@@ -1,32 +1,22 @@
-# Prerequisites
-*.d
+*.pyc
+*.log
+*.old
+*.out
+*.DS_Store
+*.~
+*~
+*.user
+*.project
+.idea
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+# Build directories
+build*/
+install*/
 
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
+# Shared library in source dir
 *.so
 *.dylib
 *.dll
 
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
+# Ignore gh-pages folder
+gh-pages*
