@@ -1,11 +1,10 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
-##
 ##                         _       _                   
 ##                        | |     | |                  
 ##                    __ _| |_ ___| | __ _ _ __   __ _ 
 ##                   / _` | __/ __| |/ _` | '_ \ / _` |
 ##                  | (_| | || (__| | (_| | | | | (_| |
-##                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL (2017)
+##                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 ##                    __/ |                       __/ |
 ##                   |___/                       |___/ 
 ##
@@ -15,4 +14,12 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_subdirectory(gtclang)
+add_subdirectory(utils)
+
+if(GTCLANG_UNIT_TESTING)
+  add_subdirectory(unit-test)
+endif()
+
+if(GTCLANG_INTEGRATION_TESTING)
+  add_subdirectory(integration-test)
+endif()

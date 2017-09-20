@@ -1,0 +1,48 @@
+{
+  "PassStageReordering": {
+    "Test": {
+      "Stencil_0": {
+        "MultiStage_0": {
+          "LoopOrder": "parallel",
+          "Stage_0": {
+            "Do_0": {
+              "Accesses_0": "W:field_b1:<0,0,0,0,0,0> R:field_b0:<0,0,0,0,0,0>",
+              "Interval": "{ Start+1 : End-1 }",
+              "Stmt_0": "field_b1[0, 0, 0] = field_b0[0, 0, 0];"
+            }
+          }
+        },
+        "MultiStage_1": {
+          "LoopOrder": "parallel",
+          "Stage_0": {
+            "Do_0": {
+              "Accesses_0": "W:field_b2:<0,0,0,0,0,0> R:field_b1:<0,0,0,0,-1,0>",
+              "Interval": "{ Start+1 : End-1 }",
+              "Stmt_0": "field_b2[0, 0, 0] = field_b1[0, 0, -1];"
+            }
+          }
+        },
+        "MultiStage_2": {
+          "LoopOrder": "parallel",
+          "Stage_0": {
+            "Do_0": {
+              "Accesses_0": "W:field_a1:<0,0,0,0,0,0> R:field_a0:<0,0,0,0,0,0>",
+              "Interval": "{ Start+1 : End-1 }",
+              "Stmt_0": "field_a1[0, 0, 0] = field_a0[0, 0, 0];"
+            }
+          }
+        },
+        "MultiStage_3": {
+          "LoopOrder": "parallel",
+          "Stage_0": {
+            "Do_0": {
+              "Accesses_0": "W:field_a2:<0,0,0,0,0,0> R:field_a1:<0,0,0,0,0,1>",
+              "Interval": "{ Start+1 : End-1 }",
+              "Stmt_0": "field_a2[0, 0, 0] = field_a1[0, 0, 1];"
+            }
+          }
+        }
+      }
+    }
+  }
+}

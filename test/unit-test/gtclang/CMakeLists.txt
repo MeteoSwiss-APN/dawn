@@ -14,5 +14,13 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_subdirectory(googletest)
-add_subdirectory(gtclang-tester)
+set(GTCLANG_UNITTEST_LIBRARIES 
+  GTClangUnittest
+  GTClangDriver
+  GTClangFrontend
+  GTClangSupport
+  gtest
+  ${GTCLANG_EXTERNAL_LIBRARIES}
+)
+
+add_subdirectory(Support)

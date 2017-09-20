@@ -1,0 +1,20 @@
+{
+  "PassStageMerger": {
+    "Test": {
+      "Stencil_0": {
+        "MultiStage_0": {
+          "LoopOrder": "parallel",
+          "Stage_0": {
+            "Do_0": {
+              "Accesses_0": "W:field_b1:<0,0,0,0,0,0> R:field_b0:<0,0,0,0,0,0>",
+              "Accesses_1": "W:field_a1:<0,0,0,0,0,0> R:field_a0:<0,0,0,0,0,0>",
+              "Interval": "{ Start : End }",
+              "Stmt_0": "field_b1[0, 0, 0] = field_b0[0, 0, 0];",
+              "Stmt_1": "field_a1[0, 0, 0] = field_a0[0, 0, 0];"
+            }
+          }
+        }
+      }
+    }
+  }
+}

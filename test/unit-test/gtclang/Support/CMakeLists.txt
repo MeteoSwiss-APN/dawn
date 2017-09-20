@@ -14,5 +14,9 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_subdirectory(googletest)
-add_subdirectory(gtclang-tester)
+gtclang_add_unittest(
+  NAME GTClangUnittestSupport
+  SOURCES TestStringUtil.cpp
+          TestMain.cpp
+  DEPENDS ${GTCLANG_UNITTEST_LIBRARIES}
+)

@@ -1,0 +1,28 @@
+{
+  "PassStageReordering": {
+    "Test": {
+      "Stencil_0": {
+        "MultiStage_0": {
+          "LoopOrder": "parallel",
+          "Stage_0": {
+            "Do_0": {
+              "Accesses_0": "W:field_a1:<0,0,0,0,0,0> R:field_a0:<0,0,0,0,0,1>",
+              "Interval": "{ Start : Start }",
+              "Stmt_0": "field_a1[0, 0, 0] = field_a0[0, 0, 1];"
+            }
+          }
+        },
+        "MultiStage_1": {
+          "LoopOrder": "parallel",
+          "Stage_0": {
+            "Do_0": {
+              "Accesses_0": "W:field_a2:<0,0,0,0,0,0> R:field_a1:<0,0,0,0,0,1>",
+              "Interval": "{ Start+2 : End-1 }",
+              "Stmt_0": "field_a2[0, 0, 0] = field_a1[0, 0, 1];"
+            }
+          }
+        }
+      }
+    }
+  }
+}
