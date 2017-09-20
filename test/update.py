@@ -72,4 +72,4 @@ def main():
                 update_license(file, comment, lang)
     
 if __name__ == '__main__':
-    main)
+    main()
