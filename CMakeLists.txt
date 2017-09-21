@@ -1,12 +1,13 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
-##                         _     _ _              _            _                   
-##                        (_)   | | |            | |          | |                  
-##               __ _ _ __ _  __| | |_ ___   ___ | |___    ___| | __ _ _ __   __ _ 
-##              / _` | '__| |/ _` | __/ _ \ / _ \| / __|  / __| |/ _` | '_ \ / _` |
-##             | (_| | |  | | (_| | || (_) | (_) | \__ \ | (__| | (_| | | | | (_| |
-##              \__, |_|  |_|\__,_|\__\___/ \___/|_|___/  \___|_|\__,_|_| |_|\__, |
-##               __/ |                                                        __/ |
-##              |___/                                                        |___/ 
+##                         _       _       
+##                        | |     | |
+##                    __ _| |_ ___| | __ _ _ __   __ _ 
+##                   / _` | __/ __| |/ _` | '_ \ / _` |
+##                  | (_| | || (__| | (_| | | | | (_| |
+##                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
+##                    __/ |                       __/ |
+##                   |___/                       |___/
+##
 ##
 ##  This file is distributed under the MIT License (MIT). 
 ##  See LICENSE.txt for details.
@@ -18,7 +19,7 @@ if(NOT CMAKE_BUILD_TYPE)
       "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
 endif()
 
-project(gridtools_clang C CXX)
+project(gtclang C CXX)
 cmake_minimum_required(VERSION 3.3)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" "${CMAKE_SOURCE_DIR}/cmake/modules")
@@ -55,18 +56,36 @@ include(AddThreads)
 include(AddClang)
 include(AddGSL)
 
-if(GTCLANG_EXAMPLES OR GTCLANG_TESTING)
+if(GTCLANG_TESTING)
   enable_testing()
+
+  if(GTCLANG_INTEGRATION_TESTING)
+    include(AddPython3)
+    include(AddGTClang)
+    include(AddGridTools)
+    include(AddBoost)
+
+    if(GTCLANG_GRIDTOOLS_FOUND AND GTCLANG_BOOST_FOUND)
+      set(GTCLANG_HAS_GRIDTOOLS 1)
+    endif()
+  endif()
+endif()
+
+if(GTCLANG_BUILD_EXAMPLES)
+  include(AddGTClang)
   include(AddGridTools)
   include(AddBoost)
-  include(AddPython3)
-  include(AddGTClang)
-  if(GTCLANG_EXAMPLES)
-    if(GTCLANG_USE_GPU)
-      include(AddCUDA)
-    else()
-      include(AddOpenMP)
-    endif()
+
+  if(GTCLANG_BUILD_EXAMPLES_WITH_GPU)
+    include(AddCUDA)
+  else()
+    include(AddOpenMP)
+  endif()
+
+  if(NOT(GTCLANG_GRIDTOOLS_FOUND) AND NOT(GTCLANG_BOOST_FOUND))
+    message(STATUS "GirdTools and Boost are required to build examples")
+    set(GTCLANG_BUILD_EXAMPLES OFF)
+    set(GTCLANG_BUILD_EXAMPLES_WITH_GPU OFF)
   endif()
 endif()
 
@@ -95,9 +114,9 @@ include_directories(${CMAKE_SOURCE_DIR}/test/utils/googletest/include)
 
 add_subdirectory(src)
 
-if(GTCLANG_EXAMPLES)
-  add_subdirectory(examples)
-endif()
+# if(GTCLANG_BUILD_EXAMPLES)
+#   add_subdirectory(examples)
+# endif()
 
 ##===---------------------------------- Testing -----------------------------------------------===##
 if(GTCLANG_TESTING)
@@ -105,7 +124,7 @@ if(GTCLANG_TESTING)
 endif()
 
 ##===---------------------------------- Documentation -----------------------------------------===##
-if(GTCLANG_DOCUMENTATION)
-  add_subdirectory(docs)
-endif()
+# if(GTCLANG_DOCUMENTATION)
+#   add_subdirectory(docs)
+# endif()
 
