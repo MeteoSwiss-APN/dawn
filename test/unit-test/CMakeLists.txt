@@ -24,7 +24,6 @@ include(DawnAddUnittest)
 #
 #    NAME:STRING=<>     - Name of the unittest exectuable as well as the CMake target to build it.
 #    SOURCES:STRING=<>   - List of source files making up the exectuable.
-#    DEPENDS:STRING=<>   - List of external libraries and/or CMake targets to link against.
 #
 macro(gtclang_add_unittest)
   cmake_parse_arguments(ARG "" "NAME" "SOURCES" ${ARGN})
@@ -36,7 +35,7 @@ macro(gtclang_add_unittest)
   dawn_add_unittest(
     NAME ${ARG_NAME}
     SOURCES ${ARG_SOURCES}
-    DEPENDS ${ARG_DEPENDS}
+    DEPENDS GTClangStatic ${DAWN_EXTERNAL_LIBRARIES} gtest
     OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/unittest
     GTEST_ARGS --gtest_color=yes
   )

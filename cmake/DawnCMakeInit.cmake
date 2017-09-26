@@ -1,8 +1,8 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
 ##                          _                      
 ##                         | |                     
-##                       __| | __ ___      ___ __  
-##                      / _` |/ _` \ \ /\ / / '_ \ 
+##                       __| | __ ___      ___ ___  
+##                      / _` |/ _` \ \ /\ / / '_  | 
 ##                     | (_| | (_| |\ V  V /| | | |
 ##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
@@ -47,8 +47,8 @@ macro(dawn_cmake_init)
   
   # Sanity check the CMake directory
   if(NOT EXISTS ${dawn_dir})
-    message(FATAL_ERROR "Invalid Dawn directory: ${dawn_dir} (missing dawn/cmake/)")
+    message(FATAL_ERROR "Invalid Dawn directory: ${dawn_dir} (missing dawn/cmake/modules)")
   endif()
 
-  list(APPEND CMAKE_MODULE_PATH "${dawn_dir}/cmake")
+  list(APPEND CMAKE_MODULE_PATH "${dawn_dir}/cmake/modules")
 endmacro()
