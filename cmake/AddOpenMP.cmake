@@ -16,12 +16,7 @@
 
 find_package(OpenMP)
 
-if(OPENMP_FOUND)
-  set(OPENMP_LIBRARIES)
-  gtclang_export_package_variable(
-    OPENMP 
-    ${OPENMP_FOUND} 
-    "OpenMP: found" 
-    ${OPENMP_LIBRARIES}
-  )
-endif()
+dawn_export_package(
+  NAME OpenMP 
+  FOUND ${OPENMP_FOUND} 
+)

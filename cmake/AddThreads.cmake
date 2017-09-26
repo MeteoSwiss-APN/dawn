@@ -26,4 +26,9 @@ elseif(CMAKE_HP_PTHREADS_INIT)
   set(threadlib "hp pthreads")
 endif()
 
-gtclang_export_package_variable(THREADS ON "Threads: ${threadlib}" ${CMAKE_THREAD_LIBS_INIT})
+dawn_export_package(
+  NAME Threads
+  FOUND ON 
+  VERSION "${threadlib}"
+  LIBRARIES ${CMAKE_THREAD_LIBS_INIT}
+)

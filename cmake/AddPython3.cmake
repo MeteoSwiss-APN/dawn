@@ -14,12 +14,11 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-find_package(PythonInterp 3.4 REQUIRED)
-set(PYTHONINTERP_LIBRARIES)
+find_package(PythonInterp 3.4)
 
-gtclang_export_package_variable(
-  PYTHON3 
-  ${PYTHONINTERP_FOUND} 
-  "python3: ${PYTHON_VERSION_STRING}" 
-  ${PYTHONINTERP_LIBRARIES}
+dawn_export_package(
+  NAME Python3
+  FOUND ${PYTHONINTERP_FOUND}
+  EXECUTABLE ${PYTHON_EXECUTABLE}
+  VERSION ${PYTHON_VERSION_STRING}
 )

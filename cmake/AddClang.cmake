@@ -14,34 +14,35 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+include(DawnCheckAndSetCXXFlag)
+
 set(llvm_clang_version "3.8.0")
 set(llvm_clang_version_short "3.8")
 
 find_package(Clang ${llvm_clang_version_short} REQUIRED)
 
-include_directories(SYSTEM ${CLANG_INCLUDE_DIRS})
-include_directories(SYSTEM ${LLVM_INCLUDE_DIRS})
-link_directories(${LLVM_LIBRARY_DIRS})
-list(APPEND CLANG_LIBRARIES ${CLANG_LIBS} ${LLVM_LIBS} ${LLVM_SYSTEM_LIBS})
+list(APPEND clang_libraries ${CLANG_LIBS} ${LLVM_LIBS} ${LLVM_SYSTEM_LIBS})
+list(APPEND clang_include_dirs ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
+set(clang_definitions)
 
 # Set the resource path (this path contains the LLVM/Clang specific include files like `stdarg.h` 
 # which are needed during the invocation of clang)
 set(GTCLANG_CLANG_RESSOURCE_INCLUDE_PATH ${CLANG_RESSOURCE_INCLUDE_PATH})
 
-# Parse the C++ flags of LLVM and properly convert them to CMake
+# Parse the C++ flags of LLVM/Clang and properly convert them to CMake
 string(REPLACE " " ";" llvm_cxx_falgs ${LLVM_CXXFLAGS})
 foreach(flag ${llvm_cxx_falgs})
 
   # Filter definitions
   if(${flag} MATCHES "^-D.*$" AND NOT(${flag} STREQUAL "-DNDEBUG"))
-    add_definitions(${flag})
+    list(APPEND clang_definitions ${flag})
     continue()
   endif()
 
   # Filter includes
   if(${flag} MATCHES "^-I.*$")
     string(REPLACE "-I" "" include_path ${flag})
-    include_directories(SYSTEM ${include_path})
+    list(APPEND clang_include_dirs ${include_path})
     continue()
   endif()
 
@@ -51,15 +52,16 @@ foreach(flag ${llvm_cxx_falgs})
     string(REGEX REPLACE "-" "_" check_name ${check_name})
     string(TOUPPER ${check_name} check_name)
     set(check_name "HAVE_${check_name}")
-    gtclang_check_and_set_cxx_flag("${flag}" ${check_name})
+    dawn_check_and_set_cxx_flag("${flag}" ${check_name})
     continue()
   endif()
 endforeach()
 
-gtclang_export_package_variable(
-  CLANG
-  ${CLANG_FOUND} 
-  "LLVM/Clang: ${LLVM_VERSION}" 
-  ${CLANG_LIBRARIES}
+dawn_export_package(
+  NAME Clang
+  FOUND ${CLANG_FOUND}
+  VERSION "${LLVM_VERSION}" 
+  LIBRARIES ${clang_libraries}
+  INCLUDE_DIRS ${clang_include_dirs}
+  DEFINITIONS ${clang_definitions}
 )
-

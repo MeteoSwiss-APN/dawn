@@ -14,15 +14,20 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-set(GTCLANG_EXECUTABLE ${GTCLANG_EXECUTABLE})
-set(GTCLANG_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/src")
-find_package(GTClang REQUIRED)
-include_directories(SYSTEM ${GTCLANG_INCLUDE_DIRS})
-set(GTCLANG_LIBRARIES)
+find_package(ccache)
 
-gtclang_export_package_variable(
-  GTCLANG 
-  ${GTCLANG_FOUND} 
-  "GTClang: found" 
-  ${GTCLANG_LIBRARIES}
+dawn_export_package(
+  NAME ccache
+  FOUND ${CCACHE_FOUND}
+  EXECUTABLE ${CCACHE_EXECUTABLE}
 )
+
+if(CCACHE_FOUND)
+  set(GTCLANG_HAS_CCACHE 1)
+  if(GTCLANG_USE_CCACHE)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE_EXECUTABLE})
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ${CCACHE_EXECUTABLE})
+  endif()
+else()
+  set(GTCLANG_HAS_CCACHE 0)
+endif()
