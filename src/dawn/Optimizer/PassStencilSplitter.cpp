@@ -116,11 +116,11 @@ bool PassStencilSplitter::run(StencilInstantiation* stencilInstantiation) {
                                                                   newStencils);
 
         // Remove empty multi-stages within the stencils
-        for(auto& stencil : newStencils) {
-          for(auto msIt = stencil->getMultiStages().begin();
-              msIt != stencil->getMultiStages().end();)
+        for(auto& s : newStencils) {
+          for(auto msIt = s->getMultiStages().begin();
+              msIt != s->getMultiStages().end();)
             if((*msIt)->isEmpty())
-              msIt = stencil->getMultiStages().erase(msIt);
+              msIt = s->getMultiStages().erase(msIt);
             else
               ++msIt;
         }
@@ -128,13 +128,13 @@ bool PassStencilSplitter::run(StencilInstantiation* stencilInstantiation) {
         // Update the fields of the stencil (this is not strictly necessary but it might be a source
         // of error in the future when updateFields also changes data-structures in the
         // Multi-Stage/Stencil)
-        for(auto& stencil : newStencils)
-          stencil->updateFields();
+        for(auto& s : newStencils)
+          s->updateFields();
 
         // Update the calls to this stencil in the stencil description AST
         std::vector<int> newStencilIDs;
-        for(const auto& stencil : newStencils)
-          newStencilIDs.push_back(stencil->getStencilID());
+        for(const auto& s : newStencils)
+          newStencilIDs.push_back(s->getStencilID());
 
         replaceStencilCalls(stencilInstantiation, stencil.getStencilID(), newStencilIDs);
 
