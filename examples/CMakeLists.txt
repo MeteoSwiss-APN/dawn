@@ -13,9 +13,3 @@
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
-
-gtclang_add_unittest(
-  NAME GTClangUnittestSupport
-  SOURCES TestStringUtil.cpp
-          TestMain.cpp
-)
