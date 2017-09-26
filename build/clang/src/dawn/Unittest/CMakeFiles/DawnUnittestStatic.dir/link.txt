@@ -1,2 +1,0 @@
-/usr/bin/ccache /usr/bin/ar qc libDawnUnittest.a  CMakeFiles/DawnUnittestStatic.dir/UnittestLogger.cpp.o
-/usr/bin/ccache /usr/bin/ranlib libDawnUnittest.a
