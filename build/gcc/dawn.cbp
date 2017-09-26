@@ -1,0 +1,1443 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+   <FileVersion major="1" minor="6" />
+   <Project>
+      <Option title="dawn" />
+      <Option makefile_is_custom="1" />
+      <Option compiler="gcc" />
+      <Option virtualFolders="CMake Files\;CMake Files\cmake\;CMake Files\cmake\modules\;CMake Files\cmake\modules\scripts\;CMake Files\.git\;CMake Files\.git\refs\;CMake Files\.git\refs\heads\;CMake Files\src\;CMake Files\src\dawn\;CMake Files\src\dawn\Support\;CMake Files\src\dawn\SIR\;CMake Files\src\dawn\Compiler\;CMake Files\src\dawn\Optimizer\;CMake Files\src\dawn\CodeGen\;CMake Files\src\dawn\Unittest\;CMake Files\test\;CMake Files\test\utils\;CMake Files\test\utils\googletest\;CMake Files\test\unit-test\;CMake Files\test\unit-test\dawn\;CMake Files\test\unit-test\dawn\Optimizer\;CMake Files\test\unit-test\dawn\SIR\;CMake Files\test\unit-test\dawn\Support\;" />
+      <Build>
+      <Target title="all">
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 all" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="list_install_components">
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 list_install_components" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="install">
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 install" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="rebuild_cache">
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 rebuild_cache" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="edit_cache">
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 edit_cache" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="clean-all">
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 clean-all" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="test">
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 test" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="install/strip">
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 install/strip" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="install/local">
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 install/local" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="DawnStatic">
+         <Option output="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/libDawn.a" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc/src/dawn" />
+         <Option object_output="./" />
+         <Option type="2" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/thfabian/Desktop/dawn/build/gcc/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/5" />
+            <Add directory="/usr/include/c++/5/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/5" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Makefile&quot;  VERBOSE=1 DawnStatic" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="DawnStatic/fast">
+         <Option output="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/libDawn.a" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc/src/dawn" />
+         <Option object_output="./" />
+         <Option type="2" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/thfabian/Desktop/dawn/build/gcc/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/5" />
+            <Add directory="/usr/include/c++/5/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/5" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Makefile&quot;  VERBOSE=1 DawnStatic/fast" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="DawnSupportObjects">
+         <Option output="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Support/CMakeFiles/DawnSupportObjects.dir/DawnSupportObjects.objlib" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Support" />
+         <Option object_output="./" />
+         <Option type="2" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/thfabian/Desktop/dawn/build/gcc/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/5" />
+            <Add directory="/usr/include/c++/5/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/5" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Support/Makefile&quot;  VERBOSE=1 DawnSupportObjects" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Support/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Support/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Support/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="DawnSupportObjects/fast">
+         <Option output="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Support/CMakeFiles/DawnSupportObjects.dir/DawnSupportObjects.objlib" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Support" />
+         <Option object_output="./" />
+         <Option type="2" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/thfabian/Desktop/dawn/build/gcc/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/5" />
+            <Add directory="/usr/include/c++/5/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/5" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Support/Makefile&quot;  VERBOSE=1 DawnSupportObjects/fast" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Support/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Support/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Support/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="DawnSIRObjects">
+         <Option output="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/SIR/CMakeFiles/DawnSIRObjects.dir/DawnSIRObjects.objlib" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/SIR" />
+         <Option object_output="./" />
+         <Option type="2" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/thfabian/Desktop/dawn/build/gcc/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/5" />
+            <Add directory="/usr/include/c++/5/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/5" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/SIR/Makefile&quot;  VERBOSE=1 DawnSIRObjects" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/SIR/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/SIR/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/SIR/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="DawnSIRObjects/fast">
+         <Option output="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/SIR/CMakeFiles/DawnSIRObjects.dir/DawnSIRObjects.objlib" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/SIR" />
+         <Option object_output="./" />
+         <Option type="2" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/thfabian/Desktop/dawn/build/gcc/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/5" />
+            <Add directory="/usr/include/c++/5/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/5" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/SIR/Makefile&quot;  VERBOSE=1 DawnSIRObjects/fast" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/SIR/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/SIR/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/SIR/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="DawnCompilerObjects">
+         <Option output="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Compiler/CMakeFiles/DawnCompilerObjects.dir/DawnCompilerObjects.objlib" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Compiler" />
+         <Option object_output="./" />
+         <Option type="2" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/thfabian/Desktop/dawn/build/gcc/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/5" />
+            <Add directory="/usr/include/c++/5/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/5" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Compiler/Makefile&quot;  VERBOSE=1 DawnCompilerObjects" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Compiler/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Compiler/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Compiler/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="DawnCompilerObjects/fast">
+         <Option output="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Compiler/CMakeFiles/DawnCompilerObjects.dir/DawnCompilerObjects.objlib" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Compiler" />
+         <Option object_output="./" />
+         <Option type="2" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/thfabian/Desktop/dawn/build/gcc/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/5" />
+            <Add directory="/usr/include/c++/5/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/5" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Compiler/Makefile&quot;  VERBOSE=1 DawnCompilerObjects/fast" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Compiler/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Compiler/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Compiler/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="DawnOptimizerObjects">
+         <Option output="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Optimizer/CMakeFiles/DawnOptimizerObjects.dir/DawnOptimizerObjects.objlib" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Optimizer" />
+         <Option object_output="./" />
+         <Option type="2" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/thfabian/Desktop/dawn/build/gcc/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/5" />
+            <Add directory="/usr/include/c++/5/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/5" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Optimizer/Makefile&quot;  VERBOSE=1 DawnOptimizerObjects" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Optimizer/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Optimizer/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Optimizer/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="DawnOptimizerObjects/fast">
+         <Option output="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Optimizer/CMakeFiles/DawnOptimizerObjects.dir/DawnOptimizerObjects.objlib" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Optimizer" />
+         <Option object_output="./" />
+         <Option type="2" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/thfabian/Desktop/dawn/build/gcc/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/5" />
+            <Add directory="/usr/include/c++/5/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/5" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Optimizer/Makefile&quot;  VERBOSE=1 DawnOptimizerObjects/fast" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Optimizer/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Optimizer/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Optimizer/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="DawnCodeGenObjects">
+         <Option output="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/CodeGen/CMakeFiles/DawnCodeGenObjects.dir/DawnCodeGenObjects.objlib" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/CodeGen" />
+         <Option object_output="./" />
+         <Option type="2" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/thfabian/Desktop/dawn/build/gcc/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/5" />
+            <Add directory="/usr/include/c++/5/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/5" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/CodeGen/Makefile&quot;  VERBOSE=1 DawnCodeGenObjects" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/CodeGen/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/CodeGen/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/CodeGen/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="DawnCodeGenObjects/fast">
+         <Option output="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/CodeGen/CMakeFiles/DawnCodeGenObjects.dir/DawnCodeGenObjects.objlib" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/CodeGen" />
+         <Option object_output="./" />
+         <Option type="2" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/thfabian/Desktop/dawn/build/gcc/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/5" />
+            <Add directory="/usr/include/c++/5/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/5" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/CodeGen/Makefile&quot;  VERBOSE=1 DawnCodeGenObjects/fast" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/CodeGen/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/CodeGen/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/CodeGen/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="DawnUnittestStatic">
+         <Option output="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Unittest/libDawnUnittest.a" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Unittest" />
+         <Option object_output="./" />
+         <Option type="2" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/thfabian/Desktop/dawn/build/gcc/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/5" />
+            <Add directory="/usr/include/c++/5/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/5" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Unittest/Makefile&quot;  VERBOSE=1 DawnUnittestStatic" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Unittest/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Unittest/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Unittest/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="DawnUnittestStatic/fast">
+         <Option output="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Unittest/libDawnUnittest.a" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Unittest" />
+         <Option object_output="./" />
+         <Option type="2" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/thfabian/Desktop/dawn/build/gcc/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/5" />
+            <Add directory="/usr/include/c++/5/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/5" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Unittest/Makefile&quot;  VERBOSE=1 DawnUnittestStatic/fast" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Unittest/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Unittest/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/src/dawn/Unittest/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="gtest">
+         <Option output="/home/thfabian/Desktop/dawn/build/gcc/test/utils/googletest/libgtest.a" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc/test/utils/googletest" />
+         <Option object_output="./" />
+         <Option type="2" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add option="-DGTEST_HAS_PTHREAD=1" />
+            <Add directory="/home/thfabian/Desktop/dawn/build/gcc/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/5" />
+            <Add directory="/usr/include/c++/5/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/5" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/utils/googletest/Makefile&quot;  VERBOSE=1 gtest" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/utils/googletest/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/utils/googletest/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/utils/googletest/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="gtest/fast">
+         <Option output="/home/thfabian/Desktop/dawn/build/gcc/test/utils/googletest/libgtest.a" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc/test/utils/googletest" />
+         <Option object_output="./" />
+         <Option type="2" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add option="-DGTEST_HAS_PTHREAD=1" />
+            <Add directory="/home/thfabian/Desktop/dawn/build/gcc/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/5" />
+            <Add directory="/usr/include/c++/5/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/5" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/utils/googletest/Makefile&quot;  VERBOSE=1 gtest/fast" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/utils/googletest/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/utils/googletest/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/utils/googletest/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="DawnUnittestOptimizer">
+         <Option output="/home/thfabian/Desktop/dawn/build/gcc/bin/unittest/DawnUnittestOptimizer" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/Optimizer" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/thfabian/Desktop/dawn/build/gcc/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/5" />
+            <Add directory="/usr/include/c++/5/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/5" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/Optimizer/Makefile&quot;  VERBOSE=1 DawnUnittestOptimizer" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/Optimizer/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/Optimizer/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/Optimizer/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="DawnUnittestOptimizer/fast">
+         <Option output="/home/thfabian/Desktop/dawn/build/gcc/bin/unittest/DawnUnittestOptimizer" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/Optimizer" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/thfabian/Desktop/dawn/build/gcc/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/5" />
+            <Add directory="/usr/include/c++/5/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/5" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/Optimizer/Makefile&quot;  VERBOSE=1 DawnUnittestOptimizer/fast" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/Optimizer/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/Optimizer/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/Optimizer/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="DawnUnittestSIR">
+         <Option output="/home/thfabian/Desktop/dawn/build/gcc/bin/unittest/DawnUnittestSIR" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/SIR" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/thfabian/Desktop/dawn/build/gcc/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/5" />
+            <Add directory="/usr/include/c++/5/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/5" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/SIR/Makefile&quot;  VERBOSE=1 DawnUnittestSIR" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/SIR/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/SIR/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/SIR/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="DawnUnittestSIR/fast">
+         <Option output="/home/thfabian/Desktop/dawn/build/gcc/bin/unittest/DawnUnittestSIR" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/SIR" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/thfabian/Desktop/dawn/build/gcc/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/5" />
+            <Add directory="/usr/include/c++/5/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/5" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/SIR/Makefile&quot;  VERBOSE=1 DawnUnittestSIR/fast" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/SIR/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/SIR/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/SIR/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="DawnUnittestSupport">
+         <Option output="/home/thfabian/Desktop/dawn/build/gcc/bin/unittest/DawnUnittestSupport" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/Support" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/thfabian/Desktop/dawn/build/gcc/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/5" />
+            <Add directory="/usr/include/c++/5/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/5" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/Support/Makefile&quot;  VERBOSE=1 DawnUnittestSupport" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/Support/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/Support/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/Support/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="DawnUnittestSupport/fast">
+         <Option output="/home/thfabian/Desktop/dawn/build/gcc/bin/unittest/DawnUnittestSupport" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/Support" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add directory="/home/thfabian/Desktop/dawn/build/gcc/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/src" />
+            <Add directory="/home/thfabian/Desktop/dawn/test/utils/googletest/include" />
+            <Add directory="/usr/include" />
+            <Add directory="/usr/include/c++/5" />
+            <Add directory="/usr/include/c++/5/backward" />
+            <Add directory="/usr/include/x86_64-linux-gnu" />
+            <Add directory="/usr/include/x86_64-linux-gnu/c++/5" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include" />
+            <Add directory="/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed" />
+            <Add directory="/usr/local/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/Support/Makefile&quot;  VERBOSE=1 DawnUnittestSupport/fast" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/Support/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/Support/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/thfabian/Desktop/dawn/build/gcc/test/unit-test/dawn/Support/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      </Build>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/CodeGen/ASTCodeGenCXX.cpp">
+         <Option target="DawnCodeGenObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/CodeGen/ASTCodeGenCXX.h">
+         <Option target="DawnCodeGenObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/CodeGen/ASTCodeGenGTClangStencilBody.cpp">
+         <Option target="DawnCodeGenObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/CodeGen/ASTCodeGenGTClangStencilBody.h">
+         <Option target="DawnCodeGenObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/CodeGen/ASTCodeGenGTClangStencilDesc.cpp">
+         <Option target="DawnCodeGenObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/CodeGen/ASTCodeGenGTClangStencilDesc.h">
+         <Option target="DawnCodeGenObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/CodeGen/CXXUtil.h">
+         <Option target="DawnCodeGenObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/CodeGen/CodeGen.h">
+         <Option target="DawnCodeGenObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/CodeGen/GTClangCodeGen.cpp">
+         <Option target="DawnCodeGenObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/CodeGen/GTClangCodeGen.h">
+         <Option target="DawnCodeGenObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/CodeGen/GTClangNaiveCXXCodeGen.cpp">
+         <Option target="DawnCodeGenObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/CodeGen/GTClangNaiveCXXCodeGen.h">
+         <Option target="DawnCodeGenObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/CodeGen/TranslationUnit.cpp">
+         <Option target="DawnCodeGenObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/CodeGen/TranslationUnit.h">
+         <Option target="DawnCodeGenObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Compiler/DawnCompiler.cpp">
+         <Option target="DawnCompilerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Compiler/DawnCompiler.h">
+         <Option target="DawnCompilerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Compiler/DiagnosticsEngine.cpp">
+         <Option target="DawnCompilerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Compiler/DiagnosticsEngine.h">
+         <Option target="DawnCompilerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Compiler/DiagnosticsMessage.h">
+         <Option target="DawnCompilerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Compiler/DiagnosticsQueue.cpp">
+         <Option target="DawnCompilerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Compiler/DiagnosticsQueue.h">
+         <Option target="DawnCompilerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Compiler/Options.h">
+         <Option target="DawnCompilerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Compiler/Options.inc">
+         <Option target="DawnCompilerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/AccessComputation.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/AccessComputation.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/Accesses.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/Accesses.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/BoundaryExtent.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/BoundaryExtent.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/Cache.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/Cache.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/DependencyGraph.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/DependencyGraphAccesses.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/DependencyGraphAccesses.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/DependencyGraphStage.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/DependencyGraphStage.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/DoMethod.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/DoMethod.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/Extents.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/Extents.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/Field.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/Interval.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/Interval.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/LoopOrder.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/LoopOrder.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/MultiStage.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/MultiStage.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/OptimizerContext.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/OptimizerContext.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/Pass.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassDataLocalityMetric.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassDataLocalityMetric.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassFieldVersioning.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassFieldVersioning.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassInlining.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassInlining.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassManager.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassManager.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassMultiStageSplitter.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassMultiStageSplitter.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassPrintStencilGraph.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassPrintStencilGraph.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassSSA.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassSSA.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassSetCaches.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassSetCaches.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassSetStageGraph.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassSetStageGraph.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassSetStageName.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassSetStageName.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassStageMerger.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassStageMerger.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassStageReordering.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassStageReordering.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassStageSplitter.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassStageSplitter.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassStencilSplitter.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassStencilSplitter.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassTemporaryFirstAccess.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassTemporaryFirstAccess.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassTemporaryMerger.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassTemporaryMerger.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassTemporaryType.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/PassTemporaryType.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/ReadBeforeWriteConflict.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/ReadBeforeWriteConflict.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/Renaming.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/Renaming.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/ReorderStrategy.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/ReorderStrategyGreedy.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/ReorderStrategyGreedy.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/ReorderStrategyPartitioning.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/ReorderStrategyPartitioning.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/Replacing.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/Replacing.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/Stage.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/Stage.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/StatementAccessesPair.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/StatementAccessesPair.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/Stencil.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/Stencil.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/StencilFunctionInstantiation.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/StencilFunctionInstantiation.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/StencilInstantiation.cpp">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/StencilInstantiation.h">
+         <Option target="DawnOptimizerObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/SIR/AST.cpp">
+         <Option target="DawnSIRObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/SIR/AST.h">
+         <Option target="DawnSIRObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/SIR/ASTExpr.cpp">
+         <Option target="DawnSIRObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/SIR/ASTExpr.h">
+         <Option target="DawnSIRObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/SIR/ASTFwd.h">
+         <Option target="DawnSIRObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/SIR/ASTStmt.cpp">
+         <Option target="DawnSIRObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/SIR/ASTStmt.h">
+         <Option target="DawnSIRObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/SIR/ASTStringifier.cpp">
+         <Option target="DawnSIRObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/SIR/ASTStringifier.h">
+         <Option target="DawnSIRObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/SIR/ASTUtil.cpp">
+         <Option target="DawnSIRObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/SIR/ASTUtil.h">
+         <Option target="DawnSIRObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/SIR/ASTVisitor.cpp">
+         <Option target="DawnSIRObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/SIR/ASTVisitor.h">
+         <Option target="DawnSIRObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/SIR/SIR.cpp">
+         <Option target="DawnSIRObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/SIR/SIR.h">
+         <Option target="DawnSIRObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/SIR/SIRSerializerJSON.cpp">
+         <Option target="DawnSIRObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/SIR/SIRSerializerJSON.h">
+         <Option target="DawnSIRObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/SIR/Statement.h">
+         <Option target="DawnSIRObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/AlignOf.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/Array.cpp">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/Array.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/ArrayRef.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/Assert.cpp">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/Assert.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/Casting.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/Compiler.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/Config.h.cmake">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/EditDistance.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/FileUtil.cpp">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/FileUtil.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/Format.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/HashCombine.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/Json.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/Logging.cpp">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/Logging.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/MathExtras.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/NonCopyable.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/Printing.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/STLExtras.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/SmallString.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/SmallVector.cpp">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/SmallVector.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/SourceLocation.cpp">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/SourceLocation.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/StringRef.cpp">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/StringRef.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/StringSwitch.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/StringUtil.cpp">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/StringUtil.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/Twine.cpp">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/Twine.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/Type.cpp">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/Type.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/TypeTraits.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/UIDGenerator.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/Unreachable.cpp">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/Unreachable.h">
+         <Option target="DawnSupportObjects"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Unittest/UnittestLogger.cpp">
+         <Option target="DawnUnittestStatic"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Unittest/UnittestLogger.h">
+         <Option target="DawnUnittestStatic"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/unit-test/dawn/Optimizer/TestColoringAlgorithm.cpp">
+         <Option target="DawnUnittestOptimizer"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/unit-test/dawn/Optimizer/TestExtent.cpp">
+         <Option target="DawnUnittestOptimizer"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/unit-test/dawn/Optimizer/TestGraph.cpp">
+         <Option target="DawnUnittestOptimizer"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/unit-test/dawn/Optimizer/TestInterval.cpp">
+         <Option target="DawnUnittestOptimizer"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/unit-test/dawn/Optimizer/TestIsDAGAlgorithm.cpp">
+         <Option target="DawnUnittestOptimizer"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/unit-test/dawn/Optimizer/TestMain.cpp">
+         <Option target="DawnUnittestOptimizer"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/unit-test/dawn/Optimizer/TestPartitionAlgorithm.cpp">
+         <Option target="DawnUnittestOptimizer"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/unit-test/dawn/Optimizer/TestSCCAlgorithm.cpp">
+         <Option target="DawnUnittestOptimizer"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/unit-test/dawn/Optimizer/TestStencil.cpp">
+         <Option target="DawnUnittestOptimizer"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/unit-test/dawn/SIR/TestAST.cpp">
+         <Option target="DawnUnittestSIR"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/unit-test/dawn/SIR/TestMain.cpp">
+         <Option target="DawnUnittestSIR"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/unit-test/dawn/SIR/TestSIR.cpp">
+         <Option target="DawnUnittestSIR"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/unit-test/dawn/SIR/TestSIRSerializerJSON.cpp">
+         <Option target="DawnUnittestSIR"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/unit-test/dawn/Support/TestArrayRef.cpp">
+         <Option target="DawnUnittestSupport"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/unit-test/dawn/Support/TestMain.cpp">
+         <Option target="DawnUnittestSupport"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/unit-test/dawn/Support/TestSmallVector.cpp">
+         <Option target="DawnUnittestSupport"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/unit-test/dawn/Support/TestStringRef.cpp">
+         <Option target="DawnUnittestSupport"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/unit-test/dawn/Support/TestType.cpp">
+         <Option target="DawnUnittestSupport"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/utils/googletest/src/gtest-all.cc">
+         <Option target="gtest"/>
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/DawnCMakeInit.cmake">
+          <Option virtualFolder="CMake Files\cmake\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/DawnOptions.cmake">
+          <Option virtualFolder="CMake Files\cmake\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/DawnDefinitions.cmake">
+          <Option virtualFolder="CMake Files\cmake\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/DawnMacros.cmake">
+          <Option virtualFolder="CMake Files\cmake\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/Addccache.cmake">
+          <Option virtualFolder="CMake Files\cmake\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnAddLibrary.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnIncludeGuard.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnAddTargetCleanAll.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnIncludeGuard.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnGetScriptDir.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnIncludeGuard.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnCheckInSourceBuild.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnIncludeGuard.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnCombineLibraries.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnIncludeGuard.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnConfigureFile.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnIncludeGuard.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnCreatePackageString.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnIncludeGuard.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnMakeStringPair.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnIncludeGuard.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnExportPackage.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnIncludeGuard.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnGetArchitectureInfo.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnIncludeGuard.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnGetCompilerInfo.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnIncludeGuard.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnGetGitHeadRevision.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnIncludeGuard.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnGetScriptDir.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnIncludeGuard.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnGetPlatformInfo.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnIncludeGuard.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnMakeStringPair.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnIncludeGuard.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnReportResult.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnIncludeGuard.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnSetCXXStandard.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnIncludeGuard.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnCheckAndSetCXXFlag.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnIncludeGuard.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnCheckCXXFlag.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnIncludeGuard.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnCheckAndSetCXXFlag.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnIncludeGuard.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/Findccache.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnAddUnittest.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnIncludeGuard.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnAddExecutable.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/DawnIncludeGuard.cmake">
+          <Option virtualFolder="CMake Files\cmake\modules\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/scripts/DawnGetGitHeadRevision-Script.cmake.in">
+          <Option virtualFolder="CMake Files\cmake\modules\scripts\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/cmake/modules/scripts/DawnAddTargetCleanAll-Script.cmake.in">
+          <Option virtualFolder="CMake Files\cmake\modules\scripts\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/.git/HEAD">
+          <Option virtualFolder="CMake Files\.git\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/.git/refs/heads/master">
+          <Option virtualFolder="CMake Files\.git\refs\heads\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\dawn\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\dawn\Support\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Support/Config.h.cmake">
+          <Option virtualFolder="CMake Files\src\dawn\Support\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/SIR/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\dawn\SIR\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Compiler/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\dawn\Compiler\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Optimizer/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\dawn\Optimizer\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/CodeGen/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\dawn\CodeGen\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/src/dawn/Unittest/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\src\dawn\Unittest\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\test\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/utils/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\test\utils\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/utils/googletest/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\test\utils\googletest\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/unit-test/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\test\unit-test\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/unit-test/dawn/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\test\unit-test\dawn\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/unit-test/dawn/Optimizer/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\test\unit-test\dawn\Optimizer\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/unit-test/dawn/SIR/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\test\unit-test\dawn\SIR\" />
+      </Unit>
+      <Unit filename="/home/thfabian/Desktop/dawn/test/unit-test/dawn/Support/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\test\unit-test\dawn\Support\" />
+      </Unit>
+   </Project>
+</CodeBlocks_project_file>

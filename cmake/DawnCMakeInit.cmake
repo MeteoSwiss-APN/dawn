@@ -1,8 +1,8 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
 ##                          _                      
 ##                         | |                     
-##                       __| | __ ___      ___ __  
-##                      / _` |/ _` \ \ /\ / / '_ \ 
+##                       __| | __ ___      ___ ___  
+##                      / _` |/ _` \ \ /\ / / '_  | 
 ##                     | (_| | (_| |\ V  V /| | | |
 ##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
@@ -24,7 +24,7 @@
 #  3. ``${CMAKE_CURRENT_LIST_DIR}/../dawn``
 #
 # where ``CMAKE_CURRENT_LIST_DIR`` is the directory of the listfile currently being processed. Note 
-# that this script should be copied into each sub-project. 
+# that this only checks for the CMake directory in thus also usuable with the source directory Dawn. 
 #
 # .. code-block:: cmake
 #
@@ -44,5 +44,11 @@ macro(dawn_cmake_init)
   endif()
 
   get_filename_component(dawn_dir ${dawn_dir} ABSOLUTE)
-  list(APPEND CMAKE_MODULE_PATH "${dawn_dir}/cmake")
+  
+  # Sanity check the CMake directory
+  if(NOT EXISTS ${dawn_dir})
+    message(FATAL_ERROR "Invalid Dawn directory: ${dawn_dir} (missing dawn/cmake/modules)")
+  endif()
+
+  list(APPEND CMAKE_MODULE_PATH "${dawn_dir}/cmake/modules")
 endmacro()
