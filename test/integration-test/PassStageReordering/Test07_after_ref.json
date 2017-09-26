@@ -1,0 +1,66 @@
+{
+  "PassStageReordering": {
+    "Test": {
+      "Stencil_0": {
+        "MultiStage_0": {
+          "LoopOrder": "parallel",
+          "Stage_0": {
+            "Do_0": {
+              "Accesses_0": "W:field_a1:<0,0,0,0,0,0> R:field_a0:<0,1,0,0,0,0>",
+              "Interval": "{ Start : End }",
+              "Stmt_0": "field_a1[0, 0, 0] = field_a0[1, 0, 0];"
+            }
+          },
+          "Stage_1": {
+            "Do_0": {
+              "Accesses_0": "W:field_a2:<0,0,0,0,0,0> R:field_a1:<0,1,0,0,0,0>",
+              "Interval": "{ Start : End }",
+              "Stmt_0": "field_a2[0, 0, 0] = field_a1[1, 0, 0];"
+            }
+          },
+          "Stage_2": {
+            "Do_0": {
+              "Accesses_0": "W:field_a3:<0,0,0,0,0,0> R:field_a2:<0,1,0,0,0,0>",
+              "Interval": "{ Start : End }",
+              "Stmt_0": "field_a3[0, 0, 0] = field_a2[1, 0, 0];"
+            }
+          }
+        },
+        "MultiStage_1": {
+          "LoopOrder": "parallel",
+          "Stage_0": {
+            "Do_0": {
+              "Accesses_0": "W:field_a4:<0,0,0,0,0,0> R:field_a3:<0,1,0,0,0,0>",
+              "Interval": "{ Start : End }",
+              "Stmt_0": "field_a4[0, 0, 0] = field_a3[1, 0, 0];"
+            }
+          },
+          "Stage_1": {
+            "Do_0": {
+              "Accesses_0": "W:field_a5:<0,0,0,0,0,0> R:field_a4:<0,1,0,0,0,0>",
+              "Interval": "{ Start : End }",
+              "Stmt_0": "field_a5[0, 0, 0] = field_a4[1, 0, 0];"
+            }
+          },
+          "Stage_2": {
+            "Do_0": {
+              "Accesses_0": "W:field_a6:<0,0,0,0,0,0> R:field_a5:<0,1,0,0,0,0>",
+              "Interval": "{ Start : End }",
+              "Stmt_0": "field_a6[0, 0, 0] = field_a5[1, 0, 0];"
+            }
+          }
+        },
+        "MultiStage_2": {
+          "LoopOrder": "parallel",
+          "Stage_0": {
+            "Do_0": {
+              "Accesses_0": "W:field_a7:<0,0,0,0,0,0> R:field_a6:<0,1,0,0,0,0>",
+              "Interval": "{ Start : End }",
+              "Stmt_0": "field_a7[0, 0, 0] = field_a6[1, 0, 0];"
+            }
+          }
+        }
+      }
+    }
+  }
+}
