@@ -3,7 +3,7 @@ Dawn  <a target="_blank" href="http://semver.org">![Version][Version.Badge]</a> 
 
 ## Introduction
 
-Dawn is a compiler toolchain for developing high-level DSLs for geophysical fluid dynamics models.
+Dawn is a compiler toolchain for developing high-level DSLs for geophysical fluid dynamics models. A tutorial and reference documentation is provided [here](http://dawn.readthedocs.org/en/master).
 
 ### Motivation
 
@@ -18,9 +18,13 @@ concise high-level DSLs that increase productivity without compromising on perfo
 high-level DSLs from the optimization and code generation, which is performed by the Dawn library, thus allowing to share the same toolchain among several DSLs. Using a common compiler 
 infrastructure can drastically reduce development and maintenance effort, as well as the quality of the generated code in terms of performance, for new and existing stencil DSLs in the GFD model domain.
 
+### Core features
+
+TODO
+
 ## Building
 
-Dawn has no external dependencies and only requires a C++11 compiler and CMake.
+Dawn has no external dependencies and only requires a C++11 compiler and [CMake](https://cmake.org/).
 
 ```bash
 git clone
@@ -31,7 +35,7 @@ make
 make install
 ```
 
-This will install Dawn locally into `<dawn-dir>/install/`. For a more detailed guide on building Dawn, see [here](todo).
+This will install Dawn locally into `<dawn-dir>/install/`. For a more detailed guide on how to build Dawn, see [here](todo).
 
 ## Continuous Integration
 
@@ -45,7 +49,12 @@ This will install Dawn locally into `<dawn-dir>/install/`. For a more detailed g
 | Clang 4.0    | Release        |  <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![GCC 5.4][Clang_40_Release.Badge]</a>        |
 | Clang 4.0    | RelWithDebInfo |  <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![GCC 5.4][Clang_40_RelWithDebInfo.Badge]</a> |
 
-## License
+## About
+
+This project is funded by the [PASCHA](http://www.pasc-ch.org/projects/2017-2020/pascha) project and developed by ETH Zurich and MeteoSwiss.
+Significant contributions were made by Fabian Thuering (Master Thesis), Carlos Osuna and Tobias Twicki. 
+
+### License
 
 > You can check out the full license [here](https://opensource.org/licenses/MIT).
 
