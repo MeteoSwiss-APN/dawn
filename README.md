@@ -61,7 +61,7 @@ This project is licensed under the terms of the **MIT** license.
 <!-- Links -->
 [TravisCI]: https://travis-ci.org/thfabian/dawn
 [TravisCI.Badge]: https://travis-ci.org/thfabian/dawn.svg?branch=master
-[MIT.License]: https://img.shields.io/badge/License-MIT-yellow.svg
+[MIT.License]: https://img.shields.io/badge/License-MIT-blue.svg
 [Version.Badge]: https://badge.fury.io/gh/thfabian%2Fdawn.svg
 [GCC_54_Release.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/3
 [GCC_54_RelWithDebInfo.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/4
