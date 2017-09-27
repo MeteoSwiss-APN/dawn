@@ -1,13 +1,13 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -38,18 +38,18 @@ namespace std {
 template <>
 struct hash<dawn::Array2i> {
   size_t operator()(const dawn::Array2i& array) const {
-    size_t hash = 0;
-    dawn::hash_combine(hash, array[0], array[1]);
-    return hash;
+    size_t seed = 0;
+    dawn::hash_combine(seed, array[0], array[1]);
+    return seed;
   }
 };
 
 template <>
 struct hash<dawn::Array3i> {
   size_t operator()(const dawn::Array3i& array) const {
-    size_t hash = 0;
-    dawn::hash_combine(hash, array[0], array[1], array[2]);
-    return hash;
+    size_t seed = 0;
+    dawn::hash_combine(seed, array[0], array[1], array[2]);
+    return seed;
   }
 };
 
