@@ -20,7 +20,18 @@ infrastructure can drastically reduce development and maintenance effort, as wel
 
 ## Building
 
-TODO.
+Dawn has no external dependencies and only requires a C++11 compiler and CMake.
+
+```bash
+git clone
+cd dawn
+mkdir build && cd build
+cmake ..
+make
+make install
+```
+
+This will install Dawn locally into `<dawn-dir>/install/`. For a more detailed guide on building Dawn, see [here](todo).
 
 ## Continuous Integration
 
