@@ -1,4 +1,4 @@
-Dawn  <a target="_blank" href="http://semver.org">![Version][Version.Badge]</a> <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![Travis status][TravisCI.Badge]</a> <a target="_blank" href="https://opensource.org/licenses/MIT">![License: MIT][MIT.License]</a>
+Dawn <br/> <a target="_blank" href="http://semver.org">![Version][Version.Badge]</a> <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![Travis status][TravisCI.Badge]</a> <a target="_blank" href="https://opensource.org/licenses/MIT">![License: MIT][MIT.License]</a>
 ====
 
 ## Introduction
@@ -27,8 +27,6 @@ TODO
 Dawn has no external dependencies and only requires a C++11 compiler and [CMake](https://cmake.org/).
 
 ```bash
-git clone
-cd dawn
 mkdir build && cd build
 cmake ..
 make
