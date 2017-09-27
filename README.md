@@ -17,13 +17,12 @@ By exposing a Stencil Intermediate Representation (SIR), we allow users to share
 This allows the design of expressive, concise DSLs that can focus on applicability and don't need to bother with the aspect of high-performance computing.
 Using DAWN as a common compiler infrastructure can drastically reduce development and maintenance effort, while increasing the performance of the generated code, for new and existing DSLs in the GFD model domain.
 
+### Core Features
 
-###Core Features
-
-* DAWN allows the user to generate fast, performing code for several back-ends from a relatively simple Stencil Intermediate Representation (SIR).
-* DAWN is able to generate code to be run on Distributed Memory Machines based on MPI, Machines with access to GPUs based on CUDA and it can generate an easy to understand representation with close to no parallelism for debugging.
-* DAWN offers a variety of optimizers that can be manually enabled or disabled 
-
+* DAWN allows the user to generate fast performing code for several back-ends from a relatively simple Stencil Intermediate Representation (SIR).
+* DAWN exposes several APIs in different languages (C++, Java, Python) to parse and process the SIR. 
+* DAWN is able to generate code to be run on Distributed Memory Machines based on MPI, Machines with access to GPUs based on CUDA as well as naive C++ code with close to no parallelism for debugging.
+* DAWN offers a wide range of optimization and static analysis passes to guarantee correctness as well as performance of the generated parallel program.
 
 ## Building
 
