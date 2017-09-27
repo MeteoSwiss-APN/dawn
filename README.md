@@ -7,20 +7,23 @@ Dawn is a compiler toolchain for developing high-level DSLs for geophysical flui
 
 ### Motivation
 
-Development productivity of large scientific codes, like geophysical fluid dynamics (GFD) models, decreased drastically in recent times due to the fact these community models often
-have to run efficiently on multiple computing architectures that impose the use of different programming models. Embedded domain specific languages (EDSLs) in C ++ have been
-used successfully in the past to enable a clear separation of concerns between the domain algorithms and the implementation strategy, thus allowing a single source code which is
-performance portable across heterogeneous architectures. Yet, using EDSLs in a correct and efficient manner often requires expert knowledge in high-performance computing. In
-addition, current DSLs are usually designed and developed for a specific scientific model with little to no reusability among DSLs.
+Development productivity of large scientific codes, like geophysical fluid dynamics (GFD) models, decreased drastically in recent times due to the fact these community models often have to run efficiently on multiple computing architectures that impose the use of different programming models.
+Embedded domain specific languages (EDSLs) in C ++ have been used successfully in the past to enable a clear separation of concerns between the domain algorithms and the implementation strategy, thus allowing a single source code which is performance portable across heterogeneous architectures.
+Yet, using EDSLs in a correct and efficient manner often requires expert knowledge in high-performance computing.
+In addition, current DSLs are usually designed and developed for a specific scientific model with little to no reusability among DSLs.
 
-Focusing on stencil-like computations on a grid, typical for GFD models, we introduce a new compiler framework, Dawn, that provides the means necessary to design expressive and 
-concise high-level DSLs that increase productivity without compromising on performance. We expose a Stencil Intermediate Representation (SIR) that allows to decouple the definition of 
-high-level DSLs from the optimization and code generation, which is performed by the Dawn library, thus allowing to share the same toolchain among several DSLs. Using a common compiler 
-infrastructure can drastically reduce development and maintenance effort, as well as the quality of the generated code in terms of performance, for new and existing stencil DSLs in the GFD model domain.
+We introduce a new compiler framework, DAWN, that decouples optimization and code generation from high level DSLs.
+By exposing a Stencil Intermediate Representation (SIR), we allow users to share the toolchain to optimize and generate code among several DSLs.
+This allows the design of expressive, concise DSLs that can focus on applicability and don't need to bother with the aspect of high-performance computing.
+Using DAWN as a common compiler infrastructure can drastically reduce development and maintenance effort, while increasing the performance of the generated code, for new and existing DSLs in the GFD model domain.
 
-### Core features
 
-TODO
+###Core Features
+
+* DAWN allows the user to generate fast, performing code for several back-ends from a relatively simple Stencil Intermediate Representation (SIR).
+* DAWN is able to generate code to be run on Distributed Memory Machines based on MPI, Machines with access to GPUs based on CUDA and it can generate an easy to understand representation with close to no parallelism for debugging.
+* DAWN offers a variety of optimizers that can be manually enabled or disabled 
+
 
 ## Building
 
@@ -50,11 +53,11 @@ This will install Dawn locally into `<dawn-dir>/install/`. For a more detailed g
 ## About
 
 This project is funded by the [PASCHA](http://www.pasc-ch.org/projects/2017-2020/pascha) project and developed by ETH Zurich and MeteoSwiss.
-Significant contributions were made by Fabian Thuering (Master Thesis), Carlos Osuna and Tobias Twicki. 
+Significant contributions were made by Fabian Thuering (Master Thesis), Carlos Osuna and Tobias Wicky. 
 
 ### License
 
-> You can check out the full license [here](https://opensource.org/licenses/MIT).
+> The full license can be found [here](https://opensource.org/licenses/MIT).
 
 This project is licensed under the terms of the **MIT** license.
 
