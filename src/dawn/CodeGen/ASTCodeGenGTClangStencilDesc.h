@@ -19,6 +19,7 @@
 #include "dawn/Support/StringUtil.h"
 #include <stack>
 #include <unordered_map>
+#include <vector>
 
 namespace dawn {
 

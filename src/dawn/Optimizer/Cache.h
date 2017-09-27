@@ -1,13 +1,13 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -82,11 +82,11 @@ namespace std {
 template <>
 struct hash<dawn::Cache> {
   size_t operator()(const dawn::Cache& cache) const {
-    std::size_t hash = 0;
-    dawn::hash_combine(hash, cache.getCachedFieldAccessID(),
-                      static_cast<int>(cache.getCacheIOPolicy()),
-                      static_cast<int>(cache.getCacheType()));
-    return hash;
+    std::size_t seed = 0;
+    dawn::hash_combine(seed, cache.getCachedFieldAccessID(),
+                       static_cast<int>(cache.getCacheIOPolicy()),
+                       static_cast<int>(cache.getCacheType()));
+    return seed;
   }
 };
 

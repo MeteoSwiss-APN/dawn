@@ -176,10 +176,10 @@ namespace std {
 template <>
 struct hash<dawn::Extents> {
   size_t operator()(const dawn::Extents& extent) const {
-    size_t hash = 0;
-    dawn::hash_combine(hash, extent[0].Minus, extent[0].Plus, extent[1].Minus, extent[1].Plus,
+    size_t seed = 0;
+    dawn::hash_combine(seed, extent[0].Minus, extent[0].Plus, extent[1].Minus, extent[1].Plus,
                       extent[2].Minus, extent[2].Plus);
-    return hash;
+    return seed;
   }
 };
 

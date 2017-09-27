@@ -1,0 +1,92 @@
+##===-------------------------------------------------------------------------------*- yaml -*-===##
+##                          _                      
+##                         | |                     
+##                       __| | __ ___      ___ ___  
+##                      / _` |/ _` \ \ /\ / / '_  | 
+##                     | (_| | (_| |\ V  V /| | | |
+##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+##
+##
+##  This file is distributed under the MIT License (MIT). 
+##  See LICENSE.txt for details.
+##
+##===------------------------------------------------------------------------------------------===##
+
+dist: trusty
+sudo: false
+  
+language: c++
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+      - llvm-toolchain-trusty-4.0
+    packages:
+      - g++-5
+      - gcc-5
+      - g++-6
+      - gcc-6
+      - clang-4.0
+      - clang++-4.0
+
+os:
+  - linux
+
+env:
+  global:
+    - SCRIPT_DIR=${TRAVIS_BUILD_DIR}/scripts/travis
+    - CACHE_DIR=${TRAVIS_BUILD_DIR}/deps/install
+    - CMAKE_VERSION=3.8.1
+
+jobs:
+  include:
+    - &prepare_cache_stage
+      stage: Prepare Cache
+      compiler: gcc
+      env: CXX_COMPILER=g++-5 C_COMPILER=gcc-5
+      script: bash ${SCRIPT_DIR}/driver-install.sh -i ${CACHE_DIR} -b cmake
+
+    - <<: *prepare_cache_stage
+      compiler: clang
+      env: CXX_COMPILER=clang++-4.0 C_COMPILER=clang-4.0
+
+    # Linux GCC 5.4 (Release)
+    - &test_stage
+      stage: Test
+      script: bash ${SCRIPT_DIR}/driver-test.sh
+      compiler: gcc
+      env: CONFIG=Release CXX_COMPILER=g++-5 C_COMPILER=gcc-5
+    
+    # Linux GCC 5.4 (RelWithDebInfo)
+    - <<: *test_stage
+      compiler: gcc
+      env: CONFIG=RelWithDebInfo CXX_COMPILER=g++-5 C_COMPILER=gcc-5
+
+    # Linux GCC 6.3 (Release)
+    - <<: *test_stage      
+      compiler: gcc
+      env: CONFIG=Release CXX_COMPILER=g++-6 C_COMPILER=gcc-6
+    
+    # Linux GCC 6.3 (RelWithDebInfo)
+    - <<: *test_stage      
+      compiler: gcc
+      env: CONFIG=RelWithDebInfo CXX_COMPILER=g++-6 C_COMPILER=gcc-6
+
+    # Clang 4.0 (Release)
+    - <<: *test_stage      
+      compiler: clang
+      env: CONFIG=Release CXX_COMPILER=clang++-4.0 C_COMPILER=clang-4.0
+
+    # Clang 4.0 (RelWithDebInfo)
+    - <<: *test_stage      
+      compiler: clang
+      env: CONFIG=RelWithDebInfo CXX_COMPILER=clang++-4.0 C_COMPILER=clang-4.0
+
+branches:
+  only:
+    - master
+
+notifications:
+  on_success: never
+  on_failure: never
