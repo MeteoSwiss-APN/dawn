@@ -5,6 +5,23 @@ Dawn  <a target="_blank" href="http://semver.org">![Version][Version.Badge]</a> 
 
 Dawn is a compiler toolchain for developing high-level DSLs for geophysical fluid dynamics models.
 
+### Motivation
+
+Development productivity of large scientific codes, like geophysical fluid dynamics (GFD) models, decreased drastically in recent times due to the fact these community models often
+have to run efficiently on multiple computing architectures that impose the use of different programming models. Embedded domain specific languages (EDSLs) in C ++ have been
+used successfully in the past to enable a clear separation of concerns between the domain algorithms and the implementation strategy, thus allowing a single source code which is
+performance portable across heterogeneous architectures. Yet, using EDSLs in a correct and efficient manner often requires expert knowledge in high-performance computing. In
+addition, current DSLs are usually designed and developed for a specific scientific model with little to no reusability among DSLs.
+
+Focusing on stencil-like computations on a grid, typical for GFD models, we introduce a new compiler framework, Dawn, that provides the means necessary to design expressive and 
+concise high-level DSLs that increase productivity without compromising on performance. We expose a Stencil Intermediate Representation (SIR) that allows to decouple the definition of 
+high-level DSLs from the optimization and code generation, which is performed by the Dawn library, thus allowing to share the same toolchain among several DSLs. Using a common compiler 
+infrastructure can drastically reduce development and maintenance effort, as well as the quality of the generated code in terms of performance, for new and existing stencil DSLs in the GFD model domain.
+
+## Building
+
+TODO.
+
 ## Continuous Integration
 
 ### Linux
