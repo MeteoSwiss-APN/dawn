@@ -38,7 +38,7 @@ add_custom_target(DawnDocsSphinx ALL
 
 add_dependencies(DawnDocsSphinx DawnDocsCMakeModules)
 
-# Docs target
+# Generate documentation
 add_custom_target(docs ALL
  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/sphinx/html 
                                             ${CMAKE_SOURCE_DIR}/docs/html
@@ -46,3 +46,11 @@ add_custom_target(docs ALL
  COMMENT "Generating documentation" VERBATIM
  DEPENDS DawnDocsSphinx
 )
+
+# Generate & deploy documentation
+add_custom_target(deploy-docs
+  COMMAND ${BASH_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/gh-pages/deploy.sh
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  COMMENT "Deploying documentation" VERBATIM
+)
+add_dependencies(deploy-docs docs)

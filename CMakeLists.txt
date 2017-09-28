@@ -88,7 +88,7 @@ dawn_report_result("Configuration summary" ${config_info})
 
 # Include the packages 
 if(DAWN_DOCUMENTATION)
-  set(doc_packages Python3 Sphinx)
+  set(doc_packages bash Python3 Sphinx)
 endif()
 
 foreach(package ccache ${doc_packages})
