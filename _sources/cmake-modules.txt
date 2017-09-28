@@ -68,4 +68,5 @@ Load settings for an external project via `find_package <https://cmake.org/cmake
   /cmake-modules/FindClang
   /cmake-modules/FindLLVM
   /cmake-modules/FindSphinx
+  /cmake-modules/Findbash
   /cmake-modules/Findccache
