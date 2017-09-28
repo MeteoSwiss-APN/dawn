@@ -32,7 +32,7 @@ include(CMakeParseArguments)
 # ``NAME``
 #   Name of the library.
 # ``OBJECTS``
-#   Object libraries to combine (see .
+#   Object libraries to combine (see :ref:`dawn_add_library`).
 # ``DEPENDS``
 #   List of external libraries and/or CMake targets treated as dependencies of the library.
 #

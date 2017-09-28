@@ -34,6 +34,9 @@
 #define DAWN_VERSION_PATCH ${DAWN_VERSION_PATCH}
 
 // DAWN version string 
-#define DAWN_VERSION_STRING "${DAWN_VERSION_STRING}"
+#define DAWN_VERSION_STR "${DAWN_VERSION_STR}"
+
+// DAWN full version string 
+#define DAWN_FULL_VERSION_STR "${DAWN_FULL_VERSION_STR}"
 
 #endif

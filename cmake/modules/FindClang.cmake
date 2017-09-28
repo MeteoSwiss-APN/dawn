@@ -20,39 +20,35 @@
 #
 #   find_package(Clang [REQUIRED] [QUIET])
 #
-# Find the Clang libraries and includes. Uses the same include and library paths detected by 
-# FindLLVM.cmake.
+# Find the Clang_ libraries and includes. Uses the same include and library paths detected 
+# by :ref:`FindLLVM`.
 #
 # Result Variables
 # ^^^^^^^^^^^^^^^^
 #
 # Defines the following variables:
 #
-#  ``CLANG_FOUND``                    
-#    True if Clang was found.
-#  ``CLANG_INCLUDE_DIRS``
-#    Where to find Clang includes.
-#  ``CLANG_LIBS``
-#    List of all Clang libraries.
-#  ``CLANG_LIBCLANG_LIB``
+# ``CLANG_FOUND``                    
+#   True if Clang was found.
+# ``CLANG_INCLUDE_DIRS``
+#   Where to find Clang includes.
+# ``CLANG_LIBS``
+#   List of all Clang libraries.
+# ``CLANG_LIBCLANG_LIB``
 #   C Interface to Clang.
-#  ``CLANG_LIBRARY_DIRS``
+# ``CLANG_LIBRARY_DIRS``
 #   Where to find Clang libraries.
-#  ``CLANG_RESSOURCE_INCLUDE_PATH``
+# ``CLANG_RESSOURCE_INCLUDE_PATH``
 #   Path to the internal Clang headers needed by Frontend tools.
-#
-# For each found component library:
-#
-#  ``CLANG_CLANGFRONTEND_LIB``
-#    Clang Frontend Library.
-#  ``CLANG_CLANGDRIVER_LIB``
-#    Clang Driver Library.
-#  etc.   
+# ``CLANG_<COMPONENT>_LIB``
+#   Path to the ``<COMPONENT>`` library.
 #
 # Hints
 # ^^^^^
 #
 # Set ``LLVM_ROOT`` to a directory that contains a LLVM/Clang installation.
+#
+# .. _Clang: https://clang.llvm.org/
 #
 
 include(CMakeParseArguments)

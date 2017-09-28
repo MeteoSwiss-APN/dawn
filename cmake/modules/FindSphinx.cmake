@@ -20,7 +20,7 @@
 #
 #   find_package(Sphinx [REQUIRED] [QUIET])
 #
-# This module locates Sphinx_. ``SPHINX_FOUND`` will report if sphinx has been found.
+# This module locates Sphinx_.
 #
 # Result Variables
 # ^^^^^^^^^^^^^^^^
