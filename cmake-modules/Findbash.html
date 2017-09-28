@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>dawn_add_unittest &mdash; Dawn -ad9e210-x86_64-linux-gnu-5.4.0 documentation</title>
+  <title>Findbash &mdash; Dawn -ad9e210-x86_64-linux-gnu-5.4.0 documentation</title>
   
 
   
@@ -34,8 +34,8 @@
   
     <link rel="top" title="Dawn -ad9e210-x86_64-linux-gnu-5.4.0 documentation" href="../index.html"/>
         <link rel="up" title="CMake Modules" href="../cmake-modules.html"/>
-        <link rel="next" title="dawn_check_and_set_cxx_flag" href="DawnCheckAndSetCXXFlag.html"/>
-        <link rel="prev" title="dawn_add_target_clean_all" href="DawnAddTargetCleanAll.html"/> 
+        <link rel="next" title="Findccache" href="Findccache.html"/>
+        <link rel="prev" title="FindSphinx" href="FindSphinx.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -95,12 +95,12 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../cmake-modules.html">CMake Modules</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../cmake-modules.html#installation">Installation</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="../cmake-modules.html#functions-macros">Functions &amp; Macros</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../cmake-modules.html#functions-macros">Functions &amp; Macros</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="DawGetCompilerStr.html">dawn_get_compiler_info</a></li>
 <li class="toctree-l3"><a class="reference internal" href="DawnAddExecutable.html">dawn_add_executable</a></li>
 <li class="toctree-l3"><a class="reference internal" href="DawnAddLibrary.html">dawn_add_library</a></li>
 <li class="toctree-l3"><a class="reference internal" href="DawnAddTargetCleanAll.html">dawn_add_target_clean_all</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="">dawn_add_unittest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DawnAddUnittest.html">dawn_add_unittest</a></li>
 <li class="toctree-l3"><a class="reference internal" href="DawnCheckAndSetCXXFlag.html">dawn_check_and_set_cxx_flag</a></li>
 <li class="toctree-l3"><a class="reference internal" href="DawnCheckCXXFlag.html">dawn_check_cxx_flag</a></li>
 <li class="toctree-l3"><a class="reference internal" href="DawnCheckInSourceBuild.html">dawn_check_in_source_build</a></li>
@@ -120,11 +120,11 @@
 <li class="toctree-l3"><a class="reference internal" href="DawnSetCXXStandard.html">dawn_set_cxx_standard</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../cmake-modules.html#modules">Modules</a><ul>
+<li class="toctree-l2 current"><a class="reference internal" href="../cmake-modules.html#modules">Modules</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="FindClang.html">FindClang</a></li>
 <li class="toctree-l3"><a class="reference internal" href="FindLLVM.html">FindLLVM</a></li>
 <li class="toctree-l3"><a class="reference internal" href="FindSphinx.html">FindSphinx</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Findbash.html">Findbash</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="">Findbash</a></li>
 <li class="toctree-l3"><a class="reference internal" href="Findccache.html">Findccache</a></li>
 </ul>
 </li>
@@ -176,14 +176,14 @@
         
           <li><a href="../cmake-modules.html">CMake Modules</a> &raquo;</li>
         
-      <li>dawn_add_unittest</li>
+      <li>Findbash</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
             
-              <a href="https://github.com/thfabian/dawn/blob/master/cmake-modules/DawnAddUnittest.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/thfabian/dawn/blob/master/cmake-modules/Findbash.rst" class="fa fa-github"> Edit on GitHub</a>
             
           
         
@@ -199,26 +199,26 @@
             
   <div class="toctree-wrapper compound">
 </div>
-<div class="section" id="dawn-add-unittest">
-<h1>dawn_add_unittest<a class="headerlink" href="#dawn-add-unittest" title="Permalink to this headline">¶</a></h1>
-<p>Compile the given objects into a runnable unittest executable (.exe) and register it within CTest.
-Note that to enable CTest you need to call the builtin command <code class="docutils literal"><span class="pre">enable_testing()</span></code> in the source 
-root.</p>
-<div class="highlight-cmake"><div class="highlight"><pre><span class="nb">dawn_add_unittest</span><span class="p">(</span><span class="s">NAME</span> <span class="s">SOURCES</span> <span class="s">DEPENDS</span> <span class="s">[OUTPUT_DIR</span> <span class="s">GTEST_ARGS]</span><span class="p">)</span>
+<div class="section" id="findbash">
+<h1>Findbash<a class="headerlink" href="#findbash" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-cmake"><div class="highlight"><pre><span class="nb">find_package</span><span class="p">(</span><span class="s">bash</span> <span class="s">[REQUIRED]</span> <span class="s">[QUIET]</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>This module locates <a class="reference external" href="https://www.gnu.org/software/bash/">bash</a>. <code class="docutils literal"><span class="pre">BASH_FOUND</span></code> will report if bash has been found.</p>
+<div class="section" id="result-variables">
+<h2>Result Variables<a class="headerlink" href="#result-variables" title="Permalink to this headline">¶</a></h2>
+<p>Defines the following variables:</p>
 <dl class="docutils">
-<dt><code class="docutils literal"><span class="pre">NAME</span></code></dt>
-<dd>Name of the unittest exectuable as well as the CMake target to build it.</dd>
-<dt><code class="docutils literal"><span class="pre">SOURCES</span></code></dt>
-<dd>List of source files making up the exectuable.</dd>
-<dt><code class="docutils literal"><span class="pre">DEPENDS</span></code></dt>
-<dd>List of external libraries and/or CMake targets to link against.</dd>
-<dt><code class="docutils literal"><span class="pre">OUTPUT_DIR</span></code> [optional]</dt>
-<dd>Directory to place the exectuable (e.g <code class="docutils literal"><span class="pre">${CMAKE_BINARY_DIR}/bin</span></code>).</dd>
-<dt><code class="docutils literal"><span class="pre">GTEST_ARGS</span></code> [optional]</dt>
-<dd>Arguments passed to the created GTest exectuable (e.g <code class="docutils literal"><span class="pre">--gtest_color=yes</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">BASH_FOUND</span></code></dt>
+<dd>System has bash.</dd>
+<dt><code class="docutils literal"><span class="pre">BASH_EXECUTABLE</span></code></dt>
+<dd>Path to the bash executable.</dd>
 </dl>
+</div>
+<div class="section" id="hints">
+<h2>Hints<a class="headerlink" href="#hints" title="Permalink to this headline">¶</a></h2>
+<p>You can directly set <code class="docutils literal"><span class="pre">BASH_EXECUTABLE</span></code> if the module has trouble finding bash.</p>
+</div>
 </div>
 
 
@@ -231,10 +231,10 @@ root.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="DawnCheckAndSetCXXFlag.html" class="btn btn-neutral float-right" title="dawn_check_and_set_cxx_flag" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="Findccache.html" class="btn btn-neutral float-right" title="Findccache" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="DawnAddTargetCleanAll.html" class="btn btn-neutral" title="dawn_add_target_clean_all" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="FindSphinx.html" class="btn btn-neutral" title="FindSphinx" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
