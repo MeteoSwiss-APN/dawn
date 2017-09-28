@@ -48,5 +48,5 @@ string(TOLOWER ${DAWN_PLATFORM_STRING} platform)
 string(TOLOWER ${CMAKE_CXX_COMPILER_ID} compiler)
 set(compiler "${compiler}-${CMAKE_CXX_COMPILER_VERSION}")
 set(DAWN_FULL_VERSION_STR 
-    "${DAWN_VERSION_STRING}-${SDAWN_GIT_HASH}-${architecture}-${platform}-${compiler}"
+    "${DAWN_VERSION_STR}-${SDAWN_GIT_HASH}-${architecture}-${platform}-${compiler}"
     CACHE STRING "Full version string of Dawn" FORCE)
