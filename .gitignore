@@ -1,1 +1,8 @@
+docs/
+gh-pages/
+scripts/
 build/
+cmake/
+script/
+src/
+test/
