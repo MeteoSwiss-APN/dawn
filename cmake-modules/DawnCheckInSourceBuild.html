@@ -1,0 +1,246 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dawn_check_in_source_build &mdash; Dawn -4d0b1cf-x86_64-linux-gnu-5.4.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/theme_overrides.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="Dawn -4d0b1cf-x86_64-linux-gnu-5.4.0 documentation" href="../index.html"/>
+        <link rel="up" title="CMake Modules" href="../cmake-modules.html"/>
+        <link rel="next" title="dawn_combine_libraries" href="DawnCombineLibraries.html"/>
+        <link rel="prev" title="dawn_check_cxx_flag" href="DawnCheckCXXFlag.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Dawn
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">About this project</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../cmake-modules.html">CMake Modules</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../cmake-modules.html#installation">Installation</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../cmake-modules.html#functions-macros">Functions &amp; Macros</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="DawGetCompilerStr.html">dawn_get_compiler_info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DawnAddExecutable.html">dawn_add_executable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DawnAddLibrary.html">dawn_add_library</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DawnAddTargetCleanAll.html">dawn_add_target_clean_all</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DawnAddUnittest.html">dawn_add_unittest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DawnCheckAndSetCXXFlag.html">dawn_check_and_set_cxx_flag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DawnCheckCXXFlag.html">dawn_check_cxx_flag</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="">dawn_check_in_source_build</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DawnCombineLibraries.html">dawn_combine_libraries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DawnConfigureFile.html">dawn_configure_file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DawnCreatePackageString.html">dawn_create_package_string</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DawnExportPackage.html">dawn_export_package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DawnFindPythonModule.html">dawn_find_python_module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DawnGetArchitectureInfo.html">dawn_get_architecture_info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DawnGetCompilerInfo.html">dawn_get_compiler_info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DawnGetGitHeadRevision.html">dawn_get_git_head_revision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DawnGetPlatformInfo.html">dawn_get_platform_info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DawnGetScriptDir.html">dawn_get_script_dir</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DawnIncludeGuard.html">dawn_include_guard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DawnMakeStringPair.html">dawn_make_string_pair</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DawnReportResult.html">dawn_report_result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DawnSetCXXStandard.html">dawn_set_cxx_standard</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../cmake-modules.html#modules">Modules</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Dawn</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../cmake-modules.html">CMake Modules</a> &raquo;</li>
+      
+    <li>dawn_check_in_source_build</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="https://github.com/thfabian/dawn/blob/master/cmake-modules/DawnCheckInSourceBuild.rst" class="fa fa-github"> Edit on GitHub</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="toctree-wrapper compound">
+</div>
+<div class="section" id="dawn-check-in-source-build">
+<h1>dawn_check_in_source_build<a class="headerlink" href="#dawn-check-in-source-build" title="Permalink to this headline">¶</a></h1>
+<p>Abort with a meaningful error message if <code class="docutils literal"><span class="pre">CMAKE_BINARY_DIR</span></code> matches <code class="docutils literal"><span class="pre">CMAKE_SOURCE_DIR</span></code>.</p>
+<div class="highlight-cmake"><div class="highlight"><pre><span class="nb">dawn_check_in_source_build</span><span class="p">()</span>  
+</pre></div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="DawnCombineLibraries.html" class="btn btn-neutral float-right" title="dawn_combine_libraries" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="DawnCheckCXXFlag.html" class="btn btn-neutral" title="dawn_check_cxx_flag" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, ETH Zurich and MeteoSwiss.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'-4d0b1cf-x86_64-linux-gnu-5.4.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
