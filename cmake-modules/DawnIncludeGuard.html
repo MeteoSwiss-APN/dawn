@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -28,8 +30,6 @@
   
 
   
-    <link rel="stylesheet" href="../_static/theme_overrides.css" type="text/css" />
-  
 
   
     <link rel="top" title="Dawn -ad9e210-x86_64-linux-gnu-5.4.0 documentation" href="../index.html"/>
@@ -44,6 +44,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -84,7 +85,10 @@
           
             
             
-                <ul>
+              
+            
+            
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">About this project</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Developer</span></p>
@@ -116,7 +120,14 @@
 <li class="toctree-l3"><a class="reference internal" href="DawnSetCXXStandard.html">dawn_set_cxx_standard</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../cmake-modules.html#modules">Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cmake-modules.html#modules">Modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="FindClang.html">FindClang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="FindLLVM.html">FindLLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="FindSphinx.html">FindSphinx</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Findbash.html">Findbash</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Findccache.html">Findccache</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -131,8 +142,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../index.html">Dawn</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Dawn</a>
+        
       </nav>
 
 
@@ -141,25 +154,44 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
           <li><a href="../cmake-modules.html">CMake Modules</a> &raquo;</li>
-      
-    <li>dawn_include_guard</li>
+        
+      <li>dawn_include_guard</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="https://github.com/thfabian/dawn/blob/master/cmake-modules/DawnIncludeGuard.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+            
+              <a href="https://github.com/thfabian/dawn/blob/master/cmake-modules/DawnIncludeGuard.rst" class="fa fa-github"> Edit on GitHub</a>
+            
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -177,15 +209,18 @@
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="DawnMakeStringPair.html" class="btn btn-neutral float-right" title="dawn_make_string_pair" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="DawnMakeStringPair.html" class="btn btn-neutral float-right" title="dawn_make_string_pair" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="DawnGetScriptDir.html" class="btn btn-neutral" title="dawn_get_script_dir" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="DawnGetScriptDir.html" class="btn btn-neutral" title="dawn_get_script_dir" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -217,9 +252,11 @@
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
             VERSION:'-ad9e210-x86_64-linux-gnu-5.4.0',
+            LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: ''
         };
     </script>
       <script type="text/javascript" src="../_static/jquery.js"></script>
