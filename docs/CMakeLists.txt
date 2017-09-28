@@ -24,8 +24,6 @@ add_custom_target(DawnDocsCMakeModules
 )
 
 # Sphinx
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf.py.in
-               ${CMAKE_CURRENT_SOURCE_DIR}/conf.py @ONLY)
 add_custom_target(DawnDocsSphinx ALL
    COMMAND ${SPHINX_EXECUTABLE} -b html -d ${CMAKE_BINARY_DIR}/sphinx/doctrees 
            ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR}/sphinx/html
