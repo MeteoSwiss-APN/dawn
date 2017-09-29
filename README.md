@@ -12,17 +12,17 @@ Embedded domain specific languages (EDSLs) in C ++ have been used successfully i
 Yet, using EDSLs in a correct and efficient manner often requires expert knowledge in high-performance computing.
 In addition, current DSLs are usually designed and developed for a specific scientific model with little to no reusability among DSLs.
 
-We introduce a new compiler framework, DAWN, that decouples optimization and code generation from high level DSLs.
+We introduce a new compiler framework, Dawn, that decouples optimization and code generation from high level DSLs.
 By exposing a Stencil Intermediate Representation (SIR), we allow users to share the toolchain to optimize and generate code among several DSLs.
 This allows the design of expressive, concise DSLs that can focus on applicability and don't need to bother with the aspect of high-performance computing.
-Using DAWN as a common compiler infrastructure can drastically reduce development and maintenance effort, while increasing the performance of the generated code, for new and existing DSLs in the GFD model domain.
+Using Dawn as a common compiler infrastructure can drastically reduce development and maintenance effort, while increasing the performance of the generated code, for new and existing DSLs in the GFD model domain.
 
 ### Core Features
 
-* DAWN allows the user to generate fast performing code for several back-ends from a relatively simple Stencil Intermediate Representation (SIR).
-* DAWN exposes several APIs in different languages (C++, Java, Python) to parse and process the SIR. 
-* DAWN is able to generate code to be run on Distributed Memory Machines based on MPI, Machines with access to GPUs based on CUDA as well as naive C++ code with close to no parallelism for debugging.
-* DAWN offers a wide range of optimization and static analysis passes to guarantee correctness as well as performance of the generated parallel program.
+* Dawn allows the user to generate fast performing code for several back-ends from a relatively simple Stencil Intermediate Representation (SIR).
+* Dawn exposes several APIs in different languages (C++, Java, Python) to parse and process the SIR. 
+* Dawn is able to generate code to be run on Distributed Memory Machines based on MPI, Machines with access to GPUs based on CUDA as well as naive C++ code with close to no parallelism for debugging.
+* Dawn offers a wide range of optimization and static analysis passes to guarantee correctness as well as performance of the generated parallel program.
 
 ## Building
 
