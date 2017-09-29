@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>About this project &mdash; Dawn 0.0.1-417f67f-x86_64-linux-gnu-5.4.0 documentation</title>
+  <title>About this project &mdash; Dawn 0.0.1 documentation</title>
   
 
   
@@ -32,8 +32,8 @@
   
 
   
-    <link rel="top" title="Dawn 0.0.1-417f67f-x86_64-linux-gnu-5.4.0 documentation" href="index.html"/>
-        <link rel="next" title="CMake Modules" href="cmake-modules.html"/>
+    <link rel="top" title="Dawn 0.0.1 documentation" href="index.html"/>
+        <link rel="next" title="First steps" href="basics.html"/>
         <link rel="prev" title="Dawn — Compiler toolchain for high-level DSLs" href="index.html"/> 
 
   
@@ -88,9 +88,23 @@
             
             
               <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="">About this project</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">About this project</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#core-features">Core Features</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Developer</span></p>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">The Basics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="basics.html">First steps</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="basics.html#compiling-the-test-cases">Compiling the test cases</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="basics.html#linux-macos">Linux/MacOS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="basics.html#windows">Windows</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Developer Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="cmake-modules.html">CMake Modules</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#installation">Installation</a></li>
@@ -196,8 +210,19 @@
             
   <div class="section" id="about-this-project">
 <h1>About this project<a class="headerlink" href="#about-this-project" title="Permalink to this headline">¶</a></h1>
-<p>TODO
-as</p>
+<p><strong>Dawn</strong> is a compiler toolchain for developing high-level DSLs for geophysical fluid dynamics models.
+Development productivity of large scientific codes, like geophysical fluid dynamics (GFD) models, decreased drastically in recent times due to the fact these community models often have to run efficiently on multiple computing architectures that impose the use of different programming models. Embedded domain specific languages (EDSLs) in C ++ have been used successfully in the past to enable a clear separation of concerns between the domain algorithms and the implementation strategy, thus allowing a single source code which is performance portable across heterogeneous architectures. Yet, using EDSLs in a correct and efficient manner often requires expert knowledge in high-performance computing. In addition, current DSLs are usually designed and developed for a specific scientific model with little to no reusability among DSLs.</p>
+<p>We introduce a new compiler framework, Dawn, that decouples optimization and code generation from high level DSLs. By exposing a Stencil Intermediate Representation (SIR), we allow users to share the toolchain to optimize and generate code among several DSLs.
+This allows the design of expressive, concise DSLs that can focus on applicability and don&#8217;t need to bother with the aspect of high-performance computing. Using Dawn as a common compiler infrastructure can drastically reduce development and maintenance effort, while increasing the performance of the generated code, for new and existing DSLs in the GFD model domain.</p>
+<div class="section" id="core-features">
+<h2>Core Features<a class="headerlink" href="#core-features" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Dawn allows the user to generate fast performing code for several back-ends from a relatively simple Stencil Intermediate Representation (SIR).</li>
+<li>Dawn exposes several APIs in different languages (C++, Java, Python) to parse and process the SIR.</li>
+<li>Dawn is able to generate code to be run on Distributed Memory Machines based on MPI, Machines with access to GPUs based on CUDA (via the gridtools EDSL) as well as naive C++ code with close to no parallelism for debugging.</li>
+<li>Dawn offers a wide range of optimization and static analysis passes to guarantee correctness as well as performance of the generated parallel program.</li>
+</ul>
+</div>
 </div>
 
 
@@ -210,7 +235,7 @@ as</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="cmake-modules.html" class="btn btn-neutral float-right" title="CMake Modules" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="basics.html" class="btn btn-neutral float-right" title="First steps" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="index.html" class="btn btn-neutral" title="Dawn — Compiler toolchain for high-level DSLs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -244,7 +269,7 @@ as</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.0.1-417f67f-x86_64-linux-gnu-5.4.0',
+            VERSION:'0.0.1',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',

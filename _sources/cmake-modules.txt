@@ -1,11 +1,10 @@
-*************
 CMake Modules
-*************
+=============
 
-CMake modules of the Dawn project. 
+This section describes the CMake functionailty of Dawn and it's subprojects.
 
 Installation
-~~~~~~~~~~~~
+************
 
 Add the ``<dawn>/cmake/modules`` directory to the ``CMAKE_MODULE_PATH`` to use the functions, macros and modules:
 
@@ -21,7 +20,7 @@ Note that all Dawn projects contain a ``dawn_cmake_init`` macro which tries to f
   dawn_cmake_init()
 
 Functions & Macros
-~~~~~~~~~~~~~~~~~~
+******************
 
 Each function and macro uses a `snake-case <https://en.wikipedia.org/wiki/Snake_case>`_ identifier and is defined in a spereate file using he corresponding `camel-case <https://en.wikipedia.org/wiki/Camel_case>`_ filename. For example, to use the function ``dawn_add_target_clean_all`` include the file ``DawnAddTargetCleanAll``.
 
@@ -57,7 +56,7 @@ Each function and macro uses a `snake-case <https://en.wikipedia.org/wiki/Snake_
   /cmake-modules/DawnSetCXXStandard
 
 Modules
-~~~~~~~
+*******
 
 Load settings for an external project via `find_package <https://cmake.org/cmake/help/v3.0/command/find_package.html>`_.
 
