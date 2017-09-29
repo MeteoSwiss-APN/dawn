@@ -12,7 +12,7 @@ __licence__ = 'BSD (3 clause)'
 
 
 def get_github_url(app, view, path):
-    return 'https://github.com/{project}/{view}/{branch}/{path}'.format(
+    return 'https://github.com/{project}/{view}/{branch}/docs/{path}'.format(
         project=app.config.edit_on_github_project,
         view=view,
         branch=app.config.edit_on_github_branch,
@@ -38,8 +38,11 @@ def html_page_context(app, pagename, templatename, context, doctree):
     context['display_github'] = True
     context['github_user'] = app.config.edit_on_github_project.split('/')[0]
     context['github_version'] = app.config.edit_on_github_branch + '/'
-    context['github_repo'] = app.config.edit_on_github_project.split('/')[1]
+    context['github_repo'] = app.config.edit_on_github_project.split('/')[1] 
     context['source_suffix'] = app.config.source_suffix[0]
+
+    # Assume conf.py is in docs/
+    context['conf_py_path'] = 'docs/'
 
 def setup(app):
     app.add_config_value('edit_on_github_project', '', True)

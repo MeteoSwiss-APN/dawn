@@ -69,7 +69,14 @@ dawn_set_cxx_flags()
 dawn_check_in_source_build()
 
 # Add custom targets
-dawn_add_target_clean_all()
+dawn_add_target_clean_all(
+  ${CMAKE_BINARY_DIR}/docs 
+  ${CMAKE_BINARY_DIR}/sphinx
+  ${CMAKE_BINARY_DIR}/src
+  ${CMAKE_BINARY_DIR}/test
+  ${CMAKE_BINARY_DIR}/bin
+  ${CMAKE_BINARY_DIR}/dawn-cmake
+)
 
 # Output summary of the configuration
 macro(make_config_string FIRST SECOND)
