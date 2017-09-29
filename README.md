@@ -3,7 +3,7 @@ Dawn <br/> <a target="_blank" href="http://semver.org">![Version][Version.Badge]
 
 ## Introduction
 
-Dawn is a compiler toolchain for developing high-level DSLs for geophysical fluid dynamics models. A tutorial and reference documentation is provided [here](https://thfabian.github.io/dawn).
+Dawn is a compiler toolchain for developing high-level DSLs for geophysical fluid dynamics models. A tutorial and reference documentation is provided [here](https://thfabian.github.io/dawn) (or you can download it as a pdf [here](https://github.com/thfabian/dawn/blob/gh-pages/dawn.pdf)).
 
 ### Motivation
 
