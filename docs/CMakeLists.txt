@@ -49,15 +49,6 @@ add_custom_target(docs ALL
  DEPENDS DawnDocsSphinxHtml
 )
 
-# Deploy HTML
-add_custom_target(deploy-docs
-  COMMAND ${BASH_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/gh-pages/deploy.sh
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  COMMENT "Deploying documentation" VERBATIM
-)
-add_dependencies(deploy-docs docs)
-
-
 #
 # LaTeX documentation
 #
@@ -94,3 +85,11 @@ if(DAWN_HAS_LATEX)
    DEPENDS  DawnDocsPdfLaTeX
   )
 endif()
+
+# Deploy documentation
+add_custom_target(deploy-docs
+  COMMAND ${BASH_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/gh-pages/deploy.sh
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  COMMENT "Deploying documentation" VERBATIM
+)
+add_dependencies(deploy-docs docs)

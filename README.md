@@ -3,7 +3,7 @@ Dawn <br/> <a target="_blank" href="http://semver.org">![Version][Version.Badge]
 
 ## Introduction
 
-Dawn is a compiler toolchain for developing high-level DSLs for geophysical fluid dynamics models. A tutorial and reference documentation is provided [here](http://dawn.readthedocs.org/en/master).
+Dawn is a compiler toolchain for developing high-level DSLs for geophysical fluid dynamics models. A tutorial and reference documentation is provided [here](https://thfabian.github.io/dawn).
 
 ### Motivation
 
@@ -35,7 +35,7 @@ make
 make install
 ```
 
-This will install Dawn locally into `<dawn-dir>/install/`. For a more detailed guide on how to build Dawn, see [here](todo).
+This will install Dawn locally into `<dawn-dir>/install/`. For a more detailed guide on how to build Dawn, see [here](https://thfabian.github.io/dawn/basics.html).
 
 ## Continuous Integration
 
