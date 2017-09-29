@@ -92,4 +92,8 @@ add_custom_target(deploy-docs
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   COMMENT "Deploying documentation" VERBATIM
 )
+
 add_dependencies(deploy-docs docs)
+if(DAWN_HAS_LATEX)
+  add_dependencies(deploy-docs latex)
+endif()

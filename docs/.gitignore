@@ -1,4 +1,5 @@
 html/*
-cmake-modules/
+latex/*
+cmake-modules/*
 cmake-modules.rst
 conf.py
