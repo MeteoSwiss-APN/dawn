@@ -1,4 +1,4 @@
-Dawn <br/> <a target="_blank" href="http://semver.org">![Version][Version.Badge]</a> <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![Travis status][TravisCI.Badge]</a> <a target="_blank" href="https://opensource.org/licenses/MIT">![License: MIT][MIT.License]</a>
+Dawn <br/> <a target="_blank" href="http://semver.org">![Version][Version.Badge]</a> <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![Travis status][TravisCI.Badge]</a> <a target="_blank" href="https://opensource.org/licenses/MIT">![License: MIT][MIT.License]</a> <a target="_blank" href="https://thfabian.github.io/dawn">![Documentation][Documentation.Badge]</a>
 ====
 
 ## Introduction
@@ -63,6 +63,7 @@ This project is licensed under the terms of the **MIT** license.
 <!-- Links -->
 [TravisCI]: https://travis-ci.org/thfabian/dawn
 [TravisCI.Badge]: https://travis-ci.org/thfabian/dawn.svg?branch=master
+[Documentation.Badge]: https://img.shields.io/badge/documentation-link-blue.svg
 [MIT.License]: https://img.shields.io/badge/License-MIT-blue.svg
 [Version.Badge]: https://badge.fury.io/gh/thfabian%2Fdawn.svg
 [GCC_54_Release.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/3
