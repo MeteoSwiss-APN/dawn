@@ -31,7 +31,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf.py.in
 set(rst_files index.rst basics.rst)
 
 # Run sphinx
-add_custom_target(DawnDocsSphinxHtml ALL
+add_custom_target(DawnDocsSphinxHtml
    COMMAND ${SPHINX_EXECUTABLE} -b html -d ${CMAKE_BINARY_DIR}/sphinx/doctrees 
            ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR}/sphinx/html
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -41,7 +41,7 @@ add_custom_target(DawnDocsSphinxHtml ALL
 add_dependencies(DawnDocsSphinxHtml DawnDocsCMakeModules)
 
 # Copy HTML
-add_custom_target(docs ALL
+add_custom_target(docs
  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/sphinx/html 
                                             ${CMAKE_SOURCE_DIR}/docs/html
  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -55,7 +55,7 @@ add_custom_target(docs ALL
 if(DAWN_HAS_LATEX)
 
   # Run sphinx
-  add_custom_target(DawnDocsSphinxLaTeX ALL
+  add_custom_target(DawnDocsSphinxLaTeX
      COMMAND ${SPHINX_EXECUTABLE} -b latex -d ${CMAKE_BINARY_DIR}/sphinx/doctrees 
              ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR}/sphinx/latex
      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -65,7 +65,7 @@ if(DAWN_HAS_LATEX)
   add_dependencies(DawnDocsSphinxLaTeX DawnDocsCMakeModules)
 
   # Run PdfLaTex
-  add_custom_target(DawnDocsPdfLaTeX ALL
+  add_custom_target(DawnDocsPdfLaTeX
    COMMAND ${PDFLATEX_COMPILER} -synctex=1 -interaction=nonstopmode 
            ${CMAKE_BINARY_DIR}/sphinx/latex/dawn.tex
    # Rerun to get cross-references right
@@ -77,7 +77,7 @@ if(DAWN_HAS_LATEX)
   )
 
   # Copy pdf
-  add_custom_target(latex ALL
+  add_custom_target(latex
    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/sphinx/latex/dawn.pdf 
                                                  ${CMAKE_SOURCE_DIR}/docs/latex/dawn.pdf
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
