@@ -96,9 +96,9 @@
 <p class="caption"><span class="caption-text">The Basics</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="">First steps</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#compiling-the-test-cases">Compiling the test cases</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#linux-macos">Linux/MacOS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#windows">Windows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#compiling-the-library">Compiling the library</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#linux">Linux</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mac-os">Mac OS</a></li>
 </ul>
 </li>
 </ul>
@@ -194,7 +194,7 @@
         
             
             
-              <a href="https://github.com/thfabian/dawn/blob/master/basics.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/thfabian/dawn/blob/master/docs/basics.rst" class="fa fa-github"> Edit on GitHub</a>
             
           
         
@@ -210,51 +210,43 @@
             
   <div class="section" id="first-steps">
 <span id="basics"></span><h1>First steps<a class="headerlink" href="#first-steps" title="Permalink to this headline">¶</a></h1>
-<p>This sections demonstrates the basic features of pybind11. Before getting
-started, make sure that development environment is set up to compile the
-included set of test cases.</p>
-<div class="section" id="compiling-the-test-cases">
-<h2>Compiling the test cases<a class="headerlink" href="#compiling-the-test-cases" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="linux-macos">
-<h3>Linux/MacOS<a class="headerlink" href="#linux-macos" title="Permalink to this headline">¶</a></h3>
-<p>On Linux  you&#8217;ll need to install the <strong>python-dev</strong> or <strong>python3-dev</strong> packages as
-well as <strong>cmake</strong>. On Mac OS, the included python version works out of the box,
-but <strong>cmake</strong> must still be installed.</p>
+<p>This sections demonstrates the basic features of Dawn. Before getting started, make sure that development environment is set up to compile the included set of test cases.</p>
+<div class="section" id="compiling-the-library">
+<h2>Compiling the library<a class="headerlink" href="#compiling-the-library" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="linux">
+<h3>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h3>
+<p>On Linux, you&#8217;ll need to install a C++11 toolchain (e.g <strong>gcc</strong> or <strong>clang</strong>) as well as <a class="reference external" href="https://cmake.org/">CMake</a> (&gt;= 3.1). For example, on Ubuntu the following will do</p>
+<div class="highlight-bash"><div class="highlight"><pre>sudo apt-get install g++ cmake
+</pre></div>
+</div>
 <p>After installing the prerequisites, run</p>
 <div class="highlight-bash"><div class="highlight"><pre>mkdir build
 <span class="nb">cd</span> build
 cmake ..
-make check -j 4
+make install -j 4
 </pre></div>
 </div>
-<p>The last line will both compile and run the tests.</p>
+<p>The last line will both install and compile the library locally in <strong>&lt;dawn-dir&gt;/install/</strong>.</p>
 </div>
-<div class="section" id="windows">
-<h3>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h3>
-<p>On Windows, only <strong>Visual Studio 2015</strong> and newer are supported since pybind11 relies
-on various C++11 language features that break older versions of Visual Studio.</p>
-<p>To compile and run the tests:</p>
-<div class="highlight-batch"><div class="highlight"><pre><span class="k">mkdir</span> build
-<span class="k">cd</span> build
+<div class="section" id="mac-os">
+<h3>Mac OS<a class="headerlink" href="#mac-os" title="Permalink to this headline">¶</a></h3>
+<p>On Mac OS, you&#8217;ll need to install Xcode as well as <a class="reference external" href="https://cmake.org/">CMake</a> (&gt;= 3.1). First, make sure you have the Xcode Command Line Tools installed</p>
+<div class="highlight-bash"><div class="highlight"><pre>xcode-select --install
+</pre></div>
+</div>
+<p>If you are using <a class="reference external" href="https://brew.sh/">Homebrew</a>, use the following to install <strong>CMake</strong>:</p>
+<div class="highlight-bash"><div class="highlight"><pre>brew update
+brew install cmake
+</pre></div>
+</div>
+<p>After installing the prerequisites, run</p>
+<div class="highlight-bash"><div class="highlight"><pre>mkdir build
+<span class="nb">cd</span> build
 cmake ..
-cmake --build . --config Release --target check
+make install -j 4
 </pre></div>
 </div>
-<p>This will create a Visual Studio project, compile and run the target, all from the
-command line.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">If all tests fail, make sure that the Python binary and the testcases are compiled
-for the same processor type and bitness (i.e. either <strong>i386</strong> or <strong>x86_64</strong>). You
-can specify <strong>x86_64</strong> as the target architecture for the generated Visual Studio
-project using <code class="docutils literal"><span class="pre">cmake</span> <span class="pre">-A</span> <span class="pre">x64</span> <span class="pre">..</span></code>.</p>
-</div>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last">Advanced users who are already familiar with Boost.Python may want to skip
-the tutorial and look at the test cases in the <code class="file docutils literal"><span class="pre">tests</span></code> directory,
-which exercise all features of pybind11.</p>
-</div>
+<p>The last line will both install and compile the library locally in <strong>&lt;dawn-dir&gt;/install/</strong>.</p>
 </div>
 </div>
 </div>
