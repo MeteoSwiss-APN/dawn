@@ -32,7 +32,7 @@ include(CMakeParseArguments)
 # ``DIRECTORIES``
 #   Directories to recursively traverse to find all files with extensions matching ``EXTENSION``.
 # ``EXTENSION``
-#   Extension to match (e.g ``.h;.cpp``). 
+#   Extension to match, separated by ``;``. For example: ``".h;.cpp"``. 
 #
 # .. _clang-format: https://clang.llvm.org/docs/ClangFormat.html
 #

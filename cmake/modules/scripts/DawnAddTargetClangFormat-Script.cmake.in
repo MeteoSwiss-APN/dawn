@@ -38,4 +38,4 @@ foreach(dir ${dirs})
 endforeach()
 
 # Run clang-format
-exec_program(${executable} -style=file ${files})
+exec_program(${executable} ${CMAKE_BINARY_DIR} ARGS -style=file -i ${files})
