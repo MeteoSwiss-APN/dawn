@@ -12,10 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/CodeGen/GTClangCodeGen.h"
 #include "dawn/CodeGen/ASTCodeGenGTClangStencilBody.h"
 #include "dawn/CodeGen/ASTCodeGenGTClangStencilDesc.h"
 #include "dawn/CodeGen/CXXUtil.h"
-#include "dawn/CodeGen/GTClangCodeGen.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/StatementAccessesPair.h"
 #include "dawn/Optimizer/StencilFunctionInstantiation.h"

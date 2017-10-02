@@ -1,21 +1,21 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/GTClangCodeGen.h"
 #include "dawn/CodeGen/GTClangNaiveCXXCodeGen.h"
-#include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/EditDistance.h"
@@ -169,13 +169,13 @@ std::unique_ptr<TranslationUnit> DawnCompiler::compile(const SIR* SIR, CodeGenKi
   for(auto& stencil : optimizer->getStencilInstantiationMap()) {
     StencilInstantiation* instantiation = stencil.second.get();
     DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `" << instantiation->getName()
-                  << "` ...";
+                   << "` ...";
 
     if(!passManager.runAllPassesOnStecilInstantiation(instantiation))
       return nullptr;
 
     DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `" << instantiation->getName()
-                  << "`";
+                   << "`";
   }
 
   if(diagnostics_->hasErrors()) {

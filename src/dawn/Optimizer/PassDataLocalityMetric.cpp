@@ -1,19 +1,19 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTVisitor.h"
@@ -313,8 +313,8 @@ bool PassDataLocalityMetric::run(StencilInstantiation* stencilInstantiation) {
         auto readAndWrite =
             computeReadWriteAccessesMetric(stencilInstantiation, multiStage, config_);
 
-//        auto readAndWrite =
-//            computeReadWriteAccessesLowerBound(stencilInstantiation, multiStage, config_);
+        //        auto readAndWrite =
+        //            computeReadWriteAccessesLowerBound(stencilInstantiation, multiStage, config_);
 
         std::size_t numReads = readAndWrite.first, numWrites = readAndWrite.second;
 
