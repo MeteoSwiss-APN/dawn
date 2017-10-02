@@ -6,3 +6,4 @@ cmake/
 script/
 src/
 test/
+*.user
