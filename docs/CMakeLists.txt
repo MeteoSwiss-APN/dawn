@@ -28,7 +28,13 @@ add_custom_target(DawnDocsCMakeModules
 #
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf.py.in
                ${CMAKE_CURRENT_SOURCE_DIR}/conf.py @ONLY)
-set(rst_files index.rst basics.rst)
+set(rst_files 
+    basics.rst
+    coding.rst
+    index.rst 
+    sir.rst
+    toolchain.rst
+)
 
 # Run sphinx
 add_custom_target(DawnDocsSphinxHtml
