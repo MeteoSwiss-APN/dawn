@@ -1,0 +1,390 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Dawn Coding standard &mdash; Dawn 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Dawn 0.0.1 documentation" href="index.html"/>
+        <link rel="next" title="CMake Modules" href="cmake-modules.html"/>
+        <link rel="prev" title="Dawn toolchain" href="toolchain.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Dawn
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About this project</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#core-features">Core Features</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">The Basics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="basics.html">First steps</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="basics.html#compiling-the-library">Compiling the library</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="basics.html#linux">Linux</a></li>
+<li class="toctree-l3"><a class="reference internal" href="basics.html#mac-os">Mac OS</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="basics.html#linking-the-library">Linking the library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basics.html#using-the-library">Using the library</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Advanced Topics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="sir.html">Stencil Intermediate Representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="toolchain.html">Dawn toolchain</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Dawn Coding standard</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#supported-c-11-language-and-library-features">Supported C++11 Language and Library Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#style-issues">Style Issues</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#naming-of-types-functions-variables-and-enumerators">Naming of Types, Functions, Variables, and Enumerators</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#source-code-formatting">Source Code Formatting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#source-code-width">Source Code Width</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#spaces-before-parentheses">Spaces Before Parentheses</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pointer-and-reference-alignment">Pointer and Reference Alignment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#clang-format">Clang Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cmake-modules.html">CMake Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#functions-macros">Functions &amp; Macros</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawGetCompilerStr.html">dawn_get_compiler_info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddExecutable.html">dawn_add_executable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddLibrary.html">dawn_add_library</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddTargetCleanAll.html">dawn_add_target_clean_all</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddUnittest.html">dawn_add_unittest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckAndSetCXXFlag.html">dawn_check_and_set_cxx_flag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckCXXFlag.html">dawn_check_cxx_flag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckInSourceBuild.html">dawn_check_in_source_build</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCombineLibraries.html">dawn_combine_libraries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnConfigureFile.html">dawn_configure_file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCreatePackageString.html">dawn_create_package_string</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnExportPackage.html">dawn_export_package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnFindPythonModule.html">dawn_find_python_module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetArchitectureInfo.html">dawn_get_architecture_info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetCompilerInfo.html">dawn_get_compiler_info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetGitHeadRevision.html">dawn_get_git_head_revision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetPlatformInfo.html">dawn_get_platform_info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetScriptDir.html">dawn_get_script_dir</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnIncludeGuard.html">dawn_include_guard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnMakeStringPair.html">dawn_make_string_pair</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnReportResult.html">dawn_report_result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnSetCXXStandard.html">dawn_set_cxx_standard</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#modules">Modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/FindClang.html">FindClang</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/FindLLVM.html">FindLLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/FindSphinx.html">FindSphinx</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/Findbash.html">Findbash</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/Findccache.html">Findccache</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Dawn</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Dawn Coding standard</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+              <a href="https://github.com/thfabian/dawn/blob/master/docs/coding.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dawn-coding-standard">
+<h1>Dawn Coding standard<a class="headerlink" href="#dawn-coding-standard" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>This document attempts to describe a few coding standards that are being used in the Dawn source tree. Although no coding standards should be regarded as absolute requirements to be followed in all instances, you should try to follow the <a class="reference external" href="https://llvm.org/docs/CodingStandards.html">LLVM</a> coding standard. We deviate from the LLVM standard in certainer areas as listed in the following.</p>
+</div>
+<div class="section" id="supported-c-11-language-and-library-features">
+<h2>Supported C++11 Language and Library Features<a class="headerlink" href="#supported-c-11-language-and-library-features" title="Permalink to this headline">¶</a></h2>
+<p>While LLVM restricts the usage of C++11, we do not impose any constraints on the allowed features. While we generally allow the usage of C++ exceptions, you should avoid them at the interface boundary to make exposing the API more convenient - <a class="reference external" href="https://en.wikipedia.org/wiki/Run-time_type_information">RTII</a> should be avoided.</p>
+</div>
+<div class="section" id="style-issues">
+<h2>Style Issues<a class="headerlink" href="#style-issues" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="naming-of-types-functions-variables-and-enumerators">
+<h3>Naming of Types, Functions, Variables, and Enumerators<a class="headerlink" href="#naming-of-types-functions-variables-and-enumerators" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><ul class="simple">
+<li><strong>Variable Names</strong> should start with a lower-case letter (e.g <code class="docutils literal"><span class="pre">textFileReader</span></code>) as opposed to LLVM which starts with an uppercase-letter.</li>
+</ul>
+</div></blockquote>
+<p>For types, functions and enumerators you should follow the LLVM style.</p>
+</div>
+</div>
+<div class="section" id="source-code-formatting">
+<h2>Source Code Formatting<a class="headerlink" href="#source-code-formatting" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="source-code-width">
+<h3>Source Code Width<a class="headerlink" href="#source-code-width" title="Permalink to this headline">¶</a></h3>
+<p>You may use up to 100 columns of text when writing your code (instead of 80 as dictated by LLVM). The rationale behind this is that we do not live in the 90s any more and people usually have wide screens.</p>
+</div>
+<div class="section" id="spaces-before-parentheses">
+<h3>Spaces Before Parentheses<a class="headerlink" href="#spaces-before-parentheses" title="Permalink to this headline">¶</a></h3>
+<p>You should never use spaces before parentheses. For example, this is good</p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="p">...</span>
+<span class="k">for</span><span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">!=</span> <span class="mi">100</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">...</span>
+
+<span class="n">somefunc</span><span class="p">(</span><span class="mi">42</span><span class="p">);</span>
+<span class="n">assert</span><span class="p">(</span><span class="mi">3</span> <span class="o">!=</span> <span class="mi">4</span> <span class="o">&amp;&amp;</span> <span class="s">&quot;laws of math are failing me&quot;</span><span class="p">);</span>
+
+<span class="n">A</span> <span class="o">=</span> <span class="n">foo</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span> <span class="mi">92</span><span class="p">)</span> <span class="o">+</span> <span class="n">bar</span><span class="p">(</span><span class="n">X</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>and this is bad</p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="p">...</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">!=</span> <span class="mi">100</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">...</span>
+
+<span class="n">somefunc</span> <span class="p">(</span><span class="mi">42</span><span class="p">);</span>
+<span class="n">assert</span> <span class="p">(</span><span class="mi">3</span> <span class="o">!=</span> <span class="mi">4</span> <span class="o">&amp;&amp;</span> <span class="s">&quot;laws of math are failing me&quot;</span><span class="p">);</span>
+
+<span class="n">A</span> <span class="o">=</span> <span class="n">foo</span> <span class="p">(</span><span class="mi">42</span><span class="p">,</span> <span class="mi">92</span><span class="p">)</span> <span class="o">+</span> <span class="n">bar</span> <span class="p">(</span><span class="n">X</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="pointer-and-reference-alignment">
+<h3>Pointer and Reference Alignment<a class="headerlink" href="#pointer-and-reference-alignment" title="Permalink to this headline">¶</a></h3>
+<p>You should always align pointers and references on the left i.e directly following the type. For example, this is considered good</p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="kt">int</span><span class="o">*</span> <span class="n">a</span> <span class="o">=</span> <span class="p">...</span>
+<span class="kt">int</span><span class="o">&amp;</span> <span class="n">b</span> <span class="o">=</span> <span class="p">...</span>
+
+<span class="k">const</span> <span class="kt">char</span><span class="o">**</span> <span class="n">ptr</span> <span class="o">=</span> <span class="p">...</span>
+</pre></div>
+</div>
+<p>while the following is considered bad</p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="kt">int</span> <span class="o">*</span><span class="n">a</span> <span class="o">=</span> <span class="p">...</span>
+<span class="kt">int</span> <span class="o">&amp;</span><span class="n">b</span> <span class="o">=</span> <span class="p">...</span>
+
+<span class="k">const</span> <span class="kt">char</span> <span class="o">**</span><span class="n">ptr</span> <span class="o">=</span> <span class="p">...</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="clang-format">
+<h2>Clang Format<a class="headerlink" href="#clang-format" title="Permalink to this headline">¶</a></h2>
+<p>To enforce most of these coding standards, CMake can be configured to run <a class="reference external" href="https://clang.llvm.org/docs/ClangFormat.html">clang-format</a> on each file with</p>
+<div class="highlight-bash"><div class="highlight"><pre>make format
+</pre></div>
+</div>
+<p>or to simply check the formatting (but don&#8217;t modify the sources) use</p>
+<div class="highlight-bash"><div class="highlight"><pre>make check-format
+</pre></div>
+</div>
+<p>The clang-format file is located in the root directory at <code class="docutils literal"><span class="pre">&lt;dawn-dir&gt;/.clangformat</span></code>.</p>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="cmake-modules.html" class="btn btn-neutral float-right" title="CMake Modules" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="toolchain.html" class="btn btn-neutral" title="Dawn toolchain" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, ETH Zurich and MeteoSwiss.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.0.1',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: ''
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

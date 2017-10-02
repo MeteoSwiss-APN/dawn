@@ -54,3 +54,13 @@ After installing the prerequisites, run
    make install -j 4
 
 The last line will both install and compile the library locally in **<dawn-dir>/install/**.
+
+Linking the library
+===================
+
+TODO
+
+Using the library
+=================
+
+TODO

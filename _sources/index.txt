@@ -19,8 +19,16 @@ Dawn --- Compiler toolchain for high-level DSLs
    basics
 
 .. toctree::
+   :caption: Advanced Topics
+   :maxdepth: 2
+
+   sir
+   toolchain
+
+.. toctree::
    :caption: Developer Documentation
    :maxdepth: 2
 
+   coding
    cmake-modules
 
