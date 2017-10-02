@@ -1,13 +1,13 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -226,10 +226,10 @@ const std::unordered_set<int>& Stage::getGlobalVariables() const { return global
 
 void Stage::addDoMethod(std::unique_ptr<DoMethod>& doMethod) {
   DAWN_ASSERT_MSG(std::find_if(DoMethods_.begin(), DoMethods_.end(),
-                              [&](const std::unique_ptr<DoMethod>& doMethodPtr) {
-                                return doMethodPtr->getInterval() == doMethod->getInterval();
-                              }) == DoMethods_.end(),
-                 "Do-Method with given interval already exists!");
+                               [&](const std::unique_ptr<DoMethod>& doMethodPtr) {
+                                 return doMethodPtr->getInterval() == doMethod->getInterval();
+                               }) == DoMethods_.end(),
+                  "Do-Method with given interval already exists!");
   DoMethods_.emplace_back(std::move(doMethod));
   update();
 }
@@ -237,9 +237,9 @@ void Stage::addDoMethod(std::unique_ptr<DoMethod>& doMethod) {
 void Stage::appendDoMethod(std::unique_ptr<DoMethod>& from, std::unique_ptr<DoMethod>& to,
                            const std::shared_ptr<DependencyGraphAccesses>& dependencyGraph) {
   DAWN_ASSERT_MSG(std::find(DoMethods_.begin(), DoMethods_.end(), to) != DoMethods_.end(),
-                 "'to' DoMethod does not exists");
+                  "'to' DoMethod does not exists");
   DAWN_ASSERT_MSG(from->getInterval() == to->getInterval(),
-                 "DoMethods have incompatible intervals!");
+                  "DoMethods have incompatible intervals!");
 
   to->setDependencyGraph(dependencyGraph);
   to->getStatementAccessesPairs().insert(

@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassTemporaryFirstAccess.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/StatementAccessesPair.h"
 #include "dawn/Optimizer/StencilInstantiation.h"
 #include "dawn/SIR/ASTVisitor.h"

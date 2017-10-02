@@ -1,13 +1,13 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -108,7 +108,7 @@ bool PassFieldVersioning::run(StencilInstantiation* stencilInstantiation) {
 
       std::shared_ptr<DependencyGraphAccesses> newGraph, oldGraph;
       newGraph = std::make_shared<DependencyGraphAccesses>(stencilInstantiation);
-      
+
       // Iterate stages bottom -> top
       for(auto stageRit = multiStage.getStages().rbegin(),
                stageRend = multiStage.getStages().rend();
@@ -270,9 +270,9 @@ PassFieldVersioning::fixRaceCondition(const DependencyGraphAccesses* graph, Sten
 
   // Create a new multi-versioned field and rename all occurences
   for(int oldAccessID : renameCandiates) {
-    int newAccessID = instantiation->createVersionAndRename(oldAccessID, &stencil, stageIdx,
-                                                                 index, assignment->getRight(),
-                                                                 StencilInstantiation::RD_Above);
+    int newAccessID = instantiation->createVersionAndRename(oldAccessID, &stencil, stageIdx, index,
+                                                            assignment->getRight(),
+                                                            StencilInstantiation::RD_Above);
 
     if(context->getOptions().ReportPassFieldVersioning)
       std::cout << (numRenames != 0 ? ", " : " ") << instantiation->getNameFromAccessID(oldAccessID)

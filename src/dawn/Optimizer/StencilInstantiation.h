@@ -1,13 +1,13 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -67,8 +67,8 @@ class StencilInstantiation : NonCopyable {
 
   /// Set containing the AccessIDs of fields which are represented by a temporary storages
   std::set<int> TemporaryFieldAccessIDSet_;
-  
-  /// Set containing the AccessIDs of fields which are manually allocated by the stencil and serve 
+
+  /// Set containing the AccessIDs of fields which are manually allocated by the stencil and serve
   /// as temporaries spanning over multiple stencils
   std::set<int> AllocatedFieldAccessIDSet_;
 
@@ -80,7 +80,7 @@ class StencilInstantiation : NonCopyable {
   /// Map of AccessIDs to the the list of all AccessIDs of the multi-versioned field. Note
   /// that the index in the vector corresponds to the version number.
   std::unordered_map<int, std::shared_ptr<std::vector<int>>> FieldVersionsMap_;
-  
+
   /// Map of AccessIDs to the the list of all AccessIDs of the multi-versioned variables. Note
   /// that the index in the vector corresponds to the version number.
   std::unordered_map<int, std::shared_ptr<std::vector<int>>> VariableVersionsMap_;
@@ -144,15 +144,15 @@ public:
   bool isTemporaryField(int AccessID) const {
     return isField(AccessID) && TemporaryFieldAccessIDSet_.count(AccessID);
   }
-    
+
   /// @brief Check whether the `AccessID` corresponds to a manually allocated field
   bool isAllocatedField(int AccessID) const {
     return isField(AccessID) && AllocatedFieldAccessIDSet_.count(AccessID);
   }
-  
+
   /// @brief Get the set of fields which need to be allocated
   const std::set<int>& getAllocatedFieldAccessIDs() const { return AllocatedFieldAccessIDSet_; }
-  
+
   /// @brief Check if the stencil instantiation needs to allocate fields
   bool hasAllocatedFields() const { return !AllocatedFieldAccessIDSet_.empty(); }
 
@@ -175,7 +175,7 @@ public:
   bool isMultiVersionedField(int AccessID) const {
     return isField(AccessID) && FieldVersionsMap_.count(AccessID);
   }
-  
+
   /// @brief Check whether the `AccessID` corresponds to a multi-versioned variable
   bool isMultiVersionedVariable(int AccessID) const {
     return isVariable(AccessID) && VariableVersionsMap_.count(AccessID);
@@ -183,15 +183,15 @@ public:
 
   /// @brief Get a list of all field AccessIDs of this multi-versioned field
   ArrayRef<int> getFieldVersions(int AccessID) const;
-  
-  enum RenameDirection { 
+
+  enum RenameDirection {
     RD_Above, ///< Rename all fields above the current statement
-    RD_Below  ///< Rename all fields below the current statement 
+    RD_Below  ///< Rename all fields below the current statement
   };
 
-  /// @brief Add a new version to the field/local variable given by `AccessID` 
-  /// 
-  /// This will create a **new** field and trigger a renaming of all the remaining occurences in the 
+  /// @brief Add a new version to the field/local variable given by `AccessID`
+  ///
+  /// This will create a **new** field and trigger a renaming of all the remaining occurences in the
   /// AccessID maps either above or below that statement, starting one statment before or after the
   /// current statement. Optionally, an `Expr` can be passed which will be renamed as well (usually
   /// the left- or right-hand side of an assignment).
@@ -204,7 +204,7 @@ public:
   ///   u = lap(i+1)
   /// @endcode
   ///
-  /// We may want to rename `u` in the second statement (an all occurences of `u` above) to 
+  /// We may want to rename `u` in the second statement (an all occurences of `u` above) to
   /// resolve the race-condition. We expect to end up with:
   ///
   /// @code
@@ -213,17 +213,17 @@ public:
   ///   u = lap(i+1)
   /// @endcode
   ///
-  /// where `u_1` is the newly created version of `u`. 
-  /// 
+  /// where `u_1` is the newly created version of `u`.
+  ///
   /// @param AccessID   AccessID of the field for which a new version will be created
   /// @param stencil    Current stencil
   /// @param stageIdx   **Linear** index of the stage in the stencil
   /// @param stmtIdx    Index of the statement inside the stage
-  /// @param expr       Expression to be renamed (usually the left- or right-hand side of an 
+  /// @param expr       Expression to be renamed (usually the left- or right-hand side of an
   ///                   assignment). Can be `NULL`.
   /// @returns AccessID of the new field
   int createVersionAndRename(int AccessID, Stencil* stencil, int stageIndex, int stmtIndex,
-                                  std::shared_ptr<Expr>& expr, RenameDirection dir);
+                             std::shared_ptr<Expr>& expr, RenameDirection dir);
 
   /// @brief Rename all occurences of field `oldAccessID` to `newAccessID`
   void renameAllOccurrences(Stencil* stencil, int oldAccessID, int newAccessID);
@@ -234,7 +234,7 @@ public:
   /// replacing the variable accesses with point-wise field accesses.
   void promoteLocalVariableToTemporaryField(Stencil* stencil, int AccessID,
                                             const Stencil::Lifetime& lifetime);
-  
+
   /// @brief Promote the temporary field, given by `AccessID`, to a real storage which needs to be
   /// allocated by the stencil
   void promoteTemporaryFieldToAllocatedField(int AccessID);

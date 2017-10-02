@@ -266,16 +266,13 @@ inline void formatTruncated(std::ostream& out, const T& value, int ntrunc) {
   out.write(result.c_str(), (std::min)(ntrunc, static_cast<int>(result.size())));
 }
 #define TINYFORMAT_DEFINE_FORMAT_TRUNCATED_CSTR(type)                                              \
-  \
-inline void                                                                                        \
-  formatTruncated(std::ostream& out, type* value, int ntrunc) \
-{                                 \
+                                                                                                   \
+  inline void formatTruncated(std::ostream& out, type* value, int ntrunc) {                        \
     std::streamsize len = 0;                                                                       \
     while(len < ntrunc && value[len] != 0)                                                         \
       ++len;                                                                                       \
     out.write(value, len);                                                                         \
-  \
-}
+  }
 // Overload for const char* and char*.  Could overload for signed & unsigned
 // char too, but these are technically unneeded for printf compatibility.
 TINYFORMAT_DEFINE_FORMAT_TRUNCATED_CSTR(const char)
@@ -333,11 +330,9 @@ inline void formatValue(std::ostream& out, const char* /*fmtBegin*/, const char*
 
 // Overloaded version for char types to support printing as an integer
 #define TINYFORMAT_DEFINE_FORMATVALUE_CHAR(charType)                                               \
-  \
-inline void                                                                                        \
-  formatValue(std::ostream& out, const char* /*fmtBegin*/, const char* fmtEnd, int /**/,           \
-              charType value) \
-{                                                                 \
+                                                                                                   \
+  inline void formatValue(std::ostream& out, const char* /*fmtBegin*/, const char* fmtEnd,         \
+                          int /**/, charType value) {                                              \
     switch(*(fmtEnd - 1)) {                                                                        \
     case 'u':                                                                                      \
     case 'd':                                                                                      \
@@ -351,8 +346,7 @@ inline void                                                                     
       out << value;                                                                                \
       break;                                                                                       \
     }                                                                                              \
-  \
-}
+  }
 // per 3.9.1: char, signed char and unsigned char are all distinct types
 TINYFORMAT_DEFINE_FORMATVALUE_CHAR(char)
 TINYFORMAT_DEFINE_FORMATVALUE_CHAR(signed char)
@@ -917,15 +911,12 @@ detail::FormatListN<sizeof...(Args)> makeFormatList(const Args&... args) {
 
 inline detail::FormatListN<0> makeFormatList() { return detail::FormatListN<0>(); }
 #define TINYFORMAT_MAKE_MAKEFORMATLIST(n)                                                          \
-  \
-template<TINYFORMAT_ARGTYPES(n)>                                                                   \
-      \
-detail::FormatListN<n>                                                                             \
-          makeFormatList(TINYFORMAT_VARARGS(n)) \
-{                                               \
+                                                                                                   \
+  template <TINYFORMAT_ARGTYPES(n)>                                                                \
+                                                                                                   \
+  detail::FormatListN<n> makeFormatList(TINYFORMAT_VARARGS(n)) {                                   \
     return detail::FormatListN<n>(TINYFORMAT_PASSARGS(n));                                         \
-  \
-}
+  }
 TINYFORMAT_FOREACH_ARGNUM(TINYFORMAT_MAKE_MAKEFORMATLIST)
 #undef TINYFORMAT_MAKE_MAKEFORMATLIST
 
@@ -986,42 +977,33 @@ inline void printfln(const char* fmt) {
 }
 
 #define TINYFORMAT_MAKE_FORMAT_FUNCS(n)                                                            \
-  \
-template<TINYFORMAT_ARGTYPES(n)>                                                                   \
-      \
-void format(std::ostream& out, const char* fmt, TINYFORMAT_VARARGS(n)) \
-{                        \
+                                                                                                   \
+  template <TINYFORMAT_ARGTYPES(n)>                                                                \
+                                                                                                   \
+  void format(std::ostream& out, const char* fmt, TINYFORMAT_VARARGS(n)) {                         \
     vformat(out, fmt, makeFormatList(TINYFORMAT_PASSARGS(n)));                                     \
-  \
-}                                                                                             \
-  \
-template<TINYFORMAT_ARGTYPES(n)>                                                                   \
-      \
-std::string                                                                                        \
-      format(const char* fmt, TINYFORMAT_VARARGS(n)) \
-{                                          \
+  }                                                                                                \
+                                                                                                   \
+  template <TINYFORMAT_ARGTYPES(n)>                                                                \
+                                                                                                   \
+  std::string format(const char* fmt, TINYFORMAT_VARARGS(n)) {                                     \
     std::ostringstream oss;                                                                        \
     format(oss, fmt, TINYFORMAT_PASSARGS(n));                                                      \
     return oss.str();                                                                              \
-  \
-}                                                                                             \
-  \
-template<TINYFORMAT_ARGTYPES(n)>                                                                   \
-      \
-void printf(const char* fmt, TINYFORMAT_VARARGS(n)) \
-{                                           \
+  }                                                                                                \
+                                                                                                   \
+  template <TINYFORMAT_ARGTYPES(n)>                                                                \
+                                                                                                   \
+  void printf(const char* fmt, TINYFORMAT_VARARGS(n)) {                                            \
     format(std::cout, fmt, TINYFORMAT_PASSARGS(n));                                                \
-  \
-}                                                                                             \
-  \
-template<TINYFORMAT_ARGTYPES(n)>                                                                   \
-      \
-void printfln(const char* fmt, TINYFORMAT_VARARGS(n)) \
-{                                         \
+  }                                                                                                \
+                                                                                                   \
+  template <TINYFORMAT_ARGTYPES(n)>                                                                \
+                                                                                                   \
+  void printfln(const char* fmt, TINYFORMAT_VARARGS(n)) {                                          \
     format(std::cout, fmt, TINYFORMAT_PASSARGS(n));                                                \
     std::cout << '\n';                                                                             \
-  \
-}
+  }
 
 TINYFORMAT_FOREACH_ARGNUM(TINYFORMAT_MAKE_FORMAT_FUNCS)
 #undef TINYFORMAT_MAKE_FORMAT_FUNCS

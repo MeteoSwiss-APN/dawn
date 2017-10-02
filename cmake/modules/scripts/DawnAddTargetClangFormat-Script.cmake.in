@@ -1,0 +1,41 @@
+##===------------------------------------------------------------------------------*- CMake -*-===##
+##                          _                      
+##                         | |                     
+##                       __| | __ ___      ___ __  
+##                      / _` |/ _` \ \ /\ / / '_ \ 
+##                     | (_| | (_| |\ V  V /| | | |
+##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+##
+##
+##  This file is distributed under the MIT License (MIT). 
+##  See LICENSE.txt for details.
+##
+##===------------------------------------------------------------------------------------------===##
+
+set(executable "@CLANG-FORMAT_EXECUTABLE@")
+set(dirs "@CLANG-FORMAT_DIRECTORIES@")
+set(extensions "@CLANG-FORMAT_EXTENSION@")
+
+if(NOT(executable))
+  message(FATAL_ERROR "dawn_add_target_clang_format: clang-format executable not found!")
+endif()
+
+if(NOT(extensions))
+   message(FATAL_ERROR "dawn_add_target_clang_format: invalid extension \"${extensions}\"")
+endif()
+
+# Glob the files
+foreach(dir ${dirs})
+  foreach(extension ${extensions})
+    list(APPEND pattern "${dir}/*${extension}")
+  endforeach()
+
+  file(GLOB_RECURSE globbed_files RELATIVE ${dir} ${pattern})
+
+  foreach(file ${globbed_files})
+    set(files "${files} ${dir}/${file}")
+  endforeach()
+endforeach()
+
+# Run clang-format
+exec_program(${executable} ${CMAKE_BINARY_DIR} ARGS -style=file -i ${files})

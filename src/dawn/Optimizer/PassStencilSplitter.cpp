@@ -1,21 +1,21 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/Optimizer/PassStencilSplitter.h"
 #include "dawn/Optimizer/DependencyGraphStage.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
-#include "dawn/Optimizer/PassStencilSplitter.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/Replacing.h"
 #include "dawn/Optimizer/StencilInstantiation.h"
@@ -117,8 +117,7 @@ bool PassStencilSplitter::run(StencilInstantiation* stencilInstantiation) {
 
         // Remove empty multi-stages within the stencils
         for(auto& s : newStencils) {
-          for(auto msIt = s->getMultiStages().begin();
-              msIt != s->getMultiStages().end();)
+          for(auto msIt = s->getMultiStages().begin(); msIt != s->getMultiStages().end();)
             if((*msIt)->isEmpty())
               msIt = s->getMultiStages().erase(msIt);
             else

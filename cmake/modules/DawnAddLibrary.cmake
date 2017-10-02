@@ -18,6 +18,8 @@ dawn_include_guard()
 include(CMakeParseArguments)
 
 #.rst:
+# .. _dawn_add_library:
+#
 # dawn_add_library
 # ----------------
 #

@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/GTClangNaiveCXXCodeGen.h"
+#include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
@@ -43,7 +43,7 @@ static std::string makeKLoop(bool isBackward) {
                     : makeLoopImpl("k", lower, upper, "<=", "++");
 }
 
-//static std::string makeBound(int level, int offset) {
+// static std::string makeBound(int level, int offset) {
 //  std::string offsetStr;
 //  if(offset != 0)
 //    offsetStr = level > 0 ? "+" + std::to_string(offset) : std::to_string(offset);
