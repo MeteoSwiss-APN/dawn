@@ -36,6 +36,7 @@ set(DAWN_ROOT ${CMAKE_CURRENT_LIST_DIR})
 dawn_cmake_init()
 
 include(DawnAddLibrary)
+include(DawnAddTargetClangFormat)
 include(DawnAddTargetCleanAll)
 include(DawnCheckInSourceBuild)
 include(DawnCombineLibraries)
@@ -62,7 +63,7 @@ include(DawnMacros)
 # Set C++ standard
 dawn_set_cxx_standard(c++11)
 
-# Set C++ flags (Note that the LLVM/Clang package might add some other flags)
+# Set C++ flags
 dawn_set_cxx_flags()
 
 # Prevent in source builds
@@ -98,12 +99,15 @@ if(DAWN_DOCUMENTATION)
   set(doc_packages bash Python3 Sphinx LaTeX)
 endif()
 
-foreach(package ccache ${doc_packages})
+foreach(package ccache clang-format ${doc_packages})
   include("Add${package}")
   dawn_create_package_string(${package} info)
   list(APPEND package_info ${info})
 endforeach()
 dawn_report_result("Package summary" ${package_info})
+
+# Add clang-format target
+dawn_add_target_clang_format(DIRECTORIES ${CMAKE_SOURCE_DIR}/src EXTENSION ".h;.cpp;.h.cmake")
 
 # Build dawn
 include_directories(${CMAKE_SOURCE_DIR}/src)
