@@ -96,22 +96,46 @@
 <p class="caption"><span class="caption-text">The Basics</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="basics.html">First steps</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="basics.html#compiling-the-test-cases">Compiling the test cases</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="basics.html#linux-macos">Linux/MacOS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="basics.html#windows">Windows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basics.html#compiling-the-library">Compiling the library</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="basics.html#linux">Linux</a></li>
+<li class="toctree-l3"><a class="reference internal" href="basics.html#mac-os">Mac OS</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="basics.html#linking-the-library">Linking the library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basics.html#using-the-library">Using the library</a></li>
 </ul>
 </li>
 </ul>
-</li>
+<p class="caption"><span class="caption-text">Advanced Topics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="sir.html">Stencil Intermediate Representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="toolchain.html">Dawn toolchain</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Developer Documentation</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="coding.html">Dawn Coding standard</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="coding.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coding.html#supported-c-11-language-and-library-features">Supported C++11 Language and Library Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coding.html#style-issues">Style Issues</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="coding.html#naming-of-types-functions-variables-and-enumerators">Naming of Types, Functions, Variables, and Enumerators</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="coding.html#source-code-formatting">Source Code Formatting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="coding.html#source-code-width">Source Code Width</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coding.html#spaces-before-parentheses">Spaces Before Parentheses</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coding.html#pointer-and-reference-alignment">Pointer and Reference Alignment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="coding.html#clang-format">Clang Format</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="cmake-modules.html">CMake Modules</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#installation">Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#functions-macros">Functions &amp; Macros</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawGetCompilerStr.html">dawn_get_compiler_info</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddExecutable.html">dawn_add_executable</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddLibrary.html">dawn_add_library</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddTargetClangFormat.html">dawn_add_target_clang_format</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddTargetCleanAll.html">dawn_add_target_clean_all</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddUnittest.html">dawn_add_unittest</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckAndSetCXXFlag.html">dawn_check_and_set_cxx_flag</a></li>
@@ -139,6 +163,7 @@
 <li class="toctree-l3"><a class="reference internal" href="cmake-modules/FindSphinx.html">FindSphinx</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cmake-modules/Findbash.html">Findbash</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cmake-modules/Findccache.html">Findccache</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/Findclang-format.html">Findclang-format</a></li>
 </ul>
 </li>
 </ul>
@@ -194,7 +219,7 @@
         
             
             
-              <a href="https://github.com/thfabian/dawn/docs//blob/master/intro.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/thfabian/dawn/blob/master/docs/intro.rst" class="fa fa-github"> Edit on GitHub</a>
             
           
         

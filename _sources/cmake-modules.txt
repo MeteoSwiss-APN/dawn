@@ -35,6 +35,7 @@ Each function and macro uses a `snake-case <https://en.wikipedia.org/wiki/Snake_
   /cmake-modules/DawGetCompilerStr
   /cmake-modules/DawnAddExecutable
   /cmake-modules/DawnAddLibrary
+  /cmake-modules/DawnAddTargetClangFormat
   /cmake-modules/DawnAddTargetCleanAll
   /cmake-modules/DawnAddUnittest
   /cmake-modules/DawnCheckAndSetCXXFlag
@@ -69,3 +70,4 @@ Load settings for an external project via `find_package <https://cmake.org/cmake
   /cmake-modules/FindSphinx
   /cmake-modules/Findbash
   /cmake-modules/Findccache
+  /cmake-modules/Findclang-format

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>FindLLVM &mdash; Dawn 0.0.1 documentation</title>
+  <title>dawn_add_target_clang_format &mdash; Dawn 0.0.1 documentation</title>
   
 
   
@@ -34,8 +34,8 @@
   
     <link rel="top" title="Dawn 0.0.1 documentation" href="../index.html"/>
         <link rel="up" title="CMake Modules" href="../cmake-modules.html"/>
-        <link rel="next" title="FindSphinx" href="FindSphinx.html"/>
-        <link rel="prev" title="FindClang" href="FindClang.html"/> 
+        <link rel="next" title="dawn_add_target_clean_all" href="DawnAddTargetCleanAll.html"/>
+        <link rel="prev" title="dawn_add_library" href="DawnAddLibrary.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -132,11 +132,11 @@
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="../cmake-modules.html">CMake Modules</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../cmake-modules.html#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../cmake-modules.html#functions-macros">Functions &amp; Macros</a><ul>
+<li class="toctree-l2 current"><a class="reference internal" href="../cmake-modules.html#functions-macros">Functions &amp; Macros</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="DawGetCompilerStr.html">dawn_get_compiler_info</a></li>
 <li class="toctree-l3"><a class="reference internal" href="DawnAddExecutable.html">dawn_add_executable</a></li>
 <li class="toctree-l3"><a class="reference internal" href="DawnAddLibrary.html">dawn_add_library</a></li>
-<li class="toctree-l3"><a class="reference internal" href="DawnAddTargetClangFormat.html">dawn_add_target_clang_format</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="">dawn_add_target_clang_format</a></li>
 <li class="toctree-l3"><a class="reference internal" href="DawnAddTargetCleanAll.html">dawn_add_target_clean_all</a></li>
 <li class="toctree-l3"><a class="reference internal" href="DawnAddUnittest.html">dawn_add_unittest</a></li>
 <li class="toctree-l3"><a class="reference internal" href="DawnCheckAndSetCXXFlag.html">dawn_check_and_set_cxx_flag</a></li>
@@ -158,9 +158,9 @@
 <li class="toctree-l3"><a class="reference internal" href="DawnSetCXXStandard.html">dawn_set_cxx_standard</a></li>
 </ul>
 </li>
-<li class="toctree-l2 current"><a class="reference internal" href="../cmake-modules.html#modules">Modules</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../cmake-modules.html#modules">Modules</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="FindClang.html">FindClang</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="">FindLLVM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="FindLLVM.html">FindLLVM</a></li>
 <li class="toctree-l3"><a class="reference internal" href="FindSphinx.html">FindSphinx</a></li>
 <li class="toctree-l3"><a class="reference internal" href="Findbash.html">Findbash</a></li>
 <li class="toctree-l3"><a class="reference internal" href="Findccache.html">Findccache</a></li>
@@ -215,14 +215,14 @@
         
           <li><a href="../cmake-modules.html">CMake Modules</a> &raquo;</li>
         
-      <li>FindLLVM</li>
+      <li>dawn_add_target_clang_format</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
             
-              <a href="https://github.com/thfabian/dawn/blob/master/docs/cmake-modules/FindLLVM.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/thfabian/dawn/blob/master/docs/cmake-modules/DawnAddTargetClangFormat.rst" class="fa fa-github"> Edit on GitHub</a>
             
           
         
@@ -238,38 +238,19 @@
             
   <div class="toctree-wrapper compound">
 </div>
-<div class="section" id="findllvm">
-<span id="id1"></span><h1>FindLLVM<a class="headerlink" href="#findllvm" title="Permalink to this headline">¶</a></h1>
-<div class="highlight-cmake"><div class="highlight"><pre><span class="nb">find_package</span><span class="p">(</span><span class="s">LLVM</span> <span class="s">[REQUIRED]</span> <span class="s">[QUIET]</span><span class="p">)</span>
+<div class="section" id="dawn-add-target-clang-format">
+<h1>dawn_add_target_clang_format<a class="headerlink" href="#dawn-add-target-clang-format" title="Permalink to this headline">¶</a></h1>
+<p>Provide a <code class="docutils literal"><span class="pre">format</span></code> which runs <a class="reference external" href="https://clang.llvm.org/docs/ClangFormat.html">clang-format</a> recursively on all files in the provided 
+directories.</p>
+<div class="highlight-cmake"><div class="highlight"><pre><span class="nb">dawn_add_target_clang_format</span><span class="p">(</span><span class="s">DIRECTORIES</span> <span class="s">PATTERN</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Find the LLVM libraries and includes.</p>
-<div class="section" id="result-variables">
-<h2>Result Variables<a class="headerlink" href="#result-variables" title="Permalink to this headline">¶</a></h2>
-<p>Defines the following variables:</p>
 <dl class="docutils">
-<dt><code class="docutils literal"><span class="pre">LLVM_FOUND</span></code></dt>
-<dd>True if llvm found.</dd>
-<dt><code class="docutils literal"><span class="pre">LLVM_INCLUDE_DIRS</span></code></dt>
-<dd>Where to find llvm include files</dd>
-<dt><code class="docutils literal"><span class="pre">LLVM_LIBRARY_DIRS</span></code></dt>
-<dd>Where to find llvm libs</dd>
-<dt><code class="docutils literal"><span class="pre">LLVM_CPPFLAGS</span></code></dt>
-<dd>LLVM preprocessor flags</dd>
-<dt><code class="docutils literal"><span class="pre">LLVM_LDFLAGS</span></code></dt>
-<dd>LLVM linker flags.</dd>
-<dt><code class="docutils literal"><span class="pre">LLVM_CXXFLAGS</span></code> </dt>
-<dd>LLVM c++ compiler flags</dd>
-<dt><code class="docutils literal"><span class="pre">LLVM_INSTALL_PREFIX</span></code></dt>
-<dd>LLVM installation prefix</dd>
-<dt><code class="docutils literal"><span class="pre">LLVM_VERSION</span></code></dt>
-<dd>Version string (<code class="docutils literal"><span class="pre">llvm-config</span> <span class="pre">--version</span></code>)</dd>
+<dt><code class="docutils literal"><span class="pre">DIRECTORIES</span></code></dt>
+<dd>Directories to recursively traverse to find all files with extensions matching <code class="docutils literal"><span class="pre">EXTENSION</span></code>.</dd>
+<dt><code class="docutils literal"><span class="pre">EXTENSION</span></code></dt>
+<dd>Extension to match, separated by <code class="docutils literal"><span class="pre">;</span></code>. For example: <code class="docutils literal"><span class="pre">&quot;.h;.cpp&quot;</span></code>.</dd>
 </dl>
-</div>
-<div class="section" id="hints">
-<h2>Hints<a class="headerlink" href="#hints" title="Permalink to this headline">¶</a></h2>
-<p>Set <code class="docutils literal"><span class="pre">LLVM_ROOT</span></code> to a directory that contains a LLVM installation.</p>
-</div>
 </div>
 
 
@@ -282,10 +263,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="FindSphinx.html" class="btn btn-neutral float-right" title="FindSphinx" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="DawnAddTargetCleanAll.html" class="btn btn-neutral float-right" title="dawn_add_target_clean_all" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="FindClang.html" class="btn btn-neutral" title="FindClang" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="DawnAddLibrary.html" class="btn btn-neutral" title="dawn_add_library" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

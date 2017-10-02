@@ -87,10 +87,4 @@ To enforce most of these coding standards, CMake can be configured to run `clang
 
   make format
 
-or to simply check the formatting (but don't modify the sources) use
-
-.. code-block:: bash
-
-  make check-format
-
 The clang-format file is located in the root directory at ``<dawn-dir>/.clangformat``.
