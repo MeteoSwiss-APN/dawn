@@ -16,6 +16,7 @@
 #define DAWN_OPTIMIZER_PASSTEMPORARYTYPE_H
 
 #include "dawn/Optimizer/Pass.h"
+#include <memory>
 
 namespace dawn {
 
