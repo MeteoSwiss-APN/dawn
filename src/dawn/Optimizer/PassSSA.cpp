@@ -1,21 +1,21 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/Optimizer/PassSSA.h"
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/DependencyGraphAccesses.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/PassSSA.h"
 #include "dawn/Optimizer/StencilInstantiation.h"
 #include <unordered_set>
 

@@ -1,13 +1,13 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -68,7 +68,9 @@ std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
 
   os << "SIR : " << Sir.Filename << "\n{\n";
   for(const auto& stencilFunction : Sir.StencilFunctions) {
-    os << "\n" << indent1 << "StencilFunction : " << stencilFunction->Name << "\n" << indent1 << "{\n";
+    os << "\n"
+       << indent1 << "StencilFunction : " << stencilFunction->Name << "\n"
+       << indent1 << "{\n";
     for(const auto& arg : stencilFunction->Args) {
       if(sir::Field* field = dyn_cast<sir::Field>(arg.get()))
         os << indent2 << "Field : " << field->Name << "\n";
@@ -141,7 +143,7 @@ BuiltinTypeID sir::Value::typeToBuiltinTypeID(sir::Value::TypeKind type) {
 std::string sir::Value::toString() const {
   if(empty())
     return "null";
-  
+
   std::stringstream ss;
   switch(type_) {
   case Boolean:

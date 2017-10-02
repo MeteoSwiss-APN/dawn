@@ -1,13 +1,13 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -257,7 +257,7 @@ const std::shared_ptr<Stage>& Stencil::getStage(const StagePosition& position) c
 
   // ... and the requested stage inside the given multi-stage
   DAWN_ASSERT_MSG(position.StageOffset == -1 || position.StageOffset < MS->getStages().size(),
-                 "invalid stage offset");
+                  "invalid stage offset");
   auto stageIt = MS->getStages().begin();
   std::advance(stageIt, position.StageOffset == -1 ? 0 : position.StageOffset);
   return *stageIt;
@@ -298,7 +298,7 @@ void Stencil::insertStage(const StagePosition& position, const std::shared_ptr<S
 
   // ... and the requested stage inside the given multi-stage
   DAWN_ASSERT_MSG(position.StageOffset == -1 || position.StageOffset < MS->getStages().size(),
-                 "invalid stage offset");
+                  "invalid stage offset");
   auto stageIt = MS->getStages().begin();
 
   // A stage offset of -1 indicates *before* the first element (thus nothing to do).

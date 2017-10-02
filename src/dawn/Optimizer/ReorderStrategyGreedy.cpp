@@ -1,13 +1,13 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -151,8 +151,8 @@ std::shared_ptr<Stencil> ReoderStrategyGreedy::reorder(const std::shared_ptr<Ste
             }
           }
           DAWN_ASSERT_MSG(!lastChance,
-                         "merging stage in empty multi-stage failed (this probably means the "
-                         "stage graph contains cycles - i.e is not a DAG!)");
+                          "merging stage in empty multi-stage failed (this probably means the "
+                          "stage graph contains cycles - i.e is not a DAG!)");
         }
 
         // Advance to the next multi-stage

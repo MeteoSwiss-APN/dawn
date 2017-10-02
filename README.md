@@ -1,9 +1,9 @@
-Dawn <br/> <a target="_blank" href="http://semver.org">![Version][Version.Badge]</a> <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![Travis status][TravisCI.Badge]</a> <a target="_blank" href="https://opensource.org/licenses/MIT">![License: MIT][MIT.License]</a>
+Dawn <br/> <a target="_blank" href="http://semver.org">![Version][Version.Badge]</a> <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![Travis status][TravisCI.Badge]</a> <a target="_blank" href="https://opensource.org/licenses/MIT">![License: MIT][MIT.License]</a> <a target="_blank" href="https://thfabian.github.io/dawn">![Documentation][Documentation.Badge]</a>
 ====
 
 ## Introduction
 
-Dawn is a compiler toolchain for developing high-level DSLs for geophysical fluid dynamics models. A tutorial and reference documentation is provided [here](http://dawn.readthedocs.org/en/master).
+Dawn is a compiler toolchain for developing high-level DSLs for geophysical fluid dynamics models. A tutorial and reference documentation is provided [here](https://thfabian.github.io/dawn) (or you can download it as a pdf [here](https://github.com/thfabian/dawn/raw/gh-pages/dawn.pdf)).
 
 ### Motivation
 
@@ -12,18 +12,17 @@ Embedded domain specific languages (EDSLs) in C ++ have been used successfully i
 Yet, using EDSLs in a correct and efficient manner often requires expert knowledge in high-performance computing.
 In addition, current DSLs are usually designed and developed for a specific scientific model with little to no reusability among DSLs.
 
-We introduce a new compiler framework, DAWN, that decouples optimization and code generation from high level DSLs.
+We introduce a new compiler framework, Dawn, that decouples optimization and code generation from high level DSLs.
 By exposing a Stencil Intermediate Representation (SIR), we allow users to share the toolchain to optimize and generate code among several DSLs.
 This allows the design of expressive, concise DSLs that can focus on applicability and don't need to bother with the aspect of high-performance computing.
-Using DAWN as a common compiler infrastructure can drastically reduce development and maintenance effort, while increasing the performance of the generated code, for new and existing DSLs in the GFD model domain.
+Using Dawn as a common compiler infrastructure can drastically reduce development and maintenance effort, while increasing the performance of the generated code, for new and existing DSLs in the GFD model domain.
 
+### Core Features
 
-###Core Features
-
-* DAWN allows the user to generate fast, performing code for several back-ends from a relatively simple Stencil Intermediate Representation (SIR).
-* DAWN is able to generate code to be run on Distributed Memory Machines based on MPI, Machines with access to GPUs based on CUDA and it can generate an easy to understand representation with close to no parallelism for debugging.
-* DAWN offers a variety of optimizers that can be manually enabled or disabled 
-
+* Dawn allows the user to generate fast performing code for several back-ends from a relatively simple Stencil Intermediate Representation (SIR).
+* Dawn exposes several APIs in different languages (C++, Java, Python) to parse and process the SIR. 
+* Dawn is able to generate code to be run on Distributed Memory Machines based on MPI, Machines with access to GPUs based on CUDA as well as naive C++ code with close to no parallelism for debugging.
+* Dawn offers a wide range of optimization and static analysis passes to guarantee correctness as well as performance of the generated parallel program.
 
 ## Building
 
@@ -36,7 +35,7 @@ make
 make install
 ```
 
-This will install Dawn locally into `<dawn-dir>/install/`. For a more detailed guide on how to build Dawn, see [here](todo).
+This will install Dawn locally into `<dawn-dir>/install/`. For a more detailed guide on how to build Dawn, see [here](https://thfabian.github.io/dawn/basics.html).
 
 ## Continuous Integration
 
@@ -64,6 +63,7 @@ This project is licensed under the terms of the **MIT** license.
 <!-- Links -->
 [TravisCI]: https://travis-ci.org/thfabian/dawn
 [TravisCI.Badge]: https://travis-ci.org/thfabian/dawn.svg?branch=master
+[Documentation.Badge]: https://img.shields.io/badge/documentation-link-blue.svg
 [MIT.License]: https://img.shields.io/badge/License-MIT-blue.svg
 [Version.Badge]: https://badge.fury.io/gh/thfabian%2Fdawn.svg
 [GCC_54_Release.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/3

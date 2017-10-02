@@ -1,5 +1,5 @@
 //===--------------------------------------------------------------------------------*-
-//C++ -*-===//
+// C++ -*-===//
 //                          _
 //                         | |
 //                       __| | __ ___      ___ ___
@@ -18,10 +18,10 @@
 
 namespace dawn {
 
-#define ASTVISITORFORWARDING_VISIT_IMPL(Type)                                  \
-  void ASTVisitorForwarding::visit(const std::shared_ptr<Type> &node) {        \
-    for (const auto &s : node->getChildren())                                  \
-      s->accept(*this);                                                        \
+#define ASTVISITORFORWARDING_VISIT_IMPL(Type)                                                      \
+  void ASTVisitorForwarding::visit(const std::shared_ptr<Type>& node) {                            \
+    for(const auto& s : node->getChildren())                                                       \
+      s->accept(*this);                                                                            \
   }
 
 ASTVISITORFORWARDING_VISIT_IMPL(BlockStmt);
@@ -42,16 +42,16 @@ ASTVISITORFORWARDING_VISIT_IMPL(LiteralAccessExpr);
 
 #undef ASTVISITORFORWARDING_VISIT_IMPL
 
-void ASTVisitorForwarding::visit(const std::shared_ptr<ExprStmt> &node) {
+void ASTVisitorForwarding::visit(const std::shared_ptr<ExprStmt>& node) {
   node->getExpr()->accept(*this);
 }
 
-void ASTVisitorForwarding::visit(const std::shared_ptr<ReturnStmt> &node) {
+void ASTVisitorForwarding::visit(const std::shared_ptr<ReturnStmt>& node) {
   node->getExpr()->accept(*this);
 }
 
-void ASTVisitorForwarding::visit(const std::shared_ptr<VarDeclStmt> &node) {
-  for (const auto &expr : node->getInitList())
+void ASTVisitorForwarding::visit(const std::shared_ptr<VarDeclStmt>& node) {
+  for(const auto& expr : node->getInitList())
     expr->accept(*this);
 }
 

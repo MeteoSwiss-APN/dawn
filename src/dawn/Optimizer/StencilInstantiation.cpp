@@ -1,24 +1,24 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/Optimizer/StencilInstantiation.h"
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/Optimizer/Replacing.h"
 #include "dawn/Optimizer/StatementAccessesPair.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTUtil.h"
 #include "dawn/SIR/ASTVisitor.h"
@@ -545,31 +545,31 @@ public:
     stencilDescReplacement_ = stencilCallDeclStmt;
   }
 
-  /// @brief Replace the first VerticalRegionDeclStmt or StencilCallDelcStmt with a dummy 
+  /// @brief Replace the first VerticalRegionDeclStmt or StencilCallDelcStmt with a dummy
   /// placeholder signaling code-gen that it should insert a call to the gridtools stencil.
   ///
-  /// All remaining VerticalRegion/StencilCalls statements which are still in the stencil 
+  /// All remaining VerticalRegion/StencilCalls statements which are still in the stencil
   /// description AST are pruned at the end
   ///
   /// @see removeObsoleteStencilDescNodes
   void tryReplaceStencilDescStmt(const std::shared_ptr<Stmt>& stencilDescNode) {
     DAWN_ASSERT(stencilDescNode->isStencilDesc());
-  
+
     // Nothing to do, statement was already replaced
     if(!stencilDescReplacement_)
       return;
-  
+
     // Instead of inserting the VerticalRegionDeclStmt we insert the call to the gridtools stencil
     if(scope_.top()->ScopeDepth == 1)
       scope_.top()->Statements.emplace_back(
           std::make_shared<Statement>(stencilDescReplacement_, scope_.top()->StackTrace));
     else {
-  
+
       // We need to replace the VerticalRegionDeclStmt in the current statement
       replaceOldStmtWithNewStmtInStmt(scope_.top()->Statements.back()->ASTStmt, stencilDescNode,
                                       stencilDescReplacement_);
     }
-  
+
     stencilDescReplacement_ = nullptr;
   }
 
@@ -650,7 +650,7 @@ public:
   void visit(const std::shared_ptr<IfStmt>& stmt) override {
     bool result;
     if(evalExprAsBoolean(stmt->getCondExpr(), result, scope_.top()->VariableMap)) {
-      
+
       if(scope_.top()->ScopeDepth == 1) {
         // The condition is known at compile time, we can remove this If statement completely by
         // just not inserting it into the statement list
@@ -669,7 +669,7 @@ public:
         // We are inside a nested statement and we need to remove this if-statment and replace it
         // with either the then-block or the else-block or in case we evaluted to `false` and there
         // is no else-block we insert a `0` void statement.
-        
+
         if(result) {
           // Replace the if-statement with the then-block
           replaceOldStmtWithNewStmtInStmt(scope_.top()->Statements.back()->ASTStmt, stmt,
@@ -694,9 +694,9 @@ public:
     } else {
       if(scope_.top()->ScopeDepth == 1)
         pushBackStatement(stmt);
-            
+
       stmt->getCondExpr()->accept(*this);
-      
+
       // The then-part needs to go into a separate stencil ...
       makeNewStencil();
       stmt->getThenStmt()->accept(*this);
@@ -798,11 +798,11 @@ public:
 
   void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
     sir::StencilCall* stencilCall = stmt->getStencilCall().get();
-    
+
     tryReplaceStencilDescStmt(stmt);
-    
+
     DAWN_LOG(INFO) << "Processing stencil call to `" << stencilCall->Callee << "` at "
-                  << stencilCall->Loc;
+                   << stencilCall->Loc;
 
     // Prepare a new scope for the stencil call
     std::shared_ptr<Scope>& curScope = scope_.top();
@@ -856,11 +856,11 @@ public:
 
     // Process the stencil description AST of the callee.
     scope_.push(candiateScope);
-    
-    // As we *may* modify the AST we better make a copy here otherwise we get funny surprises if we 
+
+    // As we *may* modify the AST we better make a copy here otherwise we get funny surprises if we
     // call this stencil multiple times ...
     stencil.StencilDescAst->clone()->accept(*this);
-    
+
     scope_.pop();
 
     DAWN_LOG(INFO) << "Done processing stencil call to `" << stencilCall->Callee << "`";
@@ -874,7 +874,7 @@ public:
     for(auto& s : expr->getChildren())
       s->accept(*this);
 
-    // If the LHS is known to be a known constant, we need to update its value or remove it as 
+    // If the LHS is known to be a known constant, we need to update its value or remove it as
     // being compile time constant
     if(VarAccessExpr* var = dyn_cast<VarAccessExpr>(expr->getLeft().get())) {
       if(scope_.top()->VariableMap.count(var->getName())) {
@@ -1006,7 +1006,7 @@ StencilInstantiation::StencilInstantiation(OptimizerContext* context,
 
   // Cleanup the `stencilDescStatements` and remove the empty stencils which may have been inserted
   stencilDeclMapper.cleanupStencilDeclAST();
-  
+
   // Repair broken references to temporaries i.e promote them to real fields
   PassTemporaryType::fixTemporariesSpanningMultipleStencils(this, stencils_);
 
@@ -1107,85 +1107,83 @@ ArrayRef<int> StencilInstantiation::getFieldVersions(int AccessID) const {
   return it != FieldVersionsMap_.end() ? ArrayRef<int>(*it->second) : ArrayRef<int>{};
 }
 
-int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
-                                                      int curStageIdx, int curStmtIdx,
-                                                      std::shared_ptr<Expr>& expr,
-                                                      RenameDirection dir) {
+int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil, int curStageIdx,
+                                                 int curStmtIdx, std::shared_ptr<Expr>& expr,
+                                                 RenameDirection dir) {
   int newAccessID = nextUID();
-  
+
   if(isField(AccessID)) {
     auto it = FieldVersionsMap_.find(AccessID);
     if(it != FieldVersionsMap_.end()) {
       // Field is already multi-versioned, append a new version
       std::vector<int>& versions = *it->second;
-  
+
       // Set the second to last field to be a temporary (only the first and the last field will be
       // real storages, all other versions will be temporaries)
       int lastAccessID = versions.back();
       TemporaryFieldAccessIDSet_.insert(lastAccessID);
-      AllocatedFieldAccessIDSet_.erase(lastAccessID);      
-  
+      AllocatedFieldAccessIDSet_.erase(lastAccessID);
+
       // The field with version 0 contains the original name
       const std::string& originalName = getNameFromAccessID(versions.front());
-  
+
       // Register the new field
       setAccessIDNamePairOfField(newAccessID, originalName + "_" + std::to_string(versions.size()),
                                  false);
       AllocatedFieldAccessIDSet_.insert(newAccessID);
-          
+
       versions.push_back(newAccessID);
       FieldVersionsMap_.emplace(newAccessID, it->second);
-  
+
     } else {
       const std::string& originalName = getNameFromAccessID(AccessID);
-  
+
       // Register the new *and* old field as being multi-versioned and indicate code-gen it has to
       // allocate the second version
       auto versionsVecPtr = std::make_shared<std::vector<int>>();
       *versionsVecPtr = {AccessID, newAccessID};
-  
+
       setAccessIDNamePairOfField(newAccessID, originalName + "_1", false);
       AllocatedFieldAccessIDSet_.insert(newAccessID);
-      
+
       FieldVersionsMap_.emplace(AccessID, versionsVecPtr);
       FieldVersionsMap_.emplace(newAccessID, versionsVecPtr);
     }
-  }
-  else {
+  } else {
     auto it = VariableVersionsMap_.find(AccessID);
     if(it != VariableVersionsMap_.end()) {
       // Variable is already multi-versioned, append a new version
       std::vector<int>& versions = *it->second;
-      
+
       // The variable with version 0 contains the original name
       const std::string& originalName = getNameFromAccessID(versions.front());
-  
+
       // Register the new variable
       setAccessIDNamePair(newAccessID, originalName + "_" + std::to_string(versions.size()));
       versions.push_back(newAccessID);
       VariableVersionsMap_.emplace(newAccessID, it->second);
-      
+
     } else {
       const std::string& originalName = getNameFromAccessID(AccessID);
-      
+
       // Register the new *and* old variable as being multi-versioned
       auto versionsVecPtr = std::make_shared<std::vector<int>>();
       *versionsVecPtr = {AccessID, newAccessID};
-      
-      setAccessIDNamePair(newAccessID, originalName + "_1"); 
+
+      setAccessIDNamePair(newAccessID, originalName + "_1");
       VariableVersionsMap_.emplace(AccessID, versionsVecPtr);
       VariableVersionsMap_.emplace(newAccessID, versionsVecPtr);
     }
   }
-  
+
   // Rename the Expression
   renameAccessIDInExpr(this, AccessID, newAccessID, expr);
-  
+
   // Recompute the accesses of the current statement (only works with single Do-Methods - for now)
   computeAccesses(
       this,
       stencil->getStage(curStageIdx)->getSingleDoMethod().getStatementAccessesPairs()[curStmtIdx]);
-  
+
   // Rename the statement and accesses
   for(int stageIdx = curStageIdx;
       dir == RD_Above ? (stageIdx >= 0) : (stageIdx < stencil->getNumStages());
@@ -1206,7 +1204,7 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
       renameAccessIDInStmts(this, AccessID, newAccessID, doMethod.getStatementAccessesPairs());
       renameAccessIDInAccesses(this, AccessID, newAccessID, doMethod.getStatementAccessesPairs());
     }
-    
+
     // Updat the fields of the stage
     stage.update();
   }
@@ -1254,7 +1252,7 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
   //
   VarDeclStmt* varDeclStmt = dyn_cast<VarDeclStmt>(oldStatement->ASTStmt.get());
   DAWN_ASSERT_MSG(varDeclStmt,
-                 "first access to variable (i.e lifetime.Begin) is not an `VarDeclStmt`");
+                  "first access to variable (i.e lifetime.Begin) is not an `VarDeclStmt`");
   DAWN_ASSERT_MSG(!varDeclStmt->isArray(), "cannot promote local array to temporary field");
 
   auto fieldAccessExpr = std::make_shared<FieldAccessExpr>(fieldname);
@@ -1317,7 +1315,7 @@ void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil,
   DAWN_ASSERT_MSG(exprStmt, "first access of field (i.e lifetime.Begin) is not an `ExprStmt`");
   AssignmentExpr* assignmentExpr = dyn_cast<AssignmentExpr>(exprStmt->getExpr().get());
   DAWN_ASSERT_MSG(assignmentExpr,
-                 "first access of field (i.e lifetime.Begin) is not an `AssignmentExpr`");
+                  "first access of field (i.e lifetime.Begin) is not an `AssignmentExpr`");
 
   // Create the new `VarDeclStmt` which will replace the old `ExprStmt`
   std::shared_ptr<Stmt> varDeclStmt =

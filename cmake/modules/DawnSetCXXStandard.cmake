@@ -28,8 +28,8 @@ include(DawnCheckAndSetCXXFlag)
 #   dawn_set_cxx_standard(MIN_CXX_STANDARD)
 #
 # ``MIN_CXX_STANDARD``
-#   Minimum C++ standard which needs to be supported, one of ["c++11", c++14", "c++1z", "c++17", 
-#                                                             "c++2a"].
+#   Minimum C++ standard which needs to be supported, one of 
+#   [``c++11``, ``c++14``, ``c++1z``, ``c++17``, ``c++2a``].
 #
 macro(dawn_set_cxx_standard MIN_CXX_STANDARD)
   set(supported_standards "c++11" "c++14" "c++1z" "c++17" "c++2a")    

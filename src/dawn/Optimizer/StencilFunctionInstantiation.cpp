@@ -1,13 +1,13 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -571,7 +571,8 @@ void StencilFunctionInstantiation::dump() {
 
   const auto& statements = getAST()->getRoot()->getStatements();
   for(std::size_t i = 0; i < statements.size(); ++i) {
-    std::cout << "\e[1m" << ASTStringifer::toString(statements[i], 2 * DAWN_PRINT_INDENT) << "\e[0m";
+    std::cout << "\e[1m" << ASTStringifer::toString(statements[i], 2 * DAWN_PRINT_INDENT)
+              << "\e[0m";
     if(statementAccessesPairs_[i]->getCallerAccesses())
       std::cout << statementAccessesPairs_[i]->getCallerAccesses()->toString(this,
                                                                              3 * DAWN_PRINT_INDENT)

@@ -1,13 +1,13 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -27,8 +27,8 @@ namespace dawn {
 ///
 /// Use the llvm_unreachable macro (that adds location info), instead of
 /// calling this function directly.
-DAWN_ATTRIBUTE_NORETURN void dawn_unreachable_internal(const char* msg = nullptr,
-                                                     const char* file = nullptr, unsigned line = 0);
+DAWN_ATTRIBUTE_NORETURN void
+dawn_unreachable_internal(const char* msg = nullptr, const char* file = nullptr, unsigned line = 0);
 
 /// @macro dawn_unreachable
 /// @brief Marks that the current location is not supposed to be reachable

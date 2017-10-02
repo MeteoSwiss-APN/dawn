@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/SmallString.h"
 #include "dawn/Support/Twine.h"
+#include "dawn/Support/SmallString.h"
 #include <iostream>
 #include <sstream>
 
