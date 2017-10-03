@@ -86,12 +86,15 @@ macro(dawn_gen_install_config)
     COMPATIBILITY AnyNewerVersion
   )
 
+  set(DAWN_INSTALL_ROOT "")
+
   # Export configuration
   configure_package_config_file(
     ${CMAKE_SOURCE_DIR}/cmake/templates/DawnConfig.cmake.in 
     ${CMAKE_CURRENT_BINARY_DIR}/DawnConfig.cmake
     INSTALL_DESTINATION ${DAWN_INSTALL_CMAKE_DIR}
     PATH_VARS 
+      DAWN_INSTALL_ROOT
       DAWN_INSTALL_INCLUDE_DIR
       DAWN_INSTALL_LIB_DIR
       DAWN_INSTALL_CMAKE_DIR

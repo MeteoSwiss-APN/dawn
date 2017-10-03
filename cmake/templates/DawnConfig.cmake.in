@@ -14,11 +14,15 @@
 
 @PACKAGE_INIT@
 
+# Root directory of the installation
+get_filename_component(DAWN_ROOT "@PACKAGE_DAWN_INSTALL_ROOT@" ABSOLUTE)
+list(APPEND CMAKE_MODULE_PATH "${DAWN_ROOT}/cmake/modules")
+
 # Dawn include directories
-set_and_check(DAWN_INCLUDE_DIRS @PACKAGE_DAWN_INSTALL_INCLUDE_DIR@)
+set_and_check(DAWN_INCLUDE_DIRS "@PACKAGE_DAWN_INSTALL_INCLUDE_DIR@")
 
 # Link directories for Dawn libraries
-set_and_check(DAWN_LIBRARY_DIRS @PACKAGE_DAWN_INSTALL_LIB_DIR@)
+set_and_check(DAWN_LIBRARY_DIRS "@PACKAGE_DAWN_INSTALL_LIB_DIR@")
 
 # Was Dawn compiled with asserts?
 set(DAWN_ASSERTS @DAWN_ASSERTS@)

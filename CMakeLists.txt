@@ -115,6 +115,7 @@ include_directories(${CMAKE_BINARY_DIR}/src)
 include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/test/utils/googletest/include)
 
 add_subdirectory(src)
+add_subdirectory(cmake)
 
 if(DAWN_TESTING)
   enable_testing()
@@ -125,4 +126,12 @@ if(DAWN_DOCUMENTATION)
   add_subdirectory(docs)
 endif()
 
+# Install headers
+install(
+  DIRECTORY src/ 
+  DESTINATION ${DAWN_INSTALL_INCLUDE_DIR} 
+  FILES_MATCHING PATTERN "*.h" PATTERN "*.inc"
+)
+
+# Install CMake package configuration
 dawn_gen_install_config()
