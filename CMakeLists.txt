@@ -18,7 +18,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 if(NOT BUILD_SHARED_LIBS)
-  set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries." FORCE)
+  set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries." FORCE)
 endif()
 
 if(NOT CMAKE_INSTALL_PREFIX)
@@ -124,3 +124,5 @@ endif()
 if(DAWN_DOCUMENTATION)
   add_subdirectory(docs)
 endif()
+
+dawn_gen_install_config()

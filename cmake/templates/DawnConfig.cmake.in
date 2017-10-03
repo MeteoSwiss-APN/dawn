@@ -1,0 +1,48 @@
+##===------------------------------------------------------------------------------*- CMake -*-===##
+##                          _                      
+##                         | |                     
+##                       __| | __ ___      ___ ___  
+##                      / _` |/ _` \ \ /\ / / '_  | 
+##                     | (_| | (_| |\ V  V /| | | |
+##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+##
+##
+##  This file is distributed under the MIT License (MIT). 
+##  See LICENSE.txt for details.
+##
+##===------------------------------------------------------------------------------------------===##
+
+@PACKAGE_INIT@
+
+# Dawn include directories
+set_and_check(DAWN_INCLUDE_DIRS @PACKAGE_DAWN_INSTALL_INCLUDE_DIR@)
+
+# Link directories for Dawn libraries
+set_and_check(DAWN_LIBRARY_DIRS @PACKAGE_DAWN_INSTALL_LIB_DIR@)
+
+# Was Dawn compiled with asserts?
+set(DAWN_ASSERTS @DAWN_ASSERTS@)
+
+# Import Dawn library targets (DawnStatic and DawnShared)
+include("@PACKAGE_DAWN_INSTALL_CMAKE_DIR@/DawnTargets.cmake")
+
+# Aliases
+set(DAWN_VERSION ${Dawn_VERSION})
+set(DAWN_FOUND 1)
+
+if(TARGET Dawn::DawnShared)
+  set(DAWN_HAS_SHARED_LIB TRUE)
+else()
+  set(DAWN_HAS_SHARED_LIB FALSE)
+endif()
+
+# Report findings
+message(STATUS "Found Dawn version: ${DAWN_VERSION}")
+
+get_property(__static_location TARGET Dawn::DawnStatic PROPERTY LOCATION)
+message(STATUS "  Static: ${__static_location}")
+
+if(DAWN_HAS_SHARED_LIB)
+  get_property(__shared_location TARGET Dawn::DawnShared PROPERTY LOCATION)
+  message(STATUS "  Shared: ${__shared_location}")
+endif()
