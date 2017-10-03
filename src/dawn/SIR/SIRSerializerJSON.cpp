@@ -1,19 +1,19 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIRSerializerJSON.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/Json.h"
@@ -319,13 +319,12 @@ void SIRSerializerJSON::serialize(const std::string& file, const SIR* sir) {
       jStencilFunction["arguments"].push_back(jArg);
     }
 
-    
     if(stencilFunction->Intervals.empty())
-      jStencilFunction["intervals"] = json::json();      
+      jStencilFunction["intervals"] = json::json();
     else
       for(const auto& interval : stencilFunction->Intervals)
         jStencilFunction["intervals"].push_back(IntervalToJSON(*interval));
-    
+
     for(const auto& ast : stencilFunction->Asts) {
       JSONASTSerializer serializer;
       ast->accept(serializer);

@@ -1,13 +1,13 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -135,14 +135,14 @@ public:
 } // anonymous namespace
 
 void replaceStencilCalls(StencilInstantiation* instantiation, int oldStencilID,
-                        const std::vector<int>& newStencilIDs) {
+                         const std::vector<int>& newStencilIDs) {
   GetStencilCalls visitor(instantiation, oldStencilID);
 
   for(auto& statement : instantiation->getStencilDescStatements()) {
     visitor.reset();
 
     std::shared_ptr<Stmt>& stmt = statement->ASTStmt;
-    
+
     stmt->accept(visitor);
     for(auto& oldStencilCall : visitor.getStencilCallsToReplace()) {
 
@@ -167,12 +167,12 @@ void replaceStencilCalls(StencilInstantiation* instantiation, int oldStencilID,
         // Recursively replace the statement
         replaceOldStmtWithNewStmtInStmt(stmt, oldStencilCall, newBlockStmt);
       }
-        
+
       instantiation->getStencilCallToStencilIDMap().erase(oldStencilCall);
       for(std::size_t i = 0; i < newStencilIDs.size(); ++i)
         instantiation->getStencilCallToStencilIDMap().emplace(newStencilCalls[i], newStencilIDs[i]);
     }
   }
 }
-  
+
 } // namespace dawn

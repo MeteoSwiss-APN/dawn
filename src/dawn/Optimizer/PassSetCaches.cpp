@@ -1,20 +1,20 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/Optimizer/PassSetCaches.h"
 #include "dawn/Optimizer/Cache.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/PassSetCaches.h"
 #include "dawn/Optimizer/StatementAccessesPair.h"
 #include "dawn/Optimizer/StencilInstantiation.h"
 #include "dawn/Support/Unreachable.h"
@@ -224,9 +224,9 @@ bool PassSetCaches::run(StencilInstantiation* instantiation) {
             continue;
 
           // Currently we only cache temporaries!
-//          if(!instantiation->isTemporaryField(field.AccessID))
-//            continue;
-                    
+          //          if(!instantiation->isTemporaryField(field.AccessID))
+          //            continue;
+
           if(!instantiation->isTemporaryField(field.AccessID) &&
              (field.Intend == Field::IK_Output ||
               (field.Intend == Field::IK_Input && field.Extent.isPointwise())))

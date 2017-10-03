@@ -20,8 +20,8 @@ dawn_include_guard()
 # -------------------
 #
 # Configure a file and store the output in the same directory hirarchy as the input file while 
-# substituting ${CMAKE_SOURCE_DIR} for ${CMAKE_BINARY_DIR}. If the input file has a ".cmake" 
-# extension, it will be removed in the output. This full also handle installing of the file 
+# substituting ``CMAKE_SOURCE_DIR`` for ``CMAKE_BINARY_DIR``. If the input file has a ``.cmake`` 
+# extension, it will be removed in the output. This will also handle the installation of the file 
 # correctly by replacing ``src/`` with ``include/``.
 #
 # .. code-block:: cmake
@@ -39,7 +39,7 @@ dawn_include_guard()
 #   dawn_configure_file(${CMAKE_SOURCE_DIR}/src/dawn/Config.h.cmake)
 #
 # Ths stores the configured file in ``${CMAKE_BINARY_DIR}/src/dawn/Config.h`` and, in addition, it 
-# will install it in ``${CMAKE_INSTALL_PREFIX}/include/dawn/Config.h``" (meaning it will strip 
+# will install it in ``${CMAKE_INSTALL_PREFIX}/include/dawn/Config.h``" (hence it will strip 
 # ``"src/"``).
 #
 function(dawn_configure_file FILE)

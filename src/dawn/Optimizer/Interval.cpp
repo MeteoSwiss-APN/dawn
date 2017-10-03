@@ -1,13 +1,13 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -102,7 +102,7 @@ std::vector<Interval> Interval::computeGapIntervals(const Interval& axis,
   for(const Interval& interval : intervals) {
     auto it = std::find_if(newIntervals.begin(), newIntervals.end(), [&](const Interval& I) {
       DAWN_ASSERT_MSG(I.lowerBound() != interval.lowerBound(),
-                     "Intervals have to be non-overlapping");
+                      "Intervals have to be non-overlapping");
       return I.lowerBound() > interval.lowerBound();
     });
     newIntervals.insert(it, interval);
@@ -116,7 +116,7 @@ std::vector<Interval> Interval::computeGapIntervals(const Interval& axis,
       const Interval& curTopInterval = *curTopIt;
 
       DAWN_ASSERT_MSG(!curLowInterval.overlaps(curTopInterval),
-                     "Intervals have to be non-overlapping");
+                      "Intervals have to be non-overlapping");
 
       if(!curLowInterval.adjacent(curTopInterval)) {
         Interval gapFillInterval(curLowInterval.upperLevel(), curTopInterval.lowerLevel(),

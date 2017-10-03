@@ -29,11 +29,9 @@ include(DawnGetScriptDir)
 #   dawn_get_git_head_revision(HEAD_REF HEAD_HASH)
 # 
 # ``HEAD_REF``
-#   The Refspec_.
+#   The `Refspec <https://git-scm.com/book/en/v2/Git-Internals-The-Refspec>`_.
 # ``HEAD_HASH``
 #   sha1 hash of the current head revision.
-#
-# .. _Refspec: https://git-scm.com/book/en/v2/Git-Internals-The-Refspec
 #
 function(dawn_get_git_head_revision HEAD_REF HEAD_HASH)
   set(git_parent_dir "${CMAKE_CURRENT_SOURCE_DIR}")

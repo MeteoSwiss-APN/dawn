@@ -13,6 +13,8 @@
 ##===------------------------------------------------------------------------------------------===##
 
 #.rst:
+# .. _FindLLVM:
+#
 # FindLLVM
 # --------
 #
@@ -27,22 +29,22 @@
 #
 # Defines the following variables:
 #
-#  ``LLVM_FOUND``
-#    True if llvm found.
-#  ``LLVM_INCLUDE_DIRS``
-#    Where to find llvm include files
-#  ``LLVM_LIBRARY_DIRS``
-#    Where to find llvm libs
-#  ``LLVM_CPPFLAGS``
-#    LLVM preprocessor flags
-#  ``LLVM_LDFLAGS``
-#    LLVM linker flags.
-#  ``LLVM_CXXFLAGS`` 
-#    LLVM c++ compiler flags
-#  ``LLVM_INSTALL_PREFIX``
-#    LLVM installation prefix
-#  ``LLVM_VERSION``
-#    Version string ("llvm-config --version")
+# ``LLVM_FOUND``
+#   True if llvm found.
+# ``LLVM_INCLUDE_DIRS``
+#   Where to find llvm include files
+# ``LLVM_LIBRARY_DIRS``
+#   Where to find llvm libs
+# ``LLVM_CPPFLAGS``
+#   LLVM preprocessor flags
+# ``LLVM_LDFLAGS``
+#   LLVM linker flags.
+# ``LLVM_CXXFLAGS`` 
+#   LLVM c++ compiler flags
+# ``LLVM_INSTALL_PREFIX``
+#   LLVM installation prefix
+# ``LLVM_VERSION``
+#   Version string (``llvm-config --version``)
 #
 # Hints
 # ^^^^^
