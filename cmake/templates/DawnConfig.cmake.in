@@ -35,18 +35,24 @@ set(DAWN_VERSION ${Dawn_VERSION})
 set(DAWN_FOUND 1)
 
 if(TARGET Dawn::DawnShared)
-  set(DAWN_HAS_SHARED_LIB TRUE)
+  set(DAWN_HAS_SHARED_LIBRARY TRUE)
 else()
-  set(DAWN_HAS_SHARED_LIB FALSE)
+  set(DAWN_HAS_SHARED_LIBRARY FALSE)
 endif()
 
 # Report findings
 message(STATUS "Found Dawn version: ${DAWN_VERSION}")
 
-get_property(__static_location TARGET Dawn::DawnStatic PROPERTY LOCATION)
-message(STATUS "  Static: ${__static_location}")
+get_property(_static_lib TARGET Dawn::DawnStatic PROPERTY LOCATION)
+set(DAWN_STATIC_LIBRARY ${_static_lib})
+message(STATUS "  Static: ${_static_lib}")
 
-if(DAWN_HAS_SHARED_LIB)
-  get_property(__shared_location TARGET Dawn::DawnShared PROPERTY LOCATION)
-  message(STATUS "  Shared: ${__shared_location}")
+if(DAWN_HAS_SHARED_LIBRARY)
+  get_property(_shared_lib TARGET Dawn::DawnShared PROPERTY LOCATION)
+  set(DAWN_SHARED_LIBRARY ${_shared_lib})
+  message(STATUS "  Shared: ${_shared_lib}")
 endif()
+
+# Aliases of DAWN_STATIC_LIBRARY
+set(DAWN_LIBRARY ${DAWN_STATIC_LIBRARY})
+set(DAWN_LIBRARIES ${DAWN_LIBRARY})
