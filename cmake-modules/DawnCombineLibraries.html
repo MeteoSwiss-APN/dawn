@@ -102,7 +102,10 @@
 <li class="toctree-l3"><a class="reference internal" href="../basics.html#mac-os">Mac OS</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../basics.html#linking-the-library">Linking the library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basics.html#linking-the-library">Linking the library</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../basics.html#example">Example</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="../basics.html#using-the-library">Using the library</a></li>
 </ul>
 </li>
@@ -242,7 +245,8 @@
 <h1>dawn_combine_libraries<a class="headerlink" href="#dawn-combine-libraries" title="Permalink to this headline">¶</a></h1>
 <p>Combine multiple object libraries to a single static and, if <code class="docutils literal"><span class="pre">BUILD_SHARED_LIBS</span></code> is ON, shared 
 library. The CMake target of the library is <code class="docutils literal"><span class="pre">&lt;NAME&gt;Static</span></code> and <code class="docutils literal"><span class="pre">&lt;NAME&gt;Shared</span></code> respectively.
-This will also provide an install traget for the libraries.</p>
+This will also provide an install traget for the libraries as well as an export via 
+<code class="docutils literal"><span class="pre">&lt;NAME&gt;Targets</span></code>.</p>
 <div class="highlight-cmake"><div class="highlight"><pre><span class="nb">dawn_combine_libraries</span><span class="p">(</span><span class="s">NAME</span> <span class="s">OBJECTS</span> <span class="s">DEPENDS</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -251,7 +255,9 @@ This will also provide an install traget for the libraries.</p>
 <dd>Name of the library.</dd>
 <dt><code class="docutils literal"><span class="pre">OBJECTS</span></code></dt>
 <dd>Object libraries to combine (see <a class="reference internal" href="DawnAddLibrary.html#dawn-add-library"><span>dawn_add_library</span></a>).</dd>
-<dt><code class="docutils literal"><span class="pre">DEPENDS</span></code></dt>
+<dt><code class="docutils literal"><span class="pre">INSTALL_DESTINATION</span></code></dt>
+<dd>Destition (relative to <code class="docutils literal"><span class="pre">CMAKE_INSTALL_PREFIX</span></code>) to install the libraries.</dd>
+<dt><code class="docutils literal"><span class="pre">DEPENDS</span></code> [optional]</dt>
 <dd>List of external libraries and/or CMake targets treated as dependencies of the library.</dd>
 </dl>
 </div>

@@ -4,7 +4,7 @@ Dawn Coding standard
 Introduction
 ============
 
-This document attempts to describe a few coding standards that are being used in the Dawn source tree. Although no coding standards should be regarded as absolute requirements to be followed in all instances, you should try to follow the `LLVM <https://llvm.org/docs/CodingStandards.html>`_ coding standard. We deviate from the LLVM standard in certainer areas as listed in the following.
+This document attempts to describe a few coding standards that are being used in the Dawn source tree. Although no coding standards should be regarded as absolute requirements to be followed in all instances, you should try to follow the `LLVM <https://llvm.org/docs/CodingStandards.html>`_ coding standard. We deviate from the LLVM standard in certain areas as listed in the following.
 
 Supported C++11 Language and Library Features
 =============================================
