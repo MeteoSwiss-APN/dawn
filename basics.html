@@ -101,7 +101,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#mac-os">Mac OS</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#linking-the-library">Linking the library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#linking-the-library">Linking the library</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#using-the-library">Using the library</a></li>
 </ul>
 </li>
@@ -276,11 +279,96 @@ make install -j 4
 </div>
 <div class="section" id="linking-the-library">
 <h2>Linking the library<a class="headerlink" href="#linking-the-library" title="Permalink to this headline">¶</a></h2>
-<p>TODO</p>
+<p>We suggest using the build system (CMake) for a smooth integration with your project. The installation of Dawn provides a find configuration script (which can be used with <a class="reference external" href="https://cmake.org/cmake/help/v3.5/command/find_package.html">find_package</a>) that should be installed into your system.</p>
+<p>In your projects <code class="docutils literal"><span class="pre">CMakeLists.txt</span></code>, simply add</p>
+<div class="highlight-cmake"><div class="highlight"><pre><span class="nb">find_package</span><span class="p">(</span><span class="s">Dawn</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>to import all the necessary informations.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The script is located in <strong>&lt;dawn-install-dir&gt;/cmake</strong>. If CMake has trouble finding the script you may pass this location directly to CMake by adding <code class="docutils literal"><span class="pre">-DDawn_DIR=&lt;dawn-install-dir&gt;/cmake</span></code> to the command line flags.</p>
+</div>
+<p>If Dawn is found, the following CMake variables will be defined</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="28%" />
+<col width="72%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Variable</th>
+<th class="head">Explanation</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">DAWN_FOUND</span></code></td>
+<td>True if headers and libraries of Dawn were found.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">DAWN_ROOT</span></code></td>
+<td>Installation prefix of Dawn.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">DAWN_VERSION</span></code></td>
+<td>Version of Dawn (format X.Y.Z)).</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">DAWN_ASSERTS</span></code></td>
+<td>True if Dawn was compiled with asserts.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">DAWN_INCLUDE_DIRS</span></code></td>
+<td>Dawn include directories.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">DAWN_LIBRARY_DIRS</span></code></td>
+<td>Link directories for Dawn libraries.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">DAWN_LIBRARY</span></code></td>
+<td>Library to link against (this is an alias of <code class="docutils literal"><span class="pre">DAWN_STATIC_LIBRARY</span></code>).</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">DAWN_STATIC_LIBRARY</span></code></td>
+<td>Static library of Dawn.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">DAWN_HAS_SHARED_LIBRARY</span></code></td>
+<td>True if the shared library of Dawn is available.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">DAWN_SHARED_LIBRARY</span></code></td>
+<td>Shared library of Dawn.</td>
+</tr>
+</tbody>
+</table>
+<p>Finally, just link the static library of Dawn to your own library or executable</p>
+<div class="highlight-cmake"><div class="highlight"><pre><span class="nb">target_link_libraries</span><span class="p">(</span><span class="o">${</span><span class="nv">target</span><span class="o">}</span> <span class="s">...</span> <span class="s">PUBLIC</span> <span class="s">Dawn::DawnStatic</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>or use <code class="docutils literal"><span class="pre">Dawn::DawnShared</span></code> instead of <code class="docutils literal"><span class="pre">Dawn::DawnStatic</span></code> if you want to linkt against the shared library.</p>
+<div class="section" id="example">
+<h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
+<p>If we want to link our file (<code class="docutils literal"><span class="pre">foo.cpp</span></code>) against the static library of Dawn, we may use something like</p>
+<div class="highlight-cmake"><div class="highlight"><pre><span class="c"># Find the Dawn library (abort if we cannot find it!)</span>
+<span class="nb">find_package</span><span class="p">(</span><span class="s">Dawn</span> <span class="s">REQUIRED</span><span class="p">)</span>
+
+<span class="c"># Expose the Dawn include directories</span>
+<span class="nb">include_directories</span><span class="p">(</span><span class="s">SYSTEM</span> <span class="o">${</span><span class="nv">DAWN_INCLUDE_DIRS</span><span class="o">}</span><span class="p">)</span>
+
+<span class="c"># Compile foo and link against Dawn</span>
+<span class="nb">add_executable</span><span class="p">(</span><span class="s">foo</span> <span class="s">foo.cpp</span><span class="p">)</span>
+<span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">foo</span> <span class="s">PUBLIC</span> <span class="s">Dawn::DawnStatic</span><span class="p">)</span>
+
+<span class="c"># Dawn requires atleast C++11 (you can also set this globally!)</span>
+<span class="nb">set_property</span><span class="p">(</span><span class="s">TARGET</span> <span class="s">foo</span> <span class="s">PROPERTY</span> <span class="s">CXX_STANDARD</span> <span class="s">11</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
 </div>
 <div class="section" id="using-the-library">
 <h2>Using the library<a class="headerlink" href="#using-the-library" title="Permalink to this headline">¶</a></h2>
-<p>TODO</p>
+<p>TODO:</p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="cp">#include</span> <span class="cpf">&lt;dawn/Dawn.h&gt;</span><span class="cp"></span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+
+
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 </div>
 </div>
 
