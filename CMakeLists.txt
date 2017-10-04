@@ -130,7 +130,7 @@ endif()
 install(
   DIRECTORY src/ 
   DESTINATION ${DAWN_INSTALL_INCLUDE_DIR} 
-  FILES_MATCHING PATTERN "*.h" PATTERN "*.inc"
+  FILES_MATCHING PATTERN "*.h" PATTERN "*.inc" PATTERN "*.hpp"
 )
 
 # Install CMake package configuration
