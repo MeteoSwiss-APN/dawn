@@ -19,6 +19,15 @@ if(NOT CMAKE_BUILD_TYPE)
       "Choose the type of build, options are: Debug Release RelWithDebInfo." FORCE)
 endif()
 
+if(NOT BUILD_SHARED_LIBS)
+  set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries." FORCE)
+endif()
+
+if(NOT CMAKE_INSTALL_PREFIX)
+  set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE STRING
+      "Install path prefix, prepended onto install directories." FORCE)
+endif()
+
 project(gtclang CXX)
 cmake_minimum_required(VERSION 3.3)
 
@@ -27,7 +36,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 # Locate Dawn for the CMake modules
 include(DawnCMakeInit)
 dawn_cmake_init()
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 include(DawnAddExecutable)
 include(DawnAddLibrary)
@@ -69,7 +77,7 @@ macro(make_config_string FIRST SECOND)
   dawn_make_string_pair(${FIRST} ": ${SECOND}" 20 out)
   list(APPEND config_info ${out})
 endmacro()
-make_config_string("gtclang version" ${GTCLANG_FULL_VERSION_STRING})
+make_config_string("gtclang version" ${GTCLANG_FULL_VERSION})
 make_config_string("Platform" ${DAWN_PLATFORM_STRING})
 make_config_string("Architecture" ${DAWN_ARCHITECTURE_STRING})
 make_config_string("Compiler" ${DAWN_COMPILER_STRING})
@@ -78,7 +86,7 @@ make_config_string("Asserts" ${GTCLANG_ASSERTS})
 dawn_report_result("Configuration summary" ${config_info})
 
 # Include the packages (and set the correct, libraries, includes etc.)
-foreach(package Threads ccache Python3 Boost Clang)
+foreach(package Threads ccache Python3 Boost Clang Dawn)
   include("Add${package}")
   dawn_create_package_string(${package} info)
   list(APPEND package_info ${info})
