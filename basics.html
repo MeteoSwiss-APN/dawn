@@ -253,7 +253,7 @@
 <h2>Compiling the library<a class="headerlink" href="#compiling-the-library" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="linux">
 <h3>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h3>
-<p>On Linux, you&#8217;ll need to install a C++11 toolchain (e.g <strong>gcc</strong> or <strong>clang</strong>) as well as <a href="#id1"><span class="problematic" id="id2">`CMake`_</span></a> (&gt;= 3.3). For example, on Ubuntu the following will do</p>
+<p>On Linux, you&#8217;ll need to install a C++11 toolchain (e.g <strong>gcc</strong> or <strong>clang</strong>) as well as <a class="reference external" href="https://cmake.org/">CMake</a> (&gt;= 3.3). For example, on Ubuntu the following will do</p>
 <div class="highlight-bash"><div class="highlight"><pre>sudo apt-get install g++ cmake
 </pre></div>
 </div>
@@ -268,7 +268,7 @@ make install -j 4
 </div>
 <div class="section" id="mac-os">
 <h3>Mac OS<a class="headerlink" href="#mac-os" title="Permalink to this headline">¶</a></h3>
-<p>On Mac OS, you&#8217;ll need to install Xcode as well as <a href="#id3"><span class="problematic" id="id4">`CMake`_</span></a> (&gt;= 3.3). First, make sure you have the Xcode Command Line Tools installed</p>
+<p>On Mac OS, you&#8217;ll need to install Xcode as well as <a class="reference external" href="https://cmake.org/">CMake</a> (&gt;= 3.3). First, make sure you have the Xcode Command Line Tools installed</p>
 <div class="highlight-bash"><div class="highlight"><pre>xcode-select --install
 </pre></div>
 </div>
@@ -289,7 +289,7 @@ make install -j 4
 </div>
 <div class="section" id="linking-the-library">
 <h2>Linking the library<a class="headerlink" href="#linking-the-library" title="Permalink to this headline">¶</a></h2>
-<p>We suggest using <a href="#id5"><span class="problematic" id="id6">`CMake`_</span></a> for a smooth integration with your project. The installation of Dawn provides a find configuration script (which can be used with <a class="reference external" href="https://cmake.org/cmake/help/v3.5/command/find_package.html">find_package</a>) that should be installed into your system.</p>
+<p>We suggest using <a class="reference external" href="https://cmake.org/">CMake</a> for a smooth integration with your project. The installation of Dawn provides a find configuration script (which can be used with <a class="reference external" href="https://cmake.org/cmake/help/v3.5/command/find_package.html">find_package</a>) that should be installed into your system.</p>
 <p>In your projects <code class="docutils literal"><span class="pre">CMakeLists.txt</span></code>, simply add</p>
 <div class="highlight-cmake"><div class="highlight"><pre><span class="nb">find_package</span><span class="p">(</span><span class="s">Dawn</span><span class="p">)</span>
 </pre></div>
@@ -377,8 +377,6 @@ make install -j 4
 
   <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
-
-<span class="p">...</span> <span class="nl">_CMake</span><span class="p">:</span> <span class="nl">https</span><span class="p">:</span><span class="c1">//cmake.org/</span>
 </pre></div>
 </div>
 </div>
