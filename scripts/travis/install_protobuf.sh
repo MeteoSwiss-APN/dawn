@@ -66,6 +66,6 @@ function install_protobuf() {
   NOTICE $(printf "${FUNCNAME[0]}: Successfully installed protobuf %s (took %dm %ds)\n"            \
            $protobuf_version $(($elapsed_time%3600/60)) $(($elapsed_time%60)))
 
-  export Protobuf_DIR="${protobuf_install_dir}"
+  export Protobuf_DIR="${protobuf_install_dir}/lib/cmake/protobuf"
   popd
 }
