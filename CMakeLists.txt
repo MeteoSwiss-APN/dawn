@@ -40,6 +40,7 @@ dawn_cmake_init()
 include(DawnAddExecutable)
 include(DawnAddLibrary)
 include(DawnAddTargetCleanAll)
+include(DawnAddTargetClangFormat)
 include(DawnCheckInSourceBuild)
 include(DawnCombineLibraries)
 include(DawnConfigureFile)
@@ -88,7 +89,7 @@ make_config_string("Asserts" ${GTCLANG_ASSERTS})
 dawn_report_result("Configuration summary" ${config_info})
 
 # Include the packages (and set the correct, libraries, includes etc.)
-foreach(package ccache Python3 Boost Clang Dawn Threads)
+foreach(package ccache Python3 Boost clang-format Clang Dawn Threads)
   include("Add${package}")
   dawn_create_package_string(${package} info)
   list(APPEND package_info ${info})
@@ -104,6 +105,9 @@ add_definitions(${GTCLANG_EXTERNAL_DEFINITIONS})
 
 # Output summary of the packages
 dawn_report_result("Package summary" ${package_info})
+
+# Add clang-format target
+dawn_add_target_clang_format(DIRECTORIES ${CMAKE_SOURCE_DIR}/src EXTENSION ".h;.cpp")
 
 # Build gtclang
 include_directories(${CMAKE_SOURCE_DIR}/src)
