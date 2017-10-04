@@ -14,15 +14,15 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "gsl/Support/STLExtras.h"
+#include "dawn/Support/STLExtras.h"
 #include "gtclang/Support/Logger.h"
 #include "gtclang/Unittest/UnittestEnvironment.h"
 #include <gtest/gtest.h>
 
 int main(int argc, char* argv[]) {
   // Initialize Logger
-  auto logger = gsl::make_unique<gtclang::Logger>();
-  gsl::Logger::getSingleton().registerLogger(logger.get());
+  auto logger = dawn::make_unique<gtclang::Logger>();
+  dawn::Logger::getSingleton().registerLogger(logger.get());
 
   // Initialize GTest
   testing::InitGoogleTest(&argc, argv);

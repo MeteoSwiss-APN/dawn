@@ -25,7 +25,7 @@ def replace(dirs, old, new):
                     f.write(s)
                   
 if __name__ == '__main__':
-    dir = ["./gtclang"]
+    dir = ["./unit-test"]
 
     old = ["Gsl", "gsl", "GSL"]
     new = ["Dawn", "dawn", "DAWN"]

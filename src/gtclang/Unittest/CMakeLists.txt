@@ -14,17 +14,18 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-gtclang_configure_file(Config.h.cmake)
+dawn_configure_file(Config.h.cmake)
 
-gtclang_add_library(
+dawn_add_library(
   NAME GTClangUnittest
-  SOURCES UnittestEnvironment.h
-          UnittestEnvironment.cpp
+  SOURCES FileManager.cpp
           FileManager.h
-          FileManager.cpp
-          FlagManager.h
           FlagManager.cpp
-          GTClang.h
+          FlagManager.h
           GTClang.cpp
+          GTClang.h
+          UnittestEnvironment.cpp
+          UnittestEnvironment.h
+  ARCHIVE
 )
 

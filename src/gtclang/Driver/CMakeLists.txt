@@ -14,26 +14,15 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-gtclang_add_library(
+dawn_add_library(
   NAME GTClangDriver
-  SOURCES CompilerInstance.h
-          CompilerInstance.cpp
-          Driver.h
+  SOURCES CompilerInstance.cpp
+          CompilerInstance.h
           Driver.cpp
+          Driver.h
           Options.h
           Options.inc
-          OptionsParser.h
           OptionsParser.cpp
-)
-
-gtclang_add_executable(
-  NAME gtclang
-  SOURCES gtclang.cpp
-  DEPENDS 
-    GTClangDriver
-    GTClangFrontend
-    GTClangSupport
-    ${GTCLANG_CLANG_LIBRARIES}
-    ${GTCLANG_DAWN_LIBRARIES}
-    ${GTCLANG_THREADS_LIBRARIES}
+          OptionsParser.h
+  OBJECT
 )

@@ -14,29 +14,30 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-gtclang_add_library(
+dawn_add_library(
   NAME GTClangFrontend
   SOURCES ClangASTExprResolver.h
           ClangASTExprResolver.cpp
-          ClangASTStmtResolver.h
           ClangASTStmtResolver.cpp
-          ClangFormat.h
+          ClangASTStmtResolver.h
           ClangFormat.cpp
-          Diagnostics.h
+          ClangFormat.h
           Diagnostics.cpp
+          Diagnostics.h
           DiagnosticsKind.inc
-          GlobalVariableParser.h
           GlobalVariableParser.cpp
-          GTClangASTAction.h
+          GlobalVariableParser.h
           GTClangASTAction.cpp
-          GTClangASTConsumer.h
+          GTClangASTAction.h
           GTClangASTConsumer.cpp
-          GTClangASTVisitor.h
+          GTClangASTConsumer.h
           GTClangASTVisitor.cpp
-          GTClangContext.h
+          GTClangASTVisitor.h
           GTClangContext.cpp
-          GTClangPreprocessorAction.h
+          GTClangContext.h
           GTClangPreprocessorAction.cpp
-          StencilParser.h
+          GTClangPreprocessorAction.h
           StencilParser.cpp
+          StencilParser.h
+  OBJECT
 )

@@ -31,8 +31,8 @@ namespace {
 
 /// @brief Print version and exit
 DAWN_ATTRIBUTE_NORETURN static void versionPrinter() {
-  llvm::outs() << dawn::format("gtclang (%s) based on LLVM/Clang (%s), DAWN (%s)\n",
-                              GTCLANG_VERSION_STRING, LLVM_VERSION_STRING, DAWN_VERSION_STRING);
+  llvm::outs() << dawn::format("gtclang (%s)\nbased on LLVM/Clang (%s), Dawn (%s)\n",
+                               GTCLANG_FULL_VERSION_STR, LLVM_VERSION_STRING, DAWN_VERSION_STR);
   llvm::outs().flush();
   std::exit(0);
 }

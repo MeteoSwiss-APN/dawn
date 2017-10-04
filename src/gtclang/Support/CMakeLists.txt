@@ -14,14 +14,15 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-gtclang_configure_file(Config.h.cmake)
+dawn_configure_file(Config.h.cmake)
 
-gtclang_add_library(
+dawn_add_library(
   NAME GTClangSupport
-  SOURCES StringUtil.h
-          StringUtil.cpp
-          Logger.h
-          Logger.cpp
+  SOURCES FileUtil.cpp
           FileUtil.h
-          FileUtil.cpp
+          Logger.cpp
+          Logger.h
+          StringUtil.cpp
+          StringUtil.h
+  OBJECT
 )

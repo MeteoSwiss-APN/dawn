@@ -14,7 +14,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Compiler/DAWNCompiler.h"
+#include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/SIRSerializerJSON.h"
 #include "dawn/Support/Config.h"
@@ -117,11 +117,11 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   }
 
   // Set the backend
-  dawn::DAWNCompiler::CodeGenKind codeGen = dawn::DAWNCompiler::CG_GTClang;
+  dawn::DawnCompiler::CodeGenKind codeGen = dawn::DawnCompiler::CG_GTClang;
   if(context_->getOptions().Backend == "gridtools")
-    codeGen = dawn::DAWNCompiler::CG_GTClang;
+    codeGen = dawn::DawnCompiler::CG_GTClang;
   else if(context_->getOptions().Backend == "c++")
-    codeGen = dawn::DAWNCompiler::CG_GTClangNaiveCXX;
+    codeGen = dawn::DawnCompiler::CG_GTClangNaiveCXX;
   else {
     context_->getDiagnostics().report(Diagnostics::err_invalid_option)
         << ("-backend=" + context_->getOptions().Backend)
@@ -129,18 +129,18 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   }
 
   // Compile the SIR to GridTools
-  dawn::DAWNCompiler Compiler(makeDAWNOptions(context_->getOptions()).get());
-  std::unique_ptr<dawn::TranslationUnit> DAWNTranslationUnit = Compiler.compile(SIR.get(), codeGen);
+  dawn::DawnCompiler Compiler(makeDAWNOptions(context_->getOptions()).get());
+  std::unique_ptr<dawn::TranslationUnit> DawnTranslationUnit = Compiler.compile(SIR.get(), codeGen);
 
-  // Report diagnostics from DAWN
+  // Report diagnostics from Dawn
   if(Compiler.getDiagnostics().hasDiags()) {
     for(const auto& diags : Compiler.getDiagnostics().getQueue()) {
       context_->getDiagnostics().report(*diags);
     }
   }
 
-  if(!DAWNTranslationUnit || Compiler.getDiagnostics().hasErrors()) {
-    DAWN_LOG(INFO) << "Errors in DAWN. Aborting";
+  if(!DawnTranslationUnit || Compiler.getDiagnostics().hasErrors()) {
+    DAWN_LOG(INFO) << "Errors in Dawn. Aborting";
     return;
   }
 
@@ -183,15 +183,15 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
     if(rewriter.ReplaceText(stencilDecl->getSourceRange(),
                             stencilPair.second->Attributes.has(dawn::sir::Attr::AK_NoCodeGen)
                                 ? "class " + stencilPair.second->Name + "{}"
-                                : DAWNTranslationUnit->getStencils().at(stencilPair.second->Name)))
+                                : DawnTranslationUnit->getStencils().at(stencilPair.second->Name)))
       context_->getDiagnostics().report(Diagnostics::err_fs_error) << dawn::format(
           "unable to replace stencil code at: %s", stencilDecl->getLocation().printToString(SM));
   }
 
   // Replace globals struct
-  if(!globalsParser.isEmpty() && !DAWNTranslationUnit->getGlobals().empty()) {
+  if(!globalsParser.isEmpty() && !DawnTranslationUnit->getGlobals().empty()) {
     if(rewriter.ReplaceText(globalsParser.getRecordDecl()->getSourceRange(),
-                            DAWNTranslationUnit->getGlobals()))
+                            DawnTranslationUnit->getGlobals()))
       context_->getDiagnostics().report(Diagnostics::err_fs_error)
           << dawn::format("unable to replace globals code at: %s",
                          globalsParser.getRecordDecl()->getLocation().printToString(SM));
@@ -222,12 +222,12 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   llvm::raw_fd_ostream fout(generatedFilename, ec, flags);
 
   // Print a header
-  fout << dawn::format("// gtclang (%s) based on LLVM/Clang (%s), DAWN (%s)\n",
-                      GTCLANG_VERSION_STRING, LLVM_VERSION_STRING, DAWN_VERSION_STRING);
+  fout << dawn::format("// gtclang (%s)\n// based on LLVM/Clang (%s), Dawn (%s)\n",
+                      GTCLANG_FULL_VERSION_STR, LLVM_VERSION_STRING, DAWN_VERSION_STR);
   fout << "// Generated on " << currentDateTime() << "\n\n";
 
   // Add the macro definitions
-  for(const auto& macroDefine : DAWNTranslationUnit->getPPDefines())
+  for(const auto& macroDefine : DawnTranslationUnit->getPPDefines())
     fout << macroDefine << "\n";
 
   fout.write(code.data(), code.size());

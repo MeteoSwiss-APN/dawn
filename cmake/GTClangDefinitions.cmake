@@ -56,3 +56,13 @@ set(GTCLANG_DSL_INCLUDES "${CMAKE_SOURCE_DIR}/src" "${CMAKE_INSTALL_PREFIX}/incl
 set(GTCLANG_EXECUTABLE "${CMAKE_BINARY_DIR}/bin/gtclang")
 set(GTCLANG_UNITTEST_DATAPATH ${CMAKE_SOURCE_DIR}/test/integration)
 set(GTCLANG_UNITTEST_INCLUDES ${CMAKE_SOURCE_DIR}/src)
+
+# Installation definitions
+set(GTCLANG_INSTALL_BIN_DIR cmake 
+    CACHE INTERNAL "Relative path of the binary install location" FORCE)
+set(GTCLANG_INSTALL_INCLUDE_DIR include 
+    CACHE INTERNAL "Relative path of the include install location" FORCE)
+set(GTCLANG_INSTALL_LIB_DIR lib 
+    CACHE INTERNAL "Relative path of the library install location " FORCE)
+set(GTCLANG_INSTALL_CMAKE_DIR cmake 
+    CACHE INTERNAL "Relative path of the cmake install location" FORCE)
