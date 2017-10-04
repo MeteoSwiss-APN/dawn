@@ -29,6 +29,8 @@ Dawn --- Compiler toolchain for high-level DSLs
    :caption: Developer Documentation
    :maxdepth: 2
 
+   isir
+   gridtools
    coding
    cmake-modules
 
