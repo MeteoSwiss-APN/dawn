@@ -22,7 +22,7 @@ include(CMakeParseArguments)
 # dawn_add_target_clang_format
 # ----------------------------
 #
-# Provide a ``format`` which runs clang-format_ recursively on all files in the provided 
+# Provide a ``format`` target which runs clang-format_ recursively on all files in the provided 
 # directories.
 #
 # .. code-block:: cmake

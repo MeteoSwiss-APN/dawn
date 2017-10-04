@@ -29,11 +29,10 @@ if(NOT DEFINED DAWN_VERSION_SUFFIX)
   set(DAWN_VERSION_SUFFIX "dev" CACHE INTERNAL "Suffix of the Dawn version" FORCE)
 endif()
 
-if(NOT DEFINED DAWN_VERSION_STR)
-  set(DAWN_VERSION_STR 
-      "${DAWN_VERSION_MAJOR}.${DAWN_VERSION_MINOR}.${DAWN_VERSION_PATCH}"
-      CACHE INTERNAL "Version string of Dawn" FORCE)
-endif()
+set(DAWN_VERSION ${DAWN_VERSION_MAJOR}.${DAWN_VERSION_MINOR}.${DAWN_VERSION_PATCH}
+    CACHE STRING "Version of Dawn" FORCE)
+
+mark_as_advanced(DAWN_VERSION)
 
 # Git version string
 dawn_get_git_head_revision(git_refspec git_hash)
@@ -48,5 +47,16 @@ string(TOLOWER ${DAWN_PLATFORM_STRING} platform)
 string(TOLOWER ${CMAKE_CXX_COMPILER_ID} compiler)
 set(compiler "${compiler}-${CMAKE_CXX_COMPILER_VERSION}")
 set(DAWN_FULL_VERSION_STR 
-    "${DAWN_VERSION_STR}-${SDAWN_GIT_HASH}-${architecture}-${platform}-${compiler}"
+    "${DAWN_VERSION}-${SDAWN_GIT_HASH}-${architecture}-${platform}-${compiler}"
     CACHE STRING "Full version string of Dawn" FORCE)
+
+mark_as_advanced(DAWN_FULL_VERSION_STR)
+
+# Installation definitions
+set(DAWN_INSTALL_INCLUDE_DIR include 
+    CACHE INTERNAL "Relative path of the include install location" FORCE)
+set(DAWN_INSTALL_LIB_DIR lib 
+    CACHE INTERNAL "Relative path of the library install location " FORCE)
+set(DAWN_INSTALL_CMAKE_DIR cmake 
+    CACHE INTERNAL "Relative path of the cmake install location" FORCE)
+
