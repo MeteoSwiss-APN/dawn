@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>CMake Modules &mdash; Dawn 0.0.1 documentation</title>
+  <title>GridTools &mdash; Dawn 0.0.1 documentation</title>
   
 
   
@@ -32,9 +32,7 @@
   
 
   
-    <link rel="top" title="Dawn 0.0.1 documentation" href="index.html"/>
-        <link rel="next" title="dawn_get_compiler_info" href="cmake-modules/DawGetCompilerStr.html"/>
-        <link rel="prev" title="Dawn Coding standard" href="coding.html"/> 
+    <link rel="top" title="Dawn 0.0.1 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -120,12 +118,8 @@
 </li>
 </ul>
 <p class="caption"><span class="caption-text">Developer Documentation</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="isir.html">ISIR</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gridtools.html">GridTools</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="gridtools.html#parallel-model">Parallel Model</a></li>
-</ul>
-</li>
 <li class="toctree-l1"><a class="reference internal" href="coding.html">Dawn Coding standard</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="coding.html#introduction">Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coding.html#supported-c-11-language-and-library-features">Supported C++11 Language and Library Features</a></li>
@@ -142,9 +136,9 @@
 <li class="toctree-l2"><a class="reference internal" href="coding.html#clang-format">Clang Format</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">CMake Modules</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#functions-macros">Functions &amp; Macros</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="cmake-modules.html">CMake Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#functions-macros">Functions &amp; Macros</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawGetCompilerStr.html">dawn_get_compiler_info</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddExecutable.html">dawn_add_executable</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddLibrary.html">dawn_add_library</a></li>
@@ -170,7 +164,7 @@
 <li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnSetCXXStandard.html">dawn_set_cxx_standard</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#modules">Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#modules">Modules</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="cmake-modules/FindClang.html">FindClang</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cmake-modules/FindLLVM.html">FindLLVM</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cmake-modules/FindSphinx.html">FindSphinx</a></li>
@@ -225,14 +219,14 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>CMake Modules</li>
+      <li>GridTools</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
             
-              <a href="https://github.com/thfabian/dawn/blob/master/docs/cmake-modules.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/thfabian/dawn/blob/master/docs/gridtools.rst" class="fa fa-github"> Edit on GitHub</a>
             
           
         
@@ -246,69 +240,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="cmake-modules">
-<h1>CMake Modules<a class="headerlink" href="#cmake-modules" title="Permalink to this headline">¶</a></h1>
-<p>This section describes the CMake functionailty of Dawn and it&#8217;s subprojects.</p>
-<div class="section" id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p>Add the <code class="docutils literal"><span class="pre">&lt;dawn&gt;/cmake/modules</span></code> directory to the <code class="docutils literal"><span class="pre">CMAKE_MODULE_PATH</span></code> to use the functions, macros and modules:</p>
-<div class="highlight-cmake"><div class="highlight"><pre><span class="nb">list</span><span class="p">(</span><span class="s">APPEND</span> <span class="s">CMAKE_MODULE_PATH</span> <span class="s2">&quot;&lt;dawn&gt;/cmake/modules&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Note that all Dawn projects contain a <code class="docutils literal"><span class="pre">dawn_cmake_init</span></code> macro which tries to find the CMake modules of Dawn.</p>
-<div class="highlight-cmake"><div class="highlight"><pre><span class="nb">include</span><span class="p">(</span><span class="s">DawnCMakeInit</span><span class="p">)</span>
-<span class="nb">dawn_cmake_init</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="functions-macros">
-<h2>Functions &amp; Macros<a class="headerlink" href="#functions-macros" title="Permalink to this headline">¶</a></h2>
-<p>Each function and macro uses a <a class="reference external" href="https://en.wikipedia.org/wiki/Snake_case">snake-case</a> identifier and is defined in a spereate file using he corresponding <a class="reference external" href="https://en.wikipedia.org/wiki/Camel_case">camel-case</a> filename. For example, to use the function <code class="docutils literal"><span class="pre">dawn_add_target_clean_all</span></code> include the file <code class="docutils literal"><span class="pre">DawnAddTargetCleanAll</span></code>.</p>
-<div class="highlight-cmake"><div class="highlight"><pre><span class="nb">include</span><span class="p">(</span><span class="s">DawnAddTargetCleanAll</span><span class="p">)</span>
-<span class="nb">dawn_add_target_clean_all</span><span class="p">()</span>
-</pre></div>
-</div>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/DawGetCompilerStr.html">dawn_get_compiler_info</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/DawnAddExecutable.html">dawn_add_executable</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/DawnAddLibrary.html">dawn_add_library</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/DawnAddTargetClangFormat.html">dawn_add_target_clang_format</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/DawnAddTargetCleanAll.html">dawn_add_target_clean_all</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/DawnAddUnittest.html">dawn_add_unittest</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/DawnCheckAndSetCXXFlag.html">dawn_check_and_set_cxx_flag</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/DawnCheckCXXFlag.html">dawn_check_cxx_flag</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/DawnCheckInSourceBuild.html">dawn_check_in_source_build</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/DawnCombineLibraries.html">dawn_combine_libraries</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/DawnConfigureFile.html">dawn_configure_file</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/DawnCreatePackageString.html">dawn_create_package_string</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/DawnExportPackage.html">dawn_export_package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/DawnFindPythonModule.html">dawn_find_python_module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/DawnGetArchitectureInfo.html">dawn_get_architecture_info</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/DawnGetCompilerInfo.html">dawn_get_compiler_info</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/DawnGetGitHeadRevision.html">dawn_get_git_head_revision</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/DawnGetPlatformInfo.html">dawn_get_platform_info</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/DawnGetScriptDir.html">dawn_get_script_dir</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/DawnIncludeGuard.html">dawn_include_guard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/DawnMakeStringPair.html">dawn_make_string_pair</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/DawnReportResult.html">dawn_report_result</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/DawnSetCXXStandard.html">dawn_set_cxx_standard</a></li>
-</ul>
-</div>
-</div>
-<div class="section" id="modules">
-<h2>Modules<a class="headerlink" href="#modules" title="Permalink to this headline">¶</a></h2>
-<p>Load settings for an external project via <a class="reference external" href="https://cmake.org/cmake/help/v3.0/command/find_package.html">find_package</a>.</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/FindClang.html">FindClang</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/FindLLVM.html">FindLLVM</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/FindSphinx.html">FindSphinx</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/Findbash.html">Findbash</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/Findccache.html">Findccache</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cmake-modules/Findclang-format.html">Findclang-format</a></li>
-</ul>
-</div>
+  <div class="section" id="gridtools">
+<span id="id1"></span><h1>GridTools<a class="headerlink" href="#gridtools" title="Permalink to this headline">¶</a></h1>
+<p>TODO</p>
+<div class="section" id="parallel-model">
+<span id="gridtools-parallel-model"></span><h2>Parallel Model<a class="headerlink" href="#parallel-model" title="Permalink to this headline">¶</a></h2>
+<p>TODO</p>
 </div>
 </div>
 
@@ -319,15 +256,6 @@
            </div>
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="cmake-modules/DawGetCompilerStr.html" class="btn btn-neutral float-right" title="dawn_get_compiler_info" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="coding.html" class="btn btn-neutral" title="Dawn Coding standard" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

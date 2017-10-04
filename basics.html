@@ -112,10 +112,20 @@
 <p class="caption"><span class="caption-text">Advanced Topics</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="sir.html">Stencil Intermediate Representation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="toolchain.html">Dawn toolchain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="toolchain.html">Dawn toolchain</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="toolchain.html#parallel-model-builder">Parallel Model Builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="toolchain.html#safety-checker">Safety Checker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="toolchain.html#optimizer">Optimizer</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">Developer Documentation</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="isir.html">ISIR</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gridtools.html">GridTools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gridtools.html#parallel-model">Parallel Model</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="coding.html">Dawn Coding standard</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="coding.html#introduction">Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coding.html#supported-c-11-language-and-library-features">Supported C++11 Language and Library Features</a></li>
@@ -243,7 +253,7 @@
 <h2>Compiling the library<a class="headerlink" href="#compiling-the-library" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="linux">
 <h3>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h3>
-<p>On Linux, you&#8217;ll need to install a C++11 toolchain (e.g <strong>gcc</strong> or <strong>clang</strong>) as well as <a class="reference external" href="https://cmake.org/">CMake</a> (&gt;= 3.1). For example, on Ubuntu the following will do</p>
+<p>On Linux, you&#8217;ll need to install a C++11 toolchain (e.g <strong>gcc</strong> or <strong>clang</strong>) as well as <a class="reference external" href="https://cmake.org/">CMake</a> (&gt;= 3.3). For example, on Ubuntu the following will do</p>
 <div class="highlight-bash"><div class="highlight"><pre>sudo apt-get install g++ cmake
 </pre></div>
 </div>
@@ -258,7 +268,7 @@ make install -j 4
 </div>
 <div class="section" id="mac-os">
 <h3>Mac OS<a class="headerlink" href="#mac-os" title="Permalink to this headline">¶</a></h3>
-<p>On Mac OS, you&#8217;ll need to install Xcode as well as <a class="reference external" href="https://cmake.org/">CMake</a> (&gt;= 3.1). First, make sure you have the Xcode Command Line Tools installed</p>
+<p>On Mac OS, you&#8217;ll need to install Xcode as well as <a class="reference external" href="https://cmake.org/">CMake</a> (&gt;= 3.3). First, make sure you have the Xcode Command Line Tools installed</p>
 <div class="highlight-bash"><div class="highlight"><pre>xcode-select --install
 </pre></div>
 </div>
@@ -279,12 +289,12 @@ make install -j 4
 </div>
 <div class="section" id="linking-the-library">
 <h2>Linking the library<a class="headerlink" href="#linking-the-library" title="Permalink to this headline">¶</a></h2>
-<p>We suggest using the build system (CMake) for a smooth integration with your project. The installation of Dawn provides a find configuration script (which can be used with <a class="reference external" href="https://cmake.org/cmake/help/v3.5/command/find_package.html">find_package</a>) that should be installed into your system.</p>
+<p>We suggest using <a class="reference external" href="https://cmake.org/">CMake</a> for a smooth integration with your project. The installation of Dawn provides a find configuration script (which can be used with <a class="reference external" href="https://cmake.org/cmake/help/v3.5/command/find_package.html">find_package</a>) that should be installed into your system.</p>
 <p>In your projects <code class="docutils literal"><span class="pre">CMakeLists.txt</span></code>, simply add</p>
 <div class="highlight-cmake"><div class="highlight"><pre><span class="nb">find_package</span><span class="p">(</span><span class="s">Dawn</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>to import all the necessary informations.</p>
+<p>to import all the necessary information.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The script is located in <strong>&lt;dawn-install-dir&gt;/cmake</strong>. If CMake has trouble finding the script you may pass this location directly to CMake by adding <code class="docutils literal"><span class="pre">-DDawn_DIR=&lt;dawn-install-dir&gt;/cmake</span></code> to the command line flags.</p>

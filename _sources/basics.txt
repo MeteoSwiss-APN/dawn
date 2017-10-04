@@ -11,7 +11,7 @@ Compiling the library
 Linux
 -----
 
-On Linux, you'll need to install a C++11 toolchain (e.g **gcc** or **clang**) as well as `CMake <https://cmake.org/>`_ (>= 3.1). For example, on Ubuntu the following will do
+On Linux, you'll need to install a C++11 toolchain (e.g **gcc** or **clang**) as well as `CMake`_ (>= 3.3). For example, on Ubuntu the following will do
 
 .. code-block:: bash
 
@@ -31,7 +31,7 @@ The last line will both install and compile the library locally in **<dawn-dir>/
 Mac OS
 ------
 
-On Mac OS, you'll need to install Xcode as well as `CMake <https://cmake.org/>`_ (>= 3.1). First, make sure you have the Xcode Command Line Tools installed
+On Mac OS, you'll need to install Xcode as well as `CMake`_ (>= 3.3). First, make sure you have the Xcode Command Line Tools installed
 
 .. code-block:: bash
 
@@ -58,7 +58,7 @@ The last line will both install and compile the library locally in **<dawn-dir>/
 Linking the library
 ===================
 
-We suggest using the build system (CMake) for a smooth integration with your project. The installation of Dawn provides a find configuration script (which can be used with `find_package <https://cmake.org/cmake/help/v3.5/command/find_package.html>`_) that should be installed into your system.
+We suggest using `CMake`_ for a smooth integration with your project. The installation of Dawn provides a find configuration script (which can be used with `find_package <https://cmake.org/cmake/help/v3.5/command/find_package.html>`_) that should be installed into your system.
 
 In your projects ``CMakeLists.txt``, simply add
 
@@ -66,7 +66,7 @@ In your projects ``CMakeLists.txt``, simply add
 
    find_package(Dawn)
 
-to import all the necessary informations.
+to import all the necessary information.
 
 .. note::
 
@@ -131,3 +131,6 @@ TODO:
 
     return 0;
   }
+
+
+.. _CMake: https://cmake.org/

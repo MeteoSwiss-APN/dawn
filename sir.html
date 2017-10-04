@@ -101,7 +101,10 @@
 <li class="toctree-l3"><a class="reference internal" href="basics.html#mac-os">Mac OS</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="basics.html#linking-the-library">Linking the library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basics.html#linking-the-library">Linking the library</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="basics.html#example">Example</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="basics.html#using-the-library">Using the library</a></li>
 </ul>
 </li>
@@ -109,7 +112,12 @@
 <p class="caption"><span class="caption-text">Advanced Topics</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="">Stencil Intermediate Representation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="toolchain.html">Dawn toolchain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="toolchain.html">Dawn toolchain</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="toolchain.html#parallel-model-builder">Parallel Model Builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="toolchain.html#safety-checker">Safety Checker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="toolchain.html#optimizer">Optimizer</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">Developer Documentation</span></p>
 <ul>
@@ -234,8 +242,9 @@
            <div itemprop="articleBody">
             
   <div class="section" id="stencil-intermediate-representation">
-<h1>Stencil Intermediate Representation<a class="headerlink" href="#stencil-intermediate-representation" title="Permalink to this headline">¶</a></h1>
-<p>TODO</p>
+<span id="sir"></span><h1>Stencil Intermediate Representation<a class="headerlink" href="#stencil-intermediate-representation" title="Permalink to this headline">¶</a></h1>
+<p>Developing a single DSL that is able to support all numerical methods and computational patterns present in GFD models present a serious challenge due to the wide domain it needs to cover. In this project, we accept the reality that multiple scientific communities desire to develop their own DSL language, tailored for their model and needs. The Stencil Intermediate Representation (SIR) allows to define multiple high level DSLs in a lightweight manner by reusing most of the complex toolchain i.e the Dawn library. In addition, a standardized SIR has another major advantage: It allows to easily interact with third-party developers and hardware manufacturers. For instance, the SIR of the <a class="reference external" href="http://www.cosmo-model.org/">COSMO</a> atmospheric model, serialized to a mark-up Language like <a class="reference external" href="https://en.wikipedia.org/wiki/JSON">JSON</a>, can be distributed to hardware vendors, which in turn have their proprietary, in-house compilers based on the SIR and can return plain C/C++ or CUDA code. This frees third-party developers from compiling the models and hopefully improves collaboration.</p>
+<p>In this section we define the specification of the SIR.</p>
 </div>
 
 

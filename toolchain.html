@@ -33,7 +33,7 @@
 
   
     <link rel="top" title="Dawn 0.0.1 documentation" href="index.html"/>
-        <link rel="next" title="Dawn Coding standard" href="coding.html"/>
+        <link rel="next" title="ISIR" href="isir.html"/>
         <link rel="prev" title="Stencil Intermediate Representation" href="sir.html"/> 
 
   
@@ -101,7 +101,10 @@
 <li class="toctree-l3"><a class="reference internal" href="basics.html#mac-os">Mac OS</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="basics.html#linking-the-library">Linking the library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basics.html#linking-the-library">Linking the library</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="basics.html#example">Example</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="basics.html#using-the-library">Using the library</a></li>
 </ul>
 </li>
@@ -109,10 +112,20 @@
 <p class="caption"><span class="caption-text">Advanced Topics</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="sir.html">Stencil Intermediate Representation</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Dawn toolchain</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Dawn toolchain</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#parallel-model-builder">Parallel Model Builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#safety-checker">Safety Checker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#optimizer">Optimizer</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">Developer Documentation</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="isir.html">ISIR</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gridtools.html">GridTools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gridtools.html#parallel-model">Parallel Model</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="coding.html">Dawn Coding standard</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="coding.html#introduction">Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coding.html#supported-c-11-language-and-library-features">Supported C++11 Language and Library Features</a></li>
@@ -235,7 +248,23 @@
             
   <div class="section" id="dawn-toolchain">
 <h1>Dawn toolchain<a class="headerlink" href="#dawn-toolchain" title="Permalink to this headline">¶</a></h1>
+<p>The toolchain of Dawn contains several modules and is organized in passes, allowing to customize the process by enabling, disabling or change the order of execution of the individual passes. The default order of execution, depicted in <a class="reference internal" href="#toolchain-process"><span>Figure 1</span></a>, starts by translating the SIR into an <em>internal</em> SIR (<a class="reference internal" href="isir.html#isir"><span>ISIR</span></a>) which enriches the SIR with various information, like the computation of the access patterns, required by the following passes. As the initial construction of the ISIR generates a parallel program that is most likely incorrect under the given parallel model, we invoke several passes (<a class="reference internal" href="#parallel-model-builder">Parallel Model Builder</a>) to build a valid parallel program. The <a class="reference internal" href="#safety-checker">Safety Checker</a> passes will run various static analysis routines and the <a class="reference internal" href="#optimizer">Optimizer</a> will perform several optimizations such as reordering and fusing groups of statements, setting software managed caches or reducing shared-memory pressure. Finally, the code generation will translate the ISIR into the main DSL of GridTools or directly to C++.</p>
+<div class="figure align-center" id="id4">
+<span id="toolchain-process"></span><img alt="_images/toolchain_process.png" src="_images/toolchain_process.png" />
+<p class="caption"><span class="caption-number">Fig. 1 </span><span class="caption-text">Default order of execution of the passes grouped in <a class="reference internal" href="#parallel-model-builder">Parallel Model Builder</a> (orange), <a class="reference internal" href="#safety-checker">Safety Checker</a> (yellow) and <a class="reference internal" href="#optimizer">Optimizer</a> (green).</span></p>
+</div>
+<div class="section" id="parallel-model-builder">
+<span id="id1"></span><h2>Parallel Model Builder<a class="headerlink" href="#parallel-model-builder" title="Permalink to this headline">¶</a></h2>
+<p>The parallel model builder passes transform the initial Stage and Multi-Stage arrangement into a valid parallel program under the <a class="reference internal" href="gridtools.html#gridtools-parallel-model"><span>GridTools parallel model</span></a>.</p>
+</div>
+<div class="section" id="safety-checker">
+<span id="id2"></span><h2>Safety Checker<a class="headerlink" href="#safety-checker" title="Permalink to this headline">¶</a></h2>
 <p>TODO</p>
+</div>
+<div class="section" id="optimizer">
+<span id="id3"></span><h2>Optimizer<a class="headerlink" href="#optimizer" title="Permalink to this headline">¶</a></h2>
+<p>TODO</p>
+</div>
 </div>
 
 
@@ -248,7 +277,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="coding.html" class="btn btn-neutral float-right" title="Dawn Coding standard" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="isir.html" class="btn btn-neutral float-right" title="ISIR" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="sir.html" class="btn btn-neutral" title="Stencil Intermediate Representation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
