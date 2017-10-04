@@ -14,4 +14,10 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_subdirectory(gtclang)
+add_subdirectory(Support)
+add_subdirectory(Frontend)
+add_subdirectory(Driver)
+
+if(GTCLANG_TESTING)
+  add_subdirectory(Unittest)
+endif()
