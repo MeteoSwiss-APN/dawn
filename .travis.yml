@@ -84,6 +84,10 @@ jobs:
       compiler: clang
       env: CONFIG=RelWithDebInfo CXX_COMPILER=clang++-4.0 C_COMPILER=clang-4.0
 
+cache:
+  directories:
+    - ${CACHE_DIR}/protobuf-${PROTOBUF_VERSION}
+
 branches:
   only:
     - master
