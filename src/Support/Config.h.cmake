@@ -1,14 +1,15 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                         _     _ _              _            _
-//                        (_)   | | |            | |          | |
-//               __ _ _ __ _  __| | |_ ___   ___ | |___    ___| | __ _ _ __   __ _
-//              / _` | '__| |/ _` | __/ _ \ / _ \| / __|  / __| |/ _` | '_ \ / _` |
-//             | (_| | |  | | (_| | || (_) | (_) | \__ \ | (__| | (_| | | | | (_| |
-//              \__, |_|  |_|\__,_|\__\___/ \___/|_|___/  \___|_|\__,_|_| |_|\__, |
-//               __/ |                                                        __/ |
-//              |___/                                                        |___/
+//                         _       _                   
+//                        | |     | |                  
+//                    __ _| |_ ___| | __ _ _ __   __ _ 
+//                   / _` | __/ __| |/ _` | '_ \ / _` |
+//                  | (_| | || (__| | (_| | | | | (_| |
+//                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
+//                    __/ |                       __/ |
+//                   |___/                       |___/ 
 //
-//  This file is distributed under the MIT License (MIT).
+//
+//  This file is distributed under the MIT License (MIT). 
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -26,7 +27,10 @@
 #define GTCLANG_VERSION_PATCH ${GTCLANG_VERSION_PATCH}
 
 // GTClang version string 
-#define GTCLANG_VERSION_STRING "${GTCLANG_VERSION_STRING}"
+#define GTCLANG_VERSION_STRING "${GTCLANG_VERSION}"
+
+// GTClang full version string 
+#define GTCLANG_FULL_VERSION_STRING "${GTCLANG_FULL_VERSION}"
 
 // Path to gridtools clang DSL headers
 #define GTCLANG_DSL_INCLUDES "${GTCLANG_DSL_INCLUDES}"
