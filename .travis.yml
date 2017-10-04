@@ -39,6 +39,7 @@ env:
     - CACHE_DIR=${TRAVIS_BUILD_DIR}/deps/install
     - CMAKE_VERSION=3.8.1
     - PROTOBUF_VERSION=3.4.1
+    - PACKAGES_TO_INSTALL=cmake,protobuf
 
 jobs:
   include:
@@ -46,7 +47,7 @@ jobs:
       stage: Prepare Cache
       compiler: gcc
       env: CXX_COMPILER=g++-5 C_COMPILER=gcc-5
-      script: bash ${SCRIPT_DIR}/driver-install.sh -i ${CACHE_DIR} -b cmake,protobuf
+      script: bash ${SCRIPT_DIR}/driver-install.sh -i ${CACHE_DIR} -b ${PACKAGES_TO_INSTALL}
 
     - <<: *prepare_cache_stage
       compiler: clang

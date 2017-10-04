@@ -99,11 +99,20 @@ if(DAWN_DOCUMENTATION)
   set(doc_packages bash Python3 Sphinx LaTeX)
 endif()
 
-foreach(package ccache clang-format ${doc_packages})
+foreach(package Protobuf ccache clang-format ${doc_packages})
   include("Add${package}")
   dawn_create_package_string(${package} info)
   list(APPEND package_info ${info})
+
+    string(TOUPPER ${package} PACKAGE)
+  list(APPEND DAW_EXTERNAL_LIBRARIES ${DAWN_${PACKAGE}_LIBRARIES})
+  list(APPEND DAWN_EXTERNAL_INCLUDE_DIRS ${DAWN_${PACKAGE}_INCLUDE_DIRS})
+  list(APPEND DAWN_EXTERNAL_DEFINITIONS ${DAWN_${PACKAGE}_DEFINITIONS})
 endforeach()
+
+include_directories(SYSTEM ${DAWN_EXTERNAL_INCLUDE_DIRS})
+add_definitions(${DAWN_EXTERNAL_DEFINITIONS})
+
 dawn_report_result("Package summary" ${package_info})
 
 # Add clang-format target

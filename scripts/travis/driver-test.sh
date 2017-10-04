@@ -17,7 +17,7 @@ this_script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Setup dependencies
 source "$this_script_dir/install.sh"
-install_driver -i ${CACHE_DIR} -b cmake
+install_driver -i ${CACHE_DIR} -b ${PACKAGES_TO_INSTALL}
 
 export CXX=${CXX_COMPILER}
 export CC=${C_COMPILER}

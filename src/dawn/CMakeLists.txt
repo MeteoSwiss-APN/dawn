@@ -28,6 +28,7 @@ dawn_combine_libraries(
           DawnOptimizerObjects
           DawnCodeGenObjects
   INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
+  DEPENDS ${DAW_EXTERNAL_LIBRARIES}
 )
 
 # Export the targets

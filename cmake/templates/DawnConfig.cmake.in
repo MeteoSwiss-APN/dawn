@@ -33,6 +33,9 @@ include("@PACKAGE_DAWN_INSTALL_CMAKE_DIR@/DawnTargets.cmake")
 # Aliases
 set(DAWN_VERSION ${Dawn_VERSION})
 set(DAWN_FOUND 1)
+set(DAWN_STATIC_LIBRARY Dawn::DawnStatic)
+set(DAWN_LIBRARY ${DAWN_STATIC_LIBRARY})
+set(DAWN_LIBRARIES ${DAWN_LIBRARY})
 
 if(TARGET Dawn::DawnShared)
   set(DAWN_HAS_SHARED_LIBRARY TRUE)
@@ -44,15 +47,10 @@ endif()
 message(STATUS "Found Dawn version: ${DAWN_VERSION}")
 
 get_property(_static_lib TARGET Dawn::DawnStatic PROPERTY LOCATION)
-set(DAWN_STATIC_LIBRARY ${_static_lib})
 message(STATUS "  Static: ${_static_lib}")
 
 if(DAWN_HAS_SHARED_LIBRARY)
+  set(DAWN_SHARED_LIBRARY Dawn::DawnShared)
   get_property(_shared_lib TARGET Dawn::DawnShared PROPERTY LOCATION)
-  set(DAWN_SHARED_LIBRARY ${_shared_lib})
   message(STATUS "  Shared: ${_shared_lib}")
 endif()
-
-# Aliases of DAWN_STATIC_LIBRARY
-set(DAWN_LIBRARY ${DAWN_STATIC_LIBRARY})
-set(DAWN_LIBRARIES ${DAWN_LIBRARY})
