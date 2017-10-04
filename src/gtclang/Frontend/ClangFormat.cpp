@@ -1,16 +1,16 @@
 
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                         _       _                   
-//                        | |     | |                  
-//                    __ _| |_ ___| | __ _ _ __   __ _ 
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
 //                   / _` | __/ __| |/ _` | '_ \ / _` |
 //                  | (_| | || (__| | (_| | | | | (_| |
 //                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 //                    __/ |                       __/ |
-//                   |___/                       |___/ 
+//                   |___/                       |___/
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -70,7 +70,8 @@ std::string ClangFormat::format(const std::string& code) {
   std::string changedCode =
       clang::tooling::applyAllReplacements(codeBuffer->getBuffer(), replacements);
 
-  DAWN_LOG(INFO) << "Done reformatting stencil code: " << (changedCode.empty() ? "FAIL" : "Success");
+  DAWN_LOG(INFO) << "Done reformatting stencil code: "
+                 << (changedCode.empty() ? "FAIL" : "Success");
   return changedCode.empty() ? code : changedCode;
 }
 

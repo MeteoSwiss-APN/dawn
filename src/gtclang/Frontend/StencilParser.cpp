@@ -1,19 +1,20 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                         _       _                   
-//                        | |     | |                  
-//                    __ _| |_ ___| | __ _ _ __   __ _ 
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
 //                   / _` | __/ __| |/ _` | '_ \ / _` |
 //                  | (_| | || (__| | (_| | | | | (_| |
 //                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 //                    __/ |                       __/ |
-//                   |___/                       |___/ 
+//                   |___/                       |___/
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "gtclang/Frontend/StencilParser.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Assert.h"
@@ -22,7 +23,6 @@
 #include "gtclang/Frontend/ClangASTStmtResolver.h"
 #include "gtclang/Frontend/GTClangContext.h"
 #include "gtclang/Frontend/GlobalVariableParser.h"
-#include "gtclang/Frontend/StencilParser.h"
 #include "gtclang/Support/FileUtil.h"
 #include "clang/AST/AST.h"
 #include <numeric>
@@ -377,24 +377,25 @@ private:
   void resolve(clang::CXXTemporaryObjectExpr* expr) {
     DAWN_ASSERT(functor_.empty());
     functor_ = expr->getConstructor()->getNameAsString();
-  
+
     // Check the stencil function exists
     if(!parser_->hasStencilFunction(functor_)) {
       parser_->reportDiagnostic(expr->getLocation(),
                                 Diagnostics::DiagKind::err_stencilfun_invalid_call);
       return;
     }
-  
+
     // Check that there are only storage arguments
-    dawn::sir::StencilFunction* stencilFun = parser_->getStencilFunctionByName(functor_).second.get();
-  
+    dawn::sir::StencilFunction* stencilFun =
+        parser_->getStencilFunctionByName(functor_).second.get();
+
     if(stencilFun->Args.size() > 1) {
       parser_->reportDiagnostic(expr->getLocation(),
                                 Diagnostics::DiagKind::err_boundary_condition_invalid_functor)
           << functor_ << "expected single argument";
       return;
     }
-  
+
     for(const auto& arg : stencilFun->Args) {
       if(!dawn::isa<dawn::sir::Field>(arg.get()))
         parser_->reportDiagnostic(expr->getLocation(),
@@ -528,7 +529,8 @@ void StencilParser::parseStencilImpl(clang::CXXRecordDecl* recordDecl, const std
 
     // Construct the sir::Stencil and set the name and location
     currentParserRecord_->CurrentStencil =
-        stencilMap_.insert({recordDecl, std::make_shared<dawn::sir::Stencil>()}).first->second.get();
+        stencilMap_.insert({recordDecl, std::make_shared<dawn::sir::Stencil>()})
+            .first->second.get();
     currentParserRecord_->CurrentStencil->Name = name;
     currentParserRecord_->CurrentStencil->Loc = getLocation(recordDecl);
     currentParserRecord_->CurrentStencil->StencilDescAst = std::make_shared<dawn::AST>();
@@ -942,10 +944,10 @@ StencilParser::parseBoundaryCondition(clang::CXXConstructExpr* boundaryCondition
   DAWN_ASSERT(boundaryCondition->getConstructor()->getNameAsString() == "boundary_condition");
 
   DAWN_LOG(INFO) << "Parsing boundary-condition at "
-                << getFilename(
-                       boundaryCondition->getLocation().printToString(context_->getSourceManager()))
-                       .str()
-                << " ...";
+                 << getFilename(boundaryCondition->getLocation().printToString(
+                                    context_->getSourceManager()))
+                        .str()
+                 << " ...";
 
   BoundaryConditionResolver resolver(this);
   resolver.resolve(boundaryCondition);

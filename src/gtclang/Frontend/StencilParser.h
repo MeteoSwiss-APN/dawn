@@ -1,15 +1,15 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                         _       _                   
-//                        | |     | |                  
-//                    __ _| |_ ___| | __ _ _ __   __ _ 
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
 //                   / _` | __/ __| |/ _` | '_ \ / _` |
 //                  | (_| | || (__| | (_| | | | | (_| |
 //                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 //                    __/ |                       __/ |
-//                   |___/                       |___/ 
+//                   |___/                       |___/
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -156,7 +156,8 @@ private:
   parseBoundaryCondition(clang::CXXConstructExpr* boundaryCondition);
 
   /// @brief Resolve Clang AST statements by passing them to ClangASTResolver
-  std::shared_ptr<dawn::Stmt> resolveStmt(ClangASTExprResolver& clangASTResolver, clang::Stmt* stmt);
+  std::shared_ptr<dawn::Stmt> resolveStmt(ClangASTExprResolver& clangASTResolver,
+                                          clang::Stmt* stmt);
 
   /// @brief Get SourceLocation
   dawn::SourceLocation getLocation(clang::Decl* decl) const;

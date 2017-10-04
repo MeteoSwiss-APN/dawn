@@ -1,15 +1,15 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                         _       _                   
-//                        | |     | |                  
-//                    __ _| |_ ___| | __ _ _ __   __ _ 
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
 //                   / _` | __/ __| |/ _` | '_ \ / _` |
 //                  | (_| | || (__| | (_| | | | | (_| |
 //                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 //                    __/ |                       __/ |
-//                   |___/                       |___/ 
+//                   |___/                       |___/
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -89,7 +89,7 @@ DAWN_ATTRIBUTE_NORETURN static void helpPrinter() {
                    << dawn::format("%s.\n", splitString(help, maxLineLen, maxOptionLen + 3, true));
     else
       llvm::outs() << dawn::format("  %-15s %s.\n", option,
-                                  splitString(help, maxLineLen, maxOptionLen + 3, false));
+                                   splitString(help, maxLineLen, maxOptionLen + 3, false));
   };
 
   printOption("-help, -h", "Display available options");
@@ -175,7 +175,7 @@ OptionsParser::OptionsParser(Options* options) : options_(options) {
         OptionsMap::value_type{OPTION, [](Options* op, const char* value, bool negatedOption) {    \
                                  return SetOption<HAS_VALUE>()(op->NAME, value, negatedOption);    \
                                }});                                                                \
-    DAWN_ASSERT_MSG(ret.second, "Option \"" OPTION "\" registered twice!");                         \
+    DAWN_ASSERT_MSG(ret.second, "Option \"" OPTION "\" registered twice!");                        \
     std::string shortStr(OPTION_SHORT);                                                            \
     if(!shortStr.empty()) {                                                                        \
       auto it = optionsAliasMap_.find(OPTION_SHORT);                                               \

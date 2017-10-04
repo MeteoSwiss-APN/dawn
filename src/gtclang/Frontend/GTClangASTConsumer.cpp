@@ -1,19 +1,20 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                         _       _                   
-//                        | |     | |                  
-//                    __ _| |_ ___| | __ _ _ __   __ _ 
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
 //                   / _` | __/ __| |/ _` | '_ \ / _` |
 //                  | (_| | || (__| | (_| | | | | (_| |
 //                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 //                    __/ |                       __/ |
-//                   |___/                       |___/ 
+//                   |___/                       |___/
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "gtclang/Frontend/GTClangASTConsumer.h"
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/SIRSerializerJSON.h"
@@ -21,7 +22,6 @@
 #include "dawn/Support/Format.h"
 #include "dawn/Support/StringUtil.h"
 #include "gtclang/Frontend/ClangFormat.h"
-#include "gtclang/Frontend/GTClangASTConsumer.h"
 #include "gtclang/Frontend/GTClangASTVisitor.h"
 #include "gtclang/Frontend/GTClangContext.h"
 #include "gtclang/Frontend/GlobalVariableParser.h"
@@ -110,7 +110,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
 
   const GlobalVariableParser& globalsParser = visitor_->getGlobalVariableParser();
   SIR->GlobalVariableMap = globalsParser.getGlobalVariableMap();
-  
+
   if(context_->getOptions().DumpSIR) {
     dawn::SIRSerializerJSON::serialize("sir.json", SIR.get());
     SIR->dump();
@@ -194,7 +194,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
                             DawnTranslationUnit->getGlobals()))
       context_->getDiagnostics().report(Diagnostics::err_fs_error)
           << dawn::format("unable to replace globals code at: %s",
-                         globalsParser.getRecordDecl()->getLocation().printToString(SM));
+                          globalsParser.getRecordDecl()->getLocation().printToString(SM));
   }
 
   // Remove the code from stencil-functions
@@ -208,7 +208,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   llvm::raw_string_ostream os(code);
   rewriter.getEditBuffer(generatedFileID).write(os);
   os.flush();
-  
+
   // Format the file
   if(context_->getOptions().ClangFormat) {
     ClangFormat clangformat(context_);
@@ -223,7 +223,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
 
   // Print a header
   fout << dawn::format("// gtclang (%s)\n// based on LLVM/Clang (%s), Dawn (%s)\n",
-                      GTCLANG_FULL_VERSION_STR, LLVM_VERSION_STRING, DAWN_VERSION_STR);
+                       GTCLANG_FULL_VERSION_STR, LLVM_VERSION_STRING, DAWN_VERSION_STR);
   fout << "// Generated on " << currentDateTime() << "\n\n";
 
   // Add the macro definitions

@@ -1,15 +1,15 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                         _       _                   
-//                        | |     | |                  
-//                    __ _| |_ ___| | __ _ _ __   __ _ 
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
 //                   / _` | __/ __| |/ _` | '_ \ / _` |
 //                  | (_| | || (__| | (_| | | | | (_| |
 //                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 //                    __/ |                       __/ |
-//                   |___/                       |___/ 
+//                   |___/                       |___/
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -30,7 +30,7 @@ ClangASTStmtResolver::ClangASTStmtResolver(const std::shared_ptr<ClangASTExprRes
     : clangASTExprResolver_(resolver), AstKind_(AK_Unknown) {}
 
 llvm::ArrayRef<std::shared_ptr<dawn::Stmt>> ClangASTStmtResolver::resolveStmt(clang::Stmt* stmt,
-                                                                             ASTKind kind) {
+                                                                              ASTKind kind) {
   resetInternals();
   AstKind_ = kind;
   resolve(stmt);
@@ -50,7 +50,7 @@ const std::vector<std::shared_ptr<dawn::Stmt>>& ClangASTStmtResolver::getStateme
 
 void ClangASTStmtResolver::resolve(clang::Stmt* stmt) {
   using namespace clang;
-  
+
   if(BinaryOperator* s = dyn_cast<BinaryOperator>(stmt))
     resolve(s);
   else if(CXXOperatorCallExpr* s = dyn_cast<CXXOperatorCallExpr>(stmt))

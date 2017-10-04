@@ -1,15 +1,15 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                         _       _                   
-//                        | |     | |                  
-//                    __ _| |_ ___| | __ _ _ __   __ _ 
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
 //                   / _` | __/ __| |/ _` | '_ \ / _` |
 //                  | (_| | || (__| | (_| | | | | (_| |
 //                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 //                    __/ |                       __/ |
-//                   |___/                       |___/ 
+//                   |___/                       |___/
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -134,7 +134,8 @@ public:
   void skipNextArguments(int N) { scope_.top()->ArgumentsToSkip += N; }
 
   /// @brief Add an argument to the current stencil function
-  std::shared_ptr<dawn::Expr> addArgument(clang::Expr* expr, const std::shared_ptr<dawn::Expr>& arg) {
+  std::shared_ptr<dawn::Expr> addArgument(clang::Expr* expr,
+                                          const std::shared_ptr<dawn::Expr>& arg) {
     DAWN_ASSERT(isActive() && scope_.top()->DAWNFunCallExpr);
 
     if(scope_.top()->ArgumentsToSkip != 0) {
@@ -355,9 +356,10 @@ public:
   /// @}
 
   /// @brief Assemble FieldAccessExpr
-  std::shared_ptr<dawn::FieldAccessExpr> makeFieldAccessExpr(const dawn::SourceLocation& loc) const {
+  std::shared_ptr<dawn::FieldAccessExpr>
+  makeFieldAccessExpr(const dawn::SourceLocation& loc) const {
     return std::make_shared<dawn::FieldAccessExpr>(name_, offset_, argumentMap_, argumentOffset_,
-                                                  negateOffset_, loc);
+                                                   negateOffset_, loc);
   }
 
   void resolve(clang::MemberExpr* expr) {
@@ -568,7 +570,7 @@ public:
   std::shared_ptr<dawn::StencilFunArgExpr>
   makeStencilFunArgExpr(const dawn::SourceLocation& loc) const {
     return isStorage_ ? nullptr : std::make_shared<dawn::StencilFunArgExpr>(direction_, offset_,
-                                                                           argumentIndex_, loc);
+                                                                            argumentIndex_, loc);
   }
 
 private:
@@ -686,7 +688,7 @@ std::shared_ptr<dawn::Stmt> ClangASTExprResolver::resolveDecl(clang::VarDecl* de
   if(qualType.getBaseTypeIdentifier() &&
      functionResolver_->hasStencilFunction(qualType.getBaseTypeIdentifier()->getName().str())) {
     DAWN_ASSERT_MSG(0, "we currently can't parse stencil functions of the form `fun(arg1)` i.e "
-                      "stencil functions with one argument and no return type!");
+                       "stencil functions with one argument and no return type!");
   }
 
   // Issue an error about variable shadowing i.e we declare a local variable which has the same name
@@ -759,7 +761,7 @@ std::shared_ptr<dawn::Stmt> ClangASTExprResolver::resolveDecl(clang::VarDecl* de
   }
 
   return std::make_shared<dawn::VarDeclStmt>(DAWNType, varname, dimension, "=", std::move(initList),
-                                            getSourceLocation(decl));
+                                             getSourceLocation(decl));
 }
 
 std::shared_ptr<dawn::Stmt> ClangASTExprResolver::resolveStmt(clang::ReturnStmt* stmt) {
@@ -920,7 +922,7 @@ std::shared_ptr<dawn::Expr> ClangASTExprResolver::resolve(clang::CXXOperatorCall
 std::shared_ptr<dawn::Expr> ClangASTExprResolver::resolve(clang::CXXConstructExpr* expr) {
   if(StorageResolver::isaStorage(expr->getConstructor()->getNameAsString()) &&
      expr->getNumArgs() == 1) {
-    // This is an access to a storage e.g `u = ...`        
+    // This is an access to a storage e.g `u = ...`
     return resolve(expr->getArg(0));
 
   } else if(functionResolver_->checkAndSetReferenced()) {
@@ -941,27 +943,27 @@ std::shared_ptr<dawn::Expr> ClangASTExprResolver::resolve(clang::CXXConstructExp
     return nullptr;
 
   } else {
-      // Resolve stencil function
-      bool isNestedFunction = functionResolver_->isActive();
-  
-      // This is a stencil function call (e.g `avg(u, v)`), make sure the stencil function exists
-      if(!functionResolver_->push(expr))
-        return nullptr;
-      
-      // Resolve the arguments
-      for(clang::Expr* arg : expr->arguments())
-        resolve(arg);
-  
-      // Check number of arguments matches
-      functionResolver_->checkNumOfArgumentsMatch();
-  
-      // If we parse a nested stencil function, we need to register it as an argument
-      std::shared_ptr<dawn::StencilFunCallExpr> stencilFunctionFun =
-          std::static_pointer_cast<dawn::StencilFunCallExpr>(functionResolver_->pop());
-      if(isNestedFunction)
-        functionResolver_->addArgument(expr, stencilFunctionFun);
+    // Resolve stencil function
+    bool isNestedFunction = functionResolver_->isActive();
 
-      return stencilFunctionFun;
+    // This is a stencil function call (e.g `avg(u, v)`), make sure the stencil function exists
+    if(!functionResolver_->push(expr))
+      return nullptr;
+
+    // Resolve the arguments
+    for(clang::Expr* arg : expr->arguments())
+      resolve(arg);
+
+    // Check number of arguments matches
+    functionResolver_->checkNumOfArgumentsMatch();
+
+    // If we parse a nested stencil function, we need to register it as an argument
+    std::shared_ptr<dawn::StencilFunCallExpr> stencilFunctionFun =
+        std::static_pointer_cast<dawn::StencilFunCallExpr>(functionResolver_->pop());
+    if(isNestedFunction)
+      functionResolver_->addArgument(expr, stencilFunctionFun);
+
+    return stencilFunctionFun;
   }
 }
 
@@ -990,7 +992,7 @@ std::shared_ptr<dawn::Expr> ClangASTExprResolver::resolve(clang::CXXFunctionalCa
 
 std::shared_ptr<dawn::Expr> ClangASTExprResolver::resolve(clang::ConditionalOperator* expr) {
   return std::make_shared<dawn::TernaryOperator>(resolve(expr->getCond()), resolve(expr->getLHS()),
-                                                resolve(expr->getRHS()));
+                                                 resolve(expr->getRHS()));
 }
 
 std::shared_ptr<dawn::Expr> ClangASTExprResolver::resolve(clang::DeclRefExpr* expr) {
@@ -1006,7 +1008,7 @@ std::shared_ptr<dawn::Expr> ClangASTExprResolver::resolve(clang::DeclRefExpr* ex
 
   // Access to a locally declared variable
   auto var = std::make_shared<dawn::VarAccessExpr>(expr->getNameInfo().getAsString(), nullptr,
-                                                  getSourceLocation(expr));
+                                                   getSourceLocation(expr));
 
   if(functionResolver_->isActive())
     return functionResolver_->addArgument(expr, var);
@@ -1018,7 +1020,7 @@ std::shared_ptr<dawn::Expr> ClangASTExprResolver::resolve(clang::FloatingLiteral
   expr->getValue().toString(valueVec);
   auto floatLiteral =
       std::make_shared<dawn::LiteralAccessExpr>(std::string(valueVec.data(), valueVec.size()),
-                                               resolveBuiltinType(expr), getSourceLocation(expr));
+                                                resolveBuiltinType(expr), getSourceLocation(expr));
 
   if(functionResolver_->isActive())
     // We are inside an argument-list of a function, append the arguments
@@ -1052,11 +1054,11 @@ std::shared_ptr<dawn::Expr> ClangASTExprResolver::resolve(clang::MemberExpr* exp
   if(baseIdentifier == "globals") {
     // Access to a global variable
     auto var = std::make_shared<dawn::VarAccessExpr>(expr->getMemberNameInfo().getAsString(),
-                                                    nullptr, getSourceLocation(expr));
+                                                     nullptr, getSourceLocation(expr));
     var->setIsExternal(true);
     DAWN_ASSERT_MSG(parser_->isGlobalVariable(var->getName()),
-                   "access to unregistered global variable");
-    
+                    "access to unregistered global variable");
+
     if(functionResolver_->isActive())
       // We are inside an argument-list of a c++ function, append the arguments
       return functionResolver_->addArgument(expr, var);
@@ -1114,8 +1116,8 @@ std::shared_ptr<dawn::Expr> ClangASTExprResolver::resolveAssignmentOp(clang::Exp
   if(clang::CXXOperatorCallExpr* e = clang::dyn_cast<clang::CXXOperatorCallExpr>(expr)) {
     DAWN_ASSERT(e->getNumArgs() == 2);
     return std::make_shared<dawn::AssignmentExpr>(resolve(e->getArg(0)), resolve(e->getArg(1)),
-                                                 clang::getOperatorSpelling(e->getOperator()),
-                                                 getSourceLocation(e));
+                                                  clang::getOperatorSpelling(e->getOperator()),
+                                                  getSourceLocation(e));
   } else if(clang::BinaryOperator* e = clang::dyn_cast<clang::BinaryOperator>(expr)) {
     return std::make_shared<dawn::AssignmentExpr>(
         resolve(e->getLHS()), resolve(e->getRHS()),

@@ -1,15 +1,15 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                         _       _                   
-//                        | |     | |                  
-//                    __ _| |_ ___| | __ _ _ __   __ _ 
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
 //                   / _` | __/ __| |/ _` | '_ \ / _` |
 //                  | (_| | || (__| | (_| | | | | (_| |
 //                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 //                    __/ |                       __/ |
-//                   |___/                       |___/ 
+//                   |___/                       |___/
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -293,8 +293,8 @@ private:
 
     if(curlyBracesNestingLevel != 0) {
       reportError(loc, dawn::format("unbalanced brace '%s' detected in Do-Method of %s '%s'",
-                                   (curlyBracesNestingLevel > 0 ? "}" : "{"), toString(stencilKind),
-                                   name));
+                                    (curlyBracesNestingLevel > 0 ? "}" : "{"),
+                                    toString(stencilKind), name));
     }
   }
 
@@ -422,8 +422,8 @@ private:
 
     if(curlyBracesNestingLevel != 0) {
       reportError(loc, dawn::format("unbalanced brace '%s' detected in %s '%s'",
-                                   (curlyBracesNestingLevel > 0 ? "}" : "{"), toString(stencilKind),
-                                   name));
+                                    (curlyBracesNestingLevel > 0 ? "}" : "{"),
+                                    toString(stencilKind), name));
     }
   }
 
@@ -667,7 +667,7 @@ private:
           Diagnostics::reportRaw(
               diag_, token_.getLocation(), clang::DiagnosticIDs::Error,
               dawn::format("statement after '#pragma gtclang %s' must be a stencil declaration",
-                          curClause));
+                           curClause));
         }
 
         // We finished or failed to lex the pragma, start over again

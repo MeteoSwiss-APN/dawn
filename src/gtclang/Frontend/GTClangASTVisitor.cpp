@@ -1,15 +1,15 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                         _       _                   
-//                        | |     | |                  
-//                    __ _| |_ ___| | __ _ _ __   __ _ 
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
 //                   / _` | __/ __| |/ _` | '_ \ / _` |
 //                  | (_| | || (__| | (_| | | | | (_| |
 //                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 //                    __/ |                       __/ |
-//                   |___/                       |___/ 
+//                   |___/                       |___/
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -58,7 +58,7 @@ bool GTClangASTVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl* recordDecl) {
           auto name = recordDecl->getIdentifier()->getName().str();
 
           DAWN_LOG(INFO) << "Parsing stencil `" << name << "` at "
-                        << getFilename(base.getLocStart().printToString(SM)).str();
+                         << getFilename(base.getLocStart().printToString(SM)).str();
 
           stencilParser_.parseStencil(recordDecl, name);
         }
@@ -68,7 +68,7 @@ bool GTClangASTVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl* recordDecl) {
           auto name = recordDecl->getIdentifier()->getName().str();
 
           DAWN_LOG(INFO) << "Parsing stencil function `" << name << "` at "
-                        << getFilename(base.getLocStart().printToString(SM)).str();
+                         << getFilename(base.getLocStart().printToString(SM)).str();
 
           stencilParser_.parseStencilFunction(recordDecl, name);
         }
