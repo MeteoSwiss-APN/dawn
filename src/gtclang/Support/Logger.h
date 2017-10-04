@@ -14,7 +14,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "gsl/Support/Logging.h"
+#include "dawn/Support/Logging.h"
 
 #ifndef GTCLANG_SUPPORT_LOGGER_H
 #define GTCLANG_SUPPORT_LOGGER_H
@@ -23,10 +23,10 @@ namespace gtclang {
 
 /// @brief Logger implementation
 /// @ingroup support
-class Logger : public gsl::LoggerInterface {
+class Logger : public dawn::LoggerInterface {
 public:
   /// @brief Log `message` of severity `level` at position `file:line`
-  virtual void log(gsl::LoggingLevel level, const std::string& message, const char* file,
+  virtual void log(dawn::LoggingLevel level, const std::string& message, const char* file,
                    int line) override;
 };
 

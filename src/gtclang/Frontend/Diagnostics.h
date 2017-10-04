@@ -17,15 +17,15 @@
 #ifndef GTCLANG_FRONTEND_DIAGNOSTICS
 #define GTCLANG_FRONTEND_DIAGNOSTICS
 
-#include "gsl/Compiler/DiagnosticsMessage.h"
-#include "gsl/Support/NonCopyable.h"
+#include "dawn/Compiler/DiagnosticsMessage.h"
+#include "dawn/Support/NonCopyable.h"
 #include "clang/Basic/Diagnostic.h"
 
 namespace gtclang {
 
 /// @brief Handling of GTClang diagnostics
 /// @ingroup frontend
-class Diagnostics : gsl::NonCopyable {
+class Diagnostics : dawn::NonCopyable {
 public:
   enum DiagKind {
 #define DIAG(ENUM, LEVEL, DESC) ENUM,
@@ -44,8 +44,8 @@ public:
   }
   clang::DiagnosticBuilder report(clang::SourceRange range, DiagKind kind);
 
-  /// @brief Format GSL diagnostics message and issue it to the client
-  void report(const gsl::DiagnosticsMessage& diag);
+  /// @brief Format DAWN diagnostics message and issue it to the client
+  void report(const dawn::DiagnosticsMessage& diag);
 
   /// @brief Get the Clang diagnostics engine
   clang::DiagnosticsEngine& getDiagnosticsEngine() { return *diags_; }

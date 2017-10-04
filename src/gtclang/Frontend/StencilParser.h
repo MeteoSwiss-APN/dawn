@@ -17,7 +17,7 @@
 #ifndef GTCLANG_FRONTEND_STENCILPARSER
 #define GTCLANG_FRONTEND_STENCILPARSER
 
-#include "gsl/SIR/SIR.h"
+#include "dawn/SIR/SIR.h"
 #include "gtclang/Frontend/ClangASTStmtResolver.h"
 #include "gtclang/Frontend/Diagnostics.h"
 #include "clang/AST/ASTFwd.h"
@@ -33,7 +33,7 @@ class GlobalVariableParser;
 
 /// @brief Convert AST declaration of a stencil to SIR
 /// @ingroup frontend
-class StencilParser : gsl::NonCopyable {
+class StencilParser : dawn::NonCopyable {
 public:
   /// @brief The type of stencil we are going to parse
   enum StencilKind { SK_Stencil, SK_StencilFunction };
@@ -45,8 +45,8 @@ private:
   GlobalVariableParser& globalVariableParser_;
 
   /// Map of the parsed stencils and stencil functions
-  std::map<clang::CXXRecordDecl*, std::shared_ptr<gsl::sir::Stencil>> stencilMap_;
-  std::map<clang::CXXRecordDecl*, std::shared_ptr<gsl::sir::StencilFunction>> stencilFunctionMap_;
+  std::map<clang::CXXRecordDecl*, std::shared_ptr<dawn::sir::Stencil>> stencilMap_;
+  std::map<clang::CXXRecordDecl*, std::shared_ptr<dawn::sir::StencilFunction>> stencilFunctionMap_;
 
   /// Registered interval levels (to speedup lookup)
   std::unordered_map<std::string, int> customIntervalLevel_;
@@ -62,10 +62,10 @@ private:
     clang::CXXRecordDecl* CurrentCXXRecordDecl = nullptr;
 
     /// The current SIR stencil description (might be NULL and incomplete)
-    gsl::sir::Stencil* CurrentStencil = nullptr;
+    dawn::sir::Stencil* CurrentStencil = nullptr;
 
     /// The current SIR stencil function descroption (might be NULL and incomplete)
-    gsl::sir::StencilFunction* CurrentStencilFunction = nullptr;
+    dawn::sir::StencilFunction* CurrentStencilFunction = nullptr;
 
     struct ArgDecl {
       ArgDecl(int index, const std::string& name, clang::FieldDecl* decl)
@@ -94,10 +94,10 @@ public:
   void parseStencilFunction(clang::CXXRecordDecl* recordDecl, const std::string& name);
 
   /// @brief Get the StencilMap
-  const std::map<clang::CXXRecordDecl*, std::shared_ptr<gsl::sir::Stencil>>& getStencilMap() const;
+  const std::map<clang::CXXRecordDecl*, std::shared_ptr<dawn::sir::Stencil>>& getStencilMap() const;
 
   /// @brief Get the StencilFunctionMap
-  const std::map<clang::CXXRecordDecl*, std::shared_ptr<gsl::sir::StencilFunction>>&
+  const std::map<clang::CXXRecordDecl*, std::shared_ptr<dawn::sir::StencilFunction>>&
   getStencilFunctionMap() const;
 
   /// @brief Report a diagnostic
@@ -105,7 +105,7 @@ public:
 
   /// @brief Get stencil-function map entry by stencil-function `name` returns (NULL, NULL) if
   /// stencil function does not exist
-  std::pair<clang::CXXRecordDecl*, std::shared_ptr<gsl::sir::StencilFunction>>
+  std::pair<clang::CXXRecordDecl*, std::shared_ptr<dawn::sir::StencilFunction>>
   getStencilFunctionByName(const std::string& name);
 
   /// @brief Check if stencil function with given `name` exists
@@ -145,22 +145,22 @@ private:
   void parseStencilFunctionDoMethod(clang::CXXMethodDecl* DoMethod);
 
   /// @brief Parse call to another stencil
-  std::shared_ptr<gsl::StencilCallDeclStmt> parseStencilCall(clang::CXXConstructExpr* stencilCall);
+  std::shared_ptr<dawn::StencilCallDeclStmt> parseStencilCall(clang::CXXConstructExpr* stencilCall);
 
   /// @brief Parse a vertical-region
-  std::shared_ptr<gsl::VerticalRegionDeclStmt>
+  std::shared_ptr<dawn::VerticalRegionDeclStmt>
   parseVerticalRegion(clang::CXXForRangeStmt* verticalRegionDecl);
 
   /// @brief Parse a decription of a boundary condition
-  std::shared_ptr<gsl::BoundaryConditionDeclStmt>
+  std::shared_ptr<dawn::BoundaryConditionDeclStmt>
   parseBoundaryCondition(clang::CXXConstructExpr* boundaryCondition);
 
   /// @brief Resolve Clang AST statements by passing them to ClangASTResolver
-  std::shared_ptr<gsl::Stmt> resolveStmt(ClangASTExprResolver& clangASTResolver, clang::Stmt* stmt);
+  std::shared_ptr<dawn::Stmt> resolveStmt(ClangASTExprResolver& clangASTResolver, clang::Stmt* stmt);
 
   /// @brief Get SourceLocation
-  gsl::SourceLocation getLocation(clang::Decl* decl) const;
-  gsl::SourceLocation getLocation(clang::Stmt* stmt) const;
+  dawn::SourceLocation getLocation(clang::Decl* decl) const;
+  dawn::SourceLocation getLocation(clang::Stmt* stmt) const;
 };
 
 } // namespace gtclang

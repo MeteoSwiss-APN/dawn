@@ -17,9 +17,9 @@
 #ifndef GTCLANG_FRONTEND_GLOBALVARIABLEPARSER_H
 #define GTCLANG_FRONTEND_GLOBALVARIABLEPARSER_H
 
-#include "gsl/SIR/SIR.h"
-#include "gsl/Support/Json.h"
-#include "gsl/Support/NonCopyable.h"
+#include "dawn/SIR/SIR.h"
+#include "dawn/Support/Json.h"
+#include "dawn/Support/NonCopyable.h"
 #include "clang/AST/ASTFwd.h"
 #include <unordered_map>
 
@@ -29,17 +29,17 @@ class GTClangContext;
 
 /// @brief Convert AST declaration of a stencil to SIR
 /// @ingroup frontend
-class GlobalVariableParser : gsl::NonCopyable {
+class GlobalVariableParser : dawn::NonCopyable {
   GTClangContext* context_;
-  std::shared_ptr<gsl::sir::GlobalVariableMap> variableMap_;
-  std::shared_ptr<gsl::json::json> configFile_;
+  std::shared_ptr<dawn::sir::GlobalVariableMap> variableMap_;
+  std::shared_ptr<dawn::json::json> configFile_;
   clang::CXXRecordDecl* recordDecl_;
 
 public:
   GlobalVariableParser(GTClangContext* context);
 
   /// @brief Get the parsed global variable map
-  const std::shared_ptr<gsl::sir::GlobalVariableMap>& getGlobalVariableMap() const;
+  const std::shared_ptr<dawn::sir::GlobalVariableMap>& getGlobalVariableMap() const;
 
   /// @brief Check if global variable exists
   bool has(const std::string& name) const;

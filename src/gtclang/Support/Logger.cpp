@@ -15,13 +15,13 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "gtclang/Support/Logger.h"
-#include "gsl/Support/Format.h"
+#include "dawn/Support/Format.h"
 #include "llvm/Support/raw_ostream.h"
 #include <chrono>
 
 namespace gtclang {
 
-void Logger::log(gsl::LoggingLevel level, const std::string& message, const char* file, int line) {
+void Logger::log(dawn::LoggingLevel level, const std::string& message, const char* file, int line) {
   using namespace llvm;
 
   StringRef fileStr(file);
@@ -36,24 +36,24 @@ void Logger::log(gsl::LoggingLevel level, const std::string& message, const char
   std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
   struct tm* localTime = std::localtime(&currentTime);
 
-  auto timeStr = gsl::format("%02i:%02i:%02i.%03i", localTime->tm_hour, localTime->tm_min,
+  auto timeStr = dawn::format("%02i:%02i:%02i.%03i", localTime->tm_hour, localTime->tm_min,
                              localTime->tm_sec, tm_ms.count());
 
   outs() << "[" << timeStr << "] ";
 
   switch(level) {
-  case gsl::LoggingLevel::Info:
+  case dawn::LoggingLevel::Info:
     outs() << "[INFO]";
     break;
-  case gsl::LoggingLevel::Warning:
+  case dawn::LoggingLevel::Warning:
     outs().changeColor(raw_ostream::MAGENTA, true) << "[WARN]";
     outs().resetColor();
     break;
-  case gsl::LoggingLevel::Error:
+  case dawn::LoggingLevel::Error:
     outs().changeColor(raw_ostream::RED, true) << "[ERROR]";
     outs().resetColor();
     break;
-  case gsl::LoggingLevel::Fatal:
+  case dawn::LoggingLevel::Fatal:
     outs().changeColor(raw_ostream::RED, true) << "[FATAL]";
     outs().resetColor();
     break;

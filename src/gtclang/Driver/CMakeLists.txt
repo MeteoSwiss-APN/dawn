@@ -34,6 +34,6 @@ gtclang_add_executable(
     GTClangFrontend
     GTClangSupport
     ${GTCLANG_CLANG_LIBRARIES}
-    ${GTCLANG_GSL_LIBRARIES}
+    ${GTCLANG_DAWN_LIBRARIES}
     ${GTCLANG_THREADS_LIBRARIES}
 )

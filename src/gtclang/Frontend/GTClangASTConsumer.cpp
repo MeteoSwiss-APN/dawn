@@ -14,12 +14,12 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "gsl/Compiler/GSLCompiler.h"
-#include "gsl/SIR/SIR.h"
-#include "gsl/SIR/SIRSerializerJSON.h"
-#include "gsl/Support/Config.h"
-#include "gsl/Support/Format.h"
-#include "gsl/Support/StringUtil.h"
+#include "dawn/Compiler/DAWNCompiler.h"
+#include "dawn/SIR/SIR.h"
+#include "dawn/SIR/SIRSerializerJSON.h"
+#include "dawn/Support/Config.h"
+#include "dawn/Support/Format.h"
+#include "dawn/Support/StringUtil.h"
 #include "gtclang/Frontend/ClangFormat.h"
 #include "gtclang/Frontend/GTClangASTConsumer.h"
 #include "gtclang/Frontend/GTClangASTVisitor.h"
@@ -54,19 +54,19 @@ static const std::string currentDateTime() {
   return buf;
 }
 
-/// @brief Extract the GSL options from the GTClang options
-static std::unique_ptr<gsl::Options> makeGSLOptions(const Options& options) {
-  auto GSLOptions = llvm::make_unique<gsl::Options>();
+/// @brief Extract the DAWN options from the GTClang options
+static std::unique_ptr<dawn::Options> makeDAWNOptions(const Options& options) {
+  auto DAWNOptions = llvm::make_unique<dawn::Options>();
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  GSLOptions->NAME = options.NAME;
-#include "gsl/Compiler/Options.inc"
+  DAWNOptions->NAME = options.NAME;
+#include "dawn/Compiler/Options.inc"
 #undef OPT
-  return GSLOptions;
+  return DAWNOptions;
 }
 
 GTClangASTConsumer::GTClangASTConsumer(GTClangContext* context, std::string file)
     : context_(context), file_(file) {
-  GSL_LOG(INFO) << "Creating ASTVisitor ... ";
+  DAWN_LOG(INFO) << "Creating ASTVisitor ... ";
   visitor_ = llvm::make_unique<GTClangASTVisitor>(context);
 }
 
@@ -75,24 +75,24 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   if(!context_->hasDiagnostics())
     context_->setDiagnostics(&ASTContext.getDiagnostics());
 
-  GSL_LOG(INFO) << "Parsing translation unit... ";
+  DAWN_LOG(INFO) << "Parsing translation unit... ";
 
   clang::TranslationUnitDecl* TU = ASTContext.getTranslationUnitDecl();
   for(auto& decl : TU->decls())
     visitor_->TraverseDecl(decl);
 
-  GSL_LOG(INFO) << "Done parsing translation unit";
+  DAWN_LOG(INFO) << "Done parsing translation unit";
 
   if(context_->getASTContext().getDiagnostics().hasErrorOccurred()) {
-    GSL_LOG(INFO) << "Erros occurred. Aborting";
+    DAWN_LOG(INFO) << "Erros occurred. Aborting";
     return;
   }
 
-  GSL_LOG(INFO) << "Generating SIR ... ";
+  DAWN_LOG(INFO) << "Generating SIR ... ";
   auto& SM = context_->getSourceManager();
 
   // Assemble SIR
-  std::unique_ptr<gsl::SIR> SIR = llvm::make_unique<gsl::SIR>();
+  std::unique_ptr<dawn::SIR> SIR = llvm::make_unique<dawn::SIR>();
   SIR->Filename = SM.getFileEntryForID(SM.getMainFileID())->getName();
 
   const StencilParser& stencilParser = visitor_->getStencilParser();
@@ -112,41 +112,41 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   SIR->GlobalVariableMap = globalsParser.getGlobalVariableMap();
   
   if(context_->getOptions().DumpSIR) {
-    gsl::SIRSerializerJSON::serialize("sir.json", SIR.get());
+    dawn::SIRSerializerJSON::serialize("sir.json", SIR.get());
     SIR->dump();
   }
 
   // Set the backend
-  gsl::GSLCompiler::CodeGenKind codeGen = gsl::GSLCompiler::CG_GTClang;
+  dawn::DAWNCompiler::CodeGenKind codeGen = dawn::DAWNCompiler::CG_GTClang;
   if(context_->getOptions().Backend == "gridtools")
-    codeGen = gsl::GSLCompiler::CG_GTClang;
+    codeGen = dawn::DAWNCompiler::CG_GTClang;
   else if(context_->getOptions().Backend == "c++")
-    codeGen = gsl::GSLCompiler::CG_GTClangNaiveCXX;
+    codeGen = dawn::DAWNCompiler::CG_GTClangNaiveCXX;
   else {
     context_->getDiagnostics().report(Diagnostics::err_invalid_option)
         << ("-backend=" + context_->getOptions().Backend)
-        << gsl::RangeToString(", ", "", "")(std::vector<std::string>{"gridtools", "c++"});
+        << dawn::RangeToString(", ", "", "")(std::vector<std::string>{"gridtools", "c++"});
   }
 
   // Compile the SIR to GridTools
-  gsl::GSLCompiler Compiler(makeGSLOptions(context_->getOptions()).get());
-  std::unique_ptr<gsl::TranslationUnit> GSLTranslationUnit = Compiler.compile(SIR.get(), codeGen);
+  dawn::DAWNCompiler Compiler(makeDAWNOptions(context_->getOptions()).get());
+  std::unique_ptr<dawn::TranslationUnit> DAWNTranslationUnit = Compiler.compile(SIR.get(), codeGen);
 
-  // Report diagnostics from GSL
+  // Report diagnostics from DAWN
   if(Compiler.getDiagnostics().hasDiags()) {
     for(const auto& diags : Compiler.getDiagnostics().getQueue()) {
       context_->getDiagnostics().report(*diags);
     }
   }
 
-  if(!GSLTranslationUnit || Compiler.getDiagnostics().hasErrors()) {
-    GSL_LOG(INFO) << "Errors in GSL. Aborting";
+  if(!DAWNTranslationUnit || Compiler.getDiagnostics().hasErrors()) {
+    DAWN_LOG(INFO) << "Errors in DAWN. Aborting";
     return;
   }
 
   // Do we generate code?
   if(!context_->getOptions().CodeGen) {
-    GSL_LOG(INFO) << "Skipping code-generation";
+    DAWN_LOG(INFO) << "Skipping code-generation";
     return;
   }
 
@@ -172,7 +172,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   }
 
   // Create the generated file
-  GSL_LOG(INFO) << "Creating generated file " << generatedFilename;
+  DAWN_LOG(INFO) << "Creating generated file " << generatedFilename;
   clang::FileID generatedFileID =
       createInMemoryFile(generatedFilename, generatedCode.get(), sources, files, memFS.get());
 
@@ -181,19 +181,19 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   for(const auto& stencilPair : stencilParser.getStencilMap()) {
     clang::CXXRecordDecl* stencilDecl = stencilPair.first;
     if(rewriter.ReplaceText(stencilDecl->getSourceRange(),
-                            stencilPair.second->Attributes.has(gsl::sir::Attr::AK_NoCodeGen)
+                            stencilPair.second->Attributes.has(dawn::sir::Attr::AK_NoCodeGen)
                                 ? "class " + stencilPair.second->Name + "{}"
-                                : GSLTranslationUnit->getStencils().at(stencilPair.second->Name)))
-      context_->getDiagnostics().report(Diagnostics::err_fs_error) << gsl::format(
+                                : DAWNTranslationUnit->getStencils().at(stencilPair.second->Name)))
+      context_->getDiagnostics().report(Diagnostics::err_fs_error) << dawn::format(
           "unable to replace stencil code at: %s", stencilDecl->getLocation().printToString(SM));
   }
 
   // Replace globals struct
-  if(!globalsParser.isEmpty() && !GSLTranslationUnit->getGlobals().empty()) {
+  if(!globalsParser.isEmpty() && !DAWNTranslationUnit->getGlobals().empty()) {
     if(rewriter.ReplaceText(globalsParser.getRecordDecl()->getSourceRange(),
-                            GSLTranslationUnit->getGlobals()))
+                            DAWNTranslationUnit->getGlobals()))
       context_->getDiagnostics().report(Diagnostics::err_fs_error)
-          << gsl::format("unable to replace globals code at: %s",
+          << dawn::format("unable to replace globals code at: %s",
                          globalsParser.getRecordDecl()->getLocation().printToString(SM));
   }
 
@@ -216,18 +216,18 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   }
 
   // Write file to disk
-  GSL_LOG(INFO) << "Writing file to disk... ";
+  DAWN_LOG(INFO) << "Writing file to disk... ";
   std::error_code ec;
   llvm::sys::fs::OpenFlags flags = llvm::sys::fs::OpenFlags::F_RW;
   llvm::raw_fd_ostream fout(generatedFilename, ec, flags);
 
   // Print a header
-  fout << gsl::format("// gtclang (%s) based on LLVM/Clang (%s), GSL (%s)\n",
-                      GTCLANG_VERSION_STRING, LLVM_VERSION_STRING, GSL_VERSION_STRING);
+  fout << dawn::format("// gtclang (%s) based on LLVM/Clang (%s), DAWN (%s)\n",
+                      GTCLANG_VERSION_STRING, LLVM_VERSION_STRING, DAWN_VERSION_STRING);
   fout << "// Generated on " << currentDateTime() << "\n\n";
 
   // Add the macro definitions
-  for(const auto& macroDefine : GSLTranslationUnit->getPPDefines())
+  for(const auto& macroDefine : DAWNTranslationUnit->getPPDefines())
     fout << macroDefine << "\n";
 
   fout.write(code.data(), code.size());

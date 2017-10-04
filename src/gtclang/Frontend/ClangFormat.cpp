@@ -36,7 +36,7 @@ std::string ClangFormat::format(const std::string& code) {
   if(code.empty())
     return code;
 
-  GSL_LOG(INFO) << "Reformatting stencil code";
+  DAWN_LOG(INFO) << "Reformatting stencil code";
 
   // Create memory buffer of the code
   std::unique_ptr<llvm::MemoryBuffer> codeBuffer = llvm::MemoryBuffer::getMemBuffer(code);
@@ -70,7 +70,7 @@ std::string ClangFormat::format(const std::string& code) {
   std::string changedCode =
       clang::tooling::applyAllReplacements(codeBuffer->getBuffer(), replacements);
 
-  GSL_LOG(INFO) << "Done reformatting stencil code: " << (changedCode.empty() ? "FAIL" : "Success");
+  DAWN_LOG(INFO) << "Done reformatting stencil code: " << (changedCode.empty() ? "FAIL" : "Success");
   return changedCode.empty() ? code : changedCode;
 }
 

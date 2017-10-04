@@ -15,10 +15,10 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "gtclang/Driver/OptionsParser.h"
-#include "gsl/Support/Assert.h"
-#include "gsl/Support/Compiler.h"
-#include "gsl/Support/Config.h"
-#include "gsl/Support/Format.h"
+#include "dawn/Support/Assert.h"
+#include "dawn/Support/Compiler.h"
+#include "dawn/Support/Config.h"
+#include "dawn/Support/Format.h"
 #include "gtclang/Support/Config.h"
 #include "gtclang/Support/StringUtil.h"
 #include "llvm/ADT/ArrayRef.h"
@@ -30,9 +30,9 @@ namespace gtclang {
 namespace {
 
 /// @brief Print version and exit
-GSL_ATTRIBUTE_NORETURN static void versionPrinter() {
-  llvm::outs() << gsl::format("gtclang (%s) based on LLVM/Clang (%s), GSL (%s)\n",
-                              GTCLANG_VERSION_STRING, LLVM_VERSION_STRING, GSL_VERSION_STRING);
+DAWN_ATTRIBUTE_NORETURN static void versionPrinter() {
+  llvm::outs() << dawn::format("gtclang (%s) based on LLVM/Clang (%s), DAWN (%s)\n",
+                              GTCLANG_VERSION_STRING, LLVM_VERSION_STRING, DAWN_VERSION_STRING);
   llvm::outs().flush();
   std::exit(0);
 }
@@ -70,7 +70,7 @@ struct DefaultString<true> {
 };
 
 /// @brief Print Help and exit
-GSL_ATTRIBUTE_NORETURN static void helpPrinter() {
+DAWN_ATTRIBUTE_NORETURN static void helpPrinter() {
   const int maxLineLen = 80;
 
   llvm::outs() << "OVERVIEW: gtclang - gridtools clang DSL compiler\n\n";
@@ -86,9 +86,9 @@ GSL_ATTRIBUTE_NORETURN static void helpPrinter() {
 
     if(option.size() >= maxOptionLen)
       llvm::outs() << "  " << option << "\n"
-                   << gsl::format("%s.\n", splitString(help, maxLineLen, maxOptionLen + 3, true));
+                   << dawn::format("%s.\n", splitString(help, maxLineLen, maxOptionLen + 3, true));
     else
-      llvm::outs() << gsl::format("  %-15s %s.\n", option,
+      llvm::outs() << dawn::format("  %-15s %s.\n", option,
                                   splitString(help, maxLineLen, maxOptionLen + 3, false));
   };
 
@@ -110,9 +110,9 @@ GSL_ATTRIBUTE_NORETURN static void helpPrinter() {
   }
 #include "gtclang/Driver/Options.inc"
 
-  llvm::outs() << "\nGSL OPTIONS:\n";
+  llvm::outs() << "\nDAWN OPTIONS:\n";
 
-#include "gsl/Compiler/Options.inc"
+#include "dawn/Compiler/Options.inc"
 #undef OPT
 
   llvm::outs().flush();
@@ -126,7 +126,7 @@ struct ExtractValue;
 template <>
 struct ExtractValue<int> {
   int operator()(const char* value) {
-    GSL_ASSERT(value);
+    DAWN_ASSERT(value);
     return std::atoi(value);
   }
 };
@@ -134,7 +134,7 @@ struct ExtractValue<int> {
 template <>
 struct ExtractValue<std::string> {
   std::string operator()(const char* value) {
-    GSL_ASSERT(value);
+    DAWN_ASSERT(value);
     return value;
   }
 };
@@ -175,7 +175,7 @@ OptionsParser::OptionsParser(Options* options) : options_(options) {
         OptionsMap::value_type{OPTION, [](Options* op, const char* value, bool negatedOption) {    \
                                  return SetOption<HAS_VALUE>()(op->NAME, value, negatedOption);    \
                                }});                                                                \
-    GSL_ASSERT_MSG(ret.second, "Option \"" OPTION "\" registered twice!");                         \
+    DAWN_ASSERT_MSG(ret.second, "Option \"" OPTION "\" registered twice!");                         \
     std::string shortStr(OPTION_SHORT);                                                            \
     if(!shortStr.empty()) {                                                                        \
       auto it = optionsAliasMap_.find(OPTION_SHORT);                                               \
@@ -186,7 +186,7 @@ OptionsParser::OptionsParser(Options* options) : options_(options) {
       it->second.push_back(llvm::StringRef(ret.first->first));                                     \
     }                                                                                              \
   }
-#include "gsl/Compiler/Options.inc"
+#include "dawn/Compiler/Options.inc"
 #include "gtclang/Driver/Options.inc"
 #undef OPT
 }

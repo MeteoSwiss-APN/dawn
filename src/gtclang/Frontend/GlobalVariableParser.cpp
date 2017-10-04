@@ -15,8 +15,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "gtclang/Frontend/GlobalVariableParser.h"
-#include "gsl/Support/Format.h"
-#include "gsl/Support/Unreachable.h"
+#include "dawn/Support/Format.h"
+#include "dawn/Support/Unreachable.h"
 #include "gtclang/Frontend/GTClangContext.h"
 #include "gtclang/Support/FileUtil.h"
 #include "gtclang/Support/Logger.h"
@@ -55,7 +55,7 @@ public:
     else if(MaterializeTemporaryExpr* e = dyn_cast<MaterializeTemporaryExpr>(expr))
       resolve(e);
     else {
-      GSL_ASSERT_MSG(0, "unresolved expression in StringInitArgResolver");
+      DAWN_ASSERT_MSG(0, "unresolved expression in StringInitArgResolver");
       llvm_unreachable("invalid expr");
     }
   }
@@ -82,12 +82,12 @@ public:
 };
 
 template <class T>
-void setValue(gsl::sir::Value& value, const gsl::json::json& jnode) {
+void setValue(dawn::sir::Value& value, const dawn::json::json& jnode) {
   value.setValue(T(jnode));
 }
 
 template <>
-void setValue<std::string>(gsl::sir::Value& value, const gsl::json::json& jnode) {
+void setValue<std::string>(dawn::sir::Value& value, const dawn::json::json& jnode) {
   std::string v = jnode;
   value.setValue(v);
 }
@@ -99,10 +99,10 @@ void setValue<std::string>(gsl::sir::Value& value, const gsl::json::json& jnode)
 //===------------------------------------------------------------------------------------------===//
 
 GlobalVariableParser::GlobalVariableParser(gtclang::GTClangContext* context)
-    : context_(context), variableMap_(std::make_shared<gsl::sir::GlobalVariableMap>()),
-      configFile_(std::make_shared<gsl::json::json>()), recordDecl_(nullptr) {}
+    : context_(context), variableMap_(std::make_shared<dawn::sir::GlobalVariableMap>()),
+      configFile_(std::make_shared<dawn::json::json>()), recordDecl_(nullptr) {}
 
-const std::shared_ptr<gsl::sir::GlobalVariableMap>&
+const std::shared_ptr<dawn::sir::GlobalVariableMap>&
 GlobalVariableParser::getGlobalVariableMap() const {
   return variableMap_;
 }
@@ -115,7 +115,7 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
   variableMap_->clear();
   configFile_->clear();
 
-  GSL_LOG(INFO)
+  DAWN_LOG(INFO)
       << "Parsing globals at "
       << getFilename(recordDecl->getLocation().printToString(context_->getSourceManager())).str()
       << " ...";
@@ -125,21 +125,21 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
   for(FieldDecl* arg : recordDecl->fields()) {
     auto name = arg->getDeclName().getAsString();
 
-    GSL_LOG(INFO) << "Parsing global variable: " << name;
+    DAWN_LOG(INFO) << "Parsing global variable: " << name;
 
     // Extract the type `T` of the field `T var;`
     auto type = arg->getType();
-    GSL_ASSERT(!type.isNull());
+    DAWN_ASSERT(!type.isNull());
 
-    gsl::sir::Value::TypeKind typeKind = gsl::sir::Value::None;
+    dawn::sir::Value::TypeKind typeKind = dawn::sir::Value::None;
     if(type->isBooleanType()) // bool
-      typeKind = gsl::sir::Value::Boolean;
+      typeKind = dawn::sir::Value::Boolean;
     else if(type->isIntegerType()) // int
-      typeKind = gsl::sir::Value::Integer;
+      typeKind = dawn::sir::Value::Integer;
     else if(type->isArithmeticType()) // int, float, double... we treat this as 'double'
-      typeKind = gsl::sir::Value::Double;
+      typeKind = dawn::sir::Value::Double;
     else if(type.getAsString() == "std::string") {
-      typeKind = gsl::sir::Value::String;
+      typeKind = dawn::sir::Value::String;
     } else {
       context_->getDiagnostics().report(arg->getLocation(), Diagnostics::err_globals_invalid_type)
           << type.getAsString() << name;
@@ -148,7 +148,7 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
       return;
     }
 
-    auto value = std::make_shared<gsl::sir::Value>();
+    auto value = std::make_shared<dawn::sir::Value>();
     value->setType(typeKind);
 
     // Check if we have a default value `value` i.e `T var = value`
@@ -167,27 +167,27 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
       if(IntegerLiteral* il = dyn_cast<IntegerLiteral>(init)) {
         std::string valueStr = il->getValue().toString(10, true);
         value->setValue((int)std::atoi(valueStr.c_str()));
-        GSL_LOG(INFO) << "Setting default value of '" << name << "' to '" << valueStr << "'";
+        DAWN_LOG(INFO) << "Setting default value of '" << name << "' to '" << valueStr << "'";
 
       } else if(FloatingLiteral* fl = dyn_cast<FloatingLiteral>(init)) {
         llvm::SmallVector<char, 10> valueVec;
         fl->getValue().toString(valueVec);
         std::string valueStr(valueVec.data(), valueVec.size());
         value->setValue((double)std::atof(valueStr.c_str()));
-        GSL_LOG(INFO) << "Setting default value of '" << name << "' to '" << valueStr << "'";
+        DAWN_LOG(INFO) << "Setting default value of '" << name << "' to '" << valueStr << "'";
 
       } else if(CXXBoolLiteralExpr* bl = dyn_cast<CXXBoolLiteralExpr>(init)) {
         value->setValue(bl->getValue());
-        GSL_LOG(INFO) << "Setting default value of '" << name << "' to '" << bl->getValue() << "'";
+        DAWN_LOG(INFO) << "Setting default value of '" << name << "' to '" << bl->getValue() << "'";
 
-      } else if(typeKind == gsl::sir::Value::String) {
+      } else if(typeKind == dawn::sir::Value::String) {
         StringInitArgResolver resolver;
         resolver.resolve(init);
         std::string valueStr = resolver.getStr();
 
         if(!valueStr.empty()) {
           value->setValue(valueStr);
-          GSL_LOG(INFO) << "Setting default value of '" << name << "' to '" << valueStr << "'";
+          DAWN_LOG(INFO) << "Setting default value of '" << name << "' to '" << valueStr << "'";
         } else
           reportError();
 
@@ -203,12 +203,12 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
   if(!context_->getOptions().ConfigFile.empty()) {
     std::string& file = context_->getOptions().ConfigFile;
 
-    GSL_LOG(INFO) << "Reading global config file \"" << file << "\"";
+    DAWN_LOG(INFO) << "Reading global config file \"" << file << "\"";
 
     std::ifstream fin(file);
     if(!fin.is_open()) {
       context_->getDiagnostics().report(Diagnostics::err_fs_error)
-          << gsl::format("cannot to open config file '%s'", file);
+          << dawn::format("cannot to open config file '%s'", file);
       return;
     }
 
@@ -237,27 +237,27 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
 
       auto varIt = variableMap_->find(key);
       if(varIt == variableMap_->end()) {
-        GSL_LOG(INFO) << "Parse non-existing variable: " << key;
+        DAWN_LOG(INFO) << "Parse non-existing variable: " << key;
         continue;
       }
 
-      gsl::sir::Value& value = *varIt->second;
+      dawn::sir::Value& value = *varIt->second;
       try {
         switch(value.getType()) {
-        case gsl::sir::Value::Boolean:
+        case dawn::sir::Value::Boolean:
           setValue<bool>(value, *it);
           break;
-        case gsl::sir::Value::Integer:
+        case dawn::sir::Value::Integer:
           setValue<int>(value, *it);
           break;
-        case gsl::sir::Value::Double:
+        case dawn::sir::Value::Double:
           setValue<double>(value, *it);
           break;
-        case gsl::sir::Value::String:
+        case dawn::sir::Value::String:
           setValue<std::string>(value, *it);
           break;
         default:
-          gsl_unreachable("invalid type");
+          dawn_unreachable("invalid type");
         }
       } catch(std::domain_error& e) {
         configError("invalid key '" + key + "': " + e.what());
@@ -267,11 +267,11 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
       // Treat the value as a compile time constant
       value.setIsConstexpr(true);
 
-      GSL_LOG(INFO) << "Setting constant value of '" << key << " to '" << value.toString() << "'";
+      DAWN_LOG(INFO) << "Setting constant value of '" << key << " to '" << value.toString() << "'";
     }
   }
 
-  GSL_LOG(INFO) << "Done parsing globals";
+  DAWN_LOG(INFO) << "Done parsing globals";
 }
 
 clang::CXXRecordDecl* GlobalVariableParser::getRecordDecl() const { return recordDecl_; }

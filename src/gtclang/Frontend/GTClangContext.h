@@ -17,8 +17,8 @@
 #ifndef GTCLANG_FRONTEND_GTCLANGCONTEXT
 #define GTCLANG_FRONTEND_GTCLANGCONTEXT
 
-#include "gsl/SIR/SIR.h"
-#include "gsl/Support/NonCopyable.h"
+#include "dawn/SIR/SIR.h"
+#include "dawn/Support/NonCopyable.h"
 #include "gtclang/Driver/Options.h"
 #include "gtclang/Frontend/Diagnostics.h"
 #include <memory>
@@ -32,12 +32,12 @@ namespace gtclang {
 
 /// @brief Context of the GTClang tool
 /// @ingroup frontend
-class GTClangContext : gsl::NonCopyable {
+class GTClangContext : dawn::NonCopyable {
   std::unique_ptr<Options> options_;
   std::unique_ptr<Diagnostics> diagnostics_;
 
   // Map of attributes for stencil and stencil-functions
-  std::unordered_map<std::string, gsl::sir::Attr> stencilNameToAttributeMap_;
+  std::unordered_map<std::string, dawn::sir::Attr> stencilNameToAttributeMap_;
 
   // Raw points are always non-owning
   clang::ASTContext* astContext_;
@@ -83,10 +83,10 @@ public:
   /// If attribute was not set for the given stencil or stencil function, the default constructed
   /// attribute is returned.
   ///
-  /// @see gsl::sir::Attr
+  /// @see dawn::sir::Attr
   /// @{
-  gsl::sir::Attr getStencilAttribute(const std::string& name) const;
-  void setStencilAttribute(const std::string& name, gsl::sir::Attr attr);
+  dawn::sir::Attr getStencilAttribute(const std::string& name) const;
+  void setStencilAttribute(const std::string& name, dawn::sir::Attr attr);
   /// @}
 };
 

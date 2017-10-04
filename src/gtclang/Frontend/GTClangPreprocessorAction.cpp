@@ -15,8 +15,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "gtclang/Frontend/GTClangPreprocessorAction.h"
-#include "gsl/Support/Assert.h"
-#include "gsl/Support/Format.h"
+#include "dawn/Support/Assert.h"
+#include "dawn/Support/Format.h"
 #include "gtclang/Frontend/GTClangContext.h"
 #include "gtclang/Support/Logger.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -46,7 +46,7 @@ class GTClangLexer {
   bool hasGlobals_;
 
   /// Map of stencil and stencil functions to their parsed attributes from pragmas
-  std::unordered_map<std::string, gsl::sir::Attr> attributeMap_;
+  std::unordered_map<std::string, dawn::sir::Attr> attributeMap_;
 
   /// The current token
   clang::Token token_;
@@ -63,7 +63,7 @@ private:
   enum StencilKind { SK_Invalid, SK_Stencil, SK_StencilFunction };
 
   static const char* toString(StencilKind stencilKind) {
-    GSL_ASSERT(stencilKind != SK_Invalid);
+    DAWN_ASSERT(stencilKind != SK_Invalid);
     return stencilKind == SK_Stencil ? "stencil" : "stencil_function";
   }
 
@@ -201,7 +201,7 @@ private:
 
     if(parenNestingLevel != 0) {
       reportError(
-          loc, gsl::format(
+          loc, dawn::format(
                    "unbalanced parenthesis '%s' detected in argument-list of Do-Method of %s '%s'",
                    (parenNestingLevel > 0 ? ")" : "("), toString(stencilKind), name));
     } else {
@@ -243,7 +243,7 @@ private:
         if(!peekUntil(tok::r_square, peekedTokens)) {
           reportError(
               lSquareLoc,
-              gsl::format(
+              dawn::format(
                   "unbalanced brace ']' detected in storage access '%s' in Do-Method of %s '%s'",
                   token_.getIdentifierInfo()->getName().str(), toString(stencilKind), name));
         } else {
@@ -278,7 +278,7 @@ private:
           continue;
 
         registerReplacement(token_.getLocation(), PP_.LookAhead(peekedTokens).getLocation(),
-                            gsl::format("for(auto __k_loopvar__ : {%s, %s})", Arg1, Arg2));
+                            dawn::format("for(auto __k_loopvar__ : {%s, %s})", Arg1, Arg2));
 
         consumeTokens(peekedTokens);
       }
@@ -292,7 +292,7 @@ private:
     }
 
     if(curlyBracesNestingLevel != 0) {
-      reportError(loc, gsl::format("unbalanced brace '%s' detected in Do-Method of %s '%s'",
+      reportError(loc, dawn::format("unbalanced brace '%s' detected in Do-Method of %s '%s'",
                                    (curlyBracesNestingLevel > 0 ? "}" : "{"), toString(stencilKind),
                                    name));
     }
@@ -421,7 +421,7 @@ private:
     }
 
     if(curlyBracesNestingLevel != 0) {
-      reportError(loc, gsl::format("unbalanced brace '%s' detected in %s '%s'",
+      reportError(loc, dawn::format("unbalanced brace '%s' detected in %s '%s'",
                                    (curlyBracesNestingLevel > 0 ? "}" : "{"), toString(stencilKind),
                                    name));
     }
@@ -525,7 +525,7 @@ private:
           const char* stencilKindStr = toString(stencilKind);
           registerReplacement(
               token_.getLocation(), tokenLBrace.getLocation(),
-              gsl::format(
+              dawn::format(
                   "struct %s : public gridtools::clang::%s%s{ using gridtools::clang::%s::%s;",
                   identifier, stencilKindStr, hasGlobals_ ? ", public globals " : " ",
                   stencilKindStr, stencilKindStr));
@@ -570,7 +570,7 @@ private:
     };
 
     LexStateKind state = LK_Unknown;
-    gsl::sir::Attr curAttribute;
+    dawn::sir::Attr curAttribute;
     SourceLocation curStartLoc;
     SourceLocation curEndLoc;
     std::string curClause;
@@ -610,20 +610,20 @@ private:
           curClause = token_.getRawIdentifier().str();
 
           if(curClause == "no_codegen")
-            curAttribute.set(gsl::sir::Attr::AK_NoCodeGen);
+            curAttribute.set(dawn::sir::Attr::AK_NoCodeGen);
           else if(curClause == "merge_stages")
-            curAttribute.set(gsl::sir::Attr::AK_MergeStages);
+            curAttribute.set(dawn::sir::Attr::AK_MergeStages);
           else if(curClause == "merge_do_methods")
-            curAttribute.set(gsl::sir::Attr::AK_MergeDoMethods);
+            curAttribute.set(dawn::sir::Attr::AK_MergeDoMethods);
           else if(curClause == "merge_temporaries")
-            curAttribute.set(gsl::sir::Attr::AK_MergeTemporaries);
+            curAttribute.set(dawn::sir::Attr::AK_MergeTemporaries);
           else if(curClause == "use_kcaches")
-            curAttribute.set(gsl::sir::Attr::AK_UseKCaches);
+            curAttribute.set(dawn::sir::Attr::AK_UseKCaches);
           else {
             // We don't know this pragma, issue a warning about unknown gtclang pragma
             Diagnostics::reportRaw(
                 diag_, curStartLoc, clang::DiagnosticIDs::Warning,
-                gsl::format("invalid clause '%s' for '#pragma gtclang'", curClause));
+                dawn::format("invalid clause '%s' for '#pragma gtclang'", curClause));
             state = LK_Unknown;
             break;
           }
@@ -666,7 +666,7 @@ private:
         } else {
           Diagnostics::reportRaw(
               diag_, token_.getLocation(), clang::DiagnosticIDs::Error,
-              gsl::format("statement after '#pragma gtclang %s' must be a stencil declaration",
+              dawn::format("statement after '#pragma gtclang %s' must be a stencil declaration",
                           curClause));
         }
 
@@ -693,7 +693,7 @@ public:
   }
 
   /// @brief Get the attribute map for the stencil and stencil functions
-  const std::unordered_map<std::string, gsl::sir::Attr>& getAttributeMap() const {
+  const std::unordered_map<std::string, dawn::sir::Attr>& getAttributeMap() const {
     return attributeMap_;
   }
 
@@ -708,7 +708,7 @@ GTClangPreprocessorAction::GTClangPreprocessorAction(GTClangContext* context) : 
 void GTClangPreprocessorAction::ExecuteAction() {
   using namespace clang;
 
-  GSL_LOG(INFO) << "Start preprocessing ...";
+  DAWN_LOG(INFO) << "Start preprocessing ...";
 
   CompilerInstance& compiler = getCompilerInstance();
   SourceManager& SM = compiler.getSourceManager();
@@ -778,7 +778,7 @@ void GTClangPreprocessorAction::ExecuteAction() {
     }
   }
 
-  GSL_LOG(INFO) << "Done preprocessing";
+  DAWN_LOG(INFO) << "Done preprocessing";
 }
 
 } // namespace gtclang

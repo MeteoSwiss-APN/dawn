@@ -15,7 +15,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "gtclang/Driver/CompilerInstance.h"
-#include "gsl/Support/Compiler.h"
+#include "dawn/Support/Compiler.h"
 #include "gtclang/Support/Config.h"
 #include "gtclang/Support/Logger.h"
 #include "clang/Basic/DiagnosticOptions.h"
@@ -94,7 +94,7 @@ clang::CompilerInstance* createCompilerInstance(llvm::SmallVectorImpl<const char
   ccArgs.push_back("-internal-isystem");
   ccArgs.push_back(GTCLANG_CLANG_RESSOURCE_INCLUDE_PATH);
 
-#ifdef GSL_ON_APPLE
+#ifdef DAWN_ON_APPLE
   // On Mac OSX it is even more severe as it usually can't even find the STL headers ...
   ccArgs.push_back("-internal-isystem");
   ccArgs.push_back(GTCLANG_CLANG_RESSOURCE_INCLUDE_PATH "/../../../../include/c++/v1/");
@@ -114,7 +114,7 @@ clang::CompilerInstance* createCompilerInstance(llvm::SmallVectorImpl<const char
   }
 
   // Create a compiler instance to handle the actual work.
-  GSL_LOG(INFO) << "Creating GTClang compiler instance ...";
+  DAWN_LOG(INFO) << "Creating GTClang compiler instance ...";
   CompilerInstance* GTClang = new CompilerInstance;
   GTClang->setInvocation(CI.release());
 
@@ -126,7 +126,7 @@ clang::CompilerInstance* createCompilerInstance(llvm::SmallVectorImpl<const char
   // Check that we are atleast in C++11 mode and correct if necessary
   auto& langOpts = GTClang->getLangOpts();
   if(!langOpts.CPlusPlus11 && !langOpts.CPlusPlus14 && !langOpts.CPlusPlus1z) {
-    GSL_LOG(WARNING) << "C++98 mode detected; switchting to C++11";
+    DAWN_LOG(WARNING) << "C++98 mode detected; switchting to C++11";
     langOpts.CPlusPlus11 = 1;
   }
 
@@ -140,7 +140,7 @@ clang::CompilerInstance* createCompilerInstance(llvm::SmallVectorImpl<const char
   SmallVector<StringRef, 2> DSLIncludes;
   StringRef(GTCLANG_DSL_INCLUDES).split(DSLIncludes, ';');
   for(const auto& path : DSLIncludes) {
-    GSL_LOG(INFO) << "Adding DSL include path: " << path.str();
+    DAWN_LOG(INFO) << "Adding DSL include path: " << path.str();
     GTClang->getHeaderSearchOpts().AddPath(path, clang::frontend::System, false, false);
   }
   return GTClang;

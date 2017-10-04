@@ -17,7 +17,7 @@
 #ifndef GTCLANG_DRIVER_OPTIONSPARSER_H
 #define GTCLANG_DRIVER_OPTIONSPARSER_H
 
-#include "gsl/Support/NonCopyable.h"
+#include "dawn/Support/NonCopyable.h"
 #include "gtclang/Driver/Options.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -30,7 +30,7 @@ namespace gtclang {
 
 /// @brief GTClang options parser
 /// @ingroup driver
-class OptionsParser : gsl::NonCopyable {
+class OptionsParser : dawn::NonCopyable {
   using OptionsMap =
       std::unordered_map<std::string, std::function<bool(Options*, const char*, bool)>>;
   using OptionsAliasMap = std::unordered_map<std::string, std::vector<llvm::StringRef>>;

@@ -17,7 +17,7 @@
 #ifndef GTCLANG_UNITTEST_GTCLANG_H
 #define GTCLANG_UNITTEST_GTCLANG_H
 
-#include "gsl/Support/NonCopyable.h"
+#include "dawn/Support/NonCopyable.h"
 #include <string>
 #include <vector>
 
@@ -25,7 +25,7 @@ namespace gtclang {
 
 /// @brief Emulate invocation of GTClang from command-line
 /// @ingroup unittest
-class GTClang : gsl::NonCopyable {
+class GTClang : dawn::NonCopyable {
 public:
   /// @brief Run GTClang with given flags
   ///

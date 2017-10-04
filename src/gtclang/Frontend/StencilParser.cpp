@@ -14,11 +14,11 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "gsl/SIR/SIR.h"
-#include "gsl/Support/Array.h"
-#include "gsl/Support/Assert.h"
-#include "gsl/Support/Casting.h"
-#include "gsl/Support/Logging.h"
+#include "dawn/SIR/SIR.h"
+#include "dawn/Support/Array.h"
+#include "dawn/Support/Assert.h"
+#include "dawn/Support/Casting.h"
+#include "dawn/Support/Logging.h"
 #include "gtclang/Frontend/ClangASTStmtResolver.h"
 #include "gtclang/Frontend/GTClangContext.h"
 #include "gtclang/Frontend/GlobalVariableParser.h"
@@ -53,7 +53,7 @@ public:
     varDecl_ = varDecl;
     name_ = varDecl->getNameAsString();
 
-    GSL_ASSERT_MSG(varDecl, "expected variable declaration for interval bound");
+    DAWN_ASSERT_MSG(varDecl, "expected variable declaration for interval bound");
     resolve(varDecl->getInit());
   }
 
@@ -66,7 +66,7 @@ public:
 private:
   void resolve(clang::CXXConstructExpr* expr) {
     if(expr->getNumArgs()) {
-      GSL_ASSERT(expr->getNumArgs() == 1);
+      DAWN_ASSERT(expr->getNumArgs() == 1);
       resolve(expr->getArg(0));
     } else {
       clang::SourceLocation locEnd = varDecl_->getLocEnd().getLocWithOffset(name_.size());
@@ -106,7 +106,7 @@ private:
         parser_->reportDiagnostic(expr->getArg(1)->getLocStart(),
                                   Diagnostics::DiagKind::err_interval_custom_not_constexpr)
             << expr->getSourceRange()
-            << (builtinLevel_ == gsl::sir::Interval::Start ? "k_start" : "k_end");
+            << (builtinLevel_ == dawn::sir::Interval::Start ? "k_start" : "k_end");
       }
     }
   }
@@ -114,9 +114,9 @@ private:
   void resolve(clang::DeclRefExpr* expr) {
     llvm::StringRef name = expr->getDecl()->getName();
     if(name == "k_start")
-      builtinLevel_ = gsl::sir::Interval::Start;
+      builtinLevel_ = dawn::sir::Interval::Start;
     else if(name == "k_end")
-      builtinLevel_ = gsl::sir::Interval::End;
+      builtinLevel_ = dawn::sir::Interval::End;
     else {
       parser_->reportDiagnostic(expr->getLocStart(),
                                 Diagnostics::DiagKind::err_interval_custom_not_builtin)
@@ -145,7 +145,7 @@ private:
       return resolve(e);
     else {
       expr->dumpColor();
-      GSL_ASSERT_MSG(0, "unresolved expression in IntervalLevelParser");
+      DAWN_ASSERT_MSG(0, "unresolved expression in IntervalLevelParser");
     }
     llvm_unreachable("invalid expr");
   }
@@ -160,8 +160,8 @@ private:
 class IntervalResolver {
   StencilParser* parser_;
 
-  gsl::Array2i level_;
-  gsl::Array2i offset_;
+  dawn::Array2i level_;
+  dawn::Array2i offset_;
   int curIndex_;
 
   std::string verticalIndexName_;
@@ -176,7 +176,7 @@ public:
   ///   ...
   /// }
   void resolve(clang::CXXForRangeStmt* verticalRegionDecl) {
-    GSL_ASSERT(verticalRegionDecl->getRangeStmt()->isSingleDecl());
+    DAWN_ASSERT(verticalRegionDecl->getRangeStmt()->isSingleDecl());
 
     // Extract loop bounds
     clang::VarDecl* initializerListDecl =
@@ -214,19 +214,19 @@ public:
   }
 
   /// @brief Get the SIRInterval
-  std::pair<std::shared_ptr<gsl::sir::Interval>, gsl::sir::VerticalRegion::LoopOrderKind>
+  std::pair<std::shared_ptr<dawn::sir::Interval>, dawn::sir::VerticalRegion::LoopOrderKind>
   getInterval() const {
 
     // Note that intervals have the the invariant lowerBound <= upperBound. We thus encapsulate the
     // loop order here.
     if((level_[0] + offset_[0]) <= (level_[1] + offset_[1]))
       return std::make_pair(
-          std::make_shared<gsl::sir::Interval>(level_[0], level_[1], offset_[0], offset_[1]),
-          gsl::sir::VerticalRegion::LK_Forward);
+          std::make_shared<dawn::sir::Interval>(level_[0], level_[1], offset_[0], offset_[1]),
+          dawn::sir::VerticalRegion::LK_Forward);
     else
       return std::make_pair(
-          std::make_shared<gsl::sir::Interval>(level_[1], level_[0], offset_[1], offset_[0]),
-          gsl::sir::VerticalRegion::LK_Backward);
+          std::make_shared<dawn::sir::Interval>(level_[1], level_[0], offset_[1], offset_[0]),
+          dawn::sir::VerticalRegion::LK_Backward);
   }
 
   /// @brief Get vertical index name (i.e loop variable in the range-based for loop)
@@ -293,9 +293,9 @@ private:
 
     llvm::StringRef name = expr->getDecl()->getName();
     if(name == "k_start")
-      level_[curIndex_] = gsl::sir::Interval::Start;
+      level_[curIndex_] = dawn::sir::Interval::Start;
     else if(name == "k_end")
-      level_[curIndex_] = gsl::sir::Interval::End;
+      level_[curIndex_] = dawn::sir::Interval::End;
     else {
       // Not a builtin interval, parse it!
       auto levelPair = parser_->getCustomIntervalLevel(name);
@@ -337,7 +337,7 @@ private:
       return resolve(e);
     else {
       expr->dumpColor();
-      GSL_ASSERT_MSG(0, "unresolved expression in IntervalResolver");
+      DAWN_ASSERT_MSG(0, "unresolved expression in IntervalResolver");
     }
     llvm_unreachable("invalid expr");
   }
@@ -375,7 +375,7 @@ private:
   void resolve(clang::MaterializeTemporaryExpr* expr) { resolve(expr->GetTemporaryExpr()); }
 
   void resolve(clang::CXXTemporaryObjectExpr* expr) {
-    GSL_ASSERT(functor_.empty());
+    DAWN_ASSERT(functor_.empty());
     functor_ = expr->getConstructor()->getNameAsString();
   
     // Check the stencil function exists
@@ -386,7 +386,7 @@ private:
     }
   
     // Check that there are only storage arguments
-    gsl::sir::StencilFunction* stencilFun = parser_->getStencilFunctionByName(functor_).second.get();
+    dawn::sir::StencilFunction* stencilFun = parser_->getStencilFunctionByName(functor_).second.get();
   
     if(stencilFun->Args.size() > 1) {
       parser_->reportDiagnostic(expr->getLocation(),
@@ -396,7 +396,7 @@ private:
     }
   
     for(const auto& arg : stencilFun->Args) {
-      if(!gsl::isa<gsl::sir::Field>(arg.get()))
+      if(!dawn::isa<dawn::sir::Field>(arg.get()))
         parser_->reportDiagnostic(expr->getLocation(),
                                   Diagnostics::DiagKind::err_boundary_condition_invalid_functor)
             << functor_ << "only storage arguments allowed";
@@ -439,7 +439,7 @@ private:
       return resolve(e);
     else {
       expr->dumpColor();
-      GSL_ASSERT_MSG(0, "unresolved expression in IntervalResolver");
+      DAWN_ASSERT_MSG(0, "unresolved expression in IntervalResolver");
     }
     llvm_unreachable("invalid expr");
   }
@@ -467,12 +467,12 @@ void StencilParser::parseStencilFunction(clang::CXXRecordDecl* recordDecl,
   parseStencilImpl(recordDecl, name, StencilKind::SK_StencilFunction);
 }
 
-const std::map<clang::CXXRecordDecl*, std::shared_ptr<gsl::sir::Stencil>>&
+const std::map<clang::CXXRecordDecl*, std::shared_ptr<dawn::sir::Stencil>>&
 StencilParser::getStencilMap() const {
   return stencilMap_;
 }
 
-const std::map<clang::CXXRecordDecl*, std::shared_ptr<gsl::sir::StencilFunction>>&
+const std::map<clang::CXXRecordDecl*, std::shared_ptr<dawn::sir::StencilFunction>>&
 StencilParser::getStencilFunctionMap() const {
   return stencilFunctionMap_;
 }
@@ -482,7 +482,7 @@ clang::DiagnosticBuilder StencilParser::reportDiagnostic(clang::SourceLocation l
   return context_->getDiagnostics().report(loc, kind);
 }
 
-std::pair<clang::CXXRecordDecl*, std::shared_ptr<gsl::sir::StencilFunction>>
+std::pair<clang::CXXRecordDecl*, std::shared_ptr<dawn::sir::StencilFunction>>
 StencilParser::getStencilFunctionByName(const std::string& name) {
   for(auto& stencilFunPair : stencilFunctionMap_)
     if(stencilFunPair.second->Name == name)
@@ -524,25 +524,25 @@ void StencilParser::parseStencilImpl(clang::CXXRecordDecl* recordDecl, const std
   currentParserRecord_->CurrentCXXRecordDecl = recordDecl;
 
   if(currentParserRecord_->CurrentKind == SK_Stencil) {
-    GSL_ASSERT(!stencilMap_.count(recordDecl));
+    DAWN_ASSERT(!stencilMap_.count(recordDecl));
 
     // Construct the sir::Stencil and set the name and location
     currentParserRecord_->CurrentStencil =
-        stencilMap_.insert({recordDecl, std::make_shared<gsl::sir::Stencil>()}).first->second.get();
+        stencilMap_.insert({recordDecl, std::make_shared<dawn::sir::Stencil>()}).first->second.get();
     currentParserRecord_->CurrentStencil->Name = name;
     currentParserRecord_->CurrentStencil->Loc = getLocation(recordDecl);
-    currentParserRecord_->CurrentStencil->StencilDescAst = std::make_shared<gsl::AST>();
+    currentParserRecord_->CurrentStencil->StencilDescAst = std::make_shared<dawn::AST>();
 
     // Parse the arguments
     for(FieldDecl* field : recordDecl->fields())
       parseStorage(field);
 
   } else {
-    GSL_ASSERT(!stencilFunctionMap_.count(recordDecl));
+    DAWN_ASSERT(!stencilFunctionMap_.count(recordDecl));
 
     // Construct the sir::StencilFunction and set the name and location
     currentParserRecord_->CurrentStencilFunction =
-        stencilFunctionMap_.insert({recordDecl, std::make_shared<gsl::sir::StencilFunction>()})
+        stencilFunctionMap_.insert({recordDecl, std::make_shared<dawn::sir::StencilFunction>()})
             .first->second.get();
     currentParserRecord_->CurrentStencilFunction->Name = name;
     currentParserRecord_->CurrentStencilFunction->Loc = getLocation(recordDecl);
@@ -583,7 +583,7 @@ void StencilParser::parseStencilImpl(clang::CXXRecordDecl* recordDecl, const std
 }
 
 void StencilParser::parseStorage(clang::FieldDecl* field) {
-  GSL_ASSERT(currentParserRecord_->CurrentKind == SK_Stencil);
+  DAWN_ASSERT(currentParserRecord_->CurrentKind == SK_Stencil);
 
   auto name = field->getDeclName().getAsString();
 
@@ -595,16 +595,16 @@ void StencilParser::parseStorage(clang::FieldDecl* field) {
 
   if(typeStr == "storage") {
 
-    GSL_LOG(INFO) << "Parsing field: " << name;
-    auto SIRField = std::make_shared<gsl::sir::Field>(name, getLocation(field));
+    DAWN_LOG(INFO) << "Parsing field: " << name;
+    auto SIRField = std::make_shared<dawn::sir::Field>(name, getLocation(field));
     SIRField->IsTemporary = false;
     currentParserRecord_->CurrentStencil->Fields.emplace_back(SIRField);
     currentParserRecord_->addArgDecl(name, field);
 
   } else if(typeStr == "temporary_storage") {
 
-    GSL_LOG(INFO) << "Parsing temporary field: " << name;
-    auto SIRField = std::make_shared<gsl::sir::Field>(name, getLocation(field));
+    DAWN_LOG(INFO) << "Parsing temporary field: " << name;
+    auto SIRField = std::make_shared<dawn::sir::Field>(name, getLocation(field));
     SIRField->IsTemporary = true;
     currentParserRecord_->CurrentStencil->Fields.emplace_back(SIRField);
     currentParserRecord_->addArgDecl(name, field);
@@ -618,7 +618,7 @@ void StencilParser::parseStorage(clang::FieldDecl* field) {
 }
 
 void StencilParser::parseArgument(clang::FieldDecl* arg) {
-  GSL_ASSERT(currentParserRecord_->CurrentKind == SK_StencilFunction);
+  DAWN_ASSERT(currentParserRecord_->CurrentKind == SK_StencilFunction);
 
   auto name = arg->getDeclName().getAsString();
 
@@ -630,31 +630,31 @@ void StencilParser::parseArgument(clang::FieldDecl* arg) {
 
   if(typeStr == "storage") {
 
-    GSL_LOG(INFO) << "Parsing field: " << name;
-    auto SIRField = std::make_shared<gsl::sir::Field>(name, getLocation(arg));
+    DAWN_LOG(INFO) << "Parsing field: " << name;
+    auto SIRField = std::make_shared<dawn::sir::Field>(name, getLocation(arg));
     SIRField->IsTemporary = false;
     currentParserRecord_->CurrentStencilFunction->Args.emplace_back(SIRField);
     currentParserRecord_->addArgDecl(name, arg);
 
   } else if(typeStr == "temporary_storage") {
 
-    GSL_LOG(INFO) << "Parsing temporary field: " << name;
-    auto SIRField = std::make_shared<gsl::sir::Field>(name, getLocation(arg));
+    DAWN_LOG(INFO) << "Parsing temporary field: " << name;
+    auto SIRField = std::make_shared<dawn::sir::Field>(name, getLocation(arg));
     SIRField->IsTemporary = true;
     currentParserRecord_->CurrentStencilFunction->Args.emplace_back(SIRField);
     currentParserRecord_->addArgDecl(name, arg);
 
   } else if(typeStr == "offset") {
 
-    GSL_LOG(INFO) << "Parsing offset: " << name;
-    auto SIROffset = std::make_shared<gsl::sir::Offset>(name, getLocation(arg));
+    DAWN_LOG(INFO) << "Parsing offset: " << name;
+    auto SIROffset = std::make_shared<dawn::sir::Offset>(name, getLocation(arg));
     currentParserRecord_->CurrentStencilFunction->Args.emplace_back(SIROffset);
     currentParserRecord_->addArgDecl(name, arg);
 
   } else if(typeStr == "direction") {
 
-    GSL_LOG(INFO) << "Parsing direction: " << name;
-    auto SIRDirection = std::make_shared<gsl::sir::Direction>(name, getLocation(arg));
+    DAWN_LOG(INFO) << "Parsing direction: " << name;
+    auto SIRDirection = std::make_shared<dawn::sir::Direction>(name, getLocation(arg));
     currentParserRecord_->CurrentStencilFunction->Args.emplace_back(SIRDirection);
     currentParserRecord_->addArgDecl(name, arg);
 
@@ -669,12 +669,12 @@ void StencilParser::parseStencilFunctionDoMethod(clang::CXXMethodDecl* DoMethod)
   using namespace clang;
   using namespace llvm;
 
-  GSL_LOG(INFO)
+  DAWN_LOG(INFO)
       << "Parsing stencil-function Do-Method at "
       << getFilename(DoMethod->getLocation().printToString(context_->getSourceManager())).str()
       << " ...";
 
-  std::shared_ptr<gsl::sir::Interval> intervals = nullptr;
+  std::shared_ptr<dawn::sir::Interval> intervals = nullptr;
   if(DoMethod->getNumParams() > 0) {
     if(DoMethod->getNumParams() != 2) {
       reportDiagnostic(DoMethod->getLocStart(),
@@ -691,7 +691,7 @@ void StencilParser::parseStencilFunctionDoMethod(clang::CXXMethodDecl* DoMethod)
   if(DoMethod->hasBody()) {
 
     ClangASTStmtResolver stmtResolver(context_, this);
-    auto SIRBlockStmt = std::make_shared<gsl::BlockStmt>(getLocation(DoMethod->getBody()));
+    auto SIRBlockStmt = std::make_shared<dawn::BlockStmt>(getLocation(DoMethod->getBody()));
 
     if(CompoundStmt* bodyStmt = dyn_cast<CompoundStmt>(DoMethod->getBody())) {
 
@@ -712,7 +712,7 @@ void StencilParser::parseStencilFunctionDoMethod(clang::CXXMethodDecl* DoMethod)
 
     // Assemble the stencil function
     currentParserRecord_->CurrentStencilFunction->Asts.emplace_back(
-        std::make_shared<gsl::AST>(std::move(SIRBlockStmt)));
+        std::make_shared<dawn::AST>(std::move(SIRBlockStmt)));
 
     if(intervals)
       currentParserRecord_->CurrentStencilFunction->Intervals.emplace_back(std::move(intervals));
@@ -722,14 +722,14 @@ void StencilParser::parseStencilFunctionDoMethod(clang::CXXMethodDecl* DoMethod)
     reportDiagnostic(DoMethod->getLocation(), Diagnostics::DiagKind::err_do_method_ill_formed);
   }
 
-  GSL_LOG(INFO) << "Done parsing stencil-function Do-Method";
+  DAWN_LOG(INFO) << "Done parsing stencil-function Do-Method";
 }
 
 void StencilParser::parseStencilDoMethod(clang::CXXMethodDecl* DoMethod) {
   using namespace clang;
   using namespace llvm;
 
-  GSL_LOG(INFO)
+  DAWN_LOG(INFO)
       << "Parsing Do-Method at "
       << getFilename(DoMethod->getLocation().printToString(context_->getSourceManager())).str()
       << " ...";
@@ -739,7 +739,7 @@ void StencilParser::parseStencilDoMethod(clang::CXXMethodDecl* DoMethod) {
 
       ClangASTStmtResolver stmtResolver(context_, this);
 
-      std::shared_ptr<gsl::AST>& stencilDescAst =
+      std::shared_ptr<dawn::AST>& stencilDescAst =
           currentParserRecord_->CurrentStencil->StencilDescAst;
 
       // DoMethod is a CompoundStmt, start iterating
@@ -785,14 +785,14 @@ void StencilParser::parseStencilDoMethod(clang::CXXMethodDecl* DoMethod) {
     }
   }
 
-  GSL_LOG(INFO) << "Done parsing Do-Method";
+  DAWN_LOG(INFO) << "Done parsing Do-Method";
 }
 
-std::shared_ptr<gsl::StencilCallDeclStmt>
+std::shared_ptr<dawn::StencilCallDeclStmt>
 StencilParser::parseStencilCall(clang::CXXConstructExpr* stencilCall) {
   std::string callee = stencilCall->getConstructor()->getNameAsString();
 
-  GSL_LOG(INFO)
+  DAWN_LOG(INFO)
       << "Parsing stencil-call at "
       << getFilename(stencilCall->getLocation().printToString(context_->getSourceManager())).str()
       << " ...";
@@ -800,7 +800,7 @@ StencilParser::parseStencilCall(clang::CXXConstructExpr* stencilCall) {
   // Check if stencil exists
   auto stencilIt = std::find_if(
       stencilMap_.begin(), stencilMap_.end(),
-      [&](const std::pair<clang::CXXRecordDecl*, std::shared_ptr<gsl::sir::Stencil>>& spair) {
+      [&](const std::pair<clang::CXXRecordDecl*, std::shared_ptr<dawn::sir::Stencil>>& spair) {
         return spair.second->Name == callee;
       });
 
@@ -824,7 +824,7 @@ StencilParser::parseStencilCall(clang::CXXConstructExpr* stencilCall) {
     return nullptr;
   }
 
-  std::vector<std::shared_ptr<gsl::sir::Field>> fields;
+  std::vector<std::shared_ptr<dawn::sir::Field>> fields;
 
   // Check if arguments are of type `gridtools::clang::storage` and the number of arguments match
   for(auto* arg : stencilCall->arguments()) {
@@ -842,9 +842,9 @@ StencilParser::parseStencilCall(clang::CXXConstructExpr* stencilCall) {
       }
 
       std::string name = member->getMemberDecl()->getNameAsString();
-      fields.push_back(std::make_shared<gsl::sir::Field>(name, getLocation(member)));
+      fields.push_back(std::make_shared<dawn::sir::Field>(name, getLocation(member)));
     } else {
-      GSL_ASSERT_MSG(0, "expected `clang::MemberExpr` in argument-list of stencil call");
+      DAWN_ASSERT_MSG(0, "expected `clang::MemberExpr` in argument-list of stencil call");
     }
   }
 
@@ -855,7 +855,7 @@ StencilParser::parseStencilCall(clang::CXXConstructExpr* stencilCall) {
   const auto& requiredFields = stencilIt->second->Fields;
   std::size_t requiredArgs =
       std::accumulate(requiredFields.begin(), requiredFields.end(), 0,
-                      [](std::size_t acc, const std::shared_ptr<gsl::sir::Field>& field) {
+                      [](std::size_t acc, const std::shared_ptr<dawn::sir::Field>& field) {
                         return acc + !field->IsTemporary;
                       });
 
@@ -874,19 +874,19 @@ StencilParser::parseStencilCall(clang::CXXConstructExpr* stencilCall) {
     return nullptr;
   }
 
-  auto SIRStencilCall = std::make_shared<gsl::sir::StencilCall>(callee, getLocation(stencilCall));
+  auto SIRStencilCall = std::make_shared<dawn::sir::StencilCall>(callee, getLocation(stencilCall));
   SIRStencilCall->Args = std::move(fields);
 
-  GSL_LOG(INFO) << "Done parsing stencil call";
-  return std::make_shared<gsl::StencilCallDeclStmt>(SIRStencilCall, SIRStencilCall->Loc);
+  DAWN_LOG(INFO) << "Done parsing stencil call";
+  return std::make_shared<dawn::StencilCallDeclStmt>(SIRStencilCall, SIRStencilCall->Loc);
 }
 
-std::shared_ptr<gsl::VerticalRegionDeclStmt>
+std::shared_ptr<dawn::VerticalRegionDeclStmt>
 StencilParser::parseVerticalRegion(clang::CXXForRangeStmt* verticalRegion) {
   using namespace clang;
   using namespace llvm;
 
-  GSL_LOG(INFO) << "Parsing vertical region at " << getLocation(verticalRegion);
+  DAWN_LOG(INFO) << "Parsing vertical region at " << getLocation(verticalRegion);
 
   // The idea is to translate each vertical region, given as a C++11 range-based for loop (i.e
   // `for(auto k : {X,X})`) into a VerticalRegionDeclStmt
@@ -896,7 +896,7 @@ StencilParser::parseVerticalRegion(clang::CXXForRangeStmt* verticalRegion) {
   intervalResolver.resolve(verticalRegion);
 
   // Extract the Do-Method body (AST) from the loop body
-  auto SIRBlockStmt = std::make_shared<gsl::BlockStmt>(getLocation(verticalRegion));
+  auto SIRBlockStmt = std::make_shared<dawn::BlockStmt>(getLocation(verticalRegion));
 
   // There is a difference between
   //
@@ -923,25 +923,25 @@ StencilParser::parseVerticalRegion(clang::CXXForRangeStmt* verticalRegion) {
   }
 
   // Assemble the vertical region and register it within the current Stencil
-  auto SIRAST = std::make_shared<gsl::AST>(std::move(SIRBlockStmt));
+  auto SIRAST = std::make_shared<dawn::AST>(std::move(SIRBlockStmt));
 
   auto intervalPair = intervalResolver.getInterval();
 
-  auto SIRVerticalRegion = std::make_shared<gsl::sir::VerticalRegion>(
+  auto SIRVerticalRegion = std::make_shared<dawn::sir::VerticalRegion>(
       SIRAST, intervalPair.first, intervalPair.second, getLocation(verticalRegion));
 
-  GSL_LOG(INFO) << "Done parsing vertical region";
-  return std::make_shared<gsl::VerticalRegionDeclStmt>(SIRVerticalRegion, SIRVerticalRegion->Loc);
+  DAWN_LOG(INFO) << "Done parsing vertical region";
+  return std::make_shared<dawn::VerticalRegionDeclStmt>(SIRVerticalRegion, SIRVerticalRegion->Loc);
 }
 
-std::shared_ptr<gsl::BoundaryConditionDeclStmt>
+std::shared_ptr<dawn::BoundaryConditionDeclStmt>
 StencilParser::parseBoundaryCondition(clang::CXXConstructExpr* boundaryCondition) {
   using namespace clang;
   using namespace llvm;
 
-  GSL_ASSERT(boundaryCondition->getConstructor()->getNameAsString() == "boundary_condition");
+  DAWN_ASSERT(boundaryCondition->getConstructor()->getNameAsString() == "boundary_condition");
 
-  GSL_LOG(INFO) << "Parsing boundary-condition at "
+  DAWN_LOG(INFO) << "Parsing boundary-condition at "
                 << getFilename(
                        boundaryCondition->getLocation().printToString(context_->getSourceManager()))
                        .str()
@@ -950,15 +950,15 @@ StencilParser::parseBoundaryCondition(clang::CXXConstructExpr* boundaryCondition
   BoundaryConditionResolver resolver(this);
   resolver.resolve(boundaryCondition);
 
-  auto ASTBoundaryCondition = std::make_shared<gsl::BoundaryConditionDeclStmt>(
+  auto ASTBoundaryCondition = std::make_shared<dawn::BoundaryConditionDeclStmt>(
       resolver.getFunctor(), getLocation(boundaryCondition));
 
   for(const auto& name : resolver.getFields()) {
-    gsl::sir::Stencil* curStencil = currentParserRecord_->CurrentStencil;
+    dawn::sir::Stencil* curStencil = currentParserRecord_->CurrentStencil;
 
     auto it = std::find_if(
         curStencil->Fields.begin(), curStencil->Fields.end(),
-        [&name](const std::shared_ptr<gsl::sir::Field>& field) { return field->Name == name; });
+        [&name](const std::shared_ptr<dawn::sir::Field>& field) { return field->Name == name; });
 
     if(it == curStencil->Fields.end()) {
       auto builder = reportDiagnostic(boundaryCondition->getLocation(),
@@ -969,18 +969,18 @@ StencilParser::parseBoundaryCondition(clang::CXXConstructExpr* boundaryCondition
     }
   }
 
-  GSL_LOG(INFO) << "Done parsing boundary-condition";
+  DAWN_LOG(INFO) << "Done parsing boundary-condition";
   return ASTBoundaryCondition;
 }
 
-gsl::SourceLocation StencilParser::getLocation(clang::Decl* decl) const {
+dawn::SourceLocation StencilParser::getLocation(clang::Decl* decl) const {
   clang::PresumedLoc ploc = context_->getSourceManager().getPresumedLoc(decl->getLocation());
-  return gsl::SourceLocation(ploc.getLine(), ploc.getColumn());
+  return dawn::SourceLocation(ploc.getLine(), ploc.getColumn());
 }
 
-gsl::SourceLocation StencilParser::getLocation(clang::Stmt* stmt) const {
+dawn::SourceLocation StencilParser::getLocation(clang::Stmt* stmt) const {
   clang::PresumedLoc ploc = context_->getSourceManager().getPresumedLoc(stmt->getLocStart());
-  return gsl::SourceLocation(ploc.getLine(), ploc.getColumn());
+  return dawn::SourceLocation(ploc.getLine(), ploc.getColumn());
 }
 
 } // namespace gtclang

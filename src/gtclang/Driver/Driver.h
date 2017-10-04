@@ -17,7 +17,7 @@
 #ifndef GTCLANG_DRIVER_DRIVER_H
 #define GTCLANG_DRIVER_DRIVER_H
 
-#include "gsl/Support/NonCopyable.h"
+#include "dawn/Support/NonCopyable.h"
 #include "llvm/ADT/SmallVector.h"
 #include <string>
 #include <vector>
@@ -26,7 +26,7 @@ namespace gtclang {
 
 /// @brief Main driver of gtclang
 /// @ingroup driver
-struct Driver : public gsl::NonCopyable {
+struct Driver : public dawn::NonCopyable {
 
   /// @brief Run gtclang on the given arguments
   /// @returns `0` on success, `1` otherwise

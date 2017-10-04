@@ -15,8 +15,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "gtclang/Frontend/GTClangASTVisitor.h"
-#include "gsl/SIR/SIR.h"
-#include "gsl/Support/Logging.h"
+#include "dawn/SIR/SIR.h"
+#include "dawn/Support/Logging.h"
 #include "gtclang/Frontend/GTClangContext.h"
 #include "gtclang/Support/FileUtil.h"
 #include "clang/AST/ASTContext.h"
@@ -57,7 +57,7 @@ bool GTClangASTVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl* recordDecl) {
         if(baseTypeName == "stencil") {
           auto name = recordDecl->getIdentifier()->getName().str();
 
-          GSL_LOG(INFO) << "Parsing stencil `" << name << "` at "
+          DAWN_LOG(INFO) << "Parsing stencil `" << name << "` at "
                         << getFilename(base.getLocStart().printToString(SM)).str();
 
           stencilParser_.parseStencil(recordDecl, name);
@@ -67,7 +67,7 @@ bool GTClangASTVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl* recordDecl) {
         else if(baseTypeName == "stencil_function") {
           auto name = recordDecl->getIdentifier()->getName().str();
 
-          GSL_LOG(INFO) << "Parsing stencil function `" << name << "` at "
+          DAWN_LOG(INFO) << "Parsing stencil function `" << name << "` at "
                         << getFilename(base.getLocStart().printToString(SM)).str();
 
           stencilParser_.parseStencilFunction(recordDecl, name);

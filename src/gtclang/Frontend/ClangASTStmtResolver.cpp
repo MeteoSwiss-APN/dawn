@@ -15,7 +15,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "gtclang/Frontend/ClangASTStmtResolver.h"
-#include "gsl/SIR/AST.h"
+#include "dawn/SIR/AST.h"
 #include "gtclang/Frontend/ClangASTExprResolver.h"
 #include "gtclang/Frontend/StencilParser.h"
 #include "clang/AST/AST.h"
@@ -29,19 +29,19 @@ ClangASTStmtResolver::ClangASTStmtResolver(GTClangContext* context, StencilParse
 ClangASTStmtResolver::ClangASTStmtResolver(const std::shared_ptr<ClangASTExprResolver>& resolver)
     : clangASTExprResolver_(resolver), AstKind_(AK_Unknown) {}
 
-llvm::ArrayRef<std::shared_ptr<gsl::Stmt>> ClangASTStmtResolver::resolveStmt(clang::Stmt* stmt,
+llvm::ArrayRef<std::shared_ptr<dawn::Stmt>> ClangASTStmtResolver::resolveStmt(clang::Stmt* stmt,
                                                                              ASTKind kind) {
   resetInternals();
   AstKind_ = kind;
   resolve(stmt);
-  return llvm::ArrayRef<std::shared_ptr<gsl::Stmt>>(statements_);
+  return llvm::ArrayRef<std::shared_ptr<dawn::Stmt>>(statements_);
 }
 
-std::vector<std::shared_ptr<gsl::Stmt>>& ClangASTStmtResolver::getStatements() {
+std::vector<std::shared_ptr<dawn::Stmt>>& ClangASTStmtResolver::getStatements() {
   return statements_;
 }
 
-const std::vector<std::shared_ptr<gsl::Stmt>>& ClangASTStmtResolver::getStatements() const {
+const std::vector<std::shared_ptr<dawn::Stmt>>& ClangASTStmtResolver::getStatements() const {
   return statements_;
 }
 
@@ -79,7 +79,7 @@ void ClangASTStmtResolver::resolve(clang::Stmt* stmt) {
     resolve(s);
   else {
     stmt->dumpColor();
-    GSL_ASSERT_MSG(0, "unresolved statement");
+    DAWN_ASSERT_MSG(0, "unresolved statement");
   }
 }
 
@@ -110,7 +110,7 @@ void ClangASTStmtResolver::resolve(clang::CXXFunctionalCastExpr* expr) {
 
 void ClangASTStmtResolver::resolve(clang::CXXForRangeStmt* expr) {
   // Parse a vertial region (i.e `for( ... ) { ... }`)
-  GSL_ASSERT(AstKind_ == AK_StencilDesc);
+  DAWN_ASSERT(AstKind_ == AK_StencilDesc);
   statements_.emplace_back(clangASTExprResolver_->getParser()->parseVerticalRegion(expr));
 }
 
@@ -125,7 +125,7 @@ void ClangASTStmtResolver::resolve(clang::UnaryOperator* expr) {
 }
 
 void ClangASTStmtResolver::resolve(clang::DeclStmt* stmt) {
-  GSL_ASSERT_MSG(stmt->isSingleDecl(), "only single declarations are currently supported");
+  DAWN_ASSERT_MSG(stmt->isSingleDecl(), "only single declarations are currently supported");
 
   // LHS is a variable declaration (e.g `double a = ...`)
   statements_.emplace_back(
@@ -139,7 +139,7 @@ void ClangASTStmtResolver::resolve(clang::ReturnStmt* stmt) {
 
 void ClangASTStmtResolver::resolve(clang::IfStmt* stmt) {
   using namespace clang;
-  std::shared_ptr<gsl::Stmt> condStmt = nullptr;
+  std::shared_ptr<dawn::Stmt> condStmt = nullptr;
 
   // We currently don't support expression with variable decls in the condition
   if(stmt->getConditionVariable())
@@ -179,12 +179,12 @@ void ClangASTStmtResolver::resolve(clang::IfStmt* stmt) {
         << clangCond->getSourceRange();
   }
 
-  auto parseBody = [&](clang::Stmt* clangStmt) -> std::shared_ptr<gsl::BlockStmt> {
+  auto parseBody = [&](clang::Stmt* clangStmt) -> std::shared_ptr<dawn::BlockStmt> {
     if(!clangStmt)
       return nullptr;
 
     auto blockStmt =
-        std::make_shared<gsl::BlockStmt>(clangASTExprResolver_->getSourceLocation(clangStmt));
+        std::make_shared<dawn::BlockStmt>(clangASTExprResolver_->getSourceLocation(clangStmt));
     ClangASTStmtResolver resolver(clangASTExprResolver_);
 
     if(CompoundStmt* compound = dyn_cast<CompoundStmt>(clangStmt)) {
@@ -198,7 +198,7 @@ void ClangASTStmtResolver::resolve(clang::IfStmt* stmt) {
     return blockStmt;
   };
 
-  statements_.emplace_back(std::make_shared<gsl::IfStmt>(
+  statements_.emplace_back(std::make_shared<dawn::IfStmt>(
       condStmt, parseBody(stmt->getThen()), parseBody(stmt->getElse()),
       clangASTExprResolver_->getSourceLocation(stmt)));
 }

@@ -21,14 +21,14 @@
 
 namespace gtclang {
 
-/// @brief Configuration options used by gtclang and the GSL library (most of them are parsed from
+/// @brief Configuration options used by gtclang and the DAWN library (most of them are parsed from
 /// the command-line)
 ///
 /// @ingroup driver
 struct Options {
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
   TYPE NAME = DEFAULT_VALUE;
-#include "gsl/Compiler/Options.inc"
+#include "dawn/Compiler/Options.inc"
 #include "gtclang/Driver/Options.inc"
 #undef OPT
 };

@@ -50,9 +50,9 @@ int Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
 
   // Ininitialize the Logger
   auto logger = llvm::make_unique<Logger>();
-  auto* oldLogger = gsl::Logger::getSingleton().getLogger();
+  auto* oldLogger = dawn::Logger::getSingleton().getLogger();
   if(context->getOptions().Verbose)
-    gsl::Logger::getSingleton().registerLogger(logger.get());
+    dawn::Logger::getSingleton().registerLogger(logger.get());
 
   // Create GTClang
   std::unique_ptr<clang::CompilerInstance> GTClang(createCompilerInstance(clangArgs));
@@ -66,12 +66,12 @@ int Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
       std::unique_ptr<clang::ASTFrontendAction> ASTAction(new GTClangASTAction(context.get()));
       ret |= !GTClang->ExecuteAction(*ASTAction);
     }
-    GSL_LOG(INFO) << "Compilation finished " << (ret ? "with errors" : "successfully");
+    DAWN_LOG(INFO) << "Compilation finished " << (ret ? "with errors" : "successfully");
   }
 
   // Cleanup (restore the old logger)
   if(context->getOptions().Verbose)
-    gsl::Logger::getSingleton().registerLogger(oldLogger);
+    dawn::Logger::getSingleton().registerLogger(oldLogger);
 
   return ret;
 }

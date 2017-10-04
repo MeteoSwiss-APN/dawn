@@ -15,7 +15,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "gtclang/Frontend/Diagnostics.h"
-#include "gsl/Support/Assert.h"
+#include "dawn/Support/Assert.h"
 #include "clang/Basic/SourceManager.h"
 
 namespace gtclang {
@@ -37,7 +37,7 @@ static StaticDiagInfoRec StaticDiagInfo[]{
 };
 
 Diagnostics::Diagnostics(clang::DiagnosticsEngine* diags) : diags_(diags) {
-  GSL_ASSERT(diags_);
+  DAWN_ASSERT(diags_);
   auto& diagsID = diags_->getDiagnosticIDs();
   for(unsigned i = 0; i < DiagKind::num_diags; ++i)
     StaticDiagInfo[i].ID =
@@ -52,25 +52,25 @@ clang::DiagnosticBuilder Diagnostics::report(clang::SourceRange range, DiagKind 
   return (diags_->Report(clang::SourceLocation(), StaticDiagInfo[kind].ID) << range);
 }
 
-void Diagnostics::report(const gsl::DiagnosticsMessage& diagMsg) {
+void Diagnostics::report(const dawn::DiagnosticsMessage& diagMsg) {
 
   auto& SM = diags_->getSourceManager();
   auto& diagsID = diags_->getDiagnosticIDs();
 
-  auto makeCustomDiag = [&](gsl::DiagnosticsKind kind, const std::string& msg) -> unsigned {
+  auto makeCustomDiag = [&](dawn::DiagnosticsKind kind, const std::string& msg) -> unsigned {
     switch(kind) {
-    case gsl::DiagnosticsKind::Note:
+    case dawn::DiagnosticsKind::Note:
       return diagsID->getCustomDiagID(clang::DiagnosticIDs::Level::Note, msg);
-    case gsl::DiagnosticsKind::Warning:
+    case dawn::DiagnosticsKind::Warning:
       return diagsID->getCustomDiagID(clang::DiagnosticIDs::Level::Warning, msg);
-    case gsl::DiagnosticsKind::Error:
+    case dawn::DiagnosticsKind::Error:
       return diagsID->getCustomDiagID(clang::DiagnosticIDs::Level::Error, msg);
     default:
       llvm_unreachable("invalid diag ID");
     }
   };
 
-  auto makeSourceLocation = [&](const gsl::SourceLocation& loc) -> clang::SourceLocation {
+  auto makeSourceLocation = [&](const dawn::SourceLocation& loc) -> clang::SourceLocation {
     if(!loc.isValid())
       return clang::SourceLocation();
     else
