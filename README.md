@@ -1,9 +1,9 @@
-Dawn <br/> <a target="_blank" href="http://semver.org">![Version][Version.Badge]</a> <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![Travis status][TravisCI.Badge]</a> <a target="_blank" href="https://opensource.org/licenses/MIT">![License: MIT][MIT.License]</a> <a target="_blank" href="https://thfabian.github.io/dawn">![Documentation][Documentation.Badge]</a>
+Dawn <br/> <a target="_blank" href="http://semver.org">![Version][Version.Badge]</a> <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![Travis status][TravisCI.Badge]</a> <a target="_blank" href="https://opensource.org/licenses/MIT">![License: MIT][MIT.License]</a> <a target="_blank" href="https://MeteoSwiss-APN.github.io/dawn">![Documentation][Documentation.Badge]</a>
 ====
 
 ## Introduction
 
-Dawn is a compiler toolchain for developing high-level DSLs for geophysical fluid dynamics models. A tutorial and reference documentation is provided [here](https://thfabian.github.io/dawn) (or you can download it as a pdf [here](https://github.com/thfabian/dawn/raw/gh-pages/dawn.pdf)).
+Dawn is a compiler toolchain for developing high-level DSLs for geophysical fluid dynamics models. A tutorial and reference documentation is provided [here](https://MeteoSwiss-APN.github.io/dawn) (or you can download it as a pdf [here](https://github.com/MeteoSwiss-APN/dawn/raw/gh-pages/dawn.pdf)).
 
 ### Motivation
 
@@ -35,7 +35,7 @@ make
 make install
 ```
 
-This will install Dawn locally into `<dawn-dir>/install/`. For a more detailed guide on how to build Dawn, see [here](https://thfabian.github.io/dawn/basics.html).
+This will install Dawn locally into `<dawn-dir>/install/`. For a more detailed guide on how to build Dawn, see [here](https://MeteoSwiss-APN.github.io/dawn/basics.html).
 
 ## Continuous Integration
 

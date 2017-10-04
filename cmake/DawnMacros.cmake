@@ -13,6 +13,7 @@
 ##===------------------------------------------------------------------------------------------===##
 
 include(DawnCheckAndSetCXXFlag)
+include(CMakePackageConfigHelpers)
 
 # dawn_set_cxx_flags
 # ------------------
@@ -70,4 +71,38 @@ macro(dawn_set_cxx_flags)
       dawn_check_and_set_cxx_flag("-fdiagnostics-color=always" HAVE_GCC_COLOR_DIAGNOSTICS)
     endif()
   endif()
+endmacro()
+
+# dawn_gen_install_config
+# -----------------------
+#
+# Create the CMake packge configuration for installation.
+#
+macro(dawn_gen_install_config)
+  # Export version
+  write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/DawnConfigVersion.cmake"
+    VERSION ${DAWN_VERSION}
+    COMPATIBILITY AnyNewerVersion
+  )
+
+  set(DAWN_INSTALL_ROOT "")
+
+  # Export configuration
+  configure_package_config_file(
+    ${CMAKE_SOURCE_DIR}/cmake/templates/DawnConfig.cmake.in 
+    ${CMAKE_CURRENT_BINARY_DIR}/DawnConfig.cmake
+    INSTALL_DESTINATION ${DAWN_INSTALL_CMAKE_DIR}
+    PATH_VARS 
+      DAWN_INSTALL_ROOT
+      DAWN_INSTALL_INCLUDE_DIR
+      DAWN_INSTALL_LIB_DIR
+      DAWN_INSTALL_CMAKE_DIR
+  )
+
+  install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/DawnConfigVersion.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/DawnConfig.cmake"
+    DESTINATION ${DAWN_INSTALL_CMAKE_DIR}
+  )
 endmacro()
