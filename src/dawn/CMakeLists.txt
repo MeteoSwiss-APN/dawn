@@ -1,8 +1,8 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
 ##                          _                      
-##                         | |                     
-##                       __| | __ ___      ___ ___  
-##                      / _` |/ _` \ \ /\ / / '_  | 
+##                         | |
+##                       __| | __ ___      ___ ___
+##                      / _` |/ _` \ \ /\ / / '_  |
 ##                     | (_| | (_| |\ V  V /| | | |
 ##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
@@ -27,4 +27,8 @@ dawn_combine_libraries(
           DawnCompilerObjects
           DawnOptimizerObjects
           DawnCodeGenObjects
+  INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
 )
+
+# Export the targets
+install(EXPORT DawnTargets NAMESPACE Dawn:: DESTINATION ${DAWN_INSTALL_CMAKE_DIR})
