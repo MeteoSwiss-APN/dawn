@@ -132,9 +132,10 @@ function install_driver() {
   IFS=', ' read -r -a split_package <<< "$packages"
   for package in "${split_package[@]}"
   do
-    case $package in cmake) 
+    case $package in
+    cmake) 
       install_package "${install_dir}" cmake;;
-    case $package in protobuf) 
+    protobuf) 
       install_package "${install_dir}" protobuf;;
     *) 
       >&2 echo "$0: error: unknown package '$package'";
