@@ -35,9 +35,11 @@ include(CMakeParseArguments)
 #   List of external libraries and/or CMake targets to link against.
 # ``OUTPUT_DIR`` [optional]
 #   Directory to place the exectuable (e.g ``${CMAKE_BINARY_DIR}/bin``).
+# ``INSTALL_DESTINATION`` [optional]
+#   Destition (relative to ``CMAKE_INSTALL_PREFIX``) to install the exectuable.
 #
 function(dawn_add_executable)
-  set(one_value_args NAME OUTPUT_DIR)
+  set(one_value_args NAME OUTPUT_DIR INSTALL_DESTINATION)
   set(multi_value_args SOURCES DEPENDS)
   cmake_parse_arguments(ARG "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
@@ -50,5 +52,11 @@ function(dawn_add_executable)
 
   if(ARG_OUTPUT_DIR)
     set_target_properties(${ARG_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${ARG_OUTPUT_DIR}")
+  endif()
+
+  if(ARG_INSTALL_DESTINATION)
+    install(TARGETS ${ARG_NAME} 
+            DESTINATION ${ARG_INSTALL_DESTINATION} 
+            EXPORT ${ARG_NAME}Targets)
   endif()
 endfunction()
