@@ -63,9 +63,9 @@ function install_protobuf() {
   fi
   
   local elapsed_time=$(expr $(date +%s) - $start_time)
-  NOTICE $(printf "${FUNCNAME[0]}: Successfully installed protobuf %s (took %dm %ds)\n"           \
+  NOTICE $(printf "${FUNCNAME[0]}: Successfully installed protobuf %s (took %dm %ds)\n"            \
            $protobuf_version $(($elapsed_time%3600/60)) $(($elapsed_time%60)))
 
-  export protobuf_DIR="${protobuf_install_dir}"
+  export Protobuf_DIR="${protobuf_install_dir}"
   popd
 }

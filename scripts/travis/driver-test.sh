@@ -32,6 +32,7 @@ mkdir build && cd build
 cmake .. -DCMAKE_CXX_COMPILER="$CXX"                                                               \
          -DCMAKE_C_COMPILER="$CC"                                                                  \
          -DCMAKE_BUILD_TYPE="$CONFIG"                                                              \
+         -DProtobuf_DIR="$Protobuf_DIR"                                                            \
       || fatal_error "failed to configure"
 make -j2 || fatal_error "failed to build"
 
