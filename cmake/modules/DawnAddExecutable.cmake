@@ -36,7 +36,7 @@ include(CMakeParseArguments)
 # ``OUTPUT_DIR`` [optional]
 #   Directory to place the exectuable (e.g ``${CMAKE_BINARY_DIR}/bin``).
 # ``INSTALL_DESTINATION`` [optional]
-#   Destition (relative to ``CMAKE_INSTALL_PREFIX``) to install the exectuable.
+#   Destition (relative to ``CMAKE_INSTALL_PREFIX``) to install the executable.
 #
 function(dawn_add_executable)
   set(one_value_args NAME OUTPUT_DIR INSTALL_DESTINATION)
