@@ -12,4 +12,4 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-install(DIRECTORY modules DESTINATION ${DAWN_INSTALL_CMAKE_DIR}/modules)
+install(DIRECTORY modules/ DESTINATION ${DAWN_INSTALL_CMAKE_DIR}/modules)

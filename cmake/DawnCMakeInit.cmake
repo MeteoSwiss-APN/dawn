@@ -19,8 +19,8 @@
 # Add the necessary paths to ``CMAKE_MODULE_PATH`` to use the functions, macros and modules of the 
 # ``dawn`` project. To find the ``dawn`` modules the following directories are searched:
 #
-#  1. CMake variable ``DAWN_ROOT``
-#  2. Environment variable ``DAWN_ROOT``
+#  1. CMake variable ``DAWN_ROOT`` and corresponding environment variable
+#  2. CMake variable ``Dawn_DIR`` and corresponding environment variable
 #  3. ``${CMAKE_CURRENT_LIST_DIR}/../dawn``
 #
 # where ``CMAKE_CURRENT_LIST_DIR`` is the directory of the listfile currently being processed. Note 
@@ -38,6 +38,10 @@ macro(dawn_cmake_init)
     set(dawn_dir ${DAWN_ROOT})
   elseif(NOT "$ENV{DAWN_ROOT}" STREQUAL "")
     set(dawn_dir $ENV{DAWN_ROOT})
+  elseif(DEFINED Dawn_DIR)
+    set(dawn_dir ${Dawn_DIR})
+  elseif(NOT "$ENV{Dawn_DIR}" STREQUAL "")
+    set(dawn_dir $ENV{Dawn_DIR})
   elseif(EXISTS "${CMAKE_CURRENT_LIST_DIR}/../dawn")
     set(dawn_dir ${CMAKE_CURRENT_LIST_DIR}/../dawn)
     message(FATAL_ERROR "Could NOT find Dawn. (Try setting DAWN_ROOT in the env)")
