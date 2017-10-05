@@ -64,6 +64,8 @@ public:
   }
   /// @}
 
+  ///@brief getting the Bits
+  unsigned getBits() const { return attrBits_; }
   /// @brief Set `attr`bit
   void set(AttrKind attr) { attrBits_ |= 1 << attr; }
 
@@ -72,6 +74,9 @@ public:
 
   /// @brief Clear all attributes
   void clear() { attrBits_ = 0; }
+
+  ///@brief comparison if two Attrs are in the Same mode
+  bool operator==(const Attr& rhs) const { return getBits() == rhs.getBits(); }
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -130,6 +135,9 @@ struct StencilFunctionArg {
   std::string Name;   ///< Name of the argument
   ArgumentKind Kind;  ///< Type of argument
   SourceLocation Loc; ///< Source location
+
+  ///@brief comparison of Name and Kind (omitting location)
+  bool operator==(const StencilFunctionArg& rhs) const;
 };
 
 /// @brief Representation of a field
@@ -141,6 +149,9 @@ struct Field : public StencilFunctionArg {
   bool IsTemporary;
 
   static bool classof(const StencilFunctionArg* arg) { return arg->Kind == AK_Field; }
+  bool operator==(const Field& rhs) const {
+    return StencilFunctionArg::operator==(rhs) && IsTemporary == rhs.IsTemporary;
+  }
 };
 
 /// @brief Representation of a direction (e.g `i`)
@@ -184,6 +195,10 @@ struct StencilFunction {
   /// @brief Get the AST of the specified vertical interval or `NULL` if the function is not
   /// specialized for this interval
   std::shared_ptr<AST> getASTOfInterval(const Interval& interval) const;
+
+  /// @brief Comparison of Stencil functions for Equality in content
+  /// including the name, excluding the location
+  bool operator==(const sir::StencilFunction& rhs) const;
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -237,6 +252,9 @@ struct Stencil {
   std::shared_ptr<AST> StencilDescAst;        ///< Stencil description AST
   std::vector<std::shared_ptr<Field>> Fields; ///< Fields referenced by this stencil
   Attr Attributes;                            ///< Attributes of the stencil
+
+  /// @brief Comparison between stencils (omitting location)
+  bool operator==(const Stencil& rhs) const;
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -295,6 +313,9 @@ struct Value : NonCopyable {
   struct TypeInfo {
     static const TypeKind Type = None;
   };
+
+  /// @brief Comparison between two Values
+  bool operator==(const Value& rhs) const;
 
 private:
   struct ValueImplBase {
@@ -363,7 +384,31 @@ struct SIR {
 
   /// @brief Dump SIR to the given stream
   friend std::ostream& operator<<(std::ostream& os, const SIR& Sir);
+
+  /// @brief Compares two SIRs for equality in contents
+  /// It is to note that the filenames are not compared here
+  /// and positions of expressions are omitted
+  bool operator==(const SIR& rhs) const;
+
+  /// @brief Compares two SIRs for inequality in contents
+  /// It is to note that the filenames are not compared here
+  /// and positions of expressions are omitted
+  bool operator!=(const SIR& rhs) const;
+
+  bool pointerMapComparison(const sir::GlobalVariableMap& map1,
+                            const sir::GlobalVariableMap& map2) const;
 };
+
+////////////// Should not be here.....
+/// @brief Compares the content of two shared pointers
+/// @param[in] shared pointer of type T
+/// @param[in] shared pointer of same type T
+/// @return true if contents of the shared pointers match (operator ==)
+template <typename T>
+bool sharedpointer_comparison(const std::shared_ptr<T>& comparate1,
+                              const std::shared_ptr<T>& comparate2) {
+  return *comparate1 == *comparate2;
+}
 
 } // namespace dawn
 

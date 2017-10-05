@@ -174,4 +174,137 @@ std::shared_ptr<sir::StencilCall> sir::StencilCall::clone() const {
   return call;
 }
 
+bool SIR::operator==(const SIR& rhs) const {
+  bool retval = true;
+
+  if((Stencils.size() == rhs.Stencils.size()) &&
+     (StencilFunctions.size() == rhs.StencilFunctions.size())) {
+
+    if(Stencils.size() > 0) {
+      retval &= std::equal(Stencils.begin(), Stencils.end(), rhs.Stencils.begin(),
+                           sharedpointer_comparison<sir::Stencil>);
+    }
+
+    if(StencilFunctions.size() > 0) {
+      retval &=
+          std::equal(StencilFunctions.begin(), StencilFunctions.end(), rhs.StencilFunctions.begin(),
+                     sharedpointer_comparison<sir::StencilFunction>);
+    }
+
+    if(GlobalVariableMap != nullptr && rhs.GlobalVariableMap != nullptr) {
+      if(GlobalVariableMap->size() == rhs.GlobalVariableMap->size()) {
+        if(GlobalVariableMap->size() > 0) {
+          retval &=
+              pointerMapComparison(*(GlobalVariableMap.get()), *(rhs.GlobalVariableMap.get()));
+        }
+      } else {
+        return false;
+      }
+    } else {
+      return GlobalVariableMap == rhs.GlobalVariableMap;
+    }
+
+    return retval;
+  }
+  return false;
+}
+bool SIR::operator!=(const SIR& rhs) const { return !(*this == rhs); }
+
+bool sir::Stencil::operator==(const sir::Stencil& rhs) const {
+  bool retval = true;
+  if(Fields.size() != rhs.Fields.size()) {
+    return false;
+  }
+  retval &= (Name == rhs.Name);
+  retval &= (Attributes == rhs.Attributes);
+  if(StencilDescAst != nullptr && rhs.StencilDescAst != nullptr) {
+    if(StencilDescAst->getRoot() != nullptr && rhs.StencilDescAst->getRoot() != nullptr) {
+      retval &= StencilDescAst->getRoot().get()->equals(rhs.StencilDescAst->getRoot().get());
+    } else {
+      return StencilDescAst->getRoot() == rhs.StencilDescAst->getRoot();
+    }
+  } else {
+    return StencilDescAst == rhs.StencilDescAst;
+  }
+  if(Fields.size() > 0) {
+    retval &= std::equal(Fields.begin(), Fields.end(), rhs.Fields.begin(),
+                         sharedpointer_comparison<Field>);
+  }
+
+  return retval;
+}
+
+bool sir::StencilFunction::operator==(const sir::StencilFunction& rhs) const {
+  bool retval = true;
+  retval &= (Name == rhs.Name);
+  retval &= Attributes == rhs.Attributes;
+  if(Args.size() != rhs.Args.size() && Intervals.size() != rhs.Intervals.size() &&
+     Asts.size() != rhs.Asts.size()) {
+    return false;
+  } else {
+    if(Args.size() > 0) {
+      retval &= std::equal(Args.begin(), Args.end(), rhs.Args.begin(),
+                           sharedpointer_comparison<sir::StencilFunctionArg>);
+    }
+    if(Intervals.size() > 0) {
+      retval &= std::equal(Intervals.begin(), Intervals.end(), rhs.Intervals.begin(),
+                           sharedpointer_comparison<sir::Interval>);
+    }
+
+    if(Asts.size() > 0) {
+      auto astcomparison = [](std::shared_ptr<dawn::AST> comparate1,
+                              std::shared_ptr<dawn::AST> comparate2) {
+        if(comparate1->getRoot() != nullptr && comparate2->getRoot() != nullptr) {
+          return comparate1->getRoot().get()->equals(comparate2->getRoot().get());
+        } else {
+          return comparate1->getRoot() == comparate2->getRoot();
+        }
+      };
+      retval &= std::equal(Asts.begin(), Asts.end(), rhs.Asts.begin(), astcomparison);
+    }
+  }
+  return retval;
+}
+
+bool sir::StencilFunctionArg::operator==(const sir::StencilFunctionArg& rhs) const {
+  return (Name == rhs.Name) && (Kind == rhs.Kind);
+}
+bool SIR::pointerMapComparison(const sir::GlobalVariableMap& map1,
+                               const sir::GlobalVariableMap& map2) const {
+  if(map1.size() != map2.size()) {
+    return false;
+  } else {
+    for(auto& a : map1) {
+      auto finder = map2.find(a.first);
+      if(finder == map2.end()) {
+        return false;
+      } else if(finder->second == nullptr || a.second == nullptr) {
+        return finder->second == a.second;
+      } else if(!(*(finder->second.get()) == *(a.second.get()))) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
+bool sir::Value::operator==(const sir::Value& rhs) const {
+  if(getType() != rhs.getType()) {
+    return false;
+  }
+  if(getType() == Value::TypeKind::Boolean) {
+    return getValue<bool>() == rhs.getValue<bool>();
+  }
+  if(getType() == Value::TypeKind::Integer) {
+    return getValue<int>() == rhs.getValue<int>();
+  }
+  if(getType() == Value::TypeKind::Double) {
+    return getValue<double>() == rhs.getValue<double>();
+  }
+  if(getType() == Value::TypeKind::String) {
+    return getValue<std::string>() == rhs.getValue<std::string>();
+  }
+  return true;
+}
+
 } // namespace dawn

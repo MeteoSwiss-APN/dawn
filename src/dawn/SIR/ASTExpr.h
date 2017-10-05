@@ -73,7 +73,7 @@ public:
   /// @{
   virtual bool equals(const std::shared_ptr<Expr>& other) const { return equals(other.get()); }
   virtual bool equals(const Expr* other) const {
-    return kind_ == other->kind_ && loc_ == other->loc_;
+    return kind_ == other->kind_;
   }
   /// @}
 
