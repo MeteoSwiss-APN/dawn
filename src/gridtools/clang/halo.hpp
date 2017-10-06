@@ -14,19 +14,22 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/STLExtras.h"
-#include "gtclang/Support/Logger.h"
-#include "gtclang/Unittest/UnittestEnvironment.h"
-#include <gtest/gtest.h>
+#pragma once
 
-int main(int argc, char* argv[]) {
-  // Initialize Logger
-  auto logger = dawn::make_unique<gtclang::Logger>();
-  dawn::Logger::getSingleton().registerLogger(logger.get());
+namespace gridtools {
 
-  // Initialize GTest
-  testing::InitGoogleTest(&argc, argv);
-  testing::AddGlobalTestEnvironment(&gtclang::UnittestEnvironment::getSingleton());
+    namespace clang {
 
-  return RUN_ALL_TESTS();
+        /**
+         * @brief Halo extend (passed to gtclang by "-max-halo")
+         * @ingroup gridtools_clang
+         */
+        struct halo {
+#ifdef GRIDTOOLS_CLANG_HALO_EXTEND
+            static constexpr int value = GRIDTOOLS_CLANG_HALO_EXTEND;
+#else
+            static constexpr int value = 3;
+#endif
+        };
+    }
 }

@@ -14,4 +14,18 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_subdirectory(Support)
+dawn_configure_file(Config.h.cmake)
+
+dawn_add_library(
+  NAME GTClangUnittest
+  SOURCES FileManager.cpp
+          FileManager.h
+          FlagManager.cpp
+          FlagManager.h
+          GTClang.cpp
+          GTClang.h
+          UnittestEnvironment.cpp
+          UnittestEnvironment.h
+  ARCHIVE
+)
+

@@ -18,4 +18,5 @@ gtclang_add_unittest(
   NAME GTClangUnittestSupport
   SOURCES TestStringUtil.cpp
           TestMain.cpp
+  DEPENDS ${GTCLANG_UNITTEST_EXTERNAL_LIBRARIES}  
 )

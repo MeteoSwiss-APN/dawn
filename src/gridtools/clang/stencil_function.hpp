@@ -14,19 +14,29 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/STLExtras.h"
-#include "gtclang/Support/Logger.h"
-#include "gtclang/Unittest/UnittestEnvironment.h"
-#include <gtest/gtest.h>
+#pragma once
 
-int main(int argc, char* argv[]) {
-  // Initialize Logger
-  auto logger = dawn::make_unique<gtclang::Logger>();
-  dawn::Logger::getSingleton().registerLogger(logger.get());
+#include "gridtools/clang/dimension.hpp"
 
-  // Initialize GTest
-  testing::InitGoogleTest(&argc, argv);
-  testing::AddGlobalTestEnvironment(&gtclang::UnittestEnvironment::getSingleton());
+namespace gridtools {
 
-  return RUN_ALL_TESTS();
+    namespace clang {
+
+        /*
+         * @brief A stencil which can be called as a function from other `stencils`
+         * @ingroup gridtools_clang
+         */
+        class stencil_function {
+          protected:
+            dimension i;
+            dimension j;
+            dimension k;
+
+          public:
+            template < typename... T >
+            stencil_function(T &&...);
+
+            operator double() const;
+        };
+    }
 }

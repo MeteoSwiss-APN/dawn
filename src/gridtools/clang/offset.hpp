@@ -14,19 +14,22 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/STLExtras.h"
-#include "gtclang/Support/Logger.h"
-#include "gtclang/Unittest/UnittestEnvironment.h"
-#include <gtest/gtest.h>
+#pragma once
 
-int main(int argc, char* argv[]) {
-  // Initialize Logger
-  auto logger = dawn::make_unique<gtclang::Logger>();
-  dawn::Logger::getSingleton().registerLogger(logger.get());
+namespace gridtools {
 
-  // Initialize GTest
-  testing::InitGoogleTest(&argc, argv);
-  testing::AddGlobalTestEnvironment(&gtclang::UnittestEnvironment::getSingleton());
+    namespace clang {
 
-  return RUN_ALL_TESTS();
+        /**
+         * @brief Defintion of an offset which can be as argument in stencil functions
+         * @ingroup gridtools_clang
+         */
+        struct offset {
+            offset operator+(int);
+            offset operator-(int);
+
+            offset operator+();
+            offset operator-();
+        };
+    }
 }

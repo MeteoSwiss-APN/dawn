@@ -14,4 +14,15 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_subdirectory(Support)
+dawn_configure_file(Config.h.cmake)
+
+dawn_add_library(
+  NAME GTClangSupport
+  SOURCES FileUtil.cpp
+          FileUtil.h
+          Logger.cpp
+          Logger.h
+          StringUtil.cpp
+          StringUtil.h
+  OBJECT
+)

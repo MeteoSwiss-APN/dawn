@@ -14,4 +14,30 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_subdirectory(Support)
+dawn_add_library(
+  NAME GTClangFrontend
+  SOURCES ClangASTExprResolver.h
+          ClangASTExprResolver.cpp
+          ClangASTStmtResolver.cpp
+          ClangASTStmtResolver.h
+          ClangFormat.cpp
+          ClangFormat.h
+          Diagnostics.cpp
+          Diagnostics.h
+          DiagnosticsKind.inc
+          GlobalVariableParser.cpp
+          GlobalVariableParser.h
+          GTClangASTAction.cpp
+          GTClangASTAction.h
+          GTClangASTConsumer.cpp
+          GTClangASTConsumer.h
+          GTClangASTVisitor.cpp
+          GTClangASTVisitor.h
+          GTClangContext.cpp
+          GTClangContext.h
+          GTClangPreprocessorAction.cpp
+          GTClangPreprocessorAction.h
+          StencilParser.cpp
+          StencilParser.h
+  OBJECT
+)

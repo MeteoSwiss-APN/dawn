@@ -19,6 +19,15 @@ if(NOT CMAKE_BUILD_TYPE)
       "Choose the type of build, options are: Debug Release RelWithDebInfo." FORCE)
 endif()
 
+if(NOT BUILD_SHARED_LIBS)
+  set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries." FORCE)
+endif()
+
+if(NOT CMAKE_INSTALL_PREFIX)
+  set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE STRING
+      "Install path prefix, prepended onto install directories." FORCE)
+endif()
+
 project(gtclang CXX)
 cmake_minimum_required(VERSION 3.3)
 
@@ -27,12 +36,14 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 # Locate Dawn for the CMake modules
 include(DawnCMakeInit)
 dawn_cmake_init()
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 include(DawnAddExecutable)
 include(DawnAddLibrary)
 include(DawnAddTargetCleanAll)
+include(DawnAddTargetClangFormat)
 include(DawnCheckInSourceBuild)
+include(DawnCombineLibraries)
+include(DawnConfigureFile)
 include(DawnCreatePackageString)
 include(DawnExportPackage)
 include(DawnGetArchitectureInfo)
@@ -69,7 +80,7 @@ macro(make_config_string FIRST SECOND)
   dawn_make_string_pair(${FIRST} ": ${SECOND}" 20 out)
   list(APPEND config_info ${out})
 endmacro()
-make_config_string("gtclang version" ${GTCLANG_FULL_VERSION_STRING})
+make_config_string("gtclang version" ${GTCLANG_FULL_VERSION})
 make_config_string("Platform" ${DAWN_PLATFORM_STRING})
 make_config_string("Architecture" ${DAWN_ARCHITECTURE_STRING})
 make_config_string("Compiler" ${DAWN_COMPILER_STRING})
@@ -78,15 +89,15 @@ make_config_string("Asserts" ${GTCLANG_ASSERTS})
 dawn_report_result("Configuration summary" ${config_info})
 
 # Include the packages (and set the correct, libraries, includes etc.)
-foreach(package Threads ccache Python3 Boost Clang)
+foreach(package ccache Python3 Boost clang-format Clang Dawn Threads)
   include("Add${package}")
   dawn_create_package_string(${package} info)
   list(APPEND package_info ${info})
 
   string(TOUPPER ${package} PACKAGE)
-  list(APPEND GTCLANG_EXTERNAL_LIBRARIES ${SEQUOIA_${PACKAGE}_LIBRARIES})
-  list(APPEND GTCLANG_EXTERNAL_INCLUDE_DIRS ${SEQUOIA_${PACKAGE}_INCLUDE_DIRS})
-  list(APPEND GTCLANG_EXTERNAL_DEFINITIONS ${SEQUOIA_${PACKAGE}_DEFINITIONS})
+  list(APPEND GTCLANG_EXTERNAL_LIBRARIES ${DAWN_${PACKAGE}_LIBRARIES})
+  list(APPEND GTCLANG_EXTERNAL_INCLUDE_DIRS ${DAWN_${PACKAGE}_INCLUDE_DIRS})
+  list(APPEND GTCLANG_EXTERNAL_DEFINITIONS ${DAWN_${PACKAGE}_DEFINITIONS})
 endforeach()
 
 include_directories(SYSTEM ${GTCLANG_EXTERNAL_INCLUDE_DIRS})
@@ -94,6 +105,9 @@ add_definitions(${GTCLANG_EXTERNAL_DEFINITIONS})
 
 # Output summary of the packages
 dawn_report_result("Package summary" ${package_info})
+
+# Add clang-format target
+dawn_add_target_clang_format(DIRECTORIES ${CMAKE_SOURCE_DIR}/src EXTENSION ".h;.cpp")
 
 # Build gtclang
 include_directories(${CMAKE_SOURCE_DIR}/src)
@@ -114,3 +128,4 @@ endif()
 if(GTCLANG_DOCUMENTATION)
   add_subdirectory(docs)
 endif()
+

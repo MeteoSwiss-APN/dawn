@@ -13,3 +13,6 @@
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
+
+add_subdirectory(gtclang)
+add_subdirectory(gridtools)

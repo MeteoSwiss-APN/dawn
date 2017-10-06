@@ -14,19 +14,29 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/STLExtras.h"
-#include "gtclang/Support/Logger.h"
-#include "gtclang/Unittest/UnittestEnvironment.h"
-#include <gtest/gtest.h>
+#ifndef GTCLANG_SUPPORT_CONFIG_H
+#define GTCLANG_SUPPORT_CONFIG_H
 
-int main(int argc, char* argv[]) {
-  // Initialize Logger
-  auto logger = dawn::make_unique<gtclang::Logger>();
-  dawn::Logger::getSingleton().registerLogger(logger.get());
+// Major version of GTClang 
+#define GTCLANG_VERSION_MAJOR ${GTCLANG_VERSION_MAJOR}
 
-  // Initialize GTest
-  testing::InitGoogleTest(&argc, argv);
-  testing::AddGlobalTestEnvironment(&gtclang::UnittestEnvironment::getSingleton());
+// Minor version of GTClang 
+#define GTCLANG_VERSION_MINOR ${GTCLANG_VERSION_MINOR}
 
-  return RUN_ALL_TESTS();
-}
+// Patch version of GTClang 
+#define GTCLANG_VERSION_PATCH ${GTCLANG_VERSION_PATCH}
+
+// GTClang version string 
+#define GTCLANG_VERSION_STR "${GTCLANG_VERSION}"
+
+// GTClang full version string 
+#define GTCLANG_FULL_VERSION_STR "${GTCLANG_FULL_VERSION}"
+
+// Path to gridtools clang DSL headers
+#define GTCLANG_DSL_INCLUDES "${GTCLANG_DSL_INCLUDES}"
+
+// Ressource path of the Clang specific headers needed during invocation of Clang
+#define GTCLANG_CLANG_RESSOURCE_INCLUDE_PATH "${GTCLANG_CLANG_RESSOURCE_INCLUDE_PATH}"
+
+#endif
+

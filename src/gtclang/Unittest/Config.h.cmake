@@ -14,19 +14,17 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/STLExtras.h"
-#include "gtclang/Support/Logger.h"
-#include "gtclang/Unittest/UnittestEnvironment.h"
-#include <gtest/gtest.h>
+#ifndef GTCLANG_UNITTEST_CONFIG_H
+#define GTCLANG_UNITTEST_CONFIG_H
 
-int main(int argc, char* argv[]) {
-  // Initialize Logger
-  auto logger = dawn::make_unique<gtclang::Logger>();
-  dawn::Logger::getSingleton().registerLogger(logger.get());
+// Path to the GTClang executable
+#define GTCLANG_EXECUTABLE "${GTCLANG_EXECUTABLE}"
 
-  // Initialize GTest
-  testing::InitGoogleTest(&argc, argv);
-  testing::AddGlobalTestEnvironment(&gtclang::UnittestEnvironment::getSingleton());
+// Path of Unittest snippets
+#define GTCLANG_UNITTEST_DATAPATH "${GTCLANG_UNITTEST_DATAPATH}"
 
-  return RUN_ALL_TESTS();
-}
+// Path to include of gridtools clang for unittests
+#define GTCLANG_UNITTEST_INCLUDES "${GTCLANG_UNITTEST_INCLUDES}"
+
+#endif
+

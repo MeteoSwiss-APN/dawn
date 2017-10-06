@@ -14,19 +14,9 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/STLExtras.h"
-#include "gtclang/Support/Logger.h"
-#include "gtclang/Unittest/UnittestEnvironment.h"
-#include <gtest/gtest.h>
+#pragma once
 
-int main(int argc, char* argv[]) {
-  // Initialize Logger
-  auto logger = dawn::make_unique<gtclang::Logger>();
-  dawn::Logger::getSingleton().registerLogger(logger.get());
-
-  // Initialize GTest
-  testing::InitGoogleTest(&argc, argv);
-  testing::AddGlobalTestEnvironment(&gtclang::UnittestEnvironment::getSingleton());
-
-  return RUN_ALL_TESTS();
-}
+#if __cplusplus < 201103L
+#error This file requires compiler and library support for the ISO C++ 2011 standard. \
+This support must be enabled with the -std=c++11 or -std=gnu++11 compiler options.
+#endif

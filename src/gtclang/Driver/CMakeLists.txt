@@ -14,4 +14,15 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_subdirectory(Support)
+dawn_add_library(
+  NAME GTClangDriver
+  SOURCES CompilerInstance.cpp
+          CompilerInstance.h
+          Driver.cpp
+          Driver.h
+          Options.h
+          Options.inc
+          OptionsParser.cpp
+          OptionsParser.h
+  OBJECT
+)

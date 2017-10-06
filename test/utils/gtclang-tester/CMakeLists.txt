@@ -25,9 +25,7 @@
 ##    GRIDTOOLS_FLAGS:STRING=<>  - List of compile flags needed to compile gridtools C++ code
 ##
 function(gtclang_add_integrationtest)
-  #
   # Parse arguments
-  #
   set(options)
   set(one_value_args GTCLANG NAME)
   set(multi_value_args DIRECTORIES GRIDTOOLS_FLAGS)
@@ -50,18 +48,14 @@ function(gtclang_add_integrationtest)
   string(REPLACE ";" " " cmd_script_no_dir "${command_no_dir}")
   file(WRITE ${CMAKE_BINARY_DIR}/gtclang-tester.sh "#!/bin/bash\n${cmd_script_no_dir} $*\n")
 
-  #
   # Add make target 
-  #  
   add_custom_target(
     integrationtest-${ARG_NAME}
     COMMAND ${command}
     DEPENDS gtclang
   )
 
-  #
   # Add CTest target
-  #
   add_test(NAME CTest-IntegrationTest-${ARG_NAME} COMMAND ${command})
 endfunction()
 

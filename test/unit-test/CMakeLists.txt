@@ -41,4 +41,10 @@ macro(gtclang_add_unittest)
   )
 endmacro()
 
+set(GTCLANG_UNITTEST_EXTERNAL_LIBRARIES 
+  GTClangStatic
+  GTClangUnittestStatic
+  ${GTCLANG_EXTERNAL_LIBRARIES}
+)
+
 add_subdirectory(gtclang)

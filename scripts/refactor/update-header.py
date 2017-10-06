@@ -59,7 +59,7 @@ def main():
                     lang = 'Python'
                     comment = '##'
                 elif filename.endswith(".cpp") or filename.endswith(".h") or \
-                     filename.endswith(".inc"):
+                     filename.endswith(".inc") or filename.endswith(".hpp"):
                     lang = 'C++'
                     comment = '//' 
                 elif filename.endswith(".cmake") or filename == "CMakeLists.txt":

@@ -15,3 +15,28 @@
 ##===------------------------------------------------------------------------------------------===##
 
 add_subdirectory(Support)
+add_subdirectory(Frontend)
+add_subdirectory(Driver)
+
+if(GTCLANG_TESTING)
+  add_subdirectory(Unittest)
+endif()
+
+# Combine the relevant object libraries into libGTClang.a
+dawn_combine_libraries(
+  NAME GTClang
+  OBJECTS GTClangSupportObjects
+          GTClangFrontendObjects
+          GTClangDriverObjects
+  INSTALL_DESTINATION ${GTCLANG_INSTALL_LIB_DIR}
+)
+
+# Link the driver
+dawn_add_executable(
+  NAME gtclang
+  SOURCES Driver/gtclang.cpp
+  DEPENDS GTClangStatic
+          ${GTCLANG_EXTERNAL_LIBRARIES}
+  OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin
+  INSTALL_DESTINATION ${GTCLANG_INSTALL_BIN_DIR}
+)

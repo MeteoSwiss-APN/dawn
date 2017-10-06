@@ -27,14 +27,10 @@ if(NOT DEFINED GTCLANG_VERSION_PATCH)
   set(GTCLANG_VERSION_PATCH 1 CACHE INTERNAL "Patch version of gtcang" FORCE)
 endif()
 
-if(NOT DEFINED GTCLANG_VERSION_SUFFIX)
-  set(GTCLANG_VERSION_SUFFIX "dev" CACHE INTERNAL "Suffix of the gtclang version" FORCE)
-endif()
-
-if(NOT DEFINED GTCLANG_VERSION_STRING)
+if(NOT DEFINED GTCLANG_VERSION)
   set(GTCLANG_VERSION_STRING 
-      "${GTCLANG_VERSION_MAJOR}.${GTCLANG_VERSION_MINOR}.${GTCLANG_VERSION_PATCH}-${GTCLANG_VERSION_SUFFIX}"
-      CACHE INTERNAL "Version string of gtclang" FORCE)
+      ${GTCLANG_VERSION_MAJOR}.${GTCLANG_VERSION_MINOR}.${GTCLANG_VERSION_PATCH}
+      CACHE INTERNAL "Version of gtclang" FORCE)
 endif()
 
 # Git version string
@@ -49,7 +45,7 @@ string(TOLOWER ${DAWN_ARCHITECTURE_STRING} architecture)
 string(TOLOWER ${DAWN_PLATFORM_STRING} platform)
 string(TOLOWER ${CMAKE_CXX_COMPILER_ID} compiler)
 set(compiler "${compiler}-${CMAKE_CXX_COMPILER_VERSION}")
-set(GTCLANG_FULL_VERSION_STRING 
+set(GTCLANG_FULL_VERSION 
     "${GTCLANG_VERSION_STRING}-${SGTCLANG_GIT_HASH}-${architecture}-${platform}-${compiler}"
     CACHE STRING "Full version string of gtclang" FORCE)
 
@@ -60,3 +56,13 @@ set(GTCLANG_DSL_INCLUDES "${CMAKE_SOURCE_DIR}/src" "${CMAKE_INSTALL_PREFIX}/incl
 set(GTCLANG_EXECUTABLE "${CMAKE_BINARY_DIR}/bin/gtclang")
 set(GTCLANG_UNITTEST_DATAPATH ${CMAKE_SOURCE_DIR}/test/integration)
 set(GTCLANG_UNITTEST_INCLUDES ${CMAKE_SOURCE_DIR}/src)
+
+# Installation definitions
+set(GTCLANG_INSTALL_BIN_DIR cmake 
+    CACHE INTERNAL "Relative path of the binary install location" FORCE)
+set(GTCLANG_INSTALL_INCLUDE_DIR include 
+    CACHE INTERNAL "Relative path of the include install location" FORCE)
+set(GTCLANG_INSTALL_LIB_DIR lib 
+    CACHE INTERNAL "Relative path of the library install location " FORCE)
+set(GTCLANG_INSTALL_CMAKE_DIR cmake 
+    CACHE INTERNAL "Relative path of the cmake install location" FORCE)
