@@ -18,8 +18,26 @@
 get_filename_component(DAWN_ROOT "@PACKAGE_DAWN_INSTALL_ROOT@" ABSOLUTE)
 list(APPEND CMAKE_MODULE_PATH "${DAWN_ROOT}/cmake/modules")
 
+# Import protobuf
+if(NOT ZLIB_FOUND)
+  find_package(ZLIB)
+endif()
+
+if(NOT Protobuf_FOUND)
+  set(Protobuf_DIR "@DAWN_INSTALL_PROTOBUF_ROOT@/lib/cmake/protobuf")
+  find_package(Protobuf @DAWN_INSTALL_PROTOBUF_VERSION@ NO_MODULE REQUIRED)
+else()
+  if(${Protobuf_VERSION} VERSION_LESS "@DAWN_INSTALL_PROTOBUF_VERSION@")
+    message(FATAL_ERROR 
+      "Dawn was compiled with Protobuf (@DAWN_INSTALL_PROTOBUF_VERSION@), already found (${Protobuf_VERSION})")
+  endif()
+endif()
+
 # Dawn include directories
-set_and_check(DAWN_INCLUDE_DIRS "@PACKAGE_DAWN_INSTALL_INCLUDE_DIR@")
+set_and_check(DAWN_INCLUDE_DIRS 
+  "@PACKAGE_DAWN_INSTALL_INCLUDE_DIR@"
+  "@DAWN_INSTALL_PROTOBUF_ROOT@/include"
+)
 
 # Link directories for Dawn libraries
 set_and_check(DAWN_LIBRARY_DIRS "@PACKAGE_DAWN_INSTALL_LIB_DIR@")
@@ -30,18 +48,17 @@ set(DAWN_ASSERTS @DAWN_ASSERTS@)
 # Import Dawn library targets (DawnStatic and DawnShared)
 include("@PACKAGE_DAWN_INSTALL_CMAKE_DIR@/DawnTargets.cmake")
 
+set(DAWN_HAS_SHARED_LIBRARY FALSE)
+if(TARGET Dawn::DawnShared)
+  set(DAWN_HAS_SHARED_LIBRARY TRUE)
+endif()
+
 # Aliases
 set(DAWN_VERSION ${Dawn_VERSION})
 set(DAWN_FOUND 1)
 set(DAWN_STATIC_LIBRARY Dawn::DawnStatic)
 set(DAWN_LIBRARY ${DAWN_STATIC_LIBRARY})
 set(DAWN_LIBRARIES ${DAWN_LIBRARY})
-
-if(TARGET Dawn::DawnShared)
-  set(DAWN_HAS_SHARED_LIBRARY TRUE)
-else()
-  set(DAWN_HAS_SHARED_LIBRARY FALSE)
-endif()
 
 # Report findings
 message(STATUS "Found Dawn version: ${DAWN_VERSION}")

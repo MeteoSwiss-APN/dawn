@@ -132,4 +132,5 @@ TODO:
     return 0;
   }
 
-  ... _CMake: https://cmake.org/
+
+.. _CMake: https://cmake.org/

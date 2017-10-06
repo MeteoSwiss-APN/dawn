@@ -89,6 +89,9 @@ macro(dawn_gen_install_config)
   set(DAWN_INSTALL_ROOT "")
 
   # Export configuration
+  set(DAWN_INSTALL_PROTOBUF_ROOT ${DAWN_PROTOBUF_ROOT})
+  set(DAWN_INSTALL_PROTOBUF_VERSION ${DAWN_PROTOBUF_VERSION})
+
   configure_package_config_file(
     ${CMAKE_SOURCE_DIR}/cmake/templates/DawnConfig.cmake.in 
     ${CMAKE_CURRENT_BINARY_DIR}/DawnConfig.cmake
