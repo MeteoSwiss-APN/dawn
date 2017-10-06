@@ -90,8 +90,8 @@ cache:
     - ${CACHE_DIR}/protobuf-${PROTOBUF_VERSION}
 
 branches:
-  only:
-    - master
+  except:
+    - gh-pages
 
 notifications:
   on_success: never
