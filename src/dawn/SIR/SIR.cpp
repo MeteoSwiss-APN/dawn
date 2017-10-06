@@ -22,22 +22,50 @@
 
 namespace dawn {
 
-bool sir::StencilFunction::isSpecialized() const { return !Intervals.empty(); }
+/// @brief Compares the content of two shared pointers
+/// @param[in] shared pointer of type T
+/// @param[in] shared pointer of same type T
+/// @return true if contents of the shared pointers match (operator ==)
+template <typename T>
+bool pointeeComparison(const std::shared_ptr<T>& comparate1, const std::shared_ptr<T>& comparate2) {
+  return *comparate1 == *comparate2;
+}
 
-std::shared_ptr<AST> sir::StencilFunction::getASTOfInterval(const sir::Interval& interval) const {
+static bool pointerMapComparison(const sir::GlobalVariableMap& map1,
+                                 const sir::GlobalVariableMap& map2) {
+  if(map1.size() != map2.size()) {
+    return false;
+  } else {
+    for(auto& a : map1) {
+      auto finder = map2.find(a.first);
+      if(finder == map2.end()) {
+        return false;
+      } else if(finder->second == nullptr || a.second == nullptr) {
+        return finder->second == a.second;
+      } else if(!(*(finder->second.get()) == *(a.second.get()))) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
+namespace sir {
+
+bool StencilFunction::isSpecialized() const { return !Intervals.empty(); }
+
+std::shared_ptr<AST> StencilFunction::getASTOfInterval(const Interval& interval) const {
   for(int i = 0; i < Intervals.size(); ++i)
     if(*Intervals[i] == interval)
       return Asts[i];
   return nullptr;
 }
 
-std::string sir::Interval::toString() const {
+std::string Interval::toString() const {
   std::stringstream ss;
   ss << *this;
   return ss.str();
 }
-
-namespace sir {
 
 std::ostream& operator<<(std::ostream& os, const Interval& interval) {
   auto printLevel = [&os](int level, int offset) -> void {
@@ -184,10 +212,16 @@ bool SIR::operator==(const SIR& rhs) const {
       retval &= std::equal(Stencils.begin(), Stencils.end(), rhs.Stencils.begin(),
                            pointeeComparison<sir::Stencil>);
     }
+    if(!retval) {
+      return false;
+    }
 
     if(StencilFunctions.size() > 0) {
       retval &= std::equal(StencilFunctions.begin(), StencilFunctions.end(),
                            rhs.StencilFunctions.begin(), pointeeComparison<sir::StencilFunction>);
+    }
+    if(!retval) {
+      return false;
     }
 
     if(GlobalVariableMap != nullptr && rhs.GlobalVariableMap != nullptr) {
@@ -215,7 +249,14 @@ bool sir::Stencil::operator==(const sir::Stencil& rhs) const {
     return false;
   }
   retval &= (Name == rhs.Name);
+  if(!retval) {
+    return false;
+  }
+
   retval &= (Attributes == rhs.Attributes);
+  if(!retval) {
+    return false;
+  }
   if(StencilDescAst != nullptr && rhs.StencilDescAst != nullptr) {
     if(StencilDescAst->getRoot() != nullptr && rhs.StencilDescAst->getRoot() != nullptr) {
       retval &= StencilDescAst->getRoot().get()->equals(rhs.StencilDescAst->getRoot().get());
@@ -237,6 +278,9 @@ bool sir::StencilFunction::operator==(const sir::StencilFunction& rhs) const {
   bool retval = true;
   retval &= (Name == rhs.Name);
   retval &= Attributes == rhs.Attributes;
+  if(!retval) {
+    return false;
+  }
   if(Args.size() != rhs.Args.size() && Intervals.size() != rhs.Intervals.size() &&
      Asts.size() != rhs.Asts.size()) {
     return false;
@@ -245,9 +289,16 @@ bool sir::StencilFunction::operator==(const sir::StencilFunction& rhs) const {
       retval &= std::equal(Args.begin(), Args.end(), rhs.Args.begin(),
                            pointeeComparison<sir::StencilFunctionArg>);
     }
+    if(!retval) {
+      return false;
+    }
+
     if(Intervals.size() > 0) {
       retval &= std::equal(Intervals.begin(), Intervals.end(), rhs.Intervals.begin(),
                            pointeeComparison<sir::Interval>);
+    }
+    if(!retval) {
+      return false;
     }
 
     if(Asts.size() > 0) {
@@ -268,24 +319,6 @@ bool sir::StencilFunction::operator==(const sir::StencilFunction& rhs) const {
 bool sir::StencilFunctionArg::operator==(const sir::StencilFunctionArg& rhs) const {
   return (Name == rhs.Name) && (Kind == rhs.Kind);
 }
-bool SIR::pointerMapComparison(const sir::GlobalVariableMap& map1,
-                               const sir::GlobalVariableMap& map2) const {
-  if(map1.size() != map2.size()) {
-    return false;
-  } else {
-    for(auto& a : map1) {
-      auto finder = map2.find(a.first);
-      if(finder == map2.end()) {
-        return false;
-      } else if(finder->second == nullptr || a.second == nullptr) {
-        return finder->second == a.second;
-      } else if(!(*(finder->second.get()) == *(a.second.get()))) {
-        return false;
-      }
-    }
-    return true;
-  }
-}
 
 bool sir::Value::operator==(const sir::Value& rhs) const {
 
@@ -305,11 +338,6 @@ bool sir::Value::operator==(const sir::Value& rhs) const {
   default:
     dawn_unreachable("invalid type");
   }
-}
-
-template <typename T>
-bool pointeeComparison(const std::shared_ptr<T>& comparate1, const std::shared_ptr<T>& comparate2) {
-  return *comparate1 == *comparate2;
 }
 
 } // namespace dawn

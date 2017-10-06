@@ -394,19 +394,8 @@ struct SIR {
   /// It is to note that the filenames are not compared here
   /// and positions of expressions are omitted
   bool operator!=(const SIR& rhs) const;
-
-  bool pointerMapComparison(const sir::GlobalVariableMap& map1,
-                            const sir::GlobalVariableMap& map2) const;
 };
 
-////////////// Should not be here.....
-/// @brief Compares the content of two shared pointers
-/// @param[in] shared pointer of type T
-/// @param[in] shared pointer of same type T
-/// @return true if contents of the shared pointers match (operator ==)
-template <typename T>
-bool pointeeComparison(const std::shared_ptr<T>& comparate1,
-                              const std::shared_ptr<T>& comparate2);
 } // namespace dawn
 
 #endif
