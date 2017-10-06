@@ -89,6 +89,15 @@ macro(dawn_gen_install_config)
   set(DAWN_INSTALL_ROOT "")
 
   # Export configuration
+  get_property(protobuf_lib TARGET protobuf::libprotobuf PROPERTY LOCATION)
+  get_property(protobuf_dep TARGET protobuf::libprotobuf PROPERTY LOCATION)
+
+  set(DAWN_INSTALL_PROTOBUF_LIBRARY "${protobuf_lib}")
+  set(DAWN_INSTALL_PROTOBUF_DEPENDENCIES "${protobuf_dep}")
+  set(DAWN_INSTALL_PROTOBUF_INCLUDE_DIRS "${DAWN_PROTOBUF_INSTALL_DIRS}")
+
+  message(${DAWN_INSTALL_PROTOBUF_LIBRARY})
+
   configure_package_config_file(
     ${CMAKE_SOURCE_DIR}/cmake/templates/DawnConfig.cmake.in 
     ${CMAKE_CURRENT_BINARY_DIR}/DawnConfig.cmake
