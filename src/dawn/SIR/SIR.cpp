@@ -182,13 +182,13 @@ bool SIR::operator==(const SIR& rhs) const {
 
     if(Stencils.size() > 0) {
       retval &= std::equal(Stencils.begin(), Stencils.end(), rhs.Stencils.begin(),
-                           sharedpointer_comparison<sir::Stencil>);
+                           pointeeComparison<sir::Stencil>);
     }
 
     if(StencilFunctions.size() > 0) {
       retval &=
           std::equal(StencilFunctions.begin(), StencilFunctions.end(), rhs.StencilFunctions.begin(),
-                     sharedpointer_comparison<sir::StencilFunction>);
+                     pointeeComparison<sir::StencilFunction>);
     }
 
     if(GlobalVariableMap != nullptr && rhs.GlobalVariableMap != nullptr) {
@@ -228,7 +228,7 @@ bool sir::Stencil::operator==(const sir::Stencil& rhs) const {
   }
   if(Fields.size() > 0) {
     retval &= std::equal(Fields.begin(), Fields.end(), rhs.Fields.begin(),
-                         sharedpointer_comparison<Field>);
+                         pointeeComparison<Field>);
   }
 
   return retval;
@@ -244,11 +244,11 @@ bool sir::StencilFunction::operator==(const sir::StencilFunction& rhs) const {
   } else {
     if(Args.size() > 0) {
       retval &= std::equal(Args.begin(), Args.end(), rhs.Args.begin(),
-                           sharedpointer_comparison<sir::StencilFunctionArg>);
+                           pointeeComparison<sir::StencilFunctionArg>);
     }
     if(Intervals.size() > 0) {
       retval &= std::equal(Intervals.begin(), Intervals.end(), rhs.Intervals.begin(),
-                           sharedpointer_comparison<sir::Interval>);
+                           pointeeComparison<sir::Interval>);
     }
 
     if(Asts.size() > 0) {
@@ -305,6 +305,11 @@ bool sir::Value::operator==(const sir::Value& rhs) const {
     return getValue<std::string>() == rhs.getValue<std::string>();
   }
   return true;
+}
+
+bool pointeeComparison(const std::shared_ptr<T>& comparate1,
+                              const std::shared_ptr<T>& comparate2) {
+  return *comparate1 == *comparate2;
 }
 
 } // namespace dawn

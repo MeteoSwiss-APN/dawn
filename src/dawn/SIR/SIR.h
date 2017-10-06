@@ -405,11 +405,8 @@ struct SIR {
 /// @param[in] shared pointer of same type T
 /// @return true if contents of the shared pointers match (operator ==)
 template <typename T>
-bool sharedpointer_comparison(const std::shared_ptr<T>& comparate1,
-                              const std::shared_ptr<T>& comparate2) {
-  return *comparate1 == *comparate2;
-}
-
+bool pointeeComparison(const std::shared_ptr<T>& comparate1,
+                              const std::shared_ptr<T>& comparate2);
 } // namespace dawn
 
 #endif
