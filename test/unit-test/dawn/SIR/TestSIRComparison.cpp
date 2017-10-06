@@ -17,7 +17,6 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/STLExtras.h"
-#include "llvm/ADT/STLExtras.h"
 #include <gtest/gtest.h>
 #include <iostream>
 
@@ -28,14 +27,14 @@ namespace {
 
 TEST(SIRComparisonTest, EmptySIR) {
   // Works all the time, initializing the suite checks that no exceptions are thrown with empty SIRs
-  std::unique_ptr<SIR> test01SIR = llvm::make_unique<SIR>();
-  std::unique_ptr<SIR> test02SIR = llvm::make_unique<SIR>();
+  std::unique_ptr<SIR> test01SIR = make_unique<SIR>();
+  std::unique_ptr<SIR> test02SIR = make_unique<SIR>();
   EXPECT_TRUE(*test01SIR.get() == *test02SIR.get());
 }
 
 TEST(SIRComparisonTest, DoubleReferenceStencilOnly) {
-  std::unique_ptr<SIR> test01SIR = llvm::make_unique<SIR>();
-  std::unique_ptr<SIR> test02SIR = llvm::make_unique<SIR>();
+  std::unique_ptr<SIR> test01SIR = make_unique<SIR>();
+  std::unique_ptr<SIR> test02SIR = make_unique<SIR>();
 
   // Genereate a stencil
   test01SIR->Stencils.resize(1);
@@ -65,8 +64,8 @@ TEST(SIRComparisonTest, DoubleReferenceStencilOnly) {
 }
 
 TEST(SIRComparisonTest, DoubleReferenceStencilFunctionOnly) {
-  std::unique_ptr<SIR> test01SIR = llvm::make_unique<SIR>();
-  std::unique_ptr<SIR> test02SIR = llvm::make_unique<SIR>();
+  std::unique_ptr<SIR> test01SIR = make_unique<SIR>();
+  std::unique_ptr<SIR> test02SIR = make_unique<SIR>();
   // Generate a stencil Function
   test01SIR->StencilFunctions.resize(1);
   for(auto& a : test01SIR->StencilFunctions) {
@@ -107,8 +106,8 @@ TEST(SIRComparisonTest, DoubleReferenceStencilFunctionOnly) {
 }
 
 TEST(SIRComparisonTest, DoubleReferenceGlobalVariableMapOnly) {
-  std::unique_ptr<SIR> test01SIR = llvm::make_unique<SIR>();
-  std::unique_ptr<SIR> test02SIR = llvm::make_unique<SIR>();
+  std::unique_ptr<SIR> test01SIR = make_unique<SIR>();
+  std::unique_ptr<SIR> test02SIR = make_unique<SIR>();
   // Generate a global Variable Map
   test02SIR->GlobalVariableMap = std::make_shared<GlobalVariableMap>();
   test01SIR->GlobalVariableMap = std::make_shared<GlobalVariableMap>();
@@ -124,8 +123,8 @@ TEST(SIRComparisonTest, DoubleReferenceGlobalVariableMapOnly) {
 }
 
 TEST(SIRComparisonTest, DoubleReferenceFullSIR) {
-  std::unique_ptr<SIR> test01SIR = llvm::make_unique<SIR>();
-  std::unique_ptr<SIR> test02SIR = llvm::make_unique<SIR>();
+  std::unique_ptr<SIR> test01SIR = make_unique<SIR>();
+  std::unique_ptr<SIR> test02SIR = make_unique<SIR>();
 
   // Genereate a stencil
   test01SIR->Stencils.resize(1);
