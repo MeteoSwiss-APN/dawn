@@ -74,7 +74,7 @@ public:
 
   /// @brief Compare for equality
   virtual bool equals(const Stmt* other) const {
-    return kind_ == other->kind_ && loc_ == other->loc_;
+    return kind_ == other->kind_;
   }
 
   /// @brief Is the statement used for stencil description and has no real analogon in C++
