@@ -12,4 +12,23 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-install(DIRECTORY modules/ DESTINATION ${DAWN_INSTALL_CMAKE_DIR}/modules)
+find_package(Protobuf 3.0 NO_MODULE REQUIRED)
+
+get_property(Protobuf_INCLUDE_DIRS 
+  TARGET protobuf::libprotobuf 
+  PROPERTY INTERFACE_INCLUDE_DIRECTORIES
+)
+
+get_property(Protobuf_PROTOC_EXECUTABLE 
+  TARGET protobuf::protoc 
+  PROPERTY LOCATION
+)
+
+dawn_export_package(
+  NAME Protobuf
+  FOUND ${Protobuf_FOUND}
+  EXECUTABLE "${Protobuf_PROTOC_EXECUTABLE}"
+  INCLUDE_DIRS "${Protobuf_INCLUDE_DIRS}"
+  LIBRARIES "protobuf::libprotobuf"
+  VERSION "${Protobuf_VERSION}"
+)

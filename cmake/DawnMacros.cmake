@@ -22,7 +22,7 @@ include(CMakePackageConfigHelpers)
 #
 macro(dawn_set_cxx_flags)
   # Remove -DNDEBUG flag if ASSERTS are ON
-  if(GTCLANG_ASSERTS)
+  if(DAWN_ASSERTS)
     set(ndebug_flag "-DNDEBUG")
     string(REPLACE "${ndebug_flag}" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
     string(REPLACE "${ndebug_flag}" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")

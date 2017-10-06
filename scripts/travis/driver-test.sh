@@ -17,7 +17,7 @@ this_script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Setup dependencies
 source "$this_script_dir/install.sh"
-install_driver -i ${CACHE_DIR} -b cmake
+install_driver -i ${CACHE_DIR} -b ${PACKAGES_TO_INSTALL}
 
 export CXX=${CXX_COMPILER}
 export CC=${C_COMPILER}
@@ -32,6 +32,7 @@ mkdir build && cd build
 cmake .. -DCMAKE_CXX_COMPILER="$CXX"                                                               \
          -DCMAKE_C_COMPILER="$CC"                                                                  \
          -DCMAKE_BUILD_TYPE="$CONFIG"                                                              \
+         -DProtobuf_DIR="$Protobuf_DIR"                                                            \
       || fatal_error "failed to configure"
 make -j2 || fatal_error "failed to build"
 

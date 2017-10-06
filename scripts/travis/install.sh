@@ -133,10 +133,13 @@ function install_driver() {
   for package in "${split_package[@]}"
   do
     case $package in
-      cmake) install_package "${install_dir}" cmake;;
-      *) 
-        >&2 echo "$0: error: unknown package '$package'";
-        exit 1;;
+    cmake) 
+      install_package "${install_dir}" cmake;;
+    protobuf) 
+      install_package "${install_dir}" protobuf;;
+    *) 
+      >&2 echo "$0: error: unknown package '$package'";
+      exit 1;;
     esac
   done
 }
