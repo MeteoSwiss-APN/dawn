@@ -58,7 +58,7 @@ function(dawn_combine_libraries)
 
   # Add static library
   add_library(${ARG_NAME}Static STATIC ${object_sources})
-  target_link_libraries(${ARG_NAME}Static ${ARG_DEPENDS})
+  target_link_libraries(${ARG_NAME}Static PUBLIC ${ARG_DEPENDS})
 
   set_target_properties(${ARG_NAME}Static PROPERTIES OUTPUT_NAME ${ARG_NAME})
   set_target_properties(${ARG_NAME}Static PROPERTIES VERSION ${DAWN_VERSION})
@@ -70,7 +70,7 @@ function(dawn_combine_libraries)
   # Add shared library
   if(BUILD_SHARED_LIBS)
     add_library(${ARG_NAME}Shared SHARED ${object_sources})
-    target_link_libraries(${ARG_NAME}Shared ${ARG_DEPENDS})
+    target_link_libraries(${ARG_NAME}Shared PUBLIC ${ARG_DEPENDS})
     
     set_target_properties(${ARG_NAME}Shared PROPERTIES OUTPUT_NAME ${ARG_NAME})
     set_target_properties(${ARG_NAME}Shared PROPERTIES VERSION ${DAWN_VERSION})
