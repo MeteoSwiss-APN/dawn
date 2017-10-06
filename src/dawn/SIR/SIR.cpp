@@ -186,9 +186,8 @@ bool SIR::operator==(const SIR& rhs) const {
     }
 
     if(StencilFunctions.size() > 0) {
-      retval &=
-          std::equal(StencilFunctions.begin(), StencilFunctions.end(), rhs.StencilFunctions.begin(),
-                     pointeeComparison<sir::StencilFunction>);
+      retval &= std::equal(StencilFunctions.begin(), StencilFunctions.end(),
+                           rhs.StencilFunctions.begin(), pointeeComparison<sir::StencilFunction>);
     }
 
     if(GlobalVariableMap != nullptr && rhs.GlobalVariableMap != nullptr) {
@@ -227,8 +226,8 @@ bool sir::Stencil::operator==(const sir::Stencil& rhs) const {
     return StencilDescAst == rhs.StencilDescAst;
   }
   if(Fields.size() > 0) {
-    retval &= std::equal(Fields.begin(), Fields.end(), rhs.Fields.begin(),
-                         pointeeComparison<Field>);
+    retval &=
+        std::equal(Fields.begin(), Fields.end(), rhs.Fields.begin(), pointeeComparison<Field>);
   }
 
   return retval;
@@ -289,26 +288,27 @@ bool SIR::pointerMapComparison(const sir::GlobalVariableMap& map1,
 }
 
 bool sir::Value::operator==(const sir::Value& rhs) const {
-  if(getType() != rhs.getType()) {
+
+  auto type = getType();
+  if(type != rhs.getType()) {
     return false;
   }
-  if(getType() == Value::TypeKind::Boolean) {
+  switch(type) {
+  case Value::TypeKind::Boolean:
     return getValue<bool>() == rhs.getValue<bool>();
-  }
-  if(getType() == Value::TypeKind::Integer) {
+  case Value::TypeKind::Integer:
     return getValue<int>() == rhs.getValue<int>();
-  }
-  if(getType() == Value::TypeKind::Double) {
+  case Value::TypeKind::Double:
     return getValue<double>() == rhs.getValue<double>();
-  }
-  if(getType() == Value::TypeKind::String) {
+  case Value::TypeKind::String:
     return getValue<std::string>() == rhs.getValue<std::string>();
+  default:
+    dawn_unreachable("invalid type");
   }
-  return true;
 }
 
-bool pointeeComparison(const std::shared_ptr<T>& comparate1,
-                              const std::shared_ptr<T>& comparate2) {
+template <typename T>
+bool pointeeComparison(const std::shared_ptr<T>& comparate1, const std::shared_ptr<T>& comparate2) {
   return *comparate1 == *comparate2;
 }
 
