@@ -11,19 +11,32 @@ Compiling the library
 Linux
 -----
 
-On Linux, you'll need to install a C++11 toolchain (e.g **gcc** or **clang**) as well as `CMake`_ (>= 3.3). For example, on Ubuntu the following will do
+On Linux, you'll need to install a C++11 toolchain (e.g **gcc** or **clang**) as well as `CMake`_ (>= 3.3). In addition, you will need `Protobuf`_ (>= 3.4). For example, on Ubuntu the following will install the necessary dependencies
 
 .. code-block:: bash
 
    sudo apt-get install g++ cmake
 
-After installing the prerequisites, run
+Note that most Ubuntu distributions don't ship the latest Protobuf library which means you need to compile it yourself (don't worry it's super easy!). First, grab the latest release of Protobuf from `GitHub`_, configure it with CMake (the ``CMakeLists.txt`` file is located in the **cmake/** subdirectory) and then build it
 
 .. code-block:: bash
 
+  git clone https://github.com/google/protobuf.git
+  cd protobuf
   mkdir build
   cd build
-  cmake ..
+  export PROTOBUF_INSTALL_DIR="$(pwd)/install"
+  cmake ../cmake/ -DCMAKE_INSTALL_PREFIX="$PROTOBUF_INSTALL_DIR"
+  make install -j 4
+
+which will install the library locally into **build/install**. Next, we can build Dawn. Note that we need to point CMake to the ``protobuf-config.cmake`` file of Protobuf (which is located in ``${PROTOBUF_INSTALL_DIR}/lib/cmake/protobuf/``) via the CMake variable ``Protobuf_DIR``.
+
+.. code-block:: bash
+
+  git clone https://github.com/google/protobuf.git
+  mkdir build
+  cd build
+  cmake .. -DProtobuf_DIR="$PROTOBUF_INSTALL_DIR/lib/cmake/protobuf/"
   make install -j 4
 
 The last line will both install and compile the library locally in **<dawn-dir>/install/**.
@@ -31,18 +44,18 @@ The last line will both install and compile the library locally in **<dawn-dir>/
 Mac OS
 ------
 
-On Mac OS, you'll need to install Xcode as well as `CMake`_ (>= 3.3). First, make sure you have the Xcode Command Line Tools installed
+On Mac OS, you'll need to install Xcode as well as `CMake`_ (>= 3.3). In addition, you will need `Protobuf`_ (>= 3.4). First, make sure you have the Xcode Command Line Tools installed
 
 .. code-block:: bash
 
   xcode-select --install
 
-If you are using `Homebrew <https://brew.sh/>`_, use the following to install **CMake**:
+If you are using `Homebrew <https://brew.sh/>`_, use the following to install **Protobuf** and **CMake**
 
 .. code-block:: bash
 
   brew update
-  brew install cmake
+  brew install cmake protobuf
 
 After installing the prerequisites, run
 
@@ -93,9 +106,9 @@ Finally, just link the static library of Dawn to your own library or executable
 
 .. code-block:: cmake
 
-  target_link_libraries(${target} ... PUBLIC Dawn::DawnStatic)
+  target_link_libraries(${target} ... PUBLIC ${DAWN_STATIC_LIBRARY})
 
-or use ``Dawn::DawnShared`` instead of ``Dawn::DawnStatic`` if you want to linkt against the shared library.
+or use ``DAWN_SHARED_LIBRARY`` instead of ``DAWN_STATIC_LIBRARY`` if you want to linkt against the shared library.
 
 Example
 -------
@@ -112,7 +125,7 @@ If we want to link our file (``foo.cpp``) against the static library of Dawn, we
 
   # Compile foo and link against Dawn
   add_executable(foo foo.cpp)
-  target_link_libraries(foo PUBLIC Dawn::DawnStatic)
+  target_link_libraries(foo PUBLIC ${DAWN_STATIC_LIBRARY})
 
   # Dawn requires atleast C++11 (you can also set this globally!)
   set_property(TARGET foo PROPERTY CXX_STANDARD 11)
@@ -133,4 +146,7 @@ TODO:
   }
 
 
+.. _GitHub: https://github.com/google/protobuf/releases
 .. _CMake: https://cmake.org/
+.. _Protobuf: https://developers.google.com/protocol-buffers/
+
