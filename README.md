@@ -26,7 +26,7 @@ Using Dawn as a common compiler infrastructure can drastically reduce developmen
 
 ## Building
 
-Dawn only depends on [Protobuf](https://developers.google.com/protocol-buffers/) (3.4 >=) and requires a C++11 compiler as well as [CMake](https://cmake.org/). To compile the library you need to point CMake to `protobuf-config.cmake` (the CMake configuration file of Protobuf). The following will install Dawn locally into `<dawn-dir>/install/` 
+Dawn only depends on [Protobuf](https://developers.google.com/protocol-buffers/) (>= 3.4) and requires a C++11 compiler as well as [CMake](https://cmake.org/). To compile the library you need to point CMake to `protobuf-config.cmake` (the CMake configuration file of Protobuf). The following will install Dawn locally into `<dawn-dir>/install/` 
 
 ```bash
 mkdir build && cd build
