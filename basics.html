@@ -253,14 +253,25 @@
 <h2>Compiling the library<a class="headerlink" href="#compiling-the-library" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="linux">
 <h3>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h3>
-<p>On Linux, you&#8217;ll need to install a C++11 toolchain (e.g <strong>gcc</strong> or <strong>clang</strong>) as well as <a class="reference external" href="https://cmake.org/">CMake</a> (&gt;= 3.3). For example, on Ubuntu the following will do</p>
+<p>On Linux, you&#8217;ll need to install a C++11 toolchain (e.g <strong>gcc</strong> or <strong>clang</strong>) as well as <a class="reference external" href="https://cmake.org/">CMake</a> (&gt;= 3.3). In addition, you will need <a class="reference external" href="https://developers.google.com/protocol-buffers/">Protobuf</a> (&gt;= 3.4). For example, on Ubuntu the following will install the necessary dependencies</p>
 <div class="highlight-bash"><div class="highlight"><pre>sudo apt-get install g++ cmake
 </pre></div>
 </div>
-<p>After installing the prerequisites, run</p>
-<div class="highlight-bash"><div class="highlight"><pre>mkdir build
+<p>Note that most Ubuntu distributions don&#8217;t ship the latest Protobuf library which means you need to compile it yourself (don&#8217;t worry it&#8217;s super easy!). First, grab the latest release of Protobuf from <a class="reference external" href="https://github.com/google/protobuf/releases">GitHub</a>, configure it with CMake (the <code class="docutils literal"><span class="pre">CMakeLists.txt</span></code> file is located in the <strong>cmake/</strong> subdirectory) and then build it</p>
+<div class="highlight-bash"><div class="highlight"><pre>git clone https://github.com/google/protobuf.git
+<span class="nb">cd</span> protobuf
+mkdir build
 <span class="nb">cd</span> build
-cmake ..
+<span class="nb">export</span> <span class="nv">PROTOBUF_INSTALL_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/install&quot;</span>
+cmake ../cmake/ -DCMAKE_INSTALL_PREFIX<span class="o">=</span><span class="s2">&quot;</span>$<span class="s2">PROTOBUF_INSTALL_DIR&quot;</span>
+make install -j 4
+</pre></div>
+</div>
+<p>which will install the library locally into <strong>build/install</strong>. Next, we can build Dawn. Note that we need to point CMake to the <code class="docutils literal"><span class="pre">protobuf-config.cmake</span></code> file of Protobuf (which is located in <code class="docutils literal"><span class="pre">${PROTOBUF_INSTALL_DIR}/lib/cmake/protobuf/</span></code>) via the CMake variable <code class="docutils literal"><span class="pre">Protobuf_DIR</span></code>.</p>
+<div class="highlight-bash"><div class="highlight"><pre>git clone https://github.com/google/protobuf.git
+mkdir build
+<span class="nb">cd</span> build
+cmake .. -DProtobuf_DIR<span class="o">=</span><span class="s2">&quot;</span>$<span class="s2">PROTOBUF_INSTALL_DIR/lib/cmake/protobuf/&quot;</span>
 make install -j 4
 </pre></div>
 </div>
@@ -268,13 +279,13 @@ make install -j 4
 </div>
 <div class="section" id="mac-os">
 <h3>Mac OS<a class="headerlink" href="#mac-os" title="Permalink to this headline">¶</a></h3>
-<p>On Mac OS, you&#8217;ll need to install Xcode as well as <a class="reference external" href="https://cmake.org/">CMake</a> (&gt;= 3.3). First, make sure you have the Xcode Command Line Tools installed</p>
+<p>On Mac OS, you&#8217;ll need to install Xcode as well as <a class="reference external" href="https://cmake.org/">CMake</a> (&gt;= 3.3). In addition, you will need <a class="reference external" href="https://developers.google.com/protocol-buffers/">Protobuf</a> (&gt;= 3.4). First, make sure you have the Xcode Command Line Tools installed</p>
 <div class="highlight-bash"><div class="highlight"><pre>xcode-select --install
 </pre></div>
 </div>
-<p>If you are using <a class="reference external" href="https://brew.sh/">Homebrew</a>, use the following to install <strong>CMake</strong>:</p>
+<p>If you are using <a class="reference external" href="https://brew.sh/">Homebrew</a>, use the following to install <strong>Protobuf</strong> and <strong>CMake</strong></p>
 <div class="highlight-bash"><div class="highlight"><pre>brew update
-brew install cmake
+brew install cmake protobuf
 </pre></div>
 </div>
 <p>After installing the prerequisites, run</p>
@@ -344,10 +355,10 @@ make install -j 4
 </tbody>
 </table>
 <p>Finally, just link the static library of Dawn to your own library or executable</p>
-<div class="highlight-cmake"><div class="highlight"><pre><span class="nb">target_link_libraries</span><span class="p">(</span><span class="o">${</span><span class="nv">target</span><span class="o">}</span> <span class="s">...</span> <span class="s">PUBLIC</span> <span class="s">Dawn::DawnStatic</span><span class="p">)</span>
+<div class="highlight-cmake"><div class="highlight"><pre><span class="nb">target_link_libraries</span><span class="p">(</span><span class="o">${</span><span class="nv">target</span><span class="o">}</span> <span class="s">...</span> <span class="s">PUBLIC</span> <span class="o">${</span><span class="nv">DAWN_STATIC_LIBRARY</span><span class="o">}</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>or use <code class="docutils literal"><span class="pre">Dawn::DawnShared</span></code> instead of <code class="docutils literal"><span class="pre">Dawn::DawnStatic</span></code> if you want to linkt against the shared library.</p>
+<p>or use <code class="docutils literal"><span class="pre">DAWN_SHARED_LIBRARY</span></code> instead of <code class="docutils literal"><span class="pre">DAWN_STATIC_LIBRARY</span></code> if you want to linkt against the shared library.</p>
 <div class="section" id="example">
 <h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
 <p>If we want to link our file (<code class="docutils literal"><span class="pre">foo.cpp</span></code>) against the static library of Dawn, we may use something like</p>
@@ -359,7 +370,7 @@ make install -j 4
 
 <span class="c"># Compile foo and link against Dawn</span>
 <span class="nb">add_executable</span><span class="p">(</span><span class="s">foo</span> <span class="s">foo.cpp</span><span class="p">)</span>
-<span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">foo</span> <span class="s">PUBLIC</span> <span class="s">Dawn::DawnStatic</span><span class="p">)</span>
+<span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">foo</span> <span class="s">PUBLIC</span> <span class="o">${</span><span class="nv">DAWN_STATIC_LIBRARY</span><span class="o">}</span><span class="p">)</span>
 
 <span class="c"># Dawn requires atleast C++11 (you can also set this globally!)</span>
 <span class="nb">set_property</span><span class="p">(</span><span class="s">TARGET</span> <span class="s">foo</span> <span class="s">PROPERTY</span> <span class="s">CXX_STANDARD</span> <span class="s">11</span><span class="p">)</span>
