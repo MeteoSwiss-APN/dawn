@@ -44,6 +44,7 @@ Each function and macro uses a `snake-case <https://en.wikipedia.org/wiki/Snake_
   /cmake-modules/DawnCombineLibraries
   /cmake-modules/DawnConfigureFile
   /cmake-modules/DawnCreatePackageString
+  /cmake-modules/DawnExportOptions
   /cmake-modules/DawnExportPackage
   /cmake-modules/DawnFindPythonModule
   /cmake-modules/DawnGetArchitectureInfo

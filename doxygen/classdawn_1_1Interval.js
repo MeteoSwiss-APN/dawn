@@ -1,0 +1,26 @@
+var classdawn_1_1Interval =
+[
+    [ "Interval", "classdawn_1_1Interval.html#affc4f6a4a1a78eb2a7bfc633c5389404", null ],
+    [ "Interval", "classdawn_1_1Interval.html#a9af422daf3f6bbaa413a9e2657308277", null ],
+    [ "Interval", "classdawn_1_1Interval.html#a927fcb1783bd1f58d89e3cb22c39006f", null ],
+    [ "Interval", "classdawn_1_1Interval.html#ab65deba391b999204935415d6077b1ac", null ],
+    [ "adjacent", "classdawn_1_1Interval.html#ab05c1c991df97897bed2d66bc90e1aae", null ],
+    [ "asSIRInterval", "classdawn_1_1Interval.html#a6a0dfa0eeeb2a8dfbab0df399f1d783e", null ],
+    [ "contains", "classdawn_1_1Interval.html#a4e97c4e239f35dc2e9285fcae79ee5df", null ],
+    [ "extendInterval", "classdawn_1_1Interval.html#abcddc93351f6c3815d98bda99f8a5d27", null ],
+    [ "extendInterval", "classdawn_1_1Interval.html#a1241b282cbd363e2b859e7e7280a9ce7", null ],
+    [ "lowerBound", "classdawn_1_1Interval.html#aec8cf5a12d9d6b3922786341e0dc514e", null ],
+    [ "lowerLevel", "classdawn_1_1Interval.html#a5ef40e746e3f55a83c2043223ccbe05a", null ],
+    [ "lowerOffset", "classdawn_1_1Interval.html#a67e3e2b2d2c04dd76fdf0ca34e164287", null ],
+    [ "merge", "classdawn_1_1Interval.html#a002317d81a171ad278a8ebdc613bebe7", null ],
+    [ "operator!=", "classdawn_1_1Interval.html#aaaa9997c7def6bd0afcc44d07eed3788", null ],
+    [ "operator=", "classdawn_1_1Interval.html#a35085e8a184c06128ec545b70df8d153", null ],
+    [ "operator=", "classdawn_1_1Interval.html#a1512462149a1f2ca0206c44f4ebc4377", null ],
+    [ "operator==", "classdawn_1_1Interval.html#a22d3290d2a54eb9564f80db94c8c419d", null ],
+    [ "overlaps", "classdawn_1_1Interval.html#a7e41fe102e7757d498895bd24ba2a379", null ],
+    [ "toString", "classdawn_1_1Interval.html#a51766316a3253e7532785ce8da32179f", null ],
+    [ "upperBound", "classdawn_1_1Interval.html#a59858ddeb2f3fe6f2b181d2b5fc41a5e", null ],
+    [ "upperLevel", "classdawn_1_1Interval.html#a3202f65a0f2cf1bb8d3c4c94279a2413", null ],
+    [ "upperOffset", "classdawn_1_1Interval.html#a17c92fb52201b61d69ba2489b53240dd", null ],
+    [ "operator<<", "classdawn_1_1Interval.html#ac95b512584f3f7b577829ab5f2331c0f", null ]
+];
