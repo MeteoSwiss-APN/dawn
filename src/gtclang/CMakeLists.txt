@@ -25,9 +25,9 @@ endif()
 # Combine the relevant object libraries into libGTClang.a
 dawn_combine_libraries(
   NAME GTClang
-  OBJECTS GTClangSupportObjects
+  OBJECTS GTClangDriverObjects
           GTClangFrontendObjects
-          GTClangDriverObjects
+          GTClangSupportObjects
   INSTALL_DESTINATION ${GTCLANG_INSTALL_LIB_DIR}
 )
 
