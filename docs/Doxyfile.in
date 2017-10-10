@@ -811,6 +811,7 @@ EXCLUDE_PATTERNS       =
 EXCLUDE_SYMBOLS        = internal*    \
                          nlohmann*    \
                          std*         \
+                         tinyformat*  \
                          json*
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or directories
