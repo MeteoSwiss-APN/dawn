@@ -14,7 +14,14 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+
 include(DawnAddUnittest)
+
+set(GTCLANG_UNITTEST_EXTERNAL_LIBRARIES
+  GTClangUnittestStatic
+  GTClangStatic
+  ${GTCLANG_EXTERNAL_LIBRARIES}
+)
 
 # gtclang_add_unittest
 # --------------------
@@ -35,16 +42,10 @@ macro(gtclang_add_unittest)
   dawn_add_unittest(
     NAME ${ARG_NAME}
     SOURCES ${ARG_SOURCES}
-    DEPENDS GTClangStatic ${DAWN_EXTERNAL_LIBRARIES} gtest
+    DEPENDS ${GTCLANG_UNITTEST_EXTERNAL_LIBRARIES} gtest
     OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/unittest
     GTEST_ARGS --gtest_color=yes
   )
 endmacro()
-
-set(GTCLANG_UNITTEST_EXTERNAL_LIBRARIES 
-  GTClangStatic
-  GTClangUnittestStatic
-  ${GTCLANG_EXTERNAL_LIBRARIES}
-)
 
 add_subdirectory(gtclang)
