@@ -26,30 +26,42 @@ add_custom_target(DawnDocsCMakeModules
 #
 # HTML documentation
 #
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf.py.in
-               ${CMAKE_CURRENT_SOURCE_DIR}/conf.py @ONLY)
-set(rst_files 
-    basics.rst
-    coding.rst
-    index.rst 
-    sir.rst
-    toolchain.rst
+
+# Run Doxygen
+set(doxyfile_in ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
+set(doxyfile ${CMAKE_BINARY_DIR}/docs/Doxyfile)
+configure_file(${doxyfile_in} ${doxyfile} @ONLY)
+
+add_custom_target(DawnDocsDoxygenHtml
+   COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
+   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+   COMMENT "Generating Doxygen HTML documentation" VERBATIM
+   DEPENDS ${doxyfile} 
 )
 
 # Run sphinx
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf.py.in
+               ${CMAKE_CURRENT_SOURCE_DIR}/conf.py @ONLY)
+
 add_custom_target(DawnDocsSphinxHtml
    COMMAND ${SPHINX_EXECUTABLE} -b html -d ${CMAKE_BINARY_DIR}/sphinx/doctrees 
            ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR}/sphinx/html
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
    COMMENT "Generating sphinx HTML documentation" VERBATIM
-   DEPENDS conf.py ${rst_files}
+   DEPENDS conf.py 
+           basics.rst
+           coding.rst
+           index.rst 
+          sir.rst
 )
-add_dependencies(DawnDocsSphinxHtml DawnDocsCMakeModules)
+add_dependencies(DawnDocsSphinxHtml DawnDocsCMakeModules DawnDocsDoxygenHtml)
 
 # Copy HTML
 add_custom_target(docs
  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/sphinx/html 
                                             ${CMAKE_SOURCE_DIR}/docs/html
+ COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/doxygen/html 
+                                            ${CMAKE_SOURCE_DIR}/docs/html/doxygen
  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
  COMMENT "Generating HTML documentation" VERBATIM
  DEPENDS DawnDocsSphinxHtml
