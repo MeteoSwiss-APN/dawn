@@ -1,14 +1,14 @@
 gtclang <br/> <a target="_blank" href="http://semver.org">![Version][Version.Badge]</a> <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![Travis status][TravisCI.Badge]</a> <a target="_blank" href="https://opensource.org/licenses/MIT">![License: MIT][MIT.License]</a>
 ===========
 
-**gtclang** is a source-to-source compiler with a high level DSL (Domain-Specifc Language) to execute stencil-like computations on a variety of different parallel architectures. The target applications for gtclang are regional weather models (regular grids) as well as global weather and climate simulations (irregular grids). gtclang is built on top of the LLVM/Clang compiler framework and [Dawn](https://github.com/MeteoSwiss-APN/dawn) and produces highly optimized C++ source code for the gridtools library.
+**gtclang** is a source-to-source compiler with a high level DSL (Domain-Specifc Language) to execute stencil-like computations on a variety of different parallel architectures. The target applications for gtclang are regional weather models (regular grids) as well as global weather and climate simulations (irregular grids). gtclang is built on top of the [LLVM/Clang](https://clang.llvm.org/) compiler framework and [Dawn](https://github.com/MeteoSwiss-APN/dawn) and produces highly optimized C++ source code for the gridtools library.
 
 ## Building
 
-gtclang depends on [Dawn](https://github.com/MeteoSwiss-APN/dawn) as well as [Clang](https://clang.llvm.org/) (3.8.0) and requires a C++11 compiler and [CMake](https://cmake.org/). To build all these dependencies with a single CMake invocation, it is highly recommended to use the meta repository [gtclang-all](https://github.com/MeteoSwiss-APN/gtclang-all).
+gtclang depends on [Dawn](https://github.com/MeteoSwiss-APN/dawn) as well as [Clang](https://clang.llvm.org/) (3.8.0), the generated code further requires gridtools and optionally [CUDA](https://developer.nvidia.com/cuda-downloads). The build process requires a C++11 compiler and [CMake](https://cmake.org/). To build all these dependencies with a single CMake invocation, it is highly recommended to use the meta repository [gtclang-all](https://github.com/MeteoSwiss-APN/gtclang-all).
 
 
-If you wish to directly compile the library, make sure CMake can find Dawn (pass the install directory via ``DAWN_ROOT``) and Clang (if CMake has trouble finding Clang or LLVM, set ``LLVM_ROOT`` to the correct directory). Note that Ubuntu 14.04 ships with Clang (3.8.0) and a simple
+If you wish to directly compile the library, make sure CMake can find Dawn (pass the install directory via ``DAWN_ROOT``) and Clang (if CMake has trouble finding Clang or LLVM, set ``LLVM_ROOT`` to the correct directory). Note that Ubuntu 16.04 ships with Clang (3.8.0) and a simple
 
 ```bash
 sudo apt-get install llvm-3.8-dev clang-3.8
@@ -24,7 +24,7 @@ make -j4
 make install
 ```
 
-This will install all the gtclang locally into `<gtclang-dir>/install/`. The ``gtclang`` compiler can be found in the `bin/` directory.
+This will install gtclang locally into `<gtclang-dir>/install/`. The ``gtclang`` compiler can be found in the `bin/` directory.
 
 ## Continuous Integration
 
