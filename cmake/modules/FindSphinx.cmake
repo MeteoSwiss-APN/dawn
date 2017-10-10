@@ -30,7 +30,9 @@
 # ``SPHINX_FOUND``
 #   System has sphinx.
 # ``SPHINX_EXECUTABLE``
-#   Path to sphinx-build executable.
+#   Path to **sphinx-build** executable.
+# ``SPHINX_VERSION``
+#   Version of sphinx.
 #
 # Hints
 # ^^^^^
@@ -49,11 +51,29 @@ if(NOT DEFINED SPHINX_EXECUTABLE)
   )
 endif()
 
+if(SPHINX_EXECUTABLE AND NOT DEFINED SPHINX_VERSION)
+  execute_process(
+    COMMAND ${SPHINX_EXECUTABLE} "--version"
+    OUTPUT_VARIABLE out
+    RESULT_VARIABLE res
+  )
+
+  set(SPHINX_VERSION "unknown")
+  if("${res}" STREQUAL "0")
+    # The output should be "Sphinx (sphinx-build) X.Y.Z" 
+    string(SUBSTRING "${out}" 21 -1 version)
+    string(STRIP "${version}" version)
+    set(SPHINX_VERSION "${version}")
+  endif()
+endif()
+
 find_package_handle_standard_args(sphinx 
   FOUND_VAR 
     SPHINX_FOUND 
   REQUIRED_VARS
     SPHINX_EXECUTABLE
+  VERSION_VAR
+    SPHINX_VERSION
 )
 
 mark_as_advanced(SPHINX_EXECUTABLE)
