@@ -75,15 +75,15 @@ if(LLVM_FOUND AND LLVM_LIBRARY_DIRS)
   
   # Add a clang library to CLANG_LIBS and resolve dependencies
   macro(add_clang_lib)
-    cmake_parse_arguments(__ARG "" "NAME" "DEPENDS" ${ARGN})  
+    cmake_parse_arguments(_arg "" "NAME" "DEPENDS" ${ARGN})  
     
-    find_clang_lib(${_ARG_NAME})
+    find_clang_lib(${_arg_NAME})
     
-    string(TOUPPER ${_ARG_NAME} prettylibname)    
+    string(TOUPPER ${_arg_NAME} prettylibname)    
     if(CLANG_${prettylibname}_LIB)
       list(APPEND CLANG_LIBS ${CLANG_${prettylibname}_LIB})
       
-      foreach(dependency ${_ARG_DEPENDS})
+      foreach(dependency ${_arg_DEPENDS})
         string(TOUPPER ${dependency} prettylibname)    
         find_clang_lib(${dependency})
         if(CLANG_${prettylibname}_LIB)
