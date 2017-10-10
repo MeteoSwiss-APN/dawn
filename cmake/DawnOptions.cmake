@@ -31,7 +31,7 @@ option(DAWN_DOCUMENTATION "Enable documentation" OFF)
 
 # Export options for meta projects
 dawn_export_options(DAWN 
-  DAWN_ASSERT 
+  DAWN_ASSERTS 
   DAWN_USE_CCACHE
   DAWN_TESTING
   DAWN_DOCUMENTATION
