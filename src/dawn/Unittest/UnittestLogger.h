@@ -19,7 +19,8 @@
 
 namespace dawn {
 
-/// @brief Simple logger to std::cout for debugging purposes
+/// @brief Simple logger to `std::cout` for debugging purposes
+/// @ingroup unittest
 class UnittestLogger : public LoggerInterface {
 public:
   void log(LoggingLevel level, const std::string& message, const char* file, int line) override;
