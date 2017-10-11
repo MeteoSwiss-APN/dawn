@@ -24,7 +24,7 @@ make -j4
 make install
 ```
 
-This will install gtclang locally into `<gtclang-dir>/install/`. The ``gtclang`` compiler can be found in the `bin/` directory.
+This will install gtclang locally into `<gtclang-dir>/install/`. The `gtclang` compiler can be found in the `bin/` directory.
 
 ## Continuous Integration
 
