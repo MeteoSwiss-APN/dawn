@@ -138,6 +138,9 @@ struct StencilFunctionArg {
 
   ///@brief comparison of Name and Kind (omitting location)
   bool operator==(const StencilFunctionArg& rhs) const;
+
+  ///@brief comparison of Name and Kind (omitting location) with output if the comparison fails
+  std::pair<std::string, bool> comparison(const sir::StencilFunctionArg& rhs) const;
 };
 
 /// @brief Representation of a field
@@ -199,6 +202,11 @@ struct StencilFunction {
   /// @brief Comparison of Stencil functions for Equality in content
   /// including the name, excluding the location
   bool operator==(const sir::StencilFunction& rhs) const;
+
+  /// @brief Comparison of Stencil functions for Equality in content
+  /// including the name, excluding the location
+  /// if the comparison fails, outputs human readable reason why in the string
+  std::pair<std::string, bool> comparison(const StencilFunction& rhs) const;
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -255,6 +263,10 @@ struct Stencil {
 
   /// @brief Comparison between stencils (omitting location)
   bool operator==(const Stencil& rhs) const;
+
+  /// @brief Comparison between stencils (omitting location)
+  /// if the comparison fails, outputs human readable reason why in the string
+  std::pair<std::string, bool> comparison(const Stencil& rhs) const;
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -316,6 +328,10 @@ struct Value : NonCopyable {
 
   /// @brief Comparison between two Values
   bool operator==(const Value& rhs) const;
+
+  /// @brief Comparison between two Values
+  /// if the comparison fails, outputs human readable reason why in the string
+  std::pair<std::string, bool> comparison(const sir::Value& rhs) const;
 
 private:
   struct ValueImplBase {
@@ -390,9 +406,15 @@ struct SIR {
   /// and positions of expressions are omitted
   bool operator==(const SIR& rhs) const;
 
-  /// @brief Compares two SIRs for inequality in contents
+  /// @brief Compares two SIRs for equality in contents
   /// It is to note that the filenames are not compared here
   /// and positions of expressions are omitted
+  /// returns a missmatch string if the bool is false
+  std::pair<std::string, bool> comparison(const SIR& rhs) const;
+
+  /// @brief Compares two SIRs for inequality in contents
+  /// It is to note that the filenames are not compared here
+  /// if the comparison fails, outputs human readable reason why in the string
   bool operator!=(const SIR& rhs) const;
 };
 
