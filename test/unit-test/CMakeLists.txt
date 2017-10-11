@@ -14,7 +14,6 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-
 include(DawnAddUnittest)
 
 set(GTCLANG_UNITTEST_EXTERNAL_LIBRARIES
