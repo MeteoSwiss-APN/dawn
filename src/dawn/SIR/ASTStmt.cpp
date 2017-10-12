@@ -186,9 +186,9 @@ std::shared_ptr<Stmt> VerticalRegionDeclStmt::clone() const {
 
 bool VerticalRegionDeclStmt::equals(const Stmt* other) const {
   const VerticalRegionDeclStmt* otherPtr = dyn_cast<VerticalRegionDeclStmt>(other);
-  // We just compare the shared pointers of the vertical region
-  return otherPtr && Stmt::equals(other) && verticalRegion_ == otherPtr->verticalRegion_;
+  return otherPtr && Stmt::equals(other) && *(verticalRegion_.get()) == *(otherPtr->verticalRegion_.get());
 }
+
 
 void VerticalRegionDeclStmt::accept(ASTVisitor& visitor) {
   visitor.visit(std::static_pointer_cast<VerticalRegionDeclStmt>(shared_from_this()));

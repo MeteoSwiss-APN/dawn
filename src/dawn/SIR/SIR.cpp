@@ -13,7 +13,9 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/SIR/SIR.h"
+#include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Casting.h"
+#include "dawn/Support/Format.h"
 #include "dawn/Support/Printing.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
@@ -22,13 +24,140 @@
 
 namespace dawn {
 
+namespace {
+class DiffWriter : public ASTVisitorForwarding {
+public:
+  DiffWriter()
+      : expressions(std::make_shared<std::vector<std::shared_ptr<Expr>>>()),
+        statements(std::make_shared<std::vector<std::shared_ptr<Stmt>>>()) {}
+
+  virtual void visit(const std::shared_ptr<UnaryOperator>& expr) override {
+    expressions->push_back(expr);
+    ASTVisitorForwarding::visit(expr);
+  }
+  virtual void visit(const std::shared_ptr<BinaryOperator>& expr) override {
+    expressions->push_back(expr);
+    ASTVisitorForwarding::visit(expr);
+  }
+  virtual void visit(const std::shared_ptr<TernaryOperator>& expr) override {
+    expressions->push_back(expr);
+    ASTVisitorForwarding::visit(expr);
+  }
+  virtual void visit(const std::shared_ptr<FunCallExpr>& expr) override {
+    expressions->push_back(expr);
+    ASTVisitorForwarding::visit(expr);
+  }
+  virtual void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
+    expressions->push_back(expr);
+    ASTVisitorForwarding::visit(expr);
+  }
+  virtual void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override {
+    expressions->push_back(expr);
+    ASTVisitorForwarding::visit(expr);
+  }
+
+  virtual void visit(const std::shared_ptr<AssignmentExpr>& expr) override {
+    expressions->push_back(expr);
+    ASTVisitorForwarding::visit(expr);
+  }
+  virtual void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
+    expressions->push_back(expr);
+    ASTVisitorForwarding::visit(expr);
+  }
+
+  virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
+    expressions->push_back(expr);
+    ASTVisitorForwarding::visit(expr);
+  }
+  virtual void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) override {
+    statements->push_back(stmt);
+    stmt->getVerticalRegion()->Ast->getRoot()->accept(*this);
+  }
+
+  virtual void visit(const std::shared_ptr<ReturnStmt>& stmt) override {
+    statements->push_back(stmt);
+    ASTVisitorForwarding::visit(stmt);
+  }
+
+  virtual void visit(const std::shared_ptr<ExprStmt>& stmt) override {
+    statements->push_back(stmt);
+    ASTVisitorForwarding::visit(stmt);
+  }
+
+  virtual void visit(const std::shared_ptr<BlockStmt>& stmt) override {
+    statements->push_back(stmt);
+    ASTVisitorForwarding::visit(stmt);
+  }
+  virtual void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
+    statements->push_back(stmt);
+    ASTVisitorForwarding::visit(stmt);
+  }
+
+  std::shared_ptr<std::vector<std::shared_ptr<Expr>>> getExpr() { return expressions; }
+  std::shared_ptr<std::vector<std::shared_ptr<Stmt>>> getStmt() { return statements; }
+
+private:
+  std::shared_ptr<std::vector<std::shared_ptr<Expr>>> expressions;
+  std::shared_ptr<std::vector<std::shared_ptr<Stmt>>> statements;
+};
+
+std::pair<std::string, bool> compareAst(std::shared_ptr<AST> lhs, std::shared_ptr<AST> rhs) {
+  std::string output;
+  if(lhs->getRoot()->getStatements().size() != rhs->getRoot()->getStatements().size()) {
+    output += "[AST missmatch] ASTs do not have the same number of statements";
+    return std::make_pair(output, false);
+  }
+  for(unsigned i = 0; i < lhs->getRoot()->getStatements().size(); ++i) {
+    if(!lhs->getRoot()->getStatements()[i]->equals(rhs->getRoot()->getStatements()[i].get())) {
+      auto a = lhs->getRoot()->getStatements()[i];
+      auto b = rhs->getRoot()->getStatements()[i];
+      auto kind = a->getKind();
+      auto rhskind = b->getKind();
+      if(kind != rhskind) {
+        output += "[AST missmatch] Statements are not of the same kind";
+        return std::make_pair(output, false);
+      }
+      DiffWriter dw;
+      a->accept(dw);
+      auto lhsExpr = dw.getExpr();
+      auto lhsStmt = dw.getStmt();
+      DiffWriter dw2;
+      b->accept(dw2);
+      auto rhsExpr = dw2.getExpr();
+      auto rhsStmt = dw2.getStmt();
+      if(lhsExpr->size() != rhsExpr->size() || lhsStmt->size() != rhsStmt->size()) {
+        output += "[AST missmatch] Number of Statements / Expressions does not match";
+        return std::make_pair(output, false);
+      }
+      for(unsigned j = 0; j < lhsExpr->size(); ++j) {
+        if(lhsExpr->at(j) != rhsExpr->at(j)) {
+          output += dawn::format("[AST missmatch] Uneven Statements\n"
+                                 "[Expression missmatch] Expecting \n %s \n and got \n %s \n",
+                                 ASTStringifer::toString(lhsExpr->at(j)),
+                                 ASTStringifer::toString(rhsExpr->at(j)));
+          return std::make_pair(output, false);
+        }
+      }
+      for(unsigned j = 0; j < lhsStmt->size(); ++j) {
+        if(lhsStmt->at(j) != rhsStmt->at(j)) {
+          output += dawn::format("[AST missmatch] Uneven Statements\n"
+                                 "[Statement missmatch] Expecting \n %s \n and got \n %s \n",
+                                 ASTStringifer::toString(lhsStmt->at(j)),
+                                 ASTStringifer::toString(rhsStmt->at(j)));
+          return std::make_pair(output, false);
+        }
+      }
+    }
+  }
+  return std::make_pair(output, true);
+}
+
 /// @brief Compares the content of two shared pointers
 /// @param[in] shared pointer of type T
 /// @param[in] shared pointer of same type T
 /// @return true if contents of the shared pointers match (operator ==)
 template <typename T>
-static bool pointeeComparison(const std::shared_ptr<T>& comparate1,
-                              const std::shared_ptr<T>& comparate2) {
+bool pointeeComparison(const std::shared_ptr<T>& comparate1, const std::shared_ptr<T>& comparate2) {
   return *comparate1 == *comparate2;
 }
 
@@ -40,9 +169,8 @@ static bool pointeeComparison(const std::shared_ptr<T>& comparate1,
 /// the string returns a potential missmatch notification
 /// @pre Type T requies a comparison function that returns the pair of bool and string
 template <typename T>
-static std::pair<std::string, bool>
-pointeeComparisonWithOutput(const std::shared_ptr<T>& comparate1,
-                            const std::shared_ptr<T>& comparate2) {
+std::pair<std::string, bool> pointeeComparisonWithOutput(const std::shared_ptr<T>& comparate1,
+                                                         const std::shared_ptr<T>& comparate2) {
   return (*comparate1).comparison(*comparate2);
 }
 
@@ -65,9 +193,8 @@ static bool pointerMapComparison(const sir::GlobalVariableMap& map1,
   }
 }
 
-static std::pair<std::string, bool>
-pointerMapComparisonWithOutput(const sir::GlobalVariableMap& map1,
-                               const sir::GlobalVariableMap& map2) {
+std::pair<std::string, bool> pointerMapComparisonWithOutput(const sir::GlobalVariableMap& map1,
+                                                            const sir::GlobalVariableMap& map2) {
   std::string output;
   if(map1.size() != map2.size()) {
     output += "[GlobalVariableMap missmatch] unequal number of variables defined\n";
@@ -88,6 +215,8 @@ pointerMapComparisonWithOutput(const sir::GlobalVariableMap& map1,
     return std::make_pair(output, true);
   }
 }
+
+} // anonymous namespace
 
 std::pair<std::string, bool> SIR::comparison(const SIR& rhs) const {
   std::string output;
@@ -143,11 +272,18 @@ std::pair<std::string, bool> sir::Stencil::comparison(const sir::Stencil& rhs) c
   }
   if(!(Attributes == rhs.Attributes)) {
     output += "[Stencil missmatch] Stencil attibutes do not match\n";
+    output += dawn::format("of Stencil %s and %s", Name, rhs.Name);
     return std::make_pair(output, false);
   }
   if(!StencilDescAst->getRoot().get()->equals(rhs.StencilDescAst->getRoot().get())) {
-    output += "[Stencil missmatch] Stencil ASTs Do not match at i....\n";
-    return std::make_pair(output, false);
+    output += "[Stencil missmatch] Stencil ASTs Do not match\n";
+    auto a = compareAst(StencilDescAst, rhs.StencilDescAst);
+    if(a.second)
+      dawn_unreachable("Stencils should not match");
+    else {
+      output += a.first;
+      return std::make_pair(output, false);
+    }
   }
   if(!Fields.empty() &&
      !std::equal(Fields.begin(), Fields.end(), rhs.Fields.begin(), pointeeComparison<sir::Field>)) {
@@ -222,16 +358,12 @@ sir::StencilFunction::comparison(const sir::StencilFunction& rhs) const {
     if(!std::equal(Asts.begin(), Asts.end(), rhs.Asts.begin(), astcomparison)) {
       output += "[StencilFunction missmatch] ASTs do not match\n";
       for(int i = 0; i < Asts.size(); ++i) {
-        for(unsigned j = 0; j < Asts[i]->getRoot()->getStatements().size(); ++j) {
-          if(!Asts[i]->getRoot()->getStatements()[i]->equals(
-                 rhs.Asts[i]->getRoot()->getStatements()[i].get())) {
-            output += "Statements do not match:\n";
-            output += ASTStringifer::toString(Asts[i]->getRoot()->getStatements()[i]);
-            output += ASTStringifer::toString(rhs.Asts[i]->getRoot()->getStatements()[i]);
-          }
+        auto out = compareAst(Asts[i], rhs.Asts[i]);
+        if(!out.second) {
+          output += out.first;
+          return std::make_pair(output, false);
         }
       }
-      return std::make_pair(output, false);
     }
   }
   return std::make_pair(output, true);
@@ -289,6 +421,31 @@ std::pair<std::string, bool> sir::Value::comparison(const sir::Value& rhs) const
   }
 }
 
+std::pair<std::string, bool> sir::VerticalRegion::comparison(const sir::VerticalRegion& rhs) const {
+  std::string output;
+  if(LoopOrder != rhs.LoopOrder) {
+    output += "[VerticalRegion missmatch] Loop order does not match";
+    return std::make_pair(output, false);
+  }
+  auto tmp = VerticalInterval->comparison(*(rhs.VerticalInterval));
+  if(!tmp.second) {
+    output += "[VerticalRegion missmatch] Intervals do not match\n";
+    output += tmp.first;
+    return std::make_pair(output, false);
+  }
+  auto astcomp = compareAst(Ast, rhs.Ast);
+  if(!astcomp.second){
+      output += "[VerticalRegion missmatch] ASTs do not match\n";
+      output += astcomp.first;
+      return std::make_pair(output, false);
+  }
+  return std::make_pair("", true);
+}
+
+bool sir::VerticalRegion::operator==(const sir::VerticalRegion& rhs) const {
+  return this->comparison(rhs).second;
+}
+
 namespace sir {
 
 bool StencilFunction::isSpecialized() const { return !Intervals.empty(); }
@@ -326,6 +483,8 @@ std::ostream& operator<<(std::ostream& os, const Interval& interval) {
   os << " }";
   return os;
 }
+
+Stencil::Stencil() : StencilDescAst(std::make_shared<AST>()) {}
 
 } // namespace sir
 
@@ -373,6 +532,8 @@ std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
   os << "\n}";
   return os;
 }
+
+SIR::SIR() : GlobalVariableMap(std::make_shared<sir::GlobalVariableMap>()) {}
 
 void SIR::dump() { std::cout << *this << std::endl; }
 

@@ -17,6 +17,7 @@
 
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Assert.h"
+#include "dawn/Support/Format.h"
 #include "dawn/Support/NonCopyable.h"
 #include "dawn/Support/SourceLocation.h"
 #include "dawn/Support/Type.h"
@@ -114,6 +115,31 @@ struct Interval {
            LowerOffset == other.LowerOffset && UpperOffset == other.UpperOffset;
   }
   bool operator!=(const Interval& other) const { return !(*this == other); }
+
+  std::pair<std::string, bool> comparison(const Interval& rhs) const {
+    std::string output;
+    if(LowerLevel != rhs.LowerLevel) {
+      output += dawn::format("[Inverval missmatch] Expected LowerLevel %i, received %i", LowerLevel,
+                             rhs.LowerLevel);
+      return std::make_pair(output, false);
+    }
+    if(UpperLevel != rhs.UpperLevel) {
+      output += dawn::format("[Inverval missmatch] Expected UpperLevel %i, received %i", UpperLevel,
+                             rhs.UpperLevel);
+      return std::make_pair(output, false);
+    }
+    if(LowerOffset != rhs.LowerOffset) {
+      output += dawn::format("[Inverval missmatch] Expected LowerOffset %i, received %i",
+                             LowerOffset, rhs.LowerOffset);
+      return std::make_pair(output, false);
+    }
+    if(UpperOffset != rhs.UpperOffset) {
+      output += dawn::format("[Inverval missmatch] Expected UpperOffset %i, received %i",
+                             UpperOffset, rhs.UpperOffset);
+      return std::make_pair(output, false);
+    }
+    return std::make_pair(output, true);
+  }
   /// @}
 
   /// @brief Convert to string
@@ -230,6 +256,13 @@ struct VerticalRegion {
 
   /// @brief Clone the vertical region
   std::shared_ptr<VerticalRegion> clone() const;
+
+  /// @brief Comparison between stencils (omitting location)
+  bool operator==(const VerticalRegion& rhs) const;
+
+  /// @brief Comparison between stencils (omitting location)
+  /// if the comparison fails, outputs human readable reason why in the string
+  std::pair<std::string, bool> comparison(const VerticalRegion& rhs) const;
 };
 
 /// @brief Call to another stencil
@@ -254,7 +287,12 @@ struct StencilCall {
 /// @brief Representation of a stencil which is a sequence of calls to other stencils
 /// (`StencilCall`) or vertical regions (`VerticalRegion`)
 /// @ingroup sir
-struct Stencil {
+struct Stencil : public dawn::NonCopyable {
+
+  ///@brief Default Ctor that initializes all the shared pointers
+  /// this ensures that no errors occur when handeling the in memory generated SIRs
+  Stencil();
+
   std::string Name;                           ///< Name of the stencil
   SourceLocation Loc;                         ///< Source location of the stencil declaration
   std::shared_ptr<AST> StencilDescAst;        ///< Stencil description AST
@@ -389,11 +427,11 @@ using GlobalVariableMap = std::unordered_map<std::string, std::shared_ptr<sir::V
 
 /// @brief Definition of the Stencil Intermediate Representation (SIR)
 /// @ingroup sir
-struct SIR {
-  std::string Filename;                                ///< Name of the file the SIR was parsed from
-  std::vector<std::shared_ptr<sir::Stencil>> Stencils; ///< List of stencils
-  std::vector<std::shared_ptr<sir::StencilFunction>> StencilFunctions; ///< List of stencil function
-  std::shared_ptr<sir::GlobalVariableMap> GlobalVariableMap;           ///< Map of global variables
+struct SIR : public dawn::NonCopyable {
+
+  ///@brief Default Ctor that initializes all the shared pointers
+  /// this ensures that no errors occur when handeling the in memory generated SIRs
+  SIR();
 
   /// @brief Dump the SIR to stdout
   void dump();
@@ -416,6 +454,11 @@ struct SIR {
   /// It is to note that the filenames are not compared here
   /// if the comparison fails, outputs human readable reason why in the string
   bool operator!=(const SIR& rhs) const;
+
+  std::string Filename;                                ///< Name of the file the SIR was parsed from
+  std::vector<std::shared_ptr<sir::Stencil>> Stencils; ///< List of stencils
+  std::vector<std::shared_ptr<sir::StencilFunction>> StencilFunctions; ///< List of stencil function
+  std::shared_ptr<sir::GlobalVariableMap> GlobalVariableMap;           ///< Map of global variables
 };
 
 } // namespace dawn
