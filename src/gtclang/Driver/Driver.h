@@ -17,6 +17,7 @@
 #ifndef GTCLANG_DRIVER_DRIVER_H
 #define GTCLANG_DRIVER_DRIVER_H
 
+#include "dawn/SIR/SIR.h"
 #include "dawn/Support/NonCopyable.h"
 #include "llvm/ADT/SmallVector.h"
 #include <string>
@@ -29,8 +30,10 @@ namespace gtclang {
 struct Driver : public dawn::NonCopyable {
 
   /// @brief Run gtclang on the given arguments
-  /// @returns `0` on success, `1` otherwise
-  static int run(const llvm::SmallVectorImpl<const char*>& args);
+  /// @returns The Stencil Intermediate Representation and an integer that is `0` on success, `1`
+  /// otherwise
+  static std::pair<int, std::shared_ptr<dawn::SIR>>
+  run(const llvm::SmallVectorImpl<const char*>& args);
 };
 
 } // namespace gtclang

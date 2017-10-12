@@ -20,3 +20,7 @@ install*/
 
 # Ignore gh-pages folder
 gh-pages*
+
+# Ignore generated files in testfolder
+test/unittest/*
+test/integrationtest/*

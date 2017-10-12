@@ -20,7 +20,9 @@ namespace gtclang {
 
 UnittestEnvironment::~UnittestEnvironment() {}
 
-void UnittestEnvironment::SetUp() {}
+void UnittestEnvironment::SetUp() {
+    fileManager_.setKind(FileManager::testKind::unittest);
+}
 
 void UnittestEnvironment::TearDown() {}
 

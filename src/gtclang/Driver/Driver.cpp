@@ -30,7 +30,7 @@
 
 namespace gtclang {
 
-int Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
+std::pair<int, std::shared_ptr<dawn::SIR>> Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
 
   // Print a stack trace if we signal out
   llvm::sys::PrintStackTraceOnErrorSignal(args[0]);
@@ -39,6 +39,9 @@ int Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
   // Call llvm_shutdown() on exit
   llvm::llvm_shutdown_obj Y;
 
+  // Create SIR as return value
+  std::shared_ptr<dawn::SIR> returnSIR;
+
   // Initialize the GTClangContext
   auto context = llvm::make_unique<GTClangContext>();
 
@@ -46,7 +49,7 @@ int Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
   OptionsParser optionsParser(&context->getOptions());
   llvm::SmallVector<const char*, 16> clangArgs;
   if(!optionsParser.parse(args, clangArgs))
-    return 1;
+    return std::pair<int,std::shared_ptr<dawn::SIR>> (1,returnSIR);
 
   // Ininitialize the Logger
   auto logger = llvm::make_unique<Logger>();
@@ -63,8 +66,9 @@ int Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
     ret |= !GTClang->ExecuteAction(*PPAction);
 
     if(ret == 0) {
-      std::unique_ptr<clang::ASTFrontendAction> ASTAction(new GTClangASTAction(context.get()));
+      std::unique_ptr<GTClangASTAction> ASTAction(new GTClangASTAction(context.get()));
       ret |= !GTClang->ExecuteAction(*ASTAction);
+      returnSIR = ASTAction->getSIR();
     }
     DAWN_LOG(INFO) << "Compilation finished " << (ret ? "with errors" : "successfully");
   }
@@ -73,7 +77,7 @@ int Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
   if(context->getOptions().Verbose)
     dawn::Logger::getSingleton().registerLogger(oldLogger);
 
-  return ret;
+  return std::pair<int, std::shared_ptr<dawn::SIR>>(ret,returnSIR);
 }
 
 } // namespace gtclang

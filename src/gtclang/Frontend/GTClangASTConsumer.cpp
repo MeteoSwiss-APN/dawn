@@ -22,6 +22,7 @@
 #include "dawn/Support/Format.h"
 #include "dawn/Support/StringUtil.h"
 #include "gtclang/Frontend/ClangFormat.h"
+#include "gtclang/Frontend/GTClangASTAction.h"
 #include "gtclang/Frontend/GTClangASTVisitor.h"
 #include "gtclang/Frontend/GTClangContext.h"
 #include "gtclang/Frontend/GlobalVariableParser.h"
@@ -64,8 +65,9 @@ static std::unique_ptr<dawn::Options> makeDAWNOptions(const Options& options) {
   return DAWNOptions;
 }
 
-GTClangASTConsumer::GTClangASTConsumer(GTClangContext* context, std::string file)
-    : context_(context), file_(file) {
+GTClangASTConsumer::GTClangASTConsumer(GTClangContext* context, std::string file,
+                                       GTClangASTAction* parentAction)
+    : context_(context), file_(file), parentAction_(parentAction) {
   DAWN_LOG(INFO) << "Creating ASTVisitor ... ";
   visitor_ = llvm::make_unique<GTClangASTVisitor>(context);
 }
@@ -92,7 +94,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   auto& SM = context_->getSourceManager();
 
   // Assemble SIR
-  std::unique_ptr<dawn::SIR> SIR = llvm::make_unique<dawn::SIR>();
+  std::shared_ptr<dawn::SIR> SIR = std::make_shared<dawn::SIR>();
   SIR->Filename = SM.getFileEntryForID(SM.getMainFileID())->getName();
 
   const StencilParser& stencilParser = visitor_->getStencilParser();
@@ -115,6 +117,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
     dawn::SIRSerializerJSON::serialize("sir.json", SIR.get());
     SIR->dump();
   }
+  parentAction_->catchSIR(SIR);
 
   // Set the backend
   dawn::DawnCompiler::CodeGenKind codeGen = dawn::DawnCompiler::CG_GTClang;

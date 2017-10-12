@@ -26,7 +26,11 @@ GTClangASTAction::GTClangASTAction(GTClangContext* context) : context_(context) 
 std::unique_ptr<clang::ASTConsumer>
 GTClangASTAction::CreateASTConsumer(clang::CompilerInstance& compiler, llvm::StringRef file) {
   DAWN_LOG(INFO) << "Creating ASTConsumer for " << file.str();
-  return llvm::make_unique<GTClangASTConsumer>(context_, file);
+  return llvm::make_unique<GTClangASTConsumer>(context_, file, this);
 }
+
+void GTClangASTAction::catchSIR(std::shared_ptr<dawn::SIR> sir) { sir_ = sir; }
+
+std::shared_ptr<dawn::SIR> GTClangASTAction::getSIR() const { return sir_; }
 
 } // namespace gtclang

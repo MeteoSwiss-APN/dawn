@@ -14,5 +14,8 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_subdirectory(Support)
-add_subdirectory(Parsing)
+gtclang_add_unittest(
+  NAME GTClangUnittestParsing
+  SOURCES TestParsing.cpp
+          TestMain.cpp
+)

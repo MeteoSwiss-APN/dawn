@@ -24,6 +24,15 @@ namespace gtclang {
 
 FileManager::FileManager() : dataPath_(GTCLANG_UNITTEST_DATAPATH) {}
 
+void FileManager::setKind(testKind kind) {
+  if(kind == testKind::unittest) {
+    dataPath_ = GTCLANG_UNITTEST_DATAPATH;
+  }
+  if(kind == testKind::integrationtet) {
+    dataPath_ = GTCLANG_INTEGRATIONTEST_DATAPATH;
+  }
+}
+
 std::string FileManager::getFile(llvm::StringRef filename) const {
   using namespace llvm;
   Twine path = llvm::StringRef(dataPath_) + "/" + filename;
