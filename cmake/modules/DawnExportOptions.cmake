@@ -12,27 +12,28 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(DawnExportOptions)
+include(DawnIncludeGuard)
+dawn_include_guard()
 
-set(BUILD_IS_NOT_RELEASE ON)
-if(${CMAKE_BUILD_TYPE} MATCHES "Release")
-  set(BUILD_IS_NOT_RELEASE OFF)
-endif()
-
-# Building
-option(DAWN_ASSERTS "Enable asserts" ${BUILD_IS_NOT_RELEASE})
-option(DAWN_USE_CCACHE "Use compile cache (ccache)" ON)
-
-# Testing
-option(DAWN_TESTING "Enable testing" ON)
-
-# Documentation
-option(DAWN_DOCUMENTATION "Enable documentation" OFF)
-
-# Export options for meta projects
-dawn_export_options(DAWN 
-  DAWN_ASSERTS 
-  DAWN_USE_CCACHE
-  DAWN_TESTING
-  DAWN_DOCUMENTATION
-)
+#.rst:
+# dawn_export_options
+# -------------------
+#
+# Export a list of options in the variable ``<NAME>_OPTIONS`` which can be accessed by meta
+# projects.
+# 
+# .. code-block:: cmake
+#
+#   dawn_export_options(NAME ARGN)
+#
+# ``NAME``
+#   Prefix of the options list.
+# ``ARGN``
+#   List of option names to export.
+#
+macro(dawn_export_options NAME)
+  set("${NAME}_OPTIONS" "" CACHE INTERNAL "Options of ${NAME}" FORCE)
+  foreach(arg ${ARGN})
+    list(APPEND "${NAME}_OPTIONS" "${arg}")
+  endforeach()
+endmacro()
