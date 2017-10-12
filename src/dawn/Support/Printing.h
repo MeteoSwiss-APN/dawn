@@ -15,7 +15,8 @@
 #ifndef DAWN_SUPPORT_PRINTING_H
 #define DAWN_SUPPORT_PRINTING_H
 
-/// @macro DAWN_PRINT_INDENT
+namespace dawn {
+
 /// @brief Indentation used for each level
 /// @see dawn::MakeIndent
 /// @ingroup support
@@ -26,7 +27,6 @@
 /// (`Level * DAWN_PRINT_INDENT`)
 ///
 /// @ingroup support
-/// @{
 template <unsigned Level>
 struct MakeIndent;
 
@@ -56,6 +56,7 @@ template <>
 struct MakeIndent<4> {
   static constexpr const char* value = "        ";
 };
-/// @}
+
+} // namespace dawn
 
 #endif

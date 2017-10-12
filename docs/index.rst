@@ -32,5 +32,6 @@ Dawn --- Compiler toolchain for high-level DSLs
    isir
    gridtools
    coding
+   doxygen
    cmake-modules
 

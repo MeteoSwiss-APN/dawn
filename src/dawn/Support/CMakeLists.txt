@@ -55,5 +55,6 @@ dawn_add_library(
           UIDGenerator.h
           Unreachable.cpp
           Unreachable.h
+          ../Dawn.h
   OBJECT
 )

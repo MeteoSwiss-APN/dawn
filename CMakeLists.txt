@@ -96,7 +96,7 @@ dawn_report_result("Configuration summary" ${config_info})
 
 # Include the packages 
 if(DAWN_DOCUMENTATION)
-  set(doc_packages bash Python3 Sphinx LaTeX)
+  set(doc_packages bash Python3 Sphinx LaTeX Doxygen)
 endif()
 
 foreach(package Protobuf ccache clang-format ${doc_packages})
