@@ -12,7 +12,5 @@ var searchData=
   ['cast_5fretty_5fwrap',['cast_retty_wrap',['../structdawn_1_1cast__retty__wrap.html',1,'dawn']]],
   ['cast_5fretty_5fwrap_3c_20to_2c_20fromty_2c_20fromty_20_3e',['cast_retty_wrap&lt; To, FromTy, FromTy &gt;',['../structdawn_1_1cast__retty__wrap_3_01To_00_01FromTy_00_01FromTy_01_4.html',1,'dawn']]],
   ['class',['Class',['../structdawn_1_1codegen_1_1Class.html',1,'dawn::codegen']]],
-  ['codegen',['CodeGen',['../classdawn_1_1CodeGen.html',1,'dawn']]],
-  ['converttoint',['convertToInt',['../structtinyformat_1_1detail_1_1convertToInt.html',1,'tinyformat::detail']]],
-  ['converttoint_3c_20t_2c_20true_20_3e',['convertToInt&lt; T, true &gt;',['../structtinyformat_1_1detail_1_1convertToInt_3_01T_00_01true_01_4.html',1,'tinyformat::detail']]]
+  ['codegen',['CodeGen',['../classdawn_1_1CodeGen.html',1,'dawn']]]
 ];

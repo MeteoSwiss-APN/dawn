@@ -12,6 +12,7 @@ var searchData=
   ['logginglevel',['LoggingLevel',['../group__support.html#ga4a4a55a883cc0696de56483aeac9dce4',1,'dawn']]],
   ['looporder',['LoopOrder',['../structdawn_1_1Extents_1_1VerticalLoopOrderAccess.html#aa4f07d42029a7fc88dfc51a568694120',1,'dawn::Extents::VerticalLoopOrderAccess']]],
   ['looporderconflict',['LoopOrderConflict',['../structdawn_1_1ReadBeforeWriteConflict.html#a4b4045f48951901ff1c51a0b6e41872d',1,'dawn::ReadBeforeWriteConflict']]],
+  ['looporderkind',['LoopOrderKind',['../group__optimizer.html#ga870b2bcbca496ec52f5dd261a89de8bc',1,'dawn']]],
   ['lower',['lower',['../classdawn_1_1StringRef.html#a5d45628903453df0d2865474ffbbe787',1,'dawn::StringRef']]],
   ['lowerbound',['lowerBound',['../classdawn_1_1Interval.html#aec8cf5a12d9d6b3922786341e0dc514e',1,'dawn::Interval']]],
   ['lowerlooporder',['LowerLoopOrder',['../structdawn_1_1MultiStage_1_1SplitIndex.html#a360e297d211ddc5d4a37f5e96fa3d08b',1,'dawn::MultiStage::SplitIndex']]],

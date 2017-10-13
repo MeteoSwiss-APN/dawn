@@ -95,6 +95,12 @@ var annotated_dup =
       [ "LiteralAccessExpr", "classdawn_1_1LiteralAccessExpr.html", "classdawn_1_1LiteralAccessExpr" ],
       [ "Logger", "classdawn_1_1Logger.html", "classdawn_1_1Logger" ],
       [ "LoggerInterface", "classdawn_1_1LoggerInterface.html", "classdawn_1_1LoggerInterface" ],
+      [ "MakeIndent", "structdawn_1_1MakeIndent.html", null ],
+      [ "MakeIndent< 0 >", "structdawn_1_1MakeIndent_3_010_01_4.html", null ],
+      [ "MakeIndent< 1 >", "structdawn_1_1MakeIndent_3_011_01_4.html", null ],
+      [ "MakeIndent< 2 >", "structdawn_1_1MakeIndent_3_012_01_4.html", null ],
+      [ "MakeIndent< 3 >", "structdawn_1_1MakeIndent_3_013_01_4.html", null ],
+      [ "MakeIndent< 4 >", "structdawn_1_1MakeIndent_3_014_01_4.html", null ],
       [ "MultiStage", "classdawn_1_1MultiStage.html", "classdawn_1_1MultiStage" ],
       [ "MutableArrayRef", "classdawn_1_1MutableArrayRef.html", "classdawn_1_1MutableArrayRef" ],
       [ "NonCopyable", "classdawn_1_1NonCopyable.html", "classdawn_1_1NonCopyable" ],
@@ -162,29 +168,5 @@ var annotated_dup =
       [ "VarAccessExpr", "classdawn_1_1VarAccessExpr.html", "classdawn_1_1VarAccessExpr" ],
       [ "VarDeclStmt", "classdawn_1_1VarDeclStmt.html", "classdawn_1_1VarDeclStmt" ],
       [ "VerticalRegionDeclStmt", "classdawn_1_1VerticalRegionDeclStmt.html", "classdawn_1_1VerticalRegionDeclStmt" ]
-    ] ],
-    [ "tinyformat", null, [
-      [ "detail", null, [
-        [ "convertToInt", "structtinyformat_1_1detail_1_1convertToInt.html", null ],
-        [ "convertToInt< T, true >", "structtinyformat_1_1detail_1_1convertToInt_3_01T_00_01true_01_4.html", null ],
-        [ "FormatArg", "classtinyformat_1_1detail_1_1FormatArg.html", "classtinyformat_1_1detail_1_1FormatArg" ],
-        [ "FormatListN", "classtinyformat_1_1detail_1_1FormatListN.html", "classtinyformat_1_1detail_1_1FormatListN" ],
-        [ "FormatListN< 0 >", "classtinyformat_1_1detail_1_1FormatListN_3_010_01_4.html", "classtinyformat_1_1detail_1_1FormatListN_3_010_01_4" ],
-        [ "formatValueAsType", "structtinyformat_1_1detail_1_1formatValueAsType.html", null ],
-        [ "formatValueAsType< T, fmtT, true >", "structtinyformat_1_1detail_1_1formatValueAsType_3_01T_00_01fmtT_00_01true_01_4.html", null ],
-        [ "is_convertible", "structtinyformat_1_1detail_1_1is__convertible.html", null ],
-        [ "is_wchar", "structtinyformat_1_1detail_1_1is__wchar.html", "structtinyformat_1_1detail_1_1is__wchar" ],
-        [ "is_wchar< const wchar_t * >", "structtinyformat_1_1detail_1_1is__wchar_3_01const_01wchar__t_01_5_01_4.html", null ],
-        [ "is_wchar< const wchar_t[n]>", "structtinyformat_1_1detail_1_1is__wchar_3_01const_01wchar__t[n]_4.html", null ],
-        [ "is_wchar< wchar_t * >", "structtinyformat_1_1detail_1_1is__wchar_3_01wchar__t_01_5_01_4.html", null ],
-        [ "is_wchar< wchar_t[n]>", "structtinyformat_1_1detail_1_1is__wchar_3_01wchar__t[n]_4.html", null ]
-      ] ],
-      [ "FormatList", "classtinyformat_1_1FormatList.html", "classtinyformat_1_1FormatList" ]
-    ] ],
-    [ "MakeIndent", "structMakeIndent.html", null ],
-    [ "MakeIndent< 0 >", "structMakeIndent_3_010_01_4.html", null ],
-    [ "MakeIndent< 1 >", "structMakeIndent_3_011_01_4.html", null ],
-    [ "MakeIndent< 2 >", "structMakeIndent_3_012_01_4.html", null ],
-    [ "MakeIndent< 3 >", "structMakeIndent_3_013_01_4.html", null ],
-    [ "MakeIndent< 4 >", "structMakeIndent_3_014_01_4.html", null ]
+    ] ]
 ];

@@ -19,7 +19,7 @@ var searchData=
   ['setvalue',['setValue',['../structdawn_1_1sir_1_1Value.html#a348d18b513072c42ff26383b227d613c',1,'dawn::sir::Value']]],
   ['simplify_5ftype',['simplify_type',['../structdawn_1_1simplify__type.html',1,'dawn']]],
   ['simplify_5ftype_3c_20const_20from_20_3e',['simplify_type&lt; const From &gt;',['../structdawn_1_1simplify__type_3_01const_01From_01_4.html',1,'dawn']]],
-  ['sir',['sir',['../namespacesir.html',1,'']]],
+  ['sir',['sir',['../namespacesir.html',1,'sir'],['../group__sir.html',1,'(Global Namespace)']]],
   ['sir',['SIR',['../structdawn_1_1SIR.html',1,'dawn']]],
   ['sirserializerjson',['SIRSerializerJSON',['../classdawn_1_1SIRSerializerJSON.html',1,'dawn']]],
   ['size',['size',['../classdawn_1_1ArrayRef.html#ae35800ea1183ecf8f8a5e104d7569c59',1,'dawn::ArrayRef::size()'],['../classdawn_1_1StringRef.html#a8d2803a41e8fbee9defb19f20747beaf',1,'dawn::StringRef::size()']]],

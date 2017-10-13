@@ -126,7 +126,7 @@ var searchData=
   ['getvertexnamebyvertexid',['getVertexNameByVertexID',['../classdawn_1_1DependencyGraphAccesses.html#ab34e4876a98e77825c4976d1ea88c9e1',1,'dawn::DependencyGraphAccesses::getVertexNameByVertexID()'],['../classdawn_1_1DependencyGraphStage.html#a4d9760945f59e4e47247489476cc4958',1,'dawn::DependencyGraphStage::getVertexNameByVertexID()']]],
   ['getverticallooporderaccesses',['getVerticalLoopOrderAccesses',['../classdawn_1_1Extents.html#ad9068cd8a9d2fb3b35f19fcb98b2f32c',1,'dawn::Extents']]],
   ['getvertices',['getVertices',['../classdawn_1_1DependencyGraph.html#aab17be0eece6df8f48aa66116d4bf9d8',1,'dawn::DependencyGraph']]],
-  ['globalvariablemap',['GlobalVariableMap',['../structdawn_1_1SIR.html#ada225d372fbe1af2e2f377c3692301f3',1,'dawn::SIR']]],
+  ['globalvariablemap',['GlobalVariableMap',['../structdawn_1_1SIR.html#ada225d372fbe1af2e2f377c3692301f3',1,'dawn::SIR::GlobalVariableMap()'],['../group__sir.html#ga964434cb26910fd498248d1df3f605f8',1,'dawn::sir::GlobalVariableMap()']]],
   ['greedycoloring',['greedyColoring',['../classdawn_1_1DependencyGraphAccesses.html#a7fc61beabd180ece4fc9f87ccb81dae1',1,'dawn::DependencyGraphAccesses']]],
   ['grow',['grow',['../classdawn_1_1SmallVectorTemplateBase.html#ab05620f53a289ce0997e0b68b3d8aa64',1,'dawn::SmallVectorTemplateBase::grow()'],['../classdawn_1_1SmallVectorTemplateBase_3_01T_00_01true_01_4.html#a6b6e5757a1f1ffbc84eef0ba51ffa7bc',1,'dawn::SmallVectorTemplateBase&lt; T, true &gt;::grow()']]],
   ['grow_5fpod',['grow_pod',['../classdawn_1_1SmallVectorBase.html#af16868f42f22580f15e5751c37383b01',1,'dawn::SmallVectorBase']]],

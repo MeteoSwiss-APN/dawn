@@ -43,8 +43,6 @@ var hierarchy =
       [ "dawn::GTClangCodeGen", "classdawn_1_1GTClangCodeGen.html", null ],
       [ "dawn::GTClangNaiveCXXCodeGen", "classdawn_1_1GTClangNaiveCXXCodeGen.html", null ]
     ] ],
-    [ "tinyformat::detail::convertToInt< T, convertible >", "structtinyformat_1_1detail_1_1convertToInt.html", null ],
-    [ "tinyformat::detail::convertToInt< T, true >", "structtinyformat_1_1detail_1_1convertToInt_3_01T_00_01true_01_4.html", null ],
     [ "dawn::RangeToString::DefaultStringifyFunctor", "structdawn_1_1RangeToString_1_1DefaultStringifyFunctor.html", null ],
     [ "dawn::DependencyGraph< Derived, EdgeData >", "classdawn_1_1DependencyGraph.html", null ],
     [ "dawn::DependencyGraph< DependencyGraphAccesses, DependencyGraphAccessesEdgeData >", "classdawn_1_1DependencyGraph.html", [
@@ -88,29 +86,16 @@ var hierarchy =
     [ "dawn::Extents", "classdawn_1_1Extents.html", null ],
     [ "dawn::Field", "structdawn_1_1Field.html", null ],
     [ "dawn::Stencil::FieldInfo", "structdawn_1_1Stencil_1_1FieldInfo.html", null ],
-    [ "tinyformat::detail::FormatArg", "classtinyformat_1_1detail_1_1FormatArg.html", null ],
-    [ "tinyformat::FormatList", "classtinyformat_1_1FormatList.html", [
-      [ "tinyformat::detail::FormatListN< N >", "classtinyformat_1_1detail_1_1FormatListN.html", null ],
-      [ "tinyformat::detail::FormatListN< 0 >", "classtinyformat_1_1detail_1_1FormatListN_3_010_01_4.html", null ]
-    ] ],
-    [ "tinyformat::detail::formatValueAsType< T, fmtT, convertible >", "structtinyformat_1_1detail_1_1formatValueAsType.html", null ],
-    [ "tinyformat::detail::formatValueAsType< T, fmtT, true >", "structtinyformat_1_1detail_1_1formatValueAsType_3_01T_00_01fmtT_00_01true_01_4.html", null ],
     [ "dawn::function_ref< Fn >", "classdawn_1_1function__ref.html", null ],
     [ "dawn::function_ref< Ret(Params...)>", "classdawn_1_1function__ref_3_01Ret_07Params_8_8_8_08_4.html", null ],
     [ "dawn::HardwareConfig", "structdawn_1_1HardwareConfig.html", null ],
     [ "dawn::sir::Interval", "structdawn_1_1sir_1_1Interval.html", null ],
     [ "dawn::Interval", "classdawn_1_1Interval.html", null ],
     [ "dawn::GTClangCodeGen::IntervalDefinitions", "structdawn_1_1GTClangCodeGen_1_1IntervalDefinitions.html", null ],
-    [ "tinyformat::detail::is_convertible< T1, T2 >", "structtinyformat_1_1detail_1_1is__convertible.html", null ],
     [ "is_function", null, [
       [ "dawn::is_callable< T, typename >", "structdawn_1_1is__callable.html", null ]
     ] ],
     [ "dawn::is_simple_type< X >", "structdawn_1_1is__simple__type.html", null ],
-    [ "tinyformat::detail::is_wchar< T >", "structtinyformat_1_1detail_1_1is__wchar.html", null ],
-    [ "tinyformat::detail::is_wchar< const wchar_t * >", "structtinyformat_1_1detail_1_1is__wchar_3_01const_01wchar__t_01_5_01_4.html", null ],
-    [ "tinyformat::detail::is_wchar< const wchar_t[n]>", "structtinyformat_1_1detail_1_1is__wchar_3_01const_01wchar__t[n]_4.html", null ],
-    [ "tinyformat::detail::is_wchar< wchar_t * >", "structtinyformat_1_1detail_1_1is__wchar_3_01wchar__t_01_5_01_4.html", null ],
-    [ "tinyformat::detail::is_wchar< wchar_t[n]>", "structtinyformat_1_1detail_1_1is__wchar_3_01wchar__t[n]_4.html", null ],
     [ "dawn::isa_impl< To, From, Enabler >", "structdawn_1_1isa__impl.html", null ],
     [ "dawn::isa_impl_cl< To, From >", "structdawn_1_1isa__impl__cl.html", null ],
     [ "dawn::isa_impl_cl< To, const From * >", "structdawn_1_1isa__impl__cl_3_01To_00_01const_01From_01_5_01_4.html", null ],
@@ -127,12 +112,12 @@ var hierarchy =
     [ "dawn::LoggerInterface", "classdawn_1_1LoggerInterface.html", [
       [ "dawn::UnittestLogger", "classdawn_1_1UnittestLogger.html", null ]
     ] ],
-    [ "MakeIndent< Level >", "structMakeIndent.html", null ],
-    [ "MakeIndent< 0 >", "structMakeIndent_3_010_01_4.html", null ],
-    [ "MakeIndent< 1 >", "structMakeIndent_3_011_01_4.html", null ],
-    [ "MakeIndent< 2 >", "structMakeIndent_3_012_01_4.html", null ],
-    [ "MakeIndent< 3 >", "structMakeIndent_3_013_01_4.html", null ],
-    [ "MakeIndent< 4 >", "structMakeIndent_3_014_01_4.html", null ],
+    [ "dawn::MakeIndent< Level >", "structdawn_1_1MakeIndent.html", null ],
+    [ "dawn::MakeIndent< 0 >", "structdawn_1_1MakeIndent_3_010_01_4.html", null ],
+    [ "dawn::MakeIndent< 1 >", "structdawn_1_1MakeIndent_3_011_01_4.html", null ],
+    [ "dawn::MakeIndent< 2 >", "structdawn_1_1MakeIndent_3_012_01_4.html", null ],
+    [ "dawn::MakeIndent< 3 >", "structdawn_1_1MakeIndent_3_013_01_4.html", null ],
+    [ "dawn::MakeIndent< 4 >", "structdawn_1_1MakeIndent_3_014_01_4.html", null ],
     [ "dawn::MultiStage", "classdawn_1_1MultiStage.html", null ],
     [ "dawn::NonCopyable", "classdawn_1_1NonCopyable.html", [
       [ "dawn::ASTCodeGenCXX", "classdawn_1_1ASTCodeGenCXX.html", null ],
