@@ -21,14 +21,13 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
-      - llvm-toolchain-trusty-4.0
     packages:
       - g++-5
       - gcc-5
       - g++-6
       - gcc-6
-      - clang-4.0
-      - clang++-4.0
+      - clang-3.8
+      - clang++-3.8
 
 os:
   - linux
@@ -39,7 +38,6 @@ env:
     - CACHE_DIR=${TRAVIS_BUILD_DIR}/deps/install
     - CMAKE_VERSION=3.8.1
     - PROTOBUF_VERSION=3.4.1
-    - PACKAGES_TO_INSTALL=cmake,protobuf
 
 jobs:
   include:
@@ -47,11 +45,11 @@ jobs:
       stage: Prepare Cache
       compiler: gcc
       env: CXX_COMPILER=g++-5 C_COMPILER=gcc-5
-      script: bash ${SCRIPT_DIR}/driver-install.sh -i ${CACHE_DIR} -b ${PACKAGES_TO_INSTALL}
+      script: bash ${SCRIPT_DIR}/driver-install.sh -i ${CACHE_DIR} -b cmake,protobuf
 
     - <<: *prepare_cache_stage
       compiler: clang
-      env: CXX_COMPILER=clang++-4.0 C_COMPILER=clang-4.0
+      env: CXX_COMPILER=clang++-3.8 C_COMPILER=clang-3.8
 
     # Linux GCC 5.4 (Release)
     - &test_stage
@@ -75,15 +73,35 @@ jobs:
       compiler: gcc
       env: CONFIG=RelWithDebInfo CXX_COMPILER=g++-6 C_COMPILER=gcc-6
 
+    # Clang 3.8 (Release)
+    - <<: *test_stage      
+      compiler: clang
+      env: CONFIG=Release CXX_COMPILER=clang++-3.8 C_COMPILER=clang-3.8
+
+    # Clang 3.8 (RelWithDebInfo)
+    - <<: *test_stage      
+      compiler: clang
+      env: CONFIG=RelWithDebInfo CXX_COMPILER=clang++-3.8 C_COMPILER=clang-3.8
+
     # Clang 4.0 (Release)
     - <<: *test_stage      
       compiler: clang
-      env: CONFIG=Release CXX_COMPILER=clang++-4.0 C_COMPILER=clang-4.0
+      env: CONFIG=Release CXX_COMPILER=clang++-3.8 C_COMPILER=clang-3.8 CLANG_VERSION=4.0
 
     # Clang 4.0 (RelWithDebInfo)
     - <<: *test_stage      
       compiler: clang
-      env: CONFIG=RelWithDebInfo CXX_COMPILER=clang++-4.0 C_COMPILER=clang-4.0
+      env: CONFIG=RelWithDebInfo CXX_COMPILER=clang++-3.8 C_COMPILER=clang-3.8 CLANG_VERSION=4.0
+
+    # Clang 5.0 (Release)
+    - <<: *test_stage      
+      compiler: clang
+      env: CONFIG=Release CXX_COMPILER=clang++-3.8 C_COMPILER=clang-3.8 CLANG_VERSION=5.0
+
+    # Clang 5.0 (RelWithDebInfo)
+    - <<: *test_stage      
+      compiler: clang
+      env: CONFIG=RelWithDebInfo CXX_COMPILER=clang++-3.8 C_COMPILER=clang-3.8 CLANG_VERSION=5.0
 
 cache:
   directories:
