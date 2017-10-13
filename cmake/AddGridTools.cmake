@@ -14,11 +14,16 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-find_package(Boost 1.58 REQUIRED)
+find_package(GridTools QUIET)
+
+if(GridTools_FOUND)
+  set(GRIDTOOLS_INCLUDE_DIRS "${GridTools_DIR}/include")
+  set(GTCLANG_HAS_GRIDTOOLS 1)
+endif()
 
 dawn_export_package(
-  NAME Boost
-  FOUND ${Boost_FOUND} 
-  VERSION "${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION}.${Boost_SUBMINOR_VERSION}" 
-  INCLUDE_DIRS ${Boost_INCLUDE_DIRS}
+  NAME GridTools
+  FOUND ${GridTools_FOUND}
+  INCLUDE_DIRS ${GRIDTOOLS_INCLUDE_DIRS} 
+  VERSION "${GridTools_VERSION}" 
 )
