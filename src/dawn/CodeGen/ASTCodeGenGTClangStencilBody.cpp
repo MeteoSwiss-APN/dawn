@@ -129,7 +129,7 @@ void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<StencilFunCallExp
                        : instantiation_->getStencilFunctionInstantiation(expr);
 
   ss_ << "gridtools::call<" << StencilFunctionInstantiation::makeCodeGenName(*stencilFun) << ", "
-      << intervalToNameMap_.find(stencilFun->getInterval())->second << ">::with_offsets(eval";
+      << intervalToNameMap_.find(stencilFun->getInterval())->second << ">::with(eval";
 
   for(auto& arg : expr->getArguments())
     arg->accept(*this);
