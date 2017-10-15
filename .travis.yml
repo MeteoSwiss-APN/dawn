@@ -86,22 +86,22 @@ jobs:
     # Clang 4.0 (Release)
     - <<: *test_stage      
       compiler: clang
-      env: CONFIG=Release CXX_COMPILER=clang++-3.8 C_COMPILER=clang-3.8 CLANG_VERSION=4.0
+      env: CONFIG=Release CXX_COMPILER=clang++-3.8 C_COMPILER=clang-3.8 CLANG_VERSION=4.0.0
 
     # Clang 4.0 (RelWithDebInfo)
     - <<: *test_stage      
       compiler: clang
-      env: CONFIG=RelWithDebInfo CXX_COMPILER=clang++-3.8 C_COMPILER=clang-3.8 CLANG_VERSION=4.0
+      env: CONFIG=RelWithDebInfo CXX_COMPILER=clang++-3.8 C_COMPILER=clang-3.8 CLANG_VERSION=4.0.0
 
     # Clang 5.0 (Release)
     - <<: *test_stage      
       compiler: clang
-      env: CONFIG=Release CXX_COMPILER=clang++-3.8 C_COMPILER=clang-3.8 CLANG_VERSION=5.0
+      env: CONFIG=Release CXX_COMPILER=clang++-3.8 C_COMPILER=clang-3.8 CLANG_VERSION=5.0.0
 
     # Clang 5.0 (RelWithDebInfo)
     - <<: *test_stage      
       compiler: clang
-      env: CONFIG=RelWithDebInfo CXX_COMPILER=clang++-3.8 C_COMPILER=clang-3.8 CLANG_VERSION=5.0
+      env: CONFIG=RelWithDebInfo CXX_COMPILER=clang++-3.8 C_COMPILER=clang-3.8 CLANG_VERSION=5.0.0
 
 cache:
   directories:

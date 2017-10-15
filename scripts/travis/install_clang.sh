@@ -59,7 +59,7 @@ function install_clang() {
             ${clang_version} ${clang_version})
     else
       local clang_url=$(printf                                                                     \
-            "http://llvm.org/releases/%s/clang+llvm-%s-x86_64-linux-gnu-ubuntu-14.04.tar.xz"       \
+            "http://releases.llvm.org/%s/clang+llvm-%s-x86_64-linux-gnu-ubuntu-14.04.tar.xz"       \
             ${clang_version} ${clang_version})
     fi
 
