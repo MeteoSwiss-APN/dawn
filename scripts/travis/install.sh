@@ -137,6 +137,8 @@ function install_driver() {
       install_package "${install_dir}" cmake;;
     protobuf) 
       install_package "${install_dir}" protobuf;;
+    clang) 
+      install_package "${install_dir}" clang;; 
     *) 
       >&2 echo "$0: error: unknown package '$package'";
       exit 1;;
