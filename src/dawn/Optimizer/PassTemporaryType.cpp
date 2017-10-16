@@ -19,10 +19,10 @@
 #include "dawn/Optimizer/StencilInstantiation.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include <iostream>
+#include <memory>
 #include <stack>
 #include <unordered_map>
 #include <unordered_set>
-#include <memory>
 
 namespace dawn {
 

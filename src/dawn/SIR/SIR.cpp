@@ -135,6 +135,8 @@ std::pair<std::string, bool> compareAst(std::shared_ptr<AST> lhs, std::shared_pt
                                  "[Expression missmatch] Expecting \n %s \n and got \n %s \n",
                                  ASTStringifer::toString(lhsExpr->at(j)),
                                  ASTStringifer::toString(rhsExpr->at(j)));
+          output += "Expression kind is " + std::to_string(lhsExpr->at(j)->getKind()) + " and " +
+                    std::to_string(rhsExpr->at(j)->getKind());
           return std::make_pair(output, false);
         }
       }
@@ -434,10 +436,10 @@ std::pair<std::string, bool> sir::VerticalRegion::comparison(const sir::Vertical
     return std::make_pair(output, false);
   }
   auto astcomp = compareAst(Ast, rhs.Ast);
-  if(!astcomp.second){
-      output += "[VerticalRegion missmatch] ASTs do not match\n";
-      output += astcomp.first;
-      return std::make_pair(output, false);
+  if(!astcomp.second) {
+    output += "[VerticalRegion missmatch] ASTs do not match\n";
+    output += astcomp.first;
+    return std::make_pair(output, false);
   }
   return std::make_pair("", true);
 }

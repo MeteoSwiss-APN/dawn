@@ -73,9 +73,7 @@ public:
   virtual StmtRangeType getChildren() { return StmtRangeType(); }
 
   /// @brief Compare for equality
-  virtual bool equals(const Stmt* other) const {
-    return kind_ == other->kind_;
-  }
+  virtual bool equals(const Stmt* other) const { return kind_ == other->kind_; }
 
   /// @brief Is the statement used for stencil description and has no real analogon in C++
   /// (e.g a VerticalRegion or StencilCall)?
