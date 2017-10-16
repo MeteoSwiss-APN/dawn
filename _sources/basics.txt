@@ -92,7 +92,7 @@ Variable                     Explanation
 =========================== ======================================================================
 ``DAWN_FOUND``              True if headers and libraries of Dawn were found.
 ``DAWN_ROOT``               Installation prefix of Dawn.
-``DAWN_VERSION``            Version of Dawn (format X.Y.Z)).
+``DAWN_VERSION``            Version of Dawn (format X.Y.Z).
 ``DAWN_ASSERTS``            True if Dawn was compiled with asserts.
 ``DAWN_INCLUDE_DIRS``       Dawn include directories.
 ``DAWN_LIBRARY_DIRS``       Link directories for Dawn libraries.

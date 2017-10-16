@@ -226,7 +226,7 @@ var group__support =
       [ "UIDGenerator", "classdawn_1_1UIDGenerator.html#a2c371f044b5e51055d3f1fa2703be3ee", null ],
       [ "get", "classdawn_1_1UIDGenerator.html#a2bcc486a60987427307f55979cbc82da", null ]
     ] ],
-    [ "MakeIndent", "structMakeIndent.html", null ],
+    [ "MakeIndent", "structdawn_1_1MakeIndent.html", null ],
     [ "DAWN_ALIGNAS", "group__support.html#gacfaf532397a0d7f50fffe137b3d74920", null ],
     [ "DAWN_ASSERT", "group__support.html#ga9fe2d75c26f3d240f7612d2e69a846fd", null ],
     [ "DAWN_ASSERT_MSG", "group__support.html#gac9cd9f86e36df7224a3e217db95496c7", null ],

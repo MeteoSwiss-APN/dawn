@@ -19,6 +19,8 @@ Naming of Types, Functions, Variables, and Enumerators
 
   * **Variable Names** should start with a lower-case letter (e.g ``textFileReader``) as opposed to LLVM which starts with an uppercase-letter.
 
+  * **Members** should start with a lower-case letter and contain an `_` suffix (e.g ``myMember_``) 
+
 For types, functions and enumerators you should follow the LLVM style.
 
 Source Code Formatting
