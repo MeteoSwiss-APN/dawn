@@ -36,6 +36,9 @@
 @defgroup unittest Unittest
 @brief Unittest utility functionality
 
+@defgroup testing Testing
+@brief Utility routines to help simplify testing
+
 **/
 #endif DAWN_DOXYGEN_INVOKED
 

@@ -105,4 +105,36 @@ TEST(SIRComparisonTest, DoubleReferenceFullSIR) {
   auto a = (*test01SIR).comparison(*test02SIR);
   EXPECT_TRUE(a.second) << a.first;
 }
+
+TEST(SIRComparisonTest, Errorcheck) {
+  std::unique_ptr<SIR> test01SIR = make_unique<SIR>();
+  std::unique_ptr<SIR> test02SIR = make_unique<SIR>();
+
+  // Genereate a stencil
+  test01SIR->Stencils.resize(1);
+  test02SIR->Stencils.resize(1);
+  test01SIR->Stencils[0] = std::make_shared<Stencil>();
+  test02SIR->Stencils[0] = std::make_shared<Stencil>();
+  test01SIR->Stencils[0]->Name = "TestStencil01";
+  test02SIR->Stencils[0]->Name = "TestStencil01";
+
+  // Generate a global Variable Map
+  test02SIR->GlobalVariableMap = std::make_shared<GlobalVariableMap>();
+  test01SIR->GlobalVariableMap = std::make_shared<GlobalVariableMap>();
+  auto val01 = std::make_shared<Value>();
+  val01.get()->setType(Value::TypeKind::Integer);
+  val01.get()->setValue(10);
+  auto val02 = std::make_shared<Value>();
+  val02.get()->setType(Value::TypeKind::Integer);
+  val02.get()->setValue(12);
+  test01SIR->GlobalVariableMap->emplace("TestGlobal", val01);
+  test02SIR->GlobalVariableMap->emplace("TestGlobal", val02);
+
+  auto a = (*test01SIR).comparison(*test02SIR);
+//  EXPECT_TRUE(a.second) << a.first;
+  ASSERT_FALSE(a.second) << "SIRs match but should not";
+  std::string comp = "[VariableMap mismatch] Global Variables have different values\nGlobal "
+                     "Variable TestGlobal has values 10 and 12";
+  EXPECT_TRUE(a.first == comp) << a.first;
+}
 } // anonymous namespace

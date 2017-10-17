@@ -119,22 +119,26 @@ struct Interval {
   std::pair<std::string, bool> comparison(const Interval& rhs) const {
     std::string output;
     if(LowerLevel != rhs.LowerLevel) {
-      output += dawn::format("[Inverval missmatch] Expected LowerLevel %i, received %i", LowerLevel,
-                             rhs.LowerLevel);
+      output += dawn::format("[Inverval mismatch] LowerLevels do not match\n"
+                             "Expected %i, received %i",
+                             LowerLevel, rhs.LowerLevel);
       return std::make_pair(output, false);
     }
     if(UpperLevel != rhs.UpperLevel) {
-      output += dawn::format("[Inverval missmatch] Expected UpperLevel %i, received %i", UpperLevel,
-                             rhs.UpperLevel);
+      output += dawn::format("[Inverval mismatch] UpperLevels do not match\n"
+                             "Expected %i, received %i",
+                             UpperLevel, rhs.UpperLevel);
       return std::make_pair(output, false);
     }
     if(LowerOffset != rhs.LowerOffset) {
-      output += dawn::format("[Inverval missmatch] Expected LowerOffset %i, received %i",
+      output += dawn::format("[Inverval mismatch] LowerOffsets do not match\n"
+                             "Expected %i, received %i",
                              LowerOffset, rhs.LowerOffset);
       return std::make_pair(output, false);
     }
     if(UpperOffset != rhs.UpperOffset) {
-      output += dawn::format("[Inverval missmatch] Expected UpperOffset %i, received %i",
+      output += dawn::format("[Inverval mismatch] UpperOffsets do not match\n"
+                             "Expected %i, received %i",
                              UpperOffset, rhs.UpperOffset);
       return std::make_pair(output, false);
     }
@@ -347,7 +351,7 @@ struct Value : NonCopyable {
   template <class T>
   T getValue() const {
     DAWN_ASSERT(!empty());
-    DAWN_ASSERT_MSG(TypeInfo<T>::Type == type_, "type missmatch");
+    DAWN_ASSERT_MSG(TypeInfo<T>::Type == type_, "type mismatch");
     return *(T*)valueImpl_->get();
   }
 
@@ -447,7 +451,7 @@ struct SIR : public dawn::NonCopyable {
   /// @brief Compares two SIRs for equality in contents
   /// It is to note that the filenames are not compared here
   /// and positions of expressions are omitted
-  /// returns a missmatch string if the bool is false
+  /// returns a mismatch string if the bool is false
   std::pair<std::string, bool> comparison(const SIR& rhs) const;
 
   /// @brief Compares two SIRs for inequality in contents
