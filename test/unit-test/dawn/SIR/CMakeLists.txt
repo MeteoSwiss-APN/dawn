@@ -18,6 +18,5 @@ dawn_add_unittest_impl(
           TestAST.cpp
           TestSIR.cpp
           TestSIRSerializerJSON.cpp
-          TestSIRComparison.cpp
 )
 
