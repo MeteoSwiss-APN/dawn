@@ -72,9 +72,7 @@ public:
   /// @brief Compare for equality
   /// @{
   virtual bool equals(const std::shared_ptr<Expr>& other) const { return equals(other.get()); }
-  virtual bool equals(const Expr* other) const {
-    return kind_ == other->kind_;
-  }
+  virtual bool equals(const Expr* other) const { return kind_ == other->kind_; }
   /// @}
 
   /// @name Operators

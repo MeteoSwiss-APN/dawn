@@ -17,6 +17,7 @@
 
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Assert.h"
+#include "dawn/Support/Format.h"
 #include "dawn/Support/NonCopyable.h"
 #include "dawn/Support/SourceLocation.h"
 #include "dawn/Support/Type.h"
@@ -114,6 +115,35 @@ struct Interval {
            LowerOffset == other.LowerOffset && UpperOffset == other.UpperOffset;
   }
   bool operator!=(const Interval& other) const { return !(*this == other); }
+
+  std::pair<std::string, bool> comparison(const Interval& rhs) const {
+    std::string output;
+    if(LowerLevel != rhs.LowerLevel) {
+      output += dawn::format("[Inverval mismatch] LowerLevels do not match\n"
+                             "Expected %i, received %i",
+                             LowerLevel, rhs.LowerLevel);
+      return std::make_pair(output, false);
+    }
+    if(UpperLevel != rhs.UpperLevel) {
+      output += dawn::format("[Inverval mismatch] UpperLevels do not match\n"
+                             "Expected %i, received %i",
+                             UpperLevel, rhs.UpperLevel);
+      return std::make_pair(output, false);
+    }
+    if(LowerOffset != rhs.LowerOffset) {
+      output += dawn::format("[Inverval mismatch] LowerOffsets do not match\n"
+                             "Expected %i, received %i",
+                             LowerOffset, rhs.LowerOffset);
+      return std::make_pair(output, false);
+    }
+    if(UpperOffset != rhs.UpperOffset) {
+      output += dawn::format("[Inverval mismatch] UpperOffsets do not match\n"
+                             "Expected %i, received %i",
+                             UpperOffset, rhs.UpperOffset);
+      return std::make_pair(output, false);
+    }
+    return std::make_pair(output, true);
+  }
   /// @}
 
   /// @brief Convert to string
@@ -138,6 +168,9 @@ struct StencilFunctionArg {
 
   ///@brief comparison of Name and Kind (omitting location)
   bool operator==(const StencilFunctionArg& rhs) const;
+
+  ///@brief comparison of Name and Kind (omitting location) with output if the comparison fails
+  std::pair<std::string, bool> comparison(const sir::StencilFunctionArg& rhs) const;
 };
 
 /// @brief Representation of a field
@@ -199,6 +232,11 @@ struct StencilFunction {
   /// @brief Comparison of Stencil functions for Equality in content
   /// including the name, excluding the location
   bool operator==(const sir::StencilFunction& rhs) const;
+
+  /// @brief Comparison of Stencil functions for Equality in content
+  /// including the name, excluding the location
+  /// if the comparison fails, outputs human readable reason why in the string
+  std::pair<std::string, bool> comparison(const StencilFunction& rhs) const;
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -222,6 +260,13 @@ struct VerticalRegion {
 
   /// @brief Clone the vertical region
   std::shared_ptr<VerticalRegion> clone() const;
+
+  /// @brief Comparison between stencils (omitting location)
+  bool operator==(const VerticalRegion& rhs) const;
+
+  /// @brief Comparison between stencils (omitting location)
+  /// if the comparison fails, outputs human readable reason why in the string
+  std::pair<std::string, bool> comparison(const VerticalRegion& rhs) const;
 };
 
 /// @brief Call to another stencil
@@ -246,7 +291,12 @@ struct StencilCall {
 /// @brief Representation of a stencil which is a sequence of calls to other stencils
 /// (`StencilCall`) or vertical regions (`VerticalRegion`)
 /// @ingroup sir
-struct Stencil {
+struct Stencil : public dawn::NonCopyable {
+
+  ///@brief Default Ctor that initializes all the shared pointers
+  /// this ensures that no errors occur when handeling the in memory generated SIRs
+  Stencil();
+
   std::string Name;                           ///< Name of the stencil
   SourceLocation Loc;                         ///< Source location of the stencil declaration
   std::shared_ptr<AST> StencilDescAst;        ///< Stencil description AST
@@ -255,6 +305,10 @@ struct Stencil {
 
   /// @brief Comparison between stencils (omitting location)
   bool operator==(const Stencil& rhs) const;
+
+  /// @brief Comparison between stencils (omitting location)
+  /// if the comparison fails, outputs human readable reason why in the string
+  std::pair<std::string, bool> comparison(const Stencil& rhs) const;
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -297,7 +351,7 @@ struct Value : NonCopyable {
   template <class T>
   T getValue() const {
     DAWN_ASSERT(!empty());
-    DAWN_ASSERT_MSG(TypeInfo<T>::Type == type_, "type missmatch");
+    DAWN_ASSERT_MSG(TypeInfo<T>::Type == type_, "type mismatch");
     return *(T*)valueImpl_->get();
   }
 
@@ -316,6 +370,10 @@ struct Value : NonCopyable {
 
   /// @brief Comparison between two Values
   bool operator==(const Value& rhs) const;
+
+  /// @brief Comparison between two Values
+  /// if the comparison fails, outputs human readable reason why in the string
+  std::pair<std::string, bool> comparison(const sir::Value& rhs) const;
 
 private:
   struct ValueImplBase {
@@ -373,11 +431,11 @@ using GlobalVariableMap = std::unordered_map<std::string, std::shared_ptr<sir::V
 
 /// @brief Definition of the Stencil Intermediate Representation (SIR)
 /// @ingroup sir
-struct SIR {
-  std::string Filename;                                ///< Name of the file the SIR was parsed from
-  std::vector<std::shared_ptr<sir::Stencil>> Stencils; ///< List of stencils
-  std::vector<std::shared_ptr<sir::StencilFunction>> StencilFunctions; ///< List of stencil function
-  std::shared_ptr<sir::GlobalVariableMap> GlobalVariableMap;           ///< Map of global variables
+struct SIR : public dawn::NonCopyable {
+
+  ///@brief Default Ctor that initializes all the shared pointers
+  /// this ensures that no errors occur when handeling the in memory generated SIRs
+  SIR();
 
   /// @brief Dump the SIR to stdout
   void dump();
@@ -390,10 +448,21 @@ struct SIR {
   /// and positions of expressions are omitted
   bool operator==(const SIR& rhs) const;
 
-  /// @brief Compares two SIRs for inequality in contents
+  /// @brief Compares two SIRs for equality in contents
   /// It is to note that the filenames are not compared here
   /// and positions of expressions are omitted
+  /// returns a mismatch string if the bool is false
+  std::pair<std::string, bool> comparison(const SIR& rhs) const;
+
+  /// @brief Compares two SIRs for inequality in contents
+  /// It is to note that the filenames are not compared here
+  /// if the comparison fails, outputs human readable reason why in the string
   bool operator!=(const SIR& rhs) const;
+
+  std::string Filename;                                ///< Name of the file the SIR was parsed from
+  std::vector<std::shared_ptr<sir::Stencil>> Stencils; ///< List of stencils
+  std::vector<std::shared_ptr<sir::StencilFunction>> StencilFunctions; ///< List of stencil function
+  std::shared_ptr<sir::GlobalVariableMap> GlobalVariableMap;           ///< Map of global variables
 };
 
 } // namespace dawn
