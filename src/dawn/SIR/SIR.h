@@ -116,34 +116,7 @@ struct Interval {
   }
   bool operator!=(const Interval& other) const { return !(*this == other); }
 
-  std::pair<std::string, bool> comparison(const Interval& rhs) const {
-    std::string output;
-    if(LowerLevel != rhs.LowerLevel) {
-      output += dawn::format("[Inverval mismatch] LowerLevels do not match\n"
-                             "Expected %i, received %i",
-                             LowerLevel, rhs.LowerLevel);
-      return std::make_pair(output, false);
-    }
-    if(UpperLevel != rhs.UpperLevel) {
-      output += dawn::format("[Inverval mismatch] UpperLevels do not match\n"
-                             "Expected %i, received %i",
-                             UpperLevel, rhs.UpperLevel);
-      return std::make_pair(output, false);
-    }
-    if(LowerOffset != rhs.LowerOffset) {
-      output += dawn::format("[Inverval mismatch] LowerOffsets do not match\n"
-                             "Expected %i, received %i",
-                             LowerOffset, rhs.LowerOffset);
-      return std::make_pair(output, false);
-    }
-    if(UpperOffset != rhs.UpperOffset) {
-      output += dawn::format("[Inverval mismatch] UpperOffsets do not match\n"
-                             "Expected %i, received %i",
-                             UpperOffset, rhs.UpperOffset);
-      return std::make_pair(output, false);
-    }
-    return std::make_pair(output, true);
-  }
+  std::pair<std::string, bool> comparison(const Interval& rhs) const;
   /// @}
 
   /// @brief Convert to string
