@@ -17,7 +17,11 @@ this_script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Setup dependencies
 source "$this_script_dir/install.sh"
-install_driver -i ${CACHE_DIR} -b ${PACKAGES_TO_INSTALL}
+install_driver -i ${CACHE_DIR} -b cmake,protobuf
+
+if [ ! -z ${CLANG_VERSION+x} ]; then
+  install_driver -i ${CACHE_DIR} -b clang
+fi
 
 export CXX=${CXX_COMPILER}
 export CC=${C_COMPILER}
