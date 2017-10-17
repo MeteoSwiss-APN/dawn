@@ -76,8 +76,8 @@ public:
   /// @brief Clear all attributes
   void clear() { attrBits_ = 0; }
 
-  ///@brief comparison if two Attrs are in the Same mode
   bool operator==(const Attr& rhs) const { return getBits() == rhs.getBits(); }
+  bool operator!=(const Attr& rhs) const { return getBits() != rhs.getBits(); }
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -116,34 +116,7 @@ struct Interval {
   }
   bool operator!=(const Interval& other) const { return !(*this == other); }
 
-  std::pair<std::string, bool> comparison(const Interval& rhs) const {
-    std::string output;
-    if(LowerLevel != rhs.LowerLevel) {
-      output += dawn::format("[Inverval mismatch] LowerLevels do not match\n"
-                             "Expected %i, received %i",
-                             LowerLevel, rhs.LowerLevel);
-      return std::make_pair(output, false);
-    }
-    if(UpperLevel != rhs.UpperLevel) {
-      output += dawn::format("[Inverval mismatch] UpperLevels do not match\n"
-                             "Expected %i, received %i",
-                             UpperLevel, rhs.UpperLevel);
-      return std::make_pair(output, false);
-    }
-    if(LowerOffset != rhs.LowerOffset) {
-      output += dawn::format("[Inverval mismatch] LowerOffsets do not match\n"
-                             "Expected %i, received %i",
-                             LowerOffset, rhs.LowerOffset);
-      return std::make_pair(output, false);
-    }
-    if(UpperOffset != rhs.UpperOffset) {
-      output += dawn::format("[Inverval mismatch] UpperOffsets do not match\n"
-                             "Expected %i, received %i",
-                             UpperOffset, rhs.UpperOffset);
-      return std::make_pair(output, false);
-    }
-    return std::make_pair(output, true);
-  }
+  std::pair<std::string, bool> comparison(const Interval& rhs) const;
   /// @}
 
   /// @brief Convert to string
@@ -325,7 +298,12 @@ struct Value : NonCopyable {
   enum TypeKind { None = 0, Boolean, Integer, Double, String };
 
   Value() : type_(None), isConstexpr_(false), valueImpl_(nullptr) {}
-
+  
+  template <class T>
+  explicit Value(T&& value) : isConstexpr_(false) {
+    setValue(value);
+  }
+  
   /// @brief Get/Set if the variable is `constexpr`
   bool isConstexpr() const { return isConstexpr_; }
   void setIsConstexpr(bool isConstexpr) { isConstexpr_ = isConstexpr; }
