@@ -46,8 +46,12 @@ For a more detailed guide on how to build Dawn (and Protobuf), see [here](https:
 | GCC 5.4      | RelWithDebInfo |  <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![GCC 5.4][GCC_54_RelWithDebInfo.Badge]</a>   |
 | GCC 6.3      | Release        |  <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![GCC 6.3][GCC_63_Release.Badge]</a>          |
 | GCC 6.3      | RelWithDebInfo |  <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![GCC 6.3][GCC_63_RelWithDebInfo.Badge]</a>   |
-| Clang 4.0    | Release        |  <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![GCC 5.4][Clang_40_Release.Badge]</a>        |
-| Clang 4.0    | RelWithDebInfo |  <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![GCC 5.4][Clang_40_RelWithDebInfo.Badge]</a> |
+| Clang 3.8    | Release        |  <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![Clang 3.8][Clang_38_Release.Badge]</a>        |
+| Clang 3.8    | RelWithDebInfo |  <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![Clang 3.8][Clang_38_RelWithDebInfo.Badge]</a> |
+| Clang 4.0    | Release        |  <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![Clang 4.0][Clang_40_Release.Badge]</a>        |
+| Clang 4.0    | RelWithDebInfo |  <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![Clang 4.0][Clang_40_RelWithDebInfo.Badge]</a> |
+| Clang 5.0    | Release        |  <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![Clang 5.0][Clang_50_Release.Badge]</a>        |
+| Clang 5.0    | RelWithDebInfo |  <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![Clang 5.0][Clang_50_RelWithDebInfo.Badge]</a> |
 
 ## About
 
@@ -70,5 +74,9 @@ This project is licensed under the terms of the **MIT** license.
 [GCC_54_RelWithDebInfo.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/4
 [GCC_63_Release.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/5
 [GCC_63_RelWithDebInfo.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/6
-[Clang_40_Release.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/7
-[Clang_40_RelWithDebInfo.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/8
+[Clang_38_Release.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/7
+[Clang_38_RelWithDebInfo.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/8
+[Clang_40_Release.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/9
+[Clang_40_RelWithDebInfo.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/10
+[Clang_50_Release.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/11
+[Clang_50_RelWithDebInfo.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/12
