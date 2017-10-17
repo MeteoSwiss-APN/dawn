@@ -16,7 +16,7 @@
 this_script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Setup logging
-source "$this_script_dir/b_log.sh"
+source "$this_script_dir/logger.sh"
 LOG_LEVEL_ALL
 
 # @brief Issue an error message to `stderr` and exit with 1
