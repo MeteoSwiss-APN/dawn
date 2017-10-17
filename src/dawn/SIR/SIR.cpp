@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/SIR/SIR.h"
 #include "dawn/SIR/ASTVisitor.h"
+#include "dawn/SIR/SIR.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Printing.h"
@@ -141,15 +141,20 @@ std::pair<std::string, bool> pointeeComparisonWithOutput(const std::shared_ptr<T
 }
 
 /// @brief Helperfunction to compare two maps of key and shared pointer
-/// @return pair of boolean and string
+///
 /// the boolean is true if contents of the shared pointers match for every key (operator ==)
 /// the string returns a potential mismatch notification
+///
+/// @return pair of boolean and string
 static std::pair<std::string, bool> pointerMapComparison(const sir::GlobalVariableMap& map1,
                                                          const sir::GlobalVariableMap& map2) {
   std::string output;
   if(map1.size() != map2.size()) {
-    output += dawn::format("[VariableMap mismatch] Number of Global Varialbes do not match\n"
-                           "Expected %i and received %i",
+    output += dawn::format("[GlobalVariableMap mismatch] Number of Global Variables do not match\n"
+                           "  Actual:\n"
+                           "    %s\n"
+                           "  Expected:\n"
+                           "    %s",
                            map1.size(), map2.size());
     return std::make_pair(output, false);
 
@@ -157,14 +162,17 @@ static std::pair<std::string, bool> pointerMapComparison(const sir::GlobalVariab
     for(auto& a : map1) {
       auto finder = map2.find(a.first);
       if(finder == map2.end()) {
-        output += dawn::format("[VariableMap mismatch] Could not find global variable\n"
-                               "Global Variable %s was expected but not found",
-                               a.first);
+        output +=
+            dawn::format("[GlobalVariableMap mismatch] Global Variable '%s' not found\n", a.first);
         return std::make_pair(output, false);
       } else if(!(*(finder->second.get()) == *(a.second.get()))) {
-        output += dawn::format("[VariableMap mismatch] Global Variables have different values\n"
-                               "Global Variable %s has values %i and %i",
-                               a.first, a.second->toString(), finder->second->toString());
+        output +=
+            dawn::format("[GlobalVariableMap mismatch] Global Variables '%s' values are not equal\n"
+                         "  Actual:\n"
+                         "    %s\n"
+                         "  Expected:\n"
+                         "    %s",
+                         a.first, a.second->toString(), finder->second->toString());
         return std::make_pair(output, false);
       }
     }
@@ -176,197 +184,266 @@ static std::pair<std::string, bool> pointerMapComparison(const sir::GlobalVariab
 
 std::pair<std::string, bool> SIR::comparison(const SIR& rhs) const {
   std::string output;
-  if((Stencils.size() != rhs.Stencils.size()))
-    return std::make_pair("[SIR mismatch] number of stencils do not match\n", false);
-  if(StencilFunctions.size() != rhs.StencilFunctions.size())
-    return std::make_pair("[SIR mismatch] number of stencil functions does not match\n", false);
-  if(GlobalVariableMap.get()->size() != rhs.GlobalVariableMap.get()->size())
-    return std::make_pair("[SIR mismatch] number of global variables does not match\n", false);
 
-  if(!Stencils.empty() &&
-     !std::equal(Stencils.begin(), Stencils.end(), rhs.Stencils.begin(),
+  // Stencils
+  if((Stencils.size() != rhs.Stencils.size()))
+    return std::make_pair("[SIR mismatch] number of Stencils do not match\n", false);
+
+  if(!std::equal(Stencils.begin(), Stencils.end(), rhs.Stencils.begin(),
                  pointeeComparison<sir::Stencil>)) {
-    output += "[SIR mismatch] stencils do not match\n";
-    for(unsigned i = 0; i < Stencils.size(); ++i) {
-      auto tmp = pointeeComparisonWithOutput(Stencils[i], rhs.Stencils[i]);
-      if(tmp.second == false) {
-        output += tmp.first;
+    output += "[SIR mismatch] Stencils do not match\n";
+    for(int i = 0; i < Stencils.size(); ++i) {
+      auto comp = pointeeComparisonWithOutput(Stencils[i], rhs.Stencils[i]);
+      if(comp.second == false) {
+        output += comp.first;
       }
     }
+
     return std::make_pair(output, false);
   }
-  if(!StencilFunctions.empty() &&
-     !std::equal(StencilFunctions.begin(), StencilFunctions.end(), rhs.StencilFunctions.begin(),
+
+  // Stencil Functions
+  if(StencilFunctions.size() != rhs.StencilFunctions.size())
+    return std::make_pair("[SIR mismatch] number of Stencil Functions does not match\n", false);
+
+  if(!std::equal(StencilFunctions.begin(), StencilFunctions.end(), rhs.StencilFunctions.begin(),
                  pointeeComparison<sir::StencilFunction>)) {
-    output += "[SIR mismatch] stencil functions do not match\n";
-    for(unsigned i = 0; i < StencilFunctions.size(); ++i) {
-      auto tmp = pointeeComparisonWithOutput(StencilFunctions[i], rhs.StencilFunctions[i]);
-      if(tmp.second == false) {
-        output += "mismatch of function " + StencilFunctions[i]->Name + "\n" + tmp.first;
-      }
+    output += "[SIR mismatch] Stencil Functions do not match\n";
+    for(int i = 0; i < StencilFunctions.size(); ++i) {
+      auto comp = pointeeComparisonWithOutput(StencilFunctions[i], rhs.StencilFunctions[i]);
+      if(!comp.second)
+        output +=
+            dawn::format("[StencilFunction mismatch] Stencil Function %s does not match\n%s\n",
+                         StencilFunctions[i]->Name, comp.first);
     }
+
     return std::make_pair(output, false);
   }
-  if(!GlobalVariableMap.get()->empty() &&
-     !pointerMapComparison(*(GlobalVariableMap.get()), *(rhs.GlobalVariableMap.get())).second) {
-    auto a = pointerMapComparison(*(GlobalVariableMap.get()), *(rhs.GlobalVariableMap.get()));
-    return std::make_pair(a.first, false);
+
+  // Global variable map
+  if(GlobalVariableMap.get()->size() != rhs.GlobalVariableMap.get()->size())
+    return std::make_pair("[SIR mismatch] number of Global Variables does not match\n", false);
+
+  if(!pointerMapComparison(*(GlobalVariableMap.get()), *(rhs.GlobalVariableMap.get())).second) {
+    auto comp = pointerMapComparison(*(GlobalVariableMap.get()), *(rhs.GlobalVariableMap.get()));
+    if(!comp.second)
+      return std::make_pair(comp.first, false);
   }
+
   return std::make_pair("", true);
 }
 
 std::pair<std::string, bool> sir::Stencil::comparison(const sir::Stencil& rhs) const {
-  std::string output;
-  if(Fields.size() != rhs.Fields.size()) {
-    output += dawn::format("[Stencil mismatch] number of Fields does not match\n"
-                           "gotten %i and %i Fields\n",
-                           Fields.size(), rhs.Fields.size());
-    return std::make_pair(output, false);
-  }
-  if(Name != rhs.Name) {
-    output += dawn::format("[Stencil mismatch] Stencil names do not match\n"
-                           "Names are \n"
-                           "%s\n"
-                           "%s\n",
-                           Name, rhs.Name);
-    return std::make_pair(output, false);
-  }
-  if(!(Attributes == rhs.Attributes)) {
-    output += dawn::format("[Stencil mismatch] Stencil attibutes do not match\n"
-                           "Attributes are %i and %i\n",
-                           Attributes.getBits(), rhs.Attributes.getBits());
-    return std::make_pair(output, false);
-  }
-  if(!StencilDescAst->getRoot().get()->equals(rhs.StencilDescAst->getRoot().get())) {
-    output += "[Stencil mismatch] Stencil ASTs Do not match\n";
-    auto a = compareAst(StencilDescAst, rhs.StencilDescAst);
-    DAWN_ASSERT_MSG(a.second, "Stencils should not match");
-    output += a.first;
-    return std::make_pair(output, false);
-  }
+  // Fields
+  if(Fields.size() != rhs.Fields.size())
+    return std::make_pair(dawn::format("[Stencil mismatch] number of Fields does not match\n"
+                                       "  Actual:\n"
+                                       "    %s\n"
+                                       "  Expected:\n"
+                                       "    %s",
+                                       Fields.size(), rhs.Fields.size()),
+                          false);
+
+  // Name
+  if(Name != rhs.Name)
+    return std::make_pair(dawn::format("[Stencil mismatch] Stencil names do not match\n"
+                                       "  Actual:\n"
+                                       "    %s\n"
+                                       "  Expected:\n"
+                                       "    %s",
+                                       Name, rhs.Name),
+                          false);
+
+  // Attributes
+  if(Attributes != rhs.Attributes)
+    return std::make_pair(dawn::format("[Stencil mismatch] Stencil attibutes do not match\n"
+                                       "  Actual:\n"
+                                       "    %s\n"
+                                       "  Expected:\n"
+                                       "    %s",
+                                       Attributes.getBits(), rhs.Attributes.getBits()),
+                          false);
+
   if(!Fields.empty() &&
      !std::equal(Fields.begin(), Fields.end(), rhs.Fields.begin(), pointeeComparison<sir::Field>)) {
-    output += "[Stencil mismatch] Fields do not match\n";
-    for(unsigned i = 0; i < Fields.size(); ++i) {
-      auto tmp = pointeeComparisonWithOutput(Fields[i], rhs.Fields[i]);
-      if(tmp.second == false) {
-        output += "Field " + Fields[i].get()->Name + " mismatch: " + tmp.first;
-      }
+    std::string output = "[Stencil mismatch] Fields do not match\n";
+
+    for(int i = 0; i < Fields.size(); ++i) {
+      auto comp = pointeeComparisonWithOutput(Fields[i], rhs.Fields[i]);
+      if(!comp.second)
+        output += dawn::format("[Stencil mismatch] Field %s does not match\n%s\n",
+                               Fields[i].get()->Name, comp.first);
     }
+
     return std::make_pair(output, false);
   }
 
-  return std::make_pair(output, true);
+  // AST
+  auto astComp = compareAst(StencilDescAst, rhs.StencilDescAst);
+  if(!astComp.second)
+    return std::make_pair(dawn::format("[Stencil mismatch] ASTs do not match\n%s\n", astComp.first),
+                          false);
+
+  return std::make_pair("", true);
 }
 
 std::pair<std::string, bool>
 sir::StencilFunction::comparison(const sir::StencilFunction& rhs) const {
-  std::string output;
+
+  // Name
   if(Name != rhs.Name) {
-    output += dawn::format("[StencilFunction mismatch] Names of Stencil Functions do not match\n"
-                           "Found Names %s and %s\n",
-                           Name, rhs.Name);
-    return std::make_pair(output, false);
+    return std::make_pair(
+        dawn::format("[StencilFunction mismatch] Names of Stencil Functions do not match\n"
+                     "  Actual:\n"
+                     "    %s\n"
+                     "  Expected:\n"
+                     "    %s",
+                     Name, rhs.Name),
+        false);
   }
-  if(!(Attributes == rhs.Attributes)) {
-    output +=
+
+  // Attributes
+  if(Attributes != rhs.Attributes) {
+    return std::make_pair(
         dawn::format("[StencilFunction mismatch] Attributes of Stencil Functions do not match\n"
-                     "Found Attributes %i and %i\n",
-                     Attributes.getBits(), rhs.Attributes.getBits());
-    return std::make_pair(output, false);
+                     "  Actual:\n"
+                     "    %i\n"
+                     "  Expected:\n"
+                     "    %i",
+                     Attributes.getBits(), rhs.Attributes.getBits()),
+        false);
   }
+
+  // Arguments
   if(Args.size() != rhs.Args.size()) {
-    output += dawn::format("[StencilFunction mismatch] Number of Arguments do not match\n"
-                           "Found %i and %i arguments respectively\n",
-                           Args.size(), rhs.Args.size());
-    return std::make_pair(output, false);
+    return std::make_pair(
+        dawn::format("[StencilFunction mismatch] Number of Arguments do not match\n"
+                     "  Actual:\n"
+                     "    %i\n"
+                     "  Expected:\n"
+                     "    %i",
+                     Args.size(), rhs.Args.size()),
+        false);
   }
-  if(Intervals.size() != rhs.Intervals.size()) {
-    output += dawn::format("[StencilFunction mismatch] Number of Intervals do not match\n"
-                           "Found %i and %i Intervals\n",
-                           Intervals.size(), rhs.Intervals.size());
-    return std::make_pair(output, false);
-  }
-  if(Asts.size() != rhs.Asts.size()) {
-    output += dawn::format("[StencilFunction mismatch] Number of ASTs does not match\n"
-                           "Found %i and %i ASTs",
-                           Asts.size(), rhs.Asts.size());
-    return std::make_pair(output, false);
-  }
-  if(!Args.empty() &&
-     !std::equal(Args.begin(), Args.end(), rhs.Args.begin(),
+
+  if(!std::equal(Args.begin(), Args.end(), rhs.Args.begin(),
                  pointeeComparison<sir::StencilFunctionArg>)) {
-    output += "[StencilFunction mismatch] stencil functions arguments do not match\n";
-    for(unsigned i = 0; i < Args.size(); ++i) {
-      auto tmp = pointeeComparisonWithOutput(Args[i], rhs.Args[i]);
-      if(tmp.second == false) {
-        output += "mismatch of argument " + Args[i]->Name + "\n" + tmp.first;
+    std::string output = "[StencilFunction mismatch] Stencil Functions Arguments do not match\n";
+    for(int i = 0; i < Args.size(); ++i) {
+      auto comp = pointeeComparisonWithOutput(Args[i], rhs.Args[i]);
+      if(!comp.second) {
+        output += dawn::format("[StencilFunction mismatch] Argument '%s' does not match\n%s\n",
+                               Args[i]->Name, comp.first);
       }
     }
     return std::make_pair(output, false);
   }
 
+  // Intervals
+  if(Intervals.size() != rhs.Intervals.size()) {
+    return std::make_pair(
+        dawn::format("[StencilFunction mismatch] Number of Intervals do not match\n"
+                     "  Actual:\n"
+                     "    %i\n"
+                     "  Expected:\n"
+                     "    %i",
+                     Intervals.size(), rhs.Intervals.size()),
+        false);
+  }
+
+  // Intervals
   if(!Intervals.empty() &&
      !std::equal(Intervals.begin(), Intervals.end(), rhs.Intervals.begin(),
                  pointeeComparison<sir::Interval>)) {
-    output += "[StencilFunction mismatch] Intervals do not match\n";
-    for(unsigned i = 0; i < Intervals.size(); ++i) {
-      auto tmp = pointeeComparisonWithOutput(Intervals[i], rhs.Intervals[i]);
-      if(tmp.second == false) {
-        output += tmp.first;
-        return std::make_pair(output, false);
+    std::string output = "[StencilFunction mismatch] Intervals do not match\n";
+    for(int i = 0; i < Intervals.size(); ++i) {
+      auto comp = pointeeComparisonWithOutput(Intervals[i], rhs.Intervals[i]);
+      if(comp.second == false) {
+        output += dawn::format("[StencilFunction mismatch] Interval '%s' does not match '%s'\n%s\n",
+                               *Intervals[i], *rhs.Intervals[i], comp.first);
       }
     }
     return std::make_pair(output, false);
   }
 
-  if(!Asts.empty()) {
-    auto astcomparison = [](const std::shared_ptr<dawn::AST>& comparate1,
-                            const std::shared_ptr<dawn::AST>& comparate2) {
-      return *(comparate1->getRoot()) == *(comparate2->getRoot());
-    };
-    if(!std::equal(Asts.begin(), Asts.end(), rhs.Asts.begin(), astcomparison)) {
-      output += "[StencilFunction mismatch] ASTs do not match\n";
-      for(int i = 0; i < Asts.size(); ++i) {
-        auto out = compareAst(Asts[i], rhs.Asts[i]);
-        if(!out.second) {
-          output += out.first;
-          return std::make_pair(output, false);
-        }
-      }
-    }
+  // ASTs
+  if(Asts.size() != rhs.Asts.size()) {
+    return std::make_pair(dawn::format("[StencilFunction mismatch] Number of ASTs does not match\n"
+                                       "  Actual:\n"
+                                       "    %i\n"
+                                       "  Expected:\n"
+                                       "    %i",
+                                       Asts.size(), rhs.Asts.size()),
+                          false);
   }
-  return std::make_pair(output, true);
+
+  auto intervalToString = [](const sir::Interval& interval) {
+    std::stringstream ss;
+    ss << interval;
+    return ss.str();
+  };
+
+  for(int i = 0; i < Asts.size(); ++i) {
+    auto astComp = compareAst(Asts[i], rhs.Asts[i]);
+    if(!astComp.second)
+      return std::make_pair(
+          dawn::format("[StencilFunction mismatch] AST '%s' does not match\n%s\n",
+                       i < Intervals.size() ? intervalToString(*Intervals[i]) : std::to_string(i),
+                       astComp.first),
+          false);
+  }
+
+  return std::make_pair("", true);
 }
 
 std::pair<std::string, bool>
 sir::StencilFunctionArg::comparison(const sir::StencilFunctionArg& rhs) const {
-  std::string output;
+  auto kindToString = [](ArgumentKind kind) -> const char* {
+    switch(kind) {
+    case dawn::sir::StencilFunctionArg::AK_Field:
+      return "Field";
+    case dawn::sir::StencilFunctionArg::AK_Direction:
+      return "Direction";
+    case dawn::sir::StencilFunctionArg::AK_Offset:
+      return "Offset";
+    }
+    dawn_unreachable("invalid argument type");
+  };
+
   if(Name != rhs.Name) {
-    output += dawn::format("[StencilFunctionArgument mismatch] Names do not match\n"
-                           "Found Names %s and %s",
-                           Name, rhs.Name);
-    return std::make_pair(output, false);
+    return std::make_pair(dawn::format("[StencilFunctionArgument mismatch] Names do not match\n"
+                                       "  Actual:\n"
+                                       "    %s\n"
+                                       "  Expected:\n"
+                                       "    %s",
+                                       Name, rhs.Name),
+                          false);
   }
-  if(Kind != rhs.Kind) {
-    output += dawn::format("[StencilFunctionArgument mismatch] Argument Types do not match\n"
-                           "Found Kinds %i and %i",
-                           (int)Kind, (int)rhs.Kind);
-    return std::make_pair(output, false);
-  }
-  return std::make_pair(output, true);
+
+  if(Kind != rhs.Kind)
+    return std::make_pair(
+        dawn::format("[StencilFunctionArgument mismatch] Argument Types do not match\n"
+                     "  Actual:\n"
+                     "    %s\n"
+                     "  Expected:\n"
+                     "    %s",
+                     kindToString(Kind), kindToString(rhs.Kind)),
+        false);
+
+  return std::make_pair("", true);
 }
 
 std::pair<std::string, bool> sir::Value::comparison(const sir::Value& rhs) const {
-
-  std::string output;
   auto type = getType();
-  if(type != rhs.getType()) {
-    output += dawn::format("[Value mismatch] Values are not of the same type\n"
-                           "Found Types %i and %i",
-                           type, rhs.getType());
-    return std::make_pair(output, false);
-  }
+  if(type != rhs.getType())
+    return std::make_pair(dawn::format("[Value mismatch] Values are not of the same type\n"
+                                       "  Actual:\n"
+                                       "    %s\n"
+                                       "  Expected:\n"
+                                       "    %s",
+                                       type, rhs.getType()),
+                          false);
+
   switch(type) {
   case sir::Value::TypeKind::Boolean:
     return isEqualImpl<bool>(*this, rhs, rhs.toString());
@@ -384,24 +461,29 @@ std::pair<std::string, bool> sir::Value::comparison(const sir::Value& rhs) const
 std::pair<std::string, bool> sir::VerticalRegion::comparison(const sir::VerticalRegion& rhs) const {
   std::string output;
   if(LoopOrder != rhs.LoopOrder) {
-    output += dawn::format("[VerticalRegion mismatch] Loop order does not match"
-                           "loop orders are %i and %i",
+    output += dawn::format("[VerticalRegion mismatch] Loop order does not match\n"
+                           "  Actual:\n"
+                           "    %s\n"
+                           "  Expected:\n"
+                           "    %s",
                            LoopOrder, rhs.LoopOrder);
     return std::make_pair(output, false);
   }
-  auto tmp = VerticalInterval->comparison(*(rhs.VerticalInterval));
-  if(!tmp.second) {
+
+  auto intervalComp = VerticalInterval->comparison(*(rhs.VerticalInterval));
+  if(!intervalComp.second) {
     output += "[VerticalRegion mismatch] Intervals do not match\n";
-    output += tmp.first;
+    output += intervalComp.first;
     return std::make_pair(output, false);
   }
-  auto astcomp = compareAst(Ast, rhs.Ast);
-  if(!astcomp.second) {
+
+  auto astComp = compareAst(Ast, rhs.Ast);
+  if(!astComp.second) {
     output += "[VerticalRegion mismatch] ASTs do not match\n";
-    output += astcomp.first;
+    output += astComp.first;
     return std::make_pair(output, false);
   }
-  return std::make_pair("", true);
+  return std::make_pair(output, true);
 }
 
 bool sir::VerticalRegion::operator==(const sir::VerticalRegion& rhs) const {
@@ -417,6 +499,31 @@ std::shared_ptr<AST> StencilFunction::getASTOfInterval(const Interval& interval)
     if(*Intervals[i] == interval)
       return Asts[i];
   return nullptr;
+}
+
+std::pair<std::string, bool> Interval::comparison(const Interval& rhs) const {
+  auto formatErrorMsg = [](const char* name, int l, int r) -> std::string {
+    return dawn::format("[Inverval mismatch] %s do not match\n"
+                        "  Actual:\n"
+                        "    %i\n"
+                        "  Expected:\n"
+                        "    %i",
+                        name, l, r);
+  };
+
+  if(LowerLevel != rhs.LowerLevel)
+    return std::make_pair(formatErrorMsg("LowerLevels", LowerLevel, rhs.LowerLevel), false);
+
+  if(UpperLevel != rhs.UpperLevel)
+    return std::make_pair(formatErrorMsg("UpperLevels", UpperLevel, rhs.UpperLevel), false);
+
+  if(LowerOffset != rhs.LowerOffset)
+    return std::make_pair(formatErrorMsg("LowerOffsets", LowerOffset, rhs.LowerOffset), false);
+
+  if(UpperOffset != rhs.UpperOffset)
+    return std::make_pair(formatErrorMsg("UpperOffsets", UpperOffset, rhs.UpperOffset), false);
+
+  return std::make_pair("", true);
 }
 
 std::string Interval::toString() const {
