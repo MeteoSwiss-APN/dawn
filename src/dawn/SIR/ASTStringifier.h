@@ -28,6 +28,8 @@ namespace dawn {
 ///
 /// @ingroup sir
 struct ASTStringifer {
+  ASTStringifer() = delete;
+
   static std::string toString(const std::shared_ptr<Stmt>& stmt, int initialIndent = 0,
                               bool newLines = true);
   static std::string toString(const std::shared_ptr<Expr>& expr, int initialIndent = 0,

@@ -12,8 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Casting.h"
+#include "dawn/Support/Format.h"
 #include "dawn/Support/Printing.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
@@ -22,7 +24,99 @@
 
 namespace dawn {
 
+namespace {
+
+/// @brief Allow direct comparison of the Stmts of an AST
+class DiffWriter final : public ASTVisitorForwarding {
+public:
+  virtual void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) override {
+    statements_.push_back(stmt);
+    stmt->getVerticalRegion()->Ast->getRoot()->accept(*this);
+  }
+
+  virtual void visit(const std::shared_ptr<ReturnStmt>& stmt) override {
+    statements_.push_back(stmt);
+    ASTVisitorForwarding::visit(stmt);
+  }
+
+  virtual void visit(const std::shared_ptr<ExprStmt>& stmt) override {
+    statements_.push_back(stmt);
+    ASTVisitorForwarding::visit(stmt);
+  }
+
+  virtual void visit(const std::shared_ptr<BlockStmt>& stmt) override {
+    statements_.push_back(stmt);
+    ASTVisitorForwarding::visit(stmt);
+  }
+
+  virtual void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
+    statements_.push_back(stmt);
+    ASTVisitorForwarding::visit(stmt);
+  }
+
+  std::vector<std::shared_ptr<Stmt>> getStatements() const { return statements_; }
+
+  std::pair<std::string, bool> compare(const DiffWriter& other) {
+    std::size_t minSize = std::min(statements_.size(), other.getStatements().size());
+    if(minSize == 0 && (statements_.size() != other.getStatements().size()))
+      return std::make_pair("[AST mismatch] AST is empty", false);
+
+    for(std::size_t idx = 0; idx < minSize; ++idx) {
+      if(!statements_[idx]->equals(other.getStatements()[idx].get())) {
+        return std::make_pair(
+            dawn::format("[AST mismatch] Statement mismatch\n"
+                         "  Actual:\n"
+                         "    %s\n"
+                         "  Expected:\n"
+                         "    %s",
+                         indent(ASTStringifer::toString(statements_[idx]), 4),
+                         indent(ASTStringifer::toString(other.getStatements()[idx]), 4)),
+            false);
+      }
+    }
+
+    return std::make_pair("", true);
+  }
+
+private:
+  std::vector<std::shared_ptr<Stmt>> statements_;
+};
+
+///@brief Stringification of a Value mismatch
+template <class T>
+std::pair<std::string, bool> isEqualImpl(const sir::Value& a, const sir::Value& b,
+                                         const std::string& name) {
+  if(a.getValue<T>() != b.getValue<T>())
+    return std::make_pair(dawn::format("[Value mismatch] %s values are not equal\n"
+                                       "  Actual:\n"
+                                       "    %s\n"
+                                       "  Expected:\n"
+                                       "    %s",
+                                       name, a.toString(), b.toString()),
+                          false);
+
+  return std::make_pair("", true);
+}
+
+/// @brief Compares two ASTs
+std::pair<std::string, bool> compareAst(const std::shared_ptr<AST>& lhs,
+                                        const std::shared_ptr<AST>& rhs) {
+  if(lhs->getRoot()->equals(rhs->getRoot().get()))
+    return std::make_pair("", true);
+
+  DiffWriter lhsDW, rhsDW;
+  lhs->accept(lhsDW);
+  rhs->accept(rhsDW);
+
+  auto comp = lhsDW.compare(rhsDW);
+  if(!comp.second)
+    return comp;
+
+  return std::make_pair("", true);
+}
+
 /// @brief Compares the content of two shared pointers
+///
 /// @param[in] shared pointer of type T
 /// @param[in] shared pointer of same type T
 /// @return true if contents of the shared pointers match (operator ==)
@@ -31,23 +125,369 @@ bool pointeeComparison(const std::shared_ptr<T>& comparate1, const std::shared_p
   return *comparate1 == *comparate2;
 }
 
-static bool pointerMapComparison(const sir::GlobalVariableMap& map1,
-                                 const sir::GlobalVariableMap& map2) {
+/// @brief Compares the content of two shared pointers
+///
+/// The boolean is true if contents of the shared pointers match (operator ==) the string returns a
+/// potential mismatch notification
+///
+/// @param[in] shared pointer of type T
+/// @param[in] shared pointer of same type T
+/// @return pair of boolean and string
+/// @pre Type T requies a comparison function that returns the pair of bool and string
+template <typename T>
+std::pair<std::string, bool> pointeeComparisonWithOutput(const std::shared_ptr<T>& comparate1,
+                                                         const std::shared_ptr<T>& comparate2) {
+  return (*comparate1).comparison(*comparate2);
+}
+
+/// @brief Helperfunction to compare two maps of key and shared pointer
+///
+/// the boolean is true if contents of the shared pointers match for every key (operator ==)
+/// the string returns a potential mismatch notification
+///
+/// @return pair of boolean and string
+static std::pair<std::string, bool> pointerMapComparison(const sir::GlobalVariableMap& map1,
+                                                         const sir::GlobalVariableMap& map2) {
+  std::string output;
   if(map1.size() != map2.size()) {
-    return false;
+    output += dawn::format("[GlobalVariableMap mismatch] Number of Global Variables do not match\n"
+                           "  Actual:\n"
+                           "    %s\n"
+                           "  Expected:\n"
+                           "    %s",
+                           map1.size(), map2.size());
+    return std::make_pair(output, false);
+
   } else {
     for(auto& a : map1) {
       auto finder = map2.find(a.first);
       if(finder == map2.end()) {
-        return false;
-      } else if(finder->second == nullptr || a.second == nullptr) {
-        return finder->second == a.second;
+        output +=
+            dawn::format("[GlobalVariableMap mismatch] Global Variable '%s' not found\n", a.first);
+        return std::make_pair(output, false);
       } else if(!(*(finder->second.get()) == *(a.second.get()))) {
-        return false;
+        output +=
+            dawn::format("[GlobalVariableMap mismatch] Global Variables '%s' values are not equal\n"
+                         "  Actual:\n"
+                         "    %s\n"
+                         "  Expected:\n"
+                         "    %s",
+                         a.first, a.second->toString(), finder->second->toString());
+        return std::make_pair(output, false);
       }
     }
-    return true;
+    return std::make_pair(output, true);
   }
+}
+
+} // anonymous namespace
+
+std::pair<std::string, bool> SIR::comparison(const SIR& rhs) const {
+  std::string output;
+
+  // Stencils
+  if((Stencils.size() != rhs.Stencils.size()))
+    return std::make_pair("[SIR mismatch] number of Stencils do not match\n", false);
+
+  if(!std::equal(Stencils.begin(), Stencils.end(), rhs.Stencils.begin(),
+                 pointeeComparison<sir::Stencil>)) {
+    output += "[SIR mismatch] Stencils do not match\n";
+    for(int i = 0; i < Stencils.size(); ++i) {
+      auto comp = pointeeComparisonWithOutput(Stencils[i], rhs.Stencils[i]);
+      if(comp.second == false) {
+        output += comp.first;
+      }
+    }
+
+    return std::make_pair(output, false);
+  }
+
+  // Stencil Functions
+  if(StencilFunctions.size() != rhs.StencilFunctions.size())
+    return std::make_pair("[SIR mismatch] number of Stencil Functions does not match\n", false);
+
+  if(!std::equal(StencilFunctions.begin(), StencilFunctions.end(), rhs.StencilFunctions.begin(),
+                 pointeeComparison<sir::StencilFunction>)) {
+    output += "[SIR mismatch] Stencil Functions do not match\n";
+    for(int i = 0; i < StencilFunctions.size(); ++i) {
+      auto comp = pointeeComparisonWithOutput(StencilFunctions[i], rhs.StencilFunctions[i]);
+      if(!comp.second)
+        output +=
+            dawn::format("[StencilFunction mismatch] Stencil Function %s does not match\n%s\n",
+                         StencilFunctions[i]->Name, comp.first);
+    }
+
+    return std::make_pair(output, false);
+  }
+
+  // Global variable map
+  if(GlobalVariableMap.get()->size() != rhs.GlobalVariableMap.get()->size())
+    return std::make_pair("[SIR mismatch] number of Global Variables does not match\n", false);
+
+  if(!pointerMapComparison(*(GlobalVariableMap.get()), *(rhs.GlobalVariableMap.get())).second) {
+    auto comp = pointerMapComparison(*(GlobalVariableMap.get()), *(rhs.GlobalVariableMap.get()));
+    if(!comp.second)
+      return std::make_pair(comp.first, false);
+  }
+
+  return std::make_pair("", true);
+}
+
+std::pair<std::string, bool> sir::Stencil::comparison(const sir::Stencil& rhs) const {
+  // Fields
+  if(Fields.size() != rhs.Fields.size())
+    return std::make_pair(dawn::format("[Stencil mismatch] number of Fields does not match\n"
+                                       "  Actual:\n"
+                                       "    %s\n"
+                                       "  Expected:\n"
+                                       "    %s",
+                                       Fields.size(), rhs.Fields.size()),
+                          false);
+
+  // Name
+  if(Name != rhs.Name)
+    return std::make_pair(dawn::format("[Stencil mismatch] Stencil names do not match\n"
+                                       "  Actual:\n"
+                                       "    %s\n"
+                                       "  Expected:\n"
+                                       "    %s",
+                                       Name, rhs.Name),
+                          false);
+
+  // Attributes
+  if(Attributes != rhs.Attributes)
+    return std::make_pair(dawn::format("[Stencil mismatch] Stencil attibutes do not match\n"
+                                       "  Actual:\n"
+                                       "    %s\n"
+                                       "  Expected:\n"
+                                       "    %s",
+                                       Attributes.getBits(), rhs.Attributes.getBits()),
+                          false);
+
+  if(!Fields.empty() &&
+     !std::equal(Fields.begin(), Fields.end(), rhs.Fields.begin(), pointeeComparison<sir::Field>)) {
+    std::string output = "[Stencil mismatch] Fields do not match\n";
+
+    for(int i = 0; i < Fields.size(); ++i) {
+      auto comp = pointeeComparisonWithOutput(Fields[i], rhs.Fields[i]);
+      if(!comp.second)
+        output += dawn::format("[Stencil mismatch] Field %s does not match\n%s\n",
+                               Fields[i].get()->Name, comp.first);
+    }
+
+    return std::make_pair(output, false);
+  }
+
+  // AST
+  auto astComp = compareAst(StencilDescAst, rhs.StencilDescAst);
+  if(!astComp.second)
+    return std::make_pair(dawn::format("[Stencil mismatch] ASTs do not match\n%s\n", astComp.first),
+                          false);
+
+  return std::make_pair("", true);
+}
+
+std::pair<std::string, bool>
+sir::StencilFunction::comparison(const sir::StencilFunction& rhs) const {
+
+  // Name
+  if(Name != rhs.Name) {
+    return std::make_pair(
+        dawn::format("[StencilFunction mismatch] Names of Stencil Functions do not match\n"
+                     "  Actual:\n"
+                     "    %s\n"
+                     "  Expected:\n"
+                     "    %s",
+                     Name, rhs.Name),
+        false);
+  }
+
+  // Attributes
+  if(Attributes != rhs.Attributes) {
+    return std::make_pair(
+        dawn::format("[StencilFunction mismatch] Attributes of Stencil Functions do not match\n"
+                     "  Actual:\n"
+                     "    %i\n"
+                     "  Expected:\n"
+                     "    %i",
+                     Attributes.getBits(), rhs.Attributes.getBits()),
+        false);
+  }
+
+  // Arguments
+  if(Args.size() != rhs.Args.size()) {
+    return std::make_pair(
+        dawn::format("[StencilFunction mismatch] Number of Arguments do not match\n"
+                     "  Actual:\n"
+                     "    %i\n"
+                     "  Expected:\n"
+                     "    %i",
+                     Args.size(), rhs.Args.size()),
+        false);
+  }
+
+  if(!std::equal(Args.begin(), Args.end(), rhs.Args.begin(),
+                 pointeeComparison<sir::StencilFunctionArg>)) {
+    std::string output = "[StencilFunction mismatch] Stencil Functions Arguments do not match\n";
+    for(int i = 0; i < Args.size(); ++i) {
+      auto comp = pointeeComparisonWithOutput(Args[i], rhs.Args[i]);
+      if(!comp.second) {
+        output += dawn::format("[StencilFunction mismatch] Argument '%s' does not match\n%s\n",
+                               Args[i]->Name, comp.first);
+      }
+    }
+    return std::make_pair(output, false);
+  }
+
+  // Intervals
+  if(Intervals.size() != rhs.Intervals.size()) {
+    return std::make_pair(
+        dawn::format("[StencilFunction mismatch] Number of Intervals do not match\n"
+                     "  Actual:\n"
+                     "    %i\n"
+                     "  Expected:\n"
+                     "    %i",
+                     Intervals.size(), rhs.Intervals.size()),
+        false);
+  }
+
+  // Intervals
+  if(!Intervals.empty() &&
+     !std::equal(Intervals.begin(), Intervals.end(), rhs.Intervals.begin(),
+                 pointeeComparison<sir::Interval>)) {
+    std::string output = "[StencilFunction mismatch] Intervals do not match\n";
+    for(int i = 0; i < Intervals.size(); ++i) {
+      auto comp = pointeeComparisonWithOutput(Intervals[i], rhs.Intervals[i]);
+      if(comp.second == false) {
+        output += dawn::format("[StencilFunction mismatch] Interval '%s' does not match '%s'\n%s\n",
+                               *Intervals[i], *rhs.Intervals[i], comp.first);
+      }
+    }
+    return std::make_pair(output, false);
+  }
+
+  // ASTs
+  if(Asts.size() != rhs.Asts.size()) {
+    return std::make_pair(dawn::format("[StencilFunction mismatch] Number of ASTs does not match\n"
+                                       "  Actual:\n"
+                                       "    %i\n"
+                                       "  Expected:\n"
+                                       "    %i",
+                                       Asts.size(), rhs.Asts.size()),
+                          false);
+  }
+
+  auto intervalToString = [](const sir::Interval& interval) {
+    std::stringstream ss;
+    ss << interval;
+    return ss.str();
+  };
+
+  for(int i = 0; i < Asts.size(); ++i) {
+    auto astComp = compareAst(Asts[i], rhs.Asts[i]);
+    if(!astComp.second)
+      return std::make_pair(
+          dawn::format("[StencilFunction mismatch] AST '%s' does not match\n%s\n",
+                       i < Intervals.size() ? intervalToString(*Intervals[i]) : std::to_string(i),
+                       astComp.first),
+          false);
+  }
+
+  return std::make_pair("", true);
+}
+
+std::pair<std::string, bool>
+sir::StencilFunctionArg::comparison(const sir::StencilFunctionArg& rhs) const {
+  auto kindToString = [](ArgumentKind kind) -> const char* {
+    switch(kind) {
+    case dawn::sir::StencilFunctionArg::AK_Field:
+      return "Field";
+    case dawn::sir::StencilFunctionArg::AK_Direction:
+      return "Direction";
+    case dawn::sir::StencilFunctionArg::AK_Offset:
+      return "Offset";
+    }
+    dawn_unreachable("invalid argument type");
+  };
+
+  if(Name != rhs.Name) {
+    return std::make_pair(dawn::format("[StencilFunctionArgument mismatch] Names do not match\n"
+                                       "  Actual:\n"
+                                       "    %s\n"
+                                       "  Expected:\n"
+                                       "    %s",
+                                       Name, rhs.Name),
+                          false);
+  }
+
+  if(Kind != rhs.Kind)
+    return std::make_pair(
+        dawn::format("[StencilFunctionArgument mismatch] Argument Types do not match\n"
+                     "  Actual:\n"
+                     "    %s\n"
+                     "  Expected:\n"
+                     "    %s",
+                     kindToString(Kind), kindToString(rhs.Kind)),
+        false);
+
+  return std::make_pair("", true);
+}
+
+std::pair<std::string, bool> sir::Value::comparison(const sir::Value& rhs) const {
+  auto type = getType();
+  if(type != rhs.getType())
+    return std::make_pair(dawn::format("[Value mismatch] Values are not of the same type\n"
+                                       "  Actual:\n"
+                                       "    %s\n"
+                                       "  Expected:\n"
+                                       "    %s",
+                                       type, rhs.getType()),
+                          false);
+
+  switch(type) {
+  case sir::Value::TypeKind::Boolean:
+    return isEqualImpl<bool>(*this, rhs, rhs.toString());
+  case sir::Value::TypeKind::Integer:
+    return isEqualImpl<int>(*this, rhs, rhs.toString());
+  case sir::Value::TypeKind::Double:
+    return isEqualImpl<double>(*this, rhs, rhs.toString());
+  case sir::Value::TypeKind::String:
+    return isEqualImpl<std::string>(*this, rhs, rhs.toString());
+  default:
+    dawn_unreachable("invalid type");
+  }
+}
+
+std::pair<std::string, bool> sir::VerticalRegion::comparison(const sir::VerticalRegion& rhs) const {
+  std::string output;
+  if(LoopOrder != rhs.LoopOrder) {
+    output += dawn::format("[VerticalRegion mismatch] Loop order does not match\n"
+                           "  Actual:\n"
+                           "    %s\n"
+                           "  Expected:\n"
+                           "    %s",
+                           LoopOrder, rhs.LoopOrder);
+    return std::make_pair(output, false);
+  }
+
+  auto intervalComp = VerticalInterval->comparison(*(rhs.VerticalInterval));
+  if(!intervalComp.second) {
+    output += "[VerticalRegion mismatch] Intervals do not match\n";
+    output += intervalComp.first;
+    return std::make_pair(output, false);
+  }
+
+  auto astComp = compareAst(Ast, rhs.Ast);
+  if(!astComp.second) {
+    output += "[VerticalRegion mismatch] ASTs do not match\n";
+    output += astComp.first;
+    return std::make_pair(output, false);
+  }
+  return std::make_pair(output, true);
+}
+
+bool sir::VerticalRegion::operator==(const sir::VerticalRegion& rhs) const {
+  return this->comparison(rhs).second;
 }
 
 namespace sir {
@@ -59,6 +499,31 @@ std::shared_ptr<AST> StencilFunction::getASTOfInterval(const Interval& interval)
     if(*Intervals[i] == interval)
       return Asts[i];
   return nullptr;
+}
+
+std::pair<std::string, bool> Interval::comparison(const Interval& rhs) const {
+  auto formatErrorMsg = [](const char* name, int l, int r) -> std::string {
+    return dawn::format("[Inverval mismatch] %s do not match\n"
+                        "  Actual:\n"
+                        "    %i\n"
+                        "  Expected:\n"
+                        "    %i",
+                        name, l, r);
+  };
+
+  if(LowerLevel != rhs.LowerLevel)
+    return std::make_pair(formatErrorMsg("LowerLevels", LowerLevel, rhs.LowerLevel), false);
+
+  if(UpperLevel != rhs.UpperLevel)
+    return std::make_pair(formatErrorMsg("UpperLevels", UpperLevel, rhs.UpperLevel), false);
+
+  if(LowerOffset != rhs.LowerOffset)
+    return std::make_pair(formatErrorMsg("LowerOffsets", LowerOffset, rhs.LowerOffset), false);
+
+  if(UpperOffset != rhs.UpperOffset)
+    return std::make_pair(formatErrorMsg("UpperOffsets", UpperOffset, rhs.UpperOffset), false);
+
+  return std::make_pair("", true);
 }
 
 std::string Interval::toString() const {
@@ -87,6 +552,8 @@ std::ostream& operator<<(std::ostream& os, const Interval& interval) {
   os << " }";
   return os;
 }
+
+Stencil::Stencil() : StencilDescAst(std::make_shared<AST>()) {}
 
 } // namespace sir
 
@@ -134,6 +601,8 @@ std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
   os << "\n}";
   return os;
 }
+
+SIR::SIR() : GlobalVariableMap(std::make_shared<sir::GlobalVariableMap>()) {}
 
 void SIR::dump() { std::cout << *this << std::endl; }
 
@@ -202,142 +671,20 @@ std::shared_ptr<sir::StencilCall> sir::StencilCall::clone() const {
   return call;
 }
 
-bool SIR::operator==(const SIR& rhs) const {
-  bool retval = true;
+bool SIR::operator==(const SIR& rhs) const { return comparison(rhs).second; }
 
-  if((Stencils.size() == rhs.Stencils.size()) &&
-     (StencilFunctions.size() == rhs.StencilFunctions.size())) {
-
-    if(Stencils.size() > 0) {
-      retval &= std::equal(Stencils.begin(), Stencils.end(), rhs.Stencils.begin(),
-                           pointeeComparison<sir::Stencil>);
-    }
-    if(!retval) {
-      return false;
-    }
-
-    if(StencilFunctions.size() > 0) {
-      retval &= std::equal(StencilFunctions.begin(), StencilFunctions.end(),
-                           rhs.StencilFunctions.begin(), pointeeComparison<sir::StencilFunction>);
-    }
-    if(!retval) {
-      return false;
-    }
-
-    if(GlobalVariableMap != nullptr && rhs.GlobalVariableMap != nullptr) {
-      if(GlobalVariableMap->size() == rhs.GlobalVariableMap->size()) {
-        if(GlobalVariableMap->size() > 0) {
-          retval &=
-              pointerMapComparison(*(GlobalVariableMap.get()), *(rhs.GlobalVariableMap.get()));
-        }
-      } else {
-        return false;
-      }
-    } else {
-      return GlobalVariableMap == rhs.GlobalVariableMap;
-    }
-
-    return retval;
-  }
-  return false;
-}
 bool SIR::operator!=(const SIR& rhs) const { return !(*this == rhs); }
 
-bool sir::Stencil::operator==(const sir::Stencil& rhs) const {
-  bool retval = true;
-  if(Fields.size() != rhs.Fields.size()) {
-    return false;
-  }
-  retval &= (Name == rhs.Name);
-  if(!retval) {
-    return false;
-  }
-
-  retval &= (Attributes == rhs.Attributes);
-  if(!retval) {
-    return false;
-  }
-  if(StencilDescAst != nullptr && rhs.StencilDescAst != nullptr) {
-    if(StencilDescAst->getRoot() != nullptr && rhs.StencilDescAst->getRoot() != nullptr) {
-      retval &= StencilDescAst->getRoot().get()->equals(rhs.StencilDescAst->getRoot().get());
-    } else {
-      return StencilDescAst->getRoot() == rhs.StencilDescAst->getRoot();
-    }
-  } else {
-    return StencilDescAst == rhs.StencilDescAst;
-  }
-  if(Fields.size() > 0) {
-    retval &=
-        std::equal(Fields.begin(), Fields.end(), rhs.Fields.begin(), pointeeComparison<Field>);
-  }
-
-  return retval;
-}
+bool sir::Stencil::operator==(const sir::Stencil& rhs) const { return comparison(rhs).second; }
 
 bool sir::StencilFunction::operator==(const sir::StencilFunction& rhs) const {
-  bool retval = true;
-  retval &= (Name == rhs.Name);
-  retval &= Attributes == rhs.Attributes;
-  if(!retval) {
-    return false;
-  }
-  if(Args.size() != rhs.Args.size() && Intervals.size() != rhs.Intervals.size() &&
-     Asts.size() != rhs.Asts.size()) {
-    return false;
-  } else {
-    if(Args.size() > 0) {
-      retval &= std::equal(Args.begin(), Args.end(), rhs.Args.begin(),
-                           pointeeComparison<sir::StencilFunctionArg>);
-    }
-    if(!retval) {
-      return false;
-    }
-
-    if(Intervals.size() > 0) {
-      retval &= std::equal(Intervals.begin(), Intervals.end(), rhs.Intervals.begin(),
-                           pointeeComparison<sir::Interval>);
-    }
-    if(!retval) {
-      return false;
-    }
-
-    if(Asts.size() > 0) {
-      auto astcomparison = [](std::shared_ptr<dawn::AST> comparate1,
-                              std::shared_ptr<dawn::AST> comparate2) {
-        if(comparate1->getRoot() != nullptr && comparate2->getRoot() != nullptr) {
-          return comparate1->getRoot().get()->equals(comparate2->getRoot().get());
-        } else {
-          return comparate1->getRoot() == comparate2->getRoot();
-        }
-      };
-      retval &= std::equal(Asts.begin(), Asts.end(), rhs.Asts.begin(), astcomparison);
-    }
-  }
-  return retval;
+  return comparison(rhs).second;
 }
 
 bool sir::StencilFunctionArg::operator==(const sir::StencilFunctionArg& rhs) const {
-  return (Name == rhs.Name) && (Kind == rhs.Kind);
+  return comparison(rhs).second;
 }
 
-bool sir::Value::operator==(const sir::Value& rhs) const {
-
-  auto type = getType();
-  if(type != rhs.getType()) {
-    return false;
-  }
-  switch(type) {
-  case Value::TypeKind::Boolean:
-    return getValue<bool>() == rhs.getValue<bool>();
-  case Value::TypeKind::Integer:
-    return getValue<int>() == rhs.getValue<int>();
-  case Value::TypeKind::Double:
-    return getValue<double>() == rhs.getValue<double>();
-  case Value::TypeKind::String:
-    return getValue<std::string>() == rhs.getValue<std::string>();
-  default:
-    dawn_unreachable("invalid type");
-  }
-}
+bool sir::Value::operator==(const sir::Value& rhs) const { return comparison(rhs).second; }
 
 } // namespace dawn
