@@ -325,7 +325,12 @@ struct Value : NonCopyable {
   enum TypeKind { None = 0, Boolean, Integer, Double, String };
 
   Value() : type_(None), isConstexpr_(false), valueImpl_(nullptr) {}
-
+  
+  template <class T>
+  explicit Value(T&& value) : isConstexpr_(false) {
+    setValue(value);
+  }
+  
   /// @brief Get/Set if the variable is `constexpr`
   bool isConstexpr() const { return isConstexpr_; }
   void setIsConstexpr(bool isConstexpr) { isConstexpr_ = isConstexpr; }
