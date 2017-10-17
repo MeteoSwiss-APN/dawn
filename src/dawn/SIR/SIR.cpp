@@ -25,55 +25,10 @@
 namespace dawn {
 
 namespace {
-/// @brief AST Visitor to read all expressions and statements for comparison
-/// @ingroup testing
-/// DiffWriter traverses the full AST similar to the Forwarder with the exception of also going into
-/// vertical regions.
-/// All the expressions and Statements are strored locally.
-/// Two DiffWriters can be compared to one and another via compare that returns a pair of boolean
-/// and string with a human readable explanation if they do not match.
-class DiffWriter : public ASTVisitorForwarding {
+
+/// @brief Allow direct comparison of the Stmts of an AST
+class DiffWriter final : public ASTVisitorForwarding {
 public:
-  DiffWriter() : expressions_(), statements_() {}
-
-  virtual void visit(const std::shared_ptr<UnaryOperator>& expr) override {
-    expressions_.push_back(expr);
-    ASTVisitorForwarding::visit(expr);
-  }
-  virtual void visit(const std::shared_ptr<BinaryOperator>& expr) override {
-    expressions_.push_back(expr);
-    ASTVisitorForwarding::visit(expr);
-  }
-  virtual void visit(const std::shared_ptr<TernaryOperator>& expr) override {
-    expressions_.push_back(expr);
-    ASTVisitorForwarding::visit(expr);
-  }
-  virtual void visit(const std::shared_ptr<FunCallExpr>& expr) override {
-    expressions_.push_back(expr);
-    ASTVisitorForwarding::visit(expr);
-  }
-  virtual void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
-    expressions_.push_back(expr);
-    ASTVisitorForwarding::visit(expr);
-  }
-  virtual void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override {
-    expressions_.push_back(expr);
-    ASTVisitorForwarding::visit(expr);
-  }
-
-  virtual void visit(const std::shared_ptr<AssignmentExpr>& expr) override {
-    expressions_.push_back(expr);
-    ASTVisitorForwarding::visit(expr);
-  }
-  virtual void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
-    expressions_.push_back(expr);
-    ASTVisitorForwarding::visit(expr);
-  }
-
-  virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
-    expressions_.push_back(expr);
-    ASTVisitorForwarding::visit(expr);
-  }
   virtual void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) override {
     statements_.push_back(stmt);
     stmt->getVerticalRegion()->Ast->getRoot()->accept(*this);
@@ -93,127 +48,92 @@ public:
     statements_.push_back(stmt);
     ASTVisitorForwarding::visit(stmt);
   }
+
   virtual void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
     statements_.push_back(stmt);
     ASTVisitorForwarding::visit(stmt);
   }
 
-  const std::vector<std::shared_ptr<Expr>>& getExpr() const { return expressions_; }
-  const std::vector<std::shared_ptr<Stmt>>& getStmt() const { return statements_; }
+  std::vector<std::shared_ptr<Stmt>> getStatements() const { return statements_; }
 
   std::pair<std::string, bool> compare(const DiffWriter& other) {
-    std::string output;
-    auto rhsExpr = other.getExpr();
-    auto rhsStmt = other.getStmt();
-    if(expressions_.size() != rhsExpr.size() || statements_.size() != rhsStmt.size()) {
-      output +=
-          dawn::format("[AST mismatch] Number of Statements / Expressions does not match\n"
-                       "AST1: #Statements %i and #Expressions %i\n"
-                       "AST2: #Statements %i and #Expressions %i\n",
-                       statements_.size(), expressions_.size(), rhsExpr.size(), rhsStmt.size());
-      return std::make_pair(output, false);
-    }
-    for(unsigned j = 0; j < expressions_.size(); ++j) {
-      if(expressions_[j] != rhsExpr[j]) {
-        output += dawn::format("[AST mismatch] Uneven Expressions\n"
-                               "[Expression mismatch] Expecting \n"
-                               "%s \n"
-                               "and got \n"
-                               "%s \n",
-                               ASTStringifer::toString(expressions_[j]),
-                               ASTStringifer::toString(rhsExpr[j]));
-        output += "Expression kind is " + std::to_string(expressions_[j]->getKind()) + " and " +
-                  std::to_string(rhsExpr[j]->getKind());
-        return std::make_pair(output, false);
+    std::size_t minSize = std::min(statements_.size(), other.getStatements().size());
+    if(minSize == 0 && (statements_.size() != other.getStatements().size()))
+      return std::make_pair("[AST mismatch] AST is empty", false);
+
+    for(std::size_t idx = 0; idx < minSize; ++idx) {
+      if(!statements_[idx]->equals(other.getStatements()[idx].get())) {
+        return std::make_pair(
+            dawn::format("[AST mismatch] Statement mismatch\n"
+                         "  Actual:\n"
+                         "    %s\n"
+                         "  Expected:\n"
+                         "    %s",
+                         indent(ASTStringifer::toString(statements_[idx]), 4),
+                         indent(ASTStringifer::toString(other.getStatements()[idx]), 4)),
+            false);
       }
     }
-    for(unsigned j = 0; j < statements_.size(); ++j) {
-      if(statements_[j] != rhsStmt[j]) {
-        output += dawn::format("[AST mismatch] Uneven Statements\n"
-                               "[Statement mismatch] Expecting \n"
-                               "%s \n"
-                               " and got \n"
-                               " %s \n",
-                               ASTStringifer::toString(statements_[j]),
-                               ASTStringifer::toString(rhsStmt[j]));
-        return std::make_pair(output, false);
-      }
-    }
-    return std::make_pair(output, true);
+
+    return std::make_pair("", true);
   }
 
 private:
-  std::vector<std::shared_ptr<Expr>> expressions_;
   std::vector<std::shared_ptr<Stmt>> statements_;
 };
 
-///@brief Stringification of a Value Mismatch
-/// @ingroup testing
+///@brief Stringification of a Value mismatch
 template <class T>
 std::pair<std::string, bool> isEqualImpl(const sir::Value& a, const sir::Value& b,
                                          const std::string& name) {
   if(a.getValue<T>() != b.getValue<T>())
     return std::make_pair(dawn::format("[Value mismatch] %s values are not equal\n"
-                                       "  left = %s\n"
-                                       "  right = %s\n",
+                                       "  Actual:\n"
+                                       "    %s\n"
+                                       "  Expected:\n"
+                                       "    %s",
                                        name, a.toString(), b.toString()),
                           false);
-  return std::make_pair(std::string(), true);
+
+  return std::make_pair("", true);
 }
 
-/// @brief compares two ASTs
-/// @ingroup testing
-std::pair<std::string, bool> compareAst(std::shared_ptr<AST> lhs, std::shared_ptr<AST> rhs) {
-  std::string output;
-  if(lhs->getRoot()->getStatements().size() != rhs->getRoot()->getStatements().size()) {
-    output += dawn::format("[AST mismatch] ASTs do not have the same number of statements\n"
-                           "we get %i and %i total Statements",
-                           lhs->getRoot()->getStatements().size(),
-                           rhs->getRoot()->getStatements().size());
-    return std::make_pair(output, false);
-  }
-  for(unsigned i = 0; i < lhs->getRoot()->getStatements().size(); ++i) {
-    if(!lhs->getRoot()->getStatements()[i]->equals(rhs->getRoot()->getStatements()[i].get())) {
-      const auto& lhsStatement = lhs->getRoot()->getStatements()[i];
-      const auto& rhsStatement = rhs->getRoot()->getStatements()[i];
-      const auto& lhskind = lhsStatement->getKind();
-      const auto& rhskind = rhsStatement->getKind();
-      if(lhskind != rhskind) {
-        output += "[AST mismatch] Statements are not of the same kind";
-        return std::make_pair(output, false);
-      }
-      DiffWriter dw;
-      lhsStatement->accept(dw);
-      DiffWriter dw2;
-      rhsStatement->accept(dw2);
-      auto statementComparison = dw.compare(dw2);
-      if(!statementComparison.second) {
-        output += statementComparison.first;
-        return std::make_pair(output, false);
-      }
-    }
-  }
-  return std::make_pair(output, true);
+/// @brief Compares two ASTs
+std::pair<std::string, bool> compareAst(const std::shared_ptr<AST>& lhs,
+                                        const std::shared_ptr<AST>& rhs) {
+  if(lhs->getRoot()->equals(rhs->getRoot().get()))
+    return std::make_pair("", true);
+
+  DiffWriter lhsDW, rhsDW;
+  lhs->accept(lhsDW);
+  rhs->accept(rhsDW);
+
+  auto comp = lhsDW.compare(rhsDW);
+  if(!comp.second)
+    return comp;
+
+  return std::make_pair("", true);
 }
 
 /// @brief Compares the content of two shared pointers
+///
 /// @param[in] shared pointer of type T
 /// @param[in] shared pointer of same type T
 /// @return true if contents of the shared pointers match (operator ==)
-/// @ingroup testing
 template <typename T>
 bool pointeeComparison(const std::shared_ptr<T>& comparate1, const std::shared_ptr<T>& comparate2) {
   return *comparate1 == *comparate2;
 }
 
 /// @brief Compares the content of two shared pointers
+///
+/// The boolean is true if contents of the shared pointers match (operator ==) the string returns a
+/// potential mismatch notification
+///
 /// @param[in] shared pointer of type T
 /// @param[in] shared pointer of same type T
 /// @return pair of boolean and string
-/// the boolean is true if contents of the shared pointers match (operator ==)
-/// the string returns a potential mismatch notification
 /// @pre Type T requies a comparison function that returns the pair of bool and string
-/// @ingroup testing
 template <typename T>
 std::pair<std::string, bool> pointeeComparisonWithOutput(const std::shared_ptr<T>& comparate1,
                                                          const std::shared_ptr<T>& comparate2) {
