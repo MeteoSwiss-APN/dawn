@@ -76,8 +76,8 @@ public:
   /// @brief Clear all attributes
   void clear() { attrBits_ = 0; }
 
-  ///@brief comparison if two Attrs are in the Same mode
   bool operator==(const Attr& rhs) const { return getBits() == rhs.getBits(); }
+  bool operator!=(const Attr& rhs) const { return getBits() != rhs.getBits(); }
 };
 
 //===------------------------------------------------------------------------------------------===//
