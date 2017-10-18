@@ -67,7 +67,7 @@ gtclang_build_dawn() {
   local dawn_install_dir="$DAWN_DIR/install"
   local dawn_build_dir="$DAWN_DIR/build"
 
-  mkdir -p "$DAWN_DIR/build" && cd -p "$DAWN_DIR/build"
+  mkdir -p "$DAWN_DIR/build" && cd "$DAWN_DIR/build"
   cmake .. -DCMAKE_CXX_COMPILER="$CXX"                                                             \
         -DCMAKE_C_COMPILER="$CC"                                                                   \
         -DCMAKE_BUILD_TYPE="$CONFIG"                                                               \
