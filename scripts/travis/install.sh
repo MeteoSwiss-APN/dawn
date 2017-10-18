@@ -70,11 +70,18 @@ function install_package() {
   local package_upper=$(echo $package | awk '{print toupper($0)}')
   local package_version_var="${package_upper}_VERSION"
 
+  # Check version var exists
   if [ -z ${!package_version_var+x} ]; then
     fatal_error "variable '$package_version_var' is not defined"
   fi
 
-  source "$this_script_dir/install_${package}.sh" || exit 1
+  # Check install_<package>.sh exists
+  local install_script_dir="$this_script_dir/install_${package}.sh"
+  if [ ! -f "$install_script_dir" ]; then
+    fatal_error "unknown package '$package' (missing 'install_$package.sh')"
+  fi
+
+  source "$install_script_dir" || exit 1
   "install_${package}" "$install_dir" ${!package_version_var} $args
 }
 
@@ -94,7 +101,7 @@ function install_driver() {
       -b|--build) packages=$2; shift 2;;
       -i|--install-dir) install_dir=$2; shift 2;;
       --) shift; break ;;
-      *) echo "$0: internal error." ; exit 1 ;;
+      *) echo "$0: internal error."; exit 1;;
     esac
   done
 
@@ -132,16 +139,6 @@ function install_driver() {
   IFS=', ' read -r -a split_package <<< "$packages"
   for package in "${split_package[@]}"
   do
-    case $package in
-    cmake) 
-      install_package "${install_dir}" cmake;;
-    protobuf) 
-      install_package "${install_dir}" protobuf;;
-    clang) 
-      install_package "${install_dir}" clang;; 
-    *) 
-      >&2 echo "$0: error: unknown package '$package'";
-      exit 1;;
-    esac
+    install_package "${install_dir}" $package;
   done
 }
