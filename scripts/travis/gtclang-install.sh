@@ -49,6 +49,7 @@ gtclang_get_dawn() {
       dawn_git_url="https://github.com/MeteoSwiss-APN/dawn.git"
     fi
 
+    echo "Cloning from $dawn_git_url"
     git clone $dawn_git_url "$DAWN_DIR" || fatal_error_bootstrap "failed to clone master"
   fi
 
@@ -82,7 +83,7 @@ gtclang_build_dawn() {
 
 gtclang_install_dependencies() {
   export DAWN_DIR="$CACHE_DIR/dawn"
-  export DAWN_SCRIPT_DIR="$DAWN_DIR/script/travis"
+  export DAWN_SCRIPT_DIR="$DAWN_DIR/scripts/travis"
 
   # Fetch Dawn
   gtclang_get_dawn
