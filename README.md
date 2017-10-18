@@ -1,4 +1,4 @@
-Dawn <br/> <a target="_blank" href="http://semver.org">![Version][Version.Badge]</a> <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![Travis status][TravisCI.Badge]</a> <a target="_blank" href="https://opensource.org/licenses/MIT">![License: MIT][MIT.License]</a> <a target="_blank" href="https://MeteoSwiss-APN.github.io/dawn">![Documentation][Documentation.Badge]</a>
+Dawn <br/> <a target="_blank" href="http://semver.org">![Version][Version.Badge]</a> <a target="_blank" href="https://travis-ci.org/MeteoSwiss-APN/dawn">![Travis status][TravisCI.Badge]</a> <a target="_blank" href="https://opensource.org/licenses/MIT">![License: MIT][MIT.License]</a> <a target="_blank" href="https://MeteoSwiss-APN.github.io/dawn">![Documentation][Documentation.Badge]</a>
 ====
 
 ## Introduction
@@ -42,16 +42,16 @@ For a more detailed guide on how to build Dawn (and Protobuf), see [here](https:
 ### Linux
 |  Toolchain   | Config         |                                                     Status                                                   |
 |:-------------|:---------------|-------------------------------------------------------------------------------------------------------------:|
-| GCC 5.4      | Release        |  <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![GCC 5.4][GCC_54_Release.Badge]</a>          |
-| GCC 5.4      | RelWithDebInfo |  <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![GCC 5.4][GCC_54_RelWithDebInfo.Badge]</a>   |
-| GCC 6.3      | Release        |  <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![GCC 6.3][GCC_63_Release.Badge]</a>          |
-| GCC 6.3      | RelWithDebInfo |  <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![GCC 6.3][GCC_63_RelWithDebInfo.Badge]</a>   |
-| Clang 3.8    | Release        |  <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![Clang 3.8][Clang_38_Release.Badge]</a>        |
-| Clang 3.8    | RelWithDebInfo |  <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![Clang 3.8][Clang_38_RelWithDebInfo.Badge]</a> |
-| Clang 4.0    | Release        |  <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![Clang 4.0][Clang_40_Release.Badge]</a>        |
-| Clang 4.0    | RelWithDebInfo |  <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![Clang 4.0][Clang_40_RelWithDebInfo.Badge]</a> |
-| Clang 5.0    | Release        |  <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![Clang 5.0][Clang_50_Release.Badge]</a>        |
-| Clang 5.0    | RelWithDebInfo |  <a target="_blank" href="https://travis-ci.org/thfabian/dawn">![Clang 5.0][Clang_50_RelWithDebInfo.Badge]</a> |
+| GCC 5.4      | Release        |  <a target="_blank" href="https://travis-ci.org/MeteoSwiss-APN/dawn">![GCC 5.4][GCC_54_Release.Badge]</a>          |
+| GCC 5.4      | RelWithDebInfo |  <a target="_blank" href="https://travis-ci.org/MeteoSwiss-APN/dawn">![GCC 5.4][GCC_54_RelWithDebInfo.Badge]</a>   |
+| GCC 6.3      | Release        |  <a target="_blank" href="https://travis-ci.org/MeteoSwiss-APN/dawn">![GCC 6.3][GCC_63_Release.Badge]</a>          |
+| GCC 6.3      | RelWithDebInfo |  <a target="_blank" href="https://travis-ci.org/MeteoSwiss-APN/dawn">![GCC 6.3][GCC_63_RelWithDebInfo.Badge]</a>   |
+| Clang 3.8    | Release        |  <a target="_blank" href="https://travis-ci.org/MeteoSwiss-APN/dawn">![Clang 3.8][Clang_38_Release.Badge]</a>        |
+| Clang 3.8    | RelWithDebInfo |  <a target="_blank" href="https://travis-ci.org/MeteoSwiss-APN/dawn">![Clang 3.8][Clang_38_RelWithDebInfo.Badge]</a> |
+| Clang 4.0    | Release        |  <a target="_blank" href="https://travis-ci.org/MeteoSwiss-APN/dawn">![Clang 4.0][Clang_40_Release.Badge]</a>        |
+| Clang 4.0    | RelWithDebInfo |  <a target="_blank" href="https://travis-ci.org/MeteoSwiss-APN/dawn">![Clang 4.0][Clang_40_RelWithDebInfo.Badge]</a> |
+| Clang 5.0    | Release        |  <a target="_blank" href="https://travis-ci.org/MeteoSwiss-APN/dawn">![Clang 5.0][Clang_50_Release.Badge]</a>        |
+| Clang 5.0    | RelWithDebInfo |  <a target="_blank" href="https://travis-ci.org/MeteoSwiss-APN/dawn">![Clang 5.0][Clang_50_RelWithDebInfo.Badge]</a> |
 
 ## About
 
@@ -65,18 +65,18 @@ Significant contributions were made by Fabian Thuering (Master Thesis), Carlos O
 This project is licensed under the terms of the **MIT** license.
 
 <!-- Links -->
-[TravisCI]: https://travis-ci.org/thfabian/dawn
-[TravisCI.Badge]: https://travis-ci.org/thfabian/dawn.svg?branch=master
+[TravisCI]: https://travis-ci.org/MeteoSwiss-APN/dawn
+[TravisCI.Badge]: https://travis-ci.org/MeteoSwiss-APN/dawn.svg?branch=master
 [Documentation.Badge]: https://img.shields.io/badge/documentation-link-blue.svg
 [MIT.License]: https://img.shields.io/badge/License-MIT-blue.svg
-[Version.Badge]: https://badge.fury.io/gh/thfabian%2Fdawn.svg
-[GCC_54_Release.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/3
-[GCC_54_RelWithDebInfo.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/4
-[GCC_63_Release.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/5
-[GCC_63_RelWithDebInfo.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/6
-[Clang_38_Release.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/7
-[Clang_38_RelWithDebInfo.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/8
-[Clang_40_Release.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/9
-[Clang_40_RelWithDebInfo.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/10
-[Clang_50_Release.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/11
-[Clang_50_RelWithDebInfo.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/dawn/branches/master/12
+[Version.Badge]: https://badge.fury.io/gh/MeteoSwiss-APN%2Fdawn.svg
+[GCC_54_Release.Badge]: https://travis-matrix-badges.herokuapp.com/repos/MeteoSwiss-APN/dawn/branches/master/3
+[GCC_54_RelWithDebInfo.Badge]: https://travis-matrix-badges.herokuapp.com/repos/MeteoSwiss-APN/dawn/branches/master/4
+[GCC_63_Release.Badge]: https://travis-matrix-badges.herokuapp.com/repos/MeteoSwiss-APN/dawn/branches/master/5
+[GCC_63_RelWithDebInfo.Badge]: https://travis-matrix-badges.herokuapp.com/repos/MeteoSwiss-APN/dawn/branches/master/6
+[Clang_38_Release.Badge]: https://travis-matrix-badges.herokuapp.com/repos/MeteoSwiss-APN/dawn/branches/master/7
+[Clang_38_RelWithDebInfo.Badge]: https://travis-matrix-badges.herokuapp.com/repos/MeteoSwiss-APN/dawn/branches/master/8
+[Clang_40_Release.Badge]: https://travis-matrix-badges.herokuapp.com/repos/MeteoSwiss-APN/dawn/branches/master/9
+[Clang_40_RelWithDebInfo.Badge]: https://travis-matrix-badges.herokuapp.com/repos/MeteoSwiss-APN/dawn/branches/master/10
+[Clang_50_Release.Badge]: https://travis-matrix-badges.herokuapp.com/repos/MeteoSwiss-APN/dawn/branches/master/11
+[Clang_50_RelWithDebInfo.Badge]: https://travis-matrix-badges.herokuapp.com/repos/MeteoSwiss-APN/dawn/branches/master/12
