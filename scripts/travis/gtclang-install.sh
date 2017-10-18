@@ -54,8 +54,8 @@ gtclang_get_dawn() {
   fi
 
   # Create symlinks for packages
-  ln -sf "$this_script_dir/install_boost.sh" "$DAWN_SCRIPT_DIR/install_boost.sh"                        \
-      || fatal_error_bootstrap "failed to create symlinks"
+  ln -sf "$this_script_dir/install_boost.sh" "$DAWN_SCRIPT_DIR/install_boost.sh"                   \
+    || fatal_error_bootstrap "failed to create symlinks"
 
   popd
 }
@@ -90,7 +90,7 @@ gtclang_install_dependencies() {
 
   # Install 3rd party dependencies
   source "$DAWN_SCRIPT_DIR/install.sh"
-  install_driver cmake,protobuf,boost
+  install_driver -i ${CACHE_DIR} -b cmake,protobuf,boost
 
   # Install Dawn
   gtclang_build_dawn
