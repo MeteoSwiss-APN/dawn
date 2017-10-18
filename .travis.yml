@@ -113,7 +113,8 @@ cache:
     - ${CACHE_DIR}/dawn
     - ${CACHE_DIR}/boost-${BOOST_VERSION}
     - ${CACHE_DIR}/protobuf-${PROTOBUF_VERSION}
-
+  ccache: true
+  apt: true 
 
 branches:
   except:
