@@ -53,7 +53,8 @@ gtclang_get_dawn() {
   fi
 
   # Create symlinks for packages
-  ln -sf "$SCRIPT_DIR/install_boost.sh" "$DAWN_SCRIPT_DIR/install_boost.sh"
+  ln -sf "$this_script_dir/install_boost.sh" "$DAWN_SCRIPT_DIR/install_boost.sh"                        \
+      || fatal_error_bootstrap "failed to create symlinks"
 
   popd
 }
