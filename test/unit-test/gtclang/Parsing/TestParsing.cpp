@@ -18,6 +18,7 @@
 #include "dawn/SIR/SIR.h"
 #include "gtclang/Support/ParsingHeader.h"
 #include "gtclang/Unittest/GTClang.h"
+#include "gtclang/Unittest/SirGenerator.h"
 #include "gtclang/Unittest/UnittestEnvironment.h"
 #include <fstream>
 #include <gtest/gtest.h>
@@ -106,7 +107,7 @@ struct Globals : public DawnObject {
 class FileWriter {
 public:
   FileWriter(std::string filename) {
-    filename_ = env_.getFileManager().dataPath() + filename;
+    filename_ = UnittestEnvironment::getSingleton().getFileManager().dataPath() + filename;
     writeSkeleton();
   }
 
@@ -124,52 +125,227 @@ public:
     ofs.close();
   }
   const std::string getFileName() const { return filename_; }
-  UnittestEnvironment& getEnv() const { return env_; }
+  //  UnittestEnvironment& getEnv() const { return env_; }
+
+  void addParsedString(const ParsedString& ps) {
+    auto stencil = Stencil("test01", ss_);
+    for(const auto& a : ps.getFields()) {
+      stencil.addStorage(a);
+    }
+    auto doMethod = stencil.addDoMethod("void");
+    doMethod.startBody();
+
+    auto vr = doMethod.addVerticalRegion("k_start", "k_end");
+    vr.addStatement(ps.getCall());
+    vr.commit();
+    doMethod.commit();
+    stencil.commit();
+    writeToFile();
+  }
 
 private:
   std::stringstream ss_;
   std::string filename_;
   std::string fileHeader;
-  UnittestEnvironment& env_ = UnittestEnvironment::getSingleton();
 };
 
-TEST(ParsingTest, Assignment_Stencil) {
-  FileWriter writer("AssignmentStencil.cpp");
-  auto stencil = Stencil("test01", writer.ss());
-  stencil.addStorage("a,b");
-
-  auto domethod = stencil.addDoMethod("void");
-  domethod.startBody();
-
-  auto vr1 = domethod.addVerticalRegion("k_start", "k_end");
-  vr1.addStatement("a = b");
-  vr1.commit();
-  domethod.commit();
-  stencil.commit();
-  writer.writeToFile();
-
-  auto out =
-      GTClang::run({writer.getFileName()}, writer.getEnv().getFlagManager().getDefaultFlags());
-
-  ASSERT_TRUE(out.first);
-
-  std::unique_ptr<dawn::SIR> test01SIR = make_unique<dawn::SIR>();
-  test01SIR->Stencils.push_back(std::make_shared<dawn::sir::Stencil>());
-  test01SIR->Stencils[0]->Name = "test01";
-  test01SIR->Stencils[0]->StencilDescAst =
-      std::make_shared<dawn::AST>(std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{
-          std::make_shared<VerticalRegionDeclStmt>(std::make_shared<sir::VerticalRegion>(
-              std::make_shared<dawn::AST>(std::make_shared<BlockStmt>(
-                  std::vector<std::shared_ptr<Stmt>>{std::make_shared<ExprStmt>(
-                      std::make_shared<AssignmentExpr>(std::make_shared<FieldAccessExpr>("a"),
-                                                       std::make_shared<FieldAccessExpr>("b")))})),
-              std::make_shared<sir::Interval>(0, 1 << 20),
-              sir::VerticalRegion::LoopOrderKind::LK_Forward))}));
-  test01SIR->Stencils[0]->Fields.push_back(std::make_shared<sir::Field>("a"));
-  test01SIR->Stencils[0]->Fields.push_back(std::make_shared<sir::Field>("b"));
-
-
-  auto a = test01SIR->comparison(*out.second.get());
-  EXPECT_TRUE(a.second) << a.first;
+void wrapStatementInStencil(std::unique_ptr<dawn::SIR>& sir,
+                            const std::shared_ptr<dawn::Stmt>& stmt) {
+  using namespace dawn;
+  if(BlockStmt* blockstmt = dawn::dyn_cast<BlockStmt>(stmt.get())) {
+    sir->Stencils.push_back(std::make_shared<sir::Stencil>());
+    sir->Stencils[0]->Name = "test01";
+    sir->Stencils[0]->StencilDescAst =
+        std::make_shared<AST>(std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{
+            std::make_shared<VerticalRegionDeclStmt>(std::make_shared<sir::VerticalRegion>(
+                std::make_shared<AST>(std::make_shared<BlockStmt>(*blockstmt)),
+                std::make_shared<sir::Interval>(0, sir::Interval::End),
+                sir::VerticalRegion::LoopOrderKind::LK_Forward))}));
+    FieldFinder ff;
+    sir->Stencils[0]->StencilDescAst->accept(ff);
+    for(const auto& a : ff.getFields()) {
+      sir->Stencils[0]->Fields.push_back(a);
+    }
+  } else {
+    wrapStatementInStencil(sir,
+                           std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{stmt}));
+  }
+  //  sir->Stencils.push_back(std::make_shared<sir::Stencil>());
+  //  sir->Stencils[0]->Name = "test01";
+  //  sir->Stencils[0]->StencilDescAst =
+  //      std::make_shared<AST>(std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{
+  //          std::make_shared<VerticalRegionDeclStmt>(std::make_shared<sir::VerticalRegion>(
+  //              std::make_shared<AST>(
+  //                  std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{stmt})),
+  //              std::make_shared<sir::Interval>(0, sir::Interval::End),
+  //              sir::VerticalRegion::LoopOrderKind::LK_Forward))}));
+  //  FieldFinder ff;
+  //  sir->Stencils[0]->StencilDescAst->accept(ff);
+  //  for(const auto& a : ff.getFields()) {
+  //    sir->Stencils[0]->Fields.push_back(a);
+  //  }
 }
+
+std::pair<std::string, bool> compare(const ParsedString& ps,
+                                     const std::shared_ptr<dawn::Stmt>& stmt) {
+  std::unique_ptr<dawn::SIR> test01SIR = dawn::make_unique<dawn::SIR>();
+  wrapStatementInStencil(test01SIR, stmt);
+  test01SIR->Filename = "In Memory Generated SIR";
+  FileWriter writer("TestStencil.cpp");
+  writer.addParsedString(ps);
+  auto out = GTClang::run({writer.getFileName()},
+                          UnittestEnvironment::getSingleton().getFlagManager().getDefaultFlags());
+  if(!out.first) {
+    return std::make_pair("could not parse file " + writer.getFileName(), false);
+  }
+  auto compResult = test01SIR->comparison(*out.second.get());
+  //  test01SIR->dump();
+  //  PrintAllExpressionTypes visitor;
+  //  test01SIR->Stencils[0]->StencilDescAst->getRoot()->accept(visitor);
+  //  out.second->dump();
+  //  out.second->Stencils[0]->StencilDescAst->getRoot()->accept(visitor);
+  if(!compResult.second) {
+    return std::make_pair(compResult.first, false);
+  }
+  return std::make_pair("", true);
+}
+
+std::pair<std::string, bool> compare(const ParsedString& ps,
+                                     const std::shared_ptr<dawn::Expr>& expr) {
+  return compare(ps, std::make_shared<dawn::ExprStmt>(expr));
+}
+
+#define DAWN_EXPECT_EQ(parsing, operation)                                                         \
+  do {                                                                                             \
+    auto output = compare(parsing, operation);                                                     \
+    EXPECT_TRUE(output.second) << output.first;                                                    \
+  } while(0)
+
+#define DAWN_EXPECT_NE(parsing, operation)                                                         \
+  do {                                                                                             \
+    auto output = compare(parsing, operation);                                                     \
+    EXPECT_FALSE(output.second) << output.first;                                                   \
+  } while(0)
+
+TEST(ParsingTest, Assignment) {
+  DAWN_EXPECT_EQ(parse("a = b", field("a"), field("b")), assign(field("a"), field("b")));
+  DAWN_EXPECT_EQ(parse("a += b", field("a"), field("b")), assign(field("a"), field("b"), "+="));
+  DAWN_EXPECT_EQ(parse("a -= b", field("a"), field("b")), assign(field("a"), field("b"), "-="));
+  DAWN_EXPECT_EQ(parse("a *= b", field("a"), field("b")), assign(field("a"), field("b"), "*="));
+  DAWN_EXPECT_EQ(parse("a /= b", field("a"), field("b")), assign(field("a"), field("b"), "/="));
+  DAWN_EXPECT_EQ(parse("int b = 1; a = b", field("a"), var("b")),
+                 blockMultiple(vardec("int", "b", lit("1")), assign(field("a"), var("b"))));
+}
+
+TEST(ParsingTest, Unop) {
+  DAWN_EXPECT_EQ(parse("int a = 0;\n"
+                       "a++;\n"
+                       "st = a",
+                       field("st")),
+                 blockMultiple(vardec("int", "a", lit("0")), unop(var("a"), "++"),
+                               assign(field("st"), var("a"))));
+  DAWN_EXPECT_EQ(parse("int a = 0;\n"
+                       "a--;\n"
+                       "st = a",
+                       field("st")),
+                 blockMultiple(vardec("int", "a", lit("0")), unop(var("a"), "--"),
+                               assign(field("st"), var("a"))));
+}
+
+TEST(ParsingTest, BinOp) {
+  DAWN_EXPECT_EQ(parse("a = b + c", field("a"), field("b"), field("c")),
+                 assign(field("a"), binop(field("b"), "+", field("c"))));
+  DAWN_EXPECT_EQ(parse("a = b - c", field("a"), field("b"), field("c")),
+                 assign(field("a"), binop(field("b"), "-", field("c"))));
+  DAWN_EXPECT_EQ(parse("a = b / c", field("a"), field("b"), field("c")),
+                 assign(field("a"), binop(field("b"), "/", field("c"))));
+  DAWN_EXPECT_EQ(parse("a = b * c", field("a"), field("b"), field("c")),
+                 assign(field("a"), binop(field("b"), "*", field("c"))));
+
+  DAWN_EXPECT_EQ(parse("a = b < c", field("a"), field("b"), field("c")),
+                 assign(field("a"), binop(field("b"), "<", field("c"))));
+  DAWN_EXPECT_EQ(parse("a = b > c", field("a"), field("b"), field("c")),
+                 assign(field("a"), binop(field("b"), ">", field("c"))));
+  DAWN_EXPECT_EQ(parse("a = b == c", field("a"), field("b"), field("c")),
+                 assign(field("a"), binop(field("b"), "==", field("c"))));
+  DAWN_EXPECT_EQ(parse("a = b >= c", field("a"), field("b"), field("c")),
+                 assign(field("a"), binop(field("b"), ">=", field("c"))));
+  DAWN_EXPECT_EQ(parse("a = b <= c", field("a"), field("b"), field("c")),
+                 assign(field("a"), binop(field("b"), "<=", field("c"))));
+
+  DAWN_EXPECT_EQ(parse("a = b && c", field("a"), field("b"), field("c")),
+                 assign(field("a"), binop(field("b"), "&&", field("c"))));
+  DAWN_EXPECT_EQ(parse("a = b || c", field("a"), field("b"), field("c")),
+                 assign(field("a"), binop(field("b"), "||", field("c"))));
+
+  DAWN_EXPECT_EQ(parse("int b = 1;\n"
+                       "int c = 2;\n"
+                       "a = b & c",
+                       field("a"), var("b"), var("c")),
+                 blockMultiple(vardec("int", "b", lit("1")), vardec("int", "c", lit("2")),
+                               assign(field("a"), binop(var("b"), "&", var("c")))));
+  DAWN_EXPECT_EQ(parse("int b = 1;\n"
+                       "int c = 2;\n"
+                       "a = b | c",
+                       field("a"), var("b"), var("c")),
+                 blockMultiple(vardec("int", "b", lit("1")), vardec("int", "c", lit("2")),
+                               assign(field("a"), binop(var("b"), "|", var("c")))));
+  DAWN_EXPECT_EQ(parse("int b = 1;\n"
+                       "int c = 2;\n"
+                       "a = b ^ c",
+                       field("a"), var("b"), var("c")),
+                 blockMultiple(vardec("int", "b", lit("1")), vardec("int", "c", lit("2")),
+                               assign(field("a"), binop(var("b"), "^", var("c")))));
+  DAWN_EXPECT_EQ(parse("int b = 1;\n"
+                       "int c = 2;\n"
+                       "a = b << c",
+                       field("a"), var("b"), var("c")),
+                 blockMultiple(vardec("int", "b", lit("1")), vardec("int", "c", lit("2")),
+                               assign(field("a"), binop(var("b"), "<<", var("c")))));
+  DAWN_EXPECT_EQ(parse(R"(
+                       int b = 1;
+                       int c = 2;
+                       a = b >> c
+                       )",
+                       field("a"), var("b"), var("c")),
+                 blockMultiple(vardec("int", "b", lit("1")), vardec("int", "c", lit("2")),
+                               assign(field("a"), binop(var("b"), ">>", var("c")))));
+}
+
+TEST(ParsingTest, TernOp) {
+  DAWN_EXPECT_EQ(parse("int a = 0;\n"
+                       "int b = 1;\n"
+                       "int c = 2;\n"
+                       "f = a<0 ? b : c",
+                       field("f"), var("a"), var("b"), var("c")),
+                 blockMultiple(vardec("int", "a", lit("0")), vardec("int", "b", lit("1")),
+                               vardec("int", "c", lit("2")),
+                               assign(field("f"),
+                                      ternop(binop(var("a"), "<", lit("0")), var("b"), var("c")))));
+}
+
+TEST(ParsingTest, IfStmt) {
+  DAWN_EXPECT_EQ(parse("int a = 0;\n"
+                       "int b = 1;\n"
+                       "int c = 2;\n"
+                       "int d = 3;\n"
+                       "if(b > 0)\{\n"
+                       "c = a;\n"
+                       "\} else \{\n"
+                       "d = a;\n"
+                       "\}\n"
+                       "field = a",
+                       field("field")),
+                 blockMultiple(vardec("int", "a", lit("0")), vardec("int", "b", lit("1")),
+                               vardec("int", "c", lit("2")), vardec("int", "d", lit("3")),
+                               ifst(expr(binop(var("b"), ">", lit("0"))),
+                                    blockMultiple(expr(assign(var("c"), var("a")))),
+                                    blockMultiple(expr(assign(var("d"), var("a"))))),
+                               assign(field("field"), var("a"))));
+}
+
+#undef DAWN_EXPECT_EQ
+
+#undef DAWN_EXPECT_NE
+
 } // anonymous namespace

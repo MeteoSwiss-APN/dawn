@@ -26,6 +26,8 @@ dawn_add_library(
           GTClang.h
           UnittestEnvironment.cpp
           UnittestEnvironment.h
+          SirGenerator.h
+          SirGenerator.cpp
   ARCHIVE
 )
 

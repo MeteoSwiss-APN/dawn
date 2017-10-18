@@ -25,5 +25,6 @@ dawn_add_library(
           StringUtil.cpp
           StringUtil.h
           ParsingHeader.h
+
   OBJECT
 )
