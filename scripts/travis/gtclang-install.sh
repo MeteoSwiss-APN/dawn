@@ -90,7 +90,7 @@ gtclang_install_dependencies() {
 
   # Install 3rd party dependencies
   source "$DAWN_SCRIPT_DIR/install.sh"
-  install_driver -i ${CACHE_DIR} -b cmake,protobuf,boost
+  install_driver -i ${CACHE_DIR} -b cmake,protobuf,boost -c boost:system
 
   # Install Dawn
   gtclang_build_dawn
