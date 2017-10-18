@@ -54,9 +54,15 @@ public:
     ASTVisitorForwarding::visit(stmt);
   }
 
+  virtual void visit(const std::shared_ptr<IfStmt>& stmt) override {
+    statements_.push_back(stmt);
+    ASTVisitorForwarding::visit(stmt);
+  }
+
   std::vector<std::shared_ptr<Stmt>> getStatements() const { return statements_; }
 
   std::pair<std::string, bool> compare(const DiffWriter& other) {
+
     std::size_t minSize = std::min(statements_.size(), other.getStatements().size());
     if(minSize == 0 && (statements_.size() != other.getStatements().size()))
       return std::make_pair("[AST mismatch] AST is empty", false);
