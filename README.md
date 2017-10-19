@@ -57,7 +57,7 @@ This project is licensed under the terms of the **MIT** license.
 [MIT.License]: https://img.shields.io/badge/License-MIT-blue.svg
 [Version.Badge]: https://badge.fury.io/gh/thfabian%2Fgtclang.svg
 [GCC_54_Release.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/gtclang/branches/master/3
-[GCC_54_RelWithDebInfo.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/gtclang-/branches/master/4
+[GCC_54_RelWithDebInfo.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/gtclang/branches/master/4
 [GCC_63_Release.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/gtclang/branches/master/5
 [GCC_63_RelWithDebInfo.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/gtclang/branches/master/6
 [Clang_40_Release.Badge]: https://travis-matrix-badges.herokuapp.com/repos/thfabian/gtclang/branches/master/7
