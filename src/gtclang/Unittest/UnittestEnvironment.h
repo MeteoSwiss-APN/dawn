@@ -20,6 +20,7 @@
 #include "gtclang/Unittest/FileManager.h"
 #include "gtclang/Unittest/FlagManager.h"
 #include <gtest/gtest.h>
+#include <string>
 
 namespace gtclang {
 
@@ -38,6 +39,14 @@ public:
 
   /// @brief Tear down the environment.
   virtual void TearDown();
+
+  /// @brief Name of the current test-case
+  /// @return Name of the current test-case or an empty string if called outside a test
+  std::string testCaseName() const;
+
+  /// @brief Name of the current test
+  /// @return Name of the current test or an empty string if called outside a test
+  std::string testName() const;
 
   /// @brief Get singleton instance
   static UnittestEnvironment& getSingleton();
