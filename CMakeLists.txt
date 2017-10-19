@@ -106,10 +106,6 @@ add_definitions(${GTCLANG_EXTERNAL_DEFINITIONS})
 # Output summary of the packages
 dawn_report_result("Package summary" ${package_info})
 
-if(NOT GTCLANG_HAS_GRIDTOOLS)
-  set(GTCLANG_INTEGRATION_TESTING OFF)
-endif()
-
 # Add clang-format target
 dawn_add_target_clang_format(DIRECTORIES ${CMAKE_SOURCE_DIR}/src EXTENSION ".h;.cpp")
 
