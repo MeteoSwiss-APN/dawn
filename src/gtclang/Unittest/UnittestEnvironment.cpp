@@ -34,7 +34,7 @@ std::string UnittestEnvironment::testCaseName() const {
 std::string UnittestEnvironment::testName() const {
   const ::testing::TestInfo* testInfo = ::testing::UnitTest::GetInstance()->current_test_info();
   DAWN_ASSERT_MSG(testInfo, "testName() called outside a test");
-  return testInfo->test_case_name();
+  return testInfo->name();
 }
 
 UnittestEnvironment* UnittestEnvironment::instance_ = nullptr;
