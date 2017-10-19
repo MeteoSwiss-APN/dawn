@@ -50,9 +50,6 @@ make -j2 || fatal_error "failed to build"
 ctest -C ${CONFIG} --output-on-failure --force-new-ctest-process                                   \
      || fatal_error "failed to run tests"
 
-ls
-echo $(pwd)
-
 # Run regression tests
 bash ./gtclang-tester-no-codegen.sh || fatal_error "failed to run tests"
 
