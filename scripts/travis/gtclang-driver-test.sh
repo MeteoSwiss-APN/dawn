@@ -28,6 +28,9 @@ fi
 export CXX=${CXX_COMPILER}
 export CC=${C_COMPILER}
 
+echo $DAWN_ROOT
+echo $DAWN_DIR
+
 $CC --version
 $CXX --version
 
@@ -39,6 +42,7 @@ cmake .. -DCMAKE_CXX_COMPILER="$CXX"                                            
          -DCMAKE_C_COMPILER="$CC"                                                                  \
          -DCMAKE_BUILD_TYPE="$CONFIG"                                                              \
          -DBOOST_ROOT="$BOOST_ROOT"                                                                \
+         -DDAWN_ROOT="$DAWN_ROOT"                                                                  \
       || fatal_error "failed to configure"
 make -j2 || fatal_error "failed to build"
 
