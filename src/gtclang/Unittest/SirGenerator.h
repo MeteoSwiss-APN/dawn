@@ -37,7 +37,11 @@ public:
   ParsedString() = default;
   ParsedString(ParsedString&&) = default;
   ParsedString(const ParsedString&) = default;
-  ParsedString(const std::string& functionCall) : functionCall_(functionCall) {}
+  ParsedString(const std::string& functionCall) : functionCall_(functionCall) {
+      if(functionCall_.back()==';'){
+          functionCall_.pop_back();
+      }
+  }
 
   const std::vector<std::string>& getFields() const { return fields_; }
   const std::vector<std::string>& getVariables() const { return variables_; }

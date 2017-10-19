@@ -170,20 +170,6 @@ void wrapStatementInStencil(std::unique_ptr<dawn::SIR>& sir,
     wrapStatementInStencil(sir,
                            std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{stmt}));
   }
-  //  sir->Stencils.push_back(std::make_shared<sir::Stencil>());
-  //  sir->Stencils[0]->Name = "test01";
-  //  sir->Stencils[0]->StencilDescAst =
-  //      std::make_shared<AST>(std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{
-  //          std::make_shared<VerticalRegionDeclStmt>(std::make_shared<sir::VerticalRegion>(
-  //              std::make_shared<AST>(
-  //                  std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{stmt})),
-  //              std::make_shared<sir::Interval>(0, sir::Interval::End),
-  //              sir::VerticalRegion::LoopOrderKind::LK_Forward))}));
-  //  FieldFinder ff;
-  //  sir->Stencils[0]->StencilDescAst->accept(ff);
-  //  for(const auto& a : ff.getFields()) {
-  //    sir->Stencils[0]->Fields.push_back(a);
-  //  }
 }
 
 std::pair<std::string, bool> compare(const ParsedString& ps,
@@ -199,11 +185,6 @@ std::pair<std::string, bool> compare(const ParsedString& ps,
     return std::make_pair("could not parse file " + writer.getFileName(), false);
   }
   auto compResult = test01SIR->comparison(*out.second.get());
-  //  test01SIR->dump();
-  //  PrintAllExpressionTypes visitor;
-  //  test01SIR->Stencils[0]->StencilDescAst->getRoot()->accept(visitor);
-  //  out.second->dump();
-  //  out.second->Stencils[0]->StencilDescAst->getRoot()->accept(visitor);
   if(!compResult.second) {
     return std::make_pair(compResult.first, false);
   }
@@ -224,31 +205,78 @@ std::pair<std::string, bool> compare(const ParsedString& ps,
 #define DAWN_EXPECT_NE(parsing, operation)                                                         \
   do {                                                                                             \
     auto output = compare(parsing, operation);                                                     \
-    EXPECT_FALSE(output.second) << output.first;                                                   \
+    EXPECT_FALSE(output.second) << "SIRs Match but should not";                                    \
   } while(0)
 
 TEST(ParsingTest, Assignment) {
+  // Field - Field
   DAWN_EXPECT_EQ(parse("a = b", field("a"), field("b")), assign(field("a"), field("b")));
   DAWN_EXPECT_EQ(parse("a += b", field("a"), field("b")), assign(field("a"), field("b"), "+="));
   DAWN_EXPECT_EQ(parse("a -= b", field("a"), field("b")), assign(field("a"), field("b"), "-="));
   DAWN_EXPECT_EQ(parse("a *= b", field("a"), field("b")), assign(field("a"), field("b"), "*="));
   DAWN_EXPECT_EQ(parse("a /= b", field("a"), field("b")), assign(field("a"), field("b"), "/="));
-  DAWN_EXPECT_EQ(parse("int b = 1; a = b", field("a"), var("b")),
-                 blockMultiple(vardec("int", "b", lit("1")), assign(field("a"), var("b"))));
+
+  //  Field - Variable
+  DAWN_EXPECT_EQ(parse("float b = 1; a = b", field("a"), var("b")),
+                 blockMultiple(vardec("float", "b", lit("1")), assign(field("a"), var("b"))));
+  DAWN_EXPECT_EQ(parse("float b = 1; a += b", field("a"), var("b")),
+                 blockMultiple(vardec("float", "b", lit("1")), assign(field("a"), var("b"), "+=")));
+  DAWN_EXPECT_EQ(parse("float b = 1; a -= b", field("a"), var("b")),
+                 blockMultiple(vardec("float", "b", lit("1")), assign(field("a"), var("b"), "-=")));
+  DAWN_EXPECT_EQ(parse("float b = 1; a *= b", field("a"), var("b")),
+                 blockMultiple(vardec("float", "b", lit("1")), assign(field("a"), var("b"), "*=")));
+  DAWN_EXPECT_EQ(parse("float b = 1; a /= b", field("a"), var("b")),
+                 blockMultiple(vardec("float", "b", lit("1")), assign(field("a"), var("b"), "/=")));
+
+  // Variable - Field
+  DAWN_EXPECT_EQ(parse("float b = 1; b = a", field("a"), var("b")),
+                 blockMultiple(vardec("float", "b", lit("1")), assign(var("b"), field("a"))));
+  DAWN_EXPECT_EQ(parse("float b = 1; b += a", field("a"), var("b")),
+                 blockMultiple(vardec("float", "b", lit("1")), assign(var("b"), field("a"), "+=")));
+  DAWN_EXPECT_EQ(parse("float b = 1; b -= a", field("a"), var("b")),
+                 blockMultiple(vardec("float", "b", lit("1")), assign(var("b"), field("a"), "-=")));
+  DAWN_EXPECT_EQ(parse("float b = 1; b *= a", field("a"), var("b")),
+                 blockMultiple(vardec("float", "b", lit("1")), assign(var("b"), field("a"), "*=")));
+  DAWN_EXPECT_EQ(parse("float b = 1; b /= a", field("a"), var("b")),
+                 blockMultiple(vardec("float", "b", lit("1")), assign(var("b"), field("a"), "/=")));
+
+  // Variable - Variable
+  DAWN_EXPECT_EQ(
+      parse("float b = 1; float c = 2; b = c; field = b", field("field"), var("b"), var("c")),
+      blockMultiple(vardec("float", "b", lit("1")), vardec("float", "c", lit("2")),
+                    assign(var("b"), var("c")), assign(field("field"), var("b"))));
+  DAWN_EXPECT_EQ(
+      parse("float b = 1; float c = 2; b += c; field = b", field("field"), var("b"), var("c")),
+      blockMultiple(vardec("float", "b", lit("1")), vardec("float", "c", lit("2")),
+                    assign(var("b"), var("c"), "+="), assign(field("field"), var("b"))));
+  DAWN_EXPECT_EQ(
+      parse("float b = 1; float c = 2; b -= c; field = b", field("field"), var("b"), var("c")),
+      blockMultiple(vardec("float", "b", lit("1")), vardec("float", "c", lit("2")),
+                    assign(var("b"), var("c"), "-="), assign(field("field"), var("b"))));
+  DAWN_EXPECT_EQ(
+      parse("float b = 1; float c = 2; b *= c; field = b", field("field"), var("b"), var("c")),
+      blockMultiple(vardec("float", "b", lit("1")), vardec("float", "c", lit("2")),
+                    assign(var("b"), var("c"), "*="), assign(field("field"), var("b"))));
+  DAWN_EXPECT_EQ(
+      parse("float b = 1; float c = 2; b /= c; field = b", field("field"), var("b"), var("c")),
+      blockMultiple(vardec("float", "b", lit("1")), vardec("float", "c", lit("2")),
+                    assign(var("b"), var("c"), "/="), assign(field("field"), var("b"))));
 }
 
 TEST(ParsingTest, Unop) {
-  DAWN_EXPECT_EQ(parse("int a = 0;\n"
-                       "a++;\n"
-                       "st = a",
+  DAWN_EXPECT_EQ(parse(R"(
+                       float a = 0;
+                       ++a;
+                       st = a;)",
                        field("st")),
-                 blockMultiple(vardec("int", "a", lit("0")), unop(var("a"), "++"),
+                 blockMultiple(vardec("float", "a", lit("0")), unop(var("a"), "++"),
                                assign(field("st"), var("a"))));
-  DAWN_EXPECT_EQ(parse("int a = 0;\n"
-                       "a--;\n"
-                       "st = a",
+  DAWN_EXPECT_EQ(parse(R"(
+                       float a = 0;
+                       a--;
+                       st = a;)",
                        field("st")),
-                 blockMultiple(vardec("int", "a", lit("0")), unop(var("a"), "--"),
+                 blockMultiple(vardec("float", "a", lit("0")), unop(var("a"), "--"),
                                assign(field("st"), var("a"))));
 }
 
@@ -278,27 +306,31 @@ TEST(ParsingTest, BinOp) {
   DAWN_EXPECT_EQ(parse("a = b || c", field("a"), field("b"), field("c")),
                  assign(field("a"), binop(field("b"), "||", field("c"))));
 
-  DAWN_EXPECT_EQ(parse("int b = 1;\n"
-                       "int c = 2;\n"
-                       "a = b & c",
+  DAWN_EXPECT_EQ(parse(R"(
+                       int b = 1;
+                       int c = 2;
+                       a = b & c;)",
                        field("a"), var("b"), var("c")),
                  blockMultiple(vardec("int", "b", lit("1")), vardec("int", "c", lit("2")),
                                assign(field("a"), binop(var("b"), "&", var("c")))));
-  DAWN_EXPECT_EQ(parse("int b = 1;\n"
-                       "int c = 2;\n"
-                       "a = b | c",
+  DAWN_EXPECT_EQ(parse(R"(
+                       int b = 1;
+                       int c = 2;
+                       a = b | c;)",
                        field("a"), var("b"), var("c")),
                  blockMultiple(vardec("int", "b", lit("1")), vardec("int", "c", lit("2")),
                                assign(field("a"), binop(var("b"), "|", var("c")))));
-  DAWN_EXPECT_EQ(parse("int b = 1;\n"
-                       "int c = 2;\n"
-                       "a = b ^ c",
+  DAWN_EXPECT_EQ(parse(R"(
+                       int b = 1;
+                       int c = 2;
+                       a = b ^ c;)",
                        field("a"), var("b"), var("c")),
                  blockMultiple(vardec("int", "b", lit("1")), vardec("int", "c", lit("2")),
                                assign(field("a"), binop(var("b"), "^", var("c")))));
-  DAWN_EXPECT_EQ(parse("int b = 1;\n"
-                       "int c = 2;\n"
-                       "a = b << c",
+  DAWN_EXPECT_EQ(parse(R"(
+                        int b = 1;
+                        int c = 2;
+                        a = b << c;)",
                        field("a"), var("b"), var("c")),
                  blockMultiple(vardec("int", "b", lit("1")), vardec("int", "c", lit("2")),
                                assign(field("a"), binop(var("b"), "<<", var("c")))));
@@ -313,35 +345,42 @@ TEST(ParsingTest, BinOp) {
 }
 
 TEST(ParsingTest, TernOp) {
-  DAWN_EXPECT_EQ(parse("int a = 0;\n"
-                       "int b = 1;\n"
-                       "int c = 2;\n"
-                       "f = a<0 ? b : c",
+  DAWN_EXPECT_EQ(parse(R"(
+                       float a = 0;
+                       float b = 1;
+                       float c = 2;
+                       f = a<0 ? b : c;)",
                        field("f"), var("a"), var("b"), var("c")),
-                 blockMultiple(vardec("int", "a", lit("0")), vardec("int", "b", lit("1")),
-                               vardec("int", "c", lit("2")),
+                 blockMultiple(vardec("float", "a", lit("0")), vardec("float", "b", lit("1")),
+                               vardec("float", "c", lit("2")),
                                assign(field("f"),
                                       ternop(binop(var("a"), "<", lit("0")), var("b"), var("c")))));
 }
 
 TEST(ParsingTest, IfStmt) {
-  DAWN_EXPECT_EQ(parse("int a = 0;\n"
-                       "int b = 1;\n"
-                       "int c = 2;\n"
-                       "int d = 3;\n"
-                       "if(b > 0)\{\n"
-                       "c = a;\n"
-                       "\} else \{\n"
-                       "d = a;\n"
-                       "\}\n"
-                       "field = a",
-                       field("field")),
-                 blockMultiple(vardec("int", "a", lit("0")), vardec("int", "b", lit("1")),
-                               vardec("int", "c", lit("2")), vardec("int", "d", lit("3")),
+  DAWN_EXPECT_EQ(parse(R"(
+                         float a = 0;
+                         float b = 1;
+                         if(b > 0){
+                         fieldOne = a;
+                         } else {
+                         fieldTwo = b;
+                         })",
+                       field("fieldOne"), field("fieldTwo")),
+                 blockMultiple(vardec("float", "a", lit("0")), vardec("float", "b", lit("1")),
                                ifst(expr(binop(var("b"), ">", lit("0"))),
-                                    blockMultiple(expr(assign(var("c"), var("a")))),
-                                    blockMultiple(expr(assign(var("d"), var("a"))))),
-                               assign(field("field"), var("a"))));
+                                    blockMultiple(expr(assign(field("fieldOne"), var("a")))),
+                                    blockMultiple(expr(assign(field("fieldTwo"), var("b")))))));
+  DAWN_EXPECT_EQ(parse(R"(
+                      float a = 0;
+                      float b = 1;
+                      if(b > 0){
+                      field = a;
+                      })",
+                       field("field")),
+                 blockMultiple(vardec("float", "a", lit("0")), vardec("float", "b", lit("1")),
+                               ifst(expr(binop(var("b"), ">", lit("0"))),
+                                    blockMultiple(expr(assign(field("field"), var("a")))))));
 }
 
 #undef DAWN_EXPECT_EQ
