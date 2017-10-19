@@ -40,6 +40,9 @@ cmake .. -DCMAKE_CXX_COMPILER="$CXX"                                            
          -DCMAKE_BUILD_TYPE="$CONFIG"                                                              \
          -DBOOST_ROOT="$BOOST_ROOT"                                                                \
          -DDAWN_ROOT="$DAWN_ROOT"                                                                  \
+         -DGTCLANG_TESTING=ON                                                                      \
+         -DGTCLANG_UNIT_TESTING=ON                                                                 \
+         -DGTCLANG_INTEGRATION_TESTING=ON                                                          \
       || fatal_error "failed to configure"
 make -j2 || fatal_error "failed to build"
 
