@@ -28,9 +28,6 @@ fi
 export CXX=${CXX_COMPILER}
 export CC=${C_COMPILER}
 
-echo $DAWN_ROOT
-echo $DAWN_DIR
-
 $CC --version
 $CXX --version
 
@@ -51,6 +48,6 @@ ctest -C ${CONFIG} --output-on-failure --force-new-ctest-process                
      || fatal_error "failed to run tests"
 
 # Run regression tests
-bash  || fatal_error "failed to run tests"
+bash gtclang-tester-no-codegen.sh || fatal_error "failed to run tests"
 
 popd
