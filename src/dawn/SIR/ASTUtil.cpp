@@ -485,5 +485,31 @@ bool evalExprAsBoolean(const std::shared_ptr<Expr>& expr, bool& result,
                        const std::unordered_map<std::string, double>& variableMap) {
   return evalExprImpl(expr, result, variableMap);
 }
+/// @brief helper to find all the fields in a statement
+class FieldFinder : public dawn::ASTVisitorForwarding {
+public:
+  virtual void visit(const std::shared_ptr<dawn::FieldAccessExpr>& expr) {
+    auto fieldFromExpression = sir::Field(expr->getName());
+    auto iter = std::find(allFields_.begin(), allFields_.end(), fieldFromExpression);
+    if(iter == allFields_.end())
+      allFields_.push_back(fieldFromExpression);
+    ASTVisitorForwarding::visit(expr);
+  }
+
+  virtual void visit(const std::shared_ptr<dawn::VerticalRegionDeclStmt>& stmt) {
+    stmt->getVerticalRegion()->Ast->accept(*this);
+  }
+
+  const std::vector<dawn::sir::Field>& getFields() const { return allFields_; }
+
+private:
+  std::vector<dawn::sir::Field> allFields_;
+};
+
+extern std::vector<sir::Field> getFieldFromStencilAST(const std::shared_ptr<AST>& ast) {
+  FieldFinder finder;
+  ast->accept(finder);
+  return finder.getFields();
+}
 
 } // namespace dawn
