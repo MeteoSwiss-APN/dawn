@@ -51,11 +51,12 @@ function(gtclang_add_integrationtest)
   # Add make target 
   add_custom_target(
     integrationtest-${ARG_NAME}
-    COMMAND ${command}
+    COMMAND ${BASH_EXECUTABLE} ${CMAKE_BINARY_DIR}/gtclang-tester-${ARG_NAME}.sh
     DEPENDS gtclang
   )
 
   # Add CTest target
-  add_test(NAME CTest-IntegrationTest-${ARG_NAME} COMMAND ${command})
+  add_test(NAME CTest-IntegrationTest-${ARG_NAME} 
+           COMMAND ${BASH_EXECUTABLE} ${CMAKE_BINARY_DIR}/gtclang-tester-${ARG_NAME}.sh)
 endfunction()
 

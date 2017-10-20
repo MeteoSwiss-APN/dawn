@@ -40,6 +40,7 @@ gtclang_add_integrationtest(NAME no-codegen
                             GRIDTOOLS_FLAGS ${gridtools_flags}
 )
 
+# Codegen tests require GridTools
 if(GTCLANG_HAS_GRIDTOOLS)
   list(APPEND directories_with_codegen ${directories} ${cwd}/CodeGen)
   list(APPEND gridtools_flags_with_codegen ${gridtools_flags} -isystem${GRIDTOOLS_INCLUDE_DIRS} 
