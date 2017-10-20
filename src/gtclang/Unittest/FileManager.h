@@ -26,23 +26,23 @@ namespace gtclang {
 /// @ingroup unittest
 class FileManager {
 
-
 public:
-  enum testKind{unittest, integrationtet};
+  enum TestKind { TK_Unittest, TK_Integrationtet };
 
   FileManager();
   /// @brief set if unit- or integrationtest
-  void setKind(testKind kind);
+  void setKind(TestKind kind);
 
   /// @brief Get full path of `filename` or abort if file was not found in `dataPath()` directory
   std::string getFile(llvm::StringRef filename) const;
 
   /// @brief Path of the unittest data files
   const std::string& dataPath() const { return dataPath_; }
+
 private:
   std::string dataPath_;
 
-  testKind kind_;
+  TestKind kind_;
 };
 
 } // namespace gtclang

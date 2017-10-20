@@ -15,239 +15,182 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "gtclang/Unittest/SirGenerator.h"
-#include "dawn/SIR/ASTStringifier.h"
-#include "dawn/Support/StringUtil.h"
-#include <cstring>
-
-#include <iostream>
+#include "dawn/CodeGen/CXXUtil.h"
+#include "dawn/SIR/ASTUtil.h"
+#include "dawn/SIR/SIR.h"
+#include "dawn/Support/Array.h"
+#include "dawn/Support/Casting.h"
+#include "dawn/Support/Unreachable.h"
+#include "gtclang/Support/ParsingHeader.h"
+#include "gtclang/Unittest/GTClang.h"
+#include "gtclang/Unittest/UnittestEnvironment.h"
+#include <fstream>
 
 namespace gtclang {
 
-dawn::Type stringToType(const std::string& typestring) {
-  if(typestring == "int") {
-    return dawn::Type(dawn::BuiltinTypeID::Integer);
+struct NestableFunctions : public dawn::codegen::MemberFunction {
+  NestableFunctions(const dawn::Twine& type, const dawn::Twine& name, std::stringstream& s,
+                    int il = 0)
+      : MemberFunction(type, name, s, il) {}
+
+  NestableFunctions addFunction(const dawn::Twine& returntype, const dawn::Twine& name) {
+    NestableFunctions nf(returntype, name, ss(), IndentLevel + 1);
+    return nf;
   }
-  if(typestring == "float") {
-    return dawn::Type(dawn::BuiltinTypeID::Float);
+
+  NestableFunctions addVerticalRegion(const dawn::Twine& min, const dawn::Twine& max) {
+    NestableFunctions nf(dawn::Twine::createNull(), "vertical_region", ss(), IndentLevel + 1);
+    nf.addArg(min).addArg(max);
+    nf.startBody();
+    return nf;
   }
-  if(typestring == "auto") {
-    return dawn::Type(dawn::BuiltinTypeID::Auto);
+
+  NestableFunctions addIfStatement(const dawn::Twine& ifCondition) {
+    NestableFunctions ifStatement(dawn::Twine::createNull(), "if", ss(), IndentLevel + 1);
+    ifStatement.addArg(ifCondition);
+    ifStatement.startBody();
+    return ifStatement;
   }
-  if(typestring == "bool") {
-    return dawn::Type(dawn::BuiltinTypeID::Boolean);
+};
+
+struct VerticalRegion : public NestableFunctions {
+  VerticalRegion(const dawn::Twine& name, std::stringstream& s, int il = 0)
+      : NestableFunctions(dawn::Twine::createNull(), name, s, il) {}
+};
+
+struct DawnObject : public dawn::codegen::Structure {
+  DawnObject(const dawn::Twine& type, const dawn::Twine& name, std::stringstream& s)
+      : Structure(type.str().c_str(), name, s) {}
+
+  Statement addStorage(const dawn::Twine& memberName) {
+    Statement member(ss(), IndentLevel + 1);
+    member << "storage"
+           << " " << memberName;
+    return member;
   }
-  dawn_unreachable("wrong type");
-}
 
-void FieldFinder::visit(const std::shared_ptr<dawn::FieldAccessExpr>& expr) {
-  allFields_.push_back(std::make_shared<dawn::sir::Field>(expr->getName()));
-  ASTVisitorForwarding::visit(expr);
-}
+  NestableFunctions addDoMethod(const dawn::Twine& type) {
+    NestableFunctions nf(type, "Do", ss(), IndentLevel + 1);
+    return nf;
+  }
 
-void FieldFinder::visit(const std::shared_ptr<dawn::VerticalRegionDeclStmt>& stmt) {
-  stmt->getVerticalRegion()->Ast->accept(*this);
-}
+  Statement addOffset(const dawn::Twine& offsetName) {
+    Statement member(ss(), IndentLevel + 1);
+    member << "offset"
+           << " " << offsetName;
+    return member;
+  }
+};
 
-std::shared_ptr<dawn::BlockStmt> block(const std::vector<std::shared_ptr<dawn::Stmt>>& statements) {
-  return std::make_shared<dawn::BlockStmt>(statements);
-}
+struct StencilFunction : public DawnObject {
+  StencilFunction(const dawn::Twine& name, std::stringstream& s)
+      : DawnObject("stencil_function", name, s) {}
 
-std::shared_ptr<dawn::ExprStmt> expr(const std::shared_ptr<dawn::Expr>& expr) {
-  return std::make_shared<dawn::ExprStmt>(expr);
-}
+  virtual NestableFunctions addDoMethod(const dawn::Twine& type) {
+    NestableFunctions nf(type, "Do", ss(), IndentLevel + 1);
+    nf.startBody();
+    return nf;
+  }
 
-std::shared_ptr<dawn::ReturnStmt> ret(const std::shared_ptr<dawn::Expr>& expr) {
-  return std::make_shared<dawn::ReturnStmt>(expr);
-}
+  virtual ~StencilFunction() {}
+};
 
-std::shared_ptr<dawn::VarDeclStmt> vardec(const std::string& type, const std::string& name,
-                                          const std::shared_ptr<dawn::Expr>& init, const char* op) {
+struct Stencil : public DawnObject {
+  Stencil(const dawn::Twine& name, std::stringstream& s) : DawnObject("stencil", name, s) {}
+};
 
-  return vecdec(type, name, std::vector<std::shared_ptr<dawn::Expr>>({init}), 0, op);
-}
+struct Globals : public DawnObject {
+  Globals(std::stringstream& s) : DawnObject("globals", dawn::Twine::createNull(), s) {}
+  virtual NestableFunctions addDoMethod(const dawn::Twine& type) = delete;
+  virtual Statement addOffset(const dawn::Twine& offsetName) = delete;
+  virtual ~Globals() {}
+};
 
-std::shared_ptr<dawn::VarDeclStmt> vecdec(const std::string& type, const std::string& name,
-                                          std::vector<std::shared_ptr<dawn::Expr>> initList,
-                                          int dimension, const char* op) {
-  auto realtype = stringToType(type);
-  return std::make_shared<dawn::VarDeclStmt>(realtype, name, dimension, op, initList);
-}
+class FileWriter {
+public:
+  FileWriter(std::string filename) {
+    filename_ = UnittestEnvironment::getSingleton().getFileManager().dataPath() + filename;
+    fileHeader_ = HeaderWriter::longheader();
+    fileHeader_ += HeaderWriter::includes();
+  }
 
-std::shared_ptr<dawn::VerticalRegionDeclStmt>
-vrdec(const std::shared_ptr<dawn::sir::VerticalRegion>& verticalRegion) {
-  return std::make_shared<dawn::VerticalRegionDeclStmt>(verticalRegion);
-}
+  std::stringstream& ss() { return ss_; }
 
-std::shared_ptr<dawn::StencilCallDeclStmt>
-scdec(const std::shared_ptr<dawn::sir::StencilCall>& stencilCall) {
-  return std::make_shared<dawn::StencilCallDeclStmt>(stencilCall);
-}
+  void writeToFile() {
+    std::ofstream ofs(filename_, std::ofstream::trunc);
+    ofs << HeaderWriter::longheader();
+    ofs << HeaderWriter::includes();
+    ofs << ss_.str();
+    ofs.close();
+  }
+  const std::string getFileName() const { return filename_; }
 
-std::shared_ptr<dawn::BoundaryConditionDeclStmt> bcdec(const std::__cxx11::string& callee) {
-  return std::make_shared<dawn::BoundaryConditionDeclStmt>(callee);
-}
+  void addParsedString(const ParsedString& ps) {
+    auto stencil = Stencil("test01", ss_);
+    for(const auto& a : ps.getFields()) {
+      stencil.addStorage(a);
+    }
+    auto doMethod = stencil.addDoMethod("void");
+    doMethod.startBody();
 
-std::shared_ptr<dawn::IfStmt> ifst(const std::shared_ptr<dawn::Stmt>& condExpr,
-                                   const std::shared_ptr<dawn::Stmt>& thenStmt,
-                                   const std::shared_ptr<dawn::Stmt>& elseStmt) {
-  return std::make_shared<dawn::IfStmt>(condExpr, thenStmt, elseStmt);
-}
+    auto vr = doMethod.addVerticalRegion("k_start", "k_end");
+    vr.addStatement(ps.getCall());
+    vr.commit();
+    doMethod.commit();
+    stencil.commit();
+    writeToFile();
+  }
 
-std::shared_ptr<dawn::UnaryOperator> unop(const std::shared_ptr<dawn::Expr>& operand,
-                                          const char* op) {
-  return std::make_shared<dawn::UnaryOperator>(operand, op);
-}
+private:
+  std::stringstream ss_;
+  std::string filename_;
+  std::string fileHeader_;
+};
 
-std::shared_ptr<dawn::BinaryOperator> binop(const std::shared_ptr<dawn::Expr>& left, const char* op,
-                                            const std::shared_ptr<dawn::Expr>& right) {
-  return std::make_shared<dawn::BinaryOperator>(left, op, right);
-}
-
-std::shared_ptr<dawn::AssignmentExpr> assign(const std::shared_ptr<dawn::Expr>& left,
-                                             const std::shared_ptr<dawn::Expr>& right, const char* op) {
-  return std::make_shared<dawn::AssignmentExpr>(left, right, op);
-}
-
-std::shared_ptr<dawn::TernaryOperator> ternop(const std::shared_ptr<dawn::Expr>& cond,
-                                              const std::shared_ptr<dawn::Expr>& left,
-                                              const std::shared_ptr<dawn::Expr>& right) {
-  return std::make_shared<dawn::TernaryOperator>(cond, left, right);
-}
-
-std::shared_ptr<dawn::FunCallExpr> fcall(const std::__cxx11::string& callee) {
-  return std::make_shared<dawn::FunCallExpr>(callee);
-}
-
-std::shared_ptr<dawn::StencilFunCallExpr> sfcall(const std::__cxx11::string& calee) {
-  return std::make_shared<dawn::StencilFunCallExpr>(calee);
-}
-
-std::shared_ptr<dawn::StencilFunArgExpr> sfarg(int direction, int offset, int argumentIndex) {
-  return std::make_shared<dawn::StencilFunArgExpr>(direction, offset, argumentIndex);
-}
-
-std::shared_ptr<dawn::VarAccessExpr> var(const std::__cxx11::string& name,
-                                         std::shared_ptr<dawn::Expr> index) {
-  return std::make_shared<dawn::VarAccessExpr>(name, index);
-}
-
-std::shared_ptr<dawn::FieldAccessExpr> field(const std::__cxx11::string& name, dawn::Array3i offset,
-                                             dawn::Array3i argumentMap,
-                                             dawn::Array3i argumentOffset, bool negateOffset) {
-  return std::make_shared<dawn::FieldAccessExpr>(name, offset, argumentMap, argumentOffset,
-                                                 negateOffset);
-}
-
-std::shared_ptr<dawn::LiteralAccessExpr> lit(const std::string& value,
-                                             dawn::BuiltinTypeID builtinType) {
-  return std::make_shared<dawn::LiteralAccessExpr>(value, builtinType);
-}
-
-void PrintAllExpressionTypes::visit(const std::shared_ptr<dawn::BlockStmt>& node) {
-  std::cout << "Block Statement\n" << dawn::ASTStringifer::toString(node) << std::endl;
-  for(const auto& s : node->getChildren())
-    s->accept(*this);
-}
-void PrintAllExpressionTypes::visit(const std::shared_ptr<dawn::VerticalRegionDeclStmt>& node) {
-  std::cout << "VerticalRegionDeclStmt\n" << dawn::ASTStringifer::toString(node) << std::endl;
-  node->getVerticalRegion()->Ast->accept(*this);
-}
-void PrintAllExpressionTypes::visit(const std::shared_ptr<dawn::StencilCallDeclStmt>& node) {
-  std::cout << "StencilCallDeclStmt\n" << dawn::ASTStringifer::toString(node) << std::endl;
-  for(const auto& s : node->getChildren())
-    s->accept(*this);
-}
-void PrintAllExpressionTypes::visit(const std::shared_ptr<dawn::BoundaryConditionDeclStmt>& node) {
-  std::cout << "BoundaryConditionDeclStmt\n" << dawn::ASTStringifer::toString(node) << std::endl;
-  for(const auto& s : node->getChildren())
-    s->accept(*this);
-}
-void PrintAllExpressionTypes::visit(const std::shared_ptr<dawn::IfStmt>& node) {
-  std::cout << "IfStmt\n" << dawn::ASTStringifer::toString(node) << std::endl;
-  for(const auto& s : node->getChildren())
-    s->accept(*this);
-}
-void PrintAllExpressionTypes::visit(const std::shared_ptr<dawn::UnaryOperator>& node) {
-  std::cout << "UnaryOperator\n" << dawn::ASTStringifer::toString(node) << std::endl;
-  for(const auto& s : node->getChildren())
-    s->accept(*this);
-}
-void PrintAllExpressionTypes::visit(const std::shared_ptr<dawn::BinaryOperator>& node) {
-  std::cout << "BinaryOperator\n" << dawn::ASTStringifer::toString(node) << std::endl;
-  for(const auto& s : node->getChildren())
-    s->accept(*this);
-}
-void PrintAllExpressionTypes::visit(const std::shared_ptr<dawn::AssignmentExpr>& node) {
-  std::cout << "AssignmentExpr\n" << dawn::ASTStringifer::toString(node) << std::endl;
-  for(const auto& s : node->getChildren())
-    s->accept(*this);
-}
-void PrintAllExpressionTypes::visit(const std::shared_ptr<dawn::TernaryOperator>& node) {
-  std::cout << "TernaryOperator\n" << dawn::ASTStringifer::toString(node) << std::endl;
-  for(const auto& s : node->getChildren())
-    s->accept(*this);
-}
-void PrintAllExpressionTypes::visit(const std::shared_ptr<dawn::FunCallExpr>& node) {
-  std::cout << "FunCallExpr\n" << dawn::ASTStringifer::toString(node) << std::endl;
-  for(const auto& s : node->getChildren())
-    s->accept(*this);
-}
-void PrintAllExpressionTypes::visit(const std::shared_ptr<dawn::StencilFunCallExpr>& node) {
-  std::cout << "StencilFunCallExpr\n" << dawn::ASTStringifer::toString(node) << std::endl;
-  for(const auto& s : node->getChildren())
-    s->accept(*this);
-}
-void PrintAllExpressionTypes::visit(const std::shared_ptr<dawn::StencilFunArgExpr>& node) {
-  std::cout << "StencilFunArgExpr\n" << dawn::ASTStringifer::toString(node) << std::endl;
-  for(const auto& s : node->getChildren())
-    s->accept(*this);
-}
-void PrintAllExpressionTypes::visit(const std::shared_ptr<dawn::VarAccessExpr>& node) {
-  std::cout << "VarAccessExpr\n" << dawn::ASTStringifer::toString(node) << std::endl;
-  for(const auto& s : node->getChildren())
-    s->accept(*this);
-}
-void PrintAllExpressionTypes::visit(const std::shared_ptr<dawn::FieldAccessExpr>& node) {
-  std::cout << "FieldAccessExpr\n" << dawn::ASTStringifer::toString(node) << std::endl;
-  for(const auto& s : node->getChildren())
-    s->accept(*this);
-}
-void PrintAllExpressionTypes::visit(const std::shared_ptr<dawn::LiteralAccessExpr>& node) {
-  std::cout << "LiteralAccessExpr\n" << dawn::ASTStringifer::toString(node) << std::endl;
-  for(const auto& s : node->getChildren())
-    s->accept(*this);
-}
-
-void PrintAllExpressionTypes::visit(const std::shared_ptr<dawn::ExprStmt>& node) {
-  std::cout << "ExprStmt\n" << dawn::ASTStringifer::toString(node) << std::endl;
-  node->getExpr()->accept(*this);
-}
-void PrintAllExpressionTypes::visit(const std::shared_ptr<dawn::ReturnStmt>& node) {
-  std::cout << "ReturnStmt\n" << dawn::ASTStringifer::toString(node) << std::endl;
-  node->getExpr()->accept(*this);
-}
-void PrintAllExpressionTypes::visit(const std::shared_ptr<dawn::VarDeclStmt>& node) {
-  std::cout << "VarDeclStmt\n" << dawn::ASTStringifer::toString(node) << std::endl;
-  for(const auto& expr : node->getInitList())
-    expr->accept(*this);
-}
-
-void ParsedString::argumentParsingImpl(ParsedString& p,
-                                       const std::shared_ptr<dawn::Expr>& argument) {
-  if(dawn::VarAccessExpr* expr = dawn::dyn_cast<dawn::VarAccessExpr>(argument.get())) {
-    p.addVariable(expr->getName());
-  } else if(dawn::FieldAccessExpr* expr = dawn::dyn_cast<dawn::FieldAccessExpr>(argument.get())) {
-    p.addField(expr->getName());
+static void wrapStatementInStencil(std::unique_ptr<dawn::SIR>& sir,
+                                   const std::shared_ptr<dawn::Stmt>& stmt) {
+  using namespace dawn;
+  if(BlockStmt* blockstmt = dawn::dyn_cast<BlockStmt>(stmt.get())) {
+    sir->Stencils.push_back(std::make_shared<sir::Stencil>());
+    sir->Stencils[0]->Name = "test01";
+    sir->Stencils[0]->StencilDescAst =
+        std::make_shared<AST>(std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{
+            std::make_shared<VerticalRegionDeclStmt>(std::make_shared<sir::VerticalRegion>(
+                std::make_shared<AST>(std::make_shared<BlockStmt>(*blockstmt)),
+                std::make_shared<sir::Interval>(0, sir::Interval::End),
+                sir::VerticalRegion::LoopOrderKind::LK_Forward))}));
+    auto allFields = dawn::getFieldFromStencilAST(sir->Stencils[0]->StencilDescAst);
+    for(const auto& a : allFields) {
+      sir->Stencils[0]->Fields.push_back(std::make_shared<dawn::sir::Field>(a));
+    }
   } else {
-    dawn_unreachable("invalid expression");
+    wrapStatementInStencil(sir,
+                           std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{stmt}));
   }
 }
 
-void ParsedString::dump() {
-  std::cout << "function call: " << std::endl;
-  std::cout << functionCall_ << std::endl;
-  std::cout << "all fields: " << dawn::RangeToString()(fields_) << std::endl;
-  std::cout << "all variables: " << dawn::RangeToString()(variables_) << std::endl;
+CompareResult compare(const ParsedString& ps,
+                                     const std::shared_ptr<dawn::Stmt>& stmt) {
+  std::unique_ptr<dawn::SIR> test01SIR = dawn::make_unique<dawn::SIR>();
+  wrapStatementInStencil(test01SIR, stmt);
+  test01SIR->Filename = "In Memory Generated SIR";
+  FileWriter writer("TestStencil.cpp");
+  writer.addParsedString(ps);
+  auto out = GTClang::run({writer.getFileName()},
+                          UnittestEnvironment::getSingleton().getFlagManager().getDefaultFlags());
+  if(!out.first) {
+    return CompareResult{"could not parse file " + writer.getFileName(), false};
+  }
+  auto compResult = test01SIR->comparison(*out.second.get());
+  if(!bool(compResult)) {
+    return CompareResult{compResult.why(), false};
+  }
+  return CompareResult{"", true};
+}
+
+CompareResult compare(const ParsedString& ps,
+                                     const std::shared_ptr<dawn::Expr>& expr) {
+  return compare(ps, std::make_shared<dawn::ExprStmt>(expr));
 }
 
 } // namespace gtclang

@@ -24,11 +24,11 @@ namespace gtclang {
 
 FileManager::FileManager() : dataPath_(GTCLANG_UNITTEST_DATAPATH) {}
 
-void FileManager::setKind(testKind kind) {
-  if(kind == testKind::unittest) {
+void FileManager::setKind(TestKind kind) {
+  if(kind == TestKind::TK_Unittest) {
     dataPath_ = GTCLANG_UNITTEST_DATAPATH;
   }
-  if(kind == testKind::integrationtet) {
+  if(kind == TestKind::TK_Integrationtet) {
     dataPath_ = GTCLANG_INTEGRATIONTEST_DATAPATH;
   }
 }

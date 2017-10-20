@@ -26,8 +26,12 @@ dawn_add_library(
           GTClang.h
           UnittestEnvironment.cpp
           UnittestEnvironment.h
+          UnittestStmtSimplyfier.h
+          UnittestStmtSimplyfier.cpp          
           SirGenerator.h
           SirGenerator.cpp
+          ParsedString.h
+          ParsedString.cpp
   ARCHIVE
 )
 

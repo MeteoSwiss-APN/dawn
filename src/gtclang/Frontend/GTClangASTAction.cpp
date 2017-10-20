@@ -29,7 +29,7 @@ GTClangASTAction::CreateASTConsumer(clang::CompilerInstance& compiler, llvm::Str
   return llvm::make_unique<GTClangASTConsumer>(context_, file, this);
 }
 
-void GTClangASTAction::catchSIR(std::shared_ptr<dawn::SIR> sir) { sir_ = sir; }
+void GTClangASTAction::setSIR(std::shared_ptr<dawn::SIR> sir) { sir_ = sir; }
 
 std::shared_ptr<dawn::SIR> GTClangASTAction::getSIR() const { return sir_; }
 

@@ -117,7 +117,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
     dawn::SIRSerializerJSON::serialize("sir.json", SIR.get());
     SIR->dump();
   }
-  parentAction_->catchSIR(SIR);
+  parentAction_->setSIR(SIR);
 
   // Set the backend
   dawn::DawnCompiler::CodeGenKind codeGen = dawn::DawnCompiler::CG_GTClang;

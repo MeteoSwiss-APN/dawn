@@ -25,6 +25,13 @@
 
 namespace gtclang {
 
+struct ReturnValue {
+  int ExitCode;
+  std::shared_ptr<dawn::SIR> SIR;
+
+  operator int() { return ExitCode; }
+};
+
 /// @brief Main driver of gtclang
 /// @ingroup driver
 struct Driver : public dawn::NonCopyable {
@@ -32,8 +39,7 @@ struct Driver : public dawn::NonCopyable {
   /// @brief Run gtclang on the given arguments
   /// @returns The Stencil Intermediate Representation and an integer that is `0` on success, `1`
   /// otherwise
-  static std::pair<int, std::shared_ptr<dawn::SIR>>
-  run(const llvm::SmallVectorImpl<const char*>& args);
+  static ReturnValue run(const llvm::SmallVectorImpl<const char*>& args);
 };
 
 } // namespace gtclang

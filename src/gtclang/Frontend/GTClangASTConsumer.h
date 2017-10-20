@@ -32,7 +32,8 @@ class GTClangASTAction;
 /// @ingroup frontend
 class GTClangASTConsumer : public clang::ASTConsumer {
 public:
-  GTClangASTConsumer(GTClangContext* context, std::string file, gtclang::GTClangASTAction* parentAction);
+  GTClangASTConsumer(GTClangContext* context, std::string file,
+                     gtclang::GTClangASTAction* parentAction);
 
   /// @brief This method translating the AST to SIR and generating gridtools C++ code
   virtual void HandleTranslationUnit(clang::ASTContext& ASTContext) override;

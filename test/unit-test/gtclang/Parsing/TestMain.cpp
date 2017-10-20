@@ -20,9 +20,6 @@
 #include <gtest/gtest.h>
 
 int main(int argc, char* argv[]) {
-  // Initialize Logger
-//    auto logger = dawn::make_unique<gtclang::Logger>();
-//    dawn::Logger::getSingleton().registerLogger(logger.get());
 
   // Initialize GTest
   testing::InitGoogleTest(&argc, argv);
