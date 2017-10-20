@@ -3,7 +3,7 @@ gtclang <br/> <a target="_blank" href="http://semver.org">![Version][Version.Bad
 
 **gtclang** is a source-to-source compiler with a high level DSL (Domain-Specifc Language) to execute stencil-like computations on a variety of different parallel architectures. The target applications for gtclang are regional weather models (regular grids) as well as global weather and climate simulations (irregular grids). gtclang is built on top of the [LLVM/Clang](https://clang.llvm.org/) compiler framework and [Dawn](https://github.com/MeteoSwiss-APN/dawn) and produces highly optimized C++ source code for the gridtools library.
 
-[![gtclang](https://raw.githubusercontent.com/thfabian/gtclang/master/docs/images/hd.png)](https://github.com/MeteoSwiss-APN/gtclang/releases)
+[![gtclang](https://raw.githubusercontent.com/MeteoSwiss-APN/gtclang/master/docs/images/hd.png)](https://github.com/MeteoSwiss-APN/gtclang/releases)
 
 ## Building
 
