@@ -34,6 +34,16 @@ namespace dawn {
 /// @ingroup sir
 namespace sir {
 
+/// @brief Result of comparisons
+/// contains the boolean that is true when the comparee match and an error message if not
+struct CompareResult {
+  std::string message;
+  bool match;
+
+  operator bool() { return match; }
+  std::string why() { return message; }
+};
+
 /// @brief Attributes attached to various SIR objects which allow to change the behavior on per
 /// stencil basis
 /// @ingroup sir
@@ -116,7 +126,7 @@ struct Interval {
   }
   bool operator!=(const Interval& other) const { return !(*this == other); }
 
-  std::pair<std::string, bool> comparison(const Interval& rhs) const;
+  CompareResult comparison(const Interval& rhs) const;
   /// @}
 
   /// @brief Convert to string
@@ -143,7 +153,7 @@ struct StencilFunctionArg {
   bool operator==(const StencilFunctionArg& rhs) const;
 
   ///@brief comparison of Name and Kind (omitting location) with output if the comparison fails
-  std::pair<std::string, bool> comparison(const sir::StencilFunctionArg& rhs) const;
+  CompareResult comparison(const sir::StencilFunctionArg& rhs) const;
 };
 
 /// @brief Representation of a field
@@ -209,7 +219,7 @@ struct StencilFunction {
   /// @brief Comparison of Stencil functions for Equality in content
   /// including the name, excluding the location
   /// if the comparison fails, outputs human readable reason why in the string
-  std::pair<std::string, bool> comparison(const StencilFunction& rhs) const;
+  CompareResult comparison(const StencilFunction& rhs) const;
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -239,7 +249,7 @@ struct VerticalRegion {
 
   /// @brief Comparison between stencils (omitting location)
   /// if the comparison fails, outputs human readable reason why in the string
-  std::pair<std::string, bool> comparison(const VerticalRegion& rhs) const;
+  CompareResult comparison(const VerticalRegion& rhs) const;
 };
 
 /// @brief Call to another stencil
@@ -281,7 +291,7 @@ struct Stencil : public dawn::NonCopyable {
 
   /// @brief Comparison between stencils (omitting location)
   /// if the comparison fails, outputs human readable reason why in the string
-  std::pair<std::string, bool> comparison(const Stencil& rhs) const;
+  CompareResult comparison(const Stencil& rhs) const;
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -298,12 +308,12 @@ struct Value : NonCopyable {
   enum TypeKind { None = 0, Boolean, Integer, Double, String };
 
   Value() : type_(None), isConstexpr_(false), valueImpl_(nullptr) {}
-  
+
   template <class T>
   explicit Value(T&& value) : isConstexpr_(false) {
     setValue(value);
   }
-  
+
   /// @brief Get/Set if the variable is `constexpr`
   bool isConstexpr() const { return isConstexpr_; }
   void setIsConstexpr(bool isConstexpr) { isConstexpr_ = isConstexpr; }
@@ -351,7 +361,7 @@ struct Value : NonCopyable {
 
   /// @brief Comparison between two Values
   /// if the comparison fails, outputs human readable reason why in the string
-  std::pair<std::string, bool> comparison(const sir::Value& rhs) const;
+  CompareResult comparison(const sir::Value& rhs) const;
 
 private:
   struct ValueImplBase {
@@ -411,7 +421,7 @@ using GlobalVariableMap = std::unordered_map<std::string, std::shared_ptr<sir::V
 /// @ingroup sir
 struct SIR : public dawn::NonCopyable {
 
-  ///@brief Default Ctor that initializes all the shared pointers
+  /// @brief Default Ctor that initializes all the shared pointers
   /// this ensures that no errors occur when handeling the in memory generated SIRs
   SIR();
 
@@ -430,7 +440,7 @@ struct SIR : public dawn::NonCopyable {
   /// It is to note that the filenames are not compared here
   /// and positions of expressions are omitted
   /// returns a mismatch string if the bool is false
-  std::pair<std::string, bool> comparison(const SIR& rhs) const;
+  sir::CompareResult comparison(const SIR& rhs) const;
 
   /// @brief Compares two SIRs for inequality in contents
   /// It is to note that the filenames are not compared here

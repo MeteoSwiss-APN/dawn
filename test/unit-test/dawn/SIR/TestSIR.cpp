@@ -23,7 +23,7 @@ namespace {
 #define SIR_EXPECT_IMPL(sir1, sir2, VALUE)                                                         \
   do {                                                                                             \
     auto comp = sir1->comparison(*sir2);                                                           \
-    EXPECT_##VALUE(comp.second) << comp.first;                                                     \
+    EXPECT_##VALUE(bool(comp)) << comp.why();                                                      \
   } while(0);
 
 #define SIR_EXCPECT_EQ(sir1, sir2) SIR_EXPECT_IMPL((sir1), (sir2), TRUE)
