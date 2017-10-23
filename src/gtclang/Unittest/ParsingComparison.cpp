@@ -143,7 +143,7 @@ public:
   FileWriter(std::string testPath, std::string filename) {
     filename_ = UnittestEnvironment::getSingleton().getFileManager().dataPath() +
                 "/gtclang/Frontend/" + testPath;
-    auto errorRepport = llvm::sys::fs::create_directories(filename_);
+    llvm::sys::fs::create_directories(filename_);
     //    DAWN_ASSERT(errorRepport == llvm::instrprof_error::success);
     filename_ += filename;
     fileHeader_ = HeaderWriter::longheader();

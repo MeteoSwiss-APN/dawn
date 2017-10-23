@@ -23,6 +23,7 @@ namespace gtclang {
 
 namespace sirgen {
 
+/// @brief Helper Class to write a concatination of statements into a block statement
 class BlockWriter {
 public:
   template <typename... Args>

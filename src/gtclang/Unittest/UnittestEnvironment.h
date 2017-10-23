@@ -58,6 +58,7 @@ public:
   /// @brief Get FlagManager
   const FlagManager& getFlagManager() { return flagManager_; }
 
+  /// @brief Get an ID unique to the test
   int getUniqueID() { return uniqueID_++; }
 };
 
