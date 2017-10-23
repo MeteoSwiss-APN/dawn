@@ -14,6 +14,9 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_subdirectory(Support)
-add_subdirectory(Parsing)
-add_subdirectory(Unittest)
+gtclang_add_unittest(
+  NAME GTClangUnittestUnittest
+  SOURCES TestUnittestEnvironment.cpp
+          TestMain.cpp
+  DEPENDS ${GTCLANG_UNITTEST_EXTERNAL_LIBRARIES}  
+)

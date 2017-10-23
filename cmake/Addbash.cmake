@@ -1,12 +1,12 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
-##                         _       _                   
-##                        | |     | |                  
+##                         _       _       
+##                        | |     | |
 ##                    __ _| |_ ___| | __ _ _ __   __ _ 
 ##                   / _` | __/ __| |/ _` | '_ \ / _` |
 ##                  | (_| | || (__| | (_| | | | | (_| |
 ##                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 ##                    __/ |                       __/ |
-##                   |___/                       |___/ 
+##                   |___/                       |___/
 ##
 ##
 ##  This file is distributed under the MIT License (MIT). 
@@ -14,6 +14,10 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_subdirectory(Support)
-add_subdirectory(Parsing)
-add_subdirectory(Unittest)
+find_package(bash REQUIRED)
+
+dawn_export_package(
+  NAME bash
+  FOUND ${BASH_FOUND}
+  EXECUTABLE ${BASH_EXECUTABLE}
+)
