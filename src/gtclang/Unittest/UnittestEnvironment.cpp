@@ -14,6 +14,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/Support/Assert.h"
 #include "gtclang/Unittest/UnittestEnvironment.h"
 
 namespace gtclang {
@@ -24,12 +25,23 @@ void UnittestEnvironment::SetUp() {}
 
 void UnittestEnvironment::TearDown() {}
 
+std::string UnittestEnvironment::testCaseName() const {
+  const ::testing::TestInfo* testInfo = ::testing::UnitTest::GetInstance()->current_test_info();
+  DAWN_ASSERT_MSG(testInfo, "testCaseName() called outside a test case");
+  return testInfo->test_case_name();
+}
+
+std::string UnittestEnvironment::testName() const {
+  const ::testing::TestInfo* testInfo = ::testing::UnitTest::GetInstance()->current_test_info();
+  DAWN_ASSERT_MSG(testInfo, "testName() called outside a test");
+  return testInfo->name();
+}
+
 UnittestEnvironment* UnittestEnvironment::instance_ = nullptr;
 
 UnittestEnvironment& UnittestEnvironment::getSingleton() {
-  if(instance_ == nullptr) {
+  if(instance_ == nullptr)
     instance_ = new UnittestEnvironment;
-  }
   return *instance_;
 }
 
