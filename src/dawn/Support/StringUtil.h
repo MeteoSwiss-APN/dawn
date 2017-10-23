@@ -106,7 +106,7 @@ public:
 
 /// @brief Indent a string by the specified number of spaces
 /// @ingroup core
-/// 
+///
 /// @ingroup support
 extern std::string indent(const std::string& string, int amount = 2);
 
@@ -116,7 +116,7 @@ extern std::string indent(const std::string& string, int amount = 2);
 /// @code
 ///   std::string one = intToOrdinal(1); // == "1st"
 /// @endcode
-/// 
+///
 /// @ingroup support
 extern std::string decimalToOrdinal(int dec);
 
