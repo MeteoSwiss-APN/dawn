@@ -486,7 +486,7 @@ bool evalExprAsBoolean(const std::shared_ptr<Expr>& expr, bool& result,
   return evalExprImpl(expr, result, variableMap);
 }
 /// @brief helper to find all the fields in a statement
-class FieldFinder : public dawn::ASTVisitorForwarding {
+class FieldFinder : public ASTVisitorForwarding {
 public:
   virtual void visit(const std::shared_ptr<dawn::FieldAccessExpr>& expr) {
     auto fieldFromExpression = sir::Field(expr->getName());
