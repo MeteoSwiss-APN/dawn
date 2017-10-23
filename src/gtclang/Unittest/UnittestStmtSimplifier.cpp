@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "gtclang/Unittest/UnittestStmtSimplyfier.h"
+#include "gtclang/Unittest/UnittestStmtSimplifier.h"
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/Unreachable.h"
 
@@ -39,21 +39,22 @@ std::shared_ptr<dawn::ReturnStmt> ret(const std::shared_ptr<dawn::Expr>& expr) {
   return std::make_shared<dawn::ReturnStmt>(expr);
 }
 
-std::shared_ptr<dawn::VarDeclStmt> vardec(const std::string& type, const std::string& name,
-                                          const std::shared_ptr<dawn::Expr>& init, const char* op) {
+std::shared_ptr<dawn::VarDeclStmt> vardecl(const std::string& type, const std::string& name,
+                                           const std::shared_ptr<dawn::Expr>& init,
+                                           const char* op) {
 
-  return vecdec(type, name, std::vector<std::shared_ptr<dawn::Expr>>({init}), 0, op);
+  return vecdecl(type, name, std::vector<std::shared_ptr<dawn::Expr>>({init}), 0, op);
 }
 
-std::shared_ptr<dawn::VarDeclStmt> vecdec(const std::string& type, const std::string& name,
-                                          std::vector<std::shared_ptr<dawn::Expr>> initList,
-                                          int dimension, const char* op) {
+std::shared_ptr<dawn::VarDeclStmt> vecdecl(const std::string& type, const std::string& name,
+                                           std::vector<std::shared_ptr<dawn::Expr>> initList,
+                                           int dimension, const char* op) {
   auto realtype = stringToType(type);
   return std::make_shared<dawn::VarDeclStmt>(realtype, name, dimension, op, initList);
 }
 
 std::shared_ptr<dawn::VerticalRegionDeclStmt>
-vrdec(const std::shared_ptr<dawn::sir::VerticalRegion>& verticalRegion) {
+verticalRegion(const std::shared_ptr<dawn::sir::VerticalRegion>& verticalRegion) {
   return std::make_shared<dawn::VerticalRegionDeclStmt>(verticalRegion);
 }
 
@@ -62,13 +63,13 @@ scdec(const std::shared_ptr<dawn::sir::StencilCall>& stencilCall) {
   return std::make_shared<dawn::StencilCallDeclStmt>(stencilCall);
 }
 
-std::shared_ptr<dawn::BoundaryConditionDeclStmt> bcdec(const std::string& callee) {
+std::shared_ptr<dawn::BoundaryConditionDeclStmt> boundaryCondition(const std::string& callee) {
   return std::make_shared<dawn::BoundaryConditionDeclStmt>(callee);
 }
 
-std::shared_ptr<dawn::IfStmt> ifst(const std::shared_ptr<dawn::Stmt>& condExpr,
-                                   const std::shared_ptr<dawn::Stmt>& thenStmt,
-                                   const std::shared_ptr<dawn::Stmt>& elseStmt) {
+std::shared_ptr<dawn::IfStmt> ifstmt(const std::shared_ptr<dawn::Stmt>& condExpr,
+                                     const std::shared_ptr<dawn::Stmt>& thenStmt,
+                                     const std::shared_ptr<dawn::Stmt>& elseStmt) {
   return std::make_shared<dawn::IfStmt>(condExpr, thenStmt, elseStmt);
 }
 
@@ -102,7 +103,7 @@ std::shared_ptr<dawn::StencilFunCallExpr> sfcall(const std::string& calee) {
   return std::make_shared<dawn::StencilFunCallExpr>(calee);
 }
 
-std::shared_ptr<dawn::StencilFunArgExpr> sfarg(int direction, int offset, int argumentIndex) {
+std::shared_ptr<dawn::StencilFunArgExpr> arg(int direction, int offset, int argumentIndex) {
   return std::make_shared<dawn::StencilFunArgExpr>(direction, offset, argumentIndex);
 }
 

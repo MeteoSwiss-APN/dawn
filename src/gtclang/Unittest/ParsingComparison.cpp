@@ -90,8 +90,8 @@ struct VerticalRegion : public NestableFunctions {
       : NestableFunctions(dawn::Twine::createNull(), name, s, il) {}
 };
 
-struct DawnObject : public dawn::codegen::Structure {
-  DawnObject(const dawn::Twine& type, const dawn::Twine& name, std::stringstream& s)
+struct StencilBase : public dawn::codegen::Structure {
+  StencilBase(const dawn::Twine& type, const dawn::Twine& name, std::stringstream& s)
       : Structure(type.str().c_str(), name, s) {}
 
   Statement addStorage(const dawn::Twine& memberName) {
@@ -114,9 +114,9 @@ struct DawnObject : public dawn::codegen::Structure {
   }
 };
 
-struct StencilFunction : public DawnObject {
+struct StencilFunction : public StencilBase {
   StencilFunction(const dawn::Twine& name, std::stringstream& s)
-      : DawnObject("stencil_function", name, s) {}
+      : StencilBase("stencil_function", name, s) {}
 
   virtual NestableFunctions addDoMethod(const dawn::Twine& type) {
     NestableFunctions nf(type, "Do", ss(), IndentLevel + 1);
@@ -127,12 +127,12 @@ struct StencilFunction : public DawnObject {
   virtual ~StencilFunction() {}
 };
 
-struct Stencil : public DawnObject {
-  Stencil(const dawn::Twine& name, std::stringstream& s) : DawnObject("stencil", name, s) {}
+struct Stencil : public StencilBase {
+  Stencil(const dawn::Twine& name, std::stringstream& s) : StencilBase("stencil", name, s) {}
 };
 
-struct Globals : public DawnObject {
-  Globals(std::stringstream& s) : DawnObject("globals", dawn::Twine::createNull(), s) {}
+struct Globals : public StencilBase {
+  Globals(std::stringstream& s) : StencilBase("globals", dawn::Twine::createNull(), s) {}
   virtual NestableFunctions addDoMethod(const dawn::Twine& type) = delete;
   virtual Statement addOffset(const dawn::Twine& offsetName) = delete;
   virtual ~Globals() {}

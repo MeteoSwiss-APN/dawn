@@ -20,7 +20,6 @@
 #include "clang/Frontend/FrontendAction.h"
 
 #include "gtclang/Frontend/GTClangContext.h"
-#include <iostream>
 
 namespace gtclang {
 

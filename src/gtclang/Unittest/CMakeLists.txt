@@ -26,8 +26,8 @@ dawn_add_library(
           GTClang.h
           UnittestEnvironment.cpp
           UnittestEnvironment.h
-          UnittestStmtSimplyfier.h
-          UnittestStmtSimplyfier.cpp          
+          UnittestStmtSimplifier.h
+          UnittestStmtSimplifier.cpp          
           ParsingComparison.h
           ParsingComparison.cpp
           ParsedString.h

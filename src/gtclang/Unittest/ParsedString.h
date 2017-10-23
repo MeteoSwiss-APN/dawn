@@ -37,16 +37,13 @@ public:
   ParsedString() = default;
   ParsedString(ParsedString&&) = default;
   ParsedString(const ParsedString&) = default;
-  ParsedString(const std::string& functionCall) : functionCall_(functionCall) {
-    if(functionCall_.back() == ';') {
-      functionCall_.pop_back();
-    }
-  }
+  ParsedString(const std::string& functionCall);
+
   /// @brief get all the parsed Fields
-  const std::vector<std::string>& getFields() const { return fields_; }
+  const std::vector<std::string>& getFields() const;
 
   /// @brief get all the parsed Variables
-  const std::vector<std::string>& getVariables() const { return variables_; }
+  const std::vector<std::string>& getVariables() const;
 
   /// @brief retruns the function call that was to pe parsed
   const std::string& getCall() const { return functionCall_; }
@@ -58,17 +55,7 @@ public:
     argumentParsingImpl(argument);
     argumentParsing(std::forward<Args>(args)...);
   }
-  void argumentParsing() {}
-
-  void argumentParsingImpl(const std::shared_ptr<dawn::Expr>& argument) {
-    if(dawn::VarAccessExpr* expr = dawn::dyn_cast<dawn::VarAccessExpr>(argument.get())) {
-      addVariable(expr->getName());
-    } else if(dawn::FieldAccessExpr* expr = dawn::dyn_cast<dawn::FieldAccessExpr>(argument.get())) {
-      addField(expr->getName());
-    } else {
-      dawn_unreachable("invalid expression");
-    }
-  }
+  void argumentParsing();
   /// @}
 
   /// @brief dumps the call with all its fields and variables to std::cout
@@ -80,6 +67,9 @@ private:
 
   /// @brief lets the implementation add variables to the local storage
   void addVariable(std::string& variable) { variables_.push_back(variable); }
+
+  /// @brief recursive argument parsing to read all the fields given to specify the function call
+  void argumentParsingImpl(const std::shared_ptr<dawn::Expr>& argument);
 
   std::vector<std::string> fields_;
   std::vector<std::string> variables_;

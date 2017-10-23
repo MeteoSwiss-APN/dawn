@@ -74,20 +74,20 @@ std::shared_ptr<dawn::BlockStmt> block(Args&&... args) {
 
 std::shared_ptr<dawn::ExprStmt> expr(const std::shared_ptr<dawn::Expr>& expr);
 std::shared_ptr<dawn::ReturnStmt> ret(const std::shared_ptr<dawn::Expr>& expr);
-std::shared_ptr<dawn::VarDeclStmt> vardec(const std::string& type, const std::string& name,
-                                          const std::shared_ptr<dawn::Expr>& init,
-                                          const char* op = "=");
-std::shared_ptr<dawn::VarDeclStmt> vecdec(const std::string& type, const std::string& name,
-                                          std::vector<std::shared_ptr<dawn::Expr>> initList,
-                                          int dimension = 0, const char* op = "=");
+std::shared_ptr<dawn::VarDeclStmt> vardecl(const std::string& type, const std::string& name,
+                                           const std::shared_ptr<dawn::Expr>& init,
+                                           const char* op = "=");
+std::shared_ptr<dawn::VarDeclStmt> vecdecl(const std::string& type, const std::string& name,
+                                           std::vector<std::shared_ptr<dawn::Expr>> initList,
+                                           int dimension = 0, const char* op = "=");
 std::shared_ptr<dawn::VerticalRegionDeclStmt>
-vrdec(const std::shared_ptr<dawn::sir::VerticalRegion>& verticalRegion);
+verticalRegion(const std::shared_ptr<dawn::sir::VerticalRegion>& verticalRegion);
 std::shared_ptr<dawn::StencilCallDeclStmt>
 scdec(const std::shared_ptr<dawn::sir::StencilCall>& stencilCall);
-std::shared_ptr<dawn::BoundaryConditionDeclStmt> bcdec(const std::string& callee);
-std::shared_ptr<dawn::IfStmt> ifst(const std::shared_ptr<dawn::Stmt>& condExpr,
-                                   const std::shared_ptr<dawn::Stmt>& thenStmt,
-                                   const std::shared_ptr<dawn::Stmt>& elseStmt = nullptr);
+std::shared_ptr<dawn::BoundaryConditionDeclStmt> boundaryCondition(const std::string& callee);
+std::shared_ptr<dawn::IfStmt> ifstmt(const std::shared_ptr<dawn::Stmt>& condExpr,
+                                     const std::shared_ptr<dawn::Stmt>& thenStmt,
+                                     const std::shared_ptr<dawn::Stmt>& elseStmt = nullptr);
 std::shared_ptr<dawn::UnaryOperator> unop(const std::shared_ptr<dawn::Expr>& operand,
                                           const char* op);
 std::shared_ptr<dawn::BinaryOperator> binop(const std::shared_ptr<dawn::Expr>& left, const char* op,
@@ -100,7 +100,7 @@ std::shared_ptr<dawn::TernaryOperator> ternop(const std::shared_ptr<dawn::Expr>&
                                               const std::shared_ptr<dawn::Expr>& right);
 std::shared_ptr<dawn::FunCallExpr> fcall(const std::string& callee);
 std::shared_ptr<dawn::StencilFunCallExpr> sfcall(const std::string& calee);
-std::shared_ptr<dawn::StencilFunArgExpr> sfarg(int direction, int offset, int argumentIndex);
+std::shared_ptr<dawn::StencilFunArgExpr> arg(int direction, int offset, int argumentIndex);
 std::shared_ptr<dawn::VarAccessExpr> var(const std::string& name,
                                          std::shared_ptr<dawn::Expr> index = nullptr);
 std::shared_ptr<dawn::FieldAccessExpr>

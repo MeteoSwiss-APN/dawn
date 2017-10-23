@@ -65,7 +65,7 @@ static std::unique_ptr<dawn::Options> makeDAWNOptions(const Options& options) {
   return DAWNOptions;
 }
 
-GTClangASTConsumer::GTClangASTConsumer(GTClangContext* context, std::string file,
+GTClangASTConsumer::GTClangASTConsumer(GTClangContext* context, const std::string& file,
                                        GTClangASTAction* parentAction)
     : context_(context), file_(file), parentAction_(parentAction) {
   DAWN_LOG(INFO) << "Creating ASTVisitor ... ";

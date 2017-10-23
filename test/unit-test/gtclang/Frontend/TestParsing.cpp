@@ -15,7 +15,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "gtclang/Unittest/ParsingComparison.h"
-#include "gtclang/Unittest/UnittestStmtSimplyfier.h"
+#include "gtclang/Unittest/UnittestStmtSimplifier.h"
 #include <fstream>
 #include <gtest/gtest.h>
 
@@ -39,7 +39,7 @@ namespace {
 TEST(ParsingTest, Setup) {
   // Setup Tests: types, #fields, names, repeated fields
   DAWN_EXPECT_NE(parse("float b = 1; a = b", field("a"), var("b")),
-                 block(vardec("int", "b", lit("1")), assign(field("a"), var("b"))));
+                 block(vardecl("int", "b", lit("1")), assign(field("a"), var("b"))));
   DAWN_EXPECT_NE(parse("a = b", field("a"), field("b"), field("c")),
                  assign(field("a"), field("b")));
   DAWN_EXPECT_NE(parse("a = c", field("a"), field("c")), assign(field("a"), field("b")));
@@ -58,62 +58,62 @@ TEST(ParsingTest, Assignment) {
 
   //  Field - Variable
   DAWN_EXPECT_EQ(parse("float b = 1; a = b", field("a"), var("b")),
-                 block(vardec("float", "b", lit("1")), assign(field("a"), var("b"))));
+                 block(vardecl("float", "b", lit("1")), assign(field("a"), var("b"))));
   DAWN_EXPECT_EQ(parse("float b = 1; a += b", field("a"), var("b")),
-                 block(vardec("float", "b", lit("1")), assign(field("a"), var("b"), "+=")));
+                 block(vardecl("float", "b", lit("1")), assign(field("a"), var("b"), "+=")));
   DAWN_EXPECT_EQ(parse("float b = 1; a -= b", field("a"), var("b")),
-                 block(vardec("float", "b", lit("1")), assign(field("a"), var("b"), "-=")));
+                 block(vardecl("float", "b", lit("1")), assign(field("a"), var("b"), "-=")));
   DAWN_EXPECT_EQ(parse("float b = 1; a *= b", field("a"), var("b")),
-                 block(vardec("float", "b", lit("1")), assign(field("a"), var("b"), "*=")));
+                 block(vardecl("float", "b", lit("1")), assign(field("a"), var("b"), "*=")));
   DAWN_EXPECT_EQ(parse("float b = 1; a /= b", field("a"), var("b")),
-                 block(vardec("float", "b", lit("1")), assign(field("a"), var("b"), "/=")));
+                 block(vardecl("float", "b", lit("1")), assign(field("a"), var("b"), "/=")));
 
   // Variable - Field
   DAWN_EXPECT_EQ(parse("float b = 1; b = a", field("a"), var("b")),
-                 block(vardec("float", "b", lit("1")), assign(var("b"), field("a"))));
+                 block(vardecl("float", "b", lit("1")), assign(var("b"), field("a"))));
   DAWN_EXPECT_EQ(parse("float b = 1; b += a", field("a"), var("b")),
-                 block(vardec("float", "b", lit("1")), assign(var("b"), field("a"), "+=")));
+                 block(vardecl("float", "b", lit("1")), assign(var("b"), field("a"), "+=")));
   DAWN_EXPECT_EQ(parse("float b = 1; b -= a", field("a"), var("b")),
-                 block(vardec("float", "b", lit("1")), assign(var("b"), field("a"), "-=")));
+                 block(vardecl("float", "b", lit("1")), assign(var("b"), field("a"), "-=")));
   DAWN_EXPECT_EQ(parse("float b = 1; b *= a", field("a"), var("b")),
-                 block(vardec("float", "b", lit("1")), assign(var("b"), field("a"), "*=")));
+                 block(vardecl("float", "b", lit("1")), assign(var("b"), field("a"), "*=")));
   DAWN_EXPECT_EQ(parse("float b = 1; b /= a", field("a"), var("b")),
-                 block(vardec("float", "b", lit("1")), assign(var("b"), field("a"), "/=")));
+                 block(vardecl("float", "b", lit("1")), assign(var("b"), field("a"), "/=")));
 
   // Variable - Variable
   DAWN_EXPECT_EQ(
       parse("float b = 1; float c = 2; b = c; field = b", field("field"), var("b"), var("c")),
-      block(vardec("float", "b", lit("1")), vardec("float", "c", lit("2")),
+      block(vardecl("float", "b", lit("1")), vardecl("float", "c", lit("2")),
             assign(var("b"), var("c")), assign(field("field"), var("b"))));
   DAWN_EXPECT_EQ(
       parse("float b = 1; float c = 2; b += c; field = b", field("field"), var("b"), var("c")),
-      block(vardec("float", "b", lit("1")), vardec("float", "c", lit("2")),
+      block(vardecl("float", "b", lit("1")), vardecl("float", "c", lit("2")),
             assign(var("b"), var("c"), "+="), assign(field("field"), var("b"))));
   DAWN_EXPECT_EQ(
       parse("float b = 1; float c = 2; b -= c; field = b", field("field"), var("b"), var("c")),
-      block(vardec("float", "b", lit("1")), vardec("float", "c", lit("2")),
+      block(vardecl("float", "b", lit("1")), vardecl("float", "c", lit("2")),
             assign(var("b"), var("c"), "-="), assign(field("field"), var("b"))));
   DAWN_EXPECT_EQ(
       parse("float b = 1; float c = 2; b *= c; field = b", field("field"), var("b"), var("c")),
-      block(vardec("float", "b", lit("1")), vardec("float", "c", lit("2")),
+      block(vardecl("float", "b", lit("1")), vardecl("float", "c", lit("2")),
             assign(var("b"), var("c"), "*="), assign(field("field"), var("b"))));
   DAWN_EXPECT_EQ(
       parse("float b = 1; float c = 2; b /= c; field = b", field("field"), var("b"), var("c")),
-      block(vardec("float", "b", lit("1")), vardec("float", "c", lit("2")),
+      block(vardecl("float", "b", lit("1")), vardecl("float", "c", lit("2")),
             assign(var("b"), var("c"), "/="), assign(field("field"), var("b"))));
 }
 
 TEST(ParsingTest, Unop) {
   DAWN_EXPECT_EQ(parse("float a = 1; st = ++a;", field("st")),
-                 block(vardec("float", "a", lit("1")), assign(field("st"), unop(var("a"), "++"))));
+                 block(vardecl("float", "a", lit("1")), assign(field("st"), unop(var("a"), "++"))));
   DAWN_EXPECT_EQ(parse("float a = 1; st = --a;", field("st")),
-                 block(vardec("float", "a", lit("1")), assign(field("st"), unop(var("a"), "--"))));
+                 block(vardecl("float", "a", lit("1")), assign(field("st"), unop(var("a"), "--"))));
   DAWN_EXPECT_EQ(parse("float a = 1; st = -a;", field("st")),
-                 block(vardec("float", "a", lit("1")), assign(field("st"), unop(var("a"), "-"))));
+                 block(vardecl("float", "a", lit("1")), assign(field("st"), unop(var("a"), "-"))));
   DAWN_EXPECT_EQ(parse("bool a = 1; st = !a;", field("st")),
-                 block(vardec("bool", "a", lit("1")), assign(field("st"), unop(var("a"), "!"))));
+                 block(vardecl("bool", "a", lit("1")), assign(field("st"), unop(var("a"), "!"))));
   DAWN_EXPECT_NE(parse("bool a = 1; st = !a;", field("st")),
-                 block(vardec("bool", "a", lit("1")), assign(field("st"), unop(var("a"), "-"))));
+                 block(vardecl("bool", "a", lit("1")), assign(field("st"), unop(var("a"), "-"))));
 }
 
 TEST(ParsingTest, BinOp) {
@@ -146,44 +146,44 @@ TEST(ParsingTest, BinOp) {
   // Field - Var operators
   DAWN_EXPECT_EQ(
       parse("float c = 1; a = b + c", field("a"), field("b"), var("c")),
-      block(vardec("float", "c", lit("1")), assign(field("a"), binop(field("b"), "+", var("c")))));
+      block(vardecl("float", "c", lit("1")), assign(field("a"), binop(field("b"), "+", var("c")))));
   DAWN_EXPECT_EQ(
       parse("float c = 1; a = b - c", field("a"), field("b"), var("c")),
-      block(vardec("float", "c", lit("1")), assign(field("a"), binop(field("b"), "-", var("c")))));
+      block(vardecl("float", "c", lit("1")), assign(field("a"), binop(field("b"), "-", var("c")))));
   DAWN_EXPECT_EQ(
       parse("float c = 1; a = b * c", field("a"), field("b"), var("c")),
-      block(vardec("float", "c", lit("1")), assign(field("a"), binop(field("b"), "*", var("c")))));
+      block(vardecl("float", "c", lit("1")), assign(field("a"), binop(field("b"), "*", var("c")))));
   DAWN_EXPECT_EQ(
       parse("float c = 1; a = b / c", field("a"), field("b"), var("c")),
-      block(vardec("float", "c", lit("1")), assign(field("a"), binop(field("b"), "/", var("c")))));
+      block(vardecl("float", "c", lit("1")), assign(field("a"), binop(field("b"), "/", var("c")))));
 
   DAWN_EXPECT_EQ(parse(R"(
                        int b = 1;
                        int c = 2;
                        a = b & c;)",
                        field("a"), var("b"), var("c")),
-                 block(vardec("int", "b", lit("1")), vardec("int", "c", lit("2")),
+                 block(vardecl("int", "b", lit("1")), vardecl("int", "c", lit("2")),
                        assign(field("a"), binop(var("b"), "&", var("c")))));
   DAWN_EXPECT_EQ(parse(R"(
                        int b = 1;
                        int c = 2;
                        a = b | c;)",
                        field("a"), var("b"), var("c")),
-                 block(vardec("int", "b", lit("1")), vardec("int", "c", lit("2")),
+                 block(vardecl("int", "b", lit("1")), vardecl("int", "c", lit("2")),
                        assign(field("a"), binop(var("b"), "|", var("c")))));
   DAWN_EXPECT_EQ(parse(R"(
                        int b = 1;
                        int c = 2;
                        a = b ^ c;)",
                        field("a"), var("b"), var("c")),
-                 block(vardec("int", "b", lit("1")), vardec("int", "c", lit("2")),
+                 block(vardecl("int", "b", lit("1")), vardecl("int", "c", lit("2")),
                        assign(field("a"), binop(var("b"), "^", var("c")))));
   DAWN_EXPECT_EQ(parse(R"(
                         int b = 1;
                         int c = 2;
                         a = b << c;)",
                        field("a"), var("b"), var("c")),
-                 block(vardec("int", "b", lit("1")), vardec("int", "c", lit("2")),
+                 block(vardecl("int", "b", lit("1")), vardecl("int", "c", lit("2")),
                        assign(field("a"), binop(var("b"), "<<", var("c")))));
   DAWN_EXPECT_EQ(parse(R"(
                        int b = 1;
@@ -191,7 +191,7 @@ TEST(ParsingTest, BinOp) {
                        a = b >> c
                        )",
                        field("a"), var("b"), var("c")),
-                 block(vardec("int", "b", lit("1")), vardec("int", "c", lit("2")),
+                 block(vardecl("int", "b", lit("1")), vardecl("int", "c", lit("2")),
                        assign(field("a"), binop(var("b"), ">>", var("c")))));
 }
 
@@ -203,8 +203,8 @@ TEST(ParsingTest, TernOp) {
                        float c = 2;
                        f = a<0 ? b : c;)",
             field("f"), var("a"), var("b"), var("c")),
-      block(vardec("float", "a", lit("0")), vardec("float", "b", lit("1")),
-            vardec("float", "c", lit("2")),
+      block(vardecl("float", "a", lit("0")), vardecl("float", "b", lit("1")),
+            vardecl("float", "c", lit("2")),
             assign(field("f"), ternop(binop(var("a"), "<", lit("0")), var("b"), var("c")))));
 }
 
@@ -218,8 +218,8 @@ TEST(ParsingTest, IfStmt) {
                          fieldTwo = b;
                          })",
                        field("fieldOne"), field("fieldTwo")),
-                 block(vardec("float", "a", lit("0")), vardec("float", "b", lit("1")),
-                       ifst(expr(binop(var("b"), ">", lit("0"))),
+                 block(vardecl("float", "a", lit("0")), vardecl("float", "b", lit("1")),
+                       ifstmt(expr(binop(var("b"), ">", lit("0"))),
                             block(expr(assign(field("fieldOne"), var("a")))),
                             block(expr(assign(field("fieldTwo"), var("b")))))));
   DAWN_EXPECT_EQ(parse(R"(
@@ -229,8 +229,8 @@ TEST(ParsingTest, IfStmt) {
                       field = a;
                       })",
                        field("field")),
-                 block(vardec("float", "a", lit("0")), vardec("float", "b", lit("1")),
-                       ifst(expr(binop(var("b"), ">", lit("0"))),
+                 block(vardecl("float", "a", lit("0")), vardecl("float", "b", lit("1")),
+                       ifstmt(expr(binop(var("b"), ">", lit("0"))),
                             block(expr(assign(field("field"), var("a")))))));
 }
 
