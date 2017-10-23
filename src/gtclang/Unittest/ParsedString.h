@@ -42,32 +42,43 @@ public:
       functionCall_.pop_back();
     }
   }
-
+  /// @brief get all the parsed Fields
   const std::vector<std::string>& getFields() const { return fields_; }
+
+  /// @brief get all the parsed Variables
   const std::vector<std::string>& getVariables() const { return variables_; }
+
+  /// @brief retruns the function call that was to pe parsed
   const std::string& getCall() const { return functionCall_; }
 
+  /// @brief recursive argument parsing to read all the fields given to specify the function call
+  /// @{
   template <typename... Args>
-  void argumentParsing(const std::shared_ptr<dawn::Expr>& argument, Args&&... args){
-      argumentParsingImpl(argument);
-      argumentParsing(std::forward<Args>(args)...);
-    }
+  void argumentParsing(const std::shared_ptr<dawn::Expr>& argument, Args&&... args) {
+    argumentParsingImpl(argument);
+    argumentParsing(std::forward<Args>(args)...);
+  }
   void argumentParsing() {}
 
-  void argumentParsingImpl(const std::shared_ptr<dawn::Expr>& argument){
-      if(dawn::VarAccessExpr* expr = dawn::dyn_cast<dawn::VarAccessExpr>(argument.get())) {
-        addVariable(expr->getName());
-      } else if(dawn::FieldAccessExpr* expr = dawn::dyn_cast<dawn::FieldAccessExpr>(argument.get())) {
-        addField(expr->getName());
-      } else {
-        dawn_unreachable("invalid expression");
-      }
+  void argumentParsingImpl(const std::shared_ptr<dawn::Expr>& argument) {
+    if(dawn::VarAccessExpr* expr = dawn::dyn_cast<dawn::VarAccessExpr>(argument.get())) {
+      addVariable(expr->getName());
+    } else if(dawn::FieldAccessExpr* expr = dawn::dyn_cast<dawn::FieldAccessExpr>(argument.get())) {
+      addField(expr->getName());
+    } else {
+      dawn_unreachable("invalid expression");
     }
+  }
+  /// @}
 
+  /// @brief dumps the call with all its fields and variables to std::cout
   void dump();
 
 private:
+  /// @brief lets the implementation add fields to the local storage
   void addField(std::string& field) { fields_.push_back(field); }
+
+  /// @brief lets the implementation add variables to the local storage
   void addVariable(std::string& variable) { variables_.push_back(variable); }
 
   std::vector<std::string> fields_;

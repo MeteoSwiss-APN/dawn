@@ -15,7 +15,7 @@
 ##===------------------------------------------------------------------------------------------===##
 
 gtclang_add_unittest(
-  NAME GTClangUnittestParsing
+  NAME GTClangUnittestFrontend
   SOURCES TestParsing.cpp
           TestMain.cpp
   DEPENDS ${GTCLANG_UNITTEST_EXTERNAL_LIBRARIES}

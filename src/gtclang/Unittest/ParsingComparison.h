@@ -20,7 +20,6 @@
 #include "dawn/SIR/ASTStmt.h"
 #include "gtclang/Unittest/ParsedString.h"
 #include <string>
-#include <vector>
 
 namespace gtclang {
 struct CompareResult {
@@ -28,10 +27,9 @@ struct CompareResult {
   bool match;
 
   operator bool() { return match; }
-  std::string why() {return message;}
+  std::string why() { return message; }
 };
 
-///
 /// \brief compares a string of an input operation with a statement wrapped into an ast
 /// \param ps a parsed string with all its variables. Can be created i.e with
 /// \code{.cpp}
@@ -43,11 +41,19 @@ struct CompareResult {
 /// and and empty string if we have a mismatch, we get a human-readable message of what failed and
 /// false
 ///
-CompareResult compare(const ParsedString& ps,
-                                     const std::shared_ptr<dawn::Stmt>& stmt);
+class ParsingComparison {
+public:
+  CompareResult compare(const ParsedString& ps, const std::shared_ptr<dawn::Stmt>& stmt);
 
-CompareResult compare(const ParsedString& ps,
-                                     const std::shared_ptr<dawn::Expr>& expr);
+  CompareResult compare(const ParsedString& ps, const std::shared_ptr<dawn::Expr>& expr);
+
+  static ParsingComparison& getSingleton();
+
+private:
+  void wrapStatementInStencil(std::unique_ptr<dawn::SIR>& sir,
+                              const std::shared_ptr<dawn::Stmt>& stmt);
+  static ParsingComparison* instance_;
+};
 
 } // namespace gtclang
 

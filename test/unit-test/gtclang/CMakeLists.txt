@@ -15,5 +15,5 @@
 ##===------------------------------------------------------------------------------------------===##
 
 add_subdirectory(Support)
-add_subdirectory(Parsing)
+add_subdirectory(Frontend)
 add_subdirectory(Unittest)

@@ -14,19 +14,51 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "gtclang/Unittest/SirGenerator.h"
+#include "gtclang/Unittest/ParsingComparison.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/SIR/ASTUtil.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/Unreachable.h"
-#include "gtclang/Support/ParsingHeader.h"
 #include "gtclang/Unittest/GTClang.h"
 #include "gtclang/Unittest/UnittestEnvironment.h"
+#include "llvm/ProfileData/InstrProf.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/Path.h"
 #include <fstream>
 
 namespace gtclang {
+
+struct HeaderWriter {
+  HeaderWriter() = delete;
+  static std::string longheader() {
+    return R"(
+//===--------------------------------------------------------------------------------*- C++ -*-===//
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
+//                   / _` | __/ __| |/ _` | '_ \ / _` |
+//                  | (_| | || (__| | (_| | | | | (_| |
+//                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
+//                    __/ |                       __/ |
+//                   |___/                       |___/
+//
+//
+//  This file is distributed under the MIT License (MIT).
+//  See LICENSE.txt for details.
+//
+//===------------------------------------------------------------------------------------------===//
+           )";
+  }
+  static std::string includes() {
+    return R"(
+#include "gridtools/clang_dsl.hpp"
+
+using namespace gridtools::clang;
+            )";
+  }
+};
 
 struct NestableFunctions : public dawn::codegen::MemberFunction {
   NestableFunctions(const dawn::Twine& type, const dawn::Twine& name, std::stringstream& s,
@@ -108,8 +140,12 @@ struct Globals : public DawnObject {
 
 class FileWriter {
 public:
-  FileWriter(std::string filename) {
-    filename_ = UnittestEnvironment::getSingleton().getFileManager().dataPath() + filename;
+  FileWriter(std::string testPath, std::string filename) {
+    filename_ = UnittestEnvironment::getSingleton().getFileManager().dataPath() +
+                "/gtclang/Frontend/" + testPath;
+    auto errorRepport = llvm::sys::fs::create_directories(filename_);
+    //    DAWN_ASSERT(errorRepport == llvm::instrprof_error::success);
+    filename_ += filename;
     fileHeader_ = HeaderWriter::longheader();
     fileHeader_ += HeaderWriter::includes();
   }
@@ -147,34 +183,16 @@ private:
   std::string fileHeader_;
 };
 
-static void wrapStatementInStencil(std::unique_ptr<dawn::SIR>& sir,
-                                   const std::shared_ptr<dawn::Stmt>& stmt) {
-  using namespace dawn;
-  if(BlockStmt* blockstmt = dawn::dyn_cast<BlockStmt>(stmt.get())) {
-    sir->Stencils.push_back(std::make_shared<sir::Stencil>());
-    sir->Stencils[0]->Name = "test01";
-    sir->Stencils[0]->StencilDescAst =
-        std::make_shared<AST>(std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{
-            std::make_shared<VerticalRegionDeclStmt>(std::make_shared<sir::VerticalRegion>(
-                std::make_shared<AST>(std::make_shared<BlockStmt>(*blockstmt)),
-                std::make_shared<sir::Interval>(0, sir::Interval::End),
-                sir::VerticalRegion::LoopOrderKind::LK_Forward))}));
-    auto allFields = dawn::getFieldFromStencilAST(sir->Stencils[0]->StencilDescAst);
-    for(const auto& a : allFields) {
-      sir->Stencils[0]->Fields.push_back(std::make_shared<dawn::sir::Field>(a));
-    }
-  } else {
-    wrapStatementInStencil(sir,
-                           std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{stmt}));
-  }
-}
-
-CompareResult compare(const ParsedString& ps,
-                                     const std::shared_ptr<dawn::Stmt>& stmt) {
+CompareResult ParsingComparison::compare(const ParsedString& ps,
+                                         const std::shared_ptr<dawn::Stmt>& stmt) {
   std::unique_ptr<dawn::SIR> test01SIR = dawn::make_unique<dawn::SIR>();
   wrapStatementInStencil(test01SIR, stmt);
   test01SIR->Filename = "In Memory Generated SIR";
-  FileWriter writer("TestStencil.cpp");
+  std::string localPath = UnittestEnvironment::getSingleton().testCaseName() + "/" +
+                          UnittestEnvironment::getSingleton().testName() + "/";
+  std::string fileName =
+      dawn::format("TestStencil_%i.cpp", UnittestEnvironment::getSingleton().getUniqueID());
+  FileWriter writer(localPath, fileName);
   writer.addParsedString(ps);
   auto out = GTClang::run({writer.getFileName()},
                           UnittestEnvironment::getSingleton().getFlagManager().getDefaultFlags());
@@ -188,9 +206,39 @@ CompareResult compare(const ParsedString& ps,
   return CompareResult{"", true};
 }
 
-CompareResult compare(const ParsedString& ps,
-                                     const std::shared_ptr<dawn::Expr>& expr) {
+CompareResult ParsingComparison::compare(const ParsedString& ps,
+                                         const std::shared_ptr<dawn::Expr>& expr) {
   return compare(ps, std::make_shared<dawn::ExprStmt>(expr));
+}
+
+ParsingComparison* ParsingComparison::instance_ = nullptr;
+
+ParsingComparison& ParsingComparison::getSingleton() {
+  if(instance_ == nullptr)
+    instance_ = new ParsingComparison;
+  return *instance_;
+}
+
+void ParsingComparison::wrapStatementInStencil(std::unique_ptr<dawn::SIR>& sir,
+                                               const std::shared_ptr<dawn::Stmt>& stmt) {
+  using namespace dawn;
+  if(BlockStmt* blockstmt = dawn::dyn_cast<BlockStmt>(stmt.get())) {
+    sir->Stencils.push_back(std::make_shared<sir::Stencil>());
+    sir->Stencils[0]->Name = "test01";
+    sir->Stencils[0]->StencilDescAst =
+        std::make_shared<AST>(std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{
+            std::make_shared<VerticalRegionDeclStmt>(std::make_shared<sir::VerticalRegion>(
+                std::make_shared<AST>(std::make_shared<BlockStmt>(*blockstmt)),
+                std::make_shared<sir::Interval>(sir::Interval::Start, sir::Interval::End),
+                sir::VerticalRegion::LoopOrderKind::LK_Forward))}));
+    auto allFields = dawn::getFieldFromStencilAST(sir->Stencils[0]->StencilDescAst);
+    for(const auto& a : allFields) {
+      sir->Stencils[0]->Fields.push_back(std::make_shared<dawn::sir::Field>(a));
+    }
+  } else {
+    wrapStatementInStencil(sir,
+                           std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{stmt}));
+  }
 }
 
 } // namespace gtclang

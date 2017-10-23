@@ -28,8 +28,8 @@ dawn_add_library(
           UnittestEnvironment.h
           UnittestStmtSimplyfier.h
           UnittestStmtSimplyfier.cpp          
-          SirGenerator.h
-          SirGenerator.cpp
+          ParsingComparison.h
+          ParsingComparison.cpp
           ParsedString.h
           ParsedString.cpp
   ARCHIVE

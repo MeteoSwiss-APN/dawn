@@ -30,6 +30,7 @@ class UnittestEnvironment : public testing::Environment {
   static UnittestEnvironment* instance_;
   FileManager fileManager_;
   FlagManager flagManager_;
+  int uniqueID_ = 0;
 
 public:
   virtual ~UnittestEnvironment();
@@ -56,6 +57,8 @@ public:
 
   /// @brief Get FlagManager
   const FlagManager& getFlagManager() { return flagManager_; }
+
+  int getUniqueID() { return uniqueID_++; }
 };
 
 } // namespace gtclang

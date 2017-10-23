@@ -14,7 +14,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "gtclang/Unittest/SirGenerator.h"
+#include "gtclang/Unittest/ParsingComparison.h"
 #include "gtclang/Unittest/UnittestStmtSimplyfier.h"
 #include <fstream>
 #include <gtest/gtest.h>
@@ -26,13 +26,13 @@ namespace {
 
 #define DAWN_EXPECT_EQ(parsing, operation)                                                         \
   do {                                                                                             \
-    auto output = compare(parsing, operation);                                                     \
+    auto output = ParsingComparison::getSingleton().compare(parsing, operation);                   \
     EXPECT_TRUE(bool(output)) << output.why();                                                     \
   } while(0)
 
 #define DAWN_EXPECT_NE(parsing, operation)                                                         \
   do {                                                                                             \
-    auto output = compare(parsing, operation);                                                     \
+    auto output = ParsingComparison::getSingleton().compare(parsing, operation);                   \
     EXPECT_FALSE(bool(output)) << "SIRs Match but should not";                                     \
   } while(0)
 
