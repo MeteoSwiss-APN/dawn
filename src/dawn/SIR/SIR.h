@@ -166,8 +166,10 @@ struct Field : public StencilFunctionArg {
 
   static bool classof(const StencilFunctionArg* arg) { return arg->Kind == AK_Field; }
   bool operator==(const Field& rhs) const {
-    return StencilFunctionArg::operator==(rhs) && IsTemporary == rhs.IsTemporary;
+    return comparison(rhs);
   }
+
+  CompareResult comparison(const Field& rhs) const;
 };
 
 /// @brief Representation of a direction (e.g `i`)

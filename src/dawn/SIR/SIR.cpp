@@ -270,17 +270,18 @@ sir::CompareResult sir::Stencil::comparison(const sir::Stencil& rhs) const {
                          false};
 
   if(!Fields.empty() &&
-     !std::equal(Fields.begin(), Fields.end(), rhs.Fields.begin(), pointeeComparison<sir::Field>)) {
+     !std::equal(Fields.begin(), Fields.end(), rhs.Fields.begin(), pointeeComparisonWithOutput<Field>)) {
     std::string output = "[Stencil mismatch] Fields do not match\n";
-
     for(int i = 0; i < Fields.size(); ++i) {
       auto comp = pointeeComparisonWithOutput(Fields[i], rhs.Fields[i]);
-      if(!bool(comp))
+      if(!comp) {
         output += dawn::format("[Stencil mismatch] Field %s does not match\n%s\n",
                                Fields[i].get()->Name, comp.why());
+      }
     }
 
-    CompareResult{output, false};
+
+    return CompareResult{output, false};
   }
 
   // AST
@@ -557,6 +558,20 @@ std::ostream& operator<<(std::ostream& os, const Interval& interval) {
 }
 
 Stencil::Stencil() : StencilDescAst(std::make_shared<AST>()) {}
+
+CompareResult Field::comparison(const Field& rhs) const {
+  if(rhs.IsTemporary != IsTemporary) {
+    return {dawn::format("[Field Mismatch] Temporary Flags do not match"
+                         "Actual:\n"
+                         "%s\n"
+                         "Expected:\n"
+                         "%s",
+                         (IsTemporary ? "true" : "false"), (rhs.IsTemporary ? "true" : "false")),
+            false};
+  }
+
+  return StencilFunctionArg::comparison(rhs);
+}
 
 } // namespace sir
 
