@@ -220,8 +220,8 @@ TEST(ParsingTest, IfStmt) {
                        field("fieldOne"), field("fieldTwo")),
                  block(vardecl("float", "a", lit("0")), vardecl("float", "b", lit("1")),
                        ifstmt(expr(binop(var("b"), ">", lit("0"))),
-                            block(expr(assign(field("fieldOne"), var("a")))),
-                            block(expr(assign(field("fieldTwo"), var("b")))))));
+                              block(expr(assign(field("fieldOne"), var("a")))),
+                              block(expr(assign(field("fieldTwo"), var("b")))))));
   DAWN_EXPECT_EQ(parse(R"(
                       float a = 0;
                       float b = 1;
@@ -231,7 +231,61 @@ TEST(ParsingTest, IfStmt) {
                        field("field")),
                  block(vardecl("float", "a", lit("0")), vardecl("float", "b", lit("1")),
                        ifstmt(expr(binop(var("b"), ">", lit("0"))),
-                            block(expr(assign(field("field"), var("a")))))));
+                              block(expr(assign(field("field"), var("a")))))));
+  // Only one else Stmt
+  DAWN_EXPECT_NE(parse(R"(
+                       float a = 0;
+                       float b = 1;
+                       if(b > 0){
+                       field = a;
+                       })",
+                       field("field")),
+                 block(vardecl("float", "a", lit("0")), vardecl("float", "b", lit("1")),
+                       ifstmt(expr(binop(var("b"), ">", lit("0"))),
+                              block(expr(assign(field("field"), var("a"))))),
+                       block(expr(assign(field("b"), var("field"))))));
+  // Else does not match
+  DAWN_EXPECT_NE(parse(R"(
+                           float a = 0;
+                           float b = 1;
+                           if(b > 0){
+                           fieldOne = a;
+                           } else {
+                           fieldTwo = b;
+                           })",
+                       field("fieldOne"), field("fieldTwo")),
+                 block(vardecl("float", "a", lit("0")), vardecl("float", "b", lit("1")),
+                       ifstmt(expr(binop(var("b"), ">", lit("0"))),
+                              block(expr(assign(field("fieldOne"), var("a")))),
+                              block(expr(assign(var("b"), field("fieldTwo")))))));
+  // If does not match
+  DAWN_EXPECT_NE(parse(R"(
+                        float a = 0;
+                        float b = 1;
+                        if(b > 0){
+                        fieldOne = a;
+                        } else {
+                        fieldTwo = b;
+                        })",
+                       field("fieldOne"), field("fieldTwo")),
+                 block(vardecl("float", "a", lit("0")), vardecl("float", "b", lit("1")),
+                       ifstmt(expr(binop(var("b"), ">", lit("0"))),
+                              block(expr(assign(field("fieldOne"), var("b")))),
+                              block(expr(assign(field("fieldTwo"), var("b")))))));
+  // condition does not match
+  DAWN_EXPECT_NE(parse(R"(
+                         float a = 0;
+                         float b = 1;
+                         if(b > 0){
+                         fieldOne = a;
+                         } else {
+                         fieldTwo = b;
+                         })",
+                       field("fieldOne"), field("fieldTwo")),
+                 block(vardecl("float", "a", lit("0")), vardecl("float", "b", lit("1")),
+                       ifstmt(expr(binop(var("a"), ">", lit("0"))),
+                              block(expr(assign(field("fieldOne"), var("a")))),
+                              block(expr(assign(field("fieldTwo"), var("b")))))));
 }
 
 #undef DAWN_EXPECT_EQ
