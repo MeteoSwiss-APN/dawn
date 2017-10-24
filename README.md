@@ -20,6 +20,7 @@ will install it. An example invocation of CMake may look like
 
 ```bash
 git clone https://github.com/MeteoSwiss-APN/gtclang.git
+cd gtclang
 mkdir build && cd build
 cmake .. -DDAWN_ROOT=<dawn-install-dir>
 make -j4
