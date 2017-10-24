@@ -293,10 +293,14 @@ std::shared_ptr<Stmt> IfStmt::clone() const { return std::make_shared<IfStmt>(*t
 
 bool IfStmt::equals(const Stmt* other) const {
   const IfStmt* otherPtr = dyn_cast<IfStmt>(other);
+  bool sameElse;
+  if(hasElse() && otherPtr->hasElse())
+    sameElse = subStmts_[OK_Else]->equals(otherPtr->subStmts_[OK_Else].get());
+  else
+    sameElse = !(hasElse() ^ otherPtr->hasElse());
   return otherPtr && Stmt::equals(other) &&
          subStmts_[OK_Cond]->equals(otherPtr->subStmts_[OK_Cond].get()) &&
-         subStmts_[OK_Then]->equals(otherPtr->subStmts_[OK_Then].get()) &&
-         subStmts_[OK_Else]->equals(otherPtr->subStmts_[OK_Else].get());
+         subStmts_[OK_Then]->equals(otherPtr->subStmts_[OK_Then].get()) && sameElse;
 }
 
 void IfStmt::accept(ASTVisitor& visitor) {
