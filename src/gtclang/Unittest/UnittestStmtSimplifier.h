@@ -60,9 +60,9 @@ private:
 /// This group of statements allows for a simplyfied notation to generate in-memory SIRs for testing
 /// puropses. It can be used to describe simple operations or blocks of operations in a human
 /// readable way like
-/// \code{.cpp}
+/// @code{.cpp}
 /// assign(var("a"), binop(var("b"),"+",var("c")))
-/// \endcode
+/// @endcode
 /// @ingroup unittest
 /// @{
 template <typename... Args>
