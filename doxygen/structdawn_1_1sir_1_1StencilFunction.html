@@ -117,6 +117,10 @@ std::shared_ptr&lt; <a class="el" href="classdawn_1_1AST.html">AST</a> &gt;&#160
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdawn_1_1sir_1_1StencilFunction.html#afd2480fe1bc5bc2358aaad31ce777cda">operator==</a> (const <a class="el" href="structdawn_1_1sir_1_1StencilFunction.html">sir::StencilFunction</a> &amp;rhs) const </td></tr>
 <tr class="memdesc:afd2480fe1bc5bc2358aaad31ce777cda"><td class="mdescLeft">&#160;</td><td class="mdescRight">Comparison of <a class="el" href="structdawn_1_1sir_1_1Stencil.html" title="Representation of a stencil which is a sequence of calls to other stencils (StencilCall) or vertical ...">Stencil</a> functions for Equality in content including the name, excluding the location. <br /></td></tr>
 <tr class="separator:afd2480fe1bc5bc2358aaad31ce777cda"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a81e9890877d80f5da72ff02f1275bd2d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a81e9890877d80f5da72ff02f1275bd2d"></a>
+std::pair&lt; std::string, bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdawn_1_1sir_1_1StencilFunction.html#a81e9890877d80f5da72ff02f1275bd2d">comparison</a> (const <a class="el" href="structdawn_1_1sir_1_1StencilFunction.html">StencilFunction</a> &amp;rhs) const </td></tr>
+<tr class="memdesc:a81e9890877d80f5da72ff02f1275bd2d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Comparison of <a class="el" href="structdawn_1_1sir_1_1Stencil.html" title="Representation of a stencil which is a sequence of calls to other stencils (StencilCall) or vertical ...">Stencil</a> functions for Equality in content including the name, excluding the location if the comparison fails, outputs human readable reason why in the string. <br /></td></tr>
+<tr class="separator:a81e9890877d80f5da72ff02f1275bd2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -148,7 +152,7 @@ std::vector&lt; std::shared_ptr&lt; <a class="el" href="classdawn_1_1AST.html">A
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Representation of a stencil function. </p>
 
-<p>Definition at line <a class="el" href="SIR_8h_source.html#l00181">181</a> of file <a class="el" href="SIR_8h_source.html">SIR.h</a>.</p>
+<p>Definition at line <a class="el" href="SIR_8h_source.html#l00187">187</a> of file <a class="el" href="SIR_8h_source.html">SIR.h</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a class="anchor" id="a5238b54c51d6a01073ee0325dcdc1783"></a>
 <div class="memitem">
@@ -166,7 +170,7 @@ std::vector&lt; std::shared_ptr&lt; <a class="el" href="classdawn_1_1AST.html">A
 <p>Check if the <a class="el" href="structdawn_1_1sir_1_1Stencil.html" title="Representation of a stencil which is a sequence of calls to other stencils (StencilCall) or vertical ...">Stencil</a> function contains specializations. </p>
 <p>If <code>Intervals</code> is empty and <code>Asts</code> contains one element, the <a class="el" href="structdawn_1_1sir_1_1StencilFunction.html" title="Representation of a stencil function. ">StencilFunction</a> is not specialized. </p>
 
-<p>Definition at line <a class="el" href="SIR_8cpp_source.html#l00055">55</a> of file <a class="el" href="SIR_8cpp_source.html">SIR.cpp</a>.</p>
+<p>Definition at line <a class="el" href="SIR_8cpp_source.html#l00501">501</a> of file <a class="el" href="SIR_8cpp_source.html">SIR.cpp</a>.</p>
 
 </div>
 </div>

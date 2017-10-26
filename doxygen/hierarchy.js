@@ -126,6 +126,8 @@ var hierarchy =
       [ "dawn::DiagnosticsQueue", "classdawn_1_1DiagnosticsQueue.html", null ],
       [ "dawn::OptimizerContext", "classdawn_1_1OptimizerContext.html", null ],
       [ "dawn::PassManager", "classdawn_1_1PassManager.html", null ],
+      [ "dawn::SIR", "structdawn_1_1SIR.html", null ],
+      [ "dawn::sir::Stencil", "structdawn_1_1sir_1_1Stencil.html", null ],
       [ "dawn::sir::Value", "structdawn_1_1sir_1_1Value.html", null ],
       [ "dawn::StencilInstantiation", "classdawn_1_1StencilInstantiation.html", null ],
       [ "dawn::UIDGenerator", "classdawn_1_1UIDGenerator.html", null ]
@@ -157,7 +159,6 @@ var hierarchy =
     ] ],
     [ "dawn::simplify_type< From >", "structdawn_1_1simplify__type.html", null ],
     [ "dawn::simplify_type< const From >", "structdawn_1_1simplify__type_3_01const_01From_01_4.html", null ],
-    [ "dawn::SIR", "structdawn_1_1SIR.html", null ],
     [ "dawn::SIRSerializerJSON", "classdawn_1_1SIRSerializerJSON.html", null ],
     [ "dawn::SmallVectorBase", "classdawn_1_1SmallVectorBase.html", [
       [ "dawn::SmallVectorTemplateCommon< T, typename >", "classdawn_1_1SmallVectorTemplateCommon.html", null ],
@@ -189,7 +190,6 @@ var hierarchy =
     [ "dawn::Statement", "structdawn_1_1Statement.html", null ],
     [ "dawn::StatementAccessesPair", "classdawn_1_1StatementAccessesPair.html", null ],
     [ "dawn::Stencil::StatementPosition", "structdawn_1_1Stencil_1_1StatementPosition.html", null ],
-    [ "dawn::sir::Stencil", "structdawn_1_1sir_1_1Stencil.html", null ],
     [ "dawn::Stencil", "classdawn_1_1Stencil.html", null ],
     [ "dawn::sir::StencilCall", "structdawn_1_1sir_1_1StencilCall.html", null ],
     [ "dawn::sir::StencilFunction", "structdawn_1_1sir_1_1StencilFunction.html", null ],

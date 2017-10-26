@@ -104,9 +104,22 @@ $(document).ready(function(){initNavTree('structdawn_1_1SIR.html','');});
  <a href="structdawn_1_1SIR.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="SIR_8h_source.html">SIR.h</a>&gt;</code></p>
+<div class="dynheader">
+Inheritance diagram for dawn::SIR:</div>
+<div class="dyncontent">
+ <div class="center">
+  <img src="structdawn_1_1SIR.png" usemap="#dawn::SIR_map" alt=""/>
+  <map id="dawn::SIR_map" name="dawn::SIR_map">
+<area href="classdawn_1_1NonCopyable.html" title="Classes derived from NonCopyable cannot be copied or assigned. " alt="dawn::NonCopyable" shape="rect" coords="0,0,125,24"/>
+</map>
+ </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a985c16e42b903ab103c7b84c718fbc8c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a985c16e42b903ab103c7b84c718fbc8c"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdawn_1_1SIR.html#a985c16e42b903ab103c7b84c718fbc8c">SIR</a> ()</td></tr>
+<tr class="memdesc:a985c16e42b903ab103c7b84c718fbc8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default Ctor that initializes all the shared pointers this ensures that no errors occur when handeling the in memory generated SIRs. <br /></td></tr>
+<tr class="separator:a985c16e42b903ab103c7b84c718fbc8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a08c4f6ce9e9f228ba53d206858af63f6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a08c4f6ce9e9f228ba53d206858af63f6"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdawn_1_1SIR.html#a08c4f6ce9e9f228ba53d206858af63f6">dump</a> ()</td></tr>
 <tr class="memdesc:a08c4f6ce9e9f228ba53d206858af63f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dump the <a class="el" href="structdawn_1_1SIR.html" title="Definition of the Stencil Intermediate Representation (SIR) ">SIR</a> to stdout. <br /></td></tr>
@@ -115,9 +128,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stru
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdawn_1_1SIR.html#a06e92cbb1ef8f75ca2a17e84e50b9965">operator==</a> (const <a class="el" href="structdawn_1_1SIR.html">SIR</a> &amp;rhs) const </td></tr>
 <tr class="memdesc:a06e92cbb1ef8f75ca2a17e84e50b9965"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compares two SIRs for equality in contents It is to note that the filenames are not compared here and positions of expressions are omitted. <br /></td></tr>
 <tr class="separator:a06e92cbb1ef8f75ca2a17e84e50b9965"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac60ce05efadde2056a5df69109507574"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac60ce05efadde2056a5df69109507574"></a>
+std::pair&lt; std::string, bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdawn_1_1SIR.html#ac60ce05efadde2056a5df69109507574">comparison</a> (const <a class="el" href="structdawn_1_1SIR.html">SIR</a> &amp;rhs) const </td></tr>
+<tr class="memdesc:ac60ce05efadde2056a5df69109507574"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compares two SIRs for equality in contents It is to note that the filenames are not compared here and positions of expressions are omitted returns a mismatch string if the bool is false. <br /></td></tr>
+<tr class="separator:ac60ce05efadde2056a5df69109507574"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a678ca47b1aa7881bc6b634269c6282eb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a678ca47b1aa7881bc6b634269c6282eb"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdawn_1_1SIR.html#a678ca47b1aa7881bc6b634269c6282eb">operator!=</a> (const <a class="el" href="structdawn_1_1SIR.html">SIR</a> &amp;rhs) const </td></tr>
-<tr class="memdesc:a678ca47b1aa7881bc6b634269c6282eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compares two SIRs for inequality in contents It is to note that the filenames are not compared here and positions of expressions are omitted. <br /></td></tr>
+<tr class="memdesc:a678ca47b1aa7881bc6b634269c6282eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compares two SIRs for inequality in contents It is to note that the filenames are not compared here if the comparison fails, outputs human readable reason why in the string. <br /></td></tr>
 <tr class="separator:a678ca47b1aa7881bc6b634269c6282eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
@@ -145,11 +162,21 @@ Friends</h2></td></tr>
 std::ostream &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdawn_1_1SIR.html#ac2b8e5956bd315cb57461f41f8ead3c1">operator&lt;&lt;</a> (std::ostream &amp;os, const <a class="el" href="structdawn_1_1SIR.html">SIR</a> &amp;Sir)</td></tr>
 <tr class="memdesc:ac2b8e5956bd315cb57461f41f8ead3c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dump <a class="el" href="structdawn_1_1SIR.html" title="Definition of the Stencil Intermediate Representation (SIR) ">SIR</a> to the given stream. <br /></td></tr>
 <tr class="separator:ac2b8e5956bd315cb57461f41f8ead3c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
+Additional Inherited Members</h2></td></tr>
+<tr class="inherit_header pro_methods_classdawn_1_1NonCopyable"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classdawn_1_1NonCopyable')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classdawn_1_1NonCopyable.html">dawn::NonCopyable</a></td></tr>
+<tr class="memitem:a83aef483361a10d8853be3db523705ce inherit pro_methods_classdawn_1_1NonCopyable"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a83aef483361a10d8853be3db523705ce"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>NonCopyable</b> (const <a class="el" href="classdawn_1_1NonCopyable.html">NonCopyable</a> &amp;)=delete</td></tr>
+<tr class="separator:a83aef483361a10d8853be3db523705ce inherit pro_methods_classdawn_1_1NonCopyable"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa40be68bbd861ddcf67829ef6d173ad1 inherit pro_methods_classdawn_1_1NonCopyable"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa40be68bbd861ddcf67829ef6d173ad1"></a>
+<a class="el" href="classdawn_1_1NonCopyable.html">NonCopyable</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="classdawn_1_1NonCopyable.html">NonCopyable</a> &amp;)=delete</td></tr>
+<tr class="separator:aa40be68bbd861ddcf67829ef6d173ad1 inherit pro_methods_classdawn_1_1NonCopyable"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Definition of the <a class="el" href="classdawn_1_1Stencil.html" title="A Stencil is represented by a collection of MultiStages. ">Stencil</a> Intermediate Representation (<a class="el" href="structdawn_1_1SIR.html" title="Definition of the Stencil Intermediate Representation (SIR) ">SIR</a>) </p>
 
-<p>Definition at line <a class="el" href="SIR_8h_source.html#l00376">376</a> of file <a class="el" href="SIR_8h_source.html">SIR.h</a>.</p>
+<p>Definition at line <a class="el" href="SIR_8h_source.html#l00412">412</a> of file <a class="el" href="SIR_8h_source.html">SIR.h</a>.</p>
 </div><hr/>The documentation for this struct was generated from the following files:<ul>
 <li>src/dawn/SIR/<a class="el" href="SIR_8h_source.html">SIR.h</a></li>
 <li>src/dawn/SIR/<a class="el" href="SIR_8cpp_source.html">SIR.cpp</a></li>

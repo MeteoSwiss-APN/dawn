@@ -13,6 +13,7 @@ var classdawn_1_1sir_1_1Attr =
     [ "has", "classdawn_1_1sir_1_1Attr.html#a2f390cd08e32cbde8607e617fb93259a", null ],
     [ "hasOneOf", "classdawn_1_1sir_1_1Attr.html#a8882684daf1b693a0df3f75f588f95bd", null ],
     [ "hasOneOf", "classdawn_1_1sir_1_1Attr.html#a95440308e16daf54ef14fd60e4ce163b", null ],
+    [ "operator!=", "classdawn_1_1sir_1_1Attr.html#a0f1d6db3f5699d50a4302f8564ef8d52", null ],
     [ "operator==", "classdawn_1_1sir_1_1Attr.html#a0a65cce999d46dc0e709c871dda809c5", null ],
     [ "set", "classdawn_1_1sir_1_1Attr.html#a7218d6e826a28eb79318ab5050539822", null ],
     [ "unset", "classdawn_1_1sir_1_1Attr.html#a702c2c9a544a0c22eff824ba86999931", null ]

@@ -1,5 +1,6 @@
 var structdawn_1_1sir_1_1StencilFunction =
 [
+    [ "comparison", "structdawn_1_1sir_1_1StencilFunction.html#a81e9890877d80f5da72ff02f1275bd2d", null ],
     [ "getASTOfInterval", "structdawn_1_1sir_1_1StencilFunction.html#a873e162c10bfa55329d001c3a17df9dd", null ],
     [ "isSpecialized", "structdawn_1_1sir_1_1StencilFunction.html#a5238b54c51d6a01073ee0325dcdc1783", null ],
     [ "operator==", "structdawn_1_1sir_1_1StencilFunction.html#afd2480fe1bc5bc2358aaad31ce777cda", null ],

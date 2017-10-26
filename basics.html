@@ -270,7 +270,7 @@ make install -j 4
 </pre></div>
 </div>
 <p>which will install the library locally into <strong>build/install</strong>. Next, we can build Dawn. Note that we need to point CMake to the <code class="docutils literal"><span class="pre">protobuf-config.cmake</span></code> file of Protobuf (which is located in <code class="docutils literal"><span class="pre">${PROTOBUF_INSTALL_DIR}/lib/cmake/protobuf/</span></code>) via the CMake variable <code class="docutils literal"><span class="pre">Protobuf_DIR</span></code>.</p>
-<div class="highlight-bash"><div class="highlight"><pre>git clone https://github.com/google/protobuf.git
+<div class="highlight-bash"><div class="highlight"><pre>git clone https://github.com/MeteoSwiss-APN/dawn
 mkdir build
 <span class="nb">cd</span> build
 cmake .. -DProtobuf_DIR<span class="o">=</span><span class="s2">&quot;</span>$<span class="s2">PROTOBUF_INSTALL_DIR/lib/cmake/protobuf/&quot;</span>

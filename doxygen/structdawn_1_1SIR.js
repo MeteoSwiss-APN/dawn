@@ -1,5 +1,7 @@
 var structdawn_1_1SIR =
 [
+    [ "SIR", "structdawn_1_1SIR.html#a985c16e42b903ab103c7b84c718fbc8c", null ],
+    [ "comparison", "structdawn_1_1SIR.html#ac60ce05efadde2056a5df69109507574", null ],
     [ "dump", "structdawn_1_1SIR.html#a08c4f6ce9e9f228ba53d206858af63f6", null ],
     [ "operator!=", "structdawn_1_1SIR.html#a678ca47b1aa7881bc6b634269c6282eb", null ],
     [ "operator==", "structdawn_1_1SIR.html#a06e92cbb1ef8f75ca2a17e84e50b9965", null ],

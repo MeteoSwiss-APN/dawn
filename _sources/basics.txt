@@ -33,7 +33,7 @@ which will install the library locally into **build/install**. Next, we can buil
 
 .. code-block:: bash
 
-  git clone https://github.com/google/protobuf.git
+  git clone https://github.com/MeteoSwiss-APN/dawn
   mkdir build
   cd build
   cmake .. -DProtobuf_DIR="$PROTOBUF_INSTALL_DIR/lib/cmake/protobuf/"

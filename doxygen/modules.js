@@ -5,5 +5,6 @@ var modules =
     [ "Optimizer", "group__optimizer.html", "group__optimizer" ],
     [ "SIR", "group__sir.html", "group__sir" ],
     [ "Support", "group__support.html", "group__support" ],
-    [ "Unittest", "group__unittest.html", "group__unittest" ]
+    [ "Unittest", "group__unittest.html", "group__unittest" ],
+    [ "Testing", "group__testing.html", null ]
 ];
