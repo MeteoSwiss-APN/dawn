@@ -2,6 +2,7 @@ var searchData=
 [
   ['data',['data',['../classdawn_1_1SmallVectorTemplateCommon.html#a715dca19a895302e08781d0600a70150',1,'dawn::SmallVectorTemplateCommon::data()'],['../classdawn_1_1SmallVectorTemplateCommon.html#a11569a76ac2f469ce49effa012ac6844',1,'dawn::SmallVectorTemplateCommon::data() const '],['../classdawn_1_1StringRef.html#a107055aa239a9f486c35b0f682c4a6fd',1,'dawn::StringRef::data()']]],
   ['dawncompiler',['DawnCompiler',['../classdawn_1_1DawnCompiler.html#a116c465eb7cee26652bfaa5652b0cb58',1,'dawn::DawnCompiler']]],
+  ['decimaltoordinal',['decimalToOrdinal',['../group__support.html#gac5e1c15f8fab6440f2213070ea42aca8',1,'dawn']]],
   ['deletecontainerpointers',['deleteContainerPointers',['../group__support.html#ga2298d935511421eeb92beb6a7515098f',1,'dawn']]],
   ['deletecontainerseconds',['deleteContainerSeconds',['../group__support.html#gac7c65b85437d05b7a0160e303af86d57',1,'dawn']]],
   ['demotetemporaryfieldtolocalvariable',['demoteTemporaryFieldToLocalVariable',['../classdawn_1_1StencilInstantiation.html#abb96e8af6bc3fe6264d964a1aadac5b5',1,'dawn::StencilInstantiation']]],

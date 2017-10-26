@@ -300,6 +300,13 @@ StringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href=
 <tr class="memitem:ga185fdcf25a9957efd471333b6b906f2c"><td class="memItemLeft" align="right" valign="top">std::uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__support.html#ga185fdcf25a9957efd471333b6b906f2c">dawn::nextPowerOf2</a> (std::uint64_t A)</td></tr>
 <tr class="memdesc:ga185fdcf25a9957efd471333b6b906f2c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the next power of two (in 64-bits) that is strictly greater than A. Returns zero on overflow.  <a href="group__support.html#ga185fdcf25a9957efd471333b6b906f2c">More...</a><br /></td></tr>
 <tr class="separator:ga185fdcf25a9957efd471333b6b906f2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga5d8ccd0fa25b1260bf42ad3632a5b5c7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga5d8ccd0fa25b1260bf42ad3632a5b5c7"></a>
+std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__support.html#ga5d8ccd0fa25b1260bf42ad3632a5b5c7">dawn::indent</a> (const std::string &amp;string, int amount=2)</td></tr>
+<tr class="memdesc:ga5d8ccd0fa25b1260bf42ad3632a5b5c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indent a string by the specified number of spaces. <br /></td></tr>
+<tr class="separator:ga5d8ccd0fa25b1260bf42ad3632a5b5c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac5e1c15f8fab6440f2213070ea42aca8"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__support.html#gac5e1c15f8fab6440f2213070ea42aca8">dawn::decimalToOrdinal</a> (int dec)</td></tr>
+<tr class="memdesc:gac5e1c15f8fab6440f2213070ea42aca8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a decimal integer to an ordinal string.  <a href="group__support.html#gac5e1c15f8fab6440f2213070ea42aca8">More...</a><br /></td></tr>
+<tr class="separator:gac5e1c15f8fab6440f2213070ea42aca8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga0473f77dd59e921071d07f83d187210e"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:ga0473f77dd59e921071d07f83d187210e"><td class="memTemplItemLeft" align="right" valign="top">unsigned&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__support.html#ga0473f77dd59e921071d07f83d187210e">dawn::computeEditDistance</a> (ArrayRef&lt; T &gt; fromArray, ArrayRef&lt; T &gt; toArray, bool allowReplacements=true, unsigned maxEditDistance=0)</td></tr>
 <tr class="memdesc:ga0473f77dd59e921071d07f83d187210e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determine the edit distance between two sequences.  <a href="group__support.html#ga0473f77dd59e921071d07f83d187210e">More...</a><br /></td></tr>
@@ -750,6 +757,26 @@ template&lt;typename T &gt; </div>
 <dl class="section see"><dt>See also</dt><dd><a href="http://en.wikipedia.org/wiki/Levenshtein_distance">http://en.wikipedia.org/wiki/Levenshtein_distance</a> </dd></dl>
 
 <p>Definition at line <a class="el" href="EditDistance_8h_source.html#l00044">44</a> of file <a class="el" href="EditDistance_8h_source.html">EditDistance.h</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="gac5e1c15f8fab6440f2213070ea42aca8"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::string dawn::decimalToOrdinal </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>dec</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Convert a decimal integer to an ordinal string. </p>
+<p><b>Example</b> </p><div class="fragment"><div class="line">std::string one = intToOrdinal(1); <span class="comment">// == &quot;1st&quot;</span></div></div><!-- fragment --> 
+<p>Definition at line <a class="el" href="StringUtil_8cpp_source.html#l00020">20</a> of file <a class="el" href="StringUtil_8cpp_source.html">StringUtil.cpp</a>.</p>
 
 </div>
 </div>

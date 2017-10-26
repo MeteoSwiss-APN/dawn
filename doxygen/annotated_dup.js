@@ -38,7 +38,7 @@ var annotated_dup =
       [ "ASTCodeGenCXX", "classdawn_1_1ASTCodeGenCXX.html", "classdawn_1_1ASTCodeGenCXX" ],
       [ "ASTCodeGenGTClangStencilBody", "classdawn_1_1ASTCodeGenGTClangStencilBody.html", "classdawn_1_1ASTCodeGenGTClangStencilBody" ],
       [ "ASTCodeGenGTClangStencilDesc", "classdawn_1_1ASTCodeGenGTClangStencilDesc.html", "classdawn_1_1ASTCodeGenGTClangStencilDesc" ],
-      [ "ASTStringifer", "structdawn_1_1ASTStringifer.html", null ],
+      [ "ASTStringifer", "structdawn_1_1ASTStringifer.html", "structdawn_1_1ASTStringifer" ],
       [ "ASTVisitor", "classdawn_1_1ASTVisitor.html", "classdawn_1_1ASTVisitor" ],
       [ "ASTVisitorForwarding", "classdawn_1_1ASTVisitorForwarding.html", "classdawn_1_1ASTVisitorForwarding" ],
       [ "BinaryOperator", "classdawn_1_1BinaryOperator.html", "classdawn_1_1BinaryOperator" ],
