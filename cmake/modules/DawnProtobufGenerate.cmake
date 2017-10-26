@@ -78,7 +78,7 @@ function(dawn_protobuf_generate)
     get_filename_component(abs_path ${proto} PATH)
     list(FIND include_path ${abs_path} existing)
     if("${existing}" EQUAL "-1")
-      list(APPEND include_path -I${abs_path})
+      list(APPEND include_path "-I${abs_path}")
     endif()
   endforeach()
 
@@ -88,13 +88,11 @@ function(dawn_protobuf_generate)
   get_filename_component(libprotoc_dir ${libprotoc_loc} PATH)
   get_property(protoc_path TARGET protobuf::protoc PROPERTY LOCATION)
 
-  set(protobuf_script "${CMAKE_CURRENT_BINARY_DIR}/run_protobuf.sh")
+  set(protobuf_script ${CMAKE_CURRENT_BINARY_DIR}/run_protobuf.sh)
   file(WRITE "${protobuf_script}" "#!/usr/bin/env bash\n")
   file(APPEND "${protobuf_script}" "export LD_LIBRARY_PATH=\"${libprotoc_dir}\":$LD_LIBRARY_PATH\n")
   file(APPEND "${protobuf_script}" "${protoc_path} $*\n")
-
-  set(cmd "${BASH_EXECUTABLE}")
-  set(first_arg "${protobuf_script}")
+  set(command "${BASH_EXECUTABLE}")
 
   set(output_files)
   set(output_include_dirs)
@@ -110,9 +108,9 @@ function(dawn_protobuf_generate)
 
     add_custom_command(
       OUTPUT ${generated_srcs}
-      COMMAND  ${cmd}
-      ARGS ${first_arg} --${ARG_LANGUAGE}_out ${CMAKE_CURRENT_BINARY_DIR} ${include_path} 
-           ${abs_file}
+      COMMAND ${command} 
+      ARGS ${protobuf_script} --${ARG_LANGUAGE}_out "${CMAKE_CURRENT_BINARY_DIR}" 
+           ${include_path} "${abs_file}"
       COMMENT "Running ${ARG_LANGUAGE} protocol buffer compiler on ${proto}"
       VERBATIM 
     )
