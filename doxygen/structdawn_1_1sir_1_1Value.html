@@ -145,6 +145,10 @@ Public Types</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:ad7676c816cc0cad601ec3a897ad3671b"><td class="memTemplParams" colspan="2"><a class="anchor" id="ad7676c816cc0cad601ec3a897ad3671b"></a>
+template&lt;class T &gt; </td></tr>
+<tr class="memitem:ad7676c816cc0cad601ec3a897ad3671b"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><b>Value</b> (T &amp;&amp;value)</td></tr>
+<tr class="separator:ad7676c816cc0cad601ec3a897ad3671b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4bf613688a852b8de3fe3d14ac70dab7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4bf613688a852b8de3fe3d14ac70dab7"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdawn_1_1sir_1_1Value.html#a4bf613688a852b8de3fe3d14ac70dab7">isConstexpr</a> () const </td></tr>
 <tr class="memdesc:a4bf613688a852b8de3fe3d14ac70dab7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get/Set if the variable is <code>constexpr</code> <br /></td></tr>
@@ -180,6 +184,10 @@ template&lt;class T &gt; </td></tr>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdawn_1_1sir_1_1Value.html#a09cbd40610749273de19aa3f60ad8e13">operator==</a> (const <a class="el" href="structdawn_1_1sir_1_1Value.html">Value</a> &amp;rhs) const </td></tr>
 <tr class="memdesc:a09cbd40610749273de19aa3f60ad8e13"><td class="mdescLeft">&#160;</td><td class="mdescRight">Comparison between two Values. <br /></td></tr>
 <tr class="separator:a09cbd40610749273de19aa3f60ad8e13"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab6ea7370143bc907d00ebe35bdc0eb7e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab6ea7370143bc907d00ebe35bdc0eb7e"></a>
+std::pair&lt; std::string, bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdawn_1_1sir_1_1Value.html#ab6ea7370143bc907d00ebe35bdc0eb7e">comparison</a> (const <a class="el" href="structdawn_1_1sir_1_1Value.html">sir::Value</a> &amp;rhs) const </td></tr>
+<tr class="memdesc:ab6ea7370143bc907d00ebe35bdc0eb7e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Comparison between two Values if the comparison fails, outputs human readable reason why in the string. <br /></td></tr>
+<tr class="separator:ab6ea7370143bc907d00ebe35bdc0eb7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -206,7 +214,7 @@ Additional Inherited Members</h2></td></tr>
 <div class="textblock"><p>Representation of a value of a global variable. </p>
 <p>This is a very primitive (i.e non-copyable) version of boost::any. Further, the possible values are restricted to <code>bool</code>, <code>int</code>, <code>double</code> or <code>std::string</code>. </p>
 
-<p>Definition at line <a class="el" href="SIR_8h_source.html#l00270">270</a> of file <a class="el" href="SIR_8h_source.html">SIR.h</a>.</p>
+<p>Definition at line <a class="el" href="SIR_8h_source.html#l00297">297</a> of file <a class="el" href="SIR_8h_source.html">SIR.h</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a class="anchor" id="ad44afd175d0efb399b57b460da28ff7e"></a>
 <div class="memitem">
@@ -234,7 +242,7 @@ template&lt;class T &gt; </div>
 <p>Get the value as type <code>T</code> </p>
 <dl class="section return"><dt>Returns</dt><dd>Copy of the value </dd></dl>
 
-<p>Definition at line <a class="el" href="SIR_8h_source.html#l00298">298</a> of file <a class="el" href="SIR_8h_source.html">SIR.h</a>.</p>
+<p>Definition at line <a class="el" href="SIR_8h_source.html#l00330">330</a> of file <a class="el" href="SIR_8h_source.html">SIR.h</a>.</p>
 
 </div>
 </div>

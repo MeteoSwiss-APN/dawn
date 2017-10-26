@@ -13,6 +13,8 @@ var structdawn_1_1sir_1_1Value =
       [ "String", "structdawn_1_1sir_1_1Value.html#a1f9252ab2c5dd6d641e3fa5b4a307e1ea19edd592b485d7a9d7c0ebf159a02609", null ]
     ] ],
     [ "Value", "structdawn_1_1sir_1_1Value.html#ab168797a82811742152796d0180deaac", null ],
+    [ "Value", "structdawn_1_1sir_1_1Value.html#ad7676c816cc0cad601ec3a897ad3671b", null ],
+    [ "comparison", "structdawn_1_1sir_1_1Value.html#ab6ea7370143bc907d00ebe35bdc0eb7e", null ],
     [ "empty", "structdawn_1_1sir_1_1Value.html#a1186aba43333ebac1bbae1f0d49ababa", null ],
     [ "getType", "structdawn_1_1sir_1_1Value.html#ac9dc7dd2dcfb416c1718dc0fd613eddf", null ],
     [ "getValue", "structdawn_1_1sir_1_1Value.html#ad44afd175d0efb399b57b460da28ff7e", null ],

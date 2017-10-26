@@ -6,6 +6,8 @@ var structdawn_1_1sir_1_1VerticalRegion =
     ] ],
     [ "VerticalRegion", "structdawn_1_1sir_1_1VerticalRegion.html#a474c99e6fc0d5bb7a809577796f01c56", null ],
     [ "clone", "structdawn_1_1sir_1_1VerticalRegion.html#a612855f115cd650316a0c9f777162584", null ],
+    [ "comparison", "structdawn_1_1sir_1_1VerticalRegion.html#a385b46ca0de098785a2a9e57c939268a", null ],
+    [ "operator==", "structdawn_1_1sir_1_1VerticalRegion.html#a2987f86264653781eb73031fd13bac7a", null ],
     [ "Ast", "structdawn_1_1sir_1_1VerticalRegion.html#a1cb1a6d20106a97a33dc1c592836a6ae", null ],
     [ "Loc", "structdawn_1_1sir_1_1VerticalRegion.html#aab8659acc20fc4cc9b13f057b844eaa1", null ],
     [ "LoopOrder", "structdawn_1_1sir_1_1VerticalRegion.html#a8d8455a6ef43fe34a2607f3835b9d4c0", null ],

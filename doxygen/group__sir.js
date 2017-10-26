@@ -353,7 +353,9 @@ var group__sir =
       [ "setElseStmt", "classdawn_1_1IfStmt.html#a69fc53c7095bee4dd0ee5f873416d69f", null ],
       [ "setThenStmt", "classdawn_1_1IfStmt.html#a2a207e029a67789f238215cc31b7cfe4", null ]
     ] ],
-    [ "ASTStringifer", "structdawn_1_1ASTStringifer.html", null ],
+    [ "ASTStringifer", "structdawn_1_1ASTStringifer.html", [
+      [ "ASTStringifer", "structdawn_1_1ASTStringifer.html#a306a85fe38e4cb8257ba2783d23cd51d", null ]
+    ] ],
     [ "ASTVisitor", "classdawn_1_1ASTVisitor.html", [
       [ "~ASTVisitor", "classdawn_1_1ASTVisitor.html#a6f1e19112c4462a0fe824a638e3823ac", null ],
       [ "visit", "classdawn_1_1ASTVisitor.html#ac6fd87737b684ecdcb3f256139129642", null ],
@@ -410,6 +412,7 @@ var group__sir =
       [ "has", "classdawn_1_1sir_1_1Attr.html#a2f390cd08e32cbde8607e617fb93259a", null ],
       [ "hasOneOf", "classdawn_1_1sir_1_1Attr.html#a8882684daf1b693a0df3f75f588f95bd", null ],
       [ "hasOneOf", "classdawn_1_1sir_1_1Attr.html#a95440308e16daf54ef14fd60e4ce163b", null ],
+      [ "operator!=", "classdawn_1_1sir_1_1Attr.html#a0f1d6db3f5699d50a4302f8564ef8d52", null ],
       [ "operator==", "classdawn_1_1sir_1_1Attr.html#a0a65cce999d46dc0e709c871dda809c5", null ],
       [ "set", "classdawn_1_1sir_1_1Attr.html#a7218d6e826a28eb79318ab5050539822", null ],
       [ "unset", "classdawn_1_1sir_1_1Attr.html#a702c2c9a544a0c22eff824ba86999931", null ]
@@ -420,6 +423,7 @@ var group__sir =
         [ "End", "structdawn_1_1sir_1_1Interval.html#a9b0402380541a9268f8429e079ec807baf226c3c522e3fd2b596794a6d37a230b", null ]
       ] ],
       [ "Interval", "structdawn_1_1sir_1_1Interval.html#a8534ffd93ccd1d5aab4f1a465f9fe070", null ],
+      [ "comparison", "structdawn_1_1sir_1_1Interval.html#a3862f8b2cebcbd1c048f40564b6709e8", null ],
       [ "operator!=", "structdawn_1_1sir_1_1Interval.html#a022bd6e28666f6fcdd2b199c5ec8dd84", null ],
       [ "operator==", "structdawn_1_1sir_1_1Interval.html#af029a58ec31f73e4ed08abd397a28dd0", null ],
       [ "toString", "structdawn_1_1sir_1_1Interval.html#afb6f1661d27b8e715dc89053c1b3af25", null ],
@@ -435,6 +439,7 @@ var group__sir =
         [ "AK_Direction", "structdawn_1_1sir_1_1StencilFunctionArg.html#a5935f3d32b55c0689fdd2f8c74424342a44cf621ee0843faea014fd7c746cbd54", null ],
         [ "AK_Offset", "structdawn_1_1sir_1_1StencilFunctionArg.html#a5935f3d32b55c0689fdd2f8c74424342a3f12047855978f6445e86a5518c9acf7", null ]
       ] ],
+      [ "comparison", "structdawn_1_1sir_1_1StencilFunctionArg.html#a035212b1fc14ad0ccd5a70d0551fd429", null ],
       [ "operator==", "structdawn_1_1sir_1_1StencilFunctionArg.html#a0bea1b0f989c3415500557b881662ae3", null ],
       [ "Kind", "structdawn_1_1sir_1_1StencilFunctionArg.html#aa9d20168ca2b30182a5f8faa547ececa", null ],
       [ "Loc", "structdawn_1_1sir_1_1StencilFunctionArg.html#a50729cef8effe4ee24e1c385fc8f5864", null ],
@@ -452,6 +457,7 @@ var group__sir =
       [ "Offset", "structdawn_1_1sir_1_1Offset.html#a25be7c1609f16486cc9c5ad104c928c9", null ]
     ] ],
     [ "StencilFunction", "structdawn_1_1sir_1_1StencilFunction.html", [
+      [ "comparison", "structdawn_1_1sir_1_1StencilFunction.html#a81e9890877d80f5da72ff02f1275bd2d", null ],
       [ "getASTOfInterval", "structdawn_1_1sir_1_1StencilFunction.html#a873e162c10bfa55329d001c3a17df9dd", null ],
       [ "isSpecialized", "structdawn_1_1sir_1_1StencilFunction.html#a5238b54c51d6a01073ee0325dcdc1783", null ],
       [ "operator==", "structdawn_1_1sir_1_1StencilFunction.html#afd2480fe1bc5bc2358aaad31ce777cda", null ],
@@ -469,6 +475,8 @@ var group__sir =
       ] ],
       [ "VerticalRegion", "structdawn_1_1sir_1_1VerticalRegion.html#a474c99e6fc0d5bb7a809577796f01c56", null ],
       [ "clone", "structdawn_1_1sir_1_1VerticalRegion.html#a612855f115cd650316a0c9f777162584", null ],
+      [ "comparison", "structdawn_1_1sir_1_1VerticalRegion.html#a385b46ca0de098785a2a9e57c939268a", null ],
+      [ "operator==", "structdawn_1_1sir_1_1VerticalRegion.html#a2987f86264653781eb73031fd13bac7a", null ],
       [ "Ast", "structdawn_1_1sir_1_1VerticalRegion.html#a1cb1a6d20106a97a33dc1c592836a6ae", null ],
       [ "Loc", "structdawn_1_1sir_1_1VerticalRegion.html#aab8659acc20fc4cc9b13f057b844eaa1", null ],
       [ "LoopOrder", "structdawn_1_1sir_1_1VerticalRegion.html#a8d8455a6ef43fe34a2607f3835b9d4c0", null ],
@@ -482,6 +490,8 @@ var group__sir =
       [ "Loc", "structdawn_1_1sir_1_1StencilCall.html#a83827f34a924efca6c03866e223ebd11", null ]
     ] ],
     [ "Stencil", "structdawn_1_1sir_1_1Stencil.html", [
+      [ "Stencil", "structdawn_1_1sir_1_1Stencil.html#a12624a081a05a3e12900dc8cd7499da3", null ],
+      [ "comparison", "structdawn_1_1sir_1_1Stencil.html#a22d7de5d622f658210593424257f1e1f", null ],
       [ "operator==", "structdawn_1_1sir_1_1Stencil.html#aecded8a239c3781b49dc3b8a289f718c", null ],
       [ "Attributes", "structdawn_1_1sir_1_1Stencil.html#a36cfaaaf499ad0f5edcd3a95171a9444", null ],
       [ "Fields", "structdawn_1_1sir_1_1Stencil.html#abc8d0334b1cb023917412dfd95ad3ba0", null ],
@@ -503,6 +513,8 @@ var group__sir =
         [ "String", "structdawn_1_1sir_1_1Value.html#a1f9252ab2c5dd6d641e3fa5b4a307e1ea19edd592b485d7a9d7c0ebf159a02609", null ]
       ] ],
       [ "Value", "structdawn_1_1sir_1_1Value.html#ab168797a82811742152796d0180deaac", null ],
+      [ "Value", "structdawn_1_1sir_1_1Value.html#ad7676c816cc0cad601ec3a897ad3671b", null ],
+      [ "comparison", "structdawn_1_1sir_1_1Value.html#ab6ea7370143bc907d00ebe35bdc0eb7e", null ],
       [ "empty", "structdawn_1_1sir_1_1Value.html#a1186aba43333ebac1bbae1f0d49ababa", null ],
       [ "getType", "structdawn_1_1sir_1_1Value.html#ac9dc7dd2dcfb416c1718dc0fd613eddf", null ],
       [ "getValue", "structdawn_1_1sir_1_1Value.html#ad44afd175d0efb399b57b460da28ff7e", null ],
@@ -514,6 +526,8 @@ var group__sir =
       [ "toString", "structdawn_1_1sir_1_1Value.html#aadd6d99ba385cc50ed18802fc33669c6", null ]
     ] ],
     [ "SIR", "structdawn_1_1SIR.html", [
+      [ "SIR", "structdawn_1_1SIR.html#a985c16e42b903ab103c7b84c718fbc8c", null ],
+      [ "comparison", "structdawn_1_1SIR.html#ac60ce05efadde2056a5df69109507574", null ],
       [ "dump", "structdawn_1_1SIR.html#a08c4f6ce9e9f228ba53d206858af63f6", null ],
       [ "operator!=", "structdawn_1_1SIR.html#a678ca47b1aa7881bc6b634269c6282eb", null ],
       [ "operator==", "structdawn_1_1SIR.html#a06e92cbb1ef8f75ca2a17e84e50b9965", null ],
