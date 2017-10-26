@@ -140,12 +140,12 @@ struct Globals : public StencilBase {
 
 class FileWriter {
 public:
-  FileWriter(std::string testPath, std::string filename) {
-    filename_ = UnittestEnvironment::getSingleton().getFileManager().dataPath() +
-                "/gtclang/Frontend/" + testPath;
-    llvm::sys::fs::create_directories(filename_);
-    //    DAWN_ASSERT(errorRepport == llvm::instrprof_error::success);
-    filename_ += filename;
+  FileWriter(std::string testPath, std::string filename)
+      : localPath_(testPath), filename_(filename) {
+    UnittestEnvironment::getSingleton().getFileManager().createRequiredFolders(
+        UnittestEnvironment::getSingleton().getFileManager().getUnittestPath() + "/" + testPath);
+    fullpath_ = UnittestEnvironment::getSingleton().getFileManager().getUnittestPath() + "/" +
+                testPath + "/" + filename;
     fileHeader_ = HeaderWriter::longheader();
     fileHeader_ += HeaderWriter::includes();
   }
@@ -153,13 +153,15 @@ public:
   std::stringstream& ss() { return ss_; }
 
   void writeToFile() {
-    std::ofstream ofs(filename_, std::ofstream::trunc);
+    std::ofstream ofs(fullpath_, std::ofstream::trunc);
+    std::cout << "full path is " << fullpath_ << std::endl;
+    UnittestEnvironment::getSingleton().getFileManager().getUnittestFile(localPath_, filename_);
     ofs << HeaderWriter::longheader();
     ofs << HeaderWriter::includes();
     ofs << ss_.str();
     ofs.close();
   }
-  const std::string getFileName() const { return filename_; }
+  const std::string getFileName() const { return fullpath_; }
 
   void addParsedString(const ParsedString& ps) {
     auto stencil = Stencil("test01", ss_);
@@ -179,8 +181,10 @@ public:
 
 private:
   std::stringstream ss_;
-  std::string filename_;
+  std::string fullpath_;
   std::string fileHeader_;
+  std::string localPath_;
+  std::string filename_;
 };
 
 CompareResult ParsingComparison::compare(const ParsedString& ps,
@@ -188,8 +192,8 @@ CompareResult ParsingComparison::compare(const ParsedString& ps,
   std::unique_ptr<dawn::SIR> test01SIR = dawn::make_unique<dawn::SIR>();
   wrapStatementInStencil(test01SIR, stmt);
   test01SIR->Filename = "In Memory Generated SIR";
-  std::string localPath = UnittestEnvironment::getSingleton().testCaseName() + "/" +
-                          UnittestEnvironment::getSingleton().testName() + "/";
+  std::string localPath = "gtclang/Frontend/" + UnittestEnvironment::getSingleton().testCaseName() +
+                          "/" + UnittestEnvironment::getSingleton().testName();
   std::string fileName =
       dawn::format("TestStencil_%i.cpp", UnittestEnvironment::getSingleton().getUniqueID());
   FileWriter writer(localPath, fileName);

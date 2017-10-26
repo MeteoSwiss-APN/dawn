@@ -27,22 +27,26 @@ namespace gtclang {
 class FileManager {
 
 public:
-  enum TestKind { TK_Unittest, TK_Integrationtet };
+  FileManager() = default;
 
-  FileManager();
-  /// @brief set if unit- or integrationtest
-  void setKind(TestKind kind);
+  /// @brief Get full path of `filename` or abort if file was not found in `{unittest directory}/relativePath`
+  std::string getUnittestFile(llvm::StringRef relativePath, llvm::StringRef filename) const;
 
-  /// @brief Get full path of `filename` or abort if file was not found in `dataPath()` directory
-  std::string getFile(llvm::StringRef filename) const;
+  /// @brief Get full path of `filename` or abort if file was not found in `{integrationtest directory}/relativePath`
+  std::string getIntegrationtestFile(llvm::StringRef relativePath, llvm::StringRef filename) const;
 
-  /// @brief Path of the unittest data files
-  const std::string& dataPath() const { return dataPath_; }
+  /// @brief Get full path of the unittest source directory
+  std::string getIntegrationtestPath() const;
+
+  /// @brief Get full path of the integrationtest source directory
+  std::string getUnittestPath() const;
+
+  /// @brief Creates all the required direcotries such that 'fullpath' is a valid location
+  void createRequiredFolders(llvm::StringRef fullpath) const;
 
 private:
-  std::string dataPath_;
-
-  TestKind kind_;
+  /// @brief Get full path of `filename` or abort if file was not found in `filePath`
+  std::string getFile(llvm::StringRef filePath, llvm::StringRef filename) const;
 };
 
 } // namespace gtclang
