@@ -140,12 +140,9 @@ struct Globals : public StencilBase {
 
 class FileWriter {
 public:
-  FileWriter(std::string testPath, std::string filename)
-      : localPath_(testPath), filename_(filename) {
-    UnittestEnvironment::getSingleton().getFileManager().createRequiredFolders(
-        UnittestEnvironment::getSingleton().getFileManager().getUnittestPath() + "/" + testPath);
-    fullpath_ = UnittestEnvironment::getSingleton().getFileManager().getUnittestPath() + "/" +
-                testPath + "/" + filename;
+  FileWriter(std::string localPath, std::string filename)
+      : localPath_(localPath), filename_(filename) {
+    fullpath_ = UnittestEnvironment::getSingleton().getFileManager().getUnittestFile(localPath, filename);
     fileHeader_ = HeaderWriter::longheader();
     fileHeader_ += HeaderWriter::includes();
   }
@@ -154,8 +151,6 @@ public:
 
   void writeToFile() {
     std::ofstream ofs(fullpath_, std::ofstream::trunc);
-    std::cout << "full path is " << fullpath_ << std::endl;
-    UnittestEnvironment::getSingleton().getFileManager().getUnittestFile(localPath_, filename_);
     ofs << HeaderWriter::longheader();
     ofs << HeaderWriter::includes();
     ofs << ss_.str();
