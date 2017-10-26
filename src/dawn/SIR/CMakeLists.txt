@@ -12,6 +12,16 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+include(DawnProtobufGenerate)
+
+dawn_protobuf_generate(
+  OUT_FILES sir_proto_files
+  OUT_INCLUDE_DIRS sir_proto_include_dirs
+  PROTOS ${CMAKE_CURRENT_SOURCE_DIR}/SIR.proto
+  LANGUAGE cpp
+)
+include_directories(${sir_proto_include_dirs})
+
 dawn_add_library(
   NAME DawnSIR
   SOURCES AST.h  
@@ -32,5 +42,6 @@ dawn_add_library(
           SIRSerializerJSON.cpp
           SIRSerializerJSON.h          
           Statement.h
+          ${sir_proto_files}
   OBJECT
 )
