@@ -83,7 +83,7 @@ function(dawn_protobuf_generate)
   endforeach()
 
   # Generate a script to invoke protoc (this is needed to set the LD_LIBRARY_PATH as google 
-  # doesn't now about RPATH support in CMake ...)
+  # doesn't know about RPATH support in CMake ...)
   get_property(libprotoc_loc TARGET protobuf::libprotoc PROPERTY LOCATION)
   get_filename_component(libprotoc_dir ${libprotoc_loc} PATH)
   get_property(protoc_path TARGET protobuf::protoc PROPERTY LOCATION)
@@ -112,6 +112,7 @@ function(dawn_protobuf_generate)
       ARGS ${protobuf_script} --${ARG_LANGUAGE}_out "${CMAKE_CURRENT_BINARY_DIR}" 
            ${include_path} "${abs_file}"
       COMMENT "Running ${ARG_LANGUAGE} protocol buffer compiler on ${proto}"
+      DEPENDS ${abs_file}
       VERBATIM 
     )
 

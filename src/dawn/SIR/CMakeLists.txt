@@ -39,6 +39,7 @@ dawn_add_library(
           ASTVisitor.h
           SIR.cpp
           SIR.h
+          SIR.proto
           SIRSerializerJSON.cpp
           SIRSerializerJSON.h          
           Statement.h
