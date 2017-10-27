@@ -14,9 +14,148 @@
 
 syntax = "proto3";
 
-package sir;
+package dawn.sir.proto;
 
-message SIR {
-  int32 id = 1;
+// Location (line, col) in a specific file (-1, -1) represents unknown location)
+message SourceLocation {
+  int32 Line = 1;
+  int32 Column = 2;
 }
 
+message Attributes {
+  bool no_codegen = 1;        // Don't generate code for this stencil
+  bool merge_stages = 2;      // Merge the Stages of this stencil
+  bool merge_do_methods = 3;  // Merge the Do-Methods of this stencil
+  bool merge_temporaries = 4; // Merge the temporaries of this stencil
+  bool use_k_caches = 5;      // Use K-Caches
+}
+
+message Field {
+  // Name of the argument
+  string name = 1;
+  
+  // Source location 
+  SourceLocation loc = 2;
+
+  // Is the field a temporary?
+  bool is_temporary = 3;
+}
+
+message Direction {
+  // Name of the argument
+  string name = 1;
+  
+  // Source location 
+  SourceLocation loc = 2;
+}
+
+message Offset {
+  // Name of the argument
+  string name = 1;
+  
+  // Source location 
+  SourceLocation loc = 2;
+}
+
+message StencilFunctionArg {
+  oneof Arg {
+    Field field_value = 1;
+    Direction direction_value = 2;
+    Offset offset_value = 3;
+  }
+}
+
+message Interval {
+  int32 lower_level = 1;
+  int32 upper_level = 2;
+  int32 lower_offset = 3;
+  int32 upper_offset = 4;
+}
+
+message AST {
+
+}
+
+//===------------------------------------------------------------------------------------------===//
+//     Stencil
+//===------------------------------------------------------------------------------------------===//
+
+message Stencil {
+  // Name of the stencil
+  string name = 3;
+  
+  // Source location of the stencil
+  SourceLocation loc = 4;
+
+  // Stencil description AST
+  AST ast = 1;
+
+  // Fields referenced by this stencil
+  repeated Field fields = 2;
+  
+  // Attributes of the stencil
+  Attributes attributes = 5;
+}
+
+//===------------------------------------------------------------------------------------------===//
+//     StencilFunction
+//===------------------------------------------------------------------------------------------===//
+
+message StencilFunction {
+  // Name of the stencil function
+  string name = 5;
+  
+  // Source location of the stencil function
+  SourceLocation loc = 4;
+  
+  // Stencil body ASTs
+  repeated AST asts = 1;
+  
+  // Associated intervals of the AST
+  repeated Interval intervals = 2;
+
+  // Fields referenced by this stencil
+  repeated StencilFunctionArg arguments = 3;
+  
+  // Attributes of the stencil function
+  Attributes attributes = 6;
+}
+
+//===------------------------------------------------------------------------------------------===//
+//     Global Variable Map
+//===------------------------------------------------------------------------------------------===//
+
+message GlobalVariableValue {
+  // Type and value of the variable
+  oneof Value {
+    bool boolean_value = 1;     
+    int32 integer_value = 2;
+    int32 double_value = 3;    
+    string string_value = 4;
+  }
+  
+  // Is the value a a compile time constant?
+  bool is_constexpr = 5;
+}
+
+message GlobalVariableMap {
+  map<string, GlobalVariableValue> map = 1;
+}
+
+//===------------------------------------------------------------------------------------------===//
+//     SIR
+//===------------------------------------------------------------------------------------------===//
+
+message SIR {
+  // Name of the file the SIR was parsed from
+  string filename = 4;
+  
+  // List of stencils
+  repeated Stencil stencils = 1;
+
+  // List of stencil functions
+  repeated StencilFunction stencil_functions = 2;
+  
+  // Map of global variables
+  GlobalVariableMap global_variables = 3;
+}

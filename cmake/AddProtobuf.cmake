@@ -37,4 +37,6 @@ dawn_export_package(
   INCLUDE_DIRS "${Protobuf_INCLUDE_DIRS}"
   LIBRARIES "protobuf::libprotobuf"
   VERSION "${Protobuf_VERSION}"
+  # https://stackoverflow.com/questions/34474091/protobuf-inline-not-in-headers
+  DEFINITIONS "-DPROTOBUF_INLINE_NOT_IN_HEADERS=0"
 )

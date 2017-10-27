@@ -129,7 +129,6 @@ function(dawn_protobuf_generate)
   endforeach()
 
   set("${ARG_OUT_FILES}" ${output_files} PARENT_SCOPE)
-
   if(ARG_OUT_INCLUDE_DIRS)
     set("${ARG_OUT_INCLUDE_DIRS}" ${output_include_dirs} PARENT_SCOPE)
   endif()
