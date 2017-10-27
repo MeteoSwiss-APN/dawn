@@ -16,7 +16,6 @@ syntax = "proto3";
 
 package dawn.sir.proto;
 
-// Location (line, col) in a specific file (-1, -1) represents unknown location)
 message SourceLocation {
   int32 Line = 1;
   int32 Column = 2;
@@ -72,8 +71,54 @@ message Interval {
   int32 upper_offset = 4;
 }
 
-message AST {
+//===------------------------------------------------------------------------------------------===//
+//     AST
+//===------------------------------------------------------------------------------------------===//
 
+message StmtID {
+  // Key into the AST.statements map
+  int32 id = 1;
+}
+
+message BlockStmt {
+  // Statements in the block
+  repeated StmtID statements = 1;
+}
+
+message Stmt {
+  oneof stmt {
+    BlockStmt block_stmt_value = 1;
+  }
+}
+
+message ExprID {
+  // Key into the AST.expressions map
+  int32 id = 1;
+}
+
+message UnaryOperator {
+  // Operarion (e.g "+")
+  string op = 1;
+  
+  // Expression to apply the operation
+  ExprID operand = 2;
+}
+
+message Expr {
+  oneof expr {
+    UnaryOperator unary_operator_value = 1;
+  }
+}
+
+message AST {
+  // List of all statements
+  map<int32, Stmt> statements = 1;
+  
+  // List of all expressions
+  map<int32, Expr> expressions = 2;
+  
+  // Root node
+  StmtID root = 3;
 }
 
 //===------------------------------------------------------------------------------------------===//
