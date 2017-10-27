@@ -15,6 +15,7 @@
 
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTVisitor.h"
+#include "dawn/SIR/SIR.h"
 
 namespace dawn {
 
@@ -25,7 +26,6 @@ namespace dawn {
   }
 
 ASTVISITORFORWARDING_VISIT_IMPL(BlockStmt);
-ASTVISITORFORWARDING_VISIT_IMPL(VerticalRegionDeclStmt);
 ASTVISITORFORWARDING_VISIT_IMPL(StencilCallDeclStmt);
 ASTVISITORFORWARDING_VISIT_IMPL(BoundaryConditionDeclStmt);
 ASTVISITORFORWARDING_VISIT_IMPL(IfStmt);
@@ -53,6 +53,10 @@ void ASTVisitorForwarding::visit(const std::shared_ptr<ReturnStmt>& node) {
 void ASTVisitorForwarding::visit(const std::shared_ptr<VarDeclStmt>& node) {
   for(const auto& expr : node->getInitList())
     expr->accept(*this);
+}
+
+void ASTVisitorForwarding::visit(const std::shared_ptr<dawn::VerticalRegionDeclStmt>& stmt) {
+  stmt->getVerticalRegion()->Ast->accept(*this);
 }
 
 ASTVisitorForwarding::~ASTVisitorForwarding() {}
