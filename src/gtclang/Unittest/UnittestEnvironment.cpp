@@ -14,8 +14,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/Assert.h"
 #include "gtclang/Unittest/UnittestEnvironment.h"
+#include "dawn/Support/Assert.h"
 
 namespace gtclang {
 

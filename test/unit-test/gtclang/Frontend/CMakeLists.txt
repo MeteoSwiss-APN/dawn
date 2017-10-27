@@ -14,24 +14,9 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-dawn_configure_file(Config.h.cmake)
-
-dawn_add_library(
-  NAME GTClangUnittest
-  SOURCES FileManager.cpp
-          FileManager.h
-          FlagManager.cpp
-          FlagManager.h
-          GTClang.cpp
-          GTClang.h
-          UnittestEnvironment.cpp
-          UnittestEnvironment.h
-          UnittestStmtSimplifier.h
-          UnittestStmtSimplifier.cpp          
-          ParsingComparison.h
-          ParsingComparison.cpp
-          ParsedString.h
-          ParsedString.cpp
-  ARCHIVE
+gtclang_add_unittest(
+  NAME GTClangUnittestFrontend
+  SOURCES TestParsing.cpp
+          TestMain.cpp
+  DEPENDS ${GTCLANG_UNITTEST_EXTERNAL_LIBRARIES}
 )
-

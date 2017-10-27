@@ -25,16 +25,20 @@ namespace gtclang {
 /// @brief Handle unittest data files
 /// @ingroup unittest
 class FileManager {
-  std::string dataPath_;
 
 public:
-  FileManager();
+  FileManager() = default;
 
-  /// @brief Get full path of `filename` or abort if file was not found in `dataPath()` directory
-  std::string getFile(llvm::StringRef filename) const;
+  /// @brief Get full path of `filename` or abort if required directories could not be created `{unittest directory}/relativePath`
+  std::string getUnittestFile(llvm::StringRef relativePath, llvm::StringRef filename) const;
 
-  /// @brief Path of the unittest data files
-  const std::string& dataPath() const { return dataPath_; }
+  /// @brief Get full path of `filename` or abort if required directories could not be created `{integrationtest directory}/relativePath`
+  std::string getIntegrationtestFile(llvm::StringRef relativePath, llvm::StringRef filename) const;
+
+private:
+  /// @brief Creates all the required direcotries such that 'fullpath' is a valid location
+  void createRequiredFolders(llvm::StringRef fullpath) const;
+
 };
 
 } // namespace gtclang

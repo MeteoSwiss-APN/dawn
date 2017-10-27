@@ -20,7 +20,6 @@
 #include "clang/Frontend/FrontendAction.h"
 
 #include "gtclang/Frontend/GTClangContext.h"
-#include <iostream>
 
 namespace gtclang {
 
@@ -33,11 +32,19 @@ class GTClangASTAction : public clang::ASTFrontendAction {
 
 public:
   GTClangASTAction(GTClangContext* context);
-  virtual ~GTClangASTAction(){};
+  virtual ~GTClangASTAction() {}
 
   /// @brief Create the AST consumer to read the AST
   virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance& compiler,
                                                                 llvm::StringRef file) override;
+
+  /// @brief catch the SIR from the ASTConsumer to use it afterwards
+  void setSIR(std::shared_ptr<dawn::SIR> sir);
+
+  std::shared_ptr<dawn::SIR> getSIR() const;
+
+private:
+  std::shared_ptr<dawn::SIR> sir_;
 };
 
 } // namespace gtclang

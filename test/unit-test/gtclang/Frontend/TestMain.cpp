@@ -14,23 +14,16 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "gtclang/Frontend/GTClangASTAction.h"
-#include "gtclang/Frontend/GTClangASTConsumer.h"
+#include "dawn/Support/STLExtras.h"
 #include "gtclang/Support/Logger.h"
-#include "clang/Frontend/CompilerInstance.h"
+#include "gtclang/Unittest/UnittestEnvironment.h"
+#include <gtest/gtest.h>
 
-namespace gtclang {
+int main(int argc, char* argv[]) {
 
-GTClangASTAction::GTClangASTAction(GTClangContext* context) : context_(context) {}
+  // Initialize GTest
+  testing::InitGoogleTest(&argc, argv);
+  testing::AddGlobalTestEnvironment(&gtclang::UnittestEnvironment::getSingleton());
 
-std::unique_ptr<clang::ASTConsumer>
-GTClangASTAction::CreateASTConsumer(clang::CompilerInstance& compiler, llvm::StringRef file) {
-  DAWN_LOG(INFO) << "Creating ASTConsumer for " << file.str();
-  return llvm::make_unique<GTClangASTConsumer>(context_, file, this);
+  return RUN_ALL_TESTS();
 }
-
-void GTClangASTAction::setSIR(std::shared_ptr<dawn::SIR> sir) { sir_ = sir; }
-
-std::shared_ptr<dawn::SIR> GTClangASTAction::getSIR() const { return sir_; }
-
-} // namespace gtclang

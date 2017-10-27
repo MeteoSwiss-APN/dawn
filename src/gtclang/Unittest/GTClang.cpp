@@ -21,8 +21,9 @@
 
 namespace gtclang {
 
-bool GTClang::run(const std::vector<std::string>& gtclangFlags,
-                  const std::vector<std::string>& clangFlags) {
+std::pair<bool, std::shared_ptr<dawn::SIR>>
+GTClang::run(const std::vector<std::string>& gtclangFlags,
+             const std::vector<std::string>& clangFlags) {
   llvm::SmallVector<const char*, 16> args;
   args.push_back(GTCLANG_EXECUTABLE);
 
@@ -32,11 +33,12 @@ bool GTClang::run(const std::vector<std::string>& gtclangFlags,
   for(const auto& flag : clangFlags)
     args.push_back(copyCString(flag));
 
-  bool ret = (Driver::run(args) == 0);
+  auto ret = Driver::run(args);
+  auto retVal = std::make_pair(ret.ExitCode == 0, ret.SIR);
 
   for(std::size_t i = 1; i < args.size(); ++i)
     delete args[i];
-  return ret;
+  return retVal;
 }
 
 } // namespace gtclang

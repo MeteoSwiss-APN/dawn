@@ -22,19 +22,30 @@
 
 namespace gtclang {
 
-FileManager::FileManager() : dataPath_(GTCLANG_UNITTEST_DATAPATH) {}
+std::string FileManager::getUnittestFile(llvm::StringRef relativePath,
+                                         llvm::StringRef filename) const {
+  std::string fullpath = std::string(GTCLANG_UNITTEST_DATAPATH) + "/" + std::string(relativePath);
+  createRequiredFolders(fullpath);
 
-std::string FileManager::getFile(llvm::StringRef filename) const {
-  using namespace llvm;
-  Twine path = llvm::StringRef(dataPath_) + "/" + filename;
+  return fullpath + "/" + std::string(filename);
+}
 
-  if(!sys::fs::exists(path)) {
-    errs().changeColor(llvm::raw_ostream::RED, true) << "FATAL ERROR ";
-    errs().resetColor() << ": file '" << path.str() << "' not found!\n";
+std::string FileManager::getIntegrationtestFile(llvm::StringRef relativePath,
+                                                llvm::StringRef filename) const {
+  std::string fullpath =
+      std::string(GTCLANG_INTEGRATIONTEST_DATAPATH) + "/" + std::string(relativePath);
+  createRequiredFolders(fullpath);
+  return fullpath + "/" + std::string(filename);
+}
+
+void FileManager::createRequiredFolders(llvm::StringRef fullpath) const {
+  llvm::sys::fs::create_directories(fullpath);
+
+  if(!llvm::sys::fs::exists(fullpath)) {
+    llvm::errs().changeColor(llvm::raw_ostream::RED, true) << "FATAL ERROR ";
+    llvm::errs().resetColor() << ": could not generate " << fullpath << "' !\n";
     std::abort();
   }
-
-  return path.str();
 }
 
 } // namespace gtclang

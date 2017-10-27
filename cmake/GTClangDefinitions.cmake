@@ -49,6 +49,15 @@ set(GTCLANG_FULL_VERSION
     "${GTCLANG_VERSION_STRING}-${SGTCLANG_GIT_HASH}-${architecture}-${platform}-${compiler}"
     CACHE STRING "Full version string of gtclang" FORCE)
 
+# Building configs
+set(GTCLANG_DSL_INCLUDES "${CMAKE_SOURCE_DIR}/src" "${CMAKE_INSTALL_PREFIX}/include")
+
+# Testing configs
+set(GTCLANG_EXECUTABLE "${CMAKE_BINARY_DIR}/bin/gtclang")
+set(GTCLANG_UNITTEST_DATAPATH ${CMAKE_BINARY_DIR}/test/unit-test)
+set(GTCLANG_INTEGRATIONTEST_DATAPATH ${CMAKE_BINARY_DIR}/test/integration-test)
+set(GTCLANG_UNITTEST_INCLUDES ${CMAKE_SOURCE_DIR}/src)
+
 # Installation definitions
 set(GTCLANG_INSTALL_BIN_DIR bin 
     CACHE INTERNAL "Relative path of the binary install location" FORCE)
@@ -64,8 +73,3 @@ set(GTCLANG_DSL_INCLUDES
   "${CMAKE_SOURCE_DIR}/src" 
   "${CMAKE_INSTALL_PREFIX}/${GTCLANG_INSTALL_INCLUDE_DIR}"
 )
-
-# Testing configs
-set(GTCLANG_EXECUTABLE "${CMAKE_BINARY_DIR}/bin/gtclang")
-set(GTCLANG_UNITTEST_DATAPATH ${CMAKE_SOURCE_DIR}/test/integration)
-set(GTCLANG_UNITTEST_INCLUDES ${CMAKE_SOURCE_DIR}/src)
