@@ -55,6 +55,8 @@ function install_protobuf() {
     NOTICE "${FUNCNAME[0]}: Starting to build protobuf ..."
     mkdir build && cd build
     cmake ../cmake/ -DCMAKE_BUILD_TYPE=Release                                                     \
+                    -DBUILD_SHARED_LIBS=ON                                                         \
+                    -Dprotobuf_BUILD_SHARED_LIBS=ON                                                \
                     -Dprotobuf_BUILD_TESTS=OFF                                                     \
                     -Dprotobuf_BUILD_EXAMPLES=OFF                                                  \
                     -DCMAKE_INSTALL_PREFIX=${protobuf_install_dir}                                 \
