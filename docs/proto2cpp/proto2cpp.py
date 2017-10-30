@@ -45,51 +45,33 @@ import re
 import fnmatch
 import inspect
 
-## Class for converting Google Protocol Buffers .proto files into C++ style output to enable Doxygen 
-## usage.
 class proto2cpp:
-
-  ## Logging level: do not log anything.
-  logNone   = 0
-  ## Logging level: log errors only.
+  logNone = 0
   logErrors = 1
-  ## Logging level: log everything.
-  logAll    = 2
+  logAll= 2
 
-  ## Constructor
   def __init__(self):
-    ## Debug log file name.
     self.logFile = "proto2cpp.log"
-    ## Error log file name.
     self.errorLogFile = "proto2cpp.error.log"
-    ## Logging level.
     self.logLevel = self.logAll
 
-  ## Handles a file.
-  ##
-  ## If @p fileName has .proto suffix, it is processed through parseFile().
-  ## Otherwise it is printed to stdout as is except for file \c proto2cpp.py without
-  ## path since it's the script given to python for processing.
-  ##
-  ## @param fileName Name of the file to be handled.
-  def handleFile(self, fileName):
+  def handleFile(self, filename):
     if fnmatch.fnmatch(filename, '*.proto'):
-      self.log('\nXXXXXXXXXX\nXX ' + filename + '\nXXXXXXXXXX\n\n')
-      # Open the file. Use try to detect whether or not we have an actual file.
+      self.log('\n==========\n' + filename + '\n==========\n\n')
+
       try:
-        with open(filename, 'r') as inputFile:
-          self.parseFile(inputFile)
+        with open(filename, 'r') as file:
+          self.parseFile(file)
         pass
       except IOError as e:
         self.logError('the file ' + filename + ' could not be opened for reading')
 
-    elif not fnmatch.fnmatch(filename, os.path.basename(inspect.getfile(inspect.currentframe()))):
+    else:
       try:
         with open(filename, 'r') as theFile:
-          output = ''
-          for theLine in theFile:
-            output += theLine
-          print(output)
+          for line in theFile:
+            print(line)
+            self.log(line + '\n')
         pass
       except IOError as e:
         self.logError('the file ' + filename + ' could not be opened for reading')
@@ -103,6 +85,7 @@ class proto2cpp:
   ## @param inputFile Input file object
   def parseFile(self, inputFile):
     isEnum = False
+
     # This variable is here as a workaround for not getting extra line breaks (each line
     # ends with a line separator and print() method will add another one).
     # We will be adding lines into this var and then print the var out at the end.
@@ -167,18 +150,16 @@ class proto2cpp:
       else:
         self.log('\n')
 
-  ## Writes @p string to log file.
   def log(self, string):
     if self.logLevel >= self.logAll:
       with open(self.logFile, 'a') as theFile:
         theFile.write(string)
 
-  ## Writes @p string to error log file.
   def logError(self, string):
     if self.logLevel >= self.logError:
       with open(self.errorLogFile, 'a') as theFile:
         theFile.write(string)
 
 converter = proto2cpp()
-for filename in sys.argv:
-  converter.handleFile(filename)
+for idx in range(1, len(sys.argv)):
+  converter.handleFile(sys.argv[idx])
