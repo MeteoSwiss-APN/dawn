@@ -130,6 +130,10 @@ include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/test/utils/googletest/include)
 add_subdirectory(src)
 add_subdirectory(cmake)
 
+if(DAWN_PYTHON)
+  add_subdirectory(python)
+endif()
+
 if(DAWN_TESTING)
   enable_testing()
   add_subdirectory(test)
