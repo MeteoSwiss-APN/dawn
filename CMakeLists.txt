@@ -50,6 +50,7 @@ include(DawnGetPlatformInfo)
 include(DawnMakeStringPair)
 include(DawnReportResult)
 include(DawnSetCXXStandard)
+include(DawnEnableFullRPATH)
 
 dawn_get_compiler_info()
 dawn_get_platform_info()
@@ -78,6 +79,9 @@ dawn_add_target_clean_all(
   ${CMAKE_BINARY_DIR}/bin
   ${CMAKE_BINARY_DIR}/dawn-cmake
 )
+
+# Enable RPath support
+dawn_enable_full_rpath(${DAWN_INSTALL_LIB_DIR})
 
 # Output summary of the configuration
 macro(make_config_string FIRST SECOND)
