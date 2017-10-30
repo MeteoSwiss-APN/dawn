@@ -13,7 +13,7 @@
 \*===------------------------------------------------------------------------------------------===*/
 
 // @defgroup sir_proto SIR protobuf
-// @brief This is a SIR description for Google's protocol buffers library 
+// @brief This is a SIR description for Google's protocol buffers library
 // <a href="https://developers.google.com/protocol-buffers/">Protobuf</a>.
 
 syntax = "proto3";
@@ -25,7 +25,7 @@ package dawn.sir.proto;
 // `(-1,-1)` indicates an invalid location.
 // @ingroup sir_proto
 message SourceLocation {
-  int32 Line = 1;   // Source line 
+  int32 Line = 1;   // Source line
   int32 Column = 2; // Column in the `Line`
 }
 
@@ -120,7 +120,15 @@ message Interval {
 // Statements IDs directly related to a statement in the `AST.statements` map.
 // @ingroup sir_proto
 message StmtID {
-  int32 id = 1;  // Key into the `AST.statements` map
+  int32 id = 1; // Key into the `AST.statements` map
+}
+
+// @brief Identifier of a specific expression
+//
+// Expression IDs directly related to an expression in the `AST.expressions` map.
+// @ingroup sir_proto
+message ExprID {
+  int32 id = 1; // Key into the `AST.expressions` map
 }
 
 // @brief A block of `N` statetements
@@ -135,22 +143,24 @@ message StmtID {
 // }
 // @endcode
 // @ingroup sir_proto
- message BlockStmt {
-   repeated StmtID statements = 1;  // List of statements
- }
+message BlockStmt {
+  repeated StmtID statements = 1; // List of statements
+}
+
+// @brief A statement wrapping an expression
+//
+// @ingroup sir_proto
+message ExprStmt {
+  ExprID expr = 1; // Expression
+}
 
 // @brief This message holds the actual value of a statement
 // @ingroup sir_proto
 message Stmt {
-  oneof stmt { BlockStmt block_stmt_value = 1; }
-}
-
-// @brief Identifier of a specific expression
-//
-// Expression IDs directly related to an expression in the `AST.expressions` map.
-// @ingroup sir_proto
-message ExprID {
-  int32 id = 1; // Key into the `AST.expressions` map
+  oneof stmt {
+    BlockStmt block_stmt_value = 1;
+    ExprStmt expr_stmt_value = 2;
+  }
 }
 
 // @brief Apply the unary operations to an expression
@@ -176,7 +186,7 @@ message Expr {
 // The AST is stored two fold. All expression and statements are assigned a unique identifier and
 // stored in the `statements` and `expression` maps respectively. The indivudual relations between
 // the nodes, hence the *tree* strucutre, is encoded indirectly via IDs into the maps (this is way
-// children nodes are encoded via `StmtID` and `ExprID`). 
+// children nodes are encoded via `StmtID` and `ExprID`).
 // This is necessary as protobuf lacks proper polymorphism and forward declarations.
 //
 // @ingroup sir_proto
@@ -195,10 +205,10 @@ message AST {
  *     Stencil
 \*===------------------------------------------------------------------------------------------===*/
 
-// @brief Stencil description of the SIR 
+// @brief Stencil description of the SIR
 //
 // A stencil represents the executation of a series of statements on a finite number of input fields
-// producing a finite number of output fields, hence a stencilcan have multiple output fields. 
+// producing a finite number of output fields, hence a stencilcan have multiple output fields.
 // Hence, a stencil is described by an AST and a list of participating Field(s).
 //
 // @ingroup sir_proto
@@ -223,13 +233,13 @@ message Stencil {
  *     StencilFunction
 \*===------------------------------------------------------------------------------------------===*/
 
-// @brief Stencil function description of the SIR 
+// @brief Stencil function description of the SIR
 //
 // Stencil functions are represented, like stencils, by a unique identifier, a list of arguments
-// and a list vertical intervals and coressponding AST(s). The latter allows to *specialize* the 
-// stencil function for a specific vertical interval enabling straight-forward incorporation of 
+// and a list vertical intervals and coressponding AST(s). The latter allows to *specialize* the
+// stencil function for a specific vertical interval enabling straight-forward incorporation of
 // vertical boundary conditions. Next to simple field and scalar arguments, stencil functions can be
-// parametrized on Direction `(i, j or k)` and Offset `(i+1) arguments. 
+// parametrized on Direction `(i, j or k)` and Offset `(i+1) arguments.
 //
 // @ingroup sir_proto
 message StencilFunction {
@@ -289,7 +299,7 @@ message GlobalVariableMap {
 
 // @brief Protobuf description of the SIR
 //
-// The Stencil Intermediate Representation (SIR) allows to define multiple high level DSLs in a 
+// The Stencil Intermediate Representation (SIR) allows to define multiple high level DSLs in a
 // lightweight manner by reusing most of the complex toolchain i.e the Dawn library.
 //
 // @ingroup sir_proto

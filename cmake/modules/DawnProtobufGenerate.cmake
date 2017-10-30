@@ -33,7 +33,7 @@ include(CMakeParseArguments)
 #   source files.
 # ``OUT_INCLUDE_DIRS``
 #   On output this variable contains a list of include directories which need to be added to compile 
-#   the generated sources.
+#   the generated sources (C++ only).
 # ``PROTOS``
 #   List of proto files to compile.
 # ``LANGUAGE``
