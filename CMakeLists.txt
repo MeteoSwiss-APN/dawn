@@ -77,6 +77,7 @@ dawn_add_target_clean_all(
   ${CMAKE_BINARY_DIR}/src
   ${CMAKE_BINARY_DIR}/test
   ${CMAKE_BINARY_DIR}/bin
+  ${CMAKE_BINARY_DIR}/python
   ${CMAKE_BINARY_DIR}/dawn-cmake
 )
 
