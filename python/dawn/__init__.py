@@ -41,8 +41,3 @@ if __dawn_python_version_info < (3, 4):
 # Import submodules
 #
 from .sir import *
-
-__all__ = [
-    # sir.py
-    # TODO
-]

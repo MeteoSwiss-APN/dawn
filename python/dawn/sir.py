@@ -60,19 +60,50 @@ def from_json(text: str, message_type):
     return msg
 
 
+def makeExpr(expr):
+    """ Wrap a concrete expression (e.g VarAccessExpr) into an Expr object
+
+    :param expr: Expression to wrap
+    :return: Expression wrapped into Expr
+    """
+    if isinstance(expr, Expr):
+        return expr
+    wrapped_expr = Expr()
+
+    if isinstance(expr, UnaryOperator):
+        wrapped_expr.unary_operator.CopyFrom(expr)
+    elif isinstance(expr, LiteralAccessExpr):
+        wrapped_expr.literal_access_expr.CopyFrom(expr)
+    else:
+        raise Error("cannot create Expr from type {}".format(type(expr)))
+    return wrapped_expr
+
+
+def makeUnaryOperator(op: str, operand) -> UnaryOperator:
+    """ Create an UnaryOperator
+
+    :param value:     Operation (e.g "+" or "-").
+    :param operand:   Builtin type id of the literal.
+    """
+    expr = UnaryOperator()
+    expr.op = op
+    expr.operand.CopyFrom(makeExpr(operand))
+    return expr
+
+
 def makeLiteralAccessExpr(value: str, type: BuiltinType.TypeID) -> LiteralAccessExpr:
     """ Create a LiteralAccessExpr.
 
-    :param value:    Value of the literal (e.g "1.123123").
-    :param type:     Builtin type id of the literal.
+    :param value:  Value of the literal (e.g "1.123123").
+    :param type:   Builtin type id of the literal.
     """
     builtin_type = BuiltinType()
     builtin_type.type_id = type
 
-    literal = LiteralAccessExpr()
-    literal.value = value
-    literal.type.CopyFrom(builtin_type)
-    return literal
+    expr = LiteralAccessExpr()
+    expr.value = value
+    expr.type.CopyFrom(builtin_type)
+    return expr
 
 
 __all__ = [
@@ -97,5 +128,7 @@ __all__ = [
     'to_json',
     'from_json',
     'ParseError',
-    'makeLiteralAccessExpr'
+    'makeUnaryOperator',
+    'makeLiteralAccessExpr',
+    'makeExpr',
 ]

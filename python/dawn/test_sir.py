@@ -16,6 +16,7 @@
 
 import unittest
 
+from dawn.error import Error
 from dawn.sir import *
 
 
@@ -49,7 +50,31 @@ class TestJSON(unittest.TestCase):
         self.assertEqual(expr, ref_expr)
 
 
+class TestMakeExpr(unittest.TestCase):
+    def test_make_expr(self):
+        expr = makeLiteralAccessExpr("1.235", BuiltinType.Float)
+
+        wrapped_expr = makeExpr(expr)
+        self.assertEqual(wrapped_expr.literal_access_expr, expr)
+
+        # Should return itself
+        self.assertEqual(makeExpr(wrapped_expr), wrapped_expr)
+
+        # Invalid type, should throw exception
+        with self.assertRaises(Error):
+            makeExpr("foo")
+
+
 class TestExpr(unittest.TestCase):
+    def expr(self):
+        """ Create a dummy expression """
+        return makeLiteralAccessExpr("1.235", BuiltinType.Float)
+
+    def test_unary_operator(self):
+        expr = makeUnaryOperator("+", self.expr())
+        self.assertEqual(expr.op, "+")
+        self.assertEqual(expr.operand, makeExpr(self.expr()))
+
     def test_literal_access_expr(self):
         expr = makeLiteralAccessExpr("1.235", BuiltinType.Float)
         self.assertEqual(expr.value, "1.235")
