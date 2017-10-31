@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
 ##===-----------------------------------------------------------------------------*- Python -*-===##
 ##                          _                      
 ##                         | |                     
@@ -12,12 +14,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-__version__ = '@DAWN_VERSION@'
-
-__dawn_install_protobuf_module__ = '@DAWN_INSTALL_PROTOBUF_MODULE@'
-
-if __name__ != '__main__':
-    try:
-        __import__('pkg_resources').declare_namespace(__name__)
-    except ImportError:
-        __path__ = __import__('pkgutil').extend_path(__path__, __name__)
+class Error(Exception):
+    """ Thrown in case of an error.
+    """
+    pass
