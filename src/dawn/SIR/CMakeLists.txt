@@ -54,7 +54,8 @@ dawn_protobuf_generate(
   PROTOS ${CMAKE_CURRENT_SOURCE_DIR}/SIR.proto
   LANGUAGE python
 )
-add_custom_target(DawnSIRPythonProto ALL SOURCES ${sir_proto_python_files})
+add_custom_target(DawnSIRPythonProto ALL 
+  COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${CMAKE_BINARY_DIR}/python/dawn
+  SOURCES ${sir_proto_python_files})
 
-file(COPY ${sir_proto_python_files} DESTINATION ${CMAKE_BINARY_DIR}/python/dawn)
 install(FILES ${sir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/dawn)
