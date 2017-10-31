@@ -56,6 +56,7 @@ dawn_protobuf_generate(
 )
 add_custom_target(DawnSIRPythonProto ALL 
   COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${CMAKE_BINARY_DIR}/python/dawn
-  SOURCES ${sir_proto_python_files})
+  DEPENDS ${sir_proto_python_files}
+)
 
 install(FILES ${sir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/dawn)

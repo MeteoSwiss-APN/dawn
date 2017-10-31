@@ -39,6 +39,7 @@ class TestStencilFunction(unittest.TestCase):
         stencil_function.name = "foo"
         self.assertEqual(stencil_function.name, "foo")
 
+
 class TestJSON(unittest.TestCase):
     def test_serialization(self):
         ref_expr = makeLiteralAccessExpr("1.235", BuiltinType.Float)
@@ -47,11 +48,13 @@ class TestJSON(unittest.TestCase):
         expr = from_json(json, LiteralAccessExpr)
         self.assertEqual(expr, ref_expr)
 
+
 class TestExpr(unittest.TestCase):
     def test_literal_access_expr(self):
         expr = makeLiteralAccessExpr("1.235", BuiltinType.Float)
         self.assertEqual(expr.value, "1.235")
         self.assertEqual(expr.type.type_id, BuiltinType.Float)
+
 
 if __name__ == "__main__":
     unittest.main()
