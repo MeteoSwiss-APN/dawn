@@ -643,7 +643,7 @@ const char* sir::Value::typeToString(sir::Value::TypeKind type) {
 BuiltinTypeID sir::Value::typeToBuiltinTypeID(sir::Value::TypeKind type) {
   switch(type) {
   case None:
-    return BuiltinTypeID::None;
+    return BuiltinTypeID::Invalid;
   case Boolean:
     return BuiltinTypeID::Boolean;
   case Integer:
