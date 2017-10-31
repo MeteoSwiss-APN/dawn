@@ -20,7 +20,8 @@ get_filename_component(protobuf_root "${lib_dir}" DIRECTORY)
 # Check the python libraries were installed in <protobuf_root>/python/
 set(protobuf_python "${protobuf_root}/python")
 set(protobuf_init_py "${protobuf_python}/google/protobuf/__init__.py")
-if(NOT EXISTS "${protobuf_python}/google/protobuf/__init__.py")
+
+if(NOT EXISTS "${protobuf_init_py}")
   message(WARNING 
     "Python module of protobuf is not installed correctly! Expected protobuf's __init__.py at:\n"
     "    ${protobuf_init_py}\n"
@@ -28,11 +29,18 @@ if(NOT EXISTS "${protobuf_python}/google/protobuf/__init__.py")
   )
 else()
   set(DAWN_INSTALL_PROTOBUF_MODULE "${protobuf_python}")
-  configure_file(${CMAKE_CURRENT_LIST_DIR}/dawn/__init__.py.in
-                 ${CMAKE_CURRENT_BINARY_DIR}/dawn/__init__.py)
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/dawn/__init__.py 
-          DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/dawn/)
 
+  set(config_in "${CMAKE_SOURCE_DIR}/python/dawn/config.py.in")
+  set(config_out "${CMAKE_BINARY_DIR}/python/dawn/config.py")
+  configure_file(${config_in} ${config_out})
+
+  # Copy to build directory
+  file(COPY ${CMAKE_SOURCE_DIR}/python/ DESTINATION ${CMAKE_BINARY_DIR}/python
+       FILES_MATCHING PATTERN "*.py")
+
+  # Copy to install
+  install(FILES ${config_out} 
+          DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/dawn/)
   install(DIRECTORY dawn/ 
           DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/dawn
           FILES_MATCHING PATTERN "*.py"
