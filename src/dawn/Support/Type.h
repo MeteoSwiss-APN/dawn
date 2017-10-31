@@ -22,7 +22,7 @@ namespace dawn {
 
 /// @brief Builtin types recognized by the SIR
 /// @ingroup support
-enum class BuiltinTypeID : int { None, Auto, Boolean, Integer, Float };
+enum class BuiltinTypeID : int { Invalid, Auto, Boolean, Integer, Float };
 
 /// @brief Const-volatile qualifiers
 /// @ingroup support
@@ -46,11 +46,11 @@ class Type {
 public:
   /// @name Constructors and Assignment
   /// @{
-  Type() : name_(), builtinTypeID_(BuiltinTypeID::None), cvQualifier_(CVQualifier::None) {}
+  Type() : name_(), builtinTypeID_(BuiltinTypeID::Invalid), cvQualifier_(CVQualifier::None) {}
   Type(BuiltinTypeID builtinTypeID, CVQualifier cvQualifier = CVQualifier::None)
       : name_(), builtinTypeID_(builtinTypeID), cvQualifier_(cvQualifier) {}
   Type(const std::string& name, CVQualifier cvQualifier = CVQualifier::None)
-      : name_(name), builtinTypeID_(BuiltinTypeID::None), cvQualifier_(cvQualifier) {}
+      : name_(name), builtinTypeID_(BuiltinTypeID::Invalid), cvQualifier_(cvQualifier) {}
   Type(const Type&) = default;
   Type(Type&&) = default;
 
@@ -67,7 +67,7 @@ public:
   CVQualifier& getCVQualifier() { return cvQualifier_; }
   const CVQualifier& getCVQualifier() const { return cvQualifier_; }
 
-  bool isBuiltinType() const { return builtinTypeID_ != BuiltinTypeID::None; }
+  bool isBuiltinType() const { return builtinTypeID_ != BuiltinTypeID::Invalid; }
   bool isConst() const {
     return static_cast<int>(cvQualifier_) & static_cast<int>(CVQualifier::Const);
   }
