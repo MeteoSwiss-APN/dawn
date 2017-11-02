@@ -120,6 +120,14 @@ message BuiltinType {
 }
 
 // @brief Supported builtin types
+// @ingroup sir_proto
+message Dimension {
+  enum Direction { I = 0; J = 1; K = 2; Invalid = 3; }
+
+  Direction dimension = 1; // Dimension identifier
+}
+
+// @brief Supported builtin types
 message Type {
   // Underlying type (either a custom type given by `name` or a `BuiltinType`)
   oneof type {
@@ -141,6 +149,9 @@ message Stmt {
   oneof stmt {
     BlockStmt block_stmt = 1;
     ExprStmt expr_stmt = 2;
+    ReturnStmt return_stmt = 3;
+    VarDeclStmt var_decl_stmt = 4;
+    IfStmt if_stmt = 5;
   }
 }
 
@@ -182,6 +193,65 @@ message BlockStmt {
 // @ingroup sir_proto
 message ExprStmt {
   Expr expr = 1; // Expression
+}
+
+// @brief Return statement
+//
+// @ingroup sir_proto
+message ReturnStmt {
+  Expr expr = 1; // Expression to return
+}
+
+// @brief Declaration of a variable
+//
+// Synopsis
+// @code{.cpp}
+// Type name[dimension] op init_list
+// @endcode
+//
+// @b Example
+// In the following C++ expression:
+//
+// @code{.cpp}
+//  double foo[2] = {2.3, 5.3};
+// @endcode
+//
+// the members of `VarDeclStmt` would be:
+//
+// @code{.cpp}
+//  - type: Float
+//  - name: "foo"
+//  - dimension: 2
+//  - op: "="
+//  - init_list: {LiteralAccessExpr{"2.3"}, LiteralAccessExpr{"5.3"}}
+// @endcode
+//
+// @ingroup sir_proto
+message VarDeclStmt {
+  Type type = 1;       // Type of the variable
+  string name = 2;     // Name of the variable
+  int32 dimension = 3; // Dimension of the array or 0 for variables
+  string op = 4;       // Operation used for initialization
+
+  // List of expression used for array initialization or just 1 element for variable initialization
+  repeated Expr init_list = 5;
+}
+
+// @brief Represent an if/then/else block
+//
+// Synopsis
+// @code{.cpp}
+//  if(cond_part)
+//    then_part
+//  else
+//    else_part
+// @endcode
+//
+// @ingroup sir_proto
+message IfStmt {
+  Stmt cond_part = 1; // Condition (needs to be an `ExprStmt`)
+  Stmt then_part = 2; // Then part
+  Stmt else_part = 3; // Else part (can be empty)
 }
 
 // @brief Apply the unary operations to an expression
@@ -266,9 +336,7 @@ message StencilFunCallExpr {
 //
 // @ingroup sir_proto
 message StencilFunArgExpr {
-  enum Dimension { I = 0; J = 1; K = 2; Invalid = 3; }
-
-  // Dimension of the argument (-1 to indicate the absence of a dimensional argument)
+  // Dimension of the argument
   Dimension dimension = 1;
   
   // Offset to the dimension
@@ -287,6 +355,7 @@ message StencilFunArgExpr {
   // @endcode
   //
   // in which the members of `StencilFunArgExpr` for the argument `dir+1` of `bar` would be:
+  //
   // @code{.cpp}
   //  - dimension: -1        // We do not know the dimension yet as it depends on `dir` of `foo`
   //  - offset: +1           // Whatever `dir` will be, we offset it by `+1`
@@ -429,7 +498,7 @@ message StencilFunction {
 }
 
 /*===------------------------------------------------------------------------------------------===*\
- *     StencilFunction
+ *     GlobalVariableMap
 \*===------------------------------------------------------------------------------------------===*/
 
 // @brief Value of a global variable
