@@ -16,8 +16,41 @@
 
 import unittest
 
-from dawn.error import Error
+from dawn.error import SIRError
 from dawn.sir import *
+
+
+class ExprTestBase(unittest.TestCase):
+    def lit(self):
+        """ Create a dummy literal expression """
+        return makeLiteralAccessExpr("1.235", BuiltinType.Float)
+
+    def var(self, index=None):
+        """ Create a dummy variable expression """
+        return makeVarAccessExpr("var", index)
+
+
+class StmtTestBase(ExprTestBase):
+    def lit_stmt(self):
+        """ Create a dummy literal expression statement """
+        return makeExprStmt(self.lit())
+
+    def var_stmt(self, index=None):
+        """ Create a dummy variable expression statement """
+        return makeExprStmt(self.var(index))
+
+
+class ASTTestBase(StmtTestBase):
+    def ast(self):
+        """ Create a dummy AST """
+        return makeAST(makeBlockStmt(self.var_stmt()))
+
+
+class VerticalRegionTestBase(ASTTestBase):
+    def vertical_region(self):
+        """ Create a dummy vertical region """
+        return makeVerticalRegion(self.ast(), makeInterval(Interval.Start, Interval.End),
+                                  VerticalRegion.Forward)
 
 
 class TestJSON(unittest.TestCase):
@@ -40,7 +73,7 @@ class TestMakeExpr(unittest.TestCase):
         self.assertEqual(makeExpr(wrapped_expr), wrapped_expr)
 
         # Invalid type, should throw exception
-        with self.assertRaises(Error):
+        with self.assertRaises(SIRError):
             makeExpr("foo")
 
 
@@ -55,7 +88,7 @@ class TestMakeStmt(unittest.TestCase):
         self.assertEqual(makeStmt(wrapped_stmt), wrapped_stmt)
 
         # Invalid type, should throw exception
-        with self.assertRaises(Error):
+        with self.assertRaises(SIRError):
             makeStmt("foo")
 
 
@@ -71,25 +104,84 @@ class TestMakeType(unittest.TestCase):
         self.assertEqual(t.builtin_type, builtin_type2)
 
 
-class ExprTestBase(unittest.TestCase):
-    def lit(self):
-        """ Create a dummy literal expression """
-        return makeLiteralAccessExpr("1.235", BuiltinType.Float)
+class TestMakeField(unittest.TestCase):
+    def test_make_field(self):
+        field = makeField("foo")
+        self.assertEqual(field.name, "foo")
 
-    def var(self, index=None):
-        """ Create a dummy variable expression """
-        return makeVarAccessExpr("var", index)
+    def test_make_field_temporary(self):
+        field = makeField("foo", True)
+        self.assertEqual(field.name, "foo")
+        self.assertEqual(field.is_temporary, True)
 
 
-class TestStmt(ExprTestBase):
-    def lit_stmt(self):
-        """ Create a dummy literal expression statement """
-        return makeExprStmt(self.lit())
+class TestMakeInterval(unittest.TestCase):
+    def test_make_interval_start_end(self):
+        interval = makeInterval(Interval.Start, Interval.End)
+        self.assertEqual(interval.special_lower_level, Interval.Start)
+        self.assertEqual(interval.special_upper_level, Interval.End)
+        self.assertEqual(interval.lower_offset, 0)
+        self.assertEqual(interval.upper_offset, 0)
 
-    def var_stmt(self, index=None):
-        """ Create a dummy variable expression statement """
-        return makeExprStmt(self.var(index))
+    def test_make_interval_start_plus_1_end_minuse_1(self):
+        interval = makeInterval(Interval.Start, Interval.End, 1, -1)
+        self.assertEqual(interval.special_lower_level, Interval.Start)
+        self.assertEqual(interval.special_upper_level, Interval.End)
+        self.assertEqual(interval.lower_offset, 1)
+        self.assertEqual(interval.upper_offset, -1)
 
+    def test_make_interval_11_end(self):
+        interval = makeInterval(11, Interval.End)
+        self.assertEqual(interval.lower_level, 11)
+        self.assertEqual(interval.special_upper_level, Interval.End)
+        self.assertEqual(interval.lower_offset, 0)
+        self.assertEqual(interval.upper_offset, 0)
+
+    def test_make_interval_11_22(self):
+        interval = makeInterval(11, 22, 5, -5)
+        self.assertEqual(interval.lower_level, 11)
+        self.assertEqual(interval.upper_level, 22)
+        self.assertEqual(interval.lower_offset, 5)
+        self.assertEqual(interval.upper_offset, -5)
+
+
+class TestMakeStencilCall(unittest.TestCase):
+    def test_make_stencil_call(self):
+        call = makeStencilCall("foo", [makeField("a"), makeField("b")])
+        self.assertEqual(call.callee, "foo")
+        self.assertEqual(call.arguments[0], makeField("a"))
+        self.assertEqual(call.arguments[1], makeField("b"))
+
+    def test_make_stencil_call_1_arg(self):
+        call = makeStencilCall("foo", makeField("a"))
+        self.assertEqual(call.callee, "foo")
+        self.assertEqual(call.arguments[0], makeField("a"))
+
+    def test_make_stencil_call_str_args(self):
+        call = makeStencilCall("foo", ["a", "b", "c"])
+        self.assertEqual(call.callee, "foo")
+        self.assertEqual(call.arguments[0], makeField("a"))
+        self.assertEqual(call.arguments[1], makeField("b"))
+        self.assertEqual(call.arguments[2], makeField("c"))
+
+    def test_make_stencil_call_mixed(self):
+        call = makeStencilCall("foo", [makeField("a"), "b", makeField("c")])
+        self.assertEqual(call.callee, "foo")
+        self.assertEqual(call.arguments[0], makeField("a"))
+        self.assertEqual(call.arguments[1], makeField("b"))
+        self.assertEqual(call.arguments[2], makeField("c"))
+
+
+class TestMakeVerticalRegion(ASTTestBase):
+    def test_make_vertical_region(self):
+        vr = makeVerticalRegion(self.ast(), makeInterval(Interval.Start, Interval.End),
+                                VerticalRegion.Backward)
+        self.assertEqual(vr.ast, self.ast())
+        self.assertEqual(vr.interval, makeInterval(Interval.Start, Interval.End))
+        self.assertEqual(vr.loop_order, VerticalRegion.Backward)
+
+
+class TestStmt(VerticalRegionTestBase):
     def block_stmt(self):
         stmt1 = makeBlockStmt([self.var_stmt(), self.lit_stmt()])
         self.assertEqual(stmt1.statements[0], makeStmt(self.var_stmt()))
@@ -110,6 +202,16 @@ class TestStmt(ExprTestBase):
         stmt = makeVarDeclStmt(makeType(BuiltinType.Float), "var")
         self.assertEqual(stmt.type, makeType(BuiltinType.Float))
         self.assertEqual(stmt.name, "var")
+
+    def test_vertical_region_decl_stmt(self):
+        stmt = makeVerticalRegionDeclStmt(self.vertical_region())
+        self.assertEqual(stmt.vertical_region, self.vertical_region())
+
+    def test_boundary_condition_decl_stmt(self):
+        stmt = makeBoundaryConditionDeclStmt("foo", ["a", makeField("b")])
+        self.assertEqual(stmt.functor, "foo")
+        self.assertEqual(stmt.fields[0], makeField("a"))
+        self.assertEqual(stmt.fields[1], makeField("b"))
 
 
 class TestExpr(ExprTestBase):
@@ -188,6 +290,16 @@ class TestExpr(ExprTestBase):
         expr = makeLiteralAccessExpr("1.235", BuiltinType.Float)
         self.assertEqual(expr.value, "1.235")
         self.assertEqual(expr.type.type_id, BuiltinType.Float)
+
+
+class TestAST(StmtTestBase):
+    def test_make_ast(self):
+        ast = makeAST(makeBlockStmt(self.var_stmt()))
+        self.assertEqual(ast.root, makeStmt(makeBlockStmt(self.var_stmt())))
+
+    def test_make_ast_invalid(self):
+        with self.assertRaises(SIRError):
+            makeAST(self.var_stmt())
 
 
 class TestSIR(unittest.TestCase):

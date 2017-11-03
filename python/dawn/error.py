@@ -15,6 +15,15 @@
 ##===------------------------------------------------------------------------------------------===##
 
 class Error(Exception):
-    """ Thrown in case of an error.
-    """
+    """ Thrown in case of an error. """
+    pass
+
+
+class ParseError(Error):
+    """ Thrown in case of a parsing error. """
+    pass
+
+
+class SIRError(Error):
+    """ Thrown in case of an invalid SIR configuration. """
     pass

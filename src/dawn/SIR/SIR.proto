@@ -83,32 +83,38 @@ message StencilFunctionArg {
 // is represented by a level and an offset (`bound = level + offset`)
 //
 // The Interval has to satisfy the following invariants:
-//  - `lowerLevel >= Interval::Start`
-//  - `upperLevel <= Interval::End`
-//  - `(lowerLevel + lowerOffset) <= (upperLevel + upperOffset)`
+//  - `lower_level >= Interval::Start`
+//  - `upper_level <= Interval::End`
+//  - `(lower_level + lower_offset) <= (upper_level + upper_offset)`
 //
 // @ingroup sir_proto
 message Interval {
-  // @brief Description of a level
-  //
-  // A level can be any integer between `[Start, End]` while the `Start` and `End` levels are
-  // treated specially. Note that if `special_level_value` is `SpecialLevel::Start` or
-  // `SpecialLevel::End`, the value of `level_value` is ignored.
-  message Level {
-    enum SpecialLevel {
-      Noting = 0; // No special level, use the numerical value of `level_value` instead
-      Start = 1;  // The first level
-      End = 2;    // The last level
-    }
-
-    int32 level_value = 1;                // Numeric value of the level
-    SpecialLevel special_level_value = 2; // Encoding of special levels (`Start` and `End`)
+  // Indication of a special level
+  enum SpecialLevel {
+    Start = 0; // The first level
+    End = 1;   // The last level
   }
 
-  Level lower_level = 1;  // Lover level
-  Level upper_level = 2;  // Upper level
-  int32 lower_offset = 3; // Lower offset added to `lower_level`
-  int32 upper_offset = 4; // Upper offset added to `upper_level`
+  // Lower level
+  //
+  // A level can be any integer between `[Start, End]` while the `Start` and `End` levels are
+  // treated specially.
+  oneof LowerLevel {
+    SpecialLevel special_lower_level = 1;
+    int32 lower_level = 2;
+  }
+
+  // Upper level
+  //
+  // A level can be any integer between `[Start, End]` while the `Start` and `End` levels are
+  // treated specially.
+  oneof UpperLevel {
+    SpecialLevel special_upper_level = 3;
+    int32 upper_level = 4;
+  }
+
+  int32 lower_offset = 5; // Lower offset added to `lower_level`
+  int32 upper_offset = 6; // Upper offset added to `upper_level`
 }
 
 // @brief Supported builtin types
@@ -128,6 +134,7 @@ message Dimension {
 }
 
 // @brief Supported builtin types
+// @ingroup sir_proto
 message Type {
   // Underlying type (either a custom type given by `name` or a `BuiltinType`)
   oneof type {
@@ -137,6 +144,25 @@ message Type {
 
   bool is_const = 3;    // Is the type const qualified?
   bool is_volatile = 4; // Is the type volatile qualified?
+}
+
+// @brief Declaration of a vertical region
+// @ingroup sir_proto
+message VerticalRegion {
+  enum LoopOrder { Forward = 0; Backward = 1; }
+
+  SourceLocation loc = 1;   // Source location of the vertical region
+  AST ast = 2;              // Syntax tree of the body of the vertical region
+  Interval interval = 3;    // Vertical interval
+  LoopOrder loop_order = 4; // Loop order of execution
+}
+
+// @brief Stencil call declaration
+// @ingroup sir_proto
+message StencilCall {
+  SourceLocation loc = 1;       // Source location of the stencil call
+  string callee = 2;            // Name of the called stencil (i.e callee)
+  repeated Field arguments = 3; // Fields passed as arguments during the stencil call
 }
 
 /*===------------------------------------------------------------------------------------------===*\
@@ -151,7 +177,10 @@ message Stmt {
     ExprStmt expr_stmt = 2;
     ReturnStmt return_stmt = 3;
     VarDeclStmt var_decl_stmt = 4;
-    IfStmt if_stmt = 5;
+    StencilCallDeclStmt stencil_call_decl_stmt = 5;
+    VerticalRegionDeclStmt vertical_region_decl_stmt = 6;
+    BoundaryConditionDeclStmt boundary_condition_decl_stmt = 7;
+    IfStmt if_stmt = 8;
   }
 }
 
@@ -235,6 +264,24 @@ message VarDeclStmt {
 
   // List of expression used for array initialization or just 1 element for variable initialization
   repeated Expr init_list = 5;
+}
+
+// @brief Declaration of a vertical region
+//
+// @ingroup sir_proto
+message VerticalRegionDeclStmt { VerticalRegion vertical_region = 1; }
+
+// @brief Declaration of a stencil call
+//
+// @ingroup sir_proto
+message StencilCallDeclStmt { StencilCall stencil_call = 1; }
+
+// @brief Declaration of a boundary condition
+//
+// @ingroup sir_proto
+message BoundaryConditionDeclStmt {
+  string functor = 1;        // Identifier of the boundary condition functor
+  repeated Field fields = 2; // List of field arguments to apply the functor to
 }
 
 // @brief Represent an if/then/else block

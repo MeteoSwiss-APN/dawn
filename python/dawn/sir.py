@@ -20,7 +20,7 @@ from typing import List, TypeVar
 
 from dawn.config import __dawn_install_protobuf_module__
 
-from dawn.error import Error
+from dawn.error import ParseError, SIRError
 
 sys_path.insert(1, __dawn_install_protobuf_module__)
 
@@ -50,14 +50,11 @@ StmtType = TypeVar('Stmt',
                    ExprStmt,
                    ReturnStmt,
                    VarDeclStmt,
+                   VerticalRegionDeclStmt,
+                   StencilCallDeclStmt,
+                   BoundaryConditionDeclStmt,
                    IfStmt
                    )
-
-
-class ParseError(Error):
-    """ Thrown in case of a parsing error.
-    """
-    pass
 
 
 def to_json(msg):
@@ -110,6 +107,96 @@ def makeType(builtin_type_or_name, is_const: bool = False, is_volatile: bool = F
     return t
 
 
+def makeAST(root: StmtType) -> AST:
+    """ Create an AST
+
+    :param root:    Root node of the AST (needs to be of type BlockStmt)
+    """
+    ast = AST()
+    if isinstance(root, BlockStmt) or isinstance(root, Stmt):
+        ast.root.CopyFrom(makeStmt(root))
+    else:
+        raise SIRError("root statement of an AST needs to be a BlockStmt")
+    return ast
+
+
+def makeField(name: str, is_temporary: bool = False) -> Field:
+    """ Create a Field
+
+    :param name:         Name of the field
+    :param is_temporary: Is it a temporary field?
+    """
+    field = Field()
+    field.name = name
+    field.is_temporary = is_temporary
+    return field
+
+
+def makeInterval(lower_level, upper_level, lower_offset: int = 0,
+                 upper_offset: int = 0) -> Interval:
+    """ Create an Interval
+
+    Representation of a vertical interval, given by a lower and upper bound where a bound
+    is represented by a level and an offset (`bound = level + offset`)
+
+     The Interval has to satisfy the following invariants:
+      - `lower_level >= Interval.Start`
+      - `upper_level <= Interval.End`
+      - `(lower_level + lower_offset) <= (upper_level + upper_offset)`
+
+    :param lower_level:    Lower level integer between `[Interval.Start, Interval.End]`
+    :param upper_level:    Lower level integer between `[Interval.Start, Interval.End]`
+    :param lower_offset:   Lower offset
+    :param upper_offset:   Upper offset
+    """
+    interval = Interval()
+
+    if lower_level in (Interval.Start, Interval.End):
+        interval.special_lower_level = lower_level
+    else:
+        interval.lower_level = lower_level
+
+    if upper_level in (Interval.Start, Interval.End):
+        interval.special_upper_level = upper_level
+    else:
+        interval.upper_level = upper_level
+
+    interval.lower_offset = lower_offset
+    interval.upper_offset = upper_offset
+    return interval
+
+
+def makeStencilCall(callee: str, arguments: List[Field]) -> StencilCall:
+    """ Create a StencilCall
+
+    :param callee:      Name of the called stencil (i.e callee)
+    :param arguments:   Fields passed as arguments during the stencil call
+    """
+    call = StencilCall()
+    call.callee = callee
+    if isinstance(arguments, Iterable):
+        call.arguments.extend(
+            [makeField(arg) if isinstance(arg, str) else arg for arg in arguments])
+    else:
+        call.arguments.extend([makeField(arguments) if isinstance(arguments, str) else arguments])
+    return call
+
+
+def makeVerticalRegion(ast: AST, interval: Interval,
+                       loop_order: VerticalRegion.LoopOrder) -> VerticalRegion:
+    """ Create a VerticalRegion
+
+    :param ast:         Syntax tree of the body of the vertical region
+    :param interval:    Vertical interval
+    :param loop_order:  Vertical loop order of execution
+    """
+    vr = VerticalRegion()
+    vr.ast.CopyFrom(ast)
+    vr.interval.CopyFrom(interval)
+    vr.loop_order = loop_order
+    return vr
+
+
 def makeExpr(expr: ExprType):
     """ Wrap a concrete expression (e.g VarAccessExpr) into an Expr object
 
@@ -141,7 +228,7 @@ def makeExpr(expr: ExprType):
     elif isinstance(expr, LiteralAccessExpr):
         wrapped_expr.literal_access_expr.CopyFrom(expr)
     else:
-        raise Error("cannot create Expr from type {}".format(type(expr)))
+        raise SIRError("cannot create Expr from type {}".format(type(expr)))
     return wrapped_expr
 
 
@@ -163,14 +250,20 @@ def makeStmt(stmt: StmtType):
         wrapped_stmt.return_stmt.CopyFrom(stmt)
     elif isinstance(stmt, VarDeclStmt):
         wrapped_stmt.var_decl_stmt.CopyFrom(stmt)
+    elif isinstance(stmt, VerticalRegionDeclStmt):
+        wrapped_stmt.var_decl_stmt.CopyFrom(stmt)
+    elif isinstance(stmt, StencilCallDeclStmt):
+        wrapped_stmt.var_decl_stmt.CopyFrom(stmt)
+    elif isinstance(stmt, BoundaryConditionDeclStmt):
+        wrapped_stmt.var_decl_stmt.CopyFrom(stmt)
     elif isinstance(stmt, IfStmt):
         wrapped_stmt.if_stmt.CopyFrom(stmt)
     else:
-        raise Error("cannot create Stmt from type {}".format(type(stmt)))
+        raise SIRError("cannot create Stmt from type {}".format(type(stmt)))
     return wrapped_stmt
 
 
-def makeBlockStmt(statements: list) -> BlockStmt:
+def makeBlockStmt(statements: List[StmtType]) -> BlockStmt:
     """ Create an UnaryOperator
 
     :param op:      Operation (e.g "+" or "-").
@@ -226,6 +319,43 @@ def makeVarDeclStmt(type: Type, name: str, dimension: int = 0, op: str = "=",
         else:
             stmt.init_list.extend([makeExpr(init_list)])
 
+    return stmt
+
+
+def makeStencilCallDeclStmt(stencil_call: StencilCall) -> StencilCallDeclStmt:
+    """ Create a StencilCallDeclStmt
+
+    :param stencil_call:   Stencil call.
+    """
+    stmt = StencilCallDeclStmt()
+    stmt.stencil_call.CopyFrom(stencil_call)
+    return stmt
+
+
+def makeVerticalRegionDeclStmt(vertical_region: VerticalRegion) -> VerticalRegionDeclStmt:
+    """ Create a VerticalRegionDeclStmt
+
+    :param vertical_region:   Vertical region.
+    """
+    stmt = VerticalRegionDeclStmt()
+    stmt.vertical_region.CopyFrom(vertical_region)
+    return stmt
+
+
+def makeBoundaryConditionDeclStmt(functor: str,
+                                  fields: List[Field]) -> BoundaryConditionDeclStmt:
+    """ Create a BoundaryConditionDeclStmt
+
+    :param functor:  Identifier of the boundary condition functor.
+    :param fields:   List of field arguments to apply the functor to.
+    """
+    stmt = BoundaryConditionDeclStmt()
+    stmt.functor = functor
+    if isinstance(fields, Iterable):
+        stmt.fields.extend(
+            [makeField(field) if isinstance(field, str) else field for field in fields])
+    else:
+        stmt.fields.extend([makeField(fields) if isinstance(fields, str) else fields])
     return stmt
 
 
@@ -399,13 +529,21 @@ __all__ = [
     'GlobalVariableMap',
     'SourceLocation',
     'AST',
+    'makeAST',
     'Field',
+    'makeField',
+    'Interval',
+    'makeInterval',
     'Attributes',
     'BuiltinType',
     'SourceLocation',
     'Type',
     'makeType',
     'Dimension',
+    'VerticalRegion',
+    'makeVerticalRegion',
+    'StencilCall',
+    'makeStencilCall',
 
     # Stmt
     'Stmt',
@@ -418,6 +556,12 @@ __all__ = [
     'makeReturnStmt',
     'VarDeclStmt',
     'makeVarDeclStmt',
+    'VerticalRegionDeclStmt',
+    'makeVerticalRegionDeclStmt',
+    'StencilCallDeclStmt',
+    'makeStencilCallDeclStmt',
+    'BoundaryConditionDeclStmt',
+    'makeBoundaryConditionDeclStmt',
     'IfStmt',
     'makeIfStmt',
 
@@ -448,5 +592,4 @@ __all__ = [
     # Convenience functions
     'to_json',
     'from_json',
-    'ParseError',
 ]
