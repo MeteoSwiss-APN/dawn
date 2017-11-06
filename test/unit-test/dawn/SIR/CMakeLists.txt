@@ -17,6 +17,6 @@ dawn_add_unittest_impl(
   SOURCES TestMain.cpp
           TestAST.cpp
           TestSIR.cpp
-          TestSIRSerializerJSON.cpp
+          TestSIRSerializer.cpp
 )
 

@@ -41,6 +41,8 @@ dawn_add_library(
           SIR.cpp
           SIR.h
           SIR.proto
+          SIRSerializer.h
+          SIRSerializer.cpp
           Statement.h
           ${sir_proto_cpp_files}
   OBJECT

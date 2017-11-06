@@ -13,20 +13,19 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/SIR/SIR.h"
-#include "dawn/SIR/SIRSerializerJSON.h"
+#include "dawn/SIR/SIRSerializer.h"
 #include "gtest/gtest.h"
 
 using namespace dawn;
 
 namespace {
 
-TEST(SIRSerializerJSON, Serialize) {
+TEST(SIRSerializer, Serialize) {
 
 }
 
-TEST(SIRSerializerJSON, Deserialize) {
+TEST(SIRSerializer, Deserialize) {
 
 }
-
 
 } // anonymous namespace
