@@ -215,20 +215,23 @@ message Expr {
 // @ingroup sir_proto
 message BlockStmt {
   repeated Stmt statements = 1; // List of statements
+  SourceLocation loc = 2;       // Source location
 }
 
 // @brief A statement wrapping an expression
 //
 // @ingroup sir_proto
 message ExprStmt {
-  Expr expr = 1; // Expression
+  Expr expr = 1;          // Expression
+  SourceLocation loc = 2; // Source location
 }
 
 // @brief Return statement
 //
 // @ingroup sir_proto
 message ReturnStmt {
-  Expr expr = 1; // Expression to return
+  Expr expr = 1;          // Expression to return
+  SourceLocation loc = 2; // Source location
 }
 
 // @brief Declaration of a variable
@@ -264,17 +267,25 @@ message VarDeclStmt {
 
   // List of expression used for array initialization or just 1 element for variable initialization
   repeated Expr init_list = 5;
+
+  SourceLocation loc = 6; // Source location
 }
 
 // @brief Declaration of a vertical region
 //
 // @ingroup sir_proto
-message VerticalRegionDeclStmt { VerticalRegion vertical_region = 1; }
+message VerticalRegionDeclStmt {
+  VerticalRegion vertical_region = 1;
+  SourceLocation loc = 2; // Source location
+}
 
 // @brief Declaration of a stencil call
 //
 // @ingroup sir_proto
-message StencilCallDeclStmt { StencilCall stencil_call = 1; }
+message StencilCallDeclStmt {
+  StencilCall stencil_call = 1;
+  SourceLocation loc = 2; // Source location
+}
 
 // @brief Declaration of a boundary condition
 //
@@ -282,6 +293,7 @@ message StencilCallDeclStmt { StencilCall stencil_call = 1; }
 message BoundaryConditionDeclStmt {
   string functor = 1;        // Identifier of the boundary condition functor
   repeated Field fields = 2; // List of field arguments to apply the functor to
+  SourceLocation loc = 3;    // Source location
 }
 
 // @brief Represent an if/then/else block
@@ -296,9 +308,10 @@ message BoundaryConditionDeclStmt {
 //
 // @ingroup sir_proto
 message IfStmt {
-  Stmt cond_part = 1; // Condition (needs to be an `ExprStmt`)
-  Stmt then_part = 2; // Then part
-  Stmt else_part = 3; // Else part (can be empty)
+  Stmt cond_part = 1;     // Condition (needs to be an `ExprStmt`)
+  Stmt then_part = 2;     // Then part
+  Stmt else_part = 3;     // Else part (can be empty)
+  SourceLocation loc = 4; // Source location
 }
 
 // @brief Apply the unary operations to an expression
@@ -309,8 +322,9 @@ message IfStmt {
 // @endcode
 // @ingroup sir_proto
 message UnaryOperator {
-  string op = 1;    // Operation (e.g "+" or "-")
-  Expr operand = 2; // Expression to apply the operation
+  string op = 1;          // Operation (e.g "+" or "-")
+  Expr operand = 2;       // Expression to apply the operation
+  SourceLocation loc = 3; // Source location
 }
 
 // @brief Apply a binary operation to `left` and `right`
@@ -321,9 +335,10 @@ message UnaryOperator {
 // @endcode
 // @ingroup sir_proto
 message BinaryOperator {
-  Expr left = 1;  // Left-hand side
-  string op = 2;  // Operation (e.g "+" or "-")
-  Expr right = 3; // Right-hand side
+  Expr left = 1;          // Left-hand side
+  string op = 2;          // Operation (e.g "+" or "-")
+  Expr right = 3;         // Right-hand side
+  SourceLocation loc = 4; // Source location
 }
 
 // @brief Assignment operator
@@ -334,8 +349,9 @@ message BinaryOperator {
 // @endcode
 // @ingroup sir_proto
 message AssignmentExpr {
-  Expr left = 1;  // Left-hand side
-  Expr right = 2; // Right-hand side
+  Expr left = 1;          // Left-hand side
+  Expr right = 2;         // Right-hand side
+  SourceLocation loc = 3; // Source location
 }
 
 // @brief Apply a ternary operation
@@ -346,9 +362,10 @@ message AssignmentExpr {
 // @endcode
 // @ingroup sir_proto
 message TernaryOperator {
-  Expr cond = 1;  // Condition
-  Expr left = 2;  // Left-hand side
-  Expr right = 3; // Right-hand side
+  Expr cond = 1;          // Condition
+  Expr left = 2;          // Left-hand side
+  Expr right = 3;         // Right-hand side
+  SourceLocation loc = 4; // Source location
 }
 
 // @brief Function call expression
@@ -361,6 +378,7 @@ message TernaryOperator {
 message FunCallExpr {
   string callee = 1;           // Identifier of the function (i.e callee)
   repeated Expr arguments = 2; // List of arguments
+  SourceLocation loc = 3;      // Source location
 }
 
 // @brief Stencil function call expression
@@ -373,6 +391,7 @@ message FunCallExpr {
 message StencilFunCallExpr {
   string callee = 1;           // Identifier of the stencil function (i.e callee)
   repeated Expr arguments = 2; // List of arguments
+  SourceLocation loc = 3;      // Source location
 }
 
 // @brief Stencil function argument
@@ -385,11 +404,11 @@ message StencilFunCallExpr {
 message StencilFunArgExpr {
   // Dimension of the argument
   Dimension dimension = 1;
-  
-  // Offset to the dimension
-  int32 offset = 2;         
 
-  // Index of the argument of the stencil function in the outer scope. If unused, the value *has* to 
+  // Offset to the dimension
+  int32 offset = 2;
+
+  // Index of the argument of the stencil function in the outer scope. If unused, the value *has* to
   // be set to -1.
   //
   // @b Example:
@@ -410,15 +429,19 @@ message StencilFunArgExpr {
   //                         // the index 1 as we use a 0 based indexing.
   // @endcode
   int32 argument_index = 3;
+
+  // Source location
+  SourceLocation loc = 4;
 }
 
 // @brief Access to a variable
 //
 // @ingroup sir_proto
 message VarAccessExpr {
-  string name = 1;      // Name of the variable
-  Expr index = 2;       // Is it an array access (i.e var[2])?
-  bool is_external = 3; // Is this an access to a external variable (e.g a global)?
+  string name = 1;        // Name of the variable
+  Expr index = 2;         // Is it an array access (i.e var[2])?
+  bool is_external = 3;   // Is this an access to a external variable (e.g a global)?
+  SourceLocation loc = 4; // Source location
 }
 
 // @brief Access to a field
@@ -428,11 +451,11 @@ message FieldAccessExpr {
   // Name of the field
   string name = 1;
 
-  // Static offsets 
+  // Static offsets
   //
-  // This represent the offset which are know before instantiationg the stencil function. Meaning, 
-  // if we have directional or offset arguments, we have to perform a lazy evaluation to compute 
-  // the real offset once we know the mapping of the directions (and offsets) to the actual 
+  // This represent the offset which are know before instantiationg the stencil function. Meaning,
+  // if we have directional or offset arguments, we have to perform a lazy evaluation to compute
+  // the real offset once we know the mapping of the directions (and offsets) to the actual
   // arguments of the stencil function.
   repeated int32 offset = 2;
 
@@ -442,7 +465,7 @@ message FieldAccessExpr {
   // indicating this argument is unused. The `argumentOffset` holds the parsed offsets of the
   // direction (or offset).
   //
-  // @b Example:  
+  // @b Example:
   // Consider the following example which implements an average stencil function :
   //
   // @code{.cpp}
@@ -453,27 +476,31 @@ message FieldAccessExpr {
   //
   // The `in(dir+2)` FieldAccessExpr would have the following members:
   //
-  // @code{.cpp}  
+  // @code{.cpp}
   //  - name           : "in"
   //  - offset         : {0, 0, 0}     // We don't have any i,j or k accesses
   //  - argumentMap    : {1, -1, -1}   // `dir` maps to the 1st argument of `avg` (0 based)
   //  - argumentOffset : {2, 0, 0}     // `dir+2` has an offset `+2`
   // @endcode
   repeated int32 argument_map = 3;
-  
+
   // @see argument_map
   repeated int32 argument_offset = 4;
 
   // Negate the offset (this allows writing `in(-off)`)
   bool negate_offset = 5;
+
+  // Source location
+  SourceLocation loc = 6;
 }
 
 // @brief Access of a literal
 //
 // @ingroup sir_proto
 message LiteralAccessExpr {
-  string value = 1;     // Value of the literal (e.g "1.24324")
-  BuiltinType type = 2; // Type of the literal
+  string value = 1;       // Value of the literal (e.g "1.24324")
+  BuiltinType type = 2;   // Type of the literal
+  SourceLocation loc = 3; // Source location
 }
 
 // @brief Abstract syntax tree of the SIR
