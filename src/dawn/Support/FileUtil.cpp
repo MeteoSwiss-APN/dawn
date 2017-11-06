@@ -23,4 +23,8 @@ StringRef getFilenameWithoutExtension(StringRef path) {
   return filename.substr(0, filename.find_last_of("."));
 }
 
+StringRef getExtension(StringRef filename) {
+  return filename.substr(filename.find_last_of(".") - 1);
+}
+
 } // namespace dawn

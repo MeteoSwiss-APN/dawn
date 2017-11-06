@@ -26,6 +26,10 @@ namespace dawn {
 /// @ingroup support
 extern StringRef getFilename(StringRef path);
 
+/// @brief Extract the extension from `filename`
+/// @ingroup support
+extern StringRef getExtension(StringRef filename);
+
 /// @brief Extract the filename without extension from `path`
 /// @ingroup support
 extern StringRef getFilenameWithoutExtension(StringRef path);

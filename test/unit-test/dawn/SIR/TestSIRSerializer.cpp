@@ -14,14 +14,18 @@
 
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/SIRSerializer.h"
-#include "gtest/gtest.h"
+#include "dawn/Unittest/PrintAllExpressionTypes.h"
+#include <gtest/gtest.h>
 
 using namespace dawn;
 
 namespace {
 
 TEST(SIRSerializer, Serialize) {
-
+  SIR sir;
+  sir.Filename = "test";
+  
+  std::cout << SIRSerializer::serializeToString(&sir) << std::endl;
 }
 
 TEST(SIRSerializer, Deserialize) {
