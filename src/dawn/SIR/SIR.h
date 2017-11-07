@@ -149,10 +149,7 @@ struct StencilFunctionArg {
   ArgumentKind Kind;  ///< Type of argument
   SourceLocation Loc; ///< Source location
 
-  ///@brief comparison of Name and Kind (omitting location)
   bool operator==(const StencilFunctionArg& rhs) const;
-
-  ///@brief comparison of Name and Kind (omitting location) with output if the comparison fails
   CompareResult comparison(const sir::StencilFunctionArg& rhs) const;
 };
 
@@ -165,9 +162,7 @@ struct Field : public StencilFunctionArg {
   bool IsTemporary;
 
   static bool classof(const StencilFunctionArg* arg) { return arg->Kind == AK_Field; }
-  bool operator==(const Field& rhs) const {
-    return comparison(rhs);
-  }
+  bool operator==(const Field& rhs) const { return comparison(rhs); }
 
   CompareResult comparison(const Field& rhs) const;
 };
@@ -214,13 +209,7 @@ struct StencilFunction {
   /// specialized for this interval
   std::shared_ptr<AST> getASTOfInterval(const Interval& interval) const;
 
-  /// @brief Comparison of Stencil functions for Equality in content
-  /// including the name, excluding the location
   bool operator==(const sir::StencilFunction& rhs) const;
-
-  /// @brief Comparison of Stencil functions for Equality in content
-  /// including the name, excluding the location
-  /// if the comparison fails, outputs human readable reason why in the string
   CompareResult comparison(const StencilFunction& rhs) const;
 };
 
@@ -288,11 +277,7 @@ struct Stencil : public dawn::NonCopyable {
   std::vector<std::shared_ptr<Field>> Fields; ///< Fields referenced by this stencil
   Attr Attributes;                            ///< Attributes of the stencil
 
-  /// @brief Comparison between stencils (omitting location)
   bool operator==(const Stencil& rhs) const;
-
-  /// @brief Comparison between stencils (omitting location)
-  /// if the comparison fails, outputs human readable reason why in the string
   CompareResult comparison(const Stencil& rhs) const;
 };
 
@@ -358,11 +343,7 @@ struct Value : NonCopyable {
     static const TypeKind Type = None;
   };
 
-  /// @brief Comparison between two Values
   bool operator==(const Value& rhs) const;
-
-  /// @brief Comparison between two Values
-  /// if the comparison fails, outputs human readable reason why in the string
   CompareResult comparison(const sir::Value& rhs) const;
 
 private:
@@ -424,30 +405,24 @@ using GlobalVariableMap = std::unordered_map<std::string, std::shared_ptr<sir::V
 struct SIR : public dawn::NonCopyable {
 
   /// @brief Default Ctor that initializes all the shared pointers
-  /// this ensures that no errors occur when handeling the in memory generated SIRs
   SIR();
 
   /// @brief Dump the SIR to stdout
   void dump();
 
-  /// @brief Dump SIR to the given stream
-  friend std::ostream& operator<<(std::ostream& os, const SIR& Sir);
-
   /// @brief Compares two SIRs for equality in contents
-  /// It is to note that the filenames are not compared here
-  /// and positions of expressions are omitted
+  ///
+  /// The `Filename` as well as the SourceLocations are not taken into account.
   bool operator==(const SIR& rhs) const;
+  bool operator!=(const SIR& rhs) const;
 
   /// @brief Compares two SIRs for equality in contents
-  /// It is to note that the filenames are not compared here
-  /// and positions of expressions are omitted
-  /// returns a mismatch string if the bool is false
+  ///
+  /// The `Filename` as well as the SourceLocations and Attributes are not taken into account.
   sir::CompareResult comparison(const SIR& rhs) const;
 
-  /// @brief Compares two SIRs for inequality in contents
-  /// It is to note that the filenames are not compared here
-  /// if the comparison fails, outputs human readable reason why in the string
-  bool operator!=(const SIR& rhs) const;
+  /// @brief Dump SIR to the given stream
+  friend std::ostream& operator<<(std::ostream& os, const SIR& Sir);
 
   std::string Filename;                                ///< Name of the file the SIR was parsed from
   std::vector<std::shared_ptr<sir::Stencil>> Stencils; ///< List of stencils

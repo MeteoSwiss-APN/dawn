@@ -534,7 +534,6 @@ __all__ = [
     'makeField',
     'Interval',
     'makeInterval',
-    'Attributes',
     'BuiltinType',
     'SourceLocation',
     'Type',

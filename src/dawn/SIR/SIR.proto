@@ -29,19 +29,6 @@ message SourceLocation {
   int32 Column = 2; // Column in the `Line`
 }
 
-// @brief Stencil attributes
-//
-// Stencil attributes can be used to adjust optimization and code generation for individual stencil
-// and stencil_functions.
-// @ingroup sir_proto
-message Attributes {
-  bool no_codegen = 1;        // Don't generate code for this stencil
-  bool merge_stages = 2;      // Merge the Stages of this stencil
-  bool merge_do_methods = 3;  // Merge the Do-Methods of this stencil
-  bool merge_temporaries = 4; // Merge the temporaries of this stencil
-  bool use_k_caches = 5;      // Use K-Caches
-}
-
 // @brief Description of a field argument of a Stencil or StencilFunction
 // @ingroup sir_proto
 message Field {
@@ -533,9 +520,6 @@ message Stencil {
 
   // Fields referenced by this stencil
   repeated Field fields = 2;
-
-  // Attributes of the stencil
-  Attributes attributes = 5;
 }
 
 /*===------------------------------------------------------------------------------------------===*\
@@ -566,9 +550,6 @@ message StencilFunction {
 
   // Fields referenced by this stencil
   repeated StencilFunctionArg arguments = 3;
-
-  // Attributes of the stencil function
-  Attributes attributes = 6;
 }
 
 /*===------------------------------------------------------------------------------------------===*\

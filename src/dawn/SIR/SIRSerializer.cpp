@@ -39,14 +39,6 @@ static void setBuiltinType(sir::proto::BuiltinType* builtinTypeProto,
   builtinTypeProto->set_type_id(static_cast<sir::proto::BuiltinType_TypeID>(builtinType));
 }
 
-static void setAttributes(sir::proto::Attributes* attributesProto, const sir::Attr& attribute) {
-  attributesProto->set_no_codegen(attribute.has(sir::Attr::AK_NoCodeGen));
-  attributesProto->set_merge_stages(attribute.has(sir::Attr::AK_MergeStages));
-  attributesProto->set_merge_do_methods(attribute.has(sir::Attr::AK_MergeDoMethods));
-  attributesProto->set_merge_temporaries(attribute.has(sir::Attr::AK_MergeTemporaries));
-  attributesProto->set_use_k_caches(attribute.has(sir::Attr::AK_UseKCaches));
-}
-
 static void setInterval(sir::proto::Interval* intervalProto, const sir::Interval* interval) {
   if(interval->LowerLevel == sir::Interval::Start)
     intervalProto->set_special_lower_level(sir::proto::Interval::Start);
@@ -407,9 +399,6 @@ static std::string serializeImpl(const SIR* sir) {
       auto fieldProto = stencilProto->add_fields();
       setField(fieldProto, field.get());
     }
-
-    // Stencil.Attributes
-    setAttributes(stencilProto->mutable_attributes(), stencil->Attributes);
   }
   
   // SIR.StencilFunctions
@@ -448,9 +437,6 @@ static std::string serializeImpl(const SIR* sir) {
       auto astProto = stencilFunctionProto->add_asts();
       setAST(astProto, ast.get());
     }
-  
-    // StencilFunction.Attributes
-    setAttributes(stencilFunctionProto->mutable_attributes(), stencilFunction->Attributes);
   }
   
   // SIR.GlobalVariableMap  
