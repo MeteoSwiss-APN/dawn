@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer//Extents.h"
+#include "dawn/Optimizer/Extents.h"
 #include <gtest/gtest.h>
 
 using namespace dawn;
