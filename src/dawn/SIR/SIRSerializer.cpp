@@ -27,6 +27,10 @@ namespace dawn {
 
 namespace {
 
+//===------------------------------------------------------------------------------------------===//
+//     Serialization
+//===------------------------------------------------------------------------------------------===//
+
 static void setAST(sir::proto::AST* astProto, const AST* ast);
 
 static void setLocation(sir::proto::SourceLocation* locProto, const SourceLocation& loc) {
@@ -479,6 +483,26 @@ static std::string serializeImpl(const SIR* sir) {
   return str;
 }
 
+} // anonymous namespace
+
+void SIRSerializer::serialize(const std::string& file, const SIR* sir) {
+  std::ofstream ofs(file);
+  if(!ofs.is_open())
+    throw std::runtime_error(
+        dawn::format("cannot serialize SIR: failed to open file \"%s\"", file));
+
+  auto str = serializeImpl(sir);
+  std::copy(str.begin(), str.end(), std::ostreambuf_iterator<char>(ofs));
+}
+
+std::string SIRSerializer::serializeToString(const SIR* sir) { return serializeImpl(sir); }
+
+//===------------------------------------------------------------------------------------------===//
+//     Deserialization
+//===------------------------------------------------------------------------------------------===//
+
+namespace {
+
 static std::shared_ptr<SIR> deserializeImpl(const std::string& str) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
@@ -493,7 +517,7 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str) {
   return sir;
 }
 
-} // namespace internal
+} // anonymous namespace
 
 std::shared_ptr<SIR> SIRSerializer::deserialize(const std::string& file) {
   std::ifstream ifs(file);
@@ -508,17 +532,5 @@ std::shared_ptr<SIR> SIRSerializer::deserialize(const std::string& file) {
 std::shared_ptr<SIR> SIRSerializer::deserializeFromString(const std::string& str) {
   return deserializeImpl(str);
 }
-
-void SIRSerializer::serialize(const std::string& file, const SIR* sir) {
-  std::ofstream ofs(file);
-  if(!ofs.is_open())
-    throw std::runtime_error(
-        dawn::format("cannot serialize SIR: failed to open file \"%s\"", file));
-
-  auto str = serializeImpl(sir);
-  std::copy(str.begin(), str.end(), std::ostreambuf_iterator<char>(ofs));
-}
-
-std::string SIRSerializer::serializeToString(const SIR* sir) { return serializeImpl(sir); }
 
 } // namespace dawn
