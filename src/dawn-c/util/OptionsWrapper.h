@@ -229,6 +229,7 @@ private:
 };
 
 /// @brief Convert `dawnOptions_t` to `OptionsWrapper`
+/// @ingroup dawn_c_util
 /// @{
 inline const OptionsWrapper* toConstOptionsWrapper(const dawnOptions_t* options) {
   if(!options->Impl)
