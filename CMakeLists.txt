@@ -53,6 +53,7 @@ include(DawnGetPlatformInfo)
 include(DawnMakeStringPair)
 include(DawnReportResult)
 include(DawnSetCXXStandard)
+include(DawnAddCustomDummyTarget)
 
 dawn_get_compiler_info()
 dawn_get_platform_info()
