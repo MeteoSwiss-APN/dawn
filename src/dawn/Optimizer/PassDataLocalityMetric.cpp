@@ -220,21 +220,6 @@ public:
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override { processReadAccess(expr); }
 };
 
-/// @brief Approximate the reads and writes accoding to our data locality metric
-DAWN_ATTRIBUTE_UNUSED static std::pair<int, int>
-computeReadWriteAccessesMetric(StencilInstantiation* instantiation, const MultiStage& multiStage,
-                               const HardwareConfig& config) {
-  ReadWriteCounter readWriteCounter(instantiation, multiStage, config);
-
-  for(const auto& stage : multiStage.getStages())
-    for(const auto& DoMethod : stage->getDoMethods())
-      for(const auto& statementAccessesPair : DoMethod->getStatementAccessesPairs()) {
-        statementAccessesPair->getStatement()->ASTStmt->accept(readWriteCounter);
-      }
-
-  return std::make_pair(readWriteCounter.getNumReads(), readWriteCounter.getNumWrites());
-}
-
 /// @brief Approximate an upperbound of the required reads and writes.
 ///
 /// Every non-cached input field yiels has at most 1 main-memory access, input-output at most 2, and
@@ -285,6 +270,21 @@ computeReadWriteAccessesLowerBound(StencilInstantiation* instantiation,
 }
 
 } // anonymous namespace
+
+/// @brief Approximate the reads and writes accoding to our data locality metric
+std::pair<int, int> computeReadWriteAccessesMetric(StencilInstantiation* instantiation,
+                                                   const MultiStage& multiStage,
+                                                   const HardwareConfig& config) {
+  ReadWriteCounter readWriteCounter(instantiation, multiStage, config);
+
+  for(const auto& stage : multiStage.getStages())
+    for(const auto& DoMethod : stage->getDoMethods())
+      for(const auto& statementAccessesPair : DoMethod->getStatementAccessesPairs()) {
+        statementAccessesPair->getStatement()->ASTStmt->accept(readWriteCounter);
+      }
+
+  return std::make_pair(readWriteCounter.getNumReads(), readWriteCounter.getNumWrites());
+}
 
 PassDataLocalityMetric::PassDataLocalityMetric() : Pass("PassDataLocalityMetric") {}
 

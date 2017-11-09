@@ -12,39 +12,25 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_PASSDATALOCALITYMETRIC_H
-#define DAWN_OPTIMIZER_PASSDATALOCALITYMETRIC_H
+#ifndef DAWN_OPTIMIZER_PASSNONTEMPCACHES_H
+#define DAWN_OPTIMIZER_PASSNONTEMPCACHES_H
 
 #include "dawn/Optimizer/Pass.h"
-#include "dawn/Optimizer/MultiStage.h"
 
 namespace dawn {
 
-struct HardwareConfig {
-  /// Maximum number of fields concurrently in shared memory
-  int SMemMaxFields = 8;
-
-  /// Maximum number of fields concurrently in the texture cache
-  int TexCacheMaxFields = 3;
-};
-
-/// @brief This Pass computes a heuristic measuring the data-locality of each stencil
+/// @brief This Pass prints the dependency graph of each stencil to a dot file
+///
+/// This Pass depends on `PassStageSplitter` (which sets the dependency graphs).
 ///
 /// @ingroup optimizer
-class PassDataLocalityMetric : public Pass {
+class PassSetNonTempCaches : public Pass {
 public:
-  PassDataLocalityMetric();
+  PassSetNonTempCaches();
 
   /// @brief Pass implementation
   bool run(StencilInstantiation* stencilInstantiation) override;
-
-private:
-  HardwareConfig config_;
 };
-
-std::pair<int, int> computeReadWriteAccessesMetric(StencilInstantiation* instantiation,
-                                                   const MultiStage& multiStage,
-                                                   const HardwareConfig& config);
 
 } // namespace dawn
 

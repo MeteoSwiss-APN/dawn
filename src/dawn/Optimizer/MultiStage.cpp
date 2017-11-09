@@ -16,6 +16,7 @@
 #include "dawn/Optimizer/Accesses.h"
 #include "dawn/Optimizer/DependencyGraphAccesses.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
+#include "dawn/Optimizer/Renaming.h"
 #include "dawn/Optimizer/Stage.h"
 #include "dawn/Optimizer/StencilInstantiation.h"
 #include "dawn/Support/STLExtras.h"
@@ -146,6 +147,25 @@ std::unordered_map<int, Field> MultiStage::getFields() const {
   }
 
   return fields;
+}
+
+void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
+  for(auto stageIt = getStages().begin(); stageIt != getStages().end(); ++stageIt) {
+    Stage& stage = (**stageIt);
+    for(auto& doMethodPtr : stage.getDoMethods()) {
+      DoMethod& doMethod = *doMethodPtr;
+      std::cout << "we are renaming from "
+                << stencilInstantiation_->getNameFromAccessID(oldAccessID) << " to  "
+                << stencilInstantiation_->getNameFromAccessID(newAccessID) << " in Stage "
+                << stage.getStageID() << std::endl;
+      renameAccessIDInStmts(stencilInstantiation_, oldAccessID, newAccessID,
+                            doMethod.getStatementAccessesPairs());
+      renameAccessIDInAccesses(stencilInstantiation_, oldAccessID, newAccessID,
+                               doMethod.getStatementAccessesPairs());
+    }
+
+    stage.update();
+  }
 }
 
 } // namespace dawn

@@ -91,5 +91,7 @@ OPT(bool, ReportPassStageMerger, false, "report-pass-stage-merger", "",
     "Dump the stencil-instantiation before and after the stage merger pass to JSON", "", false, true)
 OPT(bool, ReportPassSetCaches, false, "report-pass-set-caches", "", 
     "Report which fields are cached for each multi-stage", "", false, true)
+OPT(bool, UseNonTempCaches, true, "cache-non-temp-fields", "",
+    "Allows for caching of non-temporary fields", "", false, true)
 
 // clang-format on

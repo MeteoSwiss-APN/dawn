@@ -39,6 +39,7 @@
 #include "dawn/Optimizer/PassTemporaryFirstAccess.h"
 #include "dawn/Optimizer/PassTemporaryMerger.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
+#include "dawn/Optimizer/PassSetNonTempCaches.h"
 
 namespace dawn {
 
@@ -162,6 +163,7 @@ std::unique_ptr<TranslationUnit> DawnCompiler::compile(const SIR* SIR, CodeGenKi
   passManager.pushBackPass<PassStencilSplitter>();
   passManager.pushBackPass<PassTemporaryType>();
   passManager.pushBackPass<PassTemporaryMerger>();
+  passManager.pushBackPass<PassSetNonTempCaches>();
   passManager.pushBackPass<PassSetCaches>();
   passManager.pushBackPass<PassDataLocalityMetric>();
 
