@@ -30,15 +30,14 @@ include(CMakeParseArguments)
 function(dawn_add_custom_dummy_target)
   # Parse arguments
   set(options)
-  set(one_value_args GTCLANG NAME)
-  set(multi_value_args DIRECTORIES GRIDTOOLS_FLAGS)
+  set(one_value_args NAME)
+  set(multi_value_args DIRECTORIES)
   cmake_parse_arguments(ARG "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
   set(all_files "")
   foreach(dir ${ARG_DIRECTORIES})
 
-    file(GLOB test_sources "${dir}/*.cpp" )
-    file(GLOB test_headers "${dir}/*.hpp" )
+    file(GLOB test_sources "${dir}/*.cpp" "${dir}/*.hpp" "${dir}/*.h")
 
     list(APPEND all_files ${test_sources} ${test_headers})
   endforeach(dir)
