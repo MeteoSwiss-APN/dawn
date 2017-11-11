@@ -180,8 +180,8 @@ OptionsParser::OptionsParser(Options* options) : options_(options) {
     if(!shortStr.empty()) {                                                                        \
       auto it = optionsAliasMap_.find(OPTION_SHORT);                                               \
       if(it == optionsAliasMap_.end())                                                             \
-        it = optionsAliasMap_.insert(OptionsAliasMap::value_type(shortStr,                         \
-                                                                 std::vector<llvm::StringRef>{}))  \
+        it = optionsAliasMap_                                                                      \
+                 .insert(OptionsAliasMap::value_type(shortStr, std::vector<llvm::StringRef>{}))    \
                  .first;                                                                           \
       it->second.push_back(llvm::StringRef(ret.first->first));                                     \
     }                                                                                              \

@@ -31,9 +31,7 @@ struct StaticDiagInfoRec {
 } // anonymous namespace
 
 static StaticDiagInfoRec StaticDiagInfo[]{
-#define DIAG(ENUM, LEVEL, DESC)                                                                    \
-  { unsigned(-1), LEVEL, DESC }                                                                    \
-  ,
+#define DIAG(ENUM, LEVEL, DESC) {unsigned(-1), LEVEL, DESC},
 #include "gtclang/Frontend/DiagnosticsKind.inc"
 #undef DIAG
 };

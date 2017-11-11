@@ -115,11 +115,10 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
   variableMap_->clear();
   configFile_->clear();
 
-  DAWN_LOG(INFO) << "Parsing globals at "
-                 << getFilename(
-                        recordDecl->getLocation().printToString(context_->getSourceManager()))
-                        .str()
-                 << " ...";
+  DAWN_LOG(INFO)
+      << "Parsing globals at "
+      << getFilename(recordDecl->getLocation().printToString(context_->getSourceManager())).str()
+      << " ...";
 
   recordDecl_ = recordDecl;
 
