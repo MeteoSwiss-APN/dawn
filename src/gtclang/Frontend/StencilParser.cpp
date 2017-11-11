@@ -671,10 +671,10 @@ void StencilParser::parseStencilFunctionDoMethod(clang::CXXMethodDecl* DoMethod)
   using namespace clang;
   using namespace llvm;
 
-  DAWN_LOG(INFO)
-      << "Parsing stencil-function Do-Method at "
-      << getFilename(DoMethod->getLocation().printToString(context_->getSourceManager())).str()
-      << " ...";
+  DAWN_LOG(INFO) << "Parsing stencil-function Do-Method at "
+                 << getFilename(DoMethod->getLocation().printToString(context_->getSourceManager()))
+                        .str()
+                 << " ...";
 
   std::shared_ptr<dawn::sir::Interval> intervals = nullptr;
   if(DoMethod->getNumParams() > 0) {
@@ -731,10 +731,10 @@ void StencilParser::parseStencilDoMethod(clang::CXXMethodDecl* DoMethod) {
   using namespace clang;
   using namespace llvm;
 
-  DAWN_LOG(INFO)
-      << "Parsing Do-Method at "
-      << getFilename(DoMethod->getLocation().printToString(context_->getSourceManager())).str()
-      << " ...";
+  DAWN_LOG(INFO) << "Parsing Do-Method at "
+                 << getFilename(DoMethod->getLocation().printToString(context_->getSourceManager()))
+                        .str()
+                 << " ...";
 
   if(DoMethod->hasBody()) {
     if(CompoundStmt* bodyStmt = dyn_cast<CompoundStmt>(DoMethod->getBody())) {
@@ -794,10 +794,11 @@ std::shared_ptr<dawn::StencilCallDeclStmt>
 StencilParser::parseStencilCall(clang::CXXConstructExpr* stencilCall) {
   std::string callee = stencilCall->getConstructor()->getNameAsString();
 
-  DAWN_LOG(INFO)
-      << "Parsing stencil-call at "
-      << getFilename(stencilCall->getLocation().printToString(context_->getSourceManager())).str()
-      << " ...";
+  DAWN_LOG(INFO) << "Parsing stencil-call at "
+                 << getFilename(
+                        stencilCall->getLocation().printToString(context_->getSourceManager()))
+                        .str()
+                 << " ...";
 
   // Check if stencil exists
   auto stencilIt = std::find_if(
