@@ -1,15 +1,15 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                         _       _                   
-//                        | |     | |                  
-//                    __ _| |_ ___| | __ _ _ __   __ _ 
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
 //                   / _` | __/ __| |/ _` | '_ \ / _` |
 //                  | (_| | || (__| | (_| | | | | (_| |
 //                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 //                    __/ |                       __/ |
-//                   |___/                       |___/ 
+//                   |___/                       |___/
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -27,10 +27,10 @@ stencil Test {
 
   Do {
     vertical_region(k_end, k_end)
-      tmp = in;
+        tmp = in;
 
-    vertical_region(k_end-1, k_start)
-      out = tmp(k+1);
+    vertical_region(k_end - 1, k_start)
+        out = tmp(k + 1);
   }
 };
 

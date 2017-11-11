@@ -1,15 +1,15 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                         _       _                   
-//                        | |     | |                  
-//                    __ _| |_ ___| | __ _ _ __   __ _ 
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
 //                   / _` | __/ __| |/ _` | '_ \ / _` |
 //                  | (_| | || (__| | (_| | | | | (_| |
 //                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 //                    __/ |                       __/ |
-//                   |___/                       |___/ 
+//                   |___/                       |___/
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -33,7 +33,7 @@ stencil Test {
 
   Do {
     vertical_region(k_start, k_end)
-      TestFun(out, in); // EXPECTED_ERROR: no matching stencil function for call to 'TestFun'
+        TestFun(out, in); // EXPECTED_ERROR: no matching stencil function for call to 'TestFun'
   }
 };
 

@@ -1,15 +1,15 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                         _       _                   
-//                        | |     | |                  
-//                    __ _| |_ ___| | __ _ _ __   __ _ 
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
 //                   / _` | __/ __| |/ _` | '_ \ / _` |
 //                  | (_| | || (__| | (_| | | | | (_| |
 //                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 //                    __/ |                       __/ |
-//                   |___/                       |___/ 
+//                   |___/                       |___/
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -23,13 +23,13 @@
 using namespace gridtools::clang;
 
 globals {
-  int var_runtime = 1;  // == 1
-  int var_compiletime;  // == 2
+  int var_runtime = 1; // == 1
+  int var_compiletime; // == 2
 };
 
-#define IJK_LOOP()                                                                                 \
-  for(int i = dom.iminus(); i < (dom.isize() - dom.iplus()); ++i)                                  \
-    for(int j = dom.jminus(); j < (dom.jsize() - dom.jplus()); ++j)                                \
+#define IJK_LOOP()                                                  \
+  for(int i = dom.iminus(); i < (dom.isize() - dom.iplus()); ++i)   \
+    for(int j = dom.jminus(); j < (dom.jsize() - dom.jplus()); ++j) \
       for(int k = dom.kminus(); k < (dom.ksize() - dom.kplus()); ++k)
 
 //
@@ -41,7 +41,7 @@ stencil test_01_stencil {
   Do {
     if(var_runtime == 1)
       vertical_region(k_start, k_end)
-        out = in + var_runtime;
+          out = in + var_runtime;
   }
 };
 
@@ -64,7 +64,7 @@ stencil test_02_stencil {
   Do {
     if(var_compiletime == 2)
       vertical_region(k_start, k_end)
-        out = in + var_compiletime;
+          out = in + var_compiletime;
   }
 };
 
@@ -88,7 +88,7 @@ stencil test_03_stencil {
     if(var_runtime == 1)
       if(var_compiletime == 2)
         vertical_region(k_start, k_end)
-          out = in + var_runtime + var_compiletime;
+            out = in + var_runtime + var_compiletime;
   }
 };
 
@@ -114,10 +114,10 @@ stencil test_04_stencil {
     if(var_compiletime == 2)
       if(var_compiletime != 1) {
         vertical_region(k_start, k_end)
-          out = 0.0;
+            out = 0.0;
         if(var_compiletime != 1) {
           vertical_region(k_start, k_end)
-            out += 2 + in;
+              out += 2 + in;
         }
       }
   }
@@ -151,7 +151,7 @@ stencil test_05_stencil {
       double some_var = 5.0;
       if(var_runtime < some_var)
         vertical_region(k_start, k_end)
-          out = 2 * in;
+            out = 2 * in;
     }
   }
 };
@@ -180,7 +180,7 @@ stencil test_06_stencil {
       double some_var = 5.0;
       if(var_compiletime < some_var)
         vertical_region(k_start, k_end)
-          out = 2 * in;
+            out = 2 * in;
     }
   }
 };
@@ -208,12 +208,12 @@ stencil test_07_stencil {
     if(var_compiletime == 2) {
       double some_var = 5.0;
       double some_other_var = var_compiletime;
-  
+
       some_var += 1.0;
-      
+
       if((var_compiletime + some_var + some_other_var) == 10)
         vertical_region(k_start, k_end)
-          out = 2 * in;
+            out = 2 * in;
     }
   }
 };
@@ -245,11 +245,11 @@ stencil test_08_stencil {
   Do {
     if(var_compiletime == 2) {
       vertical_region(k_start, k_end)
-        tmp = 2 * in;
+          tmp = 2 * in;
     }
     if(var_compiletime == 2) {
       vertical_region(k_start, k_end)
-        out = 2 * tmp;
+          out = 2 * tmp;
     }
   }
 };
@@ -273,7 +273,7 @@ stencil test_09_stencil_call {
   Do {
     if(var_compiletime == 2) {
       vertical_region(k_start, k_end)
-        out = 2 * in;
+          out = 2 * in;
     }
   }
 };
@@ -300,25 +300,24 @@ void test_09_stencil_reference(const domain& dom, storage_t& in_s, storage_t& ou
   }
 }
 
-#define TEST(test)                                                                                 \
-  storage_t test##_in(meta_data, #test "_in");                                                     \
-  storage_t test##_out(meta_data, #test "_out");                                                   \
-  storage_t test##_out_ref(meta_data, #test "_out_ref");                                           \
-  verif.for_each([&](int i, int j, int k) { return i + j + k; }, test##_in);                       \
-  verif.fill(-1.0, test##_out, test##_out_ref);                                                    \
-  test##_stencil_reference(dom, test##_in, test##_out_ref);                                        \
-  test##_stencil test(dom, test##_in, test##_out);                                                 \
-  test.run();                                                                                      \
-  if(!verif.verify(test##_out, test##_out_ref)) {                                                  \
-    std::cerr << " >>> " << #test << " FAILED!" << std::endl;                                      \
-    return 1;                                                                                      \
+#define TEST(test)                                                           \
+  storage_t test##_in(meta_data, #test "_in");                               \
+  storage_t test##_out(meta_data, #test "_out");                             \
+  storage_t test##_out_ref(meta_data, #test "_out_ref");                     \
+  verif.for_each([&](int i, int j, int k) { return i + j + k; }, test##_in); \
+  verif.fill(-1.0, test##_out, test##_out_ref);                              \
+  test##_stencil_reference(dom, test##_in, test##_out_ref);                  \
+  test##_stencil test(dom, test##_in, test##_out);                           \
+  test.run();                                                                \
+  if(!verif.verify(test##_out, test##_out_ref)) {                            \
+    std::cerr << " >>> " << #test << " FAILED!" << std::endl;                \
+    return 1;                                                                \
   }
 
 int main() {
   domain dom(64, 64, 80);
   dom.set_halos(halo::value, halo::value, halo::value, halo::value, 0, 0);
   verifier verif(dom);
-
 
   meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize());
   globals::get().var_runtime = 1;
