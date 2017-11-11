@@ -41,7 +41,7 @@ gtclang_add_integrationtest(NAME no-codegen
 )
 
 # Add a dummy target with all the source files so that they are included in a qt creator project
-dawn_add_custom_dummy_target(NAME qt_creator_parse_project
+dawn_add_custom_dummy_target(NAME qt_creator_parse_project_integration_test
                              DIRECTORIES ${directories})
 
 # Codegen tests require GridTools
