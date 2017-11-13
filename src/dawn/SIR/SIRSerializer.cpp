@@ -259,6 +259,7 @@ public:
 
   void visit(const std::shared_ptr<AssignmentExpr>& expr) override {
     auto protoExpr = getCurrentExprProto()->mutable_assignment_expr();
+    protoExpr->set_op(expr->getOp());
 
     currentExprProto_.push(protoExpr->mutable_left());
     expr->getLeft()->accept(*this);
@@ -347,7 +348,7 @@ public:
     auto protoExpr = getCurrentExprProto()->mutable_field_access_expr();
 
     protoExpr->set_name(expr->getName());
-    
+
     for(int offset : expr->getOffset())
       protoExpr->add_offset(offset);
 
@@ -479,7 +480,7 @@ static std::string serializeImpl(const SIR* sir) {
   options.preserve_proto_field_names = true;
   auto status = google::protobuf::util::MessageToJsonString(sirProto, &str, options);
   if(!status.ok())
-    throw std::runtime_error(dawn::format("cannot serialize SIR: %s", status.ToString()));
+    throw std::runtime_error(format("cannot serialize SIR: %s", status.ToString()));
   return str;
 }
 
@@ -488,8 +489,7 @@ static std::string serializeImpl(const SIR* sir) {
 void SIRSerializer::serialize(const std::string& file, const SIR* sir) {
   std::ofstream ofs(file);
   if(!ofs.is_open())
-    throw std::runtime_error(
-        dawn::format("cannot serialize SIR: failed to open file \"%s\"", file));
+    throw std::runtime_error(format("cannot serialize SIR: failed to open file \"%s\"", file));
 
   auto str = serializeImpl(sir);
   std::copy(str.begin(), str.end(), std::ostreambuf_iterator<char>(ofs));
@@ -586,7 +586,6 @@ makeVerticalRegion(const sir::proto::VerticalRegion& verticalRegionProto) {
   return std::make_shared<sir::VerticalRegion>(ast, interval, loopOrder, loc);
 }
 
-
 static std::shared_ptr<sir::StencilCall>
 makeStencilCall(const sir::proto::StencilCall& stencilCallProto) {
   auto stencilCall =
@@ -640,16 +639,16 @@ static std::shared_ptr<Expr> makeExpr(const sir::proto::Expr& expressionProto) {
 
     if(exprProto.has_dimension()) {
       switch(exprProto.dimension().direction()) {
-      case dawn::sir::proto::Dimension_Direction_I:
+      case sir::proto::Dimension_Direction_I:
         direction = 0;
         break;
-      case dawn::sir::proto::Dimension_Direction_J:
+      case sir::proto::Dimension_Direction_J:
         direction = 1;
         break;
-      case dawn::sir::proto::Dimension_Direction_K:
+      case sir::proto::Dimension_Direction_K:
         direction = 2;
         break;
-      case dawn::sir::proto::Dimension_Direction_Invalid:
+      case sir::proto::Dimension_Direction_Invalid:
       default:
         direction = -1;
         break;
@@ -849,16 +848,16 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str) {
       // StencilFunction.Args
       for(const sir::proto::StencilFunctionArg& sirArg : stencilFunctionProto.arguments()) {
         switch(sirArg.Arg_case()) {
-        case dawn::sir::proto::StencilFunctionArg::kFieldValue:
+        case sir::proto::StencilFunctionArg::kFieldValue:
           stencilFunction->Args.emplace_back(makeField(sirArg.field_value()));
           break;
-        case dawn::sir::proto::StencilFunctionArg::kDirectionValue:
+        case sir::proto::StencilFunctionArg::kDirectionValue:
           stencilFunction->Args.emplace_back(makeDirection(sirArg.direction_value()));
           break;
-        case dawn::sir::proto::StencilFunctionArg::kOffsetValue:
+        case sir::proto::StencilFunctionArg::kOffsetValue:
           stencilFunction->Args.emplace_back(makeOffset(sirArg.offset_value()));
           break;
-        case dawn::sir::proto::StencilFunctionArg::ARG_NOT_SET:
+        case sir::proto::StencilFunctionArg::ARG_NOT_SET:
         default:
           dawn_unreachable("argument not set");
         }
@@ -882,19 +881,19 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str) {
       std::shared_ptr<Value> value = nullptr;
 
       switch(sirValue.Value_case()) {
-      case dawn::sir::proto::GlobalVariableValue::kBooleanValue:
+      case sir::proto::GlobalVariableValue::kBooleanValue:
         value = std::make_shared<Value>(static_cast<bool>(sirValue.boolean_value()));
         break;
-      case dawn::sir::proto::GlobalVariableValue::kIntegerValue:
+      case sir::proto::GlobalVariableValue::kIntegerValue:
         value = std::make_shared<Value>(static_cast<int>(sirValue.integer_value()));
         break;
-      case dawn::sir::proto::GlobalVariableValue::kDoubleValue:
+      case sir::proto::GlobalVariableValue::kDoubleValue:
         value = std::make_shared<Value>(static_cast<double>(sirValue.double_value()));
         break;
-      case dawn::sir::proto::GlobalVariableValue::kStringValue:
+      case sir::proto::GlobalVariableValue::kStringValue:
         value = std::make_shared<Value>(static_cast<std::string>(sirValue.string_value()));
         break;
-      case dawn::sir::proto::GlobalVariableValue::VALUE_NOT_SET:
+      case sir::proto::GlobalVariableValue::VALUE_NOT_SET:
       default:
         dawn_unreachable("value not set");
       }
