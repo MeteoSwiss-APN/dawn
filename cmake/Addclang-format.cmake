@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-find_package(clang-format 3.8)
+find_package(clang-format EXACT 3.8)
 
 dawn_export_package(
   NAME clang-format

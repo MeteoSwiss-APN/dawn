@@ -47,7 +47,7 @@ include(FindPackageHandleStandardArgs)
 # Find clang-format
 if(NOT DEFINED CLANG-FORMAT_EXECUTABLE)
   find_program(CLANG-FORMAT_EXECUTABLE 
-    NAMES clang-format_${clang-format_FIND_VERSION}
+    NAMES clang-format-${clang-format_FIND_VERSION}
           clang-format
     DOC "Path to clang-format executable"
   )
@@ -65,8 +65,7 @@ if(CLANG-FORMAT_EXECUTABLE)
     string(REGEX MATCH "^clang-format version ([0-9]+)\\.([0-9]+)\\.([0-9]+)(.*)$" match "${stdout}")
     set(major "${CMAKE_MATCH_1}") 
     set(minor "${CMAKE_MATCH_2}") 
-    set(patch "${CMAKE_MATCH_3}") 
-    set(CLANG-FORMAT_VERSION "${major}.${minor}.${patch}")
+    set(CLANG-FORMAT_VERSION "${major}.${minor}")
   endif()
 endif()
 
