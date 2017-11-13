@@ -101,12 +101,12 @@ protected:
 class UnaryOperator : public Expr {
 protected:
   std::shared_ptr<Expr> operand_;
-  const char* op_;
+  std::string op_;
 
 public:
   /// @name Constructor & Destructor
   /// @{
-  UnaryOperator(const std::shared_ptr<Expr>& operand, const char* op,
+  UnaryOperator(const std::shared_ptr<Expr>& operand, std::string op,
                 SourceLocation loc = SourceLocation());
   UnaryOperator(const UnaryOperator& expr);
   UnaryOperator& operator=(UnaryOperator expr);
@@ -115,7 +115,7 @@ public:
 
   void setOperand(const std::shared_ptr<Expr>& operand) { operand_ = operand; }
   const std::shared_ptr<Expr>& getOperand() const { return operand_; }
-  const char* getOp() const { return op_; }
+  const char* getOp() const { return op_.c_str(); }
 
   virtual std::shared_ptr<Expr> clone() const override;
   virtual bool equals(const Expr* other) const override;
@@ -134,12 +134,12 @@ class BinaryOperator : public Expr {
 protected:
   enum OperandKind { OK_Left = 0, OK_Right };
   std::shared_ptr<Expr> operands_[2];
-  const char* op_;
+  std::string op_;
 
 public:
   /// @name Constructor & Destructor
   /// @{
-  BinaryOperator(const std::shared_ptr<Expr>& left, const char* op,
+  BinaryOperator(const std::shared_ptr<Expr>& left, std::string op,
                  const std::shared_ptr<Expr>& right, SourceLocation loc = SourceLocation());
   BinaryOperator(const BinaryOperator& expr);
   BinaryOperator& operator=(BinaryOperator expr);
@@ -154,7 +154,7 @@ public:
   const std::shared_ptr<Expr>& getRight() const { return operands_[OK_Right]; }
   std::shared_ptr<Expr>& getRight() { return operands_[OK_Right]; }
 
-  const char* getOp() const { return op_; }
+  const char* getOp() const { return op_.c_str(); }
 
   virtual std::shared_ptr<Expr> clone() const override;
   virtual bool equals(const Expr* other) const override;
@@ -174,7 +174,7 @@ public:
   /// @name Constructor & Destructor
   /// @{
   AssignmentExpr(const std::shared_ptr<Expr>& left, const std::shared_ptr<Expr>& right,
-                 const char* op = "=", SourceLocation loc = SourceLocation());
+                 std::string op = "=", SourceLocation loc = SourceLocation());
   AssignmentExpr(const AssignmentExpr& expr);
   AssignmentExpr& operator=(AssignmentExpr expr);
   virtual ~AssignmentExpr();
@@ -298,6 +298,14 @@ class StencilFunArgExpr : public Expr {
 public:
   /// @name Constructor & Destructor
   /// @{
+
+  /// @brief Construct a StencilFunArgExpr
+  ///
+  /// @param direction      Direction, i.e 0 for I, 1 for J and 2 for K) or -1 if no directional
+  ///                       argument is set
+  /// @param offset         Offset to the provided direction or argument
+  /// @param argumentIndex  In nested stencil function call this references the argument of the
+  ///                       outer stencil function
   StencilFunArgExpr(int direction, int offset, int argumentIndex,
                     SourceLocation loc = SourceLocation());
   StencilFunArgExpr(const StencilFunArgExpr& expr);

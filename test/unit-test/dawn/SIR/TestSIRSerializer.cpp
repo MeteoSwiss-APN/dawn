@@ -32,7 +32,8 @@ TEST(SIRSerializer, Serialize) {
   stencil->Fields.emplace_back(std::make_shared<sir::Field>("foo", SourceLocation(10, 15)));
   
   auto stencilBodyAst = std::make_shared<AST>();
-  stencilBodyAst->setRoot(block(binop(lit("5"), "+", var("a")), assign(var("a"), var("b"))));
+  //stencilBodyAst->setRoot(block(binop(lit("5"), "+", var("a")), assign(var("a"), var("b"))));
+  stencilBodyAst->setRoot(block(var("var")));
   
   auto vr = std::make_shared<sir::VerticalRegion>(
       stencilBodyAst, std::make_shared<sir::Interval>(sir::Interval::Start, 12, 1, -3),
@@ -44,7 +45,10 @@ TEST(SIRSerializer, Serialize) {
   stencil->StencilDescAst = stencilDescAst;
   sir.Stencils.emplace_back(stencil);
   
-  std::cout << SIRSerializer::serializeToString(&sir) << std::endl;
+  //std::cout << SIRSerializer::serializeToString(&sir) << std::endl;
+  
+  auto sirNew = SIRSerializer::deserializeFromString(SIRSerializer::serializeToString(&sir));
+  sirNew->dump();
 }
 
 TEST(SIRSerializer, Deserialize) {

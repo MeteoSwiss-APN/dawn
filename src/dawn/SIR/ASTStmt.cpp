@@ -148,7 +148,7 @@ std::shared_ptr<Stmt> VarDeclStmt::clone() const { return std::make_shared<VarDe
 bool VarDeclStmt::equals(const Stmt* other) const {
   const VarDeclStmt* otherPtr = dyn_cast<VarDeclStmt>(other);
   return otherPtr && Stmt::equals(other) && type_ == otherPtr->type_ && name_ == otherPtr->name_ &&
-         dimension_ == otherPtr->dimension_ && std::strcmp(op_, otherPtr->op_) == 0 &&
+         dimension_ == otherPtr->dimension_ && op_ == otherPtr->op_ &&
          initList_.size() == otherPtr->initList_.size() &&
          std::equal(initList_.begin(), initList_.end(), otherPtr->initList_.begin(),
                     [](const std::shared_ptr<Expr>& a, const std::shared_ptr<Expr>& b) {

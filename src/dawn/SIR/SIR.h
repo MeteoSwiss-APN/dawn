@@ -266,9 +266,6 @@ struct StencilCall {
 /// (`StencilCall`) or vertical regions (`VerticalRegion`)
 /// @ingroup sir
 struct Stencil : public dawn::NonCopyable {
-
-  ///@brief Default Ctor that initializes all the shared pointers
-  /// this ensures that no errors occur when handeling the in memory generated SIRs
   Stencil();
 
   std::string Name;                           ///< Name of the stencil

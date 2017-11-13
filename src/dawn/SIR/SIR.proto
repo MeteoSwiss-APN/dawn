@@ -107,7 +107,7 @@ message Interval {
 // @brief Supported builtin types
 // @ingroup sir_proto
 message BuiltinType {
-  enum TypeID { None = 0; Auto = 1; Boolean = 2; Integer = 3; Float = 4; }
+  enum TypeID { Invalid = 0; Auto = 1; Boolean = 2; Integer = 3; Float = 4; }
 
   TypeID type_id = 1; // Type identifier
 }
@@ -117,7 +117,7 @@ message BuiltinType {
 message Dimension {
   enum Direction { I = 0; J = 1; K = 2; Invalid = 3; }
 
-  Direction dimension = 1; // Dimension identifier
+  Direction direction = 1; // Dimension identifier
 }
 
 // @brief Supported builtin types
@@ -337,8 +337,9 @@ message BinaryOperator {
 // @ingroup sir_proto
 message AssignmentExpr {
   Expr left = 1;          // Left-hand side
-  Expr right = 2;         // Right-hand side
-  SourceLocation loc = 3; // Source location
+  string op = 2;          // Operation (e.g "=" or "+=")  
+  Expr right = 3;         // Right-hand side
+  SourceLocation loc = 4; // Source location
 }
 
 // @brief Apply a ternary operation

@@ -97,14 +97,14 @@ public:
 
   void visit(const std::shared_ptr<BlockStmt>& stmt) override {
     auto protoStmt = getCurrentStmtProto()->mutable_block_stmt();
-    
+
     for(const auto& s : stmt->getStatements()) {
       currentStmtProto_.push(protoStmt->add_statements());
       s->accept(*this);
       currentStmtProto_.pop();
     }
-    
-    setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());    
+
+    setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
   }
 
   void visit(const std::shared_ptr<ExprStmt>& stmt) override {
@@ -112,25 +112,26 @@ public:
     currentExprProto_.push(protoStmt->mutable_expr());
     stmt->getExpr()->accept(*this);
     currentExprProto_.pop();
-    
-    setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());        
+
+    setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
   }
 
   void visit(const std::shared_ptr<ReturnStmt>& stmt) override {
     auto protoStmt = getCurrentStmtProto()->mutable_return_stmt();
-    
+
     currentExprProto_.push(protoStmt->mutable_expr());
     stmt->getExpr()->accept(*this);
     currentExprProto_.pop();
-    
-    setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());        
+
+    setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
   }
 
   void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
     auto protoStmt = getCurrentStmtProto()->mutable_var_decl_stmt();
 
     if(stmt->getType().isBuiltinType())
-      setBuiltinType(protoStmt->mutable_type()->mutable_builtin_type(), stmt->getType().getBuiltinTypeID());
+      setBuiltinType(protoStmt->mutable_type()->mutable_builtin_type(),
+                     stmt->getType().getBuiltinTypeID());
     else
       protoStmt->mutable_type()->set_name(stmt->getType().getName());
     protoStmt->mutable_type()->set_is_const(stmt->getType().isConst());
@@ -145,8 +146,8 @@ public:
       expr->accept(*this);
       currentExprProto_.pop();
     }
-    
-    setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());        
+
+    setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
   }
 
   void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) override {
@@ -156,8 +157,7 @@ public:
     sir::proto::VerticalRegion* verticalRegionProto = protoStmt->mutable_vertical_region();
 
     // VerticalRegion.Loc
-    verticalRegionProto->mutable_loc()->set_column(verticalRegion->Loc.Column);
-    verticalRegionProto->mutable_loc()->set_line(verticalRegion->Loc.Line);
+    setLocation(verticalRegionProto->mutable_loc(), verticalRegion->Loc);
 
     // VerticalRegion.Ast
     setAST(verticalRegionProto->mutable_ast(), verticalRegion->Ast.get());
@@ -170,23 +170,22 @@ public:
                                                 sir::VerticalRegion::LK_Backward
                                             ? sir::proto::VerticalRegion::Backward
                                             : sir::proto::VerticalRegion::Forward);
-    
-    setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());        
+
+    setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
   }
-  
-  void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {  
+
+  void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
     auto protoStmt = getCurrentStmtProto()->mutable_stencil_call_decl_stmt();
-  
+
     sir::StencilCall* stencilCall = stmt->getStencilCall().get();
     sir::proto::StencilCall* stencilCallProto = protoStmt->mutable_stencil_call();
-  
+
     // StencilCall.Loc
-    stencilCallProto->mutable_loc()->set_column(stencilCall->Loc.Column);
-    stencilCallProto->mutable_loc()->set_line(stencilCall->Loc.Line);
-  
+    setLocation(stencilCallProto->mutable_loc(), stencilCall->Loc);
+
     // StencilCall.Callee
     stencilCallProto->set_callee(stencilCall->Callee);
-  
+
     // StencilCall.Args
     for(const auto& arg : stencilCall->Args) {
       auto argProto = stencilCallProto->add_arguments();
@@ -195,14 +194,14 @@ public:
       argProto->mutable_loc()->set_column(arg->Loc.Column);
       argProto->mutable_loc()->set_line(arg->Loc.Line);
     }
-    
-    setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());        
+
+    setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
   }
 
-  void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override {    
+  void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override {
     auto protoStmt = getCurrentStmtProto()->mutable_boundary_condition_decl_stmt();
     protoStmt->set_functor(stmt->getFunctor());
-    
+
     for(const auto& field : stmt->getFields()) {
       auto fieldProto = protoStmt->add_fields();
       fieldProto->set_name(field->Name);
@@ -210,13 +209,13 @@ public:
       fieldProto->mutable_loc()->set_column(field->Loc.Column);
       fieldProto->mutable_loc()->set_line(field->Loc.Line);
     }
-    
-    setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());        
+
+    setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
   }
 
   void visit(const std::shared_ptr<IfStmt>& stmt) override {
     auto protoStmt = getCurrentStmtProto()->mutable_if_stmt();
-    
+
     currentStmtProto_.push(protoStmt->mutable_cond_part());
     stmt->getCondStmt()->accept(*this);
     currentStmtProto_.pop();
@@ -228,8 +227,8 @@ public:
     currentStmtProto_.push(protoStmt->mutable_else_part());
     stmt->getElseStmt()->accept(*this);
     currentStmtProto_.pop();
-    
-    setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());        
+
+    setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
   }
 
   void visit(const std::shared_ptr<UnaryOperator>& expr) override {
@@ -239,8 +238,8 @@ public:
     currentExprProto_.push(protoExpr->mutable_operand());
     expr->getOperand()->accept(*this);
     currentExprProto_.pop();
-    
-    setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());        
+
+    setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());
   }
 
   void visit(const std::shared_ptr<BinaryOperator>& expr) override {
@@ -254,8 +253,8 @@ public:
     currentExprProto_.push(protoExpr->mutable_right());
     expr->getRight()->accept(*this);
     currentExprProto_.pop();
-    
-    setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());        
+
+    setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());
   }
 
   void visit(const std::shared_ptr<AssignmentExpr>& expr) override {
@@ -268,8 +267,8 @@ public:
     currentExprProto_.push(protoExpr->mutable_right());
     expr->getRight()->accept(*this);
     currentExprProto_.pop();
-    
-    setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());        
+
+    setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());
   }
 
   void visit(const std::shared_ptr<TernaryOperator>& expr) override {
@@ -286,8 +285,8 @@ public:
     currentExprProto_.push(protoExpr->mutable_right());
     expr->getRight()->accept(*this);
     currentExprProto_.pop();
-    
-    setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());        
+
+    setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());
   }
 
   void visit(const std::shared_ptr<FunCallExpr>& expr) override {
@@ -299,8 +298,8 @@ public:
       arg->accept(*this);
       currentExprProto_.pop();
     }
-    
-    setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());        
+
+    setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());
   }
 
   void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
@@ -312,26 +311,26 @@ public:
       arg->accept(*this);
       currentExprProto_.pop();
     }
-    
-    setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());        
+
+    setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());
   }
 
   void visit(const std::shared_ptr<StencilFunArgExpr>& expr) override {
     auto protoExpr = getCurrentExprProto()->mutable_stencil_fun_arg_expr();
-    
-    protoExpr->mutable_dimension()->set_dimension(
+
+    protoExpr->mutable_dimension()->set_direction(
         expr->getDimension() == -1
             ? sir::proto::Dimension::Invalid
             : static_cast<sir::proto::Dimension_Direction>(expr->getDimension()));
     protoExpr->set_offset(expr->getOffset());
     protoExpr->set_argument_index(expr->getArgumentIndex());
-    
-    setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());        
+
+    setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());
   }
 
   void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
     auto protoExpr = getCurrentExprProto()->mutable_var_access_expr();
-    
+
     protoExpr->set_name(expr->getName());
     protoExpr->set_is_external(expr->isExternal());
 
@@ -340,14 +339,17 @@ public:
       expr->getIndex()->accept(*this);
       currentExprProto_.pop();
     }
-    
-    setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());    
+
+    setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());
   }
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
     auto protoExpr = getCurrentExprProto()->mutable_field_access_expr();
-    
+
     protoExpr->set_name(expr->getName());
+    
+    for(int offset : expr->getOffset())
+      protoExpr->add_offset(offset);
 
     for(int argOffset : expr->getArgumentOffset())
       protoExpr->add_argument_offset(argOffset);
@@ -356,17 +358,17 @@ public:
       protoExpr->add_argument_map(argMap);
 
     protoExpr->set_negate_offset(expr->negateOffset());
-    
-    setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());        
+
+    setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());
   }
 
   void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override {
     auto protoExpr = getCurrentExprProto()->mutable_literal_access_expr();
-    
+
     protoExpr->set_value(expr->getValue());
     setBuiltinType(protoExpr->mutable_type(), expr->getBuiltinType());
-    
-    setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());        
+
+    setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());
   }
 };
 
@@ -392,8 +394,7 @@ static std::string serializeImpl(const SIR* sir) {
     stencilProto->set_name(stencil->Name);
 
     // Stencil.Loc
-    stencilProto->mutable_loc()->set_column(stencil->Loc.Column);
-    stencilProto->mutable_loc()->set_line(stencil->Loc.Line);
+    setLocation(stencilProto->mutable_loc(), stencil->Loc);
 
     // Stencil.StencilDescAst
     setAST(stencilProto->mutable_ast(), stencil->StencilDescAst.get());
@@ -404,18 +405,17 @@ static std::string serializeImpl(const SIR* sir) {
       setField(fieldProto, field.get());
     }
   }
-  
+
   // SIR.StencilFunctions
   for(const auto& stencilFunction : sir->StencilFunctions) {
     auto stencilFunctionProto = sirProto.add_stencil_functions();
-  
+
     // StencilFunction.Name
     stencilFunctionProto->set_name(stencilFunction->Name);
-  
+
     // StencilFunction.Loc
-    stencilFunctionProto->mutable_loc()->set_column(stencilFunction->Loc.Column);
-    stencilFunctionProto->mutable_loc()->set_line(stencilFunction->Loc.Line);
-  
+    setLocation(stencilFunctionProto->mutable_loc(), stencilFunction->Loc);
+
     // StencilFunction.Args
     for(const auto& arg : stencilFunction->Args) {
       auto argProto = stencilFunctionProto->add_arguments();
@@ -429,48 +429,48 @@ static std::string serializeImpl(const SIR* sir) {
         dawn_unreachable("invalid argument");
       }
     }
-  
+
     // StencilFunction.Intervals
     for(const auto& interval : stencilFunction->Intervals) {
       auto intervalProto = stencilFunctionProto->add_intervals();
       setInterval(intervalProto, interval.get());
     }
-  
+
     // StencilFunction.Asts
     for(const auto& ast : stencilFunction->Asts) {
       auto astProto = stencilFunctionProto->add_asts();
       setAST(astProto, ast.get());
     }
   }
-  
-  // SIR.GlobalVariableMap  
+
+  // SIR.GlobalVariableMap
   auto mapProto = sirProto.mutable_global_variables()->mutable_map();
-  for(const auto& nameValuePair : *sir->GlobalVariableMap) { 
+  for(const auto& nameValuePair : *sir->GlobalVariableMap) {
     const std::string& name = nameValuePair.first;
     const sir::Value& value = *nameValuePair.second;
-    
+
     sir::proto::GlobalVariableValue valueProto;
     valueProto.set_is_constexpr(value.isConstexpr());
     switch(value.getType()) {
-      case sir::Value::Boolean:
-        valueProto.set_boolean_value(value.getValue<bool>());
-        break;
-      case sir::Value::Integer:
-        valueProto.set_integer_value(value.getValue<int>());        
-        break;
-      case sir::Value::Double:
-        valueProto.set_double_value(value.getValue<double>());        
-        break;
-      case sir::Value::String:
-        valueProto.set_string_value(value.getValue<std::string>());        
-        break;
-      case sir::Value::None:
-        break;
+    case sir::Value::Boolean:
+      valueProto.set_boolean_value(value.getValue<bool>());
+      break;
+    case sir::Value::Integer:
+      valueProto.set_integer_value(value.getValue<int>());
+      break;
+    case sir::Value::Double:
+      valueProto.set_double_value(value.getValue<double>());
+      break;
+    case sir::Value::String:
+      valueProto.set_string_value(value.getValue<std::string>());
+      break;
+    case sir::Value::None:
+      break;
     }
-    
+
     mapProto->insert({name, valueProto});
   }
-  
+
   // Encode message to a  JSON formatted string
   std::string str;
   google::protobuf::util::JsonPrintOptions options;
@@ -503,8 +503,280 @@ std::string SIRSerializer::serializeToString(const SIR* sir) { return serializeI
 
 namespace {
 
+static std::shared_ptr<AST> makeAST(const sir::proto::AST& astProto);
+
+template <class T>
+static SourceLocation makeLocation(const T& proto) {
+  return proto.has_loc() ? SourceLocation{}
+                         : SourceLocation(proto.loc().line(), proto.loc().column());
+}
+
+static std::shared_ptr<sir::Field> makeField(const sir::proto::Field& fieldProto) {
+  auto field = std::make_shared<sir::Field>(fieldProto.name(), makeLocation(fieldProto));
+  field->IsTemporary = fieldProto.is_temporary();
+  return field;
+}
+
+static BuiltinTypeID makeBuiltinTypeID(const sir::proto::BuiltinType& builtinTypeProto) {
+  switch(builtinTypeProto.type_id()) {
+  case sir::proto::BuiltinType_TypeID_Invalid:
+    return BuiltinTypeID::Invalid;
+  case sir::proto::BuiltinType_TypeID_Auto:
+    return BuiltinTypeID::Auto;
+  case sir::proto::BuiltinType_TypeID_Boolean:
+    return BuiltinTypeID::Boolean;
+  case sir::proto::BuiltinType_TypeID_Integer:
+    return BuiltinTypeID::Integer;
+  case sir::proto::BuiltinType_TypeID_Float:
+    return BuiltinTypeID::Float;
+  default:
+    return BuiltinTypeID::Invalid;
+  }
+  return BuiltinTypeID::Invalid;
+}
+
+static std::shared_ptr<sir::Direction> makeDirection(const sir::proto::Direction& directionProto) {
+  return std::make_shared<sir::Direction>(directionProto.name(), makeLocation(directionProto));
+}
+
+static std::shared_ptr<sir::Offset> makeOffset(const sir::proto::Offset& offsetProto) {
+  return std::make_shared<sir::Offset>(offsetProto.name(), makeLocation(offsetProto));
+}
+
+static std::shared_ptr<sir::Interval> makeInterval(const sir::proto::Interval& intervalProto) {
+  int lowerLevel = -1, upperLevel = -1, lowerOffset = -1, upperOffset = -1;
+
+  if(intervalProto.LowerLevel_case() == sir::proto::Interval::kSpecialLowerLevel)
+    lowerLevel = intervalProto.special_lower_level() ==
+                         sir::proto::Interval_SpecialLevel::Interval_SpecialLevel_Start
+                     ? sir::Interval::Start
+                     : sir::Interval::End;
+  else
+    lowerLevel = intervalProto.lower_level();
+
+  if(intervalProto.UpperLevel_case() == sir::proto::Interval::kSpecialUpperLevel)
+    upperLevel = intervalProto.special_upper_level() ==
+                         sir::proto::Interval_SpecialLevel::Interval_SpecialLevel_Start
+                     ? sir::Interval::Start
+                     : sir::Interval::End;
+  else
+    upperLevel = intervalProto.upper_level();
+
+  lowerOffset = intervalProto.lower_offset();
+  upperOffset = intervalProto.upper_offset();
+  return std::make_shared<sir::Interval>(lowerLevel, upperLevel, lowerOffset, upperOffset);
+}
+
+static std::shared_ptr<sir::VerticalRegion>
+makeVerticalRegion(const sir::proto::VerticalRegion& verticalRegionProto) {
+  // VerticalRegion.Loc
+  auto loc = makeLocation(verticalRegionProto);
+
+  // VerticalRegion.Ast
+  auto ast = makeAST(verticalRegionProto.ast());
+
+  // VerticalRegion.VerticalInterval
+  auto interval = makeInterval(verticalRegionProto.interval());
+
+  // VerticalRegion.LoopOrder
+  auto loopOrder = verticalRegionProto.loop_order() == sir::proto::VerticalRegion::Backward
+                       ? sir::VerticalRegion::LK_Backward
+                       : sir::VerticalRegion::LK_Forward;
+
+  return std::make_shared<sir::VerticalRegion>(ast, interval, loopOrder, loc);
+}
+
+
+static std::shared_ptr<sir::StencilCall>
+makeStencilCall(const sir::proto::StencilCall& stencilCallProto) {
+  auto stencilCall =
+      std::make_shared<sir::StencilCall>(stencilCallProto.callee(), makeLocation(stencilCallProto));
+
+  for(const auto& arg : stencilCallProto.arguments())
+    stencilCall->Args.emplace_back(makeField(arg));
+
+  return stencilCall;
+}
+
+static std::shared_ptr<Expr> makeExpr(const sir::proto::Expr& expressionProto) {
+  switch(expressionProto.expr_case()) {
+  case sir::proto::Expr::kUnaryOperator: {
+    const auto& exprProto = expressionProto.unary_operator();
+    return std::make_shared<UnaryOperator>(makeExpr(exprProto.operand()), exprProto.op(),
+                                           makeLocation(exprProto));
+  }
+  case sir::proto::Expr::kBinaryOperator: {
+    const auto& exprProto = expressionProto.binary_operator();
+    return std::make_shared<BinaryOperator>(makeExpr(exprProto.left()), exprProto.op(),
+                                            makeExpr(exprProto.right()), makeLocation(exprProto));
+  }
+  case sir::proto::Expr::kAssignmentExpr: {
+    const auto& exprProto = expressionProto.assignment_expr();
+    return std::make_shared<AssignmentExpr>(makeExpr(exprProto.left()), makeExpr(exprProto.right()),
+                                            exprProto.op(), makeLocation(exprProto));
+  }
+  case sir::proto::Expr::kTernaryOperator: {
+    const auto& exprProto = expressionProto.ternary_operator();
+    return std::make_shared<TernaryOperator>(makeExpr(exprProto.cond()), makeExpr(exprProto.left()),
+                                             makeExpr(exprProto.right()), makeLocation(exprProto));
+  }
+  case sir::proto::Expr::kFunCallExpr: {
+    const auto& exprProto = expressionProto.fun_call_expr();
+    auto expr = std::make_shared<FunCallExpr>(exprProto.callee(), makeLocation(exprProto));
+    for(const auto& argProto : exprProto.arguments())
+      expr->getArguments().emplace_back(makeExpr(argProto));
+    return expr;
+  }
+  case sir::proto::Expr::kStencilFunCallExpr: {
+    const auto& exprProto = expressionProto.stencil_fun_call_expr();
+    auto expr = std::make_shared<StencilFunCallExpr>(exprProto.callee(), makeLocation(exprProto));
+    for(const auto& argProto : exprProto.arguments())
+      expr->getArguments().emplace_back(makeExpr(argProto));
+    return expr;
+  }
+  case sir::proto::Expr::kStencilFunArgExpr: {
+    const auto& exprProto = expressionProto.stencil_fun_arg_expr();
+    int direction = -1, offset = 0, argumentIndex = -1; // default values
+  
+    if(exprProto.has_dimension()) {
+      switch(exprProto.dimension().direction()) {
+      case dawn::sir::proto::Dimension_Direction_I:
+        direction = 0;
+        break;
+      case dawn::sir::proto::Dimension_Direction_J:
+        direction = 1;
+        break;
+      case dawn::sir::proto::Dimension_Direction_K:
+        direction = 2;
+        break;
+      case dawn::sir::proto::Dimension_Direction_Invalid:
+      default:
+        direction = -1;
+        break;
+      }
+    }
+    offset = exprProto.offset();
+    argumentIndex = exprProto.argument_index();
+    return std::make_shared<StencilFunArgExpr>(direction, offset, argumentIndex,
+                                               makeLocation(exprProto));
+  }
+  case sir::proto::Expr::kVarAccessExpr: {
+    const auto& exprProto = expressionProto.var_access_expr();
+    auto expr = std::make_shared<VarAccessExpr>(
+        exprProto.name(), exprProto.has_index() ? makeExpr(exprProto.index()) : nullptr,
+        makeLocation(exprProto));
+    expr->setIsExternal(exprProto.is_external());
+    return expr;
+  }
+  case sir::proto::Expr::kFieldAccessExpr: {
+    const auto& exprProto = expressionProto.field_access_expr();
+    auto name = exprProto.name();
+        
+    auto throwException = [&exprProto](const char* member) {
+      throw std::runtime_error(
+          format("FieldAccessExpr::%s (loc %s) exceeds 3 dimensions", member, makeLocation(exprProto)));
+    };
+    
+    if(exprProto.argument_offset().size() != 3)
+      throwException("argument_offset");
+    Array3i argumentOffset;
+//    for(int i = 0; i < )
+      
+    
+    //auto expr = std::make_shared<FieldAccessExpr>();
+    //return expr;
+  }
+  case sir::proto::Expr::kLiteralAccessExpr:
+    break;
+  case sir::proto::Expr::EXPR_NOT_SET:
+  default:
+    dawn_unreachable("expr not set");
+  }
+  return nullptr;
+}
+
+static std::shared_ptr<Stmt> makeStmt(const sir::proto::Stmt& statementProto) {
+  switch(statementProto.stmt_case()) {
+  case sir::proto::Stmt::kBlockStmt: {
+    const auto& stmtProto = statementProto.block_stmt();
+    auto stmt = std::make_shared<BlockStmt>(makeLocation(stmtProto));
+
+    for(const auto& s : stmtProto.statements())
+      stmt->push_back(makeStmt(s));
+
+    return stmt;
+  }
+  case sir::proto::Stmt::kExprStmt: {
+    const auto& stmtProto = statementProto.expr_stmt();
+    return std::make_shared<ExprStmt>(makeExpr(stmtProto.expr()), makeLocation(stmtProto));
+  }
+  case sir::proto::Stmt::kReturnStmt: {
+    const auto& stmtProto = statementProto.return_stmt();
+    return std::make_shared<ReturnStmt>(makeExpr(stmtProto.expr()), makeLocation(stmtProto));
+  }
+  case sir::proto::Stmt::kVarDeclStmt: {
+    const auto& stmtProto = statementProto.var_decl_stmt();
+
+    std::vector<std::shared_ptr<Expr>> initList;
+    for(const auto& e : stmtProto.init_list())
+      initList.emplace_back(makeExpr(e));
+
+    const sir::proto::Type& typeProto = stmtProto.type();
+    CVQualifier cvQual = CVQualifier::Invalid;
+    if(typeProto.is_const())
+      cvQual |= CVQualifier::Const;
+    if(typeProto.is_volatile())
+      cvQual |= CVQualifier::Volatile;
+    Type type = typeProto.name().empty() ? Type(makeBuiltinTypeID(typeProto.builtin_type()), cvQual)
+                                         : Type(typeProto.name(), cvQual);
+
+    return std::make_shared<VarDeclStmt>(type, stmtProto.name(), stmtProto.dimension(),
+                                         stmtProto.op().c_str(), initList, makeLocation(stmtProto));
+  }
+  case sir::proto::Stmt::kStencilCallDeclStmt: {
+    const auto& stmtProto = statementProto.stencil_call_decl_stmt();
+    return std::make_shared<StencilCallDeclStmt>(makeStencilCall(stmtProto.stencil_call()),
+                                                 makeLocation(stmtProto));
+  }
+  case sir::proto::Stmt::kVerticalRegionDeclStmt: {
+    const auto& stmtProto = statementProto.vertical_region_decl_stmt();
+    return std::make_shared<VerticalRegionDeclStmt>(makeVerticalRegion(stmtProto.vertical_region()),
+                                                    makeLocation(stmtProto));
+  }
+  case sir::proto::Stmt::kBoundaryConditionDeclStmt: {
+    const auto& stmtProto = statementProto.boundary_condition_decl_stmt();
+    auto stmt =
+        std::make_shared<BoundaryConditionDeclStmt>(stmtProto.functor(), makeLocation(stmtProto));
+    for(const auto& fieldProto : stmtProto.fields())
+      stmt->getFields().emplace_back(makeField(fieldProto));
+    return stmt;
+  }
+  case sir::proto::Stmt::kIfStmt: {
+    const auto& stmtProto = statementProto.if_stmt();
+    return std::make_shared<IfStmt>(
+        makeStmt(stmtProto.cond_part()), makeStmt(stmtProto.then_part()),
+        stmtProto.has_else_part() ? makeStmt(stmtProto.else_part()) : nullptr,
+        makeLocation(stmtProto));
+  }
+  case sir::proto::Stmt::STMT_NOT_SET:
+  default:
+    dawn_unreachable("stmt not set");
+  }
+  return nullptr;
+}
+
+static std::shared_ptr<AST> makeAST(const sir::proto::AST& astProto) {
+  auto ast = std::make_shared<AST>();
+  auto root = dyn_pointer_cast<BlockStmt>(makeStmt(astProto.root()));
+  if(!root)
+    throw std::runtime_error("root statement of AST is not a 'BlockStmt'");
+  ast->setRoot(root);
+  return ast;
+}
+
 static std::shared_ptr<SIR> deserializeImpl(const std::string& str) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
+  using namespace sir;
 
   // Decode JSON formatted string
   sir::proto::SIR sirProto;
@@ -513,7 +785,39 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str) {
     throw std::runtime_error(dawn::format("cannot deserialize SIR: %s", status.ToString()));
 
   // Convert protobuf SIR to SIR
-  auto sir = std::make_shared<SIR>();
+  std::shared_ptr<SIR> sir = std::make_shared<SIR>();
+
+  try {
+    // SIR.Filename
+    sir->Filename = sirProto.filename();
+
+    // SIR.Stencils
+    for(const sir::proto::Stencil& stencilProto : sirProto.stencils()) {
+      std::shared_ptr<Stencil> stencil = std::make_shared<Stencil>();
+
+      // Stencil.Name
+      stencil->Name = stencilProto.name();
+
+      // Stencil.Loc
+      stencil->Loc = makeLocation(stencilProto);
+
+      // Stencil.StencilDescAst
+      stencil->StencilDescAst = makeAST(stencilProto.ast());
+
+      // Stencil.Fields
+      for(const sir::proto::Field& fieldProto : stencilProto.fields())
+        stencil->Fields.emplace_back(makeField(fieldProto));
+
+      sir->Stencils.emplace_back(stencil);
+    }
+    
+    // SIR.StencilFunctions
+    
+    // SIR.GlobalVariableMap
+    
+  } catch(std::runtime_error& error) {
+    throw std::runtime_error(dawn::format("cannot deserialize SIR: %s", error.what()));
+  }
   return sir;
 }
 
