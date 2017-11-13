@@ -47,13 +47,18 @@ public:
     addFlushStages();
   }
 
+  std::vector<accessIDaccessMetric>& getSortedAccesses() { return sortedAccesses_; }
+  std::unordered_map<int, Cache> getIDtocacheMap() { return idToCache_; }
+  std::unordered_map<int, int> getaccessIDtoDataLocality() { return accessIDtoDataLocality_; }
+
 private:
   /// @brief use the data locality metric to rank the fields in a stencil based on how much they
   /// would benefit from caching
   void computeOptimalFields() {
     // Call the improved metric calculator here TODO
     // dataLocality holds <numreads, numwrites>
-    auto dataLocality = computeReadWriteAccessesMetric(instantiation_, *multiStagePrt_, config_);
+    auto dataLocality =
+        computeReadWriteAccessesMetricIndividually(instantiation_, *multiStagePrt_, config_);
 
     for(const auto& stagePtr : multiStagePrt_->getStages()) {
       for(const Field& field : stagePtr->getFields()) {
@@ -71,14 +76,27 @@ private:
         if(instantiation_->isTemporaryField(field.AccessID))
           continue;
 
-        // We cache the potential field and see how the read and write accesses changes:
-        // TODO: cache this field
-        auto newLocality = computeReadWriteAccessesMetric(instantiation_, *multiStagePrt_, config_);
-        int cachedreadwrites = (dataLocality.first + dataLocality.second) - (newLocality.first + newLocality.second);
+        sortedAccesses_.emplace_back(field.AccessID, 1);
+
+        int cachedreadwrites = (*dataLocality.find(field.AccessID)).second.total();
+//        std::cout << std::endl
+//                  << "In the Field (before subtracting): "
+//                  << instantiation_->getNameFromAccessID(field.AccessID) << " we have "
+//                  << dataLocality.find(field.AccessID)->second.numReads
+//                  << " read operations\n and we have "
+//                  << dataLocality.find(field.AccessID)->second.numWrites << " wirte operations"
+//                  << std::endl;
+
+        // We need one more read and one more write due to cache-filling
+        if(checkReadBeforeWrite(field.AccessID))
+          cachedreadwrites -= 2;
+        // We need one more write to flush the cache back to the variable
+        cachedreadwrites--;
 
         accessIDtoDataLocality_.emplace(field.AccessID, cachedreadwrites);
       }
     }
+
     for(auto& performanceMesure : accessIDtoDataLocality_) {
       sortedAccesses_.emplace_back(performanceMesure.first, performanceMesure.second);
       std::sort(sortedAccesses_.begin(), sortedAccesses_.end());
@@ -87,13 +105,10 @@ private:
 
   /// @brief iterate through the multistage and find the first read-statement for evey cached
   /// variable and insert the cache fill before that statement
-  // TODO: Empirical testing if this is the best way?
   void addFillerStages() {
-    for(int i = 0; i < std::min((int)sortedAccesses_.size(), 2) /*config_.SMemMaxFields*/; ++i) {
+    for(int i = 0; i < std::min((int)sortedAccesses_.size(), config_.SMemMaxFields); ++i) {
       if(sortedAccesses_[i].dataLocalityGain > 0) {
         int oldID = sortedAccesses_[i].accessID;
-        std::cout << std::endl
-                  << "we want to cache " << instantiation_->getNameFromAccessID(oldID) << std::endl;
 
         // Create new temporary field and register in the instantiation
         int newID = instantiation_->nextUID();
@@ -105,27 +120,27 @@ private:
 
         oldIDtoNewID.emplace(oldID, newID);
         Cache& cache = multiStagePrt_->setCache(Cache::IJ, Cache::local, newID);
+        idToCache_.emplace(oldID, cache);
       }
-    }
 
-    // Create the cache-filler stage
-    std::vector<int> oldIDs;
-    std::vector<int> newIDs;
-    for(auto& idPair : oldIDtoNewID) {
-      bool hasReadBeforeWrite = checkReadBeforeWrite(idPair.first);
-      if(hasReadBeforeWrite) {
-        oldIDs.push_back(idPair.first);
-        newIDs.push_back(idPair.second);
+      // Create the cache-filler stage
+      std::vector<int> oldIDs;
+      std::vector<int> newIDs;
+      for(auto& idPair : oldIDtoNewID) {
+        bool hasReadBeforeWrite = checkReadBeforeWrite(idPair.first);
+        if(hasReadBeforeWrite) {
+          oldIDs.push_back(idPair.first);
+          newIDs.push_back(idPair.second);
+        }
       }
-    }
-    if(oldIDs.size() > 0) {
-      auto stageBegin = multiStagePrt_->getStages().begin();
+      if(oldIDs.size() > 0) {
+        auto stageBegin = multiStagePrt_->getStages().begin();
 
-      DoMethod& method = (stageBegin)->get()->getSingleDoMethod();
-      std::shared_ptr<Stage> cacheFillStage =
-          createAssignmentStage(method.getInterval(), newIDs, oldIDs);
-      std::cout << "the FILL-stage we add is " << cacheFillStage->getStageID() << std::endl;
-      multiStagePrt_->getStages().insert(stageBegin, std::move(cacheFillStage));
+        DoMethod& method = (stageBegin)->get()->getSingleDoMethod();
+        std::shared_ptr<Stage> cacheFillStage =
+            createAssignmentStage(method.getInterval(), newIDs, oldIDs);
+        multiStagePrt_->getStages().insert(stageBegin, std::move(cacheFillStage));
+      }
     }
   }
 
@@ -144,8 +159,6 @@ private:
 
       std::shared_ptr<Stage> cacheFlushStage =
           createAssignmentStage(method.getInterval(), oldIDs, newIDs);
-
-      std::cout << "the FLUSH-stage we add is " << cacheFlushStage->getStageID() << std::endl;
 
       // Insert the new stage at the found location
       multiStagePrt_->getStages().insert(++stageEnd, std::move(cacheFlushStage));
@@ -228,8 +241,11 @@ private:
   std::unordered_map<int, int> accessIDtoDataLocality_;
   std::unordered_map<int, int> oldIDtoNewID;
   std::vector<accessIDaccessMetric> sortedAccesses_;
+  std::vector<int> fieldsToCheck_;
   HardwareConfig config_;
   StencilInstantiation* instantiation_;
+
+  std::unordered_map<int, Cache> idToCache_;
 };
 
 PassSetNonTempCaches::PassSetNonTempCaches() : Pass("PassSetNonTempCaches") {}
@@ -241,11 +257,24 @@ bool dawn::PassSetNonTempCaches::run(dawn::StencilInstantiation* stencilInstanti
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     const Stencil& stencil = *stencilPtr;
 
+    if(context->getOptions().ReportPassSetNonTempCaches) {
+      std::cout << "\nPASS: " << getName() << ": In stencil: " << stencilInstantiation->getName()
+                << " : ";
+    }
     if(context->getOptions().UseNonTempCaches) {
       // Cache normal fields within multistages
       for(auto& multiStagePtr : stencil.getMultiStages()) {
         GlobalFieldCacher organizer(multiStagePtr.get(), stencilInstantiation);
         organizer.process();
+        if(context->getOptions().ReportPassSetNonTempCaches) {
+          for(const auto& idToCache : organizer.getIDtocacheMap())
+            std::cout << stencilInstantiation->getOriginalNameFromAccessID(idToCache.first) << ":"
+                      << idToCache.second.getCacheTypeAsString() << ":"
+                      << idToCache.second.getCacheIOPolicyAsString()
+                      << " ,expected perfomance gain: "
+                      << organizer.getaccessIDtoDataLocality().find(idToCache.first)->second
+                      << std::endl;
+        }
       }
     }
   }

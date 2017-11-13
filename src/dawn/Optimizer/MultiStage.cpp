@@ -154,10 +154,6 @@ void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
     Stage& stage = (**stageIt);
     for(auto& doMethodPtr : stage.getDoMethods()) {
       DoMethod& doMethod = *doMethodPtr;
-      std::cout << "we are renaming from "
-                << stencilInstantiation_->getNameFromAccessID(oldAccessID) << " to  "
-                << stencilInstantiation_->getNameFromAccessID(newAccessID) << " in Stage "
-                << stage.getStageID() << std::endl;
       renameAccessIDInStmts(stencilInstantiation_, oldAccessID, newAccessID,
                             doMethod.getStatementAccessesPairs());
       renameAccessIDInAccesses(stencilInstantiation_, oldAccessID, newAccessID,

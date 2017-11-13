@@ -93,5 +93,7 @@ OPT(bool, ReportPassSetCaches, false, "report-pass-set-caches", "",
     "Report which fields are cached for each multi-stage", "", false, true)
 OPT(bool, UseNonTempCaches, true, "cache-non-temp-fields", "",
     "Allows for caching of non-temporary fields", "", false, true)
+OPT(bool, ReportPassSetNonTempCaches, true, "report cache-non-temp-fields", "",
+    "Report which non temporary fields are cached for each multi-stage", "", false, true)
 
 // clang-format on
