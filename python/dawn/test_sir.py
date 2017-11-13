@@ -14,6 +14,11 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+from os import path
+from sys import path as sys_path
+
+sys_path.insert(1, path.join(path.dirname(path.realpath(__file__)), ".."))
+
 import unittest
 
 from dawn.error import SIRError
