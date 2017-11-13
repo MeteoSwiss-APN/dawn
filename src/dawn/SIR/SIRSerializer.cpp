@@ -637,7 +637,7 @@ static std::shared_ptr<Expr> makeExpr(const sir::proto::Expr& expressionProto) {
   case sir::proto::Expr::kStencilFunArgExpr: {
     const auto& exprProto = expressionProto.stencil_fun_arg_expr();
     int direction = -1, offset = 0, argumentIndex = -1; // default values
-  
+
     if(exprProto.has_dimension()) {
       switch(exprProto.dimension().direction()) {
       case dawn::sir::proto::Dimension_Direction_I:
@@ -671,23 +671,48 @@ static std::shared_ptr<Expr> makeExpr(const sir::proto::Expr& expressionProto) {
   case sir::proto::Expr::kFieldAccessExpr: {
     const auto& exprProto = expressionProto.field_access_expr();
     auto name = exprProto.name();
-        
+    auto negateOffset = exprProto.negate_offset();
+
     auto throwException = [&exprProto](const char* member) {
-      throw std::runtime_error(
-          format("FieldAccessExpr::%s (loc %s) exceeds 3 dimensions", member, makeLocation(exprProto)));
+      throw std::runtime_error(format("FieldAccessExpr::%s (loc %s) exceeds 3 dimensions", member,
+                                      makeLocation(exprProto)));
     };
-    
-    if(exprProto.argument_offset().size() != 3)
-      throwException("argument_offset");
-    Array3i argumentOffset;
-//    for(int i = 0; i < )
-      
-    
-    //auto expr = std::make_shared<FieldAccessExpr>();
-    //return expr;
+
+    Array3i offset{{0, 0, 0}};
+    if(!exprProto.offset().empty()) {
+      if(exprProto.offset().size() > 3)
+        throwException("offset");
+
+      for(int i = 0; i < exprProto.offset().size(); ++i)
+        offset[i] = exprProto.offset()[i];
+    }
+
+    Array3i argumentOffset{{0, 0, 0}};
+    if(!exprProto.argument_offset().empty()) {
+      if(exprProto.argument_offset().size() > 3)
+        throwException("argument_offset");
+
+      for(int i = 0; i < exprProto.argument_offset().size(); ++i)
+        argumentOffset[i] = exprProto.argument_offset()[i];
+    }
+
+    Array3i argumentMap{{-1, -1, -1}};
+    if(!exprProto.argument_map().empty()) {
+      if(exprProto.argument_map().size() > 3)
+        throwException("argument_map");
+
+      for(int i = 0; i < exprProto.argument_map().size(); ++i)
+        argumentMap[i] = exprProto.argument_map()[i];
+    }
+
+    return std::make_shared<FieldAccessExpr>(name, offset, argumentMap, argumentOffset,
+                                             negateOffset, makeLocation(exprProto));
   }
-  case sir::proto::Expr::kLiteralAccessExpr:
-    break;
+  case sir::proto::Expr::kLiteralAccessExpr: {
+    const auto& exprProto = expressionProto.literal_access_expr();
+    return std::make_shared<LiteralAccessExpr>(
+        exprProto.value(), makeBuiltinTypeID(exprProto.type()), makeLocation(exprProto));
+  }
   case sir::proto::Expr::EXPR_NOT_SET:
   default:
     dawn_unreachable("expr not set");
@@ -810,11 +835,74 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str) {
 
       sir->Stencils.emplace_back(stencil);
     }
-    
+
     // SIR.StencilFunctions
-    
+    for(const sir::proto::StencilFunction& stencilFunctionProto : sirProto.stencil_functions()) {
+      std::shared_ptr<StencilFunction> stencilFunction = std::make_shared<StencilFunction>();
+
+      // StencilFunction.Name
+      stencilFunction->Name = stencilFunctionProto.name();
+
+      // Stencil.Loc
+      stencilFunction->Loc = makeLocation(stencilFunctionProto);
+
+      // StencilFunction.Args
+      for(const sir::proto::StencilFunctionArg& sirArg : stencilFunctionProto.arguments()) {
+        switch(sirArg.Arg_case()) {
+        case dawn::sir::proto::StencilFunctionArg::kFieldValue:
+          stencilFunction->Args.emplace_back(makeField(sirArg.field_value()));
+          break;
+        case dawn::sir::proto::StencilFunctionArg::kDirectionValue:
+          stencilFunction->Args.emplace_back(makeDirection(sirArg.direction_value()));
+          break;
+        case dawn::sir::proto::StencilFunctionArg::kOffsetValue:
+          stencilFunction->Args.emplace_back(makeOffset(sirArg.offset_value()));
+          break;
+        case dawn::sir::proto::StencilFunctionArg::ARG_NOT_SET:
+        default:
+          dawn_unreachable("argument not set");
+        }
+      }
+
+      // StencilFunction.Intervals
+      for(const sir::proto::Interval& sirInterval : stencilFunctionProto.intervals())
+        stencilFunction->Intervals.emplace_back(makeInterval(sirInterval));
+
+      // StencilFunction.Asts
+      for(const sir::proto::AST& sirAst : stencilFunctionProto.asts())
+        stencilFunction->Asts.emplace_back(makeAST(sirAst));
+
+      sir->StencilFunctions.emplace_back(stencilFunction);
+    }
+
     // SIR.GlobalVariableMap
-    
+    for(const auto& nameValuePair : sirProto.global_variables().map()) {
+      const std::string& sirName = nameValuePair.first;
+      const sir::proto::GlobalVariableValue& sirValue = nameValuePair.second;
+      std::shared_ptr<Value> value = nullptr;
+
+      switch(sirValue.Value_case()) {
+      case dawn::sir::proto::GlobalVariableValue::kBooleanValue:
+        value = std::make_shared<Value>(static_cast<bool>(sirValue.boolean_value()));
+        break;
+      case dawn::sir::proto::GlobalVariableValue::kIntegerValue:
+        value = std::make_shared<Value>(static_cast<int>(sirValue.integer_value()));
+        break;
+      case dawn::sir::proto::GlobalVariableValue::kDoubleValue:
+        value = std::make_shared<Value>(static_cast<double>(sirValue.double_value()));
+        break;
+      case dawn::sir::proto::GlobalVariableValue::kStringValue:
+        value = std::make_shared<Value>(static_cast<std::string>(sirValue.string_value()));
+        break;
+      case dawn::sir::proto::GlobalVariableValue::VALUE_NOT_SET:
+      default:
+        dawn_unreachable("value not set");
+      }
+
+      value->setIsConstexpr(sirValue.is_constexpr());
+      sir->GlobalVariableMap->emplace(sirName, std::move(value));
+    }
+
   } catch(std::runtime_error& error) {
     throw std::runtime_error(dawn::format("cannot deserialize SIR: %s", error.what()));
   }
