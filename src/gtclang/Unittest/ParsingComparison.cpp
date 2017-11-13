@@ -142,7 +142,8 @@ class FileWriter {
 public:
   FileWriter(std::string localPath, std::string filename)
       : localPath_(localPath), filename_(filename) {
-    fullpath_ = UnittestEnvironment::getSingleton().getFileManager().getUnittestFile(localPath, filename);
+    fullpath_ =
+        UnittestEnvironment::getSingleton().getFileManager().getUnittestFile(localPath, filename);
     fileHeader_ = HeaderWriter::longheader();
     fileHeader_ += HeaderWriter::includes();
   }

@@ -1,29 +1,29 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                         _       _                   
-//                        | |     | |                  
-//                    __ _| |_ ___| | __ _ _ __   __ _ 
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
 //                   / _` | __/ __| |/ _` | '_ \ / _` |
 //                  | (_| | || (__| | (_| | | | | (_| |
 //                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 //                    __/ |                       __/ |
-//                   |___/                       |___/ 
+//                   |___/                       |___/
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
 
 // RUN: %c++% %file% %gridtools_flags% -fsyntax-only
 
-// This file can be used to test the gridtools extent analysis. Change the placeholder you are 
+// This file can be used to test the gridtools extent analysis. Change the placeholder you are
 // intrested in:
 //
 //    using final_extent = typename boost::mpl::at<final_map, p_pp_in>::type;
 //
 // (here it is `p_pp_in`) and compilation will fail and print the extent.
-// 
-// This file can be run with gtclang-tester (just pass this directory as an argument to the bash 
+//
+// This file can be run with gtclang-tester (just pass this directory as an argument to the bash
 // scripts in the gridtools_clang build directory).
 
 #define GRIDTOOLS_CLANG_GENERATED 1
@@ -179,4 +179,3 @@ int main() {
 
   return 0;
 }
-

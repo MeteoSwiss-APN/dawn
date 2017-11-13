@@ -1,15 +1,15 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                         _       _                   
-//                        | |     | |                  
-//                    __ _| |_ ___| | __ _ _ __   __ _ 
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
 //                   / _` | __/ __| |/ _` | '_ \ / _` |
 //                  | (_| | || (__| | (_| | | | | (_| |
 //                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 //                    __/ |                       __/ |
-//                   |___/                       |___/ 
+//                   |___/                       |___/
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -22,9 +22,9 @@
 using namespace gridtools::clang;
 
 globals {
-  int var_runtime;         // == 1
-  double var_default = 2;  // == 2
-  bool var_compiletime;    // == true
+  int var_runtime;        // == 1
+  double var_default = 2; // == 2
+  bool var_compiletime;   // == true
 };
 
 stencil Test01 {
@@ -32,7 +32,7 @@ stencil Test01 {
 
   Do {
     vertical_region(k_start, k_end) {
-      if(var_compiletime) // true
+      if(var_compiletime)              // true
         s = var_runtime + var_default; // 1 + 2
     }
   }
@@ -56,4 +56,3 @@ int main() {
 
   return !verif.verify(s, s_ref);
 }
-
