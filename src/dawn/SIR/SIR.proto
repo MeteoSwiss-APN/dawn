@@ -457,8 +457,8 @@ message FieldAccessExpr {
   // Consider the following example which implements an average stencil function :
   //
   // @code{.cpp}
-  // foo(storage in, direction dir) {
-  //    return in(dir+2) + in;
+  // avg(storage in, direction dir) {
+  //    return (in(dir+2) + in) / 2.0;
   //  }
   // @endcode
   //
