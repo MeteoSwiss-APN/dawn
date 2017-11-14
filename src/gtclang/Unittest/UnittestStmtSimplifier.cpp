@@ -25,7 +25,7 @@ static dawn::Type stringToType(const std::string& typestring) {
                           .Case("float", dawn::BuiltinTypeID::Float)
                           .Case("auto", dawn::BuiltinTypeID::Auto)
                           .Case("bool", dawn::BuiltinTypeID::Boolean)
-                          .Default(dawn::BuiltinTypeID::None);
+                          .Default(dawn::BuiltinTypeID::Invalid);
   if(!retval.isBuiltinType())
     dawn_unreachable("wrong type");
   return retval;
