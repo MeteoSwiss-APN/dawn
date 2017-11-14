@@ -113,7 +113,8 @@ def makeAST(root: StmtType) -> AST:
     :param root:    Root node of the AST (needs to be of type BlockStmt)
     """
     ast = AST()
-    if isinstance(root, BlockStmt) or isinstance(root, Stmt):
+    if isinstance(root, BlockStmt) or (
+        isinstance(root, Stmt) and root.WhichOneof("stmt") == "block_stmt"):
         ast.root.CopyFrom(makeStmt(root))
     else:
         raise SIRError("root statement of an AST needs to be a BlockStmt")
@@ -369,7 +370,7 @@ def makeIfStmt(cond_part: StmtType, then_part: StmtType, else_part: StmtType = N
     stmt = IfStmt()
     stmt.expr.CopyFrom(makeStmt(cond_part))
     stmt.expr.CopyFrom(makeStmt(then_part))
-    if cond_part:
+    if else_part:
         stmt.expr.CopyFrom(makeStmt(else_part))
     return stmt
 
