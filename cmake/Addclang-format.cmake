@@ -12,10 +12,11 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-find_package(clang-format)
+find_package(clang-format EXACT 3.8)
 
 dawn_export_package(
   NAME clang-format
   FOUND ${CLANG-FORMAT_FOUND}
+  VERSION ${CLANG-FORMAT_VERSION}
   EXECUTABLE ${CLANG-FORMAT_EXECUTABLE}
 )
