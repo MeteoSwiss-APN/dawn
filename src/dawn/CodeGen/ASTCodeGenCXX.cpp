@@ -163,7 +163,7 @@ std::string ASTCodeGenCXX::getCodeAndResetStream() {
 const char* ASTCodeGenCXX::builtinTypeIDToCXXType(const BuiltinTypeID& builtinTypeID,
                                                   bool isAutoAllowed) {
   switch(builtinTypeID) {
-  case BuiltinTypeID::None:
+  case BuiltinTypeID::Invalid:
     return "";
   case BuiltinTypeID::Auto:
     return (isAutoAllowed ? "auto" : "");

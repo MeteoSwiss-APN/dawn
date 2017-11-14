@@ -12,19 +12,4 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/FileUtil.h"
-
-namespace dawn {
-
-StringRef getFilename(StringRef path) { return path.substr(path.find_last_of('/') + 1); }
-
-StringRef getFilenameWithoutExtension(StringRef path) {
-  auto filename = getFilename(path);
-  return filename.substr(0, filename.find_last_of("."));
-}
-
-StringRef getExtension(StringRef filename) {
-  return filename.substr(filename.find_last_of(".") - 1);
-}
-
-} // namespace dawn
+#include "dawn-c/Compiler.h"

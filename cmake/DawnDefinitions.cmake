@@ -36,9 +36,9 @@ mark_as_advanced(DAWN_VERSION)
 
 # Git version string
 dawn_get_git_head_revision(git_refspec git_hash)
-if(NOT DEFINED SDAWN_GIT_HASH OR NOT "${SDAWN_GIT_HASH}" STREQUAL "${git_hash}")
-  string(SUBSTRING ${git_hash} 0 7 git_hash_short)
-  set(SDAWN_GIT_HASH "${git_hash_short}" CACHE INTERNAL "git hash (short) of current head" FORCE)
+string(SUBSTRING "${git_hash}" 0 7 git_hash_short)
+if(NOT DEFINED DAWN_GIT_HASH OR NOT "${DAWN_GIT_HASH}" STREQUAL "${git_hash_short}")
+  set(DAWN_GIT_HASH "${git_hash_short}" CACHE INTERNAL "git hash (short) of current head" FORCE)
 endif()
 
 # Assemble full version string
@@ -47,7 +47,7 @@ string(TOLOWER ${DAWN_PLATFORM_STRING} platform)
 string(TOLOWER ${CMAKE_CXX_COMPILER_ID} compiler)
 set(compiler "${compiler}-${CMAKE_CXX_COMPILER_VERSION}")
 set(DAWN_FULL_VERSION_STR 
-    "${DAWN_VERSION}-${SDAWN_GIT_HASH}-${architecture}-${platform}-${compiler}"
+    "${DAWN_VERSION}-${DAWN_GIT_HASH}-${architecture}-${platform}-${compiler}"
     CACHE STRING "Full version string of Dawn" FORCE)
 
 mark_as_advanced(DAWN_FULL_VERSION_STR)
@@ -59,4 +59,5 @@ set(DAWN_INSTALL_LIB_DIR lib
     CACHE INTERNAL "Relative path of the library install location " FORCE)
 set(DAWN_INSTALL_CMAKE_DIR cmake 
     CACHE INTERNAL "Relative path of the cmake install location" FORCE)
-
+set(DAWN_INSTALL_PYTHON_DIR python 
+    CACHE INTERNAL "Relative path of the cmake install location" FORCE)
