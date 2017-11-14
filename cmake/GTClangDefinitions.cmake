@@ -36,8 +36,8 @@ endif()
 # Git version string
 dawn_get_git_head_revision(git_refspec git_hash)
 string(SUBSTRING "${git_hash}" 0 7 git_hash_short)
-if(NOT DEFINED DAWN_GIT_HASH OR NOT "${DAWN_GIT_HASH}" STREQUAL "${git_hash_short}")
-  set(DAWN_GIT_HASH "${git_hash_short}" CACHE INTERNAL "git hash (short) of current head" FORCE)
+if(NOT DEFINED GTCLANG_GIT_HASH OR NOT "${GTCLANG_GIT_HASH}" STREQUAL "${git_hash_short}")
+  set(GTCLANG_GIT_HASH "${git_hash_short}" CACHE INTERNAL "git hash (short) of current head" FORCE)
 endif()
 
 # Assemble full version string
@@ -46,7 +46,7 @@ string(TOLOWER ${DAWN_PLATFORM_STRING} platform)
 string(TOLOWER ${CMAKE_CXX_COMPILER_ID} compiler)
 set(compiler "${compiler}-${CMAKE_CXX_COMPILER_VERSION}")
 set(GTCLANG_FULL_VERSION 
-    "${GTCLANG_VERSION_STRING}-${SGTCLANG_GIT_HASH}-${architecture}-${platform}-${compiler}"
+    "${GTCLANG_VERSION_STRING}-${GTCLANG_GIT_HASH}-${architecture}-${platform}-${compiler}"
     CACHE STRING "Full version string of gtclang" FORCE)
 
 # Building configs
