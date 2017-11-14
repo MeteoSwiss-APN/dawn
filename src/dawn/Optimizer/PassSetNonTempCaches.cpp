@@ -44,11 +44,16 @@ struct nameToImprovementMetric {
   int dataLocalityImprovement;
 };
 
+/// @brief The GlobalFieldCacher class handles the caching for a given Multistage
+/// @param[in, out]  msprt   Pointer to the multistage to handle
+/// @param[in, out]  si      Stencil Instanciation [ISIR] holding all the Stencils
 class GlobalFieldCacher {
 public:
   GlobalFieldCacher(MultiStage* msptr, StencilInstantiation* si)
       : multiStagePrt_(msptr), instantiation_(si) {}
 
+  /// @brief entry method for the pass: processes a given multistage and applies all changes
+  /// required
   void process() {
     computeOptimalFields();
     addFillerStages();
@@ -105,8 +110,12 @@ private:
     }
   }
 
-  /// @brief iterate through the multistage and find the first read-statement for evey cached
-  /// variable and insert the cache fill before that statement
+  /// @brief for each chached variable, check if we need a filler-stage (if we find a
+  /// read-before-write) and add it if necessary, renames all occurances and sets the cache for the
+  /// temporary variable newly created
+  ///
+  /// We always fill to the extent of the given multistage and we only add one stage to fill all the
+  /// variables to reduce synchronisation overhead
   void addFillerStages() {
     for(int i = 0; i < std::min((int)sortedAccesses_.size(), config_.SMemMaxFields); ++i) {
       int oldID = sortedAccesses_[i].accessID;
@@ -144,6 +153,8 @@ private:
     }
   }
 
+  /// @brief we create one stage at the end of the multistage that flushes back all the variables
+  /// that we cached in temporaries
   void addFlushStages() {
     std::vector<int> oldIDs;
     std::vector<int> newIDs;
@@ -163,6 +174,7 @@ private:
     }
   }
 
+  /// @brief creates the stage in which assignment happens (fill and flush)
   std::shared_ptr<Stage> createAssignmentStage(const Interval& interval,
                                                const std::vector<int>& assignmentIDs,
                                                const std::vector<int>& assigneeIDs) {
@@ -186,6 +198,7 @@ private:
     return assignmentStage;
   }
 
+  ///@brief add the assignment operator of two unique id's to a given domethod
   void addAssignmentToDoMethod(std::unique_ptr<DoMethod>& domethod, int assignmentID,
                                int assigneeID) {
     // Create the StatementAccessPair of the assignment with the new and old variables
@@ -211,6 +224,9 @@ private:
     instantiation_->getExprToAccessIDMap().emplace(fa_assignee, assigneeID);
   }
 
+  /// @brief checks if there is a read operation before the first write operation in the given multistage.
+  /// @param[in]    id  original FieldAccessID of the field to check
+  /// @return           true if there is a read-access before the first write access
   bool checkReadBeforeWrite(int id) {
     for(auto stageItGlob = multiStagePrt_->getStages().begin();
         stageItGlob != multiStagePrt_->getStages().end(); ++stageItGlob) {
