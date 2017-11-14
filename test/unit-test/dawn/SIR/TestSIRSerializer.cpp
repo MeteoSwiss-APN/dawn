@@ -53,7 +53,7 @@ TEST_F(SIRSerializerStencilTest, Name) {
 
 TEST_F(SIRSerializerStencilTest, SourceLocation) {
   sirRef->Stencils[0]->Loc = SourceLocation(5, 5);
-  SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
+  EXPECT_EQ(sirRef->Stencils[0]->Loc, serializeAndDeserializeRef()->Stencils[0]->Loc);
 }
 
 TEST_F(SIRSerializerStencilTest, Fields) {
@@ -84,7 +84,8 @@ TEST_F(SIRSerializerStencilFunctionTest, Name) {
 
 TEST_F(SIRSerializerStencilFunctionTest, SourceLocation) {
   sirRef->StencilFunctions[0]->Loc = SourceLocation(5, 5);
-  SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
+  EXPECT_EQ(sirRef->StencilFunctions[0]->Loc,
+            serializeAndDeserializeRef()->StencilFunctions[0]->Loc);
 }
 
 TEST_F(SIRSerializerStencilFunctionTest, Arguments) {

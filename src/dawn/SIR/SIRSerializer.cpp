@@ -507,8 +507,8 @@ static std::shared_ptr<AST> makeAST(const sir::proto::AST& astProto);
 
 template <class T>
 static SourceLocation makeLocation(const T& proto) {
-  return proto.has_loc() ? SourceLocation{}
-                         : SourceLocation(proto.loc().line(), proto.loc().column());
+  return proto.has_loc() ? SourceLocation(proto.loc().line(), proto.loc().column())
+                         : SourceLocation{};
 }
 
 static std::shared_ptr<sir::Field> makeField(const sir::proto::Field& fieldProto) {
