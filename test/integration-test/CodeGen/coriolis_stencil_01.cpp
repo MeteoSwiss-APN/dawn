@@ -1,15 +1,15 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                         _       _                   
-//                        | |     | |                  
-//                    __ _| |_ ___| | __ _ _ __   __ _ 
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
 //                   / _` | __/ __| |/ _` | '_ \ / _` |
 //                  | (_| | || (__| | (_| | | | | (_| |
 //                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 //                    __/ |                       __/ |
-//                   |___/                       |___/ 
+//                   |___/                       |___/
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -40,7 +40,7 @@ stencil coriolis_stencil {
 void coriolis_stencil_reference(const domain& dom, storage_t& u_tens_s, storage_t& u_nnow_s,
                                 storage_t& v_tens_s, storage_t& v_nnow_s, storage_t& fc_s) {
   auto u_tens = make_host_view(u_tens_s);
-  auto u_nnow = make_host_view(u_nnow_s);  
+  auto u_nnow = make_host_view(u_nnow_s);
   auto v_tens = make_host_view(v_tens_s);
   auto v_nnow = make_host_view(v_nnow_s);
   auto fc = make_host_view(fc_s);
@@ -75,7 +75,7 @@ int main() {
   verif.for_each([&](int i, int j, int k) { return -i - j - k; }, v_nnow);
 
   coriolis_stencil_reference(dom, u_tens_ref, u_nnow, v_tens_ref, v_nnow, fc);
- 
+
   coriolis_stencil coriolis(dom, u_tens, u_nnow, v_tens, v_nnow, fc);
   coriolis.run();
 

@@ -1,15 +1,15 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                         _       _                   
-//                        | |     | |                  
-//                    __ _| |_ ___| | __ _ _ __   __ _ 
+//                         _       _
+//                        | |     | |
+//                    __ _| |_ ___| | __ _ _ __   __ _
 //                   / _` | __/ __| |/ _` | '_ \ / _` |
 //                  | (_| | || (__| | (_| | | | | (_| |
 //                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 //                    __/ |                       __/ |
-//                   |___/                       |___/ 
+//                   |___/                       |___/
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -26,7 +26,7 @@ stencil_function TestFun {
 
   Do {
     vertical_region(k_start, k_end) // EXPECTED_ERROR: invalid vertical region in stencil function
-      in = out;
+        in = out;
   }
 };
 
@@ -36,7 +36,7 @@ stencil Test {
 
   void Do() {
     vertical_region(k_start, k_end)
-      in = out;
+        in = out;
   }
 };
 

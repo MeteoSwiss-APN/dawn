@@ -17,7 +17,6 @@
 #include "gtclang/Frontend/GTClangASTConsumer.h"
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/SIR/SIRSerializerJSON.h"
 #include "dawn/Support/Config.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/StringUtil.h"
@@ -114,7 +113,6 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   SIR->GlobalVariableMap = globalsParser.getGlobalVariableMap();
 
   if(context_->getOptions().DumpSIR) {
-    dawn::SIRSerializerJSON::serialize("sir.json", SIR.get());
     SIR->dump();
   }
   parentAction_->setSIR(SIR);

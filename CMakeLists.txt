@@ -53,6 +53,7 @@ include(DawnGetPlatformInfo)
 include(DawnMakeStringPair)
 include(DawnReportResult)
 include(DawnSetCXXStandard)
+include(DawnAddCustomDummyTarget)
 
 dawn_get_compiler_info()
 dawn_get_platform_info()
@@ -107,7 +108,13 @@ add_definitions(${GTCLANG_EXTERNAL_DEFINITIONS})
 dawn_report_result("Package summary" ${package_info})
 
 # Add clang-format target
-dawn_add_target_clang_format(DIRECTORIES ${CMAKE_SOURCE_DIR}/src EXTENSION ".h;.cpp")
+set(format_directories 
+  "${CMAKE_SOURCE_DIR}/src"
+  "${CMAKE_SOURCE_DIR}/test/integration-test"
+  "${CMAKE_SOURCE_DIR}/test/unit-test"
+)
+
+dawn_add_target_clang_format(DIRECTORIES ${format_directories} EXTENSION ".h;.cpp")
 
 # Build gtclang
 include_directories(${CMAKE_SOURCE_DIR}/src)
