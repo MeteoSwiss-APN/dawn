@@ -113,7 +113,8 @@ def makeAST(root: StmtType) -> AST:
     :param root:    Root node of the AST (needs to be of type BlockStmt)
     """
     ast = AST()
-    if isinstance(root, BlockStmt) or isinstance(root, Stmt):
+    if isinstance(root, BlockStmt) or (
+        isinstance(root, Stmt) and root.WhichOneof("stmt") == "block_stmt"):
         ast.root.CopyFrom(makeStmt(root))
     else:
         raise SIRError("root statement of an AST needs to be a BlockStmt")
@@ -369,7 +370,7 @@ def makeIfStmt(cond_part: StmtType, then_part: StmtType, else_part: StmtType = N
     stmt = IfStmt()
     stmt.expr.CopyFrom(makeStmt(cond_part))
     stmt.expr.CopyFrom(makeStmt(then_part))
-    if cond_part:
+    if else_part:
         stmt.expr.CopyFrom(makeStmt(else_part))
     return stmt
 
@@ -400,13 +401,15 @@ def makeBinaryOperator(left: ExprType, op: str, right: ExprType) -> BinaryOperat
     return expr
 
 
-def makeAssignmentExpr(left: ExprType, right: ExprType) -> AssignmentExpr:
+def makeAssignmentExpr(left: ExprType, right: ExprType, op: str = "=") -> AssignmentExpr:
     """ Create an AssignmentExpr
 
     :param left:    Left-hand side.
     :param right:   Right-hand side.
+    :param op:      Operation (e.g "=" or "+=").
     """
     expr = AssignmentExpr()
+    expr.op = op
     expr.left.CopyFrom(makeExpr(left))
     expr.right.CopyFrom(makeExpr(right))
     return expr
@@ -450,17 +453,17 @@ def makeStencilFunCallExpr(callee: str, arguments: List[ExprType]) -> StencilFun
     return expr
 
 
-def makeStencilFunArgExpr(dimension: Dimension.Direction, offset: int = 0,
+def makeStencilFunArgExpr(direction: Dimension.Direction, offset: int = 0,
                           argument_index: int = -1) -> StencilFunArgExpr:
     """ Create a StencilFunArgExpr
 
-    :param dimension:       Dimension of the argument.
+    :param direction:       Direction of the argument.
     :param offset:          Offset to the dimension.
     :param argument_index:  Index of the argument of the stencil function in the outer scope.
                             If unused, the value *has* to be set to -1.
     """
     dim = Dimension()
-    dim.dimension = dimension
+    dim.direction = direction
 
     expr = StencilFunArgExpr()
     expr.dimension.CopyFrom(dim)

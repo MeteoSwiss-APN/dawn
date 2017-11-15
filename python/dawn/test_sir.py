@@ -14,6 +14,11 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+from os import path
+from sys import path as sys_path
+
+sys_path.insert(1, path.join(path.dirname(path.realpath(__file__)), ".."))
+
 import unittest
 
 from dawn.error import SIRError
@@ -227,9 +232,10 @@ class TestExpr(ExprTestBase):
         self.assertEqual(expr.right, makeExpr(self.lit()))
 
     def test_assignment_expr(self):
-        expr = makeAssignmentExpr(self.var(), self.lit())
+        expr = makeAssignmentExpr(self.var(), self.lit(), "+=")
         self.assertEqual(expr.left, makeExpr(self.var()))
         self.assertEqual(expr.right, makeExpr(self.lit()))
+        self.assertEqual(expr.op, "+=")
 
     def test_ternary_operator(self):
         expr = makeTernaryOperator(self.lit(), self.var(), self.var(self.lit()))
@@ -251,7 +257,7 @@ class TestExpr(ExprTestBase):
 
     def test_stencil_fun_arg_expr(self):
         arg1 = makeStencilFunArgExpr(Dimension.I)
-        self.assertEqual(arg1.dimension.dimension, Dimension.I)
+        self.assertEqual(arg1.dimension.direction, Dimension.I)
 
     def test_field_access_expr(self):
         field1 = makeFieldAccessExpr("a")

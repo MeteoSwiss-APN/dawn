@@ -316,6 +316,13 @@ inline typename cast_retty<X, Y*>::ret_type dyn_cast_or_null(Y* Val) {
   return (Val && isa<X>(Val)) ? cast<X>(Val) : nullptr;
 }
 
+/// @brief `dyn_cast` for `std::shared_ptr`s
+/// @ingroup core
+template <class T, class U>
+inline std::shared_ptr<T> dyn_pointer_cast(const std::shared_ptr<U>& ptr) noexcept {
+  return std::shared_ptr<T>(ptr, dyn_cast<T>(ptr.get()));
+}
+
 } // namespace dawn
 
 #endif
