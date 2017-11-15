@@ -708,7 +708,7 @@ std::shared_ptr<dawn::Stmt> ClangASTExprResolver::resolveDecl(clang::VarDecl* de
                                              : qualType.getTypePtrOrNull();
   DAWN_ASSERT(type);
 
-  dawn::BuiltinTypeID builtinType = dawn::BuiltinTypeID::None;
+  dawn::BuiltinTypeID builtinType = dawn::BuiltinTypeID::Invalid;
   if(type->isBuiltinType()) {
     if(type->isBooleanType()) // bool
       builtinType = dawn::BuiltinTypeID::Boolean;
@@ -723,7 +723,7 @@ std::shared_ptr<dawn::Stmt> ClangASTExprResolver::resolveDecl(clang::VarDecl* de
   }
 
   // Extract qualifiers (if any)
-  dawn::CVQualifier cvQualifier = dawn::CVQualifier::None;
+  dawn::CVQualifier cvQualifier = dawn::CVQualifier::Invalid;
   if(qualType.hasQualifiers()) {
     if(qualType.isConstQualified())
       cvQualifier |= dawn::CVQualifier::Const;
@@ -733,7 +733,7 @@ std::shared_ptr<dawn::Stmt> ClangASTExprResolver::resolveDecl(clang::VarDecl* de
 
   // Assemble the type
   dawn::Type DAWNType;
-  if(builtinType != dawn::BuiltinTypeID::None)
+  if(builtinType != dawn::BuiltinTypeID::Invalid)
     DAWNType = dawn::Type(builtinType, cvQualifier);
   else
     DAWNType = dawn::Type(qualType.getAsString(), cvQualifier);
