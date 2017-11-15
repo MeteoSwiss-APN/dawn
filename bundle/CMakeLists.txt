@@ -49,7 +49,7 @@ set(GTCLANG_GIT_URL "git@github.com:MeteoSwiss-APN/gtclang.git"
     CACHE PATH "URL of the gtclang git repository to clone")
 set(GTCLANG_GIT_BRANCH "master" CACHE STRING "URL of the gtclang git repository to clone")
 
-list(APPEND CMAKE_MODULE_PATH "${GTCLANG_ALL_MSBUILD_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${DAWN_MSBUILD_SOURCE_DIR}/cmake")
 include(msbuildCMakeInit)
 
 include(DawnAddTargetCleanAll)
