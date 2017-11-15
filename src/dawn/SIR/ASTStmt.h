@@ -208,7 +208,7 @@ class VarDeclStmt : public Stmt {
 
   // Dimension of the array or 0 for variables
   int dimension_;
-  const char* op_;
+  std::string op_;
 
   // List of expression used for initializaion or just 1 element for variables
   std::vector<std::shared_ptr<Expr>> initList_;
@@ -229,7 +229,7 @@ public:
   const std::string& getName() const { return name_; }
   std::string& getName() { return name_; }
 
-  const char* getOp() const { return op_; }
+  const char* getOp() const { return op_.c_str(); }
   int getDimension() const { return dimension_; }
 
   bool isArray() const { return (dimension_ > 0); }

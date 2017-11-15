@@ -59,4 +59,6 @@ set(DAWN_INSTALL_LIB_DIR lib
     CACHE INTERNAL "Relative path of the library install location " FORCE)
 set(DAWN_INSTALL_CMAKE_DIR cmake 
     CACHE INTERNAL "Relative path of the cmake install location" FORCE)
+set(DAWN_INSTALL_PYTHON_DIR python 
+    CACHE INTERNAL "Relative path of the cmake install location" FORCE)
 

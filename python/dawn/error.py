@@ -1,4 +1,6 @@
-##===------------------------------------------------------------------------------*- CMake -*-===##
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+##===-----------------------------------------------------------------------------*- Python -*-===##
 ##                          _                      
 ##                         | |                     
 ##                       __| | __ ___      ___ ___  
@@ -12,11 +14,16 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-dawn_add_unittest_impl(
-  NAME DawnUnittestSIR
-  SOURCES TestMain.cpp
-          TestAST.cpp
-          TestSIR.cpp
-          TestSIRSerializer.cpp
-)
+class Error(Exception):
+    """ Thrown in case of an error. """
+    pass
 
+
+class ParseError(Error):
+    """ Thrown in case of a parsing error. """
+    pass
+
+
+class SIRError(Error):
+    """ Thrown in case of an invalid SIR configuration. """
+    pass

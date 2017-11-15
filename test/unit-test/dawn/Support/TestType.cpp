@@ -26,7 +26,7 @@ TEST(TypeTest, Construction) {
   EXPECT_TRUE(t0.isConst());
   EXPECT_TRUE(t0.isVolatile());
 
-  Type t1{"foo", CVQualifier::None};
+  Type t1{"foo", CVQualifier::Invalid};
   EXPECT_FALSE(t1.isBuiltinType());
   EXPECT_FALSE(t1.isConst());
   EXPECT_FALSE(t1.isVolatile());
@@ -42,7 +42,7 @@ TEST(TypeTest, Stringify) {
   }
 
   {
-    Type t1{"foo", CVQualifier::None};
+    Type t1{"foo", CVQualifier::Invalid};
     std::stringstream ss;
     ss << t1;
     EXPECT_STREQ(ss.str().c_str(), "foo");
