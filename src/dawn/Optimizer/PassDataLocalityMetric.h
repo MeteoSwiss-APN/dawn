@@ -29,9 +29,8 @@ struct HardwareConfig {
 };
 
 struct ReadWriteAccumulator {
-  ReadWriteAccumulator(int r, int w) : numReads(r), numWrites(w) {}
-  int numReads = 0;
-  int numWrites = 0;
+  int numReads;
+  int numWrites;
 
   int totalAccesses() const { return numReads + numWrites; }
 };

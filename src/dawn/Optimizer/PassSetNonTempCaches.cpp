@@ -28,7 +28,6 @@
 namespace dawn {
 
 struct AcessIDTolocalityMetric {
-  AcessIDTolocalityMetric(int id, int gain) : accessID(id), dataLocalityGain(gain) {}
   int accessID;
   int dataLocalityGain;
   bool operator<(const AcessIDTolocalityMetric& rhs) {
@@ -37,8 +36,6 @@ struct AcessIDTolocalityMetric {
 };
 
 struct NameToImprovementMetric {
-  NameToImprovementMetric(std::string name_, Cache cache_, int metric)
-      : name(name_), cache(cache_), dataLocalityImprovement(metric) {}
   std::string name;
   Cache cache;
   int dataLocalityImprovement;
@@ -102,7 +99,7 @@ private:
     }
 
     for(auto& AcessIDMetricPair : accessIDToDataLocality_) {
-      sortedAccesses_.emplace_back(AcessIDMetricPair.first, AcessIDMetricPair.second);
+      sortedAccesses_.emplace_back(AcessIDTolocalityMetric{AcessIDMetricPair.first, AcessIDMetricPair.second});
       std::sort(sortedAccesses_.begin(), sortedAccesses_.end());
     }
   }
@@ -128,8 +125,8 @@ private:
 
       oldAccessIDtoNewAccessID_.emplace(oldID, newID);
       Cache& cache = multiStagePrt_->setCache(Cache::IJ, Cache::local, newID);
-      originalNameToCache_.emplace_back(instantiation_->getOriginalNameFromAccessID(oldID), cache,
-                                        accessIDToDataLocality_.find(oldID)->second);
+      originalNameToCache_.emplace_back(NameToImprovementMetric{instantiation_->getOriginalNameFromAccessID(oldID), cache,
+                                        accessIDToDataLocality_.find(oldID)->second});
     }
 
     // Create the cache-filler stage

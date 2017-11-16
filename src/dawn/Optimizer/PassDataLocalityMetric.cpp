@@ -134,7 +134,7 @@ public:
         if(iter != individualReadWrites_.end())
           (*iter).second.numReads++;
         else
-          individualReadWrites_.emplace(AccessID, ReadWriteAccumulator(1, 0));
+          individualReadWrites_.emplace(AccessID, ReadWriteAccumulator{1, 0});
       }
       if(cache.getCacheIOPolicy() == Cache::flush ||
          cache.getCacheIOPolicy() == Cache::fill_and_flush) {
@@ -144,7 +144,7 @@ public:
         if(iter != individualReadWrites_.end())
           (*iter).second.numWrites++;
         else
-          individualReadWrites_.emplace(AccessID, ReadWriteAccumulator(0, 1));
+          individualReadWrites_.emplace(AccessID, ReadWriteAccumulator{0, 1});
       }
     }
     kCacheLoaded_.insert(AccessID);
@@ -161,7 +161,7 @@ public:
       if(iter != individualReadWrites_.end())
         (*iter).second.numWrites++;
       else
-        individualReadWrites_.emplace(AccessID, ReadWriteAccumulator(0, 1));
+        individualReadWrites_.emplace(AccessID, ReadWriteAccumulator{0, 1});
 
       // The written value is stored in a register
       register_.insert(AccessID);
@@ -194,7 +194,7 @@ public:
           if(iter != individualReadWrites_.end())
             (*iter).second.numReads++;
           else
-            individualReadWrites_.emplace(AccessID, ReadWriteAccumulator(1, 0));
+            individualReadWrites_.emplace(AccessID, ReadWriteAccumulator{1, 0});
         } else {
           updateKCache(AccessID);
         }
@@ -210,7 +210,7 @@ public:
           if(iter != individualReadWrites_.end())
             (*iter).second.numReads++;
           else
-            individualReadWrites_.emplace(AccessID, ReadWriteAccumulator(1, 0));
+            individualReadWrites_.emplace(AccessID, ReadWriteAccumulator{1, 0});
         }
 
       } else {
