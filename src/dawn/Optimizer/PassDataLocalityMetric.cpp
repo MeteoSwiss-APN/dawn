@@ -58,7 +58,7 @@ class ReadWriteCounter : public ASTVisitorForwarding {
   const HardwareConfig& config_;
 
   /// Map of ID's to their respective number of reads / writes
-  std::unordered_map<int, ReadWriteIDspecific> individualReadWrites_;
+  std::unordered_map<int, ReadWriteAccumulator> individualReadWrites_;
 
 public:
   ReadWriteCounter(StencilInstantiation* instantiation, const MultiStage& multiStage,
@@ -134,7 +134,7 @@ public:
         if(iter != individualReadWrites_.end())
           (*iter).second.numReads++;
         else
-          individualReadWrites_.emplace(AccessID, ReadWriteIDspecific(1, 0));
+          individualReadWrites_.emplace(AccessID, ReadWriteAccumulator(1, 0));
       }
       if(cache.getCacheIOPolicy() == Cache::flush ||
          cache.getCacheIOPolicy() == Cache::fill_and_flush) {
@@ -144,7 +144,7 @@ public:
         if(iter != individualReadWrites_.end())
           (*iter).second.numWrites++;
         else
-          individualReadWrites_.emplace(AccessID, ReadWriteIDspecific(0, 1));
+          individualReadWrites_.emplace(AccessID, ReadWriteAccumulator(0, 1));
       }
     }
     kCacheLoaded_.insert(AccessID);
@@ -161,7 +161,7 @@ public:
       if(iter != individualReadWrites_.end())
         (*iter).second.numWrites++;
       else
-        individualReadWrites_.emplace(AccessID, ReadWriteIDspecific(0, 1));
+        individualReadWrites_.emplace(AccessID, ReadWriteAccumulator(0, 1));
 
       // The written value is stored in a register
       register_.insert(AccessID);
@@ -194,7 +194,7 @@ public:
           if(iter != individualReadWrites_.end())
             (*iter).second.numReads++;
           else
-            individualReadWrites_.emplace(AccessID, ReadWriteIDspecific(1, 0));
+            individualReadWrites_.emplace(AccessID, ReadWriteAccumulator(1, 0));
         } else {
           updateKCache(AccessID);
         }
@@ -210,7 +210,7 @@ public:
           if(iter != individualReadWrites_.end())
             (*iter).second.numReads++;
           else
-            individualReadWrites_.emplace(AccessID, ReadWriteIDspecific(1, 0));
+            individualReadWrites_.emplace(AccessID, ReadWriteAccumulator(1, 0));
         }
 
       } else {
@@ -246,7 +246,7 @@ public:
   }
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override { processReadAccess(expr); }
-  std::unordered_map<int, ReadWriteIDspecific> getIndividualReadWrites() const {
+  const std::unordered_map<int, ReadWriteAccumulator>& getIndividualReadWrites() const {
     return individualReadWrites_;
   }
 };
@@ -303,9 +303,10 @@ computeReadWriteAccessesLowerBound(StencilInstantiation* instantiation,
 } // anonymous namespace
 
 /// @brief Approximate the reads and writes individually for each ID
-std::unordered_map<int, ReadWriteIDspecific> computeReadWriteAccessesMetricIndividually(StencilInstantiation* instantiation,
-                                                   const MultiStage& multiStage,
-                                                   const HardwareConfig& config) {
+std::unordered_map<int, ReadWriteAccumulator>
+computeReadWriteAccessesMetricPerAccessID(StencilInstantiation* instantiation,
+                                          const MultiStage& multiStage,
+                                          const HardwareConfig& config) {
   ReadWriteCounter readWriteCounter(instantiation, multiStage, config);
 
   for(const auto& stage : multiStage.getStages())

@@ -21,14 +21,15 @@ namespace dawn {
 
 /// @brief This Pass optimizes data locality on a per-multistage basis
 ///
-/// For all the non-temporary fields that we access in any given multistage, we check how high the
-/// performance gain of using a local ij-cache woud be. This is only beneficial if the fields are
-/// horizontally non-pointwise but vertically pointwise.
-/// If is is beneficial, we cache the fieldswith the most performance gain up to HardwareConfig's
+/// For all the non-temporary, horizontally non-pointwise but vertically pointwise fields that we
+/// access in any given multistage, we check how high the performance gain of using a local ij-cache
+/// woud be.
+///
+/// If is is beneficial, we cache the fields with the most performance gain up to HardwareConfig's
 /// Maximum number of fields concurrently in shared memory (defined in PassDataLocalityMetric.h)
 ///
 /// The caching invokes a renaming of all the occurances of any given field we cache and adds
-/// potentially filler stages and definitly flush stages to the multistage thus changing the ISIR
+/// potentially filler stages and definitely flush stages to the multistage thus changing the ISIR
 /// (StencilInstantation) in memory.
 ///
 /// This Pass has no dependecies
