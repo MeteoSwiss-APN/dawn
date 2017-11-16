@@ -28,7 +28,7 @@ def parse(dirs):
     """ Parse files in the given directories and return a list of Test objects """
     tests = []
     for dir in dirs:
-        if path.isdir(dir):
+        if path.isdir(dir) and path.isabs(dir):
             report_info("Parsing directory %s ... " % dir)
 
             # Parse configuration file (gtclang-tester.cfg)
@@ -54,7 +54,7 @@ def parse(dirs):
                 report_info("Done parsing file %s ... " % file)
             report_info("Done parsing directory %s ... " % dir)
         else:
-            report_warning("'%s' is not a directory" % dir)
+            report_warning("'%s' is not a full path directory" % dir)
 
     return tests
 

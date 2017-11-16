@@ -28,6 +28,7 @@ set(directories
   ${cwd}/PassTemporaryMerger
   ${cwd}/PassTemporaryType
   ${cwd}/PassPreprocessor
+  ${cwd}/SIR
 )
 
 list(APPEND compiler_flags -std=c++11 -O2)

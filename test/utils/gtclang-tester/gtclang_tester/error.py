@@ -34,7 +34,7 @@ def report_warning(msg):
     term = TerminalController()
     if term.is_valid():
         print(
-            term.BOLD + term.WHITE + "gtclang-tester:" + term.MAGENTA + " warning" + term.WHITE + (
+            term.BOLD + term.BLUE + "gtclang-tester:" + term.MAGENTA + " warning" + term.BLUE + (
                 ": %s" % msg) + term.NORMAL, file=stderr)
     else:
         print("gtclang-terster: warning: %s" % msg, file=stderr)
@@ -45,7 +45,7 @@ def report_fatal_error(msg):
 
     term = TerminalController()
     if term.is_valid():
-        print(term.BOLD + term.WHITE + "gtclang-tester:" + term.RED + " error" + term.WHITE + (
+        print(term.BOLD + term.BLUE + "gtclang-tester:" + term.RED + " error" + term.BLUE + (
             ": %s" % msg) + term.NORMAL, file=stderr)
     else:
         print("gtclang-terster: error: %s" % msg, file=stderr)

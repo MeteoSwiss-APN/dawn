@@ -1,0 +1,137 @@
+{
+ "filename": "/code/gtclang-all/gtclang/test/integration-test/SIR/CopyTest.cpp",
+ "stencils": [
+  {
+   "name": "Test",
+   "loc": {
+    "Line": 24,
+    "Column": 8
+   },
+   "ast": {
+    "root": {
+     "block_stmt": {
+      "statements": [
+       {
+        "vertical_region_decl_stmt": {
+         "vertical_region": {
+          "loc": {
+           "Line": 28,
+           "Column": 5
+          },
+          "ast": {
+           "root": {
+            "block_stmt": {
+             "statements": [
+              {
+               "expr_stmt": {
+                "expr": {
+                 "assignment_expr": {
+                  "left": {
+                   "field_access_expr": {
+                    "name": "field_a",
+                    "offset": [],
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 29,
+                     "Column": 7
+                    }
+                   }
+                  },
+                  "right": {
+                   "field_access_expr": {
+                    "name": "field_b",
+                    "offset": [],
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 29,
+                     "Column": 17
+                    }
+                   }
+                  },
+                  "loc": {
+                   "Line": 29,
+                   "Column": 7
+                  }
+                 }
+                },
+                "loc": {
+                 "Line": 29,
+                 "Column": 7
+                }
+               }
+              }
+             ],
+             "loc": {
+              "Line": 28,
+              "Column": 5
+             }
+            }
+           }
+          },
+          "interval": {
+           "lower_offset": 0,
+           "upper_offset": 0,
+           "special_lower_level": "Start",
+           "special_upper_level": "End"
+          },
+          "loop_order": "Forward"
+         },
+         "loc": {
+          "Line": 28,
+          "Column": 5
+         }
+        }
+       }
+      ],
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      }
+     }
+    }
+   },
+   "fields": [
+    {
+     "name": "field_a",
+     "loc": {
+      "Line": 25,
+      "Column": 11
+     },
+     "is_temporary": false
+    },
+    {
+     "name": "field_b",
+     "loc": {
+      "Line": 25,
+      "Column": 20
+     },
+     "is_temporary": false
+    }
+   ]
+  }
+ ],
+ "stencil_functions": [],
+ "global_variables": {
+  "map": {}
+ }
+}
