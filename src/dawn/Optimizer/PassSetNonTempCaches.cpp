@@ -60,11 +60,7 @@ public:
     addFlushStages();
   }
 
-  std::vector<accessIDaccessMetric>& getSortedAccesses() { return sortedAccesses_; }
-
   std::vector<nameToImprovementMetric> getoriginalNameToCache() { return originalNameToCache_; }
-
-  std::unordered_map<int, int> getaccessIDtoDataLocality() { return accessIDtoDataLocality_; }
 
 private:
   /// @brief use the data locality metric to rank the fields in a stencil based on how much they
@@ -89,15 +85,14 @@ private:
         if(instantiation_->isTemporaryField(field.AccessID))
           continue;
 
-        //        sortedAccesses_.emplace_back(field.AccessID, 1);
+        int cachedreadwrites = dataLocality.find(field.AccessID)->second.total();
 
-        int cachedreadwrites = (*dataLocality.find(field.AccessID)).second.total();
-
-        // We need one more read and one more write due to cache-filling
+        // We check how much the cache-filling costs: 1 Read and if we fill from Memory
         if(checkReadBeforeWrite(field.AccessID))
-          cachedreadwrites -= 2;
+          cachedreadwrites--;
         // We need one more write to flush the cache back to the variable
-        cachedreadwrites--;
+        if(!checkReadOnlyAccess(field.AccessID))
+          cachedreadwrites--;
 
         if(cachedreadwrites > 0)
           accessIDtoDataLocality_.emplace(field.AccessID, cachedreadwrites);
@@ -138,7 +133,7 @@ private:
     std::vector<int> oldIDs;
     std::vector<int> newIDs;
     for(auto& idPair : oldIDtoNewID) {
-      bool hasReadBeforeWrite = checkReadBeforeWrite(idPair.first);
+      bool hasReadBeforeWrite = checkReadBeforeWrite(idPair.second);
       if(hasReadBeforeWrite) {
         oldIDs.push_back(idPair.first);
         newIDs.push_back(idPair.second);
@@ -159,8 +154,10 @@ private:
     std::vector<int> oldIDs;
     std::vector<int> newIDs;
     for(auto& idPair : oldIDtoNewID) {
-      oldIDs.push_back(idPair.first);
-      newIDs.push_back(idPair.second);
+      if(!checkReadOnlyAccess(idPair.second)) {
+        oldIDs.push_back(idPair.first);
+        newIDs.push_back(idPair.second);
+      }
     }
 
     if(oldIDs.size() > 0) {
@@ -224,7 +221,8 @@ private:
     instantiation_->getExprToAccessIDMap().emplace(fa_assignee, assigneeID);
   }
 
-  /// @brief checks if there is a read operation before the first write operation in the given multistage.
+  /// @brief checks if there is a read operation before the first write operation in the given
+  /// multistage.
   /// @param[in]    id  original FieldAccessID of the field to check
   /// @return           true if there is a read-access before the first write access
   bool checkReadBeforeWrite(int id) {
@@ -234,6 +232,7 @@ private:
       for(int stmtIndex = 0; stmtIndex < doMethod.getStatementAccessesPairs().size(); ++stmtIndex) {
         const std::shared_ptr<StatementAccessesPair>& stmtAccessesPair =
             doMethod.getStatementAccessesPairs()[stmtIndex];
+
         // Find first if this statement has a read
         auto readAccessIterator = stmtAccessesPair->getCallerAccesses()->getReadAccesses().find(id);
         if(readAccessIterator != stmtAccessesPair->getCallerAccesses()->getReadAccesses().end()) {
@@ -251,13 +250,32 @@ private:
     return false;
   }
 
+  bool checkReadOnlyAccess(int id) {
+      for(auto stageItGlob = multiStagePrt_->getStages().begin();
+          stageItGlob != multiStagePrt_->getStages().end(); ++stageItGlob) {
+        DoMethod& doMethod = (**stageItGlob).getSingleDoMethod();
+        for(int stmtIndex = 0; stmtIndex < doMethod.getStatementAccessesPairs().size(); ++stmtIndex) {
+          const std::shared_ptr<StatementAccessesPair>& stmtAccessesPair =
+              doMethod.getStatementAccessesPairs()[stmtIndex];
+
+          // If we find a write-statement we exit
+          auto wirteAccessIterator =
+              stmtAccessesPair->getCallerAccesses()->getWriteAccesses().find(id);
+          if(wirteAccessIterator != stmtAccessesPair->getCallerAccesses()->getWriteAccesses().end()) {
+            return false;
+          }
+        }
+      }
+      return true;
+  }
+
   MultiStage* multiStagePrt_;
+  HardwareConfig config_;
+  StencilInstantiation* instantiation_;
+
   std::unordered_map<int, int> accessIDtoDataLocality_;
   std::unordered_map<int, int> oldIDtoNewID;
   std::vector<accessIDaccessMetric> sortedAccesses_;
-  std::vector<int> fieldsToCheck_;
-  HardwareConfig config_;
-  StencilInstantiation* instantiation_;
 
   std::vector<nameToImprovementMetric> originalNameToCache_;
 };
@@ -288,14 +306,16 @@ bool dawn::PassSetNonTempCaches::run(dawn::StencilInstantiation* stencilInstanti
                 [](const nameToImprovementMetric& lhs, const nameToImprovementMetric& rhs) {
                   return lhs.name < rhs.name;
                 });
-      std::cout << "\nPASS: " << getName() << ": In stencil: " << stencilInstantiation->getName()
-                << " : \n";
+      std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName() << " :";
       for(const auto& nametoCache : allCachedFields) {
-        std::cout << nametoCache.name << ": Cached::" << nametoCache.cache.getCacheTypeAsString()
-                  << ":" << nametoCache.cache.getCacheIOPolicyAsString()
-                  << " , expected perfomance gain: " << nametoCache.dataLocalityImprovement
-                  << std::endl;
+        std::cout << " Cached: " << nametoCache.name
+                  << " : Type: " << nametoCache.cache.getCacheTypeAsString() << ":"
+                  << nametoCache.cache.getCacheIOPolicyAsString();
       }
+      if(allCachedFields.size() == 0) {
+        std::cout << " no fields cached";
+      }
+      std::cout << std::endl;
     }
   }
 
