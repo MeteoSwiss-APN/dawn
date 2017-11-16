@@ -32,6 +32,9 @@ namespace gridtools {
             dimension j;
             dimension k;
 
+          private:
+            stencil_function &operator=(stencil_function) = delete;
+
           public:
             template < typename... T >
             stencil_function(T &&...);
