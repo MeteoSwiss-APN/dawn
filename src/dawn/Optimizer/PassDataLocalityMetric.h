@@ -20,17 +20,10 @@
 
 namespace dawn {
 
-struct HardwareConfig {
-  /// Maximum number of fields concurrently in shared memory
-  int SMemMaxFields = 8;
-
-  /// Maximum number of fields concurrently in the texture cache
-  int TexCacheMaxFields = 3;
-};
 
 struct ReadWriteAccumulator {
-  int numReads;
-  int numWrites;
+  int numReads = 0;
+  int numWrites = 0;
 
   int totalAccesses() const { return numReads + numWrites; }
 };
@@ -45,17 +38,13 @@ public:
   /// @brief Pass implementation
   bool run(StencilInstantiation* stencilInstantiation) override;
 
-private:
-  HardwareConfig config_;
 };
 
 std::pair<int, int> computeReadWriteAccessesMetric(StencilInstantiation* instantiation,
-                                                   const MultiStage& multiStage,
-                                                   const HardwareConfig& config);
+                                                   const MultiStage& multiStage);
 std::unordered_map<int, ReadWriteAccumulator>
 computeReadWriteAccessesMetricPerAccessID(StencilInstantiation* instantiation,
-                                          const MultiStage& multiStage,
-                                          const HardwareConfig& config);
+                                          const MultiStage& multiStage);
 
 } // namespace dawn
 

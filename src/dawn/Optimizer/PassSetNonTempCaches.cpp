@@ -41,9 +41,9 @@ struct NameToImprovementMetric {
   int dataLocalityImprovement;
 };
 
+  /// @brief The GlobalFieldCacher class handles the caching for a given Multistage
 class GlobalFieldCacher {
 public:
-  /// @brief The GlobalFieldCacher class handles the caching for a given Multistage
   /// @param[in, out]  msprt   Pointer to the multistage to handle
   /// @param[in, out]  si      Stencil Instanciation [ISIR] holding all the Stencils
   GlobalFieldCacher(MultiStage* msptr, StencilInstantiation* si)
@@ -66,7 +66,7 @@ private:
   /// would benefit from caching
   void computeOptimalFields() {
     auto dataLocality =
-        computeReadWriteAccessesMetricPerAccessID(instantiation_, *multiStagePrt_, config_);
+        computeReadWriteAccessesMetricPerAccessID(instantiation_, *multiStagePrt_);
 
     for(const auto& stagePtr : multiStagePrt_->getStages()) {
       for(const Field& field : stagePtr->getFields()) {
@@ -111,7 +111,7 @@ private:
   /// We always fill to the extent of the given multistage and we only add one stage to fill all the
   /// variables to reduce synchronisation overhead
   void addFillerStages() {
-    int numVarsToBeCached = std::min((int)sortedAccesses_.size(), config_.SMemMaxFields);
+    int numVarsToBeCached = std::min((int)sortedAccesses_.size(), instantiation_->getOptimizerContext()->getHardwareConfiguration().SMemMaxFields);
     for(int i = 0; i < numVarsToBeCached; ++i) {
       int oldID = sortedAccesses_[i].accessID;
 
@@ -267,7 +267,6 @@ private:
   }
 
   MultiStage* multiStagePrt_;
-  HardwareConfig config_;
   StencilInstantiation* instantiation_;
 
   std::unordered_map<int, int> accessIDToDataLocality_;
