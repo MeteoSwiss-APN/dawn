@@ -89,18 +89,16 @@ dawn_report_result("Configuration summary" ${config_info})
 include(msbuildAddDependency)
 
 msbuild_add_dependency(NAME "protobuf")
-msbuild_add_dependency(NAME "Boost")
 
 
 set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR} -DBOOST_ROOT=${BOOST_ROOT})
 
 msbuild_find_package(
   PACKAGE dawn
-  DEPENDS "boost" "protobuf"
+  DEPENDS "protobuf"
   ADDITIONAL
     SOURCE_DIR "${CMAKE_SOURCE_DIR}/../"
     CMAKE_ARGS 
         ${dawn_cmake_args}
-    -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
 )
 
