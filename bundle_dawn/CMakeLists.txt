@@ -41,14 +41,7 @@ set(MB_GIT_BRANCH "master" CACHE STRING "Branch of the dawn git repository to cl
 
 dawn_clone_repository(NAME msbuild URL ${MB_GIT_URL} BRANCH ${MB_GIT_BRANCH})
 
-set(DAWN_GIT_URL "git@github.com:MeteoSwiss-APN/dawn.git" 
-    CACHE PATH "URL of the dawn git repository to clone")
-set(DAWN_GIT_BRANCH "master" CACHE STRING "Branch of the dawn git repository to clone")
 #
-set(GTCLANG_GIT_URL "git@github.com:MeteoSwiss-APN/gtclang.git" 
-    CACHE PATH "URL of the gtclang git repository to clone")
-set(GTCLANG_GIT_BRANCH "master" CACHE STRING "URL of the gtclang git repository to clone")
-
 list(APPEND CMAKE_MODULE_PATH "${DAWN_MSBUILD_SOURCE_DIR}/cmake")
 include(msbuildCMakeInit)
 
@@ -98,8 +91,6 @@ include(msbuildAddDependency)
 msbuild_add_dependency(NAME "protobuf")
 msbuild_add_dependency(NAME "Boost")
 
-
-set(dawn_build "${CMAKE_CURRENT_BINARY_DIR}/dawn")
 
 set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR} -DBOOST_ROOT=${BOOST_ROOT})
 
