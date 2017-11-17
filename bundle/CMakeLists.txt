@@ -101,20 +101,15 @@ msbuild_add_dependency(NAME "Boost")
 
 set(dawn_build "${CMAKE_CURRENT_BINARY_DIR}/dawn")
 
-msbuild_add_optional_deps(dawn_deps protobuf boost)
 set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR} -DBOOST_ROOT=${BOOST_ROOT})
 
-include(ExternalProject)
-
-ExternalProject_Add(self_dawn
-   SOURCE_DIR "${CMAKE_SOURCE_DIR}/../"
-   BINARY_DIR ${dawn_build}
-   INSTALL_DIR "${CMAKE_INSTALL_PREFIX}"
-   CMAKE_ARGS
-     ${dawn_cmake_args}
+msbuild_find_package(
+  PACKAGE dawn
+  DEPENDS "boost" "protobuf"
+  ADDITIONAL
+    SOURCE_DIR "${CMAKE_SOURCE_DIR}/../"
+    CMAKE_ARGS 
+        ${dawn_cmake_args}
     -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-   DEPENDS
-     ${dawn_deps}
 )
-
 
