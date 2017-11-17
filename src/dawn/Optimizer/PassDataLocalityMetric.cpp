@@ -54,7 +54,6 @@ class ReadWriteCounter : public ASTVisitorForwarding {
   /// Current stencil function call
   std::stack<StencilFunctionInstantiation*> stencilFunCalls_;
 
-
   /// Map of ID's to their respective number of reads / writes
   std::unordered_map<int, ReadWriteAccumulator> individualReadWrites_;
 
@@ -67,7 +66,8 @@ public:
   std::size_t getNumWrites() const { return numWrites_; }
 
   void updateTextureCache(int AccessID, int kOffset) {
-    if(textureCache_.size() < instantiation_->getOptimizerContext()->getHardwareConfiguration().TexCacheMaxFields)
+    if(textureCache_.size() <
+       instantiation_->getOptimizerContext()->getHardwareConfiguration().TexCacheMaxFields)
       textureCache_.emplace_front(AccessID, kOffset);
     else {
       auto it = std::find_if(
@@ -327,8 +327,7 @@ bool PassDataLocalityMetric::run(StencilInstantiation* stencilInstantiation) {
 
         std::cout << "  MultiStage " << multiStageIdx << ":\n";
 
-        auto readAndWrite =
-            computeReadWriteAccessesMetric(stencilInstantiation, multiStage);
+        auto readAndWrite = computeReadWriteAccessesMetric(stencilInstantiation, multiStage);
 
         //        auto readAndWrite =
         //            computeReadWriteAccessesLowerBound(stencilInstantiation, multiStage);

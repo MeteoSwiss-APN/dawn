@@ -75,8 +75,8 @@ public:
   DiagnosticsEngine& getDiagnostics();
 
   /// @brief Get the hardware configuration
-  const HardwareConfig& getHardwareConfiguration() const { return hardwareConfiguration_;}
-  HardwareConfig& getHardwareConfiguration() { return hardwareConfiguration_;}
+  const HardwareConfig& getHardwareConfiguration() const { return hardwareConfiguration_; }
+  HardwareConfig& getHardwareConfiguration() { return hardwareConfiguration_; }
 };
 
 } // namespace dawn

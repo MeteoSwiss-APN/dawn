@@ -270,7 +270,8 @@ sir::CompareResult sir::Stencil::comparison(const sir::Stencil& rhs) const {
                          false};
 
   if(!Fields.empty() &&
-     !std::equal(Fields.begin(), Fields.end(), rhs.Fields.begin(), pointeeComparisonWithOutput<Field>)) {
+     !std::equal(Fields.begin(), Fields.end(), rhs.Fields.begin(),
+                 pointeeComparisonWithOutput<Field>)) {
     std::string output = "[Stencil mismatch] Fields do not match\n";
     for(int i = 0; i < Fields.size(); ++i) {
       auto comp = pointeeComparisonWithOutput(Fields[i], rhs.Fields[i]);
@@ -279,7 +280,6 @@ sir::CompareResult sir::Stencil::comparison(const sir::Stencil& rhs) const {
                                Fields[i].get()->Name, comp.why());
       }
     }
-
 
     return CompareResult{output, false};
   }

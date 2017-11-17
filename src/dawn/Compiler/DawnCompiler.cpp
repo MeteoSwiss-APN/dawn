@@ -30,6 +30,7 @@
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
 #include "dawn/Optimizer/PassSSA.h"
 #include "dawn/Optimizer/PassSetCaches.h"
+#include "dawn/Optimizer/PassSetNonTempCaches.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassSetStageName.h"
 #include "dawn/Optimizer/PassStageMerger.h"
@@ -39,7 +40,6 @@
 #include "dawn/Optimizer/PassTemporaryFirstAccess.h"
 #include "dawn/Optimizer/PassTemporaryMerger.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
-#include "dawn/Optimizer/PassSetNonTempCaches.h"
 
 namespace dawn {
 

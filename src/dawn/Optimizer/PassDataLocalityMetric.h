@@ -20,7 +20,6 @@
 
 namespace dawn {
 
-
 struct ReadWriteAccumulator {
   int numReads = 0;
   int numWrites = 0;
@@ -37,7 +36,6 @@ public:
 
   /// @brief Pass implementation
   bool run(StencilInstantiation* stencilInstantiation) override;
-
 };
 
 std::pair<int, int> computeReadWriteAccessesMetric(StencilInstantiation* instantiation,

@@ -165,9 +165,7 @@ struct Field : public StencilFunctionArg {
   bool IsTemporary;
 
   static bool classof(const StencilFunctionArg* arg) { return arg->Kind == AK_Field; }
-  bool operator==(const Field& rhs) const {
-    return comparison(rhs);
-  }
+  bool operator==(const Field& rhs) const { return comparison(rhs); }
 
   CompareResult comparison(const Field& rhs) const;
 };
