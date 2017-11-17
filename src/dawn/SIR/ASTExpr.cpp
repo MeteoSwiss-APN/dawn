@@ -23,9 +23,9 @@ namespace dawn {
 //     UnaryOperator
 //===------------------------------------------------------------------------------------------===//
 
-UnaryOperator::UnaryOperator(const std::shared_ptr<Expr>& operand, const char* op,
+UnaryOperator::UnaryOperator(const std::shared_ptr<Expr>& operand, std::string op,
                              SourceLocation loc)
-    : Expr(EK_UnaryOperator, loc), operand_(operand), op_(op) {}
+    : Expr(EK_UnaryOperator, loc), operand_(operand), op_(std::move(op)) {}
 
 UnaryOperator::UnaryOperator(const UnaryOperator& expr)
     : Expr(EK_UnaryOperator, expr.getSourceLocation()), operand_(expr.getOperand()->clone()),
@@ -47,7 +47,7 @@ std::shared_ptr<Expr> UnaryOperator::clone() const {
 bool UnaryOperator::equals(const Expr* other) const {
   const UnaryOperator* otherPtr = dyn_cast<UnaryOperator>(other);
   return otherPtr && Expr::equals(other) && operand_->equals(otherPtr->operand_.get()) &&
-         std::strcmp(op_, otherPtr->op_) == 0;
+         op_ == otherPtr->op_;
 }
 
 void UnaryOperator::accept(ASTVisitor& visitor) {
@@ -58,9 +58,9 @@ void UnaryOperator::accept(ASTVisitor& visitor) {
 //     BinaryOperator
 //===------------------------------------------------------------------------------------------===//
 
-BinaryOperator::BinaryOperator(const std::shared_ptr<Expr>& left, const char* op,
+BinaryOperator::BinaryOperator(const std::shared_ptr<Expr>& left, std::string op,
                                const std::shared_ptr<Expr>& right, SourceLocation loc)
-    : Expr(EK_BinaryOperator, loc), operands_{left, right}, op_(op) {}
+    : Expr(EK_BinaryOperator, loc), operands_{left, right}, op_(std::move(op)) {}
 
 BinaryOperator::BinaryOperator(const BinaryOperator& expr)
     : Expr(EK_BinaryOperator, expr.getSourceLocation()),
@@ -84,8 +84,7 @@ bool BinaryOperator::equals(const Expr* other) const {
   const BinaryOperator* otherPtr = dyn_cast<BinaryOperator>(other);
   return otherPtr && Expr::equals(other) &&
          operands_[OK_Left]->equals(otherPtr->operands_[OK_Left].get()) &&
-         operands_[OK_Right]->equals(otherPtr->operands_[OK_Right].get()) &&
-         std::strcmp(op_, otherPtr->op_) == 0;
+         operands_[OK_Right]->equals(otherPtr->operands_[OK_Right].get()) && op_ == otherPtr->op_;
 }
 
 void BinaryOperator::accept(ASTVisitor& visitor) {
@@ -97,9 +96,9 @@ void BinaryOperator::accept(ASTVisitor& visitor) {
 //===------------------------------------------------------------------------------------------===//
 
 AssignmentExpr::AssignmentExpr(const std::shared_ptr<Expr>& left,
-                               const std::shared_ptr<Expr>& right, const char* op,
+                               const std::shared_ptr<Expr>& right, std::string op,
                                SourceLocation loc)
-    : BinaryOperator(left, op, right, loc) {
+    : BinaryOperator(left, std::move(op), right, loc) {
   kind_ = EK_AssignmentExpr;
 }
 
@@ -127,8 +126,7 @@ bool AssignmentExpr::equals(const Expr* other) const {
   const AssignmentExpr* otherPtr = dyn_cast<AssignmentExpr>(other);
   return otherPtr && Expr::equals(other) &&
          operands_[OK_Left]->equals(otherPtr->operands_[OK_Left].get()) &&
-         operands_[OK_Right]->equals(otherPtr->operands_[OK_Right].get()) &&
-         std::strcmp(op_, otherPtr->op_) == 0;
+         operands_[OK_Right]->equals(otherPtr->operands_[OK_Right].get()) && op_ == otherPtr->op_;
 }
 
 void AssignmentExpr::accept(ASTVisitor& visitor) {

@@ -259,16 +259,6 @@ sir::CompareResult sir::Stencil::comparison(const sir::Stencil& rhs) const {
                                       Name, rhs.Name),
                          false};
 
-  // Attributes
-  if(Attributes != rhs.Attributes)
-    return CompareResult{dawn::format("[Stencil mismatch] Stencil attibutes do not match\n"
-                                      "  Actual:\n"
-                                      "    %s\n"
-                                      "  Expected:\n"
-                                      "    %s",
-                                      Attributes.getBits(), rhs.Attributes.getBits()),
-                         false};
-
   if(!Fields.empty() &&
      !std::equal(Fields.begin(), Fields.end(), rhs.Fields.begin(), pointeeComparisonWithOutput<Field>)) {
     std::string output = "[Stencil mismatch] Fields do not match\n";
@@ -304,18 +294,6 @@ sir::CompareResult sir::StencilFunction::comparison(const sir::StencilFunction& 
                      "  Expected:\n"
                      "    %s",
                      Name, rhs.Name),
-        false};
-  }
-
-  // Attributes
-  if(Attributes != rhs.Attributes) {
-    return CompareResult{
-        dawn::format("[StencilFunction mismatch] Attributes of Stencil Functions do not match\n"
-                     "  Actual:\n"
-                     "    %i\n"
-                     "  Expected:\n"
-                     "    %i",
-                     Attributes.getBits(), rhs.Attributes.getBits()),
         false};
   }
 
@@ -643,7 +621,7 @@ const char* sir::Value::typeToString(sir::Value::TypeKind type) {
 BuiltinTypeID sir::Value::typeToBuiltinTypeID(sir::Value::TypeKind type) {
   switch(type) {
   case None:
-    return BuiltinTypeID::None;
+    return BuiltinTypeID::Invalid;
   case Boolean:
     return BuiltinTypeID::Boolean;
   case Integer:
@@ -689,7 +667,7 @@ std::shared_ptr<sir::StencilCall> sir::StencilCall::clone() const {
   return call;
 }
 
-bool SIR::operator==(const SIR& rhs) const { return bool(comparison(rhs)); }
+bool SIR::operator==(const SIR& rhs) const { return comparison(rhs); }
 
 bool SIR::operator!=(const SIR& rhs) const { return !(*this == rhs); }
 

@@ -50,6 +50,7 @@ include(DawnGetPlatformInfo)
 include(DawnMakeStringPair)
 include(DawnReportResult)
 include(DawnSetCXXStandard)
+include(DawnEnableFullRPATH)
 
 dawn_get_compiler_info()
 dawn_get_platform_info()
@@ -76,8 +77,12 @@ dawn_add_target_clean_all(
   ${CMAKE_BINARY_DIR}/src
   ${CMAKE_BINARY_DIR}/test
   ${CMAKE_BINARY_DIR}/bin
+  ${CMAKE_BINARY_DIR}/python
   ${CMAKE_BINARY_DIR}/dawn-cmake
 )
+
+# Enable RPath support
+dawn_enable_full_rpath(${DAWN_INSTALL_LIB_DIR})
 
 # Output summary of the configuration
 macro(make_config_string FIRST SECOND)
@@ -96,10 +101,10 @@ dawn_report_result("Configuration summary" ${config_info})
 
 # Include the packages 
 if(DAWN_DOCUMENTATION)
-  set(doc_packages bash Python3 Sphinx LaTeX Doxygen)
+  set(doc_packages Python3 Sphinx LaTeX Doxygen)
 endif()
 
-foreach(package Protobuf ccache clang-format ${doc_packages})
+foreach(package bash Protobuf ccache clang-format ${doc_packages})
   include("Add${package}")
   dawn_create_package_string(${package} info)
   list(APPEND package_info ${info})
@@ -125,6 +130,10 @@ include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/test/utils/googletest/include)
 
 add_subdirectory(src)
 add_subdirectory(cmake)
+
+if(DAWN_PYTHON)
+  add_subdirectory(python)
+endif()
 
 if(DAWN_TESTING)
   enable_testing()

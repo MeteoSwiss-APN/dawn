@@ -23,6 +23,8 @@ add_custom_target(DawnDocsCMakeModules
   COMMENT "Configuring dawn-cmake" VERBATIM
 )
 
+set(PROTO_2_CPP_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/proto2cpp/proto2cpp.py)
+
 #
 # HTML documentation
 #

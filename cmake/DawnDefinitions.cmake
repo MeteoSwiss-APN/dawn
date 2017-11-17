@@ -36,9 +36,9 @@ mark_as_advanced(DAWN_VERSION)
 
 # Git version string
 dawn_get_git_head_revision(git_refspec git_hash)
-if(NOT DEFINED SDAWN_GIT_HASH OR NOT "${SDAWN_GIT_HASH}" STREQUAL "${git_hash}")
-  string(SUBSTRING ${git_hash} 0 7 git_hash_short)
-  set(SDAWN_GIT_HASH "${git_hash_short}" CACHE INTERNAL "git hash (short) of current head" FORCE)
+string(SUBSTRING "${git_hash}" 0 7 git_hash_short)
+if(NOT DEFINED DAWN_GIT_HASH OR NOT "${DAWN_GIT_HASH}" STREQUAL "${git_hash_short}")
+  set(DAWN_GIT_HASH "${git_hash_short}" CACHE INTERNAL "git hash (short) of current head" FORCE)
 endif()
 
 # Assemble full version string
@@ -58,5 +58,7 @@ set(DAWN_INSTALL_INCLUDE_DIR include
 set(DAWN_INSTALL_LIB_DIR lib 
     CACHE INTERNAL "Relative path of the library install location " FORCE)
 set(DAWN_INSTALL_CMAKE_DIR cmake 
+    CACHE INTERNAL "Relative path of the cmake install location" FORCE)
+set(DAWN_INSTALL_PYTHON_DIR python 
     CACHE INTERNAL "Relative path of the cmake install location" FORCE)
 

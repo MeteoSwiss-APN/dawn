@@ -85,15 +85,6 @@ TEST_F(SIRStencilTest, Fields) {
   SIR_EXCPECT_NE(sir1, sir2);
 }
 
-TEST_F(SIRStencilTest, Attributes) {
-  sir1->Stencils[0]->Attributes.set(sir::Attr::AK_NoCodeGen);
-  sir2->Stencils[0]->Attributes.set(sir::Attr::AK_NoCodeGen);
-  SIR_EXCPECT_EQ(sir1, sir2);
-
-  sir2->Stencils[0]->Attributes.set(sir::Attr::AK_UseKCaches);
-  SIR_EXCPECT_NE(sir1, sir2);
-}
-
 TEST_F(SIRStencilTest, AST) {
   sir1->Stencils[0]->StencilDescAst =
       std::make_shared<AST>(std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{
@@ -162,15 +153,6 @@ TEST_F(SIRStencilFunctionTest, Interval) {
 
   sir2->StencilFunctions[0]->Intervals.emplace_back(
       std::make_shared<sir::Interval>(0, sir::Interval::End, 1, 1));
-  SIR_EXCPECT_NE(sir1, sir2);
-}
-
-TEST_F(SIRStencilFunctionTest, Attributes) {
-  sir1->StencilFunctions[0]->Attributes.set(sir::Attr::AK_NoCodeGen);
-  sir2->StencilFunctions[0]->Attributes.set(sir::Attr::AK_NoCodeGen);
-  SIR_EXCPECT_EQ(sir1, sir2);
-
-  sir2->StencilFunctions[0]->Attributes.set(sir::Attr::AK_UseKCaches);
   SIR_EXCPECT_NE(sir1, sir2);
 }
 

@@ -12,17 +12,28 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-add_subdirectory(Support)
-add_subdirectory(SIR)
-add_subdirectory(Compiler)
-add_subdirectory(Optimizer)
-add_subdirectory(CodeGen)
-add_subdirectory(Unittest)
+dawn_add_library(
+  NAME DawnC
+  SOURCES Dawn.h
+          Compiler.h
+          Compiler.cpp
+          ErrorHandling.h
+          ErrorHandling.cpp
+          Options.h
+          Options.cpp
+          Types.h
+          
+          util/Allocate.h
+          util/OptionsWrapper.h
+          util/OptionsWrapper.cpp
+  OBJECT
+)
 
-# Combine the relevant object libraries into libDawn.so/libDawn.a
+# Combine the relevant object libraries into libDawnC.so/libDawnC.a
 dawn_combine_libraries(
-  NAME Dawn
-  OBJECTS DawnSupportObjects
+  NAME DawnC
+  OBJECTS DawnCObjects
+          DawnSupportObjects
           DawnSIRObjects
           DawnCompilerObjects
           DawnOptimizerObjects
@@ -32,4 +43,4 @@ dawn_combine_libraries(
 )
 
 # Export the targets
-install(EXPORT DawnTargets NAMESPACE Dawn:: DESTINATION ${DAWN_INSTALL_CMAKE_DIR})
+install(EXPORT DawnCTargets NAMESPACE Dawn:: DESTINATION ${DAWN_INSTALL_CMAKE_DIR})

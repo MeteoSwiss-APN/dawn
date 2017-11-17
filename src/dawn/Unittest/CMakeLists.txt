@@ -14,9 +14,11 @@
 
 dawn_add_library(
   NAME DawnUnittest
-  SOURCES UnittestLogger.h
-          UnittestLogger.cpp
-          PrintAllExpressionTypes.h
+  SOURCES ASTSimplifier.cpp
+          ASTSimplifier.h
           PrintAllExpressionTypes.cpp
+          PrintAllExpressionTypes.h
+          UnittestLogger.cpp
+          UnittestLogger.h
   ARCHIVE
 )
