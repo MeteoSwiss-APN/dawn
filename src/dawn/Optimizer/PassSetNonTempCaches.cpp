@@ -57,7 +57,7 @@ public:
     addFlushStages();
   }
 
-  const std::vector<NameToImprovementMetric>& getOriginalNameToCache() {
+  const std::vector<NameToImprovementMetric>& getOriginalNameToCache() const {
     return originalNameToCache_;
   }
 
