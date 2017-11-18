@@ -102,3 +102,10 @@ msbuild_find_package(
         ${dawn_cmake_args}
 )
 
+file(WRITE ${CMAKE_BINARY_DIR}/BundleConf.h "conf")
+
+install(
+  DIRECTORY src/ 
+  DESTINATION bundle_conf
+)
+
