@@ -19,8 +19,9 @@ add_subdirectory(Optimizer)
 add_subdirectory(CodeGen)
 add_subdirectory(Unittest)
 
+include(msbuildCombineLibraries)
 # Combine the relevant object libraries into libDawn.so/libDawn.a
-dawn_combine_libraries(
+msbuild_combine_libraries(
   NAME Dawn
   OBJECTS DawnSupportObjects
           DawnSIRObjects
@@ -28,6 +29,7 @@ dawn_combine_libraries(
           DawnOptimizerObjects
           DawnCodeGenObjects
   INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
+  VERSION ${DAWN_VERSION}
   DEPENDS ${DAW_EXTERNAL_LIBRARIES}
 )
 

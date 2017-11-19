@@ -23,7 +23,7 @@ dawn_protobuf_generate(
 )
 include_directories(SYSTEM ${sir_proto_include_dirs})
 
-dawn_add_library(
+msbuild_add_library(
   NAME DawnSIR
   SOURCES AST.h
           AST.cpp

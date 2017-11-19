@@ -40,21 +40,21 @@ include(DawnCMakeInit)
 set(DAWN_ROOT ${CMAKE_CURRENT_LIST_DIR})
 dawn_cmake_init()
 
-include(DawnAddLibrary)
-include(DawnAddTargetClangFormat)
+include(msbuildAddLibrary)
+include(msbuildAddTargetClangFormat)
 include(msbuildAddTargetCleanAll)
 include(msbuildCheckInSourceBuild)
-include(DawnCombineLibraries)
-include(DawnConfigureFile)
-include(DawnCreatePackageString)
+include(msbuildCombineLibraries)
+include(msbuildConfigureFile)
+include(msbuildCreatePackageString)
 include(DawnExportPackage)
 include(msbuildGetArchitectureInfo)
 include(msbuildGetCompilerInfo)
-include(DawnGetGitHeadRevision)
+include(msbuildGetGitHeadRevision)
 include(msbuildGetPlatformInfo)
 include(msbuildMakeStringPair)
 include(msbuildReportResult)
-include(DawnSetCXXStandard)
+include(msbuildSetCXXStandard)
 include(DawnEnableFullRPATH)
 
 msbuild_get_compiler_info()
@@ -67,7 +67,7 @@ include(DawnDefinitions)
 include(DawnMacros)
 
 # Set C++ standard
-dawn_set_cxx_standard(c++11)
+msbuild_set_cxx_standard(c++11)
 
 # Set C++ flags
 dawn_set_cxx_flags()
@@ -111,7 +111,7 @@ endif()
 
 foreach(package bash Protobuf ccache clang-format ${doc_packages})
   include("Add${package}")
-  dawn_create_package_string(${package} info)
+  msbuild_create_package_string(${package} info)
   list(APPEND package_info ${info})
 
     string(TOUPPER ${package} PACKAGE)
@@ -126,7 +126,7 @@ add_definitions(${DAWN_EXTERNAL_DEFINITIONS})
 msbuild_report_result("Package summary" ${package_info})
 
 # Add clang-format target
-dawn_add_target_clang_format(DIRECTORIES ${CMAKE_SOURCE_DIR}/src EXTENSION ".h;.cpp")
+msbuild_add_target_clang_format(DIRECTORIES ${CMAKE_SOURCE_DIR}/src EXTENSION ".h;.cpp")
 
 # Build dawn
 include_directories(${CMAKE_SOURCE_DIR}/src)

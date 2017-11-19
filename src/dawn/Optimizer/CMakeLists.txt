@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-dawn_add_library(
+msbuild_add_library(
   NAME DawnOptimizer
   SOURCES AccessComputation.h
           AccessComputation.cpp   
