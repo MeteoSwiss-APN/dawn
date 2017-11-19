@@ -73,6 +73,9 @@ msbuild_add_target_clean_all(
   "${CMAKE_BINARY_DIR}/gtclang"
   "${CMAKE_BINARY_DIR}/gtclang-prefix"
   "${CMAKE_BINARY_DIR}/Makefile"
+  "${CMAKE_BINARY_DIR}/msbuild-cmake"
+  "${CMAKE_BINARY_DIR}/protobuf"
+  "${CMAKE_BINARY_DIR}/protobuf-prefix"
 )
 
 # Output summary of the configuration
