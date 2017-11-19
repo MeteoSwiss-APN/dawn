@@ -42,8 +42,8 @@ if(NOT DEFINED DAWN_GIT_HASH OR NOT "${DAWN_GIT_HASH}" STREQUAL "${git_hash_shor
 endif()
 
 # Assemble full version string
-string(TOLOWER ${DAWN_ARCHITECTURE_STRING} architecture)
-string(TOLOWER ${DAWN_PLATFORM_STRING} platform)
+string(TOLOWER ${MSBUILD_ARCHITECTURE_STRING} architecture)
+string(TOLOWER ${MSBUILD_PLATFORM_STRING} platform)
 string(TOLOWER ${CMAKE_CXX_COMPILER_ID} compiler)
 set(compiler "${compiler}-${CMAKE_CXX_COMPILER_VERSION}")
 set(DAWN_FULL_VERSION_STR 

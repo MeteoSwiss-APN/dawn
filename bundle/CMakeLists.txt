@@ -45,26 +45,26 @@ dawn_clone_repository(NAME msbuild URL ${MB_GIT_URL} BRANCH ${MB_GIT_BRANCH})
 list(APPEND CMAKE_MODULE_PATH "${DAWN_MSBUILD_SOURCE_DIR}/cmake")
 include(msbuildCMakeInit)
 
-include(DawnAddTargetCleanAll)
-include(DawnCheckInSourceBuild)
-include(DawnGetArchitectureInfo)
-include(DawnGetCompilerInfo)
-include(DawnGetPlatformInfo)
-include(DawnMakeStringPair)
-include(DawnReportResult)
+include(msbuildAddTargetCleanAll)
+include(msbuildCheckInSourceBuild)
+include(msbuildGetArchitectureInfo)
+include(msbuildGetCompilerInfo)
+include(msbuildGetPlatformInfo)
+include(msbuildMakeStringPair)
+include(msbuildReportResult)
 
 # Include all options (including all Dawn and GTClang options)
 #include(GTClangAllOptions)
 
-dawn_get_compiler_info()
-dawn_get_platform_info()
-dawn_get_architecture_info()
+msbuild_get_compiler_info()
+msbuild_get_platform_info()
+msbuild_get_architecture_info()
 
 # Prevent in source builds
-dawn_check_in_source_build()
+msbuild_check_in_source_build()
 
 # Add custom targets
-dawn_add_target_clean_all(
+msbuild_add_target_clean_all(
   "${CMAKE_BINARY_DIR}/prefix"
   "${CMAKE_BINARY_DIR}/thirdparty"  
   "${CMAKE_BINARY_DIR}/dawn-cmake"  
@@ -77,27 +77,28 @@ dawn_add_target_clean_all(
 
 # Output summary of the configuration
 macro(make_config_string FIRST SECOND)
-  dawn_make_string_pair(${FIRST} ": ${SECOND}" 20 out)
+  msbuild_make_string_pair(${FIRST} ": ${SECOND}" 20 out)
   list(APPEND config_info ${out})
 endmacro()
-make_config_string("Platform" ${DAWN_PLATFORM_STRING})
-make_config_string("Architecture" ${DAWN_ARCHITECTURE_STRING})
-make_config_string("Compiler" ${DAWN_COMPILER_STRING})
+make_config_string("Platform" ${MSBUILD_PLATFORM_STRING})
+make_config_string("Architecture" ${MSBUILD_ARCHITECTURE_STRING})
+make_config_string("Compiler" ${MSBUILD_COMPILER_STRING})
 make_config_string("Build type" ${CMAKE_BUILD_TYPE})
-dawn_report_result("Configuration summary" ${config_info})
+msbuild_report_result("Configuration summary" ${config_info})
 
 include(msbuildAddDependency)
 
 msbuild_add_dependency(NAME "protobuf")
 
 
-set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR} -DBOOST_ROOT=${BOOST_ROOT})
+set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR})
 
 msbuild_find_package(
   PACKAGE dawn
   DEPENDS "protobuf"
   ADDITIONAL
     SOURCE_DIR "${CMAKE_SOURCE_DIR}/../"
+    MSBUILD_ROOT "${DAWN_MSBUILD_SOURCE_DIR}"
     CMAKE_ARGS 
         ${dawn_cmake_args}
 )
