@@ -32,6 +32,7 @@ project(dawn C CXX)
 cmake_minimum_required(VERSION 3.3)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake")
 
 include(DawnCloneRepository)
 
@@ -89,9 +90,9 @@ make_config_string("Compiler" ${MSBUILD_COMPILER_STRING})
 make_config_string("Build type" ${CMAKE_BUILD_TYPE})
 msbuild_report_result("Configuration summary" ${config_info})
 
-include(msbuildAddDependency)
+include(DawnAddDependency)
 
-msbuild_add_dependency(NAME "protobuf")
+dawn_add_dependency(NAME "protobuf")
 
 
 set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR})
