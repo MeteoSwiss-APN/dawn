@@ -325,19 +325,8 @@ Interval Stencil::getAxis(bool useExtendedInterval) const {
 }
 
 void Stencil::renameAllOccurrences(int oldAccessID, int newAccessID) {
-  int numStages = getNumStages();
-  for(int stageIdx = 0; stageIdx < numStages; ++stageIdx) {
-    Stage& stage = *getStage(stageIdx);
-
-    for(auto& doMethodPtr : stage.getDoMethods()) {
-      DoMethod& doMethod = *doMethodPtr;
-      renameAccessIDInStmts(stencilInstantiation_, oldAccessID, newAccessID,
-                            doMethod.getStatementAccessesPairs());
-      renameAccessIDInAccesses(stencilInstantiation_, oldAccessID, newAccessID,
-                               doMethod.getStatementAccessesPairs());
-    }
-
-    stage.update();
+  for(const auto& multistage : getMultiStages()) {
+    multistage->renameAllOccurrences(oldAccessID, newAccessID);
   }
 }
 

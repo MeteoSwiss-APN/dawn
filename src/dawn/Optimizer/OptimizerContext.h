@@ -29,6 +29,14 @@ struct SIR;
 class StencilInstantiation;
 class DawnCompiler;
 
+struct HardwareConfig {
+  /// Maximum number of fields concurrently in shared memory
+  int SMemMaxFields = 8;
+
+  /// Maximum number of fields concurrently in the texture cache
+  int TexCacheMaxFields = 3;
+};
+
 /// @brief Context of handling all Optimizations
 /// @ingroup optimizer
 class OptimizerContext : NonCopyable {
@@ -37,6 +45,7 @@ class OptimizerContext : NonCopyable {
   const SIR* SIR_;
   std::map<std::string, std::unique_ptr<StencilInstantiation>> stencilInstantiationMap_;
   PassManager passManager_;
+  HardwareConfig hardwareConfiguration_;
 
 public:
   /// @brief Initialize the context with a SIR
@@ -64,6 +73,10 @@ public:
   /// @brief Get the diagnostics engine
   const DiagnosticsEngine& getDiagnostics() const;
   DiagnosticsEngine& getDiagnostics();
+
+  /// @brief Get the hardware configuration
+  const HardwareConfig& getHardwareConfiguration() const { return hardwareConfiguration_; }
+  HardwareConfig& getHardwareConfiguration() { return hardwareConfiguration_; }
 };
 
 } // namespace dawn

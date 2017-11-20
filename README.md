@@ -29,9 +29,11 @@ Using Dawn as a common compiler infrastructure can drastically reduce developmen
 Dawn only depends on [Protobuf](https://developers.google.com/protocol-buffers/) (>= 3.4) and requires a C++11 compiler as well as [CMake](https://cmake.org/). To compile the library you need to point CMake to `protobuf-config.cmake` (the CMake configuration file of Protobuf). The following will install Dawn locally into `<dawn-dir>/install/` 
 
 ```bash
+git clone git@github.com:MeteoSwiss-APN/dawn.git
+cd dawn
 mkdir build && cd build
 cmake .. -DProtobuf_DIR=<protobuf-dir>/lib/cmake/protobuf
-make
+make -j4
 make install
 ```
 

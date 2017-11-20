@@ -30,6 +30,7 @@
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
 #include "dawn/Optimizer/PassSSA.h"
 #include "dawn/Optimizer/PassSetCaches.h"
+#include "dawn/Optimizer/PassSetNonTempCaches.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassSetStageName.h"
 #include "dawn/Optimizer/PassStageMerger.h"
@@ -162,6 +163,7 @@ std::unique_ptr<TranslationUnit> DawnCompiler::compile(const SIR* SIR, CodeGenKi
   passManager.pushBackPass<PassStencilSplitter>();
   passManager.pushBackPass<PassTemporaryType>();
   passManager.pushBackPass<PassTemporaryMerger>();
+  passManager.pushBackPass<PassSetNonTempCaches>();
   passManager.pushBackPass<PassSetCaches>();
   passManager.pushBackPass<PassDataLocalityMetric>();
 
