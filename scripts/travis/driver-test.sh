@@ -32,6 +32,7 @@ $CXX --version
 # Build dawn
 pushd "$(pwd)"
 
+cd bundle
 mkdir build && cd build
 cmake .. -DCMAKE_CXX_COMPILER="$CXX"                                                               \
          -DCMAKE_C_COMPILER="$CC"                                                                  \

@@ -45,7 +45,7 @@ jobs:
       stage: Prepare Cache
       compiler: gcc
       env: CXX_COMPILER=g++-5 C_COMPILER=gcc-5
-      script: bash ${SCRIPT_DIR}/driver-install.sh -i ${CACHE_DIR} -b cmake,protobuf
+      script: bash ${SCRIPT_DIR}/driver-install.sh -i ${CACHE_DIR} -b cmake
 
     - <<: *prepare_cache_stage
       compiler: clang
@@ -103,7 +103,7 @@ jobs:
       compiler: clang
       env: CONFIG=RelWithDebInfo CXX_COMPILER=clang++-3.8 C_COMPILER=clang-3.8 CLANG_VERSION=5.0.0
 
-cache:
+cache: ccache
   directories:
     - ${CACHE_DIR}/protobuf-${PROTOBUF_VERSION}
 
