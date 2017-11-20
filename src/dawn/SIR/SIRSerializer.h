@@ -16,6 +16,7 @@
 #define DAWN_SIR_SIRSERIALIZER_H
 
 #include <memory>
+#include <string>
 
 namespace dawn {
 
@@ -37,7 +38,13 @@ public:
   ///
   /// @throws std::excetpion    Failed to deserialize
   /// @returns newly allocated SIR on success or `NULL`
-  static std::shared_ptr<SIR> deserializeFromString(const std::string& str);
+  static std::shared_ptr<SIR> deserializeFromJsonString(const std::string& str);
+
+  /// @brief Deserialize the SIR from the given byte string (protbufs internal format) `string`
+  ///
+  /// @throws std::excetpion    Failed to deserialize
+  /// @returns newly allocated SIR on success or `NULL`
+  static std::shared_ptr<SIR> deserializeFromByteString(const std::string& str);
 
   /// @brief Serialize the SIR as a JSON formatted string to `file`
   ///
@@ -46,7 +53,7 @@ public:
 
   /// @brief Serialize the SIR to a JSON string
   /// @returns JSON formatted strong of `sir`
-  static std::string serializeToString(const SIR* sir);
+  static std::string serializeToJsonString(const SIR* sir);
 };
 
 } // namespace dawn

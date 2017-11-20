@@ -32,7 +32,7 @@ protected:
   virtual void TearDown() override { sirRef.reset(); }
 
   std::shared_ptr<SIR> serializeAndDeserializeRef() {
-    return SIRSerializer::deserializeFromString(SIRSerializer::serializeToString(sirRef.get()));
+    return SIRSerializer::deserializeFromJsonString(SIRSerializer::serializeToJsonString(sirRef.get()));
   }
 
   std::shared_ptr<SIR> sirRef;

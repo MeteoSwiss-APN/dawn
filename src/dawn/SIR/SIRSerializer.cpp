@@ -495,7 +495,7 @@ void SIRSerializer::serialize(const std::string& file, const SIR* sir) {
   std::copy(str.begin(), str.end(), std::ostreambuf_iterator<char>(ofs));
 }
 
-std::string SIRSerializer::serializeToString(const SIR* sir) { return serializeImpl(sir); }
+std::string SIRSerializer::serializeToJsonString(const SIR* sir) { return serializeImpl(sir); }
 
 //===------------------------------------------------------------------------------------------===//
 //     Deserialization
@@ -920,7 +920,7 @@ std::shared_ptr<SIR> SIRSerializer::deserialize(const std::string& file) {
   return deserializeImpl(str);
 }
 
-std::shared_ptr<SIR> SIRSerializer::deserializeFromString(const std::string& str) {
+std::shared_ptr<SIR> SIRSerializer::deserializeFromJsonString(const std::string& str) {
   return deserializeImpl(str);
 }
 
