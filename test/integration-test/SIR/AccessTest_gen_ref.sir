@@ -1,5 +1,5 @@
 {
- "filename": "/code/gtclang-all/gtclang/test/integration-test/SIR/AccessTest.cpp",
+ "filename": "/home/thfabian/Desktop/gtclang/test/integration-test/SIR/AccessTest.cpp",
  "stencils": [
   {
    "name": "Test",
@@ -29,7 +29,11 @@
                   "left": {
                    "field_access_expr": {
                     "name": "b",
-                    "offset": [],
+                    "offset": [
+                     0,
+                     0,
+                     0
+                    ],
                     "argument_map": [
                      -1,
                      -1,
@@ -47,6 +51,7 @@
                     }
                    }
                   },
+                  "op": "=",
                   "right": {
                    "binary_operator": {
                     "left": {
@@ -60,7 +65,11 @@
                             "left": {
                              "field_access_expr": {
                               "name": "a",
-                              "offset": [],
+                              "offset": [
+                               1,
+                               0,
+                               0
+                              ],
                               "argument_map": [
                                -1,
                                -1,
@@ -82,7 +91,11 @@
                             "right": {
                              "field_access_expr": {
                               "name": "a",
-                              "offset": [],
+                              "offset": [
+                               -1,
+                               0,
+                               0
+                              ],
                               "argument_map": [
                                -1,
                                -1,
@@ -110,7 +123,11 @@
                           "right": {
                            "field_access_expr": {
                             "name": "a",
-                            "offset": [],
+                            "offset": [
+                             0,
+                             1,
+                             0
+                            ],
                             "argument_map": [
                              -1,
                              -1,
@@ -138,7 +155,11 @@
                         "right": {
                          "field_access_expr": {
                           "name": "a",
-                          "offset": [],
+                          "offset": [
+                           0,
+                           -1,
+                           0
+                          ],
                           "argument_map": [
                            -1,
                            -1,
@@ -166,7 +187,11 @@
                       "right": {
                        "field_access_expr": {
                         "name": "a",
-                        "offset": [],
+                        "offset": [
+                         0,
+                         0,
+                         -1
+                        ],
                         "argument_map": [
                          -1,
                          -1,
@@ -194,7 +219,11 @@
                     "right": {
                      "field_access_expr": {
                       "name": "a",
-                      "offset": [],
+                      "offset": [
+                       0,
+                       1,
+                       1
+                      ],
                       "argument_map": [
                        -1,
                        -1,

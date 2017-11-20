@@ -25,7 +25,7 @@ from time import time
 
 from .config import Config
 from .error import report_info
-from .progressbar import TerminalController, ProgressBar, SimpleProgressBar
+from .progressbar import TerminalController, ProgressBar, SimpleProgressBar, EmptyProgressbar
 from .utility import executeCommand, levenshtein
 
 
@@ -48,7 +48,10 @@ class TestRunner(object):
         self.__test_time = 0
 
         try:
-            self.__progressbar = ProgressBar(self.__term, 'Tests')
+            if Config.no_progressbar:
+                self.__progressbar = EmptyProgressbar()
+            else:
+                self.__progressbar = ProgressBar(self.__term, 'Tests')
         except ValueError:
             report_info("Failed to initialize advanced progressbar")
             self.__progressbar = SimpleProgressBar('Tests  ')
@@ -127,6 +130,12 @@ class TestRunner(object):
                         except FileNotFoundError as e:
                             self.add_failure(file, "EXECUTION", "%s" % e)
                             break
+
+                        # Filter ignored nodes
+                        if files.get_ignored_nodes():
+                            for node in files.get_ignored_nodes():
+                                del output_json[node]
+                                del reference_json[node]
 
                         output, reference = dumps(output_json), dumps(reference_json)
 

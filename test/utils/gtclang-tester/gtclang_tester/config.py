@@ -33,3 +33,6 @@ class Config(object):
 
     # Generate reference files
     generate_reference = False
+
+    # Don't show any progressbar
+    no_progressbar = False

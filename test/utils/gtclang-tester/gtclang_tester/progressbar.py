@@ -203,7 +203,34 @@ class TerminalController:
         return self.__valid
 
 
-class SimpleProgressBar:
+class ProgressBarInterface(object):
+    """
+    Abstract progressbar interface.
+    """
+
+    def update(self, percent, message):
+        raise NotImplementedError
+
+    def clear(self):
+        raise NotImplementedError
+
+
+class EmptyProgressbar(ProgressBarInterface):
+    """
+    Empty implementation of a progressbar.
+    """
+
+    def __init__(self):
+        pass
+
+    def update(self, percent, message):
+        pass
+
+    def clear(self):
+        pass
+
+
+class SimpleProgressBar(ProgressBarInterface):
     """
     A simple progress bar which doesn't need any terminal support.
 
@@ -244,7 +271,7 @@ class SimpleProgressBar:
             self.atIndex = None
 
 
-class ProgressBar:
+class ProgressBar(ProgressBarInterface):
     """
     A 3-line progress bar, which looks like::
     

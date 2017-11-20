@@ -35,6 +35,8 @@ def main():
     parser.add_option("--gridtools_flags", dest="gridtools_flags",
                       help="semicolon separated list of compile flags required to compile gridtools C++ code",
                       metavar="FLAGS")
+    parser.add_option("--no-progressbar", dest="no_progressbar", action="store_true",
+                      help="Don't show any progressbar")
     parser.add_option("-v", "--verbose", dest="verbose", action="store_true",
                       help="verbose logging")
     parser.add_option("-g", "--generate-reference", dest="generate_reference", action="store_true",
@@ -56,6 +58,9 @@ def main():
 
     if options.cxx:
         Config.cxx = options.cxx
+
+    if options.no_progressbar:
+        Config.no_progressbar = True
 
     if not args:
         report_fatal_error('no input directories given')

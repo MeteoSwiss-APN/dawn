@@ -1,5 +1,5 @@
 {
- "filename": "/code/gtclang-all/gtclang/test/integration-test/SIR/CopyTest.cpp",
+ "filename": "/home/thfabian/Desktop/gtclang/test/integration-test/SIR/CopyTest.cpp",
  "stencils": [
   {
    "name": "Test",
@@ -29,7 +29,11 @@
                   "left": {
                    "field_access_expr": {
                     "name": "field_a",
-                    "offset": [],
+                    "offset": [
+                     0,
+                     0,
+                     0
+                    ],
                     "argument_map": [
                      -1,
                      -1,
@@ -47,10 +51,15 @@
                     }
                    }
                   },
+                  "op": "=",
                   "right": {
                    "field_access_expr": {
                     "name": "field_b",
-                    "offset": [],
+                    "offset": [
+                     0,
+                     0,
+                     0
+                    ],
                     "argument_map": [
                      -1,
                      -1,

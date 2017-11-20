@@ -138,7 +138,7 @@ class Parser(object):
 
             expected_file = self.__substitute_keywords(line, linenumber)
 
-            report_info("Parsed EXPECTED_ACCESSES as: %s" % expected_file)
+            report_info("Parsed EXPECTED_FILE as: \"%s\"" % expected_file)
             self.__test.add_expected_file_command(expected_file, self.__dir, self.__file,
                                                   linenumber)
 
@@ -209,6 +209,7 @@ class ExpectedFile(object):
     def __init__(self, command, dir, file, linenumber):
         self.__file_output = []
         self.__file_reference = []
+        self.__ignored_nodes = []
 
         commands = command.split(' ')
         for cmd in commands:
@@ -224,6 +225,12 @@ class ExpectedFile(object):
                 for ref_file in reference_cmd.split(','):
                     self.__file_reference.append(path.join(dir, ref_file))
 
+            ignore_idx = cmd.find("IGNORE:")
+            if ignore_idx >= 0:
+                ignored_nodes = cmd[ignore_idx + len("IGNORE:"):].rstrip()
+                for node in ignored_nodes.split(','):
+                    self.__ignored_nodes.append(node)
+
         if len(self.__file_output) != len(self.__file_reference):
             report_fatal_error(
                 "%s:%i: mismatch of number of output and reference files" % (file, linenumber))
@@ -233,6 +240,9 @@ class ExpectedFile(object):
 
     def get_reference_files(self):
         return self.__file_reference
+
+    def get_ignored_nodes(self):
+        return self.__ignored_nodes
 
 
 class Test(object):

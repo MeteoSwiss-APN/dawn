@@ -15,7 +15,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 // RUN: %gtclang% %file% -write-sir -fno-codegen -o %filename%_gen.cpp
-// EXPECTED_FILE: OUTPUT:%filename%_gen.sir REFERENCE:%filename%_gen_ref.sir
+// EXPECTED_FILE: OUTPUT:%filename%_gen.sir REFERENCE:%filename%_gen_ref.sir IGNORE:filename
 
 #include "gridtools/clang_dsl.hpp"
 
