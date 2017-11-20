@@ -38,6 +38,7 @@ list(APPEND CMAKE_MODULE_PATH "${MSBUILD_ROOT}/cmake")
 
 include(DawnCMakeInit)
 set(DAWN_ROOT ${CMAKE_CURRENT_LIST_DIR})
+
 dawn_cmake_init()
 
 include(msbuildAddLibrary)
