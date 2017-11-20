@@ -103,7 +103,7 @@ jobs:
       compiler: clang
       env: CONFIG=RelWithDebInfo CXX_COMPILER=clang++-3.8 C_COMPILER=clang-3.8 CLANG_VERSION=5.0.0
 
-cache: ccache
+cache:
   directories:
     - ${CACHE_DIR}/protobuf-${PROTOBUF_VERSION}
 
