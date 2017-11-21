@@ -36,9 +36,9 @@ extern "C" {
 extern dawnOptionsEntry_t* dawnOptionsEntryCreateInteger(int value);
 
 /**
- * @brief Create a float options entry
+ * @brief Create a double options entry
  */
-extern dawnOptionsEntry_t* dawnOptionsEntryCreateFloat(double value);
+extern dawnOptionsEntry_t* dawnOptionsEntryCreateDouble(double value);
 
 /**
  * @brief Create a string options entry
@@ -46,6 +46,27 @@ extern dawnOptionsEntry_t* dawnOptionsEntryCreateFloat(double value);
  * Note that the string needs to be `\0` terminated
  */
 extern dawnOptionsEntry_t* dawnOptionsEntryCreateString(const char* value);
+
+/**
+ * @brief Get a *copy* of the value of an entry which stores an integer
+ * @returns newly allocated pointer to the value of the entry or `NULL` if the `entry` does no store
+ *          an integer
+ */
+extern int* dawnOptionsEntryGetInteger(dawnOptionsEntry_t* entry);
+
+/**
+ * @brief Get a *copy* of the value of an entry which stores a double
+ * @returns newly allocated pointer to the value of the entry or `NULL` if the `entry` does no store
+ *          a double
+ */
+extern double* dawnOptionsEntryGetDouble(dawnOptionsEntry_t* entry);
+
+/**
+ * @brief Get a *copy* of the value of an entry which stores a string
+ * @returns newly allocated pointer to the value of the entry or `NULL` if the `entry` does no store
+ *          a string
+ */
+extern char* dawnOptionsEntryGetString(dawnOptionsEntry_t* entry);
 
 /**
  * @brief Destroy the Options and deallocate all memory

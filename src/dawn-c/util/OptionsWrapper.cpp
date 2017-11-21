@@ -12,7 +12,9 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn-c/util/Allocate.h"
 #include "dawn-c/util/OptionsWrapper.h"
+#include <sstream>
 
 namespace dawn {
 
@@ -41,7 +43,14 @@ Options OptionsWrapper::toOptions() const noexcept {
   return opt;
 }
 
-char* OptionsWrapper::toString() const { return nullptr; }
+char* OptionsWrapper::toString() const {
+  std::stringstream ss;
+#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
+  ss << #NAME " = " << OptionsEntryWrapper::getValue<TYPE>(options_.find(#NAME)->second) << "\n";
+#include "dawn/Compiler/Options.inc"
+#undef OPT
+  return allocateAndCopyString(ss.str());
+}
 
 } // namespace util
 
