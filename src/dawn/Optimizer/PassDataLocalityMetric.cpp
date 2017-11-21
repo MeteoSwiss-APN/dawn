@@ -54,20 +54,20 @@ class ReadWriteCounter : public ASTVisitorForwarding {
   /// Current stencil function call
   std::stack<StencilFunctionInstantiation*> stencilFunCalls_;
 
-  /// Hardware configuration
-  const HardwareConfig& config_;
+  /// Map of ID's to their respective number of reads / writes
+  std::unordered_map<int, ReadWriteAccumulator> individualReadWrites_;
 
 public:
-  ReadWriteCounter(StencilInstantiation* instantiation, const MultiStage& multiStage,
-                   const HardwareConfig& config)
+  ReadWriteCounter(StencilInstantiation* instantiation, const MultiStage& multiStage)
       : instantiation_(instantiation), numReads_(0), numWrites_(0), multiStage_(multiStage),
-        fields_(multiStage_.getFields()), config_(config) {}
+        fields_(multiStage_.getFields()) {}
 
   std::size_t getNumReads() const { return numReads_; }
   std::size_t getNumWrites() const { return numWrites_; }
 
   void updateTextureCache(int AccessID, int kOffset) {
-    if(textureCache_.size() < config_.TexCacheMaxFields)
+    if(textureCache_.size() <
+       instantiation_->getOptimizerContext()->getHardwareConfiguration().TexCacheMaxFields)
       textureCache_.emplace_front(AccessID, kOffset);
     else {
       auto it = std::find_if(
@@ -125,13 +125,13 @@ public:
     if(cache.getCacheType() == Cache::K) {
       if(cache.getCacheIOPolicy() == Cache::fill ||
          cache.getCacheIOPolicy() == Cache::fill_and_flush) {
-        std::cout << "   Fill: " << getNameFromAccessID(AccessID) << std::endl;
         numReads_++;
+        individualReadWrites_[AccessID].numReads++;
       }
       if(cache.getCacheIOPolicy() == Cache::flush ||
          cache.getCacheIOPolicy() == Cache::fill_and_flush) {
-        std::cout << "   Flush: " << getNameFromAccessID(AccessID) << std::endl;
         numWrites_++;
+        individualReadWrites_[AccessID].numWrites++;
       }
     }
     kCacheLoaded_.insert(AccessID);
@@ -142,8 +142,8 @@ public:
 
     // Is field stored in cache?
     if(!multiStage_.getCaches().count(AccessID)) {
-      std::cout << "   Write: " << getNameFromAccessID(AccessID) << std::endl;
       numWrites_++;
+      individualReadWrites_[AccessID].numWrites++;
 
       // The written value is stored in a register
       register_.insert(AccessID);
@@ -170,8 +170,8 @@ public:
 
         // Check if the field is either cached or stored in the texture cache
         if(!(multiStage_.isCached(AccessID) || isTextureCached(AccessID, kOffset))) {
-          std::cout << "   Read: " << getNameFromAccessID(AccessID) << std::endl;
           numReads_++;
+          individualReadWrites_[AccessID].numReads++;
         } else {
           updateKCache(AccessID);
         }
@@ -181,8 +181,8 @@ public:
 
         // Check if the center is stored in a register
         if(!(register_.count(AccessID) && getOffset(fieldExpr) == Array3i{{0, 0, 0}})) {
-          std::cout << "   Read: " << getNameFromAccessID(AccessID) << std::endl;
           numReads_++;
+          individualReadWrites_[AccessID].numReads++;
         }
 
       } else {
@@ -218,22 +218,10 @@ public:
   }
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override { processReadAccess(expr); }
+  const std::unordered_map<int, ReadWriteAccumulator>& getIndividualReadWrites() const {
+    return individualReadWrites_;
+  }
 };
-
-/// @brief Approximate the reads and writes accoding to our data locality metric
-DAWN_ATTRIBUTE_UNUSED static std::pair<int, int>
-computeReadWriteAccessesMetric(StencilInstantiation* instantiation, const MultiStage& multiStage,
-                               const HardwareConfig& config) {
-  ReadWriteCounter readWriteCounter(instantiation, multiStage, config);
-
-  for(const auto& stage : multiStage.getStages())
-    for(const auto& DoMethod : stage->getDoMethods())
-      for(const auto& statementAccessesPair : DoMethod->getStatementAccessesPairs()) {
-        statementAccessesPair->getStatement()->ASTStmt->accept(readWriteCounter);
-      }
-
-  return std::make_pair(readWriteCounter.getNumReads(), readWriteCounter.getNumWrites());
-}
 
 /// @brief Approximate an upperbound of the required reads and writes.
 ///
@@ -241,7 +229,7 @@ computeReadWriteAccessesMetric(StencilInstantiation* instantiation, const MultiS
 /// every output at most 1 store.
 DAWN_ATTRIBUTE_UNUSED static std::pair<int, int>
 computeReadWriteAccessesLowerBound(StencilInstantiation* instantiation,
-                                   const MultiStage& multiStage, const HardwareConfig& config) {
+                                   const MultiStage& multiStage) {
   std::size_t numReads = 0, numWrites = 0;
   std::unordered_map<int, Field> fields = multiStage.getFields();
 
@@ -286,6 +274,35 @@ computeReadWriteAccessesLowerBound(StencilInstantiation* instantiation,
 
 } // anonymous namespace
 
+/// @brief Approximate the reads and writes individually for each ID
+std::unordered_map<int, ReadWriteAccumulator>
+computeReadWriteAccessesMetricPerAccessID(StencilInstantiation* instantiation,
+                                          const MultiStage& multiStage) {
+  ReadWriteCounter readWriteCounter(instantiation, multiStage);
+
+  for(const auto& stage : multiStage.getStages())
+    for(const auto& DoMethod : stage->getDoMethods())
+      for(const auto& statementAccessesPair : DoMethod->getStatementAccessesPairs()) {
+        statementAccessesPair->getStatement()->ASTStmt->accept(readWriteCounter);
+      }
+
+  return readWriteCounter.getIndividualReadWrites();
+}
+
+/// @brief Approximate the reads and writes accoding to our data locality metric
+std::pair<int, int> computeReadWriteAccessesMetric(StencilInstantiation* instantiation,
+                                                   const MultiStage& multiStage) {
+  ReadWriteCounter readWriteCounter(instantiation, multiStage);
+
+  for(const auto& stage : multiStage.getStages())
+    for(const auto& DoMethod : stage->getDoMethods())
+      for(const auto& statementAccessesPair : DoMethod->getStatementAccessesPairs()) {
+        statementAccessesPair->getStatement()->ASTStmt->accept(readWriteCounter);
+      }
+
+  return std::make_pair(readWriteCounter.getNumReads(), readWriteCounter.getNumWrites());
+}
+
 PassDataLocalityMetric::PassDataLocalityMetric() : Pass("PassDataLocalityMetric") {}
 
 bool PassDataLocalityMetric::run(StencilInstantiation* stencilInstantiation) {
@@ -310,11 +327,10 @@ bool PassDataLocalityMetric::run(StencilInstantiation* stencilInstantiation) {
 
         std::cout << "  MultiStage " << multiStageIdx << ":\n";
 
-        auto readAndWrite =
-            computeReadWriteAccessesMetric(stencilInstantiation, multiStage, config_);
+        auto readAndWrite = computeReadWriteAccessesMetric(stencilInstantiation, multiStage);
 
         //        auto readAndWrite =
-        //            computeReadWriteAccessesLowerBound(stencilInstantiation, multiStage, config_);
+        //            computeReadWriteAccessesLowerBound(stencilInstantiation, multiStage);
 
         std::size_t numReads = readAndWrite.first, numWrites = readAndWrite.second;
 

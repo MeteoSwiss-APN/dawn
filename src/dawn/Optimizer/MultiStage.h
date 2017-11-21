@@ -118,6 +118,9 @@ public:
   /// @brief Get the caches
   std::unordered_map<int, Cache>& getCaches() { return caches_; }
   const std::unordered_map<int, Cache>& getCaches() const { return caches_; }
+
+  /// @brief Rename all the occurances in the multi-stage
+  void renameAllOccurrences(int oldAccessID, int newAccessID);
 };
 
 } // namespace dawn
