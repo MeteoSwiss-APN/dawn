@@ -211,8 +211,8 @@ private:
     auto assignmentStatement = std::make_shared<Statement>(expAssignment, nullptr);
     auto pair = std::make_shared<StatementAccessesPair>(assignmentStatement);
     auto newAccess = std::make_shared<Accesses>();
-    newAccess->addWriteExtent(assignmentID, Extents({0, 0, 0}));
-    newAccess->addReadExtent(assigneeID, Extents({0, 0, 0}));
+    newAccess->addWriteExtent(assignmentID, Extents({{0, 0, 0}}));
+    newAccess->addReadExtent(assigneeID, Extents({{0, 0, 0}}));
     pair->setAccesses(newAccess);
     domethod->getStatementAccessesPairs().push_back(pair);
 
