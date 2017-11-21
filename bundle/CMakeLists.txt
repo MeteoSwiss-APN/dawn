@@ -29,6 +29,7 @@ if(NOT CMAKE_INSTALL_PREFIX)
 endif()
 
 project(dawn C CXX)
+enable_testing()
 cmake_minimum_required(VERSION 3.3)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -99,12 +100,22 @@ set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR})
 
 msbuild_find_package(
   PACKAGE dawn
+  FORWARD_VARS 
+    BINARY_DIR dawn_binary_dir
   DEPENDS "protobuf"
   ADDITIONAL
     SOURCE_DIR "${CMAKE_SOURCE_DIR}/../"
     MSBUILD_ROOT "${DAWN_MSBUILD_SOURCE_DIR}"
     CMAKE_ARGS 
         ${dawn_cmake_args}
+)
+
+if(NOT(dawn_binary_dir))
+  message(FATAL_ERROR "dawn binary dir was not defined by External_dawn")
+endif()
+
+add_test(NAME dawn-tests 
+  COMMAND  make test -C ${dawn_binary_dir}
 )
 
 file(WRITE ${CMAKE_BINARY_DIR}/Conf.bundle "conf")
