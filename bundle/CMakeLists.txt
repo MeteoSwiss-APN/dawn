@@ -41,7 +41,7 @@ set(MB_GIT_URL "https:///github.com/cosunae/msbuild.git"
     CACHE PATH "URL of the dawn git repository to clone")
 set(MB_GIT_BRANCH "master" CACHE STRING "Branch of the dawn git repository to clone")
 
-dawn_clone_repository(NAME msbuild URL ${MB_GIT_URL} BRANCH ${MB_GIT_BRANCH})
+dawn_clone_repository(NAME msbuild URL ${MB_GIT_URL} BRANCH ${MB_GIT_BRANCH} SOURCE_DIR DAWN_MSBUILD_SOURCE_DIR )
 
 #
 list(APPEND CMAKE_MODULE_PATH "${DAWN_MSBUILD_SOURCE_DIR}/cmake")
