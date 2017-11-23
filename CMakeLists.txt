@@ -56,7 +56,7 @@ include(msbuildGetPlatformInfo)
 include(msbuildMakeStringPair)
 include(msbuildReportResult)
 include(msbuildSetCXXStandard)
-include(DawnEnableFullRPATH)
+include(msbuildEnableFullRPATH)
 
 msbuild_get_compiler_info()
 msbuild_get_platform_info()
@@ -88,7 +88,7 @@ msbuild_add_target_clean_all(
 )
 
 # Enable RPath support
-dawn_enable_full_rpath(${DAWN_INSTALL_LIB_DIR})
+msbuild_enable_full_rpath(${DAWN_INSTALL_LIB_DIR})
 
 # Output summary of the configuration
 macro(make_config_string FIRST SECOND)
