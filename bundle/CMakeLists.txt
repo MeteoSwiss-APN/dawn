@@ -112,10 +112,11 @@ add_test(NAME dawn-tests
   COMMAND  ${CMAKE_COMMAND} --build ${dawn_binary_dir} --target test
 )
 
-file(WRITE ${CMAKE_BINARY_DIR}/dawn-conf.bundle "conf")
+set(conf_bundle_filename ${CMAKE_BINARY_DIR}/dawn-conf.bundle)
+file(WRITE ${conf_bundle_filename} "conf")
 
 install(
-  FILES ${CMAKE_BINARY_DIR}/Conf.bundle
+  FILES ${conf_bundle_filename}
   DESTINATION bundle_conf
 )
 
