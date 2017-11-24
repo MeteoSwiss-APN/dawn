@@ -55,6 +55,8 @@ msbuild_add_library(
           PassPrintStencilGraph.h
           PassSetCaches.cpp
           PassSetCaches.h
+          PassSetNonTempCaches.cpp
+          PassSetNonTempCaches.h
           PassSetStageGraph.cpp
           PassSetStageGraph.h
           PassSetStageName.cpp
