@@ -30,7 +30,7 @@ endif()
 
 project(dawn C CXX)
 enable_testing()
-cmake_minimum_required(VERSION 3.3)
+cmake_minimum_required(VERSION 3.8.1)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake")
@@ -54,9 +54,6 @@ include(msbuildGetCompilerInfo)
 include(msbuildGetPlatformInfo)
 include(msbuildMakeStringPair)
 include(msbuildReportResult)
-
-# Include all options (including all Dawn and GTClang options)
-#include(GTClangAllOptions)
 
 msbuild_get_compiler_info()
 msbuild_get_platform_info()
@@ -91,10 +88,7 @@ make_config_string("Compiler" ${MSBUILD_COMPILER_STRING})
 make_config_string("Build type" ${CMAKE_BUILD_TYPE})
 msbuild_report_result("Configuration summary" ${config_info})
 
-include(DawnAddDependency)
-
-dawn_add_dependency(NAME "protobuf")
-
+include("thirdparty/DawnAddProtobuf")
 
 set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR})
 
@@ -115,10 +109,10 @@ if(NOT(dawn_binary_dir))
 endif()
 
 add_test(NAME dawn-tests 
-  COMMAND  make test -C ${dawn_binary_dir}
+  COMMAND  ${CMAKE_COMMAND} --build ${dawn_binary_dir} --target test
 )
 
-file(WRITE ${CMAKE_BINARY_DIR}/Conf.bundle "conf")
+file(WRITE ${CMAKE_BINARY_DIR}/dawn-conf.bundle "conf")
 
 install(
   FILES ${CMAKE_BINARY_DIR}/Conf.bundle

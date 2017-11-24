@@ -32,7 +32,7 @@ cmake_minimum_required(VERSION 3.3)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 if(NOT(DEFINED MSBUILD_ROOT))
-    message(FATAL_ERROR "Specifying a MSBUILD_ROOT is required")
+  message(FATAL_ERROR "MSBUILD_ROOT not found! Try specifying it in the environment via -DMSBUILD_ROOT=<>")
 endif()
 list(APPEND CMAKE_MODULE_PATH "${MSBUILD_ROOT}/cmake")
 
