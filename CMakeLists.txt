@@ -30,37 +30,36 @@ project(dawn C CXX)
 cmake_minimum_required(VERSION 3.3)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-
-if(NOT(DEFINED MSBUILD_ROOT))
-  message(FATAL_ERROR "MSBUILD_ROOT not found! Try specifying it in the environment via -DMSBUILD_ROOT=<>")
+if(NOT(DEFINED MCHBUILD_ROOT))
+  message(FATAL_ERROR "MCHBUILD_ROOT not found! Try specifying it in the environment via -DMCHBUILD_ROOT=<>")
 endif()
-list(APPEND CMAKE_MODULE_PATH "${MSBUILD_ROOT}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${MCHBUILD_ROOT}/cmake")
 
 include(DawnCMakeInit)
 set(DAWN_ROOT ${CMAKE_CURRENT_LIST_DIR})
 
 dawn_cmake_init()
 
-include(msbuildAddLibrary)
-include(msbuildAddTargetClangFormat)
-include(msbuildAddTargetCleanAll)
-include(msbuildCheckInSourceBuild)
-include(msbuildCombineLibraries)
-include(msbuildConfigureFile)
-include(msbuildCreatePackageString)
+include(mchbuildAddLibrary)
+include(mchbuildAddTargetClangFormat)
+include(mchbuildAddTargetCleanAll)
+include(mchbuildCheckInSourceBuild)
+include(mchbuildCombineLibraries)
+include(mchbuildConfigureFile)
+include(mchbuildCreatePackageString)
 include(DawnExportPackage)
-include(msbuildGetArchitectureInfo)
-include(msbuildGetCompilerInfo)
-include(msbuildGetGitHeadRevision)
-include(msbuildGetPlatformInfo)
-include(msbuildMakeStringPair)
-include(msbuildReportResult)
-include(msbuildSetCXXStandard)
-include(msbuildEnableFullRPATH)
+include(mchbuildGetArchitectureInfo)
+include(mchbuildGetCompilerInfo)
+include(mchbuildGetGitHeadRevision)
+include(mchbuildGetPlatformInfo)
+include(mchbuildMakeStringPair)
+include(mchbuildReportResult)
+include(mchbuildSetCXXStandard)
+include(mchbuildEnableFullRPATH)
 
-msbuild_get_compiler_info()
-msbuild_get_platform_info()
-msbuild_get_architecture_info()
+mchbuild_get_compiler_info()
+mchbuild_get_platform_info()
+mchbuild_get_architecture_info()
 
 # Include the Dawn specific options, definitions and macros
 include(DawnOptions)
@@ -68,16 +67,16 @@ include(DawnDefinitions)
 include(DawnMacros)
 
 # Set C++ standard
-msbuild_set_cxx_standard(c++11)
+mchbuild_set_cxx_standard(c++11)
 
 # Set C++ flags
 dawn_set_cxx_flags()
 
 # Prevent in source builds
-msbuild_check_in_source_build()
+mchbuild_check_in_source_build()
 
 # Add custom targets
-msbuild_add_target_clean_all(
+mchbuild_add_target_clean_all(
   ${CMAKE_BINARY_DIR}/docs 
   ${CMAKE_BINARY_DIR}/sphinx
   ${CMAKE_BINARY_DIR}/src
@@ -88,22 +87,22 @@ msbuild_add_target_clean_all(
 )
 
 # Enable RPath support
-msbuild_enable_full_rpath(${DAWN_INSTALL_LIB_DIR})
+mchbuild_enable_full_rpath(${DAWN_INSTALL_LIB_DIR})
 
 # Output summary of the configuration
 macro(make_config_string FIRST SECOND)
-  msbuild_make_string_pair(${FIRST} ": ${SECOND}" 20 out)
+  mchbuild_make_string_pair(${FIRST} ": ${SECOND}" 20 out)
   list(APPEND config_info ${out})
 endmacro()
 make_config_string("Dawn version" ${DAWN_FULL_VERSION_STR})
-make_config_string("Platform" ${MSBUILD_PLATFORM_STRING})
-make_config_string("Architecture" ${MSBUILD_ARCHITECTURE_STRING})
-make_config_string("Compiler" ${MSBUILD_COMPILER_STRING})
+make_config_string("Platform" ${MCHBUILD_PLATFORM_STRING})
+make_config_string("Architecture" ${MCHBUILD_ARCHITECTURE_STRING})
+make_config_string("Compiler" ${MCHBUILD_COMPILER_STRING})
 make_config_string("Build type" ${CMAKE_BUILD_TYPE})
 make_config_string("Asserts" ${DAWN_ASSERTS})
 make_config_string("Build shared " ${BUILD_SHARED_LIBS})
 make_config_string("Install prefix" ${CMAKE_INSTALL_PREFIX})
-msbuild_report_result("Configuration summary" ${config_info})
+mchbuild_report_result("Configuration summary" ${config_info})
 
 # Include the packages 
 if(DAWN_DOCUMENTATION)
@@ -112,7 +111,7 @@ endif()
 
 foreach(package bash Protobuf ccache clang-format ${doc_packages})
   include("Add${package}")
-  msbuild_create_package_string(${package} info)
+  mchbuild_create_package_string(${package} info)
   list(APPEND package_info ${info})
 
     string(TOUPPER ${package} PACKAGE)
@@ -124,10 +123,10 @@ endforeach()
 include_directories(SYSTEM ${DAWN_EXTERNAL_INCLUDE_DIRS})
 add_definitions(${DAWN_EXTERNAL_DEFINITIONS})
 
-msbuild_report_result("Package summary" ${package_info})
+mchbuild_report_result("Package summary" ${package_info})
 
 # Add clang-format target
-msbuild_add_target_clang_format(DIRECTORIES ${CMAKE_SOURCE_DIR}/src EXTENSION ".h;.cpp")
+mchbuild_add_target_clang_format(DIRECTORIES ${CMAKE_SOURCE_DIR}/src EXTENSION ".h;.cpp")
 
 # Build dawn
 include_directories(${CMAKE_SOURCE_DIR}/src)

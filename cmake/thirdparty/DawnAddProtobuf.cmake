@@ -14,11 +14,11 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(msbuildSetDownloadDir)
-include(msbuildFindPackage)
+include(mchbuildSetDownloadDir)
+include(mchbuildFindPackage)
 
 # Set the default download directory (define GTCLANG_ALL_DOWNLOAD_DIR)
-msbuild_set_download_dir()
+mchbuild_set_download_dir()
 
 #
 # Protobuf
@@ -26,13 +26,13 @@ msbuild_set_download_dir()
 set(protobuf_version "3.4.0")
 set(protobuf_version_short "3.4")
 
-msbuild_find_package(
+mchbuild_find_package(
   PACKAGE Protobuf
   PACKAGE_ARGS ${protobuf_version_short} NO_MODULE 
   REQUIRED_VARS Protobuf_DIR
   BUILD_VERSION ${protobuf_version}
   ADDITIONAL
-    DOWNLOAD_DIR ${MSBUILD_DOWNLOAD_DIR}
+    DOWNLOAD_DIR ${MCHBUILD_DOWNLOAD_DIR}
     URL "https://github.com/google/protobuf/archive/v${protobuf_version}.tar.gz"
     URL_MD5 "1d077a7d4db3d75681f5c333f2de9b1a"
 )

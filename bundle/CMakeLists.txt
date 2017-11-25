@@ -37,33 +37,33 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake")
 
 include(DawnCloneRepository)
 
-set(MB_GIT_URL "https:///github.com/cosunae/msbuild.git"
+set(DAWN_MCHBUILD_GIT_URL "https:///github.com/cosunae/msbuild.git"
     CACHE PATH "URL of the dawn git repository to clone")
-set(MB_GIT_BRANCH "master" CACHE STRING "Branch of the dawn git repository to clone")
-
-dawn_clone_repository(NAME msbuild URL ${MB_GIT_URL} BRANCH ${MB_GIT_BRANCH} SOURCE_DIR DAWN_MSBUILD_SOURCE_DIR )
-
+set(DAWN_MCHBUILD_GIT_BRANCH "master" CACHE STRING "Branch of the dawn git repository to clone")
+message("HOHOHOHOHO")
+dawn_clone_repository(NAME mchbuild URL ${DAWN_MCHBUILD_GIT_URL} BRANCH ${DAWN_MCHBUILD_GIT_BRANCH} SOURCE_DIR DAWN_MCHBUILD_SOURCE_DIR )
+message("KKKKK ${DAWN_MCHBUILD_SOURCE_DIR}")
 #
-list(APPEND CMAKE_MODULE_PATH "${DAWN_MSBUILD_SOURCE_DIR}/cmake")
-include(msbuildCMakeInit)
+list(APPEND CMAKE_MODULE_PATH "${DAWN_MCHBUILD_SOURCE_DIR}/cmake")
+include(mchbuildCMakeInit)
 
-include(msbuildAddTargetCleanAll)
-include(msbuildCheckInSourceBuild)
-include(msbuildGetArchitectureInfo)
-include(msbuildGetCompilerInfo)
-include(msbuildGetPlatformInfo)
-include(msbuildMakeStringPair)
-include(msbuildReportResult)
+include(mchbuildAddTargetCleanAll)
+include(mchbuildCheckInSourceBuild)
+include(mchbuildGetArchitectureInfo)
+include(mchbuildGetCompilerInfo)
+include(mchbuildGetPlatformInfo)
+include(mchbuildMakeStringPair)
+include(mchbuildReportResult)
 
-msbuild_get_compiler_info()
-msbuild_get_platform_info()
-msbuild_get_architecture_info()
+mchbuild_get_compiler_info()
+mchbuild_get_platform_info()
+mchbuild_get_architecture_info()
 
 # Prevent in source builds
-msbuild_check_in_source_build()
+mchbuild_check_in_source_build()
 
 # Add custom targets
-msbuild_add_target_clean_all(
+mchbuild_add_target_clean_all(
   "${CMAKE_BINARY_DIR}/prefix"
   "${CMAKE_BINARY_DIR}/thirdparty"  
   "${CMAKE_BINARY_DIR}/dawn-cmake"  
@@ -72,34 +72,34 @@ msbuild_add_target_clean_all(
   "${CMAKE_BINARY_DIR}/gtclang"
   "${CMAKE_BINARY_DIR}/gtclang-prefix"
   "${CMAKE_BINARY_DIR}/Makefile"
-  "${CMAKE_BINARY_DIR}/msbuild-cmake"
+  "${CMAKE_BINARY_DIR}/mchbuild-cmake"
   "${CMAKE_BINARY_DIR}/protobuf"
   "${CMAKE_BINARY_DIR}/protobuf-prefix"
 )
 
 # Output summary of the configuration
 macro(make_config_string FIRST SECOND)
-  msbuild_make_string_pair(${FIRST} ": ${SECOND}" 20 out)
+  mchbuild_make_string_pair(${FIRST} ": ${SECOND}" 20 out)
   list(APPEND config_info ${out})
 endmacro()
-make_config_string("Platform" ${MSBUILD_PLATFORM_STRING})
-make_config_string("Architecture" ${MSBUILD_ARCHITECTURE_STRING})
-make_config_string("Compiler" ${MSBUILD_COMPILER_STRING})
+make_config_string("Platform" ${MCHBUILD_PLATFORM_STRING})
+make_config_string("Architecture" ${MCHBUILD_ARCHITECTURE_STRING})
+make_config_string("Compiler" ${MCHBUILD_COMPILER_STRING})
 make_config_string("Build type" ${CMAKE_BUILD_TYPE})
-msbuild_report_result("Configuration summary" ${config_info})
+mchbuild_report_result("Configuration summary" ${config_info})
 
 include("thirdparty/DawnAddProtobuf")
 
 set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR})
 
-msbuild_find_package(
+mchbuild_find_package(
   PACKAGE dawn
   FORWARD_VARS 
     BINARY_DIR dawn_binary_dir
   DEPENDS "protobuf"
   ADDITIONAL
     SOURCE_DIR "${CMAKE_SOURCE_DIR}/../"
-    MSBUILD_ROOT "${DAWN_MSBUILD_SOURCE_DIR}"
+    MCHBUILD_ROOT "${DAWN_MCHBUILD_SOURCE_DIR}"
     CMAKE_ARGS 
         ${dawn_cmake_args}
 )
