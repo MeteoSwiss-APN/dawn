@@ -81,7 +81,7 @@ endmacro()
 macro(dawn_gen_install_config)
   # Export version
   write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/DawnConfigVersion.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/dawnConfigVersion.cmake"
     VERSION ${DAWN_VERSION}
     COMPATIBILITY AnyNewerVersion
   )
@@ -93,8 +93,8 @@ macro(dawn_gen_install_config)
   set(DAWN_INSTALL_PROTOBUF_VERSION ${DAWN_PROTOBUF_VERSION})
 
   configure_package_config_file(
-    ${CMAKE_SOURCE_DIR}/cmake/templates/DawnConfig.cmake.in 
-    ${CMAKE_CURRENT_BINARY_DIR}/DawnConfig.cmake
+    ${CMAKE_SOURCE_DIR}/cmake/templates/dawnConfig.cmake.in 
+    ${CMAKE_CURRENT_BINARY_DIR}/dawnConfig.cmake
     INSTALL_DESTINATION ${DAWN_INSTALL_CMAKE_DIR}
     PATH_VARS 
       DAWN_INSTALL_ROOT
@@ -104,8 +104,8 @@ macro(dawn_gen_install_config)
   )
 
   install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/DawnConfigVersion.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/DawnConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/dawnConfigVersion.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/dawnConfig.cmake"
     DESTINATION ${DAWN_INSTALL_CMAKE_DIR}
   )
 endmacro()
