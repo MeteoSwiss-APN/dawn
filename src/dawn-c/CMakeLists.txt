@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-msbuild_add_library(
+mchbuild_add_library(
   NAME DawnC
   SOURCES Dawn.h
           Compiler.h
@@ -30,7 +30,7 @@ msbuild_add_library(
 )
 
 # Combine the relevant object libraries into libDawnC.so/libDawnC.a
-msbuild_combine_libraries(
+mchbuild_combine_libraries(
   NAME DawnC
   OBJECTS DawnCObjects
           DawnSupportObjects

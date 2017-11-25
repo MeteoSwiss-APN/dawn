@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-msbuild_add_library(
+mchbuild_add_library(
   NAME DawnUnittest
   SOURCES ASTSimplifier.cpp
           ASTSimplifier.h
