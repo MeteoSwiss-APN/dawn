@@ -37,12 +37,10 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake")
 
 include(DawnCloneRepository)
 
-set(DAWN_MCHBUILD_GIT_URL "https:///github.com/cosunae/msbuild.git"
+set(DAWN_MCHBUILD_GIT_URL "https:///github.com/Meteoswiss-APN/mchbuild.git"
     CACHE PATH "URL of the dawn git repository to clone")
 set(DAWN_MCHBUILD_GIT_BRANCH "master" CACHE STRING "Branch of the dawn git repository to clone")
-message("HOHOHOHOHO")
 dawn_clone_repository(NAME mchbuild URL ${DAWN_MCHBUILD_GIT_URL} BRANCH ${DAWN_MCHBUILD_GIT_BRANCH} SOURCE_DIR DAWN_MCHBUILD_SOURCE_DIR )
-message("KKKKK ${DAWN_MCHBUILD_SOURCE_DIR}")
 #
 list(APPEND CMAKE_MODULE_PATH "${DAWN_MCHBUILD_SOURCE_DIR}/cmake")
 include(mchbuildCMakeInit)
