@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(DawnExportOptions)
+include(mchbuildExportOptions)
 
 set(BUILD_IS_NOT_RELEASE ON)
 if(${CMAKE_BUILD_TYPE} MATCHES "Release")
@@ -31,7 +31,7 @@ option(DAWN_TESTING "Enable testing" ON)
 option(DAWN_DOCUMENTATION "Enable documentation" OFF)
 
 # Export options for meta projects
-dawn_export_options(DAWN 
+mchbuild_export_options(DAWN 
   DAWN_ASSERTS 
   DAWN_USE_CCACHE
   DAWN_TESTING
