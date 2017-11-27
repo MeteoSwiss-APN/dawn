@@ -32,16 +32,19 @@ $CXX --version
 # Build dawn
 pushd "$(pwd)"
 
+export PYTHON_DIR=/opt/python/3.5.3
+
 cd bundle
 mkdir build && cd build
 cmake .. -DCMAKE_CXX_COMPILER="$CXX"                                                               \
          -DCMAKE_C_COMPILER="$CC"                                                                  \
          -DCMAKE_BUILD_TYPE="$CONFIG"                                                              \
+         -DPYTHON_EXECUTABLE="$PYTHON_DIR/bin/python3"                                             \
       || fatal_error "failed to configure"
 make -j2 || fatal_error "failed to build"
 
 # Run unittests
-ctest -C ${CONFIG} --output-on-failure --force-new-ctest-process                                   \
+ctest -V -C ${CONFIG} --output-on-failure --force-new-ctest-process                                   \
      || fatal_error "failed to run tests"
 
 popd
