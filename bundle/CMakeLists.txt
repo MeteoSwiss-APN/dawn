@@ -43,22 +43,11 @@ set(DAWN_MCHBUILD_GIT_BRANCH "master" CACHE STRING "Branch of the dawn git repos
 dawn_clone_repository(NAME mchbuild URL ${DAWN_MCHBUILD_GIT_URL} BRANCH ${DAWN_MCHBUILD_GIT_BRANCH} SOURCE_DIR DAWN_MCHBUILD_SOURCE_DIR )
 #
 list(APPEND CMAKE_MODULE_PATH "${DAWN_MCHBUILD_SOURCE_DIR}/cmake")
-include(mchbuildCMakeInit)
+include(mchbuildInit)
+
+mchbuild_init()
 
 include(mchbuildAddTargetCleanAll)
-include(mchbuildCheckInSourceBuild)
-include(mchbuildGetArchitectureInfo)
-include(mchbuildGetCompilerInfo)
-include(mchbuildGetPlatformInfo)
-include(mchbuildMakeStringPair)
-include(mchbuildReportResult)
-
-mchbuild_get_compiler_info()
-mchbuild_get_platform_info()
-mchbuild_get_architecture_info()
-
-# Prevent in source builds
-mchbuild_check_in_source_build()
 
 # Add custom targets
 mchbuild_add_target_clean_all(
@@ -74,17 +63,6 @@ mchbuild_add_target_clean_all(
   "${CMAKE_BINARY_DIR}/protobuf"
   "${CMAKE_BINARY_DIR}/protobuf-prefix"
 )
-
-# Output summary of the configuration
-macro(make_config_string FIRST SECOND)
-  mchbuild_make_string_pair(${FIRST} ": ${SECOND}" 20 out)
-  list(APPEND config_info ${out})
-endmacro()
-make_config_string("Platform" ${MCHBUILD_PLATFORM_STRING})
-make_config_string("Architecture" ${MCHBUILD_ARCHITECTURE_STRING})
-make_config_string("Compiler" ${MCHBUILD_COMPILER_STRING})
-make_config_string("Build type" ${CMAKE_BUILD_TYPE})
-mchbuild_report_result("Configuration summary" ${config_info})
 
 include("thirdparty/DawnAddProtobuf")
 
