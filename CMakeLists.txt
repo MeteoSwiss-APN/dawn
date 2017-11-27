@@ -34,6 +34,8 @@ if(NOT(DEFINED MCHBUILD_ROOT))
   message(FATAL_ERROR "MCHBUILD_ROOT not found! Try specifying it in the environment via -DMCHBUILD_ROOT=<>")
 endif()
 list(APPEND CMAKE_MODULE_PATH "${MCHBUILD_ROOT}/cmake")
+include(mchbuildInit)
+mchbuild_init()
 
 include(DawnCMakeInit)
 set(DAWN_ROOT ${CMAKE_CURRENT_LIST_DIR})
@@ -43,23 +45,15 @@ dawn_cmake_init()
 include(mchbuildAddLibrary)
 include(mchbuildAddTargetClangFormat)
 include(mchbuildAddTargetCleanAll)
-include(mchbuildCheckInSourceBuild)
 include(mchbuildCombineLibraries)
 include(mchbuildConfigureFile)
 include(mchbuildCreatePackageString)
 include(DawnExportPackage)
-include(mchbuildGetArchitectureInfo)
-include(mchbuildGetCompilerInfo)
 include(mchbuildGetGitHeadRevision)
-include(mchbuildGetPlatformInfo)
 include(mchbuildMakeStringPair)
 include(mchbuildReportResult)
 include(mchbuildSetCXXStandard)
 include(mchbuildEnableFullRPATH)
-
-mchbuild_get_compiler_info()
-mchbuild_get_platform_info()
-mchbuild_get_architecture_info()
 
 # Include the Dawn specific options, definitions and macros
 include(DawnOptions)
@@ -71,9 +65,6 @@ mchbuild_set_cxx_standard(c++11)
 
 # Set C++ flags
 dawn_set_cxx_flags()
-
-# Prevent in source builds
-mchbuild_check_in_source_build()
 
 # Add custom targets
 mchbuild_add_target_clean_all(

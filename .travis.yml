@@ -105,7 +105,7 @@ jobs:
 
 cache:
   directories:
-    - ${CACHE_DIR}/protobuf-${PROTOBUF_VERSION}
+    - ${TRAVIS_BUILD_DIR}/bundle/build/protobuf-prefix/
 
 branches:
   except:
