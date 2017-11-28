@@ -37,10 +37,13 @@ export PYTHON_DIR=/opt/python/3.5.3
 cd bundle
 mkdir build
 cd build
+build_dir=$(pwd)
+
 cmake .. -DCMAKE_CXX_COMPILER="$CXX"                                                               \
          -DCMAKE_C_COMPILER="$CC"                                                                  \
          -DCMAKE_BUILD_TYPE="$CONFIG"                                                              \
          -DPYTHON_EXECUTABLE="$PYTHON_DIR/bin/python3"                                             \
+         -DProtobuf_DIR=$(build_dir)/protobuf-prefix/src/protobuf-build/lib/cmake/protobuf/        \
       || fatal_error "failed to configure"
 make -j2 || fatal_error "failed to build"
 
