@@ -13,3 +13,106 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn-c/Compiler.h"
+#include "dawn-c/ErrorHandling.h"
+#include "dawn-c/util/Allocate.h"
+#include "dawn-c/util/CompilerWrapper.h"
+#include "dawn-c/util/OptionsWrapper.h"
+#include "dawn/SIR/SIRSerializer.h"
+#include "dawn/Support/STLExtras.h"
+#include "dawn/Support/Unreachable.h"
+#include <iostream>
+#include <memory>
+
+using namespace dawn::util;
+
+static dawn::DawnCompiler::CodeGenKind getCodeGenKind(DawnCodeGenKind codegen) {
+  switch(codegen) {
+  case DC_GTClang:
+    return dawn::DawnCompiler::CG_GTClang;
+  case DC_GTClangNaiveCXX:
+    return dawn::DawnCompiler::CG_GTClangNaiveCXX;
+  default:
+    dawn_unreachable("invalid CodeGenKind");
+  }
+}
+
+static DawnDiagnosticsKind getDawnDiagnosticsKind(dawn::DiagnosticsKind diag) {
+  switch(diag) {
+  case dawn::DiagnosticsKind::Note:
+    return DD_Note;
+  case dawn::DiagnosticsKind::Warning:
+    return DD_Warning;
+  case dawn::DiagnosticsKind::Error:
+    return DD_Error;
+  default:
+    dawn_unreachable("invalid dawn::DiagnosticsKind");
+  }
+}
+
+static void dawnDefaultDiagnosticsHandler(DawnDiagnosticsKind diag, int line, int column,
+                                          const char* filename, const char* msg) {
+  std::cerr << filename << ":" << line << ":" << column << ": ";
+  switch(diag) {
+  case DD_Note:
+    std::cerr << "note";
+  case DD_Warning:
+    std::cerr << "warning";
+  case DD_Error:
+    std::cerr << "error";
+  default:
+    dawn_unreachable("invalid DawnDiagnosticsKind");
+  }
+  std::cerr << ": " << msg << std::endl;
+}
+
+static dawnDiagnosticsHandler_t DiagnosticsHandler = dawnDefaultDiagnosticsHandler;
+
+void dawnReportDiagnostic(DawnDiagnosticsKind diag, int line, int column, const char* filename,
+                          const char* msg) {
+  DiagnosticsHandler(diag, line, column, filename, msg);
+}
+
+void dawnInstallDiagnosticsHandler(dawnDiagnosticsHandler_t handler) {
+  DiagnosticsHandler = handler ? handler : dawnDefaultDiagnosticsHandler;
+}
+
+dawnTranslationUnit_t* dawnCompile(const char* SIR, size_t size, const dawnOptions_t* options,
+                                   DawnCodeGenKind codeGenKind) {
+  dawnTranslationUnit_t* translationUnit = nullptr;
+
+  // Deserialize the SIR
+  try {
+    std::string sirStr(SIR, size);
+    auto inMemorySIR =
+        dawn::SIRSerializer::deserializeFromString(sirStr, dawn::SIRSerializer::SK_Byte);
+
+    // Prepare options
+    std::unique_ptr<dawn::Options> compileOptions = dawn::make_unique<dawn::Options>();
+    if(options)
+      toConstOptionsWrapper(options)->setDawnOptions(compileOptions.get());
+
+    // Run the compiler
+    dawn::DawnCompiler compiler(compileOptions.get());
+    auto TU = compiler.compile(inMemorySIR.get(), getCodeGenKind(codeGenKind));
+
+    // Report diganostics
+    if(compiler.getDiagnostics().hasDiags()) {
+      for(const auto& diag : compiler.getDiagnostics().getQueue())
+        dawnReportDiagnostic(getDawnDiagnosticsKind(diag->getDiagKind()),
+                             diag->getSourceLocation().Line, diag->getSourceLocation().Column,
+                             diag->getFilename().c_str(), diag->getMessage().c_str());
+    }
+
+    if(!TU || compiler.getDiagnostics().hasErrors())
+      throw std::runtime_error("compilation failed");
+
+    translationUnit = allocate<dawnTranslationUnit_t>();
+    translationUnit->Impl = new dawn::TranslationUnit(std::move(*TU.get()));
+    translationUnit->OwnsData = 1;
+
+  } catch(std::exception& e) {
+    dawnFatalError(e.what());
+  }
+
+  return translationUnit;
+}

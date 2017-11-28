@@ -20,7 +20,7 @@ namespace {
 
 TEST(OptionsTest, OptionsEntryInteger) {
   dawnOptionsEntry_t* entry = dawnOptionsEntryCreateInteger(5);
-  EXPECT_EQ(entry->Type, DK_Integer);
+  EXPECT_EQ(entry->Type, DT_Integer);
   EXPECT_EQ(entry->SizeInBytes, sizeof(int));
 
   int* value = dawnOptionsEntryGetInteger(entry);
@@ -36,7 +36,7 @@ TEST(OptionsTest, OptionsEntryInteger) {
 
 TEST(OptionsTest, OptionsEntryDouble) {
   dawnOptionsEntry_t* entry = dawnOptionsEntryCreateDouble(5.5);
-  EXPECT_EQ(entry->Type, DK_Double);
+  EXPECT_EQ(entry->Type, DT_Double);
   EXPECT_EQ(entry->SizeInBytes, sizeof(double));
 
   double* value = dawnOptionsEntryGetDouble(entry);
@@ -49,7 +49,7 @@ TEST(OptionsTest, OptionsEntryDouble) {
 
 TEST(OptionsTest, OptionsEntryString) {
   dawnOptionsEntry_t* entry = dawnOptionsEntryCreateString("hello");
-  EXPECT_EQ(entry->Type, DK_Char);
+  EXPECT_EQ(entry->Type, DT_Char);
   EXPECT_EQ(entry->SizeInBytes, std::strlen("hello") + 1);
 
   char* value = dawnOptionsEntryGetString(entry);

@@ -34,13 +34,11 @@ const dawnOptionsEntry_t* OptionsWrapper::getOption(std::string name) const noex
   return it == options_.end() ? nullptr : it->second;
 }
 
-Options OptionsWrapper::toOptions() const noexcept {
-  Options opt;
+void OptionsWrapper::setDawnOptions(dawn::Options* options) const noexcept {
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
-  opt.NAME = OptionsEntryWrapper::getValue<TYPE>(options_.find(#NAME)->second);
+  options->NAME = OptionsEntryWrapper::getValue<TYPE>(options_.find(#NAME)->second);
 #include "dawn/Compiler/Options.inc"
 #undef OPT
-  return opt;
 }
 
 char* OptionsWrapper::toString() const {

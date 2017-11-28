@@ -32,6 +32,9 @@ class TranslationUnit {
 public:
   using const_iterator = std::map<std::string, std::string>::const_iterator;
 
+  TranslationUnit(const TranslationUnit&) = default;
+  TranslationUnit(TranslationUnit&&) = default;
+
   /// @brief Construct the TranslationUnit by consuming the input arguments
   TranslationUnit(std::string filename, std::vector<std::string>&& ppDefines,
                   std::map<std::string, std::string>&& stencils, std::string&& globals);

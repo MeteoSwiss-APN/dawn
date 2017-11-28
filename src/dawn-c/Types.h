@@ -32,10 +32,20 @@ extern "C" {
  * Note that booleans are represented as integers.
  */
 enum DawnTypeKind {
-  DK_Integer, /**< `int` */
-  DK_Double,  /**< `double` */
-  DK_Char     /**< `char` */
+  DT_Integer, /**< `int` */
+  DT_Double,  /**< `double` */
+  DT_Char     /**< `char` */
 };
+
+/**
+ * @brief Code generation backend
+ */
+enum DawnCodeGenKind { DC_GTClang, DC_GTClangNaiveCXX };
+
+/**
+ * @brief Kinds of diagnostics
+ */
+enum DawnDiagnosticsKind { DD_Note, DD_Warning, DD_Error };
 
 /**
  * @brief Refrence to the Options
@@ -61,6 +71,14 @@ typedef struct {
   void* Impl;   /**< Pointer to the allocated dawn::DawnCompiler */
   int OwnsData; /**< Ownership flag */
 } dawnCompiler_t;
+
+/**
+ * @brief Refrence to a TranslationUnit
+ */
+typedef struct {
+  void* Impl;   /**< Pointer to the allocated dawn::TranslationUnit */
+  int OwnsData; /**< Ownership flag */
+} dawnTranslationUnit_t;
 
 /** @} */
 

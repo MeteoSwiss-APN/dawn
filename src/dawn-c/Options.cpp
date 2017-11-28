@@ -33,7 +33,7 @@ dawnOptionsEntry_t* dawnOptionsEntryCreateString(const char* value) {
 }
 
 int* dawnOptionsEntryGetInteger(dawnOptionsEntry_t* entry) {
-  if(entry->Type == DK_Integer) {
+  if(entry->Type == DT_Integer) {
     void* value = std::malloc(entry->SizeInBytes);
     std::memcpy(value, entry->Value, entry->SizeInBytes);
     return reinterpret_cast<int*>(value);
@@ -42,7 +42,7 @@ int* dawnOptionsEntryGetInteger(dawnOptionsEntry_t* entry) {
 }
 
 double* dawnOptionsEntryGetDouble(dawnOptionsEntry_t* entry) {
-  if(entry->Type == DK_Double) {
+  if(entry->Type == DT_Double) {
     void* value = std::malloc(entry->SizeInBytes);
     std::memcpy(value, entry->Value, entry->SizeInBytes);
     return reinterpret_cast<double*>(value);
@@ -51,7 +51,7 @@ double* dawnOptionsEntryGetDouble(dawnOptionsEntry_t* entry) {
 }
 
 char* dawnOptionsEntryGetString(dawnOptionsEntry_t* entry) {
-  if(entry->Type == DK_Char) {
+  if(entry->Type == DT_Char) {
     void* value = std::malloc(entry->SizeInBytes);
     std::memcpy(value, entry->Value, entry->SizeInBytes);
     return reinterpret_cast<char*>(value);

@@ -34,7 +34,7 @@ struct OptionsInfo {};
 
 template <>
 struct OptionsInfo<bool> {
-  static constexpr DawnTypeKind TypeKind = DK_Integer;
+  static constexpr DawnTypeKind TypeKind = DT_Integer;
   using Type = int;
 
   static std::size_t getSizeInBytes(const bool& value) { return sizeof(Type); }
@@ -47,7 +47,7 @@ struct OptionsInfo<bool> {
 
 template <>
 struct OptionsInfo<int> {
-  static constexpr DawnTypeKind TypeKind = DK_Integer;
+  static constexpr DawnTypeKind TypeKind = DT_Integer;
   using Type = int;
 
   static std::size_t getSizeInBytes(const int& value) { return sizeof(Type); }
@@ -60,7 +60,7 @@ struct OptionsInfo<int> {
 
 template <>
 struct OptionsInfo<float> {
-  static constexpr DawnTypeKind TypeKind = DK_Double;
+  static constexpr DawnTypeKind TypeKind = DT_Double;
   using Type = double;
 
   static std::size_t getSizeInBytes(const float& value) { return sizeof(Type); }
@@ -73,7 +73,7 @@ struct OptionsInfo<float> {
 
 template <>
 struct OptionsInfo<double> {
-  static constexpr DawnTypeKind TypeKind = DK_Double;
+  static constexpr DawnTypeKind TypeKind = DT_Double;
   using Type = double;
 
   static std::size_t getSizeInBytes(const double& value) { return sizeof(Type); }
@@ -86,7 +86,7 @@ struct OptionsInfo<double> {
 
 template <>
 struct OptionsInfo<const char*> {
-  static constexpr DawnTypeKind TypeKind = DK_Char;
+  static constexpr DawnTypeKind TypeKind = DT_Char;
   using Type = char;
 
   static std::size_t getSizeInBytes(const char* value) { return std::strlen(value) + 1; }
@@ -100,7 +100,7 @@ struct OptionsInfo<const char*> {
 
 template <>
 struct OptionsInfo<std::string> {
-  static constexpr DawnTypeKind TypeKind = DK_Char;
+  static constexpr DawnTypeKind TypeKind = DT_Char;
   using Type = char;
 
   static std::size_t getSizeInBytes(const std::string& value) { return value.size() + 1; }
@@ -118,7 +118,7 @@ struct ValueGetter {};
 template <>
 struct ValueGetter<bool> {
   static bool get(const dawnOptionsEntry_t* entry) {
-    DAWN_ASSERT_MSG(entry->Type == DK_Integer, "invalid type, expected int");
+    DAWN_ASSERT_MSG(entry->Type == DT_Integer, "invalid type, expected int");
     return *(int*)entry->Value;
   }
 };
@@ -126,7 +126,7 @@ struct ValueGetter<bool> {
 template <>
 struct ValueGetter<int> {
   static int get(const dawnOptionsEntry_t* entry) {
-    DAWN_ASSERT_MSG(entry->Type == DK_Integer, "invalid type, expected int");
+    DAWN_ASSERT_MSG(entry->Type == DT_Integer, "invalid type, expected int");
     return *(int*)entry->Value;
   }
 };
@@ -134,7 +134,7 @@ struct ValueGetter<int> {
 template <>
 struct ValueGetter<double> {
   static double get(const dawnOptionsEntry_t* entry) {
-    DAWN_ASSERT_MSG(entry->Type == DK_Double, "invalid type, expected double");
+    DAWN_ASSERT_MSG(entry->Type == DT_Double, "invalid type, expected double");
     return *(double*)entry->Value;
   }
 };
@@ -142,7 +142,7 @@ struct ValueGetter<double> {
 template <>
 struct ValueGetter<std::string> {
   static std::string get(const dawnOptionsEntry_t* entry) {
-    DAWN_ASSERT_MSG(entry->Type == DK_Char, "invalid type, expected string");
+    DAWN_ASSERT_MSG(entry->Type == DT_Char, "invalid type, expected string");
     return std::string((const char*)entry->Value);
   }
 };
@@ -218,8 +218,8 @@ public:
   /// @brief Returns a copy of the option `name` or `NULL` if option does not exist
   const dawnOptionsEntry_t* getOption(std::string name) const noexcept;
 
-  /// @brief Convert to `dawn::Options` (this copies the current options)
-  dawn::Options toOptions() const noexcept;
+  /// @brief Set the `dawn::Options` to the content of the wrapper
+  void setDawnOptions(dawn::Options* options) const noexcept;
 
   /// @brief Convert to string
   char* toString() const;
