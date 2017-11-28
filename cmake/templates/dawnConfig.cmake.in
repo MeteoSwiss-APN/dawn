@@ -71,3 +71,8 @@ if(DAWN_HAS_SHARED_LIBRARY)
   get_property(_shared_lib TARGET Dawn::DawnShared PROPERTY LOCATION)
   message(STATUS "  Shared: ${_shared_lib}")
 endif()
+
+set(DAWN_OPTIONS "@DAWN_OPTIONS@")
+if("${DAWN_OPTIONS}" STREQUAL "")
+  message(FATAL_ERROR "DAWN_OPTIONS not set")
+endif()

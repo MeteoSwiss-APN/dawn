@@ -12,9 +12,9 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-dawn_configure_file(Config.h.cmake)
+mchbuild_configure_file(Config.h.cmake)
 
-dawn_add_library(
+mchbuild_add_library(
   NAME DawnSupport
   SOURCES AlignOf.h
           Array.cpp

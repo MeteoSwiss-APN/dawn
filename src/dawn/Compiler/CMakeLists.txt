@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-dawn_add_library(
+mchbuild_add_library(
   NAME DawnCompiler
   SOURCES DawnCompiler.h
           DawnCompiler.cpp
