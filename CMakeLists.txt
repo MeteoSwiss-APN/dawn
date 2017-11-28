@@ -30,31 +30,30 @@ project(dawn C CXX)
 cmake_minimum_required(VERSION 3.3)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+if(NOT(DEFINED MCHBUILD_ROOT))
+  message(FATAL_ERROR "MCHBUILD_ROOT not found! Try specifying it in the environment via -DMCHBUILD_ROOT=<>")
+endif()
+list(APPEND CMAKE_MODULE_PATH "${MCHBUILD_ROOT}/cmake")
+include(mchbuildInit)
+mchbuild_init()
 
 include(DawnCMakeInit)
 set(DAWN_ROOT ${CMAKE_CURRENT_LIST_DIR})
+
 dawn_cmake_init()
 
-include(DawnAddLibrary)
-include(DawnAddTargetClangFormat)
-include(DawnAddTargetCleanAll)
-include(DawnCheckInSourceBuild)
-include(DawnCombineLibraries)
-include(DawnConfigureFile)
-include(DawnCreatePackageString)
+include(mchbuildAddLibrary)
+include(mchbuildAddTargetClangFormat)
+include(mchbuildAddTargetCleanAll)
+include(mchbuildCombineLibraries)
+include(mchbuildConfigureFile)
+include(mchbuildCreatePackageString)
 include(DawnExportPackage)
-include(DawnGetArchitectureInfo)
-include(DawnGetCompilerInfo)
-include(DawnGetGitHeadRevision)
-include(DawnGetPlatformInfo)
-include(DawnMakeStringPair)
-include(DawnReportResult)
-include(DawnSetCXXStandard)
-include(DawnEnableFullRPATH)
-
-dawn_get_compiler_info()
-dawn_get_platform_info()
-dawn_get_architecture_info()
+include(mchbuildGetGitHeadRevision)
+include(mchbuildMakeStringPair)
+include(mchbuildReportResult)
+include(mchbuildSetCXXStandard)
+include(mchbuildEnableFullRPATH)
 
 # Include the Dawn specific options, definitions and macros
 include(DawnOptions)
@@ -62,16 +61,13 @@ include(DawnDefinitions)
 include(DawnMacros)
 
 # Set C++ standard
-dawn_set_cxx_standard(c++11)
+mchbuild_set_cxx_standard(c++11)
 
 # Set C++ flags
 dawn_set_cxx_flags()
 
-# Prevent in source builds
-dawn_check_in_source_build()
-
 # Add custom targets
-dawn_add_target_clean_all(
+mchbuild_add_target_clean_all(
   ${CMAKE_BINARY_DIR}/docs 
   ${CMAKE_BINARY_DIR}/sphinx
   ${CMAKE_BINARY_DIR}/src
@@ -82,22 +78,22 @@ dawn_add_target_clean_all(
 )
 
 # Enable RPath support
-dawn_enable_full_rpath(${DAWN_INSTALL_LIB_DIR})
+mchbuild_enable_full_rpath(${DAWN_INSTALL_LIB_DIR})
 
 # Output summary of the configuration
 macro(make_config_string FIRST SECOND)
-  dawn_make_string_pair(${FIRST} ": ${SECOND}" 20 out)
+  mchbuild_make_string_pair(${FIRST} ": ${SECOND}" 20 out)
   list(APPEND config_info ${out})
 endmacro()
 make_config_string("Dawn version" ${DAWN_FULL_VERSION_STR})
-make_config_string("Platform" ${DAWN_PLATFORM_STRING})
-make_config_string("Architecture" ${DAWN_ARCHITECTURE_STRING})
-make_config_string("Compiler" ${DAWN_COMPILER_STRING})
+make_config_string("Platform" ${MCHBUILD_PLATFORM_STRING})
+make_config_string("Architecture" ${MCHBUILD_ARCHITECTURE_STRING})
+make_config_string("Compiler" ${MCHBUILD_COMPILER_STRING})
 make_config_string("Build type" ${CMAKE_BUILD_TYPE})
 make_config_string("Asserts" ${DAWN_ASSERTS})
 make_config_string("Build shared " ${BUILD_SHARED_LIBS})
 make_config_string("Install prefix" ${CMAKE_INSTALL_PREFIX})
-dawn_report_result("Configuration summary" ${config_info})
+mchbuild_report_result("Configuration summary" ${config_info})
 
 # Include the packages 
 if(DAWN_DOCUMENTATION)
@@ -106,7 +102,7 @@ endif()
 
 foreach(package bash Protobuf ccache clang-format ${doc_packages})
   include("Add${package}")
-  dawn_create_package_string(${package} info)
+  mchbuild_create_package_string(${package} info)
   list(APPEND package_info ${info})
 
     string(TOUPPER ${package} PACKAGE)
@@ -118,10 +114,10 @@ endforeach()
 include_directories(SYSTEM ${DAWN_EXTERNAL_INCLUDE_DIRS})
 add_definitions(${DAWN_EXTERNAL_DEFINITIONS})
 
-dawn_report_result("Package summary" ${package_info})
+mchbuild_report_result("Package summary" ${package_info})
 
 # Add clang-format target
-dawn_add_target_clang_format(DIRECTORIES ${CMAKE_SOURCE_DIR}/src EXTENSION ".h;.cpp")
+mchbuild_add_target_clang_format(DIRECTORIES ${CMAKE_SOURCE_DIR}/src EXTENSION ".h;.cpp")
 
 # Build dawn
 include_directories(${CMAKE_SOURCE_DIR}/src)
@@ -146,7 +142,7 @@ endif()
 
 # Install headers
 install(
-  DIRECTORY src/ 
+  DIRECTORY ${CMAKE_SOURCE_DIR}/src/ 
   DESTINATION ${DAWN_INSTALL_INCLUDE_DIR} 
   FILES_MATCHING PATTERN "*.h" PATTERN "*.inc" PATTERN "*.hpp"
 )

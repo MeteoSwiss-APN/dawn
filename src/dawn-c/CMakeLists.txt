@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-dawn_add_library(
+mchbuild_add_library(
   NAME DawnC
   SOURCES Dawn.h
           Compiler.h
@@ -30,7 +30,7 @@ dawn_add_library(
 )
 
 # Combine the relevant object libraries into libDawnC.so/libDawnC.a
-dawn_combine_libraries(
+mchbuild_combine_libraries(
   NAME DawnC
   OBJECTS DawnCObjects
           DawnSupportObjects
@@ -39,6 +39,7 @@ dawn_combine_libraries(
           DawnOptimizerObjects
           DawnCodeGenObjects
   INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
+  VERSION ${DAWN_VERSION}
   DEPENDS ${DAW_EXTERNAL_LIBRARIES}
 )
 
