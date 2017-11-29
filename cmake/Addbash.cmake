@@ -14,9 +14,11 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+include(mchbuildExportPackage)
+
 find_package(bash REQUIRED)
 
-dawn_export_package(
+mchbuild_export_package(
   NAME bash
   FOUND ${BASH_FOUND}
   EXECUTABLE ${BASH_EXECUTABLE}

@@ -14,9 +14,11 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+include(mchbuildExportPackage)
+
 find_package(PythonInterp 3.4)
 
-dawn_export_package(
+mchbuild_export_package(
   NAME Python3
   FOUND ${PYTHONINTERP_FOUND}
   EXECUTABLE ${PYTHON_EXECUTABLE}

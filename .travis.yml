@@ -19,11 +19,13 @@ dist: trusty
 sudo: false
   
 language: c++
-
+python:
+  - "3.5"
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
+
     packages:
       - g++-5
       - gcc-5
@@ -40,9 +42,7 @@ env:
   global:
     - SCRIPT_DIR=${TRAVIS_BUILD_DIR}/scripts/travis
     - CACHE_DIR=${TRAVIS_BUILD_DIR}/deps/install
-    - BOOST_VERSION=1.60.0
     - CMAKE_VERSION=3.8.1
-    - PROTOBUF_VERSION=3.4.1
 
 jobs:
   include:
@@ -110,9 +110,10 @@ jobs:
 
 cache:
   directories:
-    - ${CACHE_DIR}/dawn
-    - ${CACHE_DIR}/boost-${BOOST_VERSION}
-    - ${CACHE_DIR}/protobuf-${PROTOBUF_VERSION}
+    - ${TRAVIS_BUILD_DIR}/bundle/build/protobuf-prefix/
+    - ${TRAVIS_BUILD_DIR}/bundle/build/dawn-prefix/
+    - ${TRAVIS_BUILD_DIR}/bundle/build/boost-prefix/
+    - ${TRAVIS_BUILD_DIR}/bundle/build/prefix/boost/
   ccache: true
   apt: true 
 

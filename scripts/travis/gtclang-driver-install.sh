@@ -18,3 +18,31 @@
 this_script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$this_script_dir/gtclang-install.sh"
 gtclang_install_dependencies
+
+export CXX=${CXX_COMPILER}
+export CC=${C_COMPILER}
+
+$CC --version
+$CXX --version
+
+# Build gtclang
+pushd "$(pwd)"
+
+cd bundle
+mkdir build
+cd build
+
+export PYTHON_DIR=/opt/python/3.5.3
+
+cmake .. -DCMAKE_CXX_COMPILER="$CXX"                                                               \
+         -DCMAKE_C_COMPILER="$CC"                                                                  \
+         -DCMAKE_BUILD_TYPE="$CONFIG"                                                              \
+         -DGTCLANG_TESTING=ON                                                                      \
+         -DGTCLANG_UNIT_TESTING=ON                                                                 \
+         -DGTCLANG_INTEGRATION_TESTING=ON                                                          \
+         -DPYTHON_EXECUTABLE="$PYTHON_DIR/bin/python3"                                             \
+      || fatal_error "failed to configure"
+
+make -j2 boost || fatal_error "failed to build"
+make -j2 dawn || fatal_error "failed to build"
+

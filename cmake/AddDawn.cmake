@@ -14,14 +14,15 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-if(NOT DEFINED(Dawn_DIR) AND DEFINED DAWN_ROOT)
-  set(Dawn_DIR "${DAWN_ROOT}/cmake")
+include(mchbuildExportPackage)
+
+if(NOT DEFINED(dawn_DIR) AND DEFINED DAWN_ROOT)
+  set(dawn_DIR "${DAWN_ROOT}/cmake")
 endif()
+find_package(dawn NO_MODULE REQUIRED)
 
-find_package(Dawn NO_MODULE REQUIRED)
-
-dawn_export_package(
-  NAME Dawn
+mchbuild_export_package(
+  NAME dawn
   FOUND ${DAWN_FOUND} 
   VERSION "${DAWN_VERSION}" 
   LIBRARIES ${DAWN_STATIC_LIBRARY}

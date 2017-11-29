@@ -14,6 +14,9 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+include(mchbuildAddExecutable)
+include(mchbuildCombineLibraries)
+
 add_subdirectory(Support)
 add_subdirectory(Frontend)
 add_subdirectory(Driver)
@@ -23,16 +26,17 @@ if(GTCLANG_TESTING)
 endif()
 
 # Combine the relevant object libraries into libGTClang.a
-dawn_combine_libraries(
+mchbuild_combine_libraries(
   NAME GTClang
   OBJECTS GTClangDriverObjects
           GTClangFrontendObjects
           GTClangSupportObjects
   INSTALL_DESTINATION ${GTCLANG_INSTALL_LIB_DIR}
+  VERSION ${GTCLANG_FULL_VERSION}
 )
 
 # Link the driver
-dawn_add_executable(
+mchbuild_add_executable(
   NAME gtclang
   SOURCES Driver/gtclang.cpp
   DEPENDS GTClangStatic

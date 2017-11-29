@@ -34,23 +34,28 @@ $CXX --version
 # Build gtclang
 pushd "$(pwd)"
 
-mkdir build && cd build
-cmake .. -DCMAKE_CXX_COMPILER="$CXX"                                                               \
-         -DCMAKE_C_COMPILER="$CC"                                                                  \
-         -DCMAKE_BUILD_TYPE="$CONFIG"                                                              \
-         -DBOOST_ROOT="$BOOST_ROOT"                                                                \
-         -DDAWN_ROOT="$DAWN_ROOT"                                                                  \
-         -DGTCLANG_TESTING=ON                                                                      \
-         -DGTCLANG_UNIT_TESTING=ON                                                                 \
-         -DGTCLANG_INTEGRATION_TESTING=ON                                                          \
+cd bundle
+mkdir build 
+cd build
+
+build_dir=$(pwd)
+
+export PYTHON_DIR=/opt/python/3.5.3
+
+cmake .. -DCMAKE_CXX_COMPILER="$CXX"                                                                                          \
+         -DCMAKE_C_COMPILER="$CC"                                                                                             \
+         -DCMAKE_BUILD_TYPE="$CONFIG"                                                                                         \
+         -DGTCLANG_TESTING=ON                                                                                                 \
+         -DGTCLANG_UNIT_TESTING=ON                                                                                            \
+         -DGTCLANG_INTEGRATION_TESTING=ON                                                                                     \
+         -DDawn_DIR=${build_dir}/dawn-prefix/src/dawn-build/prefix/dawn/cmake/                                                \
+         -DPYTHON_EXECUTABLE="$PYTHON_DIR/bin/python3"                                                                        \
       || fatal_error "failed to configure"
+
 make -j2 || fatal_error "failed to build"
 
 # Run unittests
-ctest -C ${CONFIG} --output-on-failure --force-new-ctest-process                                   \
+ctest -V -C ${CONFIG} --output-on-failure --force-new-ctest-process                                   \
      || fatal_error "failed to run tests"
-
-# Run regression tests
-bash ./gtclang-tester-no-codegen.sh --no-progressbar || fatal_error "failed to run tests"
 
 popd

@@ -14,14 +14,15 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-find_package(GridTools QUIET)
+include(mchbuildExportPackage)
+find_package(GridTools CONFIG QUIET)
 
 if(GridTools_FOUND)
   set(GRIDTOOLS_INCLUDE_DIRS "${GridTools_DIR}/include")
   set(GTCLANG_HAS_GRIDTOOLS 1)
 endif()
 
-dawn_export_package(
+mchbuild_export_package(
   NAME GridTools
   FOUND ${GridTools_FOUND}
   INCLUDE_DIRS ${GRIDTOOLS_INCLUDE_DIRS} 

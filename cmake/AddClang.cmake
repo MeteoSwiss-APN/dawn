@@ -14,7 +14,8 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(DawnCheckAndSetCXXFlag)
+include(mchbuildCheckAndSetCXXFlag)
+include(mchbuildExportPackage)
 
 set(llvm_clang_version "3.8.0")
 set(llvm_clang_version_short "3.8")
@@ -52,12 +53,12 @@ foreach(flag ${llvm_cxx_falgs})
     string(REGEX REPLACE "-" "_" check_name ${check_name})
     string(TOUPPER ${check_name} check_name)
     set(check_name "HAVE_${check_name}")
-    dawn_check_and_set_cxx_flag("${flag}" ${check_name})
+    mchbuild_check_and_set_cxx_flag("${flag}" ${check_name})
     continue()
   endif()
 endforeach()
 
-dawn_export_package(
+mchbuild_export_package(
   NAME Clang
   FOUND ${CLANG_FOUND}
   VERSION "${LLVM_VERSION}" 

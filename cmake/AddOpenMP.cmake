@@ -14,9 +14,11 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+include(mchbuildExportPackage)
+
 find_package(OpenMP)
 
-dawn_export_package(
+mchbuild_export_package(
   NAME OpenMP 
   FOUND ${OPENMP_FOUND} 
 )

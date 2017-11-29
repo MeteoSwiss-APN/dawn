@@ -14,7 +14,9 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-dawn_add_library(
+include(mchbuildAddLibrary)
+
+mchbuild_add_library(
   NAME GTClangFrontend
   SOURCES ClangASTExprResolver.h
           ClangASTExprResolver.cpp
