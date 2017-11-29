@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(DawnAddUnittest)
+include(mchbuildAddUnittest)
 
 # dawn_add_unittest_impl
 # ----------------------
@@ -30,10 +30,10 @@ macro(dawn_add_unittest_impl)
     message(FATAL_ERROR "dawn_add_unittest_impl: invalid argument ${ARG_UNPARSED_ARGUMENTS}")
   endif()
 
-  dawn_add_unittest(
+  mchbuild_add_unittest(
     NAME ${ARG_NAME}
     SOURCES ${ARG_SOURCES}
-    DEPENDS DawnUnittestStatic DawnStatic DawnCStatic ${DAWN_EXTERNAL_LIBRARIES} gtest
+    DEPENDS DawnUnittestStatic DawnStatic ${DAWN_EXTERNAL_LIBRARIES} gtest
     OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/unittest
     GTEST_ARGS --gtest_color=yes
   )
