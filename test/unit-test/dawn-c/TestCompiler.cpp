@@ -12,118 +12,81 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn-c/Options.h"
+#include "dawn-c/Compiler.h"
+#include "dawn-c/TranslationUnit.h"
+#include "dawn/SIR/SIR.h"
+#include "dawn/SIR/SIRSerializer.h"
+#include "dawn/Unittest/ASTSimplifier.h"
 #include <cstring>
 #include <gtest/gtest.h>
 
 namespace {
 
-TEST(OptionsTest, OptionsEntryInteger) {
-  dawnOptionsEntry_t* entry = dawnOptionsEntryCreateInteger(5);
-  EXPECT_EQ(entry->Type, DT_Integer);
-  EXPECT_EQ(entry->SizeInBytes, sizeof(int));
-
-  int* value = dawnOptionsEntryGetInteger(entry);
-  ASSERT_NE(value, nullptr);
-  EXPECT_EQ(*value, 5);
-
-  double* invalid = dawnOptionsEntryGetDouble(entry);
-  ASSERT_EQ(invalid, nullptr);
-
-  std::free(value);
-  dawnOptionsEntryDestroy(entry);
+static void freeCharArray(char** array, int size) {
+  for(int i = 0; i < size; ++i)
+    std::free(array[i]);
+  std::free(array);
 }
 
-TEST(OptionsTest, OptionsEntryDouble) {
-  dawnOptionsEntry_t* entry = dawnOptionsEntryCreateDouble(5.5);
-  EXPECT_EQ(entry->Type, DT_Double);
-  EXPECT_EQ(entry->SizeInBytes, sizeof(double));
+TEST(CompilerTest, CompileEmptySIR) {
+  std::string sir;
+  dawnTranslationUnit_t* TU = dawnCompile(sir.data(), sir.size(), nullptr, DC_GTClang);
 
-  double* value = dawnOptionsEntryGetDouble(entry);
-  ASSERT_NE(value, nullptr);
-  EXPECT_EQ(*value, 5.5);
+  EXPECT_EQ(dawnTranslationUnitGetStencil(TU, "invalid"), nullptr);
 
-  std::free(value);
-  dawnOptionsEntryDestroy(entry);
+  char** ppDefines;
+  int size;
+  dawnTranslationUnitGetPPDefines(TU, &ppDefines, &size);
+  EXPECT_NE(size, 0);
+  EXPECT_NE(ppDefines, nullptr);
+
+  freeCharArray(ppDefines, size);
+  dawnTranslationUnitDestroy(TU);
 }
 
-TEST(OptionsTest, OptionsEntryString) {
-  dawnOptionsEntry_t* entry = dawnOptionsEntryCreateString("hello");
-  EXPECT_EQ(entry->Type, DT_Char);
-  EXPECT_EQ(entry->SizeInBytes, std::strlen("hello") + 1);
+TEST(CompilerTest, CompileCopyStencil) {
+  using namespace dawn::astgen;
 
-  char* value = dawnOptionsEntryGetString(entry);
-  ASSERT_NE(value, nullptr);
-  EXPECT_STREQ(value, "hello");
+  // Build copy stencil
+  //
+  //  copy {
+  //    storage in, out;
+  //
+  //    vertical_region(start, end) {
+  //      out = in;
+  //    }
+  //  }
+  //
+  auto sir = std::make_shared<dawn::SIR>();
+  auto stencil = std::make_shared<dawn::sir::Stencil>();
+  stencil->Name = "copy";
+  stencil->Fields.emplace_back(std::make_shared<dawn::sir::Field>("in"));
+  stencil->Fields.emplace_back(std::make_shared<dawn::sir::Field>("out"));
 
-  std::free(value);
-  dawnOptionsEntryDestroy(entry);
-}
+  auto ast = std::make_shared<dawn::AST>(block(assign(field("out"), field("in"))));
+  auto vr = std::make_shared<dawn::sir::VerticalRegion>(
+      ast,
+      std::make_shared<dawn::sir::Interval>(dawn::sir::Interval::Start, dawn::sir::Interval::End),
+      dawn::sir::VerticalRegion::LK_Forward);
+  stencil->StencilDescAst = std::make_shared<dawn::AST>(block(verticalRegion(vr)));
+  sir->Stencils.emplace_back(stencil);
 
-TEST(OptionsTest, OptionsCreateAndDestroy) {
-  dawnOptions_t* options = dawnOptionsCreate();
-  dawnOptionsDestroy(options);
-}
+  std::string sirStr =
+      dawn::SIRSerializer::serializeToString(sir.get(), dawn::SIRSerializer::SK_Byte);
+  dawnTranslationUnit_t* TU = dawnCompile(sirStr.data(), sirStr.size(), nullptr, DC_GTClang);
 
-TEST(OptionsTest, OptionsSetAndGetInteger) {
-  dawnOptions_t* options = dawnOptionsCreate();
+  char* copyCode = dawnTranslationUnitGetStencil(TU, "copy");
+  EXPECT_NE(copyCode, nullptr);
 
-  dawnOptionsEntry_t* entry = dawnOptionsEntryCreateInteger(5);
-  dawnOptionsSet(options, "int", entry);
-  dawnOptionsEntryDestroy(entry);
+  char** ppDefines;
+  int size;
+  dawnTranslationUnitGetPPDefines(TU, &ppDefines, &size);
+  EXPECT_NE(size, 0);
+  EXPECT_NE(ppDefines, nullptr);
 
-  entry = dawnOptionsGet(options, "int");
-  int* value = dawnOptionsEntryGetInteger(entry);
-  ASSERT_NE(value, nullptr);
-  EXPECT_EQ(*value, 5);
-  std::free(value);
-  dawnOptionsEntryDestroy(entry);
-
-  dawnOptionsDestroy(options);
-}
-
-TEST(OptionsTest, OptionsSetAndGetDouble) {
-  dawnOptions_t* options = dawnOptionsCreate();
-
-  dawnOptionsEntry_t* entry = dawnOptionsEntryCreateDouble(5.5);
-  dawnOptionsSet(options, "double", entry);
-  dawnOptionsEntryDestroy(entry);
-
-  entry = dawnOptionsGet(options, "double");
-  double* value = dawnOptionsEntryGetDouble(entry);
-  ASSERT_NE(value, nullptr);
-  EXPECT_EQ(*value, 5.5);
-  std::free(value);
-  dawnOptionsEntryDestroy(entry);
-
-  dawnOptionsDestroy(options);
-}
-
-TEST(OptionsTest, OptionsSetAndGetString) {
-  dawnOptions_t* options = dawnOptionsCreate();
-
-  dawnOptionsEntry_t* entry = dawnOptionsEntryCreateString("hello");
-  dawnOptionsSet(options, "string", entry);
-  dawnOptionsEntryDestroy(entry);
-
-  entry = dawnOptionsGet(options, "string");
-  char* value = dawnOptionsEntryGetString(entry);
-  ASSERT_NE(value, nullptr);
-  EXPECT_STREQ(value, "hello");
-  std::free(value);
-  dawnOptionsEntryDestroy(entry);
-
-  dawnOptionsDestroy(options);
-}
-
-TEST(OptionsTest, OptionsToString) {
-  dawnOptions_t* options = dawnOptionsCreate();
-
-  char* str = dawnOptionsToString(options);
-  EXPECT_NE(str, nullptr);
-  std::free(str);
-
-  dawnOptionsDestroy(options);
+  freeCharArray(ppDefines, size);
+  std::free(copyCode);
+  dawnTranslationUnitDestroy(TU);
 }
 
 } // anonymous namespace
