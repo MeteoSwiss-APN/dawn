@@ -16,4 +16,5 @@ dawn_add_unittest_impl(
   NAME DawnCUnittest
   SOURCES TestMain.cpp
           TestOptions.cpp
+          TestCompiler.cpp
 )
