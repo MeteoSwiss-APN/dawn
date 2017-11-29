@@ -123,7 +123,7 @@ std::shared_ptr<FieldAccessExpr> field(const std::string& name, Array3i offset =
                                        bool negateOffset = false);
 
 std::shared_ptr<LiteralAccessExpr> lit(const std::string& value,
-                                       BuiltinTypeID builtinType = BuiltinTypeID::Integer);
+                                       BuiltinTypeID builtinType = BuiltinTypeID::Float);
 /// @}
 
 } // namespace astgen
