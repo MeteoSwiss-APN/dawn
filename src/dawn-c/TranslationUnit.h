@@ -37,10 +37,10 @@ extern void dawnTranslationUnitDestroy(dawnTranslationUnit_t* translationUnit);
  * @param[in]   translationUnit   Translation unit to use
  * @param[out]  ppDefines         Array of '\0' termianted strings of length `num` which contains
  *                                the preprocessor definitions required
- * @param[out]  num               Length of array `ppDefines`
+ * @param[out]  size              Size of array `ppDefines`
  */
 extern void dawnTranslationUnitGetPPDefines(const dawnTranslationUnit_t* translationUnit,
-                                            char*** ppDefines, int* num);
+                                            char*** ppDefines, int* size);
 /**
  * @brief Get the generated code of the stencil `name`
  *

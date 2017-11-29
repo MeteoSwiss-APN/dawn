@@ -28,7 +28,7 @@ void dawnTranslationUnitDestroy(dawnTranslationUnit_t* translationUnit) {
 }
 
 void dawnTranslationUnitGetPPDefines(const dawnTranslationUnit_t* translationUnit,
-                                     char*** ppDefines, int* num) {
+                                     char*** ppDefines, int* size) {
   const dawn::TranslationUnit* TU = toConstTranslationUnit(translationUnit);
   const auto& ppVec = TU->getPPDefines();
 
@@ -36,7 +36,7 @@ void dawnTranslationUnitGetPPDefines(const dawnTranslationUnit_t* translationUni
   for(std::size_t i = 0; i < ppVec.size(); ++i)
     ppArray[i] = allocateAndCopyString(ppVec[i]);
 
-  *num = ppVec.size();
+  *size = ppVec.size();
   *ppDefines = ppArray;
 }
 
