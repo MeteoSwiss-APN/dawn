@@ -16,9 +16,9 @@
 
 // RUN: %gtclang% %file% -o%filename%_gen.cpp | %c++% %filename%_gen.cpp %gridtools_flags% -o%tmpdir%/%filename% | %tmpdir%/%filename%
 
-#include "gridtools/clang_dsl.hpp"
 #include "gridtools/clang/math.hpp"
 #include "gridtools/clang/verify.hpp"
+#include "gridtools/clang_dsl.hpp"
 
 using namespace gridtools::clang;
 
@@ -66,7 +66,7 @@ stencil hd_smagorinsky_stencil {
   storage weight_smag;
 
   // Temporaries
-  temporary_storage T_sqr_s, S_sqr_uv;
+  var T_sqr_s, S_sqr_uv;
 
   Do {
     vertical_region(k_start, k_end) {

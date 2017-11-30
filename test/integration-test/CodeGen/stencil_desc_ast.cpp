@@ -16,8 +16,8 @@
 
 // RUN: %gtclang% %file% -o%filename%_gen.cpp --config=%filedir%/stencil_desc_ast.json | %c++% %filename%_gen.cpp %gridtools_flags% -o%tmpdir%/%filename% | %tmpdir%/%filename%
 
-#include "gridtools/clang_dsl.hpp"
 #include "gridtools/clang/verify.hpp"
+#include "gridtools/clang_dsl.hpp"
 #include <iostream>
 
 using namespace gridtools::clang;
@@ -240,7 +240,7 @@ void test_07_stencil_reference(const domain& dom, storage_t& in_s, storage_t& ou
 //
 stencil test_08_stencil {
   storage in, out;
-  temporary_storage tmp;
+  var tmp;
 
   Do {
     if(var_compiletime == 2) {

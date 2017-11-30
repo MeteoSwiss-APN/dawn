@@ -1,5 +1,5 @@
-#include "gridtools/clang_dsl.hpp"
 #include "gridtools/clang/verify.hpp"
+#include "gridtools/clang_dsl.hpp"
 
 using namespace gridtools::clang;
 
@@ -39,7 +39,7 @@ stencil_function diffusive_flux_y {
 
 stencil horizontal_diffusion_type2_stencil {
   storage out, in, crlato, crlatu, hdmask;
-  temporary_storage lap;
+  var lap;
 
   Do {
     vertical_region(k_start, k_end) {
