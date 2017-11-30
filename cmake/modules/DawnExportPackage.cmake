@@ -12,8 +12,8 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(DawnIncludeGuard)
-dawn_include_guard()
+include(mchbuildIncludeGuard)
+mchbuild_include_guard()
 
 include(CMakeParseArguments)
 
