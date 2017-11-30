@@ -24,7 +24,7 @@ using namespace gridtools::clang;
 
 stencil Test {
   storage a, b, c;
-  temporary_storage tmp;
+  var tmp;
 
   Do {
     // MS0

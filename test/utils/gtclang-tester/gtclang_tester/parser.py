@@ -18,6 +18,7 @@
 
 from os import path, listdir
 from re import compile
+from re import split
 from tempfile import mkdtemp
 
 from .config import Config
@@ -141,6 +142,36 @@ class Parser(object):
             report_info("Parsed EXPECTED_FILE as: \"%s\"" % expected_file)
             self.__test.add_expected_file_command(expected_file, self.__dir, self.__file,
                                                   linenumber)
+    
+
+    def __parse_line_with_number(self, line, linenumber):
+        found = line.find("%line")
+        if found == -1:
+            return line
+        char = -1
+        words  = line.split()
+        for word in words:
+            char += len(word)
+            if char >= found :
+                match = word
+                break
+        splits = match.split("+")
+        if len(splits) == 1:
+            splits = match.split("-")
+        else:
+            number = splits[1][:-2]
+            line = line.replace(match, str(linenumber+int(number))+":")
+        if len(splits) == 1:
+            found = line.find("%line%")
+            if found == -1:
+                report_fatal_error("Bad line-stmt in " +line)
+            line = line.replace("%line%", str(linenumber))
+        else:
+            number = splits[1][:-2]
+            line = line.replace(match, str(linenumber-int(number))+":")
+
+        return line
+
 
     def __substitute_keywords(self, line, linenumber):
         """ Substitute keywords """
@@ -163,8 +194,8 @@ class Parser(object):
         # %filedir%
         line = line.replace("%filedir%", path.dirname(self.__file))
 
-        # %line%
-        line = line.replace("%line%", str(linenumber))
+        # %line[+-Val]%
+        line = self.__parse_line_with_number(line, linenumber)
 
         # %tmpdir%
         line = line.replace("%tmpdir%", mkdtemp())
@@ -177,6 +208,7 @@ class Parser(object):
 
     def get_test_config(self):
         return self.__test
+
 
 
 class ExpectedAccesses(object):

@@ -104,7 +104,6 @@ mchbuild_report_result("Package summary" ${package_info})
 # Add clang-format target
 set(format_directories 
   "${CMAKE_SOURCE_DIR}/src"
-  "${CMAKE_SOURCE_DIR}/test/integration-test"
   "${CMAKE_SOURCE_DIR}/test/unit-test"
 )
 

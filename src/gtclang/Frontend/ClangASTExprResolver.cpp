@@ -345,7 +345,7 @@ public:
   /// @brief Check if the typy is a storage
   /// @{
   static bool isaStorage(clang::StringRef storage) {
-    if(storage == "storage" || storage == "temporary_storage")
+    if(storage == "storage" || storage == "var")
       return true;
     return false;
   }

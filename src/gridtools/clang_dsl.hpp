@@ -22,11 +22,11 @@
  * @brief Namespace of the gridtools library
  */
 namespace gridtools {
-    /**
-     * @namespace clang
-     * @brief Namespace of the gridtools clang DSL
-     */
-    namespace clang {}
+/**
+ * @namespace clang
+ * @brief Namespace of the gridtools clang DSL
+ */
+namespace clang {}
 }
 
 /**

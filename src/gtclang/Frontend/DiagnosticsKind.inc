@@ -68,7 +68,7 @@ DIAG(note_stencilcall_not_viable, clang::DiagnosticIDs::Note, "candidate stencil
 
 // Stencil
 DIAG(err_stencil_invalid_storage_decl, clang::DiagnosticIDs::Error, "invalid type '%0' of stencil argument '%1'")
-DIAG(note_only_storages_allowed, clang::DiagnosticIDs::Note, "only 'gridtools::clang::storage' or 'gridtools::clang::temporary_storage' are allowed as stencil arguments")
+DIAG(note_only_storages_allowed, clang::DiagnosticIDs::Note, "only 'gridtools::clang::storage' or 'gridtools::clang::var' are allowed as stencil arguments")
 
 // Interval
 DIAG(err_interval_invalid_type, clang::DiagnosticIDs::Error, "invalid type '%0' for vertical region declaration")

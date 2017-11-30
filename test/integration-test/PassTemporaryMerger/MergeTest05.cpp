@@ -23,7 +23,7 @@ using namespace gridtools::clang;
 
 stencil Test {
   storage field_1, field_2, field_3, field_4, field_5;
-  temporary_storage tmp_1, tmp_2, tmp_3, tmp_4, tmp_5;
+  var tmp_1, tmp_2, tmp_3, tmp_4, tmp_5;
 
   Do {
     vertical_region(k_start, k_end) {

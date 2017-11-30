@@ -60,4 +60,3 @@ stencil Test03 {
 };
 
 // clang-format on
-

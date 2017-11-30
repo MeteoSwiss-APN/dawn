@@ -14,27 +14,22 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-// RUN: %gtclang% %file% -fno-codegen -fmerge-temporaries -freport-pass-temporary-merger
-// EXPECTED: PASS: PassTemporaryMerger: Test: merging: tmp_a, tmp_b
+// RUN: %gtclang% %file% -fno-codegen
 
 #include "gridtools/clang_dsl.hpp"
 
 using namespace gridtools::clang;
 
 stencil Test {
-  storage field_a, field_b;
-  var tmp_a, tmp_b;
+  storage in;
+  var tmp;
 
   Do {
-    vertical_region(k_start, k_end) {
-      tmp_a = field_a;
-      field_a = tmp_a(i + 1);
-    }
+    vertical_region(k_start, k_end)
+        in(i, j, k) = tmp(i, j, k); // EXPECTED_ERROR: access to uninitialized temporary storage 'tmp'
 
-    vertical_region(k_start, k_end) {
-      tmp_b = field_b;
-      field_b = tmp_b(i + 1);
-    }
+    vertical_region(k_start, k_end)
+        tmp(i, j, k) = in(i, j, k);
   }
 };
 

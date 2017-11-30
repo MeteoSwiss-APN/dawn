@@ -603,7 +603,7 @@ void StencilParser::parseStorage(clang::FieldDecl* field) {
     currentParserRecord_->CurrentStencil->Fields.emplace_back(SIRField);
     currentParserRecord_->addArgDecl(name, field);
 
-  } else if(typeStr == "temporary_storage") {
+  } else if(typeStr == "var") {
 
     DAWN_LOG(INFO) << "Parsing temporary field: " << name;
     auto SIRField = std::make_shared<dawn::sir::Field>(name, getLocation(field));
@@ -638,13 +638,13 @@ void StencilParser::parseArgument(clang::FieldDecl* arg) {
     currentParserRecord_->CurrentStencilFunction->Args.emplace_back(SIRField);
     currentParserRecord_->addArgDecl(name, arg);
 
-  } else if(typeStr == "temporary_storage") {
+  } else if(typeStr == "var") {
 
     DAWN_LOG(INFO) << "Parsing temporary field: " << name;
-    auto SIRField = std::make_shared<dawn::sir::Field>(name, getLocation(arg));
-    SIRField->IsTemporary = true;
-    currentParserRecord_->CurrentStencilFunction->Args.emplace_back(SIRField);
-    currentParserRecord_->addArgDecl(name, arg);
+
+    reportDiagnostic(arg->getLocStart(),
+                     Diagnostics::DiagKind::err_stencilfun_invalid_argument_type)
+        << typeStr << name;
 
   } else if(typeStr == "offset") {
 
@@ -834,7 +834,7 @@ StencilParser::parseStencilCall(clang::CXXConstructExpr* stencilCall) {
       std::string type = member->getMemberDecl()->getType().getAsString();
       std::string declType = member->getType()->getAsCXXRecordDecl()->getName();
 
-      if(declType != "storage" && declType != "temporary_storage") {
+      if(declType != "storage" && declType != "var") {
         reportDiagnostic(member->getLocStart(),
                          Diagnostics::DiagKind::err_stencilcall_invalid_argument_type)
             << member->getSourceRange() << type << callee;
