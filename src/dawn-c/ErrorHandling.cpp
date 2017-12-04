@@ -20,24 +20,21 @@
 #include <iostream>
 #include <string>
 
+static void dawnDefaultFatalErrorHandler(const char* reason) {
+  std::fprintf(stderr, "dawn: ERROR: %s\n", reason);
+  std::fflush(stderr);
+  std::exit(1);
+}
+
 static dawnFatalErrorHandler_t FatalErrorHandler = dawnDefaultFatalErrorHandler;
 
 void dawnInstallFatalErrorHandler(dawnFatalErrorHandler_t handler) {
-  assert(handler);
-  FatalErrorHandler = handler;
+  FatalErrorHandler = handler ? handler : dawnDefaultFatalErrorHandler;
 }
-
-void dawnResetFatalErrorHandler(void) { FatalErrorHandler = dawnDefaultFatalErrorHandler; }
 
 void dawnFatalError(const char* reason) {
   assert(FatalErrorHandler);
   (*FatalErrorHandler)(reason);
-}
-
-void dawnDefaultFatalErrorHandler(const char* reason) {
-  std::fprintf(stderr, "dawn: ERROR: %s\n", reason);
-  std::fflush(stderr);
-  std::exit(1);
 }
 
 static struct ErrorState {

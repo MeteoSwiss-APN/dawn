@@ -15,17 +15,21 @@
 mchbuild_add_library(
   NAME DawnC
   SOURCES Dawn.h
-          Compiler.h
           Compiler.cpp
-          ErrorHandling.h
+          Compiler.h
           ErrorHandling.cpp
-          Options.h
+          ErrorHandling.h
           Options.cpp
+          Options.h
+          TranslationUnit.cpp
+          TranslationUnit.h
           Types.h
           
           util/Allocate.h
-          util/OptionsWrapper.h
+          util/CompilerWrapper.h          
           util/OptionsWrapper.cpp
+          util/OptionsWrapper.h
+          util/TranslationUnitWrapper.h
   OBJECT
 )
 
