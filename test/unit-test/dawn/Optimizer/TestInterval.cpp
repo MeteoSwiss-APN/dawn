@@ -1,13 +1,13 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -245,6 +245,30 @@ TEST(IntervalTest, GapIntervals7) {
                                             Interval(10, 15, 0, 0), // [10, 15]
                                             Interval(15, 20, 1, 0)} // [16, 20]
                ));
+}
+
+TEST(IntervalTest, GapIntervalsOverlap1) {
+  Interval Axis(0, 6);
+  Interval I1(1, 4);
+  Interval I2(2, 5);
+
+  EXPECT_DEATH(Interval::computeGapIntervals(Axis, std::vector<Interval>{I1, I2}), ".*");
+}
+
+TEST(IntervalTest, GapIntervalsOverlap2) {
+  Interval Axis(0, 6);
+  Interval I1(1, 8);
+  Interval I2(5, 10);
+
+  Interval::computeGapIntervals(Axis, std::vector<Interval>{I1, I2});
+}
+
+TEST(IntervalTest, GapIntervalsOverlap3) {
+  Interval Axis(0, 6);
+  Interval I1(6, 7);
+  Interval I2(5, 6);
+
+  EXPECT_DEATH(Interval::computeGapIntervals(Axis, std::vector<Interval>{I1, I2}), ".*");
 }
 
 TEST(IntervalTest, Construction) {
