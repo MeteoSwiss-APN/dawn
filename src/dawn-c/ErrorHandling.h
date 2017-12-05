@@ -47,28 +47,10 @@ typedef void (*dawnFatalErrorHandler_t)(const char* reason);
  * This may not be appropriate in some contexts. For example, the Python module might want to
  * translate the errror into an exception. This function allows you to install a callback that will
  * be invoked after a fatal error occurred.
+ *
+ * @param handler   New error handler (or if `NULL` is passed the default handler will be restored)
  */
 extern void dawnInstallFatalErrorHandler(dawnFatalErrorHandler_t handler);
-
-/**
- * @brief Reset the fatal error handler.
- *
- * This resets dawn's fatal error handling behavior to the default.
- */
-extern void dawnResetFatalErrorHandler(void);
-
-/*===------------------------------------------------------------------------------------------===*\
- *     Default Error Handler
-\*===------------------------------------------------------------------------------------------===*/
-
-/**
- * @brief Emits the last error string to stderr and call exit(1)
- */
-extern void dawnDefaultFatalErrorHandler(const char* reason);
-
-/*===------------------------------------------------------------------------------------------===*\
- *     State Error Handler
-\*===------------------------------------------------------------------------------------------===*/
 
 /**
  * @brief Store the the current state of the error which can be queried via

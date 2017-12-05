@@ -45,6 +45,18 @@ T* allocate(std::size_t n) noexcept {
   return data;
 }
 
+/// @brief Copy string into `char*` buffer
+/// @ingroup dawn_c_util
+template <class StringType>
+inline char* allocateAndCopyString(StringType&& str) {
+  char* buffer = NULL;
+  buffer = (char*)std::malloc((str.size() + 1) * sizeof(char));
+  if(!buffer)
+    dawnFatalError("out of memory");
+  std::memcpy(buffer, str.c_str(), str.size() + 1);
+  return buffer;
+}
+
 } // namespace util
 
 } // namespace dawn
