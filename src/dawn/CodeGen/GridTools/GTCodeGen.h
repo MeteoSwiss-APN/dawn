@@ -30,10 +30,10 @@ class Stencil;
 
 /// @brief GridTools C++ code generation for the gridtools_clang DSL
 /// @ingroup codegen
-class GTClangCodeGen : public CodeGen {
+class GTCodeGen : public CodeGen {
 public:
-  GTClangCodeGen(OptimizerContext* context);
-  virtual ~GTClangCodeGen();
+  GTCodeGen(OptimizerContext* context);
+  virtual ~GTCodeGen();
 
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 

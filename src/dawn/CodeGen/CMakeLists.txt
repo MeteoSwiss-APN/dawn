@@ -16,16 +16,20 @@ mchbuild_add_library(
   NAME DawnCodeGen
   SOURCES ASTCodeGenCXX.cpp
           ASTCodeGenCXX.h
-          ASTCodeGenGTClangStencilBody.cpp
-          ASTCodeGenGTClangStencilBody.h
-          ASTCodeGenGTClangStencilDesc.cpp
-          ASTCodeGenGTClangStencilDesc.h
           CodeGen.h
           CXXUtil.h
-          GTClangCodeGen.cpp
-          GTClangCodeGen.h
-          GTClangNaiveCXXCodeGen.cpp
-          GTClangNaiveCXXCodeGen.h
+          CXXNaive/ASTCodeGenCXXNaiveStencilBody.cpp
+          CXXNaive/ASTCodeGenCXXNaiveStencilBody.h
+          CXXNaive/ASTCodeGenCXXNaiveStencilDesc.cpp
+          CXXNaive/ASTCodeGenCXXNaiveStencilDesc.h
+          CXXNaive/CXXNaiveCodeGen.cpp
+          CXXNaive/CXXNaiveCodeGen.h
+          GridTools/ASTCodeGenGTStencilBody.cpp
+          GridTools/ASTCodeGenGTStencilBody.h
+          GridTools/ASTCodeGenGTStencilDesc.cpp
+          GridTools/ASTCodeGenGTStencilDesc.h
+          GridTools/GTCodeGen.cpp
+          GridTools/GTCodeGen.h
           TranslationUnit.cpp
           TranslationUnit.h
   OBJECT

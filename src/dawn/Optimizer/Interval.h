@@ -18,6 +18,9 @@
 #include "dawn/Optimizer/Extents.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/HashCombine.h"
+#include <algorithm>
+#include <iterator>
+#include <unordered_set>
 #include <vector>
 
 namespace dawn {
@@ -125,6 +128,8 @@ public:
     return sir::Interval(lowerLevel_, upperLevel_, lowerOffset_, upperOffset_);
   }
 
+  bool upperIsEnd() const { return (upperLevel_ == (1 << 20)); }
+
   /// @brief Convert interval to string
   std::string toString() const;
 
@@ -161,6 +166,8 @@ public:
   /// @ingroup optimizer
   static std::vector<Interval> computeGapIntervals(const Interval& axis,
                                                    const std::vector<Interval>& intervals);
+
+  static std::vector<Interval> computePartition(const std::vector<Interval>& intervals);
 
   /// @brief Computes a set of non-overlapping, adjacent intervals of the given set of intervals
   /// where all interval levels are preserved (i.e a union of all levels of the given intervals)

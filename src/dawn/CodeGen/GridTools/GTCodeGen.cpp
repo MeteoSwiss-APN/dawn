@@ -12,10 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/CodeGen/GTClangCodeGen.h"
-#include "dawn/CodeGen/ASTCodeGenGTClangStencilBody.h"
-#include "dawn/CodeGen/ASTCodeGenGTClangStencilDesc.h"
+#include "dawn/CodeGen/GridTools/GTCodeGen.h"
 #include "dawn/CodeGen/CXXUtil.h"
+#include "dawn/CodeGen/GridTools/ASTCodeGenGTStencilBody.h"
+#include "dawn/CodeGen/GridTools/ASTCodeGenGTStencilDesc.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/StatementAccessesPair.h"
 #include "dawn/Optimizer/StencilFunctionInstantiation.h"
@@ -28,12 +28,11 @@
 
 namespace dawn {
 
-GTClangCodeGen::GTClangCodeGen(OptimizerContext* context)
-    : CodeGen(context), mplContainerMaxSize_(20) {}
+GTCodeGen::GTCodeGen(OptimizerContext* context) : CodeGen(context), mplContainerMaxSize_(20) {}
 
-GTClangCodeGen::~GTClangCodeGen() {}
+GTCodeGen::~GTCodeGen() {}
 
-GTClangCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
+GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
     : Intervals(stencil.getIntervals()), Axis(*Intervals.begin()) {
   DAWN_ASSERT(!Intervals.empty());
 
@@ -82,7 +81,7 @@ GTClangCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
 }
 
 std::string
-GTClangCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInstantiation) {
+GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInstantiation) {
   using namespace codegen;
 
   std::stringstream ssSW, ssMS, tss;
@@ -138,8 +137,8 @@ GTClangCodeGen::generateStencilInstantiation(const StencilInstantiation* stencil
                                       makeLevelName(intervalNamePair.first.upperLevel(),
                                                     intervalNamePair.first.upperOffset())}));
 
-    ASTCodeGenGTClangStencilBody stencilBodyCGVisitor(stencilInstantiation,
-                                                      intervalDefinitions.IntervalToNameMap);
+    ASTCodeGenGTStencilBody stencilBodyCGVisitor(stencilInstantiation,
+                                                 intervalDefinitions.IntervalToNameMap);
 
     // Generate typedef for the axis
     const Interval& axis = intervalDefinitions.Axis;
@@ -610,12 +609,11 @@ GTClangCodeGen::generateStencilInstantiation(const StencilInstantiation* stencil
   for(std::size_t i = 0; i < stencils.size(); ++i)
     stencilIDToStencilNameMap[stencils[i]->getStencilID()].emplace_back(stencilMembers[i]);
 
-  ASTCodeGenGTClangStencilDesc stnecilDescCGVisitor(stencilInstantiation,
-                                                    stencilIDToStencilNameMap);
-  stnecilDescCGVisitor.setIndent(RunMethod.getIndent());
+  ASTCodeGenGTStencilDesc stencilDescCGVisitor(stencilInstantiation, stencilIDToStencilNameMap);
+  stencilDescCGVisitor.setIndent(RunMethod.getIndent());
   for(const auto& statement : stencilInstantiation->getStencilDescStatements()) {
-    statement->ASTStmt->accept(stnecilDescCGVisitor);
-    RunMethod << stnecilDescCGVisitor.getCodeAndResetStream();
+    statement->ASTStmt->accept(stencilDescCGVisitor);
+    RunMethod << stencilDescCGVisitor.getCodeAndResetStream();
   }
 
   RunMethod.commit();
@@ -641,7 +639,7 @@ GTClangCodeGen::generateStencilInstantiation(const StencilInstantiation* stencil
   return str;
 }
 
-std::string GTClangCodeGen::generateGlobals(const SIR* Sir) {
+std::string GTCodeGen::generateGlobals(const SIR* Sir) {
   using namespace codegen;
 
   const auto& globalsMap = *Sir->GlobalVariableMap;
@@ -691,7 +689,7 @@ std::string GTClangCodeGen::generateGlobals(const SIR* Sir) {
   return str;
 }
 
-std::unique_ptr<TranslationUnit> GTClangCodeGen::generateCode() {
+std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   mplContainerMaxSize_ = 20;
   DAWN_LOG(INFO) << "Starting code generation for GTClang ...";
 

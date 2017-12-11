@@ -12,8 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_GTCLANGNAIVECXXCODEGEN_H
-#define DAWN_CODEGEN_GTCLANGNAIVECXXCODEGEN_H
+#pragma once
 
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/Optimizer/Interval.h"
@@ -28,10 +27,10 @@ class OptimizerContext;
 
 /// @brief GridTools C++ code generation for the gridtools_clang DSL
 /// @ingroup codegen
-class GTClangNaiveCXXCodeGen : public CodeGen {
+class CXXNaiveCodeGen : public CodeGen {
 public:
-  GTClangNaiveCXXCodeGen(OptimizerContext* context);
-  virtual ~GTClangNaiveCXXCodeGen();
+  CXXNaiveCodeGen(OptimizerContext* context);
+  virtual ~CXXNaiveCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 
 private:
@@ -39,5 +38,3 @@ private:
 };
 
 } // namespace dawn
-
-#endif

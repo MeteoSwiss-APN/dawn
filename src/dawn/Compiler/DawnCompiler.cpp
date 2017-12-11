@@ -13,9 +13,9 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Compiler/DawnCompiler.h"
+#include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
-#include "dawn/CodeGen/GTClangCodeGen.h"
-#include "dawn/CodeGen/GTClangNaiveCXXCodeGen.h"
+#include "dawn/CodeGen/GridTools/GTCodeGen.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/EditDistance.h"
@@ -189,10 +189,10 @@ std::unique_ptr<TranslationUnit> DawnCompiler::compile(const SIR* SIR, CodeGenKi
   std::unique_ptr<CodeGen> CG;
   switch(codeGen) {
   case CodeGenKind::CG_GTClang:
-    CG = make_unique<GTClangCodeGen>(optimizer.get());
+    CG = make_unique<GTCodeGen>(optimizer.get());
     break;
   case CodeGenKind::CG_GTClangNaiveCXX:
-    CG = make_unique<GTClangNaiveCXXCodeGen>(optimizer.get());
+    CG = make_unique<CXXNaiveCodeGen>(optimizer.get());
     break;
   }
   return CG->generateCode();
