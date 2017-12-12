@@ -30,7 +30,9 @@ project(dawn C CXX)
 cmake_minimum_required(VERSION 3.3)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-if(NOT(DEFINED MCHBUILD_ROOT))
+set(MCHBUILD_ROOT CACHE PATH "path to mchbuild package")
+
+if("${MCHBUILD_ROOT}" STREQUAL "")
   message(FATAL_ERROR "MCHBUILD_ROOT not found! Try specifying it in the environment via -DMCHBUILD_ROOT=<>")
 endif()
 list(APPEND CMAKE_MODULE_PATH "${MCHBUILD_ROOT}/cmake")
