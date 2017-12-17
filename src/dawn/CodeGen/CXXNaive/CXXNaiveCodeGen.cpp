@@ -25,6 +25,8 @@
 #include <algorithm>
 
 namespace dawn {
+namespace codegen {
+namespace cxxnaive {
 
 static std::string makeLoopImpl(const std::string& dim, const std::string& lower,
                                 const std::string& upper, const std::string& comparison,
@@ -49,12 +51,12 @@ static std::string makeKLoop(const std::string dom, bool isBackward, Interval co
                     : makeLoopImpl("k", lower, upper, "<=", "++");
 }
 
-CXXNaiveCodeGen::CXXNaiveCodeGen(OptimizerContext* context) : CodeGen(context) {}
+CXXNaiveCodeGen::CXXNaiveCodeGen(dawn::OptimizerContext* context) : CodeGen(context) {}
 
 CXXNaiveCodeGen::~CXXNaiveCodeGen() {}
 
-std::string
-CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInstantiation) {
+std::string CXXNaiveCodeGen::generateStencilInstantiation(
+    const dawn::StencilInstantiation* stencilInstantiation) {
   using namespace codegen;
 
   std::stringstream ssSW, tss;
@@ -86,7 +88,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
   //
   std::unordered_set<std::string> generatedStencilFun;
   for(const auto& stencilFun : stencilInstantiation->getStencilFunctionInstantiations()) {
-    std::string stencilFunName = StencilFunctionInstantiation::makeCodeGenName(*stencilFun);
+    std::string stencilFunName = dawn::StencilFunctionInstantiation::makeCodeGenName(*stencilFun);
     if(generatedStencilFun.emplace(stencilFunName).second) {
 
       // Field declaration
@@ -135,7 +137,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
         std::string paramName = stencilFun->getOriginalNameFromCallerAccessID(fields[m].AccessID);
         paramNameToType.emplace(paramName, stencilFnTemplates[m]);
 
-        stencilFunMethod.addArg("ParamWrapper<" + gt() + "data_view<StorageType" +
+        stencilFunMethod.addArg("ParamWrapper<" + c_gt() + "data_view<StorageType" +
                                 std::to_string(m) + ">> pw_" + paramName);
       }
 
@@ -148,8 +150,8 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
 
         std::string paramName = stencilFun->getOriginalNameFromCallerAccessID(fields[m].AccessID);
 
-        stencilFunMethod << gt() << "data_view<StorageType" + std::to_string(m) + "> " << paramName
-                         << " = pw_" << paramName << ".dview_;";
+        stencilFunMethod << c_gt() << "data_view<StorageType" + std::to_string(m) + "> "
+                         << paramName << " = pw_" << paramName << ".dview_;";
         stencilFunMethod << "auto " << paramName << "_offsets = pw_" << paramName << ".offsets_;";
       }
 
@@ -206,7 +208,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
     ASTCodeGenCXXNaiveStencilBody stencilBodyCXXVisitor(stencilInstantiation, paramNameToType,
                                                         StencilContext::E_Stencil);
 
-    StencilClass.addMember("const " + gtc() + "domain&", "m_dom");
+    StencilClass.addMember("const " + c_gtc() + "domain&", "m_dom");
     for(int i = 0; i < StencilFields.size(); ++i) {
       StencilClass.addMember(StencilTemplates[i] + "&", "m_" + StencilFields[i].Name);
     }
@@ -215,7 +217,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
 
     auto stencilClassCtr = StencilClass.addConstructor();
 
-    stencilClassCtr.addArg("const " + gtc() + "domain& dom_");
+    stencilClassCtr.addArg("const " + c_gtc() + "domain& dom_");
     for(int i = 0; i < StencilFields.size(); ++i)
       stencilClassCtr.addArg(StencilTemplates[i] + "& " + StencilFields[i].Name + "_");
     stencilClassCtr.addInit("m_dom(dom_)");
@@ -233,8 +235,8 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
       const MultiStage& multiStage = *multiStagePtr;
 
       for(int i = 0; i < StencilFields.size(); ++i)
-        StencilDoMethod.addStatement(gt() + "data_view<" + StencilTemplates[i] + "> " +
-                                     StencilFields[i].Name + "= " + gt() + "make_host_view(m_" +
+        StencilDoMethod.addStatement(c_gt() + "data_view<" + StencilTemplates[i] + "> " +
+                                     StencilFields[i].Name + "= " + c_gt() + "make_host_view(m_" +
                                      StencilFields[i].Name + ")");
 
       auto intervals_set = multiStage.getIntervals();
@@ -294,10 +296,10 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
   //
   // Define allocated memebers if necessary
   if(stencilInstantiation->hasAllocatedFields()) {
-    StencilWrapperClass.addMember(gtc() + "meta_data_t", "m_meta_data");
+    StencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
 
     for(int AccessID : stencilInstantiation->getAllocatedFieldAccessIDs())
-      StencilWrapperClass.addMember(gtc() + "storage_t",
+      StencilWrapperClass.addMember(c_gtc() + "storage_t",
                                     stencilInstantiation->getNameFromAccessID(AccessID) + "_");
   }
 
@@ -316,7 +318,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
   auto StencilWrapperConstructor = StencilWrapperClass.addConstructor(RangeToString(", ", "", "")(
       StencilWrapperRunTemplates, [](const std::string& str) { return "class " + str; }));
 
-  StencilWrapperConstructor.addArg("const " + gtc() + "domain& dom");
+  StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
   std::string ctrArgs("(dom");
   for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i) {
     StencilWrapperConstructor.addArg(StencilWrapperRunTemplates[i] + "& " +
@@ -340,7 +342,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
     for(int i = 0; i < StencilFields.size(); ++i) {
       initCtr +=
           (i != 0 ? "," : "<") + (stencilInstantiation->isAllocatedField(StencilFields[i].AccessID)
-                                      ? (gtc().str() + "storage_t")
+                                      ? (c_gtc().str() + "storage_t")
                                       : (std::string("StorageType") + std::to_string(i + 1)));
     }
     initCtr += ">(dom";
@@ -426,4 +428,6 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
                                       std::move(stencils), std::move(globals));
 }
 
+} // namespace cxxnaive
+} // namespace codegen
 } // namespace dawn

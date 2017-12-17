@@ -19,9 +19,11 @@
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
+namespace codegen {
+namespace gt {
 
 ASTCodeGenGTStencilDesc::ASTCodeGenGTStencilDesc(
-    const StencilInstantiation* instantiation,
+    const dawn::StencilInstantiation* instantiation,
     const std::unordered_map<int, std::vector<std::string>>& StencilIDToStencilNameMap)
     : ASTCodeGenCXX(), instantiation_(instantiation),
       StencilIDToStencilNameMap_(StencilIDToStencilNameMap) {}
@@ -119,4 +121,6 @@ void ASTCodeGenGTStencilDesc::visit(const std::shared_ptr<FieldAccessExpr>& expr
   dawn_unreachable("FieldAccessExpr not allowed in StencilDesc AST");
 }
 
+} // namespace gt
+} // namespace codegen
 } // namespace dawn

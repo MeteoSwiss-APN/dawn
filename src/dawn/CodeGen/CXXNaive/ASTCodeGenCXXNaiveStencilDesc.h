@@ -21,14 +21,16 @@
 #include <vector>
 
 namespace dawn {
-
 class StencilInstantiation;
+
+namespace codegen {
+namespace cxxnaive {
 
 /// @brief ASTVisitor to generate C++ gridtools code for the stencil and stencil function bodies
 /// @ingroup codegen
 class ASTCodeGenCXXNaiveStencilDesc : public ASTCodeGenCXX {
 protected:
-  const StencilInstantiation* instantiation_;
+  const dawn::StencilInstantiation* instantiation_;
 
   std::unordered_map<int, std::vector<std::string>> stencilIDToStencilNameMap_;
 
@@ -36,7 +38,7 @@ public:
   using Base = ASTCodeGenCXX;
 
   ASTCodeGenCXXNaiveStencilDesc(
-      const StencilInstantiation* instantiation,
+      const dawn::StencilInstantiation* instantiation,
       const std::unordered_map<int, std::vector<std::string>>& stencilIDToStencilNameMap);
 
   virtual ~ASTCodeGenCXXNaiveStencilDesc();
@@ -61,4 +63,6 @@ public:
   const std::string& getName(const std::shared_ptr<Expr>& expr) const override;
 };
 
+} // namespace cxxnaive
+} // namespace codegen
 } // namespace dawn

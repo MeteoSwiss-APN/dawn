@@ -21,20 +21,23 @@
 #include <unordered_set>
 
 namespace dawn {
-
 class StencilInstantiation;
 class OptimizerContext;
+
+namespace codegen {
+namespace cxxnaive {
 
 /// @brief GridTools C++ code generation for the gridtools_clang DSL
 /// @ingroup codegen
 class CXXNaiveCodeGen : public CodeGen {
 public:
-  CXXNaiveCodeGen(OptimizerContext* context);
+  CXXNaiveCodeGen(dawn::OptimizerContext* context);
   virtual ~CXXNaiveCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 
 private:
-  std::string generateStencilInstantiation(const StencilInstantiation* stencilInstantiation);
+  std::string generateStencilInstantiation(const dawn::StencilInstantiation* stencilInstantiation);
 };
-
+} // namespace cxxnaive
+} // namespace codegen
 } // namespace dawn

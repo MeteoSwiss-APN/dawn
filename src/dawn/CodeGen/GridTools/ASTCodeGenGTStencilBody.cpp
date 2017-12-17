@@ -21,6 +21,8 @@
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
+namespace codegen {
+namespace gt {
 
 ASTCodeGenGTStencilBody::ASTCodeGenGTStencilBody(
     const StencilInstantiation* stencilInstantiation,
@@ -184,4 +186,6 @@ void ASTCodeGenGTStencilBody::setCurrentStencilFunction(
   currentFunction_ = currentFunction;
 }
 
+} // namespace gt
+} // namespace codegen
 } // namespace dawn

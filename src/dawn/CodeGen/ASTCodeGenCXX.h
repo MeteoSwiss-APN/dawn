@@ -21,6 +21,7 @@
 #include <sstream>
 
 namespace dawn {
+namespace codegen {
 
 /// @brief Abstract base class of all C++ code generation visitor
 /// @ingroup codegen
@@ -80,6 +81,7 @@ public:
   static const char* builtinTypeIDToCXXType(const BuiltinTypeID& builtinTypeID, bool isAutoAllowed);
 };
 
+} // namespace codegen
 } // namespace dawn
 
 #endif

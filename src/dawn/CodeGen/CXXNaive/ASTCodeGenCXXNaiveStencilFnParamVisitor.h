@@ -21,6 +21,8 @@
 #include <unordered_map>
 
 namespace dawn {
+namespace codegen {
+namespace cxxnaive {
 
 class StencilInstantiation;
 class StencilFunctionInstantiation;
@@ -51,4 +53,6 @@ public:
   /// @}
 };
 
+} // namespace cxxnaive
+} // namespace codegen
 } // namespace dawn

@@ -28,11 +28,14 @@ class OptimizerContext;
 class Stage;
 class Stencil;
 
+namespace codegen {
+namespace gt {
+
 /// @brief GridTools C++ code generation for the gridtools_clang DSL
 /// @ingroup codegen
 class GTCodeGen : public CodeGen {
 public:
-  GTCodeGen(OptimizerContext* context);
+  GTCodeGen(dawn::OptimizerContext* context);
   virtual ~GTCodeGen();
 
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
@@ -65,6 +68,8 @@ private:
   std::size_t mplContainerMaxSize_;
 };
 
+} // namespace gt
+} // namespace codegen
 } // namespace dawn
 
 #endif

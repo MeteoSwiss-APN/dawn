@@ -25,17 +25,20 @@ namespace dawn {
 class StencilInstantiation;
 class StencilFunctionInstantiation;
 
+namespace codegen {
+namespace cxxnaive {
+
 enum class StencilContext { E_Stencil, E_StencilFunction };
 
 /// @brief ASTVisitor to generate C++ gridtools code for the stencil and stencil function bodies
 /// @ingroup codegen
 class ASTCodeGenCXXNaiveStencilBody : public ASTCodeGenCXX {
 protected:
-  const StencilInstantiation* instantiation_;
+  const dawn::StencilInstantiation* instantiation_;
   RangeToString offsetPrinter_;
 
   /// The stencil function we are currently generating or NULL
-  const StencilFunctionInstantiation* currentFunction_;
+  const dawn::StencilFunctionInstantiation* currentFunction_;
   // map of stencil (or stencil function) parameter types to names
   std::unordered_map<std::string, std::string> paramNameToType_;
 
@@ -62,7 +65,7 @@ protected:
 public:
   using Base = ASTCodeGenCXX;
 
-  ASTCodeGenCXXNaiveStencilBody(const StencilInstantiation* stencilInstantiation,
+  ASTCodeGenCXXNaiveStencilBody(const dawn::StencilInstantiation* stencilInstantiation,
                                 std::unordered_map<std::string, std::string> paramNameToType,
                                 StencilContext stencilContext);
 
@@ -95,7 +98,7 @@ public:
   /// @}
 
   /// @brief Set the current stencil function (can be NULL)
-  void setCurrentStencilFunction(const StencilFunctionInstantiation* currentFunction);
+  void setCurrentStencilFunction(const dawn::StencilFunctionInstantiation* currentFunction);
 
   /// @brief Mapping of VarDeclStmt and Var/FieldAccessExpr to their name
   const std::string& getName(const std::shared_ptr<Expr>& expr) const override;
@@ -103,4 +106,6 @@ public:
   int getAccessID(const std::shared_ptr<Expr>& expr) const;
 };
 
+} // namespace cxxnaive
+} // namespace codegen
 } // namespace dawn

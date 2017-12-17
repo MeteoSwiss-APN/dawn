@@ -20,6 +20,7 @@
 #include <memory>
 
 namespace dawn {
+namespace codegen {
 
 /// @brief Interface of the backend code generation
 /// @ingroup codegen
@@ -38,6 +39,7 @@ public:
   const OptimizerContext* getOptimizerContext() const { return context_; }
 };
 
+} // namespace codegen
 } // namespace dawn
 
 #endif

@@ -26,16 +26,17 @@ namespace util {
 /// @brief Convert `dawnTranslationUnit_t` to `TranslationUnit`
 /// @ingroup dawn_c_util
 /// @{
-inline const TranslationUnit* toConstTranslationUnit(const dawnTranslationUnit_t* TU) {
+inline const dawn::codegen::TranslationUnit*
+toConstTranslationUnit(const dawnTranslationUnit_t* TU) {
   if(!TU->Impl)
     dawnFatalError("uninitialized TranslationUnit");
-  return reinterpret_cast<const TranslationUnit*>(TU->Impl);
+  return reinterpret_cast<const dawn::codegen::TranslationUnit*>(TU->Impl);
 }
 
-inline TranslationUnit* toTranslationUnit(dawnTranslationUnit_t* TU) {
+inline dawn::codegen::TranslationUnit* toTranslationUnit(dawnTranslationUnit_t* TU) {
   if(!TU->Impl)
     dawnFatalError("uninitialized TranslationUnit");
-  return reinterpret_cast<TranslationUnit*>(TU->Impl);
+  return reinterpret_cast<dawn::codegen::TranslationUnit*>(TU->Impl);
 }
 /// @}
 

@@ -22,9 +22,11 @@
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
+namespace codegen {
+namespace cxxnaive {
 
 ASTCodeGenCXXNaiveStencilBody::ASTCodeGenCXXNaiveStencilBody(
-    const StencilInstantiation* stencilInstantiation,
+    const dawn::StencilInstantiation* stencilInstantiation,
     std::unordered_map<std::string, std::string> paramNameToType, StencilContext stencilContext)
     : ASTCodeGenCXX(), instantiation_(stencilInstantiation), offsetPrinter_(",", "(", ")"),
       currentFunction_(nullptr), paramNameToType_(paramNameToType), nestingOfStencilFunArgLists_(0),
@@ -123,11 +125,11 @@ void ASTCodeGenCXXNaiveStencilBody::visit(const std::shared_ptr<StencilFunCallEx
   if(nestingOfStencilFunArgLists_++)
     ss_ << ", ";
 
-  const StencilFunctionInstantiation* stencilFun =
+  const dawn::StencilFunctionInstantiation* stencilFun =
       currentFunction_ ? currentFunction_->getStencilFunctionInstantiation(expr)
                        : instantiation_->getStencilFunctionInstantiation(expr);
 
-  ss_ << StencilFunctionInstantiation::makeCodeGenName(*stencilFun) << "(i,j,k";
+  ss_ << dawn::StencilFunctionInstantiation::makeCodeGenName(*stencilFun) << "(i,j,k";
 
   int n = 0;
   for(auto& arg : expr->getArguments()) {
@@ -197,8 +199,10 @@ void ASTCodeGenCXXNaiveStencilBody::visit(const std::shared_ptr<FieldAccessExpr>
 }
 
 void ASTCodeGenCXXNaiveStencilBody::setCurrentStencilFunction(
-    const StencilFunctionInstantiation* currentFunction) {
+    const dawn::StencilFunctionInstantiation* currentFunction) {
   currentFunction_ = currentFunction;
 }
 
+} // namespace cxxnaive
+} // namespace codegen
 } // namespace dawn

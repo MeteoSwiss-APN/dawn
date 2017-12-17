@@ -22,6 +22,8 @@
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
+namespace codegen {
+namespace cxxnaive {
 
 ASTCodeGenCXXNaiveStencilFnParamVisitor::ASTCodeGenCXXNaiveStencilFnParamVisitor(
     std::unordered_map<std::string, std::string> paramNameToType)
@@ -39,7 +41,7 @@ void ASTCodeGenCXXNaiveStencilFnParamVisitor::visit(const std::shared_ptr<FieldA
   if(!paramNameToType_.count(expr->getName()))
     DAWN_ASSERT_MSG(0, "param of stencil function call not found");
 
-  ss_ << "ParamWrapper<" << codegen::gt() << "data_view<" << paramNameToType_[expr->getName()]
+  ss_ << "ParamWrapper<" << codegen::c_gt() << "data_view<" << paramNameToType_[expr->getName()]
       << ">>(" << expr->getName() << ","
       << "std::array<int, 3>{" << RangeToString(", ", "", "")(expr->getOffset()) << "})";
 }
@@ -50,4 +52,6 @@ std::string ASTCodeGenCXXNaiveStencilFnParamVisitor::getCodeAndResetStream() {
   return str;
 }
 
+} // namespace cxxnaive
+} // namespace codegen
 } // namespace dawn

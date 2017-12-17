@@ -20,6 +20,7 @@
 #include <vector>
 
 namespace dawn {
+namespace codegen {
 
 /// @brief Result of the code generation process
 /// @ingroup codegen
@@ -52,6 +53,7 @@ public:
   const std::string& getGlobals() const { return globals_; }
 };
 
+} // namespace codegen
 } // namespace dawn
 
 #endif

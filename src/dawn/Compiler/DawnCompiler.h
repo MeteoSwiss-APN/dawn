@@ -41,7 +41,7 @@ public:
 
   /// @brief Compile the SIR using the provided code generation routine
   /// @returns compiled TranslationUnit on success, `nullptr` otherwise
-  std::unique_ptr<TranslationUnit> compile(const SIR* SIR, CodeGenKind codeGen);
+  std::unique_ptr<codegen::TranslationUnit> compile(const SIR* SIR, CodeGenKind codeGen);
 
   /// @brief Get options
   const Options& getOptions() const;
