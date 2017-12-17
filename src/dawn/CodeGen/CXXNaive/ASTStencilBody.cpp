@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/CodeGen/CXXNaive/ASTCodeGenCXXNaiveStencilBody.h"
-#include "dawn/CodeGen/CXXNaive/ASTCodeGenCXXNaiveStencilFnParamVisitor.h"
+#include "dawn/CodeGen/CXXNaive/ASTStencilBody.h"
+#include "dawn/CodeGen/CXXNaive/ASTStencilFnParamVisitor.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/StencilFunctionInstantiation.h"

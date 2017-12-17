@@ -13,8 +13,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
-#include "dawn/CodeGen/CXXNaive/ASTCodeGenCXXNaiveStencilBody.h"
-#include "dawn/CodeGen/CXXNaive/ASTCodeGenCXXNaiveStencilDesc.h"
+#include "dawn/CodeGen/CXXNaive/ASTStencilBody.h"
+#include "dawn/CodeGen/CXXNaive/ASTStencilDesc.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/StencilInstantiation.h"

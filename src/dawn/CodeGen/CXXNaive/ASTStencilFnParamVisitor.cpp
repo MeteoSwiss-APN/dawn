@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/CodeGen/CXXNaive/ASTCodeGenCXXNaiveStencilFnParamVisitor.h"
+#include "dawn/CodeGen/CXXNaive/ASTStencilFnParamVisitor.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/Optimizer/OptimizerContext.h"
