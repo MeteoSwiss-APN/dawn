@@ -31,6 +31,8 @@ static dawn::DawnCompiler::CodeGenKind getCodeGenKind(DawnCodeGenKind codegen) {
     return dawn::DawnCompiler::CG_GTClang;
   case DC_GTClangNaiveCXX:
     return dawn::DawnCompiler::CG_GTClangNaiveCXX;
+  case DC_GTClangOptCXX:
+    return dawn::DawnCompiler::CG_GTClangOptCXX;
   default:
     dawn_unreachable("invalid CodeGenKind");
   }

@@ -19,6 +19,8 @@
 
 namespace dawn {
 
+ASTVisitor::~ASTVisitor() {}
+
 #define ASTVISITORFORWARDING_VISIT_IMPL(Type)                                                      \
   void ASTVisitorForwarding::visit(const std::shared_ptr<Type>& node) {                            \
     for(const auto& s : node->getChildren())                                                       \
@@ -42,6 +44,32 @@ ASTVISITORFORWARDING_VISIT_IMPL(LiteralAccessExpr);
 
 #undef ASTVISITORFORWARDING_VISIT_IMPL
 
+#define ASTVISITORDISABLED_VISIT_IMPL(Type)                                                        \
+  void ASTVisitorDisabled::visit(const std::shared_ptr<Type>& node) {                              \
+    DAWN_ASSERT_MSG(0, "Type not allowed in this context");                                        \
+  }
+
+ASTVISITORDISABLED_VISIT_IMPL(BlockStmt);
+ASTVISITORDISABLED_VISIT_IMPL(StencilCallDeclStmt);
+ASTVISITORDISABLED_VISIT_IMPL(BoundaryConditionDeclStmt);
+ASTVISITORDISABLED_VISIT_IMPL(IfStmt);
+ASTVISITORDISABLED_VISIT_IMPL(UnaryOperator);
+ASTVISITORDISABLED_VISIT_IMPL(BinaryOperator);
+ASTVISITORDISABLED_VISIT_IMPL(AssignmentExpr);
+ASTVISITORDISABLED_VISIT_IMPL(TernaryOperator);
+ASTVISITORDISABLED_VISIT_IMPL(FunCallExpr);
+ASTVISITORDISABLED_VISIT_IMPL(StencilFunCallExpr);
+ASTVISITORDISABLED_VISIT_IMPL(StencilFunArgExpr);
+ASTVISITORDISABLED_VISIT_IMPL(VarAccessExpr);
+ASTVISITORDISABLED_VISIT_IMPL(FieldAccessExpr);
+ASTVISITORDISABLED_VISIT_IMPL(LiteralAccessExpr);
+ASTVISITORDISABLED_VISIT_IMPL(ExprStmt);
+ASTVISITORDISABLED_VISIT_IMPL(ReturnStmt);
+ASTVISITORDISABLED_VISIT_IMPL(VarDeclStmt);
+ASTVISITORDISABLED_VISIT_IMPL(VerticalRegionDeclStmt);
+
+#undef ASTVISITORDISABLED_VISIT_IMPL
+
 void ASTVisitorForwarding::visit(const std::shared_ptr<ExprStmt>& node) {
   node->getExpr()->accept(*this);
 }
@@ -60,7 +88,6 @@ void ASTVisitorForwarding::visit(const std::shared_ptr<dawn::VerticalRegionDeclS
 }
 
 ASTVisitorForwarding::~ASTVisitorForwarding() {}
-
-ASTVisitor::~ASTVisitor() {}
+ASTVisitorDisabled::~ASTVisitorDisabled() {}
 
 } // namespace dawn

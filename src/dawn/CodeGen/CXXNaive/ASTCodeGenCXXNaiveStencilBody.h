@@ -25,6 +25,8 @@ namespace dawn {
 class StencilInstantiation;
 class StencilFunctionInstantiation;
 
+enum class StencilContext { E_Stencil, E_StencilFunction };
+
 /// @brief ASTVisitor to generate C++ gridtools code for the stencil and stencil function bodies
 /// @ingroup codegen
 class ASTCodeGenCXXNaiveStencilBody : public ASTCodeGenCXX {
@@ -34,14 +36,36 @@ protected:
 
   /// The stencil function we are currently generating or NULL
   const StencilFunctionInstantiation* currentFunction_;
+  // map of stencil (or stencil function) parameter types to names
+  std::unordered_map<std::string, std::string> paramNameToType_;
 
   /// Nesting level of argument lists of stencil function *calls*
   int nestingOfStencilFunArgLists_;
 
+  StencilContext stencilContext_;
+
+  template <long unsigned N>
+  std::array<std::string, N> ijkfyOffset(const std::array<int, N>& offsets,
+                                         std::string accessName) {
+    int n = -1;
+    std::array<std::string, N> res;
+    std::transform(offsets.begin(), offsets.end(), res.begin(), [&](int const& off) {
+      ++n;
+      return ((n == 0) ? "i+" : ((n == 1) ? "j+" : ((n == 2) ? "k+" : ""))) + std::to_string(off) +
+             ((stencilContext_ == StencilContext::E_StencilFunction)
+                  ? "+" + accessName + "_offsets[" + std::to_string(n) + "]"
+                  : "");
+    });
+    return res;
+  }
+
 public:
   using Base = ASTCodeGenCXX;
 
-  ASTCodeGenCXXNaiveStencilBody(const StencilInstantiation* stencilInstantiation);
+  ASTCodeGenCXXNaiveStencilBody(const StencilInstantiation* stencilInstantiation,
+                                std::unordered_map<std::string, std::string> paramNameToType,
+                                StencilContext stencilContext);
+
   virtual ~ASTCodeGenCXXNaiveStencilBody();
 
   /// @name Statement implementation

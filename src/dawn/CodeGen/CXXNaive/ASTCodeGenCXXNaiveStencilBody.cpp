@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/CodeGen/CXXNaive/ASTCodeGenCXXNaiveStencilBody.h"
+#include "dawn/CodeGen/CXXNaive/ASTCodeGenCXXNaiveStencilFnParamVisitor.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/StencilFunctionInstantiation.h"
@@ -23,9 +24,11 @@
 namespace dawn {
 
 ASTCodeGenCXXNaiveStencilBody::ASTCodeGenCXXNaiveStencilBody(
-    const StencilInstantiation* stencilInstantiation)
+    const StencilInstantiation* stencilInstantiation,
+    std::unordered_map<std::string, std::string> paramNameToType, StencilContext stencilContext)
     : ASTCodeGenCXX(), instantiation_(stencilInstantiation), offsetPrinter_(",", "(", ")"),
-      currentFunction_(nullptr), nestingOfStencilFunArgLists_(0) {}
+      currentFunction_(nullptr), paramNameToType_(paramNameToType), nestingOfStencilFunArgLists_(0),
+      stencilContext_(stencilContext) {}
 
 ASTCodeGenCXXNaiveStencilBody::~ASTCodeGenCXXNaiveStencilBody() {}
 
@@ -124,12 +127,17 @@ void ASTCodeGenCXXNaiveStencilBody::visit(const std::shared_ptr<StencilFunCallEx
       currentFunction_ ? currentFunction_->getStencilFunctionInstantiation(expr)
                        : instantiation_->getStencilFunctionInstantiation(expr);
 
-  //  ss_ << "gridtools::call<" << StencilFunctionInstantiation::makeCodeGenName(*stencilFun) << ",
-  //  "
-  //      << intervalToNameMap_.find(stencilFun->getInterval())->second << ">::with(eval";
+  ss_ << StencilFunctionInstantiation::makeCodeGenName(*stencilFun) << "(i,j,k";
 
-  for(auto& arg : expr->getArguments())
-    arg->accept(*this);
+  int n = 0;
+  for(auto& arg : expr->getArguments()) {
+    ASTCodeGenCXXNaiveStencilFnParamVisitor fieldAccessVisitor(paramNameToType_);
+
+    arg->accept(fieldAccessVisitor);
+
+    ss_ << "," << fieldAccessVisitor.getCodeAndResetStream();
+    ++n;
+  }
 
   nestingOfStencilFunArgLists_--;
   ss_ << ")";
@@ -174,11 +182,15 @@ void ASTCodeGenCXXNaiveStencilBody::visit(const std::shared_ptr<FieldAccessExpr>
   //  ss_ << ", ";
 
   if(currentFunction_) {
-    ss_ << currentFunction_->getOriginalNameFromCallerAccessID(
-               currentFunction_->getAccessIDFromExpr(expr))
-        << offsetPrinter_(currentFunction_->evalOffsetOfFieldAccessExpr(expr, false));
-  } else
-    ss_ << getName(expr) << offsetPrinter_(expr->getOffset());
+    std::string accessName = currentFunction_->getOriginalNameFromCallerAccessID(
+        currentFunction_->getAccessIDFromExpr(expr));
+    ss_ << accessName
+        << offsetPrinter_(
+               ijkfyOffset(currentFunction_->evalOffsetOfFieldAccessExpr(expr, false), accessName));
+  } else {
+    std::string accessName = getName(expr);
+    ss_ << accessName << offsetPrinter_(ijkfyOffset(expr->getOffset(), accessName));
+  }
 
   //  if(!nestingOfStencilFunArgLists_)
   //    ss_ << ")";

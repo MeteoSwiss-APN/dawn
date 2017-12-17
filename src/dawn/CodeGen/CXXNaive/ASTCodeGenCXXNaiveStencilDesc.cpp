@@ -57,12 +57,7 @@ void ASTCodeGenCXXNaiveStencilDesc::visit(const std::shared_ptr<StencilCallDeclS
 
       if(stencil->getStencilID() != stencilID)
         continue;
-      ss_ << stencilName + "::run(dom";
-      const auto StencilFields = stencil->getFields();
-
-      for(int i = 0; i < StencilFields.size(); ++i)
-        ss_ << "," << StencilFields[i].Name;
-      ss_ << ");";
+      ss_ << "m_" << stencilName + "->run()";
     }
   }
 }

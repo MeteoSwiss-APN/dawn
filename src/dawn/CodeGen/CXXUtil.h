@@ -652,6 +652,10 @@ struct Struct : public Structure {
       : Structure("struct", name, s, templateName) {}
 };
 
+auto gt = []() { return Twine("gridtools::"); };
+auto gtc = []() { return Twine("gridtools::clang::"); };
+auto gt_enum = []() { return Twine("gridtools::enumtype::"); };
+
 } // namesapce codegen
 
 } // namespace dawn
