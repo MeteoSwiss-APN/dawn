@@ -29,7 +29,7 @@ class StencilFunctionInstantiation;
 
 /// @brief ASTVisitor to generate C++ gridtools code for the stencil and stencil function bodies
 /// @ingroup codegen
-class ASTCodeGenCXXNaiveStencilFnParamVisitor : public ASTVisitorDisabled, public NonCopyable {
+class ASTStencilFnParamVisitor : public ASTVisitorDisabled, public NonCopyable {
 protected:
   std::unordered_map<std::string, std::string> paramNameToType_;
   /// Underlying stream
@@ -39,9 +39,8 @@ protected:
 public:
   using Base = ASTVisitorDisabled;
 
-  ASTCodeGenCXXNaiveStencilFnParamVisitor(
-      std::unordered_map<std::string, std::string> paramNameToType);
-  virtual ~ASTCodeGenCXXNaiveStencilFnParamVisitor();
+  ASTStencilFnParamVisitor(std::unordered_map<std::string, std::string> paramNameToType);
+  virtual ~ASTStencilFnParamVisitor();
 
   std::string getCodeAndResetStream();
 

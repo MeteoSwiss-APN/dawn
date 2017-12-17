@@ -22,19 +22,19 @@ namespace dawn {
 namespace codegen {
 namespace cxxnaive {
 
-ASTCodeGenCXXNaiveStencilDesc::ASTCodeGenCXXNaiveStencilDesc(
+ASTStencilDesc::ASTStencilDesc(
     const dawn::StencilInstantiation* instantiation,
     std::unordered_map<int, std::vector<std::string>> const& stencilIDToStencilNameMap)
     : ASTCodeGenCXX(), instantiation_(instantiation),
       stencilIDToStencilNameMap_(stencilIDToStencilNameMap) {}
 
-ASTCodeGenCXXNaiveStencilDesc::~ASTCodeGenCXXNaiveStencilDesc() {}
+ASTStencilDesc::~ASTStencilDesc() {}
 
-const std::string& ASTCodeGenCXXNaiveStencilDesc::getName(const std::shared_ptr<Stmt>& stmt) const {
+const std::string& ASTStencilDesc::getName(const std::shared_ptr<Stmt>& stmt) const {
   return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
 }
 
-const std::string& ASTCodeGenCXXNaiveStencilDesc::getName(const std::shared_ptr<Expr>& expr) const {
+const std::string& ASTStencilDesc::getName(const std::shared_ptr<Expr>& expr) const {
   return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromExpr(expr));
 }
 
@@ -42,15 +42,15 @@ const std::string& ASTCodeGenCXXNaiveStencilDesc::getName(const std::shared_ptr<
 //     Stmt
 //===------------------------------------------------------------------------------------------===//
 
-void ASTCodeGenCXXNaiveStencilDesc::visit(const std::shared_ptr<ReturnStmt>& stmt) {
+void ASTStencilDesc::visit(const std::shared_ptr<ReturnStmt>& stmt) {
   dawn_unreachable("ReturnStmt not allowed in StencilDesc AST");
 }
 
-void ASTCodeGenCXXNaiveStencilDesc::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) {
+void ASTStencilDesc::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) {
   dawn_unreachable("VerticalRegionDeclStmt not allowed in StencilDesc AST");
 }
 
-void ASTCodeGenCXXNaiveStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
+void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
   int stencilID = instantiation_->getStencilCallToStencilIDMap().find(stmt)->second;
 
   for(const std::string& stencilName : stencilIDToStencilNameMap_.find(stencilID)->second) {
@@ -64,7 +64,7 @@ void ASTCodeGenCXXNaiveStencilDesc::visit(const std::shared_ptr<StencilCallDeclS
   }
 }
 
-void ASTCodeGenCXXNaiveStencilDesc::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
+void ASTStencilDesc::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
   DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not yet implemented");
 }
 
@@ -72,15 +72,15 @@ void ASTCodeGenCXXNaiveStencilDesc::visit(const std::shared_ptr<BoundaryConditio
 //     Expr
 //===------------------------------------------------------------------------------------------===//
 
-void ASTCodeGenCXXNaiveStencilDesc::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
+void ASTStencilDesc::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
   dawn_unreachable("StencilFunCallExpr not allowed in StencilDesc AST");
 }
 
-void ASTCodeGenCXXNaiveStencilDesc::visit(const std::shared_ptr<StencilFunArgExpr>& expr) {
+void ASTStencilDesc::visit(const std::shared_ptr<StencilFunArgExpr>& expr) {
   dawn_unreachable("StencilFunArgExpr not allowed in StencilDesc AST");
 }
 
-void ASTCodeGenCXXNaiveStencilDesc::visit(const std::shared_ptr<VarAccessExpr>& expr) {
+void ASTStencilDesc::visit(const std::shared_ptr<VarAccessExpr>& expr) {
   if(instantiation_->isGlobalVariable(instantiation_->getAccessIDFromExpr(expr)))
     ss_ << "globals::get().";
 
@@ -93,7 +93,7 @@ void ASTCodeGenCXXNaiveStencilDesc::visit(const std::shared_ptr<VarAccessExpr>& 
   }
 }
 
-void ASTCodeGenCXXNaiveStencilDesc::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
+void ASTStencilDesc::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   dawn_unreachable("FieldAccessExpr not allowed in StencilDesc AST");
 }
 

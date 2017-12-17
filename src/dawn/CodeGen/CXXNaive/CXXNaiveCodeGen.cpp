@@ -141,8 +141,8 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
                                 std::to_string(m) + ">> pw_" + paramName);
       }
 
-      ASTCodeGenCXXNaiveStencilBody stencilBodyCXXVisitor(stencilInstantiation, paramNameToType,
-                                                          StencilContext::E_StencilFunction);
+      ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, paramNameToType,
+                                           StencilContext::E_StencilFunction);
 
       stencilFunMethod.startBody();
 
@@ -205,8 +205,8 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
       paramNameToType.emplace(StencilFields[i].Name, StencilTemplates[i]);
     }
 
-    ASTCodeGenCXXNaiveStencilBody stencilBodyCXXVisitor(stencilInstantiation, paramNameToType,
-                                                        StencilContext::E_Stencil);
+    ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, paramNameToType,
+                                         StencilContext::E_Stencil);
 
     StencilClass.addMember("const " + c_gtc() + "domain&", "m_dom");
     for(int i = 0; i < StencilFields.size(); ++i) {
@@ -372,8 +372,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
   for(std::size_t i = 0; i < stencils.size(); ++i)
     stencilIDToStencilNameMap[stencils[i]->getStencilID()].emplace_back(innerStencilNames[i]);
 
-  ASTCodeGenCXXNaiveStencilDesc stencilDescCGVisitor(stencilInstantiation,
-                                                     stencilIDToStencilNameMap);
+  ASTStencilDesc stencilDescCGVisitor(stencilInstantiation, stencilIDToStencilNameMap);
   stencilDescCGVisitor.setIndent(RunMethod.getIndent());
   for(const auto& statement : stencilInstantiation->getStencilDescStatements()) {
     statement->ASTStmt->accept(stencilDescCGVisitor);

@@ -32,7 +32,7 @@ enum class StencilContext { E_Stencil, E_StencilFunction };
 
 /// @brief ASTVisitor to generate C++ gridtools code for the stencil and stencil function bodies
 /// @ingroup codegen
-class ASTCodeGenCXXNaiveStencilBody : public ASTCodeGenCXX {
+class ASTStencilBody : public ASTCodeGenCXX {
 protected:
   const dawn::StencilInstantiation* instantiation_;
   RangeToString offsetPrinter_;
@@ -65,11 +65,11 @@ protected:
 public:
   using Base = ASTCodeGenCXX;
 
-  ASTCodeGenCXXNaiveStencilBody(const dawn::StencilInstantiation* stencilInstantiation,
-                                std::unordered_map<std::string, std::string> paramNameToType,
-                                StencilContext stencilContext);
+  ASTStencilBody(const dawn::StencilInstantiation* stencilInstantiation,
+                 std::unordered_map<std::string, std::string> paramNameToType,
+                 StencilContext stencilContext);
 
-  virtual ~ASTCodeGenCXXNaiveStencilBody();
+  virtual ~ASTStencilBody();
 
   /// @name Statement implementation
   /// @{

@@ -25,18 +25,17 @@ namespace dawn {
 namespace codegen {
 namespace cxxnaive {
 
-ASTCodeGenCXXNaiveStencilFnParamVisitor::ASTCodeGenCXXNaiveStencilFnParamVisitor(
+ASTStencilFnParamVisitor::ASTStencilFnParamVisitor(
     std::unordered_map<std::string, std::string> paramNameToType)
     : paramNameToType_(paramNameToType) {}
 
-ASTCodeGenCXXNaiveStencilFnParamVisitor::~ASTCodeGenCXXNaiveStencilFnParamVisitor() {}
+ASTStencilFnParamVisitor::~ASTStencilFnParamVisitor() {}
 
-void ASTCodeGenCXXNaiveStencilFnParamVisitor::visit(const std::shared_ptr<VarAccessExpr>& expr) {}
+void ASTStencilFnParamVisitor::visit(const std::shared_ptr<VarAccessExpr>& expr) {}
 
-void ASTCodeGenCXXNaiveStencilFnParamVisitor::visit(
-    const std::shared_ptr<LiteralAccessExpr>& expr) {}
+void ASTStencilFnParamVisitor::visit(const std::shared_ptr<LiteralAccessExpr>& expr) {}
 
-void ASTCodeGenCXXNaiveStencilFnParamVisitor::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
+void ASTStencilFnParamVisitor::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
 
   if(!paramNameToType_.count(expr->getName()))
     DAWN_ASSERT_MSG(0, "param of stencil function call not found");
@@ -46,7 +45,7 @@ void ASTCodeGenCXXNaiveStencilFnParamVisitor::visit(const std::shared_ptr<FieldA
       << "std::array<int, 3>{" << RangeToString(", ", "", "")(expr->getOffset()) << "})";
 }
 
-std::string ASTCodeGenCXXNaiveStencilFnParamVisitor::getCodeAndResetStream() {
+std::string ASTStencilFnParamVisitor::getCodeAndResetStream() {
   std::string str = ss_.str();
   codegen::clear(ss_);
   return str;

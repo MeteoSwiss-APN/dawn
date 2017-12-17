@@ -28,7 +28,7 @@ namespace cxxnaive {
 
 /// @brief ASTVisitor to generate C++ gridtools code for the stencil and stencil function bodies
 /// @ingroup codegen
-class ASTCodeGenCXXNaiveStencilDesc : public ASTCodeGenCXX {
+class ASTStencilDesc : public ASTCodeGenCXX {
 protected:
   const dawn::StencilInstantiation* instantiation_;
 
@@ -37,11 +37,11 @@ protected:
 public:
   using Base = ASTCodeGenCXX;
 
-  ASTCodeGenCXXNaiveStencilDesc(
+  ASTStencilDesc(
       const dawn::StencilInstantiation* instantiation,
       const std::unordered_map<int, std::vector<std::string>>& stencilIDToStencilNameMap);
 
-  virtual ~ASTCodeGenCXXNaiveStencilDesc();
+  virtual ~ASTStencilDesc();
 
   /// @name Statement implementation
   /// @{
