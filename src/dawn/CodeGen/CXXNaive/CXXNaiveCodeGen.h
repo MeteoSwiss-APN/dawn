@@ -40,6 +40,7 @@ public:
 
 private:
   std::string generateStencilInstantiation(const dawn::StencilInstantiation* stencilInstantiation);
+  std::string generateGlobals(const SIR* Sir);
 };
 } // namespace cxxnaive
 } // namespace codegen

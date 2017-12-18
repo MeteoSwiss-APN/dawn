@@ -134,7 +134,7 @@ void ASTStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
   int AccessID = getAccessID(expr);
 
   if(instantiation_->isGlobalVariable(AccessID)) {
-    ss_ << name;
+    ss_ << "globals::get()." << name;
   } else {
     ss_ << name;
 
