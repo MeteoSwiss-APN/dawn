@@ -62,7 +62,7 @@ protected:
       ++n;
       std::array<std::string, 3> indices{"i+", "j+", "k+"};
 
-      return ((n < 4) ? indices[n] : ""))) + std::to_string(off) +
+      return ((n < 4) ? indices[n] : "") + std::to_string(off) +
              ((stencilContext_ == StencilContext::E_StencilFunction)
                   ? "+" + accessName + "_offsets[" + std::to_string(n) + "]"
                   : "");

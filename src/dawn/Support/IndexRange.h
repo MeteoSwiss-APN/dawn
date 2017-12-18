@@ -160,7 +160,7 @@ IndexRange<const Cont> makeRange(Cont const& cont,
 
 template <typename Cont>
 IndexRange<Cont> makeRange(Cont& cont, std::function<bool(typename Cont::value_type const&)> pred) {
-  return IndexRange<Cont>{cont, f};
+  return IndexRange<Cont>{cont, pred};
 }
 
 } // namespace dawn
