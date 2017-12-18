@@ -23,6 +23,7 @@
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringUtil.h"
 #include <algorithm>
+#include <vector>
 
 namespace dawn {
 namespace codegen {
@@ -115,17 +116,6 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
         return "";
       }
 
-      // If we have a return argument, we generate a special `__out` field
-      //      int accessorID = 0;
-      //      if(stencilFun->hasReturn()) {
-      //        StencilFunStruct.addStatement("using __out = gridtools::accessor<0, "
-      //                                      "gridtools::enumtype::inout, gridtools::extent<0, 0,
-      //                                      0, 0, "
-      //                                      "0, 0>>");
-      //        arglist.push_back("__out");
-      //        accessorID++;
-      //      }
-
       // Generate field declarations
       stencilFunMethod.addArg("const int i");
       stencilFunMethod.addArg("const int j");
@@ -183,9 +173,17 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
 
     innerStencilNames[stencilIdx] = "stencil_" + std::to_string(stencilIdx);
 
-    std::vector<std::string> StencilTemplates;
-    for(int i = 0; i < StencilFields.size(); ++i)
-      StencilTemplates.push_back("StorageType" + std::to_string(i + 1));
+    auto non_temp_fields =
+        makeRange(StencilFields, std::function<bool(Stencil::FieldInfo const&)>(
+                                     [](Stencil::FieldInfo const& f) { return !f.IsTemporary; }));
+    auto temp_fields =
+        makeRange(StencilFields, std::function<bool(Stencil::FieldInfo const&)>(
+                                     [](Stencil::FieldInfo const& f) { return f.IsTemporary; }));
+
+    std::vector<std::string> StencilTemplates(non_temp_fields.size());
+    int cnt = 0;
+    std::generate(StencilTemplates.begin(), StencilTemplates.end(),
+                  [&cnt]() { return "StorageType" + std::to_string(cnt++); });
 
     Structure sbase = StencilWrapperClass.addStruct("sbase", "");
     MemberFunction sbase_run = sbase.addMemberFunction("virtual void", "run");
@@ -201,16 +199,30 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
     std::string StencilName = StencilClass.getName();
 
     std::unordered_map<std::string, std::string> paramNameToType;
-    for(int i = 0; i < StencilFields.size(); ++i) {
-      paramNameToType.emplace(StencilFields[i].Name, StencilTemplates[i]);
+    for(auto fieldIt : non_temp_fields) {
+      paramNameToType.emplace((*fieldIt).Name, StencilTemplates[fieldIt.idx()]);
+    }
+
+    for(auto fieldIt : temp_fields) {
+      paramNameToType.emplace((*fieldIt).Name, c_gtc().str() + "storage_t");
     }
 
     ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, paramNameToType,
                                          StencilContext::E_Stencil);
 
+    StencilClass.addComment("//Members");
+
     StencilClass.addMember("const " + c_gtc() + "domain&", "m_dom");
-    for(int i = 0; i < StencilFields.size(); ++i) {
-      StencilClass.addMember(StencilTemplates[i] + "&", "m_" + StencilFields[i].Name);
+
+    for(auto fieldIt : non_temp_fields) {
+      StencilClass.addMember(StencilTemplates[fieldIt.idx()] + "&", "m_" + (*fieldIt).Name);
+    }
+
+    if(!(temp_fields.empty())) {
+      StencilClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
+
+      for(auto field : temp_fields)
+        StencilClass.addMember(c_gtc() + "storage_t", "m_" + (*field).Name);
     }
 
     StencilClass.changeAccessibility("public");
@@ -218,11 +230,22 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
     auto stencilClassCtr = StencilClass.addConstructor();
 
     stencilClassCtr.addArg("const " + c_gtc() + "domain& dom_");
-    for(int i = 0; i < StencilFields.size(); ++i)
-      stencilClassCtr.addArg(StencilTemplates[i] + "& " + StencilFields[i].Name + "_");
+    for(auto fieldIt : non_temp_fields) {
+      stencilClassCtr.addArg(StencilTemplates[fieldIt.idx()] + "& " + (*fieldIt).Name + "_");
+    }
+
     stencilClassCtr.addInit("m_dom(dom_)");
-    for(int i = 0; i < StencilFields.size(); ++i)
-      stencilClassCtr.addInit("m_" + StencilFields[i].Name + "(" + StencilFields[i].Name + "_)");
+
+    for(auto fieldIt : non_temp_fields) {
+      stencilClassCtr.addInit("m_" + (*fieldIt).Name + "(" + (*fieldIt).Name + "_)");
+    }
+
+    if(!(temp_fields.empty())) {
+      stencilClassCtr.addInit("m_meta_data(dom_.isize(), dom_.jsize(), dom_.ksize())");
+      for(auto fieldIt : temp_fields) {
+        stencilClassCtr.addInit("m_" + (*fieldIt).Name + "(m_meta_data)");
+      }
+    }
 
     stencilClassCtr.commit();
 
@@ -234,10 +257,15 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
     for(const auto& multiStagePtr : stencil.getMultiStages()) {
       const MultiStage& multiStage = *multiStagePtr;
 
-      for(int i = 0; i < StencilFields.size(); ++i)
-        StencilDoMethod.addStatement(c_gt() + "data_view<" + StencilTemplates[i] + "> " +
-                                     StencilFields[i].Name + "= " + c_gt() + "make_host_view(m_" +
-                                     StencilFields[i].Name + ")");
+      for(auto fieldIt : non_temp_fields) {
+        StencilDoMethod.addStatement(c_gt() + "data_view<" + StencilTemplates[fieldIt.idx()] +
+                                     "> " + (*fieldIt).Name + "= " + c_gt() + "make_host_view(m_" +
+                                     (*fieldIt).Name + ")");
+      }
+      for(auto fieldIt : temp_fields) {
+        StencilDoMethod.addStatement(c_gt() + "data_view<storage_t> " + (*fieldIt).Name + "= " +
+                                     c_gt() + "make_host_view(m_" + (*fieldIt).Name + ")");
+      }
 
       auto intervals_set = multiStage.getIntervals();
       std::vector<Interval> intervals_v;
@@ -338,15 +366,20 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
     std::string initCtr =
         "m_" + innerStencilNames[stencilIdx] + "(new " + innerStencilNames[stencilIdx];
 
-    // TODO HERE
-    for(int i = 0; i < StencilFields.size(); ++i) {
+    int i = 0;
+    for(auto field : StencilFields) {
+      if(field.IsTemporary)
+        continue;
       initCtr +=
-          (i != 0 ? "," : "<") + (stencilInstantiation->isAllocatedField(StencilFields[i].AccessID)
+          (i != 0 ? "," : "<") + (stencilInstantiation->isAllocatedField(field.AccessID)
                                       ? (c_gtc().str() + "storage_t")
                                       : (std::string("StorageType") + std::to_string(i + 1)));
+      i++;
     }
     initCtr += ">(dom";
     for(auto field : StencilFields) {
+      if(field.IsTemporary)
+        continue;
       initCtr += "," + (stencilInstantiation->isAllocatedField(field.AccessID) ? (field.Name + "_")
                                                                                : (field.Name));
     }

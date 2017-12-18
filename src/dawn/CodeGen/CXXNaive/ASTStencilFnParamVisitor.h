@@ -34,7 +34,6 @@ protected:
   std::unordered_map<std::string, std::string> paramNameToType_;
   /// Underlying stream
   std::stringstream ss_;
-  int firstParam_ = 0;
 
 public:
   using Base = ASTVisitorDisabled;
@@ -47,6 +46,7 @@ public:
   /// @name Expression implementation
   /// @{
   virtual void visit(const std::shared_ptr<VarAccessExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<StencilFunArgExpr>& expr) override;
   virtual void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override;
   virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override;
   /// @}

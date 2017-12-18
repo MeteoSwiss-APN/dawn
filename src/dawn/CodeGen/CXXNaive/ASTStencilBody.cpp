@@ -119,7 +119,7 @@ void ASTStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
 
     arg->accept(fieldAccessVisitor);
 
-    ss_ << "," << fieldAccessVisitor.getCodeAndResetStream();
+    ss_ << fieldAccessVisitor.getCodeAndResetStream();
     ++n;
   }
 
@@ -134,16 +134,7 @@ void ASTStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
   int AccessID = getAccessID(expr);
 
   if(instantiation_->isGlobalVariable(AccessID)) {
-    //    if(!nestingOfStencilFunArgLists_)
-    //      ss_ << "eval";
-    //    else
-    //    ss_ << ", ";
-
     ss_ << name;
-
-    //    if(!nestingOfStencilFunArgLists_)
-    //      ss_ << ").value";
-
   } else {
     ss_ << name;
 
@@ -158,11 +149,6 @@ void ASTStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
 void ASTStencilBody::visit(const std::shared_ptr<LiteralAccessExpr>& expr) { Base::visit(expr); }
 
 void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
-  //  if(!nestingOfStencilFunArgLists_)
-  //    ss_ << "eval(";
-  //  else
-  //  ss_ << ", ";
-
   if(currentFunction_) {
     std::string accessName = currentFunction_->getOriginalNameFromCallerAccessID(
         currentFunction_->getAccessIDFromExpr(expr));
@@ -173,9 +159,6 @@ void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
     std::string accessName = getName(expr);
     ss_ << accessName << offsetPrinter_(ijkfyOffset(expr->getOffset(), accessName));
   }
-
-  //  if(!nestingOfStencilFunArgLists_)
-  //    ss_ << ")";
 }
 
 void ASTStencilBody::setCurrentStencilFunction(

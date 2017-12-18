@@ -15,9 +15,9 @@
 find_package(PythonInterp 3.5 REQUIRED)
 
 # Look for all the required modules
-include(DawnFindPythonModule)
-dawn_find_python_module(sphinx REQUIRED)
-dawn_find_python_module(docutils REQUIRED)
+include(mchbuildFindPythonModule)
+mchbuild_find_python_module(sphinx REQUIRED)
+mchbuild_find_python_module(docutils REQUIRED)
 
 dawn_export_package(
   NAME Python3
