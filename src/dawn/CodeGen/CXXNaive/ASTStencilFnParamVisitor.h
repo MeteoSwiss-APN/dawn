@@ -27,8 +27,9 @@ namespace cxxnaive {
 class StencilInstantiation;
 class StencilFunctionInstantiation;
 
-/// @brief ASTVisitor to generate C++ gridtools code for the stencil and stencil function bodies
-/// @ingroup codegen
+/// @brief ASTVisitor to generate C++ naive backend code for the parameters of the stencil function
+/// calls
+/// @ingroup cxxnaive
 class ASTStencilFnParamVisitor : public ASTVisitorDisabled, public NonCopyable {
 protected:
   std::unordered_map<std::string, std::string> paramNameToType_;

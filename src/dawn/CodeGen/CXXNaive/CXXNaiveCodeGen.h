@@ -30,9 +30,10 @@ namespace codegen {
 namespace cxxnaive {
 
 /// @brief GridTools C++ code generation for the gridtools_clang DSL
-/// @ingroup codegen
+/// @ingroup cxxnaive
 class CXXNaiveCodeGen : public CodeGen {
 public:
+  ///@brief constructor
   CXXNaiveCodeGen(dawn::OptimizerContext* context);
   virtual ~CXXNaiveCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;

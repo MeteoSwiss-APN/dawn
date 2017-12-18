@@ -123,11 +123,9 @@ std::vector<Stencil::FieldInfo> Stencil::getFields(bool withTemporaries) const {
 
     if(isTemporary) {
       if(withTemporaries) {
-        std::cout << "PSGING " << name << " " << isTemporary << std::endl;
         fields.insert(fields.begin(), FieldInfo{isTemporary, name, AccessID});
       }
     } else {
-      std::cout << "DEULT " << name << " " << isTemporary << std::endl;
       fields.emplace_back(FieldInfo{isTemporary, name, AccessID});
     }
   }

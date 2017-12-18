@@ -28,7 +28,7 @@ namespace codegen {
 namespace gt {
 
 /// @brief ASTVisitor to generate C++ gridtools code for the stencil and stencil function bodies
-/// @ingroup codegen
+/// @ingroup gt
 class ASTCodeGenGTStencilDesc : public ASTCodeGenCXX {
 protected:
   const dawn::StencilInstantiation* instantiation_;

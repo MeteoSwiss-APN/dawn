@@ -87,6 +87,8 @@ public:
 };
 
 /// @brief Visitor which disables the visit of all expr and stmt
+/// (in order to implement the corresponding functionality of a node, the method should be overrided
+/// by the inherited class)
 /// @ingroup sir
 class ASTVisitorDisabled : public ASTVisitor {
 public:

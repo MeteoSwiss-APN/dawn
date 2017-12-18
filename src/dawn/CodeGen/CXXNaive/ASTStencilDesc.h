@@ -26,8 +26,8 @@ class StencilInstantiation;
 namespace codegen {
 namespace cxxnaive {
 
-/// @brief ASTVisitor to generate C++ gridtools code for the stencil and stencil function bodies
-/// @ingroup codegen
+/// @brief ASTVisitor to generate C++ naive bakend code for the control flow code of stencils
+/// @ingroup cxxnaive
 class ASTStencilDesc : public ASTCodeGenCXX {
 protected:
   const dawn::StencilInstantiation* instantiation_;

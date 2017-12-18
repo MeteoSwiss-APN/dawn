@@ -28,10 +28,12 @@ class StencilFunctionInstantiation;
 namespace codegen {
 namespace cxxnaive {
 
+// @brief context of a stencil body
+// (pure stencil or a stencil function)
 enum class StencilContext { E_Stencil, E_StencilFunction };
 
-/// @brief ASTVisitor to generate C++ gridtools code for the stencil and stencil function bodies
-/// @ingroup codegen
+/// @brief ASTVisitor to generate C++ naive code for the stencil and stencil function bodies
+/// @ingroup cxxnaive
 class ASTStencilBody : public ASTCodeGenCXX {
 protected:
   const dawn::StencilInstantiation* instantiation_;
@@ -47,6 +49,10 @@ protected:
 
   StencilContext stencilContext_;
 
+  /**
+   * @brief produces a string of (i,j,k) accesses for the C++ generated naive code,
+   * from an array of offseted accesses
+   */
   template <long unsigned N>
   std::array<std::string, N> ijkfyOffset(const std::array<int, N>& offsets,
                                          std::string accessName) {
@@ -54,7 +60,9 @@ protected:
     std::array<std::string, N> res;
     std::transform(offsets.begin(), offsets.end(), res.begin(), [&](int const& off) {
       ++n;
-      return ((n == 0) ? "i+" : ((n == 1) ? "j+" : ((n == 2) ? "k+" : ""))) + std::to_string(off) +
+      std::array<std::string, 3> indices{"i+", "j+", "k+"};
+
+      return ((n < 4) ? indices[n] : ""))) + std::to_string(off) +
              ((stencilContext_ == StencilContext::E_StencilFunction)
                   ? "+" + accessName + "_offsets[" + std::to_string(n) + "]"
                   : "");
@@ -65,6 +73,7 @@ protected:
 public:
   using Base = ASTCodeGenCXX;
 
+  /// @brief constructor
   ASTStencilBody(const dawn::StencilInstantiation* stencilInstantiation,
                  std::unordered_map<std::string, std::string> paramNameToType,
                  StencilContext stencilContext);

@@ -32,7 +32,7 @@ namespace codegen {
 namespace gt {
 
 /// @brief GridTools C++ code generation for the gridtools_clang DSL
-/// @ingroup codegen
+/// @ingroup gt
 class GTCodeGen : public CodeGen {
 public:
   GTCodeGen(dawn::OptimizerContext* context);
