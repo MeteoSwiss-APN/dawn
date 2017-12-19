@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn-c/util/Allocate.h"
 #include "dawn-c/util/OptionsWrapper.h"
+#include "dawn-c/util/Allocate.h"
 #include <sstream>
 
 namespace dawn {

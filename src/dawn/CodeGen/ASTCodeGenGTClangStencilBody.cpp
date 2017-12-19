@@ -91,7 +91,22 @@ void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<StencilCallDeclSt
 }
 
 void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
-  DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not allowed in this context");
+  //  ss_ << "gridtools::call<" << stmt->getFunctor() << ", "
+  //      << intervalToNameMap_.find(sir::Interval(sir::Interval::Start,
+  //      sir::Interval::End))->second
+  //      << ">::with(eval";
+
+  //  for(auto& arg : stmt->getFields()) {
+  //    std::cout << "we are here" << std::endl;
+  //    auto fae = FieldAccessExpr(arg->Name);
+  //    fae.setPureOffset({0, 0, 0});
+  //    fae.accept(*this);
+  //  }
+
+  //  nestingOfStencilFunArgLists_--;
+  //  ss_ << ")";
+  std::cout << "ignoring boundary condition in code generation" << std::endl;
+  //  DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not allowed in this context");
 }
 
 void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<IfStmt>& stmt) { Base::visit(stmt); }

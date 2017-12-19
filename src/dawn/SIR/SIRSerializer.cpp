@@ -12,18 +12,18 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/SIR/SIR.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTVisitor.h"
-#include "dawn/SIR/SIR.h"
 #include "dawn/SIR/SIR.pb.h"
 #include "dawn/SIR/SIRSerializer.h"
 #include "dawn/Support/Format.h"
-#include "dawn/Support/Unreachable.h"
 #include "dawn/Support/Logging.h"
+#include "dawn/Support/Unreachable.h"
 #include <fstream>
 #include <google/protobuf/util/json_util.h>
-#include <stack>
 #include <list>
+#include <stack>
 #include <tuple>
 
 namespace dawn {
@@ -444,7 +444,7 @@ static void setAST(sir::proto::AST* astProto, const AST* ast) {
 
 static std::string serializeImpl(const SIR* sir, SIRSerializer::SerializationKind kind) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
-  ProtobufLogger::init();  
+  ProtobufLogger::init();
 
   // Convert SIR to protobuf SIR
   sir::proto::SIR sirProto;
@@ -559,7 +559,7 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::SerializationKin
   default:
     dawn_unreachable("invalid SerializationKind");
   }
-  
+
   return str;
 }
 
@@ -884,7 +884,7 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str,
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   using namespace sir;
   ProtobufLogger::init();
-  
+
   // Decode the string
   sir::proto::SIR sirProto;
   switch(kind) {
@@ -903,7 +903,7 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str,
   default:
     dawn_unreachable("invalid SerializationKind");
   }
-  
+
   // Convert protobuf SIR to SIR
   std::shared_ptr<SIR> sir = std::make_shared<SIR>();
 
