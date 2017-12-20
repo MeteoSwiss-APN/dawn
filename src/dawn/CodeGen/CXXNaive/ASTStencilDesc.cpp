@@ -23,7 +23,7 @@ namespace codegen {
 namespace cxxnaive {
 
 ASTStencilDesc::ASTStencilDesc(
-    const dawn::StencilInstantiation* instantiation,
+    const StencilInstantiation* instantiation,
     std::unordered_map<int, std::vector<std::string>> const& stencilIDToStencilNameMap)
     : ASTCodeGenCXX(), instantiation_(instantiation),
       stencilIDToStencilNameMap_(stencilIDToStencilNameMap) {}
@@ -43,11 +43,11 @@ const std::string& ASTStencilDesc::getName(const std::shared_ptr<Expr>& expr) co
 //===------------------------------------------------------------------------------------------===//
 
 void ASTStencilDesc::visit(const std::shared_ptr<ReturnStmt>& stmt) {
-  dawn_unreachable("ReturnStmt not allowed in StencilDesc AST");
+  DAWN_ASSERT_MSG(0, "ReturnStmt not allowed in StencilDesc AST");
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) {
-  dawn_unreachable("VerticalRegionDeclStmt not allowed in StencilDesc AST");
+  DAWN_ASSERT_MSG(0, "VerticalRegionDeclStmt not allowed in StencilDesc AST");
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
@@ -73,11 +73,11 @@ void ASTStencilDesc::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stm
 //===------------------------------------------------------------------------------------------===//
 
 void ASTStencilDesc::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
-  dawn_unreachable("StencilFunCallExpr not allowed in StencilDesc AST");
+  DAWN_ASSERT_MSG(0, "StencilFunCallExpr not allowed in StencilDesc AST");
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<StencilFunArgExpr>& expr) {
-  dawn_unreachable("StencilFunArgExpr not allowed in StencilDesc AST");
+  DAWN_ASSERT_MSG(0, "StencilFunArgExpr not allowed in StencilDesc AST");
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<VarAccessExpr>& expr) {
@@ -94,7 +94,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<VarAccessExpr>& expr) {
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
-  dawn_unreachable("FieldAccessExpr not allowed in StencilDesc AST");
+  DAWN_ASSERT_MSG(0, "FieldAccessExpr not allowed in StencilDesc AST");
 }
 
 } // namespace cxxnaive

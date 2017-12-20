@@ -30,7 +30,7 @@ namespace cxxnaive {
 /// @ingroup cxxnaive
 class ASTStencilDesc : public ASTCodeGenCXX {
 protected:
-  const dawn::StencilInstantiation* instantiation_;
+  const StencilInstantiation* instantiation_;
 
   std::unordered_map<int, std::vector<std::string>> stencilIDToStencilNameMap_;
 
@@ -38,7 +38,7 @@ public:
   using Base = ASTCodeGenCXX;
 
   ASTStencilDesc(
-      const dawn::StencilInstantiation* instantiation,
+      const StencilInstantiation* instantiation,
       const std::unordered_map<int, std::vector<std::string>>& stencilIDToStencilNameMap);
 
   virtual ~ASTStencilDesc();

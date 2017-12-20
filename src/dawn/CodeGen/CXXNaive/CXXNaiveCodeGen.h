@@ -34,13 +34,13 @@ namespace cxxnaive {
 class CXXNaiveCodeGen : public CodeGen {
 public:
   ///@brief constructor
-  CXXNaiveCodeGen(dawn::OptimizerContext* context);
+  CXXNaiveCodeGen(OptimizerContext* context);
   virtual ~CXXNaiveCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 
 private:
-  std::string generateStencilInstantiation(const dawn::StencilInstantiation* stencilInstantiation);
-  std::string generateGlobals(const SIR* Sir);
+  std::string generateStencilInstantiation(const StencilInstantiation* stencilInstantiation);
+  std::string generateGlobals(const SIR* sir);
 };
 } // namespace cxxnaive
 } // namespace codegen

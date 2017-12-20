@@ -12,43 +12,36 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_ASTCODEGENGTCLANGSTENCILBODY_H
-#define DAWN_CODEGEN_ASTCODEGENGTCLANGSTENCILBODY_H
-
+#pragma once
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
-#include "dawn/Optimizer/Interval.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>
 #include <unordered_map>
+#include <vector>
 
 namespace dawn {
-
 class StencilInstantiation;
-class StencilFunctionInstantiation;
 
 namespace codegen {
 namespace gt {
 
 /// @brief ASTVisitor to generate C++ gridtools code for the stencil and stencil function bodies
 /// @ingroup gt
-class ASTCodeGenGTStencilBody : public ASTCodeGenCXX {
+class ASTStencilDesc : public ASTCodeGenCXX {
 protected:
-  const dawn::StencilInstantiation* instantiation_;
-  const std::unordered_map<Interval, std::string>& intervalToNameMap_;
-  RangeToString offsetPrinter_;
+  const StencilInstantiation* instantiation_;
 
-  /// The stencil function we are currently generating or NULL
-  const dawn::StencilFunctionInstantiation* currentFunction_;
-
-  /// Nesting level of argument lists of stencil function *calls*
-  int nestingOfStencilFunArgLists_;
+  /// StencilID to the name of the generated stencils for this ID
+  const std::unordered_map<int, std::vector<std::string>>& StencilIDToStencilNameMap_;
 
 public:
   using Base = ASTCodeGenCXX;
 
-  ASTCodeGenGTStencilBody(const dawn::StencilInstantiation* stencilInstantiation,
-                          const std::unordered_map<Interval, std::string>& intervalToNameMap);
-  virtual ~ASTCodeGenGTStencilBody();
+  ASTStencilDesc(
+      const StencilInstantiation* instantiation,
+      const std::unordered_map<int, std::vector<std::string>>& StencilIDToStencilNameMap);
+
+  virtual ~ASTStencilDesc();
 
   /// @name Statement implementation
   /// @{
@@ -76,17 +69,10 @@ public:
   virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override;
   /// @}
 
-  /// @brief Set the current stencil function (can be NULL)
-  void setCurrentStencilFunction(const StencilFunctionInstantiation* currentFunction);
-
-  /// @brief Mapping of VarDeclStmt and Var/FieldAccessExpr to their name
-  const std::string& getName(const std::shared_ptr<Expr>& expr) const override;
   const std::string& getName(const std::shared_ptr<Stmt>& stmt) const override;
-  int getAccessID(const std::shared_ptr<Expr>& expr) const;
+  const std::string& getName(const std::shared_ptr<Expr>& expr) const override;
 };
 
 } // namespace gt
 } // namespace codegen
 } // namespace dawn
-
-#endif

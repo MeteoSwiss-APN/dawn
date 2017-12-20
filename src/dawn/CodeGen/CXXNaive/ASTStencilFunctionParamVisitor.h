@@ -30,7 +30,7 @@ class StencilFunctionInstantiation;
 /// @brief ASTVisitor to generate C++ naive backend code for the parameters of the stencil function
 /// calls
 /// @ingroup cxxnaive
-class ASTStencilFnParamVisitor : public ASTVisitorDisabled, public NonCopyable {
+class ASTStencilFunctionParamVisitor : public ASTVisitorDisabled, public NonCopyable {
 protected:
   std::unordered_map<std::string, std::string> paramNameToType_;
   /// Underlying stream
@@ -39,8 +39,8 @@ protected:
 public:
   using Base = ASTVisitorDisabled;
 
-  ASTStencilFnParamVisitor(std::unordered_map<std::string, std::string> paramNameToType);
-  virtual ~ASTStencilFnParamVisitor();
+  ASTStencilFunctionParamVisitor(std::unordered_map<std::string, std::string> paramNameToType);
+  virtual ~ASTStencilFunctionParamVisitor();
 
   std::string getCodeAndResetStream();
 

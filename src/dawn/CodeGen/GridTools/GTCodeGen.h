@@ -35,7 +35,7 @@ namespace gt {
 /// @ingroup gt
 class GTCodeGen : public CodeGen {
 public:
-  GTCodeGen(dawn::OptimizerContext* context);
+  GTCodeGen(OptimizerContext* context);
   virtual ~GTCodeGen();
 
   virtual std::unique_ptr<TranslationUnit> generateCode() override;

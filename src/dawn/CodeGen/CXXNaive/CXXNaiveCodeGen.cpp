@@ -52,12 +52,12 @@ static std::string makeKLoop(const std::string dom, bool isBackward, Interval co
                     : makeLoopImpl("k", lower, upper, "<=", "++");
 }
 
-CXXNaiveCodeGen::CXXNaiveCodeGen(dawn::OptimizerContext* context) : CodeGen(context) {}
+CXXNaiveCodeGen::CXXNaiveCodeGen(OptimizerContext* context) : CodeGen(context) {}
 
 CXXNaiveCodeGen::~CXXNaiveCodeGen() {}
 
-std::string CXXNaiveCodeGen::generateStencilInstantiation(
-    const dawn::StencilInstantiation* stencilInstantiation) {
+std::string
+CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInstantiation) {
   using namespace codegen;
 
   std::stringstream ssSW, tss;
@@ -89,7 +89,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
   //
   std::unordered_set<std::string> generatedStencilFun;
   for(const auto& stencilFun : stencilInstantiation->getStencilFunctionInstantiations()) {
-    std::string stencilFunName = dawn::StencilFunctionInstantiation::makeCodeGenName(*stencilFun);
+    std::string stencilFunName = StencilFunctionInstantiation::makeCodeGenName(*stencilFun);
     if(generatedStencilFun.emplace(stencilFunName).second) {
 
       // Field declaration
@@ -137,7 +137,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
       }
 
       ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, paramNameToType,
-                                           StencilContext::E_StencilFunction);
+                                           StencilContext::SC_StencilFunction);
 
       stencilFunMethod.startBody();
 
@@ -184,15 +184,15 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
 
     innerStencilNames[stencilIdx] = "stencil_" + std::to_string(stencilIdx);
 
-    auto non_temp_fields =
+    auto nonTempFields =
         makeRange(StencilFields, std::function<bool(Stencil::FieldInfo const&)>(
                                      [](Stencil::FieldInfo const& f) { return !f.IsTemporary; }));
-    auto temp_fields =
+    auto tempFields =
         makeRange(StencilFields, std::function<bool(Stencil::FieldInfo const&)>(
                                      [](Stencil::FieldInfo const& f) { return f.IsTemporary; }));
 
     // list of template for storages used in the stencil class
-    std::vector<std::string> StencilTemplates(non_temp_fields.size());
+    std::vector<std::string> StencilTemplates(nonTempFields.size());
     int cnt = 0;
     std::generate(StencilTemplates.begin(), StencilTemplates.end(),
                   [cnt]() mutable { return "StorageType" + std::to_string(cnt++); });
@@ -205,29 +205,29 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
     std::string StencilName = StencilClass.getName();
 
     std::unordered_map<std::string, std::string> paramNameToType;
-    for(auto fieldIt : non_temp_fields) {
+    for(auto fieldIt : nonTempFields) {
       paramNameToType.emplace((*fieldIt).Name, StencilTemplates[fieldIt.idx()]);
     }
 
-    for(auto fieldIt : temp_fields) {
+    for(auto fieldIt : tempFields) {
       paramNameToType.emplace((*fieldIt).Name, c_gtc().str() + "storage_t");
     }
 
     ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, paramNameToType,
-                                         StencilContext::E_Stencil);
+                                         StencilContext::SC_Stencil);
 
     StencilClass.addComment("//Members");
 
     StencilClass.addMember("const " + c_gtc() + "domain&", "m_dom");
 
-    for(auto fieldIt : non_temp_fields) {
+    for(auto fieldIt : nonTempFields) {
       StencilClass.addMember(StencilTemplates[fieldIt.idx()] + "&", "m_" + (*fieldIt).Name);
     }
 
-    if(!(temp_fields.empty())) {
+    if(!(tempFields.empty())) {
       StencilClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
 
-      for(auto field : temp_fields)
+      for(auto field : tempFields)
         StencilClass.addMember(c_gtc() + "storage_t", "m_" + (*field).Name);
     }
 
@@ -236,19 +236,19 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
     auto stencilClassCtr = StencilClass.addConstructor();
 
     stencilClassCtr.addArg("const " + c_gtc() + "domain& dom_");
-    for(auto fieldIt : non_temp_fields) {
+    for(auto fieldIt : nonTempFields) {
       stencilClassCtr.addArg(StencilTemplates[fieldIt.idx()] + "& " + (*fieldIt).Name + "_");
     }
 
     stencilClassCtr.addInit("m_dom(dom_)");
 
-    for(auto fieldIt : non_temp_fields) {
+    for(auto fieldIt : nonTempFields) {
       stencilClassCtr.addInit("m_" + (*fieldIt).Name + "(" + (*fieldIt).Name + "_)");
     }
 
-    if(!(temp_fields.empty())) {
+    if(!(tempFields.empty())) {
       stencilClassCtr.addInit("m_meta_data(dom_.isize(), dom_.jsize(), dom_.ksize())");
-      for(auto fieldIt : temp_fields) {
+      for(auto fieldIt : tempFields) {
         stencilClassCtr.addInit("m_" + (*fieldIt).Name + "(m_meta_data)");
       }
     }
@@ -264,12 +264,12 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
       const MultiStage& multiStage = *multiStagePtr;
 
       // create all the data views
-      for(auto fieldIt : non_temp_fields) {
+      for(auto fieldIt : nonTempFields) {
         StencilDoMethod.addStatement(c_gt() + "data_view<" + StencilTemplates[fieldIt.idx()] +
                                      "> " + (*fieldIt).Name + "= " + c_gt() + "make_host_view(m_" +
                                      (*fieldIt).Name + ")");
       }
-      for(auto fieldIt : temp_fields) {
+      for(auto fieldIt : tempFields) {
         StencilDoMethod.addStatement(c_gt() + "data_view<storage_t> " + (*fieldIt).Name + "= " +
                                      c_gt() + "make_host_view(m_" + (*fieldIt).Name + ")");
       }
@@ -435,10 +435,9 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
   return str;
 }
 
-std::string CXXNaiveCodeGen::generateGlobals(const SIR* Sir) {
-  using namespace codegen;
+std::string CXXNaiveCodeGen::generateGlobals(const SIR* sir) {
 
-  const auto& globalsMap = *Sir->GlobalVariableMap;
+  const auto& globalsMap = *sir->GlobalVariableMap;
   if(globalsMap.empty())
     return "";
 
@@ -486,7 +485,6 @@ std::string CXXNaiveCodeGen::generateGlobals(const SIR* Sir) {
 }
 
 std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
-  //  DAWN_ASSERT_MSG(0, "naive codegen: not yet implement");
   DAWN_LOG(INFO) << "Starting code generation for GTClang ...";
 
   // Generate code for StencilInstantiations
@@ -498,7 +496,6 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
   }
 
-  // TODO:
   std::string globals = generateGlobals(context_->getSIR());
 
   std::vector<std::string> ppDefines;

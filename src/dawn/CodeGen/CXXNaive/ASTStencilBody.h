@@ -30,17 +30,17 @@ namespace cxxnaive {
 
 // @brief context of a stencil body
 // (pure stencil or a stencil function)
-enum class StencilContext { E_Stencil, E_StencilFunction };
+enum class StencilContext { SC_Stencil, SC_StencilFunction };
 
 /// @brief ASTVisitor to generate C++ naive code for the stencil and stencil function bodies
 /// @ingroup cxxnaive
 class ASTStencilBody : public ASTCodeGenCXX {
 protected:
-  const dawn::StencilInstantiation* instantiation_;
+  const StencilInstantiation* instantiation_;
   RangeToString offsetPrinter_;
 
   /// The stencil function we are currently generating or NULL
-  const dawn::StencilFunctionInstantiation* currentFunction_;
+  const StencilFunctionInstantiation* currentFunction_;
   // map of stencil (or stencil function) parameter types to names
   std::unordered_map<std::string, std::string> paramNameToType_;
 
@@ -63,7 +63,7 @@ protected:
       std::array<std::string, 3> indices{"i+", "j+", "k+"};
 
       return ((n < 4) ? indices[n] : "") + std::to_string(off) +
-             ((stencilContext_ == StencilContext::E_StencilFunction)
+             ((stencilContext_ == StencilContext::SC_StencilFunction)
                   ? "+" + accessName + "_offsets[" + std::to_string(n) + "]"
                   : "");
     });
@@ -74,7 +74,7 @@ public:
   using Base = ASTCodeGenCXX;
 
   /// @brief constructor
-  ASTStencilBody(const dawn::StencilInstantiation* stencilInstantiation,
+  ASTStencilBody(const StencilInstantiation* stencilInstantiation,
                  std::unordered_map<std::string, std::string> paramNameToType,
                  StencilContext stencilContext);
 
@@ -107,7 +107,7 @@ public:
   /// @}
 
   /// @brief Set the current stencil function (can be NULL)
-  void setCurrentStencilFunction(const dawn::StencilFunctionInstantiation* currentFunction);
+  void setCurrentStencilFunction(const StencilFunctionInstantiation* currentFunction);
 
   /// @brief Mapping of VarDeclStmt and Var/FieldAccessExpr to their name
   const std::string& getName(const std::shared_ptr<Expr>& expr) const override;

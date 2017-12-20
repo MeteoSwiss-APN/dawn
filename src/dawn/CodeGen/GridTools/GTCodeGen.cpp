@@ -14,8 +14,8 @@
 
 #include "dawn/CodeGen/GridTools/GTCodeGen.h"
 #include "dawn/CodeGen/CXXUtil.h"
-#include "dawn/CodeGen/GridTools/ASTCodeGenGTStencilBody.h"
-#include "dawn/CodeGen/GridTools/ASTCodeGenGTStencilDesc.h"
+#include "dawn/CodeGen/GridTools/ASTStencilBody.h"
+#include "dawn/CodeGen/GridTools/ASTStencilDesc.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/StatementAccessesPair.h"
 #include "dawn/Optimizer/StencilFunctionInstantiation.h"
@@ -30,8 +30,7 @@ namespace dawn {
 namespace codegen {
 namespace gt {
 
-GTCodeGen::GTCodeGen(dawn::OptimizerContext* context)
-    : CodeGen(context), mplContainerMaxSize_(20) {}
+GTCodeGen::GTCodeGen(OptimizerContext* context) : CodeGen(context), mplContainerMaxSize_(20) {}
 
 GTCodeGen::~GTCodeGen() {}
 
@@ -137,8 +136,8 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
                                       makeLevelName(intervalNamePair.first.upperLevel(),
                                                     intervalNamePair.first.upperOffset())}));
 
-    ASTCodeGenGTStencilBody stencilBodyCGVisitor(stencilInstantiation,
-                                                 intervalDefinitions.IntervalToNameMap);
+    ASTStencilBody stencilBodyCGVisitor(stencilInstantiation,
+                                        intervalDefinitions.IntervalToNameMap);
 
     // Generate typedef for the axis
     const Interval& axis = intervalDefinitions.Axis;
@@ -609,7 +608,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
   for(std::size_t i = 0; i < stencils.size(); ++i)
     stencilIDToStencilNameMap[stencils[i]->getStencilID()].emplace_back(stencilMembers[i]);
 
-  ASTCodeGenGTStencilDesc stencilDescCGVisitor(stencilInstantiation, stencilIDToStencilNameMap);
+  ASTStencilDesc stencilDescCGVisitor(stencilInstantiation, stencilIDToStencilNameMap);
   stencilDescCGVisitor.setIndent(RunMethod.getIndent());
   for(const auto& statement : stencilInstantiation->getStencilDescStatements()) {
     statement->ASTStmt->accept(stencilDescCGVisitor);

@@ -110,9 +110,11 @@ std::unordered_set<Interval> Stencil::getIntervals() const {
 std::vector<Stencil::FieldInfo> Stencil::getFields(bool withTemporaries) const {
   std::set<int> fieldAccessIDs;
   for(const auto& multistage : multistages_) {
-    for(const auto& stage : multistage->getStages())
-      for(const auto& field : stage->getFields())
+    for(const auto& stage : multistage->getStages()) {
+      for(const auto& field : stage->getFields()) {
         fieldAccessIDs.insert(field.AccessID);
+      }
+    }
   }
 
   std::vector<FieldInfo> fields;

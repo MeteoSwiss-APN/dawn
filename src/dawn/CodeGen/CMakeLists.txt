@@ -22,14 +22,14 @@ mchbuild_add_library(
           CXXNaive/ASTStencilBody.h
           CXXNaive/ASTStencilDesc.cpp
           CXXNaive/ASTStencilDesc.h
-          CXXNaive/ASTStencilFnParamVisitor.cpp
-          CXXNaive/ASTStencilFnParamVisitor.h
+          CXXNaive/ASTStencilFunctionParamVisitor.cpp
+          CXXNaive/ASTStencilFunctionParamVisitor.h
           CXXNaive/CXXNaiveCodeGen.cpp
           CXXNaive/CXXNaiveCodeGen.h
-          GridTools/ASTCodeGenGTStencilBody.cpp
-          GridTools/ASTCodeGenGTStencilBody.h
-          GridTools/ASTCodeGenGTStencilDesc.cpp
-          GridTools/ASTCodeGenGTStencilDesc.h
+          GridTools/ASTStencilBody.cpp
+          GridTools/ASTStencilBody.h
+          GridTools/ASTStencilDesc.cpp
+          GridTools/ASTStencilDesc.h
           GridTools/GTCodeGen.cpp
           GridTools/GTCodeGen.h
           TranslationUnit.cpp

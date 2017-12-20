@@ -129,7 +129,7 @@ public:
   }
 
   /// @brief returns true if the upper bound of the interval is the end of the axis
-  bool upperIsEnd() const { return (upperLevel_ == (1 << 20)); }
+  bool upperIsEnd() const { return (upperLevel_ == sir::Interval::End); }
 
   /// @brief Convert interval to string
   std::string toString() const;

@@ -13,7 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/CodeGen/CXXNaive/ASTStencilBody.h"
-#include "dawn/CodeGen/CXXNaive/ASTStencilFnParamVisitor.h"
+#include "dawn/CodeGen/CXXNaive/ASTStencilFunctionParamVisitor.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/StencilFunctionInstantiation.h"
@@ -76,11 +76,11 @@ void ASTStencilBody::visit(const std::shared_ptr<ReturnStmt>& stmt) {
 void ASTStencilBody::visit(const std::shared_ptr<VarDeclStmt>& stmt) { Base::visit(stmt); }
 
 void ASTStencilBody::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) {
-  dawn_unreachable("VerticalRegionDeclStmt not allowed in this context");
+  DAWN_ASSERT_MSG(0, "VerticalRegionDeclStmt not allowed in this context");
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
-  dawn_unreachable("StencilCallDeclStmt not allowed in this context");
+  DAWN_ASSERT_MSG(0, "StencilCallDeclStmt not allowed in this context");
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
@@ -115,7 +115,7 @@ void ASTStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
 
   int n = 0;
   for(auto& arg : expr->getArguments()) {
-    ASTStencilFnParamVisitor fieldAccessVisitor(paramNameToType_);
+    ASTStencilFunctionParamVisitor fieldAccessVisitor(paramNameToType_);
 
     arg->accept(fieldAccessVisitor);
 
