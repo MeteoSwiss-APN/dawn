@@ -105,7 +105,8 @@ void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<BoundaryCondition
 
   //  nestingOfStencilFunArgLists_--;
   //  ss_ << ")";
-  std::cout << "ignoring boundary condition in code generation" << std::endl;
+//  std::cout << "ignoring boundary condition in code generation" << std::endl;
+  std::cout << "boundary condition not implemented in ASTCodeGenGTClangStencilBody" << std::endl;
   //  DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not allowed in this context");
 }
 

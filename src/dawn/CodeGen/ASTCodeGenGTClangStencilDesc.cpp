@@ -67,7 +67,8 @@ void ASTCodeGenGTClangStencilDesc::visit(const std::shared_ptr<StencilCallDeclSt
 }
 
 void ASTCodeGenGTClangStencilDesc::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
-  DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not yet implemented");
+    std::cout << "boundary condition not implemented in ASTCodeGenGTClangStencilDesc" << std::endl;
+    //  DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not yet implemented");
 }
 
 void ASTCodeGenGTClangStencilDesc::visit(const std::shared_ptr<IfStmt>& stmt) { Base::visit(stmt); }
