@@ -14,7 +14,7 @@
 
 if(NOT DEFINED PYTHON_EXECUTABLE)
   find_package(PythonInterp 3.5 REQUIRED)
-endif 
+endif() 
 
 # Look for all the required modules
 include(mchbuildFindPythonModule)
