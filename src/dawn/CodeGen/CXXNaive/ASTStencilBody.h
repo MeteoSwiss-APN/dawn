@@ -50,10 +50,10 @@ protected:
 
   StencilContext stencilContext_;
 
-  /**
-   * @brief produces a string of (i,j,k) accesses for the C++ generated naive code,
-   * from an array of offseted accesses
-   */
+  ///
+  /// @brief produces a string of (i,j,k) accesses for the C++ generated naive code,
+  /// from an array of offseted accesses
+  ///
   template <long unsigned N>
   std::array<std::string, N> ijkfyOffset(const std::array<int, N>& offsets,
                                          std::string accessName) {

@@ -19,10 +19,9 @@
 
 namespace dawn {
 
-/** @brief class that wraps the value pointed by a IndexRangeIterator,
- * together with the index position within the loop range (IndexRange)
- *
- */
+/// @brief class that wraps the value pointed by a IndexRangeIterator,
+/// together with the index position within the loop range (IndexRange)
+///
 template <typename T>
 struct IteratorWrap {
 private:
@@ -36,10 +35,10 @@ public:
   T& operator->() { return t_; }
 };
 
-/** @brief Iterator class of an IndexRange
- * @tparam cont input STL container
- * @ingroup support
- */
+/// @brief Iterator class of an IndexRange
+/// @tparam cont input STL container
+/// @ingroup support
+///
 template <typename Cont>
 struct IndexRangeIterator {
   using T = typename std::conditional<std::is_const<Cont>::value, const typename Cont::value_type,
@@ -81,28 +80,28 @@ bool operator!=(IndexRangeIterator<Cont> l, IndexRangeIterator<Cont> r) {
   return l.it_ != r.it_;
 }
 
-/** @brief range class to be used within C++11 for range loops,
- that accepts predicates to filter elements of the iteration.
-
- The following example
-
- @code
-   std::vector<int> v{1,2,3,4,5};
-   IndexRange<std::vector<int>> range(v, [](int const &v){ return v%2;});
-   std::vector<int> res;
-   for(auto it: range) {
-     std::cout << "(" << it.idx() << "," << "it << ")" << std::endl;
-   }
- @endcode
-
- generates the output
-
- @code
- (0,2)(1,4)
- @endcode
-
- @ingroup support
- */
+/// @brief range class to be used within C++11 for range loops,
+/// that accepts predicates to filter elements of the iteration.
+///
+/// The following example
+///
+/// @code
+///   std::vector<int> v{1,2,3,4,5};
+///   IndexRange<std::vector<int>> range(v, [](int const &v){ return v%2;});
+///   std::vector<int> res;
+///   for(auto it: range) {
+///     std::cout << "(" << it.idx() << "," << "it << ")" << std::endl;
+///   }
+/// @endcode
+///
+/// generates the output
+///
+/// @code
+/// (0,2)(1,4)
+/// @endcode
+///
+/// @ingroup support
+///
 template <typename Cont>
 struct IndexRange {
   using T = typename Cont::value_type;
