@@ -46,7 +46,8 @@ OPT(std::string, ConfigFile, "", "config", "",
 OPT(std::string, Backend, "gridtools", "backend", "", 
     "Set backend code-generator. Possible values for <backend> are:"
     "\n - gridtools = gridtools C++ code"
-    "\n - c++       = naive C++ code\n", "<backend>", true, false)
+    "\n - c++-naive   = naive C++ code\n"
+    "\n - c++-opt     = optimized C++ code", "<backend>", true, false)
 OPT(bool, CodeGen, true, "codegen", "", "Generate code", "", false, true)
 OPT(bool, ClangFormat, true, "clang-format", "", "Run clang-format on the generated code", "", false, true)
 OPT(bool, ReportPassPreprocessor, false, "report-pass-preprocessor", "", 
