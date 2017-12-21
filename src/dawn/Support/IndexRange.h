@@ -11,7 +11,9 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-#pragma once
+#ifndef DAWN_SUPPORT_INDEXRANGE_H
+#define DAWN_SUPPORT_INDEXRANGE_H
+
 #include <functional>
 #include <type_traits>
 
@@ -146,12 +148,12 @@ private:
   }
 };
 
-/** @brief creates an IndexRange from a STL container
- * @param cont input STL container
- * @param pred predicate that filters the elements that will be iterated over by the range
- * @see IndexRange for an example on how to use the index ranges
- * @ingroup support
- */
+/// @brief creates an IndexRange from a STL container
+/// @param cont input STL container
+/// @param pred predicate that filters the elements that will be iterated over by the range
+/// @see IndexRange for an example on how to use the index ranges
+/// @ingroup support
+///
 template <typename Cont>
 IndexRange<const Cont> makeRange(Cont const& cont,
                                  std::function<bool(typename Cont::value_type const&)> pred) {
@@ -164,3 +166,5 @@ IndexRange<Cont> makeRange(Cont& cont, std::function<bool(typename Cont::value_t
 }
 
 } // namespace dawn
+
+#endif
