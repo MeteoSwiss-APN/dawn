@@ -35,6 +35,8 @@ namespace dawn {
 /// @see boost::hash_combine
 /// @ingroup support
 /// @{
+///
+
 inline void hash_combine(std::size_t& seed) {}
 
 template <typename T, typename... Rest>

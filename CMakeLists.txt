@@ -107,7 +107,7 @@ foreach(package bash Protobuf ccache clang-format ${doc_packages})
   mchbuild_create_package_string(${package} info)
   list(APPEND package_info ${info})
 
-    string(TOUPPER ${package} PACKAGE)
+  string(TOUPPER ${package} PACKAGE)
   list(APPEND DAW_EXTERNAL_LIBRARIES ${DAWN_${PACKAGE}_LIBRARIES})
   list(APPEND DAWN_EXTERNAL_INCLUDE_DIRS ${DAWN_${PACKAGE}_INCLUDE_DIRS})
   list(APPEND DAWN_EXTERNAL_DEFINITIONS ${DAWN_${PACKAGE}_DEFINITIONS})

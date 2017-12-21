@@ -1,13 +1,13 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -245,6 +245,82 @@ TEST(IntervalTest, GapIntervals7) {
                                             Interval(10, 15, 0, 0), // [10, 15]
                                             Interval(15, 20, 1, 0)} // [16, 20]
                ));
+}
+
+TEST(IntervalTest, GapIntervalsOverlap1) {
+  Interval Axis(0, 6);
+  Interval I1(1, 4);
+  Interval I2(2, 5);
+
+  EXPECT_DEATH(Interval::computeGapIntervals(Axis, std::vector<Interval>{I1, I2}), ".*");
+}
+
+TEST(IntervalTest, GapIntervalsOverlap2) {
+  Interval Axis(0, 6);
+  Interval I1(1, 8);
+  Interval I2(5, 10);
+
+  EXPECT_DEATH(Interval::computeGapIntervals(Axis, std::vector<Interval>{I1, I2}), ".*");
+}
+
+TEST(IntervalTest, GapIntervalsOverlap3) {
+  Interval Axis(0, 6);
+  Interval I1(6, 7);
+  Interval I2(5, 6);
+
+  EXPECT_DEATH(Interval::computeGapIntervals(Axis, std::vector<Interval>{I1, I2}), ".*");
+}
+
+TEST(IntervalTest, PartitionIntervals0) {
+  Interval I1(1, 5);
+  Interval I2(1, 3);
+
+  auto partIntervals = Interval::computePartition(std::vector<Interval>{I1, I2});
+
+  EXPECT_TRUE((std::unordered_set<Interval>(partIntervals.begin(), partIntervals.end()) ==
+               std::unordered_set<Interval>{Interval(1, 3), Interval(4, 5)}));
+}
+
+TEST(IntervalTest, PartitionIntervals1) {
+  Interval I1(1, 5);
+  Interval I2(1, 5);
+
+  auto partIntervals = Interval::computePartition(std::vector<Interval>{I1, I2});
+
+  EXPECT_TRUE((std::unordered_set<Interval>(partIntervals.begin(), partIntervals.end()) ==
+               std::unordered_set<Interval>{Interval(1, 5)}));
+}
+
+TEST(IntervalTest, PartitionIntervals2) {
+  Interval I1(1, 3);
+  Interval I2(2, 5);
+
+  auto partIntervals = Interval::computePartition(std::vector<Interval>{I1, I2});
+
+  EXPECT_TRUE((std::unordered_set<Interval>(partIntervals.begin(), partIntervals.end()) ==
+               std::unordered_set<Interval>{Interval(1, 2), Interval(3, 3), Interval(4, 5)}));
+}
+
+TEST(IntervalTest, PartitionIntervals3) {
+  Interval I1(1, 5);
+  Interval I2(2, 9);
+
+  auto partIntervals = Interval::computePartition(std::vector<Interval>{I1, I2});
+
+  EXPECT_TRUE((std::unordered_set<Interval>(partIntervals.begin(), partIntervals.end()) ==
+               std::unordered_set<Interval>{Interval(1, 2), Interval(3, 5), Interval(6, 9)}));
+}
+
+TEST(IntervalTest, PartitionIntervals4) {
+  Interval I1(1, 5);
+  Interval I2(2, 9);
+  Interval I3(4, 7);
+
+  auto partIntervals = Interval::computePartition(std::vector<Interval>{I1, I2, I3});
+
+  EXPECT_TRUE((std::unordered_set<Interval>(partIntervals.begin(), partIntervals.end()) ==
+               std::unordered_set<Interval>{Interval(1, 2), Interval(3, 4), Interval(5, 5),
+                                            Interval(6, 7), Interval(8, 9)}));
 }
 
 TEST(IntervalTest, Construction) {

@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_ASTCODEGENGTCLANGSTENCILBODY_H
-#define DAWN_CODEGEN_ASTCODEGENGTCLANGSTENCILBODY_H
+#ifndef DAWN_CODEGEN_CXXNAIVE_ASTSTENCILBODY_H
+#define DAWN_CODEGEN_CXXNAIVE_ASTSTENCILBODY_H
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/Optimizer/Interval.h"
@@ -26,26 +26,60 @@ namespace dawn {
 class StencilInstantiation;
 class StencilFunctionInstantiation;
 
-/// @brief ASTVisitor to generate C++ gridtools code for the stencil and stencil function bodies
-/// @ingroup codegen
-class ASTCodeGenGTClangStencilBody : public ASTCodeGenCXX {
+namespace codegen {
+namespace cxxnaive {
+
+// @brief context of a stencil body
+// (pure stencil or a stencil function)
+enum class StencilContext { SC_Stencil, SC_StencilFunction };
+
+/// @brief ASTVisitor to generate C++ naive code for the stencil and stencil function bodies
+/// @ingroup cxxnaive
+class ASTStencilBody : public ASTCodeGenCXX {
 protected:
   const StencilInstantiation* instantiation_;
-  const std::unordered_map<Interval, std::string>& intervalToNameMap_;
   RangeToString offsetPrinter_;
 
   /// The stencil function we are currently generating or NULL
   const StencilFunctionInstantiation* currentFunction_;
+  // map of stencil (or stencil function) parameter types to names
+  std::unordered_map<std::string, std::string> paramNameToType_;
 
   /// Nesting level of argument lists of stencil function *calls*
   int nestingOfStencilFunArgLists_;
 
+  StencilContext stencilContext_;
+
+  ///
+  /// @brief produces a string of (i,j,k) accesses for the C++ generated naive code,
+  /// from an array of offseted accesses
+  ///
+  template <long unsigned N>
+  std::array<std::string, N> ijkfyOffset(const std::array<int, N>& offsets,
+                                         std::string accessName) {
+    int n = -1;
+    std::array<std::string, N> res;
+    std::transform(offsets.begin(), offsets.end(), res.begin(), [&](int const& off) {
+      ++n;
+      std::array<std::string, 3> indices{"i+", "j+", "k+"};
+
+      return ((n < 4) ? indices[n] : "") + std::to_string(off) +
+             ((stencilContext_ == StencilContext::SC_StencilFunction)
+                  ? "+" + accessName + "_offsets[" + std::to_string(n) + "]"
+                  : "");
+    });
+    return res;
+  }
+
 public:
   using Base = ASTCodeGenCXX;
 
-  ASTCodeGenGTClangStencilBody(const StencilInstantiation* stencilInstantiation,
-                               const std::unordered_map<Interval, std::string>& intervalToNameMap);
-  virtual ~ASTCodeGenGTClangStencilBody();
+  /// @brief constructor
+  ASTStencilBody(const StencilInstantiation* stencilInstantiation,
+                 std::unordered_map<std::string, std::string> paramNameToType,
+                 StencilContext stencilContext);
+
+  virtual ~ASTStencilBody();
 
   /// @name Statement implementation
   /// @{
@@ -82,6 +116,8 @@ public:
   int getAccessID(const std::shared_ptr<Expr>& expr) const;
 };
 
+} // namespace cxxnaive
+} // namespace codegen
 } // namespace dawn
 
 #endif
