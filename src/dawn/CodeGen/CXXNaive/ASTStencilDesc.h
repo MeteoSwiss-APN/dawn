@@ -12,7 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#pragma once
+#ifndef DAWN_CODEGEN_CXXNAIVE_ASTSTENCILDESC_H
+#define DAWN_CODEGEN_CXXNAIVE_ASTSTENCILDESC_H
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/Support/StringUtil.h"
@@ -66,3 +67,5 @@ public:
 } // namespace cxxnaive
 } // namespace codegen
 } // namespace dawn
+
+#endif

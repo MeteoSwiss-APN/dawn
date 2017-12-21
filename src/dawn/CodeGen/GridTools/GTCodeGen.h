@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_GTCLANGCODEGEN_H
-#define DAWN_CODEGEN_GTCLANGCODEGEN_H
+#ifndef DAWN_CODEGEN_GRIDTOOLS_GTCODEGEN_H
+#define DAWN_CODEGEN_GRIDTOOLS_GTCODEGEN_H
 
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/Optimizer/Interval.h"

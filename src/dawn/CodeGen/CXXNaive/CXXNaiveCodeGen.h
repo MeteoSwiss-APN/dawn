@@ -12,7 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#pragma once
+#ifndef DAWN_CODEGEN_CXXNAIVE_CXXNAIVECODEGEN_H
+#define DAWN_CODEGEN_CXXNAIVE_CXXNAIVECODEGEN_H
 
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/Optimizer/Interval.h"
@@ -45,3 +46,5 @@ private:
 } // namespace cxxnaive
 } // namespace codegen
 } // namespace dawn
+
+#endif

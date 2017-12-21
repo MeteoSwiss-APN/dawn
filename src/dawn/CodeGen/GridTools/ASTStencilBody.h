@@ -12,7 +12,9 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#pragma once
+#ifndef DAWN_CODEGEN_GRIDTOOLS_ASTSTENCILBODY_H
+#define DAWN_CODEGEN_GRIDTOOLS_ASTSTENCILBODY_H
+
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/Optimizer/Interval.h"
 #include "dawn/Support/StringUtil.h"
@@ -86,3 +88,5 @@ public:
 } // namespace gt
 } // namespace codegen
 } // namespace dawn
+
+#endif
