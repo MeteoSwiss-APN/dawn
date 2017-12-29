@@ -18,19 +18,27 @@
 
 using namespace gridtools::clang;
 
-stencil_function laplacian {
-  storage phi;
+#ifndef GRIDTOOLS_CLANG_GENERATED
+interval k_flat = k_start + 11;
+#endif
 
-  Do { return phi(i + 1) + phi(i - 1) + phi(j + 1) + phi(j - 1) - 4.0 * phi; }
-};
+// Check if we correclty generate the empty Do-Methods according to
+// https://github.com/eth-cscs/gridtools/issues/330
 
-stencil hori_diff_stencil {
-  storage u, out, lap;
+stencil intervals_stencil {
+  storage in, out;
 
   Do {
-    vertical_region(k_start, k_end) {
-      lap = laplacian(u);
-      out = laplacian(lap);
-    }
+    // Should give empty Do-Method for [k_flat+1, k_end]
+    vertical_region(k_start, k_flat)
+        out = in + 1;
+
+    // Should give empty Do-Method for [k_start, k_flat-1], [k_flat+1, k_end]
+    vertical_region(k_flat + 1, k_flat + 1)
+        out = in + 2;
+
+    // Should give empty Do-Method for [k_start, k_flat-1]
+    vertical_region(k_flat + 2, k_end)
+        out = in + 3;
   }
 };

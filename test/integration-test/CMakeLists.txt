@@ -54,6 +54,11 @@ if(GTCLANG_HAS_GRIDTOOLS)
   list(APPEND directories_with_codegen ${directories} ${cwd}/CodeGen)
   list(APPEND gridtools_flags_with_codegen ${gridtools_flags} -isystem${GRIDTOOLS_INCLUDE_DIRS} 
                                                               -isystem${Boost_INCLUDE_DIRS})
+
+  # Add a dummy target with all the source files so that they are included in a qt creator project
+  mchbuild_add_custom_dummy_target(NAME GTClangQtCreatorParseProjectCodeGenTest
+                             DIRECTORIES ${cwd}/CodeGen)
+
   foreach(include ${GTCLANG_DSL_INCLUDES})
     list(APPEND gridtools_flags_with_codegen -isystem${include})
   endforeach()
@@ -63,4 +68,43 @@ if(GTCLANG_HAS_GRIDTOOLS)
                               DIRECTORIES ${directories_with_codegen}
                               GRIDTOOLS_FLAGS ${gridtools_flags_with_codegen}
   )
+
+  set(codegen_examples copy_stencil coriolis_stencil hori_diff_stencil_01 hori_diff_stencil_02 hori_diff_type2_stencil hd_smagorinsky intervals_stencil globals_stencil)
+  set(codegen_example_benchmarks)
+  set(codegen_generate_targets)
+
+  set(include_dirs)
+  list(APPEND include_dirs "${CMAKE_SOURCE_DIR}/src")
+  list(APPEND include_dirs "${GRIDTOOLS_INCLUDE_DIRS}")
+  list(APPEND include_dirs "${CMAKE_SOURCE_DIR}")
+
+  foreach(example ${codegen_examples})
+
+    set(config_str "")
+    if(EXISTS "${cwd}/CodeGen/${example}.json")
+      set(config_str "--config=${cwd}/CodeGen/${example}.json")
+    endif()
+
+    # Add make target 
+    add_custom_target(
+      ${example}-codegen-gt
+      COMMAND $<TARGET_FILE:gtclang> "-backend=gridtools" "${config_str}" "-o" "${cwd}/CodeGen/generated/${example}_gridtools.cpp"  ${cwd}/CodeGen/${example}.cpp
+      DEPENDS gtclang
+    )
+    add_custom_target(
+      ${example}-codegen-cxxnaive
+      COMMAND $<TARGET_FILE:gtclang> "-backend=c++-naive" "${config_str}" "-o" "${cwd}/CodeGen/generated/${example}_c++-naive.cpp"  ${cwd}/CodeGen/${example}.cpp
+      DEPENDS gtclang
+    )
+    list(APPEND ${example}_benchmarks ${cwd}/CodeGen/${example}_benchmark.cpp)
+    list(APPEND codegen_generate_targets ${example}-codegen-gt)
+    list(APPEND codegen_generate_targets ${example}-codegen-cxxnaive)
+
+    add_executable(${example}_benchmarks "${cwd}/CodeGen/${example}_benchmark.cpp" "${cwd}/CodeGen/TestMain.cpp" "${cwd}/CodeGen/Options.cpp")
+    target_include_directories(${example}_benchmarks PUBLIC ${include_dirs})
+    add_dependencies(${example}_benchmarks ${example}-codegen-gt ${example}-codegen-cxxnaive)
+    target_link_libraries(${example}_benchmarks ${GTCLANG_UNITTEST_EXTERNAL_LIBRARIES} gtest)
+
+  endforeach()
+
 endif()

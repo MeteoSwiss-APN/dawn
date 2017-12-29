@@ -17,23 +17,23 @@
 #ifndef GRIDTOOLS_CLANG_VERIFY_HPP
 #define GRIDTOOLS_CLANG_VERIFY_HPP
 
-#ifdef GRIDTOOLS_CLANG_GENERATED
 #include "gridtools/clang_dsl.hpp"
+#include <array>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
-#endif
 
 namespace gridtools {
 
     namespace clang {
 
-#ifdef GRIDTOOLS_CLANG_GENERATED
+        //#ifdef GRIDTOOLS_CLANG_GENERATED
 
         class verifier {
           public:
             verifier(const domain &dom,
-                double precision = std::is_same< float_type, double >::value ? 1e-12 : 1e-6)
+                double precision = std::is_same< gridtools::float_type, double >::value ? 1e-12
+                                                                                        : 1e-6)
                 : m_domain(dom), m_precision(precision) {}
 
             template < class FunctorType, class... StorageTypes >
@@ -46,6 +46,30 @@ namespace gridtools {
                 fill_impl(value, storages...);
             }
 
+            template < class... StorageTypes >
+            void fillMath(double a,
+                double b,
+                double c,
+                double d,
+                double e,
+                double f,
+                StorageTypes &... storages) const {
+                const gridtools::float_type PI = std::atan(1.) * 4.;
+                for_each(
+                    [&](std::array< unsigned int, 3 > dims, int i, int j, int k) {
+                        // 8,2,1.5,1.5,2,4
+                        double x = i / (gridtools::float_type)dims[0];
+                        double y = j / (gridtools::float_type)dims[1];
+                        return k +
+                               (gridtools::float_type)a *
+                                   ((gridtools::float_type)b +
+                                       cos(PI * (x + (gridtools::float_type)c * y)) +
+                                       sin((gridtools::float_type)d * PI *
+                                           (x + (gridtools::float_type)e * y))) /
+                                   (gridtools::float_type)f;
+                    },
+                    storages...);
+            }
             template < class... StorageTypes >
             void fill_random(StorageTypes &... storages) const {
                 for_each(
@@ -87,21 +111,18 @@ namespace gridtools {
                     return true;
                 };
 
-                check_dim(
-                    idim1, idim2, m_domain.isize() + m_domain.iminus() + m_domain.iplus(), "i");
-                check_dim(
-                    jdim1, jdim2, m_domain.jsize() + m_domain.jminus() + m_domain.jplus(), "j");
-                check_dim(
-                    kdim1, kdim2, m_domain.ksize() + m_domain.kminus() + m_domain.kplus(), "k");
+                check_dim(idim1, idim2, m_domain.isize(), "i");
+                check_dim(jdim1, jdim2, m_domain.jsize(), "j");
+                check_dim(kdim1, kdim2, m_domain.ksize(), "k");
 
                 bool verified = true;
+
                 for (int i = m_domain.iminus(); i < (m_domain.isize() - m_domain.iplus()); ++i)
                     for (int j = m_domain.jminus(); j < (m_domain.jsize() - m_domain.jplus()); ++j)
                         for (int k = m_domain.kminus(); k < (m_domain.ksize() - m_domain.kplus());
                              ++k) {
                             typename StorageType1::data_t value1 = storage1_v(i, j, k);
                             typename StorageType2::data_t value2 = storage2_v(i, j, k);
-
                             if (!compare_below_threashold(value1, value2, m_precision)) {
                                 if (--max_erros >= 0) {
                                     std::cerr
@@ -145,7 +166,8 @@ namespace gridtools {
                 for (uint_t i = 0; i < d1; ++i) {
                     for (uint_t j = 0; j < d2; ++j) {
                         for (uint_t k = 0; k < d3; ++k) {
-                            storage_v(i, j, k) = functor(i, j, k);
+                            storage_v(i, j, k) =
+                                functor(std::array< uint_t, 3 >{d1, d2, d3}, i, j, k);
                         }
                     }
                 }
@@ -167,7 +189,11 @@ namespace gridtools {
             template < class StorageType >
             void fill_impl(typename StorageType::data_t value, StorageType &storage) const {
                 using namespace gridtools;
-                for_each([&](uint_t i, uint_t j, uint_t k) { return value; }, storage);
+                for_each(
+                    [&](std::array< uint_t, 3 > dims, uint_t i, uint_t j, uint_t k) {
+                        return value;
+                    },
+                    storage);
             }
 
             template < class StorageType, class... StorageTypes >
@@ -175,7 +201,11 @@ namespace gridtools {
                 StorageType &storage,
                 StorageTypes &... storages) const {
                 using namespace gridtools;
-                for_each([&](uint_t i, uint_t j, uint_t k) { return value; }, storage);
+                for_each(
+                    [&](std::array< uint_t, 3 > dims, uint_t i, uint_t j, uint_t k) {
+                        return value;
+                    },
+                    storage);
                 fill_impl(value, storages...);
             }
 
@@ -183,30 +213,6 @@ namespace gridtools {
             domain m_domain;
             double m_precision;
         };
-
-#else
-
-        struct verifier {
-
-            template < class... Args >
-            verifier(Args &&...) {}
-
-            template < class... Args >
-            void for_each(Args &&...) const {}
-
-            template < class... Args >
-            void fill(Args &&...) const {}
-
-            template < class... Args >
-            void fill_random(Args &&...) const {}
-
-            template < class... Args >
-            bool verify(Args &&...) const {
-                return true;
-            }
-        };
-
-#endif
     }
 }
 

@@ -14,10 +14,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-// RUN: %gtclang% %file% -o%filename%_gen.cpp | %c++% %filename%_gen.cpp %gridtools_flags% -o%tmpdir%/%filename% | %tmpdir%/%filename%
-
 #include "gridtools/clang/math.hpp"
-#include "gridtools/clang/verify.hpp"
 #include "gridtools/clang_dsl.hpp"
 
 using namespace gridtools::clang;
@@ -100,45 +97,3 @@ stencil hd_smagorinsky_stencil {
     }
   }
 };
-
-int main() {
-  domain dom(64, 64, 80);
-  dom.set_halos(halo::value, halo::value, halo::value, halo::value, 0, 0);
-
-  meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize());
-  meta_data_j_t meta_data_j(1, dom.jsize(), 1);
-  meta_data_scalar_t meta_data_scalar(1, 1, 1);
-
-  // Output fields
-  storage_t u_out(meta_data, "v_out");
-  storage_t v_out(meta_data, "u_out");
-
-  // Input fields
-  storage_t u_in(meta_data, "u_in");
-  storage_t v_in(meta_data, "v_in");
-  storage_t hdmaskvel(meta_data, "hdmaskvel");
-  storage_j_t crlavo(meta_data_j, "crlavo");
-  storage_j_t crlavu(meta_data_j, "crlavu");
-  storage_j_t crlato(meta_data_j, "crlato");
-  storage_j_t crlatu(meta_data_j, "crlatu");
-  storage_j_t acrlat0(meta_data_j, "acrlat0");
-
-  // Scalar fields
-  storage_scalar_t eddlon(meta_data_scalar, "eddlon");
-  storage_scalar_t eddlat(meta_data_scalar, "eddlat");
-  storage_scalar_t tau_smag(meta_data_scalar, "tau_smag");
-  storage_scalar_t weight_smag(meta_data_scalar, "weight_smag");
-
-  // Fill the fields
-  verifier verif(dom);
-  verif.fill_random(u_out, v_out, u_in, v_in, hdmaskvel, crlavo, crlavu, crlato, crlatu, acrlat0,
-                    eddlon, eddlat, tau_smag, weight_smag);
-
-  // Assemble the stencil ...
-  hd_smagorinsky_stencil hd_smagorinsky(dom, u_out, v_out, u_in, v_in, hdmaskvel, crlavo, crlavu,
-                                        crlato, crlatu, acrlat0, eddlon, eddlat, tau_smag,
-                                        weight_smag);
-
-  // ... and run it
-  hd_smagorinsky.run();
-}
