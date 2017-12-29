@@ -88,6 +88,8 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
 
   std::stringstream ssSW, ssMS, tss;
 
+  Namespace gridtoolsNamespace("gridtools", ssSW);
+
   // K-Cache branch changes the signature of Do-Methods
   const char* DoMethodArg = "Evaluation& eval";
 
@@ -631,6 +633,8 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
 
   StencilWrapperClass.commit();
 
+  gridtoolsNamespace.commit();
+
   // Remove trailing ';' as this is retained by Clang's Rewriter
   std::string str = ssSW.str();
   str[str.size() - 2] = ' ';
@@ -646,6 +650,8 @@ std::string GTCodeGen::generateGlobals(const SIR* Sir) {
     return "";
 
   std::stringstream ss;
+
+  Namespace gridtoolsNamespace("gridtools", ss);
 
   std::string StructName = "globals";
   std::string BaseName = "gridtools::clang::globals_impl<" + StructName + ">";
@@ -681,6 +687,8 @@ std::string GTCodeGen::generateGlobals(const SIR* Sir) {
   codegen::Statement(ss) << "template<> " << StructName << "* " << BaseName
                          << "::s_instance = nullptr";
 
+  gridtoolsNamespace.commit();
+
   // Remove trailing ';' as this is retained by Clang's Rewriter
   std::string str = ss.str();
   str[str.size() - 2] = ' ';
@@ -714,8 +722,6 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   };
 
   ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
-  ppDefines.push_back(
-      makeDefine("GRIDTOOLS_CLANG_HALO_EXTEND", context_->getOptions().MaxHaloPoints));
   ppDefines.push_back(makeIfNotDefined("BOOST_RESULT_OF_USE_TR1", 1));
   ppDefines.push_back(makeIfNotDefined("BOOST_NO_CXX11_DECLTYPE", 1));
 

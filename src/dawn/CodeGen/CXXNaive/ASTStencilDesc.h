@@ -16,6 +16,7 @@
 #define DAWN_CODEGEN_CXXNAIVE_ASTSTENCILDESC_H
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
+#include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>
 #include <unordered_map>
@@ -33,14 +34,13 @@ class ASTStencilDesc : public ASTCodeGenCXX {
 protected:
   const StencilInstantiation* instantiation_;
 
-  std::unordered_map<int, std::vector<std::string>> stencilIDToStencilNameMap_;
+  const CodeGenProperties& codeGenProperties_;
 
 public:
   using Base = ASTCodeGenCXX;
 
-  ASTStencilDesc(
-      const StencilInstantiation* instantiation,
-      const std::unordered_map<int, std::vector<std::string>>& stencilIDToStencilNameMap);
+  ASTStencilDesc(const StencilInstantiation* instantiation,
+                 const CodeGenProperties& CodeGenProperties);
 
   virtual ~ASTStencilDesc();
 

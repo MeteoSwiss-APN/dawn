@@ -16,6 +16,7 @@
 #define DAWN_CODEGEN_CXXNAIVE_ASTSTENCILBODY_H
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
+#include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/Optimizer/Interval.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>
@@ -28,10 +29,6 @@ class StencilFunctionInstantiation;
 
 namespace codegen {
 namespace cxxnaive {
-
-// @brief context of a stencil body
-// (pure stencil or a stencil function)
-enum class StencilContext { SC_Stencil, SC_StencilFunction };
 
 /// @brief ASTVisitor to generate C++ naive code for the stencil and stencil function bodies
 /// @ingroup cxxnaive
