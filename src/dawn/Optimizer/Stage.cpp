@@ -25,7 +25,7 @@ namespace dawn {
 
 Stage::Stage(StencilInstantiation* context, MultiStage* multiStage, int StageID,
              const Interval& interval)
-    : stencilInstantiation_(context), multiStage_(multiStage), StageID_(StageID) {
+    : stencilInstantiation_(context), multiStage_(multiStage), StageID_(StageID), extents_{} {
   DoMethods_.emplace_back(make_unique<DoMethod>(this, interval));
 }
 

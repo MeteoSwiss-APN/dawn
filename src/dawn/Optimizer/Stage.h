@@ -53,6 +53,8 @@ class Stage {
   /// AccessIDs of the global variable accesses of this stage
   std::unordered_set<int> globalVariables_;
 
+  Extents extents_;
+
 public:
   /// @name Constructors and Assignment
   /// @{
@@ -154,6 +156,10 @@ public:
   std::vector<std::shared_ptr<Stage>>
   split(std::deque<int>& splitterIndices,
         const std::deque<std::shared_ptr<DependencyGraphAccesses>>* graphs);
+
+  Extents& getExtents() { return extents_; }
+
+  Extents const& getExtents() const { return extents_; }
 };
 
 } // namespace dawn

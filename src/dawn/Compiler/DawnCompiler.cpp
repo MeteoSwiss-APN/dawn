@@ -24,6 +24,7 @@
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
 
+#include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassInlining.h"
@@ -104,20 +105,7 @@ DawnCompiler::DawnCompiler(Options* options) : diagnostics_(make_unique<Diagnost
   options_ = options ? make_unique<Options>(*options) : make_unique<Options>();
 }
 
-std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const SIR* SIR,
-                                                                CodeGenKind codeGen) {
-  diagnostics_->clear();
-  diagnostics_->setFilename(SIR->Filename);
-
-  // Check if options are valid
-
-  // -max-halo
-  if(options_->MaxHaloPoints < 0) {
-    diagnostics_->report(buildDiag("-max-halo", options_->MaxHaloPoints,
-                                   "maximum number of allowed halo points must be >= 0"));
-    return nullptr;
-  }
-
+std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(const SIR* SIR) {
   // -inline
   using InlineStrategyKind = PassInlining::InlineStrategyKind;
   InlineStrategyKind inlineStrategy = StringSwitch<InlineStrategyKind>(options_->InlineStrategy)
@@ -146,7 +134,7 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const SIR* SIR,
   }
 
   // Initialize optimizer
-  auto optimizer = make_unique<OptimizerContext>(this, SIR);
+  auto optimizer = make_unique<OptimizerContext>(getDiagnostics(), getOptions(), SIR);
   PassManager& passManager = optimizer->getPassManager();
 
   // Setup pass interface
@@ -167,6 +155,7 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const SIR* SIR,
   passManager.pushBackPass<PassTemporaryMerger>();
   passManager.pushBackPass<PassSetNonTempCaches>();
   passManager.pushBackPass<PassSetCaches>();
+  passManager.pushBackPass<PassComputeStageExtents>();
   passManager.pushBackPass<PassDataLocalityMetric>();
 
   // Run optimization passes
@@ -181,6 +170,26 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const SIR* SIR,
     DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `" << instantiation->getName()
                    << "`";
   }
+
+  return optimizer;
+}
+
+std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const SIR* SIR,
+                                                                CodeGenKind codeGen) {
+  diagnostics_->clear();
+  diagnostics_->setFilename(SIR->Filename);
+
+  // Check if options are valid
+
+  // -max-halo
+  if(options_->MaxHaloPoints < 0) {
+    diagnostics_->report(buildDiag("-max-halo", options_->MaxHaloPoints,
+                                   "maximum number of allowed halo points must be >= 0"));
+    return nullptr;
+  }
+
+  // Initialize optimizer
+  auto optimizer = runOptimizer(SIR);
 
   if(diagnostics_->hasErrors()) {
     DAWN_LOG(INFO) << "Errors occured. Skipping code generation.";

@@ -18,7 +18,7 @@
 
 namespace dawn {
 
-Extents::Extents() {}
+Extents::Extents() : extents_{} {}
 
 Extents::Extents(const Array3i& offset) { merge(offset); }
 
