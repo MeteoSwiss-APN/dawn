@@ -30,16 +30,17 @@ namespace dawn {
 namespace codegen {
 namespace cxxnaive {
 
-static std::string makeLoopImpl(const std::string& dim, const std::string& lower,
-                                const std::string& upper, const std::string& comparison,
-                                const std::string& increment) {
-  return Twine("for(int " + dim + " = " + lower + "; " + dim + " " + comparison + " " + upper +
-               "; " + increment + dim + ")")
+static std::string makeLoopImpl(const Extent extent, const std::string& dim,
+                                const std::string& lower, const std::string& upper,
+                                const std::string& comparison, const std::string& increment) {
+  return Twine("for(int " + dim + " = " + lower + "+" + std::to_string(extent.Minus) + "; " + dim +
+               " " + comparison + " " + upper + "+" + std::to_string(extent.Plus) + "; " +
+               increment + dim + ")")
       .str();
 }
 
-static std::string makeIJLoop(const std::string dom, const std::string& dim) {
-  return makeLoopImpl(dim, dom + "." + dim + "minus()",
+static std::string makeIJLoop(const Extent extent, const std::string dom, const std::string& dim) {
+  return makeLoopImpl(extent, dim, dom + "." + dim + "minus()",
                       dom + "." + dim + "size() - " + dom + "." + dim + "plus() - 1", " <= ", "++");
 }
 
@@ -49,8 +50,8 @@ static std::string makeKLoop(const std::string dom, bool isBackward, Interval co
       interval.upperIsEnd()
           ? "( " + dom + ".ksize() == 0 ? 0 : (" + dom + ".ksize() - " + dom + ".kplus() - 1))"
           : std::to_string(interval.upperBound());
-  return isBackward ? makeLoopImpl("k", upper, lower, ">=", "--")
-                    : makeLoopImpl("k", lower, upper, "<=", "++");
+  return isBackward ? makeLoopImpl(Extent{}, "k", upper, lower, ">=", "--")
+                    : makeLoopImpl(Extent{}, "k", lower, upper, "<=", "++");
 }
 
 CXXNaiveCodeGen::CXXNaiveCodeGen(OptimizerContext* context) : CodeGen(context) {}
@@ -64,6 +65,15 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
   std::stringstream ssSW;
 
   Namespace cxxnaiveNamespace("cxxnaive", ssSW);
+
+  MemberFunction arraysumop = createFunction("std::array<int,N>", "operator+", ssSW, "size_t N");
+  arraysumop.addArg("std::array<int, N> const& a");
+  arraysumop.addArg("std::array<int, N> const& b");
+  arraysumop.addStatement("std::array<int, N> res");
+  arraysumop.addBlockStatement("for(size_t i =0; i < N; ++i)",
+                               [&]() { arraysumop.addStatement("res[i] = a[i]+b[i]"); });
+  arraysumop.addStatement("return res");
+  arraysumop.commit();
 
   Class StencilWrapperClass(stencilInstantiation->getName(), ssSW);
   StencilWrapperClass.changeAccessibility("private");
@@ -287,10 +297,12 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
         StencilDoMethod.addStatement(c_gt() + "data_view<" + StencilTemplates[fieldIt.idx()] +
                                      "> " + (*fieldIt).Name + "= " + c_gt() + "make_host_view(m_" +
                                      (*fieldIt).Name + ")");
+        StencilDoMethod.addStatement("std::array<int,3> " + (*fieldIt).Name + "_offsets{0,0,0}");
       }
       for(auto fieldIt : tempFields) {
         StencilDoMethod.addStatement(c_gt() + "data_view<storage_t> " + (*fieldIt).Name + "= " +
                                      c_gt() + "make_host_view(m_" + (*fieldIt).Name + ")");
+        StencilDoMethod.addStatement("std::array<int,3> " + (*fieldIt).Name + "_offsets{0,0,0}");
       }
 
       auto intervals_set = multiStage.getIntervals();
@@ -308,25 +320,27 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
               for(const auto& stagePtr : multiStage.getStages()) {
                 const Stage& stage = *stagePtr;
 
-                StencilDoMethod.addBlockStatement(makeIJLoop("m_dom", "i"), [&]() {
-                  StencilDoMethod.addBlockStatement(makeIJLoop("m_dom", "j"), [&]() {
+                StencilDoMethod.addBlockStatement(
+                    makeIJLoop(stage.getExtents()[0], "m_dom", "i"), [&]() {
+                      StencilDoMethod.addBlockStatement(
+                          makeIJLoop(stage.getExtents()[1], "m_dom", "j"), [&]() {
 
-                    // Generate Do-Method
-                    for(const auto& doMethodPtr : stage.getDoMethods()) {
-                      const DoMethod& doMethod = *doMethodPtr;
+                            // Generate Do-Method
+                            for(const auto& doMethodPtr : stage.getDoMethods()) {
+                              const DoMethod& doMethod = *doMethodPtr;
 
-                      if(!doMethod.getInterval().overlaps(interval))
-                        continue;
-                      for(const auto& statementAccessesPair :
-                          doMethod.getStatementAccessesPairs()) {
-                        statementAccessesPair->getStatement()->ASTStmt->accept(
-                            stencilBodyCXXVisitor);
-                        StencilDoMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
-                      }
-                    }
+                              if(!doMethod.getInterval().overlaps(interval))
+                                continue;
+                              for(const auto& statementAccessesPair :
+                                  doMethod.getStatementAccessesPairs()) {
+                                statementAccessesPair->getStatement()->ASTStmt->accept(
+                                    stencilBodyCXXVisitor);
+                                StencilDoMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
+                              }
+                            }
 
-                  });
-                });
+                          });
+                    });
               }
             });
       }

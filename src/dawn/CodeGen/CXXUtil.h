@@ -670,6 +670,14 @@ struct Struct : public Structure {
       : Structure("struct", name, s, templateName) {}
 };
 
+inline MemberFunction createFunction(const Twine& returnType, const Twine& funcName,
+                                     std::stringstream& s,
+                                     const Twine& templateName = Twine::createNull()) {
+  if(!templateName.isTriviallyEmpty())
+    s << "template<" << templateName.str() << ">\n";
+  return MemberFunction(returnType, funcName, s);
+}
+
 auto c_gt = []() { return Twine("gridtools::"); };
 auto c_gtc = []() { return Twine("gridtools::clang::"); };
 auto c_gt_enum = []() { return Twine("gridtools::enumtype::"); };

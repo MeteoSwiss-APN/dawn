@@ -44,7 +44,8 @@ void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<FieldAccessExpr
 
   ss_ << ",ParamWrapper<" << c_gt() << "data_view<" << paramNameToType_[expr->getName()] << ">>("
       << expr->getName() << ","
-      << "std::array<int, 3>{" << RangeToString(", ", "", "")(expr->getOffset()) << "})";
+      << "std::array<int, 3>{" << RangeToString(", ", "", "")(expr->getOffset())
+      << "}+" + expr->getName() + "_offsets)";
 }
 
 std::string ASTStencilFunctionParamVisitor::getCodeAndResetStream() {
