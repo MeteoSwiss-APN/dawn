@@ -1,9 +1,8 @@
-// gtclang (0.0.1-c392bf6-x86_64-linux-gnu-5.4.0)
+// gtclang (0.0.1-a7a9177-x86_64-linux-gnu-5.4.0)
 // based on LLVM/Clang (3.8.0), Dawn (0.0.1)
-// Generated on 2017-12-28  02:54:38
+// Generated on 2018-01-02  00:53:20
 
 #define GRIDTOOLS_CLANG_GENERATED 1
-#define GRIDTOOLS_CLANG_HALO_EXTEND 3
 #ifndef BOOST_RESULT_OF_USE_TR1
  #define BOOST_RESULT_OF_USE_TR1 1
 #endif
@@ -174,22 +173,3 @@ class globals_stencil {
 };
 }  // namespace gridtool
 ;
-
-// int main() {
-//  domain dom(64, 64, 80);
-//  dom.set_halos(halo::value, halo::value, halo::value, halo::value, 0, 0);
-//  verifier verif(dom);
-
-//  meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize());
-//  storage_t s(meta_data, "s"), s_ref(meta_data, "s_ref");
-
-//  verif.fill(-1.0, s);
-//  verif.fill(3.0, s_ref);
-
-//  globals::get().var_runtime = 1;
-
-//  Test01 test(dom, s);
-//  test.run();
-
-//  return !verif.verify(s, s_ref);
-//}

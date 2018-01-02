@@ -1,6 +1,6 @@
-// gtclang (0.0.1-0085b07-x86_64-linux-gnu-5.4.0)
+// gtclang (0.0.1-a7a9177-x86_64-linux-gnu-5.4.0)
 // based on LLVM/Clang (3.8.0), Dawn (0.0.1)
-// Generated on 2017-12-29  16:13:15
+// Generated on 2018-01-02  00:58:45
 
 #define GRIDTOOLS_CLANG_GENERATED 1
 #ifndef BOOST_RESULT_OF_USE_TR1
@@ -22,6 +22,14 @@ using namespace gridtools::clang;
 ;
 
 namespace cxxnaive {
+template <size_t N>
+std::array<int, N> operator+(std::array<int, N> const& a, std::array<int, N> const& b) {
+  std::array<int, N> res;
+  for (size_t i = 0; i < N; ++i) {
+    res[i] = a[i] + b[i];
+  }
+  return res;
+}
 
 class hori_diff_type2_stencil {
  private:
@@ -34,6 +42,47 @@ class hori_diff_type2_stencil {
         : dview_(dview), offsets_(offsets) {}
   };
 
+  template <class StorageType0, class StorageType1, class StorageType2>
+  static double laplacian_interval_start_0_end_0(const int i, const int j, const int k,
+                                                 ParamWrapper<gridtools::data_view<StorageType0>> pw_data,
+                                                 ParamWrapper<gridtools::data_view<StorageType1>> pw_crlato,
+                                                 ParamWrapper<gridtools::data_view<StorageType2>> pw_crlatu) {
+    gridtools::data_view<StorageType0> data = pw_data.dview_;
+    auto data_offsets = pw_data.offsets_;
+    gridtools::data_view<StorageType1> crlato = pw_crlato.dview_;
+    auto crlato_offsets = pw_crlato.offsets_;
+    gridtools::data_view<StorageType2> crlatu = pw_crlatu.dview_;
+    auto crlatu_offsets = pw_crlatu.offsets_;
+    return ((((data(i + 1 + data_offsets[0], j + 0 + data_offsets[1], k + 0 + data_offsets[2]) +
+               data(i + -1 + data_offsets[0], j + 0 + data_offsets[1], k + 0 + data_offsets[2])) -
+              ((gridtools::clang::float_type)2 *
+               data(i + 0 + data_offsets[0], j + 0 + data_offsets[1], k + 0 + data_offsets[2]))) +
+             (crlato(i + 0 + crlato_offsets[0], j + 0 + crlato_offsets[1], k + 0 + crlato_offsets[2]) *
+              delta_j_plus_1_interval_start_0_end_0(i, j, k, ParamWrapper<gridtools::data_view<StorageType0>>(
+                                                                 data, std::array<int, 3>{0, 0, 0} + data_offsets)))) +
+            (crlatu(i + 0 + crlatu_offsets[0], j + 0 + crlatu_offsets[1], k + 0 + crlatu_offsets[2]) *
+             delta_j_minus_1_interval_start_0_end_0(i, j, k, ParamWrapper<gridtools::data_view<StorageType0>>(
+                                                                 data, std::array<int, 3>{0, 0, 0} + data_offsets))));
+  }
+
+  template <class StorageType0>
+  static double delta_j_plus_1_interval_start_0_end_0(const int i, const int j, const int k,
+                                                      ParamWrapper<gridtools::data_view<StorageType0>> pw_data) {
+    gridtools::data_view<StorageType0> data = pw_data.dview_;
+    auto data_offsets = pw_data.offsets_;
+    return (data(i + 0 + data_offsets[0], j + 1 + data_offsets[1], k + 0 + data_offsets[2]) -
+            data(i + 0 + data_offsets[0], j + 0 + data_offsets[1], k + 0 + data_offsets[2]));
+  }
+
+  template <class StorageType0>
+  static double delta_j_minus_1_interval_start_0_end_0(const int i, const int j, const int k,
+                                                       ParamWrapper<gridtools::data_view<StorageType0>> pw_data) {
+    gridtools::data_view<StorageType0> data = pw_data.dview_;
+    auto data_offsets = pw_data.offsets_;
+    return (data(i + 0 + data_offsets[0], j + -1 + data_offsets[1], k + 0 + data_offsets[2]) -
+            data(i + 0 + data_offsets[0], j + 0 + data_offsets[1], k + 0 + data_offsets[2]));
+  }
+
   template <class StorageType0, class StorageType1>
   static double diffusive_flux_x_interval_start_0_end_0(const int i, const int j, const int k,
                                                         ParamWrapper<gridtools::data_view<StorageType0>> pw_lap,
@@ -42,13 +91,14 @@ class hori_diff_type2_stencil {
     auto lap_offsets = pw_lap.offsets_;
     gridtools::data_view<StorageType1> data = pw_data.dview_;
     auto data_offsets = pw_data.offsets_;
-    const gridtools::clang::float_type __local_flx_10 = delta_i_plus_1_interval_start_0_end_0(
-        i, j, k, ParamWrapper<gridtools::data_view<StorageType0>>(lap, std::array<int, 3>{0, 0, 0}));
-    return (((__local_flx_10 * delta_i_plus_1_interval_start_0_end_0(
-                                   i, j, k, ParamWrapper<gridtools::data_view<StorageType1>>(
-                                                data, std::array<int, 3>{0, 0, 0}))) > (gridtools::clang::float_type)0)
+    const gridtools::clang::float_type __local_flx_11 = delta_i_plus_1_interval_start_0_end_0(
+        i, j, k, ParamWrapper<gridtools::data_view<StorageType0>>(lap, std::array<int, 3>{0, 0, 0} + lap_offsets));
+    return (((__local_flx_11 *
+              delta_i_plus_1_interval_start_0_end_0(i, j, k, ParamWrapper<gridtools::data_view<StorageType1>>(
+                                                                 data, std::array<int, 3>{0, 0, 0} + data_offsets))) >
+             (gridtools::clang::float_type)0)
                 ? (gridtools::clang::float_type)0
-                : __local_flx_10);
+                : __local_flx_11);
   }
 
   template <class StorageType0>
@@ -71,24 +121,16 @@ class hori_diff_type2_stencil {
     auto data_offsets = pw_data.offsets_;
     gridtools::data_view<StorageType2> crlato = pw_crlato.dview_;
     auto crlato_offsets = pw_crlato.offsets_;
-    const gridtools::clang::float_type __local_fly_17 =
+    const gridtools::clang::float_type __local_fly_18 =
         (crlato(i + 0 + crlato_offsets[0], j + 0 + crlato_offsets[1], k + 0 + crlato_offsets[2]) *
-         delta_j_plus_1_interval_start_0_end_0(
-             i, j, k, ParamWrapper<gridtools::data_view<StorageType0>>(lap, std::array<int, 3>{0, 0, 0})));
-    return (((__local_fly_17 * delta_j_plus_1_interval_start_0_end_0(
-                                   i, j, k, ParamWrapper<gridtools::data_view<StorageType1>>(
-                                                data, std::array<int, 3>{0, 0, 0}))) > (gridtools::clang::float_type)0)
+         delta_j_plus_1_interval_start_0_end_0(i, j, k, ParamWrapper<gridtools::data_view<StorageType0>>(
+                                                            lap, std::array<int, 3>{0, 0, 0} + lap_offsets)));
+    return (((__local_fly_18 *
+              delta_j_plus_1_interval_start_0_end_0(i, j, k, ParamWrapper<gridtools::data_view<StorageType1>>(
+                                                                 data, std::array<int, 3>{0, 0, 0} + data_offsets))) >
+             (gridtools::clang::float_type)0)
                 ? (gridtools::clang::float_type)0
-                : __local_fly_17);
-  }
-
-  template <class StorageType0>
-  static double delta_j_plus_1_interval_start_0_end_0(const int i, const int j, const int k,
-                                                      ParamWrapper<gridtools::data_view<StorageType0>> pw_data) {
-    gridtools::data_view<StorageType0> data = pw_data.dview_;
-    auto data_offsets = pw_data.offsets_;
-    return (data(i + 0 + data_offsets[0], j + 1 + data_offsets[1], k + 0 + data_offsets[2]) -
-            data(i + 0 + data_offsets[0], j + 0 + data_offsets[1], k + 0 + data_offsets[2]));
+                : __local_fly_18);
   }
 
   struct sbase {
@@ -96,24 +138,26 @@ class hori_diff_type2_stencil {
 
     virtual ~sbase() {}
   };
-  template <class StorageType0, class StorageType1, class StorageType2, class StorageType3>
+  template <class StorageType0, class StorageType1, class StorageType2, class StorageType3, class StorageType4>
   struct stencil_0 : public sbase {
     // //Members
     const gridtools::clang::domain& m_dom;
     StorageType0& m_out;
     StorageType1& m_in;
     StorageType2& m_crlato;
-    StorageType3& m_hdmask;
+    StorageType3& m_crlatu;
+    StorageType4& m_hdmask;
     gridtools::clang::meta_data_t m_meta_data;
     gridtools::clang::storage_t m_lap;
 
    public:
     stencil_0(const gridtools::clang::domain& dom_, StorageType0& out_, StorageType1& in_, StorageType2& crlato_,
-              StorageType3& hdmask_)
+              StorageType3& crlatu_, StorageType4& hdmask_)
         : m_dom(dom_),
           m_out(out_),
           m_in(in_),
           m_crlato(crlato_),
+          m_crlatu(crlatu_),
           m_hdmask(hdmask_),
           m_meta_data(dom_.isize(), dom_.jsize(), dom_.ksize()),
           m_lap(m_meta_data) {}
@@ -122,40 +166,53 @@ class hori_diff_type2_stencil {
 
     virtual void run() {
       gridtools::data_view<StorageType0> out = gridtools::make_host_view(m_out);
+      std::array<int, 3> out_offsets{0, 0, 0};
       gridtools::data_view<StorageType1> in = gridtools::make_host_view(m_in);
+      std::array<int, 3> in_offsets{0, 0, 0};
       gridtools::data_view<StorageType2> crlato = gridtools::make_host_view(m_crlato);
-      gridtools::data_view<StorageType3> hdmask = gridtools::make_host_view(m_hdmask);
+      std::array<int, 3> crlato_offsets{0, 0, 0};
+      gridtools::data_view<StorageType3> crlatu = gridtools::make_host_view(m_crlatu);
+      std::array<int, 3> crlatu_offsets{0, 0, 0};
+      gridtools::data_view<StorageType4> hdmask = gridtools::make_host_view(m_hdmask);
+      std::array<int, 3> hdmask_offsets{0, 0, 0};
       gridtools::data_view<storage_t> lap = gridtools::make_host_view(m_lap);
-      for (int k = 0; k <= (m_dom.ksize() == 0 ? 0 : (m_dom.ksize() - m_dom.kplus() - 1)); ++k) {
-        for (int i = m_dom.iminus(); i <= m_dom.isize() - m_dom.iplus() - 1; ++i) {
-          for (int j = m_dom.jminus(); j <= m_dom.jsize() - m_dom.jplus() - 1; ++j) {
-            lap(i + 0, j + 0, k + 0) = in(i + 0, j + 0, k + 0);
+      std::array<int, 3> lap_offsets{0, 0, 0};
+      for (int k = 0 + 0; k <= (m_dom.ksize() == 0 ? 0 : (m_dom.ksize() - m_dom.kplus() - 1)) + 0; ++k) {
+        for (int i = m_dom.iminus() + -1; i <= m_dom.isize() - m_dom.iplus() - 1 + 1; ++i) {
+          for (int j = m_dom.jminus() + -1; j <= m_dom.jsize() - m_dom.jplus() - 1 + 1; ++j) {
+            lap(i + 0, j + 0, k + 0) = laplacian_interval_start_0_end_0(
+                i, j, k, ParamWrapper<gridtools::data_view<StorageType1>>(in, std::array<int, 3>{0, 0, 0} + in_offsets),
+                ParamWrapper<gridtools::data_view<StorageType2>>(crlato, std::array<int, 3>{0, 0, 0} + crlato_offsets),
+                ParamWrapper<gridtools::data_view<StorageType3>>(crlatu, std::array<int, 3>{0, 0, 0} + crlatu_offsets));
           }
         }
-        for (int i = m_dom.iminus(); i <= m_dom.isize() - m_dom.iplus() - 1; ++i) {
-          for (int j = m_dom.jminus(); j <= m_dom.jsize() - m_dom.jplus() - 1; ++j) {
-            const gridtools::clang::float_type __local_delta_flux_x_9 =
+        for (int i = m_dom.iminus() + 0; i <= m_dom.isize() - m_dom.iplus() - 1 + 0; ++i) {
+          for (int j = m_dom.jminus() + 0; j <= m_dom.jsize() - m_dom.jplus() - 1 + 0; ++j) {
+            const gridtools::clang::float_type __local_delta_flux_x_10 =
                 (diffusive_flux_x_interval_start_0_end_0(
-                     i, j, k,
-                     ParamWrapper<gridtools::data_view<gridtools::clang::storage_t>>(lap, std::array<int, 3>{0, 0, 0}),
-                     ParamWrapper<gridtools::data_view<StorageType1>>(in, std::array<int, 3>{0, 0, 0})) -
+                     i, j, k, ParamWrapper<gridtools::data_view<gridtools::clang::storage_t>>(
+                                  lap, std::array<int, 3>{0, 0, 0} + lap_offsets),
+                     ParamWrapper<gridtools::data_view<StorageType1>>(in, std::array<int, 3>{0, 0, 0} + in_offsets)) -
                  diffusive_flux_x_interval_start_0_end_0(
-                     i, j, k,
-                     ParamWrapper<gridtools::data_view<gridtools::clang::storage_t>>(lap, std::array<int, 3>{-1, 0, 0}),
-                     ParamWrapper<gridtools::data_view<StorageType1>>(in, std::array<int, 3>{-1, 0, 0})));
-            const gridtools::clang::float_type __local_delta_flux_y_16 =
+                     i, j, k, ParamWrapper<gridtools::data_view<gridtools::clang::storage_t>>(
+                                  lap, std::array<int, 3>{-1, 0, 0} + lap_offsets),
+                     ParamWrapper<gridtools::data_view<StorageType1>>(in, std::array<int, 3>{-1, 0, 0} + in_offsets)));
+            const gridtools::clang::float_type __local_delta_flux_y_17 =
                 (diffusive_flux_y_interval_start_0_end_0(
-                     i, j, k,
-                     ParamWrapper<gridtools::data_view<gridtools::clang::storage_t>>(lap, std::array<int, 3>{0, 0, 0}),
-                     ParamWrapper<gridtools::data_view<StorageType1>>(in, std::array<int, 3>{0, 0, 0}),
-                     ParamWrapper<gridtools::data_view<StorageType2>>(crlato, std::array<int, 3>{0, 0, 0})) -
+                     i, j, k, ParamWrapper<gridtools::data_view<gridtools::clang::storage_t>>(
+                                  lap, std::array<int, 3>{0, 0, 0} + lap_offsets),
+                     ParamWrapper<gridtools::data_view<StorageType1>>(in, std::array<int, 3>{0, 0, 0} + in_offsets),
+                     ParamWrapper<gridtools::data_view<StorageType2>>(crlato,
+                                                                      std::array<int, 3>{0, 0, 0} + crlato_offsets)) -
                  diffusive_flux_y_interval_start_0_end_0(
-                     i, j, k,
-                     ParamWrapper<gridtools::data_view<gridtools::clang::storage_t>>(lap, std::array<int, 3>{0, -1, 0}),
-                     ParamWrapper<gridtools::data_view<StorageType1>>(in, std::array<int, 3>{0, -1, 0}),
-                     ParamWrapper<gridtools::data_view<StorageType2>>(crlato, std::array<int, 3>{0, -1, 0})));
+                     i, j, k, ParamWrapper<gridtools::data_view<gridtools::clang::storage_t>>(
+                                  lap, std::array<int, 3>{0, -1, 0} + lap_offsets),
+                     ParamWrapper<gridtools::data_view<StorageType1>>(in, std::array<int, 3>{0, -1, 0} + in_offsets),
+                     ParamWrapper<gridtools::data_view<StorageType2>>(crlato,
+                                                                      std::array<int, 3>{0, -1, 0} + crlato_offsets)));
             out(i + 0, j + 0, k + 0) =
-                (in(i + 0, j + 0, k + 0) - (hdmask(i + 0, j + 0, k + 0) * __local_delta_flux_y_16));
+                (in(i + 0, j + 0, k + 0) -
+                 (hdmask(i + 0, j + 0, k + 0) * (__local_delta_flux_x_10 + __local_delta_flux_y_17)));
           }
         }
       }
@@ -172,87 +229,10 @@ class hori_diff_type2_stencil {
   template <class StorageType1, class StorageType2, class StorageType3, class StorageType4, class StorageType5>
   hori_diff_type2_stencil(const gridtools::clang::domain& dom, StorageType1& out, StorageType2& in,
                           StorageType3& crlato, StorageType4& crlatu, StorageType5& hdmask)
-      : m_stencil_0(
-            new stencil_0<StorageType1, StorageType2, StorageType3, StorageType5>(dom, out, in, crlato, hdmask)) {}
+      : m_stencil_0(new stencil_0<StorageType1, StorageType2, StorageType3, StorageType4, StorageType5>(
+            dom, out, in, crlato, crlatu, hdmask)) {}
 
   void run() { m_stencil_0->run(); }
 };
 }  // namespace cxxnaiv
 ;
-
-// void horizontal_diffusion_type2_stencil_reference(const domain& dom, storage_t& out_s, storage_t& in_s,
-//                                                  storage_j_t& crlato_s, storage_j_t& crlatu_s,
-//                                                  storage_t& hdmask_s, storage_t& lap_s) {
-//  auto out = make_host_view(out_s);
-//  auto in = make_host_view(in_s);
-//  auto crlato = make_host_view(crlato_s);
-//  auto crlatu = make_host_view(crlatu_s);
-//  auto hdmask = make_host_view(hdmask_s);
-//  auto lap = make_host_view(crlatu_s);
-
-//  for(int k = dom.kminus(); k < (dom.ksize() - dom.kplus()); ++k) {
-//    for(int i = dom.iminus() - 1; i < (dom.isize() - dom.iplus() + 1); ++i) {
-//      for(int j = dom.jminus() - 1; j < (dom.jsize() - dom.jplus() + 1); ++j) {
-//        lap(i, j, k) = in(i + 1, j, k) + in(i - 1, j, k) - 2.0 * in(i, j, k) +
-//                       crlato(0, j, 0) * (in(i, j + 1, k) - in(i, j, k)) +
-//                       crlatu(0, j, 0) * (in(i, j - 1, k) - in(i, j, k));
-//      }
-//    }
-//    for(int i = dom.iminus(); i < (dom.isize() - dom.iplus()); ++i) {
-//      for(int j = dom.jminus(); j < (dom.jsize() - dom.jplus()); ++j) {
-
-//        double flux_x_lap_center_delta = lap(i + 1, j, k) - lap(i, j, k);
-//        double flux_x_lap_iminus_delta = lap(i, j, k) - lap(i - 1, j, k);
-//        double flux_x_center = flux_x_lap_center_delta * (in(i + 1, j, k) - in(i, j, k)) > 0.0
-//                                   ? 0.0
-//                                   : flux_x_lap_center_delta;
-//        double flux_x_iminus = flux_x_lap_iminus_delta * (in(i, j, k) - in(i - 1, j, k)) > 0.0
-//                                   ? 0.0
-//                                   : flux_x_lap_iminus_delta;
-
-//        double flux_y_lap_center_delta = crlato(i, j, k) * (lap(i, j + 1, k) - lap(i, j, k));
-//        double flux_y_lap_jminus_delta = crlato(i, j - 1, k) * (lap(i, j, k) - lap(i, j - 1, k));
-//        double flux_y_center = flux_y_lap_center_delta * (in(i, j + 1, k) - in(i, j, k)) > 0.0
-//                                   ? 0.0
-//                                   : flux_y_lap_center_delta;
-//        double flux_y_jminus = flux_y_lap_jminus_delta * (in(i, j, k) - in(i, j - 1, k)) > 0.0
-//                                   ? 0.0
-//                                   : flux_y_lap_jminus_delta;
-
-//        double delta_flux_x = flux_x_center - flux_x_iminus;
-//        double delta_flux_y = flux_y_center - flux_y_jminus;
-
-//        out(i, j, k) = in(i, j, k) - hdmask(i, j, k) * (delta_flux_x + delta_flux_y);
-//      }
-//    }
-//  }
-//}
-
-// int main() {
-//  domain dom(64, 64, 80);
-//  dom.set_halos(halo::value, halo::value, halo::value, halo::value, 0, 0);
-
-//  meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize());
-//  meta_data_j_t meta_data_j(1, dom.jsize(), 1);
-
-//  // Output fields
-//  storage_t u_out(meta_data, "u_out");
-//  storage_t u_out_ref(meta_data, "u_out_ref");
-
-//  // Input fields
-//  storage_t u_in(meta_data, "u_in");
-//  storage_t lap(meta_data, "lap");
-//  storage_t hdmask(meta_data, "hdmask");
-//  storage_j_t crlato(meta_data_j, "crlato");
-//  storage_j_t crlatu(meta_data_j, "crlatu");
-
-//  verifier verif(dom);
-//  verif.fill_random(u_out, u_out_ref, u_in, lap, crlato, crlatu, hdmask);
-
-//  horizontal_diffusion_type2_stencil_reference(dom, u_out_ref, u_in, crlato, crlatu, hdmask, lap);
-
-//  horizontal_diffusion_type2_stencil hd(dom, u_out, u_in, crlato, crlatu, hdmask);
-//  hd.run();
-
-//  return !verif.verify(u_out, u_out_ref);
-//}

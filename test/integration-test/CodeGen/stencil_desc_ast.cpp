@@ -14,8 +14,6 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-// RUN: %gtclang% %file% -o%filename%_gen.cpp --config=%filedir%/stencil_desc_ast.json | %c++% %filename%_gen.cpp %gridtools_flags% -o%tmpdir%/%filename% | %tmpdir%/%filename%
-
 #include "gridtools/clang/verify.hpp"
 #include "gridtools/clang_dsl.hpp"
 #include <iostream>

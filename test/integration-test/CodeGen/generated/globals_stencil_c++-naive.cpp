@@ -1,9 +1,8 @@
-// gtclang (0.0.1-c392bf6-x86_64-linux-gnu-5.4.0)
+// gtclang (0.0.1-a7a9177-x86_64-linux-gnu-5.4.0)
 // based on LLVM/Clang (3.8.0), Dawn (0.0.1)
-// Generated on 2017-12-28  02:54:38
+// Generated on 2018-01-02  00:53:20
 
 #define GRIDTOOLS_CLANG_GENERATED 1
-#define GRIDTOOLS_CLANG_HALO_EXTEND 3
 #ifndef BOOST_RESULT_OF_USE_TR1
  #define BOOST_RESULT_OF_USE_TR1 1
 #endif
@@ -71,6 +70,13 @@ globals* gridtools::clang::globals_impl<globals>::s_instance = nullptr;
 ;
 
 namespace cxxnaive {
+template <size_t N>
+std::array<int, N> operator+(std::array<int, N> const& a, std::array<int, N> const& b) {
+  std::array<int, N> res;
+  for (size_t i = 0; i < N; ++i) {
+  }
+  return res;
+}
 
 class globals_stencil {
  private:
@@ -103,10 +109,12 @@ class globals_stencil {
 
     virtual void run() {
       gridtools::data_view<StorageType0> in = gridtools::make_host_view(m_in);
+      std::array<int, 3> in_offsets{0, 0, 0};
       gridtools::data_view<StorageType1> out = gridtools::make_host_view(m_out);
-      for (int k = 0; k <= (m_dom.ksize() == 0 ? 0 : (m_dom.ksize() - m_dom.kplus() - 1)); ++k) {
-        for (int i = m_dom.iminus(); i <= m_dom.isize() - m_dom.iplus() - 1; ++i) {
-          for (int j = m_dom.jminus(); j <= m_dom.jsize() - m_dom.jplus() - 1; ++j) {
+      std::array<int, 3> out_offsets{0, 0, 0};
+      for (int k = 0 + 0; k <= (m_dom.ksize() == 0 ? 0 : (m_dom.ksize() - m_dom.kplus() - 1)) + 0; ++k) {
+        for (int i = m_dom.iminus() + 0; i <= m_dom.isize() - m_dom.iplus() - 1 + 0; ++i) {
+          for (int j = m_dom.jminus() + 0; j <= m_dom.jsize() - m_dom.jplus() - 1 + 0; ++j) {
             if ((bool)true) {
               out(i + 0, j + 0, k + 0) =
                   ((in(i + 0, j + 0, k + 0) + globals::get().var_runtime) + globals::get().var_default);
@@ -132,22 +140,3 @@ class globals_stencil {
 };
 }  // namespace cxxnaiv
 ;
-
-// int main() {
-//  domain dom(64, 64, 80);
-//  dom.set_halos(halo::value, halo::value, halo::value, halo::value, 0, 0);
-//  verifier verif(dom);
-
-//  meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize());
-//  storage_t s(meta_data, "s"), s_ref(meta_data, "s_ref");
-
-//  verif.fill(-1.0, s);
-//  verif.fill(3.0, s_ref);
-
-//  globals::get().var_runtime = 1;
-
-//  Test01 test(dom, s);
-//  test.run();
-
-//  return !verif.verify(s, s_ref);
-//}

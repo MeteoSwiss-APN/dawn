@@ -14,7 +14,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 #define GRIDTOOLS_CLANG_GENERATED 1
-#define GRIDTOOLS_CLANG_HALO_EXTEND 5
+#define GRIDTOOLS_CLANG_HALO_EXTEND 3
 #include <gtest/gtest.h>
 #include "test/integration-test/CodeGen/Options.hpp"
 #include "gridtools/clang/verify.hpp"

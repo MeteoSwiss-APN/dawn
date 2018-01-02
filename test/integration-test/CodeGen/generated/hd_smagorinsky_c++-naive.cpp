@@ -1,9 +1,8 @@
-// gtclang (0.0.1-c392bf6-x86_64-linux-gnu-5.4.0)
+// gtclang (0.0.1-a7a9177-x86_64-linux-gnu-5.4.0)
 // based on LLVM/Clang (3.8.0), Dawn (0.0.1)
-// Generated on 2017-12-28  01:03:29
+// Generated on 2018-01-02  00:59:48
 
 #define GRIDTOOLS_CLANG_GENERATED 1
-#define GRIDTOOLS_CLANG_HALO_EXTEND 3
 #ifndef BOOST_RESULT_OF_USE_TR1
  #define BOOST_RESULT_OF_USE_TR1 1
 #endif
@@ -38,6 +37,14 @@ using namespace gridtools::clang;
 ;
 
 namespace cxxnaive {
+template <size_t N>
+std::array<int, N> operator+(std::array<int, N> const& a, std::array<int, N> const& b) {
+  std::array<int, N> res;
+  for (size_t i = 0; i < N; ++i) {
+    res[i] = a[i] + b[i];
+  }
+  return res;
+}
 
 class hd_smagorinsky_stencil {
  private:
@@ -142,11 +149,11 @@ class hd_smagorinsky_stencil {
            in(i + -1 + in_offsets[0], j + 0 + in_offsets[1], k + 0 + in_offsets[2])) -
           ((gridtools::clang::float_type)2 * in(i + 0 + in_offsets[0], j + 0 + in_offsets[1], k + 0 + in_offsets[2]))) +
          (crlato(i + 0 + crlato_offsets[0], j + 0 + crlato_offsets[1], k + 0 + crlato_offsets[2]) *
-          delta_j_plus_1_interval_start_0_end_0(
-              i, j, k, ParamWrapper<gridtools::data_view<StorageType0>>(in, std::array<int, 3>{0, 0, 0})))) +
+          delta_j_plus_1_interval_start_0_end_0(i, j, k, ParamWrapper<gridtools::data_view<StorageType0>>(
+                                                             in, std::array<int, 3>{0, 0, 0} + in_offsets)))) +
         (crlatu(i + 0 + crlatu_offsets[0], j + 0 + crlatu_offsets[1], k + 0 + crlatu_offsets[2]) *
          delta_j_minus_1_interval_start_0_end_0(
-             i, j, k, ParamWrapper<gridtools::data_view<StorageType0>>(in, std::array<int, 3>{0, 0, 0}))));
+             i, j, k, ParamWrapper<gridtools::data_view<StorageType0>>(in, std::array<int, 3>{0, 0, 0} + in_offsets))));
   }
 
   struct sbase {
@@ -206,48 +213,68 @@ class hd_smagorinsky_stencil {
 
     virtual void run() {
       gridtools::data_view<StorageType0> u_out = gridtools::make_host_view(m_u_out);
+      std::array<int, 3> u_out_offsets{0, 0, 0};
       gridtools::data_view<StorageType1> v_out = gridtools::make_host_view(m_v_out);
+      std::array<int, 3> v_out_offsets{0, 0, 0};
       gridtools::data_view<StorageType2> u_in = gridtools::make_host_view(m_u_in);
+      std::array<int, 3> u_in_offsets{0, 0, 0};
       gridtools::data_view<StorageType3> v_in = gridtools::make_host_view(m_v_in);
+      std::array<int, 3> v_in_offsets{0, 0, 0};
       gridtools::data_view<StorageType4> hdmaskvel = gridtools::make_host_view(m_hdmaskvel);
+      std::array<int, 3> hdmaskvel_offsets{0, 0, 0};
       gridtools::data_view<StorageType5> crlavo = gridtools::make_host_view(m_crlavo);
+      std::array<int, 3> crlavo_offsets{0, 0, 0};
       gridtools::data_view<StorageType6> crlavu = gridtools::make_host_view(m_crlavu);
+      std::array<int, 3> crlavu_offsets{0, 0, 0};
       gridtools::data_view<StorageType7> crlato = gridtools::make_host_view(m_crlato);
+      std::array<int, 3> crlato_offsets{0, 0, 0};
       gridtools::data_view<StorageType8> crlatu = gridtools::make_host_view(m_crlatu);
+      std::array<int, 3> crlatu_offsets{0, 0, 0};
       gridtools::data_view<StorageType9> acrlat0 = gridtools::make_host_view(m_acrlat0);
+      std::array<int, 3> acrlat0_offsets{0, 0, 0};
       gridtools::data_view<StorageType10> eddlon = gridtools::make_host_view(m_eddlon);
+      std::array<int, 3> eddlon_offsets{0, 0, 0};
       gridtools::data_view<StorageType11> eddlat = gridtools::make_host_view(m_eddlat);
+      std::array<int, 3> eddlat_offsets{0, 0, 0};
       gridtools::data_view<StorageType12> tau_smag = gridtools::make_host_view(m_tau_smag);
+      std::array<int, 3> tau_smag_offsets{0, 0, 0};
       gridtools::data_view<StorageType13> weight_smag = gridtools::make_host_view(m_weight_smag);
+      std::array<int, 3> weight_smag_offsets{0, 0, 0};
       gridtools::data_view<storage_t> S_sqr_uv = gridtools::make_host_view(m_S_sqr_uv);
+      std::array<int, 3> S_sqr_uv_offsets{0, 0, 0};
       gridtools::data_view<storage_t> T_sqr_s = gridtools::make_host_view(m_T_sqr_s);
-      for (int k = 0; k <= (m_dom.ksize() == 0 ? 0 : (m_dom.ksize() - m_dom.kplus() - 1)); ++k) {
-        for (int i = m_dom.iminus(); i <= m_dom.isize() - m_dom.iplus() - 1; ++i) {
-          for (int j = m_dom.jminus(); j <= m_dom.jsize() - m_dom.jplus() - 1; ++j) {
+      std::array<int, 3> T_sqr_s_offsets{0, 0, 0};
+      for (int k = 0 + 0; k <= (m_dom.ksize() == 0 ? 0 : (m_dom.ksize() - m_dom.kplus() - 1)) + 0; ++k) {
+        for (int i = m_dom.iminus() + -1; i <= m_dom.isize() - m_dom.iplus() - 1 + 1; ++i) {
+          for (int j = m_dom.jminus() + -1; j <= m_dom.jsize() - m_dom.jplus() - 1 + 1; ++j) {
             const gridtools::clang::float_type __local_frac_1_dx_19 =
                 (acrlat0(i + 0, j + 0, k + 0) * eddlon(i + 0, j + 0, k + 0));
             const gridtools::clang::float_type __local_frac_1_dy_20 =
                 (eddlat(i + 0, j + 0, k + 0) / (gridtools::clang::float_type)6371229);
             const gridtools::clang::float_type __local_T_s_22 =
-                ((delta_j_minus_1_interval_start_0_end_0(
-                      i, j, k, ParamWrapper<gridtools::data_view<StorageType3>>(v_in, std::array<int, 3>{0, 0, 0})) *
+                ((delta_j_minus_1_interval_start_0_end_0(i, j, k,
+                                                         ParamWrapper<gridtools::data_view<StorageType3>>(
+                                                             v_in, std::array<int, 3>{0, 0, 0} + v_in_offsets)) *
                   __local_frac_1_dy_20) -
-                 (delta_i_minus_1_interval_start_0_end_0(
-                      i, j, k, ParamWrapper<gridtools::data_view<StorageType2>>(u_in, std::array<int, 3>{0, 0, 0})) *
+                 (delta_i_minus_1_interval_start_0_end_0(i, j, k,
+                                                         ParamWrapper<gridtools::data_view<StorageType2>>(
+                                                             u_in, std::array<int, 3>{0, 0, 0} + u_in_offsets)) *
                   __local_frac_1_dx_19));
             T_sqr_s(i + 0, j + 0, k + 0) = (__local_T_s_22 * __local_T_s_22);
             const gridtools::clang::float_type __local_S_uv_23 =
-                ((delta_j_plus_1_interval_start_0_end_0(
-                      i, j, k, ParamWrapper<gridtools::data_view<StorageType2>>(u_in, std::array<int, 3>{0, 0, 0})) *
+                ((delta_j_plus_1_interval_start_0_end_0(i, j, k,
+                                                        ParamWrapper<gridtools::data_view<StorageType2>>(
+                                                            u_in, std::array<int, 3>{0, 0, 0} + u_in_offsets)) *
                   __local_frac_1_dy_20) +
-                 (delta_i_plus_1_interval_start_0_end_0(
-                      i, j, k, ParamWrapper<gridtools::data_view<StorageType3>>(v_in, std::array<int, 3>{0, 0, 0})) *
+                 (delta_i_plus_1_interval_start_0_end_0(i, j, k,
+                                                        ParamWrapper<gridtools::data_view<StorageType3>>(
+                                                            v_in, std::array<int, 3>{0, 0, 0} + v_in_offsets)) *
                   __local_frac_1_dx_19));
             S_sqr_uv(i + 0, j + 0, k + 0) = (__local_S_uv_23 * __local_S_uv_23);
           }
         }
-        for (int i = m_dom.iminus(); i <= m_dom.isize() - m_dom.iplus() - 1; ++i) {
-          for (int j = m_dom.jminus(); j <= m_dom.jsize() - m_dom.jplus() - 1; ++j) {
+        for (int i = m_dom.iminus() + 0; i <= m_dom.isize() - m_dom.iplus() - 1 + 0; ++i) {
+          for (int j = m_dom.jminus() + 0; j <= m_dom.jsize() - m_dom.jplus() - 1 + 0; ++j) {
             const gridtools::clang::float_type __local_hdweight_24 =
                 (weight_smag(i + 0, j + 0, k + 0) * hdmaskvel(i + 0, j + 0, k + 0));
             gridtools::clang::float_type __local_smag_u_25 =
@@ -255,10 +282,10 @@ class hd_smagorinsky_stencil {
                   gridtools::clang::math::sqrt(
                       (avg_i_plus_1_interval_start_0_end_0(
                            i, j, k, ParamWrapper<gridtools::data_view<gridtools::clang::storage_t>>(
-                                        T_sqr_s, std::array<int, 3>{0, 0, 0})) +
+                                        T_sqr_s, std::array<int, 3>{0, 0, 0} + T_sqr_s_offsets)) +
                        avg_j_minus_1_interval_start_0_end_0(
                            i, j, k, ParamWrapper<gridtools::data_view<gridtools::clang::storage_t>>(
-                                        S_sqr_uv, std::array<int, 3>{0, 0, 0}))))) -
+                                        S_sqr_uv, std::array<int, 3>{0, 0, 0} + S_sqr_uv_offsets))))) -
                  __local_hdweight_24);
             __local_smag_u_25 = gridtools::clang::math::min(
                 (gridtools::clang::float_type)0.5,
@@ -268,22 +295,24 @@ class hd_smagorinsky_stencil {
                   gridtools::clang::math::sqrt(
                       (avg_j_plus_1_interval_start_0_end_0(
                            i, j, k, ParamWrapper<gridtools::data_view<gridtools::clang::storage_t>>(
-                                        T_sqr_s, std::array<int, 3>{0, 0, 0})) +
+                                        T_sqr_s, std::array<int, 3>{0, 0, 0} + T_sqr_s_offsets)) +
                        avg_i_minus_1_interval_start_0_end_0(
                            i, j, k, ParamWrapper<gridtools::data_view<gridtools::clang::storage_t>>(
-                                        S_sqr_uv, std::array<int, 3>{0, 0, 0}))))) -
+                                        S_sqr_uv, std::array<int, 3>{0, 0, 0} + S_sqr_uv_offsets))))) -
                  __local_hdweight_24);
             __local_smag_v_30 = gridtools::clang::math::min(
                 (gridtools::clang::float_type)0.5,
                 gridtools::clang::math::max((gridtools::clang::float_type)0, __local_smag_v_30));
             const gridtools::clang::float_type __local_lapu_35 = laplacian_interval_start_0_end_0(
-                i, j, k, ParamWrapper<gridtools::data_view<StorageType2>>(u_in, std::array<int, 3>{0, 0, 0}),
-                ParamWrapper<gridtools::data_view<StorageType7>>(crlato, std::array<int, 3>{0, 0, 0}),
-                ParamWrapper<gridtools::data_view<StorageType8>>(crlatu, std::array<int, 3>{0, 0, 0}));
+                i, j, k,
+                ParamWrapper<gridtools::data_view<StorageType2>>(u_in, std::array<int, 3>{0, 0, 0} + u_in_offsets),
+                ParamWrapper<gridtools::data_view<StorageType7>>(crlato, std::array<int, 3>{0, 0, 0} + crlato_offsets),
+                ParamWrapper<gridtools::data_view<StorageType8>>(crlatu, std::array<int, 3>{0, 0, 0} + crlatu_offsets));
             const gridtools::clang::float_type __local_lapv_37 = laplacian_interval_start_0_end_0(
-                i, j, k, ParamWrapper<gridtools::data_view<StorageType3>>(v_in, std::array<int, 3>{0, 0, 0}),
-                ParamWrapper<gridtools::data_view<StorageType5>>(crlavo, std::array<int, 3>{0, 0, 0}),
-                ParamWrapper<gridtools::data_view<StorageType6>>(crlavu, std::array<int, 3>{0, 0, 0}));
+                i, j, k,
+                ParamWrapper<gridtools::data_view<StorageType3>>(v_in, std::array<int, 3>{0, 0, 0} + v_in_offsets),
+                ParamWrapper<gridtools::data_view<StorageType5>>(crlavo, std::array<int, 3>{0, 0, 0} + crlavo_offsets),
+                ParamWrapper<gridtools::data_view<StorageType6>>(crlavu, std::array<int, 3>{0, 0, 0} + crlavu_offsets));
             u_out(i + 0, j + 0, k + 0) = (u_in(i + 0, j + 0, k + 0) + (__local_smag_u_25 * __local_lapu_35));
             v_out(i + 0, j + 0, k + 0) = (v_in(i + 0, j + 0, k + 0) + (__local_smag_v_30 * __local_lapv_37));
           }

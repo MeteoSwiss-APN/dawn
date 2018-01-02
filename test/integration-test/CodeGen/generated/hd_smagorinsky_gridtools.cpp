@@ -1,9 +1,8 @@
-// gtclang (0.0.1-c392bf6-x86_64-linux-gnu-5.4.0)
+// gtclang (0.0.1-a7a9177-x86_64-linux-gnu-5.4.0)
 // based on LLVM/Clang (3.8.0), Dawn (0.0.1)
-// Generated on 2017-12-28  01:03:27
+// Generated on 2018-01-02  00:59:47
 
 #define GRIDTOOLS_CLANG_GENERATED 1
-#define GRIDTOOLS_CLANG_HALO_EXTEND 3
 #ifndef BOOST_RESULT_OF_USE_TR1
  #define BOOST_RESULT_OF_USE_TR1 1
 #endif
