@@ -20,7 +20,7 @@ using namespace gridtools::clang;
 
 interval k_flat = k_start + 4;
 
-stencil hori_diff_stencil {
+stencil compute_extent_test_stencil {
   storage u, out;
 
   var tmp0, tmp1, tmp2, tmp3;

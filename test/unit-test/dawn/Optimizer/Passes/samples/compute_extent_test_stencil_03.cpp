@@ -26,7 +26,7 @@ stencil_function delta {
   }
 };
 
-stencil hori_diff_stencil {
+stencil compute_extent_test_stencil {
   storage u, out, coeff;
 
   var flx, fly, lap, lap2;
