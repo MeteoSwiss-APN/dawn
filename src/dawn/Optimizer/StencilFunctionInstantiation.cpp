@@ -23,19 +23,6 @@
 
 namespace dawn {
 
-static std::string dim2str(int dim) {
-  switch(dim) {
-  case 0:
-    return "i";
-  case 1:
-    return "j";
-  case 2:
-    return "k";
-  default:
-    dawn_unreachable("invalid dimension");
-  }
-};
-
 StencilFunctionInstantiation::StencilFunctionInstantiation(
     StencilInstantiation* context, const std::shared_ptr<StencilFunCallExpr>& expr,
     sir::StencilFunction* function, const std::shared_ptr<AST>& ast, const Interval& interval,
@@ -522,6 +509,10 @@ StencilFunctionInstantiation::makeCodeGenName(const StencilFunctionInstantiation
 
     } else if(stencilFun.isArgDirection(argIdx)) {
       name += "_" + dim2str(stencilFun.getCallerDimensionOfArgDirection(argIdx));
+    } else if(stencilFun.isArgStencilFunctionInstantiation(argIdx)) {
+      StencilFunctionInstantiation& argFunction =
+          *(stencilFun.getFunctionInstantiationOfArgField(argIdx));
+      name += "_" + makeCodeGenName(argFunction);
     }
   }
 
@@ -535,11 +526,28 @@ bool StencilFunctionInstantiation::hasReturn() const { return hasReturn_; }
 
 bool StencilFunctionInstantiation::isNested() const { return isNested_; }
 
-void StencilFunctionInstantiation::dump() {
+size_t StencilFunctionInstantiation::numArgs() const { return function_->Args.size(); }
+
+std::string StencilFunctionInstantiation::getArgNameFromFunctionCall(std::string fnCallName) const {
+
+  for(std::size_t argIdx = 0; argIdx < numArgs(); ++argIdx) {
+    if(!isArgField(argIdx) || !isArgStencilFunctionInstantiation(argIdx))
+      continue;
+
+    if(fnCallName == getFunctionInstantiationOfArgField(argIdx)->getName()) {
+      sir::Field* field = dyn_cast<sir::Field>(function_->Args[argIdx].get());
+      return field->Name;
+    }
+  }
+  DAWN_ASSERT_MSG(0, "arg field of callee being a stencial function at caller not found");
+  return "";
+}
+
+void StencilFunctionInstantiation::dump() const {
   std::cout << "\nStencilFunction : " << getName() << " " << getInterval() << "\n";
   std::cout << MakeIndent<1>::value << "Arguments:\n";
 
-  for(std::size_t argIdx = 0; argIdx < function_->Args.size(); ++argIdx) {
+  for(std::size_t argIdx = 0; argIdx < numArgs(); ++argIdx) {
 
     std::cout << MakeIndent<2>::value << "arg(" << argIdx << ") : ";
 

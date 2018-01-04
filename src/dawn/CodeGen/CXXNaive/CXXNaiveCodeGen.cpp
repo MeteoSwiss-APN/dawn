@@ -66,32 +66,8 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
 
   Namespace cxxnaiveNamespace("cxxnaive", ssSW);
 
-  MemberFunction arraysumop = createFunction("std::array<int,N>", "operator+", ssSW, "size_t N");
-  arraysumop.addArg("std::array<int, N> const& a");
-  arraysumop.addArg("std::array<int, N> const& b");
-  arraysumop.addStatement("std::array<int, N> res");
-  arraysumop.addBlockStatement("for(size_t i =0; i < N; ++i)",
-                               [&]() { arraysumop.addStatement("res[i] = a[i]+b[i]"); });
-  arraysumop.addStatement("return res");
-  arraysumop.commit();
-
   Class StencilWrapperClass(stencilInstantiation->getName(), ssSW);
   StencilWrapperClass.changeAccessibility("private");
-
-  Structure paramWrapper = StencilWrapperClass.addStruct("ParamWrapper", "class DataView");
-  paramWrapper.addMember("DataView", "dview_");
-  paramWrapper.addMember("std::array<int, DataView::storage_info_t::ndims>", "offsets_");
-
-  auto pwClassCtr = paramWrapper.addConstructor();
-
-  pwClassCtr.addArg("DataView dview");
-  pwClassCtr.addArg("std::array<int, DataView::storage_info_t::ndims> offsets");
-  pwClassCtr.addInit("dview_(dview)");
-  pwClassCtr.addInit("offsets_(offsets)");
-
-  pwClassCtr.commit();
-
-  paramWrapper.commit();
 
   // Generate stencils
   auto& stencils = stencilInstantiation->getStencils();

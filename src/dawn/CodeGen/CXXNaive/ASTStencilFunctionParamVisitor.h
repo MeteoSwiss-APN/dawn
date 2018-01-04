@@ -22,11 +22,11 @@
 #include <unordered_map>
 
 namespace dawn {
-namespace codegen {
-namespace cxxnaive {
-
 class StencilInstantiation;
 class StencilFunctionInstantiation;
+
+namespace codegen {
+namespace cxxnaive {
 
 /// @brief ASTVisitor to generate C++ naive backend code for the parameters of the stencil function
 /// calls
@@ -51,6 +51,7 @@ public:
   virtual void visit(const std::shared_ptr<StencilFunArgExpr>& expr) override;
   virtual void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override;
   virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override;
   /// @}
 };
 

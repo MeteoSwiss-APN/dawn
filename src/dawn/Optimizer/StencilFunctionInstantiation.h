@@ -21,6 +21,7 @@
 #include "dawn/Optimizer/StatementAccessesPair.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Array.h"
+#include "dawn/Support/Unreachable.h"
 #include <memory>
 #include <set>
 #include <string>
@@ -30,6 +31,19 @@
 namespace dawn {
 
 class StencilInstantiation;
+
+inline std::string dim2str(int dim) {
+  switch(dim) {
+  case 0:
+    return "i";
+  case 1:
+    return "j";
+  case 2:
+    return "k";
+  default:
+    dawn_unreachable("invalid dimension");
+  }
+};
 
 /// @brief Specific instantiation of a stencil function
 ///
@@ -147,6 +161,17 @@ public:
                                const std::shared_ptr<StencilFunCallExpr>& expr,
                                sir::StencilFunction* function, const std::shared_ptr<AST>& ast,
                                const Interval& interval, bool isNested);
+
+  std::unordered_map<int, int>& ArgumentIndexToCallerAccessIDMap() {
+    return ArgumentIndexToCallerAccessIDMap_;
+  }
+  std::unordered_map<int, int> const& ArgumentIndexToCallerAccessIDMap() const {
+    return ArgumentIndexToCallerAccessIDMap_;
+  }
+
+  size_t numArgs() const;
+
+  std::string getArgNameFromFunctionCall(std::string fnCallName) const;
 
   /// @brief Get the associated StencilInstantiation
   StencilInstantiation* getStencilInstantiation() { return stencilInstantiation_; }
@@ -334,7 +359,7 @@ public:
   const std::shared_ptr<StencilFunCallExpr>& getExpression() const { return expr_; }
 
   /// @brief Dump the stencil function instantiation to stdout
-  void dump();
+  void dump() const;
 };
 
 } // namespace dawn

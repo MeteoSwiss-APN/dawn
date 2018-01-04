@@ -37,6 +37,16 @@ void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<StencilFunArgEx
 
 void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<LiteralAccessExpr>& expr) {}
 
+void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
+  for(auto& arg : expr->getArguments()) {
+    ASTStencilFunctionParamVisitor fieldAccessVisitor(paramNameToType_);
+
+    arg->accept(fieldAccessVisitor);
+
+    ss_ << fieldAccessVisitor.getCodeAndResetStream();
+  }
+}
+
 void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
 
   if(!paramNameToType_.count(expr->getName()))

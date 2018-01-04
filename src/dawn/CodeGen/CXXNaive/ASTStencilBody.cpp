@@ -149,12 +149,63 @@ void ASTStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
 void ASTStencilBody::visit(const std::shared_ptr<LiteralAccessExpr>& expr) { Base::visit(expr); }
 
 void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
+
   if(currentFunction_) {
-    std::string accessName = currentFunction_->getOriginalNameFromCallerAccessID(
-        currentFunction_->getAccessIDFromExpr(expr));
-    ss_ << accessName
-        << offsetPrinter_(
-               ijkfyOffset(currentFunction_->evalOffsetOfFieldAccessExpr(expr, false), accessName));
+    int argIndex = -1;
+    for(auto pp : currentFunction_->ArgumentIndexToCallerAccessIDMap()) {
+      if(pp.second == currentFunction_->getAccessIDFromExpr(expr))
+        argIndex = pp.first;
+    }
+
+    auto accessOffset = expr->getOffset();
+
+    if(currentFunction_->isArgStencilFunctionInstantiation(argIndex)) {
+      StencilFunctionInstantiation& argStencilFn =
+          *(currentFunction_->getFunctionInstantiationOfArgField(argIndex));
+
+      ss_ << StencilFunctionInstantiation::makeCodeGenName(argStencilFn) << "(i,j,k";
+
+      for(int argIdx = 0; argIdx < argStencilFn.numArgs(); ++argIdx) {
+        if(argStencilFn.isArgField(argIdx)) {
+          Array3i offset = expr->getOffset();
+
+          std::string append;
+          for(auto idx : expr->getArgumentMap()) {
+            if(idx != -1) {
+              DAWN_ASSERT_MSG((argStencilFn.isArgOffset(idx)),
+                              "index identified by argument map is not an offset arg");
+              int dim = argStencilFn.getCallerOffsetOfArgOffset(idx)[0];
+              int off = argStencilFn.getCallerOffsetOfArgOffset(idx)[1];
+              DAWN_ASSERT(dim < offset.size());
+              offset[dim] = off;
+            }
+          }
+
+          std::string accessName =
+              currentFunction_->getArgNameFromFunctionCall(argStencilFn.getName());
+          ss_ << ", "
+              << "pw_" + accessName << ".cloneWithOffset(std::array<int,"
+              << std::to_string(offset.size()) << ">{";
+
+          bool init = false;
+          for(auto idxIt : offset) {
+            if(init)
+              ss_ << ",";
+            ss_ << std::to_string(idxIt);
+            init = true;
+          }
+          ss_ << "})";
+        }
+      }
+      ss_ << ")";
+
+    } else {
+      std::string accessName = currentFunction_->getOriginalNameFromCallerAccessID(
+          currentFunction_->getAccessIDFromExpr(expr));
+      ss_ << accessName
+          << offsetPrinter_(ijkfyOffset(currentFunction_->evalOffsetOfFieldAccessExpr(expr, false),
+                                        accessName));
+    }
   } else {
     std::string accessName = getName(expr);
     ss_ << accessName << offsetPrinter_(ijkfyOffset(expr->getOffset(), accessName));
