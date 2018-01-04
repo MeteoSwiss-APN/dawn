@@ -97,6 +97,7 @@ class StencilInstantiation : NonCopyable {
   /// Stencil description statements. These are built from the StencilDescAst of the sir::Stencil
   std::vector<std::shared_ptr<Statement>> stencilDescStatements_;
   std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int> StencilCallToStencilIDMap_;
+  std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>> IDToStencilCallMap_;
 
   /// StageID to name Map. Filled by the `PassSetStageName`.
   std::unordered_map<int, std::string> StageIDToNameMap_;
@@ -311,6 +312,11 @@ public:
   std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>& getStencilCallToStencilIDMap();
   const std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
   getStencilCallToStencilIDMap() const;
+
+  /// @brief Get StencilID of the StencilCallDeclStmt
+  std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>>& getIDToStencilCallMap();
+  const std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>>&
+  getIDToStencilCallMap() const;
 
   /// @brief Get the StencilID of the StencilCallDeclStmt `stmt`
   int getStencilIDFromStmt(const std::shared_ptr<StencilCallDeclStmt>& stmt) const;

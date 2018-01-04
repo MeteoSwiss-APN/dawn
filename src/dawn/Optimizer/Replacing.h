@@ -15,6 +15,7 @@
 #ifndef DAWN_OPTIMIZER_REPLACING_H
 #define DAWN_OPTIMIZER_REPLACING_H
 
+#include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/ArrayRef.h"
 #include <memory>
 
@@ -24,6 +25,23 @@ class Stencil;
 struct Statement;
 class StatementAccessesPair;
 class StencilInstantiation;
+
+/// @brief Get all field and variable accesses identifier by `AccessID`
+class GetStencilCalls : public ASTVisitorForwarding {
+  StencilInstantiation* instantiation_;
+  int StencilID_;
+
+  std::vector<std::shared_ptr<StencilCallDeclStmt>> stencilCallsToReplace_;
+
+public:
+  GetStencilCalls(StencilInstantiation* instantiation, int StencilID);
+
+  void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override;
+
+  std::vector<std::shared_ptr<StencilCallDeclStmt>>& getStencilCallsToReplace();
+
+  void reset();
+};
 
 /// @name Replacing routines
 /// @ingroup optimizer

@@ -1438,6 +1438,16 @@ StencilInstantiation::getStencilCallToStencilIDMap() const {
   return StencilCallToStencilIDMap_;
 }
 
+std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>>&
+StencilInstantiation::getIDToStencilCallMap() {
+  return IDToStencilCallMap_;
+}
+
+const std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>>&
+StencilInstantiation::getIDToStencilCallMap() const {
+  return IDToStencilCallMap_;
+}
+
 int StencilInstantiation::getStencilIDFromStmt(
     const std::shared_ptr<StencilCallDeclStmt>& stmt) const {
   auto it = StencilCallToStencilIDMap_.find(stmt);

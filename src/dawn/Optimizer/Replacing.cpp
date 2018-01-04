@@ -107,33 +107,6 @@ void replaceVarWithFieldAccessInStmts(
   }
 }
 
-namespace {
-
-/// @brief Get all field and variable accesses identifier by `AccessID`
-class GetStencilCalls : public ASTVisitorForwarding {
-  StencilInstantiation* instantiation_;
-  int StencilID_;
-
-  std::vector<std::shared_ptr<StencilCallDeclStmt>> stencilCallsToReplace_;
-
-public:
-  GetStencilCalls(StencilInstantiation* instantiation, int StencilID)
-      : instantiation_(instantiation), StencilID_(StencilID) {}
-
-  void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
-    if(instantiation_->getStencilIDFromStmt(stmt) == StencilID_)
-      stencilCallsToReplace_.emplace_back(stmt);
-  }
-
-  std::vector<std::shared_ptr<StencilCallDeclStmt>>& getStencilCallsToReplace() {
-    return stencilCallsToReplace_;
-  }
-
-  void reset() { stencilCallsToReplace_.clear(); }
-};
-
-} // anonymous namespace
-
 void replaceStencilCalls(StencilInstantiation* instantiation, int oldStencilID,
                          const std::vector<int>& newStencilIDs) {
   GetStencilCalls visitor(instantiation, oldStencilID);
@@ -169,10 +142,26 @@ void replaceStencilCalls(StencilInstantiation* instantiation, int oldStencilID,
       }
 
       instantiation->getStencilCallToStencilIDMap().erase(oldStencilCall);
-      for(std::size_t i = 0; i < newStencilIDs.size(); ++i)
+      for(std::size_t i = 0; i < newStencilIDs.size(); ++i) {
         instantiation->getStencilCallToStencilIDMap().emplace(newStencilCalls[i], newStencilIDs[i]);
+        instantiation->getIDToStencilCallMap().emplace(newStencilIDs[i], newStencilCalls[i]);
+      }
     }
   }
 }
+
+GetStencilCalls::GetStencilCalls(StencilInstantiation* instantiation, int StencilID)
+    : instantiation_(instantiation), StencilID_(StencilID) {}
+
+void GetStencilCalls::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
+  if(instantiation_->getStencilIDFromStmt(stmt) == StencilID_)
+    stencilCallsToReplace_.emplace_back(stmt);
+}
+
+std::vector<std::shared_ptr<StencilCallDeclStmt>>& GetStencilCalls::getStencilCallsToReplace() {
+  return stencilCallsToReplace_;
+}
+
+void GetStencilCalls::reset() { stencilCallsToReplace_.clear(); }
 
 } // namespace dawn
