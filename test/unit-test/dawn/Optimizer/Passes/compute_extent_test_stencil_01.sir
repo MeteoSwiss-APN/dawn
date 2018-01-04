@@ -1,8 +1,8 @@
 {
- "filename": "/code/gtclang/test/integration-test/CodeGen/hori_diff_stencil_01.cpp",
+ "filename": "/code/gtclang/test/integration-test/CodeGen/compute_extent_test_stencil_01.cpp",
  "stencils": [
   {
-   "name": "hori_diff_stencil",
+   "name": "compute_extent_test_stencil",
    "loc": {
     "Line": 21,
     "Column": 8

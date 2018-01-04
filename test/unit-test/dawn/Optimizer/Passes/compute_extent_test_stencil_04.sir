@@ -1,8 +1,8 @@
 {
- "filename": "test/unit-test/dawn/Optimizer/Passes/samples/hori_diff_stencil_04.cpp",
+ "filename": "test/unit-test/dawn/Optimizer/Passes/samples/compute_extent_test_stencil_04.cpp",
  "stencils": [
   {
-   "name": "hori_diff_stencil",
+   "name": "compute_extent_test_stencil",
    "loc": {
     "Line": 23,
     "Column": 8

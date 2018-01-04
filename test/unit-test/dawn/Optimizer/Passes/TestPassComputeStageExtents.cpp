@@ -25,8 +25,8 @@ using namespace dawn;
 
 namespace {
 
-TEST(ComputeStageExtents, hori_diff_stencil_01) {
-  std::string filename = TestEnvironment::path_ + "/hori_diff_stencil_01.sir";
+TEST(ComputeStageExtents, test_stencil_01) {
+  std::string filename = TestEnvironment::path_ + "/compute_extent_test_stencil_01.sir";
   std::ifstream file(filename);
   DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
 
@@ -47,10 +47,11 @@ TEST(ComputeStageExtents, hori_diff_stencil_01) {
     throw std::runtime_error("compilation failed");
   }
 
-  DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("hori_diff_stencil")),
-                  "hori_diff_stencil not found in sir");
+  DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("compute_extent_test_stencil")),
+                  "compute_extent_test_stencil not found in sir");
 
-  auto stencils = optimizer->getStencilInstantiationMap()["hori_diff_stencil"]->getStencils();
+  auto stencils =
+      optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"]->getStencils();
   ASSERT_TRUE((stencils.size() == 1));
   std::shared_ptr<Stencil> stencil = stencils[0];
 
@@ -59,8 +60,8 @@ TEST(ComputeStageExtents, hori_diff_stencil_01) {
   ASSERT_TRUE((stencil->getStage(1)->getExtents() == Extents{0, 0, 0, 0, 0, 0}));
 }
 
-TEST(ComputeStageExtents, hori_diff_stencil_02) {
-  std::string filename = TestEnvironment::path_ + "/hori_diff_stencil_02.sir";
+TEST(ComputeStageExtents, test_stencil_02) {
+  std::string filename = TestEnvironment::path_ + "/compute_extent_test_stencil_02.sir";
   std::ifstream file(filename);
   DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
 
@@ -81,10 +82,11 @@ TEST(ComputeStageExtents, hori_diff_stencil_02) {
     throw std::runtime_error("compilation failed");
   }
 
-  DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("hori_diff_stencil")),
-                  "hori_diff_stencil not found in sir");
+  DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("compute_extent_test_stencil")),
+                  "compute_extent_test_stencil not found in sir");
 
-  auto stencils = optimizer->getStencilInstantiationMap()["hori_diff_stencil"]->getStencils();
+  auto stencils =
+      optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"]->getStencils();
   ASSERT_TRUE((stencils.size() == 1));
   std::shared_ptr<Stencil> stencil = stencils[0];
 
@@ -93,8 +95,8 @@ TEST(ComputeStageExtents, hori_diff_stencil_02) {
   ASSERT_TRUE((stencil->getStage(1)->getExtents() == Extents{-1, 0, -1, 0, 0, 0}));
   ASSERT_TRUE((stencil->getStage(2)->getExtents() == Extents{0, 0, 0, 0, 0, 0}));
 }
-TEST(ComputeStageExtents, hori_diff_stencil_03) {
-  std::string filename = TestEnvironment::path_ + "/hori_diff_stencil_03.sir";
+TEST(ComputeStageExtents, test_stencil_03) {
+  std::string filename = TestEnvironment::path_ + "/compute_extent_test_stencil_03.sir";
   std::ifstream file(filename);
   DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
 
@@ -115,10 +117,11 @@ TEST(ComputeStageExtents, hori_diff_stencil_03) {
     throw std::runtime_error("compilation failed");
   }
 
-  DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("hori_diff_stencil")),
-                  "hori_diff_stencil not found in sir");
+  DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("compute_extent_test_stencil")),
+                  "compute_extent_test_stencil not found in sir");
 
-  auto stencils = optimizer->getStencilInstantiationMap()["hori_diff_stencil"]->getStencils();
+  auto stencils =
+      optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"]->getStencils();
   ASSERT_TRUE((stencils.size() == 1));
   std::shared_ptr<Stencil> stencil = stencils[0];
 
@@ -129,8 +132,8 @@ TEST(ComputeStageExtents, hori_diff_stencil_03) {
   ASSERT_TRUE((stencil->getStage(3)->getExtents() == Extents{0, 0, 0, 0, 0, 0}));
 }
 
-TEST(ComputeStageExtents, hori_diff_stencil_04) {
-  std::string filename = TestEnvironment::path_ + "/hori_diff_stencil_04.sir";
+TEST(ComputeStageExtents, test_stencil_04) {
+  std::string filename = TestEnvironment::path_ + "/compute_extent_test_stencil_04.sir";
   std::ifstream file(filename);
   DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
 
@@ -153,10 +156,11 @@ TEST(ComputeStageExtents, hori_diff_stencil_04) {
     throw std::runtime_error("compilation failed");
   }
 
-  DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("hori_diff_stencil")),
-                  "hori_diff_stencil not found in sir");
+  DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("compute_extent_test_stencil")),
+                  "compute_extent_test_stencil not found in sir");
 
-  auto stencils = optimizer->getStencilInstantiationMap()["hori_diff_stencil"]->getStencils();
+  auto stencils =
+      optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"]->getStencils();
   ASSERT_TRUE((stencils.size() == 1));
   std::shared_ptr<Stencil> stencil = stencils[0];
 
@@ -167,8 +171,8 @@ TEST(ComputeStageExtents, hori_diff_stencil_04) {
   ASSERT_TRUE((stencil->getStage(3)->getExtents() == Extents{0, 0, 0, 0, 0, 0}));
 }
 
-TEST(ComputeStageExtents, hori_diff_stencil_05) {
-  std::string filename = TestEnvironment::path_ + "/hori_diff_stencil_05.sir";
+TEST(ComputeStageExtents, test_stencil_05) {
+  std::string filename = TestEnvironment::path_ + "/compute_extent_test_stencil_05.sir";
   std::ifstream file(filename);
   DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
 
@@ -191,10 +195,11 @@ TEST(ComputeStageExtents, hori_diff_stencil_05) {
     throw std::runtime_error("compilation failed");
   }
 
-  DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("hori_diff_stencil")),
-                  "hori_diff_stencil not found in sir");
+  DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("compute_extent_test_stencil")),
+                  "compute_extent_test_stencil not found in sir");
 
-  auto stencils = optimizer->getStencilInstantiationMap()["hori_diff_stencil"]->getStencils();
+  auto stencils =
+      optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"]->getStencils();
   ASSERT_TRUE((stencils.size() == 1));
   std::shared_ptr<Stencil> stencil = stencils[0];
 
