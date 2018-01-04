@@ -1,9 +1,8 @@
-// gtclang (0.0.1-c392bf6-x86_64-linux-gnu-5.4.0)
+// gtclang (0.0.1-b9691ca-x86_64-linux-gnu-5.4.0)
 // based on LLVM/Clang (3.8.0), Dawn (0.0.1)
-// Generated on 2017-12-28  00:45:31
+// Generated on 2018-01-02  01:22:54
 
 #define GRIDTOOLS_CLANG_GENERATED 1
-#define GRIDTOOLS_CLANG_HALO_EXTEND 3
 #ifndef BOOST_RESULT_OF_USE_TR1
  #define BOOST_RESULT_OF_USE_TR1 1
 #endif
@@ -31,6 +30,14 @@
 using namespace gridtools::clang;
 
 namespace cxxnaive {
+template <size_t N>
+std::array<int, N> operator+(std::array<int, N> const& a, std::array<int, N> const& b) {
+  std::array<int, N> res;
+  for (size_t i = 0; i < N; ++i) {
+    res[i] = a[i] + b[i];
+  }
+  return res;
+}
 
 class coriolis_stencil {
  private:
@@ -67,13 +74,18 @@ class coriolis_stencil {
 
     virtual void run() {
       gridtools::data_view<StorageType0> u_tens = gridtools::make_host_view(m_u_tens);
+      std::array<int, 3> u_tens_offsets{0, 0, 0};
       gridtools::data_view<StorageType1> u_nnow = gridtools::make_host_view(m_u_nnow);
+      std::array<int, 3> u_nnow_offsets{0, 0, 0};
       gridtools::data_view<StorageType2> v_tens = gridtools::make_host_view(m_v_tens);
+      std::array<int, 3> v_tens_offsets{0, 0, 0};
       gridtools::data_view<StorageType3> v_nnow = gridtools::make_host_view(m_v_nnow);
+      std::array<int, 3> v_nnow_offsets{0, 0, 0};
       gridtools::data_view<StorageType4> fc = gridtools::make_host_view(m_fc);
-      for (int k = 0; k <= (m_dom.ksize() == 0 ? 0 : (m_dom.ksize() - m_dom.kplus() - 1)); ++k) {
-        for (int i = m_dom.iminus(); i <= m_dom.isize() - m_dom.iplus() - 1; ++i) {
-          for (int j = m_dom.jminus(); j <= m_dom.jsize() - m_dom.jplus() - 1; ++j) {
+      std::array<int, 3> fc_offsets{0, 0, 0};
+      for (int k = 0 + 0; k <= (m_dom.ksize() == 0 ? 0 : (m_dom.ksize() - m_dom.kplus() - 1)) + 0; ++k) {
+        for (int i = m_dom.iminus() + 0; i <= m_dom.isize() - m_dom.iplus() - 1 + 0; ++i) {
+          for (int j = m_dom.jminus() + 0; j <= m_dom.jsize() - m_dom.jplus() - 1 + 0; ++j) {
             gridtools::clang::float_type __local_z_fv_north_8 =
                 (fc(i + 0, j + 0, k + 0) * (v_nnow(i + 0, j + 0, k + 0) + v_nnow(i + 1, j + 0, k + 0)));
             gridtools::clang::float_type __local_z_fv_south_9 =

@@ -69,7 +69,8 @@ if(GTCLANG_HAS_GRIDTOOLS)
                               GRIDTOOLS_FLAGS ${gridtools_flags_with_codegen}
   )
 
-  set(codegen_examples copy_stencil coriolis_stencil hori_diff_stencil_01 hori_diff_stencil_02 hori_diff_type2_stencil hd_smagorinsky intervals_stencil globals_stencil)
+  set(codegen_examples copy_stencil coriolis_stencil hori_diff_stencil_01 hori_diff_stencil_02 hori_diff_type2_stencil 
+      hd_smagorinsky intervals_stencil globals_stencil stencil_functions nested_stencil_functions)
   set(codegen_example_benchmarks)
   set(codegen_generate_targets)
 
@@ -102,9 +103,11 @@ if(GTCLANG_HAS_GRIDTOOLS)
 
     add_executable(${example}_benchmarks "${cwd}/CodeGen/${example}_benchmark.cpp" "${cwd}/CodeGen/TestMain.cpp" "${cwd}/CodeGen/Options.cpp")
     target_include_directories(${example}_benchmarks PUBLIC ${include_dirs})
+#TODO mchbuild_add_unittest does not work here since the DEPENDS argument not only makes a dependency but also links against them
     add_dependencies(${example}_benchmarks ${example}-codegen-gt ${example}-codegen-cxxnaive)
     target_link_libraries(${example}_benchmarks ${GTCLANG_UNITTEST_EXTERNAL_LIBRARIES} gtest)
 
+    add_test(NAME CTest-${example}_benchmarks COMMAND $<TARGET_FILE:${example}_benchmarks> 12 12 10 )
   endforeach()
 
 endif()

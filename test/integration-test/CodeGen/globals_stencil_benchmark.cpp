@@ -21,7 +21,7 @@
 #include "test/integration-test/CodeGen/generated/globals_stencil_c++-naive.cpp"
 
 using namespace dawn;
-TEST(copy_stencil, test) {
+TEST(globals_stencil, test) {
   domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1], Options::getInstance().m_size[2]);
   verifier verif(dom);
 

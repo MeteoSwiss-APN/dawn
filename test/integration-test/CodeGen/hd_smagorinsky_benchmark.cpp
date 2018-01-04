@@ -24,7 +24,7 @@
 #include "test/integration-test/CodeGen/generated/hd_smagorinsky_c++-naive.cpp"
 
 using namespace dawn;
-TEST(hori_diff_stencil, test) {
+TEST(hd_smagorinsky, test) {
 
   domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1], Options::getInstance().m_size[2]);
   dom.set_halos(halo::value, halo::value, halo::value, halo::value, 0, 0);

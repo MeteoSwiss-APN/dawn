@@ -21,7 +21,7 @@
 #include "test/integration-test/CodeGen/generated/intervals_stencil_c++-naive.cpp"
 
 using namespace dawn;
-TEST(copy_stencil, test) {
+TEST(intervals_stencil, test) {
   domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1], Options::getInstance().m_size[2]);
   verifier verif(dom);
 

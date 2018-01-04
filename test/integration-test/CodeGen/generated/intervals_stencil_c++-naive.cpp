@@ -1,6 +1,6 @@
-// gtclang (0.0.1-a7a9177-x86_64-linux-gnu-5.4.0)
+// gtclang (0.0.1-b9691ca-x86_64-linux-gnu-5.4.0)
 // based on LLVM/Clang (3.8.0), Dawn (0.0.1)
-// Generated on 2018-01-02  00:53:31
+// Generated on 2018-01-02  01:22:54
 
 #define GRIDTOOLS_CLANG_GENERATED 1
 #ifndef BOOST_RESULT_OF_USE_TR1
@@ -30,7 +30,7 @@
 using namespace gridtools::clang;
 
 #ifndef GRIDTOOLS_CLANG_GENERATED
-interval k_flat = k_start + 11;
+interval k_flat = k_start + 4;
 #endif
 
 // Check if we correclty generate the empty Do-Methods according to
@@ -41,6 +41,7 @@ template <size_t N>
 std::array<int, N> operator+(std::array<int, N> const& a, std::array<int, N> const& b) {
   std::array<int, N> res;
   for (size_t i = 0; i < N; ++i) {
+    res[i] = a[i] + b[i];
   }
   return res;
 }
@@ -79,21 +80,21 @@ class intervals_stencil {
       std::array<int, 3> in_offsets{0, 0, 0};
       gridtools::data_view<StorageType1> out = gridtools::make_host_view(m_out);
       std::array<int, 3> out_offsets{0, 0, 0};
-      for (int k = 0 + 0; k <= 11 + 0; ++k) {
+      for (int k = 0 + 0; k <= 4 + 0; ++k) {
         for (int i = m_dom.iminus() + 0; i <= m_dom.isize() - m_dom.iplus() - 1 + 0; ++i) {
           for (int j = m_dom.jminus() + 0; j <= m_dom.jsize() - m_dom.jplus() - 1 + 0; ++j) {
             out(i + 0, j + 0, k + 0) = (in(i + 0, j + 0, k + 0) + (int)1);
           }
         }
       }
-      for (int k = 12 + 0; k <= 12 + 0; ++k) {
+      for (int k = 5 + 0; k <= 5 + 0; ++k) {
         for (int i = m_dom.iminus() + 0; i <= m_dom.isize() - m_dom.iplus() - 1 + 0; ++i) {
           for (int j = m_dom.jminus() + 0; j <= m_dom.jsize() - m_dom.jplus() - 1 + 0; ++j) {
             out(i + 0, j + 0, k + 0) = (in(i + 0, j + 0, k + 0) + (int)2);
           }
         }
       }
-      for (int k = 13 + 0; k <= (m_dom.ksize() == 0 ? 0 : (m_dom.ksize() - m_dom.kplus() - 1)) + 0; ++k) {
+      for (int k = 6 + 0; k <= (m_dom.ksize() == 0 ? 0 : (m_dom.ksize() - m_dom.kplus() - 1)) + 0; ++k) {
         for (int i = m_dom.iminus() + 0; i <= m_dom.isize() - m_dom.iplus() - 1 + 0; ++i) {
           for (int j = m_dom.jminus() + 0; j <= m_dom.jsize() - m_dom.jplus() - 1 + 0; ++j) {
             out(i + 0, j + 0, k + 0) = (in(i + 0, j + 0, k + 0) + (int)3);

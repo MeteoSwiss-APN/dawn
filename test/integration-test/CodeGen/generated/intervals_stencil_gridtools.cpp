@@ -1,6 +1,6 @@
-// gtclang (0.0.1-a7a9177-x86_64-linux-gnu-5.4.0)
+// gtclang (0.0.1-b9691ca-x86_64-linux-gnu-5.4.0)
 // based on LLVM/Clang (3.8.0), Dawn (0.0.1)
-// Generated on 2018-01-02  00:53:31
+// Generated on 2018-01-02  01:22:54
 
 #define GRIDTOOLS_CLANG_GENERATED 1
 #ifndef BOOST_RESULT_OF_USE_TR1
@@ -39,7 +39,7 @@
 using namespace gridtools::clang;
 
 #ifndef GRIDTOOLS_CLANG_GENERATED
-interval k_flat = k_start + 11;
+interval k_flat = k_start + 4;
 #endif
 
 // Check if we correclty generate the empty Do-Methods according to
@@ -51,9 +51,9 @@ class intervals_stencil {
  public:
   struct stencil_0 {
     // Intervals
-    using interval_start_0_11_0 = gridtools::interval<gridtools::level<0, -1>, gridtools::level<1, -1>>;
-    using interval_11_plus_2_end_0 = gridtools::interval<gridtools::level<1, 2>, gridtools::level<2, -1>>;
-    using interval_11_plus_1_11_plus_1 = gridtools::interval<gridtools::level<1, 1>, gridtools::level<1, 1>>;
+    using interval_4_plus_2_end_0 = gridtools::interval<gridtools::level<1, 2>, gridtools::level<2, -1>>;
+    using interval_4_plus_1_4_plus_1 = gridtools::interval<gridtools::level<1, 1>, gridtools::level<1, 1>>;
+    using interval_start_0_4_0 = gridtools::interval<gridtools::level<0, -1>, gridtools::level<1, -1>>;
     using interval_start_0_end_0 = gridtools::interval<gridtools::level<0, -1>, gridtools::level<2, -1>>;
     using axis_stencil_0 = gridtools::interval<gridtools::level<0, -2>, gridtools::level<2, 1>>;
     using grid_stencil_0 = gridtools::grid<axis_stencil_0>;
@@ -68,17 +68,17 @@ class intervals_stencil {
       using arg_list = boost::mpl::vector<out, in>;
 
       template <typename Evaluation>
-      GT_FUNCTION static void Do(Evaluation& eval, interval_11_plus_2_end_0) {
+      GT_FUNCTION static void Do(Evaluation& eval, interval_4_plus_2_end_0) {
         eval(out(0, 0, 0)) = (eval(in(0, 0, 0)) + (int)3);
       }
 
       template <typename Evaluation>
-      GT_FUNCTION static void Do(Evaluation& eval, interval_11_plus_1_11_plus_1) {
+      GT_FUNCTION static void Do(Evaluation& eval, interval_4_plus_1_4_plus_1) {
         eval(out(0, 0, 0)) = (eval(in(0, 0, 0)) + (int)2);
       }
 
       template <typename Evaluation>
-      GT_FUNCTION static void Do(Evaluation& eval, interval_start_0_11_0) {
+      GT_FUNCTION static void Do(Evaluation& eval, interval_start_0_4_0) {
         eval(out(0, 0, 0)) = (eval(in(0, 0, 0)) + (int)1);
       }
     };
@@ -96,7 +96,7 @@ class intervals_stencil {
       unsigned int dj[5] = {dom.jminus(), dom.jminus(), dom.jplus(), dom.jsize() - 1 - dom.jplus(), dom.jsize()};
       m_grid = std::unique_ptr<grid_stencil_0>(new grid_stencil_0(di, dj));
       m_grid->value_list[0] = dom.kminus();
-      m_grid->value_list[1] = 11;
+      m_grid->value_list[1] = 4;
       m_grid->value_list[2] = dom.ksize() == 0 ? 0 : dom.ksize() - dom.kplus() - 1;
 
       // Computation

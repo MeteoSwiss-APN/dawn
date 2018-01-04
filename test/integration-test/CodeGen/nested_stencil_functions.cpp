@@ -18,27 +18,49 @@
 
 using namespace gridtools::clang;
 
-#ifndef GRIDTOOLS_CLANG_GENERATED
-interval k_flat = k_start + 4;
-#endif
+stencil_function delta {
+  offset off;
+  storage in;
 
-// Check if we correclty generate the empty Do-Methods according to
-// https://github.com/eth-cscs/gridtools/issues/330
+  Do { return in(off)-in; }
+};
 
-stencil intervals_stencil {
+////
+//// Test 4
+////
+
+stencil_function sum {
+  storage s1, s2;
+
+  Do { return s1 + s2; }
+};
+
+stencil_function delta_sum {
+  offset off1;
+  offset off2;
+  storage in0;
+
+  Do { return sum(delta(off1, in0), delta(off2, in0)); }
+};
+
+stencil test_04_stencil {
   storage in, out;
 
   Do {
-    // Should give empty Do-Method for [k_flat+1, k_end]
-    vertical_region(k_start, k_flat)
-        out = in + 1;
+    vertical_region(k_start, k_end)
+        out = delta_sum(i + 1, j + 1, in);
+  }
+};
 
-    // Should give empty Do-Method for [k_start, k_flat-1], [k_flat+1, k_end]
-    vertical_region(k_flat + 1, k_flat + 1)
-        out = in + 2;
+////
+//// Test 5
+////
 
-    // Should give empty Do-Method for [k_start, k_flat-1]
-    vertical_region(k_flat + 2, k_end)
-        out = in + 3;
+stencil test_05_stencil {
+  storage in, out;
+
+  Do {
+    vertical_region(k_start, k_end)
+        out = delta(i + 1, delta(j + 1, delta(i + 1, in)));
   }
 };

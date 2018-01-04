@@ -1,9 +1,8 @@
-// gtclang (0.0.1-0085b07-x86_64-linux-gnu-5.4.0)
+// gtclang (0.0.1-b9691ca-x86_64-linux-gnu-5.4.0)
 // based on LLVM/Clang (3.8.0), Dawn (0.0.1)
-// Generated on 2017-12-29  12:06:58
+// Generated on 2018-01-02  01:22:55
 
 #define GRIDTOOLS_CLANG_GENERATED 1
-#define GRIDTOOLS_CLANG_HALO_EXTEND 3
 #ifndef BOOST_RESULT_OF_USE_TR1
  #define BOOST_RESULT_OF_USE_TR1 1
 #endif
@@ -30,6 +29,14 @@
 using namespace gridtools::clang;
 
 namespace cxxnaive {
+template <size_t N>
+std::array<int, N> operator+(std::array<int, N> const& a, std::array<int, N> const& b) {
+  std::array<int, N> res;
+  for (size_t i = 0; i < N; ++i) {
+    res[i] = a[i] + b[i];
+  }
+  return res;
+}
 
 class copy_stencil {
  private:
@@ -62,10 +69,12 @@ class copy_stencil {
 
     virtual void run() {
       gridtools::data_view<StorageType0> in = gridtools::make_host_view(m_in);
+      std::array<int, 3> in_offsets{0, 0, 0};
       gridtools::data_view<StorageType1> out = gridtools::make_host_view(m_out);
-      for (int k = 0; k <= (m_dom.ksize() == 0 ? 0 : (m_dom.ksize() - m_dom.kplus() - 1)); ++k) {
-        for (int i = m_dom.iminus(); i <= m_dom.isize() - m_dom.iplus() - 1; ++i) {
-          for (int j = m_dom.jminus(); j <= m_dom.jsize() - m_dom.jplus() - 1; ++j) {
+      std::array<int, 3> out_offsets{0, 0, 0};
+      for (int k = 0 + 0; k <= (m_dom.ksize() == 0 ? 0 : (m_dom.ksize() - m_dom.kplus() - 1)) + 0; ++k) {
+        for (int i = m_dom.iminus() + 0; i <= m_dom.isize() - m_dom.iplus() - 1 + 0; ++i) {
+          for (int j = m_dom.jminus() + 0; j <= m_dom.jsize() - m_dom.jplus() - 1 + 0; ++j) {
             out(i + 0, j + 0, k + 0) = in(i + 0, j + 0, k + 0);
           }
         }
