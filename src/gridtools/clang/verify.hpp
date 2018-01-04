@@ -27,8 +27,6 @@ namespace gridtools {
 
     namespace clang {
 
-        //#ifdef GRIDTOOLS_CLANG_GENERATED
-
         class verifier {
           public:
             verifier(const domain &dom,
