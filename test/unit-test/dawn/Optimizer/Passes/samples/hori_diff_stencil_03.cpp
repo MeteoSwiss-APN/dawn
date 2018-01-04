@@ -41,7 +41,7 @@ stencil hori_diff_stencil {
       if (fly * delta(j,u) > 0)
       	fly = 0.;
       else 
-        fly = lap[j+1] - lap;
+        fly = delta(j, lap);
       lap2 = u - coeff * (flx - flx[i-1] + fly - fly[j-1]);
 
       out = lap2[j+1] - lap2;

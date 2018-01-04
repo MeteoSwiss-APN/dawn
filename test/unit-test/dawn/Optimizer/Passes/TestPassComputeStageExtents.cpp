@@ -119,7 +119,6 @@ TEST(ComputeStageExtents, hori_diff_stencil_03) {
                   "hori_diff_stencil not found in sir");
 
   auto stencils = optimizer->getStencilInstantiationMap()["hori_diff_stencil"]->getStencils();
-  optimizer->getStencilInstantiationMap()["hori_diff_stencil"]->dump();
   ASSERT_TRUE((stencils.size() == 1));
   std::shared_ptr<Stencil> stencil = stencils[0];
 
