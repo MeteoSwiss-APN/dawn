@@ -25,22 +25,18 @@ PassComputeStageExtents::PassComputeStageExtents() : Pass("PassComputeStageExten
 }
 
 bool PassComputeStageExtents::run(StencilInstantiation* stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
-
-  int stencilIdx = 0;
   for(auto& stencilPtr : stencilInstantiation->getStencils()) {
     Stencil& stencil = *stencilPtr;
-    std::vector<Stencil::FieldInfo> fields = stencil.getFields();
 
     int numStages = stencil.getNumStages();
 
-    auto stageDAG = stencil.getStageDependencyGraph();
-
+    // backward loop over stages
     for(int i = numStages - 1; i >= 0; --i) {
       Stage& fromStage = *(stencil.getStage(i));
 
       Extents const& stageExtent = fromStage.getExtents();
 
+      // loop over all the input fields read in fromStage
       for(const Field& fromField : fromStage.getFields()) {
         // notice that IO (if read happens before write) would also be a valid pattern
         // to trigger the propagation of the stage extents, however this is not a legal
@@ -49,17 +45,20 @@ bool PassComputeStageExtents::run(StencilInstantiation* stencilInstantiation) {
           continue;
 
         Extents fieldExtent = fromField.Extent;
-        fieldExtent.merge(stageExtent);
 
+        fieldExtent.expand(stageExtent);
+
+        // check which (previous) stage computes the field (read in fromStage)
         for(int j = i - 1; j >= 0; --j) {
           Stage& toStage = *(stencil.getStage(j));
           auto fields = toStage.getFields();
-          auto it = std::find_if(fields.begin(), fields.end(), [](Field const& f) {
-            return (f.Intend != Field::IntendKind::IK_Input);
+          auto it = std::find_if(fields.begin(), fields.end(), [&](Field const& f) {
+            return (f.Intend != Field::IntendKind::IK_Input) && (f.AccessID == fromField.AccessID);
           });
           if(it == fields.end())
             continue;
 
+          // if found, add the (read) extent of the field as an extent of the stage
           toStage.getExtents().merge(fieldExtent);
         }
       }

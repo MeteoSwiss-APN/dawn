@@ -1615,6 +1615,9 @@ void StencilInstantiation::dump() const {
           }
           l += 1;
         }
+        std::cout << "\e[1m" << std::string(4 * DAWN_PRINT_INDENT, ' ')
+                  << "Extents: " << stage->getExtents() << std::endl
+                  << "\e[0m";
         k += 1;
       }
       j += 1;
