@@ -72,6 +72,8 @@ if(GTCLANG_HAS_GRIDTOOLS)
       set(config_str "--config=${cwd}/CodeGen/${example}.json")
     endif()
 
+    file(MAKE_DIRECTORY "${cwd}/CodeGen/generated/")
+
     # Add make target 
     add_custom_target(
       ${example}-codegen-gt
