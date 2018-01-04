@@ -51,26 +51,12 @@ mchbuild_add_custom_dummy_target(NAME GTClangQtCreatorParseProjectIntegrationTes
 
 # Codegen tests require GridTools
 if(GTCLANG_HAS_GRIDTOOLS)
-  list(APPEND directories_with_codegen ${directories} ${cwd}/CodeGen)
-  list(APPEND gridtools_flags_with_codegen ${gridtools_flags} -isystem${GRIDTOOLS_INCLUDE_DIRS} 
-                                                              -isystem${Boost_INCLUDE_DIRS})
-
   # Add a dummy target with all the source files so that they are included in a qt creator project
   mchbuild_add_custom_dummy_target(NAME GTClangQtCreatorParseProjectCodeGenTest
                              DIRECTORIES ${cwd}/CodeGen)
 
-  foreach(include ${GTCLANG_DSL_INCLUDES})
-    list(APPEND gridtools_flags_with_codegen -isystem${include})
-  endforeach()
-
-  gtclang_add_integrationtest(NAME all
-                              GTCLANG ${GTCLANG_EXECUTABLE}
-                              DIRECTORIES ${directories_with_codegen}
-                              GRIDTOOLS_FLAGS ${gridtools_flags_with_codegen}
-  )
-
   set(codegen_examples copy_stencil coriolis_stencil hori_diff_stencil_01 hori_diff_stencil_02 hori_diff_type2_stencil 
-      hd_smagorinsky intervals_stencil globals_stencil stencil_functions nested_stencil_functions)
+      hd_smagorinsky intervals_stencil globals_stencil stencil_functions nested_stencil_functions stencil_desc_ast)
   set(codegen_example_benchmarks)
   set(codegen_generate_targets)
 

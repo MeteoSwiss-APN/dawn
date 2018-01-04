@@ -1,6 +1,6 @@
-// gtclang (0.0.1-b9691ca-x86_64-linux-gnu-5.4.0)
+// gtclang (0.0.1-6e50cdb-x86_64-linux-gnu-5.4.0)
 // based on LLVM/Clang (3.8.0), Dawn (0.0.1)
-// Generated on 2018-01-04  09:36:54
+// Generated on 2018-01-04  10:33:52
 
 #define GRIDTOOLS_CLANG_GENERATED 1
 #ifndef BOOST_RESULT_OF_USE_TR1
@@ -129,7 +129,10 @@ class test_04_stencil {
   test_04_stencil(const gridtools::clang::domain& dom, StorageType1& in, StorageType2& out)
       : m_stencil_0(new stencil_0<StorageType1, StorageType2>(dom, in, out)) {}
 
-  void run() { m_stencil_0->run(); }
+  void run() {
+    m_stencil_0->run();
+    ;
+  }
 };
 }  // namespace cxxnaiv
 ;
@@ -219,7 +222,10 @@ class test_05_stencil {
   test_05_stencil(const gridtools::clang::domain& dom, StorageType1& in, StorageType2& out)
       : m_stencil_0(new stencil_0<StorageType1, StorageType2>(dom, in, out)) {}
 
-  void run() { m_stencil_0->run(); }
+  void run() {
+    m_stencil_0->run();
+    ;
+  }
 };
 }  // namespace cxxnaiv
 ;
