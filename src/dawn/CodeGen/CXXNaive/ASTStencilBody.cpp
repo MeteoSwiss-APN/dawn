@@ -157,8 +157,6 @@ void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
         argIndex = pp.first;
     }
 
-    auto accessOffset = expr->getOffset();
-
     if(currentFunction_->isArgStencilFunctionInstantiation(argIndex)) {
       StencilFunctionInstantiation& argStencilFn =
           *(currentFunction_->getFunctionInstantiationOfArgField(argIndex));
