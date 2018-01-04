@@ -19,9 +19,11 @@
 
 namespace dawn {
 
-/// @brief This Pass computes and assign the stage graph of each stencil
+/// @brief This Pass computes the extents (associated to redundant computations) of each stage
+/// The pass takes as input a collection of stages of each multi-stage from the StencilInstantation
+/// and stores the computation in the `Extent` member of the Stage (@see Stage)
 ///
-/// This Pass depends on `PassSetStageName`.
+/// This Pass needs to be recomputed if the collection and order of stages/multistages changes
 ///
 /// @ingroup optimizer
 class PassComputeStageExtents : public Pass {

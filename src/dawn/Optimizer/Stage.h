@@ -157,9 +157,12 @@ public:
   split(std::deque<int>& splitterIndices,
         const std::deque<std::shared_ptr<DependencyGraphAccesses>>* graphs);
 
+  /// @brief Get the extent of the stage
+  /// @{
   Extents& getExtents() { return extents_; }
 
   Extents const& getExtents() const { return extents_; }
+  /// @}
 };
 
 } // namespace dawn
