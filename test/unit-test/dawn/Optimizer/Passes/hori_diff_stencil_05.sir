@@ -1,0 +1,616 @@
+{
+ "filename": "test/unit-test/dawn/Optimizer/Passes/samples/hori_diff_stencil_05.cpp",
+ "stencils": [
+  {
+   "name": "hori_diff_stencil",
+   "loc": {
+    "Line": 21,
+    "Column": 8
+   },
+   "ast": {
+    "root": {
+     "block_stmt": {
+      "statements": [
+       {
+        "vertical_region_decl_stmt": {
+         "vertical_region": {
+          "loc": {
+           "Line": 26,
+           "Column": 5
+          },
+          "ast": {
+           "root": {
+            "block_stmt": {
+             "statements": [
+              {
+               "expr_stmt": {
+                "expr": {
+                 "assignment_expr": {
+                  "left": {
+                   "field_access_expr": {
+                    "name": "tmp0",
+                    "offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 27,
+                     "Column": 7
+                    }
+                   }
+                  },
+                  "op": "=",
+                  "right": {
+                   "binary_operator": {
+                    "left": {
+                     "field_access_expr": {
+                      "name": "u",
+                      "offset": [
+                       1,
+                       0,
+                       0
+                      ],
+                      "argument_map": [
+                       -1,
+                       -1,
+                       -1
+                      ],
+                      "argument_offset": [
+                       0,
+                       0,
+                       0
+                      ],
+                      "negate_offset": false,
+                      "loc": {
+                       "Line": 27,
+                       "Column": 14
+                      }
+                     }
+                    },
+                    "op": "+",
+                    "right": {
+                     "field_access_expr": {
+                      "name": "u",
+                      "offset": [
+                       -1,
+                       0,
+                       0
+                      ],
+                      "argument_map": [
+                       -1,
+                       -1,
+                       -1
+                      ],
+                      "argument_offset": [
+                       0,
+                       0,
+                       0
+                      ],
+                      "negate_offset": false,
+                      "loc": {
+                       "Line": 27,
+                       "Column": 25
+                      }
+                     }
+                    },
+                    "loc": {
+                     "Line": 27,
+                     "Column": 14
+                    }
+                   }
+                  },
+                  "loc": {
+                   "Line": 27,
+                   "Column": 7
+                  }
+                 }
+                },
+                "loc": {
+                 "Line": 27,
+                 "Column": 7
+                }
+               }
+              },
+              {
+               "expr_stmt": {
+                "expr": {
+                 "assignment_expr": {
+                  "left": {
+                   "field_access_expr": {
+                    "name": "tmp1",
+                    "offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 28,
+                     "Column": 7
+                    }
+                   }
+                  },
+                  "op": "=",
+                  "right": {
+                   "binary_operator": {
+                    "left": {
+                     "field_access_expr": {
+                      "name": "tmp0",
+                      "offset": [
+                       0,
+                       1,
+                       0
+                      ],
+                      "argument_map": [
+                       -1,
+                       -1,
+                       -1
+                      ],
+                      "argument_offset": [
+                       0,
+                       0,
+                       0
+                      ],
+                      "negate_offset": false,
+                      "loc": {
+                       "Line": 28,
+                       "Column": 14
+                      }
+                     }
+                    },
+                    "op": "+",
+                    "right": {
+                     "field_access_expr": {
+                      "name": "tmp0",
+                      "offset": [
+                       -1,
+                       0,
+                       0
+                      ],
+                      "argument_map": [
+                       -1,
+                       -1,
+                       -1
+                      ],
+                      "argument_offset": [
+                       0,
+                       0,
+                       0
+                      ],
+                      "negate_offset": false,
+                      "loc": {
+                       "Line": 28,
+                       "Column": 28
+                      }
+                     }
+                    },
+                    "loc": {
+                     "Line": 28,
+                     "Column": 14
+                    }
+                   }
+                  },
+                  "loc": {
+                   "Line": 28,
+                   "Column": 7
+                  }
+                 }
+                },
+                "loc": {
+                 "Line": 28,
+                 "Column": 7
+                }
+               }
+              },
+              {
+               "expr_stmt": {
+                "expr": {
+                 "assignment_expr": {
+                  "left": {
+                   "field_access_expr": {
+                    "name": "tmp2",
+                    "offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 29,
+                     "Column": 7
+                    }
+                   }
+                  },
+                  "op": "=",
+                  "right": {
+                   "binary_operator": {
+                    "left": {
+                     "field_access_expr": {
+                      "name": "tmp1",
+                      "offset": [
+                       -1,
+                       0,
+                       0
+                      ],
+                      "argument_map": [
+                       -1,
+                       -1,
+                       -1
+                      ],
+                      "argument_offset": [
+                       0,
+                       0,
+                       0
+                      ],
+                      "negate_offset": false,
+                      "loc": {
+                       "Line": 29,
+                       "Column": 14
+                      }
+                     }
+                    },
+                    "op": "+",
+                    "right": {
+                     "field_access_expr": {
+                      "name": "tmp0",
+                      "offset": [
+                       0,
+                       -1,
+                       0
+                      ],
+                      "argument_map": [
+                       -1,
+                       -1,
+                       -1
+                      ],
+                      "argument_offset": [
+                       0,
+                       0,
+                       0
+                      ],
+                      "negate_offset": false,
+                      "loc": {
+                       "Line": 29,
+                       "Column": 26
+                      }
+                     }
+                    },
+                    "loc": {
+                     "Line": 29,
+                     "Column": 14
+                    }
+                   }
+                  },
+                  "loc": {
+                   "Line": 29,
+                   "Column": 7
+                  }
+                 }
+                },
+                "loc": {
+                 "Line": 29,
+                 "Column": 7
+                }
+               }
+              },
+              {
+               "expr_stmt": {
+                "expr": {
+                 "assignment_expr": {
+                  "left": {
+                   "field_access_expr": {
+                    "name": "tmp3",
+                    "offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 30,
+                     "Column": 7
+                    }
+                   }
+                  },
+                  "op": "=",
+                  "right": {
+                   "binary_operator": {
+                    "left": {
+                     "field_access_expr": {
+                      "name": "tmp0",
+                      "offset": [
+                       2,
+                       0,
+                       0
+                      ],
+                      "argument_map": [
+                       -1,
+                       -1,
+                       -1
+                      ],
+                      "argument_offset": [
+                       0,
+                       0,
+                       0
+                      ],
+                      "negate_offset": false,
+                      "loc": {
+                       "Line": 30,
+                       "Column": 14
+                      }
+                     }
+                    },
+                    "op": "+",
+                    "right": {
+                     "field_access_expr": {
+                      "name": "tmp0",
+                      "offset": [
+                       0,
+                       -1,
+                       0
+                      ],
+                      "argument_map": [
+                       -1,
+                       -1,
+                       -1
+                      ],
+                      "argument_offset": [
+                       0,
+                       0,
+                       0
+                      ],
+                      "negate_offset": false,
+                      "loc": {
+                       "Line": 30,
+                       "Column": 28
+                      }
+                     }
+                    },
+                    "loc": {
+                     "Line": 30,
+                     "Column": 14
+                    }
+                   }
+                  },
+                  "loc": {
+                   "Line": 30,
+                   "Column": 7
+                  }
+                 }
+                },
+                "loc": {
+                 "Line": 30,
+                 "Column": 7
+                }
+               }
+              },
+              {
+               "expr_stmt": {
+                "expr": {
+                 "assignment_expr": {
+                  "left": {
+                   "field_access_expr": {
+                    "name": "out",
+                    "offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 31,
+                     "Column": 7
+                    }
+                   }
+                  },
+                  "op": "=",
+                  "right": {
+                   "binary_operator": {
+                    "left": {
+                     "field_access_expr": {
+                      "name": "tmp3",
+                      "offset": [
+                       1,
+                       0,
+                       0
+                      ],
+                      "argument_map": [
+                       -1,
+                       -1,
+                       -1
+                      ],
+                      "argument_offset": [
+                       0,
+                       0,
+                       0
+                      ],
+                      "negate_offset": false,
+                      "loc": {
+                       "Line": 31,
+                       "Column": 13
+                      }
+                     }
+                    },
+                    "op": "+",
+                    "right": {
+                     "field_access_expr": {
+                      "name": "tmp2",
+                      "offset": [
+                       0,
+                       -1,
+                       0
+                      ],
+                      "argument_map": [
+                       -1,
+                       -1,
+                       -1
+                      ],
+                      "argument_offset": [
+                       0,
+                       0,
+                       0
+                      ],
+                      "negate_offset": false,
+                      "loc": {
+                       "Line": 31,
+                       "Column": 27
+                      }
+                     }
+                    },
+                    "loc": {
+                     "Line": 31,
+                     "Column": 13
+                    }
+                   }
+                  },
+                  "loc": {
+                   "Line": 31,
+                   "Column": 7
+                  }
+                 }
+                },
+                "loc": {
+                 "Line": 31,
+                 "Column": 7
+                }
+               }
+              }
+             ],
+             "loc": {
+              "Line": 26,
+              "Column": 5
+             }
+            }
+           }
+          },
+          "interval": {
+           "lower_offset": 0,
+           "upper_offset": 0,
+           "special_lower_level": "Start",
+           "special_upper_level": "End"
+          },
+          "loop_order": "Forward"
+         },
+         "loc": {
+          "Line": 26,
+          "Column": 5
+         }
+        }
+       }
+      ],
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      }
+     }
+    }
+   },
+   "fields": [
+    {
+     "name": "u",
+     "loc": {
+      "Line": 22,
+      "Column": 11
+     },
+     "is_temporary": false
+    },
+    {
+     "name": "out",
+     "loc": {
+      "Line": 22,
+      "Column": 14
+     },
+     "is_temporary": false
+    },
+    {
+     "name": "tmp0",
+     "loc": {
+      "Line": 24,
+      "Column": 7
+     },
+     "is_temporary": true
+    },
+    {
+     "name": "tmp1",
+     "loc": {
+      "Line": 24,
+      "Column": 13
+     },
+     "is_temporary": true
+    },
+    {
+     "name": "tmp2",
+     "loc": {
+      "Line": 24,
+      "Column": 19
+     },
+     "is_temporary": true
+    },
+    {
+     "name": "tmp3",
+     "loc": {
+      "Line": 24,
+      "Column": 25
+     },
+     "is_temporary": true
+    }
+   ]
+  }
+ ],
+ "stencil_functions": [],
+ "global_variables": {
+  "map": {}
+ }
+}
