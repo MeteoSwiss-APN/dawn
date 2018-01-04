@@ -49,7 +49,7 @@ bool PassComputeStageExtents::run(StencilInstantiation* stencilInstantiation) {
           continue;
 
         Extents fieldExtent = fromField.Extent;
-        fieldExtent.merge(stageExtent);
+        fieldExtent.expand(stageExtent);
 
         for(int j = i - 1; j >= 0; --j) {
           Stage& toStage = *(stencil.getStage(j));

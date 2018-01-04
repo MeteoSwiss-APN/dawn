@@ -37,6 +37,11 @@ void Extents::merge(const Extents& other) {
     extents_[i].merge(other.extents_[i]);
 }
 
+void Extents::expand(const Extents& other) {
+  for(std::size_t i = 0; i < extents_.size(); ++i)
+    extents_[i].expand(other.extents_[i]);
+}
+
 void Extents::merge(const Array3i& offset) {
   for(std::size_t i = 0; i < extents_.size(); ++i)
     extents_[i].merge(offset[i] >= 0 ? Extent{0, offset[i]} : Extent{offset[i], 0});
