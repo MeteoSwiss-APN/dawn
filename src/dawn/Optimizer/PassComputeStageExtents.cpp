@@ -25,16 +25,10 @@ PassComputeStageExtents::PassComputeStageExtents() : Pass("PassComputeStageExten
 }
 
 bool PassComputeStageExtents::run(StencilInstantiation* stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
-
-  int stencilIdx = 0;
   for(auto& stencilPtr : stencilInstantiation->getStencils()) {
     Stencil& stencil = *stencilPtr;
-    std::vector<Stencil::FieldInfo> fields = stencil.getFields();
 
     int numStages = stencil.getNumStages();
-
-    auto stageDAG = stencil.getStageDependencyGraph();
 
     for(int i = numStages - 1; i >= 0; --i) {
       Stage& fromStage = *(stencil.getStage(i));
@@ -49,13 +43,14 @@ bool PassComputeStageExtents::run(StencilInstantiation* stencilInstantiation) {
           continue;
 
         Extents fieldExtent = fromField.Extent;
+
         fieldExtent.expand(stageExtent);
 
         for(int j = i - 1; j >= 0; --j) {
           Stage& toStage = *(stencil.getStage(j));
           auto fields = toStage.getFields();
-          auto it = std::find_if(fields.begin(), fields.end(), [](Field const& f) {
-            return (f.Intend != Field::IntendKind::IK_Input);
+          auto it = std::find_if(fields.begin(), fields.end(), [&](Field const& f) {
+            return (f.Intend != Field::IntendKind::IK_Input) && (f.AccessID == fromField.AccessID);
           });
           if(it == fields.end())
             continue;
