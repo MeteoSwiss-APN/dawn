@@ -151,23 +151,44 @@ void ASTStencilBody::visit(const std::shared_ptr<LiteralAccessExpr>& expr) { Bas
 void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
 
   if(currentFunction_) {
+    // extract the arg index, from the AccessID
     int argIndex = -1;
-    for(auto pp : currentFunction_->ArgumentIndexToCallerAccessIDMap()) {
-      if(pp.second == currentFunction_->getAccessIDFromExpr(expr))
-        argIndex = pp.first;
+    for(auto idx : currentFunction_->ArgumentIndexToCallerAccessIDMap()) {
+      if(idx.second == currentFunction_->getAccessIDFromExpr(expr))
+        argIndex = idx.first;
     }
 
+    DAWN_ASSERT(argIndex != -1);
+
+    // In order to explain the algorithm, let assume the following example
+    // stencil_function fn {
+    //   offset off1;
+    //   storage st1;
+    //   Do {
+    //     st1(off1+2);
+    //   }
+    // }
+    // ... Inside a stencil computation, there is a call to fn
+    // fn(offset_fn1, gn(offset_gn1, storage2, storage3)) ;
+
+    // If the arg index corresponds to a function instantation,
+    // it means the function was called passing another function as argument,
+    // i.e. gn in the example
     if(currentFunction_->isArgStencilFunctionInstantiation(argIndex)) {
       StencilFunctionInstantiation& argStencilFn =
           *(currentFunction_->getFunctionInstantiationOfArgField(argIndex));
 
       ss_ << StencilFunctionInstantiation::makeCodeGenName(argStencilFn) << "(i,j,k";
 
+      // parse the arguments of the argument stencil gn call
       for(int argIdx = 0; argIdx < argStencilFn.numArgs(); ++argIdx) {
+        // parse the argument if it is a field. Ignore offsets/directions,
+        // since they are "inlined" in the code generation of the function
         if(argStencilFn.isArgField(argIdx)) {
           Array3i offset = expr->getOffset();
 
-          std::string append;
+          // parse the offsets of the field access, that should be used to offset the evaluation
+          // of gn(), i.e. off1+2 in the example
           for(auto idx : expr->getArgumentMap()) {
             if(idx != -1) {
               DAWN_ASSERT_MSG((argStencilFn.isArgOffset(idx)),

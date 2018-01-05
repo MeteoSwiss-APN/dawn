@@ -264,8 +264,12 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
     // Run-Method
     //
     MemberFunction StencilDoMethod = StencilClass.addMemberFunction("virtual void", "run", "");
+    StencilDoMethod.startBody();
 
     for(const auto& multiStagePtr : stencil.getMultiStages()) {
+
+      StencilDoMethod.ss() << "{";
+
       const MultiStage& multiStage = *multiStagePtr;
 
       // create all the data views
@@ -320,6 +324,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
               }
             });
       }
+      StencilDoMethod.ss() << "}";
     }
     StencilDoMethod.commit();
   }

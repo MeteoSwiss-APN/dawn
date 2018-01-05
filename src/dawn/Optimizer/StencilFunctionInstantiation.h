@@ -171,6 +171,15 @@ public:
 
   size_t numArgs() const;
 
+  /// @brief get the name of the arg parameter of the stencil function which is called passing
+  /// another function
+  ///
+  /// In the following example
+  /// stencil_function fn {
+  ///   storage arg_st1, arg_st2;
+  /// }
+  /// fn(storage1, fn(storage2) )
+  /// it will return arg_st2
   std::string getArgNameFromFunctionCall(std::string fnCallName) const;
 
   /// @brief Get the associated StencilInstantiation
