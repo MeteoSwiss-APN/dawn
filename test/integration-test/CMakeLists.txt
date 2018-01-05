@@ -75,16 +75,16 @@ if(GTCLANG_HAS_GRIDTOOLS)
     file(MAKE_DIRECTORY "${cwd}/CodeGen/generated/")
 
     # Add make target 
-    add_custom_target(
-      ${example}-codegen-gt
-      COMMAND $<TARGET_FILE:gtclang> "-backend=gridtools" "${config_str}" "-o" "${cwd}/CodeGen/generated/${example}_gridtools.cpp"  ${cwd}/CodeGen/${example}.cpp
-      DEPENDS gtclang
+    add_custom_command( OUTPUT ${cwd}/CodeGen/generated/${example}_gridtools.cpp
+      COMMAND $<TARGET_FILE:gtclang> "-backend=gridtools" "${config_str}" "-o" "${cwd}/CodeGen/generated/${example}_gridtools.cpp"  "${cwd}/CodeGen/${example}.cpp"
+      DEPENDS ${cwd}/CodeGen/${example}.cpp gtclang
     )
-    add_custom_target(
-      ${example}-codegen-cxxnaive
-      COMMAND $<TARGET_FILE:gtclang> "-backend=c++-naive" "${config_str}" "-o" "${cwd}/CodeGen/generated/${example}_c++-naive.cpp"  ${cwd}/CodeGen/${example}.cpp
-      DEPENDS gtclang
+
+    add_custom_command(OUTPUT ${cwd}/CodeGen/generated/${example}_c++-naive.cpp
+      COMMAND $<TARGET_FILE:gtclang> "-backend=c++-naive" "${config_str}" "-o" "${cwd}/CodeGen/generated/${example}_c++-naive.cpp"  "${cwd}/CodeGen/${example}.cpp"
+      DEPENDS ${cwd}/CodeGen/${example}.cpp gtclang
     )
+
     list(APPEND ${example}_benchmarks ${cwd}/CodeGen/${example}_benchmark.cpp)
     list(APPEND codegen_generate_targets ${example}-codegen-gt)
     list(APPEND codegen_generate_targets ${example}-codegen-cxxnaive)
@@ -92,8 +92,11 @@ if(GTCLANG_HAS_GRIDTOOLS)
     add_executable(${example}_benchmarks "${cwd}/CodeGen/${example}_benchmark.cpp" "${cwd}/CodeGen/TestMain.cpp" "${cwd}/CodeGen/Options.cpp")
     target_include_directories(${example}_benchmarks PUBLIC ${include_dirs})
 #TODO mchbuild_add_unittest does not work here since the DEPENDS argument not only makes a dependency but also links against them
-    add_dependencies(${example}_benchmarks ${example}-codegen-gt ${example}-codegen-cxxnaive)
+    add_dependencies(${example}_benchmarks gtclang)
     target_link_libraries(${example}_benchmarks ${GTCLANG_UNITTEST_EXTERNAL_LIBRARIES} gtest)
+
+    set_property(SOURCE ${cwd}/CodeGen/${example}_benchmark.cpp APPEND PROPERTY OBJECT_DEPENDS ${cwd}/CodeGen/generated/${example}_gridtools.cpp)
+    set_property(SOURCE ${cwd}/CodeGen/${example}_benchmark.cpp APPEND PROPERTY OBJECT_DEPENDS ${cwd}/CodeGen/generated/${example}_c++-naive.cpp)
 
     add_test(NAME CTest-${example}_benchmarks COMMAND $<TARGET_FILE:${example}_benchmarks> 12 12 10 )
   endforeach()
