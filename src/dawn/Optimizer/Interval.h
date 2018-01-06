@@ -42,6 +42,8 @@ class Interval {
   int upperOffset_;
 
 public:
+  enum class Bound { upper = 0, lower };
+
   /// @name Constructors and Assignment
   /// @{
   Interval(int lowerLevel, int upperLevel, int lowerOffset = 0, int upperOffset = 0)
@@ -62,6 +64,18 @@ public:
   int upperLevel() const { return upperLevel_; }
   int lowerOffset() const { return lowerOffset_; }
   int upperOffset() const { return upperOffset_; }
+
+  int offset(const Bound bound) const {
+    return (bound == Bound::lower) ? lowerOffset() : upperOffset();
+  }
+  int level(const Bound bound) const {
+    return (bound == Bound::lower) ? lowerLevel() : upperLevel();
+  }
+
+  /// @brief Get the bound of the Interval (i.e `level + offset`)
+  inline int bound(const Bound bound) const {
+    return (bound == Bound::lower) ? lowerBound() : upperBound();
+  }
 
   /// @brief Get the lower bound of the Interval (i.e `lowerLevel + lowerOffset`)
   inline int lowerBound() const { return (lowerLevel_ + lowerOffset_); }
@@ -128,8 +142,16 @@ public:
     return sir::Interval(lowerLevel_, upperLevel_, lowerOffset_, upperOffset_);
   }
 
+  /// @brief returns true if the level bound of the interval is the end of the axis
+  bool levelIsEnd(Bound bound) const {
+    return (bound == Bound::lower) ? lowerLevelIsEnd() : upperLevelIsEnd();
+  }
+
+  /// @brief returns true if the lower bound of the interval is the end of the axis
+  bool lowerLevelIsEnd() const { return (lowerLevel_ == sir::Interval::End); }
+
   /// @brief returns true if the upper bound of the interval is the end of the axis
-  bool upperIsEnd() const { return (upperLevel_ == sir::Interval::End); }
+  bool upperLevelIsEnd() const { return (upperLevel_ == sir::Interval::End); }
 
   /// @brief Convert interval to string
   std::string toString() const;

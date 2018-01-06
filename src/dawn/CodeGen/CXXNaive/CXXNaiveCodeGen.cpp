@@ -44,12 +44,19 @@ static std::string makeIJLoop(const Extent extent, const std::string dom, const 
                       dom + "." + dim + "size() - " + dom + "." + dim + "plus() - 1", " <= ", "++");
 }
 
+static std::string makeIntervalBound(const std::string dom, Interval const& interval,
+                                     Interval::Bound bound) {
+  return interval.levelIsEnd(bound)
+             ? "( " + dom + ".ksize() == 0 ? 0 : (" + dom + ".ksize() - " + dom +
+                   ".kplus() - 1)) + " + std::to_string(interval.offset(bound))
+             : std::to_string(interval.bound(bound));
+}
+
 static std::string makeKLoop(const std::string dom, bool isBackward, Interval const& interval) {
-  const std::string lower = std::to_string(interval.lowerBound());
-  const std::string upper =
-      interval.upperIsEnd()
-          ? "( " + dom + ".ksize() == 0 ? 0 : (" + dom + ".ksize() - " + dom + ".kplus() - 1))"
-          : std::to_string(interval.upperBound());
+
+  const std::string lower = makeIntervalBound(dom, interval, Interval::Bound::lower);
+  const std::string upper = makeIntervalBound(dom, interval, Interval::Bound::upper);
+
   return isBackward ? makeLoopImpl(Extent{}, "k", upper, lower, ">=", "--")
                     : makeLoopImpl(Extent{}, "k", lower, upper, "<=", "++");
 }
@@ -291,8 +298,11 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
 
       // compute the partition of the intervals
       auto partitionIntervals = Interval::computePartition(intervals_v);
+      if((multiStage.getLoopOrder() == LoopOrderKind::LK_Backward))
+        std::reverse(partitionIntervals.begin(), partitionIntervals.end());
 
       for(auto interval : partitionIntervals) {
+
         // for each interval, we generate naive nested loops
         StencilDoMethod.addBlockStatement(
             makeKLoop("m_dom", (multiStage.getLoopOrder() == LoopOrderKind::LK_Backward), interval),
