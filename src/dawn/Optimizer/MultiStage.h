@@ -104,7 +104,7 @@ public:
   /// @brief Check if the multi-stage is empty (i.e contains no statements)
   bool isEmpty() const { return stages_.empty(); }
 
-  /// @brief Get the intervals of the stage
+  /// @brief Get the intervals of the multi-stage
   std::unordered_set<Interval> getIntervals() const;
 
   /// @brief Get the enclosing vertical Interval of this multi-stage

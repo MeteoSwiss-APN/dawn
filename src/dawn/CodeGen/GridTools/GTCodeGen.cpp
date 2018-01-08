@@ -12,10 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/CodeGen/GTClangCodeGen.h"
-#include "dawn/CodeGen/ASTCodeGenGTClangStencilBody.h"
-#include "dawn/CodeGen/ASTCodeGenGTClangStencilDesc.h"
+#include "dawn/CodeGen/GridTools/GTCodeGen.h"
 #include "dawn/CodeGen/CXXUtil.h"
+#include "dawn/CodeGen/GridTools/ASTStencilBody.h"
+#include "dawn/CodeGen/GridTools/ASTStencilDesc.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/StatementAccessesPair.h"
 #include "dawn/Optimizer/StencilFunctionInstantiation.h"
@@ -27,13 +27,14 @@
 #include <unordered_map>
 
 namespace dawn {
+namespace codegen {
+namespace gt {
 
-GTClangCodeGen::GTClangCodeGen(OptimizerContext* context)
-    : CodeGen(context), mplContainerMaxSize_(20) {}
+GTCodeGen::GTCodeGen(OptimizerContext* context) : CodeGen(context), mplContainerMaxSize_(20) {}
 
-GTClangCodeGen::~GTClangCodeGen() {}
+GTCodeGen::~GTCodeGen() {}
 
-GTClangCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
+GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
     : Intervals(stencil.getIntervals()), Axis(*Intervals.begin()) {
   DAWN_ASSERT(!Intervals.empty());
 
@@ -82,13 +83,10 @@ GTClangCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
 }
 
 std::string
-GTClangCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInstantiation) {
+GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInstantiation) {
   using namespace codegen;
 
   std::stringstream ssSW, ssMS, tss;
-  auto gt = []() { return Twine("gridtools::"); };
-  auto gtc = []() { return Twine("gridtools::clang::"); };
-  auto gt_enum = []() { return Twine("gridtools::enumtype::"); };
 
   // K-Cache branch changes the signature of Do-Methods
   const char* DoMethodArg = "Evaluation& eval";
@@ -132,19 +130,19 @@ GTClangCodeGen::generateStencilInstantiation(const StencilInstantiation* stencil
     // Generate typedefs for the individual intervals
     for(const auto& intervalNamePair : intervalDefinitions.IntervalToNameMap)
       StencilClass.addTypeDef(intervalNamePair.second)
-          .addType(gt() + "interval")
+          .addType(c_gt() + "interval")
           .addTemplates(makeArrayRef({makeLevelName(intervalNamePair.first.lowerLevel(),
                                                     intervalNamePair.first.lowerOffset()),
                                       makeLevelName(intervalNamePair.first.upperLevel(),
                                                     intervalNamePair.first.upperOffset())}));
 
-    ASTCodeGenGTClangStencilBody stencilBodyCGVisitor(stencilInstantiation,
-                                                      intervalDefinitions.IntervalToNameMap);
+    ASTStencilBody stencilBodyCGVisitor(stencilInstantiation,
+                                        intervalDefinitions.IntervalToNameMap);
 
     // Generate typedef for the axis
     const Interval& axis = intervalDefinitions.Axis;
     StencilClass.addTypeDef(Twine("axis_") + StencilName)
-        .addType(gt() + "interval")
+        .addType(c_gt() + "interval")
         .addTemplates(makeArrayRef(
             {makeLevelName(axis.lowerLevel(), axis.lowerOffset() - 1),
              makeLevelName(axis.upperLevel(),
@@ -152,7 +150,7 @@ GTClangCodeGen::generateStencilInstantiation(const StencilInstantiation* stencil
 
     // Generate typedef of the grid
     StencilClass.addTypeDef(Twine("grid_") + StencilName)
-        .addType(gt() + "grid")
+        .addType(c_gt() + "grid")
         .addTemplate(Twine("axis_") + StencilName);
 
     // Generate code for members of the stencil
@@ -195,14 +193,14 @@ GTClangCodeGen::generateStencilInstantiation(const StencilInstantiation* stencil
           std::string paramName = stencilFun->getOriginalNameFromCallerAccessID(fields[m].AccessID);
 
           // Generate parameter of stage
-          codegen::Type extent(gt() + "extent", clear(tss));
+          codegen::Type extent(c_gt() + "extent", clear(tss));
           for(auto& e : fields[m].Extent.getExtents())
             extent.addTemplate(Twine(e.Minus) + ", " + Twine(e.Plus));
 
           StencilFunStruct.addTypeDef(paramName)
-              .addType(gt() + "accessor")
+              .addType(c_gt() + "accessor")
               .addTemplate(Twine(accessorID))
-              .addTemplate(gt_enum() + (fields[m].Intend == Field::IK_Input ? "in" : "inout"))
+              .addTemplate(c_gt_enum() + (fields[m].Intend == Field::IK_Input ? "in" : "inout"))
               .addTemplate(extent);
 
           arglist.push_back(std::move(paramName));
@@ -262,11 +260,11 @@ GTClangCodeGen::generateStencilInstantiation(const StencilInstantiation* stencil
         ssMS << RangeToString(", ", "gridtools::define_caches(", "),")(
             multiStage.getCaches(),
             [&](const std::pair<int, Cache>& AccessIDCachePair) -> std::string {
-              return (gt() + "cache<" +
+              return (c_gt() + "cache<" +
                       // Type: IJ or K
-                      gt() + AccessIDCachePair.second.getCacheTypeAsString() + ", " +
+                      c_gt() + AccessIDCachePair.second.getCacheTypeAsString() + ", " +
                       // IOPolicy: local, fill, bpfill, flush, epflush or flush_and_fill
-                      gt() + "cache_io_policy::" +
+                      c_gt() + "cache_io_policy::" +
                       AccessIDCachePair.second.getCacheIOPolicyAsString() +
                       // Interval: if IOPolicy is not local, we need to provide the interval
                       (AccessIDCachePair.second.getCacheIOPolicy() != Cache::local
@@ -311,14 +309,14 @@ GTClangCodeGen::generateStencilInstantiation(const StencilInstantiation* stencil
           std::string paramName = stencilInstantiation->getNameFromAccessID(field.AccessID);
 
           // Generate parameter of stage
-          codegen::Type extent(gt() + "extent", clear(tss));
+          codegen::Type extent(c_gt() + "extent", clear(tss));
           for(auto& e : field.Extent.getExtents())
             extent.addTemplate(Twine(e.Minus) + ", " + Twine(e.Plus));
 
           StageStruct.addTypeDef(paramName)
-              .addType(gt() + "accessor")
+              .addType(c_gt() + "accessor")
               .addTemplate(Twine(accessorIdx))
-              .addTemplate(gt_enum() + (field.Intend == Field::IK_Input ? "in" : "inout"))
+              .addTemplate(c_gt_enum() + (field.Intend == Field::IK_Input ? "in" : "inout"))
               .addTemplate(extent);
 
           // Generate placeholder mapping of the field in `make_stage`
@@ -336,9 +334,9 @@ GTClangCodeGen::generateStencilInstantiation(const StencilInstantiation* stencil
           std::string paramName = stencilInstantiation->getNameFromAccessID(AccessID);
 
           StageStruct.addTypeDef(paramName)
-              .addType(gt() + "global_accessor")
+              .addType(c_gt() + "global_accessor")
               .addTemplate(Twine(accessorIdx))
-              .addTemplate(gt_enum() + "inout");
+              .addTemplate(c_gt_enum() + "inout");
           accessorIdx++;
 
           // Generate placeholder mapping of the field in `make_stage`
@@ -421,7 +419,7 @@ GTClangCodeGen::generateStencilInstantiation(const StencilInstantiation* stencil
     for(; accessorIdx < numFields; ++accessorIdx)
       // Fields
       StencilConstructor.addTypeDef("p_" + StencilFields[accessorIdx].Name)
-          .addType(gt() + (StencilFields[accessorIdx].IsTemporary ? "tmp_arg" : "arg"))
+          .addType(c_gt() + (StencilFields[accessorIdx].IsTemporary ? "tmp_arg" : "arg"))
           .addTemplate(Twine(accessorIdx))
           .addTemplate(StencilFields[accessorIdx].IsTemporary
                            ? "storage_t"
@@ -431,7 +429,7 @@ GTClangCodeGen::generateStencilInstantiation(const StencilInstantiation* stencil
       // Global variables
       const auto& varname = StencilGlobalVariables[accessorIdx - numFields];
       StencilConstructor.addTypeDef("p_" + StencilGlobalVariables[accessorIdx - numFields])
-          .addType(gt() + "arg")
+          .addType(c_gt() + "arg")
           .addTemplate(Twine(accessorIdx))
           .addTemplate("typename std::decay<decltype(globals::get()." + varname +
                        ".as_global_parameter())>::type");
@@ -457,7 +455,7 @@ GTClangCodeGen::generateStencilInstantiation(const StencilInstantiation* stencil
 
     // This is a memory leak.. but nothing we can do ;)
     // https://github.com/eth-cscs/gridtools/issues/621
-    StencilConstructor.addStatement("auto gt_domain = new " + gt() +
+    StencilConstructor.addStatement("auto gt_domain = new " + c_gt() +
                                     "aggregator_type<domain_arg_list>(" +
                                     RangeToString(", ", "", ")")(DomainMapPlaceholders));
 
@@ -522,10 +520,10 @@ GTClangCodeGen::generateStencilInstantiation(const StencilInstantiation* stencil
 
   // Define allocated memebers if necessary
   if(stencilInstantiation->hasAllocatedFields()) {
-    StencilWrapperClass.addMember(gtc() + "meta_data_t", "m_meta_data");
+    StencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
 
     for(int AccessID : stencilInstantiation->getAllocatedFieldAccessIDs())
-      StencilWrapperClass.addMember(gtc() + "storage_t",
+      StencilWrapperClass.addMember(c_gtc() + "storage_t",
                                     "m_" + stencilInstantiation->getNameFromAccessID(AccessID));
   }
 
@@ -557,7 +555,7 @@ GTClangCodeGen::generateStencilInstantiation(const StencilInstantiation* stencil
   auto StencilWrapperConstructor = StencilWrapperClass.addConstructor(RangeToString(", ", "", "")(
       StencilWrapperConstructorTemplates, [](const std::string& str) { return "class " + str; }));
 
-  StencilWrapperConstructor.addArg("const " + gtc() + "domain& dom");
+  StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
   for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i)
     StencilWrapperConstructor.addArg(StencilWrapperConstructorTemplates[i] + "& " +
                                      SIRFieldsWithoutTemps[i]->Name);
@@ -610,12 +608,11 @@ GTClangCodeGen::generateStencilInstantiation(const StencilInstantiation* stencil
   for(std::size_t i = 0; i < stencils.size(); ++i)
     stencilIDToStencilNameMap[stencils[i]->getStencilID()].emplace_back(stencilMembers[i]);
 
-  ASTCodeGenGTClangStencilDesc stnecilDescCGVisitor(stencilInstantiation,
-                                                    stencilIDToStencilNameMap);
-  stnecilDescCGVisitor.setIndent(RunMethod.getIndent());
+  ASTStencilDesc stencilDescCGVisitor(stencilInstantiation, stencilIDToStencilNameMap);
+  stencilDescCGVisitor.setIndent(RunMethod.getIndent());
   for(const auto& statement : stencilInstantiation->getStencilDescStatements()) {
-    statement->ASTStmt->accept(stnecilDescCGVisitor);
-    RunMethod << stnecilDescCGVisitor.getCodeAndResetStream();
+    statement->ASTStmt->accept(stencilDescCGVisitor);
+    RunMethod << stencilDescCGVisitor.getCodeAndResetStream();
   }
 
   RunMethod.commit();
@@ -641,7 +638,7 @@ GTClangCodeGen::generateStencilInstantiation(const StencilInstantiation* stencil
   return str;
 }
 
-std::string GTClangCodeGen::generateGlobals(const SIR* Sir) {
+std::string GTCodeGen::generateGlobals(const SIR* Sir) {
   using namespace codegen;
 
   const auto& globalsMap = *Sir->GlobalVariableMap;
@@ -691,7 +688,7 @@ std::string GTClangCodeGen::generateGlobals(const SIR* Sir) {
   return str;
 }
 
-std::unique_ptr<TranslationUnit> GTClangCodeGen::generateCode() {
+std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   mplContainerMaxSize_ = 20;
   DAWN_LOG(INFO) << "Starting code generation for GTClang ...";
 
@@ -744,4 +741,6 @@ std::unique_ptr<TranslationUnit> GTClangCodeGen::generateCode() {
                                       std::move(stencils), std::move(globals));
 }
 
+} // namespace gt
+} // namespace codegen
 } // namespace dawn

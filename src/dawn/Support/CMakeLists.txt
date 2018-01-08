@@ -30,6 +30,7 @@ mchbuild_add_library(
           FileUtil.h
           Format.h
           HashCombine.h
+          IndexRange.h
           Json.h
           Logging.cpp
           Logging.h

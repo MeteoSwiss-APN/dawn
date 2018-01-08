@@ -20,7 +20,7 @@ using namespace dawn::util;
 
 void dawnTranslationUnitDestroy(dawnTranslationUnit_t* translationUnit) {
   if(translationUnit) {
-    dawn::TranslationUnit* TU = toTranslationUnit(translationUnit);
+    dawn::codegen::TranslationUnit* TU = toTranslationUnit(translationUnit);
     if(translationUnit->OwnsData)
       delete TU;
     std::free(translationUnit);
@@ -29,7 +29,7 @@ void dawnTranslationUnitDestroy(dawnTranslationUnit_t* translationUnit) {
 
 void dawnTranslationUnitGetPPDefines(const dawnTranslationUnit_t* translationUnit,
                                      char*** ppDefines, int* size) {
-  const dawn::TranslationUnit* TU = toConstTranslationUnit(translationUnit);
+  const dawn::codegen::TranslationUnit* TU = toConstTranslationUnit(translationUnit);
   const auto& ppVec = TU->getPPDefines();
 
   char** ppArray = allocate<char*>(ppVec.size());
@@ -42,12 +42,12 @@ void dawnTranslationUnitGetPPDefines(const dawnTranslationUnit_t* translationUni
 
 char* dawnTranslationUnitGetStencil(const dawnTranslationUnit_t* translationUnit,
                                     const char* name) {
-  const dawn::TranslationUnit* TU = toConstTranslationUnit(translationUnit);
+  const dawn::codegen::TranslationUnit* TU = toConstTranslationUnit(translationUnit);
   auto it = TU->getStencils().find(name);
   return it == TU->getStencils().end() ? nullptr : allocateAndCopyString(it->second);
 }
 
 char* dawnTranslationUnitGetGlobals(const dawnTranslationUnit_t* translationUnit) {
-  const dawn::TranslationUnit* TU = toConstTranslationUnit(translationUnit);
+  const dawn::codegen::TranslationUnit* TU = toConstTranslationUnit(translationUnit);
   return allocateAndCopyString(TU->getGlobals());
 }
