@@ -75,6 +75,21 @@ void ASTCodeGenGTClangStencilDesc::visit(const std::shared_ptr<BoundaryCondition
     }
   }
   ss_ << ");\n";
+
+  auto findStencilFunction = [&](std::string name){
+      for(const auto& sf : instantiation_->getSIR()->StencilFunctions){
+          if(sf->Name == name){
+              return sf.get();
+          }
+      }
+      dawn_unreachable("stencil function should have been declared and thrown a compiler-error");
+  };
+
+  auto stencilFunction = findStencilFunction(stmt->getFunctor());
+  std::cout << stencilFunction->Name << " at: " << stencilFunction->Loc << std::endl;
+
+
+
   //    std::cout << "boundary condition not implemented in ASTCodeGenGTClangStencilDesc" <<
   //    std::endl;
   //      DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not yet implemented");
