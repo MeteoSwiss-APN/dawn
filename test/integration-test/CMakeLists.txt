@@ -50,7 +50,7 @@ mchbuild_add_custom_dummy_target(NAME GTClangQtCreatorParseProjectIntegrationTes
                              DIRECTORIES ${directories})
 
 # Codegen tests require GridTools
-if(GTCLANG_HAS_GRIDTOOLS)
+if(GTCLANG_HAS_GRIDTOOLS AND GTCLANG_BUILD_EXAMPLES)
   # Add a dummy target with all the source files so that they are included in a qt creator project
   mchbuild_add_custom_dummy_target(NAME GTClangQtCreatorParseProjectCodeGenTest
                              DIRECTORIES ${cwd}/CodeGen)
