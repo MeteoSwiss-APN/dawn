@@ -402,8 +402,6 @@ public:
       }
 
     } else {
-      DAWN_ASSERT(!function);
-
       // Register the mapping between VarAccessExpr and AccessID.
       if(function)
         function->mapExprToAccessID(expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
