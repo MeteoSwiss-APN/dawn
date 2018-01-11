@@ -129,11 +129,11 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
         std::string paramName = stencilFun->getOriginalNameFromCallerAccessID(fields[m].AccessID);
         paramNameToType.emplace(paramName, stencilFnTemplates[m]);
 
-        // each parameter being passed to a stencil function, is wrapped around the ParamWrapper
+        // each parameter being passed to a stencil function, is wrapped around the param_wrapper
         // that contains the storage and the offset, in order to resolve offset passed to the
         // storage during the function call. For example:
         // fn_call(v(i+1), v(j-1))
-        stencilFunMethod.addArg("ParamWrapper<" + c_gt() + "data_view<StorageType" +
+        stencilFunMethod.addArg("param_wrapper<" + c_gt() + "data_view<StorageType" +
                                 std::to_string(m) + ">> pw_" + paramName);
       }
 

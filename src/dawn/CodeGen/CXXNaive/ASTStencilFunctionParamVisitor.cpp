@@ -52,7 +52,7 @@ void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<FieldAccessExpr
   if(!paramNameToType_.count(expr->getName()))
     DAWN_ASSERT_MSG(0, "param of stencil function call not found");
 
-  ss_ << ",ParamWrapper<" << c_gt() << "data_view<" << paramNameToType_[expr->getName()] << ">>("
+  ss_ << ",param_wrapper<" << c_gt() << "data_view<" << paramNameToType_[expr->getName()] << ">>("
       << expr->getName() << ","
       << "std::array<int, 3>{" << RangeToString(", ", "", "")(expr->getOffset())
       << "}+" + expr->getName() + "_offsets)";
