@@ -287,13 +287,17 @@ public:
   /// @brief Get the `AccessID` of the Stmt (VarDeclStmt)
   int getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) const;
 
-  /// @brief Get map which associates Exprs with `caller` AccessIDs
-  std::unordered_map<std::shared_ptr<Expr>, int>& getExprToCallerAccessIDMap();
-  const std::unordered_map<std::shared_ptr<Expr>, int>& getExprToCallerAccessIDMap() const;
+  /// @brief Set the `AccessID` of a Expr (VarAccess or FieldAccess)
+  void setAccessIDOfExpr(const std::shared_ptr<Expr>& expr, const int accessID);
 
-  /// @brief Get map which associates Stmts with `caller` AccessIDs
-  std::unordered_map<std::shared_ptr<Stmt>, int>& getStmtToCallerAccessIDMap();
-  const std::unordered_map<std::shared_ptr<Stmt>, int>& getStmtToCallerAccessIDMap() const;
+  /// @brief Add entry to the map between a given expr to its access ID
+  void mapExprToAccessID(std::shared_ptr<Expr> expr, int AccessID);
+
+  /// @brief Set the `AccessID` of a Stmt (VarDecl)
+  void setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt, const int accessID);
+
+  /// @brief Add entry to the map between a given stmt to its access ID
+  void mapStmtToAccessID(std::shared_ptr<Stmt> stmt, int AccessID);
 
   /// @brief Get the Literal-AccessID-to-Name map
   std::unordered_map<int, std::string>& getLiteralAccessIDToNameMap();
