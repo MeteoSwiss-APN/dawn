@@ -32,12 +32,7 @@ $CXX --version
 # Build dawn
 pushd "$(pwd)"
 
-export PYTHON_DIR=/opt/python/3.5.3
-
 python_path=`which python3`
-python_path3=`which python3.5`
-
-echo "TEST PYTHON ${python_path} OO ${python_path3}"
 
 cd bundle
 mkdir build
@@ -48,6 +43,7 @@ cmake .. -DCMAKE_CXX_COMPILER="$CXX"                                            
          -DCMAKE_C_COMPILER="$CC"                                                                  \
          -DCMAKE_BUILD_TYPE="$CONFIG"                                                              \
          -DProtobuf_DIR=${build_dir}/protobuf-prefix/src/protobuf-build/lib/cmake/protobuf/        \
+         -DPYTHON_EXECUTABLE=${python_path}                                                        \
       || fatal_error "failed to configure"
 make -j2 || fatal_error "failed to build"
 
