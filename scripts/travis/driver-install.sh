@@ -26,6 +26,11 @@ $CXX --version
 # Build dawn
 pushd "$(pwd)"
 
+python_path=`which python3`
+python_path3=`which python3.5`
+
+echo "TEST PYTHON ${python_path} OO ${python_path3}"
+
 export PYTHON_DIR=/opt/python/3.5.3
 
 cd bundle
@@ -34,6 +39,7 @@ cd build
 cmake .. -DCMAKE_CXX_COMPILER="$CXX"                                                               \
          -DCMAKE_C_COMPILER="$CC"                                                                  \
          -DCMAKE_BUILD_TYPE="$CONFIG"                                                              \
+         -DPYTHON_EXECUTABLE=${python_path}                                                        \
       || fatal_error "failed to configure"
 make -j2 protobuf || fatal_error "failed to build"
 

@@ -37,7 +37,7 @@ export PYTHON_DIR=/opt/python/3.5.3
 python_path=`which python3`
 python_path3=`which python3.5`
 
-echo "TEST PYTHON ${python_path} ${python_path3}"
+echo "TEST PYTHON ${python_path} OO ${python_path3}"
 
 cd bundle
 mkdir build
