@@ -38,6 +38,8 @@ env:
     - CACHE_DIR=${TRAVIS_BUILD_DIR}/deps/install
     - CMAKE_VERSION=3.8.1
     - PROTOBUF_VERSION=3.4.1
+install:
+    - pip install setuptools
 
 jobs:
   include:
