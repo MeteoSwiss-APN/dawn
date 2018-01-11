@@ -26,7 +26,7 @@ $CXX --version
 # Build dawn
 pushd "$(pwd)"
 
-python_path=`which python3`
+export python_path=`which python3`
 
 cd bundle
 mkdir build
