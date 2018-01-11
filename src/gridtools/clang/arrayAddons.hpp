@@ -24,10 +24,10 @@ namespace gridtools {
 
         template < size_t N >
         std::array< int, N > operator+(
-            std::array< int, N > const &a, std::array< int, N > const &b) {
+            std::array< int, N > const &lhs, std::array< int, N > const &rhs) {
             std::array< int, N > res;
             for (size_t i = 0; i < N; ++i) {
-                res[i] = a[i] + b[i];
+                res[i] = lhs[i] + rhs[i];
             }
             return res;
         }

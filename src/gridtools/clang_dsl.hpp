@@ -52,4 +52,4 @@ namespace clang {}
 #include "gridtools/clang/stencil_function.hpp"
 #include "gridtools/clang/storage.hpp"
 #include "gridtools/clang/arrayAddons.hpp"
-#include "gridtools/clang/ParamWrapper.hpp"
+#include "gridtools/clang/param_wrapper.hpp"
