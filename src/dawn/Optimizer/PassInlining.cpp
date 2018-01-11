@@ -124,8 +124,8 @@ public:
 
       // Register the variable
       instantiation_->setAccessIDNamePair(AccessID, returnVarName);
-      instantiation_->getStmtToAccessIDMap().emplace(newStmt, AccessID);
-      instantiation_->getExprToAccessIDMap().emplace(newExpr_, AccessID);
+      instantiation_->mapStmtToAccessID(newStmt, AccessID);
+      instantiation_->mapExprToAccessID(newExpr_, AccessID);
 
     } else {
       // We are called within an arugment list of a stencil function, we thus need to store the
@@ -141,7 +141,7 @@ public:
 
       // Promote the "temporary" storage we used to mock the argument to an actual temporary field
       instantiation_->setAccessIDNamePairOfField(AccessIDOfCaller_, returnFieldName, true);
-      instantiation_->getExprToAccessIDMap().emplace(newExpr_, AccessIDOfCaller_);
+      instantiation_->mapExprToAccessID(newExpr_, AccessIDOfCaller_);
     }
 
     // Resolve the actual expression of the return statement
@@ -161,7 +161,7 @@ public:
     int AccessID = curStencilFunctioninstantiation_->getAccessIDFromStmt(stmt);
     const std::string& name = curStencilFunctioninstantiation_->getNameFromAccessID(AccessID);
     instantiation_->setAccessIDNamePair(AccessID, name);
-    instantiation_->getStmtToAccessIDMap().emplace(stmt, AccessID);
+    instantiation_->mapStmtToAccessID(stmt, AccessID);
 
     // Push back the statement and move on
     appendNewStatementAccessesPair(stmt);
@@ -279,15 +279,15 @@ public:
 
   void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
 
-    instantiation_->getExprToAccessIDMap().emplace(
-        expr, curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
+    instantiation_->mapExprToAccessID(expr,
+                                      curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
     if(expr->isArrayAccess())
       expr->getIndex()->accept(*this);
   }
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
-    instantiation_->getExprToAccessIDMap().emplace(
-        expr, curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
+    instantiation_->mapExprToAccessID(expr,
+                                      curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
 
     // Set the fully evaluated offset as the new offset of the field. Note that this renders the
     // AST of the current stencil function incorrent which is why it needs to be removed!
@@ -300,7 +300,7 @@ public:
   void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override {
     int AccessID = curStencilFunctioninstantiation_->getAccessIDFromExpr(expr);
     instantiation_->getLiteralAccessIDToNameMap().emplace(AccessID, expr->getValue());
-    instantiation_->getExprToAccessIDMap().emplace(expr, AccessID);
+    instantiation_->mapExprToAccessID(expr, AccessID);
   }
 };
 
