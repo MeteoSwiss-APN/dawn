@@ -33,17 +33,23 @@ namespace cxxnaive {
 /// @ingroup cxxnaive
 class ASTStencilFunctionParamVisitor : public ASTVisitorDisabled, public NonCopyable {
 protected:
-  std::unordered_map<std::string, std::string> paramNameToType_;
+  const StencilInstantiation* instantiation_;
+  const StencilFunctionInstantiation* currentFunction_;
   /// Underlying stream
   std::stringstream ss_;
 
 public:
   using Base = ASTVisitorDisabled;
 
-  ASTStencilFunctionParamVisitor(std::unordered_map<std::string, std::string> paramNameToType);
+  ASTStencilFunctionParamVisitor(StencilFunctionInstantiation const* function,
+                                 StencilInstantiation const* instantiation);
   virtual ~ASTStencilFunctionParamVisitor();
 
   std::string getCodeAndResetStream();
+
+  std::string getName(const std::shared_ptr<Expr>& expr) const;
+
+  int getAccessID(const std::shared_ptr<Expr>& expr) const;
 
   /// @name Expression implementation
   /// @{

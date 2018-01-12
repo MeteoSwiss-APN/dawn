@@ -26,11 +26,9 @@ namespace codegen {
 namespace cxxnaive {
 
 ASTStencilBody::ASTStencilBody(const dawn::StencilInstantiation* stencilInstantiation,
-                               std::unordered_map<std::string, std::string> paramNameToType,
                                StencilContext stencilContext)
     : ASTCodeGenCXX(), instantiation_(stencilInstantiation), offsetPrinter_(",", "(", ")"),
-      currentFunction_(nullptr), paramNameToType_(paramNameToType), nestingOfStencilFunArgLists_(0),
-      stencilContext_(stencilContext) {}
+      currentFunction_(nullptr), nestingOfStencilFunArgLists_(0), stencilContext_(stencilContext) {}
 
 ASTStencilBody::~ASTStencilBody() {}
 
@@ -113,15 +111,15 @@ void ASTStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
 
   ss_ << dawn::StencilFunctionInstantiation::makeCodeGenName(*stencilFun) << "(i,j,k";
 
-  int n = 0;
+  //  int n = 0;
+  ASTStencilFunctionParamVisitor fieldAccessVisitor(currentFunction_, instantiation_);
+
   for(auto& arg : expr->getArguments()) {
-    ASTStencilFunctionParamVisitor fieldAccessVisitor(paramNameToType_);
 
     arg->accept(fieldAccessVisitor);
-
-    ss_ << fieldAccessVisitor.getCodeAndResetStream();
-    ++n;
+    //    ++n;
   }
+  ss_ << fieldAccessVisitor.getCodeAndResetStream();
 
   nestingOfStencilFunArgLists_--;
   ss_ << ")";

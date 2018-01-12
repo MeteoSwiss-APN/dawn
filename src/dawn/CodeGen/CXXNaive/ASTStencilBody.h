@@ -39,8 +39,6 @@ protected:
 
   /// The stencil function we are currently generating or NULL
   const StencilFunctionInstantiation* currentFunction_;
-  // map of stencil (or stencil function) parameter types to names
-  std::unordered_map<std::string, std::string> paramNameToType_;
 
   /// Nesting level of argument lists of stencil function *calls*
   int nestingOfStencilFunArgLists_;
@@ -72,9 +70,7 @@ public:
   using Base = ASTCodeGenCXX;
 
   /// @brief constructor
-  ASTStencilBody(const StencilInstantiation* stencilInstantiation,
-                 std::unordered_map<std::string, std::string> paramNameToType,
-                 StencilContext stencilContext);
+  ASTStencilBody(const StencilInstantiation* stencilInstantiation, StencilContext stencilContext);
 
   virtual ~ASTStencilBody();
 

@@ -137,7 +137,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
                                 std::to_string(m) + ">> pw_" + paramName);
       }
 
-      ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, paramNameToType,
+      ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation,
                                            StencilContext::SC_StencilFunction);
 
       stencilFunMethod.startBody();
@@ -150,7 +150,6 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
                          << paramName << " = pw_" << paramName << ".dview_;";
         stencilFunMethod << "auto " << paramName << "_offsets = pw_" << paramName << ".offsets_;";
       }
-
       stencilBodyCXXVisitor.setCurrentStencilFunction(stencilFun.get());
       stencilBodyCXXVisitor.setIndent(stencilFunMethod.getIndent());
       for(const auto& statementAccessesPair : stencilFun->getStatementAccessesPairs()) {
@@ -220,8 +219,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
       paramNameToType.emplace((*fieldIt).Name, c_gtc().str() + "storage_t");
     }
 
-    ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, paramNameToType,
-                                         StencilContext::SC_Stencil);
+    ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, StencilContext::SC_Stencil);
 
     StencilClass.addComment("//Members");
 
@@ -318,7 +316,6 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
                             // Generate Do-Method
                             for(const auto& doMethodPtr : stage.getDoMethods()) {
                               const DoMethod& doMethod = *doMethodPtr;
-
                               if(!doMethod.getInterval().overlaps(interval))
                                 continue;
                               for(const auto& statementAccessesPair :
