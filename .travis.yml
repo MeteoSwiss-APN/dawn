@@ -19,14 +19,14 @@ dist: trusty
 sudo: false
   
 language: c++
-python:
-  - "3.5"
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
-
+      - deadsnakes
     packages:
+      - python3.5
+
       - g++-5
       - gcc-5
       - g++-6
