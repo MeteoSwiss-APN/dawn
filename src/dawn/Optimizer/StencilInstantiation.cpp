@@ -321,7 +321,6 @@ public:
           candiateScope->FunctionInstantiation->setCallerInitialOffsetFromAccessID(
               AccessID, Array3i{{0, 0, 0}});
           candiateScope->LocalFieldnameToAccessIDMap.emplace(field->Name, AccessID);
-
         } else {
           int AccessID = candiateScope->FunctionInstantiation->getCallerAccessIDOfArgField(argIdx);
           candiateScope->LocalFieldnameToAccessIDMap.emplace(field->Name, AccessID);
@@ -331,6 +330,11 @@ public:
     // Resolve the function
     scope_.push(scope_.top()->CandiateScopes.top());
     scope_.top()->FunctionInstantiation->getAST()->accept(*this);
+
+    for(auto id : stencilFun->getAccessIDSetGlobalVariables()) {
+      scope_.top()->LocalVarNameToAccessIDMap.emplace(stencilFun->getNameFromAccessID(id), id);
+    }
+
     scope_.pop();
 
     // We resolved the candiate function, move on ...
@@ -396,8 +400,12 @@ public:
         }
 
         if(function)
+          function->setAccessIDOfGlobalVariable(AccessID);
+
+        if(function) {
           function->mapExprToAccessID(expr, AccessID);
-        else
+          instantiation_->mapExprToAccessID(expr, AccessID);
+        } else
           instantiation_->mapExprToAccessID(expr, AccessID);
       }
 

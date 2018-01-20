@@ -208,6 +208,18 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
           arglist.push_back(std::move(paramName));
         }
 
+        // Global accessor declaration
+        for(auto accessID : stencilFun->getAccessIDSetGlobalVariables()) {
+          std::string paramName = stencilFun->getNameFromAccessID(accessID);
+          StencilFunStruct.addTypeDef(paramName)
+              .addType(c_gt() + "global_accessor")
+              .addTemplate(Twine(accessorID))
+              .addTemplate(c_gt_enum() + "in");
+          accessorID++;
+
+          arglist.push_back(std::move(paramName));
+        }
+
         // Generate arglist
         StencilFunStruct.addTypeDef("arg_list").addType("boost::mpl::vector").addTemplates(arglist);
         mplContainerMaxSize_ = std::max(mplContainerMaxSize_, arglist.size());
@@ -323,16 +335,14 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
 
           // Generate placeholder mapping of the field in `make_stage`
           ssMS << "p_" << paramName << "()"
-               << ((stage.getGlobalVariables().empty() && (accessorIdx == fields.size() - 1))
-                       ? ""
-                       : ", ");
+               << ((stage.hasGlobalVariables() && (accessorIdx == fields.size() - 1)) ? "" : ", ");
 
           arglist.push_back(std::move(paramName));
         }
 
         // Global accessor declaration
-        std::size_t maxAccessors = fields.size() + stage.getGlobalVariables().size();
-        for(int AccessID : stage.getGlobalVariables()) {
+        std::size_t maxAccessors = fields.size() + stage.getAllGlobalVariables().size();
+        for(int AccessID : stage.getAllGlobalVariables()) {
           std::string paramName = stencilInstantiation->getNameFromAccessID(AccessID);
 
           StageStruct.addTypeDef(paramName)

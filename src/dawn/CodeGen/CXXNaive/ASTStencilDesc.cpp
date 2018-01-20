@@ -28,11 +28,11 @@ ASTStencilDesc::ASTStencilDesc(const StencilInstantiation* instantiation,
 
 ASTStencilDesc::~ASTStencilDesc() {}
 
-const std::string& ASTStencilDesc::getName(const std::shared_ptr<Stmt>& stmt) const {
+std::string ASTStencilDesc::getName(const std::shared_ptr<Stmt>& stmt) const {
   return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
 }
 
-const std::string& ASTStencilDesc::getName(const std::shared_ptr<Expr>& expr) const {
+std::string ASTStencilDesc::getName(const std::shared_ptr<Expr>& expr) const {
   return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromExpr(expr));
 }
 

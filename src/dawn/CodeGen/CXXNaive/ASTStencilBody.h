@@ -104,8 +104,8 @@ public:
   void setCurrentStencilFunction(const StencilFunctionInstantiation* currentFunction);
 
   /// @brief Mapping of VarDeclStmt and Var/FieldAccessExpr to their name
-  const std::string& getName(const std::shared_ptr<Expr>& expr) const override;
-  const std::string& getName(const std::shared_ptr<Stmt>& stmt) const override;
+  std::string getName(const std::shared_ptr<Expr>& expr) const override;
+  std::string getName(const std::shared_ptr<Stmt>& stmt) const override;
   int getAccessID(const std::shared_ptr<Expr>& expr) const;
 };
 
