@@ -275,7 +275,7 @@ void Stage::update() {
 }
 
 bool Stage::hasGlobalVariables() const {
-  return (!globalVariables_.empty()) && (globalVariablesFromStencilFunctionCalls_.empty());
+  return (!globalVariables_.empty()) || (!globalVariablesFromStencilFunctionCalls_.empty());
 }
 
 const std::unordered_set<int>& Stage::getGlobalVariables() const { return globalVariables_; }
