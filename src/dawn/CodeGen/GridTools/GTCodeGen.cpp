@@ -334,7 +334,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
 
           // Generate placeholder mapping of the field in `make_stage`
           ssMS << "p_" << paramName << "()"
-               << ((stage.hasGlobalVariables() && (accessorIdx == fields.size() - 1)) ? "" : ", ");
+               << ((!stage.hasGlobalVariables() && (accessorIdx == fields.size() - 1)) ? "" : ", ");
 
           arglist.push_back(std::move(paramName));
         }
