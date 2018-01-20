@@ -34,14 +34,14 @@ ASTStencilBody::ASTStencilBody(const dawn::StencilInstantiation* stencilInstanti
 
 ASTStencilBody::~ASTStencilBody() {}
 
-const std::string& ASTStencilBody::getName(const std::shared_ptr<Stmt>& stmt) const {
+std::string ASTStencilBody::getName(const std::shared_ptr<Stmt>& stmt) const {
   if(currentFunction_)
     return currentFunction_->getNameFromAccessID(currentFunction_->getAccessIDFromStmt(stmt));
   else
     return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
 }
 
-const std::string& ASTStencilBody::getName(const std::shared_ptr<Expr>& expr) const {
+std::string ASTStencilBody::getName(const std::shared_ptr<Expr>& expr) const {
   if(currentFunction_)
     return currentFunction_->getNameFromAccessID(currentFunction_->getAccessIDFromExpr(expr));
   else

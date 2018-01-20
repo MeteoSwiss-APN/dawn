@@ -15,6 +15,7 @@
 #include "dawn/Optimizer/Stage.h"
 #include "dawn/Optimizer/DependencyGraphAccesses.h"
 #include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Logging.h"
 #include <algorithm>
 #include <iterator>
@@ -101,9 +102,45 @@ bool Stage::overlaps(const Interval& interval, ArrayRef<Field> fields) const {
   return false;
 }
 
+///
+/// @brief The CaptureStencilFunctionCallGlobalParams class
+/// is an AST visitor used to capture accesses to global accessor from within
+/// stencil functions called from a stage
+class CaptureStencilFunctionCallGlobalParams : public ASTVisitorForwarding {
+
+  std::unordered_set<int>& globalVariables_;
+  StencilFunctionInstantiation* currentFunction_;
+  StencilInstantiation* stencilInstantiation_;
+  StencilFunctionInstantiation* function_;
+
+public:
+  CaptureStencilFunctionCallGlobalParams(std::unordered_set<int>& globalVariables,
+                                         StencilInstantiation* stencilInstantiation)
+      : globalVariables_(globalVariables), stencilInstantiation_(stencilInstantiation),
+        function_(nullptr) {}
+
+  void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
+    // Find the referenced stencil function
+    StencilFunctionInstantiation* stencilFun =
+        function_ ? function_->getStencilFunctionInstantiation(expr)
+                  : stencilInstantiation_->getStencilFunctionInstantiation(expr);
+
+    DAWN_ASSERT(stencilFun);
+    for(auto it : stencilFun->getAccessIDSetGlobalVariables()) {
+      globalVariables_.insert(it);
+    }
+    StencilFunctionInstantiation* prevFunction_ = function_;
+    function_ = stencilFun;
+    stencilFun->getAST()->accept(*this);
+    function_ = prevFunction_;
+  }
+};
+
 void Stage::update() {
   fields_.clear();
   globalVariables_.clear();
+  globalVariablesFromStencilFunctionCalls_.clear();
+  allGlobalVariables_.clear();
 
   // Compute the fields and their intended usage. Fields can be in one of three states: `Output`,
   // `InputOutput` or `Input` which implements the following state machine:
@@ -120,9 +157,12 @@ void Stage::update() {
   std::set<int> inputFields;
   std::set<int> outputFields;
 
+  CaptureStencilFunctionCallGlobalParams functionCallGlobaParamVisitor(
+      globalVariablesFromStencilFunctionCalls_, stencilInstantiation_);
   for(const auto& doMethodPtr : DoMethods_) {
     const DoMethod& doMethod = *doMethodPtr;
     for(const auto& statementAccessesPair : doMethod.getStatementAccessesPairs()) {
+      statementAccessesPair->getStatement()->ASTStmt->accept(functionCallGlobaParamVisitor);
       const auto& access = statementAccessesPair->getAccesses();
 
       for(const auto& accessPair : access->getWriteAccesses()) {
@@ -174,8 +214,20 @@ void Stage::update() {
         // Field not yet present, record it as input
         inputFields.insert(AccessID);
       }
+
+      const std::shared_ptr<Statement> statement = statementAccessesPair->getStatement();
+      DAWN_ASSERT(statement);
+      DAWN_ASSERT(statement->ASTStmt);
+
+      // capture all the accesses to global accesses of stencil function called
+      // from this statement
+      statement->ASTStmt->accept(functionCallGlobaParamVisitor);
     }
   }
+
+  allGlobalVariables_.insert(globalVariables_.begin(), globalVariables_.end());
+  allGlobalVariables_.insert(globalVariablesFromStencilFunctionCalls_.begin(),
+                             globalVariablesFromStencilFunctionCalls_.end());
 
   // Merge inputFields, outputFields and fields
   for(int AccessID : outputFields)
@@ -222,7 +274,17 @@ void Stage::update() {
   }
 }
 
+bool Stage::hasGlobalVariables() const {
+  return (!globalVariables_.empty()) && (globalVariablesFromStencilFunctionCalls_.empty());
+}
+
 const std::unordered_set<int>& Stage::getGlobalVariables() const { return globalVariables_; }
+
+const std::unordered_set<int>& Stage::getGlobalVariablesFromStencilFunctionCalls() const {
+  return globalVariablesFromStencilFunctionCalls_;
+}
+
+const std::unordered_set<int>& Stage::getAllGlobalVariables() const { return allGlobalVariables_; }
 
 void Stage::addDoMethod(std::unique_ptr<DoMethod>& doMethod) {
   DAWN_ASSERT_MSG(std::find_if(DoMethods_.begin(), DoMethods_.end(),
