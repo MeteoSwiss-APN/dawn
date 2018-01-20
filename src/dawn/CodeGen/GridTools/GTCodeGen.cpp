@@ -213,8 +213,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
           std::string paramName = stencilFun->getNameFromAccessID(accessID);
           StencilFunStruct.addTypeDef(paramName)
               .addType(c_gt() + "global_accessor")
-              .addTemplate(Twine(accessorID))
-              .addTemplate(c_gt_enum() + "in");
+              .addTemplate(Twine(accessorID));
           accessorID++;
 
           arglist.push_back(std::move(paramName));
@@ -347,8 +346,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
 
           StageStruct.addTypeDef(paramName)
               .addType(c_gt() + "global_accessor")
-              .addTemplate(Twine(accessorIdx))
-              .addTemplate(c_gt_enum() + "inout");
+              .addTemplate(Twine(accessorIdx));
           accessorIdx++;
 
           // Generate placeholder mapping of the field in `make_stage`

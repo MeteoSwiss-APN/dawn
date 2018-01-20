@@ -116,8 +116,28 @@ void ASTStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
   ss_ << "gridtools::call<" << StencilFunctionInstantiation::makeCodeGenName(*stencilFun) << ", "
       << intervalToNameMap_.find(stencilFun->getInterval())->second << ">::with(eval";
 
-  for(auto& arg : expr->getArguments())
+  for(auto& arg : expr->getArguments()) {
     arg->accept(*this);
+  }
+
+  // we record in a set all global variables passed to the stencil call
+  std::set<int> globalVariablesInCallStmt;
+  for(auto& arg : expr->getArguments()) {
+    if(!isa<FieldAccessExpr>(*arg))
+      continue;
+    int accessID = currentFunction_ ? currentFunction_->getAccessIDFromExpr(arg)
+                                    : instantiation_->getAccessIDFromExpr(arg);
+    if(instantiation_->isGlobalVariable(accessID))
+      globalVariablesInCallStmt.insert(accessID);
+  }
+
+  // explicitly add all global variables parameters that are used by stencil function but not passed
+  // by user in stencil function call
+  for(const int globalAccessID : stencilFun->getAccessIDSetGlobalVariables()) {
+    if(globalVariablesInCallStmt.count(globalAccessID))
+      continue;
+    ss_ << "," << instantiation_->getNameFromAccessID(globalAccessID) << "()";
+  }
 
   nestingOfStencilFunArgLists_--;
   ss_ << ")";
