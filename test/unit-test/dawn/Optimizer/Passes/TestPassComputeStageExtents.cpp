@@ -25,33 +25,43 @@ using namespace dawn;
 
 namespace {
 
-TEST(ComputeStageExtents, test_stencil_01) {
-  std::string filename = TestEnvironment::path_ + "/compute_extent_test_stencil_01.sir";
-  std::ifstream file(filename);
-  DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
+class ComputeStageExtents : public ::testing::Test {
+  std::unique_ptr<dawn::Options> compileOptions_;
 
-  std::string jsonstr((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+  dawn::DawnCompiler compiler_;
 
-  std::shared_ptr<SIR> sir = SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::SK_Json);
+protected:
+  ComputeStageExtents() : compiler_(compileOptions_.get()) {}
+  virtual void SetUp() {}
 
-  // Prepare options
-  std::unique_ptr<dawn::Options> compileOptions;
+  std::vector<std::shared_ptr<Stencil>> loadTest(std::string sirFilename) {
 
-  // Run the compiler
-  dawn::DawnCompiler compiler(compileOptions.get());
-  std::unique_ptr<OptimizerContext> optimizer = compiler.runOptimizer(sir.get());
-  // Report diganostics
-  if(compiler.getDiagnostics().hasDiags()) {
-    for(const auto& diag : compiler.getDiagnostics().getQueue())
-      std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
-    throw std::runtime_error("compilation failed");
+    std::string filename = TestEnvironment::path_ + "/" + sirFilename;
+    std::ifstream file(filename);
+    DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
+
+    std::string jsonstr((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+
+    std::shared_ptr<SIR> sir =
+        SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::SK_Json);
+
+    std::unique_ptr<OptimizerContext> optimizer = compiler_.runOptimizer(sir.get());
+    // Report diganostics
+    if(compiler_.getDiagnostics().hasDiags()) {
+      for(const auto& diag : compiler_.getDiagnostics().getQueue())
+        std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
+      throw std::runtime_error("compilation failed");
+    }
+
+    DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("compute_extent_test_stencil")),
+                    "compute_extent_test_stencil not found in sir");
+
+    return optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"]->getStencils();
   }
+};
 
-  DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("compute_extent_test_stencil")),
-                  "compute_extent_test_stencil not found in sir");
-
-  auto stencils =
-      optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"]->getStencils();
+TEST_F(ComputeStageExtents, test_stencil_01) {
+  auto stencils = loadTest("compute_extent_test_stencil_01.sir");
   ASSERT_TRUE((stencils.size() == 1));
   std::shared_ptr<Stencil> stencil = stencils[0];
 
@@ -60,33 +70,9 @@ TEST(ComputeStageExtents, test_stencil_01) {
   ASSERT_TRUE((stencil->getStage(1)->getExtents() == Extents{0, 0, 0, 0, 0, 0}));
 }
 
-TEST(ComputeStageExtents, test_stencil_02) {
-  std::string filename = TestEnvironment::path_ + "/compute_extent_test_stencil_02.sir";
-  std::ifstream file(filename);
-  DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
+TEST_F(ComputeStageExtents, test_stencil_02) {
+  auto stencils = loadTest("compute_extent_test_stencil_02.sir");
 
-  std::string jsonstr((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-
-  std::shared_ptr<SIR> sir = SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::SK_Json);
-
-  // Prepare options
-  std::unique_ptr<dawn::Options> compileOptions;
-
-  // Run the compiler
-  dawn::DawnCompiler compiler(compileOptions.get());
-  std::unique_ptr<OptimizerContext> optimizer = compiler.runOptimizer(sir.get());
-  // Report diganostics
-  if(compiler.getDiagnostics().hasDiags()) {
-    for(const auto& diag : compiler.getDiagnostics().getQueue())
-      std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
-    throw std::runtime_error("compilation failed");
-  }
-
-  DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("compute_extent_test_stencil")),
-                  "compute_extent_test_stencil not found in sir");
-
-  auto stencils =
-      optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"]->getStencils();
   ASSERT_TRUE((stencils.size() == 1));
   std::shared_ptr<Stencil> stencil = stencils[0];
 
@@ -95,33 +81,8 @@ TEST(ComputeStageExtents, test_stencil_02) {
   ASSERT_TRUE((stencil->getStage(1)->getExtents() == Extents{-1, 0, -1, 0, 0, 0}));
   ASSERT_TRUE((stencil->getStage(2)->getExtents() == Extents{0, 0, 0, 0, 0, 0}));
 }
-TEST(ComputeStageExtents, test_stencil_03) {
-  std::string filename = TestEnvironment::path_ + "/compute_extent_test_stencil_03.sir";
-  std::ifstream file(filename);
-  DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
-
-  std::string jsonstr((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-
-  std::shared_ptr<SIR> sir = SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::SK_Json);
-
-  // Prepare options
-  std::unique_ptr<dawn::Options> compileOptions;
-
-  // Run the compiler
-  dawn::DawnCompiler compiler(compileOptions.get());
-  std::unique_ptr<OptimizerContext> optimizer = compiler.runOptimizer(sir.get());
-  // Report diganostics
-  if(compiler.getDiagnostics().hasDiags()) {
-    for(const auto& diag : compiler.getDiagnostics().getQueue())
-      std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
-    throw std::runtime_error("compilation failed");
-  }
-
-  DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("compute_extent_test_stencil")),
-                  "compute_extent_test_stencil not found in sir");
-
-  auto stencils =
-      optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"]->getStencils();
+TEST_F(ComputeStageExtents, test_stencil_03) {
+  auto stencils = loadTest("compute_extent_test_stencil_03.sir");
   ASSERT_TRUE((stencils.size() == 1));
   std::shared_ptr<Stencil> stencil = stencils[0];
 
@@ -132,35 +93,9 @@ TEST(ComputeStageExtents, test_stencil_03) {
   ASSERT_TRUE((stencil->getStage(3)->getExtents() == Extents{0, 0, 0, 0, 0, 0}));
 }
 
-TEST(ComputeStageExtents, test_stencil_04) {
-  std::string filename = TestEnvironment::path_ + "/compute_extent_test_stencil_04.sir";
-  std::ifstream file(filename);
-  DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
+TEST_F(ComputeStageExtents, test_stencil_04) {
+  auto stencils = loadTest("compute_extent_test_stencil_04.sir");
 
-  std::string jsonstr((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-
-  std::shared_ptr<SIR> sir = SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::SK_Json);
-
-  // Prepare options
-  std::unique_ptr<dawn::Options> compileOptions = make_unique<Options>();
-
-  compileOptions->MaxHaloPoints = 4;
-
-  // Run the compiler
-  dawn::DawnCompiler compiler(compileOptions.get());
-  std::unique_ptr<OptimizerContext> optimizer = compiler.runOptimizer(sir.get());
-  // Report diganostics
-  if(compiler.getDiagnostics().hasDiags()) {
-    for(const auto& diag : compiler.getDiagnostics().getQueue())
-      std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
-    throw std::runtime_error("compilation failed");
-  }
-
-  DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("compute_extent_test_stencil")),
-                  "compute_extent_test_stencil not found in sir");
-
-  auto stencils =
-      optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"]->getStencils();
   ASSERT_TRUE((stencils.size() == 1));
   std::shared_ptr<Stencil> stencil = stencils[0];
 
@@ -171,35 +106,8 @@ TEST(ComputeStageExtents, test_stencil_04) {
   ASSERT_TRUE((stencil->getStage(3)->getExtents() == Extents{0, 0, 0, 0, 0, 0}));
 }
 
-TEST(ComputeStageExtents, test_stencil_05) {
-  std::string filename = TestEnvironment::path_ + "/compute_extent_test_stencil_05.sir";
-  std::ifstream file(filename);
-  DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
-
-  std::string jsonstr((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-
-  std::shared_ptr<SIR> sir = SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::SK_Json);
-
-  // Prepare options
-  std::unique_ptr<dawn::Options> compileOptions = make_unique<Options>();
-
-  compileOptions->MaxHaloPoints = 4;
-
-  // Run the compiler
-  dawn::DawnCompiler compiler(compileOptions.get());
-  std::unique_ptr<OptimizerContext> optimizer = compiler.runOptimizer(sir.get());
-  // Report diganostics
-  if(compiler.getDiagnostics().hasDiags()) {
-    for(const auto& diag : compiler.getDiagnostics().getQueue())
-      std::cerr << "Compilation Error " << diag->getMessage() << std::endl;
-    throw std::runtime_error("compilation failed");
-  }
-
-  DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("compute_extent_test_stencil")),
-                  "compute_extent_test_stencil not found in sir");
-
-  auto stencils =
-      optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"]->getStencils();
+TEST_F(ComputeStageExtents, test_stencil_05) {
+  auto stencils = loadTest("compute_extent_test_stencil_05.sir");
   ASSERT_TRUE((stencils.size() == 1));
   std::shared_ptr<Stencil> stencil = stencils[0];
 
