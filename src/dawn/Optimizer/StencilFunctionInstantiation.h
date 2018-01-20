@@ -142,11 +142,45 @@ private:
   /// Set of AccessID of fields which are not used
   std::set<int> unusedFields_;
 
+  /// Set containing the AccessIDs of "global variable" accesses. Global variable accesses are
+  /// represented by global_accessor or if we know the value at compile time we do a constant
+  /// folding of the variable
+  std::set<int> GlobalVariableAccessIDSet_;
+
 public:
   StencilFunctionInstantiation(StencilInstantiation* context,
                                const std::shared_ptr<StencilFunCallExpr>& expr,
                                sir::StencilFunction* function, const std::shared_ptr<AST>& ast,
                                const Interval& interval, bool isNested);
+
+  std::unordered_map<int, int>& ArgumentIndexToCallerAccessIDMap() {
+    return ArgumentIndexToCallerAccessIDMap_;
+  }
+  std::unordered_map<int, int> const& ArgumentIndexToCallerAccessIDMap() const {
+    return ArgumentIndexToCallerAccessIDMap_;
+  }
+
+  size_t numArgs() const;
+
+  /// @brief register the access id of a global variable access
+  void setAccessIDOfGlobalVariable(int AccessID);
+
+  /// @brief get the access id set of a global variables
+  /// @{
+  std::set<int>& getAccessIDSetGlobalVariables() { return GlobalVariableAccessIDSet_; }
+  std::set<int> const& getAccessIDSetGlobalVariables() const { return GlobalVariableAccessIDSet_; }
+  /// @}
+
+  /// @brief get the name of the arg parameter of the stencil function which is called passing
+  /// another function
+  ///
+  /// In the following example
+  /// stencil_function fn {
+  ///   storage arg_st1, arg_st2;
+  /// }
+  /// fn(storage1, fn(storage2) )
+  /// it will return arg_st2
+  std::string getArgNameFromFunctionCall(std::string fnCallName) const;
 
   /// @brief Get the associated StencilInstantiation
   StencilInstantiation* getStencilInstantiation() { return stencilInstantiation_; }
@@ -242,7 +276,7 @@ public:
   //===----------------------------------------------------------------------------------------===//
 
   /// @brief Get the `name` associated with the `AccessID`
-  const std::string& getNameFromAccessID(int AccessID) const;
+  std::string getNameFromAccessID(int AccessID) const;
 
   /// @brief Get the `name` associated with the literal `AccessID`
   const std::string& getNameFromLiteralAccessID(int AccessID) const;

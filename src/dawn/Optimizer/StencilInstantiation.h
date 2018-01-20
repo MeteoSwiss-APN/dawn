@@ -290,8 +290,7 @@ public:
 
   /// @brief Remove the stencil function given by `expr`
   ///
-  /// If `callerStencilFunctionInstantiation` is not NULL (i.e the stencil function is called
-  /// within
+  /// If `callerStencilFunctionInstantiation` is not NULL (i.e the stencil function is called within
   /// the scope of another stencil function), the stencil function will be removed
   /// from the `callerStencilFunctionInstantiation` instead of this `StencilInstantiation`.
   void removeStencilFunctionInstantiation(
@@ -300,8 +299,7 @@ public:
 
   /// @brief Register a new stencil function
   ///
-  /// If `curStencilFunctionInstantiation` is not NULL, the stencil function is treated as a
-  /// nested
+  /// If `curStencilFunctionInstantiation` is not NULL, the stencil function is treated as a nested
   /// stencil function.
   StencilFunctionInstantiation*
   makeStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr,

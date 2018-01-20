@@ -240,14 +240,22 @@ void StencilFunctionInstantiation::renameCallerAccessID(int oldAccessID, int new
 //     Expr/Stmt to Caller AccessID Maps
 //===----------------------------------------------------------------------------------------===//
 
-const std::string& StencilFunctionInstantiation::getNameFromAccessID(int AccessID) const {
+std::string StencilFunctionInstantiation::getNameFromAccessID(int AccessID) const {
   // As we store the caller accessIDs, we have to get the name of the field from the context!
   if(AccessID < 0)
     return getNameFromLiteralAccessID(AccessID);
-  else if(stencilInstantiation_->isField(AccessID))
+  else if(stencilInstantiation_->isField(AccessID) ||
+          stencilInstantiation_->isGlobalVariable(AccessID))
     return stencilInstantiation_->getNameFromAccessID(AccessID);
-  else
+  else {
+    DAWN_ASSERT(AccessIDToNameMap_.count(AccessID));
     return AccessIDToNameMap_.find(AccessID)->second;
+  }
+}
+
+void StencilFunctionInstantiation::setAccessIDOfGlobalVariable(int AccessID) {
+  //  setAccessIDNamePair(AccessID, name);
+  GlobalVariableAccessIDSet_.insert(AccessID);
 }
 
 const std::string& StencilFunctionInstantiation::getNameFromLiteralAccessID(int AccessID) const {
