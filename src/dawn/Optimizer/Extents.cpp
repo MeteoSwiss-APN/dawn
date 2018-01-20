@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/Extents.h"
+#include "dawn/Support/Assert.h"
 #include "dawn/Support/StringUtil.h"
 #include <iostream>
 
@@ -33,21 +34,28 @@ Extents::Extents(int extent1Minus, int extent1Plus, int extent2Minus, int extent
 }
 
 void Extents::merge(const Extents& other) {
+  DAWN_ASSERT(extents_.size() == other.extents_.size());
   for(std::size_t i = 0; i < extents_.size(); ++i)
     extents_[i].merge(other.extents_[i]);
 }
 
 void Extents::expand(const Extents& other) {
+  DAWN_ASSERT(extents_.size() == other.extents_.size());
+
   for(std::size_t i = 0; i < extents_.size(); ++i)
     extents_[i].expand(other.extents_[i]);
 }
 
 void Extents::merge(const Array3i& offset) {
+  DAWN_ASSERT(extents_.size() == offset.size());
+
   for(std::size_t i = 0; i < extents_.size(); ++i)
     extents_[i].merge(offset[i] >= 0 ? Extent{0, offset[i]} : Extent{offset[i], 0});
 }
 
 void Extents::add(const Extents& other) {
+  DAWN_ASSERT(extents_.size() == other.extents_.size());
+
   for(std::size_t i = 0; i < extents_.size(); ++i)
     extents_[i].add(other.extents_[i]);
 }
@@ -60,6 +68,8 @@ Extents Extents::add(const Extents& lhs, const Extents& rhs) {
 }
 
 void Extents::add(const Array3i& offset) {
+  DAWN_ASSERT(extents_.size() == offset.size());
+
   for(std::size_t i = 0; i < extents_.size(); ++i)
     extents_[i].add(offset[i]);
 }
