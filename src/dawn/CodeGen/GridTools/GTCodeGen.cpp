@@ -157,7 +157,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
 
     // Generate code for members of the stencil
     StencilClass.addComment("Members");
-    StencilClass.addMember("std::shared_ptr< gridtools::stencil >", "m_stencil");
+    StencilClass.addMember("std::shared_ptr< gridtools::stencil<gridtools::notype> >", "m_stencil");
     StencilClass.addMember(Twine("std::unique_ptr< grid_") + StencilName + ">", "m_grid");
 
     //
@@ -513,7 +513,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     dtor.commit();
 
     // Generate stencil getter
-    StencilClass.addMemberFunction("gridtools::stencil*", "get_stencil")
+    StencilClass.addMemberFunction("gridtools::stencil<gridtools::notype>*", "get_stencil")
         .addStatement("return m_stencil.get()");
   }
 
@@ -630,11 +630,12 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
   RunMethod.commit();
 
   // Generate stencil getter
-  StencilWrapperClass.addMemberFunction("std::vector<gridtools::stencil*>", "get_stencils")
-      .addStatement("return " + RangeToString(", ", "std::vector<gridtools::stencil*>({",
-                                              "})")(stencilMembers, [](const std::string& member) {
-                      return member + ".get_stencil()";
-                    }));
+  StencilWrapperClass
+      .addMemberFunction("std::vector<gridtools::stencil<gridtools::notype>*>", "get_stencils")
+      .addStatement(
+          "return " +
+          RangeToString(", ", "std::vector<gridtools::stencil<gridtools::notype>*>({", "})")(
+              stencilMembers, [](const std::string& member) { return member + ".get_stencil()"; }));
 
   // Generate name getter
   StencilWrapperClass.addMemberFunction("const char*", "get_name")
