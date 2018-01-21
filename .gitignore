@@ -13,6 +13,10 @@
 build*/
 install*/
 
+# Meta project information
+bundle/mchbuild/*
+bundle/CMakeFiles/*
+
 # Shared library in source dir
 *.so
 *.dylib
