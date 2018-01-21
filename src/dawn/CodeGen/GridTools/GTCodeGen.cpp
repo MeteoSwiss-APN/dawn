@@ -158,7 +158,6 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     // Generate code for members of the stencil
     StencilClass.addComment("Members");
     StencilClass.addMember("std::shared_ptr< gridtools::stencil<gridtools::notype> >", "m_stencil");
-    StencilClass.addMember(Twine("std::unique_ptr< grid_") + StencilName + ">", "m_grid");
 
     //
     // Generate stencil functions code for stencils instantiated by this stencil
@@ -301,7 +300,10 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
         Structure StageStruct =
             StencilClass.addStruct(Twine("stage_") + Twine(multiStageIdx) + "_" + Twine(stageIdx));
 
-        ssMS << "gridtools::make_stage<" << StageStruct.getName() << ">(";
+        ssMS << "gridtools::make_stage_with_extent<" << StageStruct.getName() << ", extent< ";
+        auto extents = stage.getExtents().getExtents();
+        ssMS << extents[0].Minus << ", " << extents[0].Plus << ", " << extents[1].Minus << ", "
+             << extents[1].Plus << "> >(";
 
         // Field declaration
         const auto& fields = stage.getFields();
@@ -417,7 +419,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     StencilConstructor.addArg("const gridtools::clang::domain& dom");
     for(int i = 0; i < numFields; ++i)
       if(!StencilFields[i].IsTemporary)
-        StencilConstructor.addArg(StencilConstructorTemplates[i - numTemporaries] + "& " +
+        StencilConstructor.addArg(StencilConstructorTemplates[i - numTemporaries] + " " +
                                   StencilFields[i].Name);
 
     StencilConstructor.startBody();
@@ -458,49 +460,56 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     // Placeholders to map the real storages to the placeholders (no temporaries)
     std::vector<std::string> DomainMapPlaceholders;
     std::transform(StencilFields.begin() + numTemporaries, StencilFields.end(),
-                   std::back_inserter(DomainMapPlaceholders),
-                   [](const Stencil::FieldInfo& field) { return field.Name; });
+                   std::back_inserter(DomainMapPlaceholders), [](const Stencil::FieldInfo& field) {
+                     return "(p_" + field.Name + "() = " + field.Name + ")";
+                   });
     for(const auto& var : StencilGlobalVariables)
-      DomainMapPlaceholders.push_back("globals::get()." + var + ".as_global_parameter()");
+      DomainMapPlaceholders.push_back("(p_" + var + "() = globals::get()." + var +
+                                      ".as_global_parameter())");
 
     // This is a memory leak.. but nothing we can do ;)
-    // https://github.com/eth-cscs/gridtools/issues/621
-    StencilConstructor.addStatement("auto gt_domain = new " + c_gt() +
-                                    "aggregator_type<domain_arg_list>(" +
+    StencilConstructor.addStatement(c_gt() + "aggregator_type<domain_arg_list> gt_domain(" +
                                     RangeToString(", ", "", ")")(DomainMapPlaceholders));
 
     // Generate grid
     StencilConstructor.addComment("Grid");
-    StencilConstructor.addStatement("unsigned int di[5] = {dom.iminus(), dom.iminus(), "
+    StencilConstructor.addStatement("gridtools::halo_descriptor di = {dom.iminus(), dom.iminus(), "
                                     "dom.iplus(), dom.isize() - 1 - dom.iplus(), dom.isize()}");
-    StencilConstructor.addStatement("unsigned int dj[5] = {dom.jminus(), dom.jminus(), "
+    StencilConstructor.addStatement("gridtools::halo_descriptor dj = {dom.jminus(), dom.jminus(), "
                                     "dom.jplus(), dom.jsize() - 1 - dom.jplus(), dom.jsize()}");
-    StencilConstructor.addStatement("m_grid = std::unique_ptr<grid_stencil_" +
-                                    std::to_string(stencilIdx) + ">(new grid_stencil_" +
-                                    std::to_string(stencilIdx) + "(di, dj))");
+
+    StencilConstructor.addStatement(std::string("using axis_t = axis<") +
+                                    std::to_string((intervalDefinitions.Levels.size() == 1)
+                                                       ? 1
+                                                       : intervalDefinitions.Levels.size() - 1) +
+                                    ">");
 
     auto getLevelSize = [](int level) -> std::string {
       switch(level) {
       case sir::Interval::Start:
         return "dom.kminus()";
       case sir::Interval::End:
-        return "dom.ksize() == 0 ? 0 : dom.ksize() - dom.kplus() - 1";
+        return "dom.ksize() == 0 ? 0 : dom.ksize() - dom.kplus()-1";
       default:
         return std::to_string(level);
       }
     };
 
+    StencilConstructor.addStatement("auto grid_ = grid_stencil_" + std::to_string(stencilIdx) +
+                                    "(di, dj)");
+
     int levelIdx = 0;
+    // notice we skip the first level since it is kstart and not included in the GT grid definition
     for(auto it = intervalDefinitions.Levels.begin(), end = intervalDefinitions.Levels.end();
         it != end; ++it, ++levelIdx)
-      StencilConstructor.addStatement("m_grid->value_list[" + std::to_string(levelIdx) + "] = " +
+      StencilConstructor.addStatement("grid_.value_list[" + std::to_string(levelIdx) + "] = " +
                                       getLevelSize(*it));
 
     // Generate make_computation
     StencilConstructor.addComment("Computation");
     StencilConstructor.addStatement(
-        Twine("m_stencil = gridtools::make_computation<gridtools::clang::backend_t>(*gt_domain, "
-              "*m_grid") +
+        Twine("m_stencil = gridtools::make_computation<gridtools::clang::backend_t>(gt_domain, "
+              "grid_") +
         RangeToString(", ", ", ", ")")(makeComputation));
 
     StencilConstructor.commit();
@@ -567,7 +576,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
 
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
   for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i)
-    StencilWrapperConstructor.addArg(StencilWrapperConstructorTemplates[i] + "& " +
+    StencilWrapperConstructor.addArg(StencilWrapperConstructorTemplates[i] + " " +
                                      SIRFieldsWithoutTemps[i]->Name);
 
   // Initialize allocated fields
