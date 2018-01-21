@@ -40,7 +40,7 @@ cd build
 
 build_dir=$(pwd)
 
-export PYTHON_DIR=/opt/python/3.5.3
+export PYTHON_DIR=$(which python3.5)
 
 cmake .. -DCMAKE_CXX_COMPILER="$CXX"                                                                                          \
          -DCMAKE_C_COMPILER="$CC"                                                                                             \
@@ -49,7 +49,7 @@ cmake .. -DCMAKE_CXX_COMPILER="$CXX"                                            
          -DGTCLANG_UNIT_TESTING=ON                                                                                            \
          -DGTCLANG_INTEGRATION_TESTING=ON                                                                                     \
          -DDawn_DIR=${build_dir}/dawn-prefix/src/dawn-build/prefix/dawn/cmake/                                                \
-         -DPYTHON_EXECUTABLE="$PYTHON_DIR/bin/python3"                                                                        \
+         -DPYTHON_EXECUTABLE="$PYTHON_DIR"                                                                                    \
       || fatal_error "failed to configure"
 
 make -j2 || fatal_error "failed to build"
