@@ -64,6 +64,7 @@ if(GTCLANG_HAS_GRIDTOOLS AND GTCLANG_BUILD_EXAMPLES)
   list(APPEND include_dirs "${CMAKE_SOURCE_DIR}/src")
   list(APPEND include_dirs "${GRIDTOOLS_INCLUDE_DIRS}")
   list(APPEND include_dirs "${CMAKE_SOURCE_DIR}")
+  list(APPEND include_dirs "${Boost_INCLUDE_DIR}")
 
   foreach(example ${codegen_examples})
 
