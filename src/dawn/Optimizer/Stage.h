@@ -57,6 +57,8 @@ class Stage {
 
   Extents extents_;
 
+  Extents extents_;
+
 public:
   /// @name Constructors and Assignment
   /// @{
