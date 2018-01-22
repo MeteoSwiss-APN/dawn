@@ -16,6 +16,7 @@
 #define DAWN_CODEGEN_CXXNAIVE_ASTSTENCILBODY_H
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
+#include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/Optimizer/Interval.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>
@@ -29,10 +30,6 @@ class StencilFunctionInstantiation;
 namespace codegen {
 namespace cxxnaive {
 
-// @brief context of a stencil body
-// (pure stencil or a stencil function)
-enum class StencilContext { SC_Stencil, SC_StencilFunction };
-
 /// @brief ASTVisitor to generate C++ naive code for the stencil and stencil function bodies
 /// @ingroup cxxnaive
 class ASTStencilBody : public ASTCodeGenCXX {
@@ -42,8 +39,6 @@ protected:
 
   /// The stencil function we are currently generating or NULL
   const StencilFunctionInstantiation* currentFunction_;
-  // map of stencil (or stencil function) parameter types to names
-  std::unordered_map<std::string, std::string> paramNameToType_;
 
   /// Nesting level of argument lists of stencil function *calls*
   int nestingOfStencilFunArgLists_;
@@ -75,9 +70,7 @@ public:
   using Base = ASTCodeGenCXX;
 
   /// @brief constructor
-  ASTStencilBody(const StencilInstantiation* stencilInstantiation,
-                 std::unordered_map<std::string, std::string> paramNameToType,
-                 StencilContext stencilContext);
+  ASTStencilBody(const StencilInstantiation* stencilInstantiation, StencilContext stencilContext);
 
   virtual ~ASTStencilBody();
 
@@ -111,8 +104,8 @@ public:
   void setCurrentStencilFunction(const StencilFunctionInstantiation* currentFunction);
 
   /// @brief Mapping of VarDeclStmt and Var/FieldAccessExpr to their name
-  const std::string& getName(const std::shared_ptr<Expr>& expr) const override;
-  const std::string& getName(const std::shared_ptr<Stmt>& stmt) const override;
+  std::string getName(const std::shared_ptr<Expr>& expr) const override;
+  std::string getName(const std::shared_ptr<Stmt>& stmt) const override;
   int getAccessID(const std::shared_ptr<Expr>& expr) const;
 };
 

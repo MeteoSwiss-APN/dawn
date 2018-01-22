@@ -21,8 +21,8 @@
 
 namespace dawn {
 
-OptimizerContext::OptimizerContext(DawnCompiler* compiler, const SIR* SIR)
-    : compiler_(compiler), SIR_(SIR) {
+OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, Options& options, const SIR* SIR)
+    : diagnostics_(diagnostics), options_(options), SIR_(SIR) {
   DAWN_LOG(INFO) << "Intializing OptimizerContext ... ";
 
   for(const auto& stencil : SIR_->Stencils)
@@ -44,14 +44,12 @@ OptimizerContext::getStencilInstantiationMap() const {
   return stencilInstantiationMap_;
 }
 
-const DiagnosticsEngine& OptimizerContext::getDiagnostics() const {
-  return compiler_->getDiagnostics();
-}
+const DiagnosticsEngine& OptimizerContext::getDiagnostics() const { return diagnostics_; }
 
-DiagnosticsEngine& OptimizerContext::getDiagnostics() { return compiler_->getDiagnostics(); }
+DiagnosticsEngine& OptimizerContext::getDiagnostics() { return diagnostics_; }
 
-const Options& OptimizerContext::getOptions() const { return compiler_->getOptions(); }
+const Options& OptimizerContext::getOptions() const { return options_; }
 
-Options& OptimizerContext::getOptions() { return compiler_->getOptions(); }
+Options& OptimizerContext::getOptions() { return options_; }
 
 } // namespace dawn

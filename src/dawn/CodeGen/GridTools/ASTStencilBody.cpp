@@ -24,22 +24,21 @@ namespace dawn {
 namespace codegen {
 namespace gt {
 
-ASTStencilBody::ASTStencilBody(
-    const StencilInstantiation* stencilInstantiation,
-    const std::unordered_map<Interval, std::string>& intervalToNameMap)
+ASTStencilBody::ASTStencilBody(const StencilInstantiation* stencilInstantiation,
+                               const std::unordered_map<Interval, std::string>& intervalToNameMap)
     : ASTCodeGenCXX(), instantiation_(stencilInstantiation), intervalToNameMap_(intervalToNameMap),
       offsetPrinter_(",", "(", ")"), currentFunction_(nullptr), nestingOfStencilFunArgLists_(0) {}
 
 ASTStencilBody::~ASTStencilBody() {}
 
-const std::string& ASTStencilBody::getName(const std::shared_ptr<Stmt>& stmt) const {
+std::string ASTStencilBody::getName(const std::shared_ptr<Stmt>& stmt) const {
   if(currentFunction_)
     return currentFunction_->getNameFromAccessID(currentFunction_->getAccessIDFromStmt(stmt));
   else
     return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
 }
 
-const std::string& ASTStencilBody::getName(const std::shared_ptr<Expr>& expr) const {
+std::string ASTStencilBody::getName(const std::shared_ptr<Expr>& expr) const {
   if(currentFunction_)
     return currentFunction_->getNameFromAccessID(currentFunction_->getAccessIDFromExpr(expr));
   else
@@ -96,21 +95,13 @@ void ASTStencilBody::visit(const std::shared_ptr<IfStmt>& stmt) { Base::visit(st
 //     Expr
 //===------------------------------------------------------------------------------------------===//
 
-void ASTStencilBody::visit(const std::shared_ptr<UnaryOperator>& expr) {
-  Base::visit(expr);
-}
+void ASTStencilBody::visit(const std::shared_ptr<UnaryOperator>& expr) { Base::visit(expr); }
 
-void ASTStencilBody::visit(const std::shared_ptr<BinaryOperator>& expr) {
-  Base::visit(expr);
-}
+void ASTStencilBody::visit(const std::shared_ptr<BinaryOperator>& expr) { Base::visit(expr); }
 
-void ASTStencilBody::visit(const std::shared_ptr<AssignmentExpr>& expr) {
-  Base::visit(expr);
-}
+void ASTStencilBody::visit(const std::shared_ptr<AssignmentExpr>& expr) { Base::visit(expr); }
 
-void ASTStencilBody::visit(const std::shared_ptr<TernaryOperator>& expr) {
-  Base::visit(expr);
-}
+void ASTStencilBody::visit(const std::shared_ptr<TernaryOperator>& expr) { Base::visit(expr); }
 
 void ASTStencilBody::visit(const std::shared_ptr<FunCallExpr>& expr) { Base::visit(expr); }
 
@@ -125,8 +116,28 @@ void ASTStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
   ss_ << "gridtools::call<" << StencilFunctionInstantiation::makeCodeGenName(*stencilFun) << ", "
       << intervalToNameMap_.find(stencilFun->getInterval())->second << ">::with(eval";
 
-  for(auto& arg : expr->getArguments())
+  for(auto& arg : expr->getArguments()) {
     arg->accept(*this);
+  }
+
+  // we record in a set all global variables passed to the stencil call
+  std::set<int> globalVariablesInCallStmt;
+  for(auto& arg : expr->getArguments()) {
+    if(!isa<FieldAccessExpr>(*arg))
+      continue;
+    int accessID = currentFunction_ ? currentFunction_->getAccessIDFromExpr(arg)
+                                    : instantiation_->getAccessIDFromExpr(arg);
+    if(instantiation_->isGlobalVariable(accessID))
+      globalVariablesInCallStmt.insert(accessID);
+  }
+
+  // explicitly add all global variables parameters that are used by stencil function but not passed
+  // by user in stencil function call
+  for(const int globalAccessID : stencilFun->getAccessIDSetGlobalVariables()) {
+    if(globalVariablesInCallStmt.count(globalAccessID))
+      continue;
+    ss_ << "," << instantiation_->getNameFromAccessID(globalAccessID) << "()";
+  }
 
   nestingOfStencilFunArgLists_--;
   ss_ << ")";
@@ -160,9 +171,7 @@ void ASTStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
   }
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<LiteralAccessExpr>& expr) {
-  Base::visit(expr);
-}
+void ASTStencilBody::visit(const std::shared_ptr<LiteralAccessExpr>& expr) { Base::visit(expr); }
 
 void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   if(!nestingOfStencilFunArgLists_)

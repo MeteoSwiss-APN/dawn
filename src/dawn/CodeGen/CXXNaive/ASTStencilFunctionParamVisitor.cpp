@@ -26,10 +26,25 @@ namespace codegen {
 namespace cxxnaive {
 
 ASTStencilFunctionParamVisitor::ASTStencilFunctionParamVisitor(
-    std::unordered_map<std::string, std::string> paramNameToType)
-    : paramNameToType_(paramNameToType) {}
+    StencilFunctionInstantiation const* function, StencilInstantiation const* instantiation)
+    : instantiation_(instantiation), currentFunction_(function) {}
 
 ASTStencilFunctionParamVisitor::~ASTStencilFunctionParamVisitor() {}
+
+std::string ASTStencilFunctionParamVisitor::getName(const std::shared_ptr<Expr>& expr) const {
+
+  if(currentFunction_)
+    return currentFunction_->getNameFromAccessID(getAccessID(expr));
+  else
+    return instantiation_->getNameFromAccessID(getAccessID(expr));
+}
+
+int ASTStencilFunctionParamVisitor::getAccessID(const std::shared_ptr<Expr>& expr) const {
+  if(currentFunction_)
+    return currentFunction_->getAccessIDFromExpr(expr);
+  else
+    return instantiation_->getAccessIDFromExpr(expr);
+}
 
 void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<VarAccessExpr>& expr) {}
 
@@ -37,14 +52,23 @@ void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<StencilFunArgEx
 
 void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<LiteralAccessExpr>& expr) {}
 
+void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
+
+  for(auto& arg : expr->getArguments()) {
+    arg->accept(*this);
+  }
+}
+
 void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
 
-  if(!paramNameToType_.count(expr->getName()))
-    DAWN_ASSERT_MSG(0, "param of stencil function call not found");
+  std::string fieldName = (currentFunction_)
+                              ? currentFunction_->getOriginalNameFromCallerAccessID(
+                                    currentFunction_->getAccessIDFromExpr(expr))
+                              : getName(expr);
 
-  ss_ << ",ParamWrapper<" << c_gt() << "data_view<" << paramNameToType_[expr->getName()] << ">>("
-      << expr->getName() << ","
-      << "std::array<int, 3>{" << RangeToString(", ", "", "")(expr->getOffset()) << "})";
+  ss_ << ",param_wrapper<decltype(" << fieldName << ")>(" << fieldName << ","
+      << "std::array<int, 3>{" << RangeToString(", ", "", "")(expr->getOffset())
+      << "}+" + fieldName + "_offsets)";
 }
 
 std::string ASTStencilFunctionParamVisitor::getCodeAndResetStream() {

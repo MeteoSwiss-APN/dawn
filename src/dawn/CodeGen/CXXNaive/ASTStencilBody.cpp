@@ -26,22 +26,20 @@ namespace codegen {
 namespace cxxnaive {
 
 ASTStencilBody::ASTStencilBody(const dawn::StencilInstantiation* stencilInstantiation,
-                               std::unordered_map<std::string, std::string> paramNameToType,
                                StencilContext stencilContext)
     : ASTCodeGenCXX(), instantiation_(stencilInstantiation), offsetPrinter_(",", "(", ")"),
-      currentFunction_(nullptr), paramNameToType_(paramNameToType), nestingOfStencilFunArgLists_(0),
-      stencilContext_(stencilContext) {}
+      currentFunction_(nullptr), nestingOfStencilFunArgLists_(0), stencilContext_(stencilContext) {}
 
 ASTStencilBody::~ASTStencilBody() {}
 
-const std::string& ASTStencilBody::getName(const std::shared_ptr<Stmt>& stmt) const {
+std::string ASTStencilBody::getName(const std::shared_ptr<Stmt>& stmt) const {
   if(currentFunction_)
     return currentFunction_->getNameFromAccessID(currentFunction_->getAccessIDFromStmt(stmt));
   else
     return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
 }
 
-const std::string& ASTStencilBody::getName(const std::shared_ptr<Expr>& expr) const {
+std::string ASTStencilBody::getName(const std::shared_ptr<Expr>& expr) const {
   if(currentFunction_)
     return currentFunction_->getNameFromAccessID(currentFunction_->getAccessIDFromExpr(expr));
   else
@@ -113,15 +111,15 @@ void ASTStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
 
   ss_ << dawn::StencilFunctionInstantiation::makeCodeGenName(*stencilFun) << "(i,j,k";
 
-  int n = 0;
+  //  int n = 0;
+  ASTStencilFunctionParamVisitor fieldAccessVisitor(currentFunction_, instantiation_);
+
   for(auto& arg : expr->getArguments()) {
-    ASTStencilFunctionParamVisitor fieldAccessVisitor(paramNameToType_);
 
     arg->accept(fieldAccessVisitor);
-
-    ss_ << fieldAccessVisitor.getCodeAndResetStream();
-    ++n;
+    //    ++n;
   }
+  ss_ << fieldAccessVisitor.getCodeAndResetStream();
 
   nestingOfStencilFunArgLists_--;
   ss_ << ")";
@@ -134,7 +132,7 @@ void ASTStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
   int AccessID = getAccessID(expr);
 
   if(instantiation_->isGlobalVariable(AccessID)) {
-    ss_ << "globals::get()." << name;
+    ss_ << "globals::get()." << name << ".get_value()";
   } else {
     ss_ << name;
 
@@ -149,12 +147,82 @@ void ASTStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
 void ASTStencilBody::visit(const std::shared_ptr<LiteralAccessExpr>& expr) { Base::visit(expr); }
 
 void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
+
   if(currentFunction_) {
-    std::string accessName = currentFunction_->getOriginalNameFromCallerAccessID(
-        currentFunction_->getAccessIDFromExpr(expr));
-    ss_ << accessName
-        << offsetPrinter_(
-               ijkfyOffset(currentFunction_->evalOffsetOfFieldAccessExpr(expr, false), accessName));
+    // extract the arg index, from the AccessID
+    int argIndex = -1;
+    for(auto idx : currentFunction_->ArgumentIndexToCallerAccessIDMap()) {
+      if(idx.second == currentFunction_->getAccessIDFromExpr(expr))
+        argIndex = idx.first;
+    }
+
+    DAWN_ASSERT(argIndex != -1);
+
+    // In order to explain the algorithm, let assume the following example
+    // stencil_function fn {
+    //   offset off1;
+    //   storage st1;
+    //   Do {
+    //     st1(off1+2);
+    //   }
+    // }
+    // ... Inside a stencil computation, there is a call to fn
+    // fn(offset_fn1, gn(offset_gn1, storage2, storage3)) ;
+
+    // If the arg index corresponds to a function instantation,
+    // it means the function was called passing another function as argument,
+    // i.e. gn in the example
+    if(currentFunction_->isArgStencilFunctionInstantiation(argIndex)) {
+      StencilFunctionInstantiation& argStencilFn =
+          *(currentFunction_->getFunctionInstantiationOfArgField(argIndex));
+
+      ss_ << StencilFunctionInstantiation::makeCodeGenName(argStencilFn) << "(i,j,k";
+
+      // parse the arguments of the argument stencil gn call
+      for(int argIdx = 0; argIdx < argStencilFn.numArgs(); ++argIdx) {
+        // parse the argument if it is a field. Ignore offsets/directions,
+        // since they are "inlined" in the code generation of the function
+        if(argStencilFn.isArgField(argIdx)) {
+          Array3i offset = expr->getOffset();
+
+          // parse the offsets of the field access, that should be used to offset the evaluation
+          // of gn(), i.e. off1+2 in the example
+          for(auto idx : expr->getArgumentMap()) {
+            if(idx != -1) {
+              DAWN_ASSERT_MSG((argStencilFn.isArgOffset(idx)),
+                              "index identified by argument map is not an offset arg");
+              int dim = argStencilFn.getCallerOffsetOfArgOffset(idx)[0];
+              int off = argStencilFn.getCallerOffsetOfArgOffset(idx)[1];
+              DAWN_ASSERT(dim < offset.size());
+              offset[dim] = off;
+            }
+          }
+
+          std::string accessName =
+              currentFunction_->getArgNameFromFunctionCall(argStencilFn.getName());
+          ss_ << ", "
+              << "pw_" + accessName << ".cloneWithOffset(std::array<int,"
+              << std::to_string(offset.size()) << ">{";
+
+          bool init = false;
+          for(auto idxIt : offset) {
+            if(init)
+              ss_ << ",";
+            ss_ << std::to_string(idxIt);
+            init = true;
+          }
+          ss_ << "})";
+        }
+      }
+      ss_ << ")";
+
+    } else {
+      std::string accessName = currentFunction_->getOriginalNameFromCallerAccessID(
+          currentFunction_->getAccessIDFromExpr(expr));
+      ss_ << accessName
+          << offsetPrinter_(ijkfyOffset(currentFunction_->evalOffsetOfFieldAccessExpr(expr, false),
+                                        accessName));
+    }
   } else {
     std::string accessName = getName(expr);
     ss_ << accessName << offsetPrinter_(ijkfyOffset(expr->getOffset(), accessName));

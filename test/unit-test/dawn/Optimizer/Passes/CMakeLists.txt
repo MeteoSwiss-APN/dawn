@@ -12,17 +12,16 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-dawn_add_unittest_impl(
-  NAME DawnUnittestOptimizer
-  SOURCES TestColoringAlgorithm.cpp
-          TestExtent.cpp  
-          TestGraph.cpp
-          TestIsDAGAlgorithm.cpp          
-          TestPartitionAlgorithm.cpp
+  mchbuild_add_unittest(
+    NAME DawnUnittestOptimizerPasses
+    SOURCES 
+          TestEnvironment.h
           TestMain.cpp
-          TestInterval.cpp
-          TestSCCAlgorithm.cpp
-          TestStencil.cpp
-)
+          TestPassComputeStageExtents.cpp
+    DEPENDS DawnUnittestStatic DawnStatic DawnCStatic ${DAWN_EXTERNAL_LIBRARIES} gtest
+    OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/unittest
+    GTEST_ARGS "${CMAKE_CURRENT_LIST_DIR}" "--gtest_color=yes"
+  )
 
-add_subdirectory(Passes)
+target_include_directories(DawnUnittestOptimizerPasses PUBLIC "${CMAKE_SOURCE_DIR}")
+

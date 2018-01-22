@@ -21,6 +21,7 @@
 #include "dawn/Optimizer/StatementAccessesPair.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Array.h"
+#include "dawn/Support/Unreachable.h"
 #include <memory>
 #include <set>
 #include <string>
@@ -30,6 +31,19 @@
 namespace dawn {
 
 class StencilInstantiation;
+
+inline std::string dim2str(int dim) {
+  switch(dim) {
+  case 0:
+    return "i";
+  case 1:
+    return "j";
+  case 2:
+    return "k";
+  default:
+    dawn_unreachable("invalid dimension");
+  }
+};
 
 /// @brief Specific instantiation of a stencil function
 ///
@@ -142,11 +156,45 @@ private:
   /// Set of AccessID of fields which are not used
   std::set<int> unusedFields_;
 
+  /// Set containing the AccessIDs of "global variable" accesses. Global variable accesses are
+  /// represented by global_accessor or if we know the value at compile time we do a constant
+  /// folding of the variable
+  std::set<int> GlobalVariableAccessIDSet_;
+
 public:
   StencilFunctionInstantiation(StencilInstantiation* context,
                                const std::shared_ptr<StencilFunCallExpr>& expr,
                                sir::StencilFunction* function, const std::shared_ptr<AST>& ast,
                                const Interval& interval, bool isNested);
+
+  std::unordered_map<int, int>& ArgumentIndexToCallerAccessIDMap() {
+    return ArgumentIndexToCallerAccessIDMap_;
+  }
+  std::unordered_map<int, int> const& ArgumentIndexToCallerAccessIDMap() const {
+    return ArgumentIndexToCallerAccessIDMap_;
+  }
+
+  size_t numArgs() const;
+
+  /// @brief register the access id of a global variable access
+  void setAccessIDOfGlobalVariable(int AccessID);
+
+  /// @brief get the access id set of a global variables
+  /// @{
+  std::set<int>& getAccessIDSetGlobalVariables() { return GlobalVariableAccessIDSet_; }
+  std::set<int> const& getAccessIDSetGlobalVariables() const { return GlobalVariableAccessIDSet_; }
+  /// @}
+
+  /// @brief get the name of the arg parameter of the stencil function which is called passing
+  /// another function
+  ///
+  /// In the following example
+  /// stencil_function fn {
+  ///   storage arg_st1, arg_st2;
+  /// }
+  /// fn(storage1, fn(storage2) )
+  /// it will return arg_st2
+  std::string getArgNameFromFunctionCall(std::string fnCallName) const;
 
   /// @brief Get the associated StencilInstantiation
   StencilInstantiation* getStencilInstantiation() { return stencilInstantiation_; }
@@ -242,7 +290,7 @@ public:
   //===----------------------------------------------------------------------------------------===//
 
   /// @brief Get the `name` associated with the `AccessID`
-  const std::string& getNameFromAccessID(int AccessID) const;
+  std::string getNameFromAccessID(int AccessID) const;
 
   /// @brief Get the `name` associated with the literal `AccessID`
   const std::string& getNameFromLiteralAccessID(int AccessID) const;
@@ -253,13 +301,17 @@ public:
   /// @brief Get the `AccessID` of the Stmt (VarDeclStmt)
   int getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) const;
 
-  /// @brief Get map which associates Exprs with `caller` AccessIDs
-  std::unordered_map<std::shared_ptr<Expr>, int>& getExprToCallerAccessIDMap();
-  const std::unordered_map<std::shared_ptr<Expr>, int>& getExprToCallerAccessIDMap() const;
+  /// @brief Set the `AccessID` of a Expr (VarAccess or FieldAccess)
+  void setAccessIDOfExpr(const std::shared_ptr<Expr>& expr, const int accessID);
 
-  /// @brief Get map which associates Stmts with `caller` AccessIDs
-  std::unordered_map<std::shared_ptr<Stmt>, int>& getStmtToCallerAccessIDMap();
-  const std::unordered_map<std::shared_ptr<Stmt>, int>& getStmtToCallerAccessIDMap() const;
+  /// @brief Add entry to the map between a given expr to its access ID
+  void mapExprToAccessID(std::shared_ptr<Expr> expr, int AccessID);
+
+  /// @brief Set the `AccessID` of a Stmt (VarDecl)
+  void setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt, const int accessID);
+
+  /// @brief Add entry to the map between a given stmt to its access ID
+  void mapStmtToAccessID(std::shared_ptr<Stmt> stmt, int AccessID);
 
   /// @brief Get the Literal-AccessID-to-Name map
   std::unordered_map<int, std::string>& getLiteralAccessIDToNameMap();
@@ -334,7 +386,7 @@ public:
   const std::shared_ptr<StencilFunCallExpr>& getExpression() const { return expr_; }
 
   /// @brief Dump the stencil function instantiation to stdout
-  void dump();
+  void dump() const;
 };
 
 } // namespace dawn
