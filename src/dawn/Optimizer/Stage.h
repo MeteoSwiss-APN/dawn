@@ -154,6 +154,9 @@ public:
   std::vector<std::shared_ptr<Stage>>
   split(std::deque<int>& splitterIndices,
         const std::deque<std::shared_ptr<DependencyGraphAccesses>>* graphs);
+
+  // This is just a mock-function until we merge the two prs: TODO: remove this
+  Extents getExtents() { return Extents(-1, 1, -1, 1, 0, 0); }
 };
 
 } // namespace dawn

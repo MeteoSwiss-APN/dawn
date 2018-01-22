@@ -81,6 +81,69 @@ GTClangCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
                               Interval::makeCodeGenName(stencilFun->getInterval()));
 }
 
+class StencilFunctionReader : public ASTCodeGenGTClangStencilBody {
+private:
+  std::shared_ptr<sir::StencilFunction> function;
+
+public:
+  using Base = ASTCodeGenGTClangStencilBody;
+  StencilFunctionReader(const StencilInstantiation* stencilInstantiation,
+                        const std::unordered_map<Interval, std::string>& intervalToNameMap,
+                        const std::shared_ptr<sir::StencilFunction>& foo)
+      : Base(stencilInstantiation, intervalToNameMap), function(foo) {}
+
+  void visit(const std::shared_ptr<FieldAccessExpr>& expr) {
+    auto printOffset = [](const Array3i& argumentoffsets) {
+      std::string retval = "";
+      if(argumentoffsets[0] == 0) {
+        retval += "i";
+      } else {
+        retval += dawn::format("i + %i", argumentoffsets[0]);
+      }
+      retval += " , ";
+      if(argumentoffsets[1] == 0) {
+        retval += "j";
+      } else {
+        retval += dawn::format("j + %i", argumentoffsets[1]);
+      }
+      retval += " , ";
+      if(argumentoffsets[2] == 0) {
+        retval += "k";
+      } else {
+        retval += dawn::format("k + %i", argumentoffsets[2]);
+      }
+      return retval;
+    };
+    expr->getName();
+    auto getArgumentIndex = [&](const std::string& name) {
+      for(int i = 0; i < function->Args.size(); ++i) {
+        if(name == function->Args[i]->Name) {
+          return i;
+        }
+      }
+      DAWN_ASSERT_MSG(false, "invalid argument");
+      return -1;
+    };
+    ss_ << dawn::format("data_field_%i(%s)", getArgumentIndex(expr->getName()),
+                        printOffset(expr->getOffset()));
+  }
+  void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) {
+    DAWN_ASSERT_MSG(0, "VerticalRegionDeclStmt not allowed in this context");
+  }
+  void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
+    DAWN_ASSERT_MSG(0, "StencilCallDeclStmt not allowed in this context");
+  }
+  void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
+    DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not allowed in this context");
+  }
+  void visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
+    DAWN_ASSERT_MSG(0, "StencilFunCallExpr not allowed in this context");
+  }
+  void visit(const std::shared_ptr<StencilFunArgExpr>& expr) {
+    DAWN_ASSERT_MSG(0, "StencilFunArgExpr not allowed in this context");
+  }
+};
+
 std::string
 GTClangCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInstantiation) {
   using namespace codegen;
@@ -98,6 +161,37 @@ GTClangCodeGen::generateStencilInstantiation(const StencilInstantiation* stencil
       "public"); // The stencils should technically be private but nvcc doesn't like it ...
 
   bool isEmpty = true;
+  std::unordered_map<Interval, std::string> empty;
+  // Functions for boundary conditions
+  for(auto usedBoundaryCondition : stencilInstantiation->getBoundaryConditions()) {
+    for(const auto& sf : stencilInstantiation->getSIR()->StencilFunctions) {
+      if(sf->Name == usedBoundaryCondition.second.functor) {
+
+        Structure BoundaryCondition = StencilWrapperClass.addStruct(Twine(sf->Name));
+        std::string templatefunctions = "typename Direction, typename DataField_0 ";
+        std::string functionargs = "Direction, DataField_0 &data_field_0";
+
+        // A templated datafield for every function argument
+        for(int i = 0; i < usedBoundaryCondition.second.arguments.size(); i++) {
+          templatefunctions += ", DataField_" + (i + 1);
+          functionargs += ", DataField_" + (i + 1);
+          functionargs += " &data_field_" + (i + 1);
+        }
+        functionargs += ", int i , int j, int k";
+        auto BC = BoundaryCondition.addMemberFunction(
+            Twine("GT_FUNCTION void"), Twine("operator()"), Twine(templatefunctions));
+        BC.isConst(true);
+        BC.addArg(functionargs);
+        BC.startBody();
+        StencilFunctionReader reader(stencilInstantiation, empty, sf);
+        sf->Asts[0]->accept(reader);
+        std::string output = reader.getCodeAndResetStream();
+        BC << output;
+        BC.commit();
+        break;
+      }
+    }
+  }
 
   // Generate stencils
   auto& stencils = stencilInstantiation->getStencils();
@@ -519,7 +613,20 @@ GTClangCodeGen::generateStencilInstantiation(const StencilInstantiation* stencil
   // Generate constructor/destructor and methods of the stencil wrapper
   //
   StencilWrapperClass.addComment("Members");
+  StencilWrapperClass.addComment("Fields that require Boundary Conditions");
+  // add all fields that require a boundary condition as members since they need to be called from
+  // this class and not from individual stencils
+  std::unordered_set<std::string> memberfields;
+  for(auto usedBoundaryCondition : stencilInstantiation->getBoundaryConditions()) {
+    memberfields.emplace(usedBoundaryCondition.first);
+    for(const auto& arg : usedBoundaryCondition.second.arguments)
+      memberfields.emplace(arg);
+  }
+  for(const auto& field : memberfields) {
+    StencilWrapperClass.addMember(Twine("storage_t"), Twine(field));
+  }
 
+  StencilWrapperClass.addComment("Stencil-Data");
   // Define allocated memebers if necessary
   if(stencilInstantiation->hasAllocatedFields()) {
     StencilWrapperClass.addMember(gtc() + "meta_data_t", "m_meta_data");
@@ -570,6 +677,10 @@ GTClangCodeGen::generateStencilInstantiation(const StencilInstantiation* stencil
       const std::string& name = stencilInstantiation->getNameFromAccessID(AccessID);
       StencilWrapperConstructor.addInit("m_" + name + "(m_meta_data, \"" + name + "\")");
     }
+  }
+  // Initialize storages that require boundary conditions
+  for(const auto& memberfield : memberfields) {
+    StencilWrapperConstructor.addInit(memberfield + "(" + memberfield + ")");
   }
 
   // Initialize stencils

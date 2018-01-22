@@ -34,6 +34,13 @@ protected:
   /// StencilID to the name of the generated stencils for this ID
   const std::unordered_map<int, std::vector<std::string>>& StencilIDToStencilNameMap_;
 
+  /// List of all the stencils visited already, required to compute the proper boundary-condition
+  /// extents
+  std::vector<int> StencilIDsVisited_;
+
+  /// A map of all the stencils that a given field already applied its boundary conditons to
+  std::unordered_map<std::string, std::vector<int>> StencilBCsApplied_;
+
 public:
   using Base = ASTCodeGenCXX;
 
