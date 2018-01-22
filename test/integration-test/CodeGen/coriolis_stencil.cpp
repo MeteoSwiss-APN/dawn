@@ -14,33 +14,22 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-// RUN: %gtclang% %file% -o%filename%_gen.cpp | %c++% %filename%_gen.cpp %gridtools_flags% -o%tmpdir%/%filename%
-
 #include "gridtools/clang_dsl.hpp"
 
 using namespace gridtools::clang;
 
-interval k_flat = k_start + 11;
-
-// Check if we correclty generate the empty Do-Methods according to
-// https://github.com/eth-cscs/gridtools/issues/330
-
-stencil EmptyDoMethodTest {
-  storage foo, bar;
+stencil coriolis_stencil {
+  storage u_tens, u_nnow, v_tens, v_nnow, fc;
 
   Do {
-    // Should give empty Do-Method for [k_flat+1, k_end]
-    vertical_region(k_start, k_flat)
-        foo = bar;
+    vertical_region(k_start, k_end) {
+      double z_fv_north = fc * (v_nnow + v_nnow(i + 1));
+      double z_fv_south = fc(j - 1) * (v_nnow(j - 1) + v_nnow(i + 1, j - 1));
+      u_tens += 0.25 * (z_fv_north + z_fv_south);
 
-    // Should give empty Do-Method for [k_start, k_flat-1], [k_flat+1, k_end]
-    vertical_region(k_flat, k_flat)
-        foo = bar;
-
-    // Should give empty Do-Method for [k_start, k_flat-1]
-    vertical_region(k_flat, k_end)
-        foo = bar;
+      double z_fu_east = fc * (u_nnow + u_nnow(j + 1));
+      double z_fu_west = fc(i - 1) * (u_nnow(i - 1) + u_nnow(i - 1, j + 1));
+      v_tens -= 0.25 * (z_fu_east + z_fu_west);
+    }
   }
 };
-
-int main() {}

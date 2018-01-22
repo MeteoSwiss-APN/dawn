@@ -18,19 +18,49 @@
 
 using namespace gridtools::clang;
 
-stencil_function laplacian {
-  storage phi;
+stencil_function delta {
+  offset off;
+  storage in;
 
-  Do { return phi(i + 1) + phi(i - 1) + phi(j + 1) + phi(j - 1) - 4.0 * phi; }
+  Do { return in(off)-in; }
 };
 
-stencil hori_diff_stencil {
-  storage u, out, lap;
+////
+//// Test 4
+////
+
+stencil_function sum {
+  storage s1, s2;
+
+  Do { return s1 + s2; }
+};
+
+stencil_function delta_sum {
+  offset off1;
+  offset off2;
+  storage in0;
+
+  Do { return sum(delta(off1, in0), delta(off2, in0)); }
+};
+
+stencil test_04_stencil {
+  storage in, out;
 
   Do {
-    vertical_region(k_start, k_end) {
-      lap = laplacian(u);
-      out = laplacian(lap);
-    }
+    vertical_region(k_start, k_end)
+        out = delta_sum(i + 1, j + 1, in);
+  }
+};
+
+////
+//// Test 5
+////
+
+stencil test_05_stencil {
+  storage in, out;
+
+  Do {
+    vertical_region(k_start, k_end)
+        out = delta(i + 1, delta(j + 1, delta(i + 1, in)));
   }
 };

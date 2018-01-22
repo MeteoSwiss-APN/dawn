@@ -14,23 +14,24 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "gridtools/clang_dsl.hpp"
+#ifndef GRIDTOOLS_CLANG_ARRAYADDONS_HPP
+#define GRIDTOOLS_CLANG_ARRAYADDONS_HPP
 
-using namespace gridtools::clang;
+#include <array>
 
-stencil_function laplacian {
-  storage phi;
+namespace gridtools {
+    namespace clang {
 
-  Do { return phi(i + 1) + phi(i - 1) + phi(j + 1) + phi(j - 1) - 4.0 * phi; }
-};
+        template < size_t N >
+        std::array< int, N > operator+(
+            std::array< int, N > const &lhs, std::array< int, N > const &rhs) {
+            std::array< int, N > res;
+            for (size_t i = 0; i < N; ++i) {
+                res[i] = lhs[i] + rhs[i];
+            }
+            return res;
+        }
+    } // namespace clang
+} // namespace gridtools
 
-stencil hori_diff_stencil {
-  storage u, out, lap;
-
-  Do {
-    vertical_region(k_start, k_end) {
-      lap = laplacian(u);
-      out = laplacian(lap);
-    }
-  }
-};
+#endif

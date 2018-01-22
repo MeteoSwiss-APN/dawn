@@ -14,8 +14,6 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-// RUN: %gtclang% %file% -ohori_diff_stencil_01_gen.cpp | %c++% hori_diff_stencil_01_gen.cpp %gridtools_flags% -fsyntax-only
-
 #include "gridtools/clang_dsl.hpp"
 
 using namespace gridtools::clang;
@@ -30,13 +28,3 @@ stencil hori_diff_stencil {
     }
   }
 };
-
-int main() {
-  domain dom(64, 64, 80);
-  dom.set_halos(halo::value, halo::value, halo::value, halo::value, 0, 0);
-
-  meta_data_t meta_data(256, 256, 80);
-  storage_t u(meta_data, "u"), out(meta_data, "out"), lap(meta_data, "lap");
-
-  hori_diff_stencil hori_diff(dom, u, out, lap);
-}

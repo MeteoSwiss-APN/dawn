@@ -13,24 +13,34 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
+#ifndef TEST_INTEGRATIONTEST_CODEGEN_OPTIONS_H
+#define TEST_INTEGRATIONTEST_CODEGEN_OPTIONS_H
 
-#include "gridtools/clang_dsl.hpp"
+#include <string>
 
-using namespace gridtools::clang;
-
-stencil_function laplacian {
-  storage phi;
-
-  Do { return phi(i + 1) + phi(i - 1) + phi(j + 1) + phi(j - 1) - 4.0 * phi; }
-};
-
-stencil hori_diff_stencil {
-  storage u, out, lap;
-
-  Do {
-    vertical_region(k_start, k_end) {
-      lap = laplacian(u);
-      out = laplacian(lap);
+namespace dawn {
+/**
+* @class Options
+* Singleton data container for program options
+*/
+class Options /* singleton */
+{
+private:
+  Options() {
+    for(int i = 0; i < 4; ++i) {
+      m_size[i] = 0;
     }
+    m_verify = true;
   }
+  Options(const Options&) {}
+  ~Options() {}
+
+public:
+  static Options& getInstance();
+
+  int m_size[4] = {12, 12, 12, 10};
+  bool m_verify;
 };
+}
+
+#endif

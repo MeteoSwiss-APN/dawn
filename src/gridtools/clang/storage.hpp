@@ -17,7 +17,6 @@
 #pragma once
 
 #include <type_traits>
-
 #ifdef GRIDTOOLS_CLANG_GENERATED
 
 // Set the storage type

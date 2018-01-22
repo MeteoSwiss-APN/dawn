@@ -13,24 +13,22 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
+#include <gtest/gtest.h>
+#include "test/integration-test/CodeGen/Options.hpp"
 
-#include "gridtools/clang_dsl.hpp"
+using namespace dawn;
 
-using namespace gridtools::clang;
+int main(int argc, char** argv) {
+  // Pass command line arguments to googltest
+  ::testing::InitGoogleTest(&argc, argv);
 
-stencil_function laplacian {
-  storage phi;
-
-  Do { return phi(i + 1) + phi(i - 1) + phi(j + 1) + phi(j - 1) - 4.0 * phi; }
-};
-
-stencil hori_diff_stencil {
-  storage u, out, lap;
-
-  Do {
-    vertical_region(k_start, k_end) {
-      lap = laplacian(u);
-      out = laplacian(lap);
-    }
+  if(argc < 4) {
+    printf("Usage: <pack>_stencil_<whatever> dimx dimy dimz\n where args are integer sizes of the data fields\n");
+    return 1;
   }
-};
+
+  for(int i = 0; i != 3; ++i) {
+    Options::getInstance().m_size[i] = atoi(argv[i + 1]);
+  }
+  return RUN_ALL_TESTS();
+}

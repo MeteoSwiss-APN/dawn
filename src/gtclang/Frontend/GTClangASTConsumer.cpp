@@ -133,12 +133,14 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   else {
     context_->getDiagnostics().report(Diagnostics::err_invalid_option)
         << ("-backend=" + context_->getOptions().Backend)
-        << dawn::RangeToString(", ", "", "")(std::vector<std::string>{"gridtools", "c++-naive", "c++-opt"});
+        << dawn::RangeToString(", ", "",
+                               "")(std::vector<std::string>{"gridtools", "c++-naive", "c++-opt"});
   }
 
   // Compile the SIR to GridTools
   dawn::DawnCompiler Compiler(makeDAWNOptions(context_->getOptions()).get());
-  std::unique_ptr<dawn::codegen::TranslationUnit> DawnTranslationUnit = Compiler.compile(SIR.get(), codeGen);
+  std::unique_ptr<dawn::codegen::TranslationUnit> DawnTranslationUnit =
+      Compiler.compile(SIR.get(), codeGen);
 
   // Report diagnostics from Dawn
   if(Compiler.getDiagnostics().hasDiags()) {
@@ -202,7 +204,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
     clang::CXXRecordDecl* stencilDecl = stencilPair.first;
     if(rewriter.ReplaceText(stencilDecl->getSourceRange(),
                             stencilPair.second->Attributes.has(dawn::sir::Attr::AK_NoCodeGen)
-                                ? "class " + stencilPair.second->Name + "{}"
+                                ? ""
                                 : DawnTranslationUnit->getStencils().at(stencilPair.second->Name)))
       context_->getDiagnostics().report(Diagnostics::err_fs_error) << dawn::format(
           "unable to replace stencil code at: %s", stencilDecl->getLocation().printToString(SM));
@@ -220,8 +222,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   // Remove the code from stencil-functions
   for(const auto& stencilFunPair : stencilParser.getStencilFunctionMap()) {
     clang::CXXRecordDecl* stencilFunDecl = stencilFunPair.first;
-    rewriter.ReplaceText(stencilFunDecl->getSourceRange(),
-                         "class " + stencilFunPair.second->Name + "{}");
+    rewriter.ReplaceText(stencilFunDecl->getSourceRange(), "");
   }
 
   std::string code;
