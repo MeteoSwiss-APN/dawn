@@ -21,28 +21,28 @@
 namespace dawn {
 
 static Extents analyzestencilExtents(const std::shared_ptr<Stencil>& s, int ID) {
-    std::unordered_map<int, Extents> fieldIDtoFullExtentSize;
-      Stencil& stencil = *s;
+  std::unordered_map<int, Extents> fieldIDtoFullExtentSize;
+  Stencil& stencil = *s;
 
-      int numStages = stencil.getNumStages();
+  int numStages = stencil.getNumStages();
 
-      // loop over stages
-      for(int i = 0; i < numStages; ++i) {
-        Stage& stage = *(stencil.getStage(i));
+  // loop over stages
+  for(int i = 0; i < numStages; ++i) {
+    Stage& stage = *(stencil.getStage(i));
 
-        Extents const& stageExtent = stage.getExtents();
-        for(auto& field : stage.getFields()) {
-          if(fieldIDtoFullExtentSize.count(ID) == 0) {
-            fieldIDtoFullExtentSize.emplace(ID, field.Extent);
-            fieldIDtoFullExtentSize.find(ID)->second.add(stageExtent);
-          } else {
-            fieldIDtoFullExtentSize.find(ID)->second.merge(field.Extent);
-            fieldIDtoFullExtentSize.find(ID)->second.add(stageExtent);
-          }
-        }
+    Extents const& stageExtent = stage.getExtents();
+    for(auto& field : stage.getFields()) {
+      if(fieldIDtoFullExtentSize.count(ID) == 0) {
+        fieldIDtoFullExtentSize.emplace(ID, field.Extent);
+        fieldIDtoFullExtentSize.find(ID)->second.add(stageExtent);
+      } else {
+        fieldIDtoFullExtentSize.find(ID)->second.merge(field.Extent);
+        fieldIDtoFullExtentSize.find(ID)->second.add(stageExtent);
       }
+    }
+  }
 
-    return fieldIDtoFullExtentSize.find(ID)->second;
+  return fieldIDtoFullExtentSize.find(ID)->second;
 }
 
 ASTCodeGenGTClangStencilDesc::ASTCodeGenGTClangStencilDesc(

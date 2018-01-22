@@ -91,7 +91,7 @@ void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<StencilCallDeclSt
 }
 
 void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
-    DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not allowed in this context");
+  DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not allowed in this context");
 }
 
 void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<IfStmt>& stmt) { Base::visit(stmt); }
