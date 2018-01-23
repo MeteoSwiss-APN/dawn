@@ -52,7 +52,7 @@ namespace gridtools {
                 double e,
                 double f,
                 StorageTypes &... storages) const {
-                const gridtools::float_type PI = std::atan(1.) * 4.;
+                const gridtools::float_type pi = std::atan(1.) * 4.;
                 for_each(
                     [&](std::array< unsigned int, 3 > dims, int i, int j, int k) {
                         // 8,2,1.5,1.5,2,4
@@ -61,8 +61,8 @@ namespace gridtools {
                         return k +
                                (gridtools::float_type)a *
                                    ((gridtools::float_type)b +
-                                       cos(PI * (x + (gridtools::float_type)c * y)) +
-                                       sin((gridtools::float_type)d * PI *
+                                       cos(pi * (x + (gridtools::float_type)c * y)) +
+                                       sin((gridtools::float_type)d * pi *
                                            (x + (gridtools::float_type)e * y))) /
                                    (gridtools::float_type)f;
                     },
