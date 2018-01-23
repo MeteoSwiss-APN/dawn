@@ -137,10 +137,12 @@ std::vector<Stencil::FieldInfo> Stencil::getFields(bool withTemporaries) const {
 
 std::vector<std::string> Stencil::getGlobalVariables() const {
   std::set<int> globalVariableAccessIDs;
-  for(const auto& multistage : multistages_)
-    for(const auto& stage : multistage->getStages())
-      for(const auto& varAccessID : stage->getGlobalVariables())
-        globalVariableAccessIDs.insert(varAccessID);
+  for(const auto& multistage : multistages_) {
+    for(const auto& stage : multistage->getStages()) {
+      globalVariableAccessIDs.insert(stage->getAllGlobalVariables().begin(),
+                                     stage->getAllGlobalVariables().end());
+    }
+  }
 
   std::vector<std::string> globalVariables;
   for(const auto& AccessID : globalVariableAccessIDs)

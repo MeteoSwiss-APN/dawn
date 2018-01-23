@@ -22,28 +22,34 @@
 #include <unordered_map>
 
 namespace dawn {
-namespace codegen {
-namespace cxxnaive {
-
 class StencilInstantiation;
 class StencilFunctionInstantiation;
+
+namespace codegen {
+namespace cxxnaive {
 
 /// @brief ASTVisitor to generate C++ naive backend code for the parameters of the stencil function
 /// calls
 /// @ingroup cxxnaive
 class ASTStencilFunctionParamVisitor : public ASTVisitorDisabled, public NonCopyable {
 protected:
-  std::unordered_map<std::string, std::string> paramNameToType_;
+  const StencilInstantiation* instantiation_;
+  const StencilFunctionInstantiation* currentFunction_;
   /// Underlying stream
   std::stringstream ss_;
 
 public:
   using Base = ASTVisitorDisabled;
 
-  ASTStencilFunctionParamVisitor(std::unordered_map<std::string, std::string> paramNameToType);
+  ASTStencilFunctionParamVisitor(StencilFunctionInstantiation const* function,
+                                 StencilInstantiation const* instantiation);
   virtual ~ASTStencilFunctionParamVisitor();
 
   std::string getCodeAndResetStream();
+
+  std::string getName(const std::shared_ptr<Expr>& expr) const;
+
+  int getAccessID(const std::shared_ptr<Expr>& expr) const;
 
   /// @name Expression implementation
   /// @{
@@ -51,6 +57,7 @@ public:
   virtual void visit(const std::shared_ptr<StencilFunArgExpr>& expr) override;
   virtual void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override;
   virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override;
   /// @}
 };
 

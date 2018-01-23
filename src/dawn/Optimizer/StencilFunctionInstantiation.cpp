@@ -23,25 +23,15 @@
 
 namespace dawn {
 
-static std::string dim2str(int dim) {
-  switch(dim) {
-  case 0:
-    return "i";
-  case 1:
-    return "j";
-  case 2:
-    return "k";
-  default:
-    dawn_unreachable("invalid dimension");
-  }
-};
-
 StencilFunctionInstantiation::StencilFunctionInstantiation(
     StencilInstantiation* context, const std::shared_ptr<StencilFunCallExpr>& expr,
     sir::StencilFunction* function, const std::shared_ptr<AST>& ast, const Interval& interval,
     bool isNested)
     : stencilInstantiation_(context), expr_(expr), function_(function), ast_(ast),
-      interval_(interval), hasReturn_(false), isNested_(isNested) {}
+      interval_(interval), hasReturn_(false), isNested_(isNested) {
+  DAWN_ASSERT(context);
+  DAWN_ASSERT(function);
+}
 
 Array3i StencilFunctionInstantiation::evalOffsetOfFieldAccessExpr(
     const std::shared_ptr<FieldAccessExpr>& expr, bool applyInitialOffset) const {
@@ -237,14 +227,22 @@ void StencilFunctionInstantiation::renameCallerAccessID(int oldAccessID, int new
 //     Expr/Stmt to Caller AccessID Maps
 //===----------------------------------------------------------------------------------------===//
 
-const std::string& StencilFunctionInstantiation::getNameFromAccessID(int AccessID) const {
+std::string StencilFunctionInstantiation::getNameFromAccessID(int AccessID) const {
   // As we store the caller accessIDs, we have to get the name of the field from the context!
   if(AccessID < 0)
     return getNameFromLiteralAccessID(AccessID);
-  else if(stencilInstantiation_->isField(AccessID))
+  else if(stencilInstantiation_->isField(AccessID) ||
+          stencilInstantiation_->isGlobalVariable(AccessID))
     return stencilInstantiation_->getNameFromAccessID(AccessID);
-  else
+  else {
+    DAWN_ASSERT(AccessIDToNameMap_.count(AccessID));
     return AccessIDToNameMap_.find(AccessID)->second;
+  }
+}
+
+void StencilFunctionInstantiation::setAccessIDOfGlobalVariable(int AccessID) {
+  //  setAccessIDNamePair(AccessID, name);
+  GlobalVariableAccessIDSet_.insert(AccessID);
 }
 
 const std::string& StencilFunctionInstantiation::getNameFromLiteralAccessID(int AccessID) const {
@@ -265,24 +263,23 @@ int StencilFunctionInstantiation::getAccessIDFromStmt(const std::shared_ptr<Stmt
   return it->second;
 }
 
-const std::unordered_map<std::shared_ptr<Expr>, int>&
-StencilFunctionInstantiation::getExprToCallerAccessIDMap() const {
-  return ExprToCallerAccessIDMap_;
+void StencilFunctionInstantiation::setAccessIDOfExpr(const std::shared_ptr<Expr>& expr,
+                                                     const int accessID) {
+  ExprToCallerAccessIDMap_[expr] = accessID;
 }
 
-std::unordered_map<std::shared_ptr<Expr>, int>&
-StencilFunctionInstantiation::getExprToCallerAccessIDMap() {
-  return ExprToCallerAccessIDMap_;
+void StencilFunctionInstantiation::mapExprToAccessID(std::shared_ptr<Expr> expr, int accessID) {
+  ExprToCallerAccessIDMap_.emplace(expr, accessID);
 }
 
-const std::unordered_map<std::shared_ptr<Stmt>, int>&
-StencilFunctionInstantiation::getStmtToCallerAccessIDMap() const {
-  return StmtToCallerAccessIDMap_;
+void StencilFunctionInstantiation::setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt,
+                                                     const int accessID) {
+  DAWN_ASSERT(StmtToCallerAccessIDMap_.count(stmt));
+  StmtToCallerAccessIDMap_[stmt] = accessID;
 }
 
-std::unordered_map<std::shared_ptr<Stmt>, int>&
-StencilFunctionInstantiation::getStmtToCallerAccessIDMap() {
-  return StmtToCallerAccessIDMap_;
+void StencilFunctionInstantiation::mapStmtToAccessID(std::shared_ptr<Stmt> stmt, int accessID) {
+  StmtToCallerAccessIDMap_.emplace(stmt, accessID);
 }
 
 std::unordered_map<int, std::string>& StencilFunctionInstantiation::getLiteralAccessIDToNameMap() {
@@ -522,6 +519,10 @@ StencilFunctionInstantiation::makeCodeGenName(const StencilFunctionInstantiation
 
     } else if(stencilFun.isArgDirection(argIdx)) {
       name += "_" + dim2str(stencilFun.getCallerDimensionOfArgDirection(argIdx));
+    } else if(stencilFun.isArgStencilFunctionInstantiation(argIdx)) {
+      StencilFunctionInstantiation& argFunction =
+          *(stencilFun.getFunctionInstantiationOfArgField(argIdx));
+      name += "_" + makeCodeGenName(argFunction);
     }
   }
 
@@ -535,11 +536,28 @@ bool StencilFunctionInstantiation::hasReturn() const { return hasReturn_; }
 
 bool StencilFunctionInstantiation::isNested() const { return isNested_; }
 
-void StencilFunctionInstantiation::dump() {
+size_t StencilFunctionInstantiation::numArgs() const { return function_->Args.size(); }
+
+std::string StencilFunctionInstantiation::getArgNameFromFunctionCall(std::string fnCallName) const {
+
+  for(std::size_t argIdx = 0; argIdx < numArgs(); ++argIdx) {
+    if(!isArgField(argIdx) || !isArgStencilFunctionInstantiation(argIdx))
+      continue;
+
+    if(fnCallName == getFunctionInstantiationOfArgField(argIdx)->getName()) {
+      sir::Field* field = dyn_cast<sir::Field>(function_->Args[argIdx].get());
+      return field->Name;
+    }
+  }
+  DAWN_ASSERT_MSG(0, "arg field of callee being a stencial function at caller not found");
+  return "";
+}
+
+void StencilFunctionInstantiation::dump() const {
   std::cout << "\nStencilFunction : " << getName() << " " << getInterval() << "\n";
   std::cout << MakeIndent<1>::value << "Arguments:\n";
 
-  for(std::size_t argIdx = 0; argIdx < function_->Args.size(); ++argIdx) {
+  for(std::size_t argIdx = 0; argIdx < numArgs(); ++argIdx) {
 
     std::cout << MakeIndent<2>::value << "arg(" << argIdx << ") : ";
 

@@ -40,7 +40,9 @@ struct HardwareConfig {
 /// @brief Context of handling all Optimizations
 /// @ingroup optimizer
 class OptimizerContext : NonCopyable {
-  DawnCompiler* compiler_;
+
+  DiagnosticsEngine& diagnostics_;
+  Options& options_;
 
   const SIR* SIR_;
   std::map<std::string, std::unique_ptr<StencilInstantiation>> stencilInstantiationMap_;
@@ -49,7 +51,7 @@ class OptimizerContext : NonCopyable {
 
 public:
   /// @brief Initialize the context with a SIR
-  OptimizerContext(DawnCompiler* compiler, const SIR* SIR);
+  OptimizerContext(DiagnosticsEngine& diagnostics, Options& options, const SIR* SIR);
 
   /// @brief Get StencilInstantiation map
   std::map<std::string, std::unique_ptr<StencilInstantiation>>& getStencilInstantiationMap();

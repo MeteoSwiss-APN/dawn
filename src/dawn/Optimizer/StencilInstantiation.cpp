@@ -199,7 +199,7 @@ public:
     auto& function = scope_.top()->FunctionInstantiation;
     if(function) {
       function->getAccessIDToNameMap().emplace(AccessID, globalName);
-      function->getStmtToCallerAccessIDMap().emplace(stmt, AccessID);
+      function->mapStmtToAccessID(stmt, AccessID);
     } else {
       instantiation_->setAccessIDNamePair(AccessID, globalName);
       instantiation_->getStmtToAccessIDMap().emplace(stmt, AccessID);
@@ -321,7 +321,6 @@ public:
           candiateScope->FunctionInstantiation->setCallerInitialOffsetFromAccessID(
               AccessID, Array3i{{0, 0, 0}});
           candiateScope->LocalFieldnameToAccessIDMap.emplace(field->Name, AccessID);
-
         } else {
           int AccessID = candiateScope->FunctionInstantiation->getCallerAccessIDOfArgField(argIdx);
           candiateScope->LocalFieldnameToAccessIDMap.emplace(field->Name, AccessID);
@@ -331,6 +330,11 @@ public:
     // Resolve the function
     scope_.push(scope_.top()->CandiateScopes.top());
     scope_.top()->FunctionInstantiation->getAST()->accept(*this);
+
+    for(auto id : stencilFun->getAccessIDSetGlobalVariables()) {
+      scope_.top()->LocalVarNameToAccessIDMap.emplace(stencilFun->getNameFromAccessID(id), id);
+    }
+
     scope_.pop();
 
     // We resolved the candiate function, move on ...
@@ -367,7 +371,6 @@ public:
     const auto& varname = expr->getName();
 
     if(expr->isExternal()) {
-      DAWN_ASSERT(!function);
       DAWN_ASSERT_MSG(!expr->isArrayAccess(), "global array access is not supported");
 
       const auto& value = instantiation_->getGlobalVariableValue(varname);
@@ -382,27 +385,36 @@ public:
 
         int AccessID = instantiation_->nextUID();
         instantiation_->getLiteralAccessIDToNameMap().emplace(AccessID, newExpr->getValue());
-        instantiation_->getExprToAccessIDMap().emplace(newExpr, AccessID);
+        instantiation_->mapExprToAccessID(newExpr, AccessID);
 
       } else {
+        StencilInstantiation* stencilInstantiation =
+            (function) ? function->getStencilInstantiation() : instantiation_;
+
         int AccessID = 0;
-        if(!instantiation_->isGlobalVariable(varname)) {
-          AccessID = instantiation_->nextUID();
-          instantiation_->setAccessIDNamePairOfGlobalVariable(AccessID, varname);
+        if(!stencilInstantiation->isGlobalVariable(varname)) {
+          AccessID = stencilInstantiation->nextUID();
+          stencilInstantiation->setAccessIDNamePairOfGlobalVariable(AccessID, varname);
         } else {
-          AccessID = instantiation_->getAccessIDFromName(varname);
+          AccessID = stencilInstantiation->getAccessIDFromName(varname);
         }
-        instantiation_->getExprToAccessIDMap().emplace(expr, AccessID);
+
+        if(function)
+          function->setAccessIDOfGlobalVariable(AccessID);
+
+        if(function) {
+          function->mapExprToAccessID(expr, AccessID);
+          instantiation_->mapExprToAccessID(expr, AccessID);
+        } else
+          instantiation_->mapExprToAccessID(expr, AccessID);
       }
 
     } else {
       // Register the mapping between VarAccessExpr and AccessID.
       if(function)
-        function->getExprToCallerAccessIDMap().emplace(
-            expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
+        function->mapExprToAccessID(expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
       else
-        instantiation_->getExprToAccessIDMap().emplace(
-            expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
+        instantiation_->mapExprToAccessID(expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
 
       // Resolve the index if this is an array access
       if(expr->isArrayAccess())
@@ -417,10 +429,10 @@ public:
     auto& function = scope_.top()->FunctionInstantiation;
     if(function) {
       function->getLiteralAccessIDToNameMap().emplace(AccessID, expr->getValue());
-      function->getExprToCallerAccessIDMap().emplace(expr, AccessID);
+      function->mapExprToAccessID(expr, AccessID);
     } else {
       instantiation_->getLiteralAccessIDToNameMap().emplace(AccessID, expr->getValue());
-      instantiation_->getExprToAccessIDMap().emplace(expr, AccessID);
+      instantiation_->mapExprToAccessID(expr, AccessID);
     }
   }
 
@@ -430,9 +442,9 @@ public:
 
     auto& function = scope_.top()->FunctionInstantiation;
     if(function) {
-      function->getExprToCallerAccessIDMap().emplace(expr, AccessID);
+      function->mapExprToAccessID(expr, AccessID);
     } else {
-      instantiation_->getExprToAccessIDMap().emplace(expr, AccessID);
+      instantiation_->mapExprToAccessID(expr, AccessID);
     }
 
     if(Scope* candiateScope = getCurrentCandidateScope()) {
@@ -686,7 +698,7 @@ public:
           auto voidStmt = std::make_shared<ExprStmt>(voidExpr);
           int AccessID = -instantiation_->nextUID();
           instantiation_->getLiteralAccessIDToNameMap().emplace(AccessID, "0");
-          instantiation_->getExprToAccessIDMap().emplace(voidExpr, AccessID);
+          instantiation_->mapExprToAccessID(voidExpr, AccessID);
           replaceOldStmtWithNewStmtInStmt(scope_.top()->Statements.back()->ASTStmt, stmt, voidStmt);
         }
       }
@@ -942,7 +954,7 @@ public:
 
         int AccessID = instantiation_->nextUID();
         instantiation_->getLiteralAccessIDToNameMap().emplace(AccessID, newExpr->getValue());
-        instantiation_->getExprToAccessIDMap().emplace(newExpr, AccessID);
+        instantiation_->mapExprToAccessID(newExpr, AccessID);
 
       } else {
         int AccessID = 0;
@@ -953,13 +965,12 @@ public:
           AccessID = instantiation_->getAccessIDFromName(varname);
         }
 
-        instantiation_->getExprToAccessIDMap().emplace(expr, AccessID);
+        instantiation_->mapExprToAccessID(expr, AccessID);
       }
 
     } else {
       // Register the mapping between VarAccessExpr and AccessID.
-      instantiation_->getExprToAccessIDMap().emplace(
-          expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
+      instantiation_->mapExprToAccessID(expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
 
       // Resolve the index if this is an array access
       if(expr->isArrayAccess())
@@ -971,7 +982,7 @@ public:
     // Register a literal access (Note: the negative AccessID we assign!)
     int AccessID = -instantiation_->nextUID();
     instantiation_->getLiteralAccessIDToNameMap().emplace(AccessID, expr->getValue());
-    instantiation_->getExprToAccessIDMap().emplace(expr, AccessID);
+    instantiation_->mapExprToAccessID(expr, AccessID);
   }
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {}
@@ -1054,15 +1065,6 @@ void StencilInstantiation::removeAccessID(int AccesssID) {
 
 const std::string& StencilInstantiation::getName() const { return SIRStencil_->Name; }
 
-const std::unordered_map<std::shared_ptr<Expr>, int>&
-StencilInstantiation::getExprToAccessIDMap() const {
-  return ExprToAccessIDMap_;
-}
-
-std::unordered_map<std::shared_ptr<Expr>, int>& StencilInstantiation::getExprToAccessIDMap() {
-  return ExprToAccessIDMap_;
-}
-
 const std::unordered_map<std::shared_ptr<Stmt>, int>&
 StencilInstantiation::getStmtToAccessIDMap() const {
   return StmtToAccessIDMap_;
@@ -1084,6 +1086,19 @@ const std::string& StencilInstantiation::getNameFromStageID(int StageID) const {
   auto it = StageIDToNameMap_.find(StageID);
   DAWN_ASSERT_MSG(it != StageIDToNameMap_.end(), "Invalid StageID");
   return it->second;
+}
+
+void StencilInstantiation::mapExprToAccessID(std::shared_ptr<Expr> expr, int accessID) {
+  ExprToAccessIDMap_.emplace(expr, accessID);
+}
+
+void StencilInstantiation::eraseExprToAccessID(std::shared_ptr<Expr> expr) {
+  DAWN_ASSERT(ExprToAccessIDMap_.count(expr));
+  ExprToAccessIDMap_.erase(expr);
+}
+
+void StencilInstantiation::mapStmtToAccessID(std::shared_ptr<Stmt> stmt, int accessID) {
+  StmtToAccessIDMap_.emplace(stmt, accessID);
 }
 
 const std::string& StencilInstantiation::getNameFromLiteralAccessID(int AccessID) const {
@@ -1355,6 +1370,18 @@ int StencilInstantiation::getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt)
   return it->second;
 }
 
+void StencilInstantiation::setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt,
+                                             const int accessID) {
+  DAWN_ASSERT(StmtToAccessIDMap_.count(stmt));
+  StmtToAccessIDMap_[stmt] = accessID;
+}
+
+void StencilInstantiation::setAccessIDOfExpr(const std::shared_ptr<Expr>& expr,
+                                             const int accessID) {
+  DAWN_ASSERT(ExprToAccessIDMap_.count(expr));
+  ExprToAccessIDMap_[expr] = accessID;
+}
+
 void StencilInstantiation::removeStencilFunctionInstantiation(
     const std::shared_ptr<StencilFunCallExpr>& expr,
     StencilFunctionInstantiation* callerStencilFunctionInstantiation) {
@@ -1615,6 +1642,9 @@ void StencilInstantiation::dump() const {
           }
           l += 1;
         }
+        std::cout << "\e[1m" << std::string(4 * DAWN_PRINT_INDENT, ' ')
+                  << "Extents: " << stage->getExtents() << std::endl
+                  << "\e[0m";
         k += 1;
       }
       j += 1;

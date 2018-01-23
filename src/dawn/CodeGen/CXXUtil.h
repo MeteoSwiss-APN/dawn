@@ -259,6 +259,24 @@ struct Using : public Statement {
 };
 
 //===------------------------------------------------------------------------------------------===//
+//     Namespace
+//===------------------------------------------------------------------------------------------===//
+/// @brief Definition of a `namespace`
+/// @ingroup codegen
+struct Namespace {
+  const Twine name_;
+  std::stringstream& s_;
+
+  ~Namespace() {}
+  /// @brief Add `namespace`
+  Namespace(const Twine& name, std::stringstream& s) : name_(name), s_(s) {
+    s_ << "namespace " << name_ << "{" << std::endl;
+  }
+
+  void commit() { s_ << "} // namespace " << name_ << std::endl; }
+};
+
+//===------------------------------------------------------------------------------------------===//
 //     Function
 //===------------------------------------------------------------------------------------------===//
 

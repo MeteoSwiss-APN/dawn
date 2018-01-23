@@ -51,6 +51,12 @@ struct Extent {
     return *this;
   }
 
+  Extent& expand(const Extent& other) {
+    Minus = Minus + other.Minus;
+    Plus = Plus + other.Plus;
+    return *this;
+  }
+
   Extent& merge(int other) {
     Minus = std::min(Minus, other < 0 ? other : 0);
     Plus = std::max(Plus, other > 0 ? other : 0);
@@ -117,6 +123,8 @@ public:
   ///   `{-2, 1, 0, 0, 0, 1}`.
   void merge(const Extents& other);
   void merge(const Array3i& offset);
+
+  void expand(const Extents& other);
 
   /// @brief Add `this` and `other` and compute the direction sum of the two
   ///

@@ -71,8 +71,8 @@ public:
   virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override;
   /// @}
 
-  const std::string& getName(const std::shared_ptr<Stmt>& stmt) const override;
-  const std::string& getName(const std::shared_ptr<Expr>& expr) const override;
+  std::string getName(const std::shared_ptr<Stmt>& stmt) const override;
+  std::string getName(const std::shared_ptr<Expr>& expr) const override;
 };
 
 } // namespace gt
