@@ -32,7 +32,7 @@ static int mergePossible(const std::set<int>& fields, const Stage* stage, int ma
   int numFields = fields.size();
 
   for(const Field& field : stage->getFields())
-    if(!fields.count(field.AccessID))
+    if(!fields.count(field.getAccessID()))
       numFields++;
 
   // Inserting the stage would further increase the number of fields
@@ -90,7 +90,7 @@ bool PassStencilSplitter::run(std::shared_ptr<StencilInstantiation> stencilInsta
               // Update fields of the `newStencil`. Note that the indivudual stages do not need to
               // update their fields as they remain the same.
               for(const Field& field : stagePtr->getFields())
-                fieldsInNewStencil.insert(field.AccessID);
+                fieldsInNewStencil.insert(field.getAccessID());
 
             } else {
               // Make a new stencil

@@ -162,7 +162,7 @@ StencilFunctionInstantiation::getCallerFieldFromArgumentIndex(int argumentIndex)
   int callerAccessID = getCallerAccessIDOfArgField(argumentIndex);
 
   for(const Field& field : callerFields_)
-    if(field.AccessID == callerAccessID)
+    if(field.getAccessID() == callerAccessID)
       return field;
 
   dawn_unreachable("invalid argument index of field");
@@ -379,7 +379,7 @@ void StencilFunctionInstantiation::update() {
       }
 
       // Field not yet present, record it as output
-      outputFields.emplace(AccessID, Field(AccessID, Field::IK_Output, interval_));
+      outputFields.emplace(AccessID, Field(AccessID, Field::IK_Output, Extents{}, interval_));
     }
 
     for(const auto& accessPair : access->getReadAccesses()) {
@@ -401,7 +401,7 @@ void StencilFunctionInstantiation::update() {
       }
 
       // Field not yet present, record it as input
-      inputFields.emplace(AccessID, Field(AccessID, Field::IK_Input, interval_));
+      inputFields.emplace(AccessID, Field(AccessID, Field::IK_Input, Extents{}, interval_));
     }
   }
 
@@ -410,7 +410,7 @@ void StencilFunctionInstantiation::update() {
     int AccessID = argIdxCallerAccessIDPair.second;
     if(!inputFields.count(AccessID) && !outputFields.count(AccessID) &&
        !inputOutputFields.count(AccessID)) {
-      inputFields.emplace(AccessID, Field(AccessID, Field::IK_Output, interval_));
+      inputFields.emplace(AccessID, Field(AccessID, Field::IK_Output, Extents{}, interval_));
       unusedFields_.insert(AccessID);
     }
   }
@@ -448,7 +448,7 @@ void StencilFunctionInstantiation::update() {
       // Index to speedup lookup into fields map
       std::unordered_map<int, std::vector<Field>::iterator> AccessIDToFieldMap;
       for(auto it = fields.begin(), end = fields.end(); it != end; ++it)
-        AccessIDToFieldMap.insert(std::make_pair(it->AccessID, it));
+        AccessIDToFieldMap.insert(std::make_pair(it->getAccessID(), it));
 
       // Accumulate the extents of each field in this stage
       for(const auto& statementAccessesPair : statementAccessesPairs_) {
@@ -461,7 +461,7 @@ void StencilFunctionInstantiation::update() {
              !stencilInstantiation_->isField(accessPair.first))
             continue;
 
-          AccessIDToFieldMap[accessPair.first]->Extent.merge(accessPair.second);
+          AccessIDToFieldMap[accessPair.first]->mergeExtents(accessPair.second);
         }
 
         for(const auto& accessPair : access->getReadAccesses()) {
@@ -469,7 +469,7 @@ void StencilFunctionInstantiation::update() {
              !stencilInstantiation_->isField(accessPair.first))
             continue;
 
-          AccessIDToFieldMap[accessPair.first]->Extent.merge(accessPair.second);
+          AccessIDToFieldMap[accessPair.first]->mergeExtents(accessPair.second);
         }
       }
     };
@@ -486,7 +486,7 @@ void StencilFunctionInstantiation::update() {
       auto insertField = [&](std::vector<Field>& fieldsOrdered,
                              std::vector<Field>& fieldsUnordered) {
         auto it = std::find_if(fieldsUnordered.begin(), fieldsUnordered.end(),
-                               [&](const Field& field) { return field.AccessID == AccessID; });
+                               [&](const Field& field) { return field.getAccessID() == AccessID; });
         DAWN_ASSERT(it != fieldsUnordered.end());
         fieldsOrdered.push_back(*it);
       };

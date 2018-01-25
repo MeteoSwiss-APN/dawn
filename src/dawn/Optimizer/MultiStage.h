@@ -115,6 +115,9 @@ public:
   /// @brief Get the pair <AccessID, field> for the fields used within the multi-stage
   std::unordered_map<int, Field> getFields() const;
 
+  /// @brief Get the enclosing interval of all access to temporaries
+  std::shared_ptr<Interval> getEnclosingAccessIntervalTemporaries() const;
+
   /// @brief Get the caches
   std::unordered_map<int, Cache>& getCaches() { return caches_; }
   const std::unordered_map<int, Cache>& getCaches() const { return caches_; }

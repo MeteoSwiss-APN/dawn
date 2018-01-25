@@ -69,31 +69,31 @@ private:
 
     for(const auto& stagePtr : multiStagePrt_->getStages()) {
       for(const Field& field : stagePtr->getFields()) {
-        auto iter = accessIDToDataLocality_.find(field.AccessID);
+        auto iter = accessIDToDataLocality_.find(field.getAccessID());
 
         // We already checked this field
         if(iter != accessIDToDataLocality_.end())
           continue;
 
         // Only ij-cache fields that are not horizontally pointwise and are vertically pointwise
-        if(!field.Extent.isVerticalPointwise() || field.Extent.isHorizontalPointwise())
+        if(!field.getExtents().isVerticalPointwise() || field.getExtents().isHorizontalPointwise())
           continue;
 
         // This is caching non-temporary fields
-        if(instantiation_->isTemporaryField(field.AccessID))
+        if(instantiation_->isTemporaryField(field.getAccessID()))
           continue;
 
-        int cachedReadAndWrites = dataLocality.find(field.AccessID)->second.totalAccesses();
+        int cachedReadAndWrites = dataLocality.find(field.getAccessID())->second.totalAccesses();
 
         // We check how much the cache-filling costs: 1 Read and if we fill from Memory
-        if(checkReadBeforeWrite(field.AccessID))
+        if(checkReadBeforeWrite(field.getAccessID()))
           cachedReadAndWrites--;
         // We need one more write to flush the cache back to the variable
-        if(!checkReadOnlyAccess(field.AccessID))
+        if(!checkReadOnlyAccess(field.getAccessID()))
           cachedReadAndWrites--;
 
         if(cachedReadAndWrites > 0)
-          accessIDToDataLocality_.emplace(field.AccessID, cachedReadAndWrites);
+          accessIDToDataLocality_.emplace(field.getAccessID(), cachedReadAndWrites);
       }
     }
 

@@ -189,17 +189,19 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
         }
         // Generate field declarations
         for(std::size_t m = 0; m < fields.size(); ++m, ++accessorID) {
-          std::string paramName = stencilFun->getOriginalNameFromCallerAccessID(fields[m].AccessID);
+          std::string paramName =
+              stencilFun->getOriginalNameFromCallerAccessID(fields[m].getAccessID());
 
           // Generate parameter of stage
           codegen::Type extent(c_gt() + "extent", clear(tss));
-          for(auto& e : fields[m].Extent.getExtents())
+          for(auto& e : fields[m].getExtents().getExtents())
             extent.addTemplate(Twine(e.Minus) + ", " + Twine(e.Plus));
 
           StencilFunStruct.addTypeDef(paramName)
               .addType(c_gt() + "accessor")
               .addTemplate(Twine(accessorID))
-              .addTemplate(c_gt_enum() + (fields[m].Intend == Field::IK_Input ? "in" : "inout"))
+              .addTemplate(c_gt_enum() +
+                           (fields[m].getIntend() == Field::IK_Input ? "in" : "inout"))
               .addTemplate(extent);
 
           arglist.push_back(std::move(paramName));
@@ -319,17 +321,17 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
         std::size_t accessorIdx = 0;
         for(; accessorIdx < fields.size(); ++accessorIdx) {
           const auto& field = fields[accessorIdx];
-          std::string paramName = stencilInstantiation->getNameFromAccessID(field.AccessID);
+          std::string paramName = stencilInstantiation->getNameFromAccessID(field.getAccessID());
 
           // Generate parameter of stage
           codegen::Type extent(c_gt() + "extent", clear(tss));
-          for(auto& e : field.Extent.getExtents())
+          for(auto& e : field.getExtents().getExtents())
             extent.addTemplate(Twine(e.Minus) + ", " + Twine(e.Plus));
 
           StageStruct.addTypeDef(paramName)
               .addType(c_gt() + "accessor")
               .addTemplate(Twine(accessorIdx))
-              .addTemplate(c_gt_enum() + (field.Intend == Field::IK_Input ? "in" : "inout"))
+              .addTemplate(c_gt_enum() + (field.getIntend() == Field::IK_Input ? "in" : "inout"))
               .addTemplate(extent);
 
           // Generate placeholder mapping of the field in `make_stage`

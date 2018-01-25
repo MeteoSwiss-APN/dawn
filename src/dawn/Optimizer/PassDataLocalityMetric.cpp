@@ -162,7 +162,7 @@ public:
     DAWN_ASSERT(it != fields_.end());
     Field& field = it->second;
 
-    if(field.Intend == Field::IK_Input) {
+    if(field.getIntend() == Field::IK_Input) {
       if(!register_.count(AccessID)) {
 
         // Cache the center access
@@ -191,7 +191,7 @@ public:
       }
     }
 
-    if(multiStage_.isCached(AccessID) && field.Intend == Field::IK_Input)
+    if(multiStage_.isCached(AccessID) && field.getIntend() == Field::IK_Input)
       updateTextureCache(AccessID, kOffset);
   }
 
@@ -255,7 +255,7 @@ computeReadWriteAccessesLowerBound(StencilInstantiation* instantiation,
       }
 
     } else {
-      switch(field.Intend) {
+      switch(field.getIntend()) {
       case Field::IK_Output:
         numWrites += 1;
         break;

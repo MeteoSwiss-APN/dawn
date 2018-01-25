@@ -126,7 +126,8 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
       auto& paramNameToType = stencilProperties->paramNameToType_;
       for(std::size_t m = 0; m < fields.size(); ++m) {
 
-        std::string paramName = stencilFun->getOriginalNameFromCallerAccessID(fields[m].AccessID);
+        std::string paramName =
+            stencilFun->getOriginalNameFromCallerAccessID(fields[m].getAccessID());
         paramNameToType.emplace(paramName, stencilFnTemplates[m]);
 
         // each parameter being passed to a stencil function, is wrapped around the param_wrapper
@@ -144,7 +145,8 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
 
       for(std::size_t m = 0; m < fields.size(); ++m) {
 
-        std::string paramName = stencilFun->getOriginalNameFromCallerAccessID(fields[m].AccessID);
+        std::string paramName =
+            stencilFun->getOriginalNameFromCallerAccessID(fields[m].getAccessID());
 
         stencilFunMethod << c_gt() << "data_view<StorageType" + std::to_string(m) + "> "
                          << paramName << " = pw_" << paramName << ".dview_;";
@@ -216,7 +218,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
     }
 
     for(auto fieldIt : tempFields) {
-      paramNameToType.emplace((*fieldIt).Name, c_gtc().str() + "storage_t");
+      paramNameToType.emplace((*fieldIt).Name, c_gtc().str() + "tmpstorage_t");
     }
 
     ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, StencilContext::SC_Stencil);

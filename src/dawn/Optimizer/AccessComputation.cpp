@@ -216,7 +216,7 @@ public:
                                 StencilFunctionInstantiation* curStencilFunCall,
                                 std::set<int>& appliedAccessIDs) {
     for(const Field& field : curStencilFunCall->getCallerFields()) {
-      int AccessID = field.AccessID;
+      int AccessID = field.getAccessID();
 
       if(appliedAccessIDs.count(AccessID))
         continue;
@@ -231,11 +231,11 @@ public:
       } else {
         appliedAccessIDs.insert(AccessID);
 
-        if(field.Intend == Field::IK_Input || field.Intend == Field::IK_InputOutput)
+        if(field.getIntend() == Field::IK_Input || field.getIntend() == Field::IK_InputOutput)
           for(auto& callerAccesses : callerAccessesList_)
             callerAccesses->addReadExtent(AccessID, extent);
 
-        if(field.Intend == Field::IK_Output || field.Intend == Field::IK_InputOutput)
+        if(field.getIntend() == Field::IK_Output || field.getIntend() == Field::IK_InputOutput)
           for(auto& callerAccesses : callerAccessesList_)
             callerAccesses->addWriteExtent(AccessID, extent);
       }
@@ -343,11 +343,11 @@ public:
       auto& prevStencilFunCall = previousStencilFunCallScope->FunctionInstantiation;
 
       const Field& field = prevStencilFunCall->getCallerFieldFromArgumentIndex(prevArgumentIndex);
-      DAWN_ASSERT(prevStencilFunCall->isProvidedByStencilFunctionCall(field.AccessID));
+      DAWN_ASSERT(prevStencilFunCall->isProvidedByStencilFunctionCall(field.getAccessID()));
 
       // Add the extent of the field mapping to the stencil function to all fields
       std::set<int> appliedAccessIDs;
-      mergeExtentWithAllFields(field.Extent, curStencilFunCall, appliedAccessIDs);
+      mergeExtentWithAllFields(field.getExtents(), curStencilFunCall, appliedAccessIDs);
 
       prevArgumentIndex += 1;
     }
@@ -424,11 +424,11 @@ public:
       // Get the extent of the field corresponding to the argument index
       const Field& field = functionInstantiation->getCallerFieldFromArgumentIndex(ArgumentIndex);
 
-      if(field.Intend == Field::IK_Input || field.Intend == Field::IK_InputOutput)
-        mergeReadExtent(expr, field.Extent);
+      if(field.getIntend() == Field::IK_Input || field.getIntend() == Field::IK_InputOutput)
+        mergeReadExtent(expr, field.getExtents());
 
-      if(field.Intend == Field::IK_Output || field.Intend == Field::IK_InputOutput)
-        mergeWriteExtent(expr, field.Extent);
+      if(field.getIntend() == Field::IK_Output || field.getIntend() == Field::IK_InputOutput)
+        mergeWriteExtent(expr, field.getExtents());
 
       ArgumentIndex += 1;
 

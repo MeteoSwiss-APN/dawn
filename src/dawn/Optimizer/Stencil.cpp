@@ -113,7 +113,7 @@ std::vector<Stencil::FieldInfo> Stencil::getFields(bool withTemporaries) const {
   for(const auto& multistage : multistages_) {
     for(const auto& stage : multistage->getStages()) {
       for(const auto& field : stage->getFields()) {
-        fieldAccessIDs.insert(field.AccessID);
+        fieldAccessIDs.insert(field.getAccessID());
       }
     }
   }
@@ -425,7 +425,7 @@ std::ostream& operator<<(std::ostream& os, const Stencil& stencil) {
          << RangeToString()(stage->getFields(),
                             [&](const Field& field) {
                               return stencil.getStencilInstantiation().getNameFromAccessID(
-                                  field.AccessID);
+                                  field.getAccessID());
                             })
          << "\n";
   }

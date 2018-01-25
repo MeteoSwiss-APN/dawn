@@ -64,7 +64,7 @@ Interval Stage::getEnclosingInterval() const {
 Extent Stage::getMaxVerticalExtent() const {
   Extent verticalExtent;
   std::for_each(fields_.begin(), fields_.end(),
-                [&](const Field& field) { verticalExtent.merge(field.Extent[2]); });
+                [&](const Field& field) { verticalExtent.merge(field.getExtents()[2]); });
   return verticalExtent;
 }
 
@@ -89,11 +89,11 @@ bool Stage::overlaps(const Interval& interval, ArrayRef<Field> fields) const {
 
     for(const Field& thisField : getFields()) {
       for(const Field& field : fields) {
-        if(thisField.AccessID != field.AccessID)
+        if(thisField.getAccessID() != field.getAccessID())
           continue;
 
-        if(thisInterval.extendInterval(thisField.Extent[2])
-               .overlaps(interval.extendInterval(field.Extent[2])))
+        if(thisInterval.extendInterval(thisField.getExtents()[2])
+               .overlaps(interval.extendInterval(field.getExtents()[2])))
           return true;
       }
     }
@@ -177,14 +177,14 @@ void Stage::update() {
 
         // Field was recorded as `InputOutput`, state can't change ...
         if(inputOutputFields.count(AccessID)) {
-          inputOutputFields.at(AccessID).interval_.merge(doMethod.getInterval());
+          inputOutputFields.at(AccessID).extendInterval(doMethod.getInterval());
           continue;
         }
 
         // Field was recorded as `Input`, change it's state to `InputOutput`
         if(inputFields.count(AccessID)) {
           Field& preField = inputFields.at(AccessID);
-          preField.interval_.merge(doMethod.getInterval());
+          preField.extendInterval(doMethod.getInterval());
           inputOutputFields.insert({AccessID, preField});
           inputFields.erase(AccessID);
           continue;
@@ -192,9 +192,10 @@ void Stage::update() {
 
         // Field not yet present, record it as output
         if(outputFields.count(AccessID)) {
-          outputFields.at(AccessID).interval_.merge(doMethod.getInterval());
+          outputFields.at(AccessID).extendInterval(doMethod.getInterval());
         } else
-          outputFields.emplace(AccessID, Field(AccessID, Field::IK_Output, doMethod.getInterval()));
+          outputFields.emplace(
+              AccessID, Field(AccessID, Field::IK_Output, Extents{}, doMethod.getInterval()));
       }
 
       for(const auto& accessPair : access->getReadAccesses()) {
@@ -209,14 +210,14 @@ void Stage::update() {
 
         // Field was recorded as `InputOutput`, state can't change ...
         if(inputOutputFields.count(AccessID)) {
-          inputOutputFields.at(AccessID).interval_.merge(doMethod.getInterval());
+          inputOutputFields.at(AccessID).extendInterval(doMethod.getInterval());
           continue;
         }
 
         // Field was recorded as `Output`, change it's state to `InputOutput`
         if(outputFields.count(AccessID)) {
           Field& preField = outputFields.at(AccessID);
-          preField.interval_.merge(doMethod.getInterval());
+          preField.extendInterval(doMethod.getInterval());
           inputOutputFields.insert({AccessID, preField});
 
           outputFields.erase(AccessID);
@@ -225,9 +226,10 @@ void Stage::update() {
 
         // Field not yet present, record it as input
         if(inputFields.count(AccessID)) {
-          inputFields.at(AccessID).interval_.merge(doMethod.getInterval());
+          inputFields.at(AccessID).extendInterval(doMethod.getInterval());
         } else
-          inputFields.emplace(AccessID, Field(AccessID, Field::IK_Input, doMethod.getInterval()));
+          inputFields.emplace(AccessID,
+                              Field(AccessID, Field::IK_Input, Extents{}, doMethod.getInterval()));
       }
 
       const std::shared_ptr<Statement> statement = statementAccessesPair->getStatement();
@@ -262,7 +264,7 @@ void Stage::update() {
   // Index to speedup lookup into fields map
   std::unordered_map<int, std::vector<Field>::iterator> AccessIDToFieldMap;
   for(auto it = fields_.begin(), end = fields_.end(); it != end; ++it)
-    AccessIDToFieldMap.insert(std::make_pair(it->AccessID, it));
+    AccessIDToFieldMap.insert(std::make_pair(it->getAccessID(), it));
 
   // Compute the extents of each field by accumulating the extents of each access to field in the
   // stage
@@ -277,14 +279,14 @@ void Stage::update() {
         if(!stencilInstantiation_.isField(accessPair.first))
           continue;
 
-        AccessIDToFieldMap[accessPair.first]->Extent.merge(accessPair.second);
+        AccessIDToFieldMap[accessPair.first]->mergeExtents(accessPair.second);
       }
 
       for(const auto& accessPair : access->getReadAccesses()) {
         if(!stencilInstantiation_.isField(accessPair.first))
           continue;
 
-        AccessIDToFieldMap[accessPair.first]->Extent.merge(accessPair.second);
+        AccessIDToFieldMap[accessPair.first]->mergeExtents(accessPair.second);
       }
     }
   }
