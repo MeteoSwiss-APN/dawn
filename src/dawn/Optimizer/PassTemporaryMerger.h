@@ -26,7 +26,7 @@ public:
   PassTemporaryMerger();
 
   /// @brief Pass implementation
-  bool run(StencilInstantiation* stencilInstantiation) override;
+  bool run(std::shared_ptr<StencilInstantiation> stencilInstantiation) override;
 };
 
 } // namespace dawn

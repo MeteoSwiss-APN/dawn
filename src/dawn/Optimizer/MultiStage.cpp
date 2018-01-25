@@ -23,7 +23,7 @@
 
 namespace dawn {
 
-MultiStage::MultiStage(StencilInstantiation* stencilInstantiation, LoopOrderKind loopOrder)
+MultiStage::MultiStage(StencilInstantiation& stencilInstantiation, LoopOrderKind loopOrder)
     : stencilInstantiation_(stencilInstantiation), loopOrder_(loopOrder) {}
 
 std::vector<std::shared_ptr<MultiStage>>
@@ -82,7 +82,7 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
 
 std::shared_ptr<DependencyGraphAccesses>
 MultiStage::getDependencyGraphOfInterval(const Interval& interval) const {
-  auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(stencilInstantiation_);
+  auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(&stencilInstantiation_);
   std::for_each(stages_.begin(), stages_.end(), [&](const std::shared_ptr<Stage>& stagePtr) {
     if(interval.overlaps(stagePtr->getEnclosingExtendedInterval()))
       std::for_each(stagePtr->getDoMethods().begin(), stagePtr->getDoMethods().end(),
@@ -94,7 +94,7 @@ MultiStage::getDependencyGraphOfInterval(const Interval& interval) const {
 }
 
 std::shared_ptr<DependencyGraphAccesses> MultiStage::getDependencyGraphOfAxis() const {
-  auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(stencilInstantiation_);
+  auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(&stencilInstantiation_);
   std::for_each(stages_.begin(), stages_.end(), [&](const std::shared_ptr<Stage>& stagePtr) {
     std::for_each(stagePtr->getDoMethods().begin(), stagePtr->getDoMethods().end(),
                   [&](const std::unique_ptr<DoMethod>& DoMethodPtr) {
@@ -141,6 +141,7 @@ std::unordered_map<int, Field> MultiStage::getFields() const {
 
         // Merge the Extent
         it->second.Extent.merge(field.Extent);
+        it->second.interval_.merge(field.interval_);
       } else
         fields.emplace(field.AccessID, field);
     }
@@ -154,9 +155,9 @@ void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
     Stage& stage = (**stageIt);
     for(auto& doMethodPtr : stage.getDoMethods()) {
       DoMethod& doMethod = *doMethodPtr;
-      renameAccessIDInStmts(stencilInstantiation_, oldAccessID, newAccessID,
+      renameAccessIDInStmts(&stencilInstantiation_, oldAccessID, newAccessID,
                             doMethod.getStatementAccessesPairs());
-      renameAccessIDInAccesses(stencilInstantiation_, oldAccessID, newAccessID,
+      renameAccessIDInAccesses(&stencilInstantiation_, oldAccessID, newAccessID,
                                doMethod.getStatementAccessesPairs());
     }
 

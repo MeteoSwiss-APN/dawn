@@ -38,7 +38,7 @@ class MultiStage;
 ///
 /// @ingroup optimizer
 class Stage {
-  StencilInstantiation* stencilInstantiation_;
+  StencilInstantiation& stencilInstantiation_;
   MultiStage* multiStage_;
 
   /// Unique identifier of the stage
@@ -60,7 +60,7 @@ class Stage {
 public:
   /// @name Constructors and Assignment
   /// @{
-  Stage(StencilInstantiation* context, MultiStage* multiStage, int StageID,
+  Stage(StencilInstantiation& context, MultiStage* multiStage, int StageID,
         const Interval& interval);
   Stage(const Stage&) = default;
   Stage(Stage&&) = default;

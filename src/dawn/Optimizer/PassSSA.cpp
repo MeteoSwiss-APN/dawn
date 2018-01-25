@@ -23,7 +23,7 @@ namespace dawn {
 
 PassSSA::PassSSA() : Pass("PassSSA") {}
 
-bool PassSSA::run(StencilInstantiation* stencilInstantiation) {
+bool PassSSA::run(std::shared_ptr<StencilInstantiation> stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   if(context->getOptions().SSA) {
@@ -32,7 +32,7 @@ bool PassSSA::run(StencilInstantiation* stencilInstantiation) {
       Stencil& stencil = *stencilPtr;
 
       std::shared_ptr<DependencyGraphAccesses> DAG =
-          std::make_shared<DependencyGraphAccesses>(stencilInstantiation);
+          std::make_shared<DependencyGraphAccesses>(stencilInstantiation.get());
 
       std::unordered_set<int> tochedAccessIDs;
 

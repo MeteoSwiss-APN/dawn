@@ -86,7 +86,7 @@ std::shared_ptr<Stencil> ReoderStrategyGreedy::reorder(const std::shared_ptr<Ste
   Stencil& stencil = *stencilPtr;
 
   DependencyGraphStage& stageDAG = *stencil.getStageDependencyGraph();
-  StencilInstantiation* instantiation = stencil.getStencilInstantiation();
+  StencilInstantiation& instantiation = stencil.getStencilInstantiation();
 
   std::shared_ptr<Stencil> newStencil =
       std::make_shared<Stencil>(instantiation, stencil.getSIRStencil(), stencilPtr->getStencilID(),
@@ -94,7 +94,7 @@ std::shared_ptr<Stencil> ReoderStrategyGreedy::reorder(const std::shared_ptr<Ste
   int newNumStages = 0;
   int newNumMultiStages = 0;
 
-  const int maxBoundaryExtent = instantiation->getOptimizerContext()->getOptions().MaxHaloPoints;
+  const int maxBoundaryExtent = instantiation.getOptimizerContext()->getOptions().MaxHaloPoints;
 
   auto pushBackNewMultiStage = [&](LoopOrderKind loopOrder) -> void {
     newStencil->getMultiStages().push_back(std::make_shared<MultiStage>(instantiation, loopOrder));
@@ -143,10 +143,10 @@ std::shared_ptr<Stencil> ReoderStrategyGreedy::reorder(const std::shared_ptr<Ste
             } else if(lastChance) {
               // Our stage exceeds the maximum allowed boundary extents... nothing we can do
               DiagnosticsBuilder diag(DiagnosticsKind::Error, SourceLocation());
-              diag << "stencil '" << instantiation->getName()
+              diag << "stencil '" << instantiation.getName()
                    << "' exceeds maximum number of allowed halo lines (" << maxBoundaryExtent
                    << ")";
-              instantiation->getOptimizerContext()->getDiagnostics().report(diag);
+              instantiation.getOptimizerContext()->getDiagnostics().report(diag);
               return nullptr;
             }
           }

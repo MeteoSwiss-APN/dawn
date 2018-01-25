@@ -23,14 +23,14 @@ PassPrintStencilGraph::PassPrintStencilGraph() : Pass("PassPrintStencilGraph") {
   dependencies_.push_back("PassStageSplitter");
 }
 
-bool PassPrintStencilGraph::run(StencilInstantiation* stencilInstantiation) {
+bool PassPrintStencilGraph::run(std::shared_ptr<StencilInstantiation> stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
   if(context->getOptions().DumpStencilGraph) {
 
     int stencilIdx = 0;
     for(auto& stencilPtr : stencilInstantiation->getStencils()) {
       Stencil& stencil = *stencilPtr;
-      auto DAG = std::make_shared<DependencyGraphAccesses>(stencilInstantiation);
+      auto DAG = std::make_shared<DependencyGraphAccesses>(stencilInstantiation.get());
 
       // Merge all stages into a single DAG
       int numStages = stencil.getNumStages();

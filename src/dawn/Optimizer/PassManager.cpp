@@ -20,7 +20,8 @@
 
 namespace dawn {
 
-bool PassManager::runAllPassesOnStecilInstantiation(StencilInstantiation* instantiation) {
+bool PassManager::runAllPassesOnStecilInstantiation(
+    std::shared_ptr<StencilInstantiation> instantiation) {
   std::vector<std::string> passesRan;
 
   for(auto& pass : passes_) {
@@ -41,7 +42,8 @@ bool PassManager::runAllPassesOnStecilInstantiation(StencilInstantiation* instan
   return true;
 }
 
-bool PassManager::runPassOnStecilInstantiation(StencilInstantiation* instantiation, Pass* pass) {
+bool PassManager::runPassOnStecilInstantiation(std::shared_ptr<StencilInstantiation> instantiation,
+                                               Pass* pass) {
   DAWN_LOG(INFO) << "Starting " << pass->getName() << " ...";
 
   if(!pass->run(instantiation)) {

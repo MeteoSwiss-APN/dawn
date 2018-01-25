@@ -21,25 +21,26 @@
 
 namespace dawn {
 
-OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, Options& options, const SIR* SIR)
+OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, Options& options,
+                                   const std::shared_ptr<SIR> SIR)
     : diagnostics_(diagnostics), options_(options), SIR_(SIR) {
   DAWN_LOG(INFO) << "Intializing OptimizerContext ... ";
 
   for(const auto& stencil : SIR_->Stencils)
     if(!stencil->Attributes.has(sir::Attr::AK_NoCodeGen)) {
       stencilInstantiationMap_.insert(std::make_pair(
-          stencil->Name, make_unique<StencilInstantiation>(this, stencil.get(), SIR)));
+          stencil->Name, std::make_shared<StencilInstantiation>(this, stencil, SIR)));
     } else {
       DAWN_LOG(INFO) << "Skipping processing of `" << stencil->Name << "`";
     }
 }
 
-std::map<std::string, std::unique_ptr<StencilInstantiation>>&
+std::map<std::string, std::shared_ptr<StencilInstantiation>>&
 OptimizerContext::getStencilInstantiationMap() {
   return stencilInstantiationMap_;
 }
 
-const std::map<std::string, std::unique_ptr<StencilInstantiation>>&
+const std::map<std::string, std::shared_ptr<StencilInstantiation>>&
 OptimizerContext::getStencilInstantiationMap() const {
   return stencilInstantiationMap_;
 }

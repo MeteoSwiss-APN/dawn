@@ -45,7 +45,7 @@ void replaceVarWithFieldAccessInStmts(
 
 /// @brief Replace all stencil calls to `oldStencilID` with a series of stencil calls to
 /// `newStencilIDs` in the stencil description AST of `instantiation`
-void replaceStencilCalls(StencilInstantiation* instantiation, int oldStencilID,
+void replaceStencilCalls(std::shared_ptr<StencilInstantiation> instantiation, int oldStencilID,
                          const std::vector<int>& newStencilIDs);
 
 /// @}

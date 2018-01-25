@@ -37,7 +37,7 @@ class OptimizerContext;
 ///
 /// @ingroup optimizer
 class MultiStage {
-  StencilInstantiation* stencilInstantiation_;
+  StencilInstantiation& stencilInstantiation_;
 
   LoopOrderKind loopOrder_;
   std::list<std::shared_ptr<Stage>> stages_;
@@ -47,7 +47,7 @@ class MultiStage {
 public:
   /// @name Constructors and Assignment
   /// @{
-  MultiStage(StencilInstantiation* stencilInstantiation, LoopOrderKind loopOrder);
+  MultiStage(StencilInstantiation& stencilInstantiation, LoopOrderKind loopOrder);
   MultiStage(const MultiStage&) = default;
   MultiStage(MultiStage&&) = default;
 
@@ -60,7 +60,7 @@ public:
   const std::list<std::shared_ptr<Stage>>& getStages() const { return stages_; }
 
   /// @brief Get the execution policy
-  StencilInstantiation* getStencilInstantiation() const { return stencilInstantiation_; }
+  StencilInstantiation& getStencilInstantiation() const { return stencilInstantiation_; }
 
   /// @brief Get the loop order
   LoopOrderKind getLoopOrder() const { return loopOrder_; }
@@ -112,7 +112,7 @@ public:
   /// This merges the intervals of all Do-Methods of all stages.
   Interval getEnclosingInterval() const;
 
-  /// @brief Get the fields of the multi-stage
+  /// @brief Get the pair <AccessID, field> for the fields used within the multi-stage
   std::unordered_map<int, Field> getFields() const;
 
   /// @brief Get the caches

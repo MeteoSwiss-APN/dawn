@@ -353,9 +353,9 @@ void StencilFunctionInstantiation::update() {
   //        +----------> | InputOutput | <----------+
   //                     +-------------+
   //
-  std::set<int> inputOutputFields;
-  std::set<int> inputFields;
-  std::set<int> outputFields;
+  std::unordered_map<int, Field> inputOutputFields;
+  std::unordered_map<int, Field> inputFields;
+  std::unordered_map<int, Field> outputFields;
 
   for(const auto& statementAccessesPair : statementAccessesPairs_) {
     auto& access = statementAccessesPair->getAccesses();
@@ -373,13 +373,13 @@ void StencilFunctionInstantiation::update() {
 
       // Field was recorded as `Input`, change it's state to `InputOutput`
       if(inputFields.count(AccessID)) {
-        inputOutputFields.insert(AccessID);
+        inputOutputFields.emplace(AccessID, inputFields.at(AccessID));
         inputFields.erase(AccessID);
         continue;
       }
 
       // Field not yet present, record it as output
-      outputFields.insert(AccessID);
+      outputFields.emplace(AccessID, Field(AccessID, Field::IK_Output, interval_));
     }
 
     for(const auto& accessPair : access->getReadAccesses()) {
@@ -395,13 +395,13 @@ void StencilFunctionInstantiation::update() {
 
       // Field was recorded as `Output`, change it's state to `InputOutput`
       if(outputFields.count(AccessID)) {
-        inputOutputFields.insert(AccessID);
+        inputOutputFields.insert({AccessID, outputFields.at(AccessID)});
         outputFields.erase(AccessID);
         continue;
       }
 
       // Field not yet present, record it as input
-      inputFields.insert(AccessID);
+      inputFields.emplace(AccessID, Field(AccessID, Field::IK_Input, interval_));
     }
   }
 
@@ -410,7 +410,7 @@ void StencilFunctionInstantiation::update() {
     int AccessID = argIdxCallerAccessIDPair.second;
     if(!inputFields.count(AccessID) && !outputFields.count(AccessID) &&
        !inputOutputFields.count(AccessID)) {
-      inputFields.insert(AccessID);
+      inputFields.emplace(AccessID, Field(AccessID, Field::IK_Output, interval_));
       unusedFields_.insert(AccessID);
     }
   }
@@ -421,19 +421,19 @@ void StencilFunctionInstantiation::update() {
   // Merge inputFields, outputFields and fields. Note that caller and callee fields are the same,
   // the only difference is that in the caller fields we apply the inital offset to the extents
   // while in the callee fields we do not.
-  for(int AccessID : outputFields) {
-    calleeFieldsUnordered.emplace_back(AccessID, Field::IK_Output);
-    callerFieldsUnordered.emplace_back(AccessID, Field::IK_Output);
+  for(auto AccessIDFieldPair : outputFields) {
+    calleeFieldsUnordered.push_back(AccessIDFieldPair.second);
+    callerFieldsUnordered.push_back(AccessIDFieldPair.second);
   }
 
-  for(int AccessID : inputOutputFields) {
-    calleeFieldsUnordered.emplace_back(AccessID, Field::IK_InputOutput);
-    callerFieldsUnordered.emplace_back(AccessID, Field::IK_InputOutput);
+  for(auto AccessIDFieldPair : inputOutputFields) {
+    calleeFieldsUnordered.push_back(AccessIDFieldPair.second);
+    callerFieldsUnordered.push_back(AccessIDFieldPair.second);
   }
 
-  for(int AccessID : inputFields) {
-    calleeFieldsUnordered.emplace_back(AccessID, Field::IK_Input);
-    callerFieldsUnordered.emplace_back(AccessID, Field::IK_Input);
+  for(auto AccessIDFieldPair : inputFields) {
+    calleeFieldsUnordered.push_back(AccessIDFieldPair.second);
+    callerFieldsUnordered.push_back(AccessIDFieldPair.second);
   }
 
   if(calleeFieldsUnordered.empty() || callerFieldsUnordered.empty()) {

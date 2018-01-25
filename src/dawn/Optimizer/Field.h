@@ -16,6 +16,7 @@
 #define DAWN_OPTIMIZER_FIELDTYPES_H
 
 #include "dawn/Optimizer/Extents.h"
+#include "dawn/Optimizer/Interval.h"
 #include <utility>
 
 namespace dawn {
@@ -29,11 +30,14 @@ namespace dawn {
 struct Field {
   enum IntendKind { IK_Output = 0, IK_InputOutput = 1, IK_Input = 2 };
 
-  int AccessID;      ///< Unique AccessID of the field
-  IntendKind Intend; ///< Intended usage
-  Extents Extent;    ///< Accumulated extent of the field
+  int AccessID;       ///< Unique AccessID of the field
+  IntendKind Intend;  ///< Intended usage
+  Extents Extent;     ///< Accumulated extent of the field
+  Interval interval_; ///< Enclosing Interval from the iteration space
+                      ///  where the Field has been accessed
 
-  Field(int accessID, IntendKind intend) : AccessID(accessID), Intend(intend), Extent{} {}
+  Field(int accessID, IntendKind intend, Interval interval)
+      : AccessID(accessID), Intend(intend), Extent{}, interval_(interval) {}
 
   /// @name Operators
   /// @{
@@ -45,6 +49,9 @@ struct Field {
     return (Intend < other.Intend || (Intend == other.Intend && AccessID < other.AccessID));
   }
   /// @}
+
+  /// @brief get the interval where field has been accessed
+  Interval getAccessedInterval() const { return Interval(interval_).extendInterval(Extent); }
 };
 
 } // namespace dawn

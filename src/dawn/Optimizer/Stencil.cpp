@@ -92,8 +92,9 @@ bool Stencil::Lifetime::overlaps(const Stencil::Lifetime& other) const {
   return lowerBoundOverlap && upperBoundOverlap;
 }
 
-Stencil::Stencil(StencilInstantiation* stencilInstantiation, const sir::Stencil* SIRStencil,
-                 int StencilID, std::shared_ptr<DependencyGraphStage> stageDependencyGraph)
+Stencil::Stencil(StencilInstantiation& stencilInstantiation,
+                 const std::shared_ptr<sir::Stencil> SIRStencil, int StencilID,
+                 std::shared_ptr<DependencyGraphStage> stageDependencyGraph)
     : stencilInstantiation_(stencilInstantiation), SIRStencil_(SIRStencil), StencilID_(StencilID),
       stageDependencyGraph_(stageDependencyGraph) {}
 
@@ -120,8 +121,8 @@ std::vector<Stencil::FieldInfo> Stencil::getFields(bool withTemporaries) const {
   std::vector<FieldInfo> fields;
 
   for(const auto& AccessID : fieldAccessIDs) {
-    std::string name = stencilInstantiation_->getNameFromAccessID(AccessID);
-    bool isTemporary = stencilInstantiation_->isTemporaryField(AccessID);
+    std::string name = stencilInstantiation_.getNameFromAccessID(AccessID);
+    bool isTemporary = stencilInstantiation_.isTemporaryField(AccessID);
 
     if(isTemporary) {
       if(withTemporaries) {
@@ -146,7 +147,7 @@ std::vector<std::string> Stencil::getGlobalVariables() const {
 
   std::vector<std::string> globalVariables;
   for(const auto& AccessID : globalVariableAccessIDs)
-    globalVariables.push_back(stencilInstantiation_->getNameFromAccessID(AccessID));
+    globalVariables.push_back(stencilInstantiation_.getNameFromAccessID(AccessID));
 
   return globalVariables;
 }
@@ -405,7 +406,7 @@ bool Stencil::isEmpty() const {
   return true;
 }
 
-const sir::Stencil* Stencil::getSIRStencil() const { return SIRStencil_; }
+const std::shared_ptr<sir::Stencil> Stencil::getSIRStencil() const { return SIRStencil_; }
 
 void Stencil::accept(ASTVisitor& visitor) {
   for(const auto& multistagePtr : multistages_)
@@ -420,12 +421,12 @@ std::ostream& operator<<(std::ostream& os, const Stencil& stencil) {
   for(const auto& MS : stencil.getMultiStages()) {
     os << "MultiStage " << (multiStageIdx++) << ": (" << MS->getLoopOrder() << ")\n";
     for(const auto& stage : MS->getStages())
-      os << "  " << stencil.getStencilInstantiation()->getNameFromStageID(stage->getStageID())
-         << " " << RangeToString()(stage->getFields(),
-                                   [&](const Field& field) {
-                                     return stencil.getStencilInstantiation()->getNameFromAccessID(
-                                         field.AccessID);
-                                   })
+      os << "  " << stencil.getStencilInstantiation().getNameFromStageID(stage->getStageID()) << " "
+         << RangeToString()(stage->getFields(),
+                            [&](const Field& field) {
+                              return stencil.getStencilInstantiation().getNameFromAccessID(
+                                  field.AccessID);
+                            })
          << "\n";
   }
   return os;

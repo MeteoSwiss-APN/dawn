@@ -26,7 +26,7 @@ PassStageMerger::PassStageMerger() : Pass("PassStageMerger") {
   dependencies_.push_back("PassSetStageGraph");
 }
 
-bool PassStageMerger::run(StencilInstantiation* stencilInstantiation) {
+bool PassStageMerger::run(std::shared_ptr<StencilInstantiation> stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   // Do we need to run this Pass?
@@ -124,7 +124,7 @@ bool PassStageMerger::run(StencilInstantiation* stencilInstantiation) {
                 auto& curDepGraph = curDoMethod.getDependencyGraph();
 
                 auto newDepGraph = std::make_shared<DependencyGraphAccesses>(
-                    stencilInstantiation, candiateDepGraph, curDepGraph);
+                    stencilInstantiation.get(), candiateDepGraph, curDepGraph);
 
                 if(newDepGraph->isDAG() &&
                    !hasHorizontalReadBeforeWriteConflict(newDepGraph.get())) {

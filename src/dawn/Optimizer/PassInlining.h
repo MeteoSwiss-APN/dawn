@@ -42,7 +42,7 @@ public:
   PassInlining(InlineStrategyKind strategy);
 
   /// @brief Pass implementation
-  bool run(StencilInstantiation* stencilInstantiation) override;
+  bool run(std::shared_ptr<StencilInstantiation> stencilInstantiation) override;
 
 private:
   InlineStrategyKind strategy_;

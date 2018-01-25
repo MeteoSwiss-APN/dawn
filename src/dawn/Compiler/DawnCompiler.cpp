@@ -105,7 +105,7 @@ DawnCompiler::DawnCompiler(Options* options) : diagnostics_(make_unique<Diagnost
   options_ = options ? make_unique<Options>(*options) : make_unique<Options>();
 }
 
-std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(const SIR* SIR) {
+std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(const std::shared_ptr<SIR> SIR) {
   // -inline
   using InlineStrategyKind = PassInlining::InlineStrategyKind;
   InlineStrategyKind inlineStrategy = StringSwitch<InlineStrategyKind>(options_->InlineStrategy)
@@ -160,7 +160,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(const SIR* SIR) {
 
   // Run optimization passes
   for(auto& stencil : optimizer->getStencilInstantiationMap()) {
-    StencilInstantiation* instantiation = stencil.second.get();
+    std::shared_ptr<StencilInstantiation> instantiation = stencil.second;
     DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `" << instantiation->getName()
                    << "` ...";
 
@@ -174,7 +174,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(const SIR* SIR) {
   return optimizer;
 }
 
-std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const SIR* SIR,
+std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::shared_ptr<SIR> SIR,
                                                                 CodeGenKind codeGen) {
   diagnostics_->clear();
   diagnostics_->setFilename(SIR->Filename);

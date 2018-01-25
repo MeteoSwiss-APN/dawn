@@ -41,7 +41,7 @@ tryInlineStencilFunction(PassInlining::InlineStrategyKind strategy,
 class Inliner : public ASTVisitor {
   PassInlining::InlineStrategyKind strategy_;
   StencilFunctionInstantiation* curStencilFunctioninstantiation_;
-  StencilInstantiation* instantiation_;
+  std::shared_ptr<StencilInstantiation> instantiation_;
 
   /// The statement which we are currently processing in the `DetectInlineCandiates`
   std::shared_ptr<StatementAccessesPair>& oldStmtAccessesPair_;
@@ -307,7 +307,7 @@ public:
 /// @brief Detect inline candidates
 class DetectInlineCandiates : public ASTVisitorForwarding {
   PassInlining::InlineStrategyKind strategy_;
-  StencilInstantiation* instantiation_;
+  std::shared_ptr<StencilInstantiation> instantiation_;
 
   /// The statement we are currently analyzing
   std::shared_ptr<StatementAccessesPair> oldStmtAccessesPair_;
@@ -335,7 +335,7 @@ public:
   using Base = ASTVisitorForwarding;
 
   DetectInlineCandiates(PassInlining::InlineStrategyKind strategy,
-                        StencilInstantiation* instantiation)
+                        std::shared_ptr<StencilInstantiation> instantiation)
       : strategy_(strategy), instantiation_(instantiation), inlineCandiatesFound_(false) {}
 
   /// @brief Process the given statement
@@ -459,7 +459,7 @@ tryInlineStencilFunction(PassInlining::InlineStrategyKind strategy,
 PassInlining::PassInlining(InlineStrategyKind strategy)
     : Pass("PassInlining"), strategy_(strategy) {}
 
-bool PassInlining::run(StencilInstantiation* stencilInstantiation) {
+bool PassInlining::run(std::shared_ptr<StencilInstantiation> stencilInstantiation) {
   // Nothing to do ...
   if(strategy_ == IK_None)
     return true;
@@ -483,7 +483,7 @@ bool PassInlining::run(StencilInstantiation* stencilInstantiation) {
             const auto& newStmtAccList = inliner.getNewStatementAccessesPairs();
 
             // Compute the accesses of the new statements
-            computeAccesses(stencilInstantiation, newStmtAccList);
+            computeAccesses(stencilInstantiation.get(), newStmtAccList);
 
             // Erase the old StatementAccessPair ...
             stmtAccIt = stmtAccList.erase(stmtAccIt);

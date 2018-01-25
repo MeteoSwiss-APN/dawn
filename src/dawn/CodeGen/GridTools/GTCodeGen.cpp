@@ -39,8 +39,7 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
   DAWN_ASSERT(!Intervals.empty());
 
   // Add intervals for the stencil functions
-  for(const auto& stencilFun :
-      stencil.getStencilInstantiation()->getStencilFunctionInstantiations())
+  for(const auto& stencilFun : stencil.getStencilInstantiation().getStencilFunctionInstantiations())
     Intervals.insert(stencilFun->getInterval());
 
   // Compute axis and populate the levels
@@ -76,8 +75,7 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
   }
 
   // Make sure the intervals for the stencil functions exist
-  for(const auto& stencilFun :
-      stencil.getStencilInstantiation()->getStencilFunctionInstantiations())
+  for(const auto& stencilFun : stencil.getStencilInstantiation().getStencilFunctionInstantiations())
     IntervalToNameMap.emplace(stencilFun->getInterval(),
                               Interval::makeCodeGenName(stencilFun->getInterval()));
 }
@@ -660,10 +658,10 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
   return str;
 }
 
-std::string GTCodeGen::generateGlobals(const SIR* Sir) {
+std::string GTCodeGen::generateGlobals(const std::shared_ptr<SIR> Sir) {
   using namespace codegen;
 
-  const auto& globalsMap = *Sir->GlobalVariableMap;
+  const auto& globalsMap = *(Sir->GlobalVariableMap);
   if(globalsMap.empty())
     return "";
 

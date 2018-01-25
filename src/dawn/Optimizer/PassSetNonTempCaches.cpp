@@ -46,7 +46,7 @@ class GlobalFieldCacher {
 public:
   /// @param[in, out]  msprt   Pointer to the multistage to handle
   /// @param[in, out]  si      Stencil Instanciation [ISIR] holding all the Stencils
-  GlobalFieldCacher(MultiStage* msptr, StencilInstantiation* si)
+  GlobalFieldCacher(MultiStage* msptr, std::shared_ptr<StencilInstantiation> si)
       : multiStagePrt_(msptr), instantiation_(si) {}
 
   /// @brief Entry method for the pass: processes a given multistage and applies all changes
@@ -180,7 +180,7 @@ private:
                                                const std::vector<int>& assigneeIDs) {
     // Add the cache Flush stage
     std::shared_ptr<Stage> assignmentStage = std::make_shared<Stage>(
-        instantiation_, multiStagePrt_, instantiation_->nextUID(), interval);
+        *instantiation_, multiStagePrt_, instantiation_->nextUID(), interval);
     std::unique_ptr<DoMethod> domethod = make_unique<DoMethod>(assignmentStage.get(), interval);
     domethod->getStatementAccessesPairs().clear();
 
@@ -270,7 +270,7 @@ private:
   }
 
   MultiStage* multiStagePrt_;
-  StencilInstantiation* instantiation_;
+  std::shared_ptr<StencilInstantiation> instantiation_;
 
   std::unordered_map<int, int> accessIDToDataLocality_;
   std::unordered_map<int, int> oldAccessIDtoNewAccessID_;
@@ -281,7 +281,7 @@ private:
 
 PassSetNonTempCaches::PassSetNonTempCaches() : Pass("PassSetNonTempCaches") {}
 
-bool dawn::PassSetNonTempCaches::run(dawn::StencilInstantiation* stencilInstantiation) {
+bool dawn::PassSetNonTempCaches::run(std::shared_ptr<StencilInstantiation> stencilInstantiation) {
 
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 

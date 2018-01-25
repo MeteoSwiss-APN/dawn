@@ -29,12 +29,12 @@ namespace dawn {
 
 PassMultiStageSplitter::PassMultiStageSplitter() : Pass("PassMultiStageSplitter") {}
 
-bool PassMultiStageSplitter::run(StencilInstantiation* stencilInstantiation) {
+bool PassMultiStageSplitter::run(std::shared_ptr<StencilInstantiation> stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   int numSplit = 0;
   std::deque<MultiStage::SplitIndex> splitterIndices;
-  DependencyGraphAccesses graph(stencilInstantiation);
+  DependencyGraphAccesses graph(stencilInstantiation.get());
 
   // Iterate over all stages in all multistages of all stencils
   for(auto& stencil : stencilInstantiation->getStencils()) {

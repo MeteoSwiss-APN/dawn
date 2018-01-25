@@ -29,7 +29,7 @@ namespace dawn {
 namespace {
 
 class ReadWriteCounter : public ASTVisitorForwarding {
-  StencilInstantiation* instantiation_;
+  std::shared_ptr<StencilInstantiation> instantiation_;
 
   std::size_t numReads_, numWrites_;
 
@@ -58,7 +58,8 @@ class ReadWriteCounter : public ASTVisitorForwarding {
   std::unordered_map<int, ReadWriteAccumulator> individualReadWrites_;
 
 public:
-  ReadWriteCounter(StencilInstantiation* instantiation, const MultiStage& multiStage)
+  ReadWriteCounter(std::shared_ptr<StencilInstantiation> instantiation,
+                   const MultiStage& multiStage)
       : instantiation_(instantiation), numReads_(0), numWrites_(0), multiStage_(multiStage),
         fields_(multiStage_.getFields()) {}
 
@@ -276,7 +277,7 @@ computeReadWriteAccessesLowerBound(StencilInstantiation* instantiation,
 
 /// @brief Approximate the reads and writes individually for each ID
 std::unordered_map<int, ReadWriteAccumulator>
-computeReadWriteAccessesMetricPerAccessID(StencilInstantiation* instantiation,
+computeReadWriteAccessesMetricPerAccessID(std::shared_ptr<StencilInstantiation> instantiation,
                                           const MultiStage& multiStage) {
   ReadWriteCounter readWriteCounter(instantiation, multiStage);
 
@@ -290,8 +291,9 @@ computeReadWriteAccessesMetricPerAccessID(StencilInstantiation* instantiation,
 }
 
 /// @brief Approximate the reads and writes accoding to our data locality metric
-std::pair<int, int> computeReadWriteAccessesMetric(StencilInstantiation* instantiation,
-                                                   const MultiStage& multiStage) {
+std::pair<int, int>
+computeReadWriteAccessesMetric(std::shared_ptr<StencilInstantiation> instantiation,
+                               const MultiStage& multiStage) {
   ReadWriteCounter readWriteCounter(instantiation, multiStage);
 
   for(const auto& stage : multiStage.getStages())
@@ -305,7 +307,7 @@ std::pair<int, int> computeReadWriteAccessesMetric(StencilInstantiation* instant
 
 PassDataLocalityMetric::PassDataLocalityMetric() : Pass("PassDataLocalityMetric") {}
 
-bool PassDataLocalityMetric::run(StencilInstantiation* stencilInstantiation) {
+bool PassDataLocalityMetric::run(std::shared_ptr<StencilInstantiation> stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   if(context->getOptions().ReportDataLocalityMetric) {

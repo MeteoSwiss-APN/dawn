@@ -24,7 +24,7 @@
 
 namespace dawn {
 
-Stage::Stage(StencilInstantiation* context, MultiStage* multiStage, int StageID,
+Stage::Stage(StencilInstantiation& context, MultiStage* multiStage, int StageID,
              const Interval& interval)
     : stencilInstantiation_(context), multiStage_(multiStage), StageID_(StageID), extents_{} {
   DoMethods_.emplace_back(make_unique<DoMethod>(this, interval));
@@ -110,12 +110,12 @@ class CaptureStencilFunctionCallGlobalParams : public ASTVisitorForwarding {
 
   std::unordered_set<int>& globalVariables_;
   StencilFunctionInstantiation* currentFunction_;
-  StencilInstantiation* stencilInstantiation_;
+  StencilInstantiation& stencilInstantiation_;
   StencilFunctionInstantiation* function_;
 
 public:
   CaptureStencilFunctionCallGlobalParams(std::unordered_set<int>& globalVariables,
-                                         StencilInstantiation* stencilInstantiation)
+                                         StencilInstantiation& stencilInstantiation)
       : globalVariables_(globalVariables), stencilInstantiation_(stencilInstantiation),
         function_(nullptr) {}
 
@@ -123,7 +123,7 @@ public:
     // Find the referenced stencil function
     StencilFunctionInstantiation* stencilFun =
         function_ ? function_->getStencilFunctionInstantiation(expr)
-                  : stencilInstantiation_->getStencilFunctionInstantiation(expr);
+                  : stencilInstantiation_.getStencilFunctionInstantiation(expr);
 
     DAWN_ASSERT(stencilFun);
     for(auto it : stencilFun->getAccessIDSetGlobalVariables()) {
@@ -153,9 +153,9 @@ void Stage::update() {
   //        +----------> | InputOutput | <----------+
   //                     +-------------+
   //
-  std::set<int> inputOutputFields;
-  std::set<int> inputFields;
-  std::set<int> outputFields;
+  std::unordered_map<int, Field> inputOutputFields;
+  std::unordered_map<int, Field> inputFields;
+  std::unordered_map<int, Field> outputFields;
 
   CaptureStencilFunctionCallGlobalParams functionCallGlobaParamVisitor(
       globalVariablesFromStencilFunctionCalls_, stencilInstantiation_);
@@ -169,50 +169,65 @@ void Stage::update() {
         int AccessID = accessPair.first;
 
         // Does this AccessID correspond to a field access?
-        if(!stencilInstantiation_->isField(AccessID)) {
-          if(stencilInstantiation_->isGlobalVariable(AccessID))
+        if(!stencilInstantiation_.isField(AccessID)) {
+          if(stencilInstantiation_.isGlobalVariable(AccessID))
             globalVariables_.insert(AccessID);
           continue;
         }
 
         // Field was recorded as `InputOutput`, state can't change ...
-        if(inputOutputFields.count(AccessID))
+        if(inputOutputFields.count(AccessID)) {
+          inputOutputFields.at(AccessID).interval_.merge(doMethod.getInterval());
           continue;
+        }
 
         // Field was recorded as `Input`, change it's state to `InputOutput`
         if(inputFields.count(AccessID)) {
-          inputOutputFields.insert(AccessID);
+          Field& preField = inputFields.at(AccessID);
+          preField.interval_.merge(doMethod.getInterval());
+          inputOutputFields.insert({AccessID, preField});
           inputFields.erase(AccessID);
           continue;
         }
 
         // Field not yet present, record it as output
-        outputFields.insert(AccessID);
+        if(outputFields.count(AccessID)) {
+          outputFields.at(AccessID).interval_.merge(doMethod.getInterval());
+        } else
+          outputFields.emplace(AccessID, Field(AccessID, Field::IK_Output, doMethod.getInterval()));
       }
 
       for(const auto& accessPair : access->getReadAccesses()) {
         int AccessID = accessPair.first;
 
         // Does this AccessID correspond to a field access?
-        if(!stencilInstantiation_->isField(AccessID)) {
-          if(stencilInstantiation_->isGlobalVariable(AccessID))
+        if(!stencilInstantiation_.isField(AccessID)) {
+          if(stencilInstantiation_.isGlobalVariable(AccessID))
             globalVariables_.insert(AccessID);
           continue;
         }
 
         // Field was recorded as `InputOutput`, state can't change ...
-        if(inputOutputFields.count(AccessID))
+        if(inputOutputFields.count(AccessID)) {
+          inputOutputFields.at(AccessID).interval_.merge(doMethod.getInterval());
           continue;
+        }
 
         // Field was recorded as `Output`, change it's state to `InputOutput`
         if(outputFields.count(AccessID)) {
-          inputOutputFields.insert(AccessID);
+          Field& preField = outputFields.at(AccessID);
+          preField.interval_.merge(doMethod.getInterval());
+          inputOutputFields.insert({AccessID, preField});
+
           outputFields.erase(AccessID);
           continue;
         }
 
         // Field not yet present, record it as input
-        inputFields.insert(AccessID);
+        if(inputFields.count(AccessID)) {
+          inputFields.at(AccessID).interval_.merge(doMethod.getInterval());
+        } else
+          inputFields.emplace(AccessID, Field(AccessID, Field::IK_Input, doMethod.getInterval()));
       }
 
       const std::shared_ptr<Statement> statement = statementAccessesPair->getStatement();
@@ -230,14 +245,14 @@ void Stage::update() {
                              globalVariablesFromStencilFunctionCalls_.end());
 
   // Merge inputFields, outputFields and fields
-  for(int AccessID : outputFields)
-    fields_.emplace_back(AccessID, Field::IK_Output);
+  for(auto fieldPair : outputFields)
+    fields_.push_back(fieldPair.second);
 
-  for(int AccessID : inputOutputFields)
-    fields_.emplace_back(AccessID, Field::IK_InputOutput);
+  for(auto fieldPair : inputOutputFields)
+    fields_.push_back(fieldPair.second);
 
-  for(int AccessID : inputFields)
-    fields_.emplace_back(AccessID, Field::IK_Input);
+  for(auto fieldPair : inputFields)
+    fields_.push_back(fieldPair.second);
 
   if(fields_.empty()) {
     DAWN_LOG(WARNING) << "no fields referenced in stage";
@@ -249,7 +264,8 @@ void Stage::update() {
   for(auto it = fields_.begin(), end = fields_.end(); it != end; ++it)
     AccessIDToFieldMap.insert(std::make_pair(it->AccessID, it));
 
-  // Accumulate the extents of each field in this stage
+  // Compute the extents of each field by accumulating the extents of each access to field in the
+  // stage
   for(const auto& doMethodPtr : DoMethods_) {
     const DoMethod& doMethod = *doMethodPtr;
 
@@ -258,14 +274,14 @@ void Stage::update() {
 
       // first => AccessID, second => Extent
       for(auto& accessPair : access->getWriteAccesses()) {
-        if(!stencilInstantiation_->isField(accessPair.first))
+        if(!stencilInstantiation_.isField(accessPair.first))
           continue;
 
         AccessIDToFieldMap[accessPair.first]->Extent.merge(accessPair.second);
       }
 
       for(const auto& accessPair : access->getReadAccesses()) {
-        if(!stencilInstantiation_->isField(accessPair.first))
+        if(!stencilInstantiation_.isField(accessPair.first))
           continue;
 
         AccessIDToFieldMap[accessPair.first]->Extent.merge(accessPair.second);
@@ -333,7 +349,7 @@ Stage::split(std::deque<int>& splitterIndices,
     std::size_t nextSplitterIndex = splitterIndices[i] + 1;
 
     newStages.push_back(std::make_shared<Stage>(stencilInstantiation_, multiStage_,
-                                                stencilInstantiation_->nextUID(),
+                                                stencilInstantiation_.nextUID(),
                                                 thisDoMethod.getInterval()));
     Stage& newStage = *newStages.back();
     DoMethod& doMethod = newStage.getSingleDoMethod();

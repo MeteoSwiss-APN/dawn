@@ -28,7 +28,7 @@ PassStageReordering::PassStageReordering(ReorderStrategy::ReorderStrategyKind st
   dependencies_.push_back("PassSetStageGraph");
 }
 
-bool PassStageReordering::run(StencilInstantiation* stencilInstantiation) {
+bool PassStageReordering::run(std::shared_ptr<StencilInstantiation> stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   std::string filenameWE = getFilenameWithoutExtension(context->getSIR()->Filename);

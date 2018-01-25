@@ -25,23 +25,23 @@ namespace {
 
 /// @brief Get all field and variable accesses identifier by `AccessID`
 class GetFieldAndVarAccesses : public ASTVisitorForwarding {
-  StencilInstantiation* instantiation_;
+  StencilInstantiation& instantiation_;
   int AccessID_;
 
   std::vector<std::shared_ptr<FieldAccessExpr>> fieldAccessExprToReplace_;
   std::vector<std::shared_ptr<VarAccessExpr>> varAccessesToReplace_;
 
 public:
-  GetFieldAndVarAccesses(StencilInstantiation* instantiation, int AccessID)
+  GetFieldAndVarAccesses(StencilInstantiation& instantiation, int AccessID)
       : instantiation_(instantiation), AccessID_(AccessID) {}
 
   void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
-    if(instantiation_->getAccessIDFromExpr(expr) == AccessID_)
+    if(instantiation_.getAccessIDFromExpr(expr) == AccessID_)
       varAccessesToReplace_.emplace_back(expr);
   }
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
-    if(instantiation_->getAccessIDFromExpr(expr) == AccessID_)
+    if(instantiation_.getAccessIDFromExpr(expr) == AccessID_)
       fieldAccessExprToReplace_.emplace_back(expr);
   }
 
@@ -64,7 +64,7 @@ public:
 void replaceFieldWithVarAccessInStmts(
     Stencil* stencil, int AccessID, const std::string& varname,
     ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs) {
-  StencilInstantiation* instantiation = stencil->getStencilInstantiation();
+  StencilInstantiation& instantiation = stencil->getStencilInstantiation();
 
   GetFieldAndVarAccesses visitor(instantiation, AccessID);
   for(const auto& statementAccessesPair : statementAccessesPairs) {
@@ -78,8 +78,8 @@ void replaceFieldWithVarAccessInStmts(
 
       replaceOldExprWithNewExprInStmt(stmt, oldExpr, newExpr);
 
-      instantiation->mapExprToAccessID(newExpr, AccessID);
-      instantiation->eraseExprToAccessID(oldExpr);
+      instantiation.mapExprToAccessID(newExpr, AccessID);
+      instantiation.eraseExprToAccessID(oldExpr);
     }
   }
 }
@@ -87,7 +87,7 @@ void replaceFieldWithVarAccessInStmts(
 void replaceVarWithFieldAccessInStmts(
     Stencil* stencil, int AccessID, const std::string& fieldname,
     ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs) {
-  StencilInstantiation* instantiation = stencil->getStencilInstantiation();
+  StencilInstantiation& instantiation = stencil->getStencilInstantiation();
 
   GetFieldAndVarAccesses visitor(instantiation, AccessID);
   for(const auto& statementAccessesPair : statementAccessesPairs) {
@@ -101,8 +101,8 @@ void replaceVarWithFieldAccessInStmts(
 
       replaceOldExprWithNewExprInStmt(stmt, oldExpr, newExpr);
 
-      instantiation->mapExprToAccessID(newExpr, AccessID);
-      instantiation->eraseExprToAccessID(oldExpr);
+      instantiation.mapExprToAccessID(newExpr, AccessID);
+      instantiation.eraseExprToAccessID(oldExpr);
     }
   }
 }
@@ -111,13 +111,13 @@ namespace {
 
 /// @brief Get all field and variable accesses identifier by `AccessID`
 class GetStencilCalls : public ASTVisitorForwarding {
-  StencilInstantiation* instantiation_;
+  std::shared_ptr<StencilInstantiation> instantiation_;
   int StencilID_;
 
   std::vector<std::shared_ptr<StencilCallDeclStmt>> stencilCallsToReplace_;
 
 public:
-  GetStencilCalls(StencilInstantiation* instantiation, int StencilID)
+  GetStencilCalls(std::shared_ptr<StencilInstantiation> instantiation, int StencilID)
       : instantiation_(instantiation), StencilID_(StencilID) {}
 
   void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
@@ -134,7 +134,7 @@ public:
 
 } // anonymous namespace
 
-void replaceStencilCalls(StencilInstantiation* instantiation, int oldStencilID,
+void replaceStencilCalls(std::shared_ptr<StencilInstantiation> instantiation, int oldStencilID,
                          const std::vector<int>& newStencilIDs) {
   GetStencilCalls visitor(instantiation, oldStencilID);
 

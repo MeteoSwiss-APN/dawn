@@ -66,7 +66,7 @@ public:
   PassTemporaryType();
 
   /// @brief Pass implementation
-  bool run(StencilInstantiation* stencilInstantiation) override;
+  bool run(std::shared_ptr<StencilInstantiation> stencilInstantiation) override;
 
   /// @brief Promote a temporary fields which span over multiple stencils to real (allocated)
   /// storage
