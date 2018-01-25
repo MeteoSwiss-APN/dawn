@@ -86,16 +86,16 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
 /// condition into it's stringstream. In order to use stencil_functions as boundary conditions, we
 /// need them to be memnbers of the stencil-wrapper class. The goal is to template the function s.t
 /// every field is a template argument.
-class StencilFunctionReader : public ASTCodeGenGTClangStencilBody {
+class StencilFunctionReader : public ASTStencilDesc {
 private:
   std::shared_ptr<sir::StencilFunction> function;
 
 public:
-  using Base = ASTCodeGenGTClangStencilBody;
+  using Base = ASTStencilDesc;
   StencilFunctionReader(const StencilInstantiation* stencilInstantiation,
-                        const std::unordered_map<Interval, std::string>& intervalToNameMap,
+                        const std::unordered_map<int, std::vector<std::string>>& stencilIDToStencilNameMap,
                         const std::shared_ptr<sir::StencilFunction>& functionToAnalyze)
-      : Base(stencilInstantiation, intervalToNameMap), function(functionToAnalyze) {}
+      : Base(stencilInstantiation, stencilIDToStencilNameMap), function(functionToAnalyze) {}
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) {
     auto printOffset = [](const Array3i& argumentoffsets) {
@@ -165,7 +165,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
       "public"); // The stencils should technically be private but nvcc doesn't like it ...
 
   bool isEmpty = true;
-  std::unordered_map<Interval, std::string> empty;
+  std::unordered_map<int, std::vector<std::string>> empty;
   // Functions for boundary conditions
   for(auto usedBoundaryCondition : stencilInstantiation->getBoundaryConditions()) {
     for(const auto& sf : stencilInstantiation->getSIR()->StencilFunctions) {

@@ -64,7 +64,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
   }
 }
 
-void ASTCodeGenGTClangStencilDesc::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
+void ASTStencilDesc::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
   if(instantiation_->getBoundaryConditionToExtentsMap().count(stmt) == 0) {
     DAWN_ASSERT_MSG(false, "Boundary Condition did not trigger extent-calculation");
   }
