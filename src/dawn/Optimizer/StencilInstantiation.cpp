@@ -879,7 +879,14 @@ public:
   }
 
   void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override {
-    DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not yet implemented");
+    BoundaryConditions bc;
+    bc.functor = stmt.get()->getFunctor();
+    // Extracting all the stencil_function arguments except for the field we apply it to
+    for(int i = 1; i < (*stmt).getFields().size(); ++i) {
+      bc.arguments.push_back(stmt.get()->getFields()[i].get()->Name);
+    }
+    // store it with the fieldname to apply it to as the key
+    instantiation_->getBoundaryConditions().emplace(stmt.get()->getFields()[0].get()->Name, bc);
   }
 
   void visit(const std::shared_ptr<AssignmentExpr>& expr) override {
@@ -1458,6 +1465,16 @@ StencilInstantiation::getStencilCallToStencilIDMap() const {
   return StencilCallToStencilIDMap_;
 }
 
+std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>>&
+StencilInstantiation::getIDToStencilCallMap() {
+  return IDToStencilCallMap_;
+}
+
+const std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>>&
+StencilInstantiation::getIDToStencilCallMap() const {
+  return IDToStencilCallMap_;
+}
+
 int StencilInstantiation::getStencilIDFromStmt(
     const std::shared_ptr<StencilCallDeclStmt>& stmt) const {
   auto it = StencilCallToStencilIDMap_.find(stmt);
@@ -1752,6 +1769,12 @@ std::string StencilInstantiation::makeStencilCallCodeGenName(int StencilID) {
 bool StencilInstantiation::isStencilCallCodeGenName(const std::string& name) {
   return StringRef(name).startswith("__code_gen_");
 }
+
+const std::set<int>& StencilInstantiation::getCachedVariableSet() const {
+  return CachedVariableSet_;
+}
+
+std::set<int>& StencilInstantiation::getCachedVariableSet() { return CachedVariableSet_; }
 
 void StencilInstantiation::reportAccesses() const {
   // Stencil functions

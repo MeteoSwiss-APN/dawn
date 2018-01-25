@@ -95,5 +95,6 @@ OPT(bool, UseNonTempCaches, false, "cache-non-temp-fields", "",
     "Allows for caching of non-temporary fields", "", false, true)
 OPT(bool, ReportPassSetNonTempCaches, false, "report-cache-non-temp-fields", "",
     "Report which non temporary fields are cached for each multi-stage", "", false, true)
-
+OPT(bool, ReportBoundaryConditions, false, "report-bc", "",
+    "Report where boundary conditions are inserted", "", false, true)
 // clang-format on

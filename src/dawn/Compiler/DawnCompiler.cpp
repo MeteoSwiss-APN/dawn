@@ -17,13 +17,6 @@
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/GridTools/GTCodeGen.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/SIR/SIR.h"
-#include "dawn/Support/EditDistance.h"
-#include "dawn/Support/Logging.h"
-#include "dawn/Support/StringSwitch.h"
-#include "dawn/Support/StringUtil.h"
-#include "dawn/Support/Unreachable.h"
-
 #include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
@@ -31,6 +24,7 @@
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
 #include "dawn/Optimizer/PassSSA.h"
+#include "dawn/Optimizer/PassSetBoundaryCondition.h"
 #include "dawn/Optimizer/PassSetCaches.h"
 #include "dawn/Optimizer/PassSetNonTempCaches.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
@@ -42,6 +36,17 @@
 #include "dawn/Optimizer/PassTemporaryFirstAccess.h"
 #include "dawn/Optimizer/PassTemporaryMerger.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
+#include "dawn/SIR/SIR.h"
+#include "dawn/SIR/SIR.h"
+#include "dawn/Support/EditDistance.h"
+#include "dawn/Support/EditDistance.h"
+#include "dawn/Support/Logging.h"
+#include "dawn/Support/Logging.h"
+#include "dawn/Support/StringSwitch.h"
+#include "dawn/Support/StringSwitch.h"
+#include "dawn/Support/StringUtil.h"
+#include "dawn/Support/StringUtil.h"
+#include "dawn/Support/Unreachable.h"
 
 namespace dawn {
 
@@ -155,7 +160,11 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(const SIR* SIR) {
   passManager.pushBackPass<PassTemporaryMerger>();
   passManager.pushBackPass<PassSetNonTempCaches>();
   passManager.pushBackPass<PassSetCaches>();
+<<<<<<< HEAD
   passManager.pushBackPass<PassComputeStageExtents>();
+=======
+  passManager.pushBackPass<PassSetBoundaryCondition>();
+>>>>>>> merger
   passManager.pushBackPass<PassDataLocalityMetric>();
 
   // Run optimization passes
@@ -163,10 +172,10 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(const SIR* SIR) {
     StencilInstantiation* instantiation = stencil.second.get();
     DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `" << instantiation->getName()
                    << "` ...";
-
+    instantiation->dump();
     if(!passManager.runAllPassesOnStecilInstantiation(instantiation))
       return nullptr;
-
+    instantiation->dump();
     DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `" << instantiation->getName()
                    << "`";
   }

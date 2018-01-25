@@ -31,6 +31,12 @@ namespace dawn {
 
 class OptimizerContext;
 
+/// @brief struct for storing the boundary conditions
+struct BoundaryConditions {
+  std::string functor;
+  std::vector<std::string> arguments;
+};
+
 /// @brief Specific instantiation of a stencil
 /// @ingroup optimizer
 class StencilInstantiation : NonCopyable {
@@ -91,6 +97,7 @@ class StencilInstantiation : NonCopyable {
   /// Stencil description statements. These are built from the StencilDescAst of the sir::Stencil
   std::vector<std::shared_ptr<Statement>> stencilDescStatements_;
   std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int> StencilCallToStencilIDMap_;
+  std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>> IDToStencilCallMap_;
 
   /// StageID to name Map. Filled by the `PassSetStageName`.
   std::unordered_map<int, std::string> StageIDToNameMap_;
@@ -100,6 +107,14 @@ class StencilInstantiation : NonCopyable {
   std::vector<std::unique_ptr<StencilFunctionInstantiation>> stencilFunctionInstantiations_;
   std::unordered_map<std::shared_ptr<StencilFunCallExpr>, StencilFunctionInstantiation*>
       ExprToStencilFunctionInstantiationMap_;
+
+  std::unordered_map<std::string, BoundaryConditions> BoundaryConditions_;
+
+  /// BoundaryConditionCall to Extent Map. Filled my `PassSetBoundaryCondition`
+  std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents> BoundaryConditionToExtentsMap_;
+
+  /// Set of all the IDs that are locally cached
+  std::set<int> CachedVariableSet_;
 
 public:
   /// @brief Assemble StencilInstantiation for stencil
@@ -316,6 +331,11 @@ public:
   const std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
   getStencilCallToStencilIDMap() const;
 
+  /// @brief Get StencilID of the StencilCallDeclStmt
+  std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>>& getIDToStencilCallMap();
+  const std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>>&
+  getIDToStencilCallMap() const;
+
   /// @brief Get the StencilID of the StencilCallDeclStmt `stmt`
   int getStencilIDFromStmt(const std::shared_ptr<StencilCallDeclStmt>& stmt) const;
 
@@ -370,6 +390,13 @@ public:
   /// @brief Get the optimizer context
   OptimizerContext* getOptimizerContext() { return context_; }
 
+  std::unordered_map<std::string, BoundaryConditions>& getBoundaryConditions() {
+    return BoundaryConditions_;
+  }
+  const std::unordered_map<std::string, BoundaryConditions>& getBoundaryConditions() const {
+    return BoundaryConditions_;
+  }
+
   /// @brief Get a unique (positive) identifier
   int nextUID() { return UIDGen_.get(); }
 
@@ -403,6 +430,17 @@ public:
   /// @brief Check if the given name of a `StencilCallDeclStmt` was generate by
   /// `makeStencilCallCodeGenName`
   static bool isStencilCallCodeGenName(const std::string& name);
+
+  const std::set<int>& getCachedVariableSet() const;
+  std::set<int>& getCachedVariableSet();
+
+  const std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>& getBoundaryConditionToExtentsMap() const {
+      return BoundaryConditionToExtentsMap_;
+  }
+
+  std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&  getBoundaryConditionToExtentsMap() {
+      return BoundaryConditionToExtentsMap_;
+  }
 
 private:
   /// @brief Report the accesses to the console (according to `-freport-accesses`)

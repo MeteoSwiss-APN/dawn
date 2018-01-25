@@ -55,6 +55,8 @@ mchbuild_add_library(
           PassMultiStageSplitter.h
           PassPrintStencilGraph.cpp
           PassPrintStencilGraph.h
+          PassSetBoundaryCondition.cpp
+          PassSetBoundaryCondition.h
           PassSetCaches.cpp
           PassSetCaches.h
           PassSetNonTempCaches.cpp
