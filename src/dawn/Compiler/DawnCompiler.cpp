@@ -160,11 +160,8 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(const SIR* SIR) {
   passManager.pushBackPass<PassTemporaryMerger>();
   passManager.pushBackPass<PassSetNonTempCaches>();
   passManager.pushBackPass<PassSetCaches>();
-<<<<<<< HEAD
   passManager.pushBackPass<PassComputeStageExtents>();
-=======
   passManager.pushBackPass<PassSetBoundaryCondition>();
->>>>>>> merger
   passManager.pushBackPass<PassDataLocalityMetric>();
 
   // Run optimization passes
@@ -172,10 +169,8 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(const SIR* SIR) {
     StencilInstantiation* instantiation = stencil.second.get();
     DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `" << instantiation->getName()
                    << "` ...";
-    instantiation->dump();
     if(!passManager.runAllPassesOnStecilInstantiation(instantiation))
       return nullptr;
-    instantiation->dump();
     DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `" << instantiation->getName()
                    << "`";
   }
