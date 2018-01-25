@@ -104,7 +104,6 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_02) {
     }
     if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("coeff")) {
       ASSERT_TRUE(field.getInterval() == Interval(sir::Interval::Start, sir::Interval::End, 11, 0));
-      std::cout << field.getAccessedInterval() << std::endl;
       ASSERT_TRUE(field.getAccessedInterval() ==
                   Interval(sir::Interval::Start, sir::Interval::End, 11, 1));
     }
