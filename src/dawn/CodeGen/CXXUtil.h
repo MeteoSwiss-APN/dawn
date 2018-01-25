@@ -259,6 +259,24 @@ struct Using : public Statement {
 };
 
 //===------------------------------------------------------------------------------------------===//
+//     Namespace
+//===------------------------------------------------------------------------------------------===//
+/// @brief Definition of a `namespace`
+/// @ingroup codegen
+struct Namespace {
+  const Twine name_;
+  std::stringstream& s_;
+
+  ~Namespace() {}
+  /// @brief Add `namespace`
+  Namespace(const Twine& name, std::stringstream& s) : name_(name), s_(s) {
+    s_ << "namespace " << name_ << "{" << std::endl;
+  }
+
+  void commit() { s_ << "} // namespace " << name_ << std::endl; }
+};
+
+//===------------------------------------------------------------------------------------------===//
 //     Function
 //===------------------------------------------------------------------------------------------===//
 
@@ -651,6 +669,10 @@ struct Struct : public Structure {
   Struct(const Twine& name, std::stringstream& s, const Twine& templateName = Twine::createNull())
       : Structure("struct", name, s, templateName) {}
 };
+
+auto c_gt = []() { return Twine("gridtools::"); };
+auto c_gtc = []() { return Twine("gridtools::clang::"); };
+auto c_gt_enum = []() { return Twine("gridtools::enumtype::"); };
 
 } // namesapce codegen
 

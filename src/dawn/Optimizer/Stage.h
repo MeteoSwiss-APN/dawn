@@ -51,7 +51,11 @@ class Stage {
   std::vector<Field> fields_;
 
   /// AccessIDs of the global variable accesses of this stage
+  std::unordered_set<int> allGlobalVariables_;
   std::unordered_set<int> globalVariables_;
+  std::unordered_set<int> globalVariablesFromStencilFunctionCalls_;
+
+  Extents extents_;
 
 public:
   /// @name Constructors and Assignment
@@ -123,10 +127,27 @@ public:
   /// the @b accumulated extent of each field
   void update();
 
+  /// @brief checks whether the stage contains global variables
+  bool hasGlobalVariables() const;
+
   /// @brief Get the global variables accessed in this stage
   ///
+  /// only returns those global variables used within the stage,
+  /// but not inside stencil functions called from the stage
   /// The global variables are computed during `Stage::update`.
   const std::unordered_set<int>& getGlobalVariables() const;
+
+  /// @brief Get the global variables accessed in stencil functions that
+  /// are called from within the stage
+  ///
+  /// The global variables are computed during `Stage::update`.
+  const std::unordered_set<int>& getGlobalVariablesFromStencilFunctionCalls() const;
+
+  /// @brief Get the all global variables used in the stage:
+  /// i.e. the union of getGlovalVariables() and getGlobalVariablesFromStencilFunctionCalls()
+  ///
+  /// The global variables are computed during `Stage::update`.
+  const std::unordered_set<int>& getAllGlobalVariables() const;
 
   /// @brief Add the given Do-Method to the list of Do-Methods of this stage
   ///
@@ -155,8 +176,12 @@ public:
   split(std::deque<int>& splitterIndices,
         const std::deque<std::shared_ptr<DependencyGraphAccesses>>* graphs);
 
-  // This is just a mock-function until we merge the two prs: TODO: remove this
-  Extents getExtents() { return Extents(-1, 1, -1, 1, 0, 0); }
+  /// @brief Get the extent of the stage
+  /// @{
+  Extents& getExtents() { return extents_; }
+
+  Extents const& getExtents() const { return extents_; }
+  /// @}
 };
 
 } // namespace dawn

@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/CodeGen/ASTCodeGenGTClangStencilBody.h"
+#include "dawn/CodeGen/GridTools/ASTStencilBody.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/StencilFunctionInstantiation.h"
@@ -21,30 +21,31 @@
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
+namespace codegen {
+namespace gt {
 
-ASTCodeGenGTClangStencilBody::ASTCodeGenGTClangStencilBody(
-    const StencilInstantiation* stencilInstantiation,
-    const std::unordered_map<Interval, std::string>& intervalToNameMap)
+ASTStencilBody::ASTStencilBody(const StencilInstantiation* stencilInstantiation,
+                               const std::unordered_map<Interval, std::string>& intervalToNameMap)
     : ASTCodeGenCXX(), instantiation_(stencilInstantiation), intervalToNameMap_(intervalToNameMap),
       offsetPrinter_(",", "(", ")"), currentFunction_(nullptr), nestingOfStencilFunArgLists_(0) {}
 
-ASTCodeGenGTClangStencilBody::~ASTCodeGenGTClangStencilBody() {}
+ASTStencilBody::~ASTStencilBody() {}
 
-const std::string& ASTCodeGenGTClangStencilBody::getName(const std::shared_ptr<Stmt>& stmt) const {
+std::string ASTStencilBody::getName(const std::shared_ptr<Stmt>& stmt) const {
   if(currentFunction_)
     return currentFunction_->getNameFromAccessID(currentFunction_->getAccessIDFromStmt(stmt));
   else
     return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
 }
 
-const std::string& ASTCodeGenGTClangStencilBody::getName(const std::shared_ptr<Expr>& expr) const {
+std::string ASTStencilBody::getName(const std::shared_ptr<Expr>& expr) const {
   if(currentFunction_)
     return currentFunction_->getNameFromAccessID(currentFunction_->getAccessIDFromExpr(expr));
   else
     return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromExpr(expr));
 }
 
-int ASTCodeGenGTClangStencilBody::getAccessID(const std::shared_ptr<Expr>& expr) const {
+int ASTStencilBody::getAccessID(const std::shared_ptr<Expr>& expr) const {
   if(currentFunction_)
     return currentFunction_->getAccessIDFromExpr(expr);
   else
@@ -55,15 +56,11 @@ int ASTCodeGenGTClangStencilBody::getAccessID(const std::shared_ptr<Expr>& expr)
 //     Stmt
 //===------------------------------------------------------------------------------------------===//
 
-void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<BlockStmt>& stmt) {
-  Base::visit(stmt);
-}
+void ASTStencilBody::visit(const std::shared_ptr<BlockStmt>& stmt) { Base::visit(stmt); }
 
-void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<ExprStmt>& stmt) {
-  Base::visit(stmt);
-}
+void ASTStencilBody::visit(const std::shared_ptr<ExprStmt>& stmt) { Base::visit(stmt); }
 
-void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<ReturnStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<ReturnStmt>& stmt) {
   if(scopeDepth_ == 0)
     ss_ << std::string(indent_, ' ');
 
@@ -78,49 +75,37 @@ void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<ReturnStmt>& stmt
   ss_ << ";\n";
 }
 
-void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<VarDeclStmt>& stmt) {
-  Base::visit(stmt);
-}
+void ASTStencilBody::visit(const std::shared_ptr<VarDeclStmt>& stmt) { Base::visit(stmt); }
 
-void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) {
   dawn_unreachable("VerticalRegionDeclStmt not allowed in this context");
 }
 
-void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
   dawn_unreachable("StencilCallDeclStmt not allowed in this context");
 }
 
-void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
   DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not allowed in this context");
 }
 
-void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<IfStmt>& stmt) { Base::visit(stmt); }
+void ASTStencilBody::visit(const std::shared_ptr<IfStmt>& stmt) { Base::visit(stmt); }
 
 //===------------------------------------------------------------------------------------------===//
 //     Expr
 //===------------------------------------------------------------------------------------------===//
 
-void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<UnaryOperator>& expr) {
-  Base::visit(expr);
-}
+void ASTStencilBody::visit(const std::shared_ptr<UnaryOperator>& expr) { Base::visit(expr); }
 
-void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<BinaryOperator>& expr) {
-  Base::visit(expr);
-}
+void ASTStencilBody::visit(const std::shared_ptr<BinaryOperator>& expr) { Base::visit(expr); }
 
-void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<AssignmentExpr>& expr) {
-  Base::visit(expr);
-}
+void ASTStencilBody::visit(const std::shared_ptr<AssignmentExpr>& expr) { Base::visit(expr); }
 
-void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<TernaryOperator>& expr) {
-  Base::visit(expr);
-}
+void ASTStencilBody::visit(const std::shared_ptr<TernaryOperator>& expr) { Base::visit(expr); }
 
-void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<FunCallExpr>& expr) {
-  Base::visit(expr);
-}
+void ASTStencilBody::visit(const std::shared_ptr<FunCallExpr>& expr) { Base::visit(expr); }
 
-void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
+void ASTStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
   if(nestingOfStencilFunArgLists_++)
     ss_ << ", ";
 
@@ -131,16 +116,36 @@ void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<StencilFunCallExp
   ss_ << "gridtools::call<" << StencilFunctionInstantiation::makeCodeGenName(*stencilFun) << ", "
       << intervalToNameMap_.find(stencilFun->getInterval())->second << ">::with(eval";
 
-  for(auto& arg : expr->getArguments())
+  for(auto& arg : expr->getArguments()) {
     arg->accept(*this);
+  }
+
+  // we record in a set all global variables passed to the stencil call
+  std::set<int> globalVariablesInCallStmt;
+  for(auto& arg : expr->getArguments()) {
+    if(!isa<FieldAccessExpr>(*arg))
+      continue;
+    int accessID = currentFunction_ ? currentFunction_->getAccessIDFromExpr(arg)
+                                    : instantiation_->getAccessIDFromExpr(arg);
+    if(instantiation_->isGlobalVariable(accessID))
+      globalVariablesInCallStmt.insert(accessID);
+  }
+
+  // explicitly add all global variables parameters that are used by stencil function but not passed
+  // by user in stencil function call
+  for(const int globalAccessID : stencilFun->getAccessIDSetGlobalVariables()) {
+    if(globalVariablesInCallStmt.count(globalAccessID))
+      continue;
+    ss_ << "," << instantiation_->getNameFromAccessID(globalAccessID) << "()";
+  }
 
   nestingOfStencilFunArgLists_--;
   ss_ << ")";
 }
 
-void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<StencilFunArgExpr>& expr) {}
+void ASTStencilBody::visit(const std::shared_ptr<StencilFunArgExpr>& expr) {}
 
-void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
+void ASTStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
   std::string name = getName(expr);
   int AccessID = getAccessID(expr);
 
@@ -166,11 +171,9 @@ void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<VarAccessExpr>& e
   }
 }
 
-void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<LiteralAccessExpr>& expr) {
-  Base::visit(expr);
-}
+void ASTStencilBody::visit(const std::shared_ptr<LiteralAccessExpr>& expr) { Base::visit(expr); }
 
-void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
+void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   if(!nestingOfStencilFunArgLists_)
     ss_ << "eval(";
   else
@@ -187,9 +190,11 @@ void ASTCodeGenGTClangStencilBody::visit(const std::shared_ptr<FieldAccessExpr>&
     ss_ << ")";
 }
 
-void ASTCodeGenGTClangStencilBody::setCurrentStencilFunction(
+void ASTStencilBody::setCurrentStencilFunction(
     const StencilFunctionInstantiation* currentFunction) {
   currentFunction_ = currentFunction;
 }
 
+} // namespace gt
+} // namespace codegen
 } // namespace dawn

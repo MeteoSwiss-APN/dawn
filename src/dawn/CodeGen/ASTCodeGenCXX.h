@@ -21,6 +21,7 @@
 #include <sstream>
 
 namespace dawn {
+namespace codegen {
 
 /// @brief Abstract base class of all C++ code generation visitor
 /// @ingroup codegen
@@ -72,14 +73,15 @@ public:
 
   /// @brief Mapping of VarDeclStmt and Var/FieldAccessExpr to their name
   /// @{
-  virtual const std::string& getName(const std::shared_ptr<Expr>& expr) const = 0;
-  virtual const std::string& getName(const std::shared_ptr<Stmt>& stmt) const = 0;
+  virtual std::string getName(const std::shared_ptr<Expr>& expr) const = 0;
+  virtual std::string getName(const std::shared_ptr<Stmt>& stmt) const = 0;
   /// @}
 
   /// @brief Convert builtin type to the corresponding C++ type
   static const char* builtinTypeIDToCXXType(const BuiltinTypeID& builtinTypeID, bool isAutoAllowed);
 };
 
+} // namespace codegen
 } // namespace dawn
 
 #endif

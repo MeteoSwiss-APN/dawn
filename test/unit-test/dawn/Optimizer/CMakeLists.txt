@@ -24,3 +24,5 @@ dawn_add_unittest_impl(
           TestSCCAlgorithm.cpp
           TestStencil.cpp
 )
+
+add_subdirectory(Passes)

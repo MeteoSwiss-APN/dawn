@@ -30,6 +30,8 @@ static dawn::DawnCompiler::CodeGenKind getCodeGenKind(DawnCodeGenKind codegen) {
     return dawn::DawnCompiler::CG_GTClang;
   case DC_GTClangNaiveCXX:
     return dawn::DawnCompiler::CG_GTClangNaiveCXX;
+  case DC_GTClangOptCXX:
+    return dawn::DawnCompiler::CG_GTClangOptCXX;
   default:
     dawn_unreachable("invalid CodeGenKind");
   }
@@ -105,7 +107,7 @@ dawnTranslationUnit_t* dawnCompile(const char* SIR, size_t size, const dawnOptio
       throw std::runtime_error("compilation failed");
 
     translationUnit = allocate<dawnTranslationUnit_t>();
-    translationUnit->Impl = new dawn::TranslationUnit(std::move(*TU.get()));
+    translationUnit->Impl = new dawn::codegen::TranslationUnit(std::move(*TU.get()));
     translationUnit->OwnsData = 1;
 
   } catch(std::exception& e) {

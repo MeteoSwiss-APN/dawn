@@ -13,10 +13,11 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Compiler/DawnCompiler.h"
+#include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
-#include "dawn/CodeGen/GTClangCodeGen.h"
-#include "dawn/CodeGen/GTClangNaiveCXXCodeGen.h"
+#include "dawn/CodeGen/GridTools/GTCodeGen.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassInlining.h"
@@ -36,10 +37,16 @@
 #include "dawn/Optimizer/PassTemporaryMerger.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/SIR/SIR.h"
+#include "dawn/Support/EditDistance.h"
 #include "dawn/Support/EditDistance.h"
 #include "dawn/Support/Logging.h"
+#include "dawn/Support/Logging.h"
+#include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/StringUtil.h"
+#include "dawn/Support/StringUtil.h"
+#include "dawn/Support/Unreachable.h"
 
 namespace dawn {
 
@@ -103,19 +110,7 @@ DawnCompiler::DawnCompiler(Options* options) : diagnostics_(make_unique<Diagnost
   options_ = options ? make_unique<Options>(*options) : make_unique<Options>();
 }
 
-std::unique_ptr<TranslationUnit> DawnCompiler::compile(const SIR* SIR, CodeGenKind codeGen) {
-  diagnostics_->clear();
-  diagnostics_->setFilename(SIR->Filename);
-
-  // Check if options are valid
-
-  // -max-halo
-  if(options_->MaxHaloPoints < 0) {
-    diagnostics_->report(buildDiag("-max-halo", options_->MaxHaloPoints,
-                                   "maximum number of allowed halo points must be >= 0"));
-    return nullptr;
-  }
-
+std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(const SIR* SIR) {
   // -inline
   using InlineStrategyKind = PassInlining::InlineStrategyKind;
   InlineStrategyKind inlineStrategy = StringSwitch<InlineStrategyKind>(options_->InlineStrategy)
@@ -144,7 +139,7 @@ std::unique_ptr<TranslationUnit> DawnCompiler::compile(const SIR* SIR, CodeGenKi
   }
 
   // Initialize optimizer
-  auto optimizer = make_unique<OptimizerContext>(this, SIR);
+  auto optimizer = make_unique<OptimizerContext>(getDiagnostics(), getOptions(), SIR);
   PassManager& passManager = optimizer->getPassManager();
 
   // Setup pass interface
@@ -165,7 +160,11 @@ std::unique_ptr<TranslationUnit> DawnCompiler::compile(const SIR* SIR, CodeGenKi
   passManager.pushBackPass<PassTemporaryMerger>();
   passManager.pushBackPass<PassSetNonTempCaches>();
   passManager.pushBackPass<PassSetCaches>();
+<<<<<<< HEAD
+  passManager.pushBackPass<PassComputeStageExtents>();
+=======
   passManager.pushBackPass<PassSetBoundaryCondition>();
+>>>>>>> merger
   passManager.pushBackPass<PassDataLocalityMetric>();
 
   // Run optimization passes
@@ -181,19 +180,42 @@ std::unique_ptr<TranslationUnit> DawnCompiler::compile(const SIR* SIR, CodeGenKi
                    << "`";
   }
 
+  return optimizer;
+}
+
+std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const SIR* SIR,
+                                                                CodeGenKind codeGen) {
+  diagnostics_->clear();
+  diagnostics_->setFilename(SIR->Filename);
+
+  // Check if options are valid
+
+  // -max-halo
+  if(options_->MaxHaloPoints < 0) {
+    diagnostics_->report(buildDiag("-max-halo", options_->MaxHaloPoints,
+                                   "maximum number of allowed halo points must be >= 0"));
+    return nullptr;
+  }
+
+  // Initialize optimizer
+  auto optimizer = runOptimizer(SIR);
+
   if(diagnostics_->hasErrors()) {
     DAWN_LOG(INFO) << "Errors occured. Skipping code generation.";
     return nullptr;
   }
 
   // Generate code
-  std::unique_ptr<CodeGen> CG;
+  std::unique_ptr<codegen::CodeGen> CG;
   switch(codeGen) {
   case CodeGenKind::CG_GTClang:
-    CG = make_unique<GTClangCodeGen>(optimizer.get());
+    CG = make_unique<codegen::gt::GTCodeGen>(optimizer.get());
     break;
   case CodeGenKind::CG_GTClangNaiveCXX:
-    CG = make_unique<GTClangNaiveCXXCodeGen>(optimizer.get());
+    CG = make_unique<codegen::cxxnaive::CXXNaiveCodeGen>(optimizer.get());
+    break;
+  case CodeGenKind::CG_GTClangOptCXX:
+    dawn_unreachable("GTClangOptCXX not supported yet");
     break;
   }
   return CG->generateCode();

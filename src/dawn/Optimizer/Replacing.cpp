@@ -78,8 +78,8 @@ void replaceFieldWithVarAccessInStmts(
 
       replaceOldExprWithNewExprInStmt(stmt, oldExpr, newExpr);
 
-      instantiation->getExprToAccessIDMap().emplace(newExpr, AccessID);
-      instantiation->getExprToAccessIDMap().erase(oldExpr);
+      instantiation->mapExprToAccessID(newExpr, AccessID);
+      instantiation->eraseExprToAccessID(oldExpr);
     }
   }
 }
@@ -101,8 +101,8 @@ void replaceVarWithFieldAccessInStmts(
 
       replaceOldExprWithNewExprInStmt(stmt, oldExpr, newExpr);
 
-      instantiation->getExprToAccessIDMap().emplace(newExpr, AccessID);
-      instantiation->getExprToAccessIDMap().erase(oldExpr);
+      instantiation->mapExprToAccessID(newExpr, AccessID);
+      instantiation->eraseExprToAccessID(oldExpr);
     }
   }
 }

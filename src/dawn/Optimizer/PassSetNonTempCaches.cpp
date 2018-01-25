@@ -219,8 +219,8 @@ private:
     domethod->getStatementAccessesPairs().push_back(pair);
 
     // Add the new expressions to the map
-    instantiation_->getExprToAccessIDMap().emplace(fa_assignment, assignmentID);
-    instantiation_->getExprToAccessIDMap().emplace(fa_assignee, assigneeID);
+    instantiation_->mapExprToAccessID(fa_assignment, assignmentID);
+    instantiation_->mapExprToAccessID(fa_assignee, assigneeID);
   }
 
   /// @brief Checks if there is a read operation before the first write operation in the given

@@ -109,10 +109,13 @@ std::unordered_set<Interval> Stencil::getIntervals() const {
 
 std::vector<Stencil::FieldInfo> Stencil::getFields(bool withTemporaries) const {
   std::set<int> fieldAccessIDs;
-  for(const auto& multistage : multistages_)
-    for(const auto& stage : multistage->getStages())
-      for(const auto& field : stage->getFields())
+  for(const auto& multistage : multistages_) {
+    for(const auto& stage : multistage->getStages()) {
+      for(const auto& field : stage->getFields()) {
         fieldAccessIDs.insert(field.AccessID);
+      }
+    }
+  }
 
   std::vector<FieldInfo> fields;
 
@@ -121,10 +124,12 @@ std::vector<Stencil::FieldInfo> Stencil::getFields(bool withTemporaries) const {
     bool isTemporary = stencilInstantiation_->isTemporaryField(AccessID);
 
     if(isTemporary) {
-      if(withTemporaries)
+      if(withTemporaries) {
         fields.insert(fields.begin(), FieldInfo{isTemporary, name, AccessID});
-    } else
+      }
+    } else {
       fields.emplace_back(FieldInfo{isTemporary, name, AccessID});
+    }
   }
 
   return fields;
@@ -132,10 +137,12 @@ std::vector<Stencil::FieldInfo> Stencil::getFields(bool withTemporaries) const {
 
 std::vector<std::string> Stencil::getGlobalVariables() const {
   std::set<int> globalVariableAccessIDs;
-  for(const auto& multistage : multistages_)
-    for(const auto& stage : multistage->getStages())
-      for(const auto& varAccessID : stage->getGlobalVariables())
-        globalVariableAccessIDs.insert(varAccessID);
+  for(const auto& multistage : multistages_) {
+    for(const auto& stage : multistage->getStages()) {
+      globalVariableAccessIDs.insert(stage->getAllGlobalVariables().begin(),
+                                     stage->getAllGlobalVariables().end());
+    }
+  }
 
   std::vector<std::string> globalVariables;
   for(const auto& AccessID : globalVariableAccessIDs)

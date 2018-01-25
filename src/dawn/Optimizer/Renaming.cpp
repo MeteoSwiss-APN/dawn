@@ -33,20 +33,14 @@ class AccessIDRemapper : public ASTVisitorForwarding {
   int oldAccessID_;
   int newAccessID_;
 
-  std::unordered_map<std::shared_ptr<Expr>, int>& ExprToAccessIDMap_;
-  std::unordered_map<std::shared_ptr<Stmt>, int>& StmtToAccessIDMap_;
-
 public:
-  AccessIDRemapper(InstantiationType* instantiation, int oldAccessID, int newAccessID,
-                   std::unordered_map<std::shared_ptr<Expr>, int>& ExprToAccessIDMap,
-                   std::unordered_map<std::shared_ptr<Stmt>, int>& StmtToAccessIDMap)
-      : instantiation_(instantiation), oldAccessID_(oldAccessID), newAccessID_(newAccessID),
-        ExprToAccessIDMap_(ExprToAccessIDMap), StmtToAccessIDMap_(StmtToAccessIDMap) {}
+  AccessIDRemapper(InstantiationType* instantiation, int oldAccessID, int newAccessID)
+      : instantiation_(instantiation), oldAccessID_(oldAccessID), newAccessID_(newAccessID) {}
 
   virtual void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
-    int& varAccessID = StmtToAccessIDMap_[stmt];
+    int varAccessID = instantiation_->getAccessIDFromStmt(stmt);
     if(varAccessID == oldAccessID_)
-      varAccessID = newAccessID_;
+      instantiation_->setAccessIDOfStmt(stmt, newAccessID_);
     ASTVisitorForwarding::visit(stmt);
   }
 
@@ -57,15 +51,15 @@ public:
   }
 
   void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
-    int& varAccessID = ExprToAccessIDMap_[expr];
+    int varAccessID = instantiation_->getAccessIDFromExpr(expr);
     if(varAccessID == oldAccessID_)
-      varAccessID = newAccessID_;
+      instantiation_->setAccessIDOfExpr(expr, newAccessID_);
   }
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
-    int& fieldAccessID = ExprToAccessIDMap_[expr];
+    int fieldAccessID = instantiation_->getAccessIDFromExpr(expr);
     if(fieldAccessID == oldAccessID_)
-      fieldAccessID = newAccessID_;
+      instantiation_->setAccessIDOfExpr(expr, newAccessID_);
   }
 };
 
@@ -87,9 +81,7 @@ static void renameAccessesMaps(std::unordered_map<int, Extents>& accessesMap, in
 void renameAccessIDInStmts(
     StencilInstantiation* instantiation, int oldAccessID, int newAccessID,
     ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs) {
-  AccessIDRemapper<StencilInstantiation> remapper(instantiation, oldAccessID, newAccessID,
-                                                  instantiation->getExprToAccessIDMap(),
-                                                  instantiation->getStmtToAccessIDMap());
+  AccessIDRemapper<StencilInstantiation> remapper(instantiation, oldAccessID, newAccessID);
 
   for(auto& statementAccessesPair : statementAccessesPairs)
     statementAccessesPair->getStatement()->ASTStmt->accept(remapper);
@@ -98,9 +90,7 @@ void renameAccessIDInStmts(
 void renameAccessIDInStmts(
     StencilFunctionInstantiation* instantiation, int oldAccessID, int newAccessID,
     ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs) {
-  AccessIDRemapper<StencilFunctionInstantiation> remapper(
-      instantiation, oldAccessID, newAccessID, instantiation->getExprToCallerAccessIDMap(),
-      instantiation->getStmtToCallerAccessIDMap());
+  AccessIDRemapper<StencilFunctionInstantiation> remapper(instantiation, oldAccessID, newAccessID);
 
   for(auto& statementAccessesPair : statementAccessesPairs)
     statementAccessesPair->getStatement()->ASTStmt->accept(remapper);
@@ -108,9 +98,7 @@ void renameAccessIDInStmts(
 
 void renameAccessIDInExpr(StencilInstantiation* instantiation, int oldAccessID, int newAccessID,
                           std::shared_ptr<Expr>& expr) {
-  AccessIDRemapper<StencilInstantiation> remapper(instantiation, oldAccessID, newAccessID,
-                                                  instantiation->getExprToAccessIDMap(),
-                                                  instantiation->getStmtToAccessIDMap());
+  AccessIDRemapper<StencilInstantiation> remapper(instantiation, oldAccessID, newAccessID);
   expr->accept(remapper);
 }
 

@@ -273,6 +273,12 @@ public:
   /// @brief Get the `AccessID` of the Expr (VarAccess or FieldAccess)
   int getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) const;
 
+  /// @brief Set the `AccessID` of the Expr (VarAccess or FieldAccess)
+  void setAccessIDOfExpr(const std::shared_ptr<Expr>& expr, const int accessID);
+
+  /// @brief Set the `AccessID` of the Stmt (VarDeclStmt)
+  void setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt, const int accessID);
+
   /// @brief Get the `AccessID` of the Stmt (VarDeclStmt)
   int getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) const;
 
@@ -281,6 +287,15 @@ public:
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr);
   const StencilFunctionInstantiation*
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) const;
+
+  /// @brief Add entry to the map between a given expr to its access ID
+  void mapExprToAccessID(std::shared_ptr<Expr> expr, int accessID);
+
+  /// @brief Add entry to the map between a given stmt to its access ID
+  void mapStmtToAccessID(std::shared_ptr<Stmt> stmt, int accessID);
+
+  /// @brief Add entry of the Expr to AccessID map
+  void eraseExprToAccessID(std::shared_ptr<Expr> expr);
 
   /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
   std::unordered_map<std::shared_ptr<StencilFunCallExpr>, StencilFunctionInstantiation*>&
@@ -337,10 +352,6 @@ public:
   getStencilFunctionInstantiations() const {
     return stencilFunctionInstantiations_;
   }
-
-  /// @brief Get map which associates Exprs with AccessIDs
-  std::unordered_map<std::shared_ptr<Expr>, int>& getExprToAccessIDMap();
-  const std::unordered_map<std::shared_ptr<Expr>, int>& getExprToAccessIDMap() const;
 
   /// @brief Get map which associates Stmts with AccessIDs
   std::unordered_map<std::shared_ptr<Stmt>, int>& getStmtToAccessIDMap();

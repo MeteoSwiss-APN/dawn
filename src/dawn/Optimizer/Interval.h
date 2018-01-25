@@ -18,6 +18,9 @@
 #include "dawn/Optimizer/Extents.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/HashCombine.h"
+#include <algorithm>
+#include <iterator>
+#include <unordered_set>
 #include <vector>
 
 namespace dawn {
@@ -39,6 +42,8 @@ class Interval {
   int upperOffset_;
 
 public:
+  enum class Bound { upper = 0, lower };
+
   /// @name Constructors and Assignment
   /// @{
   Interval(int lowerLevel, int upperLevel, int lowerOffset = 0, int upperOffset = 0)
@@ -59,6 +64,18 @@ public:
   int upperLevel() const { return upperLevel_; }
   int lowerOffset() const { return lowerOffset_; }
   int upperOffset() const { return upperOffset_; }
+
+  int offset(const Bound bound) const {
+    return (bound == Bound::lower) ? lowerOffset() : upperOffset();
+  }
+  int level(const Bound bound) const {
+    return (bound == Bound::lower) ? lowerLevel() : upperLevel();
+  }
+
+  /// @brief Get the bound of the Interval (i.e `level + offset`)
+  inline int bound(const Bound bound) const {
+    return (bound == Bound::lower) ? lowerBound() : upperBound();
+  }
 
   /// @brief Get the lower bound of the Interval (i.e `lowerLevel + lowerOffset`)
   inline int lowerBound() const { return (lowerLevel_ + lowerOffset_); }
@@ -125,6 +142,17 @@ public:
     return sir::Interval(lowerLevel_, upperLevel_, lowerOffset_, upperOffset_);
   }
 
+  /// @brief returns true if the level bound of the interval is the end of the axis
+  bool levelIsEnd(Bound bound) const {
+    return (bound == Bound::lower) ? lowerLevelIsEnd() : upperLevelIsEnd();
+  }
+
+  /// @brief returns true if the lower bound of the interval is the end of the axis
+  bool lowerLevelIsEnd() const { return (lowerLevel_ == sir::Interval::End); }
+
+  /// @brief returns true if the upper bound of the interval is the end of the axis
+  bool upperLevelIsEnd() const { return (upperLevel_ == sir::Interval::End); }
+
   /// @brief Convert interval to string
   std::string toString() const;
 
@@ -161,6 +189,22 @@ public:
   /// @ingroup optimizer
   static std::vector<Interval> computeGapIntervals(const Interval& axis,
                                                    const std::vector<Interval>& intervals);
+
+  ///
+  /// @brief computes a partition of the set of levels contained in the collection of intervals
+  /// such that the number of subsets of the partition is minimized given the constraint that
+  /// the intersection of any pair of interval (if not null) should be split as a subset.
+  /// @b Example:
+  /// @code
+  ///   computePartition(vector<int>(Interval(2,5), Interval(4,7)))
+  /// @endcode
+  /// generates the output
+  /// @code
+  ///   vector<int>(Interval(2,3), Interval(4,5), Interval(6,7))
+  /// @endcode
+  /// @ingroup optimizer
+  ///
+  static std::vector<Interval> computePartition(const std::vector<Interval>& intervals);
 
   /// @brief Computes a set of non-overlapping, adjacent intervals of the given set of intervals
   /// where all interval levels are preserved (i.e a union of all levels of the given intervals)

@@ -15,6 +15,7 @@
 #include "dawn/CodeGen/TranslationUnit.h"
 
 namespace dawn {
+namespace codegen {
 
 TranslationUnit::TranslationUnit(std::string filename, std::vector<std::string>&& ppDefines,
                                  std::map<std::string, std::string>&& stencils,
@@ -22,4 +23,5 @@ TranslationUnit::TranslationUnit(std::string filename, std::vector<std::string>&
     : filename_(std::move(filename)), ppDefines_(std::move(ppDefines)),
       globals_(std::move(globals)), stencils_(std::move(stencils)) {}
 
+} // namespace codegen
 } // namespace dawn

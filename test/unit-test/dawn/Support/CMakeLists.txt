@@ -18,6 +18,7 @@ dawn_add_unittest_impl(
           TestSmallVector.cpp
           TestStringRef.cpp
           TestArrayRef.cpp
+          TestIndexRange.cpp
           TestMain.cpp
           TestType.cpp
 )

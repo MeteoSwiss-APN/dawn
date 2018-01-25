@@ -18,6 +18,7 @@
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
+namespace codegen {
 
 ASTCodeGenCXX::ASTCodeGenCXX() : indent_(0), scopeDepth_(0) {}
 
@@ -178,4 +179,5 @@ const char* ASTCodeGenCXX::builtinTypeIDToCXXType(const BuiltinTypeID& builtinTy
   }
 }
 
+} // namespace codegen
 } // namespace dawn

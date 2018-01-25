@@ -13,9 +13,11 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/Interval.h"
+#include <algorithm>
 #include <iostream>
 #include <set>
 #include <sstream>
+#include <unordered_set>
 
 namespace dawn {
 
@@ -147,6 +149,65 @@ std::vector<Interval> Interval::computeGapIntervals(const Interval& axis,
     newIntervals.insert(newIntervals.end(), topFillInterval);
   }
 
+  return newIntervals;
+}
+
+std::vector<Interval> Interval::computePartition(std::vector<Interval> const& intervals) {
+
+  std::vector<Interval> newIntervals(intervals);
+
+  // sort the intervals based on the lower bound
+  std::sort(newIntervals.begin(), newIntervals.end(),
+            [](Interval const& a, Interval const& b) { return a.lowerBound() < b.lowerBound(); });
+
+  if(newIntervals.size() > 1) {
+    int cnt = 0;
+    for(auto curLowIt = newIntervals.begin(), curTopIt = std::next(newIntervals.begin());
+        curTopIt != newIntervals.end();) {
+      // get iterators of two contiguous intervals
+      const Interval& curLowInterval = *curLowIt;
+      const Interval& curTopInterval = *curTopIt;
+
+      // If they are the same, we simply eliminate one
+      if(curLowInterval == curTopInterval) {
+        curTopIt = newIntervals.erase(curTopIt);
+        continue;
+      }
+      // if one interval is contained in the other hand, we split them in two non overlapping
+      // intervals
+      else if(curLowInterval.contains(curTopInterval) || curTopInterval.contains(curLowInterval)) {
+        int midLevel = std::min(curLowInterval.upperBound(), curTopInterval.upperBound());
+        int topLevel = std::max(curLowInterval.upperBound(), curTopInterval.upperBound());
+        Interval splitLowInterval(curLowInterval.lowerBound(), midLevel);
+        Interval splitHighInterval(midLevel + 1, topLevel);
+
+        *curLowIt = splitLowInterval;
+        *curTopIt = splitHighInterval;
+      }
+      // otherwise we will generate three intervals: the intersection and the two disjoint intervals
+      // of the XOR
+      else if(curLowInterval.overlaps(curTopInterval)) {
+        Interval splitLowInterval(curLowInterval.lowerBound(), curTopInterval.lowerBound());
+        Interval splitMidInterval(curTopInterval.lowerBound() + 1, curLowInterval.upperBound());
+        Interval splitHighInterval(curLowInterval.upperBound() + 1, curTopInterval.upperBound());
+
+        *curLowIt = splitLowInterval;
+        *curTopIt = splitMidInterval;
+        newIntervals.insert(curTopIt, splitHighInterval);
+        std::sort(
+            newIntervals.begin(), newIntervals.end(),
+            [](Interval const& a, Interval const& b) { return a.lowerBound() < b.lowerBound(); });
+
+        curLowIt = newIntervals.begin() + cnt;
+        curTopIt = std::next(curLowIt);
+        cnt++;
+      }
+
+      curLowIt = curTopIt;
+      curTopIt++;
+      cnt++;
+    }
+  }
   return newIntervals;
 }
 

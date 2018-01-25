@@ -517,21 +517,23 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::SerializationKin
 
     sir::proto::GlobalVariableValue valueProto;
     valueProto.set_is_constexpr(value.isConstexpr());
-    switch(value.getType()) {
-    case sir::Value::Boolean:
-      valueProto.set_boolean_value(value.getValue<bool>());
-      break;
-    case sir::Value::Integer:
-      valueProto.set_integer_value(value.getValue<int>());
-      break;
-    case sir::Value::Double:
-      valueProto.set_double_value(value.getValue<double>());
-      break;
-    case sir::Value::String:
-      valueProto.set_string_value(value.getValue<std::string>());
-      break;
-    case sir::Value::None:
-      break;
+    if(!value.empty()) {
+      switch(value.getType()) {
+      case sir::Value::Boolean:
+        valueProto.set_boolean_value(value.getValue<bool>());
+        break;
+      case sir::Value::Integer:
+        valueProto.set_integer_value(value.getValue<int>());
+        break;
+      case sir::Value::Double:
+        valueProto.set_double_value(value.getValue<double>());
+        break;
+      case sir::Value::String:
+        valueProto.set_string_value(value.getValue<std::string>());
+        break;
+      case sir::Value::None:
+        break;
+      }
     }
 
     mapProto->insert({name, valueProto});

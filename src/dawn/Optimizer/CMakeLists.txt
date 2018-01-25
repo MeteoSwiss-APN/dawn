@@ -41,6 +41,8 @@ mchbuild_add_library(
           OptimizerContext.cpp 
           OptimizerContext.h
           Pass.h
+          PassComputeStageExtents.cpp
+          PassComputeStageExtents.h
           PassDataLocalityMetric.cpp      
           PassDataLocalityMetric.h
           PassFieldVersioning.cpp
