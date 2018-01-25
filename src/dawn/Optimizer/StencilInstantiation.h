@@ -110,6 +110,9 @@ class StencilInstantiation : NonCopyable {
 
   std::unordered_map<std::string, BoundaryConditions> BoundaryConditions_;
 
+  /// BoundaryConditionCall to Extent Map. Filled my `PassSetBoundaryCondition`
+  std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents> BoundaryConditionToExtentsMap_;
+
   /// Set of all the IDs that are locally cached
   std::set<int> CachedVariableSet_;
 
@@ -419,6 +422,14 @@ public:
 
   const std::set<int>& getCachedVariableSet() const;
   std::set<int>& getCachedVariableSet();
+
+  const std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>& getBoundaryConditionToExtentsMap() const {
+      return BoundaryConditionToExtentsMap_;
+  }
+
+  std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&  getBoundaryConditionToExtentsMap() {
+      return BoundaryConditionToExtentsMap_;
+  }
 
 private:
   /// @brief Report the accesses to the console (according to `-freport-accesses`)

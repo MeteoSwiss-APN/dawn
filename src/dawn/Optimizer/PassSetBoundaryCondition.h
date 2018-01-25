@@ -16,6 +16,7 @@
 #define DAWN_OPTIMIZER_PASSSETBOUNDARYCONDITIONS_H
 
 #include "dawn/Optimizer/Pass.h"
+#include <unordered_map>
 
 namespace dawn {
 
@@ -33,7 +34,7 @@ namespace dawn {
 /// If a variable requires a boundary condition but no boundary conditon is specified, we issue an
 /// assert during compilation
 ///
-/// This pass has no dependencies
+/// This pass should run after all the spltting is done: It depends on `PassStencilSplitter`
 ///
 /// @ingroup optimizer
 class PassSetBoundaryCondition : public Pass {
@@ -45,6 +46,9 @@ public:
 
 private:
   std::vector<int> boundaryConditionInserted_;
+
+  /// A map of all the stencils that a given field already applied its boundary conditons to
+  std::unordered_map<std::string, std::vector<int>> StencilBCsApplied_;
 };
 
 } // namespace dawn

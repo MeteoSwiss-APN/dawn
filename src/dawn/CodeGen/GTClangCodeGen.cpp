@@ -81,6 +81,10 @@ GTClangCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
                               Interval::makeCodeGenName(stencilFun->getInterval()));
 }
 
+/// @brief The StencilFunctionReader class parses a stencil function that is used as a boundary
+/// condition into it's stringstream. In order to use stencil_functions as boundary conditions, we
+/// need them to be memnbers of the stencil-wrapper class. The goal is to template the function s.t
+/// every field is a template argument.
 class StencilFunctionReader : public ASTCodeGenGTClangStencilBody {
 private:
   std::shared_ptr<sir::StencilFunction> function;
@@ -89,8 +93,8 @@ public:
   using Base = ASTCodeGenGTClangStencilBody;
   StencilFunctionReader(const StencilInstantiation* stencilInstantiation,
                         const std::unordered_map<Interval, std::string>& intervalToNameMap,
-                        const std::shared_ptr<sir::StencilFunction>& foo)
-      : Base(stencilInstantiation, intervalToNameMap), function(foo) {}
+                        const std::shared_ptr<sir::StencilFunction>& functionToAnalyze)
+      : Base(stencilInstantiation, intervalToNameMap), function(functionToAnalyze) {}
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) {
     auto printOffset = [](const Array3i& argumentoffsets) {
