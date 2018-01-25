@@ -219,6 +219,11 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
                           globalsParser.getRecordDecl()->getLocation().printToString(SM));
   }
 
+  // Replace interval
+  for(const clang::VarDecl* a : visitor_->getIntervalDecls()) {
+    rewriter.ReplaceText(a->getSourceRange(), "");
+  }
+
   // Remove the code from stencil-functions
   for(const auto& stencilFunPair : stencilParser.getStencilFunctionMap()) {
     clang::CXXRecordDecl* stencilFunDecl = stencilFunPair.first;

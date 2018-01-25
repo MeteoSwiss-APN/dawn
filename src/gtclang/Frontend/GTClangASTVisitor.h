@@ -38,6 +38,7 @@ public:
   /// @name Visitor implementations
   /// @{
   bool VisitCXXRecordDecl(clang::CXXRecordDecl* recordDecl);
+  bool VisitDecl(clang::Decl *Decl);
   /// @}
 
   /// @brief Get the StencilParser
@@ -46,11 +47,15 @@ public:
   /// @brief Get the GlobalVariableParser
   const GlobalVariableParser& getGlobalVariableParser() const { return globalVariableParser_; }
 
+  std::unordered_set<clang::VarDecl*>& getIntervalDecls(){ return intervalDecls_;}
+  const std::unordered_set<clang::VarDecl*>& getIntervalDecls() const { return intervalDecls_;}
+
 private:
   GTClangContext* context_;
 
   GlobalVariableParser globalVariableParser_;
   StencilParser stencilParser_;
+  std::unordered_set<clang::VarDecl*> intervalDecls_;
 };
 
 } // namespace gtclang
