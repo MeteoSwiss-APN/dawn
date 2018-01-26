@@ -186,6 +186,9 @@ public:
   std::list<std::shared_ptr<MultiStage>>& getMultiStages() { return multistages_; }
   const std::list<std::shared_ptr<MultiStage>>& getMultiStages() const { return multistages_; }
 
+  /// @brief Get the enclosing interval of accesses of temporaries used in this stencil
+  std::shared_ptr<Interval> getEnclosingIntervalTemporaries() const;
+
   /// @brief Get the multi-stage at given multistage index
   const std::shared_ptr<MultiStage>& getMultiStageFromMultiStageIndex(int multiStageIdx) const;
 

@@ -30,10 +30,10 @@ namespace {
 
 class Inliner;
 
-static std::pair<bool, std::unique_ptr<Inliner>>
+static std::pair<bool, std::shared_ptr<Inliner>>
 tryInlineStencilFunction(PassInlining::InlineStrategyKind strategy,
                          StencilFunctionInstantiation* stencilFunctioninstantiation,
-                         std::shared_ptr<StatementAccessesPair>& oldStmt,
+                         std::shared_ptr<StatementAccessesPair> oldStmt,
                          std::vector<std::shared_ptr<StatementAccessesPair>>& newStmts,
                          int AccessIDOfCaller);
 
@@ -41,10 +41,10 @@ tryInlineStencilFunction(PassInlining::InlineStrategyKind strategy,
 class Inliner : public ASTVisitor {
   PassInlining::InlineStrategyKind strategy_;
   StencilFunctionInstantiation* curStencilFunctioninstantiation_;
-  std::shared_ptr<StencilInstantiation> instantiation_;
+  StencilInstantiation* instantiation_;
 
   /// The statement which we are currently processing in the `DetectInlineCandiates`
-  std::shared_ptr<StatementAccessesPair>& oldStmtAccessesPair_;
+  std::shared_ptr<StatementAccessesPair> oldStmtAccessesPair_;
 
   /// List of the new statements
   std::vector<std::shared_ptr<StatementAccessesPair>>& newStmtAccessesPairs_;
@@ -74,7 +74,7 @@ class Inliner : public ASTVisitor {
 public:
   Inliner(PassInlining::InlineStrategyKind strategy,
           StencilFunctionInstantiation* stencilFunctioninstantiation,
-          std::shared_ptr<StatementAccessesPair>& oldStmtAccessesPair,
+          std::shared_ptr<StatementAccessesPair> oldStmtAccessesPair,
           std::vector<std::shared_ptr<StatementAccessesPair>>& newStmtAccessesPairs,
           int AccessIDOfCaller = 0)
       : strategy_(strategy), curStencilFunctioninstantiation_(stencilFunctioninstantiation),
@@ -93,7 +93,7 @@ public:
     scopeDepth_--;
   }
 
-  void appendNewStatementAccessesPair(const std::shared_ptr<Stmt>& stmt) {
+  void appendNewStatementAccessesPair(const std::shared_ptr<Stmt> stmt) {
     if(scopeDepth_ == 1)
       newStmtAccessesPairs_.emplace_back(std::make_shared<StatementAccessesPair>(
           std::make_shared<Statement>(stmt, oldStmtAccessesPair_->getStatement()->StackTrace)));
@@ -237,7 +237,7 @@ public:
       int stmtIdxOfFunc = std::distance(newStmtAccessesPairs_.begin(), curStencilFunStmtIt);
 
       if(func->hasReturn()) {
-        std::unique_ptr<Inliner>& inliner = inlineResult.second;
+        std::shared_ptr<Inliner>& inliner = inlineResult.second;
         DAWN_ASSERT(inliner);
         DAWN_ASSERT(inliner->getNewExpr());
 
@@ -436,22 +436,22 @@ public:
 ///
 /// @returns `true` if the stencil-function was inlined, `false` otherwise (the corresponding
 /// `Inliner` instance (or NULL) is returned as well)
-static std::pair<bool, std::unique_ptr<Inliner>>
+static std::pair<bool, std::shared_ptr<Inliner>>
 tryInlineStencilFunction(PassInlining::InlineStrategyKind strategy,
                          StencilFunctionInstantiation* stencilFunc,
-                         std::shared_ptr<StatementAccessesPair>& oldStmtAccessesPair,
+                         std::shared_ptr<StatementAccessesPair> oldStmtAccessesPair,
                          std::vector<std::shared_ptr<StatementAccessesPair>>& newStmtAccessesPairs,
                          int AccessIDOfCaller) {
 
   // Function which do not return a value are *always* inlined. Function which do return a value
   // are only inlined if we favor precomputations.
   if(!stencilFunc->hasReturn() || strategy == PassInlining::IK_Precomputation) {
-    auto inliner = make_unique<Inliner>(strategy, stencilFunc, oldStmtAccessesPair,
-                                        newStmtAccessesPairs, AccessIDOfCaller);
-    stencilFunc->getAST()->accept(*inliner);
-    return std::pair<bool, std::unique_ptr<Inliner>>(true, std::move(inliner));
+    auto inliner = std::make_shared<Inliner>(strategy, stencilFunc, oldStmtAccessesPair,
+                                             newStmtAccessesPairs, AccessIDOfCaller);
+    //    stencilFunc->getAST()->accept(*inliner);
+    //    return std::pair<bool, std::shared_ptr<Inliner>>(true, std::move(inliner));
   }
-  return std::pair<bool, std::unique_ptr<Inliner>>(false, nullptr);
+  return std::pair<bool, std::shared_ptr<Inliner>>(false, nullptr);
 }
 
 } // anonymous namespace

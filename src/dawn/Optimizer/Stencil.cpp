@@ -406,6 +406,19 @@ bool Stencil::isEmpty() const {
   return true;
 }
 
+std::shared_ptr<Interval> Stencil::getEnclosingIntervalTemporaries() const {
+  std::shared_ptr<Interval> tmpInterval;
+  for(auto mss : getMultiStages()) {
+    auto mssInterval = mss->getEnclosingAccessIntervalTemporaries();
+    if(tmpInterval != nullptr && mssInterval != nullptr) {
+      tmpInterval->merge(*mssInterval);
+    } else if(mssInterval != nullptr) {
+      tmpInterval = mssInterval;
+    }
+  }
+  return tmpInterval;
+}
+
 const std::shared_ptr<sir::Stencil> Stencil::getSIRStencil() const { return SIRStencil_; }
 
 void Stencil::accept(ASTVisitor& visitor) {

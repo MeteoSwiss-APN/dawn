@@ -218,13 +218,24 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
     }
 
     for(auto fieldIt : tempFields) {
-      paramNameToType.emplace((*fieldIt).Name, c_gtc().str() + "tmpstorage_t");
+      paramNameToType.emplace((*fieldIt).Name, c_gtc().str() + "storage_t");
     }
 
     ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, StencilContext::SC_Stencil);
 
     StencilClass.addComment("//Members");
+    std::shared_ptr<Interval> interval = stencil.getEnclosingIntervalTemporaries();
+    StencilClass.addTypeDef("tmp_halo_t")
+        .addType("gridtools::halo< GRIDTOOLS_CLANG_HALO_EXTEND, GRIDTOOLS_CLANG_HALO_EXTEND, " +
+                 std::to_string((interval != nullptr)
+                                    ? std::max(interval->overEnd(), interval->belowBegin())
+                                    : 0) +
+                 ">");
+    StencilClass.addTypeDef("tmp_meta_data_t")
+        .addType("storage_traits_t::storage_info_t< 0, 3, tmp_halo_t >");
 
+    StencilClass.addTypeDef("tmp_storage_t")
+        .addType("storage_traits_t::data_store_t< float_type, tmp_meta_data_t >");
     StencilClass.addMember("const " + c_gtc() + "domain&", "m_dom");
 
     for(auto fieldIt : nonTempFields) {
@@ -232,10 +243,10 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
     }
 
     if(!(tempFields.empty())) {
-      StencilClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
+      StencilClass.addMember("tmp_meta_data_t", "m_tmp_meta_data");
 
       for(auto field : tempFields)
-        StencilClass.addMember(c_gtc() + "storage_t", "m_" + (*field).Name);
+        StencilClass.addMember("tmp_storage_t", "m_" + (*field).Name);
     }
 
     StencilClass.changeAccessibility("public");
@@ -254,9 +265,9 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
     }
 
     if(!(tempFields.empty())) {
-      stencilClassCtr.addInit("m_meta_data(dom_.isize(), dom_.jsize(), dom_.ksize())");
+      stencilClassCtr.addInit("m_tmp_meta_data(dom_.isize(), dom_.jsize(), dom_.ksize())");
       for(auto fieldIt : tempFields) {
-        stencilClassCtr.addInit("m_" + (*fieldIt).Name + "(m_meta_data)");
+        stencilClassCtr.addInit("m_" + (*fieldIt).Name + "(m_tmp_meta_data)");
       }
     }
 
@@ -538,6 +549,8 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
   ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
   ppDefines.push_back(makeIfNDef("BOOST_RESULT_OF_USE_TR1", 1));
   ppDefines.push_back(makeIfNDef("BOOST_NO_CXX11_DECLTYPE", 1));
+  ppDefines.push_back(
+      makeIfNDef("GRIDTOOLS_CLANG_HALO_EXTEND", context_->getOptions().MaxHaloPoints));
 
   DAWN_LOG(INFO) << "Done generating code";
 
