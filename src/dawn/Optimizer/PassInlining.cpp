@@ -448,8 +448,8 @@ tryInlineStencilFunction(PassInlining::InlineStrategyKind strategy,
   if(!stencilFunc->hasReturn() || strategy == PassInlining::IK_Precomputation) {
     auto inliner = std::make_shared<Inliner>(strategy, stencilFunc, oldStmtAccessesPair,
                                              newStmtAccessesPairs, AccessIDOfCaller);
-    //    stencilFunc->getAST()->accept(*inliner);
-    //    return std::pair<bool, std::shared_ptr<Inliner>>(true, std::move(inliner));
+    stencilFunc->getAST()->accept(*inliner);
+    return std::pair<bool, std::shared_ptr<Inliner>>(true, std::move(inliner));
   }
   return std::pair<bool, std::shared_ptr<Inliner>>(false, nullptr);
 }
