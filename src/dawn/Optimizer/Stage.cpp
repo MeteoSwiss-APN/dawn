@@ -185,6 +185,7 @@ void Stage::update() {
         if(inputFields.count(AccessID)) {
           Field& preField = inputFields.at(AccessID);
           preField.extendInterval(doMethod.getInterval());
+          preField.setIntend(Field::IK_InputOutput);
           inputOutputFields.insert({AccessID, preField});
           inputFields.erase(AccessID);
           continue;
@@ -218,6 +219,7 @@ void Stage::update() {
         if(outputFields.count(AccessID)) {
           Field& preField = outputFields.at(AccessID);
           preField.extendInterval(doMethod.getInterval());
+          preField.setIntend(Field::IK_InputOutput);
           inputOutputFields.insert({AccessID, preField});
 
           outputFields.erase(AccessID);
