@@ -223,31 +223,17 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
 
     ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, StencilContext::SC_Stencil);
 
-    StencilClass.addComment("//Members");
-    std::shared_ptr<Interval> interval = stencil.getEnclosingIntervalTemporaries();
-    StencilClass.addTypeDef("tmp_halo_t")
-        .addType("gridtools::halo< GRIDTOOLS_CLANG_HALO_EXTEND, GRIDTOOLS_CLANG_HALO_EXTEND, " +
-                 std::to_string((interval != nullptr)
-                                    ? std::max(interval->overEnd(), interval->belowBegin())
-                                    : 0) +
-                 ">");
-    StencilClass.addTypeDef("tmp_meta_data_t")
-        .addType("storage_traits_t::storage_info_t< 0, 3, tmp_halo_t >");
+    StencilClass.addComment("Members");
+    StencilClass.addComment("Temporary storages");
+    addTempStorageTypedef(StencilClass, stencil);
 
-    StencilClass.addTypeDef("tmp_storage_t")
-        .addType("storage_traits_t::data_store_t< float_type, tmp_meta_data_t >");
     StencilClass.addMember("const " + c_gtc() + "domain&", "m_dom");
 
     for(auto fieldIt : nonTempFields) {
       StencilClass.addMember(StencilTemplates[fieldIt.idx()] + "&", "m_" + (*fieldIt).Name);
     }
 
-    if(!(tempFields.empty())) {
-      StencilClass.addMember("tmp_meta_data_t", "m_tmp_meta_data");
-
-      for(auto field : tempFields)
-        StencilClass.addMember("tmp_storage_t", "m_" + (*field).Name);
-    }
+    addTmpStorageDeclaration(StencilClass, tempFields);
 
     StencilClass.changeAccessibility("public");
 
@@ -264,13 +250,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
       stencilClassCtr.addInit("m_" + (*fieldIt).Name + "(" + (*fieldIt).Name + "_)");
     }
 
-    if(!(tempFields.empty())) {
-      stencilClassCtr.addInit("m_tmp_meta_data(dom_.isize(), dom_.jsize(), dom_.ksize())");
-      for(auto fieldIt : tempFields) {
-        stencilClassCtr.addInit("m_" + (*fieldIt).Name + "(m_tmp_meta_data)");
-      }
-    }
-
+    addTmpStorageInit(stencilClassCtr, stencil, tempFields);
     stencilClassCtr.commit();
 
     // virtual dtor
@@ -298,7 +278,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
         StencilDoMethod.addStatement("std::array<int,3> " + (*fieldIt).Name + "_offsets{0,0,0}");
       }
       for(auto fieldIt : tempFields) {
-        StencilDoMethod.addStatement(c_gt() + "data_view<storage_t> " + (*fieldIt).Name + "= " +
+        StencilDoMethod.addStatement(c_gt() + "data_view<tmp_storage_t> " + (*fieldIt).Name + "= " +
                                      c_gt() + "make_host_view(m_" + (*fieldIt).Name + ")");
         StencilDoMethod.addStatement("std::array<int,3> " + (*fieldIt).Name + "_offsets{0,0,0}");
       }

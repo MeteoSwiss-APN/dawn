@@ -17,6 +17,7 @@ mchbuild_add_library(
   SOURCES ASTCodeGenCXX.cpp
           ASTCodeGenCXX.h
           CodeGen.h
+          CodeGen.cpp
           CodeGenProperties.cpp
           CodeGenProperties.h
           CXXUtil.h
