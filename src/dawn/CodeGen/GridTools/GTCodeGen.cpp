@@ -201,7 +201,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
               .addType(c_gt() + "accessor")
               .addTemplate(Twine(accessorID))
               .addTemplate(c_gt_enum() +
-                           (fields[m].getIntend() == Field::IK_Input ? "in" : "inout"))
+                           ((fields[m].getIntend() == Field::IK_Input) ? "in" : "inout"))
               .addTemplate(extent);
 
           arglist.push_back(std::move(paramName));
@@ -331,7 +331,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
           StageStruct.addTypeDef(paramName)
               .addType(c_gt() + "accessor")
               .addTemplate(Twine(accessorIdx))
-              .addTemplate(c_gt_enum() + (field.getIntend() == Field::IK_Input ? "in" : "inout"))
+              .addTemplate(c_gt_enum() + ((field.getIntend() == Field::IK_Input) ? "in" : "inout"))
               .addTemplate(extent);
 
           // Generate placeholder mapping of the field in `make_stage`

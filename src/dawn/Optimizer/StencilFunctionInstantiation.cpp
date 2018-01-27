@@ -13,6 +13,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/StencilFunctionInstantiation.h"
+#include "dawn/Optimizer/AccessUtils.h"
+#include "dawn/Optimizer/Field.h"
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/Optimizer/StencilInstantiation.h"
 #include "dawn/Support/Casting.h"
@@ -367,19 +369,8 @@ void StencilFunctionInstantiation::update() {
       if(!isProvidedByStencilFunctionCall(AccessID) && !stencilInstantiation_->isField(AccessID))
         continue;
 
-      // Field was recorded as `InputOutput`, state can't change ...
-      if(inputOutputFields.count(AccessID))
-        continue;
-
-      // Field was recorded as `Input`, change it's state to `InputOutput`
-      if(inputFields.count(AccessID)) {
-        inputOutputFields.emplace(AccessID, inputFields.at(AccessID));
-        inputFields.erase(AccessID);
-        continue;
-      }
-
-      // Field not yet present, record it as output
-      outputFields.emplace(AccessID, Field(AccessID, Field::IK_Output, Extents{}, interval_));
+      AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
+                                     interval_);
     }
 
     for(const auto& accessPair : access->getReadAccesses()) {
@@ -389,19 +380,8 @@ void StencilFunctionInstantiation::update() {
       if(!isProvidedByStencilFunctionCall(AccessID) && !stencilInstantiation_->isField(AccessID))
         continue;
 
-      // Field was recorded as `InputOutput`, state can't change ...
-      if(inputOutputFields.count(AccessID))
-        continue;
-
-      // Field was recorded as `Output`, change it's state to `InputOutput`
-      if(outputFields.count(AccessID)) {
-        inputOutputFields.insert({AccessID, outputFields.at(AccessID)});
-        outputFields.erase(AccessID);
-        continue;
-      }
-
-      // Field not yet present, record it as input
-      inputFields.emplace(AccessID, Field(AccessID, Field::IK_Input, Extents{}, interval_));
+      AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
+                                    interval_);
     }
   }
 
@@ -410,7 +390,7 @@ void StencilFunctionInstantiation::update() {
     int AccessID = argIdxCallerAccessIDPair.second;
     if(!inputFields.count(AccessID) && !outputFields.count(AccessID) &&
        !inputOutputFields.count(AccessID)) {
-      inputFields.emplace(AccessID, Field(AccessID, Field::IK_Output, Extents{}, interval_));
+      inputFields.emplace(AccessID, Field(AccessID, Field::IK_Input, Extents{}, interval_));
       unusedFields_.insert(AccessID);
     }
   }
