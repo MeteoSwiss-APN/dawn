@@ -152,4 +152,33 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_04) {
   ASSERT_TRUE((*enclosingInterval == Interval(sir::Interval::Start, sir::Interval::Start, 0, 14)));
 }
 
+TEST_F(TestFieldAccessIntervals, test_field_access_interval_05) {
+  auto stencils = loadTest("test_field_access_interval_05.sir");
+  ASSERT_TRUE((stencils.size() == 1));
+  std::shared_ptr<Stencil> stencil = stencils[0];
+
+  ASSERT_TRUE((stencil->getNumStages() == 2));
+  ASSERT_TRUE((stencil->getStage(0)->getExtents() == Extents{-1, 1, -1, 1, -1, 0}));
+  ASSERT_TRUE((stencil->getStage(1)->getExtents() == Extents{0, 0, 0, 0, 0, 0}));
+
+  for(auto fieldPair : stencil->getMultiStages().front()->getFields()) {
+    Field& field = fieldPair.second;
+    int AccessID = fieldPair.first;
+    if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("lap")) {
+      ASSERT_TRUE(field.getInterval() == Interval(sir::Interval::Start + 11, sir::Interval::End));
+      ASSERT_TRUE(field.getAccessedInterval() ==
+                  Interval(sir::Interval::Start + 10, sir::Interval::End));
+    }
+    if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("out") ||
+       AccessID == stencil->getStencilInstantiation().getAccessIDFromName("u")) {
+      ASSERT_TRUE(field.getInterval() == Interval(sir::Interval::Start, sir::Interval::End));
+    }
+    if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("coeff")) {
+      ASSERT_TRUE(field.getInterval() == Interval(sir::Interval::Start, sir::Interval::End, 11, 0));
+      ASSERT_TRUE(field.getAccessedInterval() ==
+                  Interval(sir::Interval::Start, sir::Interval::End, 11, 1));
+    }
+  }
+}
+
 } // anonymous namespace
