@@ -41,6 +41,7 @@
 #include "dawn/Optimizer/PassStencilSplitter.h"
 #include "dawn/Optimizer/PassTemporaryFirstAccess.h"
 #include "dawn/Optimizer/PassTemporaryMerger.h"
+#include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
 
 namespace dawn {
@@ -153,6 +154,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(const std::shared_p
   passManager.pushBackPass<PassStencilSplitter>();
   passManager.pushBackPass<PassTemporaryType>();
   passManager.pushBackPass<PassTemporaryMerger>();
+  passManager.pushBackPass<PassTemporaryToStencilFunction>();
   passManager.pushBackPass<PassSetNonTempCaches>();
   passManager.pushBackPass<PassSetCaches>();
   passManager.pushBackPass<PassComputeStageExtents>();

@@ -53,10 +53,6 @@ bool BlockStmt::equals(const Stmt* other) const {
                     });
 }
 
-void BlockStmt::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<BlockStmt>(shared_from_this()));
-}
-
 //===------------------------------------------------------------------------------------------===//
 //     ExprStmt
 //===------------------------------------------------------------------------------------------===//
@@ -82,10 +78,6 @@ bool ExprStmt::equals(const Stmt* other) const {
   return otherPtr && Stmt::equals(other) && expr_->equals(otherPtr->expr_.get());
 }
 
-void ExprStmt::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<ExprStmt>(shared_from_this()));
-}
-
 //===------------------------------------------------------------------------------------------===//
 //     ReturnStmt
 //===------------------------------------------------------------------------------------------===//
@@ -109,10 +101,6 @@ std::shared_ptr<Stmt> ReturnStmt::clone() const { return std::make_shared<Return
 bool ReturnStmt::equals(const Stmt* other) const {
   const ReturnStmt* otherPtr = dyn_cast<ReturnStmt>(other);
   return otherPtr && Stmt::equals(other) && expr_->equals(otherPtr->expr_.get());
-}
-
-void ReturnStmt::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<ReturnStmt>(shared_from_this()));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -156,10 +144,6 @@ bool VarDeclStmt::equals(const Stmt* other) const {
                     });
 }
 
-void VarDeclStmt::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<VarDeclStmt>(shared_from_this()));
-}
-
 //===------------------------------------------------------------------------------------------===//
 //     VerticalRegionDeclStmt
 //===------------------------------------------------------------------------------------------===//
@@ -190,10 +174,6 @@ bool VerticalRegionDeclStmt::equals(const Stmt* other) const {
          *(verticalRegion_.get()) == *(otherPtr->verticalRegion_.get());
 }
 
-void VerticalRegionDeclStmt::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<VerticalRegionDeclStmt>(shared_from_this()));
-}
-
 //===------------------------------------------------------------------------------------------===//
 //     StencilCallDeclStmt
 //===------------------------------------------------------------------------------------------===//
@@ -222,10 +202,6 @@ bool StencilCallDeclStmt::equals(const Stmt* other) const {
   const StencilCallDeclStmt* otherPtr = dyn_cast<StencilCallDeclStmt>(other);
   // We just compare the shared pointers of the stencil call
   return otherPtr && Stmt::equals(other) && stencilCall_ == otherPtr->stencilCall_;
-}
-
-void StencilCallDeclStmt::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<StencilCallDeclStmt>(shared_from_this()));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -260,10 +236,6 @@ bool BoundaryConditionDeclStmt::equals(const Stmt* other) const {
                     [](const std::shared_ptr<sir::Field>& a, const std::shared_ptr<sir::Field>& b) {
                       return a->Name == b->Name && a->IsTemporary == b->IsTemporary;
                     });
-}
-
-void BoundaryConditionDeclStmt::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<BoundaryConditionDeclStmt>(shared_from_this()));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -301,10 +273,6 @@ bool IfStmt::equals(const Stmt* other) const {
   return otherPtr && Stmt::equals(other) &&
          subStmts_[OK_Cond]->equals(otherPtr->subStmts_[OK_Cond].get()) &&
          subStmts_[OK_Then]->equals(otherPtr->subStmts_[OK_Then].get()) && sameElse;
-}
-
-void IfStmt::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<IfStmt>(shared_from_this()));
 }
 
 } // namespace dawn

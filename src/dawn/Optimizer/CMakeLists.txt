@@ -81,6 +81,8 @@ mchbuild_add_library(
           PassTemporaryMerger.h
           PassTemporaryType.cpp
           PassTemporaryType.h
+          PassTemporaryToStencilFunction.cpp
+          PassTemporaryToStencilFunction.h
           ReadBeforeWriteConflict.cpp
           ReadBeforeWriteConflict.h
           Renaming.cpp

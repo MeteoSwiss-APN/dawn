@@ -44,6 +44,29 @@ ASTVISITORFORWARDING_VISIT_IMPL(LiteralAccessExpr);
 
 #undef ASTVISITORFORWARDING_VISIT_IMPL
 
+#define ASTVISITORFORWARDINGNONCONST_VISIT_IMPL(Type)                                              \
+  void ASTVisitorForwardingNonConst::visit(std::shared_ptr<Type> node) {                           \
+    for(auto& s : node->getChildren())                                                             \
+      s->accept(*this);                                                                            \
+  }
+
+ASTVISITORFORWARDINGNONCONST_VISIT_IMPL(BlockStmt);
+ASTVISITORFORWARDINGNONCONST_VISIT_IMPL(StencilCallDeclStmt);
+ASTVISITORFORWARDINGNONCONST_VISIT_IMPL(BoundaryConditionDeclStmt);
+ASTVISITORFORWARDINGNONCONST_VISIT_IMPL(IfStmt);
+ASTVISITORFORWARDINGNONCONST_VISIT_IMPL(UnaryOperator);
+ASTVISITORFORWARDINGNONCONST_VISIT_IMPL(BinaryOperator);
+ASTVISITORFORWARDINGNONCONST_VISIT_IMPL(AssignmentExpr);
+ASTVISITORFORWARDINGNONCONST_VISIT_IMPL(TernaryOperator);
+ASTVISITORFORWARDINGNONCONST_VISIT_IMPL(FunCallExpr);
+ASTVISITORFORWARDINGNONCONST_VISIT_IMPL(StencilFunCallExpr);
+ASTVISITORFORWARDINGNONCONST_VISIT_IMPL(StencilFunArgExpr);
+ASTVISITORFORWARDINGNONCONST_VISIT_IMPL(VarAccessExpr);
+ASTVISITORFORWARDINGNONCONST_VISIT_IMPL(FieldAccessExpr);
+ASTVISITORFORWARDINGNONCONST_VISIT_IMPL(LiteralAccessExpr);
+
+#undef ASTVISITORFORWARDINGNONCONST_VISIT_IMPL
+
 #define ASTVISITORDISABLED_VISIT_IMPL(Type)                                                        \
   void ASTVisitorDisabled::visit(const std::shared_ptr<Type>& node) {                              \
     DAWN_ASSERT_MSG(0, "Type not allowed in this context");                                        \

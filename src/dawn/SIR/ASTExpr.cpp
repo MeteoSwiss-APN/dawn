@@ -50,10 +50,6 @@ bool UnaryOperator::equals(const Expr* other) const {
          op_ == otherPtr->op_;
 }
 
-void UnaryOperator::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<UnaryOperator>(shared_from_this()));
-}
-
 //===------------------------------------------------------------------------------------------===//
 //     BinaryOperator
 //===------------------------------------------------------------------------------------------===//
@@ -85,10 +81,6 @@ bool BinaryOperator::equals(const Expr* other) const {
   return otherPtr && Expr::equals(other) &&
          operands_[OK_Left]->equals(otherPtr->operands_[OK_Left].get()) &&
          operands_[OK_Right]->equals(otherPtr->operands_[OK_Right].get()) && op_ == otherPtr->op_;
-}
-
-void BinaryOperator::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<BinaryOperator>(shared_from_this()));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -129,10 +121,6 @@ bool AssignmentExpr::equals(const Expr* other) const {
          operands_[OK_Right]->equals(otherPtr->operands_[OK_Right].get()) && op_ == otherPtr->op_;
 }
 
-void AssignmentExpr::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<AssignmentExpr>(shared_from_this()));
-}
-
 //===------------------------------------------------------------------------------------------===//
 //     TernaryOperator
 //===------------------------------------------------------------------------------------------===//
@@ -168,10 +156,6 @@ bool TernaryOperator::equals(const Expr* other) const {
          operands_[OK_Right]->equals(otherPtr->operands_[OK_Right].get());
 }
 
-void TernaryOperator::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<TernaryOperator>(shared_from_this()));
-}
-
 //===------------------------------------------------------------------------------------------===//
 //     FunCallExpr
 //===------------------------------------------------------------------------------------------===//
@@ -204,10 +188,6 @@ bool FunCallExpr::equals(const Expr* other) const {
                     [](const std::shared_ptr<Expr>& a, const std::shared_ptr<Expr>& b) {
                       return a->equals(b.get());
                     });
-}
-
-void FunCallExpr::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<FunCallExpr>(shared_from_this()));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -249,10 +229,6 @@ bool StencilFunCallExpr::equals(const Expr* other) const {
                     });
 }
 
-void StencilFunCallExpr::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<StencilFunCallExpr>(shared_from_this()));
-}
-
 //===------------------------------------------------------------------------------------------===//
 //     StencilFunArgExpr
 //===------------------------------------------------------------------------------------------===//
@@ -286,10 +262,6 @@ bool StencilFunArgExpr::equals(const Expr* other) const {
          offset_ == otherPtr->offset_ && argumentIndex_ == otherPtr->argumentIndex_;
 }
 
-void StencilFunArgExpr::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<StencilFunArgExpr>(shared_from_this()));
-}
-
 //===------------------------------------------------------------------------------------------===//
 //     VarAccessExpr
 //===------------------------------------------------------------------------------------------===//
@@ -321,10 +293,6 @@ bool VarAccessExpr::equals(const Expr* other) const {
   return otherPtr && Expr::equals(other) && name_ == otherPtr->name_ &&
          isExternal_ == otherPtr->isExternal_ && isArrayAccess() == otherPtr->isArrayAccess() &&
          (isArrayAccess() ? index_->equals(otherPtr->index_.get()) : true);
-}
-
-void VarAccessExpr::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<VarAccessExpr>(shared_from_this()));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -371,10 +339,6 @@ bool FieldAccessExpr::equals(const Expr* other) const {
          argumentOffset_ == otherPtr->argumentOffset_ && negateOffset_ == otherPtr->negateOffset_;
 }
 
-void FieldAccessExpr::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<FieldAccessExpr>(shared_from_this()));
-}
-
 //===------------------------------------------------------------------------------------------===//
 //     LiteralAccessExpr
 //===------------------------------------------------------------------------------------------===//
@@ -404,10 +368,6 @@ bool LiteralAccessExpr::equals(const Expr* other) const {
   const LiteralAccessExpr* otherPtr = dyn_cast<LiteralAccessExpr>(other);
   return otherPtr && Expr::equals(other) && value_ == otherPtr->value_ &&
          builtinType_ == otherPtr->builtinType_;
-}
-
-void LiteralAccessExpr::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<LiteralAccessExpr>(shared_from_this()));
 }
 
 } // namespace dawn

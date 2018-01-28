@@ -19,6 +19,7 @@
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/SourceLocation.h"
 #include "dawn/Support/Type.h"
+#include "dawn/Support/VisitorHelpers.h"
 #include <memory>
 #include <vector>
 
@@ -59,6 +60,7 @@ public:
 
   /// @brief Hook for Visitors
   virtual void accept(ASTVisitor& visitor) = 0;
+  virtual void accept(ASTVisitorNonConst& visitor) = 0;
 
   /// @brief Clone the current statement
   virtual std::shared_ptr<Stmt> clone() const = 0;
@@ -135,9 +137,9 @@ public:
 
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_BlockStmt; }
   virtual StmtRangeType getChildren() override { return StmtRangeType(statements_); }
+  ACCEPTVISITOR(BlockStmt)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -164,8 +166,8 @@ public:
 
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_ExprStmt; }
+  ACCEPTVISITOR(ExprStmt)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -192,8 +194,8 @@ public:
 
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_ReturnStmt; }
+  ACCEPTVISITOR(ReturnStmt)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -239,8 +241,8 @@ public:
 
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_VarDeclStmt; }
+  ACCEPTVISITOR(VarDeclStmt)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -267,8 +269,8 @@ public:
   virtual bool isStencilDesc() const override { return true; }
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_VerticalRegionDeclStmt; }
+  ACCEPTVISITOR(VerticalRegionDeclStmt)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -295,8 +297,8 @@ public:
   virtual bool isStencilDesc() const override { return true; }
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_StencilCallDeclStmt; }
+  ACCEPTVISITOR(StencilCallDeclStmt)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -326,8 +328,8 @@ public:
   virtual bool isStencilDesc() const override { return true; }
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_BoundaryConditionDeclStmt; }
+  ACCEPTVISITOR(BoundaryConditionDeclStmt)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -371,11 +373,11 @@ public:
 
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_IfStmt; }
   virtual StmtRangeType getChildren() override {
     return hasElse() ? StmtRangeType(subStmts_) : StmtRangeType(&subStmts_[0], OK_End - 1);
   }
+  ACCEPTVISITOR(IfStmt)
 };
 
 } // namespace dawn

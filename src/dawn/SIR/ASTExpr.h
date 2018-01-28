@@ -19,6 +19,8 @@
 #include "dawn/Support/ArrayRef.h"
 #include "dawn/Support/SourceLocation.h"
 #include "dawn/Support/Type.h"
+#include "dawn/Support/VisitorHelpers.h"
+#include "dawn/Support/VisitorHelpers.h"
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -56,6 +58,7 @@ public:
 
   /// @brief Hook for Visitors
   virtual void accept(ASTVisitor& visitor) = 0;
+  virtual void accept(ASTVisitorNonConst& visitor) = 0;
 
   /// @brief Clone the current expression
   virtual std::shared_ptr<Expr> clone() const = 0;
@@ -119,9 +122,9 @@ public:
 
   virtual std::shared_ptr<Expr> clone() const override;
   virtual bool equals(const Expr* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Expr* expr) { return expr->getKind() == EK_UnaryOperator; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(operand_); }
+  ACCEPTVISITOR(UnaryOperator)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -158,9 +161,9 @@ public:
 
   virtual std::shared_ptr<Expr> clone() const override;
   virtual bool equals(const Expr* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Expr* expr) { return expr->getKind() == EK_BinaryOperator; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(operands_); }
+  ACCEPTVISITOR(BinaryOperator)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -182,8 +185,8 @@ public:
 
   virtual std::shared_ptr<Expr> clone() const override;
   virtual bool equals(const Expr* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Expr* expr) { return expr->getKind() == EK_AssignmentExpr; }
+  ACCEPTVISITOR(AssignmentExpr)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -224,9 +227,9 @@ public:
 
   virtual std::shared_ptr<Expr> clone() const override;
   virtual bool equals(const Expr* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Expr* expr) { return expr->getKind() == EK_TernaryOperator; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(operands_); }
+  ACCEPTVISITOR(TernaryOperator)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -257,9 +260,9 @@ public:
 
   virtual std::shared_ptr<Expr> clone() const override;
   virtual bool equals(const Expr* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Expr* expr) { return expr->getKind() == EK_FunCallExpr; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(arguments_); }
+  ACCEPTVISITOR(FunCallExpr)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -280,8 +283,8 @@ public:
 
   virtual std::shared_ptr<Expr> clone() const override;
   virtual bool equals(const Expr* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Expr* expr) { return expr->getKind() == EK_StencilFunCallExpr; }
+  ACCEPTVISITOR(StencilFunCallExpr)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -321,8 +324,8 @@ public:
 
   virtual std::shared_ptr<Expr> clone() const override;
   virtual bool equals(const Expr* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Expr* expr) { return expr->getKind() == EK_StencilFunArgExpr; }
+  ACCEPTVISITOR(StencilFunArgExpr)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -364,11 +367,11 @@ public:
 
   virtual std::shared_ptr<Expr> clone() const override;
   virtual bool equals(const Expr* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Expr* expr) { return expr->getKind() == EK_VarAccessExpr; }
   virtual ExprRangeType getChildren() override {
     return (isArrayAccess() ? ExprRangeType(index_) : ExprRangeType());
   }
+  ACCEPTVISITOR(VarAccessExpr)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -452,8 +455,8 @@ public:
 
   virtual std::shared_ptr<Expr> clone() const override;
   virtual bool equals(const Expr* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Expr* expr) { return expr->getKind() == EK_FieldAccessExpr; }
+  ACCEPTVISITOR(FieldAccessExpr)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -484,8 +487,8 @@ public:
 
   virtual std::shared_ptr<Expr> clone() const override;
   virtual bool equals(const Expr* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Expr* expr) { return expr->getKind() == EK_LiteralAccessExpr; }
+  ACCEPTVISITOR(LiteralAccessExpr)
 };
 
 } // namespace dawn
