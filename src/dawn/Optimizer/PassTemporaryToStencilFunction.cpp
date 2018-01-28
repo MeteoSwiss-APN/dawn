@@ -62,7 +62,7 @@ public:
   /// @name Statement implementation
   /// @{
   //  virtual void visit(const std::shared_ptr<BlockStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<ExprStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<ExprStmt> stmt) override {
     std::cout << "This is expr " << std::endl;
 
     stmt->getExpr()->accept(*this);
@@ -72,7 +72,7 @@ public:
 
   /// @name Expression implementation
   /// @{
-  virtual void visit(std::shared_ptr<FieldAccessExpr>& expr) override {
+  virtual void visit(std::shared_ptr<FieldAccessExpr> expr) override {
     DAWN_ASSERT(tmpFunction_);
     std::cout << "IIIIIIIIIII" << std::endl;
     if(insertedFields_.count(expr->getName()))
@@ -86,7 +86,7 @@ public:
 
   /// @name Expression implementation
   /// @{
-  virtual void visit(const std::shared_ptr<AssignmentExpr>& expr) override {
+  virtual void visit(const std::shared_ptr<AssignmentExpr> expr) override {
     std::cout << "KKK " << std::endl;
     if(isa<FieldAccessExpr>(*(expr->getLeft()))) {
       int accessID = instantiation_->getAccessIDFromExpr(expr->getLeft());

@@ -45,6 +45,8 @@ AST& AST::operator=(AST&& ast) {
 
 void AST::accept(ASTVisitor& visitor) const { root_->accept(visitor); }
 
+void AST::accept(ASTVisitorNonConst& visitor) const { root_->accept(visitor); }
+
 std::shared_ptr<BlockStmt>& AST::getRoot() { return root_; }
 const std::shared_ptr<BlockStmt>& AST::getRoot() const { return root_; }
 

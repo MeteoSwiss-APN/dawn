@@ -52,6 +52,7 @@ public:
 
   /// @brief Apply the visitor to all nodes of the AST
   void accept(ASTVisitor& visitor) const;
+  void accept(ASTVisitorNonConst& visitor) const;
 
   /// @brief Get root node
   const std::shared_ptr<BlockStmt>& getRoot() const;
