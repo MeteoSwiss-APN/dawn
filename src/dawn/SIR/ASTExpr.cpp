@@ -122,6 +122,27 @@ bool AssignmentExpr::equals(const Expr* other) const {
 }
 
 //===------------------------------------------------------------------------------------------===//
+//     NOPExpr
+//===------------------------------------------------------------------------------------------===//
+
+NOPExpr::NOPExpr(SourceLocation loc) : Expr(EK_NOPExpr, loc) { kind_ = EK_NOPExpr; }
+
+NOPExpr::NOPExpr(const NOPExpr& expr) : Expr(EK_NOPExpr, expr.getSourceLocation()) {
+  kind_ = EK_NOPExpr;
+}
+
+NOPExpr& NOPExpr::operator=(NOPExpr expr) {
+  assign(expr);
+  return *this;
+}
+
+NOPExpr::~NOPExpr() {}
+
+std::shared_ptr<Expr> NOPExpr::clone() const { return std::make_shared<NOPExpr>(*this); }
+
+bool NOPExpr::equals(const Expr* other) const { return true; }
+
+//===------------------------------------------------------------------------------------------===//
 //     TernaryOperator
 //===------------------------------------------------------------------------------------------===//
 
@@ -189,6 +210,8 @@ bool FunCallExpr::equals(const Expr* other) const {
                       return a->equals(b.get());
                     });
 }
+
+void FunCallExpr::insertArgument(std::shared_ptr<Expr> expr) { arguments_.push_back(expr); }
 
 //===------------------------------------------------------------------------------------------===//
 //     StencilFunCallExpr

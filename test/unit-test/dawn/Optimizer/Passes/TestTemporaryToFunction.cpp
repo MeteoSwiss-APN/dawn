@@ -12,14 +12,45 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
+#include "dawn/CodeGen/CodeGen.h"
+#include "dawn/CodeGen/GridTools/GTCodeGen.h"
+#include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Compiler/Options.h"
+#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/SIR/SIR.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/SIRSerializer.h"
+#include "dawn/Support/EditDistance.h"
+#include "dawn/Support/Logging.h"
+#include "dawn/Support/StringSwitch.h"
+#include "dawn/Support/StringUtil.h"
+#include "dawn/Support/Unreachable.h"
 #include "test/unit-test/dawn/Optimizer/Passes/TestEnvironment.h"
 #include <fstream>
 #include <gtest/gtest.h>
 #include <streambuf>
+
+#include "dawn/Optimizer/PassComputeStageExtents.h"
+#include "dawn/Optimizer/PassDataLocalityMetric.h"
+#include "dawn/Optimizer/PassFieldVersioning.h"
+#include "dawn/Optimizer/PassInlining.h"
+#include "dawn/Optimizer/PassMultiStageSplitter.h"
+#include "dawn/Optimizer/PassPrintStencilGraph.h"
+#include "dawn/Optimizer/PassSSA.h"
+#include "dawn/Optimizer/PassSetCaches.h"
+#include "dawn/Optimizer/PassSetNonTempCaches.h"
+#include "dawn/Optimizer/PassSetStageGraph.h"
+#include "dawn/Optimizer/PassSetStageName.h"
+#include "dawn/Optimizer/PassStageMerger.h"
+#include "dawn/Optimizer/PassStageReordering.h"
+#include "dawn/Optimizer/PassStageSplitter.h"
+#include "dawn/Optimizer/PassStencilSplitter.h"
+#include "dawn/Optimizer/PassTemporaryFirstAccess.h"
+#include "dawn/Optimizer/PassTemporaryMerger.h"
+#include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
+#include "dawn/Optimizer/PassTemporaryType.h"
 
 using namespace dawn;
 
@@ -55,6 +86,25 @@ protected:
 
     DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("compute_extent_test_stencil")),
                     "compute_extent_test_stencil not found in sir");
+
+    // Generate code
+    std::unique_ptr<codegen::CodeGen> CG;
+    //    switch(codeGen) {
+    //    case CodeGenKind::CG_GTClang:
+    CG = make_unique<codegen::gt::GTCodeGen>(optimizer.get());
+    //      break;
+    //    case CodeGenKind::CG_GTClangNaiveCXX:
+    //      CG = make_unique<codegen::cxxnaive::CXXNaiveCodeGen>(optimizer.get());
+    //      break;
+    //    case CodeGenKind::CG_GTClangOptCXX:
+    //      dawn_unreachable("GTClangOptCXX not supported yet");
+    //      break;
+    //    }
+    std::cout << "IIIIIIIIIIIIIIIIIIII" << std::endl;
+    auto gg = CG->generateCode();
+    for(auto pair : gg->getStencils()) {
+      std::cout << pair.first << " KKKKKKKKKKK " << pair.second << std::endl;
+    }
 
     return optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"]->getStencils();
   }

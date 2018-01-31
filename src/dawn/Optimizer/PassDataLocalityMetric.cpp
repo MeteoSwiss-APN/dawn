@@ -52,7 +52,7 @@ class ReadWriteCounter : public ASTVisitorForwarding {
   std::unordered_set<int> kCacheLoaded_;
 
   /// Current stencil function call
-  std::stack<StencilFunctionInstantiation*> stencilFunCalls_;
+  std::stack<std::shared_ptr<StencilFunctionInstantiation>> stencilFunCalls_;
 
   /// Map of ID's to their respective number of reads / writes
   std::unordered_map<int, ReadWriteAccumulator> individualReadWrites_;
@@ -102,7 +102,7 @@ public:
                                     : stencilFunCalls_.top()->getNameFromAccessID(AccessID);
   }
 
-  StencilFunctionInstantiation*
+  std::shared_ptr<StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) {
     return stencilFunCalls_.empty() ? instantiation_->getStencilFunctionInstantiation(expr)
                                     : stencilFunCalls_.top()->getStencilFunctionInstantiation(expr);

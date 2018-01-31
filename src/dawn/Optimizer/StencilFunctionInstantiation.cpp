@@ -27,8 +27,8 @@ namespace dawn {
 
 StencilFunctionInstantiation::StencilFunctionInstantiation(
     StencilInstantiation* context, const std::shared_ptr<StencilFunCallExpr>& expr,
-    sir::StencilFunction* function, const std::shared_ptr<AST>& ast, const Interval& interval,
-    bool isNested)
+    std::shared_ptr<sir::StencilFunction> function, const std::shared_ptr<AST>& ast,
+    const Interval& interval, bool isNested)
     : stencilInstantiation_(context), expr_(expr), function_(function), ast_(ast),
       interval_(interval), hasReturn_(false), isNested_(isNested) {
   DAWN_ASSERT(context);
@@ -97,6 +97,11 @@ void StencilFunctionInstantiation::setCallerDimensionOfArgDirection(int argument
 }
 
 const Array2i& StencilFunctionInstantiation::getCallerOffsetOfArgOffset(int argumentIndex) const {
+  std::cout << "SIZE " << ArgumentIndexToCallerOffsetMap_.size() << std::endl;
+  for(auto pair : ArgumentIndexToCallerOffsetMap_) {
+    std::cout << "CHE " << pair.first << " " << argumentIndex << std::endl;
+  }
+  DAWN_ASSERT(ArgumentIndexToCallerOffsetMap_.count(argumentIndex));
   return ArgumentIndexToCallerOffsetMap_.find(argumentIndex)->second;
 }
 
@@ -114,13 +119,14 @@ void StencilFunctionInstantiation::setCallerAccessIDOfArgField(int argumentIndex
   ArgumentIndexToCallerAccessIDMap_[argumentIndex] = callerAccessID;
 }
 
-StencilFunctionInstantiation*
+std::shared_ptr<StencilFunctionInstantiation>
 StencilFunctionInstantiation::getFunctionInstantiationOfArgField(int argumentIndex) const {
+  DAWN_ASSERT(ArgumentIndexToStencilFunctionInstantiationMap_.count(argumentIndex));
   return ArgumentIndexToStencilFunctionInstantiationMap_.find(argumentIndex)->second;
 }
 
 void StencilFunctionInstantiation::setFunctionInstantiationOfArgField(
-    int argumentIndex, StencilFunctionInstantiation* func) {
+    int argumentIndex, std::shared_ptr<StencilFunctionInstantiation> func) {
   ArgumentIndexToStencilFunctionInstantiationMap_[argumentIndex] = func;
 }
 
@@ -301,24 +307,28 @@ StencilFunctionInstantiation::getAccessIDToNameMap() const {
   return AccessIDToNameMap_;
 }
 
-std::unordered_map<std::shared_ptr<StencilFunCallExpr>, StencilFunctionInstantiation*>&
+std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
+                   std::shared_ptr<StencilFunctionInstantiation>>&
 StencilFunctionInstantiation::getExprToStencilFunctionInstantiationMap() {
   return ExprToStencilFunctionInstantiationMap_;
 }
 
-const std::unordered_map<std::shared_ptr<StencilFunCallExpr>, StencilFunctionInstantiation*>&
+const std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
+                         std::shared_ptr<StencilFunctionInstantiation>>&
 StencilFunctionInstantiation::getExprToStencilFunctionInstantiationMap() const {
   return ExprToStencilFunctionInstantiationMap_;
 }
 
-StencilFunctionInstantiation* StencilFunctionInstantiation::getStencilFunctionInstantiation(
+std::shared_ptr<StencilFunctionInstantiation>
+StencilFunctionInstantiation::getStencilFunctionInstantiation(
     const std::shared_ptr<StencilFunCallExpr>& expr) {
   auto it = ExprToStencilFunctionInstantiationMap_.find(expr);
   DAWN_ASSERT_MSG(it != ExprToStencilFunctionInstantiationMap_.end(), "Invalid stencil function");
   return it->second;
 }
 
-const StencilFunctionInstantiation* StencilFunctionInstantiation::getStencilFunctionInstantiation(
+const std::shared_ptr<StencilFunctionInstantiation>
+StencilFunctionInstantiation::getStencilFunctionInstantiation(
     const std::shared_ptr<StencilFunCallExpr>& expr) const {
   auto it = ExprToStencilFunctionInstantiationMap_.find(expr);
   DAWN_ASSERT_MSG(it != ExprToStencilFunctionInstantiationMap_.end(), "Invalid stencil function");

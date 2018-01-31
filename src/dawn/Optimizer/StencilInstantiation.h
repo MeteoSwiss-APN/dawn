@@ -97,8 +97,9 @@ class StencilInstantiation : NonCopyable {
 
   /// Referenced stencil functions in this stencil (note that nested stencil functions are not
   /// stored here but rather in the respecticve `StencilFunctionInstantiation`)
-  std::vector<std::unique_ptr<StencilFunctionInstantiation>> stencilFunctionInstantiations_;
-  std::unordered_map<std::shared_ptr<StencilFunCallExpr>, StencilFunctionInstantiation*>
+  std::vector<std::shared_ptr<StencilFunctionInstantiation>> stencilFunctionInstantiations_;
+  std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
+                     std::shared_ptr<StencilFunctionInstantiation>>
       ExprToStencilFunctionInstantiationMap_;
 
 public:
@@ -269,9 +270,9 @@ public:
   int getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) const;
 
   /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
-  StencilFunctionInstantiation*
+  std::shared_ptr<StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr);
-  const StencilFunctionInstantiation*
+  const std::shared_ptr<StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) const;
 
   /// @brief Add entry to the map between a given expr to its access ID
@@ -284,9 +285,11 @@ public:
   void eraseExprToAccessID(std::shared_ptr<Expr> expr);
 
   /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
-  std::unordered_map<std::shared_ptr<StencilFunCallExpr>, StencilFunctionInstantiation*>&
+  std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
+                     std::shared_ptr<StencilFunctionInstantiation>>&
   getExprToStencilFunctionInstantiationMap();
-  const std::unordered_map<std::shared_ptr<StencilFunCallExpr>, StencilFunctionInstantiation*>&
+  const std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
+                           std::shared_ptr<StencilFunctionInstantiation>>&
   getExprToStencilFunctionInstantiationMap() const;
 
   /// @brief Remove the stencil function given by `expr`
@@ -295,18 +298,18 @@ public:
   /// the scope of another stencil function), the stencil function will be removed
   /// from the `callerStencilFunctionInstantiation` instead of this `StencilInstantiation`.
   void removeStencilFunctionInstantiation(
-      const std::shared_ptr<StencilFunCallExpr>& expr,
-      StencilFunctionInstantiation* callerStencilFunctionInstantiation = nullptr);
+      const std::shared_ptr<StencilFunCallExpr> expr,
+      std::shared_ptr<StencilFunctionInstantiation> callerStencilFunctionInstantiation = nullptr);
 
   /// @brief Register a new stencil function
   ///
   /// If `curStencilFunctionInstantiation` is not NULL, the stencil function is treated as a nested
   /// stencil function.
-  StencilFunctionInstantiation*
-  makeStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr,
-                                   sir::StencilFunction* SIRStencilFun,
-                                   const std::shared_ptr<AST>& ast, const Interval& interval,
-                                   StencilFunctionInstantiation* curStencilFunctionInstantiation);
+  std::shared_ptr<StencilFunctionInstantiation> makeStencilFunctionInstantiation(
+      const std::shared_ptr<StencilFunCallExpr>& expr,
+      std::shared_ptr<sir::StencilFunction> SIRStencilFun, const std::shared_ptr<AST>& ast,
+      const Interval& interval,
+      std::shared_ptr<StencilFunctionInstantiation> curStencilFunctionInstantiation);
 
   /// @brief Get the list of stencils
   std::vector<std::shared_ptr<Stencil>>& getStencils() { return stencils_; }
@@ -326,10 +329,10 @@ public:
   }
 
   /// @brief Get the list of stencil functions
-  std::vector<std::unique_ptr<StencilFunctionInstantiation>>& getStencilFunctionInstantiations() {
+  std::vector<std::shared_ptr<StencilFunctionInstantiation>>& getStencilFunctionInstantiations() {
     return stencilFunctionInstantiations_;
   }
-  const std::vector<std::unique_ptr<StencilFunctionInstantiation>>&
+  const std::vector<std::shared_ptr<StencilFunctionInstantiation>>&
   getStencilFunctionInstantiations() const {
     return stencilFunctionInstantiations_;
   }

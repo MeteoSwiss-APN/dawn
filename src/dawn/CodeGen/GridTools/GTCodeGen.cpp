@@ -232,7 +232,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
         DoMethod.addArg(interveralIt->second);
         DoMethod.startBody();
 
-        stencilBodyCGVisitor.setCurrentStencilFunction(stencilFun.get());
+        stencilBodyCGVisitor.setCurrentStencilFunction(stencilFun);
         stencilBodyCGVisitor.setIndent(DoMethod.getIndent());
         for(const auto& statementAccessesPair : stencilFun->getStatementAccessesPairs()) {
           statementAccessesPair->getStatement()->ASTStmt->accept(stencilBodyCGVisitor);

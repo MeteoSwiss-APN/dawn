@@ -47,6 +47,8 @@ void AST::accept(ASTVisitor& visitor) const { root_->accept(visitor); }
 
 void AST::accept(ASTVisitorNonConst& visitor) const { root_->accept(visitor); }
 
+void AST::acceptAndReplace(ASTVisitorPostOrder& visitor) const { root_->acceptAndReplace(visitor); }
+
 std::shared_ptr<BlockStmt>& AST::getRoot() { return root_; }
 const std::shared_ptr<BlockStmt>& AST::getRoot() const { return root_; }
 

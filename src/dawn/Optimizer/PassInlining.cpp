@@ -32,7 +32,7 @@ class Inliner;
 
 static std::pair<bool, std::shared_ptr<Inliner>>
 tryInlineStencilFunction(PassInlining::InlineStrategyKind strategy,
-                         StencilFunctionInstantiation* stencilFunctioninstantiation,
+                         std::shared_ptr<StencilFunctionInstantiation> stencilFunctioninstantiation,
                          std::shared_ptr<StatementAccessesPair> oldStmt,
                          std::vector<std::shared_ptr<StatementAccessesPair>>& newStmts,
                          int AccessIDOfCaller);
@@ -40,7 +40,7 @@ tryInlineStencilFunction(PassInlining::InlineStrategyKind strategy,
 /// @brief Perform the inlining of a stencil-function
 class Inliner : public ASTVisitor {
   PassInlining::InlineStrategyKind strategy_;
-  StencilFunctionInstantiation* curStencilFunctioninstantiation_;
+  std::shared_ptr<StencilFunctionInstantiation> curStencilFunctioninstantiation_;
   StencilInstantiation* instantiation_;
 
   /// The statement which we are currently processing in the `DetectInlineCandiates`
@@ -63,9 +63,10 @@ class Inliner : public ASTVisitor {
 
   /// Scope of the current argument list being parsed
   struct ArgListScope {
-    ArgListScope(StencilFunctionInstantiation* function) : Function(function), ArgumentIndex(0) {}
+    ArgListScope(std::shared_ptr<StencilFunctionInstantiation> function)
+        : Function(function), ArgumentIndex(0) {}
 
-    StencilFunctionInstantiation* Function;
+    std::shared_ptr<StencilFunctionInstantiation> Function;
     int ArgumentIndex;
   };
 
@@ -73,7 +74,7 @@ class Inliner : public ASTVisitor {
 
 public:
   Inliner(PassInlining::InlineStrategyKind strategy,
-          StencilFunctionInstantiation* stencilFunctioninstantiation,
+          std::shared_ptr<StencilFunctionInstantiation> stencilFunctioninstantiation,
           std::shared_ptr<StatementAccessesPair> oldStmtAccessesPair,
           std::vector<std::shared_ptr<StatementAccessesPair>>& newStmtAccessesPairs,
           int AccessIDOfCaller = 0)
@@ -203,14 +204,14 @@ public:
   void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
     // This is a nested stencil function call (i.e a stencil function call within the current
     // stencil function)
-    StencilFunctionInstantiation* func =
+    std::shared_ptr<StencilFunctionInstantiation> func =
         curStencilFunctioninstantiation_->getStencilFunctionInstantiation(expr);
     auto curStencilFunStmtAccessPair = newStmtAccessesPairs_[newStmtAccessesPairs_.size() - 1];
 
     int AccessIDOfCaller = 0;
     if(!argListScope_.empty()) {
       int argIdx = argListScope_.top().ArgumentIndex;
-      StencilFunctionInstantiation* curFunc = argListScope_.top().Function;
+      std::shared_ptr<StencilFunctionInstantiation> curFunc = argListScope_.top().Function;
 
       // This stencil function is called within the argument list of another stencil function. Get
       // the AccessID of the "temporary" storage we used to mock the argument (this will be
@@ -323,9 +324,10 @@ class DetectInlineCandiates : public ASTVisitorForwarding {
 
   /// Scope of the current argument list being parsed
   struct ArgListScope {
-    ArgListScope(StencilFunctionInstantiation* function) : Function(function), ArgumentIndex(0) {}
+    ArgListScope(std::shared_ptr<StencilFunctionInstantiation> function)
+        : Function(function), ArgumentIndex(0) {}
 
-    StencilFunctionInstantiation* Function;
+    std::shared_ptr<StencilFunctionInstantiation> Function;
     int ArgumentIndex;
   };
 
@@ -373,12 +375,13 @@ public:
   }
 
   void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
-    StencilFunctionInstantiation* func = instantiation_->getStencilFunctionInstantiation(expr);
+    std::shared_ptr<StencilFunctionInstantiation> func =
+        instantiation_->getStencilFunctionInstantiation(expr);
 
     int AccessIDOfCaller = 0;
     if(!argListScope_.empty()) {
       int argIdx = argListScope_.top().ArgumentIndex;
-      StencilFunctionInstantiation* curFunc = argListScope_.top().Function;
+      std::shared_ptr<StencilFunctionInstantiation> curFunc = argListScope_.top().Function;
 
       // This stencil function is called within the argument list of another stencil function. Get
       // the AccessID of the "temporary" storage we used to mock the argument (this will be
@@ -438,7 +441,7 @@ public:
 /// `Inliner` instance (or NULL) is returned as well)
 static std::pair<bool, std::shared_ptr<Inliner>>
 tryInlineStencilFunction(PassInlining::InlineStrategyKind strategy,
-                         StencilFunctionInstantiation* stencilFunc,
+                         std::shared_ptr<StencilFunctionInstantiation> stencilFunc,
                          std::shared_ptr<StatementAccessesPair> oldStmtAccessesPair,
                          std::vector<std::shared_ptr<StatementAccessesPair>>& newStmtAccessesPairs,
                          int AccessIDOfCaller) {

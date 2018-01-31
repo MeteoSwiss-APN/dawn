@@ -109,7 +109,7 @@ void ASTStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
   if(nestingOfStencilFunArgLists_++)
     ss_ << ", ";
 
-  const StencilFunctionInstantiation* stencilFun =
+  const std::shared_ptr<StencilFunctionInstantiation> stencilFun =
       currentFunction_ ? currentFunction_->getStencilFunctionInstantiation(expr)
                        : instantiation_->getStencilFunctionInstantiation(expr);
 
@@ -191,7 +191,7 @@ void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
 }
 
 void ASTStencilBody::setCurrentStencilFunction(
-    const StencilFunctionInstantiation* currentFunction) {
+    const std::shared_ptr<StencilFunctionInstantiation> currentFunction) {
   currentFunction_ = currentFunction;
 }
 

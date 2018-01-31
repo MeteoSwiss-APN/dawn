@@ -44,6 +44,45 @@ namespace {
 //     StatementMapper
 //===------------------------------------------------------------------------------------------===//
 
+class StencilFunArgParser : public ASTVisitor {
+
+  StencilInstantiation* instantiation_;
+  /// Map of the argument index to resolved offset (i.e the dimension plus offset) of the *caller*
+  std::unordered_map<int, Array2i> ArgumentIndexToCallerOffsetMap_;
+
+public:
+  StencilFunArgParser(StencilInstantiation* instantiation) : instantiation_(instantiation) {}
+
+  virtual void visit(const std::shared_ptr<StencilFunArgExpr>& expr) override {
+    //    auto* stencilFun = getCurrentCandidateScope()->FunctionInstantiation;
+    //    auto& argumentIndex = getCurrentCandidateScope()->ArgumentIndex;
+    //    bool needsLazyEval = expr->getArgumentIndex() != -1;
+
+    //    if(stencilFun->isArgOffset(argumentIndex)) {
+    //      // Argument is an offset
+    //      stencilFun->setCallerOffsetOfArgOffset(
+    //          argumentIndex, needsLazyEval
+    //                             ? function->getCallerOffsetOfArgOffset(expr->getArgumentIndex())
+    //                             : Array2i{{expr->getDimension(), expr->getOffset()}});
+    //    } else {
+    //      // Argument is a direction
+    //      stencilFun->setCallerDimensionOfArgDirection(
+    //          argumentIndex, needsLazyEval
+    //                             ?
+    //                             function->getCallerDimensionOfArgDirection(expr->getArgumentIndex())
+    //                             : expr->getDimension());
+    //    }
+
+    //    argumentIndex += 1;
+  }
+
+  void visit(const std::shared_ptr<ExprStmt>& stmt) override {}
+
+  void visit(const std::shared_ptr<ReturnStmt>& stmt) override {}
+
+  void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {}
+};
+
 /// @brief Map the statements of the AST to a flat list of statements and assign AccessIDs to all
 /// field, variable and literal accesses. In addition, stencil functions are instantiated.
 class StatementMapper : public ASTVisitor {
@@ -81,7 +120,7 @@ class StatementMapper : public ASTVisitor {
     std::string Name;
 
     /// Reference to the current stencil function (may be NULL)
-    StencilFunctionInstantiation* FunctionInstantiation;
+    std::shared_ptr<StencilFunctionInstantiation> FunctionInstantiation;
 
     /// Counter of the parsed arguments
     int ArgumentIndex;
@@ -157,7 +196,8 @@ public:
 
   void visit(const std::shared_ptr<ReturnStmt>& stmt) override {
     DAWN_ASSERT(scope_.top()->FunctionInstantiation);
-    StencilFunctionInstantiation* curFunc = scope_.top()->FunctionInstantiation;
+    std::shared_ptr<const StencilFunctionInstantiation> curFunc =
+        scope_.top()->FunctionInstantiation;
 
     // We can only have 1 return statement
     if(curFunc->hasReturn()) {
@@ -257,7 +297,7 @@ public:
 
   void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
     // Find the referenced stencil function
-    StencilFunctionInstantiation* stencilFun = nullptr;
+    std::shared_ptr<StencilFunctionInstantiation> stencilFun = nullptr;
     const Interval& interval = scope_.top()->VerticalInterval;
 
     for(auto& SIRStencilFun : instantiation_->getSIR()->StencilFunctions) {
@@ -282,7 +322,7 @@ public:
         ast = ast->clone();
 
         stencilFun = instantiation_->makeStencilFunctionInstantiation(
-            expr, SIRStencilFun.get(), ast, interval, scope_.top()->FunctionInstantiation);
+            expr, SIRStencilFun, ast, interval, scope_.top()->FunctionInstantiation);
         break;
       }
     }
@@ -305,6 +345,10 @@ public:
     // Resolve the arguments
     for(auto& arg : expr->getArguments())
       arg->accept(*this);
+
+    //    StencilFunArgParser stencilFunArgParser(instantiation_);
+    //    for(auto& arg : expr->getArguments())
+    //      arg->accept(stencilFunArgParser);
 
     // Assign the AccessIDs of the fields in the stencil function
     Scope* candiateScope = getCurrentCandidateScope();
@@ -345,7 +389,7 @@ public:
     DAWN_ASSERT(!scope_.top()->CandiateScopes.empty());
 
     auto& function = scope_.top()->FunctionInstantiation;
-    auto* stencilFun = getCurrentCandidateScope()->FunctionInstantiation;
+    auto stencilFun = getCurrentCandidateScope()->FunctionInstantiation;
     auto& argumentIndex = getCurrentCandidateScope()->ArgumentIndex;
     bool needsLazyEval = expr->getArgumentIndex() != -1;
 
@@ -1383,10 +1427,10 @@ void StencilInstantiation::setAccessIDOfExpr(const std::shared_ptr<Expr>& expr,
 }
 
 void StencilInstantiation::removeStencilFunctionInstantiation(
-    const std::shared_ptr<StencilFunCallExpr>& expr,
-    StencilFunctionInstantiation* callerStencilFunctionInstantiation) {
+    const std::shared_ptr<StencilFunCallExpr> expr,
+    std::shared_ptr<StencilFunctionInstantiation> callerStencilFunctionInstantiation) {
 
-  StencilFunctionInstantiation* func = nullptr;
+  std::shared_ptr<StencilFunctionInstantiation> func = nullptr;
 
   if(callerStencilFunctionInstantiation) {
     func = callerStencilFunctionInstantiation->getStencilFunctionInstantiation(expr);
@@ -1398,45 +1442,50 @@ void StencilInstantiation::removeStencilFunctionInstantiation(
 
   for(auto it = stencilFunctionInstantiations_.begin();
       it != stencilFunctionInstantiations_.end();) {
-    if(it->get() == func)
+    if(*it == func)
       it = stencilFunctionInstantiations_.erase(it);
     else
       ++it;
   }
 }
 
-StencilFunctionInstantiation* StencilInstantiation::getStencilFunctionInstantiation(
+std::shared_ptr<StencilFunctionInstantiation> StencilInstantiation::getStencilFunctionInstantiation(
     const std::shared_ptr<StencilFunCallExpr>& expr) {
   auto it = ExprToStencilFunctionInstantiationMap_.find(expr);
   DAWN_ASSERT_MSG(it != ExprToStencilFunctionInstantiationMap_.end(), "Invalid stencil function");
   return it->second;
 }
 
-const StencilFunctionInstantiation* StencilInstantiation::getStencilFunctionInstantiation(
+const std::shared_ptr<StencilFunctionInstantiation>
+StencilInstantiation::getStencilFunctionInstantiation(
     const std::shared_ptr<StencilFunCallExpr>& expr) const {
   auto it = ExprToStencilFunctionInstantiationMap_.find(expr);
   DAWN_ASSERT_MSG(it != ExprToStencilFunctionInstantiationMap_.end(), "Invalid stencil function");
   return it->second;
 }
 
-std::unordered_map<std::shared_ptr<StencilFunCallExpr>, StencilFunctionInstantiation*>&
+std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
+                   std::shared_ptr<StencilFunctionInstantiation>>&
 StencilInstantiation::getExprToStencilFunctionInstantiationMap() {
   return ExprToStencilFunctionInstantiationMap_;
 }
 
-const std::unordered_map<std::shared_ptr<StencilFunCallExpr>, StencilFunctionInstantiation*>&
+const std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
+                         std::shared_ptr<StencilFunctionInstantiation>>&
 StencilInstantiation::getExprToStencilFunctionInstantiationMap() const {
   return ExprToStencilFunctionInstantiationMap_;
 }
 
-StencilFunctionInstantiation* StencilInstantiation::makeStencilFunctionInstantiation(
-    const std::shared_ptr<StencilFunCallExpr>& expr, sir::StencilFunction* SIRStencilFun,
-    const std::shared_ptr<AST>& ast, const Interval& interval,
-    StencilFunctionInstantiation* curStencilFunctionInstantiation) {
+std::shared_ptr<StencilFunctionInstantiation>
+StencilInstantiation::makeStencilFunctionInstantiation(
+    const std::shared_ptr<StencilFunCallExpr>& expr,
+    std::shared_ptr<sir::StencilFunction> SIRStencilFun, const std::shared_ptr<AST>& ast,
+    const Interval& interval,
+    std::shared_ptr<StencilFunctionInstantiation> curStencilFunctionInstantiation) {
 
-  stencilFunctionInstantiations_.emplace_back(make_unique<StencilFunctionInstantiation>(
+  stencilFunctionInstantiations_.emplace_back(std::make_shared<StencilFunctionInstantiation>(
       this, expr, SIRStencilFun, ast, interval, curStencilFunctionInstantiation != nullptr));
-  StencilFunctionInstantiation* stencilFun = stencilFunctionInstantiations_.back().get();
+  std::shared_ptr<StencilFunctionInstantiation> stencilFun = stencilFunctionInstantiations_.back();
 
   if(curStencilFunctionInstantiation) {
     curStencilFunctionInstantiation->getExprToStencilFunctionInstantiationMap().emplace(expr,

@@ -112,7 +112,7 @@ class CaptureStencilFunctionCallGlobalParams : public ASTVisitorForwarding {
   std::unordered_set<int>& globalVariables_;
   StencilFunctionInstantiation* currentFunction_;
   StencilInstantiation& stencilInstantiation_;
-  StencilFunctionInstantiation* function_;
+  std::shared_ptr<const StencilFunctionInstantiation> function_;
 
 public:
   CaptureStencilFunctionCallGlobalParams(std::unordered_set<int>& globalVariables,
@@ -122,7 +122,7 @@ public:
 
   void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
     // Find the referenced stencil function
-    StencilFunctionInstantiation* stencilFun =
+    std::shared_ptr<const StencilFunctionInstantiation> stencilFun =
         function_ ? function_->getStencilFunctionInstantiation(expr)
                   : stencilInstantiation_.getStencilFunctionInstantiation(expr);
 
@@ -130,7 +130,7 @@ public:
     for(auto it : stencilFun->getAccessIDSetGlobalVariables()) {
       globalVariables_.insert(it);
     }
-    StencilFunctionInstantiation* prevFunction_ = function_;
+    std::shared_ptr<const StencilFunctionInstantiation> prevFunction_ = function_;
     function_ = stencilFun;
     stencilFun->getAST()->accept(*this);
     function_ = prevFunction_;

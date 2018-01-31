@@ -152,7 +152,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
                          << paramName << " = pw_" << paramName << ".dview_;";
         stencilFunMethod << "auto " << paramName << "_offsets = pw_" << paramName << ".offsets_;";
       }
-      stencilBodyCXXVisitor.setCurrentStencilFunction(stencilFun.get());
+      stencilBodyCXXVisitor.setCurrentStencilFunction(stencilFun);
       stencilBodyCXXVisitor.setIndent(stencilFunMethod.getIndent());
       for(const auto& statementAccessesPair : stencilFun->getStatementAccessesPairs()) {
         statementAccessesPair->getStatement()->ASTStmt->accept(stencilBodyCXXVisitor);

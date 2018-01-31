@@ -95,8 +95,8 @@ class StencilFunctionInstantiation {
 private:
   StencilInstantiation* stencilInstantiation_;
 
-  std::shared_ptr<StencilFunCallExpr> expr_;
-  sir::StencilFunction* function_;
+  const std::shared_ptr<StencilFunCallExpr> expr_;
+  std::shared_ptr<sir::StencilFunction> function_;
   std::shared_ptr<AST> ast_;
 
   Interval interval_;
@@ -111,7 +111,7 @@ private:
 
   /// Map of the argument index to the stencil function (which provides a field) (e.g in
   /// `foo(u, bar(...)` we store the instantiation of bar
-  std::unordered_map<int, StencilFunctionInstantiation*>
+  std::unordered_map<int, std::shared_ptr<StencilFunctionInstantiation>>
       ArgumentIndexToStencilFunctionInstantiationMap_;
 
   /// Map of the argument index to resolved direction (i.e the dimension) of the *caller*
@@ -141,7 +141,8 @@ private:
   std::unordered_map<int, std::string> LiteralAccessIDToNameMap_;
 
   /// Referenced stencil functions within this stencil function
-  std::unordered_map<std::shared_ptr<StencilFunCallExpr>, StencilFunctionInstantiation*>
+  std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
+                     std::shared_ptr<StencilFunctionInstantiation>>
       ExprToStencilFunctionInstantiationMap_;
 
   //===----------------------------------------------------------------------------------------===//
@@ -164,8 +165,9 @@ private:
 public:
   StencilFunctionInstantiation(StencilInstantiation* context,
                                const std::shared_ptr<StencilFunCallExpr>& expr,
-                               sir::StencilFunction* function, const std::shared_ptr<AST>& ast,
-                               const Interval& interval, bool isNested);
+                               std::shared_ptr<sir::StencilFunction> function,
+                               const std::shared_ptr<AST>& ast, const Interval& interval,
+                               bool isNested);
 
   std::unordered_map<int, int>& ArgumentIndexToCallerAccessIDMap() {
     return ArgumentIndexToCallerAccessIDMap_;
@@ -201,8 +203,8 @@ public:
   const StencilInstantiation* getStencilInstantiation() const { return stencilInstantiation_; }
 
   /// @brief Get the SIR stencil function
-  sir::StencilFunction* getStencilFunction() { return function_; }
-  const sir::StencilFunction* getStencilFunction() const { return function_; }
+  std::shared_ptr<sir::StencilFunction> getStencilFunction() const { return function_; }
+  //  const sir::StencilFunction* getStencilFunction() const { return function_; }
 
   /// @brief Get the name of the stencil function
   const std::string& getName() const { return function_->Name; }
@@ -243,8 +245,10 @@ public:
   /// @brief Get/Set the StencilFunctionInstantiation (which provides the field via return) of the
   /// field corresponding to the argument index
   /// @{
-  StencilFunctionInstantiation* getFunctionInstantiationOfArgField(int argumentIndex) const;
-  void setFunctionInstantiationOfArgField(int argumentIndex, StencilFunctionInstantiation* func);
+  std::shared_ptr<StencilFunctionInstantiation>
+  getFunctionInstantiationOfArgField(int argumentIndex) const;
+  void setFunctionInstantiationOfArgField(int argumentIndex,
+                                          std::shared_ptr<StencilFunctionInstantiation> func);
   /// @}
 
   /// @brief Get/Set the initial offset of the @b caller given the caller AccessID
@@ -322,15 +326,17 @@ public:
   const std::unordered_map<int, std::string>& getAccessIDToNameMap() const;
 
   /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
-  std::unordered_map<std::shared_ptr<StencilFunCallExpr>, StencilFunctionInstantiation*>&
+  std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
+                     std::shared_ptr<StencilFunctionInstantiation>>&
   getExprToStencilFunctionInstantiationMap();
-  const std::unordered_map<std::shared_ptr<StencilFunCallExpr>, StencilFunctionInstantiation*>&
+  const std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
+                           std::shared_ptr<StencilFunctionInstantiation>>&
   getExprToStencilFunctionInstantiationMap() const;
 
   /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
-  StencilFunctionInstantiation*
+  std::shared_ptr<StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr);
-  const StencilFunctionInstantiation*
+  const std::shared_ptr<StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) const;
 
   //===----------------------------------------------------------------------------------------===//
@@ -382,7 +388,7 @@ public:
   bool isNested() const;
 
   /// @brief Get the underlying AST stencil function call expression
-  std::shared_ptr<StencilFunCallExpr>& getExpression() { return expr_; }
+  //  std::shared_ptr<StencilFunCallExpr>& getExpression() { return expr_; }
   const std::shared_ptr<StencilFunCallExpr>& getExpression() const { return expr_; }
 
   /// @brief Dump the stencil function instantiation to stdout

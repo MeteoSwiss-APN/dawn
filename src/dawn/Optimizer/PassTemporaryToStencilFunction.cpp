@@ -24,18 +24,11 @@
 namespace dawn {
 
 namespace {
-
-/// @brief Register all referenced AccessIDs
-struct AccessIDGetter : public ASTVisitorForwarding {
-  const StencilInstantiation& Instantiation;
-  std::set<int> AccessIDs;
-
-  AccessIDGetter(const StencilInstantiation& instantiation) : Instantiation(instantiation) {}
-
-  virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
-    AccessIDs.insert(Instantiation.getAccessIDFromExpr(expr));
-  }
-};
+// TODO just have one interval class, we dont need two
+sir::Interval intervalToSIRInterval(Interval interval) {
+  return sir::Interval(interval.lowerLevel(), interval.upperLevel(), interval.lowerOffset(),
+                       interval.upperOffset());
+}
 
 template <class T>
 struct aggregate_adapter : public T {
@@ -43,61 +36,89 @@ struct aggregate_adapter : public T {
   aggregate_adapter(Args&&... args) : T{std::forward<Args>(args)...} {}
 };
 
-class TmpAssignment : public ASTVisitorForwardingNonConst, public NonCopyable {
+class TmpAssignment : public ASTVisitorPostOrder, public NonCopyable {
 protected:
   std::shared_ptr<StencilInstantiation> instantiation_;
-  Interval interval_;
+  sir::Interval interval_;
   std::shared_ptr<sir::StencilFunction> tmpFunction_;
 
   // TODO remove, not used
-  std::vector<std::shared_ptr<FieldAccessExpr>> params_;
-  std::unordered_set<std::string> insertedFields_;
+  std::shared_ptr<std::vector<std::shared_ptr<FieldAccessExpr>>> tmpComputationArgs_;
+  //  std::unordered_set<std::string> insertedFields_;
+  int accessID_ = -1;
+  std::shared_ptr<FieldAccessExpr> tmpFieldAccessExpr_;
 
 public:
-  TmpAssignment(std::shared_ptr<StencilInstantiation> instantiation, Interval const& interval)
-      : instantiation_(instantiation), interval_(interval) {}
+  TmpAssignment(std::shared_ptr<StencilInstantiation> instantiation, sir::Interval const& interval)
+      : instantiation_(instantiation), interval_(interval), tmpComputationArgs_(nullptr),
+        tmpFieldAccessExpr_(nullptr) {}
 
   virtual ~TmpAssignment() {}
 
+  int temporaryFieldAccessID() const { return accessID_; }
+
+  std::shared_ptr<std::vector<std::shared_ptr<FieldAccessExpr>>> temporaryComputationArgs() {
+    return tmpComputationArgs_;
+  }
+
+  std::shared_ptr<FieldAccessExpr> getTemporaryFieldAccessExpr() { return tmpFieldAccessExpr_; }
+
+  std::shared_ptr<sir::StencilFunction> temporaryStencilFunction() { return tmpFunction_; }
+
+  bool foundTemporaryToReplace() { return (tmpFunction_ != nullptr); }
   /// @name Statement implementation
   /// @{
   //  virtual void visit(const std::shared_ptr<BlockStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<ExprStmt> stmt) override {
+  virtual bool preVisitNode(const std::shared_ptr<ExprStmt> stmt) override {
+    return true;
     std::cout << "This is expr " << std::endl;
 
-    stmt->getExpr()->accept(*this);
+    //    stmt->getExpr()->accept(*this);
   }
   //  virtual void visit(const std::shared_ptr<IfStmt>& stmt) override;
   /// @}
 
   /// @name Expression implementation
   /// @{
-  virtual void visit(std::shared_ptr<FieldAccessExpr> expr) override {
+  virtual bool preVisitNode(std::shared_ptr<FieldAccessExpr> expr) override {
     DAWN_ASSERT(tmpFunction_);
+    for(int idx : expr->getArgumentMap()) {
+      DAWN_ASSERT(idx == -1);
+    }
+    for(int off : expr->getArgumentOffset())
+      DAWN_ASSERT(off == 0);
+
     std::cout << "IIIIIIIIIII" << std::endl;
-    if(insertedFields_.count(expr->getName()))
-      return;
-    insertedFields_.emplace(expr->getName());
+    //    if(insertedFields_.count(expr->getName()))
+    //      return;
+    //    insertedFields_.emplace(expr->getName());
 
-    params_.push_back(expr);
+    if(tmpComputationArgs_ == nullptr)
+      tmpComputationArgs_ = std::make_shared<std::vector<std::shared_ptr<FieldAccessExpr>>>();
 
+    tmpComputationArgs_->push_back(expr);
+    expr->setArgumentMap({0, 1, 2});
+    expr->setArgumentOffset({1, 1, 1});
     tmpFunction_->Args.push_back(std::make_shared<sir::Field>(expr->getName(), SourceLocation{}));
+    return true;
   }
 
   /// @name Expression implementation
   /// @{
-  virtual void visit(const std::shared_ptr<AssignmentExpr> expr) override {
+
+  virtual bool preVisitNode(const std::shared_ptr<AssignmentExpr> expr) override {
     std::cout << "KKK " << std::endl;
     if(isa<FieldAccessExpr>(*(expr->getLeft()))) {
-      int accessID = instantiation_->getAccessIDFromExpr(expr->getLeft());
+      tmpFieldAccessExpr_ = std::dynamic_pointer_cast<FieldAccessExpr>(expr->getLeft());
+      accessID_ = instantiation_->getAccessIDFromExpr(expr->getLeft());
 
-      std::cout << " ACC " << accessID << instantiation_->getNameFromAccessID(accessID)
+      std::cout << " ACC " << accessID_ << instantiation_->getNameFromAccessID(accessID_)
                 << std::endl;
-      if(!instantiation_->isTemporaryField(accessID))
-        return;
+      if(!instantiation_->isTemporaryField(accessID_))
+        return false;
 
-      std::string tmpFieldName = instantiation_->getNameFromAccessID(accessID);
-      std::cout << " TTT " << accessID << instantiation_->getNameFromAccessID(accessID)
+      std::string tmpFieldName = instantiation_->getNameFromAccessID(accessID_);
+      std::cout << " TTT " << accessID_ << instantiation_->getNameFromAccessID(accessID_)
                 << std::endl;
 
       tmpFunction_ = std::make_shared<sir::StencilFunction>();
@@ -105,13 +126,26 @@ public:
       tmpFunction_->Name = tmpFieldName + "_OnTheFly";
       tmpFunction_->Loc = expr->getSourceLocation();
       // TODO cretae a interval->sir::interval converter
-      tmpFunction_->Intervals.push_back(std::make_shared<aggregate_adapter<sir::Interval>>(
-          interval_.lowerLevel(), interval_.upperLevel(), interval_.lowerOffset(),
-          interval_.upperOffset()));
+      tmpFunction_->Intervals.push_back(std::make_shared<sir::Interval>(interval_));
+      //              aggregate_adapter<sir::Interval>>(
+      //          interval_.lowerLevel(), interval_.upperLevel(), interval_.lowerOffset(),
+      //          interval_.upperOffset()));
 
       tmpFunction_->Args.push_back(std::make_shared<sir::Offset>("iOffset"));
       tmpFunction_->Args.push_back(std::make_shared<sir::Offset>("jOffset"));
       tmpFunction_->Args.push_back(std::make_shared<sir::Offset>("kOffset"));
+      return true;
+    }
+    return false;
+  }
+  virtual std::shared_ptr<Expr> postVisitNode(const std::shared_ptr<AssignmentExpr> expr) override {
+    if(isa<FieldAccessExpr>(*(expr->getLeft()))) {
+      tmpFieldAccessExpr_ = std::dynamic_pointer_cast<FieldAccessExpr>(expr->getLeft());
+      accessID_ = instantiation_->getAccessIDFromExpr(expr->getLeft());
+      if(!instantiation_->isTemporaryField(accessID_))
+        return expr;
+
+      DAWN_ASSERT(tmpFunction_);
 
       auto functionExpr = expr->getRight()->clone();
 
@@ -120,10 +154,63 @@ public:
       std::shared_ptr<BlockStmt> root = std::make_shared<BlockStmt>();
       root->push_back(retStmt);
       std::shared_ptr<AST> ast = std::make_shared<AST>(root);
+      tmpFunction_->Asts.push_back(ast);
 
-      functionExpr->accept(*this);
+      return std::make_shared<NOPExpr>();
     }
+    return expr;
   }
+  //  virtual void visit(const std::shared_ptr<FunCallExpr>& expr) override;
+  //  virtual void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override = 0;
+  /// @}
+};
+
+class TmpReplacement : public ASTVisitorForwardingNonConst, public NonCopyable {
+protected:
+  std::shared_ptr<StencilInstantiation> instantiation_;
+  std::unordered_set<std::shared_ptr<FieldAccessExpr>> const& temporaryFieldAccessExpr_;
+  std::shared_ptr<std::vector<std::shared_ptr<FieldAccessExpr>>> tmpComputationArgs_;
+
+public:
+  TmpReplacement(
+      std::shared_ptr<StencilInstantiation> instantiation,
+      std::unordered_set<std::shared_ptr<FieldAccessExpr>> const& temporaryFieldAccessExpr,
+      std::shared_ptr<std::vector<std::shared_ptr<FieldAccessExpr>>> tmpComputationArgs)
+      : instantiation_(instantiation), temporaryFieldAccessExpr_(temporaryFieldAccessExpr),
+        tmpComputationArgs_(tmpComputationArgs) {
+    DAWN_ASSERT(tmpComputationArgs != nullptr);
+  }
+
+  virtual ~TmpReplacement() {}
+
+  /// @name Expression implementation
+  /// @{
+  virtual void visit(std::shared_ptr<FieldAccessExpr> expr) override {
+    if(!temporaryFieldAccessExpr_.count(expr))
+      return;
+    // TODO we need to version to tmp function generation, in case tmp is recomputed multiple times
+    std::string callee = expr->getName() + "_OnTheFly";
+    StencilFunCallExpr stencilFnCallExpr(callee);
+
+    // TODO coming from stencil functions is not yet supported
+    for(int idx : expr->getArgumentMap()) {
+      DAWN_ASSERT(idx == -1);
+    }
+    for(int off : expr->getArgumentOffset())
+      DAWN_ASSERT(off == 0);
+
+    // TODO need to provide proper argument index of stencil fun arg expr for nested functions
+    StencilFunArgExpr iOff(0, expr->getOffset()[0], 0);
+    StencilFunArgExpr jOff(1, expr->getOffset()[0], 0);
+    StencilFunArgExpr kOff(2, expr->getOffset()[0], 0);
+
+    stencilFnCallExpr.insertArgument(std::make_shared<StencilFunArgExpr>(iOff));
+    stencilFnCallExpr.insertArgument(std::make_shared<StencilFunArgExpr>(jOff));
+    stencilFnCallExpr.insertArgument(std::make_shared<StencilFunArgExpr>(kOff));
+
+    stencilFnCallExpr.insertArguments(tmpComputationArgs_->begin(), tmpComputationArgs_->end());
+  }
+
   //  virtual void visit(const std::shared_ptr<FunCallExpr>& expr) override;
   //  virtual void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override = 0;
   /// @}
@@ -145,6 +232,8 @@ bool PassTemporaryToStencilFunction::run(
     // Iterate multi-stages backwards
     int stageIdx = stencil.getNumStages() - 1;
     for(auto multiStage : stencil.getMultiStages()) {
+      std::shared_ptr<std::vector<std::shared_ptr<FieldAccessExpr>>> temporaryComputationArgs;
+      std::unordered_set<std::shared_ptr<FieldAccessExpr>> temporaryFieldAccessExpr;
 
       for(const auto& stagePtr : multiStage->getStages()) {
 
@@ -157,8 +246,43 @@ bool PassTemporaryToStencilFunction::run(
               continue;
             std::cout << "AFTER EXPR " << std::endl;
 
-            TmpAssignment tmpAssignment(stencilInstantiation, doMethodPtr->getInterval());
-            stmt.ASTStmt->accept(tmpAssignment);
+            //            if(temporaryFieldAccessExpr == nullptr)
+            // TODO catch a temp expr
+            {
+              const Interval& interval = doMethodPtr->getInterval();
+              const sir::Interval sirInterval = intervalToSIRInterval(interval);
+
+              TmpAssignment tmpAssignment(stencilInstantiation, sirInterval);
+              stmt.ASTStmt->acceptAndReplace(tmpAssignment);
+              if(tmpAssignment.foundTemporaryToReplace()) {
+                temporaryFieldAccessExpr.insert(tmpAssignment.getTemporaryFieldAccessExpr());
+                std::cout << "FOUND TMP " << tmpAssignment.temporaryStencilFunction()->Name
+                          << std::endl;
+                temporaryComputationArgs = tmpAssignment.temporaryComputationArgs();
+                DAWN_ASSERT(temporaryComputationArgs != nullptr);
+
+                std::shared_ptr<sir::StencilFunction> stencilFunction =
+                    tmpAssignment.temporaryStencilFunction();
+                std::shared_ptr<AST> ast = stencilFunction->getASTOfInterval(sirInterval);
+
+                DAWN_ASSERT(ast);
+                DAWN_ASSERT(stencilFunction);
+
+                std::shared_ptr<StencilFunCallExpr> stencilFunCallExpr =
+                    std::make_shared<StencilFunCallExpr>(stencilFunction->Name);
+
+                for(auto it : stencilFunction->Args) {
+                  std::cout << "CHECK " << it << std::endl;
+                }
+                stencilInstantiation->makeStencilFunctionInstantiation(
+                    stencilFunCallExpr, stencilFunction, ast, sirInterval, nullptr);
+              }
+            }
+            if(!temporaryFieldAccessExpr.empty()) {
+              //              TmpReplacement tmpReplacement(stencilInstantiation,
+              //              temporaryFieldAccessExpr,
+              //                                            temporaryComputationArgs);
+            }
           }
         }
         //        for(const Field& field : stagePtr->getFields()) {
