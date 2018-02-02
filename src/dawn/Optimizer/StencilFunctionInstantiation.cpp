@@ -88,12 +88,29 @@ StencilFunctionInstantiation::getArguments() const {
 //===------------------------------------------------------------------------------------------===//
 
 int StencilFunctionInstantiation::getCallerDimensionOfArgDirection(int argumentIndex) const {
+  DAWN_ASSERT(ArgumentIndexToCallerDirectionMap_.count(argumentIndex));
   return ArgumentIndexToCallerDirectionMap_.find(argumentIndex)->second;
 }
 
 void StencilFunctionInstantiation::setCallerDimensionOfArgDirection(int argumentIndex,
                                                                     int dimension) {
   ArgumentIndexToCallerDirectionMap_[argumentIndex] = dimension;
+}
+
+bool StencilFunctionInstantiation::isArgBoundAsOffset(int argumentIndex) const {
+  return ArgumentIndexToCallerOffsetMap_.count(argumentIndex);
+}
+
+bool StencilFunctionInstantiation::isArgBoundAsDirection(int argumentIndex) const {
+  return ArgumentIndexToCallerDirectionMap_.count(argumentIndex);
+}
+
+bool StencilFunctionInstantiation::isArgBoundAsFunctionInstantiation(int argumentIndex) const {
+  return ArgumentIndexToStencilFunctionInstantiationMap_.count(argumentIndex);
+}
+
+bool StencilFunctionInstantiation::isArgBoundAsFieldAccess(int argumentIndex) const {
+  return ArgumentIndexToCallerAccessIDMap_.count(argumentIndex);
 }
 
 const Array2i& StencilFunctionInstantiation::getCallerOffsetOfArgOffset(int argumentIndex) const {
@@ -587,6 +604,43 @@ void StencilFunctionInstantiation::dump() const {
                 << "\n";
   }
   std::cout.flush();
+}
+
+void StencilFunctionInstantiation::closeFunctionBindings() {
+  const auto& arguments = getArguments();
+  // Assign the AccessIDs of the fields in the stencil function
+
+  for(std::size_t argIdx = 0; argIdx < arguments.size(); ++argIdx) {
+    if(isa<sir::Field>(*arguments[argIdx])) {
+      if(isArgStencilFunctionInstantiation(argIdx)) {
+
+        // The field is provided by a stencil function call, we create a new AccessID for this
+        // "temporary" field
+        int AccessID = stencilInstantiation_->nextUID();
+        setIsProvidedByStencilFunctionCall(AccessID);
+        setCallerAccessIDOfArgField(argIdx, AccessID);
+        setCallerInitialOffsetFromAccessID(AccessID, Array3i{{0, 0, 0}});
+      }
+    }
+  }
+
+  for(std::size_t argIdx = 0; argIdx < arguments.size(); ++argIdx) {
+    if(isa<sir::Field>(*arguments[argIdx])) {
+      DAWN_ASSERT_MSG(
+          (isArgBoundAsFieldAccess(argIdx) || isArgBoundAsFunctionInstantiation(argIdx)),
+          std::string("Field access arg not bound for function " + function_->Name).c_str());
+    } else if(isa<sir::Direction>(*arguments[argIdx])) {
+      DAWN_ASSERT_MSG(
+          (isArgBoundAsDirection(argIdx)),
+          std::string("Direction arg not bound for function " + function_->Name).c_str());
+    } else if(isa<sir::Offset>(*arguments[argIdx])) {
+      DAWN_ASSERT_MSG((isArgBoundAsOffset(argIdx)),
+                      std::string("Offset arg not bound for function " + function_->Name).c_str());
+    } else
+      dawn_unreachable("Argument not supported");
+  }
+
+  argsBound_ = true;
 }
 
 } // namespace dawn

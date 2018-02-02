@@ -145,6 +145,8 @@ struct Interval {
 struct StencilFunctionArg {
   enum ArgumentKind { AK_Field, AK_Direction, AK_Offset };
 
+  static constexpr const int AK_NumArgTypes = 3;
+
   std::string Name;   ///< Name of the argument
   ArgumentKind Kind;  ///< Type of argument
   SourceLocation Loc; ///< Source location

@@ -34,6 +34,12 @@ class OptimizerContext;
 /// @brief Specific instantiation of a stencil
 /// @ingroup optimizer
 class StencilInstantiation : NonCopyable {
+
+  struct StencilFunctionInstantiationCandidate {
+    std::shared_ptr<StencilFunctionInstantiation> callerStencilFunction_;
+    const std::shared_ptr<StencilFunCallExpr> callerExpr_;
+  };
+
   OptimizerContext* context_;
   const std::shared_ptr<sir::Stencil> SIRStencil_;
   const std::shared_ptr<SIR> SIR_;
@@ -101,6 +107,10 @@ class StencilInstantiation : NonCopyable {
   std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
                      std::shared_ptr<StencilFunctionInstantiation>>
       ExprToStencilFunctionInstantiationMap_;
+
+  std::unordered_map<std::shared_ptr<StencilFunctionInstantiation>,
+                     StencilFunctionInstantiationCandidate>
+      stencilFunInstantiationCandidate_;
 
 public:
   /// @brief Assemble StencilInstantiation for stencil
@@ -275,6 +285,9 @@ public:
   const std::shared_ptr<StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) const;
 
+  std::shared_ptr<StencilFunctionInstantiation>
+  getStencilFunctionInstantiationCandidate(const std::shared_ptr<StencilFunCallExpr>& expr);
+
   /// @brief Add entry to the map between a given expr to its access ID
   void mapExprToAccessID(std::shared_ptr<Expr> expr, int accessID);
 
@@ -300,6 +313,8 @@ public:
   void removeStencilFunctionInstantiation(
       const std::shared_ptr<StencilFunCallExpr> expr,
       std::shared_ptr<StencilFunctionInstantiation> callerStencilFunctionInstantiation = nullptr);
+
+  void removeUncompleteStencilFunctionInstantations();
 
   /// @brief Register a new stencil function
   ///
@@ -407,6 +422,8 @@ public:
   /// @brief Check if the given name of a `StencilCallDeclStmt` was generate by
   /// `makeStencilCallCodeGenName`
   static bool isStencilCallCodeGenName(const std::string& name);
+
+  void finalizeStencilFunctionSetup(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
 
 private:
   /// @brief Report the accesses to the console (according to `-freport-accesses`)

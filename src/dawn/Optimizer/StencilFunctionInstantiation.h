@@ -103,6 +103,7 @@ private:
   bool hasReturn_;
   bool isNested_;
 
+  bool argsBound_ = false;
   //===----------------------------------------------------------------------------------------===//
   //     Argument Maps
 
@@ -176,6 +177,8 @@ public:
     return ArgumentIndexToCallerAccessIDMap_;
   }
 
+  bool isArgsBound() const { return argsBound_; }
+
   size_t numArgs() const;
 
   /// @brief register the access id of a global variable access
@@ -221,6 +224,16 @@ public:
   //===----------------------------------------------------------------------------------------===//
   //     Argument Maps
   //===----------------------------------------------------------------------------------------===//
+
+  bool isArgBoundAsOffset(int argumentIndex) const;
+
+  bool isArgBoundAsDirection(int argumentIndex) const;
+
+  bool isArgBoundAsField(int argumentIndex) const;
+
+  bool isArgBoundAsFunctionInstantiation(int argumentIndex) const;
+
+  bool isArgBoundAsFieldAccess(int argumentIndex) const;
 
   /// @brief Get/Set the instantiated dimension of the caller of the direction argument given the
   /// argument index
@@ -390,6 +403,8 @@ public:
   /// @brief Get the underlying AST stencil function call expression
   //  std::shared_ptr<StencilFunCallExpr>& getExpression() { return expr_; }
   const std::shared_ptr<StencilFunCallExpr>& getExpression() const { return expr_; }
+
+  void closeFunctionBindings();
 
   /// @brief Dump the stencil function instantiation to stdout
   void dump() const;

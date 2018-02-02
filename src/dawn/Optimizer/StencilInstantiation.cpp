@@ -43,46 +43,6 @@ namespace {
 //===------------------------------------------------------------------------------------------===//
 //     StatementMapper
 //===------------------------------------------------------------------------------------------===//
-
-class StencilFunArgParser : public ASTVisitor {
-
-  StencilInstantiation* instantiation_;
-  /// Map of the argument index to resolved offset (i.e the dimension plus offset) of the *caller*
-  std::unordered_map<int, Array2i> ArgumentIndexToCallerOffsetMap_;
-
-public:
-  StencilFunArgParser(StencilInstantiation* instantiation) : instantiation_(instantiation) {}
-
-  virtual void visit(const std::shared_ptr<StencilFunArgExpr>& expr) override {
-    //    auto* stencilFun = getCurrentCandidateScope()->FunctionInstantiation;
-    //    auto& argumentIndex = getCurrentCandidateScope()->ArgumentIndex;
-    //    bool needsLazyEval = expr->getArgumentIndex() != -1;
-
-    //    if(stencilFun->isArgOffset(argumentIndex)) {
-    //      // Argument is an offset
-    //      stencilFun->setCallerOffsetOfArgOffset(
-    //          argumentIndex, needsLazyEval
-    //                             ? function->getCallerOffsetOfArgOffset(expr->getArgumentIndex())
-    //                             : Array2i{{expr->getDimension(), expr->getOffset()}});
-    //    } else {
-    //      // Argument is a direction
-    //      stencilFun->setCallerDimensionOfArgDirection(
-    //          argumentIndex, needsLazyEval
-    //                             ?
-    //                             function->getCallerDimensionOfArgDirection(expr->getArgumentIndex())
-    //                             : expr->getDimension());
-    //    }
-
-    //    argumentIndex += 1;
-  }
-
-  void visit(const std::shared_ptr<ExprStmt>& stmt) override {}
-
-  void visit(const std::shared_ptr<ReturnStmt>& stmt) override {}
-
-  void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {}
-};
-
 /// @brief Map the statements of the AST to a flat list of statements and assign AccessIDs to all
 /// field, variable and literal accesses. In addition, stencil functions are instantiated.
 class StatementMapper : public ASTVisitor {
@@ -346,30 +306,17 @@ public:
     for(auto& arg : expr->getArguments())
       arg->accept(*this);
 
-    //    StencilFunArgParser stencilFunArgParser(instantiation_);
-    //    for(auto& arg : expr->getArguments())
-    //      arg->accept(stencilFunArgParser);
+    instantiation_->finalizeStencilFunctionSetup(stencilFun);
 
-    // Assign the AccessIDs of the fields in the stencil function
     Scope* candiateScope = getCurrentCandidateScope();
-    const auto& arguments = candiateScope->FunctionInstantiation->getArguments();
-    for(std::size_t argIdx = 0; argIdx < arguments.size(); ++argIdx)
-      if(sir::Field* field = dyn_cast<sir::Field>(arguments[argIdx].get())) {
-        if(candiateScope->FunctionInstantiation->isArgStencilFunctionInstantiation(argIdx)) {
 
-          // The field is provided by a stencil function call, we create a new AccessID for this
-          // "temporary" field
-          int AccessID = instantiation_->nextUID();
-          candiateScope->FunctionInstantiation->setIsProvidedByStencilFunctionCall(AccessID);
-          candiateScope->FunctionInstantiation->setCallerAccessIDOfArgField(argIdx, AccessID);
-          candiateScope->FunctionInstantiation->setCallerInitialOffsetFromAccessID(
-              AccessID, Array3i{{0, 0, 0}});
-          candiateScope->LocalFieldnameToAccessIDMap.emplace(field->Name, AccessID);
-        } else {
-          int AccessID = candiateScope->FunctionInstantiation->getCallerAccessIDOfArgField(argIdx);
-          candiateScope->LocalFieldnameToAccessIDMap.emplace(field->Name, AccessID);
-        }
+    const auto& arguments = candiateScope->FunctionInstantiation->getArguments();
+    for(std::size_t argIdx = 0; argIdx < arguments.size(); ++argIdx) {
+      if(sir::Field* field = dyn_cast<sir::Field>(arguments[argIdx].get())) {
+        int AccessID = candiateScope->FunctionInstantiation->getCallerAccessIDOfArgField(argIdx);
+        candiateScope->LocalFieldnameToAccessIDMap.emplace(field->Name, AccessID);
       }
+    }
 
     // Resolve the function
     scope_.push(scope_.top()->CandiateScopes.top());
@@ -1426,6 +1373,18 @@ void StencilInstantiation::setAccessIDOfExpr(const std::shared_ptr<Expr>& expr,
   ExprToAccessIDMap_[expr] = accessID;
 }
 
+void StencilInstantiation::removeUncompleteStencilFunctionInstantations() {
+  std::vector<std::shared_ptr<StencilFunctionInstantiation>>::iterator it =
+      getStencilFunctionInstantiations().begin();
+  while(it != getStencilFunctionInstantiations().end()) {
+    if(!(*it)->isArgsBound())
+      it = getStencilFunctionInstantiations().erase(it);
+    else {
+      ++it;
+    }
+  }
+}
+
 void StencilInstantiation::removeStencilFunctionInstantiation(
     const std::shared_ptr<StencilFunCallExpr> expr,
     std::shared_ptr<StencilFunctionInstantiation> callerStencilFunctionInstantiation) {
@@ -1464,6 +1423,21 @@ StencilInstantiation::getStencilFunctionInstantiation(
   return it->second;
 }
 
+std::shared_ptr<StencilFunctionInstantiation>
+StencilInstantiation::getStencilFunctionInstantiationCandidate(
+    const std::shared_ptr<StencilFunCallExpr>& expr) {
+  auto it = std::find_if(stencilFunInstantiationCandidate_.begin(),
+                         stencilFunInstantiationCandidate_.end(),
+                         [&](std::pair<std::shared_ptr<StencilFunctionInstantiation>,
+                                       StencilFunctionInstantiationCandidate> const& pair) {
+                           return (pair.second.callerExpr_ == expr);
+                         });
+  DAWN_ASSERT_MSG((it != stencilFunInstantiationCandidate_.end()),
+                  "stencil function candidate not found");
+
+  return it->first;
+}
+
 std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
                    std::shared_ptr<StencilFunctionInstantiation>>&
 StencilInstantiation::getExprToStencilFunctionInstantiationMap() {
@@ -1487,14 +1461,32 @@ StencilInstantiation::makeStencilFunctionInstantiation(
       this, expr, SIRStencilFun, ast, interval, curStencilFunctionInstantiation != nullptr));
   std::shared_ptr<StencilFunctionInstantiation> stencilFun = stencilFunctionInstantiations_.back();
 
-  if(curStencilFunctionInstantiation) {
-    curStencilFunctionInstantiation->getExprToStencilFunctionInstantiationMap().emplace(expr,
-                                                                                        stencilFun);
-  } else {
-    ExprToStencilFunctionInstantiationMap_.emplace(expr, stencilFun);
-  }
+  stencilFunInstantiationCandidate_.emplace(
+      stencilFun, StencilFunctionInstantiationCandidate{curStencilFunctionInstantiation, expr});
+  //  if(curStencilFunctionInstantiation) {
+  //    curStencilFunctionInstantiation->getExprToStencilFunctionInstantiationMap().emplace(expr,
+  //                                                                                        stencilFun);
+  //  } else {
+  //    ExprToStencilFunctionInstantiationMap_.emplace(expr, stencilFun);
+  //  }
 
   return stencilFun;
+}
+
+void StencilInstantiation::finalizeStencilFunctionSetup(
+    std::shared_ptr<StencilFunctionInstantiation> stencilFun) {
+
+  DAWN_ASSERT(stencilFunInstantiationCandidate_.count(stencilFun));
+  stencilFun->closeFunctionBindings();
+
+  StencilFunctionInstantiationCandidate candidate = stencilFunInstantiationCandidate_[stencilFun];
+
+  if(candidate.callerStencilFunction_) {
+    candidate.callerStencilFunction_->getExprToStencilFunctionInstantiationMap().emplace(
+        candidate.callerExpr_, stencilFun);
+  } else {
+    ExprToStencilFunctionInstantiationMap_.emplace(candidate.callerExpr_, stencilFun);
+  }
 }
 
 std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
