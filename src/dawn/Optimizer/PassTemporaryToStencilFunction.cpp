@@ -15,6 +15,7 @@
 #include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/StatementMapper.h"
 #include "dawn/Optimizer/Stencil.h"
 #include "dawn/Optimizer/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
@@ -48,6 +49,8 @@ protected:
   //  std::unordered_set<std::string> insertedFields_;
   int accessID_ = -1;
   std::shared_ptr<FieldAccessExpr> tmpFieldAccessExpr_;
+
+  std::shared_ptr<FieldAccessExpr> outputFieldExpr_ = nullptr;
 
 public:
   TmpAssignment(std::shared_ptr<StencilInstantiation> instantiation, sir::Interval const& interval)
@@ -100,7 +103,7 @@ public:
       tmpComputationArgs_ = std::make_shared<std::vector<std::shared_ptr<FieldAccessExpr>>>();
 
     tmpComputationArgs_->push_back(expr);
-    if(!tmpFunction_->hasArg(expr->getName())) {
+    if(!tmpFunction_->hasArg(expr->getName()) && expr != outputFieldExpr_) {
       tmpFunction_->Args.push_back(std::make_shared<sir::Field>(expr->getName(), SourceLocation{}));
       accessIDs_.push_back(instantiation_->getAccessIDFromExpr(expr));
     }
@@ -111,19 +114,14 @@ public:
   /// @{
 
   virtual bool preVisitNode(const std::shared_ptr<AssignmentExpr> expr) override {
-    std::cout << "KKK " << std::endl;
     if(isa<FieldAccessExpr>(*(expr->getLeft()))) {
       tmpFieldAccessExpr_ = std::dynamic_pointer_cast<FieldAccessExpr>(expr->getLeft());
       accessID_ = instantiation_->getAccessIDFromExpr(expr->getLeft());
 
-      std::cout << " ACC " << accessID_ << instantiation_->getNameFromAccessID(accessID_)
-                << std::endl;
       if(!instantiation_->isTemporaryField(accessID_))
         return false;
 
       std::string tmpFieldName = instantiation_->getNameFromAccessID(accessID_);
-      std::cout << " TTT " << accessID_ << instantiation_->getNameFromAccessID(accessID_)
-                << std::endl;
 
       tmpFunction_ = std::make_shared<sir::StencilFunction>();
 
@@ -131,6 +129,8 @@ public:
       tmpFunction_->Loc = expr->getSourceLocation();
       // TODO cretae a interval->sir::interval converter
       tmpFunction_->Intervals.push_back(std::make_shared<sir::Interval>(interval_));
+
+      outputFieldExpr_ = std::dynamic_pointer_cast<FieldAccessExpr>(expr->getLeft());
 
       return true;
     }
@@ -152,6 +152,7 @@ public:
       std::shared_ptr<BlockStmt> root = std::make_shared<BlockStmt>();
       root->push_back(retStmt);
       std::shared_ptr<AST> ast = std::make_shared<AST>(root);
+      std::cout << "   DDDDDD POST " << ast << std::endl;
       tmpFunction_->Asts.push_back(ast);
 
       return std::make_shared<NOPExpr>();
@@ -169,13 +170,18 @@ protected:
   std::unordered_map<int, std::shared_ptr<StencilFunCallExpr>> const&
       temporaryFieldAccessIDToFunctionCall_;
   std::shared_ptr<std::vector<std::shared_ptr<FieldAccessExpr>>> tmpComputationArgs_;
+  const sir::Interval interval_;
+  std::shared_ptr<std::vector<sir::StencilCall*>> stackTrace_;
 
 public:
   TmpReplacement(std::shared_ptr<StencilInstantiation> instantiation,
                  std::unordered_map<int, std::shared_ptr<StencilFunCallExpr>> const&
-                     temporaryFieldAccessIDToFunctionCall)
+                     temporaryFieldAccessIDToFunctionCall,
+                 const sir::Interval sirInterval,
+                 std::shared_ptr<std::vector<sir::StencilCall*>> stackTrace)
       : instantiation_(instantiation),
-        temporaryFieldAccessIDToFunctionCall_(temporaryFieldAccessIDToFunctionCall) {}
+        temporaryFieldAccessIDToFunctionCall_(temporaryFieldAccessIDToFunctionCall),
+        interval_(sirInterval), stackTrace_(stackTrace) {}
 
   virtual ~TmpReplacement() {}
 
@@ -214,17 +220,23 @@ public:
 
     const auto& argToAccessIDMap = stencilFun->ArgumentIndexToCallerAccessIDMap();
     for(auto pair : argToAccessIDMap) {
-      int accessID = pair.second;
-      stencilFun->setCallerInitialOffsetFromAccessID(accessID, expr->getOffset());
+      int accessID_ = pair.second;
+      cloneStencilFun->setCallerInitialOffsetFromAccessID(accessID_, expr->getOffset());
     }
 
     std::cout << "FINALIZING " << cloneStencilFun->getExpression()->getCallee() << std::endl;
+
     instantiation_->finalizeStencilFunctionSetup(cloneStencilFun);
+
+    StatementMapper statementMapper(instantiation_.get(), stackTrace_, "MARINO",
+                                    cloneStencilFun->getStatementAccessesPairs(), interval_,
+                                    instantiation_->getNameToAccessIDMap(), cloneStencilFun);
+
+    cloneStencilFun->getAST()->accept(statementMapper);
+
     return true;
   }
 
-  //  virtual void visit(const std::shared_ptr<FunCallExpr>& expr) override;
-  //  virtual void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override = 0;
   /// @}
 };
 
@@ -235,14 +247,10 @@ PassTemporaryToStencilFunction::PassTemporaryToStencilFunction()
 
 bool PassTemporaryToStencilFunction::run(
     std::shared_ptr<StencilInstantiation> stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
-
-  std::cout << "RUNNING " << std::endl;
   for(auto& stencilPtr : stencilInstantiation->getStencils()) {
     Stencil& stencil = *stencilPtr;
 
     // Iterate multi-stages backwards
-    int stageIdx = stencil.getNumStages() - 1;
     for(auto multiStage : stencil.getMultiStages()) {
       std::shared_ptr<std::vector<std::shared_ptr<FieldAccessExpr>>> temporaryComputationArgs;
       std::unordered_map<int, std::shared_ptr<StencilFunCallExpr>> temporaryFieldExprToFunction;
@@ -299,7 +307,8 @@ bool PassTemporaryToStencilFunction::run(
                 }
                 //////////
               }
-              TmpReplacement tmpReplacement(stencilInstantiation, temporaryFieldExprToFunction);
+              TmpReplacement tmpReplacement(stencilInstantiation, temporaryFieldExprToFunction,
+                                            sirInterval, stmt.StackTrace);
               stmt.ASTStmt->acceptAndReplace(tmpReplacement);
 
               for(auto ii : stencilInstantiation->getStencilFunctionInstantiations()) {

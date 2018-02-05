@@ -209,6 +209,8 @@ public:
   std::shared_ptr<sir::StencilFunction> getStencilFunction() const { return function_; }
   //  const sir::StencilFunction* getStencilFunction() const { return function_; }
 
+  void setStencilFunction(std::shared_ptr<sir::StencilFunction> fun) { function_ = fun; }
+
   /// @brief Get the name of the stencil function
   const std::string& getName() const { return function_->Name; }
 

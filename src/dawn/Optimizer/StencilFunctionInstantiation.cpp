@@ -114,10 +114,6 @@ bool StencilFunctionInstantiation::isArgBoundAsFieldAccess(int argumentIndex) co
 }
 
 const Array2i& StencilFunctionInstantiation::getCallerOffsetOfArgOffset(int argumentIndex) const {
-  std::cout << "SIZE " << ArgumentIndexToCallerOffsetMap_.size() << std::endl;
-  for(auto pair : ArgumentIndexToCallerOffsetMap_) {
-    std::cout << "CHE " << pair.first << " " << argumentIndex << std::endl;
-  }
   DAWN_ASSERT(ArgumentIndexToCallerOffsetMap_.count(argumentIndex));
   return ArgumentIndexToCallerOffsetMap_.find(argumentIndex)->second;
 }
@@ -149,6 +145,7 @@ void StencilFunctionInstantiation::setFunctionInstantiationOfArgField(
 
 const Array3i&
 StencilFunctionInstantiation::getCallerInitialOffsetFromAccessID(int callerAccessID) const {
+  DAWN_ASSERT(CallerAcceessIDToInitialOffsetMap_.count(callerAccessID));
   return CallerAcceessIDToInitialOffsetMap_.find(callerAccessID)->second;
 }
 
@@ -647,6 +644,9 @@ void StencilFunctionInstantiation::checkFunctionBindings() const {
     } else
       dawn_unreachable("Argument not supported");
   }
-}
 
+  // TODO recover
+  DAWN_ASSERT_MSG((getAST()->getRoot()->getStatements().size() == statementAccessesPairs_.size()),
+                  "AST has different number of statements as the statement accesses pairs");
+}
 } // namespace dawn

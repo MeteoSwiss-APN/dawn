@@ -108,6 +108,9 @@ protected:
     }
 
     DAWN_ASSERT(gg);
+    for(auto pair : gg->getStencils()) {
+      std::cout << pair.first << " KKKKKKKKKKK " << pair.second << std::endl;
+    }
 
     return optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"]->getStencils();
   }

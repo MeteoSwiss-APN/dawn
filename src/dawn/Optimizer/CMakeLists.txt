@@ -98,6 +98,8 @@ mchbuild_add_library(
           Stage.h
           StatementAccessesPair.cpp
           StatementAccessesPair.h
+          StatementMapper.cpp
+          StatementMapper.h
           Stencil.cpp
           Stencil.h
           StencilFunctionInstantiation.cpp
