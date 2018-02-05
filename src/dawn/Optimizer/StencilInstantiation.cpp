@@ -1373,18 +1373,6 @@ void StencilInstantiation::setAccessIDOfExpr(const std::shared_ptr<Expr>& expr,
   ExprToAccessIDMap_[expr] = accessID;
 }
 
-void StencilInstantiation::removeUncompleteStencilFunctionInstantations() {
-  std::vector<std::shared_ptr<StencilFunctionInstantiation>>::iterator it =
-      getStencilFunctionInstantiations().begin();
-  while(it != getStencilFunctionInstantiations().end()) {
-    if(!(*it)->isArgsBound())
-      it = getStencilFunctionInstantiations().erase(it);
-    else {
-      ++it;
-    }
-  }
-}
-
 void StencilInstantiation::removeStencilFunctionInstantiation(
     const std::shared_ptr<StencilFunCallExpr> expr,
     std::shared_ptr<StencilFunctionInstantiation> callerStencilFunctionInstantiation) {
@@ -1430,12 +1418,69 @@ StencilInstantiation::getStencilFunctionInstantiationCandidate(
                          stencilFunInstantiationCandidate_.end(),
                          [&](std::pair<std::shared_ptr<StencilFunctionInstantiation>,
                                        StencilFunctionInstantiationCandidate> const& pair) {
-                           return (pair.second.callerExpr_ == expr);
+                           return (pair.first->getExpression() == expr);
                          });
   DAWN_ASSERT_MSG((it != stencilFunInstantiationCandidate_.end()),
                   "stencil function candidate not found");
 
   return it->first;
+}
+
+// TODO all the finds by name are expensive operations, replace data structure?
+bool StencilInstantiation::hasStencilFunctionInstantiationCandidate(
+    const std::string stencilFunName) const {
+  auto it = std::find_if(stencilFunInstantiationCandidate_.begin(),
+                         stencilFunInstantiationCandidate_.end(),
+                         [&](std::pair<std::shared_ptr<StencilFunctionInstantiation>,
+                                       StencilFunctionInstantiationCandidate> const& pair) {
+                           return (pair.first->getExpression()->getCallee() == stencilFunName);
+                         });
+  return (it != stencilFunInstantiationCandidate_.end());
+}
+
+// TODO all the finds by name are expensive operations, replace data structure?
+bool StencilInstantiation::hasStencilFunctionInstantiation(const std::string stencilFunName) const {
+  auto it =
+      std::find_if(stencilFunctionInstantiations_.begin(), stencilFunctionInstantiations_.end(),
+                   [&](std::shared_ptr<StencilFunctionInstantiation> const& fun) {
+                     return (fun->getExpression()->getCallee() == stencilFunName);
+                   });
+  return (it != stencilFunctionInstantiations_.end());
+}
+
+std::shared_ptr<StencilFunctionInstantiation>
+StencilInstantiation::getStencilFunctionInstantiationCandidate(const std::string stencilFunName) {
+  std::cout << "Looking for " << stencilFunName << std::endl;
+  for(auto ii : stencilFunInstantiationCandidate_) {
+    std::cout << " KK " << ii.first->getExpression()->getCallee() << std::endl;
+  }
+  auto it = std::find_if(stencilFunInstantiationCandidate_.begin(),
+                         stencilFunInstantiationCandidate_.end(),
+                         [&](std::pair<std::shared_ptr<StencilFunctionInstantiation>,
+                                       StencilFunctionInstantiationCandidate> const& pair) {
+                           return (pair.first->getExpression()->getCallee() == stencilFunName);
+                         });
+  DAWN_ASSERT_MSG((it != stencilFunInstantiationCandidate_.end()),
+                  "stencil function candidate not found");
+
+  return it->first;
+}
+
+std::shared_ptr<StencilFunctionInstantiation> StencilInstantiation::cloneStencilFunctionCandidate(
+    std::shared_ptr<StencilFunctionInstantiation> stencilFun, std::string functionName) {
+  DAWN_ASSERT(stencilFunInstantiationCandidate_.count(stencilFun));
+  auto stencilFunClone = std::make_shared<StencilFunctionInstantiation>(*stencilFun);
+
+  auto stencilFunExpr =
+      std::dynamic_pointer_cast<StencilFunCallExpr>(stencilFun->getExpression()->clone());
+
+  stencilFunExpr->setCallee(functionName);
+  stencilFunClone->setExpression(stencilFunExpr);
+
+  stencilFunInstantiationCandidate_.emplace(stencilFunClone,
+                                            stencilFunInstantiationCandidate_[stencilFun]);
+
+  return stencilFunClone;
 }
 
 std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
@@ -1457,18 +1502,12 @@ StencilInstantiation::makeStencilFunctionInstantiation(
     const Interval& interval,
     std::shared_ptr<StencilFunctionInstantiation> curStencilFunctionInstantiation) {
 
-  stencilFunctionInstantiations_.emplace_back(std::make_shared<StencilFunctionInstantiation>(
-      this, expr, SIRStencilFun, ast, interval, curStencilFunctionInstantiation != nullptr));
-  std::shared_ptr<StencilFunctionInstantiation> stencilFun = stencilFunctionInstantiations_.back();
+  std::shared_ptr<StencilFunctionInstantiation> stencilFun =
+      std::make_shared<StencilFunctionInstantiation>(this, expr, SIRStencilFun, ast, interval,
+                                                     curStencilFunctionInstantiation != nullptr);
 
   stencilFunInstantiationCandidate_.emplace(
-      stencilFun, StencilFunctionInstantiationCandidate{curStencilFunctionInstantiation, expr});
-  //  if(curStencilFunctionInstantiation) {
-  //    curStencilFunctionInstantiation->getExprToStencilFunctionInstantiationMap().emplace(expr,
-  //                                                                                        stencilFun);
-  //  } else {
-  //    ExprToStencilFunctionInstantiationMap_.emplace(expr, stencilFun);
-  //  }
+      stencilFun, StencilFunctionInstantiationCandidate{curStencilFunctionInstantiation});
 
   return stencilFun;
 }
@@ -1483,10 +1522,16 @@ void StencilInstantiation::finalizeStencilFunctionSetup(
 
   if(candidate.callerStencilFunction_) {
     candidate.callerStencilFunction_->getExprToStencilFunctionInstantiationMap().emplace(
-        candidate.callerExpr_, stencilFun);
+        stencilFun->getExpression(), stencilFun);
   } else {
-    ExprToStencilFunctionInstantiationMap_.emplace(candidate.callerExpr_, stencilFun);
+    ExprToStencilFunctionInstantiationMap_.emplace(stencilFun->getExpression(), stencilFun);
   }
+
+  stencilFun->update();
+  stencilFun->checkFunctionBindings();
+
+  stencilFunctionInstantiations_.push_back(stencilFun);
+  stencilFunInstantiationCandidate_.erase(stencilFun);
 }
 
 std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&

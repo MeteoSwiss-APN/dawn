@@ -305,6 +305,8 @@ public:
   std::vector<std::shared_ptr<Expr>>& getArguments() { return arguments_; }
   const std::vector<std::shared_ptr<Expr>>& getArguments() const { return arguments_; }
 
+  void setCallee(std::string name) { callee_ = name; }
+
   void insertArgument(std::shared_ptr<Expr> expr);
 
   template <typename Iterator>
@@ -345,6 +347,7 @@ public:
   virtual ~StencilFunCallExpr();
   /// @}
 
+  void setName(std::string name);
   virtual std::shared_ptr<Expr> clone() const override;
   virtual bool equals(const Expr* other) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == EK_StencilFunCallExpr; }

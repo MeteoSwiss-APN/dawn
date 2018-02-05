@@ -100,11 +100,14 @@ protected:
     //      dawn_unreachable("GTClangOptCXX not supported yet");
     //      break;
     //    }
-    std::cout << "IIIIIIIIIIIIIIIIIIII" << std::endl;
     auto gg = CG->generateCode();
-    for(auto pair : gg->getStencils()) {
-      std::cout << pair.first << " KKKKKKKKKKK " << pair.second << std::endl;
+
+    if(optimizer->getDiagnostics().hasDiags()) {
+      for(const auto& diag : optimizer->getDiagnostics().getQueue())
+        std::cerr << "ERROR : " << diag->getMessage().c_str() << std::endl;
     }
+
+    DAWN_ASSERT(gg);
 
     return optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"]->getStencils();
   }

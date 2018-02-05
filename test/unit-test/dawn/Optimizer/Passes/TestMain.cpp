@@ -29,6 +29,10 @@ int main(int argc, char* argv[]) {
 
   std::string path = argv[1];
 
+  // Initialize Unittest-Logger
+  auto logger = dawn::make_unique<dawn::UnittestLogger>();
+  dawn::Logger::getSingleton().registerLogger(logger.get());
+
   TestEnvironment::path_ = path;
   ::testing::AddGlobalTestEnvironment(new TestEnvironment());
   return RUN_ALL_TESTS();

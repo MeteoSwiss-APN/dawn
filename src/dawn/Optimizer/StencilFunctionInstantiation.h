@@ -95,7 +95,7 @@ class StencilFunctionInstantiation {
 private:
   StencilInstantiation* stencilInstantiation_;
 
-  const std::shared_ptr<StencilFunCallExpr> expr_;
+  std::shared_ptr<StencilFunCallExpr> expr_;
   std::shared_ptr<sir::StencilFunction> function_;
   std::shared_ptr<AST> ast_;
 
@@ -165,7 +165,7 @@ private:
 
 public:
   StencilFunctionInstantiation(StencilInstantiation* context,
-                               const std::shared_ptr<StencilFunCallExpr>& expr,
+                               std::shared_ptr<StencilFunCallExpr> expr,
                                std::shared_ptr<sir::StencilFunction> function,
                                const std::shared_ptr<AST>& ast, const Interval& interval,
                                bool isNested);
@@ -404,7 +404,11 @@ public:
   //  std::shared_ptr<StencilFunCallExpr>& getExpression() { return expr_; }
   const std::shared_ptr<StencilFunCallExpr>& getExpression() const { return expr_; }
 
+  void setExpression(std::shared_ptr<StencilFunCallExpr> expr) { expr_ = expr; }
+
   void closeFunctionBindings();
+
+  void checkFunctionBindings() const;
 
   /// @brief Dump the stencil function instantiation to stdout
   void dump() const;

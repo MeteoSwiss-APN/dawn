@@ -213,6 +213,13 @@ struct StencilFunction {
 
   bool operator==(const sir::StencilFunction& rhs) const;
   CompareResult comparison(const StencilFunction& rhs) const;
+
+  bool hasArg(std::string name) {
+    return std::find_if(Args.begin(), Args.end(),
+                        [&](std::shared_ptr<sir::StencilFunctionArg> arg) {
+                          return name == arg->Name;
+                        }) != Args.end();
+  }
 };
 
 //===------------------------------------------------------------------------------------------===//

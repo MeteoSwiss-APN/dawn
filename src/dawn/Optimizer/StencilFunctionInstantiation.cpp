@@ -26,7 +26,7 @@
 namespace dawn {
 
 StencilFunctionInstantiation::StencilFunctionInstantiation(
-    StencilInstantiation* context, const std::shared_ptr<StencilFunCallExpr>& expr,
+    StencilInstantiation* context, std::shared_ptr<StencilFunCallExpr> expr,
     std::shared_ptr<sir::StencilFunction> function, const std::shared_ptr<AST>& ast,
     const Interval& interval, bool isNested)
     : stencilInstantiation_(context), expr_(expr), function_(function), ast_(ast),
@@ -624,6 +624,14 @@ void StencilFunctionInstantiation::closeFunctionBindings() {
     }
   }
 
+  argsBound_ = true;
+}
+
+void StencilFunctionInstantiation::checkFunctionBindings() const {
+
+  const auto& arguments = getArguments();
+  // Assign the AccessIDs of the fields in the stencil function
+
   for(std::size_t argIdx = 0; argIdx < arguments.size(); ++argIdx) {
     if(isa<sir::Field>(*arguments[argIdx])) {
       DAWN_ASSERT_MSG(
@@ -639,8 +647,6 @@ void StencilFunctionInstantiation::closeFunctionBindings() {
     } else
       dawn_unreachable("Argument not supported");
   }
-
-  argsBound_ = true;
 }
 
 } // namespace dawn

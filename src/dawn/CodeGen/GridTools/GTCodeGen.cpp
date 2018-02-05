@@ -726,9 +726,12 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
       return nullptr;
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
   }
+  DAWN_LOG(INFO) << "1";
 
   // Generate globals
   std::string globals = generateGlobals(context_->getSIR());
+
+  DAWN_LOG(INFO) << "2";
 
   std::vector<std::string> ppDefines;
   auto makeDefine = [](std::string define, int value) {
@@ -742,6 +745,8 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
   ppDefines.push_back(makeIfNotDefined("BOOST_RESULT_OF_USE_TR1", 1));
   ppDefines.push_back(makeIfNotDefined("BOOST_NO_CXX11_DECLTYPE", 1));
+
+  DAWN_LOG(INFO) << "3";
 
   // If we need more than 20 elements in boost::mpl containers, we need to increment to the nearest
   // multiple of ten

@@ -96,6 +96,14 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
       // Field declaration
       const auto& fields = stencilFun->getCalleeFields();
 
+      if(fields.empty()) {
+        DiagnosticsBuilder diag(DiagnosticsKind::Error, stencilInstantiation->getSIRStencil()->Loc);
+        diag << "no storages referenced in stencil '" << stencilInstantiation->getName()
+             << "', this would result in invalid gridtools code";
+        context_->getDiagnostics().report(diag);
+        return "";
+      }
+
       // list of template names of the stencil function declaration
       std::vector<std::string> stencilFnTemplates(fields.size());
       // TODO move to capture initialization with C++14

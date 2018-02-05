@@ -37,7 +37,6 @@ class StencilInstantiation : NonCopyable {
 
   struct StencilFunctionInstantiationCandidate {
     std::shared_ptr<StencilFunctionInstantiation> callerStencilFunction_;
-    const std::shared_ptr<StencilFunCallExpr> callerExpr_;
   };
 
   OptimizerContext* context_;
@@ -285,8 +284,19 @@ public:
   const std::shared_ptr<StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) const;
 
+  bool hasStencilFunctionInstantiationCandidate(const std::string stencilFunName) const;
+
+  bool hasStencilFunctionInstantiation(const std::string stencilFunName) const;
+
   std::shared_ptr<StencilFunctionInstantiation>
   getStencilFunctionInstantiationCandidate(const std::shared_ptr<StencilFunCallExpr>& expr);
+
+  std::shared_ptr<StencilFunctionInstantiation>
+  getStencilFunctionInstantiationCandidate(const std::string stencilFunName);
+
+  std::shared_ptr<StencilFunctionInstantiation>
+  cloneStencilFunctionCandidate(std::shared_ptr<StencilFunctionInstantiation> stencilFun,
+                                std::string functionName);
 
   /// @brief Add entry to the map between a given expr to its access ID
   void mapExprToAccessID(std::shared_ptr<Expr> expr, int accessID);
@@ -307,18 +317,18 @@ public:
 
   /// @brief Remove the stencil function given by `expr`
   ///
-  /// If `callerStencilFunctionInstantiation` is not NULL (i.e the stencil function is called within
+  /// If `callerStencilFunctionInstantiation` is not NULL (i.e the stencil function is called
+  /// within
   /// the scope of another stencil function), the stencil function will be removed
   /// from the `callerStencilFunctionInstantiation` instead of this `StencilInstantiation`.
   void removeStencilFunctionInstantiation(
       const std::shared_ptr<StencilFunCallExpr> expr,
       std::shared_ptr<StencilFunctionInstantiation> callerStencilFunctionInstantiation = nullptr);
 
-  void removeUncompleteStencilFunctionInstantations();
-
   /// @brief Register a new stencil function
   ///
-  /// If `curStencilFunctionInstantiation` is not NULL, the stencil function is treated as a nested
+  /// If `curStencilFunctionInstantiation` is not NULL, the stencil function is treated as a
+  /// nested
   /// stencil function.
   std::shared_ptr<StencilFunctionInstantiation> makeStencilFunctionInstantiation(
       const std::shared_ptr<StencilFunCallExpr>& expr,
