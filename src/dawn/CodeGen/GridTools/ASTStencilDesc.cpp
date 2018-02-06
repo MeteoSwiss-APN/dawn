@@ -65,10 +65,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
-  if(instantiation_->getBoundaryConditionToExtentsMap().count(stmt) == 0) {
-    DAWN_ASSERT_MSG(false, "Boundary Condition did not trigger extent-calculation");
-  }
-  Extents extents = instantiation_->getBoundaryConditionToExtentsMap().find(stmt)->second;
+  Extents extents = instantiation_->getBoundaryConditionExtentsFromBCStmt(stmt);
   int haloIMinus = extents[0].Minus;
   int haloIPlus = extents[0].Plus;
   int haloJMinus = extents[1].Minus;
@@ -81,14 +78,14 @@ void ASTStencilDesc::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stm
   std::string halosetup = dawn::format(
       "gridtools::array< gridtools::halo_descriptor, 3 > halos;\n"
       "halos[0] =gridtools::halo_descriptor(%i, %i, "
-      "%s->get_storage_info_ptr()->begin<0>(),%s->get_storage_info_ptr()->end<0>(), "
-      "%s->get_storage_info_ptr()->total_length<0>());\nhalos[1] = gridtools::halo_descriptor(%i, "
+      "%s.get_storage_info_ptr()->begin<0>(),%s->get_storage_info_ptr()->end<0>(), "
+      "%s.get_storage_info_ptr()->total_length<0>());\nhalos[1] = gridtools::halo_descriptor(%i, "
       "%i, "
-      "%s->get_storage_info_ptr()->begin<1>(),%s->get_storage_info_ptr()->end<1>(), "
-      "%s->get_storage_info_ptr()->total_length<1>());\nhalos[2] = gridtools::halo_descriptor(%i, "
+      "%s.get_storage_info_ptr()->begin<1>(),%s->get_storage_info_ptr()->end<1>(), "
+      "%s.get_storage_info_ptr()->total_length<1>());\nhalos[2] = gridtools::halo_descriptor(%i, "
       "%i, "
-      "%s->get_storage_info_ptr()->begin<2>(),%s->get_storage_info_ptr()->end<2>(), "
-      "%s->get_storage_info_ptr()->total_length<2>());\n",
+      "%s.get_storage_info_ptr()->begin<2>(),%s->get_storage_info_ptr()->end<2>(), "
+      "%s.get_storage_info_ptr()->total_length<2>());\n",
       haloIMinus, haloIPlus, fieldname, fieldname, fieldname, haloJMinus, haloJPlus, fieldname,
       fieldname, fieldname, haloKMinus, haloKPlus, fieldname, fieldname, fieldname);
   std::string makeView = "";

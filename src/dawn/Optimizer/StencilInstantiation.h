@@ -31,11 +31,11 @@ namespace dawn {
 
 class OptimizerContext;
 
-/// @brief struct for storing the boundary conditions
-struct BoundaryConditions {
-  std::string functor;
-  std::vector<std::string> arguments;
-};
+///// @brief struct for storing the boundary conditions
+//struct BoundaryConditions {
+//  std::string functor;
+//  std::vector<std::string> arguments;
+//};
 
 /// @brief Specific instantiation of a stencil
 /// @ingroup optimizer
@@ -108,10 +108,15 @@ class StencilInstantiation : NonCopyable {
   std::unordered_map<std::shared_ptr<StencilFunCallExpr>, StencilFunctionInstantiation*>
       ExprToStencilFunctionInstantiationMap_;
 
-  std::unordered_map<std::string, BoundaryConditions> BoundaryConditions_;
+//  std::unordered_map<std::string, BoundaryConditions> BoundaryConditions_;
 
   /// BoundaryConditionCall to Extent Map. Filled my `PassSetBoundaryCondition`
-  std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents> BoundaryConditionToExtentsMap_;
+  std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>
+      BoundaryConditionToExtentsMap_;
+
+  /// Field Name to BoundaryConditionDeclStmt
+  std::unordered_map<std::string, std::shared_ptr<BoundaryConditionDeclStmt>>
+      FieldnameToBoundaryConditionMap_;
 
   /// Set of all the IDs that are locally cached
   std::set<int> CachedVariableSet_;
@@ -390,11 +395,20 @@ public:
   /// @brief Get the optimizer context
   OptimizerContext* getOptimizerContext() { return context_; }
 
-  std::unordered_map<std::string, BoundaryConditions>& getBoundaryConditions() {
-    return BoundaryConditions_;
+  bool insertBoundaryConditions(std::string originalFieldName,
+                                std::shared_ptr<BoundaryConditionDeclStmt> bc) {
+    if(FieldnameToBoundaryConditionMap_.count(originalFieldName) != 0) {
+        return false;
+    }
+    else{
+        FieldnameToBoundaryConditionMap_.emplace(originalFieldName, bc);
+        std::cout << "emplaced " << std::endl;
+        return true;
+    }
   }
-  const std::unordered_map<std::string, BoundaryConditions>& getBoundaryConditions() const {
-    return BoundaryConditions_;
+  const std::unordered_map<std::string, std::shared_ptr<BoundaryConditionDeclStmt>>&
+  getBoundaryConditions() const {
+    return FieldnameToBoundaryConditionMap_;
   }
 
   /// @brief Get a unique (positive) identifier
@@ -432,14 +446,24 @@ public:
   static bool isStencilCallCodeGenName(const std::string& name);
 
   const std::set<int>& getCachedVariableSet() const;
-  std::set<int>& getCachedVariableSet();
 
-  const std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>& getBoundaryConditionToExtentsMap() const {
-      return BoundaryConditionToExtentsMap_;
+  void insertCachedVariable(int fieldID);
+
+  const std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&
+  getBoundaryConditionToExtentsMap() const {
+    return BoundaryConditionToExtentsMap_;
   }
 
-  std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&  getBoundaryConditionToExtentsMap() {
-      return BoundaryConditionToExtentsMap_;
+  std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&
+  getBoundaryConditionToExtentsMap() {
+    return BoundaryConditionToExtentsMap_;
+  }
+
+  Extents getBoundaryConditionExtentsFromBCStmt(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) const{
+      if(BoundaryConditionToExtentsMap_.count(stmt) == 0) {
+        DAWN_ASSERT_MSG(false, "Boundary Condition does not have a matching Extent");
+      }
+      return BoundaryConditionToExtentsMap_.find(stmt)->second;
   }
 
 private:

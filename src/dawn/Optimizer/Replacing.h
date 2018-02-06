@@ -26,7 +26,8 @@ struct Statement;
 class StatementAccessesPair;
 class StencilInstantiation;
 
-/// @brief Get all field and variable accesses identifier by `AccessID`
+/// @brief The GetStencilCalls class reads the StencilDescAST and finds all the stencils with given
+/// ID.
 class GetStencilCalls : public ASTVisitorForwarding {
   StencilInstantiation* instantiation_;
   int StencilID_;

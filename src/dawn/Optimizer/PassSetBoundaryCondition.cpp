@@ -54,8 +54,13 @@ static dawn::Extents analyzeStencilExtents(const std::shared_ptr<Stencil>& s, in
 
   return fullExtents;
 }
-}
 
+enum FieldType{ FT_NotOriginal=-1};
+}
+///
+/// @brief The VisitStencilCalls class traverses the StencilDescAST to determine an order of the
+/// stencil calls. This is required to properly evaluate boundary conditions
+///
 class VisitStencilCalls : public ASTVisitorForwarding {
   std::vector<std::shared_ptr<StencilCallDeclStmt>> stencilCallsInOrder_;
 
@@ -69,11 +74,12 @@ public:
 
   void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
     stencilCallsInOrder_.push_back(stmt);
-    std::cout << "here: " << stmt->getStencilCall()->Callee << std::endl;
   }
 };
 
-/// @brief Get all field and variable accesses identifier by `AccessID`
+/// @brief The AddBoundaryConditions class traverses the StencilDescAST to extract all the
+/// StencilCallStmts for a stencili with a given ID. This is required to properly insert boundary
+/// conditions.
 class AddBoundaryConditions : public ASTVisitorForwarding {
   StencilInstantiation* instantiation_;
   int StencilID_;
@@ -118,16 +124,16 @@ bool PassSetBoundaryCondition::run(StencilInstantiation* stencilInstantiation) {
         return stencilInstantiation->getAccessIDFromName(
             stencilInstantiation->getOriginalNameFromAccessID(ID));
       } else {
-        return -1;
+        return (int) FieldType::FT_NotOriginal;
       }
     } else {
-      return -1;
+      return (int) FieldType::FT_NotOriginal;
     }
 
   };
 
   std::unordered_map<int, Extents> dirtyFields;
-  std::unordered_map<int, BoundaryConditions> allBCs;
+  std::unordered_map<int, std::shared_ptr<BoundaryConditionDeclStmt>> allBCs;
 
   // Fetch all the boundary conditions stored in the instantiation
   for(const auto& bc : stencilInstantiation->getBoundaryConditions()) {
@@ -207,98 +213,82 @@ bool PassSetBoundaryCondition::run(StencilInstantiation* stencilInstantiation) {
             // dirtyFields)
             for(const auto& readacccess : allReadAccesses) {
               int originalID = getOriginalID(readacccess.first);
-              if(originalID == -1)
+              if(originalID == FieldType::FT_NotOriginal)
                 continue;
               auto idWithExtents = dirtyFields.find(originalID);
-              if(idWithExtents != dirtyFields.end()) {
-                // If the access is horizontally pointwise or it is a horizontally cached field,
-                // we do not need to trigger a BC
-                if(!readacccess.second.isHorizontalPointwise() &&
-                   !stencilInstantiation->getCachedVariableSet().count(readacccess.first)) {
-                  auto finder = allBCs.find(originalID);
-                  // Check if a boundary condition for this variable was defined
-                  if(finder != allBCs.end()) {
-                    // Create the Statement to insert the Boundary conditon into the StencilDescAST
-                    std::shared_ptr<BoundaryConditionDeclStmt> boundaryConditionCall =
-                        std::make_shared<BoundaryConditionDeclStmt>(finder->second.functor);
-                    boundaryConditionCall->getFields().emplace_back(std::make_shared<sir::Field>(
-                        stencilInstantiation->getNameFromAccessID(readacccess.first)));
-                    for(const auto& arg : finder->second.arguments) {
-                      boundaryConditionCall->getFields().emplace_back(
-                          std::make_shared<sir::Field>(arg));
-                    }
+              if(idWithExtents == dirtyFields.end())
+                continue;
+              // If the access is horizontally pointwise or it is a horizontally cached field,
+              // we do not need to trigger a BC
+              if(readacccess.second.isHorizontalPointwise() ||
+                 stencilInstantiation->getCachedVariableSet().count(readacccess.first))
+                continue;
+              auto finder = allBCs.find(originalID);
+              // Check if a boundary condition for this variable was defined
+              if(finder == allBCs.end()) {
+                DAWN_ASSERT_MSG(
+                    false,
+                    dawn::format("In stencil %s we need a halo update on field %s but no "
+                                 "boundary condition is set.\nUpdate the stencil (outside the "
+                                 "do-method) with a boundary condition that calls a "
+                                 "stencil_function, e.g \n'boundary_condition(zero(), %s);'\n",
+                                 stencilInstantiation->getName(),
+                                 stencilInstantiation->getOriginalNameFromAccessID(originalID),
+                                 stencilInstantiation->getOriginalNameFromAccessID(originalID))
+                        .c_str());
+              }
+              // Calculate the extent and add it to the boundary-condition - Extent map
+              Extents fullExtents = calculateHaloExtents(
+                  stencilInstantiation->getNameFromAccessID(readacccess.first));
+              stencilInstantiation->getBoundaryConditionToExtentsMap().emplace(finder->second,
+                                                                               fullExtents);
 
-                    // Calculate the extent and add it to the boundary-condition - Extent map
-                    Extents fullExtents = calculateHaloExtents(
-                        stencilInstantiation->getNameFromAccessID(readacccess.first));
-                    stencilInstantiation->getBoundaryConditionToExtentsMap().emplace(
-                        boundaryConditionCall, fullExtents);
+              // check if this stencil is called and get its StencilCallDeclStmt (the one to replace)
+              auto test =
+                  stencilInstantiation->getIDToStencilCallMap().find(stencil.getStencilID());
+              if(test == stencilInstantiation->getIDToStencilCallMap().end()) {
+                DAWN_ASSERT_MSG(false, "Stencil Triggering the Boundary Condition is not called");
+              }
 
-                    // check if this stencil is called and get its StencilCallDeclStmt (the one to
-                    // replace)
-                    auto test =
-                        stencilInstantiation->getIDToStencilCallMap().find(stencil.getStencilID());
-                    if(test != stencilInstantiation->getIDToStencilCallMap().end()) {
+              // Find all the calls to this stencil before which we need to apply the boundary
+              // condition. These calls are then replaced by {boundary_condition, stencil_call}
+              AddBoundaryConditions visitor(stencilInstantiation, stencil.getStencilID());
 
-                      // Find all the calls to this stencil before which we need to apply the
-                      // boundary condition. These calls are then replaced by {boundary_condition,
-                      // stencil_call}
-                      AddBoundaryConditions visitor(stencilInstantiation, stencil.getStencilID());
+              for(auto& statement : stencilInstantiation->getStencilDescStatements()) {
+                visitor.reset();
 
-                      for(auto& statement : stencilInstantiation->getStencilDescStatements()) {
-                        visitor.reset();
+                std::shared_ptr<Stmt>& stmt = statement->ASTStmt;
 
-                        std::shared_ptr<Stmt>& stmt = statement->ASTStmt;
+                stmt->accept(visitor);
+                std::vector<std::shared_ptr<Stmt>> stencilCallWithBC_;
+                stencilCallWithBC_.emplace_back(finder->second);
+                stencilCallWithBC_.emplace_back(test->second);
 
-                        stmt->accept(visitor);
-                        std::vector<std::shared_ptr<Stmt>> stencilCallWithBC_;
-                        stencilCallWithBC_.emplace_back(boundaryConditionCall);
-                        stencilCallWithBC_.emplace_back(test->second);
-
-                        for(auto& oldStencilCall : visitor.getStencilCallsToReplace()) {
-                          auto newBlockStmt = std::make_shared<BlockStmt>();
-                          std::copy(stencilCallWithBC_.begin(), stencilCallWithBC_.end(),
-                                    std::back_inserter(newBlockStmt->getStatements()));
-                          if(oldStencilCall == stmt) {
-                            // Replace the the statement directly
-                            DAWN_ASSERT(visitor.getStencilCallsToReplace().size() == 1);
-                            stmt = newBlockStmt;
-                          } else {
-                            // Recursively replace the statement
-                            replaceOldStmtWithNewStmtInStmt(stmt, oldStencilCall, newBlockStmt);
-                          }
-                        }
-                      }
-
-                      // The boundary condition is applied, the field is clean again
-                      dirtyFields.erase(originalID);
-                      // we add it to a vector for output
-                      boundaryConditionInserted_.push_back(originalID);
-                    } else {
-                      DAWN_ASSERT_MSG(false,
-                                      "Stencil Triggering the Boundary Condition is not called");
-                    }
+                for(auto& oldStencilCall : visitor.getStencilCallsToReplace()) {
+                  auto newBlockStmt = std::make_shared<BlockStmt>();
+                  std::copy(stencilCallWithBC_.begin(), stencilCallWithBC_.end(),
+                            std::back_inserter(newBlockStmt->getStatements()));
+                  if(oldStencilCall == stmt) {
+                    // Replace the the statement directly
+                    DAWN_ASSERT(visitor.getStencilCallsToReplace().size() == 1);
+                    stmt = newBlockStmt;
                   } else {
-                    DAWN_ASSERT_MSG(
-                        false,
-                        dawn::format("In stencil %s we need a halo update on field %s but no "
-                                     "boundary condition is set.\nUpdate the stencil (outside the "
-                                     "do-method) with a boundary condition that calls a "
-                                     "stencil_function, e.g \n'boundary_condition(zero(), %s);'\n",
-                                     stencilInstantiation->getName(),
-                                     stencilInstantiation->getOriginalNameFromAccessID(originalID),
-                                     stencilInstantiation->getOriginalNameFromAccessID(originalID))
-                            .c_str());
-                    dirtyFields.erase(originalID);
+                    // Recursively replace the statement
+                    replaceOldStmtWithNewStmtInStmt(stmt, oldStencilCall, newBlockStmt);
                   }
                 }
               }
+
+              // The boundary condition is applied, the field is clean again
+              dirtyFields.erase(originalID);
+              // we add it to a vector for output
+              boundaryConditionInserted_.push_back(originalID);
             }
             // Any write-access requires a halo update once is is read off-center therefore we set
             // the fields to modified
             for(const auto& writeaccess : allWriteAccesses) {
               int originalID = getOriginalID(writeaccess.first);
-              if(originalID != -1) {
+              if(originalID != FieldType::FT_NotOriginal) {
                 auto fieldwithExtents = stencilDirtyFields.find(originalID);
                 if(fieldwithExtents != stencilDirtyFields.end()) {
                   (*fieldwithExtents).second.merge(writeaccess.second);
