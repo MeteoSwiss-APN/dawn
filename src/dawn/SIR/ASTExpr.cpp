@@ -19,6 +19,17 @@
 
 namespace dawn {
 
+template <typename Cont>
+bool replaceOperands(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr, Cont& operands) {
+  for(int i = 0; i < operands.size(); ++i) {
+    if(operands[i] == oldExpr) {
+      operands[i] = newExpr;
+      return true;
+    }
+  }
+  return false;
+}
+
 //===------------------------------------------------------------------------------------------===//
 //     UnaryOperator
 //===------------------------------------------------------------------------------------------===//
@@ -48,6 +59,11 @@ bool UnaryOperator::equals(const Expr* other) const {
   const UnaryOperator* otherPtr = dyn_cast<UnaryOperator>(other);
   return otherPtr && Expr::equals(other) && operand_->equals(otherPtr->operand_.get()) &&
          op_ == otherPtr->op_;
+}
+
+void UnaryOperator::replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr) {
+  DAWN_ASSERT(oldExpr == operand_);
+  operand_ = newExpr;
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -81,6 +97,11 @@ bool BinaryOperator::equals(const Expr* other) const {
   return otherPtr && Expr::equals(other) &&
          operands_[OK_Left]->equals(otherPtr->operands_[OK_Left].get()) &&
          operands_[OK_Right]->equals(otherPtr->operands_[OK_Right].get()) && op_ == otherPtr->op_;
+}
+
+void BinaryOperator::replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr) {
+  bool success = replaceOperands(oldExpr, newExpr, operands_);
+  DAWN_ASSERT_MSG((success), ("Expression not found"));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -177,6 +198,12 @@ bool TernaryOperator::equals(const Expr* other) const {
          operands_[OK_Right]->equals(otherPtr->operands_[OK_Right].get());
 }
 
+void TernaryOperator::replaceChildren(std::shared_ptr<Expr> oldExpr,
+                                      std::shared_ptr<Expr> newExpr) {
+  bool success = replaceOperands(oldExpr, newExpr, operands_);
+  DAWN_ASSERT_MSG((success), ("Expression not found"));
+}
+
 //===------------------------------------------------------------------------------------------===//
 //     FunCallExpr
 //===------------------------------------------------------------------------------------------===//
@@ -212,6 +239,11 @@ bool FunCallExpr::equals(const Expr* other) const {
 }
 
 void FunCallExpr::insertArgument(std::shared_ptr<Expr> expr) { arguments_.push_back(expr); }
+
+void FunCallExpr::replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr) {
+  bool success = replaceOperands(oldExpr, newExpr, arguments_);
+  DAWN_ASSERT_MSG((success), ("Expression not found"));
+}
 
 //===------------------------------------------------------------------------------------------===//
 //     StencilFunCallExpr
@@ -316,6 +348,15 @@ bool VarAccessExpr::equals(const Expr* other) const {
   return otherPtr && Expr::equals(other) && name_ == otherPtr->name_ &&
          isExternal_ == otherPtr->isExternal_ && isArrayAccess() == otherPtr->isArrayAccess() &&
          (isArrayAccess() ? index_->equals(otherPtr->index_.get()) : true);
+}
+
+void VarAccessExpr::replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr) {
+  if(isArrayAccess()) {
+    DAWN_ASSERT(index_ == oldExpr);
+    index_ = newExpr;
+  } else {
+    DAWN_ASSERT_MSG((false), ("Non array vars have no children"));
+  }
 }
 
 //===------------------------------------------------------------------------------------------===//

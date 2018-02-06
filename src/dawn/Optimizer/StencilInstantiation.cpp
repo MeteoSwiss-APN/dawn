@@ -366,7 +366,7 @@ public:
     // Further, we instantiate all referenced stencil functions.
     DAWN_LOG(INFO) << "Inserting statements ... ";
     DoMethod& doMethod = stage->getSingleDoMethod();
-    StatementMapper statementMapper(instantiation_, scope_.top()->StackTrace, scope_.top()->Name,
+    StatementMapper statementMapper(instantiation_, scope_.top()->StackTrace,
                                     doMethod.getStatementAccessesPairs(), doMethod.getInterval(),
                                     scope_.top()->LocalFieldnameToAccessIDMap, nullptr);
     ast->accept(statementMapper);
@@ -987,18 +987,23 @@ void StencilInstantiation::removeStencilFunctionInstantiation(
   }
 }
 
-std::shared_ptr<StencilFunctionInstantiation> StencilInstantiation::getStencilFunctionInstantiation(
-    const std::shared_ptr<StencilFunCallExpr>& expr) {
+const std::shared_ptr<StencilFunctionInstantiation>
+StencilInstantiation::getStencilFunctionInstantiation(
+    const std::shared_ptr<StencilFunCallExpr>& expr) const {
   auto it = ExprToStencilFunctionInstantiationMap_.find(expr);
   DAWN_ASSERT_MSG(it != ExprToStencilFunctionInstantiationMap_.end(), "Invalid stencil function");
   return it->second;
 }
 
 const std::shared_ptr<StencilFunctionInstantiation>
-StencilInstantiation::getStencilFunctionInstantiation(
-    const std::shared_ptr<StencilFunCallExpr>& expr) const {
-  auto it = ExprToStencilFunctionInstantiationMap_.find(expr);
-  DAWN_ASSERT_MSG(it != ExprToStencilFunctionInstantiationMap_.end(), "Invalid stencil function");
+StencilInstantiation::getStencilFunctionInstantiation(const std::string stencilFunName) const {
+  auto it = std::find_if(ExprToStencilFunctionInstantiationMap_.begin(),
+                         ExprToStencilFunctionInstantiationMap_.end(),
+                         [&](std::pair<std::shared_ptr<StencilFunCallExpr>,
+                                       std::shared_ptr<StencilFunctionInstantiation>> const& pair) {
+                           return (pair.first->getCallee() == stencilFunName);
+                         });
+  DAWN_ASSERT(it != ExprToStencilFunctionInstantiationMap_.end());
   return it->second;
 }
 
@@ -1074,7 +1079,6 @@ std::shared_ptr<StencilFunctionInstantiation> StencilInstantiation::cloneStencil
 
   stencilFunInstantiationCandidate_.emplace(stencilFunClone,
                                             stencilFunInstantiationCandidate_[stencilFun]);
-
   return stencilFunClone;
 }
 

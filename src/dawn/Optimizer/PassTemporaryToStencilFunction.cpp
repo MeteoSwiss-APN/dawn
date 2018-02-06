@@ -31,10 +31,9 @@ sir::Interval intervalToSIRInterval(Interval interval) {
                        interval.upperOffset());
 }
 
-template <class T>
-struct aggregate_adapter : public T {
-  template <class... Args>
-  aggregate_adapter(Args&&... args) : T{std::forward<Args>(args)...} {}
+struct TemporaryFunctionProperties {
+  std::shared_ptr<StencilFunCallExpr> stencilFunction_;
+  std::vector<int> accessIDArgs_;
 };
 
 class TmpAssignment : public ASTVisitorPostOrder, public NonCopyable {
@@ -48,14 +47,11 @@ protected:
   std::shared_ptr<std::vector<std::shared_ptr<FieldAccessExpr>>> tmpComputationArgs_;
   //  std::unordered_set<std::string> insertedFields_;
   int accessID_ = -1;
-  std::shared_ptr<FieldAccessExpr> tmpFieldAccessExpr_;
-
-  std::shared_ptr<FieldAccessExpr> outputFieldExpr_ = nullptr;
+  std::shared_ptr<FieldAccessExpr> tmpFieldAccessExpr_ = nullptr;
 
 public:
   TmpAssignment(std::shared_ptr<StencilInstantiation> instantiation, sir::Interval const& interval)
-      : instantiation_(instantiation), interval_(interval), tmpComputationArgs_(nullptr),
-        tmpFieldAccessExpr_(nullptr) {}
+      : instantiation_(instantiation), interval_(interval), tmpComputationArgs_(nullptr) {}
 
   virtual ~TmpAssignment() {}
 
@@ -65,24 +61,13 @@ public:
     return tmpComputationArgs_;
   }
 
-  std::vector<int> const& accessIDs() { return accessIDs_; }
+  std::vector<int> const& getAccessIDs() { return accessIDs_; }
 
   std::shared_ptr<FieldAccessExpr> getTemporaryFieldAccessExpr() { return tmpFieldAccessExpr_; }
 
   std::shared_ptr<sir::StencilFunction> temporaryStencilFunction() { return tmpFunction_; }
 
   bool foundTemporaryToReplace() { return (tmpFunction_ != nullptr); }
-  /// @name Statement implementation
-  /// @{
-  //  virtual void visit(const std::shared_ptr<BlockStmt>& stmt) override;
-  virtual bool preVisitNode(const std::shared_ptr<ExprStmt> stmt) override {
-    return true;
-    std::cout << "This is expr " << std::endl;
-
-    //    stmt->getExpr()->accept(*this);
-  }
-  //  virtual void visit(const std::shared_ptr<IfStmt>& stmt) override;
-  /// @}
 
   /// @name Expression implementation
   /// @{
@@ -94,16 +79,11 @@ public:
     for(int off : expr->getArgumentOffset())
       DAWN_ASSERT(off == 0);
 
-    std::cout << "IIIIIIIIIII" << std::endl;
-    //    if(insertedFields_.count(expr->getName()))
-    //      return;
-    //    insertedFields_.emplace(expr->getName());
-
     if(tmpComputationArgs_ == nullptr)
       tmpComputationArgs_ = std::make_shared<std::vector<std::shared_ptr<FieldAccessExpr>>>();
 
     tmpComputationArgs_->push_back(expr);
-    if(!tmpFunction_->hasArg(expr->getName()) && expr != outputFieldExpr_) {
+    if(!tmpFunction_->hasArg(expr->getName()) && expr != tmpFieldAccessExpr_) {
       tmpFunction_->Args.push_back(std::make_shared<sir::Field>(expr->getName(), SourceLocation{}));
       accessIDs_.push_back(instantiation_->getAccessIDFromExpr(expr));
     }
@@ -130,15 +110,12 @@ public:
       // TODO cretae a interval->sir::interval converter
       tmpFunction_->Intervals.push_back(std::make_shared<sir::Interval>(interval_));
 
-      outputFieldExpr_ = std::dynamic_pointer_cast<FieldAccessExpr>(expr->getLeft());
-
       return true;
     }
     return false;
   }
   virtual std::shared_ptr<Expr> postVisitNode(const std::shared_ptr<AssignmentExpr> expr) override {
     if(isa<FieldAccessExpr>(*(expr->getLeft()))) {
-      tmpFieldAccessExpr_ = std::dynamic_pointer_cast<FieldAccessExpr>(expr->getLeft());
       accessID_ = instantiation_->getAccessIDFromExpr(expr->getLeft());
       if(!instantiation_->isTemporaryField(accessID_))
         return expr;
@@ -152,30 +129,26 @@ public:
       std::shared_ptr<BlockStmt> root = std::make_shared<BlockStmt>();
       root->push_back(retStmt);
       std::shared_ptr<AST> ast = std::make_shared<AST>(root);
-      std::cout << "   DDDDDD POST " << ast << std::endl;
       tmpFunction_->Asts.push_back(ast);
 
       return std::make_shared<NOPExpr>();
     }
     return expr;
   }
-  //  virtual void visit(const std::shared_ptr<FunCallExpr>& expr) override;
-  //  virtual void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override = 0;
   /// @}
 };
 
 class TmpReplacement : public ASTVisitorPostOrder, public NonCopyable {
 protected:
   std::shared_ptr<StencilInstantiation> instantiation_;
-  std::unordered_map<int, std::shared_ptr<StencilFunCallExpr>> const&
-      temporaryFieldAccessIDToFunctionCall_;
+  std::unordered_map<int, TemporaryFunctionProperties> const& temporaryFieldAccessIDToFunctionCall_;
   std::shared_ptr<std::vector<std::shared_ptr<FieldAccessExpr>>> tmpComputationArgs_;
   const sir::Interval interval_;
   std::shared_ptr<std::vector<sir::StencilCall*>> stackTrace_;
 
 public:
   TmpReplacement(std::shared_ptr<StencilInstantiation> instantiation,
-                 std::unordered_map<int, std::shared_ptr<StencilFunCallExpr>> const&
+                 std::unordered_map<int, TemporaryFunctionProperties> const&
                      temporaryFieldAccessIDToFunctionCall,
                  const sir::Interval sirInterval,
                  std::shared_ptr<std::vector<sir::StencilCall*>> stackTrace)
@@ -185,13 +158,14 @@ public:
 
   virtual ~TmpReplacement() {}
 
+  std::string makeOnTheFlyFunctionName(std::shared_ptr<FieldAccessExpr> expr) {
+    return expr->getName() + "_OnTheFly" + "_i" + std::to_string(expr->getOffset()[0]) + "_j" +
+           std::to_string(expr->getOffset()[1]) + "_k" + std::to_string(expr->getOffset()[2]);
+  }
+
   /// @name Expression implementation
   /// @{
   virtual bool preVisitNode(std::shared_ptr<FieldAccessExpr> expr) override {
-    std::cout << "FINALIZING ?? " << expr << " " << expr->getName() << std::endl;
-    for(auto pair : temporaryFieldAccessIDToFunctionCall_) {
-      std::cout << " check " << pair.first << " " << std::endl;
-    }
     int accessID = instantiation_->getAccessIDFromExpr(expr);
     if(!temporaryFieldAccessIDToFunctionCall_.count(accessID))
       return false;
@@ -200,15 +174,23 @@ public:
     std::shared_ptr<StencilFunctionInstantiation> stencilFun =
         instantiation_->getStencilFunctionInstantiationCandidate(callee);
 
-    std::string fnClone = callee + "_i" + std::to_string(expr->getOffset()[0]) + "_j" +
-                          std::to_string(expr->getOffset()[1]) + "_k" +
-                          std::to_string(expr->getOffset()[2]);
+    std::string fnClone = makeOnTheFlyFunctionName(expr);
 
     if(instantiation_->hasStencilFunctionInstantiation(fnClone))
       return true;
 
     std::shared_ptr<StencilFunctionInstantiation> cloneStencilFun =
         instantiation_->cloneStencilFunctionCandidate(stencilFun, fnClone);
+
+    auto& accessIDsOfArgs = temporaryFieldAccessIDToFunctionCall_.at(accessID).accessIDArgs_;
+
+    for(auto accessID : (accessIDsOfArgs)) {
+      std::shared_ptr<FieldAccessExpr> arg = std::make_shared<FieldAccessExpr>(
+          instantiation_->getNameFromAccessID(accessID), expr->getOffset());
+      cloneStencilFun->getExpression()->insertArgument(arg);
+
+      instantiation_->mapExprToAccessID(arg, accessID);
+    }
 
     //    instantiation_->getStencilFunctionInstantiation()
     // TODO coming from stencil functions is not yet supported
@@ -224,17 +206,32 @@ public:
       cloneStencilFun->setCallerInitialOffsetFromAccessID(accessID_, expr->getOffset());
     }
 
-    std::cout << "FINALIZING " << cloneStencilFun->getExpression()->getCallee() << std::endl;
-
     instantiation_->finalizeStencilFunctionSetup(cloneStencilFun);
 
-    StatementMapper statementMapper(instantiation_.get(), stackTrace_, "MARINO",
+    StatementMapper statementMapper(instantiation_.get(), stackTrace_,
                                     cloneStencilFun->getStatementAccessesPairs(), interval_,
                                     instantiation_->getNameToAccessIDMap(), cloneStencilFun);
 
     cloneStencilFun->getAST()->accept(statementMapper);
 
+    cloneStencilFun->checkFunctionBindings();
+
     return true;
+  }
+
+  virtual std::shared_ptr<Expr>
+  postVisitNode(const std::shared_ptr<FieldAccessExpr> expr) override {
+
+    int accessID = instantiation_->getAccessIDFromExpr(expr);
+    if(!temporaryFieldAccessIDToFunctionCall_.count(accessID))
+      return expr;
+
+    // TODO we need to version to tmp function generation, in case tmp is recomputed multiple times
+    std::string callee = makeOnTheFlyFunctionName(expr);
+
+    auto stencilFunCall = instantiation_->getStencilFunctionInstantiation(callee)->getExpression();
+
+    return stencilFunCall;
   }
 
   /// @}
@@ -252,21 +249,19 @@ bool PassTemporaryToStencilFunction::run(
 
     // Iterate multi-stages backwards
     for(auto multiStage : stencil.getMultiStages()) {
-      std::shared_ptr<std::vector<std::shared_ptr<FieldAccessExpr>>> temporaryComputationArgs;
-      std::unordered_map<int, std::shared_ptr<StencilFunCallExpr>> temporaryFieldExprToFunction;
+      //      std::shared_ptr<std::vector<std::shared_ptr<FieldAccessExpr>>>
+      //      temporaryComputationArgs;
+      std::unordered_map<int, TemporaryFunctionProperties> temporaryFieldExprToFunction;
 
       for(const auto& stagePtr : multiStage->getStages()) {
 
         for(const auto& doMethodPtr : stagePtr->getDoMethods()) {
           for(const auto& stmtAccessPair : doMethodPtr->getStatementAccessesPairs()) {
             const Statement& stmt = *(stmtAccessPair->getStatement());
-            std::cout << "INDO " << std::endl;
 
             if(stmt.ASTStmt->getKind() != Stmt::SK_ExprStmt)
               continue;
-            std::cout << "AFTER EXPR " << std::endl;
 
-            //            if(temporaryFieldAccessExpr == nullptr)
             // TODO catch a temp expr
             {
               const Interval& interval = doMethodPtr->getInterval();
@@ -275,10 +270,6 @@ bool PassTemporaryToStencilFunction::run(
               TmpAssignment tmpAssignment(stencilInstantiation, sirInterval);
               stmt.ASTStmt->acceptAndReplace(tmpAssignment);
               if(tmpAssignment.foundTemporaryToReplace()) {
-                std::cout << "FOUND TMP " << tmpAssignment.temporaryStencilFunction()->Name
-                          << std::endl;
-                temporaryComputationArgs = tmpAssignment.temporaryComputationArgs();
-                DAWN_ASSERT(temporaryComputationArgs != nullptr);
 
                 std::shared_ptr<sir::StencilFunction> stencilFunction =
                     tmpAssignment.temporaryStencilFunction();
@@ -290,19 +281,18 @@ bool PassTemporaryToStencilFunction::run(
                 std::shared_ptr<StencilFunCallExpr> stencilFunCallExpr =
                     std::make_shared<StencilFunCallExpr>(stencilFunction->Name);
 
+                auto accessIDsOfArgs = tmpAssignment.getAccessIDs();
+
                 temporaryFieldExprToFunction.emplace(
                     stencilInstantiation->getAccessIDFromExpr(
                         tmpAssignment.getTemporaryFieldAccessExpr()),
-                    stencilFunCallExpr);
+                    TemporaryFunctionProperties{stencilFunCallExpr, tmpAssignment.getAccessIDs()});
 
-                for(auto it : stencilFunction->Args) {
-                  std::cout << "CHECK " << it << std::endl;
-                }
                 auto stencilFun = stencilInstantiation->makeStencilFunctionInstantiation(
                     stencilFunCallExpr, stencilFunction, ast, sirInterval, nullptr);
 
                 int argID = 0;
-                for(auto accessID : tmpAssignment.accessIDs()) {
+                for(auto accessID : tmpAssignment.getAccessIDs()) {
                   stencilFun->setCallerAccessIDOfArgField(argID++, accessID);
                 }
                 //////////
@@ -310,95 +300,13 @@ bool PassTemporaryToStencilFunction::run(
               TmpReplacement tmpReplacement(stencilInstantiation, temporaryFieldExprToFunction,
                                             sirInterval, stmt.StackTrace);
               stmt.ASTStmt->acceptAndReplace(tmpReplacement);
-
-              for(auto ii : stencilInstantiation->getStencilFunctionInstantiations()) {
-                std::cout << "?? " << ii->getName() << " " << ii->getExpression()->getCallee()
-                          << std::endl;
-              }
-              //                auto& function = scope_.top()->FunctionInstantiation;
-              //                auto stencilFun =
-              //                getCurrentCandidateScope()->FunctionInstantiation;
-              //                auto& argumentIndex = getCurrentCandidateScope()->ArgumentIndex;
-              //                bool needsLazyEval = expr->getArgumentIndex() != -1;
-
-              //                if(stencilFun->isArgOffset(argumentIndex)) {
-              //                  // Argument is an offset
-              //                  stencilFun->setCallerOffsetOfArgOffset(
-              //                      argumentIndex, needsLazyEval
-              //                                         ?
-              //                                         function->getCallerOffsetOfArgOffset(expr->getArgumentIndex())
-              //                                         : Array2i{{expr->getDimension(),
-              //                                         expr->getOffset()}});
-              //                } else {
-              //                  // Argument is a direction
-              //                  stencilFun->setCallerDimensionOfArgDirection(
-              //                      argumentIndex, needsLazyEval
-              //                                         ?
-              //                                         function->getCallerDimensionOfArgDirection(expr->getArgumentIndex())
-              //                                         : expr->getDimension());
-              //                }
-              //                argumentIndex += 1;
-
-              //                stencilFun->closeFunctionBindings();
             }
-            //            if(!temporaryFieldAccessExpr.empty()) {
-            //              //              TmpReplacement tmpReplacement(stencilInstantiation,
-            //              //              temporaryFieldAccessExpr,
-            //              //                                            temporaryComputationArgs);
-            //            }
-
-            // TODO
-            //            stencilInstantiation->finalizeStencilFunctionSetup(stencilFun);
           }
         }
-        //        for(const Field& field : stagePtr->getFields()) {
-        //          // This is caching non-temporary fields
-        //          if(!instantiation_->isTemporaryField(field.getAccessID()))
-        //            continue;
-        //        }
       }
-      //      std::shared_ptr<DependencyGraphAccesses> newGraph, oldGraph;
-      //      newGraph = std::make_shared<DependencyGraphAccesses>(stencilInstantiation.get());
-
-      //      // Iterate stages bottom -> top
-      //      for(auto stageRit = multiStage.getStages().rbegin(),
-      //               stageRend = multiStage.getStages().rend();
-      //          stageRit != stageRend; ++stageRit) {
-      //        Stage& stage = (**stageRit);
-      //        DoMethod& doMethod = stage.getSingleDoMethod();
-
-      //        // Iterate statements bottom -> top
-      //        for(int stmtIndex = doMethod.getStatementAccessesPairs().size() - 1; stmtIndex >= 0;
-      //            --stmtIndex) {
-      //          oldGraph = newGraph->clone();
-
-      //          auto& stmtAccessesPair = doMethod.getStatementAccessesPairs()[stmtIndex];
-      //          newGraph->insertStatementAccessesPair(stmtAccessesPair);
-
-      //          // Try to resolve race-conditions by using double buffering if necessary
-      //          auto rc =
-      //              fixRaceCondition(newGraph.get(), stencil, doMethod, loopOrder, stageIdx,
-      //              stmtIndex);
-
-      //          if(rc == RCKind::RK_Unresolvable)
-      //            // Nothing we can do ... bail out
-      //            return false;
-      //          else if(rc == RCKind::RK_Fixed) {
-      //            // We fixed a race condition (this means some fields have changed and our
-      //            current graph
-      //            // is invalid)
-      //            newGraph = oldGraph;
-      //            newGraph->insertStatementAccessesPair(stmtAccessesPair);
-      //          }
-      //        }
-      //      }
-      //      stageIdx--;
     }
   }
 
-  //  if(context->getOptions().ReportPassTemporaryToStencilFunction && numRenames_ == 0)
-  //    std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
-  //              << ": no rename\n";
   return true;
 }
 

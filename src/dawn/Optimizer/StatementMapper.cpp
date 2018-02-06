@@ -17,7 +17,7 @@
 namespace dawn {
 StatementMapper::StatementMapper(
     StencilInstantiation* instantiation,
-    const std::shared_ptr<std::vector<sir::StencilCall*>>& stackTrace, std::string stencilName,
+    const std::shared_ptr<std::vector<sir::StencilCall*>>& stackTrace,
     std::vector<std::shared_ptr<StatementAccessesPair>>& statementAccessesPairs,
     const Interval& interval,
     const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,
@@ -25,8 +25,8 @@ StatementMapper::StatementMapper(
     : instantiation_(instantiation), stackTrace_(stackTrace) {
 
   // Create the initial scope
-  scope_.push(std::make_shared<Scope>(stencilName, statementAccessesPairs, interval,
-                                      stencilFunctionInstantiation));
+  scope_.push(
+      std::make_shared<Scope>(statementAccessesPairs, interval, stencilFunctionInstantiation));
   scope_.top()->LocalFieldnameToAccessIDMap = localFieldnameToAccessIDMap;
 }
 
@@ -222,8 +222,7 @@ void StatementMapper::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
   }
 
   // Create the scope of the stencil function
-  scope_.top()->CandiateScopes.push(std::make_shared<Scope>(expr->getCallee(),
-                                                            stencilFun->getStatementAccessesPairs(),
+  scope_.top()->CandiateScopes.push(std::make_shared<Scope>(stencilFun->getStatementAccessesPairs(),
                                                             stencilFun->getInterval(), stencilFun));
 
   // Resolve the arguments

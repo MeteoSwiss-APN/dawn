@@ -143,14 +143,7 @@ public:
   static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_BlockStmt; }
   virtual StmtRangeType getChildren() override { return StmtRangeType(statements_); }
   virtual void replaceChildren(std::shared_ptr<Stmt> oldStmt,
-                               std::shared_ptr<Stmt> newStmt) override {
-    for(std::shared_ptr<Stmt>& stmt : statements_) {
-      if(stmt == oldStmt)
-        stmt = newStmt;
-      return;
-    }
-    DAWN_ASSERT_MSG((false), ("Expression not found"));
-  }
+                               std::shared_ptr<Stmt> newStmt) override;
   ACCEPTVISITOR(Stmt, BlockStmt)
 };
 
@@ -176,11 +169,7 @@ public:
   const std::shared_ptr<Expr>& getExpr() const { return expr_; }
   std::shared_ptr<Expr>& getExpr() { return expr_; }
 
-  virtual void replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr) {
-    DAWN_ASSERT_MSG((oldExpr == expr_), ("Expression not found"));
-
-    expr_ = newExpr;
-  }
+  virtual void replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr);
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_ExprStmt; }
@@ -209,10 +198,7 @@ public:
   const std::shared_ptr<Expr>& getExpr() const { return expr_; }
   std::shared_ptr<Expr>& getExpr() { return expr_; }
 
-  virtual void replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr) {
-    DAWN_ASSERT_MSG((oldExpr == expr_), ("Expression not found"));
-    expr_ = newExpr;
-  }
+  virtual void replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr);
 
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
@@ -261,15 +247,7 @@ public:
   const std::vector<std::shared_ptr<Expr>>& getInitList() const { return initList_; }
   std::vector<std::shared_ptr<Expr>>& getInitList() { return initList_; }
 
-  virtual void replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr) {
-    for(auto& expr : initList_) {
-      if(expr == oldExpr) {
-        expr = newExpr;
-        return;
-      }
-    }
-    DAWN_ASSERT_MSG(false, "Expression not found");
-  }
+  virtual void replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr);
 
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
@@ -410,20 +388,7 @@ public:
     return hasElse() ? StmtRangeType(subStmts_) : StmtRangeType(&subStmts_[0], OK_End - 1);
   }
   virtual void replaceChildren(std::shared_ptr<Stmt> oldStmt,
-                               std::shared_ptr<Stmt> newStmt) override {
-    if(hasElse()) {
-      for(std::shared_ptr<Stmt>& stmt : subStmts_) {
-        if(stmt == oldStmt)
-          stmt = newStmt;
-        return;
-      }
-    } else {
-      DAWN_ASSERT(oldStmt == subStmts_[0]);
-      subStmts_[0] = newStmt;
-      return;
-    }
-    DAWN_ASSERT_MSG((false), ("Expression not found"));
-  }
+                               std::shared_ptr<Stmt> newStmt) override;
   ACCEPTVISITOR(Stmt, IfStmt)
 };
 

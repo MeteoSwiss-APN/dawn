@@ -279,8 +279,9 @@ public:
   int getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) const;
 
   /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
-  std::shared_ptr<StencilFunctionInstantiation>
-  getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr);
+  const std::shared_ptr<StencilFunctionInstantiation>
+  getStencilFunctionInstantiation(const std::string stencilFunName) const;
+
   const std::shared_ptr<StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) const;
 

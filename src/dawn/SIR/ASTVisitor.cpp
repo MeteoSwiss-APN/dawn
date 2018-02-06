@@ -112,8 +112,9 @@ void ASTVisitorForwardingNonConst::visit(std::shared_ptr<dawn::VerticalRegionDec
       return node;                                                                                 \
     for(auto s : node->getChildren()) {                                                            \
       auto repl = s->acceptAndReplace(*this);                                                      \
-      if(repl)                                                                                     \
+      if(repl && repl != s) {                                                                      \
         node->replaceChildren(s, repl);                                                            \
+      }                                                                                            \
     }                                                                                              \
     return postVisitNode(node);                                                                    \
   }                                                                                                \

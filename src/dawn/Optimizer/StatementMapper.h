@@ -28,11 +28,10 @@ class StatementMapper : public ASTVisitor {
   /// @brief Representation of the current scope which keeps track of the binding of field and
   /// variable names
   struct Scope : public NonCopyable {
-    Scope(const std::string& name,
-          std::vector<std::shared_ptr<StatementAccessesPair>>& statementAccessesPairs,
+    Scope(std::vector<std::shared_ptr<StatementAccessesPair>>& statementAccessesPairs,
           const Interval& interval, const std::shared_ptr<StencilFunctionInstantiation> stencilFun)
         : StatementAccessesPairs(statementAccessesPairs), VerticalInterval(interval), ScopeDepth(0),
-          Name(name), FunctionInstantiation(stencilFun), ArgumentIndex(0) {}
+          FunctionInstantiation(stencilFun), ArgumentIndex(0) {}
 
     /// List of statement/accesses pair of the stencil function or stage
     std::vector<std::shared_ptr<StatementAccessesPair>>& StatementAccessesPairs;
@@ -54,9 +53,6 @@ class StatementMapper : public ASTVisitor {
     /// Nesting of scopes
     int ScopeDepth;
 
-    /// Name of the current stencil or stencil function
-    std::string Name;
-
     /// Reference to the current stencil function (may be NULL)
     std::shared_ptr<StencilFunctionInstantiation> FunctionInstantiation;
 
@@ -76,7 +72,6 @@ class StatementMapper : public ASTVisitor {
 public:
   StatementMapper(StencilInstantiation* instantiation,
                   const std::shared_ptr<std::vector<sir::StencilCall*>>& stackTrace,
-                  std::string stencilName,
                   std::vector<std::shared_ptr<StatementAccessesPair>>& statementAccessesPairs,
                   const Interval& interval,
                   const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,

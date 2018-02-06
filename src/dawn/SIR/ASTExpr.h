@@ -74,7 +74,9 @@ public:
   /// @brief Iterate children (if any)
   virtual ExprRangeType getChildren() { return ExprRangeType(); }
 
-  virtual void replaceChildren(std::shared_ptr<Expr> old_, std::shared_ptr<Expr> new_) {}
+  virtual void replaceChildren(std::shared_ptr<Expr> old_, std::shared_ptr<Expr> new_) {
+    DAWN_ASSERT(false);
+  }
 
   /// @brief Compare for equality
   /// @{
@@ -128,11 +130,7 @@ public:
   virtual bool equals(const Expr* other) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == EK_UnaryOperator; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(operand_); }
-  virtual void replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr) {
-    DAWN_ASSERT(oldExpr == operand_);
-    operand_ = newExpr;
-  }
-
+  virtual void replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr);
   ACCEPTVISITOR(Expr, UnaryOperator)
 };
 
@@ -145,7 +143,7 @@ public:
 class BinaryOperator : public Expr {
 protected:
   enum OperandKind { OK_Left = 0, OK_Right };
-  std::shared_ptr<Expr> operands_[2];
+  std::array<std::shared_ptr<Expr>, 2> operands_;
   std::string op_;
 
 public:
@@ -172,14 +170,8 @@ public:
   virtual bool equals(const Expr* other) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == EK_BinaryOperator; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(operands_); }
-  virtual void replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr) {
-    for(std::shared_ptr<Expr>& expr : operands_) {
-      if(expr == oldExpr)
-        expr = newExpr;
-      return;
-    }
-    DAWN_ASSERT_MSG((false), ("Expression not found"));
-  }
+  virtual void replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr);
+
   ACCEPTVISITOR(Expr, BinaryOperator)
 };
 
@@ -237,7 +229,7 @@ public:
 class TernaryOperator : public Expr {
 protected:
   enum OperandKind { OK_Cond = 0, OK_Left, OK_Right };
-  std::shared_ptr<Expr> operands_[3];
+  std::array<std::shared_ptr<Expr>, 3> operands_;
 
 public:
   /// @name Constructor & Destructor
@@ -268,14 +260,7 @@ public:
   virtual bool equals(const Expr* other) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == EK_TernaryOperator; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(operands_); }
-  virtual void replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr) {
-    for(std::shared_ptr<Expr>& expr : operands_) {
-      if(expr == oldExpr)
-        expr = newExpr;
-      return;
-    }
-    DAWN_ASSERT_MSG((false), ("Expression not found"));
-  }
+  virtual void replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr);
   ACCEPTVISITOR(Expr, TernaryOperator)
 };
 
@@ -320,14 +305,7 @@ public:
   virtual bool equals(const Expr* other) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == EK_FunCallExpr; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(arguments_); }
-  virtual void replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr) {
-    for(std::shared_ptr<Expr>& expr : arguments_) {
-      if(expr == oldExpr)
-        expr = newExpr;
-      return;
-    }
-    DAWN_ASSERT_MSG((false), ("Expression not found"));
-  }
+  virtual void replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr);
   ACCEPTVISITOR(Expr, FunCallExpr)
 };
 
@@ -438,14 +416,7 @@ public:
   virtual ExprRangeType getChildren() override {
     return (isArrayAccess() ? ExprRangeType(index_) : ExprRangeType());
   }
-  virtual void replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr) {
-    if(isArrayAccess()) {
-      DAWN_ASSERT(index_ == oldExpr);
-      index_ = newExpr;
-    } else {
-      DAWN_ASSERT_MSG((false), ("Non array vars have no children"));
-    }
-  }
+  virtual void replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr);
   ACCEPTVISITOR(Expr, VarAccessExpr)
 };
 
