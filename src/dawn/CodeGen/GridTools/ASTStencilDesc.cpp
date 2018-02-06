@@ -66,25 +66,25 @@ void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
 
 void ASTStencilDesc::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
   Extents extents = instantiation_->getBoundaryConditionExtentsFromBCStmt(stmt);
-  int haloIMinus = extents[0].Minus;
-  int haloIPlus = extents[0].Plus;
-  int haloJMinus = extents[1].Minus;
-  int haloJPlus = extents[1].Plus;
-  int haloKMinus = extents[2].Minus;
-  int haloKPlus = extents[2].Plus;
+  int haloIMinus = abs(extents[0].Minus);
+  int haloIPlus = abs(extents[0].Plus);
+  int haloJMinus = abs(extents[1].Minus);
+  int haloJPlus = abs(extents[1].Plus);
+  int haloKMinus = abs(extents[2].Minus);
+  int haloKPlus = abs(extents[2].Plus);
   std::string fieldname = stmt->getFields()[0]->Name;
 
   // Set up the halos
   std::string halosetup = dawn::format(
       "gridtools::array< gridtools::halo_descriptor, 3 > halos;\n"
       "halos[0] =gridtools::halo_descriptor(%i, %i, "
-      "%s.get_storage_info_ptr()->begin<0>(),%s->get_storage_info_ptr()->end<0>(), "
+      "%s.get_storage_info_ptr()->begin<0>(),%s.get_storage_info_ptr()->end<0>(), "
       "%s.get_storage_info_ptr()->total_length<0>());\nhalos[1] = gridtools::halo_descriptor(%i, "
       "%i, "
-      "%s.get_storage_info_ptr()->begin<1>(),%s->get_storage_info_ptr()->end<1>(), "
+      "%s.get_storage_info_ptr()->begin<1>(),%s.get_storage_info_ptr()->end<1>(), "
       "%s.get_storage_info_ptr()->total_length<1>());\nhalos[2] = gridtools::halo_descriptor(%i, "
       "%i, "
-      "%s.get_storage_info_ptr()->begin<2>(),%s->get_storage_info_ptr()->end<2>(), "
+      "%s.get_storage_info_ptr()->begin<2>(),%s.get_storage_info_ptr()->end<2>(), "
       "%s.get_storage_info_ptr()->total_length<2>());\n",
       haloIMinus, haloIPlus, fieldname, fieldname, fieldname, haloJMinus, haloJPlus, fieldname,
       fieldname, fieldname, haloKMinus, haloKPlus, fieldname, fieldname, fieldname);
