@@ -189,6 +189,16 @@ bool PassSetBoundaryCondition::run(StencilInstantiation* stencilInstantiation) {
     return fullExtent;
   };
 
+  auto insertExtentsIntoMap = [](int fieldID, Extents extents, std::unordered_map<int, Extents>& map){
+      auto fieldExtentPair = map.find(fieldID);
+      if(fieldExtentPair==map.end()){
+          map.emplace(fieldID, extents);
+      }
+      else{
+          fieldExtentPair->second.merge(extents);
+      }
+  };
+
   // Loop through all the StmtAccessPair in the stencil forward
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     Stencil& stencil = *stencilPtr;
@@ -289,12 +299,7 @@ bool PassSetBoundaryCondition::run(StencilInstantiation* stencilInstantiation) {
             for(const auto& writeaccess : allWriteAccesses) {
               int originalID = getOriginalID(writeaccess.first);
               if(originalID != FieldType::FT_NotOriginal) {
-                auto fieldwithExtents = stencilDirtyFields.find(originalID);
-                if(fieldwithExtents != stencilDirtyFields.end()) {
-                  (*fieldwithExtents).second.merge(writeaccess.second);
-                } else {
-                  stencilDirtyFields.emplace(originalID, writeaccess.second);
-                }
+                insertExtentsIntoMap(originalID, writeaccess.second, stencilDirtyFields);
               }
             }
           }
@@ -303,7 +308,7 @@ bool PassSetBoundaryCondition::run(StencilInstantiation* stencilInstantiation) {
     }
     // Write all the fields set to dirty within this stencil to the global dirty map
     for(const auto& fieldWithExtends : stencilDirtyFields) {
-      dirtyFields.emplace(fieldWithExtends.first, fieldWithExtends.second);
+      insertExtentsIntoMap(fieldWithExtends.first, fieldWithExtends.second, dirtyFields);
     }
   }
 

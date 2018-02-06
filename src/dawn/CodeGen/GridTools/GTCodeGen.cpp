@@ -748,21 +748,6 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
         "static_assert(gridtools::is_data_store<" + StencilWrapperConstructorTemplates[i] +
         ">::value, \"argument '" + SIRFieldsWithoutTemps[i]->Name +
         "' is not a 'gridtools::data_store' (" + decimalToOrdinal(i + 2) + " argument invalid)\")");
-
-  // Check if the Extents match what they need to be from BC's
-  for(const auto& sfExtentsPair : stencilInstantiation->getBoundaryConditionToExtentsMap()) {
-    const std::shared_ptr<BoundaryConditionDeclStmt>& bc = sfExtentsPair.first;
-    std::shared_ptr<sir::Field> f = bc->getFields()[0];
-    std::string argument = f->Name;
-    int size1 = sfExtentsPair.second[0].Minus;
-    int size2 = sfExtentsPair.second[0].Plus;
-    std::cout << "we want to assert for " << argument << " with " << size1 << " and " << size2
-              << std::endl;
-    StencilWrapperConstructor.addStatement(
-        dawn::format("static_assert(S1::total_length<0> >=S1::total_lenght<0>, \n\"argument `%s` "
-                     "does not contain enough halo lines (%i expected)\")",
-                     argument, size1));
-  }
   StencilWrapperConstructor.commit();
 
   // Generate make_steady method
