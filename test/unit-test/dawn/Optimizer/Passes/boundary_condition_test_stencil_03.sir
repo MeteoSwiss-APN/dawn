@@ -1,0 +1,364 @@
+{
+ "filename": "easy.cpp",
+ "stencils": [
+  {
+   "name": "SplitStencil",
+   "loc": {
+    "Line": 29,
+    "Column": 8
+   },
+   "ast": {
+    "root": {
+     "block_stmt": {
+      "statements": [
+       {
+        "boundary_condition_decl_stmt": {
+         "functor": "zero",
+         "fields": [
+          {
+           "name": "bar",
+           "loc": {
+            "Line": -1,
+            "Column": -1
+           },
+           "is_temporary": false
+          }
+         ],
+         "loc": {
+          "Line": -1,
+          "Column": -1
+         }
+        }
+       },
+       {
+        "boundary_condition_decl_stmt": {
+         "functor": "zero",
+         "fields": [
+          {
+           "name": "foo",
+           "loc": {
+            "Line": -1,
+            "Column": -1
+           },
+           "is_temporary": false
+          }
+         ],
+         "loc": {
+          "Line": -1,
+          "Column": -1
+         }
+        }
+       },
+       {
+        "vertical_region_decl_stmt": {
+         "vertical_region": {
+          "loc": {
+           "Line": 40,
+           "Column": 5
+          },
+          "ast": {
+           "root": {
+            "block_stmt": {
+             "statements": [
+              {
+               "expr_stmt": {
+                "expr": {
+                 "assignment_expr": {
+                  "left": {
+                   "field_access_expr": {
+                    "name": "foo",
+                    "offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 41,
+                     "Column": 7
+                    }
+                   }
+                  },
+                  "op": "=",
+                  "right": {
+                   "field_access_expr": {
+                    "name": "bar",
+                    "offset": [
+                     1,
+                     0,
+                     0
+                    ],
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 41,
+                     "Column": 13
+                    }
+                   }
+                  },
+                  "loc": {
+                   "Line": 41,
+                   "Column": 7
+                  }
+                 }
+                },
+                "loc": {
+                 "Line": 41,
+                 "Column": 7
+                }
+               }
+              },
+              {
+               "expr_stmt": {
+                "expr": {
+                 "assignment_expr": {
+                  "left": {
+                   "field_access_expr": {
+                    "name": "bar",
+                    "offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 42,
+                     "Column": 7
+                    }
+                   }
+                  },
+                  "op": "=",
+                  "right": {
+                   "binary_operator": {
+                    "left": {
+                     "field_access_expr": {
+                      "name": "foo",
+                      "offset": [
+                       -1,
+                       0,
+                       0
+                      ],
+                      "argument_map": [
+                       -1,
+                       -1,
+                       -1
+                      ],
+                      "argument_offset": [
+                       0,
+                       0,
+                       0
+                      ],
+                      "negate_offset": false,
+                      "loc": {
+                       "Line": 42,
+                       "Column": 13
+                      }
+                     }
+                    },
+                    "op": "+",
+                    "right": {
+                     "var_access_expr": {
+                      "name": "glob_foo",
+                      "is_external": true,
+                      "loc": {
+                       "Line": 42,
+                       "Column": 26
+                      }
+                     }
+                    },
+                    "loc": {
+                     "Line": 42,
+                     "Column": 13
+                    }
+                   }
+                  },
+                  "loc": {
+                   "Line": 42,
+                   "Column": 7
+                  }
+                 }
+                },
+                "loc": {
+                 "Line": 42,
+                 "Column": 7
+                }
+               }
+              }
+             ],
+             "loc": {
+              "Line": 40,
+              "Column": 5
+             }
+            }
+           }
+          },
+          "interval": {
+           "lower_offset": 0,
+           "upper_offset": 0,
+           "special_lower_level": "Start",
+           "special_upper_level": "End"
+          },
+          "loop_order": "Forward"
+         },
+         "loc": {
+          "Line": 40,
+          "Column": 5
+         }
+        }
+       }
+      ],
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      }
+     }
+    }
+   },
+   "fields": [
+    {
+     "name": "foo",
+     "loc": {
+      "Line": 30,
+      "Column": 11
+     },
+     "is_temporary": false
+    },
+    {
+     "name": "bar",
+     "loc": {
+      "Line": 31,
+      "Column": 11
+     },
+     "is_temporary": false
+    }
+   ]
+  }
+ ],
+ "stencil_functions": [
+  {
+   "name": "zero",
+   "loc": {
+    "Line": 24,
+    "Column": 8
+   },
+   "asts": [
+    {
+     "root": {
+      "block_stmt": {
+       "statements": [
+        {
+         "expr_stmt": {
+          "expr": {
+           "assignment_expr": {
+            "left": {
+             "field_access_expr": {
+              "name": "a",
+              "offset": [
+               0,
+               0,
+               0
+              ],
+              "argument_map": [
+               -1,
+               -1,
+               -1
+              ],
+              "argument_offset": [
+               0,
+               0,
+               0
+              ],
+              "negate_offset": false,
+              "loc": {
+               "Line": 26,
+               "Column": 16
+              }
+             }
+            },
+            "op": "=",
+            "right": {
+             "literal_access_expr": {
+              "value": "0",
+              "type": {
+               "type_id": "Integer"
+              },
+              "loc": {
+               "Line": 26,
+               "Column": 20
+              }
+             }
+            },
+            "loc": {
+             "Line": 26,
+             "Column": 16
+            }
+           }
+          },
+          "loc": {
+           "Line": 26,
+           "Column": 16
+          }
+         }
+        }
+       ],
+       "loc": {
+        "Line": 26,
+        "Column": 14
+       }
+      }
+     }
+    }
+   ],
+   "intervals": [],
+   "arguments": [
+    {
+     "field_value": {
+      "name": "a",
+      "loc": {
+       "Line": 25,
+       "Column": 11
+      },
+      "is_temporary": false
+     }
+    }
+   ]
+  }
+ ],
+ "global_variables": {
+  "map": {
+   "glob_foo": {
+    "is_constexpr": false,
+    "integer_value": 12
+   }
+  }
+ }
+}

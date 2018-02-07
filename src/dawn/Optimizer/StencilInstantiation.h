@@ -402,7 +402,6 @@ public:
     }
     else{
         FieldnameToBoundaryConditionMap_.emplace(originalFieldName, bc);
-        std::cout << "emplaced " << std::endl;
         return true;
     }
   }
