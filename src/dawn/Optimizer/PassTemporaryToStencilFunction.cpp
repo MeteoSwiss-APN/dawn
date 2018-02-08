@@ -32,8 +32,9 @@ sir::Interval intervalToSIRInterval(Interval interval) {
 }
 
 struct TemporaryFunctionProperties {
-  std::shared_ptr<StencilFunCallExpr> stencilFunction_;
+  std::shared_ptr<StencilFunCallExpr> stencilFunCallExpr_;
   std::vector<int> accessIDArgs_;
+  std::shared_ptr<sir::StencilFunction> sirStencilFunction_;
 };
 
 class TmpAssignment : public ASTVisitorPostOrder, public NonCopyable {
@@ -146,6 +147,8 @@ protected:
   const sir::Interval interval_;
   std::shared_ptr<std::vector<sir::StencilCall*>> stackTrace_;
 
+  unsigned int numTmpReplaced_ = 0;
+
 public:
   TmpReplacement(std::shared_ptr<StencilInstantiation> instantiation,
                  std::unordered_map<int, TemporaryFunctionProperties> const&
@@ -163,6 +166,9 @@ public:
            std::to_string(expr->getOffset()[1]) + "_k" + std::to_string(expr->getOffset()[2]);
   }
 
+  unsigned int getNumTmpReplaced() { return numTmpReplaced_; }
+  void resetNumTmpReplaced() { numTmpReplaced_ = 0; }
+
   /// @name Expression implementation
   /// @{
   virtual bool preVisitNode(std::shared_ptr<FieldAccessExpr> expr) override {
@@ -179,17 +185,30 @@ public:
     if(instantiation_->hasStencilFunctionInstantiation(fnClone))
       return true;
 
+    DAWN_ASSERT(temporaryFieldAccessIDToFunctionCall_.count(accessID));
+
+    std::shared_ptr<sir::StencilFunction> sirStencilFunction =
+        temporaryFieldAccessIDToFunctionCall_.at(accessID).sirStencilFunction_;
+
+    std::shared_ptr<sir::StencilFunction> sirStencilFunctionInstance =
+        std::make_shared<sir::StencilFunction>(*sirStencilFunction);
+
+    sirStencilFunctionInstance->Name = fnClone;
+
+    // insert the sir::stencilFunction into the StencilInstantiation
+    instantiation_->insertStencilFunctionIntoSIR(sirStencilFunctionInstance);
+
     std::shared_ptr<StencilFunctionInstantiation> cloneStencilFun =
         instantiation_->cloneStencilFunctionCandidate(stencilFun, fnClone);
 
     auto& accessIDsOfArgs = temporaryFieldAccessIDToFunctionCall_.at(accessID).accessIDArgs_;
 
-    for(auto accessID : (accessIDsOfArgs)) {
+    for(auto accessID_ : (accessIDsOfArgs)) {
       std::shared_ptr<FieldAccessExpr> arg = std::make_shared<FieldAccessExpr>(
-          instantiation_->getNameFromAccessID(accessID), expr->getOffset());
+          instantiation_->getNameFromAccessID(accessID_), expr->getOffset());
       cloneStencilFun->getExpression()->insertArgument(arg);
 
-      instantiation_->mapExprToAccessID(arg, accessID);
+      instantiation_->mapExprToAccessID(arg, accessID_);
     }
 
     //    instantiation_->getStencilFunctionInstantiation()
@@ -231,6 +250,7 @@ public:
 
     auto stencilFunCall = instantiation_->getStencilFunctionInstantiation(callee)->getExpression();
 
+    numTmpReplaced_++;
     return stencilFunCall;
   }
 
@@ -255,11 +275,12 @@ bool PassTemporaryToStencilFunction::run(
 
       for(const auto& stagePtr : multiStage->getStages()) {
 
+        bool isATmpReplaced = false;
         for(const auto& doMethodPtr : stagePtr->getDoMethods()) {
-          for(const auto& stmtAccessPair : doMethodPtr->getStatementAccessesPairs()) {
-            const Statement& stmt = *(stmtAccessPair->getStatement());
+          for(auto& stmtAccessPair : doMethodPtr->getStatementAccessesPairs()) {
+            const std::shared_ptr<Statement> stmt = stmtAccessPair->getStatement();
 
-            if(stmt.ASTStmt->getKind() != Stmt::SK_ExprStmt)
+            if(stmt->ASTStmt->getKind() != Stmt::SK_ExprStmt)
               continue;
 
             // TODO catch a temp expr
@@ -268,7 +289,7 @@ bool PassTemporaryToStencilFunction::run(
               const sir::Interval sirInterval = intervalToSIRInterval(interval);
 
               TmpAssignment tmpAssignment(stencilInstantiation, sirInterval);
-              stmt.ASTStmt->acceptAndReplace(tmpAssignment);
+              stmt->ASTStmt->acceptAndReplace(tmpAssignment);
               if(tmpAssignment.foundTemporaryToReplace()) {
 
                 std::shared_ptr<sir::StencilFunction> stencilFunction =
@@ -286,7 +307,8 @@ bool PassTemporaryToStencilFunction::run(
                 temporaryFieldExprToFunction.emplace(
                     stencilInstantiation->getAccessIDFromExpr(
                         tmpAssignment.getTemporaryFieldAccessExpr()),
-                    TemporaryFunctionProperties{stencilFunCallExpr, tmpAssignment.getAccessIDs()});
+                    TemporaryFunctionProperties{stencilFunCallExpr, tmpAssignment.getAccessIDs(),
+                                                stencilFunction});
 
                 auto stencilFun = stencilInstantiation->makeStencilFunctionInstantiation(
                     stencilFunCallExpr, stencilFunction, ast, sirInterval, nullptr);
@@ -298,10 +320,34 @@ bool PassTemporaryToStencilFunction::run(
                 //////////
               }
               TmpReplacement tmpReplacement(stencilInstantiation, temporaryFieldExprToFunction,
-                                            sirInterval, stmt.StackTrace);
-              stmt.ASTStmt->acceptAndReplace(tmpReplacement);
+                                            sirInterval, stmt->StackTrace);
+              stmt->ASTStmt->acceptAndReplace(tmpReplacement);
+              isATmpReplaced = isATmpReplaced || (tmpReplacement.getNumTmpReplaced() != 0);
+
+              if(tmpReplacement.getNumTmpReplaced() != 0) {
+                std::vector<std::shared_ptr<StatementAccessesPair>> listStmtPair;
+
+                // TODO need to combine call to StatementMapper with computeAccesses in a clean
+                // way
+                StatementMapper statementMapper(
+                    stencilInstantiation.get(), stmt->StackTrace, listStmtPair, sirInterval,
+                    stencilInstantiation->getNameToAccessIDMap(), nullptr);
+
+                std::shared_ptr<BlockStmt> blockStmt =
+                    std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{stmt->ASTStmt});
+                blockStmt->accept(statementMapper);
+                DAWN_ASSERT(listStmtPair.size() == 1);
+
+                std::shared_ptr<StatementAccessesPair> stmtPair = listStmtPair[0];
+                computeAccesses(stencilInstantiation.get(), stmtPair);
+
+                stmtAccessPair = stmtPair;
+              }
             }
           }
+        }
+        if(isATmpReplaced) {
+          stagePtr->update();
         }
       }
     }

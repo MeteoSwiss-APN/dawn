@@ -42,7 +42,7 @@ class StatementMapper : public ASTVisitor {
     std::stack<std::shared_ptr<StatementAccessesPair>> CurentStmtAccessesPair;
 
     /// The current interval
-    const Interval& VerticalInterval;
+    const Interval VerticalInterval;
 
     /// Scope variable name to (global) AccessID
     std::unordered_map<std::string, int> LocalVarNameToAccessIDMap;
@@ -68,6 +68,8 @@ class StatementMapper : public ASTVisitor {
   std::shared_ptr<std::vector<sir::StencilCall*>> stackTrace_;
 
   std::stack<std::shared_ptr<Scope>> scope_;
+
+  bool initializedWithBlockStmt_ = false;
 
 public:
   StatementMapper(StencilInstantiation* instantiation,

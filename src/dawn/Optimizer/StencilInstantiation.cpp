@@ -693,6 +693,11 @@ bool StencilInstantiation::isGlobalVariable(const std::string& name) const {
   return it == NameToAccessIDMap_.end() ? false : isGlobalVariable(it->second);
 }
 
+void StencilInstantiation::insertStencilFunctionIntoSIR(
+    std::shared_ptr<sir::StencilFunction> sirStencilFunction) {
+  SIR_->StencilFunctions.push_back(sirStencilFunction);
+}
+
 const sir::Value& StencilInstantiation::getGlobalVariableValue(const std::string& name) const {
   auto it = getSIR()->GlobalVariableMap->find(name);
   DAWN_ASSERT(it != getSIR()->GlobalVariableMap->end());

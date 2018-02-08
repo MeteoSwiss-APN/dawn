@@ -165,6 +165,7 @@ void Stage::update() {
     for(const auto& statementAccessesPair : doMethod.getStatementAccessesPairs()) {
       statementAccessesPair->getStatement()->ASTStmt->accept(functionCallGlobaParamVisitor);
       const auto& access = statementAccessesPair->getAccesses();
+      DAWN_ASSERT(access);
 
       for(const auto& accessPair : access->getWriteAccesses()) {
         int AccessID = accessPair.first;

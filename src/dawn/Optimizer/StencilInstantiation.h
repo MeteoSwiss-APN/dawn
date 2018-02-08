@@ -394,6 +394,8 @@ public:
   /// @brief Get the SIR
   const std::shared_ptr<SIR> getSIR() const { return SIR_; }
 
+  void insertStencilFunctionIntoSIR(std::shared_ptr<sir::StencilFunction> sirStencilFunction);
+
   /// @brief Get the SIRStencil this context was built from
   const std::shared_ptr<sir::Stencil> getSIRStencil() const { return SIRStencil_; }
 

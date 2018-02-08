@@ -384,7 +384,8 @@ void StencilFunctionInstantiation::update() {
   std::unordered_map<int, Field> outputFields;
 
   for(const auto& statementAccessesPair : statementAccessesPairs_) {
-    auto& access = statementAccessesPair->getAccesses();
+    auto access = statementAccessesPair->getAccesses();
+    DAWN_ASSERT(access);
 
     for(const auto& accessPair : access->getWriteAccesses()) {
       int AccessID = accessPair.first;
