@@ -35,7 +35,10 @@ class OptimizerContext;
 /// @ingroup optimizer
 class StencilInstantiation : NonCopyable {
 
+  ///@brief struct with properties of a stencil function instantiation candidate
   struct StencilFunctionInstantiationCandidate {
+    /// stencil function instantiation from where the stencil function instantiation candidate is
+    /// called
     std::shared_ptr<StencilFunctionInstantiation> callerStencilFunction_;
   };
 
@@ -107,6 +110,9 @@ class StencilInstantiation : NonCopyable {
                      std::shared_ptr<StencilFunctionInstantiation>>
       ExprToStencilFunctionInstantiationMap_;
 
+  std::unordered_map<std::string, std::shared_ptr<StencilFunctionInstantiation>>
+      nameToStencilFunctionInstantiationMap_;
+
   std::unordered_map<std::shared_ptr<StencilFunctionInstantiation>,
                      StencilFunctionInstantiationCandidate>
       stencilFunInstantiationCandidate_;
@@ -136,6 +142,9 @@ public:
 
   /// @brief Get the `name` associated with the `StageID`
   const std::string& getNameFromStageID(int StageID) const;
+
+  /// @brief insert an element to the maps of stencil functions
+  void insertExprToStencilFunction(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
 
   /// @brief Get the orginal `name` and a list of source locations of the field (or variable)
   /// associated with the `AccessID` in the given statement.
@@ -202,9 +211,12 @@ public:
 
   /// @brief Add a new version to the field/local variable given by `AccessID`
   ///
-  /// This will create a **new** field and trigger a renaming of all the remaining occurences in the
-  /// AccessID maps either above or below that statement, starting one statment before or after the
-  /// current statement. Optionally, an `Expr` can be passed which will be renamed as well (usually
+  /// This will create a **new** field and trigger a renaming of all the remaining occurences in
+  /// the
+  /// AccessID maps either above or below that statement, starting one statment before or after
+  /// the
+  /// current statement. Optionally, an `Expr` can be passed which will be renamed as well
+  /// (usually
   /// the left- or right-hand side of an assignment).
   ///
   /// Consider the following example:
@@ -262,7 +274,8 @@ public:
 
   /// @brief Get the `AccessID` associated with the `name`
   ///
-  /// Note that this only works for field and variable names, the mapping of literals AccessIDs and
+  /// Note that this only works for field and variable names, the mapping of literals AccessIDs
+  /// and
   /// their name is a not bijective!
   int getAccessIDFromName(const std::string& name) const;
 
@@ -436,6 +449,11 @@ public:
   /// `makeStencilCallCodeGenName`
   static bool isStencilCallCodeGenName(const std::string& name);
 
+  /// @brief it finalizes the stencil function instantation. The stencil function instantatiation
+  /// is
+  /// moved from candidate to the final storage of stencil instantiations. And maps storing
+  /// stencil
+  /// functions of the stencil instantiation are updated
   void finalizeStencilFunctionSetup(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
 
 private:

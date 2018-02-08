@@ -211,7 +211,6 @@ public:
       instantiation_->mapExprToAccessID(arg, accessID_);
     }
 
-    //    instantiation_->getStencilFunctionInstantiation()
     // TODO coming from stencil functions is not yet supported
     for(int idx : expr->getArgumentMap()) {
       DAWN_ASSERT(idx == -1);

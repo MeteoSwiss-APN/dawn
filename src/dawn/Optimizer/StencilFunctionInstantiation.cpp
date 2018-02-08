@@ -321,16 +321,28 @@ StencilFunctionInstantiation::getAccessIDToNameMap() const {
   return AccessIDToNameMap_;
 }
 
-std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
-                   std::shared_ptr<StencilFunctionInstantiation>>&
-StencilFunctionInstantiation::getExprToStencilFunctionInstantiationMap() {
-  return ExprToStencilFunctionInstantiationMap_;
-}
-
 const std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
                          std::shared_ptr<StencilFunctionInstantiation>>&
 StencilFunctionInstantiation::getExprToStencilFunctionInstantiationMap() const {
   return ExprToStencilFunctionInstantiationMap_;
+}
+
+void StencilFunctionInstantiation::insertExprToStencilFunction(
+    std::shared_ptr<StencilFunctionInstantiation> stencilFun) {
+  ExprToStencilFunctionInstantiationMap_.emplace(stencilFun->getExpression(), stencilFun);
+  nameToStencilFunctionInstantiationMap_.emplace(stencilFun->getExpression()->getCallee(),
+                                                 stencilFun);
+}
+
+void StencilFunctionInstantiation::removeStencilFunctionInstantiation(
+    const std::shared_ptr<StencilFunCallExpr> expr) {
+  ExprToStencilFunctionInstantiationMap_.erase(expr);
+  nameToStencilFunctionInstantiationMap_.erase(expr->getCallee());
+}
+
+const std::unordered_map<std::string, std::shared_ptr<StencilFunctionInstantiation>>&
+StencilFunctionInstantiation::getNameToStencilFunctionInstantiationMap() const {
+  return nameToStencilFunctionInstantiationMap_;
 }
 
 std::shared_ptr<StencilFunctionInstantiation>
@@ -628,9 +640,9 @@ void StencilFunctionInstantiation::closeFunctionBindings() {
 void StencilFunctionInstantiation::checkFunctionBindings() const {
 
   const auto& arguments = getArguments();
-  // Assign the AccessIDs of the fields in the stencil function
 
   for(std::size_t argIdx = 0; argIdx < arguments.size(); ++argIdx) {
+    // check that all arguments of all possible types are assigned
     if(isa<sir::Field>(*arguments[argIdx])) {
       DAWN_ASSERT_MSG(
           (isArgBoundAsFieldAccess(argIdx) || isArgBoundAsFunctionInstantiation(argIdx)),
@@ -646,7 +658,7 @@ void StencilFunctionInstantiation::checkFunctionBindings() const {
       dawn_unreachable("Argument not supported");
   }
 
-  // TODO recover
+  // check that the list of <statement,access> are set for all statements
   DAWN_ASSERT_MSG((getAST()->getRoot()->getStatements().size() == statementAccessesPairs_.size()),
                   "AST has different number of statements as the statement accesses pairs");
 }

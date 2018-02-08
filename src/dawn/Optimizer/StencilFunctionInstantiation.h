@@ -146,6 +146,10 @@ private:
                      std::shared_ptr<StencilFunctionInstantiation>>
       ExprToStencilFunctionInstantiationMap_;
 
+  /// Referenced stencil functions within this stencil function
+  std::unordered_map<std::string, std::shared_ptr<StencilFunctionInstantiation>>
+      nameToStencilFunctionInstantiationMap_;
+
   //===----------------------------------------------------------------------------------------===//
   //     Accesses & Fields
 
@@ -190,6 +194,8 @@ public:
   std::set<int> const& getAccessIDSetGlobalVariables() const { return GlobalVariableAccessIDSet_; }
   /// @}
 
+  void removeStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr> expr);
+
   /// @brief get the name of the arg parameter of the stencil function which is called passing
   /// another function
   ///
@@ -223,19 +229,24 @@ public:
   Array3i evalOffsetOfFieldAccessExpr(const std::shared_ptr<FieldAccessExpr>& expr,
                                       bool applyInitialOffset = true) const;
 
+  /// @brief returns true if the argument in the argumentIndex position is bound to an offset
+  /// argument
+  bool isArgBoundAsOffset(int argumentIndex) const;
+
+  /// @brief returns true if the argument in the argumentIndex position is bound to a direction
+  /// argument
+  bool isArgBoundAsDirection(int argumentIndex) const;
+
+  /// @brief returns true if the argument in the argumentIndex position is bound to a stencil
+  /// function argument
+  bool isArgBoundAsFunctionInstantiation(int argumentIndex) const;
+
+  /// @brief returns true if the argument in the argumentIndex position is bound to a field argument
+  bool isArgBoundAsFieldAccess(int argumentIndex) const;
+
   //===----------------------------------------------------------------------------------------===//
   //     Argument Maps
   //===----------------------------------------------------------------------------------------===//
-
-  bool isArgBoundAsOffset(int argumentIndex) const;
-
-  bool isArgBoundAsDirection(int argumentIndex) const;
-
-  bool isArgBoundAsField(int argumentIndex) const;
-
-  bool isArgBoundAsFunctionInstantiation(int argumentIndex) const;
-
-  bool isArgBoundAsFieldAccess(int argumentIndex) const;
 
   /// @brief Get/Set the instantiated dimension of the caller of the direction argument given the
   /// argument index
@@ -341,18 +352,21 @@ public:
   const std::unordered_map<int, std::string>& getAccessIDToNameMap() const;
 
   /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
-  std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
-                     std::shared_ptr<StencilFunctionInstantiation>>&
-  getExprToStencilFunctionInstantiationMap();
   const std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
                            std::shared_ptr<StencilFunctionInstantiation>>&
   getExprToStencilFunctionInstantiationMap() const;
+
+  /// @brief Get StencilFunctionInstantiation by name
+  const std::unordered_map<std::string, std::shared_ptr<StencilFunctionInstantiation>>&
+  getNameToStencilFunctionInstantiationMap() const;
 
   /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
   std::shared_ptr<StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr);
   const std::shared_ptr<StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) const;
+
+  void insertExprToStencilFunction(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
 
   //===----------------------------------------------------------------------------------------===//
   //     Accesses & Fields
@@ -403,13 +417,16 @@ public:
   bool isNested() const;
 
   /// @brief Get the underlying AST stencil function call expression
-  //  std::shared_ptr<StencilFunCallExpr>& getExpression() { return expr_; }
   const std::shared_ptr<StencilFunCallExpr>& getExpression() const { return expr_; }
 
+  /// @brief Set the underlying AST stencil function call expression
   void setExpression(std::shared_ptr<StencilFunCallExpr> expr) { expr_ = expr; }
 
+  /// @brief finalizes the binding of the arguments of a stencil function.
+  /// In particular it associates new accessIDs of arguments that are nested stencil function calls
   void closeFunctionBindings();
 
+  /// @brief that all the function bindings are properly set
   void checkFunctionBindings() const;
 
   /// @brief Dump the stencil function instantiation to stdout

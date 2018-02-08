@@ -266,7 +266,7 @@ public:
 
     } else {
       // Inlining failed, transfer ownership
-      instantiation_->getExprToStencilFunctionInstantiationMap().emplace(expr, func);
+      instantiation_->insertExprToStencilFunction(func);
     }
 
     if(!argListScope_.empty())

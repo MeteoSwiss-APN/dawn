@@ -977,10 +977,11 @@ void StencilInstantiation::removeStencilFunctionInstantiation(
 
   if(callerStencilFunctionInstantiation) {
     func = callerStencilFunctionInstantiation->getStencilFunctionInstantiation(expr);
-    callerStencilFunctionInstantiation->getExprToStencilFunctionInstantiationMap().erase(expr);
+    callerStencilFunctionInstantiation->removeStencilFunctionInstantiation(expr);
   } else {
     func = getStencilFunctionInstantiation(expr);
     ExprToStencilFunctionInstantiationMap_.erase(expr);
+    nameToStencilFunctionInstantiationMap_.erase(expr->getCallee());
   }
 
   for(auto it = stencilFunctionInstantiations_.begin();
@@ -1002,13 +1003,8 @@ StencilInstantiation::getStencilFunctionInstantiation(
 
 const std::shared_ptr<StencilFunctionInstantiation>
 StencilInstantiation::getStencilFunctionInstantiation(const std::string stencilFunName) const {
-  auto it = std::find_if(ExprToStencilFunctionInstantiationMap_.begin(),
-                         ExprToStencilFunctionInstantiationMap_.end(),
-                         [&](std::pair<std::shared_ptr<StencilFunCallExpr>,
-                                       std::shared_ptr<StencilFunctionInstantiation>> const& pair) {
-                           return (pair.first->getCallee() == stencilFunName);
-                         });
-  DAWN_ASSERT(it != ExprToStencilFunctionInstantiationMap_.end());
+  auto it = nameToStencilFunctionInstantiationMap_.find(stencilFunName);
+  DAWN_ASSERT_MSG(it != nameToStencilFunctionInstantiationMap_.end(), "Invalid stencil function");
   return it->second;
 }
 
@@ -1027,7 +1023,6 @@ StencilInstantiation::getStencilFunctionInstantiationCandidate(
   return it->first;
 }
 
-// TODO all the finds by name are expensive operations, replace data structure?
 bool StencilInstantiation::hasStencilFunctionInstantiationCandidate(
     const std::string stencilFunName) const {
   auto it = std::find_if(stencilFunInstantiationCandidate_.begin(),
@@ -1116,24 +1111,34 @@ StencilInstantiation::makeStencilFunctionInstantiation(
   return stencilFun;
 }
 
+void StencilInstantiation::insertExprToStencilFunction(
+    std::shared_ptr<StencilFunctionInstantiation> stencilFun) {
+  ExprToStencilFunctionInstantiationMap_.emplace(stencilFun->getExpression(), stencilFun);
+  nameToStencilFunctionInstantiationMap_.emplace(stencilFun->getExpression()->getCallee(),
+                                                 stencilFun);
+}
+
 void StencilInstantiation::finalizeStencilFunctionSetup(
     std::shared_ptr<StencilFunctionInstantiation> stencilFun) {
 
   DAWN_ASSERT(stencilFunInstantiationCandidate_.count(stencilFun));
   stencilFun->closeFunctionBindings();
 
+  // We take the candidate to stencil function and placed it in the stencil function instantiations
+  // container
   StencilFunctionInstantiationCandidate candidate = stencilFunInstantiationCandidate_[stencilFun];
 
+  // map of expr to stencil function instantiation is updated
   if(candidate.callerStencilFunction_) {
-    candidate.callerStencilFunction_->getExprToStencilFunctionInstantiationMap().emplace(
-        stencilFun->getExpression(), stencilFun);
+    candidate.callerStencilFunction_->insertExprToStencilFunction(stencilFun);
   } else {
-    ExprToStencilFunctionInstantiationMap_.emplace(stencilFun->getExpression(), stencilFun);
+    insertExprToStencilFunction(stencilFun);
   }
 
   stencilFun->update();
 
   stencilFunctionInstantiations_.push_back(stencilFun);
+  // we remove the candidate to stencil function
   stencilFunInstantiationCandidate_.erase(stencilFun);
 }
 
