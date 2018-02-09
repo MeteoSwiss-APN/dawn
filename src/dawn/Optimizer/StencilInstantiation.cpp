@@ -1034,22 +1034,13 @@ bool StencilInstantiation::hasStencilFunctionInstantiationCandidate(
   return (it != stencilFunInstantiationCandidate_.end());
 }
 
-// TODO all the finds by name are expensive operations, replace data structure?
 bool StencilInstantiation::hasStencilFunctionInstantiation(const std::string stencilFunName) const {
-  auto it =
-      std::find_if(stencilFunctionInstantiations_.begin(), stencilFunctionInstantiations_.end(),
-                   [&](std::shared_ptr<StencilFunctionInstantiation> const& fun) {
-                     return (fun->getExpression()->getCallee() == stencilFunName);
-                   });
-  return (it != stencilFunctionInstantiations_.end());
+  auto it = nameToStencilFunctionInstantiationMap_.find(stencilFunName);
+  return it != nameToStencilFunctionInstantiationMap_.end();
 }
 
 std::shared_ptr<StencilFunctionInstantiation>
 StencilInstantiation::getStencilFunctionInstantiationCandidate(const std::string stencilFunName) {
-  std::cout << "Looking for " << stencilFunName << std::endl;
-  for(auto ii : stencilFunInstantiationCandidate_) {
-    std::cout << " KK " << ii.first->getExpression()->getCallee() << std::endl;
-  }
   auto it = std::find_if(stencilFunInstantiationCandidate_.begin(),
                          stencilFunInstantiationCandidate_.end(),
                          [&](std::pair<std::shared_ptr<StencilFunctionInstantiation>,

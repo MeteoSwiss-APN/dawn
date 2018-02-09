@@ -147,7 +147,7 @@ std::shared_ptr<Stmt> ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<ExprS
     return node;
 
   auto repl = node->getExpr()->acceptAndReplace(*this);
-  if(repl)
+  if(repl && repl != node->getExpr())
     node->replaceChildren(node->getExpr(), repl);
   return postVisitNode(node);
 }
@@ -160,7 +160,7 @@ std::shared_ptr<Stmt> ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<Retur
   if(!preVisitNode(node))
     return node;
   auto repl = node->getExpr()->acceptAndReplace(*this);
-  if(repl)
+  if(repl && repl != node->getExpr())
     node->replaceChildren(node->getExpr(), repl);
   return postVisitNode(node);
 }
@@ -174,7 +174,7 @@ std::shared_ptr<Stmt> ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<VarDe
     return node;
   for(auto expr : node->getInitList()) {
     auto repl = expr->acceptAndReplace(*this);
-    if(repl)
+    if(repl && repl != expr)
       node->replaceChildren(expr, repl);
   }
   return postVisitNode(node);
@@ -190,7 +190,9 @@ ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<dawn::VerticalRegionDeclStm
   // TODO replace this as wel
   if(!preVisitNode(stmt))
     return stmt;
-  stmt->getVerticalRegion()->Ast->acceptAndReplace(*this);
+  auto repl = stmt->getVerticalRegion()->Ast->acceptAndReplace(*this);
+  if(repl && repl != stmt->getVerticalRegion()->Ast)
+    stmt->getVerticalRegion()->Ast = repl;
   return postVisitNode(stmt);
 }
 

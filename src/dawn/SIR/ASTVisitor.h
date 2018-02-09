@@ -121,13 +121,22 @@ public:
   /// @}
 };
 
-/// @brief Visitor which forwards all calls to their children by default
+/// @brief Visitor post order that traverses the AST and replaces nodes according the post visit of
+/// a node
+/// Assume we have the following tree: A -> B, C. Then the traversal execution will do the
+/// following:
+///   previsit(A) (stop traversal if returns false)
+///   B'=visitAndReplace(B) ->recursive
+///   if(B' != B) A -> B'  (remove B)
+///   C'=visitAndReplace(C) ->recursive
+///   if(C' != C) A -> C' (remove B)
+///   return postvisit(A) (modify parent A and return it to its parent)
 /// @ingroup sir
 class ASTVisitorPostOrder {
 public:
   virtual ~ASTVisitorPostOrder();
 
-  /// @brief Statements
+  /// @brief visitAndReplace will do a full traverse of this node for Statements
   /// @{
   virtual std::shared_ptr<Stmt> visitAndReplace(std::shared_ptr<BlockStmt> stmt);
   virtual std::shared_ptr<Stmt> visitAndReplace(std::shared_ptr<ExprStmt> stmt);
@@ -139,7 +148,7 @@ public:
   virtual std::shared_ptr<Stmt> visitAndReplace(std::shared_ptr<IfStmt> stmt);
   /// @}
 
-  /// @brief Expressions
+  /// @brief visitAndReplace will do a full traverse of this node for Expressions
   /// @{
   virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<NOPExpr> expr) final;
   virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<UnaryOperator> expr);
@@ -153,7 +162,8 @@ public:
   virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<FieldAccessExpr> expr);
   virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<LiteralAccessExpr> expr);
 
-  /// @brief Statements
+  /// @brief pre-visit the node for Statements and returns true if we should continue the tree
+  /// traversal
   /// @{
   virtual bool preVisitNode(std::shared_ptr<BlockStmt> stmt);
   virtual bool preVisitNode(std::shared_ptr<ExprStmt> stmt);
@@ -165,7 +175,8 @@ public:
   virtual bool preVisitNode(std::shared_ptr<IfStmt> stmt);
   /// @}
 
-  /// @brief Expressions
+  /// @brief pre-visit the node for Expressions and returns true if we should continue the tree
+  /// traversal
   /// @{
   virtual bool preVisitNode(std::shared_ptr<NOPExpr> expr);
   virtual bool preVisitNode(std::shared_ptr<UnaryOperator> expr);
@@ -181,7 +192,8 @@ public:
 
   /// @}
 
-  /// @brief Statements
+  /// @brief post-visit the node for Statements and returns a modified/new version of the statement
+  /// node to be returned to the parent
   /// @{
   virtual std::shared_ptr<Stmt> postVisitNode(std::shared_ptr<BlockStmt> stmt);
   virtual std::shared_ptr<Stmt> postVisitNode(std::shared_ptr<ExprStmt> stmt);
@@ -193,7 +205,8 @@ public:
   virtual std::shared_ptr<Stmt> postVisitNode(std::shared_ptr<IfStmt> stmt);
   /// @}
 
-  /// @brief Expressions
+  /// @brief post-visit the node for Expressions and returns a modified/new version of the
+  /// expression node to be returned to the parent
   /// @{
   virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<NOPExpr> expr);
   virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<UnaryOperator> expr);
