@@ -30,7 +30,7 @@ class UnusedFieldVisitor : public ASTVisitorForwarding {
   int AccessID_;
   bool fieldIsUnused_;
   const std::shared_ptr<StencilInstantiation>& instantiation_;
-  std::stack<StencilFunctionInstantiation*> functionInstantiationStack_;
+  std::stack<std::shared_ptr<const StencilFunctionInstantiation>> functionInstantiationStack_;
 
 public:
   UnusedFieldVisitor(int AccessID, const std::shared_ptr<StencilInstantiation>& instantiation)

@@ -74,13 +74,8 @@ class Inliner : public ASTVisitor {
 
 public:
   Inliner(PassInlining::InlineStrategyKind strategy,
-<<<<<<< HEAD
           std::shared_ptr<StencilFunctionInstantiation> stencilFunctioninstantiation,
           std::shared_ptr<StatementAccessesPair> oldStmtAccessesPair,
-=======
-          StencilFunctionInstantiation* stencilFunctioninstantiation,
-          std::shared_ptr<StatementAccessesPair>& oldStmtAccessesPair,
->>>>>>> temporary_intervals
           std::vector<std::shared_ptr<StatementAccessesPair>>& newStmtAccessesPairs,
           int AccessIDOfCaller = 0)
       : strategy_(strategy), curStencilFunctioninstantiation_(stencilFunctioninstantiation),
@@ -446,13 +441,8 @@ public:
 /// `Inliner` instance (or NULL) is returned as well)
 static std::pair<bool, std::shared_ptr<Inliner>>
 tryInlineStencilFunction(PassInlining::InlineStrategyKind strategy,
-<<<<<<< HEAD
                          std::shared_ptr<StencilFunctionInstantiation> stencilFunc,
                          std::shared_ptr<StatementAccessesPair> oldStmtAccessesPair,
-=======
-                         StencilFunctionInstantiation* stencilFunc,
-                         std::shared_ptr<StatementAccessesPair>& oldStmtAccessesPair,
->>>>>>> temporary_intervals
                          std::vector<std::shared_ptr<StatementAccessesPair>>& newStmtAccessesPairs,
                          int AccessIDOfCaller) {
 
