@@ -28,7 +28,7 @@ if(NOT DEFINED GTCLANG_VERSION_PATCH)
 endif()
 
 if(NOT DEFINED GTCLANG_VERSION)
-  set(GTCLANG_VERSION_STRING 
+  set(GTCLANG_VERSION 
       ${GTCLANG_VERSION_MAJOR}.${GTCLANG_VERSION_MINOR}.${GTCLANG_VERSION_PATCH}
       CACHE INTERNAL "Version of gtclang" FORCE)
 endif()
@@ -46,7 +46,7 @@ string(TOLOWER ${MCHBUILD_PLATFORM_STRING} platform)
 string(TOLOWER ${CMAKE_CXX_COMPILER_ID} compiler)
 set(compiler "${compiler}-${CMAKE_CXX_COMPILER_VERSION}")
 set(GTCLANG_FULL_VERSION 
-    "${GTCLANG_VERSION_STRING}-${GTCLANG_GIT_HASH}-${architecture}-${platform}-${compiler}"
+    "${GTCLANG_VERSION}-${GTCLANG_GIT_HASH}-${architecture}-${platform}-${compiler}"
     CACHE STRING "Full version string of gtclang" FORCE)
 
 # Building configs

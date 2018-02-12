@@ -129,9 +129,12 @@ if(GTCLANG_DOCUMENTATION)
   add_subdirectory(docs)
 endif()
 
+gtclang_gen_install_config()
+
 # Install headers
 install(
   DIRECTORY src/ 
   DESTINATION ${GTCLANG_INSTALL_INCLUDE_DIR} 
   FILES_MATCHING PATTERN "*.h" PATTERN "*.inc" PATTERN "*.hpp"
 )
+

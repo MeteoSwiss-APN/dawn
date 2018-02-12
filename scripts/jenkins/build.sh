@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 module load git
 module load cmake
 module load gcc/5.4.0-2.26

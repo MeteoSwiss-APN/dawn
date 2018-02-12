@@ -14,6 +14,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+include(CMakePackageConfigHelpers)
 include(mchbuildCheckAndSetCXXFlag)
 
 # gtclang_set_cxx_flags
@@ -73,3 +74,39 @@ macro(gtclang_set_cxx_flags)
     endif()
   endif()
 endmacro()
+
+# gtclang_gen_install_config
+# -----------------------
+#
+# Create the CMake packge configuration for installation.
+#
+macro(gtclang_gen_install_config)
+  # Export version
+  write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/gtclangConfigVersion.cmake"
+    VERSION ${GTCLANG_VERSION}
+    COMPATIBILITY AnyNewerVersion
+  )
+
+  set(GTCLANG_INSTALL_ROOT "")
+
+  configure_package_config_file(
+    ${CMAKE_SOURCE_DIR}/cmake/templates/gtclangConfig.cmake.in 
+    ${CMAKE_CURRENT_BINARY_DIR}/cmake/gtclangConfig.cmake
+    INSTALL_DESTINATION ${GTCLANG_INSTALL_CMAKE_DIR}
+    PATH_VARS 
+      GTCLANG_INSTALL_ROOT
+      GTCLANG_INSTALL_INCLUDE_DIR
+      GTCLANG_INSTALL_LIB_DIR
+      GTCLANG_INSTALL_CMAKE_DIR
+      GTCLANG_INSTALL_BIN_DIR
+  )
+
+  install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/gtclangConfigVersion.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/gtclangConfig.cmake"
+    DESTINATION ${GTCLANG_INSTALL_CMAKE_DIR}
+  )
+endmacro()
+
+
