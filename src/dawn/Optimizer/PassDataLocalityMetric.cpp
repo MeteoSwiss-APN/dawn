@@ -97,7 +97,7 @@ public:
                                     : stencilFunCalls_.top()->getAccessIDFromExpr(expr);
   }
 
-  const std::string& getNameFromAccessID(int AccessID) {
+  std::string getNameFromAccessID(int AccessID) {
     return stencilFunCalls_.empty() ? instantiation_->getNameFromAccessID(AccessID)
                                     : stencilFunCalls_.top()->getNameFromAccessID(AccessID);
   }
