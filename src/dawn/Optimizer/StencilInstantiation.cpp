@@ -671,7 +671,7 @@ const std::string& StencilInstantiation::getNameFromStageID(int StageID) const {
   return it->second;
 }
 
-void StencilInstantiation::mapExprToAccessID(std::shared_ptr<Expr> expr, int accessID) {
+void StencilInstantiation::mapExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID) {
   ExprToAccessIDMap_.emplace(expr, accessID);
 }
 
@@ -680,7 +680,7 @@ void StencilInstantiation::eraseExprToAccessID(std::shared_ptr<Expr> expr) {
   ExprToAccessIDMap_.erase(expr);
 }
 
-void StencilInstantiation::mapStmtToAccessID(std::shared_ptr<Stmt> stmt, int accessID) {
+void StencilInstantiation::mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt, int accessID) {
   StmtToAccessIDMap_.emplace(stmt, accessID);
 }
 
@@ -695,7 +695,7 @@ bool StencilInstantiation::isGlobalVariable(const std::string& name) const {
 }
 
 void StencilInstantiation::insertStencilFunctionIntoSIR(
-    std::shared_ptr<sir::StencilFunction> sirStencilFunction) {
+    const std::shared_ptr<sir::StencilFunction>& sirStencilFunction) {
   SIR_->StencilFunctions.push_back(sirStencilFunction);
 }
 
@@ -971,7 +971,7 @@ void StencilInstantiation::setAccessIDOfExpr(const std::shared_ptr<Expr>& expr,
 }
 
 void StencilInstantiation::removeStencilFunctionInstantiation(
-    const std::shared_ptr<StencilFunCallExpr> expr,
+    const std::shared_ptr<StencilFunCallExpr>& expr,
     std::shared_ptr<StencilFunctionInstantiation> callerStencilFunctionInstantiation) {
 
   std::shared_ptr<StencilFunctionInstantiation> func = nullptr;
@@ -1055,7 +1055,7 @@ StencilInstantiation::getStencilFunctionInstantiationCandidate(const std::string
 }
 
 std::shared_ptr<StencilFunctionInstantiation> StencilInstantiation::cloneStencilFunctionCandidate(
-    std::shared_ptr<StencilFunctionInstantiation> stencilFun, std::string functionName) {
+    const std::shared_ptr<StencilFunctionInstantiation>& stencilFun, std::string functionName) {
   DAWN_ASSERT(stencilFunInstantiationCandidate_.count(stencilFun));
   auto stencilFunClone = std::make_shared<StencilFunctionInstantiation>(*stencilFun);
 
@@ -1089,9 +1089,9 @@ StencilInstantiation::getExprToStencilFunctionInstantiationMap() const {
 std::shared_ptr<StencilFunctionInstantiation>
 StencilInstantiation::makeStencilFunctionInstantiation(
     const std::shared_ptr<StencilFunCallExpr>& expr,
-    std::shared_ptr<sir::StencilFunction> SIRStencilFun, const std::shared_ptr<AST>& ast,
+    const std::shared_ptr<sir::StencilFunction>& SIRStencilFun, const std::shared_ptr<AST>& ast,
     const Interval& interval,
-    std::shared_ptr<StencilFunctionInstantiation> curStencilFunctionInstantiation) {
+    const std::shared_ptr<StencilFunctionInstantiation>& curStencilFunctionInstantiation) {
 
   std::shared_ptr<StencilFunctionInstantiation> stencilFun =
       std::make_shared<StencilFunctionInstantiation>(this, expr, SIRStencilFun, ast, interval,

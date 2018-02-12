@@ -46,7 +46,7 @@ class GlobalFieldCacher {
 public:
   /// @param[in, out]  msprt   Pointer to the multistage to handle
   /// @param[in, out]  si      Stencil Instanciation [ISIR] holding all the Stencils
-  GlobalFieldCacher(MultiStage* msptr, std::shared_ptr<StencilInstantiation> si)
+  GlobalFieldCacher(MultiStage* msptr, const std::shared_ptr<StencilInstantiation>& si)
       : multiStagePrt_(msptr), instantiation_(si) {}
 
   /// @brief Entry method for the pass: processes a given multistage and applies all changes
@@ -270,7 +270,7 @@ private:
   }
 
   MultiStage* multiStagePrt_;
-  std::shared_ptr<StencilInstantiation> instantiation_;
+  const std::shared_ptr<StencilInstantiation>& instantiation_;
 
   std::unordered_map<int, int> accessIDToDataLocality_;
   std::unordered_map<int, int> oldAccessIDtoNewAccessID_;

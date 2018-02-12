@@ -39,20 +39,21 @@ struct TemporaryFunctionProperties {
 
 class TmpAssignment : public ASTVisitorPostOrder, public NonCopyable {
 protected:
-  std::shared_ptr<StencilInstantiation> instantiation_;
+  const std::shared_ptr<StencilInstantiation>& instantiation_;
   sir::Interval interval_;
   std::shared_ptr<sir::StencilFunction> tmpFunction_;
   std::vector<int> accessIDs_;
 
   // TODO remove, not used
   std::shared_ptr<std::vector<std::shared_ptr<FieldAccessExpr>>> tmpComputationArgs_;
-  //  std::unordered_set<std::string> insertedFields_;
   int accessID_ = -1;
   std::shared_ptr<FieldAccessExpr> tmpFieldAccessExpr_ = nullptr;
 
 public:
-  TmpAssignment(std::shared_ptr<StencilInstantiation> instantiation, sir::Interval const& interval)
-      : instantiation_(instantiation), interval_(interval), tmpComputationArgs_(nullptr) {}
+  TmpAssignment(const std::shared_ptr<StencilInstantiation>& instantiation,
+                sir::Interval const& interval)
+      : instantiation_(instantiation), interval_(interval), tmpFunction_(nullptr),
+        tmpComputationArgs_(nullptr) {}
 
   virtual ~TmpAssignment() {}
 
@@ -142,7 +143,7 @@ public:
 
 class TmpReplacement : public ASTVisitorPostOrder, public NonCopyable {
 protected:
-  std::shared_ptr<StencilInstantiation> instantiation_;
+  const std::shared_ptr<StencilInstantiation>& instantiation_;
   std::unordered_map<int, TemporaryFunctionProperties> const& temporaryFieldAccessIDToFunctionCall_;
   std::shared_ptr<std::vector<std::shared_ptr<FieldAccessExpr>>> tmpComputationArgs_;
   const sir::Interval interval_;
@@ -151,7 +152,7 @@ protected:
   unsigned int numTmpReplaced_ = 0;
 
 public:
-  TmpReplacement(std::shared_ptr<StencilInstantiation> instantiation,
+  TmpReplacement(const std::shared_ptr<StencilInstantiation>& instantiation,
                  std::unordered_map<int, TemporaryFunctionProperties> const&
                      temporaryFieldAccessIDToFunctionCall,
                  const sir::Interval sirInterval,
@@ -162,7 +163,7 @@ public:
 
   virtual ~TmpReplacement() {}
 
-  std::string makeOnTheFlyFunctionName(std::shared_ptr<FieldAccessExpr> expr) {
+  std::string makeOnTheFlyFunctionName(const std::shared_ptr<FieldAccessExpr>& expr) {
     return expr->getName() + "_OnTheFly" + "_i" + std::to_string(expr->getOffset()[0]) + "_j" +
            std::to_string(expr->getOffset()[1]) + "_k" + std::to_string(expr->getOffset()[2]);
   }
@@ -269,8 +270,6 @@ bool PassTemporaryToStencilFunction::run(
 
     // Iterate multi-stages backwards
     for(auto multiStage : stencil.getMultiStages()) {
-      //      std::shared_ptr<std::vector<std::shared_ptr<FieldAccessExpr>>>
-      //      temporaryComputationArgs;
       std::unordered_map<int, TemporaryFunctionProperties> temporaryFieldExprToFunction;
 
       for(const auto& stagePtr : multiStage->getStages()) {

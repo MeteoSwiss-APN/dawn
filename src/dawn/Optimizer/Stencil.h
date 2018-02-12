@@ -255,7 +255,7 @@ public:
   bool isEmpty() const;
 
   /// @brief Get the SIR Stencil
-  const std::shared_ptr<sir::Stencil> getSIRStencil() const;
+  std::shared_ptr<sir::Stencil> getSIRStencil() const;
 
   /// @brief Apply the visitor to all statements in the stencil
   void accept(ASTVisitor& visitor);

@@ -74,7 +74,8 @@ public:
   /// @brief Iterate children (if any)
   virtual ExprRangeType getChildren() { return ExprRangeType(); }
 
-  virtual void replaceChildren(std::shared_ptr<Expr> old_, std::shared_ptr<Expr> new_) {
+  virtual void replaceChildren(const std::shared_ptr<Expr>& old_,
+                               const std::shared_ptr<Expr>& new_) {
     DAWN_ASSERT(false);
   }
 
@@ -130,7 +131,8 @@ public:
   virtual bool equals(const Expr* other) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == EK_UnaryOperator; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(operand_); }
-  virtual void replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr);
+  virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
+                               const std::shared_ptr<Expr>& newExpr);
   ACCEPTVISITOR(Expr, UnaryOperator)
 };
 
@@ -170,7 +172,8 @@ public:
   virtual bool equals(const Expr* other) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == EK_BinaryOperator; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(operands_); }
-  virtual void replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr);
+  virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
+                               const std::shared_ptr<Expr>& newExpr);
 
   ACCEPTVISITOR(Expr, BinaryOperator)
 };
@@ -260,7 +263,8 @@ public:
   virtual bool equals(const Expr* other) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == EK_TernaryOperator; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(operands_); }
-  virtual void replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr);
+  virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
+                               const std::shared_ptr<Expr>& newExpr);
   ACCEPTVISITOR(Expr, TernaryOperator)
 };
 
@@ -292,7 +296,7 @@ public:
 
   void setCallee(std::string name) { callee_ = name; }
 
-  void insertArgument(std::shared_ptr<Expr> expr);
+  void insertArgument(const std::shared_ptr<Expr>& expr);
 
   template <typename Iterator>
   inline void insertArguments(Iterator begin, Iterator end) {
@@ -305,7 +309,8 @@ public:
   virtual bool equals(const Expr* other) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == EK_FunCallExpr; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(arguments_); }
-  virtual void replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr);
+  virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
+                               const std::shared_ptr<Expr>& newExpr);
   ACCEPTVISITOR(Expr, FunCallExpr)
 };
 
@@ -416,7 +421,8 @@ public:
   virtual ExprRangeType getChildren() override {
     return (isArrayAccess() ? ExprRangeType(index_) : ExprRangeType());
   }
-  virtual void replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr);
+  virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
+                               const std::shared_ptr<Expr>& newExpr);
   ACCEPTVISITOR(Expr, VarAccessExpr)
 };
 

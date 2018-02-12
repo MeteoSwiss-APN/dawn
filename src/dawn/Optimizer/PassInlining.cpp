@@ -30,21 +30,20 @@ namespace {
 
 class Inliner;
 
-static std::pair<bool, std::shared_ptr<Inliner>>
-tryInlineStencilFunction(PassInlining::InlineStrategyKind strategy,
-                         std::shared_ptr<StencilFunctionInstantiation> stencilFunctioninstantiation,
-                         std::shared_ptr<StatementAccessesPair> oldStmt,
-                         std::vector<std::shared_ptr<StatementAccessesPair>>& newStmts,
-                         int AccessIDOfCaller);
+static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
+    PassInlining::InlineStrategyKind strategy,
+    const std::shared_ptr<StencilFunctionInstantiation>& stencilFunctioninstantiation,
+    const std::shared_ptr<StatementAccessesPair>& oldStmt,
+    std::vector<std::shared_ptr<StatementAccessesPair>>& newStmts, int AccessIDOfCaller);
 
 /// @brief Perform the inlining of a stencil-function
 class Inliner : public ASTVisitor {
   PassInlining::InlineStrategyKind strategy_;
-  std::shared_ptr<StencilFunctionInstantiation> curStencilFunctioninstantiation_;
+  const std::shared_ptr<StencilFunctionInstantiation>& curStencilFunctioninstantiation_;
   StencilInstantiation* instantiation_;
 
   /// The statement which we are currently processing in the `DetectInlineCandiates`
-  std::shared_ptr<StatementAccessesPair> oldStmtAccessesPair_;
+  const std::shared_ptr<StatementAccessesPair>& oldStmtAccessesPair_;
 
   /// List of the new statements
   std::vector<std::shared_ptr<StatementAccessesPair>>& newStmtAccessesPairs_;
@@ -63,10 +62,10 @@ class Inliner : public ASTVisitor {
 
   /// Scope of the current argument list being parsed
   struct ArgListScope {
-    ArgListScope(std::shared_ptr<StencilFunctionInstantiation> function)
+    ArgListScope(const std::shared_ptr<StencilFunctionInstantiation>& function)
         : Function(function), ArgumentIndex(0) {}
 
-    std::shared_ptr<StencilFunctionInstantiation> Function;
+    const std::shared_ptr<StencilFunctionInstantiation>& Function;
     int ArgumentIndex;
   };
 
@@ -74,8 +73,8 @@ class Inliner : public ASTVisitor {
 
 public:
   Inliner(PassInlining::InlineStrategyKind strategy,
-          std::shared_ptr<StencilFunctionInstantiation> stencilFunctioninstantiation,
-          std::shared_ptr<StatementAccessesPair> oldStmtAccessesPair,
+          const std::shared_ptr<StencilFunctionInstantiation>& stencilFunctioninstantiation,
+          const std::shared_ptr<StatementAccessesPair>& oldStmtAccessesPair,
           std::vector<std::shared_ptr<StatementAccessesPair>>& newStmtAccessesPairs,
           int AccessIDOfCaller = 0)
       : strategy_(strategy), curStencilFunctioninstantiation_(stencilFunctioninstantiation),
@@ -211,7 +210,7 @@ public:
     int AccessIDOfCaller = 0;
     if(!argListScope_.empty()) {
       int argIdx = argListScope_.top().ArgumentIndex;
-      std::shared_ptr<StencilFunctionInstantiation> curFunc = argListScope_.top().Function;
+      const std::shared_ptr<StencilFunctionInstantiation>& curFunc = argListScope_.top().Function;
 
       // This stencil function is called within the argument list of another stencil function. Get
       // the AccessID of the "temporary" storage we used to mock the argument (this will be
@@ -324,10 +323,10 @@ class DetectInlineCandiates : public ASTVisitorForwarding {
 
   /// Scope of the current argument list being parsed
   struct ArgListScope {
-    ArgListScope(std::shared_ptr<StencilFunctionInstantiation> function)
+    ArgListScope(const std::shared_ptr<StencilFunctionInstantiation>& function)
         : Function(function), ArgumentIndex(0) {}
 
-    std::shared_ptr<StencilFunctionInstantiation> Function;
+    const std::shared_ptr<StencilFunctionInstantiation>& Function;
     int ArgumentIndex;
   };
 
@@ -341,7 +340,7 @@ public:
       : strategy_(strategy), instantiation_(instantiation), inlineCandiatesFound_(false) {}
 
   /// @brief Process the given statement
-  void processStatment(std::shared_ptr<StatementAccessesPair>& stmtAccesesPair) {
+  void processStatment(const std::shared_ptr<StatementAccessesPair>& stmtAccesesPair) {
     // Reset the state
     inlineCandiatesFound_ = false;
     oldStmtAccessesPair_ = stmtAccesesPair;
@@ -441,8 +440,8 @@ public:
 /// `Inliner` instance (or NULL) is returned as well)
 static std::pair<bool, std::shared_ptr<Inliner>>
 tryInlineStencilFunction(PassInlining::InlineStrategyKind strategy,
-                         std::shared_ptr<StencilFunctionInstantiation> stencilFunc,
-                         std::shared_ptr<StatementAccessesPair> oldStmtAccessesPair,
+                         const std::shared_ptr<StencilFunctionInstantiation>& stencilFunc,
+                         const std::shared_ptr<StatementAccessesPair>& oldStmtAccessesPair,
                          std::vector<std::shared_ptr<StatementAccessesPair>>& newStmtAccessesPairs,
                          int AccessIDOfCaller) {
 

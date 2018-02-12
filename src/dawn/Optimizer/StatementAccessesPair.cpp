@@ -70,7 +70,9 @@ void StatementAccessesPair::setStatement(const std::shared_ptr<Statement>& state
   statement_ = statement;
 }
 
-std::shared_ptr<Accesses> StatementAccessesPair::getAccesses() const { return callerAccesses_; }
+const std::shared_ptr<Accesses>& StatementAccessesPair::getAccesses() const {
+  return callerAccesses_;
+}
 
 void StatementAccessesPair::setAccesses(const std::shared_ptr<Accesses>& accesses) {
   callerAccesses_ = accesses;
@@ -87,13 +89,15 @@ std::vector<std::shared_ptr<StatementAccessesPair>>& StatementAccessesPair::getC
 
 bool StatementAccessesPair::hasChildren() const { return !children_.empty(); }
 
-std::shared_ptr<Accesses> StatementAccessesPair::getCallerAccesses() const { return getAccesses(); }
+const std::shared_ptr<Accesses>& StatementAccessesPair::getCallerAccesses() const {
+  return getAccesses();
+}
 
 void StatementAccessesPair::setCallerAccesses(const std::shared_ptr<Accesses>& accesses) {
   return setAccesses(accesses);
 }
 
-std::shared_ptr<Accesses> StatementAccessesPair::getCalleeAccesses() const {
+const std::shared_ptr<Accesses>& StatementAccessesPair::getCalleeAccesses() const {
   return calleeAccesses_;
 }
 

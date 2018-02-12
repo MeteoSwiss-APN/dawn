@@ -26,7 +26,7 @@
 namespace dawn {
 
 StencilFunctionInstantiation::StencilFunctionInstantiation(
-    StencilInstantiation* context, std::shared_ptr<StencilFunCallExpr> expr,
+    StencilInstantiation* context, const std::shared_ptr<StencilFunCallExpr>& expr,
     std::shared_ptr<sir::StencilFunction> function, const std::shared_ptr<AST>& ast,
     const Interval& interval, bool isNested)
     : stencilInstantiation_(context), expr_(expr), function_(function), ast_(ast),
@@ -139,7 +139,7 @@ StencilFunctionInstantiation::getFunctionInstantiationOfArgField(int argumentInd
 }
 
 void StencilFunctionInstantiation::setFunctionInstantiationOfArgField(
-    int argumentIndex, std::shared_ptr<StencilFunctionInstantiation> func) {
+    int argumentIndex, const std::shared_ptr<StencilFunctionInstantiation>& func) {
   ArgumentIndexToStencilFunctionInstantiationMap_[argumentIndex] = func;
 }
 
@@ -328,14 +328,14 @@ StencilFunctionInstantiation::getExprToStencilFunctionInstantiationMap() const {
 }
 
 void StencilFunctionInstantiation::insertExprToStencilFunction(
-    std::shared_ptr<StencilFunctionInstantiation> stencilFun) {
+    const std::shared_ptr<StencilFunctionInstantiation>& stencilFun) {
   ExprToStencilFunctionInstantiationMap_.emplace(stencilFun->getExpression(), stencilFun);
   nameToStencilFunctionInstantiationMap_.emplace(stencilFun->getExpression()->getCallee(),
                                                  stencilFun);
 }
 
 void StencilFunctionInstantiation::removeStencilFunctionInstantiation(
-    const std::shared_ptr<StencilFunCallExpr> expr) {
+    const std::shared_ptr<StencilFunCallExpr>& expr) {
   ExprToStencilFunctionInstantiationMap_.erase(expr);
   nameToStencilFunctionInstantiationMap_.erase(expr->getCallee());
 }

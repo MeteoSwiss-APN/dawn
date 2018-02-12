@@ -169,7 +169,7 @@ private:
 
 public:
   StencilFunctionInstantiation(StencilInstantiation* context,
-                               std::shared_ptr<StencilFunCallExpr> expr,
+                               const std::shared_ptr<StencilFunCallExpr>& expr,
                                std::shared_ptr<sir::StencilFunction> function,
                                const std::shared_ptr<AST>& ast, const Interval& interval,
                                bool isNested);
@@ -194,7 +194,7 @@ public:
   std::set<int> const& getAccessIDSetGlobalVariables() const { return GlobalVariableAccessIDSet_; }
   /// @}
 
-  void removeStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr> expr);
+  void removeStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr);
 
   /// @brief get the name of the arg parameter of the stencil function which is called passing
   /// another function
@@ -273,8 +273,9 @@ public:
   /// @{
   std::shared_ptr<StencilFunctionInstantiation>
   getFunctionInstantiationOfArgField(int argumentIndex) const;
-  void setFunctionInstantiationOfArgField(int argumentIndex,
-                                          std::shared_ptr<StencilFunctionInstantiation> func);
+  void
+  setFunctionInstantiationOfArgField(int argumentIndex,
+                                     const std::shared_ptr<StencilFunctionInstantiation>& func);
   /// @}
 
   /// @brief Get/Set the initial offset of the @b caller given the caller AccessID
@@ -366,7 +367,7 @@ public:
   const std::shared_ptr<StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) const;
 
-  void insertExprToStencilFunction(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
+  void insertExprToStencilFunction(const std::shared_ptr<StencilFunctionInstantiation>& stencilFun);
 
   //===----------------------------------------------------------------------------------------===//
   //     Accesses & Fields
@@ -420,7 +421,7 @@ public:
   const std::shared_ptr<StencilFunCallExpr>& getExpression() const { return expr_; }
 
   /// @brief Set the underlying AST stencil function call expression
-  void setExpression(std::shared_ptr<StencilFunCallExpr> expr) { expr_ = expr; }
+  void setExpression(const std::shared_ptr<StencilFunCallExpr>& expr) { expr_ = expr; }
 
   /// @brief finalizes the binding of the arguments of a stencil function.
   /// In particular it associates new accessIDs of arguments that are nested stencil function calls

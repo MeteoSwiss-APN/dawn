@@ -309,14 +309,14 @@ public:
   getStencilFunctionInstantiationCandidate(const std::string stencilFunName);
 
   std::shared_ptr<StencilFunctionInstantiation>
-  cloneStencilFunctionCandidate(std::shared_ptr<StencilFunctionInstantiation> stencilFun,
+  cloneStencilFunctionCandidate(const std::shared_ptr<StencilFunctionInstantiation>& stencilFun,
                                 std::string functionName);
 
   /// @brief Add entry to the map between a given expr to its access ID
-  void mapExprToAccessID(std::shared_ptr<Expr> expr, int accessID);
+  void mapExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID);
 
   /// @brief Add entry to the map between a given stmt to its access ID
-  void mapStmtToAccessID(std::shared_ptr<Stmt> stmt, int accessID);
+  void mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt, int accessID);
 
   /// @brief Add entry of the Expr to AccessID map
   void eraseExprToAccessID(std::shared_ptr<Expr> expr);
@@ -336,7 +336,7 @@ public:
   /// the scope of another stencil function), the stencil function will be removed
   /// from the `callerStencilFunctionInstantiation` instead of this `StencilInstantiation`.
   void removeStencilFunctionInstantiation(
-      const std::shared_ptr<StencilFunCallExpr> expr,
+      const std::shared_ptr<StencilFunCallExpr>& expr,
       std::shared_ptr<StencilFunctionInstantiation> callerStencilFunctionInstantiation = nullptr);
 
   /// @brief Register a new stencil function
@@ -346,9 +346,9 @@ public:
   /// stencil function.
   std::shared_ptr<StencilFunctionInstantiation> makeStencilFunctionInstantiation(
       const std::shared_ptr<StencilFunCallExpr>& expr,
-      std::shared_ptr<sir::StencilFunction> SIRStencilFun, const std::shared_ptr<AST>& ast,
+      const std::shared_ptr<sir::StencilFunction>& SIRStencilFun, const std::shared_ptr<AST>& ast,
       const Interval& interval,
-      std::shared_ptr<StencilFunctionInstantiation> curStencilFunctionInstantiation);
+      const std::shared_ptr<StencilFunctionInstantiation>& curStencilFunctionInstantiation);
 
   /// @brief Get the list of stencils
   std::vector<std::shared_ptr<Stencil>>& getStencils() { return stencils_; }
@@ -407,7 +407,8 @@ public:
   /// @brief Get the SIR
   std::shared_ptr<SIR> const& getSIR() const { return SIR_; }
 
-  void insertStencilFunctionIntoSIR(std::shared_ptr<sir::StencilFunction> sirStencilFunction);
+  void
+  insertStencilFunctionIntoSIR(const std::shared_ptr<sir::StencilFunction>& sirStencilFunction);
 
   /// @brief Get the SIRStencil this context was built from
   std::shared_ptr<sir::Stencil> const& getSIRStencil() const { return SIRStencil_; }

@@ -21,7 +21,7 @@ StatementMapper::StatementMapper(
     std::vector<std::shared_ptr<StatementAccessesPair>>& statementAccessesPairs,
     const Interval& interval,
     const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,
-    const std::shared_ptr<StencilFunctionInstantiation> stencilFunctionInstantiation)
+    const std::shared_ptr<StencilFunctionInstantiation>& stencilFunctionInstantiation)
     : instantiation_(instantiation), stackTrace_(stackTrace) {
 
   // Create the initial scope

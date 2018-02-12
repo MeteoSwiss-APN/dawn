@@ -50,15 +50,15 @@ public:
   void setStatement(const std::shared_ptr<Statement>& statement);
 
   /// @brief Get/Set the accesses
-  std::shared_ptr<Accesses> getAccesses() const;
+  const std::shared_ptr<Accesses>& getAccesses() const;
   void setAccesses(const std::shared_ptr<Accesses>& accesses);
 
   /// @brief Get/Set the caller accesses (alias for `getAccesses`)
-  std::shared_ptr<Accesses> getCallerAccesses() const;
+  const std::shared_ptr<Accesses>& getCallerAccesses() const;
   void setCallerAccesses(const std::shared_ptr<Accesses>& accesses);
 
   /// @brief Get/Set the callee accesses (only set for statements inside stencil-functions)
-  std::shared_ptr<Accesses> getCalleeAccesses() const;
+  const std::shared_ptr<Accesses>& getCalleeAccesses() const;
   void setCalleeAccesses(const std::shared_ptr<Accesses>& accesses);
   bool hasCalleeAccesses();
 

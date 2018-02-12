@@ -29,7 +29,7 @@ namespace dawn {
 namespace {
 
 class ReadWriteCounter : public ASTVisitorForwarding {
-  std::shared_ptr<StencilInstantiation> instantiation_;
+  const std::shared_ptr<StencilInstantiation>& instantiation_;
 
   std::size_t numReads_, numWrites_;
 
