@@ -98,7 +98,7 @@ namespace gridtools {
 
                 // Check dimensions
                 auto check_dim = [&](uint_t dim1, uint_t dim2, uint_t size, const char *dimstr) {
-                    if (dim1 != dim2 || dim1 != size) {
+                    if (dim1 != dim2 || dim1 < size) {
                         std::cerr << "dimension \"" << dimstr << "\" missmatch in storage pair \""
                                   << storage1.name() << "\" : \"" << storage2.name() << "\"\n";
                         std::cerr << "  " << dimstr << "-dim storage1: " << dim1 << "\n";

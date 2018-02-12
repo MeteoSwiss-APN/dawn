@@ -19,7 +19,8 @@
 using namespace gridtools::clang;
 
 stencil hori_diff_stencil {
-  storage u, out, lap;
+  storage u, out;
+  var lap;
 
   Do {
     vertical_region(k_start, k_end) {
