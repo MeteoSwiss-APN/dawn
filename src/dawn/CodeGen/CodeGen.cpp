@@ -3,8 +3,6 @@
 namespace dawn {
 namespace codegen {
 
-// static std::string CodeGen::generateCode()
-
 size_t CodeGen::getVerticalTmpHaloSize(Stencil const& stencil) {
   std::shared_ptr<Interval> tmpInterval = stencil.getEnclosingIntervalTemporaries();
   return (tmpInterval != nullptr) ? std::max(tmpInterval->overEnd(), tmpInterval->belowBegin()) : 0;
