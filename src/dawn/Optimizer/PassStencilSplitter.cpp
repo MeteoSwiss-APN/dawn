@@ -42,7 +42,8 @@ static int mergePossible(const std::set<int>& fields, const Stage* stage, int ma
   return numFields <= maxNumFields;
 }
 
-PassStencilSplitter::PassStencilSplitter() : Pass("PassStencilSplitter") {
+PassStencilSplitter::PassStencilSplitter(int maxNumberOfFilelds)
+    : Pass("PassStencilSplitter"), MaxFieldPerStencil(maxNumberOfFilelds) {
   dependencies_.push_back("PassSetStageGraph");
 }
 

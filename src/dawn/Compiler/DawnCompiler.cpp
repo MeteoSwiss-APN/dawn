@@ -138,6 +138,9 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(const SIR* SIR) {
     return nullptr;
   }
 
+  // -max-fields
+  int maxFields = options_->MaxFieldsPerStencil;
+
   // Initialize optimizer
   auto optimizer = make_unique<OptimizerContext>(getDiagnostics(), getOptions(), SIR);
   PassManager& passManager = optimizer->getPassManager();
@@ -155,7 +158,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(const SIR* SIR) {
   passManager.pushBackPass<PassSetStageGraph>();
   passManager.pushBackPass<PassStageReordering>(reorderStrategy);
   passManager.pushBackPass<PassStageMerger>();
-  passManager.pushBackPass<PassStencilSplitter>();
+  passManager.pushBackPass<PassStencilSplitter>(maxFields);
   passManager.pushBackPass<PassTemporaryType>();
   passManager.pushBackPass<PassTemporaryMerger>();
   passManager.pushBackPass<PassSetNonTempCaches>();
