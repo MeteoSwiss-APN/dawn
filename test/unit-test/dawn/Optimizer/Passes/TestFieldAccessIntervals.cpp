@@ -34,7 +34,7 @@ protected:
   TestFieldAccessIntervals() : compiler_(compileOptions_.get()) {}
   virtual void SetUp() {}
 
-  std::vector<std::shared_ptr<Stencil>> loadTest(std::string sirFilename) {
+  std::shared_ptr<StencilInstantiation> loadTest(std::string sirFilename) {
 
     std::string filename = TestEnvironment::path_ + "/" + sirFilename;
     std::ifstream file(filename);
@@ -56,12 +56,12 @@ protected:
     DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("compute_extent_test_stencil")),
                     "compute_extent_test_stencil not found in sir");
 
-    return optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"]->getStencils();
+    return optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"];
   }
 };
 
 TEST_F(TestFieldAccessIntervals, test_field_access_interval_01) {
-  auto stencils = loadTest("test_field_access_interval_01.sir");
+  auto stencils = loadTest("test_field_access_interval_01.sir")->getStencils();
   ASSERT_TRUE((stencils.size() == 1));
   std::shared_ptr<Stencil> stencil = stencils[0];
 
@@ -84,7 +84,7 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_01) {
 }
 
 TEST_F(TestFieldAccessIntervals, test_field_access_interval_02) {
-  auto stencils = loadTest("test_field_access_interval_02.sir");
+  auto& stencils = loadTest("test_field_access_interval_02.sir")->getStencils();
   ASSERT_TRUE((stencils.size() == 1));
   std::shared_ptr<Stencil> stencil = stencils[0];
 
@@ -111,7 +111,7 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_02) {
 }
 
 TEST_F(TestFieldAccessIntervals, test_field_access_interval_03) {
-  auto stencils = loadTest("test_field_access_interval_03.sir");
+  auto stencils = loadTest("test_field_access_interval_03.sir")->getStencils();
   ASSERT_TRUE((stencils.size() == 1));
   std::shared_ptr<Stencil> stencil = stencils[0];
 
@@ -139,7 +139,7 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_03) {
 }
 
 TEST_F(TestFieldAccessIntervals, test_field_access_interval_04) {
-  auto stencils = loadTest("test_field_access_interval_04.sir");
+  auto stencils = loadTest("test_field_access_interval_04.sir")->getStencils();
   ASSERT_TRUE((stencils.size() == 1));
   std::shared_ptr<Stencil> stencil = stencils[0];
 
@@ -153,7 +153,7 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_04) {
 }
 
 TEST_F(TestFieldAccessIntervals, test_field_access_interval_05) {
-  auto stencils = loadTest("test_field_access_interval_05.sir");
+  auto stencils = loadTest("test_field_access_interval_05.sir")->getStencils();
   ASSERT_TRUE((stencils.size() == 1));
   std::shared_ptr<Stencil> stencil = stencils[0];
 
