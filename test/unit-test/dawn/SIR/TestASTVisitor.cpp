@@ -16,6 +16,7 @@
 #include "dawn/SIR/ASTUtil.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/STLExtras.h"
+#include <cmath>
 #include <gtest/gtest.h>
 #include <regex>
 
