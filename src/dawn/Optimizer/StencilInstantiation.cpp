@@ -879,16 +879,8 @@ public:
   }
 
   void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override {
-//    BoundaryConditions bc;
-//    bc.functor = stmt.get()->getFunctor();
-//    // Extracting all the stencil_function arguments except for the field we apply it to
-//    for(int i = 1; i < (*stmt).getFields().size(); ++i) {
-//      bc.arguments.push_back(stmt.get()->getFields()[i].get()->Name);
-//    }
-//    // store it with the fieldname to apply it to as the key
-//    instantiation_->getBoundaryConditions().emplace(stmt.get()->getFields()[0].get()->Name, bc);
-    if(instantiation_->insertBoundaryConditions(stmt->getFields()[0]->Name , stmt)==false)
-        DAWN_ASSERT_MSG(false, "Boundary Condition specified twice for the same field");
+    if(instantiation_->insertBoundaryConditions(stmt->getFields()[0]->Name, stmt) == false)
+      DAWN_ASSERT_MSG(false, "Boundary Condition specified twice for the same field");
   }
 
   void visit(const std::shared_ptr<AssignmentExpr>& expr) override {
@@ -1776,8 +1768,8 @@ const std::set<int>& StencilInstantiation::getCachedVariableSet() const {
   return CachedVariableSet_;
 }
 
-void StencilInstantiation::insertCachedVariable(int fieldID){
-    CachedVariableSet_.emplace(fieldID);
+void StencilInstantiation::insertCachedVariable(int fieldID) {
+  CachedVariableSet_.emplace(fieldID);
 }
 
 void StencilInstantiation::reportAccesses() const {

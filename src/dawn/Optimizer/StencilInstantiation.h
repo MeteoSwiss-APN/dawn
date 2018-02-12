@@ -31,12 +31,6 @@ namespace dawn {
 
 class OptimizerContext;
 
-///// @brief struct for storing the boundary conditions
-//struct BoundaryConditions {
-//  std::string functor;
-//  std::vector<std::string> arguments;
-//};
-
 /// @brief Specific instantiation of a stencil
 /// @ingroup optimizer
 class StencilInstantiation : NonCopyable {
@@ -107,8 +101,6 @@ class StencilInstantiation : NonCopyable {
   std::vector<std::unique_ptr<StencilFunctionInstantiation>> stencilFunctionInstantiations_;
   std::unordered_map<std::shared_ptr<StencilFunCallExpr>, StencilFunctionInstantiation*>
       ExprToStencilFunctionInstantiationMap_;
-
-//  std::unordered_map<std::string, BoundaryConditions> BoundaryConditions_;
 
   /// BoundaryConditionCall to Extent Map. Filled my `PassSetBoundaryCondition`
   std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>
@@ -398,15 +390,18 @@ public:
   bool insertBoundaryConditions(std::string originalFieldName,
                                 std::shared_ptr<BoundaryConditionDeclStmt> bc) {
     if(FieldnameToBoundaryConditionMap_.count(originalFieldName) != 0) {
-        return false;
-    }
-    else{
-        FieldnameToBoundaryConditionMap_.emplace(originalFieldName, bc);
-        return true;
+      return false;
+    } else {
+      FieldnameToBoundaryConditionMap_.emplace(originalFieldName, bc);
+      return true;
     }
   }
   const std::unordered_map<std::string, std::shared_ptr<BoundaryConditionDeclStmt>>&
   getBoundaryConditions() const {
+    return FieldnameToBoundaryConditionMap_;
+  }
+  std::unordered_map<std::string, std::shared_ptr<BoundaryConditionDeclStmt>> &
+  getBoundaryConditions() {
     return FieldnameToBoundaryConditionMap_;
   }
 
@@ -458,11 +453,16 @@ public:
     return BoundaryConditionToExtentsMap_;
   }
 
-  Extents getBoundaryConditionExtentsFromBCStmt(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) const{
-      if(BoundaryConditionToExtentsMap_.count(stmt) == 0) {
-        DAWN_ASSERT_MSG(false, "Boundary Condition does not have a matching Extent");
-      }
-      return BoundaryConditionToExtentsMap_.find(stmt)->second;
+  void insertBoundaryConditiontoExtentPair(std::shared_ptr<BoundaryConditionDeclStmt>& bc, Extents& extents){
+      BoundaryConditionToExtentsMap_.emplace(bc, extents);
+  }
+
+  Extents getBoundaryConditionExtentsFromBCStmt(
+      const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) const {
+    if(BoundaryConditionToExtentsMap_.count(stmt) == 0) {
+      DAWN_ASSERT_MSG(false, "Boundary Condition does not have a matching Extent");
+    }
+    return BoundaryConditionToExtentsMap_.find(stmt)->second;
   }
 
 private:

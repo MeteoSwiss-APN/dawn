@@ -18,7 +18,7 @@
 
 using namespace gridtools::clang;
 
-globals { double glob_foo = 12; };
+globals { double global_var = 12; };
 
 stencil_function zero {
   storage a;
@@ -26,16 +26,16 @@ stencil_function zero {
 };
 
 stencil SplitStencil {
-  storage foo;
-  storage bar;
+  storage intermediate;
+  storage out;
 
-  boundary_condition(zero(), foo);
-  boundary_condition(zero(), bar);
+  boundary_condition(zero(), intermediate);
+  boundary_condition(zero(), out);
 
   void Do() {
     vertical_region(k_start, k_end) {
-      foo = bar[i + 1];
-      bar = foo[i - 1] + glob_foo;
+      intermediate = out[i + 1];
+      out = intermediate[i - 1] + global_var;
     }
   }
 };

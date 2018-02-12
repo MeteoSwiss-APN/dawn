@@ -47,7 +47,7 @@ protected:
 
     // Set specific compiler options:
     if(splitStencils)
-        compiler_.getOptions().SplitStencils = true;
+      compiler_.getOptions().SplitStencils = true;
 
     // Run the optimization
     std::unique_ptr<OptimizerContext> optimizer = compiler_.runOptimizer(sir.get());
@@ -81,46 +81,49 @@ private:
   int BCsFound_;
 };
 
-
 TEST_F(StencilSplitAnalyzer, test_no_bc_inserted) {
-  std::unique_ptr<StencilInstantiation> test = loadTest("boundary_condition_test_stencil_01.sir", false);
+  std::unique_ptr<StencilInstantiation> test =
+      loadTest("boundary_condition_test_stencil_01.sir", false);
   ASSERT_TRUE((test->getBoundaryConditions().size() == 1));
   BCFinder myvisitor;
-  for(const auto& stmt : test->getStencilDescStatements()){
-      stmt->ASTStmt->accept(myvisitor);
+  for(const auto& stmt : test->getStencilDescStatements()) {
+    stmt->ASTStmt->accept(myvisitor);
   }
   ASSERT_TRUE((myvisitor.reportBCsFound() == 0));
 }
 
 // An unused BC has no extents to it
 TEST_F(StencilSplitAnalyzer, test_unused_bc) {
-  std::unique_ptr<StencilInstantiation> test = loadTest("boundary_condition_test_stencil_02.sir", false);
-  ASSERT_TRUE(test->getBoundaryConditions().count("bar"));
-  auto bc = test->getBoundaryConditions().find("bar")->second;
+  std::unique_ptr<StencilInstantiation> test =
+      loadTest("boundary_condition_test_stencil_02.sir", false);
+  ASSERT_TRUE(test->getBoundaryConditions().count("out"));
+  auto bc = test->getBoundaryConditions().find("out")->second;
   ASSERT_TRUE((test->getBoundaryConditionToExtentsMap().count(bc) == 0));
 }
 
 TEST_F(StencilSplitAnalyzer, test_bc_extent_calc) {
-  std::unique_ptr<StencilInstantiation> test = loadTest("boundary_condition_test_stencil_01.sir", true);
+  std::unique_ptr<StencilInstantiation> test =
+      loadTest("boundary_condition_test_stencil_01.sir", true);
   ASSERT_TRUE((test->getBoundaryConditions().size() == 1));
   BCFinder myvisitor;
-  for(const auto& stmt : test->getStencilDescStatements()){
-      stmt->ASTStmt->accept(myvisitor);
+  for(const auto& stmt : test->getStencilDescStatements()) {
+    stmt->ASTStmt->accept(myvisitor);
   }
   ASSERT_TRUE((myvisitor.reportBCsFound() == 1));
-  ASSERT_TRUE(test->getBoundaryConditions().count("foo"));
-  auto bc = test->getBoundaryConditions().find("foo")->second;
-  ASSERT_TRUE((test->getBoundaryConditionToExtentsMap()[bc] == Extents{-1,1,0,0,0,0}));
+  ASSERT_TRUE(test->getBoundaryConditions().count("intermediate"));
+  auto bc = test->getBoundaryConditions().find("intermediate")->second;
+  ASSERT_TRUE((test->getBoundaryConditionToExtentsMap()[bc] == Extents{-1, 1, 0, 0, 0, 0}));
 }
 
 TEST_F(StencilSplitAnalyzer, test_two_bc) {
-  std::unique_ptr<StencilInstantiation> test = loadTest("boundary_condition_test_stencil_03.sir", true);
+  std::unique_ptr<StencilInstantiation> test =
+      loadTest("boundary_condition_test_stencil_03.sir", true);
   ASSERT_TRUE((test->getBoundaryConditions().size() == 2));
-  ASSERT_TRUE(test->getBoundaryConditions().count("foo"));
-  auto bcfoo = test->getBoundaryConditions().find("foo")->second;
-  ASSERT_TRUE((test->getBoundaryConditionToExtentsMap()[bcfoo] == Extents{-1,1,0,0,0,0}));
-  ASSERT_TRUE(test->getBoundaryConditions().count("bar"));
-  auto bcbar = test->getBoundaryConditions().find("bar")->second;
+  ASSERT_TRUE(test->getBoundaryConditions().count("intermediate"));
+  auto bcfoo = test->getBoundaryConditions().find("intermediate")->second;
+  ASSERT_TRUE((test->getBoundaryConditionToExtentsMap()[bcfoo] == Extents{-1, 1, 0, 0, 0, 0}));
+  ASSERT_TRUE(test->getBoundaryConditions().count("out"));
+  auto bcbar = test->getBoundaryConditions().find("out")->second;
   ASSERT_TRUE((test->getBoundaryConditionToExtentsMap().count(bcbar) == 0));
 }
 

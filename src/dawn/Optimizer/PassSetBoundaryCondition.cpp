@@ -55,7 +55,7 @@ static dawn::Extents analyzeStencilExtents(const std::shared_ptr<Stencil>& s, in
   return fullExtents;
 }
 
-enum FieldType{ FT_NotOriginal=-1};
+enum FieldType { FT_NotOriginal = -1 };
 }
 ///
 /// @brief The VisitStencilCalls class traverses the StencilDescAST to determine an order of the
@@ -124,10 +124,10 @@ bool PassSetBoundaryCondition::run(StencilInstantiation* stencilInstantiation) {
         return stencilInstantiation->getAccessIDFromName(
             stencilInstantiation->getOriginalNameFromAccessID(ID));
       } else {
-        return (int) FieldType::FT_NotOriginal;
+        return (int)FieldType::FT_NotOriginal;
       }
     } else {
-      return (int) FieldType::FT_NotOriginal;
+      return (int)FieldType::FT_NotOriginal;
     }
 
   };
@@ -151,10 +151,11 @@ bool PassSetBoundaryCondition::run(StencilInstantiation* stencilInstantiation) {
       stencilInstantiation->getStencilDescStatements()) {
     statement->ASTStmt->accept(findStencilCalls);
   }
-  std::vector<int> StencilIDsVisited_;
+  std::unordered_set<int> StencilIDsVisited_;
   for(const auto& stencilcall : findStencilCalls.getStencilCalls()) {
-    StencilIDsVisited_.push_back(
-        stencilInstantiation->getStencilCallToStencilIDMap().find(stencilcall)->second);
+    DAWN_ASSERT_MSG(stencilInstantiation->getStencilCallToStencilIDMap().count(stencilcall),
+                    "no StencilID for the stencilcall found");
+    StencilIDsVisited_.emplace(stencilInstantiation->getStencilCallToStencilIDMap()[stencilcall]);
   }
 
   auto calculateHaloExtents = [&](std::string fieldname) {
@@ -163,40 +164,34 @@ bool PassSetBoundaryCondition::run(StencilInstantiation* stencilInstantiation) {
     // Did we already apply a BoundaryCondition for this field?
     // This is the first time we apply a BC to this field, we traverse all stencils that were
     // applied before
-    std::vector<int> stencilIDsToVisit(StencilIDsVisited_);
-    if(StencilBCsApplied_.count(fieldname) == 0) {
-    } else {
-      for(int traveresedID : StencilBCsApplied_.find(fieldname)->second) {
-        stencilIDsToVisit.erase(
-            std::remove(stencilIDsToVisit.begin(), stencilIDsToVisit.end(), traveresedID),
-            stencilIDsToVisit.end());
+    std::unordered_set<int> stencilIDsToVisit(StencilIDsVisited_);
+    if(StencilBCsApplied_.count(fieldname) != 0) {
+      for(int traveresedID : StencilBCsApplied_[fieldname]) {
+        stencilIDsToVisit.erase(traveresedID);
       }
     }
     for(auto& stencil : stencilInstantiation->getStencils()) {
-      for(const int& ID : stencilIDsToVisit) {
-        if(ID == stencil->getStencilID()) {
-          fullExtent.merge(
-              analyzeStencilExtents(stencil, stencilInstantiation->getAccessIDFromName(fieldname)));
-          if(StencilBCsApplied_.count(fieldname) == 0) {
-            StencilBCsApplied_.emplace(fieldname, std::vector<int>{stencil->getStencilID()});
-          } else {
-            StencilBCsApplied_.find(fieldname)->second.push_back(stencil->getStencilID());
-          }
-          break;
+      if(stencilIDsToVisit.count(stencil->getStencilID())) {
+        fullExtent.merge(
+            analyzeStencilExtents(stencil, stencilInstantiation->getAccessIDFromName(fieldname)));
+        if(StencilBCsApplied_.count(fieldname) == 0) {
+          StencilBCsApplied_.emplace(fieldname, std::vector<int>{stencil->getStencilID()});
+        } else {
+          StencilBCsApplied_[fieldname].push_back(stencil->getStencilID());
         }
       }
     }
     return fullExtent;
   };
 
-  auto insertExtentsIntoMap = [](int fieldID, Extents extents, std::unordered_map<int, Extents>& map){
-      auto fieldExtentPair = map.find(fieldID);
-      if(fieldExtentPair==map.end()){
-          map.emplace(fieldID, extents);
-      }
-      else{
-          fieldExtentPair->second.merge(extents);
-      }
+  auto insertExtentsIntoMap = [](int fieldID, Extents extents,
+                                 std::unordered_map<int, Extents>& map) {
+    auto fieldExtentPair = map.find(fieldID);
+    if(fieldExtentPair == map.end()) {
+      map.emplace(fieldID, extents);
+    } else {
+      fieldExtentPair->second.merge(extents);
+    }
   };
 
   // Loop through all the StmtAccessPair in the stencil forward
@@ -221,21 +216,18 @@ bool PassSetBoundaryCondition::run(StencilInstantiation* stencilInstantiation) {
             // criteria are fullfilled:
             // It is a Field (ID!=-1) and we had a write before from another stencil (is in
             // dirtyFields)
-            for(const auto& readacccess : allReadAccesses) {
-              int originalID = getOriginalID(readacccess.first);
+            for(const auto& readaccess : allReadAccesses) {
+              int originalID = getOriginalID(readaccess.first);
               if(originalID == FieldType::FT_NotOriginal)
                 continue;
-              auto idWithExtents = dirtyFields.find(originalID);
-              if(idWithExtents == dirtyFields.end())
+              if(!dirtyFields.count(originalID))
                 continue;
-              // If the access is horizontally pointwise or it is a horizontally cached field,
-              // we do not need to trigger a BC
-              if(readacccess.second.isHorizontalPointwise() ||
-                 stencilInstantiation->getCachedVariableSet().count(readacccess.first))
+              // If the access is horizontally pointwise we do not need to trigger a BC
+              if(readaccess.second.isHorizontalPointwise())
                 continue;
-              auto finder = allBCs.find(originalID);
+              auto IDtoBCpair = allBCs.find(originalID);
               // Check if a boundary condition for this variable was defined
-              if(finder == allBCs.end()) {
+              if(IDtoBCpair == allBCs.end()) {
                 DAWN_ASSERT_MSG(
                     false,
                     dawn::format("In stencil %s we need a halo update on field %s but no "
@@ -248,15 +240,16 @@ bool PassSetBoundaryCondition::run(StencilInstantiation* stencilInstantiation) {
                         .c_str());
               }
               // Calculate the extent and add it to the boundary-condition - Extent map
-              Extents fullExtents = calculateHaloExtents(
-                  stencilInstantiation->getNameFromAccessID(readacccess.first));
-              stencilInstantiation->getBoundaryConditionToExtentsMap().emplace(finder->second,
-                                                                               fullExtents);
+              Extents fullExtents =
+                  calculateHaloExtents(stencilInstantiation->getNameFromAccessID(readaccess.first));
+              stencilInstantiation->insertBoundaryConditiontoExtentPair(IDtoBCpair->second,
+                                                                        fullExtents);
 
-              // check if this stencil is called and get its StencilCallDeclStmt (the one to replace)
-              auto test =
+              // check if this stencil is called and get its StencilCallDeclStmt (the one to
+              // replace)
+              auto stencilcallstmt =
                   stencilInstantiation->getIDToStencilCallMap().find(stencil.getStencilID());
-              if(test == stencilInstantiation->getIDToStencilCallMap().end()) {
+              if(stencilcallstmt == stencilInstantiation->getIDToStencilCallMap().end()) {
                 DAWN_ASSERT_MSG(false, "Stencil Triggering the Boundary Condition is not called");
               }
 
@@ -271,8 +264,8 @@ bool PassSetBoundaryCondition::run(StencilInstantiation* stencilInstantiation) {
 
                 stmt->accept(visitor);
                 std::vector<std::shared_ptr<Stmt>> stencilCallWithBC_;
-                stencilCallWithBC_.emplace_back(finder->second);
-                stencilCallWithBC_.emplace_back(test->second);
+                stencilCallWithBC_.emplace_back(IDtoBCpair->second);
+                stencilCallWithBC_.emplace_back(stencilcallstmt->second);
 
                 for(auto& oldStencilCall : visitor.getStencilCallsToReplace()) {
                   auto newBlockStmt = std::make_shared<BlockStmt>();

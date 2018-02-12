@@ -102,22 +102,9 @@ public:
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) {
     auto printOffset = [](const Array3i& argumentoffsets) {
       std::string retval = "";
-      if(argumentoffsets[0] == 0) {
-        retval += "i";
-      } else {
-        retval += dawn::format("i + %i", argumentoffsets[0]);
-      }
-      retval += " , ";
-      if(argumentoffsets[1] == 0) {
-        retval += "j";
-      } else {
-        retval += dawn::format("j + %i", argumentoffsets[1]);
-      }
-      retval += " , ";
-      if(argumentoffsets[2] == 0) {
-        retval += "k";
-      } else {
-        retval += dawn::format("k + %i", argumentoffsets[2]);
+      std::array<std::string, 3> dims{"i","j","k"};
+      for(int i=0; i < 3; ++i) {
+        retval = dims[i]+(argumentoffsets[i]!=0 ? " + "+std::to_string(argumentoffsets[i]) : "");
       }
       return retval;
     };

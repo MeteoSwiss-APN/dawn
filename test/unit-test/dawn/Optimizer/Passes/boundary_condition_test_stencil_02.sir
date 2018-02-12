@@ -1,10 +1,10 @@
 {
- "filename": "easy.cpp",
+ "filename": "boundary_condition_test_stencil_02.cpp",
  "stencils": [
   {
    "name": "SplitStencil",
    "loc": {
-    "Line": 29,
+    "Line": 28,
     "Column": 8
    },
    "ast": {
@@ -16,7 +16,7 @@
          "functor": "zero",
          "fields": [
           {
-           "name": "bar",
+           "name": "out",
            "loc": {
             "Line": -1,
             "Column": -1
@@ -34,7 +34,7 @@
         "vertical_region_decl_stmt": {
          "vertical_region": {
           "loc": {
-           "Line": 39,
+           "Line": 37,
            "Column": 5
           },
           "ast": {
@@ -47,7 +47,7 @@
                  "assignment_expr": {
                   "left": {
                    "field_access_expr": {
-                    "name": "foo",
+                    "name": "intermediate",
                     "offset": [
                      0,
                      0,
@@ -65,7 +65,7 @@
                     ],
                     "negate_offset": false,
                     "loc": {
-                     "Line": 40,
+                     "Line": 38,
                      "Column": 7
                     }
                    }
@@ -73,7 +73,7 @@
                   "op": "=",
                   "right": {
                    "field_access_expr": {
-                    "name": "bar",
+                    "name": "out",
                     "offset": [
                      1,
                      0,
@@ -91,19 +91,19 @@
                     ],
                     "negate_offset": false,
                     "loc": {
-                     "Line": 40,
-                     "Column": 13
+                     "Line": 38,
+                     "Column": 22
                     }
                    }
                   },
                   "loc": {
-                   "Line": 40,
+                   "Line": 38,
                    "Column": 7
                   }
                  }
                 },
                 "loc": {
-                 "Line": 40,
+                 "Line": 38,
                  "Column": 7
                 }
                }
@@ -114,7 +114,7 @@
                  "assignment_expr": {
                   "left": {
                    "field_access_expr": {
-                    "name": "bar",
+                    "name": "out",
                     "offset": [
                      0,
                      0,
@@ -132,7 +132,7 @@
                     ],
                     "negate_offset": false,
                     "loc": {
-                     "Line": 41,
+                     "Line": 39,
                      "Column": 7
                     }
                    }
@@ -142,7 +142,7 @@
                    "binary_operator": {
                     "left": {
                      "field_access_expr": {
-                      "name": "foo",
+                      "name": "intermediate",
                       "offset": [
                        -1,
                        0,
@@ -160,7 +160,7 @@
                       ],
                       "negate_offset": false,
                       "loc": {
-                       "Line": 41,
+                       "Line": 39,
                        "Column": 13
                       }
                      }
@@ -168,35 +168,35 @@
                     "op": "+",
                     "right": {
                      "var_access_expr": {
-                      "name": "glob_foo",
+                      "name": "global_var",
                       "is_external": true,
                       "loc": {
-                       "Line": 41,
-                       "Column": 26
+                       "Line": 39,
+                       "Column": 35
                       }
                      }
                     },
                     "loc": {
-                     "Line": 41,
+                     "Line": 39,
                      "Column": 13
                     }
                    }
                   },
                   "loc": {
-                   "Line": 41,
+                   "Line": 39,
                    "Column": 7
                   }
                  }
                 },
                 "loc": {
-                 "Line": 41,
+                 "Line": 39,
                  "Column": 7
                 }
                }
               }
              ],
              "loc": {
-              "Line": 39,
+              "Line": 37,
               "Column": 5
              }
             }
@@ -211,7 +211,7 @@
           "loop_order": "Forward"
          },
          "loc": {
-          "Line": 39,
+          "Line": 37,
           "Column": 5
          }
         }
@@ -226,17 +226,17 @@
    },
    "fields": [
     {
-     "name": "foo",
+     "name": "intermediate",
      "loc": {
-      "Line": 30,
+      "Line": 29,
       "Column": 11
      },
      "is_temporary": false
     },
     {
-     "name": "bar",
+     "name": "out",
      "loc": {
-      "Line": 31,
+      "Line": 30,
       "Column": 11
      },
      "is_temporary": false
@@ -248,7 +248,7 @@
   {
    "name": "zero",
    "loc": {
-    "Line": 24,
+    "Line": 23,
     "Column": 8
    },
    "asts": [
@@ -280,7 +280,7 @@
               ],
               "negate_offset": false,
               "loc": {
-               "Line": 26,
+               "Line": 25,
                "Column": 16
               }
              }
@@ -293,26 +293,26 @@
                "type_id": "Integer"
               },
               "loc": {
-               "Line": 26,
+               "Line": 25,
                "Column": 20
               }
              }
             },
             "loc": {
-             "Line": 26,
+             "Line": 25,
              "Column": 16
             }
            }
           },
           "loc": {
-           "Line": 26,
+           "Line": 25,
            "Column": 16
           }
          }
         }
        ],
        "loc": {
-        "Line": 26,
+        "Line": 25,
         "Column": 14
        }
       }
@@ -325,7 +325,7 @@
      "field_value": {
       "name": "a",
       "loc": {
-       "Line": 25,
+       "Line": 24,
        "Column": 11
       },
       "is_temporary": false
@@ -336,7 +336,7 @@
  ],
  "global_variables": {
   "map": {
-   "glob_foo": {
+   "global_var": {
     "is_constexpr": false,
     "integer_value": 12
    }
