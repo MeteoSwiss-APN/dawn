@@ -120,7 +120,7 @@ public:
   BlockStmt(const std::vector<std::shared_ptr<Stmt>>& statements,
             SourceLocation loc = SourceLocation());
   BlockStmt(const BlockStmt& stmt);
-  BlockStmt& operator=(BlockStmt stmt);
+  BlockStmt& operator=(BlockStmt const& stmt);
   virtual ~BlockStmt();
   /// @}
 

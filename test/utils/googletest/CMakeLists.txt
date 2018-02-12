@@ -29,5 +29,5 @@ endif()
 
 check_cxx_compiler_flag(-w HAVE_GCC_NO_WARNING)
 if(HAVE_GCC_NO_WARNING)
-  target_compile_options(gtest PRIVATE PUBLIC -w)
+  target_compile_options(gtest PRIVATE )
 endif()
