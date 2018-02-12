@@ -45,7 +45,7 @@ computeAccesses(StencilInstantiation* instantiation,
 /// @see StencilFunctionInstantiation
 /// @ingroup optimizer
 extern void
-computeAccesses(const std::shared_ptr<StencilFunctionInstantiation>& stencilFunctionInstantiation,
+computeAccesses(std::shared_ptr<StencilFunctionInstantiation> stencilFunctionInstantiation,
                 ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs);
 
 /// @}

@@ -65,7 +65,7 @@ class AccessMapper : public ASTVisitor {
     StencilFunctionCallScope(std::shared_ptr<StencilFunctionInstantiation> functionInstantiation)
         : FunctionInstantiation(functionInstantiation), ArgumentIndex(0) {}
 
-    const std::shared_ptr<StencilFunctionInstantiation>& FunctionInstantiation;
+    std::shared_ptr<StencilFunctionInstantiation> FunctionInstantiation;
     int ArgumentIndex;
   };
   std::stack<std::unique_ptr<StencilFunctionCallScope>> stencilFunCalls_;
@@ -327,7 +327,7 @@ public:
     stencilFunCalls_.push(
         make_unique<StencilFunctionCallScope>(getStencilFunctionInstantiation(expr)));
 
-    const std::shared_ptr<StencilFunctionInstantiation>& curStencilFunCall =
+    std::shared_ptr<StencilFunctionInstantiation> curStencilFunCall =
         stencilFunCalls_.top()->FunctionInstantiation;
     computeAccesses(curStencilFunCall, curStencilFunCall->getStatementAccessesPairs());
 
@@ -419,7 +419,7 @@ public:
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
     if(!stencilFunCalls_.empty()) {
 
-      const std::shared_ptr<StencilFunctionInstantiation>& functionInstantiation =
+      std::shared_ptr<StencilFunctionInstantiation> functionInstantiation =
           stencilFunCalls_.top()->FunctionInstantiation;
       int& ArgumentIndex = stencilFunCalls_.top()->ArgumentIndex;
 
@@ -451,9 +451,8 @@ void computeAccesses(StencilInstantiation* instantiation,
   }
 }
 
-void computeAccesses(
-    const std::shared_ptr<StencilFunctionInstantiation>& stencilFunctionInstantiation,
-    ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs) {
+void computeAccesses(std::shared_ptr<StencilFunctionInstantiation> stencilFunctionInstantiation,
+                     ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs) {
   for(const auto& statementAccessesPair : statementAccessesPairs) {
     AccessMapper mapper(stencilFunctionInstantiation->getStencilInstantiation(),
                         statementAccessesPair, stencilFunctionInstantiation);
