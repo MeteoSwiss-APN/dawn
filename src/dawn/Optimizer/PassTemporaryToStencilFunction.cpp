@@ -263,7 +263,7 @@ PassTemporaryToStencilFunction::PassTemporaryToStencilFunction()
     : Pass("PassTemporaryToStencilFunction") {}
 
 bool PassTemporaryToStencilFunction::run(
-    std::shared_ptr<StencilInstantiation> stencilInstantiation) {
+    const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   for(auto& stencilPtr : stencilInstantiation->getStencils()) {
     Stencil& stencil = *stencilPtr;
 
