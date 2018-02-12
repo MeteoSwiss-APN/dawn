@@ -58,14 +58,14 @@ class AccessMapper : public ASTVisitor {
   std::vector<std::shared_ptr<Accesses>> calleeAccessesList_;
 
   /// Reference to the stencil function we are currently inside (if any)
-  std::shared_ptr<StencilFunctionInstantiation> stencilFun_;
+  const std::shared_ptr<StencilFunctionInstantiation>& stencilFun_;
 
   /// Reference to the current call of a stencil function if we are traversing an argument list
   struct StencilFunctionCallScope {
     StencilFunctionCallScope(std::shared_ptr<StencilFunctionInstantiation> functionInstantiation)
         : FunctionInstantiation(functionInstantiation), ArgumentIndex(0) {}
 
-    std::shared_ptr<StencilFunctionInstantiation> FunctionInstantiation;
+    const std::shared_ptr<StencilFunctionInstantiation>& FunctionInstantiation;
     int ArgumentIndex;
   };
   std::stack<std::unique_ptr<StencilFunctionCallScope>> stencilFunCalls_;
@@ -73,7 +73,7 @@ class AccessMapper : public ASTVisitor {
 public:
   AccessMapper(StencilInstantiation* instantiation,
                const std::shared_ptr<StatementAccessesPair>& stmtAccessesPair,
-               std::shared_ptr<StencilFunctionInstantiation> stencilFun = nullptr)
+               const std::shared_ptr<StencilFunctionInstantiation>& stencilFun = nullptr)
       : instantiation_(instantiation), stencilFun_(stencilFun) {
     curStatementAccessPairStack_.push_back(
         make_unique<CurrentStatementAccessPair>(stmtAccessesPair));
@@ -212,9 +212,10 @@ public:
 
   /// @brief Recursively merge the `extent` with all fields of the `curStencilFunCall` and apply
   /// them to the current *caller* accesses
-  void mergeExtentWithAllFields(const Extents& extent,
-                                std::shared_ptr<StencilFunctionInstantiation> curStencilFunCall,
-                                std::set<int>& appliedAccessIDs) {
+  void
+  mergeExtentWithAllFields(const Extents& extent,
+                           const std::shared_ptr<StencilFunctionInstantiation>& curStencilFunCall,
+                           std::set<int>& appliedAccessIDs) {
     for(const Field& field : curStencilFunCall->getCallerFields()) {
       int AccessID = field.getAccessID();
 
@@ -326,7 +327,7 @@ public:
     stencilFunCalls_.push(
         make_unique<StencilFunctionCallScope>(getStencilFunctionInstantiation(expr)));
 
-    std::shared_ptr<StencilFunctionInstantiation> curStencilFunCall =
+    const std::shared_ptr<StencilFunctionInstantiation>& curStencilFunCall =
         stencilFunCalls_.top()->FunctionInstantiation;
     computeAccesses(curStencilFunCall, curStencilFunCall->getStatementAccessesPairs());
 
@@ -418,7 +419,7 @@ public:
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
     if(!stencilFunCalls_.empty()) {
 
-      std::shared_ptr<StencilFunctionInstantiation> functionInstantiation =
+      const std::shared_ptr<StencilFunctionInstantiation>& functionInstantiation =
           stencilFunCalls_.top()->FunctionInstantiation;
       int& ArgumentIndex = stencilFunCalls_.top()->ArgumentIndex;
 
@@ -450,8 +451,9 @@ void computeAccesses(StencilInstantiation* instantiation,
   }
 }
 
-void computeAccesses(std::shared_ptr<StencilFunctionInstantiation> stencilFunctionInstantiation,
-                     ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs) {
+void computeAccesses(
+    const std::shared_ptr<StencilFunctionInstantiation>& stencilFunctionInstantiation,
+    ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs) {
   for(const auto& statementAccessesPair : statementAccessesPairs) {
     AccessMapper mapper(stencilFunctionInstantiation->getStencilInstantiation(),
                         statementAccessesPair, stencilFunctionInstantiation);

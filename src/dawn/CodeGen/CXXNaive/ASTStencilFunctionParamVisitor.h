@@ -34,14 +34,14 @@ namespace cxxnaive {
 class ASTStencilFunctionParamVisitor : public ASTVisitorDisabled, public NonCopyable {
 protected:
   const StencilInstantiation* instantiation_;
-  const std::shared_ptr<StencilFunctionInstantiation> currentFunction_;
+  const std::shared_ptr<StencilFunctionInstantiation>& currentFunction_;
   /// Underlying stream
   std::stringstream ss_;
 
 public:
   using Base = ASTVisitorDisabled;
 
-  ASTStencilFunctionParamVisitor(const std::shared_ptr<StencilFunctionInstantiation> function,
+  ASTStencilFunctionParamVisitor(const std::shared_ptr<StencilFunctionInstantiation>& function,
                                  StencilInstantiation const* instantiation);
   virtual ~ASTStencilFunctionParamVisitor();
 

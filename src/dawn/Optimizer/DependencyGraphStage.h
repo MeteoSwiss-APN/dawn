@@ -33,7 +33,7 @@ enum class DependencyGraphStageEdgeData { EK_Depends };
 class DependencyGraphStage
     : public DependencyGraph<DependencyGraphStage, DependencyGraphStageEdgeData> {
 
-  std::shared_ptr<StencilInstantiation> stencilInstantiation_;
+  const std::shared_ptr<StencilInstantiation>& stencilInstantiation_;
 
 public:
   using Base = DependencyGraph<DependencyGraphStage, DependencyGraphStageEdgeData>;

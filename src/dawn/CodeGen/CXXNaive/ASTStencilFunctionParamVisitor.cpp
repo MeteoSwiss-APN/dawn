@@ -26,7 +26,7 @@ namespace codegen {
 namespace cxxnaive {
 
 ASTStencilFunctionParamVisitor::ASTStencilFunctionParamVisitor(
-    const std::shared_ptr<StencilFunctionInstantiation> function,
+    const std::shared_ptr<StencilFunctionInstantiation>& function,
     StencilInstantiation const* instantiation)
     : instantiation_(instantiation), currentFunction_(function) {}
 

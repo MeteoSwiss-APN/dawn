@@ -191,7 +191,7 @@ void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
 }
 
 void ASTStencilBody::setCurrentStencilFunction(
-    const std::shared_ptr<StencilFunctionInstantiation> currentFunction) {
+    const std::shared_ptr<StencilFunctionInstantiation>& currentFunction) {
   currentFunction_ = currentFunction;
 }
 

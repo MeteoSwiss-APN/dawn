@@ -102,7 +102,7 @@ public:
 
   /// @brief Set the current stencil function (can be NULL)
   void
-  setCurrentStencilFunction(const std::shared_ptr<StencilFunctionInstantiation> currentFunction);
+  setCurrentStencilFunction(const std::shared_ptr<StencilFunctionInstantiation>& currentFunction);
 
   /// @brief Mapping of VarDeclStmt and Var/FieldAccessExpr to their name
   std::string getName(const std::shared_ptr<Expr>& expr) const override;
