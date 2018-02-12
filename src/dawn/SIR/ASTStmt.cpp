@@ -46,7 +46,7 @@ BlockStmt::BlockStmt(const BlockStmt& stmt) : Stmt(SK_BlockStmt, stmt.getSourceL
     statements_.push_back(s->clone());
 }
 
-BlockStmt& BlockStmt::operator=(BlockStmt stmt) {
+BlockStmt& BlockStmt::operator=(BlockStmt const& stmt) {
   assign(stmt);
   statements_ = std::move(stmt.statements_);
   return *this;
