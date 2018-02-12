@@ -93,8 +93,8 @@ bool Stencil::Lifetime::overlaps(const Stencil::Lifetime& other) const {
 }
 
 Stencil::Stencil(StencilInstantiation& stencilInstantiation,
-                 const std::shared_ptr<sir::Stencil> SIRStencil, int StencilID,
-                 std::shared_ptr<DependencyGraphStage> stageDependencyGraph)
+                 const std::shared_ptr<sir::Stencil>& SIRStencil, int StencilID,
+                 const std::shared_ptr<DependencyGraphStage>& stageDependencyGraph)
     : stencilInstantiation_(stencilInstantiation), SIRStencil_(SIRStencil), StencilID_(StencilID),
       stageDependencyGraph_(stageDependencyGraph) {}
 

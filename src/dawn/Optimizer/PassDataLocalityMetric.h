@@ -35,15 +35,14 @@ public:
   PassDataLocalityMetric();
 
   /// @brief Pass implementation
-  bool run(std::shared_ptr<StencilInstantiation> stencilInstantiation) override;
+  bool run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) override;
 };
 
 std::pair<int, int>
-computeReadWriteAccessesMetric(std::shared_ptr<StencilInstantiation> instantiation,
+computeReadWriteAccessesMetric(const std::shared_ptr<StencilInstantiation>& instantiation,
                                const MultiStage& multiStage);
-std::unordered_map<int, ReadWriteAccumulator>
-computeReadWriteAccessesMetricPerAccessID(std::shared_ptr<StencilInstantiation> instantiation,
-                                          const MultiStage& multiStage);
+std::unordered_map<int, ReadWriteAccumulator> computeReadWriteAccessesMetricPerAccessID(
+    const std::shared_ptr<StencilInstantiation>& instantiation, const MultiStage& multiStage);
 
 } // namespace dawn
 

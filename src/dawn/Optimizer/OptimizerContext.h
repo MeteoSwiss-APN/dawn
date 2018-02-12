@@ -52,7 +52,7 @@ class OptimizerContext : NonCopyable {
 public:
   /// @brief Initialize the context with a SIR
   OptimizerContext(DiagnosticsEngine& diagnostics, Options& options,
-                   const std::shared_ptr<SIR> SIR);
+                   const std::shared_ptr<SIR>& SIR);
 
   /// @brief Get StencilInstantiation map
   std::map<std::string, std::shared_ptr<StencilInstantiation>>& getStencilInstantiationMap();

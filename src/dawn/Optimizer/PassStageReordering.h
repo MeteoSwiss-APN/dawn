@@ -30,7 +30,7 @@ public:
   PassStageReordering(ReorderStrategy::ReorderStrategyKind strategy);
 
   /// @brief Pass implementation
-  bool run(std::shared_ptr<StencilInstantiation> stencilInstantiation) override;
+  bool run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) override;
 
 private:
   ReorderStrategy::ReorderStrategyKind strategy_;

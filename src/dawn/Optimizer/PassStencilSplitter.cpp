@@ -46,7 +46,7 @@ PassStencilSplitter::PassStencilSplitter() : Pass("PassStencilSplitter") {
   dependencies_.push_back("PassSetStageGraph");
 }
 
-bool PassStencilSplitter::run(std::shared_ptr<StencilInstantiation> stencilInstantiation) {
+bool PassStencilSplitter::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   if(context->getOptions().SplitStencils) {

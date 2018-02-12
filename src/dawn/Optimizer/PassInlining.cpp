@@ -33,7 +33,7 @@ class Inliner;
 static std::pair<bool, std::shared_ptr<Inliner>>
 tryInlineStencilFunction(PassInlining::InlineStrategyKind strategy,
                          StencilFunctionInstantiation* stencilFunctioninstantiation,
-                         std::shared_ptr<StatementAccessesPair> oldStmt,
+                         std::shared_ptr<StatementAccessesPair>& oldStmt,
                          std::vector<std::shared_ptr<StatementAccessesPair>>& newStmts,
                          int AccessIDOfCaller);
 
@@ -74,7 +74,7 @@ class Inliner : public ASTVisitor {
 public:
   Inliner(PassInlining::InlineStrategyKind strategy,
           StencilFunctionInstantiation* stencilFunctioninstantiation,
-          std::shared_ptr<StatementAccessesPair> oldStmtAccessesPair,
+          std::shared_ptr<StatementAccessesPair>& oldStmtAccessesPair,
           std::vector<std::shared_ptr<StatementAccessesPair>>& newStmtAccessesPairs,
           int AccessIDOfCaller = 0)
       : strategy_(strategy), curStencilFunctioninstantiation_(stencilFunctioninstantiation),
@@ -93,7 +93,7 @@ public:
     scopeDepth_--;
   }
 
-  void appendNewStatementAccessesPair(const std::shared_ptr<Stmt> stmt) {
+  void appendNewStatementAccessesPair(const std::shared_ptr<Stmt>& stmt) {
     if(scopeDepth_ == 1)
       newStmtAccessesPairs_.emplace_back(std::make_shared<StatementAccessesPair>(
           std::make_shared<Statement>(stmt, oldStmtAccessesPair_->getStatement()->StackTrace)));
@@ -307,7 +307,7 @@ public:
 /// @brief Detect inline candidates
 class DetectInlineCandiates : public ASTVisitorForwarding {
   PassInlining::InlineStrategyKind strategy_;
-  std::shared_ptr<StencilInstantiation> instantiation_;
+  const std::shared_ptr<StencilInstantiation>& instantiation_;
 
   /// The statement we are currently analyzing
   std::shared_ptr<StatementAccessesPair> oldStmtAccessesPair_;
@@ -335,7 +335,7 @@ public:
   using Base = ASTVisitorForwarding;
 
   DetectInlineCandiates(PassInlining::InlineStrategyKind strategy,
-                        std::shared_ptr<StencilInstantiation> instantiation)
+                        const std::shared_ptr<StencilInstantiation>& instantiation)
       : strategy_(strategy), instantiation_(instantiation), inlineCandiatesFound_(false) {}
 
   /// @brief Process the given statement
@@ -439,7 +439,7 @@ public:
 static std::pair<bool, std::shared_ptr<Inliner>>
 tryInlineStencilFunction(PassInlining::InlineStrategyKind strategy,
                          StencilFunctionInstantiation* stencilFunc,
-                         std::shared_ptr<StatementAccessesPair> oldStmtAccessesPair,
+                         std::shared_ptr<StatementAccessesPair>& oldStmtAccessesPair,
                          std::vector<std::shared_ptr<StatementAccessesPair>>& newStmtAccessesPairs,
                          int AccessIDOfCaller) {
 
@@ -459,7 +459,7 @@ tryInlineStencilFunction(PassInlining::InlineStrategyKind strategy,
 PassInlining::PassInlining(InlineStrategyKind strategy)
     : Pass("PassInlining"), strategy_(strategy) {}
 
-bool PassInlining::run(std::shared_ptr<StencilInstantiation> stencilInstantiation) {
+bool PassInlining::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   // Nothing to do ...
   if(strategy_ == IK_None)
     return true;

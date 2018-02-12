@@ -20,7 +20,7 @@ namespace dawn {
 
 PassSetStageName::PassSetStageName() : Pass("PassSetStageName") {}
 
-bool PassSetStageName::run(std::shared_ptr<StencilInstantiation> stencilInstantiation) {
+bool PassSetStageName::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   stencilInstantiation->getStageIDToNameMap().clear();
 
   int stencilIdx = 0;

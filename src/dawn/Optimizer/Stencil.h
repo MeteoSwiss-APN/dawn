@@ -159,8 +159,8 @@ public:
   /// @name Constructors and Assignment
   /// @{
   Stencil(StencilInstantiation& stencilInstantiation,
-          const std::shared_ptr<sir::Stencil> SIRStencil, int StencilID,
-          std::shared_ptr<DependencyGraphStage> stageDependencyGraph = nullptr);
+          const std::shared_ptr<sir::Stencil>& SIRStencil, int StencilID,
+          const std::shared_ptr<DependencyGraphStage>& stageDependencyGraph = nullptr);
 
   Stencil(const Stencil&) = default;
   Stencil(Stencil&&) = default;

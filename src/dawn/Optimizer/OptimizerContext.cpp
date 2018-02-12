@@ -22,7 +22,7 @@
 namespace dawn {
 
 OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, Options& options,
-                                   const std::shared_ptr<SIR> SIR)
+                                   const std::shared_ptr<SIR>& SIR)
     : diagnostics_(diagnostics), options_(options), SIR_(SIR) {
   DAWN_LOG(INFO) << "Intializing OptimizerContext ... ";
 

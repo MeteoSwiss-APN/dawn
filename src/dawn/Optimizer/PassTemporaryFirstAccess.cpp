@@ -29,11 +29,11 @@ namespace {
 class UnusedFieldVisitor : public ASTVisitorForwarding {
   int AccessID_;
   bool fieldIsUnused_;
-  std::shared_ptr<StencilInstantiation> instantiation_;
+  const std::shared_ptr<StencilInstantiation>& instantiation_;
   std::stack<StencilFunctionInstantiation*> functionInstantiationStack_;
 
 public:
-  UnusedFieldVisitor(int AccessID, std::shared_ptr<StencilInstantiation> instantiation)
+  UnusedFieldVisitor(int AccessID, const std::shared_ptr<StencilInstantiation>& instantiation)
       : AccessID_(AccessID), fieldIsUnused_(false), instantiation_(instantiation) {}
 
   StencilFunctionInstantiation*
@@ -64,7 +64,8 @@ public:
 
 PassTemporaryFirstAccess::PassTemporaryFirstAccess() : Pass("PassTemporaryFirstAccess") {}
 
-bool PassTemporaryFirstAccess::run(std::shared_ptr<StencilInstantiation> stencilInstantiation) {
+bool PassTemporaryFirstAccess::run(
+    const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   for(auto& stencilPtr : stencilInstantiation->getStencils()) {

@@ -29,7 +29,8 @@ namespace dawn {
 
 PassMultiStageSplitter::PassMultiStageSplitter() : Pass("PassMultiStageSplitter") {}
 
-bool PassMultiStageSplitter::run(std::shared_ptr<StencilInstantiation> stencilInstantiation) {
+bool PassMultiStageSplitter::run(
+    const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   int numSplit = 0;

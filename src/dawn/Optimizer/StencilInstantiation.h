@@ -103,8 +103,8 @@ class StencilInstantiation : NonCopyable {
 
 public:
   /// @brief Assemble StencilInstantiation for stencil
-  StencilInstantiation(OptimizerContext* context, const std::shared_ptr<sir::Stencil> SIRStencil,
-                       const std::shared_ptr<SIR> SIR);
+  StencilInstantiation(OptimizerContext* context, const std::shared_ptr<sir::Stencil>& SIRStencil,
+                       const std::shared_ptr<SIR>& SIR);
 
   /// @brief Insert a new AccessID - Name pair
   void setAccessIDNamePair(int AccessID, const std::string& name);
@@ -363,10 +363,10 @@ public:
   const std::set<int>& getGlobalVariableAccessIDSet() const;
 
   /// @brief Get the SIR
-  const std::shared_ptr<SIR> getSIR() const { return SIR_; }
+  std::shared_ptr<SIR> const& getSIR() const { return SIR_; }
 
   /// @brief Get the SIRStencil this context was built from
-  const std::shared_ptr<sir::Stencil> getSIRStencil() const { return SIRStencil_; }
+  std::shared_ptr<sir::Stencil> const& getSIRStencil() const { return SIRStencil_; }
 
   /// @brief Get the optimizer context
   OptimizerContext* getOptimizerContext() { return context_; }

@@ -111,13 +111,13 @@ namespace {
 
 /// @brief Get all field and variable accesses identifier by `AccessID`
 class GetStencilCalls : public ASTVisitorForwarding {
-  std::shared_ptr<StencilInstantiation> instantiation_;
+  const std::shared_ptr<StencilInstantiation>& instantiation_;
   int StencilID_;
 
   std::vector<std::shared_ptr<StencilCallDeclStmt>> stencilCallsToReplace_;
 
 public:
-  GetStencilCalls(std::shared_ptr<StencilInstantiation> instantiation, int StencilID)
+  GetStencilCalls(const std::shared_ptr<StencilInstantiation>& instantiation, int StencilID)
       : instantiation_(instantiation), StencilID_(StencilID) {}
 
   void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
@@ -134,8 +134,8 @@ public:
 
 } // anonymous namespace
 
-void replaceStencilCalls(std::shared_ptr<StencilInstantiation> instantiation, int oldStencilID,
-                         const std::vector<int>& newStencilIDs) {
+void replaceStencilCalls(const std::shared_ptr<StencilInstantiation>& instantiation,
+                         int oldStencilID, const std::vector<int>& newStencilIDs) {
   GetStencilCalls visitor(instantiation, oldStencilID);
 
   for(auto& statement : instantiation->getStencilDescStatements()) {

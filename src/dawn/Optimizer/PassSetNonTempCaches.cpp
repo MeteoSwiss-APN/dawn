@@ -281,7 +281,8 @@ private:
 
 PassSetNonTempCaches::PassSetNonTempCaches() : Pass("PassSetNonTempCaches") {}
 
-bool dawn::PassSetNonTempCaches::run(std::shared_ptr<StencilInstantiation> stencilInstantiation) {
+bool dawn::PassSetNonTempCaches::run(
+    const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
 
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 

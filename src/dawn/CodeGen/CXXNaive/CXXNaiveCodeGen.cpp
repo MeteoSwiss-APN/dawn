@@ -450,7 +450,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
   return str;
 }
 
-std::string CXXNaiveCodeGen::generateGlobals(const std::shared_ptr<SIR> sir) {
+std::string CXXNaiveCodeGen::generateGlobals(std::shared_ptr<SIR> const& sir) {
 
   const auto& globalsMap = *(sir->GlobalVariableMap);
   if(globalsMap.empty())
