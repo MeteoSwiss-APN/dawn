@@ -31,11 +31,11 @@ static bool depends(const Stage& fromStage, const Stage& toStage) {
   for(const Field& fromField : fromStage.getFields()) {
     for(const Field& toField : toStage.getFields()) {
 
-      if(fromField.AccessID != toField.AccessID)
+      if(fromField.getAccessID() != toField.getAccessID())
         continue;
 
-      Field::IntendKind fromFieldIntend = fromField.Intend;
-      Field::IntendKind toFieldIntend = toField.Intend;
+      Field::IntendKind fromFieldIntend = fromField.getIntend();
+      Field::IntendKind toFieldIntend = toField.getIntend();
 
       switch(fromFieldIntend) {
       case Field::IK_Output:
@@ -59,7 +59,7 @@ PassSetStageGraph::PassSetStageGraph() : Pass("PassSetStageGraph") {
   dependencies_.push_back("PassSetStageName");
 }
 
-bool PassSetStageGraph::run(StencilInstantiation* stencilInstantiation) {
+bool PassSetStageGraph::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   int stencilIdx = 0;

@@ -506,7 +506,7 @@ public:
                              std::vector<std::shared_ptr<Statement>>& statements,
                              const std::unordered_map<std::string, int>& fieldnameToAccessIDMap)
       : instantiation_(instantiation) {
-
+    DAWN_ASSERT(instantiation);
     // Create the initial scope
     scope_.push(std::make_shared<Scope>(name, statements));
     scope_.top()->LocalFieldnameToAccessIDMap = fieldnameToAccessIDMap;
@@ -544,7 +544,7 @@ public:
   void makeNewStencil() {
     int StencilID = instantiation_->nextUID();
     instantiation_->getStencils().emplace_back(
-        make_unique<Stencil>(instantiation_, instantiation_->getSIRStencil(), StencilID));
+        std::make_shared<Stencil>(*instantiation_, instantiation_->getSIRStencil(), StencilID));
 
     // We create a paceholder stencil-call for CodeGen to know wehere we need to insert calls to
     // this stencil
@@ -772,10 +772,10 @@ public:
 
     // Create the new multi-stage
     std::shared_ptr<MultiStage> multiStage = std::make_shared<MultiStage>(
-        instantiation_, verticalRegion->LoopOrder == sir::VerticalRegion::LK_Forward
-                            ? LoopOrderKind::LK_Forward
-                            : LoopOrderKind::LK_Backward);
-    std::shared_ptr<Stage> stage = std::make_shared<Stage>(instantiation_, multiStage.get(),
+        *instantiation_, verticalRegion->LoopOrder == sir::VerticalRegion::LK_Forward
+                             ? LoopOrderKind::LK_Forward
+                             : LoopOrderKind::LK_Backward);
+    std::shared_ptr<Stage> stage = std::make_shared<Stage>(*instantiation_, multiStage.get(),
                                                            instantiation_->nextUID(), interval);
 
     DAWN_LOG(INFO) << "Processing vertical region at " << verticalRegion->Loc;
@@ -995,7 +995,8 @@ public:
 //===------------------------------------------------------------------------------------------===//
 
 StencilInstantiation::StencilInstantiation(OptimizerContext* context,
-                                           const sir::Stencil* SIRStencil, const SIR* SIR)
+                                           std::shared_ptr<sir::Stencil> const& SIRStencil,
+                                           std::shared_ptr<SIR> const& SIR)
     : context_(context), SIRStencil_(SIRStencil), SIR_(SIR) {
   DAWN_LOG(INFO) << "Intializing StencilInstantiation of `" << SIRStencil->Name << "`";
   DAWN_ASSERT_MSG(SIRStencil, "Stencil does not exist");
@@ -1063,7 +1064,7 @@ void StencilInstantiation::removeAccessID(int AccesssID) {
   }
 }
 
-const std::string& StencilInstantiation::getName() const { return SIRStencil_->Name; }
+const std::string StencilInstantiation::getName() const { return SIRStencil_->Name; }
 
 const std::unordered_map<std::shared_ptr<Stmt>, int>&
 StencilInstantiation::getStmtToAccessIDMap() const {

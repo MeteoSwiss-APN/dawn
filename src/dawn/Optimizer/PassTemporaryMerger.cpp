@@ -25,7 +25,7 @@ namespace dawn {
 
 PassTemporaryMerger::PassTemporaryMerger() : Pass("PassTemporaryMerger") {}
 
-bool PassTemporaryMerger::run(StencilInstantiation* stencilInstantiation) {
+bool PassTemporaryMerger::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   using Edge = DependencyGraphAccesses::Edge;
   using Vertex = DependencyGraphAccesses::Vertex;
 
@@ -50,7 +50,7 @@ bool PassTemporaryMerger::run(StencilInstantiation* stencilInstantiation) {
     Stencil& stencil = *stencilPtr;
 
     // Build the dependency graph of the stencil (merge all dependency graphs of the multi-stages)
-    DependencyGraphAccesses AccessesDAG(stencilInstantiation);
+    DependencyGraphAccesses AccessesDAG(stencilInstantiation.get());
     for(const auto& multiStagePtr : stencilPtr->getMultiStages()) {
       MultiStage& multiStage = *multiStagePtr;
       AccessesDAG.merge(multiStage.getDependencyGraphOfAxis().get());
@@ -58,7 +58,7 @@ bool PassTemporaryMerger::run(StencilInstantiation* stencilInstantiation) {
     const auto& adjacencyList = AccessesDAG.getAdjacencyList();
 
     // Build the dependency graph of the temporaries
-    DependencyGraphAccesses TemporaryDAG(stencilInstantiation);
+    DependencyGraphAccesses TemporaryDAG(stencilInstantiation.get());
     int AccessIDOfLastTemporary = -1;
     for(std::size_t VertexID : AccessesDAG.getOutputVertexIDs()) {
       nodesToVisit.clear();
