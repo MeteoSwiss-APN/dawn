@@ -135,14 +135,14 @@ bool PassSetBoundaryCondition::run(StencilInstantiation* stencilInstantiation) {
   std::unordered_map<int, Extents> dirtyFields;
   std::unordered_map<int, std::shared_ptr<BoundaryConditionDeclStmt>> allBCs;
 
-  // Fetch all the boundary conditions stored in the instantiation
-  for(const auto& bc : stencilInstantiation->getBoundaryConditions()) {
-    auto it = stencilInstantiation->getNameToAccessIDMap().find(bc.first);
-    if(it != stencilInstantiation->getNameToAccessIDMap().end()) {
-      int ID = stencilInstantiation->getAccessIDFromName(bc.first);
-      allBCs.emplace(ID, bc.second);
-    }
-  }
+  //  // Fetch all the boundary conditions stored in the instantiation
+  std::transform(stencilInstantiation->getBoundaryConditions().begin(),
+                 stencilInstantiation->getBoundaryConditions().end(),
+                 std::inserter(allBCs, allBCs.begin()),
+                 [&](std::pair<std::string, std::shared_ptr<BoundaryConditionDeclStmt>> bcPair) {
+                   return std::make_pair(stencilInstantiation->getAccessIDFromName(bcPair.first),
+                                         bcPair.second);
+                 });
 
   // Get the order in which the stencils are called:
   VisitStencilCalls findStencilCalls;
