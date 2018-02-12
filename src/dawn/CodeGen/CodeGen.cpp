@@ -16,7 +16,6 @@ void CodeGen::addTempStorageTypedef(Structure& stencilClass, Stencil const& sten
       .addType("gridtools::halo< GRIDTOOLS_CLANG_HALO_EXTEND, GRIDTOOLS_CLANG_HALO_EXTEND, " +
                std::to_string(getVerticalTmpHaloSize(stencil)) + ">");
 
-  // using tmp_meta_data_t = storage_traits_t::storage_info_t< 0, 3, tmp_halo_t >
   stencilClass.addTypeDef(tmpMetadataTypename_)
       .addType("storage_traits_t::storage_info_t< 0, 3, tmp_halo_t >");
 
