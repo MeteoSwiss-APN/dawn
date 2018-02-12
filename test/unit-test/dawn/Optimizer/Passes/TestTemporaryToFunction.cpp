@@ -89,17 +89,7 @@ protected:
 
     // Generate code
     std::unique_ptr<codegen::CodeGen> CG;
-    //    switch(codeGen) {
-    //    case CodeGenKind::CG_GTClang:
     CG = make_unique<codegen::gt::GTCodeGen>(optimizer.get());
-    //      break;
-    //    case CodeGenKind::CG_GTClangNaiveCXX:
-    //      CG = make_unique<codegen::cxxnaive::CXXNaiveCodeGen>(optimizer.get());
-    //      break;
-    //    case CodeGenKind::CG_GTClangOptCXX:
-    //      dawn_unreachable("GTClangOptCXX not supported yet");
-    //      break;
-    //    }
     auto gg = CG->generateCode();
 
     if(optimizer->getDiagnostics().hasDiags()) {
@@ -109,7 +99,7 @@ protected:
 
     DAWN_ASSERT(gg);
     for(auto pair : gg->getStencils()) {
-      std::cout << pair.first << " KKKKKKKKKKK " << pair.second << std::endl;
+      //      std::cout << pair.first << " KKKKKKKKKKK " << pair.second << std::endl;
     }
 
     return optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"]->getStencils();

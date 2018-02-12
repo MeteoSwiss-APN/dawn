@@ -170,7 +170,7 @@ private:
 public:
   StencilFunctionInstantiation(StencilInstantiation* context,
                                const std::shared_ptr<StencilFunCallExpr>& expr,
-                               std::shared_ptr<sir::StencilFunction> function,
+                               const std::shared_ptr<sir::StencilFunction>& function,
                                const std::shared_ptr<AST>& ast, const Interval& interval,
                                bool isNested);
 
@@ -181,8 +181,10 @@ public:
     return ArgumentIndexToCallerAccessIDMap_;
   }
 
+  /// @brief check if all the stencil function arguments are bound
   bool isArgsBound() const { return argsBound_; }
 
+  /// @brief returns number of arguments
   size_t numArgs() const;
 
   /// @brief register the access id of a global variable access
@@ -194,6 +196,7 @@ public:
   std::set<int> const& getAccessIDSetGlobalVariables() const { return GlobalVariableAccessIDSet_; }
   /// @}
 
+  /// @brief remove a stencil function instantiation tagged by a StencilFunCallExpr
   void removeStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr);
 
   /// @brief get the name of the arg parameter of the stencil function which is called passing

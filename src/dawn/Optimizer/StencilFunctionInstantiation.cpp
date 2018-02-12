@@ -27,7 +27,7 @@ namespace dawn {
 
 StencilFunctionInstantiation::StencilFunctionInstantiation(
     StencilInstantiation* context, const std::shared_ptr<StencilFunCallExpr>& expr,
-    std::shared_ptr<sir::StencilFunction> function, const std::shared_ptr<AST>& ast,
+    const std::shared_ptr<sir::StencilFunction>& function, const std::shared_ptr<AST>& ast,
     const Interval& interval, bool isNested)
     : stencilInstantiation_(context), expr_(expr), function_(function), ast_(ast),
       interval_(interval), hasReturn_(false), isNested_(isNested) {
@@ -617,8 +617,8 @@ void StencilFunctionInstantiation::dump() const {
 }
 
 void StencilFunctionInstantiation::closeFunctionBindings() {
+  // finalize the bindings of some of the arguments that are not yet instantiated
   const auto& arguments = getArguments();
-  // Assign the AccessIDs of the fields in the stencil function
 
   for(std::size_t argIdx = 0; argIdx < arguments.size(); ++argIdx) {
     if(isa<sir::Field>(*arguments[argIdx])) {

@@ -110,9 +110,11 @@ class StencilInstantiation : NonCopyable {
                      std::shared_ptr<StencilFunctionInstantiation>>
       ExprToStencilFunctionInstantiationMap_;
 
+  /// table from name to stencil function instantiation
   std::unordered_map<std::string, std::shared_ptr<StencilFunctionInstantiation>>
       nameToStencilFunctionInstantiationMap_;
 
+  /// lookup table containing all the stencil function candidates, whose arguments are not yet bound
   std::unordered_map<std::shared_ptr<StencilFunctionInstantiation>,
                      StencilFunctionInstantiationCandidate>
       stencilFunInstantiationCandidate_;
@@ -295,19 +297,27 @@ public:
   const std::shared_ptr<StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::string stencilFunName) const;
 
+  /// @brief get a stencil function instantiation by StencilFunCallExpr
   const std::shared_ptr<StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) const;
 
+  /// @brief returns true if a stencil function instantiation candidate with name stencilFunName
+  /// exists
   bool hasStencilFunctionInstantiationCandidate(const std::string stencilFunName) const;
 
+  /// @brief returns true if a stencil function instantiation with name stencilFunName exists
   bool hasStencilFunctionInstantiation(const std::string stencilFunName) const;
 
+  /// @brief get a stencil function candidate by StencilFunCallExpr
   std::shared_ptr<StencilFunctionInstantiation>
   getStencilFunctionInstantiationCandidate(const std::shared_ptr<StencilFunCallExpr>& expr);
 
+  /// @brief get a stencil function candidate by name
   std::shared_ptr<StencilFunctionInstantiation>
   getStencilFunctionInstantiationCandidate(const std::string stencilFunName);
 
+  /// @brief clone a stencil function candidate and set its name fo functionName
+  /// @returns the clone of the stencil function
   std::shared_ptr<StencilFunctionInstantiation>
   cloneStencilFunctionCandidate(const std::shared_ptr<StencilFunctionInstantiation>& stencilFun,
                                 std::string functionName);

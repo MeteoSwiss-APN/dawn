@@ -154,6 +154,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   passManager.pushBackPass<PassStencilSplitter>();
   passManager.pushBackPass<PassTemporaryType>();
   passManager.pushBackPass<PassTemporaryMerger>();
+  // still experimental
   //  passManager.pushBackPass<PassTemporaryToStencilFunction>();
   passManager.pushBackPass<PassSetNonTempCaches>();
   passManager.pushBackPass<PassSetCaches>();
