@@ -419,7 +419,7 @@ std::shared_ptr<Interval> Stencil::getEnclosingIntervalTemporaries() const {
   return tmpInterval;
 }
 
-std::shared_ptr<sir::Stencil> Stencil::getSIRStencil() const { return SIRStencil_; }
+const std::shared_ptr<sir::Stencil> Stencil::getSIRStencil() const { return SIRStencil_; }
 
 void Stencil::accept(ASTVisitor& visitor) {
   for(const auto& multistagePtr : multistages_)

@@ -407,6 +407,7 @@ public:
   /// @brief Get the SIR
   std::shared_ptr<SIR> const& getSIR() const { return SIR_; }
 
+  /// @brief insert a new sir::StencilFunction into the IIR
   void
   insertStencilFunctionIntoSIR(const std::shared_ptr<sir::StencilFunction>& sirStencilFunction);
 
