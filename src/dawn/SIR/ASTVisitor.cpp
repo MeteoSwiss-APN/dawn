@@ -107,7 +107,8 @@ void ASTVisitorForwardingNonConst::visit(std::shared_ptr<dawn::VerticalRegionDec
 }
 
 #define ASTVISITORPOSTORDER_VISIT_IMPL(NodeType, Type)                                             \
-  std::shared_ptr<NodeType> ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<Type> node) {     \
+  std::shared_ptr<NodeType> ASTVisitorPostOrder::visitAndReplace(                                  \
+      std::shared_ptr<Type> const& node) {                                                         \
     if(!preVisitNode(node))                                                                        \
       return node;                                                                                 \
     for(auto s : node->getChildren()) {                                                            \
@@ -118,8 +119,9 @@ void ASTVisitorForwardingNonConst::visit(std::shared_ptr<dawn::VerticalRegionDec
     }                                                                                              \
     return postVisitNode(node);                                                                    \
   }                                                                                                \
-  bool ASTVisitorPostOrder::preVisitNode(std::shared_ptr<Type> node) { return true; }              \
-  std::shared_ptr<NodeType> ASTVisitorPostOrder::postVisitNode(std::shared_ptr<Type> node) {       \
+  bool ASTVisitorPostOrder::preVisitNode(std::shared_ptr<Type> const& node) { return true; }       \
+  std::shared_ptr<NodeType> ASTVisitorPostOrder::postVisitNode(                                    \
+      std::shared_ptr<Type> const& node) {                                                         \
     return node;                                                                                   \
   }
 
@@ -142,34 +144,43 @@ ASTVISITORPOSTORDER_VISIT_IMPL(Expr, NOPExpr)
 #undef ASTVISITORPOSTORDER_VISIT_STMT_IMPL
 #undef ASTVISITORPOSTORDER_VISIT_EXPR_IMPL
 
-std::shared_ptr<Stmt> ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<ExprStmt> node) {
+std::shared_ptr<Stmt> ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<ExprStmt> const& node) {
+  DAWN_ASSERT(node);
   if(!preVisitNode(node))
     return node;
 
+  DAWN_ASSERT(node->getExpr());
+  auto repl = node->getExpr()->acceptAndReplace(*this);
+  DAWN_ASSERT(repl);
+
+  if(repl && repl != node->getExpr()) {
+    auto oo = node->getExpr();
+    DAWN_ASSERT(oo && repl);
+    node->replaceChildren(node->getExpr(), repl);
+  }
+  return postVisitNode(node);
+}
+bool ASTVisitorPostOrder::preVisitNode(std::shared_ptr<ExprStmt> const& node) { return true; }
+std::shared_ptr<Stmt> ASTVisitorPostOrder::postVisitNode(std::shared_ptr<ExprStmt> const& node) {
+  return node;
+}
+
+std::shared_ptr<Stmt>
+ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<ReturnStmt> const& node) {
+  if(!preVisitNode(node))
+    return node;
   auto repl = node->getExpr()->acceptAndReplace(*this);
   if(repl && repl != node->getExpr())
     node->replaceChildren(node->getExpr(), repl);
   return postVisitNode(node);
 }
-bool ASTVisitorPostOrder::preVisitNode(std::shared_ptr<ExprStmt> node) { return true; }
-std::shared_ptr<Stmt> ASTVisitorPostOrder::postVisitNode(std::shared_ptr<ExprStmt> node) {
+std::shared_ptr<Stmt> ASTVisitorPostOrder::postVisitNode(std::shared_ptr<ReturnStmt> const& node) {
   return node;
 }
+bool ASTVisitorPostOrder::preVisitNode(std::shared_ptr<ReturnStmt> const& node) { return true; }
 
-std::shared_ptr<Stmt> ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<ReturnStmt> node) {
-  if(!preVisitNode(node))
-    return node;
-  auto repl = node->getExpr()->acceptAndReplace(*this);
-  if(repl && repl != node->getExpr())
-    node->replaceChildren(node->getExpr(), repl);
-  return postVisitNode(node);
-}
-std::shared_ptr<Stmt> ASTVisitorPostOrder::postVisitNode(std::shared_ptr<ReturnStmt> node) {
-  return node;
-}
-bool ASTVisitorPostOrder::preVisitNode(std::shared_ptr<ReturnStmt> node) { return true; }
-
-std::shared_ptr<Stmt> ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<VarDeclStmt> node) {
+std::shared_ptr<Stmt>
+ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<VarDeclStmt> const& node) {
   if(!preVisitNode(node))
     return node;
   for(auto expr : node->getInitList()) {
@@ -180,13 +191,13 @@ std::shared_ptr<Stmt> ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<VarDe
   return postVisitNode(node);
 }
 
-std::shared_ptr<Stmt> ASTVisitorPostOrder::postVisitNode(std::shared_ptr<VarDeclStmt> node) {
+std::shared_ptr<Stmt> ASTVisitorPostOrder::postVisitNode(std::shared_ptr<VarDeclStmt> const& node) {
   return node;
 }
-bool ASTVisitorPostOrder::preVisitNode(std::shared_ptr<VarDeclStmt> node) { return true; }
+bool ASTVisitorPostOrder::preVisitNode(std::shared_ptr<VarDeclStmt> const& node) { return true; }
 
 std::shared_ptr<Stmt>
-ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<dawn::VerticalRegionDeclStmt> stmt) {
+ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<dawn::VerticalRegionDeclStmt> const& stmt) {
   // TODO replace this as wel
   if(!preVisitNode(stmt))
     return stmt;
@@ -196,12 +207,12 @@ ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<dawn::VerticalRegionDeclStm
   return postVisitNode(stmt);
 }
 
-bool ASTVisitorPostOrder::preVisitNode(std::shared_ptr<dawn::VerticalRegionDeclStmt> stmt) {
+bool ASTVisitorPostOrder::preVisitNode(std::shared_ptr<dawn::VerticalRegionDeclStmt> const& stmt) {
   return true;
 }
 
 std::shared_ptr<Stmt>
-ASTVisitorPostOrder::postVisitNode(std::shared_ptr<dawn::VerticalRegionDeclStmt> stmt) {
+ASTVisitorPostOrder::postVisitNode(std::shared_ptr<dawn::VerticalRegionDeclStmt> const& stmt) {
   return stmt;
 }
 

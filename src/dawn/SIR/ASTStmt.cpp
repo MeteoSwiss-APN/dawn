@@ -22,7 +22,8 @@
 namespace dawn {
 
 template <typename Cont, typename Type>
-bool replaceOperands(std::shared_ptr<Type> oldExpr, std::shared_ptr<Type> newExpr, Cont& operands) {
+bool replaceOperands(std::shared_ptr<Type> const& oldExpr, std::shared_ptr<Type> const& newExpr,
+                     Cont& operands) {
   for(int i = 0; i < operands.size(); ++i) {
     if(operands[i] == oldExpr) {
       operands[i] = newExpr;
@@ -64,7 +65,8 @@ bool BlockStmt::equals(const Stmt* other) const {
                     });
 }
 
-void BlockStmt::replaceChildren(std::shared_ptr<Stmt> oldStmt, std::shared_ptr<Stmt> newStmt) {
+void BlockStmt::replaceChildren(std::shared_ptr<Stmt> const& oldStmt,
+                                std::shared_ptr<Stmt> const& newStmt) {
   bool success = replaceOperands(oldStmt, newStmt, statements_);
   DAWN_ASSERT_MSG((success), ("Expression not found"));
 }
@@ -94,8 +96,9 @@ bool ExprStmt::equals(const Stmt* other) const {
   return otherPtr && Stmt::equals(other) && expr_->equals(otherPtr->expr_.get());
 }
 
-void ExprStmt::replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr) {
-  DAWN_ASSERT_MSG((oldExpr == expr_), ("Expression not found"));
+void ExprStmt::replaceChildren(std::shared_ptr<Expr> const& oldExpr,
+                               std::shared_ptr<Expr> const& newExpr) {
+  DAWN_ASSERT_MSG((oldExpr == expr_ && oldExpr && newExpr), ("Expression not found"));
 
   expr_ = newExpr;
 }
@@ -125,7 +128,8 @@ bool ReturnStmt::equals(const Stmt* other) const {
   return otherPtr && Stmt::equals(other) && expr_->equals(otherPtr->expr_.get());
 }
 
-void ReturnStmt::replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr) {
+void ReturnStmt::replaceChildren(std::shared_ptr<Expr> const& oldExpr,
+                                 std::shared_ptr<Expr> const& newExpr) {
   DAWN_ASSERT_MSG((oldExpr == expr_), ("Expression not found"));
   expr_ = newExpr;
 }
@@ -171,7 +175,8 @@ bool VarDeclStmt::equals(const Stmt* other) const {
                     });
 }
 
-void VarDeclStmt::replaceChildren(std::shared_ptr<Expr> oldExpr, std::shared_ptr<Expr> newExpr) {
+void VarDeclStmt::replaceChildren(std::shared_ptr<Expr> const& oldExpr,
+                                  std::shared_ptr<Expr> const& newExpr) {
   bool success = replaceOperands(oldExpr, newExpr, initList_);
   DAWN_ASSERT_MSG((success), ("Expression not found"));
 }
@@ -306,7 +311,8 @@ bool IfStmt::equals(const Stmt* other) const {
          subStmts_[OK_Cond]->equals(otherPtr->subStmts_[OK_Cond].get()) &&
          subStmts_[OK_Then]->equals(otherPtr->subStmts_[OK_Then].get()) && sameElse;
 }
-void IfStmt::replaceChildren(std::shared_ptr<Stmt> oldStmt, std::shared_ptr<Stmt> newStmt) {
+void IfStmt::replaceChildren(std::shared_ptr<Stmt> const& oldStmt,
+                             std::shared_ptr<Stmt> const& newStmt) {
   if(hasElse()) {
     for(std::shared_ptr<Stmt>& stmt : subStmts_) {
       if(stmt == oldStmt)

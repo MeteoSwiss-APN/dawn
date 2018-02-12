@@ -138,87 +138,90 @@ public:
 
   /// @brief visitAndReplace will do a full traverse of this node for Statements
   /// @{
-  virtual std::shared_ptr<Stmt> visitAndReplace(std::shared_ptr<BlockStmt> stmt);
-  virtual std::shared_ptr<Stmt> visitAndReplace(std::shared_ptr<ExprStmt> stmt);
-  virtual std::shared_ptr<Stmt> visitAndReplace(std::shared_ptr<ReturnStmt> stmt);
-  virtual std::shared_ptr<Stmt> visitAndReplace(std::shared_ptr<VarDeclStmt> stmt);
-  virtual std::shared_ptr<Stmt> visitAndReplace(std::shared_ptr<VerticalRegionDeclStmt> stmt);
-  virtual std::shared_ptr<Stmt> visitAndReplace(std::shared_ptr<StencilCallDeclStmt> stmt);
-  virtual std::shared_ptr<Stmt> visitAndReplace(std::shared_ptr<BoundaryConditionDeclStmt> stmt);
-  virtual std::shared_ptr<Stmt> visitAndReplace(std::shared_ptr<IfStmt> stmt);
+  virtual std::shared_ptr<Stmt> visitAndReplace(std::shared_ptr<BlockStmt> const& stmt);
+  virtual std::shared_ptr<Stmt> visitAndReplace(std::shared_ptr<ExprStmt> const& stmt);
+  virtual std::shared_ptr<Stmt> visitAndReplace(std::shared_ptr<ReturnStmt> const& stmt);
+  virtual std::shared_ptr<Stmt> visitAndReplace(std::shared_ptr<VarDeclStmt> const& stmt);
+  virtual std::shared_ptr<Stmt>
+  visitAndReplace(std::shared_ptr<VerticalRegionDeclStmt> const& stmt);
+  virtual std::shared_ptr<Stmt> visitAndReplace(std::shared_ptr<StencilCallDeclStmt> const& stmt);
+  virtual std::shared_ptr<Stmt>
+  visitAndReplace(std::shared_ptr<BoundaryConditionDeclStmt> const& stmt);
+  virtual std::shared_ptr<Stmt> visitAndReplace(std::shared_ptr<IfStmt> const& stmt);
   /// @}
 
   /// @brief visitAndReplace will do a full traverse of this node for Expressions
   /// @{
-  virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<NOPExpr> expr) final;
-  virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<UnaryOperator> expr);
-  virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<BinaryOperator> expr);
-  virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<AssignmentExpr> expr);
-  virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<TernaryOperator> expr);
-  virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<FunCallExpr> expr);
-  virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<StencilFunCallExpr> expr);
-  virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<StencilFunArgExpr> expr);
-  virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<VarAccessExpr> expr);
-  virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<FieldAccessExpr> expr);
-  virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<LiteralAccessExpr> expr);
+  virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<NOPExpr> const& expr) final;
+  virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<UnaryOperator> const& expr);
+  virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<BinaryOperator> const& expr);
+  virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<AssignmentExpr> const& expr);
+  virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<TernaryOperator> const& expr);
+  virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<FunCallExpr> const& expr);
+  virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<StencilFunCallExpr> const& expr);
+  virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<StencilFunArgExpr> const& expr);
+  virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<VarAccessExpr> const& expr);
+  virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<FieldAccessExpr> const& expr);
+  virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<LiteralAccessExpr> const& expr);
 
   /// @brief pre-visit the node for Statements and returns true if we should continue the tree
   /// traversal
   /// @{
-  virtual bool preVisitNode(std::shared_ptr<BlockStmt> stmt);
-  virtual bool preVisitNode(std::shared_ptr<ExprStmt> stmt);
-  virtual bool preVisitNode(std::shared_ptr<ReturnStmt> stmt);
-  virtual bool preVisitNode(std::shared_ptr<VarDeclStmt> stmt);
-  virtual bool preVisitNode(std::shared_ptr<VerticalRegionDeclStmt> stmt);
-  virtual bool preVisitNode(std::shared_ptr<StencilCallDeclStmt> stmt);
-  virtual bool preVisitNode(std::shared_ptr<BoundaryConditionDeclStmt> stmt);
-  virtual bool preVisitNode(std::shared_ptr<IfStmt> stmt);
+  virtual bool preVisitNode(std::shared_ptr<BlockStmt> const& stmt);
+  virtual bool preVisitNode(std::shared_ptr<ExprStmt> const& stmt);
+  virtual bool preVisitNode(std::shared_ptr<ReturnStmt> const& stmt);
+  virtual bool preVisitNode(std::shared_ptr<VarDeclStmt> const& stmt);
+  virtual bool preVisitNode(std::shared_ptr<VerticalRegionDeclStmt> const& stmt);
+  virtual bool preVisitNode(std::shared_ptr<StencilCallDeclStmt> const& stmt);
+  virtual bool preVisitNode(std::shared_ptr<BoundaryConditionDeclStmt> const& stmt);
+  virtual bool preVisitNode(std::shared_ptr<IfStmt> const& stmt);
   /// @}
 
   /// @brief pre-visit the node for Expressions and returns true if we should continue the tree
   /// traversal
   /// @{
-  virtual bool preVisitNode(std::shared_ptr<NOPExpr> expr);
-  virtual bool preVisitNode(std::shared_ptr<UnaryOperator> expr);
-  virtual bool preVisitNode(std::shared_ptr<BinaryOperator> expr);
-  virtual bool preVisitNode(std::shared_ptr<AssignmentExpr> expr);
-  virtual bool preVisitNode(std::shared_ptr<TernaryOperator> expr);
-  virtual bool preVisitNode(std::shared_ptr<FunCallExpr> expr);
-  virtual bool preVisitNode(std::shared_ptr<StencilFunCallExpr> expr);
-  virtual bool preVisitNode(std::shared_ptr<StencilFunArgExpr> expr);
-  virtual bool preVisitNode(std::shared_ptr<VarAccessExpr> expr);
-  virtual bool preVisitNode(std::shared_ptr<FieldAccessExpr> expr);
-  virtual bool preVisitNode(std::shared_ptr<LiteralAccessExpr> expr);
+  virtual bool preVisitNode(std::shared_ptr<NOPExpr> const& expr);
+  virtual bool preVisitNode(std::shared_ptr<UnaryOperator> const& expr);
+  virtual bool preVisitNode(std::shared_ptr<BinaryOperator> const& expr);
+  virtual bool preVisitNode(std::shared_ptr<AssignmentExpr> const& expr);
+  virtual bool preVisitNode(std::shared_ptr<TernaryOperator> const& expr);
+  virtual bool preVisitNode(std::shared_ptr<FunCallExpr> const& expr);
+  virtual bool preVisitNode(std::shared_ptr<StencilFunCallExpr> const& expr);
+  virtual bool preVisitNode(std::shared_ptr<StencilFunArgExpr> const& expr);
+  virtual bool preVisitNode(std::shared_ptr<VarAccessExpr> const& expr);
+  virtual bool preVisitNode(std::shared_ptr<FieldAccessExpr> const& expr);
+  virtual bool preVisitNode(std::shared_ptr<LiteralAccessExpr> const& expr);
 
   /// @}
 
   /// @brief post-visit the node for Statements and returns a modified/new version of the statement
   /// node to be returned to the parent
   /// @{
-  virtual std::shared_ptr<Stmt> postVisitNode(std::shared_ptr<BlockStmt> stmt);
-  virtual std::shared_ptr<Stmt> postVisitNode(std::shared_ptr<ExprStmt> stmt);
-  virtual std::shared_ptr<Stmt> postVisitNode(std::shared_ptr<ReturnStmt> stmt);
-  virtual std::shared_ptr<Stmt> postVisitNode(std::shared_ptr<VarDeclStmt> stmt);
-  virtual std::shared_ptr<Stmt> postVisitNode(std::shared_ptr<VerticalRegionDeclStmt> stmt);
-  virtual std::shared_ptr<Stmt> postVisitNode(std::shared_ptr<StencilCallDeclStmt> stmt);
-  virtual std::shared_ptr<Stmt> postVisitNode(std::shared_ptr<BoundaryConditionDeclStmt> stmt);
-  virtual std::shared_ptr<Stmt> postVisitNode(std::shared_ptr<IfStmt> stmt);
+  virtual std::shared_ptr<Stmt> postVisitNode(std::shared_ptr<BlockStmt> const& stmt);
+  virtual std::shared_ptr<Stmt> postVisitNode(std::shared_ptr<ExprStmt> const& stmt);
+  virtual std::shared_ptr<Stmt> postVisitNode(std::shared_ptr<ReturnStmt> const& stmt);
+  virtual std::shared_ptr<Stmt> postVisitNode(std::shared_ptr<VarDeclStmt> const& stmt);
+  virtual std::shared_ptr<Stmt> postVisitNode(std::shared_ptr<VerticalRegionDeclStmt> const& stmt);
+  virtual std::shared_ptr<Stmt> postVisitNode(std::shared_ptr<StencilCallDeclStmt> const& stmt);
+  virtual std::shared_ptr<Stmt>
+  postVisitNode(std::shared_ptr<BoundaryConditionDeclStmt> const& stmt);
+  virtual std::shared_ptr<Stmt> postVisitNode(std::shared_ptr<IfStmt> const& stmt);
   /// @}
 
   /// @brief post-visit the node for Expressions and returns a modified/new version of the
   /// expression node to be returned to the parent
   /// @{
-  virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<NOPExpr> expr);
-  virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<UnaryOperator> expr);
-  virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<BinaryOperator> expr);
-  virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<AssignmentExpr> expr);
-  virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<TernaryOperator> expr);
-  virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<FunCallExpr> expr);
-  virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<StencilFunCallExpr> expr);
-  virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<StencilFunArgExpr> expr);
-  virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<VarAccessExpr> expr);
-  virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<FieldAccessExpr> expr);
-  virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<LiteralAccessExpr> expr);
+  virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<NOPExpr> const& expr);
+  virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<UnaryOperator> const& expr);
+  virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<BinaryOperator> const& expr);
+  virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<AssignmentExpr> const& expr);
+  virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<TernaryOperator> const& expr);
+  virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<FunCallExpr> const& expr);
+  virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<StencilFunCallExpr> const& expr);
+  virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<StencilFunArgExpr> const& expr);
+  virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<VarAccessExpr> const& expr);
+  virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<FieldAccessExpr> const& expr);
+  virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<LiteralAccessExpr> const& expr);
 
   /// @}
 };

@@ -72,7 +72,7 @@ public:
 
   /// @name Expression implementation
   /// @{
-  virtual bool preVisitNode(std::shared_ptr<FieldAccessExpr> expr) override {
+  virtual bool preVisitNode(std::shared_ptr<FieldAccessExpr> const& expr) override {
     DAWN_ASSERT(tmpFunction_);
     for(int idx : expr->getArgumentMap()) {
       DAWN_ASSERT(idx == -1);
@@ -94,7 +94,7 @@ public:
   /// @name Expression implementation
   /// @{
 
-  virtual bool preVisitNode(const std::shared_ptr<AssignmentExpr> expr) override {
+  virtual bool preVisitNode(std::shared_ptr<AssignmentExpr> const& expr) override {
     if(isa<FieldAccessExpr>(*(expr->getLeft()))) {
       tmpFieldAccessExpr_ = std::dynamic_pointer_cast<FieldAccessExpr>(expr->getLeft());
       accessID_ = instantiation_->getAccessIDFromExpr(expr->getLeft());
@@ -115,7 +115,8 @@ public:
     }
     return false;
   }
-  virtual std::shared_ptr<Expr> postVisitNode(const std::shared_ptr<AssignmentExpr> expr) override {
+  virtual std::shared_ptr<Expr>
+  postVisitNode(std::shared_ptr<AssignmentExpr> const& expr) override {
     if(isa<FieldAccessExpr>(*(expr->getLeft()))) {
       accessID_ = instantiation_->getAccessIDFromExpr(expr->getLeft());
       if(!instantiation_->isTemporaryField(accessID_))
@@ -171,7 +172,7 @@ public:
 
   /// @name Expression implementation
   /// @{
-  virtual bool preVisitNode(std::shared_ptr<FieldAccessExpr> expr) override {
+  virtual bool preVisitNode(std::shared_ptr<FieldAccessExpr> const& expr) override {
     int accessID = instantiation_->getAccessIDFromExpr(expr);
     if(!temporaryFieldAccessIDToFunctionCall_.count(accessID))
       return false;
@@ -238,7 +239,7 @@ public:
   }
 
   virtual std::shared_ptr<Expr>
-  postVisitNode(const std::shared_ptr<FieldAccessExpr> expr) override {
+  postVisitNode(std::shared_ptr<FieldAccessExpr> const& expr) override {
 
     int accessID = instantiation_->getAccessIDFromExpr(expr);
     if(!temporaryFieldAccessIDToFunctionCall_.count(accessID))
