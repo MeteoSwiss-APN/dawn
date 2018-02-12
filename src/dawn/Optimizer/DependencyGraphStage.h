@@ -39,7 +39,7 @@ public:
   using Base = DependencyGraph<DependencyGraphStage, DependencyGraphStageEdgeData>;
   using EdgeData = DependencyGraphStageEdgeData;
 
-  DependencyGraphStage(std::shared_ptr<StencilInstantiation> stencilInstantiation)
+  DependencyGraphStage(const std::shared_ptr<StencilInstantiation>& stencilInstantiation)
       : Base(), stencilInstantiation_(stencilInstantiation) {}
 
   void insertEdge(int StageIDFrom, int StageIDTo);

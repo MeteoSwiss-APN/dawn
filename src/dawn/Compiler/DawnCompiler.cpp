@@ -106,7 +106,7 @@ DawnCompiler::DawnCompiler(Options* options) : diagnostics_(make_unique<Diagnost
   options_ = options ? make_unique<Options>(*options) : make_unique<Options>();
 }
 
-std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(const std::shared_ptr<SIR> SIR) {
+std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR> const& SIR) {
   // -inline
   using InlineStrategyKind = PassInlining::InlineStrategyKind;
   InlineStrategyKind inlineStrategy = StringSwitch<InlineStrategyKind>(options_->InlineStrategy)
@@ -176,7 +176,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(const std::shared_p
   return optimizer;
 }
 
-std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::shared_ptr<SIR> SIR,
+std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::shared_ptr<SIR>& SIR,
                                                                 CodeGenKind codeGen) {
   diagnostics_->clear();
   diagnostics_->setFilename(SIR->Filename);

@@ -145,7 +145,7 @@ Cache::CacheIOPolicy combinePolicy(Cache::CacheIOPolicy MS1Policy, Cache::CacheI
 
 PassSetCaches::PassSetCaches() : Pass("PassSetCaches") {}
 
-bool PassSetCaches::run(std::shared_ptr<StencilInstantiation> instantiation) {
+bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiation) {
   OptimizerContext* context = instantiation->getOptimizerContext();
 
   for(const auto& stencilPtr : instantiation->getStencils()) {

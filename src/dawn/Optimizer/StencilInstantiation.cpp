@@ -577,10 +577,11 @@ public:
 //===------------------------------------------------------------------------------------------===//
 
 StencilInstantiation::StencilInstantiation(OptimizerContext* context,
-                                           const std::shared_ptr<sir::Stencil> SIRStencil,
-                                           const std::shared_ptr<SIR> SIR)
+                                           std::shared_ptr<sir::Stencil> const& SIRStencil,
+                                           std::shared_ptr<SIR> const& SIR)
     : context_(context), SIRStencil_(SIRStencil), SIR_(SIR) {
   DAWN_LOG(INFO) << "Intializing StencilInstantiation of `" << SIRStencil->Name << "`";
+  DAWN_ASSERT_MSG(SIRStencil, "Stencil does not exist");
 
   // Map the fields of the "main stencil" to unique IDs (which are used in the access maps to
   // indentify the field).

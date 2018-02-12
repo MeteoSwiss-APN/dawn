@@ -59,7 +59,7 @@ PassSetStageGraph::PassSetStageGraph() : Pass("PassSetStageGraph") {
   dependencies_.push_back("PassSetStageName");
 }
 
-bool PassSetStageGraph::run(std::shared_ptr<StencilInstantiation> stencilInstantiation) {
+bool PassSetStageGraph::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   int stencilIdx = 0;

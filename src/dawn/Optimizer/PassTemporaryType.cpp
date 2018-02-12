@@ -57,7 +57,7 @@ public:
 /// @brief Check if a field, given by `AccessID` is used as an argument of a stencil-function inside
 /// any statement of the `stencil`
 /// @returns `true` if field is used as an argument
-bool usedAsArgumentInStencilFun(std::shared_ptr<Stencil> stencil, int AccessID) {
+bool usedAsArgumentInStencilFun(const std::shared_ptr<Stencil>& stencil, int AccessID) {
   StencilFunArgumentDetector visitor(stencil->getStencilInstantiation(), AccessID);
   stencil->accept(visitor);
   return visitor.usedInStencilFun();
@@ -77,7 +77,7 @@ struct Temporary {
   Extents Extent;             ///< Accumulated access of the temporary during its lifetime
 
   /// @brief Dump the temporary
-  void dump(std::shared_ptr<StencilInstantiation> instantiation) const {
+  void dump(const std::shared_ptr<StencilInstantiation>& instantiation) const {
     std::cout << "Temporary : " << instantiation->getNameFromAccessID(AccessID) << " {"
               << "\n  Type=" << (Type == TT_LocalVariable ? "LocalVariable" : "Field")
               << ",\n  Lifetime=" << Lifetime << ",\n  Extent=" << Extent << "\n}\n";
@@ -88,7 +88,7 @@ struct Temporary {
 
 PassTemporaryType::PassTemporaryType() : Pass("PassTemporaryType") {}
 
-bool PassTemporaryType::run(std::shared_ptr<StencilInstantiation> instantiation) {
+bool PassTemporaryType::run(const std::shared_ptr<StencilInstantiation>& instantiation) {
   OptimizerContext* context = instantiation->getOptimizerContext();
 
   std::unordered_map<int, Temporary> temporaries;

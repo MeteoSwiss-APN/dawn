@@ -660,7 +660,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
   return str;
 }
 
-std::string GTCodeGen::generateGlobals(const std::shared_ptr<SIR> Sir) {
+std::string GTCodeGen::generateGlobals(std::shared_ptr<SIR> const& Sir) {
   using namespace codegen;
 
   const auto& globalsMap = *(Sir->GlobalVariableMap);

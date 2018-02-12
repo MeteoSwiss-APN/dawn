@@ -24,7 +24,8 @@ PassComputeStageExtents::PassComputeStageExtents() : Pass("PassComputeStageExten
   dependencies_.push_back("PassSetStageName");
 }
 
-bool PassComputeStageExtents::run(std::shared_ptr<StencilInstantiation> stencilInstantiation) {
+bool PassComputeStageExtents::run(
+    const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   for(auto& stencilPtr : stencilInstantiation->getStencils()) {
     Stencil& stencil = *stencilPtr;
 

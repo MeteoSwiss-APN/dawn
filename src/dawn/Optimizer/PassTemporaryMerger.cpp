@@ -25,7 +25,7 @@ namespace dawn {
 
 PassTemporaryMerger::PassTemporaryMerger() : Pass("PassTemporaryMerger") {}
 
-bool PassTemporaryMerger::run(std::shared_ptr<StencilInstantiation> stencilInstantiation) {
+bool PassTemporaryMerger::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   using Edge = DependencyGraphAccesses::Edge;
   using Vertex = DependencyGraphAccesses::Vertex;
 

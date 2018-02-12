@@ -23,7 +23,7 @@ PassPrintStencilGraph::PassPrintStencilGraph() : Pass("PassPrintStencilGraph") {
   dependencies_.push_back("PassStageSplitter");
 }
 
-bool PassPrintStencilGraph::run(std::shared_ptr<StencilInstantiation> stencilInstantiation) {
+bool PassPrintStencilGraph::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
   if(context->getOptions().DumpStencilGraph) {
 

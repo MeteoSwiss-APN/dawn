@@ -30,7 +30,7 @@ namespace dawn {
 
 PassStageSplitter::PassStageSplitter() : Pass("PassStageSplitter") {}
 
-bool PassStageSplitter::run(std::shared_ptr<StencilInstantiation> stencilInstantiation) {
+bool PassStageSplitter::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   int numSplit = 0;
   std::deque<int> splitterIndices;
   std::deque<std::shared_ptr<DependencyGraphAccesses>> graphs;
