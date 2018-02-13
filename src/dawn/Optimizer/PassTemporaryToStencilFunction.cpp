@@ -46,6 +46,8 @@ struct TemporaryFunctionProperties {
   std::vector<int> accessIDArgs_; /// access IDs of the args that are needed to compute the tmp
   std::shared_ptr<sir::StencilFunction>
       sirStencilFunction_; /// sir stencil function of the tmp being created
+  std::shared_ptr<FieldAccessExpr>
+      tmpFieldAccessExpr_; /// FieldAccessExpr of the tmp captured for replacement
 };
 
 /// @brief visitor that will detect assignment (i.e. computations) to a temporary,
@@ -100,12 +102,12 @@ public:
   /// @brief capture a tmp computation
   virtual bool preVisitNode(std::shared_ptr<AssignmentExpr> const& expr) override {
     if(isa<FieldAccessExpr>(*(expr->getLeft()))) {
-      tmpFieldAccessExpr_ = std::dynamic_pointer_cast<FieldAccessExpr>(expr->getLeft());
-      accessID_ = instantiation_->getAccessIDFromExpr(expr->getLeft());
-
       // return and stop traversing the AST if the left hand of the =  is not a temporary
-      if(!instantiation_->isTemporaryField(accessID_))
+      int accessID = instantiation_->getAccessIDFromExpr(expr->getLeft());
+      if(!instantiation_->isTemporaryField(accessID))
         return false;
+      tmpFieldAccessExpr_ = std::dynamic_pointer_cast<FieldAccessExpr>(expr->getLeft());
+      accessID_ = accessID;
 
       // otherwise we create a new stencil function
       std::string tmpFieldName = instantiation_->getNameFromAccessID(accessID_);
@@ -170,10 +172,14 @@ public:
 
   virtual ~TmpReplacement() {}
 
+  static std::string offsetToString(int a) {
+    return ((a < 0) ? "minus" : "") + std::to_string(std::abs(a));
+  }
+
   /// @brief create the name of a newly created stencil function associated to a tmp computations
   std::string makeOnTheFlyFunctionName(const std::shared_ptr<FieldAccessExpr>& expr) {
-    return expr->getName() + "_OnTheFly" + "_i" + std::to_string(expr->getOffset()[0]) + "_j" +
-           std::to_string(expr->getOffset()[1]) + "_k" + std::to_string(expr->getOffset()[2]);
+    return expr->getName() + "_OnTheFly" + "_i" + offsetToString(expr->getOffset()[0]) + "_j" +
+           offsetToString(expr->getOffset()[1]) + "_k" + offsetToString(expr->getOffset()[2]);
   }
 
   unsigned int getNumTmpReplaced() { return numTmpReplaced_; }
@@ -286,6 +292,10 @@ PassTemporaryToStencilFunction::PassTemporaryToStencilFunction()
 
 bool PassTemporaryToStencilFunction::run(
     const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
+
+  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
+  DAWN_ASSERT(context);
+
   for(auto& stencilPtr : stencilInstantiation->getStencils()) {
     Stencil& stencil = *stencilPtr;
 
@@ -332,7 +342,8 @@ bool PassTemporaryToStencilFunction::run(
                     stencilInstantiation->getAccessIDFromExpr(
                         tmpAssignment.getTemporaryFieldAccessExpr()),
                     TemporaryFunctionProperties{stencilFunCallExpr, tmpAssignment.getAccessIDs(),
-                                                stencilFunction});
+                                                stencilFunction,
+                                                tmpAssignment.getTemporaryFieldAccessExpr()});
 
                 // first instantiation of the stencil function that is inserted in the IIR as a
                 // candidate stencil function
@@ -379,6 +390,15 @@ bool PassTemporaryToStencilFunction::run(
         if(isATmpReplaced) {
           stagePtr->update();
         }
+      }
+      for(auto tmpFieldPair : temporaryFieldExprToFunction) {
+        int accessID = tmpFieldPair.first;
+        auto tmpProperties = tmpFieldPair.second;
+        if(context->getOptions().ReportPassTmpToFunction)
+          std::cout << "\nPASS: " << getName() << "; stencil: " << stencilInstantiation->getName()
+                    << ": replace tmp:" << stencilInstantiation->getNameFromAccessID(accessID)
+                    << "; line : " << tmpProperties.tmpFieldAccessExpr_->getSourceLocation().Line
+                    << "\n";
       }
     }
   }

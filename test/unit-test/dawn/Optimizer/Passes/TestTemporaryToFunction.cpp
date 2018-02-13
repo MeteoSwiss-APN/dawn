@@ -57,12 +57,14 @@ using namespace dawn;
 namespace {
 
 class TemporaryToFunction : public ::testing::Test {
-  std::unique_ptr<dawn::Options> compileOptions_;
 
   dawn::DawnCompiler compiler_;
 
 protected:
-  TemporaryToFunction() : compiler_(compileOptions_.get()) {}
+  TemporaryToFunction() {
+    compiler_.getOptions().PassTmpToFunction = true;
+    compiler_.getOptions().ReportPassTmpToFunction = true;
+  }
   virtual void SetUp() {}
 
   std::vector<std::shared_ptr<Stencil>> loadTest(std::string sirFilename) {
@@ -99,7 +101,7 @@ protected:
 
     DAWN_ASSERT(gg);
     for(auto pair : gg->getStencils()) {
-      //      std::cout << pair.first << " KKKKKKKKKKK " << pair.second << std::endl;
+      std::cout << pair.first << " KKKKKKKKKKK " << pair.second << std::endl;
     }
 
     return optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"]->getStencils();
