@@ -290,7 +290,8 @@ void StencilFunctionInstantiation::setAccessIDOfExpr(const std::shared_ptr<Expr>
   ExprToCallerAccessIDMap_[expr] = accessID;
 }
 
-void StencilFunctionInstantiation::mapExprToAccessID(std::shared_ptr<Expr> expr, int accessID) {
+void StencilFunctionInstantiation::mapExprToAccessID(const std::shared_ptr<Expr>& expr,
+                                                     int accessID) {
   ExprToCallerAccessIDMap_.emplace(expr, accessID);
 }
 
@@ -300,7 +301,8 @@ void StencilFunctionInstantiation::setAccessIDOfStmt(const std::shared_ptr<Stmt>
   StmtToCallerAccessIDMap_[stmt] = accessID;
 }
 
-void StencilFunctionInstantiation::mapStmtToAccessID(std::shared_ptr<Stmt> stmt, int accessID) {
+void StencilFunctionInstantiation::mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt,
+                                                     int accessID) {
   StmtToCallerAccessIDMap_.emplace(stmt, accessID);
 }
 
