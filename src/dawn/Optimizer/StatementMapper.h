@@ -54,7 +54,7 @@ class StatementMapper : public ASTVisitor {
     int ScopeDepth;
 
     /// Reference to the current stencil function (may be NULL)
-    const std::shared_ptr<StencilFunctionInstantiation>& FunctionInstantiation;
+    std::shared_ptr<StencilFunctionInstantiation> FunctionInstantiation;
 
     /// Counter of the parsed arguments
     int ArgumentIndex;
@@ -72,13 +72,12 @@ class StatementMapper : public ASTVisitor {
   bool initializedWithBlockStmt_ = false;
 
 public:
-  StatementMapper(
-      StencilInstantiation* instantiation,
-      const std::shared_ptr<std::vector<sir::StencilCall*>>& stackTrace,
-      std::vector<std::shared_ptr<StatementAccessesPair>>& statementAccessesPairs,
-      const Interval& interval,
-      const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,
-      const std::shared_ptr<StencilFunctionInstantiation>& stencilFunctionInstantiation);
+  StatementMapper(StencilInstantiation* instantiation,
+                  const std::shared_ptr<std::vector<sir::StencilCall*>>& stackTrace,
+                  std::vector<std::shared_ptr<StatementAccessesPair>>& statementAccessesPairs,
+                  const Interval& interval,
+                  const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,
+                  const std::shared_ptr<StencilFunctionInstantiation> stencilFunctionInstantiation);
 
   Scope* getCurrentCandidateScope();
 

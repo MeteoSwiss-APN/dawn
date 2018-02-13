@@ -21,7 +21,7 @@ StatementMapper::StatementMapper(
     std::vector<std::shared_ptr<StatementAccessesPair>>& statementAccessesPairs,
     const Interval& interval,
     const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,
-    const std::shared_ptr<StencilFunctionInstantiation>& stencilFunctionInstantiation)
+    const std::shared_ptr<StencilFunctionInstantiation> stencilFunctionInstantiation)
     : instantiation_(instantiation), stackTrace_(stackTrace) {
 
   // Create the initial scope
@@ -65,8 +65,9 @@ void StatementMapper::visit(const std::shared_ptr<BlockStmt>& stmt) {
   initializedWithBlockStmt_ = true;
   scope_.top()->ScopeDepth++;
 
-  for(const auto& s : stmt->getStatements())
+  for(const auto& s : stmt->getStatements()) {
     s->accept(*this);
+  }
 
   scope_.top()->ScopeDepth--;
 }

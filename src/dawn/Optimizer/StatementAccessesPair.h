@@ -46,19 +46,19 @@ public:
   explicit StatementAccessesPair(const std::shared_ptr<Statement>& statement);
 
   /// @brief Get/Set the statement
-  const std::shared_ptr<Statement>& getStatement() const;
+  std::shared_ptr<Statement> getStatement() const;
   void setStatement(const std::shared_ptr<Statement>& statement);
 
   /// @brief Get/Set the accesses
-  const std::shared_ptr<Accesses>& getAccesses() const;
+  std::shared_ptr<Accesses> getAccesses() const;
   void setAccesses(const std::shared_ptr<Accesses>& accesses);
 
   /// @brief Get/Set the caller accesses (alias for `getAccesses`)
-  const std::shared_ptr<Accesses>& getCallerAccesses() const;
+  std::shared_ptr<Accesses> getCallerAccesses() const;
   void setCallerAccesses(const std::shared_ptr<Accesses>& accesses);
 
   /// @brief Get/Set the callee accesses (only set for statements inside stencil-functions)
-  const std::shared_ptr<Accesses>& getCalleeAccesses() const;
+  std::shared_ptr<Accesses> getCalleeAccesses() const;
   void setCalleeAccesses(const std::shared_ptr<Accesses>& accesses);
   bool hasCalleeAccesses();
 

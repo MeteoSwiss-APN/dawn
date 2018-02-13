@@ -58,7 +58,7 @@ class AccessMapper : public ASTVisitor {
   std::vector<std::shared_ptr<Accesses>> calleeAccessesList_;
 
   /// Reference to the stencil function we are currently inside (if any)
-  const std::shared_ptr<StencilFunctionInstantiation>& stencilFun_;
+  std::shared_ptr<StencilFunctionInstantiation> stencilFun_;
 
   /// Reference to the current call of a stencil function if we are traversing an argument list
   struct StencilFunctionCallScope {
@@ -73,7 +73,7 @@ class AccessMapper : public ASTVisitor {
 public:
   AccessMapper(StencilInstantiation* instantiation,
                const std::shared_ptr<StatementAccessesPair>& stmtAccessesPair,
-               const std::shared_ptr<StencilFunctionInstantiation>& stencilFun = nullptr)
+               std::shared_ptr<StencilFunctionInstantiation> stencilFun = nullptr)
       : instantiation_(instantiation), stencilFun_(stencilFun) {
     curStatementAccessPairStack_.push_back(
         make_unique<CurrentStatementAccessPair>(stmtAccessesPair));
@@ -212,10 +212,9 @@ public:
 
   /// @brief Recursively merge the `extent` with all fields of the `curStencilFunCall` and apply
   /// them to the current *caller* accesses
-  void
-  mergeExtentWithAllFields(const Extents& extent,
-                           const std::shared_ptr<StencilFunctionInstantiation>& curStencilFunCall,
-                           std::set<int>& appliedAccessIDs) {
+  void mergeExtentWithAllFields(const Extents& extent,
+                                std::shared_ptr<StencilFunctionInstantiation> curStencilFunCall,
+                                std::set<int>& appliedAccessIDs) {
     for(const Field& field : curStencilFunCall->getCallerFields()) {
       int AccessID = field.getAccessID();
 
