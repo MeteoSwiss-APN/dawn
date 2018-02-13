@@ -30,6 +30,24 @@ namespace dawn {
 namespace codegen {
 namespace gt {
 
+namespace {
+class BCFinder : public ASTVisitorForwarding {
+public:
+  using Base = ASTVisitorForwarding;
+  BCFinder() : BCsFound_(0) {}
+  void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
+    BCsFound_++;
+    Base::visit(stmt);
+  }
+  void resetFinder() { BCsFound_ = 0; }
+
+  int reportBCsFound() { return BCsFound_; }
+
+private:
+  int BCsFound_;
+};
+}
+
 GTCodeGen::GTCodeGen(OptimizerContext* context) : CodeGen(context), mplContainerMaxSize_(20) {}
 
 GTCodeGen::~GTCodeGen() {}
@@ -94,17 +112,18 @@ private:
 
 public:
   using Base = ASTCodeGenCXX;
-  StencilFunctionAsBCGenerator(
-      const StencilInstantiation* stencilInstantiation,
-      const std::shared_ptr<sir::StencilFunction>& functionToAnalyze)
+  StencilFunctionAsBCGenerator(const StencilInstantiation* stencilInstantiation,
+                               const std::shared_ptr<sir::StencilFunction>& functionToAnalyze)
       : function(functionToAnalyze), instantiation_(stencilInstantiation) {}
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) {
     auto printOffset = [](const Array3i& argumentoffsets) {
       std::string retval = "";
-      std::array<std::string, 3> dims{"i","j","k"};
-      for(int i=0; i < 3; ++i) {
-        retval = dims[i]+(argumentoffsets[i]!=0 ? " + "+std::to_string(argumentoffsets[i]) : "");
+      std::array<std::string, 3> dims{"i", "j", "k"};
+      for(int i = 0; i < 3; ++i) {
+        retval +=
+            dims[i] + (argumentoffsets[i] != 0 ? " + " + std::to_string(argumentoffsets[i]) + ", "
+                                               : (i < 2 ? ", " : ""));
       }
       return retval;
     };
@@ -192,8 +211,8 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
 
         // A templated datafield for every function argument
         for(int i = 0; i < usedBoundaryCondition.second->getFields().size(); i++) {
-          templatefunctions += dawn::format(",typename DataField_%i",i);
-          functionargs += dawn::format(", DataField_%i &data_field_%i",i,i);
+          templatefunctions += dawn::format(",typename DataField_%i", i);
+          functionargs += dawn::format(", DataField_%i &data_field_%i", i, i);
         }
         functionargs += ", int i , int j, int k";
         auto BC = BoundaryCondition.addMemberFunction(
@@ -886,6 +905,17 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   ppDefines.push_back(makeIfNotDefined("FUSION_MAX_VECTOR_SIZE", mplContainerMaxSize_));
   ppDefines.push_back(makeIfNotDefined("FUSION_MAX_MAP_SIZE", mplContainerMaxSize_));
   ppDefines.push_back(makeIfNotDefined("BOOST_MPL_LIMIT_VECTOR_SIZE", mplContainerMaxSize_));
+  BCFinder finder;
+  for(const auto& stencilInstantiation : context_->getStencilInstantiationMap()) {
+    for(const auto& stmt : stencilInstantiation.second->getStencilDescStatements()) {
+      stmt->ASTStmt->accept(finder);
+    }
+  }
+  if(finder.reportBCsFound()) {
+    ppDefines.push_back("#ifdef __CUDACC__\n#include "
+                        "<boundary-conditions/apply_gpu.hpp>\n#else\n#include "
+                        "<boundary-conditions/apply.hpp>\n#endif\n");
+  }
 
   DAWN_LOG(INFO) << "Done generating code";
 
