@@ -339,13 +339,13 @@ public:
   void setAccessIDOfExpr(const std::shared_ptr<Expr>& expr, const int accessID);
 
   /// @brief Add entry to the map between a given expr to its access ID
-  void mapExprToAccessID(std::shared_ptr<Expr> expr, int AccessID);
+  void mapExprToAccessID(const std::shared_ptr<Expr>& expr, int AccessID);
 
   /// @brief Set the `AccessID` of a Stmt (VarDecl)
   void setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt, const int accessID);
 
   /// @brief Add entry to the map between a given stmt to its access ID
-  void mapStmtToAccessID(std::shared_ptr<Stmt> stmt, int AccessID);
+  void mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt, int AccessID);
 
   /// @brief Get the Literal-AccessID-to-Name map
   std::unordered_map<int, std::string>& getLiteralAccessIDToNameMap();
