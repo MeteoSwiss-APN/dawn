@@ -47,7 +47,7 @@ static dawn::Extents analyzeStencilExtents(const std::shared_ptr<Stencil>& s, in
 
     Extents const& stageExtent = stage.getExtents();
     for(auto& field : stage.getFields()) {
-      fullExtents.merge(field.Extent);
+      fullExtents.merge(field.getExtents());
       fullExtents.add(stageExtent);
     }
   }
@@ -81,13 +81,13 @@ public:
 /// StencilCallStmts for a stencili with a given ID. This is required to properly insert boundary
 /// conditions.
 class AddBoundaryConditions : public ASTVisitorForwarding {
-  StencilInstantiation* instantiation_;
+  std::shared_ptr<StencilInstantiation> instantiation_;
   int StencilID_;
 
   std::vector<std::shared_ptr<StencilCallDeclStmt>> stencilCallsToReplace_;
 
 public:
-  AddBoundaryConditions(StencilInstantiation* instantiation, int StencilID)
+  AddBoundaryConditions(const std::shared_ptr<StencilInstantiation>& instantiation, int StencilID)
       : instantiation_(instantiation), StencilID_(StencilID) {}
 
   void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
@@ -104,7 +104,7 @@ public:
 
 PassSetBoundaryCondition::PassSetBoundaryCondition() : Pass("PassSetBoundaryCondition") {}
 
-bool PassSetBoundaryCondition::run(StencilInstantiation* stencilInstantiation) {
+bool PassSetBoundaryCondition::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
 
   // check if we need to run this pass
   if(stencilInstantiation->getStencils().size() == 1) {

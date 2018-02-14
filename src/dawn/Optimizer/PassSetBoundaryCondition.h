@@ -42,7 +42,7 @@ public:
   PassSetBoundaryCondition();
 
   /// @brief Pass implementation
-  bool run(StencilInstantiation* stencilInstantiation) override;
+  bool run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) override;
 
 private:
   std::vector<int> boundaryConditionInserted_;

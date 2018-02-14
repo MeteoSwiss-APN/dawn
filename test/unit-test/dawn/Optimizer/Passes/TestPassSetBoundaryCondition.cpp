@@ -34,7 +34,7 @@ protected:
   StencilSplitAnalyzer() : compiler_(compileOptions_.get()) {}
   virtual void SetUp() {}
 
-  std::unique_ptr<StencilInstantiation> loadTest(std::string sirFilename, bool splitStencils) {
+  std::shared_ptr<StencilInstantiation> loadTest(std::string sirFilename, bool splitStencils) {
 
     std::string filename = TestEnvironment::path_ + "/" + sirFilename;
     std::ifstream file(filename);
@@ -50,7 +50,7 @@ protected:
       compiler_.getOptions().SplitStencils = true;
 
     // Run the optimization
-    std::unique_ptr<OptimizerContext> optimizer = compiler_.runOptimizer(sir.get());
+    std::unique_ptr<OptimizerContext> optimizer = compiler_.runOptimizer(sir);
 
     // Report diganostics
     if(compiler_.getDiagnostics().hasDiags()) {
@@ -82,7 +82,7 @@ private:
 };
 
 TEST_F(StencilSplitAnalyzer, test_no_bc_inserted) {
-  std::unique_ptr<StencilInstantiation> test =
+  std::shared_ptr<StencilInstantiation> test =
       loadTest("boundary_condition_test_stencil_01.sir", false);
   ASSERT_TRUE((test->getBoundaryConditions().size() == 1));
   BCFinder myvisitor;
@@ -94,7 +94,7 @@ TEST_F(StencilSplitAnalyzer, test_no_bc_inserted) {
 
 // An unused BC has no extents to it
 TEST_F(StencilSplitAnalyzer, test_unused_bc) {
-  std::unique_ptr<StencilInstantiation> test =
+  std::shared_ptr<StencilInstantiation> test =
       loadTest("boundary_condition_test_stencil_02.sir", false);
   ASSERT_TRUE(test->getBoundaryConditions().count("out"));
   auto bc = test->getBoundaryConditions().find("out")->second;
@@ -102,7 +102,7 @@ TEST_F(StencilSplitAnalyzer, test_unused_bc) {
 }
 
 TEST_F(StencilSplitAnalyzer, test_bc_extent_calc) {
-  std::unique_ptr<StencilInstantiation> test =
+  std::shared_ptr<StencilInstantiation> test =
       loadTest("boundary_condition_test_stencil_01.sir", true);
   ASSERT_TRUE((test->getBoundaryConditions().size() == 1));
   BCFinder myvisitor;
@@ -116,7 +116,7 @@ TEST_F(StencilSplitAnalyzer, test_bc_extent_calc) {
 }
 
 TEST_F(StencilSplitAnalyzer, test_two_bc) {
-  std::unique_ptr<StencilInstantiation> test =
+  std::shared_ptr<StencilInstantiation> test =
       loadTest("boundary_condition_test_stencil_03.sir", true);
   ASSERT_TRUE((test->getBoundaryConditions().size() == 2));
   ASSERT_TRUE(test->getBoundaryConditions().count("intermediate"));

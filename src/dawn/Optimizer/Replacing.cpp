@@ -177,18 +177,5 @@ void replaceStencilCalls(const std::shared_ptr<StencilInstantiation>& instantiat
   }
 }
 
-GetStencilCalls::GetStencilCalls(StencilInstantiation* instantiation, int StencilID)
-    : instantiation_(instantiation), StencilID_(StencilID) {}
-
-void GetStencilCalls::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
-  if(instantiation_->getStencilIDFromStmt(stmt) == StencilID_)
-    stencilCallsToReplace_.emplace_back(stmt);
-}
-
-std::vector<std::shared_ptr<StencilCallDeclStmt>>& GetStencilCalls::getStencilCallsToReplace() {
-  return stencilCallsToReplace_;
-}
-
-void GetStencilCalls::reset() { stencilCallsToReplace_.clear(); }
 
 } // namespace dawn
