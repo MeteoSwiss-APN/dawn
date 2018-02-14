@@ -35,7 +35,11 @@ protected:
   virtual void SetUp() {}
 
   std::shared_ptr<StencilInstantiation> loadTest(std::string sirFilename, bool splitStencils) {
+    return loadTest(sirFilename, splitStencils, -1);
+  }
 
+  std::shared_ptr<StencilInstantiation> loadTest(std::string sirFilename, bool splitStencils,
+                                                 int maxfields) {
     std::string filename = TestEnvironment::path_ + "/" + sirFilename;
     std::ifstream file(filename);
     DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
@@ -48,6 +52,8 @@ protected:
     // Set specific compiler options:
     if(splitStencils)
       compiler_.getOptions().SplitStencils = true;
+    if(maxfields != -1)
+      compiler_.getOptions().MaxFieldsPerStencil = maxfields;
 
     // Run the optimization
     std::unique_ptr<OptimizerContext> optimizer = compiler_.runOptimizer(sir);
@@ -103,7 +109,7 @@ TEST_F(StencilSplitAnalyzer, test_unused_bc) {
 
 TEST_F(StencilSplitAnalyzer, test_bc_extent_calc) {
   std::shared_ptr<StencilInstantiation> test =
-      loadTest("boundary_condition_test_stencil_01.sir", true);
+      loadTest("boundary_condition_test_stencil_01.sir", true, 2);
   ASSERT_TRUE((test->getBoundaryConditions().size() == 1));
   BCFinder myvisitor;
   for(const auto& stmt : test->getStencilDescStatements()) {
@@ -117,7 +123,7 @@ TEST_F(StencilSplitAnalyzer, test_bc_extent_calc) {
 
 TEST_F(StencilSplitAnalyzer, test_two_bc) {
   std::shared_ptr<StencilInstantiation> test =
-      loadTest("boundary_condition_test_stencil_03.sir", true);
+      loadTest("boundary_condition_test_stencil_03.sir", true, 2);
   ASSERT_TRUE((test->getBoundaryConditions().size() == 2));
   ASSERT_TRUE(test->getBoundaryConditions().count("intermediate"));
   auto bcfoo = test->getBoundaryConditions().find("intermediate")->second;
