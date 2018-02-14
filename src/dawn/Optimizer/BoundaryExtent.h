@@ -15,14 +15,13 @@
 #ifndef DAWN_OPTIMIZER_BOUNDARYEXTENTS_H
 #define DAWN_OPTIMIZER_BOUNDARYEXTENTS_H
 
+#include "dawn/Optimizer/DependencyGraphAccessesFwd.h"
 #include "dawn/Optimizer/Extents.h"
 #include "dawn/Optimizer/Field.h"
 #include <memory>
 #include <unordered_map>
 
 namespace dawn {
-
-class DependencyGraphAccesses;
 
 /// @fn computeBoundaryPoints
 /// @brief Compute the accumulated extent of each Vertex (given by `VertexID`) referenced in `graph`

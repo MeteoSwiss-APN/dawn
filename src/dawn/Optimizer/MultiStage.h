@@ -16,6 +16,7 @@
 #define DAWN_OPTIMIZER_MULTISTAGE_H
 
 #include "dawn/Optimizer/Cache.h"
+#include "dawn/Optimizer/DependencyGraphAccessesFwd.h"
 #include "dawn/Optimizer/LoopOrder.h"
 #include "dawn/Optimizer/Stage.h"
 #include <deque>
@@ -27,7 +28,6 @@
 namespace dawn {
 
 class StencilInstantiation;
-class DependencyGraphAccesses;
 class OptimizerContext;
 
 /// @brief A MultiStage is represented by a collection of stages and a given exectuion policy.

@@ -15,6 +15,7 @@
 #ifndef DAWN_OPTIMIZER_STAGE_H
 #define DAWN_OPTIMIZER_STAGE_H
 
+#include "dawn/Optimizer/DependencyGraphAccessesFwd.h"
 #include "dawn/Optimizer/DoMethod.h"
 #include "dawn/Optimizer/Field.h"
 #include "dawn/Optimizer/Interval.h"
@@ -27,7 +28,6 @@
 namespace dawn {
 
 class StencilInstantiation;
-class DependencyGraphAccesses;
 class MultiStage;
 
 /// @brief A Stage is represented by a collection of statements grouped into DoMethod of

@@ -18,6 +18,7 @@
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Unreachable.h"
 #include <algorithm>
+#include <dawn/SIR/ASTStmt.h>
 #include <fstream>
 #include <iosfwd>
 #include <iterator>
@@ -25,6 +26,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -33,8 +35,15 @@ namespace dawn {
 
 /// @brief CRTP base class of all dependency graphs
 /// @ingroup optimizer
-template <class Derived, class EdgeData>
+template <class Derived, class EdgeData, class VertexData>
 class DependencyGraph {
+
+  template <typename IntT, typename VertexDataT>
+  struct vertex_has_data {
+    static constexpr bool value = (std::is_void<VertexDataT>::value &&
+                                   std::is_integral<typename std::decay<IntT>::type>::value);
+  };
+
 public:
   /// @brief Directed edge between the vertex `From` and `To` containing `Data`
   ///
@@ -57,10 +66,22 @@ public:
 
   using EdgeList = std::list<Edge>;
 
-  struct Vertex {
+  using VertexDataEmul =
+      typename std::conditional<std::is_void<VertexData>::value, int, VertexData>::type;
+
+  struct VertexWithoutData {
     std::size_t VertexID; ///< Unqiue ID of the Vertex
     int ID;               ///< ID of the data to be stored
   };
+
+  struct VertexWithData {
+    std::size_t VertexID; ///< Unqiue ID of the Vertex
+    int ID;               ///< ID of the data to be stored
+    VertexDataEmul data;  /// vertex data
+  };
+
+  using Vertex = typename std::conditional<std::is_void<VertexData>::value, VertexWithoutData,
+                                           VertexWithData>::type;
 
   /// @brief Get the adjacency list
   /// @{
@@ -82,8 +103,20 @@ public:
   DependencyGraph() = default;
 
   /// @brief Insert a new node
-  Vertex& insertNode(int ID) {
+  template <typename Int>
+  Vertex& insertNode(Int ID,
+                     typename std::enable_if<vertex_has_data<Int, VertexData>::value>::type* = 0) {
     auto insertPair = vertices_.emplace(ID, Vertex{adjacencyList_.size(), ID});
+    if(insertPair.second)
+      adjacencyList_.push_back(std::make_shared<EdgeList>());
+    return insertPair.first->second;
+  }
+
+  template <typename Int>
+  Vertex&
+  insertNode(Int ID, VertexDataEmul data,
+             typename std::enable_if<(!vertex_has_data<Int, VertexData>::value)>::type* = 0) {
+    auto insertPair = vertices_.emplace(ID, Vertex{adjacencyList_.size(), ID, data});
     if(insertPair.second)
       adjacencyList_.push_back(std::make_shared<EdgeList>());
     return insertPair.first->second;
@@ -96,24 +129,26 @@ public:
   ///      X  ------------------------------- X
   ///    IDFrom                              IDTo
   /// @endverbatim
-  void insertEdge(int IDFrom, int IDTo, EdgeData data = EdgeData()) {
+  template <typename Int>
+  void insertEdge(Int IDFrom, Int IDTo, EdgeData edata = EdgeData(),
+                  typename std::enable_if<(vertex_has_data<Int, VertexData>::value)>::type* = 0) {
 
     // Create `IDTo` node (We shift the burden to the `insertNode` to take appropriate actions
     // if the node does already exist)
     static_cast<Derived*>(this)->insertNode(IDTo);
 
-    // Traverse the edge-list of node `IDFrom` to check if we already have such an edge
-    auto& edgeList = adjacencyList_[getVertexIDFromID(IDFrom)];
-    const Edge edge{data, getVertexIDFromID(IDFrom), getVertexIDFromID(IDTo)};
+    insertEdgeImpl(IDFrom, IDTo, edata);
+  }
 
-    auto it = std::find_if(edgeList->begin(), edgeList->end(), [&edge](const Edge& e) {
-      return e.FromVertexID == edge.FromVertexID && e.ToVertexID == edge.ToVertexID;
-    });
+  template <typename Int>
+  void insertEdge(Int IDFrom, Int IDTo, VertexDataEmul vdata, EdgeData edata = EdgeData(),
+                  typename std::enable_if<(!vertex_has_data<Int, VertexData>::value)>::type* = 0) {
 
-    if(it != edgeList->end())
-      static_cast<Derived*>(this)->edgeAlreadyExists(it->Data, edge.Data);
-    else
-      edgeList->push_back(edge);
+    // Create `IDTo` node (We shift the burden to the `insertNode` to take appropriate actions
+    // if the node does already exist)
+    static_cast<Derived*>(this)->insertNode(IDTo, vdata);
+
+    insertEdgeImpl(IDFrom, IDTo, edata);
   }
 
   /// @brief Callback which will be invoked if an edge already exists
@@ -219,7 +254,21 @@ protected:
     os << "}\n";
   }
 
-protected:
+  void insertEdgeImpl(int IDFrom, int IDTo, EdgeData data) {
+    // Traverse the edge-list of node `IDFrom` to check if we already have such an edge
+    auto& edgeList = adjacencyList_[getVertexIDFromID(IDFrom)];
+    const Edge edge{data, getVertexIDFromID(IDFrom), getVertexIDFromID(IDTo)};
+
+    auto it = std::find_if(edgeList->begin(), edgeList->end(), [&edge](const Edge& e) {
+      return e.FromVertexID == edge.FromVertexID && e.ToVertexID == edge.ToVertexID;
+    });
+
+    if(it != edgeList->end())
+      static_cast<Derived*>(this)->edgeAlreadyExists(it->Data, edge.Data);
+    else
+      edgeList->push_back(edge);
+  }
+
   std::unordered_map<int, Vertex> vertices_;
   std::vector<std::shared_ptr<EdgeList>> adjacencyList_;
 };

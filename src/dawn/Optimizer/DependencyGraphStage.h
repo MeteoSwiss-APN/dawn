@@ -31,12 +31,12 @@ enum class DependencyGraphStageEdgeData { EK_Depends };
 /// @brief Dependency graph of the stages
 /// @ingroup optimizer
 class DependencyGraphStage
-    : public DependencyGraph<DependencyGraphStage, DependencyGraphStageEdgeData> {
+    : public DependencyGraph<DependencyGraphStage, DependencyGraphStageEdgeData, void> {
 
   std::shared_ptr<StencilInstantiation> stencilInstantiation_;
 
 public:
-  using Base = DependencyGraph<DependencyGraphStage, DependencyGraphStageEdgeData>;
+  using Base = DependencyGraph<DependencyGraphStage, DependencyGraphStageEdgeData, void>;
   using EdgeData = DependencyGraphStageEdgeData;
 
   DependencyGraphStage(const std::shared_ptr<StencilInstantiation>& stencilInstantiation)

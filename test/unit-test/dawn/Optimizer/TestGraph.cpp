@@ -1,13 +1,13 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -105,6 +105,59 @@ TEST(GraphTest, InputOutputNodes3) {
 
   ASSERT_TRUE(graph.getOutputVertexIDs().empty());
   ASSERT_TRUE(graph.getInputVertexIDs().empty());
+}
+
+TEST(GraphTest, GraphWithVertexData) {
+
+  // testing graphs with data on vertices
+  DependencyGraphAccessesT<std::shared_ptr<Expr>> graph(nullptr);
+  std::shared_ptr<VarAccessExpr> e = std::make_shared<VarAccessExpr>(
+      "e", std::make_shared<LiteralAccessExpr>("1", BuiltinTypeID::Integer));
+  std::shared_ptr<FieldAccessExpr> b = std::make_shared<FieldAccessExpr>("b");
+  std::shared_ptr<AssignmentExpr> a = std::make_shared<AssignmentExpr>(e, b);
+  std::shared_ptr<FieldAccessExpr> c = std::make_shared<FieldAccessExpr>("c");
+  std::shared_ptr<FieldAccessExpr> d = std::make_shared<FieldAccessExpr>("d");
+  std::shared_ptr<FieldAccessExpr> f = std::make_shared<FieldAccessExpr>("f");
+
+  /*
+                       +-----+
+                       | 2,c |
+                       +-----+
+                          ^
+                          |
+           +-----+     +-----+     +-----+
+        +  | 0,a | - > | 1,b | - > | 3,d |
+        '  +-----+     +-----+     +-----+
+        '
+        '
+        '
+        '  +-----+     +-----+
+        +> | 5,e | - > | 6,f |
+           +-----+     +-----+
+  */
+
+  graph.insertNode(0, a);
+  graph.insertEdge(0, 1, b, Extents{});
+  graph.insertEdge(1, 2, c, Extents{});
+  graph.insertEdge(1, 3, d, Extents{});
+  graph.insertEdge(0, 5, e, Extents{});
+  graph.insertEdge(5, 6, f, Extents{});
+
+  auto outputNodes = graph.getOutputVertexIDs();
+  auto inputNodes = graph.getInputVertexIDs();
+
+  ASSERT_TRUE(outputNodes.size() == 1);
+  ASSERT_TRUE(graph.getVertices()[outputNodes[0]].data == a);
+
+  ASSERT_TRUE(inputNodes.size() == 3);
+  std::cout << "PP " << a << " " << b << " " << c << " " << d << " " << e << " " << f << std::endl;
+  int id = inputNodes[0];
+  ASSERT_TRUE(graph.getVertices()[graph.getIDFromVertexID(id)].data == f);
+  id = inputNodes[1];
+  ASSERT_TRUE(graph.getVertices()[graph.getIDFromVertexID(id)].data == c);
+
+  id = inputNodes[2];
+  ASSERT_TRUE(graph.getVertices()[graph.getIDFromVertexID(id)].data == d);
 }
 
 } // anonymous namespace

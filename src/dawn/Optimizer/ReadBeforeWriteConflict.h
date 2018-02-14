@@ -15,11 +15,10 @@
 #ifndef DAWN_OPTIMITZER_READBEFOREWRITECONFLICT_H
 #define DAWN_OPTIMITZER_READBEFOREWRITECONFLICT_H
 
+#include "dawn/Optimizer/DependencyGraphAccessesFwd.h"
 #include "dawn/Optimizer/LoopOrder.h"
 
 namespace dawn {
-
-class DependencyGraphAccesses;
 
 /// @brief Result of the vertical dependency analysis algorithm
 /// @ingroup optimizer

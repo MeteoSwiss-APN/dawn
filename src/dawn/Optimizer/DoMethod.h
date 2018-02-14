@@ -15,6 +15,7 @@
 #ifndef DAWN_OPTIMIZER_DOMETHOD_H
 #define DAWN_OPTIMIZER_DOMETHOD_H
 
+#include "dawn/Optimizer/DependencyGraphAccessesFwd.h"
 #include "dawn/Optimizer/Interval.h"
 #include <memory>
 #include <vector>
@@ -22,7 +23,6 @@
 namespace dawn {
 
 class Stage;
-class DependencyGraphAccesses;
 class StatementAccessesPair;
 
 /// @brief A Do-method is a collection of Statements with corresponding Accesses of a specific

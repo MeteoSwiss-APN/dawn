@@ -15,13 +15,13 @@
 #ifndef DAWN_OPTIMIZER_PASSFIELDVERSIONING_H
 #define DAWN_OPTIMIZER_PASSFIELDVERSIONING_H
 
+#include "dawn/Optimizer/DependencyGraphAccessesFwd.h"
 #include "dawn/Optimizer/LoopOrder.h"
 #include "dawn/Optimizer/Pass.h"
 
 namespace dawn {
 
 class Stencil;
-class DependencyGraphAccesses;
 class DoMethod;
 
 /// @brief This pass resolves potential race condition by introducing double buffering i.e

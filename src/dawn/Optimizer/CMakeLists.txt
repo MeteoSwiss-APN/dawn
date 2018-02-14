@@ -25,8 +25,8 @@ mchbuild_add_library(
           Cache.cpp
           Cache.h
           DependencyGraph.h
-          DependencyGraphAccesses.cpp      
           DependencyGraphAccesses.h
+          DependencyGraphAccessesFwd.h
           DependencyGraphStage.cpp
           DependencyGraphStage.h
           DoMethod.cpp
@@ -34,6 +34,8 @@ mchbuild_add_library(
           Extents.cpp
           Extents.h
           Field.h
+          GreedyColoring.cpp
+          GreedyColoring.h
           Interval.cpp
           Interval.h
           LoopOrder.cpp    
@@ -106,5 +108,7 @@ mchbuild_add_library(
           StencilFunctionInstantiation.h
           StencilInstantiation.cpp
           StencilInstantiation.h
+          StronglyConnectedComponents.cpp
+          StronglyConnectedComponents.h
   OBJECT
 )
