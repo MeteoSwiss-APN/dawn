@@ -45,7 +45,7 @@ protected:
     std::shared_ptr<SIR> sir =
         SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::SK_Json);
 
-    std::unique_ptr<OptimizerContext> optimizer = compiler_.runOptimizer(sir.get());
+    std::unique_ptr<OptimizerContext> optimizer = compiler_.runOptimizer(sir);
     // Report diganostics
     if(compiler_.getDiagnostics().hasDiags()) {
       for(const auto& diag : compiler_.getDiagnostics().getQueue())
