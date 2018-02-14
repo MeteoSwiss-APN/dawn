@@ -46,7 +46,7 @@ class GlobalFieldCacher {
 public:
   /// @param[in, out]  msprt   Pointer to the multistage to handle
   /// @param[in, out]  si      Stencil Instanciation [ISIR] holding all the Stencils
-  GlobalFieldCacher(MultiStage* msptr, StencilInstantiation* si)
+  GlobalFieldCacher(MultiStage* msptr, std::shared_ptr<StencilInstantiation> si)
       : multiStagePrt_(msptr), instantiation_(si) {}
 
   /// @brief Entry method for the pass: processes a given multistage and applies all changes
@@ -69,31 +69,31 @@ private:
 
     for(const auto& stagePtr : multiStagePrt_->getStages()) {
       for(const Field& field : stagePtr->getFields()) {
-        auto iter = accessIDToDataLocality_.find(field.AccessID);
+        auto iter = accessIDToDataLocality_.find(field.getAccessID());
 
         // We already checked this field
         if(iter != accessIDToDataLocality_.end())
           continue;
 
         // Only ij-cache fields that are not horizontally pointwise and are vertically pointwise
-        if(!field.Extent.isVerticalPointwise() || field.Extent.isHorizontalPointwise())
+        if(!field.getExtents().isVerticalPointwise() || field.getExtents().isHorizontalPointwise())
           continue;
 
         // This is caching non-temporary fields
-        if(instantiation_->isTemporaryField(field.AccessID))
+        if(instantiation_->isTemporaryField(field.getAccessID()))
           continue;
 
-        int cachedReadAndWrites = dataLocality.find(field.AccessID)->second.totalAccesses();
+        int cachedReadAndWrites = dataLocality.find(field.getAccessID())->second.totalAccesses();
 
         // We check how much the cache-filling costs: 1 Read and if we fill from Memory
-        if(checkReadBeforeWrite(field.AccessID))
+        if(checkReadBeforeWrite(field.getAccessID()))
           cachedReadAndWrites--;
         // We need one more write to flush the cache back to the variable
-        if(!checkReadOnlyAccess(field.AccessID))
+        if(!checkReadOnlyAccess(field.getAccessID()))
           cachedReadAndWrites--;
 
         if(cachedReadAndWrites > 0)
-          accessIDToDataLocality_.emplace(field.AccessID, cachedReadAndWrites);
+          accessIDToDataLocality_.emplace(field.getAccessID(), cachedReadAndWrites);
       }
     }
 
@@ -182,7 +182,7 @@ private:
                                                const std::vector<int>& assigneeIDs) {
     // Add the cache Flush stage
     std::shared_ptr<Stage> assignmentStage = std::make_shared<Stage>(
-        instantiation_, multiStagePrt_, instantiation_->nextUID(), interval);
+        *instantiation_, multiStagePrt_, instantiation_->nextUID(), interval);
     std::unique_ptr<DoMethod> domethod = make_unique<DoMethod>(assignmentStage.get(), interval);
     domethod->getStatementAccessesPairs().clear();
 
@@ -272,7 +272,7 @@ private:
   }
 
   MultiStage* multiStagePrt_;
-  StencilInstantiation* instantiation_;
+  std::shared_ptr<StencilInstantiation> instantiation_;
 
   std::unordered_map<int, int> accessIDToDataLocality_;
   std::unordered_map<int, int> oldAccessIDtoNewAccessID_;
@@ -283,7 +283,8 @@ private:
 
 PassSetNonTempCaches::PassSetNonTempCaches() : Pass("PassSetNonTempCaches") {}
 
-bool dawn::PassSetNonTempCaches::run(dawn::StencilInstantiation* stencilInstantiation) {
+bool dawn::PassSetNonTempCaches::run(
+    const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
 
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 

@@ -43,7 +43,7 @@ static FirstAccessKind getFirstAccessKind(const MultiStage& MS, int AccessID) {
   for(const auto& stagePtr : MS.getStages()) {
     Stage& stage = *stagePtr;
     if(std::find_if(stage.getFields().begin(), stage.getFields().end(), [&](const Field& field) {
-         return field.AccessID == AccessID;
+         return field.getAccessID() == AccessID;
        }) != stage.getFields().end()) {
 
       auto getFirstAccessKindFromDoMethod = [&](const DoMethod* doMethod) -> FirstAccessKind {
@@ -145,7 +145,7 @@ Cache::CacheIOPolicy combinePolicy(Cache::CacheIOPolicy MS1Policy, Cache::CacheI
 
 PassSetCaches::PassSetCaches() : Pass("PassSetCaches") {}
 
-bool PassSetCaches::run(StencilInstantiation* instantiation) {
+bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiation) {
   OptimizerContext* context = instantiation->getOptimizerContext();
 
   for(const auto& stencilPtr : instantiation->getStencils()) {
@@ -159,42 +159,43 @@ bool PassSetCaches::run(StencilInstantiation* instantiation) {
       std::set<int> outputFields;
 
       auto isOutput = [](const Field& field) {
-        return field.Intend == Field::IK_Output || field.Intend == Field::IK_InputOutput;
+        return field.getIntend() == Field::IK_Output || field.getIntend() == Field::IK_InputOutput;
       };
 
       for(const auto& stagePtr : multiStagePtr->getStages()) {
         for(const Field& field : stagePtr->getFields()) {
 
           // Field is already cached, skip
-          if(MS.isCached(field.AccessID))
+          if(MS.isCached(field.getAccessID()))
             continue;
 
           // Field has vertical extents, can't be ij-cached
-          if(!field.Extent.isVerticalPointwise())
+          if(!field.getExtents().isVerticalPointwise())
             continue;
 
           // Currently we only cache temporaries!
-          if(!instantiation->isTemporaryField(field.AccessID))
+          if(!instantiation->isTemporaryField(field.getAccessID()))
             continue;
 
           // Cache the field
-          if(field.Intend == Field::IK_Input && outputFields.count(field.AccessID) &&
-             !field.Extent.isHorizontalPointwise()) {
+          if(field.getIntend() == Field::IK_Input && outputFields.count(field.getAccessID()) &&
+             !field.getExtents().isHorizontalPointwise()) {
 
-            Cache& cache = multiStagePtr->setCache(Cache::IJ, Cache::local, field.AccessID);
+            Cache& cache = multiStagePtr->setCache(Cache::IJ, Cache::local, field.getAccessID());
             instantiation->insertCachedVariable(field.AccessID);
+
 
             if(context->getOptions().ReportPassSetCaches) {
               std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": MS"
                         << msIdx << ": "
-                        << instantiation->getOriginalNameFromAccessID(field.AccessID) << ":"
+                        << instantiation->getOriginalNameFromAccessID(field.getAccessID()) << ":"
                         << cache.getCacheTypeAsString() << ":" << cache.getCacheIOPolicyAsString()
                         << std::endl;
             }
           }
 
           if(isOutput(field))
-            outputFields.insert(field.AccessID);
+            outputFields.insert(field.getAccessID());
         }
       }
       msIdx++;
@@ -217,38 +218,40 @@ bool PassSetCaches::run(StencilInstantiation* instantiation) {
           const Field& field = AccessIDFieldPair.second;
 
           // Field is already cached, skip
-          if(MS.isCached(field.AccessID))
+          if(MS.isCached(field.getAccessID()))
             continue;
 
           // Field has horizontal extents, can't be k-cached
-          if(!field.Extent.isHorizontalPointwise())
+          if(!field.getExtents().isHorizontalPointwise())
             continue;
 
           // Currently we only cache temporaries!
-          //          if(!instantiation->isTemporaryField(field.AccessID))
+          //          if(!instantiation->isTemporaryField(field.getAccessID()))
           //            continue;
 
-          if(!instantiation->isTemporaryField(field.AccessID) &&
-             (field.Intend == Field::IK_Output ||
-              (field.Intend == Field::IK_Input && field.Extent.isPointwise())))
+          if(!instantiation->isTemporaryField(field.getAccessID()) &&
+             (field.getIntend() == Field::IK_Output ||
+              (field.getIntend() == Field::IK_Input && field.getExtents().isPointwise())))
             continue;
 
           // Determine if we need to fill the cache by analyzing the current multi-stage
           Cache::CacheIOPolicy policy = Cache::unknown;
-          if(field.Intend == Field::IK_Input) {
+          if(field.getIntend() == Field::IK_Input) {
             policy = Cache::fill;
-          } else if(field.Intend == Field::IK_Output)
+          } else if(field.getIntend() == Field::IK_Output)
             policy = Cache::local;
-          else if(field.Intend == Field::IK_InputOutput) {
+          else if(field.getIntend() == Field::IK_InputOutput) {
             // Do we compute the first levels or do we need to access main memory (i.e fill the
             // fist accesses)?
-            FirstAccessKind firstAccess = getFirstAccessKind(MS, field.AccessID);
+            FirstAccessKind firstAccess = getFirstAccessKind(MS, field.getAccessID());
             if(firstAccess == FK_WriteOnly)
               policy = Cache::local;
             else {
               // Do we have a read in counter loop order or pointwise access?
-              if(field.Extent.getVerticalLoopOrderAccesses(MS.getLoopOrder()).CounterLoopOrder ||
-                 field.Extent.isVerticalPointwise())
+              if(field.getExtents()
+                     .getVerticalLoopOrderAccesses(MS.getLoopOrder())
+                     .CounterLoopOrder ||
+                 field.getExtents().isVerticalPointwise())
                 policy = Cache::fill;
               else
                 policy = Cache::bpfill;
@@ -256,40 +259,42 @@ bool PassSetCaches::run(StencilInstantiation* instantiation) {
           }
 
           // Determine if we need to flush the cache by analyzing the next multi-stage
-          if(MSIndex != (numMS - 1) && fields[MSIndex + 1].count(field.AccessID)) {
+          if(MSIndex != (numMS - 1) && fields[MSIndex + 1].count(field.getAccessID())) {
 
             const MultiStage& nextMS = *stencil.getMultiStageFromMultiStageIndex(MSIndex + 1);
-            const Field& fieldInNextMS = fields[MSIndex + 1].find(field.AccessID)->second;
+            const Field& fieldInNextMS = fields[MSIndex + 1].find(field.getAccessID())->second;
 
-            if(fieldInNextMS.Intend == Field::IK_Input)
+            if(fieldInNextMS.getIntend() == Field::IK_Input)
               policy = combinePolicy(policy, Cache::flush);
-            else if(fieldInNextMS.Intend == Field::IK_InputOutput) {
+            else if(fieldInNextMS.getIntend() == Field::IK_InputOutput) {
               // Do we compute the first levels or do we need to access main memory (i.e flush
               // the last accesses)?
-              FirstAccessKind firstAccess = getFirstAccessKind(nextMS, fieldInNextMS.AccessID);
+              FirstAccessKind firstAccess = getFirstAccessKind(nextMS, fieldInNextMS.getAccessID());
               if(firstAccess == FK_WriteOnly)
                 policy = combinePolicy(policy, Cache::local);
               else {
-                if(fieldInNextMS.Extent.getVerticalLoopOrderAccesses(nextMS.getLoopOrder())
+                if(fieldInNextMS.getExtents()
+                       .getVerticalLoopOrderAccesses(nextMS.getLoopOrder())
                        .CounterLoopOrder ||
-                   fieldInNextMS.Extent.isVerticalPointwise())
+                   fieldInNextMS.getExtents().isVerticalPointwise())
                   policy = combinePolicy(policy, Cache::flush);
                 else
                   policy = combinePolicy(policy, Cache::epflush);
               }
             }
           } else {
-            if(!instantiation->isTemporaryField(field.AccessID) && field.Intend != Field::IK_Input)
+            if(!instantiation->isTemporaryField(field.getAccessID()) &&
+               field.getIntend() != Field::IK_Input)
               policy = combinePolicy(policy, Cache::flush);
           }
 
           // Set the cache
-          Cache& cache = MS.setCache(Cache::K, policy, field.AccessID);
+          Cache& cache = MS.setCache(Cache::K, policy, field.getAccessID());
 
           if(context->getOptions().ReportPassSetCaches) {
             std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": MS"
                       << MSIndex << ": "
-                      << instantiation->getOriginalNameFromAccessID(field.AccessID) << ":"
+                      << instantiation->getOriginalNameFromAccessID(field.getAccessID()) << ":"
                       << cache.getCacheTypeAsString() << ":" << cache.getCacheIOPolicyAsString()
                       << std::endl;
           }

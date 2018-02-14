@@ -1,0 +1,396 @@
+{
+ "filename": "/code/dawn/test/unit-test/dawn/Optimizer/Passes/samples/test_field_access_interval_04.cpp",
+ "stencils": [
+  {
+   "name": "compute_extent_test_stencil",
+   "loc": {
+    "Line": 21,
+    "Column": 8
+   },
+   "ast": {
+    "root": {
+     "block_stmt": {
+      "statements": [
+       {
+        "vertical_region_decl_stmt": {
+         "vertical_region": {
+          "loc": {
+           "Line": 26,
+           "Column": 5
+          },
+          "ast": {
+           "root": {
+            "block_stmt": {
+             "statements": [
+              {
+               "expr_stmt": {
+                "expr": {
+                 "assignment_expr": {
+                  "left": {
+                   "field_access_expr": {
+                    "name": "u",
+                    "offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 27,
+                     "Column": 7
+                    }
+                   }
+                  },
+                  "op": "=",
+                  "right": {
+                   "field_access_expr": {
+                    "name": "in",
+                    "offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 27,
+                     "Column": 11
+                    }
+                   }
+                  },
+                  "loc": {
+                   "Line": 27,
+                   "Column": 7
+                  }
+                 }
+                },
+                "loc": {
+                 "Line": 27,
+                 "Column": 7
+                }
+               }
+              }
+             ],
+             "loc": {
+              "Line": 26,
+              "Column": 5
+             }
+            }
+           }
+          },
+          "interval": {
+           "lower_offset": 2,
+           "upper_offset": 3,
+           "special_lower_level": "Start",
+           "special_upper_level": "Start"
+          },
+          "loop_order": "Forward"
+         },
+         "loc": {
+          "Line": 26,
+          "Column": 5
+         }
+        }
+       },
+       {
+        "vertical_region_decl_stmt": {
+         "vertical_region": {
+          "loc": {
+           "Line": 28,
+           "Column": 5
+          },
+          "ast": {
+           "root": {
+            "block_stmt": {
+             "statements": [
+              {
+               "expr_stmt": {
+                "expr": {
+                 "assignment_expr": {
+                  "left": {
+                   "field_access_expr": {
+                    "name": "out1",
+                    "offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 29,
+                     "Column": 7
+                    }
+                   }
+                  },
+                  "op": "=",
+                  "right": {
+                   "binary_operator": {
+                    "left": {
+                     "field_access_expr": {
+                      "name": "u",
+                      "offset": [
+                       0,
+                       0,
+                       2
+                      ],
+                      "argument_map": [
+                       -1,
+                       -1,
+                       -1
+                      ],
+                      "argument_offset": [
+                       0,
+                       0,
+                       0
+                      ],
+                      "negate_offset": false,
+                      "loc": {
+                       "Line": 29,
+                       "Column": 14
+                      }
+                     }
+                    },
+                    "op": "+",
+                    "right": {
+                     "field_access_expr": {
+                      "name": "u",
+                      "offset": [
+                       0,
+                       0,
+                       1
+                      ],
+                      "argument_map": [
+                       -1,
+                       -1,
+                       -1
+                      ],
+                      "argument_offset": [
+                       0,
+                       0,
+                       0
+                      ],
+                      "negate_offset": false,
+                      "loc": {
+                       "Line": 29,
+                       "Column": 23
+                      }
+                     }
+                    },
+                    "loc": {
+                     "Line": 29,
+                     "Column": 14
+                    }
+                   }
+                  },
+                  "loc": {
+                   "Line": 29,
+                   "Column": 7
+                  }
+                 }
+                },
+                "loc": {
+                 "Line": 29,
+                 "Column": 7
+                }
+               }
+              }
+             ],
+             "loc": {
+              "Line": 28,
+              "Column": 5
+             }
+            }
+           }
+          },
+          "interval": {
+           "lower_offset": 2,
+           "upper_offset": 10,
+           "special_lower_level": "Start",
+           "special_upper_level": "Start"
+          },
+          "loop_order": "Forward"
+         },
+         "loc": {
+          "Line": 28,
+          "Column": 5
+         }
+        }
+       },
+       {
+        "vertical_region_decl_stmt": {
+         "vertical_region": {
+          "loc": {
+           "Line": 30,
+           "Column": 5
+          },
+          "ast": {
+           "root": {
+            "block_stmt": {
+             "statements": [
+              {
+               "expr_stmt": {
+                "expr": {
+                 "assignment_expr": {
+                  "left": {
+                   "field_access_expr": {
+                    "name": "out2",
+                    "offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 31,
+                     "Column": 7
+                    }
+                   }
+                  },
+                  "op": "=",
+                  "right": {
+                   "field_access_expr": {
+                    "name": "u",
+                    "offset": [
+                     0,
+                     0,
+                     6
+                    ],
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 31,
+                     "Column": 14
+                    }
+                   }
+                  },
+                  "loc": {
+                   "Line": 31,
+                   "Column": 7
+                  }
+                 }
+                },
+                "loc": {
+                 "Line": 31,
+                 "Column": 7
+                }
+               }
+              }
+             ],
+             "loc": {
+              "Line": 30,
+              "Column": 5
+             }
+            }
+           }
+          },
+          "interval": {
+           "lower_offset": 0,
+           "upper_offset": 8,
+           "special_lower_level": "Start",
+           "special_upper_level": "Start"
+          },
+          "loop_order": "Forward"
+         },
+         "loc": {
+          "Line": 30,
+          "Column": 5
+         }
+        }
+       }
+      ],
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      }
+     }
+    }
+   },
+   "fields": [
+    {
+     "name": "in",
+     "loc": {
+      "Line": 22,
+      "Column": 11
+     },
+     "is_temporary": false
+    },
+    {
+     "name": "out1",
+     "loc": {
+      "Line": 22,
+      "Column": 15
+     },
+     "is_temporary": false
+    },
+    {
+     "name": "out2",
+     "loc": {
+      "Line": 22,
+      "Column": 21
+     },
+     "is_temporary": false
+    },
+    {
+     "name": "u",
+     "loc": {
+      "Line": 24,
+      "Column": 7
+     },
+     "is_temporary": true
+    }
+   ]
+  }
+ ],
+ "stencil_functions": [],
+ "global_variables": {
+  "map": {}
+ }
+}

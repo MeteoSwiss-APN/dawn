@@ -35,8 +35,8 @@ class OptimizerContext;
 /// @ingroup optimizer
 class StencilInstantiation : NonCopyable {
   OptimizerContext* context_;
-  const sir::Stencil* SIRStencil_;
-  const SIR* SIR_;
+  const std::shared_ptr<sir::Stencil> SIRStencil_;
+  const std::shared_ptr<SIR> SIR_;
 
   /// Unique identifier generator
   UIDGenerator UIDGen_;
@@ -115,7 +115,8 @@ class StencilInstantiation : NonCopyable {
 
 public:
   /// @brief Assemble StencilInstantiation for stencil
-  StencilInstantiation(OptimizerContext* context, const sir::Stencil* SIRStencil, const SIR* SIR);
+  StencilInstantiation(OptimizerContext* context, const std::shared_ptr<sir::Stencil>& SIRStencil,
+                       const std::shared_ptr<SIR>& SIR);
 
   /// @brief Insert a new AccessID - Name pair
   void setAccessIDNamePair(int AccessID, const std::string& name);
@@ -130,7 +131,7 @@ public:
   void removeAccessID(int AccesssID);
 
   /// @brief Get the name of the StencilInstantiation (corresponds to the name of the SIRStencil)
-  const std::string& getName() const;
+  const std::string getName() const;
 
   /// @brief Get the `name` associated with the `AccessID`
   const std::string& getNameFromAccessID(int AccessID) const;
@@ -379,10 +380,10 @@ public:
   const std::set<int>& getGlobalVariableAccessIDSet() const;
 
   /// @brief Get the SIR
-  const SIR* getSIR() const { return SIR_; }
+  std::shared_ptr<SIR> const& getSIR() const { return SIR_; }
 
   /// @brief Get the SIRStencil this context was built from
-  const sir::Stencil* getSIRStencil() const { return SIRStencil_; }
+  std::shared_ptr<sir::Stencil> const& getSIRStencil() const { return SIRStencil_; }
 
   /// @brief Get the optimizer context
   OptimizerContext* getOptimizerContext() { return context_; }

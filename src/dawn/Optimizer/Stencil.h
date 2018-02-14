@@ -33,8 +33,8 @@ class StatementAccessesPair;
 /// @brief A Stencil is represented by a collection of MultiStages
 /// @ingroup optimizer
 class Stencil {
-  StencilInstantiation* stencilInstantiation_;
-  const sir::Stencil* SIRStencil_;
+  StencilInstantiation& stencilInstantiation_;
+  const std::shared_ptr<sir::Stencil> SIRStencil_;
 
   /// Identifier of the stencil. Note that this ID is only for code-generation to associate the
   /// stencil with a stencil-call in the run() method
@@ -158,8 +158,9 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
-  Stencil(StencilInstantiation* stencilInstantiation, const sir::Stencil* SIRStencil, int StencilID,
-          std::shared_ptr<DependencyGraphStage> stageDependencyGraph = nullptr);
+  Stencil(StencilInstantiation& stencilInstantiation,
+          const std::shared_ptr<sir::Stencil>& SIRStencil, int StencilID,
+          const std::shared_ptr<DependencyGraphStage>& stageDependencyGraph = nullptr);
 
   Stencil(const Stencil&) = default;
   Stencil(Stencil&&) = default;
@@ -179,11 +180,14 @@ public:
   std::vector<std::string> getGlobalVariables() const;
 
   /// @brief Get the stencil instantiation
-  StencilInstantiation* getStencilInstantiation() const { return stencilInstantiation_; }
+  StencilInstantiation& getStencilInstantiation() const { return stencilInstantiation_; }
 
   /// @brief Get the multi-stages of the stencil
   std::list<std::shared_ptr<MultiStage>>& getMultiStages() { return multistages_; }
   const std::list<std::shared_ptr<MultiStage>>& getMultiStages() const { return multistages_; }
+
+  /// @brief Get the enclosing interval of accesses of temporaries used in this stencil
+  std::shared_ptr<Interval> getEnclosingIntervalTemporaries() const;
 
   /// @brief Get the multi-stage at given multistage index
   const std::shared_ptr<MultiStage>& getMultiStageFromMultiStageIndex(int multiStageIdx) const;
@@ -251,7 +255,7 @@ public:
   bool isEmpty() const;
 
   /// @brief Get the SIR Stencil
-  const sir::Stencil* getSIRStencil() const;
+  const std::shared_ptr<sir::Stencil> getSIRStencil() const;
 
   /// @brief Apply the visitor to all statements in the stencil
   void accept(ASTVisitor& visitor);

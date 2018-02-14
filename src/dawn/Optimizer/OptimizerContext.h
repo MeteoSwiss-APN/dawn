@@ -44,18 +44,19 @@ class OptimizerContext : NonCopyable {
   DiagnosticsEngine& diagnostics_;
   Options& options_;
 
-  const SIR* SIR_;
-  std::map<std::string, std::unique_ptr<StencilInstantiation>> stencilInstantiationMap_;
+  const std::shared_ptr<SIR> SIR_;
+  std::map<std::string, std::shared_ptr<StencilInstantiation>> stencilInstantiationMap_;
   PassManager passManager_;
   HardwareConfig hardwareConfiguration_;
 
 public:
   /// @brief Initialize the context with a SIR
-  OptimizerContext(DiagnosticsEngine& diagnostics, Options& options, const SIR* SIR);
+  OptimizerContext(DiagnosticsEngine& diagnostics, Options& options,
+                   const std::shared_ptr<SIR>& SIR);
 
   /// @brief Get StencilInstantiation map
-  std::map<std::string, std::unique_ptr<StencilInstantiation>>& getStencilInstantiationMap();
-  const std::map<std::string, std::unique_ptr<StencilInstantiation>>&
+  std::map<std::string, std::shared_ptr<StencilInstantiation>>& getStencilInstantiationMap();
+  const std::map<std::string, std::shared_ptr<StencilInstantiation>>&
   getStencilInstantiationMap() const;
 
   /// @brief Check if there are errors
@@ -66,7 +67,7 @@ public:
   const PassManager& getPassManager() const { return passManager_; }
 
   /// @brief Get the SIR
-  const SIR* getSIR() const { return SIR_; }
+  const std::shared_ptr<SIR> getSIR() const { return SIR_; }
 
   /// @brief Get options
   const Options& getOptions() const;
