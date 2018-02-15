@@ -1,13 +1,13 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -129,12 +129,10 @@ private:
   NonCopyable& operator=(const NonCopyable&) = delete;
 };
 
-
 DAWN_ATTRIBUTE_UNUSED void CompileTest() {
   SmallVector<NonCopyable, 0> V;
   V.resize(42);
 }
-
 
 class SmallVectorTestBase : public testing::Test {
 protected:
@@ -184,7 +182,8 @@ protected:
 
 typedef ::testing::Types<SmallVector<Constructable, 0>, SmallVector<Constructable, 1>,
                          SmallVector<Constructable, 2>, SmallVector<Constructable, 4>,
-                         SmallVector<Constructable, 5>> SmallVectorTestTypes;
+                         SmallVector<Constructable, 5>>
+    SmallVectorTestTypes;
 TYPED_TEST_CASE(SmallVectorTest, SmallVectorTestTypes);
 
 // New vector test.
@@ -698,8 +697,8 @@ TYPED_TEST(DualSmallVectorsTest, MoveAssignment) {
 }
 
 struct notassignable {
-  int& x;
-  notassignable(int& x) : x(x) {}
+  int& x_;
+  notassignable(int& x) : x_(x) {}
 };
 
 TEST(SmallVectorCustomTest, NoAssignTest) {
@@ -707,7 +706,7 @@ TEST(SmallVectorCustomTest, NoAssignTest) {
   SmallVector<notassignable, 2> vec;
   vec.push_back(notassignable(x));
   x = 42;
-  EXPECT_EQ(42, vec.pop_back_val().x);
+  EXPECT_EQ(42, vec.pop_back_val().x_);
 }
 
 struct MovedFrom {
@@ -746,31 +745,30 @@ private:
 
 enum EmplaceableState { ES_Emplaced, ES_Moved };
 struct Emplaceable {
-  EmplaceableArg<0> A0;
-  EmplaceableArg<1> A1;
-  EmplaceableArg<2> A2;
-  EmplaceableArg<3> A3;
+  EmplaceableArg<0> A0_;
+  EmplaceableArg<1> A1_;
+  EmplaceableArg<2> A2_;
+  EmplaceableArg<3> A3_;
   EmplaceableState State;
 
   Emplaceable() : State(ES_Emplaced) {}
 
   template <class A0Ty>
-  explicit Emplaceable(A0Ty&& A0)
-      : A0(std::forward<A0Ty>(A0)), State(ES_Emplaced) {}
+  explicit Emplaceable(A0Ty&& A0) : A0_(std::forward<A0Ty>(A0)), State(ES_Emplaced) {}
 
   template <class A0Ty, class A1Ty>
   Emplaceable(A0Ty&& A0, A1Ty&& A1)
-      : A0(std::forward<A0Ty>(A0)), A1(std::forward<A1Ty>(A1)), State(ES_Emplaced) {}
+      : A0_(std::forward<A0Ty>(A0)), A1_(std::forward<A1Ty>(A1)), State(ES_Emplaced) {}
 
   template <class A0Ty, class A1Ty, class A2Ty>
   Emplaceable(A0Ty&& A0, A1Ty&& A1, A2Ty&& A2)
-      : A0(std::forward<A0Ty>(A0)), A1(std::forward<A1Ty>(A1)), A2(std::forward<A2Ty>(A2)),
+      : A0_(std::forward<A0Ty>(A0)), A1_(std::forward<A1Ty>(A1)), A2_(std::forward<A2Ty>(A2)),
         State(ES_Emplaced) {}
 
   template <class A0Ty, class A1Ty, class A2Ty, class A3Ty>
   Emplaceable(A0Ty&& A0, A1Ty&& A1, A2Ty&& A2, A3Ty&& A3)
-      : A0(std::forward<A0Ty>(A0)), A1(std::forward<A1Ty>(A1)), A2(std::forward<A2Ty>(A2)),
-        A3(std::forward<A3Ty>(A3)), State(ES_Emplaced) {}
+      : A0_(std::forward<A0Ty>(A0)), A1_(std::forward<A1Ty>(A1)), A2_(std::forward<A2Ty>(A2)),
+        A3_(std::forward<A3Ty>(A3)), State(ES_Emplaced) {}
 
   Emplaceable(Emplaceable&&) : State(ES_Moved) {}
   Emplaceable& operator=(Emplaceable&&) {
@@ -793,60 +791,60 @@ TEST(SmallVectorTest, EmplaceBack) {
     V.emplace_back();
     EXPECT_TRUE(V.size() == 1);
     EXPECT_TRUE(V.back().State == ES_Emplaced);
-    EXPECT_TRUE(V.back().A0.State == EAS_Defaulted);
-    EXPECT_TRUE(V.back().A1.State == EAS_Defaulted);
-    EXPECT_TRUE(V.back().A2.State == EAS_Defaulted);
-    EXPECT_TRUE(V.back().A3.State == EAS_Defaulted);
+    EXPECT_TRUE(V.back().A0_.State == EAS_Defaulted);
+    EXPECT_TRUE(V.back().A1_.State == EAS_Defaulted);
+    EXPECT_TRUE(V.back().A2_.State == EAS_Defaulted);
+    EXPECT_TRUE(V.back().A3_.State == EAS_Defaulted);
   }
   {
     SmallVector<Emplaceable, 3> V;
     V.emplace_back(std::move(A0));
     EXPECT_TRUE(V.size() == 1);
     EXPECT_TRUE(V.back().State == ES_Emplaced);
-    EXPECT_TRUE(V.back().A0.State == EAS_RValue);
-    EXPECT_TRUE(V.back().A1.State == EAS_Defaulted);
-    EXPECT_TRUE(V.back().A2.State == EAS_Defaulted);
-    EXPECT_TRUE(V.back().A3.State == EAS_Defaulted);
+    EXPECT_TRUE(V.back().A0_.State == EAS_RValue);
+    EXPECT_TRUE(V.back().A1_.State == EAS_Defaulted);
+    EXPECT_TRUE(V.back().A2_.State == EAS_Defaulted);
+    EXPECT_TRUE(V.back().A3_.State == EAS_Defaulted);
   }
   {
     SmallVector<Emplaceable, 3> V;
     V.emplace_back(A0);
     EXPECT_TRUE(V.size() == 1);
     EXPECT_TRUE(V.back().State == ES_Emplaced);
-    EXPECT_TRUE(V.back().A0.State == EAS_LValue);
-    EXPECT_TRUE(V.back().A1.State == EAS_Defaulted);
-    EXPECT_TRUE(V.back().A2.State == EAS_Defaulted);
-    EXPECT_TRUE(V.back().A3.State == EAS_Defaulted);
+    EXPECT_TRUE(V.back().A0_.State == EAS_LValue);
+    EXPECT_TRUE(V.back().A1_.State == EAS_Defaulted);
+    EXPECT_TRUE(V.back().A2_.State == EAS_Defaulted);
+    EXPECT_TRUE(V.back().A3_.State == EAS_Defaulted);
   }
   {
     SmallVector<Emplaceable, 3> V;
     V.emplace_back(A0, A1);
     EXPECT_TRUE(V.size() == 1);
     EXPECT_TRUE(V.back().State == ES_Emplaced);
-    EXPECT_TRUE(V.back().A0.State == EAS_LValue);
-    EXPECT_TRUE(V.back().A1.State == EAS_LValue);
-    EXPECT_TRUE(V.back().A2.State == EAS_Defaulted);
-    EXPECT_TRUE(V.back().A3.State == EAS_Defaulted);
+    EXPECT_TRUE(V.back().A0_.State == EAS_LValue);
+    EXPECT_TRUE(V.back().A1_.State == EAS_LValue);
+    EXPECT_TRUE(V.back().A2_.State == EAS_Defaulted);
+    EXPECT_TRUE(V.back().A3_.State == EAS_Defaulted);
   }
   {
     SmallVector<Emplaceable, 3> V;
     V.emplace_back(std::move(A0), std::move(A1));
     EXPECT_TRUE(V.size() == 1);
     EXPECT_TRUE(V.back().State == ES_Emplaced);
-    EXPECT_TRUE(V.back().A0.State == EAS_RValue);
-    EXPECT_TRUE(V.back().A1.State == EAS_RValue);
-    EXPECT_TRUE(V.back().A2.State == EAS_Defaulted);
-    EXPECT_TRUE(V.back().A3.State == EAS_Defaulted);
+    EXPECT_TRUE(V.back().A0_.State == EAS_RValue);
+    EXPECT_TRUE(V.back().A1_.State == EAS_RValue);
+    EXPECT_TRUE(V.back().A2_.State == EAS_Defaulted);
+    EXPECT_TRUE(V.back().A3_.State == EAS_Defaulted);
   }
   {
     SmallVector<Emplaceable, 3> V;
     V.emplace_back(std::move(A0), A1, std::move(A2), A3);
     EXPECT_TRUE(V.size() == 1);
     EXPECT_TRUE(V.back().State == ES_Emplaced);
-    EXPECT_TRUE(V.back().A0.State == EAS_RValue);
-    EXPECT_TRUE(V.back().A1.State == EAS_LValue);
-    EXPECT_TRUE(V.back().A2.State == EAS_RValue);
-    EXPECT_TRUE(V.back().A3.State == EAS_LValue);
+    EXPECT_TRUE(V.back().A0_.State == EAS_RValue);
+    EXPECT_TRUE(V.back().A1_.State == EAS_LValue);
+    EXPECT_TRUE(V.back().A2_.State == EAS_RValue);
+    EXPECT_TRUE(V.back().A3_.State == EAS_LValue);
   }
   {
     SmallVector<int, 1> V;

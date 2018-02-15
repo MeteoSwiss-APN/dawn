@@ -29,14 +29,14 @@ namespace dawn {
 namespace {
 
 class StencilFunArgumentDetector : public ASTVisitorForwarding {
-  StencilInstantiation* instantiation_;
+  StencilInstantiation& instantiation_;
   int AccessID_;
 
   int argListNesting_;
   bool usedInStencilFun_;
 
 public:
-  StencilFunArgumentDetector(StencilInstantiation* instantiation, int AccessID)
+  StencilFunArgumentDetector(StencilInstantiation& instantiation, int AccessID)
       : instantiation_(instantiation), AccessID_(AccessID), argListNesting_(0),
         usedInStencilFun_(false) {}
 
@@ -47,7 +47,7 @@ public:
   }
 
   virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
-    if(argListNesting_ > 0 && instantiation_->getAccessIDFromExpr(expr) == AccessID_)
+    if(argListNesting_ > 0 && instantiation_.getAccessIDFromExpr(expr) == AccessID_)
       usedInStencilFun_ = true;
   }
 
@@ -57,7 +57,7 @@ public:
 /// @brief Check if a field, given by `AccessID` is used as an argument of a stencil-function inside
 /// any statement of the `stencil`
 /// @returns `true` if field is used as an argument
-bool usedAsArgumentInStencilFun(Stencil* stencil, int AccessID) {
+bool usedAsArgumentInStencilFun(const std::shared_ptr<Stencil>& stencil, int AccessID) {
   StencilFunArgumentDetector visitor(stencil->getStencilInstantiation(), AccessID);
   stencil->accept(visitor);
   return visitor.usedInStencilFun();
@@ -77,7 +77,7 @@ struct Temporary {
   Extents Extent;             ///< Accumulated access of the temporary during its lifetime
 
   /// @brief Dump the temporary
-  void dump(StencilInstantiation* instantiation) const {
+  void dump(const std::shared_ptr<StencilInstantiation>& instantiation) const {
     std::cout << "Temporary : " << instantiation->getNameFromAccessID(AccessID) << " {"
               << "\n  Type=" << (Type == TT_LocalVariable ? "LocalVariable" : "Field")
               << ",\n  Lifetime=" << Lifetime << ",\n  Extent=" << Extent << "\n}\n";
@@ -88,7 +88,7 @@ struct Temporary {
 
 PassTemporaryType::PassTemporaryType() : Pass("PassTemporaryType") {}
 
-bool PassTemporaryType::run(StencilInstantiation* instantiation) {
+bool PassTemporaryType::run(const std::shared_ptr<StencilInstantiation>& instantiation) {
   OptimizerContext* context = instantiation->getOptimizerContext();
 
   std::unordered_map<int, Temporary> temporaries;
@@ -171,8 +171,7 @@ bool PassTemporaryType::run(StencilInstantiation* instantiation) {
         // If the field is only accessed within the same Do-Method, does not have an extent and is
         // not argument to a stencil function, we can demote it to a local variable
         if(temporary.Lifetime.Begin.inSameDoMethod(temporary.Lifetime.End) &&
-           temporary.Extent.isPointwise() &&
-           !usedAsArgumentInStencilFun(stencilPtr.get(), AccessID)) {
+           temporary.Extent.isPointwise() && !usedAsArgumentInStencilFun(stencilPtr, AccessID)) {
 
           if(context->getOptions().ReportPassTemporaryType)
             report("demote");

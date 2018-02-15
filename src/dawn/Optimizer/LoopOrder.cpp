@@ -35,7 +35,8 @@ const char* loopOrderToString(LoopOrderKind loopOrder) {
   case LoopOrderKind::LK_Parallel:
     return "parallel";
   }
-  dawn_unreachable("invalid loop order");
+  dawn_unreachable(
+      std::string("invalid loop order" + std::to_string((unsigned int)loopOrder)).c_str());
 }
 
 } // namespace dawn

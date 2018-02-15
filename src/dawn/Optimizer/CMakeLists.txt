@@ -18,6 +18,8 @@ mchbuild_add_library(
           AccessComputation.cpp   
           Accesses.cpp  
           Accesses.h
+          AccessUtils.cpp
+          AccessUtils.h
           BoundaryExtent.cpp  
           BoundaryExtent.h
           Cache.cpp
