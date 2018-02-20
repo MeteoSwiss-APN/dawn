@@ -18,6 +18,7 @@
           TestEnvironment.h
           TestMain.cpp
           TestPassComputeStageExtents.cpp
+          TestPassSetBoundaryCondition.cpp
           TestFieldAccessIntervals.cpp
     DEPENDS DawnUnittestStatic DawnStatic DawnCStatic ${DAWN_EXTERNAL_LIBRARIES} gtest
     OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/unittest

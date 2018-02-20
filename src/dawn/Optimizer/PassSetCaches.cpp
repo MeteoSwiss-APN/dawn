@@ -182,6 +182,8 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
              !field.getExtents().isHorizontalPointwise()) {
 
             Cache& cache = multiStagePtr->setCache(Cache::IJ, Cache::local, field.getAccessID());
+            instantiation->insertCachedVariable(field.getAccessID());
+
 
             if(context->getOptions().ReportPassSetCaches) {
               std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": MS"

@@ -90,3 +90,14 @@ To enforce most of these coding standards, CMake can be configured to run `clang
   make format
 
 The clang-format file is located in the root directory at ``<dawn-dir>/.clangformat``.
+
+Shared pointer handeling
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+When using shared pointers as arguments of functions, the default should be ``const shared_ptr<T>&`` to avoid unneccessary (potentially expensive) ownership 
+
+If functions return shared pointers, the your return by value.
+
+Also class members should generally be ``shared_ptr<T> member``
+
+There are exceptions to this but this is the safest behaviour.

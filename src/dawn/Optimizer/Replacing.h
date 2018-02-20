@@ -15,6 +15,7 @@
 #ifndef DAWN_OPTIMIZER_REPLACING_H
 #define DAWN_OPTIMIZER_REPLACING_H
 
+#include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/ArrayRef.h"
 #include <memory>
 
@@ -24,6 +25,7 @@ class Stencil;
 struct Statement;
 class StatementAccessesPair;
 class StencilInstantiation;
+
 
 /// @name Replacing routines
 /// @ingroup optimizer

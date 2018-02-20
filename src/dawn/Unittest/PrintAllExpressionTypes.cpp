@@ -12,9 +12,9 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/Unittest/PrintAllExpressionTypes.h"
 #include "dawn/SIR/ASTStringifier.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/Unittest/PrintAllExpressionTypes.h"
 #include <iostream>
 
 namespace dawn {
