@@ -17,13 +17,6 @@
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/GridTools/GTCodeGen.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/SIR/SIR.h"
-#include "dawn/Support/EditDistance.h"
-#include "dawn/Support/Logging.h"
-#include "dawn/Support/StringSwitch.h"
-#include "dawn/Support/StringUtil.h"
-#include "dawn/Support/Unreachable.h"
-
 #include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
@@ -43,6 +36,12 @@
 #include "dawn/Optimizer/PassTemporaryMerger.h"
 #include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
+#include "dawn/SIR/SIR.h"
+#include "dawn/Support/EditDistance.h"
+#include "dawn/Support/Logging.h"
+#include "dawn/Support/StringSwitch.h"
+#include "dawn/Support/StringUtil.h"
+#include "dawn/Support/Unreachable.h"
 
 namespace dawn {
 
