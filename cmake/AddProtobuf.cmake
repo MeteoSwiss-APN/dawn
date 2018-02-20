@@ -30,6 +30,9 @@ get_filename_component(root_dir ${root_bin_dir} DIRECTORY)
 get_filename_component(root_dir ${root_dir} ABSOLUTE)
 set(DAWN_PROTOBUF_ROOT ${root_dir})
 
+# set the path to the install-direcotry of protobuf
+set(DAWN_PROTOBUF_RPATH_DIR ${DAWN_PROTOBUF_ROOT}/lib)
+
 dawn_export_package(
   NAME Protobuf
   FOUND ${Protobuf_FOUND}
