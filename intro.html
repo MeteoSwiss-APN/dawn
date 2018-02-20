@@ -32,6 +32,9 @@
   
 
   
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="Dawn 0.0.1 documentation" href="index.html"/>
         <link rel="next" title="First steps" href="basics.html"/>
         <link rel="prev" title="Dawn — Compiler toolchain for high-level DSLs" href="index.html"/> 
@@ -88,7 +91,7 @@
             
             
               <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="">About this project</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">About this project</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#core-features">Core Features</a></li>
 </ul>
 </li>
@@ -146,30 +149,8 @@
 <li class="toctree-l1"><a class="reference internal" href="cmake-modules.html">CMake Modules</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#installation">Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#functions-macros">Functions &amp; Macros</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawGetCompilerStr.html">dawn_get_compiler_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddExecutable.html">dawn_add_executable</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddLibrary.html">dawn_add_library</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddTargetClangFormat.html">dawn_add_target_clang_format</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddTargetCleanAll.html">dawn_add_target_clean_all</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddUnittest.html">dawn_add_unittest</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckAndSetCXXFlag.html">dawn_check_and_set_cxx_flag</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckCXXFlag.html">dawn_check_cxx_flag</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckInSourceBuild.html">dawn_check_in_source_build</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCombineLibraries.html">dawn_combine_libraries</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnConfigureFile.html">dawn_configure_file</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCreatePackageString.html">dawn_create_package_string</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnExportOptions.html">dawn_export_options</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnExportPackage.html">dawn_export_package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnFindPythonModule.html">dawn_find_python_module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetArchitectureInfo.html">dawn_get_architecture_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetCompilerInfo.html">dawn_get_compiler_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetGitHeadRevision.html">dawn_get_git_head_revision</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetPlatformInfo.html">dawn_get_platform_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetScriptDir.html">dawn_get_script_dir</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnIncludeGuard.html">dawn_include_guard</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnMakeStringPair.html">dawn_make_string_pair</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnReportResult.html">dawn_report_result</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnSetCXXStandard.html">dawn_set_cxx_standard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnProtobufGenerate.html">dawn_protobuf_generate</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#modules">Modules</a><ul>
@@ -234,7 +215,7 @@
         
             
             
-              <a href="https://github.com/thfabian/dawn/blob/master/docs/intro.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/MeteoSwiss-APN/dawn/blob/master/docs/intro.rst" class="fa fa-github"> Edit on GitHub</a>
             
           
         
@@ -253,7 +234,7 @@
 <p><strong>Dawn</strong> is a compiler toolchain for developing high-level DSLs for geophysical fluid dynamics models.
 Development productivity of large scientific codes, like geophysical fluid dynamics (GFD) models, decreased drastically in recent times due to the fact these community models often have to run efficiently on multiple computing architectures that impose the use of different programming models. Embedded domain specific languages (EDSLs) in C ++ have been used successfully in the past to enable a clear separation of concerns between the domain algorithms and the implementation strategy, thus allowing a single source code which is performance portable across heterogeneous architectures. Yet, using EDSLs in a correct and efficient manner often requires expert knowledge in high-performance computing. In addition, current DSLs are usually designed and developed for a specific scientific model with little to no reusability among DSLs.</p>
 <p>We introduce a new compiler framework, Dawn, that decouples optimization and code generation from high level DSLs. By exposing a Stencil Intermediate Representation (SIR), we allow users to share the toolchain to optimize and generate code among several DSLs.
-This allows the design of expressive, concise DSLs that can focus on applicability and don&#8217;t need to bother with the aspect of high-performance computing. Using Dawn as a common compiler infrastructure can drastically reduce development and maintenance effort, while increasing the performance of the generated code, for new and existing DSLs in the GFD model domain.</p>
+This allows the design of expressive, concise DSLs that can focus on applicability and don’t need to bother with the aspect of high-performance computing. Using Dawn as a common compiler infrastructure can drastically reduce development and maintenance effort, while increasing the performance of the generated code, for new and existing DSLs in the GFD model domain.</p>
 <div class="section" id="core-features">
 <h2>Core Features<a class="headerlink" href="#core-features" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
@@ -314,12 +295,13 @@ This allows the design of expressive, concise DSLs that can focus on applicabili
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: ''
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

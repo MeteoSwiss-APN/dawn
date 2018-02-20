@@ -33,6 +33,9 @@
   
 
   
+        <link rel="index" title="Index"
+              href="#"/>
+        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="Dawn 0.0.1 documentation" href="index.html"/> 
 
   
@@ -110,7 +113,8 @@
 </ul>
 <p class="caption"><span class="caption-text">Advanced Topics</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="sir.html">Stencil Intermediate Representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hir.html">High-Level Intermediate Representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hir_design.html">HIR Design</a></li>
 <li class="toctree-l1"><a class="reference internal" href="toolchain.html">Dawn toolchain</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="toolchain.html#parallel-model-builder">Parallel Model Builder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="toolchain.html#safety-checker">Safety Checker</a></li>
@@ -138,37 +142,18 @@
 <li class="toctree-l3"><a class="reference internal" href="coding.html#pointer-and-reference-alignment">Pointer and Reference Alignment</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html#clang-format">Clang Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coding.html#clang-format">Clang Format</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="coding.html#shared-pointer-handeling">Shared pointer handeling</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="doxygen.html">Doxygen</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cmake-modules.html">CMake Modules</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#installation">Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#functions-macros">Functions &amp; Macros</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawGetCompilerStr.html">dawn_get_compiler_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddExecutable.html">dawn_add_executable</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddLibrary.html">dawn_add_library</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddTargetClangFormat.html">dawn_add_target_clang_format</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddTargetCleanAll.html">dawn_add_target_clean_all</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddUnittest.html">dawn_add_unittest</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckAndSetCXXFlag.html">dawn_check_and_set_cxx_flag</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckCXXFlag.html">dawn_check_cxx_flag</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckInSourceBuild.html">dawn_check_in_source_build</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCombineLibraries.html">dawn_combine_libraries</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnConfigureFile.html">dawn_configure_file</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCreatePackageString.html">dawn_create_package_string</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnExportOptions.html">dawn_export_options</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnExportPackage.html">dawn_export_package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnFindPythonModule.html">dawn_find_python_module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetArchitectureInfo.html">dawn_get_architecture_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetCompilerInfo.html">dawn_get_compiler_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetGitHeadRevision.html">dawn_get_git_head_revision</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetPlatformInfo.html">dawn_get_platform_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetScriptDir.html">dawn_get_script_dir</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnIncludeGuard.html">dawn_include_guard</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnMakeStringPair.html">dawn_make_string_pair</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnReportResult.html">dawn_report_result</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnSetCXXStandard.html">dawn_set_cxx_standard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnProtobufGenerate.html">dawn_protobuf_generate</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#modules">Modules</a><ul>
@@ -231,6 +216,8 @@
     
       <li class="wy-breadcrumbs-aside">
         
+            
+        
       </li>
     
   </ul>
@@ -245,8 +232,210 @@
 <h1 id="index">Index</h1>
 
 <div class="genindex-jumpbox">
+ <a href="#A"><strong>A</strong></a>
+ | <a href="#B"><strong>B</strong></a>
+ | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
+ | <a href="#I"><strong>I</strong></a>
+ | <a href="#L"><strong>L</strong></a>
+ | <a href="#O"><strong>O</strong></a>
+ | <a href="#P"><strong>P</strong></a>
+ | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
+ | <a href="#V"><strong>V</strong></a>
  
 </div>
+<h2 id="A">A</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-assignmentopexpr"><strong>AssignmentOpExpr</strong></a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="B">B</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-binaryopexpr"><strong>BinaryOpExpr</strong></a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-blockstmt"><strong>BlockStmt</strong></a>
+</li>
+      <li><a href="hir.html#term-boundaryconditiondecl"><strong>BoundaryConditionDecl</strong></a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="C">C</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-callstmt"><strong>CallStmt</strong></a>
+</li>
+      <li><a href="hir.html#term-computationast"><strong>ComputationAST</strong></a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-computationstmt"><strong>ComputationStmt</strong></a>
+</li>
+      <li><a href="hir.html#term-controlflowgraph"><strong>ControlFlowGraph</strong></a>
+</li>
+      <li><a href="hir.html#term-controlflowgraphstmt"><strong>ControlFlowGraphStmt</strong></a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-direction"><strong>Direction</strong></a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-expr"><strong>Expr</strong></a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-exprstmt"><strong>ExprStmt</strong></a>
+</li>
+      <li><a href="hir.html#term-externalkernel"><strong>ExternalKernel</strong></a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-fieldaccessexpr"><strong>FieldAccessExpr</strong></a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-fielddecl"><strong>FieldDecl</strong></a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-globalvariablemap"><strong>GlobalVariableMap</strong></a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-identifier"><strong>Identifier</strong></a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-ifstmt"><strong>IfStmt</strong></a>
+</li>
+      <li><a href="hir.html#term-interval"><strong>Interval</strong></a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-literalexpr"><strong>LiteralExpr</strong></a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-looporder"><strong>LoopOrder</strong></a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-offset"><strong>Offset</strong></a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-operatorexpr"><strong>OperatorExpr</strong></a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-program"><strong>Program</strong></a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-returnstmt"><strong>ReturnStmt</strong></a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-scopedprogram"><strong>ScopedProgram</strong></a>
+</li>
+      <li><a href="hir.html#term-stencilfuncallexpr"><strong>StencilFunCallExpr</strong></a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-stencilfunctionarg"><strong>StencilFunctionArg</strong></a>
+</li>
+      <li><a href="hir.html#term-stencilfunctiondecl"><strong>StencilFunctionDecl</strong></a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-ternaryopexpr"><strong>TernaryOpExpr</strong></a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-type"><strong>Type</strong></a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-unaryopexpr"><strong>UnaryOpExpr</strong></a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-varaccessexpr"><strong>VarAccessExpr</strong></a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="hir.html#term-vardecl"><strong>VarDecl</strong></a>
+</li>
+      <li><a href="hir.html#term-verticalregioncomputationdecl"><strong>VerticalRegionComputationDecl</strong></a>
+</li>
+  </ul></td>
+</tr></table>
+
 
 
            </div>
@@ -288,12 +477,13 @@
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: ''
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

@@ -32,6 +32,9 @@
   
 
   
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="Dawn 0.0.1 documentation" href="#"/>
         <link rel="next" title="About this project" href="intro.html"/> 
 
@@ -110,7 +113,8 @@
 </ul>
 <p class="caption"><span class="caption-text">Advanced Topics</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="sir.html">Stencil Intermediate Representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hir.html">High-Level Intermediate Representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hir_design.html">HIR Design</a></li>
 <li class="toctree-l1"><a class="reference internal" href="toolchain.html">Dawn toolchain</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="toolchain.html#parallel-model-builder">Parallel Model Builder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="toolchain.html#safety-checker">Safety Checker</a></li>
@@ -138,37 +142,18 @@
 <li class="toctree-l3"><a class="reference internal" href="coding.html#pointer-and-reference-alignment">Pointer and Reference Alignment</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html#clang-format">Clang Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coding.html#clang-format">Clang Format</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="coding.html#shared-pointer-handeling">Shared pointer handeling</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="doxygen.html">Doxygen</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cmake-modules.html">CMake Modules</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#installation">Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#functions-macros">Functions &amp; Macros</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawGetCompilerStr.html">dawn_get_compiler_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddExecutable.html">dawn_add_executable</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddLibrary.html">dawn_add_library</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddTargetClangFormat.html">dawn_add_target_clang_format</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddTargetCleanAll.html">dawn_add_target_clean_all</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddUnittest.html">dawn_add_unittest</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckAndSetCXXFlag.html">dawn_check_and_set_cxx_flag</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckCXXFlag.html">dawn_check_cxx_flag</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckInSourceBuild.html">dawn_check_in_source_build</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCombineLibraries.html">dawn_combine_libraries</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnConfigureFile.html">dawn_configure_file</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCreatePackageString.html">dawn_create_package_string</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnExportOptions.html">dawn_export_options</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnExportPackage.html">dawn_export_package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnFindPythonModule.html">dawn_find_python_module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetArchitectureInfo.html">dawn_get_architecture_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetCompilerInfo.html">dawn_get_compiler_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetGitHeadRevision.html">dawn_get_git_head_revision</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetPlatformInfo.html">dawn_get_platform_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetScriptDir.html">dawn_get_script_dir</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnIncludeGuard.html">dawn_include_guard</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnMakeStringPair.html">dawn_make_string_pair</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnReportResult.html">dawn_report_result</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnSetCXXStandard.html">dawn_set_cxx_standard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnProtobufGenerate.html">dawn_protobuf_generate</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#modules">Modules</a><ul>
@@ -226,14 +211,14 @@
     
       <li><a href="#">Docs</a> &raquo;</li>
         
-      <li>Dawn &#8212; Compiler toolchain for high-level DSLs</li>
+      <li>Dawn — Compiler toolchain for high-level DSLs</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
             
-              <a href="https://github.com/thfabian/dawn/blob/master/docs/index.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/MeteoSwiss-APN/dawn/blob/master/docs/index.rst" class="fa fa-github"> Edit on GitHub</a>
             
           
         
@@ -248,14 +233,14 @@
            <div itemprop="articleBody">
             
   <div class="section" id="dawn-compiler-toolchain-for-high-level-dsls">
-<h1>Dawn &#8212; Compiler toolchain for high-level DSLs<a class="headerlink" href="#dawn-compiler-toolchain-for-high-level-dsls" title="Permalink to this headline">¶</a></h1>
+<h1>Dawn — Compiler toolchain for high-level DSLs<a class="headerlink" href="#dawn-compiler-toolchain-for-high-level-dsls" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="intro.html">About this project</a></li>
 </ul>
 </div>
-<div class="toctree-wrapper compound" id="the-basics">
-<p class="caption"><span class="caption-text">The Basics</span><a class="headerlink" href="#the-basics" title="Permalink to this toctree">¶</a></p>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">The Basics</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="basics.html">First steps</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="basics.html#compiling-the-library">Compiling the library</a></li>
@@ -265,10 +250,11 @@
 </li>
 </ul>
 </div>
-<div class="toctree-wrapper compound" id="advanced-topics">
-<p class="caption"><span class="caption-text">Advanced Topics</span><a class="headerlink" href="#advanced-topics" title="Permalink to this toctree">¶</a></p>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Advanced Topics</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="sir.html">Stencil Intermediate Representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hir.html">High-Level Intermediate Representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hir_design.html">HIR Design</a></li>
 <li class="toctree-l1"><a class="reference internal" href="toolchain.html">Dawn toolchain</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="toolchain.html#parallel-model-builder">Parallel Model Builder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="toolchain.html#safety-checker">Safety Checker</a></li>
@@ -277,8 +263,8 @@
 </li>
 </ul>
 </div>
-<div class="toctree-wrapper compound" id="developer-documentation">
-<p class="caption"><span class="caption-text">Developer Documentation</span><a class="headerlink" href="#developer-documentation" title="Permalink to this toctree">¶</a></p>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Developer Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="isir.html">ISIR</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gridtools.html">GridTools</a><ul>
@@ -351,12 +337,13 @@
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: ''
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

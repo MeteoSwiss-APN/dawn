@@ -32,6 +32,9 @@
   
 
   
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="Dawn 0.0.1 documentation" href="index.html"/>
         <link rel="next" title="ISIR" href="isir.html"/>
         <link rel="prev" title="Stencil Intermediate Representation" href="sir.html"/> 
@@ -112,7 +115,7 @@
 <p class="caption"><span class="caption-text">Advanced Topics</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="sir.html">Stencil Intermediate Representation</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Dawn toolchain</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Dawn toolchain</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#parallel-model-builder">Parallel Model Builder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#safety-checker">Safety Checker</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#optimizer">Optimizer</a></li>
@@ -146,30 +149,8 @@
 <li class="toctree-l1"><a class="reference internal" href="cmake-modules.html">CMake Modules</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#installation">Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#functions-macros">Functions &amp; Macros</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawGetCompilerStr.html">dawn_get_compiler_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddExecutable.html">dawn_add_executable</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddLibrary.html">dawn_add_library</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddTargetClangFormat.html">dawn_add_target_clang_format</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddTargetCleanAll.html">dawn_add_target_clean_all</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddUnittest.html">dawn_add_unittest</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckAndSetCXXFlag.html">dawn_check_and_set_cxx_flag</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckCXXFlag.html">dawn_check_cxx_flag</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckInSourceBuild.html">dawn_check_in_source_build</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCombineLibraries.html">dawn_combine_libraries</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnConfigureFile.html">dawn_configure_file</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCreatePackageString.html">dawn_create_package_string</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnExportOptions.html">dawn_export_options</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnExportPackage.html">dawn_export_package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnFindPythonModule.html">dawn_find_python_module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetArchitectureInfo.html">dawn_get_architecture_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetCompilerInfo.html">dawn_get_compiler_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetGitHeadRevision.html">dawn_get_git_head_revision</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetPlatformInfo.html">dawn_get_platform_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetScriptDir.html">dawn_get_script_dir</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnIncludeGuard.html">dawn_include_guard</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnMakeStringPair.html">dawn_make_string_pair</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnReportResult.html">dawn_report_result</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnSetCXXStandard.html">dawn_set_cxx_standard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnProtobufGenerate.html">dawn_protobuf_generate</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#modules">Modules</a><ul>
@@ -234,7 +215,7 @@
         
             
             
-              <a href="https://github.com/thfabian/dawn/blob/master/docs/toolchain.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/MeteoSwiss-APN/dawn/blob/master/docs/toolchain.rst" class="fa fa-github"> Edit on GitHub</a>
             
           
         
@@ -250,14 +231,14 @@
             
   <div class="section" id="dawn-toolchain">
 <h1>Dawn toolchain<a class="headerlink" href="#dawn-toolchain" title="Permalink to this headline">¶</a></h1>
-<p>The toolchain of Dawn contains several modules and is organized in passes, allowing to customize the process by enabling, disabling or change the order of execution of the individual passes. The default order of execution, depicted in <a class="reference internal" href="#toolchain-process"><span>Figure 1</span></a>, starts by translating the SIR into an <em>internal</em> SIR (<a class="reference internal" href="isir.html#isir"><span>ISIR</span></a>) which enriches the SIR with various information, like the computation of the access patterns, required by the following passes. As the initial construction of the ISIR generates a parallel program that is most likely incorrect under the given parallel model, we invoke several passes (<a class="reference internal" href="#parallel-model-builder">Parallel Model Builder</a>) to build a valid parallel program. The <a class="reference internal" href="#safety-checker">Safety Checker</a> passes will run various static analysis routines and the <a class="reference internal" href="#optimizer">Optimizer</a> will perform several optimizations such as reordering and fusing groups of statements, setting software managed caches or reducing shared-memory pressure. Finally, the code generation will translate the ISIR into the main DSL of GridTools or directly to C++.</p>
+<p>The toolchain of Dawn contains several modules and is organized in passes, allowing to customize the process by enabling, disabling or change the order of execution of the individual passes. The default order of execution, depicted in <a class="reference internal" href="#toolchain-process"><span class="std std-numref">Figure 1</span></a>, starts by translating the SIR into an <em>internal</em> SIR (<a class="reference internal" href="isir.html#isir"><span class="std std-ref">ISIR</span></a>) which enriches the SIR with various information, like the computation of the access patterns, required by the following passes. As the initial construction of the ISIR generates a parallel program that is most likely incorrect under the given parallel model, we invoke several passes (<a class="reference internal" href="#parallel-model-builder">Parallel Model Builder</a>) to build a valid parallel program. The <a class="reference internal" href="#safety-checker">Safety Checker</a> passes will run various static analysis routines and the <a class="reference internal" href="#optimizer">Optimizer</a> will perform several optimizations such as reordering and fusing groups of statements, setting software managed caches or reducing shared-memory pressure. Finally, the code generation will translate the ISIR into the main DSL of GridTools or directly to C++.</p>
 <div class="figure align-center" id="id4">
 <span id="toolchain-process"></span><img alt="_images/toolchain_process.png" src="_images/toolchain_process.png" />
 <p class="caption"><span class="caption-number">Fig. 1 </span><span class="caption-text">Default order of execution of the passes grouped in <a class="reference internal" href="#parallel-model-builder">Parallel Model Builder</a> (orange), <a class="reference internal" href="#safety-checker">Safety Checker</a> (yellow) and <a class="reference internal" href="#optimizer">Optimizer</a> (green).</span></p>
 </div>
 <div class="section" id="parallel-model-builder">
 <span id="id1"></span><h2>Parallel Model Builder<a class="headerlink" href="#parallel-model-builder" title="Permalink to this headline">¶</a></h2>
-<p>The parallel model builder passes transform the initial Stage and Multi-Stage arrangement into a valid parallel program under the <a class="reference internal" href="gridtools.html#gridtools-parallel-model"><span>GridTools parallel model</span></a>.</p>
+<p>The parallel model builder passes transform the initial Stage and Multi-Stage arrangement into a valid parallel program under the <a class="reference internal" href="gridtools.html#gridtools-parallel-model"><span class="std std-ref">GridTools parallel model</span></a>.</p>
 </div>
 <div class="section" id="safety-checker">
 <span id="id2"></span><h2>Safety Checker<a class="headerlink" href="#safety-checker" title="Permalink to this headline">¶</a></h2>
@@ -318,12 +299,13 @@
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: ''
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

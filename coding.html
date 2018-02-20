@@ -32,6 +32,9 @@
   
 
   
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="Dawn 0.0.1 documentation" href="index.html"/>
         <link rel="next" title="Doxygen" href="doxygen.html"/>
         <link rel="prev" title="GridTools" href="gridtools.html"/> 
@@ -111,7 +114,8 @@
 </ul>
 <p class="caption"><span class="caption-text">Advanced Topics</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="sir.html">Stencil Intermediate Representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hir.html">High-Level Intermediate Representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hir_design.html">HIR Design</a></li>
 <li class="toctree-l1"><a class="reference internal" href="toolchain.html">Dawn toolchain</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="toolchain.html#parallel-model-builder">Parallel Model Builder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="toolchain.html#safety-checker">Safety Checker</a></li>
@@ -126,7 +130,7 @@
 <li class="toctree-l2"><a class="reference internal" href="gridtools.html#parallel-model">Parallel Model</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Dawn Coding standard</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Dawn Coding standard</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#supported-c-11-language-and-library-features">Supported C++11 Language and Library Features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#style-issues">Style Issues</a><ul>
@@ -139,37 +143,18 @@
 <li class="toctree-l3"><a class="reference internal" href="#pointer-and-reference-alignment">Pointer and Reference Alignment</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#clang-format">Clang Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clang-format">Clang Format</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#shared-pointer-handeling">Shared pointer handeling</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="doxygen.html">Doxygen</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cmake-modules.html">CMake Modules</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#installation">Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#functions-macros">Functions &amp; Macros</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawGetCompilerStr.html">dawn_get_compiler_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddExecutable.html">dawn_add_executable</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddLibrary.html">dawn_add_library</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddTargetClangFormat.html">dawn_add_target_clang_format</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddTargetCleanAll.html">dawn_add_target_clean_all</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddUnittest.html">dawn_add_unittest</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckAndSetCXXFlag.html">dawn_check_and_set_cxx_flag</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckCXXFlag.html">dawn_check_cxx_flag</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckInSourceBuild.html">dawn_check_in_source_build</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCombineLibraries.html">dawn_combine_libraries</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnConfigureFile.html">dawn_configure_file</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCreatePackageString.html">dawn_create_package_string</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnExportOptions.html">dawn_export_options</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnExportPackage.html">dawn_export_package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnFindPythonModule.html">dawn_find_python_module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetArchitectureInfo.html">dawn_get_architecture_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetCompilerInfo.html">dawn_get_compiler_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetGitHeadRevision.html">dawn_get_git_head_revision</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetPlatformInfo.html">dawn_get_platform_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetScriptDir.html">dawn_get_script_dir</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnIncludeGuard.html">dawn_include_guard</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnMakeStringPair.html">dawn_make_string_pair</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnReportResult.html">dawn_report_result</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnSetCXXStandard.html">dawn_set_cxx_standard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnProtobufGenerate.html">dawn_protobuf_generate</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#modules">Modules</a><ul>
@@ -234,7 +219,7 @@
         
             
             
-              <a href="https://github.com/thfabian/dawn/blob/master/docs/coding.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/MeteoSwiss-APN/dawn/blob/master/docs/coding.rst" class="fa fa-github"> Edit on GitHub</a>
             
           
         
@@ -325,6 +310,13 @@
 </pre></div>
 </div>
 <p>The clang-format file is located in the root directory at <code class="docutils literal"><span class="pre">&lt;dawn-dir&gt;/.clangformat</span></code>.</p>
+<div class="section" id="shared-pointer-handeling">
+<h3>Shared pointer handeling<a class="headerlink" href="#shared-pointer-handeling" title="Permalink to this headline">¶</a></h3>
+<p>When using shared pointers as arguments of functions, the default should be <code class="docutils literal"><span class="pre">const</span> <span class="pre">shared_ptr&lt;T&gt;&amp;</span></code> to avoid unneccessary (potentially expensive) ownership</p>
+<p>If functions return shared pointers, the your return by value.</p>
+<p>Also class members should generally be <code class="docutils literal"><span class="pre">shared_ptr&lt;T&gt;</span> <span class="pre">member</span></code></p>
+<p>There are exceptions to this but this is the safest behaviour.</p>
+</div>
 </div>
 </div>
 
@@ -377,12 +369,13 @@
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: ''
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Stencil Intermediate Representation &mdash; Dawn 0.0.1 documentation</title>
+  <title>HIR Design &mdash; Dawn 0.0.1 documentation</title>
   
 
   
@@ -32,9 +32,12 @@
   
 
   
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="Dawn 0.0.1 documentation" href="index.html"/>
         <link rel="next" title="Dawn toolchain" href="toolchain.html"/>
-        <link rel="prev" title="First steps" href="basics.html"/> 
+        <link rel="prev" title="High-Level Intermediate Representation" href="hir.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -111,7 +114,8 @@
 </ul>
 <p class="caption"><span class="caption-text">Advanced Topics</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="">Stencil Intermediate Representation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hir.html">High-Level Intermediate Representation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">HIR Design</a></li>
 <li class="toctree-l1"><a class="reference internal" href="toolchain.html">Dawn toolchain</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="toolchain.html#parallel-model-builder">Parallel Model Builder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="toolchain.html#safety-checker">Safety Checker</a></li>
@@ -139,37 +143,18 @@
 <li class="toctree-l3"><a class="reference internal" href="coding.html#pointer-and-reference-alignment">Pointer and Reference Alignment</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html#clang-format">Clang Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coding.html#clang-format">Clang Format</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="coding.html#shared-pointer-handeling">Shared pointer handeling</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="doxygen.html">Doxygen</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cmake-modules.html">CMake Modules</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#installation">Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#functions-macros">Functions &amp; Macros</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawGetCompilerStr.html">dawn_get_compiler_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddExecutable.html">dawn_add_executable</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddLibrary.html">dawn_add_library</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddTargetClangFormat.html">dawn_add_target_clang_format</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddTargetCleanAll.html">dawn_add_target_clean_all</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddUnittest.html">dawn_add_unittest</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckAndSetCXXFlag.html">dawn_check_and_set_cxx_flag</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckCXXFlag.html">dawn_check_cxx_flag</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckInSourceBuild.html">dawn_check_in_source_build</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCombineLibraries.html">dawn_combine_libraries</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnConfigureFile.html">dawn_configure_file</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCreatePackageString.html">dawn_create_package_string</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnExportOptions.html">dawn_export_options</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnExportPackage.html">dawn_export_package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnFindPythonModule.html">dawn_find_python_module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetArchitectureInfo.html">dawn_get_architecture_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetCompilerInfo.html">dawn_get_compiler_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetGitHeadRevision.html">dawn_get_git_head_revision</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetPlatformInfo.html">dawn_get_platform_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetScriptDir.html">dawn_get_script_dir</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnIncludeGuard.html">dawn_include_guard</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnMakeStringPair.html">dawn_make_string_pair</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnReportResult.html">dawn_report_result</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnSetCXXStandard.html">dawn_set_cxx_standard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnProtobufGenerate.html">dawn_protobuf_generate</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#modules">Modules</a><ul>
@@ -227,14 +212,14 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Stencil Intermediate Representation</li>
+      <li>HIR Design</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
             
-              <a href="https://github.com/thfabian/dawn/blob/master/docs/sir.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/MeteoSwiss-APN/dawn/blob/master/docs/hir_design.rst" class="fa fa-github"> Edit on GitHub</a>
             
           
         
@@ -248,10 +233,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="stencil-intermediate-representation">
-<span id="sir"></span><h1>Stencil Intermediate Representation<a class="headerlink" href="#stencil-intermediate-representation" title="Permalink to this headline">¶</a></h1>
-<p>Developing a single DSL that is able to support all numerical methods and computational patterns present in GFD models present a serious challenge due to the wide domain it needs to cover. In this project, we accept the reality that multiple scientific communities desire to develop their own DSL language, tailored for their model and needs. The Stencil Intermediate Representation (SIR) allows to define multiple high level DSLs in a lightweight manner by reusing most of the complex toolchain i.e the Dawn library. In addition, a standardized SIR has another major advantage: It allows to easily interact with third-party developers and hardware manufacturers. For instance, the SIR of the <a class="reference external" href="http://www.cosmo-model.org/">COSMO</a> atmospheric model, serialized to a mark-up Language like <a class="reference external" href="https://en.wikipedia.org/wiki/JSON">JSON</a>, can be distributed to hardware vendors, which in turn have their proprietary, in-house compilers based on the SIR and can return plain C/C++ or CUDA code. This frees third-party developers from compiling the models and hopefully improves collaboration.</p>
-<p>In this section we define the specification of the SIR.</p>
+  <div class="section" id="hir-design">
+<span id="id1"></span><h1>HIR Design<a class="headerlink" href="#hir-design" title="Permalink to this headline">¶</a></h1>
+<img alt="_images/HIR.png" src="_images/HIR.png" />
 </div>
 
 
@@ -267,7 +251,7 @@
         <a href="toolchain.html" class="btn btn-neutral float-right" title="Dawn toolchain" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="basics.html" class="btn btn-neutral" title="First steps" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="hir.html" class="btn btn-neutral" title="High-Level Intermediate Representation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -303,12 +287,13 @@
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: ''
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

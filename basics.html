@@ -32,6 +32,9 @@
   
 
   
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="Dawn 0.0.1 documentation" href="index.html"/>
         <link rel="next" title="Stencil Intermediate Representation" href="sir.html"/>
         <link rel="prev" title="About this project" href="intro.html"/> 
@@ -95,7 +98,7 @@
 </ul>
 <p class="caption"><span class="caption-text">The Basics</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="">First steps</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">First steps</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#compiling-the-library">Compiling the library</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#linux">Linux</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#mac-os">Mac OS</a></li>
@@ -146,30 +149,8 @@
 <li class="toctree-l1"><a class="reference internal" href="cmake-modules.html">CMake Modules</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#installation">Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#functions-macros">Functions &amp; Macros</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawGetCompilerStr.html">dawn_get_compiler_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddExecutable.html">dawn_add_executable</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddLibrary.html">dawn_add_library</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddTargetClangFormat.html">dawn_add_target_clang_format</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddTargetCleanAll.html">dawn_add_target_clean_all</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnAddUnittest.html">dawn_add_unittest</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckAndSetCXXFlag.html">dawn_check_and_set_cxx_flag</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckCXXFlag.html">dawn_check_cxx_flag</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCheckInSourceBuild.html">dawn_check_in_source_build</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCombineLibraries.html">dawn_combine_libraries</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnConfigureFile.html">dawn_configure_file</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnCreatePackageString.html">dawn_create_package_string</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnExportOptions.html">dawn_export_options</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnExportPackage.html">dawn_export_package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnFindPythonModule.html">dawn_find_python_module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetArchitectureInfo.html">dawn_get_architecture_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetCompilerInfo.html">dawn_get_compiler_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetGitHeadRevision.html">dawn_get_git_head_revision</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetPlatformInfo.html">dawn_get_platform_info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnGetScriptDir.html">dawn_get_script_dir</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnIncludeGuard.html">dawn_include_guard</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnMakeStringPair.html">dawn_make_string_pair</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnReportResult.html">dawn_report_result</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnSetCXXStandard.html">dawn_set_cxx_standard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cmake-modules/DawnProtobufGenerate.html">dawn_protobuf_generate</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="cmake-modules.html#modules">Modules</a><ul>
@@ -234,7 +215,7 @@
         
             
             
-              <a href="https://github.com/thfabian/dawn/blob/master/docs/basics.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/MeteoSwiss-APN/dawn/blob/master/docs/basics.rst" class="fa fa-github"> Edit on GitHub</a>
             
           
         
@@ -255,11 +236,11 @@
 <h2>Compiling the library<a class="headerlink" href="#compiling-the-library" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="linux">
 <h3>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h3>
-<p>On Linux, you&#8217;ll need to install a C++11 toolchain (e.g <strong>gcc</strong> or <strong>clang</strong>) as well as <a class="reference external" href="https://cmake.org/">CMake</a> (&gt;= 3.3). In addition, you will need <a class="reference external" href="https://developers.google.com/protocol-buffers/">Protobuf</a> (&gt;= 3.4). For example, on Ubuntu the following will install the necessary dependencies</p>
+<p>On Linux, you’ll need to install a C++11 toolchain (e.g <strong>gcc</strong> or <strong>clang</strong>) as well as <a class="reference external" href="https://cmake.org/">CMake</a> (&gt;= 3.3). In addition, you will need <a class="reference external" href="https://developers.google.com/protocol-buffers/">Protobuf</a> (&gt;= 3.4). For example, on Ubuntu the following will install the necessary dependencies</p>
 <div class="highlight-bash"><div class="highlight"><pre>sudo apt-get install g++ cmake
 </pre></div>
 </div>
-<p>Note that most Ubuntu distributions don&#8217;t ship the latest Protobuf library which means you need to compile it yourself (don&#8217;t worry it&#8217;s super easy!). First, grab the latest release of Protobuf from <a class="reference external" href="https://github.com/google/protobuf/releases">GitHub</a>, configure it with CMake (the <code class="docutils literal"><span class="pre">CMakeLists.txt</span></code> file is located in the <strong>cmake/</strong> subdirectory) and then build it</p>
+<p>Note that most Ubuntu distributions don’t ship the latest Protobuf library which means you need to compile it yourself (don’t worry it’s super easy!). First, grab the latest release of Protobuf from <a class="reference external" href="https://github.com/google/protobuf/releases">GitHub</a>, configure it with CMake (the <code class="docutils literal"><span class="pre">CMakeLists.txt</span></code> file is located in the <strong>cmake/</strong> subdirectory) and then build it</p>
 <div class="highlight-bash"><div class="highlight"><pre>git clone https://github.com/google/protobuf.git
 <span class="nb">cd</span> protobuf
 mkdir build
@@ -281,7 +262,7 @@ make install -j 4
 </div>
 <div class="section" id="mac-os">
 <h3>Mac OS<a class="headerlink" href="#mac-os" title="Permalink to this headline">¶</a></h3>
-<p>On Mac OS, you&#8217;ll need to install Xcode as well as <a class="reference external" href="https://cmake.org/">CMake</a> (&gt;= 3.3). In addition, you will need <a class="reference external" href="https://developers.google.com/protocol-buffers/">Protobuf</a> (&gt;= 3.4). First, make sure you have the Xcode Command Line Tools installed</p>
+<p>On Mac OS, you’ll need to install Xcode as well as <a class="reference external" href="https://cmake.org/">CMake</a> (&gt;= 3.3). In addition, you will need <a class="reference external" href="https://developers.google.com/protocol-buffers/">Protobuf</a> (&gt;= 3.4). First, make sure you have the Xcode Command Line Tools installed</p>
 <div class="highlight-bash"><div class="highlight"><pre>xcode-select --install
 </pre></div>
 </div>
@@ -444,12 +425,13 @@ make install -j 4
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: ''
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 
