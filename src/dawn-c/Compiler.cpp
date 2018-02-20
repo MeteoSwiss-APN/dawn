@@ -22,7 +22,6 @@
 #include "dawn/Support/Unreachable.h"
 #include <iostream>
 #include <memory>
-
 using namespace dawn::util;
 
 static dawn::DawnCompiler::CodeGenKind getCodeGenKind(DawnCodeGenKind codegen) {
@@ -95,7 +94,7 @@ dawnTranslationUnit_t* dawnCompile(const char* SIR, size_t size, const dawnOptio
 
     // Run the compiler
     dawn::DawnCompiler compiler(compileOptions.get());
-    auto TU = compiler.compile(inMemorySIR.get(), getCodeGenKind(codeGenKind));
+    auto TU = compiler.compile(inMemorySIR, getCodeGenKind(codeGenKind));
 
     // Report diganostics
     if(compiler.getDiagnostics().hasDiags()) {

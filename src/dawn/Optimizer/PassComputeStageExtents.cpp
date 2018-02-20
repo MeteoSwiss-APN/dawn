@@ -24,7 +24,8 @@ PassComputeStageExtents::PassComputeStageExtents() : Pass("PassComputeStageExten
   dependencies_.push_back("PassSetStageName");
 }
 
-bool PassComputeStageExtents::run(StencilInstantiation* stencilInstantiation) {
+bool PassComputeStageExtents::run(
+    const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   for(auto& stencilPtr : stencilInstantiation->getStencils()) {
     Stencil& stencil = *stencilPtr;
 
@@ -41,10 +42,11 @@ bool PassComputeStageExtents::run(StencilInstantiation* stencilInstantiation) {
         // notice that IO (if read happens before write) would also be a valid pattern
         // to trigger the propagation of the stage extents, however this is not a legal
         // pattern within a stage if the extent is not pointwise
-        if(fromField.Extent.isPointwise() || fromField.Intend != Field::IntendKind::IK_Input)
+        if(fromField.getExtents().isPointwise() ||
+           fromField.getIntend() != Field::IntendKind::IK_Input)
           continue;
 
-        Extents fieldExtent = fromField.Extent;
+        Extents fieldExtent = fromField.getExtents();
 
         fieldExtent.expand(stageExtent);
 
@@ -53,7 +55,8 @@ bool PassComputeStageExtents::run(StencilInstantiation* stencilInstantiation) {
           Stage& toStage = *(stencil.getStage(j));
           auto fields = toStage.getFields();
           auto it = std::find_if(fields.begin(), fields.end(), [&](Field const& f) {
-            return (f.Intend != Field::IntendKind::IK_Input) && (f.AccessID == fromField.AccessID);
+            return (f.getIntend() != Field::IntendKind::IK_Input) &&
+                   (f.getAccessID() == fromField.getAccessID());
           });
           if(it == fields.end())
             continue;

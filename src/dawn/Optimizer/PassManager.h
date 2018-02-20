@@ -44,11 +44,13 @@ public:
 
   /// @brief Run all passes on the `instantiation`
   /// @returns `true` on success, `false` otherwise
-  bool runAllPassesOnStecilInstantiation(StencilInstantiation* instantiation);
+  bool
+  runAllPassesOnStecilInstantiation(const std::shared_ptr<StencilInstantiation>& instantiation);
 
   /// @brief Run the given pass on the `instantiation`
   /// @returns `true` on success, `false` otherwise
-  bool runPassOnStecilInstantiation(StencilInstantiation* instantiation, Pass* pass);
+  bool runPassOnStecilInstantiation(const std::shared_ptr<StencilInstantiation>& instantiation,
+                                    Pass* pass);
 
   /// @brief Get all registered passes
   std::list<std::unique_ptr<Pass>>& getPasses() { return passes_; }

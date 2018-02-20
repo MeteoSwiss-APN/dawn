@@ -29,7 +29,7 @@ namespace dawn {
 namespace {
 
 class ReadWriteCounter : public ASTVisitorForwarding {
-  StencilInstantiation* instantiation_;
+  std::shared_ptr<StencilInstantiation> instantiation_;
 
   std::size_t numReads_, numWrites_;
 
@@ -58,7 +58,8 @@ class ReadWriteCounter : public ASTVisitorForwarding {
   std::unordered_map<int, ReadWriteAccumulator> individualReadWrites_;
 
 public:
-  ReadWriteCounter(StencilInstantiation* instantiation, const MultiStage& multiStage)
+  ReadWriteCounter(const std::shared_ptr<StencilInstantiation>& instantiation,
+                   const MultiStage& multiStage)
       : instantiation_(instantiation), numReads_(0), numWrites_(0), multiStage_(multiStage),
         fields_(multiStage_.getFields()) {}
 
@@ -96,7 +97,7 @@ public:
                                     : stencilFunCalls_.top()->getAccessIDFromExpr(expr);
   }
 
-  const std::string& getNameFromAccessID(int AccessID) {
+  std::string getNameFromAccessID(int AccessID) {
     return stencilFunCalls_.empty() ? instantiation_->getNameFromAccessID(AccessID)
                                     : stencilFunCalls_.top()->getNameFromAccessID(AccessID);
   }
@@ -161,7 +162,7 @@ public:
     DAWN_ASSERT(it != fields_.end());
     Field& field = it->second;
 
-    if(field.Intend == Field::IK_Input) {
+    if(field.getIntend() == Field::IK_Input) {
       if(!register_.count(AccessID)) {
 
         // Cache the center access
@@ -190,7 +191,7 @@ public:
       }
     }
 
-    if(multiStage_.isCached(AccessID) && field.Intend == Field::IK_Input)
+    if(multiStage_.isCached(AccessID) && field.getIntend() == Field::IK_Input)
       updateTextureCache(AccessID, kOffset);
   }
 
@@ -254,7 +255,7 @@ computeReadWriteAccessesLowerBound(StencilInstantiation* instantiation,
       }
 
     } else {
-      switch(field.Intend) {
+      switch(field.getIntend()) {
       case Field::IK_Output:
         numWrites += 1;
         break;
@@ -275,9 +276,8 @@ computeReadWriteAccessesLowerBound(StencilInstantiation* instantiation,
 } // anonymous namespace
 
 /// @brief Approximate the reads and writes individually for each ID
-std::unordered_map<int, ReadWriteAccumulator>
-computeReadWriteAccessesMetricPerAccessID(StencilInstantiation* instantiation,
-                                          const MultiStage& multiStage) {
+std::unordered_map<int, ReadWriteAccumulator> computeReadWriteAccessesMetricPerAccessID(
+    const std::shared_ptr<StencilInstantiation>& instantiation, const MultiStage& multiStage) {
   ReadWriteCounter readWriteCounter(instantiation, multiStage);
 
   for(const auto& stage : multiStage.getStages())
@@ -290,8 +290,9 @@ computeReadWriteAccessesMetricPerAccessID(StencilInstantiation* instantiation,
 }
 
 /// @brief Approximate the reads and writes accoding to our data locality metric
-std::pair<int, int> computeReadWriteAccessesMetric(StencilInstantiation* instantiation,
-                                                   const MultiStage& multiStage) {
+std::pair<int, int>
+computeReadWriteAccessesMetric(const std::shared_ptr<StencilInstantiation>& instantiation,
+                               const MultiStage& multiStage) {
   ReadWriteCounter readWriteCounter(instantiation, multiStage);
 
   for(const auto& stage : multiStage.getStages())
@@ -305,7 +306,8 @@ std::pair<int, int> computeReadWriteAccessesMetric(StencilInstantiation* instant
 
 PassDataLocalityMetric::PassDataLocalityMetric() : Pass("PassDataLocalityMetric") {}
 
-bool PassDataLocalityMetric::run(StencilInstantiation* stencilInstantiation) {
+bool PassDataLocalityMetric::run(
+    const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   if(context->getOptions().ReportDataLocalityMetric) {

@@ -126,7 +126,8 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
       auto& paramNameToType = stencilProperties->paramNameToType_;
       for(std::size_t m = 0; m < fields.size(); ++m) {
 
-        std::string paramName = stencilFun->getOriginalNameFromCallerAccessID(fields[m].AccessID);
+        std::string paramName =
+            stencilFun->getOriginalNameFromCallerAccessID(fields[m].getAccessID());
         paramNameToType.emplace(paramName, stencilFnTemplates[m]);
 
         // each parameter being passed to a stencil function, is wrapped around the param_wrapper
@@ -144,7 +145,8 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
 
       for(std::size_t m = 0; m < fields.size(); ++m) {
 
-        std::string paramName = stencilFun->getOriginalNameFromCallerAccessID(fields[m].AccessID);
+        std::string paramName =
+            stencilFun->getOriginalNameFromCallerAccessID(fields[m].getAccessID());
 
         stencilFunMethod << c_gt() << "data_view<StorageType" + std::to_string(m) + "> "
                          << paramName << " = pw_" << paramName << ".dview_;";
@@ -221,7 +223,9 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
 
     ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, StencilContext::SC_Stencil);
 
-    StencilClass.addComment("//Members");
+    StencilClass.addComment("Members");
+    StencilClass.addComment("Temporary storages");
+    addTempStorageTypedef(StencilClass, stencil);
 
     StencilClass.addMember("const " + c_gtc() + "domain&", "m_dom");
 
@@ -229,12 +233,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
       StencilClass.addMember(StencilTemplates[fieldIt.idx()] + "&", "m_" + (*fieldIt).Name);
     }
 
-    if(!(tempFields.empty())) {
-      StencilClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
-
-      for(auto field : tempFields)
-        StencilClass.addMember(c_gtc() + "storage_t", "m_" + (*field).Name);
-    }
+    addTmpStorageDeclaration(StencilClass, tempFields);
 
     StencilClass.changeAccessibility("public");
 
@@ -251,13 +250,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
       stencilClassCtr.addInit("m_" + (*fieldIt).Name + "(" + (*fieldIt).Name + "_)");
     }
 
-    if(!(tempFields.empty())) {
-      stencilClassCtr.addInit("m_meta_data(dom_.isize(), dom_.jsize(), dom_.ksize())");
-      for(auto fieldIt : tempFields) {
-        stencilClassCtr.addInit("m_" + (*fieldIt).Name + "(m_meta_data)");
-      }
-    }
-
+    addTmpStorageInit(stencilClassCtr, stencil, tempFields);
     stencilClassCtr.commit();
 
     // virtual dtor
@@ -285,7 +278,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
         StencilDoMethod.addStatement("std::array<int,3> " + (*fieldIt).Name + "_offsets{0,0,0}");
       }
       for(auto fieldIt : tempFields) {
-        StencilDoMethod.addStatement(c_gt() + "data_view<storage_t> " + (*fieldIt).Name + "= " +
+        StencilDoMethod.addStatement(c_gt() + "data_view<tmp_storage_t> " + (*fieldIt).Name + "= " +
                                      c_gt() + "make_host_view(m_" + (*fieldIt).Name + ")");
         StencilDoMethod.addStatement("std::array<int,3> " + (*fieldIt).Name + "_offsets{0,0,0}");
       }
@@ -457,9 +450,9 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
   return str;
 }
 
-std::string CXXNaiveCodeGen::generateGlobals(const SIR* sir) {
+std::string CXXNaiveCodeGen::generateGlobals(std::shared_ptr<SIR> const& sir) {
 
-  const auto& globalsMap = *sir->GlobalVariableMap;
+  const auto& globalsMap = *(sir->GlobalVariableMap);
   if(globalsMap.empty())
     return "";
 
@@ -536,6 +529,8 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
   ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
   ppDefines.push_back(makeIfNDef("BOOST_RESULT_OF_USE_TR1", 1));
   ppDefines.push_back(makeIfNDef("BOOST_NO_CXX11_DECLTYPE", 1));
+  ppDefines.push_back(
+      makeIfNDef("GRIDTOOLS_CLANG_HALO_EXTEND", context_->getOptions().MaxHaloPoints));
 
   DAWN_LOG(INFO) << "Done generating code";
 

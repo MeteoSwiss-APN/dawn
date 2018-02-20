@@ -147,6 +147,12 @@ public:
     return (bound == Bound::lower) ? lowerLevelIsEnd() : upperLevelIsEnd();
   }
 
+  size_t overEnd() const { return (upperLevelIsEnd() && (upperOffset_ > 0)) ? upperOffset_ : 0; }
+
+  size_t belowBegin() const {
+    return (!lowerLevelIsEnd() && (lowerBound() < 0)) ? (size_t)-lowerOffset_ : 0;
+  }
+
   /// @brief returns true if the lower bound of the interval is the end of the axis
   bool lowerLevelIsEnd() const { return (lowerLevel_ == sir::Interval::End); }
 

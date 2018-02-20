@@ -26,15 +26,15 @@ namespace dawn {
 /// @ingroup optimizer
 class PassStencilSplitter : public Pass {
 public:
-  PassStencilSplitter();
+  PassStencilSplitter(int maxNumberOfFilelds);
 
   /// @brief Maximum number of allowed fields per stencil
   ///
   /// This is the threshold for the splitting pass to be invoked.
-  static constexpr int MaxFieldPerStencil = 40;
+  int MaxFieldPerStencil;
 
   /// @brief Pass implementation
-  bool run(StencilInstantiation* stencilInstantiation) override;
+  bool run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) override;
 };
 
 } // namespace dawn

@@ -32,18 +32,18 @@ namespace {
 
 /// @brief Register all referenced AccessIDs
 struct AccessIDGetter : public ASTVisitorForwarding {
-  const StencilInstantiation* Instantiation;
+  const StencilInstantiation& Instantiation;
   std::set<int> AccessIDs;
 
-  AccessIDGetter(const StencilInstantiation* instantiation) : Instantiation(instantiation) {}
+  AccessIDGetter(const StencilInstantiation& instantiation) : Instantiation(instantiation) {}
 
   virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
-    AccessIDs.insert(Instantiation->getAccessIDFromExpr(expr));
+    AccessIDs.insert(Instantiation.getAccessIDFromExpr(expr));
   }
 };
 
 /// @brief Compute the AccessIDs of the left and right hand side expression of the assignment
-static void getAccessIDFromAssignment(const StencilInstantiation* instantiation,
+static void getAccessIDFromAssignment(const StencilInstantiation& instantiation,
                                       AssignmentExpr* assignment, std::set<int>& LHSAccessIDs,
                                       std::set<int>& RHSAccessIDs) {
   auto computeAccessIDs = [&](const std::shared_ptr<Expr>& expr, std::set<int>& AccessIDs) {
@@ -65,7 +65,7 @@ static bool isHorizontalStencilOrCounterLoopOrderExtent(const Extents& extent,
 }
 
 /// @brief Report a race condition in the given `statement`
-static void reportRaceCondition(const Statement& statement, StencilInstantiation* instantiation) {
+static void reportRaceCondition(const Statement& statement, StencilInstantiation& instantiation) {
   DiagnosticsBuilder diag(DiagnosticsKind::Error, statement.ASTStmt->getSourceLocation());
 
   if(isa<IfStmt>(statement.ASTStmt.get())) {
@@ -74,7 +74,7 @@ static void reportRaceCondition(const Statement& statement, StencilInstantiation
     diag << "unresolvable race-condition in statement";
   }
 
-  instantiation->getOptimizerContext()->getDiagnostics().report(diag);
+  instantiation.getOptimizerContext()->getDiagnostics().report(diag);
 
   // Print stack trace of stencil calls
   if(statement.StackTrace) {
@@ -82,7 +82,7 @@ static void reportRaceCondition(const Statement& statement, StencilInstantiation
     for(int i = stackTrace.size() - 1; i >= 0; --i) {
       DiagnosticsBuilder note(DiagnosticsKind::Note, stackTrace[i]->Loc);
       note << "detected during instantiation of stencil-call '" << stackTrace[i]->Callee << "'";
-      instantiation->getOptimizerContext()->getDiagnostics().report(note);
+      instantiation.getOptimizerContext()->getDiagnostics().report(note);
     }
   }
 }
@@ -91,7 +91,7 @@ static void reportRaceCondition(const Statement& statement, StencilInstantiation
 
 PassFieldVersioning::PassFieldVersioning() : Pass("PassFieldVersioning"), numRenames_(0) {}
 
-bool PassFieldVersioning::run(StencilInstantiation* stencilInstantiation) {
+bool PassFieldVersioning::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
   numRenames_ = 0;
 
@@ -107,7 +107,7 @@ bool PassFieldVersioning::run(StencilInstantiation* stencilInstantiation) {
       LoopOrderKind loopOrder = multiStage.getLoopOrder();
 
       std::shared_ptr<DependencyGraphAccesses> newGraph, oldGraph;
-      newGraph = std::make_shared<DependencyGraphAccesses>(stencilInstantiation);
+      newGraph = std::make_shared<DependencyGraphAccesses>(stencilInstantiation.get());
 
       // Iterate stages bottom -> top
       for(auto stageRit = multiStage.getStages().rbegin(),
@@ -158,8 +158,8 @@ PassFieldVersioning::fixRaceCondition(const DependencyGraphAccesses* graph, Sten
 
   Statement& statement = *doMethod.getStatementAccessesPairs()[index]->getStatement();
 
-  StencilInstantiation* instantiation = stencil.getStencilInstantiation();
-  OptimizerContext* context = instantiation->getOptimizerContext();
+  auto& instantiation = stencil.getStencilInstantiation();
+  OptimizerContext* context = instantiation.getOptimizerContext();
   int numRenames = 0;
 
   // Vector of strongly connected components with atleast one stencil access
@@ -233,7 +233,7 @@ PassFieldVersioning::fixRaceCondition(const DependencyGraphAccesses* graph, Sten
 
   if(!assignment) {
     if(context->getOptions().DumpRaceConditionGraph)
-      graph->toDot("rc_" + instantiation->getName() + ".dot");
+      graph->toDot("rc_" + instantiation.getName() + ".dot");
     reportRaceCondition(statement, instantiation);
     return RCKind::RK_Unresolvable;
   }
@@ -249,7 +249,7 @@ PassFieldVersioning::fixRaceCondition(const DependencyGraphAccesses* graph, Sten
   for(std::set<int>& scc : *stencilSCCs) {
     if(!scc.count(LHSAccessID)) {
       if(context->getOptions().DumpRaceConditionGraph)
-        graph->toDot("rc_" + instantiation->getName() + ".dot");
+        graph->toDot("rc_" + instantiation.getName() + ".dot");
       reportRaceCondition(statement, instantiation);
       return RCKind::RK_Unresolvable;
     }
@@ -265,18 +265,18 @@ PassFieldVersioning::fixRaceCondition(const DependencyGraphAccesses* graph, Sten
   }
 
   if(context->getOptions().ReportPassFieldVersioning)
-    std::cout << "\nPASS: " << getName() << ": " << instantiation->getName()
+    std::cout << "\nPASS: " << getName() << ": " << instantiation.getName()
               << ": rename:" << statement.ASTStmt->getSourceLocation().Line;
 
   // Create a new multi-versioned field and rename all occurences
   for(int oldAccessID : renameCandiates) {
-    int newAccessID = instantiation->createVersionAndRename(oldAccessID, &stencil, stageIdx, index,
-                                                            assignment->getRight(),
-                                                            StencilInstantiation::RD_Above);
+    int newAccessID = instantiation.createVersionAndRename(oldAccessID, &stencil, stageIdx, index,
+                                                           assignment->getRight(),
+                                                           StencilInstantiation::RD_Above);
 
     if(context->getOptions().ReportPassFieldVersioning)
-      std::cout << (numRenames != 0 ? ", " : " ") << instantiation->getNameFromAccessID(oldAccessID)
-                << ":" << instantiation->getNameFromAccessID(newAccessID);
+      std::cout << (numRenames != 0 ? ", " : " ") << instantiation.getNameFromAccessID(oldAccessID)
+                << ":" << instantiation.getNameFromAccessID(newAccessID);
 
     numRenames++;
   }

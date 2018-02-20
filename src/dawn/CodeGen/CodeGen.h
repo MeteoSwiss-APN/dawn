@@ -15,8 +15,10 @@
 #ifndef DAWN_CODEGEN_CODEGEN_H
 #define DAWN_CODEGEN_CODEGEN_H
 
+#include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Support/IndexRange.h"
 #include <memory>
 
 namespace dawn {
@@ -27,6 +29,19 @@ namespace codegen {
 class CodeGen {
 protected:
   OptimizerContext* context_;
+
+  static size_t getVerticalTmpHaloSize(Stencil const& stencil);
+  void addTempStorageTypedef(Structure& stencilClass, Stencil const& stencil) const;
+  void addTmpStorageDeclaration(
+      Structure& stencilClass,
+      IndexRange<const std::vector<dawn::Stencil::FieldInfo>>& tmpFields) const;
+  void addTmpStorageInit(MemberFunction& ctr, const Stencil& stencil,
+                         IndexRange<const std::vector<dawn::Stencil::FieldInfo>>& tempFields) const;
+
+  const std::string tmpStorageTypename_ = "tmp_storage_t";
+  const std::string tmpMetadataTypename_ = "tmp_meta_data_t";
+  const std::string tmpMetadataName_ = "m_tmp_meta_data";
+  const std::string tmpStorageName_ = "m_tmp_storage";
 
 public:
   CodeGen(OptimizerContext* context) : context_(context){};

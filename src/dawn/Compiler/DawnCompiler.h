@@ -42,9 +42,10 @@ public:
 
   /// @brief Compile the SIR using the provided code generation routine
   /// @returns compiled TranslationUnit on success, `nullptr` otherwise
-  std::unique_ptr<codegen::TranslationUnit> compile(const SIR* SIR, CodeGenKind codeGen);
+  std::unique_ptr<codegen::TranslationUnit> compile(std::shared_ptr<SIR> const& SIR,
+                                                    CodeGenKind codeGen);
 
-  std::unique_ptr<OptimizerContext> runOptimizer(const SIR* SIR);
+  std::unique_ptr<OptimizerContext> runOptimizer(std::shared_ptr<SIR> const& SIR);
 
   /// @brief Get options
   const Options& getOptions() const;

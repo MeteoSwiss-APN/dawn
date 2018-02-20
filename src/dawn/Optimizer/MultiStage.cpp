@@ -23,7 +23,7 @@
 
 namespace dawn {
 
-MultiStage::MultiStage(StencilInstantiation* stencilInstantiation, LoopOrderKind loopOrder)
+MultiStage::MultiStage(StencilInstantiation& stencilInstantiation, LoopOrderKind loopOrder)
     : stencilInstantiation_(stencilInstantiation), loopOrder_(loopOrder) {}
 
 std::vector<std::shared_ptr<MultiStage>>
@@ -82,7 +82,7 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
 
 std::shared_ptr<DependencyGraphAccesses>
 MultiStage::getDependencyGraphOfInterval(const Interval& interval) const {
-  auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(stencilInstantiation_);
+  auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(&stencilInstantiation_);
   std::for_each(stages_.begin(), stages_.end(), [&](const std::shared_ptr<Stage>& stagePtr) {
     if(interval.overlaps(stagePtr->getEnclosingExtendedInterval()))
       std::for_each(stagePtr->getDoMethods().begin(), stagePtr->getDoMethods().end(),
@@ -94,7 +94,7 @@ MultiStage::getDependencyGraphOfInterval(const Interval& interval) const {
 }
 
 std::shared_ptr<DependencyGraphAccesses> MultiStage::getDependencyGraphOfAxis() const {
-  auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(stencilInstantiation_);
+  auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(&stencilInstantiation_);
   std::for_each(stages_.begin(), stages_.end(), [&](const std::shared_ptr<Stage>& stagePtr) {
     std::for_each(stagePtr->getDoMethods().begin(), stagePtr->getDoMethods().end(),
                   [&](const std::unique_ptr<DoMethod>& DoMethodPtr) {
@@ -126,23 +126,46 @@ Interval MultiStage::getEnclosingInterval() const {
   return interval;
 }
 
+std::shared_ptr<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() const {
+  std::shared_ptr<Interval> interval;
+  // notice we dont use here the fields of getFields() since they contain the enclosing of all the
+  // extents and intervals of all stages and it would give larger intervals than really required
+  // inspecting the extents and intervals of individual stages
+  for(const auto& stagePtr : stages_) {
+    for(const Field& field : stagePtr->getFields()) {
+      int AccessID = field.getAccessID();
+      if(!stencilInstantiation_.isTemporaryField(AccessID))
+        continue;
+
+      if(!interval) {
+        interval = std::make_shared<Interval>(field.getAccessedInterval());
+      } else {
+        interval->merge(field.getAccessedInterval());
+      }
+    }
+  }
+
+  return interval;
+}
+
 std::unordered_map<int, Field> MultiStage::getFields() const {
   std::unordered_map<int, Field> fields;
 
   for(const auto& stagePtr : stages_) {
     for(const Field& field : stagePtr->getFields()) {
-      auto it = fields.find(field.AccessID);
+      auto it = fields.find(field.getAccessID());
       if(it != fields.end()) {
         // Adjust the Intend
-        if(it->second.Intend == Field::IK_Input && field.Intend == Field::IK_Output)
-          it->second.Intend = Field::IK_InputOutput;
-        else if(it->second.Intend == Field::IK_Output && field.Intend == Field::IK_Input)
-          it->second.Intend = Field::IK_InputOutput;
+        if(it->second.getIntend() == Field::IK_Input && field.getIntend() == Field::IK_Output)
+          it->second.setIntend(Field::IK_InputOutput);
+        else if(it->second.getIntend() == Field::IK_Output && field.getIntend() == Field::IK_Input)
+          it->second.setIntend(Field::IK_InputOutput);
 
         // Merge the Extent
-        it->second.Extent.merge(field.Extent);
+        it->second.mergeExtents(field.getExtents());
+        it->second.extendInterval(field.getInterval());
       } else
-        fields.emplace(field.AccessID, field);
+        fields.emplace(field.getAccessID(), field);
     }
   }
 
@@ -154,9 +177,9 @@ void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
     Stage& stage = (**stageIt);
     for(auto& doMethodPtr : stage.getDoMethods()) {
       DoMethod& doMethod = *doMethodPtr;
-      renameAccessIDInStmts(stencilInstantiation_, oldAccessID, newAccessID,
+      renameAccessIDInStmts(&stencilInstantiation_, oldAccessID, newAccessID,
                             doMethod.getStatementAccessesPairs());
-      renameAccessIDInAccesses(stencilInstantiation_, oldAccessID, newAccessID,
+      renameAccessIDInAccesses(&stencilInstantiation_, oldAccessID, newAccessID,
                                doMethod.getStatementAccessesPairs());
     }
 

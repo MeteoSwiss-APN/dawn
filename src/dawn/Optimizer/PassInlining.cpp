@@ -30,7 +30,7 @@ namespace {
 
 class Inliner;
 
-static std::pair<bool, std::unique_ptr<Inliner>>
+static std::pair<bool, std::shared_ptr<Inliner>>
 tryInlineStencilFunction(PassInlining::InlineStrategyKind strategy,
                          StencilFunctionInstantiation* stencilFunctioninstantiation,
                          std::shared_ptr<StatementAccessesPair>& oldStmt,
@@ -44,7 +44,7 @@ class Inliner : public ASTVisitor {
   StencilInstantiation* instantiation_;
 
   /// The statement which we are currently processing in the `DetectInlineCandiates`
-  std::shared_ptr<StatementAccessesPair>& oldStmtAccessesPair_;
+  std::shared_ptr<StatementAccessesPair> oldStmtAccessesPair_;
 
   /// List of the new statements
   std::vector<std::shared_ptr<StatementAccessesPair>>& newStmtAccessesPairs_;
@@ -237,7 +237,7 @@ public:
       int stmtIdxOfFunc = std::distance(newStmtAccessesPairs_.begin(), curStencilFunStmtIt);
 
       if(func->hasReturn()) {
-        std::unique_ptr<Inliner>& inliner = inlineResult.second;
+        std::shared_ptr<Inliner>& inliner = inlineResult.second;
         DAWN_ASSERT(inliner);
         DAWN_ASSERT(inliner->getNewExpr());
 
@@ -307,7 +307,7 @@ public:
 /// @brief Detect inline candidates
 class DetectInlineCandiates : public ASTVisitorForwarding {
   PassInlining::InlineStrategyKind strategy_;
-  StencilInstantiation* instantiation_;
+  const std::shared_ptr<StencilInstantiation>& instantiation_;
 
   /// The statement we are currently analyzing
   std::shared_ptr<StatementAccessesPair> oldStmtAccessesPair_;
@@ -335,7 +335,7 @@ public:
   using Base = ASTVisitorForwarding;
 
   DetectInlineCandiates(PassInlining::InlineStrategyKind strategy,
-                        StencilInstantiation* instantiation)
+                        const std::shared_ptr<StencilInstantiation>& instantiation)
       : strategy_(strategy), instantiation_(instantiation), inlineCandiatesFound_(false) {}
 
   /// @brief Process the given statement
@@ -436,7 +436,7 @@ public:
 ///
 /// @returns `true` if the stencil-function was inlined, `false` otherwise (the corresponding
 /// `Inliner` instance (or NULL) is returned as well)
-static std::pair<bool, std::unique_ptr<Inliner>>
+static std::pair<bool, std::shared_ptr<Inliner>>
 tryInlineStencilFunction(PassInlining::InlineStrategyKind strategy,
                          StencilFunctionInstantiation* stencilFunc,
                          std::shared_ptr<StatementAccessesPair>& oldStmtAccessesPair,
@@ -446,12 +446,12 @@ tryInlineStencilFunction(PassInlining::InlineStrategyKind strategy,
   // Function which do not return a value are *always* inlined. Function which do return a value
   // are only inlined if we favor precomputations.
   if(!stencilFunc->hasReturn() || strategy == PassInlining::IK_Precomputation) {
-    auto inliner = make_unique<Inliner>(strategy, stencilFunc, oldStmtAccessesPair,
-                                        newStmtAccessesPairs, AccessIDOfCaller);
+    auto inliner = std::make_shared<Inliner>(strategy, stencilFunc, oldStmtAccessesPair,
+                                             newStmtAccessesPairs, AccessIDOfCaller);
     stencilFunc->getAST()->accept(*inliner);
-    return std::pair<bool, std::unique_ptr<Inliner>>(true, std::move(inliner));
+    return std::pair<bool, std::shared_ptr<Inliner>>(true, std::move(inliner));
   }
-  return std::pair<bool, std::unique_ptr<Inliner>>(false, nullptr);
+  return std::pair<bool, std::shared_ptr<Inliner>>(false, nullptr);
 }
 
 } // anonymous namespace
@@ -459,7 +459,7 @@ tryInlineStencilFunction(PassInlining::InlineStrategyKind strategy,
 PassInlining::PassInlining(InlineStrategyKind strategy)
     : Pass("PassInlining"), strategy_(strategy) {}
 
-bool PassInlining::run(StencilInstantiation* stencilInstantiation) {
+bool PassInlining::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   // Nothing to do ...
   if(strategy_ == IK_None)
     return true;
@@ -483,7 +483,7 @@ bool PassInlining::run(StencilInstantiation* stencilInstantiation) {
             const auto& newStmtAccList = inliner.getNewStatementAccessesPairs();
 
             // Compute the accesses of the new statements
-            computeAccesses(stencilInstantiation, newStmtAccList);
+            computeAccesses(stencilInstantiation.get(), newStmtAccList);
 
             // Erase the old StatementAccessPair ...
             stmtAccIt = stmtAccList.erase(stmtAccIt);

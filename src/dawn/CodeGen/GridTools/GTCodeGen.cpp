@@ -30,6 +30,24 @@ namespace dawn {
 namespace codegen {
 namespace gt {
 
+namespace {
+class BCFinder : public ASTVisitorForwarding {
+public:
+  using Base = ASTVisitorForwarding;
+  BCFinder() : BCsFound_(0) {}
+  void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
+    BCsFound_++;
+    Base::visit(stmt);
+  }
+  void resetFinder() { BCsFound_ = 0; }
+
+  int reportBCsFound() { return BCsFound_; }
+
+private:
+  int BCsFound_;
+};
+}
+
 GTCodeGen::GTCodeGen(OptimizerContext* context) : CodeGen(context), mplContainerMaxSize_(20) {}
 
 GTCodeGen::~GTCodeGen() {}
@@ -39,8 +57,7 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
   DAWN_ASSERT(!Intervals.empty());
 
   // Add intervals for the stencil functions
-  for(const auto& stencilFun :
-      stencil.getStencilInstantiation()->getStencilFunctionInstantiations())
+  for(const auto& stencilFun : stencil.getStencilInstantiation().getStencilFunctionInstantiations())
     Intervals.insert(stencilFun->getInterval());
 
   // Compute axis and populate the levels
@@ -76,11 +93,94 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
   }
 
   // Make sure the intervals for the stencil functions exist
-  for(const auto& stencilFun :
-      stencil.getStencilInstantiation()->getStencilFunctionInstantiations())
+  for(const auto& stencilFun : stencil.getStencilInstantiation().getStencilFunctionInstantiations())
     IntervalToNameMap.emplace(stencilFun->getInterval(),
                               Interval::makeCodeGenName(stencilFun->getInterval()));
 }
+
+/// @brief The StencilFunctionAsBCGenerator class parses a stencil function that is used as a
+/// boundary
+/// condition into it's stringstream. In order to use stencil_functions as boundary conditions, we
+/// need them to be members of the stencil-wrapper class. The goal is to template the function s.t
+/// every field is a template argument.
+class StencilFunctionAsBCGenerator : public ASTCodeGenCXX {
+private:
+  std::shared_ptr<sir::StencilFunction> function;
+  const StencilInstantiation* instantiation_;
+
+public:
+  using Base = ASTCodeGenCXX;
+  StencilFunctionAsBCGenerator(const StencilInstantiation* stencilInstantiation,
+                               const std::shared_ptr<sir::StencilFunction>& functionToAnalyze)
+      : function(functionToAnalyze), instantiation_(stencilInstantiation) {}
+
+  void visit(const std::shared_ptr<FieldAccessExpr>& expr) {
+    auto printOffset = [](const Array3i& argumentoffsets) {
+      std::string retval = "";
+      std::array<std::string, 3> dims{"i", "j", "k"};
+      for(int i = 0; i < 3; ++i) {
+        retval +=
+            dims[i] + (argumentoffsets[i] != 0 ? " + " + std::to_string(argumentoffsets[i]) + ", "
+                                               : (i < 2 ? ", " : ""));
+      }
+      return retval;
+    };
+    expr->getName();
+    auto getArgumentIndex = [&](const std::string& name) {
+      size_t pos =
+          std::distance(function->Args.begin(),
+                        std::find_if(function->Args.begin(), function->Args.end(),
+                                     [&](const std::shared_ptr<sir::StencilFunctionArg>& arg) {
+                                       return arg->Name == name;
+                                     }));
+
+      DAWN_ASSERT_MSG(pos < function->Args.size(), "");
+      return pos;
+    };
+    ss_ << dawn::format("data_field_%i(%s)", getArgumentIndex(expr->getName()),
+                        printOffset(expr->getOffset()));
+  }
+  void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) {
+    DAWN_ASSERT_MSG(0, "VerticalRegionDeclStmt not allowed in this context");
+  }
+  void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
+    DAWN_ASSERT_MSG(0, "StencilCallDeclStmt not allowed in this context");
+  }
+  void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
+    DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not allowed in this context");
+  }
+  void visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
+    DAWN_ASSERT_MSG(0, "StencilFunCallExpr not allowed in this context");
+  }
+  void visit(const std::shared_ptr<StencilFunArgExpr>& expr) {
+    DAWN_ASSERT_MSG(0, "StencilFunArgExpr not allowed in this context");
+  }
+
+  void visit(const std::shared_ptr<ReturnStmt>& stmt) {
+    DAWN_ASSERT_MSG(0, "ReturnStmt not allowed in this context");
+  }
+
+  void visit(const std::shared_ptr<VarAccessExpr>& expr) {
+    if(instantiation_->isGlobalVariable(instantiation_->getAccessIDFromExpr(expr)))
+      ss_ << "globals::get().";
+
+    ss_ << getName(expr);
+
+    if(expr->isArrayAccess()) {
+      ss_ << "[";
+      expr->getIndex()->accept(*this);
+      ss_ << "]";
+    }
+  }
+
+  std::string getName(const std::shared_ptr<Stmt>& stmt) const {
+    return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
+  }
+
+  std::string getName(const std::shared_ptr<Expr>& expr) const {
+    return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromExpr(expr));
+  }
+};
 
 std::string
 GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInstantiation) {
@@ -98,6 +198,35 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
       "public"); // The stencils should technically be private but nvcc doesn't like it ...
 
   bool isEmpty = true;
+  // Functions for boundary conditions
+  for(auto usedBoundaryCondition : stencilInstantiation->getBoundaryConditions()) {
+    for(const auto& sf : stencilInstantiation->getSIR()->StencilFunctions) {
+      if(sf->Name == usedBoundaryCondition.second->getFunctor()) {
+
+        Structure BoundaryCondition = StencilWrapperClass.addStruct(Twine(sf->Name));
+        std::string templatefunctions = "typename Direction ";
+        std::string functionargs = "Direction ";
+
+        // A templated datafield for every function argument
+        for(int i = 0; i < usedBoundaryCondition.second->getFields().size(); i++) {
+          templatefunctions += dawn::format(",typename DataField_%i", i);
+          functionargs += dawn::format(", DataField_%i &data_field_%i", i, i);
+        }
+        functionargs += ", int i , int j, int k";
+        auto BC = BoundaryCondition.addMemberFunction(
+            Twine("GT_FUNCTION void"), Twine("operator()"), Twine(templatefunctions));
+        BC.isConst(true);
+        BC.addArg(functionargs);
+        BC.startBody();
+        StencilFunctionAsBCGenerator reader(stencilInstantiation, sf);
+        sf->Asts[0]->accept(reader);
+        std::string output = reader.getCodeAndResetStream();
+        BC << output;
+        BC.commit();
+        break;
+      }
+    }
+  }
 
   // Generate stencils
   auto& stencils = stencilInstantiation->getStencils();
@@ -191,17 +320,19 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
         }
         // Generate field declarations
         for(std::size_t m = 0; m < fields.size(); ++m, ++accessorID) {
-          std::string paramName = stencilFun->getOriginalNameFromCallerAccessID(fields[m].AccessID);
+          std::string paramName =
+              stencilFun->getOriginalNameFromCallerAccessID(fields[m].getAccessID());
 
           // Generate parameter of stage
           codegen::Type extent(c_gt() + "extent", clear(tss));
-          for(auto& e : fields[m].Extent.getExtents())
+          for(auto& e : fields[m].getExtents().getExtents())
             extent.addTemplate(Twine(e.Minus) + ", " + Twine(e.Plus));
 
           StencilFunStruct.addTypeDef(paramName)
               .addType(c_gt() + "accessor")
               .addTemplate(Twine(accessorID))
-              .addTemplate(c_gt_enum() + (fields[m].Intend == Field::IK_Input ? "in" : "inout"))
+              .addTemplate(c_gt_enum() +
+                           ((fields[m].getIntend() == Field::IK_Input) ? "in" : "inout"))
               .addTemplate(extent);
 
           arglist.push_back(std::move(paramName));
@@ -321,17 +452,17 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
         std::size_t accessorIdx = 0;
         for(; accessorIdx < fields.size(); ++accessorIdx) {
           const auto& field = fields[accessorIdx];
-          std::string paramName = stencilInstantiation->getNameFromAccessID(field.AccessID);
+          std::string paramName = stencilInstantiation->getNameFromAccessID(field.getAccessID());
 
           // Generate parameter of stage
           codegen::Type extent(c_gt() + "extent", clear(tss));
-          for(auto& e : field.Extent.getExtents())
+          for(auto& e : field.getExtents().getExtents())
             extent.addTemplate(Twine(e.Minus) + ", " + Twine(e.Plus));
 
           StageStruct.addTypeDef(paramName)
               .addType(c_gt() + "accessor")
               .addTemplate(Twine(accessorIdx))
-              .addTemplate(c_gt_enum() + (field.Intend == Field::IK_Input ? "in" : "inout"))
+              .addTemplate(c_gt_enum() + ((field.getIntend() == Field::IK_Input) ? "in" : "inout"))
               .addTemplate(extent);
 
           // Generate placeholder mapping of the field in `make_stage`
@@ -536,7 +667,20 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
   // Generate constructor/destructor and methods of the stencil wrapper
   //
   StencilWrapperClass.addComment("Members");
+  StencilWrapperClass.addComment("Fields that require Boundary Conditions");
+  // add all fields that require a boundary condition as members since they need to be called from
+  // this class and not from individual stencils
+  std::unordered_set<std::string> memberfields;
+  for(auto usedBoundaryCondition : stencilInstantiation->getBoundaryConditions()) {
+    for(const auto& field : usedBoundaryCondition.second->getFields()) {
+      memberfields.emplace(field->Name);
+    }
+  }
+  for(const auto& field : memberfields) {
+    StencilWrapperClass.addMember(Twine("storage_t"), Twine(field));
+  }
 
+  StencilWrapperClass.addComment("Stencil-Data");
   // Define allocated memebers if necessary
   if(stencilInstantiation->hasAllocatedFields()) {
     StencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
@@ -588,6 +732,10 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
       StencilWrapperConstructor.addInit("m_" + name + "(m_meta_data, \"" + name + "\")");
     }
   }
+  // Initialize storages that require boundary conditions
+  for(const auto& memberfield : memberfields) {
+    StencilWrapperConstructor.addInit(memberfield + "(" + memberfield + ")");
+  }
 
   // Initialize stencils
   for(std::size_t i = 0; i < stencils.size(); ++i)
@@ -606,7 +754,6 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
         "static_assert(gridtools::is_data_store<" + StencilWrapperConstructorTemplates[i] +
         ">::value, \"argument '" + SIRFieldsWithoutTemps[i]->Name +
         "' is not a 'gridtools::data_store' (" + decimalToOrdinal(i + 2) + " argument invalid)\")");
-
   StencilWrapperConstructor.commit();
 
   // Generate make_steady method
@@ -660,10 +807,10 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
   return str;
 }
 
-std::string GTCodeGen::generateGlobals(const SIR* Sir) {
+std::string GTCodeGen::generateGlobals(std::shared_ptr<SIR> const& Sir) {
   using namespace codegen;
 
-  const auto& globalsMap = *Sir->GlobalVariableMap;
+  const auto& globalsMap = *(Sir->GlobalVariableMap);
   if(globalsMap.empty())
     return "";
 
@@ -758,6 +905,17 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   ppDefines.push_back(makeIfNotDefined("FUSION_MAX_VECTOR_SIZE", mplContainerMaxSize_));
   ppDefines.push_back(makeIfNotDefined("FUSION_MAX_MAP_SIZE", mplContainerMaxSize_));
   ppDefines.push_back(makeIfNotDefined("BOOST_MPL_LIMIT_VECTOR_SIZE", mplContainerMaxSize_));
+  BCFinder finder;
+  for(const auto& stencilInstantiation : context_->getStencilInstantiationMap()) {
+    for(const auto& stmt : stencilInstantiation.second->getStencilDescStatements()) {
+      stmt->ASTStmt->accept(finder);
+    }
+  }
+  if(finder.reportBCsFound()) {
+    ppDefines.push_back("#ifdef __CUDACC__\n#include "
+                        "<boundary-conditions/apply_gpu.hpp>\n#else\n#include "
+                        "<boundary-conditions/apply.hpp>\n#endif\n");
+  }
 
   DAWN_LOG(INFO) << "Done generating code";
 

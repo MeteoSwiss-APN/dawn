@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/StringSwitch.h"
 #include "dawn/Unittest/ASTSimplifier.h"
+#include "dawn/Support/StringSwitch.h"
 
 namespace dawn {
 

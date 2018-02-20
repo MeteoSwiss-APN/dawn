@@ -32,7 +32,7 @@ static int mergePossible(const std::set<int>& fields, const Stage* stage, int ma
   int numFields = fields.size();
 
   for(const Field& field : stage->getFields())
-    if(!fields.count(field.AccessID))
+    if(!fields.count(field.getAccessID()))
       numFields++;
 
   // Inserting the stage would further increase the number of fields
@@ -42,11 +42,12 @@ static int mergePossible(const std::set<int>& fields, const Stage* stage, int ma
   return numFields <= maxNumFields;
 }
 
-PassStencilSplitter::PassStencilSplitter() : Pass("PassStencilSplitter") {
+PassStencilSplitter::PassStencilSplitter(int maxNumberOfFilelds)
+    : Pass("PassStencilSplitter"), MaxFieldPerStencil(maxNumberOfFilelds) {
   dependencies_.push_back("PassSetStageGraph");
 }
 
-bool PassStencilSplitter::run(StencilInstantiation* stencilInstantiation) {
+bool PassStencilSplitter::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   if(context->getOptions().SplitStencils) {
@@ -66,7 +67,7 @@ bool PassStencilSplitter::run(StencilInstantiation* stencilInstantiation) {
         rerunPassSetStageGraph = true;
 
         newStencils.emplace_back(std::make_shared<Stencil>(
-            stencilInstantiation, stencil.getSIRStencil(), stencilInstantiation->nextUID()));
+            *stencilInstantiation, stencil.getSIRStencil(), stencilInstantiation->nextUID()));
         std::shared_ptr<Stencil> newStencil = newStencils.back();
 
         std::set<int> fieldsInNewStencil;
@@ -78,7 +79,7 @@ bool PassStencilSplitter::run(StencilInstantiation* stencilInstantiation) {
           // Create an empty multi-stage in the current stencil with the same parameter as
           // `multiStage`
           newStencil->getMultiStages().push_back(
-              std::make_shared<MultiStage>(stencilInstantiation, multiStage.getLoopOrder()));
+              std::make_shared<MultiStage>(*stencilInstantiation, multiStage.getLoopOrder()));
 
           for(std::shared_ptr<Stage>& stagePtr : multiStage.getStages()) {
             if(newStencil->isEmpty() ||
@@ -90,18 +91,18 @@ bool PassStencilSplitter::run(StencilInstantiation* stencilInstantiation) {
               // Update fields of the `newStencil`. Note that the indivudual stages do not need to
               // update their fields as they remain the same.
               for(const Field& field : stagePtr->getFields())
-                fieldsInNewStencil.insert(field.AccessID);
+                fieldsInNewStencil.insert(field.getAccessID());
 
             } else {
               // Make a new stencil
               newStencils.emplace_back(std::make_shared<Stencil>(
-                  stencilInstantiation, stencil.getSIRStencil(), stencilInstantiation->nextUID()));
+                  *stencilInstantiation, stencil.getSIRStencil(), stencilInstantiation->nextUID()));
               newStencil = newStencils.back();
               fieldsInNewStencil.clear();
 
               // Re-create the current multi-stage in the `newStencil` and insert the stage
               newStencil->getMultiStages().push_back(
-                  std::make_shared<MultiStage>(stencilInstantiation, multiStage.getLoopOrder()));
+                  std::make_shared<MultiStage>(*stencilInstantiation, multiStage.getLoopOrder()));
               newStencil->getMultiStages().back()->getStages().push_back(stagePtr);
             }
           }
@@ -112,7 +113,7 @@ bool PassStencilSplitter::run(StencilInstantiation* stencilInstantiation) {
       if(!newStencils.empty()) {
 
         // Repair broken references to temporaries i.e promote them to real fields
-        PassTemporaryType::fixTemporariesSpanningMultipleStencils(stencilInstantiation,
+        PassTemporaryType::fixTemporariesSpanningMultipleStencils(stencilInstantiation.get(),
                                                                   newStencils);
 
         // Remove empty multi-stages within the stencils
