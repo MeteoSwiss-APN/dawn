@@ -46,6 +46,7 @@ include(mchbuildAddTargetClangFormat)
 include(mchbuildCombineLibraries)
 include(mchbuildConfigureFile)
 include(mchbuildCreatePackageString)
+include(mchbuildEnableFullRPATH)
 include(mchbuildExportPackage)
 include(mchbuildGetGitHeadRevision)
 include(mchbuildSetCXXStandard)
@@ -100,6 +101,12 @@ add_definitions(${GTCLANG_EXTERNAL_DEFINITIONS})
 
 # Output summary of the packages
 mchbuild_report_result("Package summary" ${package_info})
+
+# Support of RPATH-exports of dawn
+if(NOT(DEFINED DAWN_RPATH_DIR))
+   message(FATAL_ERROR "DAWN_RPATH_DIR is not exported by DAWN")
+endif()
+mchbuild_enable_full_rpath("${DAWN_RPATH_DIR}")
 
 # Add clang-format target
 set(format_directories 
