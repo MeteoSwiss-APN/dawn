@@ -34,6 +34,14 @@ class OptimizerContext;
 /// @brief Specific instantiation of a stencil
 /// @ingroup optimizer
 class StencilInstantiation : NonCopyable {
+
+  ///@brief struct with properties of a stencil function instantiation candidate
+  struct StencilFunctionInstantiationCandidate {
+    /// stencil function instantiation from where the stencil function instantiation candidate is
+    /// called
+    std::shared_ptr<StencilFunctionInstantiation> callerStencilFunction_;
+  };
+
   OptimizerContext* context_;
   const std::shared_ptr<sir::Stencil> SIRStencil_;
   const std::shared_ptr<SIR> SIR_;
@@ -98,9 +106,19 @@ class StencilInstantiation : NonCopyable {
 
   /// Referenced stencil functions in this stencil (note that nested stencil functions are not
   /// stored here but rather in the respecticve `StencilFunctionInstantiation`)
-  std::vector<std::unique_ptr<StencilFunctionInstantiation>> stencilFunctionInstantiations_;
-  std::unordered_map<std::shared_ptr<StencilFunCallExpr>, StencilFunctionInstantiation*>
+  std::vector<std::shared_ptr<StencilFunctionInstantiation>> stencilFunctionInstantiations_;
+  std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
+                     std::shared_ptr<StencilFunctionInstantiation>>
       ExprToStencilFunctionInstantiationMap_;
+
+  /// table from name to stencil function instantiation
+  std::unordered_map<std::string, std::shared_ptr<StencilFunctionInstantiation>>
+      nameToStencilFunctionInstantiationMap_;
+
+  /// lookup table containing all the stencil function candidates, whose arguments are not yet bound
+  std::unordered_map<std::shared_ptr<StencilFunctionInstantiation>,
+                     StencilFunctionInstantiationCandidate>
+      stencilFunInstantiationCandidate_;
 
   /// BoundaryConditionCall to Extent Map. Filled my `PassSetBoundaryCondition`
   std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>
@@ -138,6 +156,9 @@ public:
 
   /// @brief Get the `name` associated with the `StageID`
   const std::string& getNameFromStageID(int StageID) const;
+
+  /// @brief insert an element to the maps of stencil functions
+  void insertExprToStencilFunction(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
 
   /// @brief Get the orginal `name` and a list of source locations of the field (or variable)
   /// associated with the `AccessID` in the given statement.
@@ -205,10 +226,9 @@ public:
   /// @brief Add a new version to the field/local variable given by `AccessID`
   ///
   /// This will create a **new** field and trigger a renaming of all the remaining occurences in the
-  /// AccessID maps either above or below that statement, starting one statment before or after the
-  /// current statement. Optionally, an `Expr` can be passed which will be renamed as well (usually
-  /// the left- or right-hand side of an assignment).
-  ///
+  /// AccessID maps either above or below that statement, starting one statment before or after
+  /// the current statement. Optionally, an `Expr` can be passed which will be renamed as well
+  /// (usually the left- or right-hand side of an assignment).
   /// Consider the following example:
   ///
   /// @code
@@ -264,8 +284,8 @@ public:
 
   /// @brief Get the `AccessID` associated with the `name`
   ///
-  /// Note that this only works for field and variable names, the mapping of literals AccessIDs and
-  /// their name is a not bijective!
+  /// Note that this only works for field and variable names, the mapping of literals AccessIDs
+  /// and their name is a not bijective!
   int getAccessIDFromName(const std::string& name) const;
 
   /// @brief Get the `AccessID` of the Expr (VarAccess or FieldAccess)
@@ -281,44 +301,71 @@ public:
   int getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) const;
 
   /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
-  StencilFunctionInstantiation*
-  getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr);
-  const StencilFunctionInstantiation*
+  const std::shared_ptr<StencilFunctionInstantiation>
+  getStencilFunctionInstantiation(const std::string stencilFunName) const;
+
+  /// @brief get a stencil function instantiation by StencilFunCallExpr
+  const std::shared_ptr<StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) const;
 
+  /// @brief returns true if a stencil function instantiation candidate with name stencilFunName
+  /// exists
+  bool hasStencilFunctionInstantiationCandidate(const std::string stencilFunName) const;
+
+  /// @brief returns true if a stencil function instantiation with name stencilFunName exists
+  bool hasStencilFunctionInstantiation(const std::string stencilFunName) const;
+
+  /// @brief get a stencil function candidate by StencilFunCallExpr
+  std::shared_ptr<StencilFunctionInstantiation>
+  getStencilFunctionInstantiationCandidate(const std::shared_ptr<StencilFunCallExpr>& expr);
+
+  /// @brief get a stencil function candidate by name
+  std::shared_ptr<StencilFunctionInstantiation>
+  getStencilFunctionInstantiationCandidate(const std::string stencilFunName);
+
+  /// @brief clone a stencil function candidate and set its name fo functionName
+  /// @returns the clone of the stencil function
+  std::shared_ptr<StencilFunctionInstantiation>
+  cloneStencilFunctionCandidate(const std::shared_ptr<StencilFunctionInstantiation>& stencilFun,
+                                std::string functionName);
+
   /// @brief Add entry to the map between a given expr to its access ID
-  void mapExprToAccessID(std::shared_ptr<Expr> expr, int accessID);
+  void mapExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID);
 
   /// @brief Add entry to the map between a given stmt to its access ID
-  void mapStmtToAccessID(std::shared_ptr<Stmt> stmt, int accessID);
+  void mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt, int accessID);
 
   /// @brief Add entry of the Expr to AccessID map
   void eraseExprToAccessID(std::shared_ptr<Expr> expr);
 
   /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
-  std::unordered_map<std::shared_ptr<StencilFunCallExpr>, StencilFunctionInstantiation*>&
+  std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
+                     std::shared_ptr<StencilFunctionInstantiation>>&
   getExprToStencilFunctionInstantiationMap();
-  const std::unordered_map<std::shared_ptr<StencilFunCallExpr>, StencilFunctionInstantiation*>&
+  const std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
+                           std::shared_ptr<StencilFunctionInstantiation>>&
   getExprToStencilFunctionInstantiationMap() const;
 
   /// @brief Remove the stencil function given by `expr`
   ///
-  /// If `callerStencilFunctionInstantiation` is not NULL (i.e the stencil function is called within
+  /// If `callerStencilFunctionInstantiation` is not NULL (i.e the stencil function is called
+  /// within
   /// the scope of another stencil function), the stencil function will be removed
   /// from the `callerStencilFunctionInstantiation` instead of this `StencilInstantiation`.
   void removeStencilFunctionInstantiation(
       const std::shared_ptr<StencilFunCallExpr>& expr,
-      StencilFunctionInstantiation* callerStencilFunctionInstantiation = nullptr);
+      std::shared_ptr<StencilFunctionInstantiation> callerStencilFunctionInstantiation = nullptr);
 
   /// @brief Register a new stencil function
   ///
-  /// If `curStencilFunctionInstantiation` is not NULL, the stencil function is treated as a nested
+  /// If `curStencilFunctionInstantiation` is not NULL, the stencil function is treated as a
+  /// nested
   /// stencil function.
-  StencilFunctionInstantiation*
-  makeStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr,
-                                   sir::StencilFunction* SIRStencilFun,
-                                   const std::shared_ptr<AST>& ast, const Interval& interval,
-                                   StencilFunctionInstantiation* curStencilFunctionInstantiation);
+  std::shared_ptr<StencilFunctionInstantiation> makeStencilFunctionInstantiation(
+      const std::shared_ptr<StencilFunCallExpr>& expr,
+      const std::shared_ptr<sir::StencilFunction>& SIRStencilFun, const std::shared_ptr<AST>& ast,
+      const Interval& interval,
+      const std::shared_ptr<StencilFunctionInstantiation>& curStencilFunctionInstantiation);
 
   /// @brief Get the list of stencils
   std::vector<std::shared_ptr<Stencil>>& getStencils() { return stencils_; }
@@ -343,10 +390,10 @@ public:
   }
 
   /// @brief Get the list of stencil functions
-  std::vector<std::unique_ptr<StencilFunctionInstantiation>>& getStencilFunctionInstantiations() {
+  std::vector<std::shared_ptr<StencilFunctionInstantiation>>& getStencilFunctionInstantiations() {
     return stencilFunctionInstantiations_;
   }
-  const std::vector<std::unique_ptr<StencilFunctionInstantiation>>&
+  const std::vector<std::shared_ptr<StencilFunctionInstantiation>>&
   getStencilFunctionInstantiations() const {
     return stencilFunctionInstantiations_;
   }
@@ -381,6 +428,10 @@ public:
 
   /// @brief Get the SIR
   std::shared_ptr<SIR> const& getSIR() const { return SIR_; }
+
+  /// @brief insert a new sir::StencilFunction into the IIR
+  void
+  insertStencilFunctionIntoSIR(const std::shared_ptr<sir::StencilFunction>& sirStencilFunction);
 
   /// @brief Get the SIRStencil this context was built from
   std::shared_ptr<sir::Stencil> const& getSIRStencil() const { return SIRStencil_; }
@@ -439,6 +490,11 @@ public:
   /// @brief Check if the given name of a `StencilCallDeclStmt` was generate by
   /// `makeStencilCallCodeGenName`
   static bool isStencilCallCodeGenName(const std::string& name);
+
+  /// @brief it finalizes the stencil function instantation. The stencil function instantatiation is
+  /// moved from candidate to the final storage of stencil instantiations. And maps storing
+  /// stencil functions of the stencil instantiation are updated
+  void finalizeStencilFunctionSetup(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
 
   const std::set<int>& getCachedVariableSet() const;
 

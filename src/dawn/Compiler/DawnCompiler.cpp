@@ -35,16 +35,12 @@
 #include "dawn/Optimizer/PassStencilSplitter.h"
 #include "dawn/Optimizer/PassTemporaryFirstAccess.h"
 #include "dawn/Optimizer/PassTemporaryMerger.h"
+#include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/SIR/SIR.h"
-#include "dawn/Support/EditDistance.h"
 #include "dawn/Support/EditDistance.h"
 #include "dawn/Support/Logging.h"
-#include "dawn/Support/Logging.h"
 #include "dawn/Support/StringSwitch.h"
-#include "dawn/Support/StringSwitch.h"
-#include "dawn/Support/StringUtil.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
 
@@ -161,6 +157,8 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   passManager.pushBackPass<PassStencilSplitter>(maxFields);
   passManager.pushBackPass<PassTemporaryType>();
   passManager.pushBackPass<PassTemporaryMerger>();
+  // still experimental
+  passManager.pushBackPass<PassTemporaryToStencilFunction>();
   passManager.pushBackPass<PassSetNonTempCaches>();
   passManager.pushBackPass<PassSetCaches>();
   passManager.pushBackPass<PassComputeStageExtents>();

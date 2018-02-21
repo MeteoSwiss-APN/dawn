@@ -19,6 +19,7 @@
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/SourceLocation.h"
 #include "dawn/Support/Type.h"
+#include "dawn/Support/VisitorHelpers.h"
 #include <memory>
 #include <vector>
 
@@ -59,6 +60,8 @@ public:
 
   /// @brief Hook for Visitors
   virtual void accept(ASTVisitor& visitor) = 0;
+  virtual void accept(ASTVisitorNonConst& visitor) = 0;
+  virtual std::shared_ptr<Stmt> acceptAndReplace(ASTVisitorPostOrder& visitor) = 0;
 
   /// @brief Clone the current statement
   virtual std::shared_ptr<Stmt> clone() const = 0;
@@ -71,6 +74,9 @@ public:
 
   /// @brief Iterate children (if any)
   virtual StmtRangeType getChildren() { return StmtRangeType(); }
+
+  virtual void replaceChildren(std::shared_ptr<Stmt> const& oldStmt,
+                               std::shared_ptr<Stmt> const& newStmt) {}
 
   /// @brief Compare for equality
   virtual bool equals(const Stmt* other) const { return kind_ == other->kind_; }
@@ -114,7 +120,7 @@ public:
   BlockStmt(const std::vector<std::shared_ptr<Stmt>>& statements,
             SourceLocation loc = SourceLocation());
   BlockStmt(const BlockStmt& stmt);
-  BlockStmt& operator=(BlockStmt stmt);
+  BlockStmt& operator=(BlockStmt const& stmt);
   virtual ~BlockStmt();
   /// @}
 
@@ -135,9 +141,11 @@ public:
 
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_BlockStmt; }
   virtual StmtRangeType getChildren() override { return StmtRangeType(statements_); }
+  virtual void replaceChildren(const std::shared_ptr<Stmt>& oldStmt,
+                               const std::shared_ptr<Stmt>& newStmt) override;
+  ACCEPTVISITOR(Stmt, BlockStmt)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -162,10 +170,12 @@ public:
   const std::shared_ptr<Expr>& getExpr() const { return expr_; }
   std::shared_ptr<Expr>& getExpr() { return expr_; }
 
+  virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
+                               const std::shared_ptr<Expr>& newExpr);
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_ExprStmt; }
+  ACCEPTVISITOR(Stmt, ExprStmt)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -190,10 +200,13 @@ public:
   const std::shared_ptr<Expr>& getExpr() const { return expr_; }
   std::shared_ptr<Expr>& getExpr() { return expr_; }
 
+  virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
+                               const std::shared_ptr<Expr>& newExpr);
+
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_ReturnStmt; }
+  ACCEPTVISITOR(Stmt, ReturnStmt)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -237,10 +250,13 @@ public:
   const std::vector<std::shared_ptr<Expr>>& getInitList() const { return initList_; }
   std::vector<std::shared_ptr<Expr>>& getInitList() { return initList_; }
 
+  virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
+                               const std::shared_ptr<Expr>& newExpr);
+
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_VarDeclStmt; }
+  ACCEPTVISITOR(Stmt, VarDeclStmt)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -267,8 +283,8 @@ public:
   virtual bool isStencilDesc() const override { return true; }
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_VerticalRegionDeclStmt; }
+  ACCEPTVISITOR(Stmt, VerticalRegionDeclStmt)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -295,8 +311,8 @@ public:
   virtual bool isStencilDesc() const override { return true; }
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_StencilCallDeclStmt; }
+  ACCEPTVISITOR(Stmt, StencilCallDeclStmt)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -326,8 +342,8 @@ public:
   virtual bool isStencilDesc() const override { return true; }
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_BoundaryConditionDeclStmt; }
+  ACCEPTVISITOR(Stmt, BoundaryConditionDeclStmt)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -371,11 +387,13 @@ public:
 
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
-  virtual void accept(ASTVisitor& visitor) override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_IfStmt; }
   virtual StmtRangeType getChildren() override {
     return hasElse() ? StmtRangeType(subStmts_) : StmtRangeType(&subStmts_[0], OK_End - 1);
   }
+  virtual void replaceChildren(const std::shared_ptr<Stmt>& oldStmt,
+                               const std::shared_ptr<Stmt>& newStmt) override;
+  ACCEPTVISITOR(Stmt, IfStmt)
 };
 
 } // namespace dawn

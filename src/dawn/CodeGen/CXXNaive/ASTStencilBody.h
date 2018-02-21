@@ -38,7 +38,7 @@ protected:
   RangeToString offsetPrinter_;
 
   /// The stencil function we are currently generating or NULL
-  const StencilFunctionInstantiation* currentFunction_;
+  std::shared_ptr<StencilFunctionInstantiation> currentFunction_;
 
   /// Nesting level of argument lists of stencil function *calls*
   int nestingOfStencilFunArgLists_;
@@ -101,7 +101,8 @@ public:
   /// @}
 
   /// @brief Set the current stencil function (can be NULL)
-  void setCurrentStencilFunction(const StencilFunctionInstantiation* currentFunction);
+  void
+  setCurrentStencilFunction(const std::shared_ptr<StencilFunctionInstantiation>& currentFunction);
 
   /// @brief Mapping of VarDeclStmt and Var/FieldAccessExpr to their name
   std::string getName(const std::shared_ptr<Expr>& expr) const override;

@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/SIR/ASTExpr.h"
+#include "dawn/SIR/ASTUtil.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Casting.h"
@@ -50,8 +51,10 @@ bool UnaryOperator::equals(const Expr* other) const {
          op_ == otherPtr->op_;
 }
 
-void UnaryOperator::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<UnaryOperator>(shared_from_this()));
+void UnaryOperator::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
+                                    const std::shared_ptr<Expr>& newExpr) {
+  DAWN_ASSERT(oldExpr == operand_);
+  operand_ = newExpr;
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -87,8 +90,10 @@ bool BinaryOperator::equals(const Expr* other) const {
          operands_[OK_Right]->equals(otherPtr->operands_[OK_Right].get()) && op_ == otherPtr->op_;
 }
 
-void BinaryOperator::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<BinaryOperator>(shared_from_this()));
+void BinaryOperator::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
+                                     const std::shared_ptr<Expr>& newExpr) {
+  bool success = ASTHelper::replaceOperands(oldExpr, newExpr, operands_);
+  DAWN_ASSERT_MSG((success), ("Expression not found"));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -129,9 +134,26 @@ bool AssignmentExpr::equals(const Expr* other) const {
          operands_[OK_Right]->equals(otherPtr->operands_[OK_Right].get()) && op_ == otherPtr->op_;
 }
 
-void AssignmentExpr::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<AssignmentExpr>(shared_from_this()));
+//===------------------------------------------------------------------------------------------===//
+//     NOPExpr
+//===------------------------------------------------------------------------------------------===//
+
+NOPExpr::NOPExpr(SourceLocation loc) : Expr(EK_NOPExpr, loc) { kind_ = EK_NOPExpr; }
+
+NOPExpr::NOPExpr(const NOPExpr& expr) : Expr(EK_NOPExpr, expr.getSourceLocation()) {
+  kind_ = EK_NOPExpr;
 }
+
+NOPExpr& NOPExpr::operator=(NOPExpr expr) {
+  assign(expr);
+  return *this;
+}
+
+NOPExpr::~NOPExpr() {}
+
+std::shared_ptr<Expr> NOPExpr::clone() const { return std::make_shared<NOPExpr>(*this); }
+
+bool NOPExpr::equals(const Expr* other) const { return true; }
 
 //===------------------------------------------------------------------------------------------===//
 //     TernaryOperator
@@ -168,8 +190,10 @@ bool TernaryOperator::equals(const Expr* other) const {
          operands_[OK_Right]->equals(otherPtr->operands_[OK_Right].get());
 }
 
-void TernaryOperator::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<TernaryOperator>(shared_from_this()));
+void TernaryOperator::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
+                                      const std::shared_ptr<Expr>& newExpr) {
+  bool success = ASTHelper::replaceOperands(oldExpr, newExpr, operands_);
+  DAWN_ASSERT_MSG((success), ("Expression not found"));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -206,8 +230,12 @@ bool FunCallExpr::equals(const Expr* other) const {
                     });
 }
 
-void FunCallExpr::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<FunCallExpr>(shared_from_this()));
+void FunCallExpr::insertArgument(const std::shared_ptr<Expr>& expr) { arguments_.push_back(expr); }
+
+void FunCallExpr::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
+                                  const std::shared_ptr<Expr>& newExpr) {
+  bool success = ASTHelper::replaceOperands(oldExpr, newExpr, arguments_);
+  DAWN_ASSERT_MSG((success), ("Expression not found"));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -249,10 +277,6 @@ bool StencilFunCallExpr::equals(const Expr* other) const {
                     });
 }
 
-void StencilFunCallExpr::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<StencilFunCallExpr>(shared_from_this()));
-}
-
 //===------------------------------------------------------------------------------------------===//
 //     StencilFunArgExpr
 //===------------------------------------------------------------------------------------------===//
@@ -284,10 +308,6 @@ bool StencilFunArgExpr::equals(const Expr* other) const {
   const StencilFunArgExpr* otherPtr = dyn_cast<StencilFunArgExpr>(other);
   return otherPtr && Expr::equals(other) && dimension_ == otherPtr->dimension_ &&
          offset_ == otherPtr->offset_ && argumentIndex_ == otherPtr->argumentIndex_;
-}
-
-void StencilFunArgExpr::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<StencilFunArgExpr>(shared_from_this()));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -323,8 +343,14 @@ bool VarAccessExpr::equals(const Expr* other) const {
          (isArrayAccess() ? index_->equals(otherPtr->index_.get()) : true);
 }
 
-void VarAccessExpr::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<VarAccessExpr>(shared_from_this()));
+void VarAccessExpr::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
+                                    const std::shared_ptr<Expr>& newExpr) {
+  if(isArrayAccess()) {
+    DAWN_ASSERT(index_ == oldExpr);
+    index_ = newExpr;
+  } else {
+    DAWN_ASSERT_MSG((false), ("Non array vars have no children"));
+  }
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -371,10 +397,6 @@ bool FieldAccessExpr::equals(const Expr* other) const {
          argumentOffset_ == otherPtr->argumentOffset_ && negateOffset_ == otherPtr->negateOffset_;
 }
 
-void FieldAccessExpr::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<FieldAccessExpr>(shared_from_this()));
-}
-
 //===------------------------------------------------------------------------------------------===//
 //     LiteralAccessExpr
 //===------------------------------------------------------------------------------------------===//
@@ -404,10 +426,6 @@ bool LiteralAccessExpr::equals(const Expr* other) const {
   const LiteralAccessExpr* otherPtr = dyn_cast<LiteralAccessExpr>(other);
   return otherPtr && Expr::equals(other) && value_ == otherPtr->value_ &&
          builtinType_ == otherPtr->builtinType_;
-}
-
-void LiteralAccessExpr::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<LiteralAccessExpr>(shared_from_this()));
 }
 
 } // namespace dawn

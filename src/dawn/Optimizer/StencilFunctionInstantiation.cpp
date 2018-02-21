@@ -27,8 +27,8 @@ namespace dawn {
 
 StencilFunctionInstantiation::StencilFunctionInstantiation(
     StencilInstantiation* context, const std::shared_ptr<StencilFunCallExpr>& expr,
-    sir::StencilFunction* function, const std::shared_ptr<AST>& ast, const Interval& interval,
-    bool isNested)
+    const std::shared_ptr<sir::StencilFunction>& function, const std::shared_ptr<AST>& ast,
+    const Interval& interval, bool isNested)
     : stencilInstantiation_(context), expr_(expr), function_(function), ast_(ast),
       interval_(interval), hasReturn_(false), isNested_(isNested) {
   DAWN_ASSERT(context);
@@ -88,6 +88,7 @@ StencilFunctionInstantiation::getArguments() const {
 //===------------------------------------------------------------------------------------------===//
 
 int StencilFunctionInstantiation::getCallerDimensionOfArgDirection(int argumentIndex) const {
+  DAWN_ASSERT(ArgumentIndexToCallerDirectionMap_.count(argumentIndex));
   return ArgumentIndexToCallerDirectionMap_.find(argumentIndex)->second;
 }
 
@@ -96,7 +97,24 @@ void StencilFunctionInstantiation::setCallerDimensionOfArgDirection(int argument
   ArgumentIndexToCallerDirectionMap_[argumentIndex] = dimension;
 }
 
+bool StencilFunctionInstantiation::isArgBoundAsOffset(int argumentIndex) const {
+  return ArgumentIndexToCallerOffsetMap_.count(argumentIndex);
+}
+
+bool StencilFunctionInstantiation::isArgBoundAsDirection(int argumentIndex) const {
+  return ArgumentIndexToCallerDirectionMap_.count(argumentIndex);
+}
+
+bool StencilFunctionInstantiation::isArgBoundAsFunctionInstantiation(int argumentIndex) const {
+  return ArgumentIndexToStencilFunctionInstantiationMap_.count(argumentIndex);
+}
+
+bool StencilFunctionInstantiation::isArgBoundAsFieldAccess(int argumentIndex) const {
+  return ArgumentIndexToCallerAccessIDMap_.count(argumentIndex);
+}
+
 const Array2i& StencilFunctionInstantiation::getCallerOffsetOfArgOffset(int argumentIndex) const {
+  DAWN_ASSERT(ArgumentIndexToCallerOffsetMap_.count(argumentIndex));
   return ArgumentIndexToCallerOffsetMap_.find(argumentIndex)->second;
 }
 
@@ -114,18 +132,20 @@ void StencilFunctionInstantiation::setCallerAccessIDOfArgField(int argumentIndex
   ArgumentIndexToCallerAccessIDMap_[argumentIndex] = callerAccessID;
 }
 
-StencilFunctionInstantiation*
+std::shared_ptr<StencilFunctionInstantiation>
 StencilFunctionInstantiation::getFunctionInstantiationOfArgField(int argumentIndex) const {
+  DAWN_ASSERT(ArgumentIndexToStencilFunctionInstantiationMap_.count(argumentIndex));
   return ArgumentIndexToStencilFunctionInstantiationMap_.find(argumentIndex)->second;
 }
 
 void StencilFunctionInstantiation::setFunctionInstantiationOfArgField(
-    int argumentIndex, StencilFunctionInstantiation* func) {
+    int argumentIndex, const std::shared_ptr<StencilFunctionInstantiation>& func) {
   ArgumentIndexToStencilFunctionInstantiationMap_[argumentIndex] = func;
 }
 
 const Array3i&
 StencilFunctionInstantiation::getCallerInitialOffsetFromAccessID(int callerAccessID) const {
+  DAWN_ASSERT(CallerAcceessIDToInitialOffsetMap_.count(callerAccessID));
   return CallerAcceessIDToInitialOffsetMap_.find(callerAccessID)->second;
 }
 
@@ -270,7 +290,8 @@ void StencilFunctionInstantiation::setAccessIDOfExpr(const std::shared_ptr<Expr>
   ExprToCallerAccessIDMap_[expr] = accessID;
 }
 
-void StencilFunctionInstantiation::mapExprToAccessID(std::shared_ptr<Expr> expr, int accessID) {
+void StencilFunctionInstantiation::mapExprToAccessID(const std::shared_ptr<Expr>& expr,
+                                                     int accessID) {
   ExprToCallerAccessIDMap_.emplace(expr, accessID);
 }
 
@@ -280,7 +301,8 @@ void StencilFunctionInstantiation::setAccessIDOfStmt(const std::shared_ptr<Stmt>
   StmtToCallerAccessIDMap_[stmt] = accessID;
 }
 
-void StencilFunctionInstantiation::mapStmtToAccessID(std::shared_ptr<Stmt> stmt, int accessID) {
+void StencilFunctionInstantiation::mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt,
+                                                     int accessID) {
   StmtToCallerAccessIDMap_.emplace(stmt, accessID);
 }
 
@@ -301,24 +323,40 @@ StencilFunctionInstantiation::getAccessIDToNameMap() const {
   return AccessIDToNameMap_;
 }
 
-std::unordered_map<std::shared_ptr<StencilFunCallExpr>, StencilFunctionInstantiation*>&
-StencilFunctionInstantiation::getExprToStencilFunctionInstantiationMap() {
-  return ExprToStencilFunctionInstantiationMap_;
-}
-
-const std::unordered_map<std::shared_ptr<StencilFunCallExpr>, StencilFunctionInstantiation*>&
+const std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
+                         std::shared_ptr<StencilFunctionInstantiation>>&
 StencilFunctionInstantiation::getExprToStencilFunctionInstantiationMap() const {
   return ExprToStencilFunctionInstantiationMap_;
 }
 
-StencilFunctionInstantiation* StencilFunctionInstantiation::getStencilFunctionInstantiation(
+void StencilFunctionInstantiation::insertExprToStencilFunction(
+    const std::shared_ptr<StencilFunctionInstantiation>& stencilFun) {
+  ExprToStencilFunctionInstantiationMap_.emplace(stencilFun->getExpression(), stencilFun);
+  nameToStencilFunctionInstantiationMap_.emplace(stencilFun->getExpression()->getCallee(),
+                                                 stencilFun);
+}
+
+void StencilFunctionInstantiation::removeStencilFunctionInstantiation(
+    const std::shared_ptr<StencilFunCallExpr>& expr) {
+  ExprToStencilFunctionInstantiationMap_.erase(expr);
+  nameToStencilFunctionInstantiationMap_.erase(expr->getCallee());
+}
+
+const std::unordered_map<std::string, std::shared_ptr<StencilFunctionInstantiation>>&
+StencilFunctionInstantiation::getNameToStencilFunctionInstantiationMap() const {
+  return nameToStencilFunctionInstantiationMap_;
+}
+
+std::shared_ptr<StencilFunctionInstantiation>
+StencilFunctionInstantiation::getStencilFunctionInstantiation(
     const std::shared_ptr<StencilFunCallExpr>& expr) {
   auto it = ExprToStencilFunctionInstantiationMap_.find(expr);
   DAWN_ASSERT_MSG(it != ExprToStencilFunctionInstantiationMap_.end(), "Invalid stencil function");
   return it->second;
 }
 
-const StencilFunctionInstantiation* StencilFunctionInstantiation::getStencilFunctionInstantiation(
+const std::shared_ptr<StencilFunctionInstantiation>
+StencilFunctionInstantiation::getStencilFunctionInstantiation(
     const std::shared_ptr<StencilFunCallExpr>& expr) const {
   auto it = ExprToStencilFunctionInstantiationMap_.find(expr);
   DAWN_ASSERT_MSG(it != ExprToStencilFunctionInstantiationMap_.end(), "Invalid stencil function");
@@ -360,7 +398,8 @@ void StencilFunctionInstantiation::update() {
   std::unordered_map<int, Field> outputFields;
 
   for(const auto& statementAccessesPair : statementAccessesPairs_) {
-    auto& access = statementAccessesPair->getAccesses();
+    auto access = statementAccessesPair->getAccesses();
+    DAWN_ASSERT(access);
 
     for(const auto& accessPair : access->getWriteAccesses()) {
       int AccessID = accessPair.first;
@@ -579,4 +618,50 @@ void StencilFunctionInstantiation::dump() const {
   std::cout.flush();
 }
 
+void StencilFunctionInstantiation::closeFunctionBindings() {
+  // finalize the bindings of some of the arguments that are not yet instantiated
+  const auto& arguments = getArguments();
+
+  for(std::size_t argIdx = 0; argIdx < arguments.size(); ++argIdx) {
+    if(isa<sir::Field>(*arguments[argIdx])) {
+      if(isArgStencilFunctionInstantiation(argIdx)) {
+
+        // The field is provided by a stencil function call, we create a new AccessID for this
+        // "temporary" field
+        int AccessID = stencilInstantiation_->nextUID();
+        setIsProvidedByStencilFunctionCall(AccessID);
+        setCallerAccessIDOfArgField(argIdx, AccessID);
+        setCallerInitialOffsetFromAccessID(AccessID, Array3i{{0, 0, 0}});
+      }
+    }
+  }
+
+  argsBound_ = true;
+}
+
+void StencilFunctionInstantiation::checkFunctionBindings() const {
+
+  const auto& arguments = getArguments();
+
+  for(std::size_t argIdx = 0; argIdx < arguments.size(); ++argIdx) {
+    // check that all arguments of all possible types are assigned
+    if(isa<sir::Field>(*arguments[argIdx])) {
+      DAWN_ASSERT_MSG(
+          (isArgBoundAsFieldAccess(argIdx) || isArgBoundAsFunctionInstantiation(argIdx)),
+          std::string("Field access arg not bound for function " + function_->Name).c_str());
+    } else if(isa<sir::Direction>(*arguments[argIdx])) {
+      DAWN_ASSERT_MSG(
+          (isArgBoundAsDirection(argIdx)),
+          std::string("Direction arg not bound for function " + function_->Name).c_str());
+    } else if(isa<sir::Offset>(*arguments[argIdx])) {
+      DAWN_ASSERT_MSG((isArgBoundAsOffset(argIdx)),
+                      std::string("Offset arg not bound for function " + function_->Name).c_str());
+    } else
+      dawn_unreachable("Argument not supported");
+  }
+
+  // check that the list of <statement,access> are set for all statements
+  DAWN_ASSERT_MSG((getAST()->getRoot()->getStatements().size() == statementAccessesPairs_.size()),
+                  "AST has different number of statements as the statement accesses pairs");
+}
 } // namespace dawn

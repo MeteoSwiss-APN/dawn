@@ -74,6 +74,10 @@ OPT(bool, UseParallelEP, false, "use-parallel-ep", "",
     "Make use of the parallel execution policy", "", false, true)
 OPT(bool, UseKCaches, true, "use-kcaches", "", 
     "Make use of the k-caches", "", false, true)
+OPT(bool, PassTmpToFunction, false, "pass-tmp-to-function", "",
+    "Activate pass to replace temporary precomputations by stencil function calls", "", false, true)
+OPT(bool, ReportPassTmpToFunction, false, "report-pass-tmp-to-function", "",
+    "Detailed report on the actions taken during the replace temporary by stencil function call pass", "", false, true)
 OPT(bool, ReportAccesses, false, "report-accesses", "", 
     "Detailed report on the accesses of each statement", "", false, true)
 OPT(bool, ReportPassStageSplit, false, "report-pass-stage-split", "", 
