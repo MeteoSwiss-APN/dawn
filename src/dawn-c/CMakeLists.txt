@@ -44,7 +44,7 @@ mchbuild_combine_libraries(
           DawnCodeGenObjects
   INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
   VERSION ${DAWN_VERSION}
-  DEPENDS ${DAW_EXTERNAL_LIBRARIES}
+  DEPENDS ${DAWN_EXTERNAL_LIBRARIES}
 )
 
 # Export the targets
