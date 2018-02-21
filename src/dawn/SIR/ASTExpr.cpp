@@ -13,23 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/SIR/ASTExpr.h"
+#include "dawn/SIR/ASTUtil.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Casting.h"
 
 namespace dawn {
-
-template <typename Cont>
-bool replaceOperands(const std::shared_ptr<Expr>& oldExpr, const std::shared_ptr<Expr>& newExpr,
-                     Cont& operands) {
-  for(int i = 0; i < operands.size(); ++i) {
-    if(operands[i] == oldExpr) {
-      operands[i] = newExpr;
-      return true;
-    }
-  }
-  return false;
-}
 
 //===------------------------------------------------------------------------------------------===//
 //     UnaryOperator
@@ -103,7 +92,7 @@ bool BinaryOperator::equals(const Expr* other) const {
 
 void BinaryOperator::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
                                      const std::shared_ptr<Expr>& newExpr) {
-  bool success = replaceOperands(oldExpr, newExpr, operands_);
+  bool success = ASTHelper::replaceOperands(oldExpr, newExpr, operands_);
   DAWN_ASSERT_MSG((success), ("Expression not found"));
 }
 
@@ -203,7 +192,7 @@ bool TernaryOperator::equals(const Expr* other) const {
 
 void TernaryOperator::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
                                       const std::shared_ptr<Expr>& newExpr) {
-  bool success = replaceOperands(oldExpr, newExpr, operands_);
+  bool success = ASTHelper::replaceOperands(oldExpr, newExpr, operands_);
   DAWN_ASSERT_MSG((success), ("Expression not found"));
 }
 
@@ -245,7 +234,7 @@ void FunCallExpr::insertArgument(const std::shared_ptr<Expr>& expr) { arguments_
 
 void FunCallExpr::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
                                   const std::shared_ptr<Expr>& newExpr) {
-  bool success = replaceOperands(oldExpr, newExpr, arguments_);
+  bool success = ASTHelper::replaceOperands(oldExpr, newExpr, arguments_);
   DAWN_ASSERT_MSG((success), ("Expression not found"));
 }
 

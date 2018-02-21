@@ -213,14 +213,10 @@ public:
 
   /// @brief Add a new version to the field/local variable given by `AccessID`
   ///
-  /// This will create a **new** field and trigger a renaming of all the remaining occurences in
-  /// the
+  /// This will create a **new** field and trigger a renaming of all the remaining occurences in the
   /// AccessID maps either above or below that statement, starting one statment before or after
-  /// the
-  /// current statement. Optionally, an `Expr` can be passed which will be renamed as well
-  /// (usually
-  /// the left- or right-hand side of an assignment).
-  ///
+  /// the current statement. Optionally, an `Expr` can be passed which will be renamed as well
+  /// (usually the left- or right-hand side of an assignment).
   /// Consider the following example:
   ///
   /// @code
@@ -277,8 +273,7 @@ public:
   /// @brief Get the `AccessID` associated with the `name`
   ///
   /// Note that this only works for field and variable names, the mapping of literals AccessIDs
-  /// and
-  /// their name is a not bijective!
+  /// and their name is a not bijective!
   int getAccessIDFromName(const std::string& name) const;
 
   /// @brief Get the `AccessID` of the Expr (VarAccess or FieldAccess)
@@ -461,11 +456,9 @@ public:
   /// `makeStencilCallCodeGenName`
   static bool isStencilCallCodeGenName(const std::string& name);
 
-  /// @brief it finalizes the stencil function instantation. The stencil function instantatiation
-  /// is
+  /// @brief it finalizes the stencil function instantation. The stencil function instantatiation is
   /// moved from candidate to the final storage of stencil instantiations. And maps storing
-  /// stencil
-  /// functions of the stencil instantiation are updated
+  /// stencil functions of the stencil instantiation are updated
   void finalizeStencilFunctionSetup(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
 
 private:
