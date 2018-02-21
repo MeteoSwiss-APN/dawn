@@ -22,7 +22,8 @@ Dawn --- Compiler toolchain for high-level DSLs
    :caption: Advanced Topics
    :maxdepth: 2
 
-   sir
+   hir
+   hir_design
    toolchain
 
 .. toctree::

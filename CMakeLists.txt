@@ -79,9 +79,6 @@ mchbuild_add_target_clean_all(
   ${CMAKE_BINARY_DIR}/dawn-cmake
 )
 
-# Enable RPath support
-mchbuild_enable_full_rpath(${DAWN_INSTALL_LIB_DIR})
-
 # Output summary of the configuration
 macro(make_config_string FIRST SECOND)
   mchbuild_make_string_pair(${FIRST} ": ${SECOND}" 20 out)
@@ -108,10 +105,15 @@ foreach(package bash Protobuf ccache clang-format ${doc_packages})
   list(APPEND package_info ${info})
 
   string(TOUPPER ${package} PACKAGE)
-  list(APPEND DAW_EXTERNAL_LIBRARIES ${DAWN_${PACKAGE}_LIBRARIES})
+  list(APPEND DAWN_EXTERNAL_LIBRARIES ${DAWN_${PACKAGE}_LIBRARIES})
   list(APPEND DAWN_EXTERNAL_INCLUDE_DIRS ${DAWN_${PACKAGE}_INCLUDE_DIRS})
   list(APPEND DAWN_EXTERNAL_DEFINITIONS ${DAWN_${PACKAGE}_DEFINITIONS})
+
 endforeach()
+
+# Enable RPath support
+mchbuild_enable_full_rpath("${CMAKE_INSTALL_PREFIX}/${DAWN_INSTALL_LIB_DIR};${DAWN_PROTOBUF_RPATH_DIR}")
+
 
 include_directories(SYSTEM ${DAWN_EXTERNAL_INCLUDE_DIRS})
 add_definitions(${DAWN_EXTERNAL_DEFINITIONS})

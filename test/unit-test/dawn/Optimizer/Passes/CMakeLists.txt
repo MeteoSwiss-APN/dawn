@@ -18,6 +18,7 @@
           TestEnvironment.h
           TestMain.cpp
           TestPassComputeStageExtents.cpp
+          TestPassSetBoundaryCondition.cpp
           TestFieldAccessIntervals.cpp
           TestTemporaryToFunction.cpp
     DEPENDS DawnUnittestStatic DawnStatic DawnCStatic ${DAWN_EXTERNAL_LIBRARIES} gtest

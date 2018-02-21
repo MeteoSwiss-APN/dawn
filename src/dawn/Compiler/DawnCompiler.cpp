@@ -24,6 +24,7 @@
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
 #include "dawn/Optimizer/PassSSA.h"
+#include "dawn/Optimizer/PassSetBoundaryCondition.h"
 #include "dawn/Optimizer/PassSetCaches.h"
 #include "dawn/Optimizer/PassSetNonTempCaches.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
@@ -133,6 +134,9 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     return nullptr;
   }
 
+  // -max-fields
+  int maxFields = options_->MaxFieldsPerStencil;
+
   // Initialize optimizer
   auto optimizer = make_unique<OptimizerContext>(getDiagnostics(), getOptions(), SIR);
   PassManager& passManager = optimizer->getPassManager();
@@ -150,7 +154,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   passManager.pushBackPass<PassSetStageGraph>();
   passManager.pushBackPass<PassStageReordering>(reorderStrategy);
   passManager.pushBackPass<PassStageMerger>();
-  passManager.pushBackPass<PassStencilSplitter>();
+  passManager.pushBackPass<PassStencilSplitter>(maxFields);
   passManager.pushBackPass<PassTemporaryType>();
   passManager.pushBackPass<PassTemporaryMerger>();
   // still experimental
@@ -158,6 +162,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   passManager.pushBackPass<PassSetNonTempCaches>();
   passManager.pushBackPass<PassSetCaches>();
   passManager.pushBackPass<PassComputeStageExtents>();
+  passManager.pushBackPass<PassSetBoundaryCondition>();
   passManager.pushBackPass<PassDataLocalityMetric>();
 
   // Run optimization passes
@@ -165,10 +170,8 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     std::shared_ptr<StencilInstantiation> instantiation = stencil.second;
     DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `" << instantiation->getName()
                    << "` ...";
-
     if(!passManager.runAllPassesOnStecilInstantiation(instantiation))
       return nullptr;
-
     DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `" << instantiation->getName()
                    << "`";
   }
