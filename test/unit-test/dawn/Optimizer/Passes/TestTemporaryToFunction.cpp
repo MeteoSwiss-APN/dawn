@@ -76,4 +76,12 @@ protected:
   }
 };
 
+TEST_F(TemporaryToFunction, test_stencil_03) {
+  auto stencils = loadTest("compute_extent_test_stencil_03.sir");
+  ASSERT_TRUE((stencils.size() == 1));
+  std::shared_ptr<Stencil> stencil = stencils[0];
+
+  ASSERT_TRUE((stencil->getNumStages() == 4));
+}
+
 } // anonymous namespace
