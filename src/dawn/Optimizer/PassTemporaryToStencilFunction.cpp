@@ -83,7 +83,11 @@ public:
       DAWN_ASSERT(off == 0);
 
     if(!tmpFunction_->hasArg(expr->getName()) && expr != tmpFieldAccessExpr_) {
-      tmpFunction_->Args.push_back(std::make_shared<sir::Field>(expr->getName(), SourceLocation{}));
+
+      int genLineKey = static_cast<std::underlying_type<SourceLocation::ReservedSL>::type>(
+          SourceLocation::ReservedSL::SL_Generated);
+      tmpFunction_->Args.push_back(
+          std::make_shared<sir::Field>(expr->getName(), SourceLocation(genLineKey, genLineKey)));
       accessIDs_.push_back(instantiation_->getAccessIDFromExpr(expr));
     }
     // continue traversing
@@ -382,15 +386,22 @@ bool PassTemporaryToStencilFunction::run(
           stagePtr->update();
         }
       }
+
+      std::cout << "\nPASS: " << getName() << "; stencil: " << stencilInstantiation->getName();
+
+      if(temporaryFieldExprToFunction.empty())
+        std::cout << "no replacement found";
+
       for(auto tmpFieldPair : temporaryFieldExprToFunction) {
         int accessID = tmpFieldPair.first;
         auto tmpProperties = tmpFieldPair.second;
         if(context->getOptions().ReportPassTmpToFunction)
-          std::cout << "\nPASS: " << getName() << "; stencil: " << stencilInstantiation->getName()
-                    << ": replace tmp:" << stencilInstantiation->getNameFromAccessID(accessID)
+
+          std::cout << " [ replace tmp:" << stencilInstantiation->getNameFromAccessID(accessID)
                     << "; line : " << tmpProperties.tmpFieldAccessExpr_->getSourceLocation().Line
-                    << "\n";
+                    << " ] ";
       }
+      std::cout << std::endl;
     }
   }
 
