@@ -1,0 +1,345 @@
+{
+ "filename": "boundary_condition_test_stencil_02.cpp",
+ "stencils": [
+  {
+   "name": "SplitStencil",
+   "loc": {
+    "Line": 28,
+    "Column": 8
+   },
+   "ast": {
+    "root": {
+     "block_stmt": {
+      "statements": [
+       {
+        "boundary_condition_decl_stmt": {
+         "functor": "zero",
+         "fields": [
+          {
+           "name": "out",
+           "loc": {
+            "Line": -1,
+            "Column": -1
+           },
+           "is_temporary": false
+          }
+         ],
+         "loc": {
+          "Line": -1,
+          "Column": -1
+         }
+        }
+       },
+       {
+        "vertical_region_decl_stmt": {
+         "vertical_region": {
+          "loc": {
+           "Line": 37,
+           "Column": 5
+          },
+          "ast": {
+           "root": {
+            "block_stmt": {
+             "statements": [
+              {
+               "expr_stmt": {
+                "expr": {
+                 "assignment_expr": {
+                  "left": {
+                   "field_access_expr": {
+                    "name": "intermediate",
+                    "offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 38,
+                     "Column": 7
+                    }
+                   }
+                  },
+                  "op": "=",
+                  "right": {
+                   "field_access_expr": {
+                    "name": "out",
+                    "offset": [
+                     1,
+                     0,
+                     0
+                    ],
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 38,
+                     "Column": 22
+                    }
+                   }
+                  },
+                  "loc": {
+                   "Line": 38,
+                   "Column": 7
+                  }
+                 }
+                },
+                "loc": {
+                 "Line": 38,
+                 "Column": 7
+                }
+               }
+              },
+              {
+               "expr_stmt": {
+                "expr": {
+                 "assignment_expr": {
+                  "left": {
+                   "field_access_expr": {
+                    "name": "out",
+                    "offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 39,
+                     "Column": 7
+                    }
+                   }
+                  },
+                  "op": "=",
+                  "right": {
+                   "binary_operator": {
+                    "left": {
+                     "field_access_expr": {
+                      "name": "intermediate",
+                      "offset": [
+                       -1,
+                       0,
+                       0
+                      ],
+                      "argument_map": [
+                       -1,
+                       -1,
+                       -1
+                      ],
+                      "argument_offset": [
+                       0,
+                       0,
+                       0
+                      ],
+                      "negate_offset": false,
+                      "loc": {
+                       "Line": 39,
+                       "Column": 13
+                      }
+                     }
+                    },
+                    "op": "+",
+                    "right": {
+                     "var_access_expr": {
+                      "name": "global_var",
+                      "is_external": true,
+                      "loc": {
+                       "Line": 39,
+                       "Column": 35
+                      }
+                     }
+                    },
+                    "loc": {
+                     "Line": 39,
+                     "Column": 13
+                    }
+                   }
+                  },
+                  "loc": {
+                   "Line": 39,
+                   "Column": 7
+                  }
+                 }
+                },
+                "loc": {
+                 "Line": 39,
+                 "Column": 7
+                }
+               }
+              }
+             ],
+             "loc": {
+              "Line": 37,
+              "Column": 5
+             }
+            }
+           }
+          },
+          "interval": {
+           "lower_offset": 0,
+           "upper_offset": 0,
+           "special_lower_level": "Start",
+           "special_upper_level": "End"
+          },
+          "loop_order": "Forward"
+         },
+         "loc": {
+          "Line": 37,
+          "Column": 5
+         }
+        }
+       }
+      ],
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      }
+     }
+    }
+   },
+   "fields": [
+    {
+     "name": "intermediate",
+     "loc": {
+      "Line": 29,
+      "Column": 11
+     },
+     "is_temporary": false
+    },
+    {
+     "name": "out",
+     "loc": {
+      "Line": 30,
+      "Column": 11
+     },
+     "is_temporary": false
+    }
+   ]
+  }
+ ],
+ "stencil_functions": [
+  {
+   "name": "zero",
+   "loc": {
+    "Line": 23,
+    "Column": 8
+   },
+   "asts": [
+    {
+     "root": {
+      "block_stmt": {
+       "statements": [
+        {
+         "expr_stmt": {
+          "expr": {
+           "assignment_expr": {
+            "left": {
+             "field_access_expr": {
+              "name": "a",
+              "offset": [
+               0,
+               0,
+               0
+              ],
+              "argument_map": [
+               -1,
+               -1,
+               -1
+              ],
+              "argument_offset": [
+               0,
+               0,
+               0
+              ],
+              "negate_offset": false,
+              "loc": {
+               "Line": 25,
+               "Column": 16
+              }
+             }
+            },
+            "op": "=",
+            "right": {
+             "literal_access_expr": {
+              "value": "0",
+              "type": {
+               "type_id": "Integer"
+              },
+              "loc": {
+               "Line": 25,
+               "Column": 20
+              }
+             }
+            },
+            "loc": {
+             "Line": 25,
+             "Column": 16
+            }
+           }
+          },
+          "loc": {
+           "Line": 25,
+           "Column": 16
+          }
+         }
+        }
+       ],
+       "loc": {
+        "Line": 25,
+        "Column": 14
+       }
+      }
+     }
+    }
+   ],
+   "intervals": [],
+   "arguments": [
+    {
+     "field_value": {
+      "name": "a",
+      "loc": {
+       "Line": 24,
+       "Column": 11
+      },
+      "is_temporary": false
+     }
+    }
+   ]
+  }
+ ],
+ "global_variables": {
+  "map": {
+   "global_var": {
+    "is_constexpr": false,
+    "integer_value": 12
+   }
+  }
+ }
+}

@@ -131,6 +131,8 @@ private:
       originalNameToCache_.emplace_back(
           NameToImprovementMetric{instantiation_->getOriginalNameFromAccessID(oldID), cache,
                                   accessIDToDataLocality_.find(oldID)->second});
+      instantiation_->insertCachedVariable(oldID);
+      instantiation_->insertCachedVariable(newID);
     }
 
     // Create the cache-filler stage

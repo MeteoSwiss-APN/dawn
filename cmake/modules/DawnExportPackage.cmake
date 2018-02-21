@@ -61,8 +61,6 @@ include(CMakeParseArguments)
 # ``DAWN_<NAME>_VERSION``
 #   Version string of the package.
 #
-# To create a formatted string of the exported packages :ref:`dawn_create_package_string`.
-#
 function(dawn_export_package)
   set(options)
   set(one_value_args NAME FOUND VERSION EXECUTABLE)

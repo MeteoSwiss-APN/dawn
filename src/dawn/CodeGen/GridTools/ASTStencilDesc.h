@@ -36,6 +36,7 @@ protected:
   /// StencilID to the name of the generated stencils for this ID
   const std::unordered_map<int, std::vector<std::string>>& StencilIDToStencilNameMap_;
 
+
 public:
   using Base = ASTCodeGenCXX;
 

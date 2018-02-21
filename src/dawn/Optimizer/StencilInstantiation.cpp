@@ -461,7 +461,8 @@ public:
   }
 
   void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override {
-    DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not yet implemented");
+    if(instantiation_->insertBoundaryConditions(stmt->getFields()[0]->Name, stmt) == false)
+      DAWN_ASSERT_MSG(false, "Boundary Condition specified twice for the same field");
   }
 
   void visit(const std::shared_ptr<AssignmentExpr>& expr) override {
@@ -1144,6 +1145,16 @@ StencilInstantiation::getStencilCallToStencilIDMap() const {
   return StencilCallToStencilIDMap_;
 }
 
+std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>>&
+StencilInstantiation::getIDToStencilCallMap() {
+  return IDToStencilCallMap_;
+}
+
+const std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>>&
+StencilInstantiation::getIDToStencilCallMap() const {
+  return IDToStencilCallMap_;
+}
+
 int StencilInstantiation::getStencilIDFromStmt(
     const std::shared_ptr<StencilCallDeclStmt>& stmt) const {
   auto it = StencilCallToStencilIDMap_.find(stmt);
@@ -1437,6 +1448,14 @@ std::string StencilInstantiation::makeStencilCallCodeGenName(int StencilID) {
 
 bool StencilInstantiation::isStencilCallCodeGenName(const std::string& name) {
   return StringRef(name).startswith("__code_gen_");
+}
+
+const std::set<int>& StencilInstantiation::getCachedVariableSet() const {
+  return CachedVariableSet_;
+}
+
+void StencilInstantiation::insertCachedVariable(int fieldID) {
+  CachedVariableSet_.emplace(fieldID);
 }
 
 void StencilInstantiation::reportAccesses() const {

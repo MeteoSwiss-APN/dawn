@@ -22,7 +22,6 @@
 #include "dawn/Support/Unreachable.h"
 #include <iostream>
 #include <memory>
-
 using namespace dawn::util;
 
 static dawn::DawnCompiler::CodeGenKind getCodeGenKind(DawnCodeGenKind codegen) {
