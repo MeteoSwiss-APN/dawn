@@ -15,10 +15,10 @@
 #ifndef DAWN_OPTIMIZER_DEPENDENCYGRAPH_H
 #define DAWN_OPTIMIZER_DEPENDENCYGRAPH_H
 
+#include "dawn/SIR/ASTStmt.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Unreachable.h"
 #include <algorithm>
-#include <dawn/SIR/ASTStmt.h>
 #include <fstream>
 #include <iosfwd>
 #include <iterator>

@@ -150,7 +150,6 @@ TEST(GraphTest, GraphWithVertexData) {
   ASSERT_TRUE(graph.getVertices()[outputNodes[0]].data == a);
 
   ASSERT_TRUE(inputNodes.size() == 3);
-  std::cout << "PP " << a << " " << b << " " << c << " " << d << " " << e << " " << f << std::endl;
   int id = inputNodes[0];
   ASSERT_TRUE(graph.getVertices()[graph.getIDFromVertexID(id)].data == f);
   id = inputNodes[1];
