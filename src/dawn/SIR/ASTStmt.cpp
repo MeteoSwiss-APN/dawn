@@ -14,24 +14,13 @@
 
 #include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/ASTExpr.h"
+#include "dawn/SIR/ASTUtil.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Casting.h"
 
 namespace dawn {
-
-template <typename Cont, typename Type>
-bool replaceOperands(std::shared_ptr<Type> const& oldExpr, std::shared_ptr<Type> const& newExpr,
-                     Cont& operands) {
-  for(int i = 0; i < operands.size(); ++i) {
-    if(operands[i] == oldExpr) {
-      operands[i] = newExpr;
-      return true;
-    }
-  }
-  return false;
-}
 
 //===------------------------------------------------------------------------------------------===//
 //     BlockStmt
@@ -67,7 +56,7 @@ bool BlockStmt::equals(const Stmt* other) const {
 
 void BlockStmt::replaceChildren(std::shared_ptr<Stmt> const& oldStmt,
                                 std::shared_ptr<Stmt> const& newStmt) {
-  bool success = replaceOperands(oldStmt, newStmt, statements_);
+  bool success = ASTHelper::replaceOperands(oldStmt, newStmt, statements_);
   DAWN_ASSERT_MSG((success), ("Expression not found"));
 }
 
@@ -177,7 +166,7 @@ bool VarDeclStmt::equals(const Stmt* other) const {
 
 void VarDeclStmt::replaceChildren(std::shared_ptr<Expr> const& oldExpr,
                                   std::shared_ptr<Expr> const& newExpr) {
-  bool success = replaceOperands(oldExpr, newExpr, initList_);
+  bool success = ASTHelper::replaceOperands(oldExpr, newExpr, initList_);
   DAWN_ASSERT_MSG((success), ("Expression not found"));
 }
 

@@ -216,7 +216,6 @@ public:
 
   /// @brief Get the SIR stencil function
   std::shared_ptr<sir::StencilFunction> getStencilFunction() const { return function_; }
-  //  const sir::StencilFunction* getStencilFunction() const { return function_; }
 
   void setStencilFunction(std::shared_ptr<sir::StencilFunction> fun) { function_ = fun; }
 

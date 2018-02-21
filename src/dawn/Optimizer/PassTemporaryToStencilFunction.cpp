@@ -24,15 +24,6 @@
 
 namespace dawn {
 
-/// @brief this pass will identify temporaries of a stencil and replace their pre-computations
-/// by a stencil function. Each reference to the temporary is later replaced by the stencil function
-/// call.
-/// * Input: well formed SIR and IIR with the list of mss/stages, temporaries used and
-/// <statement,accesses> pairs
-/// * Output: modified SIR, new stencil functions are inserted and calls. Temporary fields are
-/// removed. New stencil functions instantiations are inserted into the IIR. <statement,accesses>
-/// pairs are recomputed
-
 namespace {
 sir::Interval intervalToSIRInterval(Interval interval) {
   return sir::Interval(interval.lowerLevel(), interval.upperLevel(), interval.lowerOffset(),
@@ -42,12 +33,12 @@ sir::Interval intervalToSIRInterval(Interval interval) {
 /// @brief some properties of the temporary being replaced
 struct TemporaryFunctionProperties {
   std::shared_ptr<StencilFunCallExpr>
-      stencilFunCallExpr_;        /// stencil function call that will replace the tmp
-  std::vector<int> accessIDArgs_; /// access IDs of the args that are needed to compute the tmp
+      stencilFunCallExpr_;        ///< stencil function call that will replace the tmp
+  std::vector<int> accessIDArgs_; ///< access IDs of the args that are needed to compute the tmp
   std::shared_ptr<sir::StencilFunction>
-      sirStencilFunction_; /// sir stencil function of the tmp being created
+      sirStencilFunction_; ///< sir stencil function of the tmp being created
   std::shared_ptr<FieldAccessExpr>
-      tmpFieldAccessExpr_; /// FieldAccessExpr of the tmp captured for replacement
+      tmpFieldAccessExpr_; ///< FieldAccessExpr of the tmp captured for replacement
 };
 
 /// @brief visitor that will detect assignment (i.e. computations) to a temporary,
@@ -72,7 +63,7 @@ public:
 
   int temporaryFieldAccessID() const { return accessID_; }
 
-  std::vector<int> const& getAccessIDs() { return accessIDs_; }
+  const std::vector<int>& getAccessIDs() const { return accessIDs_; }
 
   std::shared_ptr<FieldAccessExpr> getTemporaryFieldAccessExpr() { return tmpFieldAccessExpr_; }
 
@@ -294,13 +285,16 @@ bool PassTemporaryToStencilFunction::run(
     const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
 
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
+
+  if(!context->getOptions().PassTmpToFunction)
+    return true;
+
   DAWN_ASSERT(context);
 
   for(auto& stencilPtr : stencilInstantiation->getStencils()) {
-    Stencil& stencil = *stencilPtr;
 
     // Iterate multi-stages backwards
-    for(auto multiStage : stencil.getMultiStages()) {
+    for(auto multiStage : stencilPtr->getMultiStages()) {
       std::unordered_map<int, TemporaryFunctionProperties> temporaryFieldExprToFunction;
 
       for(const auto& stagePtr : multiStage->getStages()) {
@@ -333,8 +327,6 @@ bool PassTemporaryToStencilFunction::run(
                 std::shared_ptr<StencilFunCallExpr> stencilFunCallExpr =
                     std::make_shared<StencilFunCallExpr>(stencilFunction->Name);
 
-                auto accessIDsOfArgs = tmpAssignment.getAccessIDs();
-
                 // all the temporary computations captured are stored in this map of <ID, tmp
                 // properties>
                 // for later use of the replacer visitor
@@ -366,10 +358,9 @@ bool PassTemporaryToStencilFunction::run(
               if(tmpReplacement.getNumTmpReplaced() != 0) {
                 std::vector<std::shared_ptr<StatementAccessesPair>> listStmtPair;
 
-                // TODO need to combine call to StatementMapper with computeAccesses in a clean
-                // way
-                // since the AST has changed, we need to recompute the <statement,accesses> pairs of
-                // the stage
+                // TODO need to combine call to StatementMapper with computeAccesses in a clean way
+                // since the AST has changed, we need to recompute the <statement,accesses> pairs
+                // of the stage
                 StatementMapper statementMapper(
                     stencilInstantiation.get(), stmt->StackTrace, listStmtPair, sirInterval,
                     stencilInstantiation->getNameToAccessIDMap(), nullptr);

@@ -86,6 +86,21 @@ extern bool evalExprAsBoolean(const std::shared_ptr<Expr>& expr, bool& result,
 /// @ingroup testing
 extern std::vector<sir::Field> getFieldFromStencilAST(const std::shared_ptr<AST>& ast);
 
+class ASTHelper {
+public:
+  template <typename Container, typename Type>
+  static bool replaceOperands(std::shared_ptr<Type> const& oldExpr,
+                              std::shared_ptr<Type> const& newExpr, Container& operands) {
+    for(int i = 0; i < operands.size(); ++i) {
+      if(operands[i] == oldExpr) {
+        operands[i] = newExpr;
+        return true;
+      }
+    }
+    return false;
+  }
+};
+
 } // namespace dawn
 
 #endif
