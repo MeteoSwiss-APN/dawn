@@ -330,7 +330,7 @@ public:
   virtual ~StencilFunCallExpr();
   /// @}
 
-  void setName(std::string name);
+  //  void setName(std::string name);
   virtual std::shared_ptr<Expr> clone() const override;
   virtual bool equals(const Expr* other) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == EK_StencilFunCallExpr; }
