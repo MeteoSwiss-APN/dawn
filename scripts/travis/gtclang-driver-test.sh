@@ -49,10 +49,12 @@ cmake .. -DCMAKE_CXX_COMPILER="$CXX"                                            
          -DGTCLANG_UNIT_TESTING=ON                                                                                            \
          -DGTCLANG_INTEGRATION_TESTING=ON                                                                                     \
          -DDawn_DIR=${build_dir}/dawn-prefix/src/dawn-build/prefix/dawn/cmake/                                                \
-         -DPYTHON_EXECUTABLE="$PYTHON_DIR"                                                                                    \
+         -DPYTHON_EXECUTABLE="$PYTHON_DIR"                                                                        			  \
       || fatal_error "failed to configure"
 
 make -j2 || fatal_error "failed to build"
+
+bash ${build_dir}/gtclang-prefix/src/gtclang-build/gtclang-tester-no-codegen.sh
 
 # Run unittests
 ctest -V -C ${CONFIG} --output-on-failure --force-new-ctest-process                                   \

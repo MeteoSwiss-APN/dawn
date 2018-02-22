@@ -94,5 +94,14 @@ namespace gridtools {
         /** @} */
 
         /** @} */
+
+#if GRIDTOOLS_CLANG_STORAGE_TYPE == GRIDTOOLS_CLANG_STORAGE_HOST
+#define GT_BACKEND_DECISION_viewmaker(x) make_host_view(x)
+#define GT_BACKEND_DECISION_bcapply gridtools::boundary_apply
+#elif GRIDTOOLS_CLANG_STORAGE_TYPE == GRIDTOOLS_CLANG_STORAGE_CUDA
+#define GT_BACKEND_DECISION_viewmaker(x) make_device_view(x)
+#define GT_BACKEND_DECISION_bcapply gridtools::boundary_apply_gpu
+#endif
+
     }
 }

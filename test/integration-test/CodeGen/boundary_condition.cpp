@@ -12,29 +12,25 @@
 //  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
-//===------------------------------------------------------------------------------------------===//
-
-// RUN: %gtclang% %file% -fno-codegen
-
+//===-------------------------------------------------------------------------------------------===//
 #include "gridtools/clang_dsl.hpp"
-
 using namespace gridtools::clang;
 
-stencil_function foo {
+stencil_function constant {
   storage a;
-  offset o;
-
-  Do {
-    a = 0.0;
-  }
+  Do { a = 10; }
 };
 
-stencil Test {
-  storage in;
+globals { double in_glob = 12; };
 
-  Do {
-    boundary_condition(foo(), in); // EXPECTED_ERROR: invalid functor 'foo' in boundary condition: expected single argument
+stencil split_stencil {
+  storage in, out;
+
+  boundary_condition(constant(), in);
+  void Do() {
+    vertical_region(k_start, k_end) {
+      in = out[j + 1];
+      out = in[j - 1] + in_glob;
+    }
   }
 };
-
-int main() {}

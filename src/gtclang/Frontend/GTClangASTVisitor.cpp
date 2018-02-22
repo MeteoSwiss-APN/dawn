@@ -51,7 +51,6 @@ bool GTClangASTVisitor::VisitDecl(clang::Decl* Decl) {
 bool GTClangASTVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl* recordDecl) {
   using namespace llvm;
   using namespace clang;
-
   const auto& SM = context_->getSourceManager();
 
   // Only parse declaration of the main-file

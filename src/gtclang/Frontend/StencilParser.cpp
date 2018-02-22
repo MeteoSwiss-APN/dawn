@@ -361,8 +361,9 @@ public:
   BoundaryConditionResolver(StencilParser* parser) : parser_(parser) {}
 
   void resolve(clang::CXXConstructExpr* boundaryCondition) {
-    for(auto e : boundaryCondition->arguments())
+    for(auto e : boundaryCondition->arguments()) {
       resolve(e);
+    }
   }
 
   /// @brief Get the name of the functor applies to the boundary points
@@ -388,13 +389,6 @@ private:
     // Check that there are only storage arguments
     dawn::sir::StencilFunction* stencilFun =
         parser_->getStencilFunctionByName(functor_).second.get();
-
-    if(stencilFun->Args.size() > 1) {
-      parser_->reportDiagnostic(expr->getLocation(),
-                                Diagnostics::DiagKind::err_boundary_condition_invalid_functor)
-          << functor_ << "expected single argument";
-      return;
-    }
 
     for(const auto& arg : stencilFun->Args) {
       if(!dawn::isa<dawn::sir::Field>(arg.get()))
@@ -574,6 +568,14 @@ void StencilParser::parseStencilImpl(clang::CXXRecordDecl* recordDecl, const std
         parseStencilDoMethod(method);
       else
         parseStencilFunctionDoMethod(method);
+    }
+    // Parse the generated function that wraps all the boundary conditions
+    if(method->getNameAsString() == "__boundary_condition__generated__") {
+      auto allBoundaryConditions = parseBoundaryConditions(method);
+      for(const auto& boundayCondition : allBoundaryConditions) {
+        currentParserRecord_->CurrentStencil->StencilDescAst->getRoot()->getStatements().push_back(
+            boundayCondition);
+      }
     }
   }
 
@@ -973,6 +975,45 @@ StencilParser::parseBoundaryCondition(clang::CXXConstructExpr* boundaryCondition
 
   DAWN_LOG(INFO) << "Done parsing boundary-condition";
   return ASTBoundaryCondition;
+}
+
+std::vector<std::shared_ptr<dawn::BoundaryConditionDeclStmt>>
+StencilParser::parseBoundaryConditions(clang::CXXMethodDecl* allBoundaryConditions) {
+  using namespace clang;
+  using namespace llvm;
+  DAWN_LOG(INFO) << "Parsing all the boundary conditions at " << getLocation(allBoundaryConditions);
+
+  std::vector<std::shared_ptr<dawn::BoundaryConditionDeclStmt>> parsedBoundayConditions;
+  CompoundStmt* bodyStmt = dyn_cast<CompoundStmt>(allBoundaryConditions->getBody());
+
+  // loop over all the bounary condition stmts
+  // they all share the same signature:
+  //    boundary_condition(functor(), Field [, arguments...]);
+  for(Stmt* stmt : bodyStmt->body()) {
+    if(CXXTemporaryObjectExpr* temporary = dyn_cast<CXXTemporaryObjectExpr>(stmt)) {
+      if(CXXConstructExpr* e = dyn_cast<CXXConstructExpr>(temporary)) {
+        // Resolve the statement
+        BoundaryConditionResolver res(this);
+        res.resolve(e);
+
+        // create that DeclStmt with the functor and add the Fields / Arugments, where the field to
+        // apply to is at Field[0] and all the arguments follow
+        auto bc = std::make_shared<dawn::BoundaryConditionDeclStmt>(res.getFunctor());
+        for(const auto& field : res.getFields()) {
+          bc->getFields().emplace_back(std::make_shared<dawn::sir::Field>(field));
+        }
+        parsedBoundayConditions.push_back(bc);
+      } else {
+        e->dumpColor();
+        DAWN_ASSERT_MSG(0, "unresolved expression in Bounday-Condition Parser");
+      }
+
+    } else {
+      stmt->dumpColor();
+      DAWN_ASSERT_MSG(0, "unresolved expression in Bounday-Condition Parser");
+    }
+  }
+  return parsedBoundayConditions;
 }
 
 dawn::SourceLocation StencilParser::getLocation(clang::Decl* decl) const {

@@ -155,6 +155,11 @@ private:
   std::shared_ptr<dawn::BoundaryConditionDeclStmt>
   parseBoundaryCondition(clang::CXXConstructExpr* boundaryCondition);
 
+  /// @brief Parses the MethodDeclaration that the preprocessor generates that contains all the
+  /// boundary-condition statements
+  std::vector<std::shared_ptr<dawn::BoundaryConditionDeclStmt>>
+  parseBoundaryConditions(clang::CXXMethodDecl* allBoundaryConditions);
+
   /// @brief Resolve Clang AST statements by passing them to ClangASTResolver
   std::shared_ptr<dawn::Stmt> resolveStmt(ClangASTExprResolver& clangASTResolver,
                                           clang::Stmt* stmt);

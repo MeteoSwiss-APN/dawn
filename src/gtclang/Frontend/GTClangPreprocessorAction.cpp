@@ -363,6 +363,15 @@ private:
 
     std::unordered_set<std::string> storagesAllocatedOnTheFly;
 
+    // Wrapping the boundary conditions in a function call to have proper syntax requires storing
+    // all the arguments found
+    std::unordered_set<std::string> boundaryConditions;
+    // and the location where we want to generate the function
+    SourceLocation bcLocationStart;
+    SourceLocation bcLocationEnd;
+
+    bool bcLocationSet = false;
+
     while(lexNext()) {
 
       // Update brace counter
@@ -405,6 +414,28 @@ private:
             for(const auto& storage : curStorages)
               storages.emplace(storage.str());
 
+            consumeTokens(peekedTokens);
+          }
+        }
+        if(token_.is(tok::identifier) &&
+           token_.getIdentifierInfo()->getName() == "boundary_condition" &&
+           PP_.LookAhead(0).is(tok::l_paren)) {
+          peekedTokens = 1;
+
+          // Accumulate all identifiers up to `;`
+          std::string storagesStr;
+          if(peekAndAccumulateUntil(tok::semi, peekedTokens, storagesStr)) {
+            boundaryConditions.emplace("boundary_condition(" + storagesStr + ";");
+            // this is the first boundary_condition we encounter, store it's location
+            if(!bcLocationSet) {
+              bcLocationStart = token_.getLocation();
+              bcLocationEnd = PP_.LookAhead(peekedTokens).getLocation();
+              bcLocationSet = true;
+            } else {
+              // after saving the information, we clear its content
+              registerReplacement(token_.getLocation(), PP_.LookAhead(peekedTokens).getLocation(),
+                                  "");
+            }
             consumeTokens(peekedTokens);
           }
         }
@@ -496,6 +527,19 @@ private:
           break;
         continue;
       }
+    }
+
+    if(bcLocationSet) {
+      std::string fullstring;
+      fullstring = "void __boundary_condition__generated__() {\n";
+      for(const auto& boundaryConditon : boundaryConditions) {
+        fullstring += boundaryConditon + "\n";
+      }
+      fullstring += "}";
+      registerReplacement(bcLocationStart, bcLocationEnd, fullstring);
+
+      bcLocationSet = false;
+      boundaryConditions.clear();
     }
 
     if(curlyBracesNestingLevel != 0) {
