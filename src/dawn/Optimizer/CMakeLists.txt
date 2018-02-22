@@ -83,6 +83,8 @@ mchbuild_add_library(
           PassTemporaryMerger.h
           PassTemporaryType.cpp
           PassTemporaryType.h
+          PassTemporaryToStencilFunction.cpp
+          PassTemporaryToStencilFunction.h
           ReadBeforeWriteConflict.cpp
           ReadBeforeWriteConflict.h
           Renaming.cpp
@@ -98,6 +100,8 @@ mchbuild_add_library(
           Stage.h
           StatementAccessesPair.cpp
           StatementAccessesPair.h
+          StatementMapper.cpp
+          StatementMapper.h
           Stencil.cpp
           Stencil.h
           StencilFunctionInstantiation.cpp

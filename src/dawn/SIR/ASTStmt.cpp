@@ -14,6 +14,7 @@
 
 #include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/ASTExpr.h"
+#include "dawn/SIR/ASTUtil.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
@@ -34,7 +35,7 @@ BlockStmt::BlockStmt(const BlockStmt& stmt) : Stmt(SK_BlockStmt, stmt.getSourceL
     statements_.push_back(s->clone());
 }
 
-BlockStmt& BlockStmt::operator=(BlockStmt stmt) {
+BlockStmt& BlockStmt::operator=(BlockStmt const& stmt) {
   assign(stmt);
   statements_ = std::move(stmt.statements_);
   return *this;
@@ -53,8 +54,10 @@ bool BlockStmt::equals(const Stmt* other) const {
                     });
 }
 
-void BlockStmt::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<BlockStmt>(shared_from_this()));
+void BlockStmt::replaceChildren(std::shared_ptr<Stmt> const& oldStmt,
+                                std::shared_ptr<Stmt> const& newStmt) {
+  bool success = ASTHelper::replaceOperands(oldStmt, newStmt, statements_);
+  DAWN_ASSERT_MSG((success), ("Expression not found"));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -82,8 +85,11 @@ bool ExprStmt::equals(const Stmt* other) const {
   return otherPtr && Stmt::equals(other) && expr_->equals(otherPtr->expr_.get());
 }
 
-void ExprStmt::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<ExprStmt>(shared_from_this()));
+void ExprStmt::replaceChildren(std::shared_ptr<Expr> const& oldExpr,
+                               std::shared_ptr<Expr> const& newExpr) {
+  DAWN_ASSERT_MSG((oldExpr == expr_ && oldExpr && newExpr), ("Expression not found"));
+
+  expr_ = newExpr;
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -111,8 +117,10 @@ bool ReturnStmt::equals(const Stmt* other) const {
   return otherPtr && Stmt::equals(other) && expr_->equals(otherPtr->expr_.get());
 }
 
-void ReturnStmt::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<ReturnStmt>(shared_from_this()));
+void ReturnStmt::replaceChildren(std::shared_ptr<Expr> const& oldExpr,
+                                 std::shared_ptr<Expr> const& newExpr) {
+  DAWN_ASSERT_MSG((oldExpr == expr_), ("Expression not found"));
+  expr_ = newExpr;
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -156,8 +164,10 @@ bool VarDeclStmt::equals(const Stmt* other) const {
                     });
 }
 
-void VarDeclStmt::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<VarDeclStmt>(shared_from_this()));
+void VarDeclStmt::replaceChildren(std::shared_ptr<Expr> const& oldExpr,
+                                  std::shared_ptr<Expr> const& newExpr) {
+  bool success = ASTHelper::replaceOperands(oldExpr, newExpr, initList_);
+  DAWN_ASSERT_MSG((success), ("Expression not found"));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -190,10 +200,6 @@ bool VerticalRegionDeclStmt::equals(const Stmt* other) const {
          *(verticalRegion_.get()) == *(otherPtr->verticalRegion_.get());
 }
 
-void VerticalRegionDeclStmt::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<VerticalRegionDeclStmt>(shared_from_this()));
-}
-
 //===------------------------------------------------------------------------------------------===//
 //     StencilCallDeclStmt
 //===------------------------------------------------------------------------------------------===//
@@ -222,10 +228,6 @@ bool StencilCallDeclStmt::equals(const Stmt* other) const {
   const StencilCallDeclStmt* otherPtr = dyn_cast<StencilCallDeclStmt>(other);
   // We just compare the shared pointers of the stencil call
   return otherPtr && Stmt::equals(other) && stencilCall_ == otherPtr->stencilCall_;
-}
-
-void StencilCallDeclStmt::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<StencilCallDeclStmt>(shared_from_this()));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -260,10 +262,6 @@ bool BoundaryConditionDeclStmt::equals(const Stmt* other) const {
                     [](const std::shared_ptr<sir::Field>& a, const std::shared_ptr<sir::Field>& b) {
                       return a->Name == b->Name && a->IsTemporary == b->IsTemporary;
                     });
-}
-
-void BoundaryConditionDeclStmt::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<BoundaryConditionDeclStmt>(shared_from_this()));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -302,9 +300,20 @@ bool IfStmt::equals(const Stmt* other) const {
          subStmts_[OK_Cond]->equals(otherPtr->subStmts_[OK_Cond].get()) &&
          subStmts_[OK_Then]->equals(otherPtr->subStmts_[OK_Then].get()) && sameElse;
 }
-
-void IfStmt::accept(ASTVisitor& visitor) {
-  visitor.visit(std::static_pointer_cast<IfStmt>(shared_from_this()));
+void IfStmt::replaceChildren(std::shared_ptr<Stmt> const& oldStmt,
+                             std::shared_ptr<Stmt> const& newStmt) {
+  if(hasElse()) {
+    for(std::shared_ptr<Stmt>& stmt : subStmts_) {
+      if(stmt == oldStmt)
+        stmt = newStmt;
+      return;
+    }
+  } else {
+    DAWN_ASSERT(oldStmt == subStmts_[0]);
+    subStmts_[0] = newStmt;
+    return;
+  }
+  DAWN_ASSERT_MSG((false), ("Expression not found"));
 }
 
 } // namespace dawn

@@ -363,7 +363,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
         DoMethod.addArg(interveralIt->second);
         DoMethod.startBody();
 
-        stencilBodyCGVisitor.setCurrentStencilFunction(stencilFun.get());
+        stencilBodyCGVisitor.setCurrentStencilFunction(stencilFun);
         stencilBodyCGVisitor.setIndent(DoMethod.getIndent());
         for(const auto& statementAccessesPair : stencilFun->getStatementAccessesPairs()) {
           statementAccessesPair->getStatement()->ASTStmt->accept(stencilBodyCGVisitor);
@@ -889,6 +889,8 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
   ppDefines.push_back(makeIfNotDefined("BOOST_RESULT_OF_USE_TR1", 1));
   ppDefines.push_back(makeIfNotDefined("BOOST_NO_CXX11_DECLTYPE", 1));
+  ppDefines.push_back(
+      makeIfNotDefined("GRIDTOOLS_CLANG_HALO_EXTEND", context_->getOptions().MaxHaloPoints));
 
   // If we need more than 20 elements in boost::mpl containers, we need to increment to the nearest
   // multiple of ten

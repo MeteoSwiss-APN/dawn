@@ -23,6 +23,9 @@ namespace dawn {
 ///
 /// @ingroup support
 struct SourceLocation {
+
+  enum class ReservedSL { SL_Generated = -2 };
+
   /// @name Constructors
   /// @{
   SourceLocation(int line, int column) : Line(line), Column(column) {}

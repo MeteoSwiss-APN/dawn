@@ -96,6 +96,14 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
       // Field declaration
       const auto& fields = stencilFun->getCalleeFields();
 
+      if(fields.empty()) {
+        DiagnosticsBuilder diag(DiagnosticsKind::Error, stencilInstantiation->getSIRStencil()->Loc);
+        diag << "no storages referenced in stencil '" << stencilInstantiation->getName()
+             << "', this would result in invalid gridtools code";
+        context_->getDiagnostics().report(diag);
+        return "";
+      }
+
       // list of template names of the stencil function declaration
       std::vector<std::string> stencilFnTemplates(fields.size());
       // TODO move to capture initialization with C++14
@@ -152,7 +160,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
                          << paramName << " = pw_" << paramName << ".dview_;";
         stencilFunMethod << "auto " << paramName << "_offsets = pw_" << paramName << ".offsets_;";
       }
-      stencilBodyCXXVisitor.setCurrentStencilFunction(stencilFun.get());
+      stencilBodyCXXVisitor.setCurrentStencilFunction(stencilFun);
       stencilBodyCXXVisitor.setIndent(stencilFunMethod.getIndent());
       for(const auto& statementAccessesPair : stencilFun->getStatementAccessesPairs()) {
         statementAccessesPair->getStatement()->ASTStmt->accept(stencilBodyCXXVisitor);

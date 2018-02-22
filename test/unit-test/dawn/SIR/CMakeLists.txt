@@ -16,6 +16,7 @@ dawn_add_unittest_impl(
   NAME DawnUnittestSIR
   SOURCES TestMain.cpp
           TestAST.cpp
+          TestASTVisitor.cpp
           TestSIR.cpp
           TestSIRSerializer.cpp
 )

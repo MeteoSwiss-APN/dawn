@@ -34,6 +34,7 @@ class BoundaryConditionDeclStmt;
 class IfStmt;
 
 class Expr;
+class NOPExpr;
 class UnaryOperator;
 class BinaryOperator;
 class AssignmentExpr;

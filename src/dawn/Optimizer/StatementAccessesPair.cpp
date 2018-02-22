@@ -64,15 +64,13 @@ static std::string toStringImpl(const StatementAccessesPair* pair,
 StatementAccessesPair::StatementAccessesPair(const std::shared_ptr<Statement>& statement)
     : statement_(statement), callerAccesses_(nullptr), calleeAccesses_(nullptr) {}
 
-const std::shared_ptr<Statement>& StatementAccessesPair::getStatement() const { return statement_; }
+std::shared_ptr<Statement> StatementAccessesPair::getStatement() const { return statement_; }
 
 void StatementAccessesPair::setStatement(const std::shared_ptr<Statement>& statement) {
   statement_ = statement;
 }
 
-const std::shared_ptr<Accesses>& StatementAccessesPair::getAccesses() const {
-  return callerAccesses_;
-}
+std::shared_ptr<Accesses> StatementAccessesPair::getAccesses() const { return callerAccesses_; }
 
 void StatementAccessesPair::setAccesses(const std::shared_ptr<Accesses>& accesses) {
   callerAccesses_ = accesses;
@@ -89,15 +87,13 @@ std::vector<std::shared_ptr<StatementAccessesPair>>& StatementAccessesPair::getC
 
 bool StatementAccessesPair::hasChildren() const { return !children_.empty(); }
 
-const std::shared_ptr<Accesses>& StatementAccessesPair::getCallerAccesses() const {
-  return getAccesses();
-}
+std::shared_ptr<Accesses> StatementAccessesPair::getCallerAccesses() const { return getAccesses(); }
 
 void StatementAccessesPair::setCallerAccesses(const std::shared_ptr<Accesses>& accesses) {
   return setAccesses(accesses);
 }
 
-const std::shared_ptr<Accesses>& StatementAccessesPair::getCalleeAccesses() const {
+std::shared_ptr<Accesses> StatementAccessesPair::getCalleeAccesses() const {
   return calleeAccesses_;
 }
 

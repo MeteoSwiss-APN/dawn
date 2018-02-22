@@ -20,6 +20,7 @@
           TestPassComputeStageExtents.cpp
           TestPassSetBoundaryCondition.cpp
           TestFieldAccessIntervals.cpp
+          TestTemporaryToFunction.cpp
     DEPENDS DawnUnittestStatic DawnStatic DawnCStatic ${DAWN_EXTERNAL_LIBRARIES} gtest
     OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/unittest
     GTEST_ARGS "${CMAKE_CURRENT_LIST_DIR}" "--gtest_color=yes"

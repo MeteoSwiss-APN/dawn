@@ -54,7 +54,8 @@ add_custom_target(DawnDocsSphinxHtml
            basics.rst
            coding.rst
            index.rst 
-           sir.rst
+           hir.rst
+           hir_design.rst
 )
 add_dependencies(DawnDocsSphinxHtml DawnDocsCMakeModules DawnDocsDoxygenHtml)
 

@@ -45,7 +45,8 @@ public:
   }
 
   virtual void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
-    StencilFunctionInstantiation* fun = instantiation_->getStencilFunctionInstantiation(expr);
+    std::shared_ptr<StencilFunctionInstantiation> fun =
+        instantiation_->getStencilFunctionInstantiation(expr);
     fun->renameCallerAccessID(oldAccessID_, newAccessID_);
     ASTVisitorForwarding::visit(expr);
   }

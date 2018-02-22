@@ -30,13 +30,13 @@ class UnusedFieldVisitor : public ASTVisitorForwarding {
   int AccessID_;
   bool fieldIsUnused_;
   const std::shared_ptr<StencilInstantiation>& instantiation_;
-  std::stack<StencilFunctionInstantiation*> functionInstantiationStack_;
+  std::stack<std::shared_ptr<const StencilFunctionInstantiation>> functionInstantiationStack_;
 
 public:
   UnusedFieldVisitor(int AccessID, const std::shared_ptr<StencilInstantiation>& instantiation)
       : AccessID_(AccessID), fieldIsUnused_(false), instantiation_(instantiation) {}
 
-  StencilFunctionInstantiation*
+  std::shared_ptr<const StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) {
     if(!functionInstantiationStack_.empty())
       return functionInstantiationStack_.top()->getStencilFunctionInstantiation(expr);
@@ -44,7 +44,8 @@ public:
   }
 
   void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
-    StencilFunctionInstantiation* funCall = getStencilFunctionInstantiation(expr);
+    std::shared_ptr<const StencilFunctionInstantiation> funCall =
+        getStencilFunctionInstantiation(expr);
 
     functionInstantiationStack_.push(funCall);
     fieldIsUnused_ |= funCall->isFieldUnused(AccessID_);
