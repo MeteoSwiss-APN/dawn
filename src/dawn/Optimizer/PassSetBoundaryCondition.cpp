@@ -288,10 +288,8 @@ bool PassSetBoundaryCondition::run(
                 stmt->accept(visitor);
                 std::vector<std::shared_ptr<Stmt>> stencilCallWithBC_;
                 stencilCallWithBC_.emplace_back(IDtoBCpair->second);
-                if(visitor.getStencilCallsToReplace().size() > 0) {
-                  stencilCallWithBC_.emplace_back(visitor.getStencilCallsToReplace()[0]);
-                }
                 for(auto& oldStencilCall : visitor.getStencilCallsToReplace()) {
+                  stencilCallWithBC_.emplace_back(oldStencilCall);
                   auto newBlockStmt = std::make_shared<BlockStmt>();
                   std::copy(stencilCallWithBC_.begin(), stencilCallWithBC_.end(),
                             std::back_inserter(newBlockStmt->getStatements()));
@@ -303,6 +301,7 @@ bool PassSetBoundaryCondition::run(
                     // Recursively replace the statement
                     replaceOldStmtWithNewStmtInStmt(stmt, oldStencilCall, newBlockStmt);
                   }
+                  stencilCallWithBC_.pop_back();
                 }
               }
 
