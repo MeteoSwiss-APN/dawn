@@ -91,8 +91,15 @@ public:
       : instantiation_(instantiation), StencilID_(StencilID) {}
 
   void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
-    if(instantiation_->getStencilIDFromStmt(stmt) == StencilID_)
+    auto iter = std::find_if(
+        instantiation_->getStencilCallToStencilIDMap().begin(),
+        instantiation_->getStencilCallToStencilIDMap().end(),
+        [this, stmt](const std::pair<std::shared_ptr<StencilCallDeclStmt>, int>& pair) {
+          return pair.first == stmt && pair.second == StencilID_;
+        });
+    if(iter != instantiation_->getStencilCallToStencilIDMap().end()) {
       stencilCallsToReplace_.emplace_back(stmt);
+    }
   }
 
   std::vector<std::shared_ptr<StencilCallDeclStmt>>& getStencilCallsToReplace() {
@@ -104,7 +111,8 @@ public:
 
 PassSetBoundaryCondition::PassSetBoundaryCondition() : Pass("PassSetBoundaryCondition") {}
 
-bool PassSetBoundaryCondition::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
+bool PassSetBoundaryCondition::run(
+    const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
 
   // check if we need to run this pass
   if(stencilInstantiation->getStencils().size() == 1) {
@@ -259,13 +267,14 @@ bool PassSetBoundaryCondition::run(const std::shared_ptr<StencilInstantiation>& 
               stencilInstantiation->insertBoundaryConditiontoExtentPair(IDtoBCpair->second,
                                                                         fullExtents);
 
-              // check if this stencil is called and get its StencilCallDeclStmt (the one to
-              // replace)
-              auto stencilcallstmt =
-                  stencilInstantiation->getIDToStencilCallMap().find(stencil.getStencilID());
-              if(stencilcallstmt == stencilInstantiation->getIDToStencilCallMap().end()) {
-                DAWN_ASSERT_MSG(false, "Stencil Triggering the Boundary Condition is not called");
-              }
+              auto it =
+                  std::find_if(stencilInstantiation->getStencils().begin(),
+                               stencilInstantiation->getStencils().end(),
+                               [&stencil](const std::shared_ptr<Stencil>& storedStencil) {
+                                 return storedStencil->getStencilID() == stencil.getStencilID();
+                               });
+              DAWN_ASSERT_MSG(it != stencilInstantiation->getStencils().end(),
+                              "Stencil Triggering the Boundary Condition is not called");
 
               // Find all the calls to this stencil before which we need to apply the boundary
               // condition. These calls are then replaced by {boundary_condition, stencil_call}
@@ -279,9 +288,8 @@ bool PassSetBoundaryCondition::run(const std::shared_ptr<StencilInstantiation>& 
                 stmt->accept(visitor);
                 std::vector<std::shared_ptr<Stmt>> stencilCallWithBC_;
                 stencilCallWithBC_.emplace_back(IDtoBCpair->second);
-                stencilCallWithBC_.emplace_back(stencilcallstmt->second);
-
                 for(auto& oldStencilCall : visitor.getStencilCallsToReplace()) {
+                  stencilCallWithBC_.emplace_back(oldStencilCall);
                   auto newBlockStmt = std::make_shared<BlockStmt>();
                   std::copy(stencilCallWithBC_.begin(), stencilCallWithBC_.end(),
                             std::back_inserter(newBlockStmt->getStatements()));
@@ -293,6 +301,7 @@ bool PassSetBoundaryCondition::run(const std::shared_ptr<StencilInstantiation>& 
                     // Recursively replace the statement
                     replaceOldStmtWithNewStmtInStmt(stmt, oldStencilCall, newBlockStmt);
                   }
+                  stencilCallWithBC_.pop_back();
                 }
               }
 
