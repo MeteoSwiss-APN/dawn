@@ -91,11 +91,14 @@ public:
       : instantiation_(instantiation), StencilID_(StencilID) {}
 
   void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
-    auto it = instantiation_->getStencilCallToStencilIDMap().find(stmt);
-    if(it != instantiation_->getStencilCallToStencilIDMap().end()) {
-      if(it->second == StencilID_) {
-        stencilCallsToReplace_.emplace_back(stmt);
-      }
+    auto iter = std::find_if(
+        instantiation_->getStencilCallToStencilIDMap().begin(),
+        instantiation_->getStencilCallToStencilIDMap().end(),
+        [this, stmt](const std::pair<std::shared_ptr<StencilCallDeclStmt>, int>& pair) {
+          return pair.first == stmt && pair.second == StencilID_;
+        });
+    if(iter != instantiation_->getStencilCallToStencilIDMap().end()) {
+      stencilCallsToReplace_.emplace_back(stmt);
     }
   }
 
@@ -264,14 +267,13 @@ bool PassSetBoundaryCondition::run(
               stencilInstantiation->insertBoundaryConditiontoExtentPair(IDtoBCpair->second,
                                                                         fullExtents);
 
-              bool checkStencilCalled = false;
-              for(auto a : stencilInstantiation->getStencils()) {
-                if(a->getStencilID() == stencil.getStencilID()) {
-                  checkStencilCalled = true;
-                  break;
-                }
-              }
-              DAWN_ASSERT_MSG(checkStencilCalled,
+              auto it =
+                  std::find_if(stencilInstantiation->getStencils().begin(),
+                               stencilInstantiation->getStencils().end(),
+                               [&stencil](const std::shared_ptr<Stencil>& storedStencil) {
+                                 return storedStencil->getStencilID() == stencil.getStencilID();
+                               });
+              DAWN_ASSERT_MSG(it != stencilInstantiation->getStencils().end(),
                               "Stencil Triggering the Boundary Condition is not called");
 
               // Find all the calls to this stencil before which we need to apply the boundary
@@ -303,8 +305,6 @@ bool PassSetBoundaryCondition::run(
                   }
                 }
               }
-
-              std::cout << "here2" << std::endl;
 
               // The boundary condition is applied, the field is clean again
               dirtyFields.erase(originalID);
