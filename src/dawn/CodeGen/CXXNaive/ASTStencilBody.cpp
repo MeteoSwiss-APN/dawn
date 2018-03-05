@@ -183,20 +183,7 @@ void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
         // parse the argument if it is a field. Ignore offsets/directions,
         // since they are "inlined" in the code generation of the function
         if(argStencilFn.isArgField(argIdx)) {
-          Array3i offset = expr->getOffset();
-
-          // parse the offsets of the field access, that should be used to offset the evaluation
-          // of gn(), i.e. off1+2 in the example
-          for(auto idx : expr->getArgumentMap()) {
-            if(idx != -1) {
-              DAWN_ASSERT_MSG((argStencilFn.isArgOffset(idx)),
-                              "index identified by argument map is not an offset arg");
-              int dim = argStencilFn.getCallerOffsetOfArgOffset(idx)[0];
-              int off = argStencilFn.getCallerOffsetOfArgOffset(idx)[1];
-              DAWN_ASSERT(dim < offset.size());
-              offset[dim] = off;
-            }
-          }
+          Array3i offset = currentFunction_->evalOffsetOfFieldAccessExpr(expr, false);
 
           std::string accessName =
               currentFunction_->getArgNameFromFunctionCall(argStencilFn.getName());
