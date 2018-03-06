@@ -298,7 +298,7 @@ TEST(IntervalTest, PartitionIntervals2) {
   auto partIntervals = Interval::computePartition(std::vector<Interval>{I1, I2});
 
   EXPECT_TRUE((std::unordered_set<Interval>(partIntervals.begin(), partIntervals.end()) ==
-               std::unordered_set<Interval>{Interval(1, 2), Interval(3, 3), Interval(4, 5)}));
+               std::unordered_set<Interval>{Interval(1, 1), Interval(2, 3), Interval(4, 5)}));
 }
 
 TEST(IntervalTest, PartitionIntervals3) {
@@ -308,7 +308,7 @@ TEST(IntervalTest, PartitionIntervals3) {
   auto partIntervals = Interval::computePartition(std::vector<Interval>{I1, I2});
 
   EXPECT_TRUE((std::unordered_set<Interval>(partIntervals.begin(), partIntervals.end()) ==
-               std::unordered_set<Interval>{Interval(1, 2), Interval(3, 5), Interval(6, 9)}));
+               std::unordered_set<Interval>{Interval(1, 1), Interval(2, 5), Interval(6, 9)}));
 }
 
 TEST(IntervalTest, PartitionIntervals4) {
@@ -319,7 +319,7 @@ TEST(IntervalTest, PartitionIntervals4) {
   auto partIntervals = Interval::computePartition(std::vector<Interval>{I1, I2, I3});
 
   EXPECT_TRUE((std::unordered_set<Interval>(partIntervals.begin(), partIntervals.end()) ==
-               std::unordered_set<Interval>{Interval(1, 2), Interval(3, 4), Interval(5, 5),
+               std::unordered_set<Interval>{Interval(1, 1), Interval(2, 3), Interval(4, 5),
                                             Interval(6, 7), Interval(8, 9)}));
 }
 
