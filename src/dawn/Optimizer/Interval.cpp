@@ -162,6 +162,7 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
 
   if(newIntervals.size() > 1) {
     int cnt = 0;
+    bool change = false;
     for(auto curLowIt = newIntervals.begin(), curTopIt = std::next(newIntervals.begin());
         curTopIt != newIntervals.end();) {
       // get iterators of two contiguous intervals
@@ -184,6 +185,8 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
 
         *curLowIt = splitLowInterval;
         *curTopIt = splitHighInterval;
+
+        change = true;
       } else if(curTopInterval.contains(curLowInterval)) {
         int midLevel = curLowInterval.upperBound();
         int topLevel = curTopInterval.upperBound();
@@ -193,6 +196,8 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
 
         *curLowIt = splitLowInterval;
         *curTopIt = splitHighInterval;
+
+        change = true;
       } else if(curLowInterval.contains(curTopInterval) &&
                 (curLowInterval.upperBound() == curTopInterval.upperBound())) {
         int midLevel = curTopInterval.lowerBound() - 1;
@@ -203,6 +208,8 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
 
         *curLowIt = splitLowInterval;
         *curTopIt = splitHighInterval;
+
+        change = true;
       }
       // if the lower one competely covers the higher one, we need three intervals: the lower one,
       // the intersection and the top interval
@@ -214,37 +221,36 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
         *curLowIt = splitLowInterval;
         *curTopIt = splitMidInterval;
         newIntervals.insert(curTopIt, splitHighInterval);
-        std::sort(
-            newIntervals.begin(), newIntervals.end(),
-            [](Interval const& a, Interval const& b) { return a.lowerBound() < b.lowerBound(); });
 
-        curLowIt = newIntervals.begin() + cnt;
-        curTopIt = std::next(curLowIt);
-        cnt++;
-
+        change = true;
       }
       // otherwise we will generate three intervals: the intersection and the two disjoint intervals
       // of the XOR
       else if(curLowInterval.overlaps(curTopInterval)) {
-        Interval splitLowInterval(curLowInterval.lowerBound(), curTopInterval.lowerBound());
-        Interval splitMidInterval(curTopInterval.lowerBound() + 1, curLowInterval.upperBound());
+        Interval splitLowInterval(curLowInterval.lowerBound(), curTopInterval.lowerBound() - 1);
+        Interval splitMidInterval(curTopInterval.lowerBound(), curLowInterval.upperBound());
         Interval splitHighInterval(curLowInterval.upperBound() + 1, curTopInterval.upperBound());
 
         *curLowIt = splitLowInterval;
         *curTopIt = splitMidInterval;
         newIntervals.insert(curTopIt, splitHighInterval);
-        std::sort(
-            newIntervals.begin(), newIntervals.end(),
-            [](Interval const& a, Interval const& b) { return a.lowerBound() < b.lowerBound(); });
-
-        curLowIt = newIntervals.begin() + cnt;
-        curTopIt = std::next(curLowIt);
-        cnt++;
+        change = true;
       }
 
-      curLowIt = curTopIt;
-      curTopIt++;
-      cnt++;
+      if(change){
+          std::sort(
+              newIntervals.begin(), newIntervals.end(),
+              [](Interval const& a, Interval const& b) { return a.lowerBound() < b.lowerBound(); });
+          curLowIt = newIntervals.begin();
+          curTopIt = std::next(curLowIt);
+          cnt=0;
+          change = false;
+      }
+      else{
+          curLowIt = curTopIt;
+          curTopIt++;
+          cnt++;
+      }
     }
   }
   return newIntervals;
