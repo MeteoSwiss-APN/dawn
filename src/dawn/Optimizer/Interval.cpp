@@ -178,21 +178,20 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
       // intervals
       else if(curLowInterval.contains(curTopInterval) &&
               (curLowInterval.lowerBound() == curTopInterval.lowerBound())) {
-        int midLevel = curTopInterval.upperBound();
-        int topLevel = curLowInterval.upperBound();
-        Interval splitHighInterval(curLowInterval.lowerBound(), midLevel);
-        Interval splitLowInterval(midLevel + 1, topLevel);
+        Interval splitHighInterval(curLowInterval.lowerLevel(), curTopInterval.upperLevel(),
+                                   curLowInterval.lowerOffset(), curTopInterval.upperOffset());
+        Interval splitLowInterval(curTopInterval.upperLevel(), curLowInterval.upperLevel(),
+                                  curTopInterval.upperOffset() + 1, curLowInterval.upperOffset());
 
         *curLowIt = splitLowInterval;
         *curTopIt = splitHighInterval;
 
         change = true;
       } else if(curTopInterval.contains(curLowInterval)) {
-        int midLevel = curLowInterval.upperBound();
-        int topLevel = curTopInterval.upperBound();
-
-        Interval splitLowInterval(curLowInterval.lowerBound(), midLevel);
-        Interval splitHighInterval(midLevel + 1, topLevel);
+        Interval splitLowInterval(curLowInterval.lowerLevel(), curLowInterval.upperLevel(),
+                                  curLowInterval.lowerOffset(), curLowInterval.upperOffset());
+        Interval splitHighInterval(curLowInterval.upperLevel(), curTopInterval.upperLevel(),
+                                   curLowInterval.upperOffset() + 1, curTopInterval.upperOffset());
 
         *curLowIt = splitLowInterval;
         *curTopIt = splitHighInterval;
@@ -200,11 +199,10 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
         change = true;
       } else if(curLowInterval.contains(curTopInterval) &&
                 (curLowInterval.upperBound() == curTopInterval.upperBound())) {
-        int midLevel = curTopInterval.lowerBound() - 1;
-        int topLevel = curTopInterval.upperBound();
-
-        Interval splitLowInterval(curLowInterval.lowerBound(), midLevel);
-        Interval splitHighInterval(midLevel + 1, topLevel);
+        Interval splitLowInterval(curLowInterval.lowerLevel(), curTopInterval.lowerLevel(),
+                                  curLowInterval.lowerOffset(), curTopInterval.lowerOffset() - 1);
+        Interval splitHighInterval(curTopInterval.lowerLevel(), curTopInterval.upperLevel(),
+                                   curTopInterval.lowerOffset(), curTopInterval.upperOffset());
 
         *curLowIt = splitLowInterval;
         *curTopIt = splitHighInterval;
@@ -214,9 +212,12 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
       // if the lower one competely covers the higher one, we need three intervals: the lower one,
       // the intersection and the top interval
       else if(curLowInterval.contains(curTopInterval)) {
-        Interval splitLowInterval(curLowInterval.lowerBound(), curTopInterval.lowerBound() - 1);
-        Interval splitMidInterval(curTopInterval.lowerBound(), curTopInterval.upperBound());
-        Interval splitHighInterval(curTopInterval.upperBound() + 1, curLowInterval.upperBound());
+        Interval splitLowInterval(curLowInterval.lowerLevel(), curTopInterval.lowerLevel(),
+                                  curLowInterval.lowerOffset(), curTopInterval.lowerOffset() - 1);
+        Interval splitMidInterval(curTopInterval.lowerLevel(), curTopInterval.upperLevel(),
+                                  curTopInterval.lowerOffset(), curTopInterval.upperOffset());
+        Interval splitHighInterval(curTopInterval.upperLevel(), curLowInterval.upperLevel(),
+                                   curTopInterval.upperOffset() + 1, curLowInterval.upperOffset());
 
         *curLowIt = splitLowInterval;
         *curTopIt = splitMidInterval;
@@ -227,9 +228,12 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
       // otherwise we will generate three intervals: the intersection and the two disjoint intervals
       // of the XOR
       else if(curLowInterval.overlaps(curTopInterval)) {
-        Interval splitLowInterval(curLowInterval.lowerBound(), curTopInterval.lowerBound() - 1);
-        Interval splitMidInterval(curTopInterval.lowerBound(), curLowInterval.upperBound());
-        Interval splitHighInterval(curLowInterval.upperBound() + 1, curTopInterval.upperBound());
+        Interval splitLowInterval(curLowInterval.lowerLevel(), curTopInterval.lowerLevel(),
+                                  curLowInterval.lowerOffset(), curTopInterval.lowerOffset() - 1);
+        Interval splitMidInterval(curTopInterval.lowerLevel(), curLowInterval.upperLevel(),
+                                  curTopInterval.lowerOffset(), curLowInterval.upperOffset());
+        Interval splitHighInterval(curLowInterval.upperLevel(), curTopInterval.upperLevel(),
+                                   curLowInterval.upperOffset() + 1, curTopInterval.upperOffset());
 
         *curLowIt = splitLowInterval;
         *curTopIt = splitMidInterval;
@@ -237,19 +241,18 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
         change = true;
       }
 
-      if(change){
-          std::sort(
-              newIntervals.begin(), newIntervals.end(),
-              [](Interval const& a, Interval const& b) { return a.lowerBound() < b.lowerBound(); });
-          curLowIt = newIntervals.begin();
-          curTopIt = std::next(curLowIt);
-          cnt=0;
-          change = false;
-      }
-      else{
-          curLowIt = curTopIt;
-          curTopIt++;
-          cnt++;
+      if(change) {
+        std::sort(
+            newIntervals.begin(), newIntervals.end(),
+            [](Interval const& a, Interval const& b) { return a.lowerBound() < b.lowerBound(); });
+        curLowIt = newIntervals.begin();
+        curTopIt = std::next(curLowIt);
+        cnt = 0;
+        change = false;
+      } else {
+        curLowIt = curTopIt;
+        curTopIt++;
+        cnt++;
       }
     }
   }
