@@ -630,20 +630,19 @@ void StencilInstantiation::setAccessIDNamePairOfGlobalVariable(int AccessID,
   GlobalVariableAccessIDSet_.insert(AccessID);
 }
 
-void StencilInstantiation::removeAccessID(int AccesssID) {
-  if(NameToAccessIDMap_.count(AccessIDToNameMap_[AccesssID]))
-    NameToAccessIDMap_.erase(AccessIDToNameMap_[AccesssID]);
+void StencilInstantiation::removeAccessID(int AccessID) {
+  if(NameToAccessIDMap_.count(AccessIDToNameMap_[AccessID]))
+    NameToAccessIDMap_.erase(AccessIDToNameMap_[AccessID]);
 
-  AccessIDToNameMap_.erase(AccesssID);
-  FieldAccessIDSet_.erase(AccesssID);
-  TemporaryFieldAccessIDSet_.erase(AccesssID);
+  AccessIDToNameMap_.erase(AccessID);
+  FieldAccessIDSet_.erase(AccessID);
+  TemporaryFieldAccessIDSet_.erase(AccessID);
 
-  auto fieldVersionIt = FieldVersionsMap_.find(AccesssID);
-  if(fieldVersionIt != FieldVersionsMap_.end()) {
-    std::vector<int>& versions = *fieldVersionIt->second;
-    versions.erase(
-        std::remove_if(versions.begin(), versions.end(), [&](int AID) { return AID == AccesssID; }),
-        versions.end());
+  if(variableVersions_.hasVariableMultipleVersions(AccessID)) {
+    auto versions = variableVersions_.getVersions(AccessID);
+    versions->erase(std::remove_if(versions->begin(), versions->end(),
+                                   [&](int AID) { return AID == AccessID; }),
+                    versions->end());
   }
 }
 
@@ -707,8 +706,9 @@ const sir::Value& StencilInstantiation::getGlobalVariableValue(const std::string
 }
 
 ArrayRef<int> StencilInstantiation::getFieldVersions(int AccessID) const {
-  auto it = FieldVersionsMap_.find(AccessID);
-  return it != FieldVersionsMap_.end() ? ArrayRef<int>(*it->second) : ArrayRef<int>{};
+  return variableVersions_.hasVariableMultipleVersions(AccessID)
+             ? ArrayRef<int>(*(variableVersions_.getVersions(AccessID)))
+             : ArrayRef<int>{};
 }
 
 int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil, int curStageIdx,
@@ -717,27 +717,26 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
   int newAccessID = nextUID();
 
   if(isField(AccessID)) {
-    auto it = FieldVersionsMap_.find(AccessID);
-    if(it != FieldVersionsMap_.end()) {
+    if(variableVersions_.hasVariableMultipleVersions(AccessID)) {
       // Field is already multi-versioned, append a new version
-      std::vector<int>& versions = *it->second;
+      auto versions = variableVersions_.getVersions(AccessID);
 
       // Set the second to last field to be a temporary (only the first and the last field will be
       // real storages, all other versions will be temporaries)
-      int lastAccessID = versions.back();
+      int lastAccessID = versions->back();
       TemporaryFieldAccessIDSet_.insert(lastAccessID);
       AllocatedFieldAccessIDSet_.erase(lastAccessID);
 
       // The field with version 0 contains the original name
-      const std::string& originalName = getNameFromAccessID(versions.front());
+      const std::string& originalName = getNameFromAccessID(versions->front());
 
       // Register the new field
-      setAccessIDNamePairOfField(newAccessID, originalName + "_" + std::to_string(versions.size()),
+      setAccessIDNamePairOfField(newAccessID, originalName + "_" + std::to_string(versions->size()),
                                  false);
       AllocatedFieldAccessIDSet_.insert(newAccessID);
 
-      versions.push_back(newAccessID);
-      FieldVersionsMap_.emplace(newAccessID, it->second);
+      versions->push_back(newAccessID);
+      variableVersions_.insert(newAccessID, versions);
 
     } else {
       const std::string& originalName = getNameFromAccessID(AccessID);
@@ -750,22 +749,21 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
       setAccessIDNamePairOfField(newAccessID, originalName + "_1", false);
       AllocatedFieldAccessIDSet_.insert(newAccessID);
 
-      FieldVersionsMap_.emplace(AccessID, versionsVecPtr);
-      FieldVersionsMap_.emplace(newAccessID, versionsVecPtr);
+      variableVersions_.insert(AccessID, versionsVecPtr);
+      variableVersions_.insert(newAccessID, versionsVecPtr);
     }
   } else {
-    auto it = VariableVersionsMap_.find(AccessID);
-    if(it != VariableVersionsMap_.end()) {
+    if(variableVersions_.hasVariableMultipleVersions(AccessID)) {
       // Variable is already multi-versioned, append a new version
-      std::vector<int>& versions = *it->second;
+      auto versions = variableVersions_.getVersions(AccessID);
 
       // The variable with version 0 contains the original name
-      const std::string& originalName = getNameFromAccessID(versions.front());
+      const std::string& originalName = getNameFromAccessID(versions->front());
 
       // Register the new variable
-      setAccessIDNamePair(newAccessID, originalName + "_" + std::to_string(versions.size()));
-      versions.push_back(newAccessID);
-      VariableVersionsMap_.emplace(newAccessID, it->second);
+      setAccessIDNamePair(newAccessID, originalName + "_" + std::to_string(versions->size()));
+      versions->push_back(newAccessID);
+      variableVersions_.insert(newAccessID, versions);
 
     } else {
       const std::string& originalName = getNameFromAccessID(AccessID);
@@ -775,8 +773,8 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
       *versionsVecPtr = {AccessID, newAccessID};
 
       setAccessIDNamePair(newAccessID, originalName + "_1");
-      VariableVersionsMap_.emplace(AccessID, versionsVecPtr);
-      VariableVersionsMap_.emplace(newAccessID, versionsVecPtr);
+      variableVersions_.insert(AccessID, versionsVecPtr);
+      variableVersions_.insert(newAccessID, versionsVecPtr);
     }
   }
 
