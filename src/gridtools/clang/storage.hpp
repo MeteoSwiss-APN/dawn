@@ -73,9 +73,9 @@
 
 // Include gridtools
 #ifndef GRIDTOOLS_CLANG_NO_INCLUDE
-#include <stencil-composition/stencil-composition.hpp>
-#include <stencil-composition/stencil-functions/call_interfaces.hpp>
-#include <storage/storage-facility.hpp>
+#include <gridtools/stencil-composition/stencil-composition.hpp>
+#include <gridtools/stencil-composition/stencil-functions/call_interfaces.hpp>
+#include <gridtools/storage/storage-facility.hpp>
 #endif
 
 #include "gridtools/clang/storage_runtime.hpp"
