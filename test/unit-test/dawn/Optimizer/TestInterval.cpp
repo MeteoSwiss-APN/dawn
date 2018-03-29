@@ -19,27 +19,6 @@
 using namespace dawn;
 
 namespace {
-template <typename T>
-bool setcomparison(const std::unordered_set<T>& lhs, const std::unordered_set<T>& rhs) {
-  if(lhs.size() != rhs.size())
-    return false;
-  bool found;
-  for(const auto& lhsElement : lhs) {
-    found = false;
-    for(const auto& rhsElement : rhs) {
-      if(lhsElement == rhsElement) {
-        found = true;
-        break;
-      }
-    }
-    if(found)
-      continue;
-    else
-      return false;
-  }
-
-  return true;
-}
 
 TEST(IntervalTest, Comparison) {
   Interval I0(0, 5);
@@ -300,7 +279,7 @@ TEST(IntervalTest, PartitionIntervals0) {
   std::unordered_set<Interval> solution(partIntervals.begin(), partIntervals.end());
   std::unordered_set<Interval> reference{Interval(1, 3), Interval(4, 5)};
 
-  EXPECT_TRUE(setcomparison(reference, solution));
+  EXPECT_TRUE((reference ==solution));
 }
 
 TEST(IntervalTest, PartitionIntervals1) {
@@ -311,7 +290,7 @@ TEST(IntervalTest, PartitionIntervals1) {
   std::unordered_set<Interval> solution(partIntervals.begin(), partIntervals.end());
   std::unordered_set<Interval> reference{Interval(1, 5)};
 
-  EXPECT_TRUE(setcomparison(reference, solution));
+  EXPECT_TRUE((reference == solution));
 }
 
 TEST(IntervalTest, PartitionIntervals2) {
@@ -322,7 +301,7 @@ TEST(IntervalTest, PartitionIntervals2) {
   std::unordered_set<Interval> solution(partIntervals.begin(), partIntervals.end());
   std::unordered_set<Interval> reference{Interval(1, 1), Interval(2, 3), Interval(4, 5)};
 
-  EXPECT_TRUE(setcomparison(reference, solution));
+  EXPECT_TRUE((reference == solution));
 }
 
 TEST(IntervalTest, PartitionIntervals3) {
@@ -333,7 +312,7 @@ TEST(IntervalTest, PartitionIntervals3) {
   std::unordered_set<Interval> solution(partIntervals.begin(), partIntervals.end());
   std::unordered_set<Interval> reference{Interval(1, 1), Interval(2, 5), Interval(6, 9)};
 
-  EXPECT_TRUE(setcomparison(reference, solution));
+  EXPECT_TRUE((reference == solution));
 }
 
 TEST(IntervalTest, PartitionIntervals4) {
@@ -346,7 +325,7 @@ TEST(IntervalTest, PartitionIntervals4) {
   std::unordered_set<Interval> reference{Interval(1, 1), Interval(2, 3), Interval(4, 5),
                                          Interval(6, 7), Interval(8, 9)};
 
-  EXPECT_TRUE(setcomparison(reference, solution));
+  EXPECT_TRUE((reference == solution));
 }
 
 TEST(IntervalTest, Construction) {
