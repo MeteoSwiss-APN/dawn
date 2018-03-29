@@ -622,9 +622,9 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     auto getLevelSize = [](int level) -> std::string {
       switch(level) {
       case sir::Interval::Start:
-        return "dom.kminus()-1";
+        return "dom.kminus()";
       case sir::Interval::End:
-        return "dom.ksize() == 0 ? 0 : dom.ksize() - dom.kplus()-1";
+        return "dom.ksize() == 0 ? 0 : dom.ksize() - dom.kplus()";
       default:
         return std::to_string(level);
       }
