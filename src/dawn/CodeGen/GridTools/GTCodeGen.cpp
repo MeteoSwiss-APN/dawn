@@ -626,7 +626,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
       case sir::Interval::End:
         return "dom.ksize() == 0 ? 0 : dom.ksize() - dom.kplus()";
       default:
-        return std::to_string(level);
+        return std::to_string(level + 1);
       }
     };
 
