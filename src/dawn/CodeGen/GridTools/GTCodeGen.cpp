@@ -254,9 +254,10 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
           (level == sir::Interval::End ? maxLevel
                                        : std::distance(intervalDefinitions.Levels.begin(),
                                                        intervalDefinitions.Levels.find(level)));
-      int gt_offset = (offset <= 0 ? offset - 1 : offset);
-      if((gt_offset == -1) && (gt_level == 0))
-        gt_offset = 1;
+      int gt_offset = (level == sir::Interval::End) ? offset + 1 : offset;
+      //      (offset <= 0 ? offset - 1 : offset);
+      //      if((gt_offset == -1) && (gt_level == 0))
+      //        gt_offset = 1;
       tss << "gridtools::level<" << gt_level << ", " << gt_offset << ">";
 
       return tss.str();
