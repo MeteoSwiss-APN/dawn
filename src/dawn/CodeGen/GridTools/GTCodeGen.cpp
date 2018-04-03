@@ -254,10 +254,8 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
           (level == sir::Interval::End ? maxLevel
                                        : std::distance(intervalDefinitions.Levels.begin(),
                                                        intervalDefinitions.Levels.find(level)));
-      int gt_offset = (level == sir::Interval::End) ? offset + 1 : offset;
-      //      (offset <= 0 ? offset - 1 : offset);
-      //      if((gt_offset == -1) && (gt_level == 0))
-      //        gt_offset = 1;
+      int gt_offset =
+          (level != sir::Interval::End) ? offset + 1 : (offset <= 0) ? offset - 1 : offset;
       tss << "gridtools::level<" << gt_level << ", " << gt_offset << ">";
 
       return tss.str();
@@ -280,7 +278,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     StencilClass.addTypeDef(Twine("axis_") + StencilName)
         .addType(c_gt() + "interval")
         .addTemplates(makeArrayRef(
-            {makeLevelName(axis.lowerLevel(), axis.lowerOffset() - 1),
+            {makeLevelName(axis.lowerLevel(), axis.lowerOffset() - 2),
              makeLevelName(axis.upperLevel(),
                            (axis.upperOffset() + 1) == 0 ? 1 : (axis.upperOffset() + 1))}));
 
@@ -627,7 +625,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
       case sir::Interval::End:
         return "dom.ksize() == 0 ? 0 : dom.ksize() - dom.kplus()";
       default:
-        return std::to_string(level + 1);
+        return std::to_string(level);
       }
     };
 
