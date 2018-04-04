@@ -73,6 +73,7 @@ mchbuild_set_download_dir()
 
 mchbuild_find_package(
   PACKAGE dawn
+  NO_DEFAULT_PATH
   REQUIRED_VARS dawn_DIR
   ADDITIONAL
     DOWNLOAD_DIR ${MCHBUILD_DOWNLOAD_DIR}
@@ -109,6 +110,7 @@ endif()
 
 mchbuild_find_package(
   PACKAGE gtclang
+  NO_DEFAULT_PATH
   FORWARD_VARS 
     BINARY_DIR gtclang_binary_dir
   DEPENDS ${gtclang_dependencies}
