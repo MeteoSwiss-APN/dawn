@@ -160,8 +160,12 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
   std::sort(newIntervals.begin(), newIntervals.end(),
             [](Interval const& a, Interval const& b) { return a.lowerBound() < b.lowerBound(); });
 
+  // When we have more than one interval, we sort them based on their lower bounds and evaluate
+  // neighbouring pairs
   if(newIntervals.size() > 1) {
     int cnt = 0;
+    bool change = false;
+    // we start the loop from the interval with the smallest lower bound and iterate over them
     for(auto curLowIt = newIntervals.begin(), curTopIt = std::next(newIntervals.begin());
         curTopIt != newIntervals.end();) {
       // get iterators of two contiguous intervals
@@ -174,38 +178,126 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
         continue;
       }
       // if one interval is contained in the other hand, we split them in two non overlapping
-      // intervals
-      else if(curLowInterval.contains(curTopInterval) || curTopInterval.contains(curLowInterval)) {
-        int midLevel = std::min(curLowInterval.upperBound(), curTopInterval.upperBound());
-        int topLevel = std::max(curLowInterval.upperBound(), curTopInterval.upperBound());
-        Interval splitLowInterval(curLowInterval.lowerBound(), midLevel);
-        Interval splitHighInterval(midLevel + 1, topLevel);
+      // intervals depending on how the contains are:
+      // [a---------b]
+      // [a--c]
+      // ====>>
+      // [a--c]
+      //      [c+1--b]
+      else if(curLowInterval.contains(curTopInterval) &&
+              (curLowInterval.lowerBound() == curTopInterval.lowerBound())) {
+        Interval splitHighInterval(curLowInterval.lowerLevel(), curTopInterval.upperLevel(),
+                                   curLowInterval.lowerOffset(), curTopInterval.upperOffset());
+        Interval splitLowInterval(curTopInterval.upperLevel(), curLowInterval.upperLevel(),
+                                  curTopInterval.upperOffset() + 1, curLowInterval.upperOffset());
 
         *curLowIt = splitLowInterval;
         *curTopIt = splitHighInterval;
+
+        change = true;
       }
-      // otherwise we will generate three intervals: the intersection and the two disjoint intervals
-      // of the XOR
-      else if(curLowInterval.overlaps(curTopInterval)) {
-        Interval splitLowInterval(curLowInterval.lowerBound(), curTopInterval.lowerBound());
-        Interval splitMidInterval(curTopInterval.lowerBound() + 1, curLowInterval.upperBound());
-        Interval splitHighInterval(curLowInterval.upperBound() + 1, curTopInterval.upperBound());
+      // [a----b]
+      // [a-----------c]
+      // ====>>
+      // [a----b]
+      //        [b+1--c]
+      else if(curTopInterval.contains(curLowInterval)) {
+        Interval splitLowInterval(curLowInterval.lowerLevel(), curLowInterval.upperLevel(),
+                                  curLowInterval.lowerOffset(), curLowInterval.upperOffset());
+        Interval splitHighInterval(curLowInterval.upperLevel(), curTopInterval.upperLevel(),
+                                   curLowInterval.upperOffset() + 1, curTopInterval.upperOffset());
+
+        *curLowIt = splitLowInterval;
+        *curTopIt = splitHighInterval;
+
+        change = true;
+      }
+      // [a------------b]
+      //         [c----b]
+      // ====>>
+      // [a--c-1]
+      //        [c-----b]
+      else if(curLowInterval.contains(curTopInterval) &&
+              (curLowInterval.upperBound() == curTopInterval.upperBound())) {
+        Interval splitLowInterval(curLowInterval.lowerLevel(), curTopInterval.lowerLevel(),
+                                  curLowInterval.lowerOffset(), curTopInterval.lowerOffset() - 1);
+        Interval splitHighInterval(curTopInterval.lowerLevel(), curTopInterval.upperLevel(),
+                                   curTopInterval.lowerOffset(), curTopInterval.upperOffset());
+
+        *curLowIt = splitLowInterval;
+        *curTopIt = splitHighInterval;
+
+        change = true;
+      }
+      // [a----------------b]
+      //   [c-------d]
+      // ====>>
+      // [a--c-1]
+      //        [c--d]
+      //             [d+1--b]
+      // if the lower one competely covers the higher one, we need three intervals: the lower one,
+      // the intersection and the top interval
+      else if(curLowInterval.contains(curTopInterval)) {
+        Interval splitLowInterval(curLowInterval.lowerLevel(), curTopInterval.lowerLevel(),
+                                  curLowInterval.lowerOffset(), curTopInterval.lowerOffset() - 1);
+        Interval splitMidInterval(curTopInterval.lowerLevel(), curTopInterval.upperLevel(),
+                                  curTopInterval.lowerOffset(), curTopInterval.upperOffset());
+        Interval splitHighInterval(curTopInterval.upperLevel(), curLowInterval.upperLevel(),
+                                   curTopInterval.upperOffset() + 1, curLowInterval.upperOffset());
 
         *curLowIt = splitLowInterval;
         *curTopIt = splitMidInterval;
         newIntervals.insert(curTopIt, splitHighInterval);
+
+        change = true;
+      }
+      // otherwise we will generate three intervals: the intersection and the two disjoint intervals
+      // of the XOR
+      // [a---------b]
+      //   [c---------------d]
+      // ====>>
+      // [a--c-1]
+      //        [c--b]
+      //             [b+1--d]
+      else if(curLowInterval.overlaps(curTopInterval)) {
+        Interval splitLowInterval(curLowInterval.lowerLevel(), curTopInterval.lowerLevel(),
+                                  curLowInterval.lowerOffset(), curTopInterval.lowerOffset() - 1);
+        Interval splitMidInterval(curTopInterval.lowerLevel(), curLowInterval.upperLevel(),
+                                  curTopInterval.lowerOffset(), curLowInterval.upperOffset());
+        Interval splitHighInterval(curLowInterval.upperLevel(), curTopInterval.upperLevel(),
+                                   curLowInterval.upperOffset() + 1, curTopInterval.upperOffset());
+
+        *curLowIt = splitLowInterval;
+        *curTopIt = splitMidInterval;
+        newIntervals.insert(curTopIt, splitHighInterval);
+        change = true;
+      }
+
+      // if we created a new interval, the order order of the list can be false now: assume
+      // a : [0,2], b : [0,3], c : [1,5]
+      // after the first iteration, we have:
+      // a' : [0,2], b' : [3,3], c : [1,5]
+      // and now b' > c. In this case the algorithm breaks.
+      // In order to solve this, we sort the complete list once more and start from the start. This
+      // is somewhat expensive but should not be too bad since the further we go, nothing happens to
+      // the start of the array anymore.
+      if(change) {
         std::sort(
             newIntervals.begin(), newIntervals.end(),
             [](Interval const& a, Interval const& b) { return a.lowerBound() < b.lowerBound(); });
-
-        curLowIt = newIntervals.begin() + cnt;
+        curLowIt = newIntervals.begin();
         curTopIt = std::next(curLowIt);
+        cnt = 0;
+        change = false;
+      }
+      // if no intervals were added, hence the only action was removing redundant intervals or
+      // having non overlapping (and non containing) intervals, we just move up the array and find
+      // the next pair of intervals to compare
+      else {
+        curLowIt = curTopIt;
+        curTopIt++;
         cnt++;
       }
-
-      curLowIt = curTopIt;
-      curTopIt++;
-      cnt++;
     }
   }
   return newIntervals;
