@@ -160,9 +160,12 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
   std::sort(newIntervals.begin(), newIntervals.end(),
             [](Interval const& a, Interval const& b) { return a.lowerBound() < b.lowerBound(); });
 
+  // When we have more than one interval, we sort them based on their lower bounds and evaluate
+  // neighbouring pairs
   if(newIntervals.size() > 1) {
     int cnt = 0;
     bool change = false;
+    // we start the loop from the interval with the smallest lower bound and iterate over them
     for(auto curLowIt = newIntervals.begin(), curTopIt = std::next(newIntervals.begin());
         curTopIt != newIntervals.end();) {
       // get iterators of two contiguous intervals
@@ -175,7 +178,12 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
         continue;
       }
       // if one interval is contained in the other hand, we split them in two non overlapping
-      // intervals
+      // intervals depending on how the contains are:
+      // [a---------b]
+      // [a--c]
+      // ====>>
+      // [a--c]
+      //      [c+1--b]
       else if(curLowInterval.contains(curTopInterval) &&
               (curLowInterval.lowerBound() == curTopInterval.lowerBound())) {
         Interval splitHighInterval(curLowInterval.lowerLevel(), curTopInterval.upperLevel(),
@@ -187,7 +195,13 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
         *curTopIt = splitHighInterval;
 
         change = true;
-      } else if(curTopInterval.contains(curLowInterval)) {
+      }
+      // [a----b]
+      // [a-----------c]
+      // ====>>
+      // [a----b]
+      //        [b+1--c]
+      else if(curTopInterval.contains(curLowInterval)) {
         Interval splitLowInterval(curLowInterval.lowerLevel(), curLowInterval.upperLevel(),
                                   curLowInterval.lowerOffset(), curLowInterval.upperOffset());
         Interval splitHighInterval(curLowInterval.upperLevel(), curTopInterval.upperLevel(),
@@ -197,8 +211,14 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
         *curTopIt = splitHighInterval;
 
         change = true;
-      } else if(curLowInterval.contains(curTopInterval) &&
-                (curLowInterval.upperBound() == curTopInterval.upperBound())) {
+      }
+      // [a------------b]
+      //         [c----b]
+      // ====>>
+      // [a--c-1]
+      //        [c-----b]
+      else if(curLowInterval.contains(curTopInterval) &&
+              (curLowInterval.upperBound() == curTopInterval.upperBound())) {
         Interval splitLowInterval(curLowInterval.lowerLevel(), curTopInterval.lowerLevel(),
                                   curLowInterval.lowerOffset(), curTopInterval.lowerOffset() - 1);
         Interval splitHighInterval(curTopInterval.lowerLevel(), curTopInterval.upperLevel(),
@@ -209,6 +229,12 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
 
         change = true;
       }
+      // [a----------------b]
+      //   [c-------d]
+      // ====>>
+      // [a--c-1]
+      //        [c--d]
+      //             [d+1--b]
       // if the lower one competely covers the higher one, we need three intervals: the lower one,
       // the intersection and the top interval
       else if(curLowInterval.contains(curTopInterval)) {
@@ -227,6 +253,12 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
       }
       // otherwise we will generate three intervals: the intersection and the two disjoint intervals
       // of the XOR
+      // [a---------b]
+      //   [c---------------d]
+      // ====>>
+      // [a--c-1]
+      //        [c--b]
+      //             [b+1--d]
       else if(curLowInterval.overlaps(curTopInterval)) {
         Interval splitLowInterval(curLowInterval.lowerLevel(), curTopInterval.lowerLevel(),
                                   curLowInterval.lowerOffset(), curTopInterval.lowerOffset() - 1);
@@ -241,6 +273,14 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
         change = true;
       }
 
+      // if we created a new interval, the order order of the list can be false now: assume
+      // a : [0,2], b : [0,3], c : [1,5]
+      // after the first iteration, we have:
+      // a' : [0,2], b' : [3,3], c : [1,5]
+      // and now b' > c. In this case the algorithm breaks.
+      // In order to solve this, we sort the complete list once more and start from the start. This
+      // is somewhat expensive but should not be too bad since the further we go, nothing happens to
+      // the start of the array anymore.
       if(change) {
         std::sort(
             newIntervals.begin(), newIntervals.end(),
@@ -249,7 +289,11 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
         curTopIt = std::next(curLowIt);
         cnt = 0;
         change = false;
-      } else {
+      }
+      // if no intervals were added, hence the only action was removing redundant intervals or
+      // having non overlapping (and non containing) intervals, we just move up the array and find
+      // the next pair of intervals to compare
+      else {
         curLowIt = curTopIt;
         curTopIt++;
         cnt++;
