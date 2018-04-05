@@ -56,7 +56,7 @@ public:
           // 8,2,1.5,1.5,2,4
           double x = i / (gridtools::float_type)dims[0];
           double y = j / (gridtools::float_type)dims[1];
-          return k +
+          return k*10e-3 +
                  (gridtools::float_type)a *
                      ((gridtools::float_type)b + cos(pi * (x + (gridtools::float_type)c * y)) +
                       sin((gridtools::float_type)d * pi * (x + (gridtools::float_type)e * y))) /
@@ -132,6 +132,28 @@ public:
         }
 
     return verified;
+  }
+  template <class StorageType>
+  void printStorage(StorageType storage) {
+    using namespace gridtools;
+
+    storage.sync();
+
+    auto storage_v = make_host_view< access_mode::ReadOnly >(storage);
+    std::cout << "==============================================\n";
+    std::cout << "printing Storage " << storage.name() << "\n";
+    std::cout << "==============================================\n";
+    for(int k = m_domain.kminus(); k < (m_domain.ksize() - m_domain.kplus()); ++k) {
+      std::cout << "Level " << k << "\n";
+      for(int j = m_domain.jminus(); j < (m_domain.jsize() - m_domain.jplus()); ++j) {
+        for(int i = m_domain.iminus(); i < (m_domain.isize() - m_domain.iplus()); ++i) {
+          typename StorageType::data_t value = storage_v(i, j, k);
+          std::cout << value << "\t";
+        }
+        std::cout << "\n";
+      }
+      std::cout << std::endl << std::endl;
+    }
   }
 
 private:
