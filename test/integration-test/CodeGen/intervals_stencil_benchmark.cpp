@@ -35,6 +35,7 @@ TEST(intervals_stencil, test) {
   cxxnaive::intervals_stencil intervals_stencil_naive(dom, in, out_naive);
 
   intervals_stencil_gt.run();
+  verif.sync_storages(in);
   intervals_stencil_naive.run();
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));

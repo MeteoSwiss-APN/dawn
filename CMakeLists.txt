@@ -60,6 +60,12 @@ include(GTClangOptions)
 include(GTClangDefinitions)
 include(GTClangMacros)
 
+if(GTCLANG_BUILD_EXAMPLES_WITH_GPU)
+  include(GTClangSetupCUDA)
+  gtclang_setup_CUDA()
+  find_package(SLURM REQUIRED)
+endif(GTCLANG_BUILD_EXAMPLES_WITH_GPU)
+
 # Set C++ standard
 mchbuild_set_cxx_standard(c++11)
 

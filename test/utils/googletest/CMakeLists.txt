@@ -16,7 +16,7 @@
 
 include(CheckCXXCompilerFlag)
 
-include_directories(SYSTEM 
+set(GTCLANG_GTEST_INCLUDE_DIRS 
   ${CMAKE_CURRENT_LIST_DIR}/include
   ${CMAKE_CURRENT_LIST_DIR}
 )
@@ -28,6 +28,8 @@ if(CMAKE_THREAD_LIBS_INIT)
   target_compile_definitions(gtest PRIVATE -DGTEST_HAS_PTHREAD=1)
   target_link_libraries(gtest ${CMAKE_THREAD_LIBS_INIT})
 endif()
+
+target_include_directories(gtest PUBLIC ${GTCLANG_GTEST_INCLUDE_DIRS})
 
 check_cxx_compiler_flag(-w HAVE_GCC_NO_WARNING)
 if(HAVE_GCC_NO_WARNING)

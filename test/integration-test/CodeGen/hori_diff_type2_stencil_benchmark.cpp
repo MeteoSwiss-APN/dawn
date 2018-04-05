@@ -48,6 +48,7 @@ TEST(hori_diff_type2_stencil, test) {
   cxxnaive::hori_diff_type2_stencil hd_naive(dom, u_out_naive, u, crlato, crlatu, hdmask);
 
   hd_gt.run();
+  verif.sync_storages(u, crlato, crlatu, hdmask);
   hd_naive.run();
 
   ASSERT_TRUE(verif.verify(u_out_gt, u_out_naive));

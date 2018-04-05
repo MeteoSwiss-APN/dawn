@@ -193,6 +193,7 @@ TEST(stencil_desc_ast, test_01) {
   sdesctest::test_01_stencil_reference(dom, in, out_ref);
 
   test_01_gt.run();
+  verif.sync_storages(in);
   test_01_naive.run();
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
@@ -218,6 +219,7 @@ TEST(stencil_desc_ast, test_02) {
   sdesctest::test_02_stencil_reference(dom, in, out_ref);
 
   test_02_gt.run();
+  verif.sync_storages(in);
   test_02_naive.run();
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
@@ -243,6 +245,7 @@ TEST(stencil_desc_ast, test_03) {
   sdesctest::test_03_stencil_reference(dom, in, out_ref);
 
   test_03_gt.run();
+  verif.sync_storages(in);
   test_03_naive.run();
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
@@ -268,6 +271,7 @@ TEST(stencil_desc_ast, test_04) {
   sdesctest::test_04_stencil_reference(dom, in, out_ref);
 
   test_04_gt.run();
+  verif.sync_storages(in);
   test_04_naive.run();
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
@@ -293,6 +297,7 @@ TEST(stencil_desc_ast, test_05) {
   sdesctest::test_05_stencil_reference(dom, in, out_ref);
 
   test_05_gt.run();
+  verif.sync_storages(in);
   test_05_naive.run();
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
@@ -317,10 +322,10 @@ TEST(stencil_desc_ast, test_06) {
   sdesctest::test_06_stencil_reference(dom, in, out_ref);
 
   test_06_gt.run();
+  verif.sync_storages(in);
   test_06_naive.run();
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
-
   ASSERT_TRUE(verif.verify(out_naive, out_ref));
 }
 TEST(stencil_desc_ast, test_07) {
@@ -341,10 +346,10 @@ TEST(stencil_desc_ast, test_07) {
   sdesctest::test_07_stencil_reference(dom, in, out_ref);
 
   test_07_gt.run();
+  verif.sync_storages(in);
   test_07_naive.run();
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
-
   ASSERT_TRUE(verif.verify(out_naive, out_ref));
 }
 
@@ -366,10 +371,10 @@ TEST(stencil_desc_ast, test_08) {
   sdesctest::test_08_stencil_reference(dom, in, out_ref);
 
   test_08_gt.run();
+  verif.sync_storages(in);
   test_08_naive.run();
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
-
   ASSERT_TRUE(verif.verify(out_naive, out_ref));
 }
 
@@ -391,9 +396,9 @@ TEST(stencil_desc_ast, test_09) {
   sdesctest::test_09_stencil_reference(dom, in, out_ref);
 
   test_09_gt.run();
+  verif.sync_storages(in);
   test_09_naive.run();
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
-
   ASSERT_TRUE(verif.verify(out_naive, out_ref));
 }

@@ -72,11 +72,12 @@ TEST(hd_smagorinsky, test) {
   gridtools::hd_smagorinsky_stencil hd_smagorinsky_gt(dom, u_out_gt, v_out_gt, u_in, v_in, hdmaskvel, crlavo, crlavu,
                                                       crlato, crlatu, acrlat0, eddlon, eddlat, tau_smag,
                                                       weight_smag);
-  hd_smagorinsky_gt.run();
-
   cxxnaive::hd_smagorinsky_stencil hd_smagorinsky_naive(dom, u_out_naive, v_out_naive, u_in, v_in, hdmaskvel, crlavo, crlavu,
                                                         crlato, crlatu, acrlat0, eddlon, eddlat, tau_smag,
                                                         weight_smag);
+
+  hd_smagorinsky_gt.run();
+  verif.sync_storages(u_in, v_in, hdmaskvel, crlavo, crlavu, crlato, crlatu, acrlat0, eddlon, eddlat, tau_smag, weight_smag);
   hd_smagorinsky_naive.run();
 
   ASSERT_TRUE(verif.verify(u_out_gt, u_out_naive));
