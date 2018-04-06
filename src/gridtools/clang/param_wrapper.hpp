@@ -18,27 +18,27 @@
 #define GRIDTOOLS_CLANG_PARAMWRAPPER_HPP
 
 namespace gridtools {
-    namespace clang {
+namespace clang {
 
-        template < class DataView >
-        struct param_wrapper {
-            using offset_t = std::array< int, DataView::storage_info_t::ndims >;
-            DataView dview_;
-            offset_t offsets_;
+template <class DataView>
+struct param_wrapper {
+  using offset_t = std::array<int, DataView::storage_info_t::ndims>;
+  DataView dview_;
+  offset_t offsets_;
 
-            param_wrapper(DataView dview, std::array< int, DataView::storage_info_t::ndims > offsets)
-                : dview_(dview), offsets_(offsets) {}
+  param_wrapper(DataView dview, std::array<int, DataView::storage_info_t::ndims> offsets)
+      : dview_(dview), offsets_(offsets) {}
 
-            void addOffset(offset_t offsets) { offsets_ = offsets_ + offsets; }
+  void addOffset(offset_t offsets) { offsets_ = offsets_ + offsets; }
 
-            param_wrapper< DataView > cloneWithOffset(offset_t offset) const {
-                param_wrapper< DataView > res(*this);
-                res.addOffset(offset);
-                return res;
-            }
-        };
+  param_wrapper<DataView> cloneWithOffset(offset_t offset) const {
+    param_wrapper<DataView> res(*this);
+    res.addOffset(offset);
+    return res;
+  }
+};
 
-    } // namespace clang
+} // namespace clang
 } // namespace gridtools
 
 #endif

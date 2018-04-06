@@ -67,7 +67,7 @@
 
 namespace gridtools {
 
-    namespace clang {
+namespace clang {
 
 /**
  * @typedef float_type
@@ -82,12 +82,12 @@ namespace gridtools {
  */
 #if GRIDTOOLS_CLANG_PRECISION == GRIDTOOLS_CLANG_SINGLE_PRECISION
 #define FLOAT_PRECISION 4
-        using float_type = float;
+using float_type = float;
 #elif GRIDTOOLS_CLANG_PRECISION == GRIDTOOLS_CLANG_DOUBLE_PRECISION
 #define FLOAT_PRECISION 8
-        using float_type = double;
+using float_type = double;
 #else
 #error GRIDTOOLS_CLANG_PRECISION is invalid
 #endif
-    }
+}
 }

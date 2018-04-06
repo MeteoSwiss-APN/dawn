@@ -26,7 +26,6 @@ namespace gridtools {
 
 namespace clang {
 
-
 /**
  * @brief Dummy 3-dimensional storage
  * @ingroup gridtools_clang

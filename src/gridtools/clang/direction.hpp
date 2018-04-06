@@ -18,15 +18,15 @@
 
 namespace gridtools {
 
-    namespace clang {
+namespace clang {
 
-        /**
-         * @brief Defintion of a direction which can be as argument in stencil functions
-         * @ingroup gridtools_clang
-         */
-        struct direction {
-            direction operator+(int);
-            direction operator-(int);
-        };
-    }
+/**
+ * @brief Defintion of a direction which can be as argument in stencil functions
+ * @ingroup gridtools_clang
+ */
+struct direction {
+  direction operator+(int);
+  direction operator-(int);
+};
+}
 }

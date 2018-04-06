@@ -26,153 +26,153 @@
 
 namespace gridtools {
 
-    namespace clang {
+namespace clang {
 
-        /**
-         * @namespace math
-         * @brief Namepsace of gridtools portable math functions
-         *
-         * @see math_function
-         */
-        namespace math {
+/**
+ * @namespace math
+ * @brief Namepsace of gridtools portable math functions
+ *
+ * @see math_function
+ */
+namespace math {
 
-            /**
-            * @defgroup math_function Math functions
-            * @brief Math functions which can be safely used inside stencil and stencil_function
-            * Do-methods
-            *
-            * @ingroup gridtools_clang
-            * @{
-            */
+/**
+* @defgroup math_function Math functions
+* @brief Math functions which can be safely used inside stencil and stencil_function
+* Do-methods
+*
+* @ingroup gridtools_clang
+* @{
+*/
 
-            /**
-             * @brief Computes the absolute value of a floating point value @c arg
-             *
-             * @see http://en.cppreference.com/w/cpp/numeric/math/fabs
-             */
-            template < typename T >
-            GT_FUNCTION T fabs(const T x) {
-                return ::fabs(x);
-            }
+/**
+ * @brief Computes the absolute value of a floating point value @c arg
+ *
+ * @see http://en.cppreference.com/w/cpp/numeric/math/fabs
+ */
+template <typename T>
+GT_FUNCTION T fabs(const T x) {
+  return ::fabs(x);
+}
 
-            /**
-             * @brief Computes the largest integer value not greater than @c arg
-             *
-             * @see http://en.cppreference.com/w/cpp/numeric/math/floor
-             */
-            template < typename T >
-            GT_FUNCTION T floor(const T arg) {
-                return ::floor(arg);
-            }
+/**
+ * @brief Computes the largest integer value not greater than @c arg
+ *
+ * @see http://en.cppreference.com/w/cpp/numeric/math/floor
+ */
+template <typename T>
+GT_FUNCTION T floor(const T arg) {
+  return ::floor(arg);
+}
 
-            /**
-             * @brief Computes the smallest integer value not less than @c arg
-             *
-             * @see http://en.cppreference.com/w/cpp/numeric/math/ceil
-             */
-            template < typename T >
-            GT_FUNCTION T ceil(const T arg) {
-                return ::ceil(arg);
-            }
+/**
+ * @brief Computes the smallest integer value not less than @c arg
+ *
+ * @see http://en.cppreference.com/w/cpp/numeric/math/ceil
+ */
+template <typename T>
+GT_FUNCTION T ceil(const T arg) {
+  return ::ceil(arg);
+}
 
-            /**
-             * @brief Truncate @c arg to an integer
-             *
-             * The truncation is performed by casting @c arg to @c int
-             */
-            template < typename T >
-            GT_FUNCTION int trunc(const T arg) {
-                return static_cast< int >(arg);
-            }
+/**
+ * @brief Truncate @c arg to an integer
+ *
+ * The truncation is performed by casting @c arg to @c int
+ */
+template <typename T>
+GT_FUNCTION int trunc(const T arg) {
+  return static_cast<int>(arg);
+}
 
-            /**
-             * @brief Returns the floating-point remainder of @c x/y (rounded towards zero)
-             *
-             * @param x Value of the quotient numerator
-             * @param y Value of the quotient denominator
-             *
-             * @see http://en.cppreference.com/w/cpp/numeric/math/fmod
-             */
-            template < typename T >
-            GT_FUNCTION T fmod(const T x, const T y) {
-                return ::fmod(x, y);
-            }
+/**
+ * @brief Returns the floating-point remainder of @c x/y (rounded towards zero)
+ *
+ * @param x Value of the quotient numerator
+ * @param y Value of the quotient denominator
+ *
+ * @see http://en.cppreference.com/w/cpp/numeric/math/fmod
+ */
+template <typename T>
+GT_FUNCTION T fmod(const T x, const T y) {
+  return ::fmod(x, y);
+}
 
-            /**
-             * @brief Raise @c x to power @c y.
-             *
-             * @param x Base value
-             * @param y Exponent value
-             *
-             * @see http://en.cppreference.com/w/cpp/numeric/math/fmod
-             */
-            template < typename T >
-            GT_FUNCTION T pow(const T x, const T y) {
-                return ::pow(x, y);
-            }
+/**
+ * @brief Raise @c x to power @c y.
+ *
+ * @param x Base value
+ * @param y Exponent value
+ *
+ * @see http://en.cppreference.com/w/cpp/numeric/math/fmod
+ */
+template <typename T>
+GT_FUNCTION T pow(const T x, const T y) {
+  return ::pow(x, y);
+}
 
-            /**
-            * @brief Compute square root
-            *
-            * @param x Value whose square root is computed. If the argument is negative, a domain
-            * error occurs.
-            *
-            * @see http://en.cppreference.com/w/cpp/numeric/math/sqrt
-            */
-            template < typename T >
-            GT_FUNCTION T sqrt(const T x) {
-                return ::sqrt(x);
-            }
+/**
+* @brief Compute square root
+*
+* @param x Value whose square root is computed. If the argument is negative, a domain
+* error occurs.
+*
+* @see http://en.cppreference.com/w/cpp/numeric/math/sqrt
+*/
+template <typename T>
+GT_FUNCTION T sqrt(const T x) {
+  return ::sqrt(x);
+}
 
-            /**
-             * @brief Returns the smaller value of @c x and @c y
-             *
-             * @see http://en.cppreference.com/w/cpp/algorithm/min
-             */
-            template < typename T >
-            GT_FUNCTION T min(const T x, const T y) {
+/**
+ * @brief Returns the smaller value of @c x and @c y
+ *
+ * @see http://en.cppreference.com/w/cpp/algorithm/min
+ */
+template <typename T>
+GT_FUNCTION T min(const T x, const T y) {
 #if GRIDTOOLS_CLANG_STORAGE_TYPE == GRIDTOOLS_CLANG_STORAGE_CUDA
-                return x < y ? x : y;
+  return x < y ? x : y;
 #else
-                return std::min(x, y);
+  return std::min(x, y);
 #endif
-            }
+}
 
-            /**
-             * @brief Returns the greater value of @c x and @c y
-             *
-             * @see http://en.cppreference.com/w/cpp/algorithm/max
-             */
-            template < typename T >
-            GT_FUNCTION T max(const T x, const T y) {
+/**
+ * @brief Returns the greater value of @c x and @c y
+ *
+ * @see http://en.cppreference.com/w/cpp/algorithm/max
+ */
+template <typename T>
+GT_FUNCTION T max(const T x, const T y) {
 #if GRIDTOOLS_CLANG_STORAGE_TYPE == GRIDTOOLS_CLANG_STORAGE_CUDA
-                return x > y ? x : y;
+  return x > y ? x : y;
 #else
-                return std::max(x, y);
+  return std::max(x, y);
 #endif
-            }
+}
 
-            /**
-             * @brief Computes the @c e (Euler's number, 2.7182818) raised to the given power @c arg
-             *
-             * @see http://en.cppreference.com/w/cpp/numeric/math/exp
-             */
-            template < typename T >
-            GT_FUNCTION T exp(const T arg) {
-                return ::exp(arg);
-            }
+/**
+ * @brief Computes the @c e (Euler's number, 2.7182818) raised to the given power @c arg
+ *
+ * @see http://en.cppreference.com/w/cpp/numeric/math/exp
+ */
+template <typename T>
+GT_FUNCTION T exp(const T arg) {
+  return ::exp(arg);
+}
 
-            /**
-             * @brief Computes the the natural (base @c e) logarithm of arg.
-             *
-             * @see http://en.cppreference.com/w/cpp/numeric/math/log
-             */
-            template < typename T >
-            GT_FUNCTION T log(const T x) {
-                return ::log(x);
-            }
+/**
+ * @brief Computes the the natural (base @c e) logarithm of arg.
+ *
+ * @see http://en.cppreference.com/w/cpp/numeric/math/log
+ */
+template <typename T>
+GT_FUNCTION T log(const T x) {
+  return ::log(x);
+}
 
-            /** @} */
-        }
-    }
+/** @} */
+}
+}
 }

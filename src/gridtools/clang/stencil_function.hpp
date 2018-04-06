@@ -20,26 +20,26 @@
 
 namespace gridtools {
 
-    namespace clang {
+namespace clang {
 
-        /*
-         * @brief A stencil which can be called as a function from other `stencils`
-         * @ingroup gridtools_clang
-         */
-        class stencil_function {
-          protected:
-            dimension i;
-            dimension j;
-            dimension k;
+/*
+ * @brief A stencil which can be called as a function from other `stencils`
+ * @ingroup gridtools_clang
+ */
+class stencil_function {
+protected:
+  dimension i;
+  dimension j;
+  dimension k;
 
-          private:
-            stencil_function &operator=(stencil_function) = delete;
+private:
+  stencil_function& operator=(stencil_function) = delete;
 
-          public:
-            template < typename... T >
-            stencil_function(T &&...);
+public:
+  template <typename... T>
+  stencil_function(T&&...);
 
-            operator double() const;
-        };
-    }
+  operator double() const;
+};
+}
 }

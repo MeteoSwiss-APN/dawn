@@ -18,15 +18,15 @@
 
 namespace gridtools {
 
-    namespace clang {
+namespace clang {
 
-        /**
-         * @brief Defintion of a dimension in an access of a storage
-         * @ingroup gridtools_clang
-         */
-        struct dimension {
-            dimension operator+(int);
-            dimension operator-(int);
-        };
-    }
+/**
+ * @brief Defintion of a dimension in an access of a storage
+ * @ingroup gridtools_clang
+ */
+struct dimension {
+  dimension operator+(int);
+  dimension operator-(int);
+};
+}
 }

@@ -18,18 +18,18 @@
 
 namespace gridtools {
 
-    namespace clang {
+namespace clang {
 
-        /**
-         * @brief Defintion of an offset which can be as argument in stencil functions
-         * @ingroup gridtools_clang
-         */
-        struct offset {
-            offset operator+(int);
-            offset operator-(int);
+/**
+ * @brief Defintion of an offset which can be as argument in stencil functions
+ * @ingroup gridtools_clang
+ */
+struct offset {
+  offset operator+(int);
+  offset operator-(int);
 
-            offset operator+();
-            offset operator-();
-        };
-    }
+  offset operator+();
+  offset operator-();
+};
+}
 }

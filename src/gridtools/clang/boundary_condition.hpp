@@ -20,16 +20,16 @@
 
 namespace gridtools {
 
-    namespace clang {
+namespace clang {
 
-        /*
-         * @brief Boundary condition specification
-         * @ingroup gridtools_clang
-         */
-        class boundary_condition {
-          public:
-            template < typename... T >
-            boundary_condition(const stencil_function &, T &&...);
-        };
-    }
+/*
+ * @brief Boundary condition specification
+ * @ingroup gridtools_clang
+ */
+class boundary_condition {
+public:
+  template <typename... T>
+  boundary_condition(const stencil_function&, T&&...);
+};
+}
 }

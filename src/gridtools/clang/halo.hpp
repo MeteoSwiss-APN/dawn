@@ -18,18 +18,18 @@
 
 namespace gridtools {
 
-    namespace clang {
+namespace clang {
 
-        /**
-         * @brief Halo extend (passed to gtclang by "-max-halo")
-         * @ingroup gridtools_clang
-         */
-        struct halo {
+/**
+ * @brief Halo extend (passed to gtclang by "-max-halo")
+ * @ingroup gridtools_clang
+ */
+struct halo {
 #ifdef GRIDTOOLS_CLANG_HALO_EXTEND
-            static constexpr int value = GRIDTOOLS_CLANG_HALO_EXTEND;
+  static constexpr int value = GRIDTOOLS_CLANG_HALO_EXTEND;
 #else
-            static constexpr int value = 3;
+  static constexpr int value = 3;
 #endif
-        };
-    }
+};
+}
 }

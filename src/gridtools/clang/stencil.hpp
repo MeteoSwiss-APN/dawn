@@ -20,33 +20,33 @@
 
 namespace gridtools {
 
-    namespace clang {
+namespace clang {
 
-        /**
-         * @brief A runnable stencil
-         * @ingroup gridtools_clang
-         */
-        class stencil {
-          protected:
-            dimension i;
-            dimension j;
-            dimension k;
+/**
+ * @brief A runnable stencil
+ * @ingroup gridtools_clang
+ */
+class stencil {
+protected:
+  dimension i;
+  dimension j;
+  dimension k;
 
-          public:
-            template < typename... T >
-            stencil(T &&...);
+public:
+  template <typename... T>
+  stencil(T&&...);
 
-            /**
-             * @brief Invoke the stencil program by calling the individual stencils
-             *
-             * @param make_steady   Prepare the stencil for execuation first (calls `make_steady`)
-             */
-            void run(bool make_steady = true);
+  /**
+   * @brief Invoke the stencil program by calling the individual stencils
+   *
+   * @param make_steady   Prepare the stencil for execuation first (calls `make_steady`)
+   */
+  void run(bool make_steady = true);
 
-            /**
-             * @brief Prepare the stencil for execuation by copying all fields to the device
-             */
-            void make_steady();
-        };
-    }
+  /**
+   * @brief Prepare the stencil for execuation by copying all fields to the device
+   */
+  void make_steady();
+};
+}
 }
