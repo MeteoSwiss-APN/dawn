@@ -41,8 +41,6 @@ public:
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 
 private:
-  void syncArgStorages(MemberFunction& method, const StencilInstantiation* stencilInstantiation,
-                       CodeGenProperties const& codeGenProperties);
   std::string generateStencilInstantiation(const StencilInstantiation* stencilInstantiation);
   std::string generateGlobals(const std::shared_ptr<SIR>& sir);
 };
