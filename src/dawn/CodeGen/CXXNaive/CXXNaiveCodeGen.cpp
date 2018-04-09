@@ -65,6 +65,26 @@ CXXNaiveCodeGen::CXXNaiveCodeGen(OptimizerContext* context) : CodeGen(context) {
 
 CXXNaiveCodeGen::~CXXNaiveCodeGen() {}
 
+void CXXNaiveCodeGen::syncArgStorages(MemberFunction& method,
+                                      const StencilInstantiation* stencilInstantiation,
+                                      CodeGenProperties const& codeGenProperties) {
+  auto& stencils = stencilInstantiation->getStencils();
+
+  // add synchronization of all argument storages
+  // add the ctr initialization of each stencil
+  for(std::size_t stencilIdx = 0; stencilIdx < stencils.size(); ++stencilIdx) {
+
+    const Stencil& stencil = *stencilInstantiation->getStencils()[stencilIdx];
+    if(stencil.isEmpty())
+      continue;
+
+    const std::string stencilName =
+        codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
+
+    method.addStatement(stencilName + "->sync_storages()");
+  }
+}
+
 std::string
 CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInstantiation) {
   using namespace codegen;
@@ -266,6 +286,16 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
     stencilClassDtr.startBody();
     stencilClassDtr.commit();
 
+    // synchronize storages method
+    MemberFunction syncStoragesMethod = StencilClass.addMemberFunction("void", "sync_storages", "");
+    syncStoragesMethod.startBody();
+
+    for(auto fieldIt : nonTempFields) {
+      syncStoragesMethod.addStatement("m_" + (*fieldIt).Name + ".sync()");
+    }
+
+    syncStoragesMethod.commit();
+
     //
     // Run-Method
     //
@@ -437,6 +467,9 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
   MemberFunction RunMethod = StencilWrapperClass.addMemberFunction("void", "run", "");
 
   RunMethod.finishArgs();
+
+  syncArgStorages(RunMethod, stencilInstantiation, codeGenProperties);
+
   // generate the control flow code executing each inner stencil
   ASTStencilDesc stencilDescCGVisitor(stencilInstantiation, codeGenProperties);
   stencilDescCGVisitor.setIndent(RunMethod.getIndent());
@@ -444,6 +477,8 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
     statement->ASTStmt->accept(stencilDescCGVisitor);
     RunMethod.addStatement(stencilDescCGVisitor.getCodeAndResetStream());
   }
+
+  syncArgStorages(RunMethod, stencilInstantiation, codeGenProperties);
 
   RunMethod.commit();
 

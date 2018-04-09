@@ -16,6 +16,7 @@
 #define DAWN_CODEGEN_CXXNAIVE_CXXNAIVECODEGEN_H
 
 #include "dawn/CodeGen/CodeGen.h"
+#include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/Optimizer/Interval.h"
 #include "dawn/Support/IndexRange.h"
 #include <set>
@@ -40,6 +41,8 @@ public:
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 
 private:
+  void syncArgStorages(MemberFunction& method, const StencilInstantiation* stencilInstantiation,
+                       CodeGenProperties const& codeGenProperties);
   std::string generateStencilInstantiation(const StencilInstantiation* stencilInstantiation);
   std::string generateGlobals(const std::shared_ptr<SIR>& sir);
 };
