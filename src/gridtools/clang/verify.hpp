@@ -126,8 +126,8 @@ public:
 
     bool verified = true;
 
-    for(int i = m_domain.iminus(); i < (m_domain.isize() - m_domain.iplus()); ++i)
-      for(int j = m_domain.jminus(); j < (m_domain.jsize() - m_domain.jplus()); ++j)
+    for(int i = m_domain.iminus(); i < (m_domain.isize() - m_domain.iplus()); ++i) {
+      for(int j = m_domain.jminus(); j < (m_domain.jsize() - m_domain.jplus()); ++j) {
         for(int k = m_domain.kminus(); k < (m_domain.ksize() - m_domain.kplus()); ++k) {
           typename StorageType1::data_t value1 = storage1_v(i, j, k);
           typename StorageType2::data_t value2 = storage2_v(i, j, k);
@@ -141,6 +141,11 @@ public:
             verified = false;
           }
         }
+      }
+    }
+
+    storage1.sync();
+    storage2.sync();
 
     return verified;
   }
@@ -165,6 +170,22 @@ public:
         std::cout << "\n";
       }
       std::cout << std::endl << std::endl;
+    }
+  }
+
+  template <typename GTStencil>
+  void runBenchmarks(GTStencil& computation, int niter = 10) {
+    for(auto stencil : computation.get_stencils()) {
+      stencil->reset_meter();
+    }
+
+    for(int i = 0; i < niter; ++i) {
+      computation.run();
+    }
+
+    for(auto stencil : computation.get_stencils()) {
+      double time = stencil->get_meter();
+      std::cout << "Time " << time << std::endl;
     }
   }
 

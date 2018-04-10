@@ -36,7 +36,6 @@ TEST(hori_diff_stencil_01, test) {
   verif.fill(-1.0, out_gt, out_naive);
 
   gridtools::hori_diff_stencil hori_diff_gt(dom, u, out_gt);
-  verif.sync_storages(u);
   cxxnaive::hori_diff_stencil hori_diff_naive(dom, u, out_naive);
 
   hori_diff_gt.run();

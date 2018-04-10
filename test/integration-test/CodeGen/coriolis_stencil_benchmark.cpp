@@ -39,7 +39,6 @@ TEST(coriolis_stencil, test) {
   cxxnaive::coriolis_stencil coriolis_cxxnaive(dom, u_tens_cxxnaive, u_nnow, v_tens_cxxnaive, v_nnow, fc);
 
   coriolis_gt.run();
-  verif.sync_storages(u_nnow, v_nnow, fc);
   coriolis_cxxnaive.run();
 
   ASSERT_TRUE(verif.verify(u_tens_gt, u_tens_cxxnaive));

@@ -101,7 +101,6 @@ TEST(stencil_functions, test_01) {
   sftest::test_01_stencil_reference(dom, in, out_ref);
 
   test_01_gt.run();
-  verif.sync_storages(in);
   test_01_naive.run();
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
@@ -127,7 +126,6 @@ TEST(stencil_functions, test_02) {
   sftest::test_02_stencil_reference(dom, in, out_ref);
 
   test_02_gt.run();
-  verif.sync_storages(in);
   test_02_naive.run();
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
@@ -153,7 +151,6 @@ TEST(stencil_functions, test_03) {
   sftest::test_03_stencil_reference(dom, in, out_ref);
 
   test_03_gt.run();
-  verif.sync_storages(in);
   test_03_naive.run();
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
@@ -179,7 +176,6 @@ TEST(stencil_functions, test_06) {
   sftest::test_06_stencil_reference(dom, in, out_ref);
 
   test_06_gt.run();
-  verif.sync_storages(in);
   test_06_naive.run();
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
@@ -205,7 +201,6 @@ TEST(stencil_functions, test_07) {
   sftest::test_07_stencil_reference(dom, in, out_ref);
 
   test_07_gt.run();
-  verif.sync_storages(in);
   test_07_naive.run();
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));

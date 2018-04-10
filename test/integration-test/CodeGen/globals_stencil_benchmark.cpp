@@ -38,7 +38,6 @@ TEST(globals_stencil, test) {
   cxxnaive::globals_stencil globals_naive(dom, in, out_naive);
 
   globals_gt.run();
-  verif.sync_storages(in);
   globals_naive.run();
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
