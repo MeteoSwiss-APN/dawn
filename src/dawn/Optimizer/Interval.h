@@ -247,7 +247,7 @@ template <>
 struct hash<dawn::Interval> {
   size_t operator()(const dawn::Interval& I) const {
     std::size_t seed = 0;
-    dawn::hash_combine(seed, I.lowerLevel(), I.lowerOffset(), I.upperLevel(), I.upperOffset());
+    dawn::hash_combine(seed, I.lowerLevel() + I.lowerOffset(), I.upperLevel() + I.upperOffset());
     return seed;
   }
 };

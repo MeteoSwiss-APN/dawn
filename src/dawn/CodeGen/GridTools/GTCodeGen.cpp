@@ -250,11 +250,14 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
 
     auto makeLevelName = [&](int level, int offset) {
       clear(tss);
-      tss << "gridtools::level<"
-          << (level == sir::Interval::End ? maxLevel
-                                          : std::distance(intervalDefinitions.Levels.begin(),
-                                                          intervalDefinitions.Levels.find(level)))
-          << ", " << (offset <= 0 ? offset - 1 : offset) << ">";
+      int gt_level =
+          (level == sir::Interval::End ? maxLevel
+                                       : std::distance(intervalDefinitions.Levels.begin(),
+                                                       intervalDefinitions.Levels.find(level)));
+      int gt_offset =
+          (level != sir::Interval::End) ? offset + 1 : (offset <= 0) ? offset - 1 : offset;
+      tss << "gridtools::level<" << gt_level << ", " << gt_offset << ">";
+
       return tss.str();
     };
 
@@ -275,7 +278,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     StencilClass.addTypeDef(Twine("axis_") + StencilName)
         .addType(c_gt() + "interval")
         .addTemplates(makeArrayRef(
-            {makeLevelName(axis.lowerLevel(), axis.lowerOffset() - 1),
+            {makeLevelName(axis.lowerLevel(), axis.lowerOffset() - 2),
              makeLevelName(axis.upperLevel(),
                            (axis.upperOffset() + 1) == 0 ? 1 : (axis.upperOffset() + 1))}));
 
@@ -599,8 +602,8 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
                                       ".as_global_parameter())");
 
     // This is a memory leak.. but nothing we can do ;)
-    StencilConstructor.addStatement(c_gt() + "aggregator_type<domain_arg_list> gt_domain(" +
-                                    RangeToString(", ", "", ")")(DomainMapPlaceholders));
+    StencilConstructor.addStatement(c_gt() + "aggregator_type<domain_arg_list> gt_domain{" +
+                                    RangeToString(", ", "", "}")(DomainMapPlaceholders));
 
     // Generate grid
     StencilConstructor.addComment("Grid");
@@ -609,18 +612,12 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     StencilConstructor.addStatement("gridtools::halo_descriptor dj = {dom.jminus(), dom.jminus(), "
                                     "dom.jplus(), dom.jsize() - 1 - dom.jplus(), dom.jsize()}");
 
-    StencilConstructor.addStatement(std::string("using axis_t = axis<") +
-                                    std::to_string((intervalDefinitions.Levels.size() == 1)
-                                                       ? 1
-                                                       : intervalDefinitions.Levels.size() - 1) +
-                                    ">");
-
     auto getLevelSize = [](int level) -> std::string {
       switch(level) {
       case sir::Interval::Start:
         return "dom.kminus()";
       case sir::Interval::End:
-        return "dom.ksize() == 0 ? 0 : dom.ksize() - dom.kplus()-1";
+        return "dom.ksize() == 0 ? 0 : dom.ksize() - dom.kplus()";
       default:
         return std::to_string(level);
       }
