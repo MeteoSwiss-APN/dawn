@@ -16,6 +16,7 @@
 #define DAWN_CODEGEN_CXXNAIVE_CXXNAIVECODEGEN_H
 
 #include "dawn/CodeGen/CodeGen.h"
+#include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/Optimizer/Interval.h"
 #include "dawn/Support/IndexRange.h"
 #include <set>
