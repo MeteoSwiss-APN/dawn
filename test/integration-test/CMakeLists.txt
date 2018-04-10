@@ -121,7 +121,7 @@ foreach(example ${codegen_examples})
     set_property(SOURCE ${cwd}/CodeGen/${example}_benchmark.cpp APPEND PROPERTY OBJECT_DEPENDS ${cwd}/CodeGen/generated/${example}_gridtools.cpp)
     set_property(SOURCE ${cwd}/CodeGen/${example}_benchmark.cpp APPEND PROPERTY OBJECT_DEPENDS ${cwd}/CodeGen/generated/${example}_c++-naive.cpp)
 
-    add_test(NAME CTest-${example}_benchmarks COMMAND $<TARGET_FILE:${example}_benchmarks> 12 12 10 )
+    add_test(NAME CTest-${example}_benchmarks COMMAND $<TARGET_FILE:${example}_benchmarks> 12 12 10 --gtest_output=xml:${example}_unittest.xml)
 
     if(GTCLANG_BUILD_EXAMPLES_WITH_GPU)
       cuda_add_executable(${example}_benchmarks_cuda "${cwd}/CodeGen/${example}_benchmark.cu" "${cwd}/CodeGen/TestMain.cpp" "${cwd}/CodeGen/Options.cpp")
@@ -138,7 +138,7 @@ foreach(example ${codegen_examples})
         set(CTEST_SUBMIT_COMMAND "${SLURM_SRUN_COMMAND}" "-n" "${GTCLANG_SLURM_N_TASKS}" "${GTCLANG_SLURM_RESOURCES}" "-p" "${GTCLANG_SLURM_PARTITION}")
       endif(CTEST_CUDA_SUBMIT)
 
-      add_test(NAME CTest-${example}_benchmarks_cuda COMMAND ${CTEST_SUBMIT_COMMAND} $<TARGET_FILE:${example}_benchmarks_cuda> 12 12 10 )
+      add_test(NAME CTest-${example}_benchmarks_cuda COMMAND ${CTEST_SUBMIT_COMMAND} $<TARGET_FILE:${example}_benchmarks_cuda> 12 12 10 --gtest_output=xml:${example}_cuda_unittest.xml)
     endif(GTCLANG_BUILD_EXAMPLES_WITH_GPU)
 
 endforeach()
