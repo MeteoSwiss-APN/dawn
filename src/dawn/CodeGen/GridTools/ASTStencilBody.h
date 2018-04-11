@@ -43,6 +43,8 @@ protected:
   /// Nesting level of argument lists of stencil function *calls*
   int nestingOfStencilFunArgLists_;
 
+  bool triggerCallProc_ = false;
+
 public:
   using Base = ASTCodeGenCXX;
 
