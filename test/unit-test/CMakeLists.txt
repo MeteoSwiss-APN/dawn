@@ -43,7 +43,7 @@ macro(gtclang_add_unittest)
     SOURCES ${ARG_SOURCES}
     DEPENDS ${GTCLANG_UNITTEST_EXTERNAL_LIBRARIES} gtest
     OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/unittest
-    GTEST_ARGS --gtest_color=yes --gtest_output="xml:${ARG_NAME}_unittest.xml"
+    GTEST_ARGS --gtest_color=yes --gtest_output=xml:${ARG_NAME}_unittest.xml
   )
 endmacro()
 
