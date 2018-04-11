@@ -266,29 +266,40 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
     stencilClassDtr.startBody();
     stencilClassDtr.commit();
 
+    // synchronize storages method
+    MemberFunction syncStoragesMethod = StencilClass.addMemberFunction("void", "sync_storages", "");
+    syncStoragesMethod.startBody();
+
+    for(auto fieldIt : nonTempFields) {
+      syncStoragesMethod.addStatement("m_" + (*fieldIt).Name + ".sync()");
+    }
+
+    syncStoragesMethod.commit();
+
     //
     // Run-Method
     //
-    MemberFunction StencilDoMethod = StencilClass.addMemberFunction("virtual void", "run", "");
-    StencilDoMethod.startBody();
+    MemberFunction StencilRunMethod = StencilClass.addMemberFunction("virtual void", "run", "");
+    StencilRunMethod.startBody();
 
+    StencilRunMethod.addStatement("sync_storages()");
     for(const auto& multiStagePtr : stencil.getMultiStages()) {
 
-      StencilDoMethod.ss() << "{";
+      StencilRunMethod.ss() << "{";
 
       const MultiStage& multiStage = *multiStagePtr;
 
       // create all the data views
       for(auto fieldIt : nonTempFields) {
-        StencilDoMethod.addStatement(c_gt() + "data_view<" + StencilTemplates[fieldIt.idx()] +
-                                     "> " + (*fieldIt).Name + "= " + c_gt() + "make_host_view(m_" +
-                                     (*fieldIt).Name + ")");
-        StencilDoMethod.addStatement("std::array<int,3> " + (*fieldIt).Name + "_offsets{0,0,0}");
+        StencilRunMethod.addStatement(c_gt() + "data_view<" + StencilTemplates[fieldIt.idx()] +
+                                      "> " + (*fieldIt).Name + "= " + c_gt() + "make_host_view(m_" +
+                                      (*fieldIt).Name + ")");
+        StencilRunMethod.addStatement("std::array<int,3> " + (*fieldIt).Name + "_offsets{0,0,0}");
       }
       for(auto fieldIt : tempFields) {
-        StencilDoMethod.addStatement(c_gt() + "data_view<tmp_storage_t> " + (*fieldIt).Name + "= " +
-                                     c_gt() + "make_host_view(m_" + (*fieldIt).Name + ")");
-        StencilDoMethod.addStatement("std::array<int,3> " + (*fieldIt).Name + "_offsets{0,0,0}");
+        StencilRunMethod.addStatement(c_gt() + "data_view<tmp_storage_t> " + (*fieldIt).Name +
+                                      "= " + c_gt() + "make_host_view(m_" + (*fieldIt).Name + ")");
+        StencilRunMethod.addStatement("std::array<int,3> " + (*fieldIt).Name + "_offsets{0,0,0}");
       }
 
       auto intervals_set = multiStage.getIntervals();
@@ -303,15 +314,15 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
       for(auto interval : partitionIntervals) {
 
         // for each interval, we generate naive nested loops
-        StencilDoMethod.addBlockStatement(
+        StencilRunMethod.addBlockStatement(
             makeKLoop("m_dom", (multiStage.getLoopOrder() == LoopOrderKind::LK_Backward), interval),
             [&]() {
               for(const auto& stagePtr : multiStage.getStages()) {
                 const Stage& stage = *stagePtr;
 
-                StencilDoMethod.addBlockStatement(
+                StencilRunMethod.addBlockStatement(
                     makeIJLoop(stage.getExtents()[0], "m_dom", "i"), [&]() {
-                      StencilDoMethod.addBlockStatement(
+                      StencilRunMethod.addBlockStatement(
                           makeIJLoop(stage.getExtents()[1], "m_dom", "j"), [&]() {
 
                             // Generate Do-Method
@@ -323,7 +334,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
                                   doMethod.getStatementAccessesPairs()) {
                                 statementAccessesPair->getStatement()->ASTStmt->accept(
                                     stencilBodyCXXVisitor);
-                                StencilDoMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
+                                StencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
                               }
                             }
 
@@ -332,9 +343,10 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
               }
             });
       }
-      StencilDoMethod.ss() << "}";
+      StencilRunMethod.ss() << "}";
     }
-    StencilDoMethod.commit();
+    StencilRunMethod.addStatement("sync_storages()");
+    StencilRunMethod.commit();
   }
 
   StencilWrapperClass.addMember("static constexpr const char* s_name =",
@@ -437,6 +449,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
   MemberFunction RunMethod = StencilWrapperClass.addMemberFunction("void", "run", "");
 
   RunMethod.finishArgs();
+
   // generate the control flow code executing each inner stencil
   ASTStencilDesc stencilDescCGVisitor(stencilInstantiation, codeGenProperties);
   stencilDescCGVisitor.setIndent(RunMethod.getIndent());
