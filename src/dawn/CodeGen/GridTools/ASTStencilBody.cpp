@@ -58,7 +58,11 @@ int ASTStencilBody::getAccessID(const std::shared_ptr<Expr>& expr) const {
 
 void ASTStencilBody::visit(const std::shared_ptr<BlockStmt>& stmt) { Base::visit(stmt); }
 
-void ASTStencilBody::visit(const std::shared_ptr<ExprStmt>& stmt) { Base::visit(stmt); }
+void ASTStencilBody::visit(const std::shared_ptr<ExprStmt>& stmt) {
+  if(isa<StencilFunCallExpr>(*(stmt->getExpr())))
+    triggerCallProc_ = true;
+  Base::visit(stmt);
+}
 
 void ASTStencilBody::visit(const std::shared_ptr<ReturnStmt>& stmt) {
   if(scopeDepth_ == 0)
@@ -113,8 +117,11 @@ void ASTStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
       currentFunction_ ? currentFunction_->getStencilFunctionInstantiation(expr)
                        : instantiation_->getStencilFunctionInstantiation(expr);
 
-  ss_ << "gridtools::call<" << StencilFunctionInstantiation::makeCodeGenName(*stencilFun) << ", "
+  ss_ << (triggerCallProc_ ? "gridtools::call_proc<" : "gridtools::call<")
+      << StencilFunctionInstantiation::makeCodeGenName(*stencilFun) << ", "
       << intervalToNameMap_.find(stencilFun->getInterval())->second << ">::with(eval";
+
+  triggerCallProc_ = false;
 
   for(auto& arg : expr->getArguments()) {
     arg->accept(*this);
