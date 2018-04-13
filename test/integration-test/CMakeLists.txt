@@ -129,7 +129,7 @@ foreach(example ${codegen_examples})
       target_include_directories(${example}_benchmarks_cuda PUBLIC ${include_dirs})
       add_dependencies(${example}_benchmarks_cuda gtclang ${example}_benchmarks)
       target_link_libraries(${example}_benchmarks_cuda gtest ${CUDA_CUDART_LIBRARY})
-      target_compile_definitions(${example}_benchmarks_cuda PUBLIC -DGRIDTOOLS_CLANG_CUDA ${GTCLANG_DEFINITIONS})
+      target_compile_definitions(${example}_benchmarks_cuda PUBLIC GRIDTOOLS_CLANG_CUDA ${GTCLANG_DEFINITIONS})
 
       set_property(SOURCE ${cwd}/CodeGen/${example}_benchmark.cu APPEND PROPERTY OBJECT_DEPENDS ${cwd}/CodeGen/generated/${example}_gridtools.cpp)
       set_property(SOURCE ${cwd}/CodeGen/${example}_benchmark.cu APPEND PROPERTY OBJECT_DEPENDS ${cwd}/CodeGen/generated/${example}_c++-naive.cpp)

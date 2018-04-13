@@ -48,9 +48,9 @@ using halo_j_t = gridtools::halo<0, 0, 0>;
   * @brief Backend type
   */
 #if GRIDTOOLS_CLANG_STORAGE_TYPE == GRIDTOOLS_CLANG_STORAGE_HOST
-using backend_t = gridtools::backend<gridtools::enumtype::Host, gridtools::enumtype::structured,
+using backend_t = gridtools::backend<gridtools::enumtype::Mic, gridtools::enumtype::structured,
                                      gridtools::enumtype::Block>;
-using storage_traits_t = gridtools::storage_traits<gridtools::enumtype::Host>;
+using storage_traits_t = gridtools::storage_traits<gridtools::enumtype::Mic>;
 #elif GRIDTOOLS_CLANG_STORAGE_TYPE == GRIDTOOLS_CLANG_STORAGE_CUDA
 using backend_t = gridtools::backend<gridtools::enumtype::Cuda, gridtools::enumtype::structured,
                                      gridtools::enumtype::Block>;

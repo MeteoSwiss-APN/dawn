@@ -25,7 +25,7 @@ add_library(gtest src/gtest-all.cc)
 
 find_package(Threads)
 if(CMAKE_THREAD_LIBS_INIT)
-  target_compile_definitions(gtest PRIVATE -DGTEST_HAS_PTHREAD=1)
+  target_compile_definitions(gtest PRIVATE GTEST_HAS_PTHREAD=1)
   target_link_libraries(gtest ${CMAKE_THREAD_LIBS_INIT})
 endif()
 

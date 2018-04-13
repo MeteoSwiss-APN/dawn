@@ -185,7 +185,10 @@ public:
 
     for(auto stencil : computation.get_stencils()) {
       double time = stencil->get_meter();
-      std::cout << "Time " << time << std::endl;
+      std::cout << "\033[0;33m"
+                << "[  output  ] "
+                << "\033[0;0m"
+                << "Time " << time << std::endl;
     }
   }
 
