@@ -15,7 +15,9 @@
 #ifndef DAWN_OPTIMIZER_CACHE_H
 #define DAWN_OPTIMIZER_CACHE_H
 
+#include "Interval.h"
 #include "dawn/Support/HashCombine.h"
+#include <boost/optional.hpp>
 #include <string>
 
 namespace dawn {
@@ -48,7 +50,8 @@ public:
     local           ///< Local only cache, neither read nor write the the cached field
   };
 
-  Cache(CacheTypeKind type, CacheIOPolicy policy, int AccessID);
+  Cache(CacheTypeKind type, CacheIOPolicy policy, int AccessID,
+        boost::optional<Interval> const& interval);
 
   /// @brief Get the AccessID of the field
   int getCachedFieldAccessID() const;
@@ -73,6 +76,7 @@ private:
   CacheTypeKind type_;
   CacheIOPolicy policy_;
   int AccessID_;
+  boost::optional<Interval> interval_;
 };
 
 } // namespace dawn

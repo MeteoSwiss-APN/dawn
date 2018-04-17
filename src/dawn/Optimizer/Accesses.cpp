@@ -149,7 +149,11 @@ void Accesses::addWriteExtent(int AccessID, const Extents& extent) {
     writeAccesses_.emplace(AccessID, extent);
 }
 
-const Extents& Accesses::getReadAccess(int AccessID) {
+bool Accesses::hasReadAccess(int accessID) const { return readAccesses_.count(accessID); }
+
+bool Accesses::hasWriteAccess(int accessID) const { return writeAccesses_.count(accessID); }
+
+const Extents& Accesses::getReadAccess(int AccessID) const {
   auto it = readAccesses_.find(AccessID);
   if(it != readAccesses_.end())
     return it->second;
@@ -157,7 +161,7 @@ const Extents& Accesses::getReadAccess(int AccessID) {
     return Accesses::NullExtents;
 }
 
-const Extents& Accesses::getWriteAccess(int AccessID) {
+const Extents& Accesses::getWriteAccess(int AccessID) const {
   auto it = writeAccesses_.find(AccessID);
   if(it != writeAccesses_.end())
     return it->second;

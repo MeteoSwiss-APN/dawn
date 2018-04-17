@@ -16,6 +16,7 @@
 #define DAWN_OPTIMIZER_DOMETHOD_H
 
 #include "dawn/Optimizer/Interval.h"
+#include <boost/optional.hpp>
 #include <memory>
 #include <vector>
 
@@ -65,6 +66,8 @@ public:
   /// @brief Get the dependency graph of this Do-Method
   std::shared_ptr<DependencyGraphAccesses>& getDependencyGraph();
   const std::shared_ptr<DependencyGraphAccesses>& getDependencyGraph() const;
+
+  boost::optional<Interval> computeEnclosingAccessInterval(const int accessID) const;
 };
 
 } // namespace dawn

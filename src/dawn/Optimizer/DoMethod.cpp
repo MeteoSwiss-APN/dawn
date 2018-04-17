@@ -46,6 +46,26 @@ std::shared_ptr<DependencyGraphAccesses>& DoMethod::getDependencyGraph() {
   return dependencyGraph_;
 }
 
+boost::optional<Interval> DoMethod::computeEnclosingAccessInterval(const int accessID) const {
+  boost::optional<Interval> interval;
+  for(auto& stmtAccess : getStatementAccessesPairs()) {
+    std::shared_ptr<Accesses> const& accesses = stmtAccess->getAccesses();
+
+    if(accesses->hasReadAccess(accessID)) {
+      if(!interval) {
+        interval = getInterval();
+      }
+      interval = (*interval).extendInterval(accesses->getReadAccess(accessID));
+    }
+    if(accesses->hasWriteAccess(accessID)) {
+      if(!interval)
+        interval = getInterval();
+      interval = (*interval).extendInterval(accesses->getWriteAccess(accessID));
+    }
+  }
+  return interval;
+}
+
 const std::shared_ptr<DependencyGraphAccesses>& DoMethod::getDependencyGraph() const {
   return dependencyGraph_;
 }

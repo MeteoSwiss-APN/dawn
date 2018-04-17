@@ -65,9 +65,12 @@ public:
   /// @see Extents::add
   void addWriteExtent(int AccessID, const Extents& extent);
 
+  bool hasReadAccess(int accessID) const;
+  bool hasWriteAccess(int accessID) const;
+
   /// @brief Get access of field (returns NullExtent if field does not exist)
-  const Extents& getReadAccess(int AccessID);
-  const Extents& getWriteAccess(int AccessID);
+  const Extents& getReadAccess(int AccessID) const;
+  const Extents& getWriteAccess(int AccessID) const;
 
   /// @brief Get the accesses maps
   std::unordered_map<int, Extents>& getReadAccesses() { return readAccesses_; }

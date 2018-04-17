@@ -104,8 +104,31 @@ std::shared_ptr<DependencyGraphAccesses> MultiStage::getDependencyGraphOfAxis() 
   return dependencyGraph;
 }
 
+Cache& MultiStage::setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy policy, int AccessID,
+                            const Interval& interval) {
+  return caches_
+      .emplace(AccessID, Cache(type, policy, AccessID, boost::optional<Interval>(interval)))
+      .first->second;
+}
+
 Cache& MultiStage::setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy policy, int AccessID) {
-  return caches_.emplace(AccessID, Cache(type, policy, AccessID)).first->second;
+  return caches_.emplace(AccessID, Cache(type, policy, AccessID, boost::optional<Interval>()))
+      .first->second;
+}
+
+boost::optional<Interval> MultiStage::computeEnclosingAccessInterval(const int accessID) const {
+  boost::optional<Interval> interval;
+  for(auto const& stage : stages_) {
+    boost::optional<Interval> doInterval = stage->computeEnclosingAccessInterval(accessID);
+
+    if(doInterval) {
+      if(interval)
+        (*interval).merge(*doInterval);
+      else
+        interval = doInterval;
+    }
+  }
+  return interval;
 }
 
 std::unordered_set<Interval> MultiStage::getIntervals() const {

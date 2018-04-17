@@ -17,8 +17,9 @@
 
 namespace dawn {
 
-Cache::Cache(CacheTypeKind type, CacheIOPolicy policy, int fieldAccessID)
-    : type_(type), policy_(policy), AccessID_(fieldAccessID) {}
+Cache::Cache(CacheTypeKind type, CacheIOPolicy policy, int fieldAccessID,
+             const boost::optional<Interval>& interval)
+    : type_(type), policy_(policy), AccessID_(fieldAccessID), interval_(interval) {}
 
 int Cache::getCachedFieldAccessID() const { return AccessID_; }
 

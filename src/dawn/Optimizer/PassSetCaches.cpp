@@ -184,7 +184,6 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
             Cache& cache = multiStagePtr->setCache(Cache::IJ, Cache::local, field.getAccessID());
             instantiation->insertCachedVariable(field.getAccessID());
 
-
             if(context->getOptions().ReportPassSetCaches) {
               std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": MS"
                         << msIdx << ": "
@@ -288,8 +287,11 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
               policy = combinePolicy(policy, Cache::flush);
           }
 
+          auto interval = MS.computeEnclosingAccessInterval(field.getAccessID());
+
           // Set the cache
-          Cache& cache = MS.setCache(Cache::K, policy, field.getAccessID());
+          DAWN_ASSERT(interval.is_initialized());
+          Cache& cache = MS.setCache(Cache::K, policy, field.getAccessID(), *interval);
 
           if(context->getOptions().ReportPassSetCaches) {
             std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": MS"

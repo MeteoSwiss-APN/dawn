@@ -96,7 +96,12 @@ public:
   std::shared_ptr<DependencyGraphAccesses> getDependencyGraphOfAxis() const;
 
   /// @brief Set a cache
+  Cache& setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy policy, int AccessID,
+                  Interval const& interval);
+
   Cache& setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy policy, int AccessID);
+
+  boost::optional<Interval> computeEnclosingAccessInterval(const int accessID) const;
 
   /// @brief Is the field given by the `AccessID` cached?
   bool isCached(int AccessID) const { return caches_.count(AccessID); }

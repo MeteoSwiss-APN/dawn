@@ -19,6 +19,7 @@
 #include "dawn/Optimizer/Field.h"
 #include "dawn/Optimizer/Interval.h"
 #include "dawn/Support/ArrayRef.h"
+#include <boost/optional.hpp>
 #include <deque>
 #include <memory>
 #include <unordered_set>
@@ -113,6 +114,8 @@ public:
 
   /// @brief Get the maximal vertical extent of this stage
   Extent getMaxVerticalExtent() const;
+
+  boost::optional<Interval> computeEnclosingAccessInterval(const int accessID) const;
 
   /// @brief Get fields of this stage sorted according their Intend: `Output` -> `IntputOutput` ->
   /// `Input`

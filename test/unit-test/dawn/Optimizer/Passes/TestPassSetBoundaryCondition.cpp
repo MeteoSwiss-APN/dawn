@@ -17,7 +17,7 @@
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/SIRSerializer.h"
-#include "test/unit-test/dawn/Optimizer/Passes/TestEnvironment.h"
+#include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 #include <fstream>
 #include <gtest/gtest.h>
 #include <streambuf>

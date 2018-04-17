@@ -131,10 +131,8 @@ public:
   /// If extents is `{0, 0, 0, 0, -1, 1}` (i.e the vertical extent is `<-1, 1>` we create a new
   /// interval (from `this`) which has a decreased lowerOffset by -1 and an increased upper
   /// Offset by +1.
-  Interval extendInterval(const Extent& verticalExtent) const {
-    return Interval(lowerLevel_, upperLevel_, lowerOffset_ + verticalExtent.Minus,
-                    upperOffset_ + verticalExtent.Plus);
-  }
+  Interval extendInterval(const Extent& verticalExtent) const;
+
   Interval extendInterval(const Extents& extents) const { return extendInterval(extents[2]); }
 
   /// @brief Convert to SIR Interval
