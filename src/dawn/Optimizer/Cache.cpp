@@ -23,6 +23,8 @@ Cache::Cache(CacheTypeKind type, CacheIOPolicy policy, int fieldAccessID,
 
 int Cache::getCachedFieldAccessID() const { return AccessID_; }
 
+boost::optional<Interval> Cache::getInterval() const { return interval_; }
+
 Cache::CacheTypeKind Cache::getCacheType() const { return type_; }
 
 std::string Cache::getCacheTypeAsString() const {

@@ -24,6 +24,7 @@
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringUtil.h"
+#include <boost/optional.hpp>
 #include <unordered_map>
 
 namespace dawn {
@@ -59,6 +60,15 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
   // Add intervals for the stencil functions
   for(const auto& stencilFun : stencil.getStencilInstantiation().getStencilFunctionInstantiations())
     Intervals.insert(stencilFun->getInterval());
+
+  // inserting the intervals of the caches
+  for(const auto& mss : stencil.getMultiStages()) {
+    for(const auto& cachePair : mss->getCaches()) {
+      const boost::optional<Interval> interval = cachePair.second.getInterval();
+      if(interval.is_initialized())
+        Intervals.insert(*interval);
+    }
+  }
 
   // Compute axis and populate the levels
   Axis = *Intervals.begin();
@@ -406,17 +416,18 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
         ssMS << RangeToString(", ", "gridtools::define_caches(", "),")(
             multiStage.getCaches(),
             [&](const std::pair<int, Cache>& AccessIDCachePair) -> std::string {
+              auto const& cache = AccessIDCachePair.second;
+              DAWN_ASSERT(cache.getInterval().is_initialized() ||
+                          cache.getCacheIOPolicy() == Cache::local);
+
               return (c_gt() + "cache<" +
                       // Type: IJ or K
-                      c_gt() + AccessIDCachePair.second.getCacheTypeAsString() + ", " +
+                      c_gt() + cache.getCacheTypeAsString() + ", " +
                       // IOPolicy: local, fill, bpfill, flush, epflush or flush_and_fill
-                      c_gt() + "cache_io_policy::" +
-                      AccessIDCachePair.second.getCacheIOPolicyAsString() +
+                      c_gt() + "cache_io_policy::" + cache.getCacheIOPolicyAsString() +
                       // Interval: if IOPolicy is not local, we need to provide the interval
-                      (AccessIDCachePair.second.getCacheIOPolicy() != Cache::local
-                           ? ", " +
-                                 intervalDefinitions
-                                     .IntervalToNameMap[multiStage.getEnclosingInterval()]
+                      (cache.getCacheIOPolicy() != Cache::local
+                           ? ", " + intervalDefinitions.IntervalToNameMap[*(cache.getInterval())]
                            : std::string()) +
                       // Placeholder which will be cached
                       ">(p_" + stencilInstantiation->getNameFromAccessID(AccessIDCachePair.first) +

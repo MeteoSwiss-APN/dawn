@@ -64,6 +64,9 @@ public:
   CacheIOPolicy getCacheIOPolicy() const;
   std::string getCacheIOPolicyAsString() const;
 
+  /// @brief Get the I/O policy of the cache
+  boost::optional<Interval> getInterval() const;
+
   /// @name Comparison operator
   /// @{
   bool operator==(const Cache& other) const {
