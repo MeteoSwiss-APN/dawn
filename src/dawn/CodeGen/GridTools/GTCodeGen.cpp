@@ -424,7 +424,8 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
               DAWN_ASSERT(cache.getInterval().is_initialized() ||
                           cache.getCacheIOPolicy() == Cache::local);
 
-              DAWN_ASSERT(intervalDefinitions.IntervalToNameMap.count(*(cache.getInterval())));
+              if(cache.getInterval().is_initialized())
+                DAWN_ASSERT(intervalDefinitions.IntervalToNameMap.count(*(cache.getInterval())));
 
               return (c_gt() + "cache<" +
                       // Type: IJ or K
