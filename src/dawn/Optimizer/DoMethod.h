@@ -67,6 +67,7 @@ public:
   std::shared_ptr<DependencyGraphAccesses>& getDependencyGraph();
   const std::shared_ptr<DependencyGraphAccesses>& getDependencyGraph() const;
 
+  /// @brief computes the interval where an accessId is used (extended by the extent of the access)
   boost::optional<Interval> computeEnclosingAccessInterval(const int accessID) const;
 };
 
