@@ -31,17 +31,23 @@ protected:
   OptimizerContext* context_;
 
   static size_t getVerticalTmpHaloSize(Stencil const& stencil);
+  size_t getVerticalTmpHaloSizeForMultipleStencils(
+      const std::vector<std::shared_ptr<Stencil>>& stencils) const;
   void addTempStorageTypedef(Structure& stencilClass, Stencil const& stencil) const;
   void addTmpStorageDeclaration(
       Structure& stencilClass,
       IndexRange<const std::vector<dawn::Stencil::FieldInfo>>& tmpFields) const;
   void addTmpStorageInit(MemberFunction& ctr, const Stencil& stencil,
                          IndexRange<const std::vector<dawn::Stencil::FieldInfo>>& tempFields) const;
+  void addTmpStorageInit_wrapper(MemberFunction& ctr,
+                                 const std::vector<std::shared_ptr<Stencil>>& stencils,
+                                 const std::vector<std::string>& tempFields) const;
 
   const std::string tmpStorageTypename_ = "tmp_storage_t";
   const std::string tmpMetadataTypename_ = "tmp_meta_data_t";
   const std::string tmpMetadataName_ = "m_tmp_meta_data";
   const std::string tmpStorageName_ = "m_tmp_storage";
+  const std::string bigWrapperMetadata_ = "m_meta_data";
 
 public:
   CodeGen(OptimizerContext* context) : context_(context){};
