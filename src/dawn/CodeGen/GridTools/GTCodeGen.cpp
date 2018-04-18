@@ -79,11 +79,14 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
   }
 
   // Generate the name of the enclosing intervals of each multi-stage (required by the K-Caches)
-  for(auto multiStagePtr : stencil.getMultiStages()) {
-    Interval interval = multiStagePtr->getEnclosingInterval();
-    if(!IntervalToNameMap.count(interval))
-      IntervalToNameMap.emplace(interval, Interval::makeCodeGenName(interval));
+  for(const auto& interval : Intervals) {
+    IntervalToNameMap.emplace(interval, Interval::makeCodeGenName(interval));
   }
+  //  for(auto multiStagePtr : stencil.getMultiStages()) {
+  //    Interval interval = multiStagePtr->getEnclosingInterval();
+  //    if(!IntervalToNameMap.count(interval))
+  //      IntervalToNameMap.emplace(interval, Interval::makeCodeGenName(interval));
+  //  }
 
   // Compute the intervals required by each stage. Note that each stage needs to have Do-Methods
   // for the entire axis, this means we may need to add empty Do-Methods
@@ -97,15 +100,16 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
     DAWN_ASSERT(iteratorSuccessPair.second);
     std::vector<Interval>& DoMethodIntervals = iteratorSuccessPair.first->second;
 
-    // Generate unique names for the intervals
-    for(const Interval& interval : DoMethodIntervals)
-      IntervalToNameMap.emplace(interval, Interval::makeCodeGenName(interval));
+    //    // Generate unique names for the intervals
+    //    for(const Interval& interval : DoMethodIntervals)
+    //      IntervalToNameMap.emplace(interval, Interval::makeCodeGenName(interval));
   }
 
-  // Make sure the intervals for the stencil functions exist
-  for(const auto& stencilFun : stencil.getStencilInstantiation().getStencilFunctionInstantiations())
-    IntervalToNameMap.emplace(stencilFun->getInterval(),
-                              Interval::makeCodeGenName(stencilFun->getInterval()));
+  //  // Make sure the intervals for the stencil functions exist
+  //  for(const auto& stencilFun :
+  //  stencil.getStencilInstantiation().getStencilFunctionInstantiations())
+  //    IntervalToNameMap.emplace(stencilFun->getInterval(),
+  //                              Interval::makeCodeGenName(stencilFun->getInterval()));
 }
 
 /// @brief The StencilFunctionAsBCGenerator class parses a stencil function that is used as a
