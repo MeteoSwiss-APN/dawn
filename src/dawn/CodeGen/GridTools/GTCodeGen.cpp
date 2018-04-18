@@ -100,9 +100,9 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
     DAWN_ASSERT(iteratorSuccessPair.second);
     std::vector<Interval>& DoMethodIntervals = iteratorSuccessPair.first->second;
 
-    //    // Generate unique names for the intervals
-    //    for(const Interval& interval : DoMethodIntervals)
-    //      IntervalToNameMap.emplace(interval, Interval::makeCodeGenName(interval));
+    // Generate unique names for the intervals
+    for(const Interval& interval : DoMethodIntervals)
+        IntervalToNameMap.emplace(interval, Interval::makeCodeGenName(interval));
   }
 
   //  // Make sure the intervals for the stencil functions exist
