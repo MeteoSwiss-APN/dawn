@@ -370,7 +370,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
 
     for(int AccessID : stencilInstantiation->getAllocatedFieldAccessIDs())
       StencilWrapperClass.addMember(c_gtc() + "storage_t",
-                                    stencilInstantiation->getNameFromAccessID(AccessID) + "_");
+                                    "m_" + stencilInstantiation->getNameFromAccessID(AccessID));
   }
 
   // Generate stencil wrapper constructor
@@ -428,7 +428,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
     for(auto field : StencilFields) {
       if(field.IsTemporary)
         continue;
-      initCtr += "," + (stencilInstantiation->isAllocatedField(field.AccessID) ? (field.Name + "_")
+      initCtr += "," + (stencilInstantiation->isAllocatedField(field.AccessID) ? ("m_" + field.Name)
                                                                                : (field.Name));
     }
     initCtr += ") )";
@@ -436,11 +436,11 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
   }
 
   if(stencilInstantiation->hasAllocatedFields()) {
-    StencilWrapperConstructor.addInit("m_meta_data(dom.isize(), dom.jsize(), dom.ksize())");
-    for(int AccessID : stencilInstantiation->getAllocatedFieldAccessIDs())
-      StencilWrapperConstructor.addInit(
-          stencilInstantiation->getNameFromAccessID(AccessID) + "_(m_meta_data,\"" +
-          stencilInstantiation->getNameFromAccessID(AccessID) + "\")");
+    std::vector<std::string> tempFields;
+    for(auto accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
+      tempFields.push_back(stencilInstantiation->getNameFromAccessID(accessID));
+    }
+    addTmpStorageInit_wrapper(StencilWrapperConstructor, stencils, tempFields);
   }
 
   StencilWrapperConstructor.commit();

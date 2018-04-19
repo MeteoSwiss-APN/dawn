@@ -722,12 +722,11 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
 
   // Initialize allocated fields
   if(stencilInstantiation->hasAllocatedFields()) {
-    StencilWrapperConstructor.addInit("m_meta_data(dom.isize(), dom.jsize(), dom.ksize())");
-
-    for(int AccessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
-      const std::string& name = stencilInstantiation->getNameFromAccessID(AccessID);
-      StencilWrapperConstructor.addInit("m_" + name + "(m_meta_data, \"" + name + "\")");
+    std::vector<std::string> tempFields;
+    for(auto accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
+      tempFields.push_back(stencilInstantiation->getNameFromAccessID(accessID));
     }
+    addTmpStorageInit_wrapper(StencilWrapperConstructor, stencils, tempFields);
   }
   // Initialize storages that require boundary conditions
   for(const auto& memberfield : memberfields) {

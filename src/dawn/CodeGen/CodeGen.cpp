@@ -8,6 +8,23 @@ size_t CodeGen::getVerticalTmpHaloSize(Stencil const& stencil) {
   return (tmpInterval != nullptr) ? std::max(tmpInterval->overEnd(), tmpInterval->belowBegin()) : 0;
 }
 
+size_t CodeGen::getVerticalTmpHaloSizeForMultipleStencils(
+    const std::vector<std::shared_ptr<Stencil>>& stencils) const {
+  std::shared_ptr<Interval> fullIntervals = nullptr;
+  for(auto stencil : stencils) {
+    auto tmpInterval = stencil->getEnclosingIntervalTemporaries();
+    if(tmpInterval != nullptr) {
+      if(fullIntervals == nullptr)
+        fullIntervals = tmpInterval;
+      else
+        fullIntervals->merge((*tmpInterval));
+    }
+  }
+  return (fullIntervals != nullptr)
+             ? std::max(fullIntervals->overEnd(), fullIntervals->belowBegin())
+             : 0;
+}
+
 void CodeGen::addTempStorageTypedef(Structure& stencilClass, Stencil const& stencil) const {
   std::shared_ptr<Interval> tmpInterval = stencil.getEnclosingIntervalTemporaries();
   stencilClass.addTypeDef("tmp_halo_t")
@@ -40,6 +57,19 @@ void CodeGen::addTmpStorageInit(
                 std::to_string(getVerticalTmpHaloSize(stencil)) + ")");
     for(auto fieldIt : tempFields) {
       ctr.addInit("m_" + (*fieldIt).Name + "(" + tmpMetadataName_ + ")");
+    }
+  }
+}
+
+void CodeGen::addTmpStorageInit_wrapper(MemberFunction& ctr,
+                                        const std::vector<std::shared_ptr<Stencil>>& stencils,
+                                        const std::vector<std::string>& tempFields) const {
+  if(!(tempFields.empty())) {
+    auto verticalExtent = getVerticalTmpHaloSizeForMultipleStencils(stencils);
+    ctr.addInit(bigWrapperMetadata_ + "(dom.isize(), dom.jsize(), dom.ksize() + 2*" +
+                std::to_string(verticalExtent) + ")");
+    for(auto fieldName : tempFields) {
+      ctr.addInit("m_" + fieldName + " (" + bigWrapperMetadata_ + ", \"" + fieldName + "\")");
     }
   }
 }
