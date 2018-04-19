@@ -10,11 +10,14 @@ size_t CodeGen::getVerticalTmpHaloSize(Stencil const& stencil) {
 
 size_t CodeGen::getVerticalTmpHaloSizeForMultipleStencils(
     const std::vector<std::shared_ptr<Stencil>>& stencils) const {
-  std::shared_ptr<Interval> fullIntervals = stencils[0]->getEnclosingIntervalTemporaries();
+  std::shared_ptr<Interval> fullIntervals = nullptr;
   for(auto stencil : stencils) {
     auto tmpInterval = stencil->getEnclosingIntervalTemporaries();
     if(tmpInterval != nullptr) {
-      fullIntervals->merge((*tmpInterval));
+      if(fullIntervals == nullptr)
+        fullIntervals = tmpInterval;
+      else
+        fullIntervals->merge((*tmpInterval));
     }
   }
   return (fullIntervals != nullptr)
