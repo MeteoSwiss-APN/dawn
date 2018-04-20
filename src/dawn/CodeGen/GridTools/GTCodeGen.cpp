@@ -61,6 +61,15 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
   for(const auto& stencilFun : stencil.getStencilInstantiation().getStencilFunctionInstantiations())
     Intervals.insert(stencilFun->getInterval());
 
+  // Compute axis and populate the levels
+  // Notice we dont take into account caches in order to build the axis
+  Axis = *Intervals.begin();
+  for(const Interval& interval : Intervals) {
+    Levels.insert(interval.lowerLevel());
+    Levels.insert(interval.upperLevel());
+    Axis.merge(interval);
+  }
+
   // inserting the intervals of the caches
   for(const auto& mss : stencil.getMultiStages()) {
     for(const auto& cachePair : mss->getCaches()) {
@@ -68,14 +77,6 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
       if(interval.is_initialized())
         Intervals.insert(*interval);
     }
-  }
-
-  // Compute axis and populate the levels
-  Axis = *Intervals.begin();
-  for(const Interval& interval : Intervals) {
-    Levels.insert(interval.lowerLevel());
-    Levels.insert(interval.upperLevel());
-    Axis.merge(interval);
   }
 
   // Generate the name of the enclosing intervals of each multi-stage (required by the K-Caches)
