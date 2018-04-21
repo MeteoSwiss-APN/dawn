@@ -90,8 +90,8 @@ boost::optional<Extents> StatementAccessesPair::computeMaximumExtents(const int 
 
   if(callerAccesses_->hasReadAccess(accessID) || callerAccesses_->hasWriteAccess(accessID)) {
     extents = boost::make_optional(Extents{});
-    extents->expand(callerAccesses_->getReadAccess(accessID));
-    extents->expand(callerAccesses_->getWriteAccess(accessID));
+    extents->merge(callerAccesses_->getReadAccess(accessID));
+    extents->merge(callerAccesses_->getWriteAccess(accessID));
   }
 
   for(auto const& child : children_) {
@@ -99,7 +99,7 @@ boost::optional<Extents> StatementAccessesPair::computeMaximumExtents(const int 
     if(!childExtent.is_initialized())
       continue;
     if(extents.is_initialized())
-      extents->expand(*childExtent);
+      extents->merge(*childExtent);
     else
       extents = childExtent;
   }
