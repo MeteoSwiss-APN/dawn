@@ -1,0 +1,301 @@
+{
+ "filename": "/code/dawn/test/unit-test/dawn/Optimizer/Passes/samples/test_compute_maximum_extent_01.cpp",
+ "stencils": [
+  {
+   "name": "compute_extent_test_stencil",
+   "loc": {
+    "Line": 21,
+    "Column": 8
+   },
+   "ast": {
+    "root": {
+     "block_stmt": {
+      "statements": [
+       {
+        "vertical_region_decl_stmt": {
+         "vertical_region": {
+          "loc": {
+           "Line": 25,
+           "Column": 5
+          },
+          "ast": {
+           "root": {
+            "block_stmt": {
+             "statements": [
+              {
+               "expr_stmt": {
+                "expr": {
+                 "assignment_expr": {
+                  "left": {
+                   "field_access_expr": {
+                    "name": "out",
+                    "offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 26,
+                     "Column": 7
+                    }
+                   }
+                  },
+                  "op": "=",
+                  "right": {
+                   "field_access_expr": {
+                    "name": "u",
+                    "offset": [
+                     1,
+                     0,
+                     0
+                    ],
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 26,
+                     "Column": 13
+                    }
+                   }
+                  },
+                  "loc": {
+                   "Line": 26,
+                   "Column": 7
+                  }
+                 }
+                },
+                "loc": {
+                 "Line": 26,
+                 "Column": 7
+                }
+               }
+              },
+              {
+               "expr_stmt": {
+                "expr": {
+                 "assignment_expr": {
+                  "left": {
+                   "field_access_expr": {
+                    "name": "out",
+                    "offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 27,
+                     "Column": 7
+                    }
+                   }
+                  },
+                  "op": "+=",
+                  "right": {
+                   "field_access_expr": {
+                    "name": "u",
+                    "offset": [
+                     0,
+                     -1,
+                     0
+                    ],
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 27,
+                     "Column": 14
+                    }
+                   }
+                  },
+                  "loc": {
+                   "Line": 27,
+                   "Column": 7
+                  }
+                 }
+                },
+                "loc": {
+                 "Line": 27,
+                 "Column": 7
+                }
+               }
+              },
+              {
+               "expr_stmt": {
+                "expr": {
+                 "assignment_expr": {
+                  "left": {
+                   "field_access_expr": {
+                    "name": "out",
+                    "offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "argument_map": [
+                     -1,
+                     -1,
+                     -1
+                    ],
+                    "argument_offset": [
+                     0,
+                     0,
+                     0
+                    ],
+                    "negate_offset": false,
+                    "loc": {
+                     "Line": 28,
+                     "Column": 7
+                    }
+                   }
+                  },
+                  "op": "*=",
+                  "right": {
+                   "binary_operator": {
+                    "left": {
+                     "field_access_expr": {
+                      "name": "u",
+                      "offset": [
+                       0,
+                       0,
+                       2
+                      ],
+                      "argument_map": [
+                       -1,
+                       -1,
+                       -1
+                      ],
+                      "argument_offset": [
+                       0,
+                       0,
+                       0
+                      ],
+                      "negate_offset": false,
+                      "loc": {
+                       "Line": 28,
+                       "Column": 14
+                      }
+                     }
+                    },
+                    "op": "+",
+                    "right": {
+                     "literal_access_expr": {
+                      "value": "2.3999999999999999",
+                      "type": {
+                       "type_id": "Float"
+                      },
+                      "loc": {
+                       "Line": 28,
+                       "Column": 21
+                      }
+                     }
+                    },
+                    "loc": {
+                     "Line": 28,
+                     "Column": 14
+                    }
+                   }
+                  },
+                  "loc": {
+                   "Line": 28,
+                   "Column": 7
+                  }
+                 }
+                },
+                "loc": {
+                 "Line": 28,
+                 "Column": 7
+                }
+               }
+              }
+             ],
+             "loc": {
+              "Line": 25,
+              "Column": 5
+             }
+            }
+           }
+          },
+          "interval": {
+           "lower_offset": 0,
+           "upper_offset": 0,
+           "special_lower_level": "Start",
+           "special_upper_level": "End"
+          },
+          "loop_order": "Forward"
+         },
+         "loc": {
+          "Line": 25,
+          "Column": 5
+         }
+        }
+       }
+      ],
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      }
+     }
+    }
+   },
+   "fields": [
+    {
+     "name": "u",
+     "loc": {
+      "Line": 22,
+      "Column": 11
+     },
+     "is_temporary": false
+    },
+    {
+     "name": "out",
+     "loc": {
+      "Line": 22,
+      "Column": 14
+     },
+     "is_temporary": false
+    }
+   ]
+  }
+ ],
+ "stencil_functions": [],
+ "global_variables": {
+  "map": {}
+ }
+}

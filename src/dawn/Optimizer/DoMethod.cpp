@@ -46,23 +46,30 @@ std::shared_ptr<DependencyGraphAccesses>& DoMethod::getDependencyGraph() {
   return dependencyGraph_;
 }
 
-boost::optional<Interval> DoMethod::computeEnclosingAccessInterval(const int accessID) const {
-  boost::optional<Interval> interval;
-  for(auto& stmtAccess : getStatementAccessesPairs()) {
-    std::shared_ptr<Accesses> const& accesses = stmtAccess->getAccesses();
+boost::optional<Extents> DoMethod::computeMaximumExtents(const int accessID) const {
+  boost::optional<Extents> extents;
 
-    if(accesses->hasReadAccess(accessID)) {
-      if(!interval) {
-        interval = getInterval();
-      }
-      interval = (*interval).extendInterval(accesses->getReadAccess(accessID));
-    }
-    if(accesses->hasWriteAccess(accessID)) {
-      if(!interval)
-        interval = getInterval();
-      interval = (*interval).extendInterval(accesses->getWriteAccess(accessID));
+  for(auto& stmtAccess : getStatementAccessesPairs()) {
+    auto extents_ = stmtAccess->computeMaximumExtents(accessID);
+    if(!extents_.is_initialized())
+      continue;
+
+    if(extents.is_initialized()) {
+      extents->merge(*extents_);
+    } else {
+      extents = extents_;
     }
   }
+  return extents;
+}
+
+boost::optional<Interval> DoMethod::computeEnclosingAccessInterval(const int accessID) const {
+  boost::optional<Interval> interval;
+
+  boost::optional<Extents>&& extents = computeMaximumExtents(accessID);
+
+  if(extents.is_initialized())
+    return boost::make_optional<Interval>(getInterval())->extendInterval(*extents);
   return interval;
 }
 
