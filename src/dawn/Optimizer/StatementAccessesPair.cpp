@@ -85,6 +85,28 @@ std::vector<std::shared_ptr<StatementAccessesPair>>& StatementAccessesPair::getC
   return children_;
 }
 
+boost::optional<Extents> StatementAccessesPair::computeMaximumExtents(const int accessID) const {
+  boost::optional<Extents> extents;
+
+  if(callerAccesses_->hasReadAccess(accessID) || callerAccesses_->hasWriteAccess(accessID)) {
+    extents = boost::make_optional(Extents{});
+    extents->merge(callerAccesses_->getReadAccess(accessID));
+    extents->merge(callerAccesses_->getWriteAccess(accessID));
+  }
+
+  for(auto const& child : children_) {
+    auto childExtent = child->computeMaximumExtents(accessID);
+    if(!childExtent.is_initialized())
+      continue;
+    if(extents.is_initialized())
+      extents->merge(*childExtent);
+    else
+      extents = childExtent;
+  }
+
+  return extents;
+}
+
 bool StatementAccessesPair::hasChildren() const { return !children_.empty(); }
 
 std::shared_ptr<Accesses> StatementAccessesPair::getCallerAccesses() const { return getAccesses(); }

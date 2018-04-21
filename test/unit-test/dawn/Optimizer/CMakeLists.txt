@@ -16,6 +16,7 @@ dawn_add_unittest_impl(
   NAME DawnUnittestOptimizer
   SOURCES TestColoringAlgorithm.cpp
           TestExtent.cpp  
+          TestEnvironment.h
           TestGraph.cpp
           TestIsDAGAlgorithm.cpp          
           TestPartitionAlgorithm.cpp
@@ -25,4 +26,6 @@ dawn_add_unittest_impl(
           TestStencil.cpp
 )
 
+add_subdirectory(TestsFromSIR)
 add_subdirectory(Passes)
+

@@ -47,6 +47,21 @@ const DoMethod& Stage::getSingleDoMethod() const {
   return *DoMethods_.front();
 }
 
+boost::optional<Interval> Stage::computeEnclosingAccessInterval(const int accessID) const {
+  boost::optional<Interval> interval;
+  for(auto const& doMethod : DoMethods_) {
+    boost::optional<Interval> doInterval = doMethod->computeEnclosingAccessInterval(accessID);
+
+    if(doInterval) {
+      if(interval)
+        (*interval).merge(*doInterval);
+      else
+        interval = doInterval;
+    }
+  }
+  return interval;
+}
+
 std::vector<Interval> Stage::getIntervals() const {
   std::vector<Interval> intervals;
   std::transform(

@@ -15,7 +15,6 @@
   mchbuild_add_unittest(
     NAME DawnUnittestOptimizerPasses
     SOURCES 
-          TestEnvironment.h
           TestMain.cpp
           TestPassComputeStageExtents.cpp
           TestPassSetBoundaryCondition.cpp

@@ -49,6 +49,11 @@ std::ostream& operator<<(std::ostream& os, const Interval& interval) {
   return os;
 }
 
+Interval Interval::extendInterval(const Extent& verticalExtent) const {
+  return Interval(lowerLevel_, upperLevel_, lowerOffset_ + verticalExtent.Minus,
+                  upperOffset_ + verticalExtent.Plus);
+}
+
 std::string Interval::makeCodeGenName(const Interval& interval) {
   std::stringstream ss;
   ss << "interval";

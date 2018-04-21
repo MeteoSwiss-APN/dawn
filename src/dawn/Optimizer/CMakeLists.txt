@@ -110,3 +110,5 @@ mchbuild_add_library(
           StencilInstantiation.h
   OBJECT
 )
+
+target_include_directories(DawnOptimizerObjects SYSTEM PUBLIC ${Boost_INCLUDE_DIR})

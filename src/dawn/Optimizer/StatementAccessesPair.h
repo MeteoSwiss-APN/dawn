@@ -17,6 +17,7 @@
 
 #include "dawn/Optimizer/Accesses.h"
 #include "dawn/SIR/Statement.h"
+#include <boost/optional.hpp>
 #include <memory>
 #include <vector>
 
@@ -66,6 +67,8 @@ public:
   const std::vector<std::shared_ptr<StatementAccessesPair>>& getChildren() const;
   std::vector<std::shared_ptr<StatementAccessesPair>>& getChildren();
   bool hasChildren() const;
+
+  boost::optional<Extents> computeMaximumExtents(const int accessID) const;
 
   /// @brief Convert the StatementAccessesPair of a stencil or stencil-function to string
   /// @{

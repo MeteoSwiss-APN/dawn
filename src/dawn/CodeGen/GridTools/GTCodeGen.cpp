@@ -24,6 +24,7 @@
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringUtil.h"
+#include <boost/optional.hpp>
 #include <unordered_map>
 
 namespace dawn {
@@ -61,6 +62,7 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
     Intervals.insert(stencilFun->getInterval());
 
   // Compute axis and populate the levels
+  // Notice we dont take into account caches in order to build the axis
   Axis = *Intervals.begin();
   for(const Interval& interval : Intervals) {
     Levels.insert(interval.lowerLevel());
@@ -68,11 +70,18 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
     Axis.merge(interval);
   }
 
+  // inserting the intervals of the caches
+  for(const auto& mss : stencil.getMultiStages()) {
+    for(const auto& cachePair : mss->getCaches()) {
+      const boost::optional<Interval> interval = cachePair.second.getInterval();
+      if(interval.is_initialized())
+        Intervals.insert(*interval);
+    }
+  }
+
   // Generate the name of the enclosing intervals of each multi-stage (required by the K-Caches)
-  for(auto multiStagePtr : stencil.getMultiStages()) {
-    Interval interval = multiStagePtr->getEnclosingInterval();
-    if(!IntervalToNameMap.count(interval))
-      IntervalToNameMap.emplace(interval, Interval::makeCodeGenName(interval));
+  for(const auto& interval : Intervals) {
+    IntervalToNameMap.emplace(interval, Interval::makeCodeGenName(interval));
   }
 
   // Compute the intervals required by each stage. Note that each stage needs to have Do-Methods
@@ -91,11 +100,6 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
     for(const Interval& interval : DoMethodIntervals)
       IntervalToNameMap.emplace(interval, Interval::makeCodeGenName(interval));
   }
-
-  // Make sure the intervals for the stencil functions exist
-  for(const auto& stencilFun : stencil.getStencilInstantiation().getStencilFunctionInstantiations())
-    IntervalToNameMap.emplace(stencilFun->getInterval(),
-                              Interval::makeCodeGenName(stencilFun->getInterval()));
 }
 
 /// @brief The StencilFunctionAsBCGenerator class parses a stencil function that is used as a
@@ -406,17 +410,21 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
         ssMS << RangeToString(", ", "gridtools::define_caches(", "),")(
             multiStage.getCaches(),
             [&](const std::pair<int, Cache>& AccessIDCachePair) -> std::string {
+              auto const& cache = AccessIDCachePair.second;
+              DAWN_ASSERT(cache.getInterval().is_initialized() ||
+                          cache.getCacheIOPolicy() == Cache::local);
+
+              if(cache.getInterval().is_initialized())
+                DAWN_ASSERT(intervalDefinitions.IntervalToNameMap.count(*(cache.getInterval())));
+
               return (c_gt() + "cache<" +
                       // Type: IJ or K
-                      c_gt() + AccessIDCachePair.second.getCacheTypeAsString() + ", " +
+                      c_gt() + cache.getCacheTypeAsString() + ", " +
                       // IOPolicy: local, fill, bpfill, flush, epflush or flush_and_fill
-                      c_gt() + "cache_io_policy::" +
-                      AccessIDCachePair.second.getCacheIOPolicyAsString() +
+                      c_gt() + "cache_io_policy::" + cache.getCacheIOPolicyAsString() +
                       // Interval: if IOPolicy is not local, we need to provide the interval
-                      (AccessIDCachePair.second.getCacheIOPolicy() != Cache::local
-                           ? ", " +
-                                 intervalDefinitions
-                                     .IntervalToNameMap[multiStage.getEnclosingInterval()]
+                      (cache.getCacheIOPolicy() != Cache::local
+                           ? ", " + intervalDefinitions.IntervalToNameMap[*(cache.getInterval())]
                            : std::string()) +
                       // Placeholder which will be cached
                       ">(p_" + stencilInstantiation->getNameFromAccessID(AccessIDCachePair.first) +

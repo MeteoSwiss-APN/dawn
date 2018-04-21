@@ -13,8 +13,6 @@ build_dir=${base_dir}/bundle/build
 mkdir -p $build_dir
 cd $build_dir
 
-export BOOST_DIR=
-
 cmake -DCMAKE_BUILD_TYPE=${build_type} -DCMAKE_CXX_COMPILER=`which g++` -DCMAKE_C_COMPILER=`which gcc` -DBOOST_ROOT=${BOOST_DIR}  \
         -DProtobuf_DIR=/scratch/cosuna/software/protobuf/3.4.0/lib/cmake/protobuf/ ../
 make -j2
