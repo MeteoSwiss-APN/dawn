@@ -31,6 +31,42 @@ namespace dawn {
 
 class OptimizerContext;
 
+class VariableVersions {
+private:
+  /// Map of AccessIDs to the the list of all AccessIDs of the multi-versioned variables. Note
+  /// that the index in the vector corresponds to the version number.
+  std::unordered_map<int, std::shared_ptr<std::vector<int>>> variableVersionsMap_;
+  std::unordered_map<int, int> versionToOriginalVersionMap_;
+  std::unordered_set<int> versionIDs_;
+
+public:
+  bool hasVariableMultipleVersions(const int accessID) const {
+    return variableVersionsMap_.count(accessID);
+  }
+
+  std::shared_ptr<std::vector<int>> getVersions(const int accessID) {
+    return variableVersionsMap_.at(accessID);
+  }
+  const std::shared_ptr<std::vector<int>> getVersions(const int accessID) const {
+    return variableVersionsMap_.at(accessID);
+  }
+
+  void insert(const int accessID, std::shared_ptr<std::vector<int>> versionsID) {
+    variableVersionsMap_.emplace(accessID, versionsID);
+    for(auto it : *versionsID) {
+      versionIDs_.emplace(it);
+      versionToOriginalVersionMap_[it] = accessID;
+    }
+  }
+
+  bool isAccessIDAVersion(const int accessID) { return versionIDs_.count(accessID); }
+
+  int getOriginalVersionOfAccessID(const int accessID) const {
+    return versionToOriginalVersionMap_.at(accessID);
+  }
+  VariableVersions() = default;
+};
+
 /// @brief Specific instantiation of a stencil
 /// @ingroup optimizer
 class StencilInstantiation : NonCopyable {
@@ -85,13 +121,9 @@ class StencilInstantiation : NonCopyable {
   /// folding of the variable
   std::set<int> GlobalVariableAccessIDSet_;
 
-  /// Map of AccessIDs to the the list of all AccessIDs of the multi-versioned field. Note
-  /// that the index in the vector corresponds to the version number.
-  std::unordered_map<int, std::shared_ptr<std::vector<int>>> FieldVersionsMap_;
-
-  /// Map of AccessIDs to the the list of all AccessIDs of the multi-versioned variables. Note
-  /// that the index in the vector corresponds to the version number.
-  std::unordered_map<int, std::shared_ptr<std::vector<int>>> VariableVersionsMap_;
+  /// Map of AccessIDs to the list of all AccessIDs of the multi-versioned field, for fields and
+  /// variables
+  VariableVersions variableVersions_;
 
   /// Encoding of the hierarchy: Stencil -> MultiStage -> Stage
   std::vector<std::shared_ptr<Stencil>> stencils_;
@@ -205,14 +237,22 @@ public:
     return AccessID < 0 && LiteralAccessIDToNameMap_.count(AccessID);
   }
 
+  bool isAccessIDAVersion(const int accessID) {
+    return variableVersions_.isAccessIDAVersion(accessID);
+  }
+
+  int getOriginalVersionOfAccessID(const int accessID) const {
+    return variableVersions_.getOriginalVersionOfAccessID(accessID);
+  }
+
   /// @brief Check whether the `AccessID` corresponds to a multi-versioned field
   bool isMultiVersionedField(int AccessID) const {
-    return isField(AccessID) && FieldVersionsMap_.count(AccessID);
+    return isField(AccessID) && variableVersions_.hasVariableMultipleVersions(AccessID);
   }
 
   /// @brief Check whether the `AccessID` corresponds to a multi-versioned variable
   bool isMultiVersionedVariable(int AccessID) const {
-    return isVariable(AccessID) && VariableVersionsMap_.count(AccessID);
+    return isVariable(AccessID) && variableVersions_.hasVariableMultipleVersions(AccessID);
   }
 
   /// @brief Get a list of all field AccessIDs of this multi-versioned field
@@ -452,7 +492,7 @@ public:
   getBoundaryConditions() const {
     return FieldnameToBoundaryConditionMap_;
   }
-  std::unordered_map<std::string, std::shared_ptr<BoundaryConditionDeclStmt>> &
+  std::unordered_map<std::string, std::shared_ptr<BoundaryConditionDeclStmt>>&
   getBoundaryConditions() {
     return FieldnameToBoundaryConditionMap_;
   }
@@ -510,8 +550,9 @@ public:
     return BoundaryConditionToExtentsMap_;
   }
 
-  void insertBoundaryConditiontoExtentPair(std::shared_ptr<BoundaryConditionDeclStmt>& bc, Extents& extents){
-      BoundaryConditionToExtentsMap_.emplace(bc, extents);
+  void insertBoundaryConditiontoExtentPair(std::shared_ptr<BoundaryConditionDeclStmt>& bc,
+                                           Extents& extents) {
+    BoundaryConditionToExtentsMap_.emplace(bc, extents);
   }
 
   Extents getBoundaryConditionExtentsFromBCStmt(

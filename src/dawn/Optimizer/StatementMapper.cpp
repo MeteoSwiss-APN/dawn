@@ -250,6 +250,7 @@ void StatementMapper::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
   Scope* candiateScope = getCurrentCandidateScope();
 
   const auto& arguments = candiateScope->FunctionInstantiation->getArguments();
+
   for(std::size_t argIdx = 0; argIdx < arguments.size(); ++argIdx) {
     if(sir::Field* field = dyn_cast<sir::Field>(arguments[argIdx].get())) {
       int AccessID = candiateScope->FunctionInstantiation->getCallerAccessIDOfArgField(argIdx);

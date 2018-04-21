@@ -172,10 +172,12 @@ int StencilFunctionInstantiation::getArgumentIndexFromCallerAccessID(int callerA
 
 const std::string&
 StencilFunctionInstantiation::getOriginalNameFromCallerAccessID(int callerAccessID) const {
-  for(std::size_t argIdx = 0; argIdx < function_->Args.size(); ++argIdx)
-    if(sir::Field* field = dyn_cast<sir::Field>(function_->Args[argIdx].get()))
+  for(std::size_t argIdx = 0; argIdx < function_->Args.size(); ++argIdx) {
+    if(sir::Field* field = dyn_cast<sir::Field>(function_->Args[argIdx].get())) {
       if(getCallerAccessIDOfArgField(argIdx) == callerAccessID)
         return field->Name;
+    }
+  }
   dawn_unreachable("invalid AccessID");
 }
 
@@ -292,6 +294,9 @@ void StencilFunctionInstantiation::setAccessIDOfExpr(const std::shared_ptr<Expr>
 
 void StencilFunctionInstantiation::mapExprToAccessID(const std::shared_ptr<Expr>& expr,
                                                      int accessID) {
+  if(ExprToCallerAccessIDMap_.count(expr)) {
+    DAWN_ASSERT(ExprToCallerAccessIDMap_.at(expr) == accessID);
+  }
   ExprToCallerAccessIDMap_.emplace(expr, accessID);
 }
 

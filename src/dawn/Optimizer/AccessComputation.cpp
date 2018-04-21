@@ -445,6 +445,7 @@ public:
 void computeAccesses(StencilInstantiation* instantiation,
                      ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs) {
   for(const auto& statementAccessesPair : statementAccessesPairs) {
+    DAWN_ASSERT(instantiation);
     AccessMapper mapper(instantiation, statementAccessesPair, nullptr);
     statementAccessesPair->getStatement()->ASTStmt->accept(mapper);
   }

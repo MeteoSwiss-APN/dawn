@@ -88,6 +88,7 @@ public:
           SourceLocation::ReservedSL::SL_Generated);
       tmpFunction_->Args.push_back(
           std::make_shared<sir::Field>(expr->getName(), SourceLocation(genLineKey, genLineKey)));
+
       accessIDs_.push_back(instantiation_->getAccessIDFromExpr(expr));
     }
     // continue traversing
@@ -97,6 +98,7 @@ public:
   /// @brief capture a tmp computation
   virtual bool preVisitNode(std::shared_ptr<AssignmentExpr> const& expr) override {
     if(isa<FieldAccessExpr>(*(expr->getLeft()))) {
+
       // return and stop traversing the AST if the left hand of the =  is not a temporary
       int accessID = instantiation_->getAccessIDFromExpr(expr->getLeft());
       if(!instantiation_->isTemporaryField(accessID))
@@ -247,10 +249,20 @@ public:
 
     instantiation_->finalizeStencilFunctionSetup(cloneStencilFun);
 
+    std::unordered_map<std::string, int> fieldsMap;
+
+    const auto& arguments = cloneStencilFun->getArguments();
+    for(std::size_t argIdx = 0; argIdx < arguments.size(); ++argIdx) {
+      if(sir::Field* field = dyn_cast<sir::Field>(arguments[argIdx].get())) {
+        int AccessID = cloneStencilFun->getCallerAccessIDOfArgField(argIdx);
+        fieldsMap[field->Name] = AccessID;
+      }
+    }
+
     // recompute the list of <statement, accesses> pairs
     StatementMapper statementMapper(instantiation_.get(), stackTrace_,
                                     cloneStencilFun->getStatementAccessesPairs(), interval_,
-                                    instantiation_->getNameToAccessIDMap(), cloneStencilFun);
+                                    fieldsMap, cloneStencilFun);
 
     cloneStencilFun->getAST()->accept(statementMapper);
 
@@ -365,6 +377,7 @@ bool PassTemporaryToStencilFunction::run(
                 // TODO need to combine call to StatementMapper with computeAccesses in a clean way
                 // since the AST has changed, we need to recompute the <statement,accesses> pairs
                 // of the stage
+
                 StatementMapper statementMapper(
                     stencilInstantiation.get(), stmt->StackTrace, listStmtPair, sirInterval,
                     stencilInstantiation->getNameToAccessIDMap(), nullptr);
