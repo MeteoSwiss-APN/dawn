@@ -109,7 +109,7 @@ public:
 
     // Check dimensions
     auto check_dim = [&](uint_t dim1, uint_t dim2, uint_t size, const char* dimstr) {
-      if(dim1 != dim2 || dim1 < size) {
+      if(dim1 != dim2 || (dim1 > 1 && dim1 < size)) {
         std::cerr << "dimension \"" << dimstr << "\" missmatch in storage pair \""
                   << storage1.name() << "\" : \"" << storage2.name() << "\"\n";
         std::cerr << "  " << dimstr << "-dim storage1: " << dim1 << "\n";
@@ -120,15 +120,23 @@ public:
       return true;
     };
 
-    check_dim(idim1, idim2, m_domain.isize(), "i");
-    check_dim(jdim1, jdim2, m_domain.jsize(), "j");
-    check_dim(kdim1, kdim2, m_domain.ksize(), "k");
-
     bool verified = true;
+    verified &= check_dim(idim1, idim2, m_domain.isize(), "i");
+    verified &= check_dim(jdim1, jdim2, m_domain.jsize(), "j");
+    verified &= check_dim(kdim1, kdim2, m_domain.ksize(), "k");
+    if(verified==false){
+        return verified;
+    }
 
-    for(int i = m_domain.iminus(); i < (m_domain.isize() - m_domain.iplus()); ++i) {
-      for(int j = m_domain.jminus(); j < (m_domain.jsize() - m_domain.jplus()); ++j) {
-        for(int k = m_domain.kminus(); k < (m_domain.ksize() - m_domain.kplus()); ++k) {
+    int iLower = m_domain.iminus();
+    int iUpper = std::min(m_domain.isize() - m_domain.iplus(), idim1);
+    int jLower = m_domain.jminus();
+    int jUpper = std::min(m_domain.jsize() - m_domain.jplus(), jdim1);
+    int kLower = m_domain.kminus();
+    int kUpper = std::min(m_domain.ksize() - m_domain.kplus(), kdim1);
+    for(int i = iLower; i < iUpper; ++i) {
+      for(int j = jLower; j < jUpper; ++j) {
+        for(int k = kLower; k < kUpper; ++k) {
           typename StorageType1::data_t value1 = storage1_v(i, j, k);
           typename StorageType2::data_t value2 = storage2_v(i, j, k);
           if(!compare_below_threashold(value1, value2, m_precision)) {
