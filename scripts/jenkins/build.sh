@@ -19,12 +19,13 @@ function help {
   echo -e "-i sets the installation directory"
   echo -e "-g gpu build" 
   echo -e "-h Shows this help"
+  echo -e "-d <path> path to dawn"
   exit 1
 }
 
 ENABLE_GPU=false
 
-while getopts i:g flag; do
+while getopts i:gd: flag; do
   case $flag in
     i)
       INSTALL_DIR=$OPTARG
@@ -34,6 +35,9 @@ while getopts i:g flag; do
       ;;
     g)
       ENABLE_GPU=true
+      ;;
+    d) 
+      DAWN_PATH=$OPTARG
       ;;
     \?) #unrecognized option - show help
       echo -e \\n"Option -${BOLD}$OPTARG${OFF} not allowed."
@@ -54,6 +58,10 @@ CMAKE_ARGS="-DCMAKE_BUILD_TYPE=${build_type} -DCMAKE_CXX_COMPILER=`which g++` -D
 
 if [ "$ENABLE_GPU" = true ]; then
   CMAKE_ARGS="${CMAKE_ARGS} -DGTCLANG_BUILD_EXAMPLES_WITH_GPU=ON -DCTEST_CUDA_SUBMIT=ON -DGTCLANG_SLURM_RESOURCES=--gres=gpu:1 -DGTCLANG_SLURM_PARTITION=debug -DGPU_DEVICE=K80"
+fi
+
+if [ ! -z ${DAWN_PATH} ]; then
+  CMAKE_ARGS="${CMAKE_ARGS} -Ddawn_DIR=${DAWN_PATH}"
 fi
 
 if [ -z ${INSTALL_DIR} ]; then
