@@ -14,6 +14,7 @@
 
 #include "dawn/Optimizer/PassInlining.h"
 #include "dawn/Optimizer/AccessComputation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/StatementAccessesPair.h"
 #include "dawn/Optimizer/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
@@ -464,6 +465,8 @@ PassInlining::PassInlining(InlineStrategyKind strategy)
 bool PassInlining::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   // Nothing to do ...
   if(strategy_ == IK_None)
+    return true;
+  if(stencilInstantiation->getOptimizerContext()->getOptions().Debug)
     return true;
 
   DetectInlineCandiates inliner(strategy_, stencilInstantiation);

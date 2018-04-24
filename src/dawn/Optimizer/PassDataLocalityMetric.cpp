@@ -310,6 +310,9 @@ bool PassDataLocalityMetric::run(
     const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
+  if(context->getOptions().Debug)
+      return true;
+
   if(context->getOptions().ReportDataLocalityMetric) {
     std::string title = " DataLocality - " + stencilInstantiation->getName() + " ";
     std::cout << std::string((51 - title.size()) / 2, '-') << title

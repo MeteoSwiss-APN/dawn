@@ -29,6 +29,8 @@ PassStageMerger::PassStageMerger() : Pass("PassStageMerger") {
 bool PassStageMerger::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
+  if(context->getOptions().Debug)
+    return true;
   // Do we need to run this Pass?
   bool stencilNeedsMergePass = false;
   for(const auto& stencilPtr : stencilInstantiation->getStencils())

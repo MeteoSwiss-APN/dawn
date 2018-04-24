@@ -24,6 +24,8 @@ namespace dawn {
 ///
 /// @see hasHorizontalReadBeforeWriteConflict
 /// @ingroup optimizer
+///
+/// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassStageSplitter : public Pass {
 public:
   PassStageSplitter();

@@ -25,6 +25,8 @@ namespace dawn {
 /// This Pass depends on `PassSetStageGraph`.
 ///
 /// @ingroup optimizer
+///
+/// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassStageReordering : public Pass {
 public:
   PassStageReordering(ReorderStrategy::ReorderStrategyKind strategy);

@@ -24,6 +24,8 @@ namespace dawn {
 /// This Pass depends on `PassSetStageGraph`.
 ///
 /// @ingroup optimizer
+///
+/// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassStencilSplitter : public Pass {
 public:
   PassStencilSplitter(int maxNumberOfFilelds);

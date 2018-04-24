@@ -148,6 +148,9 @@ PassSetCaches::PassSetCaches() : Pass("PassSetCaches") {}
 bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiation) {
   OptimizerContext* context = instantiation->getOptimizerContext();
 
+  if(context->getOptions().Debug)
+    return true;
+
   for(const auto& stencilPtr : instantiation->getStencils()) {
     const Stencil& stencil = *stencilPtr;
 

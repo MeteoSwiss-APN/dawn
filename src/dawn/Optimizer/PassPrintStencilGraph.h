@@ -24,6 +24,8 @@ namespace dawn {
 /// This Pass depends on `PassStageSplitter` (which sets the dependency graphs).
 ///
 /// @ingroup optimizer
+///
+/// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassPrintStencilGraph : public Pass {
 public:
   PassPrintStencilGraph();
