@@ -136,18 +136,18 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
 
   using MultistageSplitStrategy = PassMultiStageSplitter::MulitStageSplittingStrategy;
   MultistageSplitStrategy mssSplitStrategy;
-  if(options_->Debug){
-      mssSplitStrategy = MultistageSplitStrategy::SS_Debug;
-  }
-  else{
-      mssSplitStrategy = MultistageSplitStrategy::SS_Optimized;
+  if(options_->Debug) {
+    mssSplitStrategy = MultistageSplitStrategy::SS_Debug;
+  } else {
+    mssSplitStrategy = MultistageSplitStrategy::SS_Optimized;
   }
 
   // -max-fields
   int maxFields = options_->MaxFieldsPerStencil;
 
   // Initialize optimizer
-  std::unique_ptr<OptimizerContext> optimizer = make_unique<OptimizerContext>(getDiagnostics(), getOptions(), SIR);
+  std::unique_ptr<OptimizerContext> optimizer =
+      make_unique<OptimizerContext>(getDiagnostics(), getOptions(), SIR);
   PassManager& passManager = optimizer->getPassManager();
 
   // Setup pass interface
@@ -173,10 +173,9 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   optimizer->checkAndPushBack<PassSetBoundaryCondition>();
   optimizer->checkAndPushBack<PassDataLocalityMetric>();
 
-
   DAWN_LOG(INFO) << "All the passes ran with the current command line arugments:";
-  for(const auto& a : passManager.getPasses()){
-      DAWN_LOG(INFO) << a->getName();
+  for(const auto& a : passManager.getPasses()) {
+    DAWN_LOG(INFO) << a->getName();
   }
 
   // Run optimization passes
