@@ -37,9 +37,6 @@ public:
 
 private:
   MulitStageSplittingStrategy strategy_;
-
-  bool splitDebug(const std::shared_ptr<StencilInstantiation>& stencilInstantiation);
-  bool splitOptimized(const std::shared_ptr<StencilInstantiation>& stencilInstantiation);
 };
 
 } // namespace dawn
