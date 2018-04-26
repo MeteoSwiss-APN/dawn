@@ -177,5 +177,4 @@ void replaceStencilCalls(const std::shared_ptr<StencilInstantiation>& instantiat
   }
 }
 
-
 } // namespace dawn

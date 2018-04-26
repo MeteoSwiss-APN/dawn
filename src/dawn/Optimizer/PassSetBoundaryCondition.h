@@ -37,6 +37,8 @@ namespace dawn {
 /// This pass should run after all the spltting is done: It depends on `PassStencilSplitter`
 ///
 /// @ingroup optimizer
+///
+/// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassSetBoundaryCondition : public Pass {
 public:
   PassSetBoundaryCondition();

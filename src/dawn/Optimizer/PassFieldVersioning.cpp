@@ -89,7 +89,9 @@ static void reportRaceCondition(const Statement& statement, StencilInstantiation
 
 } // anonymous namespace
 
-PassFieldVersioning::PassFieldVersioning() : Pass("PassFieldVersioning"), numRenames_(0) {}
+PassFieldVersioning::PassFieldVersioning() : Pass("PassFieldVersioning"), numRenames_(0) {
+  isDebug_ = true;
+}
 
 bool PassFieldVersioning::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();

@@ -29,6 +29,8 @@ namespace dawn {
 /// and expressions do not carry a valid SourceLocation anymore!
 ///
 /// @ingroup optimizer
+///
+/// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassInlining : public Pass {
 public:
   /// @brief Inlining strategies

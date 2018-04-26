@@ -103,4 +103,6 @@ OPT(bool, ReportPassSetNonTempCaches, false, "report-cache-non-temp-fields", "",
     "Report which non temporary fields are cached for each multi-stage", "", false, true)
 OPT(bool, ReportBoundaryConditions, false, "report-bc", "",
     "Report where boundary conditions are inserted", "", false, true)
+OPT(bool, Debug, false, "debug", "",
+    "Compile to debug backend", "", false, true)
 // clang-format on

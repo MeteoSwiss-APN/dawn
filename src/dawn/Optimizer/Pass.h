@@ -40,6 +40,8 @@ class Pass {
 protected:
   /// Name of the passes this pass depends on (empty implies no dependency)
   std::vector<std::string> dependencies_;
+  /// Categroy of the pass
+  bool isDebug_ = false;
 
 public:
   Pass(const std::string& name) : name_(name) {}
@@ -54,6 +56,8 @@ public:
 
   /// @brief Get the dependencies of this pass
   std::vector<std::string> getDependencies() const { return dependencies_; }
+
+  bool isDebug() const { return isDebug_; }
 };
 
 } // namespace dawn

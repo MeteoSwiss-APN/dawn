@@ -25,10 +25,18 @@ namespace dawn {
 /// @ingroup optimizer
 class PassMultiStageSplitter : public Pass {
 public:
-  PassMultiStageSplitter();
+  /// @brief Inlining strategies
+  enum MulitStageSplittingStrategy {
+    SS_Debug,    ///< Splitting every Statement into it's own Multistage
+    SS_Optimized ///< Optimized splitting of Multistages, only when needed
+  };
+  PassMultiStageSplitter(MulitStageSplittingStrategy strategy);
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) override;
+
+private:
+  MulitStageSplittingStrategy strategy_;
 };
 
 } // namespace dawn

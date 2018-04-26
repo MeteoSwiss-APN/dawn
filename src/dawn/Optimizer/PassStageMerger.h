@@ -30,6 +30,8 @@ namespace dawn {
 /// @note This pass renders the stage graphs invalid. Run `PassSetStageGraph` to compute them again.
 ///
 /// @ingroup optimizer
+///
+/// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassStageMerger : public Pass {
 public:
   PassStageMerger();

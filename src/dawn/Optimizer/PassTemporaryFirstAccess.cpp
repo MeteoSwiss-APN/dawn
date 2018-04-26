@@ -63,7 +63,9 @@ public:
 
 } // anonymous namespace
 
-PassTemporaryFirstAccess::PassTemporaryFirstAccess() : Pass("PassTemporaryFirstAccess") {}
+PassTemporaryFirstAccess::PassTemporaryFirstAccess() : Pass("PassTemporaryFirstAccess") {
+  isDebug_ = true;
+}
 
 bool PassTemporaryFirstAccess::run(
     const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {

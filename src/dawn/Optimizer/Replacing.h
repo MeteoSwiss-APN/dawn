@@ -26,7 +26,6 @@ struct Statement;
 class StatementAccessesPair;
 class StencilInstantiation;
 
-
 /// @name Replacing routines
 /// @ingroup optimizer
 /// @{

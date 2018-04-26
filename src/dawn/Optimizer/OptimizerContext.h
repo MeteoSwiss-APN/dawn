@@ -80,6 +80,31 @@ public:
   /// @brief Get the hardware configuration
   const HardwareConfig& getHardwareConfiguration() const { return hardwareConfiguration_; }
   HardwareConfig& getHardwareConfiguration() { return hardwareConfiguration_; }
+
+  /// @brief Create a new pass at the end of the pass list
+  template <class T, typename... Args>
+  void checkAndPushBack(Args&&... args) {
+    std::unique_ptr<T> pass = make_unique<T>(std::forward<Args>(args)...);
+    if(compareOptionsToPassFlags<T>(pass)) {
+      passManager_.getPasses().push_back(std::move(pass));
+    }
+  }
+
+  /// @brief this function check if a pass should be pushed back into the list of passes based on
+  /// the options.
+  ///
+  /// Currently this is a placeholder for the final design once a more elaborate scheme of grouping
+  /// is in place that enables more paths. This should also eventaully replace the option-checks
+  /// that are currently hiden in the passes run-methods
+  template <typename T>
+  bool compareOptionsToPassFlags(const std::unique_ptr<T>& p) {
+    bool retval;
+    if(getOptions().Debug)
+      retval = p->isDebug();
+    else
+      retval = true;
+    return retval;
+  }
 };
 
 } // namespace dawn
