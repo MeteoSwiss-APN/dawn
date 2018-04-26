@@ -33,13 +33,13 @@ PassMultiStageSplitter::PassMultiStageSplitter(MulitStageSplittingStrategy strat
 }
 namespace {
 std::function<void(std::list<std::shared_ptr<Stage>>::reverse_iterator&, DependencyGraphAccesses&,
-                   LoopOrderKind&, LoopOrderKind&, std::deque<MultiStage::SplitIndex>&, int&, int&,
+                   LoopOrderKind&, LoopOrderKind&, std::deque<MultiStage::SplitIndex>&, int, int,
                    int&, const std::string&, const std::string&, const Options&)>
 setOptimizedLoopContent() {
   return [&](std::list<std::shared_ptr<Stage>>::reverse_iterator& stageIt,
              DependencyGraphAccesses& graph, LoopOrderKind& userSpecifiedLoopOrder,
              LoopOrderKind& curLoopOrder, std::deque<MultiStage::SplitIndex>& splitterIndices,
-             int& stageIndex, int& multiStageIndex, int& numSplit, const std::string& StencilName,
+             int stageIndex, int multiStageIndex, int& numSplit, const std::string& StencilName,
              const std::string& PassName, const Options& options) {
 
     Stage& stage = (**stageIt);
@@ -90,14 +90,14 @@ setOptimizedLoopContent() {
   };
 }
 std::function<void(std::list<std::shared_ptr<Stage>>::reverse_iterator&, DependencyGraphAccesses&,
-                   LoopOrderKind&, LoopOrderKind&, std::deque<MultiStage::SplitIndex>&, int&, int&,
+                   LoopOrderKind&, LoopOrderKind&, std::deque<MultiStage::SplitIndex>&, int, int,
                    int&, const std::string&, const std::string&, const Options&)>
 setDebugLoopContent() {
 
   return [&](std::list<std::shared_ptr<Stage>>::reverse_iterator& stageIt,
              DependencyGraphAccesses& graph, LoopOrderKind& userSpecifiedLoopOrder,
              LoopOrderKind& curLoopOrder, std::deque<MultiStage::SplitIndex>& splitterIndices,
-             int& stageIndex, int& multiStageIndex, int& numSplit, const std::string& StencilName,
+             int stageIndex, int multiStageIndex, int& numSplit, const std::string& StencilName,
              const std::string& PassName, const Options& options) {
     Stage& stage = (**stageIt);
     DoMethod& doMethod = stage.getSingleDoMethod();
@@ -118,8 +118,8 @@ bool PassMultiStageSplitter::run(
     const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
 
   std::function<void(std::list<std::shared_ptr<Stage>>::reverse_iterator&, DependencyGraphAccesses&,
-                     LoopOrderKind&, LoopOrderKind&, std::deque<MultiStage::SplitIndex>&, int&,
-                     int&, int&, const std::string&, const std::string&, const Options&)>
+                     LoopOrderKind&, LoopOrderKind&, std::deque<MultiStage::SplitIndex>&, int,
+                     int, int&, const std::string&, const std::string&, const Options&)>
       multistagesplitter;
 
   if(strategy_ == MulitStageSplittingStrategy::SS_Optimized) {
