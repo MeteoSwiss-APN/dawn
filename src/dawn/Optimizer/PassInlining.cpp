@@ -466,8 +466,6 @@ bool PassInlining::run(const std::shared_ptr<StencilInstantiation>& stencilInsta
   // Nothing to do ...
   if(strategy_ == IK_None)
     return true;
-  if(stencilInstantiation->getOptimizerContext()->getOptions().Debug)
-    return true;
 
   DetectInlineCandiates inliner(strategy_, stencilInstantiation);
 
