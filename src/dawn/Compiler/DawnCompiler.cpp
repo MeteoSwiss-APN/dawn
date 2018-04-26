@@ -186,7 +186,6 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
                    << "` ...";
     if(!passManager.runAllPassesOnStecilInstantiation(instantiation))
       return nullptr;
-//    instantiation->dump();
     DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `" << instantiation->getName()
                    << "`";
   }
