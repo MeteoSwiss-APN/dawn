@@ -22,6 +22,7 @@ namespace dawn {
 
 PassComputeStageExtents::PassComputeStageExtents() : Pass("PassComputeStageExtents") {
   dependencies_.push_back("PassSetStageName");
+  isDebug_ = true;
 }
 
 bool PassComputeStageExtents::run(

@@ -114,9 +114,6 @@ PassSetBoundaryCondition::PassSetBoundaryCondition() : Pass("PassSetBoundaryCond
 bool PassSetBoundaryCondition::run(
     const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
 
-//  if(stencilInstantiation->getOptimizerContext()->getOptions().Debug)
-//    return true;
-
   // check if we need to run this pass
   if(stencilInstantiation->getStencils().size() == 1) {
     if(stencilInstantiation->getOptimizerContext()->getOptions().ReportBoundaryConditions) {

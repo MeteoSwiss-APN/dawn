@@ -26,7 +26,7 @@ PassSSA::PassSSA() : Pass("PassSSA") {}
 bool PassSSA::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
-  if(!context->getOptions().SSA || context->getOptions().Debug)
+  if(!context->getOptions().SSA)
     return true;
 
   for(auto& stencilPtr : stencilInstantiation->getStencils()) {
