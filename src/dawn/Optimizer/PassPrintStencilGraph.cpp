@@ -25,7 +25,7 @@ PassPrintStencilGraph::PassPrintStencilGraph() : Pass("PassPrintStencilGraph") {
 
 bool PassPrintStencilGraph::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
-  if(!context->getOptions().DumpStencilGraph || context->getOptions().Debug)
+  if(!context->getOptions().DumpStencilGraph)
     return true;
 
   int stencilIdx = 0;

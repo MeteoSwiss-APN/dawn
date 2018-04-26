@@ -50,7 +50,7 @@ PassStencilSplitter::PassStencilSplitter(int maxNumberOfFilelds)
 bool PassStencilSplitter::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
-  if(!context->getOptions().SplitStencils || context->getOptions().Debug)
+  if(!context->getOptions().SplitStencils)
     return true;
 
   // If we split a stencil, we need to recompute the stage graphs

@@ -32,8 +32,6 @@ PassStageSplitter::PassStageSplitter() : Pass("PassStageSplitter") {}
 
 bool PassStageSplitter::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
-  if(context->getOptions().Debug)
-    return true;
 
   int numSplit = 0;
   std::deque<int> splitterIndices;

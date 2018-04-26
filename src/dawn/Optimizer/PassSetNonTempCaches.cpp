@@ -289,9 +289,6 @@ bool dawn::PassSetNonTempCaches::run(
 
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
-  if(context->getOptions().Debug)
-      return true;
-
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     const Stencil& stencil = *stencilPtr;
 

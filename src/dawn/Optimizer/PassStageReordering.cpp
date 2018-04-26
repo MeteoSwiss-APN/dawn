@@ -31,9 +31,6 @@ PassStageReordering::PassStageReordering(ReorderStrategy::ReorderStrategyKind st
 bool PassStageReordering::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
-  if(context->getOptions().Debug)
-    return true;
-
   std::string filenameWE = getFilenameWithoutExtension(context->getSIR()->Filename);
   if(context->getOptions().ReportPassStageReodering)
     stencilInstantiation->dumpAsJson(filenameWE + "_before.json", getName());

@@ -302,7 +302,7 @@ bool PassTemporaryToStencilFunction::run(
 
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
-  if(!context->getOptions().PassTmpToFunction || context->getOptions().Debug)
+  if(!context->getOptions().PassTmpToFunction)
     return true;
 
   DAWN_ASSERT(context);
