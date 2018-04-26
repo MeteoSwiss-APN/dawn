@@ -68,6 +68,7 @@ boost::optional<Interval> DoMethod::computeEnclosingAccessInterval(const int acc
 
   boost::optional<Extents>&& extents = computeMaximumExtents(accessID);
 
+  // TODO we do not need the extends
   if(extents.is_initialized())
     return boost::make_optional<Interval>(getInterval())->extendInterval(*extents);
   return interval;

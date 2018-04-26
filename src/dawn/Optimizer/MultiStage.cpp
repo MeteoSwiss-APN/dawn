@@ -106,8 +106,8 @@ std::shared_ptr<DependencyGraphAccesses> MultiStage::getDependencyGraphOfAxis() 
 
 Cache& MultiStage::setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy policy, int AccessID,
                             const Interval& interval) {
-  return caches_
-      .emplace(AccessID, Cache(type, policy, AccessID, boost::optional<Interval>(interval)))
+  return caches_.emplace(AccessID,
+                         Cache(type, policy, AccessID, boost::optional<Interval>(interval)))
       .first->second;
 }
 
@@ -149,6 +149,7 @@ Interval MultiStage::getEnclosingInterval() const {
   return interval;
 }
 
+// TODO make this shared_ptr a boost optional
 std::shared_ptr<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() const {
   std::shared_ptr<Interval> interval;
   // notice we dont use here the fields of getFields() since they contain the enclosing of all the
@@ -161,9 +162,9 @@ std::shared_ptr<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() co
         continue;
 
       if(!interval) {
-        interval = std::make_shared<Interval>(field.getAccessedInterval());
+        interval = std::make_shared<Interval>(field.computeAccessedInterval());
       } else {
-        interval->merge(field.getAccessedInterval());
+        interval->merge(field.computeAccessedInterval());
       }
     }
   }
@@ -185,7 +186,8 @@ std::unordered_map<int, Field> MultiStage::getFields() const {
           it->second.setIntend(Field::IK_InputOutput);
 
         // Merge the Extent
-        it->second.mergeExtents(field.getExtents());
+        it->second.mergeReadExtents(field.getReadExtents());
+        it->second.mergeWriteExtents(field.getWriteExtents());
         it->second.extendInterval(field.getInterval());
       } else
         fields.emplace(field.getAccessID(), field);

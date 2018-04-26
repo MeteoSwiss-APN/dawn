@@ -28,7 +28,8 @@ void recordWriteAccess(std::unordered_map<int, Field>& inputOutputFields,
   if(outputFields.count(AccessID)) {
     outputFields.at(AccessID).extendInterval(doMethodInterval);
   } else {
-    outputFields.emplace(AccessID, Field(AccessID, Field::IK_Output, Extents{}, doMethodInterval));
+    outputFields.emplace(AccessID,
+                         Field(AccessID, Field::IK_Output, Extents{}, Extents{}, doMethodInterval));
   }
 }
 
@@ -58,7 +59,8 @@ void recordReadAccess(std::unordered_map<int, Field>& inputOutputFields,
   if(inputFields.count(AccessID)) {
     inputFields.at(AccessID).extendInterval(doMethodInterval);
   } else
-    inputFields.emplace(AccessID, Field(AccessID, Field::IK_Input, Extents{}, doMethodInterval));
+    inputFields.emplace(AccessID,
+                        Field(AccessID, Field::IK_Input, Extents{}, Extents{}, doMethodInterval));
 }
 } // namespace AccessUtils
 } // namespace dawn

@@ -788,8 +788,8 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
   RunMethod.commit();
 
   // Generate stencil getter
-  StencilWrapperClass
-      .addMemberFunction("std::vector<gridtools::stencil<gridtools::notype>*>", "get_stencils")
+  StencilWrapperClass.addMemberFunction("std::vector<gridtools::stencil<gridtools::notype>*>",
+                                        "get_stencils")
       .addStatement(
           "return " +
           RangeToString(", ", "std::vector<gridtools::stencil<gridtools::notype>*>({", "})")(

@@ -76,7 +76,6 @@ TEST_F(TestComputeMaximumExtent, test_field_access_interval_01) {
   auto const& mss = stencil->getMultiStages().front();
 
   auto stage1_ptr = mss->getStages().begin();
-  auto stage2_ptr = std::next(stage1_ptr);
   std::shared_ptr<Stage> const& stage1 = *stage1_ptr;
 
   ASSERT_TRUE((stage1->getDoMethods().size() == 2));

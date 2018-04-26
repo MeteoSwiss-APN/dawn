@@ -24,6 +24,7 @@ mchbuild_add_library(
           BoundaryExtent.h
           Cache.cpp
           Cache.h
+          CacheHelper.h
           DependencyGraph.h
           DependencyGraphAccesses.cpp      
           DependencyGraphAccesses.h
@@ -34,6 +35,8 @@ mchbuild_add_library(
           Extents.cpp
           Extents.h
           Field.h
+          FieldAccessExtents.cpp
+          FieldAccessExtents.h
           Interval.cpp
           Interval.h
           LoopOrder.cpp    

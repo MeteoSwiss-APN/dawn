@@ -257,14 +257,14 @@ void Stage::update() {
         if(!stencilInstantiation_.isField(accessPair.first))
           continue;
 
-        AccessIDToFieldMap[accessPair.first]->mergeExtents(accessPair.second);
+        AccessIDToFieldMap[accessPair.first]->mergeWriteExtents(accessPair.second);
       }
 
       for(const auto& accessPair : access->getReadAccesses()) {
         if(!stencilInstantiation_.isField(accessPair.first))
           continue;
 
-        AccessIDToFieldMap[accessPair.first]->mergeExtents(accessPair.second);
+        AccessIDToFieldMap[accessPair.first]->mergeReadExtents(accessPair.second);
       }
     }
   }
