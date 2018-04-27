@@ -105,14 +105,15 @@ std::shared_ptr<DependencyGraphAccesses> MultiStage::getDependencyGraphOfAxis() 
 }
 
 Cache& MultiStage::setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy policy, int AccessID,
-                            const Interval& interval) {
+                            const Interval& interval, boost::optional<Cache::window> w) {
   return caches_.emplace(AccessID,
-                         Cache(type, policy, AccessID, boost::optional<Interval>(interval)))
+                         Cache(type, policy, AccessID, boost::optional<Interval>(interval), w))
       .first->second;
 }
 
 Cache& MultiStage::setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy policy, int AccessID) {
-  return caches_.emplace(AccessID, Cache(type, policy, AccessID, boost::optional<Interval>()))
+  return caches_.emplace(AccessID, Cache(type, policy, AccessID, boost::optional<Interval>(),
+                                         boost::optional<Cache::window>()))
       .first->second;
 }
 

@@ -20,20 +20,7 @@
 
 namespace dawn {
 
-namespace cache {
-struct window {
-  int m_m, m_p;
-};
-
-struct CacheHelper {
-  static boost::optional<window> ComputeBPFillCacheWindow(MultiStage const& ms,
-                                                          const int accessID) {
-
-    return boost::optional<window>();
-  }
-};
-
-} // namespace cache
+namespace cache {} // namespace cache
 } // namespace dawn
 
 #endif

@@ -63,6 +63,7 @@ public:
 private:
   std::string generateStencilInstantiation(const StencilInstantiation* stencilInstantiation);
   std::string generateGlobals(const std::shared_ptr<SIR>& Sir);
+  std::string cacheWindowToString(boost::optional<Cache::window> const& cacheWindow);
 
   /// Maximum needed vector size of boost::fusion containers
   std::size_t mplContainerMaxSize_;

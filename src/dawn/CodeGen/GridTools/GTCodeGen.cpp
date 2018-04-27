@@ -186,6 +186,12 @@ public:
   }
 };
 
+std::string GTCodeGen::cacheWindowToString(boost::optional<Cache::window> const& cacheWindow) {
+  DAWN_ASSERT(cacheWindow.is_initialized());
+  return std::string("window<") + std::to_string((*cacheWindow).m_m) + "," +
+         std::to_string((*cacheWindow).m_p) + ">";
+}
+
 std::string
 GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInstantiation) {
   using namespace codegen;
@@ -425,6 +431,10 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
                       // Interval: if IOPolicy is not local, we need to provide the interval
                       (cache.getCacheIOPolicy() != Cache::local
                            ? ", " + intervalDefinitions.IntervalToNameMap[*(cache.getInterval())]
+                           : std::string()) +
+                      // cache window if policy is bpfill
+                      (cache.getCacheIOPolicy() == Cache::bpfill
+                           ? "," + cacheWindowToString(cache.getWindow())
                            : std::string()) +
                       // Placeholder which will be cached
                       ">(p_" + stencilInstantiation->getNameFromAccessID(AccessIDCachePair.first) +

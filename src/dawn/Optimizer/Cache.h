@@ -26,6 +26,10 @@ namespace dawn {
 /// @ingroup optimizer
 class Cache {
 public:
+  struct window {
+    int m_m, m_p;
+  };
+
   /// @brief Available cache types
   enum CacheTypeKind {
     IJ,  ///< IJ caches require synchronization capabilities, as different (i,j) grid points are
@@ -51,7 +55,7 @@ public:
   };
 
   Cache(CacheTypeKind type, CacheIOPolicy policy, int AccessID,
-        boost::optional<Interval> const& interval);
+        boost::optional<Interval> const& interval, boost::optional<window> const& w);
 
   /// @brief Get the AccessID of the field
   int getCachedFieldAccessID() const;
@@ -75,11 +79,14 @@ public:
   bool operator!=(const Cache& other) const { return !(*this == other); }
   /// @}
 
+  boost::optional<window> const& getWindow() const { return window_; }
+
 private:
   CacheTypeKind type_;
   CacheIOPolicy policy_;
   int AccessID_;
   boost::optional<Interval> interval_;
+  boost::optional<window> window_;
 };
 
 } // namespace dawn
