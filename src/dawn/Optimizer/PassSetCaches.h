@@ -18,6 +18,7 @@
 #include "dawn/Optimizer/Interval.h"
 #include "dawn/Optimizer/Pass.h"
 #include "dawn/Optimizer/Stage.h"
+#include "dawn/Optimizer/Cache.h"
 
 namespace dawn {
 
