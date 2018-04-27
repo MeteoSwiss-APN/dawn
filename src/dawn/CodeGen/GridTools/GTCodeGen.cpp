@@ -190,6 +190,8 @@ std::string GTCodeGen::cacheWindowToString(boost::optional<Cache::window> const&
   DAWN_ASSERT(cacheWindow.is_initialized());
   return std::string("window<") + std::to_string((*cacheWindow).m_m) + "," +
          std::to_string((*cacheWindow).m_p) + ">";
+}
+
 std::string GTCodeGen::buildMakeComputation(std::vector<std::string> const& DomainMapPlaceholders,
                                             std::vector<std::string> const& makeComputation,
                                             std::string const& gridName) const {
