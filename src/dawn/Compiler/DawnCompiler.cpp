@@ -134,36 +134,49 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     return nullptr;
   }
 
+  using MultistageSplitStrategy = PassMultiStageSplitter::MulitStageSplittingStrategy;
+  MultistageSplitStrategy mssSplitStrategy;
+  if(options_->Debug) {
+    mssSplitStrategy = MultistageSplitStrategy::SS_Debug;
+  } else {
+    mssSplitStrategy = MultistageSplitStrategy::SS_Optimized;
+  }
+
   // -max-fields
   int maxFields = options_->MaxFieldsPerStencil;
 
   // Initialize optimizer
-  auto optimizer = make_unique<OptimizerContext>(getDiagnostics(), getOptions(), SIR);
+  std::unique_ptr<OptimizerContext> optimizer =
+      make_unique<OptimizerContext>(getDiagnostics(), getOptions(), SIR);
   PassManager& passManager = optimizer->getPassManager();
 
   // Setup pass interface
-  passManager.pushBackPass<PassInlining>(inlineStrategy);
-  passManager.pushBackPass<PassTemporaryFirstAccess>();
-  passManager.pushBackPass<PassFieldVersioning>();
-  passManager.pushBackPass<PassSSA>();
-  passManager.pushBackPass<PassMultiStageSplitter>();
-  passManager.pushBackPass<PassStageSplitter>();
-  passManager.pushBackPass<PassPrintStencilGraph>();
-  passManager.pushBackPass<PassTemporaryType>();
-  passManager.pushBackPass<PassSetStageName>();
-  passManager.pushBackPass<PassSetStageGraph>();
-  passManager.pushBackPass<PassStageReordering>(reorderStrategy);
-  passManager.pushBackPass<PassStageMerger>();
-  passManager.pushBackPass<PassStencilSplitter>(maxFields);
-  passManager.pushBackPass<PassTemporaryType>();
-  passManager.pushBackPass<PassTemporaryMerger>();
-  // still experimental
-  passManager.pushBackPass<PassTemporaryToStencilFunction>();
-  passManager.pushBackPass<PassSetNonTempCaches>();
-  passManager.pushBackPass<PassSetCaches>();
-  passManager.pushBackPass<PassComputeStageExtents>();
-  passManager.pushBackPass<PassSetBoundaryCondition>();
-  passManager.pushBackPass<PassDataLocalityMetric>();
+  optimizer->checkAndPushBack<PassInlining>(inlineStrategy);
+  optimizer->checkAndPushBack<PassTemporaryFirstAccess>();
+  optimizer->checkAndPushBack<PassFieldVersioning>();
+  optimizer->checkAndPushBack<PassSSA>();
+  optimizer->checkAndPushBack<PassMultiStageSplitter>(mssSplitStrategy);
+  optimizer->checkAndPushBack<PassStageSplitter>();
+  optimizer->checkAndPushBack<PassPrintStencilGraph>();
+  optimizer->checkAndPushBack<PassTemporaryType>();
+  optimizer->checkAndPushBack<PassSetStageName>();
+  optimizer->checkAndPushBack<PassSetStageGraph>();
+  optimizer->checkAndPushBack<PassStageReordering>(reorderStrategy);
+  optimizer->checkAndPushBack<PassStageMerger>();
+  optimizer->checkAndPushBack<PassStencilSplitter>(maxFields);
+  optimizer->checkAndPushBack<PassTemporaryType>();
+  optimizer->checkAndPushBack<PassTemporaryMerger>();
+  optimizer->checkAndPushBack<PassTemporaryToStencilFunction>();
+  optimizer->checkAndPushBack<PassSetNonTempCaches>();
+  optimizer->checkAndPushBack<PassSetCaches>();
+  optimizer->checkAndPushBack<PassComputeStageExtents>();
+  optimizer->checkAndPushBack<PassSetBoundaryCondition>();
+  optimizer->checkAndPushBack<PassDataLocalityMetric>();
+
+  DAWN_LOG(INFO) << "All the passes ran with the current command line arugments:";
+  for(const auto& a : passManager.getPasses()) {
+    DAWN_LOG(INFO) << a->getName();
+  }
 
   // Run optimization passes
   for(auto& stencil : optimizer->getStencilInstantiationMap()) {

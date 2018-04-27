@@ -35,6 +35,8 @@ namespace dawn {
 /// This Pass has no dependecies
 ///
 /// @ingroup optimizer
+///
+/// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassSetNonTempCaches : public Pass {
 public:
   PassSetNonTempCaches();

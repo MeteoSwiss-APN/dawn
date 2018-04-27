@@ -26,10 +26,11 @@ namespace dawn {
 PassTemporaryMerger::PassTemporaryMerger() : Pass("PassTemporaryMerger") {}
 
 bool PassTemporaryMerger::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
+  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
+
   using Edge = DependencyGraphAccesses::Edge;
   using Vertex = DependencyGraphAccesses::Vertex;
 
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
   bool merged = false;
 
   bool stencilNeedsMergePass = false;

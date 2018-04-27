@@ -30,6 +30,8 @@ struct ReadWriteAccumulator {
 /// @brief This Pass computes a heuristic measuring the data-locality of each stencil
 ///
 /// @ingroup optimizer
+///
+/// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassDataLocalityMetric : public Pass {
 public:
   PassDataLocalityMetric();

@@ -86,7 +86,7 @@ struct Temporary {
 
 } // anonymous namespace
 
-PassTemporaryType::PassTemporaryType() : Pass("PassTemporaryType") {}
+PassTemporaryType::PassTemporaryType() : Pass("PassTemporaryType") { isDebug_ = true; }
 
 bool PassTemporaryType::run(const std::shared_ptr<StencilInstantiation>& instantiation) {
   OptimizerContext* context = instantiation->getOptimizerContext();

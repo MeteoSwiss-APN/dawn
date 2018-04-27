@@ -14,6 +14,7 @@
 
 #include "dawn/Optimizer/PassInlining.h"
 #include "dawn/Optimizer/AccessComputation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/StatementAccessesPair.h"
 #include "dawn/Optimizer/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
@@ -459,7 +460,9 @@ tryInlineStencilFunction(PassInlining::InlineStrategyKind strategy,
 } // anonymous namespace
 
 PassInlining::PassInlining(InlineStrategyKind strategy)
-    : Pass("PassInlining"), strategy_(strategy) {}
+    : Pass("PassInlining"), strategy_(strategy) {
+  isDebug_ = true;
+}
 
 bool PassInlining::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   // Nothing to do ...

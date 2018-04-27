@@ -57,7 +57,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
-//  DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not yet implemented");
+  //  DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not yet implemented");
 }
 
 //===------------------------------------------------------------------------------------------===//

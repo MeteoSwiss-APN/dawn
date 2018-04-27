@@ -32,6 +32,8 @@ class DoMethod;
 /// removed. New stencil functions instantiations are inserted into the IIR. <statement,accesses>
 /// pairs are recomputed
 /// @ingroup optimizer
+///
+/// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassTemporaryToStencilFunction : public Pass {
 
 public:

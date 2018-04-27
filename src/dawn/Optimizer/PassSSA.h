@@ -23,6 +23,8 @@ namespace dawn {
 ///
 /// @see https://en.wikipedia.org/wiki/Static_single_assignment_form
 /// @ingroup optimizer
+///
+/// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassSSA : public Pass {
 public:
   PassSSA();
