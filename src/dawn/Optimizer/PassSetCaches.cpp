@@ -130,9 +130,10 @@ static FirstAccessKind getFirstAccessKind(const MultiStage& MS, int AccessID) {
 std::pair<Cache::CacheIOPolicy, boost::optional<Cache::window>>
 combinePolicy(std::pair<Cache::CacheIOPolicy, boost::optional<Cache::window>> const& MS1Policy,
               std::pair<Cache::CacheIOPolicy, boost::optional<Cache::window>> const& MS2Policy) {
+  std::cout << "COMBINE POLICIES " << MS1Policy.first << " " << MS2Policy.first << std::endl;
   // TODO properly compute the window
   if(MS1Policy.first == Cache::local) {
-    if(MS2Policy.first == Cache::fill || MS2Policy.first == Cache::bpfill)
+    if(MS2Policy.first == Cache::fill)
       return std::make_pair(Cache::flush, boost::make_optional(Cache::window{})); // flush
     if(MS2Policy.first == Cache::bpfill) {
       DAWN_ASSERT(MS2Policy.second.is_initialized());
@@ -359,6 +360,8 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
           // Determine if we need to fill the cache by analyzing the current multi-stage
           std::pair<Cache::CacheIOPolicy, boost::optional<Cache::window>> policy =
               computePolicyMS1(field, instantiation->isTemporaryField(field.getAccessID()), MS);
+
+          std::cout << "Policy1 " << policy.first << std::endl;
 
           if(!instantiation->isTemporaryField(field.getAccessID()) &&
              field.getIntend() != Field::IK_Input) {
