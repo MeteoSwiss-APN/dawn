@@ -139,7 +139,7 @@ combinePolicy(std::pair<Cache::CacheIOPolicy, boost::optional<Cache::window>> co
       DAWN_ASSERT(MS2Policy.second.is_initialized());
       auto const& window = *(MS2Policy.second);
       return std::make_pair(
-          Cache::flush, boost::make_optional(Cache::window{-window.m_p, -window.m_m})); // epflush
+          Cache::epflush, boost::make_optional(Cache::window{-window.m_p, -window.m_m})); // epflush
     }
     if(MS2Policy.first == Cache::local)
       return MS2Policy; // local

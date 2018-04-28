@@ -90,6 +90,9 @@ private:
   // TODO we should eliminate the redundancy on FieldInfos
   bool isTemporary(Stencil::FieldInfo const& f) const { return f.IsTemporary; }
 
+  void generateSyncStorages(MemberFunction& method,
+                            const IndexRange<std::vector<Stencil::FieldInfo>>& stencilFields) const;
+
   template <typename TFieldInfo>
   std::vector<std::string>
   buildFieldTemplateNames(std::vector<TFieldInfo> const& stencilFields) const {

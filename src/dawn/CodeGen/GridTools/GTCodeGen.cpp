@@ -220,6 +220,15 @@ void GTCodeGen::addCastOfStencil(MemberFunction& function, std::string varName,
   function.addStatement("stencil.run()");
 }
 
+void GTCodeGen::generateSyncStorages(
+    MemberFunction& method,
+    IndexRange<std::vector<Stencil::FieldInfo>> const& stencilFields) const {
+  // synchronize storages method
+  for(auto fieldIt : stencilFields) {
+    method.addStatement((*fieldIt).Name + ".sync()");
+  }
+}
+
 void GTCodeGen::buildPlaceholderDefinitions(
     MemberFunction& function, std::vector<Stencil::FieldInfo> const& stencilFields,
     std::vector<std::string> const& stencilGlobalVariables,
@@ -302,6 +311,15 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
   auto& stencils = stencilInstantiation->getStencils();
   for(std::size_t stencilIdx = 0; stencilIdx < stencils.size(); ++stencilIdx) {
     const Stencil& stencil = *stencilInstantiation->getStencils()[stencilIdx];
+
+    std::vector<Stencil::FieldInfo> StencilFields = stencil.getFields();
+
+    auto nonTempFields =
+        makeRange(StencilFields, std::function<bool(Stencil::FieldInfo const&)>(
+                                     [](Stencil::FieldInfo const& f) { return !f.IsTemporary; }));
+    auto tempFields =
+        makeRange(StencilFields, std::function<bool(Stencil::FieldInfo const&)>(
+                                     [](Stencil::FieldInfo const& f) { return f.IsTemporary; }));
 
     if(stencil.isEmpty())
       continue;
@@ -608,10 +626,8 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     //
     // Generate constructor/destructor and methods of the stencil
     //
-    std::vector<Stencil::FieldInfo> StencilFields = stencil.getFields();
     std::vector<std::string> StencilGlobalVariables = stencil.getGlobalVariables();
     std::size_t numFields = StencilFields.size();
-    int numTemporaries = computeNumTemporaries(StencilFields);
 
     mplContainerMaxSize_ = std::max(mplContainerMaxSize_, numFields);
 
@@ -622,21 +638,22 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
         StencilConstructorTemplates, [](const std::string& str) { return "class " + str; }));
 
     StencilConstructor.addArg("const gridtools::clang::domain& dom");
-    for(int i = 0; i < numFields; ++i)
-      if(!StencilFields[i].IsTemporary)
-        StencilConstructor.addArg(StencilConstructorTemplates[i - numTemporaries] + " " +
-                                  StencilFields[i].Name);
+    int i = 0;
+    for(auto field : nonTempFields) {
+      StencilConstructor.addArg(StencilConstructorTemplates[i] + " " + (*field).Name);
+      ++i;
+    }
 
     StencilConstructor.startBody();
 
     // Generate domain
     StencilConstructor.addComment("Placeholder definitions");
     // Placeholders to map the real storages to the placeholders (no temporaries)
+
     std::vector<std::string> DomainMapPlaceholders;
-    std::transform(StencilFields.begin() + numTemporaries, StencilFields.end(),
-                   std::back_inserter(DomainMapPlaceholders), [](const Stencil::FieldInfo& field) {
-                     return "(p_" + field.Name + "() = " + field.Name + ")";
-                   });
+    for(auto fieldIt : nonTempFields)
+      DomainMapPlaceholders.push_back("(p_" + (*fieldIt).Name + "() = " + (*fieldIt).Name + ")");
+
     for(const auto& var : StencilGlobalVariables)
       DomainMapPlaceholders.push_back("(p_" + var + "() = globals::get()." + var +
                                       ".as_global_parameter())");
@@ -671,6 +688,9 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
         it != end; ++it, ++levelIdx)
       StencilConstructor.addStatement("grid_.value_list[" + std::to_string(levelIdx) + "] = " +
                                       getLevelSize(*it));
+
+    // generate sync storage calls
+    generateSyncStorages(StencilConstructor, nonTempFields);
 
     // Generate make_computation
     StencilConstructor.addComment("Computation");
