@@ -499,11 +499,14 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
               if(cache.getInterval().is_initialized())
                 DAWN_ASSERT(intervalDefinitions.IntervalToNameMap.count(*(cache.getInterval())));
 
-              boost::optional<Interval> interval =
-                  (cache.getCacheIOPolicy() == Cache::CacheIOPolicy::fill)
+              boost::optional<Interval> interval;
+
+              if(cache.getCacheIOPolicy() != Cache::local) {
+                  interval = (cache.getCacheIOPolicy() == Cache::CacheIOPolicy::fill)
                       ? multiStage.computeEnclosingAccessInterval(AccessIDCachePair.first)
                       : (cache.getInterval());
-              DAWN_ASSERT(interval.is_initialized());
+                  DAWN_ASSERT(interval.is_initialized());
+              }
               return (c_gt() + "cache<" +
                       // Type: IJ or K
                       c_gt() + cache.getCacheTypeAsString() + ", " +
