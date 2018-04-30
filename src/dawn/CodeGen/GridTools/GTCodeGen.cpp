@@ -509,7 +509,8 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
                            ? ", " + intervalDefinitions.IntervalToNameMap[*(cache.getInterval())]
                            : std::string()) +
                       // cache window if policy is bpfill
-                      (cache.getCacheIOPolicy() == Cache::bpfill
+                      ((cache.getCacheIOPolicy() == Cache::bpfill ||
+                        cache.getCacheIOPolicy() == Cache::epflush)
                            ? "," + cacheWindowToString(cache.getWindow())
                            : std::string()) +
                       // Placeholder which will be cached
