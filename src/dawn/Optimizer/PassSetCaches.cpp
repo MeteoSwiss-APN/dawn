@@ -29,9 +29,8 @@ namespace {
 
 enum FirstAccessKind {
   FK_Unknown = 0,
-  FK_WriteOnly = 1,   ///< The first access is write only (e.g `a = ...`)
-  FK_ReadOnly = 2,    ///< The first access is read only (e.g `... = a`)
-  FK_ReadAndWrite = 4 ///< The first access is read and write (e.g `a = a + ...`)
+  FK_Write,   ///< The first access is write only (e.g `a = ...`)
+  FK_Read    ///< The first access is read only (e.g `... = a`)
 };
 
 /// @brief Do we compute the first levels or do we need to access main memory?
@@ -48,26 +47,45 @@ static FirstAccessKind getFirstAccessKind(const MultiStage& MS, int AccessID) {
        }) != stage.getFields().end()) {
 
       auto getFirstAccessKindFromDoMethod = [&](const DoMethod* doMethod) -> FirstAccessKind {
+std::cout << " LOOPING DO " << std::endl;
+
         for(const auto& statementAccesssPair : doMethod->getStatementAccessesPairs()) {
           const Accesses& accesses = *statementAccesssPair->getAccesses();
-
           for(const auto& writeAccessIDExtentPair : accesses.getWriteAccesses()) {
+std::cout << "SSSSS " << statementAccesssPair->getStatement()->ASTStmt << std::endl;
+std::cout << "IN ACC " << writeAccessIDExtentPair.first << " " << AccessID << std::endl;
             // Storage has a write access, does it have a read access as well?
             if(writeAccessIDExtentPair.first == AccessID) {
-              for(const auto& readAccessIDExtentPair : accesses.getReadAccesses())
+std::cout << "INWRITE " << std::endl;
+              for(const auto& readAccessIDExtentPair : accesses.getReadAccesses()) {
                 // Yes!
-                if(readAccessIDExtentPair.first == AccessID)
-                  return FK_ReadAndWrite;
+                if(readAccessIDExtentPair.first == AccessID) {
+std::cout << "ISA READWRITE" << std::endl;
+                  // is a readwrite
+                  return FK_Read;
+
+                }
+
+              }
+std::cout << "ISA AWRITE" << std::endl;
+
               // No!
-              return FK_WriteOnly;
+              return FK_Write;
             }
           }
 
-          for(const auto& readAccessIDExtentPair : accesses.getReadAccesses())
+          for(const auto& readAccessIDExtentPair : accesses.getReadAccesses()) {
             // First access is read-only
             if(readAccessIDExtentPair.first == AccessID)
-              return FK_ReadOnly;
+ {
+std::cout << "IS A READONLY" << std::endl;
+              return FK_Read;
+}
+
+  }
         }
+std::cout << "IS A UNKNOWN" << std::endl;
+
         // Storage not referenced in this Do-Method
         return FK_Unknown;
       };
@@ -75,9 +93,17 @@ static FirstAccessKind getFirstAccessKind(const MultiStage& MS, int AccessID) {
       // We need to check all Do-Methods
       if(MS.getLoopOrder() == LoopOrderKind::LK_Parallel) {
         FirstAccessKind firstAccess = FK_Unknown;
-        for(const auto& doMethodPtr : stage.getDoMethods())
-          firstAccess = static_cast<FirstAccessKind>(
-              firstAccess | getFirstAccessKindFromDoMethod(doMethodPtr.get()));
+        int cnt=0;
+        for(const auto& doMethodPtr : stage.getDoMethods()) {
+std::cout << "UU " << std::endl;
+          if(( firstAccess == getFirstAccessKindFromDoMethod(doMethodPtr.get())) || !cnt)
+            firstAccess = getFirstAccessKindFromDoMethod(doMethodPtr.get());
+          else {
+std::cout << "INCOMP " << firstAccess << " " << getFirstAccessKindFromDoMethod(doMethodPtr.get()) << std::endl;
+            return FK_Unknown;
+          }
+          ++cnt;
+        }
         return firstAccess;
 
       } else {
@@ -101,6 +127,7 @@ static FirstAccessKind getFirstAccessKind(const MultiStage& MS, int AccessID) {
 
         for(DoMethod* D : doMethods) {
           FirstAccessKind firstAccess = getFirstAccessKindFromDoMethod(D);
+std::cout << "returning f " << firstAccess << std::endl;
           if(firstAccess != FK_Unknown)
             return firstAccess;
         }
@@ -202,7 +229,8 @@ PassSetCaches::computePolicyMS1(Field const& field, bool isTemporaryField, Multi
     // fist accesses)?
     // TODO test getFirstAccessKind
     FirstAccessKind firstAccess = getFirstAccessKind(MS, field.getAccessID());
-    if(firstAccess == FK_WriteOnly) {
+std::cout << "ACH " << firstAccess<< std::endl;
+    if(firstAccess == FK_Write ) {
       // Example (kcache candidate a):
       //   k=k_end:k_start
       //     a = in
