@@ -359,11 +359,11 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
           MultiStage& MS = *stencil.getMultiStageFromMultiStageIndex(MSIndex);
           const Field& field = AccessIDFieldPair.second;
 
-          std::cout << "FOR " << std::endl;
+          std::cout << "FOR " << field.getAccessID() << " " << MSIndex << std::endl;
           // Field is already cached, skip
           if(MS.isCached(field.getAccessID()))
             continue;
-          std::cout << "FOR " << std::endl;
+          std::cout << "FOR " << field.getAccessID() << " " << MSIndex << std::endl;
 
           // Field has horizontal extents, can't be k-cached
           if(!field.getExtents().isHorizontalPointwise())
@@ -386,7 +386,7 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
               (field.getIntend() == Field::IK_Input && field.getExtents().isPointwise())))
             continue;
 
-          std::cout << "FORC " << std::endl;
+          std::cout << "FORC " << MSIndex << std::endl;
 
           // Determine if we need to fill the cache by analyzing the current multi-stage
           std::pair<Cache::CacheIOPolicy, boost::optional<Cache::window>> policy =
@@ -402,8 +402,8 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
             std::cout << "SET TO FLUSH B "
                       << instantiation->getNameFromAccessID(field.getAccessID()) << std::endl;
 
-            policy = combinePolicy(policy,
-                                   std::make_pair(policy.first, boost::optional<Cache::window>()));
+            policy = combinePolicy(policy, std::make_pair(Cache::CacheIOPolicy::fill,
+                                                          boost::optional<Cache::window>()));
           } else {
 
             for(int MSIndex2 = MSIndex + 1; MSIndex2 < numMS; MSIndex2++) {
@@ -427,6 +427,7 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
           //          auto interval = MS.computeEnclosingAccessInterval(field.getAccessID());
           auto interval = field.getInterval();
 
+          std::cout << "INSERTINGCACHE " << field.getAccessID() << std::endl;
           // Set the cache
           Cache& cache =
               MS.setCache(Cache::K, policy.first, field.getAccessID(), interval, policy.second);
