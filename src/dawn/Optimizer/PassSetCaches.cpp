@@ -369,7 +369,7 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
                       << instantiation->getNameFromAccessID(field.getAccessID()) << std::endl;
 
             policy = combinePolicy(policy,
-                                   std::make_pair(Cache::fill, boost::optional<Cache::window>()));
+                                   std::make_pair(policy.first, boost::optional<Cache::window>()));
           } else {
 
             for(int MSIndex2 = MSIndex + 1; MSIndex2 < numMS; MSIndex2++) {
