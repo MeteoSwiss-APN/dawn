@@ -361,6 +361,9 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
           std::pair<Cache::CacheIOPolicy, boost::optional<Cache::window>> policy =
               computePolicyMS1(field, instantiation->isTemporaryField(field.getAccessID()), MS);
 
+          DAWN_ASSERT((policy.first != Cache::fill && policy.first != Cache::bpfill &&
+                       policy.first != Cache::fill_and_flush) ||
+                      !instantiation->isTemporaryField(field.getAccessID()));
           std::cout << "Policy1 " << policy.first << std::endl;
 
           if(!instantiation->isTemporaryField(field.getAccessID()) &&
