@@ -428,7 +428,12 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
 
           // TODO remove
           //          auto interval = MS.computeEnclosingAccessInterval(field.getAccessID());
-          auto interval = field.getInterval();
+          Interval interval = field.getInterval();
+          if(policy.first == Cache::CacheIOPolicy::fill) {
+            auto interval_ = MS.computeEnclosingAccessInterval(field.getAccessID());
+            DAWN_ASSERT(interval_.is_initialized());
+            interval = *interval_;
+          }
 
           std::cout << "INSERTINGCACHE " << field.getAccessID() << std::endl;
           // Set the cache
