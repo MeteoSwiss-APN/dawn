@@ -499,6 +499,11 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
               if(cache.getInterval().is_initialized())
                 DAWN_ASSERT(intervalDefinitions.IntervalToNameMap.count(*(cache.getInterval())));
 
+              boost::optional<Interval> interval =
+                  (cache.getCacheIOPolicy() == Cache::CacheIOPolicy::fill)
+                      ? multiStage.computeEnclosingAccessInterval(AccessIDCachePair.first)
+                      : (cache.getInterval());
+              DAWN_ASSERT(interval.is_initialized());
               return (c_gt() + "cache<" +
                       // Type: IJ or K
                       c_gt() + cache.getCacheTypeAsString() + ", " +
@@ -506,7 +511,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
                       c_gt() + "cache_io_policy::" + cache.getCacheIOPolicyAsString() +
                       // Interval: if IOPolicy is not local, we need to provide the interval
                       (cache.getCacheIOPolicy() != Cache::local
-                           ? ", " + intervalDefinitions.IntervalToNameMap[*(cache.getInterval())]
+                           ? ", " + intervalDefinitions.IntervalToNameMap[*interval]
                            : std::string()) +
                       // cache window if policy is bpfill
                       ((cache.getCacheIOPolicy() == Cache::bpfill ||
