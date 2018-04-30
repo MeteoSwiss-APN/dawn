@@ -373,14 +373,16 @@ public:
 
     if(isa<FieldAccessExpr>(expr->getLeft().get())) {
       auto field = std::static_pointer_cast<FieldAccessExpr>(expr->getLeft());
-      mergeWriteOffset(field);
       if(readAndWrite)
         mergeReadOffset(field);
+
+      mergeWriteOffset(field);
     } else if(isa<VarAccessExpr>(expr->getLeft().get())) {
       auto var = std::static_pointer_cast<VarAccessExpr>(expr->getLeft());
-      mergeWriteOffset(var);
       if(readAndWrite)
         mergeReadOffset(var);
+
+      mergeWriteOffset(var);
     }
 
     // RHS are read accesses

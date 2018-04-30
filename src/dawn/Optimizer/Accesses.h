@@ -23,6 +23,11 @@ namespace dawn {
 class StencilInstantiation;
 class StencilFunctionInstantiation;
 
+enum AccessKind {
+  AK_Write,
+  AK_Read ///< The first access is read only (e.g `... = a`)
+};
+
 /// @brief Read and write accesses of a statement
 ///
 /// Accesses are either part of a `StencilInstantiation` or `StencilFunctionInstantiation`.
@@ -30,6 +35,7 @@ class StencilFunctionInstantiation;
 class Accesses {
   std::unordered_map<int, Extents> writeAccesses_;
   std::unordered_map<int, Extents> readAccesses_;
+  std::unordered_map<int, AccessKind> firstAccessKind_;
 
 public:
   Accesses() = default;
@@ -92,6 +98,12 @@ public:
   std::string reportAccesses(const StencilFunctionInstantiation* stencilFunc) const;
   std::string reportAccesses(const StencilInstantiation* instantiation) const;
   /// @}
+
+  AccessKind getFirstAccessKind(int accessID) const;
+
+private:
+  void insertReadFirstAccessKind(int accessID);
+  void insertWriteFirstAccessKind(int accessID);
 };
 
 } // namespace dawn

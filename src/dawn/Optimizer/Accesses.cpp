@@ -102,6 +102,7 @@ reportAccessesImpl(FieldAccessIDToStringFunctionType&& fieldAccessIDToStringFunc
 const Extents Accesses::NullExtents{};
 
 void Accesses::mergeReadOffset(int AccessID, const Array3i& offset) {
+  insertReadFirstAccessKind(AccessID);
   auto it = readAccesses_.find(AccessID);
   if(it != readAccesses_.end())
     it->second.merge(offset);
@@ -110,6 +111,7 @@ void Accesses::mergeReadOffset(int AccessID, const Array3i& offset) {
 }
 
 void Accesses::mergeReadExtent(int AccessID, const Extents& extent) {
+  insertReadFirstAccessKind(AccessID);
   auto it = readAccesses_.find(AccessID);
   if(it != readAccesses_.end())
     it->second.merge(extent);
@@ -118,6 +120,7 @@ void Accesses::mergeReadExtent(int AccessID, const Extents& extent) {
 }
 
 void Accesses::mergeWriteOffset(int AccessID, const Array3i& offset) {
+  insertWriteFirstAccessKind(AccessID);
   auto it = writeAccesses_.find(AccessID);
   if(it != writeAccesses_.end())
     it->second.merge(offset);
@@ -126,6 +129,7 @@ void Accesses::mergeWriteOffset(int AccessID, const Array3i& offset) {
 }
 
 void Accesses::mergeWriteExtent(int AccessID, const Extents& extent) {
+  insertWriteFirstAccessKind(AccessID);
   auto it = writeAccesses_.find(AccessID);
   if(it != writeAccesses_.end())
     it->second.merge(extent);
@@ -134,6 +138,7 @@ void Accesses::mergeWriteExtent(int AccessID, const Extents& extent) {
 }
 
 void Accesses::addReadExtent(int AccessID, const Extents& extent) {
+  insertReadFirstAccessKind(AccessID);
   auto it = readAccesses_.find(AccessID);
   if(it != readAccesses_.end())
     it->second.add(extent);
@@ -142,6 +147,7 @@ void Accesses::addReadExtent(int AccessID, const Extents& extent) {
 }
 
 void Accesses::addWriteExtent(int AccessID, const Extents& extent) {
+  insertWriteFirstAccessKind(AccessID);
   auto it = writeAccesses_.find(AccessID);
   if(it != writeAccesses_.end())
     it->second.add(extent);
@@ -159,6 +165,21 @@ const Extents& Accesses::getReadAccess(int AccessID) const {
     return it->second;
   else
     return Accesses::NullExtents;
+}
+
+void Accesses::insertReadFirstAccessKind(int accessID) {
+  if(!firstAccessKind_.count(accessID))
+    firstAccessKind_.emplace(accessID, AccessKind::AK_Read);
+}
+
+void Accesses::insertWriteFirstAccessKind(int accessID) {
+  if(!firstAccessKind_.count(accessID))
+    firstAccessKind_.emplace(accessID, AccessKind::AK_Write);
+}
+
+AccessKind Accesses::getFirstAccessKind(int accessID) const {
+  DAWN_ASSERT(firstAccessKind_.count(accessID));
+  return firstAccessKind_.at(accessID);
 }
 
 const Extents& Accesses::getWriteAccess(int AccessID) const {
