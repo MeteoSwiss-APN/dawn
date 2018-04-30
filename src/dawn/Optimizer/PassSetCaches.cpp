@@ -354,10 +354,14 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
 
       boost::optional<Cache::window> cacheWindow;
       int numMS = fields.size();
+      std::set<int> mssProcessedFields;
       for(int MSIndex = 0; MSIndex < numMS; ++MSIndex) {
         for(const auto& AccessIDFieldPair : fields[MSIndex]) {
           MultiStage& MS = *stencil.getMultiStageFromMultiStageIndex(MSIndex);
           const Field& field = AccessIDFieldPair.second;
+          bool mssProcessedField = mssProcessedFields.count(field.getAccessID());
+          if(!mssProcessedField)
+            mssProcessedFields.emplace(field.getAccessID());
 
           std::cout << "FOR " << field.getAccessID() << " " << MSIndex << std::endl;
           // Field is already cached, skip
@@ -392,9 +396,8 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
           std::pair<Cache::CacheIOPolicy, boost::optional<Cache::window>> policy =
               computePolicyMS1(field, instantiation->isTemporaryField(field.getAccessID()), MS);
 
-          DAWN_ASSERT((policy.first != Cache::fill && policy.first != Cache::bpfill &&
-                       policy.first != Cache::fill_and_flush) ||
-                      !instantiation->isTemporaryField(field.getAccessID()));
+          DAWN_ASSERT((policy.first != Cache::fill && policy.first != Cache::bpfill) ||
+                      !instantiation->isTemporaryField(field.getAccessID() || mssProcessedField));
           std::cout << "Policy1 " << policy.first << std::endl;
 
           if(!instantiation->isTemporaryField(field.getAccessID()) &&
