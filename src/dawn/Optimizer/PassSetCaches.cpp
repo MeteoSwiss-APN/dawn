@@ -27,17 +27,56 @@ namespace dawn {
 
 namespace {
 
-enum FirstAccessKind {
-  FK_Unknown = 0,
-  FK_Write,   ///< The first access is write only (e.g `a = ...`)
-  FK_Read    ///< The first access is read only (e.g `... = a`)
-};
+enum class FirstAccessKind { FK_Read, FK_Write, FK_Mixed };
+
+boost::optional<FirstAccessKind> toFirstAccess(boost::optional<AccessKind> thisFirstAccess) {
+  if(!thisFirstAccess.is_initialized())
+    return boost::optional<FirstAccessKind>();
+  switch(*thisFirstAccess) {
+  case AccessKind::AK_Read:
+    return boost::make_optional(FirstAccessKind::FK_Read);
+    break;
+  case AccessKind::AK_Write:
+    return boost::make_optional(FirstAccessKind::FK_Write);
+    break;
+  default:
+    dawn_unreachable("unknown access kind");
+  }
+}
+
+boost::optional<FirstAccessKind> combineFirstAccess(boost::optional<FirstAccessKind> firstAccess,
+                                                    boost::optional<AccessKind> thisFirstAccess) {
+  if(!firstAccess.is_initialized()) {
+    firstAccess = toFirstAccess(thisFirstAccess);
+  }
+  if(!thisFirstAccess.is_initialized())
+    return firstAccess;
+
+  switch(*firstAccess) {
+  case FirstAccessKind::FK_Read:
+    return (*thisFirstAccess == AccessKind::AK_Read)
+               ? firstAccess
+               : boost::make_optional(FirstAccessKind::FK_Mixed);
+    break;
+  case FirstAccessKind::FK_Write:
+    return (*thisFirstAccess == AccessKind::AK_Write)
+               ? firstAccess
+               : boost::make_optional(FirstAccessKind::FK_Mixed);
+    break;
+  case FirstAccessKind::FK_Mixed:
+    return firstAccess;
+    break;
+  default:
+    dawn_unreachable("unknown access kind");
+  }
+}
 
 /// @brief Do we compute the first levels or do we need to access main memory?
 ///
 /// If the first write access of the field has a read access to the same field as well, it is not
 /// computed and we need to fill/flush the caches.
-static FirstAccessKind getFirstAccessKind(const MultiStage& MS, int AccessID) {
+// TODO need to unittest this
+static boost::optional<FirstAccessKind> getFirstAccessKind(const MultiStage& MS, int AccessID) {
 
   // Get the stage of the first access
   for(const auto& stagePtr : MS.getStages()) {
@@ -46,67 +85,30 @@ static FirstAccessKind getFirstAccessKind(const MultiStage& MS, int AccessID) {
          return field.getAccessID() == AccessID;
        }) != stage.getFields().end()) {
 
-      auto getFirstAccessKindFromDoMethod = [&](const DoMethod* doMethod) -> FirstAccessKind {
-std::cout << " LOOPING DO " << std::endl;
+      auto getFirstAccessKindFromDoMethod = [&](
+          const DoMethod* doMethod) -> boost::optional<AccessKind> {
+        std::cout << " LOOPING DO " << std::endl;
 
         for(const auto& statementAccesssPair : doMethod->getStatementAccessesPairs()) {
           const Accesses& accesses = *statementAccesssPair->getAccesses();
-          for(const auto& writeAccessIDExtentPair : accesses.getWriteAccesses()) {
-std::cout << "SSSSS " << statementAccesssPair->getStatement()->ASTStmt << std::endl;
-std::cout << "IN ACC " << writeAccessIDExtentPair.first << " " << AccessID << std::endl;
-            // Storage has a write access, does it have a read access as well?
-            if(writeAccessIDExtentPair.first == AccessID) {
-std::cout << "INWRITE " << std::endl;
-              for(const auto& readAccessIDExtentPair : accesses.getReadAccesses()) {
-                // Yes!
-                if(readAccessIDExtentPair.first == AccessID) {
-std::cout << "ISA READWRITE" << std::endl;
-                  // is a readwrite
-                  return FK_Read;
-
-                }
-
-              }
-std::cout << "ISA AWRITE" << std::endl;
-
-              // No!
-              return FK_Write;
-            }
-          }
-
-          for(const auto& readAccessIDExtentPair : accesses.getReadAccesses()) {
-            // First access is read-only
-            if(readAccessIDExtentPair.first == AccessID)
- {
-std::cout << "IS A READONLY" << std::endl;
-              return FK_Read;
-}
-
-  }
+          if(accesses.hasAccess(AccessID))
+            return boost::make_optional(accesses.getFirstAccessKind(AccessID));
         }
-std::cout << "IS A UNKNOWN" << std::endl;
-
-        // Storage not referenced in this Do-Method
-        return FK_Unknown;
+        return boost::optional<AccessKind>();
       };
+      boost::optional<FirstAccessKind> firstAccess;
 
       // We need to check all Do-Methods
       if(MS.getLoopOrder() == LoopOrderKind::LK_Parallel) {
-        FirstAccessKind firstAccess = FK_Unknown;
-        int cnt=0;
-        for(const auto& doMethodPtr : stage.getDoMethods()) {
-std::cout << "UU " << std::endl;
-          if(( firstAccess == getFirstAccessKindFromDoMethod(doMethodPtr.get())) || !cnt)
-            firstAccess = getFirstAccessKindFromDoMethod(doMethodPtr.get());
-          else {
-std::cout << "INCOMP " << firstAccess << " " << getFirstAccessKindFromDoMethod(doMethodPtr.get()) << std::endl;
-            return FK_Unknown;
-          }
-          ++cnt;
-        }
-        return firstAccess;
 
+        for(const auto& doMethodPtr : stage.getDoMethods()) {
+          std::cout << "UU " << std::endl;
+          auto thisFirstAccess = getFirstAccessKindFromDoMethod(doMethodPtr.get());
+
+          firstAccess = combineFirstAccess(firstAccess, thisFirstAccess);
+        }
       } else {
+
         // Forward and backward loop orders
         std::vector<DoMethod*> doMethods;
         std::transform(stage.getDoMethods().begin(), stage.getDoMethods().end(),
@@ -126,18 +128,18 @@ std::cout << "INCOMP " << firstAccess << " " << getFirstAccessKindFromDoMethod(d
         }
 
         for(DoMethod* D : doMethods) {
-          FirstAccessKind firstAccess = getFirstAccessKindFromDoMethod(D);
-std::cout << "returning f " << firstAccess << std::endl;
-          if(firstAccess != FK_Unknown)
-            return firstAccess;
+          auto thisFirstAccess = getFirstAccessKindFromDoMethod(D);
+          firstAccess = combineFirstAccess(firstAccess, thisFirstAccess);
         }
       }
+      return firstAccess;
     }
   }
   dawn_unreachable("MultiStage does not contain the given field");
 }
 
-/// @brief Combine the policies from the first MultiStage (`MS1Policy`) and the immediately
+/// @brief Combine the policies from the first MultiStage (`MS1Policy`) and the
+/// immediately
 /// following (`MS2Policy`)
 ///
 /// MS1Policy has to be one of: {local, fill, bpfill}
@@ -228,9 +230,10 @@ PassSetCaches::computePolicyMS1(Field const& field, bool isTemporaryField, Multi
     // Do we compute the first levels or do we need to access main memory (i.e fill the
     // fist accesses)?
     // TODO test getFirstAccessKind
-    FirstAccessKind firstAccess = getFirstAccessKind(MS, field.getAccessID());
-std::cout << "ACH " << firstAccess<< std::endl;
-    if(firstAccess == FK_Write ) {
+    boost::optional<FirstAccessKind> firstAccess = getFirstAccessKind(MS, field.getAccessID());
+    DAWN_ASSERT(firstAccess.is_initialized());
+    std::cout << "ACH " << static_cast<int>(*firstAccess) << std::endl;
+    if(*firstAccess == FirstAccessKind::FK_Write) {
       // Example (kcache candidate a):
       //   k=k_end:k_start
       //     a = in

@@ -159,6 +159,10 @@ bool Accesses::hasReadAccess(int accessID) const { return readAccesses_.count(ac
 
 bool Accesses::hasWriteAccess(int accessID) const { return writeAccesses_.count(accessID); }
 
+bool Accesses::hasAccess(int accessID) const {
+  return hasReadAccess(accessID) || hasWriteAccess(accessID);
+}
+
 const Extents& Accesses::getReadAccess(int AccessID) const {
   auto it = readAccesses_.find(AccessID);
   if(it != readAccesses_.end())

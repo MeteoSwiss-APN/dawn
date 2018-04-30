@@ -23,7 +23,7 @@ namespace dawn {
 class StencilInstantiation;
 class StencilFunctionInstantiation;
 
-enum AccessKind {
+enum class AccessKind {
   AK_Write,
   AK_Read ///< The first access is read only (e.g `... = a`)
 };
@@ -73,6 +73,8 @@ public:
 
   bool hasReadAccess(int accessID) const;
   bool hasWriteAccess(int accessID) const;
+
+  bool hasAccess(int accessID) const;
 
   /// @brief Get access of field (returns NullExtent if field does not exist)
   const Extents& getReadAccess(int AccessID) const;
