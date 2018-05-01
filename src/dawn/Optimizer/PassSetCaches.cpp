@@ -116,8 +116,16 @@ static boost::optional<FirstAccessKind> getFirstAccessKind(const MultiStage& MS,
 
         for(const auto& statementAccesssPair : doMethod->getStatementAccessesPairs()) {
           const Accesses& accesses = *statementAccesssPair->getAccesses();
-          if(accesses.hasAccess(AccessID))
-            return boost::make_optional(accesses.getFirstAccessKind(AccessID));
+          // indepdently of whether the statement has also a write access, if there is a read
+          // access, it should happen in the RHS so first
+          if(accesses.hasReadAccess(AccessID))
+            return boost::make_optional(AccessKind::AK_Read);
+          if(accesses.hasWriteAccess(AccessID))
+            return boost::make_optional(AccessKind::AK_Write);
+          // TODO remove the accesses.getFirstAccessKind and provide solution for block statments
+          // that can be compile time resolved
+          //          if(accesses.hasAccess(AccessID))
+          //            return boost::make_optional(accesses.getFirstAccessKind(AccessID));
         }
         return boost::optional<AccessKind>();
       };
