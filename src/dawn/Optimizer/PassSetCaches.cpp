@@ -66,6 +66,7 @@ struct CacheCandidate {
   Cache::CacheIOPolicy policy_;
   boost::optional<Cache::window> window_;
   FirstAccessKind intend_;
+  Interval interval_;
 };
 
 boost::optional<FirstAccessKind> combineFirstAccess(boost::optional<FirstAccessKind> firstAccess,
@@ -190,14 +191,14 @@ CacheCandidate combinePolicy(CacheCandidate const& MS1Policy, Field::IntendKind 
   // TODO properly compute the window
   if(MS1Policy.policy_ == Cache::local) {
     if(MS2Policy.policy_ == Cache::fill)
-      return CacheCandidate{Cache::flush, boost::make_optional(Cache::window{}),
-                            MS1Policy.intend_}; // flush
+      return CacheCandidate{Cache::flush, boost::make_optional(Cache::window{}), MS1Policy.intend_,
+                            MS1Policy.interval_}; // flush
     if(MS2Policy.policy_ == Cache::bpfill) {
       DAWN_ASSERT(MS2Policy.window_.is_initialized());
       auto const& window = *(MS2Policy.window_);
       return CacheCandidate{Cache::epflush,
                             boost::make_optional(Cache::window{-window.m_p, -window.m_m}),
-                            MS1Policy.intend_}; // epflush
+                            MS1Policy.intend_, MS1Policy.interval_}; // epflush
     }
     if(MS2Policy.policy_ == Cache::local)
       return MS2Policy; // local
@@ -206,9 +207,11 @@ CacheCandidate combinePolicy(CacheCandidate const& MS1Policy, Field::IntendKind 
   if(MS1Policy.policy_ == Cache::fill || MS1Policy.policy_ == Cache::bpfill) {
     if(MS2Policy.policy_ == Cache::fill || MS2Policy.policy_ == Cache::bpfill) {
       if(fieldIntend == Field::IK_Input)
-        return CacheCandidate{Cache::fill, MS1Policy.window_, MS1Policy.intend_};
+        return CacheCandidate{Cache::fill, MS1Policy.window_, MS1Policy.intend_,
+                              MS1Policy.interval_};
       else
-        return CacheCandidate{Cache::fill_and_flush, MS1Policy.window_, MS1Policy.intend_};
+        return CacheCandidate{Cache::fill_and_flush, MS1Policy.window_, MS1Policy.intend_,
+                              MS1Policy.interval_};
     }
     if(MS2Policy.policy_ == Cache::local)
       return MS1Policy; // fill, pbfill
@@ -246,8 +249,11 @@ CacheCandidate computePolicyMS1(Field const& field, bool isTemporaryField, Multi
     std::cout << "SET FILL "
               << field.getAccessID() /* instantiation->getNameFromAccessID(field.getAccessID()) */
               << std::endl;
+    boost::optional<Interval> interval = MS.computeEnclosingAccessInterval(field.getAccessID());
+    DAWN_ASSERT(interval.is_initialized());
+
     return CacheCandidate{Cache::fill, boost::optional<Cache::window>(),
-                          toFirstAccess(field.getIntend())};
+                          toFirstAccess(field.getIntend()), *interval};
   }
   if(field.getIntend() == Field::IK_Output) {
     std::cout << "SET LOCAL "
@@ -256,7 +262,7 @@ CacheCandidate computePolicyMS1(Field const& field, bool isTemporaryField, Multi
     // we do not cache output only normal fields since there is not data reuse
     DAWN_ASSERT(isTemporaryField);
     return CacheCandidate{Cache::local, boost::optional<Cache::window>(),
-                          toFirstAccess(field.getIntend())};
+                          toFirstAccess(field.getIntend()), field.getInterval()};
   }
 
   if(field.getIntend() == Field::IK_InputOutput) {
@@ -271,11 +277,33 @@ CacheCandidate computePolicyMS1(Field const& field, bool isTemporaryField, Multi
       //   k=k_end:k_start
       //     a = in
       //     out = a[k-1]
+      boost::optional<Interval> interval = MS.computeEnclosingAccessInterval(field.getAccessID());
+      DAWN_ASSERT(interval.is_initialized());
+
       std::cout << "SET LOCALB "
                 << field.getAccessID() /*instantiation->getNameFromAccessID(field.getAccessID()) */
-                << std::endl;
+                << field.getInterval() << " " << *interval << std::endl;
 
-      return CacheCandidate{Cache::local, boost::optional<Cache::window>(), *firstAccess};
+      DAWN_ASSERT(interval->contains(field.getInterval()));
+
+      if(((MS.getLoopOrder() == LoopOrderKind::LK_Forward) &&
+          interval->upperBound() > field.getInterval().upperBound()) ||
+         ((MS.getLoopOrder() == LoopOrderKind::LK_Backward) &&
+          interval->lowerBound() < field.getInterval().lowerBound()))
+        return CacheCandidate{Cache::fill, boost::optional<Cache::window>(), *firstAccess,
+                              *interval};
+      if(((MS.getLoopOrder() == LoopOrderKind::LK_Forward) &&
+          interval->lowerBound() < field.getInterval().lowerBound()) ||
+         ((MS.getLoopOrder() == LoopOrderKind::LK_Backward) &&
+          interval->upperBound() > field.getInterval().upperBound()))
+        return CacheCandidate{Cache::bpfill,
+                              boost::make_optional(Cache::window{
+                                  interval->lowerBound() - field.getInterval().lowerBound(),
+                                  interval->upperBound() - field.getInterval().upperBound()}),
+                              *firstAccess, *interval};
+
+      return CacheCandidate{Cache::local, boost::optional<Cache::window>(), *firstAccess,
+                            *interval};
     }
     // Do we have a read in counter loop order or pointwise access?
     // TODO test getVerticalLoopOrderAccesses
@@ -294,8 +322,10 @@ CacheCandidate computePolicyMS1(Field const& field, bool isTemporaryField, Multi
                 << field.getAccessID() /* instantiation->getNameFromAccessID(field.getAccessID()) */
                 << std::endl;
 
+      boost::optional<Interval> interval = MS.computeEnclosingAccessInterval(field.getAccessID());
+      DAWN_ASSERT(interval.is_initialized());
       return CacheCandidate{Cache::fill, boost::optional<Cache::window>(),
-                            toFirstAccess(field.getIntend())};
+                            toFirstAccess(field.getIntend()), *interval};
     }
     // Example (kcache candidate a):
     //     k=k_end-1:k_start
@@ -310,7 +340,9 @@ CacheCandidate computePolicyMS1(Field const& field, bool isTemporaryField, Multi
     auto cacheWindow = boost::make_optional(
         computeCacheWindow(MS.getLoopOrder(), *accessedInterval, field.getInterval()));
 
-    return CacheCandidate{Cache::bpfill, cacheWindow, toFirstAccess(field.getIntend())};
+    boost::optional<Interval> interval = MS.computeEnclosingAccessInterval(field.getAccessID());
+    DAWN_ASSERT(interval.is_initialized());
+    return CacheCandidate{Cache::bpfill, cacheWindow, toFirstAccess(field.getIntend()), *interval};
   }
   dawn_unreachable("Policy of Field not found");
 }
@@ -434,7 +466,7 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
 
           DAWN_ASSERT((policy.policy_ != Cache::fill && policy.policy_ != Cache::bpfill) ||
                       !instantiation->isTemporaryField(field.getAccessID() || mssProcessedField));
-          std::cout << "Policy1 " << policy.policy_ << std::endl;
+          std::cout << "Policy1 " << policy.policy_ << " " << policy.interval_ << std::endl;
 
           if(!instantiation->isTemporaryField(field.getAccessID()) &&
              field.getIntend() != Field::IK_Input) {
@@ -444,7 +476,7 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
             policy = combinePolicy(policy, field.getIntend(),
                                    CacheCandidate{Cache::CacheIOPolicy::fill,
                                                   boost::optional<Cache::window>(),
-                                                  FirstAccessKind::FK_Read});
+                                                  FirstAccessKind::FK_Read, field.getInterval()});
           } else {
 
             for(int MSIndex2 = MSIndex + 1; MSIndex2 < numMS; MSIndex2++) {
@@ -457,6 +489,13 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
               CacheCandidate policyMS2 = computePolicyMS1(
                   fieldInNextMS, instantiation->isTemporaryField(fieldInNextMS.getAccessID()),
                   nextMS);
+              // if the interval of the two cache candidate do not overlap, there is no data
+              // dependency, therefore we skip it
+              if(!policy.interval_.overlaps(policyMS2.interval_))
+                continue;
+
+              std::cout << "Policy2 " << policyMS2.policy_ << " " << policyMS2.interval_
+                        << std::endl;
               if(policyMS2.intend_ == FirstAccessKind::FK_Mixed) {
                 policy.intend_ = FirstAccessKind::FK_Mixed;
                 break;
