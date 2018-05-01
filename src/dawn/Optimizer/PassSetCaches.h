@@ -33,13 +33,6 @@ public:
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) override;
-
-private:
-  std::pair<Cache::CacheIOPolicy, boost::optional<Cache::window>>
-  computePolicyMS1(Field const& field, bool isTemporaryField, MultiStage const& MS);
-
-  Cache::window computeCacheWindow(LoopOrderKind loopOrder, Interval const& accessedInterval,
-                                   Interval const& iterationInterval);
 };
 
 } // namespace dawn
