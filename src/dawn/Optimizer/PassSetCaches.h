@@ -15,6 +15,8 @@
 #ifndef DAWN_OPTIMIZER_PASSSETMULTISTAGECACHES_H
 #define DAWN_OPTIMIZER_PASSSETMULTISTAGECACHES_H
 
+#include <list>
+#include "dawn/Optimizer/Stencil.h"
 #include "dawn/Optimizer/Interval.h"
 #include "dawn/Optimizer/Pass.h"
 #include "dawn/Optimizer/Stage.h"
@@ -33,6 +35,12 @@ public:
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) override;
+
+private:
+  bool isAccessIDReadAfter(const int accessID,
+                           std::list<std::shared_ptr<Stage>>::const_iterator stage,
+                           std::list<std::shared_ptr<MultiStage>>::const_iterator multiStage,
+                           const Stencil& stencil) const;
 };
 
 } // namespace dawn

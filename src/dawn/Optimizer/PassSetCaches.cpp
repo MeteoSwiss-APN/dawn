@@ -129,7 +129,7 @@ static boost::optional<FirstAccessKind> getFirstAccessKind(const MultiStage& MS,
         }
         return boost::optional<AccessKind>();
       };
-      boost::optional<FirstAccessKind> firstAccess;
+      boost::optional<FirstAccessKind> firstAccess{};
 
       // We need to check all Do-Methods
       if(MS.getLoopOrder() == LoopOrderKind::LK_Parallel) {
@@ -355,6 +355,43 @@ CacheCandidate computePolicyMS1(Field const& field, bool isTemporaryField, Multi
   dawn_unreachable("Policy of Field not found");
 }
 
+bool PassSetCaches::isAccessIDReadAfter(
+    const int accessID, std::list<std::shared_ptr<Stage>>::const_iterator stage,
+    std::list<std::shared_ptr<MultiStage>>::const_iterator multiStage,
+    const Stencil& stencil) const {
+
+  for(std::list<std::shared_ptr<MultiStage>>::const_iterator multiStageIt = multiStage;
+      multiStageIt != stencil.getMultiStages().end(); ++multiStageIt) {
+    for(std::list<std::shared_ptr<Stage>>::const_iterator stageIt =
+            (multiStageIt == multiStage) ? stage++ : (*multiStageIt)->getStages().begin();
+        stage != (*multiStageIt)->getStages().end(); ++stageIt) {
+      for(const Field& field : (*stageIt)->getFields()) {
+        if(field.getAccessID() != accessID)
+          continue;
+        if(field.getIntend() == Field::IK_Input) {
+          return true;
+        }
+        if(field.getIntend() == Field::IK_Output) {
+          return false;
+        }
+        if(field.getIntend() == Field::IK_InputOutput) {
+          boost::optional<FirstAccessKind> firstAccess =
+              getFirstAccessKind(*(*multiStageIt), field.getAccessID());
+          DAWN_ASSERT(firstAccess.is_initialized());
+          if(*firstAccess == FirstAccessKind::FK_Write) {
+            return false;
+          }
+
+          return true;
+        }
+        dawn_unreachable("Unknown intend");
+      }
+    }
+  }
+
+  return false;
+}
+
 bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiation) {
   std::cout << "PASS" << std::endl;
   OptimizerContext* context = instantiation->getOptimizerContext();
@@ -365,8 +402,10 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
 
     // Set IJ-Caches
     int msIdx = 0;
-    for(const auto& multiStagePtr : stencil.getMultiStages()) {
-      MultiStage& MS = *multiStagePtr;
+    for(auto multiStageIt = stencil.getMultiStages().begin();
+        multiStageIt != stencil.getMultiStages().end(); ++multiStageIt) {
+
+      MultiStage& MS = *(*multiStageIt);
 
       std::set<int> outputFields;
 
@@ -374,8 +413,8 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
         return field.getIntend() == Field::IK_Output || field.getIntend() == Field::IK_InputOutput;
       };
 
-      for(const auto& stagePtr : multiStagePtr->getStages()) {
-        for(const Field& field : stagePtr->getFields()) {
+      for(auto stageIt = MS.getStages().begin(); stageIt != MS.getStages().end(); stageIt++) {
+        for(const Field& field : (*stageIt)->getFields()) {
 
           // Field is already cached, skip
           if(MS.isCached(field.getAccessID()))
@@ -389,12 +428,13 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
           if(!instantiation->isTemporaryField(field.getAccessID()))
             continue;
 
-          std::cout << "HERE " << std::endl;
+          if(isAccessIDReadAfter(field.getAccessID(), stageIt, multiStageIt, stencil))
+            continue;
           // Cache the field
           if(field.getIntend() == Field::IK_Input && outputFields.count(field.getAccessID()) &&
              !field.getExtents().isHorizontalPointwise()) {
 
-            Cache& cache = multiStagePtr->setCache(Cache::IJ, Cache::local, field.getAccessID());
+            Cache& cache = MS.setCache(Cache::IJ, Cache::local, field.getAccessID());
             instantiation->insertCachedVariable(field.getAccessID());
 
             if(context->getOptions().ReportPassSetCaches) {
