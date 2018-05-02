@@ -42,8 +42,8 @@ public:
   Field(Field&& f) = default;
   Field(Field const& f) = default;
 
-  Field(int accessID, IntendKind intend, Extents readExtents, Extents writeExtents,
-        Interval interval)
+  Field(int accessID, IntendKind intend, Extents const& readExtents, Extents const& writeExtents,
+        Interval const& interval)
       : accessID_(accessID), intend_(intend),
         extents_(FieldAccessExtents(readExtents, writeExtents)), interval_(interval) {}
 
