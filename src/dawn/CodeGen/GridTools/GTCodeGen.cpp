@@ -73,13 +73,21 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
   // inserting the intervals of the caches
   for(const auto& mss : stencil.getMultiStages()) {
     for(const auto& cachePair : mss->getCaches()) {
-      const boost::optional<Interval> interval = cachePair.second.getInterval();
+      auto const& cache = cachePair.second;
+      const boost::optional<Interval> interval = cache.getInterval();
       if(interval.is_initialized())
         Intervals.insert(*interval);
+
+      if(cache.getCacheIOPolicy() == Cache::CacheIOPolicy::fill) {
+        DAWN_ASSERT(interval.is_initialized());
+        Levels.insert(interval->lowerLevel());
+        Levels.insert(interval->upperLevel());
+        Axis.merge(*interval);
+      }
     }
   }
 
-  // Generate the name of the enclosing intervals of each multi-stage (required by the K-Caches)
+  // Generate the name of the intervals
   for(const auto& interval : Intervals) {
     IntervalToNameMap.emplace(interval, Interval::makeCodeGenName(interval));
   }
