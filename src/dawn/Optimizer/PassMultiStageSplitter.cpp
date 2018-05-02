@@ -106,9 +106,6 @@ setDebugLoopContent() {
     for(int stmtIndex = doMethod.getStatementAccessesPairs().size() - 2; stmtIndex >= 0;
         --stmtIndex) {
       DAWN_ASSERT_MSG(false, "Max-Cut for Multistages is not yet implemented");
-      // We split every StmtAccessPair into its own multistage
-      splitterIndices.emplace_front(MultiStage::SplitIndex{stageIndex, stmtIndex, curLoopOrder});
-      numSplit++;
     }
 
     // After splitting all the statements into their own Multistages, we need to ensure that if we
