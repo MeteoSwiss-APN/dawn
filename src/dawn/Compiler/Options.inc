@@ -105,4 +105,6 @@ OPT(bool, ReportBoundaryConditions, false, "report-bc", "",
     "Report where boundary conditions are inserted", "", false, true)
 OPT(bool, Debug, false, "debug", "",
     "Compile to debug backend", "", false, true)
+OPT(bool, MaxCutMSS, false, "max-cut-mss", "",
+    "Cuts the given multistages in as many multistages as possible while maintaining legal code", "", false, true)
 // clang-format on

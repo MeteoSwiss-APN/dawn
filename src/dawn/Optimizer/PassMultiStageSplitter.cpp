@@ -27,7 +27,7 @@
 
 namespace dawn {
 
-PassMultiStageSplitter::PassMultiStageSplitter(MulitStageSplittingStrategy strategy)
+PassMultiStageSplitter::PassMultiStageSplitter(MultiStageSplittingStrategy strategy)
     : Pass("PassMultiStageSplitter"), strategy_(strategy) {
   isDebug_ = true;
 }
@@ -105,9 +105,30 @@ setDebugLoopContent() {
     // Iterate statements backwards
     for(int stmtIndex = doMethod.getStatementAccessesPairs().size() - 2; stmtIndex >= 0;
         --stmtIndex) {
+      DAWN_ASSERT_MSG(false, "Max-Cut for Multistages is not yet implemented");
       // We split every StmtAccessPair into its own multistage
       splitterIndices.emplace_front(MultiStage::SplitIndex{stageIndex, stmtIndex, curLoopOrder});
       numSplit++;
+    }
+
+    // After splitting all the statements into their own Multistages, we need to ensure that if we
+    // have loop-order conflicts in one of those, that we resolve them properly.
+    //
+    // For example if we find a multistage with an offset read/write pattern (a = b * a[k-1]), even
+    // though this statement is independent from all other statements, we still need to ensure the
+    // proper loop order and cannot just assume parallel.
+    for(int stmtIndex = doMethod.getStatementAccessesPairs().size() - 1; stmtIndex >= 0;
+        --stmtIndex) {
+      auto& stmtAccessesPair = doMethod.getStatementAccessesPairs()[stmtIndex];
+      graph.insertStatementAccessesPair(stmtAccessesPair);
+
+      // Check for read-before-write conflicts in the loop order.
+      auto conflict = hasVerticalReadBeforeWriteConflict(&graph, userSpecifiedLoopOrder);
+      if(conflict.LoopOrderConflict) {
+        // We have a conflict in the loop order, the multi-stage cannot be executed in
+        // parallel and we use the loop order specified by the user
+        curLoopOrder = userSpecifiedLoopOrder;
+      }
     }
   };
 }
@@ -122,7 +143,7 @@ bool PassMultiStageSplitter::run(
                      int&, const std::string&, const std::string&, const Options&)>
       multistagesplitter;
 
-  if(strategy_ == MulitStageSplittingStrategy::SS_Optimized) {
+  if(strategy_ == MultiStageSplittingStrategy::SS_Optimized) {
     multistagesplitter = setOptimizedLoopContent();
   } else {
     multistagesplitter = setDebugLoopContent();
