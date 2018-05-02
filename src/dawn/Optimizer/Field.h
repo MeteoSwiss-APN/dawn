@@ -33,13 +33,11 @@ public:
   enum IntendKind { IK_Output = 0, IK_InputOutput = 1, IK_Input = 2 };
 
 private:
-  int accessID_;      ///< Unique AccessID of the field
-  IntendKind intend_; ///< Intended usage
-  FieldAccessExtents extents_;
-  //  Extents readExtents_;  ///< Accumulated read extent of the field
-  //  Extents writeExtents_; ///< Accumulated write extent of the field
-  Interval interval_; ///< Enclosing Interval from the iteration space
-                      ///  where the Field has been accessed
+  int accessID_;               ///< Unique AccessID of the field
+  IntendKind intend_;          ///< Intended usage
+  FieldAccessExtents extents_; ///< Accumulated read and write extent of the field
+  Interval interval_;          ///< Enclosing Interval from the iteration space
+                               ///  where the Field has been accessed
 public:
   Field(Field&& f) = default;
   Field(Field const& f) = default;
@@ -49,12 +47,11 @@ public:
       : accessID_(accessID), intend_(intend),
         extents_(FieldAccessExtents(readExtents, writeExtents)), interval_(interval) {}
 
-  // TODO This is ambiguous
-  //  Field(int accessID, IntendKind intend, Extents&& readExtents, Extents&& writeExtents,
-  //        Interval&& interval)
-  //      : accessID_(accessID), intend_(intend),
-  //        extents_(FieldAccessExtents(std::move(readExtents), std::move(writeExtents))),
-  //        interval_(std::move(interval)) {}
+  Field(int accessID, IntendKind intend, Extents&& readExtents, Extents&& writeExtents,
+        Interval&& interval)
+      : accessID_(accessID), intend_(intend),
+        extents_(FieldAccessExtents(std::move(readExtents), std::move(writeExtents))),
+        interval_(std::move(interval)) {}
 
   /// @name Operators
   /// @{

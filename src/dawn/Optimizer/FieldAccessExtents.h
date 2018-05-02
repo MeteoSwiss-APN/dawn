@@ -19,6 +19,7 @@
 
 namespace dawn {
 
+/// @brief class storing the extents of accesses of a field within a computation
 class FieldAccessExtents {
 
 public:

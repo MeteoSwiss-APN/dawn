@@ -102,8 +102,7 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil) : Ax
   for(int i = 0; i < numStages; ++i) {
     const std::shared_ptr<Stage>& stagePtr = stencil.getStage(i);
 
-    auto iteratorSuccessPair = StageIntervals.emplace(
-        stagePtr, Interval::computeGapIntervals(Axis, stagePtr->getIntervals()));
+    StageIntervals.emplace(stagePtr, Interval::computeGapIntervals(Axis, stagePtr->getIntervals()));
   }
 }
 
@@ -605,12 +604,12 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
         // See https://github.com/eth-cscs/gridtools/issues/330
         const auto& stageIntervals = stage.getIntervals();
         for(const auto& interval : intervalDefinitions.StageIntervals[stagePtr]) {
-          DAWN_ASSERT(intervalDefinitions.intervalProperties_.count(interval));
           if(std::find(stageIntervals.begin(), stageIntervals.end(), interval) ==
-             stageIntervals.end())
+             stageIntervals.end()) {
             StageStruct.addMemberFunction("GT_FUNCTION static void", "Do", "typename Evaluation")
                 .addArg(DoMethodArg)
-                .addArg(intervalDefinitions.intervalProperties_.find(interval)->name_);
+                .addArg(Interval::makeCodeGenName(interval));
+          }
         }
       }
 

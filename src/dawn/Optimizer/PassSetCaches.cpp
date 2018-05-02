@@ -17,7 +17,6 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/StatementAccessesPair.h"
 #include "dawn/Optimizer/StencilInstantiation.h"
-#include "dawn/Optimizer/CacheHelper.h"
 #include "dawn/Support/Unreachable.h"
 #include <iostream>
 #include <set>
@@ -43,6 +42,7 @@ FirstAccessKind toFirstAccess(Field::IntendKind access) {
   }
 }
 
+/// @brief properties of a cache candidate
 struct CacheCandidate {
   Cache::CacheIOPolicy policy_;
   boost::optional<Cache::window> window_;
@@ -50,23 +50,23 @@ struct CacheCandidate {
   Interval interval_;
 };
 
-boost::optional<FirstAccessKind>
-combineFirstAccess(boost::optional<FirstAccessKind> firstAccess,
-                   boost::optional<FirstAccessKind> thisFirstAccess) {
+/// @brief combine the access kind of two accesses
+boost::optional<FirstAccessKind> combineFirstAccess(boost::optional<FirstAccessKind> firstAccess,
+                                                    boost::optional<FirstAccessKind> secondAccess) {
   if(!firstAccess.is_initialized()) {
-    firstAccess = thisFirstAccess;
+    firstAccess = secondAccess;
   }
-  if(!thisFirstAccess.is_initialized())
+  if(!secondAccess.is_initialized())
     return firstAccess;
 
   switch(*firstAccess) {
   case FirstAccessKind::FK_Read:
-    return (*thisFirstAccess == FirstAccessKind::FK_Read)
+    return (*secondAccess == FirstAccessKind::FK_Read)
                ? firstAccess
                : boost::make_optional(FirstAccessKind::FK_Mixed);
     break;
   case FirstAccessKind::FK_Write:
-    return (*thisFirstAccess == FirstAccessKind::FK_Write)
+    return (*secondAccess == FirstAccessKind::FK_Write)
                ? firstAccess
                : boost::make_optional(FirstAccessKind::FK_Mixed);
     break;
@@ -94,7 +94,6 @@ static boost::optional<FirstAccessKind> getFirstAccessKind(const MultiStage& MS,
 
       auto getFirstAccessKindFromDoMethod = [&](
           const DoMethod* doMethod) -> boost::optional<FirstAccessKind> {
-        std::cout << " LOOPING DO " << std::endl;
 
         for(const auto& statementAccesssPair : doMethod->getStatementAccessesPairs()) {
           const Accesses& accesses = *statementAccesssPair->getAccesses();
@@ -104,10 +103,8 @@ static boost::optional<FirstAccessKind> getFirstAccessKind(const MultiStage& MS,
             return boost::make_optional(FirstAccessKind::FK_Read);
           if(accesses.hasWriteAccess(AccessID))
             return boost::make_optional(FirstAccessKind::FK_Write);
-          // TODO remove the accesses.getFirstAccessKind and provide solution for block statments
+          // TODO provide solution for block statments
           // that can be compile time resolved
-          //          if(accesses.hasAccess(AccessID))
-          //            return boost::make_optional(accesses.getFirstAccessKind(AccessID));
         }
         return boost::optional<FirstAccessKind>();
       };
