@@ -43,25 +43,6 @@ FirstAccessKind toFirstAccess(Field::IntendKind access) {
   }
 }
 
-FirstAccessKind toFirstAccess(AccessKind thisFirstAccess) {
-  switch(thisFirstAccess) {
-  case AccessKind::AK_Read:
-    return FirstAccessKind::FK_Read;
-    break;
-  case AccessKind::AK_Write:
-    return FirstAccessKind::FK_Write;
-    break;
-  default:
-    dawn_unreachable("unknown access kind");
-  }
-}
-
-boost::optional<FirstAccessKind> toFirstAccess(boost::optional<AccessKind> thisFirstAccess) {
-  if(!thisFirstAccess.is_initialized())
-    return boost::optional<FirstAccessKind>();
-  return boost::make_optional(toFirstAccess(*thisFirstAccess));
-}
-
 struct CacheCandidate {
   Cache::CacheIOPolicy policy_;
   boost::optional<Cache::window> window_;
@@ -69,22 +50,23 @@ struct CacheCandidate {
   Interval interval_;
 };
 
-boost::optional<FirstAccessKind> combineFirstAccess(boost::optional<FirstAccessKind> firstAccess,
-                                                    boost::optional<AccessKind> thisFirstAccess) {
+boost::optional<FirstAccessKind>
+combineFirstAccess(boost::optional<FirstAccessKind> firstAccess,
+                   boost::optional<FirstAccessKind> thisFirstAccess) {
   if(!firstAccess.is_initialized()) {
-    firstAccess = toFirstAccess(thisFirstAccess);
+    firstAccess = thisFirstAccess;
   }
   if(!thisFirstAccess.is_initialized())
     return firstAccess;
 
   switch(*firstAccess) {
   case FirstAccessKind::FK_Read:
-    return (*thisFirstAccess == AccessKind::AK_Read)
+    return (*thisFirstAccess == FirstAccessKind::FK_Read)
                ? firstAccess
                : boost::make_optional(FirstAccessKind::FK_Mixed);
     break;
   case FirstAccessKind::FK_Write:
-    return (*thisFirstAccess == AccessKind::AK_Write)
+    return (*thisFirstAccess == FirstAccessKind::FK_Write)
                ? firstAccess
                : boost::make_optional(FirstAccessKind::FK_Mixed);
     break;
@@ -111,7 +93,7 @@ static boost::optional<FirstAccessKind> getFirstAccessKind(const MultiStage& MS,
        }) != stage.getFields().end()) {
 
       auto getFirstAccessKindFromDoMethod = [&](
-          const DoMethod* doMethod) -> boost::optional<AccessKind> {
+          const DoMethod* doMethod) -> boost::optional<FirstAccessKind> {
         std::cout << " LOOPING DO " << std::endl;
 
         for(const auto& statementAccesssPair : doMethod->getStatementAccessesPairs()) {
@@ -119,15 +101,15 @@ static boost::optional<FirstAccessKind> getFirstAccessKind(const MultiStage& MS,
           // indepdently of whether the statement has also a write access, if there is a read
           // access, it should happen in the RHS so first
           if(accesses.hasReadAccess(AccessID))
-            return boost::make_optional(AccessKind::AK_Read);
+            return boost::make_optional(FirstAccessKind::FK_Read);
           if(accesses.hasWriteAccess(AccessID))
-            return boost::make_optional(AccessKind::AK_Write);
+            return boost::make_optional(FirstAccessKind::FK_Write);
           // TODO remove the accesses.getFirstAccessKind and provide solution for block statments
           // that can be compile time resolved
           //          if(accesses.hasAccess(AccessID))
           //            return boost::make_optional(accesses.getFirstAccessKind(AccessID));
         }
-        return boost::optional<AccessKind>();
+        return boost::optional<FirstAccessKind>();
       };
       boost::optional<FirstAccessKind> firstAccess{};
 

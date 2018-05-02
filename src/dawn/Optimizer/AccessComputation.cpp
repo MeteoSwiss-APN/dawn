@@ -201,7 +201,7 @@ public:
       calleeAccesses->mergeReadOffset(getAccessIDFromExpr(lit), Array3i{{0, 0, 0}});
   }
 
-  void mergeReadExtent(const std::shared_ptr<FieldAccessExpr>& field, Extents extent) {
+  void mergeReadExtent(const std::shared_ptr<FieldAccessExpr>& field, Extents const& extent) {
     for(auto& callerAccesses : callerAccessesList_)
       callerAccesses->mergeReadExtent(getAccessIDFromExpr(field), extent);
 
@@ -429,7 +429,6 @@ public:
       // Get the extent of the field corresponding to the argument index
       const Field& field = functionInstantiation->getCallerFieldFromArgumentIndex(ArgumentIndex);
 
-      // TODO do perfect forwarding
       if(field.getIntend() == Field::IK_Input || field.getIntend() == Field::IK_InputOutput)
         mergeReadExtent(expr, field.getExtents());
 

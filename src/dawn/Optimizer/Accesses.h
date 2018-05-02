@@ -35,7 +35,6 @@ enum class AccessKind {
 class Accesses {
   std::unordered_map<int, Extents> writeAccesses_;
   std::unordered_map<int, Extents> readAccesses_;
-  std::unordered_map<int, AccessKind> firstAccessKind_;
 
 public:
   Accesses() = default;
@@ -100,12 +99,6 @@ public:
   std::string reportAccesses(const StencilFunctionInstantiation* stencilFunc) const;
   std::string reportAccesses(const StencilInstantiation* instantiation) const;
   /// @}
-
-  AccessKind getFirstAccessKind(int accessID) const;
-
-private:
-  void insertReadFirstAccessKind(int accessID);
-  void insertWriteFirstAccessKind(int accessID);
 };
 
 } // namespace dawn

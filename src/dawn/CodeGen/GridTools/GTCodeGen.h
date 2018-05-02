@@ -64,14 +64,6 @@ private:
   std::string buildMakeComputation(std::vector<std::string> const& DomainMapPlaceholders,
                                    std::vector<std::string> const& makeComputation,
                                    const std::__cxx11::string& gridName) const;
-  void addCastOfStencil(MemberFunction& function, std::string varName,
-                        std::vector<std::string> const& DomainMapPlaceholders,
-                        std::vector<std::string> const& makeComputation,
-                        std::vector<Stencil::FieldInfo> const& stencilFields,
-                        std::vector<std::string> const& stencilGlobalVariables,
-                        std::vector<std::string> const& stencilConstructorTemplates,
-                        const int stencilIdx) const;
-
   void
   buildPlaceholderDefinitions(MemberFunction& function,
                               std::vector<Stencil::FieldInfo> const& stencilFields,
@@ -87,19 +79,17 @@ private:
   // TODO we should eliminate the redundancy on FieldInfos
   bool isTemporary(Stencil::FieldInfo const& f) const { return f.IsTemporary; }
 
+  /// code generate sync methods statements for all the fields passed
   void generateSyncStorages(MemberFunction& method,
                             const IndexRange<std::vector<Stencil::FieldInfo>>& stencilFields) const;
 
+  /// construct a string of template parameters for storages
   template <typename TFieldInfo>
   std::vector<std::string>
-  buildFieldTemplateNames(std::vector<TFieldInfo> const& stencilFields) const {
+  buildFieldTemplateNames(IndexRange<std::vector<TFieldInfo>> const& stencilFields) const {
     std::vector<std::string> templates;
-    int numTemporaries = 0;
     for(int i = 0; i < stencilFields.size(); ++i)
-      if(isTemporary(stencilFields[i]))
-        numTemporaries += 1;
-      else
-        templates.push_back("S" + std::to_string(i + 1 - numTemporaries));
+      templates.push_back("S" + std::to_string(i + 1));
 
     return templates;
   }
@@ -113,21 +103,21 @@ private:
   }
 
   template <typename TFieldInfo>
-  MemberFunction createStorageTemplateMethod(Structure& structure, std::string const& returnType,
-                                             std::string const& functionName,
-                                             std::vector<TFieldInfo> const& stencilFields) const {
-    int numTemporaries = computeNumTemporaries(stencilFields);
-
-    auto storageTemplates = buildFieldTemplateNames(stencilFields);
+  MemberFunction
+  createStorageTemplateMethod(Structure& structure, std::string const& returnType,
+                              std::string const& functionName,
+                              IndexRange<std::vector<TFieldInfo>> const& nonTempFields) const {
+    auto storageTemplates = buildFieldTemplateNames(nonTempFields);
 
     auto function = structure.addMemberFunction(
         returnType, functionName,
         RangeToString(", ", "", "")(storageTemplates,
                                     [](const std::string& str) { return "class " + str; }));
-    for(int i = 0; i < stencilFields.size(); ++i)
-      if(!isTemporary(stencilFields[i]))
-        function.addArg(storageTemplates[i - numTemporaries] + " " +
-                        getFieldName(stencilFields[i]));
+    int i = 0;
+    for(auto const& field : nonTempFields) {
+      function.addArg(storageTemplates[i] + " " + getFieldName(field));
+      ++i;
+    }
 
     return function;
   }

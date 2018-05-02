@@ -104,8 +104,6 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil) : Ax
 
     auto iteratorSuccessPair = StageIntervals.emplace(
         stagePtr, Interval::computeGapIntervals(Axis, stagePtr->getIntervals()));
-    DAWN_ASSERT(iteratorSuccessPair.second);
-    std::vector<Interval>& DoMethodIntervals = iteratorSuccessPair.first->second;
   }
 }
 
@@ -628,7 +626,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
 
     mplContainerMaxSize_ = std::max(mplContainerMaxSize_, numFields);
 
-    std::vector<std::string> StencilConstructorTemplates = buildFieldTemplateNames(StencilFields);
+    std::vector<std::string> StencilConstructorTemplates = buildFieldTemplateNames(nonTempFields);
 
     // Generate constructor
     auto StencilConstructor = StencilClass.addConstructor(RangeToString(", ", "", "")(
