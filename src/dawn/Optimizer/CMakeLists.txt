@@ -24,7 +24,6 @@ mchbuild_add_library(
           BoundaryExtent.h
           Cache.cpp
           Cache.h
-          CacheHelper.h
           DependencyGraph.h
           DependencyGraphAccesses.cpp      
           DependencyGraphAccesses.h

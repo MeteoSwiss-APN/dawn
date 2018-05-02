@@ -23,11 +23,6 @@ namespace dawn {
 class StencilInstantiation;
 class StencilFunctionInstantiation;
 
-enum class AccessKind {
-  AK_Write,
-  AK_Read ///< The first access is read only (e.g `... = a`)
-};
-
 /// @brief Read and write accesses of a statement
 ///
 /// Accesses are either part of a `StencilInstantiation` or `StencilFunctionInstantiation`.
