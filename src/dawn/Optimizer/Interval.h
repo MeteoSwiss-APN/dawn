@@ -237,6 +237,32 @@ public:
   static std::vector<Interval> computeLevelUnion(const std::vector<Interval>& intervals);
 };
 
+/// @brief struct that contains an interval and a associated generated name
+/// Should be used for data structures where the interval name generation (expensive string
+/// operation) is accessed frequently
+struct IntervalProperties {
+  /// @name Constructors and Assignment
+  /// @{
+
+  IntervalProperties(Interval const& interval)
+      : interval_(interval), name_(Interval::makeCodeGenName(interval)) {}
+
+  IntervalProperties(const IntervalProperties&) = default;
+  IntervalProperties(IntervalProperties&&) = default;
+  IntervalProperties& operator=(const IntervalProperties&) = default;
+  IntervalProperties& operator=(IntervalProperties&&) = default;
+  /// @}
+
+  /// @name Comparison operator
+  /// @{
+  bool operator==(const IntervalProperties& other) const { return interval_ == other.interval_; }
+  bool operator!=(const IntervalProperties& other) const { return !(*this == other); }
+  /// @}
+
+  Interval interval_;
+  std::string name_;
+};
+
 } // namespace dawn
 
 namespace std {
@@ -247,6 +273,13 @@ struct hash<dawn::Interval> {
     std::size_t seed = 0;
     dawn::hash_combine(seed, I.lowerLevel() + I.lowerOffset(), I.upperLevel() + I.upperOffset());
     return seed;
+  }
+};
+
+template <>
+struct hash<dawn::IntervalProperties> {
+  size_t operator()(const dawn::IntervalProperties& I) const {
+    return hash<dawn::Interval>()(I.interval_);
   }
 };
 

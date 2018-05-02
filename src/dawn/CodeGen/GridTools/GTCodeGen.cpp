@@ -53,18 +53,23 @@ GTCodeGen::GTCodeGen(OptimizerContext* context) : CodeGen(context), mplContainer
 
 GTCodeGen::~GTCodeGen() {}
 
-GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
-    : Intervals(stencil.getIntervals()), Axis(*Intervals.begin()) {
-  DAWN_ASSERT(!Intervals.empty());
+GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil) : Axis{0, 0} {
+  auto intervals = stencil.getIntervals();
+  std::transform(intervals.begin(), intervals.end(),
+                 std::inserter(intervalProperties_, intervalProperties_.begin()),
+                 [](Interval const& i) { return IntervalProperties{i}; });
+
+  DAWN_ASSERT(!intervalProperties_.empty());
 
   // Add intervals for the stencil functions
   for(const auto& stencilFun : stencil.getStencilInstantiation().getStencilFunctionInstantiations())
-    Intervals.insert(stencilFun->getInterval());
+    intervalProperties_.insert(stencilFun->getInterval());
 
   // Compute axis and populate the levels
   // Notice we dont take into account caches in order to build the axis
-  Axis = *Intervals.begin();
-  for(const Interval& interval : Intervals) {
+  Axis = intervalProperties_.begin()->interval_;
+  for(const auto& intervalP : intervalProperties_) {
+    const auto& interval = intervalP.interval_;
     Levels.insert(interval.lowerLevel());
     Levels.insert(interval.upperLevel());
     Axis.merge(interval);
@@ -76,8 +81,11 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
       auto const& cache = cachePair.second;
       const boost::optional<Interval> interval = cache.getInterval();
       if(interval.is_initialized())
-        Intervals.insert(*interval);
+        intervalProperties_.insert(*interval);
 
+      // for the kcaches with fill, the interval could span beyond the axis of the do methods.
+      // We need to extent the axis, to make sure that at least on interval will trigger the begin
+      // of the kcache interval
       if(cache.getCacheIOPolicy() == Cache::CacheIOPolicy::fill) {
         DAWN_ASSERT(interval.is_initialized());
         Levels.insert(interval->lowerLevel());
@@ -85,11 +93,6 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
         Axis.merge(*interval);
       }
     }
-  }
-
-  // Generate the name of the intervals
-  for(const auto& interval : Intervals) {
-    IntervalToNameMap.emplace(interval, Interval::makeCodeGenName(interval));
   }
 
   // Compute the intervals required by each stage. Note that each stage needs to have Do-Methods
@@ -103,10 +106,6 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil)
         stagePtr, Interval::computeGapIntervals(Axis, stagePtr->getIntervals()));
     DAWN_ASSERT(iteratorSuccessPair.second);
     std::vector<Interval>& DoMethodIntervals = iteratorSuccessPair.first->second;
-
-    // Generate unique names for the intervals
-    for(const Interval& interval : DoMethodIntervals)
-      IntervalToNameMap.emplace(interval, Interval::makeCodeGenName(interval));
   }
 }
 
@@ -206,26 +205,6 @@ std::string GTCodeGen::buildMakeComputation(std::vector<std::string> const& Doma
   return std::string("gridtools::make_computation<gridtools::clang::backend_t>(") + gridName + "," +
          RangeToString(", ", "", "")(DomainMapPlaceholders) +
          RangeToString(", ", ", ", ")")(makeComputation);
-}
-
-void GTCodeGen::addCastOfStencil(MemberFunction& function, std::string varName,
-                                 std::vector<std::string> const& DomainMapPlaceholders,
-                                 std::vector<std::string> const& makeComputation,
-                                 std::vector<Stencil::FieldInfo> const& stencilFields,
-                                 std::vector<std::string> const& stencilGlobalVariables,
-                                 std::vector<std::string> const& stencilConstructorTemplates,
-                                 const int stencilIdx) const {
-  function.addComment("Cast gt stencil type");
-
-  buildPlaceholderDefinitions(function, stencilFields, stencilGlobalVariables,
-                              stencilConstructorTemplates);
-
-  function.addStatement("using stencil_t = decltype(" +
-                        buildMakeComputation(DomainMapPlaceholders, makeComputation,
-                                             "grid_stencil_" + std::to_string(stencilIdx) +
-                                                 "(halo_descriptor(), halo_descriptor())") +
-                        ")");
-  function.addStatement("stencil.run()");
 }
 
 void GTCodeGen::generateSyncStorages(
@@ -358,16 +337,17 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     };
 
     // Generate typedefs for the individual intervals
-    for(const auto& intervalNamePair : intervalDefinitions.IntervalToNameMap)
-      StencilClass.addTypeDef(intervalNamePair.second)
+    for(const auto& intervalProperties : intervalDefinitions.intervalProperties_) {
+      StencilClass.addTypeDef(intervalProperties.name_)
           .addType(c_gt() + "interval")
-          .addTemplates(makeArrayRef({makeLevelName(intervalNamePair.first.lowerLevel(),
-                                                    intervalNamePair.first.lowerOffset()),
-                                      makeLevelName(intervalNamePair.first.upperLevel(),
-                                                    intervalNamePair.first.upperOffset())}));
+          .addTemplates(makeArrayRef({makeLevelName(intervalProperties.interval_.lowerLevel(),
+                                                    intervalProperties.interval_.lowerOffset()),
+                                      makeLevelName(intervalProperties.interval_.upperLevel(),
+                                                    intervalProperties.interval_.upperOffset())}));
+    }
 
     ASTStencilBody stencilBodyCGVisitor(stencilInstantiation,
-                                        intervalDefinitions.IntervalToNameMap);
+                                        intervalDefinitions.intervalProperties_);
 
     // Generate typedef for the axis
     const Interval& axis = intervalDefinitions.Axis;
@@ -453,11 +433,13 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
         // Generate Do-Method
         auto DoMethod = StencilFunStruct.addMemberFunction("GT_FUNCTION static void", "Do",
                                                            "typename Evaluation");
-        auto interveralIt = intervalDefinitions.IntervalToNameMap.find(stencilFun->getInterval());
-        DAWN_ASSERT_MSG(intervalDefinitions.IntervalToNameMap.end() != interveralIt,
+
+        DAWN_ASSERT_MSG(intervalDefinitions.intervalProperties_.count(stencilFun->getInterval()),
                         "non-existing interval");
+        auto intervalIt = intervalDefinitions.intervalProperties_.find(stencilFun->getInterval());
+
         DoMethod.addArg(DoMethodArg);
-        DoMethod.addArg(interveralIt->second);
+        DoMethod.addArg(intervalIt->name_);
         DoMethod.startBody();
 
         stencilBodyCGVisitor.setCurrentStencilFunction(stencilFun);
@@ -504,18 +486,20 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
               DAWN_ASSERT(cache.getInterval().is_initialized() ||
                           cache.getCacheIOPolicy() == Cache::local);
 
-              if(cache.getInterval().is_initialized())
-                DAWN_ASSERT(intervalDefinitions.IntervalToNameMap.count(*(cache.getInterval())));
-
+              std::string intervalName;
+              if(cache.getInterval().is_initialized()) {
+                DAWN_ASSERT(intervalDefinitions.intervalProperties_.count(*(cache.getInterval())));
+                intervalName =
+                    intervalDefinitions.intervalProperties_.find(*(cache.getInterval()))->name_;
+              }
               return (c_gt() + "cache<" +
                       // Type: IJ or K
                       c_gt() + cache.getCacheTypeAsString() + ", " +
                       // IOPolicy: local, fill, bpfill, flush, epflush or flush_and_fill
                       c_gt() + "cache_io_policy::" + cache.getCacheIOPolicyAsString() +
                       // Interval: if IOPolicy is not local, we need to provide the interval
-                      (cache.getCacheIOPolicy() != Cache::local
-                           ? ", " + intervalDefinitions.IntervalToNameMap[*(cache.getInterval())]
-                           : std::string()) +
+                      (cache.getCacheIOPolicy() != Cache::local ? ", " + intervalName
+                                                                : std::string()) +
                       // cache window if policy is bpfill
                       ((cache.getCacheIOPolicy() == Cache::bpfill ||
                         cache.getCacheIOPolicy() == Cache::epflush)
@@ -607,7 +591,9 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
           auto DoMethodCodeGen =
               StageStruct.addMemberFunction("GT_FUNCTION static void", "Do", "typename Evaluation");
           DoMethodCodeGen.addArg(DoMethodArg);
-          DoMethodCodeGen.addArg(intervalDefinitions.IntervalToNameMap[doMethod.getInterval()]);
+          DAWN_ASSERT(intervalDefinitions.intervalProperties_.count(doMethod.getInterval()));
+          DoMethodCodeGen.addArg(
+              intervalDefinitions.intervalProperties_.find(doMethod.getInterval())->name_);
           DoMethodCodeGen.startBody();
 
           stencilBodyCGVisitor.setIndent(DoMethodCodeGen.getIndent());
@@ -620,12 +606,14 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
         // Generate empty Do-Methods
         // See https://github.com/eth-cscs/gridtools/issues/330
         const auto& stageIntervals = stage.getIntervals();
-        for(const auto& interval : intervalDefinitions.StageIntervals[stagePtr])
+        for(const auto& interval : intervalDefinitions.StageIntervals[stagePtr]) {
+          DAWN_ASSERT(intervalDefinitions.intervalProperties_.count(interval));
           if(std::find(stageIntervals.begin(), stageIntervals.end(), interval) ==
              stageIntervals.end())
             StageStruct.addMemberFunction("GT_FUNCTION static void", "Do", "typename Evaluation")
                 .addArg(DoMethodArg)
-                .addArg(intervalDefinitions.IntervalToNameMap[interval]);
+                .addArg(intervalDefinitions.intervalProperties_.find(interval)->name_);
+        }
       }
 
       makeComputation.push_back(ssMS.str());
@@ -715,19 +703,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     // TODO the destructor is leaking since we can not find a solution to cast the stencil object to
     // GT stencil in a non templated method
 
-    //    addCastOfStencil(dtor, "stencil", DomainMapPlaceholders, makeComputation, StencilFields,
-    //                     StencilGlobalVariables, StencilConstructorTemplates);
-    //    dtor.addStatement("stencil->finalize()");
     dtor.commit();
-
-    //    // Generate stencil run method
-    //    auto runStencil = createStorageTemplateMethod(StencilClass, "void", "run", StencilFields);
-    //    //    auto runStencil = StencilClass.addMemberFunction("void", "run");
-    //    runStencil.startBody();
-    //    addCastOfStencil(runStencil, "stencil", DomainMapPlaceholders, makeComputation,
-    //    StencilFields,
-    //                     StencilGlobalVariables, StencilConstructorTemplates, stencilIdx);
-    //    runStencil.addStatement("stencil->run()");
   }
 
   if(isEmpty) {

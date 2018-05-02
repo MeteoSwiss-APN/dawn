@@ -25,7 +25,7 @@ namespace gt {
 ASTStencilDesc::ASTStencilDesc(
     const StencilInstantiation* instantiation,
     const std::unordered_map<int, std::vector<std::string>>& StencilIDToStencilNameMap,
-    const std::unordered_map<int, std::__cxx11::string>& stencilIdToArguments)
+    const std::unordered_map<int, std::string>& stencilIdToArguments)
     : ASTCodeGenCXX(), instantiation_(instantiation),
       StencilIDToStencilNameMap_(StencilIDToStencilNameMap),
       stencilIdToArguments_(stencilIdToArguments) {}

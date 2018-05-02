@@ -45,16 +45,13 @@ public:
     IntervalDefinitions(const Stencil& stencil);
 
     /// Intervals of the stencil
-    std::unordered_set<Interval> Intervals;
+    std::unordered_set<IntervalProperties> intervalProperties_;
 
     /// Axis of the stencil (i.e the interval which spans accross all other intervals)
     Interval Axis;
 
     /// Levels of the axis
     std::set<int> Levels;
-
-    /// Unqiue name of an interval
-    std::unordered_map<Interval, std::string> IntervalToNameMap;
 
     /// Intervals of the Do-Methods of each stage
     std::unordered_map<std::shared_ptr<Stage>, std::vector<Interval>> StageIntervals;
