@@ -34,6 +34,8 @@ mchbuild_add_library(
           Extents.cpp
           Extents.h
           Field.h
+          FieldAccessExtents.cpp
+          FieldAccessExtents.h
           Interval.cpp
           Interval.h
           LoopOrder.cpp    

@@ -106,7 +106,7 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_02) {
     }
     if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("coeff")) {
       ASSERT_TRUE(field.getInterval() == Interval(sir::Interval::Start, sir::Interval::End, 11, 0));
-      ASSERT_TRUE(field.getAccessedInterval() ==
+      ASSERT_TRUE(field.computeAccessedInterval() ==
                   Interval(sir::Interval::Start, sir::Interval::End, 11, 1));
     }
   }
@@ -135,7 +135,7 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_03) {
     }
     if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("coeff")) {
       ASSERT_TRUE(field.getInterval() == Interval(sir::Interval::Start, sir::Interval::End, 4, 0));
-      ASSERT_TRUE(field.getAccessedInterval() ==
+      ASSERT_TRUE(field.computeAccessedInterval() ==
                   Interval(sir::Interval::Start, sir::Interval::End, 2, 1));
     }
   }
@@ -171,7 +171,7 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_05) {
     int AccessID = fieldPair.first;
     if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("lap")) {
       ASSERT_TRUE(field.getInterval() == Interval(sir::Interval::Start + 11, sir::Interval::End));
-      ASSERT_TRUE(field.getAccessedInterval() ==
+      ASSERT_TRUE(field.computeAccessedInterval() ==
                   Interval(sir::Interval::Start + 10, sir::Interval::End));
     }
     if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("out") ||
@@ -180,7 +180,7 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_05) {
     }
     if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("coeff")) {
       ASSERT_TRUE(field.getInterval() == Interval(sir::Interval::Start, sir::Interval::End, 11, 0));
-      ASSERT_TRUE(field.getAccessedInterval() ==
+      ASSERT_TRUE(field.computeAccessedInterval() ==
                   Interval(sir::Interval::Start, sir::Interval::End, 11, 1));
     }
   }

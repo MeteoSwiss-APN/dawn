@@ -16,6 +16,7 @@
 #define DAWN_OPTIMIZER_FIELDTYPES_H
 
 #include "dawn/Optimizer/Extents.h"
+#include "dawn/Optimizer/FieldAccessExtents.h"
 #include "dawn/Optimizer/Interval.h"
 #include <utility>
 
@@ -32,25 +33,25 @@ public:
   enum IntendKind { IK_Output = 0, IK_InputOutput = 1, IK_Input = 2 };
 
 private:
-  int accessID_;              ///< Unique AccessID of the field
-  IntendKind intend_;         ///< Intended usage
-  Extents extents_;           ///< Accumulated extent of the field
-  Interval interval_;         ///< Enclosing Interval from the iteration space
-                              ///  where the Field has been accessed
-  Interval accessedInterval_; ///< Enclosing interval where accesses where recorded,
-                              /// i.e. interval_.extend(Extent)
-
-  void updateAccessedInterval() {
-    accessedInterval_ = interval_;
-    accessedInterval_ = accessedInterval_.extendInterval(extents_);
-  }
-
+  int accessID_;               ///< Unique AccessID of the field
+  IntendKind intend_;          ///< Intended usage
+  FieldAccessExtents extents_; ///< Accumulated read and write extent of the field
+  Interval interval_;          ///< Enclosing Interval from the iteration space
+                               ///  where the Field has been accessed
 public:
-  Field(int accessID, IntendKind intend, Extents extents, Interval interval)
-      : accessID_(accessID), intend_(intend), extents_(extents), interval_(interval),
-        accessedInterval_(interval) {
-    updateAccessedInterval();
-  }
+  Field(Field&& f) = default;
+  Field(Field const& f) = default;
+
+  Field(int accessID, IntendKind intend, Extents const& readExtents, Extents const& writeExtents,
+        Interval const& interval)
+      : accessID_(accessID), intend_(intend),
+        extents_(FieldAccessExtents(readExtents, writeExtents)), interval_(interval) {}
+
+  Field(int accessID, IntendKind intend, Extents&& readExtents, Extents&& writeExtents,
+        Interval&& interval)
+      : accessID_(accessID), intend_(intend),
+        extents_(FieldAccessExtents(std::move(readExtents), std::move(writeExtents))),
+        interval_(std::move(interval)) {}
 
   /// @name Operators
   /// @{
@@ -66,8 +67,20 @@ public:
   /// @brief getters
   /// @{
   Interval const& getInterval() const { return interval_; }
-  Interval const& getAccessedInterval() const { return accessedInterval_; }
-  Extents const& getExtents() const { return extents_; }
+
+  // Enclosing interval where accesses where recorded,
+  /// i.e. interval_.extend(Extent)
+  Interval computeAccessedInterval() const {
+    Interval accessedInterval = interval_;
+    accessedInterval = accessedInterval.extendInterval(getExtents());
+    return accessedInterval;
+  }
+
+  Extents const& getReadExtents() const { return extents_.getReadExtents(); }
+  Extents const& getWriteExtents() const { return extents_.getWriteExtents(); }
+
+  Extents const& getExtents() const { return extents_.getExtents(); }
+
   IntendKind getIntend() const { return intend_; }
   int getAccessID() const { return accessID_; }
   /// @}
@@ -77,14 +90,10 @@ public:
   void setIntend(IntendKind intend) { intend_ = intend; }
   /// @}
 
-  void mergeExtents(Extents const& extents) {
-    extents_.merge(extents);
-    updateAccessedInterval();
-  }
-  void extendInterval(Interval const& interval) {
-    interval_.merge(interval);
-    updateAccessedInterval();
-  }
+  void mergeReadExtents(Extents const& extents) { extents_.mergeReadExtents(extents); }
+  void mergeWriteExtents(Extents const& extents) { extents_.mergeWriteExtents(extents); }
+
+  void extendInterval(Interval const& interval) { interval_.merge(interval); }
 };
 
 } // namespace dawn

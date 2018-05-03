@@ -68,6 +68,8 @@ public:
   bool hasReadAccess(int accessID) const;
   bool hasWriteAccess(int accessID) const;
 
+  bool hasAccess(int accessID) const;
+
   /// @brief Get access of field (returns NullExtent if field does not exist)
   const Extents& getReadAccess(int AccessID) const;
   const Extents& getWriteAccess(int AccessID) const;

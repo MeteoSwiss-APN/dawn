@@ -24,9 +24,11 @@ namespace gt {
 
 ASTStencilDesc::ASTStencilDesc(
     const StencilInstantiation* instantiation,
-    const std::unordered_map<int, std::vector<std::string>>& StencilIDToStencilNameMap)
+    const std::unordered_map<int, std::vector<std::string>>& StencilIDToStencilNameMap,
+    const std::unordered_map<int, std::string>& stencilIdToArguments)
     : ASTCodeGenCXX(), instantiation_(instantiation),
-      StencilIDToStencilNameMap_(StencilIDToStencilNameMap) {}
+      StencilIDToStencilNameMap_(StencilIDToStencilNameMap),
+      stencilIdToArguments_(stencilIdToArguments) {}
 
 ASTStencilDesc::~ASTStencilDesc() {}
 
@@ -60,7 +62,8 @@ void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
   int StencilID = instantiation_->getStencilCallToStencilIDMap().find(stmt)->second;
 
   for(const std::string& stencilName : StencilIDToStencilNameMap_.find(StencilID)->second) {
-    ss_ << std::string(indent_, ' ') << stencilName << ".get_stencil()->run();\n";
+    ss_ << std::string(indent_, ' ') << stencilName
+        << "(" + stencilIdToArguments_.at(StencilID) + ");\n";
   }
 }
 
@@ -78,14 +81,19 @@ void ASTStencilDesc::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stm
   std::string halosetup = dawn::format(
       "gridtools::array< gridtools::halo_descriptor, 3 > halos;\n"
       "halos[0] =gridtools::halo_descriptor(%i, %i, "
-      "%s.get_storage_info_ptr()->begin<0>(),%s.get_storage_info_ptr()->end<0>(), "
-      "%s.get_storage_info_ptr()->total_length<0>());\nhalos[1] = gridtools::halo_descriptor(%i, "
+      "%s.get_storage_info_ptr()->template begin<0>(),%s.get_storage_info_ptr()->template "
+      "end<0>(), "
+      "%s.get_storage_info_ptr()->template total_length<0>());\nhalos[1] = "
+      "gridtools::halo_descriptor(%i, "
       "%i, "
-      "%s.get_storage_info_ptr()->begin<1>(),%s.get_storage_info_ptr()->end<1>(), "
-      "%s.get_storage_info_ptr()->total_length<1>());\nhalos[2] = gridtools::halo_descriptor(%i, "
+      "%s.get_storage_info_ptr()->template begin<1>(),%s.get_storage_info_ptr()->template "
+      "end<1>(), "
+      "%s.get_storage_info_ptr()->template total_length<1>());\nhalos[2] = "
+      "gridtools::halo_descriptor(%i, "
       "%i, "
-      "%s.get_storage_info_ptr()->begin<2>(),%s.get_storage_info_ptr()->end<2>(), "
-      "%s.get_storage_info_ptr()->total_length<2>());\n",
+      "%s.get_storage_info_ptr()->template begin<2>(),%s.get_storage_info_ptr()->template "
+      "end<2>(), "
+      "%s.get_storage_info_ptr()->template total_length<2>());\n",
       haloIMinus, haloIPlus, fieldname, fieldname, fieldname, haloJMinus, haloJPlus, fieldname,
       fieldname, fieldname, haloKMinus, haloKPlus, fieldname, fieldname, fieldname);
   std::string makeView = "";

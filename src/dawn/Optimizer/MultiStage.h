@@ -97,7 +97,7 @@ public:
 
   /// @brief Set a cache
   Cache& setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy policy, int AccessID,
-                  Interval const& interval);
+                  Interval const& interval, boost::optional<Cache::window> w);
 
   Cache& setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy policy, int AccessID);
 
