@@ -99,8 +99,9 @@ static boost::optional<FirstAccessKind> getFirstAccessKind(const MultiStage& MS,
           const Accesses& accesses = *statementAccesssPair->getAccesses();
           // indepdently of whether the statement has also a write access, if there is a read
           // access, it should happen in the RHS so first
-          if(accesses.hasReadAccess(AccessID))
+          if(accesses.hasReadAccess(AccessID)) {
             return boost::make_optional(FirstAccessKind::FK_Read);
+          }
           if(accesses.hasWriteAccess(AccessID))
             return boost::make_optional(FirstAccessKind::FK_Write);
           // TODO provide solution for block statments
@@ -108,13 +109,12 @@ static boost::optional<FirstAccessKind> getFirstAccessKind(const MultiStage& MS,
         }
         return boost::optional<FirstAccessKind>();
       };
-      boost::optional<FirstAccessKind> firstAccess{};
+      boost::optional<FirstAccessKind> firstAccess;
 
       // We need to check all Do-Methods
       if(MS.getLoopOrder() == LoopOrderKind::LK_Parallel) {
 
         for(const auto& doMethodPtr : stage.getDoMethods()) {
-          std::cout << "UU " << std::endl;
           auto thisFirstAccess = getFirstAccessKindFromDoMethod(doMethodPtr.get());
 
           firstAccess = combineFirstAccess(firstAccess, thisFirstAccess);
@@ -174,7 +174,6 @@ static boost::optional<FirstAccessKind> getFirstAccessKind(const MultiStage& MS,
 ///
 CacheCandidate combinePolicy(CacheCandidate const& MS1Policy, Field::IntendKind fieldIntend,
                              CacheCandidate const& MS2Policy) {
-  std::cout << "COMBINE POLICIES " << MS1Policy.policy_ << " " << MS2Policy.policy_ << std::endl;
   // TODO properly compute the window
   if(MS1Policy.policy_ == Cache::local) {
     if(MS2Policy.policy_ == Cache::fill)
@@ -202,16 +201,13 @@ CacheCandidate combinePolicy(CacheCandidate const& MS1Policy, Field::IntendKind 
     }
     if(MS2Policy.policy_ == Cache::local)
       return MS1Policy; // fill, pbfill
-    std::cout << "PO  " << MS1Policy.policy_ << " " << MS2Policy.policy_ << std::endl;
     dawn_unreachable("Not valid policy");
   }
   dawn_unreachable("invalid policy combination");
 }
 
-} // anonymous namespace
-
-PassSetCaches::PassSetCaches() : Pass("PassSetCaches") {}
-
+/// computes the cache window required by bpfill and epflush based on the accessed interval of a
+/// field and the interval of the iteration
 Cache::window computeCacheWindow(LoopOrderKind loopOrder, Interval const& accessedInterval,
                                  Interval const& iterationInterval) {
   if(loopOrder == LoopOrderKind::LK_Forward) {
@@ -230,12 +226,11 @@ Cache::window computeCacheWindow(LoopOrderKind loopOrder, Interval const& access
   return Cache::window{};
 }
 
-CacheCandidate computePolicyMS1(Field const& field, bool isTemporaryField, MultiStage const& MS) {
+/// computes a cache candidate of a field for a multistage
+CacheCandidate computeCacheCandidateForMS(Field const& field, bool isTemporaryField,
+                                          MultiStage const& MS) {
 
   if(field.getIntend() == Field::IK_Input) {
-    std::cout << "SET FILL "
-              << field.getAccessID() /* instantiation->getNameFromAccessID(field.getAccessID()) */
-              << std::endl;
     boost::optional<Interval> interval = MS.computeEnclosingAccessInterval(field.getAccessID());
     DAWN_ASSERT(interval.is_initialized());
 
@@ -243,9 +238,6 @@ CacheCandidate computePolicyMS1(Field const& field, bool isTemporaryField, Multi
                           toFirstAccess(field.getIntend()), *interval};
   }
   if(field.getIntend() == Field::IK_Output) {
-    std::cout << "SET LOCAL "
-              << field.getAccessID() /*instantiation->getNameFromAccessID(field.getAccessID())*/
-              << std::endl;
     // we do not cache output only normal fields since there is not data reuse
     DAWN_ASSERT(isTemporaryField);
     return CacheCandidate{Cache::local, boost::optional<Cache::window>(),
@@ -258,7 +250,6 @@ CacheCandidate computePolicyMS1(Field const& field, bool isTemporaryField, Multi
     // TODO test getFirstAccessKind
     boost::optional<FirstAccessKind> firstAccess = getFirstAccessKind(MS, field.getAccessID());
     DAWN_ASSERT(firstAccess.is_initialized());
-    std::cout << "ACH " << static_cast<int>(*firstAccess) << std::endl;
     if(*firstAccess == FirstAccessKind::FK_Write) {
       // Example (kcache candidate a):
       //   k=k_end:k_start
@@ -266,10 +257,6 @@ CacheCandidate computePolicyMS1(Field const& field, bool isTemporaryField, Multi
       //     out = a[k-1]
       boost::optional<Interval> interval = MS.computeEnclosingAccessInterval(field.getAccessID());
       DAWN_ASSERT(interval.is_initialized());
-
-      std::cout << "SET LOCALB "
-                << field.getAccessID() /*instantiation->getNameFromAccessID(field.getAccessID()) */
-                << field.getInterval() << " " << *interval << std::endl;
 
       DAWN_ASSERT(interval->contains(field.getInterval()));
 
@@ -282,12 +269,14 @@ CacheCandidate computePolicyMS1(Field const& field, bool isTemporaryField, Multi
       if(((MS.getLoopOrder() == LoopOrderKind::LK_Forward) &&
           interval->lowerBound() < field.getInterval().lowerBound()) ||
          ((MS.getLoopOrder() == LoopOrderKind::LK_Backward) &&
-          interval->upperBound() > field.getInterval().upperBound()))
+          interval->upperBound() > field.getInterval().upperBound())) {
+
         return CacheCandidate{Cache::bpfill,
                               boost::make_optional(Cache::window{
                                   interval->lowerBound() - field.getInterval().lowerBound(),
                                   interval->upperBound() - field.getInterval().upperBound()}),
                               *firstAccess, *interval};
+      }
 
       return CacheCandidate{Cache::local, boost::optional<Cache::window>(), *firstAccess,
                             *interval};
@@ -305,10 +294,6 @@ CacheCandidate computePolicyMS1(Field const& field, bool isTemporaryField, Multi
       // TODO Should not require a bpfill
       // If the field is a temporary, we only set the policy fo fill. A flush will be
       // granted if following MSS also read the temporary field
-      std::cout << "SET FILLB "
-                << field.getAccessID() /* instantiation->getNameFromAccessID(field.getAccessID()) */
-                << std::endl;
-
       boost::optional<Interval> interval = MS.computeEnclosingAccessInterval(field.getAccessID());
       DAWN_ASSERT(interval.is_initialized());
       return CacheCandidate{Cache::fill, boost::optional<Cache::window>(),
@@ -317,22 +302,21 @@ CacheCandidate computePolicyMS1(Field const& field, bool isTemporaryField, Multi
     // Example (kcache candidate a):
     //     k=k_end-1:k_start
     //        a += a[k+1]
-    std::cout << "SET BPFILL "
-              << field.getAccessID() /*instantiation->getNameFromAccessID(field.getAccessID()) */
-              << std::endl;
-
     // TODO should be a temporary, otherwise will require also a flush
     auto accessedInterval = MS.computeEnclosingAccessInterval(field.getAccessID());
     DAWN_ASSERT(accessedInterval.is_initialized());
     auto cacheWindow = boost::make_optional(
         computeCacheWindow(MS.getLoopOrder(), *accessedInterval, field.getInterval()));
-
     boost::optional<Interval> interval = MS.computeEnclosingAccessInterval(field.getAccessID());
     DAWN_ASSERT(interval.is_initialized());
     return CacheCandidate{Cache::bpfill, cacheWindow, toFirstAccess(field.getIntend()), *interval};
   }
   dawn_unreachable("Policy of Field not found");
 }
+
+} // anonymous namespace
+
+PassSetCaches::PassSetCaches() : Pass("PassSetCaches") {}
 
 bool PassSetCaches::isAccessIDReadAfter(
     const int accessID, std::list<std::shared_ptr<Stage>>::const_iterator stage,
@@ -372,11 +356,9 @@ bool PassSetCaches::isAccessIDReadAfter(
 }
 
 bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiation) {
-  std::cout << "PASS" << std::endl;
   OptimizerContext* context = instantiation->getOptimizerContext();
 
   for(const auto& stencilPtr : instantiation->getStencils()) {
-    std::cout << "FOR T " << std::endl;
     const Stencil& stencil = *stencilPtr;
 
     // Set IJ-Caches
@@ -432,13 +414,10 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
       msIdx++;
     }
 
-    std::cout << "BEYONG " << context->getOptions().UseKCaches
-              << stencil.getSIRStencil()->Attributes.has(sir::Attr::AK_UseKCaches) << std::endl;
     // Set K-Caches
     if(context->getOptions().UseKCaches ||
        stencil.getSIRStencil()->Attributes.has(sir::Attr::AK_UseKCaches)) {
 
-      std::cout << "KK " << std::endl;
       // Get the fields of all Multi-Stages
       std::vector<std::unordered_map<int, Field>> fields;
       std::transform(stencil.getMultiStages().begin(), stencil.getMultiStages().end(),
@@ -456,11 +435,9 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
           if(!mssProcessedField)
             mssProcessedFields.emplace(field.getAccessID());
 
-          std::cout << "FOR " << field.getAccessID() << " " << MSIndex << std::endl;
           // Field is already cached, skip
           if(MS.isCached(field.getAccessID()))
             continue;
-          std::cout << "FOR " << field.getAccessID() << " " << MSIndex << std::endl;
 
           // Field has horizontal extents, can't be k-cached
           if(!field.getExtents().isHorizontalPointwise())
@@ -470,40 +447,28 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
           if(!field.getWriteExtents().isPointwise())
             continue;
 
-          std::cout << "FORB " << instantiation->getNameFromAccessID(field.getAccessID()) << " "
-                    << instantiation->isTemporaryField(field.getAccessID()) << " "
-                    << field.getIntend() << " " << field.getExtents() << std::endl;
-
-          // Currently we only cache temporaries!
-          //          if(!instantiation->isTemporaryField(field.getAccessID()))
-          //            continue;
-
           if(!instantiation->isTemporaryField(field.getAccessID()) &&
              (field.getIntend() == Field::IK_Output ||
               (field.getIntend() == Field::IK_Input && field.getExtents().isPointwise())))
             continue;
 
-          std::cout << "FORC " << MSIndex << std::endl;
-
           // Determine if we need to fill the cache by analyzing the current multi-stage
-          CacheCandidate policy =
-              computePolicyMS1(field, instantiation->isTemporaryField(field.getAccessID()), MS);
-          if(policy.intend_ == FirstAccessKind::FK_Mixed)
+          CacheCandidate cacheCandidate = computeCacheCandidateForMS(
+              field, instantiation->isTemporaryField(field.getAccessID()), MS);
+          if(cacheCandidate.intend_ == FirstAccessKind::FK_Mixed)
             continue;
 
-          DAWN_ASSERT((policy.policy_ != Cache::fill && policy.policy_ != Cache::bpfill) ||
-                      !instantiation->isTemporaryField(field.getAccessID() || mssProcessedField));
-          std::cout << "Policy1 " << policy.policy_ << " " << policy.interval_ << std::endl;
+          DAWN_ASSERT(
+              (cacheCandidate.policy_ != Cache::fill && cacheCandidate.policy_ != Cache::bpfill) ||
+              !instantiation->isTemporaryField(field.getAccessID() || mssProcessedField));
 
           if(!instantiation->isTemporaryField(field.getAccessID()) &&
              field.getIntend() != Field::IK_Input) {
-            std::cout << "SET TO FLUSH B "
-                      << instantiation->getNameFromAccessID(field.getAccessID()) << std::endl;
 
-            policy = combinePolicy(policy, field.getIntend(),
-                                   CacheCandidate{Cache::CacheIOPolicy::fill,
-                                                  boost::optional<Cache::window>(),
-                                                  FirstAccessKind::FK_Read, field.getInterval()});
+            cacheCandidate = combinePolicy(
+                cacheCandidate, field.getIntend(),
+                CacheCandidate{Cache::CacheIOPolicy::fill, boost::optional<Cache::window>(),
+                               FirstAccessKind::FK_Read, field.getInterval()});
           } else {
 
             for(int MSIndex2 = MSIndex + 1; MSIndex2 < numMS; MSIndex2++) {
@@ -513,41 +478,36 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
               const MultiStage& nextMS = *stencil.getMultiStageFromMultiStageIndex(MSIndex2);
               const Field& fieldInNextMS = fields[MSIndex2].find(field.getAccessID())->second;
 
-              CacheCandidate policyMS2 = computePolicyMS1(
+              CacheCandidate policyMS2 = computeCacheCandidateForMS(
                   fieldInNextMS, instantiation->isTemporaryField(fieldInNextMS.getAccessID()),
                   nextMS);
               // if the interval of the two cache candidate do not overlap, there is no data
               // dependency, therefore we skip it
-              if(!policy.interval_.overlaps(policyMS2.interval_))
+              if(!cacheCandidate.interval_.overlaps(policyMS2.interval_))
                 continue;
 
-              std::cout << "Policy2 " << policyMS2.policy_ << " " << policyMS2.interval_
-                        << std::endl;
               if(policyMS2.intend_ == FirstAccessKind::FK_Mixed) {
-                policy.intend_ = FirstAccessKind::FK_Mixed;
+                cacheCandidate.intend_ = FirstAccessKind::FK_Mixed;
                 break;
               }
-              policy = combinePolicy(policy, field.getIntend(), policyMS2);
+              cacheCandidate = combinePolicy(cacheCandidate, field.getIntend(), policyMS2);
               break;
             }
 
-            if(policy.intend_ == FirstAccessKind::FK_Mixed)
+            if(cacheCandidate.intend_ == FirstAccessKind::FK_Mixed)
               continue;
           }
 
-          // TODO remove
-          //          auto interval = MS.computeEnclosingAccessInterval(field.getAccessID());
           Interval interval = field.getInterval();
-          if(policy.policy_ == Cache::CacheIOPolicy::fill) {
+          if(cacheCandidate.policy_ == Cache::CacheIOPolicy::fill) {
             auto interval_ = MS.computeEnclosingAccessInterval(field.getAccessID());
             DAWN_ASSERT(interval_.is_initialized());
             interval = *interval_;
           }
 
-          std::cout << "INSERTINGCACHE " << field.getAccessID() << std::endl;
           // Set the cache
-          Cache& cache =
-              MS.setCache(Cache::K, policy.policy_, field.getAccessID(), interval, policy.window_);
+          Cache& cache = MS.setCache(Cache::K, cacheCandidate.policy_, field.getAccessID(),
+                                     interval, cacheCandidate.window_);
 
           if(context->getOptions().ReportPassSetCaches) {
             std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": MS"
