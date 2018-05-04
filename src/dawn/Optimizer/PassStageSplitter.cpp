@@ -187,6 +187,8 @@ bool PassStageSplitter::run(const std::shared_ptr<StencilInstantiation>& stencil
   if(strategy_ == StageSplittingStrategy::SS_Optimized) {
     stageSplittingAlgorithm = setOptimizedLoopContent();
   } else {
+    DAWN_ASSERT_MSG(
+        false, "Debug splitting strategy for stages is not supported by the extent computation");
     stageSplittingAlgorithm = setDebugLoopContent();
   }
 

@@ -143,12 +143,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   }
 
   using StageSplitStrategy = PassStageSplitter::StageSplittingStrategy;
-  StageSplitStrategy stageSplitStrategy;
-  if(options_->Debug) {
-    stageSplitStrategy = StageSplitStrategy::SS_Debug;
-  } else {
-    stageSplitStrategy = StageSplitStrategy::SS_Optimized;
-  }
+  StageSplitStrategy stageSplitStrategy = StageSplitStrategy::SS_Optimized;
 
   // -max-fields
   int maxFields = options_->MaxFieldsPerStencil;
