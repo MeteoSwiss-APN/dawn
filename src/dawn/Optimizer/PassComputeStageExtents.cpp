@@ -42,9 +42,8 @@ bool PassComputeStageExtents::run(
       for(const Field& fromField : fromStage.getFields()) {
         // notice that IO (if read happens before write) would also be a valid pattern
         // to trigger the propagation of the stage extents, however this is not a legal
-        // pattern within a stage if the extent is not pointwise
-        if(fromField.getExtents().isPointwise() ||
-           fromField.getIntend() != Field::IntendKind::IK_Input)
+        // pattern within a stage
+        if(fromField.getIntend() != Field::IntendKind::IK_Input)
           continue;
 
         Extents fieldExtent = fromField.getExtents();
