@@ -129,6 +129,9 @@ static void setInterval(sir::proto::Interval* intervalProto, const sir::Interval
 static void setField(sir::proto::Field* fieldProto, const sir::Field* field) {
   fieldProto->set_name(field->Name);
   fieldProto->set_is_temporary(field->IsTemporary);
+  for(const auto& initializedDimension : field->fieldDimensions){
+    fieldProto->add_field_dimensions(initializedDimension);
+  }
   setLocation(fieldProto->mutable_loc(), field->Loc);
 }
 
@@ -597,6 +600,17 @@ static SourceLocation makeLocation(const T& proto) {
 static std::shared_ptr<sir::Field> makeField(const sir::proto::Field& fieldProto) {
   auto field = std::make_shared<sir::Field>(fieldProto.name(), makeLocation(fieldProto));
   field->IsTemporary = fieldProto.is_temporary();
+  if(!fieldProto.field_dimensions().empty()) {
+      auto throwException = [&fieldProto](const char* member) {
+        throw std::runtime_error(format("Field::%s (loc %s) exceeds 3 dimensions", member,
+                                        makeLocation(fieldProto)));
+      };
+    if(fieldProto.field_dimensions().size() > 3)
+      throwException("field_dimensions");
+
+    for(int i = 0; i < fieldProto.field_dimensions().size(); ++i)
+      field->fieldDimensions[i] = fieldProto.field_dimensions()[i];
+  }
   return field;
 }
 
