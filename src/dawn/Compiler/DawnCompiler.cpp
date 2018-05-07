@@ -142,8 +142,6 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     mssSplitStrategy = MultistageSplitStrategy::SS_Optimized;
   }
 
-  using StageSplitStrategy = PassStageSplitter::StageSplittingStrategy;
-  StageSplitStrategy stageSplitStrategy = StageSplitStrategy::SS_Optimized;
 
   // -max-fields
   int maxFields = options_->MaxFieldsPerStencil;
@@ -159,7 +157,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   optimizer->checkAndPushBack<PassFieldVersioning>();
   optimizer->checkAndPushBack<PassSSA>();
   optimizer->checkAndPushBack<PassMultiStageSplitter>(mssSplitStrategy);
-  optimizer->checkAndPushBack<PassStageSplitter>(stageSplitStrategy);
+  optimizer->checkAndPushBack<PassStageSplitter>();
   optimizer->checkAndPushBack<PassPrintStencilGraph>();
   optimizer->checkAndPushBack<PassTemporaryType>();
   optimizer->checkAndPushBack<PassSetStageName>();

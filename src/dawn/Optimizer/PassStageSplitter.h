@@ -28,18 +28,11 @@ namespace dawn {
 /// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassStageSplitter : public Pass {
 public:
-  /// @brief Multistage splitting strategies
-  enum StageSplittingStrategy {
-    SS_Debug,    ///< Splitting every Statement into its own Stage
-    SS_Optimized ///< Optimized splitting of Stages, only when needed
-  };
-  PassStageSplitter(StageSplittingStrategy strategy);
+  PassStageSplitter();
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) override;
 
-private:
-  StageSplittingStrategy strategy_;
 };
 
 } // namespace dawn
