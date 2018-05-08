@@ -28,9 +28,7 @@
 namespace dawn {
 
 PassMultiStageSplitter::PassMultiStageSplitter(MultiStageSplittingStrategy strategy)
-    : Pass("PassMultiStageSplitter"), strategy_(strategy) {
-  isDebug_ = true;
-}
+    : Pass("PassMultiStageSplitter", true), strategy_(strategy) {}
 namespace {
 
 int checkDependencies(const std::shared_ptr<Stage>& stage, int stmtIdx) {
