@@ -28,7 +28,7 @@
 
 namespace dawn {
 
-PassStageSplitter::PassStageSplitter() : Pass("PassStageSplitter") {}
+PassStageSplitter::PassStageSplitter() : Pass("PassStageSplitter") { isDebug_ = true; }
 
 bool PassStageSplitter::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
