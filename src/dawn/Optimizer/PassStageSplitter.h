@@ -32,7 +32,6 @@ public:
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) override;
-
 };
 
 } // namespace dawn
