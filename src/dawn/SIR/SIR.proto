@@ -35,6 +35,7 @@ message Field {
   string name = 1;        // Name of the field
   SourceLocation loc = 2; // Source location
   bool is_temporary = 3;  // Is the field a temporary?
+  repeated int32 field_dimensions = 4; // Legal dimension of the field initialized by the user
 }
 
 // @brief Directional argument of a StencilFunction

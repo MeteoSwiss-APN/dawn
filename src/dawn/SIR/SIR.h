@@ -159,9 +159,10 @@ struct StencilFunctionArg {
 /// @ingroup sir
 struct Field : public StencilFunctionArg {
   Field(const std::string& name, SourceLocation loc = SourceLocation())
-      : StencilFunctionArg{name, AK_Field, loc}, IsTemporary(false) {}
+      : StencilFunctionArg{name, AK_Field, loc}, IsTemporary(false), fieldDimensions({{0, 0, 0}}) {}
 
   bool IsTemporary;
+  Array3i fieldDimensions;
 
   static bool classof(const StencilFunctionArg* arg) { return arg->Kind == AK_Field; }
   bool operator==(const Field& rhs) const { return comparison(rhs); }

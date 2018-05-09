@@ -129,6 +129,9 @@ static void setInterval(sir::proto::Interval* intervalProto, const sir::Interval
 static void setField(sir::proto::Field* fieldProto, const sir::Field* field) {
   fieldProto->set_name(field->Name);
   fieldProto->set_is_temporary(field->IsTemporary);
+  for(const auto& initializedDimension : field->fieldDimensions) {
+    fieldProto->add_field_dimensions(initializedDimension);
+  }
   setLocation(fieldProto->mutable_loc(), field->Loc);
 }
 
@@ -597,6 +600,17 @@ static SourceLocation makeLocation(const T& proto) {
 static std::shared_ptr<sir::Field> makeField(const sir::proto::Field& fieldProto) {
   auto field = std::make_shared<sir::Field>(fieldProto.name(), makeLocation(fieldProto));
   field->IsTemporary = fieldProto.is_temporary();
+  if(!fieldProto.field_dimensions().empty()) {
+    auto throwException = [&fieldProto](const char* member) {
+      throw std::runtime_error(
+          format("Field::%s (loc %s) exceeds 3 dimensions", member, makeLocation(fieldProto)));
+    };
+    if(fieldProto.field_dimensions().size() > 3)
+      throwException("field_dimensions");
+
+    std::copy(fieldProto.field_dimensions().begin(), fieldProto.field_dimensions().end(),
+              field->fieldDimensions.begin());
+  }
   return field;
 }
 
@@ -765,8 +779,7 @@ static std::shared_ptr<Expr> makeExpr(const sir::proto::Expr& expressionProto) {
       if(exprProto.offset().size() > 3)
         throwException("offset");
 
-      for(int i = 0; i < exprProto.offset().size(); ++i)
-        offset[i] = exprProto.offset()[i];
+      std::copy(exprProto.offset().begin(), exprProto.offset().end(), offset.begin());
     }
 
     Array3i argumentOffset{{0, 0, 0}};
@@ -774,8 +787,8 @@ static std::shared_ptr<Expr> makeExpr(const sir::proto::Expr& expressionProto) {
       if(exprProto.argument_offset().size() > 3)
         throwException("argument_offset");
 
-      for(int i = 0; i < exprProto.argument_offset().size(); ++i)
-        argumentOffset[i] = exprProto.argument_offset()[i];
+      std::copy(exprProto.argument_offset().begin(), exprProto.argument_offset().end(),
+                argumentOffset.begin());
     }
 
     Array3i argumentMap{{-1, -1, -1}};
@@ -783,8 +796,8 @@ static std::shared_ptr<Expr> makeExpr(const sir::proto::Expr& expressionProto) {
       if(exprProto.argument_map().size() > 3)
         throwException("argument_map");
 
-      for(int i = 0; i < exprProto.argument_map().size(); ++i)
-        argumentMap[i] = exprProto.argument_map()[i];
+      std::copy(exprProto.argument_map().begin(), exprProto.argument_map().end(),
+                argumentMap.begin());
     }
 
     return std::make_shared<FieldAccessExpr>(name, offset, argumentMap, argumentOffset,

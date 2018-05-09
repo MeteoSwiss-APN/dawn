@@ -63,6 +63,13 @@ TEST_P(StencilTest, Fields) {
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
 
+TEST_P(StencilTest, FieldsWithAttributes) {
+  sirRef->Stencils[0]->Fields.emplace_back(std::make_shared<sir::Field>("foo"));
+  sirRef->Stencils[0]->Fields[0]->IsTemporary = true;
+  sirRef->Stencils[0]->Fields[0]->fieldDimensions = {{1, 1, 0}};
+  SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
+}
+
 TEST_P(StencilTest, AST) {
   sirRef->Stencils[0]->StencilDescAst =
       std::make_shared<AST>(std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{
