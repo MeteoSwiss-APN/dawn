@@ -27,15 +27,19 @@
 
 namespace dawn {
 
-PassMultiStageSplitter::PassMultiStageSplitter(MulitStageSplittingStrategy strategy)
-    : Pass("PassMultiStageSplitter"), strategy_(strategy) {
-  isDebug_ = true;
-}
+PassMultiStageSplitter::PassMultiStageSplitter(MultiStageSplittingStrategy strategy)
+    : Pass("PassMultiStageSplitter", true), strategy_(strategy) {}
 namespace {
+
+int checkDependencies(const std::shared_ptr<Stage>& stage, int stmtIdx) {
+  DAWN_ASSERT_MSG(false, "implementation missing");
+  return 0;
+}
+
 std::function<void(std::list<std::shared_ptr<Stage>>::reverse_iterator&, DependencyGraphAccesses&,
                    LoopOrderKind&, LoopOrderKind&, std::deque<MultiStage::SplitIndex>&, int, int,
                    int&, const std::string&, const std::string&, const Options&)>
-setOptimizedLoopContent() {
+multiStageSplitterOptimzied() {
   return [&](std::list<std::shared_ptr<Stage>>::reverse_iterator& stageIt,
              DependencyGraphAccesses& graph, LoopOrderKind userSpecifiedLoopOrder,
              LoopOrderKind& curLoopOrder, std::deque<MultiStage::SplitIndex>& splitterIndices,
@@ -56,7 +60,6 @@ setOptimizedLoopContent() {
       // parallel. A conflict in the counter loop order is more severe and needs the current
       // multistage be splitted!
       auto conflict = hasVerticalReadBeforeWriteConflict(&graph, userSpecifiedLoopOrder);
-
       if(conflict.CounterLoopOrderConflict) {
 
         // The loop order of the lower part is what we recoreded in the last steps
@@ -92,22 +95,61 @@ setOptimizedLoopContent() {
 std::function<void(std::list<std::shared_ptr<Stage>>::reverse_iterator&, DependencyGraphAccesses&,
                    LoopOrderKind&, LoopOrderKind&, std::deque<MultiStage::SplitIndex>&, int, int,
                    int&, const std::string&, const std::string&, const Options&)>
-setDebugLoopContent() {
+multiStageSplitterDebug() {
 
   return [&](std::list<std::shared_ptr<Stage>>::reverse_iterator& stageIt,
              DependencyGraphAccesses& graph, LoopOrderKind& userSpecifiedLoopOrder,
              LoopOrderKind& curLoopOrder, std::deque<MultiStage::SplitIndex>& splitterIndices,
              int stageIndex, int multiStageIndex, int& numSplit, const std::string& StencilName,
              const std::string& PassName, const Options& options) {
+    DAWN_ASSERT_MSG(false, "Max-Cut for Multistages is not yet implemented");
     Stage& stage = (**stageIt);
     DoMethod& doMethod = stage.getSingleDoMethod();
 
+    //==============================================================================================
+    // Max-Cut dependency analysis missing
+    //==============================================================================================
+    // The missing piece of the max-cut algorithm still requires one check that does not cut
+    // multistages that have loop order depdendencies is the form of:
+    //
+    // vertical_region(k_start, k_end){
+    //    c = a[k-1] + b;
+    //    a += c;
+    // }
+    //
+    // This pattern, an iterative solver as we call it, has vertical dependencies that need to be
+    // detected and the statements need to be linked. The splitting then splits only if no links to
+    // other statements are found.
+
     // Iterate statements backwards
+    int openDependencies = 0;
     for(int stmtIndex = doMethod.getStatementAccessesPairs().size() - 2; stmtIndex >= 0;
         --stmtIndex) {
-      // We split every StmtAccessPair into its own multistage
-      splitterIndices.emplace_front(MultiStage::SplitIndex{stageIndex, stmtIndex, curLoopOrder});
-      numSplit++;
+      openDependencies += checkDependencies(*stageIt, stmtIndex);
+      if(openDependencies == 0) {
+        splitterIndices.emplace_front(MultiStage::SplitIndex{stageIndex, stmtIndex, curLoopOrder});
+        numSplit++;
+      }
+    }
+
+    // After splitting all the statements into their own Multistages, we need to ensure that if we
+    // have loop-order conflicts in one of those, that we resolve them properly.
+    //
+    // For example if we find a multistage with an offset read/write pattern (a = b * a[k-1]), even
+    // though this statement is independent from all other statements, we still need to ensure the
+    // proper loop order and cannot just assume parallel.
+    for(int stmtIndex = doMethod.getStatementAccessesPairs().size() - 1; stmtIndex >= 0;
+        --stmtIndex) {
+      auto& stmtAccessesPair = doMethod.getStatementAccessesPairs()[stmtIndex];
+      graph.insertStatementAccessesPair(stmtAccessesPair);
+
+      // Check for read-before-write conflicts in the loop order.
+      auto conflict = hasVerticalReadBeforeWriteConflict(&graph, userSpecifiedLoopOrder);
+      if(conflict.LoopOrderConflict) {
+        // We have a conflict in the loop order, the multi-stage cannot be executed in
+        // parallel and we use the loop order specified by the user
+        curLoopOrder = userSpecifiedLoopOrder;
+      }
     }
   };
 }
@@ -122,10 +164,10 @@ bool PassMultiStageSplitter::run(
                      int&, const std::string&, const std::string&, const Options&)>
       multistagesplitter;
 
-  if(strategy_ == MulitStageSplittingStrategy::SS_Optimized) {
-    multistagesplitter = setOptimizedLoopContent();
+  if(strategy_ == MultiStageSplittingStrategy::SS_Optimized) {
+    multistagesplitter = multiStageSplitterOptimzied();
   } else {
-    multistagesplitter = setDebugLoopContent();
+    multistagesplitter = multiStageSplitterDebug();
   }
 
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();

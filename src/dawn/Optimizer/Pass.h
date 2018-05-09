@@ -41,10 +41,11 @@ protected:
   /// Name of the passes this pass depends on (empty implies no dependency)
   std::vector<std::string> dependencies_;
   /// Categroy of the pass
-  bool isDebug_ = false;
+  const bool isDebug_;
 
 public:
-  Pass(const std::string& name) : name_(name) {}
+  Pass(const std::string& name) : Pass(name, false) {}
+  Pass(const std::string& name, bool isDebug) : name_(name), isDebug_(isDebug) {}
   virtual ~Pass() {}
 
   /// @brief Run the the Pass

@@ -134,13 +134,14 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     return nullptr;
   }
 
-  using MultistageSplitStrategy = PassMultiStageSplitter::MulitStageSplittingStrategy;
+  using MultistageSplitStrategy = PassMultiStageSplitter::MultiStageSplittingStrategy;
   MultistageSplitStrategy mssSplitStrategy;
-  if(options_->Debug) {
-    mssSplitStrategy = MultistageSplitStrategy::SS_Debug;
+  if(options_->MaxCutMSS) {
+    mssSplitStrategy = MultistageSplitStrategy::SS_MaxCut;
   } else {
     mssSplitStrategy = MultistageSplitStrategy::SS_Optimized;
   }
+
 
   // -max-fields
   int maxFields = options_->MaxFieldsPerStencil;

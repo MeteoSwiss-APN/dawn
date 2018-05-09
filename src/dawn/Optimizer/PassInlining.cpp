@@ -460,9 +460,7 @@ tryInlineStencilFunction(PassInlining::InlineStrategyKind strategy,
 } // anonymous namespace
 
 PassInlining::PassInlining(InlineStrategyKind strategy)
-    : Pass("PassInlining"), strategy_(strategy) {
-  isDebug_ = true;
-}
+    : Pass("PassInlining", true), strategy_(strategy) {}
 
 bool PassInlining::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
   // Nothing to do ...
