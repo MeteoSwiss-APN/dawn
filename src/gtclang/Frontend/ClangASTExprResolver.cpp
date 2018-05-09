@@ -18,6 +18,7 @@
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Casting.h"
+#include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/StringUtil.h"
 #include "gtclang/Frontend/GTClangContext.h"
 #include "gtclang/Frontend/StencilParser.h"
@@ -334,18 +335,19 @@ class StorageResolver {
   dawn::Array3i offset_;
   dawn::Array3i argumentMap_;
   dawn::Array3i argumentOffset_;
+  dawn::Array3i legalDimensions_;
   bool negateOffset_;
 
 public:
   StorageResolver(ClangASTExprResolver* resolver)
       : resolver_(resolver), curDim_(-1), curArg_(-1), currentArgumentKind_(CK_Dimension),
         name_(""), offset_({{0, 0, 0}}), argumentMap_({{-1, -1, -1}}), argumentOffset_({{0, 0, 0}}),
-        negateOffset_(false) {}
+        legalDimensions_({{0, 0, 0}}), negateOffset_(false) {}
 
   /// @brief Check if the typy is a storage
   /// @{
   static bool isaStorage(clang::StringRef storage) {
-    if(storage == "storage" || storage == "var")
+    if((storage.find("storage") != std::string::npos) || storage == "var")
       return true;
     return false;
   }
@@ -405,6 +407,22 @@ public:
   void resolve(clang::CXXOperatorCallExpr* expr) {
     using namespace clang;
 
+    std::string declName = expr->getType()->getAsCXXRecordDecl()->getName();
+    if(declName.find("storage") != std::string::npos) {
+      legalDimensions_ = dawn::StringSwitch<dawn::Array3i>(declName)
+                             .Case("storage", {{1, 1, 1}})
+                             .Case("storage_i", {{1, 0, 0}})
+                             .Case("storage_j", {{0, 1, 0}})
+                             .Case("storage_k", {{0, 0, 1}})
+                             .Case("storage_ij", {{1, 1, 0}})
+                             .Case("storage_ik", {{1, 0, 1}})
+                             .Case("storage_jk", {{0, 1, 1}})
+                             .Case("storage_ijk", {{1, 1, 1}})
+                             .Default({{0, 0, 0}});
+    }
+    if(declName == "var") {
+      legalDimensions_ = {{1, 1, 1}};
+    }
     if(expr->getOperator() == clang::OO_Call) {
       // Parse initial `u(i, j, k)` i.e `operator()(u, i, j, k)`
       resolve(dyn_cast<MemberExpr>(expr->getArg(0)));
@@ -446,9 +464,20 @@ public:
         }
 
         // Apply the offset
-        if(currentArgumentKind_ == CK_Dimension)
+        if(currentArgumentKind_ == CK_Dimension) {
           offset_[curDim_] += offset;
-        else
+          if((legalDimensions_[curDim_] == 0) && (offset_[curDim_] != 0)) {
+            std::string dimensionOutput;
+            dimensionOutput += legalDimensions_[0] ? "i " : "";
+            dimensionOutput += legalDimensions_[1] ? "j " : "";
+            dimensionOutput += legalDimensions_[2] ? "k " : "";
+            dimensionOutput.pop_back();
+            dimensionOutput += " dimensions";
+            resolver_->reportDiagnostic(expr->getLocStart(),
+                                        Diagnostics::err_off_with_bad_storage_dim)
+                << name_ << dimensionOutput << expr->getSourceRange();
+          }
+        } else
           argumentOffset_[curArg_] += offset;
       }
     }

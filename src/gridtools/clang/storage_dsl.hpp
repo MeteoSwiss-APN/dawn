@@ -22,6 +22,51 @@
 #include "gridtools/clang/offset.hpp"
 #include <type_traits>
 
+#define STORAGE_CLASS_DEFN(Type)                                                                   \
+  Type& operator=(const storage&);                                                                 \
+  Type& operator+=(const storage&);                                                                \
+  Type& operator-=(const storage&);                                                                \
+  Type& operator/=(const storage&);                                                                \
+  Type& operator*=(const storage&);                                                                \
+                                                                                                   \
+  /**                                                                                              \
+   * @name 1D access                                                                               \
+   * @{                                                                                            \
+   */                                                                                              \
+  Type& operator()(direction);                                                                     \
+                                                                                                   \
+  Type& operator()(dimension);                                                                     \
+  Type& operator()(offset);                                                                        \
+  /** @} */                                                                                        \
+                                                                                                   \
+  /**                                                                                              \
+   * @name 2D access                                                                               \
+   * @{                                                                                            \
+   */                                                                                              \
+  Type& operator()(dimension, dimension);                                                          \
+                                                                                                   \
+  Type& operator()(dimension, direction);                                                          \
+  Type& operator()(direction, dimension);                                                          \
+  Type& operator()(direction, direction);                                                          \
+  /** @} */                                                                                        \
+                                                                                                   \
+  /**                                                                                              \
+   * @name 3D access                                                                               \
+   * @{                                                                                            \
+   */                                                                                              \
+  Type& operator()(dimension, dimension, dimension);                                               \
+                                                                                                   \
+  Type& operator()(direction, direction, direction);                                               \
+  Type& operator()(dimension, direction, direction);                                               \
+  Type& operator()(direction, dimension, direction);                                               \
+  Type& operator()(direction, direction, dimension);                                               \
+  Type& operator()(dimension, dimension, direction);                                               \
+  Type& operator()(dimension, direction, dimension);                                               \
+  Type& operator()(direction, dimension, dimension);                                               \
+  /** @} */                                                                                        \
+                                                                                                   \
+  operator double() const;
+
 namespace gridtools {
 
 namespace clang {
@@ -36,102 +81,103 @@ struct storage {
   template <typename T>
   storage(T...);
 
-  storage& operator=(const storage&);
-  storage& operator+=(const storage&);
-  storage& operator-=(const storage&);
-  storage& operator/=(const storage&);
-  storage& operator*=(const storage&);
-
   storage& operator()(int, int, int);
 
-  /**
-   * @name 1D access
-   * @{
-   */
-  storage& operator()(direction);
-  storage& operator()(dimension);
-  storage& operator()(offset);
-  /** @} */
-
-  /**
-   * @name 2D access
-   * @{
-   */
-
-  storage& operator()(dimension, dimension);
-
-  storage& operator()(dimension, direction);
-  storage& operator()(direction, dimension);
-  storage& operator()(direction, direction);
-  /** @} */
-
-  /**
-   * @name 3D access
-   * @{
-   */
-  storage& operator()(dimension, dimension, dimension);
-
-  storage& operator()(direction, direction, direction);
-  storage& operator()(dimension, direction, direction);
-  storage& operator()(direction, dimension, direction);
-  storage& operator()(direction, direction, dimension);
-  storage& operator()(dimension, dimension, direction);
-  storage& operator()(dimension, direction, dimension);
-  storage& operator()(direction, dimension, dimension);
-  /** @} */
-
-  operator double() const;
+  STORAGE_CLASS_DEFN(storage)
 };
 
-struct var {
+/**
+ * @brief Dummy 1-dimensional i-storage
+ * @ingroup gridtools_clang
+ */
+struct storage_i : public storage {
+  storage_i();
+
+  storage_i& operator()(int);
+
+  STORAGE_CLASS_DEFN(storage_i);
+};
+
+/**
+ * @brief Dummy 1-dimensional j-storage
+ * @ingroup gridtools_clang
+ */
+struct storage_j : public storage {
+  storage_j();
+
+  storage_j& operator()(int);
+
+  STORAGE_CLASS_DEFN(storage_j);
+};
+
+/**
+ * @brief Dummy 1-dimensional k-storage
+ * @ingroup gridtools_clang
+ */
+struct storage_k : public storage {
+  storage_k();
+
+  storage_k& operator()(int);
+
+  STORAGE_CLASS_DEFN(storage_k);
+};
+/**
+ * @brief Dummy 2-dimensional ij-storage
+ * @ingroup gridtools_clang
+ */
+struct storage_ij : public storage {
+  storage_ij();
+
+  storage_ij& operator()(int, int);
+
+  STORAGE_CLASS_DEFN(storage_ij);
+};
+
+/**
+ * @brief Dummy 2-dimensional ik-storage
+ * @ingroup gridtools_clang
+ */
+struct storage_ik : public storage {
+  storage_ik();
+
+  storage_ik& operator()(int, int);
+
+  STORAGE_CLASS_DEFN(storage_ik);
+};
+
+/**
+ * @brief Dummy 2-dimensional storage
+ * @ingroup gridtools_clang
+ */
+struct storage_jk : public storage {
+  storage_jk();
+
+  storage_jk& operator()(int, int);
+
+  STORAGE_CLASS_DEFN(storage_jk);
+};
+
+/**
+ * @brief Dummy 3-dimensional storage
+ * @ingroup gridtools_clang
+ */
+struct storage_ijk {
+  storage_ijk();
+
+  storage_ijk& operator()(int, int, int);
+
+  STORAGE_CLASS_DEFN(storage_ijk);
+};
+
+struct var : public storage {
   var();
 
-  template <typename T>
-  var(T...);
+  var& operator()(int, int, int);
 
-  var& operator=(const var&);
-  var& operator+=(const var&);
-  var& operator-=(const var&);
-  var& operator/=(const var&);
-  var& operator*=(const var&);
-
-  /**
-   * @name 1D access
-   * @{
-   */
-  var& operator()(direction);
-  var& operator()(dimension);
-  var& operator()(offset);
-  /** @} */
-
-  /**
-   * @name 2D access
-   * @{
-   */
-  var& operator()(dimension, dimension);
-
-  var& operator()(dimension, direction);
-  var& operator()(direction, dimension);
-  var& operator()(direction, direction);
-  /** @} */
-
-  /**
-   * @name 3D access
-   * @{
-   */
-  var& operator()(dimension, dimension, dimension);
-
-  var& operator()(direction, direction, direction);
-  var& operator()(dimension, direction, direction);
-  var& operator()(direction, dimension, direction);
-  var& operator()(direction, direction, dimension);
-  var& operator()(dimension, dimension, direction);
-  var& operator()(dimension, direction, dimension);
-  var& operator()(direction, dimension, dimension);
-  /** @} */
-
-  operator double() const;
+  STORAGE_CLASS_DEFN(var);
 };
+
+#undef STORAGE_CLASS_DEFN
 
 #ifndef GRIDTOOLS_CLANG_META_DATA_T_DEFINED
 struct meta_data {
@@ -149,11 +195,11 @@ using meta_data_scalar_t = meta_data;
 
 #ifndef GRIDTOOLS_CLANG_STORAGE_T_DEFINED
 using storage_t = storage;
-using storage_ijk_t = storage;
-using storage_ij_t = storage;
-using storage_i_t = storage;
-using storage_j_t = storage;
-using storage_k_t = storage;
+using storage_ijk_t = storage_ijk;
+using storage_ij_t = storage_ij;
+using storage_i_t = storage_i;
+using storage_j_t = storage_j;
+using storage_k_t = storage_k;
 using storage_scalar_t = storage;
 #endif
 

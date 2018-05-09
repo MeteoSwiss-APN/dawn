@@ -393,8 +393,9 @@ private:
         // Get the token which describes the `storage`
         const Token& curToken = peekedTokens == 0 ? token_ : PP_.LookAhead(peekedTokens++);
 
-        if(curToken.is(tok::identifier) && (curToken.getIdentifierInfo()->getName() == "storage" ||
-                                            curToken.getIdentifierInfo()->getName() == "var")) {
+        if(curToken.is(tok::identifier) &&
+           ((curToken.getIdentifierInfo()->getName().find("storage") != std::string::npos) ||
+            curToken.getIdentifierInfo()->getName() == "var")) {
 
           if(stencilKind == SK_StencilFunction &&
              curToken.getIdentifierInfo()->getName() == "var") {

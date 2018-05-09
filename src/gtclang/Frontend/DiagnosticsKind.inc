@@ -83,4 +83,7 @@ DIAG(err_index_not_constexpr, clang::DiagnosticIDs::Error, "offset of index is n
 DIAG(err_index_illegal_argument, clang::DiagnosticIDs::Error, "index '%0' is not a valid argument of the enclosing stencil function")
 DIAG(err_index_invalid_type, clang::DiagnosticIDs::Error, "invalid type '%0' of index '%1'")
 
+// Offset
+DIAG(err_off_with_bad_storage_dim, clang::DiagnosticIDs::Error, "offset in field access %0 in bad dimension, only allowed in %1")
+
 // clang-format on

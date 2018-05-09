@@ -1,5 +1,5 @@
 {
- "filename": "/home/thfabian/Desktop/gtclang/test/integration-test/SIR/AccessTest.cpp",
+ "filename": "/home/tobias/Documents/Work/gtclang/test/integration-test/SIR/AccessTest.cpp",
  "stencils": [
   {
    "name": "Test",
@@ -296,7 +296,12 @@
       "Line": 25,
       "Column": 11
      },
-     "is_temporary": false
+     "is_temporary": false,
+     "field_dimensions": [
+      1,
+      1,
+      1
+     ]
     },
     {
      "name": "b",
@@ -304,7 +309,12 @@
       "Line": 25,
       "Column": 14
      },
-     "is_temporary": false
+     "is_temporary": false,
+     "field_dimensions": [
+      1,
+      1,
+      1
+     ]
     }
    ]
   }

@@ -137,7 +137,12 @@
       "Line": 32,
       "Column": 11
      },
-     "is_temporary": false
+     "is_temporary": false,
+     "field_dimensions": [
+      1,
+      1,
+      1
+     ]
     },
     {
      "name": "b",
@@ -145,7 +150,12 @@
       "Line": 32,
       "Column": 14
      },
-     "is_temporary": false
+     "is_temporary": false,
+     "field_dimensions": [
+      1,
+      1,
+      1
+     ]
     }
    ]
   }
@@ -213,7 +223,12 @@
        "Line": 25,
        "Column": 11
       },
-      "is_temporary": false
+      "is_temporary": false,
+      "field_dimensions": [
+       1,
+       1,
+       1
+      ]
      }
     }
    ]
