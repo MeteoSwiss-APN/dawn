@@ -235,6 +235,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
   // Generate stencils
   auto& stencils = stencilInstantiation->getStencils();
   for(std::size_t stencilIdx = 0; stencilIdx < stencils.size(); ++stencilIdx) {
+    std::string stencilType;
     const Stencil& stencil = *stencilInstantiation->getStencils()[stencilIdx];
 
     if(stencil.isEmpty())
@@ -293,7 +294,50 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
 
     // Generate code for members of the stencil
     StencilClass.addComment("Members");
-    StencilClass.addMember("std::shared_ptr< gridtools::stencil<gridtools::notype> >", "m_stencil");
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////// wittodo    //////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    // Fields
+    std::vector<Stencil::FieldInfo> StencilFields_a = stencil.getFields();
+    //    std::vector<std::string> StencilGlobalVariables = stencil.getGlobalVariables();
+    std::size_t numFields_a = StencilFields_a.size();
+    std::string listOfArguments;
+
+    for(int accessorIdx = 0; accessorIdx < numFields_a; ++accessorIdx)
+      if(StencilFields_a[accessorIdx].IsTemporary == false)
+        if(stencilInstantiation->getAllocatedFieldAccessIDs().count(
+               StencilFields_a[accessorIdx].AccessID) == 0) {
+          Array3i fieldDimensions = StencilFields_a[accessorIdx].Dimensions;
+          std::string extents = "storage_";
+          extents += fieldDimensions[0] ? "i" : "";
+          extents += fieldDimensions[1] ? "j" : "";
+          extents += fieldDimensions[2] ? "k" : "";
+
+          //          StencilClass.addComment(extents + " " + StencilFields_a[accessorIdx].Name);
+
+          StencilClass.addTypeDef("p_" + StencilFields_a[accessorIdx].Name)
+              .addType(c_gt() + "arg")
+              .addTemplate(Twine(accessorIdx))
+              .addTemplate(extents);
+          listOfArguments += "p_" + StencilFields_a[accessorIdx].Name + ", ";
+        }
+    // wittodo: proper calls, read extents
+
+    if(listOfArguments.size() > 2) {
+      listOfArguments.pop_back();
+      listOfArguments.pop_back();
+    }
+    stencilType = "computation<void, " + listOfArguments + ">";
+    StencilClass.addMember(stencilType, "m_stencil");
+    //    StencilClass.addMember("std::shared_ptr< gridtools::stencil<gridtools::notype> >",
+    //    "m_stencil");
 
     //
     // Generate stencil functions code for stencils instantiated by this stencil
@@ -656,8 +700,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     dtor.commit();
 
     // Generate stencil getter
-    StencilClass.addMemberFunction("gridtools::stencil<gridtools::notype>*", "get_stencil")
-        .addStatement("return m_stencil.get()");
+    StencilClass.addMemberFunction(stencilType, "get_stencil").addStatement("return m_stencil");
   }
 
   if(isEmpty) {
@@ -760,18 +803,9 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
         "' is not a 'gridtools::data_store' (" + decimalToOrdinal(i + 2) + " argument invalid)\")");
   StencilWrapperConstructor.commit();
 
-  // Generate make_steady method
-  MemberFunction MakeSteadyMethod = StencilWrapperClass.addMemberFunction("void", "make_steady");
-  for(std::size_t i = 0; i < stencils.size(); ++i) {
-    MakeSteadyMethod.addStatement(Twine(stencilMembers[i]) + ".get_stencil()->ready()");
-    MakeSteadyMethod.addStatement(Twine(stencilMembers[i]) + ".get_stencil()->steady()");
-  }
-  MakeSteadyMethod.commit();
-
   // Generate the run method by generate code for the stencil description AST
   MemberFunction RunMethod = StencilWrapperClass.addMemberFunction("void", "run");
-  RunMethod.addArg("bool make_steady = true");
-  RunMethod.addStatement("if(make_steady) this->make_steady()");
+  RunMethod.startBody();
 
   // Create the StencilID -> stencil name map
   std::unordered_map<int, std::vector<std::string>> stencilIDToStencilNameMap;
@@ -788,12 +822,47 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
   RunMethod.commit();
 
   // Generate stencil getter
-  StencilWrapperClass
-      .addMemberFunction("std::vector<gridtools::stencil<gridtools::notype>*>", "get_stencils")
-      .addStatement(
-          "return " +
-          RangeToString(", ", "std::vector<gridtools::stencil<gridtools::notype>*>({", "})")(
-              stencilMembers, [](const std::string& member) { return member + ".get_stencil()"; }));
+  MemberFunction timing = StencilWrapperClass.addMemberFunction("std::string", "get_meters");
+  timing.addArg("int stencilID = -1");
+  //  RunMethod.addStatement();
+
+  //  timing.addStatement("switch(stencilID){\ncase 1: foo;\n case 2: bar;\n}");
+  timing.addBlockStatement("switch (stencilID)", [&]() {
+    int idx;
+    for(idx = 0; idx < stencilInstantiation->getStencils().size(); ++idx) {
+      timing << "case " << idx << ":\n"
+             << "return m_stencil_" << idx << ".get_stencil()->get_name()+\":\\t\"+"
+             << "m_stencil_" << idx << ".get_stencil()->get_meter();";
+    }
+    timing << "case -1 :\n"
+           << "std::string retval;\n";
+    std::string s = RangeToString("\n", "", "")(stencilMembers, [](const std::string& member) {
+      return "retval += " + member + ".get_stencil()->get_name()+\":\\t\"+" + member +
+             ".get_stencil()->get_meter()+\"\\n\";";
+    });
+    //    for(int i = 0; i < idx; ++i) {
+    //      timing << "retval += m_stencil_" << i << ".get_stencil()->get_meter()+\"\\n\";\n";
+    //    }
+    timing << s;
+    timing << "return retval;";
+    timing << "default: "
+           << "return \"\";";
+
+    // timing << "case 1: foo;\n case 2: bar;";
+  });
+  timing.commit();
+
+  MemberFunction clearMeters = StencilWrapperClass.addMemberFunction("void", "reset_meters");
+  clearMeters.startBody();
+  std::string s = RangeToString("\n", "", "")(stencilMembers, [](const std::string& member) {
+    return member + ".get_stencil()->reset_meter();";
+  });
+  clearMeters << s;
+  //  for(int stencilNumber = 0; stencilNumber < stencilInstantiation->getStencils().size();
+  //      ++stencilNumber) {
+  //    clearMeters.addStatement("stencil_" + std::to_string(stencilNumber) + "->reset_meter()");
+  //  }
+  clearMeters.commit();
 
   // Generate name getter
   StencilWrapperClass.addMemberFunction("const char*", "get_name")

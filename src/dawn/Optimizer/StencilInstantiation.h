@@ -163,6 +163,9 @@ class StencilInstantiation : NonCopyable {
   /// Set of all the IDs that are locally cached
   std::set<int> CachedVariableSet_;
 
+  /// table from FieldID to an Array of initialized dimensions
+  std::unordered_map<int, Array3i> fieldIDToInitializedDimensionsMap_;
+
 public:
   /// @brief Assemble StencilInstantiation for stencil
   StencilInstantiation(OptimizerContext* context, const std::shared_ptr<sir::Stencil>& SIRStencil,
@@ -561,6 +564,13 @@ public:
       DAWN_ASSERT_MSG(false, "Boundary Condition does not have a matching Extent");
     }
     return BoundaryConditionToExtentsMap_.find(stmt)->second;
+  }
+
+  Array3i getFieldIDFromInitializedDimensionsMap(int FieldID){
+      if(fieldIDToInitializedDimensionsMap_.count(FieldID) == 0){
+          return Array3i{{0,0,0}};
+      }
+      return fieldIDToInitializedDimensionsMap_.find(FieldID)->second;
   }
 
 private:
