@@ -36,4 +36,16 @@ MultiInterval substract(const Interval& int1, const Interval& int2) {
                                 (upperI2InInterval ? int2.upperOffset() + 1 : int1.lowerOffset()),
                                 (lowerI2InInterval ? int2.lowerOffset() - 1 : int1.upperOffset())}};
 }
+
+Cache::window computeWindowOffset(LoopOrderKind loopOrder, Interval const& accessInterval,
+                                  Interval const& computeInterval) {
+  std::cout << "For " << loopOrder << " " << accessInterval << " " << computeInterval << " "
+            << accessInterval.lowerBound() << " " << computeInterval.upperBound() << std::endl;
+  return Cache::window{(accessInterval.lowerBound() - ((loopOrder == LoopOrderKind::LK_Backward)
+                                                           ? computeInterval.upperBound()
+                                                           : computeInterval.lowerBound())),
+                       (accessInterval.upperBound() - ((loopOrder == LoopOrderKind::LK_Backward)
+                                                           ? computeInterval.upperBound()
+                                                           : computeInterval.lowerBound()))};
+}
 }

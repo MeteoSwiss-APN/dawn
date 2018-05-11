@@ -19,6 +19,7 @@
 #include "dawn/Optimizer/StencilInstantiation.h"
 #include "dawn/Support/Unreachable.h"
 #include "dawn/Support/OptionalUtil.h"
+#include "dawn/Optimizer/IntervalAlgorithms.h"
 #include <iostream>
 #include <set>
 #include <vector>
@@ -316,17 +317,17 @@ CacheCandidate computeCacheCandidateForMS(Field const& field, bool isTemporaryFi
     std::cout << "PrePPP " << multiInterval << " " << MS.getLoopOrder() << " "
               << multiInterval.numPartitions() << " " << field.getInterval() << std::endl;
 
-    if(((MS.getLoopOrder() == LoopOrderKind::LK_Forward) &&
-        (readInterval.lowerBound() <= field.getInterval().lowerBound()) &&
-        (readInterval.upperBound() <= field.getInterval().lowerBound())) ||
-       ((MS.getLoopOrder() == LoopOrderKind::LK_Backward) &&
-        (readInterval.upperBound() >= field.getInterval().upperBound()) &&
-        (readInterval.lowerBound() >= field.getInterval().upperBound()))) {
-      return CacheCandidate{Cache::bpfill,
-                            boost::make_optional(Cache::window{
-                                readInterval.lowerBound() - field.getInterval().lowerBound(),
-                                readInterval.upperBound() - field.getInterval().upperBound()}),
-                            *interval};
+    Cache::window window =
+        computeWindowOffset(MS.getLoopOrder(), readInterval, field.getInterval());
+
+    if(((MS.getLoopOrder() == LoopOrderKind::LK_Forward) && window.m_m <= 0 && window.m_p <= 0) ||
+       ((MS.getLoopOrder() == LoopOrderKind::LK_Backward) && window.m_m >= 0 && window.m_p >= 0)) {
+      std::cout << "COMPPPP " << window.m_m << " " << window.m_p << std::endl;
+      return CacheCandidate{
+          Cache::bpfill, boost::make_optional(Cache::window{
+                             ((MS.getLoopOrder() == LoopOrderKind::LK_Forward) ? window.m_m : 0),
+                             ((MS.getLoopOrder() == LoopOrderKind::LK_Forward) ? 0 : window.m_p)}),
+          *interval};
     }
 
     return CacheCandidate{Cache::fill, boost::optional<Cache::window>(), *interval};
@@ -663,6 +664,9 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
                       << MSIndex << ": "
                       << instantiation->getOriginalNameFromAccessID(field.getAccessID()) << ":"
                       << cache.getCacheTypeAsString() << ":" << cache.getCacheIOPolicyAsString()
+                      << (cache.getWindow().is_initialized()
+                              ? (std::string(":") + cache.getWindow()->toString())
+                              : "")
                       << std::endl;
           }
         }

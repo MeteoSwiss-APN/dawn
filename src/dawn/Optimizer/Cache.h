@@ -28,6 +28,9 @@ class Cache {
 public:
   struct window {
     int m_m, m_p;
+    std::string toString() const {
+      return std::string("[") + std::to_string(m_m) + "," + std::to_string(m_p) + "]";
+    }
   };
 
   /// @brief Available cache types
