@@ -16,6 +16,7 @@
 #define DAWN_OPTIMIZER_MULTISTAGE_H
 
 #include "dawn/Optimizer/Cache.h"
+#include "dawn/Optimizer/MultiInterval.h"
 #include "dawn/Optimizer/LoopOrder.h"
 #include "dawn/Optimizer/Stage.h"
 #include <deque>
@@ -64,6 +65,8 @@ public:
 
   /// @brief Get the loop order
   LoopOrderKind getLoopOrder() const { return loopOrder_; }
+
+  std::vector<DoMethod> computeOrderedDoMethods() const;
 
   /// @brief Set the loop order
   void setLoopOrder(LoopOrderKind loopOrder) { loopOrder_ = loopOrder; }
@@ -130,6 +133,8 @@ public:
 
   /// @brief Rename all the occurances in the multi-stage
   void renameAllOccurrences(int oldAccessID, int newAccessID);
+
+  dawn::MultiInterval computeReadAccessInterval(int accessID) const;
 };
 
 } // namespace dawn

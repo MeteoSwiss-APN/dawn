@@ -187,6 +187,8 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
       return nullptr;
     DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `" << instantiation->getName()
                    << "`";
+
+    instantiation->dump();
   }
 
   return optimizer;

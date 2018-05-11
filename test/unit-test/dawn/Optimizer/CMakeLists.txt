@@ -23,6 +23,7 @@ dawn_add_unittest_impl(
           TestPartitionAlgorithm.cpp
           TestMain.cpp
           TestInterval.cpp
+          TestMultiInterval.cpp
           TestSCCAlgorithm.cpp
           TestStencil.cpp
 )

@@ -182,9 +182,11 @@ public:
 
   /// @brief Get the extent of the stage
   /// @{
-  Extents& getExtents() { return extents_; }
+  //  Extents& getExtents() { return extents_; }
 
   Extents const& getExtents() const { return extents_; }
+  void setExtents(Extents const& extents) { extents_ = extents; }
+
   /// @}
 };
 

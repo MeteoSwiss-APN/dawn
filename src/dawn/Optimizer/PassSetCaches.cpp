@@ -18,6 +18,7 @@
 #include "dawn/Optimizer/StatementAccessesPair.h"
 #include "dawn/Optimizer/StencilInstantiation.h"
 #include "dawn/Support/Unreachable.h"
+#include "dawn/Support/OptionalUtil.h"
 #include <iostream>
 #include <set>
 #include <vector>
@@ -46,7 +47,7 @@ FirstAccessKind toFirstAccess(Field::IntendKind access) {
 struct CacheCandidate {
   Cache::CacheIOPolicy policy_;
   boost::optional<Cache::window> window_;
-  FirstAccessKind intend_;
+  //  FirstAccessKind intend_;
   Interval interval_;
 };
 
@@ -78,6 +79,17 @@ boost::optional<FirstAccessKind> combineFirstAccess(boost::optional<FirstAccessK
   }
 }
 
+bool iterationPastInterval(Interval const& iterInterval, Interval const& baseInterval,
+                           LoopOrderKind loopOrder) {
+  if(loopOrder == LoopOrderKind::LK_Forward) {
+    return iterInterval.lowerBound() > baseInterval.upperBound();
+  }
+  if(loopOrder == LoopOrderKind::LK_Backward) {
+    return iterInterval.upperBound() < baseInterval.lowerBound();
+  }
+  dawn_unreachable("loop order not supported");
+}
+
 /// @brief Do we compute the first levels or do we need to access main memory?
 ///
 /// If the first write access of the field has a read access to the same field as well, it is not
@@ -100,6 +112,12 @@ static boost::optional<FirstAccessKind> getFirstAccessKind(const MultiStage& MS,
           // indepdently of whether the statement has also a write access, if there is a read
           // access, it should happen in the RHS so first
           if(accesses.hasReadAccess(AccessID)) {
+
+            //            if(accesses.getReadAccess(AccessID)
+            //                   .getVerticalLoopOrderAccesses(MS.getLoopOrder())
+            //                   .CounterLoopOrder ||
+            //               (!firstAccess.is_initialized() || (*firstAccess ==
+            //               FirstAccessKind::FK_Read)))
             return boost::make_optional(FirstAccessKind::FK_Read);
           }
           if(accesses.hasWriteAccess(AccessID))
@@ -109,6 +127,7 @@ static boost::optional<FirstAccessKind> getFirstAccessKind(const MultiStage& MS,
         }
         return boost::optional<FirstAccessKind>();
       };
+
       boost::optional<FirstAccessKind> firstAccess;
 
       // We need to check all Do-Methods
@@ -141,7 +160,27 @@ static boost::optional<FirstAccessKind> getFirstAccessKind(const MultiStage& MS,
 
         for(DoMethod* D : doMethods) {
           auto thisFirstAccess = getFirstAccessKindFromDoMethod(D);
+          if(thisFirstAccess.is_initialized())
+            std::cout << "DD " << static_cast<typename std::underlying_type<FirstAccessKind>::type>(
+                                      *thisFirstAccess)
+                      << std::endl;
+          else
+            std::cout << " DD NO" << std::endl;
+
+          if(firstAccess.is_initialized())
+            std::cout << "EE " << static_cast<typename std::underlying_type<FirstAccessKind>::type>(
+                                      *firstAccess)
+                      << std::endl;
+          else
+            std::cout << " EE NO" << std::endl;
+
           firstAccess = combineFirstAccess(firstAccess, thisFirstAccess);
+          if(firstAccess.is_initialized())
+            std::cout << "FF " << static_cast<typename std::underlying_type<FirstAccessKind>::type>(
+                                      *firstAccess)
+                      << std::endl;
+          else
+            std::cout << " FF NO" << std::endl;
         }
       }
       return firstAccess;
@@ -177,14 +216,16 @@ CacheCandidate combinePolicy(CacheCandidate const& MS1Policy, Field::IntendKind 
   // TODO properly compute the window
   if(MS1Policy.policy_ == Cache::local) {
     if(MS2Policy.policy_ == Cache::fill)
-      return CacheCandidate{Cache::flush, boost::make_optional(Cache::window{}), MS1Policy.intend_,
-                            MS1Policy.interval_}; // flush
+      return CacheCandidate{Cache::flush,
+                            boost::make_optional(Cache::window{}), /*MS1Policy.intend_, */
+                            MS1Policy.interval_};                  // flush
     if(MS2Policy.policy_ == Cache::bpfill) {
       DAWN_ASSERT(MS2Policy.window_.is_initialized());
       auto const& window = *(MS2Policy.window_);
       return CacheCandidate{Cache::epflush,
                             boost::make_optional(Cache::window{-window.m_p, -window.m_m}),
-                            MS1Policy.intend_, MS1Policy.interval_}; // epflush
+                            /*MS1Policy.intend_,*/
+                            MS1Policy.interval_}; // epflush
     }
     if(MS2Policy.policy_ == Cache::local)
       return MS2Policy; // local
@@ -193,10 +234,12 @@ CacheCandidate combinePolicy(CacheCandidate const& MS1Policy, Field::IntendKind 
   if(MS1Policy.policy_ == Cache::fill || MS1Policy.policy_ == Cache::bpfill) {
     if(MS2Policy.policy_ == Cache::fill || MS2Policy.policy_ == Cache::bpfill) {
       if(fieldIntend == Field::IK_Input)
-        return CacheCandidate{Cache::fill, MS1Policy.window_, MS1Policy.intend_,
+        return CacheCandidate{Cache::fill, MS1Policy.window_,
+                              /*MS1Policy.intend_,*/
                               MS1Policy.interval_};
       else
-        return CacheCandidate{Cache::fill_and_flush, MS1Policy.window_, MS1Policy.intend_,
+        return CacheCandidate{Cache::fill_and_flush, MS1Policy.window_,
+                              /*MS1Policy.intend_,*/
                               MS1Policy.interval_};
     }
     if(MS2Policy.policy_ == Cache::local)
@@ -235,81 +278,125 @@ CacheCandidate computeCacheCandidateForMS(Field const& field, bool isTemporaryFi
     DAWN_ASSERT(interval.is_initialized());
 
     return CacheCandidate{Cache::fill, boost::optional<Cache::window>(),
-                          toFirstAccess(field.getIntend()), *interval};
+                          /*toFirstAccess(field.getIntend()),
+         */ *interval};
   }
   if(field.getIntend() == Field::IK_Output) {
     // we do not cache output only normal fields since there is not data reuse
     DAWN_ASSERT(isTemporaryField);
     return CacheCandidate{Cache::local, boost::optional<Cache::window>(),
-                          toFirstAccess(field.getIntend()), field.getInterval()};
+                          /* toFirstAccess(field.getIntend()), */
+                          field.getInterval()};
   }
 
   if(field.getIntend() == Field::IK_InputOutput) {
-    // Do we compute the first levels or do we need to access main memory (i.e fill the
-    // fist accesses)?
-    // TODO test getFirstAccessKind
-    boost::optional<FirstAccessKind> firstAccess = getFirstAccessKind(MS, field.getAccessID());
-    DAWN_ASSERT(firstAccess.is_initialized());
-    if(*firstAccess == FirstAccessKind::FK_Write) {
-      // Example (kcache candidate a):
-      //   k=k_end:k_start
-      //     a = in
-      //     out = a[k-1]
-      boost::optional<Interval> interval = MS.computeEnclosingAccessInterval(field.getAccessID());
-      DAWN_ASSERT(interval.is_initialized());
 
-      DAWN_ASSERT(interval->contains(field.getInterval()));
-
-      if(((MS.getLoopOrder() == LoopOrderKind::LK_Forward) &&
-          interval->upperBound() > field.getInterval().upperBound()) ||
-         ((MS.getLoopOrder() == LoopOrderKind::LK_Backward) &&
-          interval->lowerBound() < field.getInterval().lowerBound()))
-        return CacheCandidate{Cache::fill, boost::optional<Cache::window>(), *firstAccess,
-                              *interval};
-      if(((MS.getLoopOrder() == LoopOrderKind::LK_Forward) &&
-          interval->lowerBound() < field.getInterval().lowerBound()) ||
-         ((MS.getLoopOrder() == LoopOrderKind::LK_Backward) &&
-          interval->upperBound() > field.getInterval().upperBound())) {
-
-        return CacheCandidate{Cache::bpfill,
-                              boost::make_optional(Cache::window{
-                                  interval->lowerBound() - field.getInterval().lowerBound(),
-                                  interval->upperBound() - field.getInterval().upperBound()}),
-                              *firstAccess, *interval};
-      }
-
-      return CacheCandidate{Cache::local, boost::optional<Cache::window>(), *firstAccess,
-                            *interval};
-    }
-    // Do we have a read in counter loop order or pointwise access?
-    // TODO test getVerticalLoopOrderAccesses
-    if(field.getExtents().getVerticalLoopOrderAccesses(MS.getLoopOrder()).CounterLoopOrder ||
-       field.getExtents().isVerticalPointwise()) {
-
-      // Example (kcache candidate a):
-      //   1. a += a
-      //   2. k=k_end:k_start
-      //         a += a[k-1]
-
-      // TODO Should not require a bpfill
-      // If the field is a temporary, we only set the policy fo fill. A flush will be
-      // granted if following MSS also read the temporary field
-      boost::optional<Interval> interval = MS.computeEnclosingAccessInterval(field.getAccessID());
-      DAWN_ASSERT(interval.is_initialized());
-      return CacheCandidate{Cache::fill, boost::optional<Cache::window>(),
-                            toFirstAccess(field.getIntend()), *interval};
-    }
-    // Example (kcache candidate a):
-    //     k=k_end-1:k_start
-    //        a += a[k+1]
-    // TODO should be a temporary, otherwise will require also a flush
-    auto accessedInterval = MS.computeEnclosingAccessInterval(field.getAccessID());
-    DAWN_ASSERT(accessedInterval.is_initialized());
-    auto cacheWindow = boost::make_optional(
-        computeCacheWindow(MS.getLoopOrder(), *accessedInterval, field.getInterval()));
     boost::optional<Interval> interval = MS.computeEnclosingAccessInterval(field.getAccessID());
     DAWN_ASSERT(interval.is_initialized());
-    return CacheCandidate{Cache::bpfill, cacheWindow, toFirstAccess(field.getIntend()), *interval};
+
+    DAWN_ASSERT(interval->contains(field.getInterval()));
+
+    MultiInterval multiInterval = MS.computeReadAccessInterval(field.getAccessID());
+    if(multiInterval.empty())
+      return CacheCandidate{Cache::local, boost::optional<Cache::window>(), /* *firstAccess, */
+                            field.getInterval()};
+
+    //      if(((MS.getLoopOrder() == LoopOrderKind::LK_Forward) &&
+    //          interval->lowerBound() < field.getInterval().lowerBound()) ||
+    //         ((MS.getLoopOrder() == LoopOrderKind::LK_Backward) &&
+    //          interval->upperBound() > field.getInterval().upperBound())) {
+
+    if(multiInterval.numPartitions() > 1 ||
+       multiInterval.getIntervals()[0].contains(field.getInterval()))
+      return CacheCandidate{Cache::fill, boost::optional<Cache::window>(), *interval};
+
+    Interval const& readInterval = multiInterval.getIntervals()[0];
+    if(((MS.getLoopOrder() == LoopOrderKind::LK_Forward) &&
+        readInterval.lowerBound() < field.getInterval().lowerBound()) ||
+       ((MS.getLoopOrder() == LoopOrderKind::LK_Backward) &&
+        readInterval.upperBound() > field.getInterval().upperBound())) {
+      return CacheCandidate{Cache::bpfill,
+                            boost::make_optional(Cache::window{
+                                readInterval.lowerBound() - field.getInterval().lowerBound(),
+                                readInterval.upperBound() - field.getInterval().upperBound()}),
+                            *interval};
+    }
+
+    std::cout << "PPP " << multiInterval << " " << MS.getLoopOrder() << " "
+              << multiInterval.numPartitions() << std::endl;
+    //    // Do we compute the first levels or do we need to access main memory (i.e fill the
+    //    // fist accesses)?
+    //    // TODO test getFirstAccessKind
+    //    boost::optional<FirstAccessKind> firstAccess = getFirstAccessKind(MS,
+    //    field.getAccessID());
+    //    DAWN_ASSERT(firstAccess.is_initialized());
+    //    if(*firstAccess == FirstAccessKind::FK_Write) {
+    //      // Example (kcache candidate a):
+    //      //   k=k_end:k_start
+    //      //     a = in
+    //      //     out = a[k-1]
+    //      boost::optional<Interval> interval =
+    //      MS.computeEnclosingAccessInterval(field.getAccessID());
+    //      DAWN_ASSERT(interval.is_initialized());
+
+    //      DAWN_ASSERT(interval->contains(field.getInterval()));
+
+    //      if(((MS.getLoopOrder() == LoopOrderKind::LK_Forward) &&
+    //          interval->upperBound() > field.getInterval().upperBound()) ||
+    //         ((MS.getLoopOrder() == LoopOrderKind::LK_Backward) &&
+    //          interval->lowerBound() < field.getInterval().lowerBound()))
+    //        return CacheCandidate{Cache::fill, boost::optional<Cache::window>(), *firstAccess,
+    //                              *interval};
+    //      if(((MS.getLoopOrder() == LoopOrderKind::LK_Forward) &&
+    //          interval->lowerBound() < field.getInterval().lowerBound()) ||
+    //         ((MS.getLoopOrder() == LoopOrderKind::LK_Backward) &&
+    //          interval->upperBound() > field.getInterval().upperBound())) {
+    //        std::cout << "IIOIOI " << interval->upperBound() << " " <<
+    //        field.getInterval().upperBound()
+    //                  << std::endl;
+    //        return CacheCandidate{Cache::bpfill,
+    //                              boost::make_optional(Cache::window{
+    //                                  interval->lowerBound() - field.getInterval().lowerBound(),
+    //                                  interval->upperBound() - field.getInterval().upperBound()}),
+    //                              *firstAccess, *interval};
+    //      }
+
+    //      return CacheCandidate{Cache::local, boost::optional<Cache::window>(), *firstAccess,
+    //                            *interval};
+    //    }
+    //    // Do we have a read in counter loop order or pointwise access?
+    //    // TODO test getVerticalLoopOrderAccesses
+    //    if(field.getExtents().getVerticalLoopOrderAccesses(MS.getLoopOrder()).CounterLoopOrder ||
+    //       field.getExtents().isVerticalPointwise()) {
+
+    //      // Example (kcache candidate a):
+    //      //   1. a += a
+    //      //   2. k=k_end:k_start
+    //      //         a += a[k-1]
+
+    //      // TODO Should not require a bpfill
+    //      // If the field is a temporary, we only set the policy fo fill. A flush will be
+    //      // granted if following MSS also read the temporary field
+    //      boost::optional<Interval> interval =
+    //      MS.computeEnclosingAccessInterval(field.getAccessID());
+    //      DAWN_ASSERT(interval.is_initialized());
+    //      return CacheCandidate{Cache::fill, boost::optional<Cache::window>(),
+    //                            toFirstAccess(field.getIntend()), *interval};
+    //    }
+    //    // Example (kcache candidate a):
+    //    //     k=k_end-1:k_start
+    //    //        a += a[k+1]
+    //    // TODO should be a temporary, otherwise will require also a flush
+    //    auto accessedInterval = MS.computeEnclosingAccessInterval(field.getAccessID());
+    //    DAWN_ASSERT(accessedInterval.is_initialized());
+    //    auto cacheWindow = boost::make_optional(
+    //        computeCacheWindow(MS.getLoopOrder(), *accessedInterval, field.getInterval()));
+    //    boost::optional<Interval> interval =
+    //    MS.computeEnclosingAccessInterval(field.getAccessID());
+    //    DAWN_ASSERT(interval.is_initialized());
+    //    std::cout << "INBPFIL " << std::endl;
+    //    return CacheCandidate{Cache::bpfill, cacheWindow, toFirstAccess(field.getIntend()),
+    //    *interval};
   }
   dawn_unreachable("Policy of Field not found");
 }
@@ -323,11 +410,43 @@ bool PassSetCaches::isAccessIDReadAfter(
     std::list<std::shared_ptr<MultiStage>>::const_iterator multiStage,
     const Stencil& stencil) const {
 
-  for(std::list<std::shared_ptr<MultiStage>>::const_iterator multiStageIt = multiStage;
+  DAWN_ASSERT(multiStage != stencil.getMultiStages().end());
+  DAWN_ASSERT(stage != (*multiStage)->getStages().end());
+
+  // TODO clean this algo
+  for(std::list<std::shared_ptr<Stage>>::const_iterator stageIt = stage;
+      stageIt != (*multiStage)->getStages().end(); ++stageIt) {
+
+    for(const Field& field : (*stageIt)->getFields()) {
+      if(field.getAccessID() != accessID)
+        continue;
+      if(field.getIntend() == Field::IK_Input) {
+        return true;
+      }
+      if(field.getIntend() == Field::IK_Output) {
+        return false;
+      }
+      if(field.getIntend() == Field::IK_InputOutput) {
+        boost::optional<FirstAccessKind> firstAccess =
+            getFirstAccessKind(*(*multiStage), field.getAccessID());
+        DAWN_ASSERT(firstAccess.is_initialized());
+        if(*firstAccess == FirstAccessKind::FK_Write) {
+          return false;
+        }
+
+        return true;
+      }
+      dawn_unreachable("Unknown intend");
+    }
+  }
+
+  for(std::list<std::shared_ptr<MultiStage>>::const_iterator multiStageIt = std::next(multiStage);
       multiStageIt != stencil.getMultiStages().end(); ++multiStageIt) {
+
     for(std::list<std::shared_ptr<Stage>>::const_iterator stageIt =
-            (multiStageIt == multiStage) ? stage++ : (*multiStageIt)->getStages().begin();
+            (*multiStageIt)->getStages().begin();
         stage != (*multiStageIt)->getStages().end(); ++stageIt) {
+
       for(const Field& field : (*stageIt)->getFields()) {
         if(field.getAccessID() != accessID)
           continue;
@@ -455,8 +574,9 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
           // Determine if we need to fill the cache by analyzing the current multi-stage
           CacheCandidate cacheCandidate = computeCacheCandidateForMS(
               field, instantiation->isTemporaryField(field.getAccessID()), MS);
-          if(cacheCandidate.intend_ == FirstAccessKind::FK_Mixed)
-            continue;
+
+          //          if(cacheCandidate.intend_ == FirstAccessKind::FK_Mixed)
+          //            continue;
 
           DAWN_ASSERT(
               (cacheCandidate.policy_ != Cache::fill && cacheCandidate.policy_ != Cache::bpfill) ||
@@ -465,10 +585,11 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
           if(!instantiation->isTemporaryField(field.getAccessID()) &&
              field.getIntend() != Field::IK_Input) {
 
-            cacheCandidate = combinePolicy(
-                cacheCandidate, field.getIntend(),
-                CacheCandidate{Cache::CacheIOPolicy::fill, boost::optional<Cache::window>(),
-                               FirstAccessKind::FK_Read, field.getInterval()});
+            cacheCandidate = combinePolicy(cacheCandidate, field.getIntend(),
+                                           CacheCandidate{Cache::CacheIOPolicy::fill,
+                                                          boost::optional<Cache::window>(),
+                                                          /* FirstAccessKind::FK_Read, */
+                                                          field.getInterval()});
           } else {
 
             for(int MSIndex2 = MSIndex + 1; MSIndex2 < numMS; MSIndex2++) {
@@ -486,16 +607,16 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
               if(!cacheCandidate.interval_.overlaps(policyMS2.interval_))
                 continue;
 
-              if(policyMS2.intend_ == FirstAccessKind::FK_Mixed) {
-                cacheCandidate.intend_ = FirstAccessKind::FK_Mixed;
-                break;
-              }
+              //              if(policyMS2.intend_ == FirstAccessKind::FK_Mixed) {
+              //                cacheCandidate.intend_ = FirstAccessKind::FK_Mixed;
+              //                break;
+              //              }
               cacheCandidate = combinePolicy(cacheCandidate, field.getIntend(), policyMS2);
               break;
             }
 
-            if(cacheCandidate.intend_ == FirstAccessKind::FK_Mixed)
-              continue;
+            //            if(cacheCandidate.intend_ == FirstAccessKind::FK_Mixed)
+            //              continue;
           }
 
           Interval interval = field.getInterval();

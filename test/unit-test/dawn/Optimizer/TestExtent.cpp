@@ -1,13 +1,13 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -118,4 +118,32 @@ TEST(ExtentsTest, Stringify) {
   EXPECT_STREQ(ss.str().c_str(), "[(0, 1), (-1, 0), (0, 2)]");
 }
 
+TEST(ExtentsTest, verticalLoopOrder) {
+  Extents extents{0, 0, 0, 0, -1, 2};
+  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(
+                  LoopOrderKind::LK_Forward, Extents::VerticalLoopOrderDir::VL_CounterLoopOrder,
+                  false)) == (Extent{1, 2}));
+  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(
+                  LoopOrderKind::LK_Forward, Extents::VerticalLoopOrderDir::VL_CounterLoopOrder,
+                  true)) == (Extent{0, 2}));
+  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(LoopOrderKind::LK_Forward,
+                                                  Extents::VerticalLoopOrderDir::VL_InLoopOrder,
+                                                  false)) == (Extent{-1, -1}));
+  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(LoopOrderKind::LK_Forward,
+                                                  Extents::VerticalLoopOrderDir::VL_InLoopOrder,
+                                                  true)) == (Extent{-1, 0}));
+
+  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(
+                  LoopOrderKind::LK_Backward, Extents::VerticalLoopOrderDir::VL_CounterLoopOrder,
+                  false)) == (Extent{-1, -1}));
+  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(
+                  LoopOrderKind::LK_Backward, Extents::VerticalLoopOrderDir::VL_CounterLoopOrder,
+                  true)) == (Extent{-1, 0}));
+  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(LoopOrderKind::LK_Backward,
+                                                  Extents::VerticalLoopOrderDir::VL_InLoopOrder,
+                                                  false)) == (Extent{1, 2}));
+  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(LoopOrderKind::LK_Backward,
+                                                  Extents::VerticalLoopOrderDir::VL_InLoopOrder,
+                                                  true)) == (Extent{0, 2}));
+}
 } // anonymous namespace

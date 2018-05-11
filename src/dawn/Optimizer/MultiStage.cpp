@@ -20,6 +20,8 @@
 #include "dawn/Optimizer/Stage.h"
 #include "dawn/Optimizer/StencilInstantiation.h"
 #include "dawn/Support/STLExtras.h"
+#include "dawn/Support/OptionalUtil.h"
+#include "dawn/Optimizer/MultiInterval.h"
 
 namespace dawn {
 
@@ -115,6 +117,107 @@ Cache& MultiStage::setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy poli
   return caches_.emplace(AccessID, Cache(type, policy, AccessID, boost::optional<Interval>(),
                                          boost::optional<Cache::window>()))
       .first->second;
+}
+
+std::vector<DoMethod> MultiStage::computeOrderedDoMethods() const {
+  auto intervals_set = getIntervals();
+  std::vector<Interval> intervals_v;
+  std::copy(intervals_set.begin(), intervals_set.end(), std::back_inserter(intervals_v));
+
+  // compute the partition of the intervals
+  auto partitionIntervals = Interval::computePartition(intervals_v);
+  if((getLoopOrder() == LoopOrderKind::LK_Backward))
+    std::reverse(partitionIntervals.begin(), partitionIntervals.end());
+
+  std::vector<DoMethod> orderedDoMethods;
+
+  for(auto interval : partitionIntervals) {
+    for(const auto& stagePtr : getStages()) {
+      for(const auto& doMethod : stagePtr->getDoMethods()) {
+
+        if(doMethod->getInterval().overlaps(interval)) {
+          DoMethod partitionedDoMethod(*doMethod);
+
+          partitionedDoMethod.setInterval(interval);
+          orderedDoMethods.push_back(partitionedDoMethod);
+          // there should not be two do methods in the same stage with overlapping intervals
+          continue;
+        }
+      }
+    }
+  }
+
+  return orderedDoMethods;
+}
+
+MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
+
+  std::vector<DoMethod> orderedDoMethods = computeOrderedDoMethods();
+
+  boost::optional<Interval> writeInterval;
+  MultiInterval readInterval;
+
+  for(const auto& doMethod : orderedDoMethods) {
+    std::cout << "INDO " << doMethod.getInterval() << std::endl;
+    for(const auto& statementAccesssPair : doMethod.getStatementAccessesPairs()) {
+      std::cout << "INSTATEMENT " << (statementAccesssPair->getStatement())->ASTStmt << std::endl;
+      const Accesses& accesses = *statementAccesssPair->getAccesses();
+      // indepdently of whether the statement has also a write access, if there is a read
+      // access, it should happen in the RHS so first
+      if(accesses.hasReadAccess(accessID)) {
+        Extents readAccessExtent = accesses.getReadAccess(accessID);
+        boost::optional<Extent> readAccessCounterLoop = readAccessExtent.getVerticalLoopOrderExtent(
+            getLoopOrder(), Extents::VerticalLoopOrderDir::VL_InLoopOrder, true);
+        Interval computingInterval = doMethod.getInterval();
+
+        MultiInterval interv;
+        if(readAccessCounterLoop.is_initialized()) {
+          std::cout << "INSERT " << (*readAccessCounterLoop).Minus << " "
+                    << (*readAccessCounterLoop).Plus << std::endl;
+          interv.insert(computingInterval.extendInterval(*readAccessCounterLoop));
+        }
+        std::cout << "After CounterLoop " << interv << accesses.hasWriteAccess(accessID)
+                  << std::endl;
+        if(accesses.hasWriteAccess(accessID)) {
+          std::cout << "IN WRITE " << std::endl;
+          std::cout << "Aff " << interv << " " << computingInterval << std::endl;
+
+          interv.substract(computingInterval);
+          std::cout << "After Write1 " << interv << std::endl;
+        }
+        if(writeInterval.is_initialized()) {
+          interv.substract(*writeInterval);
+        }
+
+        std::cout << "After Write " << interv << std::endl;
+
+        boost::optional<Extent> readAccessInLoopOrder = readAccessExtent.getVerticalLoopOrderExtent(
+            getLoopOrder(), Extents::VerticalLoopOrderDir::VL_CounterLoopOrder, false);
+
+        if(readAccessInLoopOrder.is_initialized()) {
+          interv.insert(computingInterval.extendInterval(*readAccessInLoopOrder));
+
+          std::cout << "READLOOPORDER " << (*readAccessInLoopOrder).Minus << ","
+                    << (*readAccessInLoopOrder).Plus << std::endl;
+          std::cout << "After LoopOrder " << interv << std::endl;
+        }
+
+        readInterval.insert(interv);
+        std::cout << "After udpate " << readInterval << std::endl;
+      }
+      if(accesses.hasWriteAccess(accessID)) {
+        writeInterval = operateOnOptionals(
+            writeInterval, boost::make_optional(doMethod.getInterval()),
+            [](boost::optional<Interval> const& interv1, boost::optional<Interval> const& interv2) {
+              Interval res = *interv1;
+              res.merge(*interv2);
+              return boost::make_optional(res);
+            });
+      }
+    }
+  }
+
+  return readInterval;
 }
 
 boost::optional<Interval> MultiStage::computeEnclosingAccessInterval(const int accessID) const {

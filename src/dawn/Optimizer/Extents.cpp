@@ -14,6 +14,7 @@
 
 #include "dawn/Optimizer/Extents.h"
 #include "dawn/Support/Assert.h"
+#include "dawn/Support/Unreachable.h"
 #include "dawn/Support/StringUtil.h"
 #include <iostream>
 
@@ -119,6 +120,44 @@ Extents::getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const {
   }
 
   return access;
+}
+
+boost::optional<Extent> Extents::getVerticalLoopOrderExtent(LoopOrderKind loopOrder,
+                                                            VerticalLoopOrderDir loopOrderDir,
+                                                            bool includeCenter) const {
+
+  const Extent& verticalExtent = extents_[2];
+
+  if(loopOrder == LoopOrderKind::LK_Parallel)
+    // Any accesses in the vertical are against the loop-order
+    return boost::optional<Extent>();
+
+  if((loopOrder == LoopOrderKind::LK_Forward &&
+      loopOrderDir == VerticalLoopOrderDir::VL_CounterLoopOrder) ||
+     (loopOrder == LoopOrderKind::LK_Backward &&
+      loopOrderDir == VerticalLoopOrderDir::VL_InLoopOrder)) {
+    if(verticalExtent.Plus < (includeCenter ? 0 : 1))
+      return boost::optional<Extent>();
+
+    std::cout << "Suite" << verticalExtent.Minus << " " << verticalExtent.Plus << std::endl;
+
+    // Accesses k+1 are against the loop order
+    return boost::make_optional(
+        Extent{std::max((includeCenter ? 0 : 1), verticalExtent.Minus), verticalExtent.Plus});
+  }
+  if((loopOrder == LoopOrderKind::LK_Backward &&
+      loopOrderDir == VerticalLoopOrderDir::VL_CounterLoopOrder) ||
+     (loopOrder == LoopOrderKind::LK_Forward &&
+      loopOrderDir == VerticalLoopOrderDir::VL_InLoopOrder)) {
+    if(verticalExtent.Minus > (includeCenter ? 0 : -1))
+      return boost::optional<Extent>();
+
+    std::cout << "suite" << verticalExtent.Minus << " " << verticalExtent.Plus << std::endl;
+    // Accesses k-1 are against the loop order
+    return boost::make_optional(
+        Extent{verticalExtent.Minus, std::min((includeCenter ? 0 : -1), verticalExtent.Plus)});
+  }
+  dawn_unreachable("Non supported loop order");
 }
 
 bool Extents::operator==(const Extents& other) const {
