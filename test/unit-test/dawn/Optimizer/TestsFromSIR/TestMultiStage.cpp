@@ -456,12 +456,140 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_03) {
 
   EXPECT_EQ(stencil->getMultiStages().size(), 2);
 
-  auto const& mss0 = stencil->getMultiStages().front();
+  auto const mss0it = stencil->getMultiStages().begin();
+  auto const& mss0 = *mss0it;
 
   int accessID = stencilInstantiation->getAccessIDFromName("tmp");
   auto interval0 = mss0->computeReadAccessInterval(accessID);
 
   EXPECT_EQ(interval0, (MultiInterval{Interval{1, sir::Interval::End}}));
-}
 
+  auto const& mss1 = *(std::next(mss0it));
+  auto interval1 = mss1->computeReadAccessInterval(accessID);
+
+  EXPECT_EQ(interval1, (MultiInterval{Interval{sir::Interval::End, sir::Interval::End}}));
+}
+TEST_F(MultiStageTest, test_compute_read_access_interval_04) {
+
+  // Stencil_0
+  //{
+  //  MultiStage_0 [parallel]
+  //  {
+  //    Stage_0
+  //    {
+  //      Do_0 { Start : End }
+  //      {
+  //        tmp[0, 0, 0] = in[0, 0, 0];
+  //          Write Accesses:
+  //            tmp : [(0, 0), (0, 0), (0, 0)]
+  //          Read Accesses:
+  //            in : [(0, 0), (0, 0), (0, 0)]
+
+  //        b1[0, 0, 0] = a1[0, 0, 0];
+  //          Write Accesses:
+  //            b1 : [(0, 0), (0, 0), (0, 0)]
+  //          Read Accesses:
+  //            a1 : [(0, 0), (0, 0), (0, 0)]
+
+  //      }
+  //      Extents: [(0, 0), (0, 0), (-2, 2)]
+  //    }
+  //  }
+  //  MultiStage_1 [parallel]
+  //  {
+  //    Stage_0
+  //    {
+  //      Do_0 { Start : End }
+  //      {
+  //        c1[0, 0, 0] = b1[0, 0, 1];
+  //          Write Accesses:
+  //            c1 : [(0, 0), (0, 0), (0, 0)]
+  //          Read Accesses:
+  //            b1 : [(0, 0), (0, 0), (0, 1)]
+
+  //        c1[0, 0, 0] = b1[0, 0, -1];
+  //          Write Accesses:
+  //            c1 : [(0, 0), (0, 0), (0, 0)]
+  //          Read Accesses:
+  //            b1 : [(0, 0), (0, 0), (-1, 0)]
+
+  //        out[0, 0, 0] = tmp[0, 0, 0];
+  //          Write Accesses:
+  //            out : [(0, 0), (0, 0), (0, 0)]
+  //          Read Accesses:
+  //            tmp : [(0, 0), (0, 0), (0, 0)]
+
+  //        tmp[0, 0, 0] = in[0, 0, 0];
+  //          Write Accesses:
+  //            tmp : [(0, 0), (0, 0), (0, 0)]
+  //          Read Accesses:
+  //            in : [(0, 0), (0, 0), (0, 0)]
+
+  //        b2[0, 0, 0] = a2[0, 0, 0];
+  //          Write Accesses:
+  //            b2 : [(0, 0), (0, 0), (0, 0)]
+  //          Read Accesses:
+  //            a2 : [(0, 0), (0, 0), (0, 0)]
+
+  //      }
+  //      Extents: [(0, 0), (0, 0), (-1, 1)]
+  //    }
+  //  }
+  //  MultiStage_2 [parallel]
+  //  {
+  //    Stage_0
+  //    {
+  //      Do_0 { Start : End }
+  //      {
+  //        c2[0, 0, 0] = b2[0, 0, 1];
+  //          Write Accesses:
+  //            c2 : [(0, 0), (0, 0), (0, 0)]
+  //          Read Accesses:
+  //            b2 : [(0, 0), (0, 0), (0, 1)]
+
+  //        c2[0, 0, 0] = b2[0, 0, -1];
+  //          Write Accesses:
+  //            c2 : [(0, 0), (0, 0), (0, 0)]
+  //          Read Accesses:
+  //            b2 : [(0, 0), (0, 0), (-1, 0)]
+
+  //        out[0, 0, 0] = tmp[0, 0, 0];
+  //          Write Accesses:
+  //            out : [(0, 0), (0, 0), (0, 0)]
+  //          Read Accesses:
+  //            tmp : [(0, 0), (0, 0), (0, 0)]
+
+  //      }
+  //      Extents: [(0, 0), (0, 0), (0, 0)]
+  //    }
+  //  }
+  //}
+
+  auto stencilInstantiation = loadTest("test_compute_read_access_interval_04.sir", "stencil");
+  auto stencils = stencilInstantiation->getStencils();
+  EXPECT_EQ(stencils.size(), 1);
+  std::shared_ptr<Stencil> stencil = stencils[0];
+
+  EXPECT_EQ(stencil->getMultiStages().size(), 3);
+
+  auto const mss0it = stencil->getMultiStages().begin();
+  auto const& mss0 = *(mss0it);
+
+  int accessID = stencilInstantiation->getAccessIDFromName("tmp");
+  auto interval0 = mss0->computeReadAccessInterval(accessID);
+
+  auto const mss1it = std::next(mss0it);
+  auto const& mss1 = *(mss1it);
+
+  auto interval1 = mss1->computeReadAccessInterval(accessID);
+
+  EXPECT_EQ(interval1, (MultiInterval{Interval{0, sir::Interval::End}}));
+
+  auto const mss2it = std::next(mss1it);
+  auto const& mss2 = *(mss2it);
+
+  auto interval2 = mss2->computeReadAccessInterval(accessID);
+
+  EXPECT_EQ(interval2, (MultiInterval{Interval{0, sir::Interval::End}}));
+}
 } // anonymous namespace

@@ -128,10 +128,11 @@ boost::optional<Extent> Extents::getVerticalLoopOrderExtent(LoopOrderKind loopOr
 
   const Extent& verticalExtent = extents_[2];
 
-  if(loopOrder == LoopOrderKind::LK_Parallel)
-    // Any accesses in the vertical are against the loop-order
+  if(loopOrder == LoopOrderKind::LK_Parallel) {
+    if(includeCenter && verticalExtent.Plus >= 0 && verticalExtent.Minus <= 0)
+      return boost::make_optional(Extent{0, 0});
     return boost::optional<Extent>();
-
+  }
   if((loopOrder == LoopOrderKind::LK_Forward &&
       loopOrderDir == VerticalLoopOrderDir::VL_CounterLoopOrder) ||
      (loopOrder == LoopOrderKind::LK_Backward &&
