@@ -37,6 +37,23 @@ MultiInterval substract(const Interval& int1, const Interval& int2) {
                                 (lowerI2InInterval ? int2.lowerOffset() - 1 : int1.upperOffset())}};
 }
 
+// TODO unittest this
+MultiInterval substract(const Interval& int1, const MultiInterval& int2) {
+  if(int2.empty())
+    return MultiInterval{};
+
+  MultiInterval result = substract(int1, int2.getIntervals().front());
+
+  if(int2.numPartitions() == 1)
+    return result;
+
+  for(auto it = ++(int2.getIntervals().begin()); it != int2.getIntervals().end(); ++it) {
+    result.substract(*it);
+  }
+  return result;
+}
+
+// TODO Unittest this
 Cache::window computeWindowOffset(LoopOrderKind loopOrder, Interval const& accessInterval,
                                   Interval const& computeInterval) {
   std::cout << "For " << loopOrder << " " << accessInterval << " " << computeInterval << " "

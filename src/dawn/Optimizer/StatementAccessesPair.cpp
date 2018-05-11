@@ -90,8 +90,11 @@ boost::optional<Extents> StatementAccessesPair::computeMaximumExtents(const int 
 
   if(callerAccesses_->hasReadAccess(accessID) || callerAccesses_->hasWriteAccess(accessID)) {
     extents = boost::make_optional(Extents{});
-    extents->merge(callerAccesses_->getReadAccess(accessID));
-    extents->merge(callerAccesses_->getWriteAccess(accessID));
+    // TODO perfect forwarding
+    if(callerAccesses_->hasReadAccess(accessID))
+      extents->merge(callerAccesses_->getReadAccess(accessID));
+    if(callerAccesses_->hasWriteAccess(accessID))
+      extents->merge(callerAccesses_->getWriteAccess(accessID));
   }
 
   for(auto const& child : children_) {

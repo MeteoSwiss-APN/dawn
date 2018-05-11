@@ -178,6 +178,7 @@ public:
                           : field->getOffset());
     };
 
+    std::cout << "UPT " << field->getName() << std::endl;
     for(auto& callerAccesses : callerAccessesList_)
       callerAccesses->mergeReadOffset(getAccessIDFromExpr(field), getOffset(true));
 
@@ -292,6 +293,8 @@ public:
   }
 
   virtual void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
+    std::cout << "DOING " << std::static_pointer_cast<Stmt>(stmt) << std::endl;
+
     appendNewAccesses();
 
     // Declaration of variables are by defintion writes
@@ -301,6 +304,7 @@ public:
       expr->accept(*this);
 
     removeLastChildAccesses();
+    std::cout << "DONE " << std::endl;
   }
 
   virtual void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) override {
@@ -364,6 +368,8 @@ public:
   }
 
   void visit(const std::shared_ptr<AssignmentExpr>& expr) override {
+
+    std::cout << "DOING " << std::static_pointer_cast<Expr>(expr) << std::endl;
     // LHS is a write, we resolve this manually as we only care about FieldAccessExpr and
     // VarAccessExpr. However, if we have an expression `a += 5` we need to register the access as
     // write and read!

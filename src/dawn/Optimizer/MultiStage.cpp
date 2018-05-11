@@ -22,6 +22,7 @@
 #include "dawn/Support/STLExtras.h"
 #include "dawn/Support/OptionalUtil.h"
 #include "dawn/Optimizer/MultiInterval.h"
+#include "dawn/Optimizer/IntervalAlgorithms.h"
 
 namespace dawn {
 
@@ -155,7 +156,17 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
   std::vector<DoMethod> orderedDoMethods = computeOrderedDoMethods();
 
   MultiInterval writeInterval;
+  MultiInterval writeIntervalPre;
   MultiInterval readInterval;
+
+  for(const auto& doMethod : orderedDoMethods) {
+    for(const auto& statementAccesssPair : doMethod.getStatementAccessesPairs()) {
+      const Accesses& accesses = *statementAccesssPair->getAccesses();
+      if(accesses.hasWriteAccess(accessID)) {
+        writeIntervalPre.insert(doMethod.getInterval());
+      }
+    }
+  }
 
   for(const auto& doMethod : orderedDoMethods) {
     std::cout << "INDO " << doMethod.getInterval() << std::endl;
@@ -165,12 +176,13 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
       // indepdently of whether the statement has also a write access, if there is a read
       // access, it should happen in the RHS so first
       if(accesses.hasReadAccess(accessID)) {
-        Extents readAccessExtent = accesses.getReadAccess(accessID);
+        MultiInterval interv;
+
+        Extents const& readAccessExtent = accesses.getReadAccess(accessID);
         boost::optional<Extent> readAccessInLoopOrder = readAccessExtent.getVerticalLoopOrderExtent(
-            getLoopOrder(), Extents::VerticalLoopOrderDir::VL_InLoopOrder, true);
+            getLoopOrder(), Extents::VerticalLoopOrderDir::VL_InLoopOrder, false);
         Interval computingInterval = doMethod.getInterval();
 
-        MultiInterval interv;
         if(readAccessInLoopOrder.is_initialized()) {
           std::cout << "INSERT " << (*readAccessInLoopOrder).Minus << " "
                     << (*readAccessInLoopOrder).Plus << std::endl;
@@ -178,11 +190,21 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
         }
         std::cout << "After CounterLoop " << interv << accesses.hasWriteAccess(accessID)
                   << std::endl;
-        if(!writeInterval.empty()) {
-          interv.substract(writeInterval);
+        if(!writeIntervalPre.empty()) {
+          interv.substract(writeIntervalPre);
         }
-
         std::cout << "After Write " << interv << std::endl;
+
+        if(readAccessExtent.hasVerticalCenter()) {
+          auto centerAccessInterval = substract(computingInterval, writeInterval);
+          interv.insert(centerAccessInterval);
+          std::cout << "After Add Center " << interv << " "
+                    << readAccessExtent.getExtents()[2].Minus << " "
+                    << readAccessExtent.getExtents()[2].Plus << std::endl;
+        }
+        //        if(!writeInterval.empty()) {
+        //          interv.substract(writeInterval);
+        //        }
 
         boost::optional<Extent> readAccessCounterLoopOrder =
             readAccessExtent.getVerticalLoopOrderExtent(

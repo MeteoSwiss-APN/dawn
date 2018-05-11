@@ -119,6 +119,8 @@ public:
   /// @brief Get size of extents (i.e number of dimensions)
   std::array<Extent, 3>::size_type getSize() const { return extents_.size(); }
 
+  bool hasVerticalCenter() const { return extents_[2].Minus <= 0 && extents_[2].Plus >= 0; }
+
   /// @brief Merge `this` with `other` and assign an Extents to `this` which is the union of the two
   ///
   /// @b Example:

@@ -22,7 +22,14 @@ namespace dawn {
 
 Extents::Extents() : extents_{} {}
 
-Extents::Extents(const Array3i& offset) { merge(offset); }
+Extents::Extents(const Array3i& offset) {
+  DAWN_ASSERT(extents_.size() == offset.size());
+
+  for(std::size_t i = 0; i < extents_.size(); ++i) {
+    extents_[i].Minus = offset[i];
+    extents_[i].Plus = offset[i];
+  }
+}
 
 Extents::Extents(int extent1Minus, int extent1Plus, int extent2Minus, int extent2Plus,
                  int extent3Minus, int extent3Plus) {

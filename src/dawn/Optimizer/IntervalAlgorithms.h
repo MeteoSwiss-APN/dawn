@@ -23,6 +23,7 @@
 namespace dawn {
 
 MultiInterval substract(const Interval& int1, const Interval& int2);
+MultiInterval substract(const Interval& int1, const MultiInterval& int2);
 
 Cache::window computeWindowOffset(LoopOrderKind loopOrder, Interval const& accessInterval,
                                   Interval const& computeInterval);

@@ -38,9 +38,6 @@ public:
   Accesses& operator=(const Accesses&) = default;
   Accesses& operator=(Accesses&&) = default;
 
-  /// @brief Null extent
-  static const Extents NullExtents;
-
   /// @brief Merge read offset/extent to the field given by `AccessID`
   ///
   /// @see Extents::merge
