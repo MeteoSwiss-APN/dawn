@@ -32,6 +32,7 @@ public:
   void insert(boost::optional<Interval> const& interval);
   void insert(MultiInterval const& multiInterval);
   void substract(Interval const& interval);
+  void substract(MultiInterval const& multiInterval);
 
   std::vector<Interval> const& getIntervals() const { return intervals_; }
 

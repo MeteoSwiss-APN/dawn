@@ -154,7 +154,7 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
 
   std::vector<DoMethod> orderedDoMethods = computeOrderedDoMethods();
 
-  boost::optional<Interval> writeInterval;
+  MultiInterval writeInterval;
   MultiInterval readInterval;
 
   for(const auto& doMethod : orderedDoMethods) {
@@ -166,39 +166,33 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
       // access, it should happen in the RHS so first
       if(accesses.hasReadAccess(accessID)) {
         Extents readAccessExtent = accesses.getReadAccess(accessID);
-        boost::optional<Extent> readAccessCounterLoop = readAccessExtent.getVerticalLoopOrderExtent(
+        boost::optional<Extent> readAccessInLoopOrder = readAccessExtent.getVerticalLoopOrderExtent(
             getLoopOrder(), Extents::VerticalLoopOrderDir::VL_InLoopOrder, true);
         Interval computingInterval = doMethod.getInterval();
 
         MultiInterval interv;
-        if(readAccessCounterLoop.is_initialized()) {
-          std::cout << "INSERT " << (*readAccessCounterLoop).Minus << " "
-                    << (*readAccessCounterLoop).Plus << std::endl;
-          interv.insert(computingInterval.extendInterval(*readAccessCounterLoop));
+        if(readAccessInLoopOrder.is_initialized()) {
+          std::cout << "INSERT " << (*readAccessInLoopOrder).Minus << " "
+                    << (*readAccessInLoopOrder).Plus << std::endl;
+          interv.insert(computingInterval.extendInterval(*readAccessInLoopOrder));
         }
         std::cout << "After CounterLoop " << interv << accesses.hasWriteAccess(accessID)
                   << std::endl;
-        if(accesses.hasWriteAccess(accessID)) {
-          std::cout << "IN WRITE " << std::endl;
-          std::cout << "Aff " << interv << " " << computingInterval << std::endl;
-
-          interv.substract(computingInterval);
-          std::cout << "After Write1 " << interv << std::endl;
-        }
-        if(writeInterval.is_initialized()) {
-          interv.substract(*writeInterval);
+        if(!writeInterval.empty()) {
+          interv.substract(writeInterval);
         }
 
         std::cout << "After Write " << interv << std::endl;
 
-        boost::optional<Extent> readAccessInLoopOrder = readAccessExtent.getVerticalLoopOrderExtent(
-            getLoopOrder(), Extents::VerticalLoopOrderDir::VL_CounterLoopOrder, false);
+        boost::optional<Extent> readAccessCounterLoopOrder =
+            readAccessExtent.getVerticalLoopOrderExtent(
+                getLoopOrder(), Extents::VerticalLoopOrderDir::VL_CounterLoopOrder, false);
 
-        if(readAccessInLoopOrder.is_initialized()) {
-          interv.insert(computingInterval.extendInterval(*readAccessInLoopOrder));
+        if(readAccessCounterLoopOrder.is_initialized()) {
+          interv.insert(computingInterval.extendInterval(*readAccessCounterLoopOrder));
 
-          std::cout << "READLOOPORDER " << (*readAccessInLoopOrder).Minus << ","
-                    << (*readAccessInLoopOrder).Plus << std::endl;
+          std::cout << "READLOOPORDER " << (*readAccessCounterLoopOrder).Minus << ","
+                    << (*readAccessCounterLoopOrder).Plus << std::endl;
           std::cout << "After LoopOrder " << interv << std::endl;
         }
 
@@ -206,13 +200,7 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
         std::cout << "After udpate " << readInterval << std::endl;
       }
       if(accesses.hasWriteAccess(accessID)) {
-        writeInterval = operateOnOptionals(
-            writeInterval, boost::make_optional(doMethod.getInterval()),
-            [](boost::optional<Interval> const& interv1, boost::optional<Interval> const& interv2) {
-              Interval res = *interv1;
-              res.merge(*interv2);
-              return boost::make_optional(res);
-            });
+        writeInterval.insert(doMethod.getInterval());
       }
     }
   }

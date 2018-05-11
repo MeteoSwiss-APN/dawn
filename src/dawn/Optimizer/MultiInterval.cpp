@@ -65,6 +65,13 @@ void MultiInterval::substract(Interval const& interval) {
     }
   }
 }
+
+void MultiInterval::substract(MultiInterval const& multiInterval) {
+  for(auto const& interv : multiInterval.getIntervals()) {
+    substract(interv);
+  }
+}
+
 void MultiInterval::insert(Interval const& interval) {
   intervals_.push_back(interval);
   auto intervals = Interval::computePartition(intervals_);

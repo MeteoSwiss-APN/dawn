@@ -297,6 +297,7 @@ CacheCandidate computeCacheCandidateForMS(Field const& field, bool isTemporaryFi
     DAWN_ASSERT(interval->contains(field.getInterval()));
 
     MultiInterval multiInterval = MS.computeReadAccessInterval(field.getAccessID());
+    std::cout << "OVERAL " << multiInterval << std::endl;
     if(multiInterval.empty())
       return CacheCandidate{Cache::local, boost::optional<Cache::window>(), /* *firstAccess, */
                             field.getInterval()};
@@ -311,16 +312,24 @@ CacheCandidate computeCacheCandidateForMS(Field const& field, bool isTemporaryFi
       return CacheCandidate{Cache::fill, boost::optional<Cache::window>(), *interval};
 
     Interval const& readInterval = multiInterval.getIntervals()[0];
+
+    std::cout << "PrePPP " << multiInterval << " " << MS.getLoopOrder() << " "
+              << multiInterval.numPartitions() << " " << field.getInterval() << std::endl;
+
     if(((MS.getLoopOrder() == LoopOrderKind::LK_Forward) &&
-        readInterval.lowerBound() < field.getInterval().lowerBound()) ||
+        (readInterval.lowerBound() <= field.getInterval().lowerBound()) &&
+        (readInterval.upperBound() <= field.getInterval().lowerBound())) ||
        ((MS.getLoopOrder() == LoopOrderKind::LK_Backward) &&
-        readInterval.upperBound() > field.getInterval().upperBound())) {
+        (readInterval.upperBound() >= field.getInterval().upperBound()) &&
+        (readInterval.lowerBound() >= field.getInterval().upperBound()))) {
       return CacheCandidate{Cache::bpfill,
                             boost::make_optional(Cache::window{
                                 readInterval.lowerBound() - field.getInterval().lowerBound(),
                                 readInterval.upperBound() - field.getInterval().upperBound()}),
                             *interval};
     }
+
+    return CacheCandidate{Cache::fill, boost::optional<Cache::window>(), *interval};
 
     std::cout << "PPP " << multiInterval << " " << MS.getLoopOrder() << " "
               << multiInterval.numPartitions() << std::endl;
