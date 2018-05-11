@@ -497,22 +497,41 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
         for(const Field& field : (*stageIt)->getFields()) {
 
           // Field is already cached, skip
-          if(MS.isCached(field.getAccessID()))
+          if(MS.isCached(field.getAccessID())) {
+            std::cout << "already cache " << instantiation->getNameFromAccessID(field.getAccessID())
+                      << std::endl;
             continue;
+          }
 
           // Field has vertical extents, can't be ij-cached
-          if(!field.getExtents().isVerticalPointwise())
+          if(!field.getExtents().isVerticalPointwise()) {
+            std::cout << "pointwise " << instantiation->getNameFromAccessID(field.getAccessID())
+                      << std::endl;
+
             continue;
+          }
 
           // Currently we only cache temporaries!
-          if(!instantiation->isTemporaryField(field.getAccessID()))
-            continue;
+          if(!instantiation->isTemporaryField(field.getAccessID())) {
+            std::cout << "Only temporary "
+                      << instantiation->getNameFromAccessID(field.getAccessID()) << std::endl;
 
-          if(isAccessIDReadAfter(field.getAccessID(), stageIt, multiStageIt, stencil))
             continue;
+          }
+
+          //          if(isAccessIDReadAfter(field.getAccessID(), stageIt, multiStageIt, stencil)) {
+          //            std::cout << "read after " <<
+          //            instantiation->getNameFromAccessID(field.getAccessID())
+          //                      << std::endl;
+
+          //            continue;
+          //          }
           // Cache the field
           if(field.getIntend() == Field::IK_Input && outputFields.count(field.getAccessID()) &&
              !field.getExtents().isHorizontalPointwise()) {
+
+            std::cout << "caching " << instantiation->getNameFromAccessID(field.getAccessID())
+                      << std::endl;
 
             Cache& cache = MS.setCache(Cache::IJ, Cache::local, field.getAccessID());
             instantiation->insertCachedVariable(field.getAccessID());
