@@ -276,6 +276,8 @@ CacheCandidate computeCacheCandidateForMS(Field const& field, bool isTemporaryFi
 
   if(field.getIntend() == Field::IK_Input) {
     boost::optional<Interval> interval = MS.computeEnclosingAccessInterval(field.getAccessID());
+    // make sure the access interval has the same boundaries as from any interval of the mss
+    interval->merge(field.getInterval());
     DAWN_ASSERT(interval.is_initialized());
 
     return CacheCandidate{Cache::fill, boost::optional<Cache::window>(),
@@ -293,8 +295,12 @@ CacheCandidate computeCacheCandidateForMS(Field const& field, bool isTemporaryFi
   if(field.getIntend() == Field::IK_InputOutput) {
 
     boost::optional<Interval> interval = MS.computeEnclosingAccessInterval(field.getAccessID());
+    // make sure the access interval has the same boundaries as from any interval of the mss
+    interval->merge(field.getInterval());
+
     DAWN_ASSERT(interval.is_initialized());
 
+    std::cout << "IIII " << *interval << " " << field.getInterval() << std::endl;
     DAWN_ASSERT(interval->contains(field.getInterval()));
 
     MultiInterval multiInterval = MS.computeReadAccessInterval(field.getAccessID());

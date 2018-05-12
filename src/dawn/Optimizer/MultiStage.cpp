@@ -197,6 +197,8 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
 
         if(readAccessExtent.hasVerticalCenter()) {
           auto centerAccessInterval = substract(computingInterval, writeInterval);
+          std::cout << "WRIIN " << writeInterval << "  KKK " << computingInterval << " g "
+                    << centerAccessInterval << std::endl;
           interv.insert(centerAccessInterval);
           std::cout << "After Add Center " << interv << " "
                     << readAccessExtent.getExtents()[2].Minus << " "
@@ -222,7 +224,9 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
         std::cout << "After udpate " << readInterval << std::endl;
       }
       if(accesses.hasWriteAccess(accessID)) {
+        std::cout << "UPD " << doMethod.getInterval() << " " << writeInterval << std::endl;
         writeInterval.insert(doMethod.getInterval());
+        std::cout << "UPD " << doMethod.getInterval() << " " << writeInterval << std::endl;
       }
     }
   }

@@ -408,23 +408,25 @@ void StencilFunctionInstantiation::update() {
 
     for(const auto& accessPair : access->getWriteAccesses()) {
       int AccessID = accessPair.first;
+      const Extents& extents = accessPair.second;
 
       // Does this AccessID correspond to a field access?
       if(!isProvidedByStencilFunctionCall(AccessID) && !stencilInstantiation_->isField(AccessID))
         continue;
 
       AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                     interval_);
+                                     extents, interval_);
     }
 
     for(const auto& accessPair : access->getReadAccesses()) {
       int AccessID = accessPair.first;
+      const Extents& extents = accessPair.second;
 
       // Does this AccessID correspond to a field access?
       if(!isProvidedByStencilFunctionCall(AccessID) && !stencilInstantiation_->isField(AccessID))
         continue;
 
-      AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
+      AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID, extents,
                                     interval_);
     }
   }
@@ -434,8 +436,8 @@ void StencilFunctionInstantiation::update() {
     int AccessID = argIdxCallerAccessIDPair.second;
     if(!inputFields.count(AccessID) && !outputFields.count(AccessID) &&
        !inputOutputFields.count(AccessID)) {
-      inputFields.emplace(AccessID,
-                          Field(AccessID, Field::IK_Input, Extents{}, Extents{}, interval_));
+      inputFields.emplace(AccessID, Field(AccessID, Field::IK_Input, Extents{0, 0, 0, 0, 0, 0},
+                                          Extents{0, 0, 0, 0, 0, 0}, interval_));
       unusedFields_.insert(AccessID);
     }
   }

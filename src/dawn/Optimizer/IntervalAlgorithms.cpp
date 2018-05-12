@@ -40,7 +40,7 @@ MultiInterval substract(const Interval& int1, const Interval& int2) {
 // TODO unittest this
 MultiInterval substract(const Interval& int1, const MultiInterval& int2) {
   if(int2.empty())
-    return MultiInterval{};
+    return MultiInterval{int1};
 
   MultiInterval result = substract(int1, int2.getIntervals().front());
 

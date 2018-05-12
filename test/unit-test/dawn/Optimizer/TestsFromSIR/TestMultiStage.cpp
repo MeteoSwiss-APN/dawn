@@ -238,11 +238,8 @@ TEST_F(MultiStageTest, test_compute_read_access_interval) {
 
   int accessID = stencilInstantiation->getAccessIDFromName("tmp");
   auto interval = mss->computeReadAccessInterval(accessID);
-  // TODO should be when the compute accesses is fixed
-  //  EXPECT_EQ(interval, (MultiInterval{Interval{0, sir::Interval::End-3},
-  //  Interval{sir::Interval::End-1, sir::Interval::End-1}));
 
-  EXPECT_EQ(interval, (MultiInterval{Interval{0, sir::Interval::End}}));
+  EXPECT_EQ(interval, (MultiInterval{Interval{0, 1}}));
 }
 
 TEST_F(MultiStageTest, test_compute_read_access_interval_02) {
@@ -311,11 +308,8 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_02) {
   int accessID = stencilInstantiation->getAccessIDFromName("tmp");
   auto interval = mss->computeReadAccessInterval(accessID);
 
-  // TODO should be
-  //  EXPECT_EQ(interval, (MultiInterval{Interval{0, sir::Interval::End-4},
-  //                                     Interval{sir::Interval::End - 2, sir::Interval::End +
-  //                                     1}}));
-  EXPECT_EQ(interval, (MultiInterval{Interval{0, sir::Interval::End + 1}}));
+  EXPECT_EQ(interval, (MultiInterval{Interval{0, 1},
+                                     Interval{sir::Interval::End - 2, sir::Interval::End + 1}}));
 }
 
 TEST_F(MultiStageTest, test_field_access_interval_04) {
@@ -462,7 +456,7 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_03) {
   int accessID = stencilInstantiation->getAccessIDFromName("tmp");
   auto interval0 = mss0->computeReadAccessInterval(accessID);
 
-  EXPECT_EQ(interval0, (MultiInterval{Interval{1, sir::Interval::End}}));
+  EXPECT_EQ(interval0, (MultiInterval{Interval{1, sir::Interval::End - 1}}));
 
   auto const& mss1 = *(std::next(mss0it));
   auto interval1 = mss1->computeReadAccessInterval(accessID);

@@ -27,7 +27,8 @@ namespace dawn {
 
 Stage::Stage(StencilInstantiation& context, MultiStage* multiStage, int StageID,
              const Interval& interval)
-    : stencilInstantiation_(context), multiStage_(multiStage), StageID_(StageID), extents_{} {
+    : stencilInstantiation_(context), multiStage_(multiStage), StageID_(StageID),
+      extents_{0, 0, 0, 0, 0, 0} {
   DoMethods_.emplace_back(make_unique<DoMethod>(interval));
 }
 
@@ -184,6 +185,7 @@ void Stage::update() {
 
       for(const auto& accessPair : access->getWriteAccesses()) {
         int AccessID = accessPair.first;
+        Extents const& extents = accessPair.second;
 
         // Does this AccessID correspond to a field access?
         if(!stencilInstantiation_.isField(AccessID)) {
@@ -193,11 +195,12 @@ void Stage::update() {
         }
 
         AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                       doMethod.getInterval());
+                                       extents, doMethod.getInterval());
       }
 
       for(const auto& accessPair : access->getReadAccesses()) {
         int AccessID = accessPair.first;
+        Extents const& extents = accessPair.second;
 
         // Does this AccessID correspond to a field access?
         if(!stencilInstantiation_.isField(AccessID)) {
@@ -207,7 +210,7 @@ void Stage::update() {
         }
 
         AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                      doMethod.getInterval());
+                                      extents, doMethod.getInterval());
       }
 
       const std::shared_ptr<Statement> statement = statementAccessesPair->getStatement();

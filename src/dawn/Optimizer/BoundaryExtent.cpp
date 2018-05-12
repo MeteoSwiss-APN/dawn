@@ -38,7 +38,7 @@ computeBoundaryExtents(const DependencyGraphAccesses* graph) {
 
   for(const auto& AccessIDVertexPair : graph->getVertices()) {
     const Vertex& vertex = AccessIDVertexPair.second;
-    nodeExtents.emplace(vertex.VertexID, Extents{});
+    nodeExtents.emplace(vertex.VertexID, Extents{0, 0, 0, 0, 0, 0});
   }
 
   // Start from the output nodes and follow all paths

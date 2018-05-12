@@ -131,7 +131,7 @@ TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_02) {
 
   ASSERT_TRUE(intervalcoeff1.is_initialized());
 
-  ASSERT_TRUE((*intervalcoeff1 == Interval{0, sir::Interval::End, 11, 1}));
+  EXPECT_EQ(*intervalcoeff1, (Interval{12, sir::Interval::End + 1}));
 }
 
 } // anonymous namespace

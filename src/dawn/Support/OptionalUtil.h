@@ -15,6 +15,8 @@
 #ifndef DAWN_SUPPORT_OPTIONALUTIL_H
 #define DAWN_SUPPORT_OPTIONALUTIL_H
 
+#include <boost/optional.hpp>
+
 namespace dawn {
 
 template <typename T, typename F>

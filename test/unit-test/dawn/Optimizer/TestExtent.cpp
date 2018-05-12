@@ -22,9 +22,9 @@ namespace {
 TEST(ExtentsTest, Construction) {
   Extents extents({-1, 1, 0});
 
-  EXPECT_TRUE((extents[0] == Extent{-1, 0}));
-  EXPECT_TRUE((extents[1] == Extent{0, 1}));
-  EXPECT_TRUE((extents[2] == Extent{0, 0}));
+  EXPECT_EQ(extents[0], (Extent{-1, -1}));
+  EXPECT_EQ(extents[1], (Extent{1, 1}));
+  EXPECT_EQ(extents[2], (Extent{0, 0}));
 }
 
 TEST(ExtentsTest, PointWise) {
@@ -43,7 +43,7 @@ TEST(ExtentsTest, Merge1) {
   extents.merge(extentsToMerge);
 
   EXPECT_TRUE((extents[0] == Extent{-1, 3}));
-  EXPECT_TRUE((extents[1] == Extent{0, 2}));
+  EXPECT_TRUE((extents[1] == Extent{1, 2}));
   EXPECT_TRUE((extents[2] == Extent{0, 1}));
 }
 
@@ -52,8 +52,8 @@ TEST(ExtentsTest, Merge2) {
   Extents extentsToMerge({-2, 2, 0});
   extents.merge(extentsToMerge);
 
-  EXPECT_TRUE((extents[0] == Extent{-2, 0}));
-  EXPECT_TRUE((extents[1] == Extent{0, 2}));
+  EXPECT_TRUE((extents[0] == Extent{-2, -1}));
+  EXPECT_TRUE((extents[1] == Extent{1, 2}));
   EXPECT_TRUE((extents[2] == Extent{0, 0}));
 }
 
@@ -115,7 +115,7 @@ TEST(ExtentsTest, Stringify) {
   Extents extents({1, -1, 2});
   std::stringstream ss;
   ss << extents;
-  EXPECT_STREQ(ss.str().c_str(), "[(0, 1), (-1, 0), (0, 2)]");
+  EXPECT_STREQ(ss.str().c_str(), "[(1, 1), (-1, -1), (2, 2)]");
 }
 
 TEST(ExtentsTest, verticalLoopOrder) {
