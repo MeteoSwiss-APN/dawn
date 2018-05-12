@@ -48,10 +48,12 @@ const DoMethod& Stage::getSingleDoMethod() const {
   return *DoMethods_.front();
 }
 
-boost::optional<Interval> Stage::computeEnclosingAccessInterval(const int accessID) const {
+boost::optional<Interval>
+Stage::computeEnclosingAccessInterval(const int accessID, const bool mergeWithDoInterval) const {
   boost::optional<Interval> interval;
   for(auto const& doMethod : DoMethods_) {
-    boost::optional<Interval> doInterval = doMethod->computeEnclosingAccessInterval(accessID);
+    boost::optional<Interval> doInterval =
+        doMethod->computeEnclosingAccessInterval(accessID, mergeWithDoInterval);
 
     if(doInterval) {
       if(interval)

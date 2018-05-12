@@ -81,11 +81,11 @@ TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_01) {
   std::shared_ptr<Stage> const& stage2 = *stage2_ptr;
 
   boost::optional<Interval> intervalU1 =
-      stage1->computeEnclosingAccessInterval(stencilInstantiation->getAccessIDFromName("u"));
-  boost::optional<Interval> intervalOut1 =
-      stage1->computeEnclosingAccessInterval(stencilInstantiation->getAccessIDFromName("out"));
-  boost::optional<Interval> intervalLap1 =
-      stage1->computeEnclosingAccessInterval(stencilInstantiation->getAccessIDFromName("lap"));
+      stage1->computeEnclosingAccessInterval(stencilInstantiation->getAccessIDFromName("u"), false);
+  boost::optional<Interval> intervalOut1 = stage1->computeEnclosingAccessInterval(
+      stencilInstantiation->getAccessIDFromName("out"), false);
+  boost::optional<Interval> intervalLap1 = stage1->computeEnclosingAccessInterval(
+      stencilInstantiation->getAccessIDFromName("lap"), false);
 
   ASSERT_TRUE(intervalU1.is_initialized());
   ASSERT_TRUE(!intervalOut1.is_initialized());
@@ -95,11 +95,11 @@ TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_01) {
   ASSERT_TRUE((*intervalLap1 == Interval{0, sir::Interval::End, 11, 0}));
 
   boost::optional<Interval> intervalU2 =
-      stage2->computeEnclosingAccessInterval(stencilInstantiation->getAccessIDFromName("u"));
-  boost::optional<Interval> intervalOut2 =
-      stage2->computeEnclosingAccessInterval(stencilInstantiation->getAccessIDFromName("out"));
-  boost::optional<Interval> intervalLap2 =
-      stage2->computeEnclosingAccessInterval(stencilInstantiation->getAccessIDFromName("lap"));
+      stage2->computeEnclosingAccessInterval(stencilInstantiation->getAccessIDFromName("u"), false);
+  boost::optional<Interval> intervalOut2 = stage2->computeEnclosingAccessInterval(
+      stencilInstantiation->getAccessIDFromName("out"), false);
+  boost::optional<Interval> intervalLap2 = stage2->computeEnclosingAccessInterval(
+      stencilInstantiation->getAccessIDFromName("lap"), false);
 
   ASSERT_TRUE(intervalU2.is_initialized());
   ASSERT_TRUE(intervalOut2.is_initialized());
@@ -126,8 +126,8 @@ TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_02) {
   auto stage1_ptr = mss->getStages().begin();
   std::shared_ptr<Stage> const& stage1 = *stage1_ptr;
 
-  boost::optional<Interval> intervalcoeff1 =
-      stage1->computeEnclosingAccessInterval(stencilInstantiation->getAccessIDFromName("coeff"));
+  boost::optional<Interval> intervalcoeff1 = stage1->computeEnclosingAccessInterval(
+      stencilInstantiation->getAccessIDFromName("coeff"), false);
 
   ASSERT_TRUE(intervalcoeff1.is_initialized());
 

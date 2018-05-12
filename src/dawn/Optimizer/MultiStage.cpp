@@ -234,10 +234,13 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
   return readInterval;
 }
 
-boost::optional<Interval> MultiStage::computeEnclosingAccessInterval(const int accessID) const {
+boost::optional<Interval>
+MultiStage::computeEnclosingAccessInterval(const int accessID,
+                                           const bool mergeWithDoInterval) const {
   boost::optional<Interval> interval;
   for(auto const& stage : stages_) {
-    boost::optional<Interval> doInterval = stage->computeEnclosingAccessInterval(accessID);
+    boost::optional<Interval> doInterval =
+        stage->computeEnclosingAccessInterval(accessID, mergeWithDoInterval);
 
     if(doInterval) {
       if(interval)

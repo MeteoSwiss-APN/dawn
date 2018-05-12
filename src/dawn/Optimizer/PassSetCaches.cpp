@@ -275,7 +275,8 @@ CacheCandidate computeCacheCandidateForMS(Field const& field, bool isTemporaryFi
                                           MultiStage const& MS) {
 
   if(field.getIntend() == Field::IK_Input) {
-    boost::optional<Interval> interval = MS.computeEnclosingAccessInterval(field.getAccessID());
+    boost::optional<Interval> interval =
+        MS.computeEnclosingAccessInterval(field.getAccessID(), true);
     // make sure the access interval has the same boundaries as from any interval of the mss
     interval->merge(field.getInterval());
     DAWN_ASSERT(interval.is_initialized());
@@ -294,9 +295,10 @@ CacheCandidate computeCacheCandidateForMS(Field const& field, bool isTemporaryFi
 
   if(field.getIntend() == Field::IK_InputOutput) {
 
-    boost::optional<Interval> interval = MS.computeEnclosingAccessInterval(field.getAccessID());
+    boost::optional<Interval> interval =
+        MS.computeEnclosingAccessInterval(field.getAccessID(), true);
     // make sure the access interval has the same boundaries as from any interval of the mss
-    interval->merge(field.getInterval());
+    //    interval->merge(field.getInterval());
 
     DAWN_ASSERT(interval.is_initialized());
 
@@ -664,9 +666,10 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
             //              continue;
           }
 
+          // TODO what is this? Do we need it?
           Interval interval = field.getInterval();
           if(cacheCandidate.policy_ == Cache::CacheIOPolicy::fill) {
-            auto interval_ = MS.computeEnclosingAccessInterval(field.getAccessID());
+            auto interval_ = MS.computeEnclosingAccessInterval(field.getAccessID(), true);
             DAWN_ASSERT(interval_.is_initialized());
             interval = *interval_;
           }

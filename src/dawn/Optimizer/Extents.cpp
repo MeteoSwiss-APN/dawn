@@ -39,6 +39,16 @@ Extents::Extents(int extent1Minus, int extent1Plus, int extent2Minus, int extent
                               Extent{extent3Minus, extent3Plus}}}));
 }
 
+// TODO Unittest this
+void Extents::addCenter(const unsigned int dim) {
+  DAWN_ASSERT(dim < 3);
+  if(extents_.is_initialized()) {
+    (*extents_)[dim].Minus = std::min(0, (*extents_)[dim].Minus);
+    (*extents_)[dim].Plus = std::max(0, (*extents_)[dim].Plus);
+  } else
+    extents_ = boost::make_optional(std::array<Extent, 3>{});
+}
+
 void Extents::merge(const Extents& other) {
   auto& extents = getExtents();
 

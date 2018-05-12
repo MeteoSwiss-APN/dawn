@@ -162,6 +162,8 @@ public:
   /// @brief Check if Extent is empty
   bool empty();
 
+  void addCenter(const unsigned int dim);
+
   /// @brief Check if extent in is pointwise (i.e equal to `{0, 0, 0, 0, 0, 0}`)
   bool isPointwise() const;
 

@@ -65,13 +65,18 @@ boost::optional<Extents> DoMethod::computeMaximumExtents(const int accessID) con
   return extents;
 }
 
-boost::optional<Interval> DoMethod::computeEnclosingAccessInterval(const int accessID) const {
+// TODO unittest this with mergeWithDoInterval
+boost::optional<Interval>
+DoMethod::computeEnclosingAccessInterval(const int accessID, const bool mergeWithDoInterval) const {
   boost::optional<Interval> interval;
 
   boost::optional<Extents>&& extents = computeMaximumExtents(accessID);
 
-  if(extents.is_initialized())
+  if(extents.is_initialized()) {
+    if(mergeWithDoInterval)
+      extents->addCenter(2);
     return boost::make_optional<Interval>(getInterval())->extendInterval(*extents);
+  }
   return interval;
 }
 

@@ -105,7 +105,8 @@ public:
   Cache& setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy policy, int AccessID);
 
   /// @brief computes the interval where an accessId is used (extended by the extent of the access)
-  boost::optional<Interval> computeEnclosingAccessInterval(const int accessID) const;
+  boost::optional<Interval> computeEnclosingAccessInterval(const int accessID,
+                                                           const bool mergeWithDoInterval) const;
 
   /// @brief Is the field given by the `AccessID` cached?
   bool isCached(int AccessID) const { return caches_.count(AccessID); }
