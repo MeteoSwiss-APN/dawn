@@ -103,8 +103,9 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil) : Ax
   for(int i = 0; i < numStages; ++i) {
     const std::shared_ptr<Stage>& stagePtr = stencil.getStage(i);
 
-    StageIntervals.emplace(stagePtr, Interval::computeGapIntervals(Axis, stagePtr->getIntervals()));
-    for(auto const& interval : stagePtr->getIntervals()) {
+    auto gapIntervals = Interval::computeGapIntervals(Axis, stagePtr->getIntervals());
+    StageIntervals.emplace(stagePtr, gapIntervals);
+    for(auto const& interval : gapIntervals) {
       intervalProperties_.insert(interval);
     }
   }
@@ -338,7 +339,6 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     };
 
     // Generate typedefs for the individual intervals
-    std::set<std::string> insertedIntervalNames_;
     auto codeGenInterval = [&](std::string const& name, Interval const& interval) {
       StencilClass.addTypeDef(name)
           .addType(c_gt() + "interval")
@@ -349,19 +349,6 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
 
     for(const auto& intervalProperties : intervalDefinitions.intervalProperties_) {
       codeGenInterval(intervalProperties.name_, intervalProperties.interval_);
-
-      insertedIntervalNames_.insert(intervalProperties.name_);
-    }
-    // GT HACK DOMETHOD
-    for(const auto& intervalPair : intervalDefinitions.StageIntervals) {
-      for(const auto interval : intervalPair.second) {
-        std::string intervName = Interval::makeCodeGenName(interval);
-
-        if(insertedIntervalNames_.count(intervName))
-          continue;
-        codeGenInterval(intervName, interval);
-        insertedIntervalNames_.insert(intervName);
-      }
     }
 
     ASTStencilBody stencilBodyCGVisitor(stencilInstantiation,
