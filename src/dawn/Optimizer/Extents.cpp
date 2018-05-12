@@ -167,8 +167,6 @@ boost::optional<Extent> Extents::getVerticalLoopOrderExtent(LoopOrderKind loopOr
     if(verticalExtent.Plus < (includeCenter ? 0 : 1))
       return boost::optional<Extent>();
 
-    std::cout << "Suite" << verticalExtent.Minus << " " << verticalExtent.Plus << std::endl;
-
     // Accesses k+1 are against the loop order
     return boost::make_optional(
         Extent{std::max((includeCenter ? 0 : 1), verticalExtent.Minus), verticalExtent.Plus});
@@ -180,7 +178,6 @@ boost::optional<Extent> Extents::getVerticalLoopOrderExtent(LoopOrderKind loopOr
     if(verticalExtent.Minus > (includeCenter ? 0 : -1))
       return boost::optional<Extent>();
 
-    std::cout << "suite" << verticalExtent.Minus << " " << verticalExtent.Plus << std::endl;
     // Accesses k-1 are against the loop order
     return boost::make_optional(
         Extent{verticalExtent.Minus, std::min((includeCenter ? 0 : -1), verticalExtent.Plus)});

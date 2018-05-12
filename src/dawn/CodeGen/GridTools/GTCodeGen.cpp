@@ -57,10 +57,7 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil) : Ax
   auto intervals = stencil.getIntervals();
   std::transform(intervals.begin(), intervals.end(),
                  std::inserter(intervalProperties_, intervalProperties_.begin()),
-                 [](Interval const& i) {
-                   std::cout << "INIINS ggg " << i << std::endl;
-                   return IntervalProperties{i};
-                 });
+                 [](Interval const& i) { return IntervalProperties{i}; });
 
   DAWN_ASSERT(!intervalProperties_.empty());
 
@@ -108,7 +105,6 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil) : Ax
 
     StageIntervals.emplace(stagePtr, Interval::computeGapIntervals(Axis, stagePtr->getIntervals()));
     for(auto const& interval : stagePtr->getIntervals()) {
-      std::cout << "INS ggg " << interval << std::endl;
       intervalProperties_.insert(interval);
     }
   }
@@ -613,7 +609,6 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
           auto DoMethodCodeGen =
               StageStruct.addMemberFunction("GT_FUNCTION static void", "Do", "typename Evaluation");
           DoMethodCodeGen.addArg(DoMethodArg);
-          std::cout << "ggg " << doMethod.getInterval() << std::endl;
           DAWN_ASSERT(intervalDefinitions.intervalProperties_.count(
               IntervalProperties{doMethod.getInterval()}));
           DoMethodCodeGen.addArg(

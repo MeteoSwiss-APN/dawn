@@ -169,9 +169,7 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
   }
 
   for(const auto& doMethod : orderedDoMethods) {
-    std::cout << "INDO " << doMethod.getInterval() << std::endl;
     for(const auto& statementAccesssPair : doMethod.getStatementAccessesPairs()) {
-      std::cout << "INSTATEMENT " << (statementAccesssPair->getStatement())->ASTStmt << std::endl;
       const Accesses& accesses = *statementAccesssPair->getAccesses();
       // indepdently of whether the statement has also a write access, if there is a read
       // access, it should happen in the RHS so first
@@ -184,29 +182,16 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
         Interval computingInterval = doMethod.getInterval();
 
         if(readAccessInLoopOrder.is_initialized()) {
-          std::cout << "INSERT " << (*readAccessInLoopOrder).Minus << " "
-                    << (*readAccessInLoopOrder).Plus << std::endl;
           interv.insert(computingInterval.extendInterval(*readAccessInLoopOrder));
         }
-        std::cout << "After CounterLoop " << interv << accesses.hasWriteAccess(accessID)
-                  << std::endl;
         if(!writeIntervalPre.empty()) {
           interv.substract(writeIntervalPre);
         }
-        std::cout << "After Write " << interv << std::endl;
 
         if(readAccessExtent.hasVerticalCenter()) {
           auto centerAccessInterval = substract(computingInterval, writeInterval);
-          std::cout << "WRIIN " << writeInterval << "  KKK " << computingInterval << " g "
-                    << centerAccessInterval << std::endl;
           interv.insert(centerAccessInterval);
-          std::cout << "After Add Center " << interv << " "
-                    << readAccessExtent.getExtents()[2].Minus << " "
-                    << readAccessExtent.getExtents()[2].Plus << std::endl;
         }
-        //        if(!writeInterval.empty()) {
-        //          interv.substract(writeInterval);
-        //        }
 
         boost::optional<Extent> readAccessCounterLoopOrder =
             readAccessExtent.getVerticalLoopOrderExtent(
@@ -214,19 +199,12 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
 
         if(readAccessCounterLoopOrder.is_initialized()) {
           interv.insert(computingInterval.extendInterval(*readAccessCounterLoopOrder));
-
-          std::cout << "READLOOPORDER " << (*readAccessCounterLoopOrder).Minus << ","
-                    << (*readAccessCounterLoopOrder).Plus << std::endl;
-          std::cout << "After LoopOrder " << interv << std::endl;
         }
 
         readInterval.insert(interv);
-        std::cout << "After udpate " << readInterval << std::endl;
       }
       if(accesses.hasWriteAccess(accessID)) {
-        std::cout << "UPD " << doMethod.getInterval() << " " << writeInterval << std::endl;
         writeInterval.insert(doMethod.getInterval());
-        std::cout << "UPD " << doMethod.getInterval() << " " << writeInterval << std::endl;
       }
     }
   }
