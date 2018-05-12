@@ -102,15 +102,9 @@ reportAccessesImpl(FieldAccessIDToStringFunctionType&& fieldAccessIDToStringFunc
 void Accesses::mergeReadOffset(int AccessID, const Array3i& offset) {
   auto it = readAccesses_.find(AccessID);
   if(it != readAccesses_.end()) {
-    std::cout << "APP " << offset << std::endl;
     it->second.merge(offset);
-    std::cout << "APP " << it->second << std::endl;
-
   } else {
-    std::cout << "Emp " << offset << " " << Extents(offset) << std::endl;
-
     readAccesses_.emplace(AccessID, Extents(offset));
-    std::cout << "Emp " << readAccesses_[AccessID] << std::endl;
   }
 }
 
