@@ -42,22 +42,16 @@ public:
   Field(Field&& f) = default;
   Field(Field const& f) = default;
 
-  Field(int accessID, IntendKind intend, Extents const& readExtents, Extents const& writeExtents,
-        Interval const& interval)
+  Field(int accessID, IntendKind intend, boost::optional<Extents> const& readExtents,
+        boost::optional<Extents> const& writeExtents, Interval const& interval)
       : accessID_(accessID), intend_(intend),
-        extents_(FieldAccessExtents(readExtents, writeExtents)), interval_(interval) {
-    std::cout << "CREATING F " << readExtents << " " << writeExtents << " " << accessID_
-              << std::endl;
-  }
+        extents_(FieldAccessExtents(readExtents, writeExtents)), interval_(interval) {}
 
-  Field(int accessID, IntendKind intend, Extents&& readExtents, Extents&& writeExtents,
-        Interval&& interval)
+  Field(int accessID, IntendKind intend, boost::optional<Extents>&& readExtents,
+        boost::optional<Extents>&& writeExtents, Interval&& interval)
       : accessID_(accessID), intend_(intend),
         extents_(FieldAccessExtents(std::move(readExtents), std::move(writeExtents))),
-        interval_(std::move(interval)) {
-    std::cout << "CREATING F " << readExtents << " " << writeExtents << " " << accessID_
-              << std::endl;
-  }
+        interval_(std::move(interval)) {}
 
   /// @name Operators
   /// @{
@@ -82,8 +76,8 @@ public:
     return accessedInterval;
   }
 
-  Extents const& getReadExtents() const { return extents_.getReadExtents(); }
-  Extents const& getWriteExtents() const { return extents_.getWriteExtents(); }
+  boost::optional<Extents> const& getReadExtents() const { return extents_.getReadExtents(); }
+  boost::optional<Extents> const& getWriteExtents() const { return extents_.getWriteExtents(); }
 
   Extents const& getExtents() const { return extents_.getExtents(); }
 
@@ -98,6 +92,12 @@ public:
 
   void mergeReadExtents(Extents const& extents) { extents_.mergeReadExtents(extents); }
   void mergeWriteExtents(Extents const& extents) { extents_.mergeWriteExtents(extents); }
+  void mergeReadExtents(boost::optional<Extents> const& extents) {
+    extents_.mergeReadExtents(extents);
+  }
+  void mergeWriteExtents(boost::optional<Extents> const& extents) {
+    extents_.mergeWriteExtents(extents);
+  }
 
   void extendInterval(Interval const& interval) { interval_.merge(interval); }
 };

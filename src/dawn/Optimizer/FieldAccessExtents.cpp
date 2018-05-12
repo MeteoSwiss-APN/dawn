@@ -16,17 +16,38 @@
 
 namespace dawn {
 void FieldAccessExtents::mergeReadExtents(Extents const& extents) {
-  readAccessExtents_.merge(extents);
+  if(readAccessExtents_.is_initialized())
+    readAccessExtents_->merge(extents);
+  else
+    readAccessExtents_ = boost::make_optional(extents);
   updateTotalExtents();
 }
 void FieldAccessExtents::mergeWriteExtents(Extents const& extents) {
-  writeAccessExtents_.merge(extents);
+  if(writeAccessExtents_.is_initialized())
+    writeAccessExtents_->merge(extents);
+  else
+    writeAccessExtents_ = boost::make_optional(extents);
+
   updateTotalExtents();
 }
 
+void FieldAccessExtents::mergeReadExtents(boost::optional<Extents> const& extents) {
+  if(extents.is_initialized())
+    mergeReadExtents(*extents);
+}
+void FieldAccessExtents::mergeWriteExtents(boost::optional<Extents> const& extents) {
+  if(extents.is_initialized())
+    mergeWriteExtents(*extents);
+}
+
 void FieldAccessExtents::updateTotalExtents() {
-  totalExtents_ = readAccessExtents_;
-  totalExtents_.merge(writeAccessExtents_);
+  if(readAccessExtents_.is_initialized()) {
+    totalExtents_ = *readAccessExtents_;
+    if(writeAccessExtents_.is_initialized())
+      totalExtents_.merge(*writeAccessExtents_);
+  } else if(writeAccessExtents_.is_initialized()) {
+    totalExtents_ = *writeAccessExtents_;
+  }
 }
 
 } // namespace dawn

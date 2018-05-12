@@ -23,7 +23,8 @@ namespace dawn {
 class FieldAccessExtents {
 
 public:
-  FieldAccessExtents(Extents const& readExtents, Extents const& writeExtents)
+  FieldAccessExtents(boost::optional<Extents> const& readExtents,
+                     boost::optional<Extents> const& writeExtents)
       : readAccessExtents_(readExtents), writeAccessExtents_(writeExtents) {
     updateTotalExtents();
   }
@@ -31,19 +32,20 @@ public:
   FieldAccessExtents(FieldAccessExtents&&) = default;
   FieldAccessExtents(FieldAccessExtents const&) = default;
 
-  Extents const& getReadExtents() const { return readAccessExtents_; }
-  Extents const& getWriteExtents() const { return writeAccessExtents_; }
+  boost::optional<Extents> const& getReadExtents() const { return readAccessExtents_; }
+  boost::optional<Extents> const& getWriteExtents() const { return writeAccessExtents_; }
   Extents const& getExtents() const { return totalExtents_; }
 
   void mergeReadExtents(Extents const& extents);
-
   void mergeWriteExtents(Extents const& extents);
+  void mergeReadExtents(boost::optional<Extents> const& extents);
+  void mergeWriteExtents(boost::optional<Extents> const& extents);
 
 private:
   void updateTotalExtents();
 
-  Extents readAccessExtents_;
-  Extents writeAccessExtents_;
+  boost::optional<Extents> readAccessExtents_;
+  boost::optional<Extents> writeAccessExtents_;
   Extents totalExtents_;
 };
 
