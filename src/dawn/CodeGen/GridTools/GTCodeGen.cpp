@@ -57,7 +57,10 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil) : Ax
   auto intervals = stencil.getIntervals();
   std::transform(intervals.begin(), intervals.end(),
                  std::inserter(intervalProperties_, intervalProperties_.begin()),
-                 [](Interval const& i) { return IntervalProperties{i}; });
+                 [](Interval const& i) {
+                   std::cout << "INIINS ggg " << i << std::endl;
+                   return IntervalProperties{i};
+                 });
 
   DAWN_ASSERT(!intervalProperties_.empty());
 
@@ -95,7 +98,8 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil) : Ax
     }
   }
 
-  // Compute the intervals required by each stage. Note that each stage needs to have Do-Methods
+  // GT HACK DOMETHOD: Compute the intervals required by each stage. Note that each stage needs to
+  // have Do-Methods
   // for the entire axis, this means we may need to add empty Do-Methods
   // See https://github.com/eth-cscs/gridtools/issues/330
   int numStages = stencil.getNumStages();
@@ -103,6 +107,10 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil) : Ax
     const std::shared_ptr<Stage>& stagePtr = stencil.getStage(i);
 
     StageIntervals.emplace(stagePtr, Interval::computeGapIntervals(Axis, stagePtr->getIntervals()));
+    for(auto const& interval : stagePtr->getIntervals()) {
+      std::cout << "INS ggg " << interval << std::endl;
+      intervalProperties_.insert(interval);
+    }
   }
 }
 
@@ -334,13 +342,30 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     };
 
     // Generate typedefs for the individual intervals
-    for(const auto& intervalProperties : intervalDefinitions.intervalProperties_) {
-      StencilClass.addTypeDef(intervalProperties.name_)
+    std::set<std::string> insertedIntervalNames_;
+    auto codeGenInterval = [&](std::string const& name, Interval const& interval) {
+      StencilClass.addTypeDef(name)
           .addType(c_gt() + "interval")
-          .addTemplates(makeArrayRef({makeLevelName(intervalProperties.interval_.lowerLevel(),
-                                                    intervalProperties.interval_.lowerOffset()),
-                                      makeLevelName(intervalProperties.interval_.upperLevel(),
-                                                    intervalProperties.interval_.upperOffset())}));
+          .addTemplates(
+              makeArrayRef({makeLevelName(interval.lowerLevel(), interval.lowerOffset()),
+                            makeLevelName(interval.upperLevel(), interval.upperOffset())}));
+    };
+
+    for(const auto& intervalProperties : intervalDefinitions.intervalProperties_) {
+      codeGenInterval(intervalProperties.name_, intervalProperties.interval_);
+
+      insertedIntervalNames_.insert(intervalProperties.name_);
+    }
+    // GT HACK DOMETHOD
+    for(const auto& intervalPair : intervalDefinitions.StageIntervals) {
+      for(const auto interval : intervalPair.second) {
+        std::string intervName = Interval::makeCodeGenName(interval);
+
+        if(insertedIntervalNames_.count(intervName))
+          continue;
+        codeGenInterval(intervName, interval);
+        insertedIntervalNames_.insert(intervName);
+      }
     }
 
     ASTStencilBody stencilBodyCGVisitor(stencilInstantiation,
@@ -588,7 +613,9 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
           auto DoMethodCodeGen =
               StageStruct.addMemberFunction("GT_FUNCTION static void", "Do", "typename Evaluation");
           DoMethodCodeGen.addArg(DoMethodArg);
-          DAWN_ASSERT(intervalDefinitions.intervalProperties_.count(doMethod.getInterval()));
+          std::cout << "ggg " << doMethod.getInterval() << std::endl;
+          DAWN_ASSERT(intervalDefinitions.intervalProperties_.count(
+              IntervalProperties{doMethod.getInterval()}));
           DoMethodCodeGen.addArg(
               intervalDefinitions.intervalProperties_.find(doMethod.getInterval())->name_);
           DoMethodCodeGen.startBody();
