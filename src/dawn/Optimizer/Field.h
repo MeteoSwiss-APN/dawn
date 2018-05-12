@@ -45,13 +45,19 @@ public:
   Field(int accessID, IntendKind intend, Extents const& readExtents, Extents const& writeExtents,
         Interval const& interval)
       : accessID_(accessID), intend_(intend),
-        extents_(FieldAccessExtents(readExtents, writeExtents)), interval_(interval) {}
+        extents_(FieldAccessExtents(readExtents, writeExtents)), interval_(interval) {
+    std::cout << "CREATING F " << readExtents << " " << writeExtents << " " << accessID_
+              << std::endl;
+  }
 
   Field(int accessID, IntendKind intend, Extents&& readExtents, Extents&& writeExtents,
         Interval&& interval)
       : accessID_(accessID), intend_(intend),
         extents_(FieldAccessExtents(std::move(readExtents), std::move(writeExtents))),
-        interval_(std::move(interval)) {}
+        interval_(std::move(interval)) {
+    std::cout << "CREATING F " << readExtents << " " << writeExtents << " " << accessID_
+              << std::endl;
+  }
 
   /// @name Operators
   /// @{

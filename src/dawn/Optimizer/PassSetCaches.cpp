@@ -596,15 +596,23 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
           // Field has horizontal extents, can't be k-cached
           if(!field.getExtents().isHorizontalPointwise())
             continue;
-
+          std::cout << " JJ " << MSIndex << " "
+                    << instantiation->getNameFromAccessID(field.getAccessID()) << " "
+                    << field.getWriteExtents() << std::endl;
           // we dont know how to cache fields with out of center writes
           if(!field.getWriteExtents().isPointwise())
             continue;
+
+          std::cout << " JJ1 " << instantiation->getNameFromAccessID(field.getAccessID())
+                    << field.getExtents().isPointwise() << std::endl;
 
           if(!instantiation->isTemporaryField(field.getAccessID()) &&
              (field.getIntend() == Field::IK_Output ||
               (field.getIntend() == Field::IK_Input && field.getExtents().isPointwise())))
             continue;
+
+          std::cout << " JJ2 " << field.getExtents().isPointwise() << " "
+                    << instantiation->getNameFromAccessID(field.getAccessID()) << std::endl;
 
           // Determine if we need to fill the cache by analyzing the current multi-stage
           CacheCandidate cacheCandidate = computeCacheCandidateForMS(
