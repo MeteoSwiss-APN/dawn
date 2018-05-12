@@ -414,8 +414,11 @@ void StencilFunctionInstantiation::update() {
       if(!isProvidedByStencilFunctionCall(AccessID) && !stencilInstantiation_->isField(AccessID))
         continue;
 
+      // TODO here using extents of accessPair.second creates a bug
+      // (delta_k_minus_1_interval_11_plus_1_end_0 of fast_waves_sc_prepare_lhs_gen.cpp has wrong
+      // accessor extent)
       AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                     extents, interval_);
+                                     Extents{0, 0, 0, 0, 0, 0}, interval_);
     }
 
     for(const auto& accessPair : access->getReadAccesses()) {
@@ -426,8 +429,11 @@ void StencilFunctionInstantiation::update() {
       if(!isProvidedByStencilFunctionCall(AccessID) && !stencilInstantiation_->isField(AccessID))
         continue;
 
-      AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID, extents,
-                                    interval_);
+      // TODO here using extents of accessPair.second creates a bug
+      // (delta_k_minus_1_interval_11_plus_1_end_0 of fast_waves_sc_prepare_lhs_gen.cpp has wrong
+      // accessor extent)
+      AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
+                                    Extents{0, 0, 0, 0, 0, 0}, interval_);
     }
   }
 
