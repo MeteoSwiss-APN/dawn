@@ -193,12 +193,8 @@ void Stage::update() {
             globalVariables_.insert(AccessID);
           continue;
         }
-        std::cout << "RECORDING WRITE " << extents << " "
-                  << stencilInstantiation_.getNameFromAccessID(AccessID) << " " << AccessID
-                  << std::endl;
         AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
                                        extents, doMethod.getInterval());
-        std::cout << "out " << std::endl;
       }
 
       for(const auto& accessPair : access->getReadAccesses()) {
@@ -211,9 +207,6 @@ void Stage::update() {
             globalVariables_.insert(AccessID);
           continue;
         }
-
-        std::cout << "RECORDING READ " << extents << " "
-                  << stencilInstantiation_.getNameFromAccessID(AccessID) << std::endl;
 
         AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
                                       extents, doMethod.getInterval());
