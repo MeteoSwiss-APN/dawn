@@ -348,7 +348,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
       listOfArguments.pop_back();
       listOfArguments.pop_back();
     }
-    stencilType = "computation<void, " + listOfArguments + ">";
+    stencilType = "std::shared_ptr<computation<void, " + listOfArguments + ">>";
     StencilClass.addMember(stencilType, "m_stencil");
     //    StencilClass.addMember("std::shared_ptr< gridtools::stencil<gridtools::notype> >",
     //    "m_stencil");
