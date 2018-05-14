@@ -60,7 +60,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
   int StencilID = instantiation_->getStencilCallToStencilIDMap().find(stmt)->second;
 
   for(const std::string& stencilName : StencilIDToStencilNameMap_.find(StencilID)->second) {
-    ss_ << std::string(indent_, ' ') << stencilName << ".get_stencil()->run();\n";
+    ss_ << std::string(indent_, ' ') << stencilName << ".get_stencil().run();\n";
   }
 }
 
