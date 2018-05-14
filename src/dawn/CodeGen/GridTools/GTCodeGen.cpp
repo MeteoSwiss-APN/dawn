@@ -868,13 +868,13 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     int idx;
     for(idx = 0; idx < stencilInstantiation->getStencils().size(); ++idx) {
       timing << "case " << idx << ":\n"
-             << "return m_stencil_" << idx << ".get_stencil()->get_name()+\":\\t\"+"
-             << "m_stencil_" << idx << ".get_stencil()->get_meter();";
+             << "return m_stencil_" << idx << ".get_name()+\":\\t\"+"
+             << "std::to_string(m_stencil_" << idx << ".get_stencil().get_meter());";
     }
-    timing << "case -1 :\n"
+    timing << "case -1 :\n";
     std::string s = RangeToString("\n", "", "")(stencilMembers, [](const std::string& member) {
-      return "retval += " + member + ".get_stencil()->get_name()+\":\\t\"+" + member +
-             ".get_stencil()->get_meter()+\"\\n\";";
+      return "retval += " + member + ".get_name()+\":\\t\"+ std::to_string(" + member +
+             ".get_stencil().get_meter())+\"\\n\";";
     });
     timing << s;
     timing << "return retval;";
@@ -894,7 +894,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
   // Generate name getter
   StencilWrapperClass.addMemberFunction("const char*", "get_name")
       .isConst(true)
-      .addStatement("return s_name");
+      .addStatement("return std::string(s_name)");
 
   StencilWrapperClass.commit();
 
