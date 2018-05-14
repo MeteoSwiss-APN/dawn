@@ -305,53 +305,54 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     //////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////
     // Fields
-    std::vector<Stencil::FieldInfo> StencilFields_a = stencil.getFields();
-    std::vector<std::string> StencilGlobalVariables_a = stencil.getGlobalVariables();
-    std::size_t numFields_a = StencilFields_a.size();
-    std::string listOfArguments;
-    int accessorIdx = 0;
-    for(; accessorIdx < numFields_a; ++accessorIdx)
-      if(StencilFields_a[accessorIdx].IsTemporary == false) {
-        Array3i fieldDimensions = StencilFields_a[accessorIdx].Dimensions;
-        std::string extents = "storage_";
-        extents += fieldDimensions[0] ? "i" : "";
-        extents += fieldDimensions[1] ? "j" : "";
-        extents += fieldDimensions[2] ? "k" : "";
+    //    std::vector<Stencil::FieldInfo> StencilFields_a = stencil.getFields();
+    //    std::vector<std::string> StencilGlobalVariables_a = stencil.getGlobalVariables();
+    //    std::size_t numFields_a = StencilFields_a.size();
+    //    std::string listOfArguments;
+    //    int accessorIdx = 0;
+    //    for(; accessorIdx < numFields_a; ++accessorIdx)
+    //      if(StencilFields_a[accessorIdx].IsTemporary == false) {
+    //        Array3i fieldDimensions = StencilFields_a[accessorIdx].Dimensions;
+    //        std::string extents = "storage_";
+    //        extents += fieldDimensions[0] ? "i" : "";
+    //        extents += fieldDimensions[1] ? "j" : "";
+    //        extents += fieldDimensions[2] ? "k" : "";
 
-        //          StencilClass.addComment(extents + " " + StencilFields_a[accessorIdx].Name);
-        extents += "_t";
+    //        //          StencilClass.addComment(extents + " " +
+    //        StencilFields_a[accessorIdx].Name);
+    //        extents += "_t";
 
-        StencilClass.addTypeDef("p_" + StencilFields_a[accessorIdx].Name)
-            .addType(c_gt() + "arg")
-            .addTemplate(Twine(accessorIdx))
-            .addTemplate(extents);
-        listOfArguments += "p_" + StencilFields_a[accessorIdx].Name + ", ";
-      } else {
-        StencilClass.addTypeDef("p_" + StencilFields_a[accessorIdx].Name)
-            .addType(c_gt() + "tmp_arg")
-            .addTemplate(Twine(accessorIdx))
-            .addTemplate("storage_t");
-      }
-    for(; accessorIdx < (numFields_a + StencilGlobalVariables_a.size()); ++accessorIdx) {
-      // Global variables
-      const auto& varname = StencilGlobalVariables_a[accessorIdx - numFields_a];
-      StencilClass.addTypeDef("p_" + StencilGlobalVariables_a[accessorIdx - numFields_a])
-          .addType(c_gt() + "arg")
-          .addTemplate(Twine(accessorIdx))
-          .addTemplate("typename std::decay<decltype(globals::get()." + varname +
-                       ".as_global_parameter())>::type");
-      listOfArguments += "p_" + StencilGlobalVariables_a[accessorIdx - numFields_a] + ", ";
-    }
-    // wittodo: proper calls, read extents
+    //        StencilClass.addTypeDef("p_" + StencilFields_a[accessorIdx].Name)
+    //            .addType(c_gt() + "arg")
+    //            .addTemplate(Twine(accessorIdx))
+    //            .addTemplate(extents);
+    //        listOfArguments += "p_" + StencilFields_a[accessorIdx].Name + ", ";
+    //      } else {
+    //        StencilClass.addTypeDef("p_" + StencilFields_a[accessorIdx].Name)
+    //            .addType(c_gt() + "tmp_arg")
+    //            .addTemplate(Twine(accessorIdx))
+    //            .addTemplate("storage_t");
+    //      }
+    //    for(; accessorIdx < (numFields_a + StencilGlobalVariables_a.size()); ++accessorIdx) {
+    //      // Global variables
+    //      const auto& varname = StencilGlobalVariables_a[accessorIdx - numFields_a];
+    //      StencilClass.addTypeDef("p_" + StencilGlobalVariables_a[accessorIdx - numFields_a])
+    //          .addType(c_gt() + "arg")
+    //          .addTemplate(Twine(accessorIdx))
+    //          .addTemplate("typename std::decay<decltype(globals::get()." + varname +
+    //                       ".as_global_parameter())>::type");
+    //      listOfArguments += "p_" + StencilGlobalVariables_a[accessorIdx - numFields_a] + ", ";
+    //    }
+    //    // wittodo: proper calls, read extents
 
-    if(listOfArguments.size() > 2) {
-      listOfArguments.pop_back();
-      listOfArguments.pop_back();
-    }
-    stencilType = "std::shared_ptr<computation<void, " + listOfArguments + ">>";
-    StencilClass.addMember(stencilType, "m_stencil");
+    //    if(listOfArguments.size() > 2) {
+    //      listOfArguments.pop_back();
+    //      listOfArguments.pop_back();
+    //    }
     //    StencilClass.addMember("std::shared_ptr< gridtools::stencil<gridtools::notype> >",
     //    "m_stencil");
+    stencilType = "computation<void>";
+    StencilClass.addMember(stencilType, "m_stencil");
 
     //
     // Generate stencil functions code for stencils instantiated by this stencil
@@ -518,7 +519,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
           return "";
         }
 
-        accessorIdx = 0;
+        std::size_t accessorIdx = 0;
         for(; accessorIdx < fields.size(); ++accessorIdx) {
           const auto& field = fields[accessorIdx];
           std::string paramName = stencilInstantiation->getNameFromAccessID(field.getAccessID());
@@ -624,34 +625,37 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
 
     StencilConstructor.startBody();
 
-    // Generate domain
-    //    StencilConstructor.addComment("Domain");
-    //    accessorIdx = 0;
+    // Generate domain StencilConstructor.addComment("Domain");
+    int accessorIdx = 0;
 
-    //    for(; accessorIdx < numFields; ++accessorIdx)
-    //      // Fields
-    //      StencilConstructor.addTypeDef("p_" + StencilFields[accessorIdx].Name)
-    //          .addType(c_gt() + (StencilFields[accessorIdx].IsTemporary ? "tmp_arg" : "arg"))
-    //          .addTemplate(Twine(accessorIdx))
-    //          .addTemplate(StencilFields[accessorIdx].IsTemporary
-    //                           ? "storage_t"
-    //                           : StencilConstructorTemplates[accessorIdx - numTemporaries]);
+    for(; accessorIdx < numFields; ++accessorIdx)
+      // Fields
+      StencilConstructor.addTypeDef("p_" + StencilFields[accessorIdx].Name)
+          .addType(c_gt() + (StencilFields[accessorIdx].IsTemporary ? "tmp_arg" : "arg"))
+          .addTemplate(Twine(accessorIdx))
+          .addTemplate(StencilFields[accessorIdx].IsTemporary
+                           ? "storage_t"
+                           : StencilConstructorTemplates[accessorIdx - numTemporaries]);
 
-    //    for(; accessorIdx < (numFields + StencilGlobalVariables.size()); ++accessorIdx) {
-    //      // Global variables
-    //      const auto& varname = StencilGlobalVariables[accessorIdx - numFields];
-    //      StencilConstructor.addTypeDef("p_" + StencilGlobalVariables[accessorIdx - numFields])
-    //          .addType(c_gt() + "arg")
-    //          .addTemplate(Twine(accessorIdx))
-    //          .addTemplate("typename std::decay<decltype(globals::get()." + varname +
-    //                       ".as_global_parameter())>::type");
-    //    }
+    for(; accessorIdx < (numFields + StencilGlobalVariables.size()); ++accessorIdx) {
+      // Global variables
+      const auto& varname = StencilGlobalVariables[accessorIdx - numFields];
+      StencilConstructor.addTypeDef("p_" + StencilGlobalVariables[accessorIdx - numFields])
+          .addType(c_gt() + "arg")
+          .addTemplate(Twine(accessorIdx))
+          .addTemplate("typename std::decay<decltype(globals::get()." + varname +
+                       ".as_global_parameter())>::type");
+    }
 
-    //    std::vector<std::string> ArglistPlaceholders;
-    //    for(const auto& field : StencilFields)
-    //      ArglistPlaceholders.push_back("p_" + field.Name);
-    //    for(const auto& var : StencilGlobalVariables)
-    //      ArglistPlaceholders.push_back("p_" + var);
+    std::vector<std::string> ArglistPlaceholders;
+    for(const auto& field : StencilFields)
+      ArglistPlaceholders.push_back("p_" + field.Name);
+    for(const auto& var : StencilGlobalVariables)
+      ArglistPlaceholders.push_back("p_" + var);
+
+    StencilConstructor.addTypeDef("domain_arg_list")
+        .addType("boost::mpl::vector")
+        .addTemplates(ArglistPlaceholders);
 
     // Placeholders to map the real storages to the placeholders (no temporaries)
     std::vector<std::string> DomainMapPlaceholders;
@@ -703,9 +707,9 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     StencilConstructor.commit();
 
     // Generate destructor
-//    auto dtor = StencilClass.addDestructor();
-//    dtor.addStatement("m_stencil->finalize()");
-//    dtor.commit();
+    //    auto dtor = StencilClass.addDestructor();
+    //    dtor.addStatement("m_stencil->finalize()");
+    //    dtor.commit();
 
     // Generate stencil getter
     StencilClass.addMemberFunction(stencilType, "get_stencil").addStatement("return m_stencil");
@@ -783,16 +787,18 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
   for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i)
     StencilWrapperConstructorTemplates.push_back("S" + std::to_string(i + 1));
 
-  auto StencilWrapperConstructor = StencilWrapperClass.addConstructor(); //(RangeToString(", ", "", "")(
-//      StencilWrapperConstructorTemplates, [](const std::string& str) { return "class " + str; }));
+  auto StencilWrapperConstructor =
+      StencilWrapperClass.addConstructor(); //(RangeToString(", ", "", "")(
+  //      StencilWrapperConstructorTemplates, [](const std::string& str) { return "class " + str;
+  //      }));
 
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
-  for(const auto& FieldStorage : StencilWrapperConstructorArguments){
-   StencilWrapperConstructor.addArg(FieldStorage.first+" "+FieldStorage.second);
+  for(const auto& FieldStorage : StencilWrapperConstructorArguments) {
+    StencilWrapperConstructor.addArg(FieldStorage.first + " " + FieldStorage.second);
   }
-//  for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i)
-//    StencilWrapperConstructor.addArg(StencilWrapperConstructorTemplates[i] + " " +
-//                                     SIRFieldsWithoutTemps[i]->Name);
+  //  for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i)
+  //    StencilWrapperConstructor.addArg(StencilWrapperConstructorTemplates[i] + " " +
+  //                                     SIRFieldsWithoutTemps[i]->Name);
 
   // Initialize allocated fields
   if(stencilInstantiation->hasAllocatedFields()) {
@@ -819,11 +825,12 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
             return field.Name;
         }));
 
-//  for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i)
-//    StencilWrapperConstructor.addStatement(
-//        "static_assert(gridtools::is_data_store<" + StencilWrapperConstructorTemplates[i] +
-//        ">::value, \"argument '" + SIRFieldsWithoutTemps[i]->Name +
-//        "' is not a 'gridtools::data_store' (" + decimalToOrdinal(i + 2) + " argument invalid)\")");
+  //  for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i)
+  //    StencilWrapperConstructor.addStatement(
+  //        "static_assert(gridtools::is_data_store<" + StencilWrapperConstructorTemplates[i] +
+  //        ">::value, \"argument '" + SIRFieldsWithoutTemps[i]->Name +
+  //        "' is not a 'gridtools::data_store' (" + decimalToOrdinal(i + 2) + " argument
+  //        invalid)\")");
   StencilWrapperConstructor.commit();
 
   // Generate the run method by generate code for the stencil description AST
