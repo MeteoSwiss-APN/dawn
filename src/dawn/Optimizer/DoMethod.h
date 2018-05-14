@@ -60,9 +60,6 @@ public:
   void setInterval(Interval const& interval);
 
   unsigned long int getID() const { return id_; }
-  /// @brief Get the associated `stage`
-  //  std::shared_ptr<Stage> getStage();
-  //  std::shared_ptr<Stage> const& getStage() const;
 
   /// @brief Set the dependency graph of this Do-Method
   void setDependencyGraph(const std::shared_ptr<DependencyGraphAccesses>& DG);

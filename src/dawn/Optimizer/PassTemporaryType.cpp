@@ -67,7 +67,9 @@ bool usedAsArgumentInStencilFun(const std::shared_ptr<Stencil>& stencil, int Acc
 struct Temporary {
   enum TemporaryType { TT_LocalVariable, TT_Field };
 
-  Temporary() = default;
+  Temporary(Temporary const& other) = default;
+  Temporary(Temporary&& other) = default;
+  Temporary() = delete;
   Temporary(int accessID, TemporaryType type, const Extents& extent)
       : AccessID(accessID), Type(type), Extent(extent) {}
 
@@ -144,7 +146,8 @@ bool PassTemporaryType::run(const std::shared_ptr<StencilInstantiation>& instant
     auto LifetimeMap = stencilPtr->getLifetime(AccessIDs);
     std::for_each(LifetimeMap.begin(), LifetimeMap.end(),
                   [&](const std::pair<int, Stencil::Lifetime>& lifetimePair) {
-                    temporaries[lifetimePair.first].Lifetime = lifetimePair.second;
+                    DAWN_ASSERT(temporaries.count(lifetimePair.first));
+                    temporaries.at(lifetimePair.first).Lifetime = lifetimePair.second;
                   });
 
     // Process each temporary

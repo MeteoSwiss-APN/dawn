@@ -35,12 +35,6 @@ public:
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) override;
-
-private:
-  bool isAccessIDReadAfter(const int accessID,
-                           std::list<std::shared_ptr<Stage>>::const_iterator stage,
-                           std::list<std::shared_ptr<MultiStage>>::const_iterator multiStage,
-                           const Stencil& stencil) const;
 };
 
 } // namespace dawn

@@ -19,13 +19,13 @@
 #include "dawn/Support/Array.h"
 #include "dawn/Support/HashCombine.h"
 #include "dawn/Support/Assert.h"
-#include <boost/optional.hpp>
 #include <array>
 #include <cmath>
 #include <functional>
 #include <initializer_list>
 #include <iosfwd>
 #include <vector>
+#include <boost/optional.hpp>
 
 namespace dawn {
 
@@ -102,7 +102,7 @@ public:
   explicit Extents(const Array3i& offset);
   Extents(int extent1minus, int extent1plus, int extent2minus, int extent2plus, int extent3minus,
           int extent3plus);
-  Extents() = default;
+  Extents() = delete;
   Extents(const Extents&) = default;
   Extents(Extents&&) = default;
   Extents& operator=(const Extents&) = default;
@@ -110,35 +110,17 @@ public:
   /// @}
 
   /// @brief Get the i-th extend or NullExtent if i-th extent does not exists
-  Extent& operator[](int i) {
-    DAWN_ASSERT(extents_.is_initialized());
-    return (*extents_)[i];
-  }
-  const Extent& operator[](int i) const {
-    DAWN_ASSERT(extents_.is_initialized());
-    return (*extents_)[i];
-  }
+  Extent& operator[](int i) { return extents_[i]; }
+  const Extent& operator[](int i) const { return extents_[i]; }
 
   /// @brief Get the extents
-  const std::array<Extent, 3>& getExtents() const {
-    DAWN_ASSERT(extents_.is_initialized());
-    return *extents_;
-  }
-  std::array<Extent, 3>& getExtents() {
-    DAWN_ASSERT(extents_.is_initialized());
-    return *extents_;
-  }
+  const std::array<Extent, 3>& getExtents() const { return extents_; }
+  std::array<Extent, 3>& getExtents() { return extents_; }
 
   /// @brief Get size of extents (i.e number of dimensions)
-  std::array<Extent, 3>::size_type getSize() const {
-    DAWN_ASSERT(extents_.is_initialized());
-    return extents_->size();
-  }
+  std::array<Extent, 3>::size_type getSize() const { return extents_.size(); }
 
-  bool hasVerticalCenter() const {
-    DAWN_ASSERT(extents_.is_initialized());
-    return (*extents_)[2].Minus <= 0 && (*extents_)[2].Plus >= 0;
-  }
+  bool hasVerticalCenter() const { return extents_[2].Minus <= 0 && extents_[2].Plus >= 0; }
 
   /// @brief Merge `this` with `other` and assign an Extents to `this` which is the union of the two
   ///
@@ -204,7 +186,7 @@ public:
   bool operator!=(const Extents& other) const;
   /// @}
 private:
-  boost::optional<std::array<Extent, 3>> extents_;
+  std::array<Extent, 3> extents_;
 };
 
 } // namespace dawn

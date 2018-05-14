@@ -22,31 +22,29 @@ namespace dawn {
 
 Extents::Extents(const Array3i& offset) {
 
-  extents_ = boost::make_optional(std::array<Extent, 3>{});
+  extents_ = std::array<Extent, 3>{};
 
-  DAWN_ASSERT(extents_->size() == offset.size());
+  DAWN_ASSERT(extents_.size() == offset.size());
 
-  for(std::size_t i = 0; i < extents_->size(); ++i) {
-    (*extents_)[i].Minus = offset[i];
-    (*extents_)[i].Plus = offset[i];
+  for(std::size_t i = 0; i < extents_.size(); ++i) {
+    extents_[i].Minus = offset[i];
+    extents_[i].Plus = offset[i];
   }
 }
 
 Extents::Extents(int extent1Minus, int extent1Plus, int extent2Minus, int extent2Plus,
                  int extent3Minus, int extent3Plus) {
-  extents_ = boost::make_optional(
+  extents_ =
       std::array<Extent, 3>({{Extent{extent1Minus, extent1Plus}, Extent{extent2Minus, extent2Plus},
-                              Extent{extent3Minus, extent3Plus}}}));
+                              Extent{extent3Minus, extent3Plus}}});
 }
 
 // TODO Unittest this
 void Extents::addCenter(const unsigned int dim) {
   DAWN_ASSERT(dim < 3);
-  if(extents_.is_initialized()) {
-    (*extents_)[dim].Minus = std::min(0, (*extents_)[dim].Minus);
-    (*extents_)[dim].Plus = std::max(0, (*extents_)[dim].Plus);
-  } else
-    extents_ = boost::make_optional(std::array<Extent, 3>{});
+
+  extents_[dim].Minus = std::min(0, extents_[dim].Minus);
+  extents_[dim].Plus = std::max(0, extents_[dim].Plus);
 }
 
 void Extents::merge(const Extents& other) {

@@ -37,9 +37,6 @@ Interval& DoMethod::getInterval() { return interval_; }
 
 const Interval& DoMethod::getInterval() const { return interval_; }
 
-// std::shared_ptr<Stage> DoMethod::getStage() { return stage_; }
-// std::shared_ptr<Stage> const& DoMethod::getStage() const { return stage_; }
-
 void DoMethod::setDependencyGraph(const std::shared_ptr<DependencyGraphAccesses>& DG) {
   dependencyGraph_ = DG;
 }

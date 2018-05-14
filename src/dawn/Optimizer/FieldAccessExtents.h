@@ -25,9 +25,12 @@ class FieldAccessExtents {
 public:
   FieldAccessExtents(boost::optional<Extents> const& readExtents,
                      boost::optional<Extents> const& writeExtents)
-      : readAccessExtents_(readExtents), writeAccessExtents_(writeExtents) {
+      : readAccessExtents_(readExtents), writeAccessExtents_(writeExtents),
+        totalExtents_{0, 0, 0, 0, 0, 0} {
     updateTotalExtents();
   }
+
+  FieldAccessExtents() = delete;
 
   FieldAccessExtents(FieldAccessExtents&&) = default;
   FieldAccessExtents(FieldAccessExtents const&) = default;
