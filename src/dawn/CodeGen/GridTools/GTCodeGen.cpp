@@ -293,7 +293,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
         .addTemplate(Twine("axis_") + StencilName);
 
     // Generate code for members of the stencil
-//    StencilClass.addComment("Members");
+    //    StencilClass.addComment("Members");
     //////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////
@@ -351,8 +351,8 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     //    }
     //    StencilClass.addMember("std::shared_ptr< gridtools::stencil<gridtools::notype> >",
     //    "m_stencil");
-//    stencilType = "computation<void>";
-//    StencilClass.addMember(stencilType, "m_stencil");
+    //    stencilType = "computation<void>";
+    //    StencilClass.addMember(stencilType, "m_stencil");
 
     //
     // Generate stencil functions code for stencils instantiated by this stencil
@@ -716,8 +716,10 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     //    dtor.commit();
 
     // Generate stencil getter
-    StencilClass.addMemberFunction(stencilType+"&", "get_stencil").addStatement("return m_stencil");
-    StencilClass.addMemberFunction("std::string","get_name").addStatement("return std::string(s_name)");
+    StencilClass.addMemberFunction(stencilType + "&", "get_stencil")
+        .addStatement("return m_stencil");
+    StencilClass.addMemberFunction("std::string", "get_name")
+        .addStatement("return std::string(s_name)");
   }
 
   if(isEmpty) {
@@ -784,7 +786,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     extents += fieldDimensions[0] ? "i" : "";
     extents += fieldDimensions[1] ? "j" : "";
     extents += fieldDimensions[2] ? "k" : "";
-    extents.pop_back();
+    extents += "_t";
     StencilWrapperConstructorArguments.emplace_back(extents,
                                                     SIRFieldsWithoutTemps[accessorIdx]->Name);
   }
