@@ -703,9 +703,9 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     StencilConstructor.commit();
 
     // Generate destructor
-    auto dtor = StencilClass.addDestructor();
-    dtor.addStatement("m_stencil->finalize()");
-    dtor.commit();
+//    auto dtor = StencilClass.addDestructor();
+//    dtor.addStatement("m_stencil->finalize()");
+//    dtor.commit();
 
     // Generate stencil getter
     StencilClass.addMemberFunction(stencilType, "get_stencil").addStatement("return m_stencil");
