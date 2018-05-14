@@ -292,68 +292,6 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
         .addType(c_gt() + "grid")
         .addTemplate(Twine("axis_") + StencilName);
 
-    // Generate code for members of the stencil
-    //    StencilClass.addComment("Members");
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////// wittodo    //////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    // Fields
-    //    std::vector<Stencil::FieldInfo> StencilFields_a = stencil.getFields();
-    //    std::vector<std::string> StencilGlobalVariables_a = stencil.getGlobalVariables();
-    //    std::size_t numFields_a = StencilFields_a.size();
-    //    std::string listOfArguments;
-    //    int accessorIdx = 0;
-    //    for(; accessorIdx < numFields_a; ++accessorIdx)
-    //      if(StencilFields_a[accessorIdx].IsTemporary == false) {
-    //        Array3i fieldDimensions = StencilFields_a[accessorIdx].Dimensions;
-    //        std::string extents = "storage_";
-    //        extents += fieldDimensions[0] ? "i" : "";
-    //        extents += fieldDimensions[1] ? "j" : "";
-    //        extents += fieldDimensions[2] ? "k" : "";
-
-    //        //          StencilClass.addComment(extents + " " +
-    //        StencilFields_a[accessorIdx].Name);
-    //        extents += "_t";
-
-    //        StencilClass.addTypeDef("p_" + StencilFields_a[accessorIdx].Name)
-    //            .addType(c_gt() + "arg")
-    //            .addTemplate(Twine(accessorIdx))
-    //            .addTemplate(extents);
-    //        listOfArguments += "p_" + StencilFields_a[accessorIdx].Name + ", ";
-    //      } else {
-    //        StencilClass.addTypeDef("p_" + StencilFields_a[accessorIdx].Name)
-    //            .addType(c_gt() + "tmp_arg")
-    //            .addTemplate(Twine(accessorIdx))
-    //            .addTemplate("storage_t");
-    //      }
-    //    for(; accessorIdx < (numFields_a + StencilGlobalVariables_a.size()); ++accessorIdx) {
-    //      // Global variables
-    //      const auto& varname = StencilGlobalVariables_a[accessorIdx - numFields_a];
-    //      StencilClass.addTypeDef("p_" + StencilGlobalVariables_a[accessorIdx - numFields_a])
-    //          .addType(c_gt() + "arg")
-    //          .addTemplate(Twine(accessorIdx))
-    //          .addTemplate("typename std::decay<decltype(globals::get()." + varname +
-    //                       ".as_global_parameter())>::type");
-    //      listOfArguments += "p_" + StencilGlobalVariables_a[accessorIdx - numFields_a] + ", ";
-    //    }
-    //    // wittodo: proper calls, read extents
-
-    //    if(listOfArguments.size() > 2) {
-    //      listOfArguments.pop_back();
-    //      listOfArguments.pop_back();
-    //    }
-    //    StencilClass.addMember("std::shared_ptr< gridtools::stencil<gridtools::notype> >",
-    //    "m_stencil");
-    //    stencilType = "computation<void>";
-    //    StencilClass.addMember(stencilType, "m_stencil");
-
     //
     // Generate stencil functions code for stencils instantiated by this stencil
     //
@@ -833,12 +771,6 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
             return field.Name;
         }));
 
-  //  for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i)
-  //    StencilWrapperConstructor.addStatement(
-  //        "static_assert(gridtools::is_data_store<" + StencilWrapperConstructorTemplates[i] +
-  //        ">::value, \"argument '" + SIRFieldsWithoutTemps[i]->Name +
-  //        "' is not a 'gridtools::data_store' (" + decimalToOrdinal(i + 2) + " argument
-  //        invalid)\")");
   StencilWrapperConstructor.commit();
 
   // Generate the run method by generate code for the stencil description AST
@@ -862,9 +794,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
   // Generate stencil getter
   MemberFunction timing = StencilWrapperClass.addMemberFunction("std::string", "get_meters");
   timing.addArg("int stencilID = -1");
-  //  RunMethod.addStatement();
 
-  //  timing.addStatement("switch(stencilID){\ncase 1: foo;\n case 2: bar;\n}");
   timing.addStatement("std::string retval =\"\";");
   timing.addBlockStatement("switch (stencilID)", [&]() {
     int idx;
