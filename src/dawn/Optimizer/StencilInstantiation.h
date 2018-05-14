@@ -566,11 +566,11 @@ public:
     return BoundaryConditionToExtentsMap_.find(stmt)->second;
   }
 
-  Array3i getFieldIDFromInitializedDimensionsMap(int FieldID){
-      if(fieldIDToInitializedDimensionsMap_.count(FieldID) == 0){
-          return Array3i{{0,0,0}};
-      }
-      return fieldIDToInitializedDimensionsMap_.find(FieldID)->second;
+  Array3i getFieldIDFromInitializedDimensionsMap(int FieldID) {
+    if(fieldIDToInitializedDimensionsMap_.count(FieldID) == 0) {
+      return Array3i{{1, 1, 1}};
+    }
+    return fieldIDToInitializedDimensionsMap_.find(FieldID)->second;
   }
 
 private:
