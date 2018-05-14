@@ -319,6 +319,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
         extents += fieldDimensions[2] ? "k" : "";
 
         //          StencilClass.addComment(extents + " " + StencilFields_a[accessorIdx].Name);
+        extents += "_t";
 
         StencilClass.addTypeDef("p_" + StencilFields_a[accessorIdx].Name)
             .addType(c_gt() + "arg")
