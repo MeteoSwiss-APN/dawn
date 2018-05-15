@@ -698,8 +698,6 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
         Twine("m_stencil = gridtools::make_computation<gridtools::clang::backend_t>(grid_, " +
               RangeToString(", ", "", "")(DomainMapPlaceholders) +
               RangeToString(", ", ", ", ")")(makeComputation)));
-
-    StencilConstructor.addStatement("stencil.run()");
     StencilConstructor.commit();
 
     StencilClass.addComment("Members");
@@ -817,12 +815,15 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
   //            return field.Name;
   //        }));
 
-  for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i)
-    StencilWrapperConstructor.addStatement(
-        "static_assert(gridtools::is_data_store<" + StencilWrapperConstructorTemplates[i] +
-        ">::value, \"argument '" + SIRFieldsWithoutTemps[i]->Name +
-        "' is not a 'gridtools::data_store' (" + decimalToOrdinal(i + 2) + " argument invalid)\")");
+//  for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i)
+//    StencilWrapperConstructor.addStatement(
+//        "static_assert(gridtools::is_data_store<" + StencilWrapperConstructorTemplates[i] +
+//        ">::value, \"argument '" + SIRFieldsWithoutTemps[i]->Name +
+//        "' is not a 'gridtools::data_store' (" + decimalToOrdinal(i + 2) + " argument invalid)\")");
   StencilWrapperConstructor.commit();
+
+
+
 
   // Create the StencilID -> stencil name map
   std::unordered_map<int, std::vector<std::string>> stencilIDToStencilNameMap;
@@ -857,6 +858,13 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
       .addStatement("return std::string(s_name)");
 
   // Generate stencil getter
+  // Stencil members
+  std::vector<std::string> stencilMembers;
+  for(std::size_t i = 0; i < stencils.size(); ++i) {
+    StencilWrapperClass.addMember("stencil_" + Twine(i), "m_stencil_" + Twine(i));
+    stencilMembers.emplace_back("m_stencil_" + std::to_string(i));
+  }
+
   MemberFunction timing = StencilWrapperClass.addMemberFunction("std::string", "get_meters");
   timing.addArg("int stencilID = -1");
 
