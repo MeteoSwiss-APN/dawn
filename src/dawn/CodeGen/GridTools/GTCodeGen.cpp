@@ -628,34 +628,106 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     //
     // Generate constructor/destructor and methods of the stencil
     //
+    ///////////////////////fixes some issues, look what is no longer needed/////////////////////////
+    //
+    // Generate constructor/destructor and methods of the stencil
+    //
+//    std::vector<Stencil::FieldInfo> StencilFields = stencil.getFields();
     std::vector<std::string> StencilGlobalVariables = stencil.getGlobalVariables();
     std::size_t numFields = StencilFields.size();
 
     mplContainerMaxSize_ = std::max(mplContainerMaxSize_, numFields);
 
-    std::vector<std::string> StencilConstructorTemplates = buildFieldTemplateNames(nonTempFields);
+    std::vector<std::string> StencilConstructorTemplates;
+    int numTemporaries = 0;
+    for(int i = 0; i < numFields; ++i)
+      if(StencilFields[i].IsTemporary)
+        numTemporaries += 1;
+      else
+        StencilConstructorTemplates.push_back("S" + std::to_string(i + 1 - numTemporaries));
 
     // Generate constructor
     auto StencilConstructor = StencilClass.addConstructor(RangeToString(", ", "", "")(
         StencilConstructorTemplates, [](const std::string& str) { return "class " + str; }));
 
     StencilConstructor.addArg("const gridtools::clang::domain& dom");
-    int i = 0;
-    for(auto field : nonTempFields) {
-      StencilConstructor.addArg(StencilConstructorTemplates[i] + " " + (*field).Name);
-      ++i;
-    }
+    for(int i = 0; i < numFields; ++i)
+      if(!StencilFields[i].IsTemporary)
+        StencilConstructor.addArg(StencilConstructorTemplates[i - numTemporaries] + " " +
+                                  StencilFields[i].Name);
 
     StencilConstructor.startBody();
 
     // Generate domain
-    std::vector<std::string> DomainMapPlaceholders;
-    for(auto fieldIt : nonTempFields)
-      DomainMapPlaceholders.push_back("(p_" + (*fieldIt).Name + "() = " + (*fieldIt).Name + ")");
+    int accessorIdx = 0;
 
+    for(; accessorIdx < numFields; ++accessorIdx)
+      // Fields
+      StencilConstructor.addTypeDef("p_" + StencilFields[accessorIdx].Name)
+          .addType(c_gt() + (StencilFields[accessorIdx].IsTemporary ? "tmp_arg" : "arg"))
+          .addTemplate(Twine(accessorIdx))
+          .addTemplate(StencilFields[accessorIdx].IsTemporary
+                           ? "storage_t"
+                           : StencilConstructorTemplates[accessorIdx - numTemporaries]);
+
+    for(; accessorIdx < (numFields + StencilGlobalVariables.size()); ++accessorIdx) {
+      // Global variables
+      const auto& varname = StencilGlobalVariables[accessorIdx - numFields];
+      StencilConstructor.addTypeDef("p_" + StencilGlobalVariables[accessorIdx - numFields])
+          .addType(c_gt() + "arg")
+          .addTemplate(Twine(accessorIdx))
+          .addTemplate("typename std::decay<decltype(globals::get()." + varname +
+                       ".as_global_parameter())>::type");
+    }
+
+    std::vector<std::string> ArglistPlaceholders;
+    for(const auto& field : StencilFields)
+      ArglistPlaceholders.push_back("p_" + field.Name);
+    for(const auto& var : StencilGlobalVariables)
+      ArglistPlaceholders.push_back("p_" + var);
+
+    StencilConstructor.addTypeDef("domain_arg_list")
+        .addType("boost::mpl::vector")
+        .addTemplates(ArglistPlaceholders);
+
+    // Placeholders to map the real storages to the placeholders (no temporaries)
+    std::vector<std::string> DomainMapPlaceholders;
+    std::transform(StencilFields.begin() + numTemporaries, StencilFields.end(),
+                   std::back_inserter(DomainMapPlaceholders), [](const Stencil::FieldInfo& field) {
+                     return "(p_" + field.Name + "() = " + field.Name + ")";
+                   });
     for(const auto& var : StencilGlobalVariables)
       DomainMapPlaceholders.push_back("(p_" + var + "() = globals::get()." + var +
                                       ".as_global_parameter())");
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+//    std::vector<std::string> StencilGlobalVariables = stencil.getGlobalVariables();
+//    std::size_t numFields = StencilFields.size();
+
+//    mplContainerMaxSize_ = std::max(mplContainerMaxSize_, numFields);
+
+//    std::vector<std::string> StencilConstructorTemplates = buildFieldTemplateNames(nonTempFields);
+
+//    // Generate constructor
+//    auto StencilConstructor = StencilClass.addConstructor(RangeToString(", ", "", "")(
+//        StencilConstructorTemplates, [](const std::string& str) { return "class " + str; }));
+
+//    StencilConstructor.addArg("const gridtools::clang::domain& dom");
+//    int i = 0;
+//    for(auto field : nonTempFields) {
+//      StencilConstructor.addArg(StencilConstructorTemplates[i] + " " + (*field).Name);
+//      ++i;
+//    }
+
+//    StencilConstructor.startBody();
+
+//    // Generate domain
+//    std::vector<std::string> DomainMapPlaceholders;
+//    for(auto fieldIt : nonTempFields)
+//      DomainMapPlaceholders.push_back("(p_" + (*fieldIt).Name + "() = " + (*fieldIt).Name + ")");
+
+//    for(const auto& var : StencilGlobalVariables)
+//      DomainMapPlaceholders.push_back("(p_" + var + "() = globals::get()." + var +
+//                                      ".as_global_parameter())");
 
     // Generate grid
     StencilConstructor.addComment("Grid");
