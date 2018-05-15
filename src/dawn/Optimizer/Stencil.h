@@ -51,6 +51,7 @@ public:
     bool IsTemporary;
     std::string Name;
     int AccessID;
+    Array3i Dimensions;
   };
 
   /// @brief Position of a stage
