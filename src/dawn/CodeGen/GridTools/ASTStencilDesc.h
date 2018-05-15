@@ -35,13 +35,14 @@ protected:
 
   /// StencilID to the name of the generated stencils for this ID
   const std::unordered_map<int, std::vector<std::string>>& StencilIDToStencilNameMap_;
+  const std::unordered_map<int, std::string>& stencilIdToArguments_;
 
 public:
   using Base = ASTCodeGenCXX;
 
-  ASTStencilDesc(
-      const StencilInstantiation* instantiation,
-      const std::unordered_map<int, std::vector<std::string>>& StencilIDToStencilNameMap);
+  ASTStencilDesc(const StencilInstantiation* instantiation,
+                 const std::unordered_map<int, std::vector<std::string>>& StencilIDToStencilNameMap,
+                 const std::unordered_map<int, std::string>& stencilIdToArguments);
 
   virtual ~ASTStencilDesc();
 

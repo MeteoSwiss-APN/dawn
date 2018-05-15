@@ -38,7 +38,7 @@ computeBoundaryExtents(const DependencyGraphAccesses* graph) {
 
   for(const auto& AccessIDVertexPair : graph->getVertices()) {
     const Vertex& vertex = AccessIDVertexPair.second;
-    nodeExtents.emplace(vertex.VertexID, Extents{});
+    nodeExtents.emplace(vertex.VertexID, Extents{0, 0, 0, 0, 0, 0});
   }
 
   // Start from the output nodes and follow all paths
@@ -69,7 +69,7 @@ computeBoundaryExtents(const DependencyGraphAccesses* graph) {
       // Process the current node
       std::size_t curNode = nodesToVisit.back();
       nodesToVisit.pop_back();
-      const Extents& curExtent = nodeExtents[curNode];
+      const Extents& curExtent = nodeExtents.at(curNode);
 
       // Check if we already visited this node
       if(visitedNodes.count(curNode))
@@ -79,7 +79,7 @@ computeBoundaryExtents(const DependencyGraphAccesses* graph) {
 
       // Follow edges of the current node and update the node extents
       for(const Edge& edge : *adjacencyList[curNode]) {
-        nodeExtents[edge.ToVertexID].merge(Extents::add(curExtent, edge.Data));
+        nodeExtents.at(edge.ToVertexID).merge(Extents::add(curExtent, edge.Data));
         nodesToVisit.push_back(edge.ToVertexID);
       }
     }

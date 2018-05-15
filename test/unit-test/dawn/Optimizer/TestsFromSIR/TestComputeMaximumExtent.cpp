@@ -61,7 +61,7 @@ protected:
   }
 };
 
-TEST_F(TestComputeMaximumExtent, test_field_access_interval_01) {
+TEST_F(TestComputeMaximumExtent, test_field_access_interval_02) {
   auto stencilInstantiation = loadTest("test_field_access_interval_02.sir");
   auto stencils = stencilInstantiation->getStencils();
   ASSERT_TRUE((stencils.size() == 1));
@@ -87,8 +87,9 @@ TEST_F(TestComputeMaximumExtent, test_field_access_interval_01) {
   ASSERT_TRUE((stmtAccessPair->computeMaximumExtents(
                    stencilInstantiation->getAccessIDFromName("u")) == Extents{-1, 1, -1, 1, 0, 0}));
 
-  ASSERT_TRUE((stmtAccessPair->computeMaximumExtents(stencilInstantiation->getAccessIDFromName(
-                   "coeff")) == Extents{0, 0, 0, 0, 0, 1}));
+  EXPECT_EQ(
+      stmtAccessPair->computeMaximumExtents(stencilInstantiation->getAccessIDFromName("coeff")),
+      (Extents{0, 0, 0, 0, 1, 1}));
 }
 
 TEST_F(TestComputeMaximumExtent, test_compute_maximum_extent_01) {

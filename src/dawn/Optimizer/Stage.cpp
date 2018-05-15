@@ -27,8 +27,9 @@ namespace dawn {
 
 Stage::Stage(StencilInstantiation& context, MultiStage* multiStage, int StageID,
              const Interval& interval)
-    : stencilInstantiation_(context), multiStage_(multiStage), StageID_(StageID), extents_{} {
-  DoMethods_.emplace_back(make_unique<DoMethod>(this, interval));
+    : stencilInstantiation_(context), multiStage_(multiStage), StageID_(StageID),
+      extents_{0, 0, 0, 0, 0, 0} {
+  DoMethods_.emplace_back(make_unique<DoMethod>(interval));
 }
 
 std::vector<std::unique_ptr<DoMethod>>& Stage::getDoMethods() { return DoMethods_; }
@@ -47,10 +48,12 @@ const DoMethod& Stage::getSingleDoMethod() const {
   return *DoMethods_.front();
 }
 
-boost::optional<Interval> Stage::computeEnclosingAccessInterval(const int accessID) const {
+boost::optional<Interval>
+Stage::computeEnclosingAccessInterval(const int accessID, const bool mergeWithDoInterval) const {
   boost::optional<Interval> interval;
   for(auto const& doMethod : DoMethods_) {
-    boost::optional<Interval> doInterval = doMethod->computeEnclosingAccessInterval(accessID);
+    boost::optional<Interval> doInterval =
+        doMethod->computeEnclosingAccessInterval(accessID, mergeWithDoInterval);
 
     if(doInterval) {
       if(interval)
@@ -184,6 +187,7 @@ void Stage::update() {
 
       for(const auto& accessPair : access->getWriteAccesses()) {
         int AccessID = accessPair.first;
+        Extents const& extents = accessPair.second;
 
         // Does this AccessID correspond to a field access?
         if(!stencilInstantiation_.isField(AccessID)) {
@@ -191,13 +195,13 @@ void Stage::update() {
             globalVariables_.insert(AccessID);
           continue;
         }
-
         AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                       doMethod.getInterval());
+                                       extents, doMethod.getInterval());
       }
 
       for(const auto& accessPair : access->getReadAccesses()) {
         int AccessID = accessPair.first;
+        Extents const& extents = accessPair.second;
 
         // Does this AccessID correspond to a field access?
         if(!stencilInstantiation_.isField(AccessID)) {
@@ -207,7 +211,7 @@ void Stage::update() {
         }
 
         AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                      doMethod.getInterval());
+                                      extents, doMethod.getInterval());
       }
 
       const std::shared_ptr<Statement> statement = statementAccessesPair->getStatement();
@@ -257,14 +261,14 @@ void Stage::update() {
         if(!stencilInstantiation_.isField(accessPair.first))
           continue;
 
-        AccessIDToFieldMap[accessPair.first]->mergeExtents(accessPair.second);
+        AccessIDToFieldMap[accessPair.first]->mergeWriteExtents(accessPair.second);
       }
 
       for(const auto& accessPair : access->getReadAccesses()) {
         if(!stencilInstantiation_.isField(accessPair.first))
           continue;
 
-        AccessIDToFieldMap[accessPair.first]->mergeExtents(accessPair.second);
+        AccessIDToFieldMap[accessPair.first]->mergeReadExtents(accessPair.second);
       }
     }
   }

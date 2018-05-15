@@ -62,48 +62,48 @@ protected:
 
 TEST_F(ComputeStageExtents, test_stencil_01) {
   auto stencils = loadTest("compute_extent_test_stencil_01.sir");
-  ASSERT_TRUE((stencils.size() == 1));
+  EXPECT_EQ(stencils.size(), 1);
   std::shared_ptr<Stencil> stencil = stencils[0];
 
-  ASSERT_TRUE((stencil->getNumStages() == 2));
-  ASSERT_TRUE((stencil->getStage(0)->getExtents() == Extents{-1, 1, -1, 1, 0, 0}));
-  ASSERT_TRUE((stencil->getStage(1)->getExtents() == Extents{0, 0, 0, 0, 0, 0}));
+  EXPECT_EQ(stencil->getNumStages(), 2);
+  EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-1, 1, -1, 1, 0, 0}));
+  EXPECT_EQ(stencil->getStage(1)->getExtents(), (Extents{0, 0, 0, 0, 0, 0}));
 }
 
 TEST_F(ComputeStageExtents, test_stencil_02) {
   auto stencils = loadTest("compute_extent_test_stencil_02.sir");
 
-  ASSERT_TRUE((stencils.size() == 1));
+  EXPECT_EQ(stencils.size(), 1);
   std::shared_ptr<Stencil> stencil = stencils[0];
 
-  ASSERT_TRUE((stencil->getNumStages() == 3));
-  ASSERT_TRUE((stencil->getStage(0)->getExtents() == Extents{-1, 1, -1, 1, 0, 0}));
-  ASSERT_TRUE((stencil->getStage(1)->getExtents() == Extents{-1, 0, -1, 0, 0, 0}));
-  ASSERT_TRUE((stencil->getStage(2)->getExtents() == Extents{0, 0, 0, 0, 0, 0}));
+  EXPECT_EQ(stencil->getNumStages(), 3);
+  EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-1, 1, -1, 1, 0, 0}));
+  EXPECT_EQ(stencil->getStage(1)->getExtents(), (Extents{-1, 0, -1, 0, 0, 0}));
+  EXPECT_EQ(stencil->getStage(2)->getExtents(), (Extents{0, 0, 0, 0, 0, 0}));
 }
 TEST_F(ComputeStageExtents, test_stencil_03) {
   auto stencils = loadTest("compute_extent_test_stencil_03.sir");
-  ASSERT_TRUE((stencils.size() == 1));
+  EXPECT_EQ(stencils.size(), 1);
   std::shared_ptr<Stencil> stencil = stencils[0];
 
-  ASSERT_TRUE((stencil->getNumStages() == 4));
-  ASSERT_TRUE((stencil->getStage(0)->getExtents() == Extents{-1, 1, -1, 2, 0, 0}));
-  ASSERT_TRUE((stencil->getStage(1)->getExtents() == Extents{-1, 0, -1, 1, 0, 0}));
-  ASSERT_TRUE((stencil->getStage(2)->getExtents() == Extents{0, 0, 0, 1, 0, 0}));
-  ASSERT_TRUE((stencil->getStage(3)->getExtents() == Extents{0, 0, 0, 0, 0, 0}));
+  EXPECT_EQ(stencil->getNumStages(), 4);
+  EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-1, 1, -1, 2, 0, 0}));
+  EXPECT_EQ(stencil->getStage(1)->getExtents(), (Extents{-1, 0, -1, 1, 0, 0}));
+  EXPECT_EQ(stencil->getStage(2)->getExtents(), (Extents{0, 0, 0, 1, 0, 0}));
+  EXPECT_EQ(stencil->getStage(3)->getExtents(), (Extents{0, 0, 0, 0, 0, 0}));
 }
 
 TEST_F(ComputeStageExtents, test_stencil_04) {
   auto stencils = loadTest("compute_extent_test_stencil_04.sir");
 
-  ASSERT_TRUE((stencils.size() == 1));
+  EXPECT_EQ(stencils.size(), 1);
   std::shared_ptr<Stencil> stencil = stencils[0];
 
-  ASSERT_TRUE((stencil->getNumStages() == 4));
-  ASSERT_TRUE((stencil->getStage(0)->getExtents() == Extents{-2, 3, -2, 1, 0, 0}));
-  ASSERT_TRUE((stencil->getStage(1)->getExtents() == Extents{-1, 1, -1, 0, 0, 0}));
-  ASSERT_TRUE((stencil->getStage(2)->getExtents() == Extents{0, 0, -1, 0, 0, 0}));
-  ASSERT_TRUE((stencil->getStage(3)->getExtents() == Extents{0, 0, 0, 0, 0, 0}));
+  EXPECT_EQ(stencil->getNumStages(), 4);
+  EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-2, 3, -2, 1, 0, 0}));
+  EXPECT_EQ(stencil->getStage(1)->getExtents(), (Extents{-1, 1, -1, 0, 0, 0}));
+  EXPECT_EQ(stencil->getStage(2)->getExtents(), (Extents{0, 0, -1, 0, 0, 0}));
+  EXPECT_EQ(stencil->getStage(3)->getExtents(), (Extents{0, 0, 0, 0, 0, 0}));
 }
 
 TEST_F(ComputeStageExtents, test_stencil_05) {
@@ -111,11 +111,11 @@ TEST_F(ComputeStageExtents, test_stencil_05) {
   ASSERT_TRUE((stencils.size() == 1));
   std::shared_ptr<Stencil> stencil = stencils[0];
 
-  ASSERT_TRUE((stencil->getNumStages() == 4));
-  ASSERT_TRUE((stencil->getStage(0)->getExtents() == Extents{-2, 3, -2, 1, 0, 0}));
-  ASSERT_TRUE((stencil->getStage(1)->getExtents() == Extents{-1, 1, -1, 0, 0, 0}));
-  ASSERT_TRUE((stencil->getStage(2)->getExtents() == Extents{0, 1, -1, 0, 0, 0}));
-  ASSERT_TRUE((stencil->getStage(3)->getExtents() == Extents{0, 0, 0, 0, 0, 0}));
+  EXPECT_EQ(stencil->getNumStages(), 4);
+  EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-2, 3, -2, 1, 0, 0}));
+  EXPECT_EQ(stencil->getStage(1)->getExtents(), (Extents{-1, 0, -1, 0, 0, 0}));
+  EXPECT_EQ(stencil->getStage(2)->getExtents(), (Extents{0, 1, -1, 0, 0, 0}));
+  EXPECT_EQ(stencil->getStage(3)->getExtents(), (Extents{0, 0, 0, 0, 0, 0}));
 }
 
 } // anonymous namespace

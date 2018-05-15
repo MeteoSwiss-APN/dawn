@@ -157,6 +157,14 @@ std::vector<Interval> Interval::computeGapIntervals(const Interval& axis,
   return newIntervals;
 }
 
+void Interval::merge(const Interval& other) {
+  int lb = lowerBound(), ub = upperBound();
+  lowerLevel_ = std::min(lowerLevel_, other.lowerLevel());
+  upperLevel_ = std::max(upperLevel_, other.upperLevel());
+  lowerOffset_ = lb < other.lowerBound() ? lb - lowerLevel_ : other.lowerBound() - lowerLevel();
+  upperOffset_ = ub > other.upperBound() ? ub - upperLevel_ : other.upperBound() - upperLevel();
+}
+
 std::vector<Interval> Interval::computePartition(std::vector<Interval> const& intervals) {
 
   std::vector<Interval> newIntervals(intervals);

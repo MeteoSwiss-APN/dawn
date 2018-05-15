@@ -184,7 +184,7 @@ private:
     // Add the cache Flush stage
     std::shared_ptr<Stage> assignmentStage = std::make_shared<Stage>(
         *instantiation_, multiStagePrt_.get(), instantiation_->nextUID(), interval);
-    std::unique_ptr<DoMethod> domethod = make_unique<DoMethod>(assignmentStage.get(), interval);
+    std::unique_ptr<DoMethod> domethod = make_unique<DoMethod>(interval);
     domethod->getStatementAccessesPairs().clear();
 
     for(int i = 0; i < assignmentIDs.size(); ++i) {
