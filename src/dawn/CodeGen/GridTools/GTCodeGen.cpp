@@ -881,6 +881,20 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     StencilWrapperConstructor.addInit(memberfield + "(" + memberfield + ")");
   }
 
+  // Initialize stencils
+  for(std::size_t i = 0; i < stencils.size(); ++i)
+    StencilWrapperConstructor.addInit(
+        "m_stencil_" + Twine(i) +
+        RangeToString(", ", "(dom, ",
+                      ")")(stencils[i]->getFields(false), [&](const Stencil::FieldInfo& field) {
+          if(stencilInstantiation->isAllocatedField(field.AccessID))
+            return "m_" + field.Name;
+          else
+            return field.Name;
+        }));
+
+  StencilWrapperConstructor.commit();
+
   //  // Initialize stencils
   //  for(std::size_t i = 0; i < stencils.size(); ++i)
   //    StencilWrapperConstructor.addInit(
