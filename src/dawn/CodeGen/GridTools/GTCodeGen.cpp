@@ -652,8 +652,6 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     // Generate stencil getter
     StencilClass.addMemberFunction(stencilType + "&", "get_stencil")
         .addStatement("return m_stencil");
-    StencilClass.addMemberFunction("std::string", "get_name")
-        .addStatement("return std::string(s_name)");
   }
 
   if(isEmpty) {
@@ -784,6 +782,11 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
 
   RunMethod.commit();
 
+  // Generate name getter
+  StencilWrapperClass.addMemberFunction("std::string", "get_name")
+      .isConst(true)
+      .addStatement("return std::string(s_name)");
+
   // Generate stencil getter
   MemberFunction timing = StencilWrapperClass.addMemberFunction("std::string", "get_meters");
   timing.addArg("int stencilID = -1");
@@ -793,12 +796,12 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     int idx;
     for(idx = 0; idx < stencilInstantiation->getStencils().size(); ++idx) {
       timing << "case " << idx << ":\n"
-             << "return m_stencil_" << idx << ".get_name()+\":\\t\"+"
+             << "return get_name() + \"m_stencil_" << idx << ":\\t\"+"
              << "std::to_string(m_stencil_" << idx << ".get_stencil().get_meter());";
     }
     timing << "case -1 :\n";
     std::string s = RangeToString("\n", "", "")(stencilMembers, [](const std::string& member) {
-      return "retval += " + member + ".get_name()+\":\\t\"+ std::to_string(" + member +
+      return "retval += get_name() + \"" + member + ":\\t\"+ std::to_string(" + member +
              ".get_stencil().get_meter())+\"\\n\";";
     });
     timing << s;
@@ -816,10 +819,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
   clearMeters << s;
   clearMeters.commit();
 
-  // Generate name getter
-  StencilWrapperClass.addMemberFunction("const char*", "get_name")
-      .isConst(true)
-      .addStatement("return std::string(s_name)");
+
 
   StencilWrapperClass.commit();
 
