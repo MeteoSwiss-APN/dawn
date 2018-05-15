@@ -123,8 +123,8 @@ std::vector<Stencil::FieldInfo> Stencil::getFields(bool withTemporaries) const {
   for(const auto& AccessID : fieldAccessIDs) {
     std::string name = stencilInstantiation_.getNameFromAccessID(AccessID);
     bool isTemporary = stencilInstantiation_.isTemporaryField(AccessID);
-    Array3i specifiedDimension = stencilInstantiation_.getFieldIDFromInitializedDimensionsMap(AccessID);//{{0,0,0}}; //= stencilInstantiation_.
-    // wittodo: read dimension and add to fieldinfo
+    Array3i specifiedDimension =
+        stencilInstantiation_.getFieldIDFromInitializedDimensionsMap(AccessID);
 
     if(isTemporary) {
       if(withTemporaries) {

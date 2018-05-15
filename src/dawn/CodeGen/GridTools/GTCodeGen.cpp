@@ -563,7 +563,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
 
     StencilConstructor.startBody();
 
-    // Generate domain StencilConstructor.addComment("Domain");
+    // Generate domain
     int accessorIdx = 0;
 
     for(; accessorIdx < numFields; ++accessorIdx)
@@ -648,10 +648,6 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
     stencilType = "computation<void>";
     StencilClass.addMember(stencilType, "m_stencil");
 
-    // Generate destructor
-    //    auto dtor = StencilClass.addDestructor();
-    //    dtor.addStatement("m_stencil->finalize()");
-    //    dtor.commit();
 
     // Generate stencil getter
     StencilClass.addMemberFunction(stencilType + "&", "get_stencil")
@@ -742,9 +738,6 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
   for(const auto& FieldStorage : StencilWrapperConstructorArguments) {
     StencilWrapperConstructor.addArg(FieldStorage.first + " " + FieldStorage.second);
   }
-  //  for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i)
-  //    StencilWrapperConstructor.addArg(StencilWrapperConstructorTemplates[i] + " " +
-  //                                     SIRFieldsWithoutTemps[i]->Name);
 
   // Initialize allocated fields
   if(stencilInstantiation->hasAllocatedFields()) {
