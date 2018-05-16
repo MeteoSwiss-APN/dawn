@@ -408,7 +408,6 @@ void StencilFunctionInstantiation::update() {
 
     for(const auto& accessPair : access->getWriteAccesses()) {
       int AccessID = accessPair.first;
-      const Extents& extents = accessPair.second;
 
       // Does this AccessID correspond to a field access?
       if(!isProvidedByStencilFunctionCall(AccessID) && !stencilInstantiation_->isField(AccessID))
@@ -423,7 +422,6 @@ void StencilFunctionInstantiation::update() {
 
     for(const auto& accessPair : access->getReadAccesses()) {
       int AccessID = accessPair.first;
-      const Extents& extents = accessPair.second;
 
       // Does this AccessID correspond to a field access?
       if(!isProvidedByStencilFunctionCall(AccessID) && !stencilInstantiation_->isField(AccessID))
