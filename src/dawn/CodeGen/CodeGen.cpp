@@ -66,8 +66,8 @@ void CodeGen::addTmpStorageInit_wrapper(MemberFunction& ctr,
                                         const std::vector<std::string>& tempFields) const {
   if(!(tempFields.empty())) {
     auto verticalExtent = getVerticalTmpHaloSizeForMultipleStencils(stencils);
-    ctr.addInit(bigWrapperMetadata_ + "(dom.isize(), dom.jsize(), dom.ksize() + 2*" +
-                std::to_string(verticalExtent) + ")");
+    ctr.addInit(bigWrapperMetadata_ + "(dom.isize(), dom.jsize(), dom.ksize() + 2 *" +
+                std::to_string(verticalExtent) + " + 1)");
     for(auto fieldName : tempFields) {
       ctr.addInit("m_" + fieldName + " (" + bigWrapperMetadata_ + ", \"" + fieldName + "\")");
     }
