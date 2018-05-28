@@ -31,8 +31,8 @@ class StatementAccessesPair;
 ///
 /// @ingroup optimizer
 class DoMethod {
-  Stage* stage_;
   Interval interval_;
+  const long unsigned int id_;
 
   std::shared_ptr<DependencyGraphAccesses> dependencyGraph_;
   std::vector<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs_;
@@ -40,7 +40,7 @@ class DoMethod {
 public:
   /// @name Constructors and Assignment
   /// @{
-  DoMethod(Stage* stage, Interval interval);
+  DoMethod(Interval interval);
 
   DoMethod(const DoMethod&) = default;
   DoMethod(DoMethod&&) = default;
@@ -57,8 +57,9 @@ public:
   Interval& getInterval();
   const Interval& getInterval() const;
 
-  /// @brief Get the associated `stage`
-  Stage* getStage();
+  void setInterval(Interval const& interval);
+
+  unsigned long int getID() const { return id_; }
 
   /// @brief Set the dependency graph of this Do-Method
   void setDependencyGraph(const std::shared_ptr<DependencyGraphAccesses>& DG);
@@ -72,7 +73,8 @@ public:
 
   /// @brief computes the interval where an accessId is used (extended by the extent of the
   /// access)
-  boost::optional<Interval> computeEnclosingAccessInterval(const int accessID) const;
+  boost::optional<Interval> computeEnclosingAccessInterval(const int accessID,
+                                                           const bool mergeWithDoInterval) const;
 };
 
 } // namespace dawn

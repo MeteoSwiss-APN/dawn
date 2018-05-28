@@ -7,7 +7,7 @@ namespace AccessUtils {
 void recordWriteAccess(std::unordered_map<int, Field>& inputOutputFields,
                        std::unordered_map<int, Field>& inputFields,
                        std::unordered_map<int, Field>& outputFields, int AccessID,
-                       Interval const& doMethodInterval) {
+                       const Extents& writeExtents, Interval const& doMethodInterval) {
   // Field was recorded as `InputOutput`, state can't change ...
   if(inputOutputFields.count(AccessID)) {
     inputOutputFields.at(AccessID).extendInterval(doMethodInterval);
@@ -28,14 +28,15 @@ void recordWriteAccess(std::unordered_map<int, Field>& inputOutputFields,
   if(outputFields.count(AccessID)) {
     outputFields.at(AccessID).extendInterval(doMethodInterval);
   } else {
-    outputFields.emplace(AccessID, Field(AccessID, Field::IK_Output, Extents{}, doMethodInterval));
+    outputFields.emplace(AccessID, Field(AccessID, Field::IK_Output, boost::optional<Extents>(),
+                                         boost::make_optional(writeExtents), doMethodInterval));
   }
 }
 
 void recordReadAccess(std::unordered_map<int, Field>& inputOutputFields,
                       std::unordered_map<int, Field>& inputFields,
                       std::unordered_map<int, Field>& outputFields, int AccessID,
-                      const Interval& doMethodInterval) {
+                      Extents const& readExtents, const Interval& doMethodInterval) {
 
   // Field was recorded as `InputOutput`, state can't change ...
   if(inputOutputFields.count(AccessID)) {
@@ -58,7 +59,9 @@ void recordReadAccess(std::unordered_map<int, Field>& inputOutputFields,
   if(inputFields.count(AccessID)) {
     inputFields.at(AccessID).extendInterval(doMethodInterval);
   } else
-    inputFields.emplace(AccessID, Field(AccessID, Field::IK_Input, Extents{}, doMethodInterval));
+    inputFields.emplace(AccessID,
+                        Field(AccessID, Field::IK_Input, boost::make_optional(readExtents),
+                              boost::optional<Extents>(), doMethodInterval));
 }
 } // namespace AccessUtils
 } // namespace dawn

@@ -42,6 +42,7 @@ cmake .. -DCMAKE_CXX_COMPILER="$CXX"                                            
          -DCMAKE_C_COMPILER="$CC"                                                                  \
          -DCMAKE_BUILD_TYPE="$CONFIG"                                                              \
          -DProtobuf_DIR=${build_dir}/protobuf-prefix/src/protobuf-build/lib/cmake/protobuf/        \
+         -DBOOST_ROOT:PATH="$BOOST_ROOT"                                                           \
       || fatal_error "failed to configure"
 make -j2 || fatal_error "failed to build"
 

@@ -589,6 +589,7 @@ StencilInstantiation::StencilInstantiation(OptimizerContext* context,
   for(const auto& field : SIRStencil->Fields) {
     int AccessID = nextUID();
     setAccessIDNamePairOfField(AccessID, field->Name, field->IsTemporary);
+    fieldIDToInitializedDimensionsMap_.emplace(AccessID, field->fieldDimensions);
   }
 
   // Process the stencil description of the "main stencil"

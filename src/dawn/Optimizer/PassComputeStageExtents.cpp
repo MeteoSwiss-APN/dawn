@@ -39,13 +39,16 @@ bool PassComputeStageExtents::run(
 
       // loop over all the input fields read in fromStage
       for(const Field& fromField : fromStage.getFields()) {
+
+        auto&& fromFieldExtents = fromField.getExtents();
+
         // notice that IO (if read happens before write) would also be a valid pattern
         // to trigger the propagation of the stage extents, however this is not a legal
         // pattern within a stage
         if(fromField.getIntend() != Field::IntendKind::IK_Input)
           continue;
 
-        Extents fieldExtent = fromField.getExtents();
+        Extents fieldExtent = fromFieldExtents;
 
         fieldExtent.expand(stageExtent);
 
@@ -61,7 +64,10 @@ bool PassComputeStageExtents::run(
             continue;
 
           // if found, add the (read) extent of the field as an extent of the stage
-          toStage.getExtents().merge(fieldExtent);
+          Extents ext = toStage.getExtents();
+          ext.merge(fieldExtent);
+          // TODO pass rvalue
+          toStage.setExtents(ext);
         }
       }
     }

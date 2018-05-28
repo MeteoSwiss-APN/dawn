@@ -116,7 +116,8 @@ public:
   Extent getMaxVerticalExtent() const;
 
   /// @brief computes the interval where an accessId is used (extended by the extent of the access)
-  boost::optional<Interval> computeEnclosingAccessInterval(const int accessID) const;
+  boost::optional<Interval> computeEnclosingAccessInterval(const int accessID,
+                                                           const bool mergeWithDoInterval) const;
 
   /// @brief Get fields of this stage sorted according their Intend: `Output` -> `IntputOutput` ->
   /// `Input`
@@ -182,9 +183,11 @@ public:
 
   /// @brief Get the extent of the stage
   /// @{
-  Extents& getExtents() { return extents_; }
+  //  Extents& getExtents() { return extents_; }
 
   Extents const& getExtents() const { return extents_; }
+  void setExtents(Extents const& extents) { extents_ = extents; }
+
   /// @}
 };
 

@@ -36,7 +36,7 @@ namespace {
 /// @param ID the FieldID of the Field to be analized
 /// @return the full extent of the field in the stencil
 static dawn::Extents analyzeStencilExtents(const std::shared_ptr<Stencil>& s, int fieldID) {
-  Extents fullExtents;
+  Extents fullExtents{0, 0, 0, 0, 0, 0};
   Stencil& stencil = *s;
 
   int numStages = stencil.getNumStages();
@@ -47,6 +47,7 @@ static dawn::Extents analyzeStencilExtents(const std::shared_ptr<Stencil>& s, in
 
     Extents const& stageExtent = stage.getExtents();
     for(auto& field : stage.getFields()) {
+      // TODO implement a perfect forwarding
       fullExtents.merge(field.getExtents());
       fullExtents.add(stageExtent);
     }
@@ -182,7 +183,7 @@ bool PassSetBoundaryCondition::run(
 
   auto calculateHaloExtents = [&](std::string fieldname) {
 
-    Extents fullExtent;
+    Extents fullExtent{0, 0, 0, 0, 0, 0};
     // Did we already apply a BoundaryCondition for this field?
     // This is the first time we apply a BC to this field, we traverse all stencils that were
     // applied before
