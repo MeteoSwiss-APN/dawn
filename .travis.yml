@@ -38,6 +38,7 @@ env:
     - CACHE_DIR=${TRAVIS_BUILD_DIR}/deps/install
     - CMAKE_VERSION=3.8.1
     - PROTOBUF_VERSION=3.4.1
+    - BOOST_VERSION=1.63.0
 
 jobs:
   include:
@@ -45,7 +46,7 @@ jobs:
       stage: Prepare Cache
       compiler: gcc
       env: CXX_COMPILER=g++-5 C_COMPILER=gcc-5
-      script: bash ${SCRIPT_DIR}/driver-install.sh -i ${CACHE_DIR} -b cmake
+      script: bash ${SCRIPT_DIR}/driver-install.sh -i ${CACHE_DIR} -b cmake,boost
 
     - <<: *prepare_cache_stage
       compiler: clang
@@ -106,6 +107,7 @@ jobs:
 cache:
   directories:
     - ${TRAVIS_BUILD_DIR}/bundle/build/protobuf-prefix/
+    - ${CACHE_DIR}/boost-${BOOST_VERSION}
 
 branches:
   except:
