@@ -12,6 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include <boost/optional.hpp>
 #include "dawn/Optimizer/DoMethod.h"
 #include "dawn/Optimizer/Accesses.h"
 #include "dawn/Optimizer/DependencyGraphAccesses.h"
@@ -68,8 +69,10 @@ boost::optional<Interval> DoMethod::computeEnclosingAccessInterval(const int acc
 
   boost::optional<Extents>&& extents = computeMaximumExtents(accessID);
 
-  if(extents.is_initialized())
-    return boost::make_optional<Interval>(getInterval())->extendInterval(*extents);
+  if(extents.is_initialized()) {
+    auto interv = getInterval();
+    return boost::make_optional<Interval>(std::move(interv))->extendInterval(*extents);
+  }
   return interval;
 }
 
