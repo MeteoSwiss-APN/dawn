@@ -4,11 +4,6 @@ BASEPATH_SCRIPT=$(dirname "${0}")
 source ${BASEPATH_SCRIPT}/machine_env.sh
 source ${BASEPATH_SCRIPT}/env_${myhost}.sh
 
-module load git
-module load cmake
-module load gcc/5.4.0-2.26
-module load python/3.6.2-gmvolf-17.02
-
 base_dir=$(pwd)
 build_dir=${base_dir}/bundle/build
 
