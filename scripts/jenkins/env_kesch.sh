@@ -7,3 +7,4 @@ module load python/3.6.2-gmvolf-17.02
 
 export CXX=`which g++`
 export CC=`which gcc`
+export BOOST_DIR=/project/c14/install/kesch/boost/boost_1_67_0/
