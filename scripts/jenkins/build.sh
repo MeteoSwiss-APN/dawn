@@ -22,7 +22,7 @@ else
 fi
 
 
-cmake -DCMAKE_BUILD_TYPE=${build_type} -DCMAKE_CXX_COMPILER=`which g++` -DCMAKE_C_COMPILER=`which gcc` -DBOOST_ROOT=${BOOST_DIR}  \
+cmake -DCMAKE_BUILD_TYPE=${build_type} -DBOOST_ROOT=${BOOST_DIR}  \
         -DProtobuf_DIR=${PROTOBUFDIR} ../
 make -j2
 
