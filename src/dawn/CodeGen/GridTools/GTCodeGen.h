@@ -76,7 +76,6 @@ private:
 
   bool isTemporary(std::shared_ptr<sir::Field> f) const { return f->IsTemporary; }
 
-  // TODO we should eliminate the redundancy on FieldInfos
   bool isTemporary(Stencil::FieldInfo const& f) const { return f.IsTemporary; }
 
   /// code generate sync methods statements for all the fields passed
