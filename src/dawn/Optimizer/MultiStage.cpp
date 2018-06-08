@@ -180,7 +180,6 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
         boost::optional<Extent> readAccessInLoopOrder = readAccessExtent.getVerticalLoopOrderExtent(
             getLoopOrder(), Extents::VerticalLoopOrderDir::VL_InLoopOrder, false);
         Interval computingInterval = doMethod.getInterval();
-
         if(readAccessInLoopOrder.is_initialized()) {
           interv.insert(computingInterval.extendInterval(*readAccessInLoopOrder));
         }
