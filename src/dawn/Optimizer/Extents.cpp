@@ -39,7 +39,6 @@ Extents::Extents(int extent1Minus, int extent1Plus, int extent2Minus, int extent
                               Extent{extent3Minus, extent3Plus}}});
 }
 
-// TODO Unittest this
 void Extents::addCenter(const unsigned int dim) {
   DAWN_ASSERT(dim < 3);
 

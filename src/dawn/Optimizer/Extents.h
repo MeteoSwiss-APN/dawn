@@ -144,6 +144,7 @@ public:
   /// @brief Check if Extent is empty
   bool empty();
 
+  /// @brief add the center of the stencil to the extent
   void addCenter(const unsigned int dim);
 
   /// @brief Check if extent in is pointwise (i.e equal to `{0, 0, 0, 0, 0, 0}`)

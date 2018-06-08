@@ -62,4 +62,12 @@ std::string Cache::getCacheIOPolicyAsString() const {
   }
 }
 
+std::ostream& operator<<(std::ostream& os, Cache::window const& w) {
+  return os << "window[" << std::to_string(w.m_m) << "," << std::to_string(w.m_p) << "]";
+}
+
+bool operator==(const Cache::window& first, const Cache::window& second) {
+  return ((first.m_m == second.m_m) && (first.m_p == second.m_p));
+}
+
 } // namespace dawn

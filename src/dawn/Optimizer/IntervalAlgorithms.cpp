@@ -29,7 +29,6 @@ MultiInterval substract(const Interval& int1, const Interval& int2) {
                                 (lowerI2InInterval ? int2.lowerOffset() - 1 : int1.upperOffset())}};
 }
 
-// TODO unittest this
 MultiInterval substract(const Interval& int1, const MultiInterval& int2) {
   if(int2.empty())
     return MultiInterval{int1};
@@ -45,7 +44,6 @@ MultiInterval substract(const Interval& int1, const MultiInterval& int2) {
   return result;
 }
 
-// TODO Unittest this
 Cache::window computeWindowOffset(LoopOrderKind loopOrder, Interval const& accessInterval,
                                   Interval const& computeInterval) {
   return Cache::window{(accessInterval.lowerBound() - ((loopOrder == LoopOrderKind::LK_Backward)

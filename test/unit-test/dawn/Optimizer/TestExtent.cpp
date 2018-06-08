@@ -111,6 +111,15 @@ TEST(ExtentsTest, Add5) {
   EXPECT_TRUE((extents[2] == Extent{0, 3}));
 }
 
+TEST(ExtentsTest, addCenter) {
+  Extents extents({1, 1, -2, -2, 3, 3});
+  extents.addCenter(0);
+
+  EXPECT_EQ(extents, (Extents{0, 1, -2, -2, 3, 3}));
+  extents.addCenter(1);
+  EXPECT_EQ(extents, (Extents{0, 1, -2, 0, 3, 3}));
+}
+
 TEST(ExtentsTest, Stringify) {
   Extents extents({1, -1, 2});
   std::stringstream ss;

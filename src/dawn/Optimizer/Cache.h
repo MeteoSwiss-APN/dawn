@@ -92,6 +92,9 @@ private:
   boost::optional<window> window_;
 };
 
+std::ostream& operator<<(std::ostream& os, Cache::window const& w);
+bool operator==(const Cache::window& first, const Cache::window& second);
+
 } // namespace dawn
 
 namespace std {

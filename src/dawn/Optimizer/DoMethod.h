@@ -73,6 +73,14 @@ public:
 
   /// @brief computes the interval where an accessId is used (extended by the extent of the
   /// access)
+  /// @param accessID accessID for which the enclosing interval is computed
+  /// @param mergeWidhDoInterval determines if the extent of the access is merged with the interval
+  /// of the do method.
+  /// Example:
+  ///    do(kstart+2,kend) return u[k+1]
+  /// will return Interval{3,kend+1} if mergeWithDoInterval is false
+  /// will return Interval{2,kend+1} (which is Interval{3,kend+1}.merge(Interval{2,kend})) if
+  /// mergeWithDoInterval is true
   boost::optional<Interval> computeEnclosingAccessInterval(const int accessID,
                                                            const bool mergeWithDoInterval) const;
 };

@@ -30,20 +30,6 @@ namespace {
 
 enum class FirstAccessKind { FK_Read, FK_Write, FK_Mixed };
 
-FirstAccessKind toFirstAccess(Field::IntendKind access) {
-  switch(access) {
-  case Field::IK_Input:
-    return FirstAccessKind::FK_Read;
-    break;
-  case Field::IK_InputOutput:
-  case Field::IK_Output:
-    return FirstAccessKind::FK_Write;
-    break;
-  default:
-    dawn_unreachable("unknown access kind");
-  }
-}
-
 /// @brief properties of a cache candidate
 struct CacheCandidate {
   Cache::CacheIOPolicy policy_;
@@ -51,45 +37,6 @@ struct CacheCandidate {
   //  FirstAccessKind intend_;
   Interval interval_;
 };
-
-/// @brief combine the access kind of two accesses
-boost::optional<FirstAccessKind> combineFirstAccess(boost::optional<FirstAccessKind> firstAccess,
-                                                    boost::optional<FirstAccessKind> secondAccess) {
-  if(!firstAccess.is_initialized()) {
-    firstAccess = secondAccess;
-  }
-  if(!secondAccess.is_initialized())
-    return firstAccess;
-
-  switch(*firstAccess) {
-  case FirstAccessKind::FK_Read:
-    return (*secondAccess == FirstAccessKind::FK_Read)
-               ? firstAccess
-               : boost::make_optional(FirstAccessKind::FK_Mixed);
-    break;
-  case FirstAccessKind::FK_Write:
-    return (*secondAccess == FirstAccessKind::FK_Write)
-               ? firstAccess
-               : boost::make_optional(FirstAccessKind::FK_Mixed);
-    break;
-  case FirstAccessKind::FK_Mixed:
-    return firstAccess;
-    break;
-  default:
-    dawn_unreachable("unknown access kind");
-  }
-}
-
-bool iterationPastInterval(Interval const& iterInterval, Interval const& baseInterval,
-                           LoopOrderKind loopOrder) {
-  if(loopOrder == LoopOrderKind::LK_Forward) {
-    return iterInterval.lowerBound() > baseInterval.upperBound();
-  }
-  if(loopOrder == LoopOrderKind::LK_Backward) {
-    return iterInterval.upperBound() < baseInterval.lowerBound();
-  }
-  dawn_unreachable("loop order not supported");
-}
 
 /// @brief Combine the policies from the first MultiStage (`MS1Policy`) and the
 /// immediately
@@ -151,26 +98,6 @@ CacheCandidate combinePolicy(CacheCandidate const& MS1Policy, Field::IntendKind 
   dawn_unreachable("invalid policy combination");
 }
 
-/// computes the cache window required by bpfill and epflush based on the accessed interval of a
-/// field and the interval of the iteration
-Cache::window computeCacheWindow(LoopOrderKind loopOrder, Interval const& accessedInterval,
-                                 Interval const& iterationInterval) {
-  if(loopOrder == LoopOrderKind::LK_Forward) {
-    DAWN_ASSERT(accessedInterval.upperBound() == iterationInterval.upperBound());
-    DAWN_ASSERT(accessedInterval.lowerBound() <= iterationInterval.lowerBound());
-
-    return Cache::window{accessedInterval.lowerBound() - iterationInterval.lowerBound(), 0};
-
-  } else if(loopOrder == LoopOrderKind::LK_Backward) {
-    DAWN_ASSERT(accessedInterval.lowerBound() == iterationInterval.lowerBound());
-    DAWN_ASSERT(accessedInterval.upperBound() >= iterationInterval.upperBound());
-
-    return Cache::window{0, accessedInterval.upperBound() - iterationInterval.upperBound()};
-  } else
-    dawn_unreachable_internal();
-  return Cache::window{};
-}
-
 /// computes a cache candidate of a field for a multistage
 CacheCandidate computeCacheCandidateForMS(Field const& field, bool isTemporaryField,
                                           MultiStage const& MS) {
@@ -182,16 +109,12 @@ CacheCandidate computeCacheCandidateForMS(Field const& field, bool isTemporaryFi
     interval->merge(field.getInterval());
     DAWN_ASSERT(interval.is_initialized());
 
-    return CacheCandidate{Cache::fill, boost::optional<Cache::window>(),
-                          /*toFirstAccess(field.getIntend()),
-         */ *interval};
+    return CacheCandidate{Cache::fill, boost::optional<Cache::window>(), *interval};
   }
   if(field.getIntend() == Field::IK_Output) {
     // we do not cache output only normal fields since there is not data reuse
     DAWN_ASSERT(isTemporaryField);
-    return CacheCandidate{Cache::local, boost::optional<Cache::window>(),
-                          /* toFirstAccess(field.getIntend()), */
-                          field.getInterval()};
+    return CacheCandidate{Cache::local, boost::optional<Cache::window>(), field.getInterval()};
   }
 
   if(field.getIntend() == Field::IK_InputOutput) {
