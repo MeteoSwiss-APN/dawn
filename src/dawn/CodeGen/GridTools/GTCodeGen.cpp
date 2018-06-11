@@ -469,14 +469,6 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
           const auto& field = fields[accessorIdx];
           std::string paramName = stencilInstantiation->getNameFromAccessID(field.getAccessID());
 
-          // intialize map entry      
-          collectedExtents[paramName] = std::vector<int>(field.getExtents().getSize()*2);
-          // get largest and smallest extent for each field
-          for(int dim = 0; dim < field.getExtents().getSize(); ++dim) {
-            collectedExtents[paramName][dim*2] = std::max(collectedExtents[paramName][dim*2], field.getExtents()[dim].Plus);
-            collectedExtents[paramName][dim*2+1] = std::min(collectedExtents[paramName][dim*2+1], field.getExtents()[dim].Minus);
-          }
-
           // Generate parameter of stage
           codegen::Type extent(c_gt() + "extent", clear(tss));
           for(auto& e : field.getExtents().getExtents())
@@ -580,21 +572,20 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
 
     // Add static asserts to check halos against extents
     StencilConstructor.addComment("Check if extents do not exceed the halos");
+    auto exts = (*stencilInstantiation->getStencils()[stencilIdx]).computeEnclosingAccessExtents();
     for(int i = 0; i < numFields; ++i) {
       if(!StencilFields[i].IsTemporary) {
-        auto max_extents = collectedExtents[StencilFields[i].Name];
-        DAWN_ASSERT_MSG(max_extents.size() % 2 == 0,
-                      "Extents always have to come in pairs (+/-)");
-        for(int dim = 0; dim < (max_extents.size() / 2); ++dim) {
+        auto const& ext = exts[StencilFields[i].AccessID];
+        for(int dim = 0; dim < ext.getSize(); ++dim) {
           // assert for + accesses
           StencilConstructor.addStatement(
               "static_assert(" + StencilConstructorTemplates[i - numTemporaries] + 
-                "::storage_info_t::halo_t::template at<" + std::to_string(dim) + ">() >= " + std::to_string(max_extents[dim*2]) + "," +
+                "::storage_info_t::halo_t::template at<" + std::to_string(dim) + ">() >= " + std::to_string(ext[dim].Plus) + "," +
                 "Used extents exceed halo limits.)");
           // assert for - accesses
           StencilConstructor.addStatement(
               "static_assert((-" + StencilConstructorTemplates[i - numTemporaries] + 
-                "::storage_info_t::halo_t::template at<" + std::to_string(dim) + ">()) >= " + std::to_string(max_extents[dim*2+1]) + "," +
+                "::storage_info_t::halo_t::template at<" + std::to_string(dim) + ">()) >= " + std::to_string(ext[dim].Minus) + "," +
                 "Used extents exceed halo limits.)");
         }
       }
