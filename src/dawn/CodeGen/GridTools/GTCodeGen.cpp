@@ -575,15 +575,19 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
       if(!StencilFields[i].IsTemporary) {
         auto const& ext = exts.at(StencilFields[i].AccessID);
         for(int dim = 0; dim < ext.getSize(); ++dim) {
+          std::string at_call = "template at" + std::to_string(dim) + ">()";
+          std::string storage = StencilConstructorTemplates[i - numTemporaries];
           // assert for + accesses
           StencilConstructor.addStatement(
-              "static_assert(static_cast<int>(" + StencilConstructorTemplates[i - numTemporaries] + 
-                "::storage_info_t::halo_t::template at<" + std::to_string(dim) + ">()) >= " + std::to_string(ext[dim].Plus) + "," +
+              "static_assert((static_cast<int>(" + storage + 
+                "::storage_info_t::halo_t::"+at_call+") >= " + std::to_string(ext[dim].Plus) + ") || " +
+                "("+storage+"::layout_t::"+at_call+" == -1)," +
                 "\"Used extents exceed halo limits.\")");
           // assert for - accesses
           StencilConstructor.addStatement(
-              "static_assert((-1)*static_cast<int>(" + StencilConstructorTemplates[i - numTemporaries] + 
-                "::storage_info_t::halo_t::template at<" + std::to_string(dim) + ">()) >= " + std::to_string(ext[dim].Minus) + "," +
+              "static_assert(((-1)*static_cast<int>(" + storage + 
+                "::storage_info_t::halo_t::"+at_call+") <= " + std::to_string(ext[dim].Minus) + ") || " +
+                "("+storage+"::layout_t::"+at_call+" == -1)," +
                 "\"Used extents exceed halo limits.\")");
         }
       }
