@@ -579,12 +579,12 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
           StencilConstructor.addStatement(
               "static_assert(" + StencilConstructorTemplates[i - numTemporaries] + 
                 "::storage_info_t::halo_t::template at<" + std::to_string(dim) + ">() >= " + std::to_string(ext[dim].Plus) + "," +
-                "Used extents exceed halo limits.)");
+                "\"Used extents exceed halo limits.\")");
           // assert for - accesses
           StencilConstructor.addStatement(
               "static_assert((-" + StencilConstructorTemplates[i - numTemporaries] + 
                 "::storage_info_t::halo_t::template at<" + std::to_string(dim) + ">()) >= " + std::to_string(ext[dim].Minus) + "," +
-                "Used extents exceed halo limits.)");
+                "\"Used extents exceed halo limits.\")");
         }
       }
     }
