@@ -387,9 +387,6 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
 
     std::vector<std::string> makeComputation;
 
-    // map field names to maximum extent 
-    std::map<std::string, std::vector<int>> collectedExtents;
-
     //
     // Generate code for stages and assemble the `make_computation`
     //
@@ -572,10 +569,11 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
 
     // Add static asserts to check halos against extents
     StencilConstructor.addComment("Check if extents do not exceed the halos");
-    auto exts = (*stencilInstantiation->getStencils()[stencilIdx]).computeEnclosingAccessExtents();
+    std::unordered_map<int, Extents> const& exts = 
+	    (*stencilInstantiation->getStencils()[stencilIdx]).computeEnclosingAccessExtents();
     for(int i = 0; i < numFields; ++i) {
       if(!StencilFields[i].IsTemporary) {
-        auto const& ext = exts[StencilFields[i].AccessID];
+        auto const& ext = exts.at(StencilFields[i].AccessID);
         for(int dim = 0; dim < ext.getSize(); ++dim) {
           // assert for + accesses
           StencilConstructor.addStatement(
