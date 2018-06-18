@@ -10,15 +10,13 @@ build_dir=${base_dir}/bundle/build
 mkdir -p $build_dir
 cd $build_dir
 
-if [ ${myhost} == "kesch" ]; then
-  PROTOBUFDIR="/scratch/jenkins/workspace/protobuf/slave/kesch/install/lib64/cmake/protobuf/"
-elif [ ${myhost} == "daint" ]; then
-  PROTOBUFDIR="/scratch/snx3000/jenkins/workspace/protobuf/slave/daint/install/lib64/cmake/protobuf/"
-else
-  echo" Error Machine not found: ${myhost}"
-  exit 1
+if [ -z ${BOOST_DIR+x} ]; then 
+ echo "BOOST_DIR needs to be set in the machine env"
 fi
 
+if [ -z ${PROTOBUFDIR+x} ]; then 
+ echo "PROTOBUFDIF needs to be set in the machine env"
+fi
 
 cmake -DCMAKE_BUILD_TYPE=${build_type} -DBOOST_ROOT=${BOOST_DIR}  \
         -DProtobuf_DIR=${PROTOBUFDIR} ../
