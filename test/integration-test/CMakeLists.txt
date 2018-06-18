@@ -135,7 +135,8 @@ foreach(example ${codegen_examples})
       set_property(SOURCE ${cwd}/CodeGen/${example}_benchmark.cu APPEND PROPERTY OBJECT_DEPENDS ${cwd}/CodeGen/generated/${example}_c++-naive.cpp)
 
       if(CTEST_CUDA_SUBMIT) 
-        set(CTEST_SUBMIT_COMMAND "${SLURM_SRUN_COMMAND}" "-n" "${GTCLANG_SLURM_N_TASKS}" "${GTCLANG_SLURM_RESOURCES}" "-p" "${GTCLANG_SLURM_PARTITION}")
+        string(REPLACE " " ";" GTCLANG_SLURM_RESOURCES_LIST ${GTCLANG_SLURM_RESOURCES})
+        set(CTEST_SUBMIT_COMMAND "${SLURM_SRUN_COMMAND}" "-n" "${GTCLANG_SLURM_N_TASKS}" ${GTCLANG_SLURM_RESOURCES_LIST} "-p" "${GTCLANG_SLURM_PARTITION}")
       endif(CTEST_CUDA_SUBMIT)
 
       add_test(NAME CTest-${example}_benchmarks_cuda COMMAND ${CTEST_SUBMIT_COMMAND} $<TARGET_FILE:${example}_benchmarks_cuda> 12 12 10 --gtest_output=xml:${example}_cuda_unittest.xml)

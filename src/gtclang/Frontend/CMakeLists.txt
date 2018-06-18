@@ -43,3 +43,8 @@ mchbuild_add_library(
           StencilParser.h
   OBJECT
 )
+
+target_include_directories(GTClangFrontendObjects PRIVATE
+  $<TARGET_PROPERTY:Dawn::DawnShared,INTERFACE_INCLUDE_DIRECTORIES>
+)
+
