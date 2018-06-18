@@ -14,7 +14,7 @@
 
 find_package(LATEX COMPONENTS PDFLATEX)
 
-dawn_export_package(
+mchbuild_export_package(
   NAME LATEX
   FOUND ${LATEX_FOUND}
   EXECUTABLE ${PDFLATEX_COMPILER}
