@@ -33,5 +33,7 @@ mchbuild_combine_libraries(
   DEPENDS ${DAWN_EXTERNAL_LIBRARIES}
 )
 
+target_include_directories(DawnShared SYSTEM INTERFACE ${Boost_INCLUDE_DIRS})
+
 # Export the targets
 install(EXPORT DawnTargets NAMESPACE Dawn:: DESTINATION ${DAWN_INSTALL_CMAKE_DIR})

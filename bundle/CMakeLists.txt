@@ -65,14 +65,15 @@ mchbuild_add_target_clean_all(
 )
 
 include("thirdparty/DawnAddProtobuf")
+include("thirdparty/DawnAddBoost")
 
-set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR})
+set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR} -DBOOST_ROOT=${BOOST_ROOT})
 
 mchbuild_find_package(
   PACKAGE dawn
   FORWARD_VARS 
     BINARY_DIR dawn_binary_dir
-  DEPENDS "protobuf"
+  DEPENDS "protobuf" "boost"
   ADDITIONAL
     SOURCE_DIR "${CMAKE_SOURCE_DIR}/../"
     MCHBUILD_ROOT "${DAWN_MCHBUILD_SOURCE_DIR}"

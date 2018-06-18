@@ -14,7 +14,7 @@
 
 find_package(Sphinx REQUIRED)
 
-dawn_export_package(
+mchbuild_export_package(
   NAME Sphinx
   FOUND ${SPHINX_FOUND}
   VERSION ${SPHINX_VERSION}
