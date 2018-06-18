@@ -1,11 +1,8 @@
 #!/bin/bash
 
-module load git
-module load cmake
-module load gcc/5.4.0-2.26
-module load python/3.6.2-gmvolf-17.02
-
-export BOOST_DIR=/scratch/cosuna/software/boost_1_59_0/
+BASEPATH_SCRIPT=$(dirname "${0}")
+source ${BASEPATH_SCRIPT}/machine_env.sh
+source ${BASEPATH_SCRIPT}/env_${myhost}.sh
 
 base_dir=$(pwd)
 build_dir=${base_dir}/bundle/build
@@ -13,8 +10,16 @@ build_dir=${base_dir}/bundle/build
 mkdir -p $build_dir
 cd $build_dir
 
-cmake -DCMAKE_BUILD_TYPE=${build_type} -DCMAKE_CXX_COMPILER=`which g++` -DCMAKE_C_COMPILER=`which gcc` -DBOOST_ROOT=${BOOST_DIR}  \
-        -DProtobuf_DIR=/scratch/cosuna/software/protobuf/3.4.0/lib/cmake/protobuf/ ../
+if [ -z ${BOOST_DIR+x} ]; then 
+ echo "BOOST_DIR needs to be set in the machine env"
+fi
+
+if [ -z ${PROTOBUFDIR+x} ]; then 
+ echo "PROTOBUFDIF needs to be set in the machine env"
+fi
+
+cmake -DCMAKE_BUILD_TYPE=${build_type} -DBOOST_ROOT=${BOOST_DIR}  \
+        -DProtobuf_DIR=${PROTOBUFDIR} ../
 make -j2
 
 # Run unittests

@@ -21,7 +21,7 @@ include(mchbuildFindPythonModule)
 mchbuild_find_python_module(sphinx REQUIRED)
 mchbuild_find_python_module(docutils REQUIRED)
 
-dawn_export_package(
+mchbuild_export_package(
   NAME Python3
   FOUND ${PYTHONINTERP_FOUND}
   EXECUTABLE ${PYTHON_EXECUTABLE}

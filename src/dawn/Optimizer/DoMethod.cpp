@@ -12,6 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include <boost/optional.hpp>
 #include "dawn/Optimizer/DoMethod.h"
 #include "dawn/Optimizer/Accesses.h"
 #include "dawn/Optimizer/DependencyGraphAccesses.h"
