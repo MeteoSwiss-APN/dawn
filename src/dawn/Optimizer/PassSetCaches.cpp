@@ -62,7 +62,6 @@ struct CacheCandidate {
 ///
 CacheCandidate combinePolicy(CacheCandidate const& MS1Policy, Field::IntendKind fieldIntend,
                              CacheCandidate const& MS2Policy) {
-  // TODO properly compute the window
   if(MS1Policy.policy_ == Cache::local) {
     if(MS2Policy.policy_ == Cache::fill)
       return CacheCandidate{Cache::flush,
@@ -298,7 +297,6 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
             }
           }
 
-          // TODO what is this? Do we need it?
           Interval interval = field.getInterval();
           if(cacheCandidate.policy_ == Cache::CacheIOPolicy::fill) {
             auto interval_ = MS.computeEnclosingAccessInterval(field.getAccessID(), true);
