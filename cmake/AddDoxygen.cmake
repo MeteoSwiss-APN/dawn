@@ -14,7 +14,7 @@
 
 find_package(Doxygen REQUIRED)
 
-dawn_export_package(
+mchbuild_export_package(
   NAME Doxygen
   FOUND ${DOXYGEN_FOUND}
   VERSION ${DOXYGEN_VERSION}
