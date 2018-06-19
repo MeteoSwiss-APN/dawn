@@ -19,9 +19,9 @@ add_subdirectory(Optimizer)
 add_subdirectory(CodeGen)
 add_subdirectory(Unittest)
 
-include(mchbuildCombineLibraries)
+include(yodaCombineLibraries)
 # Combine the relevant object libraries into libDawn.so/libDawn.a
-mchbuild_combine_libraries(
+yoda_combine_libraries(
   NAME Dawn
   OBJECTS DawnSupportObjects
           DawnSIRObjects

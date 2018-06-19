@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-mchbuild_add_library(
+yoda_add_library(
   NAME DawnCodeGen
   SOURCES ASTCodeGenCXX.cpp
           ASTCodeGenCXX.h

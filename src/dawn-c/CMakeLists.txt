@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-mchbuild_add_library(
+yoda_add_library(
   NAME DawnC
   SOURCES Dawn.h
           Compiler.cpp
@@ -34,7 +34,7 @@ mchbuild_add_library(
 )
 
 # Combine the relevant object libraries into libDawnC.so/libDawnC.a
-mchbuild_combine_libraries(
+yoda_combine_libraries(
   NAME DawnC
   OBJECTS DawnCObjects
           DawnSupportObjects

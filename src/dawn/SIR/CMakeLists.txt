@@ -23,7 +23,7 @@ dawn_protobuf_generate(
 )
 include_directories(SYSTEM ${sir_proto_include_dirs})
 
-mchbuild_add_library(
+yoda_add_library(
   NAME DawnSIR
   SOURCES AST.h
           AST.cpp

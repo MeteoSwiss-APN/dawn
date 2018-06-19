@@ -12,9 +12,9 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-mchbuild_configure_file(Config.h.cmake)
+yoda_configure_file(Config.h.cmake)
 
-mchbuild_add_library(
+yoda_add_library(
   NAME DawnSupport
   SOURCES AlignOf.h
           Array.cpp
