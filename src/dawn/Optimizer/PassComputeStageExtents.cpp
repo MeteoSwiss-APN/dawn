@@ -45,8 +45,14 @@ bool PassComputeStageExtents::run(
         // notice that IO (if read happens before write) would also be a valid pattern
         // to trigger the propagation of the stage extents, however this is not a legal
         // pattern within a stage
-        if(fromField.getIntend() != Field::IntendKind::IK_Input)
-          continue;
+///////////////////////////////
+/*
+        auto readInterval = computeReadAccessInterval(accessID);
+        if(readInterval.empty())
+            continue;
+*/
+//        if(fromField.getIntend() != Field::IntendKind::IK_Input)
+//          continue;
 
         Extents fieldExtent = fromFieldExtents;
 
@@ -55,6 +61,11 @@ bool PassComputeStageExtents::run(
         // check which (previous) stage computes the field (read in fromStage)
         for(int j = i - 1; j >= 0; --j) {
           Stage& toStage = *(stencil.getStage(j));
+///////////////////////////////
+/*
+          if(!readInterval.overlaps(toStage.interval()))
+              continue;
+*/
           auto fields = toStage.getFields();
           auto it = std::find_if(fields.begin(), fields.end(), [&](Field const& f) {
             return (f.getIntend() != Field::IntendKind::IK_Input) &&
