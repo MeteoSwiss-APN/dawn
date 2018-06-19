@@ -142,7 +142,6 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     mssSplitStrategy = MultistageSplitStrategy::SS_Optimized;
   }
 
-
   // -max-fields
   int maxFields = options_->MaxFieldsPerStencil;
 

@@ -433,7 +433,6 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
             });
       }
 
-
       std::size_t stageIdx = 0;
       for(auto stageIt = multiStage.getStages().begin(), stageEnd = multiStage.getStages().end();
           stageIt != stageEnd; ++stageIt, ++stageIdx) {
@@ -569,8 +568,8 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
 
     // Add static asserts to check halos against extents
     StencilConstructor.addComment("Check if extents do not exceed the halos");
-    std::unordered_map<int, Extents> const& exts = 
-	    (*stencilInstantiation->getStencils()[stencilIdx]).computeEnclosingAccessExtents();
+    std::unordered_map<int, Extents> const& exts =
+        (*stencilInstantiation->getStencils()[stencilIdx]).computeEnclosingAccessExtents();
     for(int i = 0; i < numFields; ++i) {
       if(!StencilFields[i].IsTemporary) {
         auto const& ext = exts.at(StencilFields[i].AccessID);
@@ -578,17 +577,17 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
           std::string at_call = "template at<" + std::to_string(dim) + ">()";
           std::string storage = StencilConstructorTemplates[i - numTemporaries];
           // assert for + accesses
-          StencilConstructor.addStatement(
-              "static_assert((static_cast<int>(" + storage + 
-                "::storage_info_t::halo_t::"+at_call+") >= " + std::to_string(ext[dim].Plus) + ") || " +
-                "("+storage+"::storage_info_t::layout_t::"+at_call+" == -1)," +
-                "\"Used extents exceed halo limits.\")");
+          StencilConstructor.addStatement("static_assert((static_cast<int>(" + storage +
+                                          "::storage_info_t::halo_t::" + at_call + ") >= " +
+                                          std::to_string(ext[dim].Plus) + ") || " + "(" + storage +
+                                          "::storage_info_t::layout_t::" + at_call + " == -1)," +
+                                          "\"Used extents exceed halo limits.\")");
           // assert for - accesses
-          StencilConstructor.addStatement(
-              "static_assert(((-1)*static_cast<int>(" + storage + 
-                "::storage_info_t::halo_t::"+at_call+") <= " + std::to_string(ext[dim].Minus) + ") || " +
-                "("+storage+"::storage_info_t::layout_t::"+at_call+" == -1)," +
-                "\"Used extents exceed halo limits.\")");
+          StencilConstructor.addStatement("static_assert(((-1)*static_cast<int>(" + storage +
+                                          "::storage_info_t::halo_t::" + at_call + ") <= " +
+                                          std::to_string(ext[dim].Minus) + ") || " + "(" + storage +
+                                          "::storage_info_t::layout_t::" + at_call + " == -1)," +
+                                          "\"Used extents exceed halo limits.\")");
         }
       }
     }
