@@ -14,7 +14,7 @@
 
 find_package(clang-format EXACT 3.8)
 
-mchbuild_export_package(
+yoda_export_package(
   NAME clang-format
   FOUND ${CLANG-FORMAT_FOUND}
   VERSION ${CLANG-FORMAT_VERSION}

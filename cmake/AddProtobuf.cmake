@@ -33,7 +33,7 @@ set(DAWN_PROTOBUF_ROOT ${root_dir})
 # set the path to the install-directory of protobuf
 set(DAWN_PROTOBUF_RPATH_DIR ${DAWN_PROTOBUF_ROOT}/lib)
 
-mchbuild_export_package(
+yoda_export_package(
   NAME Protobuf
   FOUND ${Protobuf_FOUND}
   EXECUTABLE "${Protobuf_PROTOC_EXECUTABLE}"

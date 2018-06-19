@@ -14,7 +14,7 @@
 
 find_package(Sphinx REQUIRED)
 
-mchbuild_export_package(
+yoda_export_package(
   NAME Sphinx
   FOUND ${SPHINX_FOUND}
   VERSION ${SPHINX_VERSION}

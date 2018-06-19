@@ -14,7 +14,7 @@
 
 find_package(Doxygen REQUIRED)
 
-mchbuild_export_package(
+yoda_export_package(
   NAME Doxygen
   FOUND ${DOXYGEN_FOUND}
   VERSION ${DOXYGEN_VERSION}
