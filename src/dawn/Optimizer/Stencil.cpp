@@ -445,7 +445,8 @@ std::ostream& operator<<(std::ostream& os, const Stencil& stencil) {
   return os;
 }
 
-std::unordered_map<int, Extents> const& Stencil::computeEnclosingAccessExtents() {
+std::unordered_map<int, Extents> const Stencil::computeEnclosingAccessExtents() const {
+  std::unordered_map<int, Extents> maxExtents_;
   // iterate through multistages
   for(const auto& MS : multistages_) {
     // iterate through stages

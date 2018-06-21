@@ -46,9 +46,6 @@ class Stencil {
   /// List of multi-stages in the stencil
   std::list<std::shared_ptr<MultiStage>> multistages_;
 
-  /// Maximum extents for all the accessor that are used in this stencil
-  std::unordered_map<int, Extents> maxExtents_;
-
 public:
   struct FieldInfo {
     bool IsTemporary;
@@ -267,7 +264,7 @@ public:
   friend std::ostream& operator<<(std::ostream& os, const Stencil& stencil);
 
   /// @brief Method to compute and return the maximum extents for all the used accessors/fields
-  std::unordered_map<int, Extents> const& computeEnclosingAccessExtents();
+  std::unordered_map<int, Extents> const computeEnclosingAccessExtents() const;
 
 private:
   void forEachStatementAccessesPairImpl(
