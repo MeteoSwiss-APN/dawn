@@ -58,19 +58,20 @@ public:
   };
 
 private:
-  std::string generateStencilInstantiation(const StencilInstantiation* stencilInstantiation);
+  std::string
+  generateStencilInstantiation(const std::shared_ptr<StencilInstantiation> stencilInstantiation);
   std::string generateGlobals(const std::shared_ptr<SIR>& Sir);
-  std::string cacheWindowToString(boost::optional<Cache::window> const& cacheWindow);
+  std::string cacheWindowToString(const Cache::window& cacheWindow);
   std::string buildMakeComputation(std::vector<std::string> const& DomainMapPlaceholders,
                                    std::vector<std::string> const& makeComputation,
-                                   const std::__cxx11::string& gridName) const;
+                                   const std::string& gridName) const;
   void
   buildPlaceholderDefinitions(MemberFunction& function,
                               std::vector<Stencil::FieldInfo> const& stencilFields,
                               std::vector<std::string> const& stencilGlobalVariables,
                               std::vector<std::string> const& stencilConstructorTemplates) const;
 
-  std::string getFieldName(std::shared_ptr<sir::Field> f) const { return f->Name; }
+  std::string getFieldName(std::shared_ptr<sir::Field> const& f) const { return f->Name; }
 
   std::string getFieldName(Stencil::FieldInfo const& f) const { return f.Name; }
 

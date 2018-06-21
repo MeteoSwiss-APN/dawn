@@ -18,7 +18,6 @@
 #include "dawn/Optimizer/StatementAccessesPair.h"
 #include "dawn/Optimizer/StencilInstantiation.h"
 #include "dawn/Support/Unreachable.h"
-#include "dawn/Support/OptionalUtil.h"
 #include "dawn/Optimizer/IntervalAlgorithms.h"
 #include <iostream>
 #include <set>
@@ -34,12 +33,10 @@ enum class FirstAccessKind { FK_Read, FK_Write, FK_Mixed };
 struct CacheCandidate {
   Cache::CacheIOPolicy policy_;
   boost::optional<Cache::window> window_;
-  //  FirstAccessKind intend_;
   Interval interval_;
 };
 
-/// @brief Combine the policies from the first MultiStage (`MS1Policy`) and the
-/// immediately
+/// @brief Combine the policies from the first MultiStage (`MS1Policy`) and the immediately
 /// following (`MS2Policy`)
 ///
 /// MS1Policy has to be one of: {local, fill, bpfill}
@@ -64,34 +61,28 @@ CacheCandidate combinePolicy(CacheCandidate const& MS1Policy, Field::IntendKind 
                              CacheCandidate const& MS2Policy) {
   if(MS1Policy.policy_ == Cache::local) {
     if(MS2Policy.policy_ == Cache::fill)
-      return CacheCandidate{Cache::flush,
-                            boost::make_optional(Cache::window{}), /*MS1Policy.intend_, */
-                            MS1Policy.interval_};                  // flush
+      return CacheCandidate{Cache::flush, boost::make_optional(Cache::window{}),
+                            MS1Policy.interval_};
     if(MS2Policy.policy_ == Cache::bpfill) {
       DAWN_ASSERT(MS2Policy.window_.is_initialized());
       auto const& window = *(MS2Policy.window_);
       return CacheCandidate{Cache::epflush,
                             boost::make_optional(Cache::window{-window.m_p, -window.m_m}),
-                            /*MS1Policy.intend_,*/
-                            MS1Policy.interval_}; // epflush
+                            MS1Policy.interval_};
     }
     if(MS2Policy.policy_ == Cache::local)
-      return MS2Policy; // local
+      return MS2Policy;
     dawn_unreachable("Not valid policy");
   }
   if(MS1Policy.policy_ == Cache::fill || MS1Policy.policy_ == Cache::bpfill) {
     if(MS2Policy.policy_ == Cache::fill || MS2Policy.policy_ == Cache::bpfill) {
       if(fieldIntend == Field::IK_Input)
-        return CacheCandidate{Cache::fill, MS1Policy.window_,
-                              /*MS1Policy.intend_,*/
-                              MS1Policy.interval_};
+        return CacheCandidate{Cache::fill, MS1Policy.window_, MS1Policy.interval_};
       else
-        return CacheCandidate{Cache::fill_and_flush, MS1Policy.window_,
-                              /*MS1Policy.intend_,*/
-                              MS1Policy.interval_};
+        return CacheCandidate{Cache::fill_and_flush, MS1Policy.window_, MS1Policy.interval_};
     }
     if(MS2Policy.policy_ == Cache::local)
-      return MS1Policy; // fill, pbfill
+      return MS1Policy;
     dawn_unreachable("Not valid policy");
   }
   dawn_unreachable("invalid policy combination");
@@ -120,8 +111,6 @@ CacheCandidate computeCacheCandidateForMS(Field const& field, bool isTemporaryFi
 
     boost::optional<Interval> interval =
         MS.computeEnclosingAccessInterval(field.getAccessID(), true);
-    // make sure the access interval has the same boundaries as from any interval of the mss
-    //    interval->merge(field.getInterval());
 
     DAWN_ASSERT(interval.is_initialized());
 
@@ -129,8 +118,7 @@ CacheCandidate computeCacheCandidateForMS(Field const& field, bool isTemporaryFi
 
     MultiInterval multiInterval = MS.computeReadAccessInterval(field.getAccessID());
     if(multiInterval.empty())
-      return CacheCandidate{Cache::local, boost::optional<Cache::window>(), /* *firstAccess, */
-                            field.getInterval()};
+      return CacheCandidate{Cache::local, boost::optional<Cache::window>(), field.getInterval()};
 
     if(multiInterval.numPartitions() > 1 ||
        multiInterval.getIntervals()[0].contains(field.getInterval()))
@@ -229,7 +217,6 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
                      std::back_inserter(fields),
                      [](const std::shared_ptr<MultiStage>& MSPtr) { return MSPtr->getFields(); });
 
-      boost::optional<Cache::window> cacheWindow;
       int numMS = fields.size();
       std::set<int> mssProcessedFields;
       for(int MSIndex = 0; MSIndex < numMS; ++MSIndex) {

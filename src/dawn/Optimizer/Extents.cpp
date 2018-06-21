@@ -149,7 +149,7 @@ Extents::getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const {
 boost::optional<Extent> Extents::getVerticalLoopOrderExtent(LoopOrderKind loopOrder,
                                                             VerticalLoopOrderDir loopOrderDir,
                                                             bool includeCenter) const {
-  auto const& extents = getExtents();
+  const auto& extents = getExtents();
   const Extent& verticalExtent = extents[2];
 
   if(loopOrder == LoopOrderKind::LK_Parallel) {

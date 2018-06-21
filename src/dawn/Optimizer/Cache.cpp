@@ -43,6 +43,10 @@ std::string Cache::getCacheTypeAsString() const {
 
 Cache::CacheIOPolicy Cache::getCacheIOPolicy() const { return policy_; }
 
+bool Cache::requiresWindow() const {
+  return getCacheIOPolicy() == Cache::bpfill || getCacheIOPolicy() == Cache::epflush;
+}
+
 std::string Cache::getCacheIOPolicyAsString() const {
   switch(policy_) {
   case fill_and_flush:
@@ -63,7 +67,7 @@ std::string Cache::getCacheIOPolicyAsString() const {
 }
 
 std::ostream& operator<<(std::ostream& os, Cache::window const& w) {
-  return os << "window[" << std::to_string(w.m_m) << "," << std::to_string(w.m_p) << "]";
+  return os << "window" << w.toString();
 }
 
 bool operator==(const Cache::window& first, const Cache::window& second) {

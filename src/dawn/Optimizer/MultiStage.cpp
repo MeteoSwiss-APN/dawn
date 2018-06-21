@@ -20,7 +20,6 @@
 #include "dawn/Optimizer/Stage.h"
 #include "dawn/Optimizer/StencilInstantiation.h"
 #include "dawn/Support/STLExtras.h"
-#include "dawn/Support/OptionalUtil.h"
 #include "dawn/Optimizer/MultiInterval.h"
 #include "dawn/Optimizer/IntervalAlgorithms.h"
 
