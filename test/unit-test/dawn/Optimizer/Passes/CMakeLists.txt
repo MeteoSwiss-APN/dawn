@@ -17,6 +17,7 @@
     SOURCES 
           TestMain.cpp
           TestPassComputeStageExtents.cpp
+          TestComputeMaxExtent.cpp
           TestPassSetBoundaryCondition.cpp
           TestFieldAccessIntervals.cpp
           TestTemporaryToFunction.cpp

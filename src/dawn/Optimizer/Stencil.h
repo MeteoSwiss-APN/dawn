@@ -263,6 +263,9 @@ public:
   /// @brief Convert stencil to string (i.e print the list of multi-stage -> stages)
   friend std::ostream& operator<<(std::ostream& os, const Stencil& stencil);
 
+  /// @brief Method to compute and return the maximum extents for all the used accessors/fields
+  std::unordered_map<int, Extents> const computeEnclosingAccessExtents() const;
+
 private:
   void forEachStatementAccessesPairImpl(
       std::function<void(ArrayRef<std::shared_ptr<StatementAccessesPair>>)> func, int startStageIdx,
