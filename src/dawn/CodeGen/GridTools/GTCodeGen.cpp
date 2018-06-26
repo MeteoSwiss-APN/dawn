@@ -964,6 +964,22 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
                                       std::move(stencils), std::move(globals));
 }
 
+std::vector<std::string> GTCodeGen::buildFieldTemplateNames(
+    IndexRange<std::vector<Stencil::FieldInfo>> const& stencilFields) const {
+  std::vector<std::string> templates;
+  for(int i = 0; i < stencilFields.size(); ++i)
+    templates.push_back("S" + std::to_string(i + 1));
+
+  return templates;
+}
+
+int GTCodeGen::computeNumTemporaries(std::vector<Stencil::FieldInfo> const& stencilFields) const {
+  int numTemporaries = 0;
+  for(auto const& f : stencilFields)
+    numTemporaries += (isTemporary(f) ? 1 : 0);
+  return numTemporaries;
+}
+
 } // namespace gt
 } // namespace codegen
 } // namespace dawn

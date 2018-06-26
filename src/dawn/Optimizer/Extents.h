@@ -174,8 +174,15 @@ public:
   /// non-pointwise extent is considered a counter-loop- and loop order access.
   VerticalLoopOrderAccess getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const;
 
+  /// @brief Computes the fraction of this Extent being accessed in a LoopOrder or CounterLoopOrder
+  /// return non initialized optional<Extent> if the full extent is accessed in a counterloop order
+  /// manner
+  /// @param loopOrder specifies the vertical loop order direction (forward, backward, or parallel)
+  /// @param loopOrderPolicy specifies the requested policy for the requested extent access:
+  ///            InLoopOrder/CounterLoopOrder
+  /// @param includeCenter determines whether center is considered part of the loopOrderPolicy
   boost::optional<Extent> getVerticalLoopOrderExtent(LoopOrderKind loopOrder,
-                                                     VerticalLoopOrderDir loopOrderDir,
+                                                     VerticalLoopOrderDir loopOrderPolicy,
                                                      bool includeCenter) const;
 
   /// @brief Convert to stream
