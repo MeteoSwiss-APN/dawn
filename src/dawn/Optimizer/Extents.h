@@ -102,7 +102,7 @@ public:
   explicit Extents(const Array3i& offset);
   Extents(int extent1minus, int extent1plus, int extent2minus, int extent2plus, int extent3minus,
           int extent3plus);
-  Extents() = delete;
+  Extents();
   Extents(const Extents&) = default;
   Extents(Extents&&) = default;
   Extents& operator=(const Extents&) = default;
