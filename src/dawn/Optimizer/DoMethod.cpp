@@ -12,13 +12,13 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include <boost/optional.hpp>
 #include "dawn/Optimizer/DoMethod.h"
 #include "dawn/Optimizer/Accesses.h"
 #include "dawn/Optimizer/DependencyGraphAccesses.h"
 #include "dawn/Optimizer/StatementAccessesPair.h"
 #include "dawn/SIR/Statement.h"
 #include "dawn/Support/IndexGenerator.h"
+#include <boost/optional.hpp>
 
 namespace dawn {
 
