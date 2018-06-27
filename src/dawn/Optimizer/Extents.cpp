@@ -14,99 +14,74 @@
 
 #include "dawn/Optimizer/Extents.h"
 #include "dawn/Support/Assert.h"
-#include "dawn/Support/Unreachable.h"
 #include "dawn/Support/StringUtil.h"
 #include <iostream>
 
 namespace dawn {
 
-Extents::Extents(const Array3i& offset) {
+Extents::Extents() : extents_{} {}
 
-  extents_ = std::array<Extent, 3>{};
-
-  DAWN_ASSERT(extents_.size() == offset.size());
-
-  for(std::size_t i = 0; i < extents_.size(); ++i) {
-    extents_[i].Minus = offset[i];
-    extents_[i].Plus = offset[i];
-  }
-}
+Extents::Extents(const Array3i& offset) { merge(offset); }
 
 Extents::Extents(int extent1Minus, int extent1Plus, int extent2Minus, int extent2Plus,
                  int extent3Minus, int extent3Plus) {
-  extents_ =
-      std::array<Extent, 3>({{Extent{extent1Minus, extent1Plus}, Extent{extent2Minus, extent2Plus},
-                              Extent{extent3Minus, extent3Plus}}});
-}
-
-// TODO Unittest this
-void Extents::addCenter(const unsigned int dim) {
-  DAWN_ASSERT(dim < 3);
-
-  extents_[dim].Minus = std::min(0, extents_[dim].Minus);
-  extents_[dim].Plus = std::max(0, extents_[dim].Plus);
+  extents_[0].Minus = extent1Minus;
+  extents_[0].Plus = extent1Plus;
+  extents_[1].Minus = extent2Minus;
+  extents_[1].Plus = extent2Plus;
+  extents_[2].Minus = extent3Minus;
+  extents_[2].Plus = extent3Plus;
 }
 
 void Extents::merge(const Extents& other) {
-  auto& extents = getExtents();
-
-  DAWN_ASSERT(extents.size() == other.getExtents().size());
-  for(std::size_t i = 0; i < extents.size(); ++i) {
-    extents[i].merge(other.getExtents()[i]);
-  }
+  DAWN_ASSERT(extents_.size() == other.extents_.size());
+  for(std::size_t i = 0; i < extents_.size(); ++i)
+    extents_[i].merge(other.extents_[i]);
 }
 
 void Extents::expand(const Extents& other) {
-  auto& extents = getExtents();
+  DAWN_ASSERT(extents_.size() == other.extents_.size());
 
-  DAWN_ASSERT(extents.size() == other.getExtents().size());
-
-  for(std::size_t i = 0; i < extents.size(); ++i)
-    extents[i].expand(other.getExtents()[i]);
+  for(std::size_t i = 0; i < extents_.size(); ++i)
+    extents_[i].expand(other.extents_[i]);
 }
 
 void Extents::merge(const Array3i& offset) {
-  auto& extents = getExtents();
-  DAWN_ASSERT(extents.size() == offset.size());
+  DAWN_ASSERT(extents_.size() == offset.size());
 
-  for(std::size_t i = 0; i < extents.size(); ++i)
-    extents[i].merge(offset[i] >= 0 ? Extent{0, offset[i]} : Extent{offset[i], 0});
+  for(std::size_t i = 0; i < extents_.size(); ++i)
+    extents_[i].merge(offset[i] >= 0 ? Extent{0, offset[i]} : Extent{offset[i], 0});
 }
 
 void Extents::add(const Extents& other) {
-  auto& extents = getExtents();
-  DAWN_ASSERT(extents.size() == other.getExtents().size());
+  DAWN_ASSERT(extents_.size() == other.extents_.size());
 
-  for(std::size_t i = 0; i < extents.size(); ++i)
-    extents[i].add(other.getExtents()[i]);
+  for(std::size_t i = 0; i < extents_.size(); ++i)
+    extents_[i].add(other.extents_[i]);
 }
 
 Extents Extents::add(const Extents& lhs, const Extents& rhs) {
-  Extents sum = lhs;
-  sum.add(rhs);
+  Extents sum;
+  for(std::size_t i = 0; i < sum.extents_.size(); ++i)
+    sum.extents_[i] = Extent::add(lhs.extents_[i], rhs.extents_[i]);
   return sum;
 }
 
 void Extents::add(const Array3i& offset) {
-  auto& extents = getExtents();
-  DAWN_ASSERT(extents.size() == offset.size());
+  DAWN_ASSERT(extents_.size() == offset.size());
 
-  for(std::size_t i = 0; i < extents.size(); ++i)
-    extents[i].add(offset[i]);
+  for(std::size_t i = 0; i < extents_.size(); ++i)
+    extents_[i].add(offset[i]);
 }
 
-bool Extents::empty() {
-  auto const& extents = getExtents();
-  return extents.empty();
-}
+bool Extents::empty() { return extents_.empty(); }
 
 bool Extents::isPointwise() const {
   return isPointwiseInDim(0) && isPointwiseInDim(1) && isPointwiseInDim(2);
 }
 
 bool Extents::isPointwiseInDim(int dim) const {
-  auto const& extents = getExtents();
-  return (extents[dim].Minus == 0 && extents[dim].Plus == 0);
+  return (extents_[dim].Minus == 0 && extents_[dim].Plus == 0);
 }
 
 bool Extents::isHorizontalPointwise() const { return isPointwiseInDim(0) && isPointwiseInDim(1); }
@@ -114,13 +89,12 @@ bool Extents::isVerticalPointwise() const { return isPointwiseInDim(2); }
 
 Extents::VerticalLoopOrderAccess
 Extents::getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const {
-  auto const& extents = getExtents();
   VerticalLoopOrderAccess access{false, false};
 
   if(isVerticalPointwise())
     return access;
 
-  const Extent& verticalExtent = extents[2];
+  const Extent& verticalExtent = extents_[2];
 
   switch(loopOrder) {
   case LoopOrderKind::LK_Parallel:
@@ -147,45 +121,8 @@ Extents::getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const {
   return access;
 }
 
-boost::optional<Extent> Extents::getVerticalLoopOrderExtent(LoopOrderKind loopOrder,
-                                                            VerticalLoopOrderDir loopOrderDir,
-                                                            bool includeCenter) const {
-  auto const& extents = getExtents();
-  const Extent& verticalExtent = extents[2];
-
-  if(loopOrder == LoopOrderKind::LK_Parallel) {
-    if(includeCenter && verticalExtent.Plus >= 0 && verticalExtent.Minus <= 0)
-      return boost::make_optional(Extent{0, 0});
-    return boost::optional<Extent>();
-  }
-  if((loopOrder == LoopOrderKind::LK_Forward &&
-      loopOrderDir == VerticalLoopOrderDir::VL_CounterLoopOrder) ||
-     (loopOrder == LoopOrderKind::LK_Backward &&
-      loopOrderDir == VerticalLoopOrderDir::VL_InLoopOrder)) {
-    if(verticalExtent.Plus < (includeCenter ? 0 : 1))
-      return boost::optional<Extent>();
-
-    // Accesses k+1 are against the loop order
-    return boost::make_optional(
-        Extent{std::max((includeCenter ? 0 : 1), verticalExtent.Minus), verticalExtent.Plus});
-  }
-  if((loopOrder == LoopOrderKind::LK_Backward &&
-      loopOrderDir == VerticalLoopOrderDir::VL_CounterLoopOrder) ||
-     (loopOrder == LoopOrderKind::LK_Forward &&
-      loopOrderDir == VerticalLoopOrderDir::VL_InLoopOrder)) {
-    if(verticalExtent.Minus > (includeCenter ? 0 : -1))
-      return boost::optional<Extent>();
-
-    // Accesses k-1 are against the loop order
-    return boost::make_optional(
-        Extent{verticalExtent.Minus, std::min((includeCenter ? 0 : -1), verticalExtent.Plus)});
-  }
-  dawn_unreachable("Non supported loop order");
-}
-
 bool Extents::operator==(const Extents& other) const {
-  auto const& extents = getExtents();
-  return (extents[0] == other[0] && extents[1] == other[1] && extents[2] == other[2]);
+  return (extents_[0] == other[0] && extents_[1] == other[1] && extents_[2] == other[2]);
 }
 
 bool Extents::operator!=(const Extents& other) const { return !(*this == other); }
