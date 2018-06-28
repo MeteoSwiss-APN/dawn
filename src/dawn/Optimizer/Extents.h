@@ -24,6 +24,7 @@
 #include <initializer_list>
 #include <iosfwd>
 #include <vector>
+#include <boost/optional.hpp>
 
 namespace dawn {
 
