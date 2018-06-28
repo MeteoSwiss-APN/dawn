@@ -150,8 +150,8 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_04) {
 
   MultiStage& multiStage = *(stencil->getMultiStages().front());
 
-  std::shared_ptr<Interval> enclosingInterval = multiStage.getEnclosingAccessIntervalTemporaries();
-  ASSERT_TRUE(enclosingInterval != nullptr);
+  boost::optional<Interval> enclosingInterval = multiStage.getEnclosingAccessIntervalTemporaries();
+  ASSERT_TRUE(enclosingInterval.is_initialized());
   EXPECT_EQ((*enclosingInterval), (Interval{2, 14}));
 }
 

@@ -20,7 +20,6 @@
 #include "dawn/Optimizer/Stage.h"
 #include "dawn/Optimizer/StencilInstantiation.h"
 #include "dawn/Support/STLExtras.h"
-#include "dawn/Support/OptionalUtil.h"
 #include "dawn/Optimizer/MultiInterval.h"
 #include "dawn/Optimizer/IntervalAlgorithms.h"
 
@@ -180,7 +179,6 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
         boost::optional<Extent> readAccessInLoopOrder = readAccessExtent.getVerticalLoopOrderExtent(
             getLoopOrder(), Extents::VerticalLoopOrderDir::VL_InLoopOrder, false);
         Interval computingInterval = doMethod.getInterval();
-
         if(readAccessInLoopOrder.is_initialized()) {
           interv.insert(computingInterval.extendInterval(*readAccessInLoopOrder));
         }
@@ -248,9 +246,8 @@ Interval MultiStage::getEnclosingInterval() const {
   return interval;
 }
 
-// TODO make this shared_ptr a boost optional
-std::shared_ptr<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() const {
-  std::shared_ptr<Interval> interval;
+boost::optional<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() const {
+  boost::optional<Interval> interval;
   // notice we dont use here the fields of getFields() since they contain the enclosing of all the
   // extents and intervals of all stages and it would give larger intervals than really required
   // inspecting the extents and intervals of individual stages
@@ -260,8 +257,8 @@ std::shared_ptr<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() co
       if(!stencilInstantiation_.isTemporaryField(AccessID))
         continue;
 
-      if(!interval) {
-        interval = std::make_shared<Interval>(field.computeAccessedInterval());
+      if(!interval.is_initialized()) {
+        interval = boost::make_optional(field.computeAccessedInterval());
       } else {
         interval->merge(field.computeAccessedInterval());
       }

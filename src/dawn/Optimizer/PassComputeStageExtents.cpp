@@ -59,7 +59,6 @@ bool PassComputeStageExtents::run(
           // if found, add the (read) extent of the field as an extent of the stage
           Extents ext = toStage.getExtents();
           ext.merge(fieldExtent);
-          // TODO pass rvalue
           toStage.setExtents(ext);
         }
       }

@@ -58,25 +58,25 @@ public:
   };
 
 private:
-  std::string generateStencilInstantiation(const StencilInstantiation* stencilInstantiation);
+  std::string
+  generateStencilInstantiation(const std::shared_ptr<StencilInstantiation> stencilInstantiation);
   std::string generateGlobals(const std::shared_ptr<SIR>& Sir);
-  std::string cacheWindowToString(boost::optional<Cache::window> const& cacheWindow);
+  std::string cacheWindowToString(const Cache::window& cacheWindow);
   std::string buildMakeComputation(std::vector<std::string> const& DomainMapPlaceholders,
                                    std::vector<std::string> const& makeComputation,
-                                   const std::__cxx11::string& gridName) const;
+                                   const std::string& gridName) const;
   void
   buildPlaceholderDefinitions(MemberFunction& function,
                               std::vector<Stencil::FieldInfo> const& stencilFields,
                               std::vector<std::string> const& stencilGlobalVariables,
                               std::vector<std::string> const& stencilConstructorTemplates) const;
 
-  std::string getFieldName(std::shared_ptr<sir::Field> f) const { return f->Name; }
+  std::string getFieldName(std::shared_ptr<sir::Field> const& f) const { return f->Name; }
 
   std::string getFieldName(Stencil::FieldInfo const& f) const { return f.Name; }
 
   bool isTemporary(std::shared_ptr<sir::Field> f) const { return f->IsTemporary; }
 
-  // TODO we should eliminate the redundancy on FieldInfos
   bool isTemporary(Stencil::FieldInfo const& f) const { return f.IsTemporary; }
 
   /// code generate sync methods statements for all the fields passed
@@ -84,43 +84,10 @@ private:
                             const IndexRange<std::vector<Stencil::FieldInfo>>& stencilFields) const;
 
   /// construct a string of template parameters for storages
-  template <typename TFieldInfo>
   std::vector<std::string>
-  buildFieldTemplateNames(IndexRange<std::vector<TFieldInfo>> const& stencilFields) const {
-    std::vector<std::string> templates;
-    for(int i = 0; i < stencilFields.size(); ++i)
-      templates.push_back("S" + std::to_string(i + 1));
+  buildFieldTemplateNames(IndexRange<std::vector<Stencil::FieldInfo>> const& stencilFields) const;
 
-    return templates;
-  }
-
-  template <typename TFieldInfo>
-  int computeNumTemporaries(std::vector<TFieldInfo> const& stencilFields) const {
-    int numTemporaries = 0;
-    for(auto const& f : stencilFields)
-      numTemporaries += (isTemporary(f) ? 1 : 0);
-    return numTemporaries;
-  }
-
-  template <typename TFieldInfo>
-  MemberFunction
-  createStorageTemplateMethod(Structure& structure, std::string const& returnType,
-                              std::string const& functionName,
-                              IndexRange<std::vector<TFieldInfo>> const& nonTempFields) const {
-    auto storageTemplates = buildFieldTemplateNames(nonTempFields);
-
-    auto function = structure.addMemberFunction(
-        returnType, functionName,
-        RangeToString(", ", "", "")(storageTemplates,
-                                    [](const std::string& str) { return "class " + str; }));
-    int i = 0;
-    for(auto const& field : nonTempFields) {
-      function.addArg(storageTemplates[i] + " " + getFieldName(field));
-      ++i;
-    }
-
-    return function;
-  }
+  int computeNumTemporaries(std::vector<Stencil::FieldInfo> const& stencilFields) const;
 
   /// Maximum needed vector size of boost::fusion containers
   std::size_t mplContainerMaxSize_;

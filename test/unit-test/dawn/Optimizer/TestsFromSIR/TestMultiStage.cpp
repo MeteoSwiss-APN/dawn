@@ -315,50 +315,50 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_02) {
 TEST_F(MultiStageTest, test_field_access_interval_04) {
 
   //    Stencil_0
-  //     {
-  //       MultiStage_0 [backward]
-  //       {
-  //         Stage_0
-  //         {
-  //           Do_0 { Start+2 : Start+3 }
-  //           {
-  //             u[0, 0, 0] = in[0, 0, 0];
-  //               Write Accesses:
-  //                 u : [(0, 0), (0, 0), (0, 0)]
-  //               Read Accesses:
-  //                 in : [(0, 0), (0, 0), (0, 0)]
+  //    {
+  //      MultiStage_0 [backward]
+  //      {
+  //        Stage_0
+  //        {
+  //          Do_0 { Start : Start+8 }
+  //          {
+  //            out2[0, 0, 0] = u[0, 0, 6];
+  //              Write Accesses:
+  //                out2 : [(0, 0), (0, 0), (0, 0)]
+  //              Read Accesses:
+  //                u : [(0, 0), (0, 0), (6, 6)]
 
-  //           }
-  //           Extents: [(0, 0), (0, 0), (0, 6)]
-  //         }
-  //         Stage_1
-  //         {
-  //           Do_0 { Start : Start+8 }
-  //           {
-  //             out2[0, 0, 0] = u[0, 0, 6];
-  //               Write Accesses:
-  //                 out2 : [(0, 0), (0, 0), (0, 0)]
-  //               Read Accesses:
-  //                 u : [(0, 0), (0, 0), (0, 6)]
+  //          }
+  //          Extents: [(0, 0), (0, 0), (0, 0)]
+  //        }
+  //        Stage_1
+  //        {
+  //          Do_0 { Start+2 : Start+3 }
+  //          {
+  //            u[0, 0, 0] = in[0, 0, 0];
+  //              Write Accesses:
+  //                u : [(0, 0), (0, 0), (0, 0)]
+  //              Read Accesses:
+  //                in : [(0, 0), (0, 0), (0, 0)]
 
-  //           }
-  //           Extents: [(0, 0), (0, 0), (0, 0)]
-  //         }
-  //         Stage_2
-  //         {
-  //           Do_0 { Start+2 : Start+10 }
-  //           {
-  //             out1[0, 0, 0] = (u[0, 0, 2] + u[0, 0, 1]);
-  //               Write Accesses:
-  //                 out1 : [(0, 0), (0, 0), (0, 0)]
-  //               Read Accesses:
-  //                 u : [(0, 0), (0, 0), (0, 2)]
+  //          }
+  //          Extents: [(0, 0), (0, 0), (0, 2)]
+  //        }
+  //        Stage_2
+  //        {
+  //          Do_0 { Start+2 : Start+10 }
+  //          {
+  //            out1[0, 0, 0] = (u[0, 0, 2] + u[0, 0, 1]);
+  //              Write Accesses:
+  //                out1 : [(0, 0), (0, 0), (0, 0)]
+  //              Read Accesses:
+  //                u : [(0, 0), (0, 0), (0, 2)]
 
-  //           }
-  //           Extents: [(0, 0), (0, 0), (0, 0)]
-  //         }
-  //       }
-  //     }
+  //          }
+  //          Extents: [(0, 0), (0, 0), (0, 0)]
+  //        }
+  //      }
+  //    }
 
   auto stencilInstantiation =
       loadTest("test_field_access_interval_04.sir", "compute_extent_test_stencil");
@@ -373,11 +373,7 @@ TEST_F(MultiStageTest, test_field_access_interval_04) {
   int accessID = stencilInstantiation->getAccessIDFromName("u");
   auto interval = mss->computeReadAccessInterval(accessID);
 
-  // TODO the problem here is that accesses are computed including 0 always
-  std::cout << "KK " << interval << std::endl;
-  //  EXPECT_EQ(interval, (MultiInterval{Interval{0, 1},
-  //                                     Interval{sir::Interval::End - 3, sir::Interval::End +
-  //                                     1}}));
+  EXPECT_EQ(interval, (MultiInterval{Interval{4, 14}}));
 }
 
 TEST_F(MultiStageTest, test_compute_read_access_interval_03) {

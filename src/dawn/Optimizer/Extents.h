@@ -138,6 +138,9 @@ public:
   /// @brief Check if Extent is empty
   bool empty();
 
+  /// @brief add the center of the stencil to the extent
+  void addCenter(const unsigned int dim);
+
   /// @brief Check if extent in is pointwise (i.e equal to `{0, 0, 0, 0, 0, 0}`)
   bool isPointwise() const;
 
@@ -164,6 +167,17 @@ public:
   /// accesses and vice versa for backward loop order. If the loop order is parallel, any
   /// non-pointwise extent is considered a counter-loop- and loop order access.
   VerticalLoopOrderAccess getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const;
+
+  /// @brief Computes the fraction of this Extent being accessed in a LoopOrder or CounterLoopOrder
+  /// return non initialized optional<Extent> if the full extent is accessed in a counterloop order
+  /// manner
+  /// @param loopOrder specifies the vertical loop order direction (forward, backward, or parallel)
+  /// @param loopOrderPolicy specifies the requested policy for the requested extent access:
+  ///            InLoopOrder/CounterLoopOrder
+  /// @param includeCenter determines whether center is considered part of the loopOrderPolicy
+  boost::optional<Extent> getVerticalLoopOrderExtent(LoopOrderKind loopOrder,
+                                                     VerticalLoopOrderDir loopOrderPolicy,
+                                                     bool includeCenter) const;
 
   /// @brief Convert to stream
   friend std::ostream& operator<<(std::ostream& os, const Extents& extent);
