@@ -34,7 +34,7 @@ namespace gt {
 class ASTStencilBody : public ASTCodeGenCXX {
 protected:
   const StencilInstantiation* instantiation_;
-  const std::unordered_map<Interval, std::string>& intervalToNameMap_;
+  const std::unordered_set<IntervalProperties>& intervalProperties_;
   RangeToString offsetPrinter_;
 
   /// The stencil function we are currently generating or NULL
@@ -49,7 +49,7 @@ public:
   using Base = ASTCodeGenCXX;
 
   ASTStencilBody(const StencilInstantiation* stencilInstantiation,
-                 const std::unordered_map<Interval, std::string>& intervalToNameMap);
+                 const std::unordered_set<IntervalProperties>& intervalProperties);
   virtual ~ASTStencilBody();
 
   /// @name Statement implementation

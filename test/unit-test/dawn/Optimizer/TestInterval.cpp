@@ -12,6 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/Optimizer/IntervalAlgorithms.h"
+#include "dawn/Optimizer/MultiInterval.h"
 #include "dawn/Optimizer/Interval.h"
 #include <gtest/gtest.h>
 #include <unordered_set>
@@ -279,7 +281,7 @@ TEST(IntervalTest, PartitionIntervals0) {
   std::unordered_set<Interval> solution(partIntervals.begin(), partIntervals.end());
   std::unordered_set<Interval> reference{Interval(1, 3), Interval(4, 5)};
 
-  EXPECT_TRUE((reference ==solution));
+  EXPECT_TRUE((reference == solution));
 }
 
 TEST(IntervalTest, PartitionIntervals1) {
@@ -347,6 +349,55 @@ TEST(IntervalTest, Construction) {
   // Move assign
   I0 = std::move(I1);
   EXPECT_TRUE(I0 == I1);
+}
+
+TEST(IntervalTest, Substract) {
+  {
+    // I1 & I2 do not overlap
+    Interval I1(6, 7);
+    Interval I2(4, 5);
+
+    EXPECT_EQ((substract(I1, I2)), MultiInterval{I1});
+  }
+  {
+    // overlap in one level
+    Interval I1(6, 7);
+    Interval I2(5, 6);
+
+    EXPECT_EQ((substract(I1, I2)), (MultiInterval{Interval{6, 7, 1, 0}}));
+  }
+  {
+    Interval I1(6, 10);
+    Interval I2(5, 6, 0, 2);
+
+    EXPECT_EQ((substract(I1, I2)), (MultiInterval{Interval{6, 10, 3, 0}}));
+  }
+  {
+    // I2 contains I1
+    Interval I1(6, 7);
+    Interval I2(5, 6, 0, 2);
+
+    EXPECT_TRUE(substract(I1, I2).getIntervals().size() == 0);
+  }
+  {
+    Interval I1(4, 7);
+    Interval I2(5, 8);
+
+    EXPECT_EQ((substract(I1, I2)), (MultiInterval{Interval{4, 4}}));
+  }
+  {
+    Interval I1(4, 7);
+    Interval I2(5, 6);
+
+    EXPECT_EQ((substract(I1, I2)), (MultiInterval{Interval{4, 4}, Interval{7, 7}}));
+  }
+
+  {
+    Interval I1{0, sir::Interval::End - 4};
+    Interval I2{1, sir::Interval::End - 4};
+
+    EXPECT_EQ((substract(I1, I2)), (MultiInterval{Interval{0, 0}}));
+  }
 }
 
 } // anonymous namespace

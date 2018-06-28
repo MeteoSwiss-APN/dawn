@@ -20,6 +20,8 @@
 #include "dawn/Optimizer/Stage.h"
 #include "dawn/Optimizer/StencilInstantiation.h"
 #include "dawn/Support/STLExtras.h"
+#include "dawn/Optimizer/MultiInterval.h"
+#include "dawn/Optimizer/IntervalAlgorithms.h"
 
 namespace dawn {
 
@@ -105,21 +107,116 @@ std::shared_ptr<DependencyGraphAccesses> MultiStage::getDependencyGraphOfAxis() 
 }
 
 Cache& MultiStage::setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy policy, int AccessID,
-                            const Interval& interval) {
-  return caches_
-      .emplace(AccessID, Cache(type, policy, AccessID, boost::optional<Interval>(interval)))
+                            const Interval& interval, boost::optional<Cache::window> w) {
+  return caches_.emplace(AccessID,
+                         Cache(type, policy, AccessID, boost::optional<Interval>(interval), w))
       .first->second;
 }
 
 Cache& MultiStage::setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy policy, int AccessID) {
-  return caches_.emplace(AccessID, Cache(type, policy, AccessID, boost::optional<Interval>()))
+  return caches_.emplace(AccessID, Cache(type, policy, AccessID, boost::optional<Interval>(),
+                                         boost::optional<Cache::window>()))
       .first->second;
 }
 
-boost::optional<Interval> MultiStage::computeEnclosingAccessInterval(const int accessID) const {
+std::vector<DoMethod> MultiStage::computeOrderedDoMethods() const {
+  auto intervals_set = getIntervals();
+  std::vector<Interval> intervals_v;
+  std::copy(intervals_set.begin(), intervals_set.end(), std::back_inserter(intervals_v));
+
+  // compute the partition of the intervals
+  auto partitionIntervals = Interval::computePartition(intervals_v);
+  if((getLoopOrder() == LoopOrderKind::LK_Backward))
+    std::reverse(partitionIntervals.begin(), partitionIntervals.end());
+
+  std::vector<DoMethod> orderedDoMethods;
+
+  for(auto interval : partitionIntervals) {
+    for(const auto& stagePtr : getStages()) {
+      for(const auto& doMethod : stagePtr->getDoMethods()) {
+
+        if(doMethod->getInterval().overlaps(interval)) {
+          DoMethod partitionedDoMethod(*doMethod);
+
+          partitionedDoMethod.setInterval(interval);
+          orderedDoMethods.push_back(partitionedDoMethod);
+          // there should not be two do methods in the same stage with overlapping intervals
+          continue;
+        }
+      }
+    }
+  }
+
+  return orderedDoMethods;
+}
+
+MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
+
+  std::vector<DoMethod> orderedDoMethods = computeOrderedDoMethods();
+
+  MultiInterval writeInterval;
+  MultiInterval writeIntervalPre;
+  MultiInterval readInterval;
+
+  for(const auto& doMethod : orderedDoMethods) {
+    for(const auto& statementAccesssPair : doMethod.getStatementAccessesPairs()) {
+      const Accesses& accesses = *statementAccesssPair->getAccesses();
+      if(accesses.hasWriteAccess(accessID)) {
+        writeIntervalPre.insert(doMethod.getInterval());
+      }
+    }
+  }
+
+  for(const auto& doMethod : orderedDoMethods) {
+    for(const auto& statementAccesssPair : doMethod.getStatementAccessesPairs()) {
+      const Accesses& accesses = *statementAccesssPair->getAccesses();
+      // indepdently of whether the statement has also a write access, if there is a read
+      // access, it should happen in the RHS so first
+      if(accesses.hasReadAccess(accessID)) {
+        MultiInterval interv;
+
+        Extents const& readAccessExtent = accesses.getReadAccess(accessID);
+        boost::optional<Extent> readAccessInLoopOrder = readAccessExtent.getVerticalLoopOrderExtent(
+            getLoopOrder(), Extents::VerticalLoopOrderDir::VL_InLoopOrder, false);
+        Interval computingInterval = doMethod.getInterval();
+        if(readAccessInLoopOrder.is_initialized()) {
+          interv.insert(computingInterval.extendInterval(*readAccessInLoopOrder));
+        }
+        if(!writeIntervalPre.empty()) {
+          interv.substract(writeIntervalPre);
+        }
+
+        if(readAccessExtent.hasVerticalCenter()) {
+          auto centerAccessInterval = substract(computingInterval, writeInterval);
+          interv.insert(centerAccessInterval);
+        }
+
+        boost::optional<Extent> readAccessCounterLoopOrder =
+            readAccessExtent.getVerticalLoopOrderExtent(
+                getLoopOrder(), Extents::VerticalLoopOrderDir::VL_CounterLoopOrder, false);
+
+        if(readAccessCounterLoopOrder.is_initialized()) {
+          interv.insert(computingInterval.extendInterval(*readAccessCounterLoopOrder));
+        }
+
+        readInterval.insert(interv);
+      }
+      if(accesses.hasWriteAccess(accessID)) {
+        writeInterval.insert(doMethod.getInterval());
+      }
+    }
+  }
+
+  return readInterval;
+}
+
+boost::optional<Interval>
+MultiStage::computeEnclosingAccessInterval(const int accessID,
+                                           const bool mergeWithDoInterval) const {
   boost::optional<Interval> interval;
   for(auto const& stage : stages_) {
-    boost::optional<Interval> doInterval = stage->computeEnclosingAccessInterval(accessID);
+    boost::optional<Interval> doInterval =
+        stage->computeEnclosingAccessInterval(accessID, mergeWithDoInterval);
 
     if(doInterval) {
       if(interval)
@@ -149,8 +246,8 @@ Interval MultiStage::getEnclosingInterval() const {
   return interval;
 }
 
-std::shared_ptr<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() const {
-  std::shared_ptr<Interval> interval;
+boost::optional<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() const {
+  boost::optional<Interval> interval;
   // notice we dont use here the fields of getFields() since they contain the enclosing of all the
   // extents and intervals of all stages and it would give larger intervals than really required
   // inspecting the extents and intervals of individual stages
@@ -160,10 +257,10 @@ std::shared_ptr<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() co
       if(!stencilInstantiation_.isTemporaryField(AccessID))
         continue;
 
-      if(!interval) {
-        interval = std::make_shared<Interval>(field.getAccessedInterval());
+      if(!interval.is_initialized()) {
+        interval = boost::make_optional(field.computeAccessedInterval());
       } else {
-        interval->merge(field.getAccessedInterval());
+        interval->merge(field.computeAccessedInterval());
       }
     }
   }
@@ -185,7 +282,8 @@ std::unordered_map<int, Field> MultiStage::getFields() const {
           it->second.setIntend(Field::IK_InputOutput);
 
         // Merge the Extent
-        it->second.mergeExtents(field.getExtents());
+        it->second.mergeReadExtents(field.getReadExtents());
+        it->second.mergeWriteExtents(field.getWriteExtents());
         it->second.extendInterval(field.getInterval());
       } else
         fields.emplace(field.getAccessID(), field);

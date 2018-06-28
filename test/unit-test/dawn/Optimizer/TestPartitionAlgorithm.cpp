@@ -1,13 +1,13 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -29,7 +29,7 @@ public:
   TestGraph() : Base(nullptr) {}
   void insertEdge(int IDFrom, int IDTo) {
     Base::insertNode(IDFrom);
-    Base::insertEdge(IDFrom, IDTo, Extents{});
+    Base::insertEdge(IDFrom, IDTo, Extents{0, 0, 0, 0, 0, 0});
   }
 };
 
@@ -117,7 +117,7 @@ TEST(PartitionAlgorithmTest, Test6) {
 
   graph.insertEdge(2, 3);
   graph.insertEdge(2, 2);
-  
+
   graph.insertEdge(2, 4);
 
   std::vector<std::set<std::size_t>> partitions = graph.partitionInSubGraphs();

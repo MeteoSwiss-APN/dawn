@@ -17,12 +17,13 @@
 #include "dawn/Optimizer/DependencyGraphAccesses.h"
 #include "dawn/Optimizer/StatementAccessesPair.h"
 #include "dawn/SIR/Statement.h"
+#include "dawn/Support/IndexGenerator.h"
 #include <boost/optional.hpp>
 
 namespace dawn {
 
-DoMethod::DoMethod(Stage* stage, Interval interval)
-    : stage_(stage), interval_(interval), dependencyGraph_(nullptr) {}
+DoMethod::DoMethod(Interval interval)
+    : interval_(interval), id_(IndexGenerator::Instance().getIndex()), dependencyGraph_(nullptr) {}
 
 std::vector<std::shared_ptr<StatementAccessesPair>>& DoMethod::getStatementAccessesPairs() {
   return statementAccessesPairs_;
@@ -36,8 +37,6 @@ DoMethod::getStatementAccessesPairs() const {
 Interval& DoMethod::getInterval() { return interval_; }
 
 const Interval& DoMethod::getInterval() const { return interval_; }
-
-Stage* DoMethod::getStage() { return stage_; }
 
 void DoMethod::setDependencyGraph(const std::shared_ptr<DependencyGraphAccesses>& DG) {
   dependencyGraph_ = DG;
@@ -64,7 +63,8 @@ boost::optional<Extents> DoMethod::computeMaximumExtents(const int accessID) con
   return extents;
 }
 
-boost::optional<Interval> DoMethod::computeEnclosingAccessInterval(const int accessID) const {
+boost::optional<Interval>
+DoMethod::computeEnclosingAccessInterval(const int accessID, const bool mergeWithDoInterval) const {
   boost::optional<Interval> interval;
 
   boost::optional<Extents>&& extents = computeMaximumExtents(accessID);
@@ -75,6 +75,8 @@ boost::optional<Interval> DoMethod::computeEnclosingAccessInterval(const int acc
   }
   return interval;
 }
+
+void DoMethod::setInterval(const Interval& interval) { interval_ = interval; }
 
 const std::shared_ptr<DependencyGraphAccesses>& DoMethod::getDependencyGraph() const {
   return dependencyGraph_;

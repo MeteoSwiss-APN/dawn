@@ -118,13 +118,7 @@ public:
 
   /// @brief Merge `this` with `other` and assign an Interval to `this` which is the union of the
   /// two
-  void merge(const Interval& other) {
-    int lb = lowerBound(), ub = upperBound();
-    lowerLevel_ = std::min(lowerLevel_, other.lowerLevel());
-    upperLevel_ = std::max(upperLevel_, other.upperLevel());
-    lowerOffset_ = lb < other.lowerBound() ? lb - lowerLevel_ : other.lowerBound() - lowerLevel();
-    upperOffset_ = ub > other.upperBound() ? ub - upperLevel_ : other.upperBound() - upperLevel();
-  }
+  void merge(const Interval& other);
 
   /// @brief Create a @b new interval which is extented by the given Extents
   ///
@@ -133,21 +127,25 @@ public:
   /// Offset by +1.
   Interval extendInterval(const Extent& verticalExtent) const;
 
-  Interval extendInterval(const Extents& extents) const { return extendInterval(extents[2]); }
+  inline Interval extendInterval(const Extents& extents) const {
+    return extendInterval(extents[2]);
+  }
 
   /// @brief Convert to SIR Interval
-  sir::Interval asSIRInterval() const {
+  inline sir::Interval asSIRInterval() const {
     return sir::Interval(lowerLevel_, upperLevel_, lowerOffset_, upperOffset_);
   }
 
   /// @brief returns true if the level bound of the interval is the end of the axis
-  bool levelIsEnd(Bound bound) const {
+  inline bool levelIsEnd(Bound bound) const {
     return (bound == Bound::lower) ? lowerLevelIsEnd() : upperLevelIsEnd();
   }
 
-  size_t overEnd() const { return (upperLevelIsEnd() && (upperOffset_ > 0)) ? upperOffset_ : 0; }
+  inline size_t overEnd() const {
+    return (upperLevelIsEnd() && (upperOffset_ > 0)) ? upperOffset_ : 0;
+  }
 
-  size_t belowBegin() const {
+  inline size_t belowBegin() const {
     return (!lowerLevelIsEnd() && (lowerBound() < 0)) ? (size_t)-lowerOffset_ : 0;
   }
 
@@ -237,6 +235,32 @@ public:
   static std::vector<Interval> computeLevelUnion(const std::vector<Interval>& intervals);
 };
 
+/// @brief struct that contains an interval and a associated generated name
+/// Should be used for data structures where the interval name generation (expensive string
+/// operation) is accessed frequently
+struct IntervalProperties {
+  /// @name Constructors and Assignment
+  /// @{
+
+  IntervalProperties(Interval const& interval)
+      : interval_(interval), name_(Interval::makeCodeGenName(interval)) {}
+
+  IntervalProperties(const IntervalProperties&) = default;
+  IntervalProperties(IntervalProperties&&) = default;
+  IntervalProperties& operator=(const IntervalProperties&) = default;
+  IntervalProperties& operator=(IntervalProperties&&) = default;
+  /// @}
+
+  /// @name Comparison operator
+  /// @{
+  bool operator==(const IntervalProperties& other) const { return interval_ == other.interval_; }
+  bool operator!=(const IntervalProperties& other) const { return !(*this == other); }
+  /// @}
+
+  Interval interval_;
+  std::string name_;
+};
+
 } // namespace dawn
 
 namespace std {
@@ -247,6 +271,13 @@ struct hash<dawn::Interval> {
     std::size_t seed = 0;
     dawn::hash_combine(seed, I.lowerLevel() + I.lowerOffset(), I.upperLevel() + I.upperOffset());
     return seed;
+  }
+};
+
+template <>
+struct hash<dawn::IntervalProperties> {
+  size_t operator()(const dawn::IntervalProperties& I) const {
+    return hash<dawn::Interval>()(I.interval_);
   }
 };
 

@@ -414,7 +414,7 @@ void StencilFunctionInstantiation::update() {
         continue;
 
       AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                     interval_);
+                                     boost::optional<Extents>(), interval_);
     }
 
     for(const auto& accessPair : access->getReadAccesses()) {
@@ -425,7 +425,7 @@ void StencilFunctionInstantiation::update() {
         continue;
 
       AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                    interval_);
+                                    boost::optional<Extents>(), interval_);
     }
   }
 
@@ -434,7 +434,8 @@ void StencilFunctionInstantiation::update() {
     int AccessID = argIdxCallerAccessIDPair.second;
     if(!inputFields.count(AccessID) && !outputFields.count(AccessID) &&
        !inputOutputFields.count(AccessID)) {
-      inputFields.emplace(AccessID, Field(AccessID, Field::IK_Input, Extents{}, interval_));
+      inputFields.emplace(AccessID, Field(AccessID, Field::IK_Input, Extents{0, 0, 0, 0, 0, 0},
+                                          Extents{0, 0, 0, 0, 0, 0}, interval_));
       unusedFields_.insert(AccessID);
     }
   }
@@ -485,7 +486,7 @@ void StencilFunctionInstantiation::update() {
              !stencilInstantiation_->isField(accessPair.first))
             continue;
 
-          AccessIDToFieldMap[accessPair.first]->mergeExtents(accessPair.second);
+          AccessIDToFieldMap[accessPair.first]->mergeWriteExtents(accessPair.second);
         }
 
         for(const auto& accessPair : access->getReadAccesses()) {
@@ -493,7 +494,7 @@ void StencilFunctionInstantiation::update() {
              !stencilInstantiation_->isField(accessPair.first))
             continue;
 
-          AccessIDToFieldMap[accessPair.first]->mergeExtents(accessPair.second);
+          AccessIDToFieldMap[accessPair.first]->mergeReadExtents(accessPair.second);
         }
       }
     };

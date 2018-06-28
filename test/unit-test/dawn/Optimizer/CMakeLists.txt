@@ -17,11 +17,14 @@ dawn_add_unittest_impl(
   SOURCES TestColoringAlgorithm.cpp
           TestExtent.cpp  
           TestEnvironment.h
+          TestField.cpp
           TestGraph.cpp
           TestIsDAGAlgorithm.cpp          
           TestPartitionAlgorithm.cpp
           TestMain.cpp
           TestInterval.cpp
+          TestIntervalAlgorithms.cpp
+          TestMultiInterval.cpp
           TestSCCAlgorithm.cpp
           TestStencil.cpp
 )
