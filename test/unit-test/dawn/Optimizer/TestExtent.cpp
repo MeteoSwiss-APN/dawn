@@ -12,205 +12,147 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_EXTENTS_H
-#define DAWN_OPTIMIZER_EXTENTS_H
+#include "dawn/Optimizer/Extents.h"
+#include <gtest/gtest.h>
 
-#include "dawn/Optimizer/LoopOrder.h"
-#include "dawn/Support/Array.h"
-#include "dawn/Support/HashCombine.h"
-#include "dawn/Support/Assert.h"
-#include <array>
-#include <cmath>
-#include <functional>
-#include <initializer_list>
-#include <iosfwd>
-#include <vector>
-#include <boost/optional.hpp>
+using namespace dawn;
 
-namespace dawn {
+namespace {
 
-/// @brief Access extent of a single dimension
-/// @ingroup optimizer
-struct Extent {
-  int Minus;
-  int Plus;
+TEST(ExtentsTest, Construction) {
+  Extents extents({-1, 1, 0});
 
-  /// @name Constructors and Assignment
-  /// @{
-  Extent() : Minus(0), Plus(0) {}
-  Extent(int minus, int plus) : Minus(minus), Plus(plus) {}
-  Extent(const Extent&) = default;
-  Extent(Extent&&) = default;
-  Extent& operator=(const Extent&) = default;
-  Extent& operator=(Extent&&) = default;
-  /// @}
+  EXPECT_EQ(extents[0], (Extent{-1, -1}));
+  EXPECT_EQ(extents[1], (Extent{1, 1}));
+  EXPECT_EQ(extents[2], (Extent{0, 0}));
+}
 
-  /// @name Operators
-  /// @{
-  Extent& merge(const Extent& other) {
-    Minus = std::min(Minus, other.Minus);
-    Plus = std::max(Plus, other.Plus);
-    return *this;
-  }
+TEST(ExtentsTest, PointWise) {
+  Extents extents1({0, 1, 0});
+  EXPECT_FALSE(extents1.isHorizontalPointwise());
+  EXPECT_TRUE(extents1.isVerticalPointwise());
 
-  Extent& expand(const Extent& other) {
-    Minus = Minus + other.Minus;
-    Plus = Plus + other.Plus;
-    return *this;
-  }
+  Extents extents2({0, 0, 1});
+  EXPECT_TRUE(extents2.isHorizontalPointwise());
+  EXPECT_FALSE(extents2.isVerticalPointwise());
+}
 
-  Extent& merge(int other) {
-    Minus = std::min(Minus, other < 0 ? other : 0);
-    Plus = std::max(Plus, other > 0 ? other : 0);
-    return *this;
-  }
+TEST(ExtentsTest, Merge1) {
+  Extents extents({-1, 1, 0});
+  Extents extentsToMerge({3, 2, 1});
+  extents.merge(extentsToMerge);
 
-  Extent& add(const Extent& other) {
-    Minus += other.Minus;
-    Plus += other.Plus;
-    return *this;
-  }
+  EXPECT_TRUE((extents[0] == Extent{-1, 3}));
+  EXPECT_TRUE((extents[1] == Extent{1, 2}));
+  EXPECT_TRUE((extents[2] == Extent{0, 1}));
+}
 
-  Extent& add(int other) {
-    Minus += other;
-    Plus += other;
-    Minus = std::min(0, Minus);
-    Plus = std::max(0, Plus);
-    return *this;
-  }
+TEST(ExtentsTest, Merge2) {
+  Extents extents({-1, 1, 0});
+  Extents extentsToMerge({-2, 2, 0});
+  extents.merge(extentsToMerge);
 
-  static Extent add(const Extent& lhs, const Extent& rhs) {
-    Extent sum;
-    sum.Minus = lhs.Minus + rhs.Minus;
-    sum.Plus = lhs.Plus + rhs.Plus;
-    return sum;
-  }
+  EXPECT_TRUE((extents[0] == Extent{-2, -1}));
+  EXPECT_TRUE((extents[1] == Extent{1, 2}));
+  EXPECT_TRUE((extents[2] == Extent{0, 0}));
+}
 
-  bool operator==(const Extent& other) const { return Minus == other.Minus && Plus == other.Plus; }
-  bool operator!=(const Extent& other) const { return !(*this == other); }
-  /// @}
-};
+TEST(ExtentsTest, Merge3) {
+  Extents extents({-1, 1, 0});
+  extents.merge({-2, 0, 0});
 
-/// @brief Three dimensional access extents of a field
-/// @ingroup optimizer
-class Extents {
-public:
-  enum class VerticalLoopOrderDir { VL_CounterLoopOrder, VL_InLoopOrder };
+  EXPECT_TRUE((extents[0] == Extent{-2, 0}));
+  EXPECT_TRUE((extents[1] == Extent{0, 1}));
+  EXPECT_TRUE((extents[2] == Extent{0, 0}));
+}
 
-  /// @name Constructors and Assignment
-  /// @{
-  explicit Extents(const Array3i& offset);
-  Extents(int extent1minus, int extent1plus, int extent2minus, int extent2plus, int extent3minus,
-          int extent3plus);
-  Extents() = delete;
-  Extents(const Extents&) = default;
-  Extents(Extents&&) = default;
-  Extents& operator=(const Extents&) = default;
-  Extents& operator=(Extents&&) = default;
-  /// @}
+TEST(ExtentsTest, Add1) {
+  Extents extents(-1, 1, 0, 0, 0, 0);
+  extents.add({1, 0, 0});
 
-  /// @brief Get the i-th extend or NullExtent if i-th extent does not exists
-  Extent& operator[](int i) { return extents_[i]; }
-  const Extent& operator[](int i) const { return extents_[i]; }
+  EXPECT_TRUE((extents[0] == Extent{0, 2}));
+  EXPECT_TRUE((extents[1] == Extent{0, 0}));
+  EXPECT_TRUE((extents[2] == Extent{0, 0}));
+}
 
-  /// @brief Get the extents
-  const std::array<Extent, 3>& getExtents() const { return extents_; }
-  std::array<Extent, 3>& getExtents() { return extents_; }
+TEST(ExtentsTest, Add2) {
+  Extents extents(0, 1, 0, 0, 0, 0);
+  extents.add({-1, 0, 0});
 
-  /// @brief Get size of extents (i.e number of dimensions)
-  std::array<Extent, 3>::size_type getSize() const { return extents_.size(); }
+  EXPECT_TRUE((extents[0] == Extent{-1, 0}));
+  EXPECT_TRUE((extents[1] == Extent{0, 0}));
+  EXPECT_TRUE((extents[2] == Extent{0, 0}));
+}
 
-  bool hasVerticalCenter() const { return extents_[2].Minus <= 0 && extents_[2].Plus >= 0; }
+TEST(ExtentsTest, Add3) {
+  Extents extents(-2, 2, 0, 0, 0, 0);
+  extents.add({1, 0, 0});
 
-  /// @brief Merge `this` with `other` and assign an Extents to `this` which is the union of the two
-  ///
-  /// @b Example:
-  ///   If `this` is `{-1, 1, 0, 0, 0, 0}` and `other` is `{-2, 0, 0, 0, 1}` the result will be
-  ///   `{-2, 1, 0, 0, 0, 1}`.
-  void merge(const Extents& other);
-  void merge(const Array3i& offset);
+  EXPECT_TRUE((extents[0] == Extent{-1, 3}));
+  EXPECT_TRUE((extents[1] == Extent{0, 0}));
+  EXPECT_TRUE((extents[2] == Extent{0, 0}));
+}
 
-  void expand(const Extents& other);
+TEST(ExtentsTest, Add4) {
+  Extents extents(-2, 2, 0, 0, 0, 0);
+  extents.add({-2, 2, 0, 0, 0, 0});
 
-  /// @brief Add `this` and `other` and compute the direction sum of the two
-  ///
-  /// @b Example:
-  ///   If `this` is `{-1, 1, -1, 1, 0, 0}` and `other` is `{0, 1, 0, 0, 0, 0}` the result will be
-  ///   `{-1, 2, -1, 1, 0, 0}`.
-  void add(const Array3i& offset);
-  void add(const Extents& other);
-  static Extents add(const Extents& lhs, const Extents& rhs);
+  EXPECT_TRUE((extents[0] == Extent{-4, 4}));
+  EXPECT_TRUE((extents[1] == Extent{0, 0}));
+  EXPECT_TRUE((extents[2] == Extent{0, 0}));
+}
 
-  /// @brief Check if Extent is empty
-  bool empty();
+TEST(ExtentsTest, Add5) {
+  Extents extents({-2, 2, 0, 4, 0, 0});
+  extents.add({2, 2, 3});
 
-  /// @brief add the center of the stencil to the extent
-  void addCenter(const unsigned int dim);
+  EXPECT_TRUE((extents[0] == Extent{0, 4}));
+  EXPECT_TRUE((extents[1] == Extent{0, 6}));
+  EXPECT_TRUE((extents[2] == Extent{0, 3}));
+}
 
-  /// @brief Check if extent in is pointwise (i.e equal to `{0, 0, 0, 0, 0, 0}`)
-  bool isPointwise() const;
+TEST(ExtentsTest, addCenter) {
+  Extents extents({1, 1, -2, -2, 3, 3});
+  extents.addCenter(0);
 
-  /// @brief Check if extent in `dim` is pointwise (i.e equal to `{0, 0}`)
-  bool isPointwiseInDim(int dim) const;
+  EXPECT_EQ(extents, (Extents{0, 1, -2, -2, 3, 3}));
+  extents.addCenter(1);
+  EXPECT_EQ(extents, (Extents{0, 1, -2, 0, 3, 3}));
+}
 
-  /// @brief Check if this is a pointwise extent in the horizontal (i.e first two Extents are equal
-  /// to {0, 0})
-  bool isHorizontalPointwise() const;
+TEST(ExtentsTest, Stringify) {
+  Extents extents({1, -1, 2});
+  std::stringstream ss;
+  ss << extents;
+  EXPECT_STREQ(ss.str().c_str(), "[(1, 1), (-1, -1), (2, 2)]");
+}
 
-  /// @brief Check if this is a pointwise extent in the vertical (i.e the third Extent is `{0, 0}`)
-  bool isVerticalPointwise() const;
+TEST(ExtentsTest, verticalLoopOrder) {
+  Extents extents{0, 0, 0, 0, -1, 2};
+  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(
+                  LoopOrderKind::LK_Forward, Extents::VerticalLoopOrderDir::VL_CounterLoopOrder,
+                  false)) == (Extent{1, 2}));
+  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(
+                  LoopOrderKind::LK_Forward, Extents::VerticalLoopOrderDir::VL_CounterLoopOrder,
+                  true)) == (Extent{0, 2}));
+  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(LoopOrderKind::LK_Forward,
+                                                  Extents::VerticalLoopOrderDir::VL_InLoopOrder,
+                                                  false)) == (Extent{-1, -1}));
+  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(LoopOrderKind::LK_Forward,
+                                                  Extents::VerticalLoopOrderDir::VL_InLoopOrder,
+                                                  true)) == (Extent{-1, 0}));
 
-  struct VerticalLoopOrderAccess {
-    bool CounterLoopOrder; ///< Access in the counter loop order
-    bool LoopOrder;        ///< Access in the loop order
-  };
-
-  /// @brief Check if there is a stencil extent (i.e non-pointwise) in the counter-loop- and loop
-  /// order
-  ///
-  /// If the loop order is forward, positive extents (e.g `k+1`) in the vertical are treated as
-  /// counter-loop order accesses while negative extents (e.g `k-1`) are considered loop order
-  /// accesses and vice versa for backward loop order. If the loop order is parallel, any
-  /// non-pointwise extent is considered a counter-loop- and loop order access.
-  VerticalLoopOrderAccess getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const;
-
-  /// @brief Computes the fraction of this Extent being accessed in a LoopOrder or CounterLoopOrder
-  /// return non initialized optional<Extent> if the full extent is accessed in a counterloop order
-  /// manner
-  /// @param loopOrder specifies the vertical loop order direction (forward, backward, or parallel)
-  /// @param loopOrderPolicy specifies the requested policy for the requested extent access:
-  ///            InLoopOrder/CounterLoopOrder
-  /// @param includeCenter determines whether center is considered part of the loopOrderPolicy
-  boost::optional<Extent> getVerticalLoopOrderExtent(LoopOrderKind loopOrder,
-                                                     VerticalLoopOrderDir loopOrderPolicy,
-                                                     bool includeCenter) const;
-
-  /// @brief Convert to stream
-  friend std::ostream& operator<<(std::ostream& os, const Extents& extent);
-
-  /// @brief Comparison operators
-  /// @{
-  bool operator==(const Extents& other) const;
-  bool operator!=(const Extents& other) const;
-  /// @}
-private:
-  std::array<Extent, 3> extents_;
-};
-
-} // namespace dawn
-
-namespace std {
-
-template <>
-struct hash<dawn::Extents> {
-  size_t operator()(const dawn::Extents& extent) const {
-    size_t seed = 0;
-    dawn::hash_combine(seed, extent[0].Minus, extent[0].Plus, extent[1].Minus, extent[1].Plus,
-                       extent[2].Minus, extent[2].Plus);
-    return seed;
-  }
-};
-
-} // namespace std
-
-#endif
+  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(
+                  LoopOrderKind::LK_Backward, Extents::VerticalLoopOrderDir::VL_CounterLoopOrder,
+                  false)) == (Extent{-1, -1}));
+  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(
+                  LoopOrderKind::LK_Backward, Extents::VerticalLoopOrderDir::VL_CounterLoopOrder,
+                  true)) == (Extent{-1, 0}));
+  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(LoopOrderKind::LK_Backward,
+                                                  Extents::VerticalLoopOrderDir::VL_InLoopOrder,
+                                                  false)) == (Extent{1, 2}));
+  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(LoopOrderKind::LK_Backward,
+                                                  Extents::VerticalLoopOrderDir::VL_InLoopOrder,
+                                                  true)) == (Extent{0, 2}));
+}
+} // anonymous namespace

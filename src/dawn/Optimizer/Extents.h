@@ -18,6 +18,7 @@
 #include "dawn/Optimizer/LoopOrder.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/HashCombine.h"
+#include "dawn/Support/Assert.h"
 #include <array>
 #include <cmath>
 #include <functional>
@@ -94,12 +95,14 @@ struct Extent {
 /// @ingroup optimizer
 class Extents {
 public:
+  enum class VerticalLoopOrderDir { VL_CounterLoopOrder, VL_InLoopOrder };
+
   /// @name Constructors and Assignment
   /// @{
   explicit Extents(const Array3i& offset);
   Extents(int extent1minus, int extent1plus, int extent2minus, int extent2plus, int extent3minus,
           int extent3plus);
-  Extents();
+  Extents() = delete;
   Extents(const Extents&) = default;
   Extents(Extents&&) = default;
   Extents& operator=(const Extents&) = default;
@@ -116,6 +119,8 @@ public:
 
   /// @brief Get size of extents (i.e number of dimensions)
   std::array<Extent, 3>::size_type getSize() const { return extents_.size(); }
+
+  bool hasVerticalCenter() const { return extents_[2].Minus <= 0 && extents_[2].Plus >= 0; }
 
   /// @brief Merge `this` with `other` and assign an Extents to `this` which is the union of the two
   ///
