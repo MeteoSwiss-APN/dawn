@@ -14,23 +14,29 @@
 
 #include "dawn/Optimizer/Extents.h"
 #include "dawn/Support/Assert.h"
+#include "dawn/Support/Unreachable.h"
 #include "dawn/Support/StringUtil.h"
 #include <iostream>
 
 namespace dawn {
 
-Extents::Extents() : extents_{} {}
+Extents::Extents(const Array3i& offset) {
 
-Extents::Extents(const Array3i& offset) { merge(offset); }
+  extents_ = std::array<Extent, 3>{};
+
+  DAWN_ASSERT(extents_.size() == offset.size());
+
+  for(std::size_t i = 0; i < extents_.size(); ++i) {
+    extents_[i].Minus = offset[i];
+    extents_[i].Plus = offset[i];
+  }
+}
 
 Extents::Extents(int extent1Minus, int extent1Plus, int extent2Minus, int extent2Plus,
                  int extent3Minus, int extent3Plus) {
-  extents_[0].Minus = extent1Minus;
-  extents_[0].Plus = extent1Plus;
-  extents_[1].Minus = extent2Minus;
-  extents_[1].Plus = extent2Plus;
-  extents_[2].Minus = extent3Minus;
-  extents_[2].Plus = extent3Plus;
+  extents_ =
+      std::array<Extent, 3>({{Extent{extent1Minus, extent1Plus}, Extent{extent2Minus, extent2Plus},
+                              Extent{extent3Minus, extent3Plus}}});
 }
 
 void Extents::addCenter(const unsigned int dim) {
@@ -69,9 +75,8 @@ void Extents::add(const Extents& other) {
 }
 
 Extents Extents::add(const Extents& lhs, const Extents& rhs) {
-  Extents sum;
-  for(std::size_t i = 0; i < sum.extents_.size(); ++i)
-    sum.extents_[i] = Extent::add(lhs.extents_[i], rhs.extents_[i]);
+  Extents sum = lhs;
+  sum.add(rhs);
   return sum;
 }
 
