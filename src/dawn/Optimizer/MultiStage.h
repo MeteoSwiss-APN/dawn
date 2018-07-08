@@ -130,6 +130,9 @@ public:
 
   /// @brief Rename all the occurances in the multi-stage
   void renameAllOccurrences(int oldAccessID, int newAccessID);
+
+  /// @brief true if it contains no stages or the stages are empty
+  bool isEmptyOrNullStmt() const;
 };
 
 } // namespace dawn

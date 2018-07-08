@@ -145,6 +145,9 @@ public:
   virtual StmtRangeType getChildren() override { return StmtRangeType(statements_); }
   virtual void replaceChildren(const std::shared_ptr<Stmt>& oldStmt,
                                const std::shared_ptr<Stmt>& newStmt) override;
+
+  bool isEmpty() const { return statements_.empty(); }
+
   ACCEPTVISITOR(Stmt, BlockStmt)
 };
 

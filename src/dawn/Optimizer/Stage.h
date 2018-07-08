@@ -186,6 +186,9 @@ public:
 
   Extents const& getExtents() const { return extents_; }
   /// @}
+
+  /// @brief true if it contains no do methods or they are empty
+  bool isEmptyOrNullStmt() const;
 };
 
 } // namespace dawn

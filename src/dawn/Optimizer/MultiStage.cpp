@@ -106,8 +106,8 @@ std::shared_ptr<DependencyGraphAccesses> MultiStage::getDependencyGraphOfAxis() 
 
 Cache& MultiStage::setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy policy, int AccessID,
                             const Interval& interval) {
-  return caches_
-      .emplace(AccessID, Cache(type, policy, AccessID, boost::optional<Interval>(interval)))
+  return caches_.emplace(AccessID,
+                         Cache(type, policy, AccessID, boost::optional<Interval>(interval)))
       .first->second;
 }
 
@@ -208,6 +208,14 @@ void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
 
     stage.update();
   }
+}
+
+bool MultiStage::isEmptyOrNullStmt() const {
+  for(auto stageIt = getStages().begin(); stageIt != getStages().end(); ++stageIt) {
+    if(!(*stageIt)->isEmptyOrNullStmt())
+      return false;
+  }
+  return true;
 }
 
 } // namespace dawn

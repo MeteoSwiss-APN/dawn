@@ -318,9 +318,12 @@ public:
   }
 
   virtual void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
+
     StencilFunctionCallScope* previousStencilFunCallScope = nullptr;
-    if(!stencilFunCalls_.empty())
+    if(!stencilFunCalls_.empty()) {
+
       previousStencilFunCallScope = stencilFunCalls_.top().get();
+    }
 
     // Compute the accesses of the stencil function
     stencilFunCalls_.push(
@@ -334,8 +337,9 @@ public:
     curStencilFunCall->update();
 
     // Traverse the Arguments
-    for(const auto& arg : expr->getArguments())
+    for(const auto& arg : expr->getArguments()) {
       arg->accept(*this);
+    }
 
     // If the current stencil function is called within the argument list of another stencil
     // function, we need to merge the extents

@@ -37,6 +37,7 @@ mchbuild_add_library(
           MathExtras.h
           NonCopyable.h
           Printing.h          
+          RemoveIf.hpp
           SmallString.h
           SmallVector.cpp
           SmallVector.h

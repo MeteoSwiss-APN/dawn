@@ -73,6 +73,9 @@ public:
   /// @brief computes the interval where an accessId is used (extended by the extent of the
   /// access)
   boost::optional<Interval> computeEnclosingAccessInterval(const int accessID) const;
+
+  /// @brief true if it is empty
+  bool isEmptyOrNullStmt() const;
 };
 
 } // namespace dawn

@@ -21,6 +21,7 @@
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Support/RemoveIf.hpp"
 
 namespace dawn {
 
@@ -149,11 +150,21 @@ public:
 /// function instantiation is then created and the field access expression replaced by a stencil
 /// function call
 class TmpReplacement : public ASTVisitorPostOrder, public NonCopyable {
+  // struct to store the stencil function instantiation of each parameter of a stencil function that
+  // is at the same time instantiated as a stencil function
+  struct NestedStencilFunctionArgs {
+    int currentPos_ = 0;
+    std::unordered_map<int, std::shared_ptr<StencilFunctionInstantiation>> stencilFun_;
+  };
+
 protected:
   const std::shared_ptr<StencilInstantiation>& instantiation_;
   std::unordered_map<int, TemporaryFunctionProperties> const& temporaryFieldAccessIDToFunctionCall_;
   const sir::Interval interval_;
   std::shared_ptr<std::vector<sir::StencilCall*>> stackTrace_;
+
+  // the prop of the arguments of nested stencil functions
+  boost::optional<NestedStencilFunctionArgs> replaceInNestedFun_;
 
   unsigned int numTmpReplaced_ = 0;
 
@@ -181,6 +192,44 @@ public:
 
   unsigned int getNumTmpReplaced() { return numTmpReplaced_; }
   void resetNumTmpReplaced() { numTmpReplaced_ = 0; }
+
+  virtual bool preVisitNode(std::shared_ptr<StencilFunCallExpr> const& expr) override {
+    // we check which arguments of the stencil function are also a stencil function call
+    for(auto arg : expr->getArguments()) {
+      if(isa<FieldAccessExpr>(*arg)) {
+        int accessID = instantiation_->getAccessIDFromExpr(expr);
+        if(temporaryFieldAccessIDToFunctionCall_.count(accessID)) {
+          if(!replaceInNestedFun_.is_initialized()) {
+            replaceInNestedFun_ = boost::make_optional(NestedStencilFunctionArgs{});
+          }
+          replaceInNestedFun_->stencilFun_[replaceInNestedFun_->currentPos_++] = nullptr;
+        }
+      }
+    }
+    return true;
+  }
+
+  virtual std::shared_ptr<Expr>
+  postVisitNode(std::shared_ptr<StencilFunCallExpr> const& expr) override {
+    // at the post visit of a stencil function node, we will replace the arguments to "tmp" fields
+    // by stecil function calls
+    std::shared_ptr<StencilFunctionInstantiation> thisStencilFun =
+        instantiation_->getStencilFunctionInstantiation(expr);
+
+    if(!replaceInNestedFun_.is_initialized())
+      return expr;
+
+    for(auto const& stencilFunArgPair : replaceInNestedFun_->stencilFun_) {
+      int argPos = stencilFunArgPair.first;
+      std::shared_ptr<StencilFunctionInstantiation> stencilFunArg = stencilFunArgPair.second;
+
+      thisStencilFun->setFunctionInstantiationOfArgField(argPos, stencilFunArg);
+    }
+
+    // reset the structured of nested function calls to continue using the visitor
+    replaceInNestedFun_ = boost::optional<NestedStencilFunctionArgs>();
+    return expr;
+  }
 
   /// @brief previsit the access to a temporary. Finalize the stencil function instantiation and
   /// recompute its <statement,accesses> pairs
@@ -269,6 +318,13 @@ public:
     // final checks
     cloneStencilFun->checkFunctionBindings();
 
+    if(replaceInNestedFun_.is_initialized()) {
+      DAWN_ASSERT(replaceInNestedFun_->stencilFun_.count(replaceInNestedFun_->currentPos_));
+      replaceInNestedFun_->stencilFun_[replaceInNestedFun_->currentPos_] = cloneStencilFun;
+
+      replaceInNestedFun_->currentPos_++;
+    }
+
     return true;
   }
 
@@ -308,7 +364,6 @@ bool PassTemporaryToStencilFunction::run(
   DAWN_ASSERT(context);
 
   for(auto& stencilPtr : stencilInstantiation->getStencils()) {
-
     // Iterate multi-stages backwards
     for(auto multiStage : stencilPtr->getMultiStages()) {
       std::unordered_map<int, TemporaryFunctionProperties> temporaryFieldExprToFunction;
@@ -323,8 +378,8 @@ bool PassTemporaryToStencilFunction::run(
             if(stmt->ASTStmt->getKind() != Stmt::SK_ExprStmt)
               continue;
 
-            // TODO catch a temp expr
             {
+              // TODO catch a temp expr
               const Interval& interval = doMethodPtr->getInterval();
               const sir::Interval sirInterval = intervalToSIRInterval(interval);
 
@@ -374,7 +429,8 @@ bool PassTemporaryToStencilFunction::run(
               if(tmpReplacement.getNumTmpReplaced() != 0) {
                 std::vector<std::shared_ptr<StatementAccessesPair>> listStmtPair;
 
-                // TODO need to combine call to StatementMapper with computeAccesses in a clean way
+                // TODO need to combine call to StatementMapper with computeAccesses in a clean
+                // way
                 // since the AST has changed, we need to recompute the <statement,accesses> pairs
                 // of the stage
 
@@ -414,7 +470,19 @@ bool PassTemporaryToStencilFunction::run(
                     << "; line : " << tmpProperties.tmpFieldAccessExpr_->getSourceLocation().Line
                     << " ] ";
       }
-      std::cout << std::endl;
+    }
+    // eliminate empty stages or stages with only NOPExpr statements
+    RemoveIf(stencilPtr->getMultiStages().begin(), stencilPtr->getMultiStages().end(),
+             stencilPtr->getMultiStages(),
+             [](std::shared_ptr<MultiStage> m) -> bool { return m->isEmptyOrNullStmt(); });
+    for(auto multiStage : stencilPtr->getMultiStages()) {
+      std::cout << "NUM " << multiStage->getStages().size() << std::endl;
+      RemoveIf(multiStage->getStages().begin(), multiStage->getStages().end(),
+               multiStage->getStages(), [](std::shared_ptr<Stage> s) -> bool {
+                 std::cout << "CHECKS " << s->isEmptyOrNullStmt() << std::endl;
+                 return s->isEmptyOrNullStmt();
+               });
+      std::cout << "NUM " << multiStage->getStages().size() << std::endl;
     }
   }
 
