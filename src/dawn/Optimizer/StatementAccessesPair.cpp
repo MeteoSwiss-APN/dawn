@@ -19,7 +19,6 @@
 #include "dawn/SIR/ASTStringifier.h"
 #include "dawn/SIR/Statement.h"
 #include "dawn/Support/Printing.h"
-#include "dawn/Support/OptionalUtil.h"
 #include <sstream>
 
 namespace dawn {
@@ -91,7 +90,6 @@ boost::optional<Extents> StatementAccessesPair::computeMaximumExtents(const int 
 
   if(callerAccesses_->hasReadAccess(accessID) || callerAccesses_->hasWriteAccess(accessID)) {
     extents = boost::optional<Extents>();
-    // TODO perfect forwarding
 
     if(callerAccesses_->hasReadAccess(accessID)) {
       if(!extents.is_initialized())

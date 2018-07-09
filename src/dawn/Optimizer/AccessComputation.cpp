@@ -201,7 +201,7 @@ public:
       calleeAccesses->mergeReadOffset(getAccessIDFromExpr(lit), Array3i{{0, 0, 0}});
   }
 
-  void mergeReadExtent(const std::shared_ptr<FieldAccessExpr>& field, Extents const& extent) {
+  void mergeReadExtent(const std::shared_ptr<FieldAccessExpr>& field, const Extents& extent) {
     for(auto& callerAccesses : callerAccessesList_)
       callerAccesses->mergeReadExtent(getAccessIDFromExpr(field), extent);
 

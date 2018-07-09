@@ -63,7 +63,6 @@ boost::optional<Extents> DoMethod::computeMaximumExtents(const int accessID) con
   return extents;
 }
 
-// TODO unittest this with mergeWithDoInterval
 boost::optional<Interval>
 DoMethod::computeEnclosingAccessInterval(const int accessID, const bool mergeWithDoInterval) const {
   boost::optional<Interval> interval;

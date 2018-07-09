@@ -383,9 +383,15 @@ TEST(IntervalTest, Substract) {
     Interval I1(4, 7);
     Interval I2(5, 8);
 
-    // TODO what if I2 is inside I1? We need a multi interval
     EXPECT_EQ((substract(I1, I2)), (MultiInterval{Interval{4, 4}}));
   }
+  {
+    Interval I1(4, 7);
+    Interval I2(5, 6);
+
+    EXPECT_EQ((substract(I1, I2)), (MultiInterval{Interval{4, 4}, Interval{7, 7}}));
+  }
+
   {
     Interval I1{0, sir::Interval::End - 4};
     Interval I2{1, sir::Interval::End - 4};

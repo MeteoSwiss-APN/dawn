@@ -47,7 +47,6 @@ static dawn::Extents analyzeStencilExtents(const std::shared_ptr<Stencil>& s, in
 
     Extents const& stageExtent = stage.getExtents();
     for(auto& field : stage.getFields()) {
-      // TODO implement a perfect forwarding
       fullExtents.merge(field.getExtents());
       fullExtents.add(stageExtent);
     }

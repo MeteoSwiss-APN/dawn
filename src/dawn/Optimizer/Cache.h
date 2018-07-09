@@ -74,6 +74,9 @@ public:
   /// @brief Get the I/O policy of the cache
   boost::optional<Interval> getInterval() const;
 
+  /// @brief determines if the cache specification requires a window
+  bool requiresWindow() const;
+
   /// @name Comparison operator
   /// @{
   bool operator==(const Cache& other) const {
@@ -91,6 +94,9 @@ private:
   boost::optional<Interval> interval_;
   boost::optional<window> window_;
 };
+
+std::ostream& operator<<(std::ostream& os, Cache::window const& w);
+bool operator==(const Cache::window& first, const Cache::window& second);
 
 } // namespace dawn
 

@@ -119,11 +119,11 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const Stencil& stencil) : Ax
 class StencilFunctionAsBCGenerator : public ASTCodeGenCXX {
 private:
   std::shared_ptr<sir::StencilFunction> function;
-  const StencilInstantiation* instantiation_;
+  const std::shared_ptr<StencilInstantiation> instantiation_;
 
 public:
   using Base = ASTCodeGenCXX;
-  StencilFunctionAsBCGenerator(const StencilInstantiation* stencilInstantiation,
+  StencilFunctionAsBCGenerator(const std::shared_ptr<StencilInstantiation> stencilInstantiation,
                                const std::shared_ptr<sir::StencilFunction>& functionToAnalyze)
       : function(functionToAnalyze), instantiation_(stencilInstantiation) {}
 
@@ -195,10 +195,9 @@ public:
   }
 };
 
-std::string GTCodeGen::cacheWindowToString(boost::optional<Cache::window> const& cacheWindow) {
-  DAWN_ASSERT(cacheWindow.is_initialized());
-  return std::string("window<") + std::to_string((*cacheWindow).m_m) + "," +
-         std::to_string((*cacheWindow).m_p) + ">";
+std::string GTCodeGen::cacheWindowToString(Cache::window const& cacheWindow) {
+  return std::string("window<") + std::to_string(cacheWindow.m_m) + "," +
+         std::to_string(cacheWindow.m_p) + ">";
 }
 
 std::string GTCodeGen::buildMakeComputation(std::vector<std::string> const& DomainMapPlaceholders,
@@ -222,8 +221,6 @@ void GTCodeGen::buildPlaceholderDefinitions(
     MemberFunction& function, std::vector<Stencil::FieldInfo> const& stencilFields,
     std::vector<std::string> const& stencilGlobalVariables,
     std::vector<std::string> const& stencilConstructorTemplates) const {
-
-  std::string defs;
 
   const int numFields = stencilFields.size();
 
@@ -250,8 +247,8 @@ void GTCodeGen::buildPlaceholderDefinitions(
   }
 }
 
-std::string
-GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInstantiation) {
+std::string GTCodeGen::generateStencilInstantiation(
+    const std::shared_ptr<StencilInstantiation> stencilInstantiation) {
   using namespace codegen;
 
   std::stringstream ssSW, ssMS, tss;
@@ -352,7 +349,7 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
       codeGenInterval(intervalProperties.name_, intervalProperties.interval_);
     }
 
-    ASTStencilBody stencilBodyCGVisitor(stencilInstantiation,
+    ASTStencilBody stencilBodyCGVisitor(stencilInstantiation.get(),
                                         intervalDefinitions.intervalProperties_);
 
     // Generate typedef for the axis
@@ -505,10 +502,8 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
                       (cache.getCacheIOPolicy() != Cache::local ? ", " + intervalName
                                                                 : std::string()) +
                       // cache window if policy is bpfill
-                      ((cache.getCacheIOPolicy() == Cache::bpfill ||
-                        cache.getCacheIOPolicy() == Cache::epflush)
-                           ? "," + cacheWindowToString(cache.getWindow())
-                           : std::string()) +
+                      ((cache.requiresWindow()) ? "," + cacheWindowToString(*(cache.getWindow()))
+                                                : std::string()) +
                       // Placeholder which will be cached
                       ">(p_" + stencilInstantiation->getNameFromAccessID(AccessIDCachePair.first) +
                       "())")
@@ -1042,7 +1037,7 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   // Generate StencilInstantiations
   std::map<std::string, std::string> stencils;
   for(const auto& nameStencilCtxPair : context_->getStencilInstantiationMap()) {
-    std::string code = generateStencilInstantiation(nameStencilCtxPair.second.get());
+    std::string code = generateStencilInstantiation(nameStencilCtxPair.second);
     if(code.empty())
       return nullptr;
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
@@ -1098,6 +1093,22 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
 
   return make_unique<TranslationUnit>(context_->getSIR()->Filename, std::move(ppDefines),
                                       std::move(stencils), std::move(globals));
+}
+
+std::vector<std::string> GTCodeGen::buildFieldTemplateNames(
+    IndexRange<std::vector<Stencil::FieldInfo>> const& stencilFields) const {
+  std::vector<std::string> templates;
+  for(int i = 0; i < stencilFields.size(); ++i)
+    templates.push_back("S" + std::to_string(i + 1));
+
+  return templates;
+}
+
+int GTCodeGen::computeNumTemporaries(std::vector<Stencil::FieldInfo> const& stencilFields) const {
+  int numTemporaries = 0;
+  for(auto const& f : stencilFields)
+    numTemporaries += (isTemporary(f) ? 1 : 0);
+  return numTemporaries;
 }
 
 } // namespace gt

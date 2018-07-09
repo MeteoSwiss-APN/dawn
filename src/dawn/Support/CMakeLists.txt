@@ -39,7 +39,6 @@ mchbuild_add_library(
           Printing.h          
           IndexGenerator.cpp
           IndexGenerator.h
-          OptionalUtil.h
           SmallString.h
           SmallVector.cpp
           SmallVector.h

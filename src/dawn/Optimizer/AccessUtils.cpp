@@ -7,7 +7,8 @@ namespace AccessUtils {
 void recordWriteAccess(std::unordered_map<int, Field>& inputOutputFields,
                        std::unordered_map<int, Field>& inputFields,
                        std::unordered_map<int, Field>& outputFields, int AccessID,
-                       const Extents& writeExtents, Interval const& doMethodInterval) {
+                       const boost::optional<Extents>& writeExtents,
+                       Interval const& doMethodInterval) {
   // Field was recorded as `InputOutput`, state can't change ...
   if(inputOutputFields.count(AccessID)) {
     inputOutputFields.at(AccessID).extendInterval(doMethodInterval);
@@ -29,14 +30,15 @@ void recordWriteAccess(std::unordered_map<int, Field>& inputOutputFields,
     outputFields.at(AccessID).extendInterval(doMethodInterval);
   } else {
     outputFields.emplace(AccessID, Field(AccessID, Field::IK_Output, boost::optional<Extents>(),
-                                         boost::make_optional(writeExtents), doMethodInterval));
+                                         writeExtents, doMethodInterval));
   }
 }
 
 void recordReadAccess(std::unordered_map<int, Field>& inputOutputFields,
                       std::unordered_map<int, Field>& inputFields,
                       std::unordered_map<int, Field>& outputFields, int AccessID,
-                      Extents const& readExtents, const Interval& doMethodInterval) {
+                      boost::optional<Extents> const& readExtents,
+                      const Interval& doMethodInterval) {
 
   // Field was recorded as `InputOutput`, state can't change ...
   if(inputOutputFields.count(AccessID)) {
@@ -58,10 +60,10 @@ void recordReadAccess(std::unordered_map<int, Field>& inputOutputFields,
   // Field not yet present, record it as input
   if(inputFields.count(AccessID)) {
     inputFields.at(AccessID).extendInterval(doMethodInterval);
-  } else
-    inputFields.emplace(AccessID,
-                        Field(AccessID, Field::IK_Input, boost::make_optional(readExtents),
-                              boost::optional<Extents>(), doMethodInterval));
+  } else {
+    inputFields.emplace(AccessID, Field(AccessID, Field::IK_Input, readExtents,
+                                        boost::optional<Extents>(), doMethodInterval));
+  }
 }
 } // namespace AccessUtils
 } // namespace dawn

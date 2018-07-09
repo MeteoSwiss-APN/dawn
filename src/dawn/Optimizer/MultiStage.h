@@ -126,7 +126,7 @@ public:
   std::unordered_map<int, Field> getFields() const;
 
   /// @brief Get the enclosing interval of all access to temporaries
-  std::shared_ptr<Interval> getEnclosingAccessIntervalTemporaries() const;
+  boost::optional<Interval> getEnclosingAccessIntervalTemporaries() const;
 
   /// @brief Get the caches
   std::unordered_map<int, Cache>& getCaches() { return caches_; }
