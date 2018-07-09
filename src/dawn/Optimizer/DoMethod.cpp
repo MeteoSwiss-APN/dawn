@@ -72,7 +72,7 @@ DoMethod::computeEnclosingAccessInterval(const int accessID, const bool mergeWit
   if(extents.is_initialized()) {
     if(mergeWithDoInterval)
       extents->addCenter(2);
-    return boost::make_optional<Interval>(getInterval())->extendInterval(*extents);
+    return boost::make_optional(getInterval())->extendInterval(*extents);
   }
   return interval;
 }
