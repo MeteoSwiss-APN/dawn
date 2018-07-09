@@ -146,10 +146,6 @@ private:
                      std::shared_ptr<StencilFunctionInstantiation>>
       ExprToStencilFunctionInstantiationMap_;
 
-  /// Referenced stencil functions within this stencil function
-  std::unordered_map<std::string, std::shared_ptr<StencilFunctionInstantiation>>
-      nameToStencilFunctionInstantiationMap_;
-
   //===----------------------------------------------------------------------------------------===//
   //     Accesses & Fields
 
@@ -362,8 +358,8 @@ public:
   getExprToStencilFunctionInstantiationMap() const;
 
   /// @brief Get StencilFunctionInstantiation by name
-  const std::unordered_map<std::string, std::shared_ptr<StencilFunctionInstantiation>>&
-  getNameToStencilFunctionInstantiationMap() const;
+  //  const std::unordered_map<std::string, std::shared_ptr<StencilFunctionInstantiation>>&
+  //  getNameToStencilFunctionInstantiationMap() const;
 
   /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
   std::shared_ptr<StencilFunctionInstantiation>

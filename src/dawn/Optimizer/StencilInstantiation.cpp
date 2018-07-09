@@ -981,7 +981,6 @@ void StencilInstantiation::removeStencilFunctionInstantiation(
   } else {
     func = getStencilFunctionInstantiation(expr);
     ExprToStencilFunctionInstantiationMap_.erase(expr);
-    nameToStencilFunctionInstantiationMap_.erase(expr->getCallee());
   }
 
   for(auto it = stencilFunctionInstantiations_.begin();
@@ -1001,13 +1000,6 @@ StencilInstantiation::getStencilFunctionInstantiation(
   return it->second;
 }
 
-const std::shared_ptr<StencilFunctionInstantiation>
-StencilInstantiation::getStencilFunctionInstantiation(const std::string stencilFunName) const {
-  auto it = nameToStencilFunctionInstantiationMap_.find(stencilFunName);
-  DAWN_ASSERT_MSG(it != nameToStencilFunctionInstantiationMap_.end(), "Invalid stencil function");
-  return it->second;
-}
-
 std::shared_ptr<StencilFunctionInstantiation>
 StencilInstantiation::getStencilFunctionInstantiationCandidate(
     const std::shared_ptr<StencilFunCallExpr>& expr) {
@@ -1021,22 +1013,6 @@ StencilInstantiation::getStencilFunctionInstantiationCandidate(
                   "stencil function candidate not found");
 
   return it->first;
-}
-
-bool StencilInstantiation::hasStencilFunctionInstantiationCandidate(
-    const std::string stencilFunName) const {
-  auto it = std::find_if(stencilFunInstantiationCandidate_.begin(),
-                         stencilFunInstantiationCandidate_.end(),
-                         [&](std::pair<std::shared_ptr<StencilFunctionInstantiation>,
-                                       StencilFunctionInstantiationCandidate> const& pair) {
-                           return (pair.first->getExpression()->getCallee() == stencilFunName);
-                         });
-  return (it != stencilFunInstantiationCandidate_.end());
-}
-
-bool StencilInstantiation::hasStencilFunctionInstantiation(const std::string stencilFunName) const {
-  auto it = nameToStencilFunctionInstantiationMap_.find(stencilFunName);
-  return it != nameToStencilFunctionInstantiationMap_.end();
 }
 
 std::shared_ptr<StencilFunctionInstantiation>
@@ -1073,12 +1049,6 @@ std::shared_ptr<StencilFunctionInstantiation> StencilInstantiation::cloneStencil
   return stencilFunClone;
 }
 
-std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
-                   std::shared_ptr<StencilFunctionInstantiation>>&
-StencilInstantiation::getExprToStencilFunctionInstantiationMap() {
-  return ExprToStencilFunctionInstantiationMap_;
-}
-
 const std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
                          std::shared_ptr<StencilFunctionInstantiation>>&
 StencilInstantiation::getExprToStencilFunctionInstantiationMap() const {
@@ -1105,14 +1075,15 @@ StencilInstantiation::makeStencilFunctionInstantiation(
 void StencilInstantiation::insertExprToStencilFunction(
     std::shared_ptr<StencilFunctionInstantiation> stencilFun) {
   // TODO gather all the stencil function properties in a struct
+  //  DAWN_ASSERT(ExprToStencilFunctionInstantiationMap_.count(stencilFun->getExpression()));
+  //  DAWN_ASSERT(nameToStencilFunctionInstantiationMap_.count(stencilFun->getExpression()));
   ExprToStencilFunctionInstantiationMap_.emplace(stencilFun->getExpression(), stencilFun);
-  nameToStencilFunctionInstantiationMap_.emplace(stencilFun->getExpression()->getCallee(),
-                                                 stencilFun);
 }
 
 void StencilInstantiation::deregisterStencilFunction(
     std::shared_ptr<StencilFunctionInstantiation> stencilFun) {
   // TODO move all this to the Remove function
+  // TODO deregister also for a nested stencil function
   {
     bool found = false;
     auto it = ExprToStencilFunctionInstantiationMap_.begin();
@@ -1125,20 +1096,6 @@ void StencilInstantiation::deregisterStencilFunction(
         it++;
     }
     DAWN_ASSERT(found);
-  }
-  {
-    bool found = false;
-    auto it = nameToStencilFunctionInstantiationMap_.begin();
-    while(it != nameToStencilFunctionInstantiationMap_.end()) {
-      if(it->second == stencilFun) {
-        it = nameToStencilFunctionInstantiationMap_.erase(it);
-        found = true;
-        break;
-      } else
-        it++;
-    }
-    // TODO why it does not exist here ?
-    //    DAWN_ASSERT(found);
   }
   {
     bool found = false;

@@ -143,10 +143,6 @@ class StencilInstantiation : NonCopyable {
                      std::shared_ptr<StencilFunctionInstantiation>>
       ExprToStencilFunctionInstantiationMap_;
 
-  /// table from name to stencil function instantiation
-  std::unordered_map<std::string, std::shared_ptr<StencilFunctionInstantiation>>
-      nameToStencilFunctionInstantiationMap_;
-
   /// lookup table containing all the stencil function candidates, whose arguments are not yet bound
   std::unordered_map<std::shared_ptr<StencilFunctionInstantiation>,
                      StencilFunctionInstantiationCandidate> stencilFunInstantiationCandidate_;
@@ -341,20 +337,9 @@ public:
   /// @brief Get the `AccessID` of the Stmt (VarDeclStmt)
   int getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) const;
 
-  /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
-  const std::shared_ptr<StencilFunctionInstantiation>
-  getStencilFunctionInstantiation(const std::string stencilFunName) const;
-
   /// @brief get a stencil function instantiation by StencilFunCallExpr
   const std::shared_ptr<StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) const;
-
-  /// @brief returns true if a stencil function instantiation candidate with name stencilFunName
-  /// exists
-  bool hasStencilFunctionInstantiationCandidate(const std::string stencilFunName) const;
-
-  /// @brief returns true if a stencil function instantiation with name stencilFunName exists
-  bool hasStencilFunctionInstantiation(const std::string stencilFunName) const;
 
   /// @brief get a stencil function candidate by StencilFunCallExpr
   std::shared_ptr<StencilFunctionInstantiation>
@@ -380,9 +365,6 @@ public:
   void eraseExprToAccessID(std::shared_ptr<Expr> expr);
 
   /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
-  std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
-                     std::shared_ptr<StencilFunctionInstantiation>>&
-  getExprToStencilFunctionInstantiationMap();
   const std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
                            std::shared_ptr<StencilFunctionInstantiation>>&
   getExprToStencilFunctionInstantiationMap() const;

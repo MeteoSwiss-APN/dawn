@@ -350,19 +350,11 @@ void StencilFunctionInstantiation::insertExprToStencilFunction(
     const std::shared_ptr<StencilFunctionInstantiation>& stencilFun) {
   // TODO make sure it does not exist already
   ExprToStencilFunctionInstantiationMap_.emplace(stencilFun->getExpression(), stencilFun);
-  nameToStencilFunctionInstantiationMap_.emplace(stencilFun->getExpression()->getCallee(),
-                                                 stencilFun);
 }
 
 void StencilFunctionInstantiation::removeStencilFunctionInstantiation(
     const std::shared_ptr<StencilFunCallExpr>& expr) {
   ExprToStencilFunctionInstantiationMap_.erase(expr);
-  nameToStencilFunctionInstantiationMap_.erase(expr->getCallee());
-}
-
-const std::unordered_map<std::string, std::shared_ptr<StencilFunctionInstantiation>>&
-StencilFunctionInstantiation::getNameToStencilFunctionInstantiationMap() const {
-  return nameToStencilFunctionInstantiationMap_;
 }
 
 std::shared_ptr<StencilFunctionInstantiation>

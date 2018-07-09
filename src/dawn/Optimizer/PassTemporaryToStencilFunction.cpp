@@ -164,9 +164,12 @@ protected:
   std::shared_ptr<std::vector<sir::StencilCall*>> stackTrace_;
 
   // the prop of the arguments of nested stencil functions
-  bool replaceInNestedFun_ = false;
+  std::stack<bool> replaceInNestedFun_;
 
   unsigned int numTmpReplaced_ = 0;
+
+  std::unordered_map<std::shared_ptr<FieldAccessExpr>,
+                     std::shared_ptr<StencilFunctionInstantiation>> tmpToStencilFunctionMap_;
 
 public:
   TmpReplacement(const std::shared_ptr<StencilInstantiation>& instantiation,
@@ -195,14 +198,20 @@ public:
 
   virtual bool preVisitNode(std::shared_ptr<StencilFunCallExpr> const& expr) override {
     // we check which arguments of the stencil function are also a stencil function call
+    bool doReplaceTmp = false;
     for(auto arg : expr->getArguments()) {
       if(isa<FieldAccessExpr>(*arg)) {
         int accessID = instantiation_->getAccessIDFromExpr(arg);
         if(temporaryFieldAccessIDToFunctionCall_.count(accessID)) {
-          replaceInNestedFun_ = true;
+          doReplaceTmp = true;
         }
       }
     }
+    if(doReplaceTmp)
+      replaceInNestedFun_.push(true);
+    else
+      replaceInNestedFun_.push(false);
+
     return true;
   }
 
@@ -213,12 +222,14 @@ public:
     std::shared_ptr<StencilFunctionInstantiation> thisStencilFun =
         instantiation_->getStencilFunctionInstantiation(expr);
 
-    if(!replaceInNestedFun_)
+    if(!replaceInNestedFun_.top())
       return expr;
 
+    // we need to remove the previous stencil function that had "tmp" field as argument from the
+    // registry, before we replace it with a StencilFunCallExpr (that computes "tmp") argument
     instantiation_->deregisterStencilFunction(thisStencilFun);
     // reset the use of nested function calls to continue using the visitor
-    replaceInNestedFun_ = false;
+    replaceInNestedFun_.pop();
 
     return expr;
   }
@@ -235,13 +246,6 @@ public:
         instantiation_->getStencilFunctionInstantiationCandidate(callee);
 
     std::string fnClone = makeOnTheFlyFunctionName(expr);
-
-    // the temporary was not replaced by a stencil function by previous visitor, for some reasons it
-    // was not supported
-    if(instantiation_->hasStencilFunctionInstantiation(fnClone))
-      return true;
-
-    DAWN_ASSERT(temporaryFieldAccessIDToFunctionCall_.count(accessID));
 
     // retrieve the sir stencil function definition
     std::shared_ptr<sir::StencilFunction> sirStencilFunction =
@@ -309,6 +313,11 @@ public:
     // final checks
     cloneStencilFun->checkFunctionBindings();
 
+    // register the FieldAccessExpr -> StencilFunctionInstantation into a map for future replacement
+    // of the node in the post visit
+    DAWN_ASSERT(!tmpToStencilFunctionMap_.count(expr));
+    tmpToStencilFunctionMap_[expr] = cloneStencilFun;
+
     return true;
   }
 
@@ -325,7 +334,9 @@ public:
     // TODO we need to version to tmp function generation, in case tmp is recomputed multiple times
     std::string callee = makeOnTheFlyFunctionName(expr);
 
-    auto stencilFunCall = instantiation_->getStencilFunctionInstantiation(callee)->getExpression();
+    DAWN_ASSERT(tmpToStencilFunctionMap_.count(expr));
+
+    auto stencilFunCall = tmpToStencilFunctionMap_.at(expr)->getExpression();
 
     numTmpReplaced_++;
     return stencilFunCall;
