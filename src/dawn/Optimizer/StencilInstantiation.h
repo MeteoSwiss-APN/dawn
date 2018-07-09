@@ -566,7 +566,10 @@ public:
     return BoundaryConditionToExtentsMap_.find(stmt)->second;
   }
 
-  Array3i getFieldIDFromInitializedDimensionsMap(int FieldID) {
+  /// @brief this checks if the user specialized the field to a dimensionality. If not all
+  /// dimensions are allow for off-center acesses and hence, {1,1,1} is returned. If we got a
+  /// specialization, it is returned
+  Array3i getFieldDimensionsMask(int FieldID) {
     if(fieldIDToInitializedDimensionsMap_.count(FieldID) == 0) {
       return Array3i{{1, 1, 1}};
     }
