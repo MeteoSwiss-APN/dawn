@@ -877,11 +877,11 @@ std::string GTCodeGen::generateStencilInstantiation(
             return field.Name;
         }));
 
-  for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i)
-    StencilWrapperConstructor.addStatement(
-        "static_assert(gridtools::is_data_store<" + StencilWrapperConstructorTemplates[i] +
-        ">::value, \"argument '" + SIRFieldsWithoutTemps[i]->Name +
-        "' is not a 'gridtools::data_store' (" + decimalToOrdinal(i + 2) + " argument invalid)\")");
+//  for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i)
+//    StencilWrapperConstructor.addStatement(
+//        "static_assert(gridtools::is_data_store<" + StencilWrapperConstructorTemplates[i] +
+//        ">::value, \"argument '" + SIRFieldsWithoutTemps[i]->Name +
+//        "' is not a 'gridtools::data_store' (" + decimalToOrdinal(i + 2) + " argument invalid)\")");
 
   StencilWrapperConstructor.commit();
 
