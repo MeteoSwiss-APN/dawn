@@ -629,8 +629,8 @@ std::string GTCodeGen::generateStencilInstantiation(
     mplContainerMaxSize_ = std::max(mplContainerMaxSize_, numFields);
 
     std::vector<std::string> StencilConstructorTemplates;
-    for(int i=0; i < nonTempFields.size();++i){
-        StencilConstructorTemplates.push_back("S"+std::to_string(i));
+    for(int i = 0; i < nonTempFields.size(); ++i) {
+      StencilConstructorTemplates.push_back("S" + std::to_string(i));
     }
 
     // Generate constructor
@@ -638,10 +638,10 @@ std::string GTCodeGen::generateStencilInstantiation(
         StencilConstructorTemplates, [](const std::string& str) { return "class " + str; }));
 
     StencilConstructor.addArg("const gridtools::clang::domain& dom");
-    int index=0;
-    for(auto field : nonTempFields){
-        StencilConstructor.addArg(StencilConstructorTemplates[index] + " " + (*field).Name);
-        index++;
+    int index = 0;
+    for(auto field : nonTempFields) {
+      StencilConstructor.addArg(StencilConstructorTemplates[index] + " " + (*field).Name);
+      index++;
     }
 
     StencilConstructor.startBody();
@@ -808,7 +808,6 @@ std::string GTCodeGen::generateStencilInstantiation(
   StencilWrapperClass.addMember("static constexpr const char* s_name =",
                                 Twine("\"") + StencilWrapperClass.getName() + Twine("\""));
 
-
   // Stencil members
   StencilWrapperClass.addComment("Members representing all the stencils that are called");
   std::vector<std::string> stencilMembers;
@@ -844,8 +843,7 @@ std::string GTCodeGen::generateStencilInstantiation(
   for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i)
     StencilWrapperConstructorTemplates.push_back("S" + std::to_string(i + 1));
 
-  auto StencilWrapperConstructor =
-      StencilWrapperClass.addConstructor();
+  auto StencilWrapperConstructor = StencilWrapperClass.addConstructor();
   //      }));
 
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
@@ -906,7 +904,6 @@ std::string GTCodeGen::generateStencilInstantiation(
   }
 
   StencilWrapperConstructor.commit();
-
 
   // Generate the run method by generate code for the stencil description AST
   MemberFunction RunMethod = StencilWrapperClass.addMemberFunction("void", "run");
