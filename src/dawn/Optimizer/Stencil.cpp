@@ -460,7 +460,13 @@ std::unordered_map<int, Extents> const Stencil::computeEnclosingAccessExtents() 
         Extents e = field.getExtents();
         e.add(stage->getExtents());
         // merge with the current minimum/maximum extent for the given field
-        maxExtents_[stage->getFields()[accessorIdx].getAccessID()].merge(e);
+        auto finder = maxExtents_.find(stage->getFields()[accessorIdx].getAccessID());
+        if(finder != maxExtents_.end()){
+            finder->second.merge(e);
+        }
+        else{
+            maxExtents_.emplace(stage->getFields()[accessorIdx].getAccessID(),e);
+        }
       }
     }
   }
