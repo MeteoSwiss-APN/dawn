@@ -447,4 +447,24 @@ std::ostream& operator<<(std::ostream& os, const Stencil& stencil) {
   return os;
 }
 
+std::unordered_map<int, Extents> const Stencil::computeEnclosingAccessExtents() const {
+  std::unordered_map<int, Extents> maxExtents_;
+  // iterate through multistages
+  for(const auto& MS : multistages_) {
+    // iterate through stages
+    for(const auto& stage : MS->getStages()) {
+      std::size_t accessorIdx = 0;
+      for(; accessorIdx < stage->getFields().size(); ++accessorIdx) {
+        const auto& field = stage->getFields()[accessorIdx];
+        // add the stage extent to the field extent
+        Extents e = field.getExtents();
+        e.add(stage->getExtents());
+        // merge with the current minimum/maximum extent for the given field
+        maxExtents_[stage->getFields()[accessorIdx].getAccessID()].merge(e);
+      }
+    }
+  }
+  return maxExtents_;
+}
+
 } // namespace dawn

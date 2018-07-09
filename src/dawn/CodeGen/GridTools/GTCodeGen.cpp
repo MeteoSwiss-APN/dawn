@@ -658,6 +658,32 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
 
     StencilConstructor.startBody();
 
+    // Add static asserts to check halos against extents
+    StencilConstructor.addComment("Check if extents do not exceed the halos");
+    std::unordered_map<int, Extents> const& exts =
+        (*stencilInstantiation->getStencils()[stencilIdx]).computeEnclosingAccessExtents();
+    for(int i = 0; i < numFields; ++i) {
+      if(!StencilFields[i].IsTemporary) {
+        auto const& ext = exts.at(StencilFields[i].AccessID);
+        for(int dim = 0; dim < ext.getSize(); ++dim) {
+          std::string at_call = "template at<" + std::to_string(dim) + ">()";
+          std::string storage = StencilConstructorTemplates[i - numTemporaries];
+          // assert for + accesses
+          StencilConstructor.addStatement("static_assert((static_cast<int>(" + storage +
+                                          "::storage_info_t::halo_t::" + at_call + ") >= " +
+                                          std::to_string(ext[dim].Plus) + ") || " + "(" + storage +
+                                          "::storage_info_t::layout_t::" + at_call + " == -1)," +
+                                          "\"Used extents exceed halo limits.\")");
+          // assert for - accesses
+          StencilConstructor.addStatement("static_assert(((-1)*static_cast<int>(" + storage +
+                                          "::storage_info_t::halo_t::" + at_call + ") <= " +
+                                          std::to_string(ext[dim].Minus) + ") || " + "(" + storage +
+                                          "::storage_info_t::layout_t::" + at_call + " == -1)," +
+                                          "\"Used extents exceed halo limits.\")");
+        }
+      }
+    }
+
     // Generate domain
     int accessorIdx = 0;
 
@@ -892,6 +918,12 @@ GTCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInsta
           else
             return field.Name;
         }));
+
+  for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i)
+    StencilWrapperConstructor.addStatement(
+        "static_assert(gridtools::is_data_store<" + StencilWrapperConstructorTemplates[i] +
+        ">::value, \"argument '" + SIRFieldsWithoutTemps[i]->Name +
+        "' is not a 'gridtools::data_store' (" + decimalToOrdinal(i + 2) + " argument invalid)\")");
 
   StencilWrapperConstructor.commit();
 
