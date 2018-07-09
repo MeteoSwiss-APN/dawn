@@ -629,24 +629,24 @@ std::string GTCodeGen::generateStencilInstantiation(
     mplContainerMaxSize_ = std::max(mplContainerMaxSize_, numFields);
 
     std::vector<std::string> StencilConstructorTemplates;
-    int numTemporaries = 0;
-    for(int i = 0; i < numFields; ++i)
-      if(StencilFields[i].IsTemporary)
-        numTemporaries += 1;
-      else
-        StencilConstructorTemplates.push_back("S" + std::to_string(i + 1 - numTemporaries));
+    for(int i=0; i < nonTempFields.size();++i){
+        StencilConstructorTemplates.push_back("S"+std::to_string(i));
+    }
 
     // Generate constructor
     auto StencilConstructor = StencilClass.addConstructor(RangeToString(", ", "", "")(
         StencilConstructorTemplates, [](const std::string& str) { return "class " + str; }));
 
     StencilConstructor.addArg("const gridtools::clang::domain& dom");
-    for(int i = 0; i < numFields; ++i)
-      if(!StencilFields[i].IsTemporary)
-        StencilConstructor.addArg(StencilConstructorTemplates[i - numTemporaries] + " " +
-                                  StencilFields[i].Name);
+    int index=0;
+    for(auto field : nonTempFields){
+        StencilConstructor.addArg(StencilConstructorTemplates[index] + " " + (*field).Name);
+        index++;
+    }
 
     StencilConstructor.startBody();
+
+    int numTemporaries = tempFields.size();
 
     // Add static asserts to check halos against extents
     StencilConstructor.addComment("Check if extents do not exceed the halos");

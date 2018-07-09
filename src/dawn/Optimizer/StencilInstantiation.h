@@ -163,7 +163,7 @@ class StencilInstantiation : NonCopyable {
   /// Set of all the IDs that are locally cached
   std::set<int> CachedVariableSet_;
 
-  /// table from FieldID to an Array of initialized dimensions
+  /// Map of Field ID's to their respecive legal dimensions for offsets
   std::unordered_map<int, Array3i> fieldIDToInitializedDimensionsMap_;
 
 public:

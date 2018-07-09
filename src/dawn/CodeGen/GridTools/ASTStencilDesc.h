@@ -31,7 +31,7 @@ namespace gt {
 /// @ingroup gt
 class ASTStencilDesc : public ASTCodeGenCXX {
 protected:
-  const StencilInstantiation* instantiation_;
+  const std::shared_ptr<StencilInstantiation> instantiation_;
 
   /// StencilID to the name of the generated stencils for this ID
   const std::unordered_map<int, std::vector<std::string>>& StencilIDToStencilNameMap_;
@@ -40,7 +40,7 @@ protected:
 public:
   using Base = ASTCodeGenCXX;
 
-  ASTStencilDesc(const StencilInstantiation* instantiation,
+  ASTStencilDesc(const std::shared_ptr<StencilInstantiation> instantiation,
                  const std::unordered_map<int, std::vector<std::string>>& StencilIDToStencilNameMap,
                  const std::unordered_map<int, std::string>& stencilIdToArguments);
 
