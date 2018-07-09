@@ -83,6 +83,11 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   DAWN_LOG(INFO) << "Parsing translation unit... ";
 
   clang::TranslationUnitDecl* TU = ASTContext.getTranslationUnitDecl();
+
+  if(context_->getOptions().DumpAST) {
+    TU->dumpColor();
+  }
+
   for(auto& decl : TU->decls())
     visitor_->TraverseDecl(decl);
 
