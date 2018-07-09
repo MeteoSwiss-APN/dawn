@@ -777,7 +777,7 @@ std::string GTCodeGen::generateStencilInstantiation(
   //
   // Generate constructor/destructor and methods of the stencil wrapper
   //
-  if(stencilInstantiation->getBoundaryConditions().size() > 0)
+  if(!stencilInstantiation->getBoundaryConditions().empty())
     StencilWrapperClass.addComment("Fields that require Boundary Conditions");
   // add all fields that require a boundary condition as members since they need to be called from
   // this class and not from individual stencils
