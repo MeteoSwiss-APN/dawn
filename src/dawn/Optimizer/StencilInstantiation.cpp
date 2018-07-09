@@ -640,9 +640,9 @@ void StencilInstantiation::removeAccessID(int AccessID) {
 
   if(variableVersions_.hasVariableMultipleVersions(AccessID)) {
     auto versions = variableVersions_.getVersions(AccessID);
-    versions->erase(std::remove_if(versions->begin(), versions->end(),
-                                   [&](int AID) { return AID == AccessID; }),
-                    versions->end());
+    versions->erase(std::remove_if(versions->begin(), versions->end(), [&](int AID) {
+                      return AID == AccessID;
+                    }), versions->end());
   }
 }
 
@@ -1104,9 +1104,55 @@ StencilInstantiation::makeStencilFunctionInstantiation(
 
 void StencilInstantiation::insertExprToStencilFunction(
     std::shared_ptr<StencilFunctionInstantiation> stencilFun) {
+  // TODO gather all the stencil function properties in a struct
   ExprToStencilFunctionInstantiationMap_.emplace(stencilFun->getExpression(), stencilFun);
   nameToStencilFunctionInstantiationMap_.emplace(stencilFun->getExpression()->getCallee(),
                                                  stencilFun);
+}
+
+void StencilInstantiation::deregisterStencilFunction(
+    std::shared_ptr<StencilFunctionInstantiation> stencilFun) {
+  // TODO move all this to the Remove function
+  {
+    bool found = false;
+    auto it = ExprToStencilFunctionInstantiationMap_.begin();
+    while(it != ExprToStencilFunctionInstantiationMap_.end()) {
+      if(it->second == stencilFun) {
+        it = ExprToStencilFunctionInstantiationMap_.erase(it);
+        found = true;
+        break;
+      } else
+        it++;
+    }
+    DAWN_ASSERT(found);
+  }
+  {
+    bool found = false;
+    auto it = nameToStencilFunctionInstantiationMap_.begin();
+    while(it != nameToStencilFunctionInstantiationMap_.end()) {
+      if(it->second == stencilFun) {
+        it = nameToStencilFunctionInstantiationMap_.erase(it);
+        found = true;
+        break;
+      } else
+        it++;
+    }
+    // TODO why it does not exist here ?
+    //    DAWN_ASSERT(found);
+  }
+  {
+    bool found = false;
+    auto it = stencilFunctionInstantiations_.begin();
+    while(it != stencilFunctionInstantiations_.end()) {
+      if(*it == stencilFun) {
+        it = stencilFunctionInstantiations_.erase(it);
+        found = true;
+        break;
+      } else
+        it++;
+    }
+    DAWN_ASSERT(found);
+  }
 }
 
 void StencilInstantiation::finalizeStencilFunctionSetup(
@@ -1114,7 +1160,6 @@ void StencilInstantiation::finalizeStencilFunctionSetup(
 
   DAWN_ASSERT(stencilFunInstantiationCandidate_.count(stencilFun));
   stencilFun->closeFunctionBindings();
-
   // We take the candidate to stencil function and placed it in the stencil function instantiations
   // container
   StencilFunctionInstantiationCandidate candidate = stencilFunInstantiationCandidate_[stencilFun];

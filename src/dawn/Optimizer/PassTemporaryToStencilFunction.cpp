@@ -164,7 +164,7 @@ protected:
   std::shared_ptr<std::vector<sir::StencilCall*>> stackTrace_;
 
   // the prop of the arguments of nested stencil functions
-  boost::optional<NestedStencilFunctionArgs> replaceInNestedFun_;
+  bool replaceInNestedFun_ = false;
 
   unsigned int numTmpReplaced_ = 0;
 
@@ -197,12 +197,9 @@ public:
     // we check which arguments of the stencil function are also a stencil function call
     for(auto arg : expr->getArguments()) {
       if(isa<FieldAccessExpr>(*arg)) {
-        int accessID = instantiation_->getAccessIDFromExpr(expr);
+        int accessID = instantiation_->getAccessIDFromExpr(arg);
         if(temporaryFieldAccessIDToFunctionCall_.count(accessID)) {
-          if(!replaceInNestedFun_.is_initialized()) {
-            replaceInNestedFun_ = boost::make_optional(NestedStencilFunctionArgs{});
-          }
-          replaceInNestedFun_->stencilFun_[replaceInNestedFun_->currentPos_++] = nullptr;
+          replaceInNestedFun_ = true;
         }
       }
     }
@@ -216,18 +213,13 @@ public:
     std::shared_ptr<StencilFunctionInstantiation> thisStencilFun =
         instantiation_->getStencilFunctionInstantiation(expr);
 
-    if(!replaceInNestedFun_.is_initialized())
+    if(!replaceInNestedFun_)
       return expr;
 
-    for(auto const& stencilFunArgPair : replaceInNestedFun_->stencilFun_) {
-      int argPos = stencilFunArgPair.first;
-      std::shared_ptr<StencilFunctionInstantiation> stencilFunArg = stencilFunArgPair.second;
+    instantiation_->deregisterStencilFunction(thisStencilFun);
+    // reset the use of nested function calls to continue using the visitor
+    replaceInNestedFun_ = false;
 
-      thisStencilFun->setFunctionInstantiationOfArgField(argPos, stencilFunArg);
-    }
-
-    // reset the structured of nested function calls to continue using the visitor
-    replaceInNestedFun_ = boost::optional<NestedStencilFunctionArgs>();
     return expr;
   }
 
@@ -297,7 +289,6 @@ public:
     }
 
     instantiation_->finalizeStencilFunctionSetup(cloneStencilFun);
-
     std::unordered_map<std::string, int> fieldsMap;
 
     const auto& arguments = cloneStencilFun->getArguments();
@@ -317,13 +308,6 @@ public:
 
     // final checks
     cloneStencilFun->checkFunctionBindings();
-
-    if(replaceInNestedFun_.is_initialized()) {
-      DAWN_ASSERT(replaceInNestedFun_->stencilFun_.count(replaceInNestedFun_->currentPos_));
-      replaceInNestedFun_->stencilFun_[replaceInNestedFun_->currentPos_] = cloneStencilFun;
-
-      replaceInNestedFun_->currentPos_++;
-    }
 
     return true;
   }
@@ -427,6 +411,7 @@ bool PassTemporaryToStencilFunction::run(
               isATmpReplaced = isATmpReplaced || (tmpReplacement.getNumTmpReplaced() != 0);
 
               if(tmpReplacement.getNumTmpReplaced() != 0) {
+
                 std::vector<std::shared_ptr<StatementAccessesPair>> listStmtPair;
 
                 // TODO need to combine call to StatementMapper with computeAccesses in a clean
@@ -441,6 +426,7 @@ bool PassTemporaryToStencilFunction::run(
                 std::shared_ptr<BlockStmt> blockStmt =
                     std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{stmt->ASTStmt});
                 blockStmt->accept(statementMapper);
+
                 DAWN_ASSERT(listStmtPair.size() == 1);
 
                 std::shared_ptr<StatementAccessesPair> stmtPair = listStmtPair[0];
@@ -476,13 +462,9 @@ bool PassTemporaryToStencilFunction::run(
              stencilPtr->getMultiStages(),
              [](std::shared_ptr<MultiStage> m) -> bool { return m->isEmptyOrNullStmt(); });
     for(auto multiStage : stencilPtr->getMultiStages()) {
-      std::cout << "NUM " << multiStage->getStages().size() << std::endl;
       RemoveIf(multiStage->getStages().begin(), multiStage->getStages().end(),
-               multiStage->getStages(), [](std::shared_ptr<Stage> s) -> bool {
-                 std::cout << "CHECKS " << s->isEmptyOrNullStmt() << std::endl;
-                 return s->isEmptyOrNullStmt();
-               });
-      std::cout << "NUM " << multiStage->getStages().size() << std::endl;
+               multiStage->getStages(),
+               [](std::shared_ptr<Stage> s) -> bool { return s->isEmptyOrNullStmt(); });
     }
   }
 

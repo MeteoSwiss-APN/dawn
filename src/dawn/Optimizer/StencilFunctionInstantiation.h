@@ -181,6 +181,8 @@ public:
     return ArgumentIndexToCallerAccessIDMap_;
   }
 
+  void setArgumentIndexToCallerAccessID(int argIdx, int accessID);
+
   /// @brief check if all the stencil function arguments are bound
   bool isArgsBound() const { return argsBound_; }
 
@@ -427,6 +429,8 @@ public:
 
   /// @brief finalizes the binding of the arguments of a stencil function.
   /// In particular it associates new accessIDs of arguments that are nested stencil function calls
+  void closeFunctionBindings(const std::vector<int>&);
+
   void closeFunctionBindings();
 
   /// @brief that all the function bindings are properly set

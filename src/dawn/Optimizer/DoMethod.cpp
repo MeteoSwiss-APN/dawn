@@ -97,8 +97,6 @@ public:
 };
 
 bool DoMethod::isEmptyOrNullStmt() const {
-  std::cout << "OP " << statementAccessesPairs_.size() << std::endl;
-  std::cout << statementAccessesPairs_.front()->getStatement()->ASTStmt << std::endl;
   for(auto const& statementAccessPair : statementAccessesPairs_) {
     std::shared_ptr<Stmt> root = statementAccessPair->getStatement()->ASTStmt;
     CheckNonNullStatementVisitor checker;

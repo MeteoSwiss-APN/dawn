@@ -149,8 +149,7 @@ class StencilInstantiation : NonCopyable {
 
   /// lookup table containing all the stencil function candidates, whose arguments are not yet bound
   std::unordered_map<std::shared_ptr<StencilFunctionInstantiation>,
-                     StencilFunctionInstantiationCandidate>
-      stencilFunInstantiationCandidate_;
+                     StencilFunctionInstantiationCandidate> stencilFunInstantiationCandidate_;
 
   /// BoundaryConditionCall to Extent Map. Filled my `PassSetBoundaryCondition`
   std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>
@@ -191,6 +190,8 @@ public:
 
   /// @brief insert an element to the maps of stencil functions
   void insertExprToStencilFunction(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
+
+  void deregisterStencilFunction(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
 
   /// @brief Get the orginal `name` and a list of source locations of the field (or variable)
   /// associated with the `AccessID` in the given statement.

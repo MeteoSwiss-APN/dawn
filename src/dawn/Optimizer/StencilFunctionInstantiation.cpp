@@ -149,12 +149,23 @@ StencilFunctionInstantiation::getCallerInitialOffsetFromAccessID(int callerAcces
   return CallerAcceessIDToInitialOffsetMap_.find(callerAccessID)->second;
 }
 
+void StencilFunctionInstantiation::setArgumentIndexToCallerAccessID(int argIdx, int accessID) {
+  ArgumentIndexToCallerAccessIDMap_[argIdx] = accessID;
+}
+
 void StencilFunctionInstantiation::setCallerInitialOffsetFromAccessID(int callerAccessID,
                                                                       const Array3i& offset) {
   CallerAcceessIDToInitialOffsetMap_[callerAccessID] = offset;
 }
 
 bool StencilFunctionInstantiation::isProvidedByStencilFunctionCall(int callerAccessID) const {
+  //  auto pos = std::find_if(ArgumentIndexToCallerAccessIDMap_.begin(),
+  //                          ArgumentIndexToCallerAccessIDMap_.end(),
+  //                          [&](const std::pair<int, int>& p) { return p.second == callerAccessID;
+  //                          });
+
+  //  DAWN_ASSERT(pos != ArgumentIndexToCallerAccessIDMap_.end());
+  //  return isArgStencilFunctionInstantiation(pos->first);
   return isProvidedByStencilFunctionCall_.count(callerAccessID);
 }
 
@@ -294,6 +305,7 @@ void StencilFunctionInstantiation::setAccessIDOfExpr(const std::shared_ptr<Expr>
 
 void StencilFunctionInstantiation::mapExprToAccessID(const std::shared_ptr<Expr>& expr,
                                                      int accessID) {
+  // TODO redo assertion in one line
   if(ExprToCallerAccessIDMap_.count(expr)) {
     DAWN_ASSERT(ExprToCallerAccessIDMap_.at(expr) == accessID);
   }
@@ -336,6 +348,7 @@ StencilFunctionInstantiation::getExprToStencilFunctionInstantiationMap() const {
 
 void StencilFunctionInstantiation::insertExprToStencilFunction(
     const std::shared_ptr<StencilFunctionInstantiation>& stencilFun) {
+  // TODO make sure it does not exist already
   ExprToStencilFunctionInstantiationMap_.emplace(stencilFun->getExpression(), stencilFun);
   nameToStencilFunctionInstantiationMap_.emplace(stencilFun->getExpression()->getCallee(),
                                                  stencilFun);
@@ -624,10 +637,17 @@ void StencilFunctionInstantiation::dump() const {
 }
 
 void StencilFunctionInstantiation::closeFunctionBindings() {
+  std::vector<int> arglist(getArguments().size());
+  for(std::size_t argIdx = 0; argIdx < getArguments().size(); ++argIdx) {
+    arglist[argIdx] = argIdx;
+  }
+  closeFunctionBindings(arglist);
+}
+void StencilFunctionInstantiation::closeFunctionBindings(const std::vector<int>& arglist) {
   // finalize the bindings of some of the arguments that are not yet instantiated
   const auto& arguments = getArguments();
 
-  for(std::size_t argIdx = 0; argIdx < arguments.size(); ++argIdx) {
+  for(int argIdx : arglist) {
     if(isa<sir::Field>(*arguments[argIdx])) {
       if(isArgStencilFunctionInstantiation(argIdx)) {
 
@@ -635,6 +655,7 @@ void StencilFunctionInstantiation::closeFunctionBindings() {
         // "temporary" field
         int AccessID = stencilInstantiation_->nextUID();
         setIsProvidedByStencilFunctionCall(AccessID);
+
         setCallerAccessIDOfArgField(argIdx, AccessID);
         setCallerInitialOffsetFromAccessID(AccessID, Array3i{{0, 0, 0}});
       }
