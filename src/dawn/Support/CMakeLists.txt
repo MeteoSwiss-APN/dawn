@@ -37,6 +37,8 @@ mchbuild_add_library(
           MathExtras.h
           NonCopyable.h
           Printing.h          
+          IndexGenerator.cpp
+          IndexGenerator.h
           SmallString.h
           SmallVector.cpp
           SmallVector.h

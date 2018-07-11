@@ -39,19 +39,26 @@ bool PassComputeStageExtents::run(
 
       // loop over all the input fields read in fromStage
       for(const Field& fromField : fromStage.getFields()) {
+
+        auto&& fromFieldExtents = fromField.getExtents();
+
         // notice that IO (if read happens before write) would also be a valid pattern
         // to trigger the propagation of the stage extents, however this is not a legal
         // pattern within a stage
-        if(fromField.getIntend() != Field::IntendKind::IK_Input)
-          continue;
+        // ===-----------------------------------------------------------------------------------===
+        //      Point one [ExtentComputationTODO]
+        // ===-----------------------------------------------------------------------------------===
 
-        Extents fieldExtent = fromField.getExtents();
+        Extents fieldExtent = fromFieldExtents;
 
         fieldExtent.expand(stageExtent);
 
         // check which (previous) stage computes the field (read in fromStage)
         for(int j = i - 1; j >= 0; --j) {
           Stage& toStage = *(stencil.getStage(j));
+          // ===---------------------------------------------------------------------------------===
+          //      Point two [ExtentComputationTODO]
+          // ===---------------------------------------------------------------------------------===
           auto fields = toStage.getFields();
           auto it = std::find_if(fields.begin(), fields.end(), [&](Field const& f) {
             return (f.getIntend() != Field::IntendKind::IK_Input) &&
@@ -61,7 +68,9 @@ bool PassComputeStageExtents::run(
             continue;
 
           // if found, add the (read) extent of the field as an extent of the stage
-          toStage.getExtents().merge(fieldExtent);
+          Extents ext = toStage.getExtents();
+          ext.merge(fieldExtent);
+          toStage.setExtents(ext);
         }
       }
     }

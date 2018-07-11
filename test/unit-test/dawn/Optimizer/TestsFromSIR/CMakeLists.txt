@@ -3,6 +3,7 @@ dawn_add_unittest_impl(
   SOURCES
           TestMain.cpp 
           TestComputeMaximumExtent.cpp
+          TestMultiStage.cpp
           TestStage.cpp
   GTEST_ARGS "${CMAKE_CURRENT_LIST_DIR}/../Passes" "--gtest_color=yes"
 )

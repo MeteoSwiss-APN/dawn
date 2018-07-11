@@ -123,13 +123,15 @@ std::vector<Stencil::FieldInfo> Stencil::getFields(bool withTemporaries) const {
   for(const auto& AccessID : fieldAccessIDs) {
     std::string name = stencilInstantiation_.getNameFromAccessID(AccessID);
     bool isTemporary = stencilInstantiation_.isTemporaryField(AccessID);
+    Array3i specifiedDimension =
+        stencilInstantiation_.getFieldDimensionsMask(AccessID);
 
     if(isTemporary) {
       if(withTemporaries) {
-        fields.insert(fields.begin(), FieldInfo{isTemporary, name, AccessID});
+        fields.insert(fields.begin(), FieldInfo{isTemporary, name, AccessID, specifiedDimension});
       }
     } else {
-      fields.emplace_back(FieldInfo{isTemporary, name, AccessID});
+      fields.emplace_back(FieldInfo{isTemporary, name, AccessID, specifiedDimension});
     }
   }
 
@@ -406,13 +408,15 @@ bool Stencil::isEmpty() const {
   return true;
 }
 
-std::shared_ptr<Interval> Stencil::getEnclosingIntervalTemporaries() const {
-  std::shared_ptr<Interval> tmpInterval;
+boost::optional<Interval> Stencil::getEnclosingIntervalTemporaries() const {
+  boost::optional<Interval> tmpInterval;
   for(auto mss : getMultiStages()) {
     auto mssInterval = mss->getEnclosingAccessIntervalTemporaries();
-    if(tmpInterval != nullptr && mssInterval != nullptr) {
+    if(!mssInterval.is_initialized())
+      continue;
+    if(tmpInterval.is_initialized()) {
       tmpInterval->merge(*mssInterval);
-    } else if(mssInterval != nullptr) {
+    } else {
       tmpInterval = mssInterval;
     }
   }
@@ -435,12 +439,9 @@ std::ostream& operator<<(std::ostream& os, const Stencil& stencil) {
     os << "MultiStage " << (multiStageIdx++) << ": (" << MS->getLoopOrder() << ")\n";
     for(const auto& stage : MS->getStages())
       os << "  " << stencil.getStencilInstantiation().getNameFromStageID(stage->getStageID()) << " "
-         << RangeToString()(stage->getFields(),
-                            [&](const Field& field) {
-                              return stencil.getStencilInstantiation().getNameFromAccessID(
-                                  field.getAccessID());
-                            })
-         << "\n";
+         << RangeToString()(stage->getFields(), [&](const Field& field) {
+              return stencil.getStencilInstantiation().getNameFromAccessID(field.getAccessID());
+            }) << "\n";
   }
   return os;
 }
@@ -458,7 +459,13 @@ std::unordered_map<int, Extents> const Stencil::computeEnclosingAccessExtents() 
         Extents e = field.getExtents();
         e.add(stage->getExtents());
         // merge with the current minimum/maximum extent for the given field
-        maxExtents_[stage->getFields()[accessorIdx].getAccessID()].merge(e);
+        auto finder = maxExtents_.find(stage->getFields()[accessorIdx].getAccessID());
+        if(finder != maxExtents_.end()){
+            finder->second.merge(e);
+        }
+        else{
+            maxExtents_.emplace(stage->getFields()[accessorIdx].getAccessID(),e);
+        }
       }
     }
   }

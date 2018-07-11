@@ -548,6 +548,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
   };
 
   ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
+  ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T CXXNAIVE");
   ppDefines.push_back(makeIfNDef("BOOST_RESULT_OF_USE_TR1", 1));
   ppDefines.push_back(makeIfNDef("BOOST_NO_CXX11_DECLTYPE", 1));
   ppDefines.push_back(

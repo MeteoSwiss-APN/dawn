@@ -71,9 +71,9 @@ TEST_F(ComputeMaxExtents, test_stencil_01) {
   EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(1)), "u");
   EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(2)), "out");
   EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(3)), "lap");
-  EXPECT_EQ(exts[1], (Extents{-2, 2, -2, 2, 0, 0}));
-  EXPECT_EQ(exts[2], (Extents{0, 0, 0, 0, 0, 0}));
-  EXPECT_EQ(exts[3], (Extents{-1, 1, -1, 1, 0, 0}));
+  EXPECT_EQ(exts.at(1), (Extents{-2, 2, -2, 2, 0, 0}));
+  EXPECT_EQ(exts.at(2), (Extents{0, 0, 0, 0, 0, 0}));
+  EXPECT_EQ(exts.at(3), (Extents{-1, 1, -1, 1, 0, 0}));
 }
 
 TEST_F(ComputeMaxExtents, test_stencil_02) {
@@ -87,9 +87,9 @@ TEST_F(ComputeMaxExtents, test_stencil_02) {
   EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(1)), "u");
   EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(2)), "out");
   EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(3)), "coeff");
-  EXPECT_EQ(exts[1], (Extents{-2, 2, -2, 2, 0, 0}));
-  EXPECT_EQ(exts[2], (Extents{0, 0, 0, 0, 0, 0}));
-  EXPECT_EQ(exts[3], (Extents{0, 0, 0, 0, 0, 0}));
+  EXPECT_EQ(exts.at(1), (Extents{-2, 2, -2, 2, 0, 0}));
+  EXPECT_EQ(exts.at(2), (Extents{0, 0, 0, 0, 0, 0}));
+  EXPECT_EQ(exts.at(3), (Extents{0, 0, 0, 0, 0, 0}));
 }
 TEST_F(ComputeMaxExtents, test_stencil_03) {
   auto stencils = loadTest("compute_extent_test_stencil_03.sir");
@@ -102,9 +102,9 @@ TEST_F(ComputeMaxExtents, test_stencil_03) {
   EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(1)), "u");
   EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(2)), "out");
   EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(3)), "coeff");
-  EXPECT_EQ(exts[1], (Extents{-2, 2, -2, 3, 0, 0}));
-  EXPECT_EQ(exts[2], (Extents{0, 0, 0, 0, 0, 0}));
-  EXPECT_EQ(exts[3], (Extents{0, 0, 0, 1, 0, 0}));
+  EXPECT_EQ(exts.at(1), (Extents{-2, 2, -2, 3, 0, 0}));
+  EXPECT_EQ(exts.at(2), (Extents{0, 0, 0, 0, 0, 0}));
+  EXPECT_EQ(exts.at(3), (Extents{0, 0, 0, 1, 0, 0}));
 }
 
 TEST_F(ComputeMaxExtents, test_stencil_04) {
@@ -118,8 +118,8 @@ TEST_F(ComputeMaxExtents, test_stencil_04) {
   EXPECT_EQ(exts.size(), 6);
   EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(1)), "u");
   EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(2)), "out");
-  EXPECT_EQ(exts[1], (Extents{-3, 4, -2, 1, 0, 0}));
-  EXPECT_EQ(exts[2], (Extents{0, 0, 0, 0, 0, 0}));
+  EXPECT_EQ(exts.at(1), (Extents{-3, 4, -2, 1, 0, 0}));
+  EXPECT_EQ(exts.at(2), (Extents{0, 0, 0, 0, 0, 0}));
 }
 
 TEST_F(ComputeMaxExtents, test_stencil_05) {
@@ -132,8 +132,8 @@ TEST_F(ComputeMaxExtents, test_stencil_05) {
   EXPECT_EQ(exts.size(), 6);
   EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(1)), "u");
   EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(2)), "out");
-  EXPECT_EQ(exts[1], (Extents{-3, 4, -2, 1, 0, 0}));
-  EXPECT_EQ(exts[2], (Extents{0, 0, 0, 0, 0, 0}));
+  EXPECT_EQ(exts.at(1), (Extents{-3, 4, -2, 1, 0, 0}));
+  EXPECT_EQ(exts.at(2), (Extents{0, 0, 0, 0, 0, 0}));
 }
 
 } // anonymous namespace
