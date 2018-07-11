@@ -659,11 +659,17 @@ std::string GTCodeGen::generateStencilInstantiation(
           std::string at_call = "template at<" + std::to_string(dim) + ">()";
           std::string storage = StencilConstructorTemplates[i - numTemporaries];
           // assert for + accesses
-          StencilConstructor.addStatement("static_assert((static_cast<int>(" + storage +
-                                          "::storage_info_t::halo_t::" + at_call + ") >= " +
-                                          std::to_string(ext[dim].Plus) + ") || " + "(" + storage +
-                                          "::storage_info_t::layout_t::" + at_call + " == -1)," +
-                                          "\"Used extents exceed halo limits.\")");
+          // ===---------------------------------------------------------------------------------===
+          // PRODUCTIONTODO: [STAGGERING]
+          // we need the staggering offset in K in order to have valid production code
+          // https://github.com/MeteoSwiss-APN/dawn/issues/108
+          // ===---------------------------------------------------------------------------------===
+          std::string staggeringoffset = (dim == 2) ? " - 1" : "";
+          StencilConstructor.addStatement(
+              "static_assert((static_cast<int>(" + storage + "::storage_info_t::halo_t::" +
+              at_call + ") >= " + std::to_string(ext[dim].Plus) + staggeringoffset + ") || " + "(" +
+              storage + "::storage_info_t::layout_t::" + at_call + " == -1)," +
+              "\"Used extents exceed halo limits.\")");
           // assert for - accesses
           StencilConstructor.addStatement("static_assert(((-1)*static_cast<int>(" + storage +
                                           "::storage_info_t::halo_t::" + at_call + ") <= " +
