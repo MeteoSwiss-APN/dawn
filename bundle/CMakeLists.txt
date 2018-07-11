@@ -71,20 +71,21 @@ include(mchbuildSetDownloadDir)
 # Set the default download directory (define MCHBUILD_DOWNLOAD_DIR)
 mchbuild_set_download_dir()
 
+include("thirdparty/gtclangAddBoost")
+set(dawn_cmake_args -DBOOST_ROOT=${BOOST_ROOT} -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>)
+
 mchbuild_find_package(
   PACKAGE dawn
   NO_DEFAULT_PATH
   REQUIRED_VARS dawn_DIR
   ADDITIONAL
     DOWNLOAD_DIR ${MCHBUILD_DOWNLOAD_DIR}
-    GIT_REPOSITORY "https://github.com/MeteoSwiss-APN/dawn.git"
+    GIT_REPOSITORY "git@github.com:MeteoSwiss-APN/dawn.git"
     GIT_TAG "master" 
     MCHBUILD_ROOT "${GTCLANG_MCHBUILD_SOURCE_DIR}"
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+    CMAKE_ARGS ${dawn_cmake_args}
 )
 
-
-include("thirdparty/gtclangAddBoost")
 
 #TODO Cleanup the mess with the naming conventions
 set(gtclang_cmake_args -Ddawn_DIR=${dawn_DIR} -DBOOST_ROOT=${BOOST_ROOT})
@@ -92,7 +93,6 @@ option(GTCLANG_ENABLE_GRIDTOOLS "Enable GridTools compilation" OFF)
 
 set(gtclang_dependencies "boost" "dawn")
 
-message("MOD ${CMAKE_MODULE_PATH}")
 if(GTCLANG_ENABLE_GRIDTOOLS) 
   mchbuild_find_package(
     PACKAGE GridTools
@@ -100,14 +100,16 @@ if(GTCLANG_ENABLE_GRIDTOOLS)
     DEPENDS "boost"
     ADDITIONAL
       DOWNLOAD_DIR ${MCHBUILD_DOWNLOAD_DIR}
-      GIT_REPOSITORY "git@github.com:cosunae/gridtools.git"
-      GIT_TAG "fix_fill_and_flush" 
+      GIT_REPOSITORY "git@github.com:twicki/gridtools.git"
+      GIT_TAG "experimental" 
       MCHBUILD_ROOT "${GTCLANG_MCHBUILD_SOURCE_DIR}"
-      CMAKE_ARGS -DSTRUCTURED_GRIDS=ON -DBOOST_ROOT=${BOOST_ROOT} -DDISABLE_TESTING=ON
+      CMAKE_ARGS -DSTRUCTURED_GRIDS=ON -DBOOST_ROOT=${BOOST_ROOT} -DDISABLE_TESTING=ON -DENABLE_PERFORMANCE_METERS=ON
   )
   list(APPEND gtclang_dependencies "gridtools")
 
   list(APPEND gtclang_cmake_args -DGridTools_DIR=${GridTools_DIR})
+else()
+  list(APPEND gtclang_cmake_args -DGTCLANG_BUILD_EXAMPLES=OFF)
 endif()
 
 mchbuild_find_package(

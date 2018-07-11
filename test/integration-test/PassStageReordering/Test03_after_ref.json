@@ -13,7 +13,7 @@
           },
           "Stage_1": {
             "Do_0": {
-              "Accesses_0": "W:field_b2:<0,0,0,0,0,0> R:field_b1:<0,0,0,0,-1,0>",
+              "Accesses_0": "W:field_b2:<0,0,0,0,0,0> R:field_b1:<0,0,0,0,-1,-1>",
               "Interval": "{ Start+1 : End-1 }",
               "Stmt_0": "field_b2[0, 0, 0] = field_b1[0, 0, -1];"
             }

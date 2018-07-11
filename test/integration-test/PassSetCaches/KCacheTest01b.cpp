@@ -15,31 +15,24 @@
 //===------------------------------------------------------------------------------------------===//
 
 // RUN: %gtclang% %file% -fno-codegen -fuse-kcaches -freport-pass-set-caches
-// EXPECTED: PASS: PassSetCaches: Test: MS0: tmp:K:fill_and_flush
-// EXPECTED: PASS: PassSetCaches: Test: MS1: tmp:K:fill
+// EXPECTED: PASS: PassSetCaches: Test: MS0: tmp:K:local
 
 #include "gridtools/clang_dsl.hpp"
 
 using namespace gridtools::clang;
 
 stencil Test {
-  storage a, b, c;
+  storage in, out;
   var tmp;
 
   Do {
-    // MS0
-    vertical_region(k_start, k_start)
-        tmp = a;
-
-    vertical_region(k_start + 1, k_end)
-        b = tmp(k - 1);
-
-    // MS1
     vertical_region(k_end, k_end)
-        tmp = (b(k - 1) + b) * tmp;
+        tmp = in;
 
-    vertical_region(k_end - 1, k_start)
-        c = tmp(k + 1);
+    vertical_region(k_end - 1, k_start) {
+        tmp = in*2;
+        out = tmp(k + 1);
+    }
   }
 };
 

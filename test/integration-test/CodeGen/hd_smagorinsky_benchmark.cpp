@@ -17,21 +17,22 @@
 #define GRIDTOOLS_CLANG_GENERATED 1
 #define GRIDTOOLS_CLANG_HALO_EXTEND 3
 
-#include <gtest/gtest.h>
-#include "test/integration-test/CodeGen/Options.hpp"
 #include "gridtools/clang/verify.hpp"
-#include "test/integration-test/CodeGen/generated/hd_smagorinsky_gridtools.cpp"
+#include "test/integration-test/CodeGen/Options.hpp"
 #include "test/integration-test/CodeGen/generated/hd_smagorinsky_c++-naive.cpp"
+#include "test/integration-test/CodeGen/generated/hd_smagorinsky_gridtools.cpp"
+#include <gtest/gtest.h>
 
 using namespace dawn;
 TEST(hd_smagorinsky, test) {
 
-  domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1], Options::getInstance().m_size[2]);
+  domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1],
+             Options::getInstance().m_size[2]);
   dom.set_halos(halo::value, halo::value, halo::value, halo::value, 0, 0);
 
   verifier verif(dom);
 
-  meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize());
+  meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize() + 1);
   meta_data_j_t meta_data_j(1, dom.jsize(), 1);
   meta_data_scalar_t meta_data_scalar(1, 1, 1);
 
@@ -52,10 +53,10 @@ TEST(hd_smagorinsky, test) {
   storage_j_t acrlat0(meta_data_j, "acrlat0");
 
   // Scalar fields
-  storage_scalar_t eddlon(meta_data_scalar, "eddlon");
-  storage_scalar_t eddlat(meta_data_scalar, "eddlat");
-  storage_scalar_t tau_smag(meta_data_scalar, "tau_smag");
-  storage_scalar_t weight_smag(meta_data_scalar, "weight_smag");
+  storage_t eddlon(meta_data, "eddlon");
+  storage_t eddlat(meta_data, "eddlat");
+  storage_t tau_smag(meta_data, "tau_smag");
+  storage_t weight_smag(meta_data, "weight_smag");
 
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, u_in);
   verif.fillMath(6.0, 1.0, 0.9, 1.1, 2.0, 4.0, v_in);
@@ -69,12 +70,12 @@ TEST(hd_smagorinsky, test) {
   verif.fill(-1.0, u_out_gt, v_out_gt, u_out_naive, v_out_naive);
 
   // Assemble the stencil ...
-  gridtools::hd_smagorinsky_stencil hd_smagorinsky_gt(dom, u_out_gt, v_out_gt, u_in, v_in, hdmaskvel, crlavo, crlavu,
-                                                      crlato, crlatu, acrlat0, eddlon, eddlat, tau_smag,
-                                                      weight_smag);
-  cxxnaive::hd_smagorinsky_stencil hd_smagorinsky_naive(dom, u_out_naive, v_out_naive, u_in, v_in, hdmaskvel, crlavo, crlavu,
-                                                        crlato, crlatu, acrlat0, eddlon, eddlat, tau_smag,
-                                                        weight_smag);
+  gridtools::hd_smagorinsky_stencil hd_smagorinsky_gt(
+      dom, u_out_gt, v_out_gt, u_in, v_in, hdmaskvel, crlavo, crlavu, crlato, crlatu, acrlat0,
+      eddlon, eddlat, tau_smag, weight_smag);
+  cxxnaive::hd_smagorinsky_stencil hd_smagorinsky_naive(
+      dom, u_out_naive, v_out_naive, u_in, v_in, hdmaskvel, crlavo, crlavu, crlato, crlatu, acrlat0,
+      eddlon, eddlat, tau_smag, weight_smag);
 
   hd_smagorinsky_gt.run();
   hd_smagorinsky_naive.run();

@@ -15,8 +15,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 // RUN: %gtclang% %file% -fno-codegen -fuse-kcaches -freport-pass-set-caches
-// EXPECTED: PASS: PassSetCaches: Test: MS0: tmp:K:fill_and_flush
-// EXPECTED: PASS: PassSetCaches: Test: MS1: tmp:K:fill
+// EXPECTED: PASS: PassSetCaches: Test: MS0: tmp:K:epflush:[-3,0]
+// EXPECTED: PASS: PassSetCaches: Test: MS1: tmp:K:bpfill:[0,3]
 
 #include "gridtools/clang_dsl.hpp"
 
@@ -31,15 +31,22 @@ stencil Test {
     vertical_region(k_start, k_start)
         tmp = a;
 
-    vertical_region(k_start + 1, k_end)
+    vertical_region(k_start + 1, k_end) {
+        tmp = a*2;
         b = tmp(k - 1);
+    }
 
     // MS1
-    vertical_region(k_end, k_end)
-        tmp = (b(k - 1) + b) * tmp;
+    vertical_region(k_end-3, k_end-3) {
+        c = tmp[k+3] + tmp[k+2] ;
+    }
+    vertical_region(k_end-4, k_start) {
+        tmp = b;
+        c = tmp[k+1];
+    }
 
-    vertical_region(k_end - 1, k_start)
-        c = tmp(k + 1);
+
+
   }
 };
 

@@ -50,11 +50,11 @@ stencil hd_smagorinsky_stencil {
   storage u_in;
   storage v_in;
   storage hdmaskvel;
-  storage crlavo;
-  storage crlavu;
-  storage crlato;
-  storage crlatu;
-  storage acrlat0;
+  storage_j crlavo;
+  storage_j crlavu;
+  storage_j crlato;
+  storage_j crlatu;
+  storage_j acrlat0;
 
   // Scalar fields
   storage eddlon;

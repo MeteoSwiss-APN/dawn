@@ -26,6 +26,8 @@ function help {
   exit 1
 }
 
+echo "####### executing: $0 $* (PID=$$ HOST=$HOSTNAME TIME=`date '+%D %H:%M:%S'`)"
+
 ENABLE_GPU=false
 
 while getopts i:gd: flag; do

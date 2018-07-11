@@ -859,7 +859,7 @@ StencilParser::parseStencilCall(clang::CXXConstructExpr* stencilCall) {
       std::string type = member->getMemberDecl()->getType().getAsString();
       std::string declType = member->getType()->getAsCXXRecordDecl()->getName();
 
-      if(declType != "storage" && declType != "var") {
+      if((declType.find("storage") == std::string::npos) && declType != "var") {
         reportDiagnostic(member->getLocStart(),
                          Diagnostics::DiagKind::err_stencilcall_invalid_argument_type)
             << member->getSourceRange() << type << callee;

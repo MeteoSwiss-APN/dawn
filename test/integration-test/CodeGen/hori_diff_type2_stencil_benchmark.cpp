@@ -15,25 +15,27 @@
 //===------------------------------------------------------------------------------------------===//
 #define GRIDTOOLS_CLANG_GENERATED 1
 #define GRIDTOOLS_CLANG_HALO_EXTEND 3
-#include <gtest/gtest.h>
-#include "test/integration-test/CodeGen/Options.hpp"
 #include "gridtools/clang/verify.hpp"
-#include "test/integration-test/CodeGen/generated/hori_diff_type2_stencil_gridtools.cpp"
+#include "test/integration-test/CodeGen/Options.hpp"
 #include "test/integration-test/CodeGen/generated/hori_diff_type2_stencil_c++-naive.cpp"
+#include "test/integration-test/CodeGen/generated/hori_diff_type2_stencil_gridtools.cpp"
+#include <gtest/gtest.h>
 
 using namespace dawn;
 TEST(hori_diff_type2_stencil, test) {
 
-  domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1], Options::getInstance().m_size[2]);
-  dom.set_halos(GRIDTOOLS_CLANG_HALO_EXTEND, GRIDTOOLS_CLANG_HALO_EXTEND, GRIDTOOLS_CLANG_HALO_EXTEND, GRIDTOOLS_CLANG_HALO_EXTEND, 0, 0);
+  domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1],
+             Options::getInstance().m_size[2]);
+  dom.set_halos(GRIDTOOLS_CLANG_HALO_EXTEND, GRIDTOOLS_CLANG_HALO_EXTEND,
+                GRIDTOOLS_CLANG_HALO_EXTEND, GRIDTOOLS_CLANG_HALO_EXTEND, 0, 0);
 
   verifier verif(dom);
 
-  meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize());
+  meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize() + 1);
   meta_data_j_t meta_data_j(1, dom.jsize(), 1);
 
-  storage_t u(meta_data, "u"), hdmask(meta_data, "hdmask"),
-      out_naive(meta_data, "out-naive"), u_out_gt(meta_data, "u"), u_out_naive(meta_data, "u");
+  storage_t u(meta_data, "u"), hdmask(meta_data, "hdmask"), out_naive(meta_data, "out-naive"),
+      u_out_gt(meta_data, "u"), u_out_naive(meta_data, "u");
 
   storage_j_t crlato(meta_data_j, "crlato"), crlatu(meta_data_j, "crlatu");
 

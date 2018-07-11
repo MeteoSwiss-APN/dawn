@@ -30,7 +30,7 @@ namespace clang {
 class verifier {
 public:
   verifier(const domain& dom,
-           double precision = std::is_same<gridtools::float_type, double>::value ? 1e-12 : 1e-6)
+           double precision = std::is_same<gridtools::float_type, double>::value ? 1e-10 : 1e-6)
       : m_domain(dom), m_precision(precision) {}
 
   template <class FunctorType, class... StorageTypes>
@@ -96,13 +96,13 @@ public:
     auto meta_data_1 = *storage1.get_storage_info_ptr();
     auto meta_data_2 = *storage2.get_storage_info_ptr();
 
-    const uint_t idim1 = meta_data_1.template unaligned_dim<0>();
-    const uint_t jdim1 = meta_data_1.template unaligned_dim<1>();
-    const uint_t kdim1 = meta_data_1.template unaligned_dim<2>();
+    const uint_t idim1 = meta_data_1.template total_length<0>();
+    const uint_t jdim1 = meta_data_1.template total_length<1>();
+    const uint_t kdim1 = meta_data_1.template total_length<2>();
 
-    const uint_t idim2 = meta_data_2.template unaligned_dim<0>();
-    const uint_t jdim2 = meta_data_2.template unaligned_dim<1>();
-    const uint_t kdim2 = meta_data_2.template unaligned_dim<2>();
+    const uint_t idim2 = meta_data_2.template total_length<0>();
+    const uint_t jdim2 = meta_data_2.template total_length<1>();
+    const uint_t kdim2 = meta_data_2.template total_length<2>();
 
     auto storage1_v = make_host_view(storage1);
     auto storage2_v = make_host_view(storage2);
@@ -124,8 +124,8 @@ public:
     verified &= check_dim(idim1, idim2, m_domain.isize(), "i");
     verified &= check_dim(jdim1, jdim2, m_domain.jsize(), "j");
     verified &= check_dim(kdim1, kdim2, m_domain.ksize(), "k");
-    if(verified==false){
-        return verified;
+    if(verified == false) {
+      return verified;
     }
 
     int iLower = m_domain.iminus();
@@ -182,22 +182,18 @@ public:
   }
 
   template <typename GTStencil>
-  void runBenchmarks(GTStencil& computation, int niter = 10) {
-    for(auto stencil : computation.get_stencils()) {
-      stencil->reset_meter();
-    }
+  void runBenchmarks(GTStencil& computation, int niter = 100) {
+    computation.reset_meters();
 
     for(int i = 0; i < niter; ++i) {
       computation.run();
     }
 
-    for(auto stencil : computation.get_stencils()) {
-      double time = stencil->get_meter();
-      std::cout << "\033[0;33m"
-                << "[  output  ] "
-                << "\033[0;0m"
-                << "Time " << time << std::endl;
-    }
+    std::string results = computation.get_meters();
+    results.pop_back();
+    std::cout << "\033[0;33m"
+              << "[  output  ] "
+              << "\033[0;0m " << results << std::endl;
   }
 
 private:
@@ -220,9 +216,9 @@ private:
 
     auto sinfo = *(storage.get_storage_info_ptr());
     auto storage_v = make_host_view(storage);
-    const uint_t d1 = sinfo.template unaligned_dim<0>();
-    const uint_t d2 = sinfo.template unaligned_dim<1>();
-    const uint_t d3 = sinfo.template unaligned_dim<2>();
+    const uint_t d1 = sinfo.template total_length<0>();
+    const uint_t d2 = sinfo.template total_length<1>();
+    const uint_t d3 = sinfo.template total_length<2>();
 
     for(uint_t i = 0; i < d1; ++i) {
       for(uint_t j = 0; j < d2; ++j) {
@@ -276,7 +272,7 @@ private:
     const uint_t halo_d2 = decltype(sinfo)::halo_t::template at<1>();
     const uint_t end_d2 = sinfo.template total_end<1>();
 
-    const uint_t d3 = sinfo.template unaligned_dim<2>();
+    const uint_t d3 = sinfo.template total_length<2>();
 
     for(uint_t k = 0; k < d3; ++k) {
       for(uint_t i = start_d1; i < halo_d1; ++i) {

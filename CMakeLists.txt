@@ -89,7 +89,7 @@ make_config_string("Asserts" ${GTCLANG_ASSERTS})
 mchbuild_report_result("Configuration summary" ${config_info})
 
 # Include the packages (and set the correct, libraries, includes etc.)
-foreach(package bash ccache Python3 Boost clang-format Clang Dawn GridTools OpenMP Threads)
+foreach(package bash ccache Python3 Boost clang-format Clang Dawn OpenMP Threads)
   include("Add${package}")
   mchbuild_create_package_string(${package} info)
   list(APPEND package_info ${info})
@@ -101,6 +101,19 @@ foreach(package bash ccache Python3 Boost clang-format Clang Dawn GridTools Open
     list(APPEND GTCLANG_EXTERNAL_DEFINITIONS ${MCHBUILD_${PACKAGE}_DEFINITIONS})
   endif()
 endforeach()
+
+if(DEFINED GridTools_DIR)
+  include("AddGridTools")
+  mchbuild_create_package_string(GridTools info)
+  list(APPEND package_info ${info})
+
+  string(TOUPPER GridTools PACKAGE)
+  if(${PACKAGE}_FOUND)
+    list(APPEND GTCLANG_EXTERNAL_LIBRARIES ${MCHBUILD_${PACKAGE}_LIBRARIES})
+    list(APPEND GTCLANG_EXTERNAL_INCLUDE_DIRS ${MCHBUILD_${PACKAGE}_INCLUDE_DIRS})
+    list(APPEND GTCLANG_EXTERNAL_DEFINITIONS ${MCHBUILD_${PACKAGE}_DEFINITIONS})
+  endif()
+endif()
 
 include_directories(SYSTEM ${GTCLANG_EXTERNAL_INCLUDE_DIRS})
 add_definitions(${GTCLANG_EXTERNAL_DEFINITIONS})

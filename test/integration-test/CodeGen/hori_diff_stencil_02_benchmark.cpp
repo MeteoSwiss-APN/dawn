@@ -16,20 +16,21 @@
 #define GRIDTOOLS_CLANG_GENERATED 1
 #define GRIDTOOLS_CLANG_HALO_EXTEND 3
 
-#include <gtest/gtest.h>
-#include "test/integration-test/CodeGen/Options.hpp"
 #include "gridtools/clang/verify.hpp"
-#include "test/integration-test/CodeGen/generated/hori_diff_stencil_02_gridtools.cpp"
+#include "test/integration-test/CodeGen/Options.hpp"
 #include "test/integration-test/CodeGen/generated/hori_diff_stencil_02_c++-naive.cpp"
+#include "test/integration-test/CodeGen/generated/hori_diff_stencil_02_gridtools.cpp"
+#include <gtest/gtest.h>
 
 using namespace dawn;
 TEST(hori_diff_stencil_02, test) {
-  domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1], Options::getInstance().m_size[2]);
+  domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1],
+             Options::getInstance().m_size[2]);
   dom.set_halos(halo::value, halo::value, halo::value, halo::value, 0, 0);
 
   verifier verif(dom);
 
-  meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize());
+  meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize() + 1);
   storage_t u(meta_data, "u"), out_gt(meta_data, "out-gt"), out_naive(meta_data, "out-naive");
 
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, u);

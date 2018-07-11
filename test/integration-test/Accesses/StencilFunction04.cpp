@@ -50,25 +50,28 @@ stencil_function baz {
   }
 };
 
+//==================================================================================================
+// costodo: fix extents again
+//==================================================================================================
 stencil Test {
   storage field_a, field_b, field_c;
 
   Do {
     vertical_region(k_start, k_end) {
-      field_a = foo(i, field_b);                                         // EXPECTED_ACCESSES: R:field_b:<0,1,0,0,0,0>
-      field_a = foo(j, foo(i, field_b));                                 // EXPECTED_ACCESSES: R:field_b:<0,1,0,1,0,0>
-      field_a = foo(k, foo(j, foo(i, field_b)));                         // EXPECTED_ACCESSES: R:field_b:<0,1,0,1,0,1>
-      field_a = foo(k, foo(j, foo(i, foo(k, foo(j, foo(i, field_b)))))); // EXPECTED_ACCESSES: R:field_b:<0,2,0,2,0,2>
+      field_a = foo(i, field_b);                                         // EXPECTED_ACCESSES: R:field_b:<1,1,0,0,0,0>
+      field_a = foo(j, foo(i, field_b));                                 // EXPECTED_ACCESSES: R:field_b:<1,1,1,1,0,0>
+      field_a = foo(k, foo(j, foo(i, field_b)));                         // EXPECTED_ACCESSES: R:field_b:<1,1,1,1,1,1>
+      field_a = foo(k, foo(j, foo(i, foo(k, foo(j, foo(i, field_b)))))); // EXPECTED_ACCESSES: R:field_b:<2,2,2,2,2,2>
 
-      field_a = bar(i, field_b, field_c);                  // EXPECTED_ACCESSES: R:field_b:<0,1,0,0,0,0> %and% R:field_c:<0,1,0,0,0,0>
-      field_a = bar(j, foo(i, field_b), field_c);          // EXPECTED_ACCESSES: R:field_b:<0,1,0,1,0,0> %and% R:field_c:<0,0,0,1,0,0>
-      field_a = bar(j, bar(i, field_b, field_c), field_c); // EXPECTED_ACCESSES: R:field_b:<0,1,0,1,0,0> %and% R:field_c:<0,1,0,1,0,0>
-      field_a = bar(i, bar(i, field_b, field_c), field_c); // EXPECTED_ACCESSES: R:field_b:<0,2,0,0,0,0> %and% R:field_c:<0,2,0,0,0,0>
+      field_a = bar(i, field_b, field_c);                  // EXPECTED_ACCESSES: R:field_b:<1,1,0,0,0,0> %and% R:field_c:<1,1,0,0,0,0>
+      field_a = bar(j, foo(i, field_b), field_c);          // EXPECTED_ACCESSES: R:field_b:<1,1,1,1,0,0> %and% R:field_c:<0,0,1,1,0,0>
+      field_a = bar(j, bar(i, field_b, field_c), field_c); // EXPECTED_ACCESSES: R:field_b:<1,1,1,1,0,0> %and% R:field_c:<0,1,1,1,0,0>
+      field_a = bar(i, bar(i, field_b, field_c), field_c); // EXPECTED_ACCESSES: R:field_b:<2,2,0,0,0,0> %and% R:field_c:<1,2,0,0,0,0>
 
-      field_a = baz(i, field_b, field_c);                  // EXPECTED_ACCESSES: R:field_b:<0,1,0,0,0,0> %and% R:field_c:<0,1,0,0,0,0>
-      field_a = baz(j, foo(i, field_b), field_c);          // EXPECTED_ACCESSES: R:field_b:<0,1,0,1,0,0> %and% R:field_c:<0,0,0,1,0,0>
-      field_a = baz(j, baz(i, field_b, field_c), field_c); // EXPECTED_ACCESSES: R:field_b:<0,1,0,1,0,0> %and% R:field_c:<0,1,0,1,0,0>
-      field_a = baz(i, baz(i, field_b, field_c), field_c); // EXPECTED_ACCESSES: R:field_b:<0,2,0,0,0,0> %and% R:field_c:<0,2,0,0,0,0>
+      field_a = baz(i, field_b, field_c);                  // EXPECTED_ACCESSES: R:field_b:<1,1,0,0,0,0> %and% R:field_c:<1,1,0,0,0,0>
+      field_a = baz(j, foo(i, field_b), field_c);          // EXPECTED_ACCESSES: R:field_b:<1,1,1,1,0,0> %and% R:field_c:<0,0,1,1,0,0>
+      field_a = baz(j, baz(i, field_b, field_c), field_c); // EXPECTED_ACCESSES: R:field_b:<1,1,1,1,0,0> %and% R:field_c:<0,1,1,1,0,0>
+      field_a = baz(i, baz(i, field_b, field_c), field_c); // EXPECTED_ACCESSES: R:field_b:<2,2,0,0,0,0> %and% R:field_c:<1,2,0,0,0,0>
     }
   }
 };

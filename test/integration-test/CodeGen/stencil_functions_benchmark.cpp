@@ -16,16 +16,19 @@
 #define GRIDTOOLS_CLANG_GENERATED 1
 #define GRIDTOOLS_CLANG_HALO_EXTEND 3
 
-#include <gtest/gtest.h>
-#include "test/integration-test/CodeGen/Options.hpp"
 #include "gridtools/clang/verify.hpp"
-#include "test/integration-test/CodeGen/generated/stencil_functions_gridtools.cpp"
+#include "test/integration-test/CodeGen/Options.hpp"
 #include "test/integration-test/CodeGen/generated/stencil_functions_c++-naive.cpp"
+#include "test/integration-test/CodeGen/generated/stencil_functions_gridtools.cpp"
+#include <gtest/gtest.h>
 
 using namespace dawn;
 
 namespace sftest {
 void test_01_stencil_reference(const domain& dom, storage_t& in_s, storage_t& out_s) {
+  in_s.sync();
+  out_s.sync();
+
   auto in = make_host_view(in_s);
   auto out = make_host_view(out_s);
   for(int i = dom.iminus(); i < (dom.isize() - dom.iplus()); ++i) {
@@ -37,6 +40,9 @@ void test_01_stencil_reference(const domain& dom, storage_t& in_s, storage_t& ou
   }
 }
 void test_02_stencil_reference(const domain& dom, storage_t& in_s, storage_t& out_s) {
+  in_s.sync();
+  out_s.sync();
+
   auto in = make_host_view(in_s);
   auto out = make_host_view(out_s);
   for(int i = dom.iminus(); i < (dom.isize() - dom.iplus()); ++i) {
@@ -48,6 +54,9 @@ void test_02_stencil_reference(const domain& dom, storage_t& in_s, storage_t& ou
   }
 }
 void test_03_stencil_reference(const domain& dom, storage_t& in_s, storage_t& out_s) {
+  in_s.sync();
+  out_s.sync();
+
   auto in = make_host_view(in_s);
   auto out = make_host_view(out_s);
   for(int i = dom.iminus(); i < (dom.isize() - dom.iplus()); ++i) {
@@ -60,6 +69,9 @@ void test_03_stencil_reference(const domain& dom, storage_t& in_s, storage_t& ou
 }
 
 void test_06_stencil_reference(const domain& dom, storage_t& in_s, storage_t& out_s) {
+  in_s.sync();
+  out_s.sync();
+
   auto in = make_host_view(in_s);
   auto out = make_host_view(out_s);
   for(int i = dom.iminus(); i < (dom.isize() - dom.iplus()); ++i) {
@@ -71,6 +83,9 @@ void test_06_stencil_reference(const domain& dom, storage_t& in_s, storage_t& ou
   }
 }
 void test_07_stencil_reference(const domain& dom, storage_t& in_s, storage_t& out_s) {
+  in_s.sync();
+  out_s.sync();
+
   auto in = make_host_view(in_s);
   auto out = make_host_view(out_s);
   for(int i = dom.iminus(); i < (dom.isize() - dom.iplus()); ++i) {
@@ -84,13 +99,15 @@ void test_07_stencil_reference(const domain& dom, storage_t& in_s, storage_t& ou
 }
 
 TEST(stencil_functions, test_01) {
-  domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1], Options::getInstance().m_size[2]);
+  domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1],
+             Options::getInstance().m_size[2]);
   dom.set_halos(halo::value, halo::value, halo::value, halo::value, 0, 0);
 
   verifier verif(dom);
 
-  meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize());
-  storage_t in(meta_data, "in"), out_gt(meta_data, "out-gt"), out_naive(meta_data, "out-naive"), out_ref(meta_data, "out-ref");
+  meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize() + 1);
+  storage_t in(meta_data, "in"), out_gt(meta_data, "out-gt"), out_naive(meta_data, "out-naive"),
+      out_ref(meta_data, "out-ref");
 
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, in);
   verif.fill(-1.0, out_gt, out_naive);
@@ -109,13 +126,15 @@ TEST(stencil_functions, test_01) {
 }
 
 TEST(stencil_functions, test_02) {
-  domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1], Options::getInstance().m_size[2]);
+  domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1],
+             Options::getInstance().m_size[2]);
   dom.set_halos(halo::value, halo::value, halo::value, halo::value, 0, 0);
 
   verifier verif(dom);
 
   meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize());
-  storage_t in(meta_data, "in"), out_gt(meta_data, "out-gt"), out_naive(meta_data, "out-naive"), out_ref(meta_data, "out-ref");
+  storage_t in(meta_data, "in"), out_gt(meta_data, "out-gt"), out_naive(meta_data, "out-naive"),
+      out_ref(meta_data, "out-ref");
 
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, in);
   verif.fill(-1.0, out_gt, out_naive);
@@ -134,13 +153,15 @@ TEST(stencil_functions, test_02) {
 }
 
 TEST(stencil_functions, test_03) {
-  domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1], Options::getInstance().m_size[2]);
+  domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1],
+             Options::getInstance().m_size[2]);
   dom.set_halos(halo::value, halo::value, halo::value, halo::value, 0, 0);
 
   verifier verif(dom);
 
   meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize());
-  storage_t in(meta_data, "in"), out_gt(meta_data, "out-gt"), out_naive(meta_data, "out-naive"), out_ref(meta_data, "out-ref");
+  storage_t in(meta_data, "in"), out_gt(meta_data, "out-gt"), out_naive(meta_data, "out-naive"),
+      out_ref(meta_data, "out-ref");
 
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, in);
   verif.fill(-1.0, out_gt, out_naive);
@@ -159,13 +180,15 @@ TEST(stencil_functions, test_03) {
 }
 
 TEST(stencil_functions, test_06) {
-  domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1], Options::getInstance().m_size[2]);
+  domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1],
+             Options::getInstance().m_size[2]);
   dom.set_halos(halo::value, halo::value, halo::value, halo::value, 0, 0);
 
   verifier verif(dom);
 
   meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize());
-  storage_t in(meta_data, "in"), out_gt(meta_data, "out-gt"), out_naive(meta_data, "out-naive"), out_ref(meta_data, "out-ref");
+  storage_t in(meta_data, "in"), out_gt(meta_data, "out-gt"), out_naive(meta_data, "out-naive"),
+      out_ref(meta_data, "out-ref");
 
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, in);
   verif.fill(-1.0, out_gt, out_naive);
@@ -184,13 +207,15 @@ TEST(stencil_functions, test_06) {
 }
 
 TEST(stencil_functions, test_07) {
-  domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1], Options::getInstance().m_size[2]);
+  domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1],
+             Options::getInstance().m_size[2]);
   dom.set_halos(halo::value, halo::value, halo::value, halo::value, 0, 0);
 
   verifier verif(dom);
 
   meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize());
-  storage_t in(meta_data, "in"), out_gt(meta_data, "out-gt"), out_naive(meta_data, "out-naive"), out_ref(meta_data, "out-ref");
+  storage_t in(meta_data, "in"), out_gt(meta_data, "out-gt"), out_naive(meta_data, "out-naive"),
+      out_ref(meta_data, "out-ref");
 
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, in);
   verif.fill(-1.0, out_gt, out_naive);
