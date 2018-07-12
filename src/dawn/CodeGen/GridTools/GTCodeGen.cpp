@@ -655,7 +655,13 @@ std::string GTCodeGen::generateStencilInstantiation(
     for(int i = 0; i < numFields; ++i) {
       if(!StencilFields[i].IsTemporary) {
         auto const& ext = exts.at(StencilFields[i].AccessID);
-        for(int dim = 0; dim < ext.getSize(); ++dim) {
+        // ===-----------------------------------------------------------------------------------===
+        // PRODUCTIONTODO: [STAGGERING]
+        // Offset-Computation in K is currently broken and hence turned off. Remvove the -1 once it
+        // is resolved
+        // https://github.com/MeteoSwiss-APN/dawn/issues/110
+        // ===-----------------------------------------------------------------------------------===
+        for(int dim = 0; dim < ext.getSize() - 1; ++dim) {
           std::string at_call = "template at<" + std::to_string(dim) + ">()";
           std::string storage = StencilConstructorTemplates[i - numTemporaries];
           // assert for + accesses
