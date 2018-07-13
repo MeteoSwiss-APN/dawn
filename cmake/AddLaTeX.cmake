@@ -14,7 +14,7 @@
 
 find_package(LATEX COMPONENTS PDFLATEX)
 
-mchbuild_export_package(
+yoda_export_package(
   NAME LATEX
   FOUND ${LATEX_FOUND}
   EXECUTABLE ${PDFLATEX_COMPILER}

@@ -12,8 +12,8 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-  mchbuild_add_unittest(
-    NAME DawnUnittestOptimizerPasses
+yoda_add_unittest(
+  NAME DawnUnittestOptimizerPasses
     SOURCES 
           TestMain.cpp
           TestPassComputeStageExtents.cpp

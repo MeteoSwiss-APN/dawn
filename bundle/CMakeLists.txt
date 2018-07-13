@@ -37,20 +37,20 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake")
 
 include(DawnCloneRepository)
 
-set(DAWN_MCHBUILD_GIT_URL "https:///github.com/Meteoswiss-APN/mchbuild.git"
+set(DAWN_YODA_GIT_URL "https:///github.com/Meteoswiss-APN/yoda.git"
     CACHE PATH "URL of the dawn git repository to clone")
-set(DAWN_MCHBUILD_GIT_BRANCH "master" CACHE STRING "Branch of the dawn git repository to clone")
-dawn_clone_repository(NAME mchbuild URL ${DAWN_MCHBUILD_GIT_URL} BRANCH ${DAWN_MCHBUILD_GIT_BRANCH} SOURCE_DIR DAWN_MCHBUILD_SOURCE_DIR )
+set(DAWN_YODA_GIT_BRANCH "master" CACHE STRING "Branch of the dawn git repository to clone")
+dawn_clone_repository(NAME yoda URL ${DAWN_YODA_GIT_URL} BRANCH ${DAWN_YODA_GIT_BRANCH} SOURCE_DIR DAWN_YODA_SOURCE_DIR )
 #
-list(APPEND CMAKE_MODULE_PATH "${DAWN_MCHBUILD_SOURCE_DIR}/cmake")
-include(mchbuildInit)
+list(APPEND CMAKE_MODULE_PATH "${DAWN_YODA_SOURCE_DIR}/cmake")
+include(yodaInit)
 
-mchbuild_init()
+yoda_init()
 
-include(mchbuildAddTargetCleanAll)
+include(yodaAddTargetCleanAll)
 
 # Add custom targets
-mchbuild_add_target_clean_all(
+yoda_add_target_clean_all(
   "${CMAKE_BINARY_DIR}/prefix"
   "${CMAKE_BINARY_DIR}/thirdparty"  
   "${CMAKE_BINARY_DIR}/dawn-cmake"  
@@ -59,7 +59,7 @@ mchbuild_add_target_clean_all(
   "${CMAKE_BINARY_DIR}/gtclang"
   "${CMAKE_BINARY_DIR}/gtclang-prefix"
   "${CMAKE_BINARY_DIR}/Makefile"
-  "${CMAKE_BINARY_DIR}/mchbuild-cmake"
+  "${CMAKE_BINARY_DIR}/yoda-cmake"
   "${CMAKE_BINARY_DIR}/protobuf"
   "${CMAKE_BINARY_DIR}/protobuf-prefix"
 )
@@ -69,14 +69,14 @@ include("thirdparty/DawnAddBoost")
 
 set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR} -DBOOST_ROOT=${BOOST_ROOT})
 
-mchbuild_find_package(
+yoda_find_package(
   PACKAGE dawn
   FORWARD_VARS 
     BINARY_DIR dawn_binary_dir
   DEPENDS "protobuf" "boost"
   ADDITIONAL
     SOURCE_DIR "${CMAKE_SOURCE_DIR}/../"
-    MCHBUILD_ROOT "${DAWN_MCHBUILD_SOURCE_DIR}"
+    YODA_ROOT "${DAWN_YODA_SOURCE_DIR}"
     CMAKE_ARGS 
         ${dawn_cmake_args}
 )

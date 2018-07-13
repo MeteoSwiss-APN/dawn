@@ -17,11 +17,11 @@
 #endif() 
 
 # Look for all the required modules
-include(mchbuildFindPythonModule)
-mchbuild_find_python_module(sphinx REQUIRED)
-mchbuild_find_python_module(docutils REQUIRED)
+include(yodaFindPythonModule)
+yoda_find_python_module(sphinx REQUIRED)
+yoda_find_python_module(docutils REQUIRED)
 
-mchbuild_export_package(
+yoda_export_package(
   NAME Python3
   FOUND ${PYTHONINTERP_FOUND}
   EXECUTABLE ${PYTHON_EXECUTABLE}

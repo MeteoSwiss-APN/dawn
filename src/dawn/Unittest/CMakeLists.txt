@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-mchbuild_add_library(
+yoda_add_library(
   NAME DawnUnittest
   SOURCES ASTSimplifier.cpp
           ASTSimplifier.h
