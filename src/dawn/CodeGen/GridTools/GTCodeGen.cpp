@@ -656,7 +656,7 @@ std::string GTCodeGen::generateStencilInstantiation(
       if(!StencilFields[i].IsTemporary) {
         auto const& ext = exts.at(StencilFields[i].AccessID);
         // ===-----------------------------------------------------------------------------------===
-        // PRODUCTIONTODO: [STAGGERING]
+        // PRODUCTIONTODO: [BADSTATICASSERTS]
         // Offset-Computation in K is currently broken and hence turned off. Remvove the -1 once it
         // is resolved
         // https://github.com/MeteoSwiss-APN/dawn/issues/110
@@ -946,12 +946,12 @@ std::string GTCodeGen::generateStencilInstantiation(
     for(idx = 0; idx < stencilInstantiation->getStencils().size(); ++idx) {
       timing << "case " << idx << ":\n"
              << "return get_name() + \"m_stencil_" << idx << ":\\t\"+"
-             << "std::to_string(m_stencil_" << idx << ".get_stencil().get_meter());";
+             << "m_stencil_" << idx << ".get_stencil().print_meter();";
     }
     timing << "case -1 :\n";
     std::string s = RangeToString("\n", "", "")(stencilMembers, [](const std::string& member) {
-      return "retval += get_name() + \"" + member + ":\\t\"+ std::to_string(" + member +
-             ".get_stencil().get_meter())+\"\\n\";";
+      return "retval += get_name() + \"" + member + ":\\t\"+ " + member +
+             ".get_stencil().print_meter()+\"\\n\";";
     });
     timing << s;
     timing << "return retval;";
@@ -1077,9 +1077,14 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   DAWN_ASSERT_MSG(mplContainerMaxSize_ % 10 == 0,
                   "boost::mpl template limit needs to be multiple of 10");
 
+  ppDefines.push_back(makeIfNotDefined("BOOST_PP_VARIADICS", 1));
+  ppDefines.push_back(makeIfNotDefined("BOOST_FUSION_DONT_USE_PREPROCESSED_FILES", 1));
+  ppDefines.push_back(makeIfNotDefined("BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS", 1));
+  ppDefines.push_back(makeIfNotDefined("BOOST_FUSION_INVOKE_MAX_ARITY", mplContainerMaxSize_));
   ppDefines.push_back(makeIfNotDefined("FUSION_MAX_VECTOR_SIZE", mplContainerMaxSize_));
   ppDefines.push_back(makeIfNotDefined("FUSION_MAX_MAP_SIZE", mplContainerMaxSize_));
   ppDefines.push_back(makeIfNotDefined("BOOST_MPL_LIMIT_VECTOR_SIZE", mplContainerMaxSize_));
+
   BCFinder finder;
   for(const auto& stencilInstantiation : context_->getStencilInstantiationMap()) {
     for(const auto& stmt : stencilInstantiation.second->getStencilDescStatements()) {
