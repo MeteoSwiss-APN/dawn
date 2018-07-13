@@ -14,14 +14,14 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(mchbuildExportPackage)
+include(yodaExportPackage)
 
 if(NOT DEFINED(dawn_DIR) AND DEFINED DAWN_ROOT)
   set(dawn_DIR "${DAWN_ROOT}/cmake")
 endif()
 find_package(dawn NO_MODULE REQUIRED)
 
-mchbuild_export_package(
+yoda_export_package(
   NAME dawn
   FOUND ${DAWN_FOUND} 
   VERSION "${DAWN_VERSION}" 

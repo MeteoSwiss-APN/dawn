@@ -14,11 +14,11 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(mchbuildExportPackage)
+include(yodaExportPackage)
 
 find_package(PythonInterp 3.4)
 
-mchbuild_export_package(
+yoda_export_package(
   NAME Python3
   FOUND ${PYTHONINTERP_FOUND}
   EXECUTABLE ${PYTHON_EXECUTABLE}

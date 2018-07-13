@@ -34,15 +34,15 @@ if(NOT DEFINED GTCLANG_VERSION)
 endif()
 
 # Git version string
-mchbuild_get_git_head_revision(git_refspec git_hash)
+yoda_get_git_head_revision(git_refspec git_hash)
 string(SUBSTRING "${git_hash}" 0 7 git_hash_short)
 if(NOT DEFINED GTCLANG_GIT_HASH OR NOT "${GTCLANG_GIT_HASH}" STREQUAL "${git_hash_short}")
   set(GTCLANG_GIT_HASH "${git_hash_short}" CACHE INTERNAL "git hash (short) of current head" FORCE)
 endif()
 
 # Assemble full version string
-string(TOLOWER ${MCHBUILD_ARCHITECTURE_STRING} architecture)
-string(TOLOWER ${MCHBUILD_PLATFORM_STRING} platform)
+string(TOLOWER ${YODA_ARCHITECTURE_STRING} architecture)
+string(TOLOWER ${YODA_PLATFORM_STRING} platform)
 string(TOLOWER ${CMAKE_CXX_COMPILER_ID} compiler)
 set(compiler "${compiler}-${CMAKE_CXX_COMPILER_VERSION}")
 set(GTCLANG_FULL_VERSION 

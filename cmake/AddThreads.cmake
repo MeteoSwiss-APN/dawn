@@ -14,7 +14,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(mchbuildExportPackage)
+include(yodaExportPackage)
 
 find_package(Threads REQUIRED)
 
@@ -28,7 +28,7 @@ elseif(CMAKE_HP_PTHREADS_INIT)
   set(threadlib "hp pthreads")
 endif()
 
-mchbuild_export_package(
+yoda_export_package(
   NAME Threads
   FOUND ON 
   VERSION "${threadlib}"

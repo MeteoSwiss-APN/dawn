@@ -14,7 +14,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(mchbuildExportOptions)
+include(yodaExportOptions)
 include(CMakeDependentOption)
 
 set(BUILD_IS_NOT_RELEASE ON)
@@ -55,7 +55,7 @@ CMAKE_DEPENDENT_OPTION(GTCLANG_INTEGRATION_TESTING
 option(GTCLANG_DOCUMENTATION "Enable documentation" OFF)
 
 # Export options for meta projects
-mchbuild_export_options(GTCLANG 
+yoda_export_options(GTCLANG 
   GTCLANG_ASSERTS 
   GTCLANG_USE_CCACHE
   GTCLANG_BUILD_EXAMPLES

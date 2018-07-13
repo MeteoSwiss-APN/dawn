@@ -14,7 +14,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(mchbuildExportPackage)
+include(yodaExportPackage)
 find_package(GridTools CONFIG QUIET)
 
 if(GridTools_FOUND)
@@ -22,7 +22,7 @@ if(GridTools_FOUND)
   set(GTCLANG_HAS_GRIDTOOLS 1)
 endif()
 
-mchbuild_export_package(
+yoda_export_package(
   NAME GridTools
   FOUND ${GridTools_FOUND}
   INCLUDE_DIRS ${GRIDTOOLS_INCLUDE_DIRS} 

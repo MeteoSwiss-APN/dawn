@@ -37,21 +37,21 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake")
 
 include(GTClangCloneRepository)
 
-set(GTCLANG_MCHBUILD_GIT_URL "https:///github.com/Meteoswiss-APN/mchbuild.git" 
-    CACHE PATH "URL of the mchbuild git repository to clone")
-set(GTCLANG_MCHBUILD_GIT_BRANCH "master" CACHE STRING "Branch of the mchbuild git repository to clone")
+set(GTCLANG_YODA_GIT_URL "https:///github.com/Meteoswiss-APN/yoda.git" 
+    CACHE PATH "URL of the yoda git repository to clone")
+set(GTCLANG_YODA_GIT_BRANCH "master" CACHE STRING "Branch of the yoda git repository to clone")
 
-gtclang_clone_repository(NAME mchbuild URL ${GTCLANG_MCHBUILD_GIT_URL} BRANCH ${GTCLANG_MCHBUILD_GIT_BRANCH} SOURCE_DIR GTCLANG_MCHBUILD_SOURCE_DIR )
+gtclang_clone_repository(NAME yoda URL ${GTCLANG_YODA_GIT_URL} BRANCH ${GTCLANG_YODA_GIT_BRANCH} SOURCE_DIR GTCLANG_YODA_SOURCE_DIR )
 
-list(APPEND CMAKE_MODULE_PATH "${GTCLANG_MCHBUILD_SOURCE_DIR}/cmake")
-include(mchbuildInit)
+list(APPEND CMAKE_MODULE_PATH "${GTCLANG_YODA_SOURCE_DIR}/cmake")
+include(yodaInit)
 
-mchbuild_init()
+yoda_init()
 
-include(mchbuildAddTargetCleanAll)
+include(yodaAddTargetCleanAll)
 
 # Add custom targets
-mchbuild_add_target_clean_all(
+yoda_add_target_clean_all(
   "${CMAKE_BINARY_DIR}/prefix"
   "${CMAKE_BINARY_DIR}/thirdparty"  
   "${CMAKE_BINARY_DIR}/dawn-cmake"  
@@ -59,30 +59,29 @@ mchbuild_add_target_clean_all(
   "${CMAKE_BINARY_DIR}/dawn-prefix"
   "${CMAKE_BINARY_DIR}/gtclang"
   "${CMAKE_BINARY_DIR}/gtclang-prefix"
-  "${CMAKE_BINARY_DIR}/mchbuild-cmake"
+  "${CMAKE_BINARY_DIR}/yoda-cmake"
   "${CMAKE_BINARY_DIR}/boost"
   "${CMAKE_BINARY_DIR}/boost-prefix"
 )
 
-include(GTClangAddDependency)
-include(mchbuildFindPackage)
-include(mchbuildSetDownloadDir)
+include(yodaFindPackage)
+include(yodaSetDownloadDir)
 
-# Set the default download directory (define MCHBUILD_DOWNLOAD_DIR)
-mchbuild_set_download_dir()
+# Set the default download directory (define YODA_DOWNLOAD_DIR)
+yoda_set_download_dir()
 
 include("thirdparty/gtclangAddBoost")
 set(dawn_cmake_args -DBOOST_ROOT=${BOOST_ROOT} -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>)
 
-mchbuild_find_package(
+yoda_find_package(
   PACKAGE dawn
   NO_DEFAULT_PATH
   REQUIRED_VARS dawn_DIR
   ADDITIONAL
-    DOWNLOAD_DIR ${MCHBUILD_DOWNLOAD_DIR}
+    DOWNLOAD_DIR ${YODA_DOWNLOAD_DIR}
     GIT_REPOSITORY "git@github.com:Meteoswiss-APN/dawn.git"
     GIT_TAG "master" 
-    MCHBUILD_ROOT "${GTCLANG_MCHBUILD_SOURCE_DIR}"
+    YODA_ROOT "${GTCLANG_YODA_SOURCE_DIR}"
     CMAKE_ARGS ${dawn_cmake_args}
 )
 
@@ -94,15 +93,15 @@ option(GTCLANG_ENABLE_GRIDTOOLS "Enable GridTools compilation" OFF)
 set(gtclang_dependencies "boost" "dawn")
 
 if(GTCLANG_ENABLE_GRIDTOOLS) 
-  mchbuild_find_package(
+  yoda_find_package(
     PACKAGE GridTools
     REQUIRED_VARS GridTools_DIR
     DEPENDS "boost"
     ADDITIONAL
-      DOWNLOAD_DIR ${MCHBUILD_DOWNLOAD_DIR}
+      DOWNLOAD_DIR ${YODA_DOWNLOAD_DIR}
       GIT_REPOSITORY "git@github.com:twicki/gridtools.git"
       GIT_TAG "gtclang_fixed_version" 
-      MCHBUILD_ROOT "${GTCLANG_MCHBUILD_SOURCE_DIR}"
+      YODA_ROOT "${GTCLANG_YODA_SOURCE_DIR}"
       CMAKE_ARGS -DSTRUCTURED_GRIDS=ON -DBOOST_ROOT=${BOOST_ROOT} -DDISABLE_TESTING=ON -DENABLE_PERFORMANCE_METERS=ON
   )
   list(APPEND gtclang_dependencies "gridtools")
@@ -112,7 +111,7 @@ else()
   list(APPEND gtclang_cmake_args -DGTCLANG_BUILD_EXAMPLES=OFF)
 endif()
 
-mchbuild_find_package(
+yoda_find_package(
   PACKAGE gtclang
   NO_DEFAULT_PATH
   FORWARD_VARS 
@@ -120,7 +119,7 @@ mchbuild_find_package(
   DEPENDS ${gtclang_dependencies}
   ADDITIONAL
     SOURCE_DIR "${CMAKE_SOURCE_DIR}/../"
-    MCHBUILD_ROOT "${GTCLANG_MCHBUILD_SOURCE_DIR}"
+    YODA_ROOT "${GTCLANG_YODA_SOURCE_DIR}"
     CMAKE_ARGS 
         ${gtclang_cmake_args}
 )

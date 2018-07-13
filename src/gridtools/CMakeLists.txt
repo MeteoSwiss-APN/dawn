@@ -14,8 +14,8 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(mchbuildAddCustomDummyTarget)
+include(yodaAddCustomDummyTarget)
 # Add a dummy target with all the source files so that they are included in a qt creator project
-mchbuild_add_custom_dummy_target(NAME GTClangQtCreatorParseProjectClang
+yoda_add_custom_dummy_target(NAME GTClangQtCreatorParseProjectClang
                              DIRECTORIES "clang")
 

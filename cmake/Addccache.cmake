@@ -14,11 +14,11 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(mchbuildExportPackage)
+include(yodaExportPackage)
 
 find_package(ccache)
 
-mchbuild_export_package(
+yoda_export_package(
   NAME ccache
   FOUND ${CCACHE_FOUND}
   EXECUTABLE ${CCACHE_EXECUTABLE}

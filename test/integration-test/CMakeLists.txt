@@ -14,7 +14,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(mchbuildAddCustomDummyTarget)
+include(yodaAddCustomDummyTarget)
 
 macro(ADD_COMPILER_FLAG_TO_EXAMPLE _KEY _VALUE)
   set("MyMap_${_KEY}" "${MyMap_${_KEY}}" "${_VALUE}")
@@ -59,10 +59,10 @@ gtclang_add_integrationtest(NAME no-codegen
 )
 
 # Add a dummy target with all the source files so that they are included in a qt creator project
-mchbuild_add_custom_dummy_target(NAME GTClangQtCreatorParseProjectIntegrationTest
+yoda_add_custom_dummy_target(NAME GTClangQtCreatorParseProjectIntegrationTest
                              DIRECTORIES ${directories})
 # Add a dummy target with all the source files so that they are included in a qt creator project
-mchbuild_add_custom_dummy_target(NAME GTClangQtCreatorParseProjectCodeGenTest
+yoda_add_custom_dummy_target(NAME GTClangQtCreatorParseProjectCodeGenTest
                          DIRECTORIES ${cwd}/CodeGen)
 
 # Codegen tests require GridTools
@@ -114,7 +114,7 @@ foreach(example ${codegen_examples})
 
     add_executable(${example}_benchmarks "${cwd}/CodeGen/${example}_benchmark.cpp" "${cwd}/CodeGen/TestMain.cpp" "${cwd}/CodeGen/Options.cpp")
     target_include_directories(${example}_benchmarks PUBLIC ${include_dirs})
-    #TODO mchbuild_add_unittest does not work here since the DEPENDS argument not only makes a dependency but also links against them
+    #TODO yoda_add_unittest does not work here since the DEPENDS argument not only makes a dependency but also links against them
     add_dependencies(${example}_benchmarks gtclang)
     target_link_libraries(${example}_benchmarks ${GTCLANG_UNITTEST_EXTERNAL_LIBRARIES} gtest)
 

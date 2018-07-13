@@ -15,7 +15,7 @@
 ##===------------------------------------------------------------------------------------------===##
 
 include(CMakePackageConfigHelpers)
-include(mchbuildCheckAndSetCXXFlag)
+include(yodaCheckAndSetCXXFlag)
 
 # gtclang_set_cxx_flags
 # ---------------------
@@ -31,46 +31,46 @@ macro(gtclang_set_cxx_flags)
   endif()
 
   # Architecture
-  mchbuild_check_and_set_cxx_flag("-march=native" HAVE_GCC_MARCH_NATIVE)
+  yoda_check_and_set_cxx_flag("-march=native" HAVE_GCC_MARCH_NATIVE)
   
   # Pthread
-  mchbuild_check_and_set_cxx_flag("-pthread" HAVE_GCC_PTHREAD)
+  yoda_check_and_set_cxx_flag("-pthread" HAVE_GCC_PTHREAD)
 
   # Warnings
-  mchbuild_check_and_set_cxx_flag("-Wall" HAVE_GCC_WALL)
-  mchbuild_check_and_set_cxx_flag("-W" HAVE_GCC_W)
-  mchbuild_check_and_set_cxx_flag("-Wformat" HAVE_GCC_WFORMAT)
-  mchbuild_check_and_set_cxx_flag("-Wmissing-declarations" HAVE_GCC_WMISSING_DECLARATIONS)
-  mchbuild_check_and_set_cxx_flag("-Wmissing-prototypes" HAVE_GCC_WMISSING_PROTOTYPES)
-  mchbuild_check_and_set_cxx_flag("-Wstrict-prototypes" HAVE_GCC_WSTRICT_PROTOTYPES)
-  mchbuild_check_and_set_cxx_flag("-Wundef" HAVE_GCC_WUNDEF)
-  mchbuild_check_and_set_cxx_flag("-Winit-self" HAVE_GCC_WINI_SELF)
-  mchbuild_check_and_set_cxx_flag("-Wpointer-arith" HAVE_GCC_WPOINTER_ARITH)
-  mchbuild_check_and_set_cxx_flag("-Wsign-promo" HAVE_GCC_WSIGN_PROMO)
-  mchbuild_check_and_set_cxx_flag("-Werror=return-type" HAVE_GCC_WERROR_RETURN_TYPE)
-  mchbuild_check_and_set_cxx_flag("-Werror=non-virtual-dtor" HAVE_GCC_WERROR_NON_VIRTUAL_DTOR)
-  mchbuild_check_and_set_cxx_flag("-Werror=address" HAVE_GCC_WERROR_ADDRESS)
-  mchbuild_check_and_set_cxx_flag("-Werror=sequence-point" HAVE_GCC_WERROR_SEQUENCE_POINT)
+  yoda_check_and_set_cxx_flag("-Wall" HAVE_GCC_WALL)
+  yoda_check_and_set_cxx_flag("-W" HAVE_GCC_W)
+  yoda_check_and_set_cxx_flag("-Wformat" HAVE_GCC_WFORMAT)
+  yoda_check_and_set_cxx_flag("-Wmissing-declarations" HAVE_GCC_WMISSING_DECLARATIONS)
+  yoda_check_and_set_cxx_flag("-Wmissing-prototypes" HAVE_GCC_WMISSING_PROTOTYPES)
+  yoda_check_and_set_cxx_flag("-Wstrict-prototypes" HAVE_GCC_WSTRICT_PROTOTYPES)
+  yoda_check_and_set_cxx_flag("-Wundef" HAVE_GCC_WUNDEF)
+  yoda_check_and_set_cxx_flag("-Winit-self" HAVE_GCC_WINI_SELF)
+  yoda_check_and_set_cxx_flag("-Wpointer-arith" HAVE_GCC_WPOINTER_ARITH)
+  yoda_check_and_set_cxx_flag("-Wsign-promo" HAVE_GCC_WSIGN_PROMO)
+  yoda_check_and_set_cxx_flag("-Werror=return-type" HAVE_GCC_WERROR_RETURN_TYPE)
+  yoda_check_and_set_cxx_flag("-Werror=non-virtual-dtor" HAVE_GCC_WERROR_NON_VIRTUAL_DTOR)
+  yoda_check_and_set_cxx_flag("-Werror=address" HAVE_GCC_WERROR_ADDRESS)
+  yoda_check_and_set_cxx_flag("-Werror=sequence-point" HAVE_GCC_WERROR_SEQUENCE_POINT)
 
-  mchbuild_check_and_set_cxx_flag("-Wno-sign-promo" HAVE_GCC_WNO_SIGN_PROMO)
-  mchbuild_check_and_set_cxx_flag("-Wno-sign-compare" HAVE_GCC_WNO_SIGN_COMPARE)
-  mchbuild_check_and_set_cxx_flag("-Wno-unused-parameter" HAVE_GCC_WNO_UNUSDED_PARAMETER)
-  mchbuild_check_and_set_cxx_flag("-Wno-shadow" HAVE_GCC_WNO_SHADOW)
+  yoda_check_and_set_cxx_flag("-Wno-sign-promo" HAVE_GCC_WNO_SIGN_PROMO)
+  yoda_check_and_set_cxx_flag("-Wno-sign-compare" HAVE_GCC_WNO_SIGN_COMPARE)
+  yoda_check_and_set_cxx_flag("-Wno-unused-parameter" HAVE_GCC_WNO_UNUSDED_PARAMETER)
+  yoda_check_and_set_cxx_flag("-Wno-shadow" HAVE_GCC_WNO_SHADOW)
   
   if(BUILD_SHARED_LIBS)
-    mchbuild_check_and_set_cxx_flag("-fPIC" HAVE_GCC_PIC)
+    yoda_check_and_set_cxx_flag("-fPIC" HAVE_GCC_PIC)
   endif()
 
   if(GTCLANG_USE_CCACHE)
-    if(MCHBUILD_COMPILER_CLANG)
-      mchbuild_check_and_set_cxx_flag("-Qunused-arguments" HAVE_CLANG_UNUSED_ARGUMENTS)
-      mchbuild_check_and_set_cxx_flag("-fcolor-diagnostics" HAVE_CLANG_COLOR_DIAGNOSTICS)
-      mchbuild_check_and_set_cxx_flag("-Wno-undefined-var-template" 
+    if(YODA_COMPILER_CLANG)
+      yoda_check_and_set_cxx_flag("-Qunused-arguments" HAVE_CLANG_UNUSED_ARGUMENTS)
+      yoda_check_and_set_cxx_flag("-fcolor-diagnostics" HAVE_CLANG_COLOR_DIAGNOSTICS)
+      yoda_check_and_set_cxx_flag("-Wno-undefined-var-template" 
                                      HAVE_CLANG_WNO_UNDEFINED_VAR_TEMPLATE)
     endif()
 
-    if(MCHBUILD_COMPILER_GNU)
-      mchbuild_check_and_set_cxx_flag("-fdiagnostics-color=always" HAVE_GCC_COLOR_DIAGNOSTICS)
+    if(YODA_COMPILER_GNU)
+      yoda_check_and_set_cxx_flag("-fdiagnostics-color=always" HAVE_GCC_COLOR_DIAGNOSTICS)
     endif()
   endif()
 endmacro()

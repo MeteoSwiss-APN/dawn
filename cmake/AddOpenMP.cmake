@@ -14,11 +14,11 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(mchbuildExportPackage)
+include(yodaExportPackage)
 
 find_package(OpenMP)
 
-mchbuild_export_package(
+yoda_export_package(
   NAME OpenMP 
   FOUND ${OPENMP_FOUND} 
 )

@@ -14,11 +14,11 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(mchbuildExportPackage)
+include(yodaExportPackage)
 
 find_package(clang-format)
 
-mchbuild_export_package(
+yoda_export_package(
   NAME clang-format
   FOUND ${CLANG-FORMAT_FOUND}
   EXECUTABLE ${CLANG-FORMAT_EXECUTABLE}

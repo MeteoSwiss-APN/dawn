@@ -14,8 +14,8 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(mchbuildAddExecutable)
-include(mchbuildCombineLibraries)
+include(yodaAddExecutable)
+include(yodaCombineLibraries)
 
 add_subdirectory(Support)
 add_subdirectory(Frontend)
@@ -26,7 +26,7 @@ if(GTCLANG_TESTING)
 endif()
 
 # Combine the relevant object libraries into libGTClang.a
-mchbuild_combine_libraries(
+yoda_combine_libraries(
   NAME GTClang
   OBJECTS GTClangDriverObjects
           GTClangFrontendObjects
@@ -36,7 +36,7 @@ mchbuild_combine_libraries(
 )
 
 # Link the driver
-mchbuild_add_executable(
+yoda_add_executable(
   NAME gtclang
   SOURCES Driver/gtclang.cpp
   DEPENDS GTClangStatic

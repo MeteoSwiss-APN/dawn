@@ -14,9 +14,9 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(mchbuildAddLibrary)
+include(yodaAddLibrary)
 
-mchbuild_add_library(
+yoda_add_library(
   NAME GTClangDriver
   SOURCES CompilerInstance.cpp
           CompilerInstance.h
