@@ -930,14 +930,6 @@ std::string GTCodeGen::generateStencilInstantiation(
 
   RunMethod.commit();
 
-  // Generate stencil getter
-  StencilWrapperClass.addMemberFunction("std::vector<gridtools::stencil<gridtools::notype>*>",
-                                        "get_stencils")
-      .addStatement(
-          "return " +
-          RangeToString(", ", "std::vector<gridtools::stencil<gridtools::notype>*>({", "})")(
-              stencilMembers, [](const std::string& member) { return member + ".get_stencil()"; }));
-
   // Generate name getter
   StencilWrapperClass.addMemberFunction("std::string", "get_name")
       .isConst(true)
