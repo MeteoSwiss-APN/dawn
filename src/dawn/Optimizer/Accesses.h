@@ -38,9 +38,6 @@ public:
   Accesses& operator=(const Accesses&) = default;
   Accesses& operator=(Accesses&&) = default;
 
-  /// @brief Null extent
-  static const Extents NullExtents;
-
   /// @brief Merge read offset/extent to the field given by `AccessID`
   ///
   /// @see Extents::merge
@@ -67,6 +64,8 @@ public:
 
   bool hasReadAccess(int accessID) const;
   bool hasWriteAccess(int accessID) const;
+
+  bool hasAccess(int accessID) const;
 
   /// @brief Get access of field (returns NullExtent if field does not exist)
   const Extents& getReadAccess(int AccessID) const;

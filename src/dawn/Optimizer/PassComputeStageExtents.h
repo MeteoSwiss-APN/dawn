@@ -15,6 +15,11 @@
 #ifndef DAWN_OPTIMIZER_PASSCOMPUTESTAGEEXTENTS_H
 #define DAWN_OPTIMIZER_PASSCOMPUTESTAGEEXTENTS_H
 
+// ===-------------------------------------------------------------------------------------------===
+//      The Algorithm in this pass was broken and is now replaced by a greedier one that works
+//        in order to fix it, Point One and Two [ExtentComputationTODO] needs to be optimized:
+//        https://github.com/MeteoSwiss-APN/dawn/issues/104
+// ===-------------------------------------------------------------------------------------------===
 #include "dawn/Optimizer/Pass.h"
 
 namespace dawn {

@@ -4,29 +4,30 @@ namespace dawn {
 namespace codegen {
 
 size_t CodeGen::getVerticalTmpHaloSize(Stencil const& stencil) {
-  std::shared_ptr<Interval> tmpInterval = stencil.getEnclosingIntervalTemporaries();
-  return (tmpInterval != nullptr) ? std::max(tmpInterval->overEnd(), tmpInterval->belowBegin()) : 0;
+  boost::optional<Interval> tmpInterval = stencil.getEnclosingIntervalTemporaries();
+  return (tmpInterval.is_initialized())
+             ? std::max(tmpInterval->overEnd(), tmpInterval->belowBegin())
+             : 0;
 }
 
 size_t CodeGen::getVerticalTmpHaloSizeForMultipleStencils(
     const std::vector<std::shared_ptr<Stencil>>& stencils) const {
-  std::shared_ptr<Interval> fullIntervals = nullptr;
+  boost::optional<Interval> fullIntervals;
   for(auto stencil : stencils) {
     auto tmpInterval = stencil->getEnclosingIntervalTemporaries();
-    if(tmpInterval != nullptr) {
-      if(fullIntervals == nullptr)
+    if(tmpInterval.is_initialized()) {
+      if(!fullIntervals.is_initialized())
         fullIntervals = tmpInterval;
       else
         fullIntervals->merge((*tmpInterval));
     }
   }
-  return (fullIntervals != nullptr)
+  return (fullIntervals.is_initialized())
              ? std::max(fullIntervals->overEnd(), fullIntervals->belowBegin())
              : 0;
 }
 
 void CodeGen::addTempStorageTypedef(Structure& stencilClass, Stencil const& stencil) const {
-  std::shared_ptr<Interval> tmpInterval = stencil.getEnclosingIntervalTemporaries();
   stencilClass.addTypeDef("tmp_halo_t")
       .addType("gridtools::halo< GRIDTOOLS_CLANG_HALO_EXTEND, GRIDTOOLS_CLANG_HALO_EXTEND, " +
                std::to_string(getVerticalTmpHaloSize(stencil)) + ">");
@@ -66,8 +67,8 @@ void CodeGen::addTmpStorageInit_wrapper(MemberFunction& ctr,
                                         const std::vector<std::string>& tempFields) const {
   if(!(tempFields.empty())) {
     auto verticalExtent = getVerticalTmpHaloSizeForMultipleStencils(stencils);
-    ctr.addInit(bigWrapperMetadata_ + "(dom.isize(), dom.jsize(), dom.ksize() + 2*" +
-                std::to_string(verticalExtent) + ")");
+    ctr.addInit(bigWrapperMetadata_ + "(dom.isize(), dom.jsize(), dom.ksize() /*+ 2 *" +
+                std::to_string(verticalExtent) + "*/ + 1)");
     for(auto fieldName : tempFields) {
       ctr.addInit("m_" + fieldName + " (" + bigWrapperMetadata_ + ", \"" + fieldName + "\")");
     }

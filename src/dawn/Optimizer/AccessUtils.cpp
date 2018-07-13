@@ -7,6 +7,7 @@ namespace AccessUtils {
 void recordWriteAccess(std::unordered_map<int, Field>& inputOutputFields,
                        std::unordered_map<int, Field>& inputFields,
                        std::unordered_map<int, Field>& outputFields, int AccessID,
+                       const boost::optional<Extents>& writeExtents,
                        Interval const& doMethodInterval) {
   // Field was recorded as `InputOutput`, state can't change ...
   if(inputOutputFields.count(AccessID)) {
@@ -28,13 +29,15 @@ void recordWriteAccess(std::unordered_map<int, Field>& inputOutputFields,
   if(outputFields.count(AccessID)) {
     outputFields.at(AccessID).extendInterval(doMethodInterval);
   } else {
-    outputFields.emplace(AccessID, Field(AccessID, Field::IK_Output, Extents{}, doMethodInterval));
+    outputFields.emplace(AccessID, Field(AccessID, Field::IK_Output, boost::optional<Extents>(),
+                                         writeExtents, doMethodInterval));
   }
 }
 
 void recordReadAccess(std::unordered_map<int, Field>& inputOutputFields,
                       std::unordered_map<int, Field>& inputFields,
                       std::unordered_map<int, Field>& outputFields, int AccessID,
+                      boost::optional<Extents> const& readExtents,
                       const Interval& doMethodInterval) {
 
   // Field was recorded as `InputOutput`, state can't change ...
@@ -57,8 +60,10 @@ void recordReadAccess(std::unordered_map<int, Field>& inputOutputFields,
   // Field not yet present, record it as input
   if(inputFields.count(AccessID)) {
     inputFields.at(AccessID).extendInterval(doMethodInterval);
-  } else
-    inputFields.emplace(AccessID, Field(AccessID, Field::IK_Input, Extents{}, doMethodInterval));
+  } else {
+    inputFields.emplace(AccessID, Field(AccessID, Field::IK_Input, readExtents,
+                                        boost::optional<Extents>(), doMethodInterval));
+  }
 }
 } // namespace AccessUtils
 } // namespace dawn

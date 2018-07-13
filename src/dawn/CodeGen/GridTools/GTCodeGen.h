@@ -45,7 +45,7 @@ public:
     IntervalDefinitions(const Stencil& stencil);
 
     /// Intervals of the stencil
-    std::unordered_set<Interval> Intervals;
+    std::unordered_set<IntervalProperties> intervalProperties_;
 
     /// Axis of the stencil (i.e the interval which spans accross all other intervals)
     Interval Axis;
@@ -53,16 +53,41 @@ public:
     /// Levels of the axis
     std::set<int> Levels;
 
-    /// Unqiue name of an interval
-    std::unordered_map<Interval, std::string> IntervalToNameMap;
-
     /// Intervals of the Do-Methods of each stage
     std::unordered_map<std::shared_ptr<Stage>, std::vector<Interval>> StageIntervals;
   };
 
 private:
-  std::string generateStencilInstantiation(const StencilInstantiation* stencilInstantiation);
+  std::string
+  generateStencilInstantiation(const std::shared_ptr<StencilInstantiation> stencilInstantiation);
   std::string generateGlobals(const std::shared_ptr<SIR>& Sir);
+  std::string cacheWindowToString(const Cache::window& cacheWindow);
+  std::string buildMakeComputation(std::vector<std::string> const& DomainMapPlaceholders,
+                                   std::vector<std::string> const& makeComputation,
+                                   const std::string& gridName) const;
+  void
+  buildPlaceholderDefinitions(MemberFunction& function,
+                              std::vector<Stencil::FieldInfo> const& stencilFields,
+                              std::vector<std::string> const& stencilGlobalVariables,
+                              std::vector<std::string> const& stencilConstructorTemplates) const;
+
+  std::string getFieldName(std::shared_ptr<sir::Field> const& f) const { return f->Name; }
+
+  std::string getFieldName(Stencil::FieldInfo const& f) const { return f.Name; }
+
+  bool isTemporary(std::shared_ptr<sir::Field> f) const { return f->IsTemporary; }
+
+  bool isTemporary(Stencil::FieldInfo const& f) const { return f.IsTemporary; }
+
+  /// code generate sync methods statements for all the fields passed
+  void generateSyncStorages(MemberFunction& method,
+                            const IndexRange<std::vector<Stencil::FieldInfo>>& stencilFields) const;
+
+  /// construct a string of template parameters for storages
+  std::vector<std::string>
+  buildFieldTemplateNames(IndexRange<std::vector<Stencil::FieldInfo>> const& stencilFields) const;
+
+  int computeNumTemporaries(std::vector<Stencil::FieldInfo> const& stencilFields) const;
 
   /// Maximum needed vector size of boost::fusion containers
   std::size_t mplContainerMaxSize_;

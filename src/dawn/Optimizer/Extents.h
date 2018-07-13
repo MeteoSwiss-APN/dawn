@@ -18,12 +18,14 @@
 #include "dawn/Optimizer/LoopOrder.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/HashCombine.h"
+#include "dawn/Support/Assert.h"
 #include <array>
 #include <cmath>
 #include <functional>
 #include <initializer_list>
 #include <iosfwd>
 #include <vector>
+#include <boost/optional.hpp>
 
 namespace dawn {
 
@@ -93,12 +95,14 @@ struct Extent {
 /// @ingroup optimizer
 class Extents {
 public:
+  enum class VerticalLoopOrderDir { VL_CounterLoopOrder, VL_InLoopOrder };
+
   /// @name Constructors and Assignment
   /// @{
   explicit Extents(const Array3i& offset);
   Extents(int extent1minus, int extent1plus, int extent2minus, int extent2plus, int extent3minus,
           int extent3plus);
-  Extents();
+  Extents() = delete;
   Extents(const Extents&) = default;
   Extents(Extents&&) = default;
   Extents& operator=(const Extents&) = default;
@@ -115,6 +119,8 @@ public:
 
   /// @brief Get size of extents (i.e number of dimensions)
   std::array<Extent, 3>::size_type getSize() const { return extents_.size(); }
+
+  bool hasVerticalCenter() const { return extents_[2].Minus <= 0 && extents_[2].Plus >= 0; }
 
   /// @brief Merge `this` with `other` and assign an Extents to `this` which is the union of the two
   ///
@@ -137,6 +143,9 @@ public:
 
   /// @brief Check if Extent is empty
   bool empty();
+
+  /// @brief add the center of the stencil to the extent
+  void addCenter(const unsigned int dim);
 
   /// @brief Check if extent in is pointwise (i.e equal to `{0, 0, 0, 0, 0, 0}`)
   bool isPointwise() const;
@@ -164,6 +173,17 @@ public:
   /// accesses and vice versa for backward loop order. If the loop order is parallel, any
   /// non-pointwise extent is considered a counter-loop- and loop order access.
   VerticalLoopOrderAccess getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const;
+
+  /// @brief Computes the fraction of this Extent being accessed in a LoopOrder or CounterLoopOrder
+  /// return non initialized optional<Extent> if the full extent is accessed in a counterloop order
+  /// manner
+  /// @param loopOrder specifies the vertical loop order direction (forward, backward, or parallel)
+  /// @param loopOrderPolicy specifies the requested policy for the requested extent access:
+  ///            InLoopOrder/CounterLoopOrder
+  /// @param includeCenter determines whether center is considered part of the loopOrderPolicy
+  boost::optional<Extent> getVerticalLoopOrderExtent(LoopOrderKind loopOrder,
+                                                     VerticalLoopOrderDir loopOrderPolicy,
+                                                     bool includeCenter) const;
 
   /// @brief Convert to stream
   friend std::ostream& operator<<(std::ostream& os, const Extents& extent);

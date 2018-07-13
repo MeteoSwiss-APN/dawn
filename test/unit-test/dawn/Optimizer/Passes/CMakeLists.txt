@@ -14,16 +14,17 @@
 
 yoda_add_unittest(
   NAME DawnUnittestOptimizerPasses
-  SOURCES 
-        TestMain.cpp
-        TestPassComputeStageExtents.cpp
-        TestPassSetBoundaryCondition.cpp
-        TestFieldAccessIntervals.cpp
-        TestTemporaryToFunction.cpp
-  DEPENDS DawnUnittestStatic DawnStatic DawnCStatic ${DAWN_EXTERNAL_LIBRARIES} gtest
-  OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/unittest
-  GTEST_ARGS "${CMAKE_CURRENT_LIST_DIR}" "--gtest_color=yes"
-)
+    SOURCES 
+          TestMain.cpp
+          TestPassComputeStageExtents.cpp
+          TestComputeMaxExtent.cpp
+          TestPassSetBoundaryCondition.cpp
+          TestFieldAccessIntervals.cpp
+          TestTemporaryToFunction.cpp
+    DEPENDS DawnUnittestStatic DawnStatic DawnCStatic ${DAWN_EXTERNAL_LIBRARIES} gtest
+    OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/unittest
+    GTEST_ARGS "${CMAKE_CURRENT_LIST_DIR}" "--gtest_color=yes"
+  )
 
 target_include_directories(DawnUnittestOptimizerPasses PUBLIC "${CMAKE_SOURCE_DIR}")
 

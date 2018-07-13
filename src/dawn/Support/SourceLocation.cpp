@@ -22,7 +22,7 @@ std::ostream& operator<<(std::ostream& os, const SourceLocation& sourceLocation)
 }
 
 extern bool operator==(const SourceLocation& a, const SourceLocation& b) {
-  return a.Line == b.Line && b.Column == b.Column;
+  return a.Line == b.Line && a.Column == b.Column;
 }
 extern bool operator!=(const SourceLocation& a, const SourceLocation& b) { return !(a == b); }
 
