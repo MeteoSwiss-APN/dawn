@@ -80,7 +80,7 @@ mchbuild_find_package(
   REQUIRED_VARS dawn_DIR
   ADDITIONAL
     DOWNLOAD_DIR ${MCHBUILD_DOWNLOAD_DIR}
-    GIT_REPOSITORY "git@github.com:MeteoSwiss-APN/dawn.git"
+    GIT_REPOSITORY "git@github.com:Meteoswiss-APN/dawn.git"
     GIT_TAG "master" 
     MCHBUILD_ROOT "${GTCLANG_MCHBUILD_SOURCE_DIR}"
     CMAKE_ARGS ${dawn_cmake_args}
@@ -101,7 +101,7 @@ if(GTCLANG_ENABLE_GRIDTOOLS)
     ADDITIONAL
       DOWNLOAD_DIR ${MCHBUILD_DOWNLOAD_DIR}
       GIT_REPOSITORY "git@github.com:twicki/gridtools.git"
-      GIT_TAG "experimental" 
+      GIT_TAG "gtclang_fixed_version" 
       MCHBUILD_ROOT "${GTCLANG_MCHBUILD_SOURCE_DIR}"
       CMAKE_ARGS -DSTRUCTURED_GRIDS=ON -DBOOST_ROOT=${BOOST_ROOT} -DDISABLE_TESTING=ON -DENABLE_PERFORMANCE_METERS=ON
   )
