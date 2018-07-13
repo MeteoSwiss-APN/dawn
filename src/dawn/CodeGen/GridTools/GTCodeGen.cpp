@@ -930,6 +930,14 @@ std::string GTCodeGen::generateStencilInstantiation(
 
   RunMethod.commit();
 
+  // Generate stencil getter
+  StencilWrapperClass.addMemberFunction("std::vector<gridtools::stencil<gridtools::notype>*>",
+                                        "get_stencils")
+      .addStatement(
+          "return " +
+          RangeToString(", ", "std::vector<gridtools::stencil<gridtools::notype>*>({", "})")(
+              stencilMembers, [](const std::string& member) { return member + ".get_stencil()"; }));
+
   // Generate name getter
   StencilWrapperClass.addMemberFunction("std::string", "get_name")
       .isConst(true)
@@ -1077,9 +1085,14 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   DAWN_ASSERT_MSG(mplContainerMaxSize_ % 10 == 0,
                   "boost::mpl template limit needs to be multiple of 10");
 
+  ppDefines.push_back(makeIfNotDefined("BOOST_PP_VARIADICS", 1));
+  ppDefines.push_back(makeIfNotDefined("BOOST_FUSION_DONT_USE_PREPROCESSED_FILES", 1));
+  ppDefines.push_back(makeIfNotDefined("BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS", 1));
+  ppDefines.push_back(makeIfNotDefined("BOOST_FUSION_INVOKE_MAX_ARITY", mplContainerMaxSize_));
   ppDefines.push_back(makeIfNotDefined("FUSION_MAX_VECTOR_SIZE", mplContainerMaxSize_));
   ppDefines.push_back(makeIfNotDefined("FUSION_MAX_MAP_SIZE", mplContainerMaxSize_));
   ppDefines.push_back(makeIfNotDefined("BOOST_MPL_LIMIT_VECTOR_SIZE", mplContainerMaxSize_));
+
   BCFinder finder;
   for(const auto& stencilInstantiation : context_->getStencilInstantiationMap()) {
     for(const auto& stmt : stencilInstantiation.second->getStencilDescStatements()) {
