@@ -198,6 +198,31 @@ void Stencil::updateFieldsImpl(int startStageIdx, int endStageIdx) {
     getStage(stageIdx)->update();
 }
 
+std::unordered_map<int, Field> Stencil::getFields2() const {
+  std::unordered_map<int, Field> fields;
+
+  for(const auto& mssPtr : multistages_) {
+    for(const auto& fieldPair : mssPtr->getFields()) {
+      const Field& field = fieldPair.second;
+      auto it = fields.find(field.getAccessID());
+      if(it != fields.end()) {
+        // Adjust the Intend
+        if(it->second.getIntend() == Field::IK_Input && field.getIntend() == Field::IK_Output)
+          it->second.setIntend(Field::IK_InputOutput);
+        else if(it->second.getIntend() == Field::IK_Output && field.getIntend() == Field::IK_Input)
+          it->second.setIntend(Field::IK_InputOutput);
+
+        // Merge the Extent
+        it->second.mergeExtents(field.getExtents());
+        it->second.extendInterval(field.getInterval());
+      } else
+        fields.emplace(field.getAccessID(), field);
+    }
+  }
+
+  return fields;
+}
+
 void Stencil::setStageDependencyGraph(const std::shared_ptr<DependencyGraphStage>& stageDAG) {
   stageDependencyGraph_ = stageDAG;
 }
@@ -340,8 +365,17 @@ void Stencil::renameAllOccurrences(int oldAccessID, int newAccessID) {
 
 std::unordered_map<int, Stencil::Lifetime>
 Stencil::getLifetime(const std::unordered_set<int>& AccessIDs) const {
-  std::unordered_map<int, StatementPosition> Begin;
-  std::unordered_map<int, StatementPosition> End;
+  std::unordered_map<int, Lifetime> lifetimeMap;
+  for(int AccessID : AccessIDs) {
+    lifetimeMap.emplace(AccessID, getLifetime(AccessID));
+  }
+
+  return lifetimeMap;
+}
+
+Stencil::Lifetime Stencil::getLifetime(const int AccessID) const {
+  boost::optional<StatementPosition> Begin;
+  StatementPosition End;
 
   int multiStageIdx = 0;
   for(const auto& multistagePtr : multistages_) {
@@ -359,18 +393,15 @@ Stencil::getLifetime(const std::unordered_set<int>& AccessIDs) const {
               *doMethod.getStatementAccessesPairs()[statementIdx]->getAccesses();
 
           auto processAccessMap = [&](const std::unordered_map<int, Extents>& accessMap) {
-            for(const auto& AccessIDExtentPair : accessMap) {
-              int AccessID = AccessIDExtentPair.first;
+            if(!accessMap.count(AccessID))
+              return;
 
-              if(AccessIDs.count(AccessID)) {
-                StatementPosition pos(StagePosition(multiStageIdx, stageOffset), doMethodIndex,
-                                      statementIdx);
+            StatementPosition pos(StagePosition(multiStageIdx, stageOffset), doMethodIndex,
+                                  statementIdx);
 
-                if(!Begin.count(AccessID))
-                  Begin.emplace(AccessID, pos);
-                End[AccessID] = pos;
-              }
-            }
+            if(!Begin.is_initialized())
+              Begin = boost::make_optional(pos);
+            End = pos;
           };
 
           processAccessMap(accesses.getWriteAccesses());
@@ -386,15 +417,9 @@ Stencil::getLifetime(const std::unordered_set<int>& AccessIDs) const {
     multiStageIdx++;
   }
 
-  std::unordered_map<int, Lifetime> lifetimeMap;
-  for(int AccessID : AccessIDs) {
-    auto& begin = Begin[AccessID];
-    auto& end = End[AccessID];
+  DAWN_ASSERT(Begin.is_initialized());
 
-    lifetimeMap.emplace(AccessID, Lifetime(begin, end));
-  }
-
-  return lifetimeMap;
+  return Lifetime(*Begin, End);
 }
 
 bool Stencil::isEmpty() const {
@@ -435,12 +460,9 @@ std::ostream& operator<<(std::ostream& os, const Stencil& stencil) {
     os << "MultiStage " << (multiStageIdx++) << ": (" << MS->getLoopOrder() << ")\n";
     for(const auto& stage : MS->getStages())
       os << "  " << stencil.getStencilInstantiation().getNameFromStageID(stage->getStageID()) << " "
-         << RangeToString()(stage->getFields(),
-                            [&](const Field& field) {
-                              return stencil.getStencilInstantiation().getNameFromAccessID(
-                                  field.getAccessID());
-                            })
-         << "\n";
+         << RangeToString()(stage->getFields(), [&](const Field& field) {
+              return stencil.getStencilInstantiation().getNameFromAccessID(field.getAccessID());
+            }) << "\n";
   }
   return os;
 }

@@ -251,6 +251,8 @@ public:
   /// @brief Compute the life-time of the fields (or variables) given as a set of `AccessID`s
   std::unordered_map<int, Lifetime> getLifetime(const std::unordered_set<int>& AccessID) const;
 
+  Lifetime getLifetime(const int AccessIDs) const;
+
   /// @brief Check if the stencil is empty (i.e contains no statements)
   bool isEmpty() const;
 
@@ -265,6 +267,9 @@ public:
 
   /// @brief Method to compute and return the maximum extents for all the used accessors/fields
   std::unordered_map<int, Extents> const computeEnclosingAccessExtents() const;
+
+  /// @brief Get the pair <AccessID, field> for the fields used within the multi-stage
+  std::unordered_map<int, Field> getFields2() const;
 
 private:
   void forEachStatementAccessesPairImpl(

@@ -264,6 +264,7 @@ void StencilFunctionInstantiation::renameCallerAccessID(int oldAccessID, int new
 
 std::string StencilFunctionInstantiation::getNameFromAccessID(int AccessID) const {
   // As we store the caller accessIDs, we have to get the name of the field from the context!
+  // TODO have a check for what is a literal range
   if(AccessID < 0)
     return getNameFromLiteralAccessID(AccessID);
   else if(stencilInstantiation_->isField(AccessID) ||

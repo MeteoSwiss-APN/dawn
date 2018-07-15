@@ -30,6 +30,9 @@ namespace dawn {
 class StatementAccessesPair {
   std::shared_ptr<Statement> statement_;
 
+  // In case of a non function call stmt, the accesses are stored in callerAccesses_, while
+  // calleeAccesses_ will be nullptr
+
   // Accesses of the statement. If the statement is part of a stencil-function, this will store the
   // caller accesses. The caller access will have the initial offset added (e.g if a stencil
   // function is called with `avg(u(i+1))` the initial offset of `u` is `[1, 0, 0]`).
