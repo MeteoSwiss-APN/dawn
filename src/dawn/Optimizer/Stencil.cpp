@@ -123,8 +123,7 @@ std::vector<Stencil::FieldInfo> Stencil::getFields(bool withTemporaries) const {
   for(const auto& AccessID : fieldAccessIDs) {
     std::string name = stencilInstantiation_.getNameFromAccessID(AccessID);
     bool isTemporary = stencilInstantiation_.isTemporaryField(AccessID);
-    Array3i specifiedDimension =
-        stencilInstantiation_.getFieldDimensionsMask(AccessID);
+    Array3i specifiedDimension = stencilInstantiation_.getFieldDimensionsMask(AccessID);
 
     if(isTemporary) {
       if(withTemporaries) {
@@ -378,7 +377,8 @@ Stencil::getLifetime(const std::unordered_set<int>& AccessIDs) const {
 }
 
 Stencil::Lifetime Stencil::getLifetime(const int AccessID) const {
-  boost::optional<StatementPosition> Begin;
+  // use make_optional(false, ...) just to avoid a gcc warning
+  boost::optional<StatementPosition> Begin = boost::make_optional(false, StatementPosition{});
   StatementPosition End;
 
   int multiStageIdx = 0;
@@ -487,11 +487,10 @@ std::unordered_map<int, Extents> const Stencil::computeEnclosingAccessExtents() 
         e.add(stage->getExtents());
         // merge with the current minimum/maximum extent for the given field
         auto finder = maxExtents_.find(stage->getFields()[accessorIdx].getAccessID());
-        if(finder != maxExtents_.end()){
-            finder->second.merge(e);
-        }
-        else{
-            maxExtents_.emplace(stage->getFields()[accessorIdx].getAccessID(),e);
+        if(finder != maxExtents_.end()) {
+          finder->second.merge(e);
+        } else {
+          maxExtents_.emplace(stage->getFields()[accessorIdx].getAccessID(), e);
         }
       }
     }

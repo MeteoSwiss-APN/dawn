@@ -426,14 +426,19 @@ bool PassTemporaryToStencilFunction::run(
                                                     tempAccessIDsToReplace, localVarAccessIDs);
 
       // Iterate multi-stages backwards
-      for(auto multiStage : stencilPtr->getMultiStages()) {
+      for(auto multiStageIt = stencilPtr->getMultiStages().rbegin();
+          multiStageIt != stencilPtr->getMultiStages().rend(); ++multiStageIt) {
         std::unordered_map<int, TemporaryFunctionProperties> temporaryFieldExprToFunction;
 
-        for(const auto& stagePtr : multiStage->getStages()) {
+        for(auto stageIt = (*multiStageIt)->getStages().rbegin();
+            stageIt != (*multiStageIt)->getStages().rend(); ++stageIt) {
 
-          for(const auto& doMethodPtr : stagePtr->getDoMethods()) {
-            for(auto& stmtAccessPair : doMethodPtr->getStatementAccessesPairs()) {
-              const std::shared_ptr<Statement> stmt = stmtAccessPair->getStatement();
+          for(auto doMethodIt = (*stageIt)->getDoMethods().rbegin();
+              doMethodIt != (*stageIt)->getDoMethods().rend(); doMethodIt++) {
+            for(auto stmtAccessPairIt = (*doMethodIt)->getStatementAccessesPairs().rbegin();
+                stmtAccessPairIt != (*doMethodIt)->getStatementAccessesPairs().rend();
+                stmtAccessPairIt++) {
+              const std::shared_ptr<Statement> stmt = (*stmtAccessPairIt)->getStatement();
 
               if(stmt->ASTStmt->getKind() != Stmt::SK_ExprStmt)
                 continue;
