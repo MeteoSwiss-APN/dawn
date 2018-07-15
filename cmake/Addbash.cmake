@@ -14,7 +14,7 @@
 
 find_package(bash REQUIRED)
 
-mchbuild_export_package(
+yoda_export_package(
   NAME bash
   FOUND ${BASH_FOUND}
   EXECUTABLE ${BASH_EXECUTABLE}

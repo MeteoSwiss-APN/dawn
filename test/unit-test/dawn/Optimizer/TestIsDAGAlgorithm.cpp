@@ -1,13 +1,13 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -29,7 +29,7 @@ public:
   TestGraph() : Base(nullptr) {}
   void insertEdge(int IDFrom, int IDTo) {
     Base::insertNode(IDFrom);
-    Base::insertEdge(IDFrom, IDTo, Extents{});
+    Base::insertEdge(IDFrom, IDTo, Extents{0, 0, 0, 0, 0, 0});
   }
 };
 
@@ -46,59 +46,56 @@ TEST(IsDAGAlgorithmTest, Test2) {
 
   graph.insertEdge(0, 1);
   graph.insertEdge(1, 0);
-  
 
   EXPECT_FALSE(graph.isDAG());
 }
 
 TEST(IsDAGAlgorithmTest, Test3) {
   TestGraph graph;
-  
-  
+
   graph.insertEdge(0, 1);
   graph.insertEdge(1, 0);
   graph.insertEdge(2, 1);
-  
+
   EXPECT_FALSE(graph.isDAG());
 }
 
-
 TEST(IsDAGAlgorithmTest, Test4) {
   TestGraph graph;
-  
-  // Internal cycles are ok!  
+
+  // Internal cycles are ok!
   graph.insertEdge(0, 1);
   graph.insertEdge(1, 2);
   graph.insertEdge(2, 1);
   graph.insertEdge(2, 3);
-  
+
   EXPECT_TRUE(graph.isDAG());
 }
 
 TEST(IsDAGAlgorithmTest, Test5) {
   TestGraph graph;
-  
+
   graph.insertEdge(0, 1);
   graph.insertEdge(1, 2);
   graph.insertEdge(2, 1);
   graph.insertEdge(2, 3);
-  
+
   graph.insertEdge(4, 5);
-  
+
   EXPECT_TRUE(graph.isDAG());
 }
 
 TEST(IsDAGAlgorithmTest, Test6) {
   TestGraph graph;
-  
+
   graph.insertEdge(0, 1);
   graph.insertEdge(1, 2);
   graph.insertEdge(2, 1);
   graph.insertEdge(2, 3);
-  
+
   graph.insertEdge(4, 5);
   graph.insertEdge(5, 4);
-  
+
   EXPECT_FALSE(graph.isDAG());
 }
 

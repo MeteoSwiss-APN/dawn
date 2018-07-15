@@ -96,7 +96,8 @@ public:
   ///      X  ------------------------------- X
   ///    IDFrom                              IDTo
   /// @endverbatim
-  void insertEdge(int IDFrom, int IDTo, EdgeData data = EdgeData()) {
+  template <typename TEdgeData>
+  void insertEdge(int IDFrom, int IDTo, TEdgeData&& data) {
 
     // Create `IDTo` node (We shift the burden to the `insertNode` to take appropriate actions
     // if the node does already exist)
@@ -104,7 +105,8 @@ public:
 
     // Traverse the edge-list of node `IDFrom` to check if we already have such an edge
     auto& edgeList = adjacencyList_[getVertexIDFromID(IDFrom)];
-    const Edge edge{data, getVertexIDFromID(IDFrom), getVertexIDFromID(IDTo)};
+    const Edge edge{std::forward<TEdgeData>(data), getVertexIDFromID(IDFrom),
+                    getVertexIDFromID(IDTo)};
 
     auto it = std::find_if(edgeList->begin(), edgeList->end(), [&edge](const Edge& e) {
       return e.FromVertexID == edge.FromVertexID && e.ToVertexID == edge.ToVertexID;

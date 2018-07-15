@@ -92,7 +92,7 @@ bool PassTemporaryMerger::run(const std::shared_ptr<StencilInstantiation>& stenc
           int newAccessIDOfLastTemporary = AccessIDOfLastTemporary;
 
           if(stencilInstantiation->isTemporaryField(ToAccessID) && AccessIDOfLastTemporary != -1) {
-            TemporaryDAG.insertEdge(AccessIDOfLastTemporary, ToAccessID);
+            TemporaryDAG.insertEdge(AccessIDOfLastTemporary, ToAccessID, Extents{0, 0, 0, 0, 0, 0});
             newAccessIDOfLastTemporary = ToAccessID;
           }
 
@@ -127,7 +127,7 @@ bool PassTemporaryMerger::run(const std::shared_ptr<StencilInstantiation>& stenc
           continue;
 
         if(FromLifetime.overlaps(ToLifetime)) {
-          TemporaryDAG.insertEdge(FromAccessID, ToAccessID);
+          TemporaryDAG.insertEdge(FromAccessID, ToAccessID, Extents{0, 0, 0, 0, 0, 0});
         }
       }
     }

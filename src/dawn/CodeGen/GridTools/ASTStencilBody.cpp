@@ -25,9 +25,10 @@ namespace codegen {
 namespace gt {
 
 ASTStencilBody::ASTStencilBody(const StencilInstantiation* stencilInstantiation,
-                               const std::unordered_map<Interval, std::string>& intervalToNameMap)
-    : ASTCodeGenCXX(), instantiation_(stencilInstantiation), intervalToNameMap_(intervalToNameMap),
-      offsetPrinter_(",", "(", ")"), currentFunction_(nullptr), nestingOfStencilFunArgLists_(0) {}
+                               const std::unordered_set<IntervalProperties>& intervalProperties)
+    : ASTCodeGenCXX(), instantiation_(stencilInstantiation),
+      intervalProperties_(intervalProperties), offsetPrinter_(",", "(", ")"),
+      currentFunction_(nullptr), nestingOfStencilFunArgLists_(0) {}
 
 ASTStencilBody::~ASTStencilBody() {}
 
@@ -119,7 +120,7 @@ void ASTStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
 
   ss_ << (triggerCallProc_ ? "gridtools::call_proc<" : "gridtools::call<")
       << StencilFunctionInstantiation::makeCodeGenName(*stencilFun) << ", "
-      << intervalToNameMap_.find(stencilFun->getInterval())->second << ">::with(eval";
+      << intervalProperties_.find(stencilFun->getInterval())->name_ << ">::with(eval";
 
   triggerCallProc_ = false;
 

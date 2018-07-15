@@ -99,14 +99,13 @@ reportAccessesImpl(FieldAccessIDToStringFunctionType&& fieldAccessIDToStringFunc
 
 } // anonymous namespace
 
-const Extents Accesses::NullExtents{};
-
 void Accesses::mergeReadOffset(int AccessID, const Array3i& offset) {
   auto it = readAccesses_.find(AccessID);
-  if(it != readAccesses_.end())
+  if(it != readAccesses_.end()) {
     it->second.merge(offset);
-  else
+  } else {
     readAccesses_.emplace(AccessID, Extents(offset));
+  }
 }
 
 void Accesses::mergeReadExtent(int AccessID, const Extents& extent) {
@@ -153,20 +152,18 @@ bool Accesses::hasReadAccess(int accessID) const { return readAccesses_.count(ac
 
 bool Accesses::hasWriteAccess(int accessID) const { return writeAccesses_.count(accessID); }
 
-const Extents& Accesses::getReadAccess(int AccessID) const {
-  auto it = readAccesses_.find(AccessID);
-  if(it != readAccesses_.end())
-    return it->second;
-  else
-    return Accesses::NullExtents;
+bool Accesses::hasAccess(int accessID) const {
+  return hasReadAccess(accessID) || hasWriteAccess(accessID);
+}
+
+Extents const& Accesses::getReadAccess(int AccessID) const {
+  DAWN_ASSERT(readAccesses_.count(AccessID));
+  return readAccesses_.at(AccessID);
 }
 
 const Extents& Accesses::getWriteAccess(int AccessID) const {
-  auto it = writeAccesses_.find(AccessID);
-  if(it != writeAccesses_.end())
-    return it->second;
-  else
-    return Accesses::NullExtents;
+  DAWN_ASSERT(writeAccesses_.count(AccessID));
+  return writeAccesses_.at(AccessID);
 }
 
 // Yes.. this is an abomination down here. One would need to factor the common fanctionality from

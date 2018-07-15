@@ -212,7 +212,8 @@ public:
 
   /// @brief Recursively merge the `extent` with all fields of the `curStencilFunCall` and apply
   /// them to the current *caller* accesses
-  void mergeExtentWithAllFields(const Extents& extent,
+  template <typename TExtent>
+  void mergeExtentWithAllFields(TExtent&& extent,
                                 std::shared_ptr<StencilFunctionInstantiation> curStencilFunCall,
                                 std::set<int>& appliedAccessIDs) {
     for(const Field& field : curStencilFunCall->getCallerFields()) {
@@ -224,8 +225,9 @@ public:
       if(curStencilFunCall->isProvidedByStencilFunctionCall(AccessID)) {
         // The field is provided by a stencil function, forward to the callee
         mergeExtentWithAllFields(
-            extent, curStencilFunCall->getFunctionInstantiationOfArgField(
-                        curStencilFunCall->getArgumentIndexFromCallerAccessID(AccessID)),
+            std::forward<TExtent>(extent),
+            curStencilFunCall->getFunctionInstantiationOfArgField(
+                curStencilFunCall->getArgumentIndexFromCallerAccessID(AccessID)),
             appliedAccessIDs);
 
       } else {
@@ -233,11 +235,11 @@ public:
 
         if(field.getIntend() == Field::IK_Input || field.getIntend() == Field::IK_InputOutput)
           for(auto& callerAccesses : callerAccessesList_)
-            callerAccesses->addReadExtent(AccessID, extent);
+            callerAccesses->addReadExtent(AccessID, std::forward<TExtent>(extent));
 
         if(field.getIntend() == Field::IK_Output || field.getIntend() == Field::IK_InputOutput)
           for(auto& callerAccesses : callerAccessesList_)
-            callerAccesses->addWriteExtent(AccessID, extent);
+            callerAccesses->addWriteExtent(AccessID, std::forward<TExtent>(extent));
       }
     }
   }
@@ -375,14 +377,16 @@ public:
 
     if(isa<FieldAccessExpr>(expr->getLeft().get())) {
       auto field = std::static_pointer_cast<FieldAccessExpr>(expr->getLeft());
-      mergeWriteOffset(field);
       if(readAndWrite)
         mergeReadOffset(field);
+
+      mergeWriteOffset(field);
     } else if(isa<VarAccessExpr>(expr->getLeft().get())) {
       auto var = std::static_pointer_cast<VarAccessExpr>(expr->getLeft());
-      mergeWriteOffset(var);
       if(readAndWrite)
         mergeReadOffset(var);
+
+      mergeWriteOffset(var);
     }
 
     // RHS are read accesses

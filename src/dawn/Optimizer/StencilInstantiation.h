@@ -158,6 +158,9 @@ class StencilInstantiation : NonCopyable {
   /// Set of all the IDs that are locally cached
   std::set<int> CachedVariableSet_;
 
+  /// Map of Field ID's to their respecive legal dimensions for offsets if specified in the code
+  std::unordered_map<int, Array3i> fieldIDToInitializedDimensionsMap_;
+
 public:
   /// @brief Assemble StencilInstantiation for stencil
   StencilInstantiation(OptimizerContext* context, const std::shared_ptr<sir::Stencil>& SIRStencil,
@@ -544,6 +547,16 @@ public:
       DAWN_ASSERT_MSG(false, "Boundary Condition does not have a matching Extent");
     }
     return BoundaryConditionToExtentsMap_.find(stmt)->second;
+  }
+
+  /// @brief this checks if the user specialized the field to a dimensionality. If not all
+  /// dimensions are allow for off-center acesses and hence, {1,1,1} is returned. If we got a
+  /// specialization, it is returned
+  Array3i getFieldDimensionsMask(int FieldID) {
+    if(fieldIDToInitializedDimensionsMap_.count(FieldID) == 0) {
+      return Array3i{{1, 1, 1}};
+    }
+    return fieldIDToInitializedDimensionsMap_.find(FieldID)->second;
   }
 
 private:

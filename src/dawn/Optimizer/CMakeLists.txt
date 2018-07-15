@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-mchbuild_add_library(
+yoda_add_library(
   NAME DawnOptimizer
   SOURCES AccessComputation.h
           AccessComputation.cpp   
@@ -34,10 +34,16 @@ mchbuild_add_library(
           Extents.cpp
           Extents.h
           Field.h
+          FieldAccessExtents.cpp
+          FieldAccessExtents.h
           Interval.cpp
           Interval.h
+          IntervalAlgorithms.cpp
+          IntervalAlgorithms.h
           LoopOrder.cpp    
           LoopOrder.h     
+          MultiInterval.cpp
+          MultiInterval.h
           MultiStage.cpp 
           MultiStage.h
           OptimizerContext.cpp 

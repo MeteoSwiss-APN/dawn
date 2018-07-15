@@ -30,32 +30,32 @@ project(dawn C CXX)
 cmake_minimum_required(VERSION 3.3)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-set(MCHBUILD_ROOT CACHE PATH "path to mchbuild package")
+set(YODA_ROOT CACHE PATH "path to yoda package")
 
-if("${MCHBUILD_ROOT}" STREQUAL "")
-  message(FATAL_ERROR "MCHBUILD_ROOT not found! Try specifying it in the environment via -DMCHBUILD_ROOT=<>")
+if("${YODA_ROOT}" STREQUAL "")
+  message(FATAL_ERROR "YODA_ROOT not found! Try specifying it in the environment via -DYODA_ROOT=<>")
 endif()
-list(APPEND CMAKE_MODULE_PATH "${MCHBUILD_ROOT}/cmake")
-include(mchbuildInit)
-mchbuild_init()
+list(APPEND CMAKE_MODULE_PATH "${YODA_ROOT}/cmake")
+include(yodaInit)
+yoda_init()
 
 include(DawnCMakeInit)
 set(DAWN_ROOT ${CMAKE_CURRENT_LIST_DIR})
 
 dawn_cmake_init()
 
-include(mchbuildAddLibrary)
-include(mchbuildAddTargetClangFormat)
-include(mchbuildAddTargetCleanAll)
-include(mchbuildCombineLibraries)
-include(mchbuildConfigureFile)
-include(mchbuildCreatePackageString)
-include(mchbuildExportPackage)
-include(mchbuildGetGitHeadRevision)
-include(mchbuildMakeStringPair)
-include(mchbuildReportResult)
-include(mchbuildSetCXXStandard)
-include(mchbuildEnableFullRPATH)
+include(yodaAddLibrary)
+include(yodaAddTargetClangFormat)
+include(yodaAddTargetCleanAll)
+include(yodaCombineLibraries)
+include(yodaConfigureFile)
+include(yodaCreatePackageString)
+include(yodaExportPackage)
+include(yodaGetGitHeadRevision)
+include(yodaMakeStringPair)
+include(yodaReportResult)
+include(yodaSetCXXStandard)
+include(yodaEnableFullRPATH)
 
 # Include the Dawn specific options, definitions and macros
 include(DawnOptions)
@@ -63,13 +63,13 @@ include(DawnDefinitions)
 include(DawnMacros)
 
 # Set C++ standard
-mchbuild_set_cxx_standard(c++11)
+yoda_set_cxx_standard(c++11)
 
 # Set C++ flags
 dawn_set_cxx_flags()
 
 # Add custom targets
-mchbuild_add_target_clean_all(
+yoda_add_target_clean_all(
   ${CMAKE_BINARY_DIR}/docs 
   ${CMAKE_BINARY_DIR}/sphinx
   ${CMAKE_BINARY_DIR}/src
@@ -81,18 +81,18 @@ mchbuild_add_target_clean_all(
 
 # Output summary of the configuration
 macro(make_config_string FIRST SECOND)
-  mchbuild_make_string_pair(${FIRST} ": ${SECOND}" 20 out)
+  yoda_make_string_pair(${FIRST} ": ${SECOND}" 20 out)
   list(APPEND config_info ${out})
 endmacro()
 make_config_string("Dawn version" ${DAWN_FULL_VERSION_STR})
-make_config_string("Platform" ${MCHBUILD_PLATFORM_STRING})
-make_config_string("Architecture" ${MCHBUILD_ARCHITECTURE_STRING})
-make_config_string("Compiler" ${MCHBUILD_COMPILER_STRING})
+make_config_string("Platform" ${YODA_PLATFORM_STRING})
+make_config_string("Architecture" ${YODA_ARCHITECTURE_STRING})
+make_config_string("Compiler" ${YODA_COMPILER_STRING})
 make_config_string("Build type" ${CMAKE_BUILD_TYPE})
 make_config_string("Asserts" ${DAWN_ASSERTS})
 make_config_string("Build shared " ${BUILD_SHARED_LIBS})
 make_config_string("Install prefix" ${CMAKE_INSTALL_PREFIX})
-mchbuild_report_result("Configuration summary" ${config_info})
+yoda_report_result("Configuration summary" ${config_info})
 
 # Include the packages 
 if(DAWN_DOCUMENTATION)
@@ -101,28 +101,28 @@ endif()
 
 foreach(package bash Boost Protobuf ccache clang-format ${doc_packages})
   include("Add${package}")
-  mchbuild_create_package_string(${package} info)
+  yoda_create_package_string(${package} info)
   list(APPEND package_info ${info})
 
   string(TOUPPER ${package} PACKAGE)
 
-  list(APPEND DAWN_EXTERNAL_LIBRARIES ${MCHBUILD_${PACKAGE}_LIBRARIES})
-  list(APPEND DAWN_EXTERNAL_INCLUDE_DIRS ${MCHBUILD_${PACKAGE}_INCLUDE_DIRS})
-  list(APPEND DAWN_EXTERNAL_DEFINITIONS ${MCHBUILD_${PACKAGE}_DEFINITIONS})
+  list(APPEND DAWN_EXTERNAL_LIBRARIES ${YODA_${PACKAGE}_LIBRARIES})
+  list(APPEND DAWN_EXTERNAL_INCLUDE_DIRS ${YODA_${PACKAGE}_INCLUDE_DIRS})
+  list(APPEND DAWN_EXTERNAL_DEFINITIONS ${YODA_${PACKAGE}_DEFINITIONS})
 
 endforeach()
 
 # Enable RPath support
-mchbuild_enable_full_rpath("${CMAKE_INSTALL_PREFIX}/${DAWN_INSTALL_LIB_DIR};${DAWN_PROTOBUF_RPATH_DIR}")
+yoda_enable_full_rpath("${CMAKE_INSTALL_PREFIX}/${DAWN_INSTALL_LIB_DIR};${DAWN_PROTOBUF_RPATH_DIR}")
 
 
 include_directories(SYSTEM ${DAWN_EXTERNAL_INCLUDE_DIRS})
 add_definitions(${DAWN_EXTERNAL_DEFINITIONS})
 
-mchbuild_report_result("Package summary" ${package_info})
+yoda_report_result("Package summary" ${package_info})
 
 # Add clang-format target
-mchbuild_add_target_clang_format(DIRECTORIES ${CMAKE_SOURCE_DIR}/src EXTENSION ".h;.cpp")
+yoda_add_target_clang_format(DIRECTORIES ${CMAKE_SOURCE_DIR}/src EXTENSION ".h;.cpp")
 
 # Build dawn
 include_directories(${CMAKE_SOURCE_DIR}/src)

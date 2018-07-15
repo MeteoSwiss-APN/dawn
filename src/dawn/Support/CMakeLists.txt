@@ -12,9 +12,9 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-mchbuild_configure_file(Config.h.cmake)
+yoda_configure_file(Config.h.cmake)
 
-mchbuild_add_library(
+yoda_add_library(
   NAME DawnSupport
   SOURCES AlignOf.h
           Array.cpp
@@ -30,6 +30,8 @@ mchbuild_add_library(
           FileUtil.h
           Format.h
           HashCombine.h
+          IndexGenerator.cpp
+          IndexGenerator.h
           IndexRange.h
           Json.h
           Logging.cpp

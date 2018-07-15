@@ -31,8 +31,8 @@ class StatementAccessesPair;
 ///
 /// @ingroup optimizer
 class DoMethod {
-  Stage* stage_;
   Interval interval_;
+  const long unsigned int id_;
 
   std::shared_ptr<DependencyGraphAccesses> dependencyGraph_;
   std::vector<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs_;
@@ -40,7 +40,7 @@ class DoMethod {
 public:
   /// @name Constructors and Assignment
   /// @{
-  DoMethod(Stage* stage, Interval interval);
+  DoMethod(Interval interval);
 
   DoMethod(const DoMethod&) = default;
   DoMethod(DoMethod&&) = default;
@@ -57,8 +57,9 @@ public:
   Interval& getInterval();
   const Interval& getInterval() const;
 
-  /// @brief Get the associated `stage`
-  Stage* getStage();
+  void setInterval(Interval const& interval);
+
+  unsigned long int getID() const { return id_; }
 
   /// @brief Set the dependency graph of this Do-Method
   void setDependencyGraph(const std::shared_ptr<DependencyGraphAccesses>& DG);
@@ -70,12 +71,19 @@ public:
   /// @brief computes the maximum extent among all the accesses of accessID
   boost::optional<Extents> computeMaximumExtents(const int accessID) const;
 
-  /// @brief computes the interval where an accessId is used (extended by the extent of the
-  /// access)
-  boost::optional<Interval> computeEnclosingAccessInterval(const int accessID) const;
-
   /// @brief true if it is empty
   bool isEmptyOrNullStmt() const;
+
+  /// @param accessID accessID for which the enclosing interval is computed
+  /// @param mergeWidhDoInterval determines if the extent of the access is merged with the interval
+  /// of the do method.
+  /// Example:
+  ///    do(kstart+2,kend) return u[k+1]
+  /// will return Interval{3,kend+1} if mergeWithDoInterval is false
+  /// will return Interval{2,kend+1} (which is Interval{3,kend+1}.merge(Interval{2,kend})) if
+  /// mergeWithDoInterval is true
+  boost::optional<Interval> computeEnclosingAccessInterval(const int accessID,
+                                                           const bool mergeWithDoInterval) const;
 };
 
 } // namespace dawn

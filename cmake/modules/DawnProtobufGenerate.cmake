@@ -12,8 +12,8 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(mchbuildIncludeGuard)
-mchbuild_include_guard()
+include(yodaIncludeGuard)
+yoda_include_guard()
 
 include(CMakeParseArguments)
 

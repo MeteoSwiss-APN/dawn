@@ -14,11 +14,12 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-include(mchbuildSetDownloadDir)
-include(mchbuildFindPackage)
+include(yodaSetDownloadDir)
+include(yodaFindPackage)
+include(yodaReportResult)
 
-# Set the default download directory (define GTCLANG_ALL_DOWNLOAD_DIR)
-mchbuild_set_download_dir()
+# Set the default download directory (define YODA_DOWNLOAD_DIR)
+yoda_set_download_dir()
 
 #
 # Protobuf
@@ -26,15 +27,15 @@ mchbuild_set_download_dir()
 set(protobuf_version "3.4.0")
 set(protobuf_version_short "3.4")
 
-mchbuild_find_package(
+yoda_find_package(
   PACKAGE Protobuf
   PACKAGE_ARGS ${protobuf_version_short} NO_MODULE 
   REQUIRED_VARS Protobuf_DIR
   BUILD_VERSION ${protobuf_version}
   ADDITIONAL
-    DOWNLOAD_DIR ${MCHBUILD_DOWNLOAD_DIR}
+    DOWNLOAD_DIR ${YODA_DOWNLOAD_DIR}
     URL "https://github.com/google/protobuf/archive/v${protobuf_version}.tar.gz"
     URL_MD5 "1d077a7d4db3d75681f5c333f2de9b1a"
 )
 
-#dawn_report_result("Package summary" ${GTCLANG_ALL_PACKAGE_INFO})
+yoda_report_result("Package summary" ${GTCLANG_ALL_PACKAGE_INFO})

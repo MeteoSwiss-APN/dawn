@@ -16,6 +16,7 @@
 #define DAWN_OPTIMIZER_MULTISTAGE_H
 
 #include "dawn/Optimizer/Cache.h"
+#include "dawn/Optimizer/MultiInterval.h"
 #include "dawn/Optimizer/LoopOrder.h"
 #include "dawn/Optimizer/Stage.h"
 #include <deque>
@@ -65,6 +66,8 @@ public:
   /// @brief Get the loop order
   LoopOrderKind getLoopOrder() const { return loopOrder_; }
 
+  std::vector<DoMethod> computeOrderedDoMethods() const;
+
   /// @brief Set the loop order
   void setLoopOrder(LoopOrderKind loopOrder) { loopOrder_ = loopOrder; }
 
@@ -97,12 +100,13 @@ public:
 
   /// @brief Set a cache
   Cache& setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy policy, int AccessID,
-                  Interval const& interval);
+                  Interval const& interval, boost::optional<Cache::window> w);
 
   Cache& setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy policy, int AccessID);
 
   /// @brief computes the interval where an accessId is used (extended by the extent of the access)
-  boost::optional<Interval> computeEnclosingAccessInterval(const int accessID) const;
+  boost::optional<Interval> computeEnclosingAccessInterval(const int accessID,
+                                                           const bool mergeWithDoInterval) const;
 
   /// @brief Is the field given by the `AccessID` cached?
   bool isCached(int AccessID) const { return caches_.count(AccessID); }
@@ -122,7 +126,7 @@ public:
   std::unordered_map<int, Field> getFields() const;
 
   /// @brief Get the enclosing interval of all access to temporaries
-  std::shared_ptr<Interval> getEnclosingAccessIntervalTemporaries() const;
+  boost::optional<Interval> getEnclosingAccessIntervalTemporaries() const;
 
   /// @brief Get the caches
   std::unordered_map<int, Cache>& getCaches() { return caches_; }
@@ -133,6 +137,9 @@ public:
 
   /// @brief true if it contains no stages or the stages are empty
   bool isEmptyOrNullStmt() const;
+
+  //TODO doc
+  dawn::MultiInterval computeReadAccessInterval(int accessID) const;
 };
 
 } // namespace dawn

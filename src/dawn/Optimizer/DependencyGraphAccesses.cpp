@@ -254,19 +254,17 @@ bool DependencyGraphAccesses::isDAG() const {
 
 std::vector<std::size_t> DependencyGraphAccesses::getOutputVertexIDs() const {
   std::vector<std::size_t> outputVertexIDs;
-  getOutputVertexIDsImpl(
-      *this, vertices_,
-      [](const std::pair<int, Vertex>& IDVertexPair) { return IDVertexPair.second.VertexID; },
-      outputVertexIDs);
+  getOutputVertexIDsImpl(*this, vertices_, [](const std::pair<int, Vertex>& IDVertexPair) {
+    return IDVertexPair.second.VertexID;
+  }, outputVertexIDs);
   return outputVertexIDs;
 }
 
 std::vector<std::size_t> DependencyGraphAccesses::getInputVertexIDs() const {
   std::vector<std::size_t> inputVertexIDs;
-  getInputVertexIDsImpl(
-      *this, vertices_,
-      [](const std::pair<int, Vertex>& IDVertexPair) { return IDVertexPair.second.VertexID; },
-      inputVertexIDs);
+  getInputVertexIDsImpl(*this, vertices_, [](const std::pair<int, Vertex>& IDVertexPair) {
+    return IDVertexPair.second.VertexID;
+  }, inputVertexIDs);
   return inputVertexIDs;
 }
 
@@ -490,7 +488,7 @@ void DependencyGraphAccesses::toJSON(const std::string& file) const {
     json::json jvertex;
 
     jvertex["name"] = getVertexNameByVertexID(VertexID);
-    jvertex["extent"] = extentsToVec(extentMap[VertexID]);
+    jvertex["extent"] = extentsToVec(extentMap.at(VertexID));
 
     int AccessID = getIDFromVertexID(VertexID);
     if(instantiation_->isTemporaryField(AccessID))
