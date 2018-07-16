@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_DOMETHOD_H
-#define DAWN_OPTIMIZER_DOMETHOD_H
+#ifndef DAWN_IIR_DOMETHOD_H
+#define DAWN_IIR_DOMETHOD_H
 
 #include "dawn/Optimizer/Interval.h"
 #include <boost/optional.hpp>

@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_MULTISTAGE_H
-#define DAWN_OPTIMIZER_MULTISTAGE_H
+#ifndef DAWN_IIR_MULTISTAGE_H
+#define DAWN_IIR_MULTISTAGE_H
 
 #include "dawn/Optimizer/Cache.h"
 #include "dawn/Optimizer/MultiInterval.h"

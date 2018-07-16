@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_STENCILINSTANTIATION_H
-#define DAWN_OPTIMIZER_STENCILINSTANTIATION_H
+#ifndef DAWN_IIR_STENCILINSTANTIATION_H
+#define DAWN_IIR_STENCILINSTANTIATION_H
 
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/Stencil.h"

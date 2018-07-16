@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_STENCIL_H
-#define DAWN_OPTIMIZER_STENCIL_H
+#ifndef DAWN_IIR_STENCIL_H
+#define DAWN_IIR_STENCIL_H
 
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/SIR/SIR.h"

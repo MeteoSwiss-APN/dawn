@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_DEPENDENCYGRAPHACCESSES_H
-#define DAWN_OPTIMIZER_DEPENDENCYGRAPHACCESSES_H
+#ifndef DAWN_IIR_DEPENDENCYGRAPHACCESSES_H
+#define DAWN_IIR_DEPENDENCYGRAPHACCESSES_H
 
 #include "dawn/IIR/DependencyGraph.h"
 #include "dawn/Optimizer/Extents.h"

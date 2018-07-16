@@ -194,7 +194,7 @@ private:
     }
 
     // Add the single do method to the new Stage
-    assignmentStage->getDoMethods().clear();
+    assignmentStage->clearChildren();
     assignmentStage->addDoMethod(domethod);
     assignmentStage->update();
 

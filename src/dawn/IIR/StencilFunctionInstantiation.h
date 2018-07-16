@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_STENCILFUNCTIONINSTANTIATION_H
-#define DAWN_OPTIMIZER_STENCILFUNCTIONINSTANTIATION_H
+#ifndef DAWN_IIR_STENCILFUNCTIONINSTANTIATION_H
+#define DAWN_IIR_STENCILFUNCTIONINSTANTIATION_H
 
 #include "dawn/Optimizer/Extents.h"
 #include "dawn/Optimizer/Field.h"

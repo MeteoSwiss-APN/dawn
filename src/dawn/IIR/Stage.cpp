@@ -33,7 +33,9 @@ Stage::Stage(StencilInstantiation& context, MultiStage* multiStage, int StageID,
   DoMethods_.emplace_back(make_unique<DoMethod>(interval));
 }
 
-std::vector<std::unique_ptr<DoMethod>>& Stage::getDoMethods() { return DoMethods_; }
+// std::vector<std::unique_ptr<DoMethod>>& Stage::getDoMethods() { return DoMethods_; }
+
+void Stage::clearChildren() { DoMethods_.clear(); }
 
 const std::vector<std::unique_ptr<DoMethod>>& Stage::getDoMethods() const { return DoMethods_; }
 
@@ -286,6 +288,19 @@ const std::unordered_set<int>& Stage::getGlobalVariablesFromStencilFunctionCalls
 }
 
 const std::unordered_set<int>& Stage::getAllGlobalVariables() const { return allGlobalVariables_; }
+
+std::vector<std::unique_ptr<DoMethod>>::iterator Stage::childrenBegin() {
+  return DoMethods_.begin();
+}
+
+std::vector<std::unique_ptr<DoMethod>>::iterator Stage::childrenEnd() { return DoMethods_.end(); }
+
+std::vector<std::unique_ptr<DoMethod>>::iterator
+Stage::childrenErase(std::vector<std::unique_ptr<DoMethod>>::iterator it) {
+  return DoMethods_.erase(it);
+}
+
+bool Stage::childrenEmpty() const { return DoMethods_.empty(); }
 
 void Stage::addDoMethod(std::unique_ptr<DoMethod>& doMethod) {
   DAWN_ASSERT_MSG(std::find_if(DoMethods_.begin(), DoMethods_.end(),

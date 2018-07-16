@@ -71,7 +71,6 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
           curStageIt != multiStage.getStages().rend();) {
 
         iir::Stage& curStage = **curStageIt;
-        std::vector<std::unique_ptr<iir::DoMethod>>& curDoMethods = curStage.getDoMethods();
 
         bool updateFields = false;
 
@@ -82,43 +81,44 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
         }
 
         // Try to merge each Do-Method of our `curStage`
-        for(auto curDoMethodIt = curDoMethods.begin(); curDoMethodIt != curDoMethods.end();) {
+        for(auto curDoMethodIt = curStage.childrenBegin();
+            curDoMethodIt != curStage.childrenEnd();) {
           iir::DoMethod& curDoMethod = **curDoMethodIt;
 
           bool mergedDoMethod = false;
 
           // Start from the next stage and iterate upwards (i.e backwards) to find a suitable
           // stage to merge
-          for(auto candiateStageIt = std::next(curStageIt);
-              candiateStageIt != multiStage.getStages().rend(); ++candiateStageIt) {
-            iir::Stage& candiateStage = **candiateStageIt;
-            std::vector<std::unique_ptr<iir::DoMethod>>& candiateDoMethods =
-                candiateStage.getDoMethods();
+          for(auto candidateStageIt = std::next(curStageIt);
+              candidateStageIt != multiStage.getStages().rend(); ++candidateStageIt) {
+            iir::Stage& candidateStage = **candidateStageIt;
+            //            std::vector<std::unique_ptr<iir::DoMethod>>& candiateDoMethods =
+            //                candidateStage.getDoMethods();
 
             // Does the interval of `curDoMethod` overlap with any DoMethod interval in
-            // `candiateStage`?
-            auto candiateDoMethodIt = std::find_if(
-                candiateDoMethods.begin(), candiateDoMethods.end(),
+            // `candidateStage`?
+            auto candidateDoMethodIt = std::find_if(
+                candidateStage.childrenBegin(), candidateStage.childrenEnd(),
                 [&](const std::unique_ptr<iir::DoMethod>& doMethodPtr) {
                   return doMethodPtr->getInterval().overlaps(curDoMethod.getInterval());
                 });
 
-            if(candiateDoMethodIt != candiateDoMethods.end()) {
+            if(candidateDoMethodIt != candidateStage.childrenEnd()) {
 
               // Check if our interval exists (Note that if we overlap with a DoMethod but our
               // interval does not exists, we cannot merge ourself into this stage).
-              candiateDoMethodIt =
-                  std::find_if(candiateDoMethods.begin(), candiateDoMethods.end(),
+              candidateDoMethodIt =
+                  std::find_if(candidateStage.childrenBegin(), candidateStage.childrenEnd(),
                                [&](const std::unique_ptr<iir::DoMethod>& doMethodPtr) {
                                  return doMethodPtr->getInterval() == curDoMethod.getInterval();
                                });
 
-              if(candiateDoMethodIt != candiateDoMethods.end()) {
+              if(candidateDoMethodIt != candidateStage.childrenEnd()) {
 
                 // Check if we can append our `curDoMethod` to that `candiateDoMethod`. We need
                 // to check if the resulting dep. graph is a DAG and does not contain any horizontal
                 // dependencies
-                iir::DoMethod& candiateDoMethod = **candiateDoMethodIt;
+                iir::DoMethod& candiateDoMethod = **candidateDoMethodIt;
 
                 auto& candiateDepGraph = candiateDoMethod.getDependencyGraph();
                 auto& curDepGraph = curDoMethod.getDependencyGraph();
@@ -129,7 +129,8 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
                 if(newDepGraph->isDAG() &&
                    !hasHorizontalReadBeforeWriteConflict(newDepGraph.get())) {
                   if(MergeStagesOfStencil) {
-                    candiateStage.appendDoMethod(*curDoMethodIt, *candiateDoMethodIt, newDepGraph);
+                    candidateStage.appendDoMethod(*curDoMethodIt, *candidateDoMethodIt,
+                                                  newDepGraph);
                     mergedDoMethod = true;
 
                     // We moved one Do-Method away and thus broke our full axis
@@ -139,22 +140,22 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
                 }
               }
             } else {
-              // Interval does not exists in `candiateStage`, just insert our DoMethod
+              // Interval does not exists in `candidateStage`, just insert our DoMethod
               if(MergeDoMethodsOfStencil && MergeDoMethodsOfStage) {
-                candiateStage.addDoMethod(*curDoMethodIt);
+                candidateStage.addDoMethod(*curDoMethodIt);
                 mergedDoMethod = true;
                 break;
               }
             }
 
-            // The `curStage` depends on `candiateStage`, we thus cannot go further upwards
-            if(stageDAG->depends(curStage.getStageID(), candiateStage.getStageID())) {
+            // The `curStage` depends on `candidateStage`, we thus cannot go further upwards
+            if(stageDAG->depends(curStage.getStageID(), candidateStage.getStageID())) {
               break;
             }
           }
 
           if(mergedDoMethod) {
-            curDoMethodIt = curDoMethods.erase(curDoMethodIt);
+            curDoMethodIt = curStage.childrenErase(curDoMethodIt);
             updateFields = true;
           } else
             curDoMethodIt++;
@@ -162,7 +163,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
 
         // Stage is empty, remove it (the wirdness here stems from the fact that we have a reverse
         // iterator and erase expects a normal iterator ...)
-        if(curDoMethods.empty())
+        if(curStage.childrenEmpty())
           curStageIt = decltype(curStageIt)(multiStage.getStages().erase(--curStageIt.base()));
         else {
           if(updateFields)

@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_STATEMENTACCESSESPAIR_H
-#define DAWN_OPTIMIZER_STATEMENTACCESSESPAIR_H
+#ifndef DAWN_IIR_STATEMENTACCESSESPAIR_H
+#define DAWN_IIR_STATEMENTACCESSESPAIR_H
 
 #include "dawn/IIR/Accesses.h"
 #include "dawn/SIR/Statement.h"
