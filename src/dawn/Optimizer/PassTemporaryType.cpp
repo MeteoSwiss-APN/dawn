@@ -106,7 +106,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
     // Loop over all accesses
     for(auto& multiStagePtr : stencilPtr->getMultiStages()) {
       for(auto& stagePtr : multiStagePtr->getStages()) {
-        for(auto& doMethodPtr : stagePtr->getDoMethods()) {
+        for(const auto& doMethodPtr : stagePtr->getChildren()) {
           for(const auto& statementAccessesPair : doMethodPtr->getStatementAccessesPairs()) {
 
             auto processAccessMap = [&](const std::unordered_map<int, Extents>& accessMap) {

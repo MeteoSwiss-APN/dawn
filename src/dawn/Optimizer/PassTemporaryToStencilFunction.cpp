@@ -431,8 +431,8 @@ bool PassTemporaryToStencilFunction::run(
       for(auto stageIt = (*multiStageIt)->getStages().rbegin();
           stageIt != (*multiStageIt)->getStages().rend(); ++stageIt) {
 
-        for(auto doMethodIt = (*stageIt)->getDoMethods().rbegin();
-            doMethodIt != (*stageIt)->getDoMethods().rend(); doMethodIt++) {
+        for(auto doMethodIt = (*stageIt)->childrenRBegin();
+            doMethodIt != (*stageIt)->childrenREnd(); doMethodIt++) {
           for(auto stmtAccessPairIt = (*doMethodIt)->getStatementAccessesPairs().rbegin();
               stmtAccessPairIt != (*doMethodIt)->getStatementAccessesPairs().rend();
               stmtAccessPairIt++) {
@@ -455,7 +455,7 @@ bool PassTemporaryToStencilFunction::run(
       for(const auto& stagePtr : multiStage->getStages()) {
 
         bool isATmpReplaced = false;
-        for(const auto& doMethodPtr : stagePtr->getDoMethods()) {
+        for(const auto& doMethodPtr : stagePtr->getChildren()) {
           for(auto& stmtAccessPair : doMethodPtr->getStatementAccessesPairs()) {
             const std::shared_ptr<Statement> stmt = stmtAccessPair->getStatement();
 

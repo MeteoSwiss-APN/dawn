@@ -585,7 +585,7 @@ std::string GTCodeGen::generateStencilInstantiation(
         mplContainerMaxSize_ = std::max(mplContainerMaxSize_, arglist.size());
 
         // Generate Do-Method
-        for(const auto& doMethodPtr : stage.getDoMethods()) {
+        for(const auto& doMethodPtr : stage.getChildren()) {
           const iir::DoMethod& doMethod = *doMethodPtr;
 
           auto DoMethodCodeGen =

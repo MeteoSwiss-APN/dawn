@@ -78,9 +78,9 @@ TEST_F(TestComputeMaximumExtent, test_field_access_interval_02) {
   auto stage1_ptr = mss->getStages().begin();
   std::shared_ptr<iir::Stage> const& stage1 = *stage1_ptr;
 
-  ASSERT_TRUE((stage1->getDoMethods().size() == 2));
+  ASSERT_TRUE((stage1->getChildren().size() == 2));
 
-  const auto& doMethod1 = stage1->getDoMethods()[0];
+  const auto& doMethod1 = stage1->getChildren().at(0);
 
   ASSERT_TRUE((doMethod1->getStatementAccessesPairs().size() == 1));
   const auto& stmtAccessPair = doMethod1->getStatementAccessesPairs()[0];
@@ -107,11 +107,11 @@ TEST_F(TestComputeMaximumExtent, test_compute_maximum_extent_01) {
   auto stage1_ptr = mss->getStages().begin();
   std::shared_ptr<iir::Stage> const& stage1 = *stage1_ptr;
 
-  ASSERT_TRUE((stage1->getDoMethods().size() == 1));
+  ASSERT_TRUE((stage1->getChildren().size() == 1));
 
-  const auto& doMethod1 = stage1->getDoMethods()[0];
+  const auto& doMethod1 = stage1->getSingleDoMethod();
 
-  ASSERT_TRUE((doMethod1->computeMaximumExtents(stencilInstantiation->getAccessIDFromName("u")) ==
+  ASSERT_TRUE((doMethod1.computeMaximumExtents(stencilInstantiation->getAccessIDFromName("u")) ==
                Extents{0, 1, -1, 0, 0, 2}));
 }
 

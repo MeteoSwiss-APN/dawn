@@ -840,7 +840,8 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
   // Replace the the variable declaration with an assignment to the temporary field
   std::vector<std::shared_ptr<StatementAccessesPair>>& statementAccessesPairs =
       stencil->getStage(lifetime.Begin.StagePos)
-          ->getDoMethods()[lifetime.Begin.DoMethodIndex]
+          ->getChildren()
+          .at(lifetime.Begin.DoMethodIndex)
           ->getStatementAccessesPairs();
   std::shared_ptr<Statement> oldStatement =
       statementAccessesPairs[lifetime.Begin.StatementIndex]->getStatement();
@@ -901,7 +902,8 @@ void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil,
   // Replace the first access to the field with a VarDeclStmt
   std::vector<std::shared_ptr<StatementAccessesPair>>& statementAccessesPairs =
       stencil->getStage(lifetime.Begin.StagePos)
-          ->getDoMethods()[lifetime.Begin.DoMethodIndex]
+          ->getChildren()
+          .at(lifetime.Begin.DoMethodIndex)
           ->getStatementAccessesPairs();
   std::shared_ptr<Statement> oldStatement =
       statementAccessesPairs[lifetime.Begin.StatementIndex]->getStatement();
@@ -1281,7 +1283,7 @@ std::string StencilInstantiation::getOriginalNameFromAccessID(int AccessID) cons
   for(const auto& stencil : stencils_)
     for(const auto& multistage : stencil->getMultiStages())
       for(const auto& stage : multistage->getStages())
-        for(const auto& doMethod : stage->getDoMethods())
+        for(const auto& doMethod : stage->getChildren())
           for(const auto& statementAccessesPair : doMethod->getStatementAccessesPairs()) {
             statementAccessesPair->getStatement()->ASTStmt->accept(orignalNameGetter);
             if(orignalNameGetter.hasName())
@@ -1323,7 +1325,7 @@ void StencilInstantiation::dump() const {
         PrintDescLine<3> kline(Twine("Stage_") + Twine(k));
 
         int l = 0;
-        const auto& doMethods = stage->getDoMethods();
+        const auto& doMethods = stage->getChildren();
         for(const auto& doMethod : doMethods) {
           PrintDescLine<4> lline(Twine("Do_") + Twine(l) + " " +
                                  doMethod->getInterval().toString());
@@ -1369,7 +1371,7 @@ void StencilInstantiation::dumpAsJson(std::string filename, std::string passName
         json::json jStage;
 
         int l = 0;
-        for(const auto& doMethod : stage->getDoMethods()) {
+        for(const auto& doMethod : stage->getChildren()) {
           json::json jDoMethod;
 
           jDoMethod["Interval"] = doMethod->getInterval().toString();
@@ -1477,7 +1479,7 @@ void StencilInstantiation::reportAccesses() const {
   for(const auto& stencil : stencils_)
     for(const auto& multistage : stencil->getMultiStages())
       for(const auto& stage : multistage->getStages()) {
-        for(const auto& doMethod : stage->getDoMethods()) {
+        for(const auto& doMethod : stage->getChildren()) {
           const auto& statementAccessesPairs = doMethod->getStatementAccessesPairs();
 
           for(std::size_t i = 0; i < statementAccessesPairs.size(); ++i) {

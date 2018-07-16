@@ -88,7 +88,7 @@ MultiStage::getDependencyGraphOfInterval(const Interval& interval) const {
   auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(&stencilInstantiation_);
   std::for_each(stages_.begin(), stages_.end(), [&](const std::shared_ptr<Stage>& stagePtr) {
     if(interval.overlaps(stagePtr->getEnclosingExtendedInterval()))
-      std::for_each(stagePtr->getDoMethods().begin(), stagePtr->getDoMethods().end(),
+      std::for_each(stagePtr->childrenBegin(), stagePtr->childrenEnd(),
                     [&](const std::unique_ptr<DoMethod>& DoMethodPtr) {
                       dependencyGraph->merge(DoMethodPtr->getDependencyGraph().get());
                     });
@@ -99,7 +99,7 @@ MultiStage::getDependencyGraphOfInterval(const Interval& interval) const {
 std::shared_ptr<DependencyGraphAccesses> MultiStage::getDependencyGraphOfAxis() const {
   auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(&stencilInstantiation_);
   std::for_each(stages_.begin(), stages_.end(), [&](const std::shared_ptr<Stage>& stagePtr) {
-    std::for_each(stagePtr->getDoMethods().begin(), stagePtr->getDoMethods().end(),
+    std::for_each(stagePtr->childrenBegin(), stagePtr->childrenEnd(),
                   [&](const std::unique_ptr<DoMethod>& DoMethodPtr) {
                     dependencyGraph->merge(DoMethodPtr->getDependencyGraph().get());
                   });
@@ -134,7 +134,7 @@ std::vector<DoMethod> MultiStage::computeOrderedDoMethods() const {
 
   for(auto interval : partitionIntervals) {
     for(const auto& stagePtr : getStages()) {
-      for(const auto& doMethod : stagePtr->getDoMethods()) {
+      for(const auto& doMethod : stagePtr->getChildren()) {
 
         if(doMethod->getInterval().overlaps(interval)) {
           DoMethod partitionedDoMethod(*doMethod);
@@ -232,7 +232,7 @@ MultiStage::computeEnclosingAccessInterval(const int accessID,
 std::unordered_set<Interval> MultiStage::getIntervals() const {
   std::unordered_set<Interval> intervals;
   for(const auto& stagePtr : stages_)
-    for(const auto& doMethodPtr : stagePtr->getDoMethods())
+    for(const auto& doMethodPtr : stagePtr->getChildren())
       intervals.insert(doMethodPtr->getInterval());
   return intervals;
 }
@@ -297,8 +297,8 @@ std::unordered_map<int, Field> MultiStage::getFields() const {
 void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
   for(auto stageIt = getStages().begin(); stageIt != getStages().end(); ++stageIt) {
     Stage& stage = (**stageIt);
-    for(auto& doMethodPtr : stage.getDoMethods()) {
-      DoMethod& doMethod = *doMethodPtr;
+    for(const auto& doMethodPtr : stage.getChildren()) {
+      const DoMethod& doMethod = *doMethodPtr;
       renameAccessIDInStmts(&stencilInstantiation_, oldAccessID, newAccessID,
                             doMethod.getStatementAccessesPairs());
       renameAccessIDInAccesses(&stencilInstantiation_, oldAccessID, newAccessID,

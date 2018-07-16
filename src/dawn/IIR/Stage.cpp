@@ -30,31 +30,25 @@ Stage::Stage(StencilInstantiation& context, MultiStage* multiStage, int StageID,
              const Interval& interval)
     : stencilInstantiation_(context), multiStage_(multiStage), StageID_(StageID),
       extents_{0, 0, 0, 0, 0, 0} {
-  DoMethods_.emplace_back(make_unique<DoMethod>(interval));
+  insertChild(make_unique<DoMethod>(interval));
 }
-
-// std::vector<std::unique_ptr<DoMethod>>& Stage::getDoMethods() { return DoMethods_; }
-
-void Stage::clearChildren() { DoMethods_.clear(); }
-
-const std::vector<std::unique_ptr<DoMethod>>& Stage::getDoMethods() const { return DoMethods_; }
-
-bool Stage::hasSingleDoMethod() const { return (DoMethods_.size() == 1); }
 
 DoMethod& Stage::getSingleDoMethod() {
   DAWN_ASSERT_MSG(hasSingleDoMethod(), "stage contains multiple Do-Methods");
-  return *DoMethods_.front();
+  return *(getChildren().front());
 }
 
 const DoMethod& Stage::getSingleDoMethod() const {
   DAWN_ASSERT_MSG(hasSingleDoMethod(), "stage contains multiple Do-Methods");
-  return *DoMethods_.front();
+  return *(getChildren().front());
 }
+
+bool Stage::hasSingleDoMethod() const { return (children_.size() == 1); }
 
 boost::optional<Interval>
 Stage::computeEnclosingAccessInterval(const int accessID, const bool mergeWithDoInterval) const {
   boost::optional<Interval> interval;
-  for(auto const& doMethod : DoMethods_) {
+  for(auto const& doMethod : getChildren()) {
     boost::optional<Interval> doInterval =
         doMethod->computeEnclosingAccessInterval(accessID, mergeWithDoInterval);
 
@@ -71,15 +65,15 @@ Stage::computeEnclosingAccessInterval(const int accessID, const bool mergeWithDo
 std::vector<Interval> Stage::getIntervals() const {
   std::vector<Interval> intervals;
   std::transform(
-      DoMethods_.begin(), DoMethods_.end(), std::back_inserter(intervals),
+      childrenBegin(), childrenEnd(), std::back_inserter(intervals),
       [&](const std::unique_ptr<DoMethod>& doMethod) { return doMethod->getInterval(); });
   return intervals;
 }
 
 Interval Stage::getEnclosingInterval() const {
-  Interval interval = DoMethods_.front()->getInterval();
-  for(int i = 1; i < DoMethods_.size(); ++i)
-    interval.merge(DoMethods_[i]->getInterval());
+  Interval interval = getChildren().front()->getInterval();
+  for(const auto& doMethod : getChildren())
+    interval.merge(doMethod->getInterval());
   return interval;
 }
 
@@ -99,14 +93,14 @@ bool Stage::overlaps(const Stage& other) const {
   if(!getEnclosingExtendedInterval().overlaps(other.getEnclosingExtendedInterval()))
     return false;
 
-  for(const auto& otherDoMethodPtr : other.getDoMethods())
+  for(const auto& otherDoMethodPtr : other.getChildren())
     if(overlaps(otherDoMethodPtr->getInterval(), other.getFields()))
       return true;
   return false;
 }
 
 bool Stage::overlaps(const Interval& interval, ArrayRef<Field> fields) const {
-  for(const auto& doMethodPtr : DoMethods_) {
+  for(const auto& doMethodPtr : getChildren()) {
     const Interval& thisInterval = doMethodPtr->getInterval();
 
     for(const Field& thisField : getFields()) {
@@ -181,7 +175,7 @@ void Stage::update() {
 
   CaptureStencilFunctionCallGlobalParams functionCallGlobaParamVisitor(
       globalVariablesFromStencilFunctionCalls_, stencilInstantiation_);
-  for(const auto& doMethodPtr : DoMethods_) {
+  for(const auto& doMethodPtr : getChildren()) {
     const DoMethod& doMethod = *doMethodPtr;
     for(const auto& statementAccessesPair : doMethod.getStatementAccessesPairs()) {
       statementAccessesPair->getStatement()->ASTStmt->accept(functionCallGlobaParamVisitor);
@@ -253,7 +247,7 @@ void Stage::update() {
 
   // Compute the extents of each field by accumulating the extents of each access to field in the
   // stage
-  for(const auto& doMethodPtr : DoMethods_) {
+  for(const auto& doMethodPtr : getChildren()) {
     const DoMethod& doMethod = *doMethodPtr;
 
     for(const auto& statementAccessesPair : doMethod.getStatementAccessesPairs()) {
@@ -289,32 +283,19 @@ const std::unordered_set<int>& Stage::getGlobalVariablesFromStencilFunctionCalls
 
 const std::unordered_set<int>& Stage::getAllGlobalVariables() const { return allGlobalVariables_; }
 
-std::vector<std::unique_ptr<DoMethod>>::iterator Stage::childrenBegin() {
-  return DoMethods_.begin();
-}
-
-std::vector<std::unique_ptr<DoMethod>>::iterator Stage::childrenEnd() { return DoMethods_.end(); }
-
-std::vector<std::unique_ptr<DoMethod>>::iterator
-Stage::childrenErase(std::vector<std::unique_ptr<DoMethod>>::iterator it) {
-  return DoMethods_.erase(it);
-}
-
-bool Stage::childrenEmpty() const { return DoMethods_.empty(); }
-
 void Stage::addDoMethod(std::unique_ptr<DoMethod>& doMethod) {
-  DAWN_ASSERT_MSG(std::find_if(DoMethods_.begin(), DoMethods_.end(),
+  DAWN_ASSERT_MSG(std::find_if(childrenBegin(), childrenEnd(),
                                [&](const std::unique_ptr<DoMethod>& doMethodPtr) {
                                  return doMethodPtr->getInterval() == doMethod->getInterval();
-                               }) == DoMethods_.end(),
+                               }) == childrenEnd(),
                   "Do-Method with given interval already exists!");
-  DoMethods_.emplace_back(std::move(doMethod));
+  insertChild(std::move(doMethod));
   update();
 }
 
 void Stage::appendDoMethod(std::unique_ptr<DoMethod>& from, std::unique_ptr<DoMethod>& to,
                            const std::shared_ptr<DependencyGraphAccesses>& dependencyGraph) {
-  DAWN_ASSERT_MSG(std::find(DoMethods_.begin(), DoMethods_.end(), to) != DoMethods_.end(),
+  DAWN_ASSERT_MSG(std::find(childrenBegin(), childrenEnd(), to) != childrenEnd(),
                   "'to' DoMethod does not exists");
   DAWN_ASSERT_MSG(from->getInterval() == to->getInterval(),
                   "DoMethods have incompatible intervals!");
@@ -371,7 +352,7 @@ Stage::split(std::deque<int>& splitterIndices,
 }
 
 bool Stage::isEmptyOrNullStmt() const {
-  for(auto const& doMethod : DoMethods_) {
+  for(auto const& doMethod : getChildren()) {
     if(!doMethod->isEmptyOrNullStmt())
       return false;
   }

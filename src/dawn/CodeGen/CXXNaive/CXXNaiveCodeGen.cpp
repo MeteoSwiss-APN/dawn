@@ -326,7 +326,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
                           makeIJLoop(stage.getExtents()[1], "m_dom", "j"), [&]() {
 
                             // Generate Do-Method
-                            for(const auto& doMethodPtr : stage.getDoMethods()) {
+                            for(const auto& doMethodPtr : stage.getChildren()) {
                               const iir::DoMethod& doMethod = *doMethodPtr;
                               if(!doMethod.getInterval().overlaps(interval))
                                 continue;

@@ -16,6 +16,7 @@
 #define DAWN_IIR_STAGE_H
 
 #include "dawn/IIR/DoMethod.h"
+#include "dawn/IIR/IIRNode.h"
 #include "dawn/Optimizer/Field.h"
 #include "dawn/Optimizer/Interval.h"
 #include "dawn/Support/ArrayRef.h"
@@ -39,15 +40,12 @@ class MultiStage;
 /// are separated by a `__syncthreads()` call in a kernel.
 ///
 /// @ingroup optimizer
-class Stage {
+class Stage : public IIRNode<MultiStage, DoMethod> {
   StencilInstantiation& stencilInstantiation_;
   MultiStage* multiStage_;
 
   /// Unique identifier of the stage
   int StageID_;
-
-  /// List of Do-Methods of this stage
-  std::vector<std::unique_ptr<DoMethod>> DoMethods_;
 
   /// Declaration of the fields of this stage
   std::vector<Field> fields_;
@@ -72,20 +70,6 @@ public:
   Stage& operator=(const Stage&) = default;
   Stage& operator=(Stage&&) = default;
   /// @}
-
-  /// @brief Get the list of Do-Methods
-  //  std::vector<std::unique_ptr<DoMethod>>& getDoMethods();
-  const std::vector<std::unique_ptr<DoMethod>>& getDoMethods() const;
-
-  std::vector<std::unique_ptr<DoMethod>>::iterator childrenBegin();
-  std::vector<std::unique_ptr<DoMethod>>::iterator childrenEnd();
-
-  std::vector<std::unique_ptr<DoMethod>>::iterator
-  childrenErase(std::vector<std::unique_ptr<DoMethod>>::iterator it);
-
-  bool childrenEmpty() const;
-
-  void clearChildren();
 
   /// @brief Check if the stage contains of a single Do-Method
   bool hasSingleDoMethod() const;

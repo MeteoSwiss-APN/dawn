@@ -150,21 +150,21 @@ TEST_F(MultiStageTest, test_compute_ordered_do_methods) {
   EXPECT_EQ(mss->getStages().size(), 3);
   auto stageit = mss->getStages().begin();
   auto const& stage0 = *stageit;
-  EXPECT_EQ(stage0->getDoMethods().size(), 2);
-  auto const& do0_0 = stage0->getDoMethods()[0];
-  auto const& do0_1 = stage0->getDoMethods()[1];
+  EXPECT_EQ(stage0->getChildren().size(), 2);
+  auto const& do0_0 = stage0->getChildren().at(0);
+  auto const& do0_1 = stage0->getChildren().at(1);
 
   stageit++;
   auto const& stage1 = *stageit;
-  EXPECT_EQ(stage1->getDoMethods().size(), 3);
-  auto const& do1_0 = stage1->getDoMethods()[0];
-  auto const& do1_1 = stage1->getDoMethods()[1];
-  auto const& do1_2 = stage1->getDoMethods()[2];
+  EXPECT_EQ(stage1->getChildren().size(), 3);
+  auto const& do1_0 = stage1->getChildren().at(0);
+  auto const& do1_1 = stage1->getChildren().at(1);
+  auto const& do1_2 = stage1->getChildren().at(2);
 
   stageit++;
   auto const& stage2 = *stageit;
-  EXPECT_EQ(stage2->getDoMethods().size(), 1);
-  auto const& do2_0 = stage2->getDoMethods()[0];
+  EXPECT_EQ(stage2->getChildren().size(), 1);
+  auto const& do2_0 = stage2->getChildren().at(0);
 
   auto orderedDoMethods = mss->computeOrderedDoMethods();
   EXPECT_EQ(orderedDoMethods.size(), 8);

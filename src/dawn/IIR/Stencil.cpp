@@ -117,7 +117,7 @@ std::unordered_set<Interval> Stencil::getIntervals() const {
   std::unordered_set<Interval> intervals;
   for(const auto& multistage : multistages_)
     for(const auto& stage : multistage->getStages())
-      for(const auto& doMethod : stage->getDoMethods())
+      for(const auto& doMethod : stage->getChildren())
         intervals.insert(doMethod->getInterval());
 
   return intervals;
@@ -193,7 +193,7 @@ void Stencil::forEachStatementAccessesPairImpl(
     int endStageIdx, bool updateFields) {
   for(int stageIdx = startStageIdx; stageIdx < endStageIdx; ++stageIdx) {
     auto stage = getStage(stageIdx);
-    for(const auto& doMethodPtr : stage->getDoMethods())
+    for(const auto& doMethodPtr : stage->getChildren())
       func(doMethodPtr->getStatementAccessesPairs());
 
     if(updateFields)
@@ -403,7 +403,7 @@ Stencil::Lifetime Stencil::getLifetime(const int AccessID) const {
     for(const auto& stagePtr : multistagePtr->getStages()) {
 
       int doMethodIndex = 0;
-      for(const auto& doMethodPtr : stagePtr->getDoMethods()) {
+      for(const auto& doMethodPtr : stagePtr->getChildren()) {
         DoMethod& doMethod = *doMethodPtr;
 
         for(int statementIdx = 0; statementIdx < doMethod.getStatementAccessesPairs().size();
@@ -444,7 +444,7 @@ Stencil::Lifetime Stencil::getLifetime(const int AccessID) const {
 bool Stencil::isEmpty() const {
   for(const auto& MS : getMultiStages())
     for(const auto& stage : MS->getStages())
-      for(auto& doMethod : stage->getDoMethods())
+      for(const auto& doMethod : stage->getChildren())
         if(!doMethod->getStatementAccessesPairs().empty())
           return false;
   return true;
@@ -470,7 +470,7 @@ const std::shared_ptr<sir::Stencil> Stencil::getSIRStencil() const { return SIRS
 void Stencil::accept(ASTVisitor& visitor) {
   for(const auto& multistagePtr : multistages_)
     for(const auto& stagePtr : multistagePtr->getStages())
-      for(const auto& doMethodPtr : stagePtr->getDoMethods())
+      for(const auto& doMethodPtr : stagePtr->getChildren())
         for(const auto& stmtAcessesPairPtr : doMethodPtr->getStatementAccessesPairs())
           stmtAcessesPairPtr->getStatement()->ASTStmt->accept(visitor);
 }
