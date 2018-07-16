@@ -16,7 +16,6 @@
 #define DAWN_IIR_STAGE_H
 
 #include "dawn/IIR/DoMethod.h"
-#include "dawn/IIR/IIRNode.h"
 #include "dawn/Optimizer/Field.h"
 #include "dawn/Optimizer/Interval.h"
 #include "dawn/Support/ArrayRef.h"
@@ -46,6 +45,9 @@ class Stage {
 
   /// Unique identifier of the stage
   int StageID_;
+
+  /// List of Do-Methods of this stage
+  std::vector<std::unique_ptr<DoMethod>> DoMethods_;
 
   /// Declaration of the fields of this stage
   std::vector<Field> fields_;
