@@ -34,7 +34,7 @@ protected:
   ComputeStageExtents() : compiler_(compileOptions_.get()) {}
   virtual void SetUp() {}
 
-  std::vector<std::shared_ptr<Stencil>> loadTest(std::string sirFilename) {
+  std::vector<std::shared_ptr<iir::Stencil>> loadTest(std::string sirFilename) {
 
     std::string filename = TestEnvironment::path_ + "/" + sirFilename;
     std::ifstream file(filename);
@@ -63,7 +63,7 @@ protected:
 TEST_F(ComputeStageExtents, test_stencil_01) {
   auto stencils = loadTest("compute_extent_test_stencil_01.sir");
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  std::shared_ptr<iir::Stencil> stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 2);
   EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-1, 1, -1, 1, 0, 0}));
@@ -74,7 +74,7 @@ TEST_F(ComputeStageExtents, test_stencil_02) {
   auto stencils = loadTest("compute_extent_test_stencil_02.sir");
 
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  std::shared_ptr<iir::Stencil> stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 3);
   EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-1, 1, -1, 1, 0, 0}));
@@ -84,7 +84,7 @@ TEST_F(ComputeStageExtents, test_stencil_02) {
 TEST_F(ComputeStageExtents, test_stencil_03) {
   auto stencils = loadTest("compute_extent_test_stencil_03.sir");
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  std::shared_ptr<iir::Stencil> stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 4);
   EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-1, 1, -1, 2, 0, 0}));
@@ -97,7 +97,7 @@ TEST_F(ComputeStageExtents, test_stencil_04) {
   auto stencils = loadTest("compute_extent_test_stencil_04.sir");
 
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  std::shared_ptr<iir::Stencil> stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 4);
   EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-2, 3, -2, 1, 0, 0}));
@@ -109,7 +109,7 @@ TEST_F(ComputeStageExtents, test_stencil_04) {
 TEST_F(ComputeStageExtents, test_stencil_05) {
   auto stencils = loadTest("compute_extent_test_stencil_05.sir");
   ASSERT_TRUE((stencils.size() == 1));
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  std::shared_ptr<iir::Stencil> stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 4);
   EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-2, 3, -2, 1, 0, 0}));

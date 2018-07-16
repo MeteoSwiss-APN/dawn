@@ -13,11 +13,11 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassStageSplitter.h"
-#include "dawn/Optimizer/DependencyGraphAccesses.h"
+#include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
-#include "dawn/Optimizer/StatementAccessesPair.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Logging.h"
@@ -30,12 +30,13 @@ namespace dawn {
 
 PassStageSplitter::PassStageSplitter() : Pass("PassStageSplitter", true) {}
 
-bool PassStageSplitter::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
+bool PassStageSplitter::run(
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   int numSplit = 0;
   std::deque<int> splitterIndices;
-  std::deque<std::shared_ptr<DependencyGraphAccesses>> graphs;
+  std::deque<std::shared_ptr<iir::DependencyGraphAccesses>> graphs;
 
   // Iterate over all stages in all multistages of all stencils
   for(auto& stencil : stencilInstantiation->getStencils()) {
@@ -47,14 +48,14 @@ bool PassStageSplitter::run(const std::shared_ptr<StencilInstantiation>& stencil
       int stageIndex = 0;
       for(auto stageIt = multiStage->getStages().begin(); stageIt != multiStage->getStages().end();
           ++stageIndex, ++linearStageIndex) {
-        Stage& stage = (**stageIt);
-        DoMethod& doMethod = stage.getSingleDoMethod();
+        iir::Stage& stage = (**stageIt);
+        iir::DoMethod& doMethod = stage.getSingleDoMethod();
 
         splitterIndices.clear();
         graphs.clear();
 
-        std::shared_ptr<DependencyGraphAccesses> newGraph, oldGraph;
-        newGraph = std::make_shared<DependencyGraphAccesses>(stencilInstantiation.get());
+        std::shared_ptr<iir::DependencyGraphAccesses> newGraph, oldGraph;
+        newGraph = std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation.get());
 
         // Build the Dependency graph (bottom to top)
         for(int stmtIndex = doMethod.getStatementAccessesPairs().size() - 1; stmtIndex >= 0;

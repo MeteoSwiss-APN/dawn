@@ -15,7 +15,7 @@
 #ifndef DAWN_OPTIMIZER_STENCIL_H
 #define DAWN_OPTIMIZER_STENCIL_H
 
-#include "dawn/Optimizer/MultiStage.h"
+#include "dawn/IIR/MultiStage.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/Statement.h"
 #include <functional>
@@ -26,8 +26,10 @@
 
 namespace dawn {
 
-class StencilInstantiation;
+namespace iir {
+
 class DependencyGraphStage;
+class StencilInstantiation;
 class StatementAccessesPair;
 
 /// @brief A Stencil is represented by a collection of MultiStages
@@ -105,8 +107,6 @@ public:
 
     /// Index of the Stage inside the Multi-Stage, -1 indicates one before the first
     int StageOffset;
-
-    friend std::ostream& operator<<(std::ostream& os, const StagePosition& position);
   };
 
   /// @brief Position of a statement inside a stage
@@ -136,8 +136,6 @@ public:
 
     /// Index of the Statement inside the Do-Method, -1 indicates one before the first
     int StatementIndex;
-
-    friend std::ostream& operator<<(std::ostream& os, const StatementPosition& position);
   };
 
   /// @brief Lifetime of a field or variable, given as an interval of `StatementPosition`s
@@ -281,7 +279,7 @@ private:
       int endStageIdx, bool updateFields);
   void updateFieldsImpl(int startStageIdx, int endStageIdx);
 };
-
+} // namespace iir
 } // namespace dawn
 
 #endif

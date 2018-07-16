@@ -18,7 +18,7 @@
 #include "dawn/Optimizer/Extents.h"
 #include "dawn/Optimizer/Field.h"
 #include "dawn/Optimizer/Interval.h"
-#include "dawn/Optimizer/StatementAccessesPair.h"
+#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Unreachable.h"
@@ -29,6 +29,8 @@
 #include <vector>
 
 namespace dawn {
+
+namespace iir {
 
 class StencilInstantiation;
 
@@ -436,6 +438,7 @@ public:
   void dump() const;
 };
 
+} // namespace iir
 } // namespace dawn
 
 #endif

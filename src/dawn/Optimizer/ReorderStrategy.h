@@ -19,8 +19,10 @@
 
 namespace dawn {
 
+namespace iir {
 class Stencil;
 class DependencyGraphStage;
+}
 
 /// @brief Abstract class for various reodering strategies
 /// @ingroup optimizer
@@ -37,7 +39,8 @@ public:
 
   /// @brief Reorder the stages of the `stencilPtr` according to the implemented strategy
   /// @returns New stencil with the reordered stages
-  virtual std::shared_ptr<Stencil> reorder(const std::shared_ptr<Stencil>& stencilPtr) = 0;
+  virtual std::shared_ptr<iir::Stencil>
+  reorder(const std::shared_ptr<iir::Stencil>& stencilPtr) = 0;
 };
 
 } // namespace dawn

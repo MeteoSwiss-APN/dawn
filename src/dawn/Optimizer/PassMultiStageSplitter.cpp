@@ -13,11 +13,11 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
-#include "dawn/Optimizer/DependencyGraphAccesses.h"
+#include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
-#include "dawn/Optimizer/StatementAccessesPair.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Format.h"
 #include <deque>
@@ -31,23 +31,24 @@ PassMultiStageSplitter::PassMultiStageSplitter(MultiStageSplittingStrategy strat
     : Pass("PassMultiStageSplitter", true), strategy_(strategy) {}
 namespace {
 
-int checkDependencies(const std::shared_ptr<Stage>& stage, int stmtIdx) {
+int checkDependencies(const std::shared_ptr<iir::Stage>& stage, int stmtIdx) {
   DAWN_ASSERT_MSG(false, "implementation missing");
   return 0;
 }
 
-std::function<void(std::list<std::shared_ptr<Stage>>::reverse_iterator&, DependencyGraphAccesses&,
-                   LoopOrderKind&, LoopOrderKind&, std::deque<MultiStage::SplitIndex>&, int, int,
-                   int&, const std::string&, const std::string&, const Options&)>
+std::function<void(std::list<std::shared_ptr<iir::Stage>>::reverse_iterator&,
+                   iir::DependencyGraphAccesses&, LoopOrderKind&, LoopOrderKind&,
+                   std::deque<iir::MultiStage::SplitIndex>&, int, int, int&, const std::string&,
+                   const std::string&, const Options&)>
 multiStageSplitterOptimzied() {
-  return [&](std::list<std::shared_ptr<Stage>>::reverse_iterator& stageIt,
-             DependencyGraphAccesses& graph, LoopOrderKind userSpecifiedLoopOrder,
-             LoopOrderKind& curLoopOrder, std::deque<MultiStage::SplitIndex>& splitterIndices,
+  return [&](std::list<std::shared_ptr<iir::Stage>>::reverse_iterator& stageIt,
+             iir::DependencyGraphAccesses& graph, LoopOrderKind userSpecifiedLoopOrder,
+             LoopOrderKind& curLoopOrder, std::deque<iir::MultiStage::SplitIndex>& splitterIndices,
              int stageIndex, int multiStageIndex, int& numSplit, const std::string& StencilName,
              const std::string& PassName, const Options& options) {
 
-    Stage& stage = (**stageIt);
-    DoMethod& doMethod = stage.getSingleDoMethod();
+    iir::Stage& stage = (**stageIt);
+    iir::DoMethod& doMethod = stage.getSingleDoMethod();
 
     // Iterate statements backwards
     for(int stmtIndex = doMethod.getStatementAccessesPairs().size() - 1; stmtIndex >= 0;
@@ -63,7 +64,8 @@ multiStageSplitterOptimzied() {
       if(conflict.CounterLoopOrderConflict) {
 
         // The loop order of the lower part is what we recoreded in the last steps
-        splitterIndices.emplace_front(MultiStage::SplitIndex{stageIndex, stmtIndex, curLoopOrder});
+        splitterIndices.emplace_front(
+            iir::MultiStage::SplitIndex{stageIndex, stmtIndex, curLoopOrder});
 
         if(options.ReportPassMultiStageSplit)
           std::cout << "\nPASS: " << PassName << ": " << StencilName << ": split:"
@@ -92,19 +94,20 @@ multiStageSplitterOptimzied() {
     }
   };
 }
-std::function<void(std::list<std::shared_ptr<Stage>>::reverse_iterator&, DependencyGraphAccesses&,
-                   LoopOrderKind&, LoopOrderKind&, std::deque<MultiStage::SplitIndex>&, int, int,
-                   int&, const std::string&, const std::string&, const Options&)>
+std::function<void(std::list<std::shared_ptr<iir::Stage>>::reverse_iterator&,
+                   iir::DependencyGraphAccesses&, LoopOrderKind&, LoopOrderKind&,
+                   std::deque<iir::MultiStage::SplitIndex>&, int, int, int&, const std::string&,
+                   const std::string&, const Options&)>
 multiStageSplitterDebug() {
 
-  return [&](std::list<std::shared_ptr<Stage>>::reverse_iterator& stageIt,
-             DependencyGraphAccesses& graph, LoopOrderKind& userSpecifiedLoopOrder,
-             LoopOrderKind& curLoopOrder, std::deque<MultiStage::SplitIndex>& splitterIndices,
+  return [&](std::list<std::shared_ptr<iir::Stage>>::reverse_iterator& stageIt,
+             iir::DependencyGraphAccesses& graph, LoopOrderKind& userSpecifiedLoopOrder,
+             LoopOrderKind& curLoopOrder, std::deque<iir::MultiStage::SplitIndex>& splitterIndices,
              int stageIndex, int multiStageIndex, int& numSplit, const std::string& StencilName,
              const std::string& PassName, const Options& options) {
     DAWN_ASSERT_MSG(false, "Max-Cut for Multistages is not yet implemented");
-    Stage& stage = (**stageIt);
-    DoMethod& doMethod = stage.getSingleDoMethod();
+    iir::Stage& stage = (**stageIt);
+    iir::DoMethod& doMethod = stage.getSingleDoMethod();
 
     //==============================================================================================
     // Max-Cut dependency analysis missing
@@ -127,7 +130,8 @@ multiStageSplitterDebug() {
         --stmtIndex) {
       openDependencies += checkDependencies(*stageIt, stmtIndex);
       if(openDependencies == 0) {
-        splitterIndices.emplace_front(MultiStage::SplitIndex{stageIndex, stmtIndex, curLoopOrder});
+        splitterIndices.emplace_front(
+            iir::MultiStage::SplitIndex{stageIndex, stmtIndex, curLoopOrder});
         numSplit++;
       }
     }
@@ -157,12 +161,12 @@ multiStageSplitterDebug() {
 } // namespace
 
 bool PassMultiStageSplitter::run(
-    const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 
-  std::function<void(std::list<std::shared_ptr<Stage>>::reverse_iterator&, DependencyGraphAccesses&,
-                     LoopOrderKind&, LoopOrderKind&, std::deque<MultiStage::SplitIndex>&, int, int,
-                     int&, const std::string&, const std::string&, const Options&)>
-      multistagesplitter;
+  std::function<void(std::list<std::shared_ptr<iir::Stage>>::reverse_iterator&,
+                     iir::DependencyGraphAccesses&, LoopOrderKind&, LoopOrderKind&,
+                     std::deque<iir::MultiStage::SplitIndex>&, int, int, int&, const std::string&,
+                     const std::string&, const Options&)> multistagesplitter;
 
   if(strategy_ == MultiStageSplittingStrategy::SS_Optimized) {
     multistagesplitter = multiStageSplitterOptimzied();
@@ -171,7 +175,7 @@ bool PassMultiStageSplitter::run(
   }
 
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
-  DependencyGraphAccesses graph(stencilInstantiation.get());
+  iir::DependencyGraphAccesses graph(stencilInstantiation.get());
   int numSplit = 0;
   std::string StencilName = stencilInstantiation->getName();
   std::string PassName = getName();
@@ -183,9 +187,9 @@ bool PassMultiStageSplitter::run(
 
     for(auto multiStageIt = stencil->getMultiStages().begin();
         multiStageIt != stencil->getMultiStages().end(); ++multiStageIndex) {
-      MultiStage& multiStage = (**multiStageIt);
+      iir::MultiStage& multiStage = (**multiStageIt);
 
-      std::deque<MultiStage::SplitIndex> splitterIndices;
+      std::deque<iir::MultiStage::SplitIndex> splitterIndices;
       graph.clear();
 
       // Loop order specified by the user in the vertical region (e.g {k_start, k_end} is

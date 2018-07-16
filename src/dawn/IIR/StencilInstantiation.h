@@ -15,9 +15,9 @@
 #ifndef DAWN_OPTIMIZER_STENCILINSTANTIATION_H
 #define DAWN_OPTIMIZER_STENCILINSTANTIATION_H
 
-#include "dawn/Optimizer/Accesses.h"
-#include "dawn/Optimizer/Stencil.h"
-#include "dawn/Optimizer/StencilFunctionInstantiation.h"
+#include "dawn/IIR/Accesses.h"
+#include "dawn/IIR/Stencil.h"
+#include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/NonCopyable.h"
 #include "dawn/Support/StringRef.h"
@@ -28,8 +28,9 @@
 #include <unordered_map>
 
 namespace dawn {
-
 class OptimizerContext;
+
+namespace iir {
 
 class VariableVersions {
 private:
@@ -78,7 +79,7 @@ class StencilInstantiation : NonCopyable {
     std::shared_ptr<StencilFunctionInstantiation> callerStencilFunction_;
   };
 
-  OptimizerContext* context_;
+  ::dawn::OptimizerContext* context_;
   const std::shared_ptr<sir::Stencil> SIRStencil_;
   const std::shared_ptr<SIR> SIR_;
 
@@ -163,7 +164,8 @@ class StencilInstantiation : NonCopyable {
 
 public:
   /// @brief Assemble StencilInstantiation for stencil
-  StencilInstantiation(OptimizerContext* context, const std::shared_ptr<sir::Stencil>& SIRStencil,
+  StencilInstantiation(::dawn::OptimizerContext* context,
+                       const std::shared_ptr<sir::Stencil>& SIRStencil,
                        const std::shared_ptr<SIR>& SIR);
 
   /// @brief Insert a new AccessID - Name pair
@@ -463,7 +465,7 @@ public:
   std::shared_ptr<sir::Stencil> const& getSIRStencil() const { return SIRStencil_; }
 
   /// @brief Get the optimizer context
-  OptimizerContext* getOptimizerContext() { return context_; }
+  ::dawn::OptimizerContext* getOptimizerContext() { return context_; }
 
   bool insertBoundaryConditions(std::string originalFieldName,
                                 std::shared_ptr<BoundaryConditionDeclStmt> bc) {
@@ -563,7 +565,7 @@ private:
   /// @brief Report the accesses to the console (according to `-freport-accesses`)
   void reportAccesses() const;
 };
-
+} // namespace iir
 } // namespace dawn
 
 #endif

@@ -20,7 +20,9 @@
 
 namespace dawn {
 
+namespace iir {
 class Stencil;
+}
 
 /// @brief Set the correct type of the temporaries
 ///
@@ -66,16 +68,16 @@ public:
   PassTemporaryType();
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
 
   /// @brief Promote a temporary fields which span over multiple stencils to real (allocated)
   /// storage
   ///
   /// We check if a temporary field is referenced in more than one stencil and, if so, we promote
   /// the field to a real (manaully allocated) field.
-  static void
-  fixTemporariesSpanningMultipleStencils(StencilInstantiation* instantiation,
-                                         const std::vector<std::shared_ptr<Stencil>>& stencils);
+  static void fixTemporariesSpanningMultipleStencils(
+      iir::StencilInstantiation* instantiation,
+      const std::vector<std::shared_ptr<iir::Stencil>>& stencils);
 };
 
 } // namespace dawn

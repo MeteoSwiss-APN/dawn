@@ -12,13 +12,13 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/Optimizer/Replacing.h"
-#include "dawn/Optimizer/StatementAccessesPair.h"
+#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/Optimizer/StatementMapper.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTUtil.h"
@@ -38,7 +38,7 @@
 #include <stack>
 
 namespace dawn {
-
+namespace iir {
 namespace {
 
 //===------------------------------------------------------------------------------------------===//
@@ -577,7 +577,7 @@ public:
 //     StencilInstantiation
 //===------------------------------------------------------------------------------------------===//
 
-StencilInstantiation::StencilInstantiation(OptimizerContext* context,
+StencilInstantiation::StencilInstantiation(::dawn::OptimizerContext* context,
                                            std::shared_ptr<sir::Stencil> const& SIRStencil,
                                            std::shared_ptr<SIR> const& SIR)
     : context_(context), SIRStencil_(SIRStencil), SIR_(SIR) {
@@ -1490,4 +1490,5 @@ void StencilInstantiation::reportAccesses() const {
       }
 }
 
+} // namespace iir
 } // namespace dawn

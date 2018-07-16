@@ -15,8 +15,8 @@
 #include "dawn/Optimizer/PassSetCaches.h"
 #include "dawn/Optimizer/Cache.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/StatementAccessesPair.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/Unreachable.h"
 #include "dawn/Optimizer/IntervalAlgorithms.h"
 #include <iostream>
@@ -90,7 +90,7 @@ CacheCandidate combinePolicy(CacheCandidate const& MS1Policy, Field::IntendKind 
 
 /// computes a cache candidate of a field for a multistage
 CacheCandidate computeCacheCandidateForMS(Field const& field, bool isTemporaryField,
-                                          MultiStage const& MS) {
+                                          iir::MultiStage const& MS) {
 
   if(field.getIntend() == Field::IK_Input) {
     boost::optional<Interval> interval =
@@ -147,18 +147,18 @@ CacheCandidate computeCacheCandidateForMS(Field const& field, bool isTemporaryFi
 
 PassSetCaches::PassSetCaches() : Pass("PassSetCaches") {}
 
-bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiation) {
+bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
   OptimizerContext* context = instantiation->getOptimizerContext();
 
   for(const auto& stencilPtr : instantiation->getStencils()) {
-    const Stencil& stencil = *stencilPtr;
+    const iir::Stencil& stencil = *stencilPtr;
 
     // Set IJ-Caches
     int msIdx = 0;
     for(auto multiStageIt = stencil.getMultiStages().begin();
         multiStageIt != stencil.getMultiStages().end(); ++multiStageIt) {
 
-      MultiStage& MS = *(*multiStageIt);
+      iir::MultiStage& MS = *(*multiStageIt);
 
       std::set<int> outputFields;
 
@@ -214,14 +214,15 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
       // Get the fields of all Multi-Stages
       std::vector<std::unordered_map<int, Field>> fields;
       std::transform(stencil.getMultiStages().begin(), stencil.getMultiStages().end(),
-                     std::back_inserter(fields),
-                     [](const std::shared_ptr<MultiStage>& MSPtr) { return MSPtr->getFields(); });
+                     std::back_inserter(fields), [](const std::shared_ptr<iir::MultiStage>& MSPtr) {
+                       return MSPtr->getFields();
+                     });
 
       int numMS = fields.size();
       std::set<int> mssProcessedFields;
       for(int MSIndex = 0; MSIndex < numMS; ++MSIndex) {
         for(const auto& AccessIDFieldPair : fields[MSIndex]) {
-          MultiStage& MS = *stencil.getMultiStageFromMultiStageIndex(MSIndex);
+          iir::MultiStage& MS = *stencil.getMultiStageFromMultiStageIndex(MSIndex);
           const Field& field = AccessIDFieldPair.second;
           bool mssProcessedField = mssProcessedFields.count(field.getAccessID());
           if(!mssProcessedField)
@@ -268,7 +269,7 @@ bool PassSetCaches::run(const std::shared_ptr<StencilInstantiation>& instantiati
               if(!fields[MSIndex2].count(field.getAccessID()))
                 continue;
 
-              const MultiStage& nextMS = *stencil.getMultiStageFromMultiStageIndex(MSIndex2);
+              const iir::MultiStage& nextMS = *stencil.getMultiStageFromMultiStageIndex(MSIndex2);
               const Field& fieldInNextMS = fields[MSIndex2].find(field.getAccessID())->second;
 
               CacheCandidate policyMS2 = computeCacheCandidateForMS(

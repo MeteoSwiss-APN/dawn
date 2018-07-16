@@ -12,10 +12,11 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/DependencyGraphStage.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/DependencyGraphStage.h"
+#include "dawn/IIR/StencilInstantiation.h"
 
 namespace dawn {
+namespace iir {
 
 void DependencyGraphStage::insertEdge(int StageIDFrom, int StageIDTo) {
   Base::insertEdge(StageIDFrom, StageIDTo, DependencyGraphStage::EdgeData::EK_Depends);
@@ -46,4 +47,5 @@ std::string DependencyGraphStage::getVertexNameByVertexID(std::size_t VertexID) 
 
 const char* DependencyGraphStage::getDotShape() const { return "box"; }
 
+} // namespace iir
 } // namespace dawn

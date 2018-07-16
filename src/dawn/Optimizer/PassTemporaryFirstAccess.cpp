@@ -14,8 +14,8 @@
 
 #include "dawn/Optimizer/PassTemporaryFirstAccess.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/StatementAccessesPair.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include <algorithm>
 #include <set>
@@ -29,14 +29,14 @@ namespace {
 class UnusedFieldVisitor : public ASTVisitorForwarding {
   int AccessID_;
   bool fieldIsUnused_;
-  const std::shared_ptr<StencilInstantiation>& instantiation_;
-  std::stack<std::shared_ptr<const StencilFunctionInstantiation>> functionInstantiationStack_;
+  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
+  std::stack<std::shared_ptr<const iir::StencilFunctionInstantiation>> functionInstantiationStack_;
 
 public:
-  UnusedFieldVisitor(int AccessID, const std::shared_ptr<StencilInstantiation>& instantiation)
+  UnusedFieldVisitor(int AccessID, const std::shared_ptr<iir::StencilInstantiation>& instantiation)
       : AccessID_(AccessID), fieldIsUnused_(false), instantiation_(instantiation) {}
 
-  std::shared_ptr<const StencilFunctionInstantiation>
+  std::shared_ptr<const iir::StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) {
     if(!functionInstantiationStack_.empty())
       return functionInstantiationStack_.top()->getStencilFunctionInstantiation(expr);
@@ -44,7 +44,7 @@ public:
   }
 
   void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
-    std::shared_ptr<const StencilFunctionInstantiation> funCall =
+    std::shared_ptr<const iir::StencilFunctionInstantiation> funCall =
         getStencilFunctionInstantiation(expr);
 
     functionInstantiationStack_.push(funCall);
@@ -66,11 +66,11 @@ public:
 PassTemporaryFirstAccess::PassTemporaryFirstAccess() : Pass("PassTemporaryFirstAccess", true) {}
 
 bool PassTemporaryFirstAccess::run(
-    const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   for(auto& stencilPtr : stencilInstantiation->getStencils()) {
-    std::vector<Stencil::FieldInfo> fields = stencilPtr->getFields();
+    std::vector<iir::Stencil::FieldInfo> fields = stencilPtr->getFields();
     std::set<int> temporaryFields;
 
     for(int i = 0; i < fields.size(); ++i)
@@ -83,7 +83,7 @@ bool PassTemporaryFirstAccess::run(
 
     for(auto& multiStagePtr : stencilPtr->getMultiStages()) {
       for(auto& stagePtr : multiStagePtr->getStages()) {
-        DoMethod& doMethod = stagePtr->getSingleDoMethod();
+        iir::DoMethod& doMethod = stagePtr->getSingleDoMethod();
 
         for(int i = 0; i < doMethod.getStatementAccessesPairs().size(); ++i) {
           const auto& accesses = doMethod.getStatementAccessesPairs()[i]->getAccesses();

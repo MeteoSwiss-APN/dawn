@@ -13,7 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
-#include "dawn/Optimizer/DependencyGraphAccesses.h"
+#include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/Optimizer/Extents.h"
 #include "dawn/Support/Assert.h"
 #include <unordered_set>
@@ -31,11 +31,11 @@ namespace {
 /// possibly itself.
 template <bool IsVertical>
 class ReadBeforeWriteConflictDetector {
-  const DependencyGraphAccesses* graph_;
+  const iir::DependencyGraphAccesses* graph_;
   LoopOrderKind loopOrder_;
 
 public:
-  ReadBeforeWriteConflictDetector(const DependencyGraphAccesses* graph, LoopOrderKind loopOrder)
+  ReadBeforeWriteConflictDetector(const iir::DependencyGraphAccesses* graph, LoopOrderKind loopOrder)
       : graph_(graph), loopOrder_(loopOrder) {}
 
   ReadBeforeWriteConflict check() const {
@@ -138,12 +138,12 @@ ReadBeforeWriteConflict& ReadBeforeWriteConflict::operator|=(const ReadBeforeWri
   return *this;
 }
 
-ReadBeforeWriteConflict hasVerticalReadBeforeWriteConflict(const DependencyGraphAccesses* graph,
+ReadBeforeWriteConflict hasVerticalReadBeforeWriteConflict(const iir::DependencyGraphAccesses* graph,
                                                            LoopOrderKind loopOrder) {
   return ReadBeforeWriteConflictDetector<true>(graph, loopOrder).check();
 }
 
-bool hasHorizontalReadBeforeWriteConflict(const DependencyGraphAccesses* graph) {
+bool hasHorizontalReadBeforeWriteConflict(const iir::DependencyGraphAccesses* graph) {
   return ReadBeforeWriteConflictDetector<false>(graph, LoopOrderKind::LK_Parallel /* unused */)
       .check()
       .LoopOrderConflict;

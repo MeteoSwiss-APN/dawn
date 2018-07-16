@@ -25,7 +25,7 @@ namespace dawn {
 class ReoderStrategyPartitioning : public ReorderStrategy {
 public:
   /// @brief Apply the reordering strategy and return the stencil
-  virtual std::shared_ptr<Stencil> reorder(const std::shared_ptr<Stencil>& stencilPtr) override;
+  virtual std::shared_ptr<iir::Stencil> reorder(const std::shared_ptr<iir::Stencil>& stencilPtr) override;
 };
 
 } // namespace dawn

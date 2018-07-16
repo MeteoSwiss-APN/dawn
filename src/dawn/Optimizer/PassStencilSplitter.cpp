@@ -13,12 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassStencilSplitter.h"
-#include "dawn/Optimizer/DependencyGraphStage.h"
+#include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/Replacing.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include <iostream>
 
 namespace dawn {
@@ -28,7 +28,7 @@ namespace dawn {
 ///
 /// If the number of fields is already higher than `maxNumFields` we check if by merging stage into
 /// the stencil we do not increase the number of fields further.
-static int mergePossible(const std::set<int>& fields, const Stage* stage, int maxNumFields) {
+static int mergePossible(const std::set<int>& fields, const iir::Stage* stage, int maxNumFields) {
   int numFields = fields.size();
 
   for(const Field& field : stage->getFields())
@@ -47,7 +47,8 @@ PassStencilSplitter::PassStencilSplitter(int maxNumberOfFilelds)
   dependencies_.push_back("PassSetStageGraph");
 }
 
-bool PassStencilSplitter::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
+bool PassStencilSplitter::run(
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   if(!context->getOptions().SplitStencils)
@@ -58,31 +59,31 @@ bool PassStencilSplitter::run(const std::shared_ptr<StencilInstantiation>& stenc
 
   for(auto stencilIt = stencilInstantiation->getStencils().begin();
       stencilIt != stencilInstantiation->getStencils().end(); ++stencilIt) {
-    Stencil& stencil = **stencilIt;
+    iir::Stencil& stencil = **stencilIt;
 
     // New stencils which serve as a replacement for `stencil`
-    std::vector<std::shared_ptr<Stencil>> newStencils;
+    std::vector<std::shared_ptr<iir::Stencil>> newStencils;
 
     // If a stencil exceeds the threshold, we need to split it
     if(stencil.getFields().size() > MaxFieldPerStencil) {
       rerunPassSetStageGraph = true;
 
-      newStencils.emplace_back(std::make_shared<Stencil>(
+      newStencils.emplace_back(std::make_shared<iir::Stencil>(
           *stencilInstantiation, stencil.getSIRStencil(), stencilInstantiation->nextUID()));
-      std::shared_ptr<Stencil> newStencil = newStencils.back();
+      std::shared_ptr<iir::Stencil> newStencil = newStencils.back();
 
       std::set<int> fieldsInNewStencil;
 
       // Iterate the multi-stage of the old `stencil` and insert its stages into `newStencil`
       for(const auto& multiStagePtr : stencil.getMultiStages()) {
-        MultiStage& multiStage = *multiStagePtr;
+        iir::MultiStage& multiStage = *multiStagePtr;
 
         // Create an empty multi-stage in the current stencil with the same parameter as
         // `multiStage`
         newStencil->getMultiStages().push_back(
-            std::make_shared<MultiStage>(*stencilInstantiation, multiStage.getLoopOrder()));
+            std::make_shared<iir::MultiStage>(*stencilInstantiation, multiStage.getLoopOrder()));
 
-        for(std::shared_ptr<Stage>& stagePtr : multiStage.getStages()) {
+        for(std::shared_ptr<iir::Stage>& stagePtr : multiStage.getStages()) {
           if(newStencil->isEmpty() ||
              mergePossible(fieldsInNewStencil, stagePtr.get(), MaxFieldPerStencil)) {
 
@@ -96,14 +97,14 @@ bool PassStencilSplitter::run(const std::shared_ptr<StencilInstantiation>& stenc
 
           } else {
             // Make a new stencil
-            newStencils.emplace_back(std::make_shared<Stencil>(
+            newStencils.emplace_back(std::make_shared<iir::Stencil>(
                 *stencilInstantiation, stencil.getSIRStencil(), stencilInstantiation->nextUID()));
             newStencil = newStencils.back();
             fieldsInNewStencil.clear();
 
             // Re-create the current multi-stage in the `newStencil` and insert the stage
-            newStencil->getMultiStages().push_back(
-                std::make_shared<MultiStage>(*stencilInstantiation, multiStage.getLoopOrder()));
+            newStencil->getMultiStages().push_back(std::make_shared<iir::MultiStage>(
+                *stencilInstantiation, multiStage.getLoopOrder()));
             newStencil->getMultiStages().back()->getStages().push_back(stagePtr);
           }
         }

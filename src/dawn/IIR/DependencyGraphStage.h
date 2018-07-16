@@ -15,13 +15,15 @@
 #ifndef DAWN_OPTIMIZER_DEPENDENCYGRAPHSTAGE_H
 #define DAWN_OPTIMIZER_DEPENDENCYGRAPHSTAGE_H
 
-#include "dawn/Optimizer/DependencyGraph.h"
+#include "dawn/IIR/DependencyGraph.h"
 
 namespace dawn {
+class OptimizerContext;
+
+namespace iir {
 
 class Stage;
 class StencilInstantiation;
-class OptimizerContext;
 
 /// @enum DependencyGraphStageEdgeKind
 /// @brief Type of edges
@@ -60,6 +62,7 @@ public:
   const char* getDotShape() const;
 };
 
+} // namespace iir
 } // namespace dawn
 
 #endif

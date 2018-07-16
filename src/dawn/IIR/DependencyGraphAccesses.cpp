@@ -12,20 +12,21 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/DependencyGraphAccesses.h"
+#include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/Optimizer/BoundaryExtent.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/StatementAccessesPair.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/Json.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>
 #include <unordered_map>
 
 namespace dawn {
+namespace iir {
 
 void DependencyGraphAccesses::insertStatementAccessesPair(
-    const std::shared_ptr<StatementAccessesPair>& stmtAccessPair) {
+    const std::shared_ptr<iir::StatementAccessesPair>& stmtAccessPair) {
 
   if(stmtAccessPair->hasChildren()) {
     for(const auto& s : stmtAccessPair->getChildren())
@@ -531,4 +532,5 @@ void DependencyGraphAccesses::toJSON(const std::string& file) const {
   ofs.close();
 }
 
+} // namespace iir
 } // namespace dawn

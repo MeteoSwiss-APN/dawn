@@ -12,10 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/Stencil.h"
-#include "dawn/Optimizer/DependencyGraphStage.h"
+#include "dawn/IIR/Stencil.h"
+#include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/Optimizer/Renaming.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
@@ -25,18 +25,33 @@
 
 namespace dawn {
 
-std::ostream& operator<<(std::ostream& os, const Stencil::StagePosition& position) {
+std::ostream& operator<<(std::ostream& os, const iir::Stencil::StagePosition& position) {
   return (os << "(" << position.MultiStageIndex << ", " << position.StageOffset << ")");
 }
 
-std::ostream& operator<<(std::ostream& os, const Stencil::StatementPosition& position) {
+std::ostream& operator<<(std::ostream& os, const iir::Stencil::StatementPosition& position) {
   return (os << "(Stage=" << position.StagePos << ", DoMethod=" << position.DoMethodIndex
              << ", Statement=" << position.StatementIndex << ")");
 }
 
-std::ostream& operator<<(std::ostream& os, const Stencil::Lifetime& lifetime) {
+std::ostream& operator<<(std::ostream& os, const iir::Stencil::Lifetime& lifetime) {
   return (os << "[Begin=" << lifetime.Begin << ", End=" << lifetime.End << "]");
 }
+
+std::ostream& operator<<(std::ostream& os, const iir::Stencil& stencil) {
+  int multiStageIdx = 0;
+  for(const auto& MS : stencil.getMultiStages()) {
+    os << "MultiStage " << (multiStageIdx++) << ": (" << MS->getLoopOrder() << ")\n";
+    for(const auto& stage : MS->getStages())
+      os << "  " << stencil.getStencilInstantiation().getNameFromStageID(stage->getStageID()) << " "
+         << RangeToString()(stage->getFields(), [&](const Field& field) {
+              return stencil.getStencilInstantiation().getNameFromAccessID(field.getAccessID());
+            }) << "\n";
+  }
+  return os;
+}
+
+namespace iir {
 
 bool Stencil::StagePosition::operator<(const Stencil::StagePosition& other) const {
   return MultiStageIndex < other.MultiStageIndex ||
@@ -460,19 +475,6 @@ void Stencil::accept(ASTVisitor& visitor) {
           stmtAcessesPairPtr->getStatement()->ASTStmt->accept(visitor);
 }
 
-std::ostream& operator<<(std::ostream& os, const Stencil& stencil) {
-  int multiStageIdx = 0;
-  for(const auto& MS : stencil.getMultiStages()) {
-    os << "MultiStage " << (multiStageIdx++) << ": (" << MS->getLoopOrder() << ")\n";
-    for(const auto& stage : MS->getStages())
-      os << "  " << stencil.getStencilInstantiation().getNameFromStageID(stage->getStageID()) << " "
-         << RangeToString()(stage->getFields(), [&](const Field& field) {
-              return stencil.getStencilInstantiation().getNameFromAccessID(field.getAccessID());
-            }) << "\n";
-  }
-  return os;
-}
-
 std::unordered_map<int, Extents> const Stencil::computeEnclosingAccessExtents() const {
   std::unordered_map<int, Extents> maxExtents_;
   // iterate through multistages
@@ -498,4 +500,5 @@ std::unordered_map<int, Extents> const Stencil::computeEnclosingAccessExtents() 
   return maxExtents_;
 }
 
+} // namespace iir
 } // namespace dawn

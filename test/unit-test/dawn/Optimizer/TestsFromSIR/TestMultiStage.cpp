@@ -35,7 +35,8 @@ protected:
   MultiStageTest() : compiler_(compileOptions_.get()) {}
   virtual void SetUp() {}
 
-  std::shared_ptr<StencilInstantiation> loadTest(std::string sirFilename, std::string stencilName) {
+  std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename,
+                                                      std::string stencilName) {
 
     std::string filename = TestEnvironment::path_ + "/" + sirFilename;
     std::ifstream file(filename);
@@ -140,7 +141,7 @@ TEST_F(MultiStageTest, test_compute_ordered_do_methods) {
   auto stencilInstantiation = loadTest("test_compute_ordered_do_methods.sir", "stencil");
   auto stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  std::shared_ptr<iir::Stencil> stencil = stencils[0];
 
   EXPECT_EQ(stencil->getMultiStages().size(), 1);
 
@@ -230,7 +231,7 @@ TEST_F(MultiStageTest, test_compute_read_access_interval) {
   auto stencilInstantiation = loadTest("test_compute_read_access_interval.sir", "stencil");
   auto stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  std::shared_ptr<iir::Stencil> stencil = stencils[0];
 
   EXPECT_EQ(stencil->getMultiStages().size(), 1);
 
@@ -299,7 +300,7 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_02) {
   auto stencilInstantiation = loadTest("test_compute_read_access_interval_02.sir", "stencil");
   auto stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  std::shared_ptr<iir::Stencil> stencil = stencils[0];
 
   EXPECT_EQ(stencil->getMultiStages().size(), 1);
 
@@ -364,7 +365,7 @@ TEST_F(MultiStageTest, test_field_access_interval_04) {
       loadTest("test_field_access_interval_04.sir", "compute_extent_test_stencil");
   auto stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  std::shared_ptr<iir::Stencil> stencil = stencils[0];
 
   EXPECT_EQ(stencil->getMultiStages().size(), 1);
 
@@ -442,7 +443,7 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_03) {
   auto stencilInstantiation = loadTest("test_compute_read_access_interval_03.sir", "stencil");
   auto stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  std::shared_ptr<iir::Stencil> stencil = stencils[0];
 
   EXPECT_EQ(stencil->getMultiStages().size(), 2);
 
@@ -558,7 +559,7 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_04) {
   auto stencilInstantiation = loadTest("test_compute_read_access_interval_04.sir", "stencil");
   auto stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  std::shared_ptr<iir::Stencil> stencil = stencils[0];
 
   EXPECT_EQ(stencil->getMultiStages().size(), 3);
 

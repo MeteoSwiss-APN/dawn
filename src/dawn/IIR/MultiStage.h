@@ -18,7 +18,7 @@
 #include "dawn/Optimizer/Cache.h"
 #include "dawn/Optimizer/MultiInterval.h"
 #include "dawn/Optimizer/LoopOrder.h"
-#include "dawn/Optimizer/Stage.h"
+#include "dawn/IIR/Stage.h"
 #include <deque>
 #include <list>
 #include <memory>
@@ -26,6 +26,7 @@
 #include <vector>
 
 namespace dawn {
+namespace iir {
 
 class StencilInstantiation;
 class DependencyGraphAccesses;
@@ -138,10 +139,11 @@ public:
   /// @brief true if it contains no stages or the stages are empty
   bool isEmptyOrNullStmt() const;
 
-  //TODO doc
+  // TODO doc
   dawn::MultiInterval computeReadAccessInterval(int accessID) const;
 };
 
+} // namespace iir
 } // namespace dawn
 
 #endif

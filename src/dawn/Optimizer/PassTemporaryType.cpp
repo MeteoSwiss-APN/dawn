@@ -14,9 +14,9 @@
 
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/StatementAccessesPair.h"
-#include "dawn/Optimizer/Stencil.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/Stencil.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include <iostream>
 #include <memory>
@@ -29,14 +29,14 @@ namespace dawn {
 namespace {
 
 class StencilFunArgumentDetector : public ASTVisitorForwarding {
-  StencilInstantiation& instantiation_;
+  iir::StencilInstantiation& instantiation_;
   int AccessID_;
 
   int argListNesting_;
   bool usedInStencilFun_;
 
 public:
-  StencilFunArgumentDetector(StencilInstantiation& instantiation, int AccessID)
+  StencilFunArgumentDetector(iir::StencilInstantiation& instantiation, int AccessID)
       : instantiation_(instantiation), AccessID_(AccessID), argListNesting_(0),
         usedInStencilFun_(false) {}
 
@@ -57,7 +57,7 @@ public:
 /// @brief Check if a field, given by `AccessID` is used as an argument of a stencil-function inside
 /// any statement of the `stencil`
 /// @returns `true` if field is used as an argument
-bool usedAsArgumentInStencilFun(const std::shared_ptr<Stencil>& stencil, int AccessID) {
+bool usedAsArgumentInStencilFun(const std::shared_ptr<iir::Stencil>& stencil, int AccessID) {
   StencilFunArgumentDetector visitor(stencil->getStencilInstantiation(), AccessID);
   stencil->accept(visitor);
   return visitor.usedInStencilFun();
@@ -73,13 +73,13 @@ struct Temporary {
   Temporary(int accessID, TemporaryType type, const Extents& extent)
       : AccessID(accessID), Type(type), Extent(extent) {}
 
-  int AccessID;               ///< AccessID of the field or variable
-  TemporaryType Type : 1;     ///< Type of the temporary
-  Stencil::Lifetime Lifetime; ///< Lifetime of the temporary
-  Extents Extent;             ///< Accumulated access of the temporary during its lifetime
+  int AccessID;                    ///< AccessID of the field or variable
+  TemporaryType Type : 1;          ///< Type of the temporary
+  iir::Stencil::Lifetime Lifetime; ///< Lifetime of the temporary
+  Extents Extent;                  ///< Accumulated access of the temporary during its lifetime
 
   /// @brief Dump the temporary
-  void dump(const std::shared_ptr<StencilInstantiation>& instantiation) const {
+  void dump(const std::shared_ptr<iir::StencilInstantiation>& instantiation) const {
     std::cout << "Temporary : " << instantiation->getNameFromAccessID(AccessID) << " {"
               << "\n  Type=" << (Type == TT_LocalVariable ? "LocalVariable" : "Field")
               << ",\n  Lifetime=" << Lifetime << ",\n  Extent=" << Extent << "\n}\n";
@@ -90,7 +90,7 @@ struct Temporary {
 
 PassTemporaryType::PassTemporaryType() : Pass("PassTemporaryType", true) {}
 
-bool PassTemporaryType::run(const std::shared_ptr<StencilInstantiation>& instantiation) {
+bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
   OptimizerContext* context = instantiation->getOptimizerContext();
 
   std::unordered_map<int, Temporary> temporaries;
@@ -145,7 +145,7 @@ bool PassTemporaryType::run(const std::shared_ptr<StencilInstantiation>& instant
 
     auto LifetimeMap = stencilPtr->getLifetime(AccessIDs);
     std::for_each(LifetimeMap.begin(), LifetimeMap.end(),
-                  [&](const std::pair<int, Stencil::Lifetime>& lifetimePair) {
+                  [&](const std::pair<int, iir::Stencil::Lifetime>& lifetimePair) {
                     DAWN_ASSERT(temporaries.count(lifetimePair.first));
                     temporaries.at(lifetimePair.first).Lifetime = lifetimePair.second;
                   });
@@ -190,19 +190,20 @@ bool PassTemporaryType::run(const std::shared_ptr<StencilInstantiation>& instant
 }
 
 void PassTemporaryType::fixTemporariesSpanningMultipleStencils(
-    StencilInstantiation* instantiation, const std::vector<std::shared_ptr<Stencil>>& stencils) {
+    iir::StencilInstantiation* instantiation,
+    const std::vector<std::shared_ptr<iir::Stencil>>& stencils) {
   if(stencils.size() <= 1)
     return;
 
   for(int i = 0; i < stencils.size(); ++i) {
-    for(const Stencil::FieldInfo& fieldi : stencils[i]->getFields()) {
+    for(const iir::Stencil::FieldInfo& fieldi : stencils[i]->getFields()) {
 
       // Is fieldi a temporary?
       if(fieldi.IsTemporary) {
 
         // Is it referenced in another stencil?
         for(int j = i + 1; j < stencils.size(); ++j) {
-          for(const Stencil::FieldInfo& fieldj : stencils[j]->getFields()) {
+          for(const iir::Stencil::FieldInfo& fieldj : stencils[j]->getFields()) {
 
             // Yes and yes ... promote it to a real storage
             if(fieldi.AccessID == fieldj.AccessID && fieldj.IsTemporary) {

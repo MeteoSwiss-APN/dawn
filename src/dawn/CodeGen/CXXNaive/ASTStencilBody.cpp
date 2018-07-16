@@ -16,8 +16,8 @@
 #include "dawn/CodeGen/CXXNaive/ASTStencilFunctionParamVisitor.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/StencilFunctionInstantiation.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilFunctionInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Unreachable.h"
 
@@ -25,7 +25,7 @@ namespace dawn {
 namespace codegen {
 namespace cxxnaive {
 
-ASTStencilBody::ASTStencilBody(const dawn::StencilInstantiation* stencilInstantiation,
+ASTStencilBody::ASTStencilBody(const iir::StencilInstantiation* stencilInstantiation,
                                StencilContext stencilContext)
     : ASTCodeGenCXX(), instantiation_(stencilInstantiation), offsetPrinter_(",", "(", ")"),
       currentFunction_(nullptr), nestingOfStencilFunArgLists_(0), stencilContext_(stencilContext) {}
@@ -105,11 +105,11 @@ void ASTStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
   if(nestingOfStencilFunArgLists_++)
     ss_ << ", ";
 
-  const std::shared_ptr<dawn::StencilFunctionInstantiation>& stencilFun =
+  const std::shared_ptr<iir::StencilFunctionInstantiation>& stencilFun =
       currentFunction_ ? currentFunction_->getStencilFunctionInstantiation(expr)
                        : instantiation_->getStencilFunctionInstantiation(expr);
 
-  ss_ << dawn::StencilFunctionInstantiation::makeCodeGenName(*stencilFun) << "(i,j,k";
+  ss_ << iir::StencilFunctionInstantiation::makeCodeGenName(*stencilFun) << "(i,j,k";
 
   //  int n = 0;
   ASTStencilFunctionParamVisitor fieldAccessVisitor(currentFunction_, instantiation_);
@@ -173,10 +173,10 @@ void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
     // it means the function was called passing another function as argument,
     // i.e. gn in the example
     if(currentFunction_->isArgStencilFunctionInstantiation(argIndex)) {
-      StencilFunctionInstantiation& argStencilFn =
+      iir::StencilFunctionInstantiation& argStencilFn =
           *(currentFunction_->getFunctionInstantiationOfArgField(argIndex));
 
-      ss_ << StencilFunctionInstantiation::makeCodeGenName(argStencilFn) << "(i,j,k";
+      ss_ << iir::StencilFunctionInstantiation::makeCodeGenName(argStencilFn) << "(i,j,k";
 
       // parse the arguments of the argument stencil gn call
       for(int argIdx = 0; argIdx < argStencilFn.numArgs(); ++argIdx) {
@@ -217,7 +217,7 @@ void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
 }
 
 void ASTStencilBody::setCurrentStencilFunction(
-    const std::shared_ptr<StencilFunctionInstantiation>& currentFunction) {
+    const std::shared_ptr<iir::StencilFunctionInstantiation>& currentFunction) {
   currentFunction_ = currentFunction;
 }
 

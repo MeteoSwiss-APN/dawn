@@ -19,7 +19,9 @@
 
 namespace dawn {
 
+namespace iir {
 class DependencyGraphAccesses;
+}
 
 /// @brief Result of the vertical dependency analysis algorithm
 /// @ingroup optimizer
@@ -68,7 +70,8 @@ struct ReadBeforeWriteConflict {
 ///
 /// @ingroup optimizer
 extern ReadBeforeWriteConflict
-hasVerticalReadBeforeWriteConflict(const DependencyGraphAccesses* graph, LoopOrderKind loopOrder);
+hasVerticalReadBeforeWriteConflict(const iir::DependencyGraphAccesses* graph,
+                                   LoopOrderKind loopOrder);
 
 /// @brief Check if the graph contains any horizontal non-pointwise read-before-write conflicts
 ///
@@ -100,7 +103,7 @@ hasVerticalReadBeforeWriteConflict(const DependencyGraphAccesses* graph, LoopOrd
 /// @see Stage
 ///
 /// @ingroup optimizer
-extern bool hasHorizontalReadBeforeWriteConflict(const DependencyGraphAccesses* graph);
+extern bool hasHorizontalReadBeforeWriteConflict(const iir::DependencyGraphAccesses* graph);
 
 } // namespace dawn
 

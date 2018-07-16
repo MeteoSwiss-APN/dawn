@@ -13,10 +13,10 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassTemporaryMerger.h"
-#include "dawn/Optimizer/DependencyGraph.h"
-#include "dawn/Optimizer/DependencyGraphAccesses.h"
+#include "dawn/IIR/DependencyGraph.h"
+#include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/StringUtil.h"
 #include <iostream>
@@ -25,11 +25,12 @@ namespace dawn {
 
 PassTemporaryMerger::PassTemporaryMerger() : Pass("PassTemporaryMerger") {}
 
-bool PassTemporaryMerger::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
+bool PassTemporaryMerger::run(
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
-  using Edge = DependencyGraphAccesses::Edge;
-  using Vertex = DependencyGraphAccesses::Vertex;
+  using Edge = iir::DependencyGraphAccesses::Edge;
+  using Vertex = iir::DependencyGraphAccesses::Vertex;
 
   bool merged = false;
 
@@ -48,18 +49,18 @@ bool PassTemporaryMerger::run(const std::shared_ptr<StencilInstantiation>& stenc
 
   int stencilIdx = 0;
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
-    Stencil& stencil = *stencilPtr;
+    iir::Stencil& stencil = *stencilPtr;
 
     // Build the dependency graph of the stencil (merge all dependency graphs of the multi-stages)
-    DependencyGraphAccesses AccessesDAG(stencilInstantiation.get());
+    iir::DependencyGraphAccesses AccessesDAG(stencilInstantiation.get());
     for(const auto& multiStagePtr : stencilPtr->getMultiStages()) {
-      MultiStage& multiStage = *multiStagePtr;
+      iir::MultiStage& multiStage = *multiStagePtr;
       AccessesDAG.merge(multiStage.getDependencyGraphOfAxis().get());
     }
     const auto& adjacencyList = AccessesDAG.getAdjacencyList();
 
     // Build the dependency graph of the temporaries
-    DependencyGraphAccesses TemporaryDAG(stencilInstantiation.get());
+    iir::DependencyGraphAccesses TemporaryDAG(stencilInstantiation.get());
     int AccessIDOfLastTemporary = -1;
     for(std::size_t VertexID : AccessesDAG.getOutputVertexIDs()) {
       nodesToVisit.clear();
@@ -117,11 +118,11 @@ bool PassTemporaryMerger::run(const std::shared_ptr<StencilInstantiation>& stenc
 
     for(const auto& FromAccessIDLifetimePair : LifeTimeMap) {
       const int FromAccessID = FromAccessIDLifetimePair.first;
-      const Stencil::Lifetime& FromLifetime = FromAccessIDLifetimePair.second;
+      const iir::Stencil::Lifetime& FromLifetime = FromAccessIDLifetimePair.second;
 
       for(const auto& ToAccessIDLifetimePair : LifeTimeMap) {
         const int ToAccessID = ToAccessIDLifetimePair.first;
-        const Stencil::Lifetime& ToLifetime = ToAccessIDLifetimePair.second;
+        const iir::Stencil::Lifetime& ToLifetime = ToAccessIDLifetimePair.second;
 
         if(FromAccessID == ToAccessID)
           continue;

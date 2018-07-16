@@ -18,7 +18,7 @@
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Logging.h"
@@ -65,8 +65,8 @@ CXXNaiveCodeGen::CXXNaiveCodeGen(OptimizerContext* context) : CodeGen(context) {
 
 CXXNaiveCodeGen::~CXXNaiveCodeGen() {}
 
-std::string
-CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stencilInstantiation) {
+std::string CXXNaiveCodeGen::generateStencilInstantiation(
+    const iir::StencilInstantiation* stencilInstantiation) {
   using namespace codegen;
 
   std::stringstream ssSW;
@@ -88,7 +88,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
   std::unordered_set<std::string> generatedStencilFun;
   size_t idx = 0;
   for(const auto& stencilFun : stencilInstantiation->getStencilFunctionInstantiations()) {
-    std::string stencilFunName = StencilFunctionInstantiation::makeCodeGenName(*stencilFun);
+    std::string stencilFunName = iir::StencilFunctionInstantiation::makeCodeGenName(*stencilFun);
     if(generatedStencilFun.emplace(stencilFunName).second) {
 
       auto stencilProperties =
@@ -188,7 +188,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
   std::vector<std::string> innerStencilNames(stencils.size());
   // generate the code for each of the stencils
   for(std::size_t stencilIdx = 0; stencilIdx < stencils.size(); ++stencilIdx) {
-    const Stencil& stencil = *stencilInstantiation->getStencils()[stencilIdx];
+    const iir::Stencil& stencil = *stencilInstantiation->getStencils()[stencilIdx];
 
     std::string stencilName = "stencil_" + std::to_string(stencilIdx);
     auto stencilProperties = codeGenProperties.insertStencil(StencilContext::SC_Stencil,
@@ -201,11 +201,11 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
     const auto& StencilFields = stencil.getFields();
 
     auto nonTempFields =
-        makeRange(StencilFields, std::function<bool(Stencil::FieldInfo const&)>(
-                                     [](Stencil::FieldInfo const& f) { return !f.IsTemporary; }));
+        makeRange(StencilFields, std::function<bool(iir::Stencil::FieldInfo const&)>([](
+                                     iir::Stencil::FieldInfo const& f) { return !f.IsTemporary; }));
     auto tempFields =
-        makeRange(StencilFields, std::function<bool(Stencil::FieldInfo const&)>(
-                                     [](Stencil::FieldInfo const& f) { return f.IsTemporary; }));
+        makeRange(StencilFields, std::function<bool(iir::Stencil::FieldInfo const&)>([](
+                                     iir::Stencil::FieldInfo const& f) { return f.IsTemporary; }));
 
     // list of template for storages used in the stencil class
     std::vector<std::string> StencilTemplates(nonTempFields.size());
@@ -214,9 +214,9 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
                   [cnt]() mutable { return "StorageType" + std::to_string(cnt++); });
 
     Structure StencilClass = StencilWrapperClass.addStruct(
-        stencilName, RangeToString(", ", "", "")(
-                         StencilTemplates, [](const std::string& str) { return "class " + str; }),
-        "sbase");
+        stencilName, RangeToString(", ", "", "")(StencilTemplates, [](const std::string& str) {
+          return "class " + str;
+        }), "sbase");
     std::string StencilName = StencilClass.getName();
 
     auto& paramNameToType = stencilProperties->paramNameToType_;
@@ -287,7 +287,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
 
       StencilRunMethod.ss() << "{";
 
-      const MultiStage& multiStage = *multiStagePtr;
+      const iir::MultiStage& multiStage = *multiStagePtr;
 
       // create all the data views
       for(auto fieldIt : nonTempFields) {
@@ -318,7 +318,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
             makeKLoop("m_dom", (multiStage.getLoopOrder() == LoopOrderKind::LK_Backward), interval),
             [&]() {
               for(const auto& stagePtr : multiStage.getStages()) {
-                const Stage& stage = *stagePtr;
+                const iir::Stage& stage = *stagePtr;
 
                 StencilRunMethod.addBlockStatement(
                     makeIJLoop(stage.getExtents()[0], "m_dom", "i"), [&]() {
@@ -327,7 +327,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
 
                             // Generate Do-Method
                             for(const auto& doMethodPtr : stage.getDoMethods()) {
-                              const DoMethod& doMethod = *doMethodPtr;
+                              const iir::DoMethod& doMethod = *doMethodPtr;
                               if(!doMethod.getInterval().overlaps(interval))
                                 continue;
                               for(const auto& statementAccessesPair :
@@ -402,7 +402,7 @@ CXXNaiveCodeGen::generateStencilInstantiation(const StencilInstantiation* stenci
   // add the ctr initialization of each stencil
   for(std::size_t stencilIdx = 0; stencilIdx < stencils.size(); ++stencilIdx) {
 
-    const Stencil& stencil = *stencilInstantiation->getStencils()[stencilIdx];
+    const iir::Stencil& stencil = *stencilInstantiation->getStencils()[stencilIdx];
 
     if(stencil.isEmpty())
       continue;

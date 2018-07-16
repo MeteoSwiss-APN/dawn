@@ -19,6 +19,7 @@
 #include <unordered_map>
 
 namespace dawn {
+namespace iir {
 
 class StencilInstantiation;
 class StencilFunctionInstantiation;
@@ -93,6 +94,7 @@ public:
   /// @}
 };
 
+} // namespace iir
 } // namespace dawn
 
 #endif

@@ -35,7 +35,7 @@ protected:
   }
   virtual void SetUp() {}
 
-  std::vector<std::shared_ptr<Stencil>> loadTest(std::string sirFilename) {
+  std::vector<std::shared_ptr<iir::Stencil>> loadTest(std::string sirFilename) {
 
     std::string filename = TestEnvironment::path_ + "/" + sirFilename;
     std::ifstream file(filename);

@@ -30,17 +30,17 @@ class CodeGen {
 protected:
   OptimizerContext* context_;
 
-  static size_t getVerticalTmpHaloSize(Stencil const& stencil);
+  static size_t getVerticalTmpHaloSize(iir::Stencil const& stencil);
   size_t getVerticalTmpHaloSizeForMultipleStencils(
-      const std::vector<std::shared_ptr<Stencil>>& stencils) const;
-  void addTempStorageTypedef(Structure& stencilClass, Stencil const& stencil) const;
-  void addTmpStorageDeclaration(
-      Structure& stencilClass,
-      IndexRange<const std::vector<dawn::Stencil::FieldInfo>>& tmpFields) const;
-  void addTmpStorageInit(MemberFunction& ctr, const Stencil& stencil,
-                         IndexRange<const std::vector<dawn::Stencil::FieldInfo>>& tempFields) const;
+      const std::vector<std::shared_ptr<iir::Stencil>>& stencils) const;
+  void addTempStorageTypedef(Structure& stencilClass, iir::Stencil const& stencil) const;
+  void
+  addTmpStorageDeclaration(Structure& stencilClass,
+                           IndexRange<const std::vector<iir::Stencil::FieldInfo>>& tmpFields) const;
+  void addTmpStorageInit(MemberFunction& ctr, const iir::Stencil& stencil,
+                         IndexRange<const std::vector<iir::Stencil::FieldInfo>>& tempFields) const;
   void addTmpStorageInit_wrapper(MemberFunction& ctr,
-                                 const std::vector<std::shared_ptr<Stencil>>& stencils,
+                                 const std::vector<std::shared_ptr<iir::Stencil>>& stencils,
                                  const std::vector<std::string>& tempFields) const;
 
   const std::string tmpStorageTypename_ = "tmp_storage_t";

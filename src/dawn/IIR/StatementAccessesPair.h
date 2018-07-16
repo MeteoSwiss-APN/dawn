@@ -15,13 +15,14 @@
 #ifndef DAWN_OPTIMIZER_STATEMENTACCESSESPAIR_H
 #define DAWN_OPTIMIZER_STATEMENTACCESSESPAIR_H
 
-#include "dawn/Optimizer/Accesses.h"
+#include "dawn/IIR/Accesses.h"
 #include "dawn/SIR/Statement.h"
 #include <boost/optional.hpp>
 #include <memory>
 #include <vector>
 
 namespace dawn {
+namespace iir {
 
 /// @brief Statement with corresponding Accesses
 ///
@@ -82,6 +83,7 @@ public:
   /// @}
 };
 
+} // namespace iir
 } // namespace dawn
 
 #endif

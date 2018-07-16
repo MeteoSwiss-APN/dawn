@@ -15,7 +15,7 @@
 #ifndef DAWN_OPTIMIZER_STAGE_H
 #define DAWN_OPTIMIZER_STAGE_H
 
-#include "dawn/Optimizer/DoMethod.h"
+#include "dawn/IIR/DoMethod.h"
 #include "dawn/Optimizer/Field.h"
 #include "dawn/Optimizer/Interval.h"
 #include "dawn/Support/ArrayRef.h"
@@ -26,9 +26,10 @@
 #include <vector>
 
 namespace dawn {
+namespace iir {
 
-class StencilInstantiation;
 class DependencyGraphAccesses;
+class StencilInstantiation;
 class MultiStage;
 
 /// @brief A Stage is represented by a collection of statements grouped into DoMethod of
@@ -194,6 +195,7 @@ public:
   bool isEmptyOrNullStmt() const;
 };
 
+} // namespace iir
 } // namespace dawn
 
 #endif

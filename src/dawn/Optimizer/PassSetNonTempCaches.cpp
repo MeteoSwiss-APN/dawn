@@ -17,8 +17,8 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassSetCaches.h"
-#include "dawn/Optimizer/StatementAccessesPair.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/ASTExpr.h"
 #include "dawn/Support/Unreachable.h"
 #include <iostream>
@@ -46,8 +46,8 @@ class GlobalFieldCacher {
 public:
   /// @param[in, out]  msprt   Pointer to the multistage to handle
   /// @param[in, out]  si      Stencil Instanciation [ISIR] holding all the Stencils
-  GlobalFieldCacher(const std::shared_ptr<MultiStage>& msptr,
-                    const std::shared_ptr<StencilInstantiation>& si)
+  GlobalFieldCacher(const std::shared_ptr<iir::MultiStage>& msptr,
+                    const std::shared_ptr<iir::StencilInstantiation>& si)
       : multiStagePrt_(msptr), instantiation_(si) {}
 
   /// @brief Entry method for the pass: processes a given multistage and applies all changes
@@ -148,7 +148,7 @@ private:
     if(!oldAccessIDs.empty()) {
       auto stageBegin = multiStagePrt_->getStages().begin();
 
-      std::shared_ptr<Stage> cacheFillStage =
+      std::shared_ptr<iir::Stage> cacheFillStage =
           createAssignmentStage(multiStagePrt_->getEnclosingInterval(), newAccessIDs, oldAccessIDs);
       multiStagePrt_->getStages().insert(stageBegin, std::move(cacheFillStage));
     }
@@ -169,7 +169,7 @@ private:
     if(!oldAccessIDs.empty()) {
       auto stageEnd = multiStagePrt_->getStages().end();
 
-      std::shared_ptr<Stage> cacheFlushStage =
+      std::shared_ptr<iir::Stage> cacheFlushStage =
           createAssignmentStage(multiStagePrt_->getEnclosingInterval(), oldAccessIDs, newAccessIDs);
 
       // Insert the new stage at the found location
@@ -178,13 +178,13 @@ private:
   }
 
   /// @brief Creates the stage in which assignment happens (fill and flush)
-  std::shared_ptr<Stage> createAssignmentStage(const Interval& interval,
-                                               const std::vector<int>& assignmentIDs,
-                                               const std::vector<int>& assigneeIDs) {
+  std::shared_ptr<iir::Stage> createAssignmentStage(const Interval& interval,
+                                                    const std::vector<int>& assignmentIDs,
+                                                    const std::vector<int>& assigneeIDs) {
     // Add the cache Flush stage
-    std::shared_ptr<Stage> assignmentStage = std::make_shared<Stage>(
+    std::shared_ptr<iir::Stage> assignmentStage = std::make_shared<iir::Stage>(
         *instantiation_, multiStagePrt_.get(), instantiation_->nextUID(), interval);
-    std::unique_ptr<DoMethod> domethod = make_unique<DoMethod>(interval);
+    std::unique_ptr<iir::DoMethod> domethod = make_unique<iir::DoMethod>(interval);
     domethod->getStatementAccessesPairs().clear();
 
     for(int i = 0; i < assignmentIDs.size(); ++i) {
@@ -202,7 +202,7 @@ private:
   }
 
   ///@brief Add the assignment operator of two unique id's to a given domethod
-  void addAssignmentToDoMethod(std::unique_ptr<DoMethod>& domethod, int assignmentID,
+  void addAssignmentToDoMethod(std::unique_ptr<iir::DoMethod>& domethod, int assignmentID,
                                int assigneeID) {
     // Create the StatementAccessPair of the assignment with the new and old variables
     auto fa_assignee =
@@ -212,8 +212,8 @@ private:
     auto assignmentExpression = std::make_shared<AssignmentExpr>(fa_assignment, fa_assignee, "=");
     auto expAssignment = std::make_shared<ExprStmt>(assignmentExpression);
     auto assignmentStatement = std::make_shared<Statement>(expAssignment, nullptr);
-    auto pair = std::make_shared<StatementAccessesPair>(assignmentStatement);
-    auto newAccess = std::make_shared<Accesses>();
+    auto pair = std::make_shared<iir::StatementAccessesPair>(assignmentStatement);
+    auto newAccess = std::make_shared<iir::Accesses>();
     newAccess->addWriteExtent(assignmentID, Extents(Array3i{{0, 0, 0}}));
     newAccess->addReadExtent(assigneeID, Extents(Array3i{{0, 0, 0}}));
     pair->setAccesses(newAccess);
@@ -231,9 +231,9 @@ private:
   bool checkReadBeforeWrite(int AccessID) {
     for(auto stageItGlob = multiStagePrt_->getStages().begin();
         stageItGlob != multiStagePrt_->getStages().end(); ++stageItGlob) {
-      DoMethod& doMethod = (**stageItGlob).getSingleDoMethod();
+      iir::DoMethod& doMethod = (**stageItGlob).getSingleDoMethod();
       for(int stmtIndex = 0; stmtIndex < doMethod.getStatementAccessesPairs().size(); ++stmtIndex) {
-        const std::shared_ptr<StatementAccessesPair>& stmtAccessesPair =
+        const std::shared_ptr<iir::StatementAccessesPair>& stmtAccessesPair =
             doMethod.getStatementAccessesPairs()[stmtIndex];
 
         // Find first if this statement has a read
@@ -257,9 +257,9 @@ private:
   bool checkReadOnlyAccess(int AccessID) {
     for(auto stageItGlob = multiStagePrt_->getStages().begin();
         stageItGlob != multiStagePrt_->getStages().end(); ++stageItGlob) {
-      DoMethod& doMethod = (**stageItGlob).getSingleDoMethod();
+      iir::DoMethod& doMethod = (**stageItGlob).getSingleDoMethod();
       for(int stmtIndex = 0; stmtIndex < doMethod.getStatementAccessesPairs().size(); ++stmtIndex) {
-        const std::shared_ptr<StatementAccessesPair>& stmtAccessesPair =
+        const std::shared_ptr<iir::StatementAccessesPair>& stmtAccessesPair =
             doMethod.getStatementAccessesPairs()[stmtIndex];
         // If we find a write-statement we exit
         auto wirteAccessIterator =
@@ -272,8 +272,8 @@ private:
     return true;
   }
 
-  const std::shared_ptr<MultiStage>& multiStagePrt_;
-  const std::shared_ptr<StencilInstantiation>& instantiation_;
+  const std::shared_ptr<iir::MultiStage>& multiStagePrt_;
+  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
 
   std::unordered_map<int, int> accessIDToDataLocality_;
   std::unordered_map<int, int> oldAccessIDtoNewAccessID_;
@@ -285,12 +285,12 @@ private:
 PassSetNonTempCaches::PassSetNonTempCaches() : Pass("PassSetNonTempCaches") {}
 
 bool dawn::PassSetNonTempCaches::run(
-    const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
-    const Stencil& stencil = *stencilPtr;
+    const iir::Stencil& stencil = *stencilPtr;
 
     std::vector<NameToImprovementMetric> allCachedFields;
     if(context->getOptions().UseNonTempCaches) {

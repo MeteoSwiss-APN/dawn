@@ -16,21 +16,12 @@ yoda_add_library(
   NAME DawnOptimizer
   SOURCES AccessComputation.h
           AccessComputation.cpp   
-          Accesses.cpp  
-          Accesses.h
           AccessUtils.cpp
           AccessUtils.h
           BoundaryExtent.cpp  
           BoundaryExtent.h
           Cache.cpp
           Cache.h
-          DependencyGraph.h
-          DependencyGraphAccesses.cpp      
-          DependencyGraphAccesses.h
-          DependencyGraphStage.cpp
-          DependencyGraphStage.h
-          DoMethod.cpp
-          DoMethod.h
           Extents.cpp
           Extents.h
           Field.h
@@ -44,8 +35,6 @@ yoda_add_library(
           LoopOrder.h     
           MultiInterval.cpp
           MultiInterval.h
-          MultiStage.cpp 
-          MultiStage.h
           OptimizerContext.cpp 
           OptimizerContext.h
           Pass.h
@@ -102,18 +91,8 @@ yoda_add_library(
           ReorderStrategyPartitioning.h
           Replacing.cpp
           Replacing.h
-          Stage.cpp
-          Stage.h
-          StatementAccessesPair.cpp
-          StatementAccessesPair.h
           StatementMapper.cpp
           StatementMapper.h
-          Stencil.cpp
-          Stencil.h
-          StencilFunctionInstantiation.cpp
-          StencilFunctionInstantiation.h
-          StencilInstantiation.cpp
-          StencilInstantiation.h
   OBJECT
 )
 

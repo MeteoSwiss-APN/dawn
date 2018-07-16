@@ -3,7 +3,7 @@
 namespace dawn {
 namespace codegen {
 
-size_t CodeGen::getVerticalTmpHaloSize(Stencil const& stencil) {
+size_t CodeGen::getVerticalTmpHaloSize(iir::Stencil const& stencil) {
   boost::optional<Interval> tmpInterval = stencil.getEnclosingIntervalTemporaries();
   return (tmpInterval.is_initialized())
              ? std::max(tmpInterval->overEnd(), tmpInterval->belowBegin())
@@ -11,7 +11,7 @@ size_t CodeGen::getVerticalTmpHaloSize(Stencil const& stencil) {
 }
 
 size_t CodeGen::getVerticalTmpHaloSizeForMultipleStencils(
-    const std::vector<std::shared_ptr<Stencil>>& stencils) const {
+    const std::vector<std::shared_ptr<iir::Stencil>>& stencils) const {
   boost::optional<Interval> fullIntervals;
   for(auto stencil : stencils) {
     auto tmpInterval = stencil->getEnclosingIntervalTemporaries();
@@ -27,7 +27,7 @@ size_t CodeGen::getVerticalTmpHaloSizeForMultipleStencils(
              : 0;
 }
 
-void CodeGen::addTempStorageTypedef(Structure& stencilClass, Stencil const& stencil) const {
+void CodeGen::addTempStorageTypedef(Structure& stencilClass, iir::Stencil const& stencil) const {
   stencilClass.addTypeDef("tmp_halo_t")
       .addType("gridtools::halo< GRIDTOOLS_CLANG_HALO_EXTEND, GRIDTOOLS_CLANG_HALO_EXTEND, " +
                std::to_string(getVerticalTmpHaloSize(stencil)) + ">");
@@ -41,7 +41,7 @@ void CodeGen::addTempStorageTypedef(Structure& stencilClass, Stencil const& sten
 
 void CodeGen::addTmpStorageDeclaration(
     Structure& stencilClass,
-    IndexRange<const std::vector<dawn::Stencil::FieldInfo>>& tempFields) const {
+    IndexRange<const std::vector<iir::Stencil::FieldInfo>>& tempFields) const {
   if(!(tempFields.empty())) {
     stencilClass.addMember(tmpMetadataTypename_, tmpMetadataName_);
 
@@ -51,8 +51,8 @@ void CodeGen::addTmpStorageDeclaration(
 }
 
 void CodeGen::addTmpStorageInit(
-    MemberFunction& ctr, Stencil const& stencil,
-    IndexRange<const std::vector<dawn::Stencil::FieldInfo>>& tempFields) const {
+    MemberFunction& ctr, iir::Stencil const& stencil,
+    IndexRange<const std::vector<iir::Stencil::FieldInfo>>& tempFields) const {
   if(!(tempFields.empty())) {
     ctr.addInit(tmpMetadataName_ + "(dom_.isize(), dom_.jsize(), dom_.ksize() + 2*" +
                 std::to_string(getVerticalTmpHaloSize(stencil)) + ")");
@@ -63,7 +63,7 @@ void CodeGen::addTmpStorageInit(
 }
 
 void CodeGen::addTmpStorageInit_wrapper(MemberFunction& ctr,
-                                        const std::vector<std::shared_ptr<Stencil>>& stencils,
+                                        const std::vector<std::shared_ptr<iir::Stencil>>& stencils,
                                         const std::vector<std::string>& tempFields) const {
   if(!(tempFields.empty())) {
     auto verticalExtent = getVerticalTmpHaloSizeForMultipleStencils(stencils);

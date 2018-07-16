@@ -21,6 +21,7 @@
 #include <vector>
 
 namespace dawn {
+namespace iir {
 
 class Stage;
 class DependencyGraphAccesses;
@@ -86,6 +87,7 @@ public:
                                                            const bool mergeWithDoInterval) const;
 };
 
+} // namespace iir
 } // namespace dawn
 
 #endif

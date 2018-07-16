@@ -12,10 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/Stage.h"
+#include "dawn/IIR/Stage.h"
 #include "dawn/Optimizer/AccessUtils.h"
-#include "dawn/Optimizer/DependencyGraphAccesses.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/DependencyGraphAccesses.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Logging.h"
 #include <algorithm>
@@ -24,6 +24,7 @@
 #include <unordered_map>
 
 namespace dawn {
+namespace iir {
 
 Stage::Stage(StencilInstantiation& context, MultiStage* multiStage, int StageID,
              const Interval& interval)
@@ -362,4 +363,5 @@ bool Stage::isEmptyOrNullStmt() const {
   return true;
 }
 
+} // namespace iir
 } // namespace dawn

@@ -30,6 +30,7 @@
 #include <vector>
 
 namespace dawn {
+namespace iir {
 
 /// @brief CRTP base class of all dependency graphs
 /// @ingroup optimizer
@@ -226,6 +227,7 @@ protected:
   std::vector<std::shared_ptr<EdgeList>> adjacencyList_;
 };
 
+} // namespace iir
 } // namespace dawn
 
 #endif

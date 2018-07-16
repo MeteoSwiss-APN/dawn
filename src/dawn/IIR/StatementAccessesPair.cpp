@@ -12,16 +12,17 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/StatementAccessesPair.h"
-#include "dawn/Optimizer/Accesses.h"
-#include "dawn/Optimizer/StencilFunctionInstantiation.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/Accesses.h"
+#include "dawn/IIR/StencilFunctionInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/ASTStringifier.h"
 #include "dawn/SIR/Statement.h"
 #include "dawn/Support/Printing.h"
 #include <sstream>
 
 namespace dawn {
+namespace iir {
 
 namespace {
 
@@ -146,4 +147,5 @@ std::string StatementAccessesPair::toString(const StencilFunctionInstantiation* 
   return toStringImpl(this, stencilFunc, initialIndent);
 }
 
+} // namespace iir
 } // namespace dawn

@@ -12,18 +12,19 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/MultiStage.h"
-#include "dawn/Optimizer/Accesses.h"
-#include "dawn/Optimizer/DependencyGraphAccesses.h"
+#include "dawn/IIR/MultiStage.h"
+#include "dawn/IIR/Accesses.h"
+#include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 #include "dawn/Optimizer/Renaming.h"
-#include "dawn/Optimizer/Stage.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/Stage.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/STLExtras.h"
 #include "dawn/Optimizer/MultiInterval.h"
 #include "dawn/Optimizer/IntervalAlgorithms.h"
 
 namespace dawn {
+namespace iir {
 
 MultiStage::MultiStage(StencilInstantiation& stencilInstantiation, LoopOrderKind loopOrder)
     : stencilInstantiation_(stencilInstantiation), loopOrder_(loopOrder) {}
@@ -316,4 +317,5 @@ bool MultiStage::isEmptyOrNullStmt() const {
   return true;
 }
 
+} // namespace iir
 } // namespace dawn

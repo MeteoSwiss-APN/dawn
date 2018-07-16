@@ -17,8 +17,8 @@
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/StencilFunctionInstantiation.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilFunctionInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
@@ -26,8 +26,8 @@ namespace codegen {
 namespace cxxnaive {
 
 ASTStencilFunctionParamVisitor::ASTStencilFunctionParamVisitor(
-    const std::shared_ptr<StencilFunctionInstantiation>& function,
-    StencilInstantiation const* instantiation)
+    const std::shared_ptr<iir::StencilFunctionInstantiation>& function,
+    iir::StencilInstantiation const* instantiation)
     : instantiation_(instantiation), currentFunction_(function) {}
 
 ASTStencilFunctionParamVisitor::~ASTStencilFunctionParamVisitor() {}

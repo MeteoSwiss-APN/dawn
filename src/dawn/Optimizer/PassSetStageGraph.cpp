@@ -13,16 +13,16 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassSetStageGraph.h"
-#include "dawn/Optimizer/DependencyGraphStage.h"
+#include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/STLExtras.h"
 
 namespace dawn {
 
 /// @brief Compute the dependency between the stages `from` and `to`
 /// @return `true` if the stage `from` depends on `to`, `false` otherwise
-static bool depends(const Stage& fromStage, const Stage& toStage) {
+static bool depends(const iir::Stage& fromStage, const iir::Stage& toStage) {
   if(!fromStage.overlaps(toStage))
     return false;
 
@@ -59,15 +59,16 @@ PassSetStageGraph::PassSetStageGraph() : Pass("PassSetStageGraph") {
   dependencies_.push_back("PassSetStageName");
 }
 
-bool PassSetStageGraph::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
+bool PassSetStageGraph::run(
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
   int stencilIdx = 0;
 
   for(auto& stencilPtr : stencilInstantiation->getStencils()) {
-    Stencil& stencil = *stencilPtr;
+    iir::Stencil& stencil = *stencilPtr;
     int numStages = stencil.getNumStages();
 
-    auto stageDAG = std::make_shared<DependencyGraphStage>(stencilInstantiation);
+    auto stageDAG = std::make_shared<iir::DependencyGraphStage>(stencilInstantiation);
 
     // Build DAG of stages (backward sweep)
     for(int i = numStages - 1; i >= 0; --i) {

@@ -14,13 +14,13 @@
 
 #include "dawn/Optimizer/PassSetStageName.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 
 namespace dawn {
 
 PassSetStageName::PassSetStageName() : Pass("PassSetStageName", true) {}
 
-bool PassSetStageName::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
+bool PassSetStageName::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   stencilInstantiation->getStageIDToNameMap().clear();
 
   int stencilIdx = 0;
@@ -34,7 +34,7 @@ bool PassSetStageName::run(const std::shared_ptr<StencilInstantiation>& stencilI
     for(auto& multiStagePtr : stencilPtr->getMultiStages()) {
       int stageIdx = 0;
       for(auto& stagePtr : multiStagePtr->getStages()) {
-        Stage& stage = *stagePtr;
+        iir::Stage& stage = *stagePtr;
         stencilInstantiation->getStageIDToNameMap().emplace(
             stage.getStageID(),
             stencilName + "_ms" + std::to_string(multiStageIdx) + "_s" + std::to_string(stageIdx));

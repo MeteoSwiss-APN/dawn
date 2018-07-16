@@ -13,8 +13,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/BoundaryExtent.h"
-#include "dawn/Optimizer/DependencyGraphAccesses.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/DependencyGraphAccesses.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/STLExtras.h"
 #include <unordered_map>
 #include <unordered_set>
@@ -23,9 +23,9 @@
 namespace dawn {
 
 std::unique_ptr<std::unordered_map<std::size_t, Extents>>
-computeBoundaryExtents(const DependencyGraphAccesses* graph) {
-  using Vertex = DependencyGraphAccesses::Vertex;
-  using Edge = DependencyGraphAccesses::Edge;
+computeBoundaryExtents(const iir::DependencyGraphAccesses* graph) {
+  using Vertex = iir::DependencyGraphAccesses::Vertex;
+  using Edge = iir::DependencyGraphAccesses::Edge;
 
   const auto& adjacencyList = graph->getAdjacencyList();
 
@@ -88,7 +88,7 @@ computeBoundaryExtents(const DependencyGraphAccesses* graph) {
   return nodeExtentsPtr;
 }
 
-bool exceedsMaxBoundaryPoints(const DependencyGraphAccesses* graph,
+bool exceedsMaxBoundaryPoints(const iir::DependencyGraphAccesses* graph,
                               int maxHorizontalBoundaryExtent) {
   auto nodeExtentsPtr = computeBoundaryExtents(graph);
 

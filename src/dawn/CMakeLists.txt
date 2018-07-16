@@ -16,6 +16,7 @@ add_subdirectory(Support)
 add_subdirectory(SIR)
 add_subdirectory(Compiler)
 add_subdirectory(Optimizer)
+add_subdirectory(IIR)
 add_subdirectory(CodeGen)
 add_subdirectory(Unittest)
 
@@ -26,6 +27,7 @@ yoda_combine_libraries(
   OBJECTS DawnSupportObjects
           DawnSIRObjects
           DawnCompilerObjects
+          DawnIIRObjects
           DawnOptimizerObjects
           DawnCodeGenObjects
   INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}

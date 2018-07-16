@@ -13,9 +13,9 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassComputeStageExtents.h"
-#include "dawn/Optimizer/DependencyGraphStage.h"
+#include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/STLExtras.h"
 
 namespace dawn {
@@ -25,15 +25,15 @@ PassComputeStageExtents::PassComputeStageExtents() : Pass("PassComputeStageExten
 }
 
 bool PassComputeStageExtents::run(
-    const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   for(auto& stencilPtr : stencilInstantiation->getStencils()) {
-    Stencil& stencil = *stencilPtr;
+    iir::Stencil& stencil = *stencilPtr;
 
     int numStages = stencil.getNumStages();
 
     // backward loop over stages
     for(int i = numStages - 1; i >= 0; --i) {
-      Stage& fromStage = *(stencil.getStage(i));
+      iir::Stage& fromStage = *(stencil.getStage(i));
 
       Extents const& stageExtent = fromStage.getExtents();
 
@@ -55,7 +55,7 @@ bool PassComputeStageExtents::run(
 
         // check which (previous) stage computes the field (read in fromStage)
         for(int j = i - 1; j >= 0; --j) {
-          Stage& toStage = *(stencil.getStage(j));
+          iir::Stage& toStage = *(stencil.getStage(j));
           // ===---------------------------------------------------------------------------------===
           //      Point two [ExtentComputationTODO]
           // ===---------------------------------------------------------------------------------===

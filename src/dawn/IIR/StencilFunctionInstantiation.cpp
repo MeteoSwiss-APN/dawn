@@ -12,11 +12,11 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/StencilFunctionInstantiation.h"
+#include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/Optimizer/AccessUtils.h"
 #include "dawn/Optimizer/Field.h"
 #include "dawn/Optimizer/Renaming.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/Printing.h"
@@ -24,6 +24,9 @@
 #include <iostream>
 
 namespace dawn {
+namespace iir {
+
+using ::dawn::operator<<;
 
 StencilFunctionInstantiation::StencilFunctionInstantiation(
     StencilInstantiation* context, const std::shared_ptr<StencilFunCallExpr>& expr,
@@ -684,4 +687,6 @@ void StencilFunctionInstantiation::checkFunctionBindings() const {
   DAWN_ASSERT_MSG((getAST()->getRoot()->getStatements().size() == statementAccessesPairs_.size()),
                   "AST has different number of statements as the statement accesses pairs");
 }
+
+} // namespace iir
 } // namespace dawn

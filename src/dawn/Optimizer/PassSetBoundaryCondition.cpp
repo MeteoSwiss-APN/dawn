@@ -14,8 +14,8 @@
 
 #include "dawn/Optimizer/PassSetBoundaryCondition.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/Stencil.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/Stencil.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/ASTExpr.h"
 #include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/ASTUtil.h"
@@ -35,15 +35,15 @@ namespace {
 /// @param s A shared ptr to the stencil to be analyzed
 /// @param ID the FieldID of the Field to be analized
 /// @return the full extent of the field in the stencil
-static dawn::Extents analyzeStencilExtents(const std::shared_ptr<Stencil>& s, int fieldID) {
+static dawn::Extents analyzeStencilExtents(const std::shared_ptr<iir::Stencil>& s, int fieldID) {
   Extents fullExtents{0, 0, 0, 0, 0, 0};
-  Stencil& stencil = *s;
+  iir::Stencil& stencil = *s;
 
   int numStages = stencil.getNumStages();
 
   // loop over stages
   for(int i = 0; i < numStages; ++i) {
-    Stage& stage = *(stencil.getStage(i));
+    iir::Stage& stage = *(stencil.getStage(i));
 
     Extents const& stageExtent = stage.getExtents();
     for(auto& field : stage.getFields()) {
@@ -81,13 +81,14 @@ public:
 /// StencilCallStmts for a stencili with a given ID. This is required to properly insert boundary
 /// conditions.
 class AddBoundaryConditions : public ASTVisitorForwarding {
-  std::shared_ptr<StencilInstantiation> instantiation_;
+  std::shared_ptr<iir::StencilInstantiation> instantiation_;
   int StencilID_;
 
   std::vector<std::shared_ptr<StencilCallDeclStmt>> stencilCallsToReplace_;
 
 public:
-  AddBoundaryConditions(const std::shared_ptr<StencilInstantiation>& instantiation, int StencilID)
+  AddBoundaryConditions(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                        int StencilID)
       : instantiation_(instantiation), StencilID_(StencilID) {}
 
   void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
@@ -112,7 +113,7 @@ public:
 PassSetBoundaryCondition::PassSetBoundaryCondition() : Pass("PassSetBoundaryCondition") {}
 
 bool PassSetBoundaryCondition::run(
-    const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 
   // check if we need to run this pass
   if(stencilInstantiation->getStencils().size() == 1) {
@@ -218,19 +219,19 @@ bool PassSetBoundaryCondition::run(
 
   // Loop through all the StmtAccessPair in the stencil forward
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
-    Stencil& stencil = *stencilPtr;
+    iir::Stencil& stencil = *stencilPtr;
     DAWN_LOG(INFO) << "analyzing stencil " << stencilInstantiation->getName();
     std::unordered_map<int, Extents> stencilDirtyFields;
     stencilDirtyFields.clear();
 
     for(const auto& multiStagePtr : stencil.getMultiStages()) {
-      MultiStage& multiStage = *multiStagePtr;
+      iir::MultiStage& multiStage = *multiStagePtr;
       for(auto stageIt = multiStage.getStages().begin(); stageIt != multiStage.getStages().end();
           ++stageIt) {
-        Stage& stage = (**stageIt);
+        iir::Stage& stage = (**stageIt);
         for(const auto& domethod : stage.getDoMethods()) {
           for(const auto& stmtAccess : domethod->getStatementAccessesPairs()) {
-            Accesses& acesses = *(stmtAccess->getAccesses());
+            iir::Accesses& acesses = *(stmtAccess->getAccesses());
             const auto& allReadAccesses = acesses.getReadAccesses();
             const auto& allWriteAccesses = acesses.getWriteAccesses();
 
@@ -270,7 +271,7 @@ bool PassSetBoundaryCondition::run(
               auto it =
                   std::find_if(stencilInstantiation->getStencils().begin(),
                                stencilInstantiation->getStencils().end(),
-                               [&stencil](const std::shared_ptr<Stencil>& storedStencil) {
+                               [&stencil](const std::shared_ptr<iir::Stencil>& storedStencil) {
                                  return storedStencil->getStencilID() == stencil.getStencilID();
                                });
               DAWN_ASSERT_MSG(it != stencilInstantiation->getStencils().end(),

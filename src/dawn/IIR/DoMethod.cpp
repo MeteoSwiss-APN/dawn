@@ -12,15 +12,16 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/DoMethod.h"
-#include "dawn/Optimizer/Accesses.h"
-#include "dawn/Optimizer/DependencyGraphAccesses.h"
-#include "dawn/Optimizer/StatementAccessesPair.h"
+#include "dawn/IIR/DoMethod.h"
+#include "dawn/IIR/Accesses.h"
+#include "dawn/IIR/DependencyGraphAccesses.h"
+#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/SIR/Statement.h"
 #include <boost/optional.hpp>
 #include "dawn/Support/IndexGenerator.h"
 
 namespace dawn {
+namespace iir {
 
 DoMethod::DoMethod(Interval interval)
     : interval_(interval), id_(IndexGenerator::Instance().getIndex()), dependencyGraph_(nullptr) {}
@@ -111,4 +112,5 @@ bool DoMethod::isEmptyOrNullStmt() const {
   return true;
 }
 
+} // namespace iir
 } // namespace dawn

@@ -22,8 +22,10 @@
 #include <unordered_map>
 
 namespace dawn {
+namespace iir {
 class StencilInstantiation;
 class StencilFunctionInstantiation;
+}
 
 namespace codegen {
 namespace cxxnaive {
@@ -33,16 +35,16 @@ namespace cxxnaive {
 /// @ingroup cxxnaive
 class ASTStencilFunctionParamVisitor : public ASTVisitorDisabled, public NonCopyable {
 protected:
-  const StencilInstantiation* instantiation_;
-  const std::shared_ptr<StencilFunctionInstantiation>& currentFunction_;
+  const iir::StencilInstantiation* instantiation_;
+  const std::shared_ptr<iir::StencilFunctionInstantiation>& currentFunction_;
   /// Underlying stream
   std::stringstream ss_;
 
 public:
   using Base = ASTVisitorDisabled;
 
-  ASTStencilFunctionParamVisitor(const std::shared_ptr<StencilFunctionInstantiation>& function,
-                                 StencilInstantiation const* instantiation);
+  ASTStencilFunctionParamVisitor(const std::shared_ptr<iir::StencilFunctionInstantiation>& function,
+                                 iir::StencilInstantiation const* instantiation);
   virtual ~ASTStencilFunctionParamVisitor();
 
   std::string getCodeAndResetStream();

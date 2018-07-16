@@ -34,7 +34,7 @@ protected:
   ComputeMaxExtents() : compiler_(compileOptions_.get()) {}
   virtual void SetUp() {}
 
-  std::vector<std::shared_ptr<Stencil>> loadTest(std::string sirFilename) {
+  std::vector<std::shared_ptr<iir::Stencil>> loadTest(std::string sirFilename) {
 
     std::string filename = TestEnvironment::path_ + "/" + sirFilename;
     std::ifstream file(filename);
@@ -63,7 +63,7 @@ protected:
 TEST_F(ComputeMaxExtents, test_stencil_01) {
   auto stencils = loadTest("compute_extent_test_stencil_01.sir");
   ASSERT_TRUE((stencils.size() == 1));
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  std::shared_ptr<iir::Stencil> stencil = stencils[0];
 
   ASSERT_TRUE((stencil->getNumStages() == 2));
   auto exts = stencil->computeEnclosingAccessExtents();
@@ -79,7 +79,7 @@ TEST_F(ComputeMaxExtents, test_stencil_01) {
 TEST_F(ComputeMaxExtents, test_stencil_02) {
   auto stencils = loadTest("compute_extent_test_stencil_02.sir");
   ASSERT_TRUE((stencils.size() == 1));
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  std::shared_ptr<iir::Stencil> stencil = stencils[0];
 
   ASSERT_TRUE((stencil->getNumStages() == 3));
   auto exts = stencil->computeEnclosingAccessExtents();
@@ -94,7 +94,7 @@ TEST_F(ComputeMaxExtents, test_stencil_02) {
 TEST_F(ComputeMaxExtents, test_stencil_03) {
   auto stencils = loadTest("compute_extent_test_stencil_03.sir");
   ASSERT_TRUE((stencils.size() == 1));
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  std::shared_ptr<iir::Stencil> stencil = stencils[0];
 
   ASSERT_TRUE((stencil->getNumStages() == 4));
   auto exts = stencil->computeEnclosingAccessExtents();
@@ -111,7 +111,7 @@ TEST_F(ComputeMaxExtents, test_stencil_04) {
   auto stencils = loadTest("compute_extent_test_stencil_04.sir");
 
   ASSERT_TRUE((stencils.size() == 1));
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  std::shared_ptr<iir::Stencil> stencil = stencils[0];
 
   ASSERT_TRUE((stencil->getNumStages() == 4));
   auto exts = stencil->computeEnclosingAccessExtents();
@@ -125,7 +125,7 @@ TEST_F(ComputeMaxExtents, test_stencil_04) {
 TEST_F(ComputeMaxExtents, test_stencil_05) {
   auto stencils = loadTest("compute_extent_test_stencil_05.sir");
   ASSERT_TRUE((stencils.size() == 1));
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  std::shared_ptr<iir::Stencil> stencil = stencils[0];
 
   ASSERT_TRUE((stencil->getNumStages() == 4));
   auto exts = stencil->computeEnclosingAccessExtents();

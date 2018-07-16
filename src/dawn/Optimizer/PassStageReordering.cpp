@@ -14,7 +14,7 @@
 
 #include "dawn/Optimizer/PassStageReordering.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/FileUtil.h"
 #include "dawn/Support/Unreachable.h"
 
@@ -28,7 +28,8 @@ PassStageReordering::PassStageReordering(ReorderStrategy::ReorderStrategyKind st
   dependencies_.push_back("PassSetStageGraph");
 }
 
-bool PassStageReordering::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
+bool PassStageReordering::run(
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   std::string filenameWE = getFilenameWithoutExtension(context->getSIR()->Filename);
