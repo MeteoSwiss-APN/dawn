@@ -1034,7 +1034,7 @@ std::string GTCodeGen::generateGlobals(std::shared_ptr<SIR> const& Sir) {
 }
 
 std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
-  mplContainerMaxSize_ = 20;
+  mplContainerMaxSize_ = 30;
   DAWN_LOG(INFO) << "Starting code generation for GTClang ...";
 
   // Generate StencilInstantiations
@@ -1057,6 +1057,9 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   auto makeIfNotDefined = [](std::string define, int value) {
     return "#ifndef " + define + "\n #define " + define + " " + std::to_string(value) + "\n#endif";
   };
+  auto makeIfNotDefinedString = [](std::string define, std::string value){
+      return "#ifndef " + define + "\n #define " + define + " " + value + "\n#endif";
+  };
 
   ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
   ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T GT");
@@ -1068,7 +1071,7 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   // If we need more than 20 elements in boost::mpl containers, we need to increment to the nearest
   // multiple of ten
   // http://www.boost.org/doc/libs/1_61_0/libs/mpl/doc/refmanual/limit-vector-size.html
-  if(mplContainerMaxSize_ > 20) {
+  if(mplContainerMaxSize_ > 30) {
     mplContainerMaxSize_ += (10 - mplContainerMaxSize_ % 10);
     DAWN_LOG(INFO) << "increasing boost::mpl template limit to " << mplContainerMaxSize_;
     ppDefines.push_back(makeIfNotDefined("BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS", 1));
@@ -1080,10 +1083,11 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   ppDefines.push_back(makeIfNotDefined("BOOST_PP_VARIADICS", 1));
   ppDefines.push_back(makeIfNotDefined("BOOST_FUSION_DONT_USE_PREPROCESSED_FILES", 1));
   ppDefines.push_back(makeIfNotDefined("BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS", 1));
-  ppDefines.push_back(makeIfNotDefined("BOOST_FUSION_INVOKE_MAX_ARITY", mplContainerMaxSize_));
-  ppDefines.push_back(makeIfNotDefined("FUSION_MAX_VECTOR_SIZE", mplContainerMaxSize_));
-  ppDefines.push_back(makeIfNotDefined("FUSION_MAX_MAP_SIZE", mplContainerMaxSize_));
-  ppDefines.push_back(makeIfNotDefined("BOOST_MPL_LIMIT_VECTOR_SIZE", mplContainerMaxSize_));
+  ppDefines.push_back(makeIfNotDefined("GT_VECTOR_LIMIT_SIZE", mplContainerMaxSize_));
+  ppDefines.push_back(makeIfNotDefinedString("BOOST_FUSION_INVOKE_MAX_ARITY", "GT_VECTOR_LIMIT_SIZE"));
+  ppDefines.push_back(makeIfNotDefinedString("FUSION_MAX_VECTOR_SIZE", "GT_VECTOR_LIMIT_SIZE"));
+  ppDefines.push_back(makeIfNotDefinedString("FUSION_MAX_MAP_SIZE", "GT_VECTOR_LIMIT_SIZE"));
+  ppDefines.push_back(makeIfNotDefinedString("BOOST_MPL_LIMIT_VECTOR_SIZE", "GT_VECTOR_LIMIT_SIZE"));
 
   BCFinder finder;
   for(const auto& stencilInstantiation : context_->getStencilInstantiationMap()) {
