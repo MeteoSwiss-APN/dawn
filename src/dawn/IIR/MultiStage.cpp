@@ -89,7 +89,7 @@ MultiStage::getDependencyGraphOfInterval(const Interval& interval) const {
   std::for_each(stages_.begin(), stages_.end(), [&](const std::shared_ptr<Stage>& stagePtr) {
     if(interval.overlaps(stagePtr->getEnclosingExtendedInterval()))
       std::for_each(stagePtr->childrenBegin(), stagePtr->childrenEnd(),
-                    [&](const std::unique_ptr<DoMethod>& DoMethodPtr) {
+                    [&](const Stage::DoMethodSmartPtr_t& DoMethodPtr) {
                       dependencyGraph->merge(DoMethodPtr->getDependencyGraph().get());
                     });
   });
@@ -100,7 +100,7 @@ std::shared_ptr<DependencyGraphAccesses> MultiStage::getDependencyGraphOfAxis() 
   auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(&stencilInstantiation_);
   std::for_each(stages_.begin(), stages_.end(), [&](const std::shared_ptr<Stage>& stagePtr) {
     std::for_each(stagePtr->childrenBegin(), stagePtr->childrenEnd(),
-                  [&](const std::unique_ptr<DoMethod>& DoMethodPtr) {
+                  [&](const Stage::DoMethodSmartPtr_t& DoMethodPtr) {
                     dependencyGraph->merge(DoMethodPtr->getDependencyGraph().get());
                   });
   });

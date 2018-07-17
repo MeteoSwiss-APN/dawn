@@ -184,7 +184,7 @@ private:
     // Add the cache Flush stage
     std::shared_ptr<iir::Stage> assignmentStage = std::make_shared<iir::Stage>(
         *instantiation_, multiStagePrt_.get(), instantiation_->nextUID(), interval);
-    std::unique_ptr<iir::DoMethod> domethod = make_unique<iir::DoMethod>(interval);
+    iir::Stage::DoMethodSmartPtr_t domethod = make_unique<iir::DoMethod>(interval);
     domethod->getStatementAccessesPairs().clear();
 
     for(int i = 0; i < assignmentIDs.size(); ++i) {
@@ -202,7 +202,7 @@ private:
   }
 
   ///@brief Add the assignment operator of two unique id's to a given domethod
-  void addAssignmentToDoMethod(std::unique_ptr<iir::DoMethod>& domethod, int assignmentID,
+  void addAssignmentToDoMethod(const iir::Stage::DoMethodSmartPtr_t& domethod, int assignmentID,
                                int assigneeID) {
     // Create the StatementAccessPair of the assignment with the new and old variables
     auto fa_assignee =

@@ -64,9 +64,8 @@ Stage::computeEnclosingAccessInterval(const int accessID, const bool mergeWithDo
 
 std::vector<Interval> Stage::getIntervals() const {
   std::vector<Interval> intervals;
-  std::transform(
-      childrenBegin(), childrenEnd(), std::back_inserter(intervals),
-      [&](const std::unique_ptr<DoMethod>& doMethod) { return doMethod->getInterval(); });
+  std::transform(childrenBegin(), childrenEnd(), std::back_inserter(intervals),
+                 [&](const DoMethodSmartPtr_t& doMethod) { return doMethod->getInterval(); });
   return intervals;
 }
 
@@ -283,17 +282,16 @@ const std::unordered_set<int>& Stage::getGlobalVariablesFromStencilFunctionCalls
 
 const std::unordered_set<int>& Stage::getAllGlobalVariables() const { return allGlobalVariables_; }
 
-void Stage::addDoMethod(std::unique_ptr<DoMethod>& doMethod) {
-  DAWN_ASSERT_MSG(std::find_if(childrenBegin(), childrenEnd(),
-                               [&](const std::unique_ptr<DoMethod>& doMethodPtr) {
-                                 return doMethodPtr->getInterval() == doMethod->getInterval();
-                               }) == childrenEnd(),
-                  "Do-Method with given interval already exists!");
+void Stage::addDoMethod(DoMethodSmartPtr_t& doMethod) {
+  DAWN_ASSERT_MSG(
+      std::find_if(childrenBegin(), childrenEnd(), [&](const DoMethodSmartPtr_t& doMethodPtr) {
+        return doMethodPtr->getInterval() == doMethod->getInterval();
+      }) == childrenEnd(), "Do-Method with given interval already exists!");
   insertChild(std::move(doMethod));
   update();
 }
 
-void Stage::appendDoMethod(std::unique_ptr<DoMethod>& from, std::unique_ptr<DoMethod>& to,
+void Stage::appendDoMethod(DoMethodSmartPtr_t& from, DoMethodSmartPtr_t& to,
                            const std::shared_ptr<DependencyGraphAccesses>& dependencyGraph) {
   DAWN_ASSERT_MSG(std::find(childrenBegin(), childrenEnd(), to) != childrenEnd(),
                   "'to' DoMethod does not exists");

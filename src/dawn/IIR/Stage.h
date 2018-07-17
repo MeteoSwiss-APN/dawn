@@ -44,7 +44,7 @@ namespace impl {
 template <typename T>
 using DoMethodSmartptr = std::unique_ptr<T, std::default_delete<T>>;
 }
-class Stage : public IIRNode<void, Stage, DoMethod, impl::DoMethodSmartptr> {
+class Stage : public IIRNode<void, Stage, DoMethod, std::shared_ptr> {
   StencilInstantiation& stencilInstantiation_;
   MultiStage* multiStage_;
 
@@ -62,7 +62,8 @@ class Stage : public IIRNode<void, Stage, DoMethod, impl::DoMethodSmartptr> {
   Extents extents_;
 
 public:
-  using ChildrenIterator = std::vector<std::unique_ptr<DoMethod>>::iterator;
+  using DoMethodSmartPtr_t = child_smartptr_t<DoMethod>;
+  using ChildrenIterator = std::vector<child_smartptr_t<DoMethod>>::iterator;
 
   /// @name Constructors and Assignment
   /// @{
@@ -158,13 +159,13 @@ public:
   /// @brief Add the given Do-Method to the list of Do-Methods of this stage
   ///
   /// Calls `update()` in the end.
-  void addDoMethod(std::unique_ptr<DoMethod>& doMethod);
+  void addDoMethod(DoMethodSmartPtr_t& doMethod);
 
   /// @brief Append the `from` DoMethod to the existing `to` DoMethod of this stage and use
   /// `dependencyGraph` as the new DependencyGraphAccesses of this new Do-Method
   ///
   /// Calls `update()` in the end.
-  void appendDoMethod(std::unique_ptr<DoMethod>& from, std::unique_ptr<DoMethod>& to,
+  void appendDoMethod(DoMethodSmartPtr_t& from, DoMethodSmartPtr_t& to,
                       const std::shared_ptr<DependencyGraphAccesses>& dependencyGraph);
 
   /// @brief Get the loop order (induced by the multi-stage)

@@ -99,7 +99,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
             // `candidateStage`?
             auto candidateDoMethodIt = std::find_if(
                 candidateStage.childrenBegin(), candidateStage.childrenEnd(),
-                [&](const std::unique_ptr<iir::DoMethod>& doMethodPtr) {
+                [&](const iir::Stage::DoMethodSmartPtr_t& doMethodPtr) {
                   return doMethodPtr->getInterval().overlaps(curDoMethod.getInterval());
                 });
 
@@ -109,7 +109,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
               // interval does not exists, we cannot merge ourself into this stage).
               candidateDoMethodIt =
                   std::find_if(candidateStage.childrenBegin(), candidateStage.childrenEnd(),
-                               [&](const std::unique_ptr<iir::DoMethod>& doMethodPtr) {
+                               [&](const iir::Stage::child_smartptr_t<iir::DoMethod>& doMethodPtr) {
                                  return doMethodPtr->getInterval() == curDoMethod.getInterval();
                                });
 

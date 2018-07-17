@@ -28,8 +28,6 @@ template <typename Parent, typename NodeType, typename Child,
 class IIRNode {
 
 protected:
-  using child_smartptr_t = SmartPtr<Child>;
-
   IIRNode() = default;
   IIRNode(const IIRNode&) = default;
   IIRNode(IIRNode&&) = default;
@@ -39,6 +37,9 @@ protected:
   std::vector<SmartPtr<Child>> children_;
 
 public:
+  template <typename T>
+  using child_smartptr_t = SmartPtr<T>;
+
   const std::vector<SmartPtr<Child>>& getChildren() const { return children_; }
 
   typename std::vector<SmartPtr<Child>>::iterator childrenBegin() { return children_.begin(); }
