@@ -34,7 +34,7 @@ class StatementAccessesPair;
 
 /// @brief A Stencil is represented by a collection of MultiStages
 /// @ingroup optimizer
-class Stencil {
+class Stencil : public IIRNode<void, Stencil, MultiStage, std::shared_ptr, impl::StdList> {
   StencilInstantiation& stencilInstantiation_;
   const std::shared_ptr<sir::Stencil> SIRStencil_;
 
@@ -45,10 +45,9 @@ class Stencil {
   /// Dependency graph of the stages of this stencil
   std::shared_ptr<DependencyGraphStage> stageDependencyGraph_;
 
-  /// List of multi-stages in the stencil
-  std::list<std::shared_ptr<MultiStage>> multistages_;
-
 public:
+  using MultiStageSmartPtr_t = child_smartptr_t<MultiStage>;
+
   // FieldInfo desribes the properties of a given Field
   // The dimensions is an array of numberes in x,y and z describing if the field is allowed to have
   // extens in this dimension: [1,0,0] is a storage_i and cannot be accessed with field[j+1]
@@ -183,10 +182,6 @@ public:
 
   /// @brief Get the stencil instantiation
   StencilInstantiation& getStencilInstantiation() const { return stencilInstantiation_; }
-
-  /// @brief Get the multi-stages of the stencil
-  std::list<std::shared_ptr<MultiStage>>& getMultiStages() { return multistages_; }
-  const std::list<std::shared_ptr<MultiStage>>& getMultiStages() const { return multistages_; }
 
   /// @brief Get the enclosing interval of accesses of temporaries used in this stencil
   boost::optional<Interval> getEnclosingIntervalTemporaries() const;

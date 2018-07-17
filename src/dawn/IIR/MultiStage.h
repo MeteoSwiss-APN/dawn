@@ -45,7 +45,7 @@ using StdList = std::list<T, std::allocator<T>>;
 /// gridtools multistages reflect kernels.
 ///
 /// @ingroup optimizer
-class MultiStage : public IIRNode<void, MultiStage, Stage, std::shared_ptr, impl::StdList> {
+class MultiStage : public IIRNode<Stencil, MultiStage, Stage, std::shared_ptr, impl::StdList> {
 
   StencilInstantiation& stencilInstantiation_;
 

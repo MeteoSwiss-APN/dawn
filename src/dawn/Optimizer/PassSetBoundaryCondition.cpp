@@ -224,7 +224,7 @@ bool PassSetBoundaryCondition::run(
     std::unordered_map<int, Extents> stencilDirtyFields;
     stencilDirtyFields.clear();
 
-    for(const auto& multiStagePtr : stencil.getMultiStages()) {
+    for(const auto& multiStagePtr : stencil.getChildren()) {
       iir::MultiStage& multiStage = *multiStagePtr;
       for(const auto& stagePtr : multiStage.getChildren()) {
         iir::Stage& stage = (*stagePtr);

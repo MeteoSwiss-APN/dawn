@@ -292,7 +292,7 @@ bool dawn::PassSetNonTempCaches::run(
 
     std::vector<NameToImprovementMetric> allCachedFields;
     if(context->getOptions().UseNonTempCaches) {
-      for(auto& multiStagePtr : stencil.getMultiStages()) {
+      for(const auto& multiStagePtr : stencil.getChildren()) {
         GlobalFieldCacher organizer(multiStagePtr, stencilInstantiation);
         organizer.process();
         if(context->getOptions().ReportPassSetNonTempCaches) {

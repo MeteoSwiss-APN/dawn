@@ -75,12 +75,12 @@ bool PassStencilSplitter::run(
       std::set<int> fieldsInNewStencil;
 
       // Iterate the multi-stage of the old `stencil` and insert its stages into `newStencil`
-      for(const auto& multiStagePtr : stencil.getMultiStages()) {
+      for(const auto& multiStagePtr : stencil.getChildren()) {
         iir::MultiStage& multiStage = *multiStagePtr;
 
         // Create an empty multi-stage in the current stencil with the same parameter as
         // `multiStage`
-        newStencil->getMultiStages().push_back(
+        newStencil->insertChild(
             std::make_shared<iir::MultiStage>(*stencilInstantiation, multiStage.getLoopOrder()));
 
         for(const auto& stagePtr : multiStage.getChildren()) {
@@ -88,7 +88,7 @@ bool PassStencilSplitter::run(
              mergePossible(fieldsInNewStencil, stagePtr.get(), MaxFieldPerStencil)) {
 
             // We can safely insert the stage into the current multi-stage of the `newStencil`
-            newStencil->getMultiStages().back()->insertChild(stagePtr);
+            newStencil->getChildren().back()->insertChild(stagePtr);
 
             // Update fields of the `newStencil`. Note that the indivudual stages do not need to
             // update their fields as they remain the same.
@@ -103,9 +103,9 @@ bool PassStencilSplitter::run(
             fieldsInNewStencil.clear();
 
             // Re-create the current multi-stage in the `newStencil` and insert the stage
-            newStencil->getMultiStages().push_back(std::make_shared<iir::MultiStage>(
-                *stencilInstantiation, multiStage.getLoopOrder()));
-            newStencil->getMultiStages().back()->insertChild(stagePtr);
+            newStencil->insertChild(std::make_shared<iir::MultiStage>(*stencilInstantiation,
+                                                                      multiStage.getLoopOrder()));
+            newStencil->getChildren().back()->insertChild(stagePtr);
           }
         }
       }
@@ -120,9 +120,9 @@ bool PassStencilSplitter::run(
 
       // Remove empty multi-stages within the stencils
       for(auto& s : newStencils) {
-        for(auto msIt = s->getMultiStages().begin(); msIt != s->getMultiStages().end();)
+        for(auto msIt = s->childrenBegin(); msIt != s->childrenEnd();)
           if((*msIt)->childrenEmpty())
-            msIt = s->getMultiStages().erase(msIt);
+            msIt = s->childrenErase(msIt);
           else
             ++msIt;
       }

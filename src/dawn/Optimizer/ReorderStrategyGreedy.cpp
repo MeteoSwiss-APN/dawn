@@ -99,12 +99,11 @@ ReoderStrategyGreedy::reorder(const std::shared_ptr<iir::Stencil>& stencilPtr) {
   const int maxBoundaryExtent = instantiation.getOptimizerContext()->getOptions().MaxHaloPoints;
 
   auto pushBackNewMultiStage = [&](LoopOrderKind loopOrder) -> void {
-    newStencil->getMultiStages().push_back(
-        std::make_shared<iir::MultiStage>(instantiation, loopOrder));
+    newStencil->insertChild(std::make_shared<iir::MultiStage>(instantiation, loopOrder));
     newNumMultiStages++;
   };
 
-  for(const auto& multiStagePtr : stencil.getMultiStages()) {
+  for(const auto& multiStagePtr : stencil.getChildren()) {
 
     // First time we encounter this multi-stage, create an empty multi-stage
     pushBackNewMultiStage(LoopOrderKind::LK_Parallel);
@@ -177,9 +176,9 @@ ReoderStrategyGreedy::reorder(const std::shared_ptr<iir::Stencil>& stencilPtr) {
   }
 
   // Remove empty multi-stages
-  for(auto it = newStencil->getMultiStages().begin(); it != newStencil->getMultiStages().end();) {
+  for(auto it = newStencil->childrenBegin(); it != newStencil->childrenEnd();) {
     if((*it)->childrenEmpty())
-      it = newStencil->getMultiStages().erase(it);
+      it = newStencil->childrenErase(it);
     else
       it++;
   }

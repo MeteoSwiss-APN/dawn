@@ -424,8 +424,8 @@ bool PassTemporaryToStencilFunction::run(
                                                   tempAccessIDsToReplace, localVarAccessIDs);
 
     // Iterate multi-stages backwards
-    for(auto multiStageIt = stencilPtr->getMultiStages().rbegin();
-        multiStageIt != stencilPtr->getMultiStages().rend(); ++multiStageIt) {
+    for(auto multiStageIt = stencilPtr->childrenRBegin();
+        multiStageIt != stencilPtr->childrenREnd(); ++multiStageIt) {
       std::unordered_map<int, TemporaryFunctionProperties> temporaryFieldExprToFunction;
 
       for(auto stageIt = (*multiStageIt)->childrenRBegin();
@@ -447,7 +447,7 @@ bool PassTemporaryToStencilFunction::run(
     }
 
     // Iterate multi-stages backwards
-    for(auto multiStage : stencilPtr->getMultiStages()) {
+    for(const auto& multiStage : stencilPtr->getChildren()) {
       std::unordered_map<int, TemporaryFunctionProperties> temporaryFieldExprToFunction;
 
       for(const auto& stagePtr : multiStage->getChildren()) {
@@ -554,10 +554,9 @@ bool PassTemporaryToStencilFunction::run(
       }
     }
     // eliminate empty stages or stages with only NOPExpr statements
-    RemoveIf(stencilPtr->getMultiStages().begin(), stencilPtr->getMultiStages().end(),
-             stencilPtr->getMultiStages(),
+    RemoveIf(stencilPtr->childrenBegin(), stencilPtr->childrenEnd(), stencilPtr->getChildren(),
              [](std::shared_ptr<iir::MultiStage> m) -> bool { return m->isEmptyOrNullStmt(); });
-    for(auto multiStage : stencilPtr->getMultiStages()) {
+    for(const auto& multiStage : stencilPtr->getChildren()) {
       RemoveIf(multiStage->childrenBegin(), multiStage->childrenEnd(), multiStage->getChildren(),
                [](std::shared_ptr<iir::Stage> s) -> bool { return s->isEmptyOrNullStmt(); });
     }

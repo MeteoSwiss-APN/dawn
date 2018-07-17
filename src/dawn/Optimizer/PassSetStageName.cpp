@@ -31,7 +31,7 @@ bool PassSetStageName::run(const std::shared_ptr<iir::StencilInstantiation>& ste
       stencilName += std::to_string(stencilIdx);
 
     int multiStageIdx = 0;
-    for(auto& multiStagePtr : stencilPtr->getMultiStages()) {
+    for(const auto& multiStagePtr : stencilPtr->getChildren()) {
       int stageIdx = 0;
       for(const auto& stagePtr : multiStagePtr->getChildren()) {
         iir::Stage& stage = *stagePtr;

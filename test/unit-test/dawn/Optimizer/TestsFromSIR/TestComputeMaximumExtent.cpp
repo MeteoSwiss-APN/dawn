@@ -71,9 +71,9 @@ TEST_F(TestComputeMaximumExtent, test_field_access_interval_02) {
   ASSERT_TRUE((stencil->getStage(0)->getExtents() == Extents{-1, 1, -1, 1, 0, 0}));
   ASSERT_TRUE((stencil->getStage(1)->getExtents() == Extents{0, 0, 0, 0, 0, 0}));
 
-  ASSERT_TRUE((stencil->getMultiStages().size() == 1));
+  ASSERT_TRUE((stencil->getChildren().size() == 1));
 
-  auto const& mss = stencil->getMultiStages().front();
+  auto const& mss = (*stencil->childrenBegin());
 
   auto stage1_ptr = mss->childrenBegin();
   std::shared_ptr<iir::Stage> const& stage1 = *stage1_ptr;
@@ -100,9 +100,9 @@ TEST_F(TestComputeMaximumExtent, test_compute_maximum_extent_01) {
   std::shared_ptr<iir::Stencil> stencil = stencils[0];
 
   ASSERT_TRUE((stencil->getNumStages() == 1));
-  ASSERT_TRUE((stencil->getMultiStages().size() == 1));
+  ASSERT_TRUE((stencil->getChildren().size() == 1));
 
-  auto const& mss = stencil->getMultiStages().front();
+  auto const& mss = (*stencil->childrenBegin());
 
   auto stage1_ptr = mss->childrenBegin();
   std::shared_ptr<iir::Stage> const& stage1 = *stage1_ptr;

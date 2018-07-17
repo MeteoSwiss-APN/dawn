@@ -325,7 +325,7 @@ bool PassDataLocalityMetric::run(
       std::cout << "Stencil " << stencilIdx << ":\n";
 
       int multiStageIdx = 0;
-      for(const auto& multiStagePtr : stencil.getMultiStages()) {
+      for(const auto& multiStagePtr : stencil.getChildren()) {
         const iir::MultiStage& multiStage = *multiStagePtr;
 
         std::cout << "  MultiStage " << multiStageIdx << ":\n";

@@ -102,8 +102,7 @@ bool PassFieldVersioning::run(
 
     // Iterate multi-stages backwards
     int stageIdx = stencil.getNumStages() - 1;
-    for(auto multiStageRit = stencil.getMultiStages().rbegin(),
-             multiStageRend = stencil.getMultiStages().rend();
+    for(auto multiStageRit = stencil.childrenRBegin(), multiStageRend = stencil.childrenREnd();
         multiStageRit != multiStageRend; ++multiStageRit) {
       iir::MultiStage& multiStage = (**multiStageRit);
       LoopOrderKind loopOrder = multiStage.getLoopOrder();

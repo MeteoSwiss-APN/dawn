@@ -283,7 +283,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
     StencilRunMethod.startBody();
 
     StencilRunMethod.addStatement("sync_storages()");
-    for(const auto& multiStagePtr : stencil.getMultiStages()) {
+    for(const auto& multiStagePtr : stencil.getChildren()) {
 
       StencilRunMethod.ss() << "{";
 

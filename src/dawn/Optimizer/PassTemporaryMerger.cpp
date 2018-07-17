@@ -53,7 +53,7 @@ bool PassTemporaryMerger::run(
 
     // Build the dependency graph of the stencil (merge all dependency graphs of the multi-stages)
     iir::DependencyGraphAccesses AccessesDAG(stencilInstantiation.get());
-    for(const auto& multiStagePtr : stencilPtr->getMultiStages()) {
+    for(const auto& multiStagePtr : stencilPtr->getChildren()) {
       iir::MultiStage& multiStage = *multiStagePtr;
       AccessesDAG.merge(multiStage.getDependencyGraphOfAxis().get());
     }

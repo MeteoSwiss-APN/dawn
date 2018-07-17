@@ -155,10 +155,9 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
 
     // Set IJ-Caches
     int msIdx = 0;
-    for(auto multiStageIt = stencil.getMultiStages().begin();
-        multiStageIt != stencil.getMultiStages().end(); ++multiStageIt) {
+    for(const auto& multiStagePtr : stencil.getChildren()) {
 
-      iir::MultiStage& MS = *(*multiStageIt);
+      iir::MultiStage& MS = *(multiStagePtr);
 
       std::set<int> outputFields;
 
@@ -213,10 +212,9 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
 
       // Get the fields of all Multi-Stages
       std::vector<std::unordered_map<int, Field>> fields;
-      std::transform(stencil.getMultiStages().begin(), stencil.getMultiStages().end(),
-                     std::back_inserter(fields), [](const std::shared_ptr<iir::MultiStage>& MSPtr) {
-                       return MSPtr->getFields();
-                     });
+      std::transform(
+          stencil.childrenBegin(), stencil.childrenEnd(), std::back_inserter(fields),
+          [](const iir::Stencil::MultiStageSmartPtr_t& MSPtr) { return MSPtr->getFields(); });
 
       int numMS = fields.size();
       std::set<int> mssProcessedFields;

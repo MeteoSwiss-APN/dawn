@@ -143,9 +143,9 @@ TEST_F(MultiStageTest, test_compute_ordered_do_methods) {
   EXPECT_EQ(stencils.size(), 1);
   std::shared_ptr<iir::Stencil> stencil = stencils[0];
 
-  EXPECT_EQ(stencil->getMultiStages().size(), 1);
+  EXPECT_EQ(stencil->getChildren().size(), 1);
 
-  auto const& mss = stencil->getMultiStages().front();
+  auto const& mss = (*stencil->childrenBegin());
 
   EXPECT_EQ(mss->getChildren().size(), 3);
   auto stageit = mss->getChildren().begin();
@@ -233,9 +233,9 @@ TEST_F(MultiStageTest, test_compute_read_access_interval) {
   EXPECT_EQ(stencils.size(), 1);
   std::shared_ptr<iir::Stencil> stencil = stencils[0];
 
-  EXPECT_EQ(stencil->getMultiStages().size(), 1);
+  EXPECT_EQ(stencil->getChildren().size(), 1);
 
-  auto const& mss = stencil->getMultiStages().front();
+  auto const& mss = *stencil->childrenBegin();
 
   int accessID = stencilInstantiation->getAccessIDFromName("tmp");
   auto interval = mss->computeReadAccessInterval(accessID);
@@ -302,9 +302,9 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_02) {
   EXPECT_EQ(stencils.size(), 1);
   std::shared_ptr<iir::Stencil> stencil = stencils[0];
 
-  EXPECT_EQ(stencil->getMultiStages().size(), 1);
+  EXPECT_EQ(stencil->getChildren().size(), 1);
 
-  auto const& mss = stencil->getMultiStages().front();
+  auto const& mss = *stencil->childrenBegin();
 
   int accessID = stencilInstantiation->getAccessIDFromName("tmp");
   auto interval = mss->computeReadAccessInterval(accessID);
@@ -367,9 +367,9 @@ TEST_F(MultiStageTest, test_field_access_interval_04) {
   EXPECT_EQ(stencils.size(), 1);
   std::shared_ptr<iir::Stencil> stencil = stencils[0];
 
-  EXPECT_EQ(stencil->getMultiStages().size(), 1);
+  EXPECT_EQ(stencil->getChildren().size(), 1);
 
-  auto const& mss = stencil->getMultiStages().front();
+  auto const& mss = *stencil->childrenBegin();
 
   int accessID = stencilInstantiation->getAccessIDFromName("u");
   auto interval = mss->computeReadAccessInterval(accessID);
@@ -445,9 +445,9 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_03) {
   EXPECT_EQ(stencils.size(), 1);
   std::shared_ptr<iir::Stencil> stencil = stencils[0];
 
-  EXPECT_EQ(stencil->getMultiStages().size(), 2);
+  EXPECT_EQ(stencil->getChildren().size(), 2);
 
-  auto const mss0it = stencil->getMultiStages().begin();
+  auto const mss0it = stencil->childrenBegin();
   auto const& mss0 = *mss0it;
 
   int accessID = stencilInstantiation->getAccessIDFromName("tmp");
@@ -561,9 +561,9 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_04) {
   EXPECT_EQ(stencils.size(), 1);
   std::shared_ptr<iir::Stencil> stencil = stencils[0];
 
-  EXPECT_EQ(stencil->getMultiStages().size(), 3);
+  EXPECT_EQ(stencil->getChildren().size(), 3);
 
-  auto const mss0it = stencil->getMultiStages().begin();
+  auto const mss0it = stencil->childrenBegin();
   auto const& mss0 = *(mss0it);
 
   int accessID = stencilInstantiation->getAccessIDFromName("tmp");

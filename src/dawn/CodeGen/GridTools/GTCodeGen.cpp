@@ -76,7 +76,7 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const iir::Stencil& stencil)
   }
 
   // inserting the intervals of the caches
-  for(const auto& mss : stencil.getMultiStages()) {
+  for(const auto& mss : stencil.getChildren()) {
     for(const auto& cachePair : mss->getCaches()) {
       auto const& cache = cachePair.second;
       const boost::optional<Interval> interval = cache.getInterval();
@@ -465,8 +465,8 @@ std::string GTCodeGen::generateStencilInstantiation(
     // Generate code for stages and assemble the `make_computation`
     //
     std::size_t multiStageIdx = 0;
-    for(auto multiStageIt = stencil.getMultiStages().begin(),
-             multiStageEnd = stencil.getMultiStages().end();
+    for(auto multiStageIt = stencil.getChildren().begin(),
+             multiStageEnd = stencil.getChildren().end();
         multiStageIt != multiStageEnd; ++multiStageIt, ++multiStageIdx) {
       const iir::MultiStage& multiStage = **multiStageIt;
 

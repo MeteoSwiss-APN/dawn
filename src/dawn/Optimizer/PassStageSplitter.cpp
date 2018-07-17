@@ -43,7 +43,7 @@ bool PassStageSplitter::run(
 
     int multiStageIndex = 0;
     int linearStageIndex = 0;
-    for(auto& multiStage : stencil->getMultiStages()) {
+    for(const auto& multiStage : stencil->getChildren()) {
 
       int stageIndex = 0;
       for(auto stageIt = multiStage->childrenBegin(); stageIt != multiStage->childrenEnd();

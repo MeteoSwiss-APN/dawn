@@ -388,7 +388,7 @@ public:
     multiStage->insertChild(std::move(stage));
 
     // ... and append the MultiStages of the current stencil
-    instantiation_->getStencils().back()->getMultiStages().push_back(std::move(multiStage));
+    instantiation_->getStencils().back()->insertChild(std::move(multiStage));
   }
 
   void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
@@ -1280,7 +1280,7 @@ StencilInstantiation::getOriginalNameAndLocationsFromAccessID(
 std::string StencilInstantiation::getOriginalNameFromAccessID(int AccessID) const {
   OriginalNameGetter orignalNameGetter(this, AccessID, true);
   for(const auto& stencil : stencils_)
-    for(const auto& multistage : stencil->getMultiStages())
+    for(const auto& multistage : stencil->getChildren())
       for(const auto& stage : multistage->getChildren())
         for(const auto& doMethod : stage->getChildren())
           for(const auto& statementAccessesPair : doMethod->getChildren()) {
@@ -1313,7 +1313,7 @@ void StencilInstantiation::dump() const {
     PrintDescLine<1> iline("Stencil_" + Twine(i));
 
     int j = 0;
-    const auto& multiStages = stencils_[i]->getMultiStages();
+    const auto& multiStages = stencils_[i]->getChildren();
     for(const auto& multiStage : multiStages) {
       PrintDescLine<2> jline(Twine("MultiStage_") + Twine(j) + " [" +
                              loopOrderToString(multiStage->getLoopOrder()) + "]");
@@ -1359,8 +1359,7 @@ void StencilInstantiation::dumpAsJson(std::string filename, std::string passName
     json::json jStencil;
 
     int j = 0;
-    const auto& multiStages = stencils_[i]->getMultiStages();
-    for(const auto& multiStage : multiStages) {
+    for(const auto& multiStage : stencils_[i]->getChildren()) {
       json::json jMultiStage;
       jMultiStage["LoopOrder"] = loopOrderToString(multiStage->getLoopOrder());
 
@@ -1476,7 +1475,7 @@ void StencilInstantiation::reportAccesses() const {
 
   // Stages
   for(const auto& stencil : stencils_)
-    for(const auto& multistage : stencil->getMultiStages())
+    for(const auto& multistage : stencil->getChildren())
       for(const auto& stage : multistage->getChildren()) {
         for(const auto& doMethod : stage->getChildren()) {
           const auto& statementAccessesPairs = doMethod->getChildren();

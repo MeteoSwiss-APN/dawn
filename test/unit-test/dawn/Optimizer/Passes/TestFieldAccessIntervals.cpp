@@ -70,7 +70,7 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_01) {
   EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-1, 1, -1, 1, 0, 0}));
   EXPECT_EQ(stencil->getStage(1)->getExtents(), (Extents{0, 0, 0, 0, 0, 0}));
 
-  for(auto fieldPair : stencil->getMultiStages().front()->getFields()) {
+  for(auto fieldPair : (*stencil->childrenBegin())->getFields()) {
     Field& field = fieldPair.second;
     int AccessID = fieldPair.first;
 
@@ -94,7 +94,7 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_02) {
   EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-1, 1, -1, 1, 0, 0}));
   EXPECT_EQ(stencil->getStage(1)->getExtents(), (Extents{0, 0, 0, 0, 0, 0}));
 
-  for(auto fieldPair : stencil->getMultiStages().front()->getFields()) {
+  for(auto fieldPair : (*stencil->childrenBegin())->getFields()) {
     Field& field = fieldPair.second;
     int AccessID = fieldPair.first;
     if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("lap")) {
@@ -122,7 +122,7 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_03) {
   EXPECT_EQ(stencil->getStage(1)->getExtents(), (Extents{0, 0, 0, 0, 0, 0}));
   EXPECT_EQ(stencil->getStage(2)->getExtents(), (Extents{0, 0, 0, 0, 0, 0}));
 
-  for(auto fieldPair : stencil->getMultiStages().front()->getFields()) {
+  for(auto fieldPair : (*stencil->childrenBegin())->getFields()) {
     Field& field = fieldPair.second;
     int AccessID = fieldPair.first;
     if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("lap")) {
@@ -148,7 +148,7 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_04) {
 
   EXPECT_EQ(stencil->getNumStages(), 3);
 
-  iir::MultiStage& multiStage = *(stencil->getMultiStages().front());
+  iir::MultiStage& multiStage = **(stencil->childrenBegin());
 
   boost::optional<Interval> enclosingInterval = multiStage.getEnclosingAccessIntervalTemporaries();
   ASSERT_TRUE(enclosingInterval.is_initialized());
@@ -165,7 +165,7 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_05) {
   EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-1, 1, -1, 1, -1, 0}));
   EXPECT_EQ(stencil->getStage(1)->getExtents(), (Extents{0, 0, 0, 0, 0, 0}));
 
-  for(auto fieldPair : stencil->getMultiStages().front()->getFields()) {
+  for(auto fieldPair : (*stencil->childrenBegin())->getFields()) {
     Field& field = fieldPair.second;
     int AccessID = fieldPair.first;
     if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("lap")) {

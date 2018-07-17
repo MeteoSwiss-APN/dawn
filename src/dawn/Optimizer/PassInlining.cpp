@@ -471,9 +471,9 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
   DetectInlineCandiates inliner(strategy_, stencilInstantiation);
 
   // Iterate all statements (top -> bottom)
-  for(auto& stencilPtr : stencilInstantiation->getStencils()) {
-    for(auto& multiStagePtr : stencilPtr->getMultiStages()) {
-      for(auto& stagePtr : multiStagePtr->getChildren()) {
+  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
+    for(const auto& multiStagePtr : stencilPtr->getChildren()) {
+      for(const auto& stagePtr : multiStagePtr->getChildren()) {
         iir::Stage& stage = *stagePtr;
         iir::DoMethod& doMethod = stage.getSingleDoMethod();
 

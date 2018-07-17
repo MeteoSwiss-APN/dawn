@@ -63,7 +63,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
     // Note that the underyling assumption is that stages in the same multi-stage are guaranteed to
     // have no counter loop-oorder vertical dependencies. We can thus treat each multi-stage in
     // isolation!
-    for(const auto& multiStagePtr : stencil.getMultiStages()) {
+    for(const auto& multiStagePtr : stencil.getChildren()) {
       iir::MultiStage& multiStage = *multiStagePtr;
 
       // Iterate stages backwards (bottom -> top)

@@ -180,8 +180,8 @@ bool PassMultiStageSplitter::run(
   for(auto& stencil : stencilInstantiation->getStencils()) {
     int multiStageIndex = 0;
 
-    for(auto multiStageIt = stencil->getMultiStages().begin();
-        multiStageIt != stencil->getMultiStages().end(); ++multiStageIndex) {
+    for(auto multiStageIt = stencil->childrenBegin(); multiStageIt != stencil->childrenEnd();
+        ++multiStageIndex) {
       iir::MultiStage& multiStage = (**multiStageIt);
 
       std::deque<iir::MultiStage::SplitIndex> splitterIndices;
@@ -207,10 +207,9 @@ bool PassMultiStageSplitter::run(
 
       if(!splitterIndices.empty()) {
         auto newMultiStages = multiStage.split(splitterIndices, curLoopOrder);
-        multiStageIt = stencil->getMultiStages().erase(multiStageIt);
-        stencil->getMultiStages().insert(multiStageIt,
-                                         std::make_move_iterator(newMultiStages.begin()),
-                                         std::make_move_iterator(newMultiStages.end()));
+        multiStageIt = stencil->childrenErase(multiStageIt);
+        stencil->insertChildren(multiStageIt, std::make_move_iterator(newMultiStages.begin()),
+                                std::make_move_iterator(newMultiStages.end()));
       } else {
         ++multiStageIt;
         multiStage.setLoopOrder(curLoopOrder);
