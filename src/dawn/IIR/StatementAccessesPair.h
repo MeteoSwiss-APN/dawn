@@ -50,6 +50,9 @@ class StatementAccessesPair {
 public:
   explicit StatementAccessesPair(const std::shared_ptr<Statement>& statement);
 
+  StatementAccessesPair(const StatementAccessesPair&) = default;
+  StatementAccessesPair(StatementAccessesPair&&) = default;
+
   /// @brief Get/Set the statement
   std::shared_ptr<Statement> getStatement() const;
   void setStatement(const std::shared_ptr<Statement>& statement);

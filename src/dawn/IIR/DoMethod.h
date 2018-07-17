@@ -15,6 +15,7 @@
 #ifndef DAWN_IIR_DOMETHOD_H
 #define DAWN_IIR_DOMETHOD_H
 
+#include "dawn/IIR/IIRNode.h"
 #include "dawn/Optimizer/Interval.h"
 #include <boost/optional.hpp>
 #include <memory>
@@ -31,7 +32,7 @@ class StatementAccessesPair;
 /// vertical region
 ///
 /// @ingroup optimizer
-class DoMethod {
+class DoMethod : public IIRNode<void, DoMethod, StatementAccessesPair> {
   Interval interval_;
   const long unsigned int id_;
 
