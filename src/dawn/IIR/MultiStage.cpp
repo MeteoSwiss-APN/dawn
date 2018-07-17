@@ -160,7 +160,7 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
   MultiInterval readInterval;
 
   for(const auto& doMethod : orderedDoMethods) {
-    for(const auto& statementAccesssPair : doMethod.getStatementAccessesPairs()) {
+    for(const auto& statementAccesssPair : doMethod.getChildren()) {
       const Accesses& accesses = *statementAccesssPair->getAccesses();
       if(accesses.hasWriteAccess(accessID)) {
         writeIntervalPre.insert(doMethod.getInterval());
@@ -169,7 +169,7 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
   }
 
   for(const auto& doMethod : orderedDoMethods) {
-    for(const auto& statementAccesssPair : doMethod.getStatementAccessesPairs()) {
+    for(const auto& statementAccesssPair : doMethod.getChildren()) {
       const Accesses& accesses = *statementAccesssPair->getAccesses();
       // indepdently of whether the statement has also a write access, if there is a read
       // access, it should happen in the RHS so first

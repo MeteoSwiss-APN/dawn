@@ -330,8 +330,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
                               const iir::DoMethod& doMethod = *doMethodPtr;
                               if(!doMethod.getInterval().overlaps(interval))
                                 continue;
-                              for(const auto& statementAccessesPair :
-                                  doMethod.getStatementAccessesPairs()) {
+                              for(const auto& statementAccessesPair : doMethod.getChildren()) {
                                 statementAccessesPair->getStatement()->ASTStmt->accept(
                                     stencilBodyCXXVisitor);
                                 StencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();

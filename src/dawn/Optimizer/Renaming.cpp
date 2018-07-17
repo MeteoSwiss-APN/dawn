@@ -94,7 +94,7 @@ void renameAccessIDInStmts(
   AccessIDRemapper<iir::StencilFunctionInstantiation> remapper(instantiation, oldAccessID,
                                                                newAccessID);
 
-  for(auto& statementAccessesPair : statementAccessesPairs)
+  for(const auto& statementAccessesPair : statementAccessesPairs)
     statementAccessesPair->getStatement()->ASTStmt->accept(remapper);
 }
 

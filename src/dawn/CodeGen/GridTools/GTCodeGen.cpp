@@ -598,7 +598,7 @@ std::string GTCodeGen::generateStencilInstantiation(
           DoMethodCodeGen.startBody();
 
           stencilBodyCGVisitor.setIndent(DoMethodCodeGen.getIndent());
-          for(const auto& statementAccessesPair : doMethod.getStatementAccessesPairs()) {
+          for(const auto& statementAccessesPair : doMethod.getChildren()) {
             statementAccessesPair->getStatement()->ASTStmt->accept(stencilBodyCGVisitor);
             DoMethodCodeGen << stencilBodyCGVisitor.getCodeAndResetStream();
           }
