@@ -300,9 +300,9 @@ void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
     for(const auto& doMethodPtr : stage.getChildren()) {
       const DoMethod& doMethod = *doMethodPtr;
       renameAccessIDInStmts(&stencilInstantiation_, oldAccessID, newAccessID,
-                            doMethod.getStatementAccessesPairs());
+                            doMethod.getChildren());
       renameAccessIDInAccesses(&stencilInstantiation_, oldAccessID, newAccessID,
-                               doMethod.getStatementAccessesPairs());
+                               doMethod.getChildren());
     }
 
     stage.update();

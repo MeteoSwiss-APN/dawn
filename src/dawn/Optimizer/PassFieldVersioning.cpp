@@ -119,11 +119,10 @@ bool PassFieldVersioning::run(
         iir::DoMethod& doMethod = stage.getSingleDoMethod();
 
         // Iterate statements bottom -> top
-        for(int stmtIndex = doMethod.getStatementAccessesPairs().size() - 1; stmtIndex >= 0;
-            --stmtIndex) {
+        for(int stmtIndex = doMethod.getChildren().size() - 1; stmtIndex >= 0; --stmtIndex) {
           oldGraph = newGraph->clone();
 
-          auto& stmtAccessesPair = doMethod.getStatementAccessesPairs()[stmtIndex];
+          auto& stmtAccessesPair = doMethod.getChildren()[stmtIndex];
           newGraph->insertStatementAccessesPair(stmtAccessesPair);
 
           // Try to resolve race-conditions by using double buffering if necessary
@@ -158,7 +157,7 @@ PassFieldVersioning::fixRaceCondition(const iir::DependencyGraphAccesses* graph,
   using Vertex = iir::DependencyGraphAccesses::Vertex;
   using Edge = iir::DependencyGraphAccesses::Edge;
 
-  Statement& statement = *doMethod.getStatementAccessesPairs()[index]->getStatement();
+  Statement& statement = *doMethod.getChildren()[index]->getStatement();
 
   auto& instantiation = stencil.getStencilInstantiation();
   OptimizerContext* context = instantiation.getOptimizerContext();

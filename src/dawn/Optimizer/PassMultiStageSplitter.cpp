@@ -51,9 +51,8 @@ multiStageSplitterOptimzied() {
     iir::DoMethod& doMethod = stage.getSingleDoMethod();
 
     // Iterate statements backwards
-    for(int stmtIndex = doMethod.getStatementAccessesPairs().size() - 1; stmtIndex >= 0;
-        --stmtIndex) {
-      auto& stmtAccessesPair = doMethod.getStatementAccessesPairs()[stmtIndex];
+    for(int stmtIndex = doMethod.getChildren().size() - 1; stmtIndex >= 0; --stmtIndex) {
+      auto& stmtAccessesPair = doMethod.getChildren()[stmtIndex];
       graph.insertStatementAccessesPair(stmtAccessesPair);
 
       // Check for read-before-write conflicts in the loop order and counter loop order.
@@ -69,7 +68,7 @@ multiStageSplitterOptimzied() {
 
         if(options.ReportPassMultiStageSplit)
           std::cout << "\nPASS: " << PassName << ": " << StencilName << ": split:"
-                    << doMethod.getStatementAccessesPairs()[stmtIndex]
+                    << doMethod.getChildren()[stmtIndex]
                            ->getStatement()
                            ->ASTStmt->getSourceLocation()
                            .Line
@@ -126,8 +125,7 @@ multiStageSplitterDebug() {
 
     // Iterate statements backwards
     int openDependencies = 0;
-    for(int stmtIndex = doMethod.getStatementAccessesPairs().size() - 2; stmtIndex >= 0;
-        --stmtIndex) {
+    for(int stmtIndex = doMethod.getChildren().size() - 2; stmtIndex >= 0; --stmtIndex) {
       openDependencies += checkDependencies(*stageIt, stmtIndex);
       if(openDependencies == 0) {
         splitterIndices.emplace_front(
@@ -142,9 +140,8 @@ multiStageSplitterDebug() {
     // For example if we find a multistage with an offset read/write pattern (a = b * a[k-1]), even
     // though this statement is independent from all other statements, we still need to ensure the
     // proper loop order and cannot just assume parallel.
-    for(int stmtIndex = doMethod.getStatementAccessesPairs().size() - 1; stmtIndex >= 0;
-        --stmtIndex) {
-      auto& stmtAccessesPair = doMethod.getStatementAccessesPairs()[stmtIndex];
+    for(int stmtIndex = doMethod.getChildren().size() - 1; stmtIndex >= 0; --stmtIndex) {
+      auto& stmtAccessesPair = doMethod.getChildren()[stmtIndex];
       graph.insertStatementAccessesPair(stmtAccessesPair);
 
       // Check for read-before-write conflicts in the loop order.

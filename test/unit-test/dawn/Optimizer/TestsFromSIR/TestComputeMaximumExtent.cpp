@@ -82,8 +82,8 @@ TEST_F(TestComputeMaximumExtent, test_field_access_interval_02) {
 
   const auto& doMethod1 = stage1->getChildren().at(0);
 
-  ASSERT_TRUE((doMethod1->getStatementAccessesPairs().size() == 1));
-  const auto& stmtAccessPair = doMethod1->getStatementAccessesPairs()[0];
+  ASSERT_TRUE((doMethod1->getChildren().size() == 1));
+  const auto& stmtAccessPair = doMethod1->getChildren()[0];
   ASSERT_TRUE((stmtAccessPair->computeMaximumExtents(
                    stencilInstantiation->getAccessIDFromName("u")) == Extents{-1, 1, -1, 1, 0, 0}));
 

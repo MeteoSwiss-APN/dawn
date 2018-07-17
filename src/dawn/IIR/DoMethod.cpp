@@ -26,14 +26,14 @@ namespace iir {
 DoMethod::DoMethod(Interval interval)
     : interval_(interval), id_(IndexGenerator::Instance().getIndex()), dependencyGraph_(nullptr) {}
 
-std::vector<std::shared_ptr<StatementAccessesPair>>& DoMethod::getStatementAccessesPairs() {
-  return statementAccessesPairs_;
-}
+// std::vector<std::shared_ptr<StatementAccessesPair>>& DoMethod::getStatementAccessesPairs() {
+//  return statementAccessesPairs_;
+//}
 
-const std::vector<std::shared_ptr<StatementAccessesPair>>&
-DoMethod::getStatementAccessesPairs() const {
-  return statementAccessesPairs_;
-}
+// const std::vector<std::shared_ptr<StatementAccessesPair>>&
+// DoMethod::getStatementAccessesPairs() const {
+//  return statementAccessesPairs_;
+//}
 
 Interval& DoMethod::getInterval() { return interval_; }
 
@@ -50,7 +50,7 @@ std::shared_ptr<DependencyGraphAccesses>& DoMethod::getDependencyGraph() {
 boost::optional<Extents> DoMethod::computeMaximumExtents(const int accessID) const {
   boost::optional<Extents> extents;
 
-  for(auto& stmtAccess : getStatementAccessesPairs()) {
+  for(auto& stmtAccess : getChildren()) {
     auto extents_ = stmtAccess->computeMaximumExtents(accessID);
     if(!extents_.is_initialized())
       continue;
@@ -101,7 +101,7 @@ public:
 };
 
 bool DoMethod::isEmptyOrNullStmt() const {
-  for(auto const& statementAccessPair : statementAccessesPairs_) {
+  for(auto const& statementAccessPair : children_) {
     std::shared_ptr<Stmt> root = statementAccessPair->getStatement()->ASTStmt;
     CheckNonNullStatementVisitor checker;
     root->accept(checker);

@@ -194,7 +194,7 @@ void Stencil::forEachStatementAccessesPairImpl(
   for(int stageIdx = startStageIdx; stageIdx < endStageIdx; ++stageIdx) {
     auto stage = getStage(stageIdx);
     for(const auto& doMethodPtr : stage->getChildren())
-      func(doMethodPtr->getStatementAccessesPairs());
+      func(doMethodPtr->getChildren());
 
     if(updateFields)
       stage->update();
@@ -406,10 +406,9 @@ Stencil::Lifetime Stencil::getLifetime(const int AccessID) const {
       for(const auto& doMethodPtr : stagePtr->getChildren()) {
         DoMethod& doMethod = *doMethodPtr;
 
-        for(int statementIdx = 0; statementIdx < doMethod.getStatementAccessesPairs().size();
-            ++statementIdx) {
-          const Accesses& accesses =
-              *doMethod.getStatementAccessesPairs()[statementIdx]->getAccesses();
+        int statementIdx = 0;
+        for(const auto& stmtAccessPair : doMethod.getChildren()) {
+          const Accesses& accesses = *stmtAccessPair->getAccesses();
 
           auto processAccessMap = [&](const std::unordered_map<int, Extents>& accessMap) {
             if(!accessMap.count(AccessID))
@@ -425,6 +424,7 @@ Stencil::Lifetime Stencil::getLifetime(const int AccessID) const {
 
           processAccessMap(accesses.getWriteAccesses());
           processAccessMap(accesses.getReadAccesses());
+          statementIdx++;
         }
 
         doMethodIndex++;
@@ -445,7 +445,7 @@ bool Stencil::isEmpty() const {
   for(const auto& MS : getMultiStages())
     for(const auto& stage : MS->getStages())
       for(const auto& doMethod : stage->getChildren())
-        if(!doMethod->getStatementAccessesPairs().empty())
+        if(!doMethod->childrenEmpty())
           return false;
   return true;
 }
@@ -471,7 +471,7 @@ void Stencil::accept(ASTVisitor& visitor) {
   for(const auto& multistagePtr : multistages_)
     for(const auto& stagePtr : multistagePtr->getStages())
       for(const auto& doMethodPtr : stagePtr->getChildren())
-        for(const auto& stmtAcessesPairPtr : doMethodPtr->getStatementAccessesPairs())
+        for(const auto& stmtAcessesPairPtr : doMethodPtr->getChildren())
           stmtAcessesPairPtr->getStatement()->ASTStmt->accept(visitor);
 }
 

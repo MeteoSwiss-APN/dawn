@@ -477,7 +477,7 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
         iir::Stage& stage = *stagePtr;
         iir::DoMethod& doMethod = stage.getSingleDoMethod();
 
-        auto& stmtAccList = doMethod.getStatementAccessesPairs();
+        auto& stmtAccList = doMethod.getChildren();
         auto stmtAccIt = stmtAccList.begin();
 
         for(; stmtAccIt != stmtAccList.end(); ++stmtAccIt) {

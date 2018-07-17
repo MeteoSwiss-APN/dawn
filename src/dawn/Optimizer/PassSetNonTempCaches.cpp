@@ -185,7 +185,7 @@ private:
     std::shared_ptr<iir::Stage> assignmentStage = std::make_shared<iir::Stage>(
         *instantiation_, multiStagePrt_.get(), instantiation_->nextUID(), interval);
     iir::Stage::DoMethodSmartPtr_t domethod = make_unique<iir::DoMethod>(interval);
-    domethod->getStatementAccessesPairs().clear();
+    domethod->clearChildren();
 
     for(int i = 0; i < assignmentIDs.size(); ++i) {
       int assignmentID = assignmentIDs[i];
@@ -217,7 +217,7 @@ private:
     newAccess->addWriteExtent(assignmentID, Extents(Array3i{{0, 0, 0}}));
     newAccess->addReadExtent(assigneeID, Extents(Array3i{{0, 0, 0}}));
     pair->setAccesses(newAccess);
-    domethod->getStatementAccessesPairs().push_back(pair);
+    domethod->insertChild(pair);
 
     // Add the new expressions to the map
     instantiation_->mapExprToAccessID(fa_assignment, assignmentID);
@@ -232,9 +232,9 @@ private:
     for(auto stageItGlob = multiStagePrt_->getStages().begin();
         stageItGlob != multiStagePrt_->getStages().end(); ++stageItGlob) {
       iir::DoMethod& doMethod = (**stageItGlob).getSingleDoMethod();
-      for(int stmtIndex = 0; stmtIndex < doMethod.getStatementAccessesPairs().size(); ++stmtIndex) {
+      for(int stmtIndex = 0; stmtIndex < doMethod.getChildren().size(); ++stmtIndex) {
         const std::shared_ptr<iir::StatementAccessesPair>& stmtAccessesPair =
-            doMethod.getStatementAccessesPairs()[stmtIndex];
+            doMethod.getChildren()[stmtIndex];
 
         // Find first if this statement has a read
         auto readAccessIterator =
@@ -258,9 +258,9 @@ private:
     for(auto stageItGlob = multiStagePrt_->getStages().begin();
         stageItGlob != multiStagePrt_->getStages().end(); ++stageItGlob) {
       iir::DoMethod& doMethod = (**stageItGlob).getSingleDoMethod();
-      for(int stmtIndex = 0; stmtIndex < doMethod.getStatementAccessesPairs().size(); ++stmtIndex) {
+      for(int stmtIndex = 0; stmtIndex < doMethod.getChildren().size(); ++stmtIndex) {
         const std::shared_ptr<iir::StatementAccessesPair>& stmtAccessesPair =
-            doMethod.getStatementAccessesPairs()[stmtIndex];
+            doMethod.getChildren()[stmtIndex];
         // If we find a write-statement we exit
         auto wirteAccessIterator =
             stmtAccessesPair->getCallerAccesses()->getWriteAccesses().find(AccessID);

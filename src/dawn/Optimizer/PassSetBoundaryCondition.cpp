@@ -230,7 +230,7 @@ bool PassSetBoundaryCondition::run(
           ++stageIt) {
         iir::Stage& stage = (**stageIt);
         for(const auto& domethod : stage.getChildren()) {
-          for(const auto& stmtAccess : domethod->getStatementAccessesPairs()) {
+          for(const auto& stmtAccess : domethod->getChildren()) {
             iir::Accesses& acesses = *(stmtAccess->getAccesses());
             const auto& allReadAccesses = acesses.getReadAccesses();
             const auto& allWriteAccesses = acesses.getWriteAccesses();

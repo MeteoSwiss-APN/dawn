@@ -433,10 +433,8 @@ bool PassTemporaryToStencilFunction::run(
 
         for(auto doMethodIt = (*stageIt)->childrenRBegin();
             doMethodIt != (*stageIt)->childrenREnd(); doMethodIt++) {
-          for(auto stmtAccessPairIt = (*doMethodIt)->getStatementAccessesPairs().rbegin();
-              stmtAccessPairIt != (*doMethodIt)->getStatementAccessesPairs().rend();
-              stmtAccessPairIt++) {
-            const std::shared_ptr<Statement> stmt = (*stmtAccessPairIt)->getStatement();
+          for(const auto& stmtAccessPair : (*doMethodIt)->getChildren()) {
+            const std::shared_ptr<Statement> stmt = (stmtAccessPair)->getStatement();
 
             stmt->ASTStmt->acceptAndReplace(localVariablePromotion);
           }
@@ -456,7 +454,7 @@ bool PassTemporaryToStencilFunction::run(
 
         bool isATmpReplaced = false;
         for(const auto& doMethodPtr : stagePtr->getChildren()) {
-          for(auto& stmtAccessPair : doMethodPtr->getStatementAccessesPairs()) {
+          for(auto& stmtAccessPair : doMethodPtr->getChildren()) {
             const std::shared_ptr<Statement> stmt = stmtAccessPair->getStatement();
 
             if(stmt->ASTStmt->getKind() != Stmt::SK_ExprStmt)

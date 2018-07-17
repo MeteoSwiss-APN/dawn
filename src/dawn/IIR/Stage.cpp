@@ -176,7 +176,7 @@ void Stage::update() {
       globalVariablesFromStencilFunctionCalls_, stencilInstantiation_);
   for(const auto& doMethodPtr : getChildren()) {
     const DoMethod& doMethod = *doMethodPtr;
-    for(const auto& statementAccessesPair : doMethod.getStatementAccessesPairs()) {
+    for(const auto& statementAccessesPair : doMethod.getChildren()) {
       statementAccessesPair->getStatement()->ASTStmt->accept(functionCallGlobaParamVisitor);
       const auto& access = statementAccessesPair->getAccesses();
       DAWN_ASSERT(access);
@@ -249,7 +249,7 @@ void Stage::update() {
   for(const auto& doMethodPtr : getChildren()) {
     const DoMethod& doMethod = *doMethodPtr;
 
-    for(const auto& statementAccessesPair : doMethod.getStatementAccessesPairs()) {
+    for(const auto& statementAccessesPair : doMethod.getChildren()) {
       const auto& access = statementAccessesPair->getAccesses();
 
       // first => AccessID, second => Extent
@@ -299,10 +299,8 @@ void Stage::appendDoMethod(DoMethodSmartPtr_t& from, DoMethodSmartPtr_t& to,
                   "DoMethods have incompatible intervals!");
 
   to->setDependencyGraph(dependencyGraph);
-  to->getStatementAccessesPairs().insert(
-      to->getStatementAccessesPairs().end(),
-      std::make_move_iterator(from->getStatementAccessesPairs().begin()),
-      std::make_move_iterator(from->getStatementAccessesPairs().end()));
+  to->insertChildren(to->childrenEnd(), std::make_move_iterator(from->childrenBegin()),
+                     std::make_move_iterator(from->childrenEnd()));
   update();
 }
 
@@ -313,19 +311,19 @@ Stage::split(std::deque<int>& splitterIndices,
              const std::deque<std::shared_ptr<DependencyGraphAccesses>>* graphs) {
   DAWN_ASSERT_MSG(hasSingleDoMethod(), "Stage::split does not support multiple Do-Methods");
   DoMethod& thisDoMethod = getSingleDoMethod();
-  auto& thisStatementAccessesPairs = thisDoMethod.getStatementAccessesPairs();
 
-  DAWN_ASSERT(thisStatementAccessesPairs.size() >= 2);
+  DAWN_ASSERT(thisDoMethod.getChildren().size() >= 2);
   DAWN_ASSERT(!graphs || splitterIndices.size() == graphs->size() - 1);
 
   std::vector<std::shared_ptr<Stage>> newStages;
 
-  splitterIndices.push_back(thisStatementAccessesPairs.size() - 1);
-  std::size_t prevSplitterIndex = 0;
+  splitterIndices.push_back(thisDoMethod.getChildren().size() - 1);
+  DoMethod::StatementAccessesIterator prevSplitterIndex = thisDoMethod.childrenBegin();
 
   // Create new stages
   for(std::size_t i = 0; i < splitterIndices.size(); ++i) {
-    std::size_t nextSplitterIndex = splitterIndices[i] + 1;
+    DoMethod::StatementAccessesIterator nextSplitterIndex =
+        std::next(thisDoMethod.childrenBegin(), splitterIndices[i] + 1);
 
     newStages.push_back(std::make_shared<Stage>(stencilInstantiation_, multiStage_,
                                                 stencilInstantiation_.nextUID(),
@@ -337,8 +335,11 @@ Stage::split(std::deque<int>& splitterIndices,
       doMethod.setDependencyGraph((*graphs)[i]);
 
     // The new stage contains the statements in the range [prevSplitterIndex , nextSplitterIndex)
-    for(std::size_t idx = prevSplitterIndex; idx < nextSplitterIndex; ++idx)
-      doMethod.getStatementAccessesPairs().emplace_back(std::move(thisStatementAccessesPairs[idx]));
+    for(auto it = prevSplitterIndex; it != nextSplitterIndex; ++it) {
+      doMethod.insertChild(std::move(*it));
+    }
+
+    //    for(std::size_t idx = prevSplitterIndex; idx < nextSplitterIndex; ++idx)
 
     // Update the fields of the new stage
     newStage.update();

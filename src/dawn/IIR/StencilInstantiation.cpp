@@ -366,11 +366,12 @@ public:
     // Further, we instantiate all referenced stencil functions.
     DAWN_LOG(INFO) << "Inserting statements ... ";
     DoMethod& doMethod = stage->getSingleDoMethod();
+    // TODO move iterators of IIRNode to const getChildren, when we pass here begin, end instead
     StatementMapper statementMapper(instantiation_, scope_.top()->StackTrace,
-                                    doMethod.getStatementAccessesPairs(), doMethod.getInterval(),
+                                    doMethod.getChildren(), doMethod.getInterval(),
                                     scope_.top()->LocalFieldnameToAccessIDMap, nullptr);
     ast->accept(statementMapper);
-    DAWN_LOG(INFO) << "Inserted " << doMethod.getStatementAccessesPairs().size() << " statements";
+    DAWN_LOG(INFO) << "Inserted " << doMethod.getChildren().size() << " statements";
 
     if(instantiation_->getOptimizerContext()->getDiagnostics().hasErrors())
       return;
@@ -378,7 +379,7 @@ public:
     // Here we compute the *actual* access of each statement and associate access to the AccessIDs
     // we set previously.
     DAWN_LOG(INFO) << "Filling accesses ...";
-    computeAccesses(instantiation_, doMethod.getStatementAccessesPairs());
+    computeAccesses(instantiation_, doMethod.getChildren());
 
     // Now, we compute the fields of each stage (this will give us the IO-Policy of the fields)
     stage->update();
@@ -783,9 +784,8 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
   renameAccessIDInExpr(this, AccessID, newAccessID, expr);
 
   // Recompute the accesses of the current statement (only works with single Do-Methods - for now)
-  computeAccesses(
-      this,
-      stencil->getStage(curStageIdx)->getSingleDoMethod().getStatementAccessesPairs()[curStmtIdx]);
+  computeAccesses(this,
+                  stencil->getStage(curStageIdx)->getSingleDoMethod().getChildren()[curStmtIdx]);
 
   // Rename the statement and accesses
   for(int stageIdx = curStageIdx;
@@ -796,16 +796,15 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
 
     if(stageIdx == curStageIdx) {
       for(int i = dir == RD_Above ? (curStmtIdx - 1) : (curStmtIdx + 1);
-          dir == RD_Above ? (i >= 0) : (i < doMethod.getStatementAccessesPairs().size());
+          dir == RD_Above ? (i >= 0) : (i < doMethod.getChildren().size());
           dir == RD_Above ? (--i) : (++i)) {
-        renameAccessIDInStmts(this, AccessID, newAccessID, doMethod.getStatementAccessesPairs()[i]);
-        renameAccessIDInAccesses(this, AccessID, newAccessID,
-                                 doMethod.getStatementAccessesPairs()[i]);
+        renameAccessIDInStmts(this, AccessID, newAccessID, doMethod.getChildren()[i]);
+        renameAccessIDInAccesses(this, AccessID, newAccessID, doMethod.getChildren()[i]);
       }
 
     } else {
-      renameAccessIDInStmts(this, AccessID, newAccessID, doMethod.getStatementAccessesPairs());
-      renameAccessIDInAccesses(this, AccessID, newAccessID, doMethod.getStatementAccessesPairs());
+      renameAccessIDInStmts(this, AccessID, newAccessID, doMethod.getChildren());
+      renameAccessIDInAccesses(this, AccessID, newAccessID, doMethod.getChildren());
     }
 
     // Updat the fields of the stage
@@ -842,7 +841,7 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
       stencil->getStage(lifetime.Begin.StagePos)
           ->getChildren()
           .at(lifetime.Begin.DoMethodIndex)
-          ->getStatementAccessesPairs();
+          ->getChildren();
   std::shared_ptr<Statement> oldStatement =
       statementAccessesPairs[lifetime.Begin.StatementIndex]->getStatement();
 
@@ -904,7 +903,7 @@ void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil,
       stencil->getStage(lifetime.Begin.StagePos)
           ->getChildren()
           .at(lifetime.Begin.DoMethodIndex)
-          ->getStatementAccessesPairs();
+          ->getChildren();
   std::shared_ptr<Statement> oldStatement =
       statementAccessesPairs[lifetime.Begin.StatementIndex]->getStatement();
 
@@ -1284,7 +1283,7 @@ std::string StencilInstantiation::getOriginalNameFromAccessID(int AccessID) cons
     for(const auto& multistage : stencil->getMultiStages())
       for(const auto& stage : multistage->getStages())
         for(const auto& doMethod : stage->getChildren())
-          for(const auto& statementAccessesPair : doMethod->getStatementAccessesPairs()) {
+          for(const auto& statementAccessesPair : doMethod->getChildren()) {
             statementAccessesPair->getStatement()->ASTStmt->accept(orignalNameGetter);
             if(orignalNameGetter.hasName())
               return orignalNameGetter.getName();
@@ -1330,7 +1329,7 @@ void StencilInstantiation::dump() const {
           PrintDescLine<4> lline(Twine("Do_") + Twine(l) + " " +
                                  doMethod->getInterval().toString());
 
-          const auto& statementAccessesPairs = doMethod->getStatementAccessesPairs();
+          const auto& statementAccessesPairs = doMethod->getChildren();
           for(std::size_t m = 0; m < statementAccessesPairs.size(); ++m) {
             std::cout << "\e[1m"
                       << ASTStringifer::toString(statementAccessesPairs[m]->getStatement()->ASTStmt,
@@ -1376,7 +1375,7 @@ void StencilInstantiation::dumpAsJson(std::string filename, std::string passName
 
           jDoMethod["Interval"] = doMethod->getInterval().toString();
 
-          const auto& statementAccessesPairs = doMethod->getStatementAccessesPairs();
+          const auto& statementAccessesPairs = doMethod->getChildren();
           for(std::size_t m = 0; m < statementAccessesPairs.size(); ++m) {
             jDoMethod["Stmt_" + std::to_string(m)] = ASTStringifer::toString(
                 statementAccessesPairs[m]->getStatement()->ASTStmt, 0, false);
@@ -1480,7 +1479,7 @@ void StencilInstantiation::reportAccesses() const {
     for(const auto& multistage : stencil->getMultiStages())
       for(const auto& stage : multistage->getStages()) {
         for(const auto& doMethod : stage->getChildren()) {
-          const auto& statementAccessesPairs = doMethod->getStatementAccessesPairs();
+          const auto& statementAccessesPairs = doMethod->getChildren();
 
           for(std::size_t i = 0; i < statementAccessesPairs.size(); ++i) {
             std::cout

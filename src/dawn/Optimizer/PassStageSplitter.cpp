@@ -58,9 +58,8 @@ bool PassStageSplitter::run(
         newGraph = std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation.get());
 
         // Build the Dependency graph (bottom to top)
-        for(int stmtIndex = doMethod.getStatementAccessesPairs().size() - 1; stmtIndex >= 0;
-            --stmtIndex) {
-          auto& stmtAccessesPair = doMethod.getStatementAccessesPairs()[stmtIndex];
+        for(int stmtIndex = doMethod.getChildren().size() - 1; stmtIndex >= 0; --stmtIndex) {
+          auto& stmtAccessesPair = doMethod.getChildren()[stmtIndex];
 
           newGraph->insertStatementAccessesPair(stmtAccessesPair);
 

@@ -37,9 +37,11 @@ class DoMethod : public IIRNode<void, DoMethod, StatementAccessesPair> {
   const long unsigned int id_;
 
   std::shared_ptr<DependencyGraphAccesses> dependencyGraph_;
-  std::vector<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs_;
+  //  std::vector<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs_;
 
 public:
+  using StatementAccessesIterator = child_iterator_t;
+
   /// @name Constructors and Assignment
   /// @{
   DoMethod(Interval interval);
@@ -51,9 +53,9 @@ public:
   DoMethod& operator=(DoMethod&&) = default;
   /// @}
 
-  /// @brief Get the statements of the Stage
-  std::vector<std::shared_ptr<StatementAccessesPair>>& getStatementAccessesPairs();
-  const std::vector<std::shared_ptr<StatementAccessesPair>>& getStatementAccessesPairs() const;
+  //  /// @brief Get the statements of the Stage
+  //  std::vector<std::shared_ptr<StatementAccessesPair>>& getStatementAccessesPairs();
+  //  const std::vector<std::shared_ptr<StatementAccessesPair>>& getStatementAccessesPairs() const;
 
   /// @brief Get the vertical Interval
   Interval& getInterval();

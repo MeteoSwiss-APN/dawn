@@ -379,6 +379,7 @@ StencilFunctionInstantiation::getStencilFunctionInstantiation(
 
 std::vector<std::shared_ptr<StatementAccessesPair>>&
 StencilFunctionInstantiation::getStatementAccessesPairs() {
+  // TODO does this belong here, isnt it in IIR?
   return statementAccessesPairs_;
 }
 

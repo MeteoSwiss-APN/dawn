@@ -85,10 +85,9 @@ bool PassTemporaryFirstAccess::run(
       for(auto& stagePtr : multiStagePtr->getStages()) {
         iir::DoMethod& doMethod = stagePtr->getSingleDoMethod();
 
-        for(int i = 0; i < doMethod.getStatementAccessesPairs().size(); ++i) {
-          const auto& accesses = doMethod.getStatementAccessesPairs()[i]->getAccesses();
-          const auto& astStatement =
-              doMethod.getStatementAccessesPairs()[i]->getStatement()->ASTStmt;
+        for(const auto& stmtAccessesPair : doMethod.getChildren()) {
+          const auto& accesses = stmtAccessesPair->getAccesses();
+          const auto& astStatement = stmtAccessesPair->getStatement()->ASTStmt;
 
           for(const auto& writeAccess : accesses->getWriteAccesses())
             if(temporaryFields.count(writeAccess.first))

@@ -39,9 +39,12 @@ protected:
 public:
   template <typename T>
   using child_smartptr_t = SmartPtr<T>;
+  using child_iterator_t = typename std::vector<SmartPtr<Child>>::iterator;
 
+  std::vector<SmartPtr<Child>>& getChildren() { return children_; }
   const std::vector<SmartPtr<Child>>& getChildren() const { return children_; }
 
+  // TODO alias for iterators
   typename std::vector<SmartPtr<Child>>::iterator childrenBegin() { return children_.begin(); }
   typename std::vector<SmartPtr<Child>>::iterator childrenEnd() { return children_.end(); }
 
@@ -79,9 +82,9 @@ public:
     dawn_unreachable("child weak pointer not found");
   }
 
-  template <typename T>
-  void setChildParent(const SmartPtr<Child>& child,
-                      typename std::enable_if<!std::is_void<T>::value>::type* = 0) {
+  template <typename TChild, typename TParent>
+  void setChildParent(TChild&& child,
+                      typename std::enable_if<!std::is_void<TParent>::value>::type* = 0) {
     if(!parent_.expired()) {
       auto sparent = parent_.lock();
       std::weak_ptr<NodeType> p = sparent->getChildWeakPtr(this);
@@ -89,15 +92,24 @@ public:
     }
   }
 
-  template <typename T>
-  void setChildParent(const SmartPtr<Child>& child,
-                      typename std::enable_if<std::is_void<T>::value>::type* = 0) {}
+  template <typename TChild, typename TParent>
+  void setChildParent(TChild&& child,
+                      typename std::enable_if<std::is_void<TParent>::value>::type* = 0) {}
 
-  void insertChild(SmartPtr<Child>&& child) {
-    setChildParent<Parent>(child);
-    children_.push_back(std::move(child));
+  template <typename TChild>
+  void insertChild(TChild&& child) {
+    setChildParent<TChild, Parent>(std::forward<TChild>(child));
+    children_.push_back(std::forward<TChild>(child));
   }
 
+  template <typename Iterator>
+  void insertChildren(typename std::vector<SmartPtr<Child>>::iterator pos, Iterator first,
+                      Iterator last) {
+    for(auto& it = first; it != std::next(last); ++it) {
+      setChildParent<SmartPtr<Child>, Parent>(*it);
+    }
+    children_.insert(pos, first, last);
+  }
   bool childrenEmpty() const { return children_.empty(); }
 
   void clearChildren() { children_.clear(); }

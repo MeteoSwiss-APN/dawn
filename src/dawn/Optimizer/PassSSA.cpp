@@ -42,10 +42,10 @@ bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInsta
       std::shared_ptr<iir::Stage> stagePtr = stencil.getStage(stageIdx);
 
       iir::DoMethod& doMethod = stagePtr->getSingleDoMethod();
-      for(int stmtIdx = 0; stmtIdx < doMethod.getStatementAccessesPairs().size(); ++stmtIdx) {
+      for(int stmtIdx = 0; stmtIdx < doMethod.getChildren().size(); ++stmtIdx) {
 
         std::shared_ptr<iir::StatementAccessesPair> stmtAccessesPair =
-            doMethod.getStatementAccessesPairs()[stmtIdx];
+            doMethod.getChildren()[stmtIdx];
 
         AssignmentExpr* assignment = nullptr;
         if(ExprStmt* stmt = dyn_cast<ExprStmt>(stmtAccessesPair->getStatement()->ASTStmt.get()))
