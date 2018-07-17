@@ -83,12 +83,12 @@ bool PassStencilSplitter::run(
         newStencil->getMultiStages().push_back(
             std::make_shared<iir::MultiStage>(*stencilInstantiation, multiStage.getLoopOrder()));
 
-        for(std::shared_ptr<iir::Stage>& stagePtr : multiStage.getStages()) {
+        for(const auto& stagePtr : multiStage.getChildren()) {
           if(newStencil->isEmpty() ||
              mergePossible(fieldsInNewStencil, stagePtr.get(), MaxFieldPerStencil)) {
 
             // We can safely insert the stage into the current multi-stage of the `newStencil`
-            newStencil->getMultiStages().back()->getStages().push_back(stagePtr);
+            newStencil->getMultiStages().back()->insertChild(stagePtr);
 
             // Update fields of the `newStencil`. Note that the indivudual stages do not need to
             // update their fields as they remain the same.
@@ -105,7 +105,7 @@ bool PassStencilSplitter::run(
             // Re-create the current multi-stage in the `newStencil` and insert the stage
             newStencil->getMultiStages().push_back(std::make_shared<iir::MultiStage>(
                 *stencilInstantiation, multiStage.getLoopOrder()));
-            newStencil->getMultiStages().back()->getStages().push_back(stagePtr);
+            newStencil->getMultiStages().back()->insertChild(stagePtr);
           }
         }
       }
@@ -121,7 +121,7 @@ bool PassStencilSplitter::run(
       // Remove empty multi-stages within the stencils
       for(auto& s : newStencils) {
         for(auto msIt = s->getMultiStages().begin(); msIt != s->getMultiStages().end();)
-          if((*msIt)->isEmpty())
+          if((*msIt)->childrenEmpty())
             msIt = s->getMultiStages().erase(msIt);
           else
             ++msIt;

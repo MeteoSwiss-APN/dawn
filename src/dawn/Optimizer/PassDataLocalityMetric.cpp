@@ -281,7 +281,7 @@ std::unordered_map<int, ReadWriteAccumulator> computeReadWriteAccessesMetricPerA
     const iir::MultiStage& multiStage) {
   ReadWriteCounter readWriteCounter(instantiation, multiStage);
 
-  for(const auto& stage : multiStage.getStages())
+  for(const auto& stage : multiStage.getChildren())
     for(const auto& doMethod : stage->getChildren())
       for(const auto& statementAccessesPair : doMethod->getChildren()) {
         statementAccessesPair->getStatement()->ASTStmt->accept(readWriteCounter);
@@ -296,7 +296,7 @@ computeReadWriteAccessesMetric(const std::shared_ptr<iir::StencilInstantiation>&
                                const iir::MultiStage& multiStage) {
   ReadWriteCounter readWriteCounter(instantiation, multiStage);
 
-  for(const auto& stage : multiStage.getStages())
+  for(const auto& stage : multiStage.getChildren())
     for(const auto& doMethod : stage->getChildren())
       for(const auto& statementAccessesPair : doMethod->getChildren()) {
         statementAccessesPair->getStatement()->ASTStmt->accept(readWriteCounter);

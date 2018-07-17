@@ -513,7 +513,7 @@ std::string GTCodeGen::generateStencilInstantiation(
       }
 
       std::size_t stageIdx = 0;
-      for(auto stageIt = multiStage.getStages().begin(), stageEnd = multiStage.getStages().end();
+      for(auto stageIt = multiStage.childrenBegin(), stageEnd = multiStage.childrenEnd();
           stageIt != stageEnd; ++stageIt, ++stageIdx) {
         const auto& stagePtr = *stageIt;
         const iir::Stage& stage = *stagePtr;
@@ -578,7 +578,7 @@ std::string GTCodeGen::generateStencilInstantiation(
           arglist.push_back(std::move(paramName));
         }
 
-        ssMS << ")" << ((stageIdx != multiStage.getStages().size() - 1) ? "," : ")");
+        ssMS << ")" << ((stageIdx != multiStage.getChildren().size() - 1) ? "," : ")");
 
         // Generate arglist
         StageStruct.addTypeDef("arg_list").addType("boost::mpl::vector").addTemplates(arglist);

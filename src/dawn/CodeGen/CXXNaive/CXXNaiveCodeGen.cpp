@@ -317,7 +317,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
         StencilRunMethod.addBlockStatement(
             makeKLoop("m_dom", (multiStage.getLoopOrder() == LoopOrderKind::LK_Backward), interval),
             [&]() {
-              for(const auto& stagePtr : multiStage.getStages()) {
+              for(const auto& stagePtr : multiStage.getChildren()) {
                 const iir::Stage& stage = *stagePtr;
 
                 StencilRunMethod.addBlockStatement(

@@ -109,7 +109,7 @@ ReoderStrategyGreedy::reorder(const std::shared_ptr<iir::Stencil>& stencilPtr) {
     // First time we encounter this multi-stage, create an empty multi-stage
     pushBackNewMultiStage(LoopOrderKind::LK_Parallel);
 
-    for(const auto& stagePtr : multiStagePtr->getStages()) {
+    for(const auto& stagePtr : multiStagePtr->getChildren()) {
       const iir::Stage& stage = *stagePtr;
       int stageIdx = newNumStages - 1;
 
@@ -178,7 +178,7 @@ ReoderStrategyGreedy::reorder(const std::shared_ptr<iir::Stencil>& stencilPtr) {
 
   // Remove empty multi-stages
   for(auto it = newStencil->getMultiStages().begin(); it != newStencil->getMultiStages().end();) {
-    if((*it)->getStages().empty())
+    if((*it)->childrenEmpty())
       it = newStencil->getMultiStages().erase(it);
     else
       it++;

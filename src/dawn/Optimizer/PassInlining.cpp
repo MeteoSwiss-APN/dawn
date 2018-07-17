@@ -473,7 +473,7 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
   // Iterate all statements (top -> bottom)
   for(auto& stencilPtr : stencilInstantiation->getStencils()) {
     for(auto& multiStagePtr : stencilPtr->getMultiStages()) {
-      for(auto& stagePtr : multiStagePtr->getStages()) {
+      for(auto& stagePtr : multiStagePtr->getChildren()) {
         iir::Stage& stage = *stagePtr;
         iir::DoMethod& doMethod = stage.getSingleDoMethod();
 

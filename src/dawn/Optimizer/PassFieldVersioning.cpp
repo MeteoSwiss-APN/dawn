@@ -112,8 +112,7 @@ bool PassFieldVersioning::run(
       newGraph = std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation.get());
 
       // Iterate stages bottom -> top
-      for(auto stageRit = multiStage.getStages().rbegin(),
-               stageRend = multiStage.getStages().rend();
+      for(auto stageRit = multiStage.childrenRBegin(), stageRend = multiStage.childrenREnd();
           stageRit != stageRend; ++stageRit) {
         iir::Stage& stage = (**stageRit);
         iir::DoMethod& doMethod = stage.getSingleDoMethod();

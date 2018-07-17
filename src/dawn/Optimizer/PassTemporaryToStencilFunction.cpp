@@ -428,8 +428,8 @@ bool PassTemporaryToStencilFunction::run(
         multiStageIt != stencilPtr->getMultiStages().rend(); ++multiStageIt) {
       std::unordered_map<int, TemporaryFunctionProperties> temporaryFieldExprToFunction;
 
-      for(auto stageIt = (*multiStageIt)->getStages().rbegin();
-          stageIt != (*multiStageIt)->getStages().rend(); ++stageIt) {
+      for(auto stageIt = (*multiStageIt)->childrenRBegin();
+          stageIt != (*multiStageIt)->childrenREnd(); ++stageIt) {
 
         for(auto doMethodIt = (*stageIt)->childrenRBegin();
             doMethodIt != (*stageIt)->childrenREnd(); doMethodIt++) {
@@ -450,7 +450,7 @@ bool PassTemporaryToStencilFunction::run(
     for(auto multiStage : stencilPtr->getMultiStages()) {
       std::unordered_map<int, TemporaryFunctionProperties> temporaryFieldExprToFunction;
 
-      for(const auto& stagePtr : multiStage->getStages()) {
+      for(const auto& stagePtr : multiStage->getChildren()) {
 
         bool isATmpReplaced = false;
         for(const auto& doMethodPtr : stagePtr->getChildren()) {
@@ -558,8 +558,7 @@ bool PassTemporaryToStencilFunction::run(
              stencilPtr->getMultiStages(),
              [](std::shared_ptr<iir::MultiStage> m) -> bool { return m->isEmptyOrNullStmt(); });
     for(auto multiStage : stencilPtr->getMultiStages()) {
-      RemoveIf(multiStage->getStages().begin(), multiStage->getStages().end(),
-               multiStage->getStages(),
+      RemoveIf(multiStage->childrenBegin(), multiStage->childrenEnd(), multiStage->getChildren(),
                [](std::shared_ptr<iir::Stage> s) -> bool { return s->isEmptyOrNullStmt(); });
     }
   }

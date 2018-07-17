@@ -23,8 +23,13 @@
 namespace dawn {
 namespace iir {
 
+namespace impl {
+template <typename T>
+using StdVector = std::vector<T, std::allocator<T>>;
+}
 template <typename Parent, typename NodeType, typename Child,
-          template <class> class SmartPtr = std::shared_ptr>
+          template <class> class SmartPtr = std::shared_ptr,
+          template <class> class Container = impl::StdVector>
 class IIRNode {
 
 protected:
@@ -34,43 +39,42 @@ protected:
 
   std::weak_ptr<Parent> parent_;
   /// List of Do-Methods of this stage
-  std::vector<SmartPtr<Child>> children_;
+  Container<SmartPtr<Child>> children_;
 
 public:
   template <typename T>
   using child_smartptr_t = SmartPtr<T>;
-  using child_iterator_t = typename std::vector<SmartPtr<Child>>::iterator;
+  using child_iterator_t = typename Container<SmartPtr<Child>>::iterator;
+  using child_reverse_iterator_t = typename Container<SmartPtr<Child>>::reverse_iterator;
 
-  std::vector<SmartPtr<Child>>& getChildren() { return children_; }
-  const std::vector<SmartPtr<Child>>& getChildren() const { return children_; }
+  Container<SmartPtr<Child>>& getChildren() { return children_; }
+  const Container<SmartPtr<Child>>& getChildren() const { return children_; }
 
   // TODO alias for iterators
-  typename std::vector<SmartPtr<Child>>::iterator childrenBegin() { return children_.begin(); }
-  typename std::vector<SmartPtr<Child>>::iterator childrenEnd() { return children_.end(); }
+  typename Container<SmartPtr<Child>>::iterator childrenBegin() { return children_.begin(); }
+  typename Container<SmartPtr<Child>>::iterator childrenEnd() { return children_.end(); }
 
-  typename std::vector<SmartPtr<Child>>::reverse_iterator childrenRBegin() {
+  typename Container<SmartPtr<Child>>::reverse_iterator childrenRBegin() {
     return children_.rbegin();
   }
-  typename std::vector<SmartPtr<Child>>::reverse_iterator childrenREnd() {
-    return children_.rend();
-  }
+  typename Container<SmartPtr<Child>>::reverse_iterator childrenREnd() { return children_.rend(); }
 
-  typename std::vector<SmartPtr<Child>>::const_iterator childrenBegin() const {
+  typename Container<SmartPtr<Child>>::const_iterator childrenBegin() const {
     return children_.begin();
   }
-  typename std::vector<SmartPtr<Child>>::const_iterator childrenEnd() const {
+  typename Container<SmartPtr<Child>>::const_iterator childrenEnd() const {
     return children_.end();
   }
 
-  typename std::vector<SmartPtr<Child>>::const_reverse_iterator childrenRBegin() const {
+  typename Container<SmartPtr<Child>>::const_reverse_iterator childrenRBegin() const {
     return children_.rbegin();
   }
-  typename std::vector<SmartPtr<Child>>::const_reverse_iterator childrenREnd() const {
+  typename Container<SmartPtr<Child>>::const_reverse_iterator childrenREnd() const {
     return children_.rend();
   }
 
-  typename std::vector<SmartPtr<Child>>::iterator
-  childrenErase(typename std::vector<SmartPtr<Child>>::iterator it) {
+  typename Container<SmartPtr<Child>>::iterator
+  childrenErase(typename Container<SmartPtr<Child>>::iterator it) {
     return children_.erase(it);
   }
 
@@ -82,12 +86,14 @@ public:
     dawn_unreachable("child weak pointer not found");
   }
 
+  void setParent(std::weak_ptr<Parent> p) { parent_ = p; }
+
   template <typename TChild, typename TParent>
   void setChildParent(TChild&& child,
                       typename std::enable_if<!std::is_void<TParent>::value>::type* = 0) {
     if(!parent_.expired()) {
       auto sparent = parent_.lock();
-      std::weak_ptr<NodeType> p = sparent->getChildWeakPtr(this);
+      std::weak_ptr<NodeType> p = sparent->getChildWeakPtr(static_cast<NodeType*>(this));
       child->setParent(p);
     }
   }
@@ -102,10 +108,16 @@ public:
     children_.push_back(std::forward<TChild>(child));
   }
 
+  template <typename TChild>
+  void insertChild(typename Container<SmartPtr<Child>>::iterator pos, TChild&& child) {
+    setChildParent<TChild, Parent>(std::forward<TChild>(child));
+    children_.insert(pos, std::forward<TChild>(child));
+  }
+
   template <typename Iterator>
-  void insertChildren(typename std::vector<SmartPtr<Child>>::iterator pos, Iterator first,
+  void insertChildren(typename Container<SmartPtr<Child>>::iterator pos, Iterator first,
                       Iterator last) {
-    for(auto& it = first; it != std::next(last); ++it) {
+    for(auto it = first; it != last; ++it) {
       setChildParent<SmartPtr<Child>, Parent>(*it);
     }
     children_.insert(pos, first, last);

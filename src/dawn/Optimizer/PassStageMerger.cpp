@@ -67,8 +67,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
       iir::MultiStage& multiStage = *multiStagePtr;
 
       // Iterate stages backwards (bottom -> top)
-      for(auto curStageIt = multiStage.getStages().rbegin();
-          curStageIt != multiStage.getStages().rend();) {
+      for(auto curStageIt = multiStage.childrenRBegin(); curStageIt != multiStage.childrenREnd();) {
 
         iir::Stage& curStage = **curStageIt;
 
@@ -90,7 +89,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
           // Start from the next stage and iterate upwards (i.e backwards) to find a suitable
           // stage to merge
           for(auto candidateStageIt = std::next(curStageIt);
-              candidateStageIt != multiStage.getStages().rend(); ++candidateStageIt) {
+              candidateStageIt != multiStage.childrenREnd(); ++candidateStageIt) {
             iir::Stage& candidateStage = **candidateStageIt;
             //            std::vector<std::unique_ptr<iir::DoMethod>>& candiateDoMethods =
             //                candidateStage.getDoMethods();
@@ -164,7 +163,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
         // Stage is empty, remove it (the wirdness here stems from the fact that we have a reverse
         // iterator and erase expects a normal iterator ...)
         if(curStage.childrenEmpty())
-          curStageIt = decltype(curStageIt)(multiStage.getStages().erase(--curStageIt.base()));
+          curStageIt = decltype(curStageIt)(multiStage.getChildren().erase(--curStageIt.base()));
         else {
           if(updateFields)
             curStage.update();

@@ -30,6 +30,18 @@ void RemoveIf(typename std::list<T>::iterator first, typename std::list<T>::iter
   }
 }
 
+// TODO make this generic
+template <class T, class UnaryPredicate>
+void RemoveIf(typename std::vector<T>::iterator first, typename std::vector<T>::iterator last,
+              std::vector<T>& cont, UnaryPredicate p) {
+  while(first != last) {
+    if(p(*first))
+      first = cont.erase(first);
+    else
+      first++;
+  }
+}
+
 } // namespace dawn
 
 #endif

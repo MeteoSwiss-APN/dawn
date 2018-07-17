@@ -36,7 +36,7 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
   std::vector<std::shared_ptr<MultiStage>> newMultiStages;
 
   int curStageIndex = 0;
-  auto curStageIt = stages_.begin();
+  auto curStageIt = children_.begin();
   std::deque<int> curStageSplitterIndices;
 
   newMultiStages.push_back(std::make_shared<MultiStage>(stencilInstantiation_, lastLoopOrder));
@@ -62,12 +62,12 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
         auto newMultiStageRIt = newMultiStages.rbegin();
         for(auto newStagesRIt = newStages.rbegin(); newStagesRIt != newStages.rend();
             ++newStagesRIt, ++newMultiStageRIt)
-          (*newMultiStageRIt)->getStages().push_back(std::move(*newStagesRIt));
+          (*newMultiStageRIt)->insertChild(std::move(*newStagesRIt));
 
         curStageSplitterIndices.clear();
       } else {
         // No split in this stage, just move it to the current multi-stage
-        newMultiStages.back()->getStages().push_back(std::move(*curStageIt));
+        newMultiStages.back()->insertChild(std::move(*curStageIt));
       }
 
       if(i != (splitterIndices.size() - 1))
@@ -86,7 +86,7 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
 std::shared_ptr<DependencyGraphAccesses>
 MultiStage::getDependencyGraphOfInterval(const Interval& interval) const {
   auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(&stencilInstantiation_);
-  std::for_each(stages_.begin(), stages_.end(), [&](const std::shared_ptr<Stage>& stagePtr) {
+  std::for_each(children_.begin(), children_.end(), [&](const std::shared_ptr<Stage>& stagePtr) {
     if(interval.overlaps(stagePtr->getEnclosingExtendedInterval()))
       std::for_each(stagePtr->childrenBegin(), stagePtr->childrenEnd(),
                     [&](const Stage::DoMethodSmartPtr_t& DoMethodPtr) {
@@ -98,7 +98,7 @@ MultiStage::getDependencyGraphOfInterval(const Interval& interval) const {
 
 std::shared_ptr<DependencyGraphAccesses> MultiStage::getDependencyGraphOfAxis() const {
   auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(&stencilInstantiation_);
-  std::for_each(stages_.begin(), stages_.end(), [&](const std::shared_ptr<Stage>& stagePtr) {
+  std::for_each(children_.begin(), children_.end(), [&](const std::shared_ptr<Stage>& stagePtr) {
     std::for_each(stagePtr->childrenBegin(), stagePtr->childrenEnd(),
                   [&](const Stage::DoMethodSmartPtr_t& DoMethodPtr) {
                     dependencyGraph->merge(DoMethodPtr->getDependencyGraph().get());
@@ -133,7 +133,7 @@ std::vector<DoMethod> MultiStage::computeOrderedDoMethods() const {
   std::vector<DoMethod> orderedDoMethods;
 
   for(auto interval : partitionIntervals) {
-    for(const auto& stagePtr : getStages()) {
+    for(const auto& stagePtr : getChildren()) {
       for(const auto& doMethod : stagePtr->getChildren()) {
 
         if(doMethod->getInterval().overlaps(interval)) {
@@ -215,7 +215,7 @@ boost::optional<Interval>
 MultiStage::computeEnclosingAccessInterval(const int accessID,
                                            const bool mergeWithDoInterval) const {
   boost::optional<Interval> interval;
-  for(auto const& stage : stages_) {
+  for(auto const& stage : children_) {
     boost::optional<Interval> doInterval =
         stage->computeEnclosingAccessInterval(accessID, mergeWithDoInterval);
 
@@ -231,18 +231,18 @@ MultiStage::computeEnclosingAccessInterval(const int accessID,
 
 std::unordered_set<Interval> MultiStage::getIntervals() const {
   std::unordered_set<Interval> intervals;
-  for(const auto& stagePtr : stages_)
+  for(const auto& stagePtr : children_)
     for(const auto& doMethodPtr : stagePtr->getChildren())
       intervals.insert(doMethodPtr->getInterval());
   return intervals;
 }
 
 Interval MultiStage::getEnclosingInterval() const {
-  DAWN_ASSERT(!stages_.empty());
-  Interval interval = (*stages_.begin())->getEnclosingInterval();
+  DAWN_ASSERT(!children_.empty());
+  Interval interval = (*children_.begin())->getEnclosingInterval();
 
-  for(auto it = std::next(stages_.begin()), end = stages_.end(); it != end; ++it)
-    interval.merge((*stages_.begin())->getEnclosingInterval());
+  for(auto it = std::next(children_.begin()), end = children_.end(); it != end; ++it)
+    interval.merge((*children_.begin())->getEnclosingInterval());
 
   return interval;
 }
@@ -252,7 +252,7 @@ boost::optional<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() co
   // notice we dont use here the fields of getFields() since they contain the enclosing of all the
   // extents and intervals of all stages and it would give larger intervals than really required
   // inspecting the extents and intervals of individual stages
-  for(const auto& stagePtr : stages_) {
+  for(const auto& stagePtr : children_) {
     for(const Field& field : stagePtr->getFields()) {
       int AccessID = field.getAccessID();
       if(!stencilInstantiation_.isTemporaryField(AccessID))
@@ -272,7 +272,7 @@ boost::optional<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() co
 std::unordered_map<int, Field> MultiStage::getFields() const {
   std::unordered_map<int, Field> fields;
 
-  for(const auto& stagePtr : stages_) {
+  for(const auto& stagePtr : children_) {
     for(const Field& field : stagePtr->getFields()) {
       auto it = fields.find(field.getAccessID());
       if(it != fields.end()) {
@@ -295,7 +295,7 @@ std::unordered_map<int, Field> MultiStage::getFields() const {
 }
 
 void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
-  for(auto stageIt = getStages().begin(); stageIt != getStages().end(); ++stageIt) {
+  for(auto stageIt = childrenBegin(); stageIt != childrenEnd(); ++stageIt) {
     Stage& stage = (**stageIt);
     for(const auto& doMethodPtr : stage.getChildren()) {
       const DoMethod& doMethod = *doMethodPtr;
@@ -310,8 +310,8 @@ void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
 }
 
 bool MultiStage::isEmptyOrNullStmt() const {
-  for(auto stageIt = getStages().begin(); stageIt != getStages().end(); ++stageIt) {
-    if(!(*stageIt)->isEmptyOrNullStmt())
+  for(const auto& stage : getChildren()) {
+    if(!(stage)->isEmptyOrNullStmt())
       return false;
   }
   return true;

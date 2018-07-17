@@ -68,7 +68,7 @@ private:
   void computeOptimalFields() {
     auto dataLocality = computeReadWriteAccessesMetricPerAccessID(instantiation_, *multiStagePrt_);
 
-    for(const auto& stagePtr : multiStagePrt_->getStages()) {
+    for(const auto& stagePtr : multiStagePrt_->getChildren()) {
       for(const Field& field : stagePtr->getFields()) {
         auto iter = accessIDToDataLocality_.find(field.getAccessID());
 
@@ -146,11 +146,11 @@ private:
       }
     }
     if(!oldAccessIDs.empty()) {
-      auto stageBegin = multiStagePrt_->getStages().begin();
+      auto stageBegin = multiStagePrt_->childrenBegin();
 
       std::shared_ptr<iir::Stage> cacheFillStage =
           createAssignmentStage(multiStagePrt_->getEnclosingInterval(), newAccessIDs, oldAccessIDs);
-      multiStagePrt_->getStages().insert(stageBegin, std::move(cacheFillStage));
+      multiStagePrt_->insertChild(stageBegin, std::move(cacheFillStage));
     }
   }
 
@@ -167,13 +167,13 @@ private:
     }
 
     if(!oldAccessIDs.empty()) {
-      auto stageEnd = multiStagePrt_->getStages().end();
+      auto stageEnd = multiStagePrt_->childrenEnd();
 
       std::shared_ptr<iir::Stage> cacheFlushStage =
           createAssignmentStage(multiStagePrt_->getEnclosingInterval(), oldAccessIDs, newAccessIDs);
 
       // Insert the new stage at the found location
-      multiStagePrt_->getStages().insert(stageEnd, std::move(cacheFlushStage));
+      multiStagePrt_->insertChild(stageEnd, std::move(cacheFlushStage));
     }
   }
 
@@ -229,9 +229,8 @@ private:
   /// @param[in]    AccessID  original FieldAccessID of the field to check
   /// @return true if there is a read-access before the first write access
   bool checkReadBeforeWrite(int AccessID) {
-    for(auto stageItGlob = multiStagePrt_->getStages().begin();
-        stageItGlob != multiStagePrt_->getStages().end(); ++stageItGlob) {
-      iir::DoMethod& doMethod = (**stageItGlob).getSingleDoMethod();
+    for(const auto& stage : multiStagePrt_->getChildren()) {
+      iir::DoMethod& doMethod = (*stage).getSingleDoMethod();
       for(int stmtIndex = 0; stmtIndex < doMethod.getChildren().size(); ++stmtIndex) {
         const std::shared_ptr<iir::StatementAccessesPair>& stmtAccessesPair =
             doMethod.getChildren()[stmtIndex];
@@ -255,9 +254,8 @@ private:
   }
 
   bool checkReadOnlyAccess(int AccessID) {
-    for(auto stageItGlob = multiStagePrt_->getStages().begin();
-        stageItGlob != multiStagePrt_->getStages().end(); ++stageItGlob) {
-      iir::DoMethod& doMethod = (**stageItGlob).getSingleDoMethod();
+    for(const auto& stage : multiStagePrt_->getChildren()) {
+      iir::DoMethod& doMethod = (*stage).getSingleDoMethod();
       for(int stmtIndex = 0; stmtIndex < doMethod.getChildren().size(); ++stmtIndex) {
         const std::shared_ptr<iir::StatementAccessesPair>& stmtAccessesPair =
             doMethod.getChildren()[stmtIndex];

@@ -75,7 +75,7 @@ TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_01) {
 
   auto const& mss = stencil->getMultiStages().front();
 
-  auto stage1_ptr = mss->getStages().begin();
+  auto stage1_ptr = mss->childrenBegin();
   auto stage2_ptr = std::next(stage1_ptr);
   std::shared_ptr<iir::Stage> const& stage1 = *stage1_ptr;
   std::shared_ptr<iir::Stage> const& stage2 = *stage2_ptr;
@@ -123,7 +123,7 @@ TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_02) {
 
   auto const& mss = stencil->getMultiStages().front();
 
-  auto stage1_ptr = mss->getStages().begin();
+  auto stage1_ptr = mss->childrenBegin();
   std::shared_ptr<iir::Stage> const& stage1 = *stage1_ptr;
 
   {

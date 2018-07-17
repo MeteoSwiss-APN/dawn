@@ -385,7 +385,7 @@ public:
     stage->update();
 
     // Put the stage into a separate MultiStage ...
-    multiStage->getStages().push_back(std::move(stage));
+    multiStage->insertChild(std::move(stage));
 
     // ... and append the MultiStages of the current stencil
     instantiation_->getStencils().back()->getMultiStages().push_back(std::move(multiStage));
@@ -1281,7 +1281,7 @@ std::string StencilInstantiation::getOriginalNameFromAccessID(int AccessID) cons
   OriginalNameGetter orignalNameGetter(this, AccessID, true);
   for(const auto& stencil : stencils_)
     for(const auto& multistage : stencil->getMultiStages())
-      for(const auto& stage : multistage->getStages())
+      for(const auto& stage : multistage->getChildren())
         for(const auto& doMethod : stage->getChildren())
           for(const auto& statementAccessesPair : doMethod->getChildren()) {
             statementAccessesPair->getStatement()->ASTStmt->accept(orignalNameGetter);
@@ -1319,7 +1319,7 @@ void StencilInstantiation::dump() const {
                              loopOrderToString(multiStage->getLoopOrder()) + "]");
 
       int k = 0;
-      const auto& stages = multiStage->getStages();
+      const auto& stages = multiStage->getChildren();
       for(const auto& stage : stages) {
         PrintDescLine<3> kline(Twine("Stage_") + Twine(k));
 
@@ -1365,7 +1365,7 @@ void StencilInstantiation::dumpAsJson(std::string filename, std::string passName
       jMultiStage["LoopOrder"] = loopOrderToString(multiStage->getLoopOrder());
 
       int k = 0;
-      const auto& stages = multiStage->getStages();
+      const auto& stages = multiStage->getChildren();
       for(const auto& stage : stages) {
         json::json jStage;
 
@@ -1477,7 +1477,7 @@ void StencilInstantiation::reportAccesses() const {
   // Stages
   for(const auto& stencil : stencils_)
     for(const auto& multistage : stencil->getMultiStages())
-      for(const auto& stage : multistage->getStages()) {
+      for(const auto& stage : multistage->getChildren()) {
         for(const auto& doMethod : stage->getChildren()) {
           const auto& statementAccessesPairs = doMethod->getChildren();
 

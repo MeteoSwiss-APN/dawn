@@ -44,7 +44,7 @@ namespace impl {
 template <typename T>
 using DoMethodSmartptr = std::unique_ptr<T, std::default_delete<T>>;
 }
-class Stage : public IIRNode<void, Stage, DoMethod, std::shared_ptr> {
+class Stage : public IIRNode<MultiStage, Stage, DoMethod, std::shared_ptr> {
   StencilInstantiation& stencilInstantiation_;
   MultiStage* multiStage_;
 

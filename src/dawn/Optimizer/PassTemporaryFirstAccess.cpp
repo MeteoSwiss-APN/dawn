@@ -81,8 +81,8 @@ bool PassTemporaryFirstAccess::run(
     // {AccesID : (isFirstAccessWrite, Stmt)}
     std::unordered_map<int, std::pair<bool, std::shared_ptr<Stmt>>> accessMap;
 
-    for(auto& multiStagePtr : stencilPtr->getMultiStages()) {
-      for(auto& stagePtr : multiStagePtr->getStages()) {
+    for(const auto& multiStagePtr : stencilPtr->getMultiStages()) {
+      for(const auto& stagePtr : multiStagePtr->getChildren()) {
         iir::DoMethod& doMethod = stagePtr->getSingleDoMethod();
 
         for(const auto& stmtAccessesPair : doMethod.getChildren()) {

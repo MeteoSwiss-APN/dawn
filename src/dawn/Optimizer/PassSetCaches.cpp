@@ -166,8 +166,8 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
         return field.getIntend() == Field::IK_Output || field.getIntend() == Field::IK_InputOutput;
       };
 
-      for(auto stageIt = MS.getStages().begin(); stageIt != MS.getStages().end(); stageIt++) {
-        for(const Field& field : (*stageIt)->getFields()) {
+      for(const auto& stage : MS.getChildren()) {
+        for(const Field& field : stage->getFields()) {
 
           // Field is already cached, skip
           if(MS.isCached(field.getAccessID())) {

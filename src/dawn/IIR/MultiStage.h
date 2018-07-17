@@ -19,6 +19,7 @@
 #include "dawn/Optimizer/MultiInterval.h"
 #include "dawn/Optimizer/LoopOrder.h"
 #include "dawn/IIR/Stage.h"
+#include "dawn/IIR/IIRNode.h"
 #include <deque>
 #include <list>
 #include <memory>
@@ -28,9 +29,15 @@
 namespace dawn {
 namespace iir {
 
+class Stencil;
 class StencilInstantiation;
 class DependencyGraphAccesses;
 class OptimizerContext;
+
+namespace impl {
+template <typename T>
+using StdList = std::list<T, std::allocator<T>>;
+}
 
 /// @brief A MultiStage is represented by a collection of stages and a given exectuion policy.
 ///
@@ -38,15 +45,17 @@ class OptimizerContext;
 /// gridtools multistages reflect kernels.
 ///
 /// @ingroup optimizer
-class MultiStage {
+class MultiStage : public IIRNode<void, MultiStage, Stage, std::shared_ptr, impl::StdList> {
+
   StencilInstantiation& stencilInstantiation_;
 
   LoopOrderKind loopOrder_;
-  std::list<std::shared_ptr<Stage>> stages_;
-
   std::unordered_map<int, Cache> caches_;
 
 public:
+  using StageSmartPtr_t = child_smartptr_t<Stage>;
+  using ChildrenIterator = std::vector<child_smartptr_t<Stage>>::iterator;
+
   /// @name Constructors and Assignment
   /// @{
   MultiStage(StencilInstantiation& stencilInstantiation, LoopOrderKind loopOrder);
@@ -56,10 +65,6 @@ public:
   MultiStage& operator=(const MultiStage&) = default;
   MultiStage& operator=(MultiStage&&) = default;
   /// @}
-
-  /// @brief Get the multi-stages of the stencil
-  std::list<std::shared_ptr<Stage>>& getStages() { return stages_; }
-  const std::list<std::shared_ptr<Stage>>& getStages() const { return stages_; }
 
   /// @brief Get the execution policy
   StencilInstantiation& getStencilInstantiation() const { return stencilInstantiation_; }
@@ -105,15 +110,13 @@ public:
 
   Cache& setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy policy, int AccessID);
 
-  /// @brief computes the interval where an accessId is used (extended by the extent of the access)
+  /// @brief computes the interval where an accessId is used (extended by the extent of the
+  /// access)
   boost::optional<Interval> computeEnclosingAccessInterval(const int accessID,
                                                            const bool mergeWithDoInterval) const;
 
   /// @brief Is the field given by the `AccessID` cached?
   bool isCached(int AccessID) const { return caches_.count(AccessID); }
-
-  /// @brief Check if the multi-stage is empty (i.e contains no statements)
-  bool isEmpty() const { return stages_.empty(); }
 
   /// @brief Get the intervals of the multi-stage
   std::unordered_set<Interval> getIntervals() const;

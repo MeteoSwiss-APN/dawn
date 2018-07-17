@@ -38,11 +38,12 @@ std::ostream& operator<<(std::ostream& os, const iir::Stencil::Lifetime& lifetim
   return (os << "[Begin=" << lifetime.Begin << ", End=" << lifetime.End << "]");
 }
 
+// TODO solve with iterators
 std::ostream& operator<<(std::ostream& os, const iir::Stencil& stencil) {
   int multiStageIdx = 0;
   for(const auto& MS : stencil.getMultiStages()) {
     os << "MultiStage " << (multiStageIdx++) << ": (" << MS->getLoopOrder() << ")\n";
-    for(const auto& stage : MS->getStages())
+    for(const auto& stage : MS->getChildren())
       os << "  " << stencil.getStencilInstantiation().getNameFromStageID(stage->getStageID()) << " "
          << RangeToString()(stage->getFields(), [&](const Field& field) {
               return stencil.getStencilInstantiation().getNameFromAccessID(field.getAccessID());
@@ -116,7 +117,7 @@ Stencil::Stencil(StencilInstantiation& stencilInstantiation,
 std::unordered_set<Interval> Stencil::getIntervals() const {
   std::unordered_set<Interval> intervals;
   for(const auto& multistage : multistages_)
-    for(const auto& stage : multistage->getStages())
+    for(const auto& stage : multistage->getChildren())
       for(const auto& doMethod : stage->getChildren())
         intervals.insert(doMethod->getInterval());
 
@@ -126,7 +127,7 @@ std::unordered_set<Interval> Stencil::getIntervals() const {
 std::vector<Stencil::FieldInfo> Stencil::getFields(bool withTemporaries) const {
   std::set<int> fieldAccessIDs;
   for(const auto& multistage : multistages_) {
-    for(const auto& stage : multistage->getStages()) {
+    for(const auto& stage : multistage->getChildren()) {
       for(const auto& field : stage->getFields()) {
         fieldAccessIDs.insert(field.getAccessID());
       }
@@ -155,7 +156,7 @@ std::vector<Stencil::FieldInfo> Stencil::getFields(bool withTemporaries) const {
 std::vector<std::string> Stencil::getGlobalVariables() const {
   std::set<int> globalVariableAccessIDs;
   for(const auto& multistage : multistages_) {
-    for(const auto& stage : multistage->getStages()) {
+    for(const auto& stage : multistage->getChildren()) {
       globalVariableAccessIDs.insert(stage->getAllGlobalVariables().begin(),
                                      stage->getAllGlobalVariables().end());
     }
@@ -171,7 +172,7 @@ std::vector<std::string> Stencil::getGlobalVariables() const {
 int Stencil::getNumStages() const {
   return std::accumulate(multistages_.begin(), multistages_.end(), int(0),
                          [](int numStages, const std::shared_ptr<MultiStage>& MS) {
-                           return numStages + MS->getStages().size();
+                           return numStages + MS->getChildren().size();
                          });
 }
 
@@ -270,7 +271,7 @@ Stencil::StagePosition Stencil::getPositionFromStageIndex(int stageIdx) const {
   for(const auto& MS : multistages_) {
 
     // Is our stage in this multi-stage?
-    int numStages = MS->getStages().size();
+    int numStages = MS->getChildren().size();
     if((curIdx + numStages) <= stageIdx) {
       curIdx += numStages;
       multiStageIdx++;
@@ -292,7 +293,7 @@ int Stencil::getStageIndexFromPosition(const Stencil::StagePosition& position) c
   int numStagesInMSBeforeCurMS =
       std::accumulate(multistages_.begin(), curMSIt, int(0),
                       [&](int numStages, const std::shared_ptr<MultiStage>& MS) {
-                        return numStages + MS->getStages().size();
+                        return numStages + MS->getChildren().size();
                       });
 
   // Add the current stage offset
@@ -307,9 +308,9 @@ const std::shared_ptr<Stage>& Stencil::getStage(const StagePosition& position) c
   const auto& MS = *msIt;
 
   // ... and the requested stage inside the given multi-stage
-  DAWN_ASSERT_MSG(position.StageOffset == -1 || position.StageOffset < MS->getStages().size(),
+  DAWN_ASSERT_MSG(position.StageOffset == -1 || position.StageOffset < MS->getChildren().size(),
                   "invalid stage offset");
-  auto stageIt = MS->getStages().begin();
+  auto stageIt = MS->childrenBegin();
   std::advance(stageIt, position.StageOffset == -1 ? 0 : position.StageOffset);
   return *stageIt;
 }
@@ -319,7 +320,7 @@ const std::shared_ptr<Stage>& Stencil::getStage(int stageIdx) const {
   for(const auto& MS : multistages_) {
 
     // Is our stage in this multi-stage?
-    int numStages = MS->getStages().size();
+    int numStages = MS->getChildren().size();
 
     if((curIdx + numStages) <= stageIdx) {
       // No... continue
@@ -329,8 +330,8 @@ const std::shared_ptr<Stage>& Stencil::getStage(int stageIdx) const {
       // Yes... advance to our stage
       int stageOffset = stageIdx - curIdx;
 
-      DAWN_ASSERT_MSG(stageOffset < MS->getStages().size(), "invalid stage index");
-      auto stageIt = MS->getStages().begin();
+      DAWN_ASSERT_MSG(stageOffset < MS->getChildren().size(), "invalid stage index");
+      auto stageIt = MS->childrenBegin();
       std::advance(stageIt, stageOffset);
 
       return *stageIt;
@@ -348,20 +349,20 @@ void Stencil::insertStage(const StagePosition& position, const std::shared_ptr<S
   const auto& MS = *msIt;
 
   // ... and the requested stage inside the given multi-stage
-  DAWN_ASSERT_MSG(position.StageOffset == -1 || position.StageOffset < MS->getStages().size(),
+  DAWN_ASSERT_MSG(position.StageOffset == -1 || position.StageOffset < MS->getChildren().size(),
                   "invalid stage offset");
-  auto stageIt = MS->getStages().begin();
+  auto stageIt = MS->childrenBegin();
 
   // A stage offset of -1 indicates *before* the first element (thus nothing to do).
   // Otherwise we advance one beyond the requested stage as we insert *after* the specified
   // stage and `std::list::insert` inserts *before*.
   if(position.StageOffset != -1) {
     std::advance(stageIt, position.StageOffset);
-    if(stageIt != MS->getStages().end())
+    if(stageIt != MS->childrenEnd())
       stageIt++;
   }
 
-  MS->getStages().insert(stageIt, stage);
+  MS->insertChild(stageIt, stage);
 }
 
 Interval Stencil::getAxis(bool useExtendedInterval) const {
@@ -400,7 +401,7 @@ Stencil::Lifetime Stencil::getLifetime(const int AccessID) const {
   for(const auto& multistagePtr : multistages_) {
 
     int stageOffset = 0;
-    for(const auto& stagePtr : multistagePtr->getStages()) {
+    for(const auto& stagePtr : multistagePtr->getChildren()) {
 
       int doMethodIndex = 0;
       for(const auto& doMethodPtr : stagePtr->getChildren()) {
@@ -443,7 +444,7 @@ Stencil::Lifetime Stencil::getLifetime(const int AccessID) const {
 
 bool Stencil::isEmpty() const {
   for(const auto& MS : getMultiStages())
-    for(const auto& stage : MS->getStages())
+    for(const auto& stage : MS->getChildren())
       for(const auto& doMethod : stage->getChildren())
         if(!doMethod->childrenEmpty())
           return false;
@@ -469,7 +470,7 @@ const std::shared_ptr<sir::Stencil> Stencil::getSIRStencil() const { return SIRS
 
 void Stencil::accept(ASTVisitor& visitor) {
   for(const auto& multistagePtr : multistages_)
-    for(const auto& stagePtr : multistagePtr->getStages())
+    for(const auto& stagePtr : multistagePtr->getChildren())
       for(const auto& doMethodPtr : stagePtr->getChildren())
         for(const auto& stmtAcessesPairPtr : doMethodPtr->getChildren())
           stmtAcessesPairPtr->getStatement()->ASTStmt->accept(visitor);
@@ -480,7 +481,7 @@ std::unordered_map<int, Extents> const Stencil::computeEnclosingAccessExtents() 
   // iterate through multistages
   for(const auto& MS : multistages_) {
     // iterate through stages
-    for(const auto& stage : MS->getStages()) {
+    for(const auto& stage : MS->getChildren()) {
       std::size_t accessorIdx = 0;
       for(; accessorIdx < stage->getFields().size(); ++accessorIdx) {
         const auto& field = stage->getFields()[accessorIdx];

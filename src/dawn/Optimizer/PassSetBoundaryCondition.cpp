@@ -226,9 +226,8 @@ bool PassSetBoundaryCondition::run(
 
     for(const auto& multiStagePtr : stencil.getMultiStages()) {
       iir::MultiStage& multiStage = *multiStagePtr;
-      for(auto stageIt = multiStage.getStages().begin(); stageIt != multiStage.getStages().end();
-          ++stageIt) {
-        iir::Stage& stage = (**stageIt);
+      for(const auto& stagePtr : multiStage.getChildren()) {
+        iir::Stage& stage = (*stagePtr);
         for(const auto& domethod : stage.getChildren()) {
           for(const auto& stmtAccess : domethod->getChildren()) {
             iir::Accesses& acesses = *(stmtAccess->getAccesses());

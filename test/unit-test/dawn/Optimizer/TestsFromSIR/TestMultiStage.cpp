@@ -147,8 +147,8 @@ TEST_F(MultiStageTest, test_compute_ordered_do_methods) {
 
   auto const& mss = stencil->getMultiStages().front();
 
-  EXPECT_EQ(mss->getStages().size(), 3);
-  auto stageit = mss->getStages().begin();
+  EXPECT_EQ(mss->getChildren().size(), 3);
+  auto stageit = mss->getChildren().begin();
   auto const& stage0 = *stageit;
   EXPECT_EQ(stage0->getChildren().size(), 2);
   auto const& do0_0 = stage0->getChildren().at(0);

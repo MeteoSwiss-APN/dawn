@@ -46,7 +46,7 @@ bool PassStageSplitter::run(
     for(auto& multiStage : stencil->getMultiStages()) {
 
       int stageIndex = 0;
-      for(auto stageIt = multiStage->getStages().begin(); stageIt != multiStage->getStages().end();
+      for(auto stageIt = multiStage->childrenBegin(); stageIt != multiStage->childrenEnd();
           ++stageIndex, ++linearStageIndex) {
         iir::Stage& stage = (**stageIt);
         iir::DoMethod& doMethod = stage.getSingleDoMethod();
@@ -101,9 +101,9 @@ bool PassStageSplitter::run(
         // Note that the "old" stage will be erased (it was consumed in split(...) anyway)
         if(!splitterIndices.empty()) {
           auto newStages = stage.split(splitterIndices, &graphs);
-          stageIt = multiStage->getStages().erase(stageIt);
-          multiStage->getStages().insert(stageIt, std::make_move_iterator(newStages.begin()),
-                                         std::make_move_iterator(newStages.end()));
+          stageIt = multiStage->childrenErase(stageIt);
+          multiStage->insertChildren(stageIt, std::make_move_iterator(newStages.begin()),
+                                     std::make_move_iterator(newStages.end()));
         } else {
           DAWN_ASSERT(graphs.size() == 1);
           doMethod.setDependencyGraph(graphs.back());
