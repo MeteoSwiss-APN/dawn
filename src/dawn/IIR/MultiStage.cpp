@@ -275,25 +275,7 @@ std::unordered_map<int, Field> MultiStage::getFields() const {
   std::unordered_map<int, Field> fields;
 
   for(const auto& stagePtr : children_) {
-    for(const auto& fieldPair : stagePtr->getFields()) {
-      const Field& field = fieldPair.second;
-      auto it = fields.find(field.getAccessID());
-      if(it != fields.end()) {
-        // Adjust the Intend
-        if(it->second.getIntend() == Field::IK_Input && field.getIntend() == Field::IK_Output)
-          it->second.setIntend(Field::IK_InputOutput);
-        else if(it->second.getIntend() == Field::IK_Output && field.getIntend() == Field::IK_Input)
-          it->second.setIntend(Field::IK_InputOutput);
-
-        // Merge the Extent
-        it->second.mergeReadExtents(field.getReadExtents());
-        it->second.mergeWriteExtents(field.getWriteExtents());
-        it->second.extendInterval(field.getInterval());
-      } else
-        fields.emplace(field.getAccessID(), field);
-    }
-
-    //    mergeFields(stagePtr->getFields(), fields);
+    mergeFields(stagePtr->getFields(), fields);
   }
 
   return fields;

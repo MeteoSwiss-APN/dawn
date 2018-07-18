@@ -51,6 +51,7 @@ class MultiStage : public IIRNode<Stencil, MultiStage, Stage, std::shared_ptr, i
 
   LoopOrderKind loopOrder_;
   std::unordered_map<int, Cache> caches_;
+  std::unordered_map<int, Field> fields_;
 
 public:
   using StageSmartPtr_t = child_smartptr_t<Stage>;
