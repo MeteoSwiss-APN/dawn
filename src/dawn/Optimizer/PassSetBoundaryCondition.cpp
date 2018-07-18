@@ -46,7 +46,8 @@ static dawn::Extents analyzeStencilExtents(const std::shared_ptr<iir::Stencil>& 
     iir::Stage& stage = *(stencil.getStage(i));
 
     Extents const& stageExtent = stage.getExtents();
-    for(auto& field : stage.getFields()) {
+    for(const auto& fieldPair : stage.getFields()) {
+      const Field& field = fieldPair.second;
       fullExtents.merge(field.getExtents());
       fullExtents.add(stageExtent);
     }

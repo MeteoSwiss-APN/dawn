@@ -526,10 +526,10 @@ std::string GTCodeGen::generateStencilInstantiation(
         ssMS << extents[0].Minus << ", " << extents[0].Plus << ", " << extents[1].Minus << ", "
              << extents[1].Plus << "> >(";
 
-        // Field declaration
         const auto& fields = stage.getFields();
-        std::vector<std::string> arglist;
 
+        // Field declaration
+        std::vector<std::string> arglist;
         if(fields.empty()) {
           DiagnosticsBuilder diag(DiagnosticsKind::Error,
                                   stencilInstantiation->getSIRStencil()->Loc);
@@ -540,9 +540,11 @@ std::string GTCodeGen::generateStencilInstantiation(
         }
 
         std::size_t accessorIdx = 0;
-        for(; accessorIdx < fields.size(); ++accessorIdx) {
-          const auto& field = fields[accessorIdx];
-          std::string paramName = stencilInstantiation->getNameFromAccessID(field.getAccessID());
+        for(const auto& fieldPair : fields) {
+          const auto& field = fieldPair.second;
+          const int accessID = fieldPair.first;
+
+          std::string paramName = stencilInstantiation->getNameFromAccessID(accessID);
 
           // Generate parameter of stage
           codegen::Type extent(c_gt() + "extent", clear(tss));

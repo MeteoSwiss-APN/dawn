@@ -14,7 +14,7 @@
 
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/Optimizer/AccessUtils.h"
-#include "dawn/Optimizer/Field.h"
+#include "dawn/IIR/Field.h"
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/Casting.h"

@@ -34,6 +34,7 @@ public:
 
   FieldAccessExtents(FieldAccessExtents&&) = default;
   FieldAccessExtents(FieldAccessExtents const&) = default;
+  FieldAccessExtents& operator=(FieldAccessExtents&&) = default;
 
   boost::optional<Extents> const& getReadExtents() const { return readAccessExtents_; }
   boost::optional<Extents> const& getWriteExtents() const { return writeAccessExtents_; }

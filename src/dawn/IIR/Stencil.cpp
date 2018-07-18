@@ -45,8 +45,8 @@ std::ostream& operator<<(std::ostream& os, const iir::Stencil& stencil) {
     os << "MultiStage " << (multiStageIdx++) << ": (" << MS->getLoopOrder() << ")\n";
     for(const auto& stage : MS->getChildren())
       os << "  " << stencil.getStencilInstantiation().getNameFromStageID(stage->getStageID()) << " "
-         << RangeToString()(stage->getFields(), [&](const Field& field) {
-              return stencil.getStencilInstantiation().getNameFromAccessID(field.getAccessID());
+         << RangeToString()(stage->getFields(), [&](const std::pair<int, Field>& fieldPair) {
+              return stencil.getStencilInstantiation().getNameFromAccessID(fieldPair.first);
             }) << "\n";
   }
   return os;
@@ -128,8 +128,9 @@ std::vector<Stencil::FieldInfo> Stencil::getFields(bool withTemporaries) const {
   std::set<int> fieldAccessIDs;
   for(const auto& multistage : children_) {
     for(const auto& stage : multistage->getChildren()) {
-      for(const auto& field : stage->getFields()) {
-        fieldAccessIDs.insert(field.getAccessID());
+      for(const auto& fieldPair : stage->getFields()) {
+        // TODO redo transform
+        fieldAccessIDs.insert(fieldPair.first);
       }
     }
   }
@@ -481,18 +482,19 @@ std::unordered_map<int, Extents> const Stencil::computeEnclosingAccessExtents() 
   for(const auto& MS : children_) {
     // iterate through stages
     for(const auto& stage : MS->getChildren()) {
-      std::size_t accessorIdx = 0;
-      for(; accessorIdx < stage->getFields().size(); ++accessorIdx) {
-        const auto& field = stage->getFields()[accessorIdx];
+      for(const auto& fieldPair : stage->getFields()) {
+        const auto& field = fieldPair.second;
+        // TODO recover
+        const int accessID = fieldPair.first;
         // add the stage extent to the field extent
         Extents e = field.getExtents();
         e.add(stage->getExtents());
         // merge with the current minimum/maximum extent for the given field
-        auto finder = maxExtents_.find(stage->getFields()[accessorIdx].getAccessID());
+        auto finder = maxExtents_.find(accessID);
         if(finder != maxExtents_.end()) {
           finder->second.merge(e);
         } else {
-          maxExtents_.emplace(stage->getFields()[accessorIdx].getAccessID(), e);
+          maxExtents_.emplace(accessID, e);
         }
       }
     }

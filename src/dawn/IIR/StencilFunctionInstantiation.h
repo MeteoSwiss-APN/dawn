@@ -16,7 +16,7 @@
 #define DAWN_IIR_STENCILFUNCTIONINSTANTIATION_H
 
 #include "dawn/Optimizer/Extents.h"
-#include "dawn/Optimizer/Field.h"
+#include "dawn/IIR/Field.h"
 #include "dawn/Optimizer/Interval.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/SIR/SIR.h"

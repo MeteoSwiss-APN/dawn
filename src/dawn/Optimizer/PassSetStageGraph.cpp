@@ -28,9 +28,10 @@ static bool depends(const iir::Stage& fromStage, const iir::Stage& toStage) {
 
   bool intervalsMatch = fromStage.getEnclosingInterval() == toStage.getEnclosingInterval();
 
-  for(const Field& fromField : fromStage.getFields()) {
-    for(const Field& toField : toStage.getFields()) {
-
+  for(const auto& fromFieldPair : fromStage.getFields()) {
+    const Field& fromField = fromFieldPair.second;
+    for(const auto& toFieldPair : toStage.getFields()) {
+      const Field& toField = toFieldPair.second;
       if(fromField.getAccessID() != toField.getAccessID())
         continue;
 

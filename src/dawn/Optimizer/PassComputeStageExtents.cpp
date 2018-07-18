@@ -38,8 +38,9 @@ bool PassComputeStageExtents::run(
       Extents const& stageExtent = fromStage.getExtents();
 
       // loop over all the input fields read in fromStage
-      for(const Field& fromField : fromStage.getFields()) {
+      for(const auto& fromFieldPair : fromStage.getFields()) {
 
+        const Field& fromField = fromFieldPair.second;
         auto&& fromFieldExtents = fromField.getExtents();
 
         // notice that IO (if read happens before write) would also be a valid pattern
@@ -60,10 +61,12 @@ bool PassComputeStageExtents::run(
           //      Point two [ExtentComputationTODO]
           // ===---------------------------------------------------------------------------------===
           auto fields = toStage.getFields();
-          auto it = std::find_if(fields.begin(), fields.end(), [&](Field const& f) {
-            return (f.getIntend() != Field::IntendKind::IK_Input) &&
-                   (f.getAccessID() == fromField.getAccessID());
-          });
+          auto it =
+              std::find_if(fields.begin(), fields.end(), [&](std::pair<int, Field> const& pair) {
+                const auto& f = pair.second;
+                return (f.getIntend() != Field::IntendKind::IK_Input) &&
+                       (f.getAccessID() == fromField.getAccessID());
+              });
           if(it == fields.end())
             continue;
 

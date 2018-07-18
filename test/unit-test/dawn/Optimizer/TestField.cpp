@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/Field.h"
+#include "dawn/IIR/Field.h"
 #include <gtest/gtest.h>
 
 using namespace dawn;

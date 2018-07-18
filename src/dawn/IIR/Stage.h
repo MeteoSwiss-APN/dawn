@@ -17,7 +17,7 @@
 
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/IIRNode.h"
-#include "dawn/Optimizer/Field.h"
+#include "dawn/IIR/Field.h"
 #include "dawn/Optimizer/Interval.h"
 #include "dawn/Support/ArrayRef.h"
 #include <boost/optional.hpp>
@@ -52,7 +52,7 @@ class Stage : public IIRNode<MultiStage, Stage, DoMethod, std::shared_ptr> {
   int StageID_;
 
   /// Declaration of the fields of this stage
-  std::vector<Field> fields_;
+  std::unordered_map<int, Field> fields_;
 
   /// AccessIDs of the global variable accesses of this stage
   std::unordered_set<int> allGlobalVariables_;
@@ -111,7 +111,7 @@ public:
   ///
   /// @{
   bool overlaps(const Stage& other) const;
-  bool overlaps(const Interval& interval, ArrayRef<Field> fields) const;
+  bool overlaps(const Interval& interval, const std::unordered_map<int, Field>& fields) const;
   /// @}
 
   /// @brief Get the maximal vertical extent of this stage
@@ -125,8 +125,8 @@ public:
   /// `Input`
   ///
   /// The fields are computed during `Stage::update`.
-  std::vector<Field>& getFields() { return fields_; }
-  const std::vector<Field>& getFields() const { return fields_; }
+  //  std::unordered_map<int, Field>& getFields() { return fields_; }
+  const std::unordered_map<int, Field>& getFields() const { return fields_; }
 
   /// @brief Update the fields and global variables
   ///

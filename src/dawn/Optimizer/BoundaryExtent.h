@@ -16,7 +16,7 @@
 #define DAWN_OPTIMIZER_BOUNDARYEXTENTS_H
 
 #include "dawn/Optimizer/Extents.h"
-#include "dawn/Optimizer/Field.h"
+#include "dawn/IIR/Field.h"
 #include <memory>
 #include <unordered_map>
 

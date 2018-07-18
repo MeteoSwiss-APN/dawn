@@ -166,7 +166,8 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
       };
 
       for(const auto& stage : MS.getChildren()) {
-        for(const Field& field : stage->getFields()) {
+        for(const auto& fieldPair : stage->getFields()) {
+          const Field& field = fieldPair.second;
 
           // Field is already cached, skip
           if(MS.isCached(field.getAccessID())) {

@@ -78,8 +78,9 @@ Interval Stage::getEnclosingInterval() const {
 
 Extent Stage::getMaxVerticalExtent() const {
   Extent verticalExtent;
-  std::for_each(fields_.begin(), fields_.end(),
-                [&](const Field& field) { verticalExtent.merge(field.getExtents()[2]); });
+  std::for_each(fields_.begin(), fields_.end(), [&](const std::pair<int, Field>& pair) {
+    verticalExtent.merge(pair.second.getExtents()[2]);
+  });
   return verticalExtent;
 }
 
@@ -98,12 +99,14 @@ bool Stage::overlaps(const Stage& other) const {
   return false;
 }
 
-bool Stage::overlaps(const Interval& interval, ArrayRef<Field> fields) const {
+bool Stage::overlaps(const Interval& interval, const std::unordered_map<int, Field>& fields) const {
   for(const auto& doMethodPtr : getChildren()) {
     const Interval& thisInterval = doMethodPtr->getInterval();
 
-    for(const Field& thisField : getFields()) {
-      for(const Field& field : fields) {
+    for(const auto& thisFieldPair : getFields()) {
+      const Field& thisField = thisFieldPair.second;
+      for(const auto& fieldPair : fields) {
+        const Field& field = fieldPair.second;
         if(thisField.getAccessID() != field.getAccessID())
           continue;
 
@@ -225,24 +228,14 @@ void Stage::update() {
                              globalVariablesFromStencilFunctionCalls_.end());
 
   // Merge inputFields, outputFields and fields
-  for(auto fieldPair : outputFields)
-    fields_.push_back(fieldPair.second);
-
-  for(auto fieldPair : inputOutputFields)
-    fields_.push_back(fieldPair.second);
-
-  for(auto fieldPair : inputFields)
-    fields_.push_back(fieldPair.second);
+  fields_.insert(outputFields.begin(), outputFields.end());
+  fields_.insert(inputOutputFields.begin(), inputOutputFields.end());
+  fields_.insert(inputFields.begin(), inputFields.end());
 
   if(fields_.empty()) {
     DAWN_LOG(WARNING) << "no fields referenced in stage";
     return;
   }
-
-  // Index to speedup lookup into fields map
-  std::unordered_map<int, std::vector<Field>::iterator> AccessIDToFieldMap;
-  for(auto it = fields_.begin(), end = fields_.end(); it != end; ++it)
-    AccessIDToFieldMap.insert(std::make_pair(it->getAccessID(), it));
 
   // Compute the extents of each field by accumulating the extents of each access to field in the
   // stage
@@ -257,14 +250,14 @@ void Stage::update() {
         if(!stencilInstantiation_.isField(accessPair.first))
           continue;
 
-        AccessIDToFieldMap[accessPair.first]->mergeWriteExtents(accessPair.second);
+        fields_.at(accessPair.first).mergeWriteExtents(accessPair.second);
       }
 
       for(const auto& accessPair : access->getReadAccesses()) {
         if(!stencilInstantiation_.isField(accessPair.first))
           continue;
 
-        AccessIDToFieldMap[accessPair.first]->mergeReadExtents(accessPair.second);
+        fields_.at(accessPair.first).mergeReadExtents(accessPair.second);
       }
     }
   }

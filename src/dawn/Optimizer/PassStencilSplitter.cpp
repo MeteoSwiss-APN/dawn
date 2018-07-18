@@ -31,8 +31,9 @@ namespace dawn {
 static int mergePossible(const std::set<int>& fields, const iir::Stage* stage, int maxNumFields) {
   int numFields = fields.size();
 
-  for(const Field& field : stage->getFields())
-    if(!fields.count(field.getAccessID()))
+  // TODO redo this clean
+  for(const auto& fieldPair : stage->getFields())
+    if(!fields.count(fieldPair.second.getAccessID()))
       numFields++;
 
   // Inserting the stage would further increase the number of fields
@@ -92,8 +93,9 @@ bool PassStencilSplitter::run(
 
             // Update fields of the `newStencil`. Note that the indivudual stages do not need to
             // update their fields as they remain the same.
-            for(const Field& field : stagePtr->getFields())
-              fieldsInNewStencil.insert(field.getAccessID());
+            // TODO transform
+            for(const auto& fieldPair : stagePtr->getFields())
+              fieldsInNewStencil.insert(fieldPair.second.getAccessID());
 
           } else {
             // Make a new stencil

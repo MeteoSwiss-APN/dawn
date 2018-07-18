@@ -253,8 +253,10 @@ boost::optional<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() co
   // extents and intervals of all stages and it would give larger intervals than really required
   // inspecting the extents and intervals of individual stages
   for(const auto& stagePtr : children_) {
-    for(const Field& field : stagePtr->getFields()) {
-      int AccessID = field.getAccessID();
+    for(const auto& fieldPair : stagePtr->getFields()) {
+      const Field& field = fieldPair.second;
+      int AccessID = fieldPair.first;
+
       if(!stencilInstantiation_.isTemporaryField(AccessID))
         continue;
 
@@ -273,7 +275,8 @@ std::unordered_map<int, Field> MultiStage::getFields() const {
   std::unordered_map<int, Field> fields;
 
   for(const auto& stagePtr : children_) {
-    for(const Field& field : stagePtr->getFields()) {
+    for(const auto& fieldPair : stagePtr->getFields()) {
+      const Field& field = fieldPair.second;
       auto it = fields.find(field.getAccessID());
       if(it != fields.end()) {
         // Adjust the Intend
@@ -289,6 +292,8 @@ std::unordered_map<int, Field> MultiStage::getFields() const {
       } else
         fields.emplace(field.getAccessID(), field);
     }
+
+    //    mergeFields(stagePtr->getFields(), fields);
   }
 
   return fields;

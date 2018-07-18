@@ -69,7 +69,8 @@ private:
     auto dataLocality = computeReadWriteAccessesMetricPerAccessID(instantiation_, *multiStagePrt_);
 
     for(const auto& stagePtr : multiStagePrt_->getChildren()) {
-      for(const Field& field : stagePtr->getFields()) {
+      for(const auto& fieldPair : stagePtr->getFields()) {
+        const Field& field = fieldPair.second;
         auto iter = accessIDToDataLocality_.find(field.getAccessID());
 
         // We already checked this field
