@@ -543,30 +543,15 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
     return "#define " + define + " " + std::to_string(value);
   };
 
-  auto makeIfNotDefined = [](std::string define, int value) {
-    return "#ifndef " + define + "\n #define " + define + " " + std::to_string(value) + "\n#endif";
-  };
-  auto makeIfNotDefinedString = [](std::string define, std::string value) {
-    return "#ifndef " + define + "\n #define " + define + " " + value + "\n#endif";
-  };
-  auto makeIfNotOtherDefined = [](std::string definee, std::string defined, int value) {
-    return "#ifndef " + defined + "\n #define " + definee + " " + std::to_string(value) +
-           "\n#else\n" + "#define " + definee + " " + defined + "\n#endif";
-  };
-
   ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
   ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T CXXNAIVE");
-  ppDefines.push_back(makeIfNotDefined("BOOST_RESULT_OF_USE_TR1", 1));
-  ppDefines.push_back(makeIfNotDefined("BOOST_NO_CXX11_DECLTYPE", 1));
-  ppDefines.push_back(
-      makeIfNotDefined("GRIDTOOLS_CLANG_HALO_EXTEND", context_->getOptions().MaxHaloPoints));
-
-  ppDefines.push_back(
-      makeIfNotOtherDefined("NAIVE_VECTOR_LIMIT_SIZE", "GRIDTOOLS_CLANG_VECTOR_LIMIT_SIZE", 30));
-  ppDefines.push_back(makeIfNotDefined("BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS", 1));
-  ppDefines.push_back(makeIfNotDefinedString("FUSION_MAX_VECTOR_SIZE", "NAIVE_VECTOR_LIMIT_SIZE"));
-  ppDefines.push_back(
-      makeIfNotDefinedString("BOOST_MPL_LIMIT_VECTOR_SIZE", "NAIVE_VECTOR_LIMIT_SIZE"));
+  // ==============------------------------------------------------------------------------------===
+  // BENCHMARKTODO: since we're importing two cpp files into the benchmark API we need to set these
+  // variables also in the naive code-generation in order to not break it. Once the move to
+  // different TU's is completed, this is no longer necessary.
+  // [https://github.com/MeteoSwiss-APN/gtclang/issues/32]
+  // ==============------------------------------------------------------------------------------===
+  CodeGen::addMplIfdefs(ppDefines, 30, context_->getOptions().MaxHaloPoints);
   DAWN_LOG(INFO) << "Done generating code";
 
   return make_unique<TranslationUnit>(context_->getSIR()->Filename, std::move(ppDefines),

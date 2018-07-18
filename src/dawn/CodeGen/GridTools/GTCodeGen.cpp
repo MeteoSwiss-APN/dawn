@@ -14,6 +14,7 @@
 
 #include "dawn/CodeGen/GridTools/GTCodeGen.h"
 #include "dawn/CodeGen/CXXUtil.h"
+#include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/GridTools/ASTStencilBody.h"
 #include "dawn/CodeGen/GridTools/ASTStencilDesc.h"
 #include "dawn/Optimizer/OptimizerContext.h"
@@ -1049,50 +1050,26 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   // Generate globals
   std::string globals = generateGlobals(context_->getSIR());
 
-  std::vector<std::string> ppDefines;
-  auto makeDefine = [](std::string define, int value) {
-    return "#define " + define + " " + std::to_string(value);
-  };
-
-  auto makeIfNotDefined = [](std::string define, int value) {
-    return "#ifndef " + define + "\n #define " + define + " " + std::to_string(value) + "\n#endif";
-  };
-  auto makeIfNotDefinedString = [](std::string define, std::string value){
-      return "#ifndef " + define + "\n #define " + define + " " + value + "\n#endif";
-  };
-  auto makeIfNotOtherDefined =
-      [](std::string definee, std::string defined, int value) {
-        return "#ifndef " + defined + "\n #define " + definee + " " + std::to_string(value) +
-               "\n#else\n" + "#define " + definee + " " + defined + "\n#endif";
-      };
-
-  ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
-  ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T GT");
-  ppDefines.push_back(makeIfNotDefined("BOOST_RESULT_OF_USE_TR1", 1));
-  ppDefines.push_back(makeIfNotDefined("BOOST_NO_CXX11_DECLTYPE", 1));
-  ppDefines.push_back(
-      makeIfNotDefined("GRIDTOOLS_CLANG_HALO_EXTEND", context_->getOptions().MaxHaloPoints));
-
   // If we need more than 20 elements in boost::mpl containers, we need to increment to the nearest
   // multiple of ten
   // http://www.boost.org/doc/libs/1_61_0/libs/mpl/doc/refmanual/limit-vector-size.html
-  if(mplContainerMaxSize_ > 30) {
+  if(mplContainerMaxSize_ > 20) {
     mplContainerMaxSize_ += (10 - mplContainerMaxSize_ % 10);
     DAWN_LOG(INFO) << "increasing boost::mpl template limit to " << mplContainerMaxSize_;
-    ppDefines.push_back(makeIfNotDefined("BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS", 1));
   }
 
   DAWN_ASSERT_MSG(mplContainerMaxSize_ % 10 == 0,
                   "boost::mpl template limit needs to be multiple of 10");
 
-  ppDefines.push_back(makeIfNotDefined("BOOST_PP_VARIADICS", 1));
-  ppDefines.push_back(makeIfNotDefined("BOOST_FUSION_DONT_USE_PREPROCESSED_FILES", 1));
-  ppDefines.push_back(makeIfNotDefined("BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS", 1));
-  ppDefines.push_back(makeIfNotOtherDefined("GT_VECTOR_LIMIT_SIZE","GRIDTOOLS_CLANG_VECTOR_LIMIT_SIZE", mplContainerMaxSize_));
-  ppDefines.push_back(makeIfNotDefinedString("BOOST_FUSION_INVOKE_MAX_ARITY", "GT_VECTOR_LIMIT_SIZE"));
-  ppDefines.push_back(makeIfNotDefinedString("FUSION_MAX_VECTOR_SIZE", "GT_VECTOR_LIMIT_SIZE"));
-  ppDefines.push_back(makeIfNotDefinedString("FUSION_MAX_MAP_SIZE", "GT_VECTOR_LIMIT_SIZE"));
-  ppDefines.push_back(makeIfNotDefinedString("BOOST_MPL_LIMIT_VECTOR_SIZE", "GT_VECTOR_LIMIT_SIZE"));
+  std::vector<std::string> ppDefines;
+  auto makeDefine = [](std::string define, int value) {
+    return "#define " + define + " " + std::to_string(value);
+  };
+
+  ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
+  ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T GT");
+
+  CodeGen::addMplIfdefs(ppDefines, mplContainerMaxSize_, context_->getOptions().MaxHaloPoints);
 
   BCFinder finder;
   for(const auto& stencilInstantiation : context_->getStencilInstantiationMap()) {
