@@ -463,7 +463,6 @@ bool PassTemporaryToStencilFunction::run(
               continue;
 
             {
-              // TODO catch a temp expr
               const Interval& interval = doMethodPtr->getInterval();
               const sir::Interval sirInterval = intervalToSIRInterval(interval);
 
@@ -558,11 +557,11 @@ bool PassTemporaryToStencilFunction::run(
     // eliminate empty stages or stages with only NOPExpr statements
     RemoveIf(stencilPtr->getMultiStages().begin(), stencilPtr->getMultiStages().end(),
              stencilPtr->getMultiStages(),
-             [](std::shared_ptr<MultiStage> m) -> bool { return m->isEmptyOrNullStmt(); });
+             [](const std::shared_ptr<MultiStage>& m) -> bool { return m->isEmptyOrNullStmt(); });
     for(auto multiStage : stencilPtr->getMultiStages()) {
       RemoveIf(multiStage->getStages().begin(), multiStage->getStages().end(),
                multiStage->getStages(),
-               [](std::shared_ptr<Stage> s) -> bool { return s->isEmptyOrNullStmt(); });
+               [](const std::shared_ptr<Stage>& s) -> bool { return s->isEmptyOrNullStmt(); });
     }
   }
 
