@@ -556,11 +556,9 @@ bool PassTemporaryToStencilFunction::run(
     }
     // eliminate empty stages or stages with only NOPExpr statements
     RemoveIf(stencilPtr->getMultiStages().begin(), stencilPtr->getMultiStages().end(),
-             stencilPtr->getMultiStages(),
              [](const std::shared_ptr<MultiStage>& m) -> bool { return m->isEmptyOrNullStmt(); });
     for(auto multiStage : stencilPtr->getMultiStages()) {
       RemoveIf(multiStage->getStages().begin(), multiStage->getStages().end(),
-               multiStage->getStages(),
                [](const std::shared_ptr<Stage>& s) -> bool { return s->isEmptyOrNullStmt(); });
     }
   }
