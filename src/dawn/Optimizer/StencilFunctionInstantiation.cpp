@@ -159,18 +159,14 @@ void StencilFunctionInstantiation::setCallerInitialOffsetFromAccessID(int caller
 }
 
 bool StencilFunctionInstantiation::isProvidedByStencilFunctionCall(int callerAccessID) const {
-  //  auto pos = std::find_if(ArgumentIndexToCallerAccessIDMap_.begin(),
-  //                          ArgumentIndexToCallerAccessIDMap_.end(),
-  //                          [&](const std::pair<int, int>& p) { return p.second == callerAccessID;
-  //                          });
+  auto pos = std::find_if(ArgumentIndexToCallerAccessIDMap_.begin(),
+                          ArgumentIndexToCallerAccessIDMap_.end(),
+                          [&](const std::pair<int, int>& p) { return p.second == callerAccessID; });
 
-  //  DAWN_ASSERT(pos != ArgumentIndexToCallerAccessIDMap_.end());
-  //  return isArgStencilFunctionInstantiation(pos->first);
-  return isProvidedByStencilFunctionCall_.count(callerAccessID);
-}
-
-void StencilFunctionInstantiation::setIsProvidedByStencilFunctionCall(int callerAccessID) {
-  isProvidedByStencilFunctionCall_.insert(callerAccessID);
+  // accessID is not an argument to stencil function
+  if(pos == ArgumentIndexToCallerAccessIDMap_.end())
+    return false;
+  return isArgStencilFunctionInstantiation(pos->first);
 }
 
 int StencilFunctionInstantiation::getArgumentIndexFromCallerAccessID(int callerAccessID) const {
@@ -306,10 +302,10 @@ void StencilFunctionInstantiation::setAccessIDOfExpr(const std::shared_ptr<Expr>
 
 void StencilFunctionInstantiation::mapExprToAccessID(const std::shared_ptr<Expr>& expr,
                                                      int accessID) {
-  // TODO redo assertion in one line
-  if(ExprToCallerAccessIDMap_.count(expr)) {
-    DAWN_ASSERT(ExprToCallerAccessIDMap_.at(expr) == accessID);
-  }
+
+  DAWN_ASSERT(!ExprToCallerAccessIDMap_.count(expr) ||
+              ExprToCallerAccessIDMap_.at(expr) == accessID);
+
   ExprToCallerAccessIDMap_.emplace(expr, accessID);
 }
 
@@ -349,7 +345,9 @@ StencilFunctionInstantiation::getExprToStencilFunctionInstantiationMap() const {
 
 void StencilFunctionInstantiation::insertExprToStencilFunction(
     const std::shared_ptr<StencilFunctionInstantiation>& stencilFun) {
-  // TODO make sure it does not exist already
+
+  DAWN_ASSERT(!ExprToStencilFunctionInstantiationMap_.count(stencilFun->getExpression()));
+
   ExprToStencilFunctionInstantiationMap_.emplace(stencilFun->getExpression(), stencilFun);
 }
 
@@ -632,9 +630,8 @@ void StencilFunctionInstantiation::dump() const {
 
 void StencilFunctionInstantiation::closeFunctionBindings() {
   std::vector<int> arglist(getArguments().size());
-  for(std::size_t argIdx = 0; argIdx < getArguments().size(); ++argIdx) {
-    arglist[argIdx] = argIdx;
-  }
+  std::iota(arglist.begin(), arglist.end(), 0);
+
   closeFunctionBindings(arglist);
 }
 void StencilFunctionInstantiation::closeFunctionBindings(const std::vector<int>& arglist) {
@@ -648,7 +645,6 @@ void StencilFunctionInstantiation::closeFunctionBindings(const std::vector<int>&
         // The field is provided by a stencil function call, we create a new AccessID for this
         // "temporary" field
         int AccessID = stencilInstantiation_->nextUID();
-        setIsProvidedByStencilFunctionCall(AccessID);
 
         setCallerAccessIDOfArgField(argIdx, AccessID);
         setCallerInitialOffsetFromAccessID(AccessID, Array3i{{0, 0, 0}});
