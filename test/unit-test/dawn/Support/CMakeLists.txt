@@ -20,5 +20,6 @@ dawn_add_unittest_impl(
           TestArrayRef.cpp
           TestIndexRange.cpp
           TestMain.cpp
+          TestRemoveIf.cpp
           TestType.cpp
 )

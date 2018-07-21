@@ -42,24 +42,28 @@ struct TemporaryFunctionProperties {
       tmpFieldAccessExpr_; ///< FieldAccessExpr of the tmp captured for replacement
 };
 
+///
+/// @brief The LocalVariablePromotion class identifies local variables that need to be promoted to
+/// temporaries because of a tmp->stencilfunction conversion
+/// In the following example:
+/// double a=0;
+/// tmp = a*2;
+/// local variable a will have to be promoted to temporary, since tmp will be evaluated on-the-fly
+/// with extents
+///
 class LocalVariablePromotion : public ASTVisitorPostOrder, public NonCopyable {
 protected:
   const std::shared_ptr<StencilInstantiation>& instantiation_;
-  std::unordered_set<int>& tempAccessIDToReplace_;
   std::unordered_set<int>& localVarAccessIDs_;
   const std::unordered_map<int, Field>& fields_;
 
 public:
   LocalVariablePromotion(const std::shared_ptr<StencilInstantiation>& instantiation,
                          const std::unordered_map<int, Field>& fields,
-                         std::unordered_set<int>& tempAccessIDToReplace,
                          std::unordered_set<int>& localVarAccessIDs)
-      : instantiation_(instantiation), tempAccessIDToReplace_(tempAccessIDToReplace),
-        localVarAccessIDs_(localVarAccessIDs), fields_(fields) {}
+      : instantiation_(instantiation), localVarAccessIDs_(localVarAccessIDs), fields_(fields) {}
 
   virtual ~LocalVariablePromotion() {}
-
-  std::unordered_set<int> getTempAccessIDToReplace() { return tempAccessIDToReplace_; }
 
   virtual bool preVisitNode(std::shared_ptr<VarAccessExpr> const& expr) override {
     // TODO if inside stencil function we should get it from stencilfun
@@ -81,14 +85,9 @@ public:
       if(field.getExtents().isHorizontalPointwise())
         return false;
 
-      // TODO filter those that are later accessed with extent
-      tempAccessIDToReplace_.emplace(accessID);
-
       return true;
     }
 
-    // TODO see if we still want to generate tempAccessIDToReplace_ since it is done also in next
-    // visitor
     return false;
   }
 };
@@ -335,7 +334,6 @@ public:
       instantiation_->mapExprToAccessID(arg, accessID_);
     }
 
-    // TODO coming from stencil functions is not yet supported
     for(int idx : expr->getArgumentMap()) {
       DAWN_ASSERT(idx == -1);
     }
@@ -416,14 +414,14 @@ bool PassTemporaryToStencilFunction::run(
 
   for(const std::shared_ptr<Stencil>& stencilPtr : stencilInstantiation->getStencils()) {
 
-    std::unordered_set<int> tempAccessIDsToReplace, localVarAccessIDs;
+    std::unordered_set<int> localVarAccessIDs;
 
     auto fields = stencilPtr->getFields2();
 
-    LocalVariablePromotion localVariablePromotion(stencilInstantiation, fields,
-                                                  tempAccessIDsToReplace, localVarAccessIDs);
+    LocalVariablePromotion localVariablePromotion(stencilInstantiation, fields, localVarAccessIDs);
 
-    // Iterate multi-stages backwards
+    // Iterate multi-stages backwards in order to identify local variables that need to be promoted
+    // to temporaries
     for(auto multiStageIt = stencilPtr->getMultiStages().rbegin();
         multiStageIt != stencilPtr->getMultiStages().rend(); ++multiStageIt) {
       std::unordered_map<int, TemporaryFunctionProperties> temporaryFieldExprToFunction;
@@ -443,12 +441,13 @@ bool PassTemporaryToStencilFunction::run(
         }
       }
     }
+    // perform the promotion "local var"->temporary
     for(auto varID : localVarAccessIDs) {
       stencilInstantiation->promoteLocalVariableToTemporaryField(stencilPtr.get(), varID,
                                                                  stencilPtr->getLifetime(varID));
     }
 
-    // Iterate multi-stages backwards
+    // Iterate multi-stages for the replacement of temporaries by stencil functions
     for(auto multiStage : stencilPtr->getMultiStages()) {
       std::unordered_map<int, TemporaryFunctionProperties> temporaryFieldExprToFunction;
 
@@ -476,11 +475,6 @@ bool PassTemporaryToStencilFunction::run(
               if(tmpReplacement.getNumTmpReplaced() != 0) {
 
                 std::vector<std::shared_ptr<StatementAccessesPair>> listStmtPair;
-
-                // TODO need to combine call to StatementMapper with computeAccesses in a clean
-                // way
-                // since the AST has changed, we need to recompute the <statement,accesses> pairs
-                // of the stage
 
                 StatementMapper statementMapper(
                     stencilInstantiation.get(), stmt->StackTrace, listStmtPair, sirInterval,
@@ -555,10 +549,10 @@ bool PassTemporaryToStencilFunction::run(
       }
     }
     // eliminate empty stages or stages with only NOPExpr statements
-    RemoveIf(stencilPtr->getMultiStages().begin(), stencilPtr->getMultiStages().end(),
+    RemoveIf(stencilPtr->getMultiStages(),
              [](const std::shared_ptr<MultiStage>& m) -> bool { return m->isEmptyOrNullStmt(); });
     for(auto multiStage : stencilPtr->getMultiStages()) {
-      RemoveIf(multiStage->getStages().begin(), multiStage->getStages().end(),
+      RemoveIf(multiStage->getStages(),
                [](const std::shared_ptr<Stage>& s) -> bool { return s->isEmptyOrNullStmt(); });
     }
   }

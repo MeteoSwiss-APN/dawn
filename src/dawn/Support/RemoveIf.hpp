@@ -18,31 +18,22 @@
 
 namespace dawn {
 
-// remove_if (std c++-14)
-template <class ForwardIt, class UnaryPredicate>
-ForwardIt RemoveIf(ForwardIt first, ForwardIt last, UnaryPredicate p) {
-  first = std::find_if(first, last, p);
-  if(first != last)
-    for(ForwardIt i = first; ++i != last;)
-      if(!p(*i)) {
-        // std::move below, like in C++-14 impl is segfault for unknown reasons
-        *first++ = *i; // std::move(*i);
-      }
-  return first;
-}
+//// remove_if (std c++-14)
 
-// remove_if (std unordered_map implementation since c++-14 remove_if is not valid on an associative
-// map [due to const key])
+// remove_if : remove elements from the container and modifies the size of the container
+// notice semantic and implementation is different that C++14
+// it supports associative containers
 // @return true if element is found and removed
-template <class K, class V, class UnaryPredicate>
-bool RemoveIf(typename std::unordered_map<K, V>::iterator first,
-              typename std::unordered_map<K, V>::iterator last, std::unordered_map<K, V>& cont,
-              UnaryPredicate p) {
+template <class Container, class UnaryPredicate>
+bool RemoveIf(Container& cont, UnaryPredicate p) {
   bool r = false;
 
+  auto first = cont.begin();
+  auto last = cont.end();
   while(first != last) {
     if(p(*first)) {
       first = cont.erase(first);
+      last = cont.end();
       r = true;
     } else {
       first++;

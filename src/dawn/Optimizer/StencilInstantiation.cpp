@@ -1085,21 +1085,19 @@ void StencilInstantiation::insertExprToStencilFunction(
 void StencilInstantiation::deregisterStencilFunction(
     std::shared_ptr<StencilFunctionInstantiation> stencilFun) {
 
-  bool found =
-      RemoveIf(ExprToStencilFunctionInstantiationMap_.begin(),
-               ExprToStencilFunctionInstantiationMap_.end(), ExprToStencilFunctionInstantiationMap_,
-               [&](std::pair<std::shared_ptr<StencilFunCallExpr>,
-                             std::shared_ptr<StencilFunctionInstantiation>> pair) {
-                 return (pair.second == stencilFun);
-               });
+  bool found = RemoveIf(ExprToStencilFunctionInstantiationMap_,
+                        [&](std::pair<std::shared_ptr<StencilFunCallExpr>,
+                                      std::shared_ptr<StencilFunctionInstantiation>> pair) {
+                          return (pair.second == stencilFun);
+                        });
   // make sure the element existed and was removed
   DAWN_ASSERT(found);
-  auto it = RemoveIf(
-      stencilFunctionInstantiations_.begin(), stencilFunctionInstantiations_.end(),
+  found = RemoveIf(
+      stencilFunctionInstantiations_,
       [&](const std::shared_ptr<StencilFunctionInstantiation>& v) { return (v == stencilFun); });
 
   // make sure the element existed and was removed
-  DAWN_ASSERT(it != stencilFunctionInstantiations_.end());
+  DAWN_ASSERT(found);
 }
 
 void StencilInstantiation::finalizeStencilFunctionSetup(
