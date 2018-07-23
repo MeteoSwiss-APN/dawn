@@ -775,8 +775,8 @@ std::string GTCodeGen::generateStencilInstantiation(
     StencilClass.addMember(stencilType, "m_stencil");
 
     // Generate stencil getter
-    StencilClass.addMemberFunction(stencilType + "&", "get_stencil")
-        .addStatement("return m_stencil");
+    StencilClass.addMemberFunction(stencilType + "*", "get_stencil")
+        .addStatement("return &m_stencil");
   }
 
   if(isEmpty) {
@@ -937,34 +937,18 @@ std::string GTCodeGen::generateStencilInstantiation(
       .addStatement("return std::string(s_name)");
 
   // Generate stencil getter
-
-  MemberFunction timing = StencilWrapperClass.addMemberFunction("std::string", "get_meters");
-  timing.addArg("int stencilID = -1");
-
-  timing.addStatement("std::string retval =\"\";");
-  timing.addBlockStatement("switch (stencilID)", [&]() {
-    int idx;
-    for(idx = 0; idx < stencilInstantiation->getStencils().size(); ++idx) {
-      timing << "case " << idx << ":\n"
-             << "return get_name() + \"m_stencil_" << idx << ":\\t\"+"
-             << "m_stencil_" << idx << ".get_stencil().print_meter();";
-    }
-    timing << "case -1 :\n";
-    std::string s = RangeToString("\n", "", "")(stencilMembers, [](const std::string& member) {
-      return "retval += get_name() + \"" + member + ":\\t\"+ " + member +
-             ".get_stencil().print_meter()+\"\\n\";";
-    });
-    timing << s;
-    timing << "return retval;";
-    timing << "default: "
-           << "return retval;";
-  });
-  timing.commit();
+  MemberFunction stencilGetter =
+      StencilWrapperClass.addMemberFunction("std::vector<computation<void>*>", "getStencils");
+  stencilGetter.addStatement(
+      "return " +
+      RangeToString(", ", "std::vector<gridtools::computation<void>*>({", "})")(
+          stencilMembers, [](const std::string& member) { return member + ".get_stencil()"; }));
+  stencilGetter.commit();
 
   MemberFunction clearMeters = StencilWrapperClass.addMemberFunction("void", "reset_meters");
   clearMeters.startBody();
   std::string s = RangeToString("\n", "", "")(stencilMembers, [](const std::string& member) {
-    return member + ".get_stencil().reset_meter();";
+    return member + ".get_stencil()->reset_meter();";
   });
   clearMeters << s;
   clearMeters.commit();
