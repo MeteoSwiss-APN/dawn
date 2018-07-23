@@ -96,8 +96,9 @@ public:
   virtual void visit(const std::shared_ptr<ExprStmt>& expr) override {
     if(!isa<NOPExpr>(expr->getExpr().get()))
       result_ = true;
-    else
+    else {
       ASTVisitorForwarding::visit(expr);
+    }
   }
 };
 
