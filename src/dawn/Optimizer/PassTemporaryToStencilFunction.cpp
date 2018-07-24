@@ -21,6 +21,7 @@
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Support/RemoveIf.hpp"
 
 namespace dawn {
 
@@ -39,6 +40,56 @@ struct TemporaryFunctionProperties {
       sirStencilFunction_; ///< sir stencil function of the tmp being created
   std::shared_ptr<FieldAccessExpr>
       tmpFieldAccessExpr_; ///< FieldAccessExpr of the tmp captured for replacement
+};
+
+///
+/// @brief The LocalVariablePromotion class identifies local variables that need to be promoted to
+/// temporaries because of a tmp->stencilfunction conversion
+/// In the following example:
+/// double a=0;
+/// tmp = a*2;
+/// local variable a will have to be promoted to temporary, since tmp will be evaluated on-the-fly
+/// with extents
+///
+class LocalVariablePromotion : public ASTVisitorPostOrder, public NonCopyable {
+protected:
+  const std::shared_ptr<StencilInstantiation>& instantiation_;
+  std::unordered_set<int>& localVarAccessIDs_;
+  const std::unordered_map<int, Field>& fields_;
+
+public:
+  LocalVariablePromotion(const std::shared_ptr<StencilInstantiation>& instantiation,
+                         const std::unordered_map<int, Field>& fields,
+                         std::unordered_set<int>& localVarAccessIDs)
+      : instantiation_(instantiation), localVarAccessIDs_(localVarAccessIDs), fields_(fields) {}
+
+  virtual ~LocalVariablePromotion() {}
+
+  virtual bool preVisitNode(std::shared_ptr<VarAccessExpr> const& expr) override {
+    // TODO if inside stencil function we should get it from stencilfun
+    localVarAccessIDs_.emplace(instantiation_->getAccessIDFromExpr(expr));
+    return true;
+  }
+
+  /// @brief capture a tmp computation
+  virtual bool preVisitNode(std::shared_ptr<AssignmentExpr> const& expr) override {
+
+    if(isa<FieldAccessExpr>(*(expr->getLeft()))) {
+      int accessID = instantiation_->getAccessIDFromExpr(expr->getLeft());
+      DAWN_ASSERT(fields_.count(accessID));
+      const Field& field = fields_.at(accessID);
+
+      if(!instantiation_->isTemporaryField(accessID))
+        return false;
+
+      if(field.getExtents().isHorizontalPointwise())
+        return false;
+
+      return true;
+    }
+
+    return false;
+  }
 };
 
 /// @brief visitor that will detect assignment (i.e. computations) to a temporary,
@@ -95,10 +146,15 @@ public:
     return true;
   }
 
+  virtual bool preVisitNode(std::shared_ptr<VarAccessExpr> const& expr) override {
+    DAWN_ASSERT(tmpFunction_);
+    dawn_unreachable_internal("All the var access should have been promoted to temporaries");
+    return true;
+  }
+
   /// @brief capture a tmp computation
   virtual bool preVisitNode(std::shared_ptr<AssignmentExpr> const& expr) override {
     if(isa<FieldAccessExpr>(*(expr->getLeft()))) {
-
       // return and stop traversing the AST if the left hand of the =  is not a temporary
       int accessID = instantiation_->getAccessIDFromExpr(expr->getLeft());
       if(!instantiation_->isTemporaryField(accessID))
@@ -149,13 +205,26 @@ public:
 /// function instantiation is then created and the field access expression replaced by a stencil
 /// function call
 class TmpReplacement : public ASTVisitorPostOrder, public NonCopyable {
+  // struct to store the stencil function instantiation of each parameter of a stencil function that
+  // is at the same time instantiated as a stencil function
+  struct NestedStencilFunctionArgs {
+    int currentPos_ = 0;
+    std::unordered_map<int, std::shared_ptr<StencilFunctionInstantiation>> stencilFun_;
+  };
+
 protected:
   const std::shared_ptr<StencilInstantiation>& instantiation_;
   std::unordered_map<int, TemporaryFunctionProperties> const& temporaryFieldAccessIDToFunctionCall_;
   const sir::Interval interval_;
   std::shared_ptr<std::vector<sir::StencilCall*>> stackTrace_;
 
+  // the prop of the arguments of nested stencil functions
+  std::stack<bool> replaceInNestedFun_;
+
   unsigned int numTmpReplaced_ = 0;
+
+  std::unordered_map<std::shared_ptr<FieldAccessExpr>,
+                     std::shared_ptr<StencilFunctionInstantiation>> tmpToStencilFunctionMap_;
 
 public:
   TmpReplacement(const std::shared_ptr<StencilInstantiation>& instantiation,
@@ -182,6 +251,44 @@ public:
   unsigned int getNumTmpReplaced() { return numTmpReplaced_; }
   void resetNumTmpReplaced() { numTmpReplaced_ = 0; }
 
+  virtual bool preVisitNode(std::shared_ptr<StencilFunCallExpr> const& expr) override {
+    // we check which arguments of the stencil function are also a stencil function call
+    bool doReplaceTmp = false;
+    for(auto arg : expr->getArguments()) {
+      if(isa<FieldAccessExpr>(*arg)) {
+        int accessID = instantiation_->getAccessIDFromExpr(arg);
+        if(temporaryFieldAccessIDToFunctionCall_.count(accessID)) {
+          doReplaceTmp = true;
+        }
+      }
+    }
+    if(doReplaceTmp)
+      replaceInNestedFun_.push(true);
+    else
+      replaceInNestedFun_.push(false);
+
+    return true;
+  }
+
+  virtual std::shared_ptr<Expr>
+  postVisitNode(std::shared_ptr<StencilFunCallExpr> const& expr) override {
+    // at the post visit of a stencil function node, we will replace the arguments to "tmp" fields
+    // by stecil function calls
+    std::shared_ptr<StencilFunctionInstantiation> thisStencilFun =
+        instantiation_->getStencilFunctionInstantiation(expr);
+
+    if(!replaceInNestedFun_.top())
+      return expr;
+
+    // we need to remove the previous stencil function that had "tmp" field as argument from the
+    // registry, before we replace it with a StencilFunCallExpr (that computes "tmp") argument
+    instantiation_->deregisterStencilFunction(thisStencilFun);
+    // reset the use of nested function calls to continue using the visitor
+    replaceInNestedFun_.pop();
+
+    return expr;
+  }
+
   /// @brief previsit the access to a temporary. Finalize the stencil function instantiation and
   /// recompute its <statement,accesses> pairs
   virtual bool preVisitNode(std::shared_ptr<FieldAccessExpr> const& expr) override {
@@ -194,13 +301,6 @@ public:
         instantiation_->getStencilFunctionInstantiationCandidate(callee);
 
     std::string fnClone = makeOnTheFlyFunctionName(expr);
-
-    // the temporary was not replaced by a stencil function by previous visitor, for some reasons it
-    // was not supported
-    if(instantiation_->hasStencilFunctionInstantiation(fnClone))
-      return true;
-
-    DAWN_ASSERT(temporaryFieldAccessIDToFunctionCall_.count(accessID));
 
     // retrieve the sir stencil function definition
     std::shared_ptr<sir::StencilFunction> sirStencilFunction =
@@ -234,7 +334,6 @@ public:
       instantiation_->mapExprToAccessID(arg, accessID_);
     }
 
-    // TODO coming from stencil functions is not yet supported
     for(int idx : expr->getArgumentMap()) {
       DAWN_ASSERT(idx == -1);
     }
@@ -248,7 +347,6 @@ public:
     }
 
     instantiation_->finalizeStencilFunctionSetup(cloneStencilFun);
-
     std::unordered_map<std::string, int> fieldsMap;
 
     const auto& arguments = cloneStencilFun->getArguments();
@@ -269,6 +367,11 @@ public:
     // final checks
     cloneStencilFun->checkFunctionBindings();
 
+    // register the FieldAccessExpr -> StencilFunctionInstantation into a map for future replacement
+    // of the node in the post visit
+    DAWN_ASSERT(!tmpToStencilFunctionMap_.count(expr));
+    tmpToStencilFunctionMap_[expr] = cloneStencilFun;
+
     return true;
   }
 
@@ -285,7 +388,9 @@ public:
     // TODO we need to version to tmp function generation, in case tmp is recomputed multiple times
     std::string callee = makeOnTheFlyFunctionName(expr);
 
-    auto stencilFunCall = instantiation_->getStencilFunctionInstantiation(callee)->getExpression();
+    DAWN_ASSERT(tmpToStencilFunctionMap_.count(expr));
+
+    auto stencilFunCall = tmpToStencilFunctionMap_.at(expr)->getExpression();
 
     numTmpReplaced_++;
     return stencilFunCall;
@@ -307,9 +412,42 @@ bool PassTemporaryToStencilFunction::run(
 
   DAWN_ASSERT(context);
 
-  for(auto& stencilPtr : stencilInstantiation->getStencils()) {
+  for(const std::shared_ptr<Stencil>& stencilPtr : stencilInstantiation->getStencils()) {
 
-    // Iterate multi-stages backwards
+    std::unordered_set<int> localVarAccessIDs;
+
+    auto fields = stencilPtr->getFields2();
+
+    LocalVariablePromotion localVariablePromotion(stencilInstantiation, fields, localVarAccessIDs);
+
+    // Iterate multi-stages backwards in order to identify local variables that need to be promoted
+    // to temporaries
+    for(auto multiStageIt = stencilPtr->getMultiStages().rbegin();
+        multiStageIt != stencilPtr->getMultiStages().rend(); ++multiStageIt) {
+      std::unordered_map<int, TemporaryFunctionProperties> temporaryFieldExprToFunction;
+
+      for(auto stageIt = (*multiStageIt)->getStages().rbegin();
+          stageIt != (*multiStageIt)->getStages().rend(); ++stageIt) {
+
+        for(auto doMethodIt = (*stageIt)->getDoMethods().rbegin();
+            doMethodIt != (*stageIt)->getDoMethods().rend(); doMethodIt++) {
+          for(auto stmtAccessPairIt = (*doMethodIt)->getStatementAccessesPairs().rbegin();
+              stmtAccessPairIt != (*doMethodIt)->getStatementAccessesPairs().rend();
+              stmtAccessPairIt++) {
+            const std::shared_ptr<Statement> stmt = (*stmtAccessPairIt)->getStatement();
+
+            stmt->ASTStmt->acceptAndReplace(localVariablePromotion);
+          }
+        }
+      }
+    }
+    // perform the promotion "local var"->temporary
+    for(auto varID : localVarAccessIDs) {
+      stencilInstantiation->promoteLocalVariableToTemporaryField(stencilPtr.get(), varID,
+                                                                 stencilPtr->getLifetime(varID));
+    }
+
+    // Iterate multi-stages for the replacement of temporaries by stencil functions
     for(auto multiStage : stencilPtr->getMultiStages()) {
       std::unordered_map<int, TemporaryFunctionProperties> temporaryFieldExprToFunction;
 
@@ -323,16 +461,41 @@ bool PassTemporaryToStencilFunction::run(
             if(stmt->ASTStmt->getKind() != Stmt::SK_ExprStmt)
               continue;
 
-            // TODO catch a temp expr
             {
               const Interval& interval = doMethodPtr->getInterval();
               const sir::Interval sirInterval = intervalToSIRInterval(interval);
+
+              // run the replacer visitor
+              TmpReplacement tmpReplacement(stencilInstantiation, temporaryFieldExprToFunction,
+                                            sirInterval, stmt->StackTrace);
+              stmt->ASTStmt->acceptAndReplace(tmpReplacement);
+              // flag if a least a tmp has been replaced within this stage
+              isATmpReplaced = isATmpReplaced || (tmpReplacement.getNumTmpReplaced() != 0);
+
+              if(tmpReplacement.getNumTmpReplaced() != 0) {
+
+                std::vector<std::shared_ptr<StatementAccessesPair>> listStmtPair;
+
+                StatementMapper statementMapper(
+                    stencilInstantiation.get(), stmt->StackTrace, listStmtPair, sirInterval,
+                    stencilInstantiation->getNameToAccessIDMap(), nullptr);
+
+                std::shared_ptr<BlockStmt> blockStmt =
+                    std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{stmt->ASTStmt});
+                blockStmt->accept(statementMapper);
+
+                DAWN_ASSERT(listStmtPair.size() == 1);
+
+                std::shared_ptr<StatementAccessesPair> stmtPair = listStmtPair[0];
+                computeAccesses(stencilInstantiation.get(), stmtPair);
+
+                stmtAccessPair = stmtPair;
+              }
 
               // find patterns like tmp = fn(args)...;
               TmpAssignment tmpAssignment(stencilInstantiation, sirInterval);
               stmt->ASTStmt->acceptAndReplace(tmpAssignment);
               if(tmpAssignment.foundTemporaryToReplace()) {
-
                 std::shared_ptr<sir::StencilFunction> stencilFunction =
                     tmpAssignment.temporaryStencilFunction();
                 std::shared_ptr<AST> ast = stencilFunction->getASTOfInterval(sirInterval);
@@ -363,35 +526,6 @@ bool PassTemporaryToStencilFunction::run(
                   stencilFun->setCallerAccessIDOfArgField(argID++, accessID);
                 }
               }
-
-              // run the replacer visitor
-              TmpReplacement tmpReplacement(stencilInstantiation, temporaryFieldExprToFunction,
-                                            sirInterval, stmt->StackTrace);
-              stmt->ASTStmt->acceptAndReplace(tmpReplacement);
-              // flag if a least a tmp has been replaced within this stage
-              isATmpReplaced = isATmpReplaced || (tmpReplacement.getNumTmpReplaced() != 0);
-
-              if(tmpReplacement.getNumTmpReplaced() != 0) {
-                std::vector<std::shared_ptr<StatementAccessesPair>> listStmtPair;
-
-                // TODO need to combine call to StatementMapper with computeAccesses in a clean way
-                // since the AST has changed, we need to recompute the <statement,accesses> pairs
-                // of the stage
-
-                StatementMapper statementMapper(
-                    stencilInstantiation.get(), stmt->StackTrace, listStmtPair, sirInterval,
-                    stencilInstantiation->getNameToAccessIDMap(), nullptr);
-
-                std::shared_ptr<BlockStmt> blockStmt =
-                    std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{stmt->ASTStmt});
-                blockStmt->accept(statementMapper);
-                DAWN_ASSERT(listStmtPair.size() == 1);
-
-                std::shared_ptr<StatementAccessesPair> stmtPair = listStmtPair[0];
-                computeAccesses(stencilInstantiation.get(), stmtPair);
-
-                stmtAccessPair = stmtPair;
-              }
             }
           }
         }
@@ -409,12 +543,17 @@ bool PassTemporaryToStencilFunction::run(
         int accessID = tmpFieldPair.first;
         auto tmpProperties = tmpFieldPair.second;
         if(context->getOptions().ReportPassTmpToFunction)
-
           std::cout << " [ replace tmp:" << stencilInstantiation->getNameFromAccessID(accessID)
                     << "; line : " << tmpProperties.tmpFieldAccessExpr_->getSourceLocation().Line
                     << " ] ";
       }
-      std::cout << std::endl;
+    }
+    // eliminate empty stages or stages with only NOPExpr statements
+    RemoveIf(stencilPtr->getMultiStages(),
+             [](const std::shared_ptr<MultiStage>& m) -> bool { return m->isEmptyOrNullStmt(); });
+    for(auto multiStage : stencilPtr->getMultiStages()) {
+      RemoveIf(multiStage->getStages(),
+               [](const std::shared_ptr<Stage>& s) -> bool { return s->isEmptyOrNullStmt(); });
     }
   }
 

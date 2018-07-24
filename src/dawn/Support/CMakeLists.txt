@@ -30,6 +30,8 @@ yoda_add_library(
           FileUtil.h
           Format.h
           HashCombine.h
+          IndexGenerator.cpp
+          IndexGenerator.h
           IndexRange.h
           Json.h
           Logging.cpp
@@ -37,8 +39,7 @@ yoda_add_library(
           MathExtras.h
           NonCopyable.h
           Printing.h          
-          IndexGenerator.cpp
-          IndexGenerator.h
+          RemoveIf.hpp
           SmallString.h
           SmallVector.cpp
           SmallVector.h

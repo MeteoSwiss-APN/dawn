@@ -189,6 +189,9 @@ public:
   void setExtents(Extents const& extents) { extents_ = extents; }
 
   /// @}
+
+  /// @brief true if it contains no do methods or they are empty
+  bool isEmptyOrNullStmt() const;
 };
 
 } // namespace dawn

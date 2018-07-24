@@ -222,6 +222,7 @@ void StatementMapper::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
       // Clone the AST s.t each stencil function has their own AST which is modifiable
       ast = ast->clone();
 
+      // TODO decouple the funciton of stencil function instantiation from the statement mapper
       stencilFun = instantiation_->makeStencilFunctionInstantiation(
           expr, SIRStencilFun, ast, interval, scope_.top()->FunctionInstantiation);
       break;

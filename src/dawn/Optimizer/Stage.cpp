@@ -354,4 +354,12 @@ Stage::split(std::deque<int>& splitterIndices,
   return newStages;
 }
 
+bool Stage::isEmptyOrNullStmt() const {
+  for(auto const& doMethod : DoMethods_) {
+    if(!doMethod->isEmptyOrNullStmt())
+      return false;
+  }
+  return true;
+}
+
 } // namespace dawn

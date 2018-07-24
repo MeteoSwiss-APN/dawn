@@ -83,4 +83,36 @@ const std::shared_ptr<DependencyGraphAccesses>& DoMethod::getDependencyGraph() c
   return dependencyGraph_;
 }
 
+class CheckNonNullStatementVisitor : public ASTVisitorForwarding, public NonCopyable {
+private:
+  bool result_ = false;
+
+public:
+  CheckNonNullStatementVisitor() {}
+  virtual ~CheckNonNullStatementVisitor() {}
+
+  bool getResult() const { return result_; }
+
+  virtual void visit(const std::shared_ptr<ExprStmt>& expr) override {
+    if(!isa<NOPExpr>(expr->getExpr().get()))
+      result_ = true;
+    else {
+      ASTVisitorForwarding::visit(expr);
+    }
+  }
+};
+
+bool DoMethod::isEmptyOrNullStmt() const {
+  for(auto const& statementAccessPair : statementAccessesPairs_) {
+    const std::shared_ptr<Stmt>& root = statementAccessPair->getStatement()->ASTStmt;
+    CheckNonNullStatementVisitor checker;
+    root->accept(checker);
+
+    if(checker.getResult()) {
+      return false;
+    }
+  }
+  return true;
+}
+
 } // namespace dawn

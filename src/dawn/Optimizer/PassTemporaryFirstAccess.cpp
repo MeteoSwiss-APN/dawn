@@ -74,8 +74,9 @@ bool PassTemporaryFirstAccess::run(
     std::set<int> temporaryFields;
 
     for(int i = 0; i < fields.size(); ++i)
-      if(fields[i].IsTemporary)
+      if(fields[i].IsTemporary) {
         temporaryFields.insert(stencilInstantiation->getAccessIDFromName(fields[i].Name));
+      }
 
     // {AccesID : (isFirstAccessWrite, Stmt)}
     std::unordered_map<int, std::pair<bool, std::shared_ptr<Stmt>>> accessMap;

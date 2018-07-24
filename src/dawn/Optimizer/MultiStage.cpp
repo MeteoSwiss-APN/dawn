@@ -308,4 +308,12 @@ void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
   }
 }
 
+bool MultiStage::isEmptyOrNullStmt() const {
+  for(auto stageIt = getStages().begin(); stageIt != getStages().end(); ++stageIt) {
+    if(!(*stageIt)->isEmptyOrNullStmt())
+      return false;
+  }
+  return true;
+}
+
 } // namespace dawn

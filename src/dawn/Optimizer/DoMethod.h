@@ -71,8 +71,9 @@ public:
   /// @brief computes the maximum extent among all the accesses of accessID
   boost::optional<Extents> computeMaximumExtents(const int accessID) const;
 
-  /// @brief computes the interval where an accessId is used (extended by the extent of the
-  /// access)
+  /// @brief true if it is empty
+  bool isEmptyOrNullStmt() const;
+
   /// @param accessID accessID for which the enclosing interval is computed
   /// @param mergeWidhDoInterval determines if the extent of the access is merged with the interval
   /// of the do method.
