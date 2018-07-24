@@ -189,11 +189,15 @@ public:
       computation.run();
     }
 
-    std::string results = computation.get_meters();
-    results.pop_back();
+    double time = 0;
+    auto allStencils = computation.getStencils();
+    for(auto stencil : allStencils){
+        time += stencil->get_time();
+    }
+
     std::cout << "\033[0;33m"
               << "[  output  ] "
-              << "\033[0;0m " << results << std::endl;
+              << "\033[0;0m " << computation.get_name() << " " << time << std::endl;
   }
 
 private:
