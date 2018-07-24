@@ -14,7 +14,7 @@ build*/
 install*/
 
 # Meta project information
-bundle/mchbuild/*
+bundle/yoda/*
 bundle/CMakeFiles/*
 
 # Shared library in source dir
