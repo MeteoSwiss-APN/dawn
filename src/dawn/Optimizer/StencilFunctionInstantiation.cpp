@@ -22,6 +22,7 @@
 #include "dawn/Support/Printing.h"
 #include "dawn/Support/Unreachable.h"
 #include <iostream>
+#include <numeric>
 
 namespace dawn {
 
