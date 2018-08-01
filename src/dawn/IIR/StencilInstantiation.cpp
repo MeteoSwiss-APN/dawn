@@ -388,7 +388,8 @@ public:
     multiStage->insertChild(std::move(stage));
 
     // ... and append the MultiStages of the current stencil
-    instantiation_->getStencils().back()->insertChild(std::move(multiStage));
+    const auto& stencil = instantiation_->getStencils().back();
+    stencil->insertChild(std::move(multiStage), stencil);
   }
 
   void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
@@ -1305,6 +1306,12 @@ struct PrintDescLine {
 };
 
 } // anonymous namespace
+
+void StencilInstantiation::checkConsistency() const {
+  for(const auto& stencil : stencils_) {
+    stencil->checkConsistency();
+  }
+}
 
 void StencilInstantiation::dump() const {
   std::cout << "StencilInstantiation : " << getName() << "\n";
