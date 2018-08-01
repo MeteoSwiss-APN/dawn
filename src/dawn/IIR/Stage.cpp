@@ -261,6 +261,8 @@ void Stage::update() {
       }
     }
   }
+  // TODO
+  //  getParent()->update();
 }
 
 bool Stage::hasGlobalVariables() const {
