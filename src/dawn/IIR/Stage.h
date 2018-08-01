@@ -179,6 +179,7 @@ public:
   /// If a vector of graphs is provided, it will be assigned to the new stages.
   ///
   /// @return New stages
+  // TODO this should not be part of a Stage but rather algorithm
   std::vector<std::shared_ptr<Stage>>
   split(std::deque<int>& splitterIndices,
         const std::deque<std::shared_ptr<DependencyGraphAccesses>>* graphs);
