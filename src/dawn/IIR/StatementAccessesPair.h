@@ -17,6 +17,7 @@
 
 #include "dawn/IIR/Accesses.h"
 #include "dawn/SIR/Statement.h"
+#include "dawn/IIR/IIRNode.h"
 #include <boost/optional.hpp>
 #include <memory>
 #include <vector>
@@ -24,11 +25,13 @@
 namespace dawn {
 namespace iir {
 
+class DoMethod;
+
 /// @brief Statement with corresponding Accesses
 ///
 /// If the statement is a block-statement, the sub-statements will be stored in `children`.
 /// @ingroup optimizer
-class StatementAccessesPair {
+class StatementAccessesPair : public IIRNode<DoMethod, StatementAccessesPair, void> {
   std::shared_ptr<Statement> statement_;
 
   // In case of a non function call stmt, the accesses are stored in callerAccesses_, while
