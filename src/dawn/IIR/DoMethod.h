@@ -32,7 +32,7 @@ class StatementAccessesPair;
 /// vertical region
 ///
 /// @ingroup optimizer
-class DoMethod : public IIRNode<void, DoMethod, StatementAccessesPair> {
+class DoMethod : public IIRNode<Stage, DoMethod, StatementAccessesPair> {
   Interval interval_;
   const long unsigned int id_;
 
@@ -40,7 +40,7 @@ class DoMethod : public IIRNode<void, DoMethod, StatementAccessesPair> {
   //  std::vector<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs_;
 
 public:
-  using StatementAccessesIterator = child_iterator_t;
+  using StatementAccessesIterator = ChildIterator;
 
   /// @name Constructors and Assignment
   /// @{

@@ -281,6 +281,13 @@ std::unordered_map<int, Field> MultiStage::getFields() const {
   return fields;
 }
 
+void MultiStage::update() {
+  fields_.clear();
+  for(const auto& stagePtr : children_) {
+    mergeFields(stagePtr->getFields(), fields_);
+  }
+}
+
 void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
   for(auto stageIt = childrenBegin(); stageIt != childrenEnd(); ++stageIt) {
     Stage& stage = (**stageIt);
@@ -298,8 +305,9 @@ void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
 
 bool MultiStage::isEmptyOrNullStmt() const {
   for(const auto& stage : getChildren()) {
-    if(!(stage)->isEmptyOrNullStmt())
+    if(!(stage)->isEmptyOrNullStmt()) {
       return false;
+    }
   }
   return true;
 }

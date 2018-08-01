@@ -78,6 +78,8 @@ public:
   /// @brief Set the loop order
   void setLoopOrder(LoopOrderKind loopOrder) { loopOrder_ = loopOrder; }
 
+  void update();
+
   /// @brief Index containing the information for splitting MultiStages
   ///
   /// The multi stage will be split into a lower and upper multistage at the given `(StageIndex,
@@ -94,6 +96,7 @@ public:
   /// the new stages. This function consumes the input argument `splitterIndices`.
   ///
   /// @return New multi-stages
+  // TODO this should not be here
   std::vector<std::shared_ptr<MultiStage>>
   split(std::deque<MultiStage::SplitIndex>& splitterIndices, LoopOrderKind lastLoopOrder);
 
