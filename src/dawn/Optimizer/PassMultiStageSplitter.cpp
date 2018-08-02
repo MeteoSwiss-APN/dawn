@@ -209,7 +209,7 @@ bool PassMultiStageSplitter::run(
         auto newMultiStages = multiStage.split(splitterIndices, curLoopOrder);
         multiStageIt = stencil->childrenErase(multiStageIt);
         stencil->insertChildren(multiStageIt, std::make_move_iterator(newMultiStages.begin()),
-                                std::make_move_iterator(newMultiStages.end()));
+                                std::make_move_iterator(newMultiStages.end()), stencil);
       } else {
         ++multiStageIt;
         multiStage.setLoopOrder(curLoopOrder);
