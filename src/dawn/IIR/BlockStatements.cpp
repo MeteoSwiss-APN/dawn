@@ -26,11 +26,6 @@ namespace iir {
 
 const std::vector<std::unique_ptr<StatementAccessesPair>>&
 BlockStatements::getBlockStatements() const {
-  std::cout << "RMMM " << blockStatements_.size() << std::endl;
-  for(const auto& stmt : blockStatements_) {
-    std::cout << "IIUU " << static_cast<std::shared_ptr<Stmt>>(stmt->getStatement()->ASTStmt)
-              << std::endl;
-  }
   return blockStatements_;
 }
 
