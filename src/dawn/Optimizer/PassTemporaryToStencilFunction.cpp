@@ -432,8 +432,7 @@ bool PassTemporaryToStencilFunction::run(
         for(auto doMethodIt = (*stageIt)->childrenRBegin();
             doMethodIt != (*stageIt)->childrenREnd(); doMethodIt++) {
           for(auto stmtAccessPairIt = (*doMethodIt)->childrenRBegin();
-              stmtAccessPairIt != (*doMethodIt)->childrenREnd();
-              stmtAccessPairIt++) {
+              stmtAccessPairIt != (*doMethodIt)->childrenREnd(); stmtAccessPairIt++) {
             const std::shared_ptr<Statement> stmt = (*stmtAccessPairIt)->getStatement();
 
             stmt->ASTStmt->acceptAndReplace(localVariablePromotion);
@@ -475,7 +474,7 @@ bool PassTemporaryToStencilFunction::run(
 
               if(tmpReplacement.getNumTmpReplaced() != 0) {
 
-                std::vector<std::shared_ptr<StatementAccessesPair>> listStmtPair;
+                std::vector<std::shared_ptr<iir::StatementAccessesPair>> listStmtPair;
 
                 StatementMapper statementMapper(
                     stencilInstantiation.get(), stmt->StackTrace, listStmtPair, sirInterval,
@@ -550,11 +549,12 @@ bool PassTemporaryToStencilFunction::run(
       }
     }
     // eliminate empty stages or stages with only NOPExpr statements
-    RemoveIf(stencilPtr->getChildren(),
-             [](const std::shared_ptr<MultiStage>& m) -> bool { return m->isEmptyOrNullStmt(); });
+    RemoveIf(stencilPtr->getChildren(), [](const std::shared_ptr<iir::MultiStage>& m) -> bool {
+      return m->isEmptyOrNullStmt();
+    });
     for(auto multiStage : stencilPtr->getChildren()) {
-      RemoveIf(multiStage->getStages(),
-               [](const std::shared_ptr<Stage>& s) -> bool { return s->isEmptyOrNullStmt(); });
+      RemoveIf(multiStage->getChildren(),
+               [](const std::shared_ptr<iir::Stage>& s) -> bool { return s->isEmptyOrNullStmt(); });
     }
   }
 

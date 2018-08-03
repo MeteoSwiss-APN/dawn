@@ -24,10 +24,8 @@ yoda_add_library(
           DependencyGraphStage.h
           DoMethod.cpp
           DoMethod.h
-          Field.cpp
           Field.h
-          IIR.cpp
-          IIR.h
+          Field.cpp
           IIRNode.cpp
           IIRNode.h
           MultiStage.cpp 
