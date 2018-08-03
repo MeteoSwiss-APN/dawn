@@ -42,6 +42,7 @@ public:
   Field(Field&& f) = default;
   Field(Field const& f) = default;
   Field& operator=(Field&&) = default;
+  Field& operator=(const Field&) = default;
 
   Field(int accessID, IntendKind intend, boost::optional<Extents> const& readExtents,
         boost::optional<Extents> const& writeExtents, Interval const& interval)

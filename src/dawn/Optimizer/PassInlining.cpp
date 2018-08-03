@@ -34,8 +34,8 @@ class Inliner;
 static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
     PassInlining::InlineStrategyKind strategy,
     const std::shared_ptr<iir::StencilFunctionInstantiation>& stencilFunctioninstantiation,
-    const std::shared_ptr<iir::StatementAccessesPair>& oldStmt,
-    std::vector<std::shared_ptr<iir::StatementAccessesPair>>& newStmts, int AccessIDOfCaller);
+    const std::unique_ptr<iir::StatementAccessesPair>& oldStmt,
+    std::vector<std::unique_ptr<iir::StatementAccessesPair>>& newStmts, int AccessIDOfCaller);
 
 /// @brief Perform the inlining of a stencil-function
 class Inliner : public ASTVisitor {
@@ -44,10 +44,10 @@ class Inliner : public ASTVisitor {
   iir::StencilInstantiation* instantiation_;
 
   /// The statement which we are currently processing in the `DetectInlineCandiates`
-  const std::shared_ptr<iir::StatementAccessesPair>& oldStmtAccessesPair_;
+  const std::unique_ptr<iir::StatementAccessesPair>& oldStmtAccessesPair_;
 
   /// List of the new statements
-  std::vector<std::shared_ptr<iir::StatementAccessesPair>>& newStmtAccessesPairs_;
+  std::vector<std::unique_ptr<iir::StatementAccessesPair>>& newStmtAccessesPairs_;
 
   /// If a stencil function is called within the argument list of another stencil function, this
   /// stores the AccessID of the "temporary" storage we would need to store the return value of the
@@ -75,8 +75,8 @@ class Inliner : public ASTVisitor {
 public:
   Inliner(PassInlining::InlineStrategyKind strategy,
           const std::shared_ptr<iir::StencilFunctionInstantiation>& stencilFunctioninstantiation,
-          const std::shared_ptr<iir::StatementAccessesPair>& oldStmtAccessesPair,
-          std::vector<std::shared_ptr<iir::StatementAccessesPair>>& newStmtAccessesPairs,
+          const std::unique_ptr<iir::StatementAccessesPair>& oldStmtAccessesPair,
+          std::vector<std::unique_ptr<iir::StatementAccessesPair>>& newStmtAccessesPairs,
           int AccessIDOfCaller = 0)
       : strategy_(strategy), curStencilFunctioninstantiation_(stencilFunctioninstantiation),
         instantiation_(stencilFunctioninstantiation->getStencilInstantiation()),
@@ -96,7 +96,7 @@ public:
 
   void appendNewStatementAccessesPair(const std::shared_ptr<Stmt>& stmt) {
     if(scopeDepth_ == 1)
-      newStmtAccessesPairs_.emplace_back(std::make_shared<iir::StatementAccessesPair>(
+      newStmtAccessesPairs_.emplace_back(make_unique<iir::StatementAccessesPair>(
           std::make_shared<Statement>(stmt, oldStmtAccessesPair_->getStatement()->StackTrace)));
   }
 
@@ -120,7 +120,7 @@ public:
       auto newStmt = std::make_shared<VarDeclStmt>(
           dawn::Type(BuiltinTypeID::Float, CVQualifier::Const), returnVarName, 0, "=",
           std::vector<std::shared_ptr<Expr>>{stmt->getExpr()});
-      newStmtAccessesPairs_.emplace_back(std::make_shared<iir::StatementAccessesPair>(
+      newStmtAccessesPairs_.emplace_back(make_unique<iir::StatementAccessesPair>(
           std::make_shared<Statement>(newStmt, oldStmtAccessesPair_->getStatement()->StackTrace)));
 
       // Register the variable
@@ -137,7 +137,7 @@ public:
       newExpr_ = std::make_shared<FieldAccessExpr>(returnFieldName);
       auto newStmt =
           std::make_shared<ExprStmt>(std::make_shared<AssignmentExpr>(newExpr_, stmt->getExpr()));
-      newStmtAccessesPairs_.emplace_back(std::make_shared<iir::StatementAccessesPair>(
+      newStmtAccessesPairs_.emplace_back(make_unique<iir::StatementAccessesPair>(
           std::make_shared<Statement>(newStmt, oldStmtAccessesPair_->getStatement()->StackTrace)));
 
       // Promote the "temporary" storage we used to mock the argument to an actual temporary field
@@ -206,7 +206,8 @@ public:
     // stencil function)
     std::shared_ptr<iir::StencilFunctionInstantiation> func =
         curStencilFunctioninstantiation_->getStencilFunctionInstantiation(expr);
-    auto curStencilFunStmtAccessPair = newStmtAccessesPairs_[newStmtAccessesPairs_.size() - 1];
+    const auto& curStencilFunStmtAccessPair =
+        newStmtAccessesPairs_[newStmtAccessesPairs_.size() - 1];
 
     int AccessIDOfCaller = 0;
     if(!argListScope_.empty()) {
@@ -248,8 +249,8 @@ public:
         // push backed all the new statements). Hence, we need to insert an empty statement in the
         // back -> swap with our statement -> replace the expr in our statement and evict the empty
         // statement)
-        newStmtAccessesPairs_.emplace_back(std::make_shared<iir::StatementAccessesPair>(
-            std::make_shared<Statement>(nullptr, nullptr)));
+        newStmtAccessesPairs_.emplace_back(
+            make_unique<iir::StatementAccessesPair>(std::make_shared<Statement>(nullptr, nullptr)));
         std::iter_swap(newStmtAccessesPairs_.begin() + stmtIdxOfFunc,
                        std::prev(newStmtAccessesPairs_.end()));
 
@@ -312,13 +313,13 @@ class DetectInlineCandiates : public ASTVisitorForwarding {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
 
   /// The statement we are currently analyzing
-  std::shared_ptr<iir::StatementAccessesPair> oldStmtAccessesPair_;
+  std::unique_ptr<iir::StatementAccessesPair> oldStmtAccessesPair_;
 
   /// If non-empty the `oldStmt` will be appended to `newStmts` with the given replacements
   std::unordered_map<std::shared_ptr<Expr>, std::shared_ptr<Expr>> replacmentOfOldStmtMap_;
 
   /// The new list of StatementAccessesPair which can serve as a replacement for `oldStmt`
-  std::vector<std::shared_ptr<iir::StatementAccessesPair>> newStmtAccessesPairs_;
+  std::vector<std::unique_ptr<iir::StatementAccessesPair>> newStmtAccessesPairs_;
 
   /// If `true` we need to replace `oldStmt` with `newStmts`
   bool inlineCandiatesFound_;
@@ -342,10 +343,10 @@ public:
       : strategy_(strategy), instantiation_(instantiation), inlineCandiatesFound_(false) {}
 
   /// @brief Process the given statement
-  void processStatment(const std::shared_ptr<iir::StatementAccessesPair>& stmtAccesesPair) {
+  void processStatment(const std::unique_ptr<iir::StatementAccessesPair>& stmtAccesesPair) {
     // Reset the state
     inlineCandiatesFound_ = false;
-    oldStmtAccessesPair_ = stmtAccesesPair;
+    oldStmtAccessesPair_ = stmtAccesesPair->clone();
     newStmtAccessesPairs_.clear();
 
     // Detect the stencil functions suitable for inlining
@@ -359,9 +360,9 @@ public:
   /// @brief Get the newly computed statements which can be substituted for the given `stmt`
   ///
   /// Note that the accesses are not computed!
-  const std::vector<std::shared_ptr<iir::StatementAccessesPair>>& getNewStatementAccessesPairs() {
+  std::vector<std::unique_ptr<iir::StatementAccessesPair>>& getNewStatementAccessesPairs() {
     if(!replacmentOfOldStmtMap_.empty()) {
-      newStmtAccessesPairs_.push_back(oldStmtAccessesPair_);
+      newStmtAccessesPairs_.push_back(oldStmtAccessesPair_->clone());
 
       for(const auto& oldNewPair : replacmentOfOldStmtMap_)
         replaceOldExprWithNewExprInStmt(
@@ -443,8 +444,8 @@ public:
 static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
     PassInlining::InlineStrategyKind strategy,
     const std::shared_ptr<iir::StencilFunctionInstantiation>& stencilFunc,
-    const std::shared_ptr<iir::StatementAccessesPair>& oldStmtAccessesPair,
-    std::vector<std::shared_ptr<iir::StatementAccessesPair>>& newStmtAccessesPairs,
+    const std::unique_ptr<iir::StatementAccessesPair>& oldStmtAccessesPair,
+    std::vector<std::unique_ptr<iir::StatementAccessesPair>>& newStmtAccessesPairs,
     int AccessIDOfCaller) {
 
   // Function which do not return a value are *always* inlined. Function which do return a value
@@ -484,7 +485,7 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
           inliner.processStatment(*stmtAccIt);
 
           if(inliner.inlineCandiatesFound()) {
-            const auto& newStmtAccList = inliner.getNewStatementAccessesPairs();
+            auto& newStmtAccList = inliner.getNewStatementAccessesPairs();
 
             // Compute the accesses of the new statements
             computeAccesses(stencilInstantiation.get(), newStmtAccList);
@@ -493,7 +494,12 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
             stmtAccIt = stmtAccList.erase(stmtAccIt);
 
             // ... and insert the new ones
-            stmtAccIt = stmtAccList.insert(stmtAccIt, newStmtAccList.begin(), newStmtAccList.end());
+            // newStmtAccList will be cleared at the next for iteration, so it is safe to move the
+            // elements here
+            stmtAccIt =
+                doMethod.insertChildren(stmtAccIt, std::make_move_iterator(newStmtAccList.begin()),
+                                        std::make_move_iterator(newStmtAccList.end()));
+
             std::advance(stmtAccIt, newStmtAccList.size() - 1);
           }
         }

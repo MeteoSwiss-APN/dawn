@@ -97,6 +97,8 @@ class StencilFunctionInstantiation {
 private:
   StencilInstantiation* stencilInstantiation_;
 
+  // TODO put all members in a struct to avoid having to implement a clone for all of them
+  // except the vector<unique_ptr>
   std::shared_ptr<StencilFunCallExpr> expr_;
   std::shared_ptr<sir::StencilFunction> function_;
   std::shared_ptr<AST> ast_;
@@ -152,7 +154,7 @@ private:
   //     Accesses & Fields
 
   /// List of statements in this stencil function
-  std::vector<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs_;
+  std::vector<std::unique_ptr<StatementAccessesPair>> statementAccessesPairs_;
 
   std::vector<Field> calleeFields_;
   std::vector<Field> callerFields_;
@@ -171,6 +173,11 @@ public:
                                const std::shared_ptr<sir::StencilFunction>& function,
                                const std::shared_ptr<AST>& ast, const Interval& interval,
                                bool isNested);
+
+  StencilFunctionInstantiation(StencilFunctionInstantiation&&) = default;
+  StencilFunctionInstantiation& operator=(StencilFunctionInstantiation&&) = default;
+
+  StencilFunctionInstantiation clone() const;
 
   std::unordered_map<int, int>& ArgumentIndexToCallerAccessIDMap() {
     return ArgumentIndexToCallerAccessIDMap_;
@@ -376,8 +383,8 @@ public:
   //===----------------------------------------------------------------------------------------===//
 
   /// @brief Get the statements of the stencil function
-  std::vector<std::shared_ptr<StatementAccessesPair>>& getStatementAccessesPairs();
-  const std::vector<std::shared_ptr<StatementAccessesPair>>& getStatementAccessesPairs() const;
+  std::vector<std::unique_ptr<StatementAccessesPair>>& getStatementAccessesPairs();
+  const std::vector<std::unique_ptr<StatementAccessesPair>>& getStatementAccessesPairs() const;
 
   /// @brief Update the fields and global variables
   ///

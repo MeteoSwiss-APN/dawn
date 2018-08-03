@@ -225,10 +225,10 @@ public:
   /// @param updateFields   Update the fields afterwards
   /// @{
   void forEachStatementAccessesPair(
-      std::function<void(ArrayRef<std::shared_ptr<StatementAccessesPair>>)> func,
+      std::function<void(ArrayRef<std::unique_ptr<StatementAccessesPair>>)> func,
       bool updateFields = false);
   void forEachStatementAccessesPair(
-      std::function<void(ArrayRef<std::shared_ptr<StatementAccessesPair>>)> func,
+      std::function<void(ArrayRef<std::unique_ptr<StatementAccessesPair>>)> func,
       const Lifetime& lifetime, bool updateFields = false);
   /// @}
 
@@ -277,7 +277,7 @@ public:
 
 private:
   void forEachStatementAccessesPairImpl(
-      std::function<void(ArrayRef<std::shared_ptr<StatementAccessesPair>>)> func, int startStageIdx,
+      std::function<void(ArrayRef<std::unique_ptr<StatementAccessesPair>>)> func, int startStageIdx,
       int endStageIdx, bool updateFields);
   void updateFieldsImpl(int startStageIdx, int endStageIdx);
 };

@@ -15,6 +15,7 @@
 #ifndef DAWN_IIR_STATEMENTACCESSESPAIR_H
 #define DAWN_IIR_STATEMENTACCESSESPAIR_H
 
+#include "dawn/IIR/BlockStatements.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/SIR/Statement.h"
 #include "dawn/IIR/IIRNode.h"
@@ -49,19 +50,22 @@ class StatementAccessesPair : public IIRNode<DoMethod, StatementAccessesPair, vo
   // accesses without the initial offset of the call
   std::shared_ptr<Accesses> calleeAccesses_;
 
+  // TODO implement different specializations of this. BlockStatements are only used for
+  // if/else/then
+
   // If the statement is a block statement, this will contain the sub-statements of the block. Note
   // that the acceses in this case are the *accumulated* accesses of all sub-statements.
-  std::vector<std::shared_ptr<StatementAccessesPair>> blockStatements_;
+  BlockStatements blockStatements_;
 
 public:
+  // TODO implement a print method per IIRNode and make the dump() use it
   explicit StatementAccessesPair(const std::shared_ptr<Statement>& statement);
 
   // TODO remove
   StatementAccessesPair(const StatementAccessesPair&) = default;
   StatementAccessesPair(StatementAccessesPair&&) = default;
 
-  // TODO change to unique_ptr
-  std::shared_ptr<StatementAccessesPair> clone() const;
+  std::unique_ptr<StatementAccessesPair> clone() const;
 
   /// @brief Get/Set the statement
   std::shared_ptr<Statement> getStatement() const;
@@ -81,9 +85,10 @@ public:
   bool hasCalleeAccesses();
 
   /// @brief Get the blockStatements
-  const std::vector<std::shared_ptr<StatementAccessesPair>>& getBlockStatements() const;
-  std::vector<std::shared_ptr<StatementAccessesPair>>& getBlockStatements();
+  const std::vector<std::unique_ptr<StatementAccessesPair>>& getBlockStatements() const;
   bool hasBlockStatements() const;
+
+  void insertBlockStatement(std::unique_ptr<StatementAccessesPair>&& stmt);
 
   boost::optional<Extents> computeMaximumExtents(const int accessID) const;
 

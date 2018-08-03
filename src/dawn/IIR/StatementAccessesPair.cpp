@@ -65,15 +65,15 @@ static std::string toStringImpl(const StatementAccessesPair* pair,
 StatementAccessesPair::StatementAccessesPair(const std::shared_ptr<Statement>& statement)
     : statement_(statement), callerAccesses_(nullptr), calleeAccesses_(nullptr) {}
 
-// TODO change to unique_ptr
-std::shared_ptr<StatementAccessesPair> StatementAccessesPair::clone() const {
-  auto cloneSAP = std::make_shared<StatementAccessesPair>(statement_);
+std::unique_ptr<StatementAccessesPair> StatementAccessesPair::clone() const {
+  auto cloneSAP = make_unique<StatementAccessesPair>(statement_);
 
   cloneSAP->callerAccesses_ = callerAccesses_;
   cloneSAP->calleeAccesses_ = calleeAccesses_;
-  cloneSAP->blockStatements_ = blockStatements_;
+  cloneSAP->blockStatements_ = blockStatements_.clone();
 
   cloneSAP->cloneChildren(*this);
+
   return std::move(cloneSAP);
 }
 
@@ -89,13 +89,13 @@ void StatementAccessesPair::setAccesses(const std::shared_ptr<Accesses>& accesse
   callerAccesses_ = accesses;
 }
 
-const std::vector<std::shared_ptr<StatementAccessesPair>>&
+const std::vector<std::unique_ptr<StatementAccessesPair>>&
 StatementAccessesPair::getBlockStatements() const {
-  return blockStatements_;
+  return blockStatements_.getBlockStatements();
 }
 
-std::vector<std::shared_ptr<StatementAccessesPair>>& StatementAccessesPair::getBlockStatements() {
-  return blockStatements_;
+void StatementAccessesPair::insertBlockStatement(std::unique_ptr<StatementAccessesPair>&& stmt) {
+  blockStatements_.insert(std::move(stmt));
 }
 
 boost::optional<Extents> StatementAccessesPair::computeMaximumExtents(const int accessID) const {
@@ -118,7 +118,7 @@ boost::optional<Extents> StatementAccessesPair::computeMaximumExtents(const int 
     }
   }
 
-  for(auto const& child : blockStatements_) {
+  for(auto const& child : blockStatements_.getBlockStatements()) {
     auto childExtent = child->computeMaximumExtents(accessID);
     if(!childExtent.is_initialized())
       continue;
@@ -131,7 +131,9 @@ boost::optional<Extents> StatementAccessesPair::computeMaximumExtents(const int 
   return extents;
 }
 
-bool StatementAccessesPair::hasBlockStatements() const { return !blockStatements_.empty(); }
+bool StatementAccessesPair::hasBlockStatements() const {
+  return blockStatements_.hasBlockStatements();
+}
 
 std::shared_ptr<Accesses> StatementAccessesPair::getCallerAccesses() const { return getAccesses(); }
 

@@ -43,10 +43,10 @@ class StencilInstantiation;
 /// @{
 void renameAccessIDInStmts(
     iir::StencilInstantiation* instantiation, int oldAccessID, int newAccessID,
-    ArrayRef<std::shared_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
+    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
 void renameAccessIDInStmts(
     iir::StencilFunctionInstantiation* instantiation, int oldAccessID, int newAccessID,
-    ArrayRef<std::shared_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
+    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
 void renameAccessIDInExpr(iir::StencilInstantiation* instantiation, int oldAccessID,
                           int newAccessID, std::shared_ptr<Expr>& expr);
 /// @}
@@ -63,10 +63,10 @@ void renameAccessIDInExpr(iir::StencilInstantiation* instantiation, int oldAcces
 /// @ingroup optimizer
 void renameAccessIDInAccesses(
     iir::StencilInstantiation* instantiation, int oldAccessID, int newAccessID,
-    ArrayRef<std::shared_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
+    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
 void renameAccessIDInAccesses(
     iir::StencilFunctionInstantiation* instantiation, int oldAccessID, int newAccessID,
-    ArrayRef<std::shared_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
+    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
 /// @}
 
 } // namespace dawn

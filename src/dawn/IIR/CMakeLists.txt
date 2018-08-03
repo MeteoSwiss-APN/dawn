@@ -17,6 +17,8 @@ yoda_add_library(
   SOURCES 
           Accesses.cpp  
           Accesses.h
+          BlockStatements.cpp
+          BlockStatements.h
           DependencyGraph.h
           DependencyGraphAccesses.cpp      
           DependencyGraphAccesses.h

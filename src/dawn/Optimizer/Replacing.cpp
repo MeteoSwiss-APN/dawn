@@ -63,7 +63,7 @@ public:
 
 void replaceFieldWithVarAccessInStmts(
     iir::Stencil* stencil, int AccessID, const std::string& varname,
-    ArrayRef<std::shared_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
+    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
   iir::StencilInstantiation& instantiation = stencil->getStencilInstantiation();
 
   GetFieldAndVarAccesses visitor(instantiation, AccessID);
@@ -86,7 +86,7 @@ void replaceFieldWithVarAccessInStmts(
 
 void replaceVarWithFieldAccessInStmts(
     iir::Stencil* stencil, int AccessID, const std::string& fieldname,
-    ArrayRef<std::shared_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
+    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
   iir::StencilInstantiation& instantiation = stencil->getStencilInstantiation();
 
   GetFieldAndVarAccesses visitor(instantiation, AccessID);

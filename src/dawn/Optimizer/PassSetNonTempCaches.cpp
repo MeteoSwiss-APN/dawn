@@ -213,12 +213,12 @@ private:
     auto assignmentExpression = std::make_shared<AssignmentExpr>(fa_assignment, fa_assignee, "=");
     auto expAssignment = std::make_shared<ExprStmt>(assignmentExpression);
     auto assignmentStatement = std::make_shared<Statement>(expAssignment, nullptr);
-    auto pair = std::make_shared<iir::StatementAccessesPair>(assignmentStatement);
+    auto pair = make_unique<iir::StatementAccessesPair>(assignmentStatement);
     auto newAccess = std::make_shared<iir::Accesses>();
     newAccess->addWriteExtent(assignmentID, Extents(Array3i{{0, 0, 0}}));
     newAccess->addReadExtent(assigneeID, Extents(Array3i{{0, 0, 0}}));
     pair->setAccesses(newAccess);
-    domethod->insertChild(pair);
+    domethod->insertChild(std::move(pair));
 
     // Add the new expressions to the map
     instantiation_->mapExprToAccessID(fa_assignment, assignmentID);
@@ -233,7 +233,7 @@ private:
     for(const auto& stage : multiStagePrt_->getChildren()) {
       iir::DoMethod& doMethod = (*stage).getSingleDoMethod();
       for(int stmtIndex = 0; stmtIndex < doMethod.getChildren().size(); ++stmtIndex) {
-        const std::shared_ptr<iir::StatementAccessesPair>& stmtAccessesPair =
+        const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessesPair =
             doMethod.getChildren()[stmtIndex];
 
         // Find first if this statement has a read
@@ -258,7 +258,7 @@ private:
     for(const auto& stage : multiStagePrt_->getChildren()) {
       iir::DoMethod& doMethod = (*stage).getSingleDoMethod();
       for(int stmtIndex = 0; stmtIndex < doMethod.getChildren().size(); ++stmtIndex) {
-        const std::shared_ptr<iir::StatementAccessesPair>& stmtAccessesPair =
+        const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessesPair =
             doMethod.getChildren()[stmtIndex];
         // If we find a write-statement we exit
         auto wirteAccessIterator =

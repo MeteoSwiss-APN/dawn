@@ -367,6 +367,7 @@ public:
     DAWN_LOG(INFO) << "Inserting statements ... ";
     DoMethod& doMethod = stage->getSingleDoMethod();
     // TODO move iterators of IIRNode to const getChildren, when we pass here begin, end instead
+
     StatementMapper statementMapper(instantiation_, scope_.top()->StackTrace,
                                     doMethod.getChildren(), doMethod.getInterval(),
                                     scope_.top()->LocalFieldnameToAccessIDMap, nullptr);
@@ -832,13 +833,13 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
 
   // Replace all variable accesses with field accesses
   stencil->forEachStatementAccessesPair(
-      [&](ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPair) -> void {
+      [&](ArrayRef<std::unique_ptr<StatementAccessesPair>> statementAccessesPair) -> void {
         replaceVarWithFieldAccessInStmts(stencil, AccessID, fieldname, statementAccessesPair);
       },
       lifetime);
 
   // Replace the the variable declaration with an assignment to the temporary field
-  std::vector<std::shared_ptr<StatementAccessesPair>>& statementAccessesPairs =
+  std::vector<std::unique_ptr<StatementAccessesPair>>& statementAccessesPairs =
       stencil->getStage(lifetime.Begin.StagePos)
           ->getChildren()
           .at(lifetime.Begin.DoMethodIndex)
@@ -894,13 +895,13 @@ void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil,
 
   // Replace all field accesses with variable accesses
   stencil->forEachStatementAccessesPair(
-      [&](ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs) -> void {
+      [&](ArrayRef<std::unique_ptr<StatementAccessesPair>> statementAccessesPairs) -> void {
         replaceFieldWithVarAccessInStmts(stencil, AccessID, varname, statementAccessesPairs);
       },
       lifetime);
 
   // Replace the first access to the field with a VarDeclStmt
-  std::vector<std::shared_ptr<StatementAccessesPair>>& statementAccessesPairs =
+  std::vector<std::unique_ptr<StatementAccessesPair>>& statementAccessesPairs =
       stencil->getStage(lifetime.Begin.StagePos)
           ->getChildren()
           .at(lifetime.Begin.DoMethodIndex)
@@ -1035,7 +1036,7 @@ StencilInstantiation::getStencilFunctionInstantiationCandidate(const std::string
 std::shared_ptr<StencilFunctionInstantiation> StencilInstantiation::cloneStencilFunctionCandidate(
     const std::shared_ptr<StencilFunctionInstantiation>& stencilFun, std::string functionName) {
   DAWN_ASSERT(stencilFunInstantiationCandidate_.count(stencilFun));
-  auto stencilFunClone = std::make_shared<StencilFunctionInstantiation>(*stencilFun);
+  auto stencilFunClone = std::make_shared<StencilFunctionInstantiation>(stencilFun->clone());
 
   auto stencilFunExpr =
       std::dynamic_pointer_cast<StencilFunCallExpr>(stencilFun->getExpression()->clone());

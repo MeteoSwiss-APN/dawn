@@ -178,12 +178,12 @@ int Stencil::getNumStages() const {
 }
 
 void Stencil::forEachStatementAccessesPair(
-    std::function<void(ArrayRef<std::shared_ptr<StatementAccessesPair>>)> func, bool updateFields) {
+    std::function<void(ArrayRef<std::unique_ptr<StatementAccessesPair>>)> func, bool updateFields) {
   forEachStatementAccessesPairImpl(func, 0, getNumStages(), updateFields);
 }
 
 void Stencil::forEachStatementAccessesPair(
-    std::function<void(ArrayRef<std::shared_ptr<StatementAccessesPair>>)> func,
+    std::function<void(ArrayRef<std::unique_ptr<StatementAccessesPair>>)> func,
     const Stencil::Lifetime& lifetime, bool updateFields) {
   int startStageIdx = getStageIndexFromPosition(lifetime.Begin.StagePos);
   int endStageIdx = getStageIndexFromPosition(lifetime.End.StagePos);
@@ -191,7 +191,7 @@ void Stencil::forEachStatementAccessesPair(
 }
 
 void Stencil::forEachStatementAccessesPairImpl(
-    std::function<void(ArrayRef<std::shared_ptr<StatementAccessesPair>>)> func, int startStageIdx,
+    std::function<void(ArrayRef<std::unique_ptr<StatementAccessesPair>>)> func, int startStageIdx,
     int endStageIdx, bool updateFields) {
   for(int stageIdx = startStageIdx; stageIdx < endStageIdx; ++stageIdx) {
     const auto& stage = getStage(stageIdx);

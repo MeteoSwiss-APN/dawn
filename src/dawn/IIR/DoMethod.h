@@ -28,11 +28,17 @@ class Stage;
 class DependencyGraphAccesses;
 class StatementAccessesPair;
 
+namespace impl {
+template <typename T>
+using StatementAccessesSmartptr = std::unique_ptr<T, std::default_delete<T>>;
+}
+
 /// @brief A Do-method is a collection of Statements with corresponding Accesses of a specific
 /// vertical region
 ///
 /// @ingroup optimizer
-class DoMethod : public IIRNode<Stage, DoMethod, StatementAccessesPair> {
+class DoMethod
+    : public IIRNode<Stage, DoMethod, StatementAccessesPair, impl::StatementAccessesSmartptr> {
   Interval interval_;
   long unsigned int id_;
 

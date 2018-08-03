@@ -36,7 +36,7 @@ class StencilFunctionInstantiation;
 /// @ingroup optimizer
 extern void
 computeAccesses(iir::StencilInstantiation* instantiation,
-                ArrayRef<std::shared_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
+                ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
 
 /// @fn computeAccesses
 /// @brief Compute the caller and callee Accesses of `statementCallerAccessesPairs`
@@ -48,7 +48,7 @@ computeAccesses(iir::StencilInstantiation* instantiation,
 /// @ingroup optimizer
 extern void
 computeAccesses(std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation,
-                ArrayRef<std::shared_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
+                ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
 
 /// @}
 

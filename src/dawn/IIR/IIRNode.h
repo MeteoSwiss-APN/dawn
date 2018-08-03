@@ -178,41 +178,42 @@ public:
   }
 
   template <typename TChild>
-  void insertChild(ChildIterator pos, TChild&& child) {
-    insertChildImpl<TChild, Parent>(pos, std::forward<TChild>(child));
+  ChildIterator insertChild(ChildIterator pos, TChild&& child) {
+    return insertChildImpl<TChild, Parent>(pos, std::forward<TChild>(child));
   }
 
   template <typename TChild, typename TParent>
-  void insertChildImpl(ChildIterator pos, TChild&& child,
-                       typename std::enable_if<!std::is_void<TParent>::value>::type* = 0) {
+  ChildIterator insertChildImpl(ChildIterator pos, TChild&& child,
+                                typename std::enable_if<!std::is_void<TParent>::value>::type* = 0) {
     // TODO watch out this first forward
     setChildParent<TChild, Parent>(std::forward<TChild>(child));
-    children_.insert(pos, std::forward<TChild>(child));
+    return children_.insert(pos, std::forward<TChild>(child));
   }
 
   template <typename Iterator>
-  void insertChildren(ChildIterator pos, Iterator first, Iterator last) {
-    insertChildrenImpl<Iterator, Parent>(pos, first, last);
+  ChildIterator insertChildren(ChildIterator pos, Iterator first, Iterator last) {
+    return insertChildrenImpl<Iterator, Parent>(pos, first, last);
   }
 
   // TODO make specialization for move_iterator
   template <typename Iterator, typename TParent>
-  void insertChildrenImpl(ChildIterator pos, Iterator first, Iterator last,
-                          typename std::enable_if<!std::is_void<TParent>::value>::type* = 0) {
+  ChildIterator
+  insertChildrenImpl(ChildIterator pos, Iterator first, Iterator last,
+                     typename std::enable_if<!std::is_void<TParent>::value>::type* = 0) {
     for(auto it = first; it != last; ++it) {
       setChildParent<SmartPtr<Child>, Parent>(*it);
     }
-    children_.insert(pos, first, last);
+    return children_.insert(pos, first, last);
   }
 
   // TODO make Iterator first & last not templated
   template <typename Iterator, template <class> class TSmartPtrP>
-  void insertChildren(ChildIterator pos, Iterator first, Iterator last,
-                      TSmartPtrP<NodeType> const& p) {
+  ChildIterator insertChildren(ChildIterator pos, Iterator first, Iterator last,
+                               TSmartPtrP<NodeType> const& p) {
     for(auto it = first; it != last; ++it) {
       (*it)->setParent(p);
     }
-    children_.insert(pos, first, last);
+    return children_.insert(pos, first, last);
   }
 
   template <typename TChild, template <class> class TSmartPtrP>

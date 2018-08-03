@@ -26,7 +26,7 @@ namespace dawn {
 namespace iir {
 
 void DependencyGraphAccesses::insertStatementAccessesPair(
-    const std::shared_ptr<iir::StatementAccessesPair>& stmtAccessPair) {
+    const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessPair) {
 
   if(stmtAccessPair->hasBlockStatements()) {
     for(const auto& s : stmtAccessPair->getBlockStatements())

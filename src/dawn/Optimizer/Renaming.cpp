@@ -81,7 +81,7 @@ static void renameAccessesMaps(std::unordered_map<int, Extents>& accessesMap, in
 
 void renameAccessIDInStmts(
     iir::StencilInstantiation* instantiation, int oldAccessID, int newAccessID,
-    ArrayRef<std::shared_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
+    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
   AccessIDRemapper<iir::StencilInstantiation> remapper(instantiation, oldAccessID, newAccessID);
 
   for(auto& statementAccessesPair : statementAccessesPairs)
@@ -90,7 +90,7 @@ void renameAccessIDInStmts(
 
 void renameAccessIDInStmts(
     iir::StencilFunctionInstantiation* instantiation, int oldAccessID, int newAccessID,
-    ArrayRef<std::shared_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
+    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
   AccessIDRemapper<iir::StencilFunctionInstantiation> remapper(instantiation, oldAccessID,
                                                                newAccessID);
 
@@ -106,7 +106,7 @@ void renameAccessIDInExpr(iir::StencilInstantiation* instantiation, int oldAcces
 
 void renameAccessIDInAccesses(
     iir::StencilInstantiation* instantiation, int oldAccessID, int newAccessID,
-    ArrayRef<std::shared_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
+    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
   for(auto& statementAccessesPair : statementAccessesPairs) {
     renameAccessesMaps(statementAccessesPair->getAccesses()->getReadAccesses(), oldAccessID,
                        newAccessID);
@@ -117,7 +117,7 @@ void renameAccessIDInAccesses(
 
 void renameAccessIDInAccesses(
     iir::StencilFunctionInstantiation* instantiation, int oldAccessID, int newAccessID,
-    ArrayRef<std::shared_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
+    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
   for(auto& statementAccessesPair : statementAccessesPairs) {
     renameAccessesMaps(statementAccessesPair->getCallerAccesses()->getReadAccesses(), oldAccessID,
                        newAccessID);

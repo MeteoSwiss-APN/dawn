@@ -95,7 +95,7 @@ public:
   ///
   /// Note that only child-less nodes are processed.
   void
-  insertStatementAccessesPair(const std::shared_ptr<iir::StatementAccessesPair>& stmtAccessPair);
+  insertStatementAccessesPair(const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessPair);
 
   /// @brief Insert a new node
   Vertex& insertNode(int ID);

@@ -38,6 +38,36 @@ StencilFunctionInstantiation::StencilFunctionInstantiation(
   DAWN_ASSERT(function);
 }
 
+StencilFunctionInstantiation StencilFunctionInstantiation::clone() const {
+  StencilFunctionInstantiation stencilFun(stencilInstantiation_, expr_, function_, ast_, interval_,
+                                          isNested_);
+
+  stencilFun.hasReturn_ = hasReturn_;
+  stencilFun.argsBound_ = argsBound_;
+  stencilFun.ArgumentIndexToCallerAccessIDMap_ = ArgumentIndexToCallerAccessIDMap_;
+  stencilFun.ArgumentIndexToStencilFunctionInstantiationMap_ =
+      ArgumentIndexToStencilFunctionInstantiationMap_;
+  stencilFun.ArgumentIndexToCallerDirectionMap_ = ArgumentIndexToCallerDirectionMap_;
+  stencilFun.ArgumentIndexToCallerOffsetMap_ = ArgumentIndexToCallerOffsetMap_;
+  stencilFun.CallerAcceessIDToInitialOffsetMap_ = CallerAcceessIDToInitialOffsetMap_;
+  stencilFun.isProvidedByStencilFunctionCall_ = isProvidedByStencilFunctionCall_;
+  stencilFun.ExprToCallerAccessIDMap_ = ExprToCallerAccessIDMap_;
+  stencilFun.StmtToCallerAccessIDMap_ = StmtToCallerAccessIDMap_;
+  stencilFun.AccessIDToNameMap_ = AccessIDToNameMap_;
+  stencilFun.LiteralAccessIDToNameMap_ = LiteralAccessIDToNameMap_;
+  stencilFun.ExprToStencilFunctionInstantiationMap_ = ExprToStencilFunctionInstantiationMap_;
+  stencilFun.calleeFields_ = calleeFields_;
+  stencilFun.callerFields_ = callerFields_;
+  stencilFun.unusedFields_ = unusedFields_;
+  stencilFun.GlobalVariableAccessIDSet_ = GlobalVariableAccessIDSet_;
+
+  for(const auto& stmt : statementAccessesPairs_) {
+    stencilFun.statementAccessesPairs_.push_back(stmt->clone());
+  }
+
+  return stencilFun;
+}
+
 Array3i StencilFunctionInstantiation::evalOffsetOfFieldAccessExpr(
     const std::shared_ptr<FieldAccessExpr>& expr, bool applyInitialOffset) const {
 
@@ -377,13 +407,14 @@ StencilFunctionInstantiation::getStencilFunctionInstantiation(
   return it->second;
 }
 
-std::vector<std::shared_ptr<StatementAccessesPair>>&
+// TODO getter should return const
+std::vector<std::unique_ptr<StatementAccessesPair>>&
 StencilFunctionInstantiation::getStatementAccessesPairs() {
   // TODO does this belong here, isnt it in IIR?
   return statementAccessesPairs_;
 }
 
-const std::vector<std::shared_ptr<StatementAccessesPair>>&
+const std::vector<std::unique_ptr<StatementAccessesPair>>&
 StencilFunctionInstantiation::getStatementAccessesPairs() const {
   return statementAccessesPairs_;
 }

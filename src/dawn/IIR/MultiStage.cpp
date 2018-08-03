@@ -15,6 +15,7 @@
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
+// TODO remove as much as possible includes from Optimizer
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/IIR/Stage.h"

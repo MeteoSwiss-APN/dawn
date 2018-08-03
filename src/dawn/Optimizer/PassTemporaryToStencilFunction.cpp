@@ -474,7 +474,7 @@ bool PassTemporaryToStencilFunction::run(
 
               if(tmpReplacement.getNumTmpReplaced() != 0) {
 
-                std::vector<std::shared_ptr<iir::StatementAccessesPair>> listStmtPair;
+                std::vector<std::unique_ptr<iir::StatementAccessesPair>> listStmtPair;
 
                 // TODO need to combine call to StatementMapper with computeAccesses in a clean
                 // way
@@ -491,10 +491,10 @@ bool PassTemporaryToStencilFunction::run(
 
                 DAWN_ASSERT(listStmtPair.size() == 1);
 
-                std::shared_ptr<iir::StatementAccessesPair> stmtPair = listStmtPair[0];
+                const std::unique_ptr<iir::StatementAccessesPair>& stmtPair = listStmtPair[0];
                 computeAccesses(stencilInstantiation.get(), stmtPair);
 
-                stmtAccessPair = stmtPair;
+                stmtAccessPair = std::move(listStmtPair[0]);
               }
 
               // find patterns like tmp = fn(args)...;
