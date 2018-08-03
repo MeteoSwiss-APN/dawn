@@ -30,6 +30,7 @@
 #include "dawn/Support/Json.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/Printing.h"
+#include "dawn/Support/RemoveIf.hpp"
 #include "dawn/Support/Twine.h"
 #include <cstdlib>
 #include <fstream>
@@ -1086,34 +1087,20 @@ void StencilInstantiation::insertExprToStencilFunction(
 
 void StencilInstantiation::deregisterStencilFunction(
     std::shared_ptr<StencilFunctionInstantiation> stencilFun) {
-  // TODO move all this to the Remove function
-  // TODO deregister also for a nested stencil function
-  {
-    bool found = false;
-    auto it = ExprToStencilFunctionInstantiationMap_.begin();
-    while(it != ExprToStencilFunctionInstantiationMap_.end()) {
-      if(it->second == stencilFun) {
-        it = ExprToStencilFunctionInstantiationMap_.erase(it);
-        found = true;
-        break;
-      } else
-        it++;
-    }
-    DAWN_ASSERT(found);
-  }
-  {
-    bool found = false;
-    auto it = stencilFunctionInstantiations_.begin();
-    while(it != stencilFunctionInstantiations_.end()) {
-      if(*it == stencilFun) {
-        it = stencilFunctionInstantiations_.erase(it);
-        found = true;
-        break;
-      } else
-        it++;
-    }
-    DAWN_ASSERT(found);
-  }
+
+  bool found = RemoveIf(ExprToStencilFunctionInstantiationMap_,
+                        [&](std::pair<std::shared_ptr<StencilFunCallExpr>,
+                                      std::shared_ptr<StencilFunctionInstantiation>> pair) {
+                          return (pair.second == stencilFun);
+                        });
+  // make sure the element existed and was removed
+  DAWN_ASSERT(found);
+  found = RemoveIf(
+      stencilFunctionInstantiations_,
+      [&](const std::shared_ptr<StencilFunctionInstantiation>& v) { return (v == stencilFun); });
+
+  // make sure the element existed and was removed
+  DAWN_ASSERT(found);
 }
 
 void StencilInstantiation::finalizeStencilFunctionSetup(

@@ -205,7 +205,7 @@ public:
 //     AssignmentExpr
 //===------------------------------------------------------------------------------------------===//
 
-/// @brief NOP expression (i.e `left = right`)
+/// @brief NOP expression
 /// @ingroup sir
 class NOPExpr : public Expr {
 public:

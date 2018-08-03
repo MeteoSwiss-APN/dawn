@@ -14,6 +14,7 @@
 
 #include "dawn/CodeGen/GridTools/GTCodeGen.h"
 #include "dawn/CodeGen/CXXUtil.h"
+#include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/GridTools/ASTStencilBody.h"
 #include "dawn/CodeGen/GridTools/ASTStencilDesc.h"
 #include "dawn/Optimizer/OptimizerContext.h"
@@ -778,8 +779,8 @@ std::string GTCodeGen::generateStencilInstantiation(
     StencilClass.addMember(stencilType, "m_stencil");
 
     // Generate stencil getter
-    StencilClass.addMemberFunction(stencilType + "&", "get_stencil")
-        .addStatement("return m_stencil");
+    StencilClass.addMemberFunction(stencilType + "*", "get_stencil")
+        .addStatement("return &m_stencil");
   }
 
   if(isEmpty) {
@@ -940,34 +941,18 @@ std::string GTCodeGen::generateStencilInstantiation(
       .addStatement("return std::string(s_name)");
 
   // Generate stencil getter
-
-  MemberFunction timing = StencilWrapperClass.addMemberFunction("std::string", "get_meters");
-  timing.addArg("int stencilID = -1");
-
-  timing.addStatement("std::string retval =\"\";");
-  timing.addBlockStatement("switch (stencilID)", [&]() {
-    int idx;
-    for(idx = 0; idx < stencilInstantiation->getStencils().size(); ++idx) {
-      timing << "case " << idx << ":\n"
-             << "return get_name() + \"m_stencil_" << idx << ":\\t\"+"
-             << "m_stencil_" << idx << ".get_stencil().print_meter();";
-    }
-    timing << "case -1 :\n";
-    std::string s = RangeToString("\n", "", "")(stencilMembers, [](const std::string& member) {
-      return "retval += get_name() + \"" + member + ":\\t\"+ " + member +
-             ".get_stencil().print_meter()+\"\\n\";";
-    });
-    timing << s;
-    timing << "return retval;";
-    timing << "default: "
-           << "return retval;";
-  });
-  timing.commit();
+  MemberFunction stencilGetter =
+      StencilWrapperClass.addMemberFunction("std::vector<computation<void>*>", "getStencils");
+  stencilGetter.addStatement(
+      "return " +
+      RangeToString(", ", "std::vector<gridtools::computation<void>*>({", "})")(
+          stencilMembers, [](const std::string& member) { return member + ".get_stencil()"; }));
+  stencilGetter.commit();
 
   MemberFunction clearMeters = StencilWrapperClass.addMemberFunction("void", "reset_meters");
   clearMeters.startBody();
   std::string s = RangeToString("\n", "", "")(stencilMembers, [](const std::string& member) {
-    return member + ".get_stencil().reset_meter();";
+    return member + ".get_stencil()->reset_meter();";
   });
   clearMeters << s;
   clearMeters.commit();
@@ -1038,7 +1023,7 @@ std::string GTCodeGen::generateGlobals(std::shared_ptr<SIR> const& Sir) {
 }
 
 std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
-  mplContainerMaxSize_ = 20;
+  mplContainerMaxSize_ = 30;
   DAWN_LOG(INFO) << "Starting code generation for GTClang ...";
 
   // Generate StencilInstantiations
@@ -1053,41 +1038,26 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   // Generate globals
   std::string globals = generateGlobals(context_->getSIR());
 
-  std::vector<std::string> ppDefines;
-  auto makeDefine = [](std::string define, int value) {
-    return "#define " + define + " " + std::to_string(value);
-  };
-
-  auto makeIfNotDefined = [](std::string define, int value) {
-    return "#ifndef " + define + "\n #define " + define + " " + std::to_string(value) + "\n#endif";
-  };
-
-  ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
-  ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T GT");
-  ppDefines.push_back(makeIfNotDefined("BOOST_RESULT_OF_USE_TR1", 1));
-  ppDefines.push_back(makeIfNotDefined("BOOST_NO_CXX11_DECLTYPE", 1));
-  ppDefines.push_back(
-      makeIfNotDefined("GRIDTOOLS_CLANG_HALO_EXTEND", context_->getOptions().MaxHaloPoints));
-
   // If we need more than 20 elements in boost::mpl containers, we need to increment to the nearest
   // multiple of ten
   // http://www.boost.org/doc/libs/1_61_0/libs/mpl/doc/refmanual/limit-vector-size.html
   if(mplContainerMaxSize_ > 20) {
     mplContainerMaxSize_ += (10 - mplContainerMaxSize_ % 10);
     DAWN_LOG(INFO) << "increasing boost::mpl template limit to " << mplContainerMaxSize_;
-    ppDefines.push_back(makeIfNotDefined("BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS", 1));
   }
 
   DAWN_ASSERT_MSG(mplContainerMaxSize_ % 10 == 0,
                   "boost::mpl template limit needs to be multiple of 10");
 
-  ppDefines.push_back(makeIfNotDefined("BOOST_PP_VARIADICS", 1));
-  ppDefines.push_back(makeIfNotDefined("BOOST_FUSION_DONT_USE_PREPROCESSED_FILES", 1));
-  ppDefines.push_back(makeIfNotDefined("BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS", 1));
-  ppDefines.push_back(makeIfNotDefined("BOOST_FUSION_INVOKE_MAX_ARITY", mplContainerMaxSize_));
-  ppDefines.push_back(makeIfNotDefined("FUSION_MAX_VECTOR_SIZE", mplContainerMaxSize_));
-  ppDefines.push_back(makeIfNotDefined("FUSION_MAX_MAP_SIZE", mplContainerMaxSize_));
-  ppDefines.push_back(makeIfNotDefined("BOOST_MPL_LIMIT_VECTOR_SIZE", mplContainerMaxSize_));
+  std::vector<std::string> ppDefines;
+  auto makeDefine = [](std::string define, int value) {
+    return "#define " + define + " " + std::to_string(value);
+  };
+
+  ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
+  ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T GT");
+
+  CodeGen::addMplIfdefs(ppDefines, mplContainerMaxSize_, context_->getOptions().MaxHaloPoints);
 
   BCFinder finder;
   for(const auto& stencilInstantiation : context_->getStencilInstantiationMap()) {

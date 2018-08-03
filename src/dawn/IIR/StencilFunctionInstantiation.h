@@ -129,10 +129,6 @@ private:
   /// field mapping to the first argument in `avg(in(i+1))` would be [1, 0, 0])
   std::unordered_map<int, Array3i> CallerAcceessIDToInitialOffsetMap_;
 
-  /// Set of *caller* AccessIDs which are provided by stencil function calls instead of real
-  /// storages
-  std::set<int> isProvidedByStencilFunctionCall_;
-
   //===----------------------------------------------------------------------------------------===//
   //     Expr/Stmt to caller AccessID maps
 
@@ -296,7 +292,6 @@ public:
   /// @brief Get/Set if a field (given by its AccessID) is provided via a stencil function call
   /// @{
   bool isProvidedByStencilFunctionCall(int callerAccessID) const;
-  void setIsProvidedByStencilFunctionCall(int callerAccessID);
   /// @}
 
   /// @brief Get the argument index of the field (or stencil function instantiation) given the
@@ -365,10 +360,6 @@ public:
   const std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
                            std::shared_ptr<StencilFunctionInstantiation>>&
   getExprToStencilFunctionInstantiationMap() const;
-
-  /// @brief Get StencilFunctionInstantiation by name
-  //  const std::unordered_map<std::string, std::shared_ptr<StencilFunctionInstantiation>>&
-  //  getNameToStencilFunctionInstantiationMap() const;
 
   /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
   std::shared_ptr<StencilFunctionInstantiation>
