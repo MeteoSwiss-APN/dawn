@@ -85,7 +85,7 @@ const std::shared_ptr<DependencyGraphAccesses>& DoMethod::getDependencyGraph() c
 }
 
 class CheckNonNullStatementVisitor : public ASTVisitorForwarding, public NonCopyable {
-protected:
+private:
   bool result_ = false;
 
 public:
@@ -97,17 +97,21 @@ public:
   virtual void visit(const std::shared_ptr<ExprStmt>& expr) override {
     if(!isa<NOPExpr>(expr->getExpr().get()))
       result_ = true;
+    else {
+      ASTVisitorForwarding::visit(expr);
+    }
   }
 };
 
 bool DoMethod::isEmptyOrNullStmt() const {
   for(auto const& statementAccessPair : children_) {
-    std::shared_ptr<Stmt> root = statementAccessPair->getStatement()->ASTStmt;
+    const std::shared_ptr<Stmt>& root = statementAccessPair->getStatement()->ASTStmt;
     CheckNonNullStatementVisitor checker;
     root->accept(checker);
 
-    if(checker.getResult())
+    if(checker.getResult()) {
       return false;
+    }
   }
   return true;
 }

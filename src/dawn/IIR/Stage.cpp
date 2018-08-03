@@ -347,8 +347,9 @@ Stage::split(std::deque<int>& splitterIndices,
 
 bool Stage::isEmptyOrNullStmt() const {
   for(auto const& doMethod : getChildren()) {
-    if(!doMethod->isEmptyOrNullStmt())
+    if(!doMethod->isEmptyOrNullStmt()) {
       return false;
+    }
   }
   return true;
 }
