@@ -51,7 +51,6 @@ StencilFunctionInstantiation StencilFunctionInstantiation::clone() const {
   stencilFun.ArgumentIndexToCallerDirectionMap_ = ArgumentIndexToCallerDirectionMap_;
   stencilFun.ArgumentIndexToCallerOffsetMap_ = ArgumentIndexToCallerOffsetMap_;
   stencilFun.CallerAcceessIDToInitialOffsetMap_ = CallerAcceessIDToInitialOffsetMap_;
-  stencilFun.isProvidedByStencilFunctionCall_ = isProvidedByStencilFunctionCall_;
   stencilFun.ExprToCallerAccessIDMap_ = ExprToCallerAccessIDMap_;
   stencilFun.StmtToCallerAccessIDMap_ = StmtToCallerAccessIDMap_;
   stencilFun.AccessIDToNameMap_ = AccessIDToNameMap_;
