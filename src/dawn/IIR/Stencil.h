@@ -35,6 +35,8 @@ class StatementAccessesPair;
 /// @brief A Stencil is represented by a collection of MultiStages
 /// @ingroup optimizer
 class Stencil : public IIRNode<void, Stencil, MultiStage, std::shared_ptr, impl::StdList> {
+  using base_type = IIRNode<void, Stencil, MultiStage, std::shared_ptr, impl::StdList>;
+
   StencilInstantiation& stencilInstantiation_;
   const std::shared_ptr<sir::Stencil> SIRStencil_;
 
@@ -198,15 +200,15 @@ public:
 
   /// @brief Get the stage at given linear stage index or position
   /// @{
-  const std::shared_ptr<Stage>& getStage(int stageIdx) const;
-  const std::shared_ptr<Stage>& getStage(const StagePosition& position) const;
+  const std::unique_ptr<Stage>& getStage(int stageIdx) const;
+  const std::unique_ptr<Stage>& getStage(const StagePosition& position) const;
   /// @}
 
   /// @brief Get the unique `StencilID`
   int getStencilID() const { return StencilID_; }
 
   /// @brief Insert the `stage` @b after the given `position`
-  void insertStage(const StagePosition& position, const std::shared_ptr<Stage>& stage);
+  void insertStage(const StagePosition& position, std::unique_ptr<Stage>&& stage);
 
   /// @brief Get number of stages
   int getNumStages() const;

@@ -172,7 +172,7 @@ ReoderStrategyGreedy::reorder(const std::shared_ptr<iir::Stencil>& stencilPtr) {
       }
 
       newNumStages++;
-      newStencil->insertStage(pos, stagePtr);
+      newStencil->insertStage(pos, stagePtr->clone());
     }
   }
 

@@ -29,6 +29,16 @@ namespace iir {
 MultiStage::MultiStage(StencilInstantiation& stencilInstantiation, LoopOrderKind loopOrder)
     : stencilInstantiation_(stencilInstantiation), loopOrder_(loopOrder) {}
 
+std::unique_ptr<MultiStage> MultiStage::clone() const {
+  auto cloneMS = make_unique<MultiStage>(stencilInstantiation_, loopOrder_);
+
+  cloneMS->caches_ = caches_;
+  cloneMS->fields_ = fields_;
+
+  cloneMS->cloneChildren(*this);
+  return std::move(cloneMS);
+}
+
 std::vector<std::shared_ptr<MultiStage>>
 MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
                   LoopOrderKind lastLoopOrder) {
@@ -62,7 +72,7 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
         auto newMultiStageRIt = newMultiStages.rbegin();
         for(auto newStagesRIt = newStages.rbegin(); newStagesRIt != newStages.rend();
             ++newStagesRIt, ++newMultiStageRIt)
-          (*newMultiStageRIt)->insertChild(std::move(*newStagesRIt));
+          (*newMultiStageRIt)->insertChild(*newStagesRIt);
 
         curStageSplitterIndices.clear();
       } else {
@@ -86,7 +96,7 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
 std::shared_ptr<DependencyGraphAccesses>
 MultiStage::getDependencyGraphOfInterval(const Interval& interval) const {
   auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(&stencilInstantiation_);
-  std::for_each(children_.begin(), children_.end(), [&](const std::shared_ptr<Stage>& stagePtr) {
+  std::for_each(children_.begin(), children_.end(), [&](const std::unique_ptr<Stage>& stagePtr) {
     if(interval.overlaps(stagePtr->getEnclosingExtendedInterval()))
       std::for_each(stagePtr->childrenBegin(), stagePtr->childrenEnd(),
                     [&](const Stage::DoMethodSmartPtr_t& DoMethodPtr) {
@@ -98,7 +108,7 @@ MultiStage::getDependencyGraphOfInterval(const Interval& interval) const {
 
 std::shared_ptr<DependencyGraphAccesses> MultiStage::getDependencyGraphOfAxis() const {
   auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(&stencilInstantiation_);
-  std::for_each(children_.begin(), children_.end(), [&](const std::shared_ptr<Stage>& stagePtr) {
+  std::for_each(children_.begin(), children_.end(), [&](const std::unique_ptr<Stage>& stagePtr) {
     std::for_each(stagePtr->childrenBegin(), stagePtr->childrenEnd(),
                   [&](const Stage::DoMethodSmartPtr_t& DoMethodPtr) {
                     dependencyGraph->merge(DoMethodPtr->getDependencyGraph().get());
@@ -120,7 +130,7 @@ Cache& MultiStage::setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy poli
       .first->second;
 }
 
-std::vector<DoMethod> MultiStage::computeOrderedDoMethods() const {
+std::vector<std::unique_ptr<DoMethod>> MultiStage::computeOrderedDoMethods() const {
   auto intervals_set = getIntervals();
   std::vector<Interval> intervals_v;
   std::copy(intervals_set.begin(), intervals_set.end(), std::back_inserter(intervals_v));
@@ -130,17 +140,17 @@ std::vector<DoMethod> MultiStage::computeOrderedDoMethods() const {
   if((getLoopOrder() == LoopOrderKind::LK_Backward))
     std::reverse(partitionIntervals.begin(), partitionIntervals.end());
 
-  std::vector<DoMethod> orderedDoMethods;
+  std::vector<std::unique_ptr<DoMethod>> orderedDoMethods;
 
   for(auto interval : partitionIntervals) {
     for(const auto& stagePtr : getChildren()) {
       for(const auto& doMethod : stagePtr->getChildren()) {
 
         if(doMethod->getInterval().overlaps(interval)) {
-          DoMethod partitionedDoMethod(*doMethod);
+          std::unique_ptr<DoMethod> partitionedDoMethod = doMethod->clone();
 
-          partitionedDoMethod.setInterval(interval);
-          orderedDoMethods.push_back(partitionedDoMethod);
+          partitionedDoMethod->setInterval(interval);
+          orderedDoMethods.push_back(std::move(partitionedDoMethod));
           // there should not be two do methods in the same stage with overlapping intervals
           continue;
         }
@@ -153,23 +163,23 @@ std::vector<DoMethod> MultiStage::computeOrderedDoMethods() const {
 
 MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
 
-  std::vector<DoMethod> orderedDoMethods = computeOrderedDoMethods();
+  std::vector<std::unique_ptr<DoMethod>> orderedDoMethods = computeOrderedDoMethods();
 
   MultiInterval writeInterval;
   MultiInterval writeIntervalPre;
   MultiInterval readInterval;
 
   for(const auto& doMethod : orderedDoMethods) {
-    for(const auto& statementAccesssPair : doMethod.getChildren()) {
+    for(const auto& statementAccesssPair : doMethod->getChildren()) {
       const Accesses& accesses = *statementAccesssPair->getAccesses();
       if(accesses.hasWriteAccess(accessID)) {
-        writeIntervalPre.insert(doMethod.getInterval());
+        writeIntervalPre.insert(doMethod->getInterval());
       }
     }
   }
 
   for(const auto& doMethod : orderedDoMethods) {
-    for(const auto& statementAccesssPair : doMethod.getChildren()) {
+    for(const auto& statementAccesssPair : doMethod->getChildren()) {
       const Accesses& accesses = *statementAccesssPair->getAccesses();
       // indepdently of whether the statement has also a write access, if there is a read
       // access, it should happen in the RHS so first
@@ -179,7 +189,7 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
         Extents const& readAccessExtent = accesses.getReadAccess(accessID);
         boost::optional<Extent> readAccessInLoopOrder = readAccessExtent.getVerticalLoopOrderExtent(
             getLoopOrder(), Extents::VerticalLoopOrderDir::VL_InLoopOrder, false);
-        Interval computingInterval = doMethod.getInterval();
+        Interval computingInterval = doMethod->getInterval();
         if(readAccessInLoopOrder.is_initialized()) {
           interv.insert(computingInterval.extendInterval(*readAccessInLoopOrder));
         }
@@ -203,7 +213,7 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
         readInterval.insert(interv);
       }
       if(accesses.hasWriteAccess(accessID)) {
-        writeInterval.insert(doMethod.getInterval());
+        writeInterval.insert(doMethod->getInterval());
       }
     }
   }

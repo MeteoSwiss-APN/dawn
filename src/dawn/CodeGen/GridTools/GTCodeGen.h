@@ -57,7 +57,7 @@ public:
     std::set<int> Levels;
 
     /// Intervals of the Do-Methods of each stage
-    std::unordered_map<std::shared_ptr<iir::Stage>, std::vector<Interval>> StageIntervals;
+    std::unordered_map<int, std::vector<Interval>> StageIntervals;
   };
 
 private:

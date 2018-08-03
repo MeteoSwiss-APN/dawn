@@ -357,8 +357,8 @@ public:
         *instantiation_, verticalRegion->LoopOrder == sir::VerticalRegion::LK_Forward
                              ? LoopOrderKind::LK_Forward
                              : LoopOrderKind::LK_Backward);
-    std::shared_ptr<Stage> stage = std::make_shared<Stage>(*instantiation_, multiStage.get(),
-                                                           instantiation_->nextUID(), interval);
+    std::unique_ptr<Stage> stage =
+        make_unique<Stage>(*instantiation_, multiStage.get(), instantiation_->nextUID(), interval);
 
     DAWN_LOG(INFO) << "Processing vertical region at " << verticalRegion->Loc;
 

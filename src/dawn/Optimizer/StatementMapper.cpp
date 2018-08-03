@@ -40,16 +40,17 @@ void StatementMapper::appendNewStatementAccessesPair(const std::shared_ptr<Stmt>
   if(scope_.top()->ScopeDepth == 1) {
     // The top-level block statement is collapsed thus we only insert at 1. Note that this works
     // because all AST have a block statement as root node.
-    scope_.top()->StatementAccessesPairs.emplace_back(
-        std::make_shared<iir::StatementAccessesPair>(std::make_shared<Statement>(stmt, stackTrace_)));
+    scope_.top()->StatementAccessesPairs.emplace_back(std::make_shared<iir::StatementAccessesPair>(
+        std::make_shared<Statement>(stmt, stackTrace_)));
     scope_.top()->CurentStmtAccessesPair.push(scope_.top()->StatementAccessesPairs.back());
 
   } else if(scope_.top()->ScopeDepth > 1) {
     // We are inside a nested block statement, we add the stmt as a child of the parent statement
-    scope_.top()->CurentStmtAccessesPair.top()->getChildren().emplace_back(
-        std::make_shared<iir::StatementAccessesPair>(std::make_shared<Statement>(stmt, stackTrace_)));
+    scope_.top()->CurentStmtAccessesPair.top()->getBlockStatements().emplace_back(
+        std::make_shared<iir::StatementAccessesPair>(
+            std::make_shared<Statement>(stmt, stackTrace_)));
     scope_.top()->CurentStmtAccessesPair.push(
-        scope_.top()->CurentStmtAccessesPair.top()->getChildren().back());
+        scope_.top()->CurentStmtAccessesPair.top()->getBlockStatements().back());
   }
 }
 

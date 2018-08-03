@@ -31,7 +31,7 @@ PassMultiStageSplitter::PassMultiStageSplitter(MultiStageSplittingStrategy strat
     : Pass("PassMultiStageSplitter", true), strategy_(strategy) {}
 namespace {
 
-int checkDependencies(const std::shared_ptr<iir::Stage>& stage, int stmtIdx) {
+int checkDependencies(const std::unique_ptr<iir::Stage>& stage, int stmtIdx) {
   DAWN_ASSERT_MSG(false, "implementation missing");
   return 0;
 }

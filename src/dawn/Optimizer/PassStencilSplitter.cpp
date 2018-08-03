@@ -90,7 +90,7 @@ bool PassStencilSplitter::run(
              mergePossible(fieldsInNewStencil, stagePtr.get(), MaxFieldPerStencil)) {
 
             // We can safely insert the stage into the current multi-stage of the `newStencil`
-            newStencil->getChildren().back()->insertChild(stagePtr);
+            newStencil->getChildren().back()->insertChild(std::move(stagePtr->clone()));
 
             // Update fields of the `newStencil`. Note that the indivudual stages do not need to
             // update their fields as they remain the same.
@@ -109,7 +109,7 @@ bool PassStencilSplitter::run(
             newStencil->insertChild(
                 std::make_shared<iir::MultiStage>(*stencilInstantiation, multiStage.getLoopOrder()),
                 newStencil);
-            newStencil->getChildren().back()->insertChild(stagePtr);
+            newStencil->getChildren().back()->insertChild(std::move(stagePtr->clone()));
           }
         }
       }

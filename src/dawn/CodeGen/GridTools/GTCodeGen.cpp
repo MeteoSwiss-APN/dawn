@@ -101,10 +101,10 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const iir::Stencil& stencil)
   // See https://github.com/eth-cscs/gridtools/issues/330
   int numStages = stencil.getNumStages();
   for(int i = 0; i < numStages; ++i) {
-    const std::shared_ptr<iir::Stage>& stagePtr = stencil.getStage(i);
+    const std::unique_ptr<iir::Stage>& stagePtr = stencil.getStage(i);
 
     auto gapIntervals = Interval::computeGapIntervals(Axis, stagePtr->getIntervals());
-    StageIntervals.emplace(stagePtr, gapIntervals);
+    StageIntervals.emplace(stagePtr->getStageID(), gapIntervals);
     for(auto const& interval : gapIntervals) {
       intervalProperties_.insert(interval);
     }
@@ -609,7 +609,7 @@ std::string GTCodeGen::generateStencilInstantiation(
         // Generate empty Do-Methods
         // See https://github.com/eth-cscs/gridtools/issues/330
         const auto& stageIntervals = stage.getIntervals();
-        for(const auto& interval : intervalDefinitions.StageIntervals[stagePtr]) {
+        for(const auto& interval : intervalDefinitions.StageIntervals[stagePtr->getStageID()]) {
           if(std::find(stageIntervals.begin(), stageIntervals.end(), interval) ==
              stageIntervals.end()) {
             StageStruct.addMemberFunction("GT_FUNCTION static void", "Do", "typename Evaluation")

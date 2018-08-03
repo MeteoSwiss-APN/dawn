@@ -29,9 +29,12 @@ class DoMethod;
 
 /// @brief Statement with corresponding Accesses
 ///
-/// If the statement is a block-statement, the sub-statements will be stored in `children`.
+/// If the statement is a block-statement, the sub-statements will be stored in `s4jf.-f5-h0
+/// blockStatements`.
 /// @ingroup optimizer
 class StatementAccessesPair : public IIRNode<DoMethod, StatementAccessesPair, void> {
+  using base_type = IIRNode<DoMethod, StatementAccessesPair, void>;
+
   std::shared_ptr<Statement> statement_;
 
   // In case of a non function call stmt, the accesses are stored in callerAccesses_, while
@@ -48,13 +51,17 @@ class StatementAccessesPair : public IIRNode<DoMethod, StatementAccessesPair, vo
 
   // If the statement is a block statement, this will contain the sub-statements of the block. Note
   // that the acceses in this case are the *accumulated* accesses of all sub-statements.
-  std::vector<std::shared_ptr<StatementAccessesPair>> children_;
+  std::vector<std::shared_ptr<StatementAccessesPair>> blockStatements_;
 
 public:
   explicit StatementAccessesPair(const std::shared_ptr<Statement>& statement);
 
+  // TODO remove
   StatementAccessesPair(const StatementAccessesPair&) = default;
   StatementAccessesPair(StatementAccessesPair&&) = default;
+
+  // TODO change to unique_ptr
+  std::shared_ptr<StatementAccessesPair> clone() const;
 
   /// @brief Get/Set the statement
   std::shared_ptr<Statement> getStatement() const;
@@ -73,10 +80,10 @@ public:
   void setCalleeAccesses(const std::shared_ptr<Accesses>& accesses);
   bool hasCalleeAccesses();
 
-  /// @brief Get the children
-  const std::vector<std::shared_ptr<StatementAccessesPair>>& getChildren() const;
-  std::vector<std::shared_ptr<StatementAccessesPair>>& getChildren();
-  bool hasChildren() const;
+  /// @brief Get the blockStatements
+  const std::vector<std::shared_ptr<StatementAccessesPair>>& getBlockStatements() const;
+  std::vector<std::shared_ptr<StatementAccessesPair>>& getBlockStatements();
+  bool hasBlockStatements() const;
 
   boost::optional<Extents> computeMaximumExtents(const int accessID) const;
 

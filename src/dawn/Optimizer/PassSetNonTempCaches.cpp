@@ -149,7 +149,7 @@ private:
     if(!oldAccessIDs.empty()) {
       auto stageBegin = multiStagePrt_->childrenBegin();
 
-      std::shared_ptr<iir::Stage> cacheFillStage =
+      std::unique_ptr<iir::Stage> cacheFillStage =
           createAssignmentStage(multiStagePrt_->getEnclosingInterval(), newAccessIDs, oldAccessIDs);
       multiStagePrt_->insertChild(stageBegin, std::move(cacheFillStage));
     }
@@ -170,7 +170,7 @@ private:
     if(!oldAccessIDs.empty()) {
       auto stageEnd = multiStagePrt_->childrenEnd();
 
-      std::shared_ptr<iir::Stage> cacheFlushStage =
+      std::unique_ptr<iir::Stage> cacheFlushStage =
           createAssignmentStage(multiStagePrt_->getEnclosingInterval(), oldAccessIDs, newAccessIDs);
 
       // Insert the new stage at the found location
@@ -179,11 +179,11 @@ private:
   }
 
   /// @brief Creates the stage in which assignment happens (fill and flush)
-  std::shared_ptr<iir::Stage> createAssignmentStage(const Interval& interval,
+  std::unique_ptr<iir::Stage> createAssignmentStage(const Interval& interval,
                                                     const std::vector<int>& assignmentIDs,
                                                     const std::vector<int>& assigneeIDs) {
     // Add the cache Flush stage
-    std::shared_ptr<iir::Stage> assignmentStage = std::make_shared<iir::Stage>(
+    std::unique_ptr<iir::Stage> assignmentStage = make_unique<iir::Stage>(
         *instantiation_, multiStagePrt_.get(), instantiation_->nextUID(), interval);
     iir::Stage::DoMethodSmartPtr_t domethod = make_unique<iir::DoMethod>(interval);
     domethod->clearChildren();

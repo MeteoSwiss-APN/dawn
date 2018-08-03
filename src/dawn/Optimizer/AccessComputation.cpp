@@ -108,7 +108,8 @@ public:
         curStatementAccessPairStack_.back()->Pair->getCallerAccesses());
 
     if(stencilFun_) {
-      curStatementAccessPairStack_.back()->Pair->setCalleeAccesses(std::make_shared<iir::Accesses>());
+      curStatementAccessPairStack_.back()->Pair->setCalleeAccesses(
+          std::make_shared<iir::Accesses>());
       calleeAccessesList_.emplace_back(
           curStatementAccessPairStack_.back()->Pair->getCalleeAccesses());
     }
@@ -248,15 +249,16 @@ public:
 
   virtual void visit(const std::shared_ptr<BlockStmt>& stmt) override {
     // If we are inside the else block of an if-statement we need to continue iterating
-    // the children as the if/then/else block of the if-statement has been collapsed into one single
-    // vector of children
+    // the block statements as the if/then/else block of the if-statement has been collapsed into
+    // one single
+    // vector of block statements
     if(!curStatementAccessPairStack_.back()->IfCondExpr)
       curStatementAccessPairStack_.back()->ChildIndex = 0;
 
     for(auto& s : stmt->getStatements()) {
       curStatementAccessPairStack_.push_back(make_unique<CurrentStatementAccessPair>(
           curStatementAccessPairStack_.back()
-              ->Pair->getChildren()[curStatementAccessPairStack_.back()->ChildIndex]));
+              ->Pair->getBlockStatements()[curStatementAccessPairStack_.back()->ChildIndex]));
 
       // Process the statement
       s->accept(*this);

@@ -26,11 +26,31 @@
 namespace dawn {
 namespace iir {
 
+Stage::Stage(StencilInstantiation& context, MultiStage* multiStage, int StageID)
+    : stencilInstantiation_(context), multiStage_(multiStage), StageID_(StageID),
+      extents_{0, 0, 0, 0, 0, 0} {}
+
 Stage::Stage(StencilInstantiation& context, MultiStage* multiStage, int StageID,
              const Interval& interval)
     : stencilInstantiation_(context), multiStage_(multiStage), StageID_(StageID),
       extents_{0, 0, 0, 0, 0, 0} {
+  // TODO reconsider whether we want to insert an interval
   insertChild(make_unique<DoMethod>(interval));
+}
+
+std::unique_ptr<Stage> Stage::clone() const {
+
+  auto cloneStage = make_unique<Stage>(stencilInstantiation_, multiStage_, StageID_);
+
+  cloneStage->fields_ = fields_;
+  cloneStage->allGlobalVariables_ = allGlobalVariables_;
+  cloneStage->globalVariables_ = globalVariables_;
+  cloneStage->globalVariablesFromStencilFunctionCalls_ = globalVariablesFromStencilFunctionCalls_;
+
+  cloneStage->extents_ = extents_;
+
+  cloneStage->cloneChildren(*this);
+  return std::move(cloneStage);
 }
 
 DoMethod& Stage::getSingleDoMethod() {
@@ -301,7 +321,7 @@ void Stage::appendDoMethod(DoMethodSmartPtr_t& from, DoMethodSmartPtr_t& to,
 
 LoopOrderKind Stage::getLoopOrder() const { return multiStage_->getLoopOrder(); }
 
-std::vector<std::shared_ptr<Stage>>
+std::vector<std::unique_ptr<Stage>>
 Stage::split(std::deque<int>& splitterIndices,
              const std::deque<std::shared_ptr<DependencyGraphAccesses>>* graphs) {
   DAWN_ASSERT_MSG(hasSingleDoMethod(), "Stage::split does not support multiple Do-Methods");
@@ -310,7 +330,7 @@ Stage::split(std::deque<int>& splitterIndices,
   DAWN_ASSERT(thisDoMethod.getChildren().size() >= 2);
   DAWN_ASSERT(!graphs || splitterIndices.size() == graphs->size() - 1);
 
-  std::vector<std::shared_ptr<Stage>> newStages;
+  std::vector<std::unique_ptr<Stage>> newStages;
 
   splitterIndices.push_back(thisDoMethod.getChildren().size() - 1);
   DoMethod::StatementAccessesIterator prevSplitterIndex = thisDoMethod.childrenBegin();
@@ -320,9 +340,9 @@ Stage::split(std::deque<int>& splitterIndices,
     DoMethod::StatementAccessesIterator nextSplitterIndex =
         std::next(thisDoMethod.childrenBegin(), splitterIndices[i] + 1);
 
-    newStages.push_back(std::make_shared<Stage>(stencilInstantiation_, multiStage_,
-                                                stencilInstantiation_.nextUID(),
-                                                thisDoMethod.getInterval()));
+    newStages.push_back(make_unique<Stage>(stencilInstantiation_, multiStage_,
+                                           stencilInstantiation_.nextUID(),
+                                           thisDoMethod.getInterval()));
     Stage& newStage = *newStages.back();
     DoMethod& doMethod = newStage.getSingleDoMethod();
 

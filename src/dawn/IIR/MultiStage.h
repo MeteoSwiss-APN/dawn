@@ -39,13 +39,19 @@ template <typename T>
 using StdList = std::list<T, std::allocator<T>>;
 }
 
+namespace impl {
+template <typename T>
+using StageSmartptr = std::unique_ptr<T, std::default_delete<T>>;
+}
+
 /// @brief A MultiStage is represented by a collection of stages and a given exectuion policy.
 ///
 /// A MultiStage usually corresponds to the outer loop (usually over k) of the loop nest. In CUDA
 /// gridtools multistages reflect kernels.
 ///
 /// @ingroup optimizer
-class MultiStage : public IIRNode<Stencil, MultiStage, Stage, std::shared_ptr, impl::StdList> {
+class MultiStage : public IIRNode<Stencil, MultiStage, Stage, impl::StageSmartptr, impl::StdList> {
+  using base_type = IIRNode<Stencil, MultiStage, Stage, impl::StageSmartptr, impl::StdList>;
 
   StencilInstantiation& stencilInstantiation_;
 
@@ -60,12 +66,14 @@ public:
   /// @name Constructors and Assignment
   /// @{
   MultiStage(StencilInstantiation& stencilInstantiation, LoopOrderKind loopOrder);
-  MultiStage(const MultiStage&) = default;
+  //  MultiStage(const MultiStage&) = default;
   MultiStage(MultiStage&&) = default;
 
   MultiStage& operator=(const MultiStage&) = default;
   MultiStage& operator=(MultiStage&&) = default;
   /// @}
+
+  std::unique_ptr<MultiStage> clone() const;
 
   /// @brief Get the execution policy
   StencilInstantiation& getStencilInstantiation() const { return stencilInstantiation_; }
@@ -73,7 +81,7 @@ public:
   /// @brief Get the loop order
   LoopOrderKind getLoopOrder() const { return loopOrder_; }
 
-  std::vector<DoMethod> computeOrderedDoMethods() const;
+  std::vector<std::unique_ptr<DoMethod>> computeOrderedDoMethods() const;
 
   /// @brief Set the loop order
   void setLoopOrder(LoopOrderKind loopOrder) { loopOrder_ = loopOrder; }

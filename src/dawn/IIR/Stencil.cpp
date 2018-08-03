@@ -194,7 +194,7 @@ void Stencil::forEachStatementAccessesPairImpl(
     std::function<void(ArrayRef<std::shared_ptr<StatementAccessesPair>>)> func, int startStageIdx,
     int endStageIdx, bool updateFields) {
   for(int stageIdx = startStageIdx; stageIdx < endStageIdx; ++stageIdx) {
-    auto stage = getStage(stageIdx);
+    const auto& stage = getStage(stageIdx);
     for(const auto& doMethodPtr : stage->getChildren())
       func(doMethodPtr->getChildren());
 
@@ -300,7 +300,7 @@ int Stencil::getStageIndexFromPosition(const Stencil::StagePosition& position) c
   return numStagesInMSBeforeCurMS + position.StageOffset;
 }
 
-const std::shared_ptr<Stage>& Stencil::getStage(const StagePosition& position) const {
+const std::unique_ptr<Stage>& Stencil::getStage(const StagePosition& position) const {
   // Get the multi-stage ...
   DAWN_ASSERT_MSG(position.MultiStageIndex < children_.size(), "invalid multi-stage index");
   auto msIt = children_.begin();
@@ -315,7 +315,7 @@ const std::shared_ptr<Stage>& Stencil::getStage(const StagePosition& position) c
   return *stageIt;
 }
 
-const std::shared_ptr<Stage>& Stencil::getStage(int stageIdx) const {
+const std::unique_ptr<Stage>& Stencil::getStage(int stageIdx) const {
   int curIdx = 0;
   for(const auto& MS : children_) {
 
@@ -340,7 +340,7 @@ const std::shared_ptr<Stage>& Stencil::getStage(int stageIdx) const {
   dawn_unreachable("invalid stage index");
 }
 
-void Stencil::insertStage(const StagePosition& position, const std::shared_ptr<Stage>& stage) {
+void Stencil::insertStage(const StagePosition& position, std::unique_ptr<Stage>&& stage) {
 
   // Get the multi-stage ...
   DAWN_ASSERT_MSG(position.MultiStageIndex < children_.size(), "invalid multi-stage index");
@@ -362,7 +362,7 @@ void Stencil::insertStage(const StagePosition& position, const std::shared_ptr<S
       stageIt++;
   }
 
-  MS->insertChild(stageIt, stage);
+  MS->insertChild(stageIt, std::move(stage));
 }
 
 Interval Stencil::getAxis(bool useExtendedInterval) const {

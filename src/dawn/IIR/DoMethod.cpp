@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/DoMethod.h"
+#include "dawn/IIR/Stage.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/StatementAccessesPair.h"
@@ -26,14 +27,15 @@ namespace iir {
 DoMethod::DoMethod(Interval interval)
     : interval_(interval), id_(IndexGenerator::Instance().getIndex()), dependencyGraph_(nullptr) {}
 
-// std::vector<std::shared_ptr<StatementAccessesPair>>& DoMethod::getStatementAccessesPairs() {
-//  return statementAccessesPairs_;
-//}
+std::unique_ptr<DoMethod> DoMethod::clone() const {
+  auto cloneMS = make_unique<DoMethod>(interval_);
 
-// const std::vector<std::shared_ptr<StatementAccessesPair>>&
-// DoMethod::getStatementAccessesPairs() const {
-//  return statementAccessesPairs_;
-//}
+  cloneMS->setID(id_);
+  cloneMS->setDependencyGraph(dependencyGraph_);
+
+  cloneMS->cloneChildren(*this);
+  return std::move(cloneMS);
+}
 
 Interval& DoMethod::getInterval() { return interval_; }
 

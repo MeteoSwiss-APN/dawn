@@ -45,6 +45,7 @@ class IIRNode {
 
 protected:
   IIRNode() = default;
+  // TODO remove copy ctr, should not be used
   IIRNode(const IIRNode&) = default;
   IIRNode(IIRNode&&) = default;
 
@@ -61,6 +62,20 @@ public:
   using child_smartptr_t = SmartPtr<T>;
   using child_iterator_t = typename Container<SmartPtr<Child>>::iterator;
   using child_reverse_iterator_t = typename Container<SmartPtr<Child>>::reverse_iterator;
+
+  template <typename TChild>
+  void cloneChildrenImpl(const IIRNode& other,
+                         typename std::enable_if<std::is_void<TChild>::value>::type* = 0) {}
+
+  template <typename TChild>
+  void cloneChildrenImpl(const IIRNode& other,
+                         typename std::enable_if<!std::is_void<TChild>::value>::type* = 0) {
+    for(const auto& child : other.getChildren()) {
+      insertChild(child->clone());
+    }
+  }
+
+  void cloneChildren(const IIRNode& other) { cloneChildrenImpl<Child>(other); }
 
   Container<SmartPtr<Child>>& getChildren() { return children_; }
   const Container<SmartPtr<Child>>& getChildren() const { return children_; }
@@ -90,10 +105,13 @@ public:
   ChildIterator childrenErase(ChildIterator it) { return ChildIterator{children_.erase(it)}; }
 
   std::weak_ptr<Child> getChildWeakPtr(Child* child) {
-    for(const auto& c : children_) {
-      if(c.get() == child)
-        return c;
-    }
+
+    // TODO move the parent to const unique_ptr
+    //    for(const auto& c : children_) {
+    //      if(c.get() == child)
+    //        return c;
+    //    }
+    return std::weak_ptr<Child>();
     dawn_unreachable("child weak pointer not found");
   }
 

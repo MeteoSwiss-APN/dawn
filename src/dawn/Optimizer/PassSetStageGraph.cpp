@@ -73,12 +73,12 @@ bool PassSetStageGraph::run(
 
     // Build DAG of stages (backward sweep)
     for(int i = numStages - 1; i >= 0; --i) {
-      auto fromStagePtr = stencil.getStage(i);
+      const auto& fromStagePtr = stencil.getStage(i);
       stageDAG->insertNode(fromStagePtr->getStageID());
       int curStageID = fromStagePtr->getStageID();
 
       for(int j = i - 1; j >= 0; --j) {
-        auto toStagePtr = stencil.getStage(j);
+        const auto& toStagePtr = stencil.getStage(j);
         if(depends(*fromStagePtr, *toStagePtr))
           stageDAG->insertEdge(curStageID, toStagePtr->getStageID());
       }

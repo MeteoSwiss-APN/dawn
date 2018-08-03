@@ -40,7 +40,7 @@ bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInsta
 
     // Iterate each statement of the stencil (top -> bottom)
     for(int stageIdx = 0; stageIdx < stencil.getNumStages(); ++stageIdx) {
-      std::shared_ptr<iir::Stage> stagePtr = stencil.getStage(stageIdx);
+      const std::unique_ptr<iir::Stage>& stagePtr = stencil.getStage(stageIdx);
 
       iir::DoMethod& doMethod = stagePtr->getSingleDoMethod();
       for(int stmtIdx = 0; stmtIdx < doMethod.getChildren().size(); ++stmtIdx) {

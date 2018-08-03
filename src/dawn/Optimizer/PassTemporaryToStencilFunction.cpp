@@ -558,7 +558,7 @@ bool PassTemporaryToStencilFunction::run(
              [](std::shared_ptr<iir::MultiStage> m) -> bool { return m->isEmptyOrNullStmt(); });
     for(const auto& multiStage : stencilPtr->getChildren()) {
       RemoveIf(multiStage->childrenBegin(), multiStage->childrenEnd(), multiStage->getChildren(),
-               [](std::shared_ptr<iir::Stage> s) -> bool { return s->isEmptyOrNullStmt(); });
+               [](const std::unique_ptr<iir::Stage>& s) -> bool { return s->isEmptyOrNullStmt(); });
     }
   }
 

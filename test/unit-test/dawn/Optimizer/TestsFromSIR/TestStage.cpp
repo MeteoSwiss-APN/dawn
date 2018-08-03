@@ -77,8 +77,8 @@ TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_01) {
 
   auto stage1_ptr = mss->childrenBegin();
   auto stage2_ptr = std::next(stage1_ptr);
-  std::shared_ptr<iir::Stage> const& stage1 = *stage1_ptr;
-  std::shared_ptr<iir::Stage> const& stage2 = *stage2_ptr;
+  std::unique_ptr<iir::Stage> const& stage1 = *stage1_ptr;
+  std::unique_ptr<iir::Stage> const& stage2 = *stage2_ptr;
 
   boost::optional<Interval> intervalU1 =
       stage1->computeEnclosingAccessInterval(stencilInstantiation->getAccessIDFromName("u"), false);
@@ -124,7 +124,7 @@ TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_02) {
   auto const& mss = *stencil->childrenBegin();
 
   auto stage1_ptr = mss->childrenBegin();
-  std::shared_ptr<iir::Stage> const& stage1 = *stage1_ptr;
+  std::unique_ptr<iir::Stage> const& stage1 = *stage1_ptr;
 
   {
     boost::optional<Interval> intervalcoeff1 = stage1->computeEnclosingAccessInterval(

@@ -28,8 +28,8 @@ namespace iir {
 void DependencyGraphAccesses::insertStatementAccessesPair(
     const std::shared_ptr<iir::StatementAccessesPair>& stmtAccessPair) {
 
-  if(stmtAccessPair->hasChildren()) {
-    for(const auto& s : stmtAccessPair->getChildren())
+  if(stmtAccessPair->hasBlockStatements()) {
+    for(const auto& s : stmtAccessPair->getBlockStatements())
       insertStatementAccessesPair(s);
   } else {
 

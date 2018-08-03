@@ -50,9 +50,9 @@ static std::string toStringImpl(const StatementAccessesPair* pair,
     ss << pair->getCalleeAccesses()->toString(instantiation, curIndent + DAWN_PRINT_INDENT) << "\n";
   }
 
-  if(!pair->getChildren().empty()) {
-    ss << curIndentStr << "Children:\n";
-    for(auto& child : pair->getChildren())
+  if(!pair->getBlockStatements().empty()) {
+    ss << curIndentStr << "BlockStatements:\n";
+    for(auto& child : pair->getBlockStatements())
       ss << child->toString(instantiation, curIndent);
   }
   ss << initialIndentStr << "]\n";
@@ -64,6 +64,18 @@ static std::string toStringImpl(const StatementAccessesPair* pair,
 
 StatementAccessesPair::StatementAccessesPair(const std::shared_ptr<Statement>& statement)
     : statement_(statement), callerAccesses_(nullptr), calleeAccesses_(nullptr) {}
+
+// TODO change to unique_ptr
+std::shared_ptr<StatementAccessesPair> StatementAccessesPair::clone() const {
+  auto cloneSAP = std::make_shared<StatementAccessesPair>(statement_);
+
+  cloneSAP->callerAccesses_ = callerAccesses_;
+  cloneSAP->calleeAccesses_ = calleeAccesses_;
+  cloneSAP->blockStatements_ = blockStatements_;
+
+  cloneSAP->cloneChildren(*this);
+  return std::move(cloneSAP);
+}
 
 std::shared_ptr<Statement> StatementAccessesPair::getStatement() const { return statement_; }
 
@@ -78,12 +90,12 @@ void StatementAccessesPair::setAccesses(const std::shared_ptr<Accesses>& accesse
 }
 
 const std::vector<std::shared_ptr<StatementAccessesPair>>&
-StatementAccessesPair::getChildren() const {
-  return children_;
+StatementAccessesPair::getBlockStatements() const {
+  return blockStatements_;
 }
 
-std::vector<std::shared_ptr<StatementAccessesPair>>& StatementAccessesPair::getChildren() {
-  return children_;
+std::vector<std::shared_ptr<StatementAccessesPair>>& StatementAccessesPair::getBlockStatements() {
+  return blockStatements_;
 }
 
 boost::optional<Extents> StatementAccessesPair::computeMaximumExtents(const int accessID) const {
@@ -106,7 +118,7 @@ boost::optional<Extents> StatementAccessesPair::computeMaximumExtents(const int 
     }
   }
 
-  for(auto const& child : children_) {
+  for(auto const& child : blockStatements_) {
     auto childExtent = child->computeMaximumExtents(accessID);
     if(!childExtent.is_initialized())
       continue;
@@ -119,7 +131,7 @@ boost::optional<Extents> StatementAccessesPair::computeMaximumExtents(const int 
   return extents;
 }
 
-bool StatementAccessesPair::hasChildren() const { return !children_.empty(); }
+bool StatementAccessesPair::hasBlockStatements() const { return !blockStatements_.empty(); }
 
 std::shared_ptr<Accesses> StatementAccessesPair::getCallerAccesses() const { return getAccesses(); }
 

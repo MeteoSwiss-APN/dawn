@@ -44,7 +44,10 @@ namespace impl {
 template <typename T>
 using DoMethodSmartptr = std::unique_ptr<T, std::default_delete<T>>;
 }
-class Stage : public IIRNode<MultiStage, Stage, DoMethod, std::shared_ptr> {
+class Stage : public IIRNode<MultiStage, Stage, DoMethod, impl::DoMethodSmartptr> {
+
+  using base_type = IIRNode<MultiStage, Stage, DoMethod, impl::DoMethodSmartptr>;
+
   StencilInstantiation& stencilInstantiation_;
   MultiStage* multiStage_;
 
@@ -59,6 +62,7 @@ class Stage : public IIRNode<MultiStage, Stage, DoMethod, std::shared_ptr> {
   std::unordered_set<int> globalVariables_;
   std::unordered_set<int> globalVariablesFromStencilFunctionCalls_;
 
+  // TODO move extents to derived
   Extents extents_;
 
 public:
@@ -69,12 +73,16 @@ public:
   /// @{
   Stage(StencilInstantiation& context, MultiStage* multiStage, int StageID,
         const Interval& interval);
-  Stage(const Stage&) = default;
+  Stage(StencilInstantiation& context, MultiStage* multiStage, int StageID);
+
+  //  Stage(const Stage&) = default;
   Stage(Stage&&) = default;
 
   Stage& operator=(const Stage&) = default;
   Stage& operator=(Stage&&) = default;
   /// @}
+
+  std::unique_ptr<Stage> clone() const;
 
   /// @brief Check if the stage contains of a single Do-Method
   bool hasSingleDoMethod() const;
@@ -180,7 +188,7 @@ public:
   ///
   /// @return New stages
   // TODO this should not be part of a Stage but rather algorithm
-  std::vector<std::shared_ptr<Stage>>
+  std::vector<std::unique_ptr<Stage>>
   split(std::deque<int>& splitterIndices,
         const std::deque<std::shared_ptr<DependencyGraphAccesses>>* graphs);
 

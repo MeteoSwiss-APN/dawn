@@ -34,10 +34,10 @@ class StatementAccessesPair;
 /// @ingroup optimizer
 class DoMethod : public IIRNode<Stage, DoMethod, StatementAccessesPair> {
   Interval interval_;
-  const long unsigned int id_;
+  long unsigned int id_;
 
   std::shared_ptr<DependencyGraphAccesses> dependencyGraph_;
-  //  std::vector<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs_;
+  using base_type = IIRNode<Stage, DoMethod, StatementAccessesPair>;
 
 public:
   using StatementAccessesIterator = ChildIterator;
@@ -53,6 +53,8 @@ public:
   DoMethod& operator=(DoMethod&&) = default;
   /// @}
 
+  std::unique_ptr<DoMethod> clone() const;
+
   //  /// @brief Get the statements of the Stage
   //  std::vector<std::shared_ptr<StatementAccessesPair>>& getStatementAccessesPairs();
   //  const std::vector<std::shared_ptr<StatementAccessesPair>>& getStatementAccessesPairs() const;
@@ -64,6 +66,8 @@ public:
   void setInterval(Interval const& interval);
 
   unsigned long int getID() const { return id_; }
+
+  void setID(const long unsigned int id) { id_ = id; }
 
   /// @brief Set the dependency graph of this Do-Method
   void setDependencyGraph(const std::shared_ptr<DependencyGraphAccesses>& DG);
