@@ -105,7 +105,7 @@ public:
   ///
   /// @return New multi-stages
   // TODO this should not be here
-  std::vector<std::shared_ptr<MultiStage>>
+  std::vector<std::unique_ptr<MultiStage>>
   split(std::deque<MultiStage::SplitIndex>& splitterIndices, LoopOrderKind lastLoopOrder);
 
   /// @brief Get the dependency graph of the multi-stage incorporating those stages whose extended

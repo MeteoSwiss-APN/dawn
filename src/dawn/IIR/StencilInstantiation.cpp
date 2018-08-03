@@ -353,7 +353,7 @@ public:
     std::shared_ptr<AST> ast = cloneAST ? verticalRegion->Ast->clone() : verticalRegion->Ast;
 
     // Create the new multi-stage
-    std::shared_ptr<MultiStage> multiStage = std::make_shared<MultiStage>(
+    std::unique_ptr<MultiStage> multiStage = make_unique<MultiStage>(
         *instantiation_, verticalRegion->LoopOrder == sir::VerticalRegion::LK_Forward
                              ? LoopOrderKind::LK_Forward
                              : LoopOrderKind::LK_Backward);

@@ -39,17 +39,17 @@ std::unique_ptr<MultiStage> MultiStage::clone() const {
   return std::move(cloneMS);
 }
 
-std::vector<std::shared_ptr<MultiStage>>
+std::vector<std::unique_ptr<MultiStage>>
 MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
                   LoopOrderKind lastLoopOrder) {
 
-  std::vector<std::shared_ptr<MultiStage>> newMultiStages;
+  std::vector<std::unique_ptr<MultiStage>> newMultiStages;
 
   int curStageIndex = 0;
   auto curStageIt = children_.begin();
   std::deque<int> curStageSplitterIndices;
 
-  newMultiStages.push_back(std::make_shared<MultiStage>(stencilInstantiation_, lastLoopOrder));
+  newMultiStages.push_back(make_unique<MultiStage>(stencilInstantiation_, lastLoopOrder));
 
   for(std::size_t i = 0; i < splitterIndices.size(); ++i) {
     SplitIndex& splitIndex = splitterIndices[i];
@@ -58,7 +58,7 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
 
       curStageSplitterIndices.push_back(splitIndex.StmtIndex);
       newMultiStages.push_back(
-          std::make_shared<MultiStage>(stencilInstantiation_, splitIndex.LowerLoopOrder));
+          make_unique<MultiStage>(stencilInstantiation_, splitIndex.LowerLoopOrder));
       lastLoopOrder = splitIndex.LowerLoopOrder;
     }
 
@@ -81,8 +81,7 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
       }
 
       if(i != (splitterIndices.size() - 1))
-        newMultiStages.push_back(
-            std::make_shared<MultiStage>(stencilInstantiation_, lastLoopOrder));
+        newMultiStages.push_back(make_unique<MultiStage>(stencilInstantiation_, lastLoopOrder));
 
       // Handle the next stage
       curStageIndex++;

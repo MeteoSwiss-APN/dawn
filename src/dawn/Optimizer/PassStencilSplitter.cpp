@@ -82,7 +82,7 @@ bool PassStencilSplitter::run(
         // Create an empty multi-stage in the current stencil with the same parameter as
         // `multiStage`
         newStencil->insertChild(
-            std::make_shared<iir::MultiStage>(*stencilInstantiation, multiStage.getLoopOrder()),
+            make_unique<iir::MultiStage>(*stencilInstantiation, multiStage.getLoopOrder()),
             newStencil);
 
         for(const auto& stagePtr : multiStage.getChildren()) {
@@ -107,7 +107,7 @@ bool PassStencilSplitter::run(
 
             // Re-create the current multi-stage in the `newStencil` and insert the stage
             newStencil->insertChild(
-                std::make_shared<iir::MultiStage>(*stencilInstantiation, multiStage.getLoopOrder()),
+                make_unique<iir::MultiStage>(*stencilInstantiation, multiStage.getLoopOrder()),
                 newStencil);
             newStencil->getChildren().back()->insertChild(std::move(stagePtr->clone()));
           }

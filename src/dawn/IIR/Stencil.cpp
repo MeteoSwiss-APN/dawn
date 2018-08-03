@@ -251,7 +251,7 @@ const std::shared_ptr<DependencyGraphStage>& Stencil::getStageDependencyGraph() 
   return stageDependencyGraph_;
 }
 
-const std::shared_ptr<MultiStage>&
+const std::unique_ptr<MultiStage>&
 Stencil::getMultiStageFromMultiStageIndex(int multiStageIdx) const {
   DAWN_ASSERT_MSG(multiStageIdx < children_.size(), "invalid multi-stage index");
   auto msIt = children_.begin();
@@ -259,7 +259,7 @@ Stencil::getMultiStageFromMultiStageIndex(int multiStageIdx) const {
   return *msIt;
 }
 
-const std::shared_ptr<MultiStage>& Stencil::getMultiStageFromStageIndex(int stageIdx) const {
+const std::unique_ptr<MultiStage>& Stencil::getMultiStageFromStageIndex(int stageIdx) const {
   return getMultiStageFromMultiStageIndex(getPositionFromStageIndex(stageIdx).MultiStageIndex);
 }
 

@@ -32,9 +32,14 @@ class DependencyGraphStage;
 class StencilInstantiation;
 class StatementAccessesPair;
 
+namespace impl {
+template <typename T>
+using MultiStageSmartptr = std::unique_ptr<T, std::default_delete<T>>;
+}
+
 /// @brief A Stencil is represented by a collection of MultiStages
 /// @ingroup optimizer
-class Stencil : public IIRNode<void, Stencil, MultiStage, std::shared_ptr, impl::StdList> {
+class Stencil : public IIRNode<void, Stencil, MultiStage, impl::MultiStageSmartptr, impl::StdList> {
   using base_type = IIRNode<void, Stencil, MultiStage, std::shared_ptr, impl::StdList>;
 
   StencilInstantiation& stencilInstantiation_;
@@ -189,10 +194,10 @@ public:
   boost::optional<Interval> getEnclosingIntervalTemporaries() const;
 
   /// @brief Get the multi-stage at given multistage index
-  const std::shared_ptr<MultiStage>& getMultiStageFromMultiStageIndex(int multiStageIdx) const;
+  const std::unique_ptr<MultiStage>& getMultiStageFromMultiStageIndex(int multiStageIdx) const;
 
   /// @brief Get the multi-stage at given stage index
-  const std::shared_ptr<MultiStage>& getMultiStageFromStageIndex(int stageIdx) const;
+  const std::unique_ptr<MultiStage>& getMultiStageFromStageIndex(int stageIdx) const;
 
   /// @brief Get the position of the stage which is identified by the linear stage index
   StagePosition getPositionFromStageIndex(int stageIdx) const;
