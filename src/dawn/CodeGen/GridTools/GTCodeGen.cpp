@@ -296,10 +296,10 @@ std::string GTCodeGen::generateStencilInstantiation(
   }
 
   // Generate stencils
-  auto& stencils = stencilInstantiation->getStencils();
+  const auto& stencils = stencilInstantiation->getStencils();
   for(std::size_t stencilIdx = 0; stencilIdx < stencils.size(); ++stencilIdx) {
     std::string stencilType;
-    const iir::Stencil& stencil = *stencilInstantiation->getStencils()[stencilIdx];
+    const iir::Stencil& stencil = *stencils[stencilIdx];
 
     std::vector<iir::Stencil::FieldInfo> StencilFields = stencil.getFields();
 
@@ -655,7 +655,7 @@ std::string GTCodeGen::generateStencilInstantiation(
     // Add static asserts to check halos against extents
     StencilConstructor.addComment("Check if extents do not exceed the halos");
     std::unordered_map<int, Extents> const& exts =
-        (*stencilInstantiation->getStencils()[stencilIdx]).computeEnclosingAccessExtents();
+        (*stencils[stencilIdx]).computeEnclosingAccessExtents();
     for(int i = 0; i < numFields; ++i) {
       if(!StencilFields[i].IsTemporary) {
         auto const& ext = exts.at(StencilFields[i].AccessID);

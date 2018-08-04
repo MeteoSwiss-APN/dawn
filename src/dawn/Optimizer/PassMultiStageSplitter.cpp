@@ -177,7 +177,7 @@ bool PassMultiStageSplitter::run(
   auto options = context->getOptions();
 
   // Iterate over all stages in all multistages of all stencils
-  for(auto& stencil : stencilInstantiation->getStencils()) {
+  for(const auto& stencil : stencilInstantiation->getStencils()) {
     int multiStageIndex = 0;
 
     for(auto multiStageIt = stencil->childrenBegin(); multiStageIt != stencil->childrenEnd();
@@ -209,7 +209,7 @@ bool PassMultiStageSplitter::run(
         auto newMultiStages = multiStage.split(splitterIndices, curLoopOrder);
         multiStageIt = stencil->childrenErase(multiStageIt);
         stencil->insertChildren(multiStageIt, std::make_move_iterator(newMultiStages.begin()),
-                                std::make_move_iterator(newMultiStages.end()), stencil);
+                                std::make_move_iterator(newMultiStages.end()));
       } else {
         ++multiStageIt;
         multiStage.setLoopOrder(curLoopOrder);

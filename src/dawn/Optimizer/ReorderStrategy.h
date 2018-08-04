@@ -39,8 +39,8 @@ public:
 
   /// @brief Reorder the stages of the `stencilPtr` according to the implemented strategy
   /// @returns New stencil with the reordered stages
-  virtual std::shared_ptr<iir::Stencil>
-  reorder(const std::shared_ptr<iir::Stencil>& stencilPtr) = 0;
+  virtual std::unique_ptr<iir::Stencil>
+  reorder(const std::unique_ptr<iir::Stencil>& stencilPtr) = 0;
 };
 
 } // namespace dawn

@@ -35,7 +35,7 @@ namespace {
 /// @param s A shared ptr to the stencil to be analyzed
 /// @param ID the FieldID of the Field to be analized
 /// @return the full extent of the field in the stencil
-static dawn::Extents analyzeStencilExtents(const std::shared_ptr<iir::Stencil>& s, int fieldID) {
+static dawn::Extents analyzeStencilExtents(const std::unique_ptr<iir::Stencil>& s, int fieldID) {
   Extents fullExtents{0, 0, 0, 0, 0, 0};
   iir::Stencil& stencil = *s;
 
@@ -194,7 +194,7 @@ bool PassSetBoundaryCondition::run(
         stencilIDsToVisit.erase(traveresedID);
       }
     }
-    for(auto& stencil : stencilInstantiation->getStencils()) {
+    for(const auto& stencil : stencilInstantiation->getStencils()) {
       if(stencilIDsToVisit.count(stencil->getStencilID())) {
         fullExtent.merge(
             analyzeStencilExtents(stencil, stencilInstantiation->getAccessIDFromName(fieldname)));
@@ -269,12 +269,12 @@ bool PassSetBoundaryCondition::run(
                                                                         fullExtents);
 
               auto it =
-                  std::find_if(stencilInstantiation->getStencils().begin(),
-                               stencilInstantiation->getStencils().end(),
-                               [&stencil](const std::shared_ptr<iir::Stencil>& storedStencil) {
+                  std::find_if(stencilInstantiation->getIIR()->childrenBegin(),
+                               stencilInstantiation->getIIR()->childrenEnd(),
+                               [&stencil](const std::unique_ptr<iir::Stencil>& storedStencil) {
                                  return storedStencil->getStencilID() == stencil.getStencilID();
                                });
-              DAWN_ASSERT_MSG(it != stencilInstantiation->getStencils().end(),
+              DAWN_ASSERT_MSG(it != stencilInstantiation->getIIR()->childrenEnd(),
                               "Stencil Triggering the Boundary Condition is not called");
 
               // Find all the calls to this stencil before which we need to apply the boundary

@@ -97,7 +97,7 @@ bool PassFieldVersioning::run(
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
   numRenames_ = 0;
 
-  for(auto& stencilPtr : stencilInstantiation->getStencils()) {
+  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     iir::Stencil& stencil = *stencilPtr;
 
     // Iterate multi-stages backwards

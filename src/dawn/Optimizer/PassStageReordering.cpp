@@ -36,7 +36,7 @@ bool PassStageReordering::run(
   if(context->getOptions().ReportPassStageReodering)
     stencilInstantiation->dumpAsJson(filenameWE + "_before.json", getName());
 
-  for(auto& stencilPtr : stencilInstantiation->getStencils()) {
+  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     if(strategy_ == ReorderStrategy::RK_None)
       continue;
 
@@ -52,7 +52,10 @@ bool PassStageReordering::run(
       dawn_unreachable("invalid reorder strategy");
     }
 
-    stencilPtr = strategy->reorder(stencilPtr);
+    // TODO should we have Iterators so to prevent unique_ptr swaps
+    auto newStencil = strategy->reorder(stencilPtr);
+    stencilInstantiation->getIIR()->replace(stencilPtr, newStencil);
+
     if(!stencilPtr)
       return false;
   }

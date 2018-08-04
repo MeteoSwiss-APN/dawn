@@ -16,14 +16,19 @@
 #define DAWN_IIR_IIR_H
 
 #include "dawn/IIR/Stencil.h"
+#include "dawn/IIR/StencilInstantiation.h"
 
 namespace dawn {
-
 namespace iir {
+
+namespace impl {
+template <typename T>
+using StencilSmartptr = std::unique_ptr<T, std::default_delete<T>>;
+}
 
 /// @brief A Stencil is represented by a collection of MultiStages
 /// @ingroup optimizer
-class IIR : public IIRNode<void, IIR, Stencil, std::shared_ptr, impl::Vector> {
+class IIR : public IIRNode<void, IIR, Stencil, impl::StencilSmartptr> {
 
 public:
   using StencilSmartPtr_t = child_smartptr_t<Stencil>;
@@ -35,6 +40,7 @@ public:
   IIR& operator=(const IIR&) = default;
   IIR& operator=(IIR&&) = default;
   /// @}
+  std::unique_ptr<IIR> clone(const std::unique_ptr<IIR>& thisIIR) const;
 };
 } // namespace iir
 } // namespace dawn

@@ -15,6 +15,7 @@
 #ifndef DAWN_IIR_STENCILINSTANTIATION_H
 #define DAWN_IIR_STENCILINSTANTIATION_H
 
+#include "dawn/IIR/IIR.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
@@ -126,8 +127,7 @@ class StencilInstantiation : NonCopyable {
   /// variables
   VariableVersions variableVersions_;
 
-  /// Encoding of the hierarchy: Stencil -> MultiStage -> Stage
-  std::vector<std::shared_ptr<Stencil>> stencils_;
+  std::unique_ptr<IIR> IIR_;
 
   /// Stencil description statements. These are built from the StencilDescAst of the sir::Stencil
   std::vector<std::shared_ptr<Statement>> stencilDescStatements_;
@@ -208,54 +208,58 @@ public:
   const std::string& getNameFromLiteralAccessID(int AccessID) const;
 
   /// @brief Check whether the `AccessID` corresponds to a field
-  bool isField(int AccessID) const { return FieldAccessIDSet_.count(AccessID); }
+  inline bool isField(int AccessID) const { return FieldAccessIDSet_.count(AccessID); }
 
   /// @brief Check whether the `AccessID` corresponds to a temporary field
-  bool isTemporaryField(int AccessID) const {
+  inline bool isTemporaryField(int AccessID) const {
     return isField(AccessID) && TemporaryFieldAccessIDSet_.count(AccessID);
   }
 
   /// @brief Check whether the `AccessID` corresponds to a manually allocated field
-  bool isAllocatedField(int AccessID) const {
+  inline bool isAllocatedField(int AccessID) const {
     return isField(AccessID) && AllocatedFieldAccessIDSet_.count(AccessID);
   }
 
   /// @brief Get the set of fields which need to be allocated
-  const std::set<int>& getAllocatedFieldAccessIDs() const { return AllocatedFieldAccessIDSet_; }
+  inline const std::set<int>& getAllocatedFieldAccessIDs() const {
+    return AllocatedFieldAccessIDSet_;
+  }
 
   /// @brief Check if the stencil instantiation needs to allocate fields
-  bool hasAllocatedFields() const { return !AllocatedFieldAccessIDSet_.empty(); }
+  inline bool hasAllocatedFields() const { return !AllocatedFieldAccessIDSet_.empty(); }
 
   /// @brief Check whether the `AccessID` corresponds to an accesses of a global variable
-  bool isGlobalVariable(int AccessID) const { return GlobalVariableAccessIDSet_.count(AccessID); }
+  inline bool isGlobalVariable(int AccessID) const {
+    return GlobalVariableAccessIDSet_.count(AccessID);
+  }
   bool isGlobalVariable(const std::string& name) const;
 
   /// @brief Get the value of the global variable `name`
   const sir::Value& getGlobalVariableValue(const std::string& name) const;
 
   /// @brief Check whether the `AccessID` corresponds to a variable
-  bool isVariable(int AccessID) const { return !isField(AccessID) && !isLiteral(AccessID); }
+  inline bool isVariable(int AccessID) const { return !isField(AccessID) && !isLiteral(AccessID); }
 
   /// @brief Check whether the `AccessID` corresponds to a literal constant
-  bool isLiteral(int AccessID) const {
+  inline bool isLiteral(int AccessID) const {
     return AccessID < 0 && LiteralAccessIDToNameMap_.count(AccessID);
   }
 
-  bool isAccessIDAVersion(const int accessID) {
+  inline bool isAccessIDAVersion(const int accessID) {
     return variableVersions_.isAccessIDAVersion(accessID);
   }
 
-  int getOriginalVersionOfAccessID(const int accessID) const {
+  inline int getOriginalVersionOfAccessID(const int accessID) const {
     return variableVersions_.getOriginalVersionOfAccessID(accessID);
   }
 
   /// @brief Check whether the `AccessID` corresponds to a multi-versioned field
-  bool isMultiVersionedField(int AccessID) const {
+  inline bool isMultiVersionedField(int AccessID) const {
     return isField(AccessID) && variableVersions_.hasVariableMultipleVersions(AccessID);
   }
 
   /// @brief Check whether the `AccessID` corresponds to a multi-versioned variable
-  bool isMultiVersionedVariable(int AccessID) const {
+  inline bool isMultiVersionedVariable(int AccessID) const {
     return isVariable(AccessID) && variableVersions_.hasVariableMultipleVersions(AccessID);
   }
 
@@ -397,9 +401,12 @@ public:
       const Interval& interval,
       const std::shared_ptr<StencilFunctionInstantiation>& curStencilFunctionInstantiation);
 
-  /// @brief Get the list of stencils
-  std::vector<std::shared_ptr<Stencil>>& getStencils() { return stencils_; }
-  const std::vector<std::shared_ptr<Stencil>>& getStencils() const { return stencils_; }
+  //  /// @brief Get the list of stencils
+  inline const std::vector<std::unique_ptr<Stencil>>& getStencils() const {
+    return getIIR()->getChildren();
+  }
+
+  inline const std::unique_ptr<IIR>& getIIR() const { return IIR_; }
 
   /// @brief Get StencilID of the StencilCallDeclStmt
   std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>& getStencilCallToStencilIDMap();
@@ -415,15 +422,17 @@ public:
   int getStencilIDFromStmt(const std::shared_ptr<StencilCallDeclStmt>& stmt) const;
 
   /// @brief Get the stencil description AST
-  const std::vector<std::shared_ptr<Statement>>& getStencilDescStatements() const {
+  inline const std::vector<std::shared_ptr<Statement>>& getStencilDescStatements() const {
     return stencilDescStatements_;
   }
 
   /// @brief Get the list of stencil functions
-  std::vector<std::shared_ptr<StencilFunctionInstantiation>>& getStencilFunctionInstantiations() {
+  inline std::vector<std::shared_ptr<StencilFunctionInstantiation>>&
+  getStencilFunctionInstantiations() {
     return stencilFunctionInstantiations_;
   }
-  const std::vector<std::shared_ptr<StencilFunctionInstantiation>>&
+
+  inline const std::vector<std::shared_ptr<StencilFunctionInstantiation>>&
   getStencilFunctionInstantiations() const {
     return stencilFunctionInstantiations_;
   }
@@ -457,38 +466,33 @@ public:
   const std::set<int>& getGlobalVariableAccessIDSet() const;
 
   /// @brief Get the SIR
-  std::shared_ptr<SIR> const& getSIR() const { return SIR_; }
+  inline std::shared_ptr<SIR> const& getSIR() const { return SIR_; }
 
   /// @brief insert a new sir::StencilFunction into the IIR
   void
   insertStencilFunctionIntoSIR(const std::shared_ptr<sir::StencilFunction>& sirStencilFunction);
 
   /// @brief Get the SIRStencil this context was built from
-  std::shared_ptr<sir::Stencil> const& getSIRStencil() const { return SIRStencil_; }
+  inline std::shared_ptr<sir::Stencil> const& getSIRStencil() const { return SIRStencil_; }
 
   /// @brief Get the optimizer context
-  ::dawn::OptimizerContext* getOptimizerContext() { return context_; }
+  inline ::dawn::OptimizerContext* getOptimizerContext() { return context_; }
 
   bool insertBoundaryConditions(std::string originalFieldName,
-                                std::shared_ptr<BoundaryConditionDeclStmt> bc) {
-    if(FieldnameToBoundaryConditionMap_.count(originalFieldName) != 0) {
-      return false;
-    } else {
-      FieldnameToBoundaryConditionMap_.emplace(originalFieldName, bc);
-      return true;
-    }
-  }
-  const std::unordered_map<std::string, std::shared_ptr<BoundaryConditionDeclStmt>>&
+                                std::shared_ptr<BoundaryConditionDeclStmt> bc);
+
+  inline const std::unordered_map<std::string, std::shared_ptr<BoundaryConditionDeclStmt>>&
   getBoundaryConditions() const {
     return FieldnameToBoundaryConditionMap_;
   }
-  std::unordered_map<std::string, std::shared_ptr<BoundaryConditionDeclStmt>>&
+
+  inline std::unordered_map<std::string, std::shared_ptr<BoundaryConditionDeclStmt>>&
   getBoundaryConditions() {
     return FieldnameToBoundaryConditionMap_;
   }
 
   /// @brief Get a unique (positive) identifier
-  int nextUID() { return UIDGen_.get(); }
+  inline int nextUID() { return UIDGen_.get(); }
 
   /// @brief Dump the StencilInstantiation to stdout
   void dump() const;
@@ -530,22 +534,22 @@ public:
 
   void insertCachedVariable(int fieldID);
 
-  const std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&
+  inline const std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&
   getBoundaryConditionToExtentsMap() const {
     return BoundaryConditionToExtentsMap_;
   }
 
-  std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&
+  inline std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&
   getBoundaryConditionToExtentsMap() {
     return BoundaryConditionToExtentsMap_;
   }
 
-  void insertBoundaryConditiontoExtentPair(std::shared_ptr<BoundaryConditionDeclStmt>& bc,
-                                           Extents& extents) {
+  inline void insertBoundaryConditiontoExtentPair(std::shared_ptr<BoundaryConditionDeclStmt>& bc,
+                                                  Extents& extents) {
     BoundaryConditionToExtentsMap_.emplace(bc, extents);
   }
 
-  Extents getBoundaryConditionExtentsFromBCStmt(
+  inline Extents getBoundaryConditionExtentsFromBCStmt(
       const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) const {
     if(BoundaryConditionToExtentsMap_.count(stmt) == 0) {
       DAWN_ASSERT_MSG(false, "Boundary Condition does not have a matching Extent");
@@ -556,12 +560,7 @@ public:
   /// @brief this checks if the user specialized the field to a dimensionality. If not all
   /// dimensions are allow for off-center acesses and hence, {1,1,1} is returned. If we got a
   /// specialization, it is returned
-  Array3i getFieldDimensionsMask(int FieldID) {
-    if(fieldIDToInitializedDimensionsMap_.count(FieldID) == 0) {
-      return Array3i{{1, 1, 1}};
-    }
-    return fieldIDToInitializedDimensionsMap_.find(FieldID)->second;
-  }
+  Array3i getFieldDimensionsMask(int FieldID);
 
 private:
   /// @brief Report the accesses to the console (according to `-freport-accesses`)

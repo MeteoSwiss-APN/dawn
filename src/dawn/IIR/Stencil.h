@@ -31,6 +31,7 @@ namespace iir {
 class DependencyGraphStage;
 class StencilInstantiation;
 class StatementAccessesPair;
+class IIR;
 
 namespace impl {
 template <typename T>
@@ -39,8 +40,8 @@ using MultiStageSmartptr = std::unique_ptr<T, std::default_delete<T>>;
 
 /// @brief A Stencil is represented by a collection of MultiStages
 /// @ingroup optimizer
-class Stencil : public IIRNode<void, Stencil, MultiStage, impl::MultiStageSmartptr, impl::StdList> {
-  using base_type = IIRNode<void, Stencil, MultiStage, std::shared_ptr, impl::StdList>;
+class Stencil : public IIRNode<IIR, Stencil, MultiStage, impl::MultiStageSmartptr, impl::StdList> {
+  using base_type = IIRNode<IIR, Stencil, MultiStage, std::shared_ptr, impl::StdList>;
 
   StencilInstantiation& stencilInstantiation_;
   const std::shared_ptr<sir::Stencil> SIRStencil_;
@@ -170,12 +171,13 @@ public:
           const std::shared_ptr<sir::Stencil>& SIRStencil, int StencilID,
           const std::shared_ptr<DependencyGraphStage>& stageDependencyGraph = nullptr);
 
-  Stencil(const Stencil&) = default;
   Stencil(Stencil&&) = default;
 
   Stencil& operator=(const Stencil&) = default;
   Stencil& operator=(Stencil&&) = default;
   /// @}
+
+  std::unique_ptr<Stencil> clone() const;
 
   /// @brief Compute a set of intervals for this stencil
   std::unordered_set<Interval> getIntervals() const;

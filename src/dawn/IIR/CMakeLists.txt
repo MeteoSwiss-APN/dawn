@@ -28,7 +28,8 @@ yoda_add_library(
           DoMethod.h
           Field.h
           Field.cpp
-          IIRNode.cpp
+          IIR.cpp
+          IIR.h
           IIRNode.h
           MultiStage.cpp 
           MultiStage.h

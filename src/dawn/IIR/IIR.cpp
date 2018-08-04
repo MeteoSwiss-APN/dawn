@@ -24,5 +24,15 @@
 #include <numeric>
 
 namespace dawn {
-namespace iir {} // namespace iir
+namespace iir {
+
+std::unique_ptr<IIR> IIR::clone(const std::unique_ptr<IIR>& thisIIR) const {
+
+  auto cloneIIR = make_unique<IIR>();
+
+  cloneIIR->cloneChildren(*this, thisIIR);
+  return std::move(cloneIIR);
+}
+
+} // namespace iir
 } // namespace dawn

@@ -39,7 +39,7 @@ bool PassStageSplitter::run(
   std::deque<std::shared_ptr<iir::DependencyGraphAccesses>> graphs;
 
   // Iterate over all stages in all multistages of all stencils
-  for(auto& stencil : stencilInstantiation->getStencils()) {
+  for(const auto& stencil : stencilInstantiation->getStencils()) {
 
     int multiStageIndex = 0;
     int linearStageIndex = 0;

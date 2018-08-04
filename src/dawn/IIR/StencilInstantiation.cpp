@@ -126,8 +126,9 @@ public:
   /// @see tryReplaceVerticalRegionDeclStmt
   void makeNewStencil() {
     int StencilID = instantiation_->nextUID();
-    instantiation_->getStencils().emplace_back(
-        std::make_shared<Stencil>(*instantiation_, instantiation_->getSIRStencil(), StencilID));
+    instantiation_->getIIR()->insertChild(
+        make_unique<Stencil>(*instantiation_, instantiation_->getSIRStencil(), StencilID),
+        instantiation_->getIIR());
 
     // We create a paceholder stencil-call for CodeGen to know wehere we need to insert calls to
     // this stencil
@@ -208,11 +209,11 @@ public:
       statement->ASTStmt->accept(remover);
 
     // Remove empty stencils
-    for(auto it = instantiation_->getStencils().begin();
-        it != instantiation_->getStencils().end();) {
+    for(auto it = instantiation_->getIIR()->childrenBegin();
+        it != instantiation_->getIIR()->childrenEnd();) {
       Stencil& stencil = **it;
       if(stencil.isEmpty())
-        it = instantiation_->getStencils().erase(it);
+        it = instantiation_->getIIR()->childrenErase(it);
       else
         ++it;
     }
@@ -584,7 +585,7 @@ public:
 StencilInstantiation::StencilInstantiation(::dawn::OptimizerContext* context,
                                            std::shared_ptr<sir::Stencil> const& SIRStencil,
                                            std::shared_ptr<SIR> const& SIR)
-    : context_(context), SIRStencil_(SIRStencil), SIR_(SIR) {
+    : context_(context), SIRStencil_(SIRStencil), SIR_(SIR), IIR_(make_unique<IIR>()) {
   DAWN_LOG(INFO) << "Intializing StencilInstantiation of `" << SIRStencil->Name << "`";
   DAWN_ASSERT_MSG(SIRStencil, "Stencil does not exist");
 
@@ -608,7 +609,7 @@ StencilInstantiation::StencilInstantiation(::dawn::OptimizerContext* context,
   stencilDeclMapper.cleanupStencilDeclAST();
 
   // Repair broken references to temporaries i.e promote them to real fields
-  PassTemporaryType::fixTemporariesSpanningMultipleStencils(this, stencils_);
+  PassTemporaryType::fixTemporariesSpanningMultipleStencils(this, getStencils());
 
   if(context_->getOptions().ReportAccesses)
     reportAccesses();
@@ -704,6 +705,22 @@ void StencilInstantiation::insertStencilFunctionIntoSIR(
   SIR_->StencilFunctions.push_back(sirStencilFunction);
 }
 
+bool StencilInstantiation::insertBoundaryConditions(std::string originalFieldName,
+                                                    std::shared_ptr<BoundaryConditionDeclStmt> bc) {
+  if(FieldnameToBoundaryConditionMap_.count(originalFieldName) != 0) {
+    return false;
+  } else {
+    FieldnameToBoundaryConditionMap_.emplace(originalFieldName, bc);
+    return true;
+  }
+}
+
+Array3i StencilInstantiation::getFieldDimensionsMask(int FieldID) {
+  if(fieldIDToInitializedDimensionsMap_.count(FieldID) == 0) {
+    return Array3i{{1, 1, 1}};
+  }
+  return fieldIDToInitializedDimensionsMap_.find(FieldID)->second;
+}
 const sir::Value& StencilInstantiation::getGlobalVariableValue(const std::string& name) const {
   auto it = getSIR()->GlobalVariableMap->find(name);
   DAWN_ASSERT(it != getSIR()->GlobalVariableMap->end());
@@ -1268,7 +1285,7 @@ StencilInstantiation::getOriginalNameAndLocationsFromAccessID(
 
 std::string StencilInstantiation::getOriginalNameFromAccessID(int AccessID) const {
   OriginalNameGetter orignalNameGetter(this, AccessID, true);
-  for(const auto& stencil : stencils_)
+  for(const auto& stencil : getStencils())
     for(const auto& multistage : stencil->getChildren())
       for(const auto& stage : multistage->getChildren())
         for(const auto& doMethod : stage->getChildren())
@@ -1296,7 +1313,7 @@ struct PrintDescLine {
 } // anonymous namespace
 
 void StencilInstantiation::checkConsistency() const {
-  for(const auto& stencil : stencils_) {
+  for(const auto& stencil : getStencils()) {
     stencil->checkConsistency();
   }
 }
@@ -1304,11 +1321,12 @@ void StencilInstantiation::checkConsistency() const {
 void StencilInstantiation::dump() const {
   std::cout << "StencilInstantiation : " << getName() << "\n";
 
-  for(std::size_t i = 0; i < stencils_.size(); ++i) {
+  int i = 0;
+  for(const auto& stencil : getStencils()) {
     PrintDescLine<1> iline("Stencil_" + Twine(i));
 
     int j = 0;
-    const auto& multiStages = stencils_[i]->getChildren();
+    const auto& multiStages = stencil->getChildren();
     for(const auto& multiStage : multiStages) {
       PrintDescLine<2> jline(Twine("MultiStage_") + Twine(j) + " [" +
                              loopOrderToString(multiStage->getLoopOrder()) + "]");
@@ -1343,6 +1361,7 @@ void StencilInstantiation::dump() const {
       }
       j += 1;
     }
+    ++i;
   }
   std::cout.flush();
 }
@@ -1350,11 +1369,12 @@ void StencilInstantiation::dump() const {
 void StencilInstantiation::dumpAsJson(std::string filename, std::string passName) const {
   json::json jout;
 
-  for(int i = 0; i < stencils_.size(); ++i) {
+  int i = 0;
+  for(const auto& stencil : getStencils()) {
     json::json jStencil;
 
     int j = 0;
-    for(const auto& multiStage : stencils_[i]->getChildren()) {
+    for(const auto& multiStage : stencil->getChildren()) {
       json::json jMultiStage;
       jMultiStage["LoopOrder"] = loopOrderToString(multiStage->getLoopOrder());
 
@@ -1390,6 +1410,7 @@ void StencilInstantiation::dumpAsJson(std::string filename, std::string passName
       jout[getName()]["Stencil_" + std::to_string(i)] = jStencil;
     else
       jout[passName][getName()]["Stencil_" + std::to_string(i)] = jStencil;
+    ++i;
   }
 
   std::ofstream fs(filename, std::ios::out | std::ios::trunc);
@@ -1469,7 +1490,7 @@ void StencilInstantiation::reportAccesses() const {
   }
 
   // Stages
-  for(const auto& stencil : stencils_)
+  for(const auto& stencil : getStencils())
     for(const auto& multistage : stencil->getChildren())
       for(const auto& stage : multistage->getChildren()) {
         for(const auto& doMethod : stage->getChildren()) {

@@ -124,6 +124,14 @@ std::unordered_set<Interval> Stencil::getIntervals() const {
   return intervals;
 }
 
+std::unique_ptr<Stencil> Stencil::clone() const {
+  auto cloneStencil =
+      make_unique<Stencil>(stencilInstantiation_, SIRStencil_, StencilID_, stageDependencyGraph_);
+
+  cloneStencil->cloneChildren(*this);
+  return std::move(cloneStencil);
+}
+
 std::vector<Stencil::FieldInfo> Stencil::getFields(bool withTemporaries) const {
   std::set<int> fieldAccessIDs;
   for(const auto& multistage : children_) {

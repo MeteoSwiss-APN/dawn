@@ -24,7 +24,7 @@ bool PassSetStageName::run(const std::shared_ptr<iir::StencilInstantiation>& ste
   stencilInstantiation->getStageIDToNameMap().clear();
 
   int stencilIdx = 0;
-  for(auto& stencilPtr : stencilInstantiation->getStencils()) {
+  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     std::string stencilName = stencilInstantiation->getName();
 
     if(stencilInstantiation->getStencils().size() > 1)

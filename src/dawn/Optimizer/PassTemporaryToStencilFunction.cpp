@@ -412,7 +412,7 @@ bool PassTemporaryToStencilFunction::run(
 
   DAWN_ASSERT(context);
 
-  for(const std::shared_ptr<iir::Stencil>& stencilPtr : stencilInstantiation->getStencils()) {
+  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
 
     std::unordered_set<int> localVarAccessIDs;
 

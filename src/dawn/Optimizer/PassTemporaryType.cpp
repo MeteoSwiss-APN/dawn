@@ -57,7 +57,7 @@ public:
 /// @brief Check if a field, given by `AccessID` is used as an argument of a stencil-function inside
 /// any statement of the `stencil`
 /// @returns `true` if field is used as an argument
-bool usedAsArgumentInStencilFun(const std::shared_ptr<iir::Stencil>& stencil, int AccessID) {
+bool usedAsArgumentInStencilFun(const std::unique_ptr<iir::Stencil>& stencil, int AccessID) {
   StencilFunArgumentDetector visitor(stencil->getStencilInstantiation(), AccessID);
   stencil->accept(visitor);
   return visitor.usedInStencilFun();
@@ -191,7 +191,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
 
 void PassTemporaryType::fixTemporariesSpanningMultipleStencils(
     iir::StencilInstantiation* instantiation,
-    const std::vector<std::shared_ptr<iir::Stencil>>& stencils) {
+    const std::vector<std::unique_ptr<iir::Stencil>>& stencils) {
   if(stencils.size() <= 1)
     return;
 

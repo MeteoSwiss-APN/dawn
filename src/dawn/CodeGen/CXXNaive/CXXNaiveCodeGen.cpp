@@ -77,7 +77,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
   StencilWrapperClass.changeAccessibility("private");
 
   // Generate stencils
-  auto& stencils = stencilInstantiation->getStencils();
+  const auto& stencils = stencilInstantiation->getStencils();
 
   CodeGenProperties codeGenProperties;
 
@@ -188,7 +188,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
   std::vector<std::string> innerStencilNames(stencils.size());
   // generate the code for each of the stencils
   for(std::size_t stencilIdx = 0; stencilIdx < stencils.size(); ++stencilIdx) {
-    const iir::Stencil& stencil = *stencilInstantiation->getStencils()[stencilIdx];
+    const auto& stencil = *stencils[stencilIdx];
 
     std::string stencilName = "stencil_" + std::to_string(stencilIdx);
     auto stencilProperties = codeGenProperties.insertStencil(StencilContext::SC_Stencil,
@@ -399,10 +399,8 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
   }
 
   // add the ctr initialization of each stencil
-  for(std::size_t stencilIdx = 0; stencilIdx < stencils.size(); ++stencilIdx) {
-
-    const iir::Stencil& stencil = *stencilInstantiation->getStencils()[stencilIdx];
-
+  for(const auto& stencilPtr : stencils) {
+    iir::Stencil& stencil = *stencilPtr;
     if(stencil.isEmpty())
       continue;
 

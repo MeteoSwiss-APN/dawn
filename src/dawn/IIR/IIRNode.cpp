@@ -15,5 +15,4 @@
 #include "dawn/IIR/IIRNode.h"
 
 namespace dawn {
-namespace iir {} // namespace iir
-} // namespace dawn
+namespace iir {} // namespace dawn

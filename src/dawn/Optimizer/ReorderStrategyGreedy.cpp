@@ -83,16 +83,16 @@ ReturnType isMergable(const iir::Stage& stage, LoopOrderKind stageLoopOrder,
   return ReturnType(nullptr, multiStageLoopOrder);
 }
 
-std::shared_ptr<iir::Stencil>
-ReoderStrategyGreedy::reorder(const std::shared_ptr<iir::Stencil>& stencilPtr) {
+std::unique_ptr<iir::Stencil>
+ReoderStrategyGreedy::reorder(const std::unique_ptr<iir::Stencil>& stencilPtr) {
   iir::Stencil& stencil = *stencilPtr;
 
   iir::DependencyGraphStage& stageDAG = *stencil.getStageDependencyGraph();
   iir::StencilInstantiation& instantiation = stencil.getStencilInstantiation();
 
-  std::shared_ptr<iir::Stencil> newStencil =
-      std::make_shared<iir::Stencil>(instantiation, stencil.getSIRStencil(),
-                                     stencilPtr->getStencilID(), stencil.getStageDependencyGraph());
+  std::unique_ptr<iir::Stencil> newStencil =
+      make_unique<iir::Stencil>(instantiation, stencil.getSIRStencil(), stencilPtr->getStencilID(),
+                                stencil.getStageDependencyGraph());
   int newNumStages = 0;
   int newNumMultiStages = 0;
 
@@ -183,7 +183,7 @@ ReoderStrategyGreedy::reorder(const std::shared_ptr<iir::Stencil>& stencilPtr) {
       it++;
   }
 
-  return newStencil;
+  return std::move(newStencil);
 }
 
 } // namespace dawn

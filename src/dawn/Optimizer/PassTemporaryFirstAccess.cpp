@@ -69,7 +69,7 @@ bool PassTemporaryFirstAccess::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
-  for(auto& stencilPtr : stencilInstantiation->getStencils()) {
+  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     std::vector<iir::Stencil::FieldInfo> fields = stencilPtr->getFields();
     std::set<int> temporaryFields;
 

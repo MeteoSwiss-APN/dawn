@@ -63,9 +63,9 @@ protected:
 
 TEST_F(TestComputeMaximumExtent, test_field_access_interval_02) {
   auto stencilInstantiation = loadTest("test_field_access_interval_02.sir");
-  auto stencils = stencilInstantiation->getStencils();
+  const auto& stencils = stencilInstantiation->getStencils();
   ASSERT_TRUE((stencils.size() == 1));
-  std::shared_ptr<iir::Stencil> stencil = stencils[0];
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   ASSERT_TRUE((stencil->getNumStages() == 2));
   ASSERT_TRUE((stencil->getStage(0)->getExtents() == Extents{-1, 1, -1, 1, 0, 0}));
@@ -94,10 +94,10 @@ TEST_F(TestComputeMaximumExtent, test_field_access_interval_02) {
 
 TEST_F(TestComputeMaximumExtent, test_compute_maximum_extent_01) {
   auto stencilInstantiation = loadTest("test_compute_maximum_extent_01.sir");
-  auto stencils = stencilInstantiation->getStencils();
+  const auto& stencils = stencilInstantiation->getStencils();
 
   ASSERT_TRUE((stencils.size() == 1));
-  std::shared_ptr<iir::Stencil> stencil = stencils[0];
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   ASSERT_TRUE((stencil->getNumStages() == 1));
   ASSERT_TRUE((stencil->getChildren().size() == 1));

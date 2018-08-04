@@ -332,9 +332,6 @@ bool PassDataLocalityMetric::run(
 
         auto readAndWrite = computeReadWriteAccessesMetric(stencilInstantiation, multiStage);
 
-        //        auto readAndWrite =
-        //            computeReadWriteAccessesLowerBound(stencilInstantiation, multiStage);
-
         std::size_t numReads = readAndWrite.first, numWrites = readAndWrite.second;
 
         std::cout << format("    %-20s %15i\n", "Reads", numReads);

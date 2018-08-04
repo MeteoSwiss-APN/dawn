@@ -58,20 +58,20 @@ bool PassStencilSplitter::run(
   // If we split a stencil, we need to recompute the stage graphs
   bool rerunPassSetStageGraph = false;
 
-  for(auto stencilIt = stencilInstantiation->getStencils().begin();
-      stencilIt != stencilInstantiation->getStencils().end(); ++stencilIt) {
+  for(auto stencilIt = stencilInstantiation->getIIR()->childrenBegin();
+      stencilIt != stencilInstantiation->getIIR()->childrenEnd(); ++stencilIt) {
     iir::Stencil& stencil = **stencilIt;
 
     // New stencils which serve as a replacement for `stencil`
-    std::vector<std::shared_ptr<iir::Stencil>> newStencils;
+    std::vector<std::unique_ptr<iir::Stencil>> newStencils;
 
     // If a stencil exceeds the threshold, we need to split it
     if(stencil.getFields().size() > MaxFieldPerStencil) {
       rerunPassSetStageGraph = true;
 
-      newStencils.emplace_back(std::make_shared<iir::Stencil>(
+      newStencils.emplace_back(make_unique<iir::Stencil>(
           *stencilInstantiation, stencil.getSIRStencil(), stencilInstantiation->nextUID()));
-      std::shared_ptr<iir::Stencil> newStencil = newStencils.back();
+      const std::unique_ptr<iir::Stencil>& newStencil = newStencils.back();
 
       std::set<int> fieldsInNewStencil;
 
@@ -100,16 +100,17 @@ bool PassStencilSplitter::run(
 
           } else {
             // Make a new stencil
-            newStencils.emplace_back(std::make_shared<iir::Stencil>(
+            newStencils.emplace_back(make_unique<iir::Stencil>(
                 *stencilInstantiation, stencil.getSIRStencil(), stencilInstantiation->nextUID()));
-            newStencil = newStencils.back();
+            const std::unique_ptr<iir::Stencil>& newStencil2 = newStencils.back();
+
             fieldsInNewStencil.clear();
 
             // Re-create the current multi-stage in the `newStencil` and insert the stage
-            newStencil->insertChild(
+            newStencil2->insertChild(
                 make_unique<iir::MultiStage>(*stencilInstantiation, multiStage.getLoopOrder()),
-                newStencil);
-            newStencil->getChildren().back()->insertChild(std::move(stagePtr->clone()));
+                newStencil2);
+            newStencil2->getChildren().back()->insertChild(std::move(stagePtr->clone()));
           }
         }
       }
@@ -145,11 +146,12 @@ bool PassStencilSplitter::run(
       replaceStencilCalls(stencilInstantiation, stencil.getStencilID(), newStencilIDs);
 
       // Erase the old stencil ...
-      stencilIt = stencilInstantiation->getStencils().erase(stencilIt);
+      stencilIt = stencilInstantiation->getIIR()->childrenErase(stencilIt);
 
       // ... and insert the new ones
-      stencilIt = stencilInstantiation->getStencils().insert(stencilIt, newStencils.begin(),
-                                                             newStencils.end());
+      stencilIt = stencilInstantiation->getIIR()->insertChildren(
+          stencilIt, std::make_move_iterator(newStencils.begin()),
+          std::make_move_iterator(newStencils.end()), stencilInstantiation->getIIR());
       std::advance(stencilIt, newStencils.size() - 1);
     }
   }

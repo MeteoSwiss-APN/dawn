@@ -77,7 +77,7 @@ public:
   /// the field to a real (manaully allocated) field.
   static void fixTemporariesSpanningMultipleStencils(
       iir::StencilInstantiation* instantiation,
-      const std::vector<std::shared_ptr<iir::Stencil>>& stencils);
+      const std::vector<std::unique_ptr<iir::Stencil>>& stencils);
 };
 
 } // namespace dawn

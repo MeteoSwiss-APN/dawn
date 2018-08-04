@@ -30,7 +30,7 @@ bool PassPrintStencilGraph::run(
     return true;
 
   int stencilIdx = 0;
-  for(auto& stencilPtr : stencilInstantiation->getStencils()) {
+  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     iir::Stencil& stencil = *stencilPtr;
     auto DAG = std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation.get());
 

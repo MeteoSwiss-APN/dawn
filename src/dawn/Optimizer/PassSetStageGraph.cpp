@@ -65,7 +65,7 @@ bool PassSetStageGraph::run(
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
   int stencilIdx = 0;
 
-  for(auto& stencilPtr : stencilInstantiation->getStencils()) {
+  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     iir::Stencil& stencil = *stencilPtr;
     int numStages = stencil.getNumStages();
 

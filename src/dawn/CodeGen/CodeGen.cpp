@@ -11,9 +11,9 @@ size_t CodeGen::getVerticalTmpHaloSize(iir::Stencil const& stencil) {
 }
 
 size_t CodeGen::getVerticalTmpHaloSizeForMultipleStencils(
-    const std::vector<std::shared_ptr<iir::Stencil>>& stencils) const {
+    const std::vector<std::unique_ptr<iir::Stencil>>& stencils) const {
   boost::optional<Interval> fullIntervals;
-  for(auto stencil : stencils) {
+  for(const auto& stencil : stencils) {
     auto tmpInterval = stencil->getEnclosingIntervalTemporaries();
     if(tmpInterval.is_initialized()) {
       if(!fullIntervals.is_initialized())
@@ -63,7 +63,7 @@ void CodeGen::addTmpStorageInit(
 }
 
 void CodeGen::addTmpStorageInit_wrapper(MemberFunction& ctr,
-                                        const std::vector<std::shared_ptr<iir::Stencil>>& stencils,
+                                        const std::vector<std::unique_ptr<iir::Stencil>>& stencils,
                                         const std::vector<std::string>& tempFields) const {
   if(!(tempFields.empty())) {
     auto verticalExtent = getVerticalTmpHaloSizeForMultipleStencils(stencils);
@@ -75,7 +75,8 @@ void CodeGen::addTmpStorageInit_wrapper(MemberFunction& ctr,
   }
 }
 
-void CodeGen::addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainerMaxSize, int MaxHaloPoints) const {
+void CodeGen::addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainerMaxSize,
+                           int MaxHaloPoints) const {
   auto makeIfNotDefined = [](std::string define, int value) {
     return "#ifndef " + define + "\n #define " + define + " " + std::to_string(value) + "\n#endif";
   };
@@ -85,8 +86,7 @@ void CodeGen::addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainer
 
   ppDefines.push_back(makeIfNotDefined("BOOST_RESULT_OF_USE_TR1", 1));
   ppDefines.push_back(makeIfNotDefined("BOOST_NO_CXX11_DECLTYPE", 1));
-  ppDefines.push_back(
-      makeIfNotDefined("GRIDTOOLS_CLANG_HALO_EXTEND", MaxHaloPoints));
+  ppDefines.push_back(makeIfNotDefined("GRIDTOOLS_CLANG_HALO_EXTEND", MaxHaloPoints));
   ppDefines.push_back(makeIfNotDefined("BOOST_PP_VARIADICS", 1));
   ppDefines.push_back(makeIfNotDefined("BOOST_FUSION_DONT_USE_PREPROCESSED_FILES", 1));
   ppDefines.push_back(makeIfNotDefined("BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS", 1));

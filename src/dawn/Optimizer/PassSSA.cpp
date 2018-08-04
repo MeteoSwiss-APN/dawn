@@ -29,7 +29,7 @@ bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInsta
   if(!context->getOptions().SSA)
     return true;
 
-  for(auto& stencilPtr : stencilInstantiation->getStencils()) {
+  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     iir::Stencil& stencil = *stencilPtr;
 
     // TODO remove <type> in make_shared since it inhibits perfect forwarding
