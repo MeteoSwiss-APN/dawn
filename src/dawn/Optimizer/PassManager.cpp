@@ -51,6 +51,8 @@ bool PassManager::runPassOnStecilInstantiation(
     return false;
   }
 
+  DAWN_ASSERT(instantiation->getIIR()->checkTreeConsistency());
+
   DAWN_LOG(INFO) << "Done with " << pass->getName() << " : Success";
   return true;
 }

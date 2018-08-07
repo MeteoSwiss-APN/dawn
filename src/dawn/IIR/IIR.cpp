@@ -26,11 +26,11 @@
 namespace dawn {
 namespace iir {
 
-std::unique_ptr<IIR> IIR::clone(const std::unique_ptr<IIR>& thisIIR) const {
+std::unique_ptr<IIR> IIR::clone() const {
 
   auto cloneIIR = make_unique<IIR>();
 
-  cloneIIR->cloneChildren(*this, thisIIR);
+  cloneIIR->cloneChildren(*this, cloneIIR);
   return std::move(cloneIIR);
 }
 

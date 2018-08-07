@@ -40,13 +40,9 @@ class MultiStage;
 /// are separated by a `__syncthreads()` call in a kernel.
 ///
 /// @ingroup optimizer
-namespace impl {
-template <typename T>
-using DoMethodSmartptr = std::unique_ptr<T, std::default_delete<T>>;
-}
-class Stage : public IIRNode<MultiStage, Stage, DoMethod, impl::DoMethodSmartptr> {
+class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
 
-  using base_type = IIRNode<MultiStage, Stage, DoMethod, impl::DoMethodSmartptr>;
+  using base_type = IIRNode<MultiStage, Stage, DoMethod>;
 
   StencilInstantiation& stencilInstantiation_;
   MultiStage* multiStage_;
@@ -66,6 +62,8 @@ class Stage : public IIRNode<MultiStage, Stage, DoMethod, impl::DoMethodSmartptr
   Extents extents_;
 
 public:
+  static constexpr const char* name = "Stage";
+
   using DoMethodSmartPtr_t = child_smartptr_t<DoMethod>;
   using ChildrenIterator = std::vector<child_smartptr_t<DoMethod>>::iterator;
 
@@ -167,7 +165,7 @@ public:
   /// @brief Add the given Do-Method to the list of Do-Methods of this stage
   ///
   /// Calls `update()` in the end.
-  void addDoMethod(DoMethodSmartPtr_t& doMethod);
+  void addDoMethod(const DoMethodSmartPtr_t& doMethod);
 
   /// @brief Append the `from` DoMethod to the existing `to` DoMethod of this stage and use
   /// `dependencyGraph` as the new DependencyGraphAccesses of this new Do-Method

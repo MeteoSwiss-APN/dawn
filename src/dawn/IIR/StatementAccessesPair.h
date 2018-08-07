@@ -30,8 +30,7 @@ class DoMethod;
 
 /// @brief Statement with corresponding Accesses
 ///
-/// If the statement is a block-statement, the sub-statements will be stored in `s4jf.-f5-h0
-/// blockStatements`.
+/// If the statement is a block-statement, the sub-statements will be stored in blockStatements.
 /// @ingroup optimizer
 class StatementAccessesPair : public IIRNode<DoMethod, StatementAccessesPair, void> {
   using base_type = IIRNode<DoMethod, StatementAccessesPair, void>;
@@ -58,11 +57,13 @@ class StatementAccessesPair : public IIRNode<DoMethod, StatementAccessesPair, vo
   BlockStatements blockStatements_;
 
 public:
+  static constexpr const char* name = "StatementAccessesPair";
+
   // TODO implement a print method per IIRNode and make the dump() use it
   explicit StatementAccessesPair(const std::shared_ptr<Statement>& statement);
 
   // TODO remove
-  StatementAccessesPair(const StatementAccessesPair&) = default;
+  //  StatementAccessesPair(const StatementAccessesPair&) = default;
   StatementAccessesPair(StatementAccessesPair&&) = default;
 
   std::unique_ptr<StatementAccessesPair> clone() const;

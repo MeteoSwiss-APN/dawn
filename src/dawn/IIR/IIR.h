@@ -28,9 +28,11 @@ using StencilSmartptr = std::unique_ptr<T, std::default_delete<T>>;
 
 /// @brief A Stencil is represented by a collection of MultiStages
 /// @ingroup optimizer
-class IIR : public IIRNode<void, IIR, Stencil, impl::StencilSmartptr> {
+class IIR : public IIRNode<void, IIR, Stencil /*, impl::StencilSmartptr*/> {
 
 public:
+  static constexpr const char* name = "IIR";
+
   using StencilSmartPtr_t = child_smartptr_t<Stencil>;
 
   IIR() = default;
@@ -40,7 +42,7 @@ public:
   IIR& operator=(const IIR&) = default;
   IIR& operator=(IIR&&) = default;
   /// @}
-  std::unique_ptr<IIR> clone(const std::unique_ptr<IIR>& thisIIR) const;
+  std::unique_ptr<IIR> clone() const;
 };
 } // namespace iir
 } // namespace dawn

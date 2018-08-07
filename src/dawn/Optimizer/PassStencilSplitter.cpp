@@ -60,6 +60,7 @@ bool PassStencilSplitter::run(
 
   for(auto stencilIt = stencilInstantiation->getIIR()->childrenBegin();
       stencilIt != stencilInstantiation->getIIR()->childrenEnd(); ++stencilIt) {
+
     iir::Stencil& stencil = **stencilIt;
 
     // New stencils which serve as a replacement for `stencil`
@@ -69,6 +70,7 @@ bool PassStencilSplitter::run(
     if(stencil.getFields().size() > MaxFieldPerStencil) {
       rerunPassSetStageGraph = true;
 
+      // TODO make the newStencils an IIR
       newStencils.emplace_back(make_unique<iir::Stencil>(
           *stencilInstantiation, stencil.getSIRStencil(), stencilInstantiation->nextUID()));
       const std::unique_ptr<iir::Stencil>& newStencil = newStencils.back();
@@ -82,8 +84,7 @@ bool PassStencilSplitter::run(
         // Create an empty multi-stage in the current stencil with the same parameter as
         // `multiStage`
         newStencil->insertChild(
-            make_unique<iir::MultiStage>(*stencilInstantiation, multiStage.getLoopOrder()),
-            newStencil);
+            make_unique<iir::MultiStage>(*stencilInstantiation, multiStage.getLoopOrder()));
 
         for(const auto& stagePtr : multiStage.getChildren()) {
           if(newStencil->isEmpty() ||
@@ -108,8 +109,7 @@ bool PassStencilSplitter::run(
 
             // Re-create the current multi-stage in the `newStencil` and insert the stage
             newStencil2->insertChild(
-                make_unique<iir::MultiStage>(*stencilInstantiation, multiStage.getLoopOrder()),
-                newStencil2);
+                make_unique<iir::MultiStage>(*stencilInstantiation, multiStage.getLoopOrder()));
             newStencil2->getChildren().back()->insertChild(std::move(stagePtr->clone()));
           }
         }
@@ -131,6 +131,8 @@ bool PassStencilSplitter::run(
           else
             ++msIt;
       }
+
+      // TODO update should happen on a consistent Tree, which at the moment we dont have
 
       // Update the fields of the stencil (this is not strictly necessary but it might be a source
       // of error in the future when updateFields also changes data-structures in the

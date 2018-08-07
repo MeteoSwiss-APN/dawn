@@ -129,7 +129,6 @@ public:
     instantiation_->getIIR()->insertChild(
         make_unique<Stencil>(*instantiation_, instantiation_->getSIRStencil(), StencilID),
         instantiation_->getIIR());
-
     // We create a paceholder stencil-call for CodeGen to know wehere we need to insert calls to
     // this stencil
     auto placeholderStencil = std::make_shared<sir::StencilCall>(
@@ -392,7 +391,7 @@ public:
 
     // ... and append the MultiStages of the current stencil
     const auto& stencil = instantiation_->getStencils().back();
-    stencil->insertChild(std::move(multiStage), stencil);
+    stencil->insertChild(std::move(multiStage));
   }
 
   void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
@@ -1312,10 +1311,12 @@ struct PrintDescLine {
 
 } // anonymous namespace
 
-void StencilInstantiation::checkConsistency() const {
+bool StencilInstantiation::checkTreeConsistency() const {
+  bool result = true;
   for(const auto& stencil : getStencils()) {
-    stencil->checkConsistency();
+    result = result & stencil->checkTreeConsistency();
   }
+  return result;
 }
 
 void StencilInstantiation::dump() const {

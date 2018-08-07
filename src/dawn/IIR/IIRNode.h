@@ -25,6 +25,13 @@
 #include <list>
 #include <iterator>
 
+#ifndef PROTECT_TEMPLATE
+#define PROTECT_TEMPLATE(TEMP, TYPE)                                                               \
+  static_assert(std::is_same<TEMP, TYPE>::value,                                                   \
+                "The template TEMP type of this function should be == TYPE. The function is "      \
+                "templated only for syntax specialization using SFINAE");
+#endif
+
 namespace dawn {
 namespace iir {
 
@@ -39,21 +46,24 @@ bool ptrEqual(const std::weak_ptr<P>& f, const std::weak_ptr<P>& s) {
 }
 
 template <typename Parent, typename NodeType, typename Child,
-          template <class> class SmartPtr = std::shared_ptr,
           template <class> class Container = impl::StdVector>
 class IIRNode {
 
 protected:
   IIRNode() = default;
-  // TODO remove copy ctr, should not be used
-  IIRNode(const IIRNode&) = default;
   IIRNode(IIRNode&&) = default;
 
   std::unique_ptr<Parent> const* parent_ = nullptr;
-  /// List of Do-Methods of this stage
+
+  template <class T>
+  using SmartPtr = typename std::conditional<std::is_void<Child>::value, std::shared_ptr<T>,
+                                             std::unique_ptr<T>>::type;
+
   Container<SmartPtr<Child>> children_;
 
 public:
+  using ChildType = Child;
+  using ChildSmartPtrType = SmartPtr<Child>;
   using ChildrenContainer = Container<SmartPtr<Child>>;
   using ChildIterator = typename Container<SmartPtr<Child>>::iterator;
   using ChildConstIterator = typename Container<SmartPtr<Child>>::const_iterator;
@@ -63,9 +73,12 @@ public:
   using child_iterator_t = typename Container<SmartPtr<Child>>::iterator;
   using child_reverse_iterator_t = typename Container<SmartPtr<Child>>::reverse_iterator;
 
+  inline void cloneFrom(const IIRNode& other) { cloneChildren(other); }
+
   inline void cloneChildren(const IIRNode& other) { cloneChildrenImpl<Child>(other); }
 
   inline void cloneChildren(const IIRNode& other, const SmartPtr<NodeType>& thisNode) {
+    DAWN_ASSERT(thisNode.get() == this);
     cloneChildrenImpl<Child>(other, thisNode);
   }
 
@@ -94,10 +107,16 @@ public:
   }
 
   inline ChildIterator childrenErase(ChildIterator it) {
-    return ChildIterator{children_.erase(it)};
+    auto it_ = children_.erase(it);
+
+    if(!children_.empty()) {
+      setChildParent<Parent, Child>(children_.back());
+    }
+
+    return it_;
   }
 
-  const std::unique_ptr<Child>& getChildWeakPtr(Child* child) {
+  inline const std::unique_ptr<Child>& getChildSmartPtr(Child* child) {
 
     for(const auto& c : children_) {
       if(c.get() == child)
@@ -108,40 +127,97 @@ public:
     return *(children_.begin());
   }
 
-  inline void checkConsistency() const { checkConsistencyImpl<Child>(); }
+  inline bool checkTreeConsistency() const { return checkTreeConsistencyImpl<Child>(); }
 
-  inline const std::unique_ptr<Parent>& getParent() { return *parent_; }
+  inline const std::unique_ptr<Parent>& getParent() {
+    DAWN_ASSERT(parent_);
+    return *parent_;
+  }
 
   inline void setParent(const std::unique_ptr<Parent>& p) { parent_ = &p; }
 
-  template <typename TChild, typename TParent>
-  void setChildParent(TChild&& child,
-                      typename std::enable_if<!std::is_void<TParent>::value>::type* = 0) {
-    if(parent_) {
-      const std::unique_ptr<NodeType>& p =
-          (*parent_)->getChildWeakPtr(static_cast<NodeType*>(this));
-      child->setParent(p);
+  inline bool parentIsSet() const { return (bool)parent_; }
+
+  template <bool T>
+  struct identity {
+    using type = std::integral_constant<bool, T>;
+  };
+
+  template <typename T>
+  struct identity_t {
+    using type = T;
+  };
+
+  template <typename T>
+  struct isVoid {
+    using type = typename std::is_void<typename std::remove_reference<T>::type::element_type>::type;
+  };
+
+  template <typename T>
+  struct is_child_void {
+    static constexpr bool value =
+        std::conditional<std::is_void<T>::value, identity<true>, isVoid<T>>::type::type::value;
+  };
+
+  template <typename T>
+  struct getChildTypeImpl {
+    using type = typename std::remove_reference<T>::type::element_type::ChildSmartPtrType;
+  };
+
+  template <typename T>
+  struct getChildType {
+    using type = typename std::conditional<std::is_void<T>::value, identity_t<void>,
+                                           getChildTypeImpl<T>>::type;
+  };
+
+  template <typename TChildSmartPtr, typename TNode>
+  void
+  setChildrenParent(const std::unique_ptr<TNode>& p,
+                    typename std::enable_if<!is_child_void<TChildSmartPtr>::value>::type* = 0) {
+    DAWN_ASSERT(parent_);
+    const std::unique_ptr<NodeType>& thisNodeSmartPtr =
+        (*parent_)->getChildSmartPtr(static_cast<NodeType*>(this));
+
+    for(const auto& child : getChildren()) {
+      child->setParent(thisNodeSmartPtr);
+      child->setChildrenParent<typename getChildType<TChildSmartPtr>::type::type>(child);
     }
   }
 
-  template <typename TChild, typename TParent>
-  void setChildParent(TChild&& child,
-                      typename std::enable_if<std::is_void<TParent>::value>::type* = 0) {}
+  template <typename TChildSmartPtr, typename TNode>
+  void setChildrenParent(const std::unique_ptr<TNode>& p,
+                         typename std::enable_if<is_child_void<TChildSmartPtr>::value>::type* = 0) {
+  }
 
-  // TODO this is replicated
-  template <typename TChild, typename TParent>
-  void setChildParent(TChild const& child,
-                      typename std::enable_if<!std::is_void<TParent>::value>::type* = 0) {
+  template <typename TParent, typename TChild>
+  void setChildParent(
+      const std::unique_ptr<TChild>& child,
+      typename std::enable_if<!std::is_void<TParent>::value &&
+                              !is_child_void<std::unique_ptr<TChild>>::value>::type* = 0) {
+    static_assert(std::is_same<TParent, Parent>::value,
+                  "The template TParent type of this function should be == Parent. The function is "
+                  "templated only for syntax specialization using SFINAE");
+
     if(parent_) {
-      const std::unique_ptr<NodeType>& p =
-          (*parent_)->getChildWeakPtr(static_cast<NodeType*>(this));
-      child->setParent(p);
+      const std::unique_ptr<NodeType>& thisNodeSmartPtr =
+          (*parent_)->getChildSmartPtr(static_cast<NodeType*>(this));
+      child->setParent(thisNodeSmartPtr);
+
+      // we recursively set the parent of not only this child but all the siblings, since an insert
+      // into a vector can modify the pointers of all elements
+      for(const auto& sibling : thisNodeSmartPtr->getChildren()) {
+        sibling->setParent(thisNodeSmartPtr);
+        sibling->setChildrenParent<typename getChildType<std::unique_ptr<TChild>>::type::type>(
+            child);
+      }
     }
   }
 
-  template <typename TChild, typename TParent>
-  void setChildParent(TChild const& child,
-                      typename std::enable_if<std::is_void<TParent>::value>::type* = 0) {}
+  template <typename TParent, typename TChild>
+  void setChildParent(
+      const std::unique_ptr<TChild>& child,
+      typename std::enable_if<std::is_void<TParent>::value ||
+                              is_child_void<std::unique_ptr<TChild>>::value>::type* = 0) {}
 
   template <typename TChild>
   void insertChild(TChild&& child) {
@@ -158,28 +234,26 @@ public:
     return insertChildrenImpl<Iterator, Parent>(pos, first, last);
   }
 
-  // TODO make Iterator first & last not templated
-  template <typename Iterator, typename TParentSmartPtr>
+  template <typename Iterator, typename TChildParent>
   ChildIterator insertChildren(ChildIterator pos, Iterator first, Iterator last,
-                               TParentSmartPtr const& p) {
-    for(auto it = first; it != last; ++it) {
-      (*it)->setParent(p);
-    }
-    return children_.insert(pos, first, last);
+                               const std::unique_ptr<TChildParent>& p) {
+    return insertChildrenImpl<Parent, Iterator, TChildParent>(pos, first, last, p);
   }
 
-  template <typename TChild, typename TParentSmartPtr>
-  void insertChild(TChild&& child, const TParentSmartPtr& p) {
-    child->setParent(p);
-    children_.push_back(std::move(child));
+  template <typename TChild>
+  void insertChild(TChild&& child, const std::unique_ptr<NodeType>& p) {
+    insertChildImpl<Parent, TChild, std::unique_ptr<NodeType>>(std::forward<TChild>(child), p);
   }
+
+  void printTree() { printTreeImpl<Child>(); }
 
   void replace(const SmartPtr<Child>& inputChild, SmartPtr<Child>& withNewChild) {
-    auto it = std::find(children_.begin(), children_.end(), inputChild);
-    DAWN_ASSERT(it != children_.end());
-    withNewChild->setParent((*it)->getParent());
+    replaceImpl<Parent>(inputChild, withNewChild);
+  }
 
-    (it)->swap(withNewChild);
+  void replace(const SmartPtr<Child>& inputChild, SmartPtr<Child>& withNewChild,
+               const std::unique_ptr<NodeType>& thisNode) {
+    replaceImpl<Parent>(inputChild, withNewChild, thisNode);
   }
 
   bool childrenEmpty() const { return children_.empty(); }
@@ -194,6 +268,10 @@ private:
   template <typename TChild>
   void cloneChildrenImpl(const IIRNode& other,
                          typename std::enable_if<!std::is_void<TChild>::value>::type* = 0) {
+    static_assert(std::is_same<TChild, Child>::value,
+                  "The template TParent type of this function should be == Parent. The function is "
+                  "templated only for syntax specialization using SFINAE");
+
     for(const auto& child : other.getChildren()) {
       insertChild(child->clone());
     }
@@ -212,48 +290,171 @@ private:
   }
 
   template <typename TChild>
-  void checkConsistencyImpl(typename std::enable_if<std::is_void<TChild>::value>::type* = 0) const {
+  bool
+  checkTreeConsistencyImpl(typename std::enable_if<std::is_void<TChild>::value>::type* = 0) const {
+    return true;
   }
 
   template <typename TChild>
-  void
-  checkConsistencyImpl(typename std::enable_if<!std::is_void<TChild>::value>::type* = 0) const {
-    for(const auto& child : getChildren()) {
-      const auto& parent = child->getParent();
-      DAWN_ASSERT(parent.get() == this);
+  bool
+  checkTreeConsistencyImpl(typename std::enable_if<!std::is_void<TChild>::value>::type* = 0) const {
+    PROTECT_TEMPLATE(TChild, Child)
 
-      child->checkConsistency();
+    bool result = true;
+    for(const auto& child : getChildren()) {
+      if(!child->parentIsSet()) {
+        return false;
+      }
+      const auto& parent = child->getParent();
+
+      if(parent.get() != this) {
+        return false;
+      }
+      result = result & child->checkTreeConsistency();
     }
+
+    return result;
   }
 
   template <typename TChild, typename TParent>
   void insertChildImpl(TChild&& child,
                        typename std::enable_if<!std::is_void<TParent>::value>::type* = 0) {
-    static_assert((std::is_same<TParent, Parent>::value), "not the same parent types");
-    setChildParent<TChild, Parent>(child);
+    PROTECT_TEMPLATE(TParent, Parent)
     children_.push_back(std::move(child));
+
+    if(!children_.empty()) {
+      const auto& lastChild = children_.back();
+      setChildParent<Parent>(lastChild);
+    }
   }
 
   template <typename TChild, typename TParent>
   ChildIterator insertChildImpl(ChildIterator pos, TChild&& child,
                                 typename std::enable_if<!std::is_void<TParent>::value>::type* = 0) {
-    // TODO watch out this first forward
-    setChildParent<TChild, Parent>(std::forward<TChild>(child));
-    return children_.insert(pos, std::forward<TChild>(child));
+
+    PROTECT_TEMPLATE(TParent, Parent)
+    auto it = children_.insert(pos, std::forward<TChild>(child));
+
+    if(!children_.empty()) {
+      const auto& lastChild = children_.back();
+      setChildParent<Parent>(lastChild);
+    }
+    return it;
   }
 
   template <typename Iterator, typename TParent>
   ChildIterator
   insertChildrenImpl(ChildIterator pos, Iterator first, Iterator last,
                      typename std::enable_if<!std::is_void<TParent>::value>::type* = 0) {
-    for(auto it = first; it != last; ++it) {
-      setChildParent<SmartPtr<Child>, Parent>(*it);
+    PROTECT_TEMPLATE(TParent, Parent)
+
+    auto newfirst = children_.insert(pos, first, last);
+
+    // setting recursively the children parents is perform on all the siblings of a child, therefore
+    // here we only need to do it on one child
+    if(!children_.empty()) {
+      const auto& lastChild = children_.back();
+      setChildParent<Parent>(lastChild);
     }
-    return children_.insert(pos, first, last);
+
+    return newfirst;
   }
+
+  template <typename TParent, typename Iterator, typename TChildParent>
+  ChildIterator
+  insertChildrenImpl(ChildIterator pos, Iterator first, Iterator last,
+                     const std::unique_ptr<NodeType>& p,
+                     typename std::enable_if<std::is_void<TParent>::value &&
+                                             !std::is_void<TChildParent>::value>::type* = 0) {
+    PROTECT_TEMPLATE(TParent, Parent)
+    PROTECT_TEMPLATE(TChildParent, NodeType)
+
+    auto newfirst = children_.insert(pos, first, last);
+
+    for(const auto& sibling : children_) {
+      sibling->setParent(p);
+
+      if(!sibling->getChildren().empty()) {
+        const auto& lastSibling = sibling->getChildren().back();
+        sibling->setChildParent<TChildParent>(lastSibling);
+      }
+    }
+
+    return newfirst;
+  }
+
+  template <typename TParent, typename TChild, typename TNodeSmartPtr>
+  void insertChildImpl(TChild&& child, const TNodeSmartPtr& p,
+                       typename std::enable_if<std::is_void<TParent>::value &&
+                                               !std::is_void<TChild>::value>::type* = 0) {
+
+    DAWN_ASSERT(p.get() == this);
+    PROTECT_TEMPLATE(TParent, Parent)
+    children_.push_back(std::move(child));
+
+    for(const auto& sibling : children_) {
+      sibling->setParent(p);
+
+      if(!sibling->getChildren().empty()) {
+        const auto& lastSibling = sibling->getChildren().back();
+        sibling->setChildParent<NodeType>(lastSibling);
+      }
+    }
+  }
+
+  template <typename TParent>
+  void replaceImpl(const SmartPtr<Child>& inputChild, SmartPtr<Child>& withNewChild,
+                   typename std::enable_if<!std::is_void<TParent>::value>::type* = 0) {
+    auto it = std::find(children_.begin(), children_.end(), inputChild);
+    DAWN_ASSERT(it != children_.end());
+    const std::unique_ptr<NodeType>* ptr = &((*it)->getParent());
+
+    (it)->swap(withNewChild);
+    inputChild->setParent(*ptr);
+    setChildParent<Parent, Child>(inputChild);
+  }
+
+  template <typename TParent>
+  void replaceImpl(const SmartPtr<Child>& inputChild, SmartPtr<Child>& withNewChild,
+                   const std::unique_ptr<NodeType>& thisNode,
+                   typename std::enable_if<std::is_void<TParent>::value>::type* = 0) {
+    // TODO rethink this
+    auto it = std::find(children_.begin(), children_.end(), inputChild);
+    DAWN_ASSERT(it != children_.end());
+    const std::unique_ptr<NodeType>* ptr = &((*it)->getParent());
+
+    (it)->swap(withNewChild);
+
+    inputChild->setParent(*ptr);
+    inputChild->setChildrenParent<typename getChildType<std::unique_ptr<Child>>::type::type>(
+        inputChild);
+  }
+
+  template <typename TChild>
+  void printTreeImpl(typename std::enable_if<!std::is_void<TChild>::value>::type* = 0) {
+    std::cout << "  NAME " << static_cast<const NodeType*>(this)->name << " " << this << std::endl;
+    for(const auto& child : getChildren()) {
+      if(child->parentIsSet())
+        std::cout << "&child : " << &child << "  child.get() : " << child.get()
+                  << " child->getParentP() : " << parent_
+                  << " parent.get() : " << child->getParent().get() << std::endl;
+      else
+        std::cout << "&child : " << &child << "  child.get() : " << child.get()
+                  << " child->getParentP() : " << parent_ << " parent.get() : "
+                  << "NULL" << std::endl;
+    }
+    for(const auto& child : children_) {
+      child->printTree();
+    }
+  }
+
+  template <typename TChild>
+  void printTreeImpl(typename std::enable_if<std::is_void<TChild>::value>::type* = 0) {}
 };
 
 } // namespace iir
 } // namespace dawn
+
+#undef PROTECT_TEMPLATE
 
 #endif

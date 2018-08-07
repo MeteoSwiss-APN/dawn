@@ -33,7 +33,7 @@ std::unique_ptr<DoMethod> DoMethod::clone() const {
   cloneMS->setID(id_);
   cloneMS->setDependencyGraph(dependencyGraph_);
 
-  cloneMS->cloneChildren(*this);
+  cloneMS->cloneFrom(*this);
   return std::move(cloneMS);
 }
 

@@ -58,7 +58,7 @@ protected:
 
     const auto& iir =
         optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"]->getIIR();
-    return iir->clone(iir);
+    return iir->clone();
   }
 };
 

@@ -36,7 +36,7 @@ std::unique_ptr<MultiStage> MultiStage::clone() const {
   cloneMS->caches_ = caches_;
   cloneMS->fields_ = fields_;
 
-  cloneMS->cloneChildren(*this);
+  cloneMS->cloneFrom(*this);
   return std::move(cloneMS);
 }
 

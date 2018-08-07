@@ -33,15 +33,10 @@ class StencilInstantiation;
 class StatementAccessesPair;
 class IIR;
 
-namespace impl {
-template <typename T>
-using MultiStageSmartptr = std::unique_ptr<T, std::default_delete<T>>;
-}
-
 /// @brief A Stencil is represented by a collection of MultiStages
 /// @ingroup optimizer
-class Stencil : public IIRNode<IIR, Stencil, MultiStage, impl::MultiStageSmartptr, impl::StdList> {
-  using base_type = IIRNode<IIR, Stencil, MultiStage, std::shared_ptr, impl::StdList>;
+class Stencil : public IIRNode<IIR, Stencil, MultiStage, impl::StdList> {
+  using base_type = IIRNode<IIR, Stencil, MultiStage, impl::StdList>;
 
   StencilInstantiation& stencilInstantiation_;
   const std::shared_ptr<sir::Stencil> SIRStencil_;
@@ -54,6 +49,8 @@ class Stencil : public IIRNode<IIR, Stencil, MultiStage, impl::MultiStageSmartpt
   std::shared_ptr<DependencyGraphStage> stageDependencyGraph_;
 
 public:
+  static constexpr const char* name = "Stencil";
+
   using MultiStageSmartPtr_t = child_smartptr_t<MultiStage>;
 
   // FieldInfo desribes the properties of a given Field

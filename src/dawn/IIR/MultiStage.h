@@ -39,19 +39,14 @@ template <typename T>
 using StdList = std::list<T, std::allocator<T>>;
 }
 
-namespace impl {
-template <typename T>
-using StageSmartptr = std::unique_ptr<T, std::default_delete<T>>;
-}
-
 /// @brief A MultiStage is represented by a collection of stages and a given exectuion policy.
 ///
 /// A MultiStage usually corresponds to the outer loop (usually over k) of the loop nest. In CUDA
 /// gridtools multistages reflect kernels.
 ///
 /// @ingroup optimizer
-class MultiStage : public IIRNode<Stencil, MultiStage, Stage, impl::StageSmartptr, impl::StdList> {
-  using base_type = IIRNode<Stencil, MultiStage, Stage, impl::StageSmartptr, impl::StdList>;
+class MultiStage : public IIRNode<Stencil, MultiStage, Stage, impl::StdList> {
+  using base_type = IIRNode<Stencil, MultiStage, Stage, impl::StdList>;
 
   StencilInstantiation& stencilInstantiation_;
 
@@ -60,6 +55,8 @@ class MultiStage : public IIRNode<Stencil, MultiStage, Stage, impl::StageSmartpt
   std::unordered_map<int, Field> fields_;
 
 public:
+  static constexpr const char* name = "MultiStage";
+
   using StageSmartPtr_t = child_smartptr_t<Stage>;
   using ChildrenIterator = std::vector<child_smartptr_t<Stage>>::iterator;
 

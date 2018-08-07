@@ -168,7 +168,7 @@ public:
                        const std::shared_ptr<sir::Stencil>& SIRStencil,
                        const std::shared_ptr<SIR>& SIR);
 
-  void checkConsistency() const;
+  bool checkTreeConsistency() const;
 
   /// @brief Insert a new AccessID - Name pair
   void setAccessIDNamePair(int AccessID, const std::string& name);

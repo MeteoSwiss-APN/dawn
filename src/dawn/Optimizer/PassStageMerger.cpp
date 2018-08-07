@@ -127,6 +127,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
 
                 if(newDepGraph->isDAG() &&
                    !hasHorizontalReadBeforeWriteConflict(newDepGraph.get())) {
+
                   if(MergeStagesOfStencil) {
                     candidateStage.appendDoMethod(*curDoMethodIt, *candidateDoMethodIt,
                                                   newDepGraph);
@@ -160,15 +161,17 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
             curDoMethodIt++;
         }
 
-        // Stage is empty, remove it (the wirdness here stems from the fact that we have a reverse
-        // iterator and erase expects a normal iterator ...)
-        if(curStage.childrenEmpty())
-          curStageIt = decltype(curStageIt)(multiStage.getChildren().erase(--curStageIt.base()));
-        else {
-          if(updateFields)
-            curStage.update();
+        if(updateFields)
+          curStage.update();
+        curStageIt++;
+      }
+
+      // remote empty stages
+      for(auto curStageIt = multiStage.childrenBegin(); curStageIt != multiStage.childrenEnd();) {
+        if((*curStageIt)->childrenEmpty()) {
+          curStageIt = multiStage.childrenErase(curStageIt);
+        } else
           curStageIt++;
-        }
       }
     }
   }

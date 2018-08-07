@@ -56,9 +56,9 @@ protected:
     DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("compute_extent_test_stencil")),
                     "compute_extent_test_stencil not found in sir");
 
-    const auto& iir =
+    const std::unique_ptr<iir::IIR>& iir =
         optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"]->getIIR();
-    return iir->clone(iir);
+    return iir->clone();
   }
 };
 
