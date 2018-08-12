@@ -16,7 +16,6 @@
 #define DAWN_IIR_IIR_H
 
 #include "dawn/IIR/Stencil.h"
-#include "dawn/IIR/StencilInstantiation.h"
 
 namespace dawn {
 namespace iir {

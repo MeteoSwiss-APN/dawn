@@ -31,6 +31,7 @@ yoda_add_library(
           IIR.cpp
           IIR.h
           IIRNode.h
+          IIRNodeIterator.h
           MultiStage.cpp 
           MultiStage.h
           Stage.cpp

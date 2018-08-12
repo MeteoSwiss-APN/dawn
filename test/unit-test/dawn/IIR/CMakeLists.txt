@@ -16,5 +16,6 @@ dawn_add_unittest_impl(
   NAME DawnUnittestIIR
   SOURCES TestMain.cpp
           TestIIRNode.cpp
+          TestIIRNodeIterator.cpp
 )
 

@@ -131,7 +131,6 @@ public:
   /// `Input`
   ///
   /// The fields are computed during `Stage::update`.
-  //  std::unordered_map<int, Field>& getFields() { return fields_; }
   const std::unordered_map<int, Field>& getFields() const { return fields_; }
 
   /// @brief Update the fields and global variables

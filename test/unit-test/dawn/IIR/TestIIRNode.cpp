@@ -12,12 +12,12 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/SIR/SIR.h"
+#include "dawn/IIR/IIRNode.h"
 #include <gtest/gtest.h>
 #include <string>
 
 using namespace dawn;
 
 namespace {
-TEST(IIRNode, t) {}
+TEST(IIRNode, clone) {}
 }

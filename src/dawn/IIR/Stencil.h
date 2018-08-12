@@ -164,6 +164,7 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
+  /// //TODO no need to pass SIRStencil, we can get it from stencilInstantiation
   Stencil(StencilInstantiation& stencilInstantiation,
           const std::shared_ptr<sir::Stencil>& SIRStencil, int StencilID,
           const std::shared_ptr<DependencyGraphStage>& stageDependencyGraph = nullptr);
