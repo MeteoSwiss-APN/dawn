@@ -94,7 +94,7 @@ TEST(IIRNodeIterator, LeafIterator) {
   (*node3_It)->insertChild<std::unique_ptr<impl::Node4>>(make_unique<impl::Node4>(18));
   (*node3_It)->insertChild<std::unique_ptr<impl::Node4>>(make_unique<impl::Node4>(19));
 
-  iir::IIRNodeIterator<impl::Node1, impl::Node4> fullIt(*root);
+  iir::IIRNodeIterator<impl::Node1, impl::Node4> fullIt(root.get());
 
   ASSERT_EQ((*fullIt)->val_, 2);
   ++fullIt;

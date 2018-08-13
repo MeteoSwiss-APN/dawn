@@ -19,6 +19,7 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include <algorithm>
 #include <iostream>
 #include <numeric>
@@ -116,11 +117,10 @@ Stencil::Stencil(StencilInstantiation& stencilInstantiation,
 
 std::unordered_set<Interval> Stencil::getIntervals() const {
   std::unordered_set<Interval> intervals;
-  for(const auto& multistage : children_)
-    for(const auto& stage : multistage->getChildren())
-      for(const auto& doMethod : stage->getChildren())
-        intervals.insert(doMethod->getInterval());
 
+  for(const auto& doMethod : iterateIIROver<DoMethod>(*this)) {
+    intervals.insert(doMethod->getInterval());
+  }
   return intervals;
 }
 
@@ -134,12 +134,10 @@ std::unique_ptr<Stencil> Stencil::clone() const {
 
 std::vector<Stencil::FieldInfo> Stencil::getFields(bool withTemporaries) const {
   std::set<int> fieldAccessIDs;
-  for(const auto& multistage : children_) {
-    for(const auto& stage : multistage->getChildren()) {
-      for(const auto& fieldPair : stage->getFields()) {
-        // TODO redo transform
-        fieldAccessIDs.insert(fieldPair.first);
-      }
+  for(const auto& stage : iterateIIROver<Stage>(*this)) {
+    for(const auto& fieldPair : stage->getFields()) {
+      // TODO redo transform
+      fieldAccessIDs.insert(fieldPair.first);
     }
   }
 
@@ -164,11 +162,9 @@ std::vector<Stencil::FieldInfo> Stencil::getFields(bool withTemporaries) const {
 
 std::vector<std::string> Stencil::getGlobalVariables() const {
   std::set<int> globalVariableAccessIDs;
-  for(const auto& multistage : children_) {
-    for(const auto& stage : multistage->getChildren()) {
-      globalVariableAccessIDs.insert(stage->getAllGlobalVariables().begin(),
-                                     stage->getAllGlobalVariables().end());
-    }
+  for(const auto& stage : iterateIIROver<Stage>(*this)) {
+    globalVariableAccessIDs.insert(stage->getAllGlobalVariables().begin(),
+                                   stage->getAllGlobalVariables().end());
   }
 
   std::vector<std::string> globalVariables;
@@ -456,6 +452,7 @@ bool Stencil::isEmpty() const {
       for(const auto& doMethod : stage->getChildren())
         if(!doMethod->childrenEmpty())
           return false;
+
   return true;
 }
 
@@ -477,11 +474,9 @@ boost::optional<Interval> Stencil::getEnclosingIntervalTemporaries() const {
 const std::shared_ptr<sir::Stencil> Stencil::getSIRStencil() const { return SIRStencil_; }
 
 void Stencil::accept(ASTVisitor& visitor) {
-  for(const auto& multistagePtr : children_)
-    for(const auto& stagePtr : multistagePtr->getChildren())
-      for(const auto& doMethodPtr : stagePtr->getChildren())
-        for(const auto& stmtAcessesPairPtr : doMethodPtr->getChildren())
-          stmtAcessesPairPtr->getStatement()->ASTStmt->accept(visitor);
+  for(const auto& stmtAcessesPairPtr : iterateIIROver<StatementAccessesPair>(*this)) {
+    stmtAcessesPairPtr->getStatement()->ASTStmt->accept(visitor);
+  }
 }
 
 std::unordered_map<int, Extents> const Stencil::computeEnclosingAccessExtents() const {

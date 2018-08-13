@@ -38,10 +38,17 @@ class IIRNodeIterator {
 public:
   using leafIterator_t = typename LeafNode::ChildIterator;
 
-  IIRNodeIterator(const RootIIRNode& root)
-      : iterator_(root.childrenBegin()), end_(root.childrenEnd()),
-        restIterator_(**(root.childrenBegin())) {}
+  IIRNodeIterator(const RootIIRNode* root) {
+    DAWN_ASSERT(root);
+    DAWN_ASSERT_MSG((root->getChildren().size() > 0),
+                    "multi-iterator with empty children set is not supported");
+    iterator_ = (root->childrenBegin());
+    end_ = (root->childrenEnd());
+    restIterator_ =
+        IIRNodeIterator<typename RootIIRNode::ChildType, LeafNode>(root->childrenBegin()->get());
+  }
 
+  IIRNodeIterator() = default;
   IIRNodeIterator(IIRNodeIterator&&) = default;
   IIRNodeIterator(const IIRNodeIterator&) = default;
   IIRNodeIterator& operator=(IIRNodeIterator&&) = default;
@@ -52,7 +59,8 @@ public:
       ++iterator_;
 
       if(!isEnd()) {
-        restIterator_ = IIRNodeIterator<typename RootIIRNode::ChildType, LeafNode>(**(iterator_));
+        restIterator_ =
+            IIRNodeIterator<typename RootIIRNode::ChildType, LeafNode>(iterator_->get());
       }
     }
     return *this;
@@ -67,7 +75,7 @@ public:
   void setToEnd() {
     iterator_ = end_;
     restIterator_ =
-        IIRNodeIterator<typename RootIIRNode::ChildType, LeafNode>(**(std::prev(iterator_)));
+        IIRNodeIterator<typename RootIIRNode::ChildType, LeafNode>(std::prev(iterator_)->get());
     restIterator_.setToEnd();
   }
 
@@ -93,7 +101,8 @@ public:
 template <typename LeafNode>
 class IIRNodeIterator<LeafNode, LeafNode> {
 public:
-  IIRNodeIterator(const LeafNode& root) {}
+  IIRNodeIterator() = default;
+  IIRNodeIterator(const LeafNode* root) {}
   IIRNodeIterator(IIRNodeIterator&&) = default;
   IIRNodeIterator(const IIRNodeIterator&) = default;
 
@@ -113,9 +122,11 @@ class IIRRange {
 
 public:
   IIRRange(const RootNode& root) : root_(root) {}
-  IIRNodeIterator<RootNode, LeafNode> begin() { return IIRNodeIterator<RootNode, LeafNode>(root_); }
+  IIRNodeIterator<RootNode, LeafNode> begin() {
+    return IIRNodeIterator<RootNode, LeafNode>(&root_);
+  }
   IIRNodeIterator<RootNode, LeafNode> end() {
-    auto it = IIRNodeIterator<RootNode, LeafNode>(root_);
+    auto it = IIRNodeIterator<RootNode, LeafNode>(&root_);
     it.setToEnd();
     return it;
   }
