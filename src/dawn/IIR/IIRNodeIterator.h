@@ -109,15 +109,13 @@ public:
 
 template <typename RootNode, typename LeafNode>
 class IIRRange {
-  const std::unique_ptr<RootNode>& root_;
+  const RootNode& root_;
 
 public:
-  IIRRange(const std::unique_ptr<RootNode>& root) : root_(root) {}
-  IIRNodeIterator<RootNode, LeafNode> begin() {
-    return IIRNodeIterator<RootNode, LeafNode>(*root_);
-  }
+  IIRRange(const RootNode& root) : root_(root) {}
+  IIRNodeIterator<RootNode, LeafNode> begin() { return IIRNodeIterator<RootNode, LeafNode>(root_); }
   IIRNodeIterator<RootNode, LeafNode> end() {
-    auto it = IIRNodeIterator<RootNode, LeafNode>(*root_);
+    auto it = IIRNodeIterator<RootNode, LeafNode>(root_);
     it.setToEnd();
     return it;
   }
@@ -126,7 +124,7 @@ public:
 } // namespace iir
 
 template <typename Leaf, typename RootNode>
-iir::IIRRange<RootNode, Leaf> iterateIIROver(const std::unique_ptr<RootNode>& root) {
+iir::IIRRange<RootNode, Leaf> iterateIIROver(const RootNode& root) {
   return iir::IIRRange<RootNode, Leaf>(root);
 }
 

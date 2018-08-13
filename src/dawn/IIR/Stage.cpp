@@ -18,6 +18,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Logging.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include <algorithm>
 #include <iterator>
 #include <set>
@@ -197,6 +198,7 @@ void Stage::update() {
 
   CaptureStencilFunctionCallGlobalParams functionCallGlobaParamVisitor(
       globalVariablesFromStencilFunctionCalls_, stencilInstantiation_);
+
   for(const auto& doMethodPtr : getChildren()) {
     const DoMethod& doMethod = *doMethodPtr;
     for(const auto& statementAccessesPair : doMethod.getChildren()) {
@@ -259,26 +261,23 @@ void Stage::update() {
 
   // Compute the extents of each field by accumulating the extents of each access to field in the
   // stage
-  for(const auto& doMethodPtr : getChildren()) {
-    const DoMethod& doMethod = *doMethodPtr;
 
-    for(const auto& statementAccessesPair : doMethod.getChildren()) {
-      const auto& access = statementAccessesPair->getAccesses();
+  for(const auto& statementAccessesPair : iterateIIROver<StatementAccessesPair>(*this)) {
+    const auto& access = statementAccessesPair->getAccesses();
 
-      // first => AccessID, second => Extent
-      for(auto& accessPair : access->getWriteAccesses()) {
-        if(!stencilInstantiation_.isField(accessPair.first))
-          continue;
+    // first => AccessID, second => Extent
+    for(auto& accessPair : access->getWriteAccesses()) {
+      if(!stencilInstantiation_.isField(accessPair.first))
+        continue;
 
-        fields_.at(accessPair.first).mergeWriteExtents(accessPair.second);
-      }
+      fields_.at(accessPair.first).mergeWriteExtents(accessPair.second);
+    }
 
-      for(const auto& accessPair : access->getReadAccesses()) {
-        if(!stencilInstantiation_.isField(accessPair.first))
-          continue;
+    for(const auto& accessPair : access->getReadAccesses()) {
+      if(!stencilInstantiation_.isField(accessPair.first))
+        continue;
 
-        fields_.at(accessPair.first).mergeReadExtents(accessPair.second);
-      }
+      fields_.at(accessPair.first).mergeReadExtents(accessPair.second);
     }
   }
   // TODO

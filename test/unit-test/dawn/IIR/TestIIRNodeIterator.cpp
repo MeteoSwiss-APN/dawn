@@ -122,7 +122,7 @@ TEST(IIRNodeIterator, LeafIterator) {
 
   std::array<int, 12> res{2, 3, 5, 6, 8, 9, 12, 13, 15, 16, 18, 19};
   int i = 0;
-  for(const auto& it : iterateIIROver<impl::Node4>(root)) {
+  for(const auto& it : iterateIIROver<impl::Node4>(*root)) {
     ASSERT_EQ(it->val_, res[i]);
     ++i;
   }

@@ -23,6 +23,7 @@
 #include "dawn/Support/STLExtras.h"
 #include "dawn/Optimizer/MultiInterval.h"
 #include "dawn/Optimizer/IntervalAlgorithms.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 
 namespace dawn {
 namespace iir {
@@ -143,17 +144,15 @@ std::vector<std::unique_ptr<DoMethod>> MultiStage::computeOrderedDoMethods() con
   std::vector<std::unique_ptr<DoMethod>> orderedDoMethods;
 
   for(auto interval : partitionIntervals) {
-    for(const auto& stagePtr : getChildren()) {
-      for(const auto& doMethod : stagePtr->getChildren()) {
 
-        if(doMethod->getInterval().overlaps(interval)) {
-          std::unique_ptr<DoMethod> partitionedDoMethod = doMethod->clone();
+    for(const auto& doMethod : iterateIIROver<DoMethod>(*this)) {
+      if(doMethod->getInterval().overlaps(interval)) {
+        std::unique_ptr<DoMethod> partitionedDoMethod = doMethod->clone();
 
-          partitionedDoMethod->setInterval(interval);
-          orderedDoMethods.push_back(std::move(partitionedDoMethod));
-          // there should not be two do methods in the same stage with overlapping intervals
-          continue;
-        }
+        partitionedDoMethod->setInterval(interval);
+        orderedDoMethods.push_back(std::move(partitionedDoMethod));
+        // there should not be two do methods in the same stage with overlapping intervals
+        continue;
       }
     }
   }
@@ -241,9 +240,10 @@ MultiStage::computeEnclosingAccessInterval(const int accessID,
 
 std::unordered_set<Interval> MultiStage::getIntervals() const {
   std::unordered_set<Interval> intervals;
-  for(const auto& stagePtr : children_)
-    for(const auto& doMethodPtr : stagePtr->getChildren())
-      intervals.insert(doMethodPtr->getInterval());
+
+  for(const auto& doMethodPtr : iterateIIROver<DoMethod>(*this)) {
+    intervals.insert(doMethodPtr->getInterval());
+  }
   return intervals;
 }
 
