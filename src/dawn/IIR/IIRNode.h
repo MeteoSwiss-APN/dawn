@@ -73,11 +73,9 @@ public:
   using child_iterator_t = typename Container<SmartPtr<Child>>::iterator;
   using child_reverse_iterator_t = typename Container<SmartPtr<Child>>::reverse_iterator;
 
-  inline void cloneFrom(const IIRNode& other) { cloneChildren(other); }
+  inline void cloneChildrenFrom(const IIRNode& other) { cloneChildrenImpl<Child>(other); }
 
-  inline void cloneChildren(const IIRNode& other) { cloneChildrenImpl<Child>(other); }
-
-  inline void cloneChildren(const IIRNode& other, const SmartPtr<NodeType>& thisNode) {
+  inline void cloneChildrenFrom(const IIRNode& other, const SmartPtr<NodeType>& thisNode) {
     DAWN_ASSERT(thisNode.get() == this);
     cloneChildrenImpl<Child>(other, thisNode);
   }

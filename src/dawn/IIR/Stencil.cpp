@@ -128,8 +128,8 @@ std::unique_ptr<Stencil> Stencil::clone() const {
   auto cloneStencil =
       make_unique<Stencil>(stencilInstantiation_, SIRStencil_, StencilID_, stageDependencyGraph_);
 
-  cloneStencil->cloneChildren(*this);
-  return std::move(cloneStencil);
+  cloneStencil->cloneChildrenFrom(*this);
+  return cloneStencil;
 }
 
 std::vector<Stencil::FieldInfo> Stencil::getFields(bool withTemporaries) const {

@@ -37,8 +37,8 @@ std::unique_ptr<MultiStage> MultiStage::clone() const {
   cloneMS->caches_ = caches_;
   cloneMS->fields_ = fields_;
 
-  cloneMS->cloneFrom(*this);
-  return std::move(cloneMS);
+  cloneMS->cloneChildrenFrom(*this);
+  return cloneMS;
 }
 
 std::vector<std::unique_ptr<MultiStage>>

@@ -72,9 +72,9 @@ std::unique_ptr<StatementAccessesPair> StatementAccessesPair::clone() const {
   cloneSAP->calleeAccesses_ = calleeAccesses_;
   cloneSAP->blockStatements_ = blockStatements_.clone();
 
-  cloneSAP->cloneFrom(*this);
+  cloneSAP->cloneChildrenFrom(*this);
 
-  return std::move(cloneSAP);
+  return cloneSAP;
 }
 
 std::shared_ptr<Statement> StatementAccessesPair::getStatement() const { return statement_; }

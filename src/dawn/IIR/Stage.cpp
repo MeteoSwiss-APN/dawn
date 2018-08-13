@@ -50,8 +50,8 @@ std::unique_ptr<Stage> Stage::clone() const {
 
   cloneStage->extents_ = extents_;
 
-  cloneStage->cloneFrom(*this);
-  return std::move(cloneStage);
+  cloneStage->cloneChildrenFrom(*this);
+  return cloneStage;
 }
 
 DoMethod& Stage::getSingleDoMethod() {

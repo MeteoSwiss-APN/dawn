@@ -51,48 +51,48 @@ TEST(IIRNodeIterator, LeafIterator) {
 
   std::unique_ptr<impl::Node1> root = make_unique<impl::Node1>();
 
-  root->insertChild<std::unique_ptr<impl::Node2>>(make_unique<impl::Node2>(), root);
-  root->insertChild<std::unique_ptr<impl::Node2>>(make_unique<impl::Node2>(), root);
+  root->insertChild(make_unique<impl::Node2>(), root);
+  root->insertChild(make_unique<impl::Node2>(), root);
 
   auto node2_It = root->childrenBegin();
 
-  (*node2_It)->insertChild<std::unique_ptr<impl::Node3>>(make_unique<impl::Node3>());
-  (*node2_It)->insertChild<std::unique_ptr<impl::Node3>>(make_unique<impl::Node3>());
-  (*node2_It)->insertChild<std::unique_ptr<impl::Node3>>(make_unique<impl::Node3>());
+  (*node2_It)->insertChild(make_unique<impl::Node3>());
+  (*node2_It)->insertChild(make_unique<impl::Node3>());
+  (*node2_It)->insertChild(make_unique<impl::Node3>());
 
   auto node3_It = (*node2_It)->childrenBegin();
-  (*node3_It)->insertChild<std::unique_ptr<impl::Node4>>(make_unique<impl::Node4>(2));
-  (*node3_It)->insertChild<std::unique_ptr<impl::Node4>>(make_unique<impl::Node4>(3));
+  (*node3_It)->insertChild(make_unique<impl::Node4>(2));
+  (*node3_It)->insertChild(make_unique<impl::Node4>(3));
 
   node3_It++;
 
-  (*node3_It)->insertChild<std::unique_ptr<impl::Node4>>(make_unique<impl::Node4>(5));
-  (*node3_It)->insertChild<std::unique_ptr<impl::Node4>>(make_unique<impl::Node4>(6));
+  (*node3_It)->insertChild(make_unique<impl::Node4>(5));
+  (*node3_It)->insertChild(make_unique<impl::Node4>(6));
 
   node3_It++;
 
-  (*node3_It)->insertChild<std::unique_ptr<impl::Node4>>(make_unique<impl::Node4>(8));
-  (*node3_It)->insertChild<std::unique_ptr<impl::Node4>>(make_unique<impl::Node4>(9));
+  (*node3_It)->insertChild(make_unique<impl::Node4>(8));
+  (*node3_It)->insertChild(make_unique<impl::Node4>(9));
 
   node2_It++;
 
-  (*node2_It)->insertChild<std::unique_ptr<impl::Node3>>(make_unique<impl::Node3>());
-  (*node2_It)->insertChild<std::unique_ptr<impl::Node3>>(make_unique<impl::Node3>());
-  (*node2_It)->insertChild<std::unique_ptr<impl::Node3>>(make_unique<impl::Node3>());
+  (*node2_It)->insertChild(make_unique<impl::Node3>());
+  (*node2_It)->insertChild(make_unique<impl::Node3>());
+  (*node2_It)->insertChild(make_unique<impl::Node3>());
 
   node3_It = (*node2_It)->childrenBegin();
-  (*node3_It)->insertChild<std::unique_ptr<impl::Node4>>(make_unique<impl::Node4>(12));
-  (*node3_It)->insertChild<std::unique_ptr<impl::Node4>>(make_unique<impl::Node4>(13));
+  (*node3_It)->insertChild(make_unique<impl::Node4>(12));
+  (*node3_It)->insertChild(make_unique<impl::Node4>(13));
 
   node3_It++;
 
-  (*node3_It)->insertChild<std::unique_ptr<impl::Node4>>(make_unique<impl::Node4>(15));
-  (*node3_It)->insertChild<std::unique_ptr<impl::Node4>>(make_unique<impl::Node4>(16));
+  (*node3_It)->insertChild(make_unique<impl::Node4>(15));
+  (*node3_It)->insertChild(make_unique<impl::Node4>(16));
 
   node3_It++;
 
-  (*node3_It)->insertChild<std::unique_ptr<impl::Node4>>(make_unique<impl::Node4>(18));
-  (*node3_It)->insertChild<std::unique_ptr<impl::Node4>>(make_unique<impl::Node4>(19));
+  (*node3_It)->insertChild(make_unique<impl::Node4>(18));
+  (*node3_It)->insertChild(make_unique<impl::Node4>(19));
 
   iir::IIRNodeIterator<impl::Node1, impl::Node4> fullIt(root.get());
 
@@ -121,10 +121,11 @@ TEST(IIRNodeIterator, LeafIterator) {
   ASSERT_EQ((*fullIt)->val_, 19);
 
   std::array<int, 12> res{2, 3, 5, 6, 8, 9, 12, 13, 15, 16, 18, 19};
-  int i = 0;
+  unsigned long i = 0;
   for(const auto& it : iterateIIROver<impl::Node4>(*root)) {
     ASSERT_EQ(it->val_, res[i]);
     ++i;
   }
+  ASSERT_EQ(i, 12);
 }
 }

@@ -30,8 +30,8 @@ std::unique_ptr<IIR> IIR::clone() const {
 
   auto cloneIIR = make_unique<IIR>();
 
-  cloneIIR->cloneChildren(*this, cloneIIR);
-  return std::move(cloneIIR);
+  cloneIIR->cloneChildrenFrom(*this, cloneIIR);
+  return cloneIIR;
 }
 
 } // namespace iir

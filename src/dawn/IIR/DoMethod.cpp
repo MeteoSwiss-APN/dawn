@@ -33,8 +33,8 @@ std::unique_ptr<DoMethod> DoMethod::clone() const {
   cloneMS->setID(id_);
   cloneMS->setDependencyGraph(dependencyGraph_);
 
-  cloneMS->cloneFrom(*this);
-  return std::move(cloneMS);
+  cloneMS->cloneChildrenFrom(*this);
+  return cloneMS;
 }
 
 Interval& DoMethod::getInterval() { return interval_; }
@@ -92,7 +92,7 @@ private:
 
 public:
   CheckNonNullStatementVisitor() {}
-  virtual ~CheckNonNullStatementVisitor() {}
+  virtual ~CheckNonNullStatementVisitor() override {}
 
   bool getResult() const { return result_; }
 
