@@ -34,6 +34,7 @@ class DoMethod;
 class PassFieldVersioning : public Pass {
 public:
   enum class FieldVersionFirstAccessKind { FA_Read, FA_Write, FA_None };
+  enum class FieldVersioningPassMode {FM_CreateVersion, FM_FixAccess};
 
 private:
   // These 3 should move to IIR since they are used in two passes
@@ -51,8 +52,10 @@ private:
   int numRenames_;
   std::vector<std::pair<int, int>> versionedIDoriginalIDs_;
 
+  FieldVersioningPassMode mode_;
+
 public:
-  PassFieldVersioning();
+  PassFieldVersioning(FieldVersioningPassMode mode);
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) override;

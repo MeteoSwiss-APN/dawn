@@ -64,6 +64,10 @@ public:
   int getOriginalVersionOfAccessID(const int accessID) const {
     return versionToOriginalVersionMap_.at(accessID);
   }
+
+  std::unordered_map<int, std::shared_ptr<std::vector<int>>>& getVariableVersionsMap() {
+      return variableVersionsMap_;
+  }
   VariableVersions() = default;
 };
 
@@ -557,6 +561,10 @@ public:
       return Array3i{{1, 1, 1}};
     }
     return fieldIDToInitializedDimensionsMap_.find(FieldID)->second;
+  }
+
+  VariableVersions& getvariableVersions(){
+      return variableVersions_;
   }
 
 private:

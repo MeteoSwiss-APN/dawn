@@ -89,100 +89,119 @@ static void reportRaceCondition(const Statement& statement, StencilInstantiation
 
 } // anonymous namespace
 
-PassFieldVersioning::PassFieldVersioning() : Pass("PassFieldVersioning", true), numRenames_(0) {}
+PassFieldVersioning::PassFieldVersioning(FieldVersioningPassMode mode)
+    : Pass("PassFieldVersioning", true), numRenames_(0), mode_(mode) {}
 
 bool PassFieldVersioning::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
-  // remove this afterwards, just to see if it works
-  instantiation_ = stencilInstantiation;
-  OptimizerContext* context = instantiation_->getOptimizerContext();
-  numRenames_ = 0;
+  if(mode_ == FieldVersioningPassMode::FM_CreateVersion) {
+    instantiation_ = stencilInstantiation;
+    OptimizerContext* context = instantiation_->getOptimizerContext();
+    numRenames_ = 0;
 
-  for(auto& stencilPtr : instantiation_->getStencils()) {
-    Stencil& stencil = *stencilPtr;
+    for(auto& stencilPtr : instantiation_->getStencils()) {
+      Stencil& stencil = *stencilPtr;
 
-    // Iterate multi-stages backwards
-    int stageIdx = stencil.getNumStages() - 1;
-    for(auto multiStageRit = stencil.getMultiStages().rbegin(),
-             multiStageRend = stencil.getMultiStages().rend();
-        multiStageRit != multiStageRend; ++multiStageRit) {
-      MultiStage& multiStage = (**multiStageRit);
-      LoopOrderKind loopOrder = multiStage.getLoopOrder();
+      // Iterate multi-stages backwards
+      int stageIdx = stencil.getNumStages() - 1;
+      for(auto multiStageRit = stencil.getMultiStages().rbegin(),
+               multiStageRend = stencil.getMultiStages().rend();
+          multiStageRit != multiStageRend; ++multiStageRit) {
+        MultiStage& multiStage = (**multiStageRit);
+        LoopOrderKind loopOrder = multiStage.getLoopOrder();
 
-      std::shared_ptr<DependencyGraphAccesses> newGraph, oldGraph;
-      newGraph = std::make_shared<DependencyGraphAccesses>(instantiation_.get());
+        std::shared_ptr<DependencyGraphAccesses> newGraph, oldGraph;
+        newGraph = std::make_shared<DependencyGraphAccesses>(instantiation_.get());
 
-      // Iterate stages bottom -> top
-      for(auto stageRit = multiStage.getStages().rbegin(),
-               stageRend = multiStage.getStages().rend();
-          stageRit != stageRend; ++stageRit) {
-        Stage& stage = (**stageRit);
-        DoMethod& doMethod = stage.getSingleDoMethod();
+        // Iterate stages bottom -> top
+        for(auto stageRit = multiStage.getStages().rbegin(),
+                 stageRend = multiStage.getStages().rend();
+            stageRit != stageRend; ++stageRit) {
+          Stage& stage = (**stageRit);
+          DoMethod& doMethod = stage.getSingleDoMethod();
 
-        // Iterate statements bottom -> top
-        for(int stmtIndex = doMethod.getStatementAccessesPairs().size() - 1; stmtIndex >= 0;
-            --stmtIndex) {
-          oldGraph = newGraph->clone();
+          // Iterate statements bottom -> top
+          for(int stmtIndex = doMethod.getStatementAccessesPairs().size() - 1; stmtIndex >= 0;
+              --stmtIndex) {
+            oldGraph = newGraph->clone();
 
-          auto& stmtAccessesPair = doMethod.getStatementAccessesPairs()[stmtIndex];
-          newGraph->insertStatementAccessesPair(stmtAccessesPair);
-
-          // Try to resolve race-conditions by using double buffering if necessary
-          auto rc =
-              fixRaceCondition(newGraph.get(), stencil, doMethod, loopOrder, stageIdx, stmtIndex);
-
-          if(rc == RCKind::RK_Unresolvable)
-            // Nothing we can do ... bail out
-            return false;
-          else if(rc == RCKind::RK_Fixed) {
-            // We fixed a race condition (this means some fields have changed and our current graph
-            // is invalid)
-            newGraph = oldGraph;
+            auto& stmtAccessesPair = doMethod.getStatementAccessesPairs()[stmtIndex];
             newGraph->insertStatementAccessesPair(stmtAccessesPair);
+
+            // Try to resolve race-conditions by using double buffering if necessary
+            auto rc =
+                fixRaceCondition(newGraph.get(), stencil, doMethod, loopOrder, stageIdx, stmtIndex);
+
+            if(rc == RCKind::RK_Unresolvable)
+              // Nothing we can do ... bail out
+              return false;
+            else if(rc == RCKind::RK_Fixed) {
+              // We fixed a race condition (this means some fields have changed and our current
+              // graph
+              // is invalid)
+              newGraph = oldGraph;
+              newGraph->insertStatementAccessesPair(stmtAccessesPair);
+            }
+          }
+        }
+        stageIdx--;
+      }
+    }
+
+    if(context->getOptions().ReportPassFieldVersioning && numRenames_ == 0)
+      std::cout << "\nPASS: " << getName() << ": " << instantiation_->getName() << ": no rename\n";
+    return true;
+  } else {
+    // Now we need to check that every field is synchronized: if the first access to the versioned
+    // field is a write-access, we don't need to do anything. If it is a read-access, we need to
+    // insert a stage before that access where we move the data to the field.
+    instantiation_ = stencilInstantiation;
+    auto vars = instantiation_->variableVersions_.getVariableVersionsMap();
+    for(auto IDVersionsPair : vars) {
+      if(IDVersionsPair.first ==
+         instantiation_->getAccessIDFromName(
+             instantiation_->getOriginalNameFromAccessID(IDVersionsPair.first))) {
+        std::cout << IDVersionsPair.first
+                  << " with name: " << instantiation_->getNameFromAccessID(IDVersionsPair.first)
+                  << " has versions: ";
+        for(auto versionedID : *(IDVersionsPair.second)) {
+          std::cout << versionedID << " ";
+        }
+        std::cout << std::endl;
+
+        for(auto fieldID : *(IDVersionsPair.second)) {
+          if(fieldID != IDVersionsPair.first) {
+            bool IDhandeled = false;
+            for(std::shared_ptr<Stencil>& stencil : instantiation_->getStencils()) {
+              for(auto mssptr = stencil->getMultiStages().begin();
+                  mssptr != stencil->getMultiStages().end(); ++mssptr) {
+                std::shared_ptr<MultiStage>& mss = *mssptr;
+                auto retval = checkReadBeforeWrite(fieldID, mss);
+                if(retval == FieldVersionFirstAccessKind::FA_Read) {
+                  // insert stage
+
+                  auto newmss = createAssignmentMS(fieldID, IDVersionsPair.first,
+                                                   mss->getEnclosingInterval());
+                  stencil->getMultiStages().insert(mssptr, std::move(newmss));
+
+                  // This field is handled, we move on to the next one
+                  IDhandeled = true;
+                  break;
+                } else if(retval == FieldVersionFirstAccessKind::FA_Write) {
+                  //  We have a write first, no need to do anything, we move on
+                  IDhandeled = true;
+                  break;
+                }
+              }
+              if(IDhandeled) {
+                break;
+              }
+            }
           }
         }
       }
-      stageIdx--;
     }
+    return true;
   }
-
-  // Now we need to check that every field is synchronized: if the first access to the versioned
-  // field is a write-access, we don't need to do anything. If it is a read-access, we need to
-  // insert a stage before that access where we move the data to the field.
-  if(!versionedIDoriginalIDs_.empty()) {
-    // check first access:
-    for(auto IDPair : versionedIDoriginalIDs_) {
-      bool IDhandeled = false;
-      for(std::shared_ptr<Stencil>& stencil : instantiation_->getStencils()) {
-        for(auto mssptr = stencil->getMultiStages().begin();
-            mssptr != stencil->getMultiStages().end(); ++mssptr) {
-          std::shared_ptr<MultiStage>& mss = *mssptr;
-          auto retval = checkReadBeforeWrite(IDPair.first, mss);
-          if(retval == FieldVersionFirstAccessKind::FA_Read) {
-            // insert stage
-
-            auto newmss =
-                createAssignmentMS(IDPair.first, IDPair.second, mss->getEnclosingInterval());
-            stencil->getMultiStages().insert(mssptr, std::move(newmss));
-
-            // This field is handled, we move on to the next one
-            IDhandeled = true;
-            break;
-          } else if(retval == FieldVersionFirstAccessKind::FA_Write) {
-            //  We have a write first, no need to do anything, we move on
-            IDhandeled = true;
-            break;
-          }
-        }
-        if(IDhandeled) {
-          break;
-        }
-      }
-    }
-  }
-
-  if(context->getOptions().ReportPassFieldVersioning && numRenames_ == 0)
-    std::cout << "\nPASS: " << getName() << ": " << instantiation_->getName() << ": no rename\n";
-  return true;
 }
 
 PassFieldVersioning::RCKind
