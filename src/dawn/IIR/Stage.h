@@ -12,11 +12,12 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_STAGE_H
-#define DAWN_OPTIMIZER_STAGE_H
+#ifndef DAWN_IIR_STAGE_H
+#define DAWN_IIR_STAGE_H
 
-#include "dawn/Optimizer/DoMethod.h"
-#include "dawn/Optimizer/Field.h"
+#include "dawn/IIR/DoMethod.h"
+#include "dawn/IIR/IIRNode.h"
+#include "dawn/IIR/Field.h"
 #include "dawn/Optimizer/Interval.h"
 #include "dawn/Support/ArrayRef.h"
 #include <boost/optional.hpp>
@@ -26,9 +27,10 @@
 #include <vector>
 
 namespace dawn {
+namespace iir {
 
-class StencilInstantiation;
 class DependencyGraphAccesses;
+class StencilInstantiation;
 class MultiStage;
 
 /// @brief A Stage is represented by a collection of statements grouped into DoMethod of
@@ -38,41 +40,47 @@ class MultiStage;
 /// are separated by a `__syncthreads()` call in a kernel.
 ///
 /// @ingroup optimizer
-class Stage {
+class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
+
+  using base_type = IIRNode<MultiStage, Stage, DoMethod>;
+
   StencilInstantiation& stencilInstantiation_;
   MultiStage* multiStage_;
 
   /// Unique identifier of the stage
   int StageID_;
 
-  /// List of Do-Methods of this stage
-  std::vector<std::unique_ptr<DoMethod>> DoMethods_;
-
   /// Declaration of the fields of this stage
-  std::vector<Field> fields_;
+  std::unordered_map<int, Field> fields_;
 
   /// AccessIDs of the global variable accesses of this stage
   std::unordered_set<int> allGlobalVariables_;
   std::unordered_set<int> globalVariables_;
   std::unordered_set<int> globalVariablesFromStencilFunctionCalls_;
 
+  // TODO move extents to derived
   Extents extents_;
 
 public:
+  static constexpr const char* name = "Stage";
+
+  using DoMethodSmartPtr_t = child_smartptr_t<DoMethod>;
+  using ChildrenIterator = std::vector<child_smartptr_t<DoMethod>>::iterator;
+
   /// @name Constructors and Assignment
   /// @{
   Stage(StencilInstantiation& context, MultiStage* multiStage, int StageID,
         const Interval& interval);
-  Stage(const Stage&) = default;
+  Stage(StencilInstantiation& context, MultiStage* multiStage, int StageID);
+
+  //  Stage(const Stage&) = default;
   Stage(Stage&&) = default;
 
   Stage& operator=(const Stage&) = default;
   Stage& operator=(Stage&&) = default;
   /// @}
 
-  /// @brief Get the list of Do-Methods
-  std::vector<std::unique_ptr<DoMethod>>& getDoMethods();
-  const std::vector<std::unique_ptr<DoMethod>>& getDoMethods() const;
+  std::unique_ptr<Stage> clone() const;
 
   /// @brief Check if the stage contains of a single Do-Method
   bool hasSingleDoMethod() const;
@@ -109,7 +117,7 @@ public:
   ///
   /// @{
   bool overlaps(const Stage& other) const;
-  bool overlaps(const Interval& interval, ArrayRef<Field> fields) const;
+  bool overlaps(const Interval& interval, const std::unordered_map<int, Field>& fields) const;
   /// @}
 
   /// @brief Get the maximal vertical extent of this stage
@@ -123,8 +131,7 @@ public:
   /// `Input`
   ///
   /// The fields are computed during `Stage::update`.
-  std::vector<Field>& getFields() { return fields_; }
-  const std::vector<Field>& getFields() const { return fields_; }
+  const std::unordered_map<int, Field>& getFields() const { return fields_; }
 
   /// @brief Update the fields and global variables
   ///
@@ -157,13 +164,13 @@ public:
   /// @brief Add the given Do-Method to the list of Do-Methods of this stage
   ///
   /// Calls `update()` in the end.
-  void addDoMethod(std::unique_ptr<DoMethod>& doMethod);
+  void addDoMethod(const DoMethodSmartPtr_t& doMethod);
 
   /// @brief Append the `from` DoMethod to the existing `to` DoMethod of this stage and use
   /// `dependencyGraph` as the new DependencyGraphAccesses of this new Do-Method
   ///
   /// Calls `update()` in the end.
-  void appendDoMethod(std::unique_ptr<DoMethod>& from, std::unique_ptr<DoMethod>& to,
+  void appendDoMethod(DoMethodSmartPtr_t& from, DoMethodSmartPtr_t& to,
                       const std::shared_ptr<DependencyGraphAccesses>& dependencyGraph);
 
   /// @brief Get the loop order (induced by the multi-stage)
@@ -177,7 +184,8 @@ public:
   /// If a vector of graphs is provided, it will be assigned to the new stages.
   ///
   /// @return New stages
-  std::vector<std::shared_ptr<Stage>>
+  // TODO this should not be part of a Stage but rather algorithm
+  std::vector<std::unique_ptr<Stage>>
   split(std::deque<int>& splitterIndices,
         const std::deque<std::shared_ptr<DependencyGraphAccesses>>* graphs);
 
@@ -194,6 +202,7 @@ public:
   bool isEmptyOrNullStmt() const;
 };
 
+} // namespace iir
 } // namespace dawn
 
 #endif

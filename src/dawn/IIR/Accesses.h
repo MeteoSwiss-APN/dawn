@@ -12,13 +12,14 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_ACCESSES_H
-#define DAWN_OPTIMIZER_ACCESSES_H
+#ifndef DAWN_IIR_ACCESSES_H
+#define DAWN_IIR_ACCESSES_H
 
 #include "dawn/Optimizer/Extents.h"
 #include <unordered_map>
 
 namespace dawn {
+namespace iir {
 
 class StencilInstantiation;
 class StencilFunctionInstantiation;
@@ -93,6 +94,7 @@ public:
   /// @}
 };
 
+} // namespace iir
 } // namespace dawn
 
 #endif

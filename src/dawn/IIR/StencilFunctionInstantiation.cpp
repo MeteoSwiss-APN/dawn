@@ -12,11 +12,11 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/StencilFunctionInstantiation.h"
+#include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/Optimizer/AccessUtils.h"
-#include "dawn/Optimizer/Field.h"
+#include "dawn/IIR/Field.h"
 #include "dawn/Optimizer/Renaming.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/Printing.h"
@@ -25,6 +25,9 @@
 #include <numeric>
 
 namespace dawn {
+namespace iir {
+
+using ::dawn::operator<<;
 
 StencilFunctionInstantiation::StencilFunctionInstantiation(
     StencilInstantiation* context, const std::shared_ptr<StencilFunCallExpr>& expr,
@@ -34,6 +37,35 @@ StencilFunctionInstantiation::StencilFunctionInstantiation(
       interval_(interval), hasReturn_(false), isNested_(isNested) {
   DAWN_ASSERT(context);
   DAWN_ASSERT(function);
+}
+
+StencilFunctionInstantiation StencilFunctionInstantiation::clone() const {
+  StencilFunctionInstantiation stencilFun(stencilInstantiation_, expr_, function_, ast_, interval_,
+                                          isNested_);
+
+  stencilFun.hasReturn_ = hasReturn_;
+  stencilFun.argsBound_ = argsBound_;
+  stencilFun.ArgumentIndexToCallerAccessIDMap_ = ArgumentIndexToCallerAccessIDMap_;
+  stencilFun.ArgumentIndexToStencilFunctionInstantiationMap_ =
+      ArgumentIndexToStencilFunctionInstantiationMap_;
+  stencilFun.ArgumentIndexToCallerDirectionMap_ = ArgumentIndexToCallerDirectionMap_;
+  stencilFun.ArgumentIndexToCallerOffsetMap_ = ArgumentIndexToCallerOffsetMap_;
+  stencilFun.CallerAcceessIDToInitialOffsetMap_ = CallerAcceessIDToInitialOffsetMap_;
+  stencilFun.ExprToCallerAccessIDMap_ = ExprToCallerAccessIDMap_;
+  stencilFun.StmtToCallerAccessIDMap_ = StmtToCallerAccessIDMap_;
+  stencilFun.AccessIDToNameMap_ = AccessIDToNameMap_;
+  stencilFun.LiteralAccessIDToNameMap_ = LiteralAccessIDToNameMap_;
+  stencilFun.ExprToStencilFunctionInstantiationMap_ = ExprToStencilFunctionInstantiationMap_;
+  stencilFun.calleeFields_ = calleeFields_;
+  stencilFun.callerFields_ = callerFields_;
+  stencilFun.unusedFields_ = unusedFields_;
+  stencilFun.GlobalVariableAccessIDSet_ = GlobalVariableAccessIDSet_;
+
+  for(const auto& stmt : statementAccessesPairs_) {
+    stencilFun.statementAccessesPairs_.push_back(stmt->clone());
+  }
+
+  return stencilFun;
 }
 
 Array3i StencilFunctionInstantiation::evalOffsetOfFieldAccessExpr(
@@ -303,7 +335,6 @@ void StencilFunctionInstantiation::setAccessIDOfExpr(const std::shared_ptr<Expr>
 
 void StencilFunctionInstantiation::mapExprToAccessID(const std::shared_ptr<Expr>& expr,
                                                      int accessID) {
-
   DAWN_ASSERT(!ExprToCallerAccessIDMap_.count(expr) ||
               ExprToCallerAccessIDMap_.at(expr) == accessID);
 
@@ -346,7 +377,6 @@ StencilFunctionInstantiation::getExprToStencilFunctionInstantiationMap() const {
 
 void StencilFunctionInstantiation::insertExprToStencilFunction(
     const std::shared_ptr<StencilFunctionInstantiation>& stencilFun) {
-
   DAWN_ASSERT(!ExprToStencilFunctionInstantiationMap_.count(stencilFun->getExpression()));
 
   ExprToStencilFunctionInstantiationMap_.emplace(stencilFun->getExpression(), stencilFun);
@@ -373,12 +403,14 @@ StencilFunctionInstantiation::getStencilFunctionInstantiation(
   return it->second;
 }
 
-std::vector<std::shared_ptr<StatementAccessesPair>>&
+// TODO getter should return const
+std::vector<std::unique_ptr<StatementAccessesPair>>&
 StencilFunctionInstantiation::getStatementAccessesPairs() {
+  // TODO does this belong here, isnt it in IIR?
   return statementAccessesPairs_;
 }
 
-const std::vector<std::shared_ptr<StatementAccessesPair>>&
+const std::vector<std::unique_ptr<StatementAccessesPair>>&
 StencilFunctionInstantiation::getStatementAccessesPairs() const {
   return statementAccessesPairs_;
 }
@@ -681,4 +713,6 @@ void StencilFunctionInstantiation::checkFunctionBindings() const {
   DAWN_ASSERT_MSG((getAST()->getRoot()->getStatements().size() == statementAccessesPairs_.size()),
                   "AST has different number of statements as the statement accesses pairs");
 }
+
+} // namespace iir
 } // namespace dawn

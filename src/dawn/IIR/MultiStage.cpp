@@ -12,33 +12,46 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/MultiStage.h"
-#include "dawn/Optimizer/Accesses.h"
-#include "dawn/Optimizer/DependencyGraphAccesses.h"
+#include "dawn/IIR/MultiStage.h"
+#include "dawn/IIR/Accesses.h"
+#include "dawn/IIR/DependencyGraphAccesses.h"
+// TODO remove as much as possible includes from Optimizer
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 #include "dawn/Optimizer/Renaming.h"
-#include "dawn/Optimizer/Stage.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/Stage.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/STLExtras.h"
 #include "dawn/Optimizer/MultiInterval.h"
 #include "dawn/Optimizer/IntervalAlgorithms.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 
 namespace dawn {
+namespace iir {
 
 MultiStage::MultiStage(StencilInstantiation& stencilInstantiation, LoopOrderKind loopOrder)
     : stencilInstantiation_(stencilInstantiation), loopOrder_(loopOrder) {}
 
-std::vector<std::shared_ptr<MultiStage>>
+std::unique_ptr<MultiStage> MultiStage::clone() const {
+  auto cloneMS = make_unique<MultiStage>(stencilInstantiation_, loopOrder_);
+
+  cloneMS->caches_ = caches_;
+  cloneMS->fields_ = fields_;
+
+  cloneMS->cloneChildrenFrom(*this);
+  return cloneMS;
+}
+
+std::vector<std::unique_ptr<MultiStage>>
 MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
                   LoopOrderKind lastLoopOrder) {
 
-  std::vector<std::shared_ptr<MultiStage>> newMultiStages;
+  std::vector<std::unique_ptr<MultiStage>> newMultiStages;
 
   int curStageIndex = 0;
-  auto curStageIt = stages_.begin();
+  auto curStageIt = children_.begin();
   std::deque<int> curStageSplitterIndices;
 
-  newMultiStages.push_back(std::make_shared<MultiStage>(stencilInstantiation_, lastLoopOrder));
+  newMultiStages.push_back(make_unique<MultiStage>(stencilInstantiation_, lastLoopOrder));
 
   for(std::size_t i = 0; i < splitterIndices.size(); ++i) {
     SplitIndex& splitIndex = splitterIndices[i];
@@ -47,7 +60,7 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
 
       curStageSplitterIndices.push_back(splitIndex.StmtIndex);
       newMultiStages.push_back(
-          std::make_shared<MultiStage>(stencilInstantiation_, splitIndex.LowerLoopOrder));
+          make_unique<MultiStage>(stencilInstantiation_, splitIndex.LowerLoopOrder));
       lastLoopOrder = splitIndex.LowerLoopOrder;
     }
 
@@ -61,17 +74,16 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
         auto newMultiStageRIt = newMultiStages.rbegin();
         for(auto newStagesRIt = newStages.rbegin(); newStagesRIt != newStages.rend();
             ++newStagesRIt, ++newMultiStageRIt)
-          (*newMultiStageRIt)->getStages().push_back(std::move(*newStagesRIt));
+          (*newMultiStageRIt)->insertChild(*newStagesRIt);
 
         curStageSplitterIndices.clear();
       } else {
         // No split in this stage, just move it to the current multi-stage
-        newMultiStages.back()->getStages().push_back(std::move(*curStageIt));
+        newMultiStages.back()->insertChild(std::move(*curStageIt));
       }
 
       if(i != (splitterIndices.size() - 1))
-        newMultiStages.push_back(
-            std::make_shared<MultiStage>(stencilInstantiation_, lastLoopOrder));
+        newMultiStages.push_back(make_unique<MultiStage>(stencilInstantiation_, lastLoopOrder));
 
       // Handle the next stage
       curStageIndex++;
@@ -85,10 +97,10 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
 std::shared_ptr<DependencyGraphAccesses>
 MultiStage::getDependencyGraphOfInterval(const Interval& interval) const {
   auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(&stencilInstantiation_);
-  std::for_each(stages_.begin(), stages_.end(), [&](const std::shared_ptr<Stage>& stagePtr) {
+  std::for_each(children_.begin(), children_.end(), [&](const std::unique_ptr<Stage>& stagePtr) {
     if(interval.overlaps(stagePtr->getEnclosingExtendedInterval()))
-      std::for_each(stagePtr->getDoMethods().begin(), stagePtr->getDoMethods().end(),
-                    [&](const std::unique_ptr<DoMethod>& DoMethodPtr) {
+      std::for_each(stagePtr->childrenBegin(), stagePtr->childrenEnd(),
+                    [&](const Stage::DoMethodSmartPtr_t& DoMethodPtr) {
                       dependencyGraph->merge(DoMethodPtr->getDependencyGraph().get());
                     });
   });
@@ -97,9 +109,9 @@ MultiStage::getDependencyGraphOfInterval(const Interval& interval) const {
 
 std::shared_ptr<DependencyGraphAccesses> MultiStage::getDependencyGraphOfAxis() const {
   auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(&stencilInstantiation_);
-  std::for_each(stages_.begin(), stages_.end(), [&](const std::shared_ptr<Stage>& stagePtr) {
-    std::for_each(stagePtr->getDoMethods().begin(), stagePtr->getDoMethods().end(),
-                  [&](const std::unique_ptr<DoMethod>& DoMethodPtr) {
+  std::for_each(children_.begin(), children_.end(), [&](const std::unique_ptr<Stage>& stagePtr) {
+    std::for_each(stagePtr->childrenBegin(), stagePtr->childrenEnd(),
+                  [&](const Stage::DoMethodSmartPtr_t& DoMethodPtr) {
                     dependencyGraph->merge(DoMethodPtr->getDependencyGraph().get());
                   });
   });
@@ -119,7 +131,7 @@ Cache& MultiStage::setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy poli
       .first->second;
 }
 
-std::vector<DoMethod> MultiStage::computeOrderedDoMethods() const {
+std::vector<std::unique_ptr<DoMethod>> MultiStage::computeOrderedDoMethods() const {
   auto intervals_set = getIntervals();
   std::vector<Interval> intervals_v;
   std::copy(intervals_set.begin(), intervals_set.end(), std::back_inserter(intervals_v));
@@ -129,20 +141,18 @@ std::vector<DoMethod> MultiStage::computeOrderedDoMethods() const {
   if((getLoopOrder() == LoopOrderKind::LK_Backward))
     std::reverse(partitionIntervals.begin(), partitionIntervals.end());
 
-  std::vector<DoMethod> orderedDoMethods;
+  std::vector<std::unique_ptr<DoMethod>> orderedDoMethods;
 
   for(auto interval : partitionIntervals) {
-    for(const auto& stagePtr : getStages()) {
-      for(const auto& doMethod : stagePtr->getDoMethods()) {
 
-        if(doMethod->getInterval().overlaps(interval)) {
-          DoMethod partitionedDoMethod(*doMethod);
+    for(const auto& doMethod : iterateIIROver<DoMethod>(*this)) {
+      if(doMethod->getInterval().overlaps(interval)) {
+        std::unique_ptr<DoMethod> partitionedDoMethod = doMethod->clone();
 
-          partitionedDoMethod.setInterval(interval);
-          orderedDoMethods.push_back(partitionedDoMethod);
-          // there should not be two do methods in the same stage with overlapping intervals
-          continue;
-        }
+        partitionedDoMethod->setInterval(interval);
+        orderedDoMethods.push_back(std::move(partitionedDoMethod));
+        // there should not be two do methods in the same stage with overlapping intervals
+        continue;
       }
     }
   }
@@ -152,23 +162,23 @@ std::vector<DoMethod> MultiStage::computeOrderedDoMethods() const {
 
 MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
 
-  std::vector<DoMethod> orderedDoMethods = computeOrderedDoMethods();
+  std::vector<std::unique_ptr<DoMethod>> orderedDoMethods = computeOrderedDoMethods();
 
   MultiInterval writeInterval;
   MultiInterval writeIntervalPre;
   MultiInterval readInterval;
 
   for(const auto& doMethod : orderedDoMethods) {
-    for(const auto& statementAccesssPair : doMethod.getStatementAccessesPairs()) {
+    for(const auto& statementAccesssPair : doMethod->getChildren()) {
       const Accesses& accesses = *statementAccesssPair->getAccesses();
       if(accesses.hasWriteAccess(accessID)) {
-        writeIntervalPre.insert(doMethod.getInterval());
+        writeIntervalPre.insert(doMethod->getInterval());
       }
     }
   }
 
   for(const auto& doMethod : orderedDoMethods) {
-    for(const auto& statementAccesssPair : doMethod.getStatementAccessesPairs()) {
+    for(const auto& statementAccesssPair : doMethod->getChildren()) {
       const Accesses& accesses = *statementAccesssPair->getAccesses();
       // indepdently of whether the statement has also a write access, if there is a read
       // access, it should happen in the RHS so first
@@ -178,7 +188,7 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
         Extents const& readAccessExtent = accesses.getReadAccess(accessID);
         boost::optional<Extent> readAccessInLoopOrder = readAccessExtent.getVerticalLoopOrderExtent(
             getLoopOrder(), Extents::VerticalLoopOrderDir::VL_InLoopOrder, false);
-        Interval computingInterval = doMethod.getInterval();
+        Interval computingInterval = doMethod->getInterval();
         if(readAccessInLoopOrder.is_initialized()) {
           interv.insert(computingInterval.extendInterval(*readAccessInLoopOrder));
         }
@@ -202,7 +212,7 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
         readInterval.insert(interv);
       }
       if(accesses.hasWriteAccess(accessID)) {
-        writeInterval.insert(doMethod.getInterval());
+        writeInterval.insert(doMethod->getInterval());
       }
     }
   }
@@ -214,7 +224,7 @@ boost::optional<Interval>
 MultiStage::computeEnclosingAccessInterval(const int accessID,
                                            const bool mergeWithDoInterval) const {
   boost::optional<Interval> interval;
-  for(auto const& stage : stages_) {
+  for(auto const& stage : children_) {
     boost::optional<Interval> doInterval =
         stage->computeEnclosingAccessInterval(accessID, mergeWithDoInterval);
 
@@ -230,18 +240,19 @@ MultiStage::computeEnclosingAccessInterval(const int accessID,
 
 std::unordered_set<Interval> MultiStage::getIntervals() const {
   std::unordered_set<Interval> intervals;
-  for(const auto& stagePtr : stages_)
-    for(const auto& doMethodPtr : stagePtr->getDoMethods())
-      intervals.insert(doMethodPtr->getInterval());
+
+  for(const auto& doMethodPtr : iterateIIROver<DoMethod>(*this)) {
+    intervals.insert(doMethodPtr->getInterval());
+  }
   return intervals;
 }
 
 Interval MultiStage::getEnclosingInterval() const {
-  DAWN_ASSERT(!stages_.empty());
-  Interval interval = (*stages_.begin())->getEnclosingInterval();
+  DAWN_ASSERT(!children_.empty());
+  Interval interval = (*children_.begin())->getEnclosingInterval();
 
-  for(auto it = std::next(stages_.begin()), end = stages_.end(); it != end; ++it)
-    interval.merge((*stages_.begin())->getEnclosingInterval());
+  for(auto it = std::next(children_.begin()), end = children_.end(); it != end; ++it)
+    interval.merge((*children_.begin())->getEnclosingInterval());
 
   return interval;
 }
@@ -251,9 +262,11 @@ boost::optional<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() co
   // notice we dont use here the fields of getFields() since they contain the enclosing of all the
   // extents and intervals of all stages and it would give larger intervals than really required
   // inspecting the extents and intervals of individual stages
-  for(const auto& stagePtr : stages_) {
-    for(const Field& field : stagePtr->getFields()) {
-      int AccessID = field.getAccessID();
+  for(const auto& stagePtr : children_) {
+    for(const auto& fieldPair : stagePtr->getFields()) {
+      const Field& field = fieldPair.second;
+      int AccessID = fieldPair.first;
+
       if(!stencilInstantiation_.isTemporaryField(AccessID))
         continue;
 
@@ -271,37 +284,29 @@ boost::optional<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() co
 std::unordered_map<int, Field> MultiStage::getFields() const {
   std::unordered_map<int, Field> fields;
 
-  for(const auto& stagePtr : stages_) {
-    for(const Field& field : stagePtr->getFields()) {
-      auto it = fields.find(field.getAccessID());
-      if(it != fields.end()) {
-        // Adjust the Intend
-        if(it->second.getIntend() == Field::IK_Input && field.getIntend() == Field::IK_Output)
-          it->second.setIntend(Field::IK_InputOutput);
-        else if(it->second.getIntend() == Field::IK_Output && field.getIntend() == Field::IK_Input)
-          it->second.setIntend(Field::IK_InputOutput);
-
-        // Merge the Extent
-        it->second.mergeReadExtents(field.getReadExtents());
-        it->second.mergeWriteExtents(field.getWriteExtents());
-        it->second.extendInterval(field.getInterval());
-      } else
-        fields.emplace(field.getAccessID(), field);
-    }
+  for(const auto& stagePtr : children_) {
+    mergeFields(stagePtr->getFields(), fields);
   }
 
   return fields;
 }
 
+void MultiStage::update() {
+  fields_.clear();
+  for(const auto& stagePtr : children_) {
+    mergeFields(stagePtr->getFields(), fields_);
+  }
+}
+
 void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
-  for(auto stageIt = getStages().begin(); stageIt != getStages().end(); ++stageIt) {
+  for(auto stageIt = childrenBegin(); stageIt != childrenEnd(); ++stageIt) {
     Stage& stage = (**stageIt);
-    for(auto& doMethodPtr : stage.getDoMethods()) {
-      DoMethod& doMethod = *doMethodPtr;
+    for(const auto& doMethodPtr : stage.getChildren()) {
+      const DoMethod& doMethod = *doMethodPtr;
       renameAccessIDInStmts(&stencilInstantiation_, oldAccessID, newAccessID,
-                            doMethod.getStatementAccessesPairs());
+                            doMethod.getChildren());
       renameAccessIDInAccesses(&stencilInstantiation_, oldAccessID, newAccessID,
-                               doMethod.getStatementAccessesPairs());
+                               doMethod.getChildren());
     }
 
     stage.update();
@@ -309,11 +314,13 @@ void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
 }
 
 bool MultiStage::isEmptyOrNullStmt() const {
-  for(auto stageIt = getStages().begin(); stageIt != getStages().end(); ++stageIt) {
-    if(!(*stageIt)->isEmptyOrNullStmt())
+  for(const auto& stage : getChildren()) {
+    if(!(stage)->isEmptyOrNullStmt()) {
       return false;
+    }
   }
   return true;
 }
 
+} // namespace iir
 } // namespace dawn

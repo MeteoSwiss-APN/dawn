@@ -34,7 +34,7 @@ protected:
   ComputeStageExtents() : compiler_(compileOptions_.get()) {}
   virtual void SetUp() {}
 
-  std::vector<std::shared_ptr<Stencil>> loadTest(std::string sirFilename) {
+  std::unique_ptr<iir::IIR> loadTest(std::string sirFilename) {
 
     std::string filename = TestEnvironment::path_ + "/" + sirFilename;
     std::ifstream file(filename);
@@ -56,14 +56,18 @@ protected:
     DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("compute_extent_test_stencil")),
                     "compute_extent_test_stencil not found in sir");
 
-    return optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"]->getStencils();
+    const std::unique_ptr<iir::IIR>& iir =
+        optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"]->getIIR();
+    return iir->clone();
   }
 };
 
 TEST_F(ComputeStageExtents, test_stencil_01) {
-  auto stencils = loadTest("compute_extent_test_stencil_01.sir");
+  std::unique_ptr<iir::IIR> IIR = loadTest("compute_extent_test_stencil_01.sir");
+  const auto& stencils = IIR->getChildren();
+
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 2);
   EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-1, 1, -1, 1, 0, 0}));
@@ -71,10 +75,11 @@ TEST_F(ComputeStageExtents, test_stencil_01) {
 }
 
 TEST_F(ComputeStageExtents, test_stencil_02) {
-  auto stencils = loadTest("compute_extent_test_stencil_02.sir");
+  std::unique_ptr<iir::IIR> IIR = loadTest("compute_extent_test_stencil_02.sir");
+  const auto& stencils = IIR->getChildren();
 
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 3);
   EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-1, 1, -1, 1, 0, 0}));
@@ -82,9 +87,10 @@ TEST_F(ComputeStageExtents, test_stencil_02) {
   EXPECT_EQ(stencil->getStage(2)->getExtents(), (Extents{0, 0, 0, 0, 0, 0}));
 }
 TEST_F(ComputeStageExtents, test_stencil_03) {
-  auto stencils = loadTest("compute_extent_test_stencil_03.sir");
+  std::unique_ptr<iir::IIR> IIR = loadTest("compute_extent_test_stencil_03.sir");
+  const auto& stencils = IIR->getChildren();
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 4);
   EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-1, 1, -1, 2, 0, 0}));
@@ -94,10 +100,11 @@ TEST_F(ComputeStageExtents, test_stencil_03) {
 }
 
 TEST_F(ComputeStageExtents, test_stencil_04) {
-  auto stencils = loadTest("compute_extent_test_stencil_04.sir");
+  std::unique_ptr<iir::IIR> IIR = loadTest("compute_extent_test_stencil_04.sir");
+  const auto& stencils = IIR->getChildren();
 
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 4);
   EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-2, 3, -2, 1, 0, 0}));
@@ -107,9 +114,10 @@ TEST_F(ComputeStageExtents, test_stencil_04) {
 }
 
 TEST_F(ComputeStageExtents, test_stencil_05) {
-  auto stencils = loadTest("compute_extent_test_stencil_05.sir");
+  std::unique_ptr<iir::IIR> IIR = loadTest("compute_extent_test_stencil_05.sir");
+  const auto& stencils = IIR->getChildren();
   ASSERT_TRUE((stencils.size() == 1));
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 4);
   EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-2, 3, -2, 1, 0, 0}));

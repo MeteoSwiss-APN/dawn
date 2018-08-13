@@ -15,10 +15,10 @@
 #ifndef DAWN_OPTIMIZER_PASSSETMULTISTAGECACHES_H
 #define DAWN_OPTIMIZER_PASSSETMULTISTAGECACHES_H
 
-#include "dawn/Optimizer/Stencil.h"
+#include "dawn/IIR/Stencil.h"
 #include "dawn/Optimizer/Interval.h"
 #include "dawn/Optimizer/Pass.h"
-#include "dawn/Optimizer/Stage.h"
+#include "dawn/IIR/Stage.h"
 #include "dawn/Optimizer/Cache.h"
 
 namespace dawn {
@@ -33,7 +33,7 @@ public:
   PassSetCaches();
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
 };
 
 } // namespace dawn

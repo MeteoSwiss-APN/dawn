@@ -12,16 +12,17 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/StatementAccessesPair.h"
-#include "dawn/Optimizer/Accesses.h"
-#include "dawn/Optimizer/StencilFunctionInstantiation.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/Accesses.h"
+#include "dawn/IIR/StencilFunctionInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/ASTStringifier.h"
 #include "dawn/SIR/Statement.h"
 #include "dawn/Support/Printing.h"
 #include <sstream>
 
 namespace dawn {
+namespace iir {
 
 namespace {
 
@@ -49,9 +50,9 @@ static std::string toStringImpl(const StatementAccessesPair* pair,
     ss << pair->getCalleeAccesses()->toString(instantiation, curIndent + DAWN_PRINT_INDENT) << "\n";
   }
 
-  if(!pair->getChildren().empty()) {
-    ss << curIndentStr << "Children:\n";
-    for(auto& child : pair->getChildren())
+  if(!pair->getBlockStatements().empty()) {
+    ss << curIndentStr << "BlockStatements:\n";
+    for(auto& child : pair->getBlockStatements())
       ss << child->toString(instantiation, curIndent);
   }
   ss << initialIndentStr << "]\n";
@@ -63,6 +64,18 @@ static std::string toStringImpl(const StatementAccessesPair* pair,
 
 StatementAccessesPair::StatementAccessesPair(const std::shared_ptr<Statement>& statement)
     : statement_(statement), callerAccesses_(nullptr), calleeAccesses_(nullptr) {}
+
+std::unique_ptr<StatementAccessesPair> StatementAccessesPair::clone() const {
+  auto cloneSAP = make_unique<StatementAccessesPair>(statement_);
+
+  cloneSAP->callerAccesses_ = callerAccesses_;
+  cloneSAP->calleeAccesses_ = calleeAccesses_;
+  cloneSAP->blockStatements_ = blockStatements_.clone();
+
+  cloneSAP->cloneChildrenFrom(*this);
+
+  return cloneSAP;
+}
 
 std::shared_ptr<Statement> StatementAccessesPair::getStatement() const { return statement_; }
 
@@ -76,13 +89,13 @@ void StatementAccessesPair::setAccesses(const std::shared_ptr<Accesses>& accesse
   callerAccesses_ = accesses;
 }
 
-const std::vector<std::shared_ptr<StatementAccessesPair>>&
-StatementAccessesPair::getChildren() const {
-  return children_;
+const std::vector<std::unique_ptr<StatementAccessesPair>>&
+StatementAccessesPair::getBlockStatements() const {
+  return blockStatements_.getBlockStatements();
 }
 
-std::vector<std::shared_ptr<StatementAccessesPair>>& StatementAccessesPair::getChildren() {
-  return children_;
+void StatementAccessesPair::insertBlockStatement(std::unique_ptr<StatementAccessesPair>&& stmt) {
+  blockStatements_.insert(std::move(stmt));
 }
 
 boost::optional<Extents> StatementAccessesPair::computeMaximumExtents(const int accessID) const {
@@ -105,7 +118,7 @@ boost::optional<Extents> StatementAccessesPair::computeMaximumExtents(const int 
     }
   }
 
-  for(auto const& child : children_) {
+  for(auto const& child : blockStatements_.getBlockStatements()) {
     auto childExtent = child->computeMaximumExtents(accessID);
     if(!childExtent.is_initialized())
       continue;
@@ -118,7 +131,9 @@ boost::optional<Extents> StatementAccessesPair::computeMaximumExtents(const int 
   return extents;
 }
 
-bool StatementAccessesPair::hasChildren() const { return !children_.empty(); }
+bool StatementAccessesPair::hasBlockStatements() const {
+  return blockStatements_.hasBlockStatements();
+}
 
 std::shared_ptr<Accesses> StatementAccessesPair::getCallerAccesses() const { return getAccesses(); }
 
@@ -146,4 +161,5 @@ std::string StatementAccessesPair::toString(const StencilFunctionInstantiation* 
   return toStringImpl(this, stencilFunc, initialIndent);
 }
 
+} // namespace iir
 } // namespace dawn

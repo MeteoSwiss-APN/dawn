@@ -35,7 +35,8 @@ protected:
   MultiStageTest() : compiler_(compileOptions_.get()) {}
   virtual void SetUp() {}
 
-  std::shared_ptr<StencilInstantiation> loadTest(std::string sirFilename, std::string stencilName) {
+  std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename,
+                                                      std::string stencilName) {
 
     std::string filename = TestEnvironment::path_ + "/" + sirFilename;
     std::ifstream file(filename);
@@ -138,61 +139,61 @@ TEST_F(MultiStageTest, test_compute_ordered_do_methods) {
   //    }
 
   auto stencilInstantiation = loadTest("test_compute_ordered_do_methods.sir", "stencil");
-  auto stencils = stencilInstantiation->getStencils();
+  const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
-  EXPECT_EQ(stencil->getMultiStages().size(), 1);
+  EXPECT_EQ(stencil->getChildren().size(), 1);
 
-  auto const& mss = stencil->getMultiStages().front();
+  auto const& mss = (*stencil->childrenBegin());
 
-  EXPECT_EQ(mss->getStages().size(), 3);
-  auto stageit = mss->getStages().begin();
+  EXPECT_EQ(mss->getChildren().size(), 3);
+  auto stageit = mss->getChildren().begin();
   auto const& stage0 = *stageit;
-  EXPECT_EQ(stage0->getDoMethods().size(), 2);
-  auto const& do0_0 = stage0->getDoMethods()[0];
-  auto const& do0_1 = stage0->getDoMethods()[1];
+  EXPECT_EQ(stage0->getChildren().size(), 2);
+  auto const& do0_0 = stage0->getChildren().at(0);
+  auto const& do0_1 = stage0->getChildren().at(1);
 
   stageit++;
   auto const& stage1 = *stageit;
-  EXPECT_EQ(stage1->getDoMethods().size(), 3);
-  auto const& do1_0 = stage1->getDoMethods()[0];
-  auto const& do1_1 = stage1->getDoMethods()[1];
-  auto const& do1_2 = stage1->getDoMethods()[2];
+  EXPECT_EQ(stage1->getChildren().size(), 3);
+  auto const& do1_0 = stage1->getChildren().at(0);
+  auto const& do1_1 = stage1->getChildren().at(1);
+  auto const& do1_2 = stage1->getChildren().at(2);
 
   stageit++;
   auto const& stage2 = *stageit;
-  EXPECT_EQ(stage2->getDoMethods().size(), 1);
-  auto const& do2_0 = stage2->getDoMethods()[0];
+  EXPECT_EQ(stage2->getChildren().size(), 1);
+  auto const& do2_0 = stage2->getChildren().at(0);
 
   auto orderedDoMethods = mss->computeOrderedDoMethods();
   EXPECT_EQ(orderedDoMethods.size(), 8);
 
-  EXPECT_EQ(orderedDoMethods[0].getInterval(), (Interval{0, 0}));
-  EXPECT_EQ(orderedDoMethods[0].getID(), do0_0->getID());
+  EXPECT_EQ(orderedDoMethods[0]->getInterval(), (Interval{0, 0}));
+  EXPECT_EQ(orderedDoMethods[0]->getID(), do0_0->getID());
 
-  EXPECT_EQ(orderedDoMethods[1].getInterval(), (Interval{0, 0}));
-  EXPECT_EQ(orderedDoMethods[1].getID(), do1_0->getID());
+  EXPECT_EQ(orderedDoMethods[1]->getInterval(), (Interval{0, 0}));
+  EXPECT_EQ(orderedDoMethods[1]->getID(), do1_0->getID());
 
-  EXPECT_EQ(orderedDoMethods[2].getInterval(), (Interval{1, sir::Interval::End - 4}));
-  EXPECT_EQ(orderedDoMethods[2].getID(), do0_1->getID());
+  EXPECT_EQ(orderedDoMethods[2]->getInterval(), (Interval{1, sir::Interval::End - 4}));
+  EXPECT_EQ(orderedDoMethods[2]->getID(), do0_1->getID());
 
-  EXPECT_EQ(orderedDoMethods[3].getInterval(), (Interval{1, sir::Interval::End - 4}));
-  EXPECT_EQ(orderedDoMethods[3].getID(), do1_1->getID());
+  EXPECT_EQ(orderedDoMethods[3]->getInterval(), (Interval{1, sir::Interval::End - 4}));
+  EXPECT_EQ(orderedDoMethods[3]->getID(), do1_1->getID());
 
-  EXPECT_EQ(orderedDoMethods[4].getInterval(),
+  EXPECT_EQ(orderedDoMethods[4]->getInterval(),
             (Interval{sir::Interval::End - 3, sir::Interval::End - 1}));
-  EXPECT_EQ(orderedDoMethods[4].getID(), do0_1->getID());
+  EXPECT_EQ(orderedDoMethods[4]->getID(), do0_1->getID());
 
-  EXPECT_EQ(orderedDoMethods[5].getInterval(),
+  EXPECT_EQ(orderedDoMethods[5]->getInterval(),
             (Interval{sir::Interval::End - 3, sir::Interval::End - 1}));
-  EXPECT_EQ(orderedDoMethods[5].getID(), do2_0->getID());
+  EXPECT_EQ(orderedDoMethods[5]->getID(), do2_0->getID());
 
-  EXPECT_EQ(orderedDoMethods[6].getInterval(), (Interval{sir::Interval::End, sir::Interval::End}));
-  EXPECT_EQ(orderedDoMethods[6].getID(), do1_2->getID());
+  EXPECT_EQ(orderedDoMethods[6]->getInterval(), (Interval{sir::Interval::End, sir::Interval::End}));
+  EXPECT_EQ(orderedDoMethods[6]->getID(), do1_2->getID());
 
-  EXPECT_EQ(orderedDoMethods[7].getInterval(), (Interval{sir::Interval::End, sir::Interval::End}));
-  EXPECT_EQ(orderedDoMethods[7].getID(), do2_0->getID());
+  EXPECT_EQ(orderedDoMethods[7]->getInterval(), (Interval{sir::Interval::End, sir::Interval::End}));
+  EXPECT_EQ(orderedDoMethods[7]->getID(), do2_0->getID());
 }
 
 TEST_F(MultiStageTest, test_compute_read_access_interval) {
@@ -228,13 +229,13 @@ TEST_F(MultiStageTest, test_compute_read_access_interval) {
   //    }
 
   auto stencilInstantiation = loadTest("test_compute_read_access_interval.sir", "stencil");
-  auto stencils = stencilInstantiation->getStencils();
+  const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
-  EXPECT_EQ(stencil->getMultiStages().size(), 1);
+  EXPECT_EQ(stencil->getChildren().size(), 1);
 
-  auto const& mss = stencil->getMultiStages().front();
+  auto const& mss = *stencil->childrenBegin();
 
   int accessID = stencilInstantiation->getAccessIDFromName("tmp");
   auto interval = mss->computeReadAccessInterval(accessID);
@@ -297,13 +298,13 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_02) {
   //    }
 
   auto stencilInstantiation = loadTest("test_compute_read_access_interval_02.sir", "stencil");
-  auto stencils = stencilInstantiation->getStencils();
+  const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
-  EXPECT_EQ(stencil->getMultiStages().size(), 1);
+  EXPECT_EQ(stencil->getChildren().size(), 1);
 
-  auto const& mss = stencil->getMultiStages().front();
+  auto const& mss = *stencil->childrenBegin();
 
   int accessID = stencilInstantiation->getAccessIDFromName("tmp");
   auto interval = mss->computeReadAccessInterval(accessID);
@@ -362,13 +363,13 @@ TEST_F(MultiStageTest, test_field_access_interval_04) {
 
   auto stencilInstantiation =
       loadTest("test_field_access_interval_04.sir", "compute_extent_test_stencil");
-  auto stencils = stencilInstantiation->getStencils();
+  const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
-  EXPECT_EQ(stencil->getMultiStages().size(), 1);
+  EXPECT_EQ(stencil->getChildren().size(), 1);
 
-  auto const& mss = stencil->getMultiStages().front();
+  auto const& mss = *stencil->childrenBegin();
 
   int accessID = stencilInstantiation->getAccessIDFromName("u");
   auto interval = mss->computeReadAccessInterval(accessID);
@@ -440,13 +441,13 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_03) {
   //    }
 
   auto stencilInstantiation = loadTest("test_compute_read_access_interval_03.sir", "stencil");
-  auto stencils = stencilInstantiation->getStencils();
+  const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
-  EXPECT_EQ(stencil->getMultiStages().size(), 2);
+  EXPECT_EQ(stencil->getChildren().size(), 2);
 
-  auto const mss0it = stencil->getMultiStages().begin();
+  auto const mss0it = stencil->childrenBegin();
   auto const& mss0 = *mss0it;
 
   int accessID = stencilInstantiation->getAccessIDFromName("tmp");
@@ -556,13 +557,13 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_04) {
   //}
 
   auto stencilInstantiation = loadTest("test_compute_read_access_interval_04.sir", "stencil");
-  auto stencils = stencilInstantiation->getStencils();
+  const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
-  EXPECT_EQ(stencil->getMultiStages().size(), 3);
+  EXPECT_EQ(stencil->getChildren().size(), 3);
 
-  auto const mss0it = stencil->getMultiStages().begin();
+  auto const mss0it = stencil->childrenBegin();
   auto const& mss0 = *(mss0it);
 
   int accessID = stencilInstantiation->getAccessIDFromName("tmp");

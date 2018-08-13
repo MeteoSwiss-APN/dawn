@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/DependencyGraphAccesses.h"
+#include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/Support/STLExtras.h"
 #include <gtest/gtest.h>
 #include <set>
@@ -24,8 +24,8 @@ using namespace dawn;
 namespace {
 
 /// @brief Convencience graph to test the coloring algorithm
-class TestGraph : public DependencyGraphAccesses {
-  using Base = DependencyGraphAccesses;
+class TestGraph : public iir::DependencyGraphAccesses {
+  using Base = iir::DependencyGraphAccesses;
 
 public:
   TestGraph() : Base(nullptr) {}

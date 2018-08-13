@@ -14,38 +14,39 @@
 
 #include "dawn/Optimizer/PassSSA.h"
 #include "dawn/Optimizer/AccessComputation.h"
-#include "dawn/Optimizer/DependencyGraphAccesses.h"
+#include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include <unordered_set>
 
 namespace dawn {
 
 PassSSA::PassSSA() : Pass("PassSSA") {}
 
-bool PassSSA::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
+bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   if(!context->getOptions().SSA)
     return true;
 
-  for(auto& stencilPtr : stencilInstantiation->getStencils()) {
-    Stencil& stencil = *stencilPtr;
+  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
+    iir::Stencil& stencil = *stencilPtr;
 
-    std::shared_ptr<DependencyGraphAccesses> DAG =
-        std::make_shared<DependencyGraphAccesses>(stencilInstantiation.get());
+    // TODO remove <type> in make_shared since it inhibits perfect forwarding
+    std::shared_ptr<iir::DependencyGraphAccesses> DAG =
+        std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation.get());
 
     std::unordered_set<int> tochedAccessIDs;
 
     // Iterate each statement of the stencil (top -> bottom)
     for(int stageIdx = 0; stageIdx < stencil.getNumStages(); ++stageIdx) {
-      std::shared_ptr<Stage> stagePtr = stencil.getStage(stageIdx);
+      const std::unique_ptr<iir::Stage>& stagePtr = stencil.getStage(stageIdx);
 
-      DoMethod& doMethod = stagePtr->getSingleDoMethod();
-      for(int stmtIdx = 0; stmtIdx < doMethod.getStatementAccessesPairs().size(); ++stmtIdx) {
+      iir::DoMethod& doMethod = stagePtr->getSingleDoMethod();
+      for(int stmtIdx = 0; stmtIdx < doMethod.getChildren().size(); ++stmtIdx) {
 
-        std::shared_ptr<StatementAccessesPair> stmtAccessesPair =
-            doMethod.getStatementAccessesPairs()[stmtIdx];
+        const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessesPair =
+            doMethod.getChildren()[stmtIdx];
 
         AssignmentExpr* assignment = nullptr;
         if(ExprStmt* stmt = dyn_cast<ExprStmt>(stmtAccessesPair->getStatement()->ASTStmt.get()))
@@ -76,7 +77,7 @@ bool PassSSA::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiat
         for(int AccessID : AccessIDsToRename)
           tochedAccessIDs.insert(stencilInstantiation->createVersionAndRename(
               AccessID, &stencil, stageIdx, stmtIdx, assignment->getLeft(),
-              StencilInstantiation::RD_Below));
+              iir::StencilInstantiation::RD_Below));
 
         DAG->insertStatementAccessesPair(stmtAccessesPair);
       }

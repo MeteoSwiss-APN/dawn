@@ -13,10 +13,10 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/Renaming.h"
-#include "dawn/Optimizer/Accesses.h"
-#include "dawn/Optimizer/StatementAccessesPair.h"
-#include "dawn/Optimizer/StencilFunctionInstantiation.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/Accesses.h"
+#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/StencilFunctionInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/Statement.h"
 #include <unordered_map>
@@ -45,7 +45,7 @@ public:
   }
 
   virtual void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
-    std::shared_ptr<StencilFunctionInstantiation> fun =
+    std::shared_ptr<iir::StencilFunctionInstantiation> fun =
         instantiation_->getStencilFunctionInstantiation(expr);
     fun->renameCallerAccessID(oldAccessID_, newAccessID_);
     ASTVisitorForwarding::visit(expr);
@@ -80,32 +80,33 @@ static void renameAccessesMaps(std::unordered_map<int, Extents>& accessesMap, in
 } // anonymous namespace
 
 void renameAccessIDInStmts(
-    StencilInstantiation* instantiation, int oldAccessID, int newAccessID,
-    ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs) {
-  AccessIDRemapper<StencilInstantiation> remapper(instantiation, oldAccessID, newAccessID);
+    iir::StencilInstantiation* instantiation, int oldAccessID, int newAccessID,
+    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
+  AccessIDRemapper<iir::StencilInstantiation> remapper(instantiation, oldAccessID, newAccessID);
 
   for(auto& statementAccessesPair : statementAccessesPairs)
     statementAccessesPair->getStatement()->ASTStmt->accept(remapper);
 }
 
 void renameAccessIDInStmts(
-    StencilFunctionInstantiation* instantiation, int oldAccessID, int newAccessID,
-    ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs) {
-  AccessIDRemapper<StencilFunctionInstantiation> remapper(instantiation, oldAccessID, newAccessID);
+    iir::StencilFunctionInstantiation* instantiation, int oldAccessID, int newAccessID,
+    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
+  AccessIDRemapper<iir::StencilFunctionInstantiation> remapper(instantiation, oldAccessID,
+                                                               newAccessID);
 
-  for(auto& statementAccessesPair : statementAccessesPairs)
+  for(const auto& statementAccessesPair : statementAccessesPairs)
     statementAccessesPair->getStatement()->ASTStmt->accept(remapper);
 }
 
-void renameAccessIDInExpr(StencilInstantiation* instantiation, int oldAccessID, int newAccessID,
-                          std::shared_ptr<Expr>& expr) {
-  AccessIDRemapper<StencilInstantiation> remapper(instantiation, oldAccessID, newAccessID);
+void renameAccessIDInExpr(iir::StencilInstantiation* instantiation, int oldAccessID,
+                          int newAccessID, std::shared_ptr<Expr>& expr) {
+  AccessIDRemapper<iir::StencilInstantiation> remapper(instantiation, oldAccessID, newAccessID);
   expr->accept(remapper);
 }
 
 void renameAccessIDInAccesses(
-    StencilInstantiation* instantiation, int oldAccessID, int newAccessID,
-    ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs) {
+    iir::StencilInstantiation* instantiation, int oldAccessID, int newAccessID,
+    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
   for(auto& statementAccessesPair : statementAccessesPairs) {
     renameAccessesMaps(statementAccessesPair->getAccesses()->getReadAccesses(), oldAccessID,
                        newAccessID);
@@ -115,8 +116,8 @@ void renameAccessIDInAccesses(
 }
 
 void renameAccessIDInAccesses(
-    StencilFunctionInstantiation* instantiation, int oldAccessID, int newAccessID,
-    ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs) {
+    iir::StencilFunctionInstantiation* instantiation, int oldAccessID, int newAccessID,
+    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
   for(auto& statementAccessesPair : statementAccessesPairs) {
     renameAccessesMaps(statementAccessesPair->getCallerAccesses()->getReadAccesses(), oldAccessID,
                        newAccessID);

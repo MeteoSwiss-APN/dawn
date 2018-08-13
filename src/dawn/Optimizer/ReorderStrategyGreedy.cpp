@@ -14,13 +14,13 @@
 
 #include "dawn/Optimizer/ReorderStrategyGreedy.h"
 #include "dawn/Optimizer/BoundaryExtent.h"
-#include "dawn/Optimizer/DependencyGraphAccesses.h"
-#include "dawn/Optimizer/DependencyGraphStage.h"
-#include "dawn/Optimizer/MultiStage.h"
+#include "dawn/IIR/DependencyGraphAccesses.h"
+#include "dawn/IIR/DependencyGraphStage.h"
+#include "dawn/IIR/MultiStage.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
-#include "dawn/Optimizer/Stencil.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/Stencil.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include <algorithm>
 #include <set>
 #include <vector>
@@ -29,15 +29,16 @@ namespace dawn {
 
 /// @brief Check if we can merge the stage into the multi-stage, possibly changing the loop order.
 /// @returns the the enew dependency graphs of the multi-stage (or NULL) and the new loop order
-template <typename ReturnType = std::pair<std::shared_ptr<DependencyGraphAccesses>, LoopOrderKind>>
-ReturnType isMergable(const Stage& stage, LoopOrderKind stageLoopOrder,
-                      const MultiStage& multiStage) {
+template <
+    typename ReturnType = std::pair<std::shared_ptr<iir::DependencyGraphAccesses>, LoopOrderKind>>
+ReturnType isMergable(const iir::Stage& stage, LoopOrderKind stageLoopOrder,
+                      const iir::MultiStage& multiStage) {
   LoopOrderKind multiStageLoopOrder = multiStage.getLoopOrder();
   auto multiStageDependencyGraph =
       multiStage.getDependencyGraphOfInterval(stage.getEnclosingExtendedInterval());
 
   // Merge stage into dependency graph
-  const DoMethod& doMethod = stage.getSingleDoMethod();
+  const iir::DoMethod& doMethod = stage.getSingleDoMethod();
   multiStageDependencyGraph->merge(doMethod.getDependencyGraph().get());
 
   // Try all possible loop orders while *favoring* a parallel loop order. Note that a parallel loop
@@ -82,14 +83,15 @@ ReturnType isMergable(const Stage& stage, LoopOrderKind stageLoopOrder,
   return ReturnType(nullptr, multiStageLoopOrder);
 }
 
-std::shared_ptr<Stencil> ReoderStrategyGreedy::reorder(const std::shared_ptr<Stencil>& stencilPtr) {
-  Stencil& stencil = *stencilPtr;
+std::unique_ptr<iir::Stencil>
+ReoderStrategyGreedy::reorder(const std::unique_ptr<iir::Stencil>& stencilPtr) {
+  iir::Stencil& stencil = *stencilPtr;
 
-  DependencyGraphStage& stageDAG = *stencil.getStageDependencyGraph();
-  StencilInstantiation& instantiation = stencil.getStencilInstantiation();
+  iir::DependencyGraphStage& stageDAG = *stencil.getStageDependencyGraph();
+  iir::StencilInstantiation& instantiation = stencil.getStencilInstantiation();
 
-  std::shared_ptr<Stencil> newStencil =
-      std::make_shared<Stencil>(instantiation, stencil.getSIRStencil(), stencilPtr->getStencilID(),
+  std::unique_ptr<iir::Stencil> newStencil =
+      make_unique<iir::Stencil>(instantiation, stencil.getSIRStencil(), stencilPtr->getStencilID(),
                                 stencil.getStageDependencyGraph());
   int newNumStages = 0;
   int newNumMultiStages = 0;
@@ -97,17 +99,17 @@ std::shared_ptr<Stencil> ReoderStrategyGreedy::reorder(const std::shared_ptr<Ste
   const int maxBoundaryExtent = instantiation.getOptimizerContext()->getOptions().MaxHaloPoints;
 
   auto pushBackNewMultiStage = [&](LoopOrderKind loopOrder) -> void {
-    newStencil->getMultiStages().push_back(std::make_shared<MultiStage>(instantiation, loopOrder));
+    newStencil->insertChild(make_unique<iir::MultiStage>(instantiation, loopOrder));
     newNumMultiStages++;
   };
 
-  for(const auto& multiStagePtr : stencil.getMultiStages()) {
+  for(const auto& multiStagePtr : stencil.getChildren()) {
 
     // First time we encounter this multi-stage, create an empty multi-stage
     pushBackNewMultiStage(LoopOrderKind::LK_Parallel);
 
-    for(const auto& stagePtr : multiStagePtr->getStages()) {
-      const Stage& stage = *stagePtr;
+    for(const auto& stagePtr : multiStagePtr->getChildren()) {
+      const iir::Stage& stage = *stagePtr;
       int stageIdx = newNumStages - 1;
 
       // Compute the best possible position to where we can move this stage without violating
@@ -117,7 +119,7 @@ std::shared_ptr<Stencil> ReoderStrategyGreedy::reorder(const std::shared_ptr<Ste
           break;
       }
 
-      Stencil::StagePosition pos = newStencil->getPositionFromStageIndex(stageIdx);
+      iir::Stencil::StagePosition pos = newStencil->getPositionFromStageIndex(stageIdx);
       LoopOrderKind stageLoopOrder = multiStagePtr->getLoopOrder();
 
       // Find the first available multi-stage
@@ -169,19 +171,19 @@ std::shared_ptr<Stencil> ReoderStrategyGreedy::reorder(const std::shared_ptr<Ste
       }
 
       newNumStages++;
-      newStencil->insertStage(pos, stagePtr);
+      newStencil->insertStage(pos, stagePtr->clone());
     }
   }
 
   // Remove empty multi-stages
-  for(auto it = newStencil->getMultiStages().begin(); it != newStencil->getMultiStages().end();) {
-    if((*it)->getStages().empty())
-      it = newStencil->getMultiStages().erase(it);
+  for(auto it = newStencil->childrenBegin(); it != newStencil->childrenEnd();) {
+    if((*it)->childrenEmpty())
+      it = newStencil->childrenErase(it);
     else
       it++;
   }
 
-  return newStencil;
+  return std::move(newStencil);
 }
 
 } // namespace dawn

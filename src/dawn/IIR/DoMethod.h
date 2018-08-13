@@ -12,15 +12,17 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_DOMETHOD_H
-#define DAWN_OPTIMIZER_DOMETHOD_H
+#ifndef DAWN_IIR_DOMETHOD_H
+#define DAWN_IIR_DOMETHOD_H
 
+#include "dawn/IIR/IIRNode.h"
 #include "dawn/Optimizer/Interval.h"
 #include <boost/optional.hpp>
 #include <memory>
 #include <vector>
 
 namespace dawn {
+namespace iir {
 
 class Stage;
 class DependencyGraphAccesses;
@@ -30,28 +32,34 @@ class StatementAccessesPair;
 /// vertical region
 ///
 /// @ingroup optimizer
-class DoMethod {
+class DoMethod : public IIRNode<Stage, DoMethod, StatementAccessesPair> {
   Interval interval_;
-  const long unsigned int id_;
+  long unsigned int id_;
 
   std::shared_ptr<DependencyGraphAccesses> dependencyGraph_;
-  std::vector<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs_;
+  using base_type = IIRNode<Stage, DoMethod, StatementAccessesPair>;
 
 public:
+  static constexpr const char* name = "DoMethod";
+
+  using StatementAccessesIterator = ChildIterator;
+
   /// @name Constructors and Assignment
   /// @{
   DoMethod(Interval interval);
 
-  DoMethod(const DoMethod&) = default;
+  //  DoMethod(const DoMethod&) = default;
   DoMethod(DoMethod&&) = default;
 
-  DoMethod& operator=(const DoMethod&) = default;
+  //  DoMethod& operator=(const DoMethod&) = default;
   DoMethod& operator=(DoMethod&&) = default;
   /// @}
 
-  /// @brief Get the statements of the Stage
-  std::vector<std::shared_ptr<StatementAccessesPair>>& getStatementAccessesPairs();
-  const std::vector<std::shared_ptr<StatementAccessesPair>>& getStatementAccessesPairs() const;
+  std::unique_ptr<DoMethod> clone() const;
+
+  //  /// @brief Get the statements of the Stage
+  //  std::vector<std::shared_ptr<StatementAccessesPair>>& getStatementAccessesPairs();
+  //  const std::vector<std::shared_ptr<StatementAccessesPair>>& getStatementAccessesPairs() const;
 
   /// @brief Get the vertical Interval
   Interval& getInterval();
@@ -60,6 +68,8 @@ public:
   void setInterval(Interval const& interval);
 
   unsigned long int getID() const { return id_; }
+
+  void setID(const long unsigned int id) { id_ = id; }
 
   /// @brief Set the dependency graph of this Do-Method
   void setDependencyGraph(const std::shared_ptr<DependencyGraphAccesses>& DG);
@@ -86,6 +96,7 @@ public:
                                                            const bool mergeWithDoInterval) const;
 };
 
+} // namespace iir
 } // namespace dawn
 
 #endif

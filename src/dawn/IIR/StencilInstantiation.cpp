@@ -12,13 +12,14 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/Optimizer/Replacing.h"
-#include "dawn/Optimizer/StatementAccessesPair.h"
+#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/Optimizer/StatementMapper.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTUtil.h"
@@ -39,7 +40,7 @@
 #include <stack>
 
 namespace dawn {
-
+namespace iir {
 namespace {
 
 //===------------------------------------------------------------------------------------------===//
@@ -126,9 +127,9 @@ public:
   /// @see tryReplaceVerticalRegionDeclStmt
   void makeNewStencil() {
     int StencilID = instantiation_->nextUID();
-    instantiation_->getStencils().emplace_back(
-        std::make_shared<Stencil>(*instantiation_, instantiation_->getSIRStencil(), StencilID));
-
+    instantiation_->getIIR()->insertChild(
+        make_unique<Stencil>(*instantiation_, instantiation_->getSIRStencil(), StencilID),
+        instantiation_->getIIR());
     // We create a paceholder stencil-call for CodeGen to know wehere we need to insert calls to
     // this stencil
     auto placeholderStencil = std::make_shared<sir::StencilCall>(
@@ -208,11 +209,11 @@ public:
       statement->ASTStmt->accept(remover);
 
     // Remove empty stencils
-    for(auto it = instantiation_->getStencils().begin();
-        it != instantiation_->getStencils().end();) {
+    for(auto it = instantiation_->getIIR()->childrenBegin();
+        it != instantiation_->getIIR()->childrenEnd();) {
       Stencil& stencil = **it;
       if(stencil.isEmpty())
-        it = instantiation_->getStencils().erase(it);
+        it = instantiation_->getIIR()->childrenErase(it);
       else
         ++it;
     }
@@ -354,12 +355,12 @@ public:
     std::shared_ptr<AST> ast = cloneAST ? verticalRegion->Ast->clone() : verticalRegion->Ast;
 
     // Create the new multi-stage
-    std::shared_ptr<MultiStage> multiStage = std::make_shared<MultiStage>(
+    std::unique_ptr<MultiStage> multiStage = make_unique<MultiStage>(
         *instantiation_, verticalRegion->LoopOrder == sir::VerticalRegion::LK_Forward
                              ? LoopOrderKind::LK_Forward
                              : LoopOrderKind::LK_Backward);
-    std::shared_ptr<Stage> stage = std::make_shared<Stage>(*instantiation_, multiStage.get(),
-                                                           instantiation_->nextUID(), interval);
+    std::unique_ptr<Stage> stage =
+        make_unique<Stage>(*instantiation_, multiStage.get(), instantiation_->nextUID(), interval);
 
     DAWN_LOG(INFO) << "Processing vertical region at " << verticalRegion->Loc;
 
@@ -367,11 +368,13 @@ public:
     // Further, we instantiate all referenced stencil functions.
     DAWN_LOG(INFO) << "Inserting statements ... ";
     DoMethod& doMethod = stage->getSingleDoMethod();
+    // TODO move iterators of IIRNode to const getChildren, when we pass here begin, end instead
+
     StatementMapper statementMapper(instantiation_, scope_.top()->StackTrace,
-                                    doMethod.getStatementAccessesPairs(), doMethod.getInterval(),
+                                    doMethod.getChildren(), doMethod.getInterval(),
                                     scope_.top()->LocalFieldnameToAccessIDMap, nullptr);
     ast->accept(statementMapper);
-    DAWN_LOG(INFO) << "Inserted " << doMethod.getStatementAccessesPairs().size() << " statements";
+    DAWN_LOG(INFO) << "Inserted " << doMethod.getChildren().size() << " statements";
 
     if(instantiation_->getOptimizerContext()->getDiagnostics().hasErrors())
       return;
@@ -379,16 +382,17 @@ public:
     // Here we compute the *actual* access of each statement and associate access to the AccessIDs
     // we set previously.
     DAWN_LOG(INFO) << "Filling accesses ...";
-    computeAccesses(instantiation_, doMethod.getStatementAccessesPairs());
+    computeAccesses(instantiation_, doMethod.getChildren());
 
     // Now, we compute the fields of each stage (this will give us the IO-Policy of the fields)
     stage->update();
 
     // Put the stage into a separate MultiStage ...
-    multiStage->getStages().push_back(std::move(stage));
+    multiStage->insertChild(std::move(stage));
 
     // ... and append the MultiStages of the current stencil
-    instantiation_->getStencils().back()->getMultiStages().push_back(std::move(multiStage));
+    const auto& stencil = instantiation_->getStencils().back();
+    stencil->insertChild(std::move(multiStage));
   }
 
   void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
@@ -578,10 +582,10 @@ public:
 //     StencilInstantiation
 //===------------------------------------------------------------------------------------------===//
 
-StencilInstantiation::StencilInstantiation(OptimizerContext* context,
+StencilInstantiation::StencilInstantiation(::dawn::OptimizerContext* context,
                                            std::shared_ptr<sir::Stencil> const& SIRStencil,
                                            std::shared_ptr<SIR> const& SIR)
-    : context_(context), SIRStencil_(SIRStencil), SIR_(SIR) {
+    : context_(context), SIRStencil_(SIRStencil), SIR_(SIR), IIR_(make_unique<IIR>()) {
   DAWN_LOG(INFO) << "Intializing StencilInstantiation of `" << SIRStencil->Name << "`";
   DAWN_ASSERT_MSG(SIRStencil, "Stencil does not exist");
 
@@ -605,7 +609,7 @@ StencilInstantiation::StencilInstantiation(OptimizerContext* context,
   stencilDeclMapper.cleanupStencilDeclAST();
 
   // Repair broken references to temporaries i.e promote them to real fields
-  PassTemporaryType::fixTemporariesSpanningMultipleStencils(this, stencils_);
+  PassTemporaryType::fixTemporariesSpanningMultipleStencils(this, getStencils());
 
   if(context_->getOptions().ReportAccesses)
     reportAccesses();
@@ -701,6 +705,22 @@ void StencilInstantiation::insertStencilFunctionIntoSIR(
   SIR_->StencilFunctions.push_back(sirStencilFunction);
 }
 
+bool StencilInstantiation::insertBoundaryConditions(std::string originalFieldName,
+                                                    std::shared_ptr<BoundaryConditionDeclStmt> bc) {
+  if(FieldnameToBoundaryConditionMap_.count(originalFieldName) != 0) {
+    return false;
+  } else {
+    FieldnameToBoundaryConditionMap_.emplace(originalFieldName, bc);
+    return true;
+  }
+}
+
+Array3i StencilInstantiation::getFieldDimensionsMask(int FieldID) {
+  if(fieldIDToInitializedDimensionsMap_.count(FieldID) == 0) {
+    return Array3i{{1, 1, 1}};
+  }
+  return fieldIDToInitializedDimensionsMap_.find(FieldID)->second;
+}
 const sir::Value& StencilInstantiation::getGlobalVariableValue(const std::string& name) const {
   auto it = getSIR()->GlobalVariableMap->find(name);
   DAWN_ASSERT(it != getSIR()->GlobalVariableMap->end());
@@ -784,9 +804,8 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
   renameAccessIDInExpr(this, AccessID, newAccessID, expr);
 
   // Recompute the accesses of the current statement (only works with single Do-Methods - for now)
-  computeAccesses(
-      this,
-      stencil->getStage(curStageIdx)->getSingleDoMethod().getStatementAccessesPairs()[curStmtIdx]);
+  computeAccesses(this,
+                  stencil->getStage(curStageIdx)->getSingleDoMethod().getChildren()[curStmtIdx]);
 
   // Rename the statement and accesses
   for(int stageIdx = curStageIdx;
@@ -797,16 +816,15 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
 
     if(stageIdx == curStageIdx) {
       for(int i = dir == RD_Above ? (curStmtIdx - 1) : (curStmtIdx + 1);
-          dir == RD_Above ? (i >= 0) : (i < doMethod.getStatementAccessesPairs().size());
+          dir == RD_Above ? (i >= 0) : (i < doMethod.getChildren().size());
           dir == RD_Above ? (--i) : (++i)) {
-        renameAccessIDInStmts(this, AccessID, newAccessID, doMethod.getStatementAccessesPairs()[i]);
-        renameAccessIDInAccesses(this, AccessID, newAccessID,
-                                 doMethod.getStatementAccessesPairs()[i]);
+        renameAccessIDInStmts(this, AccessID, newAccessID, doMethod.getChildren()[i]);
+        renameAccessIDInAccesses(this, AccessID, newAccessID, doMethod.getChildren()[i]);
       }
 
     } else {
-      renameAccessIDInStmts(this, AccessID, newAccessID, doMethod.getStatementAccessesPairs());
-      renameAccessIDInAccesses(this, AccessID, newAccessID, doMethod.getStatementAccessesPairs());
+      renameAccessIDInStmts(this, AccessID, newAccessID, doMethod.getChildren());
+      renameAccessIDInAccesses(this, AccessID, newAccessID, doMethod.getChildren());
     }
 
     // Updat the fields of the stage
@@ -833,16 +851,17 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
 
   // Replace all variable accesses with field accesses
   stencil->forEachStatementAccessesPair(
-      [&](ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPair) -> void {
+      [&](ArrayRef<std::unique_ptr<StatementAccessesPair>> statementAccessesPair) -> void {
         replaceVarWithFieldAccessInStmts(stencil, AccessID, fieldname, statementAccessesPair);
       },
       lifetime);
 
   // Replace the the variable declaration with an assignment to the temporary field
-  std::vector<std::shared_ptr<StatementAccessesPair>>& statementAccessesPairs =
+  std::vector<std::unique_ptr<StatementAccessesPair>>& statementAccessesPairs =
       stencil->getStage(lifetime.Begin.StagePos)
-          ->getDoMethods()[lifetime.Begin.DoMethodIndex]
-          ->getStatementAccessesPairs();
+          ->getChildren()
+          .at(lifetime.Begin.DoMethodIndex)
+          ->getChildren();
   std::shared_ptr<Statement> oldStatement =
       statementAccessesPairs[lifetime.Begin.StatementIndex]->getStatement();
 
@@ -894,16 +913,17 @@ void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil,
 
   // Replace all field accesses with variable accesses
   stencil->forEachStatementAccessesPair(
-      [&](ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs) -> void {
+      [&](ArrayRef<std::unique_ptr<StatementAccessesPair>> statementAccessesPairs) -> void {
         replaceFieldWithVarAccessInStmts(stencil, AccessID, varname, statementAccessesPairs);
       },
       lifetime);
 
   // Replace the first access to the field with a VarDeclStmt
-  std::vector<std::shared_ptr<StatementAccessesPair>>& statementAccessesPairs =
+  std::vector<std::unique_ptr<StatementAccessesPair>>& statementAccessesPairs =
       stencil->getStage(lifetime.Begin.StagePos)
-          ->getDoMethods()[lifetime.Begin.DoMethodIndex]
-          ->getStatementAccessesPairs();
+          ->getChildren()
+          .at(lifetime.Begin.DoMethodIndex)
+          ->getChildren();
   std::shared_ptr<Statement> oldStatement =
       statementAccessesPairs[lifetime.Begin.StatementIndex]->getStatement();
 
@@ -1034,7 +1054,7 @@ StencilInstantiation::getStencilFunctionInstantiationCandidate(const std::string
 std::shared_ptr<StencilFunctionInstantiation> StencilInstantiation::cloneStencilFunctionCandidate(
     const std::shared_ptr<StencilFunctionInstantiation>& stencilFun, std::string functionName) {
   DAWN_ASSERT(stencilFunInstantiationCandidate_.count(stencilFun));
-  auto stencilFunClone = std::make_shared<StencilFunctionInstantiation>(*stencilFun);
+  auto stencilFunClone = std::make_shared<StencilFunctionInstantiation>(stencilFun->clone());
 
   auto stencilFunExpr =
       std::dynamic_pointer_cast<StencilFunCallExpr>(stencilFun->getExpression()->clone());
@@ -1265,15 +1285,12 @@ StencilInstantiation::getOriginalNameAndLocationsFromAccessID(
 
 std::string StencilInstantiation::getOriginalNameFromAccessID(int AccessID) const {
   OriginalNameGetter orignalNameGetter(this, AccessID, true);
-  for(const auto& stencil : stencils_)
-    for(const auto& multistage : stencil->getMultiStages())
-      for(const auto& stage : multistage->getStages())
-        for(const auto& doMethod : stage->getDoMethods())
-          for(const auto& statementAccessesPair : doMethod->getStatementAccessesPairs()) {
-            statementAccessesPair->getStatement()->ASTStmt->accept(orignalNameGetter);
-            if(orignalNameGetter.hasName())
-              return orignalNameGetter.getName();
-          }
+
+  for(const auto& stmtAccessesPair : iterateIIROver<StatementAccessesPair>(*getIIR())) {
+    stmtAccessesPair->getStatement()->ASTStmt->accept(orignalNameGetter);
+    if(orignalNameGetter.hasName())
+      return orignalNameGetter.getName();
+  }
 
   // Best we can do...
   return getNameFromAccessID(AccessID);
@@ -1292,30 +1309,39 @@ struct PrintDescLine {
 
 } // anonymous namespace
 
+bool StencilInstantiation::checkTreeConsistency() const {
+  bool result = true;
+  for(const auto& stencil : getStencils()) {
+    result = result & stencil->checkTreeConsistency();
+  }
+  return result;
+}
+
 void StencilInstantiation::dump() const {
   std::cout << "StencilInstantiation : " << getName() << "\n";
 
-  for(std::size_t i = 0; i < stencils_.size(); ++i) {
+  int i = 0;
+  for(const auto& stencil : getStencils()) {
     PrintDescLine<1> iline("Stencil_" + Twine(i));
 
     int j = 0;
-    const auto& multiStages = stencils_[i]->getMultiStages();
+    const auto& multiStages = stencil->getChildren();
     for(const auto& multiStage : multiStages) {
       PrintDescLine<2> jline(Twine("MultiStage_") + Twine(j) + " [" +
                              loopOrderToString(multiStage->getLoopOrder()) + "]");
 
       int k = 0;
-      const auto& stages = multiStage->getStages();
+      const auto& stages = multiStage->getChildren();
       for(const auto& stage : stages) {
         PrintDescLine<3> kline(Twine("Stage_") + Twine(k));
 
         int l = 0;
-        const auto& doMethods = stage->getDoMethods();
+        const auto& doMethods = stage->getChildren();
         for(const auto& doMethod : doMethods) {
           PrintDescLine<4> lline(Twine("Do_") + Twine(l) + " " +
                                  doMethod->getInterval().toString());
 
-          const auto& statementAccessesPairs = doMethod->getStatementAccessesPairs();
+          const auto& statementAccessesPairs = doMethod->getChildren();
           for(std::size_t m = 0; m < statementAccessesPairs.size(); ++m) {
             std::cout << "\e[1m"
                       << ASTStringifer::toString(statementAccessesPairs[m]->getStatement()->ASTStmt,
@@ -1334,6 +1360,7 @@ void StencilInstantiation::dump() const {
       }
       j += 1;
     }
+    ++i;
   }
   std::cout.flush();
 }
@@ -1341,27 +1368,27 @@ void StencilInstantiation::dump() const {
 void StencilInstantiation::dumpAsJson(std::string filename, std::string passName) const {
   json::json jout;
 
-  for(int i = 0; i < stencils_.size(); ++i) {
+  int i = 0;
+  for(const auto& stencil : getStencils()) {
     json::json jStencil;
 
     int j = 0;
-    const auto& multiStages = stencils_[i]->getMultiStages();
-    for(const auto& multiStage : multiStages) {
+    for(const auto& multiStage : stencil->getChildren()) {
       json::json jMultiStage;
       jMultiStage["LoopOrder"] = loopOrderToString(multiStage->getLoopOrder());
 
       int k = 0;
-      const auto& stages = multiStage->getStages();
+      const auto& stages = multiStage->getChildren();
       for(const auto& stage : stages) {
         json::json jStage;
 
         int l = 0;
-        for(const auto& doMethod : stage->getDoMethods()) {
+        for(const auto& doMethod : stage->getChildren()) {
           json::json jDoMethod;
 
           jDoMethod["Interval"] = doMethod->getInterval().toString();
 
-          const auto& statementAccessesPairs = doMethod->getStatementAccessesPairs();
+          const auto& statementAccessesPairs = doMethod->getChildren();
           for(std::size_t m = 0; m < statementAccessesPairs.size(); ++m) {
             jDoMethod["Stmt_" + std::to_string(m)] = ASTStringifer::toString(
                 statementAccessesPairs[m]->getStatement()->ASTStmt, 0, false);
@@ -1382,6 +1409,7 @@ void StencilInstantiation::dumpAsJson(std::string filename, std::string passName
       jout[getName()]["Stencil_" + std::to_string(i)] = jStencil;
     else
       jout[passName][getName()]["Stencil_" + std::to_string(i)] = jStencil;
+    ++i;
   }
 
   std::ofstream fs(filename, std::ios::out | std::ios::trunc);
@@ -1461,20 +1489,13 @@ void StencilInstantiation::reportAccesses() const {
   }
 
   // Stages
-  for(const auto& stencil : stencils_)
-    for(const auto& multistage : stencil->getMultiStages())
-      for(const auto& stage : multistage->getStages()) {
-        for(const auto& doMethod : stage->getDoMethods()) {
-          const auto& statementAccessesPairs = doMethod->getStatementAccessesPairs();
 
-          for(std::size_t i = 0; i < statementAccessesPairs.size(); ++i) {
-            std::cout
-                << "\nACCESSES: line "
-                << statementAccessesPairs[i]->getStatement()->ASTStmt->getSourceLocation().Line
-                << ": " << statementAccessesPairs[i]->getAccesses()->reportAccesses(this) << "\n";
-          }
-        }
-      }
+  for(const auto& stmtAccessesPair : iterateIIROver<StatementAccessesPair>(*getIIR())) {
+    std::cout << "\nACCESSES: line "
+              << stmtAccessesPair->getStatement()->ASTStmt->getSourceLocation().Line << ": "
+              << stmtAccessesPair->getAccesses()->reportAccesses(this) << "\n";
+  }
 }
 
+} // namespace iir
 } // namespace dawn

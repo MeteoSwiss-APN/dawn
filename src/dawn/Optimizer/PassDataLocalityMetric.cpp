@@ -14,7 +14,8 @@
 
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Format.h"
@@ -29,12 +30,12 @@ namespace dawn {
 namespace {
 
 class ReadWriteCounter : public ASTVisitorForwarding {
-  const std::shared_ptr<StencilInstantiation>& instantiation_;
+  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
 
   std::size_t numReads_, numWrites_;
 
   /// Current MultiStage
-  const MultiStage& multiStage_;
+  const iir::MultiStage& multiStage_;
 
   /// Fields of the MultiStage
   std::unordered_map<int, Field> fields_;
@@ -52,14 +53,14 @@ class ReadWriteCounter : public ASTVisitorForwarding {
   std::unordered_set<int> kCacheLoaded_;
 
   /// Current stencil function call
-  std::stack<std::shared_ptr<StencilFunctionInstantiation>> stencilFunCalls_;
+  std::stack<std::shared_ptr<iir::StencilFunctionInstantiation>> stencilFunCalls_;
 
   /// Map of ID's to their respective number of reads / writes
   std::unordered_map<int, ReadWriteAccumulator> individualReadWrites_;
 
 public:
-  ReadWriteCounter(const std::shared_ptr<StencilInstantiation>& instantiation,
-                   const MultiStage& multiStage)
+  ReadWriteCounter(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                   const iir::MultiStage& multiStage)
       : instantiation_(instantiation), numReads_(0), numWrites_(0), multiStage_(multiStage),
         fields_(multiStage_.getFields()) {}
 
@@ -102,7 +103,7 @@ public:
                                     : stencilFunCalls_.top()->getNameFromAccessID(AccessID);
   }
 
-  std::shared_ptr<StencilFunctionInstantiation>
+  std::shared_ptr<iir::StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) {
     return stencilFunCalls_.empty() ? instantiation_->getStencilFunctionInstantiation(expr)
                                     : stencilFunCalls_.top()->getStencilFunctionInstantiation(expr);
@@ -229,8 +230,8 @@ public:
 /// Every non-cached input field yiels has at most 1 main-memory access, input-output at most 2, and
 /// every output at most 1 store.
 DAWN_ATTRIBUTE_UNUSED static std::pair<int, int>
-computeReadWriteAccessesLowerBound(StencilInstantiation* instantiation,
-                                   const MultiStage& multiStage) {
+computeReadWriteAccessesLowerBound(iir::StencilInstantiation* instantiation,
+                                   const iir::MultiStage& multiStage) {
   std::size_t numReads = 0, numWrites = 0;
   std::unordered_map<int, Field> fields = multiStage.getFields();
 
@@ -277,29 +278,26 @@ computeReadWriteAccessesLowerBound(StencilInstantiation* instantiation,
 
 /// @brief Approximate the reads and writes individually for each ID
 std::unordered_map<int, ReadWriteAccumulator> computeReadWriteAccessesMetricPerAccessID(
-    const std::shared_ptr<StencilInstantiation>& instantiation, const MultiStage& multiStage) {
+    const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+    const iir::MultiStage& multiStage) {
   ReadWriteCounter readWriteCounter(instantiation, multiStage);
 
-  for(const auto& stage : multiStage.getStages())
-    for(const auto& DoMethod : stage->getDoMethods())
-      for(const auto& statementAccessesPair : DoMethod->getStatementAccessesPairs()) {
-        statementAccessesPair->getStatement()->ASTStmt->accept(readWriteCounter);
-      }
+  for(const auto& statementAccessesPair : iterateIIROver<iir::StatementAccessesPair>(multiStage)) {
+    statementAccessesPair->getStatement()->ASTStmt->accept(readWriteCounter);
+  }
 
   return readWriteCounter.getIndividualReadWrites();
 }
 
 /// @brief Approximate the reads and writes accoding to our data locality metric
 std::pair<int, int>
-computeReadWriteAccessesMetric(const std::shared_ptr<StencilInstantiation>& instantiation,
-                               const MultiStage& multiStage) {
+computeReadWriteAccessesMetric(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                               const iir::MultiStage& multiStage) {
   ReadWriteCounter readWriteCounter(instantiation, multiStage);
 
-  for(const auto& stage : multiStage.getStages())
-    for(const auto& DoMethod : stage->getDoMethods())
-      for(const auto& statementAccessesPair : DoMethod->getStatementAccessesPairs()) {
-        statementAccessesPair->getStatement()->ASTStmt->accept(readWriteCounter);
-      }
+  for(const auto& statementAccessesPair : iterateIIROver<iir::StatementAccessesPair>(multiStage)) {
+    statementAccessesPair->getStatement()->ASTStmt->accept(readWriteCounter);
+  }
 
   return std::make_pair(readWriteCounter.getNumReads(), readWriteCounter.getNumWrites());
 }
@@ -307,7 +305,7 @@ computeReadWriteAccessesMetric(const std::shared_ptr<StencilInstantiation>& inst
 PassDataLocalityMetric::PassDataLocalityMetric() : Pass("PassDataLocalityMetric") {}
 
 bool PassDataLocalityMetric::run(
-    const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   if(context->getOptions().ReportDataLocalityMetric) {
@@ -319,20 +317,17 @@ bool PassDataLocalityMetric::run(
 
     int stencilIdx = 0;
     for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
-      const Stencil& stencil = *stencilPtr;
+      const iir::Stencil& stencil = *stencilPtr;
 
       std::cout << "Stencil " << stencilIdx << ":\n";
 
       int multiStageIdx = 0;
-      for(const auto& multiStagePtr : stencil.getMultiStages()) {
-        const MultiStage& multiStage = *multiStagePtr;
+      for(const auto& multiStagePtr : stencil.getChildren()) {
+        const iir::MultiStage& multiStage = *multiStagePtr;
 
         std::cout << "  MultiStage " << multiStageIdx << ":\n";
 
         auto readAndWrite = computeReadWriteAccessesMetric(stencilInstantiation, multiStage);
-
-        //        auto readAndWrite =
-        //            computeReadWriteAccessesLowerBound(stencilInstantiation, multiStage);
 
         std::size_t numReads = readAndWrite.first, numWrites = readAndWrite.second;
 

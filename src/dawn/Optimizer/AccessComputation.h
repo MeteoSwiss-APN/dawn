@@ -21,9 +21,11 @@
 
 namespace dawn {
 
+namespace iir {
 class StatementAccessesPair;
 class StencilInstantiation;
 class StencilFunctionInstantiation;
+}
 
 /// @name Access computation routines
 /// @ingroup optimizer
@@ -33,8 +35,8 @@ class StencilFunctionInstantiation;
 /// @brief Compute the Accesses of `statementAccessesPairs`
 /// @ingroup optimizer
 extern void
-computeAccesses(StencilInstantiation* instantiation,
-                ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs);
+computeAccesses(iir::StencilInstantiation* instantiation,
+                ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
 
 /// @fn computeAccesses
 /// @brief Compute the caller and callee Accesses of `statementCallerAccessesPairs`
@@ -45,8 +47,8 @@ computeAccesses(StencilInstantiation* instantiation,
 /// @see StencilFunctionInstantiation
 /// @ingroup optimizer
 extern void
-computeAccesses(std::shared_ptr<StencilFunctionInstantiation> stencilFunctionInstantiation,
-                ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs);
+computeAccesses(std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation,
+                ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
 
 /// @}
 

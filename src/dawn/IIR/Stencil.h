@@ -12,10 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_STENCIL_H
-#define DAWN_OPTIMIZER_STENCIL_H
+#ifndef DAWN_IIR_STENCIL_H
+#define DAWN_IIR_STENCIL_H
 
-#include "dawn/Optimizer/MultiStage.h"
+#include "dawn/IIR/MultiStage.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/Statement.h"
 #include <functional>
@@ -26,13 +26,18 @@
 
 namespace dawn {
 
-class StencilInstantiation;
+namespace iir {
+
 class DependencyGraphStage;
+class StencilInstantiation;
 class StatementAccessesPair;
+class IIR;
 
 /// @brief A Stencil is represented by a collection of MultiStages
 /// @ingroup optimizer
-class Stencil {
+class Stencil : public IIRNode<IIR, Stencil, MultiStage, impl::StdList> {
+  using base_type = IIRNode<IIR, Stencil, MultiStage, impl::StdList>;
+
   StencilInstantiation& stencilInstantiation_;
   const std::shared_ptr<sir::Stencil> SIRStencil_;
 
@@ -43,10 +48,11 @@ class Stencil {
   /// Dependency graph of the stages of this stencil
   std::shared_ptr<DependencyGraphStage> stageDependencyGraph_;
 
-  /// List of multi-stages in the stencil
-  std::list<std::shared_ptr<MultiStage>> multistages_;
-
 public:
+  static constexpr const char* name = "Stencil";
+
+  using MultiStageSmartPtr_t = child_smartptr_t<MultiStage>;
+
   // FieldInfo desribes the properties of a given Field
   // The dimensions is an array of numberes in x,y and z describing if the field is allowed to have
   // extens in this dimension: [1,0,0] is a storage_i and cannot be accessed with field[j+1]
@@ -105,8 +111,6 @@ public:
 
     /// Index of the Stage inside the Multi-Stage, -1 indicates one before the first
     int StageOffset;
-
-    friend std::ostream& operator<<(std::ostream& os, const StagePosition& position);
   };
 
   /// @brief Position of a statement inside a stage
@@ -136,8 +140,6 @@ public:
 
     /// Index of the Statement inside the Do-Method, -1 indicates one before the first
     int StatementIndex;
-
-    friend std::ostream& operator<<(std::ostream& os, const StatementPosition& position);
   };
 
   /// @brief Lifetime of a field or variable, given as an interval of `StatementPosition`s
@@ -162,16 +164,18 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
+  /// //TODO no need to pass SIRStencil, we can get it from stencilInstantiation
   Stencil(StencilInstantiation& stencilInstantiation,
           const std::shared_ptr<sir::Stencil>& SIRStencil, int StencilID,
           const std::shared_ptr<DependencyGraphStage>& stageDependencyGraph = nullptr);
 
-  Stencil(const Stencil&) = default;
   Stencil(Stencil&&) = default;
 
   Stencil& operator=(const Stencil&) = default;
   Stencil& operator=(Stencil&&) = default;
   /// @}
+
+  std::unique_ptr<Stencil> clone() const;
 
   /// @brief Compute a set of intervals for this stencil
   std::unordered_set<Interval> getIntervals() const;
@@ -186,18 +190,14 @@ public:
   /// @brief Get the stencil instantiation
   StencilInstantiation& getStencilInstantiation() const { return stencilInstantiation_; }
 
-  /// @brief Get the multi-stages of the stencil
-  std::list<std::shared_ptr<MultiStage>>& getMultiStages() { return multistages_; }
-  const std::list<std::shared_ptr<MultiStage>>& getMultiStages() const { return multistages_; }
-
   /// @brief Get the enclosing interval of accesses of temporaries used in this stencil
   boost::optional<Interval> getEnclosingIntervalTemporaries() const;
 
   /// @brief Get the multi-stage at given multistage index
-  const std::shared_ptr<MultiStage>& getMultiStageFromMultiStageIndex(int multiStageIdx) const;
+  const std::unique_ptr<MultiStage>& getMultiStageFromMultiStageIndex(int multiStageIdx) const;
 
   /// @brief Get the multi-stage at given stage index
-  const std::shared_ptr<MultiStage>& getMultiStageFromStageIndex(int stageIdx) const;
+  const std::unique_ptr<MultiStage>& getMultiStageFromStageIndex(int stageIdx) const;
 
   /// @brief Get the position of the stage which is identified by the linear stage index
   StagePosition getPositionFromStageIndex(int stageIdx) const;
@@ -205,15 +205,15 @@ public:
 
   /// @brief Get the stage at given linear stage index or position
   /// @{
-  const std::shared_ptr<Stage>& getStage(int stageIdx) const;
-  const std::shared_ptr<Stage>& getStage(const StagePosition& position) const;
+  const std::unique_ptr<Stage>& getStage(int stageIdx) const;
+  const std::unique_ptr<Stage>& getStage(const StagePosition& position) const;
   /// @}
 
   /// @brief Get the unique `StencilID`
   int getStencilID() const { return StencilID_; }
 
   /// @brief Insert the `stage` @b after the given `position`
-  void insertStage(const StagePosition& position, const std::shared_ptr<Stage>& stage);
+  void insertStage(const StagePosition& position, std::unique_ptr<Stage>&& stage);
 
   /// @brief Get number of stages
   int getNumStages() const;
@@ -225,10 +225,10 @@ public:
   /// @param updateFields   Update the fields afterwards
   /// @{
   void forEachStatementAccessesPair(
-      std::function<void(ArrayRef<std::shared_ptr<StatementAccessesPair>>)> func,
+      std::function<void(ArrayRef<std::unique_ptr<StatementAccessesPair>>)> func,
       bool updateFields = false);
   void forEachStatementAccessesPair(
-      std::function<void(ArrayRef<std::shared_ptr<StatementAccessesPair>>)> func,
+      std::function<void(ArrayRef<std::unique_ptr<StatementAccessesPair>>)> func,
       const Lifetime& lifetime, bool updateFields = false);
   /// @}
 
@@ -277,11 +277,11 @@ public:
 
 private:
   void forEachStatementAccessesPairImpl(
-      std::function<void(ArrayRef<std::shared_ptr<StatementAccessesPair>>)> func, int startStageIdx,
+      std::function<void(ArrayRef<std::unique_ptr<StatementAccessesPair>>)> func, int startStageIdx,
       int endStageIdx, bool updateFields);
   void updateFieldsImpl(int startStageIdx, int endStageIdx);
 };
-
+} // namespace iir
 } // namespace dawn
 
 #endif

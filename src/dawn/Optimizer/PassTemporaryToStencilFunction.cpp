@@ -16,8 +16,8 @@
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/StatementMapper.h"
-#include "dawn/Optimizer/Stencil.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/Stencil.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
@@ -53,12 +53,12 @@ struct TemporaryFunctionProperties {
 ///
 class LocalVariablePromotion : public ASTVisitorPostOrder, public NonCopyable {
 protected:
-  const std::shared_ptr<StencilInstantiation>& instantiation_;
+  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   std::unordered_set<int>& localVarAccessIDs_;
   const std::unordered_map<int, Field>& fields_;
 
 public:
-  LocalVariablePromotion(const std::shared_ptr<StencilInstantiation>& instantiation,
+  LocalVariablePromotion(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
                          const std::unordered_map<int, Field>& fields,
                          std::unordered_set<int>& localVarAccessIDs)
       : instantiation_(instantiation), localVarAccessIDs_(localVarAccessIDs), fields_(fields) {}
@@ -97,7 +97,7 @@ public:
 /// expression in the AST by a NOExpr.
 class TmpAssignment : public ASTVisitorPostOrder, public NonCopyable {
 protected:
-  const std::shared_ptr<StencilInstantiation>& instantiation_;
+  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   sir::Interval interval_;
   std::shared_ptr<sir::StencilFunction> tmpFunction_;
   std::vector<int> accessIDs_;
@@ -106,7 +106,7 @@ protected:
   std::shared_ptr<FieldAccessExpr> tmpFieldAccessExpr_ = nullptr;
 
 public:
-  TmpAssignment(const std::shared_ptr<StencilInstantiation>& instantiation,
+  TmpAssignment(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
                 sir::Interval const& interval)
       : instantiation_(instantiation), interval_(interval), tmpFunction_(nullptr) {}
 
@@ -209,11 +209,11 @@ class TmpReplacement : public ASTVisitorPostOrder, public NonCopyable {
   // is at the same time instantiated as a stencil function
   struct NestedStencilFunctionArgs {
     int currentPos_ = 0;
-    std::unordered_map<int, std::shared_ptr<StencilFunctionInstantiation>> stencilFun_;
+    std::unordered_map<int, std::shared_ptr<iir::StencilFunctionInstantiation>> stencilFun_;
   };
 
 protected:
-  const std::shared_ptr<StencilInstantiation>& instantiation_;
+  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   std::unordered_map<int, TemporaryFunctionProperties> const& temporaryFieldAccessIDToFunctionCall_;
   const sir::Interval interval_;
   std::shared_ptr<std::vector<sir::StencilCall*>> stackTrace_;
@@ -224,10 +224,10 @@ protected:
   unsigned int numTmpReplaced_ = 0;
 
   std::unordered_map<std::shared_ptr<FieldAccessExpr>,
-                     std::shared_ptr<StencilFunctionInstantiation>> tmpToStencilFunctionMap_;
+                     std::shared_ptr<iir::StencilFunctionInstantiation>> tmpToStencilFunctionMap_;
 
 public:
-  TmpReplacement(const std::shared_ptr<StencilInstantiation>& instantiation,
+  TmpReplacement(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
                  std::unordered_map<int, TemporaryFunctionProperties> const&
                      temporaryFieldAccessIDToFunctionCall,
                  const sir::Interval sirInterval,
@@ -274,7 +274,7 @@ public:
   postVisitNode(std::shared_ptr<StencilFunCallExpr> const& expr) override {
     // at the post visit of a stencil function node, we will replace the arguments to "tmp" fields
     // by stecil function calls
-    std::shared_ptr<StencilFunctionInstantiation> thisStencilFun =
+    std::shared_ptr<iir::StencilFunctionInstantiation> thisStencilFun =
         instantiation_->getStencilFunctionInstantiation(expr);
 
     if(!replaceInNestedFun_.top())
@@ -297,7 +297,7 @@ public:
       return false;
     // TODO we need to version to tmp function generation, in case tmp is recomputed multiple times
     std::string callee = expr->getName() + "_OnTheFly";
-    std::shared_ptr<StencilFunctionInstantiation> stencilFun =
+    std::shared_ptr<iir::StencilFunctionInstantiation> stencilFun =
         instantiation_->getStencilFunctionInstantiationCandidate(callee);
 
     std::string fnClone = makeOnTheFlyFunctionName(expr);
@@ -318,7 +318,7 @@ public:
     // insert the sir::stencilFunction into the StencilInstantiation
     instantiation_->insertStencilFunctionIntoSIR(sirStencilFunctionInstance);
 
-    std::shared_ptr<StencilFunctionInstantiation> cloneStencilFun =
+    std::shared_ptr<iir::StencilFunctionInstantiation> cloneStencilFun =
         instantiation_->cloneStencilFunctionCandidate(stencilFun, fnClone);
 
     auto& accessIDsOfArgs = temporaryFieldAccessIDToFunctionCall_.at(accessID).accessIDArgs_;
@@ -403,7 +403,7 @@ PassTemporaryToStencilFunction::PassTemporaryToStencilFunction()
     : Pass("PassTemporaryToStencilFunction") {}
 
 bool PassTemporaryToStencilFunction::run(
-    const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
@@ -412,7 +412,7 @@ bool PassTemporaryToStencilFunction::run(
 
   DAWN_ASSERT(context);
 
-  for(const std::shared_ptr<Stencil>& stencilPtr : stencilInstantiation->getStencils()) {
+  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
 
     std::unordered_set<int> localVarAccessIDs;
 
@@ -422,18 +422,17 @@ bool PassTemporaryToStencilFunction::run(
 
     // Iterate multi-stages backwards in order to identify local variables that need to be promoted
     // to temporaries
-    for(auto multiStageIt = stencilPtr->getMultiStages().rbegin();
-        multiStageIt != stencilPtr->getMultiStages().rend(); ++multiStageIt) {
+    for(auto multiStageIt = stencilPtr->childrenRBegin();
+        multiStageIt != stencilPtr->childrenREnd(); ++multiStageIt) {
       std::unordered_map<int, TemporaryFunctionProperties> temporaryFieldExprToFunction;
 
-      for(auto stageIt = (*multiStageIt)->getStages().rbegin();
-          stageIt != (*multiStageIt)->getStages().rend(); ++stageIt) {
+      for(auto stageIt = (*multiStageIt)->childrenRBegin();
+          stageIt != (*multiStageIt)->childrenREnd(); ++stageIt) {
 
-        for(auto doMethodIt = (*stageIt)->getDoMethods().rbegin();
-            doMethodIt != (*stageIt)->getDoMethods().rend(); doMethodIt++) {
-          for(auto stmtAccessPairIt = (*doMethodIt)->getStatementAccessesPairs().rbegin();
-              stmtAccessPairIt != (*doMethodIt)->getStatementAccessesPairs().rend();
-              stmtAccessPairIt++) {
+        for(auto doMethodIt = (*stageIt)->childrenRBegin();
+            doMethodIt != (*stageIt)->childrenREnd(); doMethodIt++) {
+          for(auto stmtAccessPairIt = (*doMethodIt)->childrenRBegin();
+              stmtAccessPairIt != (*doMethodIt)->childrenREnd(); stmtAccessPairIt++) {
             const std::shared_ptr<Statement> stmt = (*stmtAccessPairIt)->getStatement();
 
             stmt->ASTStmt->acceptAndReplace(localVariablePromotion);
@@ -448,20 +447,21 @@ bool PassTemporaryToStencilFunction::run(
     }
 
     // Iterate multi-stages for the replacement of temporaries by stencil functions
-    for(auto multiStage : stencilPtr->getMultiStages()) {
+    for(const auto& multiStage : stencilPtr->getChildren()) {
       std::unordered_map<int, TemporaryFunctionProperties> temporaryFieldExprToFunction;
 
-      for(const auto& stagePtr : multiStage->getStages()) {
+      for(const auto& stagePtr : multiStage->getChildren()) {
 
         bool isATmpReplaced = false;
-        for(const auto& doMethodPtr : stagePtr->getDoMethods()) {
-          for(auto& stmtAccessPair : doMethodPtr->getStatementAccessesPairs()) {
+        for(const auto& doMethodPtr : stagePtr->getChildren()) {
+          for(auto& stmtAccessPair : doMethodPtr->getChildren()) {
             const std::shared_ptr<Statement> stmt = stmtAccessPair->getStatement();
 
             if(stmt->ASTStmt->getKind() != Stmt::SK_ExprStmt)
               continue;
 
             {
+              // TODO catch a temp expr
               const Interval& interval = doMethodPtr->getInterval();
               const sir::Interval sirInterval = intervalToSIRInterval(interval);
 
@@ -474,7 +474,7 @@ bool PassTemporaryToStencilFunction::run(
 
               if(tmpReplacement.getNumTmpReplaced() != 0) {
 
-                std::vector<std::shared_ptr<StatementAccessesPair>> listStmtPair;
+                std::vector<std::unique_ptr<iir::StatementAccessesPair>> listStmtPair;
 
                 StatementMapper statementMapper(
                     stencilInstantiation.get(), stmt->StackTrace, listStmtPair, sirInterval,
@@ -486,10 +486,10 @@ bool PassTemporaryToStencilFunction::run(
 
                 DAWN_ASSERT(listStmtPair.size() == 1);
 
-                std::shared_ptr<StatementAccessesPair> stmtPair = listStmtPair[0];
+                const std::unique_ptr<iir::StatementAccessesPair>& stmtPair = listStmtPair[0];
                 computeAccesses(stencilInstantiation.get(), stmtPair);
 
-                stmtAccessPair = stmtPair;
+                stmtAccessPair = std::move(listStmtPair[0]);
               }
 
               // find patterns like tmp = fn(args)...;
@@ -549,11 +549,12 @@ bool PassTemporaryToStencilFunction::run(
       }
     }
     // eliminate empty stages or stages with only NOPExpr statements
-    RemoveIf(stencilPtr->getMultiStages(),
-             [](const std::shared_ptr<MultiStage>& m) -> bool { return m->isEmptyOrNullStmt(); });
-    for(auto multiStage : stencilPtr->getMultiStages()) {
-      RemoveIf(multiStage->getStages(),
-               [](const std::shared_ptr<Stage>& s) -> bool { return s->isEmptyOrNullStmt(); });
+    RemoveIf(stencilPtr->getChildren(), [](const std::unique_ptr<iir::MultiStage>& m) -> bool {
+      return m->isEmptyOrNullStmt();
+    });
+    for(const auto& multiStage : stencilPtr->getChildren()) {
+      RemoveIf(multiStage->getChildren(),
+               [](const std::unique_ptr<iir::Stage>& s) -> bool { return s->isEmptyOrNullStmt(); });
     }
   }
 

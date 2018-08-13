@@ -14,7 +14,7 @@
 
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Compiler/DawnCompiler.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/STLExtras.h"
@@ -29,18 +29,18 @@ OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, Options& opti
   for(const auto& stencil : SIR_->Stencils)
     if(!stencil->Attributes.has(sir::Attr::AK_NoCodeGen)) {
       stencilInstantiationMap_.insert(std::make_pair(
-          stencil->Name, std::make_shared<StencilInstantiation>(this, stencil, SIR)));
+          stencil->Name, std::make_shared<iir::StencilInstantiation>(this, stencil, SIR)));
     } else {
       DAWN_LOG(INFO) << "Skipping processing of `" << stencil->Name << "`";
     }
 }
 
-std::map<std::string, std::shared_ptr<StencilInstantiation>>&
+std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 OptimizerContext::getStencilInstantiationMap() {
   return stencilInstantiationMap_;
 }
 
-const std::map<std::string, std::shared_ptr<StencilInstantiation>>&
+const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
 OptimizerContext::getStencilInstantiationMap() const {
   return stencilInstantiationMap_;
 }

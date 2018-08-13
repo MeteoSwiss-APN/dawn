@@ -34,7 +34,7 @@ protected:
   TestFieldAccessIntervals() : compiler_(compileOptions_.get()) {}
   virtual void SetUp() {}
 
-  std::shared_ptr<StencilInstantiation> loadTest(std::string sirFilename) {
+  std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename) {
 
     std::string filename = TestEnvironment::path_ + "/" + sirFilename;
     std::ifstream file(filename);
@@ -62,15 +62,15 @@ protected:
 
 TEST_F(TestFieldAccessIntervals, test_field_access_interval_01) {
   auto stencilInstantiation = loadTest("test_field_access_interval_01.sir");
-  auto stencils = stencilInstantiation->getStencils();
+  const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 2);
   EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-1, 1, -1, 1, 0, 0}));
   EXPECT_EQ(stencil->getStage(1)->getExtents(), (Extents{0, 0, 0, 0, 0, 0}));
 
-  for(auto fieldPair : stencil->getMultiStages().front()->getFields()) {
+  for(auto fieldPair : (*stencil->childrenBegin())->getFields()) {
     Field& field = fieldPair.second;
     int AccessID = fieldPair.first;
 
@@ -86,15 +86,15 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_01) {
 
 TEST_F(TestFieldAccessIntervals, test_field_access_interval_02) {
   auto stencilInstantiation = loadTest("test_field_access_interval_02.sir");
-  auto& stencils = stencilInstantiation->getStencils();
+  const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 2);
   EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-1, 1, -1, 1, 0, 0}));
   EXPECT_EQ(stencil->getStage(1)->getExtents(), (Extents{0, 0, 0, 0, 0, 0}));
 
-  for(auto fieldPair : stencil->getMultiStages().front()->getFields()) {
+  for(auto fieldPair : (*stencil->childrenBegin())->getFields()) {
     Field& field = fieldPair.second;
     int AccessID = fieldPair.first;
     if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("lap")) {
@@ -113,16 +113,16 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_02) {
 
 TEST_F(TestFieldAccessIntervals, test_field_access_interval_03) {
   auto stencilInstantiation = loadTest("test_field_access_interval_03.sir");
-  auto& stencils = stencilInstantiation->getStencils();
+  const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 3);
   EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-1, 1, -1, 1, 0, 0}));
   EXPECT_EQ(stencil->getStage(1)->getExtents(), (Extents{0, 0, 0, 0, 0, 0}));
   EXPECT_EQ(stencil->getStage(2)->getExtents(), (Extents{0, 0, 0, 0, 0, 0}));
 
-  for(auto fieldPair : stencil->getMultiStages().front()->getFields()) {
+  for(auto fieldPair : (*stencil->childrenBegin())->getFields()) {
     Field& field = fieldPair.second;
     int AccessID = fieldPair.first;
     if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("lap")) {
@@ -142,13 +142,13 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_03) {
 
 TEST_F(TestFieldAccessIntervals, test_field_access_interval_04) {
   auto stencilInstantiation = loadTest("test_field_access_interval_04.sir");
-  auto& stencils = stencilInstantiation->getStencils();
+  const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 3);
 
-  MultiStage& multiStage = *(stencil->getMultiStages().front());
+  iir::MultiStage& multiStage = **(stencil->childrenBegin());
 
   boost::optional<Interval> enclosingInterval = multiStage.getEnclosingAccessIntervalTemporaries();
   ASSERT_TRUE(enclosingInterval.is_initialized());
@@ -157,15 +157,15 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_04) {
 
 TEST_F(TestFieldAccessIntervals, test_field_access_interval_05) {
   auto stencilInstantiation = loadTest("test_field_access_interval_05.sir");
-  auto& stencils = stencilInstantiation->getStencils();
+  const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 2);
   EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-1, 1, -1, 1, -1, 0}));
   EXPECT_EQ(stencil->getStage(1)->getExtents(), (Extents{0, 0, 0, 0, 0, 0}));
 
-  for(auto fieldPair : stencil->getMultiStages().front()->getFields()) {
+  for(auto fieldPair : (*stencil->childrenBegin())->getFields()) {
     Field& field = fieldPair.second;
     int AccessID = fieldPair.first;
     if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("lap")) {

@@ -12,13 +12,14 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_MULTISTAGE_H
-#define DAWN_OPTIMIZER_MULTISTAGE_H
+#ifndef DAWN_IIR_MULTISTAGE_H
+#define DAWN_IIR_MULTISTAGE_H
 
 #include "dawn/Optimizer/Cache.h"
 #include "dawn/Optimizer/MultiInterval.h"
 #include "dawn/Optimizer/LoopOrder.h"
-#include "dawn/Optimizer/Stage.h"
+#include "dawn/IIR/Stage.h"
+#include "dawn/IIR/IIRNode.h"
 #include <deque>
 #include <list>
 #include <memory>
@@ -26,10 +27,17 @@
 #include <vector>
 
 namespace dawn {
+namespace iir {
 
+class Stencil;
 class StencilInstantiation;
 class DependencyGraphAccesses;
 class OptimizerContext;
+
+namespace impl {
+template <typename T>
+using StdList = std::list<T, std::allocator<T>>;
+}
 
 /// @brief A MultiStage is represented by a collection of stages and a given exectuion policy.
 ///
@@ -37,28 +45,32 @@ class OptimizerContext;
 /// gridtools multistages reflect kernels.
 ///
 /// @ingroup optimizer
-class MultiStage {
+class MultiStage : public IIRNode<Stencil, MultiStage, Stage, impl::StdList> {
+  using base_type = IIRNode<Stencil, MultiStage, Stage, impl::StdList>;
+
   StencilInstantiation& stencilInstantiation_;
 
   LoopOrderKind loopOrder_;
-  std::list<std::shared_ptr<Stage>> stages_;
-
   std::unordered_map<int, Cache> caches_;
+  std::unordered_map<int, Field> fields_;
 
 public:
+  static constexpr const char* name = "MultiStage";
+
+  using StageSmartPtr_t = child_smartptr_t<Stage>;
+  using ChildrenIterator = std::vector<child_smartptr_t<Stage>>::iterator;
+
   /// @name Constructors and Assignment
   /// @{
   MultiStage(StencilInstantiation& stencilInstantiation, LoopOrderKind loopOrder);
-  MultiStage(const MultiStage&) = default;
+  //  MultiStage(const MultiStage&) = default;
   MultiStage(MultiStage&&) = default;
 
   MultiStage& operator=(const MultiStage&) = default;
   MultiStage& operator=(MultiStage&&) = default;
   /// @}
 
-  /// @brief Get the multi-stages of the stencil
-  std::list<std::shared_ptr<Stage>>& getStages() { return stages_; }
-  const std::list<std::shared_ptr<Stage>>& getStages() const { return stages_; }
+  std::unique_ptr<MultiStage> clone() const;
 
   /// @brief Get the execution policy
   StencilInstantiation& getStencilInstantiation() const { return stencilInstantiation_; }
@@ -66,10 +78,12 @@ public:
   /// @brief Get the loop order
   LoopOrderKind getLoopOrder() const { return loopOrder_; }
 
-  std::vector<DoMethod> computeOrderedDoMethods() const;
+  std::vector<std::unique_ptr<DoMethod>> computeOrderedDoMethods() const;
 
   /// @brief Set the loop order
   void setLoopOrder(LoopOrderKind loopOrder) { loopOrder_ = loopOrder; }
+
+  void update();
 
   /// @brief Index containing the information for splitting MultiStages
   ///
@@ -87,7 +101,8 @@ public:
   /// the new stages. This function consumes the input argument `splitterIndices`.
   ///
   /// @return New multi-stages
-  std::vector<std::shared_ptr<MultiStage>>
+  // TODO this should not be here
+  std::vector<std::unique_ptr<MultiStage>>
   split(std::deque<MultiStage::SplitIndex>& splitterIndices, LoopOrderKind lastLoopOrder);
 
   /// @brief Get the dependency graph of the multi-stage incorporating those stages whose extended
@@ -104,15 +119,13 @@ public:
 
   Cache& setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy policy, int AccessID);
 
-  /// @brief computes the interval where an accessId is used (extended by the extent of the access)
+  /// @brief computes the interval where an accessId is used (extended by the extent of the
+  /// access)
   boost::optional<Interval> computeEnclosingAccessInterval(const int accessID,
                                                            const bool mergeWithDoInterval) const;
 
   /// @brief Is the field given by the `AccessID` cached?
   bool isCached(int AccessID) const { return caches_.count(AccessID); }
-
-  /// @brief Check if the multi-stage is empty (i.e contains no statements)
-  bool isEmpty() const { return stages_.empty(); }
 
   /// @brief Get the intervals of the multi-stage
   std::unordered_set<Interval> getIntervals() const;
@@ -138,10 +151,11 @@ public:
   /// @brief true if it contains no stages or the stages are empty
   bool isEmptyOrNullStmt() const;
 
-  //TODO doc
+  // TODO doc
   dawn::MultiInterval computeReadAccessInterval(int accessID) const;
 };
 
+} // namespace iir
 } // namespace dawn
 
 #endif

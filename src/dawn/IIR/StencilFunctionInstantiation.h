@@ -12,13 +12,13 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_STENCILFUNCTIONINSTANTIATION_H
-#define DAWN_OPTIMIZER_STENCILFUNCTIONINSTANTIATION_H
+#ifndef DAWN_IIR_STENCILFUNCTIONINSTANTIATION_H
+#define DAWN_IIR_STENCILFUNCTIONINSTANTIATION_H
 
 #include "dawn/Optimizer/Extents.h"
-#include "dawn/Optimizer/Field.h"
+#include "dawn/IIR/Field.h"
 #include "dawn/Optimizer/Interval.h"
-#include "dawn/Optimizer/StatementAccessesPair.h"
+#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Unreachable.h"
@@ -29,6 +29,8 @@
 #include <vector>
 
 namespace dawn {
+
+namespace iir {
 
 class StencilInstantiation;
 
@@ -95,6 +97,8 @@ class StencilFunctionInstantiation {
 private:
   StencilInstantiation* stencilInstantiation_;
 
+  // TODO put all members in a struct to avoid having to implement a clone for all of them
+  // except the vector<unique_ptr>
   std::shared_ptr<StencilFunCallExpr> expr_;
   std::shared_ptr<sir::StencilFunction> function_;
   std::shared_ptr<AST> ast_;
@@ -146,7 +150,7 @@ private:
   //     Accesses & Fields
 
   /// List of statements in this stencil function
-  std::vector<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs_;
+  std::vector<std::unique_ptr<StatementAccessesPair>> statementAccessesPairs_;
 
   std::vector<Field> calleeFields_;
   std::vector<Field> callerFields_;
@@ -165,6 +169,11 @@ public:
                                const std::shared_ptr<sir::StencilFunction>& function,
                                const std::shared_ptr<AST>& ast, const Interval& interval,
                                bool isNested);
+
+  StencilFunctionInstantiation(StencilFunctionInstantiation&&) = default;
+  StencilFunctionInstantiation& operator=(StencilFunctionInstantiation&&) = default;
+
+  StencilFunctionInstantiation clone() const;
 
   std::unordered_map<int, int>& ArgumentIndexToCallerAccessIDMap() {
     return ArgumentIndexToCallerAccessIDMap_;
@@ -365,8 +374,8 @@ public:
   //===----------------------------------------------------------------------------------------===//
 
   /// @brief Get the statements of the stencil function
-  std::vector<std::shared_ptr<StatementAccessesPair>>& getStatementAccessesPairs();
-  const std::vector<std::shared_ptr<StatementAccessesPair>>& getStatementAccessesPairs() const;
+  std::vector<std::unique_ptr<StatementAccessesPair>>& getStatementAccessesPairs();
+  const std::vector<std::unique_ptr<StatementAccessesPair>>& getStatementAccessesPairs() const;
 
   /// @brief Update the fields and global variables
   ///
@@ -427,6 +436,7 @@ public:
   void dump() const;
 };
 
+} // namespace iir
 } // namespace dawn
 
 #endif

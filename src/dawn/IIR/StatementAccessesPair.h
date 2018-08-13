@@ -12,22 +12,29 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_STATEMENTACCESSESPAIR_H
-#define DAWN_OPTIMIZER_STATEMENTACCESSESPAIR_H
+#ifndef DAWN_IIR_STATEMENTACCESSESPAIR_H
+#define DAWN_IIR_STATEMENTACCESSESPAIR_H
 
-#include "dawn/Optimizer/Accesses.h"
+#include "dawn/IIR/BlockStatements.h"
+#include "dawn/IIR/Accesses.h"
 #include "dawn/SIR/Statement.h"
+#include "dawn/IIR/IIRNode.h"
 #include <boost/optional.hpp>
 #include <memory>
 #include <vector>
 
 namespace dawn {
+namespace iir {
+
+class DoMethod;
 
 /// @brief Statement with corresponding Accesses
 ///
-/// If the statement is a block-statement, the sub-statements will be stored in `children`.
+/// If the statement is a block-statement, the sub-statements will be stored in blockStatements.
 /// @ingroup optimizer
-class StatementAccessesPair {
+class StatementAccessesPair : public IIRNode<DoMethod, StatementAccessesPair, void> {
+  using base_type = IIRNode<DoMethod, StatementAccessesPair, void>;
+
   std::shared_ptr<Statement> statement_;
 
   // In case of a non function call stmt, the accesses are stored in callerAccesses_, while
@@ -42,12 +49,24 @@ class StatementAccessesPair {
   // accesses without the initial offset of the call
   std::shared_ptr<Accesses> calleeAccesses_;
 
+  // TODO implement different specializations of this. BlockStatements are only used for
+  // if/else/then
+
   // If the statement is a block statement, this will contain the sub-statements of the block. Note
   // that the acceses in this case are the *accumulated* accesses of all sub-statements.
-  std::vector<std::shared_ptr<StatementAccessesPair>> children_;
+  BlockStatements blockStatements_;
 
 public:
+  static constexpr const char* name = "StatementAccessesPair";
+
+  // TODO implement a print method per IIRNode and make the dump() use it
   explicit StatementAccessesPair(const std::shared_ptr<Statement>& statement);
+
+  // TODO remove
+  //  StatementAccessesPair(const StatementAccessesPair&) = default;
+  StatementAccessesPair(StatementAccessesPair&&) = default;
+
+  std::unique_ptr<StatementAccessesPair> clone() const;
 
   /// @brief Get/Set the statement
   std::shared_ptr<Statement> getStatement() const;
@@ -66,10 +85,11 @@ public:
   void setCalleeAccesses(const std::shared_ptr<Accesses>& accesses);
   bool hasCalleeAccesses();
 
-  /// @brief Get the children
-  const std::vector<std::shared_ptr<StatementAccessesPair>>& getChildren() const;
-  std::vector<std::shared_ptr<StatementAccessesPair>>& getChildren();
-  bool hasChildren() const;
+  /// @brief Get the blockStatements
+  const std::vector<std::unique_ptr<StatementAccessesPair>>& getBlockStatements() const;
+  bool hasBlockStatements() const;
+
+  void insertBlockStatement(std::unique_ptr<StatementAccessesPair>&& stmt);
 
   boost::optional<Extents> computeMaximumExtents(const int accessID) const;
 
@@ -82,6 +102,7 @@ public:
   /// @}
 };
 
+} // namespace iir
 } // namespace dawn
 
 #endif

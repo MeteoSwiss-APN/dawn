@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_FIELDTYPES_H
-#define DAWN_OPTIMIZER_FIELDTYPES_H
+#ifndef DAWN_IIR_FIELD_H
+#define DAWN_IIR_FIELD_H
 
 #include "dawn/Optimizer/Extents.h"
 #include "dawn/Optimizer/FieldAccessExtents.h"
@@ -41,6 +41,8 @@ private:
 public:
   Field(Field&& f) = default;
   Field(Field const& f) = default;
+  Field& operator=(Field&&) = default;
+  Field& operator=(const Field&) = default;
 
   Field(int accessID, IntendKind intend, boost::optional<Extents> const& readExtents,
         boost::optional<Extents> const& writeExtents, Interval const& interval)
@@ -101,6 +103,9 @@ public:
 
   void extendInterval(Interval const& interval) { interval_.merge(interval); }
 };
+
+void mergeFields(std::unordered_map<int, Field> const& sFields,
+                 std::unordered_map<int, Field>& dFields);
 
 } // namespace dawn
 

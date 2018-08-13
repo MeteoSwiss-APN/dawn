@@ -12,22 +12,24 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_DEPENDENCYGRAPHACCESSES_H
-#define DAWN_OPTIMIZER_DEPENDENCYGRAPHACCESSES_H
+#ifndef DAWN_IIR_DEPENDENCYGRAPHACCESSES_H
+#define DAWN_IIR_DEPENDENCYGRAPHACCESSES_H
 
-#include "dawn/Optimizer/DependencyGraph.h"
+#include "dawn/IIR/DependencyGraph.h"
 #include "dawn/Optimizer/Extents.h"
 #include "dawn/Support/TypeTraits.h"
 #include <set>
 #include <unordered_map>
 
 namespace dawn {
+class OptimizerContext;
+class Stmt;
+
+namespace iir {
 
 class Accesses;
-class OptimizerContext;
 class StencilInstantiation;
 class StatementAccessesPair;
-class Stmt;
 
 /// @enum DependencyGraphAccessesEdgeData
 /// @brief Edges contain the extent of the access between the two nodes
@@ -92,7 +94,8 @@ public:
   /// +-------+           +--------+
   ///
   /// Note that only child-less nodes are processed.
-  void insertStatementAccessesPair(const std::shared_ptr<StatementAccessesPair>& stmtAccessPair);
+  void
+  insertStatementAccessesPair(const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessPair);
 
   /// @brief Insert a new node
   Vertex& insertNode(int ID);
@@ -177,6 +180,7 @@ public:
   void toJSON(const std::string& file) const;
 };
 
+} // namespace iir
 } // namespace dawn
 
 #endif

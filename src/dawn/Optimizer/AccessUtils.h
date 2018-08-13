@@ -17,8 +17,8 @@
 #ifndef DAWN_OPTIMIZER_ACCESSUTILS_H
 #define DAWN_OPTIMIZER_ACCESSUTILS_H
 
-#include "dawn/Optimizer/Accesses.h"
-#include "dawn/Optimizer/Field.h"
+#include "dawn/IIR/Accesses.h"
+#include "dawn/IIR/Field.h"
 #include <unordered_map>
 
 namespace dawn {

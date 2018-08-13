@@ -13,11 +13,11 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassStageSplitter.h"
-#include "dawn/Optimizer/DependencyGraphAccesses.h"
+#include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
-#include "dawn/Optimizer/StatementAccessesPair.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Logging.h"
@@ -30,36 +30,36 @@ namespace dawn {
 
 PassStageSplitter::PassStageSplitter() : Pass("PassStageSplitter", true) {}
 
-bool PassStageSplitter::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
+bool PassStageSplitter::run(
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   int numSplit = 0;
   std::deque<int> splitterIndices;
-  std::deque<std::shared_ptr<DependencyGraphAccesses>> graphs;
+  std::deque<std::shared_ptr<iir::DependencyGraphAccesses>> graphs;
 
   // Iterate over all stages in all multistages of all stencils
-  for(auto& stencil : stencilInstantiation->getStencils()) {
+  for(const auto& stencil : stencilInstantiation->getStencils()) {
 
     int multiStageIndex = 0;
     int linearStageIndex = 0;
-    for(auto& multiStage : stencil->getMultiStages()) {
+    for(const auto& multiStage : stencil->getChildren()) {
 
       int stageIndex = 0;
-      for(auto stageIt = multiStage->getStages().begin(); stageIt != multiStage->getStages().end();
+      for(auto stageIt = multiStage->childrenBegin(); stageIt != multiStage->childrenEnd();
           ++stageIndex, ++linearStageIndex) {
-        Stage& stage = (**stageIt);
-        DoMethod& doMethod = stage.getSingleDoMethod();
+        iir::Stage& stage = (**stageIt);
+        iir::DoMethod& doMethod = stage.getSingleDoMethod();
 
         splitterIndices.clear();
         graphs.clear();
 
-        std::shared_ptr<DependencyGraphAccesses> newGraph, oldGraph;
-        newGraph = std::make_shared<DependencyGraphAccesses>(stencilInstantiation.get());
+        std::shared_ptr<iir::DependencyGraphAccesses> newGraph, oldGraph;
+        newGraph = std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation.get());
 
         // Build the Dependency graph (bottom to top)
-        for(int stmtIndex = doMethod.getStatementAccessesPairs().size() - 1; stmtIndex >= 0;
-            --stmtIndex) {
-          auto& stmtAccessesPair = doMethod.getStatementAccessesPairs()[stmtIndex];
+        for(int stmtIndex = doMethod.getChildren().size() - 1; stmtIndex >= 0; --stmtIndex) {
+          auto& stmtAccessesPair = doMethod.getChildren()[stmtIndex];
 
           newGraph->insertStatementAccessesPair(stmtAccessesPair);
 
@@ -101,9 +101,9 @@ bool PassStageSplitter::run(const std::shared_ptr<StencilInstantiation>& stencil
         // Note that the "old" stage will be erased (it was consumed in split(...) anyway)
         if(!splitterIndices.empty()) {
           auto newStages = stage.split(splitterIndices, &graphs);
-          stageIt = multiStage->getStages().erase(stageIt);
-          multiStage->getStages().insert(stageIt, std::make_move_iterator(newStages.begin()),
-                                         std::make_move_iterator(newStages.end()));
+          stageIt = multiStage->childrenErase(stageIt);
+          multiStage->insertChildren(stageIt, std::make_move_iterator(newStages.begin()),
+                                     std::make_move_iterator(newStages.end()));
         } else {
           DAWN_ASSERT(graphs.size() == 1);
           doMethod.setDependencyGraph(graphs.back());

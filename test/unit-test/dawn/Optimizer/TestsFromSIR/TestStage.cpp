@@ -35,7 +35,7 @@ protected:
   ComputeEnclosingAccessInterval() : compiler_(compileOptions_.get()) {}
   virtual void SetUp() {}
 
-  std::shared_ptr<StencilInstantiation> loadTest(std::string sirFilename) {
+  std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename) {
 
     std::string filename = TestEnvironment::path_ + "/" + sirFilename;
     std::ifstream file(filename);
@@ -63,22 +63,22 @@ protected:
 
 TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_01) {
   auto stencilInstantiation = loadTest("test_field_access_interval_01.sir");
-  auto stencils = stencilInstantiation->getStencils();
+  const auto& stencils = stencilInstantiation->getStencils();
   ASSERT_TRUE((stencils.size() == 1));
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   ASSERT_TRUE((stencil->getNumStages() == 2));
   ASSERT_TRUE((stencil->getStage(0)->getExtents() == Extents{-1, 1, -1, 1, 0, 0}));
   ASSERT_TRUE((stencil->getStage(1)->getExtents() == Extents{0, 0, 0, 0, 0, 0}));
 
-  ASSERT_TRUE((stencil->getMultiStages().size() == 1));
+  ASSERT_TRUE((stencil->getChildren().size() == 1));
 
-  auto const& mss = stencil->getMultiStages().front();
+  auto const& mss = *stencil->childrenBegin();
 
-  auto stage1_ptr = mss->getStages().begin();
+  auto stage1_ptr = mss->childrenBegin();
   auto stage2_ptr = std::next(stage1_ptr);
-  std::shared_ptr<Stage> const& stage1 = *stage1_ptr;
-  std::shared_ptr<Stage> const& stage2 = *stage2_ptr;
+  std::unique_ptr<iir::Stage> const& stage1 = *stage1_ptr;
+  std::unique_ptr<iir::Stage> const& stage2 = *stage2_ptr;
 
   boost::optional<Interval> intervalU1 =
       stage1->computeEnclosingAccessInterval(stencilInstantiation->getAccessIDFromName("u"), false);
@@ -112,19 +112,19 @@ TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_01) {
 
 TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_02) {
   auto stencilInstantiation = loadTest("test_field_access_interval_02.sir");
-  auto stencils = stencilInstantiation->getStencils();
+  const auto& stencils = stencilInstantiation->getStencils();
 
   ASSERT_TRUE((stencils.size() == 1));
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   ASSERT_TRUE((stencil->getNumStages() == 2));
 
-  ASSERT_TRUE((stencil->getMultiStages().size() == 1));
+  ASSERT_TRUE((stencil->getChildren().size() == 1));
 
-  auto const& mss = stencil->getMultiStages().front();
+  auto const& mss = *stencil->childrenBegin();
 
-  auto stage1_ptr = mss->getStages().begin();
-  std::shared_ptr<Stage> const& stage1 = *stage1_ptr;
+  auto stage1_ptr = mss->childrenBegin();
+  std::unique_ptr<iir::Stage> const& stage1 = *stage1_ptr;
 
   {
     boost::optional<Interval> intervalcoeff1 = stage1->computeEnclosingAccessInterval(

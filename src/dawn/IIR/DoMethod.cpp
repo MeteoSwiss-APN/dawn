@@ -12,26 +12,29 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/DoMethod.h"
-#include "dawn/Optimizer/Accesses.h"
-#include "dawn/Optimizer/DependencyGraphAccesses.h"
-#include "dawn/Optimizer/StatementAccessesPair.h"
+#include "dawn/IIR/DoMethod.h"
+#include "dawn/IIR/Stage.h"
+#include "dawn/IIR/Accesses.h"
+#include "dawn/IIR/DependencyGraphAccesses.h"
+#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/SIR/Statement.h"
 #include <boost/optional.hpp>
 #include "dawn/Support/IndexGenerator.h"
 
 namespace dawn {
+namespace iir {
 
 DoMethod::DoMethod(Interval interval)
     : interval_(interval), id_(IndexGenerator::Instance().getIndex()), dependencyGraph_(nullptr) {}
 
-std::vector<std::shared_ptr<StatementAccessesPair>>& DoMethod::getStatementAccessesPairs() {
-  return statementAccessesPairs_;
-}
+std::unique_ptr<DoMethod> DoMethod::clone() const {
+  auto cloneMS = make_unique<DoMethod>(interval_);
 
-const std::vector<std::shared_ptr<StatementAccessesPair>>&
-DoMethod::getStatementAccessesPairs() const {
-  return statementAccessesPairs_;
+  cloneMS->setID(id_);
+  cloneMS->setDependencyGraph(dependencyGraph_);
+
+  cloneMS->cloneChildrenFrom(*this);
+  return cloneMS;
 }
 
 Interval& DoMethod::getInterval() { return interval_; }
@@ -49,7 +52,7 @@ std::shared_ptr<DependencyGraphAccesses>& DoMethod::getDependencyGraph() {
 boost::optional<Extents> DoMethod::computeMaximumExtents(const int accessID) const {
   boost::optional<Extents> extents;
 
-  for(auto& stmtAccess : getStatementAccessesPairs()) {
+  for(auto& stmtAccess : getChildren()) {
     auto extents_ = stmtAccess->computeMaximumExtents(accessID);
     if(!extents_.is_initialized())
       continue;
@@ -89,7 +92,7 @@ private:
 
 public:
   CheckNonNullStatementVisitor() {}
-  virtual ~CheckNonNullStatementVisitor() {}
+  virtual ~CheckNonNullStatementVisitor() override {}
 
   bool getResult() const { return result_; }
 
@@ -103,7 +106,7 @@ public:
 };
 
 bool DoMethod::isEmptyOrNullStmt() const {
-  for(auto const& statementAccessPair : statementAccessesPairs_) {
+  for(auto const& statementAccessPair : children_) {
     const std::shared_ptr<Stmt>& root = statementAccessPair->getStatement()->ASTStmt;
     CheckNonNullStatementVisitor checker;
     root->accept(checker);
@@ -115,4 +118,5 @@ bool DoMethod::isEmptyOrNullStmt() const {
   return true;
 }
 
+} // namespace iir
 } // namespace dawn

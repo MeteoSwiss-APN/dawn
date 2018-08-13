@@ -1,18 +1,18 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/Stencil.h"
+#include "dawn/IIR/Stencil.h"
 #include <gtest/gtest.h>
 
 using namespace dawn;
@@ -20,11 +20,11 @@ using namespace dawn;
 namespace {
 
 TEST(StencilTest, StagePosition) {
-  Stencil::StagePosition pos1(-1, -1);
-  Stencil::StagePosition pos2(0, -1);
-  Stencil::StagePosition pos3(0, 0);
-  Stencil::StagePosition pos4(1, -1);
-  Stencil::StagePosition pos5(1, 0);
+  iir::Stencil::StagePosition pos1(-1, -1);
+  iir::Stencil::StagePosition pos2(0, -1);
+  iir::Stencil::StagePosition pos3(0, 0);
+  iir::Stencil::StagePosition pos4(1, -1);
+  iir::Stencil::StagePosition pos5(1, 0);
 
   EXPECT_TRUE(pos1 == pos1);
   EXPECT_TRUE(pos1 != pos2);
@@ -35,13 +35,13 @@ TEST(StencilTest, StagePosition) {
 }
 
 TEST(StencilTest, StatementPosition) {
-  Stencil::StagePosition pos1(0, 0);
-  Stencil::StagePosition pos2(1, 1);
+  iir::Stencil::StagePosition pos1(0, 0);
+  iir::Stencil::StagePosition pos2(1, 1);
 
-  Stencil::StatementPosition stmtPos1(pos1, 0, 0);
-  Stencil::StatementPosition stmtPos2(pos1, 0, 1);
-  Stencil::StatementPosition stmtPos3(pos1, 1, 0);
-  Stencil::StatementPosition stmtPos4(pos2, 0, 0);
+  iir::Stencil::StatementPosition stmtPos1(pos1, 0, 0);
+  iir::Stencil::StatementPosition stmtPos2(pos1, 0, 1);
+  iir::Stencil::StatementPosition stmtPos3(pos1, 1, 0);
+  iir::Stencil::StatementPosition stmtPos4(pos2, 0, 0);
 
   EXPECT_TRUE(stmtPos1 == stmtPos1);
   EXPECT_TRUE(stmtPos1 <= stmtPos1);
@@ -64,18 +64,18 @@ TEST(StencilTest, StatementPosition) {
 }
 
 TEST(StencilTest, LifeTime) {
-  Stencil::StagePosition pos1(0, 0);
-  Stencil::StagePosition pos2(1, 1);
+  iir::Stencil::StagePosition pos1(0, 0);
+  iir::Stencil::StagePosition pos2(1, 1);
 
-  Stencil::StatementPosition stmtPos1(pos1, 0, 0);
-  Stencil::StatementPosition stmtPos2(pos1, 0, 1);
-  Stencil::StatementPosition stmtPos3(pos1, 1, 0);
-  Stencil::StatementPosition stmtPos4(pos2, 0, 0);
+  iir::Stencil::StatementPosition stmtPos1(pos1, 0, 0);
+  iir::Stencil::StatementPosition stmtPos2(pos1, 0, 1);
+  iir::Stencil::StatementPosition stmtPos3(pos1, 1, 0);
+  iir::Stencil::StatementPosition stmtPos4(pos2, 0, 0);
 
-  Stencil::Lifetime lt1(stmtPos1, stmtPos1);
-  Stencil::Lifetime lt2(stmtPos1, stmtPos2);
-  Stencil::Lifetime lt3(stmtPos3, stmtPos3);
-  Stencil::Lifetime lt4(stmtPos4, stmtPos4);
+  iir::Stencil::Lifetime lt1(stmtPos1, stmtPos1);
+  iir::Stencil::Lifetime lt2(stmtPos1, stmtPos2);
+  iir::Stencil::Lifetime lt3(stmtPos3, stmtPos3);
+  iir::Stencil::Lifetime lt4(stmtPos4, stmtPos4);
 
   EXPECT_TRUE(lt1.overlaps(lt1));
   EXPECT_TRUE(lt1.overlaps(lt2));

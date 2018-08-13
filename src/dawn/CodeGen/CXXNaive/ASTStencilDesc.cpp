@@ -14,7 +14,7 @@
 
 #include "dawn/CodeGen/CXXNaive/ASTStencilDesc.h"
 #include "dawn/CodeGen/CXXUtil.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Unreachable.h"
 
@@ -22,7 +22,7 @@ namespace dawn {
 namespace codegen {
 namespace cxxnaive {
 
-ASTStencilDesc::ASTStencilDesc(const StencilInstantiation* instantiation,
+ASTStencilDesc::ASTStencilDesc(const iir::StencilInstantiation* instantiation,
                                CodeGenProperties const& codeGenProperties)
     : ASTCodeGenCXX(), instantiation_(instantiation), codeGenProperties_(codeGenProperties) {}
 

@@ -13,9 +13,9 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
-#include "dawn/Optimizer/DependencyGraphAccesses.h"
+#include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 
 namespace dawn {
 
@@ -23,15 +23,16 @@ PassPrintStencilGraph::PassPrintStencilGraph() : Pass("PassPrintStencilGraph") {
   dependencies_.push_back("PassStageSplitter");
 }
 
-bool PassPrintStencilGraph::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
+bool PassPrintStencilGraph::run(
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
   if(!context->getOptions().DumpStencilGraph)
     return true;
 
   int stencilIdx = 0;
-  for(auto& stencilPtr : stencilInstantiation->getStencils()) {
-    Stencil& stencil = *stencilPtr;
-    auto DAG = std::make_shared<DependencyGraphAccesses>(stencilInstantiation.get());
+  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
+    iir::Stencil& stencil = *stencilPtr;
+    auto DAG = std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation.get());
 
     // Merge all stages into a single DAG
     int numStages = stencil.getNumStages();

@@ -12,14 +12,15 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/Accesses.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/Accesses.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/StringUtil.h"
 #include <iostream>
 #include <utility>
 
 namespace dawn {
+namespace iir {
 
 namespace {
 
@@ -232,4 +233,5 @@ std::string Accesses::toString(const StencilFunctionInstantiation* stencilFunc,
       initialIndent, writeAccesses_, readAccesses_);
 }
 
+} // namespace iir
 } // namespace dawn

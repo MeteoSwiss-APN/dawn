@@ -14,7 +14,7 @@
 
 #include "dawn/CodeGen/GridTools/ASTStencilDesc.h"
 #include "dawn/CodeGen/CXXUtil.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Unreachable.h"
 
@@ -23,7 +23,7 @@ namespace codegen {
 namespace gt {
 
 ASTStencilDesc::ASTStencilDesc(
-    const std::shared_ptr<StencilInstantiation> instantiation,
+    const std::shared_ptr<iir::StencilInstantiation> instantiation,
     const std::unordered_map<int, std::vector<std::string>>& StencilIDToStencilNameMap,
     const std::unordered_map<int, std::string>& stencilIdToArguments)
     : ASTCodeGenCXX(), instantiation_(instantiation),
