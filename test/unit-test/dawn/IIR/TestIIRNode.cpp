@@ -261,4 +261,74 @@ TEST_F(IIRNode, insertChildrenTopNode) {
   }
   EXPECT_EQ(i, 16);
 }
+
+// test the childrenErase API for regular node
+TEST_F(IIRNode, childrenErase) {
+  auto itn2_1 = std::next(root_->getChildren().begin());
+  auto itn3_4 = std::next((*itn2_1)->getChildren().begin());
+  auto itn3_5 = (*itn2_1)->childrenErase(itn3_4);
+
+  // we check that the return iterator of the childrenErase corresponds to itn3_5 (by checkings the
+  // value of its children)
+  {
+    unsigned long i = 0;
+    std::array<int, 2> res{{18, 19}};
+
+    for(const auto& it : iterateIIROver<impl::Node4>(**itn3_5)) {
+      EXPECT_EQ(it->val_, res[i]);
+      ++i;
+    }
+    EXPECT_EQ(i, 2);
+  }
+
+  // we check the root node, after erasing the node
+  {
+    unsigned long i = 0;
+    std::array<int, 10> res{{2, 3, 5, 6, 8, 9, 12, 13, 18, 19}};
+
+    for(const auto& it : iterateIIROver<impl::Node4>(*root_)) {
+      EXPECT_EQ(it->val_, res[i]);
+      ++i;
+    }
+    EXPECT_EQ(i, 10);
+  }
+}
+
+// test the childrenErase API for a top node
+TEST_F(IIRNode, childrenEraseTopNode) {
+  auto itn2_1 = std::next(root_->getChildren().begin());
+  auto end = root_->childrenErase(itn2_1);
+
+  EXPECT_EQ(end, root_->childrenEnd());
+
+  // we check the root node, after erasing the node
+  {
+    unsigned long i = 0;
+    std::array<int, 6> res{{2, 3, 5, 6, 8, 9}};
+
+    for(const auto& it : iterateIIROver<impl::Node4>(*root_)) {
+      EXPECT_EQ(it->val_, res[i]);
+      ++i;
+    }
+    EXPECT_EQ(i, 6);
+  }
+}
+
+// test the children reverse iterators
+TEST_F(IIRNode, ReverseIterators) {
+  auto itn2_1 = std::next(root_->getChildren().begin());
+  auto itn3_4 = std::next((*itn2_1)->getChildren().begin());
+
+  EXPECT_EQ((*itn3_4)->getChildren().size(), 2);
+
+  int i = 0;
+  for(auto itn4 = (*itn3_4)->childrenRBegin(); itn4 != (*itn3_4)->childrenREnd(); ++itn4) {
+    if(i == 0) {
+      EXPECT_EQ((*itn4)->val_, 16);
+    } else if(i == 1) {
+      EXPECT_EQ((*itn4)->val_, 15);
+    }
+    ++i;
+  }
+}
 }
