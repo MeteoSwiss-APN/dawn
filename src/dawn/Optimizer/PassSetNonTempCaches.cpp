@@ -18,6 +18,7 @@
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassSetCaches.h"
 #include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/ASTExpr.h"
 #include "dawn/Support/Unreachable.h"
@@ -230,42 +231,37 @@ private:
   /// @param[in]    AccessID  original FieldAccessID of the field to check
   /// @return true if there is a read-access before the first write access
   bool checkReadBeforeWrite(int AccessID) {
-    for(const auto& stage : multiStagePrt_->getChildren()) {
-      iir::DoMethod& doMethod = (*stage).getSingleDoMethod();
-      for(int stmtIndex = 0; stmtIndex < doMethod.getChildren().size(); ++stmtIndex) {
-        const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessesPair =
-            doMethod.getChildren()[stmtIndex];
 
-        // Find first if this statement has a read
-        auto readAccessIterator =
-            stmtAccessesPair->getCallerAccesses()->getReadAccesses().find(AccessID);
-        if(readAccessIterator != stmtAccessesPair->getCallerAccesses()->getReadAccesses().end()) {
-          return true;
-        }
-        // If we did not find a read statement so far, we have  a write first and do not need to
-        // fill the cache
-        auto wirteAccessIterator =
-            stmtAccessesPair->getCallerAccesses()->getWriteAccesses().find(AccessID);
-        if(wirteAccessIterator != stmtAccessesPair->getCallerAccesses()->getWriteAccesses().end()) {
-          return false;
-        }
+    for(const auto& stmtAccessesPair :
+        iterateIIROver<iir::StatementAccessesPair>(*multiStagePrt_)) {
+
+      // Find first if this statement has a read
+      auto readAccessIterator =
+          stmtAccessesPair->getCallerAccesses()->getReadAccesses().find(AccessID);
+      if(readAccessIterator != stmtAccessesPair->getCallerAccesses()->getReadAccesses().end()) {
+        return true;
+      }
+      // If we did not find a read statement so far, we have  a write first and do not need to
+      // fill the cache
+      auto wirteAccessIterator =
+          stmtAccessesPair->getCallerAccesses()->getWriteAccesses().find(AccessID);
+      if(wirteAccessIterator != stmtAccessesPair->getCallerAccesses()->getWriteAccesses().end()) {
+        return false;
       }
     }
     return false;
   }
 
   bool checkReadOnlyAccess(int AccessID) {
-    for(const auto& stage : multiStagePrt_->getChildren()) {
-      iir::DoMethod& doMethod = (*stage).getSingleDoMethod();
-      for(int stmtIndex = 0; stmtIndex < doMethod.getChildren().size(); ++stmtIndex) {
-        const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessesPair =
-            doMethod.getChildren()[stmtIndex];
-        // If we find a write-statement we exit
-        auto wirteAccessIterator =
-            stmtAccessesPair->getCallerAccesses()->getWriteAccesses().find(AccessID);
-        if(wirteAccessIterator != stmtAccessesPair->getCallerAccesses()->getWriteAccesses().end()) {
-          return false;
-        }
+
+    for(const auto& stmtAccessesPair :
+        iterateIIROver<iir::StatementAccessesPair>(*multiStagePrt_)) {
+
+      // If we find a write-statement we exit
+      auto wirteAccessIterator =
+          stmtAccessesPair->getCallerAccesses()->getWriteAccesses().find(AccessID);
+      if(wirteAccessIterator != stmtAccessesPair->getCallerAccesses()->getWriteAccesses().end()) {
+        return false;
       }
     }
     return true;

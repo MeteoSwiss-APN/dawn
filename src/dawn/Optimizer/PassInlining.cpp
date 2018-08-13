@@ -15,6 +15,7 @@
 #include "dawn/Optimizer/PassInlining.h"
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
@@ -472,41 +473,37 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
   DetectInlineCandiates inliner(strategy_, stencilInstantiation);
 
   // Iterate all statements (top -> bottom)
-  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
-    for(const auto& multiStagePtr : stencilPtr->getChildren()) {
-      for(const auto& stagePtr : multiStagePtr->getChildren()) {
-        iir::Stage& stage = *stagePtr;
-        iir::DoMethod& doMethod = stage.getSingleDoMethod();
+  for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {
+    iir::Stage& stage = *stagePtr;
+    iir::DoMethod& doMethod = stage.getSingleDoMethod();
 
-        auto& stmtAccList = doMethod.getChildren();
-        auto stmtAccIt = stmtAccList.begin();
+    auto& stmtAccList = doMethod.getChildren();
+    auto stmtAccIt = stmtAccList.begin();
 
-        for(; stmtAccIt != stmtAccList.end(); ++stmtAccIt) {
-          inliner.processStatment(*stmtAccIt);
+    for(; stmtAccIt != stmtAccList.end(); ++stmtAccIt) {
+      inliner.processStatment(*stmtAccIt);
 
-          if(inliner.inlineCandiatesFound()) {
-            auto& newStmtAccList = inliner.getNewStatementAccessesPairs();
+      if(inliner.inlineCandiatesFound()) {
+        auto& newStmtAccList = inliner.getNewStatementAccessesPairs();
 
-            // Compute the accesses of the new statements
-            computeAccesses(stencilInstantiation.get(), newStmtAccList);
+        // Compute the accesses of the new statements
+        computeAccesses(stencilInstantiation.get(), newStmtAccList);
 
-            // Erase the old StatementAccessPair ...
-            stmtAccIt = stmtAccList.erase(stmtAccIt);
+        // Erase the old StatementAccessPair ...
+        stmtAccIt = stmtAccList.erase(stmtAccIt);
 
-            // ... and insert the new ones
-            // newStmtAccList will be cleared at the next for iteration, so it is safe to move the
-            // elements here
-            stmtAccIt =
-                doMethod.insertChildren(stmtAccIt, std::make_move_iterator(newStmtAccList.begin()),
-                                        std::make_move_iterator(newStmtAccList.end()));
+        // ... and insert the new ones
+        // newStmtAccList will be cleared at the next for iteration, so it is safe to move the
+        // elements here
+        stmtAccIt =
+            doMethod.insertChildren(stmtAccIt, std::make_move_iterator(newStmtAccList.begin()),
+                                    std::make_move_iterator(newStmtAccList.end()));
 
-            std::advance(stmtAccIt, newStmtAccList.size() - 1);
-          }
-        }
-
-        stage.update();
+        std::advance(stmtAccIt, newStmtAccList.size() - 1);
       }
     }
+
+    stage.update();
   }
   return true;
 }

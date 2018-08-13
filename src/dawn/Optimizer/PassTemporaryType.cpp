@@ -15,6 +15,7 @@
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/ASTVisitor.h"
@@ -104,43 +105,36 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
     AccessIDs.clear();
 
     // Loop over all accesses
-    for(const auto& multiStagePtr : stencilPtr->getChildren()) {
-      for(const auto& stagePtr : multiStagePtr->getChildren()) {
-        for(const auto& doMethodPtr : stagePtr->getChildren()) {
-          for(const auto& statementAccessesPair : doMethodPtr->getChildren()) {
+    for(const auto& statementAccessesPair :
+        iterateIIROver<iir::StatementAccessesPair>(*stencilPtr)) {
+      auto processAccessMap = [&](const std::unordered_map<int, Extents>& accessMap) {
+        for(const auto& AccessIDExtentPair : accessMap) {
+          int AccessID = AccessIDExtentPair.first;
+          const Extents& extent = AccessIDExtentPair.second;
 
-            auto processAccessMap = [&](const std::unordered_map<int, Extents>& accessMap) {
-              for(const auto& AccessIDExtentPair : accessMap) {
-                int AccessID = AccessIDExtentPair.first;
-                const Extents& extent = AccessIDExtentPair.second;
+          // Is it a temporary?
+          bool isTemporaryField = instantiation->isTemporaryField(AccessID);
+          if(isTemporaryField ||
+             (!instantiation->isGlobalVariable(AccessID) && instantiation->isVariable(AccessID))) {
 
-                // Is it a temporary?
-                bool isTemporaryField = instantiation->isTemporaryField(AccessID);
-                if(isTemporaryField || (!instantiation->isGlobalVariable(AccessID) &&
-                                        instantiation->isVariable(AccessID))) {
-
-                  auto it = temporaries.find(AccessID);
-                  if(it != temporaries.end()) {
-                    // If we already registered it, update the extent
-                    it->second.Extent.merge(extent);
-                  } else {
-                    // Register the temporary
-                    AccessIDs.insert(AccessID);
-                    temporaries.emplace(AccessID,
-                                        Temporary(AccessID,
-                                                  isTemporaryField ? Temporary::TT_Field
-                                                                   : Temporary::TT_LocalVariable,
-                                                  extent));
-                  }
-                }
-              }
-            };
-
-            processAccessMap(statementAccessesPair->getAccesses()->getWriteAccesses());
-            processAccessMap(statementAccessesPair->getAccesses()->getReadAccesses());
+            auto it = temporaries.find(AccessID);
+            if(it != temporaries.end()) {
+              // If we already registered it, update the extent
+              it->second.Extent.merge(extent);
+            } else {
+              // Register the temporary
+              AccessIDs.insert(AccessID);
+              temporaries.emplace(AccessID, Temporary(AccessID, isTemporaryField
+                                                                    ? Temporary::TT_Field
+                                                                    : Temporary::TT_LocalVariable,
+                                                      extent));
+            }
           }
         }
-      }
+      };
+
+      processAccessMap(statementAccessesPair->getAccesses()->getWriteAccesses());
+      processAccessMap(statementAccessesPair->getAccesses()->getReadAccesses());
     }
 
     auto LifetimeMap = stencilPtr->getLifetime(AccessIDs);

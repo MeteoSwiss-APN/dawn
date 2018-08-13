@@ -474,31 +474,28 @@ boost::optional<Interval> Stencil::getEnclosingIntervalTemporaries() const {
 const std::shared_ptr<sir::Stencil> Stencil::getSIRStencil() const { return SIRStencil_; }
 
 void Stencil::accept(ASTVisitor& visitor) {
-  for(const auto& stmtAcessesPairPtr : iterateIIROver<StatementAccessesPair>(*this)) {
-    stmtAcessesPairPtr->getStatement()->ASTStmt->accept(visitor);
+  for(const auto& stmtAccessesPairPtr : iterateIIROver<StatementAccessesPair>(*this)) {
+    stmtAccessesPairPtr->getStatement()->ASTStmt->accept(visitor);
   }
 }
 
 std::unordered_map<int, Extents> const Stencil::computeEnclosingAccessExtents() const {
   std::unordered_map<int, Extents> maxExtents_;
   // iterate through multistages
-  for(const auto& MS : children_) {
-    // iterate through stages
-    for(const auto& stage : MS->getChildren()) {
-      for(const auto& fieldPair : stage->getFields()) {
-        const auto& field = fieldPair.second;
-        // TODO recover
-        const int accessID = fieldPair.first;
-        // add the stage extent to the field extent
-        Extents e = field.getExtents();
-        e.add(stage->getExtents());
-        // merge with the current minimum/maximum extent for the given field
-        auto finder = maxExtents_.find(accessID);
-        if(finder != maxExtents_.end()) {
-          finder->second.merge(e);
-        } else {
-          maxExtents_.emplace(accessID, e);
-        }
+  for(const auto& stage : iterateIIROver<Stage>(*this)) {
+    for(const auto& fieldPair : stage->getFields()) {
+      const auto& field = fieldPair.second;
+      // TODO recover
+      const int accessID = fieldPair.first;
+      // add the stage extent to the field extent
+      Extents e = field.getExtents();
+      e.add(stage->getExtents());
+      // merge with the current minimum/maximum extent for the given field
+      auto finder = maxExtents_.find(accessID);
+      if(finder != maxExtents_.end()) {
+        finder->second.merge(e);
+      } else {
+        maxExtents_.emplace(accessID, e);
       }
     }
   }

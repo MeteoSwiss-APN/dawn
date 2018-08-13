@@ -15,6 +15,7 @@
 #include "dawn/Optimizer/PassTemporaryFirstAccess.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include <algorithm>
@@ -81,23 +82,17 @@ bool PassTemporaryFirstAccess::run(
     // {AccesID : (isFirstAccessWrite, Stmt)}
     std::unordered_map<int, std::pair<bool, std::shared_ptr<Stmt>>> accessMap;
 
-    for(const auto& multiStagePtr : stencilPtr->getChildren()) {
-      for(const auto& stagePtr : multiStagePtr->getChildren()) {
-        iir::DoMethod& doMethod = stagePtr->getSingleDoMethod();
+    for(const auto& stmtAccessesPair : iterateIIROver<iir::StatementAccessesPair>(*stencilPtr)) {
+      const auto& accesses = stmtAccessesPair->getAccesses();
+      const auto& astStatement = stmtAccessesPair->getStatement()->ASTStmt;
 
-        for(const auto& stmtAccessesPair : doMethod.getChildren()) {
-          const auto& accesses = stmtAccessesPair->getAccesses();
-          const auto& astStatement = stmtAccessesPair->getStatement()->ASTStmt;
+      for(const auto& writeAccess : accesses->getWriteAccesses())
+        if(temporaryFields.count(writeAccess.first))
+          accessMap.emplace(writeAccess.first, std::make_pair(true, astStatement));
 
-          for(const auto& writeAccess : accesses->getWriteAccesses())
-            if(temporaryFields.count(writeAccess.first))
-              accessMap.emplace(writeAccess.first, std::make_pair(true, astStatement));
-
-          for(const auto& readAccess : accesses->getReadAccesses())
-            if(temporaryFields.count(readAccess.first))
-              accessMap.emplace(readAccess.first, std::make_pair(false, astStatement));
-        }
-      }
+      for(const auto& readAccess : accesses->getReadAccesses())
+        if(temporaryFields.count(readAccess.first))
+          accessMap.emplace(readAccess.first, std::make_pair(false, astStatement));
     }
 
     for(const auto& accessPair : accessMap) {

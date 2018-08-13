@@ -14,6 +14,7 @@
 
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTVisitor.h"
@@ -281,11 +282,9 @@ std::unordered_map<int, ReadWriteAccumulator> computeReadWriteAccessesMetricPerA
     const iir::MultiStage& multiStage) {
   ReadWriteCounter readWriteCounter(instantiation, multiStage);
 
-  for(const auto& stage : multiStage.getChildren())
-    for(const auto& doMethod : stage->getChildren())
-      for(const auto& statementAccessesPair : doMethod->getChildren()) {
-        statementAccessesPair->getStatement()->ASTStmt->accept(readWriteCounter);
-      }
+  for(const auto& statementAccessesPair : iterateIIROver<iir::StatementAccessesPair>(multiStage)) {
+    statementAccessesPair->getStatement()->ASTStmt->accept(readWriteCounter);
+  }
 
   return readWriteCounter.getIndividualReadWrites();
 }
@@ -296,11 +295,9 @@ computeReadWriteAccessesMetric(const std::shared_ptr<iir::StencilInstantiation>&
                                const iir::MultiStage& multiStage) {
   ReadWriteCounter readWriteCounter(instantiation, multiStage);
 
-  for(const auto& stage : multiStage.getChildren())
-    for(const auto& doMethod : stage->getChildren())
-      for(const auto& statementAccessesPair : doMethod->getChildren()) {
-        statementAccessesPair->getStatement()->ASTStmt->accept(readWriteCounter);
-      }
+  for(const auto& statementAccessesPair : iterateIIROver<iir::StatementAccessesPair>(multiStage)) {
+    statementAccessesPair->getStatement()->ASTStmt->accept(readWriteCounter);
+  }
 
   return std::make_pair(readWriteCounter.getNumReads(), readWriteCounter.getNumWrites());
 }
