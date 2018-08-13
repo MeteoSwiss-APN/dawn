@@ -31,12 +31,11 @@ void DependencyGraphAccesses::insertStatementAccessesPair(
     for(const auto& s : stmtAccessPair->getChildren())
       insertStatementAccessesPair(s);
   } else {
-
     for(const auto& writeAccess : stmtAccessPair->getAccesses()->getWriteAccesses()) {
       insertNode(writeAccess.first);
-
-      for(const auto& readAccess : stmtAccessPair->getAccesses()->getReadAccesses())
+      for(const auto& readAccess : stmtAccessPair->getAccesses()->getReadAccesses()) {
         insertEdge(writeAccess.first, readAccess.first, readAccess.second);
+      }
     }
   }
 }
@@ -254,17 +253,19 @@ bool DependencyGraphAccesses::isDAG() const {
 
 std::vector<std::size_t> DependencyGraphAccesses::getOutputVertexIDs() const {
   std::vector<std::size_t> outputVertexIDs;
-  getOutputVertexIDsImpl(*this, vertices_, [](const std::pair<int, Vertex>& IDVertexPair) {
-    return IDVertexPair.second.VertexID;
-  }, outputVertexIDs);
+  getOutputVertexIDsImpl(
+      *this, vertices_,
+      [](const std::pair<int, Vertex>& IDVertexPair) { return IDVertexPair.second.VertexID; },
+      outputVertexIDs);
   return outputVertexIDs;
 }
 
 std::vector<std::size_t> DependencyGraphAccesses::getInputVertexIDs() const {
   std::vector<std::size_t> inputVertexIDs;
-  getInputVertexIDsImpl(*this, vertices_, [](const std::pair<int, Vertex>& IDVertexPair) {
-    return IDVertexPair.second.VertexID;
-  }, inputVertexIDs);
+  getInputVertexIDsImpl(
+      *this, vertices_,
+      [](const std::pair<int, Vertex>& IDVertexPair) { return IDVertexPair.second.VertexID; },
+      inputVertexIDs);
   return inputVertexIDs;
 }
 

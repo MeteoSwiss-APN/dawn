@@ -92,10 +92,12 @@ static void reportRaceCondition(const Statement& statement, StencilInstantiation
 PassFieldVersioning::PassFieldVersioning() : Pass("PassFieldVersioning", true), numRenames_(0) {}
 
 bool PassFieldVersioning::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
+  // remove this afterwards, just to see if it works
+  instantiation_ = stencilInstantiation;
+  OptimizerContext* context = instantiation_->getOptimizerContext();
   numRenames_ = 0;
 
-  for(auto& stencilPtr : stencilInstantiation->getStencils()) {
+  for(auto& stencilPtr : instantiation_->getStencils()) {
     Stencil& stencil = *stencilPtr;
 
     // Iterate multi-stages backwards
@@ -107,7 +109,7 @@ bool PassFieldVersioning::run(const std::shared_ptr<StencilInstantiation>& stenc
       LoopOrderKind loopOrder = multiStage.getLoopOrder();
 
       std::shared_ptr<DependencyGraphAccesses> newGraph, oldGraph;
-      newGraph = std::make_shared<DependencyGraphAccesses>(stencilInstantiation.get());
+      newGraph = std::make_shared<DependencyGraphAccesses>(instantiation_.get());
 
       // Iterate stages bottom -> top
       for(auto stageRit = multiStage.getStages().rbegin(),
@@ -143,9 +145,43 @@ bool PassFieldVersioning::run(const std::shared_ptr<StencilInstantiation>& stenc
     }
   }
 
+  // Now we need to check that every field is synchronized: if the first access to the versioned
+  // field is a write-access, we don't need to do anything. If it is a read-access, we need to
+  // insert a stage before that access where we move the data to the field.
+  if(!versionedIDoriginalIDs_.empty()) {
+    // check first access:
+    for(auto IDPair : versionedIDoriginalIDs_) {
+      bool IDhandeled = false;
+      for(std::shared_ptr<Stencil>& stencil : instantiation_->getStencils()) {
+        for(auto mssptr = stencil->getMultiStages().begin();
+            mssptr != stencil->getMultiStages().end(); ++mssptr) {
+          std::shared_ptr<MultiStage>& mss = *mssptr;
+          auto retval = checkReadBeforeWrite(IDPair.first, mss);
+          if(retval == FieldVersionFirstAccessKind::FA_Read) {
+            // insert stage
+
+            auto newmss =
+                createAssignmentMS(IDPair.first, IDPair.second, mss->getEnclosingInterval());
+            stencil->getMultiStages().insert(mssptr, std::move(newmss));
+
+            // This field is handled, we move on to the next one
+            IDhandeled = true;
+            break;
+          } else if(retval == FieldVersionFirstAccessKind::FA_Write) {
+            //  We have a write first, no need to do anything, we move on
+            IDhandeled = true;
+            break;
+          }
+        }
+        if(IDhandeled) {
+          break;
+        }
+      }
+    }
+  }
+
   if(context->getOptions().ReportPassFieldVersioning && numRenames_ == 0)
-    std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
-              << ": no rename\n";
+    std::cout << "\nPASS: " << getName() << ": " << instantiation_->getName() << ": no rename\n";
   return true;
 }
 
@@ -279,6 +315,7 @@ PassFieldVersioning::fixRaceCondition(const DependencyGraphAccesses* graph, Sten
                 << ":" << instantiation.getNameFromAccessID(newAccessID);
 
     numRenames++;
+    versionedIDoriginalIDs_.emplace_back(newAccessID, oldAccessID);
   }
 
   if(context->getOptions().ReportPassFieldVersioning && numRenames > 0)
@@ -287,5 +324,99 @@ PassFieldVersioning::fixRaceCondition(const DependencyGraphAccesses* graph, Sten
   numRenames_ += numRenames;
   return RCKind::RK_Fixed;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+////        We diff this with PassSetNonTempCaches after we refactor the IIR                     ///
+////////////////////////////////////////////////////////////////////////////////////////////////////
+PassFieldVersioning::FieldVersionFirstAccessKind
+PassFieldVersioning::checkReadBeforeWrite(int AccessID, const std::shared_ptr<MultiStage>& mss) {
+  for(auto stageItGlob = mss->getStages().begin(); stageItGlob != mss->getStages().end();
+      ++stageItGlob) {
+    DoMethod& doMethod = (**stageItGlob).getSingleDoMethod();
+
+    // Check all the stmt-access-pairs in order
+    for(int stmtIndex = 0; stmtIndex < doMethod.getStatementAccessesPairs().size(); ++stmtIndex) {
+      const std::shared_ptr<StatementAccessesPair>& stmtAccessesPair =
+          doMethod.getStatementAccessesPairs()[stmtIndex];
+
+      // Find first if this statement has a read
+      auto readAccessIterator =
+          stmtAccessesPair->getCallerAccesses()->getReadAccesses().find(AccessID);
+      if(readAccessIterator != stmtAccessesPair->getCallerAccesses()->getReadAccesses().end()) {
+        return FieldVersionFirstAccessKind::FA_Read;
+      }
+      // If we did not find a read statement so far, we have a write first and do not need to
+      // fill the cache
+      auto wirteAccessIterator =
+          stmtAccessesPair->getCallerAccesses()->getWriteAccesses().find(AccessID);
+      if(wirteAccessIterator != stmtAccessesPair->getCallerAccesses()->getWriteAccesses().end()) {
+        return FieldVersionFirstAccessKind::FA_Write;
+      }
+    }
+  }
+  // no access found, hence it is not a read before write
+  return FieldVersionFirstAccessKind::FA_None;
+}
+
+std::shared_ptr<MultiStage>
+PassFieldVersioning::createAssignmentMS(int assignmentID, int assigneeID, Interval interval) {
+  std::shared_ptr<MultiStage> assignmentMSS =
+      std::make_shared<MultiStage>(*instantiation_, LoopOrderKind::LK_Parallel);
+  // change the Enclosing Interval to ECI of the caller!
+  std::shared_ptr<Stage> cacheFillStage =
+      createAssignmentStage(interval, {assignmentID}, {assigneeID}, assignmentMSS);
+  auto stageBegin = assignmentMSS->getStages().begin();
+  assignmentMSS->getStages().insert(stageBegin, std::move(cacheFillStage));
+  return assignmentMSS;
+}
+
+std::shared_ptr<Stage> PassFieldVersioning::createAssignmentStage(
+    const Interval& interval, const std::vector<int>& assignmentIDs,
+    const std::vector<int>& assigneeIDs, std::shared_ptr<MultiStage> MSS) {
+  // Add the cache Flush stage
+  std::shared_ptr<Stage> assignmentStage =
+      std::make_shared<Stage>(*instantiation_, MSS.get(), instantiation_->nextUID(), interval);
+  std::unique_ptr<DoMethod> domethod = make_unique<DoMethod>(interval);
+  domethod->getStatementAccessesPairs().clear();
+
+  for(int i = 0; i < assignmentIDs.size(); ++i) {
+    int assignmentID = assignmentIDs[i];
+    int assigneeID = assigneeIDs[i];
+    addAssignmentToDoMethod(domethod, assignmentID, assigneeID);
+  }
+
+  // Add the single do method to the new Stage
+  assignmentStage->getDoMethods().clear();
+  assignmentStage->addDoMethod(domethod);
+  assignmentStage->update();
+
+  return assignmentStage;
+}
+
+void PassFieldVersioning::addAssignmentToDoMethod(std::unique_ptr<DoMethod>& domethod,
+                                                  int assignmentID, int assigneeID) {
+  // Create the StatementAccessPair of the assignment with the new and old variables
+  auto fa_assignee =
+      std::make_shared<FieldAccessExpr>(instantiation_->getNameFromAccessID(assigneeID));
+  auto fa_assignment =
+      std::make_shared<FieldAccessExpr>(instantiation_->getNameFromAccessID(assignmentID));
+  auto assignmentExpression = std::make_shared<AssignmentExpr>(fa_assignment, fa_assignee, "=");
+  auto expAssignment = std::make_shared<ExprStmt>(assignmentExpression);
+  auto assignmentStatement = std::make_shared<Statement>(expAssignment, nullptr);
+  auto pair = std::make_shared<StatementAccessesPair>(assignmentStatement);
+  auto newAccess = std::make_shared<Accesses>();
+  newAccess->addWriteExtent(assignmentID, Extents(Array3i{{0, 0, 0}}));
+  newAccess->addReadExtent(assigneeID, Extents(Array3i{{0, 0, 0}}));
+  pair->setAccesses(newAccess);
+  domethod->getStatementAccessesPairs().push_back(pair);
+
+  // Add the new expressions to the map
+  instantiation_->mapExprToAccessID(fa_assignment, assignmentID);
+  instantiation_->mapExprToAccessID(fa_assignee, assigneeID);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 } // namespace dawn
