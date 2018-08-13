@@ -155,7 +155,7 @@ bool PassFieldVersioning::run(const std::shared_ptr<StencilInstantiation>& stenc
     // field is a write-access, we don't need to do anything. If it is a read-access, we need to
     // insert a stage before that access where we move the data to the field.
     instantiation_ = stencilInstantiation;
-    auto vars = instantiation_->variableVersions_.getVariableVersionsMap();
+    auto vars = instantiation_->getvariableVersions().getVariableVersionsMap();
     for(auto IDVersionsPair : vars) {
       if(IDVersionsPair.first ==
          instantiation_->getAccessIDFromName(
