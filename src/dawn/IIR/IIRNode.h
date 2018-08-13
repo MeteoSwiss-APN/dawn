@@ -20,7 +20,7 @@
 #include <vector>
 #include <memory>
 #include <type_traits>
-
+#include <algorithm>
 #include <iostream>
 #include <list>
 #include <iterator>
@@ -322,6 +322,7 @@ private:
     PROTECT_TEMPLATE(TParent, Parent)
     children_.push_back(std::move(child));
 
+    // TODO non sense since we already pushed
     if(!children_.empty()) {
       const auto& lastChild = children_.back();
       setChildParent<Parent>(lastChild);
