@@ -74,7 +74,7 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
         auto newMultiStageRIt = newMultiStages.rbegin();
         for(auto newStagesRIt = newStages.rbegin(); newStagesRIt != newStages.rend();
             ++newStagesRIt, ++newMultiStageRIt)
-          (*newMultiStageRIt)->insertChild(*newStagesRIt);
+          (*newMultiStageRIt)->insertChild(*(std::make_move_iterator(newStagesRIt)));
 
         curStageSplitterIndices.clear();
       } else {

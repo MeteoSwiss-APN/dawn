@@ -19,6 +19,7 @@
 #include "dawn/IIR/Field.h"
 #include "dawn/Optimizer/Interval.h"
 #include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/DoMethod.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Unreachable.h"
@@ -149,8 +150,8 @@ private:
   //===----------------------------------------------------------------------------------------===//
   //     Accesses & Fields
 
-  /// List of statements in this stencil function
-  std::vector<std::unique_ptr<StatementAccessesPair>> statementAccessesPairs_;
+  /// DoMethod containing the list of statements in this stencil function
+  std::unique_ptr<DoMethod> doMethod_;
 
   std::vector<Field> calleeFields_;
   std::vector<Field> callerFields_;
@@ -174,6 +175,8 @@ public:
   StencilFunctionInstantiation& operator=(StencilFunctionInstantiation&&) = default;
 
   StencilFunctionInstantiation clone() const;
+
+  inline const std::unique_ptr<DoMethod>& getDoMethod() { return doMethod_; }
 
   std::unordered_map<int, int>& ArgumentIndexToCallerAccessIDMap() {
     return ArgumentIndexToCallerAccessIDMap_;
@@ -374,7 +377,6 @@ public:
   //===----------------------------------------------------------------------------------------===//
 
   /// @brief Get the statements of the stencil function
-  std::vector<std::unique_ptr<StatementAccessesPair>>& getStatementAccessesPairs();
   const std::vector<std::unique_ptr<StatementAccessesPair>>& getStatementAccessesPairs() const;
 
   /// @brief Update the fields and global variables

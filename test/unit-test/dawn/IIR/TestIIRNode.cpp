@@ -34,7 +34,11 @@ class Node2 : public iir::IIRNode<Node1, Node2, Node3> {
 public:
   static constexpr const char* name = "Node2";
 };
-class Node3 : public iir::IIRNode<Node2, Node3, Node4> {
+
+template <typename T>
+using myList = std::list<T, std::allocator<T>>;
+
+class Node3 : public iir::IIRNode<Node2, Node3, Node4, myList> {
 public:
   static constexpr const char* name = "Node3";
 };
@@ -125,7 +129,7 @@ TEST_F(IIRNode, checkTreeConsistency) { EXPECT_TRUE(root_->checkTreeConsistency(
 TEST_F(IIRNode, replace) {
   const auto& n2_1 = root_->getChildren()[1];
   const auto& n3_3 = n2_1->getChildren()[0];
-  const auto& n4_7 = n3_3->getChildren()[1];
+  const auto& n4_7 = *(std::next(n3_3->childrenBegin()));
 
   EXPECT_EQ(n4_7->val_, 13);
 
@@ -184,7 +188,7 @@ TEST_F(IIRNode, insertChildTopNode) {
   (*newn3It)->insertChild(make_unique<impl::Node4>(-16));
   (*newn3It)->insertChild(make_unique<impl::Node4>(-17));
 
-  root_->insertChild(newn2, root_);
+  root_->insertChild(std::move(newn2), root_);
 
   EXPECT_TRUE(root_->checkTreeConsistency());
   std::array<int, 18> res{{2, 3, 5, 6, 8, 9, 12, 13, 15, 16, 18, 19, -9, -11, -12, -15, -16, -17}};
@@ -210,9 +214,9 @@ TEST_F(IIRNode, insertChildren) {
   newn3->insertChild(make_unique<impl::Node4>(-5));
   newn3->insertChild(make_unique<impl::Node4>(-6));
 
-  n3_3->insertChildren(std::next(n3_3->getChildren().begin()),
-                       std::make_move_iterator(newn3->getChildren().begin()),
-                       std::make_move_iterator(newn3->getChildren().end()));
+  n3_3->insertChildren(std::next(n3_3->childrenBegin()),
+                       std::make_move_iterator(newn3->childrenBegin()),
+                       std::make_move_iterator(newn3->childrenEnd()));
 
   EXPECT_TRUE(root_->checkTreeConsistency());
   std::array<int, 16> res{{2, 3, 5, 6, 8, 9, 12, -3, -4, -5, -6, 13, 15, 16, 18, 19}};
@@ -248,9 +252,9 @@ TEST_F(IIRNode, insertChildrenTopNode) {
     newn1->insertChild(std::move(newn2), newn1);
   }
 
-  root_->insertChildren(std::next(root_->getChildren().begin()),
-                        std::make_move_iterator(newn1->getChildren().begin()),
-                        std::make_move_iterator(newn1->getChildren().end()), root_);
+  root_->insertChildren(std::next(root_->childrenBegin()),
+                        std::make_move_iterator(newn1->childrenBegin()),
+                        std::make_move_iterator(newn1->childrenEnd()), root_);
   EXPECT_TRUE(root_->checkTreeConsistency());
   std::array<int, 16> res{{2, 3, 5, 6, 8, 9, -3, -4, -7, -9, 12, 13, 15, 16, 18, 19}};
 
@@ -264,8 +268,8 @@ TEST_F(IIRNode, insertChildrenTopNode) {
 
 // test the childrenErase API for regular node
 TEST_F(IIRNode, childrenErase) {
-  auto itn2_1 = std::next(root_->getChildren().begin());
-  auto itn3_4 = std::next((*itn2_1)->getChildren().begin());
+  auto itn2_1 = std::next(root_->childrenBegin());
+  auto itn3_4 = std::next((*itn2_1)->childrenBegin());
   auto itn3_5 = (*itn2_1)->childrenErase(itn3_4);
 
   // we check that the return iterator of the childrenErase corresponds to itn3_5 (by checkings the
@@ -296,7 +300,7 @@ TEST_F(IIRNode, childrenErase) {
 
 // test the childrenErase API for a top node
 TEST_F(IIRNode, childrenEraseTopNode) {
-  auto itn2_1 = std::next(root_->getChildren().begin());
+  auto itn2_1 = std::next(root_->childrenBegin());
   auto end = root_->childrenErase(itn2_1);
 
   EXPECT_EQ(end, root_->childrenEnd());
@@ -316,8 +320,8 @@ TEST_F(IIRNode, childrenEraseTopNode) {
 
 // test the children reverse iterators
 TEST_F(IIRNode, ReverseIterators) {
-  auto itn2_1 = std::next(root_->getChildren().begin());
-  auto itn3_4 = std::next((*itn2_1)->getChildren().begin());
+  auto itn2_1 = std::next(root_->childrenBegin());
+  auto itn3_4 = std::next((*itn2_1)->childrenBegin());
 
   EXPECT_EQ((*itn3_4)->getChildren().size(), 2);
 
@@ -331,4 +335,6 @@ TEST_F(IIRNode, ReverseIterators) {
     ++i;
   }
 }
+
+TEST_F(IIRNode, getChild) {}
 }

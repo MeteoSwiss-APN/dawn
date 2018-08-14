@@ -1,4 +1,4 @@
-//===--------------------------------------------------------------------------------*- C++ -*-===//
+﻿//===--------------------------------------------------------------------------------*- C++ -*-===//
 //                          _
 //                         | |
 //                       __| | __ ___      ___ ___
@@ -80,8 +80,6 @@ public:
     cloneChildrenImpl<Child>(other, thisNode);
   }
 
-  // TODO can we remove the non const?
-  inline Container<SmartPtr<Child>>& getChildren() { return children_; }
   inline const Container<SmartPtr<Child>>& getChildren() const { return children_; }
 
   inline ChildIterator childrenBegin() { return children_.begin(); }
@@ -114,15 +112,36 @@ public:
     return it_;
   }
 
-  inline const std::unique_ptr<Child>& getChildSmartPtr(Child* child) {
+  template <typename UnaryPredicate>
+  inline bool childrenEraseIf(UnaryPredicate p) {
+    bool res = RemoveIf(children_, p);
 
-    for(const auto& c : children_) {
-      if(c.get() == child)
-        return c;
+    if(!children_.empty()) {
+      setChildParent<Parent, Child>(children_.back());
     }
-    dawn_unreachable("child weak pointer not found");
+    return res;
+  }
 
-    return *(children_.begin());
+  inline const ChildSmartPtrType& getChild(unsigned long pos) {
+    return getChildImpl<typename std::iterator_traits<ChildIterator>::iterator_category>(pos);
+  }
+
+  template <typename IteratorCategory>
+  inline const ChildSmartPtrType& getChildImpl(
+      unsigned long pos,
+      typename std::enable_if<
+          std::is_same<IteratorCategory, std::random_access_iterator_tag>::value>::type* = 0) {
+    return children_[pos];
+  }
+
+  template <typename IteratorCategory>
+  inline const ChildSmartPtrType& getChildImpl(
+      unsigned long pos,
+      typename std::enable_if<
+          !std::is_same<IteratorCategory, std::random_access_iterator_tag>::value>::type* = 0) {
+
+    auto it = std::next(children_.begin(), pos);
+    return children_[it];
   }
 
   inline bool checkTreeConsistency() const { return checkTreeConsistencyImpl<Child>(); }
@@ -134,7 +153,7 @@ public:
 
   inline void setParent(const std::unique_ptr<Parent>& p) { parent_ = &p; }
 
-  inline bool parentIsSet() const { return (bool)parent_; }
+  inline bool parentIsSet() const { return static_cast<bool>(parent_); }
 
   template <bool T>
   struct identity {
@@ -178,7 +197,7 @@ public:
 
     for(const auto& child : getChildren()) {
       child->setParent(thisNodeSmartPtr);
-      child->setChildrenParent<typename getChildType<TChildSmartPtr>::type::type>(child);
+      child->template setChildrenParent<typename getChildType<TChildSmartPtr>::type::type>(child);
     }
   }
 
@@ -199,14 +218,15 @@ public:
     if(parent_) {
       const std::unique_ptr<NodeType>& thisNodeSmartPtr =
           (*parent_)->getChildSmartPtr(static_cast<NodeType*>(this));
+
       child->setParent(thisNodeSmartPtr);
 
       // we recursively set the parent of not only this child but all the siblings, since an insert
       // into a vector can modify the pointers of all elements
       for(const auto& sibling : thisNodeSmartPtr->getChildren()) {
         sibling->setParent(thisNodeSmartPtr);
-        sibling->setChildrenParent<typename getChildType<std::unique_ptr<TChild>>::type::type>(
-            child);
+        sibling->template setChildrenParent<
+            typename getChildType<std::unique_ptr<TChild>>::type::type>(child);
       }
     }
   }
@@ -217,14 +237,10 @@ public:
       typename std::enable_if<std::is_void<TParent>::value ||
                               is_child_void<std::unique_ptr<TChild>>::value>::type* = 0) {}
 
-  template <typename TChild>
-  void insertChild(TChild&& child) {
-    insertChildImpl<TChild, Parent>(std::forward<TChild>(child));
-  }
+  void insertChild(ChildSmartPtrType&& child) { insertChildImpl<Parent>(std::move(child)); }
 
-  template <typename TChild>
-  ChildIterator insertChild(ChildIterator pos, TChild&& child) {
-    return insertChildImpl<TChild, Parent>(pos, std::forward<TChild>(child));
+  ChildIterator insertChild(ChildIterator pos, ChildSmartPtrType&& child) {
+    return insertChildImpl<Parent>(pos, std::move(child));
   }
 
   template <typename Iterator>
@@ -238,9 +254,8 @@ public:
     return insertChildrenImpl<Parent, Iterator, TChildParent>(pos, first, last, p);
   }
 
-  template <typename TChild>
-  void insertChild(TChild&& child, const std::unique_ptr<NodeType>& p) {
-    insertChildImpl<Parent, TChild, std::unique_ptr<NodeType>>(std::forward<TChild>(child), p);
+  void insertChild(ChildSmartPtrType&& child, const std::unique_ptr<NodeType>& p) {
+    insertChildImpl<Parent, ChildSmartPtrType, std::unique_ptr<NodeType>>(std::move(child), p);
   }
 
   void printTree() { printTreeImpl<Child>(); }
@@ -257,6 +272,18 @@ public:
   bool childrenEmpty() const { return children_.empty(); }
 
   void clearChildren() { children_.clear(); }
+
+  inline const std::unique_ptr<Child>& getChildSmartPtr(Child* child) {
+
+    for(const auto& c : children_) {
+      if(c.get() == child) {
+        return c;
+      }
+    }
+    dawn_unreachable("child weak pointer not found");
+
+    return *(children_.begin());
+  }
 
 private:
   template <typename TChild>
@@ -314,25 +341,22 @@ private:
     return result;
   }
 
-  template <typename TChild, typename TParent>
-  void insertChildImpl(TChild&& child,
+  template <typename TParent>
+  void insertChildImpl(ChildSmartPtrType&& child,
                        typename std::enable_if<!std::is_void<TParent>::value>::type* = 0) {
     PROTECT_TEMPLATE(TParent, Parent)
     children_.push_back(std::move(child));
 
-    // TODO non sense since we already pushed
-    if(!children_.empty()) {
-      const auto& lastChild = children_.back();
-      setChildParent<Parent>(lastChild);
-    }
+    const auto& lastChild = children_.back();
+    setChildParent<Parent>(lastChild);
   }
 
-  template <typename TChild, typename TParent>
-  ChildIterator insertChildImpl(ChildIterator pos, TChild&& child,
+  template <typename TParent>
+  ChildIterator insertChildImpl(ChildIterator pos, ChildSmartPtrType&& child,
                                 typename std::enable_if<!std::is_void<TParent>::value>::type* = 0) {
 
     PROTECT_TEMPLATE(TParent, Parent)
-    auto it = children_.insert(pos, std::forward<TChild>(child));
+    auto it = children_.insert(pos, std::move(child));
 
     if(!children_.empty()) {
       const auto& lastChild = children_.back();
@@ -375,7 +399,7 @@ private:
 
       if(!sibling->getChildren().empty()) {
         const auto& lastSibling = sibling->getChildren().back();
-        sibling->setChildParent<TChildParent>(lastSibling);
+        sibling->template setChildParent<TChildParent>(lastSibling);
       }
     }
 
@@ -396,7 +420,7 @@ private:
 
       if(!sibling->getChildren().empty()) {
         const auto& lastSibling = sibling->getChildren().back();
-        sibling->setChildParent<NodeType>(lastSibling);
+        sibling->template setChildParent<NodeType>(lastSibling);
       }
     }
   }
@@ -425,8 +449,9 @@ private:
     (it)->swap(withNewChild);
 
     inputChild->setParent(*ptr);
-    inputChild->setChildrenParent<typename getChildType<std::unique_ptr<Child>>::type::type>(
-        inputChild);
+    inputChild
+        ->template setChildrenParent<typename getChildType<std::unique_ptr<Child>>::type::type>(
+            inputChild);
   }
 
   template <typename TChild>

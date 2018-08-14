@@ -370,8 +370,8 @@ public:
     DoMethod& doMethod = stage->getSingleDoMethod();
     // TODO move iterators of IIRNode to const getChildren, when we pass here begin, end instead
 
-    StatementMapper statementMapper(instantiation_, scope_.top()->StackTrace,
-                                    doMethod.getChildren(), doMethod.getInterval(),
+    StatementMapper statementMapper(instantiation_, scope_.top()->StackTrace, doMethod,
+                                    doMethod.getInterval(),
                                     scope_.top()->LocalFieldnameToAccessIDMap, nullptr);
     ast->accept(statementMapper);
     DAWN_LOG(INFO) << "Inserted " << doMethod.getChildren().size() << " statements";
@@ -857,7 +857,7 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
       lifetime);
 
   // Replace the the variable declaration with an assignment to the temporary field
-  std::vector<std::unique_ptr<StatementAccessesPair>>& statementAccessesPairs =
+  const std::vector<std::unique_ptr<StatementAccessesPair>>& statementAccessesPairs =
       stencil->getStage(lifetime.Begin.StagePos)
           ->getChildren()
           .at(lifetime.Begin.DoMethodIndex)
@@ -919,7 +919,7 @@ void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil,
       lifetime);
 
   // Replace the first access to the field with a VarDeclStmt
-  std::vector<std::unique_ptr<StatementAccessesPair>>& statementAccessesPairs =
+  const std::vector<std::unique_ptr<StatementAccessesPair>>& statementAccessesPairs =
       stencil->getStage(lifetime.Begin.StagePos)
           ->getChildren()
           .at(lifetime.Begin.DoMethodIndex)

@@ -17,16 +17,14 @@
 namespace dawn {
 StatementMapper::StatementMapper(
     iir::StencilInstantiation* instantiation,
-    const std::shared_ptr<std::vector<sir::StencilCall*>>& stackTrace,
-    std::vector<std::unique_ptr<iir::StatementAccessesPair>>& statementAccessesPairs,
+    const std::shared_ptr<std::vector<sir::StencilCall*>>& stackTrace, iir::DoMethod& doMethod,
     const Interval& interval,
     const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,
     const std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation)
     : instantiation_(instantiation), stackTrace_(stackTrace) {
 
   // Create the initial scope
-  scope_.push(
-      std::make_shared<Scope>(statementAccessesPairs, interval, stencilFunctionInstantiation));
+  scope_.push(std::make_shared<Scope>(doMethod, interval, stencilFunctionInstantiation));
   scope_.top()->LocalFieldnameToAccessIDMap = localFieldnameToAccessIDMap;
 }
 
@@ -40,9 +38,9 @@ void StatementMapper::appendNewStatementAccessesPair(const std::shared_ptr<Stmt>
   if(scope_.top()->ScopeDepth == 1) {
     // The top-level block statement is collapsed thus we only insert at 1. Note that this works
     // because all AST have a block statement as root node.
-    scope_.top()->StatementAccessesPairs.push_back(
+    scope_.top()->doMethod_.insertChild(
         make_unique<iir::StatementAccessesPair>(std::make_shared<Statement>(stmt, stackTrace_)));
-    scope_.top()->CurentStmtAccessesPair.push(&(scope_.top()->StatementAccessesPairs.back()));
+    scope_.top()->CurentStmtAccessesPair.push(&(*(scope_.top()->doMethod_.childrenRBegin())));
 
   } else if(scope_.top()->ScopeDepth > 1) {
     // We are inside a nested block statement, we add the stmt as a child of the parent statement
@@ -244,8 +242,8 @@ void StatementMapper::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
   }
 
   // Create the scope of the stencil function
-  scope_.top()->CandiateScopes.push(std::make_shared<Scope>(stencilFun->getStatementAccessesPairs(),
-                                                            stencilFun->getInterval(), stencilFun));
+  scope_.top()->CandiateScopes.push(
+      std::make_shared<Scope>(*(stencilFun->getDoMethod()), stencilFun->getInterval(), stencilFun));
 
   // Resolve the arguments
   for(auto& arg : expr->getArguments())
@@ -325,7 +323,7 @@ void StatementMapper::visit(const std::shared_ptr<VarAccessExpr>& expr) {
       auto newExpr = std::make_shared<dawn::LiteralAccessExpr>(
           value.toString(), sir::Value::typeToBuiltinTypeID(value.getType()));
       replaceOldExprWithNewExprInStmt(
-          scope_.top()->StatementAccessesPairs.back()->getStatement()->ASTStmt, expr, newExpr);
+          (*(scope_.top()->doMethod_.childrenRBegin()))->getStatement()->ASTStmt, expr, newExpr);
 
       int AccessID = instantiation_->nextUID();
       instantiation_->getLiteralAccessIDToNameMap().emplace(AccessID, newExpr->getValue());

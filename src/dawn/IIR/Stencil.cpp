@@ -26,6 +26,11 @@
 
 namespace dawn {
 
+std::ostream& operator<<(std::ostream& os, const iir::Stencil::StagePosition& position);
+std::ostream& operator<<(std::ostream& os, const iir::Stencil::StatementPosition& position);
+std::ostream& operator<<(std::ostream& os, const iir::Stencil::Lifetime& lifetime);
+std::ostream& operator<<(std::ostream& os, const iir::Stencil& stencil);
+
 std::ostream& operator<<(std::ostream& os, const iir::Stencil::StagePosition& position) {
   return (os << "(" << position.MultiStageIndex << ", " << position.StageOffset << ")");
 }

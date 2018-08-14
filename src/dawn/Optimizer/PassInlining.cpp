@@ -477,10 +477,8 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
     iir::Stage& stage = *stagePtr;
     iir::DoMethod& doMethod = stage.getSingleDoMethod();
 
-    auto& stmtAccList = doMethod.getChildren();
-    auto stmtAccIt = stmtAccList.begin();
-
-    for(; stmtAccIt != stmtAccList.end(); ++stmtAccIt) {
+    for(auto stmtAccIt = doMethod.childrenBegin(); stmtAccIt != doMethod.childrenEnd();
+        ++stmtAccIt) {
       inliner.processStatment(*stmtAccIt);
 
       if(inliner.inlineCandiatesFound()) {
@@ -490,7 +488,7 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
         computeAccesses(stencilInstantiation.get(), newStmtAccList);
 
         // Erase the old StatementAccessPair ...
-        stmtAccIt = stmtAccList.erase(stmtAccIt);
+        stmtAccIt = doMethod.childrenErase(stmtAccIt);
 
         // ... and insert the new ones
         // newStmtAccList will be cleared at the next for iteration, so it is safe to move the

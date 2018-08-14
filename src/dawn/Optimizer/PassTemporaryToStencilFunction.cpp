@@ -1,4 +1,4 @@
-//===--------------------------------------------------------------------------------*- C++ -*-===//
+﻿//===--------------------------------------------------------------------------------*- C++ -*-===//
 //                          _
 //                         | |
 //                       __| | __ ___      ___ ___
@@ -359,8 +359,8 @@ public:
 
     // recompute the list of <statement, accesses> pairs
     StatementMapper statementMapper(instantiation_.get(), stackTrace_,
-                                    cloneStencilFun->getStatementAccessesPairs(), interval_,
-                                    fieldsMap, cloneStencilFun);
+                                    *(cloneStencilFun->getDoMethod()), interval_, fieldsMap,
+                                    cloneStencilFun);
 
     cloneStencilFun->getAST()->accept(statementMapper);
 
@@ -454,7 +454,7 @@ bool PassTemporaryToStencilFunction::run(
 
         bool isATmpReplaced = false;
         for(const auto& doMethodPtr : stagePtr->getChildren()) {
-          for(auto& stmtAccessPair : doMethodPtr->getChildren()) {
+          for(const auto& stmtAccessPair : doMethodPtr->getChildren()) {
             const std::shared_ptr<Statement> stmt = stmtAccessPair->getStatement();
 
             if(stmt->ASTStmt->getKind() != Stmt::SK_ExprStmt)
@@ -474,22 +474,23 @@ bool PassTemporaryToStencilFunction::run(
 
               if(tmpReplacement.getNumTmpReplaced() != 0) {
 
-                std::vector<std::unique_ptr<iir::StatementAccessesPair>> listStmtPair;
+                iir::DoMethod tmpStmtDoMethod(interval);
 
                 StatementMapper statementMapper(
-                    stencilInstantiation.get(), stmt->StackTrace, listStmtPair, sirInterval,
+                    stencilInstantiation.get(), stmt->StackTrace, tmpStmtDoMethod, sirInterval,
                     stencilInstantiation->getNameToAccessIDMap(), nullptr);
 
                 std::shared_ptr<BlockStmt> blockStmt =
                     std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{stmt->ASTStmt});
                 blockStmt->accept(statementMapper);
 
-                DAWN_ASSERT(listStmtPair.size() == 1);
+                DAWN_ASSERT(tmpStmtDoMethod.getChildren().size() == 1);
 
-                const std::unique_ptr<iir::StatementAccessesPair>& stmtPair = listStmtPair[0];
+                std::unique_ptr<iir::StatementAccessesPair>& stmtPair =
+                    *(tmpStmtDoMethod.childrenBegin());
                 computeAccesses(stencilInstantiation.get(), stmtPair);
 
-                stmtAccessPair = std::move(listStmtPair[0]);
+                doMethodPtr->replace(stmtAccessPair, stmtPair);
               }
 
               // find patterns like tmp = fn(args)...;
@@ -549,12 +550,11 @@ bool PassTemporaryToStencilFunction::run(
       }
     }
     // eliminate empty stages or stages with only NOPExpr statements
-    RemoveIf(stencilPtr->getChildren(), [](const std::unique_ptr<iir::MultiStage>& m) -> bool {
-      return m->isEmptyOrNullStmt();
-    });
+    stencilPtr->childrenEraseIf(
+        [](const std::unique_ptr<iir::MultiStage>& m) -> bool { return m->isEmptyOrNullStmt(); });
     for(const auto& multiStage : stencilPtr->getChildren()) {
-      RemoveIf(multiStage->getChildren(),
-               [](const std::unique_ptr<iir::Stage>& s) -> bool { return s->isEmptyOrNullStmt(); });
+      multiStage->childrenEraseIf(
+          [](const std::unique_ptr<iir::Stage>& s) -> bool { return s->isEmptyOrNullStmt(); });
     }
   }
 

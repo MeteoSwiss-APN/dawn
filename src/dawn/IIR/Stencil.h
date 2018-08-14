@@ -282,6 +282,7 @@ private:
   void updateFieldsImpl(int startStageIdx, int endStageIdx);
 };
 } // namespace iir
+
 } // namespace dawn
 
 #endif

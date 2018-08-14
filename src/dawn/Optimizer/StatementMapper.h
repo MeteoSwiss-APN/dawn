@@ -28,14 +28,13 @@ class StatementMapper : public ASTVisitor {
   /// @brief Representation of the current scope which keeps track of the binding of field and
   /// variable names
   struct Scope : public NonCopyable {
-    Scope(std::vector<std::unique_ptr<iir::StatementAccessesPair>>& statementAccessesPairs,
-          const Interval& interval,
+    Scope(iir::DoMethod& doMethod, const Interval& interval,
           const std::shared_ptr<iir::StencilFunctionInstantiation>& stencilFun)
-        : StatementAccessesPairs(statementAccessesPairs), VerticalInterval(interval), ScopeDepth(0),
+        : doMethod_(doMethod), VerticalInterval(interval), ScopeDepth(0),
           FunctionInstantiation(stencilFun), ArgumentIndex(0) {}
 
-    /// List of statement/accesses pair of the stencil function or stage
-    std::vector<std::unique_ptr<iir::StatementAccessesPair>>& StatementAccessesPairs;
+    /// DoMethod containing the list of statement/accesses pair of the stencil function or stage
+    iir::DoMethod& doMethod_;
 
     /// Statement accesses pair pointing to the statement we are currently working on. This might
     /// not be the top-level statement which was passed to the constructor but rather a
@@ -75,8 +74,7 @@ class StatementMapper : public ASTVisitor {
 public:
   StatementMapper(
       iir::StencilInstantiation* instantiation,
-      const std::shared_ptr<std::vector<sir::StencilCall*>>& stackTrace,
-      std::vector<std::unique_ptr<iir::StatementAccessesPair>>& statementAccessesPairs,
+      const std::shared_ptr<std::vector<sir::StencilCall*>>& stackTrace, iir::DoMethod& doMethod,
       const Interval& interval,
       const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,
       const std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation);
