@@ -4,7 +4,7 @@ namespace dawn {
 namespace codegen {
 
 size_t CodeGen::getVerticalTmpHaloSize(iir::Stencil const& stencil) {
-  boost::optional<Interval> tmpInterval = stencil.getEnclosingIntervalTemporaries();
+  boost::optional<iir::Interval> tmpInterval = stencil.getEnclosingIntervalTemporaries();
   return (tmpInterval.is_initialized())
              ? std::max(tmpInterval->overEnd(), tmpInterval->belowBegin())
              : 0;
@@ -12,7 +12,7 @@ size_t CodeGen::getVerticalTmpHaloSize(iir::Stencil const& stencil) {
 
 size_t CodeGen::getVerticalTmpHaloSizeForMultipleStencils(
     const std::vector<std::unique_ptr<iir::Stencil>>& stencils) const {
-  boost::optional<Interval> fullIntervals;
+  boost::optional<iir::Interval> fullIntervals;
   for(const auto& stencil : stencils) {
     auto tmpInterval = stencil->getEnclosingIntervalTemporaries();
     if(tmpInterval.is_initialized()) {

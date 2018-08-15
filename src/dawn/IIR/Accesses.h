@@ -15,7 +15,7 @@
 #ifndef DAWN_IIR_ACCESSES_H
 #define DAWN_IIR_ACCESSES_H
 
-#include "dawn/Optimizer/Extents.h"
+#include "dawn/IIR/Extents.h"
 #include <unordered_map>
 
 namespace dawn {

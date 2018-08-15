@@ -65,7 +65,7 @@ public:
 };
 
 /// @brief Remap all accesses from `oldAccessID` to `newAccessID` in the `accessesMap`
-static void renameAccessesMaps(std::unordered_map<int, Extents>& accessesMap, int oldAccessID,
+static void renameAccessesMaps(std::unordered_map<int, iir::Extents>& accessesMap, int oldAccessID,
                                int newAccessID) {
   for(auto it = accessesMap.begin(); it != accessesMap.end();) {
     if(it->first == oldAccessID) {

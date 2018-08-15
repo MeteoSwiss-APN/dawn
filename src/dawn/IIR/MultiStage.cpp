@@ -21,8 +21,8 @@
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/STLExtras.h"
-#include "dawn/Optimizer/MultiInterval.h"
-#include "dawn/Optimizer/IntervalAlgorithms.h"
+#include "dawn/IIR/MultiInterval.h"
+#include "dawn/IIR/IntervalAlgorithms.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 
 namespace dawn {
@@ -118,16 +118,18 @@ std::shared_ptr<DependencyGraphAccesses> MultiStage::getDependencyGraphOfAxis() 
   return dependencyGraph;
 }
 
-Cache& MultiStage::setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy policy, int AccessID,
-                            const Interval& interval, boost::optional<Cache::window> w) {
+iir::Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
+                                 int AccessID, const Interval& interval,
+                                 boost::optional<iir::Cache::window> w) {
   return caches_.emplace(AccessID,
-                         Cache(type, policy, AccessID, boost::optional<Interval>(interval), w))
+                         iir::Cache(type, policy, AccessID, boost::optional<Interval>(interval), w))
       .first->second;
 }
 
-Cache& MultiStage::setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy policy, int AccessID) {
-  return caches_.emplace(AccessID, Cache(type, policy, AccessID, boost::optional<Interval>(),
-                                         boost::optional<Cache::window>()))
+iir::Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
+                                 int AccessID) {
+  return caches_.emplace(AccessID, iir::Cache(type, policy, AccessID, boost::optional<Interval>(),
+                                              boost::optional<iir::Cache::window>()))
       .first->second;
 }
 

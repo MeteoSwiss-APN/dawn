@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 
 using namespace dawn;
+using namespace iir;
 
 namespace {
 

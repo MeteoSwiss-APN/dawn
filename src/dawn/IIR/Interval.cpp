@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/Interval.h"
+#include "dawn/IIR/Interval.h"
 #include <algorithm>
 #include <iostream>
 #include <set>
@@ -20,6 +20,7 @@
 #include <unordered_set>
 
 namespace dawn {
+namespace iir {
 
 std::string Interval::toString() const {
   std::stringstream ss;
@@ -316,4 +317,5 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
   return newIntervals;
 }
 
+} // namespace iir
 } // namespace dawn

@@ -15,9 +15,9 @@
 #ifndef DAWN_IIR_MULTISTAGE_H
 #define DAWN_IIR_MULTISTAGE_H
 
-#include "dawn/Optimizer/Cache.h"
-#include "dawn/Optimizer/MultiInterval.h"
-#include "dawn/Optimizer/LoopOrder.h"
+#include "dawn/IIR/Cache.h"
+#include "dawn/IIR/MultiInterval.h"
+#include "dawn/IIR/LoopOrder.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/IIRNode.h"
 #include <deque>
@@ -51,7 +51,7 @@ class MultiStage : public IIRNode<Stencil, MultiStage, Stage, impl::StdList> {
   StencilInstantiation& stencilInstantiation_;
 
   LoopOrderKind loopOrder_;
-  std::unordered_map<int, Cache> caches_;
+  std::unordered_map<int, iir::Cache> caches_;
   std::unordered_map<int, Field> fields_;
 
 public:
@@ -114,10 +114,12 @@ public:
   std::shared_ptr<DependencyGraphAccesses> getDependencyGraphOfAxis() const;
 
   /// @brief Set a cache
-  Cache& setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy policy, int AccessID,
-                  Interval const& interval, boost::optional<Cache::window> w);
+  iir::Cache& setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
+                       int AccessID, Interval const& interval,
+                       boost::optional<iir::Cache::window> w);
 
-  Cache& setCache(Cache::CacheTypeKind type, Cache::CacheIOPolicy policy, int AccessID);
+  iir::Cache& setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
+                       int AccessID);
 
   /// @brief computes the interval where an accessId is used (extended by the extent of the
   /// access)
@@ -142,8 +144,8 @@ public:
   boost::optional<Interval> getEnclosingAccessIntervalTemporaries() const;
 
   /// @brief Get the caches
-  std::unordered_map<int, Cache>& getCaches() { return caches_; }
-  const std::unordered_map<int, Cache>& getCaches() const { return caches_; }
+  std::unordered_map<int, iir::Cache>& getCaches() { return caches_; }
+  const std::unordered_map<int, iir::Cache>& getCaches() const { return caches_; }
 
   /// @brief Rename all the occurances in the multi-stage
   void renameAllOccurrences(int oldAccessID, int newAccessID);
@@ -152,7 +154,7 @@ public:
   bool isEmptyOrNullStmt() const;
 
   // TODO doc
-  dawn::MultiInterval computeReadAccessInterval(int accessID) const;
+  MultiInterval computeReadAccessInterval(int accessID) const;
 };
 
 } // namespace iir

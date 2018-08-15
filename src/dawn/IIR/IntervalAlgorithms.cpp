@@ -12,10 +12,11 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/IntervalAlgorithms.h"
+#include "dawn/IIR/IntervalAlgorithms.h"
 
 namespace dawn {
-MultiInterval substract(const Interval& int1, const Interval& int2) {
+namespace iir {
+MultiInterval substract(const iir::Interval& int1, const iir::Interval& int2) {
 
   if(!int1.overlaps(int2))
     return MultiInterval({int1});
@@ -24,9 +25,10 @@ MultiInterval substract(const Interval& int1, const Interval& int2) {
   if(int1.contains(int2) && (int1.lowerBound() != int2.lowerBound()) &&
      (int1.upperBound() != int2.upperBound())) {
 
-    return MultiInterval{
-        Interval{int1.lowerLevel(), int2.lowerLevel(), int1.lowerOffset(), int2.lowerOffset() - 1},
-        Interval{int2.upperLevel(), int1.upperLevel(), int2.upperOffset() + 1, int1.upperOffset()}};
+    return MultiInterval{iir::Interval{int1.lowerLevel(), int2.lowerLevel(), int1.lowerOffset(),
+                                       int2.lowerOffset() - 1},
+                         iir::Interval{int2.upperLevel(), int1.upperLevel(), int2.upperOffset() + 1,
+                                       int1.upperOffset()}};
   }
 
   bool upperI2InInterval =
@@ -34,13 +36,14 @@ MultiInterval substract(const Interval& int1, const Interval& int2) {
   bool lowerI2InInterval =
       (int2.lowerBound() > int1.lowerBound()) && (int2.lowerBound() <= int1.upperBound());
 
-  return MultiInterval{Interval{(upperI2InInterval ? int2.upperLevel() : int1.lowerLevel()),
-                                (lowerI2InInterval ? int2.lowerLevel() : int1.upperLevel()),
-                                (upperI2InInterval ? int2.upperOffset() + 1 : int1.lowerOffset()),
-                                (lowerI2InInterval ? int2.lowerOffset() - 1 : int1.upperOffset())}};
+  return MultiInterval{
+      iir::Interval{(upperI2InInterval ? int2.upperLevel() : int1.lowerLevel()),
+                    (lowerI2InInterval ? int2.lowerLevel() : int1.upperLevel()),
+                    (upperI2InInterval ? int2.upperOffset() + 1 : int1.lowerOffset()),
+                    (lowerI2InInterval ? int2.lowerOffset() - 1 : int1.upperOffset())}};
 }
 
-MultiInterval substract(const Interval& int1, const MultiInterval& int2) {
+MultiInterval substract(const iir::Interval& int1, const MultiInterval& int2) {
   if(int2.empty())
     return MultiInterval{int1};
 
@@ -52,8 +55,8 @@ MultiInterval substract(const Interval& int1, const MultiInterval& int2) {
   return result;
 }
 
-Cache::window computeWindowOffset(LoopOrderKind loopOrder, Interval const& accessInterval,
-                                  Interval const& computeInterval) {
+Cache::window computeWindowOffset(LoopOrderKind loopOrder, iir::Interval const& accessInterval,
+                                  iir::Interval const& computeInterval) {
   return Cache::window{(accessInterval.lowerBound() - ((loopOrder == LoopOrderKind::LK_Backward)
                                                            ? computeInterval.upperBound()
                                                            : computeInterval.lowerBound())),
@@ -61,4 +64,5 @@ Cache::window computeWindowOffset(LoopOrderKind loopOrder, Interval const& acces
                                                            ? computeInterval.upperBound()
                                                            : computeInterval.lowerBound()))};
 }
-}
+} // namespace iir
+} // namespace dawn

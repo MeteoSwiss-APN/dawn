@@ -16,7 +16,7 @@
 #define DAWN_IIR_DOMETHOD_H
 
 #include "dawn/IIR/IIRNode.h"
-#include "dawn/Optimizer/Interval.h"
+#include "dawn/IIR/Interval.h"
 #include <boost/optional.hpp>
 #include <memory>
 #include <vector>

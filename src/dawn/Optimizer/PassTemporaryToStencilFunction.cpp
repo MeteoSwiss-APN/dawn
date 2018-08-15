@@ -26,7 +26,7 @@
 namespace dawn {
 
 namespace {
-sir::Interval intervalToSIRInterval(Interval interval) {
+sir::Interval intervalToSIRInterval(iir::Interval interval) {
   return sir::Interval(interval.lowerLevel(), interval.upperLevel(), interval.lowerOffset(),
                        interval.upperOffset());
 }
@@ -55,11 +55,11 @@ class LocalVariablePromotion : public ASTVisitorPostOrder, public NonCopyable {
 protected:
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   std::unordered_set<int>& localVarAccessIDs_;
-  const std::unordered_map<int, Field>& fields_;
+  const std::unordered_map<int, iir::Field>& fields_;
 
 public:
   LocalVariablePromotion(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                         const std::unordered_map<int, Field>& fields,
+                         const std::unordered_map<int, iir::Field>& fields,
                          std::unordered_set<int>& localVarAccessIDs)
       : instantiation_(instantiation), localVarAccessIDs_(localVarAccessIDs), fields_(fields) {}
 
@@ -77,7 +77,7 @@ public:
     if(isa<FieldAccessExpr>(*(expr->getLeft()))) {
       int accessID = instantiation_->getAccessIDFromExpr(expr->getLeft());
       DAWN_ASSERT(fields_.count(accessID));
-      const Field& field = fields_.at(accessID);
+      const iir::Field& field = fields_.at(accessID);
 
       if(!instantiation_->isTemporaryField(accessID))
         return false;
@@ -462,7 +462,7 @@ bool PassTemporaryToStencilFunction::run(
 
             {
               // TODO catch a temp expr
-              const Interval& interval = doMethodPtr->getInterval();
+              const iir::Interval& interval = doMethodPtr->getInterval();
               const sir::Interval sirInterval = intervalToSIRInterval(interval);
 
               // run the replacer visitor

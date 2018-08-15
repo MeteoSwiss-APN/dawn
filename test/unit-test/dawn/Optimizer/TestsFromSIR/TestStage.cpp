@@ -68,8 +68,8 @@ TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_01) {
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   ASSERT_TRUE((stencil->getNumStages() == 2));
-  ASSERT_TRUE((stencil->getStage(0)->getExtents() == Extents{-1, 1, -1, 1, 0, 0}));
-  ASSERT_TRUE((stencil->getStage(1)->getExtents() == Extents{0, 0, 0, 0, 0, 0}));
+  ASSERT_TRUE((stencil->getStage(0)->getExtents() == iir::Extents{-1, 1, -1, 1, 0, 0}));
+  ASSERT_TRUE((stencil->getStage(1)->getExtents() == iir::Extents{0, 0, 0, 0, 0, 0}));
 
   ASSERT_TRUE((stencil->getChildren().size() == 1));
 
@@ -80,34 +80,34 @@ TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_01) {
   std::unique_ptr<iir::Stage> const& stage1 = *stage1_ptr;
   std::unique_ptr<iir::Stage> const& stage2 = *stage2_ptr;
 
-  boost::optional<Interval> intervalU1 =
+  boost::optional<iir::Interval> intervalU1 =
       stage1->computeEnclosingAccessInterval(stencilInstantiation->getAccessIDFromName("u"), false);
-  boost::optional<Interval> intervalOut1 = stage1->computeEnclosingAccessInterval(
+  boost::optional<iir::Interval> intervalOut1 = stage1->computeEnclosingAccessInterval(
       stencilInstantiation->getAccessIDFromName("out"), false);
-  boost::optional<Interval> intervalLap1 = stage1->computeEnclosingAccessInterval(
+  boost::optional<iir::Interval> intervalLap1 = stage1->computeEnclosingAccessInterval(
       stencilInstantiation->getAccessIDFromName("lap"), false);
 
   ASSERT_TRUE(intervalU1.is_initialized());
   ASSERT_TRUE(!intervalOut1.is_initialized());
   ASSERT_TRUE(intervalLap1.is_initialized());
 
-  ASSERT_TRUE((*intervalU1 == Interval{0, sir::Interval::End, 11, 0}));
-  ASSERT_TRUE((*intervalLap1 == Interval{0, sir::Interval::End, 11, 0}));
+  ASSERT_TRUE((*intervalU1 == iir::Interval{0, sir::Interval::End, 11, 0}));
+  ASSERT_TRUE((*intervalLap1 == iir::Interval{0, sir::Interval::End, 11, 0}));
 
-  boost::optional<Interval> intervalU2 =
+  boost::optional<iir::Interval> intervalU2 =
       stage2->computeEnclosingAccessInterval(stencilInstantiation->getAccessIDFromName("u"), false);
-  boost::optional<Interval> intervalOut2 = stage2->computeEnclosingAccessInterval(
+  boost::optional<iir::Interval> intervalOut2 = stage2->computeEnclosingAccessInterval(
       stencilInstantiation->getAccessIDFromName("out"), false);
-  boost::optional<Interval> intervalLap2 = stage2->computeEnclosingAccessInterval(
+  boost::optional<iir::Interval> intervalLap2 = stage2->computeEnclosingAccessInterval(
       stencilInstantiation->getAccessIDFromName("lap"), false);
 
   ASSERT_TRUE(intervalU2.is_initialized());
   ASSERT_TRUE(intervalOut2.is_initialized());
   ASSERT_TRUE(intervalLap2.is_initialized());
 
-  EXPECT_EQ(*intervalU2, (Interval{0, 0, 0, 10}));
-  EXPECT_EQ(*intervalOut2, (Interval{0, sir::Interval::End, 0, 0}));
-  EXPECT_EQ(*intervalLap2, (Interval{0, sir::Interval::End, 11, 0}));
+  EXPECT_EQ(*intervalU2, (iir::Interval{0, 0, 0, 10}));
+  EXPECT_EQ(*intervalOut2, (iir::Interval{0, sir::Interval::End, 0, 0}));
+  EXPECT_EQ(*intervalLap2, (iir::Interval{0, sir::Interval::End, 11, 0}));
 }
 
 TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_02) {
@@ -127,20 +127,20 @@ TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_02) {
   std::unique_ptr<iir::Stage> const& stage1 = *stage1_ptr;
 
   {
-    boost::optional<Interval> intervalcoeff1 = stage1->computeEnclosingAccessInterval(
+    boost::optional<iir::Interval> intervalcoeff1 = stage1->computeEnclosingAccessInterval(
         stencilInstantiation->getAccessIDFromName("coeff"), false);
 
     ASSERT_TRUE(intervalcoeff1.is_initialized());
 
-    EXPECT_EQ(*intervalcoeff1, (Interval{12, sir::Interval::End + 1}));
+    EXPECT_EQ(*intervalcoeff1, (iir::Interval{12, sir::Interval::End + 1}));
   }
   {
-    boost::optional<Interval> intervalcoeff1 = stage1->computeEnclosingAccessInterval(
+    boost::optional<iir::Interval> intervalcoeff1 = stage1->computeEnclosingAccessInterval(
         stencilInstantiation->getAccessIDFromName("coeff"), true);
 
     ASSERT_TRUE(intervalcoeff1.is_initialized());
 
-    EXPECT_EQ(*intervalcoeff1, (Interval{11, sir::Interval::End + 1}));
+    EXPECT_EQ(*intervalcoeff1, (iir::Interval{11, sir::Interval::End + 1}));
   }
 }
 

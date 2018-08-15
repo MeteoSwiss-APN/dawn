@@ -12,10 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_EXTENTS_H
-#define DAWN_OPTIMIZER_EXTENTS_H
+#ifndef DAWN_IIR_EXTENTS_H
+#define DAWN_IIR_EXTENTS_H
 
-#include "dawn/Optimizer/LoopOrder.h"
+#include "dawn/IIR/LoopOrder.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/HashCombine.h"
 #include "dawn/Support/Assert.h"
@@ -28,6 +28,7 @@
 #include <boost/optional.hpp>
 
 namespace dawn {
+namespace iir {
 
 /// @brief Access extent of a single dimension
 /// @ingroup optimizer
@@ -197,13 +198,14 @@ private:
   std::array<Extent, 3> extents_;
 };
 
+} // namespace iir
 } // namespace dawn
 
 namespace std {
 
 template <>
-struct hash<dawn::Extents> {
-  size_t operator()(const dawn::Extents& extent) const {
+struct hash<dawn::iir::Extents> {
+  size_t operator()(const dawn::iir::Extents& extent) const {
     size_t seed = 0;
     dawn::hash_combine(seed, extent[0].Minus, extent[0].Plus, extent[1].Minus, extent[1].Plus,
                        extent[2].Minus, extent[2].Plus);

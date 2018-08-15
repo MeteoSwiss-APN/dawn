@@ -17,7 +17,7 @@
 
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
-#include "dawn/Optimizer/Interval.h"
+#include "dawn/IIR/Interval.h"
 #include "dawn/Support/IndexRange.h"
 #include <set>
 #include <unordered_map>

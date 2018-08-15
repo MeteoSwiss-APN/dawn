@@ -58,7 +58,7 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const iir::Stencil& stencil)
   auto intervals = stencil.getIntervals();
   std::transform(intervals.begin(), intervals.end(),
                  std::inserter(intervalProperties_, intervalProperties_.begin()),
-                 [](Interval const& i) { return IntervalProperties{i}; });
+                 [](iir::Interval const& i) { return iir::IntervalProperties{i}; });
 
   DAWN_ASSERT(!intervalProperties_.empty());
 
@@ -80,14 +80,14 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const iir::Stencil& stencil)
   for(const auto& mss : stencil.getChildren()) {
     for(const auto& cachePair : mss->getCaches()) {
       auto const& cache = cachePair.second;
-      const boost::optional<Interval> interval = cache.getInterval();
+      const boost::optional<iir::Interval> interval = cache.getInterval();
       if(interval.is_initialized())
         intervalProperties_.insert(*interval);
 
       // for the kcaches with fill, the interval could span beyond the axis of the do methods.
       // We need to extent the axis, to make sure that at least on interval will trigger the begin
       // of the kcache interval
-      if(cache.getCacheIOPolicy() == Cache::CacheIOPolicy::fill) {
+      if(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill) {
         DAWN_ASSERT(interval.is_initialized());
         Levels.insert(interval->lowerLevel());
         Levels.insert(interval->upperLevel());
@@ -104,7 +104,7 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const iir::Stencil& stencil)
   for(int i = 0; i < numStages; ++i) {
     const std::unique_ptr<iir::Stage>& stagePtr = stencil.getStage(i);
 
-    auto gapIntervals = Interval::computeGapIntervals(Axis, stagePtr->getIntervals());
+    auto gapIntervals = iir::Interval::computeGapIntervals(Axis, stagePtr->getIntervals());
     StageIntervals.emplace(stagePtr->getStageID(), gapIntervals);
     for(auto const& interval : gapIntervals) {
       intervalProperties_.insert(interval);
@@ -197,7 +197,7 @@ public:
   }
 };
 
-std::string GTCodeGen::cacheWindowToString(Cache::window const& cacheWindow) {
+std::string GTCodeGen::cacheWindowToString(iir::Cache::window const& cacheWindow) {
   return std::string("window<") + std::to_string(cacheWindow.m_m) + "," +
          std::to_string(cacheWindow.m_p) + ">";
 }
@@ -339,7 +339,7 @@ std::string GTCodeGen::generateStencilInstantiation(
     };
 
     // Generate typedefs for the individual intervals
-    auto codeGenInterval = [&](std::string const& name, Interval const& interval) {
+    auto codeGenInterval = [&](std::string const& name, iir::Interval const& interval) {
       StencilClass.addTypeDef(name)
           .addType(c_gt() + "interval")
           .addTemplates(
@@ -355,7 +355,7 @@ std::string GTCodeGen::generateStencilInstantiation(
                                         intervalDefinitions.intervalProperties_);
 
     // Generate typedef for the axis
-    const Interval& axis = intervalDefinitions.Axis;
+    const iir::Interval& axis = intervalDefinitions.Axis;
     StencilClass.addTypeDef(Twine("axis_") + StencilName)
         .addType(c_gt() + "interval")
         .addTemplates(makeArrayRef(
@@ -412,7 +412,7 @@ std::string GTCodeGen::generateStencilInstantiation(
               .addType(c_gt() + "accessor")
               .addTemplate(Twine(accessorID))
               .addTemplate(c_gt_enum() +
-                           ((fields[m].getIntend() == Field::IK_Input) ? "in" : "inout"))
+                           ((fields[m].getIntend() == iir::Field::IK_Input) ? "in" : "inout"))
               .addTemplate(extent);
 
           arglist.push_back(std::move(paramName));
@@ -474,8 +474,8 @@ std::string GTCodeGen::generateStencilInstantiation(
       // Generate `make_multistage`
       ssMS << "gridtools::make_multistage(gridtools::enumtype::execute<gridtools::enumtype::";
       if(!context_->getOptions().UseParallelEP &&
-         multiStage.getLoopOrder() == LoopOrderKind::LK_Parallel)
-        ssMS << LoopOrderKind::LK_Forward << " /*parallel*/ ";
+         multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Parallel)
+        ssMS << iir::LoopOrderKind::LK_Forward << " /*parallel*/ ";
       else
         ssMS << multiStage.getLoopOrder();
       ssMS << ">(),";
@@ -484,10 +484,10 @@ std::string GTCodeGen::generateStencilInstantiation(
       if(!multiStage.getCaches().empty()) {
         ssMS << RangeToString(", ", "gridtools::define_caches(", "),")(
             multiStage.getCaches(),
-            [&](const std::pair<int, Cache>& AccessIDCachePair) -> std::string {
+            [&](const std::pair<int, iir::Cache>& AccessIDCachePair) -> std::string {
               auto const& cache = AccessIDCachePair.second;
               DAWN_ASSERT(cache.getInterval().is_initialized() ||
-                          cache.getCacheIOPolicy() == Cache::local);
+                          cache.getCacheIOPolicy() == iir::Cache::local);
 
               std::string intervalName;
               if(cache.getInterval().is_initialized()) {
@@ -501,8 +501,8 @@ std::string GTCodeGen::generateStencilInstantiation(
                       // IOPolicy: local, fill, bpfill, flush, epflush or flush_and_fill
                       c_gt() + "cache_io_policy::" + cache.getCacheIOPolicyAsString() +
                       // Interval: if IOPolicy is not local, we need to provide the interval
-                      (cache.getCacheIOPolicy() != Cache::local ? ", " + intervalName
-                                                                : std::string()) +
+                      (cache.getCacheIOPolicy() != iir::Cache::local ? ", " + intervalName
+                                                                     : std::string()) +
                       // cache window if policy is bpfill
                       ((cache.requiresWindow()) ? "," + cacheWindowToString(*(cache.getWindow()))
                                                 : std::string()) +
@@ -555,7 +555,8 @@ std::string GTCodeGen::generateStencilInstantiation(
           StageStruct.addTypeDef(paramName)
               .addType(c_gt() + "accessor")
               .addTemplate(Twine(accessorIdx))
-              .addTemplate(c_gt_enum() + ((field.getIntend() == Field::IK_Input) ? "in" : "inout"))
+              .addTemplate(c_gt_enum() +
+                           ((field.getIntend() == iir::Field::IK_Input) ? "in" : "inout"))
               .addTemplate(extent);
 
           // Generate placeholder mapping of the field in `make_stage`
@@ -595,7 +596,7 @@ std::string GTCodeGen::generateStencilInstantiation(
               StageStruct.addMemberFunction("GT_FUNCTION static void", "Do", "typename Evaluation");
           DoMethodCodeGen.addArg(DoMethodArg);
           DAWN_ASSERT(intervalDefinitions.intervalProperties_.count(
-              IntervalProperties{doMethod.getInterval()}));
+              iir::IntervalProperties{doMethod.getInterval()}));
           DoMethodCodeGen.addArg(
               intervalDefinitions.intervalProperties_.find(doMethod.getInterval())->name_);
           DoMethodCodeGen.startBody();
@@ -615,7 +616,7 @@ std::string GTCodeGen::generateStencilInstantiation(
              stageIntervals.end()) {
             StageStruct.addMemberFunction("GT_FUNCTION static void", "Do", "typename Evaluation")
                 .addArg(DoMethodArg)
-                .addArg(Interval::makeCodeGenName(interval));
+                .addArg(iir::Interval::makeCodeGenName(interval));
           }
         }
       }
@@ -654,7 +655,7 @@ std::string GTCodeGen::generateStencilInstantiation(
 
     // Add static asserts to check halos against extents
     StencilConstructor.addComment("Check if extents do not exceed the halos");
-    std::unordered_map<int, Extents> const& exts =
+    std::unordered_map<int, iir::Extents> const& exts =
         (*stencils[stencilIdx]).computeEnclosingAccessExtents();
     for(int i = 0; i < numFields; ++i) {
       if(!StencilFields[i].IsTemporary) {

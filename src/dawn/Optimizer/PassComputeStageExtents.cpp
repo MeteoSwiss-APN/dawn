@@ -35,12 +35,12 @@ bool PassComputeStageExtents::run(
     for(int i = numStages - 1; i >= 0; --i) {
       iir::Stage& fromStage = *(stencil.getStage(i));
 
-      Extents const& stageExtent = fromStage.getExtents();
+      iir::Extents const& stageExtent = fromStage.getExtents();
 
       // loop over all the input fields read in fromStage
       for(const auto& fromFieldPair : fromStage.getFields()) {
 
-        const Field& fromField = fromFieldPair.second;
+        const iir::Field& fromField = fromFieldPair.second;
         auto&& fromFieldExtents = fromField.getExtents();
 
         // notice that IO (if read happens before write) would also be a valid pattern
@@ -50,7 +50,7 @@ bool PassComputeStageExtents::run(
         //      Point one [ExtentComputationTODO]
         // ===-----------------------------------------------------------------------------------===
 
-        Extents fieldExtent = fromFieldExtents;
+        iir::Extents fieldExtent = fromFieldExtents;
 
         fieldExtent.expand(stageExtent);
 
@@ -61,17 +61,17 @@ bool PassComputeStageExtents::run(
           //      Point two [ExtentComputationTODO]
           // ===---------------------------------------------------------------------------------===
           auto fields = toStage.getFields();
-          auto it =
-              std::find_if(fields.begin(), fields.end(), [&](std::pair<int, Field> const& pair) {
-                const auto& f = pair.second;
-                return (f.getIntend() != Field::IntendKind::IK_Input) &&
-                       (f.getAccessID() == fromField.getAccessID());
-              });
+          auto it = std::find_if(fields.begin(), fields.end(),
+                                 [&](std::pair<int, iir::Field> const& pair) {
+                                   const auto& f = pair.second;
+                                   return (f.getIntend() != iir::Field::IntendKind::IK_Input) &&
+                                          (f.getAccessID() == fromField.getAccessID());
+                                 });
           if(it == fields.end())
             continue;
 
           // if found, add the (read) extent of the field as an extent of the stage
-          Extents ext = toStage.getExtents();
+          iir::Extents ext = toStage.getExtents();
           ext.merge(fieldExtent);
           toStage.setExtents(ext);
         }

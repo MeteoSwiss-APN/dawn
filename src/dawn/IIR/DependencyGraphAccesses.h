@@ -16,7 +16,7 @@
 #define DAWN_IIR_DEPENDENCYGRAPHACCESSES_H
 
 #include "dawn/IIR/DependencyGraph.h"
-#include "dawn/Optimizer/Extents.h"
+#include "dawn/IIR/Extents.h"
 #include "dawn/Support/TypeTraits.h"
 #include <set>
 #include <unordered_map>

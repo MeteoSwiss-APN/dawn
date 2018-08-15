@@ -12,29 +12,30 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_MULTIINTERVAL_H
-#define DAWN_OPTIMIZER_MULTIINTERVAL_H
+#ifndef DAWN_IIR_MULTIINTERVAL_H
+#define DAWN_IIR_MULTIINTERVAL_H
 
-#include "dawn/Optimizer/Interval.h"
+#include "dawn/IIR/Interval.h"
 #include <list>
 
 namespace dawn {
+namespace iir {
 
 class MultiInterval {
-  std::vector<Interval> intervals_;
+  std::vector<iir::Interval> intervals_;
 
 public:
   /// @name Constructors and Assignment
   MultiInterval() = default;
-  MultiInterval(std::initializer_list<Interval> const& intervals);
+  MultiInterval(std::initializer_list<iir::Interval> const& intervals);
 
-  void insert(Interval const& interval);
-  void insert(boost::optional<Interval> const& interval);
+  void insert(iir::Interval const& interval);
+  void insert(boost::optional<iir::Interval> const& interval);
   void insert(MultiInterval const& multiInterval);
-  void substract(Interval const& interval);
+  void substract(iir::Interval const& interval);
   void substract(MultiInterval const& multiInterval);
 
-  std::vector<Interval> const& getIntervals() const { return intervals_; }
+  std::vector<iir::Interval> const& getIntervals() const { return intervals_; }
 
   bool empty() const { return (intervals_.size() == 0); }
   bool operator==(const MultiInterval& other) const;
@@ -46,6 +47,7 @@ public:
   friend std::ostream& operator<<(std::ostream& os, const MultiInterval& interval);
 };
 
+} // namespace iir
 } // namespace dawn
 
 #endif

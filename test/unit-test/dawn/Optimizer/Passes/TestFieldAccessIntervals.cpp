@@ -67,19 +67,21 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_01) {
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 2);
-  EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-1, 1, -1, 1, 0, 0}));
-  EXPECT_EQ(stencil->getStage(1)->getExtents(), (Extents{0, 0, 0, 0, 0, 0}));
+  EXPECT_EQ(stencil->getStage(0)->getExtents(), (iir::Extents{-1, 1, -1, 1, 0, 0}));
+  EXPECT_EQ(stencil->getStage(1)->getExtents(), (iir::Extents{0, 0, 0, 0, 0, 0}));
 
   for(auto fieldPair : (*stencil->childrenBegin())->getFields()) {
-    Field& field = fieldPair.second;
+    iir::Field& field = fieldPair.second;
     int AccessID = fieldPair.first;
 
     if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("lap")) {
-      EXPECT_EQ(field.getInterval(), (Interval{sir::Interval::Start, sir::Interval::End, 11, 0}));
+      EXPECT_EQ(field.getInterval(),
+                (iir::Interval{sir::Interval::Start, sir::Interval::End, 11, 0}));
     }
     if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("out") ||
        AccessID == stencil->getStencilInstantiation().getAccessIDFromName("u")) {
-      EXPECT_EQ(field.getInterval(), (Interval{sir::Interval::Start, sir::Interval::End, 0, 0}));
+      EXPECT_EQ(field.getInterval(),
+                (iir::Interval{sir::Interval::Start, sir::Interval::End, 0, 0}));
     }
   }
 }
@@ -91,22 +93,24 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_02) {
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 2);
-  EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-1, 1, -1, 1, 0, 0}));
-  EXPECT_EQ(stencil->getStage(1)->getExtents(), (Extents{0, 0, 0, 0, 0, 0}));
+  EXPECT_EQ(stencil->getStage(0)->getExtents(), (iir::Extents{-1, 1, -1, 1, 0, 0}));
+  EXPECT_EQ(stencil->getStage(1)->getExtents(), (iir::Extents{0, 0, 0, 0, 0, 0}));
 
   for(auto fieldPair : (*stencil->childrenBegin())->getFields()) {
-    Field& field = fieldPair.second;
+    iir::Field& field = fieldPair.second;
     int AccessID = fieldPair.first;
     if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("lap")) {
-      EXPECT_EQ(field.getInterval(), (Interval{sir::Interval::Start + 11, sir::Interval::End}));
+      EXPECT_EQ(field.getInterval(),
+                (iir::Interval{sir::Interval::Start + 11, sir::Interval::End}));
     }
     if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("out") ||
        AccessID == stencil->getStencilInstantiation().getAccessIDFromName("u")) {
-      EXPECT_EQ(field.getInterval(), (Interval{sir::Interval::Start, sir::Interval::End}));
+      EXPECT_EQ(field.getInterval(), (iir::Interval{sir::Interval::Start, sir::Interval::End}));
     }
     if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("coeff")) {
-      EXPECT_EQ(field.getInterval(), (Interval{sir::Interval::Start, sir::Interval::End, 11, 0}));
-      EXPECT_EQ(field.computeAccessedInterval(), (Interval{12, sir::Interval::End + 1}));
+      EXPECT_EQ(field.getInterval(),
+                (iir::Interval{sir::Interval::Start, sir::Interval::End, 11, 0}));
+      EXPECT_EQ(field.computeAccessedInterval(), (iir::Interval{12, sir::Interval::End + 1}));
     }
   }
 }
@@ -118,24 +122,26 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_03) {
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 3);
-  EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-1, 1, -1, 1, 0, 0}));
-  EXPECT_EQ(stencil->getStage(1)->getExtents(), (Extents{0, 0, 0, 0, 0, 0}));
-  EXPECT_EQ(stencil->getStage(2)->getExtents(), (Extents{0, 0, 0, 0, 0, 0}));
+  EXPECT_EQ(stencil->getStage(0)->getExtents(), (iir::Extents{-1, 1, -1, 1, 0, 0}));
+  EXPECT_EQ(stencil->getStage(1)->getExtents(), (iir::Extents{0, 0, 0, 0, 0, 0}));
+  EXPECT_EQ(stencil->getStage(2)->getExtents(), (iir::Extents{0, 0, 0, 0, 0, 0}));
 
   for(auto fieldPair : (*stencil->childrenBegin())->getFields()) {
-    Field& field = fieldPair.second;
+    iir::Field& field = fieldPair.second;
     int AccessID = fieldPair.first;
     if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("lap")) {
-      EXPECT_EQ(field.getInterval(), (Interval{sir::Interval::Start + 11, sir::Interval::End}));
+      EXPECT_EQ(field.getInterval(),
+                (iir::Interval{sir::Interval::Start + 11, sir::Interval::End}));
     }
     if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("out") ||
        AccessID == stencil->getStencilInstantiation().getAccessIDFromName("u")) {
-      EXPECT_EQ(field.getInterval(), (Interval{sir::Interval::Start, sir::Interval::End}));
+      EXPECT_EQ(field.getInterval(), (iir::Interval{sir::Interval::Start, sir::Interval::End}));
     }
     if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("coeff")) {
-      EXPECT_EQ(field.getInterval(), (Interval{sir::Interval::Start, sir::Interval::End, 4, 0}));
+      EXPECT_EQ(field.getInterval(),
+                (iir::Interval{sir::Interval::Start, sir::Interval::End, 4, 0}));
       EXPECT_EQ(field.computeAccessedInterval(),
-                (Interval{sir::Interval::Start, sir::Interval::End, 2, 1}));
+                (iir::Interval{sir::Interval::Start, sir::Interval::End, 2, 1}));
     }
   }
 }
@@ -150,9 +156,10 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_04) {
 
   iir::MultiStage& multiStage = **(stencil->childrenBegin());
 
-  boost::optional<Interval> enclosingInterval = multiStage.getEnclosingAccessIntervalTemporaries();
+  boost::optional<iir::Interval> enclosingInterval =
+      multiStage.getEnclosingAccessIntervalTemporaries();
   ASSERT_TRUE(enclosingInterval.is_initialized());
-  EXPECT_EQ((*enclosingInterval), (Interval{2, 14}));
+  EXPECT_EQ((*enclosingInterval), (iir::Interval{2, 14}));
 }
 
 TEST_F(TestFieldAccessIntervals, test_field_access_interval_05) {
@@ -162,24 +169,26 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_05) {
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 2);
-  EXPECT_EQ(stencil->getStage(0)->getExtents(), (Extents{-1, 1, -1, 1, -1, 0}));
-  EXPECT_EQ(stencil->getStage(1)->getExtents(), (Extents{0, 0, 0, 0, 0, 0}));
+  EXPECT_EQ(stencil->getStage(0)->getExtents(), (iir::Extents{-1, 1, -1, 1, -1, 0}));
+  EXPECT_EQ(stencil->getStage(1)->getExtents(), (iir::Extents{0, 0, 0, 0, 0, 0}));
 
   for(auto fieldPair : (*stencil->childrenBegin())->getFields()) {
-    Field& field = fieldPair.second;
+    iir::Field& field = fieldPair.second;
     int AccessID = fieldPair.first;
     if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("lap")) {
-      EXPECT_EQ(field.getInterval(), (Interval{sir::Interval::Start + 11, sir::Interval::End}));
+      EXPECT_EQ(field.getInterval(),
+                (iir::Interval{sir::Interval::Start + 11, sir::Interval::End}));
       EXPECT_EQ(field.computeAccessedInterval(),
-                (Interval{sir::Interval::Start + 10, sir::Interval::End}));
+                (iir::Interval{sir::Interval::Start + 10, sir::Interval::End}));
     }
     if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("out") ||
        AccessID == stencil->getStencilInstantiation().getAccessIDFromName("u")) {
-      EXPECT_EQ(field.getInterval(), (Interval{sir::Interval::Start, sir::Interval::End}));
+      EXPECT_EQ(field.getInterval(), (iir::Interval{sir::Interval::Start, sir::Interval::End}));
     }
     if(AccessID == stencil->getStencilInstantiation().getAccessIDFromName("coeff")) {
-      EXPECT_EQ(field.getInterval(), (Interval{sir::Interval::Start, sir::Interval::End, 11, 0}));
-      EXPECT_EQ(field.computeAccessedInterval(), (Interval{12, sir::Interval::End + 1}));
+      EXPECT_EQ(field.getInterval(),
+                (iir::Interval{sir::Interval::Start, sir::Interval::End, 11, 0}));
+      EXPECT_EQ(field.computeAccessedInterval(), (iir::Interval{12, sir::Interval::End + 1}));
     }
   }
 }

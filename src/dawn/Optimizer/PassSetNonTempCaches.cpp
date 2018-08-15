@@ -13,7 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassSetNonTempCaches.h"
-#include "dawn/Optimizer/Cache.h"
+#include "dawn/IIR/Cache.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassSetCaches.h"
@@ -38,7 +38,7 @@ struct AcessIDTolocalityMetric {
 
 struct NameToImprovementMetric {
   std::string name;
-  Cache cache;
+  iir::Cache cache;
   int dataLocalityImprovement;
 };
 
@@ -71,7 +71,7 @@ private:
 
     for(const auto& stagePtr : multiStagePrt_->getChildren()) {
       for(const auto& fieldPair : stagePtr->getFields()) {
-        const Field& field = fieldPair.second;
+        const iir::Field& field = fieldPair.second;
         auto iter = accessIDToDataLocality_.find(field.getAccessID());
 
         // We already checked this field
@@ -129,7 +129,7 @@ private:
       multiStagePrt_->renameAllOccurrences(oldID, newID);
 
       oldAccessIDtoNewAccessID_.emplace(oldID, newID);
-      Cache& cache = multiStagePrt_->setCache(Cache::IJ, Cache::local, newID);
+      iir::Cache& cache = multiStagePrt_->setCache(iir::Cache::IJ, iir::Cache::local, newID);
       originalNameToCache_.emplace_back(
           NameToImprovementMetric{instantiation_->getOriginalNameFromAccessID(oldID), cache,
                                   accessIDToDataLocality_.find(oldID)->second});
@@ -180,7 +180,7 @@ private:
   }
 
   /// @brief Creates the stage in which assignment happens (fill and flush)
-  std::unique_ptr<iir::Stage> createAssignmentStage(const Interval& interval,
+  std::unique_ptr<iir::Stage> createAssignmentStage(const iir::Interval& interval,
                                                     const std::vector<int>& assignmentIDs,
                                                     const std::vector<int>& assigneeIDs) {
     // Add the cache Flush stage
@@ -216,8 +216,8 @@ private:
     auto assignmentStatement = std::make_shared<Statement>(expAssignment, nullptr);
     auto pair = make_unique<iir::StatementAccessesPair>(assignmentStatement);
     auto newAccess = std::make_shared<iir::Accesses>();
-    newAccess->addWriteExtent(assignmentID, Extents(Array3i{{0, 0, 0}}));
-    newAccess->addReadExtent(assigneeID, Extents(Array3i{{0, 0, 0}}));
+    newAccess->addWriteExtent(assignmentID, iir::Extents(Array3i{{0, 0, 0}}));
+    newAccess->addReadExtent(assigneeID, iir::Extents(Array3i{{0, 0, 0}}));
     pair->setAccesses(newAccess);
     domethod->insertChild(std::move(pair));
 

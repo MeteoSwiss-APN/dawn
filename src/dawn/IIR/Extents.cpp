@@ -12,13 +12,14 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/Extents.h"
+#include "dawn/IIR/Extents.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Unreachable.h"
 #include "dawn/Support/StringUtil.h"
 #include <iostream>
 
 namespace dawn {
+namespace iir {
 
 Extents::Extents(const Array3i& offset) {
 
@@ -184,4 +185,5 @@ std::ostream& operator<<(std::ostream& os, const Extents& extent) {
           }));
 }
 
+} // namespace iir
 } // namespace dawn

@@ -12,12 +12,13 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_FIELDACCESSEXTENTS_H
-#define DAWN_OPTIMIZER_FIELDACCESSEXTENTS_H
+#ifndef DAWN_IIR_FIELDACCESSEXTENTS_H
+#define DAWN_IIR_FIELDACCESSEXTENTS_H
 
-#include "dawn/Optimizer/Extents.h"
+#include "dawn/IIR/Extents.h"
 
 namespace dawn {
+namespace iir {
 
 /// @brief class storing the extents of accesses of a field within a computation
 class FieldAccessExtents {
@@ -53,5 +54,6 @@ private:
   Extents totalExtents_;
 };
 
+} // namespace iir
 } // namespace dawn
 #endif

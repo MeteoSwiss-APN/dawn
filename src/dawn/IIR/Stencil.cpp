@@ -51,7 +51,7 @@ std::ostream& operator<<(std::ostream& os, const iir::Stencil& stencil) {
     os << "MultiStage " << (multiStageIdx++) << ": (" << MS->getLoopOrder() << ")\n";
     for(const auto& stage : MS->getChildren())
       os << "  " << stencil.getStencilInstantiation().getNameFromStageID(stage->getStageID()) << " "
-         << RangeToString()(stage->getFields(), [&](const std::pair<int, Field>& fieldPair) {
+         << RangeToString()(stage->getFields(), [&](const std::pair<int, iir::Field>& fieldPair) {
               return stencil.getStencilInstantiation().getNameFromAccessID(fieldPair.first);
             }) << "\n";
   }

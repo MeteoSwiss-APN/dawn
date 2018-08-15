@@ -28,7 +28,7 @@ class StatementMapper : public ASTVisitor {
   /// @brief Representation of the current scope which keeps track of the binding of field and
   /// variable names
   struct Scope : public NonCopyable {
-    Scope(iir::DoMethod& doMethod, const Interval& interval,
+    Scope(iir::DoMethod& doMethod, const iir::Interval& interval,
           const std::shared_ptr<iir::StencilFunctionInstantiation>& stencilFun)
         : doMethod_(doMethod), VerticalInterval(interval), ScopeDepth(0),
           FunctionInstantiation(stencilFun), ArgumentIndex(0) {}
@@ -42,7 +42,7 @@ class StatementMapper : public ASTVisitor {
     std::stack<std::unique_ptr<iir::StatementAccessesPair> const*> CurentStmtAccessesPair;
 
     /// The current interval
-    const Interval VerticalInterval;
+    const iir::Interval VerticalInterval;
 
     /// Scope variable name to (global) AccessID
     std::unordered_map<std::string, int> LocalVarNameToAccessIDMap;
@@ -75,7 +75,7 @@ public:
   StatementMapper(
       iir::StencilInstantiation* instantiation,
       const std::shared_ptr<std::vector<sir::StencilCall*>>& stackTrace, iir::DoMethod& doMethod,
-      const Interval& interval,
+      const iir::Interval& interval,
       const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,
       const std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation);
 

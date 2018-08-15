@@ -12,13 +12,14 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/IntervalAlgorithms.h"
-#include "dawn/Optimizer/MultiInterval.h"
-#include "dawn/Optimizer/Interval.h"
+#include "dawn/IIR/IntervalAlgorithms.h"
+#include "dawn/IIR/MultiInterval.h"
+#include "dawn/IIR/Interval.h"
 #include <gtest/gtest.h>
 #include <unordered_set>
 
 using namespace dawn;
+using namespace iir;
 
 namespace {
 

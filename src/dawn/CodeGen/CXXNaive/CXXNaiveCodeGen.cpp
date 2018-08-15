@@ -30,7 +30,7 @@ namespace dawn {
 namespace codegen {
 namespace cxxnaive {
 
-static std::string makeLoopImpl(const Extent extent, const std::string& dim,
+static std::string makeLoopImpl(const iir::Extent extent, const std::string& dim,
                                 const std::string& lower, const std::string& upper,
                                 const std::string& comparison, const std::string& increment) {
   return Twine("for(int " + dim + " = " + lower + "+" + std::to_string(extent.Minus) + "; " + dim +
@@ -39,26 +39,28 @@ static std::string makeLoopImpl(const Extent extent, const std::string& dim,
       .str();
 }
 
-static std::string makeIJLoop(const Extent extent, const std::string dom, const std::string& dim) {
+static std::string makeIJLoop(const iir::Extent extent, const std::string dom,
+                              const std::string& dim) {
   return makeLoopImpl(extent, dim, dom + "." + dim + "minus()",
                       dom + "." + dim + "size() - " + dom + "." + dim + "plus() - 1", " <= ", "++");
 }
 
-static std::string makeIntervalBound(const std::string dom, Interval const& interval,
-                                     Interval::Bound bound) {
+static std::string makeIntervalBound(const std::string dom, iir::Interval const& interval,
+                                     iir::Interval::Bound bound) {
   return interval.levelIsEnd(bound)
              ? "( " + dom + ".ksize() == 0 ? 0 : (" + dom + ".ksize() - " + dom +
                    ".kplus() - 1)) + " + std::to_string(interval.offset(bound))
              : std::to_string(interval.bound(bound));
 }
 
-static std::string makeKLoop(const std::string dom, bool isBackward, Interval const& interval) {
+static std::string makeKLoop(const std::string dom, bool isBackward,
+                             iir::Interval const& interval) {
 
-  const std::string lower = makeIntervalBound(dom, interval, Interval::Bound::lower);
-  const std::string upper = makeIntervalBound(dom, interval, Interval::Bound::upper);
+  const std::string lower = makeIntervalBound(dom, interval, iir::Interval::Bound::lower);
+  const std::string upper = makeIntervalBound(dom, interval, iir::Interval::Bound::upper);
 
-  return isBackward ? makeLoopImpl(Extent{}, "k", upper, lower, ">=", "--")
-                    : makeLoopImpl(Extent{}, "k", lower, upper, "<=", "++");
+  return isBackward ? makeLoopImpl(iir::Extent{}, "k", upper, lower, ">=", "--")
+                    : makeLoopImpl(iir::Extent{}, "k", lower, upper, "<=", "++");
 }
 
 CXXNaiveCodeGen::CXXNaiveCodeGen(OptimizerContext* context) : CodeGen(context) {}
@@ -303,19 +305,20 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
       }
 
       auto intervals_set = multiStage.getIntervals();
-      std::vector<Interval> intervals_v;
+      std::vector<iir::Interval> intervals_v;
       std::copy(intervals_set.begin(), intervals_set.end(), std::back_inserter(intervals_v));
 
       // compute the partition of the intervals
-      auto partitionIntervals = Interval::computePartition(intervals_v);
-      if((multiStage.getLoopOrder() == LoopOrderKind::LK_Backward))
+      auto partitionIntervals = iir::Interval::computePartition(intervals_v);
+      if((multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Backward))
         std::reverse(partitionIntervals.begin(), partitionIntervals.end());
 
       for(auto interval : partitionIntervals) {
 
         // for each interval, we generate naive nested loops
         StencilRunMethod.addBlockStatement(
-            makeKLoop("m_dom", (multiStage.getLoopOrder() == LoopOrderKind::LK_Backward), interval),
+            makeKLoop("m_dom", (multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Backward),
+                      interval),
             [&]() {
               for(const auto& stagePtr : multiStage.getChildren()) {
                 const iir::Stage& stage = *stagePtr;

@@ -67,7 +67,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
-  Extents extents = instantiation_->getBoundaryConditionExtentsFromBCStmt(stmt);
+  iir::Extents extents = instantiation_->getBoundaryConditionExtentsFromBCStmt(stmt);
   int haloIMinus = abs(extents[0].Minus);
   int haloIPlus = abs(extents[0].Plus);
   int haloJMinus = abs(extents[1].Minus);

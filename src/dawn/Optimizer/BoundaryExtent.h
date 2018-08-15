@@ -15,7 +15,7 @@
 #ifndef DAWN_OPTIMIZER_BOUNDARYEXTENTS_H
 #define DAWN_OPTIMIZER_BOUNDARYEXTENTS_H
 
-#include "dawn/Optimizer/Extents.h"
+#include "dawn/IIR/Extents.h"
 #include "dawn/IIR/Field.h"
 #include <memory>
 #include <unordered_map>
@@ -30,7 +30,7 @@ class DependencyGraphAccesses;
 /// @brief Compute the accumulated extent of each Vertex (given by `VertexID`) referenced in `graph`
 /// @returns map of `VertexID` to boundary extent
 /// @ingroup optimizer
-extern std::unique_ptr<std::unordered_map<std::size_t, Extents>>
+extern std::unique_ptr<std::unordered_map<std::size_t, iir::Extents>>
 computeBoundaryExtents(const iir::DependencyGraphAccesses* graph);
 
 /// @fn exceedsMaxBoundaryPoints

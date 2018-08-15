@@ -15,7 +15,7 @@
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
-#include "dawn/Optimizer/Extents.h"
+#include "dawn/IIR/Extents.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
@@ -58,8 +58,8 @@ static void getAccessIDFromAssignment(const iir::StencilInstantiation& instantia
 
 /// @brief Check if the extent is a stencil-extent (i.e non-pointwise in the horizontal and a
 /// counter loop acesses in the vertical)
-static bool isHorizontalStencilOrCounterLoopOrderExtent(const Extents& extent,
-                                                        LoopOrderKind loopOrder) {
+static bool isHorizontalStencilOrCounterLoopOrderExtent(const iir::Extents& extent,
+                                                        iir::LoopOrderKind loopOrder) {
   return !extent.isHorizontalPointwise() ||
          extent.getVerticalLoopOrderAccesses(loopOrder).CounterLoopOrder;
 }
@@ -105,7 +105,7 @@ bool PassFieldVersioning::run(
     for(auto multiStageRit = stencil.childrenRBegin(), multiStageRend = stencil.childrenREnd();
         multiStageRit != multiStageRend; ++multiStageRit) {
       iir::MultiStage& multiStage = (**multiStageRit);
-      LoopOrderKind loopOrder = multiStage.getLoopOrder();
+      iir::LoopOrderKind loopOrder = multiStage.getLoopOrder();
 
       std::shared_ptr<iir::DependencyGraphAccesses> newGraph, oldGraph;
       newGraph = std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation.get());
@@ -151,7 +151,7 @@ bool PassFieldVersioning::run(
 PassFieldVersioning::RCKind
 PassFieldVersioning::fixRaceCondition(const iir::DependencyGraphAccesses* graph,
                                       iir::Stencil& stencil, iir::DoMethod& doMethod,
-                                      LoopOrderKind loopOrder, int stageIdx, int index) {
+                                      iir::LoopOrderKind loopOrder, int stageIdx, int index) {
   using Vertex = iir::DependencyGraphAccesses::Vertex;
   using Edge = iir::DependencyGraphAccesses::Edge;
 

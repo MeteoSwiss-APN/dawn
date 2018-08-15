@@ -29,25 +29,25 @@ static bool depends(const iir::Stage& fromStage, const iir::Stage& toStage) {
   bool intervalsMatch = fromStage.getEnclosingInterval() == toStage.getEnclosingInterval();
 
   for(const auto& fromFieldPair : fromStage.getFields()) {
-    const Field& fromField = fromFieldPair.second;
+    const iir::Field& fromField = fromFieldPair.second;
     for(const auto& toFieldPair : toStage.getFields()) {
-      const Field& toField = toFieldPair.second;
+      const iir::Field& toField = toFieldPair.second;
       if(fromField.getAccessID() != toField.getAccessID())
         continue;
 
-      Field::IntendKind fromFieldIntend = fromField.getIntend();
-      Field::IntendKind toFieldIntend = toField.getIntend();
+      iir::Field::IntendKind fromFieldIntend = fromField.getIntend();
+      iir::Field::IntendKind toFieldIntend = toField.getIntend();
 
       switch(fromFieldIntend) {
-      case Field::IK_Output:
-        if(!intervalsMatch || toFieldIntend == Field::IK_Input ||
-           toFieldIntend == Field::IK_InputOutput)
+      case iir::Field::IK_Output:
+        if(!intervalsMatch || toFieldIntend == iir::Field::IK_Input ||
+           toFieldIntend == iir::Field::IK_InputOutput)
           return true;
         break;
-      case Field::IK_InputOutput:
+      case iir::Field::IK_InputOutput:
         return true;
-      case Field::IK_Input:
-        if(toFieldIntend == Field::IK_Output || toFieldIntend == Field::IK_InputOutput)
+      case iir::Field::IK_Input:
+        if(toFieldIntend == iir::Field::IK_Output || toFieldIntend == iir::Field::IK_InputOutput)
           return true;
         break;
       }

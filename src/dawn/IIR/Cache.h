@@ -12,15 +12,16 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_CACHE_H
-#define DAWN_OPTIMIZER_CACHE_H
+#ifndef DAWN_IIR_CACHE_H
+#define DAWN_IIR_CACHE_H
 
-#include "Interval.h"
+#include "dawn/IIR/Interval.h"
 #include "dawn/Support/HashCombine.h"
 #include <boost/optional.hpp>
 #include <string>
 
 namespace dawn {
+namespace iir {
 
 /// @brief Cache specification of gridtools
 /// @ingroup optimizer
@@ -98,13 +99,14 @@ private:
 std::ostream& operator<<(std::ostream& os, Cache::window const& w);
 bool operator==(const Cache::window& first, const Cache::window& second);
 
+} // namespace iir
 } // namespace dawn
 
 namespace std {
 
 template <>
-struct hash<dawn::Cache> {
-  size_t operator()(const dawn::Cache& cache) const {
+struct hash<dawn::iir::Cache> {
+  size_t operator()(const dawn::iir::Cache& cache) const {
     std::size_t seed = 0;
     dawn::hash_combine(seed, cache.getCachedFieldAccessID(),
                        static_cast<int>(cache.getCacheIOPolicy()),

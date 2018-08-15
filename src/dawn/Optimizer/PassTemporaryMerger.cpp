@@ -93,7 +93,7 @@ bool PassTemporaryMerger::run(
           int newAccessIDOfLastTemporary = AccessIDOfLastTemporary;
 
           if(stencilInstantiation->isTemporaryField(ToAccessID) && AccessIDOfLastTemporary != -1) {
-            TemporaryDAG.insertEdge(AccessIDOfLastTemporary, ToAccessID, Extents{0, 0, 0, 0, 0, 0});
+            TemporaryDAG.insertEdge(AccessIDOfLastTemporary, ToAccessID, iir::Extents{0, 0, 0, 0, 0, 0});
             newAccessIDOfLastTemporary = ToAccessID;
           }
 
@@ -128,7 +128,7 @@ bool PassTemporaryMerger::run(
           continue;
 
         if(FromLifetime.overlaps(ToLifetime)) {
-          TemporaryDAG.insertEdge(FromAccessID, ToAccessID, Extents{0, 0, 0, 0, 0, 0});
+          TemporaryDAG.insertEdge(FromAccessID, ToAccessID, iir::Extents{0, 0, 0, 0, 0, 0});
         }
       }
     }

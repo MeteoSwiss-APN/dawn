@@ -163,7 +163,7 @@ public:
       calleeAccesses->mergeWriteOffset(getAccessIDFromStmt(var), Array3i{{0, 0, 0}});
   }
 
-  void mergeWriteExtent(const std::shared_ptr<FieldAccessExpr>& field, const Extents& extent) {
+  void mergeWriteExtent(const std::shared_ptr<FieldAccessExpr>& field, const iir::Extents& extent) {
     for(auto& callerAccesses : callerAccessesList_)
       callerAccesses->mergeWriteExtent(getAccessIDFromExpr(field), extent);
 
@@ -203,7 +203,7 @@ public:
       calleeAccesses->mergeReadOffset(getAccessIDFromExpr(lit), Array3i{{0, 0, 0}});
   }
 
-  void mergeReadExtent(const std::shared_ptr<FieldAccessExpr>& field, const Extents& extent) {
+  void mergeReadExtent(const std::shared_ptr<FieldAccessExpr>& field, const iir::Extents& extent) {
     for(auto& callerAccesses : callerAccessesList_)
       callerAccesses->mergeReadExtent(getAccessIDFromExpr(field), extent);
 
@@ -219,7 +219,7 @@ public:
   mergeExtentWithAllFields(TExtent&& extent,
                            std::shared_ptr<iir::StencilFunctionInstantiation> curStencilFunCall,
                            std::set<int>& appliedAccessIDs) {
-    for(const Field& field : curStencilFunCall->getCallerFields()) {
+    for(const iir::Field& field : curStencilFunCall->getCallerFields()) {
       int AccessID = field.getAccessID();
 
       if(appliedAccessIDs.count(AccessID))
@@ -236,11 +236,13 @@ public:
       } else {
         appliedAccessIDs.insert(AccessID);
 
-        if(field.getIntend() == Field::IK_Input || field.getIntend() == Field::IK_InputOutput)
+        if(field.getIntend() == iir::Field::IK_Input ||
+           field.getIntend() == iir::Field::IK_InputOutput)
           for(auto& callerAccesses : callerAccessesList_)
             callerAccesses->addReadExtent(AccessID, std::forward<TExtent>(extent));
 
-        if(field.getIntend() == Field::IK_Output || field.getIntend() == Field::IK_InputOutput)
+        if(field.getIntend() == iir::Field::IK_Output ||
+           field.getIntend() == iir::Field::IK_InputOutput)
           for(auto& callerAccesses : callerAccessesList_)
             callerAccesses->addWriteExtent(AccessID, std::forward<TExtent>(extent));
       }
@@ -355,7 +357,8 @@ public:
       auto& prevArgumentIndex = previousStencilFunCallScope->ArgumentIndex;
       auto& prevStencilFunCall = previousStencilFunCallScope->FunctionInstantiation;
 
-      const Field& field = prevStencilFunCall->getCallerFieldFromArgumentIndex(prevArgumentIndex);
+      const iir::Field& field =
+          prevStencilFunCall->getCallerFieldFromArgumentIndex(prevArgumentIndex);
       DAWN_ASSERT(prevStencilFunCall->isProvidedByStencilFunctionCall(field.getAccessID()));
 
       // Add the extent of the field mapping to the stencil function to all fields
@@ -437,12 +440,15 @@ public:
       int& ArgumentIndex = stencilFunCalls_.top()->ArgumentIndex;
 
       // Get the extent of the field corresponding to the argument index
-      const Field& field = functionInstantiation->getCallerFieldFromArgumentIndex(ArgumentIndex);
+      const iir::Field& field =
+          functionInstantiation->getCallerFieldFromArgumentIndex(ArgumentIndex);
 
-      if(field.getIntend() == Field::IK_Input || field.getIntend() == Field::IK_InputOutput)
+      if(field.getIntend() == iir::Field::IK_Input ||
+         field.getIntend() == iir::Field::IK_InputOutput)
         mergeReadExtent(expr, field.getExtents());
 
-      if(field.getIntend() == Field::IK_Output || field.getIntend() == Field::IK_InputOutput)
+      if(field.getIntend() == iir::Field::IK_Output ||
+         field.getIntend() == iir::Field::IK_InputOutput)
         mergeWriteExtent(expr, field.getExtents());
 
       ArgumentIndex += 1;

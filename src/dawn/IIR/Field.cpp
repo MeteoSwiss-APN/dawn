@@ -15,7 +15,7 @@
 #include "dawn/IIR/Field.h"
 
 namespace dawn {
-// namespace iir {
+namespace iir {
 
 void mergeFields(std::unordered_map<int, Field> const& sFields,
                  std::unordered_map<int, Field>& dFields) {
@@ -38,5 +38,5 @@ void mergeFields(std::unordered_map<int, Field> const& sFields,
   }
 }
 
-//} // namespace iir
+} // namespace iir
 } // namespace dawn

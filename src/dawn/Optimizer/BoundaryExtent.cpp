@@ -22,7 +22,7 @@
 
 namespace dawn {
 
-std::unique_ptr<std::unordered_map<std::size_t, Extents>>
+std::unique_ptr<std::unordered_map<std::size_t, iir::Extents>>
 computeBoundaryExtents(const iir::DependencyGraphAccesses* graph) {
   using Vertex = iir::DependencyGraphAccesses::Vertex;
   using Edge = iir::DependencyGraphAccesses::Edge;
@@ -33,12 +33,12 @@ computeBoundaryExtents(const iir::DependencyGraphAccesses* graph) {
   std::unordered_set<std::size_t> visitedNodes;
 
   // Keep track of the extents of each vertex (and compute a VertexID to AccessID map)
-  auto nodeExtentsPtr = make_unique<std::unordered_map<std::size_t, Extents>>();
+  auto nodeExtentsPtr = make_unique<std::unordered_map<std::size_t, iir::Extents>>();
   auto& nodeExtents = *nodeExtentsPtr;
 
   for(const auto& AccessIDVertexPair : graph->getVertices()) {
     const Vertex& vertex = AccessIDVertexPair.second;
-    nodeExtents.emplace(vertex.VertexID, Extents{0, 0, 0, 0, 0, 0});
+    nodeExtents.emplace(vertex.VertexID, iir::Extents{0, 0, 0, 0, 0, 0});
   }
 
   // Start from the output nodes and follow all paths
@@ -69,7 +69,7 @@ computeBoundaryExtents(const iir::DependencyGraphAccesses* graph) {
       // Process the current node
       std::size_t curNode = nodesToVisit.back();
       nodesToVisit.pop_back();
-      const Extents& curExtent = nodeExtents.at(curNode);
+      const iir::Extents& curExtent = nodeExtents.at(curNode);
 
       // Check if we already visited this node
       if(visitedNodes.count(curNode))
@@ -79,7 +79,7 @@ computeBoundaryExtents(const iir::DependencyGraphAccesses* graph) {
 
       // Follow edges of the current node and update the node extents
       for(const Edge& edge : *adjacencyList[curNode]) {
-        nodeExtents.at(edge.ToVertexID).merge(Extents::add(curExtent, edge.Data));
+        nodeExtents.at(edge.ToVertexID).merge(iir::Extents::add(curExtent, edge.Data));
         nodesToVisit.push_back(edge.ToVertexID);
       }
     }
@@ -93,7 +93,7 @@ bool exceedsMaxBoundaryPoints(const iir::DependencyGraphAccesses* graph,
   auto nodeExtentsPtr = computeBoundaryExtents(graph);
 
   for(const auto& vertexIDExtentsPair : *nodeExtentsPtr) {
-    const Extents& extents = vertexIDExtentsPair.second;
+    const iir::Extents& extents = vertexIDExtentsPair.second;
     if(extents[0].Plus > maxHorizontalBoundaryExtent ||
        extents[0].Minus < -maxHorizontalBoundaryExtent ||
        extents[1].Plus > maxHorizontalBoundaryExtent ||

@@ -38,7 +38,7 @@ class ReadWriteCounter : public ASTVisitorForwarding {
   const iir::MultiStage& multiStage_;
 
   /// Fields of the MultiStage
-  std::unordered_map<int, Field> fields_;
+  std::unordered_map<int, iir::Field> fields_;
 
   /// Fields which are considered to be loaded into a register
   std::unordered_set<int> register_;
@@ -119,19 +119,20 @@ public:
     if(kCacheLoaded_.count(AccessID) || !multiStage_.isCached(AccessID))
       return;
 
-    auto it = std::find_if(multiStage_.getCaches().begin(), multiStage_.getCaches().end(),
-                           [&](const std::pair<int, Cache>& p) { return p.first == AccessID; });
+    auto it =
+        std::find_if(multiStage_.getCaches().begin(), multiStage_.getCaches().end(),
+                     [&](const std::pair<int, iir::Cache>& p) { return p.first == AccessID; });
     DAWN_ASSERT(it != multiStage_.getCaches().end());
-    const Cache& cache = it->second;
+    const iir::Cache& cache = it->second;
 
-    if(cache.getCacheType() == Cache::K) {
-      if(cache.getCacheIOPolicy() == Cache::fill ||
-         cache.getCacheIOPolicy() == Cache::fill_and_flush) {
+    if(cache.getCacheType() == iir::Cache::K) {
+      if(cache.getCacheIOPolicy() == iir::Cache::fill ||
+         cache.getCacheIOPolicy() == iir::Cache::fill_and_flush) {
         numReads_++;
         individualReadWrites_[AccessID].numReads++;
       }
-      if(cache.getCacheIOPolicy() == Cache::flush ||
-         cache.getCacheIOPolicy() == Cache::fill_and_flush) {
+      if(cache.getCacheIOPolicy() == iir::Cache::flush ||
+         cache.getCacheIOPolicy() == iir::Cache::fill_and_flush) {
         numWrites_++;
         individualReadWrites_[AccessID].numWrites++;
       }
@@ -161,9 +162,9 @@ public:
 
     auto it = fields_.find(AccessID);
     DAWN_ASSERT(it != fields_.end());
-    Field& field = it->second;
+    iir::Field& field = it->second;
 
-    if(field.getIntend() == Field::IK_Input) {
+    if(field.getIntend() == iir::Field::IK_Input) {
       if(!register_.count(AccessID)) {
 
         // Cache the center access
@@ -192,7 +193,7 @@ public:
       }
     }
 
-    if(multiStage_.isCached(AccessID) && field.getIntend() == Field::IK_Input)
+    if(multiStage_.isCached(AccessID) && field.getIntend() == iir::Field::IK_Input)
       updateTextureCache(AccessID, kOffset);
   }
 
@@ -233,38 +234,38 @@ DAWN_ATTRIBUTE_UNUSED static std::pair<int, int>
 computeReadWriteAccessesLowerBound(iir::StencilInstantiation* instantiation,
                                    const iir::MultiStage& multiStage) {
   std::size_t numReads = 0, numWrites = 0;
-  std::unordered_map<int, Field> fields = multiStage.getFields();
+  std::unordered_map<int, iir::Field> fields = multiStage.getFields();
 
   for(const auto& AccessIDFieldPair : fields) {
     int AccessID = AccessIDFieldPair.first;
-    const Field& field = AccessIDFieldPair.second;
+    const iir::Field& field = AccessIDFieldPair.second;
 
     // The only fields we don't count are the once which are cached an *not* filled or flushed i.e
     // have a local fill policy (note that IJ caches are always local)
     if(multiStage.isCached(AccessID)) {
-      const Cache& cache = multiStage.getCaches().find(AccessID)->second;
+      const iir::Cache& cache = multiStage.getCaches().find(AccessID)->second;
 
-      if(cache.getCacheType() == Cache::K) {
-        if(cache.getCacheIOPolicy() == Cache::fill ||
-           cache.getCacheIOPolicy() == Cache::fill_and_flush) {
+      if(cache.getCacheType() == iir::Cache::K) {
+        if(cache.getCacheIOPolicy() == iir::Cache::fill ||
+           cache.getCacheIOPolicy() == iir::Cache::fill_and_flush) {
           numReads += 1;
         }
-        if(cache.getCacheIOPolicy() == Cache::flush ||
-           cache.getCacheIOPolicy() == Cache::fill_and_flush) {
+        if(cache.getCacheIOPolicy() == iir::Cache::flush ||
+           cache.getCacheIOPolicy() == iir::Cache::fill_and_flush) {
           numWrites += 1;
         }
       }
 
     } else {
       switch(field.getIntend()) {
-      case Field::IK_Output:
+      case iir::Field::IK_Output:
         numWrites += 1;
         break;
-      case Field::IK_InputOutput:
+      case iir::Field::IK_InputOutput:
         numReads += 1;
         numWrites += 1;
         break;
-      case Field::IK_Input:
+      case iir::Field::IK_Input:
         numReads += 1;
         break;
       }

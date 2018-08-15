@@ -15,12 +15,13 @@
 #ifndef DAWN_IIR_FIELD_H
 #define DAWN_IIR_FIELD_H
 
-#include "dawn/Optimizer/Extents.h"
-#include "dawn/Optimizer/FieldAccessExtents.h"
-#include "dawn/Optimizer/Interval.h"
+#include "dawn/IIR/Extents.h"
+#include "dawn/IIR/FieldAccessExtents.h"
+#include "dawn/IIR/Interval.h"
 #include <utility>
 
 namespace dawn {
+namespace iir {
 
 /// @brief Information of a field
 ///
@@ -107,13 +108,14 @@ public:
 void mergeFields(std::unordered_map<int, Field> const& sFields,
                  std::unordered_map<int, Field>& dFields);
 
+} // namespace iir
 } // namespace dawn
 
 namespace std {
 
 template <>
-struct hash<dawn::Field> {
-  size_t operator()(const dawn::Field& field) const {
+struct hash<dawn::iir::Field> {
+  size_t operator()(const dawn::iir::Field& field) const {
     return std::hash<int>()(field.getAccessID());
   }
 };

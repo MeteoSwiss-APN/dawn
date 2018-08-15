@@ -12,10 +12,11 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/MultiInterval.h"
-#include "dawn/Optimizer/IntervalAlgorithms.h"
+#include "dawn/IIR/MultiInterval.h"
+#include "dawn/IIR/IntervalAlgorithms.h"
 
 namespace dawn {
+namespace iir {
 
 std::ostream& operator<<(std::ostream& os, const MultiInterval& multiInterval) {
   for(auto const& interv : multiInterval.getIntervals()) {
@@ -25,7 +26,7 @@ std::ostream& operator<<(std::ostream& os, const MultiInterval& multiInterval) {
   return os;
 }
 
-MultiInterval::MultiInterval(std::initializer_list<Interval> const& intervals)
+MultiInterval::MultiInterval(std::initializer_list<iir::Interval> const& intervals)
     : intervals_(intervals) {}
 
 void MultiInterval::insert(MultiInterval const& multiInterval) {
@@ -43,16 +44,16 @@ bool MultiInterval::operator==(const MultiInterval& other) const {
   return true;
 }
 
-void MultiInterval::insert(boost::optional<Interval> const& interval) {
+void MultiInterval::insert(boost::optional<iir::Interval> const& interval) {
   if(interval.is_initialized())
     insert(*interval);
 }
 
-void MultiInterval::substract(Interval const& interval) {
+void MultiInterval::substract(iir::Interval const& interval) {
   for(auto it = intervals_.begin(); it != intervals_.end(); ++it) {
     if(it->overlaps(interval)) {
-      const Interval int1 = *it;
-      MultiInterval multiInterval = dawn::substract(int1, interval);
+      const iir::Interval int1 = *it;
+      MultiInterval multiInterval = iir::substract(int1, interval);
 
       intervals_.erase(it);
 
@@ -72,9 +73,9 @@ void MultiInterval::substract(MultiInterval const& multiInterval) {
   }
 }
 
-void MultiInterval::insert(Interval const& interval) {
+void MultiInterval::insert(iir::Interval const& interval) {
   intervals_.push_back(interval);
-  auto intervals = Interval::computePartition(intervals_);
+  auto intervals = iir::Interval::computePartition(intervals_);
   intervals_.clear();
   std::move(intervals.begin(), intervals.end(), std::back_inserter(intervals_));
 
@@ -90,4 +91,5 @@ void MultiInterval::insert(Interval const& interval) {
     }
   }
 }
+} // namespace iir
 } // namespace dawn

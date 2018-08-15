@@ -18,7 +18,7 @@ namespace dawn {
 StatementMapper::StatementMapper(
     iir::StencilInstantiation* instantiation,
     const std::shared_ptr<std::vector<sir::StencilCall*>>& stackTrace, iir::DoMethod& doMethod,
-    const Interval& interval,
+    const iir::Interval& interval,
     const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,
     const std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation)
     : instantiation_(instantiation), stackTrace_(stackTrace) {
@@ -202,7 +202,7 @@ void StatementMapper::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
 
   // Find the referenced stencil function
   std::shared_ptr<iir::StencilFunctionInstantiation> stencilFun = nullptr;
-  const Interval& interval = scope_.top()->VerticalInterval;
+  const iir::Interval& interval = scope_.top()->VerticalInterval;
 
   for(auto& SIRStencilFun : instantiation_->getSIR()->StencilFunctions) {
     if(SIRStencilFun->Name == expr->getCallee()) {

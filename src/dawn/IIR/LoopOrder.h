@@ -12,12 +12,13 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_LOOPORDER_H
-#define DAWN_OPTIMIZER_LOOPORDER_H
+#ifndef DAWN_IIR_LOOPORDER_H
+#define DAWN_IIR_LOOPORDER_H
 
 #include <iosfwd>
 
 namespace dawn {
+namespace iir {
 
 /// @enum LoopOrderKind
 /// @brief Loop order of a multi-stage and stages
@@ -39,6 +40,7 @@ extern const char* loopOrderToString(LoopOrderKind loopOrder);
 /// @ingroup optimizer
 extern std::ostream& operator<<(std::ostream& os, LoopOrderKind loopOrder);
 
+} // namespace iir
 } // namespace dawn
 
 #endif

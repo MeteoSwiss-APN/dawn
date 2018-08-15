@@ -12,11 +12,12 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/LoopOrder.h"
+#include "dawn/IIR/LoopOrder.h"
 #include "dawn/Support/Unreachable.h"
 #include <iostream>
 
 namespace dawn {
+namespace iir {
 
 bool loopOrdersAreCompatible(LoopOrderKind l1, LoopOrderKind l2) {
   return (l1 == l2 || l1 == LoopOrderKind::LK_Parallel || l2 == LoopOrderKind::LK_Parallel);
@@ -39,4 +40,5 @@ const char* loopOrderToString(LoopOrderKind loopOrder) {
       std::string("invalid loop order" + std::to_string((unsigned int)loopOrder)).c_str());
 }
 
+} // namespace iir
 } // namespace dawn

@@ -14,8 +14,14 @@
 
 dawn_add_unittest_impl(
   NAME DawnUnittestIIR
-  SOURCES TestMain.cpp
+  SOURCES TestExtent.cpp
+          TestField.cpp
+          TestInterval.cpp
+          TestIntervalAlgorithms.cpp
           TestIIRNode.cpp
           TestIIRNodeIterator.cpp
+          TestMain.cpp
+          TestMultiInterval.cpp
+          TestStencil.cpp
 )
 

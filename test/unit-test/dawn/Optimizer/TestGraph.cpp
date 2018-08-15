@@ -28,7 +28,7 @@ public:
   TestGraph() : Base(nullptr) {}
   void insertEdge(int IDFrom, int IDTo) {
     Base::insertNode(IDFrom);
-    Base::insertEdge(IDFrom, IDTo, Extents{0, 0, 0, 0, 0, 0});
+    Base::insertEdge(IDFrom, IDTo, iir::Extents{0, 0, 0, 0, 0, 0});
   }
 };
 

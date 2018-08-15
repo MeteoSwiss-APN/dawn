@@ -16,7 +16,7 @@
 #define DAWN_CODEGEN_GRIDTOOLS_GTCODEGEN_H
 
 #include "dawn/CodeGen/CodeGen.h"
-#include "dawn/Optimizer/Interval.h"
+#include "dawn/IIR/Interval.h"
 #include <set>
 #include <unordered_map>
 #include <unordered_set>
@@ -48,23 +48,23 @@ public:
     IntervalDefinitions(const iir::Stencil& stencil);
 
     /// Intervals of the stencil
-    std::unordered_set<IntervalProperties> intervalProperties_;
+    std::unordered_set<iir::IntervalProperties> intervalProperties_;
 
     /// Axis of the stencil (i.e the interval which spans accross all other intervals)
-    Interval Axis;
+    iir::Interval Axis;
 
     /// Levels of the axis
     std::set<int> Levels;
 
     /// Intervals of the Do-Methods of each stage
-    std::unordered_map<int, std::vector<Interval>> StageIntervals;
+    std::unordered_map<int, std::vector<iir::Interval>> StageIntervals;
   };
 
 private:
   std::string generateStencilInstantiation(
       const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation);
   std::string generateGlobals(const std::shared_ptr<SIR>& Sir);
-  std::string cacheWindowToString(const Cache::window& cacheWindow);
+  std::string cacheWindowToString(const iir::Cache::window& cacheWindow);
   std::string buildMakeComputation(std::vector<std::string> const& DomainMapPlaceholders,
                                    std::vector<std::string> const& makeComputation,
                                    const std::string& gridName) const;

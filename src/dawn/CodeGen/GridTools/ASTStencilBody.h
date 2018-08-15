@@ -16,7 +16,7 @@
 #define DAWN_CODEGEN_GRIDTOOLS_ASTSTENCILBODY_H
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
-#include "dawn/Optimizer/Interval.h"
+#include "dawn/IIR/Interval.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>
 #include <unordered_map>
@@ -36,7 +36,7 @@ namespace gt {
 class ASTStencilBody : public ASTCodeGenCXX {
 protected:
   const iir::StencilInstantiation* instantiation_;
-  const std::unordered_set<IntervalProperties>& intervalProperties_;
+  const std::unordered_set<iir::IntervalProperties>& intervalProperties_;
   RangeToString offsetPrinter_;
 
   /// The stencil function we are currently generating or NULL
@@ -51,7 +51,7 @@ public:
   using Base = ASTCodeGenCXX;
 
   ASTStencilBody(const iir::StencilInstantiation* stencilInstantiation,
-                 const std::unordered_set<IntervalProperties>& intervalProperties);
+                 const std::unordered_set<iir::IntervalProperties>& intervalProperties);
   virtual ~ASTStencilBody();
 
   /// @name Statement implementation

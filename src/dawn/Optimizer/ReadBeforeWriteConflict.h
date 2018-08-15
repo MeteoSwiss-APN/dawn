@@ -15,7 +15,7 @@
 #ifndef DAWN_OPTIMITZER_READBEFOREWRITECONFLICT_H
 #define DAWN_OPTIMITZER_READBEFOREWRITECONFLICT_H
 
-#include "dawn/Optimizer/LoopOrder.h"
+#include "dawn/IIR/LoopOrder.h"
 
 namespace dawn {
 
@@ -71,7 +71,7 @@ struct ReadBeforeWriteConflict {
 /// @ingroup optimizer
 extern ReadBeforeWriteConflict
 hasVerticalReadBeforeWriteConflict(const iir::DependencyGraphAccesses* graph,
-                                   LoopOrderKind loopOrder);
+                                   iir::LoopOrderKind loopOrder);
 
 /// @brief Check if the graph contains any horizontal non-pointwise read-before-write conflicts
 ///

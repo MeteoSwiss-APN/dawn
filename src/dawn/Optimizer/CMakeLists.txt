@@ -20,20 +20,6 @@ yoda_add_library(
           AccessUtils.h
           BoundaryExtent.cpp  
           BoundaryExtent.h
-          Cache.cpp
-          Cache.h
-          Extents.cpp
-          Extents.h
-          FieldAccessExtents.cpp
-          FieldAccessExtents.h
-          Interval.cpp
-          Interval.h
-          IntervalAlgorithms.cpp
-          IntervalAlgorithms.h
-          LoopOrder.cpp    
-          LoopOrder.h     
-          MultiInterval.cpp
-          MultiInterval.h
           OptimizerContext.cpp 
           OptimizerContext.h
           Pass.h

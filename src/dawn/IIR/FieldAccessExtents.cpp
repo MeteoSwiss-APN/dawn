@@ -12,9 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/FieldAccessExtents.h"
+#include "dawn/IIR/FieldAccessExtents.h"
 
 namespace dawn {
+namespace iir {
 void FieldAccessExtents::mergeReadExtents(Extents const& extents) {
   if(readAccessExtents_.is_initialized())
     readAccessExtents_->merge(extents);
@@ -50,4 +51,5 @@ void FieldAccessExtents::updateTotalExtents() {
   }
 }
 
+} // namespace iir
 } // namespace dawn

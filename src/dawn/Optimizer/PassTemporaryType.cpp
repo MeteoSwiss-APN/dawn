@@ -71,13 +71,13 @@ struct Temporary {
   Temporary(Temporary const& other) = default;
   Temporary(Temporary&& other) = default;
   Temporary() = delete;
-  Temporary(int accessID, TemporaryType type, const Extents& extent)
+  Temporary(int accessID, TemporaryType type, const iir::Extents& extent)
       : AccessID(accessID), Type(type), Extent(extent) {}
 
   int AccessID;                    ///< AccessID of the field or variable
   TemporaryType Type : 1;          ///< Type of the temporary
   iir::Stencil::Lifetime Lifetime; ///< Lifetime of the temporary
-  Extents Extent;                  ///< Accumulated access of the temporary during its lifetime
+  iir::Extents Extent;                  ///< Accumulated access of the temporary during its lifetime
 
   /// @brief Dump the temporary
   void dump(const std::shared_ptr<iir::StencilInstantiation>& instantiation) const {
@@ -107,10 +107,10 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
     // Loop over all accesses
     for(const auto& statementAccessesPair :
         iterateIIROver<iir::StatementAccessesPair>(*stencilPtr)) {
-      auto processAccessMap = [&](const std::unordered_map<int, Extents>& accessMap) {
+      auto processAccessMap = [&](const std::unordered_map<int, iir::Extents>& accessMap) {
         for(const auto& AccessIDExtentPair : accessMap) {
           int AccessID = AccessIDExtentPair.first;
-          const Extents& extent = AccessIDExtentPair.second;
+          const iir::Extents& extent = AccessIDExtentPair.second;
 
           // Is it a temporary?
           bool isTemporaryField = instantiation->isTemporaryField(AccessID);

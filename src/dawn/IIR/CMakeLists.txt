@@ -19,6 +19,8 @@ yoda_add_library(
           Accesses.h
           BlockStatements.cpp
           BlockStatements.h
+          Cache.cpp
+          Cache.h
           DependencyGraph.h
           DependencyGraphAccesses.cpp      
           DependencyGraphAccesses.h
@@ -26,12 +28,24 @@ yoda_add_library(
           DependencyGraphStage.h
           DoMethod.cpp
           DoMethod.h
+          Extents.cpp
+          Extents.h
           Field.h
           Field.cpp
+          FieldAccessExtents.cpp
+          FieldAccessExtents.h
+          Interval.cpp
+          Interval.h
+          IntervalAlgorithms.cpp
+          IntervalAlgorithms.h
           IIR.cpp
           IIR.h
           IIRNode.h
           IIRNodeIterator.h
+          LoopOrder.cpp
+          LoopOrder.h
+          MultiInterval.cpp
+          MultiInterval.h
           MultiStage.cpp 
           MultiStage.h
           Stage.cpp

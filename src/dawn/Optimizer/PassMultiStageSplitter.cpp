@@ -37,12 +37,12 @@ int checkDependencies(const std::unique_ptr<iir::Stage>& stage, int stmtIdx) {
 }
 
 std::function<void(iir::MultiStage::child_reverse_iterator_t&, iir::DependencyGraphAccesses&,
-                   LoopOrderKind&, LoopOrderKind&, std::deque<iir::MultiStage::SplitIndex>&, int,
+                   iir::LoopOrderKind&, iir::LoopOrderKind&, std::deque<iir::MultiStage::SplitIndex>&, int,
                    int, int&, const std::string&, const std::string&, const Options&)>
 multiStageSplitterOptimized() {
   return [&](iir::MultiStage::child_reverse_iterator_t& stageIt,
-             iir::DependencyGraphAccesses& graph, LoopOrderKind userSpecifiedLoopOrder,
-             LoopOrderKind& curLoopOrder, std::deque<iir::MultiStage::SplitIndex>& splitterIndices,
+             iir::DependencyGraphAccesses& graph, iir::LoopOrderKind userSpecifiedLoopOrder,
+             iir::LoopOrderKind& curLoopOrder, std::deque<iir::MultiStage::SplitIndex>& splitterIndices,
              int stageIndex, int multiStageIndex, int& numSplit, const std::string& StencilName,
              const std::string& PassName, const Options& options) {
 
@@ -78,7 +78,7 @@ multiStageSplitterOptimized() {
 
         // Clear the graph ...
         graph.clear();
-        curLoopOrder = LoopOrderKind::LK_Parallel;
+        curLoopOrder = iir::LoopOrderKind::LK_Parallel;
 
         // ... and process the current statement again
         graph.insertStatementAccessesPair(stmtAccessesPair);
@@ -93,13 +93,13 @@ multiStageSplitterOptimized() {
   };
 }
 std::function<void(iir::MultiStage::child_reverse_iterator_t&, iir::DependencyGraphAccesses&,
-                   LoopOrderKind&, LoopOrderKind&, std::deque<iir::MultiStage::SplitIndex>&, int,
+                   iir::LoopOrderKind&, iir::LoopOrderKind&, std::deque<iir::MultiStage::SplitIndex>&, int,
                    int, int&, const std::string&, const std::string&, const Options&)>
 multiStageSplitterDebug() {
 
   return [&](iir::MultiStage::child_reverse_iterator_t& stageIt,
-             iir::DependencyGraphAccesses& graph, LoopOrderKind& userSpecifiedLoopOrder,
-             LoopOrderKind& curLoopOrder, std::deque<iir::MultiStage::SplitIndex>& splitterIndices,
+             iir::DependencyGraphAccesses& graph, iir::LoopOrderKind& userSpecifiedLoopOrder,
+             iir::LoopOrderKind& curLoopOrder, std::deque<iir::MultiStage::SplitIndex>& splitterIndices,
              int stageIndex, int multiStageIndex, int& numSplit, const std::string& StencilName,
              const std::string& PassName, const Options& options) {
     DAWN_ASSERT_MSG(false, "Max-Cut for Multistages is not yet implemented");
@@ -159,7 +159,7 @@ bool PassMultiStageSplitter::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 
   std::function<void(iir::MultiStage::child_reverse_iterator_t&, iir::DependencyGraphAccesses&,
-                     LoopOrderKind&, LoopOrderKind&, std::deque<iir::MultiStage::SplitIndex>&, int,
+                     iir::LoopOrderKind&, iir::LoopOrderKind&, std::deque<iir::MultiStage::SplitIndex>&, int,
                      int, int&, const std::string&, const std::string&, const Options&)>
       multistagesplitter;
 
@@ -192,7 +192,7 @@ bool PassMultiStageSplitter::run(
       auto userSpecifiedLoopOrder = multiStage.getLoopOrder();
 
       // If not proven otherwise, we assume a parralel loop order
-      auto curLoopOrder = LoopOrderKind::LK_Parallel;
+      auto curLoopOrder = iir::LoopOrderKind::LK_Parallel;
 
       // Build the Dependency graph (bottom --> top i.e iterate the stages backwards)
       int stageIndex = multiStage.getChildren().size() - 1;

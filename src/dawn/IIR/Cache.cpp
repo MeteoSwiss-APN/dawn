@@ -12,10 +12,11 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/Cache.h"
+#include "dawn/IIR/Cache.h"
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
+namespace iir {
 
 Cache::Cache(CacheTypeKind type, CacheIOPolicy policy, int fieldAccessID,
              const boost::optional<Interval>& interval, const boost::optional<window>& w)
@@ -74,4 +75,5 @@ bool operator==(const Cache::window& first, const Cache::window& second) {
   return ((first.m_m == second.m_m) && (first.m_p == second.m_p));
 }
 
+} // namespace iir
 } // namespace dawn

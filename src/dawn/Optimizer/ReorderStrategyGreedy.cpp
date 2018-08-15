@@ -30,10 +30,10 @@ namespace dawn {
 /// @brief Check if we can merge the stage into the multi-stage, possibly changing the loop order.
 /// @returns the the enew dependency graphs of the multi-stage (or NULL) and the new loop order
 template <
-    typename ReturnType = std::pair<std::shared_ptr<iir::DependencyGraphAccesses>, LoopOrderKind>>
-ReturnType isMergable(const iir::Stage& stage, LoopOrderKind stageLoopOrder,
+    typename ReturnType = std::pair<std::shared_ptr<iir::DependencyGraphAccesses>, iir::LoopOrderKind>>
+ReturnType isMergable(const iir::Stage& stage, iir::LoopOrderKind stageLoopOrder,
                       const iir::MultiStage& multiStage) {
-  LoopOrderKind multiStageLoopOrder = multiStage.getLoopOrder();
+  iir::LoopOrderKind multiStageLoopOrder = multiStage.getLoopOrder();
   auto multiStageDependencyGraph =
       multiStage.getDependencyGraphOfInterval(stage.getEnclosingExtendedInterval());
 
@@ -55,13 +55,13 @@ ReturnType isMergable(const iir::Stage& stage, LoopOrderKind stageLoopOrder,
   //    E     B  |  B     X     B  |
   //        -----+-----------------+
   //
-  std::vector<LoopOrderKind> possibleLoopOrders;
+  std::vector<iir::LoopOrderKind> possibleLoopOrders;
 
-  if(multiStageLoopOrder == LoopOrderKind::LK_Parallel &&
-     stageLoopOrder == LoopOrderKind::LK_Parallel)
-    possibleLoopOrders = {LoopOrderKind::LK_Parallel, LoopOrderKind::LK_Forward,
-                          LoopOrderKind::LK_Backward};
-  else if(stageLoopOrder == LoopOrderKind::LK_Parallel)
+  if(multiStageLoopOrder == iir::LoopOrderKind::LK_Parallel &&
+     stageLoopOrder == iir::LoopOrderKind::LK_Parallel)
+    possibleLoopOrders = {iir::LoopOrderKind::LK_Parallel, iir::LoopOrderKind::LK_Forward,
+                          iir::LoopOrderKind::LK_Backward};
+  else if(stageLoopOrder == iir::LoopOrderKind::LK_Parallel)
     possibleLoopOrders.push_back(multiStageLoopOrder);
   else
     possibleLoopOrders.push_back(stageLoopOrder);
@@ -98,7 +98,7 @@ ReoderStrategyGreedy::reorder(const std::unique_ptr<iir::Stencil>& stencilPtr) {
 
   const int maxBoundaryExtent = instantiation.getOptimizerContext()->getOptions().MaxHaloPoints;
 
-  auto pushBackNewMultiStage = [&](LoopOrderKind loopOrder) -> void {
+  auto pushBackNewMultiStage = [&](iir::LoopOrderKind loopOrder) -> void {
     newStencil->insertChild(make_unique<iir::MultiStage>(instantiation, loopOrder));
     newNumMultiStages++;
   };
@@ -106,7 +106,7 @@ ReoderStrategyGreedy::reorder(const std::unique_ptr<iir::Stencil>& stencilPtr) {
   for(const auto& multiStagePtr : stencil.getChildren()) {
 
     // First time we encounter this multi-stage, create an empty multi-stage
-    pushBackNewMultiStage(LoopOrderKind::LK_Parallel);
+    pushBackNewMultiStage(iir::LoopOrderKind::LK_Parallel);
 
     for(const auto& stagePtr : multiStagePtr->getChildren()) {
       const iir::Stage& stage = *stagePtr;
@@ -120,7 +120,7 @@ ReoderStrategyGreedy::reorder(const std::unique_ptr<iir::Stencil>& stencilPtr) {
       }
 
       iir::Stencil::StagePosition pos = newStencil->getPositionFromStageIndex(stageIdx);
-      LoopOrderKind stageLoopOrder = multiStagePtr->getLoopOrder();
+      iir::LoopOrderKind stageLoopOrder = multiStagePtr->getLoopOrder();
 
       // Find the first available multi-stage
       bool lastChance = false;
@@ -165,7 +165,7 @@ ReoderStrategyGreedy::reorder(const std::unique_ptr<iir::Stencil>& stencilPtr) {
         // loop order (this will guarantee a success the next check if our stage does not exceed the
         // maximum boundary lines in which case we abort)
         if(pos.MultiStageIndex == newNumMultiStages) {
-          pushBackNewMultiStage(LoopOrderKind::LK_Parallel);
+          pushBackNewMultiStage(iir::LoopOrderKind::LK_Parallel);
           lastChance = true;
         }
       }

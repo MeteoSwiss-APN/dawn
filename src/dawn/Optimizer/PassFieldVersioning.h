@@ -15,7 +15,7 @@
 #ifndef DAWN_OPTIMIZER_PASSFIELDVERSIONING_H
 #define DAWN_OPTIMIZER_PASSFIELDVERSIONING_H
 
-#include "dawn/Optimizer/LoopOrder.h"
+#include "dawn/IIR/LoopOrder.h"
 #include "dawn/Optimizer/Pass.h"
 
 namespace dawn {
@@ -77,7 +77,7 @@ public:
   /// @param stageIdx   @b Lineaiir::DependencyGraphAccesses the stencil
   /// @param stmtIdx    Index of the statement inside the stage
   RCKind fixRaceCondition(const iir::DependencyGraphAccesses* graph, iir::Stencil& stencil,
-                          iir::DoMethod& doMethod, LoopOrderKind loopOrder, int stageIdx,
+                          iir::DoMethod& doMethod, iir::LoopOrderKind loopOrder, int stageIdx,
                           int stmtIdx);
 };
 

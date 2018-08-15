@@ -12,10 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_INTERVAL_H
-#define DAWN_OPTIMIZER_INTERVAL_H
+#ifndef DAWN_IIR_INTERVAL_H
+#define DAWN_IIR_INTERVAL_H
 
-#include "dawn/Optimizer/Extents.h"
+#include "dawn/IIR/Extents.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/HashCombine.h"
 #include <algorithm>
@@ -24,6 +24,7 @@
 #include <vector>
 
 namespace dawn {
+namespace iir {
 
 /// @brief Representation of a vertical interval, given by a lower and upper bound where a bound
 /// is represented by a level and an offset (`bound = level + offset`)
@@ -261,13 +262,14 @@ struct IntervalProperties {
   std::string name_;
 };
 
+} // namespace iir
 } // namespace dawn
 
 namespace std {
 
 template <>
-struct hash<dawn::Interval> {
-  size_t operator()(const dawn::Interval& I) const {
+struct hash<dawn::iir::Interval> {
+  size_t operator()(const dawn::iir::Interval& I) const {
     std::size_t seed = 0;
     dawn::hash_combine(seed, I.lowerLevel() + I.lowerOffset(), I.upperLevel() + I.upperOffset());
     return seed;
@@ -275,9 +277,9 @@ struct hash<dawn::Interval> {
 };
 
 template <>
-struct hash<dawn::IntervalProperties> {
-  size_t operator()(const dawn::IntervalProperties& I) const {
-    return hash<dawn::Interval>()(I.interval_);
+struct hash<dawn::iir::IntervalProperties> {
+  size_t operator()(const dawn::iir::IntervalProperties& I) const {
+    return hash<dawn::iir::Interval>()(I.interval_);
   }
 };
 

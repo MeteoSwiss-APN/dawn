@@ -54,7 +54,7 @@ bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInsta
 
         std::vector<int> AccessIDsToRename;
 
-        for(const std::pair<int, Extents>& readAccess :
+        for(const std::pair<int, iir::Extents>& readAccess :
             stmtAccessesPair->getAccesses()->getReadAccesses()) {
           int AccessID = readAccess.first;
           if(!tochedAccessIDs.count(AccessID))
@@ -62,7 +62,7 @@ bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInsta
         }
 
         // Every write to a field which was has been touched (read/written) will get a new version
-        for(const std::pair<int, Extents>& writeAccess :
+        for(const std::pair<int, iir::Extents>& writeAccess :
             stmtAccessesPair->getAccesses()->getWriteAccesses()) {
 
           int AccessID = writeAccess.first;

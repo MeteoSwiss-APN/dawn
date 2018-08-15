@@ -25,7 +25,7 @@ namespace codegen {
 namespace gt {
 
 ASTStencilBody::ASTStencilBody(const iir::StencilInstantiation* stencilInstantiation,
-                               const std::unordered_set<IntervalProperties>& intervalProperties)
+                               const std::unordered_set<iir::IntervalProperties>& intervalProperties)
     : ASTCodeGenCXX(), instantiation_(stencilInstantiation),
       intervalProperties_(intervalProperties), offsetPrinter_(",", "(", ")"),
       currentFunction_(nullptr), nestingOfStencilFunArgLists_(0) {}

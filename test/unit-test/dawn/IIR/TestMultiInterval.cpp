@@ -12,10 +12,11 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/MultiInterval.h"
+#include "dawn/IIR/MultiInterval.h"
 #include <gtest/gtest.h>
 
 using namespace dawn;
+using namespace iir;
 
 namespace {
 

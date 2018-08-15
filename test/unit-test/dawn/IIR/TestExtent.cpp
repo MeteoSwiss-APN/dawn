@@ -12,11 +12,11 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/Extents.h"
+#include "dawn/IIR/Extents.h"
 #include <gtest/gtest.h>
 
 using namespace dawn;
-
+using namespace iir;
 namespace {
 
 TEST(ExtentsTest, Construction) {
@@ -130,28 +130,28 @@ TEST(ExtentsTest, Stringify) {
 TEST(ExtentsTest, verticalLoopOrder) {
   Extents extents{0, 0, 0, 0, -1, 2};
   EXPECT_TRUE((extents.getVerticalLoopOrderExtent(
-                  LoopOrderKind::LK_Forward, Extents::VerticalLoopOrderDir::VL_CounterLoopOrder,
-                  false)) == (Extent{1, 2}));
+                  iir::LoopOrderKind::LK_Forward,
+                  Extents::VerticalLoopOrderDir::VL_CounterLoopOrder, false)) == (Extent{1, 2}));
   EXPECT_TRUE((extents.getVerticalLoopOrderExtent(
-                  LoopOrderKind::LK_Forward, Extents::VerticalLoopOrderDir::VL_CounterLoopOrder,
-                  true)) == (Extent{0, 2}));
-  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(LoopOrderKind::LK_Forward,
+                  iir::LoopOrderKind::LK_Forward,
+                  Extents::VerticalLoopOrderDir::VL_CounterLoopOrder, true)) == (Extent{0, 2}));
+  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(iir::LoopOrderKind::LK_Forward,
                                                   Extents::VerticalLoopOrderDir::VL_InLoopOrder,
                                                   false)) == (Extent{-1, -1}));
-  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(LoopOrderKind::LK_Forward,
+  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(iir::LoopOrderKind::LK_Forward,
                                                   Extents::VerticalLoopOrderDir::VL_InLoopOrder,
                                                   true)) == (Extent{-1, 0}));
 
   EXPECT_TRUE((extents.getVerticalLoopOrderExtent(
-                  LoopOrderKind::LK_Backward, Extents::VerticalLoopOrderDir::VL_CounterLoopOrder,
-                  false)) == (Extent{-1, -1}));
+                  iir::LoopOrderKind::LK_Backward,
+                  Extents::VerticalLoopOrderDir::VL_CounterLoopOrder, false)) == (Extent{-1, -1}));
   EXPECT_TRUE((extents.getVerticalLoopOrderExtent(
-                  LoopOrderKind::LK_Backward, Extents::VerticalLoopOrderDir::VL_CounterLoopOrder,
-                  true)) == (Extent{-1, 0}));
-  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(LoopOrderKind::LK_Backward,
+                  iir::LoopOrderKind::LK_Backward,
+                  Extents::VerticalLoopOrderDir::VL_CounterLoopOrder, true)) == (Extent{-1, 0}));
+  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(iir::LoopOrderKind::LK_Backward,
                                                   Extents::VerticalLoopOrderDir::VL_InLoopOrder,
                                                   false)) == (Extent{1, 2}));
-  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(LoopOrderKind::LK_Backward,
+  EXPECT_TRUE((extents.getVerticalLoopOrderExtent(iir::LoopOrderKind::LK_Backward,
                                                   Extents::VerticalLoopOrderDir::VL_InLoopOrder,
                                                   true)) == (Extent{0, 2}));
 }

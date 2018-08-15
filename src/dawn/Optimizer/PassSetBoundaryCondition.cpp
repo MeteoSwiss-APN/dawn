@@ -36,8 +36,8 @@ namespace {
 /// @param s A shared ptr to the stencil to be analyzed
 /// @param ID the FieldID of the Field to be analized
 /// @return the full extent of the field in the stencil
-static dawn::Extents analyzeStencilExtents(const std::unique_ptr<iir::Stencil>& s, int fieldID) {
-  Extents fullExtents{0, 0, 0, 0, 0, 0};
+static iir::Extents analyzeStencilExtents(const std::unique_ptr<iir::Stencil>& s, int fieldID) {
+  iir::Extents fullExtents{0, 0, 0, 0, 0, 0};
   iir::Stencil& stencil = *s;
 
   int numStages = stencil.getNumStages();
@@ -46,9 +46,9 @@ static dawn::Extents analyzeStencilExtents(const std::unique_ptr<iir::Stencil>& 
   for(int i = 0; i < numStages; ++i) {
     iir::Stage& stage = *(stencil.getStage(i));
 
-    Extents const& stageExtent = stage.getExtents();
+    iir::Extents const& stageExtent = stage.getExtents();
     for(const auto& fieldPair : stage.getFields()) {
-      const Field& field = fieldPair.second;
+      const iir::Field& field = fieldPair.second;
       fullExtents.merge(field.getExtents());
       fullExtents.add(stageExtent);
     }
@@ -157,7 +157,7 @@ bool PassSetBoundaryCondition::run(
 
   };
 
-  std::unordered_map<int, Extents> dirtyFields;
+  std::unordered_map<int, iir::Extents> dirtyFields;
   std::unordered_map<int, std::shared_ptr<BoundaryConditionDeclStmt>> allBCs;
 
   //  // Fetch all the boundary conditions stored in the instantiation
@@ -185,7 +185,7 @@ bool PassSetBoundaryCondition::run(
 
   auto calculateHaloExtents = [&](std::string fieldname) {
 
-    Extents fullExtent{0, 0, 0, 0, 0, 0};
+    iir::Extents fullExtent{0, 0, 0, 0, 0, 0};
     // Did we already apply a BoundaryCondition for this field?
     // This is the first time we apply a BC to this field, we traverse all stencils that were
     // applied before
@@ -209,8 +209,8 @@ bool PassSetBoundaryCondition::run(
     return fullExtent;
   };
 
-  auto insertExtentsIntoMap = [](int fieldID, Extents extents,
-                                 std::unordered_map<int, Extents>& map) {
+  auto insertExtentsIntoMap = [](int fieldID, iir::Extents extents,
+                                 std::unordered_map<int, iir::Extents>& map) {
     auto fieldExtentPair = map.find(fieldID);
     if(fieldExtentPair == map.end()) {
       map.emplace(fieldID, extents);
@@ -223,7 +223,7 @@ bool PassSetBoundaryCondition::run(
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     iir::Stencil& stencil = *stencilPtr;
     DAWN_LOG(INFO) << "analyzing stencil " << stencilInstantiation->getName();
-    std::unordered_map<int, Extents> stencilDirtyFields;
+    std::unordered_map<int, iir::Extents> stencilDirtyFields;
     stencilDirtyFields.clear();
 
     for(const auto& stmtAccess : iterateIIROver<iir::StatementAccessesPair>(stencil)) {
@@ -259,7 +259,7 @@ bool PassSetBoundaryCondition::run(
                          .c_str());
         }
         // Calculate the extent and add it to the boundary-condition - Extent map
-        Extents fullExtents =
+        iir::Extents fullExtents =
             calculateHaloExtents(stencilInstantiation->getNameFromAccessID(readaccess.first));
         stencilInstantiation->insertBoundaryConditiontoExtentPair(IDtoBCpair->second, fullExtents);
 
