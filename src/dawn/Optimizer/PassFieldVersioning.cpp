@@ -160,14 +160,6 @@ bool PassFieldVersioning::run(const std::shared_ptr<StencilInstantiation>& stenc
       if(IDVersionsPair.first ==
          instantiation_->getAccessIDFromName(
              instantiation_->getOriginalNameFromAccessID(IDVersionsPair.first))) {
-//        std::cout << IDVersionsPair.first
-//                  << " with name: " << instantiation_->getNameFromAccessID(IDVersionsPair.first)
-//                  << " has versions: ";
-//        for(auto versionedID : *(IDVersionsPair.second)) {
-//          std::cout << versionedID << " ";
-//        }
-//        std::cout << std::endl;
-
         for(auto fieldID : *(IDVersionsPair.second)) {
           if(fieldID != IDVersionsPair.first) {
             bool IDhandeled = false;
