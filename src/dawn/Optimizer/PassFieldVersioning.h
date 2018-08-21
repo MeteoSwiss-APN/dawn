@@ -17,7 +17,9 @@
 
 #include "dawn/Optimizer/LoopOrder.h"
 #include "dawn/Optimizer/Pass.h"
-
+// remove this afterwards, just to see if it works
+#include "dawn/Optimizer/StencilInstantiation.h"
+//
 namespace dawn {
 
 class Stencil;
@@ -30,10 +32,30 @@ class DoMethod;
 /// @see fixRaceCondition
 /// @ingroup optimizer
 class PassFieldVersioning : public Pass {
+public:
+  enum class FieldVersionFirstAccessKind { FA_Read, FA_Write, FA_None };
+  enum class FieldVersioningPassMode {FM_CreateVersion, FM_FixAccess};
+
+private:
+  // These 3 should move to IIR since they are used in two passes
+  FieldVersionFirstAccessKind checkReadBeforeWrite(int AccessID,
+                                                   const std::shared_ptr<MultiStage>& mss);
+  std::shared_ptr<Stage> createAssignmentStage(const Interval& interval,
+                                               const std::vector<int>& assignmentIDs,
+                                               const std::vector<int>& assigneeIDs,
+                                               std::shared_ptr<MultiStage> MSS);
+  void addAssignmentToDoMethod(std::unique_ptr<DoMethod>& domethod, int assignmentID,
+                               int assigneeID);
+
+  std::shared_ptr<StencilInstantiation> instantiation_;
+
   int numRenames_;
+  std::vector<std::pair<int, int>> versionedIDoriginalIDs_;
+
+  FieldVersioningPassMode mode_;
 
 public:
-  PassFieldVersioning();
+  PassFieldVersioning(FieldVersioningPassMode mode);
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) override;
@@ -76,6 +98,8 @@ public:
   /// @param stmtIdx    Index of the statement inside the stage
   RCKind fixRaceCondition(const DependencyGraphAccesses* graph, Stencil& stencil,
                           DoMethod& doMethod, LoopOrderKind loopOrder, int stageIdx, int stmtIdx);
+  std::shared_ptr<MultiStage> createAssignmentMS(int assignmentID, int assigneeID,
+                                                 Interval interval);
 };
 
 } // namespace dawn

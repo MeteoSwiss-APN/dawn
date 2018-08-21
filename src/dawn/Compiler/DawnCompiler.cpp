@@ -153,7 +153,8 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   // Setup pass interface
   optimizer->checkAndPushBack<PassInlining>(inlineStrategy);
   optimizer->checkAndPushBack<PassTemporaryFirstAccess>();
-  optimizer->checkAndPushBack<PassFieldVersioning>();
+  optimizer->checkAndPushBack<PassFieldVersioning>(
+      PassFieldVersioning::FieldVersioningPassMode::FM_CreateVersion);
   optimizer->checkAndPushBack<PassSSA>();
   optimizer->checkAndPushBack<PassMultiStageSplitter>(mssSplitStrategy);
   optimizer->checkAndPushBack<PassStageSplitter>();
@@ -169,6 +170,8 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   optimizer->checkAndPushBack<PassTemporaryToStencilFunction>();
   optimizer->checkAndPushBack<PassSetNonTempCaches>();
   optimizer->checkAndPushBack<PassSetCaches>();
+  optimizer->checkAndPushBack<PassFieldVersioning>(
+      PassFieldVersioning::FieldVersioningPassMode::FM_FixAccess);
   optimizer->checkAndPushBack<PassComputeStageExtents>();
   optimizer->checkAndPushBack<PassSetBoundaryCondition>();
   optimizer->checkAndPushBack<PassDataLocalityMetric>();
