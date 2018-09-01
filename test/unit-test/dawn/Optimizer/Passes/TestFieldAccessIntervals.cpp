@@ -169,7 +169,7 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_05) {
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   EXPECT_EQ(stencil->getNumStages(), 2);
-  EXPECT_EQ(stencil->getStage(0)->getExtents(), (iir::Extents{-1, 1, -1, 1, -1, 0}));
+  EXPECT_EQ(stencil->getStage(0)->getExtents(), (iir::Extents{-1, 1, -1, 1, 0, 0}));
   EXPECT_EQ(stencil->getStage(1)->getExtents(), (iir::Extents{0, 0, 0, 0, 0, 0}));
 
   for(auto fieldPair : (*stencil->childrenBegin())->getFields()) {

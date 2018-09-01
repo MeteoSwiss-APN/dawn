@@ -116,6 +116,7 @@ bool PassFieldVersioning::run(
         iir::Stage& stage = (**stageRit);
         iir::DoMethod& doMethod = stage.getSingleDoMethod();
 
+        bool updateStage = false;
         // Iterate statements bottom -> top
         for(int stmtIndex = doMethod.getChildren().size() - 1; stmtIndex >= 0; --stmtIndex) {
           oldGraph = newGraph->clone();
@@ -135,7 +136,11 @@ bool PassFieldVersioning::run(
             // is invalid)
             newGraph = oldGraph;
             newGraph->insertStatementAccessesPair(stmtAccessesPair);
+            updateStage = true;
           }
+        }
+        if(updateStage) {
+          stage.update(iir::NodeUpdateType::levelAndTreeAbove);
         }
       }
       stageIdx--;

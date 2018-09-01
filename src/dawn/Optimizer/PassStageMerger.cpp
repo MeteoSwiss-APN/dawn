@@ -131,6 +131,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
                   if(MergeStagesOfStencil) {
                     candidateStage.appendDoMethod(*curDoMethodIt, *candidateDoMethodIt,
                                                   newDepGraph);
+                    candidateStage.update(iir::NodeUpdateType::level);
                     mergedDoMethod = true;
 
                     // We moved one Do-Method away and thus broke our full axis
@@ -143,6 +144,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
               // Interval does not exists in `candidateStage`, just insert our DoMethod
               if(MergeDoMethodsOfStencil && MergeDoMethodsOfStage) {
                 candidateStage.addDoMethod(*curDoMethodIt);
+                candidateStage.update(iir::NodeUpdateType::level);
                 mergedDoMethod = true;
                 break;
               }
@@ -162,7 +164,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
         }
 
         if(updateFields)
-          curStage.update();
+          curStage.update(iir::NodeUpdateType::level);
         curStageIt++;
       }
 

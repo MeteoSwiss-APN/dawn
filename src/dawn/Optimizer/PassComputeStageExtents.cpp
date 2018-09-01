@@ -12,6 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/Optimizer/OptimizerContext.h"
@@ -73,10 +74,17 @@ bool PassComputeStageExtents::run(
           // if found, add the (read) extent of the field as an extent of the stage
           iir::Extents ext = toStage.getExtents();
           ext.merge(fieldExtent);
+          // this pass is computing the redundant computation in the horizontal, therefore we
+          // nullify the vertical component of the stage
+          ext[2] = iir::Extent{0, 0};
           toStage.setExtents(ext);
         }
       }
     }
+  }
+
+  for(const auto& MS : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
+    MS->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
 
   return true;

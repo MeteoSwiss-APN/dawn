@@ -283,7 +283,9 @@ boost::optional<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() co
   return interval;
 }
 
-std::unordered_map<int, Field> MultiStage::getFields() const {
+// TODO Do not use this
+
+std::unordered_map<int, Field> MultiStage::computeFieldsOnTheFly() const {
   std::unordered_map<int, Field> fields;
 
   for(const auto& stagePtr : children_) {
@@ -293,10 +295,12 @@ std::unordered_map<int, Field> MultiStage::getFields() const {
   return fields;
 }
 
-void MultiStage::update() {
+const std::unordered_map<int, Field>& MultiStage::getFields() const { return fields_; }
+
+void MultiStage::updateFromChildren() {
   fields_.clear();
   for(const auto& stagePtr : children_) {
-    mergeFields(stagePtr->getFields(), fields_);
+    mergeFields(stagePtr->getFields(), fields_, boost::make_optional(stagePtr->getExtents()));
   }
 }
 
@@ -311,7 +315,7 @@ void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
                                doMethod.getChildren());
     }
 
-    stage.update();
+    stage.update(NodeUpdateType::levelAndTreeAbove);
   }
 }
 

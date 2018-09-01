@@ -29,8 +29,8 @@ namespace dawn {
 
 /// @brief Check if we can merge the stage into the multi-stage, possibly changing the loop order.
 /// @returns the the enew dependency graphs of the multi-stage (or NULL) and the new loop order
-template <
-    typename ReturnType = std::pair<std::shared_ptr<iir::DependencyGraphAccesses>, iir::LoopOrderKind>>
+template <typename ReturnType =
+              std::pair<std::shared_ptr<iir::DependencyGraphAccesses>, iir::LoopOrderKind>>
 ReturnType isMergable(const iir::Stage& stage, iir::LoopOrderKind stageLoopOrder,
                       const iir::MultiStage& multiStage) {
   iir::LoopOrderKind multiStageLoopOrder = multiStage.getLoopOrder();
@@ -183,7 +183,7 @@ ReoderStrategyGreedy::reorder(const std::unique_ptr<iir::Stencil>& stencilPtr) {
       it++;
   }
 
-  return std::move(newStencil);
+  return newStencil;
 }
 
 } // namespace dawn

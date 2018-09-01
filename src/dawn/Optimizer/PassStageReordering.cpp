@@ -54,7 +54,10 @@ bool PassStageReordering::run(
 
     // TODO should we have Iterators so to prevent unique_ptr swaps
     auto newStencil = strategy->reorder(stencilPtr);
+
     stencilInstantiation->getIIR()->replace(stencilPtr, newStencil, stencilInstantiation->getIIR());
+
+    stencilPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
 
     if(!stencilPtr)
       return false;

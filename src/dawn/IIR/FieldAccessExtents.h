@@ -45,6 +45,8 @@ public:
   void mergeWriteExtents(Extents const& extents);
   void mergeReadExtents(boost::optional<Extents> const& extents);
   void mergeWriteExtents(boost::optional<Extents> const& extents);
+  void setReadExtents(Extents const& extents);
+  void setWriteExtents(Extents const& extents);
 
 private:
   void updateTotalExtents();

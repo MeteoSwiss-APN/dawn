@@ -175,7 +175,8 @@ public:
   }
 };
 
-void Stage::update() {
+void Stage::updateLevel() {
+
   fields_.clear();
   globalVariables_.clear();
   globalVariablesFromStencilFunctionCalls_.clear();
@@ -280,8 +281,6 @@ void Stage::update() {
       fields_.at(accessPair.first).mergeReadExtents(accessPair.second);
     }
   }
-  // TODO
-  //  getParent()->update();
 }
 
 bool Stage::hasGlobalVariables() const {
@@ -303,7 +302,6 @@ void Stage::addDoMethod(const DoMethodSmartPtr_t& doMethod) {
       }) == childrenEnd(), "Do-Method with given interval already exists!");
 
   insertChild(doMethod->clone());
-  update();
 }
 
 void Stage::appendDoMethod(DoMethodSmartPtr_t& from, DoMethodSmartPtr_t& to,
@@ -316,7 +314,6 @@ void Stage::appendDoMethod(DoMethodSmartPtr_t& from, DoMethodSmartPtr_t& to,
   to->setDependencyGraph(dependencyGraph);
   to->insertChildren(to->childrenEnd(), std::make_move_iterator(from->childrenBegin()),
                      std::make_move_iterator(from->childrenEnd()));
-  update();
 }
 
 LoopOrderKind Stage::getLoopOrder() const { return multiStage_->getLoopOrder(); }
@@ -357,7 +354,7 @@ Stage::split(std::deque<int>& splitterIndices,
     //    for(std::size_t idx = prevSplitterIndex; idx < nextSplitterIndex; ++idx)
 
     // Update the fields of the new stage
-    newStage.update();
+    newStage.update(iir::NodeUpdateType::level);
 
     prevSplitterIndex = nextSplitterIndex;
   }

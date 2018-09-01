@@ -385,7 +385,7 @@ public:
     computeAccesses(instantiation_, doMethod.getChildren());
 
     // Now, we compute the fields of each stage (this will give us the IO-Policy of the fields)
-    stage->update();
+    stage->update(iir::NodeUpdateType::level);
 
     // Put the stage into a separate MultiStage ...
     multiStage->insertChild(std::move(stage));
@@ -614,6 +614,9 @@ StencilInstantiation::StencilInstantiation(::dawn::OptimizerContext* context,
   if(context_->getOptions().ReportAccesses)
     reportAccesses();
 
+  for(const auto& MS : iterateIIROver<MultiStage>(*IIR_)) {
+    MS->update(NodeUpdateType::levelAndTreeAbove);
+  }
   DAWN_LOG(INFO) << "Done initializing StencilInstantiation";
 }
 
@@ -828,7 +831,7 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
     }
 
     // Updat the fields of the stage
-    stage.update();
+    stage.update(iir::NodeUpdateType::level);
   }
 
   return newAccessID;

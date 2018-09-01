@@ -53,6 +53,12 @@ bool PassManager::runPassOnStecilInstantiation(
 
   DAWN_ASSERT(instantiation->getIIR()->checkTreeConsistency());
 
+#ifndef NDEBUG
+  for(const auto& stencil : instantiation->getIIR()->getChildren()) {
+    DAWN_ASSERT(stencil->compareDerivedInfo());
+  }
+#endif
+
   DAWN_LOG(INFO) << "Done with " << pass->getName() << " : Success";
   return true;
 }

@@ -198,7 +198,7 @@ private:
     // Add the single do method to the new Stage
     assignmentStage->clearChildren();
     assignmentStage->addDoMethod(domethod);
-    assignmentStage->update();
+    assignmentStage->update(iir::NodeUpdateType::level);
 
     return assignmentStage;
   }

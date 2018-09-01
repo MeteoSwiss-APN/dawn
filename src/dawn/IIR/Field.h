@@ -37,8 +37,11 @@ private:
   int accessID_;               ///< Unique AccessID of the field
   IntendKind intend_;          ///< Intended usage
   FieldAccessExtents extents_; ///< Accumulated read and write extent of the field
-  Interval interval_;          ///< Enclosing Interval from the iteration space
-                               ///  where the Field has been accessed
+  FieldAccessExtents
+      extentsRB_; ///< Accumulated read and write extent of the field, extended by the
+  /// redundant computation of a block
+  Interval interval_; ///< Enclosing Interval from the iteration space
+                      ///  where the Field has been accessed
 public:
   Field(Field&& f) = default;
   Field(Field const& f) = default;
@@ -48,65 +51,106 @@ public:
   Field(int accessID, IntendKind intend, boost::optional<Extents> const& readExtents,
         boost::optional<Extents> const& writeExtents, Interval const& interval)
       : accessID_(accessID), intend_(intend),
-        extents_(FieldAccessExtents(readExtents, writeExtents)), interval_(interval) {}
+        extents_(FieldAccessExtents(readExtents, writeExtents)),
+        extentsRB_(FieldAccessExtents(readExtents, writeExtents)), interval_(interval) {}
 
   Field(int accessID, IntendKind intend, boost::optional<Extents>&& readExtents,
         boost::optional<Extents>&& writeExtents, Interval&& interval)
       : accessID_(accessID), intend_(intend),
         extents_(FieldAccessExtents(std::move(readExtents), std::move(writeExtents))),
-        interval_(std::move(interval)) {}
+        extentsRB_(extents_), interval_(std::move(interval)) {}
 
   /// @name Operators
   /// @{
-  bool operator==(const Field& other) const {
+  inline bool operator==(const Field& other) const {
     return (accessID_ == other.accessID_ && intend_ == other.intend_);
   }
-  bool operator!=(const Field& other) const { return !(*this == other); }
-  bool operator<(const Field& other) const {
+  inline bool operator!=(const Field& other) const { return !(*this == other); }
+  inline bool operator<(const Field& other) const {
     return (intend_ < other.intend_ || (intend_ == other.intend_ && accessID_ < other.accessID_));
   }
   /// @}
 
   /// @brief getters
   /// @{
-  Interval const& getInterval() const { return interval_; }
+  inline Interval const& getInterval() const { return interval_; }
 
   // Enclosing interval where accesses where recorded,
   /// i.e. interval_.extend(Extent)
-  Interval computeAccessedInterval() const {
-    Interval accessedInterval = interval_;
-    accessedInterval = accessedInterval.extendInterval(getExtents());
-    return accessedInterval;
+  Interval computeAccessedInterval() const;
+
+  inline boost::optional<Extents> const& getReadExtents() const {
+    return extents_.getReadExtents();
+  }
+  inline boost::optional<Extents> const& getWriteExtents() const {
+    return extents_.getWriteExtents();
   }
 
-  boost::optional<Extents> const& getReadExtents() const { return extents_.getReadExtents(); }
-  boost::optional<Extents> const& getWriteExtents() const { return extents_.getWriteExtents(); }
+  inline boost::optional<Extents> const& getReadExtentsRB() const {
+    return extentsRB_.getReadExtents();
+  }
+  inline boost::optional<Extents> const& getWriteExtentsRB() const {
+    return extentsRB_.getWriteExtents();
+  }
 
-  Extents const& getExtents() const { return extents_.getExtents(); }
+  inline Extents const& getExtents() const { return extents_.getExtents(); }
+  inline Extents const& getExtentsRB() const { return extentsRB_.getExtents(); }
 
-  IntendKind getIntend() const { return intend_; }
-  int getAccessID() const { return accessID_; }
+  inline IntendKind getIntend() const { return intend_; }
+  inline int getAccessID() const { return accessID_; }
   /// @}
 
   /// @brief setters
   /// @{
-  void setIntend(IntendKind intend) { intend_ = intend; }
+  inline void setIntend(IntendKind intend) { intend_ = intend; }
   /// @}
 
-  void mergeReadExtents(Extents const& extents) { extents_.mergeReadExtents(extents); }
-  void mergeWriteExtents(Extents const& extents) { extents_.mergeWriteExtents(extents); }
-  void mergeReadExtents(boost::optional<Extents> const& extents) {
+  inline void mergeReadExtents(Extents const& extents) { extents_.mergeReadExtents(extents); }
+  inline void mergeWriteExtents(Extents const& extents) { extents_.mergeWriteExtents(extents); }
+  inline void mergeReadExtents(boost::optional<Extents> const& extents) {
     extents_.mergeReadExtents(extents);
   }
-  void mergeWriteExtents(boost::optional<Extents> const& extents) {
+  inline void mergeWriteExtents(boost::optional<Extents> const& extents) {
     extents_.mergeWriteExtents(extents);
   }
 
-  void extendInterval(Interval const& interval) { interval_.merge(interval); }
+  inline void setReadExtentsRB(Extents const& extents) { extentsRB_.setReadExtents(extents); }
+  inline void setWriteExtentsRB(Extents const& extents) { extentsRB_.setWriteExtents(extents); }
+  inline void setReadExtentsRB(boost::optional<Extents> const& extents) {
+    if(extents.is_initialized()) {
+      extentsRB_.setReadExtents(*extents);
+    }
+  }
+  inline void setWriteExtentsRB(boost::optional<Extents> const& extents) {
+    if(extents.is_initialized()) {
+      extentsRB_.setWriteExtents(*extents);
+    }
+  }
+
+  inline void mergeReadExtentsRB(Extents const& extents) { extentsRB_.mergeReadExtents(extents); }
+  inline void mergeWriteExtentsRB(Extents const& extents) { extentsRB_.mergeWriteExtents(extents); }
+
+  inline void mergeReadExtentsRB(boost::optional<Extents> const& extents) {
+    extentsRB_.mergeReadExtents(extents);
+  }
+  inline void mergeWriteExtentsRB(boost::optional<Extents> const& extents) {
+    extentsRB_.mergeWriteExtents(extents);
+  }
+  //  inline void expandReadExtents(Extents const& extents) { extents_.expandReadExtents(extents); }
+  //  inline void expandWriteExtents(Extents const& extents) { extents_.expandWriteExtents(extents);
+  //  }
+  //  inline void expandReadExtents(boost::optional<Extents> const& extents) {
+  //    extents_.expandReadExtents(extents);
+  //  }
+  //  inline void expandWriteExtents(boost::optional<Extents> const& extents) {
+  //    extents_.expandWriteExtents(extents);
+  //  }
+  inline void extendInterval(Interval const& interval) { interval_.merge(interval); }
 };
 
 void mergeFields(std::unordered_map<int, Field> const& sFields,
-                 std::unordered_map<int, Field>& dFields);
+                 std::unordered_map<int, Field>& dFields,
+                 boost::optional<Extents> baseExtents = boost::optional<Extents>());
 
 } // namespace iir
 } // namespace dawn

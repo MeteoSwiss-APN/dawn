@@ -17,26 +17,59 @@
 namespace dawn {
 namespace iir {
 
-void mergeFields(std::unordered_map<int, Field> const& sFields,
-                 std::unordered_map<int, Field>& dFields) {
-  for(const auto& fieldPair : sFields) {
-    const Field& field = fieldPair.second;
-    auto it = dFields.find(field.getAccessID());
-    if(it != dFields.end()) {
-      // Adjust the Intend
-      if(it->second.getIntend() == Field::IK_Input && field.getIntend() == Field::IK_Output)
-        it->second.setIntend(Field::IK_InputOutput);
-      else if(it->second.getIntend() == Field::IK_Output && field.getIntend() == Field::IK_Input)
-        it->second.setIntend(Field::IK_InputOutput);
-
-      // Merge the Extent
-      it->second.mergeReadExtents(field.getReadExtents());
-      it->second.mergeWriteExtents(field.getWriteExtents());
-      it->second.extendInterval(field.getInterval());
-    } else
-      dFields.emplace(field.getAccessID(), field);
-  }
+Interval Field::computeAccessedInterval() const {
+  Interval accessedInterval = interval_;
+  accessedInterval = accessedInterval.extendInterval(getExtents());
+  return accessedInterval;
 }
 
+void mergeFields(std::unordered_map<int, Field> const& sFields,
+                 std::unordered_map<int, Field>& dFields, boost::optional<Extents> baseExtents) {
+
+  boost::optional<Extents> baseHoriExtents = baseExtents;
+  if(baseExtents.is_initialized()) {
+    (*baseHoriExtents)[2].Minus = 0;
+    (*baseHoriExtents)[2].Plus = 0;
+  }
+  for(const auto& fieldPair : sFields) {
+    Field sField = fieldPair.second;
+
+    auto readExtentsRB = sField.getReadExtents();
+    if(readExtentsRB.is_initialized() && baseHoriExtents.is_initialized()) {
+      readExtentsRB->expand(*baseHoriExtents);
+      sField.setReadExtentsRB(readExtentsRB);
+    }
+
+    auto writeExtentsRB = sField.getWriteExtents();
+    if(writeExtentsRB.is_initialized() && baseHoriExtents.is_initialized()) {
+      writeExtentsRB->expand(*baseHoriExtents);
+      sField.setWriteExtentsRB(writeExtentsRB);
+    }
+
+    auto it = dFields.find(sField.getAccessID());
+    if(it != dFields.end()) {
+      // Adjust the Intend
+      if(it->second.getIntend() == Field::IK_Input && sField.getIntend() == Field::IK_Output)
+        it->second.setIntend(Field::IK_InputOutput);
+      else if(it->second.getIntend() == Field::IK_Output && sField.getIntend() == Field::IK_Input)
+        it->second.setIntend(Field::IK_InputOutput);
+
+      // field accounting for extents of the accesses plus the base extent (i.e. normally redundant
+      // computations of the stages)
+
+      // Merge the Extent
+      it->second.mergeReadExtentsRB(sField.getReadExtentsRB());
+      it->second.mergeWriteExtentsRB(sField.getWriteExtentsRB());
+
+      it->second.mergeReadExtents(sField.getReadExtents());
+      it->second.mergeWriteExtents(sField.getWriteExtents());
+      it->second.extendInterval(sField.getInterval());
+    } else {
+
+      // add the baseExtent of the field (i.e. normally redundant computations of a stage)
+      dFields.emplace(sField.getAccessID(), sField);
+    }
+  }
+}
 } // namespace iir
 } // namespace dawn

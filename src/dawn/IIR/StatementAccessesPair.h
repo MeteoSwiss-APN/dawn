@@ -59,6 +59,9 @@ class StatementAccessesPair : public IIRNode<DoMethod, StatementAccessesPair, vo
 public:
   static constexpr const char* name = "StatementAccessesPair";
 
+  // TODO no need to have this with an SFINAE
+  inline virtual void updateFromChildren() override {}
+
   // TODO implement a print method per IIRNode and make the dump() use it
   explicit StatementAccessesPair(const std::shared_ptr<Statement>& statement);
 

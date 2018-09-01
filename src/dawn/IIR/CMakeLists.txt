@@ -48,6 +48,8 @@ yoda_add_library(
           MultiInterval.h
           MultiStage.cpp 
           MultiStage.h
+          NodeUpdateType.cpp
+          NodeUpdateType.h
           Stage.cpp
           Stage.h
           StatementAccessesPair.cpp

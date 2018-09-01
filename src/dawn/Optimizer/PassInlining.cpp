@@ -501,7 +501,10 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
       }
     }
 
-    stage.update();
+    stage.update(iir::NodeUpdateType::level);
+  }
+  for(const auto& MSPtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {
+    MSPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
   return true;
 }

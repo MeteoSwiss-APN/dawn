@@ -12,6 +12,9 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/IIR/IIR.h"
+#include "dawn/IIR/Stencil.h"
+#include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/Accesses.h"

@@ -94,6 +94,8 @@ public:
   /// mergeWithDoInterval is true
   boost::optional<Interval> computeEnclosingAccessInterval(const int accessID,
                                                            const bool mergeWithDoInterval) const;
+
+  inline virtual void updateFromChildren() override {}
 };
 
 } // namespace iir

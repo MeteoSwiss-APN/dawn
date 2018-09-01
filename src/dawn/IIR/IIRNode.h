@@ -17,6 +17,7 @@
 
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Unreachable.h"
+#include "dawn/IIR/NodeUpdateType.h"
 #include <vector>
 #include <memory>
 #include <type_traits>
@@ -50,6 +51,7 @@ template <typename Parent, typename NodeType, typename Child,
 class IIRNode {
 
 protected:
+  virtual ~IIRNode() = default;
   IIRNode() = default;
   IIRNode(IIRNode&&) = default;
 
@@ -62,6 +64,7 @@ protected:
   Container<SmartPtr<Child>> children_;
 
 public:
+  using ParentType = Parent;
   using ChildType = Child;
   using ChildSmartPtrType = SmartPtr<Child>;
   using ChildrenContainer = Container<SmartPtr<Child>>;
@@ -107,6 +110,7 @@ public:
 
     if(!children_.empty()) {
       setChildParent<Parent, Child>(children_.back());
+      updateFromChildrenRec<NodeType>();
     }
 
     return it_;
@@ -118,6 +122,7 @@ public:
 
     if(!children_.empty()) {
       setChildParent<Parent, Child>(children_.back());
+      updateFromChildrenRec<NodeType>();
     }
     return res;
   }
@@ -146,10 +151,14 @@ public:
 
   inline bool checkTreeConsistency() const { return checkTreeConsistencyImpl<Child>(); }
 
+  virtual void updateFromChildren() {}
+
   inline const std::unique_ptr<Parent>& getParent() {
     DAWN_ASSERT(parent_);
     return *parent_;
   }
+
+  inline const std::unique_ptr<Parent>* getParentPtr() { return parent_; }
 
   inline void setParent(const std::unique_ptr<Parent>& p) { parent_ = &p; }
 
@@ -211,6 +220,7 @@ public:
       const std::unique_ptr<TChild>& child,
       typename std::enable_if<!std::is_void<TParent>::value &&
                               !is_child_void<std::unique_ptr<TChild>>::value>::type* = 0) {
+
     static_assert(std::is_same<TParent, Parent>::value,
                   "The template TParent type of this function should be == Parent. The function is "
                   "templated only for syntax specialization using SFINAE");
@@ -285,6 +295,42 @@ public:
     return *(children_.begin());
   }
 
+  template <typename TNodeType>
+  inline void updateFromChildrenRec(
+      typename std::enable_if<std::is_void<typename TNodeType::ParentType>::value>::type* = 0) {
+
+    static_cast<NodeType*>(this)->updateFromChildren();
+  }
+
+  template <typename TNodeType>
+  inline void updateFromChildrenRec(
+      typename std::enable_if<!std::is_void<typename TNodeType::ParentType>::value>::type* = 0) {
+
+    static_cast<NodeType*>(this)->updateFromChildren();
+
+    auto parentPtr = getParentPtr();
+    if(parentPtr) {
+      (*parentPtr)->template updateFromChildrenRec<typename TNodeType::ParentType>();
+    }
+  }
+
+  void update(NodeUpdateType updateType) {
+    if(impl::updateLevel(updateType)) {
+      static_cast<NodeType*>(this)->updateLevel();
+      if(!impl::updateTreeAbove(updateType)) {
+        static_cast<NodeType*>(this)->updateFromChildren();
+      }
+    }
+    if(impl::updateTreeAbove(updateType)) {
+      updateFromChildrenRec<NodeType>();
+    }
+    if(impl::updateTreeBelow(updateType)) {
+      dawn_unreachable("node update type tree below not supported");
+    }
+  }
+
+  virtual void updateLevel() {}
+
 private:
   template <typename TChild>
   void cloneChildrenImpl(const IIRNode& other,
@@ -346,9 +392,7 @@ private:
                        typename std::enable_if<!std::is_void<TParent>::value>::type* = 0) {
     PROTECT_TEMPLATE(TParent, Parent)
     children_.push_back(std::move(child));
-
-    const auto& lastChild = children_.back();
-    setChildParent<Parent>(lastChild);
+    repairTreeOfChildren();
   }
 
   template <typename TParent>
@@ -358,10 +402,7 @@ private:
     PROTECT_TEMPLATE(TParent, Parent)
     auto it = children_.insert(pos, std::move(child));
 
-    if(!children_.empty()) {
-      const auto& lastChild = children_.back();
-      setChildParent<Parent>(lastChild);
-    }
+    repairTreeOfChildren();
     return it;
   }
 
@@ -373,14 +414,32 @@ private:
 
     auto newfirst = children_.insert(pos, first, last);
 
-    // setting recursively the children parents is perform on all the siblings of a child, therefore
-    // here we only need to do it on one child
-    if(!children_.empty()) {
-      const auto& lastChild = children_.back();
-      setChildParent<Parent>(lastChild);
+    repairTreeOfChildren();
+    return newfirst;
+  }
+
+  void repairTreeOfChildren(const std::unique_ptr<NodeType>& p) {
+    for(const auto& sibling : children_) {
+      // TODO update
+      sibling->setParent(p);
+
+      if(!sibling->getChildren().empty()) {
+        const auto& lastSibling = sibling->getChildren().back();
+        sibling->template setChildParent<NodeType>(lastSibling);
+      }
     }
 
-    return newfirst;
+    updateFromChildrenRec<NodeType>();
+  }
+
+  void repairTreeOfChildren() {
+    // setting recursively the children parents is performed on all the siblings of a child,
+    // therefore
+    // here we only need to do it on one child
+    const auto& lastChild = children_.back();
+    setChildParent<Parent>(lastChild);
+
+    updateFromChildrenRec<NodeType>();
   }
 
   template <typename TParent, typename Iterator, typename TChildParent>
@@ -394,14 +453,7 @@ private:
 
     auto newfirst = children_.insert(pos, first, last);
 
-    for(const auto& sibling : children_) {
-      sibling->setParent(p);
-
-      if(!sibling->getChildren().empty()) {
-        const auto& lastSibling = sibling->getChildren().back();
-        sibling->template setChildParent<TChildParent>(lastSibling);
-      }
-    }
+    repairTreeOfChildren(p);
 
     return newfirst;
   }
@@ -415,14 +467,7 @@ private:
     PROTECT_TEMPLATE(TParent, Parent)
     children_.push_back(std::move(child));
 
-    for(const auto& sibling : children_) {
-      sibling->setParent(p);
-
-      if(!sibling->getChildren().empty()) {
-        const auto& lastSibling = sibling->getChildren().back();
-        sibling->template setChildParent<NodeType>(lastSibling);
-      }
-    }
+    repairTreeOfChildren(p);
   }
 
   template <typename TParent>
@@ -435,6 +480,8 @@ private:
     (it)->swap(withNewChild);
     inputChild->setParent(*ptr);
     setChildParent<Parent, Child>(inputChild);
+
+    updateFromChildrenRec<NodeType>();
   }
 
   template <typename TParent>
@@ -452,11 +499,12 @@ private:
     inputChild
         ->template setChildrenParent<typename getChildType<std::unique_ptr<Child>>::type::type>(
             inputChild);
+
+    updateFromChildrenRec<NodeType>();
   }
 
   template <typename TChild>
   void printTreeImpl(typename std::enable_if<!std::is_void<TChild>::value>::type* = 0) {
-    std::cout << "  NAME " << static_cast<const NodeType*>(this)->name << " " << this << std::endl;
     for(const auto& child : getChildren()) {
       if(child->parentIsSet())
         std::cout << "&child : " << &child << "  child.get() : " << child.get()

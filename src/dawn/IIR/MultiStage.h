@@ -83,7 +83,7 @@ public:
   /// @brief Set the loop order
   void setLoopOrder(LoopOrderKind loopOrder) { loopOrder_ = loopOrder; }
 
-  void update();
+  virtual void updateFromChildren() override;
 
   /// @brief Index containing the information for splitting MultiStages
   ///
@@ -138,7 +138,9 @@ public:
   Interval getEnclosingInterval() const;
 
   /// @brief Get the pair <AccessID, field> for the fields used within the multi-stage
-  std::unordered_map<int, Field> getFields() const;
+  const std::unordered_map<int, Field>& getFields() const;
+
+  std::unordered_map<int, Field> computeFieldsOnTheFly() const;
 
   /// @brief Get the enclosing interval of all access to temporaries
   boost::optional<Interval> getEnclosingAccessIntervalTemporaries() const;

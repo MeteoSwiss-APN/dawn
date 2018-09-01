@@ -531,7 +531,7 @@ bool PassTemporaryToStencilFunction::run(
           }
         }
         if(isATmpReplaced) {
-          stagePtr->update();
+          stagePtr->update(iir::NodeUpdateType::level);
         }
       }
 
@@ -555,6 +555,9 @@ bool PassTemporaryToStencilFunction::run(
     for(const auto& multiStage : stencilPtr->getChildren()) {
       multiStage->childrenEraseIf(
           [](const std::unique_ptr<iir::Stage>& s) -> bool { return s->isEmptyOrNullStmt(); });
+    }
+    for(const auto& multiStage : stencilPtr->getChildren()) {
+      multiStage->update(iir::NodeUpdateType::levelAndTreeAbove);
     }
   }
 

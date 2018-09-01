@@ -48,7 +48,10 @@ class Stencil : public IIRNode<IIR, Stencil, MultiStage, impl::StdList> {
   /// Dependency graph of the stages of this stencil
   std::shared_ptr<DependencyGraphStage> stageDependencyGraph_;
 
+  std::unordered_map<int, Field> fields_;
+
 public:
+  void prepre();
   static constexpr const char* name = "Stencil";
 
   using MultiStageSmartPtr_t = child_smartptr_t<MultiStage>;
@@ -273,7 +276,13 @@ public:
   std::unordered_map<int, Extents> const computeEnclosingAccessExtents() const;
 
   /// @brief Get the pair <AccessID, field> for the fields used within the multi-stage
-  std::unordered_map<int, Field> getFields2() const;
+  const std::unordered_map<int, Field>& getFields2() const { return fields_; }
+
+  std::unordered_map<int, Field> computeFieldsOnTheFly() const;
+
+  virtual void updateFromChildren() override;
+
+  bool compareDerivedInfo() const;
 
 private:
   void forEachStatementAccessesPairImpl(

@@ -12,7 +12,26 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/IIR/IIRNode.h"
+#ifndef DAWN_IIR_NODEUPDATETYPE_H
+#define DAWN_IIR_NODEUPDATETYPE_H
 
 namespace dawn {
-namespace iir {} // namespace dawn
+namespace iir {
+
+enum class NodeUpdateType : int {
+  treeAbove = 2,
+  levelAndTreeAbove = 1,
+  level = 0,
+  levelAndTreeBelow = -1,
+  treeBelow = -2
+};
+
+namespace impl {
+bool updateLevel(NodeUpdateType updateType);
+bool updateTreeAbove(NodeUpdateType updateType);
+bool updateTreeBelow(NodeUpdateType updateType);
+} // namespace impl
+} // namespace iir
+} // namespace dawn
+
+#endif

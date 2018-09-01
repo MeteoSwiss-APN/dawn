@@ -107,12 +107,16 @@ bool PassStageSplitter::run(
         } else {
           DAWN_ASSERT(graphs.size() == 1);
           doMethod.setDependencyGraph(graphs.back());
-          stage.update();
+          stage.update(iir::NodeUpdateType::level);
           ++stageIt;
         }
       }
 
       multiStageIndex += 1;
+    }
+
+    for(const auto& multiStage : stencil->getChildren()) {
+      multiStage->update(iir::NodeUpdateType::levelAndTreeAbove);
     }
   }
 

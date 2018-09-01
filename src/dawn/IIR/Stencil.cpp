@@ -96,6 +96,13 @@ bool Stencil::StatementPosition::inSameDoMethod(const Stencil::StatementPosition
   return StagePos == other.StagePos && DoMethodIndex == other.DoMethodIndex;
 }
 
+void Stencil::updateFromChildren() {
+  fields_.clear();
+  for(const auto& MSPtr : children_) {
+    mergeFields(MSPtr->getFields(), fields_);
+  }
+}
+
 bool Stencil::Lifetime::overlaps(const Stencil::Lifetime& other) const {
   // Note: same stage but different Do-Method are treated as overlapping!
 
@@ -208,7 +215,7 @@ void Stencil::forEachStatementAccessesPairImpl(
       func(doMethodPtr->getChildren());
 
     if(updateFields)
-      stage->update();
+      stage->update(iir::NodeUpdateType::level);
   }
 }
 
@@ -222,14 +229,14 @@ void Stencil::updateFields() { updateFieldsImpl(0, getNumStages()); }
 
 void Stencil::updateFieldsImpl(int startStageIdx, int endStageIdx) {
   for(int stageIdx = startStageIdx; stageIdx < endStageIdx; ++stageIdx)
-    getStage(stageIdx)->update();
+    getStage(stageIdx)->update(iir::NodeUpdateType::level);
 }
 
-std::unordered_map<int, Field> Stencil::getFields2() const {
+std::unordered_map<int, Field> Stencil::computeFieldsOnTheFly() const {
   std::unordered_map<int, Field> fields;
 
   for(const auto& mssPtr : children_) {
-    for(const auto& fieldPair : mssPtr->getFields()) {
+    for(const auto& fieldPair : mssPtr->computeFieldsOnTheFly()) {
       const Field& field = fieldPair.second;
       auto it = fields.find(field.getAccessID());
       if(it != fields.end()) {
@@ -252,6 +259,36 @@ std::unordered_map<int, Field> Stencil::getFields2() const {
   return fields;
 }
 
+bool Stencil::compareDerivedInfo() const {
+  auto fieldsOnTheFly = computeFieldsOnTheFly();
+
+  auto enclosingAccessExtents = computeEnclosingAccessExtents();
+  auto accessExtents = computeFieldsOnTheFly();
+
+  bool equal = true;
+  for(auto it : fields_) {
+    const int accessID = it.first;
+    const Field& field = it.second;
+    const auto& extents = field.getExtents();
+    const auto& extentsRB = field.getExtentsRB();
+    if(!enclosingAccessExtents.count(accessID) || !accessExtents.count(accessID)) {
+      std::cout << "ERROR not found" << accessID << " " << enclosingAccessExtents.count(accessID)
+                << " " << accessExtents.count(accessID) << std::endl;
+      equal = false;
+    }
+    if(enclosingAccessExtents.at(accessID) != extentsRB) {
+      std::cout << "ERROR in enclosing " << accessID << " " << enclosingAccessExtents.at(accessID)
+                << " " << extentsRB << std::endl;
+      equal = false;
+    }
+    if(accessExtents.at(accessID).getExtents() != extents) {
+      std::cout << "ERROR in acc Extents " << enclosingAccessExtents.at(accessID) << " "
+                << extentsRB << std::endl;
+      equal = false;
+    }
+  }
+  return equal;
+}
 void Stencil::setStageDependencyGraph(const std::shared_ptr<DependencyGraphStage>& stageDAG) {
   stageDependencyGraph_ = stageDAG;
 }
@@ -504,6 +541,7 @@ std::unordered_map<int, Extents> const Stencil::computeEnclosingAccessExtents() 
       }
     }
   }
+
   return maxExtents_;
 }
 

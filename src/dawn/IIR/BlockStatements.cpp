@@ -41,9 +41,6 @@ BlockStatements BlockStatements::clone() const {
 }
 
 void BlockStatements::insert(std::unique_ptr<StatementAccessesPair>&& stmt) {
-  std::cout << "inser " << blockStatements_.size() << std::endl;
-  std::cout << "T" << static_cast<std::shared_ptr<Stmt>>(stmt->getStatement()->ASTStmt)
-            << std::endl;
   blockStatements_.push_back(std::move(stmt));
 }
 

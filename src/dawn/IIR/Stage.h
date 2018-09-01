@@ -137,7 +137,7 @@ public:
   ///
   /// This recomputes the fields referenced in this Stage (and all its Do-Methods) and computes
   /// the @b accumulated extent of each field
-  void update();
+  virtual void updateLevel() override;
 
   /// @brief checks whether the stage contains global variables
   bool hasGlobalVariables() const;
@@ -191,15 +191,14 @@ public:
 
   /// @brief Get the extent of the stage
   /// @{
-  //  Extents& getExtents() { return extents_; }
-
   Extents const& getExtents() const { return extents_; }
   void setExtents(Extents const& extents) { extents_ = extents; }
-
   /// @}
 
   /// @brief true if it contains no do methods or they are empty
   bool isEmptyOrNullStmt() const;
+
+  inline virtual void updateFromChildren() override {}
 };
 
 } // namespace iir
