@@ -49,16 +49,26 @@ class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
   /// Unique identifier of the stage
   int StageID_;
 
-  /// Declaration of the fields of this stage
-  std::unordered_map<int, Field> fields_;
+  struct DerivedInfo {
 
-  /// AccessIDs of the global variable accesses of this stage
-  std::unordered_set<int> allGlobalVariables_;
-  std::unordered_set<int> globalVariables_;
-  std::unordered_set<int> globalVariablesFromStencilFunctionCalls_;
+    DerivedInfo() : extents_{0, 0, 0, 0, 0, 0} {}
+    DerivedInfo(DerivedInfo&&) = default;
+    DerivedInfo(const DerivedInfo&) = default;
+    DerivedInfo& operator=(DerivedInfo&&) = default;
+    DerivedInfo& operator=(const DerivedInfo&) = default;
 
-  // TODO move extents to derived
-  Extents extents_;
+    /// Declaration of the fields of this stage
+    std::unordered_map<int, Field> fields_;
+
+    /// AccessIDs of the global variable accesses of this stage
+    std::unordered_set<int> allGlobalVariables_;
+    std::unordered_set<int> globalVariables_;
+    std::unordered_set<int> globalVariablesFromStencilFunctionCalls_;
+
+    Extents extents_;
+  };
+
+  DerivedInfo derivedInfo_;
 
 public:
   static constexpr const char* name = "Stage";
@@ -129,7 +139,7 @@ public:
   /// `Input`
   ///
   /// The fields are computed during `Stage::update`.
-  const std::unordered_map<int, Field>& getFields() const { return fields_; }
+  const std::unordered_map<int, Field>& getFields() const { return derivedInfo_.fields_; }
 
   /// @brief Update the fields and global variables
   ///
@@ -186,8 +196,8 @@ public:
 
   /// @brief Get the extent of the stage
   /// @{
-  Extents const& getExtents() const { return extents_; }
-  void setExtents(Extents const& extents) { extents_ = extents; }
+  Extents const& getExtents() const { return derivedInfo_.extents_; }
+  void setExtents(Extents const& extents) { derivedInfo_.extents_ = extents; }
   /// @}
 
   /// @brief true if it contains no do methods or they are empty

@@ -28,10 +28,10 @@ namespace dawn {
 namespace iir {
 
 Stage::Stage(StencilInstantiation& context, int StageID)
-    : stencilInstantiation_(context), StageID_(StageID), extents_{0, 0, 0, 0, 0, 0} {}
+    : stencilInstantiation_(context), StageID_(StageID) {}
 
 Stage::Stage(StencilInstantiation& context, int StageID, const Interval& interval)
-    : stencilInstantiation_(context), StageID_(StageID), extents_{0, 0, 0, 0, 0, 0} {
+    : stencilInstantiation_(context), StageID_(StageID) {
   // TODO reconsider whether we want to insert an interval
   insertChild(make_unique<DoMethod>(interval));
 }
@@ -40,12 +40,7 @@ std::unique_ptr<Stage> Stage::clone() const {
 
   auto cloneStage = make_unique<Stage>(stencilInstantiation_, StageID_);
 
-  cloneStage->fields_ = fields_;
-  cloneStage->allGlobalVariables_ = allGlobalVariables_;
-  cloneStage->globalVariables_ = globalVariables_;
-  cloneStage->globalVariablesFromStencilFunctionCalls_ = globalVariablesFromStencilFunctionCalls_;
-
-  cloneStage->extents_ = extents_;
+  cloneStage->derivedInfo_ = derivedInfo_;
 
   cloneStage->cloneChildrenFrom(*this);
   return cloneStage;
@@ -96,9 +91,10 @@ Interval Stage::getEnclosingInterval() const {
 
 Extent Stage::getMaxVerticalExtent() const {
   Extent verticalExtent;
-  std::for_each(fields_.begin(), fields_.end(), [&](const std::pair<int, Field>& pair) {
-    verticalExtent.merge(pair.second.getExtents()[2]);
-  });
+  std::for_each(derivedInfo_.fields_.begin(), derivedInfo_.fields_.end(),
+                [&](const std::pair<int, Field>& pair) {
+                  verticalExtent.merge(pair.second.getExtents()[2]);
+                });
   return verticalExtent;
 }
 
@@ -174,10 +170,10 @@ public:
 
 void Stage::updateLevel() {
 
-  fields_.clear();
-  globalVariables_.clear();
-  globalVariablesFromStencilFunctionCalls_.clear();
-  allGlobalVariables_.clear();
+  derivedInfo_.fields_.clear();
+  derivedInfo_.globalVariables_.clear();
+  derivedInfo_.globalVariablesFromStencilFunctionCalls_.clear();
+  derivedInfo_.allGlobalVariables_.clear();
 
   // Compute the fields and their intended usage. Fields can be in one of three states: `Output`,
   // `InputOutput` or `Input` which implements the following state machine:
@@ -195,7 +191,7 @@ void Stage::updateLevel() {
   std::unordered_map<int, Field> outputFields;
 
   CaptureStencilFunctionCallGlobalParams functionCallGlobaParamVisitor(
-      globalVariablesFromStencilFunctionCalls_, stencilInstantiation_);
+      derivedInfo_.globalVariablesFromStencilFunctionCalls_, stencilInstantiation_);
 
   for(const auto& doMethodPtr : getChildren()) {
     const DoMethod& doMethod = *doMethodPtr;
@@ -211,7 +207,7 @@ void Stage::updateLevel() {
         // Does this AccessID correspond to a field access?
         if(!stencilInstantiation_.isField(AccessID)) {
           if(stencilInstantiation_.isGlobalVariable(AccessID))
-            globalVariables_.insert(AccessID);
+            derivedInfo_.globalVariables_.insert(AccessID);
           continue;
         }
         AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
@@ -225,7 +221,7 @@ void Stage::updateLevel() {
         // Does this AccessID correspond to a field access?
         if(!stencilInstantiation_.isField(AccessID)) {
           if(stencilInstantiation_.isGlobalVariable(AccessID))
-            globalVariables_.insert(AccessID);
+            derivedInfo_.globalVariables_.insert(AccessID);
           continue;
         }
 
@@ -243,16 +239,18 @@ void Stage::updateLevel() {
     }
   }
 
-  allGlobalVariables_.insert(globalVariables_.begin(), globalVariables_.end());
-  allGlobalVariables_.insert(globalVariablesFromStencilFunctionCalls_.begin(),
-                             globalVariablesFromStencilFunctionCalls_.end());
+  derivedInfo_.allGlobalVariables_.insert(derivedInfo_.globalVariables_.begin(),
+                                          derivedInfo_.globalVariables_.end());
+  derivedInfo_.allGlobalVariables_.insert(
+      derivedInfo_.globalVariablesFromStencilFunctionCalls_.begin(),
+      derivedInfo_.globalVariablesFromStencilFunctionCalls_.end());
 
   // Merge inputFields, outputFields and fields
-  fields_.insert(outputFields.begin(), outputFields.end());
-  fields_.insert(inputOutputFields.begin(), inputOutputFields.end());
-  fields_.insert(inputFields.begin(), inputFields.end());
+  derivedInfo_.fields_.insert(outputFields.begin(), outputFields.end());
+  derivedInfo_.fields_.insert(inputOutputFields.begin(), inputOutputFields.end());
+  derivedInfo_.fields_.insert(inputFields.begin(), inputFields.end());
 
-  if(fields_.empty()) {
+  if(derivedInfo_.fields_.empty()) {
     DAWN_LOG(WARNING) << "no fields referenced in stage";
     return;
   }
@@ -268,29 +266,34 @@ void Stage::updateLevel() {
       if(!stencilInstantiation_.isField(accessPair.first))
         continue;
 
-      fields_.at(accessPair.first).mergeWriteExtents(accessPair.second);
+      derivedInfo_.fields_.at(accessPair.first).mergeWriteExtents(accessPair.second);
     }
 
     for(const auto& accessPair : access->getReadAccesses()) {
       if(!stencilInstantiation_.isField(accessPair.first))
         continue;
 
-      fields_.at(accessPair.first).mergeReadExtents(accessPair.second);
+      derivedInfo_.fields_.at(accessPair.first).mergeReadExtents(accessPair.second);
     }
   }
 }
 
 bool Stage::hasGlobalVariables() const {
-  return (!globalVariables_.empty()) || (!globalVariablesFromStencilFunctionCalls_.empty());
+  return (!derivedInfo_.globalVariables_.empty()) ||
+         (!derivedInfo_.globalVariablesFromStencilFunctionCalls_.empty());
 }
 
-const std::unordered_set<int>& Stage::getGlobalVariables() const { return globalVariables_; }
+const std::unordered_set<int>& Stage::getGlobalVariables() const {
+  return derivedInfo_.globalVariables_;
+}
 
 const std::unordered_set<int>& Stage::getGlobalVariablesFromStencilFunctionCalls() const {
-  return globalVariablesFromStencilFunctionCalls_;
+  return derivedInfo_.globalVariablesFromStencilFunctionCalls_;
 }
 
-const std::unordered_set<int>& Stage::getAllGlobalVariables() const { return allGlobalVariables_; }
+const std::unordered_set<int>& Stage::getAllGlobalVariables() const {
+  return derivedInfo_.allGlobalVariables_;
+}
 
 void Stage::addDoMethod(const DoMethodSmartPtr_t& doMethod) {
   DAWN_ASSERT_MSG(
