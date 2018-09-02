@@ -564,6 +564,7 @@ std::string GTCodeGen::generateStencilInstantiation(
                << ((!stage.hasGlobalVariables() && (accessorIdx == fields.size() - 1)) ? "" : ", ");
 
           arglist.push_back(std::move(paramName));
+          ++accessorIdx;
         }
 
         // Global accessor declaration
