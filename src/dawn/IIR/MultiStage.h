@@ -52,7 +52,12 @@ class MultiStage : public IIRNode<Stencil, MultiStage, Stage, impl::StdList> {
 
   LoopOrderKind loopOrder_;
   std::unordered_map<int, iir::Cache> caches_;
-  std::unordered_map<int, Field> fields_;
+
+  struct DerivedInfo {
+    std::unordered_map<int, Field> fields_;
+  };
+
+  DerivedInfo derivedInfo_;
 
 public:
   static constexpr const char* name = "MultiStage";

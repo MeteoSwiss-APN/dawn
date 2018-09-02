@@ -91,8 +91,9 @@ ReoderStrategyGreedy::reorder(const std::unique_ptr<iir::Stencil>& stencilPtr) {
   iir::StencilInstantiation& instantiation = stencil.getStencilInstantiation();
 
   std::unique_ptr<iir::Stencil> newStencil =
-      make_unique<iir::Stencil>(instantiation, stencil.getSIRStencil(), stencilPtr->getStencilID(),
-                                stencil.getStageDependencyGraph());
+      make_unique<iir::Stencil>(instantiation, stencil.getSIRStencil(), stencilPtr->getStencilID());
+
+  newStencil->setStageDependencyGraph(stencil.getStageDependencyGraph());
   int newNumStages = 0;
   int newNumMultiStages = 0;
 

@@ -35,7 +35,7 @@ std::unique_ptr<MultiStage> MultiStage::clone() const {
   auto cloneMS = make_unique<MultiStage>(stencilInstantiation_, loopOrder_);
 
   cloneMS->caches_ = caches_;
-  cloneMS->fields_ = fields_;
+  cloneMS->derivedInfo_ = derivedInfo_;
 
   cloneMS->cloneChildrenFrom(*this);
   return cloneMS;
@@ -295,12 +295,13 @@ std::unordered_map<int, Field> MultiStage::computeFieldsOnTheFly() const {
   return fields;
 }
 
-const std::unordered_map<int, Field>& MultiStage::getFields() const { return fields_; }
+const std::unordered_map<int, Field>& MultiStage::getFields() const { return derivedInfo_.fields_; }
 
 void MultiStage::updateFromChildren() {
-  fields_.clear();
+  derivedInfo_.fields_.clear();
   for(const auto& stagePtr : children_) {
-    mergeFields(stagePtr->getFields(), fields_, boost::make_optional(stagePtr->getExtents()));
+    mergeFields(stagePtr->getFields(), derivedInfo_.fields_,
+                boost::make_optional(stagePtr->getExtents()));
   }
 }
 

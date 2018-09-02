@@ -44,7 +44,6 @@ std::ostream& operator<<(std::ostream& os, const iir::Stencil::Lifetime& lifetim
   return (os << "[Begin=" << lifetime.Begin << ", End=" << lifetime.End << "]");
 }
 
-// TODO solve with iterators
 std::ostream& operator<<(std::ostream& os, const iir::Stencil& stencil) {
   int multiStageIdx = 0;
   for(const auto& MS : stencil.getChildren()) {
@@ -97,9 +96,9 @@ bool Stencil::StatementPosition::inSameDoMethod(const Stencil::StatementPosition
 }
 
 void Stencil::updateFromChildren() {
-  fields_.clear();
+  derivedInfo_.fields_.clear();
   for(const auto& MSPtr : children_) {
-    mergeFields(MSPtr->getFields(), fields_);
+    mergeFields(MSPtr->getFields(), derivedInfo_.fields_);
   }
 }
 
@@ -122,10 +121,8 @@ bool Stencil::Lifetime::overlaps(const Stencil::Lifetime& other) const {
 }
 
 Stencil::Stencil(StencilInstantiation& stencilInstantiation,
-                 const std::shared_ptr<sir::Stencil>& SIRStencil, int StencilID,
-                 const std::shared_ptr<DependencyGraphStage>& stageDependencyGraph)
-    : stencilInstantiation_(stencilInstantiation), SIRStencil_(SIRStencil), StencilID_(StencilID),
-      stageDependencyGraph_(stageDependencyGraph) {}
+                 const std::shared_ptr<sir::Stencil>& SIRStencil, int StencilID)
+    : stencilInstantiation_(stencilInstantiation), SIRStencil_(SIRStencil), StencilID_(StencilID) {}
 
 std::unordered_set<Interval> Stencil::getIntervals() const {
   std::unordered_set<Interval> intervals;
@@ -137,9 +134,10 @@ std::unordered_set<Interval> Stencil::getIntervals() const {
 }
 
 std::unique_ptr<Stencil> Stencil::clone() const {
-  auto cloneStencil =
-      make_unique<Stencil>(stencilInstantiation_, SIRStencil_, StencilID_, stageDependencyGraph_);
+  auto cloneStencil = make_unique<Stencil>(stencilInstantiation_, SIRStencil_, StencilID_ /*,
+                                           derivedInfo_.stageDependencyGraph_*/);
 
+  cloneStencil->derivedInfo_ = derivedInfo_;
   cloneStencil->cloneChildrenFrom(*this);
   return cloneStencil;
 }
@@ -266,7 +264,7 @@ bool Stencil::compareDerivedInfo() const {
   auto accessExtents = computeFieldsOnTheFly();
 
   bool equal = true;
-  for(auto it : fields_) {
+  for(auto it : derivedInfo_.fields_) {
     const int accessID = it.first;
     const Field& field = it.second;
     const auto& extents = field.getExtents();
@@ -290,11 +288,11 @@ bool Stencil::compareDerivedInfo() const {
   return equal;
 }
 void Stencil::setStageDependencyGraph(const std::shared_ptr<DependencyGraphStage>& stageDAG) {
-  stageDependencyGraph_ = stageDAG;
+  derivedInfo_.stageDependencyGraph_ = stageDAG;
 }
 
 const std::shared_ptr<DependencyGraphStage>& Stencil::getStageDependencyGraph() const {
-  return stageDependencyGraph_;
+  return derivedInfo_.stageDependencyGraph_;
 }
 
 const std::unique_ptr<MultiStage>&

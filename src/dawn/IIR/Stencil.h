@@ -45,13 +45,15 @@ class Stencil : public IIRNode<IIR, Stencil, MultiStage, impl::StdList> {
   /// stencil with a stencil-call in the run() method
   int StencilID_;
 
-  /// Dependency graph of the stages of this stencil
-  std::shared_ptr<DependencyGraphStage> stageDependencyGraph_;
+  struct DerivedInfo {
+    /// Dependency graph of the stages of this stencil
+    std::shared_ptr<DependencyGraphStage> stageDependencyGraph_;
+    std::unordered_map<int, Field> fields_;
+  };
 
-  std::unordered_map<int, Field> fields_;
+  DerivedInfo derivedInfo_;
 
 public:
-  void prepre();
   static constexpr const char* name = "Stencil";
 
   using MultiStageSmartPtr_t = child_smartptr_t<MultiStage>;
@@ -169,8 +171,8 @@ public:
   /// @{
   /// //TODO no need to pass SIRStencil, we can get it from stencilInstantiation
   Stencil(StencilInstantiation& stencilInstantiation,
-          const std::shared_ptr<sir::Stencil>& SIRStencil, int StencilID,
-          const std::shared_ptr<DependencyGraphStage>& stageDependencyGraph = nullptr);
+          const std::shared_ptr<sir::Stencil>& SIRStencil, int StencilID /*,
+          const std::shared_ptr<DependencyGraphStage>& stageDependencyGraph = nullptr*/);
 
   Stencil(Stencil&&) = default;
 
@@ -276,7 +278,7 @@ public:
   std::unordered_map<int, Extents> const computeEnclosingAccessExtents() const;
 
   /// @brief Get the pair <AccessID, field> for the fields used within the multi-stage
-  const std::unordered_map<int, Field>& getFields2() const { return fields_; }
+  const std::unordered_map<int, Field>& getFields2() const { return derivedInfo_.fields_; }
 
   std::unordered_map<int, Field> computeFieldsOnTheFly() const;
 
