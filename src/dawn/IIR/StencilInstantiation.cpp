@@ -360,7 +360,7 @@ public:
                              ? LoopOrderKind::LK_Forward
                              : LoopOrderKind::LK_Backward);
     std::unique_ptr<Stage> stage =
-        make_unique<Stage>(*instantiation_, multiStage.get(), instantiation_->nextUID(), interval);
+        make_unique<Stage>(*instantiation_, instantiation_->nextUID(), interval);
 
     DAWN_LOG(INFO) << "Processing vertical region at " << verticalRegion->Loc;
 

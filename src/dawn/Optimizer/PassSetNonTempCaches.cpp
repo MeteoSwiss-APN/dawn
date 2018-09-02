@@ -184,8 +184,8 @@ private:
                                                     const std::vector<int>& assignmentIDs,
                                                     const std::vector<int>& assigneeIDs) {
     // Add the cache Flush stage
-    std::unique_ptr<iir::Stage> assignmentStage = make_unique<iir::Stage>(
-        *instantiation_, multiStagePrt_.get(), instantiation_->nextUID(), interval);
+    std::unique_ptr<iir::Stage> assignmentStage =
+        make_unique<iir::Stage>(*instantiation_, instantiation_->nextUID(), interval);
     iir::Stage::DoMethodSmartPtr_t domethod = make_unique<iir::DoMethod>(interval);
     domethod->clearChildren();
 

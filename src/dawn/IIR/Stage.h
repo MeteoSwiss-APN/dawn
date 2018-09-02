@@ -45,7 +45,6 @@ class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
   using base_type = IIRNode<MultiStage, Stage, DoMethod>;
 
   StencilInstantiation& stencilInstantiation_;
-  MultiStage* multiStage_;
 
   /// Unique identifier of the stage
   int StageID_;
@@ -69,9 +68,8 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
-  Stage(StencilInstantiation& context, MultiStage* multiStage, int StageID,
-        const Interval& interval);
-  Stage(StencilInstantiation& context, MultiStage* multiStage, int StageID);
+  Stage(StencilInstantiation& context, int StageID, const Interval& interval);
+  Stage(StencilInstantiation& context, int StageID);
 
   //  Stage(const Stage&) = default;
   Stage(Stage&&) = default;
@@ -172,9 +170,6 @@ public:
   /// Calls `update()` in the end.
   void appendDoMethod(DoMethodSmartPtr_t& from, DoMethodSmartPtr_t& to,
                       const std::shared_ptr<DependencyGraphAccesses>& dependencyGraph);
-
-  /// @brief Get the loop order (induced by the multi-stage)
-  LoopOrderKind getLoopOrder() const;
 
   /// @brief Split the stage at the given indices into separate stages.
   ///
