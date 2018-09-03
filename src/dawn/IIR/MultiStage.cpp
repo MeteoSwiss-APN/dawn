@@ -289,7 +289,7 @@ std::unordered_map<int, Field> MultiStage::computeFieldsOnTheFly() const {
   std::unordered_map<int, Field> fields;
 
   for(const auto& stagePtr : children_) {
-    mergeFields(stagePtr->getFields(), fields);
+    mergeFields(stagePtr->getFields(), fields, stagePtr->getExtents());
   }
 
   return fields;

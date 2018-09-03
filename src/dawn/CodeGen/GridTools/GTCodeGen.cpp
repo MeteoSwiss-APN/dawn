@@ -661,13 +661,11 @@ std::string GTCodeGen::generateStencilInstantiation(
 
     // Add static asserts to check halos against extents
     StencilConstructor.addComment("Check if extents do not exceed the halos");
-    std::unordered_map<int, iir::Extents> const& exts =
-        (*stencils[stencilIdx]).computeEnclosingAccessExtents();
     int i = 0;
     for(const auto& fieldPair : StencilFields) {
       const auto& fieldInfo = fieldPair.second;
       if(!fieldInfo.IsTemporary) {
-        auto const& ext = exts.at(fieldInfo.field.getAccessID());
+        auto const& ext = fieldInfo.field.getExtentsRB();
         // ===-----------------------------------------------------------------------------------===
         // PRODUCTIONTODO: [BADSTATICASSERTS]
         // Offset-Computation in K is currently broken and hence turned off. Remvove the -1 once it

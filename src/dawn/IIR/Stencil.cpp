@@ -233,6 +233,8 @@ std::unordered_map<int, Field> Stencil::computeFieldsOnTheFly() const {
         // Merge the Extent
         it->second.mergeReadExtents(field.getReadExtents());
         it->second.mergeWriteExtents(field.getWriteExtents());
+        it->second.mergeReadExtentsRB(field.getReadExtentsRB());
+        it->second.mergeWriteExtentsRB(field.getWriteExtentsRB());
 
         it->second.extendInterval(field.getInterval());
       } else
@@ -246,9 +248,6 @@ std::unordered_map<int, Field> Stencil::computeFieldsOnTheFly() const {
 bool Stencil::compareDerivedInfo() const {
   auto fieldsOnTheFly = computeFieldsOnTheFly();
 
-  auto enclosingAccessExtents = computeEnclosingAccessExtents();
-  auto accessExtents = computeFieldsOnTheFly();
-
   bool equal = true;
   for(auto it : derivedInfo_.fields_) {
     const int accessID = it.first;
@@ -256,18 +255,17 @@ bool Stencil::compareDerivedInfo() const {
     const Field& field = fieldInfo.field;
     const auto& extents = field.getExtents();
     const auto& extentsRB = field.getExtentsRB();
-    if(!enclosingAccessExtents.count(accessID) || !accessExtents.count(accessID)) {
-      std::cout << "ERROR not found" << accessID << " " << enclosingAccessExtents.count(accessID)
-                << " " << accessExtents.count(accessID) << std::endl;
+    if(!fieldsOnTheFly.count(accessID)) {
+      std::cout << "ERROR not found" << accessID << std::endl;
       equal = false;
     }
-    if(enclosingAccessExtents.at(accessID) != extentsRB) {
-      std::cout << "ERROR in enclosing " << accessID << " " << enclosingAccessExtents.at(accessID)
-                << " " << extentsRB << std::endl;
+    if(fieldsOnTheFly.at(accessID).getExtentsRB() != extentsRB) {
+      std::cout << "ERROR in enclosing " << accessID << " "
+                << fieldsOnTheFly.at(accessID).getExtentsRB() << " " << extentsRB << std::endl;
       equal = false;
     }
-    if(accessExtents.at(accessID).getExtents() != extents) {
-      std::cout << "ERROR in acc Extents " << enclosingAccessExtents.at(accessID) << " "
+    if(fieldsOnTheFly.at(accessID).getExtents() != extents) {
+      std::cout << "ERROR in acc Extents " << fieldsOnTheFly.at(accessID).getExtents() << " "
                 << extentsRB << std::endl;
       equal = false;
     }
@@ -504,30 +502,6 @@ void Stencil::accept(ASTVisitor& visitor) {
   for(const auto& stmtAccessesPairPtr : iterateIIROver<StatementAccessesPair>(*this)) {
     stmtAccessesPairPtr->getStatement()->ASTStmt->accept(visitor);
   }
-}
-
-std::unordered_map<int, Extents> const Stencil::computeEnclosingAccessExtents() const {
-  std::unordered_map<int, Extents> maxExtents_;
-  // iterate through multistages
-  for(const auto& stage : iterateIIROver<Stage>(*this)) {
-    for(const auto& fieldPair : stage->getFields()) {
-      const auto& field = fieldPair.second;
-      // TODO recover
-      const int accessID = fieldPair.first;
-      // add the stage extent to the field extent
-      Extents e = field.getExtents();
-      e.add(stage->getExtents());
-      // merge with the current minimum/maximum extent for the given field
-      auto finder = maxExtents_.find(accessID);
-      if(finder != maxExtents_.end()) {
-        finder->second.merge(e);
-      } else {
-        maxExtents_.emplace(accessID, e);
-      }
-    }
-  }
-
-  return maxExtents_;
 }
 
 } // namespace iir
