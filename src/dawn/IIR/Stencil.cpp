@@ -97,8 +97,22 @@ bool Stencil::StatementPosition::inSameDoMethod(const Stencil::StatementPosition
 
 void Stencil::updateFromChildren() {
   derivedInfo_.fields_.clear();
+  std::unordered_map<int, Field> fields;
+
   for(const auto& MSPtr : children_) {
-    mergeFields(MSPtr->getFields(), derivedInfo_.fields_);
+    mergeFields(MSPtr->getFields(), fields);
+  }
+
+  for(const auto& fieldPair : fields) {
+    const int accessID = fieldPair.first;
+    const Field& field = fieldPair.second;
+
+    std::string name = stencilInstantiation_.getNameFromAccessID(accessID);
+    bool isTemporary = stencilInstantiation_.isTemporaryField(accessID);
+    Array3i specifiedDimension = stencilInstantiation_.getFieldDimensionsMask(accessID);
+
+    derivedInfo_.fields_.emplace(
+        std::make_pair(accessID, FieldInfo{isTemporary, name, specifiedDimension, field}));
   }
 }
 
@@ -140,34 +154,6 @@ std::unique_ptr<Stencil> Stencil::clone() const {
   cloneStencil->derivedInfo_ = derivedInfo_;
   cloneStencil->cloneChildrenFrom(*this);
   return cloneStencil;
-}
-
-std::vector<Stencil::FieldInfo> Stencil::getFields(bool withTemporaries) const {
-  std::set<int> fieldAccessIDs;
-  for(const auto& stage : iterateIIROver<Stage>(*this)) {
-    for(const auto& fieldPair : stage->getFields()) {
-      // TODO redo transform
-      fieldAccessIDs.insert(fieldPair.first);
-    }
-  }
-
-  std::vector<FieldInfo> fields;
-
-  for(const auto& AccessID : fieldAccessIDs) {
-    std::string name = stencilInstantiation_.getNameFromAccessID(AccessID);
-    bool isTemporary = stencilInstantiation_.isTemporaryField(AccessID);
-    Array3i specifiedDimension = stencilInstantiation_.getFieldDimensionsMask(AccessID);
-
-    if(isTemporary) {
-      if(withTemporaries) {
-        fields.insert(fields.begin(), FieldInfo{isTemporary, name, AccessID, specifiedDimension});
-      }
-    } else {
-      fields.emplace_back(FieldInfo{isTemporary, name, AccessID, specifiedDimension});
-    }
-  }
-
-  return fields;
 }
 
 std::vector<std::string> Stencil::getGlobalVariables() const {
@@ -266,7 +252,8 @@ bool Stencil::compareDerivedInfo() const {
   bool equal = true;
   for(auto it : derivedInfo_.fields_) {
     const int accessID = it.first;
-    const Field& field = it.second;
+    const FieldInfo& fieldInfo = it.second;
+    const Field& field = fieldInfo.field;
     const auto& extents = field.getExtents();
     const auto& extentsRB = field.getExtentsRB();
     if(!enclosingAccessExtents.count(accessID) || !accessExtents.count(accessID)) {

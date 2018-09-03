@@ -70,7 +70,7 @@ private:
                                    const std::string& gridName) const;
   void
   buildPlaceholderDefinitions(MemberFunction& function,
-                              std::vector<iir::Stencil::FieldInfo> const& stencilFields,
+                              const std::unordered_map<int, iir::Stencil::FieldInfo>& stencilFields,
                               std::vector<std::string> const& stencilGlobalVariables,
                               std::vector<std::string> const& stencilConstructorTemplates) const;
 
@@ -83,15 +83,16 @@ private:
   bool isTemporary(iir::Stencil::FieldInfo const& f) const { return f.IsTemporary; }
 
   /// code generate sync methods statements for all the fields passed
-  void
-  generateSyncStorages(MemberFunction& method,
-                       const IndexRange<std::vector<iir::Stencil::FieldInfo>>& stencilFields) const;
+  void generateSyncStorages(
+      MemberFunction& method,
+      const IndexRange<std::unordered_map<int, iir::Stencil::FieldInfo>>& stencilFields) const;
 
   /// construct a string of template parameters for storages
   std::vector<std::string> buildFieldTemplateNames(
       IndexRange<std::vector<iir::Stencil::FieldInfo>> const& stencilFields) const;
 
-  int computeNumTemporaries(std::vector<iir::Stencil::FieldInfo> const& stencilFields) const;
+  int computeNumTemporaries(
+      std::unordered_map<int, iir::Stencil::FieldInfo> const& stencilFields) const;
 
   /// Maximum needed vector size of boost::fusion containers
   std::size_t mplContainerMaxSize_;

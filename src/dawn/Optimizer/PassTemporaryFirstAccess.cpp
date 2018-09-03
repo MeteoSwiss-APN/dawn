@@ -18,6 +18,7 @@
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/ASTVisitor.h"
+#include "dawn/Support/IndexRange.h"
 #include <algorithm>
 #include <set>
 #include <stack>
@@ -71,13 +72,16 @@ bool PassTemporaryFirstAccess::run(
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
-    std::vector<iir::Stencil::FieldInfo> fields = stencilPtr->getFields();
+    std::unordered_map<int, iir::Stencil::FieldInfo> fields = stencilPtr->getFields();
     std::set<int> temporaryFields;
 
-    for(int i = 0; i < fields.size(); ++i)
-      if(fields[i].IsTemporary) {
-        temporaryFields.insert(stencilInstantiation->getAccessIDFromName(fields[i].Name));
-      }
+    auto tempFields = makeRange(
+        fields,
+        std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
+            [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
+    for(auto tmpF : tempFields) {
+      temporaryFields.insert((*tmpF).second.field.getAccessID());
+    }
 
     // {AccesID : (isFirstAccessWrite, Stmt)}
     std::unordered_map<int, std::pair<bool, std::shared_ptr<Stmt>>> accessMap;

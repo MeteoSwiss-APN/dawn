@@ -45,10 +45,25 @@ class Stencil : public IIRNode<IIR, Stencil, MultiStage, impl::StdList> {
   /// stencil with a stencil-call in the run() method
   int StencilID_;
 
+public:
+  // FieldInfo desribes the properties of a given Field
+  // The dimensions is an array of numberes in x,y and z describing if the field is allowed to have
+  // extens in this dimension: [1,0,0] is a storage_i and cannot be accessed with field[j+1]
+  struct FieldInfo {
+    FieldInfo(bool t, std::string name, Array3i dim, const Field& f)
+        : Name(name), Dimensions(dim), field(f), IsTemporary(t) {}
+
+    std::string Name;
+    Array3i Dimensions;
+    Field field;
+    bool IsTemporary;
+  };
+
+private:
   struct DerivedInfo {
     /// Dependency graph of the stages of this stencil
     std::shared_ptr<DependencyGraphStage> stageDependencyGraph_;
-    std::unordered_map<int, Field> fields_;
+    std::unordered_map<int, FieldInfo> fields_;
   };
 
   DerivedInfo derivedInfo_;
@@ -57,16 +72,6 @@ public:
   static constexpr const char* name = "Stencil";
 
   using MultiStageSmartPtr_t = child_smartptr_t<MultiStage>;
-
-  // FieldInfo desribes the properties of a given Field
-  // The dimensions is an array of numberes in x,y and z describing if the field is allowed to have
-  // extens in this dimension: [1,0,0] is a storage_i and cannot be accessed with field[j+1]
-  struct FieldInfo {
-    bool IsTemporary;
-    std::string Name;
-    int AccessID;
-    Array3i Dimensions;
-  };
 
   /// @brief Position of a stage
   ///
@@ -185,10 +190,6 @@ public:
   /// @brief Compute a set of intervals for this stencil
   std::unordered_set<Interval> getIntervals() const;
 
-  /// @brief Get the fields referenced by this stencil (temporary fields are listed first if
-  /// requested)
-  std::vector<FieldInfo> getFields(bool withTemporaries = true) const;
-
   /// @brief Get the global variables referenced by this stencil
   std::vector<std::string> getGlobalVariables() const;
 
@@ -278,7 +279,7 @@ public:
   std::unordered_map<int, Extents> const computeEnclosingAccessExtents() const;
 
   /// @brief Get the pair <AccessID, field> for the fields used within the multi-stage
-  const std::unordered_map<int, Field>& getFields2() const { return derivedInfo_.fields_; }
+  const std::unordered_map<int, FieldInfo>& getFields() const { return derivedInfo_.fields_; }
 
   std::unordered_map<int, Field> computeFieldsOnTheFly() const;
 

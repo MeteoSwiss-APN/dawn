@@ -212,15 +212,15 @@ std::string GTCodeGen::buildMakeComputation(std::vector<std::string> const& Doma
 
 void GTCodeGen::generateSyncStorages(
     MemberFunction& method,
-    IndexRange<std::vector<iir::Stencil::FieldInfo>> const& stencilFields) const {
+    IndexRange<std::unordered_map<int, iir::Stencil::FieldInfo>> const& stencilFields) const {
   // synchronize storages method
   for(auto fieldIt : stencilFields) {
-    method.addStatement((*fieldIt).Name + ".sync()");
+    method.addStatement((*fieldIt).second.Name + ".sync()");
   }
 }
 
 void GTCodeGen::buildPlaceholderDefinitions(
-    MemberFunction& function, std::vector<iir::Stencil::FieldInfo> const& stencilFields,
+    MemberFunction& function, std::unordered_map<int, iir::Stencil::FieldInfo> const& stencilFields,
     std::vector<std::string> const& stencilGlobalVariables,
     std::vector<std::string> const& stencilConstructorTemplates) const {
 
@@ -229,14 +229,17 @@ void GTCodeGen::buildPlaceholderDefinitions(
   int numTemporaries = computeNumTemporaries(stencilFields);
 
   int accessorIdx = 0;
-  for(; accessorIdx < numFields; ++accessorIdx)
+  for(const auto& fieldPair : stencilFields) {
+    const auto& fieldInfo = fieldPair.second;
     // Fields
-    function.addTypeDef("p_" + stencilFields[accessorIdx].Name)
-        .addType(c_gt() + (stencilFields[accessorIdx].IsTemporary ? "tmp_arg" : "arg"))
+    function.addTypeDef("p_" + fieldInfo.Name)
+        .addType(c_gt() + (fieldInfo.IsTemporary ? "tmp_arg" : "arg"))
         .addTemplate(Twine(accessorIdx))
-        .addTemplate(stencilFields[accessorIdx].IsTemporary
+        .addTemplate(fieldInfo.IsTemporary
                          ? "storage_t"
                          : stencilConstructorTemplates[accessorIdx - numTemporaries]);
+    ++accessorIdx;
+  }
 
   for(; accessorIdx < (numFields + stencilGlobalVariables.size()); ++accessorIdx) {
     // Global variables
@@ -301,14 +304,16 @@ std::string GTCodeGen::generateStencilInstantiation(
     std::string stencilType;
     const iir::Stencil& stencil = *stencils[stencilIdx];
 
-    std::vector<iir::Stencil::FieldInfo> StencilFields = stencil.getFields();
+    std::unordered_map<int, iir::Stencil::FieldInfo> StencilFields = stencil.getFields();
 
-    auto nonTempFields =
-        makeRange(StencilFields, std::function<bool(iir::Stencil::FieldInfo const&)>([](
-                                     iir::Stencil::FieldInfo const& f) { return !f.IsTemporary; }));
-    auto tempFields =
-        makeRange(StencilFields, std::function<bool(iir::Stencil::FieldInfo const&)>([](
-                                     iir::Stencil::FieldInfo const& f) { return f.IsTemporary; }));
+    auto nonTempFields = makeRange(
+        StencilFields,
+        std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>([](
+            std::pair<int, iir::Stencil::FieldInfo> const& f) { return !f.second.IsTemporary; }));
+    auto tempFields = makeRange(
+        StencilFields,
+        std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
+            [](std::pair<int, iir::Stencil::FieldInfo> const& f) { return f.second.IsTemporary; }));
 
     if(stencil.isEmpty())
       continue;
@@ -646,7 +651,7 @@ std::string GTCodeGen::generateStencilInstantiation(
     StencilConstructor.addArg("const gridtools::clang::domain& dom");
     int index = 0;
     for(auto field : nonTempFields) {
-      StencilConstructor.addArg(StencilConstructorTemplates[index] + " " + (*field).Name);
+      StencilConstructor.addArg(StencilConstructorTemplates[index] + " " + (*field).second.Name);
       index++;
     }
 
@@ -658,9 +663,11 @@ std::string GTCodeGen::generateStencilInstantiation(
     StencilConstructor.addComment("Check if extents do not exceed the halos");
     std::unordered_map<int, iir::Extents> const& exts =
         (*stencils[stencilIdx]).computeEnclosingAccessExtents();
-    for(int i = 0; i < numFields; ++i) {
-      if(!StencilFields[i].IsTemporary) {
-        auto const& ext = exts.at(StencilFields[i].AccessID);
+    int i = 0;
+    for(const auto& fieldPair : StencilFields) {
+      const auto& fieldInfo = fieldPair.second;
+      if(!fieldInfo.IsTemporary) {
+        auto const& ext = exts.at(fieldInfo.field.getAccessID());
         // ===-----------------------------------------------------------------------------------===
         // PRODUCTIONTODO: [BADSTATICASSERTS]
         // Offset-Computation in K is currently broken and hence turned off. Remvove the -1 once it
@@ -690,33 +697,16 @@ std::string GTCodeGen::generateStencilInstantiation(
                                           "\"Used extents exceed halo limits.\")");
         }
       }
+      ++i;
     }
 
     // Generate domain
-    int accessorIdx = 0;
-
-    for(; accessorIdx < numFields; ++accessorIdx)
-      // Fields
-      StencilConstructor.addTypeDef("p_" + StencilFields[accessorIdx].Name)
-          .addType(c_gt() + (StencilFields[accessorIdx].IsTemporary ? "tmp_arg" : "arg"))
-          .addTemplate(Twine(accessorIdx))
-          .addTemplate(StencilFields[accessorIdx].IsTemporary
-                           ? "storage_t"
-                           : StencilConstructorTemplates[accessorIdx - numTemporaries]);
-
-    for(; accessorIdx < (numFields + StencilGlobalVariables.size()); ++accessorIdx) {
-      // Global variables
-      const auto& varname = StencilGlobalVariables[accessorIdx - numFields];
-      StencilConstructor.addTypeDef("p_" + StencilGlobalVariables[accessorIdx - numFields])
-          .addType(c_gt() + "arg")
-          .addTemplate(Twine(accessorIdx))
-          .addTemplate("typename std::decay<decltype(globals::get()." + varname +
-                       ".as_global_parameter())>::type");
-    }
+    buildPlaceholderDefinitions(StencilConstructor, StencilFields, StencilGlobalVariables,
+                                StencilConstructorTemplates);
 
     std::vector<std::string> ArglistPlaceholders;
     for(const auto& field : StencilFields)
-      ArglistPlaceholders.push_back("p_" + field.Name);
+      ArglistPlaceholders.push_back("p_" + field.second.Name);
     for(const auto& var : StencilGlobalVariables)
       ArglistPlaceholders.push_back("p_" + var);
 
@@ -726,11 +716,10 @@ std::string GTCodeGen::generateStencilInstantiation(
 
     // Placeholders to map the real storages to the placeholders (no temporaries)
     std::vector<std::string> DomainMapPlaceholders;
-    std::transform(StencilFields.begin() + numTemporaries, StencilFields.end(),
-                   std::back_inserter(DomainMapPlaceholders),
-                   [](const iir::Stencil::FieldInfo& field) {
-                     return "(p_" + field.Name + "() = " + field.Name + ")";
-                   });
+    for(auto field : nonTempFields) {
+      DomainMapPlaceholders.push_back(
+          std::string("(p_" + (*field).second.Name + "() = " + (*field).second.Name + ")"));
+    }
     for(const auto& var : StencilGlobalVariables)
       DomainMapPlaceholders.push_back("(p_" + var + "() = globals::get()." + var +
                                       ".as_global_parameter())");
@@ -885,16 +874,27 @@ std::string GTCodeGen::generateStencilInstantiation(
   }
 
   // Initialize stencils
-  for(std::size_t i = 0; i < stencils.size(); ++i)
+  for(size_t i = 0; i < stencils.size(); ++i) {
+    const auto& fields = stencils[i]->getFields();
+
+    std::vector<iir::Stencil::FieldInfo> nonTempFields;
+
+    for(const auto& field : fields) {
+      if(!field.second.IsTemporary) {
+        nonTempFields.push_back(field.second);
+      }
+    }
+
     StencilWrapperConstructor.addInit(
         "m_stencil_" + Twine(i) +
-        RangeToString(", ", "(dom, ", ")")(
-            stencils[i]->getFields(false), [&](const iir::Stencil::FieldInfo& field) {
-              if(stencilInstantiation->isAllocatedField(field.AccessID))
-                return "m_" + field.Name;
-              else
-                return field.Name;
-            }));
+        RangeToString(", ", "(dom, ",
+                      ")")(nonTempFields, [&](const iir::Stencil::FieldInfo& fieldInfo) {
+          if(stencilInstantiation->isAllocatedField(fieldInfo.field.getAccessID()))
+            return "m_" + fieldInfo.Name;
+          else
+            return fieldInfo.Name;
+        }));
+  }
 
   StencilWrapperConstructor.commit();
 
@@ -906,14 +906,22 @@ std::string GTCodeGen::generateStencilInstantiation(
     stencilIDToStencilNameMap[stencils[i]->getStencilID()].emplace_back("stencil_" +
                                                                         std::to_string(i));
 
+    const auto& fields = stencils[i]->getFields();
+    std::vector<iir::Stencil::FieldInfo> nonTempFields;
+
+    for(const auto& field : fields) {
+      if(!field.second.IsTemporary) {
+        nonTempFields.push_back(field.second);
+      }
+    }
     stencilIDToRunArguments[stencils[i]->getStencilID()] =
-        "m_dom," + RangeToString(", ", "", "")(
-                       stencils[i]->getFields(false), [&](const iir::Stencil::FieldInfo& field) {
-                         if(stencilInstantiation->isAllocatedField(field.AccessID))
-                           return "m_" + field.Name;
-                         else
-                           return field.Name;
-                       });
+        "m_dom," +
+        RangeToString(", ", "", "")(nonTempFields, [&](const iir::Stencil::FieldInfo& fieldInfo) {
+          if(stencilInstantiation->isAllocatedField(fieldInfo.field.getAccessID()))
+            return "m_" + fieldInfo.Name;
+          else
+            return fieldInfo.Name;
+        });
   }
 
   StencilWrapperConstructor.commit();
@@ -1032,6 +1040,7 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   std::map<std::string, std::string> stencils;
   for(const auto& nameStencilCtxPair : context_->getStencilInstantiationMap()) {
     std::string code = generateStencilInstantiation(nameStencilCtxPair.second);
+
     if(code.empty())
       return nullptr;
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
@@ -1089,10 +1098,10 @@ std::vector<std::string> GTCodeGen::buildFieldTemplateNames(
 }
 
 int GTCodeGen::computeNumTemporaries(
-    std::vector<iir::Stencil::FieldInfo> const& stencilFields) const {
+    std::unordered_map<int, iir::Stencil::FieldInfo> const& stencilFields) const {
   int numTemporaries = 0;
   for(auto const& f : stencilFields)
-    numTemporaries += (isTemporary(f) ? 1 : 0);
+    numTemporaries += (isTemporary(f.second) ? 1 : 0);
   return numTemporaries;
 }
 

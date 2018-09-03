@@ -55,15 +55,15 @@ class LocalVariablePromotion : public ASTVisitorPostOrder, public NonCopyable {
 protected:
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   std::unordered_set<int>& localVarAccessIDs_;
-  const std::unordered_map<int, iir::Field>& fields_;
+  const std::unordered_map<int, iir::Stencil::FieldInfo>& fields_;
 
 public:
   LocalVariablePromotion(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                         const std::unordered_map<int, iir::Field>& fields,
+                         const std::unordered_map<int, iir::Stencil::FieldInfo>& fields,
                          std::unordered_set<int>& localVarAccessIDs)
       : instantiation_(instantiation), localVarAccessIDs_(localVarAccessIDs), fields_(fields) {}
 
-  virtual ~LocalVariablePromotion() {}
+  virtual ~LocalVariablePromotion() override {}
 
   virtual bool preVisitNode(std::shared_ptr<VarAccessExpr> const& expr) override {
     // TODO if inside stencil function we should get it from stencilfun
@@ -77,7 +77,7 @@ public:
     if(isa<FieldAccessExpr>(*(expr->getLeft()))) {
       int accessID = instantiation_->getAccessIDFromExpr(expr->getLeft());
       DAWN_ASSERT(fields_.count(accessID));
-      const iir::Field& field = fields_.at(accessID);
+      const iir::Field& field = fields_.at(accessID).field;
 
       if(!instantiation_->isTemporaryField(accessID))
         return false;
@@ -416,7 +416,7 @@ bool PassTemporaryToStencilFunction::run(
 
     std::unordered_set<int> localVarAccessIDs;
 
-    auto fields = stencilPtr->getFields2();
+    const auto& fields = stencilPtr->getFields();
 
     LocalVariablePromotion localVariablePromotion(stencilInstantiation, fields, localVarAccessIDs);
 

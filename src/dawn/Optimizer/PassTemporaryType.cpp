@@ -77,7 +77,7 @@ struct Temporary {
   int AccessID;                    ///< AccessID of the field or variable
   TemporaryType Type : 1;          ///< Type of the temporary
   iir::Stencil::Lifetime Lifetime; ///< Lifetime of the temporary
-  iir::Extents Extent;                  ///< Accumulated access of the temporary during its lifetime
+  iir::Extents Extent;             ///< Accumulated access of the temporary during its lifetime
 
   /// @brief Dump the temporary
   void dump(const std::shared_ptr<iir::StencilInstantiation>& instantiation) const {
@@ -190,18 +190,20 @@ void PassTemporaryType::fixTemporariesSpanningMultipleStencils(
     return;
 
   for(int i = 0; i < stencils.size(); ++i) {
-    for(const iir::Stencil::FieldInfo& fieldi : stencils[i]->getFields()) {
+    for(const auto& fieldi : stencils[i]->getFields()) {
 
       // Is fieldi a temporary?
-      if(fieldi.IsTemporary) {
+      if(fieldi.second.IsTemporary) {
 
         // Is it referenced in another stencil?
         for(int j = i + 1; j < stencils.size(); ++j) {
-          for(const iir::Stencil::FieldInfo& fieldj : stencils[j]->getFields()) {
+          for(const auto& fieldj : stencils[j]->getFields()) {
 
             // Yes and yes ... promote it to a real storage
-            if(fieldi.AccessID == fieldj.AccessID && fieldj.IsTemporary) {
-              instantiation->promoteTemporaryFieldToAllocatedField(fieldi.AccessID);
+            if(fieldi.second.field.getAccessID() == fieldj.second.field.getAccessID() &&
+               fieldj.second.IsTemporary) {
+              instantiation->promoteTemporaryFieldToAllocatedField(
+                  fieldi.second.field.getAccessID());
             }
           }
         }

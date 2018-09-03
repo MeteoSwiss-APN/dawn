@@ -41,23 +41,23 @@ void CodeGen::addTempStorageTypedef(Structure& stencilClass, iir::Stencil const&
 
 void CodeGen::addTmpStorageDeclaration(
     Structure& stencilClass,
-    IndexRange<const std::vector<iir::Stencil::FieldInfo>>& tempFields) const {
+    IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields) const {
   if(!(tempFields.empty())) {
     stencilClass.addMember(tmpMetadataTypename_, tmpMetadataName_);
 
     for(auto field : tempFields)
-      stencilClass.addMember(tmpStorageTypename_, "m_" + (*field).Name);
+      stencilClass.addMember(tmpStorageTypename_, "m_" + (*field).second.Name);
   }
 }
 
 void CodeGen::addTmpStorageInit(
     MemberFunction& ctr, iir::Stencil const& stencil,
-    IndexRange<const std::vector<iir::Stencil::FieldInfo>>& tempFields) const {
+    IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields) const {
   if(!(tempFields.empty())) {
     ctr.addInit(tmpMetadataName_ + "(dom_.isize(), dom_.jsize(), dom_.ksize() + 2*" +
                 std::to_string(getVerticalTmpHaloSize(stencil)) + ")");
     for(auto fieldIt : tempFields) {
-      ctr.addInit("m_" + (*fieldIt).Name + "(" + tmpMetadataName_ + ")");
+      ctr.addInit("m_" + (*fieldIt).second.Name + "(" + tmpMetadataName_ + ")");
     }
   }
 }
