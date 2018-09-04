@@ -74,7 +74,7 @@ public:
   /// @param stencil    Current stencil
   /// @param stencil    Current Do-Method
   /// @param loopOrder  Current loop order of the stage
-  /// @param stageIdx   @b Lineaiir::DependencyGraphAccesses the stencil
+  /// @param stageIdx   @b Linear index of the stage in the stencil
   /// @param stmtIdx    Index of the statement inside the stage
   RCKind fixRaceCondition(const iir::DependencyGraphAccesses* graph, iir::Stencil& stencil,
                           iir::DoMethod& doMethod, iir::LoopOrderKind loopOrder, int stageIdx,

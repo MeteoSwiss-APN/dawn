@@ -46,8 +46,6 @@ using StdList = std::list<T, std::allocator<T>>;
 ///
 /// @ingroup optimizer
 class MultiStage : public IIRNode<Stencil, MultiStage, Stage, impl::StdList> {
-  using base_type = IIRNode<Stencil, MultiStage, Stage, impl::StdList>;
-
   StencilInstantiation& stencilInstantiation_;
 
   LoopOrderKind loopOrder_;
@@ -68,7 +66,6 @@ public:
   /// @name Constructors and Assignment
   /// @{
   MultiStage(StencilInstantiation& stencilInstantiation, LoopOrderKind loopOrder);
-  //  MultiStage(const MultiStage&) = default;
   MultiStage(MultiStage&&) = default;
 
   MultiStage& operator=(const MultiStage&) = default;
@@ -106,7 +103,6 @@ public:
   /// the new stages. This function consumes the input argument `splitterIndices`.
   ///
   /// @return New multi-stages
-  // TODO this should not be here
   std::vector<std::unique_ptr<MultiStage>>
   split(std::deque<MultiStage::SplitIndex>& splitterIndices, LoopOrderKind lastLoopOrder);
 

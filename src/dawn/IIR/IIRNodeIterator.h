@@ -26,8 +26,6 @@
 namespace dawn {
 namespace iir {
 
-namespace impl {}
-
 template <typename RootIIRNode, typename LeafNode>
 class IIRNodeIterator {
 

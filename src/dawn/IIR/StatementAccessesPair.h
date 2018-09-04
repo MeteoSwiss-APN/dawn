@@ -33,7 +33,6 @@ class DoMethod;
 /// If the statement is a block-statement, the sub-statements will be stored in blockStatements.
 /// @ingroup optimizer
 class StatementAccessesPair : public IIRNode<DoMethod, StatementAccessesPair, void> {
-  using base_type = IIRNode<DoMethod, StatementAccessesPair, void>;
 
   std::shared_ptr<Statement> statement_;
 

@@ -36,8 +36,6 @@ class IIR;
 /// @brief A Stencil is represented by a collection of MultiStages
 /// @ingroup optimizer
 class Stencil : public IIRNode<IIR, Stencil, MultiStage, impl::StdList> {
-  using base_type = IIRNode<IIR, Stencil, MultiStage, impl::StdList>;
-
   StencilInstantiation& stencilInstantiation_;
   const std::shared_ptr<sir::Stencil> SIRStencil_;
 

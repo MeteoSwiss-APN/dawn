@@ -1314,10 +1314,11 @@ struct PrintDescLine {
 
 bool StencilInstantiation::checkTreeConsistency() const {
   bool result = true;
-  for(const auto& stencil : getStencils()) {
-    result = result & stencil->checkTreeConsistency();
-  }
-  return result;
+  return IIR_->checkTreeConsistency();
+  //  for(const auto& stencil : IIR_) {
+  //    result = result & stencil->checkTreeConsistency();
+  //  }
+  //  return result;
 }
 
 void StencilInstantiation::dump() const {

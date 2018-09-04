@@ -37,7 +37,6 @@ class DoMethod : public IIRNode<Stage, DoMethod, StatementAccessesPair> {
   long unsigned int id_;
 
   std::shared_ptr<DependencyGraphAccesses> dependencyGraph_;
-  using base_type = IIRNode<Stage, DoMethod, StatementAccessesPair>;
 
 public:
   static constexpr const char* name = "DoMethod";

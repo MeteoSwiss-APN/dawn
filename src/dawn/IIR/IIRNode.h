@@ -55,7 +55,7 @@ protected:
   IIRNode() = default;
   IIRNode(IIRNode&&) = default;
 
-  std::unique_ptr<Parent> const* parent_ = nullptr;
+  const std::unique_ptr<Parent>* parent_ = nullptr;
 
   template <class T>
   using SmartPtr = typename std::conditional<std::is_void<Child>::value, std::shared_ptr<T>,
@@ -371,7 +371,6 @@ private:
   checkTreeConsistencyImpl(typename std::enable_if<!std::is_void<TChild>::value>::type* = 0) const {
     PROTECT_TEMPLATE(TChild, Child)
 
-    bool result = true;
     for(const auto& child : getChildren()) {
       if(!child->parentIsSet()) {
         return false;
@@ -381,10 +380,10 @@ private:
       if(parent.get() != this) {
         return false;
       }
-      result = result & child->checkTreeConsistency();
+      return child->checkTreeConsistency();
     }
 
-    return result;
+    return true;
   }
 
   template <typename TParent>
@@ -420,7 +419,6 @@ private:
 
   void repairTreeOfChildren(const std::unique_ptr<NodeType>& p) {
     for(const auto& sibling : children_) {
-      // TODO update
       sibling->setParent(p);
 
       if(!sibling->getChildren().empty()) {

@@ -51,7 +51,8 @@ bool PassManager::runPassOnStecilInstantiation(
     return false;
   }
 
-  DAWN_ASSERT(instantiation->getIIR()->checkTreeConsistency());
+  DAWN_ASSERT_MSG(instantiation->getIIR()->checkTreeConsistency(),
+                  std::string("Tree consistency check failed for pass" + pass->getName()).c_str());
 
 #ifndef NDEBUG
   for(const auto& stencil : instantiation->getIIR()->getChildren()) {

@@ -32,7 +32,6 @@ Stage::Stage(StencilInstantiation& context, int StageID)
 
 Stage::Stage(StencilInstantiation& context, int StageID, const Interval& interval)
     : stencilInstantiation_(context), StageID_(StageID) {
-  // TODO reconsider whether we want to insert an interval
   insertChild(make_unique<DoMethod>(interval));
 }
 

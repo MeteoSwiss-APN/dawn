@@ -20,14 +20,9 @@
 namespace dawn {
 namespace iir {
 
-namespace impl {
-template <typename T>
-using StencilSmartptr = std::unique_ptr<T, std::default_delete<T>>;
-}
-
 /// @brief A Stencil is represented by a collection of MultiStages
 /// @ingroup optimizer
-class IIR : public IIRNode<void, IIR, Stencil /*, impl::StencilSmartptr*/> {
+class IIR : public IIRNode<void, IIR, Stencil> {
 
 public:
   static constexpr const char* name = "IIR";

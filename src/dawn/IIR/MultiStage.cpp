@@ -15,7 +15,6 @@
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
-// TODO remove as much as possible includes from Optimizer
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/IIR/Stage.h"
@@ -282,8 +281,6 @@ boost::optional<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() co
 
   return interval;
 }
-
-// TODO Do not use this
 
 std::unordered_map<int, Field> MultiStage::computeFieldsOnTheFly() const {
   std::unordered_map<int, Field> fields;

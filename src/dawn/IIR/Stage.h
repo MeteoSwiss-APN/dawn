@@ -42,8 +42,6 @@ class MultiStage;
 /// @ingroup optimizer
 class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
 
-  using base_type = IIRNode<MultiStage, Stage, DoMethod>;
-
   StencilInstantiation& stencilInstantiation_;
 
   /// Unique identifier of the stage
@@ -81,7 +79,6 @@ public:
   Stage(StencilInstantiation& context, int StageID, const Interval& interval);
   Stage(StencilInstantiation& context, int StageID);
 
-  //  Stage(const Stage&) = default;
   Stage(Stage&&) = default;
 
   Stage& operator=(const Stage&) = default;
@@ -189,7 +186,6 @@ public:
   /// If a vector of graphs is provided, it will be assigned to the new stages.
   ///
   /// @return New stages
-  // TODO this should not be part of a Stage but rather algorithm
   std::vector<std::unique_ptr<Stage>>
   split(std::deque<int>& splitterIndices,
         const std::deque<std::shared_ptr<DependencyGraphAccesses>>* graphs);

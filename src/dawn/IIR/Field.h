@@ -148,8 +148,8 @@ public:
   inline void extendInterval(Interval const& interval) { interval_.merge(interval); }
 };
 
-void mergeFields(std::unordered_map<int, Field> const& sFields,
-                 std::unordered_map<int, Field>& dFields,
+void mergeFields(std::unordered_map<int, Field> const& sourceFields,
+                 std::unordered_map<int, Field>& destinationFields,
                  boost::optional<Extents> baseExtents = boost::optional<Extents>());
 
 } // namespace iir
