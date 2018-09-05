@@ -347,7 +347,7 @@ public:
   inline void updateFromChildrenRec(
       typename std::enable_if<std::is_void<typename TNodeType::ParentType>::value>::type* = 0) {
 
-    static_cast<NodeType*>(this)->updateFromChildren();
+    updateFromChildren();
   }
 
   /// @brief update recursively (propagating to the top of the tree) the derived info of this node
@@ -355,7 +355,7 @@ public:
   inline void updateFromChildrenRec(
       typename std::enable_if<!std::is_void<typename TNodeType::ParentType>::value>::type* = 0) {
 
-    static_cast<NodeType*>(this)->updateFromChildren();
+    updateFromChildren();
 
     auto parentPtr = getParentPtr();
     if(parentPtr) {
@@ -370,7 +370,7 @@ public:
     if(impl::updateLevel(updateType)) {
       static_cast<NodeType*>(this)->updateLevel();
       if(!impl::updateTreeAbove(updateType)) {
-        static_cast<NodeType*>(this)->updateFromChildren();
+        updateFromChildren();
       }
     }
     if(impl::updateTreeAbove(updateType)) {

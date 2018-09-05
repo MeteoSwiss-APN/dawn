@@ -354,7 +354,7 @@ Stage::split(std::deque<int>& splitterIndices,
     //    for(std::size_t idx = prevSplitterIndex; idx < nextSplitterIndex; ++idx)
 
     // Update the fields of the new stage
-    newStage.update(iir::NodeUpdateType::level);
+    newStage.update(NodeUpdateType::level);
 
     prevSplitterIndex = nextSplitterIndex;
   }

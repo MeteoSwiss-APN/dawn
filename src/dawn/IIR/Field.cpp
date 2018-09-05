@@ -27,23 +27,18 @@ void mergeFields(std::unordered_map<int, Field> const& sourceFields,
                  std::unordered_map<int, Field>& destinationFields,
                  boost::optional<Extents> baseExtents) {
 
-  boost::optional<Extents> baseHoriExtents = baseExtents;
-  if(baseExtents.is_initialized()) {
-    (*baseHoriExtents)[2].Minus = 0;
-    (*baseHoriExtents)[2].Plus = 0;
-  }
   for(const auto& fieldPair : sourceFields) {
     Field sField = fieldPair.second;
 
     auto readExtentsRB = sField.getReadExtents();
-    if(readExtentsRB.is_initialized() && baseHoriExtents.is_initialized()) {
-      readExtentsRB->expand(*baseHoriExtents);
+    if(readExtentsRB.is_initialized() && baseExtents.is_initialized()) {
+      readExtentsRB->expand(*baseExtents);
       sField.setReadExtentsRB(readExtentsRB);
     }
 
     auto writeExtentsRB = sField.getWriteExtents();
-    if(writeExtentsRB.is_initialized() && baseHoriExtents.is_initialized()) {
-      writeExtentsRB->expand(*baseHoriExtents);
+    if(writeExtentsRB.is_initialized() && baseExtents.is_initialized()) {
+      writeExtentsRB->expand(*baseExtents);
       sField.setWriteExtentsRB(writeExtentsRB);
     }
 
