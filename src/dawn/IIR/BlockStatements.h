@@ -42,6 +42,7 @@ public:
   bool hasBlockStatements() const;
   /// @}
 
+  /// @brief insert a new statement accesses pair
   void insert(std::unique_ptr<StatementAccessesPair>&& stmt);
 };
 

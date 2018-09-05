@@ -101,6 +101,13 @@ Interval Stage::getEnclosingExtendedInterval() const {
   return getEnclosingInterval().extendInterval(getMaxVerticalExtent());
 }
 
+void Stage::DerivedInfo::clear() {
+  fields_.clear();
+  globalVariables_.clear();
+  globalVariablesFromStencilFunctionCalls_.clear();
+  allGlobalVariables_.clear();
+}
+
 bool Stage::overlaps(const Stage& other) const {
   // This is a more conservative test.. if it fails we are certain nothing overlaps
   if(!getEnclosingExtendedInterval().overlaps(other.getEnclosingExtendedInterval()))
@@ -169,10 +176,7 @@ public:
 
 void Stage::updateLevel() {
 
-  derivedInfo_.fields_.clear();
-  derivedInfo_.globalVariables_.clear();
-  derivedInfo_.globalVariablesFromStencilFunctionCalls_.clear();
-  derivedInfo_.allGlobalVariables_.clear();
+  derivedInfo_.clear();
 
   // Compute the fields and their intended usage. Fields can be in one of three states: `Output`,
   // `InputOutput` or `Input` which implements the following state machine:

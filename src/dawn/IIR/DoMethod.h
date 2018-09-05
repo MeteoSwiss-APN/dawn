@@ -36,7 +36,17 @@ class DoMethod : public IIRNode<Stage, DoMethod, StatementAccessesPair> {
   Interval interval_;
   long unsigned int id_;
 
-  std::shared_ptr<DependencyGraphAccesses> dependencyGraph_;
+  struct DerivedInfo {
+    DerivedInfo() : dependencyGraph_(nullptr) {}
+    DerivedInfo(DerivedInfo&&) = default;
+    DerivedInfo(const DerivedInfo&) = default;
+    DerivedInfo& operator=(DerivedInfo&&) = default;
+    DerivedInfo& operator=(const DerivedInfo&) = default;
+
+    std::shared_ptr<DependencyGraphAccesses> dependencyGraph_;
+  };
+
+  DerivedInfo derivedInfo_;
 
 public:
   static constexpr const char* name = "DoMethod";
@@ -46,36 +56,27 @@ public:
   /// @name Constructors and Assignment
   /// @{
   DoMethod(Interval interval);
-
-  //  DoMethod(const DoMethod&) = default;
   DoMethod(DoMethod&&) = default;
-
-  //  DoMethod& operator=(const DoMethod&) = default;
   DoMethod& operator=(DoMethod&&) = default;
   /// @}
 
+  /// @brief clone the object creating and returning a new unique_ptr
   std::unique_ptr<DoMethod> clone() const;
 
-  //  /// @brief Get the statements of the Stage
-  //  std::vector<std::shared_ptr<StatementAccessesPair>>& getStatementAccessesPairs();
-  //  const std::vector<std::shared_ptr<StatementAccessesPair>>& getStatementAccessesPairs() const;
-
-  /// @brief Get the vertical Interval
+  /// @name Getters
+  /// @{
   Interval& getInterval();
   const Interval& getInterval() const;
-
-  void setInterval(Interval const& interval);
-
-  unsigned long int getID() const { return id_; }
-
-  void setID(const long unsigned int id) { id_ = id; }
-
-  /// @brief Set the dependency graph of this Do-Method
-  void setDependencyGraph(const std::shared_ptr<DependencyGraphAccesses>& DG);
-
-  /// @brief Get the dependency graph of this Do-Method
-  std::shared_ptr<DependencyGraphAccesses>& getDependencyGraph();
+  inline unsigned long int getID() const { return id_; }
   const std::shared_ptr<DependencyGraphAccesses>& getDependencyGraph() const;
+  /// @}
+
+  /// @name Setters
+  /// @{
+  void setInterval(Interval const& interval);
+  void setID(const long unsigned int id) { id_ = id; }
+  void setDependencyGraph(const std::shared_ptr<DependencyGraphAccesses>& DG);
+  /// @}
 
   /// @brief computes the maximum extent among all the accesses of accessID
   boost::optional<Extents> computeMaximumExtents(const int accessID) const;
@@ -94,6 +95,8 @@ public:
   boost::optional<Interval> computeEnclosingAccessInterval(const int accessID,
                                                            const bool mergeWithDoInterval) const;
 
+  /// @brief update the derived info from the children (currently no information are propagated,
+  /// therefore the method is empty
   inline virtual void updateFromChildren() override {}
 };
 

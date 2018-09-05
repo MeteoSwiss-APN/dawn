@@ -32,7 +32,6 @@ bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInsta
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     iir::Stencil& stencil = *stencilPtr;
 
-    // TODO remove <type> in make_shared since it inhibits perfect forwarding
     std::shared_ptr<iir::DependencyGraphAccesses> DAG =
         std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation.get());
 

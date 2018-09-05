@@ -72,6 +72,8 @@ public:
 
   void setToEnd() {
     iterator_ = end_;
+    // the recursive rest of iterators is constructed with last node (i.e. end-1) and set to end
+    // recursively
     restIterator_ =
         IIRNodeIterator<typename RootIIRNode::ChildType, LeafNode>(std::prev(iterator_)->get());
     restIterator_.setToEnd();

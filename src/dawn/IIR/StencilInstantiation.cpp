@@ -1312,14 +1312,7 @@ struct PrintDescLine {
 
 } // anonymous namespace
 
-bool StencilInstantiation::checkTreeConsistency() const {
-  bool result = true;
-  return IIR_->checkTreeConsistency();
-  //  for(const auto& stencil : IIR_) {
-  //    result = result & stencil->checkTreeConsistency();
-  //  }
-  //  return result;
-}
+bool StencilInstantiation::checkTreeConsistency() const { return IIR_->checkTreeConsistency(); }
 
 void StencilInstantiation::dump() const {
   std::cout << "StencilInstantiation : " << getName() << "\n";

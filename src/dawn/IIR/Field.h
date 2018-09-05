@@ -75,10 +75,6 @@ public:
   /// @{
   inline Interval const& getInterval() const { return interval_; }
 
-  // Enclosing interval where accesses where recorded,
-  /// i.e. interval_.extend(Extent)
-  Interval computeAccessedInterval() const;
-
   inline boost::optional<Extents> const& getReadExtents() const {
     return extents_.getReadExtents();
   }
@@ -103,8 +99,18 @@ public:
   /// @brief setters
   /// @{
   inline void setIntend(IntendKind intend) { intend_ = intend; }
+  inline void setReadExtentsRB(Extents const& extents) { extentsRB_.setReadExtents(extents); }
+  inline void setWriteExtentsRB(Extents const& extents) { extentsRB_.setWriteExtents(extents); }
+  inline void setReadExtentsRB(boost::optional<Extents> const& extents);
+  inline void setWriteExtentsRB(boost::optional<Extents> const& extents);
   /// @}
 
+  // Enclosing interval where accesses where recorded,
+  /// i.e. interval_.extend(Extent)
+  Interval computeAccessedInterval() const;
+
+  /// @brief merge of the extents
+  /// @{
   inline void mergeReadExtents(Extents const& extents) { extents_.mergeReadExtents(extents); }
   inline void mergeWriteExtents(Extents const& extents) { extents_.mergeWriteExtents(extents); }
   inline void mergeReadExtents(boost::optional<Extents> const& extents) {
@@ -112,19 +118,6 @@ public:
   }
   inline void mergeWriteExtents(boost::optional<Extents> const& extents) {
     extents_.mergeWriteExtents(extents);
-  }
-
-  inline void setReadExtentsRB(Extents const& extents) { extentsRB_.setReadExtents(extents); }
-  inline void setWriteExtentsRB(Extents const& extents) { extentsRB_.setWriteExtents(extents); }
-  inline void setReadExtentsRB(boost::optional<Extents> const& extents) {
-    if(extents.is_initialized()) {
-      extentsRB_.setReadExtents(*extents);
-    }
-  }
-  inline void setWriteExtentsRB(boost::optional<Extents> const& extents) {
-    if(extents.is_initialized()) {
-      extentsRB_.setWriteExtents(*extents);
-    }
   }
 
   inline void mergeReadExtentsRB(Extents const& extents) { extentsRB_.mergeReadExtents(extents); }
@@ -136,18 +129,15 @@ public:
   inline void mergeWriteExtentsRB(boost::optional<Extents> const& extents) {
     extentsRB_.mergeWriteExtents(extents);
   }
-  //  inline void expandReadExtents(Extents const& extents) { extents_.expandReadExtents(extents); }
-  //  inline void expandWriteExtents(Extents const& extents) { extents_.expandWriteExtents(extents);
-  //  }
-  //  inline void expandReadExtents(boost::optional<Extents> const& extents) {
-  //    extents_.expandReadExtents(extents);
-  //  }
-  //  inline void expandWriteExtents(boost::optional<Extents> const& extents) {
-  //    extents_.expandWriteExtents(extents);
-  //  }
+  /// @}
+  ///
   inline void extendInterval(Interval const& interval) { interval_.merge(interval); }
 };
 
+/// @brief merges all the fields from sourceFields into destinationFields
+/// If a baseExtent is provided (optionally), the extent of each sourceField is expanded with the
+/// baseExtent (in order to account for redundant block computations where the accesses were
+/// recorded)
 void mergeFields(std::unordered_map<int, Field> const& sourceFields,
                  std::unordered_map<int, Field>& destinationFields,
                  boost::optional<Extents> baseExtents = boost::optional<Extents>());

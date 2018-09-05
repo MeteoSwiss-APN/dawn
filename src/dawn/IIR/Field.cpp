@@ -23,15 +23,16 @@ Interval Field::computeAccessedInterval() const {
   return accessedInterval;
 }
 
-void mergeFields(std::unordered_map<int, Field> const& sFields,
-                 std::unordered_map<int, Field>& dFields, boost::optional<Extents> baseExtents) {
+void mergeFields(std::unordered_map<int, Field> const& sourceFields,
+                 std::unordered_map<int, Field>& destinationFields,
+                 boost::optional<Extents> baseExtents) {
 
   boost::optional<Extents> baseHoriExtents = baseExtents;
   if(baseExtents.is_initialized()) {
     (*baseHoriExtents)[2].Minus = 0;
     (*baseHoriExtents)[2].Plus = 0;
   }
-  for(const auto& fieldPair : sFields) {
+  for(const auto& fieldPair : sourceFields) {
     Field sField = fieldPair.second;
 
     auto readExtentsRB = sField.getReadExtents();
@@ -46,8 +47,8 @@ void mergeFields(std::unordered_map<int, Field> const& sFields,
       sField.setWriteExtentsRB(writeExtentsRB);
     }
 
-    auto it = dFields.find(sField.getAccessID());
-    if(it != dFields.end()) {
+    auto it = destinationFields.find(sField.getAccessID());
+    if(it != destinationFields.end()) {
       // Adjust the Intend
       if(it->second.getIntend() == Field::IK_Input && sField.getIntend() == Field::IK_Output)
         it->second.setIntend(Field::IK_InputOutput);
@@ -67,9 +68,21 @@ void mergeFields(std::unordered_map<int, Field> const& sFields,
     } else {
 
       // add the baseExtent of the field (i.e. normally redundant computations of a stage)
-      dFields.emplace(sField.getAccessID(), sField);
+      destinationFields.emplace(sField.getAccessID(), sField);
     }
   }
 }
+
+void Field::setReadExtentsRB(boost::optional<Extents> const& extents) {
+  if(extents.is_initialized()) {
+    extentsRB_.setReadExtents(*extents);
+  }
+}
+void Field::setWriteExtentsRB(boost::optional<Extents> const& extents) {
+  if(extents.is_initialized()) {
+    extentsRB_.setWriteExtents(*extents);
+  }
+}
+
 } // namespace iir
 } // namespace dawn

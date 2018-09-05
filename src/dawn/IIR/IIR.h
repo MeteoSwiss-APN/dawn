@@ -29,13 +29,14 @@ public:
 
   using StencilSmartPtr_t = child_smartptr_t<Stencil>;
 
+  /// @brief constructors and assignment
   IIR() = default;
   IIR(const IIR&) = default;
   IIR(IIR&&) = default;
-
   IIR& operator=(const IIR&) = default;
   IIR& operator=(IIR&&) = default;
   /// @}
+  /// @brief clone the IIR
   std::unique_ptr<IIR> clone() const;
 };
 } // namespace iir

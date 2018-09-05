@@ -91,8 +91,6 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
           for(auto candidateStageIt = std::next(curStageIt);
               candidateStageIt != multiStage.childrenREnd(); ++candidateStageIt) {
             iir::Stage& candidateStage = **candidateStageIt;
-            //            std::vector<std::unique_ptr<iir::DoMethod>>& candiateDoMethods =
-            //                candidateStage.getDoMethods();
 
             // Does the interval of `curDoMethod` overlap with any DoMethod interval in
             // `candidateStage`?

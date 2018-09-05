@@ -28,13 +28,13 @@ namespace dawn {
 namespace iir {
 
 DoMethod::DoMethod(Interval interval)
-    : interval_(interval), id_(IndexGenerator::Instance().getIndex()), dependencyGraph_(nullptr) {}
+    : interval_(interval), id_(IndexGenerator::Instance().getIndex()) {}
 
 std::unique_ptr<DoMethod> DoMethod::clone() const {
   auto cloneMS = make_unique<DoMethod>(interval_);
 
   cloneMS->setID(id_);
-  cloneMS->setDependencyGraph(dependencyGraph_);
+  cloneMS->setDependencyGraph(derivedInfo_.dependencyGraph_);
 
   cloneMS->cloneChildrenFrom(*this);
   return cloneMS;
@@ -45,11 +45,7 @@ Interval& DoMethod::getInterval() { return interval_; }
 const Interval& DoMethod::getInterval() const { return interval_; }
 
 void DoMethod::setDependencyGraph(const std::shared_ptr<DependencyGraphAccesses>& DG) {
-  dependencyGraph_ = DG;
-}
-
-std::shared_ptr<DependencyGraphAccesses>& DoMethod::getDependencyGraph() {
-  return dependencyGraph_;
+  derivedInfo_.dependencyGraph_ = DG;
 }
 
 boost::optional<Extents> DoMethod::computeMaximumExtents(const int accessID) const {
@@ -86,7 +82,7 @@ DoMethod::computeEnclosingAccessInterval(const int accessID, const bool mergeWit
 void DoMethod::setInterval(const Interval& interval) { interval_ = interval; }
 
 const std::shared_ptr<DependencyGraphAccesses>& DoMethod::getDependencyGraph() const {
-  return dependencyGraph_;
+  return derivedInfo_.dependencyGraph_;
 }
 
 class CheckNonNullStatementVisitor : public ASTVisitorForwarding, public NonCopyable {

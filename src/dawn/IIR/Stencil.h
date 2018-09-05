@@ -61,6 +61,7 @@ private:
   struct DerivedInfo {
     /// Dependency graph of the stages of this stencil
     std::shared_ptr<DependencyGraphStage> stageDependencyGraph_;
+    /// field info properties
     std::unordered_map<int, FieldInfo> fields_;
   };
 
@@ -172,7 +173,6 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
-  /// //TODO no need to pass SIRStencil, we can get it from stencilInstantiation
   Stencil(StencilInstantiation& stencilInstantiation,
           const std::shared_ptr<sir::Stencil>& SIRStencil, int StencilID /*,
           const std::shared_ptr<DependencyGraphStage>& stageDependencyGraph = nullptr*/);
@@ -183,6 +183,7 @@ public:
   Stencil& operator=(Stencil&&) = default;
   /// @}
 
+  /// @brief clone the stencil returning a smart ptr
   std::unique_ptr<Stencil> clone() const;
 
   /// @brief Compute a set of intervals for this stencil
@@ -259,6 +260,7 @@ public:
   /// @brief Compute the life-time of the fields (or variables) given as a set of `AccessID`s
   std::unordered_map<int, Lifetime> getLifetime(const std::unordered_set<int>& AccessID) const;
 
+  /// @brief get the lifetime where an access id is used
   Lifetime getLifetime(const int AccessIDs) const;
 
   /// @brief Check if the stencil is empty (i.e contains no statements)
@@ -278,8 +280,11 @@ public:
 
   std::unordered_map<int, Field> computeFieldsOnTheFly() const;
 
+  /// @brief update the derived info from children
   virtual void updateFromChildren() override;
 
+  /// @brief compare stored derived info with the computed on the fly algorithm (in order to check
+  /// that the update info is consistent with the current state of the tree)
   bool compareDerivedInfo() const;
 
 private:

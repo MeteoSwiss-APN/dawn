@@ -420,23 +420,25 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
     std::string initCtr = "m_" + stencilName + "(new " + stencilName;
 
     int i = 0;
-    for(auto field : StencilFields) {
-      if(field.second.IsTemporary)
+    for(const auto& fieldInfoPair : StencilFields) {
+      const auto& fieldInfo = fieldInfoPair.second;
+      if(fieldInfo.IsTemporary)
         continue;
       initCtr += (i != 0 ? "," : "<") +
-                 (stencilInstantiation->isAllocatedField(field.second.field.getAccessID())
+                 (stencilInstantiation->isAllocatedField(fieldInfo.field.getAccessID())
                       ? (c_gtc().str() + "storage_t")
-                      : (codeGenProperties.getParamType(field.second.Name)));
+                      : (codeGenProperties.getParamType(fieldInfo.Name)));
       i++;
     }
 
     initCtr += ">(dom";
-    for(auto field : StencilFields) {
-      if(field.second.IsTemporary)
+    for(const auto& fieldInfoPair : StencilFields) {
+      const auto& fieldInfo = fieldInfoPair.second;
+      if(fieldInfo.IsTemporary)
         continue;
-      initCtr += "," + (stencilInstantiation->isAllocatedField(field.second.field.getAccessID())
-                            ? ("m_" + field.second.Name)
-                            : (field.second.Name));
+      initCtr += "," + (stencilInstantiation->isAllocatedField(fieldInfo.field.getAccessID())
+                            ? ("m_" + fieldInfo.Name)
+                            : (fieldInfo.Name));
     }
     initCtr += ") )";
     StencilWrapperConstructor.addInit(initCtr);

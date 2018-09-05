@@ -24,6 +24,8 @@ namespace iir {
 class FieldAccessExtents {
 
 public:
+  /// @brief constructors and assignment
+  /// @{
   FieldAccessExtents(boost::optional<Extents> const& readExtents,
                      boost::optional<Extents> const& writeExtents)
       : readAccessExtents_(readExtents), writeAccessExtents_(writeExtents),
@@ -36,19 +38,29 @@ public:
   FieldAccessExtents(FieldAccessExtents const&) = default;
   FieldAccessExtents& operator=(FieldAccessExtents&&) = default;
   FieldAccessExtents& operator=(const FieldAccessExtents&) = default;
+  /// @}
 
+  /// @brief getters
+  /// @{
   boost::optional<Extents> const& getReadExtents() const { return readAccessExtents_; }
   boost::optional<Extents> const& getWriteExtents() const { return writeAccessExtents_; }
   Extents const& getExtents() const { return totalExtents_; }
-
+  /// @}
+  /// @brief merge of extent with another (argument) extent
+  /// @{
   void mergeReadExtents(Extents const& extents);
   void mergeWriteExtents(Extents const& extents);
   void mergeReadExtents(boost::optional<Extents> const& extents);
   void mergeWriteExtents(boost::optional<Extents> const& extents);
+  /// @}
+  /// @brief setters
+  /// @{
   void setReadExtents(Extents const& extents);
   void setWriteExtents(Extents const& extents);
-
+  /// @}
+  ///
 private:
+  /// @brief update the total extent from read/write extents
   void updateTotalExtents();
 
   boost::optional<Extents> readAccessExtents_;

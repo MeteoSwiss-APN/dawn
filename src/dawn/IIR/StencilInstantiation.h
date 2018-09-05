@@ -401,11 +401,12 @@ public:
       const Interval& interval,
       const std::shared_ptr<StencilFunctionInstantiation>& curStencilFunctionInstantiation);
 
-  //  /// @brief Get the list of stencils
+  /// @brief Get the list of stencils
   inline const std::vector<std::unique_ptr<Stencil>>& getStencils() const {
     return getIIR()->getChildren();
   }
 
+  /// @brief get the IIR tree
   inline const std::unique_ptr<IIR>& getIIR() const { return IIR_; }
 
   /// @brief Get StencilID of the StencilCallDeclStmt

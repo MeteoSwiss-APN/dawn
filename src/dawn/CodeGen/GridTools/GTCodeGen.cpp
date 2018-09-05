@@ -229,8 +229,8 @@ void GTCodeGen::buildPlaceholderDefinitions(
   int numTemporaries = computeNumTemporaries(stencilFields);
 
   int accessorIdx = 0;
-  for(const auto& fieldPair : stencilFields) {
-    const auto& fieldInfo = fieldPair.second;
+  for(const auto& fieldInfoPair : stencilFields) {
+    const auto& fieldInfo = fieldInfoPair.second;
     // Fields
     function.addTypeDef("p_" + fieldInfo.Name)
         .addType(c_gt() + (fieldInfo.IsTemporary ? "tmp_arg" : "arg"))

@@ -19,16 +19,19 @@ namespace dawn {
 namespace iir {
 
 enum class NodeUpdateType : int {
-  treeAbove = 2,
-  levelAndTreeAbove = 1,
-  level = 0,
-  levelAndTreeBelow = -1,
-  treeBelow = -2
+  treeAbove = 2,          // update only the tree above the node
+  levelAndTreeAbove = 1,  // update current level and tree above the node
+  level = 0,              // update current level
+  levelAndTreeBelow = -1, // update current level and the tree below
+  treeBelow = -2          // update only the tree below the node
 };
 
 namespace impl {
+/// @brief return true if the current level needs to be updated
 bool updateLevel(NodeUpdateType updateType);
+/// @brief return true if the tree above the current level needs to be updated
 bool updateTreeAbove(NodeUpdateType updateType);
+/// @brief return true if the tree below the current level needs to be updated
 bool updateTreeBelow(NodeUpdateType updateType);
 } // namespace impl
 } // namespace iir

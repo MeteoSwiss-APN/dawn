@@ -31,7 +31,6 @@ namespace dawn {
 static int mergePossible(const std::set<int>& fields, const iir::Stage* stage, int maxNumFields) {
   int numFields = fields.size();
 
-  // TODO redo this clean
   for(const auto& fieldPair : stage->getFields())
     if(!fields.count(fieldPair.second.getAccessID()))
       numFields++;
@@ -70,7 +69,6 @@ bool PassStencilSplitter::run(
     if(stencil.getFields().size() > MaxFieldPerStencil) {
       rerunPassSetStageGraph = true;
 
-      // TODO make the newStencils an IIR
       newStencils.emplace_back(make_unique<iir::Stencil>(
           *stencilInstantiation, stencil.getSIRStencil(), stencilInstantiation->nextUID()));
       const std::unique_ptr<iir::Stencil>& newStencil = newStencils.back();
@@ -95,7 +93,6 @@ bool PassStencilSplitter::run(
 
             // Update fields of the `newStencil`. Note that the indivudual stages do not need to
             // update their fields as they remain the same.
-            // TODO transform
             for(const auto& fieldPair : stagePtr->getFields())
               fieldsInNewStencil.insert(fieldPair.second.getAccessID());
 
@@ -131,8 +128,6 @@ bool PassStencilSplitter::run(
           else
             ++msIt;
       }
-
-      // TODO update should happen on a consistent Tree, which at the moment we dont have
 
       // Update the fields of the stencil (this is not strictly necessary but it might be a source
       // of error in the future when updateFields also changes data-structures in the

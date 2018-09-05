@@ -46,14 +46,22 @@ bool ptrEqual(const std::weak_ptr<P>& f, const std::weak_ptr<P>& s) {
   return !f.expired() && f.lock() == s.lock();
 }
 
+/// @class base class of a node of the IIR tree
+/// @tparam Parent parent class of the node
+/// @tparam NodeType the same class that inherits from this IIRNode, i.e. this node
+/// @tparam Child child class of the node
+/// @tparam Container stl containter that stores the children
 template <typename Parent, typename NodeType, typename Child,
           template <class> class Container = impl::StdVector>
 class IIRNode {
 
 protected:
+  /// @brief constructors
+  /// @{
   virtual ~IIRNode() = default;
   IIRNode() = default;
   IIRNode(IIRNode&&) = default;
+  /// @}
 
   const std::unique_ptr<Parent>* parent_ = nullptr;
 
@@ -76,26 +84,36 @@ public:
   using child_iterator_t = typename Container<SmartPtr<Child>>::iterator;
   using child_reverse_iterator_t = typename Container<SmartPtr<Child>>::reverse_iterator;
 
+  /// @brief clone the children of another node and store them as children of this object
+  /// @param other node from where the children are cloned
   inline void cloneChildrenFrom(const IIRNode& other) { cloneChildrenImpl<Child>(other); }
-
+  /// @brief clone the children of another node and store them as children of this object
+  /// @param other node from where the children are cloned
+  /// @param thisNode smart ptr of this object (specialization for nodes that have no parent)
   inline void cloneChildrenFrom(const IIRNode& other, const SmartPtr<NodeType>& thisNode) {
     DAWN_ASSERT(thisNode.get() == this);
     cloneChildrenImpl<Child>(other, thisNode);
   }
 
+  /// @brief getters and iterator getters
+  /// @{
   inline const Container<SmartPtr<Child>>& getChildren() const { return children_; }
 
   inline ChildIterator childrenBegin() { return children_.begin(); }
   inline ChildIterator childrenEnd() { return children_.end(); }
 
+  /// @brief reverse iterator begin
   inline typename Container<SmartPtr<Child>>::reverse_iterator childrenRBegin() {
     return children_.rbegin();
   }
+  /// @brief reverse iterator end
   inline typename Container<SmartPtr<Child>>::reverse_iterator childrenREnd() {
     return children_.rend();
   }
 
+  /// @brief iterator begin
   inline ChildConstIterator childrenBegin() const { return children_.begin(); }
+  /// @brief iterator end
   inline ChildConstIterator childrenEnd() const { return children_.end(); }
 
   inline typename Container<SmartPtr<Child>>::const_reverse_iterator childrenRBegin() const {
@@ -104,9 +122,24 @@ public:
   inline typename Container<SmartPtr<Child>>::const_reverse_iterator childrenREnd() const {
     return children_.rend();
   }
+  inline const ChildSmartPtrType& getChild(unsigned long pos) {
+    return getChildImpl<typename std::iterator_traits<ChildIterator>::iterator_category>(pos);
+  }
+  /// @brief get unique_ptr to parent
+  inline const std::unique_ptr<Parent>& getParent() {
+    DAWN_ASSERT(parent_);
+    return *parent_;
+  }
 
-  inline ChildIterator childrenErase(ChildIterator it) {
-    auto it_ = children_.erase(it);
+  /// @brief get raw pointer to parent smart ptr
+  inline const std::unique_ptr<Parent>* getParentPtr() { return parent_; }
+  /// @}
+
+  /// @brief erase a children element (tree consistency is ensured after erasure)
+  /// @param childIt iterator pointing to the element being erased
+  /// @return iterator to next element
+  inline ChildIterator childrenErase(ChildIterator childIt) {
+    auto it_ = children_.erase(childIt);
 
     if(!children_.empty()) {
       setChildParent<Parent, Child>(children_.back());
@@ -116,9 +149,13 @@ public:
     return it_;
   }
 
+  /// @brief conditional erase a children element if the predicate returns true
+  /// (tree consistency is ensured after erasure)
+  /// @param pred predicate used to find the element that will be deleted
+  /// @return true if element is found and deleted
   template <typename UnaryPredicate>
-  inline bool childrenEraseIf(UnaryPredicate p) {
-    bool res = RemoveIf(children_, p);
+  inline bool childrenEraseIf(UnaryPredicate pred) {
+    bool res = RemoveIf(children_, pred);
 
     if(!children_.empty()) {
       setChildParent<Parent, Child>(children_.back());
@@ -127,41 +164,19 @@ public:
     return res;
   }
 
-  inline const ChildSmartPtrType& getChild(unsigned long pos) {
-    return getChildImpl<typename std::iterator_traits<ChildIterator>::iterator_category>(pos);
-  }
-
-  template <typename IteratorCategory>
-  inline const ChildSmartPtrType& getChildImpl(
-      unsigned long pos,
-      typename std::enable_if<
-          std::is_same<IteratorCategory, std::random_access_iterator_tag>::value>::type* = 0) {
-    return children_[pos];
-  }
-
-  template <typename IteratorCategory>
-  inline const ChildSmartPtrType& getChildImpl(
-      unsigned long pos,
-      typename std::enable_if<
-          !std::is_same<IteratorCategory, std::random_access_iterator_tag>::value>::type* = 0) {
-
-    auto it = std::next(children_.begin(), pos);
-    return children_[it];
-  }
-
+  /// @brief check the consistency of the tree
+  /// Every tree node contains pointers to parent node. When the tree is modified, i.e. a node is
+  /// inserted or deleted, the pointers pointing to parent nodes can be invalidated. This method
+  /// checks if all these pointers are valid
   inline bool checkTreeConsistency() const { return checkTreeConsistencyImpl<Child>(); }
 
+  /// @brief virtual method to be implemented by node classes that update the derived info from
+  /// children derived infos
   virtual void updateFromChildren() {}
-
-  inline const std::unique_ptr<Parent>& getParent() {
-    DAWN_ASSERT(parent_);
-    return *parent_;
-  }
-
-  inline const std::unique_ptr<Parent>* getParentPtr() { return parent_; }
 
   inline void setParent(const std::unique_ptr<Parent>& p) { parent_ = &p; }
 
+  /// @brief check if the pointer to parent is set
   inline bool parentIsSet() const { return static_cast<bool>(parent_); }
 
   template <bool T>
@@ -196,25 +211,27 @@ public:
                                            getChildTypeImpl<T>>::type;
   };
 
-  template <typename TChildSmartPtr, typename TNode>
+  /// @brief set the parent pointer of the children
+  template <typename TChildSmartPtr>
   void
-  setChildrenParent(const std::unique_ptr<TNode>& p,
-                    typename std::enable_if<!is_child_void<TChildSmartPtr>::value>::type* = 0) {
+  setChildrenParent(typename std::enable_if<!is_child_void<TChildSmartPtr>::value>::type* = 0) {
     DAWN_ASSERT(parent_);
     const std::unique_ptr<NodeType>& thisNodeSmartPtr =
         (*parent_)->getChildSmartPtr(static_cast<NodeType*>(this));
 
     for(const auto& child : getChildren()) {
       child->setParent(thisNodeSmartPtr);
-      child->template setChildrenParent<typename getChildType<TChildSmartPtr>::type::type>(child);
+      child->template setChildrenParent<typename getChildType<TChildSmartPtr>::type::type>();
     }
   }
 
-  template <typename TChildSmartPtr, typename TNode>
-  void setChildrenParent(const std::unique_ptr<TNode>& p,
-                         typename std::enable_if<is_child_void<TChildSmartPtr>::value>::type* = 0) {
+  /// @brief set the parent pointer of the children
+  template <typename TChildSmartPtr>
+  void setChildrenParent(typename std::enable_if<is_child_void<TChildSmartPtr>::value>::type* = 0) {
   }
 
+  /// @brief set the parent pointer of a child of this node
+  /// @param child child node of this node, for which the parent pointer will be set
   template <typename TParent, typename TChild>
   void setChildParent(
       const std::unique_ptr<TChild>& child,
@@ -226,6 +243,7 @@ public:
                   "templated only for syntax specialization using SFINAE");
 
     if(parent_) {
+      // we need to find the smart ptr of "this"
       const std::unique_ptr<NodeType>& thisNodeSmartPtr =
           (*parent_)->getChildSmartPtr(static_cast<NodeType*>(this));
 
@@ -236,7 +254,7 @@ public:
       for(const auto& sibling : thisNodeSmartPtr->getChildren()) {
         sibling->setParent(thisNodeSmartPtr);
         sibling->template setChildrenParent<
-            typename getChildType<std::unique_ptr<TChild>>::type::type>(child);
+            typename getChildType<std::unique_ptr<TChild>>::type::type>();
       }
     }
   }
@@ -247,42 +265,71 @@ public:
       typename std::enable_if<std::is_void<TParent>::value ||
                               is_child_void<std::unique_ptr<TChild>>::value>::type* = 0) {}
 
+  /// @brief insert a child node (specialization for nodes with a parent node)
+  /// @param child node being inserted as a child
   void insertChild(ChildSmartPtrType&& child) { insertChildImpl<Parent>(std::move(child)); }
 
+  /// @brief insert a child node (specialization for nodes without a parent node)
+  /// @param child node being inserted as a child
+  /// @param thisNode smart ptr to this
+  void insertChild(ChildSmartPtrType&& child, const std::unique_ptr<NodeType>& thisNode) {
+    insertChildImpl<Parent, ChildSmartPtrType, std::unique_ptr<NodeType>>(std::move(child),
+                                                                          thisNode);
+  }
+
+  /// @brief insert a child node
+  /// @param pos iterator with the position where the child will be inserted
+  /// @param child node being inserted as a child
   ChildIterator insertChild(ChildIterator pos, ChildSmartPtrType&& child) {
     return insertChildImpl<Parent>(pos, std::move(child));
   }
 
+  /// @brief insert children within an iterator range (specialization for nodes with a parent node)
+  /// @param pos iterator with the position where the child will be inserted
+  /// @param first iterator to begin of the children being inserted
+  /// @param last iterator to end of the children being inserted
   template <typename Iterator>
   ChildIterator insertChildren(ChildIterator pos, Iterator first, Iterator last) {
     return insertChildrenImpl<Iterator, Parent>(pos, first, last);
   }
 
+  /// @brief insert children within an iterator range (specialization for nodes without a parent
+  /// node)
+  /// @param pos iterator with the position where the child will be inserted
+  /// @param first iterator to begin of the children being inserted
+  /// @param last iterator to end of the children being inserted
   template <typename Iterator, typename TChildParent>
   ChildIterator insertChildren(ChildIterator pos, Iterator first, Iterator last,
                                const std::unique_ptr<TChildParent>& p) {
     return insertChildrenImpl<Parent, Iterator, TChildParent>(pos, first, last, p);
   }
 
-  void insertChild(ChildSmartPtrType&& child, const std::unique_ptr<NodeType>& p) {
-    insertChildImpl<Parent, ChildSmartPtrType, std::unique_ptr<NodeType>>(std::move(child), p);
-  }
-
+  /// @brief print tree of pointers
   void printTree() { printTreeImpl<Child>(); }
 
+  /// @brief replace a child node by another node (specialization for nodes with a parent node)
+  /// @param inputChild child node that will be looked up and replaced
+  /// @param withNewChild new child node that will be inserted in the place of the old node
   void replace(const SmartPtr<Child>& inputChild, SmartPtr<Child>& withNewChild) {
     replaceImpl<Parent>(inputChild, withNewChild);
   }
 
+  /// @brief replace a child node by another node (specialization for nodes without a parent node)
+  /// @param inputChild child node that will be looked up and replaced
+  /// @param withNewChild new child node that will be inserted in the place of the old node
+  /// @param thisNode smart ptr to this node
   void replace(const SmartPtr<Child>& inputChild, SmartPtr<Child>& withNewChild,
                const std::unique_ptr<NodeType>& thisNode) {
     replaceImpl<Parent>(inputChild, withNewChild, thisNode);
   }
 
+  /// @brief true if there are no children
   bool childrenEmpty() const { return children_.empty(); }
 
+  /// @brief clear the container of chilren
   void clearChildren() { children_.clear(); }
 
+  /// @brief get the smart pointer of a raw pointer child node
   inline const std::unique_ptr<Child>& getChildSmartPtr(Child* child) {
 
     for(const auto& c : children_) {
@@ -295,6 +342,7 @@ public:
     return *(children_.begin());
   }
 
+  /// @brief update recursively (propagating to the top of the tree) the derived info of this node
   template <typename TNodeType>
   inline void updateFromChildrenRec(
       typename std::enable_if<std::is_void<typename TNodeType::ParentType>::value>::type* = 0) {
@@ -302,6 +350,7 @@ public:
     static_cast<NodeType*>(this)->updateFromChildren();
   }
 
+  /// @brief update recursively (propagating to the top of the tree) the derived info of this node
   template <typename TNodeType>
   inline void updateFromChildrenRec(
       typename std::enable_if<!std::is_void<typename TNodeType::ParentType>::value>::type* = 0) {
@@ -314,6 +363,9 @@ public:
     }
   }
 
+  /// @brief update the derived info of the node
+  /// @param updateType determines if the update should be applied to this tree level (only) or
+  /// propagate it to the top or bottom of the tree
   void update(NodeUpdateType updateType) {
     if(impl::updateLevel(updateType)) {
       static_cast<NodeType*>(this)->updateLevel();
@@ -332,6 +384,24 @@ public:
   virtual void updateLevel() {}
 
 private:
+  template <typename IteratorCategory>
+  inline const ChildSmartPtrType& getChildImpl(
+      unsigned long pos,
+      typename std::enable_if<
+          std::is_same<IteratorCategory, std::random_access_iterator_tag>::value>::type* = 0) {
+    return children_[pos];
+  }
+
+  template <typename IteratorCategory>
+  inline const ChildSmartPtrType& getChildImpl(
+      unsigned long pos,
+      typename std::enable_if<
+          !std::is_same<IteratorCategory, std::random_access_iterator_tag>::value>::type* = 0) {
+
+    auto it = std::next(children_.begin(), pos);
+    return children_[it];
+  }
+
   template <typename TChild>
   void cloneChildrenImpl(const IIRNode& other,
                          typename std::enable_if<std::is_void<TChild>::value>::type* = 0) {}
@@ -482,11 +552,15 @@ private:
     updateFromChildrenRec<NodeType>();
   }
 
+  /// @brief replace a child node by another node (specialization for nodes that do not have a
+  /// parent)
+  /// @param inputChild child node that will be looked up and replaced
+  /// @param withNewChild new child node that will be inserted in the place of the old node
+  /// @param thisNode smart ptr to this node
   template <typename TParent>
   void replaceImpl(const SmartPtr<Child>& inputChild, SmartPtr<Child>& withNewChild,
                    const std::unique_ptr<NodeType>& thisNode,
                    typename std::enable_if<std::is_void<TParent>::value>::type* = 0) {
-    // TODO rethink this
     auto it = std::find(children_.begin(), children_.end(), inputChild);
     DAWN_ASSERT(it != children_.end());
     const std::unique_ptr<NodeType>* ptr = &((*it)->getParent());
@@ -495,12 +569,12 @@ private:
 
     inputChild->setParent(*ptr);
     inputChild
-        ->template setChildrenParent<typename getChildType<std::unique_ptr<Child>>::type::type>(
-            inputChild);
+        ->template setChildrenParent<typename getChildType<std::unique_ptr<Child>>::type::type>();
 
     updateFromChildrenRec<NodeType>();
   }
 
+  /// @brief print the tree of pointers (for debugging)
   template <typename TChild>
   void printTreeImpl(typename std::enable_if<!std::is_void<TChild>::value>::type* = 0) {
     for(const auto& child : getChildren()) {

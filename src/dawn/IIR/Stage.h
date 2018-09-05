@@ -55,6 +55,8 @@ class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
     DerivedInfo& operator=(DerivedInfo&&) = default;
     DerivedInfo& operator=(const DerivedInfo&) = default;
 
+    void clear();
+
     /// Declaration of the fields of this stage
     std::unordered_map<int, Field> fields_;
 

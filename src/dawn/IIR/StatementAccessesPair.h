@@ -48,9 +48,6 @@ class StatementAccessesPair : public IIRNode<DoMethod, StatementAccessesPair, vo
   // accesses without the initial offset of the call
   std::shared_ptr<Accesses> calleeAccesses_;
 
-  // TODO implement different specializations of this. BlockStatements are only used for
-  // if/else/then
-
   // If the statement is a block statement, this will contain the sub-statements of the block. Note
   // that the acceses in this case are the *accumulated* accesses of all sub-statements.
   BlockStatements blockStatements_;
@@ -58,16 +55,13 @@ class StatementAccessesPair : public IIRNode<DoMethod, StatementAccessesPair, vo
 public:
   static constexpr const char* name = "StatementAccessesPair";
 
-  // TODO no need to have this with an SFINAE
   inline virtual void updateFromChildren() override {}
 
-  // TODO implement a print method per IIRNode and make the dump() use it
   explicit StatementAccessesPair(const std::shared_ptr<Statement>& statement);
 
-  // TODO remove
-  //  StatementAccessesPair(const StatementAccessesPair&) = default;
   StatementAccessesPair(StatementAccessesPair&&) = default;
 
+  /// @brief clone the statement accesses pair, returning a smart ptr
   std::unique_ptr<StatementAccessesPair> clone() const;
 
   /// @brief Get/Set the statement
@@ -91,6 +85,7 @@ public:
   const std::vector<std::unique_ptr<StatementAccessesPair>>& getBlockStatements() const;
   bool hasBlockStatements() const;
 
+  /// @brief insert a new statemenent accesses pair as a block statement
   void insertBlockStatement(std::unique_ptr<StatementAccessesPair>&& stmt);
 
   boost::optional<Extents> computeMaximumExtents(const int accessID) const;
