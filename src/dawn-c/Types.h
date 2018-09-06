@@ -38,11 +38,6 @@ enum DawnTypeKind {
 };
 
 /**
- * @brief Code generation backend
- */
-enum DawnCodeGenKind { DC_GTClang, DC_GTClangNaiveCXX, DC_GTClangOptCXX };
-
-/**
  * @brief Kinds of diagnostics
  */
 enum DawnDiagnosticsKind { DD_Note, DD_Warning, DD_Error };

@@ -34,6 +34,11 @@
 
 OPT(int, MaxHaloPoints, 3, "max-halo", "", 
     "Set the maximum number of allowed halo points", "<N>", true, false) 
+OPT(std::string, Backend, "gridtools", "backend", "",
+    "Set backend code-generator. Possible values for <backend> are:"
+    "\n - gridtools = gridtools C++ code"
+    "\n - c++-naive   = naive C++ code\n"
+    "\n - c++-opt     = optimized C++ code", "<backend>", true, false)
 OPT(std::string, InlineStrategy, "cof", "inline", "", 
     "Set the strategy used to inline stencil functions. Possible values for <strategy> are:"
     "\n - none = Disable inlining"
