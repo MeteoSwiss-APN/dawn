@@ -31,18 +31,6 @@ void FieldAccessExtents::mergeWriteExtents(Extents const& extents) {
 
   updateTotalExtents();
 }
-// void FieldAccessExtents::expandReadExtents(Extents const& extents) {
-//  if(readAccessExtents_.is_initialized()) {
-//    readAccessExtents_->expand(extents);
-//    updateTotalExtents();
-//  }
-//}
-// void FieldAccessExtents::expandWriteExtents(Extents const& extents) {
-//  if(writeAccessExtents_.is_initialized()) {
-//    writeAccessExtents_->expand(extents);
-//    updateTotalExtents();
-//  }
-//}
 void FieldAccessExtents::mergeReadExtents(boost::optional<Extents> const& extents) {
   if(extents.is_initialized())
     mergeReadExtents(*extents);
