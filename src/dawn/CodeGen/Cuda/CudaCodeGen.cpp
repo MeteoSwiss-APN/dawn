@@ -405,8 +405,31 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
                             (*firstField).second.Name + ".storage_info().stride<1>()," +
                             (*firstField).second.Name + ".storage_info().stride<2>(),";
 
+      iir::Extents maxExtents{0, 0, 0, 0, 0, 0};
+      for(const auto& stage : iterateIIROver<iir::Stage>(*multiStagePtr)) {
+        maxExtents.merge(stage->getExtents());
+      }
+
+      StencilRunMethod.addStatement("const unsigned int nx = m_dom.isize()");
+      StencilRunMethod.addStatement("const unsigned int ny = m_dom.jsize()");
+
+      constexpr unsigned int ntx = 32;
+      constexpr unsigned int nty = 1;
+
+      StencilRunMethod.addStatement(
+          "dim3 threads(" + std::to_string(ntx) + "," + std::to_string(nty) + "+" +
+          std::to_string(maxExtents[1].Plus - maxExtents[1].Minus +
+                         (maxExtents[0].Minus < 0 ? 1 : 0) + (maxExtents[0].Plus > 0 ? 1 : 0)));
+
+      // number of blocks required
+      StencilRunMethod.addStatement("const unsigned int nbx = (nx + " + std::to_string(ntx) +
+                                    " - 1) / " + std::to_string(ntx));
+      StencilRunMethod.addStatement("const unsigned int nby = (ny + " + std::to_string(nty) +
+                                    " - 1) / " + std::to_string(nty));
+      StencilRunMethod.addStatement("const uint_t nbz = 1");
+      StencilRunMethod.addStatement("dim3 blocks(nbx, nby, nbz)");
       StencilRunMethod.addStatement(buildCudaKernelName(stencilInstantiation, multiStagePtr) +
-                                    "(m_dom," + strides + args + ")");
+                                    "<<<blocks, threads>>>(m_dom," + strides + args + ")");
     }
 
     StencilRunMethod.addStatement("sync_storages()");
