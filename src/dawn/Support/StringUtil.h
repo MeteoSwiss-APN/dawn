@@ -102,8 +102,6 @@ public:
       }
       if(i != size - 1 &&
          ((!stringify(*std::next(it)).empty() && !stringify(*it).empty()) || !ignoreIfEmpty_)) {
-        std::cout << "PPP TTT " << stringify(*std::next(it)) << " L "
-                  << stringify(*std::next(it)).empty() << std::endl;
         ss << delim_;
       }
     }

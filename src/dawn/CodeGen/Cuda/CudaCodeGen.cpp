@@ -173,7 +173,7 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
           DAWN_ASSERT_MSG((jboundary_limit * paddedBoundary_ <= 32), "not enought cuda threads");
 
           cudaKernel.addStatement("iblock = threadIdx.x % " + std::to_string(paddedBoundary_) +
-                                  " + ntx");
+                                  " + " + std::to_string(ntx));
           cudaKernel.addStatement("jblock = (int)threadIdx.x / " + std::to_string(paddedBoundary_) +
                                   "+" + std::to_string(maxExtents[1].Minus));
         });
@@ -203,8 +203,7 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
 
     // for each interval, we generate naive nested loops
     cudaKernel.addBlockStatement(
-        makeKLoop("m_dom", (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward), interval),
-        [&]() {
+        makeKLoop("dom", (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward), interval), [&]() {
           for(const auto& stagePtr : ms->getChildren()) {
             const iir::Stage& stage = *stagePtr;
 
