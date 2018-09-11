@@ -21,6 +21,7 @@
 #include <iterator>
 #include <sstream>
 #include <string>
+#include <iostream>
 
 namespace dawn {
 
@@ -99,8 +100,12 @@ public:
       if(!stringify(*it).empty() || !ignoreIfEmpty_) {
         ss << stringify(*it);
       }
-      if(i != size - 1 && (!stringify(*std::next(it)).empty() || !ignoreIfEmpty_))
+      if(i != size - 1 &&
+         ((!stringify(*std::next(it)).empty() && !stringify(*it).empty()) || !ignoreIfEmpty_)) {
+        std::cout << "PPP TTT " << stringify(*std::next(it)) << " L "
+                  << stringify(*std::next(it)).empty() << std::endl;
         ss << delim_;
+      }
     }
     ss << end_;
 
