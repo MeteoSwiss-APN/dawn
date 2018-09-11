@@ -386,13 +386,15 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
       int idx = 0;
       for(auto field : nonTempFields) {
         args = args + (idx == 0 ? "" : ",") + "(" + (*field).second.Name + ".data()+" +
-               (*field).second.Name + ".template begin<0>())";
+               (*field).second.Name + ".template begin<0>() + std::remove_reference<decltype(m_" +
+               (*field).second.Name + ")>::type::storage_info_t::halo_t::template at<0>())";
         ++idx;
       }
       idx = 0;
       for(auto field : tempFields) {
         args = args + (idx == 0 ? "" : ",") + "(" + (*field).second.Name + ".data()+" +
-               (*field).second.Name + ".template begin<0>())";
+               (*field).second.Name + ".template begin<0>() ++ std::remove_reference<decltype(m_" +
+               (*field).second.Name + ")>::type::storage_info_t::halo_t::template at<0>())";
         ++idx;
       }
       DAWN_ASSERT(nonTempFields.size() > 0);
