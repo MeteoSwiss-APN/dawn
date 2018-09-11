@@ -48,10 +48,8 @@ static std::string makeIJLoop(const iir::Extent extent, const std::string dom,
 
 static std::string makeIntervalBound(const std::string dom, iir::Interval const& interval,
                                      iir::Interval::Bound bound) {
-  return interval.levelIsEnd(bound)
-             ? "( " + dom + ".ksize() == 0 ? 0 : (" + dom + ".ksize() - " + dom +
-                   ".kplus() - 1)) + " + std::to_string(interval.offset(bound))
-             : std::to_string(interval.bound(bound));
+  return interval.levelIsEnd(bound) ? " ksize - 1 + " + std::to_string(interval.offset(bound))
+                                    : std::to_string(interval.bound(bound));
 }
 
 static std::string makeKLoop(const std::string dom, bool isBackward,
@@ -88,7 +86,9 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
   // fields used in the stencil
   const auto& fields = ms->getFields();
 
-  cudaKernel.addArg("const " + c_gtc() + "domain dom");
+  cudaKernel.addArg("const int isize");
+  cudaKernel.addArg("const int jsize");
+  cudaKernel.addArg("const int ksize");
   cudaKernel.addArg("const int istride");
   cudaKernel.addArg("const int jstride");
   cudaKernel.addArg("const int kstride");
@@ -105,8 +105,8 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
   cudaKernel.addComment("Start kernel");
   constexpr unsigned int ntx = 32;
   constexpr unsigned int nty = 1;
-  cudaKernel.addStatement("const unsigned int nx = dom.isize()");
-  cudaKernel.addStatement("const unsigned int ny = dom.jsize()");
+  cudaKernel.addStatement("const unsigned int nx = isize");
+  cudaKernel.addStatement("const unsigned int ny = jsize");
   cudaKernel.addStatement("const unsigned int block_size_i = (blockIdx.x + 1) * " +
                           std::to_string(ntx) + " < nx ? " + std::to_string(ntx) +
                           " : nx - blockIdx.x * " + std::to_string(ntx));
@@ -425,8 +425,10 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
                                     " - 1) / " + std::to_string(nty));
       StencilRunMethod.addStatement("const unsigned int nbz = 1");
       StencilRunMethod.addStatement("dim3 blocks(nbx, nby, nbz)");
-      StencilRunMethod.addStatement(buildCudaKernelName(stencilInstantiation, multiStagePtr) +
-                                    "<<<blocks, threads>>>(m_dom," + strides + args + ")");
+      StencilRunMethod.addStatement(
+          buildCudaKernelName(stencilInstantiation, multiStagePtr) +
+          "<<<blocks, threads>>>(m_dom.isize(),m_dom.jsize(),m_dom.ksize()," + strides + args +
+          ")");
     }
 
     StencilRunMethod.addStatement("sync_storages()");
@@ -631,13 +633,13 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
 
   ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
   ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T CUDA");
-  // ==============------------------------------------------------------------------------------===
+  //==============------------------------------------------------------------------------------===
   // BENCHMARKTODO: since we're importing two cpp files into the benchmark API we need to set
   // these
   // variables also in the naive code-generation in order to not break it. Once the move to
   // different TU's is completed, this is no longer necessary.
   // [https://github.com/MeteoSwiss-APN/gtclang/issues/32]
-  // ==============------------------------------------------------------------------------------===
+  //==============------------------------------------------------------------------------------===
   CodeGen::addMplIfdefs(ppDefines, 30, context_->getOptions().MaxHaloPoints);
   DAWN_LOG(INFO) << "Done generating code";
 
