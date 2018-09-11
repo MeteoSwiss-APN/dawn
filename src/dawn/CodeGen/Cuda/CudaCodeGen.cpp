@@ -399,9 +399,9 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
       }
       DAWN_ASSERT(nonTempFields.size() > 0);
       auto firstField = *(nonTempFields.begin());
-      std::string strides = (*firstField).second.Name + ".storage_info().template stride<0>()," +
-                            (*firstField).second.Name + ".storage_info().template stride<1>()," +
-                            (*firstField).second.Name + ".storage_info().template stride<2>(),";
+      std::string strides = "m_" + (*firstField).second.Name + ".strides()[0]," + "m_" +
+                            (*firstField).second.Name + ".strides()[1]," + "m_" +
+                            (*firstField).second.Name + ".strides()[2],";
 
       iir::Extents maxExtents{0, 0, 0, 0, 0, 0};
       for(const auto& stage : iterateIIROver<iir::Stage>(*multiStagePtr)) {
