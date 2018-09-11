@@ -369,15 +369,13 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
     StencilRunMethod.addStatement("sync_storages()");
     for(const auto& multiStagePtr : stencil.getChildren()) {
 
-      StencilRunMethod.ss() << "{";
-
       const iir::MultiStage& multiStage = *multiStagePtr;
 
       // create all the data views
       for(auto fieldIt : nonTempFields) {
         const auto fieldName = (*fieldIt).second.Name;
         StencilRunMethod.addStatement(c_gt() + "data_view<" + StencilTemplates[fieldIt.idx()] +
-                                      "> " + fieldName + "= " + c_gt() + "make_cuda_view(m_" +
+                                      "> " + fieldName + "= " + c_gt() + "make_device_view(m_" +
                                       fieldName + ")");
       }
       for(auto fieldIt : tempFields) {
