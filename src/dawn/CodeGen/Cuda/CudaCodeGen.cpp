@@ -106,14 +106,14 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
   cudaKernel.addComment("Start kernel");
   constexpr unsigned int ntx = 32;
   constexpr unsigned int nty = 1;
-  cudaKernel.addStatement("const uint_t nx = domain.isize()");
-  cudaKernel.addStatement("const uint_t ny = domain.jsize()");
-  cudaKernel.addStatement("const uint_t block_size_i = (blockIdx.x + 1) * " + std::to_string(ntx) +
-                          " < nx ? " + std::to_string(ntx) + " : nx - blockIdx.x * " +
-                          std::to_string(ntx));
-  cudaKernel.addStatement("const uint_t block_size_j = (blockIdx.y + 1) * " + std::to_string(nty) +
-                          " < ny ? " + std::to_string(nty) + " : ny - blockIdx.y * " +
-                          std::to_string(ntx));
+  cudaKernel.addStatement("const unsigned int nx = domain.isize()");
+  cudaKernel.addStatement("const unsigned int ny = domain.jsize()");
+  cudaKernel.addStatement("const unsigned int block_size_i = (blockIdx.x + 1) * " +
+                          std::to_string(ntx) + " < nx ? " + std::to_string(ntx) +
+                          " : nx - blockIdx.x * " + std::to_string(ntx));
+  cudaKernel.addStatement("const unsigned int block_size_j = (blockIdx.y + 1) * " +
+                          std::to_string(nty) + " < ny ? " + std::to_string(nty) +
+                          " : ny - blockIdx.y * " + std::to_string(ntx));
 
   std::string firstFieldName =
       stencilInstantiation->getNameFromAccessID(firstField.second.getAccessID());
