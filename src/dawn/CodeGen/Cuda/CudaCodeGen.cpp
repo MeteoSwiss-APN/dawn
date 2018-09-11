@@ -72,8 +72,6 @@ std::string CudaCodeGen::buildCudaKernelName(const iir::StencilInstantiation* in
                                              const std::unique_ptr<iir::MultiStage>& ms) {
   return instantiation->getName() + "_stencil" + std::to_string(ms->getParent()->getStencilID()) +
          "_ms" + std::to_string(ms->getID()) + "_kernel";
-
-  //  return stencilWrapperClass.getName() + "_" + stencil.getName() + "_kernel";
 }
 
 void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
@@ -96,9 +94,7 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
   cudaKernel.addArg("const int kstride");
 
   for(const auto& field : fields) {
-    //    cudaKernel.addArg(c_gt() + "data_view<" + getStorageType((*field).second) + "> " +
-    //                      (*field).second.Name);
-    cudaKernel.addArg("double* " +
+    cudaKernel.addArg("const double* " +
                       stencilInstantiation->getNameFromAccessID(field.second.getAccessID()));
   }
 
@@ -389,21 +385,21 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
       std::string args;
       int idx = 0;
       for(auto field : nonTempFields) {
-        args = args + (idx == 0 ? "" : ",") + "(" + (*field).second.Name + "->data()+" +
-               (*field).second.Name + "->begin<0>())";
+        args = args + (idx == 0 ? "" : ",") + "(" + (*field).second.Name + ".data()+" +
+               (*field).second.Name + ".begin<0>())";
         ++idx;
       }
       idx = 0;
       for(auto field : tempFields) {
-        args = args + (idx == 0 ? "" : ",") + "(" + (*field).second.Name + "->data()+" +
-               (*field).second.Name + "->begin<0>())";
+        args = args + (idx == 0 ? "" : ",") + "(" + (*field).second.Name + ".data()+" +
+               (*field).second.Name + ".begin<0>())";
         ++idx;
       }
       DAWN_ASSERT(nonTempFields.size() > 0);
       auto firstField = *(nonTempFields.begin());
-      std::string strides = (*firstField).second.Name + ".storage_info().stride<0>()," +
-                            (*firstField).second.Name + ".storage_info().stride<1>()," +
-                            (*firstField).second.Name + ".storage_info().stride<2>(),";
+      std::string strides = (*firstField).second.Name + ".storage_info().template stride<0>()," +
+                            (*firstField).second.Name + ".storage_info().template stride<1>()," +
+                            (*firstField).second.Name + ".storage_info().template stride<2>(),";
 
       iir::Extents maxExtents{0, 0, 0, 0, 0, 0};
       for(const auto& stage : iterateIIROver<iir::Stage>(*multiStagePtr)) {
@@ -419,14 +415,15 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
       StencilRunMethod.addStatement(
           "dim3 threads(" + std::to_string(ntx) + "," + std::to_string(nty) + "+" +
           std::to_string(maxExtents[1].Plus - maxExtents[1].Minus +
-                         (maxExtents[0].Minus < 0 ? 1 : 0) + (maxExtents[0].Plus > 0 ? 1 : 0)));
+                         (maxExtents[0].Minus < 0 ? 1 : 0) + (maxExtents[0].Plus > 0 ? 1 : 0)) +
+          ")");
 
       // number of blocks required
       StencilRunMethod.addStatement("const unsigned int nbx = (nx + " + std::to_string(ntx) +
                                     " - 1) / " + std::to_string(ntx));
       StencilRunMethod.addStatement("const unsigned int nby = (ny + " + std::to_string(nty) +
                                     " - 1) / " + std::to_string(nty));
-      StencilRunMethod.addStatement("const uint_t nbz = 1");
+      StencilRunMethod.addStatement("const unsigned int nbz = 1");
       StencilRunMethod.addStatement("dim3 blocks(nbx, nby, nbz)");
       StencilRunMethod.addStatement(buildCudaKernelName(stencilInstantiation, multiStagePtr) +
                                     "<<<blocks, threads>>>(m_dom," + strides + args + ")");
