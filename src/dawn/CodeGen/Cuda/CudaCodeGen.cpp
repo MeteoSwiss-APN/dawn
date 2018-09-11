@@ -91,6 +91,9 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
   const auto& fields = ms->getFields();
 
   cudaKernel.addArg("const " + c_gtc() + "domain dom");
+  cudaKernel.addArg("const int istride");
+  cudaKernel.addArg("const int jstride");
+  cudaKernel.addArg("const int kstride");
 
   for(const auto& field : fields) {
     //    cudaKernel.addArg(c_gt() + "data_view<" + getStorageType((*field).second) + "> " +
@@ -117,9 +120,6 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
 
   std::string firstFieldName =
       stencilInstantiation->getNameFromAccessID(firstField.second.getAccessID());
-  cudaKernel.addStatement("const int istride = " + firstFieldName + ".storage_info().stride<0>()");
-  cudaKernel.addStatement("const int jstride = " + firstFieldName + ".storage_info().stride<1>()");
-  cudaKernel.addStatement("const int kstride = " + firstFieldName + ".storage_info().stride<2>()");
   cudaKernel.addComment("computing the global position in the physical domain");
   cudaKernel.addComment("In a typical cuda block we have the following regions");
   cudaKernel.addComment("aa bbbbbbbb cc");
@@ -402,8 +402,14 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
                (*field).second.Name + "->begin<0>())";
         ++idx;
       }
+      DAWN_ASSERT(nonTempFields.size() > 0);
+      auto firstField = *(nonTempFields.begin());
+      std::string strides = (*firstField).second.Name + ".storage_info().stride<0>()," +
+                            (*firstField).second.Name + ".storage_info().stride<1>()," +
+                            (*firstField).second.Name + ".storage_info().stride<2>(),";
+
       StencilRunMethod.addStatement(buildCudaKernelName(stencilInstantiation, multiStagePtr) +
-                                    "(m_dom," + args + ")");
+                                    "(m_dom," + strides + args + ")");
     }
 
     StencilRunMethod.addStatement("sync_storages()");
