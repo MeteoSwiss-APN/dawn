@@ -378,7 +378,7 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
         const auto fieldName = (*fieldIt).second.Name;
 
         StencilRunMethod.addStatement(c_gt() + "data_view<tmp_storage_t> " + fieldName + "= " +
-                                      c_gt() + "make_cuda_view(m_" + fieldName + ")");
+                                      c_gt() + "make_device_view(m_" + fieldName + ")");
       }
 
       // TODO enable const auto& below and/or enable use RangeToString
