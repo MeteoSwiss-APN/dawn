@@ -94,7 +94,7 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
   cudaKernel.addArg("const int kstride");
 
   for(const auto& field : fields) {
-    cudaKernel.addArg("const double* " +
+    cudaKernel.addArg("double * const " +
                       stencilInstantiation->getNameFromAccessID(field.second.getAccessID()));
   }
 
