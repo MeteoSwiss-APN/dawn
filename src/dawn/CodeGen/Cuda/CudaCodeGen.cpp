@@ -106,8 +106,8 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
   cudaKernel.addComment("Start kernel");
   constexpr unsigned int ntx = 32;
   constexpr unsigned int nty = 1;
-  cudaKernel.addStatement("const unsigned int nx = domain.isize()");
-  cudaKernel.addStatement("const unsigned int ny = domain.jsize()");
+  cudaKernel.addStatement("const unsigned int nx = dom.isize()");
+  cudaKernel.addStatement("const unsigned int ny = dom.jsize()");
   cudaKernel.addStatement("const unsigned int block_size_i = (blockIdx.x + 1) * " +
                           std::to_string(ntx) + " < nx ? " + std::to_string(ntx) +
                           " : nx - blockIdx.x * " + std::to_string(ntx));
@@ -117,12 +117,9 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
 
   std::string firstFieldName =
       stencilInstantiation->getNameFromAccessID(firstField.second.getAccessID());
-  cudaKernel.addStatement("const int istride = " + firstFieldName +
-                          ".get_storage_info().stride<0>()");
-  cudaKernel.addStatement("const int jstride = " + firstFieldName +
-                          ".get_storage_info().stride<1>()");
-  cudaKernel.addStatement("const int kstride = " + firstFieldName +
-                          ".get_storage_info().stride<2>()");
+  cudaKernel.addStatement("const int istride = " + firstFieldName + ".storage_info().stride<0>()");
+  cudaKernel.addStatement("const int jstride = " + firstFieldName + ".storage_info().stride<1>()");
+  cudaKernel.addStatement("const int kstride = " + firstFieldName + ".storage_info().stride<2>()");
   cudaKernel.addComment("computing the global position in the physical domain");
   cudaKernel.addComment("In a typical cuda block we have the following regions");
   cudaKernel.addComment("aa bbbbbbbb cc");
