@@ -27,6 +27,23 @@ size_t CodeGen::getVerticalTmpHaloSizeForMultipleStencils(
              : 0;
 }
 
+std::string CodeGen::getStorageType(Array3i dimensions) {
+  std::string storageType = "storage_";
+  storageType += dimensions[0] ? "i" : "";
+  storageType += dimensions[1] ? "j" : "";
+  storageType += dimensions[2] ? "k" : "";
+  storageType += "_t";
+  return storageType;
+}
+
+std::string CodeGen::getStorageType(const sir::Field& field) {
+  return getStorageType(field.fieldDimensions);
+}
+
+std::string CodeGen::getStorageType(const iir::Stencil::FieldInfo& field) {
+  return getStorageType(field.Dimensions);
+}
+
 void CodeGen::addTempStorageTypedef(Structure& stencilClass, iir::Stencil const& stencil) const {
   stencilClass.addTypeDef("tmp_halo_t")
       .addType("gridtools::halo< GRIDTOOLS_CLANG_HALO_EXTEND, GRIDTOOLS_CLANG_HALO_EXTEND, " +

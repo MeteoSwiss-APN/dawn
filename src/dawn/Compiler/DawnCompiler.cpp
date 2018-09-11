@@ -14,6 +14,7 @@
 
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
+#include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/GridTools/GTCodeGen.h"
 #include "dawn/Optimizer/OptimizerContext.h"
@@ -220,6 +221,8 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
     CG = make_unique<codegen::gt::GTCodeGen>(optimizer.get());
   } else if(options_->Backend == "c++-naive") {
     CG = make_unique<codegen::cxxnaive::CXXNaiveCodeGen>(optimizer.get());
+  } else if(options_->Backend == "cuda") {
+    CG = make_unique<codegen::cuda::CudaCodeGen>(optimizer.get());
   } else if(options_->Backend == "c++-opt") {
     dawn_unreachable("GTClangOptCXX not supported yet");
   } else {

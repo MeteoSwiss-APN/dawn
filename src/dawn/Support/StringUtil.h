@@ -56,6 +56,7 @@ class RangeToString {
   const char* delim_;
   const char* start_;
   const char* end_;
+  const bool ignoreIfEmpty_;
 
 public:
   /// @brief Convert each element to string using `std::to_string`
@@ -66,8 +67,9 @@ public:
     }
   };
 
-  RangeToString(const char* delim = ", ", const char* start = "[", const char* end = "]")
-      : delim_(delim), start_(start), end_(end) {}
+  RangeToString(const char* delim = ", ", const char* start = "[", const char* end = "]",
+                const bool ignoreIfEmpty = false)
+      : delim_(delim), start_(start), end_(end), ignoreIfEmpty_(ignoreIfEmpty) {}
 
   /// @brief Convert a `Range` to string (elements of the Range are converted to a string via
   /// `std::to_string`)
@@ -94,8 +96,10 @@ public:
     std::size_t i = 0;
 
     for(; it != end; ++it, ++i) {
-      ss << stringify(*it);
-      if(i != size - 1)
+      if(!stringify(*it).empty() || !ignoreIfEmpty_) {
+        ss << stringify(*it);
+      }
+      if(i != size - 1 && (!stringify(*std::next(it)).empty() || !ignoreIfEmpty_))
         ss << delim_;
     }
     ss << end_;

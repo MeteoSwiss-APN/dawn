@@ -23,17 +23,20 @@
 #include "dawn/IIR/MultiInterval.h"
 #include "dawn/IIR/IntervalAlgorithms.h"
 #include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/Support/UIDGenerator.h"
 
 namespace dawn {
 namespace iir {
 
 MultiStage::MultiStage(StencilInstantiation& stencilInstantiation, LoopOrderKind loopOrder)
-    : stencilInstantiation_(stencilInstantiation), loopOrder_(loopOrder) {}
+    : stencilInstantiation_(stencilInstantiation), loopOrder_(loopOrder),
+      id_(UIDGenerator::getInstance()->get()) {}
 
 std::unique_ptr<MultiStage> MultiStage::clone() const {
   auto cloneMS = make_unique<MultiStage>(stencilInstantiation_, loopOrder_);
 
   cloneMS->caches_ = caches_;
+  cloneMS->id_ = id_;
   cloneMS->derivedInfo_ = derivedInfo_;
 
   cloneMS->cloneChildrenFrom(*this);

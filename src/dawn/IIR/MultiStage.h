@@ -57,6 +57,8 @@ class MultiStage : public IIRNode<Stencil, MultiStage, Stage, impl::StdList> {
 
   DerivedInfo derivedInfo_;
 
+  int id_;
+
 public:
   static constexpr const char* name = "MultiStage";
 
@@ -74,11 +76,16 @@ public:
 
   std::unique_ptr<MultiStage> clone() const;
 
+  /// @brief getters
+  /// @{
   /// @brief Get the execution policy
   StencilInstantiation& getStencilInstantiation() const { return stencilInstantiation_; }
 
   /// @brief Get the loop order
   LoopOrderKind getLoopOrder() const { return loopOrder_; }
+
+  int getID() const { return id_; }
+  /// @}
 
   std::vector<std::unique_ptr<DoMethod>> computeOrderedDoMethods() const;
 

@@ -62,6 +62,10 @@ public:
 
   /// @brief Get the optimizer context
   const OptimizerContext* getOptimizerContext() const { return context_; }
+
+  static std::string getStorageType(const sir::Field& field);
+  static std::string getStorageType(const iir::Stencil::FieldInfo& field);
+  static std::string getStorageType(Array3i dimensions);
 };
 
 } // namespace codegen

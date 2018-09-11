@@ -835,13 +835,8 @@ std::string GTCodeGen::generateStencilInstantiation(
 
   std::vector<std::pair<std::string, std::string>> StencilWrapperConstructorArguments;
   for(int accessorIdx = 0; accessorIdx < SIRFieldsWithoutTemps.size(); ++accessorIdx) {
-    Array3i fieldDimensions = SIRFieldsWithoutTemps[accessorIdx]->fieldDimensions;
-    std::string extents = "storage_";
-    extents += fieldDimensions[0] ? "i" : "";
-    extents += fieldDimensions[1] ? "j" : "";
-    extents += fieldDimensions[2] ? "k" : "";
-    extents += "_t";
-    StencilWrapperConstructorArguments.emplace_back(extents,
+    std::string storageType = getStorageType(*(SIRFieldsWithoutTemps[accessorIdx]));
+    StencilWrapperConstructorArguments.emplace_back(storageType,
                                                     SIRFieldsWithoutTemps[accessorIdx]->Name);
   }
 

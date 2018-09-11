@@ -84,9 +84,6 @@ class StencilInstantiation : NonCopyable {
   const std::shared_ptr<sir::Stencil> SIRStencil_;
   const std::shared_ptr<SIR> SIR_;
 
-  /// Unique identifier generator
-  UIDGenerator UIDGen_;
-
   /// Map of AccessIDs and to the name of the variable/field. Note that only for fields of the "main
   /// stencil" we can get the AccessID by name. This is due the fact that fields of different
   /// stencil functions can share the same name.
@@ -493,7 +490,7 @@ public:
   }
 
   /// @brief Get a unique (positive) identifier
-  inline int nextUID() { return UIDGen_.get(); }
+  inline int nextUID() { return UIDGenerator::getInstance()->get(); }
 
   /// @brief Dump the StencilInstantiation to stdout
   void dump() const;

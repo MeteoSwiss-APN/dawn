@@ -23,9 +23,12 @@ namespace dawn {
 /// @ingroup support
 class UIDGenerator : NonCopyable {
   int counter_;
+  static UIDGenerator* instance_;
+
+  UIDGenerator() : counter_(1) {}
 
 public:
-  UIDGenerator() : counter_(1) {}
+  static UIDGenerator* getInstance();
 
   /// @brief Get a unique *strictly* positive identifer
   int get() { return (counter_++); }
