@@ -83,7 +83,7 @@ void ASTStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
   int AccessID = instantiation_->getAccessIDFromExpr(expr);
 
   if(instantiation_->isGlobalVariable(AccessID)) {
-    dawn_unreachable("not implemented yet");
+    ss_ << "globals_." << name;
   } else {
     ss_ << name;
 

@@ -86,6 +86,10 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
   // fields used in the stencil
   const auto& fields = ms->getFields();
 
+  const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
+  if(!globalsMap.empty()) {
+    cudaKernel.addArg("globals globals_");
+  }
   cudaKernel.addArg("const int isize");
   cudaKernel.addArg("const int jsize");
   cudaKernel.addArg("const int ksize");
@@ -332,6 +336,11 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
     StencilClass.addComment("Temporary storages");
     addTempStorageTypedef(StencilClass, stencil);
 
+    const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
+    if(!globalsMap.empty()) {
+      StencilClass.addMember("globals", "m_globals");
+    }
+
     StencilClass.addMember("const " + c_gtc() + "domain&", "m_dom");
 
     for(auto fieldIt : nonTempFields) {
@@ -442,10 +451,15 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
                                     " - 1) / " + std::to_string(nty));
       StencilRunMethod.addStatement("const unsigned int nbz = 1");
       StencilRunMethod.addStatement("dim3 blocks(nbx, nby, nbz)");
-      StencilRunMethod.addStatement(
-          buildCudaKernelName(stencilInstantiation, multiStagePtr) +
-          "<<<blocks, threads>>>(m_dom.isize(),m_dom.jsize(),m_dom.ksize()," + strides + args +
-          ")");
+      std::string kernelCall =
+          buildCudaKernelName(stencilInstantiation, multiStagePtr) + "<<<blocks, threads>>>(";
+      const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
+      if(!globalsMap.empty()) {
+        kernelCall = kernelCall + "m_globals,";
+      }
+      kernelCall = kernelCall + "m_dom.isize(),m_dom.jsize(),m_dom.ksize()," + strides + args + ")";
+
+      StencilRunMethod.addStatement(kernelCall);
     }
 
     StencilRunMethod.addStatement("sync_storages()");
@@ -587,10 +601,8 @@ std::string CudaCodeGen::generateGlobals(std::shared_ptr<SIR> const& sir) {
   Namespace cudaNamespace("cuda", ss);
 
   std::string StructName = "globals";
-  std::string BaseName = "gridtools::clang::globals_impl<" + StructName + ">";
 
-  Struct GlobalsStruct(StructName + ": public " + BaseName, ss);
-  GlobalsStruct.addTypeDef("base_t").addType("gridtools::clang::globals_impl<globals>");
+  Struct GlobalsStruct(StructName, ss);
 
   for(const auto& globalsPair : globalsMap) {
     sir::Value& value = *globalsPair.second;
@@ -598,28 +610,19 @@ std::string CudaCodeGen::generateGlobals(std::shared_ptr<SIR> const& sir) {
     std::string Type = sir::Value::typeToString(value.getType());
     std::string AdapterBase = std::string("base_t::variable_adapter_impl") + "<" + Type + ">";
 
-    Structure AdapterStruct = GlobalsStruct.addStructMember(Name + "_adapter", Name, AdapterBase);
-    AdapterStruct.addConstructor().addArg("").addInit(
-        AdapterBase + "(" + Type + "(" + (value.empty() ? std::string() : value.toString()) + "))");
-
-    auto AssignmentOperator =
-        AdapterStruct.addMemberFunction(Name + "_adapter&", "operator=", "class ValueType");
-    AssignmentOperator.addArg("ValueType&& value");
-    if(value.isConstexpr())
-      AssignmentOperator.addStatement(
-          "throw std::runtime_error(\"invalid assignment to constant variable '" + Name + "'\")");
-    else
-      AssignmentOperator.addStatement("get_value() = value");
-    AssignmentOperator.addStatement("return *this");
-    AssignmentOperator.commit();
+    GlobalsStruct.addMember(Type, Name);
   }
+  auto ctr = GlobalsStruct.addConstructor();
+  for(const auto& globalsPair : globalsMap) {
+    sir::Value& value = *globalsPair.second;
+    std::string Name = globalsPair.first;
+    if(!value.empty()) {
+      ctr.addInit(Name + "(" + value.toString() + ")");
+    }
+  }
+  ctr.commit();
 
   GlobalsStruct.commit();
-
-  // Add the symbol for the singleton
-  codegen::Statement(ss) << "template<> " << StructName << "* " << BaseName
-                         << "::s_instance = nullptr";
-
   cudaNamespace.commit();
 
   // Remove trailing ';' as this is retained by Clang's Rewriter
