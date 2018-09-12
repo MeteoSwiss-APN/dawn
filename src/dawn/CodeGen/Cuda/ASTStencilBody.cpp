@@ -70,10 +70,6 @@ void ASTStencilBody::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stm
 //     Expr
 //===------------------------------------------------------------------------------------------===//
 
-void ASTStencilBody::visit(const std::shared_ptr<FunCallExpr>& expr) {
-  dawn_unreachable("stencil functions not allows in cuda backend");
-}
-
 void ASTStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
   dawn_unreachable("stencil functions not allows in cuda backend");
 }

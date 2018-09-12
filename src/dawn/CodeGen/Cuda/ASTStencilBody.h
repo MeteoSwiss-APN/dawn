@@ -75,7 +75,6 @@ public:
 
   /// @name Expression implementation
   /// @{
-  virtual void visit(const std::shared_ptr<FunCallExpr>& expr) override;
   virtual void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override;
   virtual void visit(const std::shared_ptr<StencilFunArgExpr>& expr) override;
   virtual void visit(const std::shared_ptr<VarAccessExpr>& expr) override;
