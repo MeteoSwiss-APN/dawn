@@ -215,7 +215,9 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
 
             cudaKernel.addBlockStatement(
                 "if(iblock >= " + std::to_string(extent[0].Minus) +
-                    " && iblock <= block_size_i -1 + " + std::to_string(extent[0].Plus) + ")",
+                    " && iblock <= block_size_i -1 + " + std::to_string(extent[0].Plus) +
+                    " && jblock >= " + std::to_string(extent[1].Minus) +
+                    " && jblock <= block_size_j -1 + " + std::to_string(extent[1].Plus) + ")",
                 [&]() {
                   // Generate Do-Method
                   for(const auto& doMethodPtr : stage.getChildren()) {
