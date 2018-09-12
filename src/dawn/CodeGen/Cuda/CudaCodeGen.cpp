@@ -112,7 +112,7 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
                           " : nx - blockIdx.x * " + std::to_string(ntx));
   cudaKernel.addStatement("const unsigned int block_size_j = (blockIdx.y + 1) * " +
                           std::to_string(nty) + " < ny ? " + std::to_string(nty) +
-                          " : ny - blockIdx.y * " + std::to_string(ntx));
+                          " : ny - blockIdx.y * " + std::to_string(nty));
 
   std::string firstFieldName =
       stencilInstantiation->getNameFromAccessID(firstField.second.getAccessID());
