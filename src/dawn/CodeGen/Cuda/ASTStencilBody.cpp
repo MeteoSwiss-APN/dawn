@@ -83,7 +83,20 @@ void ASTStencilBody::visit(const std::shared_ptr<StencilFunArgExpr>& expr) {
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
-  dawn_unreachable("not implemented yet");
+  std::string name = getName(expr);
+  int AccessID = instantiation_->getAccessIDFromExpr(expr);
+
+  if(instantiation_->isGlobalVariable(AccessID)) {
+    dawn_unreachable("not implemented yet");
+  } else {
+    ss_ << name;
+
+    if(expr->isArrayAccess()) {
+      ss_ << "[";
+      expr->getIndex()->accept(*this);
+      ss_ << "]";
+    }
+  }
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
