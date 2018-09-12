@@ -174,7 +174,9 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
                                   "+" + std::to_string(maxExtents[1].Minus));
         });
   }
-  cudaKernel.addStatement("int idx = 0");
+  cudaKernel.addStatement("int idx = (blockIdx.x*" + std::to_string(ntx) +
+                          "iblock)*istride + (blockIdx.y*" + std::to_string(nty) +
+                          "jblock)*jstride");
 
   auto intervals_set = ms->getIntervals();
   std::vector<iir::Interval> intervals_v;
