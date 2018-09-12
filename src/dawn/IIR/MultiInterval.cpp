@@ -34,6 +34,15 @@ void MultiInterval::insert(MultiInterval const& multiInterval) {
     insert(interv);
 }
 
+bool MultiInterval::overlaps(const Interval& other) const {
+  for(auto const& interv : getIntervals()) {
+    if(interv.overlaps(other)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool MultiInterval::operator==(const MultiInterval& other) const {
   if(other.getIntervals().size() != intervals_.size())
     return false;

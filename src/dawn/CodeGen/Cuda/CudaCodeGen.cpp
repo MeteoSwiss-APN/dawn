@@ -204,17 +204,30 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
         makeKLoop("dom", (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward), interval), [&]() {
           for(const auto& stagePtr : ms->getChildren()) {
             const iir::Stage& stage = *stagePtr;
-
-            // Generate Do-Method
+            const auto& extent = stage.getExtents();
+            iir::MultiInterval enclosingInterval;
+            // TODO add the enclosing interval in derived ?
             for(const auto& doMethodPtr : stage.getChildren()) {
-              const iir::DoMethod& doMethod = *doMethodPtr;
-              if(!doMethod.getInterval().overlaps(interval))
-                continue;
-              for(const auto& statementAccessesPair : doMethod.getChildren()) {
-                statementAccessesPair->getStatement()->ASTStmt->accept(stencilBodyCXXVisitor);
-                cudaKernel << stencilBodyCXXVisitor.getCodeAndResetStream();
-              }
+              enclosingInterval.insert(doMethodPtr->getInterval());
             }
+            if(!enclosingInterval.overlaps(interval))
+              continue;
+
+            cudaKernel.addBlockStatement(
+                "if(iblock >= " + std::to_string(extent[0].Minus) +
+                    " && iblock <= block_size_i -1 + " + std::to_string(extent[0].Plus) + ")",
+                [&]() {
+                  // Generate Do-Method
+                  for(const auto& doMethodPtr : stage.getChildren()) {
+                    const iir::DoMethod& doMethod = *doMethodPtr;
+                    if(!doMethod.getInterval().overlaps(interval))
+                      continue;
+                    for(const auto& statementAccessesPair : doMethod.getChildren()) {
+                      statementAccessesPair->getStatement()->ASTStmt->accept(stencilBodyCXXVisitor);
+                      cudaKernel << stencilBodyCXXVisitor.getCodeAndResetStream();
+                    }
+                  }
+                });
           }
           cudaKernel.addStatement("idx += kstride");
         });

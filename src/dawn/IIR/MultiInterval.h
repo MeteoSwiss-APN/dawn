@@ -34,6 +34,7 @@ public:
   void insert(MultiInterval const& multiInterval);
   void substract(iir::Interval const& interval);
   void substract(MultiInterval const& multiInterval);
+  bool overlaps(const Interval& other) const;
 
   std::vector<iir::Interval> const& getIntervals() const { return intervals_; }
 
