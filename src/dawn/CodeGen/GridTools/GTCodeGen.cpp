@@ -226,18 +226,18 @@ void GTCodeGen::buildPlaceholderDefinitions(
 
   const int numFields = stencilFields.size();
 
-  int numTemporaries = computeNumTemporaries(stencilFields);
-
-  int accessorIdx = 0;
+  int accessorIdx = 0, nonTempFieldId = 0;
   for(const auto& fieldInfoPair : stencilFields) {
     const auto& fieldInfo = fieldInfoPair.second;
     // Fields
     function.addTypeDef("p_" + fieldInfo.Name)
         .addType(c_gt() + (fieldInfo.IsTemporary ? "tmp_arg" : "arg"))
         .addTemplate(Twine(accessorIdx))
-        .addTemplate(fieldInfo.IsTemporary
-                         ? "storage_t"
-                         : stencilConstructorTemplates[accessorIdx - numTemporaries]);
+        .addTemplate(fieldInfo.IsTemporary ? "storage_t"
+                                           : stencilConstructorTemplates[nonTempFieldId]);
+    if(!fieldInfo.IsTemporary) {
+      nonTempFieldId++;
+    }
     ++accessorIdx;
   }
 
@@ -661,7 +661,7 @@ std::string GTCodeGen::generateStencilInstantiation(
 
     // Add static asserts to check halos against extents
     StencilConstructor.addComment("Check if extents do not exceed the halos");
-    int i = 0;
+    int nonTempFieldId = 0;
     for(const auto& fieldPair : StencilFields) {
       const auto& fieldInfo = fieldPair.second;
       if(!fieldInfo.IsTemporary) {
@@ -674,7 +674,7 @@ std::string GTCodeGen::generateStencilInstantiation(
         // ===-----------------------------------------------------------------------------------===
         for(int dim = 0; dim < ext.getSize() - 1; ++dim) {
           std::string at_call = "template at<" + std::to_string(dim) + ">()";
-          std::string storage = StencilConstructorTemplates[i - numTemporaries];
+          std::string storage = StencilConstructorTemplates[nonTempFieldId];
           // assert for + accesses
           // ===---------------------------------------------------------------------------------===
           // PRODUCTIONTODO: [STAGGERING]
@@ -694,8 +694,8 @@ std::string GTCodeGen::generateStencilInstantiation(
                                           "::storage_info_t::layout_t::" + at_call + " == -1)," +
                                           "\"Used extents exceed halo limits.\")");
         }
+        ++nonTempFieldId;
       }
-      ++i;
     }
 
     // Generate domain
@@ -1088,14 +1088,6 @@ std::vector<std::string> GTCodeGen::buildFieldTemplateNames(
     templates.push_back("S" + std::to_string(i + 1));
 
   return templates;
-}
-
-int GTCodeGen::computeNumTemporaries(
-    std::unordered_map<int, iir::Stencil::FieldInfo> const& stencilFields) const {
-  int numTemporaries = 0;
-  for(auto const& f : stencilFields)
-    numTemporaries += (isTemporary(f.second) ? 1 : 0);
-  return numTemporaries;
 }
 
 } // namespace gt
