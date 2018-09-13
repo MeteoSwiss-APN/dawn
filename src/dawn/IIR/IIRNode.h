@@ -141,10 +141,7 @@ public:
   inline ChildIterator childrenErase(ChildIterator childIt) {
     auto it_ = children_.erase(childIt);
 
-    if(!children_.empty()) {
-      setChildParent<Parent, Child>(children_.back());
-      updateFromChildrenRec<NodeType>();
-    }
+    fixAfterErase();
 
     return it_;
   }
@@ -157,10 +154,10 @@ public:
   inline bool childrenEraseIf(UnaryPredicate pred) {
     bool res = RemoveIf(children_, pred);
 
-    if(!children_.empty()) {
-      setChildParent<Parent, Child>(children_.back());
-      updateFromChildrenRec<NodeType>();
-    }
+    if(!res)
+      return res;
+
+    fixAfterErase();
     return res;
   }
 
@@ -215,7 +212,9 @@ public:
   template <typename TChildSmartPtr>
   void
   setChildrenParent(typename std::enable_if<!is_child_void<TChildSmartPtr>::value>::type* = 0) {
-    DAWN_ASSERT(parent_);
+    if(!parent_)
+      return;
+
     const std::unique_ptr<NodeType>& thisNodeSmartPtr =
         (*parent_)->getChildSmartPtr(static_cast<NodeType*>(this));
 
@@ -384,6 +383,19 @@ public:
   virtual void updateLevel() {}
 
 private:
+  /// @brief fix the tree structure after the erase of a child
+  inline void fixAfterErase() {
+    // since we have removed a child, the pointers of other siblings might have change,
+    // there we need to reset the parent pointer of grandchildren
+    for(auto& childIt_ : children_) {
+      childIt_->template setChildrenParent<typename Child::ChildSmartPtrType>();
+    }
+    // recompute the derived info from the remaining children
+    if(!children_.empty()) {
+      updateFromChildrenRec<NodeType>();
+    }
+  }
+
   template <typename IteratorCategory>
   inline const ChildSmartPtrType& getChildImpl(
       unsigned long pos,
