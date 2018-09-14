@@ -179,6 +179,12 @@ bool Extents::operator==(const Extents& other) const {
 
 bool Extents::operator!=(const Extents& other) const { return !(*this == other); }
 
+std::string Extents::toString() const {
+  std::stringstream ss;
+  ss << (*this);
+  return ss.str();
+}
+
 std::ostream& operator<<(std::ostream& os, const Extents& extent) {
   return (os << RangeToString()(extent.getExtents(), [](const Extent& e) -> std::string {
             return "(" + std::to_string(e.Minus) + ", " + std::to_string(e.Plus) + ")";

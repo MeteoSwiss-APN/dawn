@@ -17,6 +17,7 @@
 
 #include "dawn/Optimizer/Pass.h"
 #include <memory>
+#include <vector>
 
 namespace dawn {
 
@@ -65,6 +66,15 @@ class Stencil;
 /// @ingroup optimizer
 class PassTemporaryType : public Pass {
 public:
+  enum class TmpActionMod { promote, demote };
+
+  struct Report {
+    int tmpAccessID_;
+    TmpActionMod tmpMod_;
+  };
+
+  // collection of reports with tmp promotion/demotion
+  std::vector<Report> report_;
   PassTemporaryType();
 
   /// @brief Pass implementation

@@ -245,6 +245,7 @@ std::unordered_map<int, Field> Stencil::computeFieldsOnTheFly() const {
 }
 
 bool Stencil::compareDerivedInfo() const {
+
   auto fieldsOnTheFly = computeFieldsOnTheFly();
 
   bool equal = true;
@@ -255,18 +256,29 @@ bool Stencil::compareDerivedInfo() const {
     const auto& extents = field.getExtents();
     const auto& extentsRB = field.getExtentsRB();
     if(!fieldsOnTheFly.count(accessID)) {
-      std::cout << "ERROR not found" << accessID << std::endl;
-      equal = false;
+      dawn_unreachable("Error, accessID not found in the computed on the fly fields");
+      return false;
     }
     if(fieldsOnTheFly.at(accessID).getExtentsRB() != extentsRB) {
-      std::cout << "ERROR in enclosing " << accessID << " "
-                << fieldsOnTheFly.at(accessID).getExtentsRB() << " " << extentsRB << std::endl;
-      equal = false;
+      dawn_unreachable(
+          std::string("ERROR: the redudant block extended Extents do not much in precomputed "
+                      "derived info and computed on the fly fields:"
+                      " field id " +
+                      std::to_string(accessID) + ", on the fly [" +
+                      fieldsOnTheFly.at(accessID).getExtentsRB().toString() +
+                      "], derived info precomputed [" + extentsRB.toString())
+              .c_str());
+      return false;
     }
     if(fieldsOnTheFly.at(accessID).getExtents() != extents) {
-      std::cout << "ERROR in acc Extents " << fieldsOnTheFly.at(accessID).getExtents() << " "
-                << extentsRB << std::endl;
-      equal = false;
+      dawn_unreachable(std::string("ERROR: the field Extents do not much in precomputed "
+                                   "derived info and computed on the fly fields:"
+                                   " field id " +
+                                   std::to_string(accessID) + ", on the fly [" +
+                                   fieldsOnTheFly.at(accessID).getExtents().toString() +
+                                   "], derived info precomputed [" + extents.toString())
+                           .c_str());
+      return false;
     }
   }
   return equal;
