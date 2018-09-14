@@ -207,8 +207,8 @@ public:
     // stencil function)
     std::shared_ptr<iir::StencilFunctionInstantiation> func =
         curStencilFunctioninstantiation_->getStencilFunctionInstantiation(expr);
-    const auto& curStencilFunStmtAccessPair =
-        newStmtAccessesPairs_[newStmtAccessesPairs_.size() - 1];
+    // Compute the index of the statement of our current stencil-function call
+    const int stmtIdxOfFunc = newStmtAccessesPairs_.size() - 1;
 
     int AccessIDOfCaller = 0;
     if(!argListScope_.empty()) {
@@ -232,14 +232,8 @@ public:
     // Try to inline the stencil-function
     auto inlineResult = tryInlineStencilFunction(strategy_, func, oldStmtAccessesPair_,
                                                  newStmtAccessesPairs_, AccessIDOfCaller);
+
     if(inlineResult.first) {
-
-      // Compute the index of the statement of our current stencil-function call
-      auto curStencilFunStmtIt = std::find(
-          newStmtAccessesPairs_.begin(), newStmtAccessesPairs_.end(), curStencilFunStmtAccessPair);
-      DAWN_ASSERT(curStencilFunStmtIt != newStmtAccessesPairs_.end());
-      int stmtIdxOfFunc = std::distance(newStmtAccessesPairs_.begin(), curStencilFunStmtIt);
-
       if(func->hasReturn()) {
         std::shared_ptr<Inliner>& inliner = inlineResult.second;
         DAWN_ASSERT(inliner);
