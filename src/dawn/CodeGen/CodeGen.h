@@ -33,11 +33,11 @@ protected:
   static size_t getVerticalTmpHaloSize(iir::Stencil const& stencil);
   size_t getVerticalTmpHaloSizeForMultipleStencils(
       const std::vector<std::unique_ptr<iir::Stencil>>& stencils) const;
-  void addTempStorageTypedef(Structure& stencilClass, iir::Stencil const& stencil) const;
+  virtual void addTempStorageTypedef(Structure& stencilClass, iir::Stencil const& stencil) const;
   void addTmpStorageDeclaration(
       Structure& stencilClass,
       IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tmpFields) const;
-  void addTmpStorageInit(
+  virtual void addTmpStorageInit(
       MemberFunction& ctr, const iir::Stencil& stencil,
       IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields) const;
   void addTmpStorageInit_wrapper(MemberFunction& ctr,

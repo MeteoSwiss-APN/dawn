@@ -49,6 +49,14 @@ private:
 
   //  static std::string buildCudaKernelName(Class stencilWrapperClass, Structure& stencil);
 
+  void addTempStorageTypedef(Structure& stencilClass, iir::Stencil const& stencil) const override;
+
+  iir::Extents computeTempMaxWriteExtent(iir::Stencil const& stencil) const;
+
+  void addTmpStorageInit(MemberFunction& ctr, iir::Stencil const& stencil,
+                         IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>&
+                             tempFields) const override;
+
   void generateCudaKernelCode(std::stringstream& ssSW,
                               const iir::StencilInstantiation* stencilInstantiation,
                               const std::unique_ptr<iir::MultiStage>& ms);

@@ -81,10 +81,18 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
     maxExtents.merge(stage->getExtents());
   }
 
-  MemberFunction cudaKernel("__global__ void", buildCudaKernelName(stencilInstantiation, ms), ssSW);
-
   // fields used in the stencil
   const auto& fields = ms->getFields();
+  const bool containsTemporary =
+      (find_if(fields.begin(), fields.end(), [&](const std::pair<int, iir::Field>& field) {
+         return stencilInstantiation->isTemporaryField(field.second.getAccessID());
+       }) != fields.end());
+
+  std::string fnDecl = "";
+  if(containsTemporary)
+    fnDecl = "template<typename TmpStorage>";
+  fnDecl = fnDecl + "__global__ void";
+  MemberFunction cudaKernel(fnDecl, buildCudaKernelName(stencilInstantiation, ms), ssSW);
 
   const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
   if(!globalsMap.empty()) {
@@ -98,8 +106,14 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
   cudaKernel.addArg("const int kstride");
 
   for(const auto& field : fields) {
-    cudaKernel.addArg("double * const " +
-                      stencilInstantiation->getNameFromAccessID(field.second.getAccessID()));
+    if(stencilInstantiation->isTemporaryField(field.second.getAccessID())) {
+      cudaKernel.addArg(c_gt() + "data_view<TmpStorage>" +
+                        stencilInstantiation->getNameFromAccessID(field.second.getAccessID()) +
+                        "_dv");
+    } else {
+      cudaKernel.addArg("double * const " +
+                        stencilInstantiation->getNameFromAccessID(field.second.getAccessID()));
+    }
   }
 
   DAWN_ASSERT(fields.size() > 0);
@@ -107,6 +121,14 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
 
   cudaKernel.startBody();
   cudaKernel.addComment("Start kernel");
+  for(const auto& field : fields) {
+    if(stencilInstantiation->isTemporaryField(field.second.getAccessID())) {
+      std::string fieldName = stencilInstantiation->getNameFromAccessID(field.second.getAccessID());
+      cudaKernel.addStatement("double* " + fieldName + " = &" + fieldName + "_dv(" + fieldName +
+                              "_dv.storage_info().template begin<0>()," + fieldName +
+                              "_dv.storage_info().template begin<1>(),blockIdx.x,blockIdx.y,0)");
+    }
+  }
   constexpr unsigned int ntx = 32;
   constexpr unsigned int nty = 1;
   cudaKernel.addStatement("const unsigned int nx = isize");
@@ -407,20 +429,6 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
                                       c_gt() + "make_device_view(m_" + fieldName + ")");
       }
 
-      // TODO enable const auto& below and/or enable use RangeToString
-      std::string args;
-      int idx = 0;
-      for(auto field : nonTempFields) {
-        args = args + (idx == 0 ? "" : ",") + "(" + (*field).second.Name + ".data()+" +
-               (*field).second.Name + ".template begin<0>())";
-        ++idx;
-      }
-      idx = 0;
-      for(auto field : tempFields) {
-        args = args + (idx == 0 ? "" : ",") + "(" + (*field).second.Name + ".data()+" +
-               (*field).second.Name + ".template begin<0>())";
-        ++idx;
-      }
       DAWN_ASSERT(nonTempFields.size() > 0);
       auto firstField = *(nonTempFields.begin());
       std::string strides = "m_" + (*firstField).second.Name + ".strides()[0]," + "m_" +
@@ -453,10 +461,24 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
       StencilRunMethod.addStatement("dim3 blocks(nbx, nby, nbz)");
       std::string kernelCall =
           buildCudaKernelName(stencilInstantiation, multiStagePtr) + "<<<blocks, threads>>>(";
-      const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
+
       if(!globalsMap.empty()) {
         kernelCall = kernelCall + "m_globals,";
       }
+
+      // TODO enable const auto& below and/or enable use RangeToString
+      std::string args;
+      int idx = 0;
+      for(auto field : nonTempFields) {
+        args = args + (idx == 0 ? "" : ",") + "(" + (*field).second.Name + ".data()+" +
+               (*field).second.Name + ".template begin<0>())";
+        ++idx;
+      }
+      DAWN_ASSERT(nonTempFields.size() > 0);
+      for(auto field : tempFields) {
+        args = args + "," + (*field).second.Name;
+      }
+
       kernelCall = kernelCall + "m_dom.isize(),m_dom.jsize(),m_dom.ksize()," + strides + args + ")";
 
       StencilRunMethod.addStatement(kernelCall);
@@ -588,6 +610,51 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
   str[str.size() - 2] = ' ';
 
   return str;
+}
+
+iir::Extents CudaCodeGen::computeTempMaxWriteExtent(iir::Stencil const& stencil) const {
+  auto tempFields = makeRange(
+      stencil.getFields(),
+      std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
+          [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
+  iir::Extents maxExtents{0, 0, 0, 0, 0, 0};
+  for(auto field : tempFields) {
+    DAWN_ASSERT((*field).second.field.getWriteExtentsRB().is_initialized());
+    maxExtents.merge(*((*field).second.field.getWriteExtentsRB()));
+  }
+  return maxExtents;
+}
+void CudaCodeGen::addTempStorageTypedef(Structure& stencilClass,
+                                        iir::Stencil const& stencil) const {
+
+  auto maxExtents = computeTempMaxWriteExtent(stencil);
+  stencilClass.addTypeDef("tmp_halo_t")
+      .addType("gridtools::halo< " + std::to_string(-maxExtents[0].Minus) + "," +
+               std::to_string(-maxExtents[1].Minus) + ", 0, 0, " +
+               std::to_string(getVerticalTmpHaloSize(stencil)) + ">");
+
+  stencilClass.addTypeDef(tmpMetadataTypename_)
+      .addType("storage_traits_t::storage_info_t< 0, 5, tmp_halo_t >");
+
+  stencilClass.addTypeDef(tmpStorageTypename_)
+      .addType("storage_traits_t::data_store_t< float_type, " + tmpMetadataTypename_ + ">");
+}
+
+void CudaCodeGen::addTmpStorageInit(
+    MemberFunction& ctr, iir::Stencil const& stencil,
+    IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields) const {
+  auto maxExtents = computeTempMaxWriteExtent(stencil);
+
+  if(!(tempFields.empty())) {
+    ctr.addInit(tmpMetadataName_ + "(32+" +
+                std::to_string(-maxExtents[0].Minus + maxExtents[0].Plus) + ", 1+" +
+                std::to_string(-maxExtents[1].Minus + maxExtents[1].Plus) +
+                ", (dom_.isize()+ 32 - 1) / 32, (dom_.jsize()+ 1 - 1) / 1, dom_.ksize() + 2 * " +
+                std::to_string(getVerticalTmpHaloSize(stencil)) + ")");
+    for(auto fieldIt : tempFields) {
+      ctr.addInit("m_" + (*fieldIt).second.Name + "(" + tmpMetadataName_ + ")");
+    }
+  }
 }
 
 std::string CudaCodeGen::generateGlobals(std::shared_ptr<SIR> const& sir) {
