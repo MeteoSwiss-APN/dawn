@@ -24,10 +24,14 @@ namespace iir {
 /// @ingroup optimizer
 class IIR : public IIRNode<void, IIR, Stencil> {
 
+  const std::array<unsigned int, 3> blockSize_ = {{32, 1, 4}};
+
 public:
   static constexpr const char* name = "IIR";
 
   using StencilSmartPtr_t = child_smartptr_t<Stencil>;
+
+  inline std::array<unsigned int, 3> getBlockSize() const { return blockSize_; }
 
   /// @brief constructors and assignment
   IIR() = default;
