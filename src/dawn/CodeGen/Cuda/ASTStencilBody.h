@@ -43,14 +43,16 @@ protected:
   /// @brief produces a string of (i,j,k) accesses for the C++ generated naive code,
   /// from an array of offseted accesses
   ///
-  std::array<std::string, 3> ijkfyOffset(const std::array<int, 3>& offsets,
-                                         std::string accessName) {
+  std::array<std::string, 3> ijkfyOffset(const std::array<int, 3>& offsets, std::string accessName,
+                                         bool isTemporary) {
     int n = -1;
     std::array<std::string, 3> res;
     std::transform(offsets.begin(), offsets.end(), res.begin(), [&](int const& off) {
       ++n;
       std::array<std::string, 3> indices{"istride", "jstride", "kstride"};
-
+      if(isTemporary) {
+        indices = {"istride_tmp", "jstride_tmp", "kstride_tmp"};
+      }
       return off ? (indices[n] + "*" + std::to_string(off)) : "";
     });
     return res;

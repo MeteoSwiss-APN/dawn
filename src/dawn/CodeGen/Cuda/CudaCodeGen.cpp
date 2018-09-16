@@ -126,14 +126,26 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
 
   cudaKernel.startBody();
   cudaKernel.addComment("Start kernel");
+
+  bool firstTmpField = true;
   for(const auto& field : fields) {
     if(stencilInstantiation->isTemporaryField(field.second.getAccessID())) {
       std::string fieldName = stencilInstantiation->getNameFromAccessID(field.second.getAccessID());
+      if(firstTmpField) {
+        cudaKernel.addStatement("const int istride_tmp = " + fieldName +
+                                "_dv.storage_info().template stride<0>()");
+        cudaKernel.addStatement("const int jstride_tmp = " + fieldName +
+                                "_dv.storage_info().template stride<1>()");
+        cudaKernel.addStatement("const int kstride_tmp = " + fieldName +
+                                "_dv.storage_info().template stride<4>()");
+      }
       cudaKernel.addStatement("double* " + fieldName + " = &" + fieldName + "_dv(" + fieldName +
                               "_dv.storage_info().template begin<0>()," + fieldName +
                               "_dv.storage_info().template begin<1>(),blockIdx.x,blockIdx.y,0)");
+      firstTmpField = false;
     }
   }
+
   const auto blockSize = stencilInstantiation->getIIR()->getBlockSize();
   unsigned int ntx = blockSize[0];
   unsigned int nty = blockSize[1];
@@ -212,6 +224,12 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
                           "+iblock)*istride + (blockIdx.y*" + std::to_string(nty) +
                           "+jblock)*jstride");
 
+  if(containsTemporary) {
+    auto maxExtentTmps = computeTempMaxWriteExtent(*(ms->getParent()));
+    cudaKernel.addStatement("int idx_tmp = (iblock+" + std::to_string(-maxExtentTmps[0].Minus) +
+                            ")*istride_tmp + (jblock+" + std::to_string(-maxExtentTmps[1].Minus) +
+                            ")*jstride_tmp");
+  }
   auto intervals_set = ms->getIntervals();
   std::vector<iir::Interval> intervals_v;
   std::copy(intervals_set.begin(), intervals_set.end(), std::back_inserter(intervals_v));
@@ -231,6 +249,10 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
     if((interval.lowerBound() - lastKCell) > 0) {
       cudaKernel.addStatement("idx += kstride*(" + std::to_string(interval.lowerBound()) + "-" +
                               std::to_string(lastKCell) + ")");
+      if(containsTemporary) {
+        cudaKernel.addStatement("idx_tmp += kstride_tmp*(" + std::to_string(interval.lowerBound()) +
+                                "-" + std::to_string(lastKCell) + ")");
+      }
     }
 
     // for each interval, we generate naive nested loops
@@ -265,6 +287,9 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
             });
       }
       cudaKernel.addStatement("idx += kstride");
+      if(containsTemporary) {
+        cudaKernel.addStatement("idx_tmp += kstride_tmp");
+      }
     });
     lastKCell = interval.upperBound();
   }

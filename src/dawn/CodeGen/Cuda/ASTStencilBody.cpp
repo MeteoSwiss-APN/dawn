@@ -97,8 +97,12 @@ void ASTStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
 
 void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   std::string accessName = getName(expr);
-  std::string offsetStr = offsetPrinter_(ijkfyOffset(expr->getOffset(), accessName));
-  ss_ << accessName << (offsetStr.empty() ? "[idx]" : ("[idx+" + offsetStr + "]"));
+  bool isTemporary = instantiation_->isTemporaryField(instantiation_->getAccessIDFromExpr(expr));
+  std::string index = isTemporary ? "idx_tmp" : "idx";
+
+  std::string offsetStr = offsetPrinter_(ijkfyOffset(expr->getOffset(), accessName, isTemporary));
+  ss_ << accessName
+      << (offsetStr.empty() ? "[" + index + "]" : ("[" + index + "+" + offsetStr + "]"));
 }
 
 } // namespace cuda
