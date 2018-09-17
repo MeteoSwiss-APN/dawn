@@ -12,10 +12,11 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/Optimizer/PassComputeStageExtents.h"
-#include "dawn/Optimizer/DependencyGraphStage.h"
+#include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/STLExtras.h"
 
 namespace dawn {
@@ -25,21 +26,22 @@ PassComputeStageExtents::PassComputeStageExtents() : Pass("PassComputeStageExten
 }
 
 bool PassComputeStageExtents::run(
-    const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
-  for(auto& stencilPtr : stencilInstantiation->getStencils()) {
-    Stencil& stencil = *stencilPtr;
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
+    iir::Stencil& stencil = *stencilPtr;
 
     int numStages = stencil.getNumStages();
 
     // backward loop over stages
     for(int i = numStages - 1; i >= 0; --i) {
-      Stage& fromStage = *(stencil.getStage(i));
+      iir::Stage& fromStage = *(stencil.getStage(i));
 
-      Extents const& stageExtent = fromStage.getExtents();
+      iir::Extents const& stageExtent = fromStage.getExtents();
 
       // loop over all the input fields read in fromStage
-      for(const Field& fromField : fromStage.getFields()) {
+      for(const auto& fromFieldPair : fromStage.getFields()) {
 
+        const iir::Field& fromField = fromFieldPair.second;
         auto&& fromFieldExtents = fromField.getExtents();
 
         // notice that IO (if read happens before write) would also be a valid pattern
@@ -49,31 +51,40 @@ bool PassComputeStageExtents::run(
         //      Point one [ExtentComputationTODO]
         // ===-----------------------------------------------------------------------------------===
 
-        Extents fieldExtent = fromFieldExtents;
+        iir::Extents fieldExtent = fromFieldExtents;
 
         fieldExtent.expand(stageExtent);
 
         // check which (previous) stage computes the field (read in fromStage)
         for(int j = i - 1; j >= 0; --j) {
-          Stage& toStage = *(stencil.getStage(j));
+          iir::Stage& toStage = *(stencil.getStage(j));
           // ===---------------------------------------------------------------------------------===
           //      Point two [ExtentComputationTODO]
           // ===---------------------------------------------------------------------------------===
           auto fields = toStage.getFields();
-          auto it = std::find_if(fields.begin(), fields.end(), [&](Field const& f) {
-            return (f.getIntend() != Field::IntendKind::IK_Input) &&
-                   (f.getAccessID() == fromField.getAccessID());
-          });
+          auto it = std::find_if(fields.begin(), fields.end(),
+                                 [&](std::pair<int, iir::Field> const& pair) {
+                                   const auto& f = pair.second;
+                                   return (f.getIntend() != iir::Field::IntendKind::IK_Input) &&
+                                          (f.getAccessID() == fromField.getAccessID());
+                                 });
           if(it == fields.end())
             continue;
 
           // if found, add the (read) extent of the field as an extent of the stage
-          Extents ext = toStage.getExtents();
+          iir::Extents ext = toStage.getExtents();
           ext.merge(fieldExtent);
+          // this pass is computing the redundant computation in the horizontal, therefore we
+          // nullify the vertical component of the stage
+          ext[2] = iir::Extent{0, 0};
           toStage.setExtents(ext);
         }
       }
     }
+  }
+
+  for(const auto& MS : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
+    MS->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
 
   return true;

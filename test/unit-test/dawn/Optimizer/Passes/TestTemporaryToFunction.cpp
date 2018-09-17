@@ -35,7 +35,7 @@ protected:
   }
   virtual void SetUp() {}
 
-  std::vector<std::shared_ptr<Stencil>> loadTest(std::string sirFilename) {
+  std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename) {
 
     std::string filename = TestEnvironment::path_ + "/" + sirFilename;
     std::ifstream file(filename);
@@ -68,11 +68,8 @@ protected:
     }
 
     DAWN_ASSERT(translationUnit);
-    //    for(auto pair : translationUnit->getStencils()) {
-    //      std::cout << pair.first << " KKKKKKKKKKK " << pair.second << std::endl;
-    //    }
 
-    return optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"]->getStencils();
+    return optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"];
   }
 };
 

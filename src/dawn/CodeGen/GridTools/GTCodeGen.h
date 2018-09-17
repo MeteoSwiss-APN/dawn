@@ -16,17 +16,20 @@
 #define DAWN_CODEGEN_GRIDTOOLS_GTCODEGEN_H
 
 #include "dawn/CodeGen/CodeGen.h"
-#include "dawn/Optimizer/Interval.h"
+#include "dawn/IIR/Interval.h"
 #include <set>
 #include <unordered_map>
 #include <unordered_set>
 
 namespace dawn {
 
-class StencilInstantiation;
 class OptimizerContext;
+
+namespace iir {
+class StencilInstantiation;
 class Stage;
 class Stencil;
+}
 
 namespace codegen {
 namespace gt {
@@ -42,52 +45,51 @@ public:
 
   /// @brief Definitions of the gridtools::intervals
   struct IntervalDefinitions {
-    IntervalDefinitions(const Stencil& stencil);
+    IntervalDefinitions(const iir::Stencil& stencil);
 
     /// Intervals of the stencil
-    std::unordered_set<IntervalProperties> intervalProperties_;
+    std::unordered_set<iir::IntervalProperties> intervalProperties_;
 
     /// Axis of the stencil (i.e the interval which spans accross all other intervals)
-    Interval Axis;
+    iir::Interval Axis;
 
     /// Levels of the axis
     std::set<int> Levels;
 
     /// Intervals of the Do-Methods of each stage
-    std::unordered_map<std::shared_ptr<Stage>, std::vector<Interval>> StageIntervals;
+    std::unordered_map<int, std::vector<iir::Interval>> StageIntervals;
   };
 
 private:
-  std::string
-  generateStencilInstantiation(const std::shared_ptr<StencilInstantiation> stencilInstantiation);
+  std::string generateStencilInstantiation(
+      const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation);
   std::string generateGlobals(const std::shared_ptr<SIR>& Sir);
-  std::string cacheWindowToString(const Cache::window& cacheWindow);
+  std::string cacheWindowToString(const iir::Cache::window& cacheWindow);
   std::string buildMakeComputation(std::vector<std::string> const& DomainMapPlaceholders,
                                    std::vector<std::string> const& makeComputation,
                                    const std::string& gridName) const;
   void
   buildPlaceholderDefinitions(MemberFunction& function,
-                              std::vector<Stencil::FieldInfo> const& stencilFields,
+                              const std::unordered_map<int, iir::Stencil::FieldInfo>& stencilFields,
                               std::vector<std::string> const& stencilGlobalVariables,
                               std::vector<std::string> const& stencilConstructorTemplates) const;
 
   std::string getFieldName(std::shared_ptr<sir::Field> const& f) const { return f->Name; }
 
-  std::string getFieldName(Stencil::FieldInfo const& f) const { return f.Name; }
+  std::string getFieldName(iir::Stencil::FieldInfo const& f) const { return f.Name; }
 
   bool isTemporary(std::shared_ptr<sir::Field> f) const { return f->IsTemporary; }
 
-  bool isTemporary(Stencil::FieldInfo const& f) const { return f.IsTemporary; }
+  bool isTemporary(iir::Stencil::FieldInfo const& f) const { return f.IsTemporary; }
 
   /// code generate sync methods statements for all the fields passed
-  void generateSyncStorages(MemberFunction& method,
-                            const IndexRange<std::vector<Stencil::FieldInfo>>& stencilFields) const;
+  void generateSyncStorages(
+      MemberFunction& method,
+      const IndexRange<std::unordered_map<int, iir::Stencil::FieldInfo>>& stencilFields) const;
 
   /// construct a string of template parameters for storages
-  std::vector<std::string>
-  buildFieldTemplateNames(IndexRange<std::vector<Stencil::FieldInfo>> const& stencilFields) const;
-
-  int computeNumTemporaries(std::vector<Stencil::FieldInfo> const& stencilFields) const;
+  std::vector<std::string> buildFieldTemplateNames(
+      IndexRange<std::vector<iir::Stencil::FieldInfo>> const& stencilFields) const;
 
   /// Maximum needed vector size of boost::fusion containers
   std::size_t mplContainerMaxSize_;

@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/DependencyGraphAccesses.h"
+#include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/Support/STLExtras.h"
 #include <gtest/gtest.h>
 #include <set>
@@ -22,14 +22,14 @@ using namespace dawn;
 namespace {
 
 /// @brief Convencience graph to test the is-DAG algorithm
-class TestGraph : public DependencyGraphAccesses {
-  using Base = DependencyGraphAccesses;
+class TestGraph : public iir::DependencyGraphAccesses {
+  using Base = iir::DependencyGraphAccesses;
 
 public:
   TestGraph() : Base(nullptr) {}
   void insertEdge(int IDFrom, int IDTo) {
     Base::insertNode(IDFrom);
-    Base::insertEdge(IDFrom, IDTo, Extents{0, 0, 0, 0, 0, 0});
+    Base::insertEdge(IDFrom, IDTo, iir::Extents{0, 0, 0, 0, 0, 0});
   }
 };
 

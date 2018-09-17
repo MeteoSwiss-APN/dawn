@@ -15,8 +15,8 @@
 #include "dawn/CodeGen/GridTools/ASTStencilBody.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/StencilFunctionInstantiation.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilFunctionInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Unreachable.h"
 
@@ -24,8 +24,8 @@ namespace dawn {
 namespace codegen {
 namespace gt {
 
-ASTStencilBody::ASTStencilBody(const StencilInstantiation* stencilInstantiation,
-                               const std::unordered_set<IntervalProperties>& intervalProperties)
+ASTStencilBody::ASTStencilBody(const iir::StencilInstantiation* stencilInstantiation,
+                               const std::unordered_set<iir::IntervalProperties>& intervalProperties)
     : ASTCodeGenCXX(), instantiation_(stencilInstantiation),
       intervalProperties_(intervalProperties), offsetPrinter_(",", "(", ")"),
       currentFunction_(nullptr), nestingOfStencilFunArgLists_(0) {}
@@ -114,12 +114,12 @@ void ASTStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
   if(nestingOfStencilFunArgLists_++)
     ss_ << ", ";
 
-  const std::shared_ptr<StencilFunctionInstantiation> stencilFun =
+  const std::shared_ptr<iir::StencilFunctionInstantiation> stencilFun =
       currentFunction_ ? currentFunction_->getStencilFunctionInstantiation(expr)
                        : instantiation_->getStencilFunctionInstantiation(expr);
 
   ss_ << (triggerCallProc_ ? "gridtools::call_proc<" : "gridtools::call<")
-      << StencilFunctionInstantiation::makeCodeGenName(*stencilFun) << ", "
+      << iir::StencilFunctionInstantiation::makeCodeGenName(*stencilFun) << ", "
       << intervalProperties_.find(stencilFun->getInterval())->name_ << ">::with(eval";
 
   triggerCallProc_ = false;
@@ -199,7 +199,7 @@ void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
 }
 
 void ASTStencilBody::setCurrentStencilFunction(
-    const std::shared_ptr<StencilFunctionInstantiation>& currentFunction) {
+    const std::shared_ptr<iir::StencilFunctionInstantiation>& currentFunction) {
   currentFunction_ = currentFunction;
 }
 

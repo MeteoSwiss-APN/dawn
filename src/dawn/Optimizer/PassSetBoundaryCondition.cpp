@@ -14,8 +14,9 @@
 
 #include "dawn/Optimizer/PassSetBoundaryCondition.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/Stencil.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/Stencil.h"
+#include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/ASTExpr.h"
 #include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/ASTUtil.h"
@@ -35,18 +36,19 @@ namespace {
 /// @param s A shared ptr to the stencil to be analyzed
 /// @param ID the FieldID of the Field to be analized
 /// @return the full extent of the field in the stencil
-static dawn::Extents analyzeStencilExtents(const std::shared_ptr<Stencil>& s, int fieldID) {
-  Extents fullExtents{0, 0, 0, 0, 0, 0};
-  Stencil& stencil = *s;
+static iir::Extents analyzeStencilExtents(const std::unique_ptr<iir::Stencil>& s, int fieldID) {
+  iir::Extents fullExtents{0, 0, 0, 0, 0, 0};
+  iir::Stencil& stencil = *s;
 
   int numStages = stencil.getNumStages();
 
   // loop over stages
   for(int i = 0; i < numStages; ++i) {
-    Stage& stage = *(stencil.getStage(i));
+    iir::Stage& stage = *(stencil.getStage(i));
 
-    Extents const& stageExtent = stage.getExtents();
-    for(auto& field : stage.getFields()) {
+    iir::Extents const& stageExtent = stage.getExtents();
+    for(const auto& fieldPair : stage.getFields()) {
+      const iir::Field& field = fieldPair.second;
       fullExtents.merge(field.getExtents());
       fullExtents.add(stageExtent);
     }
@@ -81,13 +83,14 @@ public:
 /// StencilCallStmts for a stencili with a given ID. This is required to properly insert boundary
 /// conditions.
 class AddBoundaryConditions : public ASTVisitorForwarding {
-  std::shared_ptr<StencilInstantiation> instantiation_;
+  std::shared_ptr<iir::StencilInstantiation> instantiation_;
   int StencilID_;
 
   std::vector<std::shared_ptr<StencilCallDeclStmt>> stencilCallsToReplace_;
 
 public:
-  AddBoundaryConditions(const std::shared_ptr<StencilInstantiation>& instantiation, int StencilID)
+  AddBoundaryConditions(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                        int StencilID)
       : instantiation_(instantiation), StencilID_(StencilID) {}
 
   void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
@@ -112,7 +115,7 @@ public:
 PassSetBoundaryCondition::PassSetBoundaryCondition() : Pass("PassSetBoundaryCondition") {}
 
 bool PassSetBoundaryCondition::run(
-    const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 
   // check if we need to run this pass
   if(stencilInstantiation->getStencils().size() == 1) {
@@ -154,7 +157,7 @@ bool PassSetBoundaryCondition::run(
 
   };
 
-  std::unordered_map<int, Extents> dirtyFields;
+  std::unordered_map<int, iir::Extents> dirtyFields;
   std::unordered_map<int, std::shared_ptr<BoundaryConditionDeclStmt>> allBCs;
 
   //  // Fetch all the boundary conditions stored in the instantiation
@@ -182,7 +185,7 @@ bool PassSetBoundaryCondition::run(
 
   auto calculateHaloExtents = [&](std::string fieldname) {
 
-    Extents fullExtent{0, 0, 0, 0, 0, 0};
+    iir::Extents fullExtent{0, 0, 0, 0, 0, 0};
     // Did we already apply a BoundaryCondition for this field?
     // This is the first time we apply a BC to this field, we traverse all stencils that were
     // applied before
@@ -192,7 +195,7 @@ bool PassSetBoundaryCondition::run(
         stencilIDsToVisit.erase(traveresedID);
       }
     }
-    for(auto& stencil : stencilInstantiation->getStencils()) {
+    for(const auto& stencil : stencilInstantiation->getStencils()) {
       if(stencilIDsToVisit.count(stencil->getStencilID())) {
         fullExtent.merge(
             analyzeStencilExtents(stencil, stencilInstantiation->getAccessIDFromName(fieldname)));
@@ -206,8 +209,8 @@ bool PassSetBoundaryCondition::run(
     return fullExtent;
   };
 
-  auto insertExtentsIntoMap = [](int fieldID, Extents extents,
-                                 std::unordered_map<int, Extents>& map) {
+  auto insertExtentsIntoMap = [](int fieldID, iir::Extents extents,
+                                 std::unordered_map<int, iir::Extents>& map) {
     auto fieldExtentPair = map.find(fieldID);
     if(fieldExtentPair == map.end()) {
       map.emplace(fieldID, extents);
@@ -218,107 +221,96 @@ bool PassSetBoundaryCondition::run(
 
   // Loop through all the StmtAccessPair in the stencil forward
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
-    Stencil& stencil = *stencilPtr;
+    iir::Stencil& stencil = *stencilPtr;
     DAWN_LOG(INFO) << "analyzing stencil " << stencilInstantiation->getName();
-    std::unordered_map<int, Extents> stencilDirtyFields;
+    std::unordered_map<int, iir::Extents> stencilDirtyFields;
     stencilDirtyFields.clear();
 
-    for(const auto& multiStagePtr : stencil.getMultiStages()) {
-      MultiStage& multiStage = *multiStagePtr;
-      for(auto stageIt = multiStage.getStages().begin(); stageIt != multiStage.getStages().end();
-          ++stageIt) {
-        Stage& stage = (**stageIt);
-        for(const auto& domethod : stage.getDoMethods()) {
-          for(const auto& stmtAccess : domethod->getStatementAccessesPairs()) {
-            Accesses& acesses = *(stmtAccess->getAccesses());
-            const auto& allReadAccesses = acesses.getReadAccesses();
-            const auto& allWriteAccesses = acesses.getWriteAccesses();
+    for(const auto& stmtAccess : iterateIIROver<iir::StatementAccessesPair>(stencil)) {
 
-            // ReadAccesses can trigger Halo-Updates and Boundary conditions if the following
-            // criteria are fullfilled:
-            // It is a Field (ID!=-1) and we had a write before from another stencil (is in
-            // dirtyFields)
-            for(const auto& readaccess : allReadAccesses) {
-              int originalID = getOriginalID(readaccess.first);
-              if(originalID == FieldType::FT_NotOriginal)
-                continue;
-              if(!dirtyFields.count(originalID))
-                continue;
-              // If the access is horizontally pointwise we do not need to trigger a BC
-              if(readaccess.second.isHorizontalPointwise())
-                continue;
-              auto IDtoBCpair = allBCs.find(originalID);
-              // Check if a boundary condition for this variable was defined
-              if(IDtoBCpair == allBCs.end()) {
-                DAWN_ASSERT_MSG(
-                    false,
-                    dawn::format("In stencil %s we need a halo update on field %s but no "
-                                 "boundary condition is set.\nUpdate the stencil (outside the "
-                                 "do-method) with a boundary condition that calls a "
-                                 "stencil_function, e.g \n'boundary_condition(zero(), %s);'\n",
-                                 stencilInstantiation->getName(),
-                                 stencilInstantiation->getOriginalNameFromAccessID(originalID),
-                                 stencilInstantiation->getOriginalNameFromAccessID(originalID))
-                        .c_str());
-              }
-              // Calculate the extent and add it to the boundary-condition - Extent map
-              Extents fullExtents =
-                  calculateHaloExtents(stencilInstantiation->getNameFromAccessID(readaccess.first));
-              stencilInstantiation->insertBoundaryConditiontoExtentPair(IDtoBCpair->second,
-                                                                        fullExtents);
+      iir::Accesses& acesses = *(stmtAccess->getAccesses());
+      const auto& allReadAccesses = acesses.getReadAccesses();
+      const auto& allWriteAccesses = acesses.getWriteAccesses();
 
-              auto it =
-                  std::find_if(stencilInstantiation->getStencils().begin(),
-                               stencilInstantiation->getStencils().end(),
-                               [&stencil](const std::shared_ptr<Stencil>& storedStencil) {
+      // ReadAccesses can trigger Halo-Updates and Boundary conditions if the following
+      // criteria are fullfilled:
+      // It is a Field (ID!=-1) and we had a write before from another stencil (is in
+      // dirtyFields)
+      for(const auto& readaccess : allReadAccesses) {
+        int originalID = getOriginalID(readaccess.first);
+        if(originalID == FieldType::FT_NotOriginal)
+          continue;
+        if(!dirtyFields.count(originalID))
+          continue;
+        // If the access is horizontally pointwise we do not need to trigger a BC
+        if(readaccess.second.isHorizontalPointwise())
+          continue;
+        auto IDtoBCpair = allBCs.find(originalID);
+        // Check if a boundary condition for this variable was defined
+        if(IDtoBCpair == allBCs.end()) {
+          DAWN_ASSERT_MSG(
+              false, dawn::format("In stencil %s we need a halo update on field %s but no "
+                                  "boundary condition is set.\nUpdate the stencil (outside the "
+                                  "do-method) with a boundary condition that calls a "
+                                  "stencil_function, e.g \n'boundary_condition(zero(), %s);'\n",
+                                  stencilInstantiation->getName(),
+                                  stencilInstantiation->getOriginalNameFromAccessID(originalID),
+                                  stencilInstantiation->getOriginalNameFromAccessID(originalID))
+                         .c_str());
+        }
+        // Calculate the extent and add it to the boundary-condition - Extent map
+        iir::Extents fullExtents =
+            calculateHaloExtents(stencilInstantiation->getNameFromAccessID(readaccess.first));
+        stencilInstantiation->insertBoundaryConditiontoExtentPair(IDtoBCpair->second, fullExtents);
+
+        auto it = std::find_if(stencilInstantiation->getIIR()->childrenBegin(),
+                               stencilInstantiation->getIIR()->childrenEnd(),
+                               [&stencil](const std::unique_ptr<iir::Stencil>& storedStencil) {
                                  return storedStencil->getStencilID() == stencil.getStencilID();
                                });
-              DAWN_ASSERT_MSG(it != stencilInstantiation->getStencils().end(),
-                              "Stencil Triggering the Boundary Condition is not called");
+        DAWN_ASSERT_MSG(it != stencilInstantiation->getIIR()->childrenEnd(),
+                        "Stencil Triggering the Boundary Condition is not called");
 
-              // Find all the calls to this stencil before which we need to apply the boundary
-              // condition. These calls are then replaced by {boundary_condition, stencil_call}
-              AddBoundaryConditions visitor(stencilInstantiation, stencil.getStencilID());
+        // Find all the calls to this stencil before which we need to apply the boundary
+        // condition. These calls are then replaced by {boundary_condition, stencil_call}
+        AddBoundaryConditions visitor(stencilInstantiation, stencil.getStencilID());
 
-              for(auto& statement : stencilInstantiation->getStencilDescStatements()) {
-                visitor.reset();
+        for(auto& statement : stencilInstantiation->getStencilDescStatements()) {
+          visitor.reset();
 
-                std::shared_ptr<Stmt>& stmt = statement->ASTStmt;
+          std::shared_ptr<Stmt>& stmt = statement->ASTStmt;
 
-                stmt->accept(visitor);
-                std::vector<std::shared_ptr<Stmt>> stencilCallWithBC_;
-                stencilCallWithBC_.emplace_back(IDtoBCpair->second);
-                for(auto& oldStencilCall : visitor.getStencilCallsToReplace()) {
-                  stencilCallWithBC_.emplace_back(oldStencilCall);
-                  auto newBlockStmt = std::make_shared<BlockStmt>();
-                  std::copy(stencilCallWithBC_.begin(), stencilCallWithBC_.end(),
-                            std::back_inserter(newBlockStmt->getStatements()));
-                  if(oldStencilCall == stmt) {
-                    // Replace the the statement directly
-                    DAWN_ASSERT(visitor.getStencilCallsToReplace().size() == 1);
-                    stmt = newBlockStmt;
-                  } else {
-                    // Recursively replace the statement
-                    replaceOldStmtWithNewStmtInStmt(stmt, oldStencilCall, newBlockStmt);
-                  }
-                  stencilCallWithBC_.pop_back();
-                }
-              }
-
-              // The boundary condition is applied, the field is clean again
-              dirtyFields.erase(originalID);
-              // we add it to a vector for output
-              boundaryConditionInserted_.push_back(originalID);
+          stmt->accept(visitor);
+          std::vector<std::shared_ptr<Stmt>> stencilCallWithBC_;
+          stencilCallWithBC_.emplace_back(IDtoBCpair->second);
+          for(auto& oldStencilCall : visitor.getStencilCallsToReplace()) {
+            stencilCallWithBC_.emplace_back(oldStencilCall);
+            auto newBlockStmt = std::make_shared<BlockStmt>();
+            std::copy(stencilCallWithBC_.begin(), stencilCallWithBC_.end(),
+                      std::back_inserter(newBlockStmt->getStatements()));
+            if(oldStencilCall == stmt) {
+              // Replace the the statement directly
+              DAWN_ASSERT(visitor.getStencilCallsToReplace().size() == 1);
+              stmt = newBlockStmt;
+            } else {
+              // Recursively replace the statement
+              replaceOldStmtWithNewStmtInStmt(stmt, oldStencilCall, newBlockStmt);
             }
-            // Any write-access requires a halo update once is is read off-center therefore we set
-            // the fields to modified
-            for(const auto& writeaccess : allWriteAccesses) {
-              int originalID = getOriginalID(writeaccess.first);
-              if(originalID != FieldType::FT_NotOriginal) {
-                insertExtentsIntoMap(originalID, writeaccess.second, stencilDirtyFields);
-              }
-            }
+            stencilCallWithBC_.pop_back();
           }
+        }
+
+        // The boundary condition is applied, the field is clean again
+        dirtyFields.erase(originalID);
+        // we add it to a vector for output
+        boundaryConditionInserted_.push_back(originalID);
+      }
+      // Any write-access requires a halo update once is is read off-center therefore we set
+      // the fields to modified
+      for(const auto& writeaccess : allWriteAccesses) {
+        int originalID = getOriginalID(writeaccess.first);
+        if(originalID != FieldType::FT_NotOriginal) {
+          insertExtentsIntoMap(originalID, writeaccess.second, stencilDirtyFields);
         }
       }
     }

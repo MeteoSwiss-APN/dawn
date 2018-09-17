@@ -17,7 +17,7 @@
 
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
-#include "dawn/Optimizer/Interval.h"
+#include "dawn/IIR/Interval.h"
 #include "dawn/Support/IndexRange.h"
 #include <set>
 #include <unordered_map>
@@ -25,7 +25,10 @@
 #include <vector>
 
 namespace dawn {
+namespace iir {
 class StencilInstantiation;
+}
+
 class OptimizerContext;
 
 namespace codegen {
@@ -41,7 +44,7 @@ public:
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 
 private:
-  std::string generateStencilInstantiation(const StencilInstantiation* stencilInstantiation);
+  std::string generateStencilInstantiation(const iir::StencilInstantiation* stencilInstantiation);
   std::string generateGlobals(const std::shared_ptr<SIR>& sir);
 };
 } // namespace cxxnaive

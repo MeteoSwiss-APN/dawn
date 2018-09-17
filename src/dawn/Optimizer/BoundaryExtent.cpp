@@ -13,8 +13,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/BoundaryExtent.h"
-#include "dawn/Optimizer/DependencyGraphAccesses.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/DependencyGraphAccesses.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/STLExtras.h"
 #include <unordered_map>
 #include <unordered_set>
@@ -22,10 +22,10 @@
 
 namespace dawn {
 
-std::unique_ptr<std::unordered_map<std::size_t, Extents>>
-computeBoundaryExtents(const DependencyGraphAccesses* graph) {
-  using Vertex = DependencyGraphAccesses::Vertex;
-  using Edge = DependencyGraphAccesses::Edge;
+std::unique_ptr<std::unordered_map<std::size_t, iir::Extents>>
+computeBoundaryExtents(const iir::DependencyGraphAccesses* graph) {
+  using Vertex = iir::DependencyGraphAccesses::Vertex;
+  using Edge = iir::DependencyGraphAccesses::Edge;
 
   const auto& adjacencyList = graph->getAdjacencyList();
 
@@ -33,12 +33,12 @@ computeBoundaryExtents(const DependencyGraphAccesses* graph) {
   std::unordered_set<std::size_t> visitedNodes;
 
   // Keep track of the extents of each vertex (and compute a VertexID to AccessID map)
-  auto nodeExtentsPtr = make_unique<std::unordered_map<std::size_t, Extents>>();
+  auto nodeExtentsPtr = make_unique<std::unordered_map<std::size_t, iir::Extents>>();
   auto& nodeExtents = *nodeExtentsPtr;
 
   for(const auto& AccessIDVertexPair : graph->getVertices()) {
     const Vertex& vertex = AccessIDVertexPair.second;
-    nodeExtents.emplace(vertex.VertexID, Extents{0, 0, 0, 0, 0, 0});
+    nodeExtents.emplace(vertex.VertexID, iir::Extents{0, 0, 0, 0, 0, 0});
   }
 
   // Start from the output nodes and follow all paths
@@ -69,7 +69,7 @@ computeBoundaryExtents(const DependencyGraphAccesses* graph) {
       // Process the current node
       std::size_t curNode = nodesToVisit.back();
       nodesToVisit.pop_back();
-      const Extents& curExtent = nodeExtents.at(curNode);
+      const iir::Extents& curExtent = nodeExtents.at(curNode);
 
       // Check if we already visited this node
       if(visitedNodes.count(curNode))
@@ -79,7 +79,7 @@ computeBoundaryExtents(const DependencyGraphAccesses* graph) {
 
       // Follow edges of the current node and update the node extents
       for(const Edge& edge : *adjacencyList[curNode]) {
-        nodeExtents.at(edge.ToVertexID).merge(Extents::add(curExtent, edge.Data));
+        nodeExtents.at(edge.ToVertexID).merge(iir::Extents::add(curExtent, edge.Data));
         nodesToVisit.push_back(edge.ToVertexID);
       }
     }
@@ -88,12 +88,12 @@ computeBoundaryExtents(const DependencyGraphAccesses* graph) {
   return nodeExtentsPtr;
 }
 
-bool exceedsMaxBoundaryPoints(const DependencyGraphAccesses* graph,
+bool exceedsMaxBoundaryPoints(const iir::DependencyGraphAccesses* graph,
                               int maxHorizontalBoundaryExtent) {
   auto nodeExtentsPtr = computeBoundaryExtents(graph);
 
   for(const auto& vertexIDExtentsPair : *nodeExtentsPtr) {
-    const Extents& extents = vertexIDExtentsPair.second;
+    const iir::Extents& extents = vertexIDExtentsPair.second;
     if(extents[0].Plus > maxHorizontalBoundaryExtent ||
        extents[0].Minus < -maxHorizontalBoundaryExtent ||
        extents[1].Plus > maxHorizontalBoundaryExtent ||

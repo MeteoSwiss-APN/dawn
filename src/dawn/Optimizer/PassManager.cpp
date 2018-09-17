@@ -14,14 +14,14 @@
 
 #include "dawn/Optimizer/PassManager.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/Logging.h"
 #include <vector>
 
 namespace dawn {
 
 bool PassManager::runAllPassesOnStecilInstantiation(
-    const std::shared_ptr<StencilInstantiation>& instantiation) {
+    const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
   std::vector<std::string> passesRan;
 
   for(auto& pass : passes_) {
@@ -43,13 +43,22 @@ bool PassManager::runAllPassesOnStecilInstantiation(
 }
 
 bool PassManager::runPassOnStecilInstantiation(
-    const std::shared_ptr<StencilInstantiation>& instantiation, Pass* pass) {
+    const std::shared_ptr<iir::StencilInstantiation>& instantiation, Pass* pass) {
   DAWN_LOG(INFO) << "Starting " << pass->getName() << " ...";
 
   if(!pass->run(instantiation)) {
     DAWN_LOG(WARNING) << "Done with " << pass->getName() << " : FAIL";
     return false;
   }
+
+  DAWN_ASSERT_MSG(instantiation->getIIR()->checkTreeConsistency(),
+                  std::string("Tree consistency check failed for pass" + pass->getName()).c_str());
+
+#ifndef NDEBUG
+  for(const auto& stencil : instantiation->getIIR()->getChildren()) {
+    DAWN_ASSERT(stencil->compareDerivedInfo());
+  }
+#endif
 
   DAWN_LOG(INFO) << "Done with " << pass->getName() << " : Success";
   return true;

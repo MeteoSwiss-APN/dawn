@@ -13,7 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/Replacing.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/ASTUtil.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/Statement.h"
@@ -25,14 +25,14 @@ namespace {
 
 /// @brief Get all field and variable accesses identifier by `AccessID`
 class GetFieldAndVarAccesses : public ASTVisitorForwarding {
-  StencilInstantiation& instantiation_;
+  iir::StencilInstantiation& instantiation_;
   int AccessID_;
 
   std::vector<std::shared_ptr<FieldAccessExpr>> fieldAccessExprToReplace_;
   std::vector<std::shared_ptr<VarAccessExpr>> varAccessesToReplace_;
 
 public:
-  GetFieldAndVarAccesses(StencilInstantiation& instantiation, int AccessID)
+  GetFieldAndVarAccesses(iir::StencilInstantiation& instantiation, int AccessID)
       : instantiation_(instantiation), AccessID_(AccessID) {}
 
   void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
@@ -62,9 +62,9 @@ public:
 } // anonymous namespace
 
 void replaceFieldWithVarAccessInStmts(
-    Stencil* stencil, int AccessID, const std::string& varname,
-    ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs) {
-  StencilInstantiation& instantiation = stencil->getStencilInstantiation();
+    iir::Stencil* stencil, int AccessID, const std::string& varname,
+    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
+  iir::StencilInstantiation& instantiation = stencil->getStencilInstantiation();
 
   GetFieldAndVarAccesses visitor(instantiation, AccessID);
   for(const auto& statementAccessesPair : statementAccessesPairs) {
@@ -85,9 +85,9 @@ void replaceFieldWithVarAccessInStmts(
 }
 
 void replaceVarWithFieldAccessInStmts(
-    Stencil* stencil, int AccessID, const std::string& fieldname,
-    ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs) {
-  StencilInstantiation& instantiation = stencil->getStencilInstantiation();
+    iir::Stencil* stencil, int AccessID, const std::string& fieldname,
+    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
+  iir::StencilInstantiation& instantiation = stencil->getStencilInstantiation();
 
   GetFieldAndVarAccesses visitor(instantiation, AccessID);
   for(const auto& statementAccessesPair : statementAccessesPairs) {
@@ -111,13 +111,13 @@ namespace {
 
 /// @brief Get all field and variable accesses identifier by `AccessID`
 class GetStencilCalls : public ASTVisitorForwarding {
-  const std::shared_ptr<StencilInstantiation>& instantiation_;
+  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   int StencilID_;
 
   std::vector<std::shared_ptr<StencilCallDeclStmt>> stencilCallsToReplace_;
 
 public:
-  GetStencilCalls(const std::shared_ptr<StencilInstantiation>& instantiation, int StencilID)
+  GetStencilCalls(const std::shared_ptr<iir::StencilInstantiation>& instantiation, int StencilID)
       : instantiation_(instantiation), StencilID_(StencilID) {}
 
   void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
@@ -134,7 +134,7 @@ public:
 
 } // anonymous namespace
 
-void replaceStencilCalls(const std::shared_ptr<StencilInstantiation>& instantiation,
+void replaceStencilCalls(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
                          int oldStencilID, const std::vector<int>& newStencilIDs) {
   GetStencilCalls visitor(instantiation, oldStencilID);
 
@@ -150,7 +150,7 @@ void replaceStencilCalls(const std::shared_ptr<StencilInstantiation>& instantiat
       std::vector<std::shared_ptr<StencilCallDeclStmt>> newStencilCalls;
       for(int StencilID : newStencilIDs) {
         auto placeholderStencil = std::make_shared<sir::StencilCall>(
-            StencilInstantiation::makeStencilCallCodeGenName(StencilID));
+            iir::StencilInstantiation::makeStencilCallCodeGenName(StencilID));
         newStencilCalls.push_back(std::make_shared<StencilCallDeclStmt>(placeholderStencil));
       }
 

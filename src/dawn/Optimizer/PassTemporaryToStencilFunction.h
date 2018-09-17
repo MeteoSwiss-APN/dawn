@@ -19,8 +19,10 @@
 
 namespace dawn {
 
+namespace iir {
 class Stencil;
 class DoMethod;
+}
 
 /// @brief PassTemporaryToStencilFunction pass will identify temporaries of a stencil and replace
 /// their pre-computations
@@ -40,7 +42,7 @@ public:
   PassTemporaryToStencilFunction();
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
 };
 
 } // namespace dawn

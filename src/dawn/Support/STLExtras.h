@@ -42,7 +42,7 @@ namespace dawn {
 template <class T, class... Args>
 typename std::enable_if<!std::is_array<T>::value, std::unique_ptr<T>>::type
 make_unique(Args&&... args) {
-  return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+  return std::move(std::unique_ptr<T>(new T(std::forward<Args>(args)...)));
 }
 
 /// @brief Constructs a `new T[n]` with the given args and returns a `unique_ptr<T[]>` which owns
@@ -105,7 +105,7 @@ public:
 
 /// @brief Get length of an array
 template <class T, std::size_t N>
-constexpr inline size_t array_lengthof(T (&)[N]) {
+constexpr inline size_t array_lengthof(T(&)[N]) {
   return N;
 }
 

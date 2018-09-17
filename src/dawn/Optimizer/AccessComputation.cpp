@@ -13,10 +13,10 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/AccessComputation.h"
-#include "dawn/Optimizer/Accesses.h"
-#include "dawn/Optimizer/StatementAccessesPair.h"
-#include "dawn/Optimizer/StencilFunctionInstantiation.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/Accesses.h"
+#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/StencilFunctionInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include <iostream>
@@ -28,15 +28,15 @@ namespace {
 
 /// @brief Compute and fill the access map of the given statement
 class AccessMapper : public ASTVisitor {
-  StencilInstantiation* instantiation_;
+  iir::StencilInstantiation* instantiation_;
 
   /// Keep track of the current statement access pair
   struct CurrentStatementAccessPair {
-    CurrentStatementAccessPair(const std::shared_ptr<StatementAccessesPair>& pair)
+    CurrentStatementAccessPair(const std::unique_ptr<iir::StatementAccessesPair>& pair)
         : Pair(pair), ChildIndex(0), IfCondExpr(nullptr) {}
 
     /// Reference to the pair we are currently working on.
-    std::shared_ptr<StatementAccessesPair> Pair;
+    const std::unique_ptr<iir::StatementAccessesPair>& Pair;
 
     /// Index of the child we are currently traversing. We need to keep track of this index because
     /// we fold the two block statements of an if/then/else block into a single vector of statements
@@ -54,33 +54,34 @@ class AccessMapper : public ASTVisitor {
   /// List of caller and callee accesses. The first element is the primary accesses corresponding to
   /// the statement of the statement access pair which was passed to the constructor. All other
   /// elements are the accesses of the children of the top-level statement.
-  std::vector<std::shared_ptr<Accesses>> callerAccessesList_;
-  std::vector<std::shared_ptr<Accesses>> calleeAccessesList_;
+  std::vector<std::shared_ptr<iir::Accesses>> callerAccessesList_;
+  std::vector<std::shared_ptr<iir::Accesses>> calleeAccessesList_;
 
   /// Reference to the stencil function we are currently inside (if any)
-  std::shared_ptr<StencilFunctionInstantiation> stencilFun_;
+  std::shared_ptr<iir::StencilFunctionInstantiation> stencilFun_;
 
   /// Reference to the current call of a stencil function if we are traversing an argument list
   struct StencilFunctionCallScope {
-    StencilFunctionCallScope(std::shared_ptr<StencilFunctionInstantiation> functionInstantiation)
+    StencilFunctionCallScope(
+        std::shared_ptr<iir::StencilFunctionInstantiation> functionInstantiation)
         : FunctionInstantiation(functionInstantiation), ArgumentIndex(0) {}
 
-    std::shared_ptr<StencilFunctionInstantiation> FunctionInstantiation;
+    std::shared_ptr<iir::StencilFunctionInstantiation> FunctionInstantiation;
     int ArgumentIndex;
   };
   std::stack<std::unique_ptr<StencilFunctionCallScope>> stencilFunCalls_;
 
 public:
-  AccessMapper(StencilInstantiation* instantiation,
-               const std::shared_ptr<StatementAccessesPair>& stmtAccessesPair,
-               std::shared_ptr<StencilFunctionInstantiation> stencilFun = nullptr)
+  AccessMapper(iir::StencilInstantiation* instantiation,
+               const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessesPair,
+               std::shared_ptr<iir::StencilFunctionInstantiation> stencilFun = nullptr)
       : instantiation_(instantiation), stencilFun_(stencilFun) {
     curStatementAccessPairStack_.push_back(
         make_unique<CurrentStatementAccessPair>(stmtAccessesPair));
   }
 
   /// @brief Get the stencil function instantiation from the `StencilFunCallExpr`
-  std::shared_ptr<StencilFunctionInstantiation>
+  std::shared_ptr<iir::StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) {
     return (stencilFun_ ? stencilFun_->getStencilFunctionInstantiation(expr)
                         : instantiation_->getStencilFunctionInstantiation(expr));
@@ -102,12 +103,13 @@ public:
   /// accesses list. This will also add accesses to the children of the top-level statement access
   /// pair
   void appendNewAccesses() {
-    curStatementAccessPairStack_.back()->Pair->setCallerAccesses(std::make_shared<Accesses>());
+    curStatementAccessPairStack_.back()->Pair->setCallerAccesses(std::make_shared<iir::Accesses>());
     callerAccessesList_.emplace_back(
         curStatementAccessPairStack_.back()->Pair->getCallerAccesses());
 
     if(stencilFun_) {
-      curStatementAccessPairStack_.back()->Pair->setCalleeAccesses(std::make_shared<Accesses>());
+      curStatementAccessPairStack_.back()->Pair->setCalleeAccesses(
+          std::make_shared<iir::Accesses>());
       calleeAccessesList_.emplace_back(
           curStatementAccessPairStack_.back()->Pair->getCalleeAccesses());
     }
@@ -161,7 +163,7 @@ public:
       calleeAccesses->mergeWriteOffset(getAccessIDFromStmt(var), Array3i{{0, 0, 0}});
   }
 
-  void mergeWriteExtent(const std::shared_ptr<FieldAccessExpr>& field, const Extents& extent) {
+  void mergeWriteExtent(const std::shared_ptr<FieldAccessExpr>& field, const iir::Extents& extent) {
     for(auto& callerAccesses : callerAccessesList_)
       callerAccesses->mergeWriteExtent(getAccessIDFromExpr(field), extent);
 
@@ -201,7 +203,7 @@ public:
       calleeAccesses->mergeReadOffset(getAccessIDFromExpr(lit), Array3i{{0, 0, 0}});
   }
 
-  void mergeReadExtent(const std::shared_ptr<FieldAccessExpr>& field, const Extents& extent) {
+  void mergeReadExtent(const std::shared_ptr<FieldAccessExpr>& field, const iir::Extents& extent) {
     for(auto& callerAccesses : callerAccessesList_)
       callerAccesses->mergeReadExtent(getAccessIDFromExpr(field), extent);
 
@@ -213,10 +215,11 @@ public:
   /// @brief Recursively merge the `extent` with all fields of the `curStencilFunCall` and apply
   /// them to the current *caller* accesses
   template <typename TExtent>
-  void mergeExtentWithAllFields(TExtent&& extent,
-                                std::shared_ptr<StencilFunctionInstantiation> curStencilFunCall,
-                                std::set<int>& appliedAccessIDs) {
-    for(const Field& field : curStencilFunCall->getCallerFields()) {
+  void
+  mergeExtentWithAllFields(TExtent&& extent,
+                           std::shared_ptr<iir::StencilFunctionInstantiation> curStencilFunCall,
+                           std::set<int>& appliedAccessIDs) {
+    for(const iir::Field& field : curStencilFunCall->getCallerFields()) {
       int AccessID = field.getAccessID();
 
       if(appliedAccessIDs.count(AccessID))
@@ -233,11 +236,13 @@ public:
       } else {
         appliedAccessIDs.insert(AccessID);
 
-        if(field.getIntend() == Field::IK_Input || field.getIntend() == Field::IK_InputOutput)
+        if(field.getIntend() == iir::Field::IK_Input ||
+           field.getIntend() == iir::Field::IK_InputOutput)
           for(auto& callerAccesses : callerAccessesList_)
             callerAccesses->addReadExtent(AccessID, std::forward<TExtent>(extent));
 
-        if(field.getIntend() == Field::IK_Output || field.getIntend() == Field::IK_InputOutput)
+        if(field.getIntend() == iir::Field::IK_Output ||
+           field.getIntend() == iir::Field::IK_InputOutput)
           for(auto& callerAccesses : callerAccessesList_)
             callerAccesses->addWriteExtent(AccessID, std::forward<TExtent>(extent));
       }
@@ -246,15 +251,19 @@ public:
 
   virtual void visit(const std::shared_ptr<BlockStmt>& stmt) override {
     // If we are inside the else block of an if-statement we need to continue iterating
-    // the children as the if/then/else block of the if-statement has been collapsed into one single
-    // vector of children
+    // the block statements as the if/then/else block of the if-statement has been collapsed into
+    // one single
+    // vector of block statements
     if(!curStatementAccessPairStack_.back()->IfCondExpr)
       curStatementAccessPairStack_.back()->ChildIndex = 0;
 
     for(auto& s : stmt->getStatements()) {
-      curStatementAccessPairStack_.push_back(make_unique<CurrentStatementAccessPair>(
+
+      auto curBlockStmt = make_unique<CurrentStatementAccessPair>(
           curStatementAccessPairStack_.back()
-              ->Pair->getChildren()[curStatementAccessPairStack_.back()->ChildIndex]));
+              ->Pair->getBlockStatements()[curStatementAccessPairStack_.back()->ChildIndex]);
+
+      curStatementAccessPairStack_.push_back(std::move(curBlockStmt));
 
       // Process the statement
       s->accept(*this);
@@ -287,7 +296,6 @@ public:
       stmt->getElseStmt()->accept(*this);
 
     curStatementAccessPairStack_.back()->IfCondExpr = nullptr;
-
     removeLastChildAccesses();
   }
 
@@ -331,7 +339,7 @@ public:
     stencilFunCalls_.push(
         make_unique<StencilFunctionCallScope>(getStencilFunctionInstantiation(expr)));
 
-    std::shared_ptr<StencilFunctionInstantiation> curStencilFunCall =
+    std::shared_ptr<iir::StencilFunctionInstantiation> curStencilFunCall =
         stencilFunCalls_.top()->FunctionInstantiation;
     computeAccesses(curStencilFunCall, curStencilFunCall->getStatementAccessesPairs());
 
@@ -349,7 +357,8 @@ public:
       auto& prevArgumentIndex = previousStencilFunCallScope->ArgumentIndex;
       auto& prevStencilFunCall = previousStencilFunCallScope->FunctionInstantiation;
 
-      const Field& field = prevStencilFunCall->getCallerFieldFromArgumentIndex(prevArgumentIndex);
+      const iir::Field& field =
+          prevStencilFunCall->getCallerFieldFromArgumentIndex(prevArgumentIndex);
       DAWN_ASSERT(prevStencilFunCall->isProvidedByStencilFunctionCall(field.getAccessID()));
 
       // Add the extent of the field mapping to the stencil function to all fields
@@ -426,17 +435,20 @@ public:
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
     if(!stencilFunCalls_.empty()) {
 
-      std::shared_ptr<StencilFunctionInstantiation> functionInstantiation =
+      std::shared_ptr<iir::StencilFunctionInstantiation> functionInstantiation =
           stencilFunCalls_.top()->FunctionInstantiation;
       int& ArgumentIndex = stencilFunCalls_.top()->ArgumentIndex;
 
       // Get the extent of the field corresponding to the argument index
-      const Field& field = functionInstantiation->getCallerFieldFromArgumentIndex(ArgumentIndex);
+      const iir::Field& field =
+          functionInstantiation->getCallerFieldFromArgumentIndex(ArgumentIndex);
 
-      if(field.getIntend() == Field::IK_Input || field.getIntend() == Field::IK_InputOutput)
+      if(field.getIntend() == iir::Field::IK_Input ||
+         field.getIntend() == iir::Field::IK_InputOutput)
         mergeReadExtent(expr, field.getExtents());
 
-      if(field.getIntend() == Field::IK_Output || field.getIntend() == Field::IK_InputOutput)
+      if(field.getIntend() == iir::Field::IK_Output ||
+         field.getIntend() == iir::Field::IK_InputOutput)
         mergeWriteExtent(expr, field.getExtents());
 
       ArgumentIndex += 1;
@@ -450,8 +462,8 @@ public:
 
 } // anonymous namespace
 
-void computeAccesses(StencilInstantiation* instantiation,
-                     ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs) {
+void computeAccesses(iir::StencilInstantiation* instantiation,
+                     ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
   for(const auto& statementAccessesPair : statementAccessesPairs) {
     DAWN_ASSERT(instantiation);
     AccessMapper mapper(instantiation, statementAccessesPair, nullptr);
@@ -459,8 +471,9 @@ void computeAccesses(StencilInstantiation* instantiation,
   }
 }
 
-void computeAccesses(std::shared_ptr<StencilFunctionInstantiation> stencilFunctionInstantiation,
-                     ArrayRef<std::shared_ptr<StatementAccessesPair>> statementAccessesPairs) {
+void computeAccesses(
+    std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation,
+    ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
   for(const auto& statementAccessesPair : statementAccessesPairs) {
     AccessMapper mapper(stencilFunctionInstantiation->getStencilInstantiation(),
                         statementAccessesPair, stencilFunctionInstantiation);

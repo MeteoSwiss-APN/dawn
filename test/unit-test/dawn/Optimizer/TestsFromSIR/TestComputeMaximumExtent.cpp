@@ -35,7 +35,7 @@ protected:
   TestComputeMaximumExtent() : compiler_(compileOptions_.get()) {}
   virtual void SetUp() {}
 
-  std::shared_ptr<StencilInstantiation> loadTest(std::string sirFilename) {
+  std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename) {
 
     std::string filename = TestEnvironment::path_ + "/" + sirFilename;
     std::ifstream file(filename);
@@ -63,56 +63,56 @@ protected:
 
 TEST_F(TestComputeMaximumExtent, test_field_access_interval_02) {
   auto stencilInstantiation = loadTest("test_field_access_interval_02.sir");
-  auto stencils = stencilInstantiation->getStencils();
+  const auto& stencils = stencilInstantiation->getStencils();
   ASSERT_TRUE((stencils.size() == 1));
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   ASSERT_TRUE((stencil->getNumStages() == 2));
-  ASSERT_TRUE((stencil->getStage(0)->getExtents() == Extents{-1, 1, -1, 1, 0, 0}));
-  ASSERT_TRUE((stencil->getStage(1)->getExtents() == Extents{0, 0, 0, 0, 0, 0}));
+  ASSERT_TRUE((stencil->getStage(0)->getExtents() == iir::Extents{-1, 1, -1, 1, 0, 0}));
+  ASSERT_TRUE((stencil->getStage(1)->getExtents() == iir::Extents{0, 0, 0, 0, 0, 0}));
 
-  ASSERT_TRUE((stencil->getMultiStages().size() == 1));
+  ASSERT_TRUE((stencil->getChildren().size() == 1));
 
-  auto const& mss = stencil->getMultiStages().front();
+  auto const& mss = (*stencil->childrenBegin());
 
-  auto stage1_ptr = mss->getStages().begin();
-  std::shared_ptr<Stage> const& stage1 = *stage1_ptr;
+  auto stage1_ptr = mss->childrenBegin();
+  std::unique_ptr<iir::Stage> const& stage1 = *stage1_ptr;
 
-  ASSERT_TRUE((stage1->getDoMethods().size() == 2));
+  ASSERT_TRUE((stage1->getChildren().size() == 2));
 
-  const auto& doMethod1 = stage1->getDoMethods()[0];
+  const auto& doMethod1 = stage1->getChildren().at(0);
 
-  ASSERT_TRUE((doMethod1->getStatementAccessesPairs().size() == 1));
-  const auto& stmtAccessPair = doMethod1->getStatementAccessesPairs()[0];
+  ASSERT_TRUE((doMethod1->getChildren().size() == 1));
+  const auto& stmtAccessPair = doMethod1->getChildren()[0];
   ASSERT_TRUE((stmtAccessPair->computeMaximumExtents(
-                   stencilInstantiation->getAccessIDFromName("u")) == Extents{-1, 1, -1, 1, 0, 0}));
+                   stencilInstantiation->getAccessIDFromName("u")) == iir::Extents{-1, 1, -1, 1, 0, 0}));
 
   EXPECT_EQ(
       stmtAccessPair->computeMaximumExtents(stencilInstantiation->getAccessIDFromName("coeff")),
-      (Extents{0, 0, 0, 0, 1, 1}));
+      (iir::Extents{0, 0, 0, 0, 1, 1}));
 }
 
 TEST_F(TestComputeMaximumExtent, test_compute_maximum_extent_01) {
   auto stencilInstantiation = loadTest("test_compute_maximum_extent_01.sir");
-  auto stencils = stencilInstantiation->getStencils();
+  const auto& stencils = stencilInstantiation->getStencils();
 
   ASSERT_TRUE((stencils.size() == 1));
-  std::shared_ptr<Stencil> stencil = stencils[0];
+  const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   ASSERT_TRUE((stencil->getNumStages() == 1));
-  ASSERT_TRUE((stencil->getMultiStages().size() == 1));
+  ASSERT_TRUE((stencil->getChildren().size() == 1));
 
-  auto const& mss = stencil->getMultiStages().front();
+  auto const& mss = (*stencil->childrenBegin());
 
-  auto stage1_ptr = mss->getStages().begin();
-  std::shared_ptr<Stage> const& stage1 = *stage1_ptr;
+  auto stage1_ptr = mss->childrenBegin();
+  std::unique_ptr<iir::Stage> const& stage1 = *stage1_ptr;
 
-  ASSERT_TRUE((stage1->getDoMethods().size() == 1));
+  ASSERT_TRUE((stage1->getChildren().size() == 1));
 
-  const auto& doMethod1 = stage1->getDoMethods()[0];
+  const auto& doMethod1 = stage1->getSingleDoMethod();
 
-  ASSERT_TRUE((doMethod1->computeMaximumExtents(stencilInstantiation->getAccessIDFromName("u")) ==
-               Extents{0, 1, -1, 0, 0, 2}));
+  ASSERT_TRUE((doMethod1.computeMaximumExtents(stencilInstantiation->getAccessIDFromName("u")) ==
+               iir::Extents{0, 1, -1, 0, 0, 2}));
 }
 
 } // anonymous namespace

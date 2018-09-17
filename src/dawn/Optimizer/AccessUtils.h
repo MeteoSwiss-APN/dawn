@@ -17,8 +17,8 @@
 #ifndef DAWN_OPTIMIZER_ACCESSUTILS_H
 #define DAWN_OPTIMIZER_ACCESSUTILS_H
 
-#include "dawn/Optimizer/Accesses.h"
-#include "dawn/Optimizer/Field.h"
+#include "dawn/IIR/Accesses.h"
+#include "dawn/IIR/Field.h"
 #include <unordered_map>
 
 namespace dawn {
@@ -29,20 +29,22 @@ namespace AccessUtils {
 /// depending on previous accesses to the same field
 ///
 /// @ingroup optimizer
-void recordWriteAccess(std::unordered_map<int, Field>& inputOutputFields,
-                       std::unordered_map<int, Field>& inputFields,
-                       std::unordered_map<int, Field>& outputFields, int AccessID,
-                       const boost::optional<Extents>& extents, Interval const& doMethodInterval);
+void recordWriteAccess(std::unordered_map<int, iir::Field>& inputOutputFields,
+                       std::unordered_map<int, iir::Field>& inputFields,
+                       std::unordered_map<int, iir::Field>& outputFields, int AccessID,
+                       const boost::optional<iir::Extents>& extents,
+                       iir::Interval const& doMethodInterval);
 
 /// @brief given a read access, with AccessID, it will recorded in the corresponding map of input,
 /// output or inputOutput
 /// depending on previous accesses to the same field
 ///
 /// @ingroup optimizer
-void recordReadAccess(std::unordered_map<int, Field>& inputOutputFields,
-                      std::unordered_map<int, Field>& inputFields,
-                      std::unordered_map<int, Field>& outputFields, int AccessID,
-                      const boost::optional<Extents>& extents, Interval const& doMethodInterval);
+void recordReadAccess(std::unordered_map<int, iir::Field>& inputOutputFields,
+                      std::unordered_map<int, iir::Field>& inputFields,
+                      std::unordered_map<int, iir::Field>& outputFields, int AccessID,
+                      const boost::optional<iir::Extents>& extents,
+                      iir::Interval const& doMethodInterval);
 
 } // namespace AccessUtils
 } // namespace dawn

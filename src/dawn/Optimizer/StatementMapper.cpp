@@ -16,17 +16,15 @@
 
 namespace dawn {
 StatementMapper::StatementMapper(
-    StencilInstantiation* instantiation,
-    const std::shared_ptr<std::vector<sir::StencilCall*>>& stackTrace,
-    std::vector<std::shared_ptr<StatementAccessesPair>>& statementAccessesPairs,
-    const Interval& interval,
+    iir::StencilInstantiation* instantiation,
+    const std::shared_ptr<std::vector<sir::StencilCall*>>& stackTrace, iir::DoMethod& doMethod,
+    const iir::Interval& interval,
     const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,
-    const std::shared_ptr<StencilFunctionInstantiation> stencilFunctionInstantiation)
+    const std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation)
     : instantiation_(instantiation), stackTrace_(stackTrace) {
 
   // Create the initial scope
-  scope_.push(
-      std::make_shared<Scope>(statementAccessesPairs, interval, stencilFunctionInstantiation));
+  scope_.push(std::make_shared<Scope>(doMethod, interval, stencilFunctionInstantiation));
   scope_.top()->LocalFieldnameToAccessIDMap = localFieldnameToAccessIDMap;
 }
 
@@ -40,16 +38,20 @@ void StatementMapper::appendNewStatementAccessesPair(const std::shared_ptr<Stmt>
   if(scope_.top()->ScopeDepth == 1) {
     // The top-level block statement is collapsed thus we only insert at 1. Note that this works
     // because all AST have a block statement as root node.
-    scope_.top()->StatementAccessesPairs.emplace_back(
-        std::make_shared<StatementAccessesPair>(std::make_shared<Statement>(stmt, stackTrace_)));
-    scope_.top()->CurentStmtAccessesPair.push(scope_.top()->StatementAccessesPairs.back());
+    scope_.top()->doMethod_.insertChild(
+        make_unique<iir::StatementAccessesPair>(std::make_shared<Statement>(stmt, stackTrace_)));
+    scope_.top()->CurentStmtAccessesPair.push(&(*(scope_.top()->doMethod_.childrenRBegin())));
 
   } else if(scope_.top()->ScopeDepth > 1) {
     // We are inside a nested block statement, we add the stmt as a child of the parent statement
-    scope_.top()->CurentStmtAccessesPair.top()->getChildren().emplace_back(
-        std::make_shared<StatementAccessesPair>(std::make_shared<Statement>(stmt, stackTrace_)));
-    scope_.top()->CurentStmtAccessesPair.push(
-        scope_.top()->CurentStmtAccessesPair.top()->getChildren().back());
+    (*scope_.top()->CurentStmtAccessesPair.top())
+        ->insertBlockStatement(make_unique<iir::StatementAccessesPair>(
+            std::make_shared<Statement>(stmt, stackTrace_)));
+
+    const std::unique_ptr<iir::StatementAccessesPair>& lp =
+        ((*scope_.top()->CurentStmtAccessesPair.top())->getBlockStatements().back());
+
+    scope_.top()->CurentStmtAccessesPair.push(&lp);
   }
 }
 
@@ -82,7 +84,8 @@ void StatementMapper::visit(const std::shared_ptr<ExprStmt>& stmt) {
 void StatementMapper::visit(const std::shared_ptr<ReturnStmt>& stmt) {
   DAWN_ASSERT(initializedWithBlockStmt_);
   DAWN_ASSERT(scope_.top()->FunctionInstantiation);
-  std::shared_ptr<const StencilFunctionInstantiation> curFunc = scope_.top()->FunctionInstantiation;
+  std::shared_ptr<const iir::StencilFunctionInstantiation> curFunc =
+      scope_.top()->FunctionInstantiation;
 
   // We can only have 1 return statement
   if(curFunc->hasReturn()) {
@@ -122,7 +125,7 @@ void StatementMapper::visit(const std::shared_ptr<VarDeclStmt>& stmt) {
   if(instantiation_->getOptimizerContext()->getOptions().KeepVarnames)
     globalName = stmt->getName();
   else
-    globalName = StencilInstantiation::makeLocalVariablename(stmt->getName(), AccessID);
+    globalName = iir::StencilInstantiation::makeLocalVariablename(stmt->getName(), AccessID);
 
   // We generate a new AccessID and insert it into the AccessMaps (using the global name)
   auto& function = scope_.top()->FunctionInstantiation;
@@ -198,8 +201,8 @@ void StatementMapper::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
   DAWN_ASSERT(initializedWithBlockStmt_);
 
   // Find the referenced stencil function
-  std::shared_ptr<StencilFunctionInstantiation> stencilFun = nullptr;
-  const Interval& interval = scope_.top()->VerticalInterval;
+  std::shared_ptr<iir::StencilFunctionInstantiation> stencilFun = nullptr;
+  const iir::Interval& interval = scope_.top()->VerticalInterval;
 
   for(auto& SIRStencilFun : instantiation_->getSIR()->StencilFunctions) {
     if(SIRStencilFun->Name == expr->getCallee()) {
@@ -239,8 +242,8 @@ void StatementMapper::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
   }
 
   // Create the scope of the stencil function
-  scope_.top()->CandiateScopes.push(std::make_shared<Scope>(stencilFun->getStatementAccessesPairs(),
-                                                            stencilFun->getInterval(), stencilFun));
+  scope_.top()->CandiateScopes.push(
+      std::make_shared<Scope>(*(stencilFun->getDoMethod()), stencilFun->getInterval(), stencilFun));
 
   // Resolve the arguments
   for(auto& arg : expr->getArguments())
@@ -320,14 +323,14 @@ void StatementMapper::visit(const std::shared_ptr<VarAccessExpr>& expr) {
       auto newExpr = std::make_shared<dawn::LiteralAccessExpr>(
           value.toString(), sir::Value::typeToBuiltinTypeID(value.getType()));
       replaceOldExprWithNewExprInStmt(
-          scope_.top()->StatementAccessesPairs.back()->getStatement()->ASTStmt, expr, newExpr);
+          (*(scope_.top()->doMethod_.childrenRBegin()))->getStatement()->ASTStmt, expr, newExpr);
 
       int AccessID = instantiation_->nextUID();
       instantiation_->getLiteralAccessIDToNameMap().emplace(AccessID, newExpr->getValue());
       instantiation_->mapExprToAccessID(newExpr, AccessID);
 
     } else {
-      StencilInstantiation* stencilInstantiation =
+      iir::StencilInstantiation* stencilInstantiation =
           (function) ? function->getStencilInstantiation() : instantiation_;
 
       int AccessID = 0;

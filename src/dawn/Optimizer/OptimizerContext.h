@@ -18,7 +18,7 @@
 #include "dawn/Compiler/DiagnosticsEngine.h"
 #include "dawn/Compiler/Options.h"
 #include "dawn/Optimizer/PassManager.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/NonCopyable.h"
 #include <map>
 #include <memory>
@@ -26,7 +26,10 @@
 namespace dawn {
 
 struct SIR;
+namespace iir {
 class StencilInstantiation;
+}
+
 class DawnCompiler;
 
 struct HardwareConfig {
@@ -45,7 +48,7 @@ class OptimizerContext : NonCopyable {
   Options& options_;
 
   const std::shared_ptr<SIR> SIR_;
-  std::map<std::string, std::shared_ptr<StencilInstantiation>> stencilInstantiationMap_;
+  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiationMap_;
   PassManager passManager_;
   HardwareConfig hardwareConfiguration_;
 
@@ -55,8 +58,8 @@ public:
                    const std::shared_ptr<SIR>& SIR);
 
   /// @brief Get StencilInstantiation map
-  std::map<std::string, std::shared_ptr<StencilInstantiation>>& getStencilInstantiationMap();
-  const std::map<std::string, std::shared_ptr<StencilInstantiation>>&
+  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& getStencilInstantiationMap();
+  const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
   getStencilInstantiationMap() const;
 
   /// @brief Check if there are errors

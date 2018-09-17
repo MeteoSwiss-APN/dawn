@@ -37,7 +37,7 @@ public:
   PassStageMerger();
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
 };
 
 } // namespace dawn

@@ -17,15 +17,17 @@
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
-#include "dawn/Optimizer/Interval.h"
+#include "dawn/IIR/Interval.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>
 #include <unordered_map>
 
 namespace dawn {
 
+namespace iir {
 class StencilInstantiation;
 class StencilFunctionInstantiation;
+}
 
 namespace codegen {
 namespace cxxnaive {
@@ -34,11 +36,11 @@ namespace cxxnaive {
 /// @ingroup cxxnaive
 class ASTStencilBody : public ASTCodeGenCXX {
 protected:
-  const StencilInstantiation* instantiation_;
+  const iir::StencilInstantiation* instantiation_;
   RangeToString offsetPrinter_;
 
   /// The stencil function we are currently generating or NULL
-  std::shared_ptr<StencilFunctionInstantiation> currentFunction_;
+  std::shared_ptr<iir::StencilFunctionInstantiation> currentFunction_;
 
   /// Nesting level of argument lists of stencil function *calls*
   int nestingOfStencilFunArgLists_;
@@ -70,7 +72,8 @@ public:
   using Base = ASTCodeGenCXX;
 
   /// @brief constructor
-  ASTStencilBody(const StencilInstantiation* stencilInstantiation, StencilContext stencilContext);
+  ASTStencilBody(const iir::StencilInstantiation* stencilInstantiation,
+                 StencilContext stencilContext);
 
   virtual ~ASTStencilBody();
 
@@ -101,8 +104,8 @@ public:
   /// @}
 
   /// @brief Set the current stencil function (can be NULL)
-  void
-  setCurrentStencilFunction(const std::shared_ptr<StencilFunctionInstantiation>& currentFunction);
+  void setCurrentStencilFunction(
+      const std::shared_ptr<iir::StencilFunctionInstantiation>& currentFunction);
 
   /// @brief Mapping of VarDeclStmt and Var/FieldAccessExpr to their name
   std::string getName(const std::shared_ptr<Expr>& expr) const override;

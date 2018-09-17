@@ -13,8 +13,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
-#include "dawn/Optimizer/DependencyGraphAccesses.h"
-#include "dawn/Optimizer/Extents.h"
+#include "dawn/IIR/DependencyGraphAccesses.h"
+#include "dawn/IIR/Extents.h"
 #include "dawn/Support/Assert.h"
 #include <unordered_set>
 #include <utility>
@@ -31,11 +31,11 @@ namespace {
 /// possibly itself.
 template <bool IsVertical>
 class ReadBeforeWriteConflictDetector {
-  const DependencyGraphAccesses* graph_;
-  LoopOrderKind loopOrder_;
+  const iir::DependencyGraphAccesses* graph_;
+  iir::LoopOrderKind loopOrder_;
 
 public:
-  ReadBeforeWriteConflictDetector(const DependencyGraphAccesses* graph, LoopOrderKind loopOrder)
+  ReadBeforeWriteConflictDetector(const iir::DependencyGraphAccesses* graph, iir::LoopOrderKind loopOrder)
       : graph_(graph), loopOrder_(loopOrder) {}
 
   ReadBeforeWriteConflict check() const {
@@ -79,7 +79,7 @@ private:
       // Follow edges of the current node
       if(!adjacencyList[curNode]->empty()) {
         for(const auto& edge : *adjacencyList[curNode]) {
-          const Extents& extent = edge.Data;
+          const iir::Extents& extent = edge.Data;
 
           if(IsVertical) {
 
@@ -138,13 +138,13 @@ ReadBeforeWriteConflict& ReadBeforeWriteConflict::operator|=(const ReadBeforeWri
   return *this;
 }
 
-ReadBeforeWriteConflict hasVerticalReadBeforeWriteConflict(const DependencyGraphAccesses* graph,
-                                                           LoopOrderKind loopOrder) {
+ReadBeforeWriteConflict hasVerticalReadBeforeWriteConflict(const iir::DependencyGraphAccesses* graph,
+                                                           iir::LoopOrderKind loopOrder) {
   return ReadBeforeWriteConflictDetector<true>(graph, loopOrder).check();
 }
 
-bool hasHorizontalReadBeforeWriteConflict(const DependencyGraphAccesses* graph) {
-  return ReadBeforeWriteConflictDetector<false>(graph, LoopOrderKind::LK_Parallel /* unused */)
+bool hasHorizontalReadBeforeWriteConflict(const iir::DependencyGraphAccesses* graph) {
+  return ReadBeforeWriteConflictDetector<false>(graph, iir::LoopOrderKind::LK_Parallel /* unused */)
       .check()
       .LoopOrderConflict;
 }

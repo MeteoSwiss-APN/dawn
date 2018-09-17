@@ -4,11 +4,11 @@ namespace dawn {
 
 namespace AccessUtils {
 
-void recordWriteAccess(std::unordered_map<int, Field>& inputOutputFields,
-                       std::unordered_map<int, Field>& inputFields,
-                       std::unordered_map<int, Field>& outputFields, int AccessID,
-                       const boost::optional<Extents>& writeExtents,
-                       Interval const& doMethodInterval) {
+void recordWriteAccess(std::unordered_map<int, iir::Field>& inputOutputFields,
+                       std::unordered_map<int, iir::Field>& inputFields,
+                       std::unordered_map<int, iir::Field>& outputFields, int AccessID,
+                       const boost::optional<iir::Extents>& writeExtents,
+                       iir::Interval const& doMethodInterval) {
   // Field was recorded as `InputOutput`, state can't change ...
   if(inputOutputFields.count(AccessID)) {
     inputOutputFields.at(AccessID).extendInterval(doMethodInterval);
@@ -17,9 +17,9 @@ void recordWriteAccess(std::unordered_map<int, Field>& inputOutputFields,
 
   // Field was recorded as `Input`, change it's state to `InputOutput`
   if(inputFields.count(AccessID)) {
-    Field& preField = inputFields.at(AccessID);
+    iir::Field& preField = inputFields.at(AccessID);
     preField.extendInterval(doMethodInterval);
-    preField.setIntend(Field::IK_InputOutput);
+    preField.setIntend(iir::Field::IK_InputOutput);
     inputOutputFields.insert({AccessID, preField});
     inputFields.erase(AccessID);
     return;
@@ -29,16 +29,17 @@ void recordWriteAccess(std::unordered_map<int, Field>& inputOutputFields,
   if(outputFields.count(AccessID)) {
     outputFields.at(AccessID).extendInterval(doMethodInterval);
   } else {
-    outputFields.emplace(AccessID, Field(AccessID, Field::IK_Output, boost::optional<Extents>(),
-                                         writeExtents, doMethodInterval));
+    outputFields.emplace(AccessID, iir::Field(AccessID, iir::Field::IK_Output,
+                                              boost::optional<iir::Extents>(), writeExtents,
+                                              doMethodInterval));
   }
 }
 
-void recordReadAccess(std::unordered_map<int, Field>& inputOutputFields,
-                      std::unordered_map<int, Field>& inputFields,
-                      std::unordered_map<int, Field>& outputFields, int AccessID,
-                      boost::optional<Extents> const& readExtents,
-                      const Interval& doMethodInterval) {
+void recordReadAccess(std::unordered_map<int, iir::Field>& inputOutputFields,
+                      std::unordered_map<int, iir::Field>& inputFields,
+                      std::unordered_map<int, iir::Field>& outputFields, int AccessID,
+                      boost::optional<iir::Extents> const& readExtents,
+                      const iir::Interval& doMethodInterval) {
 
   // Field was recorded as `InputOutput`, state can't change ...
   if(inputOutputFields.count(AccessID)) {
@@ -48,9 +49,9 @@ void recordReadAccess(std::unordered_map<int, Field>& inputOutputFields,
 
   // Field was recorded as `Output`, change it's state to `InputOutput`
   if(outputFields.count(AccessID)) {
-    Field& preField = outputFields.at(AccessID);
+    iir::Field& preField = outputFields.at(AccessID);
     preField.extendInterval(doMethodInterval);
-    preField.setIntend(Field::IK_InputOutput);
+    preField.setIntend(iir::Field::IK_InputOutput);
     inputOutputFields.insert({AccessID, preField});
 
     outputFields.erase(AccessID);
@@ -61,8 +62,8 @@ void recordReadAccess(std::unordered_map<int, Field>& inputOutputFields,
   if(inputFields.count(AccessID)) {
     inputFields.at(AccessID).extendInterval(doMethodInterval);
   } else {
-    inputFields.emplace(AccessID, Field(AccessID, Field::IK_Input, readExtents,
-                                        boost::optional<Extents>(), doMethodInterval));
+    inputFields.emplace(AccessID, iir::Field(AccessID, iir::Field::IK_Input, readExtents,
+                                             boost::optional<iir::Extents>(), doMethodInterval));
   }
 }
 } // namespace AccessUtils

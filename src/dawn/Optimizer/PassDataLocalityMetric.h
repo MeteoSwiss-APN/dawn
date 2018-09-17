@@ -15,7 +15,7 @@
 #ifndef DAWN_OPTIMIZER_PASSDATALOCALITYMETRIC_H
 #define DAWN_OPTIMIZER_PASSDATALOCALITYMETRIC_H
 
-#include "dawn/Optimizer/MultiStage.h"
+#include "dawn/IIR/MultiStage.h"
 #include "dawn/Optimizer/Pass.h"
 
 namespace dawn {
@@ -37,14 +37,15 @@ public:
   PassDataLocalityMetric();
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) override;
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
 };
 
 std::pair<int, int>
-computeReadWriteAccessesMetric(const std::shared_ptr<StencilInstantiation>& instantiation,
-                               const MultiStage& multiStage);
+computeReadWriteAccessesMetric(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                               const iir::MultiStage& multiStage);
 std::unordered_map<int, ReadWriteAccumulator> computeReadWriteAccessesMetricPerAccessID(
-    const std::shared_ptr<StencilInstantiation>& instantiation, const MultiStage& multiStage);
+    const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+    const iir::MultiStage& multiStage);
 
 } // namespace dawn
 

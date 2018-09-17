@@ -3,17 +3,17 @@
 namespace dawn {
 namespace codegen {
 
-size_t CodeGen::getVerticalTmpHaloSize(Stencil const& stencil) {
-  boost::optional<Interval> tmpInterval = stencil.getEnclosingIntervalTemporaries();
+size_t CodeGen::getVerticalTmpHaloSize(iir::Stencil const& stencil) {
+  boost::optional<iir::Interval> tmpInterval = stencil.getEnclosingIntervalTemporaries();
   return (tmpInterval.is_initialized())
              ? std::max(tmpInterval->overEnd(), tmpInterval->belowBegin())
              : 0;
 }
 
 size_t CodeGen::getVerticalTmpHaloSizeForMultipleStencils(
-    const std::vector<std::shared_ptr<Stencil>>& stencils) const {
-  boost::optional<Interval> fullIntervals;
-  for(auto stencil : stencils) {
+    const std::vector<std::unique_ptr<iir::Stencil>>& stencils) const {
+  boost::optional<iir::Interval> fullIntervals;
+  for(const auto& stencil : stencils) {
     auto tmpInterval = stencil->getEnclosingIntervalTemporaries();
     if(tmpInterval.is_initialized()) {
       if(!fullIntervals.is_initialized())
@@ -27,7 +27,7 @@ size_t CodeGen::getVerticalTmpHaloSizeForMultipleStencils(
              : 0;
 }
 
-void CodeGen::addTempStorageTypedef(Structure& stencilClass, Stencil const& stencil) const {
+void CodeGen::addTempStorageTypedef(Structure& stencilClass, iir::Stencil const& stencil) const {
   stencilClass.addTypeDef("tmp_halo_t")
       .addType("gridtools::halo< GRIDTOOLS_CLANG_HALO_EXTEND, GRIDTOOLS_CLANG_HALO_EXTEND, " +
                std::to_string(getVerticalTmpHaloSize(stencil)) + ">");
@@ -41,29 +41,29 @@ void CodeGen::addTempStorageTypedef(Structure& stencilClass, Stencil const& sten
 
 void CodeGen::addTmpStorageDeclaration(
     Structure& stencilClass,
-    IndexRange<const std::vector<dawn::Stencil::FieldInfo>>& tempFields) const {
+    IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields) const {
   if(!(tempFields.empty())) {
     stencilClass.addMember(tmpMetadataTypename_, tmpMetadataName_);
 
     for(auto field : tempFields)
-      stencilClass.addMember(tmpStorageTypename_, "m_" + (*field).Name);
+      stencilClass.addMember(tmpStorageTypename_, "m_" + (*field).second.Name);
   }
 }
 
 void CodeGen::addTmpStorageInit(
-    MemberFunction& ctr, Stencil const& stencil,
-    IndexRange<const std::vector<dawn::Stencil::FieldInfo>>& tempFields) const {
+    MemberFunction& ctr, iir::Stencil const& stencil,
+    IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields) const {
   if(!(tempFields.empty())) {
     ctr.addInit(tmpMetadataName_ + "(dom_.isize(), dom_.jsize(), dom_.ksize() + 2*" +
                 std::to_string(getVerticalTmpHaloSize(stencil)) + ")");
     for(auto fieldIt : tempFields) {
-      ctr.addInit("m_" + (*fieldIt).Name + "(" + tmpMetadataName_ + ")");
+      ctr.addInit("m_" + (*fieldIt).second.Name + "(" + tmpMetadataName_ + ")");
     }
   }
 }
 
 void CodeGen::addTmpStorageInit_wrapper(MemberFunction& ctr,
-                                        const std::vector<std::shared_ptr<Stencil>>& stencils,
+                                        const std::vector<std::unique_ptr<iir::Stencil>>& stencils,
                                         const std::vector<std::string>& tempFields) const {
   if(!(tempFields.empty())) {
     auto verticalExtent = getVerticalTmpHaloSizeForMultipleStencils(stencils);
@@ -75,7 +75,8 @@ void CodeGen::addTmpStorageInit_wrapper(MemberFunction& ctr,
   }
 }
 
-void CodeGen::addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainerMaxSize, int MaxHaloPoints) const {
+void CodeGen::addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainerMaxSize,
+                           int MaxHaloPoints) const {
   auto makeIfNotDefined = [](std::string define, int value) {
     return "#ifndef " + define + "\n #define " + define + " " + std::to_string(value) + "\n#endif";
   };
@@ -85,8 +86,7 @@ void CodeGen::addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainer
 
   ppDefines.push_back(makeIfNotDefined("BOOST_RESULT_OF_USE_TR1", 1));
   ppDefines.push_back(makeIfNotDefined("BOOST_NO_CXX11_DECLTYPE", 1));
-  ppDefines.push_back(
-      makeIfNotDefined("GRIDTOOLS_CLANG_HALO_EXTEND", MaxHaloPoints));
+  ppDefines.push_back(makeIfNotDefined("GRIDTOOLS_CLANG_HALO_EXTEND", MaxHaloPoints));
   ppDefines.push_back(makeIfNotDefined("BOOST_PP_VARIADICS", 1));
   ppDefines.push_back(makeIfNotDefined("BOOST_FUSION_DONT_USE_PREPROCESSED_FILES", 1));
   ppDefines.push_back(makeIfNotDefined("BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS", 1));

@@ -14,12 +14,12 @@
 
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/AccessComputation.h"
-#include "dawn/Optimizer/DependencyGraphAccesses.h"
-#include "dawn/Optimizer/Extents.h"
+#include "dawn/IIR/DependencyGraphAccesses.h"
+#include "dawn/IIR/Extents.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/StatementAccessesPair.h"
-#include "dawn/Optimizer/Stencil.h"
-#include "dawn/Optimizer/StencilInstantiation.h"
+#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/Stencil.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
@@ -32,10 +32,10 @@ namespace {
 
 /// @brief Register all referenced AccessIDs
 struct AccessIDGetter : public ASTVisitorForwarding {
-  const StencilInstantiation& Instantiation;
+  const iir::StencilInstantiation& Instantiation;
   std::set<int> AccessIDs;
 
-  AccessIDGetter(const StencilInstantiation& instantiation) : Instantiation(instantiation) {}
+  AccessIDGetter(const iir::StencilInstantiation& instantiation) : Instantiation(instantiation) {}
 
   virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
     AccessIDs.insert(Instantiation.getAccessIDFromExpr(expr));
@@ -43,7 +43,7 @@ struct AccessIDGetter : public ASTVisitorForwarding {
 };
 
 /// @brief Compute the AccessIDs of the left and right hand side expression of the assignment
-static void getAccessIDFromAssignment(const StencilInstantiation& instantiation,
+static void getAccessIDFromAssignment(const iir::StencilInstantiation& instantiation,
                                       AssignmentExpr* assignment, std::set<int>& LHSAccessIDs,
                                       std::set<int>& RHSAccessIDs) {
   auto computeAccessIDs = [&](const std::shared_ptr<Expr>& expr, std::set<int>& AccessIDs) {
@@ -58,14 +58,15 @@ static void getAccessIDFromAssignment(const StencilInstantiation& instantiation,
 
 /// @brief Check if the extent is a stencil-extent (i.e non-pointwise in the horizontal and a
 /// counter loop acesses in the vertical)
-static bool isHorizontalStencilOrCounterLoopOrderExtent(const Extents& extent,
-                                                        LoopOrderKind loopOrder) {
+static bool isHorizontalStencilOrCounterLoopOrderExtent(const iir::Extents& extent,
+                                                        iir::LoopOrderKind loopOrder) {
   return !extent.isHorizontalPointwise() ||
          extent.getVerticalLoopOrderAccesses(loopOrder).CounterLoopOrder;
 }
 
 /// @brief Report a race condition in the given `statement`
-static void reportRaceCondition(const Statement& statement, StencilInstantiation& instantiation) {
+static void reportRaceCondition(const Statement& statement,
+                                iir::StencilInstantiation& instantiation) {
   DiagnosticsBuilder diag(DiagnosticsKind::Error, statement.ASTStmt->getSourceLocation());
 
   if(isa<IfStmt>(statement.ASTStmt.get())) {
@@ -91,37 +92,36 @@ static void reportRaceCondition(const Statement& statement, StencilInstantiation
 
 PassFieldVersioning::PassFieldVersioning() : Pass("PassFieldVersioning", true), numRenames_(0) {}
 
-bool PassFieldVersioning::run(const std::shared_ptr<StencilInstantiation>& stencilInstantiation) {
+bool PassFieldVersioning::run(
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
   numRenames_ = 0;
 
-  for(auto& stencilPtr : stencilInstantiation->getStencils()) {
-    Stencil& stencil = *stencilPtr;
+  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
+    iir::Stencil& stencil = *stencilPtr;
 
     // Iterate multi-stages backwards
     int stageIdx = stencil.getNumStages() - 1;
-    for(auto multiStageRit = stencil.getMultiStages().rbegin(),
-             multiStageRend = stencil.getMultiStages().rend();
+    for(auto multiStageRit = stencil.childrenRBegin(), multiStageRend = stencil.childrenREnd();
         multiStageRit != multiStageRend; ++multiStageRit) {
-      MultiStage& multiStage = (**multiStageRit);
-      LoopOrderKind loopOrder = multiStage.getLoopOrder();
+      iir::MultiStage& multiStage = (**multiStageRit);
+      iir::LoopOrderKind loopOrder = multiStage.getLoopOrder();
 
-      std::shared_ptr<DependencyGraphAccesses> newGraph, oldGraph;
-      newGraph = std::make_shared<DependencyGraphAccesses>(stencilInstantiation.get());
+      std::shared_ptr<iir::DependencyGraphAccesses> newGraph, oldGraph;
+      newGraph = std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation.get());
 
       // Iterate stages bottom -> top
-      for(auto stageRit = multiStage.getStages().rbegin(),
-               stageRend = multiStage.getStages().rend();
+      for(auto stageRit = multiStage.childrenRBegin(), stageRend = multiStage.childrenREnd();
           stageRit != stageRend; ++stageRit) {
-        Stage& stage = (**stageRit);
-        DoMethod& doMethod = stage.getSingleDoMethod();
+        iir::Stage& stage = (**stageRit);
+        iir::DoMethod& doMethod = stage.getSingleDoMethod();
 
+        bool updateStage = false;
         // Iterate statements bottom -> top
-        for(int stmtIndex = doMethod.getStatementAccessesPairs().size() - 1; stmtIndex >= 0;
-            --stmtIndex) {
+        for(int stmtIndex = doMethod.getChildren().size() - 1; stmtIndex >= 0; --stmtIndex) {
           oldGraph = newGraph->clone();
 
-          auto& stmtAccessesPair = doMethod.getStatementAccessesPairs()[stmtIndex];
+          auto& stmtAccessesPair = doMethod.getChildren()[stmtIndex];
           newGraph->insertStatementAccessesPair(stmtAccessesPair);
 
           // Try to resolve race-conditions by using double buffering if necessary
@@ -136,7 +136,11 @@ bool PassFieldVersioning::run(const std::shared_ptr<StencilInstantiation>& stenc
             // is invalid)
             newGraph = oldGraph;
             newGraph->insertStatementAccessesPair(stmtAccessesPair);
+            updateStage = true;
           }
+        }
+        if(updateStage) {
+          stage.update(iir::NodeUpdateType::levelAndTreeAbove);
         }
       }
       stageIdx--;
@@ -150,13 +154,13 @@ bool PassFieldVersioning::run(const std::shared_ptr<StencilInstantiation>& stenc
 }
 
 PassFieldVersioning::RCKind
-PassFieldVersioning::fixRaceCondition(const DependencyGraphAccesses* graph, Stencil& stencil,
-                                      DoMethod& doMethod, LoopOrderKind loopOrder, int stageIdx,
-                                      int index) {
-  using Vertex = DependencyGraphAccesses::Vertex;
-  using Edge = DependencyGraphAccesses::Edge;
+PassFieldVersioning::fixRaceCondition(const iir::DependencyGraphAccesses* graph,
+                                      iir::Stencil& stencil, iir::DoMethod& doMethod,
+                                      iir::LoopOrderKind loopOrder, int stageIdx, int index) {
+  using Vertex = iir::DependencyGraphAccesses::Vertex;
+  using Edge = iir::DependencyGraphAccesses::Edge;
 
-  Statement& statement = *doMethod.getStatementAccessesPairs()[index]->getStatement();
+  Statement& statement = *doMethod.getChildren()[index]->getStatement();
 
   auto& instantiation = stencil.getStencilInstantiation();
   OptimizerContext* context = instantiation.getOptimizerContext();
@@ -272,7 +276,7 @@ PassFieldVersioning::fixRaceCondition(const DependencyGraphAccesses* graph, Sten
   for(int oldAccessID : renameCandiates) {
     int newAccessID = instantiation.createVersionAndRename(oldAccessID, &stencil, stageIdx, index,
                                                            assignment->getRight(),
-                                                           StencilInstantiation::RD_Above);
+                                                           iir::StencilInstantiation::RD_Above);
 
     if(context->getOptions().ReportPassFieldVersioning)
       std::cout << (numRenames != 0 ? ", " : " ") << instantiation.getNameFromAccessID(oldAccessID)
