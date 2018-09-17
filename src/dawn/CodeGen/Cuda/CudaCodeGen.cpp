@@ -54,7 +54,7 @@ static std::string makeKLoop(const std::string dom, iir::LoopOrderKind loopOrder
 
   if(loopOrder == iir::LoopOrderKind::LK_Parallel) {
     lower = "max(" + lower + ",blockIdx.z*blockDim.z)";
-    upper = "min(" + upper + ",blockIdx.z*blockDim.z)";
+    upper = "min(" + upper + ",(blockIdx.z+1)*blockDim.z-1)";
   }
   return (loopOrder == iir::LoopOrderKind::LK_Backward)
              ? makeLoopImpl(iir::Extent{}, "k", upper, lower, ">=", "--")
@@ -255,6 +255,9 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
       }
     }
 
+    if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Parallel) {
+      cudaKernel.addStatement("idx += kstride*kbegin");
+    }
     // for each interval, we generate naive nested loops
     cudaKernel.addBlockStatement(makeKLoop("dom", ms->getLoopOrder(), interval), [&]() {
       for(const auto& stagePtr : ms->getChildren()) {
