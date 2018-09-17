@@ -132,6 +132,9 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
   if(containsTemporary) {
     cudaKernel.addArg("const int tmpBeginIIndex");
     cudaKernel.addArg("const int tmpBeginJIndex");
+    cudaKernel.addArg("const int istride_tmp");
+    cudaKernel.addArg("const int jstride_tmp");
+    cudaKernel.addArg("const int kstride_tmp");
   }
 
   DAWN_ASSERT(fields.size() > 0);
@@ -144,14 +147,7 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
   for(const auto& field : fields) {
     if(stencilInstantiation->isTemporaryField(field.second.getAccessID())) {
       std::string fieldName = stencilInstantiation->getNameFromAccessID(field.second.getAccessID());
-      if(firstTmpField) {
-        cudaKernel.addStatement("const int istride_tmp = " + fieldName +
-                                "_dv.storage_info().template stride<0>()");
-        cudaKernel.addStatement("const int jstride_tmp = " + fieldName +
-                                "_dv.storage_info().template stride<1>()");
-        cudaKernel.addStatement("const int kstride_tmp = " + fieldName +
-                                "_dv.storage_info().template stride<4>()");
-      }
+
       cudaKernel.addStatement("double* " + fieldName + " = &" + fieldName +
                               "_dv(tmpBeginIIndex,tmpBeginJIndex,blockIdx.x,blockIdx.y,0)");
       firstTmpField = false;
@@ -536,7 +532,10 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
       if(!tempFields.empty()) {
         auto firstTmpField = **(tempFields.begin());
         args = args + "," + firstTmpField.second.Name + ".storage_info().template begin<0>()," +
-               firstTmpField.second.Name + ".storage_info().template begin<1>()";
+               firstTmpField.second.Name + ".storage_info().template begin<1>()," +
+               firstTmpField.second.Name + ".storage_info().template stride<0>()," +
+               firstTmpField.second.Name + ".storage_info().template stride<1>()," +
+               firstTmpField.second.Name + ".storage_info().template stride<4>()";
       }
 
       kernelCall = kernelCall + "m_dom.isize(),m_dom.jsize(),m_dom.ksize()," + strides + args + ")";
