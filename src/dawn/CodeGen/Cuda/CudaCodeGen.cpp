@@ -110,14 +110,22 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
   cudaKernel.addArg("const int jstride");
   cudaKernel.addArg("const int kstride");
 
+  // first we construct non temporary field arguments
+  for(const auto& field : fields) {
+    if(stencilInstantiation->isTemporaryField(field.second.getAccessID())) {
+      continue;
+    } else {
+      cudaKernel.addArg("double * const " +
+                        stencilInstantiation->getNameFromAccessID(field.second.getAccessID()));
+    }
+  }
+
+  // then the temporary field arguments
   for(const auto& field : fields) {
     if(stencilInstantiation->isTemporaryField(field.second.getAccessID())) {
       cudaKernel.addArg(c_gt() + "data_view<TmpStorage>" +
                         stencilInstantiation->getNameFromAccessID(field.second.getAccessID()) +
                         "_dv");
-    } else {
-      cudaKernel.addArg("double * const " +
-                        stencilInstantiation->getNameFromAccessID(field.second.getAccessID()));
     }
   }
 
