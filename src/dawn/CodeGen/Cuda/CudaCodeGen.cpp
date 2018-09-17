@@ -462,8 +462,6 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
 
         StencilRunMethod.addStatement(c_gt() + "data_view<tmp_storage_t> " + fieldName + "= " +
                                       c_gt() + "make_device_view(m_" + fieldName + ")");
-        StencilRunMethod.addStatement(c_gt() + "data_view<tmp_storage_t> " + fieldName + "= " +
-                                      c_gt() + "make_host_view(m_" + fieldName + ")");
       }
 
       DAWN_ASSERT(nonTempFields.size() > 0);
@@ -529,7 +527,7 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
       if(!tempFields.empty()) {
         auto firstTmpField = **(tempFields.begin());
         args = args + "," + "m_" + firstTmpField.second.Name +
-               ".storage_info()->template begin<0>()," + "m_" + firstTmpField.second.Name +
+               ".get_storage_info_ptr()->template begin<0>()," + "m_" + firstTmpField.second.Name +
                ".get_storage_info_ptr()->template begin<1>()," + "m_" + firstTmpField.second.Name +
                ".get_storage_info_ptr()->template stride<0>()," + "m_" + firstTmpField.second.Name +
                ".get_storage_info_ptr()->template stride<1>()," + "m_" + firstTmpField.second.Name +
