@@ -129,6 +129,11 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
     }
   }
 
+  if(containsTemporary) {
+    cudaKernel.addArg("const int tmpBeginIIndex");
+    cudaKernel.addArg("const int tmpBeginJIndex");
+  }
+
   DAWN_ASSERT(fields.size() > 0);
   auto firstField = *(fields.begin());
 
@@ -147,9 +152,8 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
         cudaKernel.addStatement("const int kstride_tmp = " + fieldName +
                                 "_dv.storage_info().template stride<4>()");
       }
-      cudaKernel.addStatement("double* " + fieldName + " = &" + fieldName + "_dv(" + fieldName +
-                              "_dv.storage_info().template begin<0>()," + fieldName +
-                              "_dv.storage_info().template begin<1>(),blockIdx.x,blockIdx.y,0)");
+      cudaKernel.addStatement("double* " + fieldName + " = &" + fieldName +
+                              "_dv(tmpBeginIIndex,tmpBeginJIndex,blockIdx.x,blockIdx.y,0)");
       firstTmpField = false;
     }
   }
@@ -528,6 +532,11 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
       DAWN_ASSERT(nonTempFields.size() > 0);
       for(auto field : tempFields) {
         args = args + "," + (*field).second.Name;
+      }
+      if(!tempFields.empty()) {
+        auto firstTmpField = **(tempFields.begin());
+        args = args + "," + firstTmpField.second.Name + ".storage_info().template begin<0>()," +
+               firstTmpField.second.Name + ".storage_info().template begin<1>()";
       }
 
       kernelCall = kernelCall + "m_dom.isize(),m_dom.jsize(),m_dom.ksize()," + strides + args + ")";
