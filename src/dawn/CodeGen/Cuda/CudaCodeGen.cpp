@@ -151,12 +151,12 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
   unsigned int nty = blockSize[1];
   cudaKernel.addStatement("const unsigned int nx = isize");
   cudaKernel.addStatement("const unsigned int ny = jsize");
-  cudaKernel.addStatement("const unsigned int block_size_i = (blockIdx.x + 1) * " +
-                          std::to_string(ntx) + " < nx ? " + std::to_string(ntx) +
-                          " : nx - blockIdx.x * " + std::to_string(ntx));
-  cudaKernel.addStatement("const unsigned int block_size_j = (blockIdx.y + 1) * " +
-                          std::to_string(nty) + " < ny ? " + std::to_string(nty) +
-                          " : ny - blockIdx.y * " + std::to_string(nty));
+  cudaKernel.addStatement("const int block_size_i = (blockIdx.x + 1) * " + std::to_string(ntx) +
+                          " < nx ? " + std::to_string(ntx) + " : nx - blockIdx.x * " +
+                          std::to_string(ntx));
+  cudaKernel.addStatement("const int block_size_j = (blockIdx.y + 1) * " + std::to_string(nty) +
+                          " < ny ? " + std::to_string(nty) + " : ny - blockIdx.y * " +
+                          std::to_string(nty));
 
   std::string firstFieldName =
       stencilInstantiation->getNameFromAccessID(firstField.second.getAccessID());
@@ -257,6 +257,9 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
 
     if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Parallel) {
       cudaKernel.addStatement("idx += kstride * blockIdx.z * blockDim.z");
+      if(containsTemporary) {
+        cudaKernel.addStatement("idx_tmp += kstride_tmp * blockIdx.z * blockDim.z");
+      }
     }
     // for each interval, we generate naive nested loops
     cudaKernel.addBlockStatement(makeKLoop("dom", ms->getLoopOrder(), interval), [&]() {
@@ -288,6 +291,7 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
                 }
               }
             });
+        cudaKernel.addStatement("__syncthreads()");
       }
       cudaKernel.addStatement("idx += kstride");
       if(containsTemporary) {
