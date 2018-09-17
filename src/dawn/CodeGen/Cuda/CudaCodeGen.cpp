@@ -40,12 +40,6 @@ static std::string makeLoopImpl(const iir::Extent extent, const std::string& dim
       .str();
 }
 
-static std::string makeIJLoop(const iir::Extent extent, const std::string dom,
-                              const std::string& dim) {
-  return makeLoopImpl(extent, dim, dom + "." + dim + "minus()",
-                      dom + "." + dim + "size() - " + dom + "." + dim + "plus() - 1", " <= ", "++");
-}
-
 static std::string makeIntervalBound(const std::string dom, iir::Interval const& interval,
                                      iir::Interval::Bound bound) {
   return interval.levelIsEnd(bound) ? " ksize - 1 + " + std::to_string(interval.offset(bound))
@@ -143,14 +137,12 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
   cudaKernel.startBody();
   cudaKernel.addComment("Start kernel");
 
-  bool firstTmpField = true;
   for(const auto& field : fields) {
     if(stencilInstantiation->isTemporaryField(field.second.getAccessID())) {
       std::string fieldName = stencilInstantiation->getNameFromAccessID(field.second.getAccessID());
 
       cudaKernel.addStatement("double* " + fieldName + " = &" + fieldName +
                               "_dv(tmpBeginIIndex,tmpBeginJIndex,blockIdx.x,blockIdx.y,0)");
-      firstTmpField = false;
     }
   }
 
@@ -467,6 +459,8 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
 
         StencilRunMethod.addStatement(c_gt() + "data_view<tmp_storage_t> " + fieldName + "= " +
                                       c_gt() + "make_device_view(m_" + fieldName + ")");
+        StencilRunMethod.addStatement(c_gt() + "data_view<tmp_storage_t> " + fieldName + "= " +
+                                      c_gt() + "make_host_view(m_" + fieldName + ")");
       }
 
       DAWN_ASSERT(nonTempFields.size() > 0);
@@ -531,11 +525,12 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
       }
       if(!tempFields.empty()) {
         auto firstTmpField = **(tempFields.begin());
-        args = args + "," + firstTmpField.second.Name + ".storage_info().template begin<0>()," +
-               firstTmpField.second.Name + ".storage_info().template begin<1>()," +
-               firstTmpField.second.Name + ".storage_info().template stride<0>()," +
-               firstTmpField.second.Name + ".storage_info().template stride<1>()," +
-               firstTmpField.second.Name + ".storage_info().template stride<4>()";
+        args = args + "," + "m_" + firstTmpField.second.Name +
+               ".storage_info()->template begin<0>()," + "m_" + firstTmpField.second.Name +
+               ".get_storage_info_ptr()->template begin<1>()," + "m_" + firstTmpField.second.Name +
+               ".get_storage_info_ptr()->template stride<0>()," + "m_" + firstTmpField.second.Name +
+               ".get_storage_info_ptr()->template stride<1>()," + "m_" + firstTmpField.second.Name +
+               ".get_storage_info_ptr()->template stride<4>()";
       }
 
       kernelCall = kernelCall + "m_dom.isize(),m_dom.jsize(),m_dom.ksize()," + strides + args + ")";
