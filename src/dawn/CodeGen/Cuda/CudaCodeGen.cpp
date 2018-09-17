@@ -486,9 +486,9 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
           "dim3 threads(" + std::to_string(ntx) + "," + std::to_string(nty) + "+" +
           std::to_string(maxExtents[1].Plus - maxExtents[1].Minus +
                          (maxExtents[0].Minus < 0 ? 1 : 0) + (maxExtents[0].Plus > 0 ? 1 : 0)) +
-          ((multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Parallel)
-               ? std::to_string(blockSize[2])
-               : std::string("1")) +
+          "," + ((multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Parallel)
+                     ? std::to_string(blockSize[2])
+                     : std::string("1")) +
           ")");
 
       // number of blocks required
