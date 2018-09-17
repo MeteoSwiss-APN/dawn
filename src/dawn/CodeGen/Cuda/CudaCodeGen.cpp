@@ -256,7 +256,7 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
     }
 
     if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Parallel) {
-      cudaKernel.addStatement("idx += kstride*kbegin");
+      cudaKernel.addStatement("idx += kstride * blockIdx.z * blockDim.z");
     }
     // for each interval, we generate naive nested loops
     cudaKernel.addBlockStatement(makeKLoop("dom", ms->getLoopOrder(), interval), [&]() {
