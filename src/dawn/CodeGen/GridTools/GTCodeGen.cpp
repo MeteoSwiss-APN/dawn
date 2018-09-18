@@ -696,7 +696,6 @@ std::string GTCodeGen::generateStencilInstantiation(
         }
         ++nonTempFieldId;
       }
-      ++i;
     }
 
     // Generate domain
