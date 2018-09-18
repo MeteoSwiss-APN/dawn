@@ -258,7 +258,7 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
       if(init) {
         idxStmt = idxStmt + "+";
       }
-      idxStmt = idxStmt + "(blockIdx.y*" + std::to_string(nty) + "+iblock)*jstride";
+      idxStmt = idxStmt + "(blockIdx.y*" + std::to_string(nty) + "+jblock)*jstride";
     }
     cudaKernel.addStatement(idxStmt);
   }
@@ -306,11 +306,12 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
       for(auto index : indexIterators) {
         if(index.second.dims_[2]) {
           cudaKernel.addStatement(index.first + " += max(" + std::to_string(kmin) +
-                                  ",kstride * blockIdx.z * blockDim.z)");
+                                  ",kstride * blockIdx.z * " + std::to_string(blockSize[2]) + ")");
         }
       }
       if(containsTemporary) {
-        cudaKernel.addStatement("idx_tmp += kstride_tmp * blockIdx.z * blockDim.z");
+        cudaKernel.addStatement("idx_tmp += kstride_tmp * blockIdx.z * " +
+                                std::to_string(blockSize[2]) + "");
       }
     }
     // for each interval, we generate naive nested loops
@@ -557,10 +558,7 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
           "dim3 threads(" + std::to_string(ntx) + "," + std::to_string(nty) + "+" +
           std::to_string(maxExtents[1].Plus - maxExtents[1].Minus +
                          (maxExtents[0].Minus < 0 ? 1 : 0) + (maxExtents[0].Plus > 0 ? 1 : 0)) +
-          "," + ((multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Parallel)
-                     ? std::to_string(blockSize[2])
-                     : std::string("1")) +
-          ")");
+          ",1)");
 
       // number of blocks required
       StencilRunMethod.addStatement("const unsigned int nbx = (nx + " + std::to_string(ntx) +
