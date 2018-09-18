@@ -587,7 +587,7 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
       for(auto field : nonTempFields) {
         args = args + (idx == 0 ? "" : ",") + "(" + (*field).second.Name + ".data()+" + "m_" +
                (*field).second.Name + ".get_storage_info_ptr()->index(" + (*field).second.Name +
-               "template begin<0>(), " + (*field).second.Name + "template begin<1>(),0 )";
+               ".template begin<0>(), " + (*field).second.Name + ".template begin<1>(),0 ))";
         ++idx;
       }
       DAWN_ASSERT(nonTempFields.size() > 0);
