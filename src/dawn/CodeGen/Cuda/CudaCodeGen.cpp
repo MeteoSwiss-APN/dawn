@@ -26,6 +26,7 @@
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringUtil.h"
 #include <algorithm>
+#include <numeric>
 #include <vector>
 
 namespace dawn {
