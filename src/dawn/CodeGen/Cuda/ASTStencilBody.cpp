@@ -100,11 +100,14 @@ void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   std::string accessName = getName(expr);
   int accessID = instantiation_->getAccessIDFromExpr(expr);
   bool isTemporary = instantiation_->isTemporaryField(accessID);
-  DAWN_ASSERT(fieldIndexMap_.count(accessID));
+  DAWN_ASSERT(fieldIndexMap_.count(accessID) || isTemporary);
   std::string index = isTemporary ? "idx_tmp" : fieldIndexMap_.at(accessID).name();
 
-  std::string offsetStr = offsetPrinter_(
-      ijkfyOffset(expr->getOffset(), accessName, isTemporary, fieldIndexMap_.at(accessID)));
+  // temporaries have all 3 dimensions
+  IndexIterator iter = isTemporary ? IndexIterator{Array3i{1, 1, 1}} : fieldIndexMap_.at(accessID);
+
+  std::string offsetStr =
+      offsetPrinter_(ijkfyOffset(expr->getOffset(), accessName, isTemporary, iter));
   ss_ << accessName
       << (offsetStr.empty() ? "[" + index + "]" : ("[" + index + "+" + offsetStr + "]"));
 }
