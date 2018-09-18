@@ -48,15 +48,15 @@ static std::string makeIntervalBound(const std::string dom, iir::Interval const&
                                     : std::to_string(interval.bound(bound));
 }
 
-static std::string makeKLoop(const std::string dom, iir::LoopOrderKind loopOrder,
-                             iir::Interval const& interval) {
+static std::string makeKLoop(const std::string dom, const std::array<unsigned int, 3> blockSize,
+                             iir::LoopOrderKind loopOrder, iir::Interval const& interval) {
 
   std::string lower = makeIntervalBound(dom, interval, iir::Interval::Bound::lower);
   std::string upper = makeIntervalBound(dom, interval, iir::Interval::Bound::upper);
 
   if(loopOrder == iir::LoopOrderKind::LK_Parallel) {
-    lower = "max(" + lower + ",blockIdx.z*blockDim.z)";
-    upper = "min(" + upper + ",(blockIdx.z+1)*blockDim.z-1)";
+    lower = "max(" + lower + ",blockIdx.z*" + std::to_string(blockSize[2]) + ")";
+    upper = "min(" + upper + ",(blockIdx.z+1)*" + std::to_string(blockSize[2]) + "-1)";
   }
   return (loopOrder == iir::LoopOrderKind::LK_Backward)
              ? makeLoopImpl(iir::Extent{}, "k", upper, lower, ">=", "--")
@@ -316,7 +316,7 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
       }
     }
     // for each interval, we generate naive nested loops
-    cudaKernel.addBlockStatement(makeKLoop("dom", ms->getLoopOrder(), interval), [&]() {
+    cudaKernel.addBlockStatement(makeKLoop("dom", blockSize, ms->getLoopOrder(), interval), [&]() {
       for(const auto& stagePtr : ms->getChildren()) {
         const iir::Stage& stage = *stagePtr;
         const auto& extent = stage.getExtents();
