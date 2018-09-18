@@ -291,7 +291,10 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
                 }
               }
             });
-        cudaKernel.addStatement("__syncthreads()");
+        // If the stage is not the last stage, we need to sync
+        if(stage.getStageID() != ms->getChildren().back()->getStageID()) {
+          cudaKernel.addStatement("__syncthreads()");
+        }
       }
       cudaKernel.addStatement("idx += kstride");
       if(containsTemporary) {
@@ -469,10 +472,16 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
       }
 
       DAWN_ASSERT(nonTempFields.size() > 0);
-      auto firstField = *(nonTempFields.begin());
-      std::string strides = "m_" + (*firstField).second.Name + ".strides()[0]," + "m_" +
-                            (*firstField).second.Name + ".strides()[1]," + "m_" +
-                            (*firstField).second.Name + ".strides()[2],";
+
+      std::string strides;
+      for(auto field : nonTempFields) {
+        auto dim = (*field).second.Dimensions;
+        if(std::accumulate(dim.begin(), dim.end(), 0) != 3)
+          continue;
+        strides = "m_" + (*field).second.Name + ".strides()[0]," + "m_" + (*field).second.Name +
+                  ".strides()[1]," + "m_" + (*field).second.Name + ".strides()[2],";
+      }
+      DAWN_ASSERT(!strides.empty());
 
       iir::Extents maxExtents{0, 0, 0, 0, 0, 0};
       for(const auto& stage : iterateIIROver<iir::Stage>(*multiStagePtr)) {
