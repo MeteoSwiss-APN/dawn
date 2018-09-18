@@ -37,6 +37,7 @@ yoda_add_library(
           Cuda/ASTStencilDesc.h
           Cuda/ASTStencilFunctionParamVisitor.cpp
           Cuda/ASTStencilFunctionParamVisitor.h
+          Cuda/IndexIterator.h
           GridTools/ASTStencilBody.cpp
           GridTools/ASTStencilBody.h
           GridTools/ASTStencilDesc.cpp

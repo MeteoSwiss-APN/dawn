@@ -17,6 +17,7 @@
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
+#include "dawn/CodeGen/Cuda/IndexIterator.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>
@@ -38,13 +39,14 @@ class ASTStencilBody : public ASTCodeGenCXX {
 protected:
   const iir::StencilInstantiation* instantiation_;
   RangeToString offsetPrinter_;
+  const std::unordered_map<int, IndexIterator>& fieldIndexMap_;
 
   ///
   /// @brief produces a string of (i,j,k) accesses for the C++ generated naive code,
   /// from an array of offseted accesses
   ///
   std::array<std::string, 3> ijkfyOffset(const std::array<int, 3>& offsets, std::string accessName,
-                                         bool isTemporary) {
+                                         bool isTemporary, const IndexIterator indexIterator) {
     int n = -1;
     std::array<std::string, 3> res;
     std::transform(offsets.begin(), offsets.end(), res.begin(), [&](int const& off) {
@@ -53,7 +55,10 @@ protected:
       if(isTemporary) {
         indices = {"istride_tmp", "jstride_tmp", "kstride_tmp"};
       }
-      return off ? (indices[n] + "*" + std::to_string(off)) : "";
+      if(!(indexIterator.dims_[n]) || !off)
+        return std::string("");
+
+      return (indices[n] + "*" + std::to_string(off));
     });
     return res;
   }
@@ -63,7 +68,7 @@ public:
 
   /// @brief constructor
   ASTStencilBody(const iir::StencilInstantiation* stencilInstantiation,
-                 StencilContext stencilContext);
+                 const std::unordered_map<int, IndexIterator>& fieldIndexMap);
 
   virtual ~ASTStencilBody();
 

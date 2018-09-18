@@ -15,6 +15,7 @@
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/CodeGen/Cuda/ASTStencilBody.h"
 #include "dawn/CodeGen/Cuda/ASTStencilDesc.h"
+#include "dawn/CodeGen/Cuda/IndexIterator.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/Optimizer/OptimizerContext.h"
@@ -220,9 +221,47 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
                                   "+" + std::to_string(maxExtents[1].Minus));
         });
   }
-  cudaKernel.addStatement("int idx = (blockIdx.x*" + std::to_string(ntx) +
-                          "+iblock)*istride + (blockIdx.y*" + std::to_string(nty) +
-                          "+jblock)*jstride");
+  auto nonTempFields =
+      makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
+                            std::pair<int, iir::Field> const& p) {
+                  return !stencilInstantiation->isTemporaryField(p.second.getAccessID());
+                }));
+
+  std::unordered_map<int, IndexIterator> fieldIndexMap;
+  std::unordered_map<std::string, IndexIterator> indexIterators;
+
+  for(auto field : nonTempFields) {
+    Array3i dims{-1, -1, -1};
+    for(const auto& fieldInfo : ms->getParent()->getFields()) {
+      if(fieldInfo.second.field.getAccessID() == (*field).second.getAccessID()) {
+        dims = fieldInfo.second.Dimensions;
+        break;
+      }
+    }
+    DAWN_ASSERT(std::accumulate(dims.begin(), dims.end(), 0) != -3);
+    fieldIndexMap.emplace((*field).second.getAccessID(), IndexIterator{dims});
+    indexIterators.emplace(IndexIterator{dims}.name(), IndexIterator{dims});
+  }
+
+  for(auto index : indexIterators) {
+    std::string idxStmt = "int " + index.first + " = ";
+    bool init = false;
+    if(index.second.dims_[0] != 1 && index.second.dims_[1] != 1) {
+      idxStmt = idxStmt + "0";
+      continue;
+    }
+    if(index.second.dims_[0]) {
+      init = true;
+      idxStmt = idxStmt + "(blockIdx.x*" + std::to_string(ntx) + "+iblock)*istride";
+    }
+    if(index.second.dims_[1]) {
+      if(init) {
+        idxStmt = idxStmt + "+";
+      }
+      idxStmt = idxStmt + "(blockIdx.y*" + std::to_string(nty) + "+iblock)*jstride";
+    }
+    cudaKernel.addStatement(idxStmt);
+  }
 
   if(containsTemporary) {
     auto maxExtentTmps = computeTempMaxWriteExtent(*(ms->getParent()));
@@ -241,14 +280,21 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
 
   DAWN_ASSERT((partitionIntervals.size() > 0));
 
-  ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, StencilContext::SC_Stencil);
+  ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, fieldIndexMap);
 
   int lastKCell = 0;
   for(auto interval : partitionIntervals) {
 
+    int kmin = 0;
     if((interval.lowerBound() - lastKCell) > 0) {
-      cudaKernel.addStatement("idx += kstride*(" + std::to_string(interval.lowerBound()) + "-" +
-                              std::to_string(lastKCell) + ")");
+
+      kmin = interval.lowerBound() - lastKCell;
+
+      for(auto index : indexIterators) {
+        if(index.second.dims_[2]) {
+          cudaKernel.addStatement(index.first + " += kstride*(" + std::to_string(kmin) + ")");
+        }
+      }
       if(containsTemporary) {
         cudaKernel.addStatement("idx_tmp += kstride_tmp*(" + std::to_string(interval.lowerBound()) +
                                 "-" + std::to_string(lastKCell) + ")");
@@ -256,7 +302,13 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
     }
 
     if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Parallel) {
-      cudaKernel.addStatement("idx += kstride * blockIdx.z * blockDim.z");
+
+      for(auto index : indexIterators) {
+        if(index.second.dims_[2]) {
+          cudaKernel.addStatement(index.first + " += max(" + std::to_string(kmin) +
+                                  ",kstride * blockIdx.z * blockDim.z)");
+        }
+      }
       if(containsTemporary) {
         cudaKernel.addStatement("idx_tmp += kstride_tmp * blockIdx.z * blockDim.z");
       }
@@ -296,7 +348,10 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
           cudaKernel.addStatement("__syncthreads()");
         }
       }
-      cudaKernel.addStatement("idx += kstride");
+      for(auto index : indexIterators) {
+        if(index.second.dims_[2])
+          cudaKernel.addStatement(index.first + " += kstride");
+      }
       if(containsTemporary) {
         cudaKernel.addStatement("idx_tmp += kstride_tmp");
       }
@@ -393,8 +448,6 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
     for(auto fieldIt : tempFields) {
       paramNameToType.emplace((*fieldIt).second.Name, c_gtc().str() + "storage_t");
     }
-
-    ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, StencilContext::SC_Stencil);
 
     StencilClass.addComment("Members");
     StencilClass.addComment("Temporary storages");
