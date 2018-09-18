@@ -488,8 +488,12 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
         maxExtents.merge(stage->getExtents());
       }
 
-      StencilRunMethod.addStatement("const unsigned int nx = m_dom.isize()");
-      StencilRunMethod.addStatement("const unsigned int ny = m_dom.jsize()");
+      StencilRunMethod.addStatement(
+          "const unsigned int nx = m_dom.isize()-m_dom.iminus() - m_dom.iplus()");
+      StencilRunMethod.addStatement(
+          "const unsigned int ny = m_dom.jsize()-m_dom.jminus() - m_dom.jplus()");
+      StencilRunMethod.addStatement(
+          "const unsigned int nz = m_dom.ksize()-m_dom.kminus() - m_dom.kplus()");
 
       const auto blockSize = stencilInstantiation->getIIR()->getBlockSize();
 
@@ -547,7 +551,7 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
                ".get_storage_info_ptr()->template stride<4>()";
       }
 
-      kernelCall = kernelCall + "m_dom.isize(),m_dom.jsize(),m_dom.ksize()," + strides + args + ")";
+      kernelCall = kernelCall + "nx,ny,nz," + strides + args + ")";
 
       StencilRunMethod.addStatement(kernelCall);
     }
