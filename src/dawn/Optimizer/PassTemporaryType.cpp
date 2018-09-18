@@ -17,6 +17,7 @@
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Stencil.h"
+#include "dawn/IIR/NodeUpdateType.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include <iostream>
@@ -94,6 +95,7 @@ PassTemporaryType::PassTemporaryType() : Pass("PassTemporaryType", true) {}
 bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
   OptimizerContext* context = instantiation->getOptimizerContext();
 
+  report_.clear();
   std::unordered_map<int, Temporary> temporaries;
   std::unordered_set<int> AccessIDs;
 
@@ -161,6 +163,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
           if(context->getOptions().ReportPassTemporaryType)
             report("promote");
 
+          report_.push_back(Report{AccessID, TmpActionMod::promote});
           instantiation->promoteLocalVariableToTemporaryField(stencilPtr.get(), AccessID,
                                                               temporary.Lifetime);
         }
@@ -173,13 +176,19 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
           if(context->getOptions().ReportPassTemporaryType)
             report("demote");
 
+          report_.push_back(Report{AccessID, TmpActionMod::demote});
           instantiation->demoteTemporaryFieldToLocalVariable(stencilPtr.get(), AccessID,
                                                              temporary.Lifetime);
         }
       }
     }
-  }
 
+    if(!report_.empty()) {
+      for(const auto& ms : iterateIIROver<iir::MultiStage>(*stencilPtr)) {
+        ms->update(iir::NodeUpdateType::levelAndTreeAbove);
+      }
+    }
+  }
   return true;
 }
 

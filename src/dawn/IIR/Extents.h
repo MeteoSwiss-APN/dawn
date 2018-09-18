@@ -186,6 +186,9 @@ public:
                                                      VerticalLoopOrderDir loopOrderPolicy,
                                                      bool includeCenter) const;
 
+  /// @brief format extents in string
+  std::string toString() const;
+
   /// @brief Convert to stream
   friend std::ostream& operator<<(std::ostream& os, const Extents& extent);
 

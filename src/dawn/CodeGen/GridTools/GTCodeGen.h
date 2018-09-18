@@ -91,9 +91,6 @@ private:
   std::vector<std::string> buildFieldTemplateNames(
       IndexRange<std::vector<iir::Stencil::FieldInfo>> const& stencilFields) const;
 
-  int computeNumTemporaries(
-      std::unordered_map<int, iir::Stencil::FieldInfo> const& stencilFields) const;
-
   /// Maximum needed vector size of boost::fusion containers
   std::size_t mplContainerMaxSize_;
 };
