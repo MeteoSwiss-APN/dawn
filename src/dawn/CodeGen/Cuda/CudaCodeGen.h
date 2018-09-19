@@ -63,6 +63,11 @@ private:
   void generateAllCudaKernels(std::stringstream& ssSW,
                               const iir::StencilInstantiation* stencilInstantiation);
 
+  void generateRunMethod(Structure& stencilClass, const iir::Stencil& stencil,
+                         const iir::StencilInstantiation* stencilInstantiation,
+                         const std::unordered_map<int, std::string>& stencilTemplates,
+                         const sir::GlobalVariableMap& globalsMap) const;
+
   std::string generateStencilInstantiation(const iir::StencilInstantiation* stencilInstantiation);
   std::string generateGlobals(const std::shared_ptr<SIR>& sir);
   static int paddedBoundary(int value);
