@@ -65,7 +65,7 @@ private:
 
   void generateRunMethod(Structure& stencilClass, const iir::Stencil& stencil,
                          const iir::StencilInstantiation* stencilInstantiation,
-                         const std::unordered_map<int, std::string>& stencilTemplates,
+                         const std::unordered_map<std::string, std::string>& paramNameToType,
                          const sir::GlobalVariableMap& globalsMap) const;
 
   std::string generateStencilInstantiation(const iir::StencilInstantiation* stencilInstantiation);

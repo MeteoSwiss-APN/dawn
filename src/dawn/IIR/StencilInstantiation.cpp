@@ -722,7 +722,7 @@ bool StencilInstantiation::insertBoundaryConditions(std::string originalFieldNam
   }
 }
 
-Array3i StencilInstantiation::getFieldDimensionsMask(int FieldID) {
+Array3i StencilInstantiation::getFieldDimensionsMask(int FieldID) const {
   if(fieldIDToInitializedDimensionsMap_.count(FieldID) == 0) {
     return Array3i{{1, 1, 1}};
   }

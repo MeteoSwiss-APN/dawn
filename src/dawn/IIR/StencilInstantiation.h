@@ -564,7 +564,7 @@ public:
   /// @brief this checks if the user specialized the field to a dimensionality. If not all
   /// dimensions are allow for off-center acesses and hence, {1,1,1} is returned. If we got a
   /// specialization, it is returned
-  Array3i getFieldDimensionsMask(int FieldID);
+  Array3i getFieldDimensionsMask(int FieldID) const;
 
 private:
   /// @brief Report the accesses to the console (according to `-freport-accesses`)

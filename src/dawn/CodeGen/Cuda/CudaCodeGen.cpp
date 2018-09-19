@@ -431,27 +431,15 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
         std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
             [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
 
-    // list of template for storages used in the stencil class
-    std::unordered_map<int, std::string> stencilTemplates;
-    int cnt = 0;
-    for(auto field : nonTempFields) {
-      stencilTemplates.emplace((*field).first, "StorageType" + std::to_string(cnt++));
-    }
-    std::vector<std::string> stencilTemplatesv(stencilTemplates.size());
-    auto it = stencilTemplates.begin();
-    std::generate(stencilTemplatesv.begin(), stencilTemplatesv.end(),
-                  [&]() mutable { return (it++)->second; });
-
-    Structure StencilClass = StencilWrapperClass.addStruct(
-        stencilName, RangeToString(", ", "", "")(stencilTemplatesv, [](const std::string& str) {
-          return "class " + str;
-        }), "sbase");
+    Structure StencilClass = StencilWrapperClass.addStruct(stencilName, "", "sbase");
     std::string StencilName = StencilClass.getName();
 
     auto& paramNameToType = stencilProperties->paramNameToType_;
 
     for(auto fieldIt : nonTempFields) {
-      paramNameToType.emplace((*fieldIt).second.Name, stencilTemplates.at((*fieldIt).first));
+      paramNameToType.emplace(
+          (*fieldIt).second.Name,
+          getStorageType(stencilInstantiation->getFieldDimensionsMask((*fieldIt).first)));
     }
 
     for(auto fieldIt : tempFields) {
@@ -470,7 +458,7 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
     StencilClass.addMember("const " + c_gtc() + "domain&", "m_dom");
 
     for(auto fieldIt : nonTempFields) {
-      StencilClass.addMember(stencilTemplates.at((*fieldIt).first) + "&",
+      StencilClass.addMember(paramNameToType.at((*fieldIt).second.Name) + "&",
                              "m_" + (*fieldIt).second.Name);
     }
 
@@ -482,8 +470,8 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
 
     stencilClassCtr.addArg("const " + c_gtc() + "domain& dom_");
     for(auto fieldIt : nonTempFields) {
-      stencilClassCtr.addArg(stencilTemplates.at((*fieldIt).first) + "& " + (*fieldIt).second.Name +
-                             "_");
+      std::string fieldName = (*fieldIt).second.Name;
+      stencilClassCtr.addArg(paramNameToType.at(fieldName) + "& " + fieldName + "_");
     }
 
     stencilClassCtr.addInit("m_dom(dom_)");
@@ -513,7 +501,7 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
     //
     // Run-Method
     //
-    generateRunMethod(StencilClass, stencil, stencilInstantiation, stencilTemplates, globalsMap);
+    generateRunMethod(StencilClass, stencil, stencilInstantiation, paramNameToType, globalsMap);
   }
 
   StencilWrapperClass.addMember("static constexpr const char* s_name =",
@@ -541,29 +529,14 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
   }
 
   // Generate stencil wrapper constructor
-  decltype(stencilInstantiation->getSIRStencil()->Fields) SIRFieldsWithoutTemps;
-
-  std::copy_if(stencilInstantiation->getSIRStencil()->Fields.begin(),
-               stencilInstantiation->getSIRStencil()->Fields.end(),
-               std::back_inserter(SIRFieldsWithoutTemps),
-               [](std::shared_ptr<sir::Field> const& f) { return !(f->IsTemporary); });
-
-  std::vector<std::string> StencilWrapperRunTemplates;
-  for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i) {
-    StencilWrapperRunTemplates.push_back("StorageType" + std::to_string(i + 1));
-    codeGenProperties.insertParam(i, SIRFieldsWithoutTemps[i]->Name, StencilWrapperRunTemplates[i]);
-  }
-
-  auto StencilWrapperConstructor = StencilWrapperClass.addConstructor(RangeToString(", ", "", "")(
-      StencilWrapperRunTemplates, [](const std::string& str) { return "class " + str; }));
-
+  auto StencilWrapperConstructor = StencilWrapperClass.addConstructor();
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
-  std::string ctrArgs("(dom");
-  for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i) {
+
+  int i = 0;
+  for(int fieldId : stencilInstantiation->getAPIFieldIDs()) {
     StencilWrapperConstructor.addArg(
-        codeGenProperties.getParamType(SIRFieldsWithoutTemps[i]->Name) + "& " +
-        SIRFieldsWithoutTemps[i]->Name);
-    ctrArgs += "," + SIRFieldsWithoutTemps[i]->Name;
+        getStorageType(stencilInstantiation->getFieldDimensionsMask(fieldId)) + "& " +
+        stencilInstantiation->getNameFromAccessID(fieldId));
   }
 
   // add the ctr initialization of each stencil
@@ -579,19 +552,7 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
 
     std::string initCtr = "m_" + stencilName + "(new " + stencilName;
 
-    int i = 0;
-    for(const auto& fieldInfoPair : StencilFields) {
-      const auto& fieldInfo = fieldInfoPair.second;
-      if(fieldInfo.IsTemporary)
-        continue;
-      initCtr += (i != 0 ? "," : "<") +
-                 (stencilInstantiation->isAllocatedField(fieldInfo.field.getAccessID())
-                      ? (c_gtc().str() + "storage_t")
-                      : (codeGenProperties.getParamType(fieldInfo.Name)));
-      i++;
-    }
-
-    initCtr += ">(dom";
+    initCtr += "(dom";
     for(const auto& fieldInfoPair : StencilFields) {
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
@@ -640,10 +601,11 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
   return str;
 }
 
-void CudaCodeGen::generateRunMethod(Structure& stencilClass, const iir::Stencil& stencil,
-                                    const iir::StencilInstantiation* stencilInstantiation,
-                                    const std::unordered_map<int, std::string>& stencilTemplates,
-                                    const sir::GlobalVariableMap& globalsMap) const {
+void CudaCodeGen::generateRunMethod(
+    Structure& stencilClass, const iir::Stencil& stencil,
+    const iir::StencilInstantiation* stencilInstantiation,
+    const std::unordered_map<std::string, std::string>& paramNameToType,
+    const sir::GlobalVariableMap& globalsMap) const {
   MemberFunction StencilRunMethod = stencilClass.addMemberFunction("virtual void", "run", "");
 
   StencilRunMethod.startBody();
@@ -672,9 +634,9 @@ void CudaCodeGen::generateRunMethod(Structure& stencilClass, const iir::Stencil&
       // all the time for name and IsTmpField
       const auto fieldName =
           stencilInstantiation->getNameFromAccessID((*fieldIt).second.getAccessID());
-      StencilRunMethod.addStatement(c_gt() + "data_view<" + stencilTemplates.at((*fieldIt).first) +
-                                    "> " + fieldName + "= " + c_gt() + "make_device_view(m_" +
-                                    fieldName + ")");
+      StencilRunMethod.addStatement(c_gt() + "data_view<" + paramNameToType.at(fieldName) + "> " +
+                                    fieldName + "= " + c_gt() + "make_device_view(m_" + fieldName +
+                                    ")");
     }
     for(auto fieldIt : tempFields) {
       const auto fieldName =
