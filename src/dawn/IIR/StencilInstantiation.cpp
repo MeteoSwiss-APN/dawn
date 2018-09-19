@@ -593,6 +593,9 @@ StencilInstantiation::StencilInstantiation(::dawn::OptimizerContext* context,
   // indentify the field).
   for(const auto& field : SIRStencil->Fields) {
     int AccessID = nextUID();
+    if(!field->IsTemporary) {
+      apiFieldIDs_.push_back(AccessID);
+    }
     setAccessIDNamePairOfField(AccessID, field->Name, field->IsTemporary);
     fieldIDToInitializedDimensionsMap_.emplace(AccessID, field->fieldDimensions);
   }
@@ -629,8 +632,9 @@ void StencilInstantiation::setAccessIDNamePairOfField(int AccessID, const std::s
                                                       bool isTemporary) {
   setAccessIDNamePair(AccessID, name);
   FieldAccessIDSet_.insert(AccessID);
-  if(isTemporary)
+  if(isTemporary) {
     TemporaryFieldAccessIDSet_.insert(AccessID);
+  }
 }
 
 void StencilInstantiation::setAccessIDNamePairOfGlobalVariable(int AccessID,
