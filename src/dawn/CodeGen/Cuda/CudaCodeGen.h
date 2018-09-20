@@ -37,6 +37,9 @@ namespace cuda {
 /// @brief GridTools C++ code generation for the gridtools_clang DSL
 /// @ingroup cxxnaive
 class CudaCodeGen : public CodeGen {
+
+  enum class FunctionArgType { caller, callee };
+
 public:
   ///@brief constructor
   CudaCodeGen(OptimizerContext* context);
@@ -67,6 +70,12 @@ private:
                          const iir::StencilInstantiation* stencilInstantiation,
                          const std::unordered_map<std::string, std::string>& paramNameToType,
                          const sir::GlobalVariableMap& globalsMap) const;
+
+  std::vector<std::string> generateStrideArguments(
+      const IndexRange<const std::unordered_map<int, iir::Field>>& nonTempFields,
+      const IndexRange<const std::unordered_map<int, iir::Field>>& tempFields,
+      const iir::MultiStage& ms, const iir::StencilInstantiation& stencilInstantiation,
+      FunctionArgType funArg) const;
 
   std::string generateStencilInstantiation(const iir::StencilInstantiation* stencilInstantiation);
   std::string generateGlobals(const std::shared_ptr<SIR>& sir);

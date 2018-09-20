@@ -27,7 +27,7 @@ namespace codegen {
 namespace cuda {
 
 ASTStencilBody::ASTStencilBody(const iir::StencilInstantiation* stencilInstantiation,
-                               const std::unordered_map<int, IndexIterator>& fieldIndexMap)
+                               const std::unordered_map<int, Array3i>& fieldIndexMap)
     : ASTCodeGenCXX(), instantiation_(stencilInstantiation), offsetPrinter_("+", "", "", true),
       fieldIndexMap_(fieldIndexMap) {}
 
@@ -101,10 +101,11 @@ void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   int accessID = instantiation_->getAccessIDFromExpr(expr);
   bool isTemporary = instantiation_->isTemporaryField(accessID);
   DAWN_ASSERT(fieldIndexMap_.count(accessID) || isTemporary);
-  std::string index = isTemporary ? "idx_tmp" : fieldIndexMap_.at(accessID).name();
+  std::string index =
+      isTemporary ? "idx_tmp" : "idx" + IndexIterator::name(fieldIndexMap_.at(accessID));
 
   // temporaries have all 3 dimensions
-  IndexIterator iter = isTemporary ? IndexIterator{Array3i{1, 1, 1}} : fieldIndexMap_.at(accessID);
+  Array3i iter = isTemporary ? Array3i{1, 1, 1} : fieldIndexMap_.at(accessID);
 
   std::string offsetStr =
       offsetPrinter_(ijkfyOffset(expr->getOffset(), accessName, isTemporary, iter));

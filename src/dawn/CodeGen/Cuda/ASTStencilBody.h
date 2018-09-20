@@ -18,6 +18,7 @@
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/CodeGen/Cuda/IndexIterator.h"
+#include "dawn/CodeGen/Cuda/CodeGeneratorHelper.hpp"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>
@@ -39,23 +40,25 @@ class ASTStencilBody : public ASTCodeGenCXX {
 protected:
   const iir::StencilInstantiation* instantiation_;
   RangeToString offsetPrinter_;
-  const std::unordered_map<int, IndexIterator>& fieldIndexMap_;
+  const std::unordered_map<int, Array3i>& fieldIndexMap_;
 
   ///
   /// @brief produces a string of (i,j,k) accesses for the C++ generated naive code,
   /// from an array of offseted accesses
   ///
   std::array<std::string, 3> ijkfyOffset(const std::array<int, 3>& offsets, std::string accessName,
-                                         bool isTemporary, const IndexIterator indexIterator) {
+                                         bool isTemporary, const Array3i iteratorDims) {
     int n = -1;
     std::array<std::string, 3> res;
     std::transform(offsets.begin(), offsets.end(), res.begin(), [&](int const& off) {
       ++n;
-      std::array<std::string, 3> indices{"istride", "jstride", "kstride"};
+      std::array<std::string, 3> indices{CodeGeneratorHelper::generateStrideName(0, iteratorDims),
+                                         CodeGeneratorHelper::generateStrideName(1, iteratorDims),
+                                         CodeGeneratorHelper::generateStrideName(2, iteratorDims)};
       if(isTemporary) {
         indices = {"istride_tmp", "jstride_tmp", "kstride_tmp"};
       }
-      if(!(indexIterator.dims_[n]) || !off)
+      if(!(iteratorDims[n]) || !off)
         return std::string("");
 
       return (indices[n] + "*" + std::to_string(off));
@@ -68,7 +71,7 @@ public:
 
   /// @brief constructor
   ASTStencilBody(const iir::StencilInstantiation* stencilInstantiation,
-                 const std::unordered_map<int, IndexIterator>& fieldIndexMap);
+                 const std::unordered_map<int, Array3i>& fieldIndexMap);
 
   virtual ~ASTStencilBody();
 

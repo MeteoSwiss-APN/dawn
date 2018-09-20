@@ -16,6 +16,7 @@
 #include "dawn/CodeGen/Cuda/ASTStencilBody.h"
 #include "dawn/CodeGen/Cuda/ASTStencilDesc.h"
 #include "dawn/CodeGen/Cuda/IndexIterator.h"
+#include "dawn/CodeGen/Cuda/CodeGeneratorHelper.hpp"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/Optimizer/OptimizerContext.h"
@@ -102,9 +103,24 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
   cudaKernel.addArg("const int isize");
   cudaKernel.addArg("const int jsize");
   cudaKernel.addArg("const int ksize");
-  cudaKernel.addArg("const int istride");
-  cudaKernel.addArg("const int jstride");
-  cudaKernel.addArg("const int kstride");
+
+  auto nonTempFields =
+      makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
+                            std::pair<int, iir::Field> const& p) {
+                  return !stencilInstantiation->isTemporaryField(p.second.getAccessID());
+                }));
+  auto tempFields =
+      makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>(
+                            [&](std::pair<int, iir::Field> const& p) {
+                              return stencilInstantiation->isTemporaryField(p.second.getAccessID());
+                            }));
+
+  std::vector<std::string> strides = generateStrideArguments(
+      nonTempFields, tempFields, *ms, *stencilInstantiation, FunctionArgType::callee);
+
+  for(const auto strideArg : strides) {
+    cudaKernel.addArg(strideArg);
+  }
 
   // first we construct non temporary field arguments
   for(const auto& field : fields) {
@@ -123,14 +139,6 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
                         stencilInstantiation->getNameFromAccessID(field.second.getAccessID()) +
                         "_dv");
     }
-  }
-
-  if(containsTemporary) {
-    cudaKernel.addArg("const int tmpBeginIIndex");
-    cudaKernel.addArg("const int tmpBeginJIndex");
-    cudaKernel.addArg("const int istride_tmp");
-    cudaKernel.addArg("const int jstride_tmp");
-    cudaKernel.addArg("const int kstride_tmp");
   }
 
   DAWN_ASSERT(fields.size() > 0);
@@ -222,14 +230,9 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
                                   "+" + std::to_string(maxExtents[1].Minus));
         });
   }
-  auto nonTempFields =
-      makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
-                            std::pair<int, iir::Field> const& p) {
-                  return !stencilInstantiation->isTemporaryField(p.second.getAccessID());
-                }));
 
-  std::unordered_map<int, IndexIterator> fieldIndexMap;
-  std::unordered_map<std::string, IndexIterator> indexIterators;
+  std::unordered_map<int, Array3i> fieldIndexMap;
+  std::unordered_map<std::string, Array3i> indexIterators;
 
   for(auto field : nonTempFields) {
     Array3i dims{-1, -1, -1};
@@ -242,27 +245,28 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
       }
     }
     DAWN_ASSERT(std::accumulate(dims.begin(), dims.end(), 0) != -3);
-    fieldIndexMap.emplace((*field).second.getAccessID(), IndexIterator{dims});
-    std::cout << "OOOP " << IndexIterator{dims}.name() << std::endl;
-    indexIterators.emplace(IndexIterator{dims}.name(), IndexIterator{dims});
+    fieldIndexMap.emplace((*field).second.getAccessID(), dims);
+    std::cout << "OOOP " << IndexIterator::name(dims) << std::endl;
+    indexIterators.emplace(IndexIterator::name(dims), dims);
   }
 
   for(auto index : indexIterators) {
-    std::string idxStmt = "int " + index.first + " = ";
+    std::string idxStmt = "int idx" + index.first + " = ";
     bool init = false;
-    if(index.second.dims_[0] != 1 && index.second.dims_[1] != 1) {
+    if(index.second[0] != 1 && index.second[1] != 1) {
       idxStmt = idxStmt + "0";
       continue;
     }
-    if(index.second.dims_[0]) {
+    if(index.second[0]) {
       init = true;
-      idxStmt = idxStmt + "(blockIdx.x*" + std::to_string(ntx) + "+iblock)*istride";
+      idxStmt = idxStmt + "(blockIdx.x*" + std::to_string(ntx) + "+iblock)*1";
     }
-    if(index.second.dims_[1]) {
+    if(index.second[1]) {
       if(init) {
         idxStmt = idxStmt + "+";
       }
-      idxStmt = idxStmt + "(blockIdx.y*" + std::to_string(nty) + "+jblock)*jstride";
+      idxStmt = idxStmt + "(blockIdx.y*" + std::to_string(nty) + "+jblock)*" +
+                CodeGeneratorHelper::generateStrideName(1, index.second);
     }
     cudaKernel.addStatement(idxStmt);
   }
@@ -270,7 +274,7 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
   if(containsTemporary) {
     auto maxExtentTmps = computeTempMaxWriteExtent(*(ms->getParent()));
     cudaKernel.addStatement("int idx_tmp = (iblock+" + std::to_string(-maxExtentTmps[0].Minus) +
-                            ")*istride_tmp + (jblock+" + std::to_string(-maxExtentTmps[1].Minus) +
+                            ")*1 + (jblock+" + std::to_string(-maxExtentTmps[1].Minus) +
                             ")*jstride_tmp");
   }
   auto intervals_set = ms->getIntervals();
@@ -295,8 +299,10 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
       kmin = interval.lowerBound() - lastKCell;
 
       for(auto index : indexIterators) {
-        if(index.second.dims_[2]) {
-          cudaKernel.addStatement(index.first + " += kstride*(" + std::to_string(kmin) + ")");
+        if(index.second[2]) {
+          cudaKernel.addStatement(index.first + " += " +
+                                  CodeGeneratorHelper::generateStrideName(2, index.second) + "*(" +
+                                  std::to_string(kmin) + ")");
         }
       }
       if(containsTemporary) {
@@ -308,14 +314,16 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
     if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Parallel) {
 
       for(auto index : indexIterators) {
-        if(index.second.dims_[2]) {
-          cudaKernel.addStatement(index.first + " += max(" + std::to_string(kmin) +
-                                  ",kstride * blockIdx.z * " + std::to_string(blockSize[2]) + ")");
+        if(index.second[2]) {
+          cudaKernel.addStatement("idx" + index.first + " += max(" + std::to_string(kmin) + "," +
+                                  CodeGeneratorHelper::generateStrideName(2, index.second) +
+                                  " * blockIdx.z * " + std::to_string(blockSize[2]) + ")");
         }
       }
       if(containsTemporary) {
-        cudaKernel.addStatement("idx_tmp += kstride_tmp * blockIdx.z * " +
-                                std::to_string(blockSize[2]) + "");
+        cudaKernel.addStatement("idx_tmp += max(" + std::to_string(kmin) +
+                                ", kstride_tmp * blockIdx.z * " + std::to_string(blockSize[2]) +
+                                ")");
       }
     }
     // for each interval, we generate naive nested loops
@@ -354,8 +362,9 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
         }
       }
       for(auto index : indexIterators) {
-        if(index.second.dims_[2])
-          cudaKernel.addStatement(index.first + " += kstride");
+        if(index.second[2])
+          cudaKernel.addStatement("idx" + index.first + " += " +
+                                  CodeGeneratorHelper::generateStrideName(2, index.second));
       }
       if(containsTemporary) {
         cudaKernel.addStatement("idx_tmp += kstride_tmp");
@@ -648,26 +657,6 @@ void CudaCodeGen::generateRunMethod(
 
     DAWN_ASSERT(nonTempFields.size() > 0);
 
-    std::string strides;
-    for(auto field : nonTempFields) {
-      const auto fieldName =
-          stencilInstantiation->getNameFromAccessID((*field).second.getAccessID());
-      Array3i dims{-1, -1, -1};
-      // TODO this is a hack, we need to have dimensions also at ms level
-      for(const auto& fieldInfo : multiStage.getParent()->getFields()) {
-        if(fieldInfo.second.field.getAccessID() == (*field).second.getAccessID()) {
-          dims = fieldInfo.second.Dimensions;
-          break;
-        }
-      }
-
-      if(std::accumulate(dims.begin(), dims.end(), 0) != 3)
-        continue;
-      strides = "m_" + fieldName + ".strides()[0]," + "m_" + fieldName + ".strides()[1]," + "m_" +
-                fieldName + ".strides()[2],";
-    }
-    DAWN_ASSERT(!strides.empty());
-
     iir::Extents maxExtents{0, 0, 0, 0, 0, 0};
     for(const auto& stage : iterateIIROver<iir::Stage>(*multiStagePtr)) {
       maxExtents.merge(stage->getExtents());
@@ -727,24 +716,74 @@ void CudaCodeGen::generateRunMethod(
     for(auto field : tempFields) {
       args = args + "," + stencilInstantiation->getNameFromAccessID((*field).second.getAccessID());
     }
-    if(!tempFields.empty()) {
-      auto firstTmpField = **(tempFields.begin());
-      std::string fieldName =
-          stencilInstantiation->getNameFromAccessID(firstTmpField.second.getAccessID());
-      args = args + "," + "m_" + fieldName + ".get_storage_info_ptr()->template begin<0>()," +
-             "m_" + fieldName + ".get_storage_info_ptr()->template begin<1>()," + "m_" + fieldName +
-             ".get_storage_info_ptr()->template stride<0>()," + "m_" + fieldName +
-             ".get_storage_info_ptr()->template stride<1>()," + "m_" + fieldName +
-             ".get_storage_info_ptr()->template stride<4>()";
-    }
 
-    kernelCall = kernelCall + "nx,ny,nz," + strides + args + ")";
+    std::vector<std::string> strides = generateStrideArguments(
+        nonTempFields, tempFields, multiStage, *stencilInstantiation, FunctionArgType::caller);
+
+    DAWN_ASSERT(!strides.empty());
+
+    kernelCall = kernelCall + "nx,ny,nz," + RangeToString(",", "", "")(strides) + args + ")";
 
     StencilRunMethod.addStatement(kernelCall);
 
     StencilRunMethod.addStatement("sync_storages()");
     StencilRunMethod.commit();
   }
+}
+
+std::vector<std::string> CudaCodeGen::generateStrideArguments(
+    const IndexRange<const std::unordered_map<int, iir::Field>>& nonTempFields,
+    const IndexRange<const std::unordered_map<int, iir::Field>>& tempFields,
+    const iir::MultiStage& ms, const iir::StencilInstantiation& stencilInstantiation,
+    FunctionArgType funArg) const {
+
+  std::unordered_set<std::string> processedDims;
+  std::vector<std::string> strides;
+  for(auto field : nonTempFields) {
+    const auto fieldName = stencilInstantiation.getNameFromAccessID((*field).second.getAccessID());
+    Array3i dims{-1, -1, -1};
+    // TODO this is a hack, we need to have dimensions also at ms level
+    for(const auto& fieldInfo : ms.getParent()->getFields()) {
+      if(fieldInfo.second.field.getAccessID() == (*field).second.getAccessID()) {
+        dims = fieldInfo.second.Dimensions;
+        break;
+      }
+    }
+
+    if(processedDims.count(IndexIterator::name(dims)))
+      continue;
+    processedDims.emplace(IndexIterator::name(dims));
+    std::cout << "PROCESSING " << IndexIterator::name(dims) << std::endl;
+    int usedDim = 0;
+    for(int i = 0; i < dims.size(); ++i) {
+      if(!dims[i])
+        continue;
+      if(!(usedDim++))
+        continue;
+      if(funArg == FunctionArgType::caller) {
+        strides.push_back("m_" + fieldName + ".strides()[" + std::to_string(i) + "]");
+      } else {
+        strides.push_back("const int stride_" + IndexIterator::name(dims) + "_" +
+                          std::to_string(i));
+      }
+    }
+  }
+  if(!tempFields.empty()) {
+    auto firstTmpField = **(tempFields.begin());
+    std::string fieldName =
+        stencilInstantiation.getNameFromAccessID(firstTmpField.second.getAccessID());
+    if(funArg == FunctionArgType::caller) {
+      strides.push_back("m_" + fieldName + ".get_storage_info_ptr()->template begin<0>()," + "m_" +
+                        fieldName + ".get_storage_info_ptr()->template begin<1>()," + "m_" +
+                        fieldName + ".get_storage_info_ptr()->template stride<1>()," + "m_" +
+                        fieldName + ".get_storage_info_ptr()->template stride<4>()");
+    } else {
+      strides.push_back("const int tmpBeginIIndex, const int tmpBeginJIndex, const int "
+                        "jstride_tmp, const int kstride_tmp");
+    }
+  }
+
+  return strides;
 }
 
 iir::Extents CudaCodeGen::computeTempMaxWriteExtent(iir::Stencil const& stencil) const {

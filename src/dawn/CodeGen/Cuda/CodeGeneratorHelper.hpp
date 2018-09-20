@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_CUDA_INDEXITERATOR_H
-#define DAWN_CODEGEN_CUDA_INDEXITERATOR_H
+#ifndef DAWN_CODEGEN_CUDA_CODEGENERATORHELPER_H
+#define DAWN_CODEGEN_CUDA_CODEGENERATORHELPER_H
 
 #include <string>
 #include "dawn/Support/Array.h"
@@ -22,14 +22,9 @@ namespace dawn {
 namespace codegen {
 namespace cuda {
 
-struct IndexIterator {
-  static std::string name(Array3i dims) {
-    std::string n_ = "";
-    for(const int i : dims) {
-      n_ = n_ + std::to_string(i);
-    }
-    return n_;
-  }
+class CodeGeneratorHelper {
+public:
+  static std::string generateStrideName(int dim, Array3i fieldDims);
 };
 
 } // namespace cuda
