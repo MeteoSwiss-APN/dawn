@@ -74,7 +74,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<StencilFunArgExpr>& expr) {
 
 void ASTStencilDesc::visit(const std::shared_ptr<VarAccessExpr>& expr) {
   if(instantiation_->isGlobalVariable(instantiation_->getAccessIDFromExpr(expr)))
-    ss_ << "globals::get().";
+    ss_ << "m_globals.";
 
   ss_ << getName(expr);
 
