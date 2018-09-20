@@ -722,7 +722,7 @@ void CudaCodeGen::generateRunMethod(
 
     DAWN_ASSERT(!strides.empty());
 
-    kernelCall = kernelCall + "nx,ny,nz," + RangeToString(",", "", "")(strides) + args + ")";
+    kernelCall = kernelCall + "nx,ny,nz," + RangeToString(",", "", "")(strides) + "," + args + ")";
 
     StencilRunMethod.addStatement(kernelCall);
 
