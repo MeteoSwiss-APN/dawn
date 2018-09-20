@@ -56,7 +56,7 @@ protected:
                                          CodeGeneratorHelper::generateStrideName(1, iteratorDims),
                                          CodeGeneratorHelper::generateStrideName(2, iteratorDims)};
       if(isTemporary) {
-        indices = {"istride_tmp", "jstride_tmp", "kstride_tmp"};
+        indices = {"1", "jstride_tmp", "kstride_tmp"};
       }
       if(!(iteratorDims[n]) || !off)
         return std::string("");
