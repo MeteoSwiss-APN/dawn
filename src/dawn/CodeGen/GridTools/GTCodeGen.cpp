@@ -1022,61 +1022,6 @@ std::string GTCodeGen::generateStencilInstantiation(
   return str;
 }
 
-// std::string GTCodeGen::generateGlobals(std::shared_ptr<SIR> const& Sir) {
-//  using namespace codegen;
-
-//  const auto& globalsMap = *(Sir->GlobalVariableMap);
-//  if(globalsMap.empty())
-//    return "";
-
-//  std::stringstream ss;
-
-//  Namespace gridtoolsNamespace("gridtools", ss);
-
-//  std::string StructName = "globals";
-//  std::string BaseName = "gridtools::clang::globals_impl<" + StructName + ">";
-
-//  Struct GlobalsStruct(StructName + ": public " + BaseName, ss);
-//  GlobalsStruct.addTypeDef("base_t").addType("gridtools::clang::globals_impl<globals>");
-
-//  for(const auto& globalsPair : globalsMap) {
-//    sir::Value& value = *globalsPair.second;
-//    std::string Name = globalsPair.first;
-//    std::string Type = sir::Value::typeToString(value.getType());
-//    std::string AdapterBase = std::string("base_t::variable_adapter_impl") + "<" + Type + ">";
-
-//    Structure AdapterStruct = GlobalsStruct.addStructMember(Name + "_adapter", Name, AdapterBase);
-//    AdapterStruct.addConstructor().addArg("").addInit(
-//        AdapterBase + "(" + Type + "(" + (value.empty() ? std::string() : value.toString()) +
-//        "))");
-
-//    auto AssignmentOperator =
-//        AdapterStruct.addMemberFunction(Name + "_adapter&", "operator=", "class ValueType");
-//    AssignmentOperator.addArg("ValueType&& value");
-//    if(value.isConstexpr())
-//      AssignmentOperator.addStatement(
-//          "throw std::runtime_error(\"invalid assignment to constant variable '" + Name + "'\")");
-//    else
-//      AssignmentOperator.addStatement("get_value() = value");
-//    AssignmentOperator.addStatement("return *this");
-//    AssignmentOperator.commit();
-//  }
-
-//  GlobalsStruct.commit();
-
-//  // Add the symbol for the singleton
-//  codegen::Statement(ss) << "template<> " << StructName << "* " << BaseName
-//                         << "::s_instance = nullptr";
-
-//  gridtoolsNamespace.commit();
-
-//  // Remove trailing ';' as this is retained by Clang's Rewriter
-//  std::string str = ss.str();
-//  str[str.size() - 2] = ' ';
-
-//  return str;
-//}
-
 std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   mplContainerMaxSize_ = 30;
   DAWN_LOG(INFO) << "Starting code generation for GTClang ...";
