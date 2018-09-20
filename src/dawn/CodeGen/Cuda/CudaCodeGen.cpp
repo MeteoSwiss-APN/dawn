@@ -397,7 +397,7 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
   generateAllCudaKernels(ssSW, stencilInstantiation);
 
   Class StencilWrapperClass(stencilInstantiation->getName(), ssSW);
-  StencilWrapperClass.changeAccessibility("private");
+  StencilWrapperClass.changeAccessibility("public");
 
   // Generate stencils
   const auto& stencils = stencilInstantiation->getStencils();
