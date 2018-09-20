@@ -247,8 +247,7 @@ void GTCodeGen::buildPlaceholderDefinitions(
     function.addTypeDef("p_" + stencilGlobalVariables[accessorIdx - numFields])
         .addType(c_gt() + "arg")
         .addTemplate(Twine(accessorIdx))
-        .addTemplate("typename std::decay<decltype(globals::get()." + varname +
-                     ".as_global_parameter())>::type");
+        .addTemplate("decltype(m_globals_gp_)");
   }
 }
 
@@ -326,6 +325,8 @@ std::string GTCodeGen::generateStencilInstantiation(
 
     if(!globalsMap.empty()) {
       StencilClass.addMember("const globals&", "m_globals");
+      StencilClass.addMember("decltype(backend_t::make_global_parameter(m_globals))",
+                             "m_globals_gp_");
     }
 
     //
@@ -666,6 +667,8 @@ std::string GTCodeGen::generateStencilInstantiation(
 
     if(!globalsMap.empty()) {
       StencilConstructor.addInit("m_globals(globals)");
+      StencilConstructor.addInit(
+          "m_globals_gp_(gridtools::clang::backend_t::make_global_parameter(m_globals))");
     }
     StencilConstructor.startBody();
 
@@ -731,8 +734,7 @@ std::string GTCodeGen::generateStencilInstantiation(
           std::string("(p_" + (*field).second.Name + "() = " + (*field).second.Name + ")"));
     }
     for(const auto& var : StencilGlobalVariables)
-      DomainMapPlaceholders.push_back("(p_" + var + "() = globals::get()." + var +
-                                      ".as_global_parameter())");
+      DomainMapPlaceholders.push_back("(p_" + var + "() = m_globals_gp_");
 
     // Generate grid
     StencilConstructor.addComment("Grid");
