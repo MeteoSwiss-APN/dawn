@@ -602,7 +602,7 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
   }
 
   if(!globalsMap.empty()) {
-    generateGlobalsAPI(StencilWrapperClass, globalsMap);
+    generateGlobalsAPI(*stencilInstantiation, StencilWrapperClass, globalsMap);
   }
   // Generate the run method by generate code for the stencil description AST
   MemberFunction RunMethod = StencilWrapperClass.addMemberFunction("void", "run", "");

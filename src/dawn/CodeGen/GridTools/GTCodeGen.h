@@ -81,6 +81,10 @@ private:
 
   bool isTemporary(iir::Stencil::FieldInfo const& f) const { return f.IsTemporary; }
 
+  void generateGlobalsAPI(const iir::StencilInstantiation& stencilInstantiation,
+                          Class& stencilWrapperClass,
+                          const sir::GlobalVariableMap& globalsMap) const override;
+
   /// code generate sync methods statements for all the fields passed
   void generateSyncStorages(
       MemberFunction& method,

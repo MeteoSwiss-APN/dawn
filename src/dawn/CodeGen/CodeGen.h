@@ -67,7 +67,8 @@ public:
   static std::string getStorageType(const iir::Stencil::FieldInfo& field);
   static std::string getStorageType(Array3i dimensions);
 
-  virtual void generateGlobalsAPI(Class& stencilWrapperClass,
+  virtual void generateGlobalsAPI(const iir::StencilInstantiation& stencilInstantiation,
+                                  Class& stencilWrapperClass,
                                   const sir::GlobalVariableMap& globalsMap) const;
   virtual std::string generateGlobals(std::shared_ptr<SIR> const& sir,
                                       std::string namespace_) const;

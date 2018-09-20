@@ -242,6 +242,36 @@ void GTCodeGen::buildPlaceholderDefinitions(
   }
 }
 
+void GTCodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInstantiation,
+                                   Class& stencilWrapperClass,
+                                   const sir::GlobalVariableMap& globalsMap) const {
+
+  stencilWrapperClass.addComment("Globals API");
+
+  for(const auto& globalProp : globalsMap) {
+    auto globalValue = globalProp.second;
+    auto getter = stencilWrapperClass.addMemberFunction(
+        sir::Value::typeToString(globalValue->getType()), "get_" + globalProp.first);
+    getter.finishArgs();
+    getter.addStatement("return m_globals." + globalProp.first);
+    getter.commit();
+
+    auto setter = stencilWrapperClass.addMemberFunction("void", "set_" + globalProp.first);
+    setter.addArg(std::string(sir::Value::typeToString(globalValue->getType())) + " " +
+                  globalProp.first);
+    setter.finishArgs();
+    setter.addStatement("m_globals." + globalProp.first + "=" + globalProp.first);
+    int i = 0;
+    for(const auto& stencil : stencilInstantiation.getStencils()) {
+      // TODO need to use here and everywhere stencilID
+      setter.addStatement("m_stencil_" + std::to_string(i) + ".update_globals()");
+      ++i;
+    }
+
+    setter.commit();
+  }
+}
+
 std::string GTCodeGen::generateStencilInstantiation(
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation) {
   using namespace codegen;
@@ -769,6 +799,11 @@ std::string GTCodeGen::generateStencilInstantiation(
     stencilType = "computation<void>";
     StencilClass.addMember(stencilType, "m_stencil");
 
+    // update globals
+    StencilClass.addMemberFunction("void", "update_globals")
+        .addStatement(
+            "gridtools::clang::backend_t::update_global_parameter(m_globals_gp_, m_globals)");
+
     // Generate stencil getter
     StencilClass.addMemberFunction(stencilType + "*", "get_stencil")
         .addStatement("return &m_stencil");
@@ -954,7 +989,7 @@ std::string GTCodeGen::generateStencilInstantiation(
       .addStatement("return std::string(s_name)");
 
   if(!globalsMap.empty()) {
-    generateGlobalsAPI(StencilWrapperClass, globalsMap);
+    generateGlobalsAPI(*stencilInstantiation, StencilWrapperClass, globalsMap);
   }
 
   // Generate stencil getter

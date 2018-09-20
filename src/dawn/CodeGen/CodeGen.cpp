@@ -70,7 +70,8 @@ std::string CodeGen::generateGlobals(std::shared_ptr<SIR> const& sir,
   return str;
 }
 
-void CodeGen::generateGlobalsAPI(Class& stencilWrapperClass,
+void CodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInstantiation,
+                                 Class& stencilWrapperClass,
                                  const sir::GlobalVariableMap& globalsMap) const {
 
   stencilWrapperClass.addComment("Globals API");
