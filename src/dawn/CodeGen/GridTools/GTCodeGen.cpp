@@ -261,11 +261,12 @@ void GTCodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInsta
                   globalProp.first);
     setter.finishArgs();
     setter.addStatement("m_globals." + globalProp.first + "=" + globalProp.first);
-    int i = 0;
-    for(const auto& stencil : stencilInstantiation.getStencils()) {
-      // TODO need to use here and everywhere stencilID
-      setter.addStatement("m_stencil_" + std::to_string(i) + ".update_globals()");
-      ++i;
+
+    if(!globalsMap.empty()) {
+      for(int i = 0; i < stencilInstantiation.getStencils().size(); ++i) {
+        // TODO need to use here and everywhere stencilID
+        setter.addStatement("m_stencil_" + std::to_string(i) + ".update_globals()");
+      }
     }
 
     setter.commit();
