@@ -47,9 +47,6 @@ std::string CodeGen::generateGlobals(std::shared_ptr<SIR> const& sir,
     std::string Name = globalsPair.first;
     std::string Type = sir::Value::typeToString(value.getType());
 
-    if(!value.empty()) {
-      Name += " = " + value.toString();
-    }
     GlobalsStruct.addMember(Type, Name);
   }
   auto ctr = GlobalsStruct.addConstructor();
