@@ -63,7 +63,7 @@ public:
 private:
   std::string generateStencilInstantiation(
       const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation);
-  std::string generateGlobals(const std::shared_ptr<SIR>& Sir);
+  //  std::string generateGlobals(const std::shared_ptr<SIR>& Sir);
   std::string cacheWindowToString(const iir::Cache::window& cacheWindow);
   std::string buildMakeComputation(std::vector<std::string> const& DomainMapPlaceholders,
                                    std::vector<std::string> const& makeComputation,

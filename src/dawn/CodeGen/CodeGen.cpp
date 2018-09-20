@@ -27,6 +27,71 @@ size_t CodeGen::getVerticalTmpHaloSizeForMultipleStencils(
              : 0;
 }
 
+std::string CodeGen::generateGlobals(std::shared_ptr<SIR> const& sir,
+                                     std::string namespace_) const {
+
+  const auto& globalsMap = *(sir->GlobalVariableMap);
+  if(globalsMap.empty())
+    return "";
+
+  std::stringstream ss;
+
+  Namespace cudaNamespace(namespace_, ss);
+
+  std::string StructName = "globals";
+
+  Struct GlobalsStruct(StructName, ss);
+
+  for(const auto& globalsPair : globalsMap) {
+    sir::Value& value = *globalsPair.second;
+    std::string Name = globalsPair.first;
+    std::string Type = sir::Value::typeToString(value.getType());
+    std::string AdapterBase = std::string("base_t::variable_adapter_impl") + "<" + Type + ">";
+
+    GlobalsStruct.addMember(Type, Name);
+  }
+  auto ctr = GlobalsStruct.addConstructor();
+  for(const auto& globalsPair : globalsMap) {
+    sir::Value& value = *globalsPair.second;
+    std::string Name = globalsPair.first;
+    if(!value.empty()) {
+      ctr.addInit(Name + "(" + value.toString() + ")");
+    }
+  }
+  ctr.commit();
+
+  GlobalsStruct.commit();
+  cudaNamespace.commit();
+
+  // Remove trailing ';' as this is retained by Clang's Rewriter
+  std::string str = ss.str();
+  str[str.size() - 2] = ' ';
+
+  return str;
+}
+
+void CodeGen::generateGlobalsAPI(Class& stencilWrapperClass,
+                                 const sir::GlobalVariableMap& globalsMap) const {
+
+  stencilWrapperClass.addComment("Globals API");
+
+  for(const auto& globalProp : globalsMap) {
+    auto globalValue = globalProp.second;
+    auto getter = stencilWrapperClass.addMemberFunction(
+        sir::Value::typeToString(globalValue->getType()), "get_" + globalProp.first);
+    getter.finishArgs();
+    getter.addStatement("return m_globals." + globalProp.first);
+    getter.commit();
+
+    auto setter = stencilWrapperClass.addMemberFunction("void", "set_" + globalProp.first);
+    setter.addArg(std::string(sir::Value::typeToString(globalValue->getType())) + " " +
+                  globalProp.first);
+    setter.finishArgs();
+    setter.addStatement("m_globals." + globalProp.first + "=" + globalProp.first);
+    setter.commit();
+  }
+}
+
 std::string CodeGen::getStorageType(Array3i dimensions) {
   std::string storageType = "storage_";
   storageType += dimensions[0] ? "i" : "";

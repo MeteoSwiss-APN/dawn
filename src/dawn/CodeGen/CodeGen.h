@@ -66,6 +66,11 @@ public:
   static std::string getStorageType(const sir::Field& field);
   static std::string getStorageType(const iir::Stencil::FieldInfo& field);
   static std::string getStorageType(Array3i dimensions);
+
+  virtual void generateGlobalsAPI(Class& stencilWrapperClass,
+                                  const sir::GlobalVariableMap& globalsMap) const;
+  virtual std::string generateGlobals(std::shared_ptr<SIR> const& sir,
+                                      std::string namespace_) const;
 };
 
 } // namespace codegen

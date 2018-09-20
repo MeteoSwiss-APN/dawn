@@ -71,8 +71,8 @@ private:
                          const std::unordered_map<std::string, std::string>& paramNameToType,
                          const sir::GlobalVariableMap& globalsMap) const;
 
-  void generateGlobalsAPI(Class& stencilWrapperClass,
-                          const sir::GlobalVariableMap& globalsMap) const;
+  //  void generateGlobalsAPI(Class& stencilWrapperClass,
+  //                          const sir::GlobalVariableMap& globalsMap) const;
 
   std::vector<std::string> generateStrideArguments(
       const IndexRange<const std::unordered_map<int, iir::Field>>& nonTempFields,
@@ -81,7 +81,7 @@ private:
       FunctionArgType funArg) const;
 
   std::string generateStencilInstantiation(const iir::StencilInstantiation* stencilInstantiation);
-  std::string generateGlobals(const std::shared_ptr<SIR>& sir);
+  //  std::string generateGlobals(const std::shared_ptr<SIR>& sir);
   static int paddedBoundary(int value);
 };
 } // namespace cuda

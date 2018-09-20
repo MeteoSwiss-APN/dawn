@@ -298,6 +298,8 @@ std::string GTCodeGen::generateStencilInstantiation(
     }
   }
 
+  const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
+
   // Generate stencils
   const auto& stencils = stencilInstantiation->getStencils();
   for(std::size_t stencilIdx = 0; stencilIdx < stencils.size(); ++stencilIdx) {
@@ -321,6 +323,10 @@ std::string GTCodeGen::generateStencilInstantiation(
     isEmpty = false;
     Structure StencilClass = StencilWrapperClass.addStruct(Twine("stencil_") + Twine(stencilIdx));
     std::string StencilName = StencilClass.getName();
+
+    if(!globalsMap.empty()) {
+      StencilClass.addMember("const globals&", "m_globals");
+    }
 
     //
     // Interval typedefs
@@ -649,12 +655,18 @@ std::string GTCodeGen::generateStencilInstantiation(
         StencilConstructorTemplates, [](const std::string& str) { return "class " + str; }));
 
     StencilConstructor.addArg("const gridtools::clang::domain& dom");
+    if(!globalsMap.empty()) {
+      StencilConstructor.addArg("const globals& globals");
+    }
     int index = 0;
     for(auto field : nonTempFields) {
       StencilConstructor.addArg(StencilConstructorTemplates[index] + " " + (*field).second.Name);
       index++;
     }
 
+    if(!globalsMap.empty()) {
+      StencilConstructor.addInit("m_globals(globals)");
+    }
     StencilConstructor.startBody();
 
     int numTemporaries = tempFields.size();
@@ -822,6 +834,10 @@ std::string GTCodeGen::generateStencilInstantiation(
     stencilMembers.emplace_back("m_stencil_" + std::to_string(i));
   }
 
+  if(!globalsMap.empty()) {
+    StencilWrapperClass.addMember("globals", "m_globals");
+  }
+
   StencilWrapperClass.changeAccessibility("public");
   StencilWrapperClass.addCopyConstructor(Class::Deleted);
 
@@ -878,9 +894,13 @@ std::string GTCodeGen::generateStencilInstantiation(
       }
     }
 
+    std::string initctr = "(dom, ";
+    if(!globalsMap.empty()) {
+      initctr = initctr + "m_globals,";
+    }
     StencilWrapperConstructor.addInit(
         "m_stencil_" + Twine(i) +
-        RangeToString(", ", "(dom, ",
+        RangeToString(", ", initctr.c_str(),
                       ")")(nonTempFields, [&](const iir::Stencil::FieldInfo& fieldInfo) {
           if(stencilInstantiation->isAllocatedField(fieldInfo.field.getAccessID()))
             return "m_" + fieldInfo.Name;
@@ -943,6 +963,13 @@ std::string GTCodeGen::generateStencilInstantiation(
       .isConst(true)
       .addStatement("return std::string(s_name)");
 
+  if(!globalsMap.empty()) {
+    for(auto g : globalsMap) {
+      std::cout << "KK " << g.first << std::endl;
+    }
+    generateGlobalsAPI(StencilWrapperClass, globalsMap);
+  }
+
   // Generate stencil getter
   MemberFunction stencilGetter =
       StencilWrapperClass.addMemberFunction("std::vector<computation<void>*>", "getStencils");
@@ -971,59 +998,60 @@ std::string GTCodeGen::generateStencilInstantiation(
   return str;
 }
 
-std::string GTCodeGen::generateGlobals(std::shared_ptr<SIR> const& Sir) {
-  using namespace codegen;
+// std::string GTCodeGen::generateGlobals(std::shared_ptr<SIR> const& Sir) {
+//  using namespace codegen;
 
-  const auto& globalsMap = *(Sir->GlobalVariableMap);
-  if(globalsMap.empty())
-    return "";
+//  const auto& globalsMap = *(Sir->GlobalVariableMap);
+//  if(globalsMap.empty())
+//    return "";
 
-  std::stringstream ss;
+//  std::stringstream ss;
 
-  Namespace gridtoolsNamespace("gridtools", ss);
+//  Namespace gridtoolsNamespace("gridtools", ss);
 
-  std::string StructName = "globals";
-  std::string BaseName = "gridtools::clang::globals_impl<" + StructName + ">";
+//  std::string StructName = "globals";
+//  std::string BaseName = "gridtools::clang::globals_impl<" + StructName + ">";
 
-  Struct GlobalsStruct(StructName + ": public " + BaseName, ss);
-  GlobalsStruct.addTypeDef("base_t").addType("gridtools::clang::globals_impl<globals>");
+//  Struct GlobalsStruct(StructName + ": public " + BaseName, ss);
+//  GlobalsStruct.addTypeDef("base_t").addType("gridtools::clang::globals_impl<globals>");
 
-  for(const auto& globalsPair : globalsMap) {
-    sir::Value& value = *globalsPair.second;
-    std::string Name = globalsPair.first;
-    std::string Type = sir::Value::typeToString(value.getType());
-    std::string AdapterBase = std::string("base_t::variable_adapter_impl") + "<" + Type + ">";
+//  for(const auto& globalsPair : globalsMap) {
+//    sir::Value& value = *globalsPair.second;
+//    std::string Name = globalsPair.first;
+//    std::string Type = sir::Value::typeToString(value.getType());
+//    std::string AdapterBase = std::string("base_t::variable_adapter_impl") + "<" + Type + ">";
 
-    Structure AdapterStruct = GlobalsStruct.addStructMember(Name + "_adapter", Name, AdapterBase);
-    AdapterStruct.addConstructor().addArg("").addInit(
-        AdapterBase + "(" + Type + "(" + (value.empty() ? std::string() : value.toString()) + "))");
+//    Structure AdapterStruct = GlobalsStruct.addStructMember(Name + "_adapter", Name, AdapterBase);
+//    AdapterStruct.addConstructor().addArg("").addInit(
+//        AdapterBase + "(" + Type + "(" + (value.empty() ? std::string() : value.toString()) +
+//        "))");
 
-    auto AssignmentOperator =
-        AdapterStruct.addMemberFunction(Name + "_adapter&", "operator=", "class ValueType");
-    AssignmentOperator.addArg("ValueType&& value");
-    if(value.isConstexpr())
-      AssignmentOperator.addStatement(
-          "throw std::runtime_error(\"invalid assignment to constant variable '" + Name + "'\")");
-    else
-      AssignmentOperator.addStatement("get_value() = value");
-    AssignmentOperator.addStatement("return *this");
-    AssignmentOperator.commit();
-  }
+//    auto AssignmentOperator =
+//        AdapterStruct.addMemberFunction(Name + "_adapter&", "operator=", "class ValueType");
+//    AssignmentOperator.addArg("ValueType&& value");
+//    if(value.isConstexpr())
+//      AssignmentOperator.addStatement(
+//          "throw std::runtime_error(\"invalid assignment to constant variable '" + Name + "'\")");
+//    else
+//      AssignmentOperator.addStatement("get_value() = value");
+//    AssignmentOperator.addStatement("return *this");
+//    AssignmentOperator.commit();
+//  }
 
-  GlobalsStruct.commit();
+//  GlobalsStruct.commit();
 
-  // Add the symbol for the singleton
-  codegen::Statement(ss) << "template<> " << StructName << "* " << BaseName
-                         << "::s_instance = nullptr";
+//  // Add the symbol for the singleton
+//  codegen::Statement(ss) << "template<> " << StructName << "* " << BaseName
+//                         << "::s_instance = nullptr";
 
-  gridtoolsNamespace.commit();
+//  gridtoolsNamespace.commit();
 
-  // Remove trailing ';' as this is retained by Clang's Rewriter
-  std::string str = ss.str();
-  str[str.size() - 2] = ' ';
+//  // Remove trailing ';' as this is retained by Clang's Rewriter
+//  std::string str = ss.str();
+//  str[str.size() - 2] = ' ';
 
-  return str;
-}
+//  return str;
+//}
 
 std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   mplContainerMaxSize_ = 30;
@@ -1040,7 +1068,7 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   }
 
   // Generate globals
-  std::string globals = generateGlobals(context_->getSIR());
+  std::string globals = generateGlobals(context_->getSIR(), "gridtools");
 
   // If we need more than 20 elements in boost::mpl containers, we need to increment to the nearest
   // multiple of ten

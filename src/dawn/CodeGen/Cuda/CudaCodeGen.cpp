@@ -601,8 +601,9 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
     StencilWrapperClass.addMember("globals", "m_globals");
   }
 
-  generateGlobalsAPI(StencilWrapperClass, globalsMap);
-
+  if(!globalsMap.empty()) {
+    generateGlobalsAPI(StencilWrapperClass, globalsMap);
+  }
   // Generate the run method by generate code for the stencil description AST
   MemberFunction RunMethod = StencilWrapperClass.addMemberFunction("void", "run", "");
 
@@ -627,28 +628,6 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
   str[str.size() - 2] = ' ';
 
   return str;
-}
-
-void CudaCodeGen::generateGlobalsAPI(Class& stencilWrapperClass,
-                                     const sir::GlobalVariableMap& globalsMap) const {
-
-  stencilWrapperClass.addComment("Globals API");
-
-  for(const auto& globalProp : globalsMap) {
-    auto globalValue = globalProp.second;
-    auto getter = stencilWrapperClass.addMemberFunction(
-        sir::Value::typeToString(globalValue->getType()), "get_" + globalProp.first);
-    getter.finishArgs();
-    getter.addStatement("return m_globals." + globalProp.first);
-    getter.commit();
-
-    auto setter = stencilWrapperClass.addMemberFunction("void", "set_" + globalProp.first);
-    setter.addArg(std::string(sir::Value::typeToString(globalValue->getType())) + " " +
-                  globalProp.first);
-    setter.finishArgs();
-    setter.addStatement("m_globals." + globalProp.first + "=" + globalProp.first);
-    setter.commit();
-  }
 }
 
 void CudaCodeGen::generateRunMethod(
@@ -877,47 +856,47 @@ void CudaCodeGen::addTmpStorageInit(
   }
 }
 
-std::string CudaCodeGen::generateGlobals(std::shared_ptr<SIR> const& sir) {
+// std::string CudaCodeGen::generateGlobals(std::shared_ptr<SIR> const& sir) {
 
-  const auto& globalsMap = *(sir->GlobalVariableMap);
-  if(globalsMap.empty())
-    return "";
+//  const auto& globalsMap = *(sir->GlobalVariableMap);
+//  if(globalsMap.empty())
+//    return "";
 
-  std::stringstream ss;
+//  std::stringstream ss;
 
-  Namespace cudaNamespace("cuda", ss);
+//  Namespace cudaNamespace("cuda", ss);
 
-  std::string StructName = "globals";
+//  std::string StructName = "globals";
 
-  Struct GlobalsStruct(StructName, ss);
+//  Struct GlobalsStruct(StructName, ss);
 
-  for(const auto& globalsPair : globalsMap) {
-    sir::Value& value = *globalsPair.second;
-    std::string Name = globalsPair.first;
-    std::string Type = sir::Value::typeToString(value.getType());
-    std::string AdapterBase = std::string("base_t::variable_adapter_impl") + "<" + Type + ">";
+//  for(const auto& globalsPair : globalsMap) {
+//    sir::Value& value = *globalsPair.second;
+//    std::string Name = globalsPair.first;
+//    std::string Type = sir::Value::typeToString(value.getType());
+//    std::string AdapterBase = std::string("base_t::variable_adapter_impl") + "<" + Type + ">";
 
-    GlobalsStruct.addMember(Type, Name);
-  }
-  auto ctr = GlobalsStruct.addConstructor();
-  for(const auto& globalsPair : globalsMap) {
-    sir::Value& value = *globalsPair.second;
-    std::string Name = globalsPair.first;
-    if(!value.empty()) {
-      ctr.addInit(Name + "(" + value.toString() + ")");
-    }
-  }
-  ctr.commit();
+//    GlobalsStruct.addMember(Type, Name);
+//  }
+//  auto ctr = GlobalsStruct.addConstructor();
+//  for(const auto& globalsPair : globalsMap) {
+//    sir::Value& value = *globalsPair.second;
+//    std::string Name = globalsPair.first;
+//    if(!value.empty()) {
+//      ctr.addInit(Name + "(" + value.toString() + ")");
+//    }
+//  }
+//  ctr.commit();
 
-  GlobalsStruct.commit();
-  cudaNamespace.commit();
+//  GlobalsStruct.commit();
+//  cudaNamespace.commit();
 
-  // Remove trailing ';' as this is retained by Clang's Rewriter
-  std::string str = ss.str();
-  str[str.size() - 2] = ' ';
+//  // Remove trailing ';' as this is retained by Clang's Rewriter
+//  std::string str = ss.str();
+//  str[str.size() - 2] = ' ';
 
-  return str;
-}
+//  return str;
+//}
 
 std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
   DAWN_LOG(INFO) << "Starting code generation for GTClang ...";
@@ -931,7 +910,7 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
   }
 
-  std::string globals = generateGlobals(context_->getSIR());
+  std::string globals = generateGlobals(context_->getSIR(), "cuda");
 
   std::vector<std::string> ppDefines;
   auto makeDefine = [](std::string define, int value) {
