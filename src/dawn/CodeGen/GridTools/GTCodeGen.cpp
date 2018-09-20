@@ -202,14 +202,6 @@ std::string GTCodeGen::cacheWindowToString(iir::Cache::window const& cacheWindow
          std::to_string(cacheWindow.m_p) + ">";
 }
 
-std::string GTCodeGen::buildMakeComputation(std::vector<std::string> const& DomainMapPlaceholders,
-                                            std::vector<std::string> const& makeComputation,
-                                            std::string const& gridName) const {
-  return std::string("gridtools::make_computation<gridtools::clang::backend_t>(") + gridName + "," +
-         RangeToString(", ", "", "")(DomainMapPlaceholders) +
-         RangeToString(", ", ", ", ")")(makeComputation);
-}
-
 void GTCodeGen::generateSyncStorages(
     MemberFunction& method,
     IndexRange<std::unordered_map<int, iir::Stencil::FieldInfo>> const& stencilFields) const {
@@ -222,7 +214,8 @@ void GTCodeGen::generateSyncStorages(
 void GTCodeGen::buildPlaceholderDefinitions(
     MemberFunction& function, std::unordered_map<int, iir::Stencil::FieldInfo> const& stencilFields,
     std::vector<std::string> const& stencilGlobalVariables,
-    std::vector<std::string> const& stencilConstructorTemplates) const {
+    std::vector<std::string> const& stencilConstructorTemplates,
+    const sir::GlobalVariableMap& globalsMap) const {
 
   const int numFields = stencilFields.size();
 
@@ -241,10 +234,8 @@ void GTCodeGen::buildPlaceholderDefinitions(
     ++accessorIdx;
   }
 
-  for(; accessorIdx < (numFields + stencilGlobalVariables.size()); ++accessorIdx) {
-    // Global variables
-    const auto& varname = stencilGlobalVariables[accessorIdx - numFields];
-    function.addTypeDef("p_" + stencilGlobalVariables[accessorIdx - numFields])
+  if(!globalsMap.empty()) {
+    function.addTypeDef("p_globals")
         .addType(c_gt() + "arg")
         .addTemplate(Twine(accessorIdx))
         .addTemplate("decltype(m_globals_gp_)");
@@ -579,21 +570,32 @@ std::string GTCodeGen::generateStencilInstantiation(
           ++accessorIdx;
         }
 
-        // Global accessor declaration
-        std::size_t maxAccessors = fields.size() + stage.getAllGlobalVariables().size();
-        for(int AccessID : stage.getAllGlobalVariables()) {
-          std::string paramName = stencilInstantiation->getNameFromAccessID(AccessID);
-
-          StageStruct.addTypeDef(paramName)
+        std::size_t maxAccessors = fields.size();
+        if(stage.hasGlobalVariables()) {
+          StageStruct.addTypeDef("globals")
               .addType(c_gt() + "global_accessor")
               .addTemplate(Twine(accessorIdx));
-          accessorIdx++;
 
-          // Generate placeholder mapping of the field in `make_stage`
-          ssMS << "p_" << paramName << "()" << (accessorIdx == maxAccessors ? "" : ", ");
-
-          arglist.push_back(std::move(paramName));
+          std::cout << "SADASD " << std::endl;
+          ssMS << "p_"
+               << "globals"
+               << "()";
+          arglist.push_back("globals");
         }
+        //        // Global accessor declaration
+        //        for(int AccessID : stage.getAllGlobalVariables()) {
+        //          std::string paramName = stencilInstantiation->getNameFromAccessID(AccessID);
+
+        //          StageStruct.addTypeDef(paramName)
+        //              .addType(c_gt() + "global_accessor")
+        //              .addTemplate(Twine(accessorIdx));
+        //          accessorIdx++;
+
+        //          // Generate placeholder mapping of the field in `make_stage`
+        //          ssMS << "p_" << paramName << "()" << (accessorIdx == maxAccessors ? "" : ", ");
+
+        //          arglist.push_back(std::move(paramName));
+        //        }
 
         ssMS << ")" << ((stageIdx != multiStage.getChildren().size() - 1) ? "," : ")");
 
@@ -715,14 +717,14 @@ std::string GTCodeGen::generateStencilInstantiation(
 
     // Generate domain
     buildPlaceholderDefinitions(StencilConstructor, StencilFields, StencilGlobalVariables,
-                                StencilConstructorTemplates);
+                                StencilConstructorTemplates, globalsMap);
 
     std::vector<std::string> ArglistPlaceholders;
     for(const auto& field : StencilFields)
       ArglistPlaceholders.push_back("p_" + field.second.Name);
-    for(const auto& var : StencilGlobalVariables)
-      ArglistPlaceholders.push_back("p_" + var);
-
+    if(!globalsMap.empty()) {
+      ArglistPlaceholders.push_back("p_globals");
+    }
     StencilConstructor.addTypeDef("domain_arg_list")
         .addType("boost::mpl::vector")
         .addTemplates(ArglistPlaceholders);
@@ -733,8 +735,9 @@ std::string GTCodeGen::generateStencilInstantiation(
       DomainMapPlaceholders.push_back(
           std::string("(p_" + (*field).second.Name + "() = " + (*field).second.Name + ")"));
     }
-    for(const auto& var : StencilGlobalVariables)
-      DomainMapPlaceholders.push_back("(p_" + var + "() = m_globals_gp_");
+    if(stencil.hasGlobalVariables()) {
+      DomainMapPlaceholders.push_back("(p_globals() = m_globals_gp_)");
+    }
 
     // Generate grid
     StencilConstructor.addComment("Grid");

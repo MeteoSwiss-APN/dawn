@@ -244,6 +244,13 @@ std::unordered_map<int, Field> Stencil::computeFieldsOnTheFly() const {
   return fields;
 }
 
+bool Stencil::hasGlobalVariables() const {
+  for(const auto& stage : iterateIIROver<Stage>(*this)) {
+    if(stage->hasGlobalVariables())
+      return true;
+  }
+  return false;
+}
 bool Stencil::compareDerivedInfo() const {
 
   auto fieldsOnTheFly = computeFieldsOnTheFly();

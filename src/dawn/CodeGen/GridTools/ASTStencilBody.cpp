@@ -24,8 +24,9 @@ namespace dawn {
 namespace codegen {
 namespace gt {
 
-ASTStencilBody::ASTStencilBody(const iir::StencilInstantiation* stencilInstantiation,
-                               const std::unordered_set<iir::IntervalProperties>& intervalProperties)
+ASTStencilBody::ASTStencilBody(
+    const iir::StencilInstantiation* stencilInstantiation,
+    const std::unordered_set<iir::IntervalProperties>& intervalProperties)
     : ASTCodeGenCXX(), instantiation_(stencilInstantiation),
       intervalProperties_(intervalProperties), offsetPrinter_(",", "(", ")"),
       currentFunction_(nullptr), nestingOfStencilFunArgLists_(0) {}
@@ -163,11 +164,11 @@ void ASTStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
     else
       ss_ << ", ";
 
-    ss_ << name << "()";
+    ss_ << "globals()";
 
-    if(!nestingOfStencilFunArgLists_)
-      ss_ << ").value";
-
+    if(!nestingOfStencilFunArgLists_) {
+      ss_ << ")." << name;
+    }
   } else {
     ss_ << name;
 

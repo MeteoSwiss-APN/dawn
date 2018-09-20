@@ -65,14 +65,13 @@ private:
       const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation);
   //  std::string generateGlobals(const std::shared_ptr<SIR>& Sir);
   std::string cacheWindowToString(const iir::Cache::window& cacheWindow);
-  std::string buildMakeComputation(std::vector<std::string> const& DomainMapPlaceholders,
-                                   std::vector<std::string> const& makeComputation,
-                                   const std::string& gridName) const;
+
   void
   buildPlaceholderDefinitions(MemberFunction& function,
                               const std::unordered_map<int, iir::Stencil::FieldInfo>& stencilFields,
                               std::vector<std::string> const& stencilGlobalVariables,
-                              std::vector<std::string> const& stencilConstructorTemplates) const;
+                              std::vector<std::string> const& stencilConstructorTemplates,
+                              const sir::GlobalVariableMap& globalsMap) const;
 
   std::string getFieldName(std::shared_ptr<sir::Field> const& f) const { return f->Name; }
 
