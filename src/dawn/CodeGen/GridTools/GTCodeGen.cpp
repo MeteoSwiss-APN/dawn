@@ -262,11 +262,9 @@ void GTCodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInsta
     setter.finishArgs();
     setter.addStatement("m_globals." + globalProp.first + "=" + globalProp.first);
 
-    if(!globalsMap.empty()) {
-      for(int i = 0; i < stencilInstantiation.getStencils().size(); ++i) {
-        // TODO need to use here and everywhere stencilID
-        setter.addStatement("m_stencil_" + std::to_string(i) + ".update_globals()");
-      }
+    for(int i = 0; i < stencilInstantiation.getStencils().size(); ++i) {
+      // TODO need to use here and everywhere stencilID
+      setter.addStatement("m_stencil_" + std::to_string(i) + ".update_globals()");
     }
 
     setter.commit();
@@ -800,10 +798,13 @@ std::string GTCodeGen::generateStencilInstantiation(
     stencilType = "computation<void>";
     StencilClass.addMember(stencilType, "m_stencil");
 
-    // update globals
-    StencilClass.addMemberFunction("void", "update_globals")
-        .addStatement(
-            "gridtools::clang::backend_t::update_global_parameter(m_globals_gp_, m_globals)");
+    if(!globalsMap.empty()) {
+
+      // update globals
+      StencilClass.addMemberFunction("void", "update_globals")
+          .addStatement(
+              "gridtools::clang::backend_t::update_global_parameter(m_globals_gp_, m_globals)");
+    }
 
     // Generate stencil getter
     StencilClass.addMemberFunction(stencilType + "*", "get_stencil")
