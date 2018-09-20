@@ -45,7 +45,6 @@ public:
 
 private:
   std::string generateStencilInstantiation(const iir::StencilInstantiation* stencilInstantiation);
-  std::string generateGlobals(const std::shared_ptr<SIR>& sir);
 };
 } // namespace cxxnaive
 } // namespace codegen

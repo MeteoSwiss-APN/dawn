@@ -576,26 +576,11 @@ std::string GTCodeGen::generateStencilInstantiation(
               .addType(c_gt() + "global_accessor")
               .addTemplate(Twine(accessorIdx));
 
-          std::cout << "SADASD " << std::endl;
           ssMS << "p_"
                << "globals"
                << "()";
           arglist.push_back("globals");
         }
-        //        // Global accessor declaration
-        //        for(int AccessID : stage.getAllGlobalVariables()) {
-        //          std::string paramName = stencilInstantiation->getNameFromAccessID(AccessID);
-
-        //          StageStruct.addTypeDef(paramName)
-        //              .addType(c_gt() + "global_accessor")
-        //              .addTemplate(Twine(accessorIdx));
-        //          accessorIdx++;
-
-        //          // Generate placeholder mapping of the field in `make_stage`
-        //          ssMS << "p_" << paramName << "()" << (accessorIdx == maxAccessors ? "" : ", ");
-
-        //          arglist.push_back(std::move(paramName));
-        //        }
 
         ssMS << ")" << ((stageIdx != multiStage.getChildren().size() - 1) ? "," : ")");
 
@@ -969,9 +954,6 @@ std::string GTCodeGen::generateStencilInstantiation(
       .addStatement("return std::string(s_name)");
 
   if(!globalsMap.empty()) {
-    for(auto g : globalsMap) {
-      std::cout << "KK " << g.first << std::endl;
-    }
     generateGlobalsAPI(StencilWrapperClass, globalsMap);
   }
 

@@ -75,6 +75,8 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
 
   Namespace cxxnaiveNamespace("cxxnaive", ssSW);
 
+  const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
+
   Class StencilWrapperClass(stencilInstantiation->getName(), ssSW);
   StencilWrapperClass.changeAccessibility("private");
 
@@ -241,6 +243,10 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
 
     StencilClass.addMember("const " + c_gtc() + "domain&", "m_dom");
 
+    if(!globalsMap.empty()) {
+      StencilClass.addMember("const globals&", "m_globals");
+    }
+
     for(auto fieldIt : nonTempFields) {
       StencilClass.addMember(StencilTemplates[fieldIt.idx()] + "&", "m_" + (*fieldIt).second.Name);
     }
@@ -252,11 +258,17 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
     auto stencilClassCtr = StencilClass.addConstructor();
 
     stencilClassCtr.addArg("const " + c_gtc() + "domain& dom_");
+    if(!globalsMap.empty()) {
+      stencilClassCtr.addArg("const globals& globals_");
+    }
     for(auto fieldIt : nonTempFields) {
       stencilClassCtr.addArg(StencilTemplates[fieldIt.idx()] + "& " + (*fieldIt).second.Name + "_");
     }
 
     stencilClassCtr.addInit("m_dom(dom_)");
+    if(!globalsMap.empty()) {
+      stencilClassCtr.addArg("m_globals(globals_)");
+    }
 
     for(auto fieldIt : nonTempFields) {
       stencilClassCtr.addInit("m_" + (*fieldIt).second.Name + "(" + (*fieldIt).second.Name + "_)");
@@ -359,6 +371,10 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
   StencilWrapperClass.addMember("static constexpr const char* s_name =",
                                 Twine("\"") + StencilWrapperClass.getName() + Twine("\""));
 
+  if(!globalsMap.empty()) {
+    StencilWrapperClass.addMember("globals", "m_globals");
+  }
+
   for(auto stencilPropertiesPair :
       codeGenProperties.stencilProperties(StencilContext::SC_Stencil)) {
     StencilWrapperClass.addMember("sbase*", "m_" + stencilPropertiesPair.second->name_);
@@ -398,6 +414,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
       StencilWrapperRunTemplates, [](const std::string& str) { return "class " + str; }));
 
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
+
   std::string ctrArgs("(dom");
   for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i) {
     StencilWrapperConstructor.addArg(
@@ -432,6 +449,9 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
     }
 
     initCtr += ">(dom";
+    if(!globalsMap.empty()) {
+      initCtr += ",m_globals";
+    }
     for(const auto& fieldInfoPair : StencilFields) {
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
@@ -453,6 +473,8 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
   }
 
   StencilWrapperConstructor.commit();
+
+  generateGlobalsAPI(StencilWrapperClass, globalsMap);
 
   // Generate the run method by generate code for the stencil description AST
   MemberFunction RunMethod = StencilWrapperClass.addMemberFunction("void", "run", "");
@@ -480,59 +502,6 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
   return str;
 }
 
-std::string CXXNaiveCodeGen::generateGlobals(std::shared_ptr<SIR> const& sir) {
-
-  const auto& globalsMap = *(sir->GlobalVariableMap);
-  if(globalsMap.empty())
-    return "";
-
-  std::stringstream ss;
-
-  Namespace cxxnaiveNamespace("cxxnaive", ss);
-
-  std::string StructName = "globals";
-  std::string BaseName = "gridtools::clang::globals_impl<" + StructName + ">";
-
-  Struct GlobalsStruct(StructName + ": public " + BaseName, ss);
-  GlobalsStruct.addTypeDef("base_t").addType("gridtools::clang::globals_impl<globals>");
-
-  for(const auto& globalsPair : globalsMap) {
-    sir::Value& value = *globalsPair.second;
-    std::string Name = globalsPair.first;
-    std::string Type = sir::Value::typeToString(value.getType());
-    std::string AdapterBase = std::string("base_t::variable_adapter_impl") + "<" + Type + ">";
-
-    Structure AdapterStruct = GlobalsStruct.addStructMember(Name + "_adapter", Name, AdapterBase);
-    AdapterStruct.addConstructor().addArg("").addInit(
-        AdapterBase + "(" + Type + "(" + (value.empty() ? std::string() : value.toString()) + "))");
-
-    auto AssignmentOperator =
-        AdapterStruct.addMemberFunction(Name + "_adapter&", "operator=", "class ValueType");
-    AssignmentOperator.addArg("ValueType&& value");
-    if(value.isConstexpr())
-      AssignmentOperator.addStatement(
-          "throw std::runtime_error(\"invalid assignment to constant variable '" + Name + "'\")");
-    else
-      AssignmentOperator.addStatement("get_value() = value");
-    AssignmentOperator.addStatement("return *this");
-    AssignmentOperator.commit();
-  }
-
-  GlobalsStruct.commit();
-
-  // Add the symbol for the singleton
-  codegen::Statement(ss) << "template<> " << StructName << "* " << BaseName
-                         << "::s_instance = nullptr";
-
-  cxxnaiveNamespace.commit();
-
-  // Remove trailing ';' as this is retained by Clang's Rewriter
-  std::string str = ss.str();
-  str[str.size() - 2] = ' ';
-
-  return str;
-}
-
 std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
   DAWN_LOG(INFO) << "Starting code generation for GTClang ...";
 
@@ -545,7 +514,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
   }
 
-  std::string globals = generateGlobals(context_->getSIR());
+  std::string globals = generateGlobals(context_->getSIR(), "cxxnaive");
 
   std::vector<std::string> ppDefines;
   auto makeDefine = [](std::string define, int value) {
