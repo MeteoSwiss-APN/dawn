@@ -853,16 +853,17 @@ std::string GTCodeGen::generateStencilInstantiation(
   StencilWrapperClass.addMember("static constexpr const char* s_name =",
                                 Twine("\"") + StencilWrapperClass.getName() + Twine("\""));
 
+  // globals member
+  if(!globalsMap.empty()) {
+    StencilWrapperClass.addMember("globals", "m_globals");
+  }
+
   // Stencil members
   StencilWrapperClass.addComment("Members representing all the stencils that are called");
   std::vector<std::string> stencilMembers;
   for(std::size_t i = 0; i < stencils.size(); ++i) {
     StencilWrapperClass.addMember("stencil_" + Twine(i), "m_stencil_" + Twine(i));
     stencilMembers.emplace_back("m_stencil_" + std::to_string(i));
-  }
-
-  if(!globalsMap.empty()) {
-    StencilWrapperClass.addMember("globals", "m_globals");
   }
 
   StencilWrapperClass.changeAccessibility("public");
