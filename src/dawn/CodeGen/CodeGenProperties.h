@@ -95,8 +95,14 @@ public:
   std::shared_ptr<StencilProperties> getStencilProperties(StencilContext context,
                                                           const std::string name);
 
+  const std::shared_ptr<StencilProperties>& getStencilProperties(StencilContext context,
+                                                                 const std::string name) const;
+
   /// @brief stencil properties getter
   std::shared_ptr<StencilProperties> getStencilProperties(StencilContext context, const int id);
+
+  const std::shared_ptr<StencilProperties>& getStencilProperties(StencilContext context,
+                                                                 const int id) const;
 
   /// @brief get all the stencil properties
   const std::unordered_map<std::string, std::shared_ptr<StencilProperties>>&

@@ -75,8 +75,20 @@ std::shared_ptr<StencilProperties> CodeGenProperties::getStencilProperties(Stenc
   return stencilContextProperties_[static_cast<int>(context)].stencilProps_[name];
 }
 
+const std::shared_ptr<StencilProperties>&
+CodeGenProperties::getStencilProperties(StencilContext context, const std::string name) const {
+  DAWN_ASSERT_MSG(stencilContextProperties_[static_cast<int>(context)].stencilProps_.count(name),
+                  "stencil name not found");
+  return stencilContextProperties_.at(static_cast<int>(context)).stencilProps_.at(name);
+}
+
 std::shared_ptr<StencilProperties> CodeGenProperties::getStencilProperties(StencilContext context,
                                                                            const int id) {
+  return getStencilProperties(context, getStencilName(context, id));
+}
+
+const std::shared_ptr<StencilProperties>&
+CodeGenProperties::getStencilProperties(StencilContext context, const int id) const {
   return getStencilProperties(context, getStencilName(context, id));
 }
 
