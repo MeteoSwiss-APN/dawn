@@ -83,7 +83,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
   // Generate stencils
   const auto& stencils = stencilInstantiation->getStencils();
 
-  CodeGenProperties codeGenProperties;
+  CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation);
 
   // stencil functions
   //
@@ -95,8 +95,6 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
     std::string stencilFunName = iir::StencilFunctionInstantiation::makeCodeGenName(*stencilFun);
     if(generatedStencilFun.emplace(stencilFunName).second) {
 
-      auto stencilProperties =
-          codeGenProperties.insertStencil(StencilContext::SC_StencilFunction, idx, stencilFunName);
       // Field declaration
       const auto& fields = stencilFun->getCalleeFields();
 
@@ -135,19 +133,20 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
       stencilFunMethod.addArg("const int j");
       stencilFunMethod.addArg("const int k");
 
-      auto& paramNameToType = stencilProperties->paramNameToType_;
-      for(std::size_t m = 0; m < fields.size(); ++m) {
-
-        std::string paramName =
-            stencilFun->getOriginalNameFromCallerAccessID(fields[m].getAccessID());
-        paramNameToType.emplace(paramName, stencilFnTemplates[m]);
-
+      const auto& stencilProp = codeGenProperties.getStencilProperties(
+          StencilContext::SC_StencilFunction, stencilFunName);
+      for(const auto& param : stencilProp->paramNameToType_) {
         // each parameter being passed to a stencil function, is wrapped around the param_wrapper
         // that contains the storage and the offset, in order to resolve offset passed to the
         // storage during the function call. For example:
         // fn_call(v(i+1), v(j-1))
-        stencilFunMethod.addArg("param_wrapper<" + c_gt() + "data_view<StorageType" +
-                                std::to_string(m) + ">> pw_" + paramName);
+        stencilFunMethod.addArg("param_wrapper<" + c_gt() + "data_view<" + param.second + ">> pw_" +
+                                param.first);
+      }
+      for(std::size_t m = 0; m < fields.size(); ++m) {
+
+        std::string paramName =
+            stencilFun->getOriginalNameFromCallerAccessID(fields[m].getAccessID());
       }
 
       ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation,
@@ -194,9 +193,8 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
   for(std::size_t stencilIdx = 0; stencilIdx < stencils.size(); ++stencilIdx) {
     const auto& stencil = *stencils[stencilIdx];
 
-    std::string stencilName = "stencil_" + std::to_string(stencilIdx);
-    auto stencilProperties = codeGenProperties.insertStencil(StencilContext::SC_Stencil,
-                                                             stencil.getStencilID(), stencilName);
+    std::string stencilName =
+        codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
 
     if(stencil.isEmpty())
       continue;
@@ -224,16 +222,6 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
           return "class " + str;
         }), "sbase");
     std::string StencilName = StencilClass.getName();
-
-    auto& paramNameToType = stencilProperties->paramNameToType_;
-
-    for(auto fieldIt : nonTempFields) {
-      paramNameToType.emplace((*fieldIt).second.Name, StencilTemplates[fieldIt.idx()]);
-    }
-
-    for(auto fieldIt : tempFields) {
-      paramNameToType.emplace((*fieldIt).second.Name, c_gtc().str() + "storage_t");
-    }
 
     ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, StencilContext::SC_Stencil);
 
@@ -404,14 +392,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
                std::back_inserter(SIRFieldsWithoutTemps),
                [](std::shared_ptr<sir::Field> const& f) { return !(f->IsTemporary); });
 
-  std::vector<std::string> StencilWrapperRunTemplates;
-  for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i) {
-    StencilWrapperRunTemplates.push_back("StorageType" + std::to_string(i + 1));
-    codeGenProperties.insertParam(i, SIRFieldsWithoutTemps[i]->Name, StencilWrapperRunTemplates[i]);
-  }
-
-  auto StencilWrapperConstructor = StencilWrapperClass.addConstructor(RangeToString(", ", "", "")(
-      StencilWrapperRunTemplates, [](const std::string& str) { return "class " + str; }));
+  auto StencilWrapperConstructor = StencilWrapperClass.addConstructor();
 
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
 

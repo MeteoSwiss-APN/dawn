@@ -33,6 +33,14 @@ void CodeGenProperties::setParamBC(std::string name) {
 
 bool CodeGenProperties::isParamBC(std::string name) const { return paramBC_.count(name); }
 
+std::string CodeGenProperties::getParamType(
+    const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
+    const iir::Stencil::FieldInfo& field) const {
+  return (stencilInstantiation->isAllocatedField(field.field.getAccessID()) || field.IsTemporary)
+             ? "storage_t"
+             : getParamType(field.Name);
+}
+
 std::string CodeGenProperties::getParamType(const std::string paramName) const {
   DAWN_ASSERT_MSG(paramNameToType_.count(paramName),
                   std::string("parameter " + paramName + " not found").c_str());

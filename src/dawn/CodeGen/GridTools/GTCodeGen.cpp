@@ -212,10 +212,11 @@ void GTCodeGen::generateSyncStorages(
 }
 
 void GTCodeGen::buildPlaceholderDefinitions(
-    MemberFunction& function, std::unordered_map<int, iir::Stencil::FieldInfo> const& stencilFields,
+    MemberFunction& function,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    std::unordered_map<int, iir::Stencil::FieldInfo> const& stencilFields,
     std::vector<std::string> const& stencilGlobalVariables,
-    std::vector<std::string> const& stencilConstructorTemplates,
-    const sir::GlobalVariableMap& globalsMap) const {
+    const sir::GlobalVariableMap& globalsMap, const CodeGenProperties& codeGenProperties) const {
 
   const int numFields = stencilFields.size();
 
@@ -226,8 +227,7 @@ void GTCodeGen::buildPlaceholderDefinitions(
     function.addTypeDef("p_" + fieldInfo.Name)
         .addType(c_gt() + (fieldInfo.IsTemporary ? "tmp_arg" : "arg"))
         .addTemplate(Twine(accessorIdx))
-        .addTemplate(fieldInfo.IsTemporary ? "storage_t"
-                                           : stencilConstructorTemplates[nonTempFieldId]);
+        .addTemplate(codeGenProperties.getParamType(stencilInstantiation, fieldInfo));
     if(!fieldInfo.IsTemporary) {
       nonTempFieldId++;
     }
@@ -894,14 +894,8 @@ void GTCodeGen::generateStencilClasses(
 
     mplContainerMaxSize_ = std::max(mplContainerMaxSize_, numFields);
 
-    std::vector<std::string> StencilConstructorTemplates;
-    for(int i = 0; i < nonTempFields.size(); ++i) {
-      StencilConstructorTemplates.push_back("S" + std::to_string(i));
-    }
-
     // Generate constructor
-    auto StencilConstructor = StencilClass.addConstructor(RangeToString(", ", "", "")(
-        StencilConstructorTemplates, [](const std::string& str) { return "class " + str; }));
+    auto StencilConstructor = StencilClass.addConstructor();
 
     StencilConstructor.addArg("const gridtools::clang::domain& dom");
     if(!globalsMap.empty()) {
@@ -909,7 +903,9 @@ void GTCodeGen::generateStencilClasses(
     }
     int index = 0;
     for(auto field : nonTempFields) {
-      StencilConstructor.addArg(StencilConstructorTemplates[index] + " " + (*field).second.Name);
+      StencilConstructor.addArg(
+          codeGenProperties.getParamType(stencilInstantiation, (*field).second) + " " +
+          (*field).second.Name);
       index++;
     }
 
@@ -937,7 +933,7 @@ void GTCodeGen::generateStencilClasses(
         // ===-----------------------------------------------------------------------------------===
         for(int dim = 0; dim < ext.getSize() - 1; ++dim) {
           std::string at_call = "template at<" + std::to_string(dim) + ">()";
-          std::string storage = StencilConstructorTemplates[nonTempFieldId];
+          std::string storage = codeGenProperties.getParamType(stencilInstantiation, fieldInfo);
           // assert for + accesses
           // ===---------------------------------------------------------------------------------===
           // PRODUCTIONTODO: [STAGGERING]
@@ -962,8 +958,8 @@ void GTCodeGen::generateStencilClasses(
     }
 
     // Generate domain
-    buildPlaceholderDefinitions(StencilConstructor, StencilFields, StencilGlobalVariables,
-                                StencilConstructorTemplates, globalsMap);
+    buildPlaceholderDefinitions(StencilConstructor, stencilInstantiation, StencilFields,
+                                StencilGlobalVariables, globalsMap, codeGenProperties);
 
     std::vector<std::string> ArglistPlaceholders;
     for(const auto& field : StencilFields)

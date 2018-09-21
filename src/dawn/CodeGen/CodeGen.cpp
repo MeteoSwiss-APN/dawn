@@ -110,11 +110,16 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
       // Field declaration
       const auto& fields = stencilFun->getCalleeFields();
 
+      // list of template names of the stencil function declaration
+      std::vector<std::string> stencilFnTemplates(fields.size());
+      int n = 0;
+      std::generate(stencilFnTemplates.begin(), stencilFnTemplates.end(),
+                    [n]() mutable { return "StorageType" + std::to_string(n++); });
+
+      int m = 0;
       for(const auto& field : fields) {
         std::string paramName = stencilFun->getOriginalNameFromCallerAccessID(field.getAccessID());
-        paramNameToType.emplace(
-            paramName,
-            getStorageType(stencilInstantiation->getFieldDimensionsMask(field.getAccessID())));
+        paramNameToType.emplace(paramName, stencilFnTemplates[m++]);
       }
     }
     idx++;

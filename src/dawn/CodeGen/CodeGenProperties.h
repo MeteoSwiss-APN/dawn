@@ -16,6 +16,8 @@
 #define DAWN_CODEGEN_CODEGENPROPERTIES_H
 
 #include "dawn/Support/Assert.h"
+#include "dawn/IIR/Stencil.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -105,6 +107,10 @@ public:
 
   /// @brief get parameter
   const std::unordered_map<std::string, std::string>& getParameterNameToType() const;
+
+  /// @brief get the parameter type
+  std::string getParamType(const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
+                           const iir::Stencil::FieldInfo& field) const;
 
 private:
   std::shared_ptr<StencilProperties> insertStencil(Impl& impl, const size_t id,
