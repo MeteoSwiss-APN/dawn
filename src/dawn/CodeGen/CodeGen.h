@@ -69,6 +69,9 @@ public:
   static std::string getStorageType(const iir::Stencil::FieldInfo& field);
   static std::string getStorageType(Array3i dimensions);
 
+  CodeGenProperties
+  computeCodeGenProperties(const iir::StencilInstantiation* stencilInstantiation) const;
+
   virtual void generateGlobalsAPI(const iir::StencilInstantiation& stencilInstantiation,
                                   Class& stencilWrapperClass,
                                   const sir::GlobalVariableMap& globalsMap,

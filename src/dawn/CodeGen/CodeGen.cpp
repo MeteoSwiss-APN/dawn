@@ -93,6 +93,86 @@ void CodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInstant
   }
 }
 
+CodeGenProperties
+CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstantiation) const {
+  CodeGenProperties codeGenProperties;
+
+  int idx = 0;
+  std::unordered_set<std::string> generatedStencilFun;
+  for(const auto& stencilFun : stencilInstantiation->getStencilFunctionInstantiations()) {
+    std::string stencilFunName = iir::StencilFunctionInstantiation::makeCodeGenName(*stencilFun);
+
+    if(generatedStencilFun.emplace(stencilFunName).second) {
+      auto stencilProperties =
+          codeGenProperties.insertStencil(StencilContext::SC_StencilFunction, idx, stencilFunName);
+      auto& paramNameToType = stencilProperties->paramNameToType_;
+
+      // Field declaration
+      const auto& fields = stencilFun->getCalleeFields();
+
+      for(const auto& field : fields) {
+        std::string paramName = stencilFun->getOriginalNameFromCallerAccessID(field.getAccessID());
+        paramNameToType.emplace(
+            paramName,
+            getStorageType(stencilInstantiation->getFieldDimensionsMask(field.getAccessID())));
+      }
+    }
+    idx++;
+  }
+  for(const auto& stencil : stencilInstantiation->getStencils()) {
+    std::string stencilName = "stencil_" + std::to_string(stencil->getStencilID());
+    auto stencilProperties = codeGenProperties.insertStencil(StencilContext::SC_Stencil,
+                                                             stencil->getStencilID(), stencilName);
+    auto& paramNameToType = stencilProperties->paramNameToType_;
+
+    // fields used in the stencil
+    const auto& StencilFields = stencil->getFields();
+
+    auto nonTempFields = makeRange(
+        StencilFields,
+        std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>([](
+            std::pair<int, iir::Stencil::FieldInfo> const& p) { return !p.second.IsTemporary; }));
+    auto tempFields = makeRange(
+        StencilFields,
+        std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
+            [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
+
+    // list of template for storages used in the stencil class
+    std::vector<std::string> StencilTemplates(nonTempFields.size());
+    int cnt = 0;
+    std::generate(StencilTemplates.begin(), StencilTemplates.end(),
+                  [cnt]() mutable { return "StorageType" + std::to_string(cnt++); });
+
+    for(auto fieldIt : nonTempFields) {
+      paramNameToType.emplace((*fieldIt).second.Name, getStorageType((*fieldIt).second.Dimensions));
+    }
+
+    for(auto fieldIt : tempFields) {
+      paramNameToType.emplace((*fieldIt).second.Name, c_gtc().str() + "storage_t");
+    }
+  }
+
+  int i = 0;
+  for(const auto& fieldID : stencilInstantiation->getAPIFieldIDs()) {
+    codeGenProperties.insertParam(
+        i, stencilInstantiation->getNameFromAccessID(fieldID),
+        getStorageType(stencilInstantiation->getFieldDimensionsMask(fieldID)));
+    ++i;
+  }
+  for(auto usedBoundaryCondition : stencilInstantiation->getBoundaryConditions()) {
+    for(const auto& field : usedBoundaryCondition.second->getFields()) {
+      codeGenProperties.setParamBC(field->Name);
+    }
+  }
+  if(stencilInstantiation->hasAllocatedFields()) {
+    for(int accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
+      codeGenProperties.insertAllocateField(stencilInstantiation->getNameFromAccessID(accessID));
+    }
+  }
+
+  return codeGenProperties;
+}
+
 std::string CodeGen::getStorageType(Array3i dimensions) {
   std::string storageType = "storage_";
   storageType += dimensions[0] ? "i" : "";

@@ -319,29 +319,7 @@ std::string GTCodeGen::generateStencilInstantiation(
   const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
   const auto& stencils = stencilInstantiation->getStencils();
 
-  CodeGenProperties codeGenProperties;
-  int i = 0;
-  for(const auto& fieldID : stencilInstantiation->getAPIFieldIDs()) {
-    codeGenProperties.insertParam(
-        i, stencilInstantiation->getNameFromAccessID(fieldID),
-        getStorageType(stencilInstantiation->getFieldDimensionsMask(fieldID)));
-    ++i;
-  }
-  for(auto usedBoundaryCondition : stencilInstantiation->getBoundaryConditions()) {
-    for(const auto& field : usedBoundaryCondition.second->getFields()) {
-      codeGenProperties.setParamBC(field->Name);
-    }
-  }
-  if(stencilInstantiation->hasAllocatedFields()) {
-    for(int accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
-      codeGenProperties.insertAllocateField(stencilInstantiation->getNameFromAccessID(accessID));
-    }
-  }
-
-  for(const auto& stencil : stencils) {
-    codeGenProperties.insertStencil(StencilContext::SC_Stencil, stencil->getStencilID(),
-                                    "stencil_" + std::to_string(stencil->getStencilID()));
-  }
+  CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
 
   generateStencilClasses(stencilInstantiation, StencilWrapperClass, codeGenProperties);
 
@@ -445,8 +423,6 @@ std::string GTCodeGen::generateStencilInstantiation(
             return fieldInfo.Name;
         });
   }
-
-  StencilWrapperConstructor.commit();
 
   // Generate the run method by generate code for the stencil description AST
   MemberFunction RunMethod = StencilWrapperClass.addMemberFunction("void", "run");
