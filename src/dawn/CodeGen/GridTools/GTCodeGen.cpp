@@ -328,32 +328,38 @@ std::string GTCodeGen::generateStencilInstantiation(
   StencilWrapperClass.changeAccessibility("public");
   StencilWrapperClass.addCopyConstructor(Class::Deleted);
 
-  // Generate stencil wrapper constructor
-  auto SIRFieldsWithoutTemps = stencilInstantiation->getSIRStencil()->Fields;
-  for(auto it = SIRFieldsWithoutTemps.begin(); it != SIRFieldsWithoutTemps.end();)
-    if((*it)->IsTemporary)
-      it = SIRFieldsWithoutTemps.erase(it);
-    else
-      ++it;
+  //  // Generate stencil wrapper constructor
+  //  auto SIRFieldsWithoutTemps = stencilInstantiation->getSIRStencil()->Fields;
+  //  for(auto it = SIRFieldsWithoutTemps.begin(); it != SIRFieldsWithoutTemps.end();)
+  //    if((*it)->IsTemporary)
+  //      it = SIRFieldsWithoutTemps.erase(it);
+  //    else
+  //      ++it;
 
-  std::vector<std::pair<std::string, std::string>> StencilWrapperConstructorArguments;
-  for(int accessorIdx = 0; accessorIdx < SIRFieldsWithoutTemps.size(); ++accessorIdx) {
-    std::string storageType = getStorageType(*(SIRFieldsWithoutTemps[accessorIdx]));
-    StencilWrapperConstructorArguments.emplace_back(storageType,
-                                                    SIRFieldsWithoutTemps[accessorIdx]->Name);
-  }
+  //  std::vector<std::pair<std::string, std::string>> StencilWrapperConstructorArguments;
+  //  for(int accessorIdx = 0; accessorIdx < SIRFieldsWithoutTemps.size(); ++accessorIdx) {
+  //    std::string storageType = getStorageType(*(SIRFieldsWithoutTemps[accessorIdx]));
+  //    StencilWrapperConstructorArguments.emplace_back(storageType,
+  //                                                    SIRFieldsWithoutTemps[accessorIdx]->Name);
+  //  }
 
-  std::vector<std::string> StencilWrapperConstructorTemplates;
-  for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i)
-    StencilWrapperConstructorTemplates.push_back("S" + std::to_string(i + 1));
+  //  std::vector<std::string> StencilWrapperConstructorTemplates;
+  //  for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i)
+  //    StencilWrapperConstructorTemplates.push_back("S" + std::to_string(i + 1));
 
   auto StencilWrapperConstructor = StencilWrapperClass.addConstructor();
   //      }));
 
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
-  for(const auto& FieldStorage : StencilWrapperConstructorArguments) {
-    StencilWrapperConstructor.addArg(FieldStorage.first + " " + FieldStorage.second);
+
+  for(const auto& fieldID : stencilInstantiation->getAPIFieldIDs()) {
+    std::string name = stencilInstantiation->getNameFromAccessID(fieldID);
+    StencilWrapperConstructor.addArg(codeGenProperties.getParamType(name) + " " + name);
   }
+
+  //  for(const auto& FieldStorage : StencilWrapperConstructorArguments) {
+  //    StencilWrapperConstructor.addArg(FieldStorage.first + " " + FieldStorage.second);
+  //  }
 
   // Initialize allocated fields
   if(stencilInstantiation->hasAllocatedFields()) {
