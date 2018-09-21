@@ -22,12 +22,10 @@ namespace dawn {
 namespace codegen {
 namespace gt {
 
-ASTStencilDesc::ASTStencilDesc(
-    const std::shared_ptr<iir::StencilInstantiation> instantiation,
-    const std::unordered_map<int, std::vector<std::string>>& StencilIDToStencilNameMap,
-    const std::unordered_map<int, std::string>& stencilIdToArguments)
-    : ASTCodeGenCXX(), instantiation_(instantiation),
-      StencilIDToStencilNameMap_(StencilIDToStencilNameMap),
+ASTStencilDesc::ASTStencilDesc(const std::shared_ptr<iir::StencilInstantiation> instantiation,
+                               const CodeGenProperties& codeGenProperties,
+                               const std::unordered_map<int, std::string>& stencilIdToArguments)
+    : ASTCodeGenCXX(), instantiation_(instantiation), codeGenProperties_(codeGenProperties),
       stencilIdToArguments_(stencilIdToArguments) {}
 
 ASTStencilDesc::~ASTStencilDesc() {}
@@ -61,9 +59,9 @@ void ASTStencilDesc::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) 
 void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
   int StencilID = instantiation_->getStencilCallToStencilIDMap().find(stmt)->second;
 
-  for(const std::string& stencilName : StencilIDToStencilNameMap_.find(StencilID)->second) {
-    ss_ << std::string(indent_, ' ') << stencilName << ".get_stencil()->run();\n";
-  }
+  std::string stencilName =
+      codeGenProperties_.getStencilName(StencilContext::SC_Stencil, StencilID);
+  ss_ << std::string(indent_, ' ') << "m_" << stencilName << ".get_stencil()->run();\n";
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
@@ -74,7 +72,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stm
   int haloJPlus = abs(extents[1].Plus);
   int haloKMinus = abs(extents[2].Minus);
   int haloKPlus = abs(extents[2].Plus);
-  std::string fieldname = stmt->getFields()[0]->Name;
+  std::string fieldname = "m_" + stmt->getFields()[0]->Name;
 
   // Set up the halos
   std::string halosetup = dawn::format(
@@ -99,14 +97,14 @@ void ASTStencilDesc::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stm
 
   // Create the views for the fields
   for(int i = 0; i < stmt->getFields().size(); ++i) {
-    auto fieldName = stmt->getFields()[i]->Name;
+    auto fieldName = "m_" + stmt->getFields()[i]->Name;
     makeView +=
         dawn::format("auto %s_view = GT_BACKEND_DECISION_viewmaker(%s);\n", fieldName, fieldName);
   }
   std::string bcapply = "GT_BACKEND_DECISION_bcapply<" + stmt->getFunctor() + " >(halos, " +
                         stmt->getFunctor() + "()).apply(";
   for(int i = 0; i < stmt->getFields().size(); ++i) {
-    bcapply += stmt->getFields()[i]->Name + "_view";
+    bcapply += "m_" + stmt->getFields()[i]->Name + "_view";
     if(i < stmt->getFields().size() - 1) {
       bcapply += ", ";
     }

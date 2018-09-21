@@ -16,6 +16,7 @@
 #define DAWN_CODEGEN_GRIDTOOLS_GTCODEGEN_H
 
 #include "dawn/CodeGen/CodeGen.h"
+#include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/IIR/Interval.h"
 #include <set>
 #include <unordered_map>
@@ -62,7 +63,7 @@ public:
 
 private:
   std::string generateStencilInstantiation(
-      const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation);
+      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
   //  std::string generateGlobals(const std::shared_ptr<SIR>& Sir);
   std::string cacheWindowToString(const iir::Cache::window& cacheWindow);
 
@@ -82,8 +83,17 @@ private:
   bool isTemporary(iir::Stencil::FieldInfo const& f) const { return f.IsTemporary; }
 
   void generateGlobalsAPI(const iir::StencilInstantiation& stencilInstantiation,
-                          Class& stencilWrapperClass,
-                          const sir::GlobalVariableMap& globalsMap) const override;
+                          Class& stencilWrapperClass, const sir::GlobalVariableMap& globalsMap,
+                          const CodeGenProperties& codeGenProperties) const override;
+
+  void generateStencilWrapperMembers(
+      Class& stencilWrapperClass,
+      const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
+      CodeGenProperties& codeGenProperties);
+
+  void
+  generateStencilClasses(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                         Class& stencilWrapperClass, CodeGenProperties& codeGenProperties);
 
   /// code generate sync methods statements for all the fields passed
   void generateSyncStorages(

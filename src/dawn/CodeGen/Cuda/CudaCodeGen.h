@@ -82,7 +82,8 @@ private:
                                  const iir::StencilInstantiation* stencilInstantiation,
                                  const CodeGenProperties& codeGenProperties) const;
   void generateStencilWrapperMembers(Class& stencilWrapperClass,
-                                     const iir::StencilInstantiation* stencilInstantiation) const;
+                                     const iir::StencilInstantiation* stencilInstantiation,
+                                     CodeGenProperties& codeGenProperties) const;
 
   void generateStencilWrapperRun(Class& stencilWrapperClass,
                                  const iir::StencilInstantiation* stencilInstantiation,

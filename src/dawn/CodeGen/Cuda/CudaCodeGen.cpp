@@ -394,6 +394,8 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
 
   Namespace cudaNamespace("cuda", ssSW);
 
+  // TODO missing the BC
+
   generateAllCudaKernels(ssSW, stencilInstantiation);
 
   Class StencilWrapperClass(stencilInstantiation->getName(), ssSW);
@@ -415,23 +417,12 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
 
   generateStencilClasses(stencilInstantiation, StencilWrapperClass, codeGenProperties);
 
-  StencilWrapperClass.addMember("static constexpr const char* s_name =",
-                                Twine("\"") + StencilWrapperClass.getName() + Twine("\""));
-
-  for(auto stencilPropertiesPair :
-      codeGenProperties.stencilProperties(StencilContext::SC_Stencil)) {
-    StencilWrapperClass.addMember("sbase*", "m_" + stencilPropertiesPair.second->name_);
-  }
-
-  StencilWrapperClass.changeAccessibility("public");
-  StencilWrapperClass.addCopyConstructor(Class::Deleted);
-
-  generateStencilWrapperMembers(StencilWrapperClass, stencilInstantiation);
+  generateStencilWrapperMembers(StencilWrapperClass, stencilInstantiation, codeGenProperties);
 
   generateStencilWrapperCtr(StencilWrapperClass, stencilInstantiation, codeGenProperties);
 
   if(!globalsMap.empty()) {
-    generateGlobalsAPI(*stencilInstantiation, StencilWrapperClass, globalsMap);
+    generateGlobalsAPI(*stencilInstantiation, StencilWrapperClass, globalsMap, codeGenProperties);
   }
 
   generateStencilWrapperRun(StencilWrapperClass, stencilInstantiation, codeGenProperties);
@@ -647,9 +638,21 @@ void CudaCodeGen::generateStencilWrapperCtr(Class& stencilWrapperClass,
 }
 
 void CudaCodeGen::generateStencilWrapperMembers(
-    Class& stencilWrapperClass, const iir::StencilInstantiation* stencilInstantiation) const {
+    Class& stencilWrapperClass, const iir::StencilInstantiation* stencilInstantiation,
+    CodeGenProperties& codeGenProperties) const {
 
   const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
+
+  stencilWrapperClass.addMember("static constexpr const char* s_name =",
+                                Twine("\"") + stencilWrapperClass.getName() + Twine("\""));
+
+  for(auto stencilPropertiesPair :
+      codeGenProperties.stencilProperties(StencilContext::SC_Stencil)) {
+    stencilWrapperClass.addMember("sbase*", "m_" + stencilPropertiesPair.second->name_);
+  }
+
+  stencilWrapperClass.changeAccessibility("public");
+  stencilWrapperClass.addCopyConstructor(Class::Deleted);
 
   stencilWrapperClass.addComment("Members");
   //
@@ -945,6 +948,7 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
   CodeGen::addMplIfdefs(ppDefines, 30, context_->getOptions().MaxHaloPoints);
   DAWN_LOG(INFO) << "Done generating code";
 
+  // TODO missing the BC
   return make_unique<TranslationUnit>(context_->getSIR()->Filename, std::move(ppDefines),
                                       std::move(stencils), std::move(globals));
 }

@@ -474,7 +474,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
 
   StencilWrapperConstructor.commit();
 
-  generateGlobalsAPI(*stencilInstantiation, StencilWrapperClass, globalsMap);
+  generateGlobalsAPI(*stencilInstantiation, StencilWrapperClass, globalsMap, codeGenProperties);
 
   // Generate the run method by generate code for the stencil description AST
   MemberFunction RunMethod = StencilWrapperClass.addMemberFunction("void", "run", "");

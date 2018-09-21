@@ -16,6 +16,7 @@
 #define DAWN_CODEGEN_GRIDTOOLS_ASTSTENCILDESC_H
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
+#include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>
 #include <unordered_map>
@@ -36,14 +37,14 @@ protected:
   const std::shared_ptr<iir::StencilInstantiation> instantiation_;
 
   /// StencilID to the name of the generated stencils for this ID
-  const std::unordered_map<int, std::vector<std::string>>& StencilIDToStencilNameMap_;
+  const CodeGenProperties& codeGenProperties_;
   const std::unordered_map<int, std::string>& stencilIdToArguments_;
 
 public:
   using Base = ASTCodeGenCXX;
 
   ASTStencilDesc(const std::shared_ptr<iir::StencilInstantiation> instantiation,
-                 const std::unordered_map<int, std::vector<std::string>>& StencilIDToStencilNameMap,
+                 const CodeGenProperties& codeGenProperties,
                  const std::unordered_map<int, std::string>& stencilIdToArguments);
 
   virtual ~ASTStencilDesc();

@@ -18,6 +18,8 @@
 #include "dawn/Support/Assert.h"
 #include <memory>
 #include <unordered_map>
+#include <vector>
+#include <set>
 
 namespace dawn {
 namespace codegen {
@@ -44,16 +46,37 @@ class CodeGenProperties {
 
   // map of parameter name to its type
   std::unordered_map<std::string, std::string> paramNameToType_;
+  // set of fields that are used as boundary conditions
+  std::set<std::string> paramBC_;
   // map of parameter position to its name
   std::unordered_map<size_t, std::string> paramPositionIdxToName_;
+
+  // set of fields allocate by the stencil wrapper
+  std::set<std::string> allocatedFields_;
 
   // array stencil properties. The elements of the array corresponds to
   // SC_Stencil and SC_StencilFunction
   std::array<Impl, 2> stencilContextProperties_;
 
 public:
+  /// @brief mark a specific parameter as boundary condition param. Note the parameter should have
+  /// been inserted
+  void setParamBC(std::string name);
+
+  /// @brief true if the parameter is also a BC field
+  bool isParamBC(std::string name) const;
+
   /// @brief insert a parameter in the mapping data structures
   void insertParam(const size_t paramPosition, std::string paramName, std::string paramType);
+
+  /// @brief insert the name of an allocated field
+  void insertAllocateField(std::string name);
+
+  /// @brief get the set of allocated fields
+  std::set<std::string> getAllocatedFields() const;
+
+  /// @brief true if stencil has allocated fields
+  bool hasAllocatedFields() const;
 
   /// @brief get the type associate to parameter with name paramName
   std::string getParamType(const std::string paramName) const;
@@ -73,8 +96,15 @@ public:
   /// @brief stencil properties getter
   std::shared_ptr<StencilProperties> getStencilProperties(StencilContext context, const int id);
 
+  /// @brief get all the stencil properties
+  const std::unordered_map<std::string, std::shared_ptr<StencilProperties>>&
+  getAllStencilProperties(StencilContext context) const;
+
   /// @brief stencil name getter
   std::string getStencilName(StencilContext context, const size_t id) const;
+
+  /// @brief get parameter
+  const std::unordered_map<std::string, std::string>& getParameterNameToType() const;
 
 private:
   std::shared_ptr<StencilProperties> insertStencil(Impl& impl, const size_t id,

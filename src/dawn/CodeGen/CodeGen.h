@@ -17,6 +17,7 @@
 
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/TranslationUnit.h"
+#include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/IndexRange.h"
 #include <memory>
@@ -70,7 +71,8 @@ public:
 
   virtual void generateGlobalsAPI(const iir::StencilInstantiation& stencilInstantiation,
                                   Class& stencilWrapperClass,
-                                  const sir::GlobalVariableMap& globalsMap) const;
+                                  const sir::GlobalVariableMap& globalsMap,
+                                  const CodeGenProperties& codeGenProperties) const;
   virtual std::string generateGlobals(std::shared_ptr<SIR> const& sir,
                                       std::string namespace_) const;
 };
