@@ -469,7 +469,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
     for(auto accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
       tempFields.push_back(stencilInstantiation->getNameFromAccessID(accessID));
     }
-    addTmpStorageInit_wrapper(StencilWrapperConstructor, stencils, tempFields);
+    addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
   }
 
   StencilWrapperConstructor.commit();

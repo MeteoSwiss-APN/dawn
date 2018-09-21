@@ -399,9 +399,6 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
   Class StencilWrapperClass(stencilInstantiation->getName(), ssSW);
   StencilWrapperClass.changeAccessibility("public");
 
-  // Generate stencils
-  const auto& stencils = stencilInstantiation->getStencils();
-
   CodeGenProperties codeGenProperties;
 
   // generate code for base class of all the inner stencils
@@ -413,6 +410,48 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
   sbaseVdtor.startBody();
   sbaseVdtor.commit();
   sbase.commit();
+
+  const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
+
+  generateStencilClasses(stencilInstantiation, StencilWrapperClass, codeGenProperties);
+
+  StencilWrapperClass.addMember("static constexpr const char* s_name =",
+                                Twine("\"") + StencilWrapperClass.getName() + Twine("\""));
+
+  for(auto stencilPropertiesPair :
+      codeGenProperties.stencilProperties(StencilContext::SC_Stencil)) {
+    StencilWrapperClass.addMember("sbase*", "m_" + stencilPropertiesPair.second->name_);
+  }
+
+  StencilWrapperClass.changeAccessibility("public");
+  StencilWrapperClass.addCopyConstructor(Class::Deleted);
+
+  generateStencilWrapperMembers(StencilWrapperClass, stencilInstantiation);
+
+  generateStencilWrapperCtr(StencilWrapperClass, stencilInstantiation, codeGenProperties);
+
+  if(!globalsMap.empty()) {
+    generateGlobalsAPI(*stencilInstantiation, StencilWrapperClass, globalsMap);
+  }
+
+  generateStencilWrapperRun(StencilWrapperClass, stencilInstantiation, codeGenProperties);
+
+  StencilWrapperClass.commit();
+
+  cudaNamespace.commit();
+
+  // Remove trailing ';' as this is retained by Clang's Rewriter
+  std::string str = ssSW.str();
+  str[str.size() - 2] = ' ';
+
+  return str;
+}
+
+void CudaCodeGen::generateStencilClasses(const iir::StencilInstantiation* stencilInstantiation,
+                                         Class& stencilWrapperClass,
+                                         CodeGenProperties& codeGenProperties) const {
+  // Generate stencils
+  const auto& stencils = stencilInstantiation->getStencils();
 
   const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
 
@@ -442,8 +481,8 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
         std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
             [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
 
-    Structure StencilClass = StencilWrapperClass.addStruct(stencilName, "", "sbase");
-    std::string StencilName = StencilClass.getName();
+    Structure stencilClass = stencilWrapperClass.addStruct(stencilName, "", "sbase");
+    std::string StencilName = stencilClass.getName();
 
     auto& paramNameToType = stencilProperties->paramNameToType_;
 
@@ -457,57 +496,21 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
       paramNameToType.emplace((*fieldIt).second.Name, c_gtc().str() + "storage_t");
     }
 
-    StencilClass.addComment("Members");
-    StencilClass.addComment("Temporary storages");
-    addTempStorageTypedef(StencilClass, stencil);
+    generateStencilClassMembers(stencilClass, stencil, globalsMap, nonTempFields, tempFields,
+                                stencilProperties);
 
-    if(!globalsMap.empty()) {
-      StencilClass.addMember("globals&", "m_globals");
-    }
+    stencilClass.changeAccessibility("public");
 
-    StencilClass.addMember("const " + c_gtc() + "domain&", "m_dom");
-
-    for(auto fieldIt : nonTempFields) {
-      StencilClass.addMember(paramNameToType.at((*fieldIt).second.Name) + "&",
-                             "m_" + (*fieldIt).second.Name);
-    }
-
-    addTmpStorageDeclaration(StencilClass, tempFields);
-
-    StencilClass.changeAccessibility("public");
-
-    auto stencilClassCtr = StencilClass.addConstructor();
-
-    stencilClassCtr.addArg("const " + c_gtc() + "domain& dom_");
-    if(!globalsMap.empty()) {
-      stencilClassCtr.addArg("globals& globals_");
-    }
-
-    for(auto fieldIt : nonTempFields) {
-      std::string fieldName = (*fieldIt).second.Name;
-      stencilClassCtr.addArg(paramNameToType.at(fieldName) + "& " + fieldName + "_");
-    }
-
-    stencilClassCtr.addInit("m_dom(dom_)");
-
-    if(!globalsMap.empty()) {
-      stencilClassCtr.addInit("m_globals(globals_)");
-    }
-
-    for(auto fieldIt : nonTempFields) {
-      stencilClassCtr.addInit("m_" + (*fieldIt).second.Name + "(" + (*fieldIt).second.Name + "_)");
-    }
-
-    addTmpStorageInit(stencilClassCtr, stencil, tempFields);
-    stencilClassCtr.commit();
+    generateStencilClassCtr(stencilClass, stencil, globalsMap, nonTempFields, tempFields,
+                            stencilProperties);
 
     // virtual dtor
-    MemberFunction stencilClassDtr = StencilClass.addDestructor();
+    MemberFunction stencilClassDtr = stencilClass.addDestructor();
     stencilClassDtr.startBody();
     stencilClassDtr.commit();
 
     // synchronize storages method
-    MemberFunction syncStoragesMethod = StencilClass.addMemberFunction("void", "sync_storages", "");
+    MemberFunction syncStoragesMethod = stencilClass.addMemberFunction("void", "sync_storages", "");
     syncStoragesMethod.startBody();
 
     for(auto fieldIt : nonTempFields) {
@@ -519,35 +522,78 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
     //
     // Run-Method
     //
-    generateRunMethod(StencilClass, stencil, stencilInstantiation, paramNameToType, globalsMap);
+    generateStencilRunMethod(stencilClass, stencil, stencilInstantiation, paramNameToType,
+                             globalsMap);
+  }
+}
+
+void CudaCodeGen::generateStencilClassMembers(
+    Structure& stencilClass, const iir::Stencil& stencil, const sir::GlobalVariableMap& globalsMap,
+    IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& nonTempFields,
+    IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields,
+    std::shared_ptr<StencilProperties> stencilProperties) const {
+
+  auto& paramNameToType = stencilProperties->paramNameToType_;
+
+  stencilClass.addComment("Members");
+  stencilClass.addComment("Temporary storages");
+  addTempStorageTypedef(stencilClass, stencil);
+
+  if(!globalsMap.empty()) {
+    stencilClass.addMember("globals&", "m_globals");
   }
 
-  StencilWrapperClass.addMember("static constexpr const char* s_name =",
-                                Twine("\"") + StencilWrapperClass.getName() + Twine("\""));
+  stencilClass.addMember("const " + c_gtc() + "domain&", "m_dom");
 
-  for(auto stencilPropertiesPair :
-      codeGenProperties.stencilProperties(StencilContext::SC_Stencil)) {
-    StencilWrapperClass.addMember("sbase*", "m_" + stencilPropertiesPair.second->name_);
+  for(auto fieldIt : nonTempFields) {
+    stencilClass.addMember(paramNameToType.at((*fieldIt).second.Name) + "&",
+                           "m_" + (*fieldIt).second.Name);
   }
 
-  StencilWrapperClass.changeAccessibility("public");
-  StencilWrapperClass.addCopyConstructor(Class::Deleted);
+  addTmpStorageDeclaration(stencilClass, tempFields);
+}
+void CudaCodeGen::generateStencilClassCtr(
+    Structure& stencilClass, const iir::Stencil& stencil, const sir::GlobalVariableMap& globalsMap,
+    IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& nonTempFields,
+    IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields,
+    std::shared_ptr<StencilProperties> stencilProperties) const {
 
-  StencilWrapperClass.addComment("Members");
-  //
-  // Members
-  //
-  // Define allocated memebers if necessary
-  if(stencilInstantiation->hasAllocatedFields()) {
-    StencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
+  auto stencilClassCtr = stencilClass.addConstructor();
 
-    for(int AccessID : stencilInstantiation->getAllocatedFieldAccessIDs())
-      StencilWrapperClass.addMember(c_gtc() + "storage_t",
-                                    "m_" + stencilInstantiation->getNameFromAccessID(AccessID));
+  auto& paramNameToType = stencilProperties->paramNameToType_;
+
+  stencilClassCtr.addArg("const " + c_gtc() + "domain& dom_");
+  if(!globalsMap.empty()) {
+    stencilClassCtr.addArg("globals& globals_");
   }
+
+  for(auto fieldIt : nonTempFields) {
+    std::string fieldName = (*fieldIt).second.Name;
+    stencilClassCtr.addArg(paramNameToType.at(fieldName) + "& " + fieldName + "_");
+  }
+
+  stencilClassCtr.addInit("m_dom(dom_)");
+
+  if(!globalsMap.empty()) {
+    stencilClassCtr.addInit("m_globals(globals_)");
+  }
+
+  for(auto fieldIt : nonTempFields) {
+    stencilClassCtr.addInit("m_" + (*fieldIt).second.Name + "(" + (*fieldIt).second.Name + "_)");
+  }
+
+  addTmpStorageInit(stencilClassCtr, stencil, tempFields);
+  stencilClassCtr.commit();
+}
+
+void CudaCodeGen::generateStencilWrapperCtr(Class& stencilWrapperClass,
+                                            const iir::StencilInstantiation* stencilInstantiation,
+                                            const CodeGenProperties& codeGenProperties) const {
+
+  const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
 
   // Generate stencil wrapper constructor
-  auto StencilWrapperConstructor = StencilWrapperClass.addConstructor();
+  auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
 
   int i = 0;
@@ -556,6 +602,8 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
         getStorageType(stencilInstantiation->getFieldDimensionsMask(fieldId)) + "& " +
         stencilInstantiation->getNameFromAccessID(fieldId));
   }
+
+  const auto& stencils = stencilInstantiation->getStencils();
 
   // add the ctr initialization of each stencil
   for(const auto& stencilPtr : stencils) {
@@ -592,20 +640,40 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
     for(auto accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
       tempFields.push_back(stencilInstantiation->getNameFromAccessID(accessID));
     }
-    addTmpStorageInit_wrapper(StencilWrapperConstructor, stencils, tempFields);
+    addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
   }
 
   StencilWrapperConstructor.commit();
+}
 
-  if(!globalsMap.empty()) {
-    StencilWrapperClass.addMember("globals", "m_globals");
+void CudaCodeGen::generateStencilWrapperMembers(
+    Class& stencilWrapperClass, const iir::StencilInstantiation* stencilInstantiation) const {
+
+  const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
+
+  stencilWrapperClass.addComment("Members");
+  //
+  // Members
+  //
+  // Define allocated memebers if necessary
+  if(stencilInstantiation->hasAllocatedFields()) {
+    stencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
+
+    for(int AccessID : stencilInstantiation->getAllocatedFieldAccessIDs())
+      stencilWrapperClass.addMember(c_gtc() + "storage_t",
+                                    "m_" + stencilInstantiation->getNameFromAccessID(AccessID));
   }
 
   if(!globalsMap.empty()) {
-    generateGlobalsAPI(*stencilInstantiation, StencilWrapperClass, globalsMap);
+    stencilWrapperClass.addMember("globals", "m_globals");
   }
+}
+
+void CudaCodeGen::generateStencilWrapperRun(Class& stencilWrapperClass,
+                                            const iir::StencilInstantiation* stencilInstantiation,
+                                            const CodeGenProperties& codeGenProperties) const {
   // Generate the run method by generate code for the stencil description AST
-  MemberFunction RunMethod = StencilWrapperClass.addMemberFunction("void", "run", "");
+  MemberFunction RunMethod = stencilWrapperClass.addMemberFunction("void", "run", "");
 
   RunMethod.finishArgs();
 
@@ -618,19 +686,9 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
   }
 
   RunMethod.commit();
-
-  StencilWrapperClass.commit();
-
-  cudaNamespace.commit();
-
-  // Remove trailing ';' as this is retained by Clang's Rewriter
-  std::string str = ssSW.str();
-  str[str.size() - 2] = ' ';
-
-  return str;
 }
 
-void CudaCodeGen::generateRunMethod(
+void CudaCodeGen::generateStencilRunMethod(
     Structure& stencilClass, const iir::Stencil& stencil,
     const iir::StencilInstantiation* stencilInstantiation,
     const std::unordered_map<std::string, std::string>& paramNameToType,
@@ -855,48 +913,6 @@ void CudaCodeGen::addTmpStorageInit(
     }
   }
 }
-
-// std::string CudaCodeGen::generateGlobals(std::shared_ptr<SIR> const& sir) {
-
-//  const auto& globalsMap = *(sir->GlobalVariableMap);
-//  if(globalsMap.empty())
-//    return "";
-
-//  std::stringstream ss;
-
-//  Namespace cudaNamespace("cuda", ss);
-
-//  std::string StructName = "globals";
-
-//  Struct GlobalsStruct(StructName, ss);
-
-//  for(const auto& globalsPair : globalsMap) {
-//    sir::Value& value = *globalsPair.second;
-//    std::string Name = globalsPair.first;
-//    std::string Type = sir::Value::typeToString(value.getType());
-//    std::string AdapterBase = std::string("base_t::variable_adapter_impl") + "<" + Type + ">";
-
-//    GlobalsStruct.addMember(Type, Name);
-//  }
-//  auto ctr = GlobalsStruct.addConstructor();
-//  for(const auto& globalsPair : globalsMap) {
-//    sir::Value& value = *globalsPair.second;
-//    std::string Name = globalsPair.first;
-//    if(!value.empty()) {
-//      ctr.addInit(Name + "(" + value.toString() + ")");
-//    }
-//  }
-//  ctr.commit();
-
-//  GlobalsStruct.commit();
-//  cudaNamespace.commit();
-
-//  // Remove trailing ';' as this is retained by Clang's Rewriter
-//  std::string str = ss.str();
-//  str[str.size() - 2] = ' ';
-
-//  return str;
-//}
 
 std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
   DAWN_LOG(INFO) << "Starting code generation for GTClang ...";

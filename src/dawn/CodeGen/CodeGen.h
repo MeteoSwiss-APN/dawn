@@ -40,9 +40,10 @@ protected:
   virtual void addTmpStorageInit(
       MemberFunction& ctr, const iir::Stencil& stencil,
       IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields) const;
-  void addTmpStorageInit_wrapper(MemberFunction& ctr,
-                                 const std::vector<std::unique_ptr<iir::Stencil>>& stencils,
-                                 const std::vector<std::string>& tempFields) const;
+  void
+  addTmpStorageInitStencilWrapperCtr(MemberFunction& ctr,
+                                     const std::vector<std::unique_ptr<iir::Stencil>>& stencils,
+                                     const std::vector<std::string>& tempFields) const;
 
   void addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainerMaxSize,
                     int MaxHaloPoints) const;

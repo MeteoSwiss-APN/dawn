@@ -50,8 +50,6 @@ private:
   static std::string buildCudaKernelName(const iir::StencilInstantiation* instantiation,
                                          const std::unique_ptr<iir::MultiStage>& ms);
 
-  //  static std::string buildCudaKernelName(Class stencilWrapperClass, Structure& stencil);
-
   void addTempStorageTypedef(Structure& stencilClass, iir::Stencil const& stencil) const override;
 
   iir::Extents computeTempMaxWriteExtent(iir::Stencil const& stencil) const;
@@ -66,19 +64,43 @@ private:
   void generateAllCudaKernels(std::stringstream& ssSW,
                               const iir::StencilInstantiation* stencilInstantiation);
 
-  void generateRunMethod(Structure& stencilClass, const iir::Stencil& stencil,
-                         const iir::StencilInstantiation* stencilInstantiation,
-                         const std::unordered_map<std::string, std::string>& paramNameToType,
-                         const sir::GlobalVariableMap& globalsMap) const;
-
-  //  void generateGlobalsAPI(Class& stencilWrapperClass,
-  //                          const sir::GlobalVariableMap& globalsMap) const;
+  void generateStencilRunMethod(Structure& stencilClass, const iir::Stencil& stencil,
+                                const iir::StencilInstantiation* stencilInstantiation,
+                                const std::unordered_map<std::string, std::string>& paramNameToType,
+                                const sir::GlobalVariableMap& globalsMap) const;
 
   std::vector<std::string> generateStrideArguments(
       const IndexRange<const std::unordered_map<int, iir::Field>>& nonTempFields,
       const IndexRange<const std::unordered_map<int, iir::Field>>& tempFields,
       const iir::MultiStage& ms, const iir::StencilInstantiation& stencilInstantiation,
       FunctionArgType funArg) const;
+
+  void generateStencilClasses(const iir::StencilInstantiation* stencilInstantiation,
+                              Class& stencilWrapperClass,
+                              CodeGenProperties& codeGenProperties) const;
+  void generateStencilWrapperCtr(Class& stencilWrapperClass,
+                                 const iir::StencilInstantiation* stencilInstantiation,
+                                 const CodeGenProperties& codeGenProperties) const;
+  void generateStencilWrapperMembers(Class& stencilWrapperClass,
+                                     const iir::StencilInstantiation* stencilInstantiation) const;
+
+  void generateStencilWrapperRun(Class& stencilWrapperClass,
+                                 const iir::StencilInstantiation* stencilInstantiation,
+                                 const CodeGenProperties& codeGenProperties) const;
+
+  void generateStencilClassCtr(
+      Structure& stencilClass, const iir::Stencil& stencil,
+      const sir::GlobalVariableMap& globalsMap,
+      IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& nonTempFields,
+      IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields,
+      std::shared_ptr<StencilProperties> stencilProperties) const;
+
+  void generateStencilClassMembers(
+      Structure& stencilClass, const iir::Stencil& stencil,
+      const sir::GlobalVariableMap& globalsMap,
+      IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& nonTempFields,
+      IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields,
+      std::shared_ptr<StencilProperties> stencilProperties) const;
 
   std::string generateStencilInstantiation(const iir::StencilInstantiation* stencilInstantiation);
   //  std::string generateGlobals(const std::shared_ptr<SIR>& sir);

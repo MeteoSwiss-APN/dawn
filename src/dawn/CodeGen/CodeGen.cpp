@@ -144,9 +144,9 @@ void CodeGen::addTmpStorageInit(
   }
 }
 
-void CodeGen::addTmpStorageInit_wrapper(MemberFunction& ctr,
-                                        const std::vector<std::unique_ptr<iir::Stencil>>& stencils,
-                                        const std::vector<std::string>& tempFields) const {
+void CodeGen::addTmpStorageInitStencilWrapperCtr(
+    MemberFunction& ctr, const std::vector<std::unique_ptr<iir::Stencil>>& stencils,
+    const std::vector<std::string>& tempFields) const {
   if(!(tempFields.empty())) {
     auto verticalExtent = getVerticalTmpHaloSizeForMultipleStencils(stencils);
     ctr.addInit(bigWrapperMetadata_ + "(dom.isize(), dom.jsize(), dom.ksize() /*+ 2 *" +

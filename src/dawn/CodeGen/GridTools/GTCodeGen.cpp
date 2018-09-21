@@ -902,7 +902,7 @@ std::string GTCodeGen::generateStencilInstantiation(
     for(auto accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
       tempFields.push_back(stencilInstantiation->getNameFromAccessID(accessID));
     }
-    addTmpStorageInit_wrapper(StencilWrapperConstructor, stencils, tempFields);
+    addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
   }
   StencilWrapperConstructor.addInit("m_dom(dom)");
   // Initialize storages that require boundary conditions
