@@ -469,29 +469,30 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
   // Iterate all statements (top -> bottom)
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {
     iir::Stage& stage = *stagePtr;
-    iir::DoMethod& doMethod = stage.getSingleDoMethod();
 
-    for(auto stmtAccIt = doMethod.childrenBegin(); stmtAccIt != doMethod.childrenEnd();
-        ++stmtAccIt) {
-      inliner.processStatment(*stmtAccIt);
+    for(const auto& doMethod : stage.getChildren()) {
+      for(auto stmtAccIt = doMethod->childrenBegin(); stmtAccIt != doMethod->childrenEnd();
+          ++stmtAccIt) {
+        inliner.processStatment(*stmtAccIt);
 
-      if(inliner.inlineCandiatesFound()) {
-        auto& newStmtAccList = inliner.getNewStatementAccessesPairs();
+        if(inliner.inlineCandiatesFound()) {
+          auto& newStmtAccList = inliner.getNewStatementAccessesPairs();
 
-        // Compute the accesses of the new statements
-        computeAccesses(stencilInstantiation.get(), newStmtAccList);
+          // Compute the accesses of the new statements
+          computeAccesses(stencilInstantiation.get(), newStmtAccList);
 
-        // Erase the old StatementAccessPair ...
-        stmtAccIt = doMethod.childrenErase(stmtAccIt);
+          // Erase the old StatementAccessPair ...
+          stmtAccIt = doMethod->childrenErase(stmtAccIt);
 
-        // ... and insert the new ones
-        // newStmtAccList will be cleared at the next for iteration, so it is safe to move the
-        // elements here
-        stmtAccIt =
-            doMethod.insertChildren(stmtAccIt, std::make_move_iterator(newStmtAccList.begin()),
-                                    std::make_move_iterator(newStmtAccList.end()));
+          // ... and insert the new ones
+          // newStmtAccList will be cleared at the next for iteration, so it is safe to move the
+          // elements here
+          stmtAccIt =
+              doMethod->insertChildren(stmtAccIt, std::make_move_iterator(newStmtAccList.begin()),
+                                       std::make_move_iterator(newStmtAccList.end()));
 
-        std::advance(stmtAccIt, newStmtAccList.size() - 1);
+          std::advance(stmtAccIt, newStmtAccList.size() - 1);
+        }
       }
     }
 
