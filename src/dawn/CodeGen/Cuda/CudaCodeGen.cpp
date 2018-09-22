@@ -292,10 +292,13 @@ void CudaCodeGen::generateCudaKernelCode(
   ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, fieldIndexMap);
 
   int lastKCell = 0;
+  int intervalIdx = 0;
   for(auto interval : partitionIntervals) {
 
     int kmin = 0;
-    if((interval.lowerBound() - lastKCell) > 0) {
+    // if there is a jump between the last level of previous interval and the first level of this
+    // interval, we advance the iterators
+    if((interval.lowerBound() - lastKCell) > 1) {
 
       kmin = interval.lowerBound() - lastKCell;
 
@@ -312,8 +315,9 @@ void CudaCodeGen::generateCudaKernelCode(
       }
     }
 
-    if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Parallel) {
-
+    if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Parallel && (intervalIdx++ == 0)) {
+      // advance the iterators to the first k index of the block or the first position of the
+      // interval
       for(auto index : indexIterators) {
         if(index.second[2]) {
           cudaKernel.addStatement("idx" + index.first + " += max(" + std::to_string(kmin) + "," +
