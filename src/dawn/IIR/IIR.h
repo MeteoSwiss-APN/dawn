@@ -42,6 +42,9 @@ public:
   /// @}
   /// @brief clone the IIR
   std::unique_ptr<IIR> clone() const;
+
+  /// @brief clone the IIR
+  void clone(std::unique_ptr<IIR>& dest) const;
 };
 } // namespace iir
 } // namespace dawn

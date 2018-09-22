@@ -623,6 +623,42 @@ StencilInstantiation::StencilInstantiation(::dawn::OptimizerContext* context,
   DAWN_LOG(INFO) << "Done initializing StencilInstantiation";
 }
 
+std::shared_ptr<StencilInstantiation> StencilInstantiation::clone() const {
+
+  std::shared_ptr<StencilInstantiation> stencilInstantiation =
+      std::make_shared<StencilInstantiation>(context_, SIRStencil_, SIR_);
+
+  stencilInstantiation->NameToAccessIDMap_ = NameToAccessIDMap_;
+  stencilInstantiation->AccessIDToNameMap_ = AccessIDToNameMap_;
+  stencilInstantiation->ExprToAccessIDMap_ = ExprToAccessIDMap_;
+  stencilInstantiation->StmtToAccessIDMap_ = StmtToAccessIDMap_;
+  stencilInstantiation->LiteralAccessIDToNameMap_ = LiteralAccessIDToNameMap_;
+  stencilInstantiation->FieldAccessIDSet_ = FieldAccessIDSet_;
+  stencilInstantiation->apiFieldIDs_ = apiFieldIDs_;
+  stencilInstantiation->TemporaryFieldAccessIDSet_ = TemporaryFieldAccessIDSet_;
+  stencilInstantiation->AllocatedFieldAccessIDSet_ = AllocatedFieldAccessIDSet_;
+  stencilInstantiation->GlobalVariableAccessIDSet_ = GlobalVariableAccessIDSet_;
+  stencilInstantiation->variableVersions_ = variableVersions_;
+  stencilInstantiation->IIR_ = make_unique<iir::IIR>();
+
+  IIR_->clone(stencilInstantiation->IIR_);
+
+  stencilInstantiation->stencilDescStatements_ = stencilDescStatements_;
+  stencilInstantiation->StencilCallToStencilIDMap_ = StencilCallToStencilIDMap_;
+  stencilInstantiation->IDToStencilCallMap_ = IDToStencilCallMap_;
+  stencilInstantiation->StageIDToNameMap_ = StageIDToNameMap_;
+  stencilInstantiation->stencilFunctionInstantiations_ = stencilFunctionInstantiations_;
+  stencilInstantiation->ExprToStencilFunctionInstantiationMap_ =
+      ExprToStencilFunctionInstantiationMap_;
+  stencilInstantiation->stencilFunInstantiationCandidate_ = stencilFunInstantiationCandidate_;
+  stencilInstantiation->BoundaryConditionToExtentsMap_ = BoundaryConditionToExtentsMap_;
+  stencilInstantiation->FieldnameToBoundaryConditionMap_ = FieldnameToBoundaryConditionMap_;
+  stencilInstantiation->CachedVariableSet_ = CachedVariableSet_;
+  stencilInstantiation->fieldIDToInitializedDimensionsMap_ = fieldIDToInitializedDimensionsMap_;
+
+  return stencilInstantiation;
+}
+
 void StencilInstantiation::setAccessIDNamePair(int AccessID, const std::string& name) {
   AccessIDToNameMap_.emplace(AccessID, name);
   NameToAccessIDMap_.emplace(name, AccessID);

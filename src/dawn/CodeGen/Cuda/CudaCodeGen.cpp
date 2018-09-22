@@ -20,6 +20,7 @@
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/PassInlining.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/SIR/SIR.h"
@@ -662,10 +663,10 @@ void CudaCodeGen::generateStencilWrapperMembers(
   stencilWrapperClass.addCopyConstructor(Class::Deleted);
 
   stencilWrapperClass.addComment("Members");
+
   //
   // Members
   //
-
   generateBCFieldMembers(stencilWrapperClass, stencilInstantiation, codeGenProperties);
 
   stencilWrapperClass.addComment("Stencil-Data");
@@ -847,7 +848,7 @@ std::vector<std::string> CudaCodeGen::generateStrideArguments(
     if(processedDims.count(IndexIterator::name(dims)))
       continue;
     processedDims.emplace(IndexIterator::name(dims));
-    std::cout << "PROCESSING " << IndexIterator::name(dims) << std::endl;
+
     int usedDim = 0;
     for(int i = 0; i < dims.size(); ++i) {
       if(!dims[i])
@@ -936,7 +937,14 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
   // Generate code for StencilInstantiations
   std::map<std::string, std::string> stencils;
   for(const auto& nameStencilCtxPair : context_->getStencilInstantiationMap()) {
-    std::string code = generateStencilInstantiation(nameStencilCtxPair.second);
+    std::shared_ptr<iir::StencilInstantiation> origSI = nameStencilCtxPair.second;
+    std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = origSI->clone();
+
+    PassInlining inliner(PassInlining::InlineStrategyKind::IK_Precomputation);
+
+    inliner.run(stencilInstantiation);
+
+    std::string code = generateStencilInstantiation(stencilInstantiation);
     if(code.empty())
       return nullptr;
     stencils.emplace(nameStencilCtxPair.first, std::move(code));

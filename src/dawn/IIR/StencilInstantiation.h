@@ -168,6 +168,8 @@ public:
                        const std::shared_ptr<sir::Stencil>& SIRStencil,
                        const std::shared_ptr<SIR>& SIR);
 
+  std::shared_ptr<StencilInstantiation> clone() const;
+
   bool checkTreeConsistency() const;
 
   /// @brief Insert a new AccessID - Name pair
