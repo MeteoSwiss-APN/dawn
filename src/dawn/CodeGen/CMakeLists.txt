@@ -46,6 +46,8 @@ yoda_add_library(
           GridTools/ASTStencilDesc.h
           GridTools/GTCodeGen.cpp
           GridTools/GTCodeGen.h
+          StencilFunctionAsBCGenerator.cpp
+          StencilFunctionAsBCGenerator.h
           TranslationUnit.cpp
           TranslationUnit.h
   OBJECT

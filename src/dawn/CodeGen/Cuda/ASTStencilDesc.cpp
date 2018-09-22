@@ -22,7 +22,7 @@ namespace dawn {
 namespace codegen {
 namespace cuda {
 
-ASTStencilDesc::ASTStencilDesc(const iir::StencilInstantiation* instantiation,
+ASTStencilDesc::ASTStencilDesc(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
                                CodeGenProperties const& codeGenProperties)
     : ASTCodeGenCXX(), instantiation_(instantiation), codeGenProperties_(codeGenProperties) {}
 

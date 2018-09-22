@@ -69,6 +69,10 @@ public:
   static std::string getStorageType(const iir::Stencil::FieldInfo& field);
   static std::string getStorageType(Array3i dimensions);
 
+  void generateBoundaryConditionFunctions(
+      Class& stencilWrapperClass,
+      const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation) const;
+
   CodeGenProperties
   computeCodeGenProperties(const iir::StencilInstantiation* stencilInstantiation) const;
 

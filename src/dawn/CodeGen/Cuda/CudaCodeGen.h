@@ -47,8 +47,9 @@ public:
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 
 private:
-  static std::string buildCudaKernelName(const iir::StencilInstantiation* instantiation,
-                                         const std::unique_ptr<iir::MultiStage>& ms);
+  static std::string
+  buildCudaKernelName(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                      const std::unique_ptr<iir::MultiStage>& ms);
 
   void addTempStorageTypedef(Structure& stencilClass, iir::Stencil const& stencil) const override;
 
@@ -59,15 +60,17 @@ private:
                              tempFields) const override;
 
   void generateCudaKernelCode(std::stringstream& ssSW,
-                              const iir::StencilInstantiation* stencilInstantiation,
+                              const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
                               const std::unique_ptr<iir::MultiStage>& ms);
-  void generateAllCudaKernels(std::stringstream& ssSW,
-                              const iir::StencilInstantiation* stencilInstantiation);
+  void
+  generateAllCudaKernels(std::stringstream& ssSW,
+                         const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
 
-  void generateStencilRunMethod(Structure& stencilClass, const iir::Stencil& stencil,
-                                const iir::StencilInstantiation* stencilInstantiation,
-                                const std::unordered_map<std::string, std::string>& paramNameToType,
-                                const sir::GlobalVariableMap& globalsMap) const;
+  void
+  generateStencilRunMethod(Structure& stencilClass, const iir::Stencil& stencil,
+                           const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                           const std::unordered_map<std::string, std::string>& paramNameToType,
+                           const sir::GlobalVariableMap& globalsMap) const;
 
   std::vector<std::string> generateStrideArguments(
       const IndexRange<const std::unordered_map<int, iir::Field>>& nonTempFields,
@@ -75,19 +78,22 @@ private:
       const iir::MultiStage& ms, const iir::StencilInstantiation& stencilInstantiation,
       FunctionArgType funArg) const;
 
-  void generateStencilClasses(const iir::StencilInstantiation* stencilInstantiation,
-                              Class& stencilWrapperClass,
-                              CodeGenProperties& codeGenProperties) const;
-  void generateStencilWrapperCtr(Class& stencilWrapperClass,
-                                 const iir::StencilInstantiation* stencilInstantiation,
-                                 const CodeGenProperties& codeGenProperties) const;
-  void generateStencilWrapperMembers(Class& stencilWrapperClass,
-                                     const iir::StencilInstantiation* stencilInstantiation,
-                                     CodeGenProperties& codeGenProperties) const;
+  void
+  generateStencilClasses(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                         Class& stencilWrapperClass, CodeGenProperties& codeGenProperties) const;
+  void
+  generateStencilWrapperCtr(Class& stencilWrapperClass,
+                            const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                            const CodeGenProperties& codeGenProperties) const;
+  void generateStencilWrapperMembers(
+      Class& stencilWrapperClass,
+      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+      CodeGenProperties& codeGenProperties) const;
 
-  void generateStencilWrapperRun(Class& stencilWrapperClass,
-                                 const iir::StencilInstantiation* stencilInstantiation,
-                                 const CodeGenProperties& codeGenProperties) const;
+  void
+  generateStencilWrapperRun(Class& stencilWrapperClass,
+                            const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                            const CodeGenProperties& codeGenProperties) const;
 
   void generateStencilClassCtr(
       Structure& stencilClass, const iir::Stencil& stencil,
@@ -103,7 +109,8 @@ private:
       IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields,
       std::shared_ptr<StencilProperties> stencilProperties) const;
 
-  std::string generateStencilInstantiation(const iir::StencilInstantiation* stencilInstantiation);
+  std::string generateStencilInstantiation(
+      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
   //  std::string generateGlobals(const std::shared_ptr<SIR>& sir);
   static int paddedBoundary(int value);
 };

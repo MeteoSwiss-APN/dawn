@@ -38,7 +38,7 @@ namespace cuda {
 /// @ingroup cuda
 class ASTStencilBody : public ASTCodeGenCXX {
 protected:
-  const iir::StencilInstantiation* instantiation_;
+  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   RangeToString offsetPrinter_;
   const std::unordered_map<int, Array3i>& fieldIndexMap_;
 
@@ -46,34 +46,17 @@ protected:
   /// @brief produces a string of (i,j,k) accesses for the C++ generated naive code,
   /// from an array of offseted accesses
   ///
-  std::array<std::string, 3> ijkfyOffset(const std::array<int, 3>& offsets, std::string accessName,
-                                         bool isTemporary, const Array3i iteratorDims) {
-    int n = -1;
-    std::array<std::string, 3> res;
-    std::transform(offsets.begin(), offsets.end(), res.begin(), [&](int const& off) {
-      ++n;
-      std::array<std::string, 3> indices{CodeGeneratorHelper::generateStrideName(0, iteratorDims),
-                                         CodeGeneratorHelper::generateStrideName(1, iteratorDims),
-                                         CodeGeneratorHelper::generateStrideName(2, iteratorDims)};
-      if(isTemporary) {
-        indices = {"1", "jstride_tmp", "kstride_tmp"};
-      }
-      if(!(iteratorDims[n]) || !off)
-        return std::string("");
-
-      return (indices[n] + "*" + std::to_string(off));
-    });
-    return res;
-  }
+  std::array<std::string, 3> ijkfyOffset(const std::array<int, 3>& offsets, bool isTemporary,
+                                         const Array3i iteratorDims);
 
 public:
   using Base = ASTCodeGenCXX;
 
   /// @brief constructor
-  ASTStencilBody(const iir::StencilInstantiation* stencilInstantiation,
+  ASTStencilBody(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                  const std::unordered_map<int, Array3i>& fieldIndexMap);
 
-  virtual ~ASTStencilBody();
+  virtual ~ASTStencilBody() override;
 
   /// @name Statement implementation
   /// @{

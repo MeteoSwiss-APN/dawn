@@ -26,8 +26,9 @@ namespace dawn {
 namespace codegen {
 namespace cuda {
 
-ASTStencilBody::ASTStencilBody(const iir::StencilInstantiation* stencilInstantiation,
-                               const std::unordered_map<int, Array3i>& fieldIndexMap)
+ASTStencilBody::ASTStencilBody(
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const std::unordered_map<int, Array3i>& fieldIndexMap)
     : ASTCodeGenCXX(), instantiation_(stencilInstantiation), offsetPrinter_("+", "", "", true),
       fieldIndexMap_(fieldIndexMap) {}
 
@@ -39,6 +40,27 @@ std::string ASTStencilBody::getName(const std::shared_ptr<Expr>& expr) const {
 
 std::string ASTStencilBody::getName(const std::shared_ptr<Stmt>& stmt) const {
   return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
+}
+
+std::array<std::string, 3> ASTStencilBody::ijkfyOffset(const std::array<int, 3>& offsets,
+                                                       bool isTemporary,
+                                                       const Array3i iteratorDims) {
+  int n = -1;
+  std::array<std::string, 3> res;
+  std::transform(offsets.begin(), offsets.end(), res.begin(), [&](int const& off) {
+    ++n;
+    std::array<std::string, 3> indices{CodeGeneratorHelper::generateStrideName(0, iteratorDims),
+                                       CodeGeneratorHelper::generateStrideName(1, iteratorDims),
+                                       CodeGeneratorHelper::generateStrideName(2, iteratorDims)};
+    if(isTemporary) {
+      indices = {"1", "jstride_tmp", "kstride_tmp"};
+    }
+    if(!(iteratorDims[n]) || !off)
+      return std::string("");
+
+    return (indices[n] + "*" + std::to_string(off));
+  });
+  return res;
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -107,8 +129,7 @@ void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   // temporaries have all 3 dimensions
   Array3i iter = isTemporary ? Array3i{1, 1, 1} : fieldIndexMap_.at(accessID);
 
-  std::string offsetStr =
-      offsetPrinter_(ijkfyOffset(expr->getOffset(), accessName, isTemporary, iter));
+  std::string offsetStr = offsetPrinter_(ijkfyOffset(expr->getOffset(), isTemporary, iter));
   ss_ << accessName
       << (offsetStr.empty() ? "[" + index + "]" : ("[" + index + "+" + offsetStr + "]"));
 }

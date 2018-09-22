@@ -1,4 +1,5 @@
 #include "dawn/CodeGen/CodeGen.h"
+#include "dawn/CodeGen/StencilFunctionAsBCGenerator.h"
 
 namespace dawn {
 namespace codegen {
@@ -90,6 +91,40 @@ void CodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInstant
     setter.finishArgs();
     setter.addStatement("m_globals." + globalProp.first + "=" + globalProp.first);
     setter.commit();
+  }
+}
+
+void CodeGen::generateBoundaryConditionFunctions(
+    Class& stencilWrapperClass,
+    const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation) const {
+  // Functions for boundary conditions
+  for(auto usedBoundaryCondition : stencilInstantiation->getBoundaryConditions()) {
+    for(const auto& sf : stencilInstantiation->getSIR()->StencilFunctions) {
+      if(sf->Name == usedBoundaryCondition.second->getFunctor()) {
+
+        Structure BoundaryCondition = stencilWrapperClass.addStruct(Twine(sf->Name));
+        std::string templatefunctions = "typename Direction ";
+        std::string functionargs = "Direction ";
+
+        // A templated datafield for every function argument
+        for(int i = 0; i < usedBoundaryCondition.second->getFields().size(); i++) {
+          templatefunctions += dawn::format(",typename DataField_%i", i);
+          functionargs += dawn::format(", DataField_%i &data_field_%i", i, i);
+        }
+        functionargs += ", int i , int j, int k";
+        auto BC = BoundaryCondition.addMemberFunction(
+            Twine("GT_FUNCTION void"), Twine("operator()"), Twine(templatefunctions));
+        BC.isConst(true);
+        BC.addArg(functionargs);
+        BC.startBody();
+        StencilFunctionAsBCGenerator reader(stencilInstantiation, sf);
+        sf->Asts[0]->accept(reader);
+        std::string output = reader.getCodeAndResetStream();
+        BC << output;
+        BC.commit();
+        break;
+      }
+    }
   }
 }
 

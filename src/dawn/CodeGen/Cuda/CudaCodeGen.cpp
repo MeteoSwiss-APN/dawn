@@ -68,15 +68,16 @@ CudaCodeGen::CudaCodeGen(OptimizerContext* context) : CodeGen(context) {}
 
 CudaCodeGen::~CudaCodeGen() {}
 
-std::string CudaCodeGen::buildCudaKernelName(const iir::StencilInstantiation* instantiation,
-                                             const std::unique_ptr<iir::MultiStage>& ms) {
+std::string
+CudaCodeGen::buildCudaKernelName(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                                 const std::unique_ptr<iir::MultiStage>& ms) {
   return instantiation->getName() + "_stencil" + std::to_string(ms->getParent()->getStencilID()) +
          "_ms" + std::to_string(ms->getID()) + "_kernel";
 }
 
-void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
-                                         const iir::StencilInstantiation* stencilInstantiation,
-                                         const std::unique_ptr<iir::MultiStage>& ms) {
+void CudaCodeGen::generateCudaKernelCode(
+    std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
+    const std::unique_ptr<iir::MultiStage>& ms) {
 
   iir::Extents maxExtents{0, 0, 0, 0, 0, 0};
   for(const auto& stage : iterateIIROver<iir::Stage>(*ms)) {
@@ -379,15 +380,16 @@ void CudaCodeGen::generateCudaKernelCode(std::stringstream& ssSW,
 int CudaCodeGen::paddedBoundary(int value) {
   return value <= 1 ? 1 : value <= 2 ? 2 : value <= 4 ? 4 : 8;
 }
-void CudaCodeGen::generateAllCudaKernels(std::stringstream& ssSW,
-                                         const iir::StencilInstantiation* stencilInstantiation) {
+void CudaCodeGen::generateAllCudaKernels(
+    std::stringstream& ssSW,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
     generateCudaKernelCode(ssSW, stencilInstantiation, ms);
   }
 }
 
-std::string
-CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stencilInstantiation) {
+std::string CudaCodeGen::generateStencilInstantiation(
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   using namespace codegen;
 
   std::stringstream ssSW;
@@ -415,6 +417,8 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
 
   const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
 
+  generateBoundaryConditionFunctions(StencilWrapperClass, stencilInstantiation);
+
   generateStencilClasses(stencilInstantiation, StencilWrapperClass, codeGenProperties);
 
   generateStencilWrapperMembers(StencilWrapperClass, stencilInstantiation, codeGenProperties);
@@ -438,9 +442,9 @@ CudaCodeGen::generateStencilInstantiation(const iir::StencilInstantiation* stenc
   return str;
 }
 
-void CudaCodeGen::generateStencilClasses(const iir::StencilInstantiation* stencilInstantiation,
-                                         Class& stencilWrapperClass,
-                                         CodeGenProperties& codeGenProperties) const {
+void CudaCodeGen::generateStencilClasses(
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    Class& stencilWrapperClass, CodeGenProperties& codeGenProperties) const {
   // Generate stencils
   const auto& stencils = stencilInstantiation->getStencils();
 
@@ -577,9 +581,10 @@ void CudaCodeGen::generateStencilClassCtr(
   stencilClassCtr.commit();
 }
 
-void CudaCodeGen::generateStencilWrapperCtr(Class& stencilWrapperClass,
-                                            const iir::StencilInstantiation* stencilInstantiation,
-                                            const CodeGenProperties& codeGenProperties) const {
+void CudaCodeGen::generateStencilWrapperCtr(
+    Class& stencilWrapperClass,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const CodeGenProperties& codeGenProperties) const {
 
   const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
 
@@ -638,7 +643,8 @@ void CudaCodeGen::generateStencilWrapperCtr(Class& stencilWrapperClass,
 }
 
 void CudaCodeGen::generateStencilWrapperMembers(
-    Class& stencilWrapperClass, const iir::StencilInstantiation* stencilInstantiation,
+    Class& stencilWrapperClass,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     CodeGenProperties& codeGenProperties) const {
 
   const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
@@ -672,9 +678,10 @@ void CudaCodeGen::generateStencilWrapperMembers(
   }
 }
 
-void CudaCodeGen::generateStencilWrapperRun(Class& stencilWrapperClass,
-                                            const iir::StencilInstantiation* stencilInstantiation,
-                                            const CodeGenProperties& codeGenProperties) const {
+void CudaCodeGen::generateStencilWrapperRun(
+    Class& stencilWrapperClass,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const CodeGenProperties& codeGenProperties) const {
   // Generate the run method by generate code for the stencil description AST
   MemberFunction RunMethod = stencilWrapperClass.addMemberFunction("void", "run", "");
 
@@ -693,7 +700,7 @@ void CudaCodeGen::generateStencilWrapperRun(Class& stencilWrapperClass,
 
 void CudaCodeGen::generateStencilRunMethod(
     Structure& stencilClass, const iir::Stencil& stencil,
-    const iir::StencilInstantiation* stencilInstantiation,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const std::unordered_map<std::string, std::string>& paramNameToType,
     const sir::GlobalVariableMap& globalsMap) const {
   MemberFunction StencilRunMethod = stencilClass.addMemberFunction("virtual void", "run", "");
@@ -923,7 +930,7 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
   // Generate code for StencilInstantiations
   std::map<std::string, std::string> stencils;
   for(const auto& nameStencilCtxPair : context_->getStencilInstantiationMap()) {
-    std::string code = generateStencilInstantiation(nameStencilCtxPair.second.get());
+    std::string code = generateStencilInstantiation(nameStencilCtxPair.second);
     if(code.empty())
       return nullptr;
     stencils.emplace(nameStencilCtxPair.first, std::move(code));

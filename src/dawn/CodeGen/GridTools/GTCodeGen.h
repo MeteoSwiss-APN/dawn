@@ -86,10 +86,6 @@ private:
                           Class& stencilWrapperClass, const sir::GlobalVariableMap& globalsMap,
                           const CodeGenProperties& codeGenProperties) const override;
 
-  void generateBoundaryConditionFunctions(
-      Class& stencilWrapperClass,
-      const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation) const;
-
   void generateStencilWrapperMembers(
       Class& stencilWrapperClass,
       const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,

@@ -34,14 +34,14 @@ namespace cuda {
 /// @ingroup cuda
 class ASTStencilDesc : public ASTCodeGenCXX {
 protected:
-  const iir::StencilInstantiation* instantiation_;
+  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
 
   const CodeGenProperties& codeGenProperties_;
 
 public:
   using Base = ASTCodeGenCXX;
 
-  ASTStencilDesc(const iir::StencilInstantiation* instantiation,
+  ASTStencilDesc(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
                  const CodeGenProperties& CodeGenProperties);
 
   virtual ~ASTStencilDesc();
