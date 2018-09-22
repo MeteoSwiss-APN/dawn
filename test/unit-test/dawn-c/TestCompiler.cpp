@@ -30,7 +30,7 @@ static void freeCharArray(char** array, int size) {
 
 TEST(CompilerTest, CompileEmptySIR) {
   std::string sir;
-  dawnTranslationUnit_t* TU = dawnCompile(sir.data(), sir.size(), nullptr, DC_GTClang);
+  dawnTranslationUnit_t* TU = dawnCompile(sir.data(), sir.size(), nullptr);
 
   EXPECT_EQ(dawnTranslationUnitGetStencil(TU, "invalid"), nullptr);
 
@@ -73,7 +73,7 @@ TEST(CompilerTest, CompileCopyStencil) {
 
   std::string sirStr =
       dawn::SIRSerializer::serializeToString(sir.get(), dawn::SIRSerializer::SK_Byte);
-  dawnTranslationUnit_t* TU = dawnCompile(sirStr.data(), sirStr.size(), nullptr, DC_GTClang);
+  dawnTranslationUnit_t* TU = dawnCompile(sirStr.data(), sirStr.size(), nullptr);
 
   char* copyCode = dawnTranslationUnitGetStencil(TU, "copy");
   EXPECT_NE(copyCode, nullptr);

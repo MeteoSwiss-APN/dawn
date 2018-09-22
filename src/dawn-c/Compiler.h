@@ -62,8 +62,7 @@ extern void dawnInstallDiagnosticsHandler(dawnDiagnosticsHandler_t handler);
  * @return Translation unit of the generated code or `NULL` on failure
  */
 extern dawnTranslationUnit_t* dawnCompile(const char* SIR, size_t size,
-                                          const dawnOptions_t* options,
-                                          DawnCodeGenKind codeGenKind);
+                                          const dawnOptions_t* options);
 
 /** @} */
 

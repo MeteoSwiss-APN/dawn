@@ -192,8 +192,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   return optimizer;
 }
 
-std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::shared_ptr<SIR>& SIR,
-                                                                CodeGenKind codeGen) {
+std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::shared_ptr<SIR>& SIR) {
   diagnostics_->clear();
   diagnostics_->setFilename(SIR->Filename);
 
@@ -216,17 +215,20 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
 
   // Generate code
   std::unique_ptr<codegen::CodeGen> CG;
-  switch(codeGen) {
-  case CodeGenKind::CG_GTClang:
+
+  if(options_->Backend == "gridtools") {
     CG = make_unique<codegen::gt::GTCodeGen>(optimizer.get());
-    break;
-  case CodeGenKind::CG_GTClangNaiveCXX:
+  } else if(options_->Backend == "c++-naive") {
     CG = make_unique<codegen::cxxnaive::CXXNaiveCodeGen>(optimizer.get());
-    break;
-  case CodeGenKind::CG_GTClangOptCXX:
+  } else if(options_->Backend == "c++-opt") {
     dawn_unreachable("GTClangOptCXX not supported yet");
-    break;
+  } else {
+    diagnostics_->report(buildDiag("-backend", options_->Backend,
+                                   "backend options must be : " +
+                                       dawn::RangeToString(", ", "", "")(std::vector<std::string>{
+                                           "gridtools", "c++-naive", "c++-opt"})));
   }
+
   return CG->generateCode();
 }
 

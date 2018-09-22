@@ -24,19 +24,6 @@
 #include <memory>
 using namespace dawn::util;
 
-static dawn::DawnCompiler::CodeGenKind getCodeGenKind(DawnCodeGenKind codegen) {
-  switch(codegen) {
-  case DC_GTClang:
-    return dawn::DawnCompiler::CG_GTClang;
-  case DC_GTClangNaiveCXX:
-    return dawn::DawnCompiler::CG_GTClangNaiveCXX;
-  case DC_GTClangOptCXX:
-    return dawn::DawnCompiler::CG_GTClangOptCXX;
-  default:
-    dawn_unreachable("invalid CodeGenKind");
-  }
-}
-
 static DawnDiagnosticsKind getDawnDiagnosticsKind(dawn::DiagnosticsKind diag) {
   switch(diag) {
   case dawn::DiagnosticsKind::Note:
@@ -77,8 +64,7 @@ void dawnInstallDiagnosticsHandler(dawnDiagnosticsHandler_t handler) {
   DiagnosticsHandler = handler ? handler : dawnDefaultDiagnosticsHandler;
 }
 
-dawnTranslationUnit_t* dawnCompile(const char* SIR, size_t size, const dawnOptions_t* options,
-                                   DawnCodeGenKind codeGenKind) {
+dawnTranslationUnit_t* dawnCompile(const char* SIR, size_t size, const dawnOptions_t* options) {
   dawnTranslationUnit_t* translationUnit = nullptr;
 
   // Deserialize the SIR
@@ -94,7 +80,7 @@ dawnTranslationUnit_t* dawnCompile(const char* SIR, size_t size, const dawnOptio
 
     // Run the compiler
     dawn::DawnCompiler compiler(compileOptions.get());
-    auto TU = compiler.compile(inMemorySIR, getCodeGenKind(codeGenKind));
+    auto TU = compiler.compile(inMemorySIR);
 
     // Report diganostics
     if(compiler.getDiagnostics().hasDiags()) {

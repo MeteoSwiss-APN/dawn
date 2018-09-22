@@ -34,16 +34,12 @@ class DawnCompiler : NonCopyable {
   std::string filename_;
 
 public:
-  /// @brief Code generation backend
-  enum CodeGenKind { CG_GTClang = 0, CG_GTClangNaiveCXX, CG_GTClangOptCXX };
-
   /// @brief Initialize the compiler by setting up diagnostics
   DawnCompiler(Options* options = nullptr);
 
   /// @brief Compile the SIR using the provided code generation routine
   /// @returns compiled TranslationUnit on success, `nullptr` otherwise
-  std::unique_ptr<codegen::TranslationUnit> compile(std::shared_ptr<SIR> const& SIR,
-                                                    CodeGenKind codeGen);
+  std::unique_ptr<codegen::TranslationUnit> compile(std::shared_ptr<SIR> const& SIR);
 
   std::unique_ptr<OptimizerContext> runOptimizer(std::shared_ptr<SIR> const& SIR);
 
