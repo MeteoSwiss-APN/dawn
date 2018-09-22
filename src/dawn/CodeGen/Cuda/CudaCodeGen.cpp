@@ -247,7 +247,6 @@ void CudaCodeGen::generateCudaKernelCode(
     }
     DAWN_ASSERT(std::accumulate(dims.begin(), dims.end(), 0) != -3);
     fieldIndexMap.emplace((*field).second.getAccessID(), dims);
-    std::cout << "OOOP " << IndexIterator::name(dims) << std::endl;
     indexIterators.emplace(IndexIterator::name(dims), dims);
   }
 
@@ -301,7 +300,7 @@ void CudaCodeGen::generateCudaKernelCode(
 
       for(auto index : indexIterators) {
         if(index.second[2]) {
-          cudaKernel.addStatement(index.first + " += " +
+          cudaKernel.addStatement("idx" + index.first + " += " +
                                   CodeGeneratorHelper::generateStrideName(2, index.second) + "*(" +
                                   std::to_string(kmin) + ")");
         }
