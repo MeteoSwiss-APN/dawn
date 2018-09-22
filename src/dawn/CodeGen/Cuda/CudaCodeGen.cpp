@@ -942,7 +942,9 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
   std::map<std::string, std::string> stencils;
   for(const auto& nameStencilCtxPair : context_->getStencilInstantiationMap()) {
     std::shared_ptr<iir::StencilInstantiation> origSI = nameStencilCtxPair.second;
-    std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = origSI->clone();
+    // TODO the clone seems to be broken
+    //    std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = origSI->clone();
+    std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = origSI;
 
     PassInlining inliner(PassInlining::InlineStrategyKind::IK_Precomputation);
 
