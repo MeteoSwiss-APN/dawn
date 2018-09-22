@@ -73,6 +73,17 @@ public:
   }
 };
 
+class BCGenerator {
+  const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation_;
+  std::stringstream& ss_;
+
+public:
+  BCGenerator(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+              std::stringstream& ss)
+      : stencilInstantiation_(stencilInstantiation), ss_(ss) {}
+
+  void generate(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt);
+};
 } // namespace codegen
 } // namespace dawn
 #endif

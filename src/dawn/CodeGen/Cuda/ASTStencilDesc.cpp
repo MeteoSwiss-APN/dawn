@@ -12,6 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/CodeGen/StencilFunctionAsBCGenerator.h"
 #include "dawn/CodeGen/Cuda/ASTStencilDesc.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -57,7 +58,8 @@ void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
-  //  DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not yet implemented");
+  BCGenerator bcGen(instantiation_, ss_);
+  bcGen.generate(stmt);
 }
 
 //===------------------------------------------------------------------------------------------===//

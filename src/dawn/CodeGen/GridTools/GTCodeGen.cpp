@@ -336,12 +336,8 @@ void GTCodeGen::generateStencilWrapperCtr(
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
   }
   StencilWrapperConstructor.addInit("m_dom(dom)");
-  // Initialize storages that require boundary conditions
-  for(const auto& param : codeGenProperties.getParameterNameToType()) {
-    if(!codeGenProperties.isParamBC(param.first))
-      continue;
-    StencilWrapperConstructor.addInit("m_" + param.first + "(" + param.first + ")");
-  }
+
+  addBCFieldInitStencilWrapperCtr(StencilWrapperConstructor, codeGenProperties);
 
   // Initialize stencils
   for(const auto& stencil : stencils) {
@@ -378,18 +374,11 @@ void GTCodeGen::generateStencilWrapperMembers(
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     CodeGenProperties& codeGenProperties) {
   const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
+
   //
   // Generate constructor/destructor and methods of the stencil wrapper
   //
-  if(!stencilInstantiation->getBoundaryConditions().empty())
-    stencilWrapperClass.addComment("Fields that require Boundary Conditions");
-  // add all fields that require a boundary condition as members since they need to be called from
-  // this class and not from individual stencils
-  for(const auto& field : codeGenProperties.getParameterNameToType()) {
-    if(!codeGenProperties.isParamBC(field.first))
-      continue;
-    stencilWrapperClass.addMember(field.second, "m_" + field.first);
-  }
+  generateBCFieldMembers(stencilWrapperClass, stencilInstantiation, codeGenProperties);
 
   stencilWrapperClass.addComment("Stencil-Data");
 

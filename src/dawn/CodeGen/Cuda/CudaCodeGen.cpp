@@ -638,6 +638,8 @@ void CudaCodeGen::generateStencilWrapperCtr(
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
   }
 
+  addBCFieldInitStencilWrapperCtr(StencilWrapperConstructor, codeGenProperties);
+
   StencilWrapperConstructor.commit();
 }
 
@@ -663,6 +665,11 @@ void CudaCodeGen::generateStencilWrapperMembers(
   //
   // Members
   //
+
+  generateBCFieldMembers(stencilWrapperClass, stencilInstantiation, codeGenProperties);
+
+  stencilWrapperClass.addComment("Stencil-Data");
+
   // Define allocated memebers if necessary
   if(stencilInstantiation->hasAllocatedFields()) {
     stencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
