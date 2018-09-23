@@ -1,4 +1,4 @@
-//===--------------------------------------------------------------------------------*- C++ -*-===//
+﻿//===--------------------------------------------------------------------------------*- C++ -*-===//
 //                          _
 //                         | |
 //                       __| | __ ___      ___ ___
@@ -33,26 +33,53 @@ class IIRNodeIterator {
   typename RootIIRNode::ChildConstIterator end_;
   IIRNodeIterator<typename RootIIRNode::ChildType, LeafNode> restIterator_;
 
+  bool empty_ = false;
+  std::string name = RootIIRNode::name;
+  const RootIIRNode* root_;
+
 public:
   using leafIterator_t = typename LeafNode::ChildIterator;
 
-  IIRNodeIterator(const RootIIRNode* root) {
-    DAWN_ASSERT(root);
-    DAWN_ASSERT_MSG((root->getChildren().size() > 0),
-                    "multi-iterator with empty children set is not supported");
+  IIRNodeIterator(const RootIIRNode* root) : root_(root) {
     iterator_ = (root->childrenBegin());
     end_ = (root->childrenEnd());
-    restIterator_ =
-        IIRNodeIterator<typename RootIIRNode::ChildType, LeafNode>(root->childrenBegin()->get());
+    if(!root->childrenEmpty()) {
+      restIterator_ =
+          IIRNodeIterator<typename RootIIRNode::ChildType, LeafNode>(root->childrenBegin()->get());
+      while(restIterator_.isEmpty())
+        this->operator++();
+    } else {
+      empty_ = true;
+    }
+    std::cout << " ctr " << name << std::endl;
   }
 
+  bool isEmpty() const {
+    if(empty_)
+      return true;
+    return restIterator_.isEmpty();
+  }
   IIRNodeIterator() = default;
   IIRNodeIterator(IIRNodeIterator&&) = default;
   IIRNodeIterator(const IIRNodeIterator&) = default;
   IIRNodeIterator& operator=(IIRNodeIterator&&) = default;
 
   IIRNodeIterator& operator++() {
+    std::cout << " ++ " << name << " " << empty_ << " " << root_->childrenEmpty() << std::endl;
+    if(name == "Node3") {
+      for(auto& pp : root_->getChildren()) {
+        std::cout << "CH " << pp.get() << " " << root_->getChildren().size() << std::endl;
+      }
+    }
+    if(empty_)
+      return *this;
+
     ++restIterator_;
+    // If the restIterator contains no children, we need to continue advancing the iterator until we
+    // fall into a node with children (or leaves) to evaluate or we reach the end
+    while(restIterator_.isEmpty() && !restIterator_.isEnd())
+      ++restIterator_;
+
     if(restIterator_.isEnd()) {
       ++iterator_;
 
@@ -65,18 +92,27 @@ public:
   }
 
   bool operator==(const IIRNodeIterator& other) const {
+    std::cout << " == " << name << std::endl;
+
+    if(empty_)
+      return (iterator_ == other.iterator_);
+
     return (iterator_ == other.iterator_) && (restIterator_ == other.restIterator_);
   }
 
   bool operator!=(const IIRNodeIterator& other) const { return !(*this == other); }
 
   void setToEnd() {
+    std::cout << " setEnd " << name << std::endl;
+
     iterator_ = end_;
-    // the recursive rest of iterators is constructed with last node (i.e. end-1) and set to end
-    // recursively
-    restIterator_ =
-        IIRNodeIterator<typename RootIIRNode::ChildType, LeafNode>(std::prev(iterator_)->get());
-    restIterator_.setToEnd();
+    if(!empty_) {
+      // the recursive rest of iterators is constructed with last node (i.e. end-1) and set to end
+      // recursively
+      restIterator_ =
+          IIRNodeIterator<typename RootIIRNode::ChildType, LeafNode>(std::prev(iterator_)->get());
+      restIterator_.setToEnd();
+    }
   }
 
   const std::unique_ptr<LeafNode>& operator*() {
@@ -86,16 +122,26 @@ public:
   template <typename T>
   const std::unique_ptr<LeafNode>&
   derefImpl(typename std::enable_if<std::is_same<T, LeafNode>::value>::type* = 0) {
+    std::cout << " deref Leaf " << name << std::endl;
+
     return *iterator_;
   }
 
   template <typename T>
   const std::unique_ptr<LeafNode>&
   derefImpl(typename std::enable_if<!std::is_same<T, LeafNode>::value>::type* = 0) {
+    std::cout << " deref " << name << std::endl;
+
     return *restIterator_;
   }
 
-  bool isEnd() const { return iterator_ == end_; }
+  bool isEnd() const {
+    std::cout << " isEnd " << name << std::endl;
+
+    if(empty_)
+      return true;
+    return iterator_ == end_;
+  }
 };
 
 template <typename LeafNode>
@@ -109,6 +155,8 @@ public:
   IIRNodeIterator& operator=(IIRNodeIterator&&) = default;
 
   IIRNodeIterator& operator++() { return *this; }
+
+  bool isEmpty() const { return false; }
 
   bool isEnd() const { return true; }
   void setToEnd() {}

@@ -28,10 +28,12 @@ class Node4;
 class Node1 : public iir::IIRNode<void, Node1, Node2> {
 public:
   static constexpr const char* name = "Node1";
+  int v;
 };
 class Node2 : public iir::IIRNode<Node1, Node2, Node3> {
 public:
   static constexpr const char* name = "Node2";
+  int v;
 };
 
 template <typename T>
@@ -40,6 +42,7 @@ using myList = std::list<T, std::allocator<T>>;
 class Node3 : public iir::IIRNode<Node2, Node3, Node4, myList> {
 public:
   static constexpr const char* name = "Node3";
+  int v;
 };
 class Node4 : public iir::IIRNode<Node3, Node4, void> {
 public:
@@ -47,6 +50,8 @@ public:
   Node4(int val) : val_(val) {}
   Node4(Node4&& other) : val_(other.val_) {}
   int val_;
+
+  int v;
 };
 }
 
@@ -158,5 +163,42 @@ TEST_F(IIRNodeIterator, LeafIterator) {
     ++i;
   }
   ASSERT_EQ(i, 12);
+}
+
+TEST_F(IIRNodeIterator, MissingLeaf) {
+  std::unique_ptr<impl::Node1> root = make_unique<impl::Node1>();
+
+  root->insertChild(make_unique<impl::Node2>(), root);
+  root->insertChild(make_unique<impl::Node2>(), root);
+
+  auto node2_It = root->childrenBegin();
+
+  (*node2_It)->insertChild(make_unique<impl::Node3>());
+  (*node2_It)->insertChild(make_unique<impl::Node3>());
+  (*node2_It)->insertChild(make_unique<impl::Node3>());
+
+  auto node3_It = (*node2_It)->childrenBegin();
+
+  node3_It++;
+
+  (*node3_It)->insertChild(make_unique<impl::Node4>(4));
+  node3_It++;
+
+  //  here missing two leaf nodes
+  //  (*node3_It)->insertChild(make_unique<impl::Node4>(5));
+
+  node2_It++;
+  (*node2_It)->insertChild(make_unique<impl::Node3>());
+  node3_It = (*node2_It)->childrenBegin();
+  (*node3_It)->insertChild(make_unique<impl::Node4>(6));
+
+  // here missing to fill the final Node3 (since we inserted 3)
+
+  std::array<int, 2> res{4, 6};
+  unsigned long i = 0;
+  for(const auto& it : iterateIIROver<impl::Node4>(*root)) {
+    EXPECT_EQ((*it).val_, res[i++]);
+  }
+  ASSERT_EQ(i, 2);
 }
 }
