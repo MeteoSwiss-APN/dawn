@@ -33,31 +33,33 @@ class IIRNodeIterator {
   typename RootIIRNode::ChildConstIterator end_;
   IIRNodeIterator<typename RootIIRNode::ChildType, LeafNode> restIterator_;
 
-  bool empty_ = false;
+  // the iterator is a void iterator if the node contains no children
+  bool voidIter_ = false;
   std::string name = RootIIRNode::name;
   const RootIIRNode* root_;
+  bool isTop_ = false;
 
 public:
   using leafIterator_t = typename LeafNode::ChildIterator;
 
-  IIRNodeIterator(const RootIIRNode* root) : root_(root) {
+  /// @brief IIRNodeIterator constructor
+  /// @param root IIRNodeIterator will model iterators for children of this node
+  /// @param isTop true if this is the top node of the multi-iterator call
+  IIRNodeIterator(const RootIIRNode* root, bool isTop = false) : root_(root), isTop_(isTop) {
     iterator_ = (root->childrenBegin());
     end_ = (root->childrenEnd());
     if(!root->childrenEmpty()) {
       restIterator_ =
           IIRNodeIterator<typename RootIIRNode::ChildType, LeafNode>(root->childrenBegin()->get());
-      while(restIterator_.isEmpty())
-        this->operator++();
     } else {
-      empty_ = true;
+      voidIter_ = true;
     }
-    std::cout << " ctr " << name << std::endl;
   }
 
-  bool isEmpty() const {
-    if(empty_)
+  bool isVoidIter() const {
+    if(voidIter_)
       return true;
-    return restIterator_.isEmpty();
+    return restIterator_.isVoidIter();
   }
   IIRNodeIterator() = default;
   IIRNodeIterator(IIRNodeIterator&&) = default;
@@ -65,20 +67,10 @@ public:
   IIRNodeIterator& operator=(IIRNodeIterator&&) = default;
 
   IIRNodeIterator& operator++() {
-    std::cout << " ++ " << name << " " << empty_ << " " << root_->childrenEmpty() << std::endl;
-    if(name == "Node3") {
-      for(auto& pp : root_->getChildren()) {
-        std::cout << "CH " << pp.get() << " " << root_->getChildren().size() << std::endl;
-      }
-    }
-    if(empty_)
+    if(voidIter_)
       return *this;
 
     ++restIterator_;
-    // If the restIterator contains no children, we need to continue advancing the iterator until we
-    // fall into a node with children (or leaves) to evaluate or we reach the end
-    while(restIterator_.isEmpty() && !restIterator_.isEnd())
-      ++restIterator_;
 
     if(restIterator_.isEnd()) {
       ++iterator_;
@@ -88,13 +80,16 @@ public:
             IIRNodeIterator<typename RootIIRNode::ChildType, LeafNode>(iterator_->get());
       }
     }
+    // If the restIterator contains no children, we need to continue advancing the iterator until we
+    // fall into a node with children (or leaves) to evaluate or we reach the end
+    while(isTop_ && isVoidIter() && !isEnd())
+      this->operator++();
+
     return *this;
   }
 
   bool operator==(const IIRNodeIterator& other) const {
-    std::cout << " == " << name << std::endl;
-
-    if(empty_)
+    if(voidIter_)
       return (iterator_ == other.iterator_);
 
     return (iterator_ == other.iterator_) && (restIterator_ == other.restIterator_);
@@ -103,10 +98,8 @@ public:
   bool operator!=(const IIRNodeIterator& other) const { return !(*this == other); }
 
   void setToEnd() {
-    std::cout << " setEnd " << name << std::endl;
-
     iterator_ = end_;
-    if(!empty_) {
+    if(!voidIter_) {
       // the recursive rest of iterators is constructed with last node (i.e. end-1) and set to end
       // recursively
       restIterator_ =
@@ -122,23 +115,17 @@ public:
   template <typename T>
   const std::unique_ptr<LeafNode>&
   derefImpl(typename std::enable_if<std::is_same<T, LeafNode>::value>::type* = 0) {
-    std::cout << " deref Leaf " << name << std::endl;
-
     return *iterator_;
   }
 
   template <typename T>
   const std::unique_ptr<LeafNode>&
   derefImpl(typename std::enable_if<!std::is_same<T, LeafNode>::value>::type* = 0) {
-    std::cout << " deref " << name << std::endl;
-
     return *restIterator_;
   }
 
   bool isEnd() const {
-    std::cout << " isEnd " << name << std::endl;
-
-    if(empty_)
+    if(voidIter_)
       return true;
     return iterator_ == end_;
   }
@@ -156,7 +143,7 @@ public:
 
   IIRNodeIterator& operator++() { return *this; }
 
-  bool isEmpty() const { return false; }
+  bool isVoidIter() const { return false; }
 
   bool isEnd() const { return true; }
   void setToEnd() {}
@@ -171,10 +158,14 @@ class IIRRange {
 public:
   IIRRange(const RootNode& root) : root_(root) {}
   IIRNodeIterator<RootNode, LeafNode> begin() {
-    return IIRNodeIterator<RootNode, LeafNode>(&root_);
+    auto nodeIter = IIRNodeIterator<RootNode, LeafNode>(&root_, true);
+    while(nodeIter.isVoidIter() && !nodeIter.isEnd()) {
+      ++nodeIter;
+    }
+    return nodeIter;
   }
   IIRNodeIterator<RootNode, LeafNode> end() {
-    auto it = IIRNodeIterator<RootNode, LeafNode>(&root_);
+    auto it = IIRNodeIterator<RootNode, LeafNode>(&root_, true);
     it.setToEnd();
     return it;
   }
