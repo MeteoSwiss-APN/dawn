@@ -129,7 +129,7 @@ void CudaCodeGen::generateCudaKernelCode(
     if(stencilInstantiation->isTemporaryField(field.second.getAccessID())) {
       continue;
     } else {
-      cudaKernel.addArg("double * const " +
+      cudaKernel.addArg("gridtools::clang::float_type * const " +
                         stencilInstantiation->getNameFromAccessID(field.second.getAccessID()));
     }
   }
@@ -153,7 +153,7 @@ void CudaCodeGen::generateCudaKernelCode(
     if(stencilInstantiation->isTemporaryField(field.second.getAccessID())) {
       std::string fieldName = stencilInstantiation->getNameFromAccessID(field.second.getAccessID());
 
-      cudaKernel.addStatement("double* " + fieldName + " = &" + fieldName +
+      cudaKernel.addStatement("gridtools::clang::float_type* " + fieldName + " = &" + fieldName +
                               "_dv(tmpBeginIIndex,tmpBeginJIndex,blockIdx.x,blockIdx.y,0)");
     }
   }
