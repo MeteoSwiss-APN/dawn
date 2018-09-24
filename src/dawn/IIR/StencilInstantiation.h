@@ -111,6 +111,9 @@ class StencilInstantiation : NonCopyable {
   /// variables are neither field nor literals.
   std::set<int> FieldAccessIDSet_;
 
+  /// This is an ordered list of IDs of fields that belong to the user API call of the program
+  std::vector<int> apiFieldIDs_;
+
   /// Set containing the AccessIDs of fields which are represented by a temporary storages
   std::set<int> TemporaryFieldAccessIDSet_;
 
@@ -184,6 +187,9 @@ public:
 
   /// @brief Get the name of the StencilInstantiation (corresponds to the name of the SIRStencil)
   const std::string getName() const;
+
+  /// @brief Get the list of access ID of the user API fields
+  inline const std::vector<int>& getAPIFieldIDs() const { return apiFieldIDs_; }
 
   /// @brief Get the `name` associated with the `AccessID`
   const std::string& getNameFromAccessID(int AccessID) const;
