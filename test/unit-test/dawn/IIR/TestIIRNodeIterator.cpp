@@ -28,12 +28,10 @@ class Node4;
 class Node1 : public iir::IIRNode<void, Node1, Node2> {
 public:
   static constexpr const char* name = "Node1";
-  int v;
 };
 class Node2 : public iir::IIRNode<Node1, Node2, Node3> {
 public:
   static constexpr const char* name = "Node2";
-  int v;
 };
 
 template <typename T>
@@ -42,7 +40,6 @@ using myList = std::list<T, std::allocator<T>>;
 class Node3 : public iir::IIRNode<Node2, Node3, Node4, myList> {
 public:
   static constexpr const char* name = "Node3";
-  int v;
 };
 class Node4 : public iir::IIRNode<Node3, Node4, void> {
 public:
@@ -50,8 +47,6 @@ public:
   Node4(int val) : val_(val) {}
   Node4(Node4&& other) : val_(other.val_) {}
   int val_;
-
-  int v;
 };
 }
 
