@@ -46,6 +46,7 @@ public:
   /// @param root IIRNodeIterator will model iterators for children of this node
   /// @param isTop true if this is the top node of the multi-iterator call
   IIRNodeIterator(const RootIIRNode* root, bool isTop = false) : root_(root), isTop_(isTop) {
+    DAWN_ASSERT(root);
     iterator_ = (root->childrenBegin());
     end_ = (root->childrenEnd());
     if(!root->childrenEmpty()) {
