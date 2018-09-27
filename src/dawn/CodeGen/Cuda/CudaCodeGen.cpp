@@ -336,7 +336,7 @@ void CudaCodeGen::generateCudaKernelCode(
                                   std::to_string(kmin) + ")");
         }
       }
-      if(containsTemporary) {
+      if(useTmpIndex(ms, stencilInstantiation)) {
         cudaKernel.addStatement("idx_tmp += kstride_tmp*(" + std::to_string(interval.lowerBound()) +
                                 "-" + std::to_string(lastKCell) + ")");
       }
@@ -352,7 +352,7 @@ void CudaCodeGen::generateCudaKernelCode(
                                   " * blockIdx.z * " + std::to_string(blockSize[2]) + ")");
         }
       }
-      if(containsTemporary) {
+      if(useTmpIndex(ms, stencilInstantiation)) {
         cudaKernel.addStatement("idx_tmp += max(" + std::to_string(kmin) +
                                 ", kstride_tmp * blockIdx.z * " + std::to_string(blockSize[2]) +
                                 ")");
@@ -398,7 +398,7 @@ void CudaCodeGen::generateCudaKernelCode(
           cudaKernel.addStatement("idx" + index.first + " += " +
                                   CodeGeneratorHelper::generateStrideName(2, index.second));
       }
-      if(containsTemporary) {
+      if(useTmpIndex(ms, stencilInstantiation)) {
         cudaKernel.addStatement("idx_tmp += kstride_tmp");
       }
     });
@@ -420,10 +420,9 @@ void CudaCodeGen::generateIJCacheIndexInit(MemberFunction& kernel,
   }
 }
 
-void CudaCodeGen::generateTmpIndexInit(
-    MemberFunction& kernel, const std::unique_ptr<iir::MultiStage>& ms,
+bool CudaCodeGen::useTmpIndex(
+    const std::unique_ptr<iir::MultiStage>& ms,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const {
-
   const auto& fields = ms->getFields();
   const bool containsTemporary =
       (find_if(fields.begin(), fields.end(), [&](const std::pair<int, iir::Field>& field) {
@@ -434,7 +433,14 @@ void CudaCodeGen::generateTmpIndexInit(
          return stencilInstantiation->isTemporaryField(accessID) && !cacheBypass;
        }) != fields.end());
 
-  if(!containsTemporary)
+  return containsTemporary;
+}
+
+void CudaCodeGen::generateTmpIndexInit(
+    MemberFunction& kernel, const std::unique_ptr<iir::MultiStage>& ms,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const {
+
+  if(!useTmpIndex(ms, stencilInstantiation))
     return;
 
   auto maxExtentTmps = computeTempMaxWriteExtent(*(ms->getParent()));

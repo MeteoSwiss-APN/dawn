@@ -118,6 +118,9 @@ private:
   void generateIJCacheIndexInit(MemberFunction& kernel, const CacheProperties& cacheProperties,
                                 const Array3ui blockSize) const;
 
+  bool useTmpIndex(const std::unique_ptr<iir::MultiStage>& ms,
+                   const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
+
   void generateTmpIndexInit(
       MemberFunction& kernel, const std::unique_ptr<iir::MultiStage>& ms,
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
