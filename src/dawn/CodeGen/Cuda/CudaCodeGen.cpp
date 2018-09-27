@@ -301,7 +301,7 @@ void CudaCodeGen::generateCudaKernelCode(
   generateIJCacheIndexInit(cudaKernel, cacheProperties, blockSize);
 
   if(containsTemporary) {
-    generateTmpIndexInit(cudaKernel, ms);
+    generateTmpIndexInit(cudaKernel, ms, stencilInstantiation);
   }
 
   auto intervals_set = ms->getIntervals();
