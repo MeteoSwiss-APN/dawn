@@ -252,7 +252,6 @@ bool Stencil::hasGlobalVariables() const {
   return false;
 }
 bool Stencil::compareDerivedInfo() const {
-
   auto fieldsOnTheFly = computeFieldsOnTheFly();
 
   bool equal = true;

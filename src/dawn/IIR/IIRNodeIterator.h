@@ -1,4 +1,4 @@
-//===--------------------------------------------------------------------------------*- C++ -*-===//
+﻿//===--------------------------------------------------------------------------------*- C++ -*-===//
 //                          _
 //                         | |
 //                       __| | __ ___      ___ ___
@@ -33,26 +33,46 @@ class IIRNodeIterator {
   typename RootIIRNode::ChildConstIterator end_;
   IIRNodeIterator<typename RootIIRNode::ChildType, LeafNode> restIterator_;
 
+  // the iterator is a void iterator if the node contains no children
+  bool voidIter_ = false;
+  std::string name = RootIIRNode::name;
+  const RootIIRNode* root_;
+  bool isTop_ = false;
+
 public:
   using leafIterator_t = typename LeafNode::ChildIterator;
 
-  IIRNodeIterator(const RootIIRNode* root) {
+  /// @brief IIRNodeIterator constructor
+  /// @param root IIRNodeIterator will model iterators for children of this node
+  /// @param isTop true if this is the top node of the multi-iterator call
+  IIRNodeIterator(const RootIIRNode* root, bool isTop = false) : root_(root), isTop_(isTop) {
     DAWN_ASSERT(root);
-    DAWN_ASSERT_MSG((root->getChildren().size() > 0),
-                    "multi-iterator with empty children set is not supported");
     iterator_ = (root->childrenBegin());
     end_ = (root->childrenEnd());
-    restIterator_ =
-        IIRNodeIterator<typename RootIIRNode::ChildType, LeafNode>(root->childrenBegin()->get());
+    if(!root->childrenEmpty()) {
+      restIterator_ =
+          IIRNodeIterator<typename RootIIRNode::ChildType, LeafNode>(root->childrenBegin()->get());
+    } else {
+      voidIter_ = true;
+    }
   }
 
+  bool isVoidIter() const {
+    if(voidIter_)
+      return true;
+    return restIterator_.isVoidIter();
+  }
   IIRNodeIterator() = default;
   IIRNodeIterator(IIRNodeIterator&&) = default;
   IIRNodeIterator(const IIRNodeIterator&) = default;
   IIRNodeIterator& operator=(IIRNodeIterator&&) = default;
 
   IIRNodeIterator& operator++() {
+    if(voidIter_)
+      return *this;
+
     ++restIterator_;
+
     if(restIterator_.isEnd()) {
       ++iterator_;
 
@@ -61,10 +81,18 @@ public:
             IIRNodeIterator<typename RootIIRNode::ChildType, LeafNode>(iterator_->get());
       }
     }
+    // If the restIterator contains no children, we need to continue advancing the iterator until we
+    // fall into a node with children (or leaves) to evaluate or we reach the end
+    while(isTop_ && isVoidIter() && !isEnd())
+      this->operator++();
+
     return *this;
   }
 
   bool operator==(const IIRNodeIterator& other) const {
+    if(voidIter_)
+      return (iterator_ == other.iterator_);
+
     return (iterator_ == other.iterator_) && (restIterator_ == other.restIterator_);
   }
 
@@ -72,11 +100,13 @@ public:
 
   void setToEnd() {
     iterator_ = end_;
-    // the recursive rest of iterators is constructed with last node (i.e. end-1) and set to end
-    // recursively
-    restIterator_ =
-        IIRNodeIterator<typename RootIIRNode::ChildType, LeafNode>(std::prev(iterator_)->get());
-    restIterator_.setToEnd();
+    if(!voidIter_) {
+      // the recursive rest of iterators is constructed with last node (i.e. end-1) and set to end
+      // recursively
+      restIterator_ =
+          IIRNodeIterator<typename RootIIRNode::ChildType, LeafNode>(std::prev(iterator_)->get());
+      restIterator_.setToEnd();
+    }
   }
 
   const std::unique_ptr<LeafNode>& operator*() {
@@ -95,7 +125,11 @@ public:
     return *restIterator_;
   }
 
-  bool isEnd() const { return iterator_ == end_; }
+  bool isEnd() const {
+    if(voidIter_)
+      return true;
+    return iterator_ == end_;
+  }
 };
 
 template <typename LeafNode>
@@ -110,6 +144,8 @@ public:
 
   IIRNodeIterator& operator++() { return *this; }
 
+  bool isVoidIter() const { return false; }
+
   bool isEnd() const { return true; }
   void setToEnd() {}
   bool operator==(const IIRNodeIterator& other) const { return true; }
@@ -123,10 +159,14 @@ class IIRRange {
 public:
   IIRRange(const RootNode& root) : root_(root) {}
   IIRNodeIterator<RootNode, LeafNode> begin() {
-    return IIRNodeIterator<RootNode, LeafNode>(&root_);
+    auto nodeIter = IIRNodeIterator<RootNode, LeafNode>(&root_, true);
+    while(nodeIter.isVoidIter() && !nodeIter.isEnd()) {
+      ++nodeIter;
+    }
+    return nodeIter;
   }
   IIRNodeIterator<RootNode, LeafNode> end() {
-    auto it = IIRNodeIterator<RootNode, LeafNode>(&root_);
+    auto it = IIRNodeIterator<RootNode, LeafNode>(&root_, true);
     it.setToEnd();
     return it;
   }
