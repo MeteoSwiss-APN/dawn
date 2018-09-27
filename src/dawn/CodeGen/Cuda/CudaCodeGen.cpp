@@ -95,13 +95,6 @@ void CudaCodeGen::generateIJCacheDecl(
         std::to_string(blockSize[0] + (maxExtents[0].Plus - maxExtents[0].Minus)) + "," +
         std::to_string(blockSize[1] + (maxExtents[1].Plus - maxExtents[1].Minus)) + "]");
   }
-  if(cacheProperties.isThereACommonCache()) {
-    kernel.addStatement("int " +
-                        cacheProperties.getCommonCacheIndexName(iir::Cache::CacheTypeKind::IJ) +
-                        "= iblock + " + std::to_string(cacheProperties.getOffsetCommonCache(1)) +
-                        " (jblock + " + std::to_string(cacheProperties.getOffsetCommonCache(1)) +
-                        ")*" + std::to_string(cacheProperties.getStrideCommonCache(1, blockSize)));
-  }
 }
 
 void CudaCodeGen::generateCudaKernelCode(
@@ -305,12 +298,12 @@ void CudaCodeGen::generateCudaKernelCode(
     cudaKernel.addStatement(idxStmt);
   }
 
+  generateIJCacheIndexInit(cudaKernel, cacheProperties, blockSize);
+
   if(containsTemporary) {
-    auto maxExtentTmps = computeTempMaxWriteExtent(*(ms->getParent()));
-    cudaKernel.addStatement("int idx_tmp = (iblock+" + std::to_string(-maxExtentTmps[0].Minus) +
-                            ")*1 + (jblock+" + std::to_string(-maxExtentTmps[1].Minus) +
-                            ")*jstride_tmp");
+    generateTmpIndexInit(cudaKernel, ms);
   }
+
   auto intervals_set = ms->getIntervals();
   std::vector<iir::Interval> intervals_v;
   std::copy(intervals_set.begin(), intervals_set.end(), std::back_inserter(intervals_v));
@@ -413,6 +406,40 @@ void CudaCodeGen::generateCudaKernelCode(
   }
 
   cudaKernel.commit();
+}
+
+void CudaCodeGen::generateIJCacheIndexInit(MemberFunction& kernel,
+                                           const CacheProperties& cacheProperties,
+                                           const Array3ui blockSize) const {
+  if(cacheProperties.isThereACommonCache()) {
+    kernel.addStatement("int " +
+                        cacheProperties.getCommonCacheIndexName(iir::Cache::CacheTypeKind::IJ) +
+                        "= iblock + " + std::to_string(cacheProperties.getOffsetCommonCache(1)) +
+                        " + (jblock + " + std::to_string(cacheProperties.getOffsetCommonCache(1)) +
+                        ")*" + std::to_string(cacheProperties.getStrideCommonCache(1, blockSize)));
+  }
+}
+
+void CudaCodeGen::generateTmpIndexInit(
+    MemberFunction& kernel, const std::unique_ptr<iir::MultiStage>& ms,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const {
+
+  const auto& fields = ms->getFields();
+  const bool containsTemporary =
+      (find_if(fields.begin(), fields.end(), [&](const std::pair<int, iir::Field>& field) {
+         const int accessID = field.second.getAccessID();
+         // we dont need to initialize tmp indices for fields that are cached
+         bool cacheBypass = ms->isCached(accessID) && (ms->getCache(accessID).getCacheType() ==
+                                                       iir::Cache::CacheTypeKind::IJ);
+         return stencilInstantiation->isTemporaryField(accessID) && !cacheBypass;
+       }) != fields.end());
+
+  if(!containsTemporary)
+    return;
+
+  auto maxExtentTmps = computeTempMaxWriteExtent(*(ms->getParent()));
+  kernel.addStatement("int idx_tmp = (iblock+" + std::to_string(-maxExtentTmps[0].Minus) +
+                      ")*1 + (jblock+" + std::to_string(-maxExtentTmps[1].Minus) + ")*jstride_tmp");
 }
 
 int CudaCodeGen::paddedBoundary(int value) {

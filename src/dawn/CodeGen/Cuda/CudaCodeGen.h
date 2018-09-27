@@ -115,6 +115,12 @@ private:
                            const iir::MultiStage& ms, const CacheProperties& cacheProperties,
                            Array3ui blockSize) const;
 
+  void generateIJCacheIndexInit(MemberFunction& kernel, const CacheProperties& cacheProperties,
+                                const Array3ui blockSize) const;
+
+  void generateTmpIndexInit(
+      MemberFunction& kernel, const std::unique_ptr<iir::MultiStage>& ms,
+      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
   std::string
   getCacheName(const iir::Cache& cache,
                const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
