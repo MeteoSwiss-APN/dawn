@@ -159,8 +159,12 @@ void ASTStencilBody::derefIJCache(const std::shared_ptr<FieldAccessExpr>& expr) 
   DAWN_ASSERT(expr->getOffset()[2] == 0);
 
   auto offset = expr->getOffset();
-  std::string offsetStr = std::to_string(offset[0]) + "+" + std::to_string(offset[1]) + "*" +
-                          std::to_string(cacheProperties_.getStride(accessID, 0, blockSizes_));
+  std::string offsetStr;
+  if(offset[0]!= 0)
+     offsetStr += std::to_string(offset[0]);
+  if(offset[1] != 0) 
+     offsetStr += ((offsetStr != "") ? "+" : "") + std::to_string(offset[1]) + "*" +
+                          std::to_string(cacheProperties_.getStride(accessID, 1, blockSizes_));
   ss_ << accessName
       << (offsetStr.empty() ? "[" + index + "]" : ("[" + index + "+" + offsetStr + "]"));
 }

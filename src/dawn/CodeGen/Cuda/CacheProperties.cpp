@@ -29,7 +29,7 @@ CacheProperties makeCacheProperties(const std::unique_ptr<iir::MultiStage>& ms,
     auto extents = ms->getField(accessID).getExtentsRB();
     bool exceeds = false;
     for(int i = 0; i < 3; ++i) {
-      if(extents[i].Minus < maxRedundantLines || extents[i].Plus > maxRedundantLines) {
+      if(extents[i].Minus < -maxRedundantLines || extents[i].Plus > maxRedundantLines) {
         exceeds = true;
       }
       maxExtents[i].Minus =
@@ -71,7 +71,7 @@ int CacheProperties::getStride(int accessID, int dim, Array3ui blockSize) const 
   if(dim == 0)
     return 1;
   else if(dim == 1)
-    return blockSize[1] - extents[1].Minus + extents[1].Plus;
+    return blockSize[0] - extents[0].Minus + extents[0].Plus;
   else
     dawn_unreachable("error");
 }
