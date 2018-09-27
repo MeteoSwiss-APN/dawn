@@ -28,9 +28,11 @@ namespace cuda {
 
 ASTStencilBody::ASTStencilBody(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-    const std::unordered_map<int, Array3i>& fieldIndexMap)
+    const std::unordered_map<int, Array3i>& fieldIndexMap, const iir::MultiStage& ms,
+    const CacheProperties& cacheProperties, Array3ui blockSizes)
     : ASTCodeGenCXX(), instantiation_(stencilInstantiation), offsetPrinter_("+", "", "", true),
-      fieldIndexMap_(fieldIndexMap) {}
+      fieldIndexMap_(fieldIndexMap), ms_(ms), cacheProperties_(cacheProperties),
+      blockSizes_(blockSizes) {}
 
 ASTStencilBody::~ASTStencilBody() {}
 
@@ -42,16 +44,17 @@ std::string ASTStencilBody::getName(const std::shared_ptr<Stmt>& stmt) const {
   return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
 }
 
-std::array<std::string, 3> ASTStencilBody::ijkfyOffset(const std::array<int, 3>& offsets,
-                                                       bool isTemporary,
+std::array<std::string, 3> ASTStencilBody::ijkfyOffset(const Array3i& offsets, bool isTemporary,
                                                        const Array3i iteratorDims) {
   int n = -1;
+
   std::array<std::string, 3> res;
   std::transform(offsets.begin(), offsets.end(), res.begin(), [&](int const& off) {
     ++n;
     std::array<std::string, 3> indices{CodeGeneratorHelper::generateStrideName(0, iteratorDims),
                                        CodeGeneratorHelper::generateStrideName(1, iteratorDims),
                                        CodeGeneratorHelper::generateStrideName(2, iteratorDims)};
+
     if(isTemporary) {
       indices = {"1", "jstride_tmp", "kstride_tmp"};
     }
@@ -100,12 +103,13 @@ void ASTStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
 void ASTStencilBody::visit(const std::shared_ptr<StencilFunArgExpr>& expr) {
   dawn_unreachable("stencil functions not allows in cuda backend");
 }
+bool ASTStencilBody::isCached(const int accessID) const { return ms_.getCaches().count(accessID); }
 
 void ASTStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
   std::string name = getName(expr);
-  int AccessID = instantiation_->getAccessIDFromExpr(expr);
+  int accessID = instantiation_->getAccessIDFromExpr(expr);
 
-  if(instantiation_->isGlobalVariable(AccessID)) {
+  if(instantiation_->isGlobalVariable(accessID)) {
     ss_ << "globals_." << name;
   } else {
     ss_ << name;
@@ -121,6 +125,11 @@ void ASTStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
 void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   std::string accessName = getName(expr);
   int accessID = instantiation_->getAccessIDFromExpr(expr);
+  if(isCached(accessID) &&
+     (ms_.getCache(accessID).getCacheType() == iir::Cache::CacheTypeKind::IJ)) {
+    derefIJCache(expr);
+    return;
+  }
   bool isTemporary = instantiation_->isTemporaryField(accessID);
   DAWN_ASSERT(fieldIndexMap_.count(accessID) || isTemporary);
   std::string index =
@@ -130,6 +139,28 @@ void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   Array3i iter = isTemporary ? Array3i{1, 1, 1} : fieldIndexMap_.at(accessID);
 
   std::string offsetStr = offsetPrinter_(ijkfyOffset(expr->getOffset(), isTemporary, iter));
+  ss_ << accessName
+      << (offsetStr.empty() ? "[" + index + "]" : ("[" + index + "+" + offsetStr + "]"));
+}
+
+void ASTStencilBody::derefIJCache(const std::shared_ptr<FieldAccessExpr>& expr) {
+  int accessID = instantiation_->getAccessIDFromExpr(expr);
+  std::string accessName = cacheProperties_.getCacheName(accessID, instantiation_);
+
+  std::string index;
+  if(cacheProperties_.isCommonCache(accessID)) {
+    index = "ijcacheIndex";
+  } else {
+    index = "iblock - " + std::to_string(cacheProperties_.getOffset(accessID, 0)) + " (jblock - " +
+            std::to_string(cacheProperties_.getOffset(accessID, 1)) + ")*" +
+            std::to_string(cacheProperties_.getStride(accessID, 1, blockSizes_));
+  }
+
+  DAWN_ASSERT(expr->getOffset()[2] == 0);
+
+  auto offset = expr->getOffset();
+  std::string offsetStr = std::to_string(offset[0]) + "+" + std::to_string(offset[1]) + "*" +
+                          std::to_string(cacheProperties_.getStride(accessID, 0, blockSizes_));
   ss_ << accessName
       << (offsetStr.empty() ? "[" + index + "]" : ("[" + index + "+" + offsetStr + "]"));
 }

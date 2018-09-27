@@ -17,6 +17,8 @@
 
 #include <string>
 #include "dawn/Support/Array.h"
+#include "dawn/IIR/Cache.h"
+#include "dawn/IIR/StencilInstantiation.h"
 
 namespace dawn {
 namespace codegen {

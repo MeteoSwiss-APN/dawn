@@ -148,14 +148,19 @@ public:
   /// @brief Get the pair <AccessID, field> for the fields used within the multi-stage
   const std::unordered_map<int, Field>& getFields() const;
 
+  const Field& getField(int accessID) const;
+
   std::unordered_map<int, Field> computeFieldsOnTheFly() const;
 
   /// @brief Get the enclosing interval of all access to temporaries
   boost::optional<Interval> getEnclosingAccessIntervalTemporaries() const;
 
   /// @brief Get the caches
+  /// //TODO remove this non const getter
   std::unordered_map<int, iir::Cache>& getCaches() { return caches_; }
   const std::unordered_map<int, iir::Cache>& getCaches() const { return caches_; }
+
+  const iir::Cache& getCache(const int accessID) const;
 
   /// @brief Rename all the occurances in the multi-stage
   void renameAllOccurrences(int oldAccessID, int newAccessID);

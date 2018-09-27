@@ -26,6 +26,7 @@ namespace dawn {
 /// @{
 using Array2i = std::array<int, 2>;
 using Array3i = std::array<int, 3>;
+using Array3ui = std::array<unsigned int, 3>;
 /// @}
 
 extern std::ostream& operator<<(std::ostream& os, const Array3i& array);

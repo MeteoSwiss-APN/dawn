@@ -16,6 +16,7 @@
 #include "dawn/CodeGen/Cuda/ASTStencilBody.h"
 #include "dawn/CodeGen/Cuda/ASTStencilDesc.h"
 #include "dawn/CodeGen/Cuda/IndexIterator.h"
+#include "dawn/CodeGen/Cuda/CacheProperties.hpp"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.hpp"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
@@ -29,6 +30,7 @@
 #include "dawn/Support/StringUtil.h"
 #include <algorithm>
 #include <numeric>
+#include <string>
 #include <vector>
 
 namespace dawn {
@@ -74,6 +76,26 @@ CudaCodeGen::buildCudaKernelName(const std::shared_ptr<iir::StencilInstantiation
                                  const std::unique_ptr<iir::MultiStage>& ms) {
   return instantiation->getName() + "_stencil" + std::to_string(ms->getParent()->getStencilID()) +
          "_ms" + std::to_string(ms->getID()) + "_kernel";
+}
+
+void CudaCodeGen::generateIJCacheDecl(
+    MemberFunction& kernel, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const iir::MultiStage& ms, const CacheProperties& cacheProperties,
+    std::array<unsigned int, 3> blockSize) const {
+  for(const auto& cacheP : ms.getCaches()) {
+    const iir::Cache& cache = cacheP.second;
+    if(cache.getCacheType() != iir::Cache::CacheTypeKind::IJ)
+      continue;
+    DAWN_ASSERT(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local);
+
+    const int accessID = cache.getCachedFieldAccessID();
+    const auto& maxExtents = cacheProperties.getCacheExtent(accessID);
+
+    kernel.addStatement(
+        "__shared__ " + cacheProperties.getCacheName(accessID, stencilInstantiation) + "[" +
+        std::to_string(blockSize[0] + (maxExtents[0].Plus - maxExtents[0].Minus)) + "," +
+        std::to_string(blockSize[1] + (maxExtents[1].Plus - maxExtents[1].Minus)) + "]");
+  }
 }
 
 void CudaCodeGen::generateCudaKernelCode(
@@ -159,6 +181,11 @@ void CudaCodeGen::generateCudaKernelCode(
   }
 
   const auto blockSize = stencilInstantiation->getIIR()->getBlockSize();
+
+  auto cacheProperties = makeCacheProperties(ms, 2);
+
+  generateIJCacheDecl(cudaKernel, stencilInstantiation, *ms, cacheProperties, blockSize);
+
   unsigned int ntx = blockSize[0];
   unsigned int nty = blockSize[1];
   cudaKernel.addStatement("const unsigned int nx = isize");
@@ -289,7 +316,8 @@ void CudaCodeGen::generateCudaKernelCode(
 
   DAWN_ASSERT((partitionIntervals.size() > 0));
 
-  ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, fieldIndexMap);
+  ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, fieldIndexMap, *ms, cacheProperties,
+                                       blockSize);
 
   int lastKCell = 0;
   int intervalIdx = 0;

@@ -18,6 +18,7 @@
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/CodeGen/Cuda/IndexIterator.h"
+#include "dawn/CodeGen/Cuda/CacheProperties.hpp"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.hpp"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/StringUtil.h"
@@ -41,12 +42,15 @@ protected:
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   RangeToString offsetPrinter_;
   const std::unordered_map<int, Array3i>& fieldIndexMap_;
+  const iir::MultiStage& ms_;
+  const CacheProperties& cacheProperties_;
+  const Array3ui blockSizes_;
 
   ///
   /// @brief produces a string of (i,j,k) accesses for the C++ generated naive code,
   /// from an array of offseted accesses
   ///
-  std::array<std::string, 3> ijkfyOffset(const std::array<int, 3>& offsets, bool isTemporary,
+  std::array<std::string, 3> ijkfyOffset(const Array3i& offsets, bool isTemporary,
                                          const Array3i iteratorDims);
 
 public:
@@ -54,7 +58,8 @@ public:
 
   /// @brief constructor
   ASTStencilBody(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-                 const std::unordered_map<int, Array3i>& fieldIndexMap);
+                 const std::unordered_map<int, Array3i>& fieldIndexMap, const iir::MultiStage& ms,
+                 const CacheProperties& cacheProperties, Array3ui blockSizes);
 
   virtual ~ASTStencilBody() override;
 
@@ -77,6 +82,10 @@ public:
   /// @brief Mapping of VarDeclStmt and Var/FieldAccessExpr to their name
   std::string getName(const std::shared_ptr<Expr>& expr) const override;
   std::string getName(const std::shared_ptr<Stmt>& stmt) const override;
+  bool isCached(const int accessID) const;
+
+private:
+  void derefIJCache(const std::shared_ptr<FieldAccessExpr>& expr);
 };
 
 } // namespace cuda

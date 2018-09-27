@@ -305,6 +305,16 @@ void MultiStage::updateFromChildren() {
   }
 }
 
+const Field& MultiStage::getField(int accessID) const {
+  DAWN_ASSERT(derivedInfo_.fields_.count(accessID));
+  return derivedInfo_.fields_.at(accessID);
+}
+
+const iir::Cache& MultiStage::getCache(const int accessID) const {
+  DAWN_ASSERT(caches_.count(accessID));
+  return caches_.at(accessID);
+}
+
 void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
   for(auto stageIt = childrenBegin(); stageIt != childrenEnd(); ++stageIt) {
     Stage& stage = (**stageIt);

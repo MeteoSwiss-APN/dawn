@@ -29,6 +29,8 @@ yoda_add_library(
           CXXNaive/ASTStencilFunctionParamVisitor.h
           CXXNaive/CXXNaiveCodeGen.cpp
           CXXNaive/CXXNaiveCodeGen.h
+          Cuda/CacheProperties.cpp
+          Cuda/CacheProperties.hpp
           Cuda/CodeGeneratorHelper.cpp
           Cuda/CodeGeneratorHelper.hpp
           Cuda/CudaCodeGen.cpp

@@ -17,6 +17,7 @@
 
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
+#include "dawn/CodeGen/Cuda/CacheProperties.hpp"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/IndexRange.h"
 #include <set>
@@ -108,6 +109,15 @@ private:
       IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& nonTempFields,
       IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields,
       std::shared_ptr<StencilProperties> stencilProperties) const;
+
+  void generateIJCacheDecl(MemberFunction& kernel,
+                           const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                           const iir::MultiStage& ms, const CacheProperties& cacheProperties,
+                           std::array<unsigned int, 3> blockSize) const;
+
+  std::string
+  getCacheName(const iir::Cache& cache,
+               const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
 
   std::string generateStencilInstantiation(
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
