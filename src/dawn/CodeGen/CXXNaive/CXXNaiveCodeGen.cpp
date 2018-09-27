@@ -485,7 +485,9 @@ void CXXNaiveCodeGen::generateStencilFunctions(
 
       // We need to generate the arguments in order (of the fn call expr)
       for(const auto& exprArg : stencilFun->getArguments()) {
+        if(exprArg->Kind != sir::StencilFunctionArg::ArgumentKind::AK_Field) continue;
         const std::string argName = exprArg->Name;
+
         DAWN_ASSERT(stencilProp->paramNameToType_.count(argName));
         const std::string argType = stencilProp->paramNameToType_[argName];
         // each parameter being passed to a stencil function, is wrapped around the param_wrapper
