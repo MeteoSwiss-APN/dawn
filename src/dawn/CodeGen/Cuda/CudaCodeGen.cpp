@@ -91,8 +91,9 @@ void CudaCodeGen::generateIJCacheDecl(
     const auto& maxExtents = cacheProperties.getCacheExtent(accessID);
 
     kernel.addStatement(
-        "__shared__ " + cacheProperties.getCacheName(accessID, stencilInstantiation) + "[" +
-        std::to_string(blockSize[0] + (maxExtents[0].Plus - maxExtents[0].Minus)) + "," +
+        "__shared__ gridtools::clang::float_type " +
+        cacheProperties.getCacheName(accessID, stencilInstantiation) + "[" +
+        std::to_string(blockSize[0] + (maxExtents[0].Plus - maxExtents[0].Minus)) + "*" +
         std::to_string(blockSize[1] + (maxExtents[1].Plus - maxExtents[1].Minus)) + "]");
   }
 }
