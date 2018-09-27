@@ -133,14 +133,15 @@ void CudaCodeGen::generateCudaKernelCode(
                             std::pair<int, iir::Field> const& p) {
                   return !stencilInstantiation->isTemporaryField(p.second.getAccessID());
                 }));
-  auto tempFields =
-      makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>(
-                            [&](std::pair<int, iir::Field> const& p) {
-                              return stencilInstantiation->isTemporaryField(p.second.getAccessID());
-                            }));
+  auto tempFieldsNonCached =
+      makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
+                            std::pair<int, iir::Field> const& p) {
+                  return stencilInstantiation->isTemporaryField(p.second.getAccessID()) &&
+                         !accessIsCached(p.second.getAccessID(), ms);
+                }));
 
   std::vector<std::string> strides = generateStrideArguments(
-      nonTempFields, tempFields, *ms, *stencilInstantiation, FunctionArgType::callee);
+      nonTempFields, tempFieldsNonCached, *ms, *stencilInstantiation, FunctionArgType::callee);
 
   for(const auto strideArg : strides) {
     cudaKernel.addArg(strideArg);
@@ -429,12 +430,17 @@ bool CudaCodeGen::useTmpIndex(
       (find_if(fields.begin(), fields.end(), [&](const std::pair<int, iir::Field>& field) {
          const int accessID = field.second.getAccessID();
          // we dont need to initialize tmp indices for fields that are cached
-         bool cacheBypass = ms->isCached(accessID) && (ms->getCache(accessID).getCacheType() ==
-                                                       iir::Cache::CacheTypeKind::IJ);
+         bool cacheBypass = accessIsCached(accessID, ms);
          return stencilInstantiation->isTemporaryField(accessID) && !cacheBypass;
        }) != fields.end());
 
   return containsTemporary;
+}
+
+bool CudaCodeGen::accessIsCached(const int accessID,
+                                 const std::unique_ptr<iir::MultiStage>& ms) const {
+  return ms->isCached(accessID) &&
+         (ms->getCache(accessID).getCacheType() == iir::Cache::CacheTypeKind::IJ);
 }
 
 void CudaCodeGen::generateTmpIndexInit(
@@ -798,10 +804,11 @@ void CudaCodeGen::generateStencilRunMethod(
                     return !stencilInstantiation->isTemporaryField(p.second.getAccessID());
                   }));
 
-    auto tempFields =
+    auto tempFieldsNonCached =
         makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
                               std::pair<int, iir::Field> const& p) {
-                    return stencilInstantiation->isTemporaryField(p.second.getAccessID());
+                    return stencilInstantiation->isTemporaryField(p.second.getAccessID()) &&
+                           !accessIsCached(p.second.getAccessID(), multiStagePtr);
                   }));
 
     // create all the data views
@@ -814,7 +821,7 @@ void CudaCodeGen::generateStencilRunMethod(
                                     fieldName + "= " + c_gt() + "make_device_view(m_" + fieldName +
                                     ")");
     }
-    for(auto fieldIt : tempFields) {
+    for(auto fieldIt : tempFieldsNonCached) {
       const auto fieldName =
           stencilInstantiation->getNameFromAccessID((*fieldIt).second.getAccessID());
 
@@ -880,12 +887,13 @@ void CudaCodeGen::generateStencilRunMethod(
       ++idx;
     }
     DAWN_ASSERT(nonTempFields.size() > 0);
-    for(auto field : tempFields) {
+    for(auto field : tempFieldsNonCached) {
       args = args + "," + stencilInstantiation->getNameFromAccessID((*field).second.getAccessID());
     }
 
-    std::vector<std::string> strides = generateStrideArguments(
-        nonTempFields, tempFields, multiStage, *stencilInstantiation, FunctionArgType::caller);
+    std::vector<std::string> strides =
+        generateStrideArguments(nonTempFields, tempFieldsNonCached, multiStage,
+                                *stencilInstantiation, FunctionArgType::caller);
 
     DAWN_ASSERT(!strides.empty());
 
