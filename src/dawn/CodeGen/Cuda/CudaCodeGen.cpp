@@ -164,13 +164,12 @@ void CudaCodeGen::generateCudaKernelCode(
   cudaKernel.startBody();
   cudaKernel.addComment("Start kernel");
 
-  for(const auto& field : fields) {
-    if(stencilInstantiation->isTemporaryField(field.second.getAccessID())) {
-      std::string fieldName = stencilInstantiation->getNameFromAccessID(field.second.getAccessID());
+  for(auto field : tempFieldsNonCached) {
+    std::string fieldName =
+        stencilInstantiation->getNameFromAccessID((*field).second.getAccessID());
 
-      cudaKernel.addStatement("gridtools::clang::float_type* " + fieldName + " = &" + fieldName +
-                              "_dv(tmpBeginIIndex,tmpBeginJIndex,blockIdx.x,blockIdx.y,0)");
-    }
+    cudaKernel.addStatement("gridtools::clang::float_type* " + fieldName + " = &" + fieldName +
+                            "_dv(tmpBeginIIndex,tmpBeginJIndex,blockIdx.x,blockIdx.y,0)");
   }
 
   const auto blockSize = stencilInstantiation->getIIR()->getBlockSize();
