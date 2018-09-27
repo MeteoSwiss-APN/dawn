@@ -111,13 +111,10 @@ void ASTStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
 
   ss_ << iir::StencilFunctionInstantiation::makeCodeGenName(*stencilFun) << "(i,j,k";
 
-  //  int n = 0;
   ASTStencilFunctionParamVisitor fieldAccessVisitor(currentFunction_, instantiation_);
 
   for(auto& arg : expr->getArguments()) {
-
     arg->accept(fieldAccessVisitor);
-    //    ++n;
   }
   ss_ << fieldAccessVisitor.getCodeAndResetStream();
 

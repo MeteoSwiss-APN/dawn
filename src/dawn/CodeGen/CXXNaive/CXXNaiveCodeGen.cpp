@@ -482,13 +482,18 @@ void CXXNaiveCodeGen::generateStencilFunctions(
 
       const auto& stencilProp = codeGenProperties.getStencilProperties(
           StencilContext::SC_StencilFunction, stencilFunName);
-      for(const auto& param : stencilProp->paramNameToType_) {
+
+      // We need to generate the arguments in order (of the fn call expr)
+      for(const auto& exprArg : stencilFun->getArguments()) {
+        const std::string argName = exprArg->Name;
+        DAWN_ASSERT(stencilProp->paramNameToType_.count(argName));
+        const std::string argType = stencilProp->paramNameToType_[argName];
         // each parameter being passed to a stencil function, is wrapped around the param_wrapper
         // that contains the storage and the offset, in order to resolve offset passed to the
         // storage during the function call. For example:
         // fn_call(v(i+1), v(j-1))
-        stencilFunMethod.addArg("param_wrapper<" + c_gt() + "data_view<" + param.second + ">> pw_" +
-                                param.first);
+        stencilFunMethod.addArg("param_wrapper<" + c_gt() + "data_view<" + argType + ">> pw_" +
+                                argName);
       }
       for(std::size_t m = 0; m < fields.size(); ++m) {
 
