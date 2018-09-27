@@ -794,9 +794,10 @@ void CudaCodeGen::generateStencilRunMethod(
 
   StencilRunMethod.startBody();
 
-  StencilRunMethod.addStatement("{");
   StencilRunMethod.addStatement("sync_storages()");
   for(const auto& multiStagePtr : stencil.getChildren()) {
+    StencilRunMethod.addStatement("{");
+
     const iir::MultiStage& multiStage = *multiStagePtr;
 
     const auto& fields = multiStage.getFields();
