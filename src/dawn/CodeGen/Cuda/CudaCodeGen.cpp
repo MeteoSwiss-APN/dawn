@@ -148,22 +148,16 @@ void CudaCodeGen::generateCudaKernelCode(
   }
 
   // first we construct non temporary field arguments
-  for(const auto& field : fields) {
-    if(stencilInstantiation->isTemporaryField(field.second.getAccessID())) {
-      continue;
-    } else {
-      cudaKernel.addArg("gridtools::clang::float_type * const " +
-                        stencilInstantiation->getNameFromAccessID(field.second.getAccessID()));
-    }
+  for(const auto& field : nonTempFields) {
+    cudaKernel.addArg("gridtools::clang::float_type * const " +
+                      stencilInstantiation->getNameFromAccessID((*field).second.getAccessID()));
   }
 
   // then the temporary field arguments
-  for(const auto& field : fields) {
-    if(stencilInstantiation->isTemporaryField(field.second.getAccessID())) {
-      cudaKernel.addArg(c_gt() + "data_view<TmpStorage>" +
-                        stencilInstantiation->getNameFromAccessID(field.second.getAccessID()) +
-                        "_dv");
-    }
+  for(auto field : tempFieldsNonCached) {
+    cudaKernel.addArg(c_gt() + "data_view<TmpStorage>" +
+                      stencilInstantiation->getNameFromAccessID((*field).second.getAccessID()) +
+                      "_dv");
   }
 
   DAWN_ASSERT(fields.size() > 0);
