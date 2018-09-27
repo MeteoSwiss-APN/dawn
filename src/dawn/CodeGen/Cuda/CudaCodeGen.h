@@ -113,7 +113,7 @@ private:
   void generateIJCacheDecl(MemberFunction& kernel,
                            const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                            const iir::MultiStage& ms, const CacheProperties& cacheProperties,
-                           std::array<unsigned int, 3> blockSize) const;
+                           Array3ui blockSize) const;
 
   std::string
   getCacheName(const iir::Cache& cache,

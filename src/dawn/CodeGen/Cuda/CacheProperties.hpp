@@ -37,7 +37,14 @@ struct CacheProperties {
                const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
 
   int getStride(int accessID, int dim, Array3ui blockSize) const;
+  int getStrideCommonCache(int dim, Array3ui blockSize) const;
   int getOffset(int accessID, int dim) const;
+  int getOffsetCommonCache(int dim) const;
+  std::string getCommonCacheIndexName(iir::Cache::CacheTypeKind cacheType) const;
+  bool isThereACommonCache() const;
+
+private:
+  int getStrideImpl(int dim, Array3ui blockSize, const iir::Extents& extents) const;
 };
 
 CacheProperties makeCacheProperties(const std::unique_ptr<iir::MultiStage>& ms,

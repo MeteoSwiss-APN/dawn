@@ -80,8 +80,7 @@ CudaCodeGen::buildCudaKernelName(const std::shared_ptr<iir::StencilInstantiation
 
 void CudaCodeGen::generateIJCacheDecl(
     MemberFunction& kernel, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-    const iir::MultiStage& ms, const CacheProperties& cacheProperties,
-    std::array<unsigned int, 3> blockSize) const {
+    const iir::MultiStage& ms, const CacheProperties& cacheProperties, Array3ui blockSize) const {
   for(const auto& cacheP : ms.getCaches()) {
     const iir::Cache& cache = cacheP.second;
     if(cache.getCacheType() != iir::Cache::CacheTypeKind::IJ)
@@ -95,6 +94,13 @@ void CudaCodeGen::generateIJCacheDecl(
         "__shared__ " + cacheProperties.getCacheName(accessID, stencilInstantiation) + "[" +
         std::to_string(blockSize[0] + (maxExtents[0].Plus - maxExtents[0].Minus)) + "," +
         std::to_string(blockSize[1] + (maxExtents[1].Plus - maxExtents[1].Minus)) + "]");
+  }
+  if(cacheProperties.isThereACommonCache()) {
+    kernel.addStatement("int " +
+                        cacheProperties.getCommonCacheIndexName(iir::Cache::CacheTypeKind::IJ) +
+                        "= iblock + " + std::to_string(cacheProperties.getOffsetCommonCache(1)) +
+                        " (jblock + " + std::to_string(cacheProperties.getOffsetCommonCache(1)) +
+                        ")*" + std::to_string(cacheProperties.getStrideCommonCache(1, blockSize)));
   }
 }
 

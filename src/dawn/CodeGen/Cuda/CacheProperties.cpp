@@ -68,6 +68,14 @@ iir::Extents CacheProperties::getCacheExtent(int accessID) const {
 
 int CacheProperties::getStride(int accessID, int dim, Array3ui blockSize) const {
   auto extents = getCacheExtent(accessID);
+  return getStrideImpl(dim, blockSize, extents);
+}
+
+int CacheProperties::getStrideCommonCache(int dim, Array3ui blockSize) const {
+  return getStrideImpl(dim, blockSize, extents_);
+}
+
+int CacheProperties::getStrideImpl(int dim, Array3ui blockSize, const iir::Extents& extents) const {
   if(dim == 0)
     return 1;
   else if(dim == 1)
@@ -80,6 +88,17 @@ int CacheProperties::getOffset(int accessID, int dim) const {
   auto extents = getCacheExtent(accessID);
   return -extents[dim].Minus;
 }
+
+int CacheProperties::getOffsetCommonCache(int dim) const { return -extents_[dim].Minus; }
+
+std::string CacheProperties::getCommonCacheIndexName(iir::Cache::CacheTypeKind cacheType) const {
+  if(cacheType == iir::Cache::CacheTypeKind::IJ) {
+    return "ijcacheindex";
+  }
+  dawn_unreachable("unknown cache type");
+}
+
+bool CacheProperties::isThereACommonCache() const { return !(accessIDsCommonCache_.empty()); }
 
 } // namespace cuda
 } // namespace codegen

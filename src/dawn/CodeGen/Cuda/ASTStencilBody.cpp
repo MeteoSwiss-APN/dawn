@@ -149,7 +149,7 @@ void ASTStencilBody::derefIJCache(const std::shared_ptr<FieldAccessExpr>& expr) 
 
   std::string index;
   if(cacheProperties_.isCommonCache(accessID)) {
-    index = "ijcacheIndex";
+    index = cacheProperties_.getCommonCacheIndexName(iir::Cache::CacheTypeKind::IJ);
   } else {
     index = "iblock - " + std::to_string(cacheProperties_.getOffset(accessID, 0)) + " (jblock - " +
             std::to_string(cacheProperties_.getOffset(accessID, 1)) + ")*" +
@@ -160,11 +160,11 @@ void ASTStencilBody::derefIJCache(const std::shared_ptr<FieldAccessExpr>& expr) 
 
   auto offset = expr->getOffset();
   std::string offsetStr;
-  if(offset[0]!= 0)
-     offsetStr += std::to_string(offset[0]);
-  if(offset[1] != 0) 
-     offsetStr += ((offsetStr != "") ? "+" : "") + std::to_string(offset[1]) + "*" +
-                          std::to_string(cacheProperties_.getStride(accessID, 1, blockSizes_));
+  if(offset[0] != 0)
+    offsetStr += std::to_string(offset[0]);
+  if(offset[1] != 0)
+    offsetStr += ((offsetStr != "") ? "+" : "") + std::to_string(offset[1]) + "*" +
+                 std::to_string(cacheProperties_.getStride(accessID, 1, blockSizes_));
   ss_ << accessName
       << (offsetStr.empty() ? "[" + index + "]" : ("[" + index + "+" + offsetStr + "]"));
 }
