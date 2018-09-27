@@ -109,10 +109,20 @@ void CudaCodeGen::generateCudaKernelCode(
 
   // fields used in the stencil
   const auto& fields = ms->getFields();
-  const bool containsTemporary =
-      (find_if(fields.begin(), fields.end(), [&](const std::pair<int, iir::Field>& field) {
-         return stencilInstantiation->isTemporaryField(field.second.getAccessID());
-       }) != fields.end());
+
+  auto nonTempFields =
+      makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
+                            std::pair<int, iir::Field> const& p) {
+                  return !stencilInstantiation->isTemporaryField(p.second.getAccessID());
+                }));
+  auto tempFieldsNonCached =
+      makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
+                            std::pair<int, iir::Field> const& p) {
+                  return stencilInstantiation->isTemporaryField(p.second.getAccessID()) &&
+                         !accessIsCached(p.second.getAccessID(), ms);
+                }));
+
+  const bool containsTemporary = !tempFieldsNonCached.empty();
 
   std::string fnDecl = "";
   if(containsTemporary)
@@ -127,18 +137,6 @@ void CudaCodeGen::generateCudaKernelCode(
   cudaKernel.addArg("const int isize");
   cudaKernel.addArg("const int jsize");
   cudaKernel.addArg("const int ksize");
-
-  auto nonTempFields =
-      makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
-                            std::pair<int, iir::Field> const& p) {
-                  return !stencilInstantiation->isTemporaryField(p.second.getAccessID());
-                }));
-  auto tempFieldsNonCached =
-      makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
-                            std::pair<int, iir::Field> const& p) {
-                  return stencilInstantiation->isTemporaryField(p.second.getAccessID()) &&
-                         !accessIsCached(p.second.getAccessID(), ms);
-                }));
 
   std::vector<std::string> strides = generateStrideArguments(
       nonTempFields, tempFieldsNonCached, *ms, *stencilInstantiation, FunctionArgType::callee);
