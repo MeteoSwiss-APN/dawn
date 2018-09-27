@@ -98,6 +98,15 @@ void CudaCodeGen::generateIJCacheDecl(
   }
 }
 
+bool CudaCodeGen::useIJCaches(const std::unique_ptr<iir::MultiStage>& ms) const {
+  for(const auto& cacheP : ms->getCaches()) {
+    const iir::Cache& cache = cacheP.second;
+    if(cache.getCacheType() != iir::Cache::CacheTypeKind::IJ)
+      continue;
+    return true;
+  }
+  return false;
+}
 void CudaCodeGen::generateCudaKernelCode(
     std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     const std::unique_ptr<iir::MultiStage>& ms) {
@@ -291,7 +300,9 @@ void CudaCodeGen::generateCudaKernelCode(
     cudaKernel.addStatement(idxStmt);
   }
 
-  generateIJCacheIndexInit(cudaKernel, cacheProperties, blockSize);
+  if(useIJCaches(ms)) {
+    generateIJCacheIndexInit(cudaKernel, cacheProperties, blockSize);
+  }
 
   if(containsTemporary) {
     generateTmpIndexInit(cudaKernel, ms, stencilInstantiation);
@@ -783,6 +794,7 @@ void CudaCodeGen::generateStencilRunMethod(
 
   StencilRunMethod.startBody();
 
+  StencilRunMethod.addStatement("{");
   StencilRunMethod.addStatement("sync_storages()");
   for(const auto& multiStagePtr : stencil.getChildren()) {
     const iir::MultiStage& multiStage = *multiStagePtr;
@@ -893,8 +905,10 @@ void CudaCodeGen::generateStencilRunMethod(
     StencilRunMethod.addStatement(kernelCall);
 
     StencilRunMethod.addStatement("sync_storages()");
-    StencilRunMethod.commit();
+
+    StencilRunMethod.addStatement("}");
   }
+  StencilRunMethod.commit();
 }
 
 std::vector<std::string> CudaCodeGen::generateStrideArguments(

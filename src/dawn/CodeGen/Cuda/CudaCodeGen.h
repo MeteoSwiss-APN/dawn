@@ -121,6 +121,8 @@ private:
   bool useTmpIndex(const std::unique_ptr<iir::MultiStage>& ms,
                    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
 
+  bool useIJCaches(const std::unique_ptr<iir::MultiStage>& ms) const;
+
   bool accessIsCached(const int accessID, const std::unique_ptr<iir::MultiStage>& ms) const;
 
   void generateTmpIndexInit(
