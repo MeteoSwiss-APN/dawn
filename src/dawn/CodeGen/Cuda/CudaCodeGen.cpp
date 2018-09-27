@@ -148,7 +148,7 @@ void CudaCodeGen::generateCudaKernelCode(
   }
 
   // first we construct non temporary field arguments
-  for(const auto& field : nonTempFields) {
+  for(auto field : nonTempFields) {
     cudaKernel.addArg("gridtools::clang::float_type * const " +
                       stencilInstantiation->getNameFromAccessID((*field).second.getAccessID()));
   }
