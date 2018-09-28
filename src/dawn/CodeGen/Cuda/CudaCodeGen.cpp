@@ -428,7 +428,7 @@ CudaCodeGen::computeNextLevelToProcess(const iir::Interval& interval,
      (loopOrder == iir::LoopOrderKind::LK_Parallel)) {
     intervalLevel = interval.lowerIntervalLevel();
   } else if(loopOrder == iir::LoopOrderKind::LK_Backward) {
-    iir::Interval::IntervalLevel intervalLevel = interval.upperIntervalLevel();
+    intervalLevel = interval.upperIntervalLevel();
   } else {
     dawn_unreachable("non supported policy");
   }
@@ -809,6 +809,8 @@ void CudaCodeGen::generateStencilWrapperRun(
 
 std::string CudaCodeGen::intervalDiffToString(iir::IntervalDiff intervalDiff,
                                               std::string maxRange) const {
+  std::cout << "KO " << static_cast<int>(intervalDiff.rangeType_) << " " << intervalDiff.value
+            << std::endl;
   if(intervalDiff.rangeType_ == iir::IntervalDiff::RangeType::fullRange) {
     return maxRange + std::to_string(intervalDiff.value);
   }
