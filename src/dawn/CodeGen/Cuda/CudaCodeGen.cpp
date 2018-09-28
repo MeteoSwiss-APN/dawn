@@ -327,7 +327,8 @@ void CudaCodeGen::generateCudaKernelCode(
   for(auto interval : partitionIntervals) {
 
     // If execution is parallel we want to place the interval in a forward order
-    if(interval.lowerBound() > interval.upperBound()) {
+    if((ms->getLoopOrder() == iir::LoopOrderKind::LK_Parallel) &&
+       (interval.lowerBound() > interval.upperBound())) {
       interval.invert();
     }
     iir::IntervalDiff kmin{iir::IntervalDiff::RangeType::literal, 0};
@@ -343,12 +344,12 @@ void CudaCodeGen::generateCudaKernelCode(
         if(index.second[2]) {
           cudaKernel.addStatement("idx" + index.first + " += " +
                                   CodeGeneratorHelper::generateStrideName(2, index.second) + "*(" +
-                                  intervalDiffToString(kmin, "m_dom.ksize()") + ")");
+                                  intervalDiffToString(kmin, "ksize") + ")");
         }
       }
       if(useTmpIndex(ms, stencilInstantiation)) {
         cudaKernel.addStatement("idx_tmp += kstride_tmp*(" + std::to_string(interval.lowerBound()) +
-                                "-" + intervalDiffToString(kmin, "m_dom.ksize()") + ")");
+                                "-" + intervalDiffToString(kmin, "ksize") + ")");
       }
     }
 
@@ -358,13 +359,13 @@ void CudaCodeGen::generateCudaKernelCode(
       for(auto index : indexIterators) {
         if(index.second[2]) {
           cudaKernel.addStatement("idx" + index.first + " += max(" +
-                                  intervalDiffToString(kmin, "m_dom.ksize()") + "," +
+                                  intervalDiffToString(kmin, "ksize") + "," +
                                   CodeGeneratorHelper::generateStrideName(2, index.second) +
                                   " * blockIdx.z * " + std::to_string(blockSize[2]) + ")");
         }
       }
       if(useTmpIndex(ms, stencilInstantiation)) {
-        cudaKernel.addStatement("idx_tmp += max(" + intervalDiffToString(kmin, "m_dom.ksize()") +
+        cudaKernel.addStatement("idx_tmp += max(" + intervalDiffToString(kmin, "ksize") +
                                 ", kstride_tmp * blockIdx.z * " + std::to_string(blockSize[2]) +
                                 ")");
       }
