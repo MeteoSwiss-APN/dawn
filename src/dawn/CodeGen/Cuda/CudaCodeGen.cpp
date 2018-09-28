@@ -336,8 +336,7 @@ void CudaCodeGen::generateCudaKernelCode(
     // interval, we advance the iterators
     iir::Interval::IntervalLevel lowLevel = interval.lowerIntervalLevel();
     lowLevel.offset_ += 1;
-    if(distance(lowLevel, lastKCell).null()) {
-
+    if(!distance(lowLevel, lastKCell).null()) {
       kmin = distance(interval.lowerIntervalLevel(), lastKCell);
 
       for(auto index : indexIterators) {
