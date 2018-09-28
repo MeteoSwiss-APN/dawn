@@ -13,14 +13,14 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassFieldVersioning.h"
-#include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
-#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Extents.h"
-#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/AccessComputation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
@@ -95,10 +95,11 @@ PassFieldVersioning::PassFieldVersioning() : Pass("PassFieldVersioning", true), 
 
 bool PassFieldVersioning::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+  instantiation_ = stencilInstantiation.get();
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
   numRenames_ = 0;
 
-  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
+  for(const auto& stencilPtr : stencilInstantiation->getIIR()->getChildren()) {
     iir::Stencil& stencil = *stencilPtr;
 
     // Iterate multi-stages backwards
@@ -148,6 +149,39 @@ bool PassFieldVersioning::run(
     }
   }
 
+  // Now we need to check that every field is synchronized: if the first access to the versioned
+  // field is a write-access, we don't need to do anything. If it is a read-access, we need to
+  // insert a stage before that access where we move the data to the field.
+  if(!versionedIDoriginalIDs_.empty()) {
+    // check first access:
+    for(auto IDPair : versionedIDoriginalIDs_) {
+      bool IDhandeled = false;
+      for(auto& stencil : instantiation_->getIIR()->getChildren()) {
+        for(auto mssptr = stencil->childrenBegin(); mssptr != stencil->childrenEnd(); ++mssptr) {
+          std::unique_ptr<iir::MultiStage>& mss = *mssptr;
+          auto retval = checkReadBeforeWrite(IDPair.first, mss);
+          if(retval) {
+            // insert stage
+            auto newmss =
+                createAssignmentMS(IDPair.first, IDPair.second, mss->getEnclosingInterval());
+            stencil->insertChild(mssptr, std::move(newmss));
+            // This field is handled, we move on to the next one
+            IDhandeled = true;
+            break;
+          }
+          //          else if(retval == FieldVersionFirstAccessKind::FA_Write) {
+          //            //  We have a write first, no need to do anything, we move on
+          //            IDhandeled = true;
+          //            break;
+          //          }
+        }
+        if(IDhandeled) {
+          break;
+        }
+      }
+    }
+  }
+
   if(context->getOptions().ReportPassFieldVersioning && numRenames_ == 0)
     std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
               << ": no rename\n";
@@ -163,8 +197,8 @@ PassFieldVersioning::fixRaceCondition(const iir::DependencyGraphAccesses* graph,
 
   Statement& statement = *doMethod.getChildren()[index]->getStatement();
 
-  auto& instantiation = stencil.getStencilInstantiation();
-  OptimizerContext* context = instantiation.getOptimizerContext();
+  //  auto& instantiation = stencil.getStencilInstantiation();
+  OptimizerContext* context = instantiation_->getOptimizerContext();
   int numRenames = 0;
 
   // Vector of strongly connected components with atleast one stencil access
@@ -238,14 +272,14 @@ PassFieldVersioning::fixRaceCondition(const iir::DependencyGraphAccesses* graph,
 
   if(!assignment) {
     if(context->getOptions().DumpRaceConditionGraph)
-      graph->toDot("rc_" + instantiation.getName() + ".dot");
-    reportRaceCondition(statement, instantiation);
+      graph->toDot("rc_" + instantiation_->getName() + ".dot");
+    reportRaceCondition(statement, *instantiation_);
     return RCKind::RK_Unresolvable;
   }
 
   // Get AccessIDs of the LHS and RHS
   std::set<int> LHSAccessIDs, RHSAccessIDs;
-  getAccessIDFromAssignment(instantiation, assignment, LHSAccessIDs, RHSAccessIDs);
+  getAccessIDFromAssignment(*instantiation_, assignment, LHSAccessIDs, RHSAccessIDs);
 
   DAWN_ASSERT_MSG(LHSAccessIDs.size() == 1, "left hand side should only have only one AccessID");
   int LHSAccessID = *LHSAccessIDs.begin();
@@ -254,8 +288,8 @@ PassFieldVersioning::fixRaceCondition(const iir::DependencyGraphAccesses* graph,
   for(std::set<int>& scc : *stencilSCCs) {
     if(!scc.count(LHSAccessID)) {
       if(context->getOptions().DumpRaceConditionGraph)
-        graph->toDot("rc_" + instantiation.getName() + ".dot");
-      reportRaceCondition(statement, instantiation);
+        graph->toDot("rc_" + instantiation_->getName() + ".dot");
+      reportRaceCondition(statement, *instantiation_);
       return RCKind::RK_Unresolvable;
     }
   }
@@ -270,18 +304,19 @@ PassFieldVersioning::fixRaceCondition(const iir::DependencyGraphAccesses* graph,
   }
 
   if(context->getOptions().ReportPassFieldVersioning)
-    std::cout << "\nPASS: " << getName() << ": " << instantiation.getName()
+    std::cout << "\nPASS: " << getName() << ": " << instantiation_->getName()
               << ": rename:" << statement.ASTStmt->getSourceLocation().Line;
 
   // Create a new multi-versioned field and rename all occurences
   for(int oldAccessID : renameCandiates) {
-    int newAccessID = instantiation.createVersionAndRename(oldAccessID, &stencil, stageIdx, index,
-                                                           assignment->getRight(),
-                                                           iir::StencilInstantiation::RD_Above);
+    int newAccessID = instantiation_->createVersionAndRename(oldAccessID, &stencil, stageIdx, index,
+                                                             assignment->getRight(),
+                                                             iir::StencilInstantiation::RD_Above);
 
     if(context->getOptions().ReportPassFieldVersioning)
-      std::cout << (numRenames != 0 ? ", " : " ") << instantiation.getNameFromAccessID(oldAccessID)
-                << ":" << instantiation.getNameFromAccessID(newAccessID);
+      std::cout << (numRenames != 0 ? ", " : " ")
+                << instantiation_->getNameFromAccessID(oldAccessID) << ":"
+                << instantiation_->getNameFromAccessID(newAccessID);
 
     numRenames++;
   }
@@ -291,6 +326,88 @@ PassFieldVersioning::fixRaceCondition(const iir::DependencyGraphAccesses* graph,
 
   numRenames_ += numRenames;
   return RCKind::RK_Fixed;
+}
+
+bool PassFieldVersioning::checkReadBeforeWrite(int AccessID,
+                                               const std::unique_ptr<iir::MultiStage>& mss) {
+
+  for(const auto& stmtAccessesPair : iterateIIROver<iir::StatementAccessesPair>(*mss)) {
+
+    // Find first if this statement has a read
+    auto readAccessIterator =
+        stmtAccessesPair->getCallerAccesses()->getReadAccesses().find(AccessID);
+    if(readAccessIterator != stmtAccessesPair->getCallerAccesses()->getReadAccesses().end()) {
+      return true;
+    }
+    // If we did not find a read statement so far, we have  a write first and do not need to
+    // fill the cache
+    auto wirteAccessIterator =
+        stmtAccessesPair->getCallerAccesses()->getWriteAccesses().find(AccessID);
+    if(wirteAccessIterator != stmtAccessesPair->getCallerAccesses()->getWriteAccesses().end()) {
+      return false;
+    }
+  }
+  return false;
+}
+
+/// @brief Creates the stage in which assignment happens (fill and flush)
+std::unique_ptr<iir::Stage>
+PassFieldVersioning::createAssignmentStage(const iir::Interval& interval,
+                                           const std::vector<int>& assignmentIDs,
+                                           const std::vector<int>& assigneeIDs) {
+  // Add the cache Flush stage
+  std::unique_ptr<iir::Stage> assignmentStage =
+      make_unique<iir::Stage>(*instantiation_, instantiation_->nextUID(), interval);
+  iir::Stage::DoMethodSmartPtr_t domethod = make_unique<iir::DoMethod>(interval);
+  domethod->clearChildren();
+
+  for(int i = 0; i < assignmentIDs.size(); ++i) {
+    int assignmentID = assignmentIDs[i];
+    int assigneeID = assigneeIDs[i];
+    addAssignmentToDoMethod(domethod, assignmentID, assigneeID);
+  }
+
+  // Add the single do method to the new Stage
+  assignmentStage->clearChildren();
+  assignmentStage->addDoMethod(domethod);
+  assignmentStage->update(iir::NodeUpdateType::level);
+
+  return assignmentStage;
+}
+
+///@brief Add the assignment operator of two unique id's to a given domethod
+void PassFieldVersioning::addAssignmentToDoMethod(const iir::Stage::DoMethodSmartPtr_t& domethod,
+                                                  int assignmentID, int assigneeID) {
+  // Create the StatementAccessPair of the assignment with the new and old variables
+  auto fa_assignee =
+      std::make_shared<FieldAccessExpr>(instantiation_->getNameFromAccessID(assigneeID));
+  auto fa_assignment =
+      std::make_shared<FieldAccessExpr>(instantiation_->getNameFromAccessID(assignmentID));
+  auto assignmentExpression = std::make_shared<AssignmentExpr>(fa_assignment, fa_assignee, "=");
+  auto expAssignment = std::make_shared<ExprStmt>(assignmentExpression);
+  auto assignmentStatement = std::make_shared<Statement>(expAssignment, nullptr);
+  auto pair = make_unique<iir::StatementAccessesPair>(assignmentStatement);
+  auto newAccess = std::make_shared<iir::Accesses>();
+  newAccess->addWriteExtent(assignmentID, iir::Extents(Array3i{{0, 0, 0}}));
+  newAccess->addReadExtent(assigneeID, iir::Extents(Array3i{{0, 0, 0}}));
+  pair->setAccesses(newAccess);
+  domethod->insertChild(std::move(pair));
+
+  // Add the new expressions to the map
+  instantiation_->mapExprToAccessID(fa_assignment, assignmentID);
+  instantiation_->mapExprToAccessID(fa_assignee, assigneeID);
+}
+
+std::unique_ptr<iir::MultiStage>
+PassFieldVersioning::createAssignmentMS(int assignmentID, int assigneeID, iir::Interval interval) {
+  std::unique_ptr<iir::MultiStage> assignmentMSS =
+      make_unique<iir::MultiStage>(*instantiation_, iir::LoopOrderKind::LK_Parallel);
+  // change the Enclosing Interval to ECI of the caller!
+  std::unique_ptr<iir::Stage> cacheFillStage =
+      createAssignmentStage(interval, {assignmentID}, {assigneeID});
+  auto stageBegin = assignmentMSS->childrenBegin();
+  assignmentMSS->insertChild(stageBegin, std::move(cacheFillStage));
+  return assignmentMSS;
 }
 
 } // namespace dawn

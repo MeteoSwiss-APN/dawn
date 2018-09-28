@@ -15,7 +15,9 @@
 #ifndef DAWN_OPTIMIZER_PASSFIELDVERSIONING_H
 #define DAWN_OPTIMIZER_PASSFIELDVERSIONING_H
 
+#include "dawn/IIR/Interval.h"
 #include "dawn/IIR/LoopOrder.h"
+#include "dawn/IIR/Stage.h"
 #include "dawn/Optimizer/Pass.h"
 
 namespace dawn {
@@ -24,6 +26,8 @@ namespace iir {
 class Stencil;
 class DependencyGraphAccesses;
 class DoMethod;
+class Stage;
+class MultiStage;
 }
 
 /// @brief This pass resolves potential race condition by introducing double buffering i.e
@@ -32,7 +36,20 @@ class DoMethod;
 /// @see fixRaceCondition
 /// @ingroup optimizer
 class PassFieldVersioning : public Pass {
+private:
+  // These 3 should move to IIR since they are used in two passes
+  bool checkReadBeforeWrite(int AccessID, const std::unique_ptr<iir::MultiStage>& mss);
+  std::unique_ptr<iir::Stage> createAssignmentStage(const iir::Interval& interval,
+                                                    const std::vector<int>& assignmentIDs,
+                                                    const std::vector<int>& assigneeIDs);
+  void addAssignmentToDoMethod(const iir::Stage::DoMethodSmartPtr_t& domethod, int assignmentID,
+                               int assigneeID);
+  std::unique_ptr<iir::MultiStage> createAssignmentMS(int assignmentID, int assigneeID,
+                                                      iir::Interval interval);
+
   int numRenames_;
+  std::vector<std::pair<int, int>> versionedIDoriginalIDs_;
+  iir::StencilInstantiation* instantiation_;
 
 public:
   PassFieldVersioning();
