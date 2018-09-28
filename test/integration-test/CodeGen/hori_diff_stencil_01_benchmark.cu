@@ -1,1 +1,1 @@
-#include "hori_diff_stencil_02_benchmark.cpp"
+#include "hori_diff_stencil_01_benchmark.cpp"
