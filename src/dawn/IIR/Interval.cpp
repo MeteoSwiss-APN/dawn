@@ -345,6 +345,16 @@ IntervalDiff distance(Interval::IntervalLevel f, Interval::IntervalLevel s) {
                         invert * (up.offset_ - low.bound())};
 }
 
+Interval::IntervalLevel advance(Interval::IntervalLevel& lev_, LoopOrderKind loopOrder, int step) {
+  Interval::IntervalLevel lev = lev_;
+  if(loopOrder == LoopOrderKind::LK_Backward) {
+    lev.offset_ -= step;
+  } else {
+    lev.offset_ += step;
+  }
+  return lev;
+}
+
 IntervalDiff operator+(IntervalDiff idiff, int val) {
   idiff.value += val;
   return idiff;

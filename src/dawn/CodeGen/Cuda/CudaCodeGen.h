@@ -134,6 +134,9 @@ private:
 
   std::string intervalDiffToString(iir::IntervalDiff intervalDiff, std::string maxRange) const;
 
+  iir::Interval::IntervalLevel computeNextLevelToProcess(const iir::Interval& interval,
+                                                         iir::LoopOrderKind loopOrder) const;
+
   std::string generateStencilInstantiation(
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
   //  std::string generateGlobals(const std::shared_ptr<SIR>& sir);

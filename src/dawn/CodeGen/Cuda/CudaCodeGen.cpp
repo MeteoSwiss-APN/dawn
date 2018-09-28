@@ -323,7 +323,6 @@ void CudaCodeGen::generateCudaKernelCode(
                                        blockSize);
 
   iir::Interval::IntervalLevel lastKCell{0, 0};
-  int intervalIdx = 0;
   for(auto interval : partitionIntervals) {
 
     // If execution is parallel we want to place the interval in a forward order
@@ -334,10 +333,12 @@ void CudaCodeGen::generateCudaKernelCode(
     iir::IntervalDiff kmin{iir::IntervalDiff::RangeType::literal, 0};
     // if there is a jump between the last level of previous interval and the first level of this
     // interval, we advance the iterators
-    iir::Interval::IntervalLevel lowLevel = interval.lowerIntervalLevel();
-    lowLevel.offset_ += 1;
-    if(!distance(lowLevel, lastKCell).null()) {
-      kmin = distance(interval.lowerIntervalLevel(), lastKCell);
+
+    iir::Interval::IntervalLevel nextLevel =
+        computeNextLevelToProcess(interval, ms->getLoopOrder()); //
+    if(std::abs(distance(nextLevel, lastKCell).value) != 1) {
+      auto lastKCellp1 = advance(lastKCell, ms->getLoopOrder(), 1);
+      kmin = distance(lastKCellp1, nextLevel);
 
       for(auto index : indexIterators) {
         if(index.second[2]) {
@@ -352,7 +353,7 @@ void CudaCodeGen::generateCudaKernelCode(
       }
     }
 
-    if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Parallel && (intervalIdx++ == 0)) {
+    if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Parallel) {
       // advance the iterators to the first k index of the block or the first position of the
       // interval
       for(auto index : indexIterators) {
@@ -419,6 +420,20 @@ void CudaCodeGen::generateCudaKernelCode(
   cudaKernel.commit();
 }
 
+iir::Interval::IntervalLevel
+CudaCodeGen::computeNextLevelToProcess(const iir::Interval& interval,
+                                       iir::LoopOrderKind loopOrder) const {
+  iir::Interval::IntervalLevel intervalLevel;
+  if((loopOrder == iir::LoopOrderKind::LK_Forward) ||
+     (loopOrder == iir::LoopOrderKind::LK_Parallel)) {
+    intervalLevel = interval.lowerIntervalLevel();
+  } else if(loopOrder == iir::LoopOrderKind::LK_Backward) {
+    iir::Interval::IntervalLevel intervalLevel = interval.upperIntervalLevel();
+  } else {
+    dawn_unreachable("non supported policy");
+  }
+  return intervalLevel;
+}
 void CudaCodeGen::generateIJCacheIndexInit(MemberFunction& kernel,
                                            const CacheProperties& cacheProperties,
                                            const Array3ui blockSize) const {

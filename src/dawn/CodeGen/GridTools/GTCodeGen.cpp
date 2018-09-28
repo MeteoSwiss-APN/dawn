@@ -133,8 +133,6 @@ void GTCodeGen::buildPlaceholderDefinitions(
     std::vector<std::string> const& stencilGlobalVariables,
     const sir::GlobalVariableMap& globalsMap, const CodeGenProperties& codeGenProperties) const {
 
-  const int numFields = stencilFields.size();
-
   int accessorIdx = 0, nonTempFieldId = 0;
   for(const auto& fieldInfoPair : stencilFields) {
     const auto& fieldInfo = fieldInfoPair.second;
@@ -202,7 +200,6 @@ std::string GTCodeGen::generateStencilInstantiation(
       "public"); // The stencils should technically be private but nvcc doesn't like it ...
 
   const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
-  const auto& stencils = stencilInstantiation->getStencils();
   CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
 
   generateBoundaryConditionFunctions(StencilWrapperClass, stencilInstantiation);
@@ -401,8 +398,6 @@ void GTCodeGen::generateStencilWrapperMembers(
   if(!globalsMap.empty()) {
     stencilWrapperClass.addMember("globals", "m_globals");
   }
-
-  const auto& stencils = stencilInstantiation->getStencils();
 
   // Stencil members
   stencilWrapperClass.addComment("Members representing all the stencils that are called");
@@ -712,7 +707,6 @@ void GTCodeGen::generateStencilClasses(
           ++accessorIdx;
         }
 
-        std::size_t maxAccessors = fields.size();
         if(stage.hasGlobalVariables()) {
           StageStruct.addTypeDef("globals")
               .addType(c_gt() + "global_accessor")
@@ -796,8 +790,6 @@ void GTCodeGen::generateStencilClasses(
           "m_globals_gp_(gridtools::clang::backend_t::make_global_parameter(m_globals))");
     }
     StencilConstructor.startBody();
-
-    int numTemporaries = tempFields.size();
 
     // Add static asserts to check halos against extents
     StencilConstructor.addComment("Check if extents do not exceed the halos");

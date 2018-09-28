@@ -289,6 +289,8 @@ IntervalDiff distance(Interval::IntervalLevel f, Interval::IntervalLevel s);
 IntervalDiff operator+(IntervalDiff idiff, int val);
 bool operator==(const IntervalDiff& first, const IntervalDiff& second);
 
+Interval::IntervalLevel advance(Interval::IntervalLevel& lev, LoopOrderKind loopOrder, int step);
+
 } // namespace iir
 } // namespace dawn
 
