@@ -322,7 +322,10 @@ void CudaCodeGen::generateCudaKernelCode(
   ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, fieldIndexMap, *ms, cacheProperties,
                                        blockSize);
 
-  iir::Interval::IntervalLevel lastKCell{0, 0};
+  DAWN_ASSERT(!partitionIntervals.empty());
+  iir::Interval::IntervalLevel lastKCell =
+      computeNextLevelToProcess(partitionIntervals.front(), ms->getLoopOrder());
+  advance(lastKCell, ms->getLoopOrder(), 1);
   for(auto interval : partitionIntervals) {
 
     // If execution is parallel we want to place the interval in a forward order
