@@ -322,27 +322,29 @@ void CudaCodeGen::generateCudaKernelCode(
   ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, fieldIndexMap, *ms, cacheProperties,
                                        blockSize);
 
-  int lastKCell = 0;
+  iir::Interval::IntervalLevel lastKCell{0, 0};
   int intervalIdx = 0;
   for(auto interval : partitionIntervals) {
 
-    int kmin = 0;
+    iir::IntervalDiff kmin{iir::IntervalDiff::RangeType::literal, 0};
     // if there is a jump between the last level of previous interval and the first level of this
     // interval, we advance the iterators
-    if((interval.lowerBound() - lastKCell) > 1) {
+    iir::Interval::IntervalLevel lowLevel = interval.lowerIntervalLevel();
+    lowLevel.offset_ += 1;
+    if(distance(lowLevel, lastKCell).null()) {
 
-      kmin = interval.lowerBound() - lastKCell;
+      kmin = distance(interval.lowerIntervalLevel(), lastKCell);
 
       for(auto index : indexIterators) {
         if(index.second[2]) {
           cudaKernel.addStatement("idx" + index.first + " += " +
                                   CodeGeneratorHelper::generateStrideName(2, index.second) + "*(" +
-                                  std::to_string(kmin) + ")");
+                                  intervalDiffToString(kmin, "m_dom.ksize()") + ")");
         }
       }
       if(useTmpIndex(ms, stencilInstantiation)) {
         cudaKernel.addStatement("idx_tmp += kstride_tmp*(" + std::to_string(interval.lowerBound()) +
-                                "-" + std::to_string(lastKCell) + ")");
+                                "-" + intervalDiffToString(kmin, "m_dom.ksize()") + ")");
       }
     }
 
@@ -351,13 +353,14 @@ void CudaCodeGen::generateCudaKernelCode(
       // interval
       for(auto index : indexIterators) {
         if(index.second[2]) {
-          cudaKernel.addStatement("idx" + index.first + " += max(" + std::to_string(kmin) + "," +
+          cudaKernel.addStatement("idx" + index.first + " += max(" +
+                                  intervalDiffToString(kmin, "m_dom.ksize()") + "," +
                                   CodeGeneratorHelper::generateStrideName(2, index.second) +
                                   " * blockIdx.z * " + std::to_string(blockSize[2]) + ")");
         }
       }
       if(useTmpIndex(ms, stencilInstantiation)) {
-        cudaKernel.addStatement("idx_tmp += max(" + std::to_string(kmin) +
+        cudaKernel.addStatement("idx_tmp += max(" + intervalDiffToString(kmin, "m_dom.ksize()") +
                                 ", kstride_tmp * blockIdx.z * " + std::to_string(blockSize[2]) +
                                 ")");
       }
@@ -406,7 +409,7 @@ void CudaCodeGen::generateCudaKernelCode(
         cudaKernel.addStatement("idx_tmp += kstride_tmp");
       }
     });
-    lastKCell = interval.upperBound();
+    lastKCell = interval.upperIntervalLevel();
   }
 
   cudaKernel.commit();
@@ -783,6 +786,14 @@ void CudaCodeGen::generateStencilWrapperRun(
   }
 
   RunMethod.commit();
+}
+
+std::string CudaCodeGen::intervalDiffToString(iir::IntervalDiff intervalDiff,
+                                              std::string maxRange) const {
+  if(intervalDiff.rangeType_ == iir::IntervalDiff::RangeType::fullRange) {
+    return maxRange + std::to_string(intervalDiff.value);
+  }
+  return std::to_string(intervalDiff.value);
 }
 
 void CudaCodeGen::generateStencilRunMethod(

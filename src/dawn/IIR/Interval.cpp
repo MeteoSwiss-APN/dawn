@@ -51,8 +51,8 @@ std::ostream& operator<<(std::ostream& os, const Interval& interval) {
 }
 
 Interval Interval::extendInterval(const Extent& verticalExtent) const {
-  return Interval(lowerLevel_, upperLevel_, lowerOffset_ + verticalExtent.Minus,
-                  upperOffset_ + verticalExtent.Plus);
+  return Interval(lower_.levelMark_, upper_.levelMark_, lower_.offset_ + verticalExtent.Minus,
+                  upper_.offset_ + verticalExtent.Plus);
 }
 
 std::string Interval::makeCodeGenName(const Interval& interval) {
@@ -160,10 +160,12 @@ std::vector<Interval> Interval::computeGapIntervals(const Interval& axis,
 
 void Interval::merge(const Interval& other) {
   int lb = lowerBound(), ub = upperBound();
-  lowerLevel_ = std::min(lowerLevel_, other.lowerLevel());
-  upperLevel_ = std::max(upperLevel_, other.upperLevel());
-  lowerOffset_ = lb < other.lowerBound() ? lb - lowerLevel_ : other.lowerBound() - lowerLevel();
-  upperOffset_ = ub > other.upperBound() ? ub - upperLevel_ : other.upperBound() - upperLevel();
+  lower_.levelMark_ = std::min(lower_.levelMark_, other.lowerLevel());
+  upper_.levelMark_ = std::max(upper_.levelMark_, other.upperLevel());
+  lower_.offset_ =
+      lb < other.lowerBound() ? lb - lower_.levelMark_ : other.lowerBound() - lowerLevel();
+  upper_.offset_ =
+      ub > other.upperBound() ? ub - upper_.levelMark_ : other.upperBound() - upperLevel();
 }
 
 std::vector<Interval> Interval::computePartition(std::vector<Interval> const& intervals) {
@@ -317,5 +319,34 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
   return newIntervals;
 }
 
+IntervalDiff distance(Interval::IntervalLevel f, Interval::IntervalLevel s) {
+  Interval::IntervalLevel low = f;
+  Interval::IntervalLevel up = s;
+  int invert = 1;
+  if(f.bound() > s.bound()) {
+    low = s;
+    up = f;
+    invert = -1;
+  }
+  if((low.isEnd() && up.isEnd()) || (!up.isEnd())) {
+    return IntervalDiff{IntervalDiff::RangeType::literal, invert * (up.bound() - low.bound())};
+  }
+
+  // up.isEnd()
+  if(invert == 1)
+    return IntervalDiff{IntervalDiff::RangeType::fullRange, invert * (up.offset_ - low.bound())};
+  else
+    return IntervalDiff{IntervalDiff::RangeType::minusFullRange,
+                        invert * (up.offset_ - low.bound())};
+}
+
+IntervalDiff operator+(IntervalDiff idiff, int val) {
+  idiff.value += val;
+  return idiff;
+}
+
+bool operator==(const IntervalDiff& first, const IntervalDiff& second) {
+  return (first.rangeType_ == second.rangeType_) && (first.value == second.value);
+}
 } // namespace iir
 } // namespace dawn

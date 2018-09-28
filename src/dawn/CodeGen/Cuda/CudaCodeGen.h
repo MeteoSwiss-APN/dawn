@@ -132,6 +132,8 @@ private:
   getCacheName(const iir::Cache& cache,
                const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
 
+  std::string intervalDiffToString(iir::IntervalDiff intervalDiff, std::string maxRange) const;
+
   std::string generateStencilInstantiation(
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
   //  std::string generateGlobals(const std::shared_ptr<SIR>& sir);

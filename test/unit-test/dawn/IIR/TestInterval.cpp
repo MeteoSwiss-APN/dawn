@@ -400,5 +400,17 @@ TEST(IntervalTest, Substract) {
     EXPECT_EQ((substract(I1, I2)), (MultiInterval{Interval{0, 0}}));
   }
 }
+TEST(IntervalTest, Distance) {
+  Interval::IntervalLevel a{1, 1}, b{2, 2};
 
+  EXPECT_EQ((distance(a, b)), (IntervalDiff{IntervalDiff::RangeType::literal, 2}));
+  EXPECT_EQ((distance(b, a)), (IntervalDiff{IntervalDiff::RangeType::literal, -2}));
+
+  EXPECT_EQ(
+      (distance(Interval::IntervalLevel{1, 1}, Interval::IntervalLevel{sir::Interval::End, 1})),
+      (IntervalDiff{IntervalDiff::RangeType::fullRange, -1}));
+  EXPECT_EQ(
+      (distance(Interval::IntervalLevel{sir::Interval::End, 1}, Interval::IntervalLevel{1, 1})),
+      (IntervalDiff{IntervalDiff::RangeType::minusFullRange, 1}));
+}
 } // anonymous namespace
