@@ -335,8 +335,9 @@ void CudaCodeGen::generateCudaKernelCode(
     // interval, we advance the iterators
 
     iir::Interval::IntervalLevel nextLevel =
-        computeNextLevelToProcess(interval, ms->getLoopOrder()); //
-    if(std::abs(distance(nextLevel, lastKCell).value) != 1) {
+        computeNextLevelToProcess(interval, ms->getLoopOrder());
+    auto jump = distance(lastKCell, nextLevel);
+    if((std::abs(jump.value) != 1) || (jump.rangeType_ != iir::IntervalDiff::RangeType::literal)) {
       auto lastKCellp1 = advance(lastKCell, ms->getLoopOrder(), 1);
       kmin = distance(lastKCellp1, nextLevel);
 
@@ -809,10 +810,8 @@ void CudaCodeGen::generateStencilWrapperRun(
 
 std::string CudaCodeGen::intervalDiffToString(iir::IntervalDiff intervalDiff,
                                               std::string maxRange) const {
-  std::cout << "KO " << static_cast<int>(intervalDiff.rangeType_) << " " << intervalDiff.value
-            << std::endl;
   if(intervalDiff.rangeType_ == iir::IntervalDiff::RangeType::fullRange) {
-    return maxRange + std::to_string(intervalDiff.value);
+    return maxRange + "+" + std::to_string(intervalDiff.value);
   }
   return std::to_string(intervalDiff.value);
 }
