@@ -319,6 +319,11 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
   return newIntervals;
 }
 
+void Interval::invert() {
+  IntervalLevel tmp = lower_;
+  lower_ = upper_;
+  upper_ = tmp;
+}
 IntervalDiff distance(Interval::IntervalLevel f, Interval::IntervalLevel s) {
   Interval::IntervalLevel low = f;
   Interval::IntervalLevel up = s;

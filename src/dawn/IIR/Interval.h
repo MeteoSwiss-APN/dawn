@@ -71,6 +71,8 @@ public:
   int lowerOffset() const { return lower_.offset_; }
   int upperOffset() const { return upper_.offset_; }
 
+  void invert();
+
   IntervalLevel upperIntervalLevel() const { return upper_; }
   IntervalLevel lowerIntervalLevel() const { return lower_; }
 

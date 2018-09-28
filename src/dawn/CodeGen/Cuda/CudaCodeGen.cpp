@@ -326,6 +326,10 @@ void CudaCodeGen::generateCudaKernelCode(
   int intervalIdx = 0;
   for(auto interval : partitionIntervals) {
 
+    // If execution is parallel we want to place the interval in a forward order
+    if(interval.lowerBound() > interval.upperBound()) {
+      interval.invert();
+    }
     iir::IntervalDiff kmin{iir::IntervalDiff::RangeType::literal, 0};
     // if there is a jump between the last level of previous interval and the first level of this
     // interval, we advance the iterators
