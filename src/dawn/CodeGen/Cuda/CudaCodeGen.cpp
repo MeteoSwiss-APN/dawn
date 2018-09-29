@@ -346,13 +346,13 @@ void CudaCodeGen::generateCudaKernelCode(
       kmin = distance(lastKCellp1, nextLevel);
 
       for(auto index : indexIterators) {
-        if(index.second[2]) {
+        if(index.second[2] && !kmin.null()) {
           cudaKernel.addStatement("idx" + index.first + " += " +
                                   CodeGeneratorHelper::generateStrideName(2, index.second) + "*(" +
                                   intervalDiffToString(kmin, "ksize-1") + ")");
         }
       }
-      if(useTmpIndex(ms, stencilInstantiation)) {
+      if(useTmpIndex(ms, stencilInstantiation) && !kmin.null()) {
         cudaKernel.addStatement("idx_tmp += kstride_tmp*(" + std::to_string(interval.lowerBound()) +
                                 "-" + intervalDiffToString(kmin, "ksize-1") + ")");
       }
@@ -362,20 +362,20 @@ void CudaCodeGen::generateCudaKernelCode(
       // advance the iterators to the first k index of the block or the first position of the
       // interval
       for(auto index : indexIterators) {
-        if(index.second[2]) {
+        if(index.second[2] && !kmin.null()) {
           // the advance should correspond to max(beginning of the parallel block, beginning
           // interval)
           // but only for the first interval we force the advance to the beginning of the parallel
           // block
           std::string step = intervalDiffToString(kmin, "ksize-1");
           if(firstInterval) {
-            step += "max(" + step + "," + CodeGeneratorHelper::generateStrideName(2, index.second) +
-                    " * blockIdx.z * " + std::to_string(blockSize[2]) + ")";
+            step = "max(" + step + "," + CodeGeneratorHelper::generateStrideName(2, index.second) +
+                   " * blockIdx.z * " + std::to_string(blockSize[2]) + ")";
           }
           cudaKernel.addStatement("idx" + index.first + " += " + step);
         }
       }
-      if(useTmpIndex(ms, stencilInstantiation)) {
+      if(useTmpIndex(ms, stencilInstantiation) && !kmin.null()) {
         cudaKernel.addStatement("idx_tmp += max(" + intervalDiffToString(kmin, "ksize-1") +
                                 ", kstride_tmp * blockIdx.z * " + std::to_string(blockSize[2]) +
                                 ")");

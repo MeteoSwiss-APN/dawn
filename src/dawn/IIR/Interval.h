@@ -278,7 +278,7 @@ struct IntervalDiff {
   int value;
 
   bool null() const {
-    if(rangeType_ == RangeType::fullRange)
+    if(rangeType_ != RangeType::literal)
       return false;
     return (value == 0);
   }
