@@ -349,12 +349,12 @@ void CudaCodeGen::generateCudaKernelCode(
         if(index.second[2]) {
           cudaKernel.addStatement("idx" + index.first + " += " +
                                   CodeGeneratorHelper::generateStrideName(2, index.second) + "*(" +
-                                  intervalDiffToString(kmin, "ksize") + ")");
+                                  intervalDiffToString(kmin, "ksize-1") + ")");
         }
       }
       if(useTmpIndex(ms, stencilInstantiation)) {
         cudaKernel.addStatement("idx_tmp += kstride_tmp*(" + std::to_string(interval.lowerBound()) +
-                                "-" + intervalDiffToString(kmin, "ksize") + ")");
+                                "-" + intervalDiffToString(kmin, "ksize-1") + ")");
       }
     }
 
@@ -367,7 +367,7 @@ void CudaCodeGen::generateCudaKernelCode(
           // interval)
           // but only for the first interval we force the advance to the beginning of the parallel
           // block
-          std::string step = intervalDiffToString(kmin, "ksize");
+          std::string step = intervalDiffToString(kmin, "ksize-1");
           if(firstInterval) {
             step += "max(" + step + "," + CodeGeneratorHelper::generateStrideName(2, index.second) +
                     " * blockIdx.z * " + std::to_string(blockSize[2]) + ")";
@@ -376,7 +376,7 @@ void CudaCodeGen::generateCudaKernelCode(
         }
       }
       if(useTmpIndex(ms, stencilInstantiation)) {
-        cudaKernel.addStatement("idx_tmp += max(" + intervalDiffToString(kmin, "ksize") +
+        cudaKernel.addStatement("idx_tmp += max(" + intervalDiffToString(kmin, "ksize-1") +
                                 ", kstride_tmp * blockIdx.z * " + std::to_string(blockSize[2]) +
                                 ")");
       }
