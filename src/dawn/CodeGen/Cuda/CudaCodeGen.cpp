@@ -346,13 +346,16 @@ void CudaCodeGen::generateCudaKernelCode(
       kmin = distance(lastKCellp1, nextLevel);
 
       for(auto index : indexIterators) {
-        if(index.second[2] && !kmin.null()) {
+        if(index.second[2] && !kmin.null() &&
+           !((ms->getLoopOrder() == iir::LoopOrderKind::LK_Parallel) && firstInterval)) {
+          cudaKernel.addComment("jump iterators to match the beginning of next interval");
           cudaKernel.addStatement("idx" + index.first + " += " +
                                   CodeGeneratorHelper::generateStrideName(2, index.second) + "*(" +
                                   intervalDiffToString(kmin, "ksize-1") + ")");
         }
       }
       if(useTmpIndex(ms, stencilInstantiation) && !kmin.null()) {
+        cudaKernel.addComment("jump tmp iterators to match the beginning of next interval");
         cudaKernel.addStatement("idx_tmp += kstride_tmp*(" + std::to_string(interval.lowerBound()) +
                                 "-" + intervalDiffToString(kmin, "ksize-1") + ")");
       }
@@ -372,10 +375,14 @@ void CudaCodeGen::generateCudaKernelCode(
             step = "max(" + step + "," + CodeGeneratorHelper::generateStrideName(2, index.second) +
                    " * blockIdx.z * " + std::to_string(blockSize[2]) + ")";
           }
+          cudaKernel.addComment("jump iterators to match the intersection of beginning of next "
+                                "interval and the parallel execution block ");
           cudaKernel.addStatement("idx" + index.first + " += " + step);
         }
       }
       if(useTmpIndex(ms, stencilInstantiation)) {
+        cudaKernel.addComment("jump tmp iterators to match the intersection of beginning of next "
+                              "interval and the parallel execution block ");
         cudaKernel.addStatement("idx_tmp += max(" + intervalDiffToString(kmin, "ksize-1") +
                                 ", kstride_tmp * blockIdx.z * " + std::to_string(blockSize[2]) +
                                 ")");
@@ -428,7 +435,9 @@ void CudaCodeGen::generateCudaKernelCode(
         cudaKernel.addStatement("idx_tmp " + incStr + " kstride_tmp");
       }
     });
-    lastKCell = interval.upperIntervalLevel();
+    lastKCell = (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+                    ? interval.lowerIntervalLevel()
+                    : interval.upperIntervalLevel();
     firstInterval = false;
   }
 
