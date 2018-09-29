@@ -323,9 +323,9 @@ void CudaCodeGen::generateCudaKernelCode(
                                        blockSize);
 
   DAWN_ASSERT(!partitionIntervals.empty());
-  iir::Interval::IntervalLevel lastKCell =
-      computeNextLevelToProcess(partitionIntervals.front(), ms->getLoopOrder());
-  advance(lastKCell, ms->getLoopOrder(), -1);
+  iir::Interval::IntervalLevel lastKCell{0, 0};
+  lastKCell = advance(lastKCell, ms->getLoopOrder(), -1);
+
   bool firstInterval = true;
   for(auto interval : partitionIntervals) {
 
