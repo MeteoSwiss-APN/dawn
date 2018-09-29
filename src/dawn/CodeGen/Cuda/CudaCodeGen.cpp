@@ -326,6 +326,7 @@ void CudaCodeGen::generateCudaKernelCode(
   iir::Interval::IntervalLevel lastKCell =
       computeNextLevelToProcess(partitionIntervals.front(), ms->getLoopOrder());
   advance(lastKCell, ms->getLoopOrder(), -1);
+  bool firstInterval = true;
   for(auto interval : partitionIntervals) {
 
     // If execution is parallel we want to place the interval in a forward order
@@ -362,10 +363,16 @@ void CudaCodeGen::generateCudaKernelCode(
       // interval
       for(auto index : indexIterators) {
         if(index.second[2]) {
-          cudaKernel.addStatement("idx" + index.first + " += max(" +
-                                  intervalDiffToString(kmin, "ksize") + "," +
-                                  CodeGeneratorHelper::generateStrideName(2, index.second) +
-                                  " * blockIdx.z * " + std::to_string(blockSize[2]) + ")");
+          // the advance should correspond to max(beginning of the parallel block, beginning
+          // interval)
+          // but only for the first interval we force the advance to the beginning of the parallel
+          // block
+          std::string step = intervalDiffToString(kmin, "ksize");
+          if(firstInterval) {
+            step += "max(" + step + "," + CodeGeneratorHelper::generateStrideName(2, index.second) +
+                    " * blockIdx.z * " + std::to_string(blockSize[2]) + ")";
+          }
+          cudaKernel.addStatement("idx" + index.first + " += " + step);
         }
       }
       if(useTmpIndex(ms, stencilInstantiation)) {
@@ -419,6 +426,7 @@ void CudaCodeGen::generateCudaKernelCode(
       }
     });
     lastKCell = interval.upperIntervalLevel();
+    firstInterval = false;
   }
 
   cudaKernel.commit();
