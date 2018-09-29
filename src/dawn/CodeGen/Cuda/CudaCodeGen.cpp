@@ -416,13 +416,16 @@ void CudaCodeGen::generateCudaKernelCode(
           cudaKernel.addStatement("__syncthreads()");
         }
       }
+      std::string incStr = (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) ? "-=" : "+=";
+
       for(auto index : indexIterators) {
-        if(index.second[2])
-          cudaKernel.addStatement("idx" + index.first + " += " +
+        if(index.second[2]) {
+          cudaKernel.addStatement("idx" + index.first + incStr +
                                   CodeGeneratorHelper::generateStrideName(2, index.second));
+        }
       }
       if(useTmpIndex(ms, stencilInstantiation)) {
-        cudaKernel.addStatement("idx_tmp += kstride_tmp");
+        cudaKernel.addStatement("idx_tmp " + incStr + " kstride_tmp");
       }
     });
     lastKCell = interval.upperIntervalLevel();
