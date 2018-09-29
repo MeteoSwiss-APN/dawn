@@ -362,7 +362,7 @@ void CudaCodeGen::generateCudaKernelCode(
       // advance the iterators to the first k index of the block or the first position of the
       // interval
       for(auto index : indexIterators) {
-        if(index.second[2] && !kmin.null()) {
+        if(index.second[2]) {
           // the advance should correspond to max(beginning of the parallel block, beginning
           // interval)
           // but only for the first interval we force the advance to the beginning of the parallel
@@ -375,7 +375,7 @@ void CudaCodeGen::generateCudaKernelCode(
           cudaKernel.addStatement("idx" + index.first + " += " + step);
         }
       }
-      if(useTmpIndex(ms, stencilInstantiation) && !kmin.null()) {
+      if(useTmpIndex(ms, stencilInstantiation)) {
         cudaKernel.addStatement("idx_tmp += max(" + intervalDiffToString(kmin, "ksize-1") +
                                 ", kstride_tmp * blockIdx.z * " + std::to_string(blockSize[2]) +
                                 ")");
