@@ -137,6 +137,11 @@ private:
   iir::Interval::IntervalLevel computeNextLevelToProcess(const iir::Interval& interval,
                                                          iir::LoopOrderKind loopOrder) const;
 
+  std::vector<iir::Interval>
+  computePartitionOfIntervals(const std::unique_ptr<iir::MultiStage>& ms) const;
+
+  bool solveKLoopInParallel(const std::unique_ptr<iir::MultiStage>& ms) const;
+
   std::string generateStencilInstantiation(
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
   //  std::string generateGlobals(const std::shared_ptr<SIR>& sir);

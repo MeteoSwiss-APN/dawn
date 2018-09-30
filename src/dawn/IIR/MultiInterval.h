@@ -27,7 +27,8 @@ class MultiInterval {
 public:
   /// @name Constructors and Assignment
   MultiInterval() = default;
-  MultiInterval(std::initializer_list<iir::Interval> const& intervals);
+  MultiInterval(const std::vector<Interval>& intervals);
+  MultiInterval(std::initializer_list<Interval> const& intervals);
 
   void insert(iir::Interval const& interval);
   void insert(boost::optional<iir::Interval> const& interval);
@@ -35,6 +36,7 @@ public:
   void substract(iir::Interval const& interval);
   void substract(MultiInterval const& multiInterval);
   bool overlaps(const Interval& other) const;
+  bool contiguous() const;
 
   std::vector<iir::Interval> const& getIntervals() const { return intervals_; }
 

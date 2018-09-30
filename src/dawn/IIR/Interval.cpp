@@ -168,6 +168,7 @@ void Interval::merge(const Interval& other) {
       ub > other.upperBound() ? ub - upper_.levelMark_ : other.upperBound() - upperLevel();
 }
 
+// TODO move this to IntervalAlgorithms and generate a MultiInterval
 std::vector<Interval> Interval::computePartition(std::vector<Interval> const& intervals) {
 
   std::vector<Interval> newIntervals(intervals);

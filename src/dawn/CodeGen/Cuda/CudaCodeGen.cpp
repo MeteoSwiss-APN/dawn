@@ -53,12 +53,13 @@ static std::string makeIntervalBound(const std::string dom, iir::Interval const&
 }
 
 static std::string makeKLoop(const std::string dom, const std::array<unsigned int, 3> blockSize,
-                             iir::LoopOrderKind loopOrder, iir::Interval const& interval) {
+                             iir::LoopOrderKind loopOrder, iir::Interval const& interval,
+                             bool kParallel) {
 
   std::string lower = makeIntervalBound(dom, interval, iir::Interval::Bound::lower);
   std::string upper = makeIntervalBound(dom, interval, iir::Interval::Bound::upper);
 
-  if(loopOrder == iir::LoopOrderKind::LK_Parallel) {
+  if(kParallel) {
     lower = "max(" + lower + ",blockIdx.z*" + std::to_string(blockSize[2]) + ")";
     upper = "min(" + upper + ",(blockIdx.z+1)*" + std::to_string(blockSize[2]) + "-1)";
   }
@@ -107,6 +108,21 @@ bool CudaCodeGen::useIJCaches(const std::unique_ptr<iir::MultiStage>& ms) const 
   }
   return false;
 }
+
+std::vector<iir::Interval>
+CudaCodeGen::computePartitionOfIntervals(const std::unique_ptr<iir::MultiStage>& ms) const {
+  auto intervals_set = ms->getIntervals();
+  std::vector<iir::Interval> intervals_v;
+  std::copy(intervals_set.begin(), intervals_set.end(), std::back_inserter(intervals_v));
+
+  // compute the partition of the intervals
+
+  auto partitionIntervals = iir::Interval::computePartition(intervals_v);
+  if((ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward))
+    std::reverse(partitionIntervals.begin(), partitionIntervals.end());
+  return partitionIntervals;
+}
+
 void CudaCodeGen::generateCudaKernelCode(
     std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     const std::unique_ptr<iir::MultiStage>& ms) {
@@ -115,6 +131,8 @@ void CudaCodeGen::generateCudaKernelCode(
   for(const auto& stage : iterateIIROver<iir::Stage>(*ms)) {
     maxExtents.merge(stage->getExtents());
   }
+
+  const bool solveKLoopInParallel_ = solveKLoopInParallel(ms);
 
   // fields used in the stencil
   const auto& fields = ms->getFields();
@@ -308,14 +326,8 @@ void CudaCodeGen::generateCudaKernelCode(
     generateTmpIndexInit(cudaKernel, ms, stencilInstantiation);
   }
 
-  auto intervals_set = ms->getIntervals();
-  std::vector<iir::Interval> intervals_v;
-  std::copy(intervals_set.begin(), intervals_set.end(), std::back_inserter(intervals_v));
-
   // compute the partition of the intervals
-  auto partitionIntervals = iir::Interval::computePartition(intervals_v);
-  if((ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward))
-    std::reverse(partitionIntervals.begin(), partitionIntervals.end());
+  auto partitionIntervals = computePartitionOfIntervals(ms);
 
   DAWN_ASSERT((partitionIntervals.size() > 0));
 
@@ -330,8 +342,7 @@ void CudaCodeGen::generateCudaKernelCode(
   for(auto interval : partitionIntervals) {
 
     // If execution is parallel we want to place the interval in a forward order
-    if((ms->getLoopOrder() == iir::LoopOrderKind::LK_Parallel) &&
-       (interval.lowerBound() > interval.upperBound())) {
+    if((solveKLoopInParallel_) && (interval.lowerBound() > interval.upperBound())) {
       interval.invert();
     }
     iir::IntervalDiff kmin{iir::IntervalDiff::RangeType::literal, 0};
@@ -346,8 +357,7 @@ void CudaCodeGen::generateCudaKernelCode(
       kmin = distance(lastKCellp1, nextLevel);
 
       for(auto index : indexIterators) {
-        if(index.second[2] && !kmin.null() &&
-           !((ms->getLoopOrder() == iir::LoopOrderKind::LK_Parallel) && firstInterval)) {
+        if(index.second[2] && !kmin.null() && !((solveKLoopInParallel_) && firstInterval)) {
           cudaKernel.addComment("jump iterators to match the beginning of next interval");
           cudaKernel.addStatement("idx" + index.first + " += " +
                                   CodeGeneratorHelper::generateStrideName(2, index.second) + "*(" +
@@ -361,7 +371,7 @@ void CudaCodeGen::generateCudaKernelCode(
       }
     }
 
-    if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Parallel) {
+    if(solveKLoopInParallel_) {
       // advance the iterators to the first k index of the block or the first position of the
       // interval
       for(auto index : indexIterators) {
@@ -374,10 +384,11 @@ void CudaCodeGen::generateCudaKernelCode(
           if(firstInterval) {
             step = "max(" + step + "," + CodeGeneratorHelper::generateStrideName(2, index.second) +
                    " * blockIdx.z * " + std::to_string(blockSize[2]) + ")";
+
+            cudaKernel.addComment("jump iterators to match the intersection of beginning of next "
+                                  "interval and the parallel execution block ");
+            cudaKernel.addStatement("idx" + index.first + " += " + step);
           }
-          cudaKernel.addComment("jump iterators to match the intersection of beginning of next "
-                                "interval and the parallel execution block ");
-          cudaKernel.addStatement("idx" + index.first + " += " + step);
         }
       }
       if(useTmpIndex(ms, stencilInstantiation)) {
@@ -389,52 +400,54 @@ void CudaCodeGen::generateCudaKernelCode(
       }
     }
     // for each interval, we generate naive nested loops
-    cudaKernel.addBlockStatement(makeKLoop("dom", blockSize, ms->getLoopOrder(), interval), [&]() {
-      for(const auto& stagePtr : ms->getChildren()) {
-        const iir::Stage& stage = *stagePtr;
-        const auto& extent = stage.getExtents();
-        iir::MultiInterval enclosingInterval;
-        // TODO add the enclosing interval in derived ?
-        for(const auto& doMethodPtr : stage.getChildren()) {
-          enclosingInterval.insert(doMethodPtr->getInterval());
-        }
-        if(!enclosingInterval.overlaps(interval))
-          continue;
+    cudaKernel.addBlockStatement(
+        makeKLoop("dom", blockSize, ms->getLoopOrder(), interval, solveKLoopInParallel_), [&]() {
+          for(const auto& stagePtr : ms->getChildren()) {
+            const iir::Stage& stage = *stagePtr;
+            const auto& extent = stage.getExtents();
+            iir::MultiInterval enclosingInterval;
+            // TODO add the enclosing interval in derived ?
+            for(const auto& doMethodPtr : stage.getChildren()) {
+              enclosingInterval.insert(doMethodPtr->getInterval());
+            }
+            if(!enclosingInterval.overlaps(interval))
+              continue;
 
-        cudaKernel.addBlockStatement(
-            "if(iblock >= " + std::to_string(extent[0].Minus) + " && iblock <= block_size_i -1 + " +
-                std::to_string(extent[0].Plus) + " && jblock >= " +
-                std::to_string(extent[1].Minus) + " && jblock <= block_size_j -1 + " +
-                std::to_string(extent[1].Plus) + ")",
-            [&]() {
-              // Generate Do-Method
-              for(const auto& doMethodPtr : stage.getChildren()) {
-                const iir::DoMethod& doMethod = *doMethodPtr;
-                if(!doMethod.getInterval().overlaps(interval))
-                  continue;
-                for(const auto& statementAccessesPair : doMethod.getChildren()) {
-                  statementAccessesPair->getStatement()->ASTStmt->accept(stencilBodyCXXVisitor);
-                  cudaKernel << stencilBodyCXXVisitor.getCodeAndResetStream();
-                }
-              }
-            });
-        // If the stage is not the last stage, we need to sync
-        if(stage.getStageID() != ms->getChildren().back()->getStageID()) {
-          cudaKernel.addStatement("__syncthreads()");
-        }
-      }
-      std::string incStr = (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) ? "-=" : "+=";
+            cudaKernel.addBlockStatement(
+                "if(iblock >= " + std::to_string(extent[0].Minus) +
+                    " && iblock <= block_size_i -1 + " + std::to_string(extent[0].Plus) +
+                    " && jblock >= " + std::to_string(extent[1].Minus) +
+                    " && jblock <= block_size_j -1 + " + std::to_string(extent[1].Plus) + ")",
+                [&]() {
+                  // Generate Do-Method
+                  for(const auto& doMethodPtr : stage.getChildren()) {
+                    const iir::DoMethod& doMethod = *doMethodPtr;
+                    if(!doMethod.getInterval().overlaps(interval))
+                      continue;
+                    for(const auto& statementAccessesPair : doMethod.getChildren()) {
+                      statementAccessesPair->getStatement()->ASTStmt->accept(stencilBodyCXXVisitor);
+                      cudaKernel << stencilBodyCXXVisitor.getCodeAndResetStream();
+                    }
+                  }
+                });
+            // If the stage is not the last stage, we need to sync
+            if(stage.getStageID() != ms->getChildren().back()->getStageID()) {
+              cudaKernel.addStatement("__syncthreads()");
+            }
+          }
+          std::string incStr =
+              (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) ? "-=" : "+=";
 
-      for(auto index : indexIterators) {
-        if(index.second[2]) {
-          cudaKernel.addStatement("idx" + index.first + incStr +
-                                  CodeGeneratorHelper::generateStrideName(2, index.second));
-        }
-      }
-      if(useTmpIndex(ms, stencilInstantiation)) {
-        cudaKernel.addStatement("idx_tmp " + incStr + " kstride_tmp");
-      }
-    });
+          for(auto index : indexIterators) {
+            if(index.second[2]) {
+              cudaKernel.addStatement("idx" + index.first + incStr +
+                                      CodeGeneratorHelper::generateStrideName(2, index.second));
+            }
+          }
+          if(useTmpIndex(ms, stencilInstantiation)) {
+            cudaKernel.addStatement("idx_tmp " + incStr + " kstride_tmp");
+          }
+        });
     lastKCell = (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
                     ? interval.lowerIntervalLevel()
                     : interval.upperIntervalLevel();
@@ -444,17 +457,19 @@ void CudaCodeGen::generateCudaKernelCode(
   cudaKernel.commit();
 }
 
+bool CudaCodeGen::solveKLoopInParallel(const std::unique_ptr<iir::MultiStage>& ms) const {
+  iir::MultiInterval mInterval{computePartitionOfIntervals(ms)};
+  return mInterval.contiguous();
+}
+
 iir::Interval::IntervalLevel
 CudaCodeGen::computeNextLevelToProcess(const iir::Interval& interval,
                                        iir::LoopOrderKind loopOrder) const {
   iir::Interval::IntervalLevel intervalLevel;
-  if((loopOrder == iir::LoopOrderKind::LK_Forward) ||
-     (loopOrder == iir::LoopOrderKind::LK_Parallel)) {
-    intervalLevel = interval.lowerIntervalLevel();
-  } else if(loopOrder == iir::LoopOrderKind::LK_Backward) {
+  if(loopOrder == iir::LoopOrderKind::LK_Backward) {
     intervalLevel = interval.upperIntervalLevel();
   } else {
-    dawn_unreachable("non supported policy");
+    intervalLevel = interval.lowerIntervalLevel();
   }
   return intervalLevel;
 }
@@ -854,6 +869,8 @@ void CudaCodeGen::generateStencilRunMethod(
 
     const iir::MultiStage& multiStage = *multiStagePtr;
 
+    bool solveKLoopInParallel_ = solveKLoopInParallel(multiStagePtr);
+
     const auto& fields = multiStage.getFields();
 
     auto nonTempFields =
@@ -917,7 +934,7 @@ void CudaCodeGen::generateStencilRunMethod(
                                   " - 1) / " + std::to_string(ntx));
     StencilRunMethod.addStatement("const unsigned int nby = (ny + " + std::to_string(nty) +
                                   " - 1) / " + std::to_string(nty));
-    if(multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Parallel) {
+    if(solveKLoopInParallel_) {
       StencilRunMethod.addStatement("const unsigned int nbz = (m_dom.ksize()+" +
                                     std::to_string(blockSize[2]) + "-1) / " +
                                     std::to_string(blockSize[2]));
