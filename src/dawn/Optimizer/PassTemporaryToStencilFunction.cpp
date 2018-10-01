@@ -488,7 +488,7 @@ bool PassTemporaryToStencilFunction::run(
 
                 std::unique_ptr<iir::StatementAccessesPair>& stmtPair =
                     *(tmpStmtDoMethod.childrenBegin());
-                computeAccesses(stencilInstantiation.get(), stmtPair);
+                computeAccesses(stencilInstantiation->getIIR().get(), stmtPair);
 
                 doMethodPtr->replace(stmtAccessPair, stmtPair);
               }

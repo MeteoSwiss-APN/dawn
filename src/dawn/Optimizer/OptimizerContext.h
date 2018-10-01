@@ -17,8 +17,8 @@
 
 #include "dawn/Compiler/DiagnosticsEngine.h"
 #include "dawn/Compiler/Options.h"
-#include "dawn/Optimizer/PassManager.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/PassManager.h"
 #include "dawn/Support/NonCopyable.h"
 #include <map>
 #include <memory>
@@ -48,7 +48,11 @@ class OptimizerContext : NonCopyable {
   Options& options_;
 
   const std::shared_ptr<SIR> SIR_;
+  // this will become obsolete
+  //{
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiationMap_;
+  //}
+  std::map<std::string, std::unique_ptr<iir::IIR>> stencilNameToIIRMap_;
   PassManager passManager_;
   HardwareConfig hardwareConfiguration_;
 
@@ -108,6 +112,9 @@ public:
       retval = true;
     return retval;
   }
+
+  bool fillIIRFromSIR(std::unique_ptr<iir::IIR>& iir,
+                      const std::shared_ptr<sir::Stencil> SIRStencil);
 };
 
 } // namespace dawn

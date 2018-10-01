@@ -277,10 +277,10 @@ void StencilFunctionInstantiation::renameCallerAccessID(int oldAccessID, int new
   replaceKeyInMap(AccessIDToNameMap_, oldAccessID, newAccessID);
 
   // Update statements
-  renameAccessIDInStmts(this, oldAccessID, newAccessID, doMethod_->getChildren());
+  renameAccessIDInStmts(getStencilInstantiation()->getIIR().get(), oldAccessID, newAccessID, doMethod_->getChildren());
 
   // Update accesses
-  renameAccessIDInAccesses(this, oldAccessID, newAccessID, doMethod_->getChildren());
+  renameAccessIDInAccesses(oldAccessID, newAccessID, doMethod_->getChildren());
 
   // Recompute the fields
   update();

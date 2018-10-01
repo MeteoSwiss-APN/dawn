@@ -78,6 +78,8 @@ yoda_add_library(
           Replacing.h
           StatementMapper.cpp
           StatementMapper.h
+          Utility/TemporaryHandeling.cpp
+          Utility/TemporaryHandeling.h
   OBJECT
 )
 

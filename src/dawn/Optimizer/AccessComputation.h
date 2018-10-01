@@ -25,6 +25,7 @@ namespace iir {
 class StatementAccessesPair;
 class StencilInstantiation;
 class StencilFunctionInstantiation;
+class IIR;
 }
 
 /// @name Access computation routines
@@ -35,7 +36,7 @@ class StencilFunctionInstantiation;
 /// @brief Compute the Accesses of `statementAccessesPairs`
 /// @ingroup optimizer
 extern void
-computeAccesses(iir::StencilInstantiation* instantiation,
+computeAccesses(dawn::iir::IIR *iir_,
                 ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
 
 /// @fn computeAccesses

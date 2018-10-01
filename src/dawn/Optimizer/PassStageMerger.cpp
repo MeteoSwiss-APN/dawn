@@ -32,7 +32,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
   // Do we need to run this Pass?
   bool stencilNeedsMergePass = false;
   for(const auto& stencilPtr : stencilInstantiation->getStencils())
-    stencilNeedsMergePass |= stencilPtr->getSIRStencil()->Attributes.hasOneOf(
+    stencilNeedsMergePass |= stencilPtr->stencilAttributes.hasOneOf(
         sir::Attr::AK_MergeStages, sir::Attr::AK_MergeDoMethods);
 
   bool MergeStages = context->getOptions().MergeStages;
@@ -52,9 +52,9 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
     // Do we need to run the analysis for thist stencil?
     const std::shared_ptr<iir::DependencyGraphStage>& stageDAG = stencil.getStageDependencyGraph();
     bool MergeDoMethodsOfStencil =
-        stencil.getSIRStencil()->Attributes.has(sir::Attr::AK_MergeDoMethods) || MergeDoMethods;
+        stencil.stencilAttributes.has(sir::Attr::AK_MergeDoMethods) || MergeDoMethods;
     bool MergeStagesOfStencil =
-        stencil.getSIRStencil()->Attributes.has(sir::Attr::AK_MergeStages) || MergeStages;
+        stencil.stencilAttributes.has(sir::Attr::AK_MergeStages) || MergeStages;
 
     // Nope
     if(!MergeStagesOfStencil && !MergeDoMethodsOfStencil)
@@ -121,7 +121,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
                 auto& curDepGraph = curDoMethod.getDependencyGraph();
 
                 auto newDepGraph = std::make_shared<iir::DependencyGraphAccesses>(
-                    stencilInstantiation.get(), candiateDepGraph, curDepGraph);
+                    stencilInstantiation->getIIR().get(), candiateDepGraph, curDepGraph);
 
                 if(newDepGraph->isDAG() &&
                    !hasHorizontalReadBeforeWriteConflict(newDepGraph.get())) {

@@ -15,14 +15,27 @@
 #ifndef DAWN_IIR_IIR_H
 #define DAWN_IIR_IIR_H
 
+#include "dawn/Compiler/Options.h"
+#include "dawn/IIR/MetaInformation.h"
 #include "dawn/IIR/Stencil.h"
 
 namespace dawn {
+class OptimizerContext;
+class DiagnosticsEngine;
+
 namespace iir {
 
 /// @brief A Stencil is represented by a collection of MultiStages
 /// @ingroup optimizer
 class IIR : public IIRNode<void, IIR, Stencil> {
+
+  std::shared_ptr<StencilMetaInformation> metadata_;
+
+  struct DerivedInfo {};
+
+  DerivedInfo derivedInfo_;
+
+  OptimizerContext* creator_;
 
 public:
   static constexpr const char* name = "IIR";
@@ -30,7 +43,7 @@ public:
   using StencilSmartPtr_t = child_smartptr_t<Stencil>;
 
   /// @brief constructors and assignment
-  IIR() = default;
+  IIR(); //= default;
   IIR(const IIR&) = default;
   IIR(IIR&&) = default;
   IIR& operator=(const IIR&) = default;
@@ -38,6 +51,14 @@ public:
   /// @}
   /// @brief clone the IIR
   std::unique_ptr<IIR> clone() const;
+
+  std::shared_ptr<StencilMetaInformation> getMetaData() { return metadata_; }
+  const std::shared_ptr<StencilMetaInformation>& getMetaData() const { return metadata_; }
+
+  Options& getOptions();
+
+  const DiagnosticsEngine& getDiagnostics() const;
+  DiagnosticsEngine& getDiagnostics();
 };
 } // namespace iir
 } // namespace dawn

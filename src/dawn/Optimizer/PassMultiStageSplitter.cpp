@@ -170,7 +170,7 @@ bool PassMultiStageSplitter::run(
   }
 
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
-  iir::DependencyGraphAccesses graph(stencilInstantiation.get());
+  iir::DependencyGraphAccesses graph(stencilInstantiation->getIIR().get());
   int numSplit = 0;
   std::string StencilName = stencilInstantiation->getName();
   std::string PassName = getName();

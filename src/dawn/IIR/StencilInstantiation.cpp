@@ -128,7 +128,7 @@ public:
   void makeNewStencil() {
     int StencilID = instantiation_->nextUID();
     instantiation_->getIIR()->insertChild(
-        make_unique<Stencil>(*instantiation_, instantiation_->getSIRStencil(), StencilID),
+        make_unique<Stencil>(instantiation_->getIIR().get(), instantiation_->getIIR()->getChild(0)->stencilAttributes, StencilID),
         instantiation_->getIIR());
     // We create a paceholder stencil-call for CodeGen to know wehere we need to insert calls to
     // this stencil
@@ -356,7 +356,7 @@ public:
 
     // Create the new multi-stage
     std::unique_ptr<MultiStage> multiStage = make_unique<MultiStage>(
-        *instantiation_, verticalRegion->LoopOrder == sir::VerticalRegion::LK_Forward
+        instantiation_->getIIR().get(), verticalRegion->LoopOrder == sir::VerticalRegion::LK_Forward
                              ? LoopOrderKind::LK_Forward
                              : LoopOrderKind::LK_Backward);
     std::unique_ptr<Stage> stage =
@@ -382,7 +382,7 @@ public:
     // Here we compute the *actual* access of each statement and associate access to the AccessIDs
     // we set previously.
     DAWN_LOG(INFO) << "Filling accesses ...";
-    computeAccesses(instantiation_, doMethod.getChildren());
+    computeAccesses(instantiation_->getIIR().get(), doMethod.getChildren());
 
     // Now, we compute the fields of each stage (this will give us the IO-Policy of the fields)
     stage->update(iir::NodeUpdateType::level);
@@ -808,10 +808,10 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
   }
 
   // Rename the Expression
-  renameAccessIDInExpr(this, AccessID, newAccessID, expr);
+  renameAccessIDInExpr(getIIR().get(), AccessID, newAccessID, expr);
 
   // Recompute the accesses of the current statement (only works with single Do-Methods - for now)
-  computeAccesses(this,
+  computeAccesses(getIIR().get(),
                   stencil->getStage(curStageIdx)->getSingleDoMethod().getChildren()[curStmtIdx]);
 
   // Rename the statement and accesses
@@ -825,13 +825,13 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
       for(int i = dir == RD_Above ? (curStmtIdx - 1) : (curStmtIdx + 1);
           dir == RD_Above ? (i >= 0) : (i < doMethod.getChildren().size());
           dir == RD_Above ? (--i) : (++i)) {
-        renameAccessIDInStmts(this, AccessID, newAccessID, doMethod.getChildren()[i]);
-        renameAccessIDInAccesses(this, AccessID, newAccessID, doMethod.getChildren()[i]);
+        renameAccessIDInStmts(getIIR().get(), AccessID, newAccessID, doMethod.getChildren()[i]);
+        renameAccessIDInAccesses(AccessID, newAccessID, doMethod.getChildren()[i]);
       }
 
     } else {
-      renameAccessIDInStmts(this, AccessID, newAccessID, doMethod.getChildren());
-      renameAccessIDInAccesses(this, AccessID, newAccessID, doMethod.getChildren());
+      renameAccessIDInStmts(getIIR().get(), AccessID, newAccessID, doMethod.getChildren());
+      renameAccessIDInAccesses(AccessID, newAccessID, doMethod.getChildren());
     }
 
     // Updat the fields of the stage

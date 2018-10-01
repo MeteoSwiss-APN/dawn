@@ -27,11 +27,11 @@
 namespace dawn {
 namespace iir {
 
-MultiStage::MultiStage(StencilInstantiation& stencilInstantiation, LoopOrderKind loopOrder)
-    : stencilInstantiation_(stencilInstantiation), loopOrder_(loopOrder) {}
+MultiStage::MultiStage(IIR* iir, LoopOrderKind loopOrder)
+    : iir_(iir), loopOrder_(loopOrder) {}
 
 std::unique_ptr<MultiStage> MultiStage::clone() const {
-  auto cloneMS = make_unique<MultiStage>(stencilInstantiation_, loopOrder_);
+  auto cloneMS = make_unique<MultiStage>(iir_, loopOrder_);
 
   cloneMS->caches_ = caches_;
   cloneMS->derivedInfo_ = derivedInfo_;
@@ -50,7 +50,7 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
   auto curStageIt = children_.begin();
   std::deque<int> curStageSplitterIndices;
 
-  newMultiStages.push_back(make_unique<MultiStage>(stencilInstantiation_, lastLoopOrder));
+  newMultiStages.push_back(make_unique<MultiStage>(iir_, lastLoopOrder));
 
   for(std::size_t i = 0; i < splitterIndices.size(); ++i) {
     SplitIndex& splitIndex = splitterIndices[i];
@@ -59,7 +59,7 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
 
       curStageSplitterIndices.push_back(splitIndex.StmtIndex);
       newMultiStages.push_back(
-          make_unique<MultiStage>(stencilInstantiation_, splitIndex.LowerLoopOrder));
+          make_unique<MultiStage>(iir_, splitIndex.LowerLoopOrder));
       lastLoopOrder = splitIndex.LowerLoopOrder;
     }
 
@@ -82,7 +82,7 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
       }
 
       if(i != (splitterIndices.size() - 1))
-        newMultiStages.push_back(make_unique<MultiStage>(stencilInstantiation_, lastLoopOrder));
+        newMultiStages.push_back(make_unique<MultiStage>(iir_, lastLoopOrder));
 
       // Handle the next stage
       curStageIndex++;
@@ -95,7 +95,7 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
 
 std::shared_ptr<DependencyGraphAccesses>
 MultiStage::getDependencyGraphOfInterval(const Interval& interval) const {
-  auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(&stencilInstantiation_);
+  auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(iir_);
   std::for_each(children_.begin(), children_.end(), [&](const std::unique_ptr<Stage>& stagePtr) {
     if(interval.overlaps(stagePtr->getEnclosingExtendedInterval()))
       std::for_each(stagePtr->childrenBegin(), stagePtr->childrenEnd(),
@@ -107,7 +107,7 @@ MultiStage::getDependencyGraphOfInterval(const Interval& interval) const {
 }
 
 std::shared_ptr<DependencyGraphAccesses> MultiStage::getDependencyGraphOfAxis() const {
-  auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(&stencilInstantiation_);
+  auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(iir_);
   std::for_each(children_.begin(), children_.end(), [&](const std::unique_ptr<Stage>& stagePtr) {
     std::for_each(stagePtr->childrenBegin(), stagePtr->childrenEnd(),
                   [&](const Stage::DoMethodSmartPtr_t& DoMethodPtr) {
@@ -268,7 +268,7 @@ boost::optional<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() co
       const Field& field = fieldPair.second;
       int AccessID = fieldPair.first;
 
-      if(!stencilInstantiation_.isTemporaryField(AccessID))
+      if(!iir_->getMetaData()->isTemporaryField(AccessID))
         continue;
 
       if(!interval.is_initialized()) {
@@ -307,9 +307,9 @@ void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
     Stage& stage = (**stageIt);
     for(const auto& doMethodPtr : stage.getChildren()) {
       const DoMethod& doMethod = *doMethodPtr;
-      renameAccessIDInStmts(&stencilInstantiation_, oldAccessID, newAccessID,
+      renameAccessIDInStmts(iir_, oldAccessID, newAccessID,
                             doMethod.getChildren());
-      renameAccessIDInAccesses(&stencilInstantiation_, oldAccessID, newAccessID,
+      renameAccessIDInAccesses(oldAccessID, newAccessID,
                                doMethod.getChildren());
     }
 

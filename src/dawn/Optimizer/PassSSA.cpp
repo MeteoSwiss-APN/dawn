@@ -33,7 +33,7 @@ bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInsta
     iir::Stencil& stencil = *stencilPtr;
 
     std::shared_ptr<iir::DependencyGraphAccesses> DAG =
-        std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation.get());
+        std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation->getIIR().get());
 
     std::unordered_set<int> tochedAccessIDs;
 

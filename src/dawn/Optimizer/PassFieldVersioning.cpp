@@ -13,41 +13,42 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassFieldVersioning.h"
-#include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/Extents.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
+#include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/AccessComputation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/Renaming.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include <iostream>
 #include <set>
-
 namespace dawn {
 
 namespace {
 
 /// @brief Register all referenced AccessIDs
 struct AccessIDGetter : public ASTVisitorForwarding {
-  const iir::StencilInstantiation& Instantiation;
+  const iir::IIR* iir_;
   std::set<int> AccessIDs;
 
-  AccessIDGetter(const iir::StencilInstantiation& instantiation) : Instantiation(instantiation) {}
+  AccessIDGetter(const iir::IIR* iir) : iir_(iir) {}
 
   virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
-    AccessIDs.insert(Instantiation.getAccessIDFromExpr(expr));
+    AccessIDs.insert(iir_->getMetaData()->getAccessIDFromExpr(expr));
   }
 };
 
 /// @brief Compute the AccessIDs of the left and right hand side expression of the assignment
-static void getAccessIDFromAssignment(const iir::StencilInstantiation& instantiation,
+static void getAccessIDFromAssignment(iir::IIR* iir_,
                                       AssignmentExpr* assignment, std::set<int>& LHSAccessIDs,
                                       std::set<int>& RHSAccessIDs) {
   auto computeAccessIDs = [&](const std::shared_ptr<Expr>& expr, std::set<int>& AccessIDs) {
-    AccessIDGetter getter{instantiation};
+    AccessIDGetter getter{iir_};
     expr->accept(getter);
     AccessIDs = std::move(getter.AccessIDs);
   };
@@ -66,7 +67,7 @@ static bool isHorizontalStencilOrCounterLoopOrderExtent(const iir::Extents& exte
 
 /// @brief Report a race condition in the given `statement`
 static void reportRaceCondition(const Statement& statement,
-                                iir::StencilInstantiation& instantiation) {
+                                iir::IIR* iir) {
   DiagnosticsBuilder diag(DiagnosticsKind::Error, statement.ASTStmt->getSourceLocation());
 
   if(isa<IfStmt>(statement.ASTStmt.get())) {
@@ -75,7 +76,7 @@ static void reportRaceCondition(const Statement& statement,
     diag << "unresolvable race-condition in statement";
   }
 
-  instantiation.getOptimizerContext()->getDiagnostics().report(diag);
+  iir->getDiagnostics().report(diag);
 
   // Print stack trace of stencil calls
   if(statement.StackTrace) {
@@ -83,9 +84,116 @@ static void reportRaceCondition(const Statement& statement,
     for(int i = stackTrace.size() - 1; i >= 0; --i) {
       DiagnosticsBuilder note(DiagnosticsKind::Note, stackTrace[i]->Loc);
       note << "detected during instantiation of stencil-call '" << stackTrace[i]->Callee << "'";
-      instantiation.getOptimizerContext()->getDiagnostics().report(note);
+      iir->getDiagnostics().report(note);
     }
   }
+}
+
+enum RenameDirection {
+  RD_Above, ///< Rename all fields above the current statement
+  RD_Below  ///< Rename all fields below the current statement
+};
+
+int createVersionAndRename(iir::IIR* iir_, int AccessID, iir::Stencil* stencil, int curStageIdx,
+                           int curStmtIdx, std::shared_ptr<Expr>& expr, RenameDirection dir) {
+
+  int newAccessID = iir_->getMetaData()->nextUID();
+
+  if(iir_->getMetaData()->isField(AccessID)) {
+    if(iir_->getMetaData()->isMultiVersionedField(AccessID)) {
+      // Field is already multi-versioned, append a new version
+      auto versions = iir_->getMetaData()->getVariableVersions().getVersions(AccessID);
+
+      // Set the second to last field to be a temporary (only the first and the last field will be
+      // real storages, all other versions will be temporaries)
+      int lastAccessID = versions->back();
+      iir_->getMetaData()->getTemporaryFieldAccessIDSet().insert(lastAccessID);
+      iir_->getMetaData()->getAllocatedFieldAccessIDSet().erase(lastAccessID);
+
+      // The field with version 0 contains the original name
+      const std::string& originalName = iir_->getMetaData()->getNameFromAccessID(versions->front());
+
+      // Register the new field
+      iir_->getMetaData()->setAccessIDNamePairOfField(
+          newAccessID, originalName + "_" + std::to_string(versions->size()), false);
+      iir_->getMetaData()->getAllocatedFieldAccessIDSet().insert(newAccessID);
+
+      versions->push_back(newAccessID);
+      iir_->getMetaData()->getVariableVersions().insert(newAccessID, versions);
+
+    } else {
+      const std::string& originalName = iir_->getMetaData()->getNameFromAccessID(AccessID);
+
+      // Register the new *and* old field as being multi-versioned and indicate code-gen it has to
+      // allocate the second version
+      auto versionsVecPtr = std::make_shared<std::vector<int>>();
+      *versionsVecPtr = {AccessID, newAccessID};
+
+      iir_->getMetaData()->setAccessIDNamePairOfField(newAccessID, originalName + "_1", false);
+      iir_->getMetaData()->getAllocatedFieldAccessIDSet().insert(newAccessID);
+
+      iir_->getMetaData()->getVariableVersions().insert(AccessID, versionsVecPtr);
+      iir_->getMetaData()->getVariableVersions().insert(newAccessID, versionsVecPtr);
+    }
+  } else {
+    if(iir_->getMetaData()->getVariableVersions().hasVariableMultipleVersions(AccessID)) {
+      // Variable is already multi-versioned, append a new version
+      auto versions = iir_->getMetaData()->getVariableVersions().getVersions(AccessID);
+
+      // The variable with version 0 contains the original name
+      const std::string& originalName = iir_->getMetaData()->getNameFromAccessID(versions->front());
+
+      // Register the new variable
+      iir_->getMetaData()->setAccessIDNamePair(newAccessID, originalName + "_" +
+                                                                std::to_string(versions->size()));
+      versions->push_back(newAccessID);
+      iir_->getMetaData()->getVariableVersions().insert(newAccessID, versions);
+
+    } else {
+      const std::string& originalName = iir_->getMetaData()->getNameFromAccessID(AccessID);
+
+      // Register the new *and* old variable as being multi-versioned
+      auto versionsVecPtr = std::make_shared<std::vector<int>>();
+      *versionsVecPtr = {AccessID, newAccessID};
+
+      iir_->getMetaData()->setAccessIDNamePair(newAccessID, originalName + "_1");
+      iir_->getMetaData()->getVariableVersions().insert(AccessID, versionsVecPtr);
+      iir_->getMetaData()->getVariableVersions().insert(newAccessID, versionsVecPtr);
+    }
+  }
+
+  // Rename the Expression
+  renameAccessIDInExpr(iir_, AccessID, newAccessID, expr);
+
+  // Recompute the accesses of the current statement (only works with single Do-Methods - for now)
+  computeAccesses(iir_,
+                  stencil->getStage(curStageIdx)->getSingleDoMethod().getChildren()[curStmtIdx]);
+
+  // Rename the statement and accesses
+  for(int stageIdx = curStageIdx;
+      dir == RD_Above ? (stageIdx >= 0) : (stageIdx < stencil->getNumStages());
+      dir == RD_Above ? stageIdx-- : stageIdx++) {
+    iir::Stage& stage = *stencil->getStage(stageIdx);
+    iir::DoMethod& doMethod = stage.getSingleDoMethod();
+
+    if(stageIdx == curStageIdx) {
+      for(int i = dir == RD_Above ? (curStmtIdx - 1) : (curStmtIdx + 1);
+          dir == RD_Above ? (i >= 0) : (i < doMethod.getChildren().size());
+          dir == RD_Above ? (--i) : (++i)) {
+        renameAccessIDInStmts(iir_, AccessID, newAccessID, doMethod.getChildren()[i]);
+        renameAccessIDInAccesses(AccessID, newAccessID, doMethod.getChildren()[i]);
+      }
+
+    } else {
+      renameAccessIDInStmts(iir_, AccessID, newAccessID, doMethod.getChildren());
+      renameAccessIDInAccesses(AccessID, newAccessID, doMethod.getChildren());
+    }
+
+    // Updat the fields of the stage
+    stage.update(iir::NodeUpdateType::level);
+  }
+
+  return newAccessID;
 }
 
 } // anonymous namespace
@@ -108,7 +216,8 @@ bool PassFieldVersioning::run(
       iir::LoopOrderKind loopOrder = multiStage.getLoopOrder();
 
       std::shared_ptr<iir::DependencyGraphAccesses> newGraph, oldGraph;
-      newGraph = std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation.get());
+      newGraph =
+          std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation->getIIR().get());
 
       // Iterate stages bottom -> top
       for(auto stageRit = multiStage.childrenRBegin(), stageRend = multiStage.childrenREnd();
@@ -125,8 +234,8 @@ bool PassFieldVersioning::run(
           newGraph->insertStatementAccessesPair(stmtAccessesPair);
 
           // Try to resolve race-conditions by using double buffering if necessary
-          auto rc =
-              fixRaceCondition(newGraph.get(), stencil, doMethod, loopOrder, stageIdx, stmtIndex);
+          auto rc = fixRaceCondition(stencilInstantiation->getIIR().get(), newGraph.get(), stencil,
+                                     doMethod, loopOrder, stageIdx, stmtIndex);
 
           if(rc == RCKind::RK_Unresolvable)
             // Nothing we can do ... bail out
@@ -154,7 +263,7 @@ bool PassFieldVersioning::run(
 }
 
 PassFieldVersioning::RCKind
-PassFieldVersioning::fixRaceCondition(const iir::DependencyGraphAccesses* graph,
+PassFieldVersioning::fixRaceCondition(iir::IIR* iir, const iir::DependencyGraphAccesses* graph,
                                       iir::Stencil& stencil, iir::DoMethod& doMethod,
                                       iir::LoopOrderKind loopOrder, int stageIdx, int index) {
   using Vertex = iir::DependencyGraphAccesses::Vertex;
@@ -162,8 +271,8 @@ PassFieldVersioning::fixRaceCondition(const iir::DependencyGraphAccesses* graph,
 
   Statement& statement = *doMethod.getChildren()[index]->getStatement();
 
-  auto& instantiation = stencil.getStencilInstantiation();
-  OptimizerContext* context = instantiation.getOptimizerContext();
+  //  auto& instantiation = stencil.getStencilInstantiation();
+//  OptimizerContext* context = instantiation.getOptimizerContext();
   int numRenames = 0;
 
   // Vector of strongly connected components with atleast one stencil access
@@ -235,16 +344,17 @@ PassFieldVersioning::fixRaceCondition(const iir::DependencyGraphAccesses* graph,
   if(ExprStmt* stmt = dyn_cast<ExprStmt>(statement.ASTStmt.get()))
     assignment = dyn_cast<AssignmentExpr>(stmt->getExpr().get());
 
+
   if(!assignment) {
-    if(context->getOptions().DumpRaceConditionGraph)
-      graph->toDot("rc_" + instantiation.getName() + ".dot");
-    reportRaceCondition(statement, instantiation);
+    if(iir->getOptions().DumpRaceConditionGraph)
+      graph->toDot("rc_" + iir->getMetaData()->getName() + ".dot");
+    reportRaceCondition(statement, iir);
     return RCKind::RK_Unresolvable;
   }
 
   // Get AccessIDs of the LHS and RHS
   std::set<int> LHSAccessIDs, RHSAccessIDs;
-  getAccessIDFromAssignment(instantiation, assignment, LHSAccessIDs, RHSAccessIDs);
+  getAccessIDFromAssignment(iir, assignment, LHSAccessIDs, RHSAccessIDs);
 
   DAWN_ASSERT_MSG(LHSAccessIDs.size() == 1, "left hand side should only have only one AccessID");
   int LHSAccessID = *LHSAccessIDs.begin();
@@ -252,9 +362,9 @@ PassFieldVersioning::fixRaceCondition(const iir::DependencyGraphAccesses* graph,
   // If the LHSAccessID is not part of the SCC, we cannot resolve the race-condition
   for(std::set<int>& scc : *stencilSCCs) {
     if(!scc.count(LHSAccessID)) {
-      if(context->getOptions().DumpRaceConditionGraph)
-        graph->toDot("rc_" + instantiation.getName() + ".dot");
-      reportRaceCondition(statement, instantiation);
+      if(iir->getOptions().DumpRaceConditionGraph)
+        graph->toDot("rc_" + iir->getMetaData()->getName() + ".dot");
+      reportRaceCondition(statement, iir);
       return RCKind::RK_Unresolvable;
     }
   }
@@ -268,24 +378,24 @@ PassFieldVersioning::fixRaceCondition(const iir::DependencyGraphAccesses* graph,
       renameCandiates.insert(AccessID);
   }
 
-  if(context->getOptions().ReportPassFieldVersioning)
-    std::cout << "\nPASS: " << getName() << ": " << instantiation.getName()
+  if(iir->getOptions().ReportPassFieldVersioning)
+    std::cout << "\nPASS: " << getName() << ": " << iir->getMetaData()->getName()
               << ": rename:" << statement.ASTStmt->getSourceLocation().Line;
 
   // Create a new multi-versioned field and rename all occurences
   for(int oldAccessID : renameCandiates) {
-    int newAccessID = instantiation.createVersionAndRename(oldAccessID, &stencil, stageIdx, index,
+    int newAccessID = createVersionAndRename(iir, oldAccessID, &stencil, stageIdx, index,
                                                            assignment->getRight(),
-                                                           iir::StencilInstantiation::RD_Above);
+                                                           RenameDirection::RD_Above);
 
-    if(context->getOptions().ReportPassFieldVersioning)
-      std::cout << (numRenames != 0 ? ", " : " ") << instantiation.getNameFromAccessID(oldAccessID)
-                << ":" << instantiation.getNameFromAccessID(newAccessID);
+    if(iir->getOptions().ReportPassFieldVersioning)
+      std::cout << (numRenames != 0 ? ", " : " ") << iir->getMetaData()->getNameFromAccessID(oldAccessID)
+                << ":" << iir->getMetaData()->getNameFromAccessID(newAccessID);
 
     numRenames++;
   }
 
-  if(context->getOptions().ReportPassFieldVersioning && numRenames > 0)
+  if(iir->getOptions().ReportPassFieldVersioning && numRenames > 0)
     std::cout << "\n";
 
   numRenames_ += numRenames;

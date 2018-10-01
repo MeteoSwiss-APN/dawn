@@ -13,12 +13,13 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassTemporaryType.h"
-#include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/IIRNodeIterator.h"
-#include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/NodeUpdateType.h"
+#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/Utility/TemporaryHandeling.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include <iostream>
 #include <memory>
@@ -31,15 +32,16 @@ namespace dawn {
 namespace {
 
 class StencilFunArgumentDetector : public ASTVisitorForwarding {
-  iir::StencilInstantiation& instantiation_;
+//  iir::StencilInstantiation& instantiation_;
+    const iir::IIR* iir_;
   int AccessID_;
 
   int argListNesting_;
   bool usedInStencilFun_;
 
 public:
-  StencilFunArgumentDetector(iir::StencilInstantiation& instantiation, int AccessID)
-      : instantiation_(instantiation), AccessID_(AccessID), argListNesting_(0),
+  StencilFunArgumentDetector(iir::IIR* iir, int AccessID)
+      : iir_(iir), AccessID_(AccessID), argListNesting_(0),
         usedInStencilFun_(false) {}
 
   virtual void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
@@ -49,7 +51,8 @@ public:
   }
 
   virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
-    if(argListNesting_ > 0 && instantiation_.getAccessIDFromExpr(expr) == AccessID_)
+    if(argListNesting_ > 0 &&
+       iir_->getMetaData()->getAccessIDFromExpr(expr) == AccessID_)
       usedInStencilFun_ = true;
   }
 
@@ -60,7 +63,7 @@ public:
 /// any statement of the `stencil`
 /// @returns `true` if field is used as an argument
 bool usedAsArgumentInStencilFun(const std::unique_ptr<iir::Stencil>& stencil, int AccessID) {
-  StencilFunArgumentDetector visitor(stencil->getStencilInstantiation(), AccessID);
+  StencilFunArgumentDetector visitor(stencil->getIIR(), AccessID);
   stencil->accept(visitor);
   return visitor.usedInStencilFun();
 }
@@ -82,7 +85,8 @@ struct Temporary {
 
   /// @brief Dump the temporary
   void dump(const std::shared_ptr<iir::StencilInstantiation>& instantiation) const {
-    std::cout << "Temporary : " << instantiation->getNameFromAccessID(AccessID) << " {"
+    std::cout << "Temporary : "
+              << instantiation->getIIR()->getMetaData()->getNameFromAccessID(AccessID) << " {"
               << "\n  Type=" << (Type == TT_LocalVariable ? "LocalVariable" : "Field")
               << ",\n  Lifetime=" << Lifetime << ",\n  Extent=" << Extent << "\n}\n";
   }
@@ -102,7 +106,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
   // Fix temporaries which span over multiple stencils and promote them to 3D allocated fields
 
   // Fix the temporaries within the same stencil
-  for(const auto& stencilPtr : instantiation->getStencils()) {
+  for(const auto& stencilPtr : instantiation->getIIR()->getChildren() /* getStencils()*/) {
     temporaries.clear();
     AccessIDs.clear();
 
@@ -115,9 +119,11 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
           const iir::Extents& extent = AccessIDExtentPair.second;
 
           // Is it a temporary?
-          bool isTemporaryField = instantiation->isTemporaryField(AccessID);
+          bool isTemporaryField =
+              instantiation->getIIR()->getMetaData()->isTemporaryField(AccessID);
           if(isTemporaryField ||
-             (!instantiation->isGlobalVariable(AccessID) && instantiation->isVariable(AccessID))) {
+             (!instantiation->getIIR()->getMetaData()->isGlobalVariable(AccessID) &&
+              instantiation->getIIR()->getMetaData()->isVariable(AccessID))) {
 
             auto it = temporaries.find(AccessID);
             if(it != temporaries.end()) {
@@ -152,8 +158,9 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
       const Temporary& temporary = AccessIDTemporaryPair.second;
 
       auto report = [&](const char* action) {
-        std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": " << action
-                  << ":" << instantiation->getOriginalNameFromAccessID(AccessID) << std::endl;
+        std::cout << "\nPASS: " << getName() << ": "
+                  << instantiation->getIIR()->getMetaData()->getName() << ": " << action << ":"
+                  << instantiation->getOriginalNameFromAccessID(AccessID) << std::endl;
       };
 
       if(temporary.Type == Temporary::TT_LocalVariable) {
@@ -164,8 +171,8 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
             report("promote");
 
           report_.push_back(Report{AccessID, TmpActionMod::promote});
-          instantiation->promoteLocalVariableToTemporaryField(stencilPtr.get(), AccessID,
-                                                              temporary.Lifetime);
+          promoteLocalVariableToTemporaryField(instantiation->getIIR().get(), stencilPtr.get(),
+                                               AccessID, temporary.Lifetime);
         }
       } else {
         // If the field is only accessed within the same Do-Method, does not have an extent and is
@@ -177,8 +184,8 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
             report("demote");
 
           report_.push_back(Report{AccessID, TmpActionMod::demote});
-          instantiation->demoteTemporaryFieldToLocalVariable(stencilPtr.get(), AccessID,
-                                                             temporary.Lifetime);
+          demoteTemporaryFieldToLocalVariable(instantiation->getIIR().get(), stencilPtr.get(),
+                                              AccessID, temporary.Lifetime);
         }
       }
     }
@@ -211,7 +218,7 @@ void PassTemporaryType::fixTemporariesSpanningMultipleStencils(
             // Yes and yes ... promote it to a real storage
             if(fieldi.second.field.getAccessID() == fieldj.second.field.getAccessID() &&
                fieldj.second.IsTemporary) {
-              instantiation->promoteTemporaryFieldToAllocatedField(
+              promoteTemporaryFieldToAllocatedField(instantiation->getIIR().get(),
                   fieldi.second.field.getAccessID());
             }
           }

@@ -28,7 +28,8 @@ namespace {
 
 /// @brief Compute and fill the access map of the given statement
 class AccessMapper : public ASTVisitor {
-  iir::StencilInstantiation* instantiation_;
+//  iir::StencilInstantiation* instantiation_;
+    iir::IIR* iir_;
 
   /// Keep track of the current statement access pair
   struct CurrentStatementAccessPair {
@@ -72,10 +73,10 @@ class AccessMapper : public ASTVisitor {
   std::stack<std::unique_ptr<StencilFunctionCallScope>> stencilFunCalls_;
 
 public:
-  AccessMapper(iir::StencilInstantiation* instantiation,
+  AccessMapper(iir::IIR* iir,
                const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessesPair,
                std::shared_ptr<iir::StencilFunctionInstantiation> stencilFun = nullptr)
-      : instantiation_(instantiation), stencilFun_(stencilFun) {
+      : iir_(iir), stencilFun_(stencilFun) {
     curStatementAccessPairStack_.push_back(
         make_unique<CurrentStatementAccessPair>(stmtAccessesPair));
   }
@@ -84,19 +85,19 @@ public:
   std::shared_ptr<iir::StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) {
     return (stencilFun_ ? stencilFun_->getStencilFunctionInstantiation(expr)
-                        : instantiation_->getStencilFunctionInstantiation(expr));
+                        : iir_->getMetaData()->getStencilFunctionInstantiation(expr));
   }
 
   /// @brief Get the AccessID from the Expr
   int getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) {
     return stencilFun_ ? stencilFun_->getAccessIDFromExpr(expr)
-                       : instantiation_->getAccessIDFromExpr(expr);
+                       : iir_->getMetaData()->getAccessIDFromExpr(expr);
   }
 
   /// @brief Get the AccessID from the Stmt
   int getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) {
     return stencilFun_ ? stencilFun_->getAccessIDFromStmt(stmt)
-                       : instantiation_->getAccessIDFromStmt(stmt);
+                       : iir_->getMetaData()->getAccessIDFromStmt(stmt);
   }
 
   /// @brief Add a new access to the caller and callee and register it in the caller and callee
@@ -462,11 +463,11 @@ public:
 
 } // anonymous namespace
 
-void computeAccesses(iir::StencilInstantiation* instantiation,
+void computeAccesses(iir::IIR* iir_,
                      ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
   for(const auto& statementAccessesPair : statementAccessesPairs) {
-    DAWN_ASSERT(instantiation);
-    AccessMapper mapper(instantiation, statementAccessesPair, nullptr);
+    DAWN_ASSERT(iir_);
+    AccessMapper mapper(iir_, statementAccessesPair, nullptr);
     statementAccessesPair->getStatement()->ASTStmt->accept(mapper);
   }
 }
@@ -475,7 +476,7 @@ void computeAccesses(
     std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation,
     ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
   for(const auto& statementAccessesPair : statementAccessesPairs) {
-    AccessMapper mapper(stencilFunctionInstantiation->getStencilInstantiation(),
+    AccessMapper mapper(stencilFunctionInstantiation->getStencilInstantiation()->getIIR().get(),
                         statementAccessesPair, stencilFunctionInstantiation);
     statementAccessesPair->getStatement()->ASTStmt->accept(mapper);
   }

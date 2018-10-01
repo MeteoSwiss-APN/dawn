@@ -27,12 +27,13 @@
 #include <vector>
 
 namespace dawn {
+class OptimizerContext;
 namespace iir {
 
 class Stencil;
 class StencilInstantiation;
 class DependencyGraphAccesses;
-class OptimizerContext;
+class IIR;
 
 namespace impl {
 template <typename T>
@@ -46,7 +47,7 @@ using StdList = std::list<T, std::allocator<T>>;
 ///
 /// @ingroup optimizer
 class MultiStage : public IIRNode<Stencil, MultiStage, Stage, impl::StdList> {
-  StencilInstantiation& stencilInstantiation_;
+  IIR* iir_;
 
   LoopOrderKind loopOrder_;
   std::unordered_map<int, iir::Cache> caches_;
@@ -65,7 +66,7 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
-  MultiStage(StencilInstantiation& stencilInstantiation, LoopOrderKind loopOrder);
+  MultiStage(IIR* iir, LoopOrderKind loopOrder);
   MultiStage(MultiStage&&) = default;
 
   MultiStage& operator=(const MultiStage&) = default;
@@ -75,7 +76,7 @@ public:
   std::unique_ptr<MultiStage> clone() const;
 
   /// @brief Get the execution policy
-  StencilInstantiation& getStencilInstantiation() const { return stencilInstantiation_; }
+//  StencilInstantiation& getStencilInstantiation() const { return stencilInstantiation_; }
 
   /// @brief Get the loop order
   LoopOrderKind getLoopOrder() const { return loopOrder_; }

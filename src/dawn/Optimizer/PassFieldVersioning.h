@@ -24,6 +24,7 @@ namespace iir {
 class Stencil;
 class DependencyGraphAccesses;
 class DoMethod;
+class IIR;
 }
 
 /// @brief This pass resolves potential race condition by introducing double buffering i.e
@@ -76,9 +77,12 @@ public:
   /// @param loopOrder  Current loop order of the stage
   /// @param stageIdx   @b Linear index of the stage in the stencil
   /// @param stmtIdx    Index of the statement inside the stage
-  RCKind fixRaceCondition(const iir::DependencyGraphAccesses* graph, iir::Stencil& stencil,
-                          iir::DoMethod& doMethod, iir::LoopOrderKind loopOrder, int stageIdx,
-                          int stmtIdx);
+  RCKind fixRaceCondition(iir::IIR* iir, const iir::DependencyGraphAccesses* graph,
+                          iir::Stencil& stencil, iir::DoMethod& doMethod,
+                          iir::LoopOrderKind loopOrder, int stageIdx, int index);
+//  RCKind fixRaceCondition(dawn::iir::IIR* iir, const iir::DependencyGraphAccesses* graph,
+//                          iir::Stencil& stencil, iir::DoMethod& doMethod,
+//                          iir::LoopOrderKind loopOrder, int stageIdx, int stmtIdx);
 };
 
 } // namespace dawn

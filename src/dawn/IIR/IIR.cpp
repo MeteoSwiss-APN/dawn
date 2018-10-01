@@ -12,10 +12,11 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/DependencyGraphStage.h"
-#include "dawn/Optimizer/Renaming.h"
+#include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/Renaming.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
@@ -26,6 +27,8 @@
 namespace dawn {
 namespace iir {
 
+IIR::IIR() : metadata_(std::make_shared<StencilMetaInformation>()) {}
+
 std::unique_ptr<IIR> IIR::clone() const {
 
   auto cloneIIR = make_unique<IIR>();
@@ -33,6 +36,11 @@ std::unique_ptr<IIR> IIR::clone() const {
   cloneIIR->cloneChildrenFrom(*this, cloneIIR);
   return cloneIIR;
 }
+
+Options& IIR::getOptions() { return creator_->getOptions(); }
+
+const DiagnosticsEngine& IIR::getDiagnostics() const { return creator_->getDiagnostics(); }
+DiagnosticsEngine& IIR::getDiagnostics() { return creator_->getDiagnostics(); }
 
 } // namespace iir
 } // namespace dawn

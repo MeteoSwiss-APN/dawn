@@ -479,7 +479,7 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
         auto& newStmtAccList = inliner.getNewStatementAccessesPairs();
 
         // Compute the accesses of the new statements
-        computeAccesses(stencilInstantiation.get(), newStmtAccList);
+        computeAccesses(stencilInstantiation->getIIR().get(), newStmtAccList);
 
         // Erase the old StatementAccessPair ...
         stmtAccIt = doMethod.childrenErase(stmtAccIt);

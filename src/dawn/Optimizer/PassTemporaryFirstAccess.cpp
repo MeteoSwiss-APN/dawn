@@ -31,18 +31,19 @@ namespace {
 class UnusedFieldVisitor : public ASTVisitorForwarding {
   int AccessID_;
   bool fieldIsUnused_;
-  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
+//  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
+  const std::shared_ptr<iir::StencilMetaInformation>& stencilMetaInfo_;
   std::stack<std::shared_ptr<const iir::StencilFunctionInstantiation>> functionInstantiationStack_;
 
 public:
-  UnusedFieldVisitor(int AccessID, const std::shared_ptr<iir::StencilInstantiation>& instantiation)
-      : AccessID_(AccessID), fieldIsUnused_(false), instantiation_(instantiation) {}
+  UnusedFieldVisitor(int AccessID, const std::shared_ptr<iir::StencilMetaInformation>& info)
+      : AccessID_(AccessID), fieldIsUnused_(false), stencilMetaInfo_(info) {}
 
   std::shared_ptr<const iir::StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) {
     if(!functionInstantiationStack_.empty())
       return functionInstantiationStack_.top()->getStencilFunctionInstantiation(expr);
-    return instantiation_->getStencilFunctionInstantiation(expr);
+    return stencilMetaInfo_->getStencilFunctionInstantiation(expr);
   }
 
   void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
@@ -110,7 +111,7 @@ bool PassTemporaryFirstAccess::run(
         // If a field is unused, we still have to add it as an input field of the stencil function.
         // Thus, the uninitialized temporary anaylsis reports a false positive on this temporary
         // field!
-        UnusedFieldVisitor visitor(AccessID, stencilInstantiation);
+        UnusedFieldVisitor visitor(AccessID, stencilInstantiation->getIIR()->getMetaData());
         stmt->accept(visitor);
         if(visitor.isFieldUnused())
           continue;

@@ -215,7 +215,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
 
     // Set K-Caches
     if(context->getOptions().UseKCaches ||
-       stencil.getSIRStencil()->Attributes.has(sir::Attr::AK_UseKCaches)) {
+       stencil.stencilAttributes.has(sir::Attr::AK_UseKCaches)) {
 
       // Get the fields of all Multi-Stages
       std::vector<std::unordered_map<int, iir::Field>> fields;

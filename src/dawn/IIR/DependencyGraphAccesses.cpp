@@ -80,7 +80,7 @@ std::string DependencyGraphAccesses::edgeDataToDot(const EdgeData& data) const {
 const char* DependencyGraphAccesses::getDotShape() const { return "circle"; }
 
 std::string DependencyGraphAccesses::getVertexNameByVertexID(std::size_t VertexID) const {
-  return instantiation_ ? instantiation_->getNameFromAccessID(getIDFromVertexID(VertexID))
+  return iir_ ? iir_->getMetaData()->getNameFromAccessID(getIDFromVertexID(VertexID))
                         : std::to_string(getIDFromVertexID(VertexID));
 }
 
@@ -101,7 +101,7 @@ void DependencyGraphAccesses::merge(const DependencyGraphAccesses* other) {
 }
 
 std::shared_ptr<DependencyGraphAccesses> DependencyGraphAccesses::clone() const {
-  auto graph = std::make_shared<DependencyGraphAccesses>(instantiation_);
+  auto graph = std::make_shared<DependencyGraphAccesses>(iir_);
   graph->vertices_ = vertices_;
   graph->VertexIDToAccessIDMap_ = VertexIDToAccessIDMap_;
   for(const auto& edgeListPtr : adjacencyList_)
@@ -492,13 +492,13 @@ void DependencyGraphAccesses::toJSON(const std::string& file) const {
     jvertex["extent"] = extentsToVec(extentMap.at(VertexID));
 
     int AccessID = getIDFromVertexID(VertexID);
-    if(instantiation_->isTemporaryField(AccessID))
+    if(iir_->getMetaData()->isTemporaryField(AccessID))
       jvertex["type"] = "field_temporary";
-    else if(instantiation_->isField(AccessID))
+    else if(iir_->getMetaData()->isField(AccessID))
       jvertex["type"] = "field";
-    else if(instantiation_->isVariable(AccessID) || instantiation_->isGlobalVariable(AccessID))
+    else if(iir_->getMetaData()->isVariable(AccessID) || iir_->getMetaData()->isGlobalVariable(AccessID))
       jvertex["type"] = "variable";
-    else if(instantiation_->isLiteral(AccessID))
+    else if(iir_->getMetaData()->isLiteral(AccessID))
       jvertex["type"] = "literal";
     else
       dawn_unreachable("invalid vertex type");
@@ -525,7 +525,9 @@ void DependencyGraphAccesses::toJSON(const std::string& file) const {
   if(!ofs.is_open()) {
     DiagnosticsBuilder diag(DiagnosticsKind::Error);
     diag << "failed to open file: \"" << file << "\"";
-    instantiation_->getOptimizerContext()->getDiagnostics().report(diag);
+//    instantiation_->getOptimizerContext()->getDiagnostics().report(diag);
+    /// TODO: Add diag from IIR here
+
   }
 
   ofs << jgraph.dump(2);

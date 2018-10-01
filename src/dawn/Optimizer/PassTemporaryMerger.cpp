@@ -15,8 +15,9 @@
 #include "dawn/Optimizer/PassTemporaryMerger.h"
 #include "dawn/IIR/DependencyGraph.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/Utility/TemporaryHandeling.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/StringUtil.h"
 #include <iostream>
@@ -35,9 +36,9 @@ bool PassTemporaryMerger::run(
   bool merged = false;
 
   bool stencilNeedsMergePass = false;
-  for(const auto& stencilPtr : stencilInstantiation->getStencils())
+  for(const auto& stencilPtr : stencilInstantiation->getIIR()->getChildren())
     stencilNeedsMergePass |=
-        stencilPtr->getSIRStencil()->Attributes.has(sir::Attr::AK_MergeTemporaries);
+        stencilPtr->stencilAttributes.has(sir::Attr::AK_MergeTemporaries);
 
   if(!(context->getOptions().MergeTemporaries || stencilNeedsMergePass))
     return true;
@@ -48,11 +49,11 @@ bool PassTemporaryMerger::run(
   std::unordered_set<std::size_t> visitedNodes;
 
   int stencilIdx = 0;
-  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
+  for(const auto& stencilPtr : stencilInstantiation->getIIR()->getChildren()) {
     iir::Stencil& stencil = *stencilPtr;
 
     // Build the dependency graph of the stencil (merge all dependency graphs of the multi-stages)
-    iir::DependencyGraphAccesses AccessesDAG(stencilInstantiation.get());
+    iir::DependencyGraphAccesses AccessesDAG(stencilInstantiation->getIIR().get());
     for(const auto& multiStagePtr : stencilPtr->getChildren()) {
       iir::MultiStage& multiStage = *multiStagePtr;
       AccessesDAG.merge(multiStage.getDependencyGraphOfAxis().get());
@@ -60,7 +61,7 @@ bool PassTemporaryMerger::run(
     const auto& adjacencyList = AccessesDAG.getAdjacencyList();
 
     // Build the dependency graph of the temporaries
-    iir::DependencyGraphAccesses TemporaryDAG(stencilInstantiation.get());
+    iir::DependencyGraphAccesses TemporaryDAG(stencilInstantiation->getIIR().get());
     int AccessIDOfLastTemporary = -1;
     for(std::size_t VertexID : AccessesDAG.getOutputVertexIDs()) {
       nodesToVisit.clear();
@@ -75,7 +76,7 @@ bool PassTemporaryMerger::run(
         AccessIDOfLastTemporary = nodesToVisit.back().second;
         nodesToVisit.pop_back();
 
-        if(stencilInstantiation->isTemporaryField(FromAccessID)) {
+        if(stencilInstantiation->getIIR()->getMetaData()->isTemporaryField(FromAccessID)) {
           TemporaryDAG.insertNode(FromAccessID);
           AccessIDOfLastTemporary = FromAccessID;
         }
@@ -92,8 +93,10 @@ bool PassTemporaryMerger::run(
           int ToAccessID = AccessesDAG.getIDFromVertexID(ToVertexID);
           int newAccessIDOfLastTemporary = AccessIDOfLastTemporary;
 
-          if(stencilInstantiation->isTemporaryField(ToAccessID) && AccessIDOfLastTemporary != -1) {
-            TemporaryDAG.insertEdge(AccessIDOfLastTemporary, ToAccessID, iir::Extents{0, 0, 0, 0, 0, 0});
+          if(stencilInstantiation->getIIR()->getMetaData()->isTemporaryField(ToAccessID) &&
+             AccessIDOfLastTemporary != -1) {
+            TemporaryDAG.insertEdge(AccessIDOfLastTemporary, ToAccessID,
+                                    iir::Extents{0, 0, 0, 0, 0, 0});
             newAccessIDOfLastTemporary = ToAccessID;
           }
 
@@ -160,9 +163,11 @@ bool PassTemporaryMerger::run(
       if(context->getOptions().ReportPassTemporaryMerger && AccessIDOfRenameCandiates.size() >= 2) {
         std::vector<std::string> renameCandiatesNames;
         for(int AccessID : AccessIDOfRenameCandiates)
-          renameCandiatesNames.emplace_back(stencilInstantiation->getNameFromAccessID(AccessID));
+          renameCandiatesNames.emplace_back(
+              stencilInstantiation->getIIR()->getMetaData()->getNameFromAccessID(AccessID));
         std::sort(renameCandiatesNames.begin(), renameCandiatesNames.end());
-        std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
+        std::cout << "\nPASS: " << getName() << ": "
+                  << stencilInstantiation->getIIR()->getMetaData()->getName()
                   << ": merging: " << RangeToString(", ", "", "\n")(renameCandiatesNames);
       }
 
@@ -173,7 +178,8 @@ bool PassTemporaryMerger::run(
       for(int i = 1; i < AccessIDOfRenameCandiates.size(); ++i) {
         merged = true;
         int oldAccessID = AccessIDOfRenameCandiates[i];
-        stencilInstantiation->renameAllOccurrences(stencilPtr.get(), oldAccessID, newAccessID);
+        renameAllOccurrences(stencilInstantiation->getIIR().get(), stencilPtr.get(),
+                             oldAccessID, newAccessID);
       }
     }
 
@@ -181,8 +187,8 @@ bool PassTemporaryMerger::run(
   }
 
   if(context->getOptions().ReportPassTemporaryMerger && !merged)
-    std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
-              << ": no merge\n";
+    std::cout << "\nPASS: " << getName() << ": "
+              << stencilInstantiation->getIIR()->getMetaData()->getName() << ": no merge\n";
 
   return true;
 }

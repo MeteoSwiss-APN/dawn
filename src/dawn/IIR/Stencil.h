@@ -36,8 +36,8 @@ class IIR;
 /// @brief A Stencil is represented by a collection of MultiStages
 /// @ingroup optimizer
 class Stencil : public IIRNode<IIR, Stencil, MultiStage, impl::StdList> {
-  StencilInstantiation& stencilInstantiation_;
-  const std::shared_ptr<sir::Stencil> SIRStencil_;
+  IIR* iir_;
+  //  const std::shared_ptr<sir::Stencil> SIRStencil_;
 
   /// Identifier of the stencil. Note that this ID is only for code-generation to associate the
   /// stencil with a stencil-call in the run() method
@@ -56,6 +56,7 @@ public:
     Field field;
     bool IsTemporary;
   };
+  sir::Attr stencilAttributes;
 
 private:
   struct DerivedInfo {
@@ -173,8 +174,7 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
-  Stencil(StencilInstantiation& stencilInstantiation,
-          const std::shared_ptr<sir::Stencil>& SIRStencil, int StencilID);
+  Stencil(iir::IIR* iir, sir::Attr attributes, int StencilID);
 
   Stencil(Stencil&&) = default;
 
@@ -192,7 +192,9 @@ public:
   std::vector<std::string> getGlobalVariables() const;
 
   /// @brief Get the stencil instantiation
-  StencilInstantiation& getStencilInstantiation() const { return stencilInstantiation_; }
+  //  StencilInstantiation& getStencilInstantiation() const { return stencilInstantiation_; }
+  const iir::IIR* getIIR() const { return iir_; }
+  iir::IIR* getIIR() { return iir_; }
 
   /// @brief Get the enclosing interval of accesses of temporaries used in this stencil
   boost::optional<Interval> getEnclosingIntervalTemporaries() const;
@@ -265,8 +267,8 @@ public:
   /// @brief Check if the stencil is empty (i.e contains no statements)
   bool isEmpty() const;
 
-  /// @brief Get the SIR Stencil
-  const std::shared_ptr<sir::Stencil> getSIRStencil() const;
+  //  /// @brief Get the SIR Stencil
+  //  const std::shared_ptr<sir::Stencil> getSIRStencil() const;
 
   /// @brief Apply the visitor to all statements in the stencil
   void accept(ASTVisitor& visitor);

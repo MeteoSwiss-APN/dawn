@@ -28,7 +28,7 @@ class Stmt;
 namespace iir {
 
 class Accesses;
-class StencilInstantiation;
+class IIR;
 class StatementAccessesPair;
 
 /// @enum DependencyGraphAccessesEdgeData
@@ -60,23 +60,24 @@ using DependencyGraphAccessesEdgeData = Extents;
 class DependencyGraphAccesses
     : public DependencyGraph<DependencyGraphAccesses, DependencyGraphAccessesEdgeData> {
 
-  StencilInstantiation* instantiation_;
+//  StencilInstantiation* instantiation_;
+  IIR* iir_;
   std::unordered_map<std::size_t, int> VertexIDToAccessIDMap_;
 
 public:
   using Base = DependencyGraph<DependencyGraphAccesses, DependencyGraphAccessesEdgeData>;
   using EdgeData = DependencyGraphAccessesEdgeData;
 
-  DependencyGraphAccesses(StencilInstantiation* stencilInstantiation)
-      : Base(), instantiation_(stencilInstantiation) {}
+  DependencyGraphAccesses(IIR* iir)
+      : Base(), iir_(iir) {}
 
   /// @brief Construct graph by merging the given `graphs`
   ///
   /// @param graphs       Graphs to merge
   /// @tparam GraphTypes  Varidaic pack of `std::shared_ptr<DependencyGraphAccesses>`
   template <class... GraphTypes>
-  DependencyGraphAccesses(StencilInstantiation* stencilInstantiation, const GraphTypes&... graphs)
-      : DependencyGraphAccesses(stencilInstantiation) {
+  DependencyGraphAccesses(IIR* iir, const GraphTypes&... graphs)
+      : DependencyGraphAccesses(iir) {
     static_assert(
         and_<std::is_same<GraphTypes, std::shared_ptr<DependencyGraphAccesses>>...>::value,
         "GraphTypes needs to be a varidaic pack of `std::shared_ptr<DependencyGraphAccesses>`");
@@ -174,7 +175,7 @@ public:
   void clear();
 
   /// @brief Get stencil instantiation
-  StencilInstantiation* getStencilInstantiation() const { return instantiation_; }
+  IIR* getIIR() const { return iir_; }
 
   /// @brief Serialize the graph to JSON
   void toJSON(const std::string& file) const;

@@ -13,14 +13,14 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/ReorderStrategyGreedy.h"
-#include "dawn/Optimizer/BoundaryExtent.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/IIR/MultiStage.h"
-#include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/BoundaryExtent.h"
+#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 #include <algorithm>
 #include <set>
 #include <vector>
@@ -88,19 +88,21 @@ ReoderStrategyGreedy::reorder(const std::unique_ptr<iir::Stencil>& stencilPtr) {
   iir::Stencil& stencil = *stencilPtr;
 
   iir::DependencyGraphStage& stageDAG = *stencil.getStageDependencyGraph();
-  iir::StencilInstantiation& instantiation = stencil.getStencilInstantiation();
+//  iir::StencilInstantiation& instantiation = stencil.getStencilInstantiation();
+  auto internalIR = stencil.getIIR();
 
   std::unique_ptr<iir::Stencil> newStencil =
-      make_unique<iir::Stencil>(instantiation, stencil.getSIRStencil(), stencilPtr->getStencilID());
+      make_unique<iir::Stencil>(internalIR, stencil.stencilAttributes, stencilPtr->getStencilID());
 
   newStencil->setStageDependencyGraph(stencil.getStageDependencyGraph());
   int newNumStages = 0;
   int newNumMultiStages = 0;
 
-  const int maxBoundaryExtent = instantiation.getOptimizerContext()->getOptions().MaxHaloPoints;
+  const int maxBoundaryExtent = internalIR->getOptions().MaxHaloPoints;
 
   auto pushBackNewMultiStage = [&](iir::LoopOrderKind loopOrder) -> void {
-    newStencil->insertChild(make_unique<iir::MultiStage>(instantiation, loopOrder));
+    newStencil->insertChild(
+        make_unique<iir::MultiStage>(internalIR, loopOrder));
     newNumMultiStages++;
   };
 
@@ -146,10 +148,10 @@ ReoderStrategyGreedy::reorder(const std::unique_ptr<iir::Stencil>& stencilPtr) {
             } else if(lastChance) {
               // Our stage exceeds the maximum allowed boundary extents... nothing we can do
               DiagnosticsBuilder diag(DiagnosticsKind::Error, SourceLocation());
-              diag << "stencil '" << instantiation.getName()
+              diag << "stencil '" << internalIR->getMetaData()->getName()
                    << "' exceeds maximum number of allowed halo lines (" << maxBoundaryExtent
                    << ")";
-              instantiation.getOptimizerContext()->getDiagnostics().report(diag);
+              internalIR->getDiagnostics().report(diag);
               return nullptr;
             }
           }

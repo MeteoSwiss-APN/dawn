@@ -39,7 +39,7 @@ bool PassStageSplitter::run(
   std::deque<std::shared_ptr<iir::DependencyGraphAccesses>> graphs;
 
   // Iterate over all stages in all multistages of all stencils
-  for(const auto& stencil : stencilInstantiation->getStencils()) {
+  for(const auto& stencil : stencilInstantiation->getIIR()->getChildren()) {
 
     int multiStageIndex = 0;
     int linearStageIndex = 0;
@@ -55,7 +55,7 @@ bool PassStageSplitter::run(
         graphs.clear();
 
         std::shared_ptr<iir::DependencyGraphAccesses> newGraph, oldGraph;
-        newGraph = std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation.get());
+        newGraph = std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation->getIIR().get());
 
         // Build the Dependency graph (bottom to top)
         for(int stmtIndex = doMethod.getChildren().size() - 1; stmtIndex >= 0; --stmtIndex) {
@@ -76,7 +76,7 @@ bool PassStageSplitter::run(
             graphs.push_front(std::move(oldGraph));
 
             if(context->getOptions().ReportPassStageSplit)
-              std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
+              std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getIIR()->getMetaData()->getName()
                         << ": split:"
                         << stmtAccessesPair->getStatement()->ASTStmt->getSourceLocation().Line
                         << "\n";
@@ -121,7 +121,7 @@ bool PassStageSplitter::run(
   }
 
   if(context->getOptions().ReportPassStageSplit && !numSplit)
-    std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
+    std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getIIR()->getMetaData()->getName()
               << ": no split\n";
 
   return true;

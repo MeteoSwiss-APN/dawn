@@ -13,14 +13,13 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassStageReordering.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/FileUtil.h"
 #include "dawn/Support/Unreachable.h"
 
 #include "dawn/Optimizer/ReorderStrategyGreedy.h"
 #include "dawn/Optimizer/ReorderStrategyPartitioning.h"
-
 namespace dawn {
 
 PassStageReordering::PassStageReordering(ReorderStrategy::ReorderStrategyKind strategy)
@@ -33,10 +32,11 @@ bool PassStageReordering::run(
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   std::string filenameWE = getFilenameWithoutExtension(context->getSIR()->Filename);
-  if(context->getOptions().ReportPassStageReodering)
-    stencilInstantiation->dumpAsJson(filenameWE + "_before.json", getName());
-
-  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
+  if(context->getOptions().ReportPassStageReodering) {
+    //    stencilInstantiation->dumpAsJson(filenameWE + "_before.json", getName());
+    ///// Todo add the serializer here once this is merged
+  }
+  for(const auto& stencilPtr : stencilInstantiation->getIIR()->getChildren()) {
     if(strategy_ == ReorderStrategy::RK_None)
       continue;
 
@@ -63,9 +63,10 @@ bool PassStageReordering::run(
       return false;
   }
 
-  if(context->getOptions().ReportPassStageReodering)
-    stencilInstantiation->dumpAsJson(filenameWE + "_after.json", getName());
-
+  if(context->getOptions().ReportPassStageReodering) {
+    //    stencilInstantiation->dumpAsJson(filenameWE + "_after.json", getName());
+    /// Todo add the serializer here once this is merged
+  }
   return true;
 }
 

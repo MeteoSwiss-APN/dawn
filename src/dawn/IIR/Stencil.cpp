@@ -49,9 +49,9 @@ std::ostream& operator<<(std::ostream& os, const iir::Stencil& stencil) {
   for(const auto& MS : stencil.getChildren()) {
     os << "MultiStage " << (multiStageIdx++) << ": (" << MS->getLoopOrder() << ")\n";
     for(const auto& stage : MS->getChildren())
-      os << "  " << stencil.getStencilInstantiation().getNameFromStageID(stage->getStageID()) << " "
+      os << "  " << stencil.getIIR()->getMetaData()->getNameFromStageID(stage->getStageID()) << " "
          << RangeToString()(stage->getFields(), [&](const std::pair<int, iir::Field>& fieldPair) {
-              return stencil.getStencilInstantiation().getNameFromAccessID(fieldPair.first);
+              return stencil.getIIR()->getMetaData()->getNameFromAccessID(fieldPair.first);
             }) << "\n";
   }
   return os;
@@ -107,9 +107,9 @@ void Stencil::updateFromChildren() {
     const int accessID = fieldPair.first;
     const Field& field = fieldPair.second;
 
-    std::string name = stencilInstantiation_.getNameFromAccessID(accessID);
-    bool isTemporary = stencilInstantiation_.isTemporaryField(accessID);
-    Array3i specifiedDimension = stencilInstantiation_.getFieldDimensionsMask(accessID);
+    std::string name = iir_->getMetaData()->getNameFromAccessID(accessID);
+    bool isTemporary = iir_->getMetaData()->isTemporaryField(accessID);
+    Array3i specifiedDimension = iir_->getMetaData()->getFieldDimensionsMask(accessID);
 
     derivedInfo_.fields_.emplace(
         std::make_pair(accessID, FieldInfo{isTemporary, name, specifiedDimension, field}));
@@ -134,9 +134,9 @@ bool Stencil::Lifetime::overlaps(const Stencil::Lifetime& other) const {
   return lowerBoundOverlap && upperBoundOverlap;
 }
 
-Stencil::Stencil(StencilInstantiation& stencilInstantiation,
-                 const std::shared_ptr<sir::Stencil>& SIRStencil, int StencilID)
-    : stencilInstantiation_(stencilInstantiation), SIRStencil_(SIRStencil), StencilID_(StencilID) {}
+Stencil::Stencil(IIR *iir,
+                 sir::Attr attributes, int StencilID)
+    : iir_(iir), stencilAttributes(attributes), StencilID_(StencilID) {}
 
 std::unordered_set<Interval> Stencil::getIntervals() const {
   std::unordered_set<Interval> intervals;
@@ -148,7 +148,7 @@ std::unordered_set<Interval> Stencil::getIntervals() const {
 }
 
 std::unique_ptr<Stencil> Stencil::clone() const {
-  auto cloneStencil = make_unique<Stencil>(stencilInstantiation_, SIRStencil_, StencilID_);
+  auto cloneStencil = make_unique<Stencil>(iir_, stencilAttributes, StencilID_);
 
   cloneStencil->derivedInfo_ = derivedInfo_;
   cloneStencil->cloneChildrenFrom(*this);
@@ -164,7 +164,7 @@ std::vector<std::string> Stencil::getGlobalVariables() const {
 
   std::vector<std::string> globalVariables;
   for(const auto& AccessID : globalVariableAccessIDs)
-    globalVariables.push_back(stencilInstantiation_.getNameFromAccessID(AccessID));
+    globalVariables.push_back(iir_->getMetaData()->getNameFromAccessID(AccessID));
 
   return globalVariables;
 }
@@ -507,7 +507,7 @@ boost::optional<Interval> Stencil::getEnclosingIntervalTemporaries() const {
   return tmpInterval;
 }
 
-const std::shared_ptr<sir::Stencil> Stencil::getSIRStencil() const { return SIRStencil_; }
+//const std::shared_ptr<sir::Stencil> Stencil::getSIRStencil() const { return SIRStencil_; }
 
 void Stencil::accept(ASTVisitor& visitor) {
   for(const auto& stmtAccessesPairPtr : iterateIIROver<StatementAccessesPair>(*this)) {
