@@ -174,7 +174,7 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
-  Stencil(iir::IIR* iir, sir::Attr attributes, int StencilID);
+  Stencil(iir::IIR* iir, int StencilID, sir::Attr attributes);
 
   Stencil(Stencil&&) = default;
 

@@ -134,9 +134,9 @@ bool Stencil::Lifetime::overlaps(const Stencil::Lifetime& other) const {
   return lowerBoundOverlap && upperBoundOverlap;
 }
 
-Stencil::Stencil(IIR *iir,
-                 sir::Attr attributes, int StencilID)
-    : iir_(iir), stencilAttributes(attributes), StencilID_(StencilID) {}
+Stencil::Stencil(IIR *iir, int StencilID,
+                 sir::Attr attributes)
+    : iir_(iir), StencilID_(StencilID), stencilAttributes(attributes) {}
 
 std::unordered_set<Interval> Stencil::getIntervals() const {
   std::unordered_set<Interval> intervals;

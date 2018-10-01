@@ -657,8 +657,6 @@ std::string GTCodeGen::generateStencilInstantiation(
 
     StencilConstructor.startBody();
 
-    int numTemporaries = tempFields.size();
-
     // Add static asserts to check halos against extents
     StencilConstructor.addComment("Check if extents do not exceed the halos");
     int nonTempFieldId = 0;
