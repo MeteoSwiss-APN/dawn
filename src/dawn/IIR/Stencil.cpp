@@ -245,7 +245,6 @@ std::unordered_map<int, Field> Stencil::computeFieldsOnTheFly() const {
 }
 
 bool Stencil::compareDerivedInfo() const {
-
   auto fieldsOnTheFly = computeFieldsOnTheFly();
 
   bool equal = true;

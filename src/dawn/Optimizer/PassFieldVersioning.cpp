@@ -14,6 +14,7 @@
 
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
@@ -225,7 +226,6 @@ bool PassFieldVersioning::run(
         iir::Stage& stage = (**stageRit);
         iir::DoMethod& doMethod = stage.getSingleDoMethod();
 
-        bool updateStage = false;
         // Iterate statements bottom -> top
         for(int stmtIndex = doMethod.getChildren().size() - 1; stmtIndex >= 0; --stmtIndex) {
           oldGraph = newGraph->clone();
@@ -237,22 +237,23 @@ bool PassFieldVersioning::run(
           auto rc = fixRaceCondition(stencilInstantiation->getIIR().get(), newGraph.get(), stencil,
                                      doMethod, loopOrder, stageIdx, stmtIndex);
 
-          if(rc == RCKind::RK_Unresolvable)
+          if(rc == RCKind::RK_Unresolvable) {
             // Nothing we can do ... bail out
             return false;
-          else if(rc == RCKind::RK_Fixed) {
+          } else if(rc == RCKind::RK_Fixed) {
             // We fixed a race condition (this means some fields have changed and our current graph
             // is invalid)
             newGraph = oldGraph;
             newGraph->insertStatementAccessesPair(stmtAccessesPair);
-            updateStage = true;
           }
         }
-        if(updateStage) {
-          stage.update(iir::NodeUpdateType::levelAndTreeAbove);
-        }
+        stage.update(iir::NodeUpdateType::level);
       }
       stageIdx--;
+    }
+
+    for(const auto& ms : iterateIIROver<iir::MultiStage>(stencil)) {
+      ms->update(iir::NodeUpdateType::levelAndTreeAbove);
     }
   }
 
