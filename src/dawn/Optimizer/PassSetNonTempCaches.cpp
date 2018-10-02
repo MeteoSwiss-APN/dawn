@@ -133,7 +133,11 @@ private:
       oldAccessIDtoNewAccessID_.emplace(oldID, newID);
       iir::Cache& cache = multiStagePrt_->setCache(iir::Cache::IJ, iir::Cache::local, newID);
       originalNameToCache_.emplace_back(
+<<<<<<< Updated upstream
           NameToImprovementMetric{instantiation_->getOriginalNameFromAccessID(oldID), cache,
+=======
+          NameToImprovementMetric{instantiation_->getIIR()->getMetaData()->getOriginalNameFromAccessID(oldID, instantiation_->getIIR().get()), cache,
+>>>>>>> Stashed changes
                                   accessIDToDataLocality_.find(oldID)->second});
       instantiation_->getIIR()->getMetaData()->insertCachedVariable(oldID);
       instantiation_->getIIR()->getMetaData()->insertCachedVariable(newID);
