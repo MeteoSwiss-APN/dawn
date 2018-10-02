@@ -17,6 +17,7 @@
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/Utility/TemporaryHandeling.h"
 #include "dawn/SIR/ASTExpr.h"
 #include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/ASTUtil.h"
@@ -132,7 +133,7 @@ bool PassSetBoundaryCondition::run(
     // We have to do this since boundary conditions are only defined for their original field.
     auto checkIfFieldWasOriginallyDefined = [&](int fieldID) {
       auto it = stencilInstantiation->getIIR()->getMetaData()->getNameToAccessIDMap().find(
-          stencilInstantiation->getOriginalNameFromAccessID(fieldID));
+          getOriginalNameFromAccessID(fieldID, stencilInstantiation->getIIR()));
       return it != stencilInstantiation->getIIR()->getMetaData()->getNameToAccessIDMap().end();
     };
 
@@ -147,7 +148,7 @@ bool PassSetBoundaryCondition::run(
     if(checkIfFieldWasOriginallyDefined(ID)) {
       if(stencilInstantiation->getIIR()->getMetaData()->isField(ID)) {
         return stencilInstantiation->getIIR()->getMetaData()->getAccessIDFromName(
-            stencilInstantiation->getOriginalNameFromAccessID(ID));
+            getOriginalNameFromAccessID(ID, stencilInstantiation->getIIR()));
       } else {
         return (int)FieldType::FT_NotOriginal;
       }
@@ -256,14 +257,15 @@ bool PassSetBoundaryCondition::run(
         // Check if a boundary condition for this variable was defined
         if(IDtoBCpair == allBCs.end()) {
           DAWN_ASSERT_MSG(
-              false, dawn::format("In stencil %s we need a halo update on field %s but no "
-                                  "boundary condition is set.\nUpdate the stencil (outside the "
-                                  "do-method) with a boundary condition that calls a "
-                                  "stencil_function, e.g \n'boundary_condition(zero(), %s);'\n",
-                                  stencilInstantiation->getIIR()->getMetaData()->getName(),
-                                  stencilInstantiation->getOriginalNameFromAccessID(originalID),
-                                  stencilInstantiation->getOriginalNameFromAccessID(originalID))
-                         .c_str());
+              false,
+              dawn::format("In stencil %s we need a halo update on field %s but no "
+                           "boundary condition is set.\nUpdate the stencil (outside the "
+                           "do-method) with a boundary condition that calls a "
+                           "stencil_function, e.g \n'boundary_condition(zero(), %s);'\n",
+                           stencilInstantiation->getIIR()->getMetaData()->getName(),
+                           getOriginalNameFromAccessID(originalID, stencilInstantiation->getIIR()),
+                           getOriginalNameFromAccessID(originalID, stencilInstantiation->getIIR()))
+                  .c_str());
         }
         // Calculate the extent and add it to the boundary-condition - Extent map
         iir::Extents fullExtents = calculateHaloExtents(
@@ -338,7 +340,7 @@ bool PassSetBoundaryCondition::run(
     }
     for(const auto& ID : boundaryConditionInserted_) {
       std::cout << " Boundary Condition for field '"
-                << stencilInstantiation->getOriginalNameFromAccessID(ID) << "' inserted"
+                << getOriginalNameFromAccessID(ID, stencilInstantiation->getIIR()) << "' inserted"
                 << std::endl;
     }
   }

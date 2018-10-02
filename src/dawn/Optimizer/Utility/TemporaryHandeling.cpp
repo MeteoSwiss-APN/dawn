@@ -2,8 +2,68 @@
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/MetaInformation.h"
 #include "dawn/Optimizer/Replacing.h"
-
+#include "dawn/IIR/IIRNodeIterator.h"
 namespace dawn {
+
+namespace{
+
+class NameGetter : public ASTVisitorForwarding {
+  const iir::IIR* iir_;
+  const int AccessID_;
+  const bool captureLocation_;
+
+  std::string name_;
+  std::vector<SourceLocation> locations_;
+
+public:
+  NameGetter(const iir::IIR* iir, int AccessID, bool captureLocation)
+      : iir_(iir), AccessID_(AccessID), captureLocation_(captureLocation) {}
+
+  virtual void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
+    if(iir_->getMetaData()->getAccessIDFromStmt(stmt) == AccessID_) {
+      name_ = stmt->getName();
+      if(captureLocation_)
+        locations_.push_back(stmt->getSourceLocation());
+    }
+
+    for(const auto& expr : stmt->getInitList())
+      expr->accept(*this);
+  }
+
+  void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
+    if(iir_->getMetaData()->getAccessIDFromExpr(expr) == AccessID_) {
+      name_ = expr->getName();
+      if(captureLocation_)
+        locations_.push_back(expr->getSourceLocation());
+    }
+  }
+
+  void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override {
+    if(iir_->getMetaData()->getAccessIDFromExpr(expr) == AccessID_) {
+      name_ = expr->getValue();
+      if(captureLocation_)
+        locations_.push_back(expr->getSourceLocation());
+    }
+  }
+
+  virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
+    if(iir_->getMetaData()->getAccessIDFromExpr(expr) == AccessID_) {
+      name_ = expr->getName();
+      if(captureLocation_)
+        locations_.push_back(expr->getSourceLocation());
+    }
+  }
+
+  std::pair<std::string, std::vector<SourceLocation>> getNameLocationPair() const {
+    return std::make_pair(name_, locations_);
+  }
+
+  bool hasName() const { return !name_.empty(); }
+  std::string getName() const { return name_; }
+};
+
+} // anonymous namespace
+
 
 void promoteLocalVariableToTemporaryField(iir::IIR* iir, iir::Stencil* stencil, int AccessID,
                                           const iir::Stencil::Lifetime& lifetime) {
@@ -130,6 +190,20 @@ void renameAllOccurrences(iir::IIR *iir, iir::Stencil *stencil, int oldAccessID,
 
     // Remove form all AccessID maps
     iir->getMetaData()->removeAccessID(oldAccessID);
+}
+
+std::string getOriginalNameFromAccessID(int AccessID, const std::unique_ptr<iir::IIR>& iir)
+{
+    NameGetter orignalNameGetter(iir.get(), AccessID, true);
+
+    for(const auto& stmtAccessesPair : iterateIIROver<iir::StatementAccessesPair>(*iir)) {
+      stmtAccessesPair->getStatement()->ASTStmt->accept(orignalNameGetter);
+      if(orignalNameGetter.hasName())
+        return orignalNameGetter.getName();
+    }
+
+    // Best we can do...
+    return iir->getMetaData()->getNameFromAccessID(AccessID);
 }
 
 } // namespace dawn

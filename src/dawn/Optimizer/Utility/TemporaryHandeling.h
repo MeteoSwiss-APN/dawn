@@ -32,6 +32,9 @@ extern void promoteTemporaryFieldToAllocatedField(iir::IIR* iir, int AccessID);
 /// @brief Rename all occurences of field `oldAccessID` to `newAccessID`
 extern void renameAllOccurrences(iir::IIR* iir, iir::Stencil* stencil, int oldAccessID,
                                  int newAccessID);
-}
+
+extern std::string getOriginalNameFromAccessID(int AccessID, const std::unique_ptr<iir::IIR>& iir);
+
+} // namespace dawn
 
 #endif // DAWN_OPTIMIZER_UTILITY_TEMPORARYHANDELING_H

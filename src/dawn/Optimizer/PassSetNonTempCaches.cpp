@@ -20,6 +20,7 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassSetCaches.h"
+#include "dawn/Optimizer/Utility/TemporaryHandeling.h"
 #include "dawn/SIR/ASTExpr.h"
 #include "dawn/Support/Unreachable.h"
 #include <iostream>
@@ -133,8 +134,8 @@ private:
       oldAccessIDtoNewAccessID_.emplace(oldID, newID);
       iir::Cache& cache = multiStagePrt_->setCache(iir::Cache::IJ, iir::Cache::local, newID);
       originalNameToCache_.emplace_back(
-          NameToImprovementMetric{instantiation_->getOriginalNameFromAccessID(oldID), cache,
-                                  accessIDToDataLocality_.find(oldID)->second});
+          NameToImprovementMetric{getOriginalNameFromAccessID(oldID, instantiation_->getIIR()),
+                                  cache, accessIDToDataLocality_.find(oldID)->second});
       instantiation_->getIIR()->getMetaData()->insertCachedVariable(oldID);
       instantiation_->getIIR()->getMetaData()->insertCachedVariable(newID);
     }
