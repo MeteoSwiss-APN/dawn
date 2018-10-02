@@ -29,9 +29,7 @@
 namespace dawn {
 class OptimizerContext;
 namespace iir {
-
 class Stencil;
-class StencilInstantiation;
 class DependencyGraphAccesses;
 class IIR;
 

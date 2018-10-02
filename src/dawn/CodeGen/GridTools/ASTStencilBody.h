@@ -24,8 +24,8 @@
 namespace dawn {
 
 namespace iir {
-class StencilInstantiation;
 class StencilFunctionInstantiation;
+class IIR;
 }
 
 namespace codegen {
@@ -35,7 +35,7 @@ namespace gt {
 /// @ingroup gt
 class ASTStencilBody : public ASTCodeGenCXX {
 protected:
-  const iir::StencilInstantiation* instantiation_;
+  const iir::IIR* iir_;
   const std::unordered_set<iir::IntervalProperties>& intervalProperties_;
   RangeToString offsetPrinter_;
 
@@ -50,7 +50,7 @@ protected:
 public:
   using Base = ASTCodeGenCXX;
 
-  ASTStencilBody(const iir::StencilInstantiation* stencilInstantiation,
+  ASTStencilBody(const iir::IIR* iir,
                  const std::unordered_set<iir::IntervalProperties>& intervalProperties);
   virtual ~ASTStencilBody();
 

@@ -28,7 +28,6 @@ PassTemporaryMerger::PassTemporaryMerger() : Pass("PassTemporaryMerger") {}
 
 bool PassTemporaryMerger::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   using Edge = iir::DependencyGraphAccesses::Edge;
   using Vertex = iir::DependencyGraphAccesses::Vertex;
@@ -40,7 +39,7 @@ bool PassTemporaryMerger::run(
     stencilNeedsMergePass |=
         stencilPtr->stencilAttributes.has(sir::Attr::AK_MergeTemporaries);
 
-  if(!(context->getOptions().MergeTemporaries || stencilNeedsMergePass))
+  if(!(stencilInstantiation->getIIR()->getOptions().MergeTemporaries || stencilNeedsMergePass))
     return true;
 
   // Pair of nodes to visit and AccessID of the last temporary (or -1 if no temporary has been
@@ -136,7 +135,7 @@ bool PassTemporaryMerger::run(
       }
     }
 
-    if(context->getOptions().DumpTemporaryGraphs)
+    if(stencilInstantiation->getIIR()->getOptions().DumpTemporaryGraphs)
       TemporaryDAG.toDot(format("tmp_stencil_%i.dot", stencilIdx));
 
     // Color the temporary graph
@@ -160,7 +159,7 @@ bool PassTemporaryMerger::run(
       const std::vector<int>& AccessIDOfRenameCandiates = colorRenameCandidatesPair.second;
 
       // Print the rename candiates in alphabetical order
-      if(context->getOptions().ReportPassTemporaryMerger && AccessIDOfRenameCandiates.size() >= 2) {
+      if(stencilInstantiation->getIIR()->getOptions().ReportPassTemporaryMerger && AccessIDOfRenameCandiates.size() >= 2) {
         std::vector<std::string> renameCandiatesNames;
         for(int AccessID : AccessIDOfRenameCandiates)
           renameCandiatesNames.emplace_back(
@@ -186,7 +185,7 @@ bool PassTemporaryMerger::run(
     stencilIdx++;
   }
 
-  if(context->getOptions().ReportPassTemporaryMerger && !merged)
+  if(stencilInstantiation->getIIR()->getOptions().ReportPassTemporaryMerger && !merged)
     std::cout << "\nPASS: " << getName() << ": "
               << stencilInstantiation->getIIR()->getMetaData()->getName() << ": no merge\n";
 

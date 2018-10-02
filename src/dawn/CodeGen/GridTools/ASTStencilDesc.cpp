@@ -23,21 +23,21 @@ namespace codegen {
 namespace gt {
 
 ASTStencilDesc::ASTStencilDesc(
-    const std::shared_ptr<iir::StencilInstantiation> instantiation,
+    const iir::IIR* iir,
     const std::unordered_map<int, std::vector<std::string>>& StencilIDToStencilNameMap,
     const std::unordered_map<int, std::string>& stencilIdToArguments)
-    : ASTCodeGenCXX(), instantiation_(instantiation),
+    : ASTCodeGenCXX(), iir_(iir),
       StencilIDToStencilNameMap_(StencilIDToStencilNameMap),
       stencilIdToArguments_(stencilIdToArguments) {}
 
 ASTStencilDesc::~ASTStencilDesc() {}
 
 std::string ASTStencilDesc::getName(const std::shared_ptr<Stmt>& stmt) const {
-  return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
+  return iir_->getMetaData()->getNameFromAccessID(iir_->getMetaData()->getAccessIDFromStmt(stmt));
 }
 
 std::string ASTStencilDesc::getName(const std::shared_ptr<Expr>& expr) const {
-  return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromExpr(expr));
+  return iir_->getMetaData()->getNameFromAccessID(iir_->getMetaData()->getAccessIDFromExpr(expr));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -59,7 +59,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) 
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
-  int StencilID = instantiation_->getStencilCallToStencilIDMap().find(stmt)->second;
+  int StencilID = iir_->getMetaData()->getStencilCallToStencilIDMap().find(stmt)->second;
 
   for(const std::string& stencilName : StencilIDToStencilNameMap_.find(StencilID)->second) {
     ss_ << std::string(indent_, ' ') << stencilName << ".get_stencil()->run();\n";
@@ -67,7 +67,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
-  iir::Extents extents = instantiation_->getBoundaryConditionExtentsFromBCStmt(stmt);
+  iir::Extents extents = iir_->getMetaData()->getBoundaryConditionExtentsFromBCStmt(stmt);
   int haloIMinus = abs(extents[0].Minus);
   int haloIPlus = abs(extents[0].Plus);
   int haloJMinus = abs(extents[1].Minus);
@@ -143,7 +143,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<StencilFunArgExpr>& expr) {
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<VarAccessExpr>& expr) {
-  if(instantiation_->isGlobalVariable(instantiation_->getAccessIDFromExpr(expr)))
+  if(iir_->getMetaData()->isGlobalVariable(iir_->getMetaData()->getAccessIDFromExpr(expr)))
     ss_ << "globals::get().";
 
   ss_ << getName(expr);

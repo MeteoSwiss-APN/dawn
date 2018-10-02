@@ -14,8 +14,8 @@
 
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 
 namespace dawn {
 
@@ -25,12 +25,11 @@ PassPrintStencilGraph::PassPrintStencilGraph() : Pass("PassPrintStencilGraph") {
 
 bool PassPrintStencilGraph::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
-  if(!context->getOptions().DumpStencilGraph)
+  if(!stencilInstantiation->getIIR()->getOptions().DumpStencilGraph)
     return true;
 
   int stencilIdx = 0;
-  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
+  for(const auto& stencilPtr : stencilInstantiation->getIIR()->getChildren()) {
     iir::Stencil& stencil = *stencilPtr;
     auto DAG = std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation->getIIR().get());
 
@@ -39,10 +38,10 @@ bool PassPrintStencilGraph::run(
     for(int i = 0; i < numStages; ++i)
       DAG->merge(stencil.getStage(i)->getSingleDoMethod().getDependencyGraph().get());
 
-    DAG->toDot("stencil_" + stencilInstantiation->getName() + "_s" + std::to_string(stencilIdx) +
-               ".dot");
-    DAG->toJSON("stencil_" + stencilInstantiation->getName() + "_s" + std::to_string(stencilIdx) +
-                ".json");
+    DAG->toDot("stencil_" + stencilInstantiation->getIIR()->getMetaData()->getName() + "_s" +
+               std::to_string(stencilIdx) + ".dot");
+    DAG->toJSON("stencil_" + stencilInstantiation->getIIR()->getMetaData()->getName() + "_s" +
+                std::to_string(stencilIdx) + ".json");
 
     stencilIdx++;
   }

@@ -15,17 +15,17 @@
 #ifndef DAWN_IIR_STATEMENTACCESSESPAIR_H
 #define DAWN_IIR_STATEMENTACCESSESPAIR_H
 
-#include "dawn/IIR/BlockStatements.h"
 #include "dawn/IIR/Accesses.h"
-#include "dawn/SIR/Statement.h"
+#include "dawn/IIR/BlockStatements.h"
 #include "dawn/IIR/IIRNode.h"
+#include "dawn/SIR/Statement.h"
 #include <boost/optional.hpp>
 #include <memory>
 #include <vector>
 
 namespace dawn {
 namespace iir {
-
+class StencilInstantiation;
 class DoMethod;
 
 /// @brief Statement with corresponding Accesses
@@ -92,10 +92,11 @@ public:
 
   /// @brief Convert the StatementAccessesPair of a stencil or stencil-function to string
   /// @{
-  std::string toString(const StencilInstantiation* instantiation,
-                       std::size_t initialIndent = 0) const;
+//  std::string toString(const StencilInstantiation* instantiation,
+//                       std::size_t initialIndent = 0) const;
   std::string toString(const StencilFunctionInstantiation* stencilFunc,
                        std::size_t initialIndent = 0) const;
+  std::string toString(const iir::IIR* iir_, std::size_t initialIndent = 0) const;
   /// @}
 };
 

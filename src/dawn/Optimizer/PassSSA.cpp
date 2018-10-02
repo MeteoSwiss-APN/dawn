@@ -13,10 +13,11 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassSSA.h"
-#include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/AccessComputation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/PassFieldVersioning.h"
 #include <unordered_set>
 
 namespace dawn {
@@ -24,12 +25,12 @@ namespace dawn {
 PassSSA::PassSSA() : Pass("PassSSA") {}
 
 bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
+  //  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
-  if(!context->getOptions().SSA)
+  if(!stencilInstantiation->getIIR()->getOptions().SSA)
     return true;
 
-  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
+  for(const auto& stencilPtr : stencilInstantiation->getIIR()->getChildren()) {
     iir::Stencil& stencil = *stencilPtr;
 
     std::shared_ptr<iir::DependencyGraphAccesses> DAG =
@@ -74,9 +75,9 @@ bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInsta
         }
 
         for(int AccessID : AccessIDsToRename)
-          tochedAccessIDs.insert(stencilInstantiation->createVersionAndRename(
-              AccessID, &stencil, stageIdx, stmtIdx, assignment->getLeft(),
-              iir::StencilInstantiation::RD_Below));
+          tochedAccessIDs.insert(createVersionAndRename(
+              stencilInstantiation->getIIR().get(), AccessID, &stencil, stageIdx, stmtIdx,
+              assignment->getLeft(), RenameDirection::RD_Below));
 
         DAG->insertStatementAccessesPair(stmtAccessesPair);
       }

@@ -172,6 +172,8 @@ class StencilMetaInformation : NonCopyable {
 
   std::string stencilName_;
 
+  std::string fileName_;
+
 public:
   StencilMetaInformation();
 
@@ -470,6 +472,8 @@ public:
   std::set<int>& getAllocatedFieldAccessIDSet();
 
   VariableVersions& getVariableVersions();
+
+  std::string getFileName();
 };
 } // namespace iir
 } // namespace dawn

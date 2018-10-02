@@ -135,11 +135,11 @@ public:
 
 } // anonymous namespace
 
-void replaceStencilCalls(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+void replaceStencilCalls(iir::IIR* iir,
                          int oldStencilID, const std::vector<int>& newStencilIDs) {
-  GetStencilCalls visitor(instantiation->getIIR()->getMetaData(), oldStencilID);
+  GetStencilCalls visitor(iir->getMetaData(), oldStencilID);
 
-  for(auto& statement : instantiation->getIIR()->getMetaData()->getStencilDescStatements()) {
+  for(auto& statement : iir->getMetaData()->getStencilDescStatements()) {
     visitor.reset();
 
     std::shared_ptr<Stmt>& stmt = statement->ASTStmt;
@@ -169,11 +169,11 @@ void replaceStencilCalls(const std::shared_ptr<iir::StencilInstantiation>& insta
         replaceOldStmtWithNewStmtInStmt(stmt, oldStencilCall, newBlockStmt);
       }
 
-      instantiation->getIIR()->getMetaData()->getStencilCallToStencilIDMap().erase(oldStencilCall);
+      iir->getMetaData()->getStencilCallToStencilIDMap().erase(oldStencilCall);
       for(std::size_t i = 0; i < newStencilIDs.size(); ++i) {
-        instantiation->getIIR()->getMetaData()->getStencilCallToStencilIDMap().emplace(
+        iir->getMetaData()->getStencilCallToStencilIDMap().emplace(
             newStencilCalls[i], newStencilIDs[i]);
-        instantiation->getIIR()->getMetaData()->getIDToStencilCallMap().emplace(newStencilIDs[i],
+        iir->getMetaData()->getIDToStencilCallMap().emplace(newStencilIDs[i],
                                                                                 newStencilCalls[i]);
       }
     }

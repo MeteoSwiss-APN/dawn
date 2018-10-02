@@ -19,13 +19,15 @@
 #include "dawn/Optimizer/Pass.h"
 
 namespace dawn {
-
+class Expr;
 namespace iir {
 class Stencil;
 class DependencyGraphAccesses;
 class DoMethod;
 class IIR;
 }
+
+
 
 /// @brief This pass resolves potential race condition by introducing double buffering i.e
 /// versioning of fields
@@ -84,6 +86,15 @@ public:
 //                          iir::Stencil& stencil, iir::DoMethod& doMethod,
 //                          iir::LoopOrderKind loopOrder, int stageIdx, int stmtIdx);
 };
+
+
+/// TODO: where should this be?
+enum RenameDirection {
+  RD_Above, ///< Rename all fields above the current statement
+  RD_Below  ///< Rename all fields below the current statement
+};
+int createVersionAndRename(iir::IIR* iir_, int AccessID, iir::Stencil* stencil, int curStageIdx,
+                           int curStmtIdx, std::shared_ptr<Expr>& expr, RenameDirection dir);
 
 } // namespace dawn
 

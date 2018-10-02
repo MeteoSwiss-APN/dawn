@@ -27,7 +27,7 @@ PassComputeStageExtents::PassComputeStageExtents() : Pass("PassComputeStageExten
 
 bool PassComputeStageExtents::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
+  for(const auto& stencilPtr : stencilInstantiation->getIIR()->getChildren()) {
     iir::Stencil& stencil = *stencilPtr;
 
     int numStages = stencil.getNumStages();

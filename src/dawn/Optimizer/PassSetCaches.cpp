@@ -153,9 +153,7 @@ CacheCandidate computeCacheCandidateForMS(iir::Field const& field, bool isTempor
 PassSetCaches::PassSetCaches() : Pass("PassSetCaches") {}
 
 bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
-  OptimizerContext* context = instantiation->getOptimizerContext();
-
-  for(const auto& stencilPtr : instantiation->getStencils()) {
+  for(const auto& stencilPtr : instantiation->getIIR()->getChildren()) {
     const iir::Stencil& stencil = *stencilPtr;
 
     // Set IJ-Caches
@@ -186,7 +184,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
           }
 
           // Currently we only cache temporaries!
-          if(!instantiation->isTemporaryField(field.getAccessID())) {
+          if(!instantiation->getIIR()->getMetaData()->isTemporaryField(field.getAccessID())) {
             continue;
           }
 
@@ -195,10 +193,10 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
              !field.getExtents().isHorizontalPointwise()) {
 
             iir::Cache& cache = MS.setCache(iir::Cache::IJ, iir::Cache::local, field.getAccessID());
-            instantiation->insertCachedVariable(field.getAccessID());
+            instantiation->getIIR()->getMetaData()->insertCachedVariable(field.getAccessID());
 
-            if(context->getOptions().ReportPassSetCaches) {
-              std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": MS"
+            if(instantiation->getIIR()->getOptions().ReportPassSetCaches) {
+              std::cout << "\nPASS: " << getName() << ": " << instantiation->getIIR()->getMetaData()->getName() << ": MS"
                         << msIdx << ": "
                         << instantiation->getOriginalNameFromAccessID(field.getAccessID()) << ":"
                         << cache.getCacheTypeAsString() << ":" << cache.getCacheIOPolicyAsString()
@@ -214,7 +212,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
     }
 
     // Set K-Caches
-    if(context->getOptions().UseKCaches ||
+    if(instantiation->getIIR()->getOptions().UseKCaches ||
        stencil.stencilAttributes.has(sir::Attr::AK_UseKCaches)) {
 
       // Get the fields of all Multi-Stages
@@ -244,23 +242,23 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
           if(field.getWriteExtents().is_initialized() && !field.getWriteExtents()->isPointwise())
             continue;
 
-          if(!instantiation->isTemporaryField(field.getAccessID()) &&
+          if(!instantiation->getIIR()->getMetaData()->isTemporaryField(field.getAccessID()) &&
              (field.getIntend() == iir::Field::IK_Output ||
               (field.getIntend() == iir::Field::IK_Input && field.getExtents().isPointwise())))
             continue;
 
           // Determine if we need to fill the cache by analyzing the current multi-stage
           CacheCandidate cacheCandidate = computeCacheCandidateForMS(
-              field, instantiation->isTemporaryField(field.getAccessID()), MS);
+              field, instantiation->getIIR()->getMetaData()->isTemporaryField(field.getAccessID()), MS);
 
           //          if(cacheCandidate.intend_ == FirstAccessKind::FK_Mixed)
           //            continue;
 
           DAWN_ASSERT((cacheCandidate.policy_ != iir::Cache::fill &&
                        cacheCandidate.policy_ != iir::Cache::bpfill) ||
-                      !instantiation->isTemporaryField(field.getAccessID() || mssProcessedField));
+                      !instantiation->getIIR()->getMetaData()->isTemporaryField(field.getAccessID() || mssProcessedField));
 
-          if(!instantiation->isTemporaryField(field.getAccessID()) &&
+          if(!instantiation->getIIR()->getMetaData()->isTemporaryField(field.getAccessID()) &&
              field.getIntend() != iir::Field::IK_Input) {
 
             cacheCandidate = combinePolicy(cacheCandidate, field.getIntend(),
@@ -278,7 +276,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
               const iir::Field& fieldInNextMS = fields[MSIndex2].find(field.getAccessID())->second;
 
               CacheCandidate policyMS2 = computeCacheCandidateForMS(
-                  fieldInNextMS, instantiation->isTemporaryField(fieldInNextMS.getAccessID()),
+                  fieldInNextMS, instantiation->getIIR()->getMetaData()->isTemporaryField(fieldInNextMS.getAccessID()),
                   nextMS);
               // if the interval of the two cache candidate do not overlap, there is no data
               // dependency, therefore we skip it
@@ -301,8 +299,8 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
           iir::Cache& cache = MS.setCache(iir::Cache::K, cacheCandidate.policy_,
                                           field.getAccessID(), interval, cacheCandidate.window_);
 
-          if(context->getOptions().ReportPassSetCaches) {
-            std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": MS"
+          if(instantiation->getIIR()->getOptions().ReportPassSetCaches) {
+            std::cout << "\nPASS: " << getName() << ": " << instantiation->getIIR()->getMetaData()->getName() << ": MS"
                       << MSIndex << ": "
                       << instantiation->getOriginalNameFromAccessID(field.getAccessID()) << ":"
                       << cache.getCacheTypeAsString() << ":" << cache.getCacheIOPolicyAsString()

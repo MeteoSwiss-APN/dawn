@@ -499,5 +499,10 @@ StencilMetaInformation::VariableVersions &StencilMetaInformation::getVariableVer
     return variableVersions_;
 }
 
+std::string StencilMetaInformation::getFileName()
+{
+    return fileName_;
+}
+
 } // namespace iir
 } // namespace dawn

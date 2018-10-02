@@ -14,12 +14,12 @@
 
 #include "dawn/Optimizer/PassSetNonTempCaches.h"
 #include "dawn/IIR/Cache.h"
+#include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassSetCaches.h"
-#include "dawn/IIR/StatementAccessesPair.h"
-#include "dawn/IIR/IIRNodeIterator.h"
-#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/ASTExpr.h"
 #include "dawn/Support/Unreachable.h"
 #include <iostream>
@@ -67,7 +67,8 @@ private:
   /// @brief Use the data locality metric to rank the fields in a stencil based on how much they
   /// would benefit from caching
   void computeOptimalFields() {
-    auto dataLocality = computeReadWriteAccessesMetricPerAccessID(instantiation_, *multiStagePrt_);
+    auto dataLocality =
+        computeReadWriteAccessesMetricPerAccessID(instantiation_->getIIR().get(), *multiStagePrt_);
 
     for(const auto& stagePtr : multiStagePrt_->getChildren()) {
       for(const auto& fieldPair : stagePtr->getFields()) {
@@ -83,7 +84,7 @@ private:
           continue;
 
         // This is caching non-temporary fields
-        if(instantiation_->isTemporaryField(field.getAccessID()))
+        if(instantiation_->getIIR()->getMetaData()->isTemporaryField(field.getAccessID()))
           continue;
 
         int cachedReadAndWrites = dataLocality.find(field.getAccessID())->second.totalAccesses();
@@ -116,14 +117,15 @@ private:
   void addFillerStages() {
     int numVarsToBeCached =
         std::min((int)sortedAccesses_.size(),
-                 instantiation_->getOptimizerContext()->getHardwareConfiguration().SMemMaxFields);
+                 instantiation_->getIIR()->getHardwareConfiguration().SMemMaxFields);
     for(int i = 0; i < numVarsToBeCached; ++i) {
       int oldID = sortedAccesses_[i].accessID;
 
       // Create new temporary field and register in the instantiation
-      int newID = instantiation_->nextUID();
+      int newID = instantiation_->getIIR()->getMetaData()->nextUID();
 
-      instantiation_->setAccessIDNamePairOfField(newID, "__tmp_cache_" + std::to_string(i), true);
+      instantiation_->getIIR()->getMetaData()->setAccessIDNamePairOfField(
+          newID, "__tmp_cache_" + std::to_string(i), true);
 
       // Rename all the fields in this multistage
       multiStagePrt_->renameAllOccurrences(oldID, newID);
@@ -133,8 +135,8 @@ private:
       originalNameToCache_.emplace_back(
           NameToImprovementMetric{instantiation_->getOriginalNameFromAccessID(oldID), cache,
                                   accessIDToDataLocality_.find(oldID)->second});
-      instantiation_->insertCachedVariable(oldID);
-      instantiation_->insertCachedVariable(newID);
+      instantiation_->getIIR()->getMetaData()->insertCachedVariable(oldID);
+      instantiation_->getIIR()->getMetaData()->insertCachedVariable(newID);
     }
 
     // Create the cache-filler stage
@@ -185,7 +187,8 @@ private:
                                                     const std::vector<int>& assigneeIDs) {
     // Add the cache Flush stage
     std::unique_ptr<iir::Stage> assignmentStage =
-        make_unique<iir::Stage>(*instantiation_, instantiation_->nextUID(), interval);
+        make_unique<iir::Stage>(instantiation_->getIIR().get(),
+                                instantiation_->getIIR()->getMetaData()->nextUID(), interval);
     iir::Stage::DoMethodSmartPtr_t domethod = make_unique<iir::DoMethod>(interval);
     domethod->clearChildren();
 
@@ -207,10 +210,10 @@ private:
   void addAssignmentToDoMethod(const iir::Stage::DoMethodSmartPtr_t& domethod, int assignmentID,
                                int assigneeID) {
     // Create the StatementAccessPair of the assignment with the new and old variables
-    auto fa_assignee =
-        std::make_shared<FieldAccessExpr>(instantiation_->getNameFromAccessID(assigneeID));
-    auto fa_assignment =
-        std::make_shared<FieldAccessExpr>(instantiation_->getNameFromAccessID(assignmentID));
+    auto fa_assignee = std::make_shared<FieldAccessExpr>(
+        instantiation_->getIIR()->getMetaData()->getNameFromAccessID(assigneeID));
+    auto fa_assignment = std::make_shared<FieldAccessExpr>(
+        instantiation_->getIIR()->getMetaData()->getNameFromAccessID(assignmentID));
     auto assignmentExpression = std::make_shared<AssignmentExpr>(fa_assignment, fa_assignee, "=");
     auto expAssignment = std::make_shared<ExprStmt>(assignmentExpression);
     auto assignmentStatement = std::make_shared<Statement>(expAssignment, nullptr);
@@ -222,8 +225,8 @@ private:
     domethod->insertChild(std::move(pair));
 
     // Add the new expressions to the map
-    instantiation_->mapExprToAccessID(fa_assignment, assignmentID);
-    instantiation_->mapExprToAccessID(fa_assignee, assigneeID);
+    instantiation_->getIIR()->getMetaData()->mapExprToAccessID(fa_assignment, assignmentID);
+    instantiation_->getIIR()->getMetaData()->mapExprToAccessID(fa_assignee, assigneeID);
   }
 
   /// @brief Checks if there is a read operation before the first write operation in the given
@@ -282,29 +285,28 @@ PassSetNonTempCaches::PassSetNonTempCaches() : Pass("PassSetNonTempCaches") {}
 bool dawn::PassSetNonTempCaches::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
-
-  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
+  for(const auto& stencilPtr : stencilInstantiation->getIIR()->getChildren()) {
     const iir::Stencil& stencil = *stencilPtr;
 
     std::vector<NameToImprovementMetric> allCachedFields;
-    if(context->getOptions().UseNonTempCaches) {
+    if(stencilInstantiation->getIIR()->getOptions().UseNonTempCaches) {
       for(const auto& multiStagePtr : stencil.getChildren()) {
         GlobalFieldCacher organizer(multiStagePtr, stencilInstantiation);
         organizer.process();
-        if(context->getOptions().ReportPassSetNonTempCaches) {
+        if(stencilInstantiation->getIIR()->getOptions().ReportPassSetNonTempCaches) {
           for(const auto& nametoCache : organizer.getOriginalNameToCache())
             allCachedFields.push_back(nametoCache);
         }
       }
     }
     // Output
-    if(context->getOptions().ReportPassSetNonTempCaches) {
+    if(stencilInstantiation->getIIR()->getOptions().ReportPassSetNonTempCaches) {
       std::sort(allCachedFields.begin(), allCachedFields.end(),
                 [](const NameToImprovementMetric& lhs, const NameToImprovementMetric& rhs) {
                   return lhs.name < rhs.name;
                 });
-      std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName() << " :";
+      std::cout << "\nPASS: " << getName() << ": "
+                << stencilInstantiation->getIIR()->getMetaData()->getName() << " :";
       for(const auto& nametoCache : allCachedFields) {
         std::cout << " Cached: " << nametoCache.name
                   << " : Type: " << nametoCache.cache.getCacheTypeAsString() << ":"

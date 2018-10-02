@@ -25,9 +25,9 @@ namespace dawn {
 namespace codegen {
 namespace cxxnaive {
 
-ASTStencilBody::ASTStencilBody(const iir::StencilInstantiation* stencilInstantiation,
+ASTStencilBody::ASTStencilBody(const iir::IIR* iir,
                                StencilContext stencilContext)
-    : ASTCodeGenCXX(), instantiation_(stencilInstantiation), offsetPrinter_(",", "(", ")"),
+    : ASTCodeGenCXX(), iir_(iir), offsetPrinter_(",", "(", ")"),
       currentFunction_(nullptr), nestingOfStencilFunArgLists_(0), stencilContext_(stencilContext) {}
 
 ASTStencilBody::~ASTStencilBody() {}
@@ -36,21 +36,21 @@ std::string ASTStencilBody::getName(const std::shared_ptr<Stmt>& stmt) const {
   if(currentFunction_)
     return currentFunction_->getNameFromAccessID(currentFunction_->getAccessIDFromStmt(stmt));
   else
-    return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
+    return iir_->getMetaData()->getNameFromAccessID(iir_->getMetaData()->getAccessIDFromStmt(stmt));
 }
 
 std::string ASTStencilBody::getName(const std::shared_ptr<Expr>& expr) const {
   if(currentFunction_)
     return currentFunction_->getNameFromAccessID(currentFunction_->getAccessIDFromExpr(expr));
   else
-    return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromExpr(expr));
+    return iir_->getMetaData()->getNameFromAccessID(iir_->getMetaData()->getAccessIDFromExpr(expr));
 }
 
 int ASTStencilBody::getAccessID(const std::shared_ptr<Expr>& expr) const {
   if(currentFunction_)
     return currentFunction_->getAccessIDFromExpr(expr);
   else
-    return instantiation_->getAccessIDFromExpr(expr);
+    return iir_->getMetaData()->getAccessIDFromExpr(expr);
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -107,12 +107,12 @@ void ASTStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
 
   const std::shared_ptr<iir::StencilFunctionInstantiation>& stencilFun =
       currentFunction_ ? currentFunction_->getStencilFunctionInstantiation(expr)
-                       : instantiation_->getStencilFunctionInstantiation(expr);
+                       : iir_->getMetaData()->getStencilFunctionInstantiation(expr);
 
   ss_ << iir::StencilFunctionInstantiation::makeCodeGenName(*stencilFun) << "(i,j,k";
 
   //  int n = 0;
-  ASTStencilFunctionParamVisitor fieldAccessVisitor(currentFunction_, instantiation_);
+  ASTStencilFunctionParamVisitor fieldAccessVisitor(currentFunction_, iir_);
 
   for(auto& arg : expr->getArguments()) {
 
@@ -131,7 +131,7 @@ void ASTStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
   std::string name = getName(expr);
   int AccessID = getAccessID(expr);
 
-  if(instantiation_->isGlobalVariable(AccessID)) {
+  if(iir_->getMetaData()->isGlobalVariable(AccessID)) {
     ss_ << "globals::get()." << name << ".get_value()";
   } else {
     ss_ << name;

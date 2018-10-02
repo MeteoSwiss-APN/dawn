@@ -24,9 +24,9 @@ namespace dawn {
 namespace codegen {
 namespace gt {
 
-ASTStencilBody::ASTStencilBody(const iir::StencilInstantiation* stencilInstantiation,
+ASTStencilBody::ASTStencilBody(const iir::IIR* iir,
                                const std::unordered_set<iir::IntervalProperties>& intervalProperties)
-    : ASTCodeGenCXX(), instantiation_(stencilInstantiation),
+    : ASTCodeGenCXX(), iir_(iir),
       intervalProperties_(intervalProperties), offsetPrinter_(",", "(", ")"),
       currentFunction_(nullptr), nestingOfStencilFunArgLists_(0) {}
 
@@ -36,21 +36,21 @@ std::string ASTStencilBody::getName(const std::shared_ptr<Stmt>& stmt) const {
   if(currentFunction_)
     return currentFunction_->getNameFromAccessID(currentFunction_->getAccessIDFromStmt(stmt));
   else
-    return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
+    return iir_->getMetaData()->getNameFromAccessID(iir_->getMetaData()->getAccessIDFromStmt(stmt));
 }
 
 std::string ASTStencilBody::getName(const std::shared_ptr<Expr>& expr) const {
   if(currentFunction_)
     return currentFunction_->getNameFromAccessID(currentFunction_->getAccessIDFromExpr(expr));
   else
-    return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromExpr(expr));
+    return iir_->getMetaData()->getNameFromAccessID(iir_->getMetaData()->getAccessIDFromExpr(expr));
 }
 
 int ASTStencilBody::getAccessID(const std::shared_ptr<Expr>& expr) const {
   if(currentFunction_)
     return currentFunction_->getAccessIDFromExpr(expr);
   else
-    return instantiation_->getAccessIDFromExpr(expr);
+    return iir_->getMetaData()->getAccessIDFromExpr(expr);
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -116,7 +116,7 @@ void ASTStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
 
   const std::shared_ptr<iir::StencilFunctionInstantiation> stencilFun =
       currentFunction_ ? currentFunction_->getStencilFunctionInstantiation(expr)
-                       : instantiation_->getStencilFunctionInstantiation(expr);
+                       : iir_->getMetaData()->getStencilFunctionInstantiation(expr);
 
   ss_ << (triggerCallProc_ ? "gridtools::call_proc<" : "gridtools::call<")
       << iir::StencilFunctionInstantiation::makeCodeGenName(*stencilFun) << ", "
@@ -134,8 +134,8 @@ void ASTStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
     if(!isa<FieldAccessExpr>(*arg))
       continue;
     int accessID = currentFunction_ ? currentFunction_->getAccessIDFromExpr(arg)
-                                    : instantiation_->getAccessIDFromExpr(arg);
-    if(instantiation_->isGlobalVariable(accessID))
+                                    : iir_->getMetaData()->getAccessIDFromExpr(arg);
+    if(iir_->getMetaData()->isGlobalVariable(accessID))
       globalVariablesInCallStmt.insert(accessID);
   }
 
@@ -144,7 +144,7 @@ void ASTStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
   for(const int globalAccessID : stencilFun->getAccessIDSetGlobalVariables()) {
     if(globalVariablesInCallStmt.count(globalAccessID))
       continue;
-    ss_ << "," << instantiation_->getNameFromAccessID(globalAccessID) << "()";
+    ss_ << "," << iir_->getMetaData()->getNameFromAccessID(globalAccessID) << "()";
   }
 
   nestingOfStencilFunArgLists_--;
@@ -157,7 +157,7 @@ void ASTStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
   std::string name = getName(expr);
   int AccessID = getAccessID(expr);
 
-  if(instantiation_->isGlobalVariable(AccessID)) {
+  if(iir_->getMetaData()->isGlobalVariable(AccessID)) {
     if(!nestingOfStencilFunArgLists_)
       ss_ << "eval(";
     else

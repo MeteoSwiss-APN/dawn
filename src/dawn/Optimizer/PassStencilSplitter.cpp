@@ -49,9 +49,8 @@ PassStencilSplitter::PassStencilSplitter(int maxNumberOfFilelds)
 
 bool PassStencilSplitter::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
-  if(!context->getOptions().SplitStencils)
+  if(!stencilInstantiation->getIIR()->getOptions().SplitStencils)
     return true;
 
   // If we split a stencil, we need to recompute the stage graphs
@@ -118,7 +117,7 @@ bool PassStencilSplitter::run(
     if(!newStencils.empty()) {
 
       // Repair broken references to temporaries i.e promote them to real fields
-      PassTemporaryType::fixTemporariesSpanningMultipleStencils(stencilInstantiation.get(),
+      PassTemporaryType::fixTemporariesSpanningMultipleStencils(stencilInstantiation->getIIR().get(),
                                                                 newStencils);
 
       // Remove empty multi-stages within the stencils
@@ -141,7 +140,7 @@ bool PassStencilSplitter::run(
       for(const auto& s : newStencils)
         newStencilIDs.push_back(s->getStencilID());
 
-      replaceStencilCalls(stencilInstantiation, stencil.getStencilID(), newStencilIDs);
+      replaceStencilCalls(stencilInstantiation->getIIR().get(), stencil.getStencilID(), newStencilIDs);
 
       // Erase the old stencil ...
       stencilIt = stencilInstantiation->getIIR()->childrenErase(stencilIt);

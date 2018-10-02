@@ -15,9 +15,9 @@
 #include "dawn/Optimizer/PassStageMerger.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/DependencyGraphStage.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
-#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/FileUtil.h"
 
 namespace dawn {
@@ -27,26 +27,26 @@ PassStageMerger::PassStageMerger() : Pass("PassStageMerger") {
 }
 
 bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
-
   // Do we need to run this Pass?
   bool stencilNeedsMergePass = false;
-  for(const auto& stencilPtr : stencilInstantiation->getStencils())
-    stencilNeedsMergePass |= stencilPtr->stencilAttributes.hasOneOf(
-        sir::Attr::AK_MergeStages, sir::Attr::AK_MergeDoMethods);
+  for(const auto& stencilPtr : stencilInstantiation->getIIR()->getChildren())
+    stencilNeedsMergePass |= stencilPtr->stencilAttributes.hasOneOf(sir::Attr::AK_MergeStages,
+                                                                    sir::Attr::AK_MergeDoMethods);
 
-  bool MergeStages = context->getOptions().MergeStages;
-  bool MergeDoMethods = context->getOptions().MergeDoMethods;
+  bool MergeStages = stencilInstantiation->getIIR()->getOptions().MergeStages;
+  bool MergeDoMethods = stencilInstantiation->getIIR()->getOptions().MergeDoMethods;
 
   // ... Nope
   if(!MergeStages && !MergeDoMethods && !stencilNeedsMergePass)
     return true;
 
-  std::string filenameWE = getFilenameWithoutExtension(context->getSIR()->Filename);
-  if(context->getOptions().ReportPassStageMerger)
-    stencilInstantiation->dumpAsJson(filenameWE + "_before.json", getName());
-
-  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
+  std::string filenameWE =
+      getFilenameWithoutExtension(stencilInstantiation->getIIR()->getMetaData()->getFileName());
+  if(stencilInstantiation->getIIR()->getOptions().ReportPassStageMerger) {
+    //    stencilInstantiation->dumpAsJson(filenameWE + "_before.json", getName());
+    /// Todo add the serializer here once this is merged
+  }
+  for(const auto& stencilPtr : stencilInstantiation->getIIR()->getChildren()) {
     iir::Stencil& stencil = *stencilPtr;
 
     // Do we need to run the analysis for thist stencil?
@@ -176,8 +176,10 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
     }
   }
 
-  if(context->getOptions().ReportPassStageMerger)
-    stencilInstantiation->dumpAsJson(filenameWE + "_after.json", getName());
+  if(stencilInstantiation->getIIR()->getOptions().ReportPassStageMerger) {
+    //    stencilInstantiation->dumpAsJson(filenameWE + "_after.json", getName());
+    /// Todo add the serializer here once this is merged
+  }
 
   return true;
 }

@@ -360,7 +360,7 @@ public:
                              ? LoopOrderKind::LK_Forward
                              : LoopOrderKind::LK_Backward);
     std::unique_ptr<Stage> stage =
-        make_unique<Stage>(*instantiation_, instantiation_->nextUID(), interval);
+        make_unique<Stage>(instantiation_->getIIR().get(), instantiation_->nextUID(), interval);
 
     DAWN_LOG(INFO) << "Processing vertical region at " << verticalRegion->Loc;
 
@@ -612,7 +612,7 @@ StencilInstantiation::StencilInstantiation(::dawn::OptimizerContext* context,
   stencilDeclMapper.cleanupStencilDeclAST();
 
   // Repair broken references to temporaries i.e promote them to real fields
-  PassTemporaryType::fixTemporariesSpanningMultipleStencils(this, getStencils());
+  PassTemporaryType::fixTemporariesSpanningMultipleStencils(getIIR().get(), getStencils());
 
   if(context_->getOptions().ReportAccesses)
     reportAccesses();
@@ -1348,7 +1348,7 @@ void StencilInstantiation::dump() const {
                       << ASTStringifer::toString(statementAccessesPairs[m]->getStatement()->ASTStmt,
                                                  5 * DAWN_PRINT_INDENT)
                       << "\e[0m";
-            std::cout << statementAccessesPairs[m]->getAccesses()->toString(this,
+            std::cout << statementAccessesPairs[m]->getAccesses()->toString(getIIR().get(),
                                                                             6 * DAWN_PRINT_INDENT)
                       << "\n";
           }
@@ -1394,7 +1394,7 @@ void StencilInstantiation::dumpAsJson(std::string filename, std::string passName
             jDoMethod["Stmt_" + std::to_string(m)] = ASTStringifer::toString(
                 statementAccessesPairs[m]->getStatement()->ASTStmt, 0, false);
             jDoMethod["Accesses_" + std::to_string(m)] =
-                statementAccessesPairs[m]->getAccesses()->reportAccesses(this);
+                statementAccessesPairs[m]->getAccesses()->reportAccesses(getIIR().get());
           }
 
           jStage["Do_" + std::to_string(l++)] = jDoMethod;
@@ -1494,7 +1494,7 @@ void StencilInstantiation::reportAccesses() const {
   for(const auto& stmtAccessesPair : iterateIIROver<StatementAccessesPair>(*getIIR())) {
     std::cout << "\nACCESSES: line "
               << stmtAccessesPair->getStatement()->ASTStmt->getSourceLocation().Line << ": "
-              << stmtAccessesPair->getAccesses()->reportAccesses(this) << "\n";
+              << stmtAccessesPair->getAccesses()->reportAccesses(getIIR().get()) << "\n";
   }
 }
 

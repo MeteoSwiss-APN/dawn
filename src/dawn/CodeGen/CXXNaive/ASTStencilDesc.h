@@ -24,7 +24,7 @@
 
 namespace dawn {
 namespace iir {
-class StencilInstantiation;
+class IIR;
 }
 
 namespace codegen {
@@ -34,14 +34,14 @@ namespace cxxnaive {
 /// @ingroup cxxnaive
 class ASTStencilDesc : public ASTCodeGenCXX {
 protected:
-  const iir::StencilInstantiation* instantiation_;
+  const iir::IIR* iir_;
 
   const CodeGenProperties& codeGenProperties_;
 
 public:
   using Base = ASTCodeGenCXX;
 
-  ASTStencilDesc(const iir::StencilInstantiation* instantiation,
+  ASTStencilDesc(const iir::IIR *iir,
                  const CodeGenProperties& CodeGenProperties);
 
   virtual ~ASTStencilDesc();

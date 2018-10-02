@@ -23,7 +23,7 @@ class OptimizerContext;
 namespace iir {
 
 class Stage;
-class StencilInstantiation;
+class IIR;
 
 /// @enum DependencyGraphStageEdgeKind
 /// @brief Type of edges
@@ -35,14 +35,14 @@ enum class DependencyGraphStageEdgeData { EK_Depends };
 class DependencyGraphStage
     : public DependencyGraph<DependencyGraphStage, DependencyGraphStageEdgeData> {
 
-  std::shared_ptr<StencilInstantiation> stencilInstantiation_;
+  const IIR* iir_;
 
 public:
   using Base = DependencyGraph<DependencyGraphStage, DependencyGraphStageEdgeData>;
   using EdgeData = DependencyGraphStageEdgeData;
 
-  DependencyGraphStage(const std::shared_ptr<StencilInstantiation>& stencilInstantiation)
-      : Base(), stencilInstantiation_(stencilInstantiation) {}
+  DependencyGraphStage(const IIR* iir)
+      : Base(), iir_(iir) {}
 
   void insertEdge(int StageIDFrom, int StageIDTo);
 

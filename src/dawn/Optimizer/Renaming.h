@@ -24,7 +24,6 @@ class Expr;
 namespace iir {
 class StatementAccessesPair;
 class StencilFunctionInstantiation;
-class StencilInstantiation;
 class IIR;
 }
 

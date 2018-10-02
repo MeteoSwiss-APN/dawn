@@ -42,7 +42,7 @@ const char* DependencyGraphStage::edgeDataToString(const EdgeData& data) const {
 std::string DependencyGraphStage::edgeDataToDot(const EdgeData& data) const { return ""; }
 
 std::string DependencyGraphStage::getVertexNameByVertexID(std::size_t VertexID) const {
-  return stencilInstantiation_->getNameFromStageID(getIDFromVertexID(VertexID));
+  return iir_->getMetaData()->getNameFromStageID(getIDFromVertexID(VertexID));
 }
 
 const char* DependencyGraphStage::getDotShape() const { return "box"; }

@@ -41,10 +41,9 @@ public:
 };
 
 std::pair<int, int>
-computeReadWriteAccessesMetric(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+computeReadWriteAccessesMetric(const iir::IIR* internalIR,
                                const iir::MultiStage& multiStage);
-std::unordered_map<int, ReadWriteAccumulator> computeReadWriteAccessesMetricPerAccessID(
-    const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+std::unordered_map<int, ReadWriteAccumulator> computeReadWriteAccessesMetricPerAccessID(const iir::IIR *internalIR,
     const iir::MultiStage& multiStage);
 
 } // namespace dawn

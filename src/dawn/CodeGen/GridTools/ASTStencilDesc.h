@@ -23,7 +23,7 @@
 
 namespace dawn {
 namespace iir {
-class StencilInstantiation;
+class IIR;
 }
 
 namespace codegen {
@@ -33,7 +33,8 @@ namespace gt {
 /// @ingroup gt
 class ASTStencilDesc : public ASTCodeGenCXX {
 protected:
-  const std::shared_ptr<iir::StencilInstantiation> instantiation_;
+//  const std::shared_ptr<iir::StencilInstantiation> instantiation_;
+  const iir::IIR* iir_;
 
   /// StencilID to the name of the generated stencils for this ID
   const std::unordered_map<int, std::vector<std::string>>& StencilIDToStencilNameMap_;
@@ -42,7 +43,7 @@ protected:
 public:
   using Base = ASTCodeGenCXX;
 
-  ASTStencilDesc(const std::shared_ptr<iir::StencilInstantiation> instantiation,
+  ASTStencilDesc(const iir::IIR *iir,
                  const std::unordered_map<int, std::vector<std::string>>& StencilIDToStencilNameMap,
                  const std::unordered_map<int, std::string>& stencilIdToArguments);
 

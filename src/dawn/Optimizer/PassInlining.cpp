@@ -43,6 +43,7 @@ class Inliner : public ASTVisitor {
   PassInlining::InlineStrategyKind strategy_;
   const std::shared_ptr<iir::StencilFunctionInstantiation>& curStencilFunctioninstantiation_;
   iir::StencilInstantiation* instantiation_;
+  iir::IIR* iir_;
 
   /// The statement which we are currently processing in the `DetectInlineCandiates`
   const std::unique_ptr<iir::StatementAccessesPair>& oldStmtAccessesPair_;
@@ -113,7 +114,7 @@ public:
     if(AccessIDOfCaller_ == 0) {
       // We are *not* called within an arugment list of a stencil function, meaning we can store the
       // return value in a local variable.
-      int AccessID = instantiation_->nextUID();
+      int AccessID = iir_->getMetaData()->nextUID();
       auto returnVarName = iir::StencilInstantiation::makeLocalVariablename(
           curStencilFunctioninstantiation_->getName(), AccessID);
 
@@ -125,9 +126,9 @@ public:
           std::make_shared<Statement>(newStmt, oldStmtAccessesPair_->getStatement()->StackTrace)));
 
       // Register the variable
-      instantiation_->setAccessIDNamePair(AccessID, returnVarName);
-      instantiation_->mapStmtToAccessID(newStmt, AccessID);
-      instantiation_->mapExprToAccessID(newExpr_, AccessID);
+      iir_->getMetaData()->setAccessIDNamePair(AccessID, returnVarName);
+      iir_->getMetaData()->mapStmtToAccessID(newStmt, AccessID);
+      iir_->getMetaData()->mapExprToAccessID(newExpr_, AccessID);
 
     } else {
       // We are called within an arugment list of a stencil function, we thus need to store the
@@ -142,8 +143,8 @@ public:
           std::make_shared<Statement>(newStmt, oldStmtAccessesPair_->getStatement()->StackTrace)));
 
       // Promote the "temporary" storage we used to mock the argument to an actual temporary field
-      instantiation_->setAccessIDNamePairOfField(AccessIDOfCaller_, returnFieldName, true);
-      instantiation_->mapExprToAccessID(newExpr_, AccessIDOfCaller_);
+      iir_->getMetaData()->setAccessIDNamePairOfField(AccessIDOfCaller_, returnFieldName, true);
+      iir_->getMetaData()->mapExprToAccessID(newExpr_, AccessIDOfCaller_);
     }
 
     // Resolve the actual expression of the return statement
@@ -162,8 +163,8 @@ public:
   void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
     int AccessID = curStencilFunctioninstantiation_->getAccessIDFromStmt(stmt);
     const std::string& name = curStencilFunctioninstantiation_->getNameFromAccessID(AccessID);
-    instantiation_->setAccessIDNamePair(AccessID, name);
-    instantiation_->mapStmtToAccessID(stmt, AccessID);
+    iir_->getMetaData()->setAccessIDNamePair(AccessID, name);
+    iir_->getMetaData()->mapStmtToAccessID(stmt, AccessID);
 
     // Push back the statement and move on
     appendNewStatementAccessesPair(stmt);
@@ -277,14 +278,14 @@ public:
 
   void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
 
-    instantiation_->mapExprToAccessID(expr,
+    iir_->getMetaData()->mapExprToAccessID(expr,
                                       curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
     if(expr->isArrayAccess())
       expr->getIndex()->accept(*this);
   }
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
-    instantiation_->mapExprToAccessID(expr,
+    iir_->getMetaData()->mapExprToAccessID(expr,
                                       curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
 
     // Set the fully evaluated offset as the new offset of the field. Note that this renders the
@@ -297,8 +298,8 @@ public:
 
   void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override {
     int AccessID = curStencilFunctioninstantiation_->getAccessIDFromExpr(expr);
-    instantiation_->getLiteralAccessIDToNameMap().emplace(AccessID, expr->getValue());
-    instantiation_->mapExprToAccessID(expr, AccessID);
+    iir_->getMetaData()->getLiteralAccessIDToNameMap().emplace(AccessID, expr->getValue());
+    iir_->getMetaData()->mapExprToAccessID(expr, AccessID);
   }
 };
 
@@ -373,7 +374,7 @@ public:
 
   void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
     std::shared_ptr<iir::StencilFunctionInstantiation> func =
-        instantiation_->getStencilFunctionInstantiation(expr);
+        instantiation_->getIIR()->getMetaData()->getStencilFunctionInstantiation(expr);
 
     int AccessIDOfCaller = 0;
     if(!argListScope_.empty()) {

@@ -27,8 +27,8 @@ namespace cxxnaive {
 
 ASTStencilFunctionParamVisitor::ASTStencilFunctionParamVisitor(
     const std::shared_ptr<iir::StencilFunctionInstantiation>& function,
-    iir::StencilInstantiation const* instantiation)
-    : instantiation_(instantiation), currentFunction_(function) {}
+    const iir::IIR* iir)
+    : iir_(iir), currentFunction_(function) {}
 
 ASTStencilFunctionParamVisitor::~ASTStencilFunctionParamVisitor() {}
 
@@ -37,14 +37,14 @@ std::string ASTStencilFunctionParamVisitor::getName(const std::shared_ptr<Expr>&
   if(currentFunction_)
     return currentFunction_->getNameFromAccessID(getAccessID(expr));
   else
-    return instantiation_->getNameFromAccessID(getAccessID(expr));
+    return iir_->getMetaData()->getNameFromAccessID(getAccessID(expr));
 }
 
 int ASTStencilFunctionParamVisitor::getAccessID(const std::shared_ptr<Expr>& expr) const {
   if(currentFunction_)
     return currentFunction_->getAccessIDFromExpr(expr);
   else
-    return instantiation_->getAccessIDFromExpr(expr);
+    return iir_->getMetaData()->getAccessIDFromExpr(expr);
 }
 
 void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<VarAccessExpr>& expr) {}

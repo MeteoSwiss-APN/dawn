@@ -16,8 +16,8 @@
 #define DAWN_IIR_STAGE_H
 
 #include "dawn/IIR/DoMethod.h"
-#include "dawn/IIR/IIRNode.h"
 #include "dawn/IIR/Field.h"
+#include "dawn/IIR/IIRNode.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/ArrayRef.h"
 #include <boost/optional.hpp>
@@ -30,8 +30,8 @@ namespace dawn {
 namespace iir {
 
 class DependencyGraphAccesses;
-class StencilInstantiation;
 class MultiStage;
+class IIR;
 
 /// @brief A Stage is represented by a collection of statements grouped into DoMethod of
 /// non-overlapping vertical intervals.
@@ -42,7 +42,8 @@ class MultiStage;
 /// @ingroup optimizer
 class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
 
-  StencilInstantiation& stencilInstantiation_;
+  //  StencilInstantiation& stencilInstantiation_;
+  IIR* iir_;
 
   /// Unique identifier of the stage
   int StageID_;
@@ -78,8 +79,8 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
-  Stage(StencilInstantiation& context, int StageID, const Interval& interval);
-  Stage(StencilInstantiation& context, int StageID);
+  Stage(iir::IIR* context, int StageID, const Interval& interval);
+  Stage(iir::IIR* context, int StageID);
 
   Stage(Stage&&) = default;
 
@@ -202,6 +203,9 @@ public:
   bool isEmptyOrNullStmt() const;
 
   inline virtual void updateFromChildren() override {}
+
+  IIR* getIIR();
+  const IIR* getIIR() const;
 };
 
 } // namespace iir

@@ -42,5 +42,11 @@ Options& IIR::getOptions() { return creator_->getOptions(); }
 const DiagnosticsEngine& IIR::getDiagnostics() const { return creator_->getDiagnostics(); }
 DiagnosticsEngine& IIR::getDiagnostics() { return creator_->getDiagnostics(); }
 
+const HardwareConfig& IIR::getHardwareConfiguration() const {
+  return creator_->getHardwareConfiguration();
+}
+
+HardwareConfig& IIR::getHardwareConfiguration() { return creator_->getHardwareConfiguration(); }
+
 } // namespace iir
 } // namespace dawn

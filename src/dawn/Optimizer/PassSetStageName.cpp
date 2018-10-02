@@ -24,10 +24,10 @@ bool PassSetStageName::run(const std::shared_ptr<iir::StencilInstantiation>& ste
   stencilInstantiation->getStageIDToNameMap().clear();
 
   int stencilIdx = 0;
-  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
-    std::string stencilName = stencilInstantiation->getName();
+  for(const auto& stencilPtr : stencilInstantiation->getIIR()->getChildren()) {
+    std::string stencilName = stencilInstantiation->getIIR()->getMetaData()->getName();
 
-    if(stencilInstantiation->getStencils().size() > 1)
+    if(stencilInstantiation->getIIR()->getChildren().size() > 1)
       stencilName += std::to_string(stencilIdx);
 
     int multiStageIdx = 0;
@@ -35,7 +35,7 @@ bool PassSetStageName::run(const std::shared_ptr<iir::StencilInstantiation>& ste
       int stageIdx = 0;
       for(const auto& stagePtr : multiStagePtr->getChildren()) {
         iir::Stage& stage = *stagePtr;
-        stencilInstantiation->getStageIDToNameMap().emplace(
+        stencilInstantiation->getIIR()->getMetaData()->getStageIDToNameMap().emplace(
             stage.getStageID(),
             stencilName + "_ms" + std::to_string(multiStageIdx) + "_s" + std::to_string(stageIdx));
         stageIdx++;

@@ -14,8 +14,8 @@
 
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/IIR/DependencyGraphStage.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/STLExtras.h"
 
 namespace dawn {
@@ -62,14 +62,14 @@ PassSetStageGraph::PassSetStageGraph() : Pass("PassSetStageGraph") {
 
 bool PassSetStageGraph::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
   int stencilIdx = 0;
 
-  for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
+  for(const auto& stencilPtr : stencilInstantiation->getIIR()->getChildren()) {
     iir::Stencil& stencil = *stencilPtr;
     int numStages = stencil.getNumStages();
 
-    auto stageDAG = std::make_shared<iir::DependencyGraphStage>(stencilInstantiation);
+    auto stageDAG =
+        std::make_shared<iir::DependencyGraphStage>(stencilInstantiation->getIIR().get());
 
     // Build DAG of stages (backward sweep)
     for(int i = numStages - 1; i >= 0; --i) {
@@ -84,8 +84,8 @@ bool PassSetStageGraph::run(
       }
     }
 
-    if(context->getOptions().DumpStageGraph)
-      stageDAG->toDot("stage_" + stencilInstantiation->getName() + "_s" +
+    if(stencilInstantiation->getIIR()->getOptions().DumpStageGraph)
+      stageDAG->toDot("stage_" + stencilInstantiation->getIIR()->getMetaData()->getName() + "_s" +
                       std::to_string(stencilIdx) + ".dot");
 
     stencil.setStageDependencyGraph(std::move(stageDAG));

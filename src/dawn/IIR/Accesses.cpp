@@ -171,17 +171,17 @@ const Extents& Accesses::getWriteAccess(int AccessID) const {
 // StencilInstantiation and StencilFunctionInstantiation into a common base class to clean this
 // mess up.
 
-std::string Accesses::reportAccesses(const StencilInstantiation* instantiation) const {
+std::string Accesses::reportAccesses(const IIR* internalIR) const {
   return reportAccessesImpl(
-      [&instantiation](int AccessID) {
-        return instantiation->getNameFromAccessID(AccessID).c_str();
+      [&internalIR](int AccessID) {
+        return internalIR->getMetaData()->getNameFromAccessID(AccessID).c_str();
       },
-      [&instantiation](int AccessID) { return instantiation->isField(AccessID); },
-      [&instantiation](int AccessID) {
-        return instantiation->getNameFromLiteralAccessID(AccessID).c_str();
+      [&internalIR](int AccessID) { return internalIR->getMetaData()->isField(AccessID); },
+      [&internalIR](int AccessID) {
+        return internalIR->getMetaData()->getNameFromLiteralAccessID(AccessID).c_str();
       },
-      [&instantiation](int AccessID) {
-        return instantiation->getNameFromAccessID(AccessID).c_str();
+      [&internalIR](int AccessID) {
+        return internalIR->getMetaData()->getNameFromAccessID(AccessID).c_str();
       },
       writeAccesses_, readAccesses_);
 }
@@ -202,36 +202,36 @@ std::string Accesses::reportAccesses(const StencilFunctionInstantiation* stencil
       writeAccesses_, readAccesses_);
 }
 
-std::string Accesses::toString(const StencilInstantiation* instantiation,
+std::string Accesses::toString(const IIR* internalIR,
                                std::size_t initialIndent) const {
   return toStringImpl(
-      [&instantiation](int AccessID) {
-        return instantiation->getNameFromAccessID(AccessID).c_str();
+      [&internalIR](int AccessID) {
+        return internalIR->getMetaData()->getNameFromAccessID(AccessID).c_str();
       },
-      [&instantiation](int AccessID) { return instantiation->isField(AccessID); },
-      [&instantiation](int AccessID) {
-        return instantiation->getNameFromLiteralAccessID(AccessID);
+      [&internalIR](int AccessID) { return internalIR->getMetaData()->isField(AccessID); },
+      [&internalIR](int AccessID) {
+        return internalIR->getMetaData()->getNameFromLiteralAccessID(AccessID);
       },
-      [&instantiation](int AccessID) {
-        return instantiation->getNameFromAccessID(AccessID).c_str();
+      [&internalIR](int AccessID) {
+        return internalIR->getMetaData()->getNameFromAccessID(AccessID).c_str();
       },
       initialIndent, writeAccesses_, readAccesses_);
 }
 
-std::string Accesses::toString(const StencilFunctionInstantiation* stencilFunc,
-                               std::size_t initialIndent) const {
-  return toStringImpl(
-      [&stencilFunc](int AccessID) {
-        return stencilFunc->getOriginalNameFromCallerAccessID(AccessID).c_str();
-      },
-      [&stencilFunc](int AccessID) {
-        return stencilFunc->getStencilInstantiation()->isField(AccessID) ||
-               stencilFunc->isProvidedByStencilFunctionCall(AccessID);
-      },
-      [&stencilFunc](int AccessID) { return stencilFunc->getNameFromLiteralAccessID(AccessID); },
-      [&stencilFunc](int AccessID) { return stencilFunc->getNameFromAccessID(AccessID).c_str(); },
-      initialIndent, writeAccesses_, readAccesses_);
-}
+//std::string Accesses::toString(const IIR* i,
+//                               std::size_t initialIndent) const {
+//  return toStringImpl(
+//      [&stencilFunc](int AccessID) {
+//        return stencilFunc->getOriginalNameFromCallerAccessID(AccessID).c_str();
+//      },
+//      [&stencilFunc](int AccessID) {
+//        return stencilFunc->getStencilInstantiation()->isField(AccessID) ||
+//               stencilFunc->isProvidedByStencilFunctionCall(AccessID);
+//      },
+//      [&stencilFunc](int AccessID) { return stencilFunc->getNameFromLiteralAccessID(AccessID); },
+//      [&stencilFunc](int AccessID) { return stencilFunc->getNameFromAccessID(AccessID).c_str(); },
+//      initialIndent, writeAccesses_, readAccesses_);
+//}
 
 } // namespace iir
 } // namespace dawn

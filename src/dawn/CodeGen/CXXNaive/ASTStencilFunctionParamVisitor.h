@@ -23,8 +23,8 @@
 
 namespace dawn {
 namespace iir {
-class StencilInstantiation;
 class StencilFunctionInstantiation;
+class IIR;
 }
 
 namespace codegen {
@@ -35,7 +35,8 @@ namespace cxxnaive {
 /// @ingroup cxxnaive
 class ASTStencilFunctionParamVisitor : public ASTVisitorDisabled, public NonCopyable {
 protected:
-  const iir::StencilInstantiation* instantiation_;
+//  const iir::StencilInstantiation* instantiation_;
+  const iir::IIR* iir_;
   const std::shared_ptr<iir::StencilFunctionInstantiation>& currentFunction_;
   /// Underlying stream
   std::stringstream ss_;
@@ -44,7 +45,7 @@ public:
   using Base = ASTVisitorDisabled;
 
   ASTStencilFunctionParamVisitor(const std::shared_ptr<iir::StencilFunctionInstantiation>& function,
-                                 iir::StencilInstantiation const* instantiation);
+                                 const iir::IIR *iir);
   virtual ~ASTStencilFunctionParamVisitor();
 
   std::string getCodeAndResetStream();

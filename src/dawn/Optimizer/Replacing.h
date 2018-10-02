@@ -26,7 +26,7 @@ struct Statement;
 namespace iir {
 class Stencil;
 class StatementAccessesPair;
-class StencilInstantiation;
+class IIR;
 }
 
 /// @name Replacing routines
@@ -49,7 +49,7 @@ void replaceVarWithFieldAccessInStmts(
 
 /// @brief Replace all stencil calls to `oldStencilID` with a series of stencil calls to
 /// `newStencilIDs` in the stencil description AST of `instantiation`
-void replaceStencilCalls(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+void replaceStencilCalls(dawn::iir::IIR *iir,
                          int oldStencilID, const std::vector<int>& newStencilIDs);
 
 /// @}

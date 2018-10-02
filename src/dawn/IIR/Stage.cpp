@@ -13,12 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/Stage.h"
-#include "dawn/Optimizer/AccessUtils.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/AccessUtils.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Logging.h"
-#include "dawn/IIR/IIRNodeIterator.h"
 #include <algorithm>
 #include <iterator>
 #include <set>
@@ -27,17 +27,17 @@
 namespace dawn {
 namespace iir {
 
-Stage::Stage(StencilInstantiation& context, int StageID)
-    : stencilInstantiation_(context), StageID_(StageID) {}
+Stage::Stage(IIR* context, int StageID)
+    : iir_(context), StageID_(StageID) {}
 
-Stage::Stage(StencilInstantiation& context, int StageID, const Interval& interval)
-    : stencilInstantiation_(context), StageID_(StageID) {
+Stage::Stage(IIR* context, int StageID, const Interval& interval)
+    : iir_(context), StageID_(StageID) {
   insertChild(make_unique<DoMethod>(interval));
 }
 
 std::unique_ptr<Stage> Stage::clone() const {
 
-  auto cloneStage = make_unique<Stage>(stencilInstantiation_, StageID_);
+  auto cloneStage = make_unique<Stage>(iir_, StageID_);
 
   cloneStage->derivedInfo_ = derivedInfo_;
 
@@ -148,20 +148,20 @@ class CaptureStencilFunctionCallGlobalParams : public ASTVisitorForwarding {
 
   std::unordered_set<int>& globalVariables_;
   StencilFunctionInstantiation* currentFunction_;
-  StencilInstantiation& stencilInstantiation_;
+  IIR* iir_;
   std::shared_ptr<const StencilFunctionInstantiation> function_;
 
 public:
   CaptureStencilFunctionCallGlobalParams(std::unordered_set<int>& globalVariables,
-                                         StencilInstantiation& stencilInstantiation)
-      : globalVariables_(globalVariables), stencilInstantiation_(stencilInstantiation),
+                                         IIR* iir)
+      : globalVariables_(globalVariables), iir_(iir),
         function_(nullptr) {}
 
   void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
     // Find the referenced stencil function
     std::shared_ptr<const StencilFunctionInstantiation> stencilFun =
         function_ ? function_->getStencilFunctionInstantiation(expr)
-                  : stencilInstantiation_.getStencilFunctionInstantiation(expr);
+                  : iir_->getMetaData()->getStencilFunctionInstantiation(expr);
 
     DAWN_ASSERT(stencilFun);
     for(auto it : stencilFun->getAccessIDSetGlobalVariables()) {
@@ -194,7 +194,7 @@ void Stage::updateLevel() {
   std::unordered_map<int, Field> outputFields;
 
   CaptureStencilFunctionCallGlobalParams functionCallGlobaParamVisitor(
-      derivedInfo_.globalVariablesFromStencilFunctionCalls_, stencilInstantiation_);
+      derivedInfo_.globalVariablesFromStencilFunctionCalls_, iir_);
 
   for(const auto& doMethodPtr : getChildren()) {
     const DoMethod& doMethod = *doMethodPtr;
@@ -208,8 +208,8 @@ void Stage::updateLevel() {
         Extents const& extents = accessPair.second;
 
         // Does this AccessID correspond to a field access?
-        if(!stencilInstantiation_.isField(AccessID)) {
-          if(stencilInstantiation_.isGlobalVariable(AccessID))
+        if(!iir_->getMetaData()->isField(AccessID)) {
+          if(iir_->getMetaData()->isGlobalVariable(AccessID))
             derivedInfo_.globalVariables_.insert(AccessID);
           continue;
         }
@@ -222,8 +222,8 @@ void Stage::updateLevel() {
         Extents const& extents = accessPair.second;
 
         // Does this AccessID correspond to a field access?
-        if(!stencilInstantiation_.isField(AccessID)) {
-          if(stencilInstantiation_.isGlobalVariable(AccessID))
+        if(!iir_->getMetaData()->isField(AccessID)) {
+          if(iir_->getMetaData()->isGlobalVariable(AccessID))
             derivedInfo_.globalVariables_.insert(AccessID);
           continue;
         }
@@ -266,14 +266,14 @@ void Stage::updateLevel() {
 
     // first => AccessID, second => Extent
     for(auto& accessPair : access->getWriteAccesses()) {
-      if(!stencilInstantiation_.isField(accessPair.first))
+      if(!iir_->getMetaData()->isField(accessPair.first))
         continue;
 
       derivedInfo_.fields_.at(accessPair.first).mergeWriteExtents(accessPair.second);
     }
 
     for(const auto& accessPair : access->getReadAccesses()) {
-      if(!stencilInstantiation_.isField(accessPair.first))
+      if(!iir_->getMetaData()->isField(accessPair.first))
         continue;
 
       derivedInfo_.fields_.at(accessPair.first).mergeReadExtents(accessPair.second);
@@ -299,10 +299,11 @@ const std::unordered_set<int>& Stage::getAllGlobalVariables() const {
 }
 
 void Stage::addDoMethod(const DoMethodSmartPtr_t& doMethod) {
-  DAWN_ASSERT_MSG(
-      std::find_if(childrenBegin(), childrenEnd(), [&](const DoMethodSmartPtr_t& doMethodPtr) {
-        return doMethodPtr->getInterval() == doMethod->getInterval();
-      }) == childrenEnd(), "Do-Method with given interval already exists!");
+  DAWN_ASSERT_MSG(std::find_if(childrenBegin(), childrenEnd(),
+                               [&](const DoMethodSmartPtr_t& doMethodPtr) {
+                                 return doMethodPtr->getInterval() == doMethod->getInterval();
+                               }) == childrenEnd(),
+                  "Do-Method with given interval already exists!");
 
   insertChild(doMethod->clone());
 }
@@ -338,7 +339,7 @@ Stage::split(std::deque<int>& splitterIndices,
     DoMethod::StatementAccessesIterator nextSplitterIndex =
         std::next(thisDoMethod.childrenBegin(), splitterIndices[i] + 1);
 
-    newStages.push_back(make_unique<Stage>(stencilInstantiation_, stencilInstantiation_.nextUID(),
+    newStages.push_back(make_unique<Stage>(iir_, iir_->getMetaData()->nextUID(),
                                            thisDoMethod.getInterval()));
     Stage& newStage = *newStages.back();
     DoMethod& doMethod = newStage.getSingleDoMethod();
@@ -370,6 +371,10 @@ bool Stage::isEmptyOrNullStmt() const {
   }
   return true;
 }
+
+IIR* Stage::getIIR() { return iir_; }
+
+const IIR* Stage::getIIR() const { return iir_; }
 
 } // namespace iir
 } // namespace dawn

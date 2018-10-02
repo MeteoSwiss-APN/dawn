@@ -29,7 +29,6 @@ namespace dawn {
 namespace iir {
 
 class DependencyGraphStage;
-class StencilInstantiation;
 class StatementAccessesPair;
 class IIR;
 

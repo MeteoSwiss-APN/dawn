@@ -23,6 +23,7 @@ namespace dawn {
 
 namespace iir {
 class Stencil;
+class IIR;
 }
 
 /// @brief Set the correct type of the temporaries
@@ -85,8 +86,7 @@ public:
   ///
   /// We check if a temporary field is referenced in more than one stencil and, if so, we promote
   /// the field to a real (manaully allocated) field.
-  static void fixTemporariesSpanningMultipleStencils(
-      iir::StencilInstantiation* instantiation,
+  static void fixTemporariesSpanningMultipleStencils(dawn::iir::IIR *iir,
       const std::vector<std::unique_ptr<iir::Stencil>>& stencils);
 };
 

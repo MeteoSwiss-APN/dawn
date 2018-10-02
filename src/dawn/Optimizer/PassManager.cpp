@@ -30,7 +30,7 @@ bool PassManager::runAllPassesOnStecilInstantiation(
         DiagnosticsBuilder diag(DiagnosticsKind::Error);
         diag << "invalid pass registration: optimizer pass '" << pass->getName() << "' depends on '"
              << dependency << "'";
-        instantiation->getOptimizerContext()->getDiagnostics().report(diag);
+        instantiation->getIIR()->getDiagnostics().report(diag);
         return false;
       }
 

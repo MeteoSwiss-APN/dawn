@@ -169,15 +169,14 @@ bool PassMultiStageSplitter::run(
     multistagesplitter = multiStageSplitterDebug();
   }
 
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
   iir::DependencyGraphAccesses graph(stencilInstantiation->getIIR().get());
   int numSplit = 0;
-  std::string StencilName = stencilInstantiation->getName();
+  std::string StencilName = stencilInstantiation->getIIR()->getMetaData()->getName();
   std::string PassName = getName();
-  auto options = context->getOptions();
+  auto options = stencilInstantiation->getIIR()->getOptions();
 
   // Iterate over all stages in all multistages of all stencils
-  for(const auto& stencil : stencilInstantiation->getStencils()) {
+  for(const auto& stencil : stencilInstantiation->getIIR()->getChildren()) {
     int multiStageIndex = 0;
 
     for(auto multiStageIt = stencil->childrenBegin(); multiStageIt != stencil->childrenEnd();
@@ -202,7 +201,7 @@ bool PassMultiStageSplitter::run(
         multistagesplitter(stageIt, graph, userSpecifiedLoopOrder, curLoopOrder, splitterIndices,
                            stageIndex, multiStageIndex, numSplit, StencilName, PassName, options);
       }
-      if(context->getOptions().DumpSplitGraphs)
+      if(stencilInstantiation->getIIR()->getOptions().DumpSplitGraphs)
         graph.toDot(format("stmt_vd_m%i_%02i.dot", multiStageIndex, numSplit));
 
       if(!splitterIndices.empty()) {
@@ -217,7 +216,7 @@ bool PassMultiStageSplitter::run(
     }
   }
 
-  if(context->getOptions().ReportPassMultiStageSplit && !numSplit)
+  if(stencilInstantiation->getIIR()->getOptions().ReportPassMultiStageSplit && !numSplit)
     std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
               << ": no split\n";
 

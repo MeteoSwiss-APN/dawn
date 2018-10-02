@@ -13,9 +13,9 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Format.h"
@@ -30,7 +30,7 @@ namespace dawn {
 namespace {
 
 class ReadWriteCounter : public ASTVisitorForwarding {
-  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
+  const iir::IIR* internalIR_;
 
   std::size_t numReads_, numWrites_;
 
@@ -59,17 +59,15 @@ class ReadWriteCounter : public ASTVisitorForwarding {
   std::unordered_map<int, ReadWriteAccumulator> individualReadWrites_;
 
 public:
-  ReadWriteCounter(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                   const iir::MultiStage& multiStage)
-      : instantiation_(instantiation), numReads_(0), numWrites_(0), multiStage_(multiStage),
+  ReadWriteCounter(const iir::IIR* internalIR, const iir::MultiStage& multiStage)
+      : internalIR_(internalIR), numReads_(0), numWrites_(0), multiStage_(multiStage),
         fields_(multiStage_.getFields()) {}
 
   std::size_t getNumReads() const { return numReads_; }
   std::size_t getNumWrites() const { return numWrites_; }
 
   void updateTextureCache(int AccessID, int kOffset) {
-    if(textureCache_.size() <
-       instantiation_->getOptimizerContext()->getHardwareConfiguration().TexCacheMaxFields)
+    if(textureCache_.size() < internalIR_->getHardwareConfiguration().TexCacheMaxFields)
       textureCache_.emplace_front(AccessID, kOffset);
     else {
       auto it = std::find_if(
@@ -94,19 +92,20 @@ public:
   }
 
   int getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) {
-    return stencilFunCalls_.empty() ? instantiation_->getAccessIDFromExpr(expr)
+    return stencilFunCalls_.empty() ? internalIR_->getMetaData()->getAccessIDFromExpr(expr)
                                     : stencilFunCalls_.top()->getAccessIDFromExpr(expr);
   }
 
   std::string getNameFromAccessID(int AccessID) {
-    return stencilFunCalls_.empty() ? instantiation_->getNameFromAccessID(AccessID)
+    return stencilFunCalls_.empty() ? internalIR_->getMetaData()->getNameFromAccessID(AccessID)
                                     : stencilFunCalls_.top()->getNameFromAccessID(AccessID);
   }
 
   std::shared_ptr<iir::StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) {
-    return stencilFunCalls_.empty() ? instantiation_->getStencilFunctionInstantiation(expr)
-                                    : stencilFunCalls_.top()->getStencilFunctionInstantiation(expr);
+    return stencilFunCalls_.empty()
+               ? internalIR_->getMetaData()->getStencilFunctionInstantiation(expr)
+               : stencilFunCalls_.top()->getStencilFunctionInstantiation(expr);
   }
 
   Array3i getOffset(const std::shared_ptr<FieldAccessExpr>& field) {
@@ -231,8 +230,7 @@ public:
 /// Every non-cached input field yiels has at most 1 main-memory access, input-output at most 2, and
 /// every output at most 1 store.
 DAWN_ATTRIBUTE_UNUSED static std::pair<int, int>
-computeReadWriteAccessesLowerBound(iir::StencilInstantiation* instantiation,
-                                   const iir::MultiStage& multiStage) {
+computeReadWriteAccessesLowerBound(const iir::MultiStage& multiStage) {
   std::size_t numReads = 0, numWrites = 0;
   std::unordered_map<int, iir::Field> fields = multiStage.getFields();
 
@@ -279,9 +277,9 @@ computeReadWriteAccessesLowerBound(iir::StencilInstantiation* instantiation,
 
 /// @brief Approximate the reads and writes individually for each ID
 std::unordered_map<int, ReadWriteAccumulator> computeReadWriteAccessesMetricPerAccessID(
-    const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+    const iir::IIR* internalIR,
     const iir::MultiStage& multiStage) {
-  ReadWriteCounter readWriteCounter(instantiation, multiStage);
+  ReadWriteCounter readWriteCounter(internalIR, multiStage);
 
   for(const auto& statementAccessesPair : iterateIIROver<iir::StatementAccessesPair>(multiStage)) {
     statementAccessesPair->getStatement()->ASTStmt->accept(readWriteCounter);
@@ -291,10 +289,9 @@ std::unordered_map<int, ReadWriteAccumulator> computeReadWriteAccessesMetricPerA
 }
 
 /// @brief Approximate the reads and writes accoding to our data locality metric
-std::pair<int, int>
-computeReadWriteAccessesMetric(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                               const iir::MultiStage& multiStage) {
-  ReadWriteCounter readWriteCounter(instantiation, multiStage);
+std::pair<int, int> computeReadWriteAccessesMetric(const iir::IIR* internalIR,
+                                                   const iir::MultiStage& multiStage) {
+  ReadWriteCounter readWriteCounter(internalIR, multiStage);
 
   for(const auto& statementAccessesPair : iterateIIROver<iir::StatementAccessesPair>(multiStage)) {
     statementAccessesPair->getStatement()->ASTStmt->accept(readWriteCounter);
@@ -307,17 +304,16 @@ PassDataLocalityMetric::PassDataLocalityMetric() : Pass("PassDataLocalityMetric"
 
 bool PassDataLocalityMetric::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
-  if(context->getOptions().ReportDataLocalityMetric) {
-    std::string title = " DataLocality - " + stencilInstantiation->getName() + " ";
+  if(stencilInstantiation->getIIR()->getOptions().ReportDataLocalityMetric) {
+    std::string title = " DataLocality - " + stencilInstantiation->getIIR()->getMetaData()->getName() + " ";
     std::cout << std::string((51 - title.size()) / 2, '-') << title
               << std::string((51 - title.size() + 1) / 2, '-') << "\n";
 
     std::size_t perStencilNumReads = 0, perStencilNumWrites = 0;
 
     int stencilIdx = 0;
-    for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
+    for(const auto& stencilPtr : stencilInstantiation->getIIR()->getChildren()) {
       const iir::Stencil& stencil = *stencilPtr;
 
       std::cout << "Stencil " << stencilIdx << ":\n";
@@ -328,7 +324,8 @@ bool PassDataLocalityMetric::run(
 
         std::cout << "  MultiStage " << multiStageIdx << ":\n";
 
-        auto readAndWrite = computeReadWriteAccessesMetric(stencilInstantiation, multiStage);
+        auto readAndWrite =
+            computeReadWriteAccessesMetric(stencilInstantiation->getIIR().get(), multiStage);
 
         std::size_t numReads = readAndWrite.first, numWrites = readAndWrite.second;
 

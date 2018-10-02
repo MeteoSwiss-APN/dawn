@@ -97,7 +97,6 @@ struct Temporary {
 PassTemporaryType::PassTemporaryType() : Pass("PassTemporaryType", true) {}
 
 bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
-  OptimizerContext* context = instantiation->getOptimizerContext();
 
   report_.clear();
   std::unordered_map<int, Temporary> temporaries;
@@ -167,7 +166,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
         // If the variable is accessed in multiple Do-Methods, we need to promote it to a field!
         if(!temporary.Lifetime.Begin.inSameDoMethod(temporary.Lifetime.End)) {
 
-          if(context->getOptions().ReportPassTemporaryType)
+          if(instantiation->getIIR()->getOptions().ReportPassTemporaryType)
             report("promote");
 
           report_.push_back(Report{AccessID, TmpActionMod::promote});
@@ -180,7 +179,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
         if(temporary.Lifetime.Begin.inSameDoMethod(temporary.Lifetime.End) &&
            temporary.Extent.isPointwise() && !usedAsArgumentInStencilFun(stencilPtr, AccessID)) {
 
-          if(context->getOptions().ReportPassTemporaryType)
+          if(instantiation->getIIR()->getOptions().ReportPassTemporaryType)
             report("demote");
 
           report_.push_back(Report{AccessID, TmpActionMod::demote});
@@ -200,7 +199,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
 }
 
 void PassTemporaryType::fixTemporariesSpanningMultipleStencils(
-    iir::StencilInstantiation* instantiation,
+    iir::IIR* iir,
     const std::vector<std::unique_ptr<iir::Stencil>>& stencils) {
   if(stencils.size() <= 1)
     return;
@@ -218,7 +217,7 @@ void PassTemporaryType::fixTemporariesSpanningMultipleStencils(
             // Yes and yes ... promote it to a real storage
             if(fieldi.second.field.getAccessID() == fieldj.second.field.getAccessID() &&
                fieldj.second.IsTemporary) {
-              promoteTemporaryFieldToAllocatedField(instantiation->getIIR().get(),
+              promoteTemporaryFieldToAllocatedField(iir,
                   fieldi.second.field.getAccessID());
             }
           }

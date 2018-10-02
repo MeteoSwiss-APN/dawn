@@ -17,10 +17,10 @@
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/GridTools/ASTStencilBody.h"
 #include "dawn/CodeGen/GridTools/ASTStencilDesc.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Logging.h"
@@ -120,14 +120,14 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const iir::Stencil& stencil)
 class StencilFunctionAsBCGenerator : public ASTCodeGenCXX {
 private:
   std::shared_ptr<sir::StencilFunction> function;
-  const std::shared_ptr<iir::StencilInstantiation> instantiation_;
+  //  const std::shared_ptr<iir::StencilInstantiation> instantiation_;
+  const iir::IIR* iir_;
 
 public:
   using Base = ASTCodeGenCXX;
-  StencilFunctionAsBCGenerator(
-      const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-      const std::shared_ptr<sir::StencilFunction>& functionToAnalyze)
-      : function(functionToAnalyze), instantiation_(stencilInstantiation) {}
+  StencilFunctionAsBCGenerator(const iir::IIR* iir,
+                               const std::shared_ptr<sir::StencilFunction>& functionToAnalyze)
+      : function(functionToAnalyze), iir_(iir) {}
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) {
     auto printOffset = [](const Array3i& argumentoffsets) {
@@ -176,7 +176,7 @@ public:
   }
 
   void visit(const std::shared_ptr<VarAccessExpr>& expr) {
-    if(instantiation_->isGlobalVariable(instantiation_->getAccessIDFromExpr(expr)))
+    if(iir_->getMetaData()->isGlobalVariable(iir_->getMetaData()->getAccessIDFromExpr(expr)))
       ss_ << "globals::get().";
 
     ss_ << getName(expr);
@@ -189,11 +189,11 @@ public:
   }
 
   std::string getName(const std::shared_ptr<Stmt>& stmt) const {
-    return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
+    return iir_->getMetaData()->getNameFromAccessID(iir_->getMetaData()->getAccessIDFromStmt(stmt));
   }
 
   std::string getName(const std::shared_ptr<Expr>& expr) const {
-    return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromExpr(expr));
+    return iir_->getMetaData()->getNameFromAccessID(iir_->getMetaData()->getAccessIDFromExpr(expr));
   }
 };
 
@@ -263,13 +263,14 @@ std::string GTCodeGen::generateStencilInstantiation(
   // K-Cache branch changes the signature of Do-Methods
   const char* DoMethodArg = "Evaluation& eval";
 
-  Class StencilWrapperClass(stencilInstantiation->getName(), ssSW);
+  Class StencilWrapperClass(stencilInstantiation->getIIR()->getMetaData()->getName(), ssSW);
   StencilWrapperClass.changeAccessibility(
       "public"); // The stencils should technically be private but nvcc doesn't like it ...
 
   bool isEmpty = true;
   // Functions for boundary conditions
-  for(auto usedBoundaryCondition : stencilInstantiation->getBoundaryConditions()) {
+  for(auto usedBoundaryCondition :
+      stencilInstantiation->getIIR()->getMetaData()->getBoundaryConditions()) {
     for(const auto& sf : stencilInstantiation->getSIR()->StencilFunctions) {
       if(sf->Name == usedBoundaryCondition.second->getFunctor()) {
 
@@ -288,7 +289,7 @@ std::string GTCodeGen::generateStencilInstantiation(
         BC.isConst(true);
         BC.addArg(functionargs);
         BC.startBody();
-        StencilFunctionAsBCGenerator reader(stencilInstantiation, sf);
+        StencilFunctionAsBCGenerator reader(stencilInstantiation->getIIR().get(), sf);
         sf->Asts[0]->accept(reader);
         std::string output = reader.getCodeAndResetStream();
         BC << output;
@@ -299,7 +300,7 @@ std::string GTCodeGen::generateStencilInstantiation(
   }
 
   // Generate stencils
-  const auto& stencils = stencilInstantiation->getStencils();
+  const auto& stencils = stencilInstantiation->getIIR()->getChildren();
   for(std::size_t stencilIdx = 0; stencilIdx < stencils.size(); ++stencilIdx) {
     std::string stencilType;
     const iir::Stencil& stencil = *stencils[stencilIdx];
@@ -356,7 +357,7 @@ std::string GTCodeGen::generateStencilInstantiation(
       codeGenInterval(intervalProperties.name_, intervalProperties.interval_);
     }
 
-    ASTStencilBody stencilBodyCGVisitor(stencilInstantiation.get(),
+    ASTStencilBody stencilBodyCGVisitor(stencilInstantiation->getIIR().get(),
                                         intervalDefinitions.intervalProperties_);
 
     // Generate typedef for the axis
@@ -377,7 +378,8 @@ std::string GTCodeGen::generateStencilInstantiation(
     // Generate stencil functions code for stencils instantiated by this stencil
     //
     std::unordered_set<std::string> generatedStencilFun;
-    for(const auto& stencilFun : stencilInstantiation->getStencilFunctionInstantiations()) {
+    for(const auto& stencilFun :
+        stencilInstantiation->getIIR()->getMetaData()->getStencilFunctionInstantiations()) {
       std::string stencilFunName = iir::StencilFunctionInstantiation::makeCodeGenName(*stencilFun);
       if(generatedStencilFun.emplace(stencilFunName).second) {
         Structure StencilFunStruct = StencilClass.addStruct(stencilFunName);
@@ -512,7 +514,9 @@ std::string GTCodeGen::generateStencilInstantiation(
                       ((cache.requiresWindow()) ? "," + cacheWindowToString(*(cache.getWindow()))
                                                 : std::string()) +
                       // Placeholder which will be cached
-                      ">(p_" + stencilInstantiation->getNameFromAccessID(AccessIDCachePair.first) +
+                      ">(p_" +
+                      stencilInstantiation->getIIR()->getMetaData()->getNameFromAccessID(
+                          AccessIDCachePair.first) +
                       "())")
                   .str();
             });
@@ -537,9 +541,11 @@ std::string GTCodeGen::generateStencilInstantiation(
         // Field declaration
         std::vector<std::string> arglist;
         if(fields.empty()) {
-          DiagnosticsBuilder diag(DiagnosticsKind::Error,
-                                  stencilInstantiation->getSIRStencil()->Loc);
-          diag << "no storages referenced in stencil '" << stencilInstantiation->getName()
+          DiagnosticsBuilder diag(
+              DiagnosticsKind::Error,
+              stencilInstantiation->getIIR()->getMetaData()->getStencilLocation());
+          diag << "no storages referenced in stencil '"
+               << stencilInstantiation->getIIR()->getMetaData()->getName()
                << "', this would result in invalid gridtools code";
           context_->getDiagnostics().report(diag);
           return "";
@@ -550,7 +556,8 @@ std::string GTCodeGen::generateStencilInstantiation(
           const auto& field = fieldPair.second;
           const int accessID = fieldPair.first;
 
-          std::string paramName = stencilInstantiation->getNameFromAccessID(accessID);
+          std::string paramName =
+              stencilInstantiation->getIIR()->getMetaData()->getNameFromAccessID(accessID);
 
           // Generate parameter of stage
           codegen::Type extent(c_gt() + "extent", clear(tss));
@@ -575,7 +582,8 @@ std::string GTCodeGen::generateStencilInstantiation(
         // Global accessor declaration
         std::size_t maxAccessors = fields.size() + stage.getAllGlobalVariables().size();
         for(int AccessID : stage.getAllGlobalVariables()) {
-          std::string paramName = stencilInstantiation->getNameFromAccessID(AccessID);
+          std::string paramName =
+              stencilInstantiation->getIIR()->getMetaData()->getNameFromAccessID(AccessID);
 
           StageStruct.addTypeDef(paramName)
               .addType(c_gt() + "global_accessor")
@@ -771,8 +779,9 @@ std::string GTCodeGen::generateStencilInstantiation(
   }
 
   if(isEmpty) {
-    DiagnosticsBuilder diag(DiagnosticsKind::Error, stencilInstantiation->getSIRStencil()->Loc);
-    diag << "empty stencil '" << stencilInstantiation->getName()
+    DiagnosticsBuilder diag(DiagnosticsKind::Error,
+                            stencilInstantiation->getIIR()->getMetaData()->getStencilLocation());
+    diag << "empty stencil '" << stencilInstantiation->getIIR()->getMetaData()->getName()
          << "', this would result in invalid gridtools code";
     context_->getDiagnostics().report(diag);
     return "";
@@ -781,12 +790,13 @@ std::string GTCodeGen::generateStencilInstantiation(
   //
   // Generate constructor/destructor and methods of the stencil wrapper
   //
-  if(!stencilInstantiation->getBoundaryConditions().empty())
+  if(!stencilInstantiation->getIIR()->getMetaData()->getBoundaryConditions().empty())
     StencilWrapperClass.addComment("Fields that require Boundary Conditions");
   // add all fields that require a boundary condition as members since they need to be called from
   // this class and not from individual stencils
   std::unordered_set<std::string> memberfields;
-  for(auto usedBoundaryCondition : stencilInstantiation->getBoundaryConditions()) {
+  for(auto usedBoundaryCondition :
+      stencilInstantiation->getIIR()->getMetaData()->getBoundaryConditions()) {
     for(const auto& field : usedBoundaryCondition.second->getFields()) {
       memberfields.emplace(field->Name);
     }
@@ -798,12 +808,13 @@ std::string GTCodeGen::generateStencilInstantiation(
   StencilWrapperClass.addComment("Stencil-Data");
 
   // Define allocated memebers if necessary
-  if(stencilInstantiation->hasAllocatedFields()) {
+  if(stencilInstantiation->getIIR()->getMetaData()->hasAllocatedFields()) {
     StencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
 
-    for(int AccessID : stencilInstantiation->getAllocatedFieldAccessIDs())
-      StencilWrapperClass.addMember(c_gtc() + "storage_t",
-                                    "m_" + stencilInstantiation->getNameFromAccessID(AccessID));
+    for(int AccessID : stencilInstantiation->getIIR()->getMetaData()->getAllocatedFieldAccessIDs())
+      StencilWrapperClass.addMember(
+          c_gtc() + "storage_t",
+          "m_" + stencilInstantiation->getIIR()->getMetaData()->getNameFromAccessID(AccessID));
   }
 
   // Stencil members
@@ -856,10 +867,12 @@ std::string GTCodeGen::generateStencilInstantiation(
   }
 
   // Initialize allocated fields
-  if(stencilInstantiation->hasAllocatedFields()) {
+  if(stencilInstantiation->getIIR()->getMetaData()->hasAllocatedFields()) {
     std::vector<std::string> tempFields;
-    for(auto accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
-      tempFields.push_back(stencilInstantiation->getNameFromAccessID(accessID));
+    for(auto accessID :
+        stencilInstantiation->getIIR()->getMetaData()->getAllocatedFieldAccessIDs()) {
+      tempFields.push_back(
+          stencilInstantiation->getIIR()->getMetaData()->getNameFromAccessID(accessID));
     }
     addTmpStorageInit_wrapper(StencilWrapperConstructor, stencils, tempFields);
   }
@@ -885,7 +898,7 @@ std::string GTCodeGen::generateStencilInstantiation(
         "m_stencil_" + Twine(i) +
         RangeToString(", ", "(dom, ",
                       ")")(nonTempFields, [&](const iir::Stencil::FieldInfo& fieldInfo) {
-          if(stencilInstantiation->isAllocatedField(fieldInfo.field.getAccessID()))
+          if(stencilInstantiation->getIIR()->getMetaData()->isAllocatedField(fieldInfo.field.getAccessID()))
             return "m_" + fieldInfo.Name;
           else
             return fieldInfo.Name;
@@ -913,7 +926,7 @@ std::string GTCodeGen::generateStencilInstantiation(
     stencilIDToRunArguments[stencils[i]->getStencilID()] =
         "m_dom," +
         RangeToString(", ", "", "")(nonTempFields, [&](const iir::Stencil::FieldInfo& fieldInfo) {
-          if(stencilInstantiation->isAllocatedField(fieldInfo.field.getAccessID()))
+          if(stencilInstantiation->getIIR()->getMetaData()->isAllocatedField(fieldInfo.field.getAccessID()))
             return "m_" + fieldInfo.Name;
           else
             return fieldInfo.Name;
@@ -931,10 +944,10 @@ std::string GTCodeGen::generateStencilInstantiation(
   for(std::size_t i = 0; i < stencils.size(); ++i)
     stencilIDToStencilNameMap[stencils[i]->getStencilID()].emplace_back(stencilMembers[i]);
 
-  ASTStencilDesc stencilDescCGVisitor(stencilInstantiation, stencilIDToStencilNameMap,
+  ASTStencilDesc stencilDescCGVisitor(stencilInstantiation->getIIR().get(), stencilIDToStencilNameMap,
                                       stencilIDToRunArguments);
   stencilDescCGVisitor.setIndent(RunMethod.getIndent());
-  for(const auto& statement : stencilInstantiation->getStencilDescStatements()) {
+  for(const auto& statement : stencilInstantiation->getIIR()->getMetaData()->getStencilDescStatements()) {
     statement->ASTStmt->accept(stencilDescCGVisitor);
     RunMethod << stencilDescCGVisitor.getCodeAndResetStream();
   }
@@ -1068,7 +1081,7 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
 
   BCFinder finder;
   for(const auto& stencilInstantiation : context_->getStencilInstantiationMap()) {
-    for(const auto& stmt : stencilInstantiation.second->getStencilDescStatements()) {
+    for(const auto& stmt : stencilInstantiation.second->getIIR()->getMetaData()->getStencilDescStatements()) {
       stmt->ASTStmt->accept(finder);
     }
   }

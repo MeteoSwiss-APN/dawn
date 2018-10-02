@@ -23,7 +23,6 @@ namespace dawn {
 
 namespace iir {
 class StatementAccessesPair;
-class StencilInstantiation;
 class StencilFunctionInstantiation;
 class IIR;
 }

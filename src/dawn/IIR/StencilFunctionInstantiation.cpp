@@ -13,10 +13,10 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/StencilFunctionInstantiation.h"
-#include "dawn/Optimizer/AccessUtils.h"
 #include "dawn/IIR/Field.h"
-#include "dawn/Optimizer/Renaming.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/AccessUtils.h"
+#include "dawn/Optimizer/Renaming.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/Printing.h"
@@ -277,7 +277,8 @@ void StencilFunctionInstantiation::renameCallerAccessID(int oldAccessID, int new
   replaceKeyInMap(AccessIDToNameMap_, oldAccessID, newAccessID);
 
   // Update statements
-  renameAccessIDInStmts(getStencilInstantiation()->getIIR().get(), oldAccessID, newAccessID, doMethod_->getChildren());
+  renameAccessIDInStmts(getStencilInstantiation()->getIIR().get(), oldAccessID, newAccessID,
+                        doMethod_->getChildren());
 
   // Update accesses
   renameAccessIDInAccesses(oldAccessID, newAccessID, doMethod_->getChildren());
@@ -646,8 +647,8 @@ void StencilFunctionInstantiation::dump() const {
     std::cout << "\e[1m" << ASTStringifer::toString(statements[i], 2 * DAWN_PRINT_INDENT)
               << "\e[0m";
     if(doMethod_->getChild(i)->getCallerAccesses())
-      std::cout << doMethod_->getChild(i)->getCallerAccesses()->toString(this,
-                                                                         3 * DAWN_PRINT_INDENT)
+      std::cout << doMethod_->getChild(i)->getCallerAccesses()->toString(
+                       getStencilInstantiation()->getIIR().get(), 3 * DAWN_PRINT_INDENT)
                 << "\n";
   }
   std::cout.flush();

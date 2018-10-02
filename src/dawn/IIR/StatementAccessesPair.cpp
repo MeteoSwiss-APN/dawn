@@ -26,9 +26,8 @@ namespace iir {
 
 namespace {
 
-template <class InstantiationType>
-static std::string toStringImpl(const StatementAccessesPair* pair,
-                                const InstantiationType* instantiation, std::size_t initialIndent) {
+static std::string toStringImpl(const StatementAccessesPair* pair, const IIR* iir,
+                                std::size_t initialIndent) {
   std::stringstream ss;
 
   std::string initialIndentStr = std::string(initialIndent, ' ');
@@ -42,18 +41,18 @@ static std::string toStringImpl(const StatementAccessesPair* pair,
 
   if(pair->getCallerAccesses()) {
     ss << curIndentStr << "CallerAccesses:\n";
-    ss << pair->getCallerAccesses()->toString(instantiation, curIndent + DAWN_PRINT_INDENT) << "\n";
+    ss << pair->getCallerAccesses()->toString(iir, curIndent + DAWN_PRINT_INDENT) << "\n";
   }
 
   if(pair->getCalleeAccesses()) {
     ss << curIndentStr << "CalleeAccesses:\n";
-    ss << pair->getCalleeAccesses()->toString(instantiation, curIndent + DAWN_PRINT_INDENT) << "\n";
+    ss << pair->getCalleeAccesses()->toString(iir, curIndent + DAWN_PRINT_INDENT) << "\n";
   }
 
   if(!pair->getBlockStatements().empty()) {
     ss << curIndentStr << "BlockStatements:\n";
     for(auto& child : pair->getBlockStatements())
-      ss << child->toString(instantiation, curIndent);
+      ss << child->toString(iir, curIndent);
   }
   ss << initialIndentStr << "]\n";
 
@@ -151,15 +150,20 @@ void StatementAccessesPair::setCalleeAccesses(const std::shared_ptr<Accesses>& a
 
 bool StatementAccessesPair::hasCalleeAccesses() { return calleeAccesses_ != nullptr; }
 
-std::string StatementAccessesPair::toString(const StencilInstantiation* instantiation,
-                                            std::size_t initialIndent) const {
-  return toStringImpl(this, instantiation, initialIndent);
-}
+//std::string StatementAccessesPair::toString(const StencilInstantiation* instantiation,
+//                                            std::size_t initialIndent) const {
+//  return toStringImpl(this, instantiation->getIIR().get(), initialIndent);
+//}
 
 std::string StatementAccessesPair::toString(const StencilFunctionInstantiation* stencilFunc,
                                             std::size_t initialIndent) const {
-  return toStringImpl(this, stencilFunc, initialIndent);
+  return toStringImpl(this, stencilFunc->getStencilInstantiation()->getIIR().get(),
+                      initialIndent);
 }
+std::string StatementAccessesPair::toString(const iir::IIR* iir_, std::size_t initialIndent) const {
+  return toStringImpl(this, iir_, initialIndent);
+}
+
 
 } // namespace iir
 } // namespace dawn

@@ -22,6 +22,7 @@
 namespace dawn {
 class OptimizerContext;
 class DiagnosticsEngine;
+class HardwareConfig;
 
 namespace iir {
 
@@ -59,6 +60,10 @@ public:
 
   const DiagnosticsEngine& getDiagnostics() const;
   DiagnosticsEngine& getDiagnostics();
+
+  const HardwareConfig& getHardwareConfiguration() const;
+  HardwareConfig& getHardwareConfiguration();
+
 };
 } // namespace iir
 } // namespace dawn

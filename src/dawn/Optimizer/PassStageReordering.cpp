@@ -29,11 +29,11 @@ PassStageReordering::PassStageReordering(ReorderStrategy::ReorderStrategyKind st
 
 bool PassStageReordering::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
-  std::string filenameWE = getFilenameWithoutExtension(context->getSIR()->Filename);
-  if(context->getOptions().ReportPassStageReodering) {
-    //    stencilInstantiation->dumpAsJson(filenameWE + "_before.json", getName());
+  std::string filenameWE =
+      getFilenameWithoutExtension(stencilInstantiation->getIIR()->getMetaData()->getFileName());
+  if(stencilInstantiation->getIIR()->getOptions().ReportPassStageReodering) {
+//        stencilInstantiation->dumpAsJson(filenameWE + "_before.json", getName());
     ///// Todo add the serializer here once this is merged
   }
   for(const auto& stencilPtr : stencilInstantiation->getIIR()->getChildren()) {
@@ -63,7 +63,7 @@ bool PassStageReordering::run(
       return false;
   }
 
-  if(context->getOptions().ReportPassStageReodering) {
+  if(stencilInstantiation->getIIR()->getOptions().ReportPassStageReodering) {
     //    stencilInstantiation->dumpAsJson(filenameWE + "_after.json", getName());
     /// Todo add the serializer here once this is merged
   }
