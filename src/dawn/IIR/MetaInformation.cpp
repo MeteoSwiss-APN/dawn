@@ -331,7 +331,7 @@ namespace {
 
 /// @brief Get the orignal name of the field (or variable) given by AccessID and a list of
 /// SourceLocations where this field (or variable) was accessed.
-class NameGetter : public ASTVisitorForwarding {
+class OriginalNameGetter : public ASTVisitorForwarding {
   const StencilMetaInformation* instantiation_;
   const int AccessID_;
   const bool captureLocation_;
@@ -340,7 +340,7 @@ class NameGetter : public ASTVisitorForwarding {
   std::vector<SourceLocation> locations_;
 
 public:
-  NameGetter(const StencilMetaInformation* instantiation, int AccessID,
+  OriginalNameGetter(const StencilMetaInformation* instantiation, int AccessID,
                      bool captureLocation)
       : instantiation_(instantiation), AccessID_(AccessID), captureLocation_(captureLocation) {}
 
@@ -392,20 +392,14 @@ public:
 std::pair<std::string, std::vector<SourceLocation>>
 StencilMetaInformation::getOriginalNameAndLocationsFromAccessID(
     int AccessID, const std::shared_ptr<Stmt>& stmt) const {
-  NameGetter  orignalNameGetter(this, AccessID, true);
+  OriginalNameGetter orignalNameGetter(this, AccessID, true);
   stmt->accept(orignalNameGetter);
   return orignalNameGetter.getNameLocationPair();
 }
 
-<<<<<<< Updated upstream
 // std::string StencilMetaInformation::getOriginalNameFromAccessID(int AccessID, const IIR* iir)
 // const {
 //  OriginalNameGetter orignalNameGetter(this, AccessID, true);
-=======
- std::string StencilMetaInformation::getOriginalNameFromAccessID(int AccessID, const IIR* iir)
- const {
-  NameGetter  orignalNameGetter(this, AccessID, true);
->>>>>>> Stashed changes
 
 //  for(const auto& stmtAccessesPair : iterateIIROver<StatementAccessesPair>(iir)) {
 //    stmtAccessesPair->getStatement()->ASTStmt->accept(orignalNameGetter);
