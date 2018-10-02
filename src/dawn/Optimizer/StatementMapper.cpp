@@ -12,6 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/Optimizer/StatementMapper.h"
+#include "dawn/IIR/StencilFunction/FunctionHandeling.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 
 namespace dawn {
@@ -249,7 +250,9 @@ void StatementMapper::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
   for(auto& arg : expr->getArguments())
     arg->accept(*this);
 
-  instantiation_->finalizeStencilFunctionSetup(stencilFun);
+  iir::StencilFunctionHandeling::finalizeStencilFunctionSetup(stencilFun,
+                                                              instantiation_->getIIR().get());
+  //  instantiation_->finalizeStencilFunctionSetup(stencilFun);
 
   Scope* candiateScope = getCurrentCandidateScope();
 
@@ -326,7 +329,8 @@ void StatementMapper::visit(const std::shared_ptr<VarAccessExpr>& expr) {
           (*(scope_.top()->doMethod_.childrenRBegin()))->getStatement()->ASTStmt, expr, newExpr);
 
       int AccessID = instantiation_->getIIR()->getMetaData()->nextUID();
-      instantiation_->getIIR()->getMetaData()->getLiteralAccessIDToNameMap().emplace(AccessID, newExpr->getValue());
+      instantiation_->getIIR()->getMetaData()->getLiteralAccessIDToNameMap().emplace(
+          AccessID, newExpr->getValue());
       instantiation_->getIIR()->getMetaData()->mapExprToAccessID(newExpr, AccessID);
 
     } else {
@@ -336,7 +340,8 @@ void StatementMapper::visit(const std::shared_ptr<VarAccessExpr>& expr) {
       int AccessID = 0;
       if(!stencilInstantiation->getIIR()->getMetaData()->isGlobalVariable(varname)) {
         AccessID = stencilInstantiation->getIIR()->getMetaData()->nextUID();
-        stencilInstantiation->getIIR()->getMetaData()->setAccessIDNamePairOfGlobalVariable(AccessID, varname);
+        stencilInstantiation->getIIR()->getMetaData()->setAccessIDNamePairOfGlobalVariable(AccessID,
+                                                                                           varname);
       } else {
         AccessID = stencilInstantiation->getIIR()->getMetaData()->getAccessIDFromName(varname);
       }
@@ -356,7 +361,8 @@ void StatementMapper::visit(const std::shared_ptr<VarAccessExpr>& expr) {
     if(function)
       function->mapExprToAccessID(expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
     else
-      instantiation_->getIIR()->getMetaData()->mapExprToAccessID(expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
+      instantiation_->getIIR()->getMetaData()->mapExprToAccessID(
+          expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
 
     // Resolve the index if this is an array access
     if(expr->isArrayAccess())
@@ -375,7 +381,8 @@ void StatementMapper::visit(const std::shared_ptr<LiteralAccessExpr>& expr) {
     function->getLiteralAccessIDToNameMap().emplace(AccessID, expr->getValue());
     function->mapExprToAccessID(expr, AccessID);
   } else {
-    instantiation_->getIIR()->getMetaData()->getLiteralAccessIDToNameMap().emplace(AccessID, expr->getValue());
+    instantiation_->getIIR()->getMetaData()->getLiteralAccessIDToNameMap().emplace(
+        AccessID, expr->getValue());
     instantiation_->getIIR()->getMetaData()->mapExprToAccessID(expr, AccessID);
   }
 }

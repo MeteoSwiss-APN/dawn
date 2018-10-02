@@ -33,7 +33,7 @@ namespace iir {
 /// @brief Specific instantiation of a stencil
 /// @ingroup optimizer
 class StencilMetaInformation : NonCopyable {
-
+public:
   ///@brief struct with properties of a stencil function instantiation candidate
   struct StencilFunctionInstantiationCandidate {
     /// stencil function instantiation from where the stencil function instantiation candidate is
@@ -41,6 +41,7 @@ class StencilMetaInformation : NonCopyable {
     std::shared_ptr<StencilFunctionInstantiation> callerStencilFunction_;
   };
 
+private:
   ///
   /// @brief The VariableVersions class
   /// It holds all the relevant information of versioned fields: Which are the versioned fields and
@@ -384,6 +385,11 @@ public:
                            std::shared_ptr<StencilFunctionInstantiation>>&
   getExprToStencilFunctionInstantiationMap() const;
 
+  /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
+  std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
+                     std::shared_ptr<StencilFunctionInstantiation>>&
+  getExprToStencilFunctionInstantiationMap();
+
   /// @brief Get StencilID of the StencilCallDeclStmt
   std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>& getStencilCallToStencilIDMap();
   const std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
@@ -477,6 +483,10 @@ public:
 
   /// @brief Get the list of access ID of the user API fields
   inline const std::vector<int>& getAPIFieldIDs() const { return apiFieldIDs_; }
+
+  std::unordered_map<std::shared_ptr<StencilFunctionInstantiation>,
+                     StencilFunctionInstantiationCandidate>&
+  getStencilFunInstantiationCandidate();
 };
 } // namespace iir
 } // namespace dawn

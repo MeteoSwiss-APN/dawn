@@ -45,6 +45,12 @@ namespace iir {
 //     StencilInstantiation
 //===------------------------------------------------------------------------------------------===//
 
+std::unordered_map<std::shared_ptr<StencilFunctionInstantiation>,
+                   StencilMetaInformation::StencilFunctionInstantiationCandidate>&
+StencilMetaInformation::getStencilFunInstantiationCandidate() {
+  return stencilFunInstantiationCandidate_;
+}
+
 StencilMetaInformation::StencilMetaInformation() {}
 
 void StencilMetaInformation::setAccessIDNamePair(int AccessID, const std::string& name) {
@@ -251,6 +257,11 @@ std::shared_ptr<StencilFunctionInstantiation> StencilMetaInformation::cloneStenc
 const std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
                          std::shared_ptr<StencilFunctionInstantiation>>&
 StencilMetaInformation::getExprToStencilFunctionInstantiationMap() const {
+  return ExprToStencilFunctionInstantiationMap_;
+}
+std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
+                   std::shared_ptr<StencilFunctionInstantiation>>&
+StencilMetaInformation::getExprToStencilFunctionInstantiationMap() {
   return ExprToStencilFunctionInstantiationMap_;
 }
 
@@ -491,18 +502,14 @@ std::set<int>& StencilMetaInformation::getTemporaryFieldAccessIDSet() {
 }
 
 std::set<int>& StencilMetaInformation::getAllocatedFieldAccessIDSet() {
-    return AllocatedFieldAccessIDSet_;
+  return AllocatedFieldAccessIDSet_;
 }
 
-StencilMetaInformation::VariableVersions &StencilMetaInformation::getVariableVersions()
-{
-    return variableVersions_;
+StencilMetaInformation::VariableVersions& StencilMetaInformation::getVariableVersions() {
+  return variableVersions_;
 }
 
-std::string StencilMetaInformation::getFileName()
-{
-    return fileName_;
-}
+std::string StencilMetaInformation::getFileName() { return fileName_; }
 
 } // namespace iir
 } // namespace dawn

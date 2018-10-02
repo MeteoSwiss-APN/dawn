@@ -14,15 +14,16 @@
 
 #include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
 #include "dawn/IIR/Stencil.h"
+#include "dawn/IIR/StencilFunction/FunctionHandeling.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/StatementMapper.h"
+#include "dawn/Optimizer/Utility/TemporaryHandeling.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/RemoveIf.hpp"
-#include "dawn/Optimizer/Utility/TemporaryHandeling.h"
 
 namespace dawn {
 
@@ -284,7 +285,8 @@ public:
 
     // we need to remove the previous stencil function that had "tmp" field as argument from the
     // registry, before we replace it with a StencilFunCallExpr (that computes "tmp") argument
-    instantiation_->deregisterStencilFunction(thisStencilFun);
+    iir::StencilFunctionHandeling::deregisterStencilFunction(thisStencilFun,
+                                                             instantiation_->getIIR().get());
     // reset the use of nested function calls to continue using the visitor
     replaceInNestedFun_.pop();
 
@@ -348,7 +350,9 @@ public:
       cloneStencilFun->setCallerInitialOffsetFromAccessID(accessID_, expr->getOffset());
     }
 
-    instantiation_->finalizeStencilFunctionSetup(cloneStencilFun);
+    iir::StencilFunctionHandeling::finalizeStencilFunctionSetup(cloneStencilFun,
+                                                                instantiation_->getIIR().get());
+    //    instantiation_->finalizeStencilFunctionSetup(cloneStencilFun);
     std::unordered_map<std::string, int> fieldsMap;
 
     const auto& arguments = cloneStencilFun->getArguments();
@@ -416,7 +420,8 @@ bool PassTemporaryToStencilFunction::run(
 
     const auto& fields = stencilPtr->getFields();
 
-    LocalVariablePromotion localVariablePromotion(stencilInstantiation->getIIR().get(), fields, localVarAccessIDs);
+    LocalVariablePromotion localVariablePromotion(stencilInstantiation->getIIR().get(), fields,
+                                                  localVarAccessIDs);
 
     // Iterate multi-stages backwards in order to identify local variables that need to be promoted
     // to temporaries
@@ -440,8 +445,8 @@ bool PassTemporaryToStencilFunction::run(
     }
     // perform the promotion "local var"->temporary
     for(auto varID : localVarAccessIDs) {
-      promoteLocalVariableToTemporaryField(stencilInstantiation->getIIR().get(), stencilPtr.get(), varID,
-                                                                 stencilPtr->getLifetime(varID));
+      promoteLocalVariableToTemporaryField(stencilInstantiation->getIIR().get(), stencilPtr.get(),
+                                           varID, stencilPtr->getLifetime(varID));
     }
 
     // Iterate multi-stages for the replacement of temporaries by stencil functions
@@ -533,7 +538,8 @@ bool PassTemporaryToStencilFunction::run(
         }
       }
 
-      std::cout << "\nPASS: " << getName() << "; stencil: " << stencilInstantiation->getIIR()->getMetaData()->getName();
+      std::cout << "\nPASS: " << getName()
+                << "; stencil: " << stencilInstantiation->getIIR()->getMetaData()->getName();
 
       if(temporaryFieldExprToFunction.empty())
         std::cout << "no replacement found";
@@ -542,7 +548,8 @@ bool PassTemporaryToStencilFunction::run(
         int accessID = tmpFieldPair.first;
         auto tmpProperties = tmpFieldPair.second;
         if(stencilInstantiation->getIIR()->getOptions().ReportPassTmpToFunction)
-          std::cout << " [ replace tmp:" << stencilInstantiation->getIIR()->getMetaData()->getNameFromAccessID(accessID)
+          std::cout << " [ replace tmp:"
+                    << stencilInstantiation->getIIR()->getMetaData()->getNameFromAccessID(accessID)
                     << "; line : " << tmpProperties.tmpFieldAccessExpr_->getSourceLocation().Line
                     << " ] ";
       }

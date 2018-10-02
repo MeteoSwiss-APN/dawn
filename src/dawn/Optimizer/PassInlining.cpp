@@ -13,11 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassInlining.h"
-#include "dawn/Optimizer/AccessComputation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/StencilFunction/FunctionHandeling.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/AccessComputation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTUtil.h"
 #include "dawn/SIR/ASTVisitor.h"
@@ -264,7 +265,7 @@ public:
 
     } else {
       // Inlining failed, transfer ownership
-      instantiation_->insertExprToStencilFunction(func);
+      iir::StencilFunctionHandeling::registerStencilFunction(func, instantiation_->getIIR().get());
     }
 
     if(!argListScope_.empty())
@@ -278,15 +279,15 @@ public:
 
   void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
 
-    iir_->getMetaData()->mapExprToAccessID(expr,
-                                      curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
+    iir_->getMetaData()->mapExprToAccessID(
+        expr, curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
     if(expr->isArrayAccess())
       expr->getIndex()->accept(*this);
   }
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
-    iir_->getMetaData()->mapExprToAccessID(expr,
-                                      curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
+    iir_->getMetaData()->mapExprToAccessID(
+        expr, curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
 
     // Set the fully evaluated offset as the new offset of the field. Note that this renders the
     // AST of the current stencil function incorrent which is why it needs to be removed!
