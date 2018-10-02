@@ -159,7 +159,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
       auto report = [&](const char* action) {
         std::cout << "\nPASS: " << getName() << ": "
                   << instantiation->getIIR()->getMetaData()->getName() << ": " << action << ":"
-                  << instantiation->getIIR()->getMetaData()->getOriginalNameFromAccessID(AccessID) << std::endl;
+                  << instantiation->getOriginalNameFromAccessID(AccessID) << std::endl;
       };
 
       if(temporary.Type == Temporary::TT_LocalVariable) {

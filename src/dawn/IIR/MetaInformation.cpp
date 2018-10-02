@@ -41,66 +41,6 @@
 
 namespace dawn {
 namespace iir {
-
-namespace{
-/// @brief Get the orignal name of the field (or variable) given by AccessID and a list of
-/// SourceLocations where this field (or variable) was accessed.
-class OriginalNameGetter : public ASTVisitorForwarding {
-  const StencilMetaInformation* stencilInfo_;
-  const int AccessID_;
-  const bool captureLocation_;
-
-  std::string name_;
-  std::vector<SourceLocation> locations_;
-
-public:
-  OriginalNameGetter(const StencilMetaInformation* stencilInfo, int AccessID, bool captureLocation)
-      : stencilInfo_(stencilInfo), AccessID_(AccessID), captureLocation_(captureLocation) {}
-
-  virtual void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
-    if(stencilInfo_->getAccessIDFromStmt(stmt) == AccessID_) {
-      name_ = stmt->getName();
-      if(captureLocation_)
-        locations_.push_back(stmt->getSourceLocation());
-    }
-
-    for(const auto& expr : stmt->getInitList())
-      expr->accept(*this);
-  }
-
-  void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
-    if(stencilInfo_->getAccessIDFromExpr(expr) == AccessID_) {
-      name_ = expr->getName();
-      if(captureLocation_)
-        locations_.push_back(expr->getSourceLocation());
-    }
-  }
-
-  void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override {
-    if(stencilInfo_->getAccessIDFromExpr(expr) == AccessID_) {
-      name_ = expr->getValue();
-      if(captureLocation_)
-        locations_.push_back(expr->getSourceLocation());
-    }
-  }
-
-  virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
-    if(stencilInfo_->getAccessIDFromExpr(expr) == AccessID_) {
-      name_ = expr->getName();
-      if(captureLocation_)
-        locations_.push_back(expr->getSourceLocation());
-    }
-  }
-
-  std::pair<std::string, std::vector<SourceLocation>> getNameLocationPair() const {
-    return std::make_pair(name_, locations_);
-  }
-
-  bool hasName() const { return !name_.empty(); }
-  std::string getName() const { return name_; }
-};
-}  // anonymous namespace
-
 //===------------------------------------------------------------------------------------------===//
 //     StencilInstantiation
 //===------------------------------------------------------------------------------------------===//
@@ -457,19 +397,19 @@ StencilMetaInformation::getOriginalNameAndLocationsFromAccessID(
   return orignalNameGetter.getNameLocationPair();
 }
 
- std::string StencilMetaInformation::getOriginalNameFromAccessID(int AccessID, const IIR* iir)
- const {
-  OriginalNameGetter orignalNameGetter(this, AccessID, true);
+// std::string StencilMetaInformation::getOriginalNameFromAccessID(int AccessID, const IIR* iir)
+// const {
+//  OriginalNameGetter orignalNameGetter(this, AccessID, true);
 
-  for(const auto& stmtAccessesPair : iterateIIROver<StatementAccessesPair>(iir)) {
-    stmtAccessesPair->getStatement()->ASTStmt->accept(orignalNameGetter);
-    if(orignalNameGetter.hasName())
-      return orignalNameGetter.getName();
-  }
+//  for(const auto& stmtAccessesPair : iterateIIROver<StatementAccessesPair>(iir)) {
+//    stmtAccessesPair->getStatement()->ASTStmt->accept(orignalNameGetter);
+//    if(orignalNameGetter.hasName())
+//      return orignalNameGetter.getName();
+//  }
 
-  // Best we can do...
-  return getNameFromAccessID(AccessID);
-}
+//  // Best we can do...
+//  return getNameFromAccessID(AccessID);
+//}
 
 namespace {
 

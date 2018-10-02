@@ -474,7 +474,6 @@ public:
   VariableVersions& getVariableVersions();
 
   std::string getFileName();
-  std::string getOriginalNameFromAccessID(int AccessID, const IIR *iir) const;
 };
 } // namespace iir
 } // namespace dawn

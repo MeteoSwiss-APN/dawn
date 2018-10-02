@@ -132,7 +132,7 @@ bool PassSetBoundaryCondition::run(
     // We have to do this since boundary conditions are only defined for their original field.
     auto checkIfFieldWasOriginallyDefined = [&](int fieldID) {
       auto it = stencilInstantiation->getIIR()->getMetaData()->getNameToAccessIDMap().find(
-          stencilInstantiation->getIIR()->getMetaData()->getOriginalNameFromAccessID(fieldID));
+          stencilInstantiation->getOriginalNameFromAccessID(fieldID));
       return it != stencilInstantiation->getIIR()->getMetaData()->getNameToAccessIDMap().end();
     };
 
@@ -147,7 +147,7 @@ bool PassSetBoundaryCondition::run(
     if(checkIfFieldWasOriginallyDefined(ID)) {
       if(stencilInstantiation->getIIR()->getMetaData()->isField(ID)) {
         return stencilInstantiation->getIIR()->getMetaData()->getAccessIDFromName(
-            stencilInstantiation->getIIR()->getMetaData()->getOriginalNameFromAccessID(ID));
+            stencilInstantiation->getOriginalNameFromAccessID(ID));
       } else {
         return (int)FieldType::FT_NotOriginal;
       }
@@ -261,8 +261,8 @@ bool PassSetBoundaryCondition::run(
                                   "do-method) with a boundary condition that calls a "
                                   "stencil_function, e.g \n'boundary_condition(zero(), %s);'\n",
                                   stencilInstantiation->getIIR()->getMetaData()->getName(),
-                                  stencilInstantiation->getIIR()->getMetaData()->getOriginalNameFromAccessID(originalID),
-                                  stencilInstantiation->getIIR()->getMetaData()->getOriginalNameFromAccessID(originalID))
+                                  stencilInstantiation->getOriginalNameFromAccessID(originalID),
+                                  stencilInstantiation->getOriginalNameFromAccessID(originalID))
                          .c_str());
         }
         // Calculate the extent and add it to the boundary-condition - Extent map
@@ -338,7 +338,7 @@ bool PassSetBoundaryCondition::run(
     }
     for(const auto& ID : boundaryConditionInserted_) {
       std::cout << " Boundary Condition for field '"
-                << stencilInstantiation->getIIR()->getMetaData()->getOriginalNameFromAccessID(ID) << "' inserted"
+                << stencilInstantiation->getOriginalNameFromAccessID(ID) << "' inserted"
                 << std::endl;
     }
   }
