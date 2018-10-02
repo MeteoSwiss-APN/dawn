@@ -25,7 +25,6 @@
 
 namespace dawn {
 namespace iir {
-class StencilInstantiation;
 class DoMethod;
 
 /// @brief Statement with corresponding Accesses
