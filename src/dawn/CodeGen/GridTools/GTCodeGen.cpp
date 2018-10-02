@@ -18,7 +18,7 @@
 #include "dawn/CodeGen/GridTools/ASTStencilBody.h"
 #include "dawn/CodeGen/GridTools/ASTStencilDesc.h"
 #include "dawn/IIR/StatementAccessesPair.h"
-#include "dawn/IIR/StencilFunctionInstantiation.h"
+#include "dawn/IIR/StencilFunction/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
@@ -119,15 +119,15 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const iir::Stencil& stencil)
 /// every field is a template argument.
 class StencilFunctionAsBCGenerator : public ASTCodeGenCXX {
 private:
-  std::shared_ptr<sir::StencilFunction> function;
+   const std::shared_ptr<iir::StencilFunctionInstantiation>& function_;
   //  const std::shared_ptr<iir::StencilInstantiation> instantiation_;
   const iir::IIR* iir_;
 
 public:
   using Base = ASTCodeGenCXX;
   StencilFunctionAsBCGenerator(const iir::IIR* iir,
-                               const std::shared_ptr<sir::StencilFunction>& functionToAnalyze)
-      : function(functionToAnalyze), iir_(iir) {}
+                               const std::shared_ptr<iir::StencilFunctionInstantiation>& functionToAnalyze)
+      : function_(functionToAnalyze), iir_(iir) {}
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) {
     auto printOffset = [](const Array3i& argumentoffsets) {
@@ -143,13 +143,13 @@ public:
     expr->getName();
     auto getArgumentIndex = [&](const std::string& name) {
       size_t pos =
-          std::distance(function->Args.begin(),
-                        std::find_if(function->Args.begin(), function->Args.end(),
+          std::distance(function_->getArguments().begin(),
+                        std::find_if(function_->getArguments().begin(), function_->getArguments().end(),
                                      [&](const std::shared_ptr<sir::StencilFunctionArg>& arg) {
                                        return arg->Name == name;
                                      }));
 
-      DAWN_ASSERT_MSG(pos < function->Args.size(), "");
+      DAWN_ASSERT_MSG(pos < function_->getArguments().size(), "");
       return pos;
     };
     ss_ << dawn::format("data_field_%i(%s)", getArgumentIndex(expr->getName()),
@@ -271,32 +271,57 @@ std::string GTCodeGen::generateStencilInstantiation(
   // Functions for boundary conditions
   for(auto usedBoundaryCondition :
       stencilInstantiation->getIIR()->getMetaData()->getBoundaryConditions()) {
-    for(const auto& sf : stencilInstantiation->getSIR()->StencilFunctions) {
-      if(sf->Name == usedBoundaryCondition.second->getFunctor()) {
+      for(auto stencilFunction : stencilInstantiation->getIIR()->getMetaData()->getStencilFunctionInstantiations()){
+          if(stencilFunction->getName() == usedBoundaryCondition.second->getFunctor()){
+              Structure BoundaryCondition = StencilWrapperClass.addStruct(Twine(stencilFunction->getName()));
+              std::string templatefunctions = "typename Direction ";
+              std::string functionargs = "Direction ";
 
-        Structure BoundaryCondition = StencilWrapperClass.addStruct(Twine(sf->Name));
-        std::string templatefunctions = "typename Direction ";
-        std::string functionargs = "Direction ";
-
-        // A templated datafield for every function argument
-        for(int i = 0; i < usedBoundaryCondition.second->getFields().size(); i++) {
-          templatefunctions += dawn::format(",typename DataField_%i", i);
-          functionargs += dawn::format(", DataField_%i &data_field_%i", i, i);
-        }
-        functionargs += ", int i , int j, int k";
-        auto BC = BoundaryCondition.addMemberFunction(
-            Twine("GT_FUNCTION void"), Twine("operator()"), Twine(templatefunctions));
-        BC.isConst(true);
-        BC.addArg(functionargs);
-        BC.startBody();
-        StencilFunctionAsBCGenerator reader(stencilInstantiation->getIIR().get(), sf);
-        sf->Asts[0]->accept(reader);
-        std::string output = reader.getCodeAndResetStream();
-        BC << output;
-        BC.commit();
-        break;
+              // A templated datafield for every function argument
+              for(int i = 0; i < usedBoundaryCondition.second->getFields().size(); i++) {
+                templatefunctions += dawn::format(",typename DataField_%i", i);
+                functionargs += dawn::format(", DataField_%i &data_field_%i", i, i);
+              }
+              functionargs += ", int i , int j, int k";
+              auto BC = BoundaryCondition.addMemberFunction(
+                  Twine("GT_FUNCTION void"), Twine("operator()"), Twine(templatefunctions));
+              BC.isConst(true);
+              BC.addArg(functionargs);
+              BC.startBody();
+              StencilFunctionAsBCGenerator reader(stencilInstantiation->getIIR().get(), stencilFunction);
+              stencilFunction->getAST()->accept(reader);
+              std::string output = reader.getCodeAndResetStream();
+              BC << output;
+              BC.commit();
+              break;
+          }
       }
-    }
+//    for(const auto& sf : stencilInstantiation->getSIR()->StencilFunctions) {
+//      if(sf->Name == usedBoundaryCondition.second->getFunctor()) {
+
+//        Structure BoundaryCondition = StencilWrapperClass.addStruct(Twine(sf->Name));
+//        std::string templatefunctions = "typename Direction ";
+//        std::string functionargs = "Direction ";
+
+//        // A templated datafield for every function argument
+//        for(int i = 0; i < usedBoundaryCondition.second->getFields().size(); i++) {
+//          templatefunctions += dawn::format(",typename DataField_%i", i);
+//          functionargs += dawn::format(", DataField_%i &data_field_%i", i, i);
+//        }
+//        functionargs += ", int i , int j, int k";
+//        auto BC = BoundaryCondition.addMemberFunction(
+//            Twine("GT_FUNCTION void"), Twine("operator()"), Twine(templatefunctions));
+//        BC.isConst(true);
+//        BC.addArg(functionargs);
+//        BC.startBody();
+//        StencilFunctionAsBCGenerator reader(stencilInstantiation->getIIR().get(), sf);
+//        sf->Asts[0]->accept(reader);
+//        std::string output = reader.getCodeAndResetStream();
+//        BC << output;
+//        BC.commit();
+//        break;
+//      }
+//    }
   }
 
   // Generate stencils

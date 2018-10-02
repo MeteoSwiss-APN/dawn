@@ -19,7 +19,7 @@
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/MetaInformation.h"
 #include "dawn/IIR/Stencil.h"
-#include "dawn/IIR/StencilFunctionInstantiation.h"
+#include "dawn/IIR/StencilFunction/StencilFunctionInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/NonCopyable.h"
 #include "dawn/Support/StringRef.h"
