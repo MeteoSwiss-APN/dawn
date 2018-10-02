@@ -835,28 +835,47 @@ std::string GTCodeGen::generateStencilInstantiation(
   StencilWrapperClass.addCopyConstructor(Class::Deleted);
 
   // Generate stencil wrapper constructor
-  auto SIRFieldsWithoutTemps = stencilInstantiation->getSIRStencil()->Fields;
-  for(auto it = SIRFieldsWithoutTemps.begin(); it != SIRFieldsWithoutTemps.end();)
-    if((*it)->IsTemporary)
-      it = SIRFieldsWithoutTemps.erase(it);
-    else
-      ++it;
-
+  auto APIFields = stencilInstantiation->getIIR()->getMetaData()->getAPIFieldIDs();
   std::vector<std::pair<std::string, std::string>> StencilWrapperConstructorArguments;
-  for(int accessorIdx = 0; accessorIdx < SIRFieldsWithoutTemps.size(); ++accessorIdx) {
-    Array3i fieldDimensions = SIRFieldsWithoutTemps[accessorIdx]->fieldDimensions;
+  //  for(int accessorIdx = 0; accessorIdx < APIFields.size(); ++accessorIdx) {
+  for(auto APIfieldID : APIFields) {
+    auto fieldDimensions =
+        stencilInstantiation->getIIR()->getMetaData()->getFieldDimensionsMask(APIfieldID);
     std::string extents = "storage_";
     extents += fieldDimensions[0] ? "i" : "";
     extents += fieldDimensions[1] ? "j" : "";
     extents += fieldDimensions[2] ? "k" : "";
     extents += "_t";
-    StencilWrapperConstructorArguments.emplace_back(extents,
-                                                    SIRFieldsWithoutTemps[accessorIdx]->Name);
+    StencilWrapperConstructorArguments.emplace_back(
+        extents, stencilInstantiation->getIIR()->getMetaData()->getNameFromAccessID(APIfieldID));
+  }
+  std::vector<std::string> StencilWrapperConstructorTemplates;
+  for(int i = 0; i < APIFields.size(); ++i){
+    StencilWrapperConstructorTemplates.push_back("S" + std::to_string(i + 1));
   }
 
-  std::vector<std::string> StencilWrapperConstructorTemplates;
-  for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i)
-    StencilWrapperConstructorTemplates.push_back("S" + std::to_string(i + 1));
+//  auto SIRFieldsWithoutTemps = stencilInstantiation->getSIRStencil()->Fields;
+//  for(auto it = SIRFieldsWithoutTemps.begin(); it != SIRFieldsWithoutTemps.end();)
+//    if((*it)->IsTemporary)
+//      it = SIRFieldsWithoutTemps.erase(it);
+//    else
+//      ++it;
+
+//  std::vector<std::pair<std::string, std::string>> StencilWrapperConstructorArguments;
+//  for(int accessorIdx = 0; accessorIdx < SIRFieldsWithoutTemps.size(); ++accessorIdx) {
+//    Array3i fieldDimensions = SIRFieldsWithoutTemps[accessorIdx]->fieldDimensions;
+//    std::string extents = "storage_";
+//    extents += fieldDimensions[0] ? "i" : "";
+//    extents += fieldDimensions[1] ? "j" : "";
+//    extents += fieldDimensions[2] ? "k" : "";
+//    extents += "_t";
+//    StencilWrapperConstructorArguments.emplace_back(extents,
+//                                                    SIRFieldsWithoutTemps[accessorIdx]->Name);
+//  }
+
+//  std::vector<std::string> StencilWrapperConstructorTemplates;
+//  for(int i = 0; i < SIRFieldsWithoutTemps.size(); ++i)
+//    StencilWrapperConstructorTemplates.push_back("S" + std::to_string(i + 1));
 
   auto StencilWrapperConstructor = StencilWrapperClass.addConstructor();
   //      }));
@@ -898,7 +917,8 @@ std::string GTCodeGen::generateStencilInstantiation(
         "m_stencil_" + Twine(i) +
         RangeToString(", ", "(dom, ",
                       ")")(nonTempFields, [&](const iir::Stencil::FieldInfo& fieldInfo) {
-          if(stencilInstantiation->getIIR()->getMetaData()->isAllocatedField(fieldInfo.field.getAccessID()))
+          if(stencilInstantiation->getIIR()->getMetaData()->isAllocatedField(
+                 fieldInfo.field.getAccessID()))
             return "m_" + fieldInfo.Name;
           else
             return fieldInfo.Name;
@@ -926,7 +946,8 @@ std::string GTCodeGen::generateStencilInstantiation(
     stencilIDToRunArguments[stencils[i]->getStencilID()] =
         "m_dom," +
         RangeToString(", ", "", "")(nonTempFields, [&](const iir::Stencil::FieldInfo& fieldInfo) {
-          if(stencilInstantiation->getIIR()->getMetaData()->isAllocatedField(fieldInfo.field.getAccessID()))
+          if(stencilInstantiation->getIIR()->getMetaData()->isAllocatedField(
+                 fieldInfo.field.getAccessID()))
             return "m_" + fieldInfo.Name;
           else
             return fieldInfo.Name;
@@ -944,10 +965,11 @@ std::string GTCodeGen::generateStencilInstantiation(
   for(std::size_t i = 0; i < stencils.size(); ++i)
     stencilIDToStencilNameMap[stencils[i]->getStencilID()].emplace_back(stencilMembers[i]);
 
-  ASTStencilDesc stencilDescCGVisitor(stencilInstantiation->getIIR().get(), stencilIDToStencilNameMap,
-                                      stencilIDToRunArguments);
+  ASTStencilDesc stencilDescCGVisitor(stencilInstantiation->getIIR().get(),
+                                      stencilIDToStencilNameMap, stencilIDToRunArguments);
   stencilDescCGVisitor.setIndent(RunMethod.getIndent());
-  for(const auto& statement : stencilInstantiation->getIIR()->getMetaData()->getStencilDescStatements()) {
+  for(const auto& statement :
+      stencilInstantiation->getIIR()->getMetaData()->getStencilDescStatements()) {
     statement->ASTStmt->accept(stencilDescCGVisitor);
     RunMethod << stencilDescCGVisitor.getCodeAndResetStream();
   }
@@ -1081,7 +1103,8 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
 
   BCFinder finder;
   for(const auto& stencilInstantiation : context_->getStencilInstantiationMap()) {
-    for(const auto& stmt : stencilInstantiation.second->getIIR()->getMetaData()->getStencilDescStatements()) {
+    for(const auto& stmt :
+        stencilInstantiation.second->getIIR()->getMetaData()->getStencilDescStatements()) {
       stmt->ASTStmt->accept(finder);
     }
   }

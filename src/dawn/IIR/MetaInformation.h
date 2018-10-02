@@ -474,6 +474,9 @@ public:
   VariableVersions& getVariableVersions();
 
   std::string getFileName();
+
+  /// @brief Get the list of access ID of the user API fields
+  inline const std::vector<int>& getAPIFieldIDs() const { return apiFieldIDs_; }
 };
 } // namespace iir
 } // namespace dawn
