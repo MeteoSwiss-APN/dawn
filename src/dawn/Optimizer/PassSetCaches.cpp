@@ -198,7 +198,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
             if(instantiation->getIIR()->getOptions().ReportPassSetCaches) {
               std::cout << "\nPASS: " << getName() << ": " << instantiation->getIIR()->getMetaData()->getName() << ": MS"
                         << msIdx << ": "
-                        << instantiation->getOriginalNameFromAccessID(field.getAccessID()) << ":"
+                        << instantiation->getIIR()->getMetaData()->getOriginalNameFromAccessID(field.getAccessID()) << ":"
                         << cache.getCacheTypeAsString() << ":" << cache.getCacheIOPolicyAsString()
                         << std::endl;
             }
@@ -302,7 +302,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
           if(instantiation->getIIR()->getOptions().ReportPassSetCaches) {
             std::cout << "\nPASS: " << getName() << ": " << instantiation->getIIR()->getMetaData()->getName() << ": MS"
                       << MSIndex << ": "
-                      << instantiation->getOriginalNameFromAccessID(field.getAccessID()) << ":"
+                      << instantiation->getIIR()->getMetaData()->getOriginalNameFromAccessID(field.getAccessID()) << ":"
                       << cache.getCacheTypeAsString() << ":" << cache.getCacheIOPolicyAsString()
                       << (cache.getWindow().is_initialized()
                               ? (std::string(":") + cache.getWindow()->toString())
