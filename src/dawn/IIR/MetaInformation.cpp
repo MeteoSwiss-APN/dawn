@@ -470,10 +470,6 @@ std::string StencilMetaInformation::extractTemporaryFieldname(const std::string&
   return extractNameImpl("__tmp_", name);
 }
 
-std::string StencilMetaInformation::makeStencilCallCodeGenName(int StencilID) {
-  return "__code_gen_" + std::to_string(StencilID);
-}
-
 bool StencilMetaInformation::isStencilCallCodeGenName(const std::string& name) {
   return StringRef(name).startswith("__code_gen_");
 }
@@ -510,6 +506,8 @@ StencilMetaInformation::VariableVersions& StencilMetaInformation::getVariableVer
 }
 
 std::string StencilMetaInformation::getFileName() { return fileName_; }
+
+
 
 } // namespace iir
 } // namespace dawn

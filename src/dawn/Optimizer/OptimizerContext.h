@@ -114,7 +114,8 @@ public:
   }
 
   bool fillIIRFromSIR(std::unique_ptr<iir::IIR>& iir,
-                      const std::shared_ptr<sir::Stencil> SIRStencil);
+                      const std::shared_ptr<sir::Stencil> SIRStencil,
+                      const std::shared_ptr<SIR> fullSIR);
 };
 
 } // namespace dawn

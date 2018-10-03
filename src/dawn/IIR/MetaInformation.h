@@ -328,7 +328,9 @@ public:
   /// @brief Name used for all `StencilCallDeclStmt` in the stencil description AST
   /// (`getStencilDescStatements`) to signal code-gen it should insert a call to the gridtools
   /// stencil here
-  static std::string makeStencilCallCodeGenName(int StencilID);
+  static std::string makeStencilCallCodeGenName(int StencilID) {
+    return "__code_gen_" + std::to_string(StencilID);
+  }
 
   /// @brief Check if the given name of a `StencilCallDeclStmt` was generate by
   /// `makeStencilCallCodeGenName`
@@ -377,8 +379,7 @@ public:
   std::pair<std::string, std::vector<SourceLocation>>
   getOriginalNameAndLocationsFromAccessID(int AccessID, const std::shared_ptr<Stmt>& stmt) const;
 
-  inline const std::unordered_map<std::string, std::shared_ptr<sir::Value>>&
-  getGlobalVariableMap() const;
+  const std::unordered_map<std::string, std::shared_ptr<sir::Value>>& getGlobalVariableMap() const;
 
   /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
   const std::unordered_map<std::shared_ptr<StencilFunCallExpr>,

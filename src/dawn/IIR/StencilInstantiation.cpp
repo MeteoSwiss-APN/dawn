@@ -13,13 +13,13 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/Optimizer/Replacing.h"
-#include "dawn/IIR/StatementAccessesPair.h"
-#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/Optimizer/StatementMapper.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTUtil.h"
@@ -128,7 +128,8 @@ public:
   void makeNewStencil() {
     int StencilID = instantiation_->nextUID();
     instantiation_->getIIR()->insertChild(
-        make_unique<Stencil>(instantiation_->getIIR().get(), instantiation_->getIIR()->getChild(0)->stencilAttributes, StencilID),
+        make_unique<Stencil>(instantiation_->getIIR().get(),
+                             instantiation_->getIIR()->getChild(0)->stencilAttributes, StencilID),
         instantiation_->getIIR());
     // We create a paceholder stencil-call for CodeGen to know wehere we need to insert calls to
     // this stencil
@@ -357,8 +358,8 @@ public:
     // Create the new multi-stage
     std::unique_ptr<MultiStage> multiStage = make_unique<MultiStage>(
         instantiation_->getIIR().get(), verticalRegion->LoopOrder == sir::VerticalRegion::LK_Forward
-                             ? LoopOrderKind::LK_Forward
-                             : LoopOrderKind::LK_Backward);
+                                            ? LoopOrderKind::LK_Forward
+                                            : LoopOrderKind::LK_Backward);
     std::unique_ptr<Stage> stage =
         make_unique<Stage>(instantiation_->getIIR().get(), instantiation_->nextUID(), interval);
 
@@ -370,8 +371,8 @@ public:
     DoMethod& doMethod = stage->getSingleDoMethod();
     // TODO move iterators of IIRNode to const getChildren, when we pass here begin, end instead
 
-    StatementMapper statementMapper(instantiation_, scope_.top()->StackTrace, doMethod,
-                                    doMethod.getInterval(),
+    StatementMapper statementMapper(nullptr, instantiation_->getIIR().get(),
+                                    scope_.top()->StackTrace, doMethod, doMethod.getInterval(),
                                     scope_.top()->LocalFieldnameToAccessIDMap, nullptr);
     ast->accept(statementMapper);
     DAWN_LOG(INFO) << "Inserted " << doMethod.getChildren().size() << " statements";
@@ -653,9 +654,9 @@ void StencilInstantiation::removeAccessID(int AccessID) {
 
   if(variableVersions_.hasVariableMultipleVersions(AccessID)) {
     auto versions = variableVersions_.getVersions(AccessID);
-    versions->erase(std::remove_if(versions->begin(), versions->end(), [&](int AID) {
-                      return AID == AccessID;
-                    }), versions->end());
+    versions->erase(std::remove_if(versions->begin(), versions->end(),
+                                   [&](int AID) { return AID == AccessID; }),
+                    versions->end());
   }
 }
 
@@ -1092,7 +1093,8 @@ StencilInstantiation::makeStencilFunctionInstantiation(
     const std::shared_ptr<StencilFunctionInstantiation>& curStencilFunctionInstantiation) {
 
   std::shared_ptr<StencilFunctionInstantiation> stencilFun =
-      std::make_shared<StencilFunctionInstantiation>(getIIR().get(), expr, SIRStencilFun, ast, interval,
+      std::make_shared<StencilFunctionInstantiation>(getIIR().get(), expr, SIRStencilFun, ast,
+                                                     interval,
                                                      curStencilFunctionInstantiation != nullptr);
 
   stencilFunInstantiationCandidate_.emplace(
@@ -1114,9 +1116,8 @@ void StencilInstantiation::deregisterStencilFunction(
 
   bool found = RemoveIf(ExprToStencilFunctionInstantiationMap_,
                         [&](std::pair<std::shared_ptr<StencilFunCallExpr>,
-                                      std::shared_ptr<StencilFunctionInstantiation>> pair) {
-                          return (pair.second == stencilFun);
-                        });
+                                      std::shared_ptr<StencilFunctionInstantiation>>
+                                pair) { return (pair.second == stencilFun); });
   // make sure the element existed and was removed
   DAWN_ASSERT(found);
   found = RemoveIf(
