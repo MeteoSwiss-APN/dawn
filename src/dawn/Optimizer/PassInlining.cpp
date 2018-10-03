@@ -43,7 +43,7 @@ static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
 class Inliner : public ASTVisitor {
   PassInlining::InlineStrategyKind strategy_;
   const std::shared_ptr<iir::StencilFunctionInstantiation>& curStencilFunctioninstantiation_;
-  iir::StencilInstantiation* instantiation_;
+  //  iir::StencilInstantiation* instantiation_;
   iir::IIR* iir_;
 
   /// The statement which we are currently processing in the `DetectInlineCandiates`
@@ -82,9 +82,9 @@ public:
           std::vector<std::unique_ptr<iir::StatementAccessesPair>>& newStmtAccessesPairs,
           int AccessIDOfCaller = 0)
       : strategy_(strategy), curStencilFunctioninstantiation_(stencilFunctioninstantiation),
-        instantiation_(stencilFunctioninstantiation->getStencilInstantiation()),
-        oldStmtAccessesPair_(oldStmtAccessesPair), newStmtAccessesPairs_(newStmtAccessesPairs),
-        AccessIDOfCaller_(AccessIDOfCaller), scopeDepth_(0), newExpr_(nullptr) {}
+        iir_(stencilFunctioninstantiation->getIIR()), oldStmtAccessesPair_(oldStmtAccessesPair),
+        newStmtAccessesPairs_(newStmtAccessesPairs), AccessIDOfCaller_(AccessIDOfCaller),
+        scopeDepth_(0), newExpr_(nullptr) {}
 
   /// @brief Get the new expression which will be substitued for the `StencilFunCallExpr` of this
   /// `StencilFunctionInstantiation` (may be NULL)
@@ -261,11 +261,12 @@ public:
       newStmtAccessesPairs_.erase(newStmtAccessesPairs_.begin() + stmtIdxOfFunc);
 
       // Remove the function
-      instantiation_->removeStencilFunctionInstantiation(expr, curStencilFunctioninstantiation_);
+      iir::StencilFunctionHandeling::removeStencilFunctionInstantiation(
+          expr, curStencilFunctioninstantiation_, iir_);
 
     } else {
       // Inlining failed, transfer ownership
-      iir::StencilFunctionHandeling::registerStencilFunction(func, instantiation_->getIIR().get());
+      iir::StencilFunctionHandeling::registerStencilFunction(func, iir_);
     }
 
     if(!argListScope_.empty())
@@ -406,7 +407,8 @@ public:
         replacmentOfOldStmtMap_.emplace(expr, inlineResult.second->getNewExpr());
 
       // Remove the stencil-function (`nullptr` means we don't have a nested stencil function)
-      instantiation_->removeStencilFunctionInstantiation(expr, nullptr);
+      iir::StencilFunctionHandeling::removeStencilFunctionInstantiation(
+          expr, nullptr, instantiation_->getIIR().get());
     }
 
     if(!argListScope_.empty())

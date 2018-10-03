@@ -476,7 +476,7 @@ void computeAccesses(
     std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation,
     ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
   for(const auto& statementAccessesPair : statementAccessesPairs) {
-    AccessMapper mapper(stencilFunctionInstantiation->getStencilInstantiation()->getIIR().get(),
+    AccessMapper mapper(stencilFunctionInstantiation->getIIR(),
                         statementAccessesPair, stencilFunctionInstantiation);
     statementAccessesPair->getStatement()->ASTStmt->accept(mapper);
   }

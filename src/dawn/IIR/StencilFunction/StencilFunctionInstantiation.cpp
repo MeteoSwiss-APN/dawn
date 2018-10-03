@@ -30,18 +30,17 @@ namespace iir {
 using ::dawn::operator<<;
 
 StencilFunctionInstantiation::StencilFunctionInstantiation(
-    StencilInstantiation* context, const std::shared_ptr<StencilFunCallExpr>& expr,
+    IIR* context, const std::shared_ptr<StencilFunCallExpr>& expr,
     const std::shared_ptr<sir::StencilFunction>& function, const std::shared_ptr<AST>& ast,
     const Interval& interval, bool isNested)
-    : stencilInstantiation_(context), expr_(expr), function_(function), ast_(ast),
-      interval_(interval), hasReturn_(false), isNested_(isNested),
-      doMethod_(make_unique<DoMethod>(interval)) {
+    : contextIIR_(context), expr_(expr), function_(function), ast_(ast), interval_(interval),
+      hasReturn_(false), isNested_(isNested), doMethod_(make_unique<DoMethod>(interval)) {
   DAWN_ASSERT(context);
   DAWN_ASSERT(function);
 }
 
 StencilFunctionInstantiation StencilFunctionInstantiation::clone() const {
-  StencilFunctionInstantiation stencilFun(stencilInstantiation_, expr_, function_, ast_, interval_,
+  StencilFunctionInstantiation stencilFun(contextIIR_, expr_, function_, ast_, interval_,
                                           isNested_);
 
   stencilFun.hasReturn_ = hasReturn_;
@@ -277,7 +276,7 @@ void StencilFunctionInstantiation::renameCallerAccessID(int oldAccessID, int new
   replaceKeyInMap(AccessIDToNameMap_, oldAccessID, newAccessID);
 
   // Update statements
-  renameAccessIDInStmts(getStencilInstantiation()->getIIR().get(), oldAccessID, newAccessID,
+  renameAccessIDInStmts(getIIR(), oldAccessID, newAccessID,
                         doMethod_->getChildren());
 
   // Update accesses
@@ -296,9 +295,9 @@ std::string StencilFunctionInstantiation::getNameFromAccessID(int AccessID) cons
   // TODO have a check for what is a literal range
   if(AccessID < 0)
     return getNameFromLiteralAccessID(AccessID);
-  else if(stencilInstantiation_->isField(AccessID) ||
-          stencilInstantiation_->isGlobalVariable(AccessID))
-    return stencilInstantiation_->getNameFromAccessID(AccessID);
+  else if(contextIIR_->getMetaData()->isField(AccessID) ||
+          contextIIR_->getMetaData()->isGlobalVariable(AccessID))
+    return contextIIR_->getMetaData()->getNameFromAccessID(AccessID);
   else {
     DAWN_ASSERT(AccessIDToNameMap_.count(AccessID));
     return AccessIDToNameMap_.find(AccessID)->second;
@@ -440,7 +439,7 @@ void StencilFunctionInstantiation::update() {
       int AccessID = accessPair.first;
 
       // Does this AccessID correspond to a field access?
-      if(!isProvidedByStencilFunctionCall(AccessID) && !stencilInstantiation_->isField(AccessID))
+      if(!isProvidedByStencilFunctionCall(AccessID) && !contextIIR_->getMetaData()->isField(AccessID))
         continue;
 
       AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
@@ -451,7 +450,7 @@ void StencilFunctionInstantiation::update() {
       int AccessID = accessPair.first;
 
       // Does this AccessID correspond to a field access?
-      if(!isProvidedByStencilFunctionCall(AccessID) && !stencilInstantiation_->isField(AccessID))
+      if(!isProvidedByStencilFunctionCall(AccessID) && !contextIIR_->getMetaData()->isField(AccessID))
         continue;
 
       AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
@@ -513,7 +512,7 @@ void StencilFunctionInstantiation::update() {
         // first => AccessID, second => Extent
         for(auto& accessPair : access->getWriteAccesses()) {
           if(!isProvidedByStencilFunctionCall(accessPair.first) &&
-             !stencilInstantiation_->isField(accessPair.first))
+             !contextIIR_->getMetaData()->isField(accessPair.first))
             continue;
 
           AccessIDToFieldMap[accessPair.first]->mergeWriteExtents(accessPair.second);
@@ -521,7 +520,7 @@ void StencilFunctionInstantiation::update() {
 
         for(const auto& accessPair : access->getReadAccesses()) {
           if(!isProvidedByStencilFunctionCall(accessPair.first) &&
-             !stencilInstantiation_->isField(accessPair.first))
+             !contextIIR_->getMetaData()->isField(accessPair.first))
             continue;
 
           AccessIDToFieldMap[accessPair.first]->mergeReadExtents(accessPair.second);
@@ -630,7 +629,7 @@ void StencilFunctionInstantiation::dump() const {
                   << getFunctionInstantiationOfArgField(argIdx)->getName();
       } else {
         int callerAccessID = getCallerAccessIDOfArgField(argIdx);
-        std::cout << stencilInstantiation_->getNameFromAccessID(callerAccessID) << "  "
+        std::cout << contextIIR_->getMetaData()->getNameFromAccessID(callerAccessID) << "  "
                   << getCallerInitialOffsetFromAccessID(callerAccessID);
       }
 
@@ -648,7 +647,7 @@ void StencilFunctionInstantiation::dump() const {
               << "\e[0m";
     if(doMethod_->getChild(i)->getCallerAccesses())
       std::cout << doMethod_->getChild(i)->getCallerAccesses()->toString(
-                       getStencilInstantiation()->getIIR().get(), 3 * DAWN_PRINT_INDENT)
+                       getIIR(), 3 * DAWN_PRINT_INDENT)
                 << "\n";
   }
   std::cout.flush();
@@ -670,7 +669,7 @@ void StencilFunctionInstantiation::closeFunctionBindings(const std::vector<int>&
 
         // The field is provided by a stencil function call, we create a new AccessID for this
         // "temporary" field
-        int AccessID = stencilInstantiation_->nextUID();
+        int AccessID = contextIIR_->getMetaData()->nextUID();
 
         setCallerAccessIDOfArgField(argIdx, AccessID);
         setCallerInitialOffsetFromAccessID(AccessID, Array3i{{0, 0, 0}});

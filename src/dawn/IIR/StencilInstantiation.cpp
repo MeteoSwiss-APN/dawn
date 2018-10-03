@@ -1092,7 +1092,7 @@ StencilInstantiation::makeStencilFunctionInstantiation(
     const std::shared_ptr<StencilFunctionInstantiation>& curStencilFunctionInstantiation) {
 
   std::shared_ptr<StencilFunctionInstantiation> stencilFun =
-      std::make_shared<StencilFunctionInstantiation>(this, expr, SIRStencilFun, ast, interval,
+      std::make_shared<StencilFunctionInstantiation>(getIIR().get(), expr, SIRStencilFun, ast, interval,
                                                      curStencilFunctionInstantiation != nullptr);
 
   stencilFunInstantiationCandidate_.emplace(

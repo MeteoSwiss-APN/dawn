@@ -15,11 +15,11 @@
 #ifndef DAWN_IIR_STENCILFUNCTIONINSTANTIATION_H
 #define DAWN_IIR_STENCILFUNCTIONINSTANTIATION_H
 
+#include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/IIR/StatementAccessesPair.h"
-#include "dawn/IIR/DoMethod.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Unreachable.h"
@@ -96,7 +96,8 @@ inline std::string dim2str(int dim) {
 /// @ingroup optimizer
 class StencilFunctionInstantiation {
 private:
-  StencilInstantiation* stencilInstantiation_;
+//  StencilInstantiation* stencilInstantiation_;
+  IIR* contextIIR_;
 
   // TODO put all members in a struct to avoid having to implement a clone for all of them
   // except the vector<unique_ptr>
@@ -165,7 +166,7 @@ private:
   std::set<int> GlobalVariableAccessIDSet_;
 
 public:
-  StencilFunctionInstantiation(StencilInstantiation* context,
+  StencilFunctionInstantiation(IIR* context,
                                const std::shared_ptr<StencilFunCallExpr>& expr,
                                const std::shared_ptr<sir::StencilFunction>& function,
                                const std::shared_ptr<AST>& ast, const Interval& interval,
@@ -217,8 +218,10 @@ public:
   std::string getArgNameFromFunctionCall(std::string fnCallName) const;
 
   /// @brief Get the associated StencilInstantiation
-  StencilInstantiation* getStencilInstantiation() { return stencilInstantiation_; }
-  const StencilInstantiation* getStencilInstantiation() const { return stencilInstantiation_; }
+//    StencilInstantiation* getStencilInstantiation() { return stencilInstantiation_; }
+  //  const StencilInstantiation* getStencilInstantiation() const { return stencilInstantiation_; }
+  IIR* getIIR() { return contextIIR_; }
+  const IIR* getIIR() const { return contextIIR_; }
 
   /// @brief Get the SIR stencil function
   std::shared_ptr<sir::StencilFunction> getStencilFunction() const { return function_; }

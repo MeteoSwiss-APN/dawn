@@ -192,7 +192,7 @@ std::string Accesses::reportAccesses(const StencilFunctionInstantiation* stencil
         return stencilFunc->getOriginalNameFromCallerAccessID(AccessID).c_str();
       },
       [&stencilFunc](int AccessID) {
-        return stencilFunc->getStencilInstantiation()->isField(AccessID) ||
+        return stencilFunc->getIIR()->getMetaData()->isField(AccessID) ||
                stencilFunc->isProvidedByStencilFunctionCall(AccessID);
       },
       [&stencilFunc](int AccessID) {

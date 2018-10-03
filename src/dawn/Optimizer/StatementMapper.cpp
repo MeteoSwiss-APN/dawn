@@ -334,17 +334,26 @@ void StatementMapper::visit(const std::shared_ptr<VarAccessExpr>& expr) {
       instantiation_->getIIR()->getMetaData()->mapExprToAccessID(newExpr, AccessID);
 
     } else {
-      iir::StencilInstantiation* stencilInstantiation =
-          (function) ? function->getStencilInstantiation() : instantiation_;
-
+      auto contextIIR = (function) ? function->getIIR() : instantiation_->getIIR().get();
       int AccessID = 0;
-      if(!stencilInstantiation->getIIR()->getMetaData()->isGlobalVariable(varname)) {
-        AccessID = stencilInstantiation->getIIR()->getMetaData()->nextUID();
-        stencilInstantiation->getIIR()->getMetaData()->setAccessIDNamePairOfGlobalVariable(AccessID,
-                                                                                           varname);
+      if(!contextIIR->getMetaData()->isGlobalVariable(varname)) {
+        AccessID = contextIIR->getMetaData()->nextUID();
+        contextIIR->getMetaData()->setAccessIDNamePairOfGlobalVariable(AccessID, varname);
       } else {
-        AccessID = stencilInstantiation->getIIR()->getMetaData()->getAccessIDFromName(varname);
+        AccessID = contextIIR->getMetaData()->getAccessIDFromName(varname);
       }
+      //      iir::StencilInstantiation* stencilInstantiation =
+      //          (function) ? function->getStencilInstantiation() : instantiation_;
+
+      //      int AccessID = 0;
+      //      if(!stencilInstantiation->getIIR()->getMetaData()->isGlobalVariable(varname)) {
+      //        AccessID = stencilInstantiation->getIIR()->getMetaData()->nextUID();
+      //        stencilInstantiation->getIIR()->getMetaData()->setAccessIDNamePairOfGlobalVariable(AccessID,
+      //                                                                                           varname);
+      //      } else {
+      //        AccessID =
+      //        stencilInstantiation->getIIR()->getMetaData()->getAccessIDFromName(varname);
+      //      }
 
       if(function)
         function->setAccessIDOfGlobalVariable(AccessID);

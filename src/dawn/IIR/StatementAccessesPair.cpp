@@ -157,7 +157,7 @@ bool StatementAccessesPair::hasCalleeAccesses() { return calleeAccesses_ != null
 
 std::string StatementAccessesPair::toString(const StencilFunctionInstantiation* stencilFunc,
                                             std::size_t initialIndent) const {
-  return toStringImpl(this, stencilFunc->getStencilInstantiation()->getIIR().get(),
+  return toStringImpl(this, stencilFunc->getIIR(),
                       initialIndent);
 }
 std::string StatementAccessesPair::toString(const iir::IIR* iir_, std::size_t initialIndent) const {

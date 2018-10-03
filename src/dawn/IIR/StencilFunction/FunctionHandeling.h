@@ -17,6 +17,12 @@
 #include <memory>
 
 namespace dawn {
+class AST;
+class StencilFunCallExpr;
+class Interval;
+namespace sir {
+class StencilFunction;
+}
 namespace iir {
 class StencilFunctionInstantiation;
 class IIR;
@@ -39,6 +45,18 @@ extern void registerStencilFunction(std::shared_ptr<StencilFunctionInstantiation
 
 extern void finalizeStencilFunctionSetup(std::shared_ptr<StencilFunctionInstantiation> stencilFun,
                                          iir::IIR* iir);
+
+extern std::shared_ptr<StencilFunctionInstantiation> makeStencilFunctionInstantiation(
+    const std::shared_ptr<StencilFunCallExpr>& expr,
+    const std::shared_ptr<sir::StencilFunction>& SIRStencilFun, const std::shared_ptr<AST>& ast,
+    const Interval& interval,
+    const std::shared_ptr<StencilFunctionInstantiation>& curStencilFunctionInstantiation,
+    iir::IIR* iir);
+
+extern void removeStencilFunctionInstantiation(
+    const std::shared_ptr<StencilFunCallExpr>& expr,
+    std::shared_ptr<StencilFunctionInstantiation> callerStencilFunctionInstantiation,
+    iir::IIR* iir);
 } // namespace StencilFunctionHandeling
 } // namespace iir
 } // namespace dawn
