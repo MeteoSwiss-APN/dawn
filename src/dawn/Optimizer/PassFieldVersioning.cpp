@@ -95,10 +95,10 @@ static void reportRaceCondition(const Statement& statement,
 PassFieldVersioning::PassFieldVersioning() : Pass("PassFieldVersioning", true), numRenames_(0) {}
 
 bool PassFieldVersioning::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::unique_ptr<iir::IIR>& iir) {
   numRenames_ = 0;
 
-  for(const auto& stencilPtr : stencilInstantiation->getIIR()->getChildren()) {
+  for(const auto& stencilPtr : iir->getChildren()) {
     iir::Stencil& stencil = *stencilPtr;
 
     // Iterate multi-stages backwards
@@ -110,7 +110,7 @@ bool PassFieldVersioning::run(
 
       std::shared_ptr<iir::DependencyGraphAccesses> newGraph, oldGraph;
       newGraph =
-          std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation->getIIR().get());
+          std::make_shared<iir::DependencyGraphAccesses>(iir.get());
 
       // Iterate stages bottom -> top
       for(auto stageRit = multiStage.childrenRBegin(), stageRend = multiStage.childrenREnd();
@@ -126,7 +126,7 @@ bool PassFieldVersioning::run(
           newGraph->insertStatementAccessesPair(stmtAccessesPair);
 
           // Try to resolve race-conditions by using double buffering if necessary
-          auto rc = fixRaceCondition(stencilInstantiation->getIIR().get(), newGraph.get(), stencil,
+          auto rc = fixRaceCondition(iir.get(), newGraph.get(), stencil,
                                      doMethod, loopOrder, stageIdx, stmtIndex);
 
           if(rc == RCKind::RK_Unresolvable) {
@@ -149,8 +149,8 @@ bool PassFieldVersioning::run(
     }
   }
 
-  if(stencilInstantiation->getIIR()->getOptions().ReportPassFieldVersioning && numRenames_ == 0)
-    std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getIIR()->getMetaData()->getName()
+  if(iir->getOptions().ReportPassFieldVersioning && numRenames_ == 0)
+    std::cout << "\nPASS: " << getName() << ": " << iir->getMetaData()->getName()
               << ": no rename\n";
   return true;
 }

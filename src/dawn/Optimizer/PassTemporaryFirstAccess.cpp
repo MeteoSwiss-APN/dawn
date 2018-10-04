@@ -69,9 +69,9 @@ public:
 PassTemporaryFirstAccess::PassTemporaryFirstAccess() : Pass("PassTemporaryFirstAccess", true) {}
 
 bool PassTemporaryFirstAccess::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::unique_ptr<iir::IIR>& iir) {
 
-  for(const auto& stencilPtr : stencilInstantiation->getIIR()->getChildren()) {
+  for(const auto& stencilPtr : iir->getChildren()) {
     std::unordered_map<int, iir::Stencil::FieldInfo> fields = stencilPtr->getFields();
     std::set<int> temporaryFields;
 
@@ -110,24 +110,24 @@ bool PassTemporaryFirstAccess::run(
         // If a field is unused, we still have to add it as an input field of the stencil function.
         // Thus, the uninitialized temporary anaylsis reports a false positive on this temporary
         // field!
-        UnusedFieldVisitor visitor(AccessID, stencilInstantiation->getIIR()->getMetaData());
+        UnusedFieldVisitor visitor(AccessID, iir->getMetaData());
         stmt->accept(visitor);
         if(visitor.isFieldUnused())
           continue;
 
         // Report the error
         auto nameLocPair =
-            stencilInstantiation->getIIR()->getMetaData()->getOriginalNameAndLocationsFromAccessID(AccessID, stmt);
+            iir->getMetaData()->getOriginalNameAndLocationsFromAccessID(AccessID, stmt);
         DiagnosticsBuilder diagError(DiagnosticsKind::Error, nameLocPair.second[0]);
 
         diagError << "access to uninitialized temporary storage '" << nameLocPair.first << "'";
-        stencilInstantiation->getIIR()->getDiagnostics().report(diagError);
+        iir->getDiagnostics().report(diagError);
 
         // Report notes where the temporary is referenced
         for(int i = 1; i < nameLocPair.second.size(); ++i) {
           DiagnosticsBuilder diagNote(DiagnosticsKind::Note, nameLocPair.second[i]);
           diagNote << "'" << nameLocPair.first << "' referenced here";
-          stencilInstantiation->getIIR()->getDiagnostics().report(diagNote);
+          iir->getDiagnostics().report(diagNote);
         }
 
         return false;

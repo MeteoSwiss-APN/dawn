@@ -36,7 +36,7 @@ public:
   int MaxFieldPerStencil;
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+  bool run(const std::unique_ptr<iir::IIR>& iir) override;
 };
 
 } // namespace dawn

@@ -21,7 +21,7 @@
 namespace dawn {
 
 bool PassManager::runAllPassesOnStecilInstantiation(
-    const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
+    const std::unique_ptr<iir::IIR>& iir) {
   std::vector<std::string> passesRan;
 
   for(auto& pass : passes_) {
@@ -30,11 +30,11 @@ bool PassManager::runAllPassesOnStecilInstantiation(
         DiagnosticsBuilder diag(DiagnosticsKind::Error);
         diag << "invalid pass registration: optimizer pass '" << pass->getName() << "' depends on '"
              << dependency << "'";
-        instantiation->getIIR()->getDiagnostics().report(diag);
+        iir->getDiagnostics().report(diag);
         return false;
       }
 
-    if(!runPassOnStecilInstantiation(instantiation, pass.get()))
+    if(!runPassOnStecilInstantiation(iir, pass.get()))
       return false;
 
     passesRan.emplace_back(pass->getName());
@@ -42,20 +42,19 @@ bool PassManager::runAllPassesOnStecilInstantiation(
   return true;
 }
 
-bool PassManager::runPassOnStecilInstantiation(
-    const std::shared_ptr<iir::StencilInstantiation>& instantiation, Pass* pass) {
+bool PassManager::runPassOnStecilInstantiation(const std::unique_ptr<iir::IIR> &iir, Pass* pass) {
   DAWN_LOG(INFO) << "Starting " << pass->getName() << " ...";
 
-  if(!pass->run(instantiation)) {
+  if(!pass->run(iir)) {
     DAWN_LOG(WARNING) << "Done with " << pass->getName() << " : FAIL";
     return false;
   }
 
-  DAWN_ASSERT_MSG(instantiation->getIIR()->checkTreeConsistency(),
+  DAWN_ASSERT_MSG(iir->checkTreeConsistency(),
                   std::string("Tree consistency check failed for pass" + pass->getName()).c_str());
 
 #ifndef NDEBUG
-  for(const auto& stencil : instantiation->getIIR()->getChildren()) {
+  for(const auto& stencil : iir->getChildren()) {
     DAWN_ASSERT(stencil->compareDerivedInfo());
   }
 #endif

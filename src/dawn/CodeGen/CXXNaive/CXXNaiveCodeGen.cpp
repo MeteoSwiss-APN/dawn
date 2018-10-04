@@ -572,8 +572,8 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
 
   // Generate code for StencilInstantiations
   std::map<std::string, std::string> stencils;
-  for(const auto& nameStencilCtxPair : context_->getStencilInstantiationMap()) {
-    std::string code = generateStencilInstantiation(nameStencilCtxPair.second->getIIR());
+  for(const auto& nameStencilCtxPair : context_->getNameIIRMap()) {
+    std::string code = generateStencilInstantiation(nameStencilCtxPair.second);
     if(code.empty())
       return nullptr;
     stencils.emplace(nameStencilCtxPair.first, std::move(code));

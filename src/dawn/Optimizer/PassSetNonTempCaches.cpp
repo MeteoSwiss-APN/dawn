@@ -285,30 +285,30 @@ private:
 PassSetNonTempCaches::PassSetNonTempCaches() : Pass("PassSetNonTempCaches") {}
 
 bool dawn::PassSetNonTempCaches::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::unique_ptr<iir::IIR>& iir) {
 
-  for(const auto& stencilPtr : stencilInstantiation->getIIR()->getChildren()) {
+  for(const auto& stencilPtr : iir->getChildren()) {
     const iir::Stencil& stencil = *stencilPtr;
 
     std::vector<NameToImprovementMetric> allCachedFields;
-    if(stencilInstantiation->getIIR()->getOptions().UseNonTempCaches) {
+    if(iir->getOptions().UseNonTempCaches) {
       for(const auto& multiStagePtr : stencil.getChildren()) {
-        GlobalFieldCacher organizer(multiStagePtr, stencilInstantiation->getIIR());
+        GlobalFieldCacher organizer(multiStagePtr, iir);
         organizer.process();
-        if(stencilInstantiation->getIIR()->getOptions().ReportPassSetNonTempCaches) {
+        if(iir->getOptions().ReportPassSetNonTempCaches) {
           for(const auto& nametoCache : organizer.getOriginalNameToCache())
             allCachedFields.push_back(nametoCache);
         }
       }
     }
     // Output
-    if(stencilInstantiation->getIIR()->getOptions().ReportPassSetNonTempCaches) {
+    if(iir->getOptions().ReportPassSetNonTempCaches) {
       std::sort(allCachedFields.begin(), allCachedFields.end(),
                 [](const NameToImprovementMetric& lhs, const NameToImprovementMetric& rhs) {
                   return lhs.name < rhs.name;
                 });
       std::cout << "\nPASS: " << getName() << ": "
-                << stencilInstantiation->getIIR()->getMetaData()->getName() << " :";
+                << iir->getMetaData()->getName() << " :";
       for(const auto& nametoCache : allCachedFields) {
         std::cout << " Cached: " << nametoCache.name
                   << " : Type: " << nametoCache.cache.getCacheTypeAsString() << ":"

@@ -156,7 +156,7 @@ multiStageSplitterDebug() {
 } // namespace
 
 bool PassMultiStageSplitter::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::unique_ptr<iir::IIR>& iir) {
 
   std::function<void(iir::MultiStage::child_reverse_iterator_t&, iir::DependencyGraphAccesses&,
                      iir::LoopOrderKind&, iir::LoopOrderKind&, std::deque<iir::MultiStage::SplitIndex>&, int,
@@ -169,14 +169,14 @@ bool PassMultiStageSplitter::run(
     multistagesplitter = multiStageSplitterDebug();
   }
 
-  iir::DependencyGraphAccesses graph(stencilInstantiation->getIIR().get());
+  iir::DependencyGraphAccesses graph(iir.get());
   int numSplit = 0;
-  std::string StencilName = stencilInstantiation->getIIR()->getMetaData()->getName();
+  std::string StencilName = iir->getMetaData()->getName();
   std::string PassName = getName();
-  auto options = stencilInstantiation->getIIR()->getOptions();
+  auto options = iir->getOptions();
 
   // Iterate over all stages in all multistages of all stencils
-  for(const auto& stencil : stencilInstantiation->getIIR()->getChildren()) {
+  for(const auto& stencil : iir->getChildren()) {
     int multiStageIndex = 0;
 
     for(auto multiStageIt = stencil->childrenBegin(); multiStageIt != stencil->childrenEnd();
@@ -201,7 +201,7 @@ bool PassMultiStageSplitter::run(
         multistagesplitter(stageIt, graph, userSpecifiedLoopOrder, curLoopOrder, splitterIndices,
                            stageIndex, multiStageIndex, numSplit, StencilName, PassName, options);
       }
-      if(stencilInstantiation->getIIR()->getOptions().DumpSplitGraphs)
+      if(iir->getOptions().DumpSplitGraphs)
         graph.toDot(format("stmt_vd_m%i_%02i.dot", multiStageIndex, numSplit));
 
       if(!splitterIndices.empty()) {
@@ -216,8 +216,8 @@ bool PassMultiStageSplitter::run(
     }
   }
 
-  if(stencilInstantiation->getIIR()->getOptions().ReportPassMultiStageSplit && !numSplit)
-    std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
+  if(iir->getOptions().ReportPassMultiStageSplit && !numSplit)
+    std::cout << "\nPASS: " << getName() << ": " << iir->getMetaData()->getName()
               << ": no split\n";
 
   return true;

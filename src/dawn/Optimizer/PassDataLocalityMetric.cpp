@@ -303,17 +303,17 @@ std::pair<int, int> computeReadWriteAccessesMetric(const iir::IIR* internalIR,
 PassDataLocalityMetric::PassDataLocalityMetric() : Pass("PassDataLocalityMetric") {}
 
 bool PassDataLocalityMetric::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::unique_ptr<iir::IIR>& iir) {
 
-  if(stencilInstantiation->getIIR()->getOptions().ReportDataLocalityMetric) {
-    std::string title = " DataLocality - " + stencilInstantiation->getIIR()->getMetaData()->getName() + " ";
+  if(iir->getOptions().ReportDataLocalityMetric) {
+    std::string title = " DataLocality - " + iir->getMetaData()->getName() + " ";
     std::cout << std::string((51 - title.size()) / 2, '-') << title
               << std::string((51 - title.size() + 1) / 2, '-') << "\n";
 
     std::size_t perStencilNumReads = 0, perStencilNumWrites = 0;
 
     int stencilIdx = 0;
-    for(const auto& stencilPtr : stencilInstantiation->getIIR()->getChildren()) {
+    for(const auto& stencilPtr : iir->getChildren()) {
       const iir::Stencil& stencil = *stencilPtr;
 
       std::cout << "Stencil " << stencilIdx << ":\n";
@@ -325,7 +325,7 @@ bool PassDataLocalityMetric::run(
         std::cout << "  MultiStage " << multiStageIdx << ":\n";
 
         auto readAndWrite =
-            computeReadWriteAccessesMetric(stencilInstantiation->getIIR().get(), multiStage);
+            computeReadWriteAccessesMetric(iir.get(), multiStage);
 
         std::size_t numReads = readAndWrite.first, numWrites = readAndWrite.second;
 

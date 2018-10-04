@@ -28,15 +28,15 @@ PassStageReordering::PassStageReordering(ReorderStrategy::ReorderStrategyKind st
 }
 
 bool PassStageReordering::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const std::unique_ptr<iir::IIR>& iir) {
 
   std::string filenameWE =
-      getFilenameWithoutExtension(stencilInstantiation->getIIR()->getMetaData()->getFileName());
-  if(stencilInstantiation->getIIR()->getOptions().ReportPassStageReodering) {
+      getFilenameWithoutExtension(iir->getMetaData()->getFileName());
+  if(iir->getOptions().ReportPassStageReodering) {
 //        stencilInstantiation->dumpAsJson(filenameWE + "_before.json", getName());
     ///// Todo add the serializer here once this is merged
   }
-  for(const auto& stencilPtr : stencilInstantiation->getIIR()->getChildren()) {
+  for(const auto& stencilPtr : iir->getChildren()) {
     if(strategy_ == ReorderStrategy::RK_None)
       continue;
 
@@ -55,7 +55,7 @@ bool PassStageReordering::run(
     // TODO should we have Iterators so to prevent unique_ptr swaps
     auto newStencil = strategy->reorder(stencilPtr);
 
-    stencilInstantiation->getIIR()->replace(stencilPtr, newStencil, stencilInstantiation->getIIR());
+    iir->replace(stencilPtr, newStencil, iir);
 
     stencilPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
 
@@ -63,7 +63,7 @@ bool PassStageReordering::run(
       return false;
   }
 
-  if(stencilInstantiation->getIIR()->getOptions().ReportPassStageReodering) {
+  if(iir->getOptions().ReportPassStageReodering) {
     //    stencilInstantiation->dumpAsJson(filenameWE + "_after.json", getName());
     /// Todo add the serializer here once this is merged
   }

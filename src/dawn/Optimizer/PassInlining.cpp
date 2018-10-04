@@ -464,15 +464,15 @@ static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
 PassInlining::PassInlining(InlineStrategyKind strategy)
     : Pass("PassInlining", true), strategy_(strategy) {}
 
-bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+bool PassInlining::run(const std::unique_ptr<iir::IIR>& iir) {
   // Nothing to do ...
   if(strategy_ == IK_None)
     return true;
 
-  DetectInlineCandiates inliner(strategy_, stencilInstantiation->getIIR());
+  DetectInlineCandiates inliner(strategy_, iir);
 
   // Iterate all statements (top -> bottom)
-  for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {
+  for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(iir))) {
     iir::Stage& stage = *stagePtr;
     iir::DoMethod& doMethod = stage.getSingleDoMethod();
 
@@ -484,7 +484,7 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
         auto& newStmtAccList = inliner.getNewStatementAccessesPairs();
 
         // Compute the accesses of the new statements
-        computeAccesses(stencilInstantiation->getIIR().get(), newStmtAccList);
+        computeAccesses(iir.get(), newStmtAccList);
 
         // Erase the old StatementAccessPair ...
         stmtAccIt = doMethod.childrenErase(stmtAccIt);
@@ -502,7 +502,7 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
 
     stage.update(iir::NodeUpdateType::level);
   }
-  for(const auto& MSPtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {
+  for(const auto& MSPtr : iterateIIROver<iir::Stage>(*(iir))) {
     MSPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
   return true;

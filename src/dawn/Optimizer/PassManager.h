@@ -23,10 +23,6 @@
 
 namespace dawn {
 
-namespace iir {
-class StencilInstantiation;
-}
-
 /// @brief Handle registering and running of passes
 class PassManager : public NonCopyable {
   std::list<std::unique_ptr<Pass>> passes_;
@@ -47,11 +43,11 @@ public:
   /// @brief Run all passes on the `instantiation`
   /// @returns `true` on success, `false` otherwise
   bool runAllPassesOnStecilInstantiation(
-      const std::shared_ptr<iir::StencilInstantiation>& instantiation);
+      const std::unique_ptr<iir::IIR>& iir);
 
   /// @brief Run the given pass on the `instantiation`
   /// @returns `true` on success, `false` otherwise
-  bool runPassOnStecilInstantiation(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+  bool runPassOnStecilInstantiation(const std::unique_ptr<iir::IIR>& iir,
                                     Pass* pass);
 
   /// @brief Get all registered passes

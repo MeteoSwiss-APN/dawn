@@ -134,10 +134,14 @@ bool StencilMetaInformation::isGlobalVariable(const std::string& name) const {
   return it == NameToAccessIDMap_.end() ? false : isGlobalVariable(it->second);
 }
 
-// void StencilMetaInformation::insertStencilFunctionIntoSIR(
-//    const std::shared_ptr<sir::StencilFunction>& sirStencilFunction) {
-//  SIR_->StencilFunctions.push_back(sirStencilFunction);
-//}
+void StencilMetaInformation::insertStencilFunctionIntoSIR(
+    const std::shared_ptr<sir::StencilFunction>& sirStencilFunction) {
+  //  SIR_->StencilFunctions.push_back(sirStencilFunction);
+  std::cout << "\n\n\nTHIS IS NOT IMPLEMENTED YET\n We need to properly do the SIR SF to SFI in "
+               "passtemporarytoSFT\n\n\n"
+            << std::endl;
+  DAWN_ASSERT(false);
+}
 
 bool StencilMetaInformation::insertBoundaryConditions(
     std::string originalFieldName, std::shared_ptr<BoundaryConditionDeclStmt> bc) {
@@ -506,8 +510,6 @@ StencilMetaInformation::VariableVersions& StencilMetaInformation::getVariableVer
 }
 
 std::string StencilMetaInformation::getFileName() { return fileName_; }
-
-
 
 } // namespace iir
 } // namespace dawn

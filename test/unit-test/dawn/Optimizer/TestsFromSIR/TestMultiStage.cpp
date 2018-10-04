@@ -35,7 +35,7 @@ protected:
   MultiStageTest() : compiler_(compileOptions_.get()) {}
   virtual void SetUp() {}
 
-  std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename,
+  std::unique_ptr<iir::IIR> loadTest(std::string sirFilename,
                                                       std::string stencilName) {
 
     std::string filename = TestEnvironment::path_ + "/" + sirFilename;
@@ -55,10 +55,10 @@ protected:
       throw std::runtime_error("compilation failed");
     }
 
-    DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count(stencilName)),
+    DAWN_ASSERT_MSG((optimizer->getNameIIRMap().count(stencilName)),
                     "compute_extent_test_stencil not found in sir");
 
-    return optimizer->getStencilInstantiationMap()[stencilName];
+    return optimizer->getNameIIRMap()[stencilName]->clone();
   }
 };
 
@@ -138,8 +138,8 @@ TEST_F(MultiStageTest, test_compute_ordered_do_methods) {
   //      }
   //    }
 
-  auto stencilInstantiation = loadTest("test_compute_ordered_do_methods.sir", "stencil");
-  const auto& stencils = stencilInstantiation->getStencils();
+  auto iir = loadTest("test_compute_ordered_do_methods.sir", "stencil");
+  const auto& stencils = iir->getChildren();
   EXPECT_EQ(stencils.size(), 1);
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
@@ -230,8 +230,8 @@ TEST_F(MultiStageTest, test_compute_read_access_interval) {
   //      }
   //    }
 
-  auto stencilInstantiation = loadTest("test_compute_read_access_interval.sir", "stencil");
-  const auto& stencils = stencilInstantiation->getStencils();
+  auto iir = loadTest("test_compute_read_access_interval.sir", "stencil");
+  const auto& stencils = iir->getChildren();
   EXPECT_EQ(stencils.size(), 1);
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
@@ -239,7 +239,7 @@ TEST_F(MultiStageTest, test_compute_read_access_interval) {
 
   auto const& mss = *stencil->childrenBegin();
 
-  int accessID = stencilInstantiation->getAccessIDFromName("tmp");
+  int accessID = iir->getMetaData()->getAccessIDFromName("tmp");
   auto interval = mss->computeReadAccessInterval(accessID);
 
   EXPECT_EQ(interval, (iir::MultiInterval{iir::Interval{0, 1}}));
@@ -299,8 +299,8 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_02) {
   //      }
   //    }
 
-  auto stencilInstantiation = loadTest("test_compute_read_access_interval_02.sir", "stencil");
-  const auto& stencils = stencilInstantiation->getStencils();
+  auto iir = loadTest("test_compute_read_access_interval_02.sir", "stencil");
+  const auto& stencils = iir->getChildren();
   EXPECT_EQ(stencils.size(), 1);
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
@@ -308,7 +308,7 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_02) {
 
   auto const& mss = *stencil->childrenBegin();
 
-  int accessID = stencilInstantiation->getAccessIDFromName("tmp");
+  int accessID = iir->getMetaData()->getAccessIDFromName("tmp");
   auto interval = mss->computeReadAccessInterval(accessID);
 
   EXPECT_EQ(interval,
@@ -364,9 +364,9 @@ TEST_F(MultiStageTest, test_field_access_interval_04) {
   //      }
   //    }
 
-  auto stencilInstantiation =
+  auto iir =
       loadTest("test_field_access_interval_04.sir", "compute_extent_test_stencil");
-  const auto& stencils = stencilInstantiation->getStencils();
+  const auto& stencils = iir->getChildren();
   EXPECT_EQ(stencils.size(), 1);
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
@@ -374,7 +374,7 @@ TEST_F(MultiStageTest, test_field_access_interval_04) {
 
   auto const& mss = *stencil->childrenBegin();
 
-  int accessID = stencilInstantiation->getAccessIDFromName("u");
+  int accessID = iir->getMetaData()->getAccessIDFromName("u");
   auto interval = mss->computeReadAccessInterval(accessID);
 
   EXPECT_EQ(interval, (iir::MultiInterval{iir::Interval{4, 14}}));
@@ -443,8 +443,8 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_03) {
   //      }
   //    }
 
-  auto stencilInstantiation = loadTest("test_compute_read_access_interval_03.sir", "stencil");
-  const auto& stencils = stencilInstantiation->getStencils();
+  auto iir = loadTest("test_compute_read_access_interval_03.sir", "stencil");
+  const auto& stencils = iir->getChildren();
   EXPECT_EQ(stencils.size(), 1);
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
@@ -453,7 +453,7 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_03) {
   auto const mss0it = stencil->childrenBegin();
   auto const& mss0 = *mss0it;
 
-  int accessID = stencilInstantiation->getAccessIDFromName("tmp");
+  int accessID = iir->getMetaData()->getAccessIDFromName("tmp");
   auto interval0 = mss0->computeReadAccessInterval(accessID);
 
   EXPECT_EQ(interval0, (iir::MultiInterval{iir::Interval{1, sir::Interval::End - 1}}));
@@ -559,8 +559,8 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_04) {
   //  }
   //}
 
-  auto stencilInstantiation = loadTest("test_compute_read_access_interval_04.sir", "stencil");
-  const auto& stencils = stencilInstantiation->getStencils();
+  auto iir = loadTest("test_compute_read_access_interval_04.sir", "stencil");
+  const auto& stencils = iir->getChildren();
   EXPECT_EQ(stencils.size(), 1);
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
@@ -569,7 +569,7 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_04) {
   auto const mss0it = stencil->childrenBegin();
   auto const& mss0 = *(mss0it);
 
-  int accessID = stencilInstantiation->getAccessIDFromName("tmp");
+  int accessID = iir->getMetaData()->getAccessIDFromName("tmp");
   auto interval0 = mss0->computeReadAccessInterval(accessID);
 
   auto const mss1it = std::next(mss0it);

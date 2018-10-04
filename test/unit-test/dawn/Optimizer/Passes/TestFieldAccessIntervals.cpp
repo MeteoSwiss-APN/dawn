@@ -34,7 +34,7 @@ protected:
   TestFieldAccessIntervals() : compiler_(compileOptions_.get()) {}
   virtual void SetUp() {}
 
-  std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename) {
+  std::unique_ptr<iir::IIR> loadTest(std::string sirFilename) {
 
     std::string filename = TestEnvironment::path_ + "/" + sirFilename;
     std::ifstream file(filename);
@@ -53,16 +53,16 @@ protected:
       throw std::runtime_error("compilation failed");
     }
 
-    DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("compute_extent_test_stencil")),
+    DAWN_ASSERT_MSG((optimizer->getNameIIRMap().count("compute_extent_test_stencil")),
                     "compute_extent_test_stencil not found in sir");
 
-    return optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"];
+    return optimizer->getNameIIRMap()["compute_extent_test_stencil"]->clone();
   }
 };
 
 TEST_F(TestFieldAccessIntervals, test_field_access_interval_01) {
-  auto stencilInstantiation = loadTest("test_field_access_interval_01.sir");
-  const auto& stencils = stencilInstantiation->getStencils();
+  auto iir = loadTest("test_field_access_interval_01.sir");
+  const auto& stencils = iir->getChildren();
   EXPECT_EQ(stencils.size(), 1);
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
@@ -87,8 +87,8 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_01) {
 }
 
 TEST_F(TestFieldAccessIntervals, test_field_access_interval_02) {
-  auto stencilInstantiation = loadTest("test_field_access_interval_02.sir");
-  const auto& stencils = stencilInstantiation->getStencils();
+  auto iir = loadTest("test_field_access_interval_02.sir");
+  const auto& stencils = iir->getChildren();
   EXPECT_EQ(stencils.size(), 1);
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
@@ -116,8 +116,8 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_02) {
 }
 
 TEST_F(TestFieldAccessIntervals, test_field_access_interval_03) {
-  auto stencilInstantiation = loadTest("test_field_access_interval_03.sir");
-  const auto& stencils = stencilInstantiation->getStencils();
+  auto iir = loadTest("test_field_access_interval_03.sir");
+  const auto& stencils = iir->getChildren();
   EXPECT_EQ(stencils.size(), 1);
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
@@ -147,8 +147,8 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_03) {
 }
 
 TEST_F(TestFieldAccessIntervals, test_field_access_interval_04) {
-  auto stencilInstantiation = loadTest("test_field_access_interval_04.sir");
-  const auto& stencils = stencilInstantiation->getStencils();
+  auto iir = loadTest("test_field_access_interval_04.sir");
+  const auto& stencils = iir->getChildren();
   EXPECT_EQ(stencils.size(), 1);
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
@@ -163,8 +163,8 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_04) {
 }
 
 TEST_F(TestFieldAccessIntervals, test_field_access_interval_05) {
-  auto stencilInstantiation = loadTest("test_field_access_interval_05.sir");
-  const auto& stencils = stencilInstantiation->getStencils();
+  auto iir = loadTest("test_field_access_interval_05.sir");
+  const auto& stencils = iir->getChildren();
   EXPECT_EQ(stencils.size(), 1);
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 

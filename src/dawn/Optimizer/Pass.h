@@ -22,7 +22,7 @@
 namespace dawn {
 
 namespace iir {
-class StencilInstantiation;
+class IIR;
 }
 
 /// @brief Abstract base class of all optimization and analyzer passes
@@ -52,7 +52,7 @@ public:
 
   /// @brief Run the the Pass
   /// @returns `true` on success, `false` otherwise
-  virtual bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) = 0;
+  virtual bool run(const std::unique_ptr<iir::IIR>& iir) = 0;
 
   /// @brief Get the name of the Pass
   const std::string& getName() const { return name_; }

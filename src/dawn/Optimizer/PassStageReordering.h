@@ -32,7 +32,7 @@ public:
   PassStageReordering(ReorderStrategy::ReorderStrategyKind strategy);
 
   /// @brief Pass implementation
-  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+  bool run(const std::unique_ptr<iir::IIR>& iir) override;
 
 private:
   ReorderStrategy::ReorderStrategyKind strategy_;

@@ -26,27 +26,27 @@ PassStageMerger::PassStageMerger() : Pass("PassStageMerger") {
   dependencies_.push_back("PassSetStageGraph");
 }
 
-bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+bool PassStageMerger::run(const std::unique_ptr<iir::IIR>& iir) {
   // Do we need to run this Pass?
   bool stencilNeedsMergePass = false;
-  for(const auto& stencilPtr : stencilInstantiation->getIIR()->getChildren())
+  for(const auto& stencilPtr : iir->getChildren())
     stencilNeedsMergePass |= stencilPtr->stencilAttributes.hasOneOf(sir::Attr::AK_MergeStages,
                                                                     sir::Attr::AK_MergeDoMethods);
 
-  bool MergeStages = stencilInstantiation->getIIR()->getOptions().MergeStages;
-  bool MergeDoMethods = stencilInstantiation->getIIR()->getOptions().MergeDoMethods;
+  bool MergeStages = iir->getOptions().MergeStages;
+  bool MergeDoMethods = iir->getOptions().MergeDoMethods;
 
   // ... Nope
   if(!MergeStages && !MergeDoMethods && !stencilNeedsMergePass)
     return true;
 
   std::string filenameWE =
-      getFilenameWithoutExtension(stencilInstantiation->getIIR()->getMetaData()->getFileName());
-  if(stencilInstantiation->getIIR()->getOptions().ReportPassStageMerger) {
+      getFilenameWithoutExtension(iir->getMetaData()->getFileName());
+  if(iir->getOptions().ReportPassStageMerger) {
     //    stencilInstantiation->dumpAsJson(filenameWE + "_before.json", getName());
     /// Todo add the serializer here once this is merged
   }
-  for(const auto& stencilPtr : stencilInstantiation->getIIR()->getChildren()) {
+  for(const auto& stencilPtr : iir->getChildren()) {
     iir::Stencil& stencil = *stencilPtr;
 
     // Do we need to run the analysis for thist stencil?
@@ -121,7 +121,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
                 auto& curDepGraph = curDoMethod.getDependencyGraph();
 
                 auto newDepGraph = std::make_shared<iir::DependencyGraphAccesses>(
-                    stencilInstantiation->getIIR().get(), candiateDepGraph, curDepGraph);
+                    iir.get(), candiateDepGraph, curDepGraph);
 
                 if(newDepGraph->isDAG() &&
                    !hasHorizontalReadBeforeWriteConflict(newDepGraph.get())) {
@@ -176,7 +176,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
     }
   }
 
-  if(stencilInstantiation->getIIR()->getOptions().ReportPassStageMerger) {
+  if(iir->getOptions().ReportPassStageMerger) {
     //    stencilInstantiation->dumpAsJson(filenameWE + "_after.json", getName());
     /// Todo add the serializer here once this is merged
   }

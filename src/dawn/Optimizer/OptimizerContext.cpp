@@ -640,7 +640,6 @@ bool OptimizerContext::fillIIRFromSIR(std::unique_ptr<iir::IIR>& iir,
                                                                        field->fieldDimensions);
   }
 
-
   StencilDescStatementMapper stencilDeclMapper(iir, SIRStencil.get(), fullSIR);
 
   //  // We need to operate on a copy of the AST as we may modify the nodes inplace
@@ -651,11 +650,9 @@ bool OptimizerContext::fillIIRFromSIR(std::unique_ptr<iir::IIR>& iir,
   //  inserted
   stencilDeclMapper.cleanupStencilDeclAST();
 
-
   //  // Repair broken references to temporaries i.e promote them to real fields
   std::cout << "iir->getChildren().size() :" << iir->getChildren().size() << std::endl;
   PassTemporaryType::fixTemporariesSpanningMultipleStencils(iir.get(), iir->getChildren());
-
 
   if(iir->getOptions().ReportAccesses) {
     // WITTODO: reenable this
@@ -673,14 +670,22 @@ bool OptimizerContext::fillIIRFromSIR(std::unique_ptr<iir::IIR>& iir,
   return true;
 }
 
-std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
-OptimizerContext::getStencilInstantiationMap() {
-  return stencilInstantiationMap_;
+// std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
+// OptimizerContext::getStencilInstantiationMap() {
+//  return stencilInstantiationMap_;
+//}
+
+// const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
+// OptimizerContext::getStencilInstantiationMap() const {
+//  return stencilInstantiationMap_;
+//}
+
+std::map<std::string, std::unique_ptr<iir::IIR>>& OptimizerContext::getNameIIRMap() {
+  return stencilNameToIIRMap_;
 }
 
-const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
-OptimizerContext::getStencilInstantiationMap() const {
-  return stencilInstantiationMap_;
+const std::map<std::string, std::unique_ptr<iir::IIR>>& OptimizerContext::getNameIIRMap() const {
+  return stencilNameToIIRMap_;
 }
 
 const DiagnosticsEngine& OptimizerContext::getDiagnostics() const { return diagnostics_; }

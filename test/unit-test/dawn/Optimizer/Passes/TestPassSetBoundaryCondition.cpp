@@ -34,12 +34,11 @@ protected:
   StencilSplitAnalyzer() : compiler_(compileOptions_.get()) {}
   virtual void SetUp() {}
 
-  std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename, bool splitStencils) {
+  std::unique_ptr<iir::IIR> loadTest(std::string sirFilename, bool splitStencils) {
     return loadTest(sirFilename, splitStencils, -1);
   }
 
-  std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename, bool splitStencils,
-                                                      int maxfields) {
+  std::unique_ptr<iir::IIR> loadTest(std::string sirFilename, bool splitStencils, int maxfields) {
     std::string filename = TestEnvironment::path_ + "/" + sirFilename;
     std::ifstream file(filename);
     DAWN_ASSERT_MSG((file.good()), std::string("File " + filename + " does not exists").c_str());
@@ -65,9 +64,9 @@ protected:
       throw std::runtime_error("compilation failed");
     }
 
-    DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("SplitStencil")),
+    DAWN_ASSERT_MSG((optimizer->getNameIIRMap().count("SplitStencil")),
                     "SplitStencil not found in sir");
-    return std::move(optimizer->getStencilInstantiationMap()["SplitStencil"]);
+    return optimizer->getNameIIRMap()["SplitStencil"]->clone();
   }
 };
 
@@ -88,11 +87,10 @@ private:
 };
 
 TEST_F(StencilSplitAnalyzer, test_no_bc_inserted) {
-  std::shared_ptr<iir::StencilInstantiation> test =
-      loadTest("boundary_condition_test_stencil_01.sir", false);
-  ASSERT_TRUE((test->getBoundaryConditions().size() == 1));
+  auto test = loadTest("boundary_condition_test_stencil_01.sir", false);
+  ASSERT_TRUE((test->getMetaData()->getBoundaryConditions().size() == 1));
   BCFinder myvisitor;
-  for(const auto& stmt : test->getStencilDescStatements()) {
+  for(const auto& stmt : test->getMetaData()->getStencilDescStatements()) {
     stmt->ASTStmt->accept(myvisitor);
   }
   ASSERT_TRUE((myvisitor.reportBCsFound() == 0));
@@ -100,37 +98,36 @@ TEST_F(StencilSplitAnalyzer, test_no_bc_inserted) {
 
 // An unused BC has no extents to it
 TEST_F(StencilSplitAnalyzer, test_unused_bc) {
-  std::shared_ptr<iir::StencilInstantiation> test =
-      loadTest("boundary_condition_test_stencil_02.sir", false);
-  ASSERT_TRUE(test->getBoundaryConditions().count("out"));
-  auto bc = test->getBoundaryConditions().find("out")->second;
-  ASSERT_TRUE((test->getBoundaryConditionToExtentsMap().count(bc) == 0));
+  auto test = loadTest("boundary_condition_test_stencil_02.sir", false);
+  ASSERT_TRUE(test->getMetaData()->getBoundaryConditions().count("out"));
+  auto bc = test->getMetaData()->getBoundaryConditions().find("out")->second;
+  ASSERT_TRUE((test->getMetaData()->getBoundaryConditionToExtentsMap().count(bc) == 0));
 }
 
 TEST_F(StencilSplitAnalyzer, test_bc_extent_calc) {
-  std::shared_ptr<iir::StencilInstantiation> test =
-      loadTest("boundary_condition_test_stencil_01.sir", true, 2);
-  ASSERT_TRUE((test->getBoundaryConditions().size() == 1));
+  auto test = loadTest("boundary_condition_test_stencil_01.sir", true, 2);
+  ASSERT_TRUE((test->getMetaData()->getBoundaryConditions().size() == 1));
   BCFinder myvisitor;
-  for(const auto& stmt : test->getStencilDescStatements()) {
+  for(const auto& stmt : test->getMetaData()->getStencilDescStatements()) {
     stmt->ASTStmt->accept(myvisitor);
   }
   ASSERT_TRUE((myvisitor.reportBCsFound() == 1));
-  ASSERT_TRUE(test->getBoundaryConditions().count("intermediate"));
-  auto bc = test->getBoundaryConditions().find("intermediate")->second;
-  ASSERT_TRUE((test->getBoundaryConditionToExtentsMap().at(bc) == iir::Extents{-1, 1, 0, 0, 0, 0}));
+  ASSERT_TRUE(test->getMetaData()->getBoundaryConditions().count("intermediate"));
+  auto bc = test->getMetaData()->getBoundaryConditions().find("intermediate")->second;
+  ASSERT_TRUE((test->getMetaData()->getBoundaryConditionToExtentsMap().at(bc) ==
+               iir::Extents{-1, 1, 0, 0, 0, 0}));
 }
 
 TEST_F(StencilSplitAnalyzer, test_two_bc) {
-  std::shared_ptr<iir::StencilInstantiation> test =
-      loadTest("boundary_condition_test_stencil_03.sir", true, 2);
-  ASSERT_TRUE((test->getBoundaryConditions().size() == 2));
-  ASSERT_TRUE(test->getBoundaryConditions().count("intermediate"));
-  auto bcfoo = test->getBoundaryConditions().find("intermediate")->second;
-  ASSERT_TRUE((test->getBoundaryConditionToExtentsMap().at(bcfoo) == iir::Extents{-1, 1, 0, 0, 0, 0}));
-  ASSERT_TRUE(test->getBoundaryConditions().count("out"));
-  auto bcbar = test->getBoundaryConditions().find("out")->second;
-  ASSERT_TRUE((test->getBoundaryConditionToExtentsMap().count(bcbar) == 0));
+  auto test = loadTest("boundary_condition_test_stencil_03.sir", true, 2);
+  ASSERT_TRUE((test->getMetaData()->getBoundaryConditions().size() == 2));
+  ASSERT_TRUE(test->getMetaData()->getBoundaryConditions().count("intermediate"));
+  auto bcfoo = test->getMetaData()->getBoundaryConditions().find("intermediate")->second;
+  ASSERT_TRUE((test->getMetaData()->getBoundaryConditionToExtentsMap().at(bcfoo) ==
+               iir::Extents{-1, 1, 0, 0, 0, 0}));
+  ASSERT_TRUE(test->getMetaData()->getBoundaryConditions().count("out"));
+  auto bcbar = test->getMetaData()->getBoundaryConditions().find("out")->second;
+  ASSERT_TRUE((test->getMetaData()->getBoundaryConditionToExtentsMap().count(bcbar) == 0));
 }
 
 } // anonymous namespace

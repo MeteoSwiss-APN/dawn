@@ -24,17 +24,17 @@ namespace dawn {
 
 PassSSA::PassSSA() : Pass("PassSSA") {}
 
-bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+bool PassSSA::run(const std::unique_ptr<iir::IIR>& iir) {
   //  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
-  if(!stencilInstantiation->getIIR()->getOptions().SSA)
+  if(!iir->getOptions().SSA)
     return true;
 
-  for(const auto& stencilPtr : stencilInstantiation->getIIR()->getChildren()) {
+  for(const auto& stencilPtr : iir->getChildren()) {
     iir::Stencil& stencil = *stencilPtr;
 
     std::shared_ptr<iir::DependencyGraphAccesses> DAG =
-        std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation->getIIR().get());
+        std::make_shared<iir::DependencyGraphAccesses>(iir.get());
 
     std::unordered_set<int> tochedAccessIDs;
 
@@ -76,7 +76,7 @@ bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInsta
 
         for(int AccessID : AccessIDsToRename)
           tochedAccessIDs.insert(createVersionAndRename(
-              stencilInstantiation->getIIR().get(), AccessID, &stencil, stageIdx, stmtIdx,
+              iir.get(), AccessID, &stencil, stageIdx, stmtIdx,
               assignment->getLeft(), RenameDirection::RD_Below));
 
         DAG->insertStatementAccessesPair(stmtAccessesPair);

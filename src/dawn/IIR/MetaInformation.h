@@ -488,6 +488,8 @@ public:
   std::unordered_map<std::shared_ptr<StencilFunctionInstantiation>,
                      StencilFunctionInstantiationCandidate>&
   getStencilFunInstantiationCandidate();
+
+  void insertStencilFunctionIntoSIR(const std::shared_ptr<sir::StencilFunction> &sirStencilFunction);
 };
 } // namespace iir
 } // namespace dawn

@@ -96,7 +96,7 @@ struct Temporary {
 
 PassTemporaryType::PassTemporaryType() : Pass("PassTemporaryType", true) {}
 
-bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
+bool PassTemporaryType::run(const std::unique_ptr<iir::IIR>& iir) {
 
   report_.clear();
   std::unordered_map<int, Temporary> temporaries;
@@ -105,7 +105,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
   // Fix temporaries which span over multiple stencils and promote them to 3D allocated fields
 
   // Fix the temporaries within the same stencil
-  for(const auto& stencilPtr : instantiation->getIIR()->getChildren() /* getStencils()*/) {
+  for(const auto& stencilPtr : iir->getChildren() /* getStencils()*/) {
     temporaries.clear();
     AccessIDs.clear();
 
@@ -119,10 +119,10 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
 
           // Is it a temporary?
           bool isTemporaryField =
-              instantiation->getIIR()->getMetaData()->isTemporaryField(AccessID);
+              iir->getMetaData()->isTemporaryField(AccessID);
           if(isTemporaryField ||
-             (!instantiation->getIIR()->getMetaData()->isGlobalVariable(AccessID) &&
-              instantiation->getIIR()->getMetaData()->isVariable(AccessID))) {
+             (!iir->getMetaData()->isGlobalVariable(AccessID) &&
+              iir->getMetaData()->isVariable(AccessID))) {
 
             auto it = temporaries.find(AccessID);
             if(it != temporaries.end()) {
@@ -158,19 +158,19 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
 
       auto report = [&](const char* action) {
         std::cout << "\nPASS: " << getName() << ": "
-                  << instantiation->getIIR()->getMetaData()->getName() << ": " << action << ":"
-                  << getOriginalNameFromAccessID(AccessID, instantiation->getIIR()) << std::endl;
+                  << iir->getMetaData()->getName() << ": " << action << ":"
+                  << getOriginalNameFromAccessID(AccessID, iir) << std::endl;
       };
 
       if(temporary.Type == Temporary::TT_LocalVariable) {
         // If the variable is accessed in multiple Do-Methods, we need to promote it to a field!
         if(!temporary.Lifetime.Begin.inSameDoMethod(temporary.Lifetime.End)) {
 
-          if(instantiation->getIIR()->getOptions().ReportPassTemporaryType)
+          if(iir->getOptions().ReportPassTemporaryType)
             report("promote");
 
           report_.push_back(Report{AccessID, TmpActionMod::promote});
-          promoteLocalVariableToTemporaryField(instantiation->getIIR().get(), stencilPtr.get(),
+          promoteLocalVariableToTemporaryField(iir.get(), stencilPtr.get(),
                                                AccessID, temporary.Lifetime);
         }
       } else {
@@ -179,11 +179,11 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
         if(temporary.Lifetime.Begin.inSameDoMethod(temporary.Lifetime.End) &&
            temporary.Extent.isPointwise() && !usedAsArgumentInStencilFun(stencilPtr, AccessID)) {
 
-          if(instantiation->getIIR()->getOptions().ReportPassTemporaryType)
+          if(iir->getOptions().ReportPassTemporaryType)
             report("demote");
 
           report_.push_back(Report{AccessID, TmpActionMod::demote});
-          demoteTemporaryFieldToLocalVariable(instantiation->getIIR().get(), stencilPtr.get(),
+          demoteTemporaryFieldToLocalVariable(iir.get(), stencilPtr.get(),
                                               AccessID, temporary.Lifetime);
         }
       }

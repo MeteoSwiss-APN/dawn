@@ -35,7 +35,7 @@ protected:
   TestComputeMaximumExtent() : compiler_(compileOptions_.get()) {}
   virtual void SetUp() {}
 
-  std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename) {
+  std::unique_ptr<iir::IIR> loadTest(std::string sirFilename) {
 
     std::string filename = TestEnvironment::path_ + "/" + sirFilename;
     std::ifstream file(filename);
@@ -54,16 +54,16 @@ protected:
       throw std::runtime_error("compilation failed");
     }
 
-    DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("compute_extent_test_stencil")),
+    DAWN_ASSERT_MSG((optimizer->getNameIIRMap().count("compute_extent_test_stencil")),
                     "compute_extent_test_stencil not found in sir");
 
-    return optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"];
+    return optimizer->getNameIIRMap()["compute_extent_test_stencil"]->clone();
   }
 };
 
 TEST_F(TestComputeMaximumExtent, test_field_access_interval_02) {
-  auto stencilInstantiation = loadTest("test_field_access_interval_02.sir");
-  const auto& stencils = stencilInstantiation->getStencils();
+  auto iir = loadTest("test_field_access_interval_02.sir");
+  const auto& stencils = iir->getChildren();
   ASSERT_TRUE((stencils.size() == 1));
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
@@ -85,16 +85,16 @@ TEST_F(TestComputeMaximumExtent, test_field_access_interval_02) {
   ASSERT_TRUE((doMethod1->getChildren().size() == 1));
   const auto& stmtAccessPair = doMethod1->getChildren()[0];
   ASSERT_TRUE((stmtAccessPair->computeMaximumExtents(
-                   stencilInstantiation->getAccessIDFromName("u")) == iir::Extents{-1, 1, -1, 1, 0, 0}));
+                   iir->getMetaData()->getAccessIDFromName("u")) == iir::Extents{-1, 1, -1, 1, 0, 0}));
 
   EXPECT_EQ(
-      stmtAccessPair->computeMaximumExtents(stencilInstantiation->getAccessIDFromName("coeff")),
+      stmtAccessPair->computeMaximumExtents(iir->getMetaData()->getAccessIDFromName("coeff")),
       (iir::Extents{0, 0, 0, 0, 1, 1}));
 }
 
 TEST_F(TestComputeMaximumExtent, test_compute_maximum_extent_01) {
-  auto stencilInstantiation = loadTest("test_compute_maximum_extent_01.sir");
-  const auto& stencils = stencilInstantiation->getStencils();
+  auto iir = loadTest("test_compute_maximum_extent_01.sir");
+  const auto& stencils = iir->getChildren();
 
   ASSERT_TRUE((stencils.size() == 1));
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
@@ -111,7 +111,7 @@ TEST_F(TestComputeMaximumExtent, test_compute_maximum_extent_01) {
 
   const auto& doMethod1 = stage1->getSingleDoMethod();
 
-  ASSERT_TRUE((doMethod1.computeMaximumExtents(stencilInstantiation->getAccessIDFromName("u")) ==
+  ASSERT_TRUE((doMethod1.computeMaximumExtents(iir->getMetaData()->getAccessIDFromName("u")) ==
                iir::Extents{0, 1, -1, 0, 0, 2}));
 }
 

@@ -48,10 +48,10 @@ class OptimizerContext : NonCopyable {
   Options& options_;
 
   const std::shared_ptr<SIR> SIR_;
-  // this will become obsolete
-  //{
-  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiationMap_;
-  //}
+  //  // this will become obsolete
+  //  //{
+  //  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiationMap_;
+  //  //}
   std::map<std::string, std::unique_ptr<iir::IIR>> stencilNameToIIRMap_;
   PassManager passManager_;
   HardwareConfig hardwareConfiguration_;
@@ -61,10 +61,15 @@ public:
   OptimizerContext(DiagnosticsEngine& diagnostics, Options& options,
                    const std::shared_ptr<SIR>& SIR);
 
-  /// @brief Get StencilInstantiation map
-  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& getStencilInstantiationMap();
-  const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
-  getStencilInstantiationMap() const;
+  //  /// @brief Get StencilInstantiation map
+  //  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
+  //  getStencilInstantiationMap();
+  //  const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
+  //  getStencilInstantiationMap() const;
+
+  /// @brief Get the IIR map
+  const std::map<std::__cxx11::string, std::unique_ptr<iir::IIR>>& getNameIIRMap() const;
+  std::map<std::__cxx11::string, std::unique_ptr<iir::IIR>>& getNameIIRMap();
 
   /// @brief Check if there are errors
   bool hasErrors() const { return getDiagnostics().hasErrors(); }

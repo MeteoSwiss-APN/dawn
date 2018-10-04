@@ -24,23 +24,23 @@ PassPrintStencilGraph::PassPrintStencilGraph() : Pass("PassPrintStencilGraph") {
 }
 
 bool PassPrintStencilGraph::run(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  if(!stencilInstantiation->getIIR()->getOptions().DumpStencilGraph)
+    const std::unique_ptr<iir::IIR>& iir) {
+  if(!iir->getOptions().DumpStencilGraph)
     return true;
 
   int stencilIdx = 0;
-  for(const auto& stencilPtr : stencilInstantiation->getIIR()->getChildren()) {
+  for(const auto& stencilPtr : iir->getChildren()) {
     iir::Stencil& stencil = *stencilPtr;
-    auto DAG = std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation->getIIR().get());
+    auto DAG = std::make_shared<iir::DependencyGraphAccesses>(iir.get());
 
     // Merge all stages into a single DAG
     int numStages = stencil.getNumStages();
     for(int i = 0; i < numStages; ++i)
       DAG->merge(stencil.getStage(i)->getSingleDoMethod().getDependencyGraph().get());
 
-    DAG->toDot("stencil_" + stencilInstantiation->getIIR()->getMetaData()->getName() + "_s" +
+    DAG->toDot("stencil_" + iir->getMetaData()->getName() + "_s" +
                std::to_string(stencilIdx) + ".dot");
-    DAG->toJSON("stencil_" + stencilInstantiation->getIIR()->getMetaData()->getName() + "_s" +
+    DAG->toJSON("stencil_" + iir->getMetaData()->getName() + "_s" +
                 std::to_string(stencilIdx) + ".json");
 
     stencilIdx++;

@@ -1094,8 +1094,8 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
 
   // Generate StencilInstantiations
   std::map<std::string, std::string> stencils;
-  for(const auto& nameStencilCtxPair : context_->getStencilInstantiationMap()) {
-    std::string code = generateStencilInstantiation(nameStencilCtxPair.second->getIIR());
+  for(const auto& nameStencilCtxPair : context_->getNameIIRMap()) {
+    std::string code = generateStencilInstantiation(nameStencilCtxPair.second);
 
     if(code.empty())
       return nullptr;
@@ -1127,9 +1127,9 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   CodeGen::addMplIfdefs(ppDefines, mplContainerMaxSize_, context_->getOptions().MaxHaloPoints);
 
   BCFinder finder;
-  for(const auto& stencilInstantiation : context_->getStencilInstantiationMap()) {
+  for(const auto& iir : context_->getNameIIRMap()) {
     for(const auto& stmt :
-        stencilInstantiation.second->getIIR()->getMetaData()->getStencilDescStatements()) {
+        iir.second->getMetaData()->getStencilDescStatements()) {
       stmt->ASTStmt->accept(finder);
     }
   }

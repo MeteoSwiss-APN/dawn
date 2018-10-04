@@ -35,7 +35,7 @@ protected:
   }
   virtual void SetUp() {}
 
-  std::shared_ptr<iir::StencilInstantiation> loadTest(std::string sirFilename) {
+  std::unique_ptr<iir::IIR> loadTest(std::string sirFilename) {
 
     std::string filename = TestEnvironment::path_ + "/" + sirFilename;
     std::ifstream file(filename);
@@ -54,7 +54,7 @@ protected:
       throw std::runtime_error("compilation failed");
     }
 
-    DAWN_ASSERT_MSG((optimizer->getStencilInstantiationMap().count("compute_extent_test_stencil")),
+    DAWN_ASSERT_MSG((optimizer->getNameIIRMap().count("compute_extent_test_stencil")),
                     "compute_extent_test_stencil not found in sir");
 
     // Generate code
@@ -69,7 +69,7 @@ protected:
 
     DAWN_ASSERT(translationUnit);
 
-    return optimizer->getStencilInstantiationMap()["compute_extent_test_stencil"];
+    return optimizer->getNameIIRMap()["compute_extent_test_stencil"]->clone();
   }
 };
 
