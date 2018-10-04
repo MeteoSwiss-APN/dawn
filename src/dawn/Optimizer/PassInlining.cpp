@@ -116,7 +116,7 @@ public:
       // We are *not* called within an arugment list of a stencil function, meaning we can store the
       // return value in a local variable.
       int AccessID = iir_->getMetaData()->nextUID();
-      auto returnVarName = iir::StencilInstantiation::makeLocalVariablename(
+      auto returnVarName = iir::StencilMetaInformation::makeLocalVariablename(
           curStencilFunctioninstantiation_->getName(), AccessID);
 
       newExpr_ = std::make_shared<VarAccessExpr>(returnVarName);
@@ -134,7 +134,7 @@ public:
     } else {
       // We are called within an arugment list of a stencil function, we thus need to store the
       // return value in temporary storage (we only land here if we do precomputations).
-      auto returnFieldName = iir::StencilInstantiation::makeTemporaryFieldname(
+      auto returnFieldName = iir::StencilMetaInformation::makeTemporaryFieldname(
           curStencilFunctioninstantiation_->getName(), AccessIDOfCaller_);
 
       newExpr_ = std::make_shared<FieldAccessExpr>(returnFieldName);
@@ -308,7 +308,8 @@ public:
 /// @brief Detect inline candidates
 class DetectInlineCandiates : public ASTVisitorForwarding {
   PassInlining::InlineStrategyKind strategy_;
-  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
+//  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
+  const std::unique_ptr<iir::IIR>& iir_;
 
   /// The statement we are currently analyzing
   std::unique_ptr<iir::StatementAccessesPair> oldStmtAccessesPair_;
@@ -337,8 +338,8 @@ public:
   using Base = ASTVisitorForwarding;
 
   DetectInlineCandiates(PassInlining::InlineStrategyKind strategy,
-                        const std::shared_ptr<iir::StencilInstantiation>& instantiation)
-      : strategy_(strategy), instantiation_(instantiation), inlineCandiatesFound_(false) {}
+                        const std::unique_ptr<iir::IIR>& iir)
+      : strategy_(strategy), iir_(iir), inlineCandiatesFound_(false) {}
 
   /// @brief Process the given statement
   void processStatment(const std::unique_ptr<iir::StatementAccessesPair>& stmtAccesesPair) {
@@ -376,7 +377,7 @@ public:
 
   void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
     std::shared_ptr<iir::StencilFunctionInstantiation> func =
-        instantiation_->getIIR()->getMetaData()->getStencilFunctionInstantiation(expr);
+        iir_->getMetaData()->getStencilFunctionInstantiation(expr);
 
     int AccessIDOfCaller = 0;
     if(!argListScope_.empty()) {
@@ -408,7 +409,7 @@ public:
 
       // Remove the stencil-function (`nullptr` means we don't have a nested stencil function)
       iir::StencilFunctionHandeling::removeStencilFunctionInstantiation(
-          expr, nullptr, instantiation_->getIIR().get());
+          expr, nullptr, iir_.get());
     }
 
     if(!argListScope_.empty())
@@ -468,7 +469,7 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
   if(strategy_ == IK_None)
     return true;
 
-  DetectInlineCandiates inliner(strategy_, stencilInstantiation);
+  DetectInlineCandiates inliner(strategy_, stencilInstantiation->getIIR());
 
   // Iterate all statements (top -> bottom)
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {

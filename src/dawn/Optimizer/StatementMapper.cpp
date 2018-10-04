@@ -126,7 +126,7 @@ void StatementMapper::visit(const std::shared_ptr<VarDeclStmt>& stmt) {
   if(iir_->getOptions().KeepVarnames)
     globalName = stmt->getName();
   else
-    globalName = iir::StencilInstantiation::makeLocalVariablename(stmt->getName(), AccessID);
+    globalName = iir::StencilMetaInformation::makeLocalVariablename(stmt->getName(), AccessID);
 
   // We generate a new AccessID and insert it into the AccessMaps (using the global name)
   auto& function = scope_.top()->FunctionInstantiation;

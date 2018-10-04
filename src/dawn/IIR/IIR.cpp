@@ -29,6 +29,11 @@ namespace iir {
 
 IIR::IIR() : metadata_(std::make_shared<StencilMetaInformation>()) {}
 
+IIR::IIR(OptimizerContext* creator)
+    : metadata_(std::make_shared<StencilMetaInformation>()), creator_(creator) {
+    DAWN_ASSERT(creator);
+}
+
 std::unique_ptr<IIR> IIR::clone() const {
 
   auto cloneIIR = make_unique<IIR>();

@@ -78,7 +78,7 @@ class StencilDescStatementMapper : public ASTVisitor {
     std::shared_ptr<std::vector<sir::StencilCall*>> StackTrace;
   };
 
-  std::unique_ptr<iir::IIR> iir_;
+  const std::unique_ptr<iir::IIR>& iir_;
   std::stack<std::shared_ptr<Scope>> scope_;
 
   sir::Stencil* sirStencil_;
@@ -92,17 +92,15 @@ class StencilDescStatementMapper : public ASTVisitor {
 public:
   StencilDescStatementMapper(std::unique_ptr<iir::IIR>& iir, sir::Stencil* sirStencil,
                              const std::shared_ptr<SIR>& sir)
-      : iir_(std::move(iir)), sirStencil_(sirStencil), sir_(sir) {
+      : iir_(iir), sirStencil_(sirStencil), sir_(sir) {
     DAWN_ASSERT(iir_);
     // Create the initial scope
-    auto b = iir->getMetaData()->getStencilDescStatements();
-    std::cout << "1.0" << std::endl;
-    scope_.push(
-        std::make_shared<Scope>(sirStencil_->Name, iir->getMetaData()->getStencilDescStatements()));
-    scope_.top()->LocalFieldnameToAccessIDMap = iir->getMetaData()->getNameToAccessIDMap();
+    scope_.push(std::make_shared<Scope>(sirStencil_->Name,
+                                        iir_->getMetaData()->getStencilDescStatements()));
+    scope_.top()->LocalFieldnameToAccessIDMap = iir_->getMetaData()->getNameToAccessIDMap();
 
     // We add all global variables which have constant values
-    for(const auto& keyValuePair : iir->getMetaData()->getGlobalVariableMap()) {
+    for(const auto& keyValuePair : iir_->getMetaData()->getGlobalVariableMap()) {
       const std::string& key = keyValuePair.first;
       const sir::Value& value = *keyValuePair.second;
 
@@ -122,7 +120,6 @@ public:
         }
       }
     }
-    std::cout << "1.1" << std::endl;
     // We start with a single stencil
     makeNewStencil();
   }
@@ -181,10 +178,11 @@ public:
     class RemoveStencilDescNodes : public ASTVisitorForwarding {
     public:
       bool needsRemoval(const std::shared_ptr<Stmt>& stmt) const {
+        std::cout << "INSIDE REMOVESTENCILDESCNODOES Stmt" << std::endl;
         if(StencilCallDeclStmt* s = dyn_cast<StencilCallDeclStmt>(stmt.get())) {
           // StencilCallDeclStmt node, remove it if it is not one of our artificial stencil call
           // nodes
-          if(!StencilInstantiation::isStencilCallCodeGenName(s->getStencilCall()->Callee))
+          if(!iir::StencilMetaInformation::isStencilCallCodeGenName(s->getStencilCall()->Callee))
             return true;
 
         } else if(isa<VerticalRegionDeclStmt>(stmt.get()))
@@ -195,6 +193,7 @@ public:
       }
 
       void visit(const std::shared_ptr<BlockStmt>& stmt) override {
+        std::cout << "INSIDE REMOVDESNCILDESCNODES BlockStmt" << std::endl;
         for(auto it = stmt->getStatements().begin(); it != stmt->getStatements().end();) {
           if(needsRemoval(*it)) {
             it = stmt->getStatements().erase(it);
@@ -223,11 +222,13 @@ public:
 
   /// @brief Push back a new statement to the end of the current statement list
   void pushBackStatement(const std::shared_ptr<Stmt>& stmt) {
+    std::cout << "Stmt" << std::endl;
     scope_.top()->Statements.emplace_back(
         std::make_shared<Statement>(stmt, scope_.top()->StackTrace));
   }
 
   void visit(const std::shared_ptr<BlockStmt>& stmt) override {
+    std::cout << "BlockStmt" << std::endl;
     scope_.top()->ScopeDepth++;
     for(const auto& s : stmt->getStatements()) {
       s->accept(*this);
@@ -236,16 +237,19 @@ public:
   }
 
   void visit(const std::shared_ptr<ExprStmt>& stmt) override {
+    std::cout << "ExprStmt" << std::endl;
     if(scope_.top()->ScopeDepth == 1)
       pushBackStatement(stmt);
     stmt->getExpr()->accept(*this);
   }
 
   void visit(const std::shared_ptr<ReturnStmt>& stmt) override {
+    std::cout << "ReturnStmt" << std::endl;
     DAWN_ASSERT_MSG(0, "ReturnStmt not allowed in this context");
   }
 
   void visit(const std::shared_ptr<IfStmt>& stmt) override {
+    std::cout << "IfStmt" << std::endl;
     bool result;
     if(evalExprAsBoolean(stmt->getCondExpr(), result, scope_.top()->VariableMap)) {
 
@@ -312,6 +316,7 @@ public:
   }
 
   void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
+    std::cout << "VarDeclStmt" << std::endl;
     // This is the first time we encounter this variable. We have to make sure the name is not
     // already used in another scope!
     int AccessID = iir_->getMetaData()->nextUID();
@@ -322,7 +327,7 @@ public:
     if(false)
       globalName = stmt->getName();
     else
-      globalName = StencilInstantiation::makeLocalVariablename(stmt->getName(), AccessID);
+      globalName = StencilMetaInformation::makeLocalVariablename(stmt->getName(), AccessID);
 
     iir_->getMetaData()->setAccessIDNamePair(AccessID, globalName);
     iir_->getMetaData()->getStmtToAccessIDMap().emplace(stmt, AccessID);
@@ -347,6 +352,7 @@ public:
   }
 
   void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) override {
+    std::cout << "VerticalRegionDeclStmt" << std::endl;
     sir::VerticalRegion* verticalRegion = stmt->getVerticalRegion().get();
 
     tryReplaceStencilDescStmt(stmt);
@@ -365,7 +371,7 @@ public:
                         ? LoopOrderKind::LK_Forward
                         : LoopOrderKind::LK_Backward);
     std::unique_ptr<Stage> stage =
-        make_unique<Stage>(nullptr, iir_->getMetaData()->nextUID(), interval);
+        make_unique<Stage>(iir_.get(), iir_->getMetaData()->nextUID(), interval);
 
     DAWN_LOG(INFO) << "Processing vertical region at " << verticalRegion->Loc;
 
@@ -383,7 +389,6 @@ public:
 
     if(iir_->getDiagnostics().hasErrors())
       return;
-
     // Here we compute the *actual* access of each statement and associate access to the AccessIDs
     // we set previously.
     DAWN_LOG(INFO) << "Filling accesses ...";
@@ -401,7 +406,7 @@ public:
   }
 
   void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
-    DAWN_ASSERT_MSG(false, "not yet implemented");
+    std::cout << "StencilCallDeclStmt" << std::endl;
     sir::StencilCall* stencilCall = stmt->getStencilCall().get();
 
     tryReplaceStencilDescStmt(stmt);
@@ -445,7 +450,7 @@ public:
         // We add a new temporary field for each temporary field argument
         AccessID = iir_->getMetaData()->nextUID();
         iir_->getMetaData()->setAccessIDNamePairOfField(
-            AccessID, StencilInstantiation::makeTemporaryFieldname(
+            AccessID, StencilMetaInformation::makeTemporaryFieldname(
                           stencil.Fields[stencilArgIdx]->Name, AccessID),
             true);
       } else {
@@ -472,12 +477,14 @@ public:
   }
 
   void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override {
+    std::cout << "BoundaryConditionDeclStmt" << std::endl;
     DAWN_ASSERT_MSG(false, "BOUNDARY CONDTITION NOT IMPLEMENTED");
     //      if(instantiation_->insertBoundaryConditions(stmt->getFields()[0]->Name, stmt) == false)
     //      DAWN_ASSERT_MSG(false, "Boundary Condition specified twice for the same field");
   }
 
   void visit(const std::shared_ptr<AssignmentExpr>& expr) override {
+    std::cout << "AssignmentExpr" << std::endl;
     for(auto& s : expr->getChildren())
       s->accept(*this);
 
@@ -506,33 +513,40 @@ public:
   }
 
   void visit(const std::shared_ptr<UnaryOperator>& expr) override {
+    std::cout << "UnaryOperator" << std::endl;
     for(auto& s : expr->getChildren())
       s->accept(*this);
   }
 
   void visit(const std::shared_ptr<BinaryOperator>& expr) override {
+    std::cout << "BinaryOperator" << std::endl;
     for(auto& s : expr->getChildren())
       s->accept(*this);
   }
 
   void visit(const std::shared_ptr<TernaryOperator>& expr) override {
+    std::cout << "TernaryOperator" << std::endl;
     for(auto& s : expr->getChildren())
       s->accept(*this);
   }
 
   void visit(const std::shared_ptr<FunCallExpr>& expr) override {
+    std::cout << "FunCallExpr" << std::endl;
     for(auto& s : expr->getChildren())
       s->accept(*this);
   }
 
   void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
+    std::cout << "StencilFunCallExpr" << std::endl;
     DAWN_ASSERT_MSG(0, "StencilFunCallExpr not allowed in this context");
   }
   void visit(const std::shared_ptr<StencilFunArgExpr>& expr) override {
+    std::cout << "StencilFunArgExpr" << std::endl;
     DAWN_ASSERT_MSG(0, "StencilFunArgExpr not allowed in this context");
   }
 
   void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
+    std::cout << "VarAccessExpr" << std::endl;
     const auto& varname = expr->getName();
 
     if(expr->isExternal()) {
@@ -575,13 +589,16 @@ public:
   }
 
   void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override {
+    std::cout << "LiteralAccessExpr" << std::endl;
     // Register a literal access (Note: the negative AccessID we assign!)
     int AccessID = -iir_->getMetaData()->nextUID();
     iir_->getMetaData()->getLiteralAccessIDToNameMap().emplace(AccessID, expr->getValue());
     iir_->getMetaData()->mapExprToAccessID(expr, AccessID);
   }
 
-  void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {}
+  void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
+    std::cout << "FieldAccessExpr" << std::endl;
+  }
 };
 } // namespace anonymous
 
@@ -592,13 +609,7 @@ OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, Options& opti
 
   for(const auto& stencil : SIR_->Stencils)
     if(!stencil->Attributes.has(sir::Attr::AK_NoCodeGen)) {
-      // this will become obsolete
-      //{
-      //      stencilInstantiationMap_.insert(std::make_pair(
-      //          stencil->Name, std::make_shared<iir::StencilInstantiation>(this, stencil, SIR)));
-      //}
-
-      auto newIIR = make_unique<iir::IIR>();
+      auto newIIR = make_unique<iir::IIR>(this);
       fillIIRFromSIR(newIIR, stencil, SIR_);
       stencilNameToIIRMap_.insert(std::make_pair(stencil->Name, std::move(newIIR)));
 
@@ -629,38 +640,31 @@ bool OptimizerContext::fillIIRFromSIR(std::unique_ptr<iir::IIR>& iir,
                                                                        field->fieldDimensions);
   }
 
-  std::cout << "checkpoint 1" << std::endl;
 
-    auto b = iir->getMetaData()->getStencilDescStatements();
-  std::cout << "checkpoint 2" << std::endl;
   StencilDescStatementMapper stencilDeclMapper(iir, SIRStencil.get(), fullSIR);
 
   //  // We need to operate on a copy of the AST as we may modify the nodes inplace
   auto AST = SIRStencil->StencilDescAst->clone();
   AST->accept(stencilDeclMapper);
 
-  std::cout << "checkpoint 3" << std::endl;
-
   //  // Cleanup the `stencilDescStatements` and remove the empty stencils which may have been
   //  inserted
   stencilDeclMapper.cleanupStencilDeclAST();
 
-  std::cout << "checkpoint 4" << std::endl;
 
   //  // Repair broken references to temporaries i.e promote them to real fields
+  std::cout << "iir->getChildren().size() :" << iir->getChildren().size() << std::endl;
   PassTemporaryType::fixTemporariesSpanningMultipleStencils(iir.get(), iir->getChildren());
 
-  std::cout << "checkpoint 5" << std::endl;
 
   if(iir->getOptions().ReportAccesses) {
-      // WITTODO: reenable this
+    // WITTODO: reenable this
     //      iir->getMetaData()->reportAccesses();
   }
 
   for(const auto& MS : iterateIIROver<MultiStage>(*iir)) {
     MS->update(NodeUpdateType::levelAndTreeAbove);
   }
-  std::cout << "checkpoint 6" << std::endl;
 
   std::cout << "printing iir of " << SIRStencil->Name << std::endl;
   iir->printTree();

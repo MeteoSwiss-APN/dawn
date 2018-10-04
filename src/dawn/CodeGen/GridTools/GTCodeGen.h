@@ -26,7 +26,6 @@ namespace dawn {
 class OptimizerContext;
 
 namespace iir {
-class StencilInstantiation;
 class Stage;
 class Stencil;
 }
@@ -61,8 +60,7 @@ public:
   };
 
 private:
-  std::string generateStencilInstantiation(
-      const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation);
+  std::string generateStencilInstantiation(const std::unique_ptr<iir::IIR>& iir);
   std::string generateGlobals(const std::shared_ptr<SIR>& Sir);
   std::string cacheWindowToString(const iir::Cache::window& cacheWindow);
   std::string buildMakeComputation(std::vector<std::string> const& DomainMapPlaceholders,

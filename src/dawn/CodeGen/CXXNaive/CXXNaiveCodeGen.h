@@ -25,9 +25,6 @@
 #include <vector>
 
 namespace dawn {
-namespace iir {
-class StencilInstantiation;
-}
 
 class OptimizerContext;
 
@@ -44,7 +41,7 @@ public:
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 
 private:
-  std::string generateStencilInstantiation(const iir::StencilInstantiation* stencilInstantiation);
+  std::string generateStencilInstantiation(const std::unique_ptr<iir::IIR>& iir);
   std::string generateGlobals(const std::shared_ptr<SIR>& sir);
 };
 } // namespace cxxnaive

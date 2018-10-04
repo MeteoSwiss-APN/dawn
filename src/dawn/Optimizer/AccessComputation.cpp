@@ -28,8 +28,8 @@ namespace {
 
 /// @brief Compute and fill the access map of the given statement
 class AccessMapper : public ASTVisitor {
-//  iir::StencilInstantiation* instantiation_;
-    iir::IIR* iir_;
+  //  iir::StencilInstantiation* instantiation_;
+  iir::IIR* iir_;
 
   /// Keep track of the current statement access pair
   struct CurrentStatementAccessPair {
@@ -73,8 +73,7 @@ class AccessMapper : public ASTVisitor {
   std::stack<std::unique_ptr<StencilFunctionCallScope>> stencilFunCalls_;
 
 public:
-  AccessMapper(iir::IIR* iir,
-               const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessesPair,
+  AccessMapper(iir::IIR* iir, const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessesPair,
                std::shared_ptr<iir::StencilFunctionInstantiation> stencilFun = nullptr)
       : iir_(iir), stencilFun_(stencilFun) {
     curStatementAccessPairStack_.push_back(
@@ -465,8 +464,8 @@ public:
 
 void computeAccesses(iir::IIR* iir_,
                      ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
+  DAWN_ASSERT(iir_);
   for(const auto& statementAccessesPair : statementAccessesPairs) {
-    DAWN_ASSERT(iir_);
     AccessMapper mapper(iir_, statementAccessesPair, nullptr);
     statementAccessesPair->getStatement()->ASTStmt->accept(mapper);
   }
@@ -476,8 +475,8 @@ void computeAccesses(
     std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation,
     ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
   for(const auto& statementAccessesPair : statementAccessesPairs) {
-    AccessMapper mapper(stencilFunctionInstantiation->getIIR(),
-                        statementAccessesPair, stencilFunctionInstantiation);
+    AccessMapper mapper(stencilFunctionInstantiation->getIIR(), statementAccessesPair,
+                        stencilFunctionInstantiation);
     statementAccessesPair->getStatement()->ASTStmt->accept(mapper);
   }
 }

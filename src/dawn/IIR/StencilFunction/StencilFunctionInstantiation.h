@@ -33,8 +33,6 @@ namespace dawn {
 
 namespace iir {
 
-class StencilInstantiation;
-
 inline std::string dim2str(int dim) {
   switch(dim) {
   case 0:

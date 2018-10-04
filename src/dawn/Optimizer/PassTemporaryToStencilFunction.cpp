@@ -479,8 +479,9 @@ bool PassTemporaryToStencilFunction::run(
 
                 iir::DoMethod tmpStmtDoMethod(interval);
 
-                StatementMapper statementMapper(nullptr,
-                    stencilInstantiation->getIIR().get(), stmt->StackTrace, tmpStmtDoMethod, sirInterval,
+                StatementMapper statementMapper(
+                    nullptr, stencilInstantiation->getIIR().get(), stmt->StackTrace,
+                    tmpStmtDoMethod, sirInterval,
                     stencilInstantiation->getIIR()->getMetaData()->getNameToAccessIDMap(), nullptr);
 
                 std::shared_ptr<BlockStmt> blockStmt =
@@ -522,8 +523,9 @@ bool PassTemporaryToStencilFunction::run(
 
                 // first instantiation of the stencil function that is inserted in the IIR as a
                 // candidate stencil function
-                auto stencilFun = stencilInstantiation->makeStencilFunctionInstantiation(
-                    stencilFunCallExpr, stencilFunction, ast, sirInterval, nullptr);
+                auto stencilFun = iir::StencilFunctionHandeling::makeStencilFunctionInstantiation(
+                    stencilFunCallExpr, stencilFunction, ast, sirInterval, nullptr,
+                    stencilInstantiation->getIIR().get());
 
                 int argID = 0;
                 for(auto accessID : tmpAssignment.getAccessIDs()) {

@@ -65,8 +65,8 @@ class StatementMapper : public ASTVisitor {
   };
 
 //  iir::StencilInstantiation* instantiation_;
-  iir::IIR* iir_;
   const std::shared_ptr<SIR> sir_;
+  iir::IIR* iir_;
 
   std::shared_ptr<std::vector<sir::StencilCall*>> stackTrace_;
 

@@ -49,8 +49,8 @@ public:
   /// @param[in, out]  msprt   Pointer to the multistage to handle
   /// @param[in, out]  si      Stencil Instanciation [ISIR] holding all the Stencils
   GlobalFieldCacher(const std::unique_ptr<iir::MultiStage>& msptr,
-                    const std::shared_ptr<iir::StencilInstantiation>& si)
-      : multiStagePrt_(msptr), instantiation_(si) {}
+                    const std::unique_ptr<iir::IIR>& iir)
+      : multiStagePrt_(msptr), iir_(iir) {}
 
   /// @brief Entry method for the pass: processes a given multistage and applies all changes
   /// required
@@ -69,7 +69,7 @@ private:
   /// would benefit from caching
   void computeOptimalFields() {
     auto dataLocality =
-        computeReadWriteAccessesMetricPerAccessID(instantiation_->getIIR().get(), *multiStagePrt_);
+        computeReadWriteAccessesMetricPerAccessID(iir_.get(), *multiStagePrt_);
 
     for(const auto& stagePtr : multiStagePrt_->getChildren()) {
       for(const auto& fieldPair : stagePtr->getFields()) {
@@ -85,7 +85,7 @@ private:
           continue;
 
         // This is caching non-temporary fields
-        if(instantiation_->getIIR()->getMetaData()->isTemporaryField(field.getAccessID()))
+        if(iir_->getMetaData()->isTemporaryField(field.getAccessID()))
           continue;
 
         int cachedReadAndWrites = dataLocality.find(field.getAccessID())->second.totalAccesses();
@@ -118,14 +118,14 @@ private:
   void addFillerStages() {
     int numVarsToBeCached =
         std::min((int)sortedAccesses_.size(),
-                 instantiation_->getIIR()->getHardwareConfiguration().SMemMaxFields);
+                 iir_->getHardwareConfiguration().SMemMaxFields);
     for(int i = 0; i < numVarsToBeCached; ++i) {
       int oldID = sortedAccesses_[i].accessID;
 
       // Create new temporary field and register in the instantiation
-      int newID = instantiation_->getIIR()->getMetaData()->nextUID();
+      int newID = iir_->getMetaData()->nextUID();
 
-      instantiation_->getIIR()->getMetaData()->setAccessIDNamePairOfField(
+      iir_->getMetaData()->setAccessIDNamePairOfField(
           newID, "__tmp_cache_" + std::to_string(i), true);
 
       // Rename all the fields in this multistage
@@ -134,10 +134,10 @@ private:
       oldAccessIDtoNewAccessID_.emplace(oldID, newID);
       iir::Cache& cache = multiStagePrt_->setCache(iir::Cache::IJ, iir::Cache::local, newID);
       originalNameToCache_.emplace_back(
-          NameToImprovementMetric{getOriginalNameFromAccessID(oldID, instantiation_->getIIR()),
+          NameToImprovementMetric{getOriginalNameFromAccessID(oldID, iir_),
                                   cache, accessIDToDataLocality_.find(oldID)->second});
-      instantiation_->getIIR()->getMetaData()->insertCachedVariable(oldID);
-      instantiation_->getIIR()->getMetaData()->insertCachedVariable(newID);
+      iir_->getMetaData()->insertCachedVariable(oldID);
+      iir_->getMetaData()->insertCachedVariable(newID);
     }
 
     // Create the cache-filler stage
@@ -188,8 +188,8 @@ private:
                                                     const std::vector<int>& assigneeIDs) {
     // Add the cache Flush stage
     std::unique_ptr<iir::Stage> assignmentStage =
-        make_unique<iir::Stage>(instantiation_->getIIR().get(),
-                                instantiation_->getIIR()->getMetaData()->nextUID(), interval);
+        make_unique<iir::Stage>(iir_.get(),
+                                iir_->getMetaData()->nextUID(), interval);
     iir::Stage::DoMethodSmartPtr_t domethod = make_unique<iir::DoMethod>(interval);
     domethod->clearChildren();
 
@@ -212,9 +212,9 @@ private:
                                int assigneeID) {
     // Create the StatementAccessPair of the assignment with the new and old variables
     auto fa_assignee = std::make_shared<FieldAccessExpr>(
-        instantiation_->getIIR()->getMetaData()->getNameFromAccessID(assigneeID));
+        iir_->getMetaData()->getNameFromAccessID(assigneeID));
     auto fa_assignment = std::make_shared<FieldAccessExpr>(
-        instantiation_->getIIR()->getMetaData()->getNameFromAccessID(assignmentID));
+        iir_->getMetaData()->getNameFromAccessID(assignmentID));
     auto assignmentExpression = std::make_shared<AssignmentExpr>(fa_assignment, fa_assignee, "=");
     auto expAssignment = std::make_shared<ExprStmt>(assignmentExpression);
     auto assignmentStatement = std::make_shared<Statement>(expAssignment, nullptr);
@@ -226,8 +226,8 @@ private:
     domethod->insertChild(std::move(pair));
 
     // Add the new expressions to the map
-    instantiation_->getIIR()->getMetaData()->mapExprToAccessID(fa_assignment, assignmentID);
-    instantiation_->getIIR()->getMetaData()->mapExprToAccessID(fa_assignee, assigneeID);
+    iir_->getMetaData()->mapExprToAccessID(fa_assignment, assignmentID);
+    iir_->getMetaData()->mapExprToAccessID(fa_assignee, assigneeID);
   }
 
   /// @brief Checks if there is a read operation before the first write operation in the given
@@ -272,7 +272,8 @@ private:
   }
 
   const std::unique_ptr<iir::MultiStage>& multiStagePrt_;
-  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
+//  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
+  const std::unique_ptr<iir::IIR>& iir_;
 
   std::unordered_map<int, int> accessIDToDataLocality_;
   std::unordered_map<int, int> oldAccessIDtoNewAccessID_;
@@ -292,7 +293,7 @@ bool dawn::PassSetNonTempCaches::run(
     std::vector<NameToImprovementMetric> allCachedFields;
     if(stencilInstantiation->getIIR()->getOptions().UseNonTempCaches) {
       for(const auto& multiStagePtr : stencil.getChildren()) {
-        GlobalFieldCacher organizer(multiStagePtr, stencilInstantiation);
+        GlobalFieldCacher organizer(multiStagePtr, stencilInstantiation->getIIR());
         organizer.process();
         if(stencilInstantiation->getIIR()->getOptions().ReportPassSetNonTempCaches) {
           for(const auto& nametoCache : organizer.getOriginalNameToCache())

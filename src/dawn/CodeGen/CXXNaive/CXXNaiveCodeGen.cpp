@@ -67,19 +67,18 @@ CXXNaiveCodeGen::CXXNaiveCodeGen(OptimizerContext* context) : CodeGen(context) {
 
 CXXNaiveCodeGen::~CXXNaiveCodeGen() {}
 
-std::string CXXNaiveCodeGen::generateStencilInstantiation(
-    const iir::StencilInstantiation* stencilInstantiation) {
+std::string CXXNaiveCodeGen::generateStencilInstantiation(const std::unique_ptr<iir::IIR> &iir) {
   using namespace codegen;
 
   std::stringstream ssSW;
 
   Namespace cxxnaiveNamespace("cxxnaive", ssSW);
 
-  Class StencilWrapperClass(stencilInstantiation->getIIR()->getMetaData()->getName(), ssSW);
+  Class StencilWrapperClass(iir->getMetaData()->getName(), ssSW);
   StencilWrapperClass.changeAccessibility("private");
 
   // Generate stencils
-  const auto& stencils = stencilInstantiation->getIIR()->getChildren();
+  const auto& stencils = iir->getChildren();
 
   CodeGenProperties codeGenProperties;
 
@@ -90,7 +89,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
   std::unordered_set<std::string> generatedStencilFun;
   size_t idx = 0;
   for(const auto& stencilFun :
-      stencilInstantiation->getIIR()->getMetaData()->getStencilFunctionInstantiations()) {
+      iir->getMetaData()->getStencilFunctionInstantiations()) {
     std::string stencilFunName = iir::StencilFunctionInstantiation::makeCodeGenName(*stencilFun);
     if(generatedStencilFun.emplace(stencilFunName).second) {
 
@@ -102,9 +101,9 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
       if(fields.empty()) {
         DiagnosticsBuilder diag(
             DiagnosticsKind::Error,
-            stencilInstantiation->getIIR()->getMetaData()->getStencilLocation());
+            iir->getMetaData()->getStencilLocation());
         diag << "no storages referenced in stencil '"
-             << stencilInstantiation->getIIR()->getMetaData()->getName()
+             << iir->getMetaData()->getName()
              << "', this would result in invalid gridtools code";
         context_->getDiagnostics().report(diag);
         return "";
@@ -152,7 +151,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
                                 std::to_string(m) + ">> pw_" + paramName);
       }
 
-      ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getIIR().get(),
+      ASTStencilBody stencilBodyCXXVisitor(iir.get(),
                                            StencilContext::SC_StencilFunction);
 
       stencilFunMethod.startBody();
@@ -237,7 +236,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
       paramNameToType.emplace((*fieldIt).second.Name, c_gtc().str() + "storage_t");
     }
 
-    ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getIIR().get(),
+    ASTStencilBody stencilBodyCXXVisitor(iir.get(),
                                          StencilContext::SC_Stencil);
 
     StencilClass.addComment("Members");
@@ -377,23 +376,23 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
   // Members
   //
   // Define allocated memebers if necessary
-  if(stencilInstantiation->getIIR()->getMetaData()->hasAllocatedFields()) {
+  if(iir->getMetaData()->hasAllocatedFields()) {
     StencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
 
-    for(int AccessID : stencilInstantiation->getIIR()->getMetaData()->getAllocatedFieldAccessIDs())
+    for(int AccessID : iir->getMetaData()->getAllocatedFieldAccessIDs())
       StencilWrapperClass.addMember(
           c_gtc() + "storage_t",
-          "m_" + stencilInstantiation->getIIR()->getMetaData()->getNameFromAccessID(AccessID));
+          "m_" + iir->getMetaData()->getNameFromAccessID(AccessID));
   }
 
   // Generate stencil wrapper constructor
-  auto APIFields = stencilInstantiation->getIIR()->getMetaData()->getAPIFieldIDs();
+  auto APIFields = iir->getMetaData()->getAPIFieldIDs();
 
   std::vector<std::string> StencilWrapperRunTemplates;
   for(int i = 0; i < APIFields.size(); ++i) {
     StencilWrapperRunTemplates.push_back("StorageType" + std::to_string(i + 1));
     codeGenProperties.insertParam(
-        i, stencilInstantiation->getIIR()->getMetaData()->getNameFromAccessID(APIFields[i]),
+        i, iir->getMetaData()->getNameFromAccessID(APIFields[i]),
         StencilWrapperRunTemplates[i]);
   }
 
@@ -405,9 +404,9 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
 
   for(auto APIfieldID : APIFields) {
     StencilWrapperConstructor.addArg(
-        codeGenProperties.getParamType(stencilInstantiation->getIIR()->getMetaData()->getNameFromAccessID(APIfieldID)) + "& " +
-        stencilInstantiation->getIIR()->getMetaData()->getNameFromAccessID(APIfieldID));
-    ctrArgs += "," + stencilInstantiation->getIIR()->getMetaData()->getNameFromAccessID(APIfieldID);
+        codeGenProperties.getParamType(iir->getMetaData()->getNameFromAccessID(APIfieldID)) + "& " +
+        iir->getMetaData()->getNameFromAccessID(APIfieldID));
+    ctrArgs += "," + iir->getMetaData()->getNameFromAccessID(APIfieldID);
   }
   //  decltype(stencilInstantiation->getSIRStencil()->Fields) SIRFieldsWithoutTemps;
 
@@ -455,7 +454,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
       if(fieldInfo.IsTemporary)
         continue;
       initCtr +=
-          (i != 0 ? "," : "<") + (stencilInstantiation->getIIR()->getMetaData()->isAllocatedField(
+          (i != 0 ? "," : "<") + (iir->getMetaData()->isAllocatedField(
                                       fieldInfo.field.getAccessID())
                                       ? (c_gtc().str() + "storage_t")
                                       : (codeGenProperties.getParamType(fieldInfo.Name)));
@@ -467,7 +466,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
         continue;
-      initCtr += "," + (stencilInstantiation->getIIR()->getMetaData()->isAllocatedField(
+      initCtr += "," + (iir->getMetaData()->isAllocatedField(
                             fieldInfo.field.getAccessID())
                             ? ("m_" + fieldInfo.Name)
                             : (fieldInfo.Name));
@@ -476,12 +475,12 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
     StencilWrapperConstructor.addInit(initCtr);
   }
 
-  if(stencilInstantiation->getIIR()->getMetaData()->hasAllocatedFields()) {
+  if(iir->getMetaData()->hasAllocatedFields()) {
     std::vector<std::string> tempFields;
     for(auto accessID :
-        stencilInstantiation->getIIR()->getMetaData()->getAllocatedFieldAccessIDs()) {
+        iir->getMetaData()->getAllocatedFieldAccessIDs()) {
       tempFields.push_back(
-          stencilInstantiation->getIIR()->getMetaData()->getNameFromAccessID(accessID));
+          iir->getMetaData()->getNameFromAccessID(accessID));
     }
     addTmpStorageInit_wrapper(StencilWrapperConstructor, stencils, tempFields);
   }
@@ -494,10 +493,10 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
   RunMethod.finishArgs();
 
   // generate the control flow code executing each inner stencil
-  ASTStencilDesc stencilDescCGVisitor(stencilInstantiation->getIIR().get(), codeGenProperties);
+  ASTStencilDesc stencilDescCGVisitor(iir.get(), codeGenProperties);
   stencilDescCGVisitor.setIndent(RunMethod.getIndent());
   for(const auto& statement :
-      stencilInstantiation->getIIR()->getMetaData()->getStencilDescStatements()) {
+      iir->getMetaData()->getStencilDescStatements()) {
     statement->ASTStmt->accept(stencilDescCGVisitor);
     RunMethod.addStatement(stencilDescCGVisitor.getCodeAndResetStream());
   }
@@ -574,7 +573,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
   // Generate code for StencilInstantiations
   std::map<std::string, std::string> stencils;
   for(const auto& nameStencilCtxPair : context_->getStencilInstantiationMap()) {
-    std::string code = generateStencilInstantiation(nameStencilCtxPair.second.get());
+    std::string code = generateStencilInstantiation(nameStencilCtxPair.second->getIIR());
     if(code.empty())
       return nullptr;
     stencils.emplace(nameStencilCtxPair.first, std::move(code));

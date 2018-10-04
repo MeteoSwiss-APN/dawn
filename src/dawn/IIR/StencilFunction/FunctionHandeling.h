@@ -45,7 +45,16 @@ extern void registerStencilFunction(std::shared_ptr<StencilFunctionInstantiation
 
 extern void finalizeStencilFunctionSetup(std::shared_ptr<StencilFunctionInstantiation> stencilFun,
                                          iir::IIR* iir);
-
+///
+/// \brief makeStencilFunctionInstantiation
+/// \param expr
+/// \param SIRStencilFun
+/// \param ast
+/// \param interval
+/// \param curStencilFunctionInstantiation
+/// \param iir
+/// \return
+///
 extern std::shared_ptr<StencilFunctionInstantiation> makeStencilFunctionInstantiation(
     const std::shared_ptr<StencilFunCallExpr>& expr,
     const std::shared_ptr<sir::StencilFunction>& SIRStencilFun, const std::shared_ptr<AST>& ast,
@@ -53,10 +62,17 @@ extern std::shared_ptr<StencilFunctionInstantiation> makeStencilFunctionInstanti
     const std::shared_ptr<StencilFunctionInstantiation>& curStencilFunctionInstantiation,
     iir::IIR* iir);
 
+///
+/// \brief removeStencilFunctionInstantiation
+/// \param expr
+/// \param callerStencilFunctionInstantiation
+/// \param iir
+///
 extern void removeStencilFunctionInstantiation(
     const std::shared_ptr<StencilFunCallExpr>& expr,
     std::shared_ptr<StencilFunctionInstantiation> callerStencilFunctionInstantiation,
     iir::IIR* iir);
+
 } // namespace StencilFunctionHandeling
 } // namespace iir
 } // namespace dawn

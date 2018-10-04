@@ -45,6 +45,7 @@ public:
 
   /// @brief constructors and assignment
   IIR(); //= default;
+  IIR(OptimizerContext* creator);
   IIR(const IIR&) = default;
   IIR(IIR&&) = default;
   IIR& operator=(const IIR&) = default;

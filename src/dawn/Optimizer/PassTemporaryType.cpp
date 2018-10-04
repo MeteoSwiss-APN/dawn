@@ -84,9 +84,9 @@ struct Temporary {
   iir::Extents Extent;             ///< Accumulated access of the temporary during its lifetime
 
   /// @brief Dump the temporary
-  void dump(const std::shared_ptr<iir::StencilInstantiation>& instantiation) const {
+  void dump(const iir::IIR* iir) const {
     std::cout << "Temporary : "
-              << instantiation->getIIR()->getMetaData()->getNameFromAccessID(AccessID) << " {"
+              << iir->getMetaData()->getNameFromAccessID(AccessID) << " {"
               << "\n  Type=" << (Type == TT_LocalVariable ? "LocalVariable" : "Field")
               << ",\n  Lifetime=" << Lifetime << ",\n  Extent=" << Extent << "\n}\n";
   }
