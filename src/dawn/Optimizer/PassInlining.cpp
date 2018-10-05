@@ -38,14 +38,13 @@ static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
     const std::shared_ptr<iir::StencilFunctionInstantiation>& stencilFunctioninstantiation,
     const std::unique_ptr<iir::StatementAccessesPair>& oldStmt,
     std::vector<std::unique_ptr<iir::StatementAccessesPair>>& newStmts, int AccessIDOfCaller,
-    const std::shared_ptr<iir::StencilInstantiation>& si,
-    const std::shared_ptr<iir::StencilFunctionInstantiation>& sfi);
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
 
 /// @brief Perform the inlining of a stencil-function
 class Inliner : public ASTVisitor {
   PassInlining::InlineStrategyKind strategy_;
   const std::shared_ptr<iir::StencilFunctionInstantiation>& curStencilFunctioninstantiation_;
-  iir::StencilInstantiation* instantiation_;
+  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
 
   /// The statement which we are currently processing in the `DetectInlineCandiates`
   const std::unique_ptr<iir::StatementAccessesPair>& oldStmtAccessesPair_;
@@ -75,8 +74,6 @@ class Inliner : public ASTVisitor {
   };
 
   std::stack<ArgListScope> argListScope_;
-  const std::shared_ptr<iir::StencilInstantiation> parentSI_;
-  const std::shared_ptr<iir::StencilFunctionInstantiation> parentSFI_;
   // number of stmts in the newStmts container before before the inliner inserts the inlined new
   // stmts. It is used to computed the number of inserted stmts by the inliner
   const int numStmt_;
@@ -86,15 +83,12 @@ public:
           const std::shared_ptr<iir::StencilFunctionInstantiation>& stencilFunctioninstantiation,
           const std::unique_ptr<iir::StatementAccessesPair>& oldStmtAccessesPair,
           std::vector<std::unique_ptr<iir::StatementAccessesPair>>& newStmtAccessesPairs,
-          int AccessIDOfCaller, const std::shared_ptr<iir::StencilInstantiation>& parentSI,
-          const std::shared_ptr<iir::StencilFunctionInstantiation>& parentSFI)
+          int AccessIDOfCaller,
+          const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation)
       : strategy_(strategy), curStencilFunctioninstantiation_(stencilFunctioninstantiation),
-        instantiation_(stencilFunctioninstantiation->getStencilInstantiation()),
-        oldStmtAccessesPair_(oldStmtAccessesPair), newStmtAccessesPairs_(newStmtAccessesPairs),
-        AccessIDOfCaller_(AccessIDOfCaller), scopeDepth_(0), newExpr_(nullptr), parentSI_(parentSI),
-        parentSFI_(parentSFI), numStmt_(newStmtAccessesPairs.size()) {
-    DAWN_ASSERT(parentSFI_ || parentSI_);
-  }
+        instantiation_(stencilInstantiation), oldStmtAccessesPair_(oldStmtAccessesPair),
+        newStmtAccessesPairs_(newStmtAccessesPairs), AccessIDOfCaller_(AccessIDOfCaller),
+        scopeDepth_(0), newExpr_(nullptr), numStmt_(newStmtAccessesPairs.size()) {}
 
   /// @brief Get the new expression which will be substitued for the `StencilFunCallExpr` of this
   /// `StencilFunctionInstantiation` (may be NULL)
@@ -220,13 +214,7 @@ public:
     // stencil function)
     std::shared_ptr<iir::StencilFunctionInstantiation> func =
         curStencilFunctioninstantiation_->getStencilFunctionInstantiation(expr);
-
-    if(parentSFI_) {
-      parentSFI_->insertExprToStencilFunction(func);
-    }
-    if(parentSI_) {
-      parentSI_->insertExprToStencilFunction(func);
-    }
+    instantiation_->insertExprToStencilFunction(func);
 
     int AccessIDOfCaller = 0;
     if(!argListScope_.empty()) {
@@ -250,7 +238,7 @@ public:
     // Try to inline the stencil-function
     auto inlineResult =
         tryInlineStencilFunction(strategy_, func, oldStmtAccessesPair_, newStmtAccessesPairs_,
-                                 AccessIDOfCaller, nullptr, func);
+                                 AccessIDOfCaller, instantiation_);
 
     // Compute the index of the statement of our current stencil-function call
     const int stmtIdxOfFunc = newStmtAccessesPairs_.size() - getNumberInsertedStmt();
@@ -416,7 +404,7 @@ public:
 
     auto inlineResult =
         tryInlineStencilFunction(strategy_, func, oldStmtAccessesPair_, newStmtAccessesPairs_,
-                                 AccessIDOfCaller, instantiation_, nullptr);
+                                 AccessIDOfCaller, instantiation_);
 
     inlineCandiatesFound_ |= inlineResult.first;
     if(inlineResult.first) {
@@ -456,12 +444,9 @@ public:
 /// @param AccessIDOfCaller  If the stencil function is called whithin the argument list of another
 ///                          stencil function this contains the AccessID of the "temporary" storage
 ///                          (otherwise it is 0)
-/// @param parentSI          StencilInstantiation context from where the stencil function candidate
-///                          to inline is being called (null if the context is a stencil function
-///                          instantiation)
-/// /// @param parentSFI     StencilFunctionInstantiation context from where the stencil function
+/// @param stencilInstantiation    StencilInstantiation context from where the stencil function
 /// candidate
-///                          to inline is being called (null if the context is a stencil
+///                          to inline is being called (null if the context is a stencil function
 ///                          instantiation)
 /// @returns `true` if the stencil-function was inlined, `false` otherwise (the corresponding
 /// `Inliner` instance (or NULL) is returned as well)
@@ -470,15 +455,14 @@ static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
     const std::shared_ptr<iir::StencilFunctionInstantiation>& stencilFunc,
     const std::unique_ptr<iir::StatementAccessesPair>& oldStmtAccessesPair,
     std::vector<std::unique_ptr<iir::StatementAccessesPair>>& newStmtAccessesPairs,
-    int AccessIDOfCaller, const std::shared_ptr<iir::StencilInstantiation>& parentSI,
-    const std::shared_ptr<iir::StencilFunctionInstantiation>& parentSFI) {
+    int AccessIDOfCaller, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 
   // Function which do not return a value are *always* inlined. Function which do return a value
   // are only inlined if we favor precomputations.
   if(!stencilFunc->hasReturn() || strategy == PassInlining::IK_Precomputation) {
     auto inliner =
         std::make_shared<Inliner>(strategy, stencilFunc, oldStmtAccessesPair, newStmtAccessesPairs,
-                                  AccessIDOfCaller, parentSI, parentSFI);
+                                  AccessIDOfCaller, stencilInstantiation);
     stencilFunc->getAST()->accept(*inliner);
     return std::pair<bool, std::shared_ptr<Inliner>>(true, std::move(inliner));
   }
