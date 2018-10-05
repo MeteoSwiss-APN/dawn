@@ -31,8 +31,10 @@ IIR::IIR() : metadata_(std::make_shared<StencilMetaInformation>()) {}
 
 IIR::IIR(OptimizerContext* creator)
     : metadata_(std::make_shared<StencilMetaInformation>()), creator_(creator) {
-    DAWN_ASSERT(creator);
+  DAWN_ASSERT(creator);
 }
+
+void IIR::updateFromChildren() {std::cout << "this is my final update" << std::endl;}
 
 std::unique_ptr<IIR> IIR::clone() const {
 

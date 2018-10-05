@@ -54,6 +54,9 @@ public:
   /// @brief clone the IIR
   std::unique_ptr<IIR> clone() const;
 
+  /// @brief update the derived info from children
+  virtual void updateFromChildren() override;
+
   std::shared_ptr<StencilMetaInformation> getMetaData() { return metadata_; }
   const std::shared_ptr<StencilMetaInformation>& getMetaData() const { return metadata_; }
 

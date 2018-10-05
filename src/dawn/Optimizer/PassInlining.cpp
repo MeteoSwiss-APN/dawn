@@ -308,7 +308,7 @@ public:
 /// @brief Detect inline candidates
 class DetectInlineCandiates : public ASTVisitorForwarding {
   PassInlining::InlineStrategyKind strategy_;
-//  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
+  //  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   const std::unique_ptr<iir::IIR>& iir_;
 
   /// The statement we are currently analyzing
@@ -408,8 +408,7 @@ public:
         replacmentOfOldStmtMap_.emplace(expr, inlineResult.second->getNewExpr());
 
       // Remove the stencil-function (`nullptr` means we don't have a nested stencil function)
-      iir::StencilFunctionHandeling::removeStencilFunctionInstantiation(
-          expr, nullptr, iir_.get());
+      iir::StencilFunctionHandeling::removeStencilFunctionInstantiation(expr, nullptr, iir_.get());
     }
 
     if(!argListScope_.empty())
@@ -469,23 +468,35 @@ bool PassInlining::run(const std::unique_ptr<iir::IIR>& iir) {
   if(strategy_ == IK_None)
     return true;
 
+  std::cout << "checkpoint 1" << std::endl;
   DetectInlineCandiates inliner(strategy_, iir);
 
+  std::cout << "checkpoint 2" << std::endl;
+  int j = 0;
   // Iterate all statements (top -> bottom)
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(iir))) {
     iir::Stage& stage = *stagePtr;
     iir::DoMethod& doMethod = stage.getSingleDoMethod();
 
+    std::cout << "looking at stage " << ++j << std::endl;
+
     for(auto stmtAccIt = doMethod.childrenBegin(); stmtAccIt != doMethod.childrenEnd();
         ++stmtAccIt) {
+      const auto& stmtAccPair = *stmtAccIt;
+      std::cout << "working on " << stmtAccPair->toString(iir.get()) << std::endl;
       inliner.processStatment(*stmtAccIt);
 
+      std::cout << "checkpoint 3" << std::endl;
+
       if(inliner.inlineCandiatesFound()) {
+        std::cout << "inside found" << std::endl;
         auto& newStmtAccList = inliner.getNewStatementAccessesPairs();
 
+        std::cout << "inside found2" << std::endl;
         // Compute the accesses of the new statements
         computeAccesses(iir.get(), newStmtAccList);
 
+        std::cout << "inside found3" << std::endl;
         // Erase the old StatementAccessPair ...
         stmtAccIt = doMethod.childrenErase(stmtAccIt);
 
@@ -499,12 +510,19 @@ bool PassInlining::run(const std::unique_ptr<iir::IIR>& iir) {
         std::advance(stmtAccIt, newStmtAccList.size() - 1);
       }
     }
+    std::cout << "checkpoint 4" << std::endl;
 
     stage.update(iir::NodeUpdateType::level);
+
+    std::cout << "update done"  << std::endl;
   }
+  std::cout << "checkpoint 5" << std::endl;
+  int k=0;
   for(const auto& MSPtr : iterateIIROver<iir::Stage>(*(iir))) {
+      std::cout << "starting with stage " << ++k << std::endl;
     MSPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
+  std::cout << "checkpoint 6" << std::endl;
   return true;
 }
 
