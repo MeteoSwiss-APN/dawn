@@ -74,9 +74,6 @@ class Inliner : public ASTVisitor {
   };
 
   std::stack<ArgListScope> argListScope_;
-  // number of stmts in the newStmts container before before the inliner inserts the inlined new
-  // stmts. It is used to computed the number of inserted stmts by the inliner
-  const int numStmt_;
 
 public:
   Inliner(PassInlining::InlineStrategyKind strategy,
@@ -88,7 +85,7 @@ public:
       : strategy_(strategy), curStencilFunctioninstantiation_(stencilFunctioninstantiation),
         instantiation_(stencilInstantiation), oldStmtAccessesPair_(oldStmtAccessesPair),
         newStmtAccessesPairs_(newStmtAccessesPairs), AccessIDOfCaller_(AccessIDOfCaller),
-        scopeDepth_(0), newExpr_(nullptr), numStmt_(newStmtAccessesPairs.size()) {}
+        scopeDepth_(0), newExpr_(nullptr) {}
 
   /// @brief Get the new expression which will be substitued for the `StencilFunCallExpr` of this
   /// `StencilFunctionInstantiation` (may be NULL)
@@ -105,8 +102,6 @@ public:
     newStmtAccessesPairs_.emplace_back(make_unique<iir::StatementAccessesPair>(
         std::make_shared<Statement>(stmt, oldStmtAccessesPair_->getStatement()->StackTrace)));
   }
-
-  int getNumberInsertedStmt() const { return newStmtAccessesPairs_.size() - numStmt_; }
 
   virtual void visit(const std::shared_ptr<ExprStmt>& stmt) override {
     if(scopeDepth_ == 1) {
@@ -235,13 +230,14 @@ public:
       arg->accept(*this);
     argListScope_.pop();
 
+    int oldSize = newStmtAccessesPairs_.size();
     // Try to inline the stencil-function
     auto inlineResult =
         tryInlineStencilFunction(strategy_, func, oldStmtAccessesPair_, newStmtAccessesPairs_,
                                  AccessIDOfCaller, instantiation_);
 
     // Compute the index of the statement of our current stencil-function call
-    const int stmtIdxOfFunc = newStmtAccessesPairs_.size() - getNumberInsertedStmt();
+    const int stmtIdxOfFunc = oldSize - 1;
     if(inlineResult.first) {
       if(func->hasReturn()) {
         std::shared_ptr<Inliner>& inliner = inlineResult.second;
