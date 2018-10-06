@@ -106,7 +106,7 @@ public:
         std::make_shared<Statement>(stmt, oldStmtAccessesPair_->getStatement()->StackTrace)));
   }
 
-  int getNumberInsertedStmt() const { return newStmtAccessesPairs_.size(); }
+  int getNumberInsertedStmt() const { return newStmtAccessesPairs_.size() - numStmt_; }
 
   virtual void visit(const std::shared_ptr<ExprStmt>& stmt) override {
     if(scopeDepth_ == 1) {
@@ -242,7 +242,6 @@ public:
 
     // Compute the index of the statement of our current stencil-function call
     const int stmtIdxOfFunc = newStmtAccessesPairs_.size() - getNumberInsertedStmt();
-
     if(inlineResult.first) {
       if(func->hasReturn()) {
         std::shared_ptr<Inliner>& inliner = inlineResult.second;
@@ -492,7 +491,6 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
 
         if(inliner.inlineCandiatesFound()) {
           auto& newStmtAccList = inliner.getNewStatementAccessesPairs();
-
           // Compute the accesses of the new statements
           computeAccesses(stencilInstantiation.get(), newStmtAccList);
 
