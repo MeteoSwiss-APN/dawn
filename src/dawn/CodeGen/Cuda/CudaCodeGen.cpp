@@ -13,17 +13,17 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
-#include "dawn/CodeGen/Cuda/ASTStencilBody.h"
-#include "dawn/CodeGen/Cuda/ASTStencilDesc.h"
-#include "dawn/CodeGen/Cuda/IndexIterator.h"
-#include "dawn/CodeGen/Cuda/CacheProperties.hpp"
-#include "dawn/CodeGen/Cuda/CodeGeneratorHelper.hpp"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
+#include "dawn/CodeGen/Cuda/ASTStencilBody.h"
+#include "dawn/CodeGen/Cuda/ASTStencilDesc.h"
+#include "dawn/CodeGen/Cuda/CacheProperties.hpp"
+#include "dawn/CodeGen/Cuda/CodeGeneratorHelper.hpp"
+#include "dawn/CodeGen/Cuda/IndexIterator.h"
+#include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassInlining.h"
-#include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Logging.h"
@@ -459,7 +459,7 @@ void CudaCodeGen::generateCudaKernelCode(
 
 bool CudaCodeGen::solveKLoopInParallel(const std::unique_ptr<iir::MultiStage>& ms) const {
   iir::MultiInterval mInterval{computePartitionOfIntervals(ms)};
-  return mInterval.contiguous();
+  return mInterval.contiguous() && (ms->getLoopOrder() == iir::LoopOrderKind::LK_Parallel);
 }
 
 iir::Interval::IntervalLevel
