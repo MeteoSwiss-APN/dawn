@@ -413,6 +413,11 @@ void CudaCodeGen::generateCudaKernelCode(
             if(!enclosingInterval.overlaps(interval))
               continue;
 
+            // only add sync if there are data dependencies
+            if(stage.getRequiresSync()) {
+              cudaKernel.addStatement("__syncthreads()");
+            }
+
             cudaKernel.addBlockStatement(
                 "if(iblock >= " + std::to_string(extent[0].Minus) +
                     " && iblock <= block_size_i -1 + " + std::to_string(extent[0].Plus) +
@@ -430,10 +435,6 @@ void CudaCodeGen::generateCudaKernelCode(
                     }
                   }
                 });
-            // If the stage is not the last stage, we need to sync
-            if(stage.getStageID() != ms->getChildren().back()->getStageID()) {
-              cudaKernel.addStatement("__syncthreads()");
-            }
           }
           std::string incStr =
               (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) ? "-=" : "+=";

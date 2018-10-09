@@ -146,6 +146,7 @@ private:
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
   //  std::string generateGlobals(const std::shared_ptr<SIR>& sir);
   static int paddedBoundary(int value);
+  bool requiresSync(const iir::Stage& stage, const std::unique_ptr<iir::MultiStage>& ms) const;
 };
 } // namespace cuda
 } // namespace codegen
