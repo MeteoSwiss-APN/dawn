@@ -609,9 +609,11 @@ OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, Options& opti
 
   for(const auto& stencil : SIR_->Stencils)
     if(!stencil->Attributes.has(sir::Attr::AK_NoCodeGen)) {
-      auto newIIR = make_unique<iir::IIR>(this);
-      fillIIRFromSIR(newIIR, stencil, SIR_);
-      stencilNameToIIRMap_.insert(std::make_pair(stencil->Name, std::move(newIIR)));
+      stencilNameToIIRMap_.emplace(stencil->Name,make_unique<iir::IIR>(this));
+      fillIIRFromSIR(stencilNameToIIRMap_.at(stencil->Name), stencil, SIR_);
+//      auto newIIR = make_unique<iir::IIR>(this);
+//      fillIIRFromSIR(newIIR, stencil, SIR_);
+//      stencilNameToIIRMap_.insert(std::make_pair(stencil->Name, std::move(newIIR)));
 
     } else {
       DAWN_LOG(INFO) << "Skipping processing of `" << stencil->Name << "`";
