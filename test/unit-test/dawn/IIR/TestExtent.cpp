@@ -61,7 +61,7 @@ TEST(ExtentsTest, Merge3) {
   Extents extents({-1, 1, 0});
   extents.merge({-2, 0, 0});
 
-  EXPECT_TRUE((extents[0] == Extent{-2, 0}));
+  EXPECT_TRUE((extents[0] == Extent{-2, -1}));
   EXPECT_TRUE((extents[1] == Extent{0, 1}));
   EXPECT_TRUE((extents[2] == Extent{0, 0}));
 }
