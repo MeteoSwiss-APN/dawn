@@ -38,7 +38,7 @@ stencil Test {
 
     // MS1
     vertical_region(k_end-3, k_end-3) {
-        c = tmp[k+3] + tmp[k+2] ;
+        c = tmp[k+3] + tmp[k+2] + tmp[k+1];
     }
     vertical_region(k_end-4, k_start) {
         tmp = b;
