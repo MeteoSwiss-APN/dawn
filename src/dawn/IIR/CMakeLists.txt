@@ -56,8 +56,8 @@ yoda_add_library(
           StatementAccessesPair.h
           Stencil.cpp
           Stencil.h
-          StencilInstantiation.cpp
-          StencilInstantiation.h
+#          StencilInstantiation.cpp
+#          StencilInstantiation.h
           MetaInformation.cpp
           MetaInformation.h
           StencilFunction/StencilFunctionInstantiation.cpp

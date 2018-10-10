@@ -46,14 +46,14 @@ extern void registerStencilFunction(std::shared_ptr<StencilFunctionInstantiation
 extern void finalizeStencilFunctionSetup(std::shared_ptr<StencilFunctionInstantiation> stencilFun,
                                          iir::IIR* iir);
 ///
-/// \brief makeStencilFunctionInstantiation
-/// \param expr
-/// \param SIRStencilFun
-/// \param ast
-/// \param interval
-/// \param curStencilFunctionInstantiation
-/// \param iir
-/// \return
+/// @brief makeStencilFunctionInstantiation
+/// @param expr
+/// @param SIRStencilFun
+/// @param ast
+/// @param interval
+/// @param curStencilFunctionInstantiation
+/// @param iir
+/// @return
 ///
 extern std::shared_ptr<StencilFunctionInstantiation> makeStencilFunctionInstantiation(
     const std::shared_ptr<StencilFunCallExpr>& expr,
@@ -63,10 +63,10 @@ extern std::shared_ptr<StencilFunctionInstantiation> makeStencilFunctionInstanti
     iir::IIR* iir);
 
 ///
-/// \brief removeStencilFunctionInstantiation
-/// \param expr
-/// \param callerStencilFunctionInstantiation
-/// \param iir
+/// @brief removeStencilFunctionInstantiation
+/// @param expr
+/// @param callerStencilFunctionInstantiation
+/// @param iir
 ///
 extern void removeStencilFunctionInstantiation(
     const std::shared_ptr<StencilFunCallExpr>& expr,
