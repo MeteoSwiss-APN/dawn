@@ -17,10 +17,10 @@
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/GridTools/ASTStencilBody.h"
 #include "dawn/CodeGen/GridTools/ASTStencilDesc.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Logging.h"
@@ -952,17 +952,7 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
 
   CodeGen::addMplIfdefs(ppDefines, mplContainerMaxSize_, context_->getOptions().MaxHaloPoints);
 
-  BCFinder finder;
-  for(const auto& stencilInstantiation : context_->getStencilInstantiationMap()) {
-    for(const auto& stmt : stencilInstantiation.second->getStencilDescStatements()) {
-      stmt->ASTStmt->accept(finder);
-    }
-  }
-  if(finder.reportBCsFound()) {
-    ppDefines.push_back("#ifdef __CUDACC__\n#include "
-                        "<boundary-conditions/apply_gpu.hpp>\n#else\n#include "
-                        "<boundary-conditions/apply.hpp>\n#endif\n");
-  }
+  generateBCHeaders(context_, ppDefines);
 
   DAWN_LOG(INFO) << "Done generating code";
 

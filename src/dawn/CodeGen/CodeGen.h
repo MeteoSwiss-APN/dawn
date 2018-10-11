@@ -16,8 +16,8 @@
 #define DAWN_CODEGEN_CODEGEN_H
 
 #include "dawn/CodeGen/CXXUtil.h"
-#include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
+#include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/IndexRange.h"
 #include <memory>
@@ -88,6 +88,7 @@ public:
                                   const CodeGenProperties& codeGenProperties) const;
   virtual std::string generateGlobals(std::shared_ptr<SIR> const& sir,
                                       std::string namespace_) const;
+  void generateBCHeaders(OptimizerContext* context_, std::vector<std::string>& ppDefines) const;
 };
 
 } // namespace codegen

@@ -128,6 +128,22 @@ void CodeGen::generateBoundaryConditionFunctions(
   }
 }
 
+void CodeGen::generateBCHeaders(OptimizerContext* context_,
+                                std::vector<std::string>& ppDefines) const {
+  bool containBC = false;
+  for(const auto& stencilInstantiation : context_->getStencilInstantiationMap()) {
+    if(!stencilInstantiation.second->getBoundaryConditions().empty()) {
+      containBC = true;
+    }
+  }
+
+  if(containBC) {
+    ppDefines.push_back("#ifdef __CUDACC__\n#include "
+                        "<boundary-conditions/apply_gpu.hpp>\n#else\n#include "
+                        "<boundary-conditions/apply.hpp>\n#endif\n");
+  }
+}
+
 CodeGenProperties
 CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstantiation) const {
   CodeGenProperties codeGenProperties;

@@ -1127,6 +1127,9 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
   // [https://github.com/MeteoSwiss-APN/gtclang/issues/32]
   //==============------------------------------------------------------------------------------===
   CodeGen::addMplIfdefs(ppDefines, 30, context_->getOptions().MaxHaloPoints);
+
+  generateBCHeaders(context_, ppDefines);
+
   DAWN_LOG(INFO) << "Done generating code";
 
   // TODO missing the BC
