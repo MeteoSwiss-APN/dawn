@@ -653,7 +653,6 @@ bool OptimizerContext::fillIIRFromSIR(std::unique_ptr<iir::IIR>& iir,
   stencilDeclMapper.cleanupStencilDeclAST();
 
   //  // Repair broken references to temporaries i.e promote them to real fields
-  std::cout << "iir->getChildren().size() :" << iir->getChildren().size() << std::endl;
   PassTemporaryType::fixTemporariesSpanningMultipleStencils(iir.get(), iir->getChildren());
 
   if(iir->getOptions().ReportAccesses) {
@@ -664,23 +663,12 @@ bool OptimizerContext::fillIIRFromSIR(std::unique_ptr<iir::IIR>& iir,
   for(const auto& MS : iterateIIROver<MultiStage>(*iir)) {
     MS->update(NodeUpdateType::levelAndTreeAbove);
   }
-
-  std::cout << "printing iir of " << SIRStencil->Name << std::endl;
   iir->printTree();
   DAWN_LOG(INFO) << "Done initializing StencilInstantiation";
 
   return true;
 }
 
-// std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
-// OptimizerContext::getStencilInstantiationMap() {
-//  return stencilInstantiationMap_;
-//}
-
-// const std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>&
-// OptimizerContext::getStencilInstantiationMap() const {
-//  return stencilInstantiationMap_;
-//}
 
 std::map<std::string, std::unique_ptr<iir::IIR>>& OptimizerContext::getNameIIRMap() {
   return stencilNameToIIRMap_;

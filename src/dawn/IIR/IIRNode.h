@@ -196,7 +196,7 @@ public:
 
   /// @brief virtual method to be implemented by node classes that update the derived info from
   /// children derived infos
-  virtual void updateFromChildren() {std::cout << "base class call" << std::endl;}
+  virtual void updateFromChildren() {}
 
   inline void setParent(const std::unique_ptr<Parent>& p) { parent_ = &p; }
 
@@ -372,17 +372,13 @@ public:
   template <typename TNodeType>
   inline void updateFromChildrenRec(
       typename std::enable_if<std::is_void<typename TNodeType::ParentType>::value>::type* = 0) {
-    std::cout << "at the top" << std::endl;
-    std::cout << "updateChildren from node: " << getClassType<TNodeType>() << std::endl;
     this->updateFromChildren();
-    std::cout << "update worked" << std::endl;
   }
 
   /// @brief update recursively (propagating to the top of the tree) the derived info of this node
   template <typename TNodeType>
   inline void updateFromChildrenRec(
       typename std::enable_if<!std::is_void<typename TNodeType::ParentType>::value>::type* = 0) {
-    std::cout << "updateChildren from node: " << getClassType<TNodeType>() << std::endl;
     updateFromChildren();
 
     auto parentPtr = getParentPtr();
@@ -402,9 +398,7 @@ public:
       }
     }
     if(impl::updateTreeAbove(updateType)) {
-      std::cout << "we break here" << std::endl;
       updateFromChildrenRec<NodeType>();
-      std::cout << "this worked" << std::endl;
     }
     if(impl::updateTreeBelow(updateType)) {
       dawn_unreachable("node update type tree below not supported");

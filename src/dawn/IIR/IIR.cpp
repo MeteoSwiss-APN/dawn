@@ -34,7 +34,7 @@ IIR::IIR(OptimizerContext* creator)
   DAWN_ASSERT(creator);
 }
 
-void IIR::updateFromChildren() {std::cout << "this is my final update" << std::endl;}
+void IIR::updateFromChildren() {}
 
 std::unique_ptr<IIR> IIR::clone() const {
 
