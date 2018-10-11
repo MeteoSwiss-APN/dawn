@@ -545,7 +545,7 @@ std::string CudaCodeGen::generateStencilInstantiation(
   Class StencilWrapperClass(stencilInstantiation->getName(), ssSW);
   StencilWrapperClass.changeAccessibility("public");
 
-  CodeGenProperties codeGenProperties;
+  CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
 
   // generate code for base class of all the inner stencils
   Structure sbase = StencilWrapperClass.addStruct("sbase", "");
