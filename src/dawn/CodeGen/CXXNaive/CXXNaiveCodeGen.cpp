@@ -499,7 +499,7 @@ void CXXNaiveCodeGen::generateStencilFunctions(
 
       // add global parameter
       if(stencilFun->hasGlobalVariables()) {
-        stencilFunMethod.addArg("globals& m_globals");
+        stencilFunMethod.addArg("const globals& m_globals");
       }
       ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation.get(),
                                            StencilContext::SC_StencilFunction);
