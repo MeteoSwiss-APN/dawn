@@ -88,7 +88,7 @@ public:
                                   const CodeGenProperties& codeGenProperties) const;
   virtual std::string generateGlobals(std::shared_ptr<SIR> const& sir,
                                       std::string namespace_) const;
-  void generateBCHeaders(OptimizerContext* context_, std::vector<std::string>& ppDefines) const;
+  void generateBCHeaders(std::vector<std::string>& ppDefines) const;
 };
 
 } // namespace codegen

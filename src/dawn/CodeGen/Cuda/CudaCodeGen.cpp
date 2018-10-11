@@ -1115,7 +1115,7 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
   //==============------------------------------------------------------------------------------===
   CodeGen::addMplIfdefs(ppDefines, 30, context_->getOptions().MaxHaloPoints);
 
-  generateBCHeaders(context_, ppDefines);
+  generateBCHeaders(ppDefines);
 
   DAWN_LOG(INFO) << "Done generating code";
 

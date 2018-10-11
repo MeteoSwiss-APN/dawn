@@ -32,24 +32,6 @@ namespace dawn {
 namespace codegen {
 namespace gt {
 
-namespace {
-class BCFinder : public ASTVisitorForwarding {
-public:
-  using Base = ASTVisitorForwarding;
-  BCFinder() : BCsFound_(0) {}
-  void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
-    BCsFound_++;
-    Base::visit(stmt);
-  }
-  void resetFinder() { BCsFound_ = 0; }
-
-  int reportBCsFound() { return BCsFound_; }
-
-private:
-  int BCsFound_;
-};
-}
-
 GTCodeGen::GTCodeGen(OptimizerContext* context) : CodeGen(context), mplContainerMaxSize_(20) {}
 
 GTCodeGen::~GTCodeGen() {}
@@ -947,7 +929,7 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
 
   CodeGen::addMplIfdefs(ppDefines, mplContainerMaxSize_, context_->getOptions().MaxHaloPoints);
 
-  generateBCHeaders(context_, ppDefines);
+  generateBCHeaders(ppDefines);
 
   DAWN_LOG(INFO) << "Done generating code";
 

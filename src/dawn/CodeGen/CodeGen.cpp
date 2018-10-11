@@ -56,6 +56,7 @@ std::string CodeGen::generateGlobals(std::shared_ptr<SIR> const& sir,
       ctr.addInit(Name + "(" + value.toString() + ")");
     }
   }
+  ctr.startBody();
   ctr.commit();
 
   GlobalsStruct.commit();
@@ -126,8 +127,7 @@ void CodeGen::generateBoundaryConditionFunctions(
   }
 }
 
-void CodeGen::generateBCHeaders(OptimizerContext* context_,
-                                std::vector<std::string>& ppDefines) const {
+void CodeGen::generateBCHeaders(std::vector<std::string>& ppDefines) const {
   bool containBC = false;
   for(const auto& stencilInstantiation : context_->getStencilInstantiationMap()) {
     if(!stencilInstantiation.second->getBoundaryConditions().empty()) {
