@@ -15,10 +15,10 @@
 #ifndef DAWN_CODEGEN_CUDA_CODEGENERATORHELPER_H
 #define DAWN_CODEGEN_CUDA_CODEGENERATORHELPER_H
 
-#include <string>
-#include "dawn/Support/Array.h"
 #include "dawn/IIR/Cache.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Support/Array.h"
+#include <string>
 
 namespace dawn {
 namespace codegen {
@@ -27,6 +27,7 @@ namespace cuda {
 class CodeGeneratorHelper {
 public:
   static std::string generateStrideName(int dim, Array3i fieldDims);
+  static std::string indexIteratorName(Array3i dims);
 };
 
 } // namespace cuda

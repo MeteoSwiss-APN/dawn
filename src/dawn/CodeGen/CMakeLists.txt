@@ -30,9 +30,9 @@ yoda_add_library(
           CXXNaive/CXXNaiveCodeGen.cpp
           CXXNaive/CXXNaiveCodeGen.h
           Cuda/CacheProperties.cpp
-          Cuda/CacheProperties.hpp
+          Cuda/CacheProperties.h
           Cuda/CodeGeneratorHelper.cpp
-          Cuda/CodeGeneratorHelper.hpp
+          Cuda/CodeGeneratorHelper.h
           Cuda/CudaCodeGen.cpp
           Cuda/CudaCodeGen.h
           Cuda/ASTStencilBody.cpp
@@ -41,7 +41,6 @@ yoda_add_library(
           Cuda/ASTStencilDesc.h
           Cuda/ASTStencilFunctionParamVisitor.cpp
           Cuda/ASTStencilFunctionParamVisitor.h
-          Cuda/IndexIterator.h
           GridTools/ASTStencilBody.cpp
           GridTools/ASTStencilBody.h
           GridTools/ASTStencilDesc.cpp

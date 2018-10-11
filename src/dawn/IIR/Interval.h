@@ -144,7 +144,7 @@ public:
 
   /// @brief Convert to SIR Interval
   inline sir::Interval asSIRInterval() const {
-    return sir::Interval(lower_.levelMark_, upper_.levelMark_, lower_.offset_, upper_.offset_);
+    return sir::Interval(lowerLevel(), upperLevel(), lowerOffset(), upperOffset());
   }
 
   /// @brief returns true if the level bound of the interval is the end of the axis

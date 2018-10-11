@@ -71,12 +71,13 @@ TEST_F(ComputeMaxExtents, test_stencil_01) {
   ASSERT_TRUE((stencil->getNumStages() == 2));
   auto exts = stencil->getFields();
   EXPECT_EQ(exts.size(), 3);
-  EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(1)), "u");
-  EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(2)), "out");
-  EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(3)), "lap");
-  EXPECT_EQ(exts.at(1).field.getExtentsRB(), (iir::Extents{-2, 2, -2, 2, 0, 0}));
-  EXPECT_EQ(exts.at(2).field.getExtentsRB(), (iir::Extents{0, 0, 0, 0, 0, 0}));
-  EXPECT_EQ(exts.at(3).field.getExtentsRB(), (iir::Extents{-1, 1, -1, 1, 0, 0}));
+  int u_id = stencil->getStencilInstantiation().getAccessIDFromName("u");
+  int out_id = stencil->getStencilInstantiation().getAccessIDFromName("out");
+  int lap_id = stencil->getStencilInstantiation().getAccessIDFromName("lap");
+
+  EXPECT_EQ(exts.at(u_id).field.getExtentsRB(), (iir::Extents{-2, 2, -2, 2, 0, 0}));
+  EXPECT_EQ(exts.at(out_id).field.getExtentsRB(), (iir::Extents{0, 0, 0, 0, 0, 0}));
+  EXPECT_EQ(exts.at(lap_id).field.getExtentsRB(), (iir::Extents{-1, 1, -1, 1, 0, 0}));
 }
 
 TEST_F(ComputeMaxExtents, test_stencil_02) {
@@ -88,12 +89,13 @@ TEST_F(ComputeMaxExtents, test_stencil_02) {
   ASSERT_TRUE((stencil->getNumStages() == 3));
   auto exts = stencil->getFields();
   EXPECT_EQ(exts.size(), 6);
-  EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(1)), "u");
-  EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(2)), "out");
-  EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(3)), "coeff");
-  EXPECT_EQ(exts.at(1).field.getExtentsRB(), (iir::Extents{-2, 2, -2, 2, 0, 0}));
-  EXPECT_EQ(exts.at(2).field.getExtentsRB(), (iir::Extents{0, 0, 0, 0, 0, 0}));
-  EXPECT_EQ(exts.at(3).field.getExtentsRB(), (iir::Extents{0, 0, 0, 0, 0, 0}));
+  int u_id = stencil->getStencilInstantiation().getAccessIDFromName("u");
+  int out_id = stencil->getStencilInstantiation().getAccessIDFromName("out");
+  int coeff_id = stencil->getStencilInstantiation().getAccessIDFromName("coeff");
+
+  EXPECT_EQ(exts.at(u_id).field.getExtentsRB(), (iir::Extents{-2, 2, -2, 2, 0, 0}));
+  EXPECT_EQ(exts.at(out_id).field.getExtentsRB(), (iir::Extents{0, 0, 0, 0, 0, 0}));
+  EXPECT_EQ(exts.at(coeff_id).field.getExtentsRB(), (iir::Extents{0, 0, 0, 0, 0, 0}));
 }
 TEST_F(ComputeMaxExtents, test_stencil_03) {
   std::unique_ptr<iir::IIR> IIR = loadTest("compute_extent_test_stencil_03.sir");
@@ -104,12 +106,13 @@ TEST_F(ComputeMaxExtents, test_stencil_03) {
   ASSERT_TRUE((stencil->getNumStages() == 4));
   auto exts = stencil->getFields();
   EXPECT_EQ(exts.size(), 7);
-  EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(1)), "u");
-  EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(2)), "out");
-  EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(3)), "coeff");
-  EXPECT_EQ(exts.at(1).field.getExtentsRB(), (iir::Extents{-2, 2, -2, 3, 0, 0}));
-  EXPECT_EQ(exts.at(2).field.getExtentsRB(), (iir::Extents{0, 0, 0, 0, 0, 0}));
-  EXPECT_EQ(exts.at(3).field.getExtentsRB(), (iir::Extents{0, 0, 0, 1, 0, 0}));
+  int u_id = stencil->getStencilInstantiation().getAccessIDFromName("u");
+  int out_id = stencil->getStencilInstantiation().getAccessIDFromName("out");
+  int coeff_id = stencil->getStencilInstantiation().getAccessIDFromName("coeff");
+
+  EXPECT_EQ(exts.at(u_id).field.getExtentsRB(), (iir::Extents{-2, 2, -2, 3, 0, 0}));
+  EXPECT_EQ(exts.at(out_id).field.getExtentsRB(), (iir::Extents{0, 0, 0, 0, 0, 0}));
+  EXPECT_EQ(exts.at(coeff_id).field.getExtentsRB(), (iir::Extents{0, 0, 0, 1, 0, 0}));
 }
 
 TEST_F(ComputeMaxExtents, test_stencil_04) {
@@ -122,10 +125,11 @@ TEST_F(ComputeMaxExtents, test_stencil_04) {
   ASSERT_TRUE((stencil->getNumStages() == 4));
   auto exts = stencil->getFields();
   EXPECT_EQ(exts.size(), 6);
-  EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(1)), "u");
-  EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(2)), "out");
-  EXPECT_EQ(exts.at(1).field.getExtentsRB(), (iir::Extents{-3, 4, -2, 1, 0, 0}));
-  EXPECT_EQ(exts.at(2).field.getExtentsRB(), (iir::Extents{0, 0, 0, 0, 0, 0}));
+
+  int u_id = stencil->getStencilInstantiation().getAccessIDFromName("u");
+  int out_id = stencil->getStencilInstantiation().getAccessIDFromName("out");
+  EXPECT_EQ(exts.at(u_id).field.getExtentsRB(), (iir::Extents{-3, 4, -2, 1, 0, 0}));
+  EXPECT_EQ(exts.at(out_id).field.getExtentsRB(), (iir::Extents{0, 0, 0, 0, 0, 0}));
 }
 
 TEST_F(ComputeMaxExtents, test_stencil_05) {
@@ -138,10 +142,11 @@ TEST_F(ComputeMaxExtents, test_stencil_05) {
   ASSERT_TRUE((stencil->getNumStages() == 4));
   auto exts = stencil->getFields();
   EXPECT_EQ(exts.size(), 6);
-  EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(1)), "u");
-  EXPECT_EQ((stencil->getStencilInstantiation().getNameFromAccessID(2)), "out");
-  EXPECT_EQ(exts.at(1).field.getExtentsRB(), (iir::Extents{-3, 4, -2, 1, 0, 0}));
-  EXPECT_EQ(exts.at(2).field.getExtentsRB(), (iir::Extents{0, 0, 0, 0, 0, 0}));
+  int u_id = stencil->getStencilInstantiation().getAccessIDFromName("u");
+  int out_id = stencil->getStencilInstantiation().getAccessIDFromName("out");
+
+  EXPECT_EQ(exts.at(u_id).field.getExtentsRB(), (iir::Extents{-3, 4, -2, 1, 0, 0}));
+  EXPECT_EQ(exts.at(out_id).field.getExtentsRB(), (iir::Extents{0, 0, 0, 0, 0, 0}));
 }
 
 } // anonymous namespace

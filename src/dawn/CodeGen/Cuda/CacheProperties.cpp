@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/CodeGen/Cuda/CacheProperties.hpp"
+#include "dawn/CodeGen/Cuda/CacheProperties.h"
 
 namespace dawn {
 namespace codegen {
@@ -76,12 +76,13 @@ int CacheProperties::getStrideCommonCache(int dim, Array3ui blockSize) const {
 }
 
 int CacheProperties::getStrideImpl(int dim, Array3ui blockSize, const iir::Extents& extents) const {
-  if(dim == 0)
+  if(dim == 0) {
     return 1;
-  else if(dim == 1)
+  } else if(dim == 1) {
     return blockSize[0] - extents[0].Minus + extents[0].Plus;
-  else
+  } else {
     dawn_unreachable("error");
+  }
 }
 
 int CacheProperties::getOffset(int accessID, int dim) const {

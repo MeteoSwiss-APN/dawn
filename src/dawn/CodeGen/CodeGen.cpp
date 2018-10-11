@@ -39,9 +39,7 @@ std::string CodeGen::generateGlobals(std::shared_ptr<SIR> const& sir,
 
   Namespace cudaNamespace(namespace_, ss);
 
-  std::string StructName = "globals";
-
-  Struct GlobalsStruct(StructName, ss);
+  Struct GlobalsStruct("globals", ss);
 
   for(const auto& globalsPair : globalsMap) {
     sir::Value& value = *globalsPair.second;
@@ -75,7 +73,7 @@ void CodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInstant
                                  const sir::GlobalVariableMap& globalsMap,
                                  const CodeGenProperties& codeGenProperties) const {
 
-  stencilWrapperClass.addComment("Globals API");
+  stencilWrapperClass.addComment("Access-wrapper for globally defined variables");
 
   for(const auto& globalProp : globalsMap) {
     auto globalValue = globalProp.second;

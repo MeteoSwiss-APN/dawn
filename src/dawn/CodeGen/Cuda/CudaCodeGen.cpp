@@ -17,9 +17,8 @@
 #include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/CodeGen/Cuda/ASTStencilBody.h"
 #include "dawn/CodeGen/Cuda/ASTStencilDesc.h"
-#include "dawn/CodeGen/Cuda/CacheProperties.hpp"
-#include "dawn/CodeGen/Cuda/CodeGeneratorHelper.hpp"
-#include "dawn/CodeGen/Cuda/IndexIterator.h"
+#include "dawn/CodeGen/Cuda/CacheProperties.h"
+#include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
@@ -118,7 +117,7 @@ CudaCodeGen::computePartitionOfIntervals(const std::unique_ptr<iir::MultiStage>&
   // compute the partition of the intervals
 
   auto partitionIntervals = iir::Interval::computePartition(intervals_v);
-  if((ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward))
+  if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
     std::reverse(partitionIntervals.begin(), partitionIntervals.end());
   return partitionIntervals;
 }
@@ -216,8 +215,6 @@ void CudaCodeGen::generateCudaKernelCode(
                           " < ny ? " + std::to_string(nty) + " : ny - blockIdx.y * " +
                           std::to_string(nty));
 
-  std::string firstFieldName =
-      stencilInstantiation->getNameFromAccessID(firstField.second.getAccessID());
   cudaKernel.addComment("computing the global position in the physical domain");
   cudaKernel.addComment("In a typical cuda block we have the following regions");
   cudaKernel.addComment("aa bbbbbbbb cc");
@@ -284,8 +281,6 @@ void CudaCodeGen::generateCudaKernelCode(
 
   for(auto field : nonTempFields) {
     Array3i dims{-1, -1, -1};
-    // TODO this is a hack, we need to have dimensions also at ms level
-    // then we wont need the IndexIterator
     for(const auto& fieldInfo : ms->getParent()->getFields()) {
       if(fieldInfo.second.field.getAccessID() == (*field).second.getAccessID()) {
         dims = fieldInfo.second.Dimensions;
@@ -294,7 +289,7 @@ void CudaCodeGen::generateCudaKernelCode(
     }
     DAWN_ASSERT(std::accumulate(dims.begin(), dims.end(), 0) != -3);
     fieldIndexMap.emplace((*field).second.getAccessID(), dims);
-    indexIterators.emplace(IndexIterator::name(dims), dims);
+    indexIterators.emplace(CodeGeneratorHelper::indexIteratorName(dims), dims);
   }
 
   for(auto index : indexIterators) {
@@ -329,12 +324,11 @@ void CudaCodeGen::generateCudaKernelCode(
   // compute the partition of the intervals
   auto partitionIntervals = computePartitionOfIntervals(ms);
 
-  DAWN_ASSERT((partitionIntervals.size() > 0));
+  DAWN_ASSERT(!partitionIntervals.empty());
 
   ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, fieldIndexMap, *ms, cacheProperties,
                                        blockSize);
 
-  DAWN_ASSERT(!partitionIntervals.empty());
   iir::Interval::IntervalLevel lastKCell{0, 0};
   lastKCell = advance(lastKCell, ms->getLoopOrder(), -1);
 
@@ -538,8 +532,6 @@ std::string CudaCodeGen::generateStencilInstantiation(
 
   Namespace cudaNamespace("cuda", ssSW);
 
-  // TODO missing the BC
-
   generateAllCudaKernels(ssSW, stencilInstantiation);
 
   Class StencilWrapperClass(stencilInstantiation->getName(), ssSW);
@@ -592,9 +584,6 @@ void CudaCodeGen::generateStencilClasses(
 
   const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
 
-  // Stencil members:
-  // names of all the inner stencil classes of the stencil wrapper class
-  std::vector<std::string> innerStencilNames(stencils.size());
   // generate the code for each of the stencils
   for(const auto& stencilPtr : stencils) {
     const auto& stencil = *stencilPtr;
@@ -619,8 +608,6 @@ void CudaCodeGen::generateStencilClasses(
             [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
 
     Structure stencilClass = stencilWrapperClass.addStruct(stencilName, "", "sbase");
-    std::string StencilName = stencilClass.getName();
-
     auto& paramNameToType = stencilProperties->paramNameToType_;
 
     for(auto fieldIt : nonTempFields) {
@@ -734,7 +721,6 @@ void CudaCodeGen::generateStencilWrapperCtr(
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
 
-  int i = 0;
   for(int fieldId : stencilInstantiation->getAPIFieldIDs()) {
     StencilWrapperConstructor.addArg(
         getStorageType(stencilInstantiation->getFieldDimensionsMask(fieldId)) + "& " +
@@ -913,11 +899,11 @@ void CudaCodeGen::generateStencilRunMethod(
     }
 
     StencilRunMethod.addStatement(
-        "const unsigned int nx = m_dom.isize()-m_dom.iminus() - m_dom.iplus()");
+        "const unsigned int nx = m_dom.isize() - m_dom.iminus() - m_dom.iplus()");
     StencilRunMethod.addStatement(
-        "const unsigned int ny = m_dom.jsize()-m_dom.jminus() - m_dom.jplus()");
+        "const unsigned int ny = m_dom.jsize() - m_dom.jminus() - m_dom.jplus()");
     StencilRunMethod.addStatement(
-        "const unsigned int nz = m_dom.ksize()-m_dom.kminus() - m_dom.kplus()");
+        "const unsigned int nz = m_dom.ksize() - m_dom.kminus() - m_dom.kplus()");
 
     const auto blockSize = stencilInstantiation->getIIR()->getBlockSize();
 
@@ -1003,9 +989,10 @@ std::vector<std::string> CudaCodeGen::generateStrideArguments(
       }
     }
 
-    if(processedDims.count(IndexIterator::name(dims)))
+    if(processedDims.count(CodeGeneratorHelper::indexIteratorName(dims))) {
       continue;
-    processedDims.emplace(IndexIterator::name(dims));
+    }
+    processedDims.emplace(CodeGeneratorHelper::indexIteratorName(dims));
 
     int usedDim = 0;
     for(int i = 0; i < dims.size(); ++i) {
@@ -1016,7 +1003,7 @@ std::vector<std::string> CudaCodeGen::generateStrideArguments(
       if(funArg == FunctionArgType::caller) {
         strides.push_back("m_" + fieldName + ".strides()[" + std::to_string(i) + "]");
       } else {
-        strides.push_back("const int stride_" + IndexIterator::name(dims) + "_" +
+        strides.push_back("const int stride_" + CodeGeneratorHelper::indexIteratorName(dims) + "_" +
                           std::to_string(i));
       }
     }

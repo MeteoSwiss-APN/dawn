@@ -160,8 +160,8 @@ std::vector<Interval> Interval::computeGapIntervals(const Interval& axis,
 
 void Interval::merge(const Interval& other) {
   int lb = lowerBound(), ub = upperBound();
-  lower_.levelMark_ = std::min(lower_.levelMark_, other.lowerLevel());
-  upper_.levelMark_ = std::max(upper_.levelMark_, other.upperLevel());
+  lower_.levelMark_ = std::min(lowerLevel(), other.lowerLevel());
+  upper_.levelMark_ = std::max(upperLevel(), other.upperLevel());
   lower_.offset_ =
       lb < other.lowerBound() ? lb - lower_.levelMark_ : other.lowerBound() - lowerLevel();
   upper_.offset_ =

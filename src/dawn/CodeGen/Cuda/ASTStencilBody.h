@@ -17,9 +17,8 @@
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
-#include "dawn/CodeGen/Cuda/IndexIterator.h"
-#include "dawn/CodeGen/Cuda/CacheProperties.hpp"
-#include "dawn/CodeGen/Cuda/CodeGeneratorHelper.hpp"
+#include "dawn/CodeGen/Cuda/CacheProperties.h"
+#include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>

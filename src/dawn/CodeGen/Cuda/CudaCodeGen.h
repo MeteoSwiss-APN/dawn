@@ -17,7 +17,7 @@
 
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
-#include "dawn/CodeGen/Cuda/CacheProperties.hpp"
+#include "dawn/CodeGen/Cuda/CacheProperties.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/IndexRange.h"
 #include <set>
@@ -144,7 +144,6 @@ private:
 
   std::string generateStencilInstantiation(
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
-  //  std::string generateGlobals(const std::shared_ptr<SIR>& sir);
   static int paddedBoundary(int value);
   bool requiresSync(const iir::Stage& stage, const std::unique_ptr<iir::MultiStage>& ms) const;
 };

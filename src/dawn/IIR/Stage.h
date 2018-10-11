@@ -202,7 +202,11 @@ public:
   /// @brief true if it contains no do methods or they are empty
   bool isEmptyOrNullStmt() const;
 
+  /// @brief set the flag that specifies that the stage will require an explicit sync before
+  /// execution
   void setRequiresSync(const bool sync);
+  /// @brief get the flag that specifies that the stage will require an explicit sync before
+  /// execution
   bool getRequiresSync() const;
 
   inline virtual void updateFromChildren() override {}

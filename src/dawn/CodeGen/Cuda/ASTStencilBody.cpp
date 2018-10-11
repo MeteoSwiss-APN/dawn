@@ -12,15 +12,15 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include <string>
 #include "dawn/CodeGen/Cuda/ASTStencilBody.h"
-#include "dawn/CodeGen/Cuda/ASTStencilFunctionParamVisitor.h"
 #include "dawn/CodeGen/CXXUtil.h"
-#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/CodeGen/Cuda/ASTStencilFunctionParamVisitor.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Unreachable.h"
+#include <string>
 
 namespace dawn {
 namespace codegen {
@@ -132,8 +132,8 @@ void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   }
   bool isTemporary = instantiation_->isTemporaryField(accessID);
   DAWN_ASSERT(fieldIndexMap_.count(accessID) || isTemporary);
-  std::string index =
-      isTemporary ? "idx_tmp" : "idx" + IndexIterator::name(fieldIndexMap_.at(accessID));
+  std::string index = isTemporary ? "idx_tmp" : "idx" + CodeGeneratorHelper::indexIteratorName(
+                                                            fieldIndexMap_.at(accessID));
 
   // temporaries have all 3 dimensions
   Array3i iter = isTemporary ? Array3i{1, 1, 1} : fieldIndexMap_.at(accessID);

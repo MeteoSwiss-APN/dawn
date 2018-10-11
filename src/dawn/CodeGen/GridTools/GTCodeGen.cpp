@@ -133,7 +133,7 @@ void GTCodeGen::buildPlaceholderDefinitions(
     std::vector<std::string> const& stencilGlobalVariables,
     const sir::GlobalVariableMap& globalsMap, const CodeGenProperties& codeGenProperties) const {
 
-  int accessorIdx = 0, nonTempFieldId = 0;
+  int accessorIdx = 0;
   for(const auto& fieldInfoPair : stencilFields) {
     const auto& fieldInfo = fieldInfoPair.second;
     // Fields
@@ -141,9 +141,6 @@ void GTCodeGen::buildPlaceholderDefinitions(
         .addType(c_gt() + (fieldInfo.IsTemporary ? "tmp_arg" : "arg"))
         .addTemplate(Twine(accessorIdx))
         .addTemplate(codeGenProperties.getParamType(stencilInstantiation, fieldInfo));
-    if(!fieldInfo.IsTemporary) {
-      nonTempFieldId++;
-    }
     ++accessorIdx;
   }
 

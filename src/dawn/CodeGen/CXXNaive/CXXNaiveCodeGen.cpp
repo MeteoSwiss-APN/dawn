@@ -17,8 +17,8 @@
 #include "dawn/CodeGen/CXXNaive/ASTStencilDesc.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Logging.h"
@@ -288,9 +288,9 @@ void CXXNaiveCodeGen::generateStencilClasses(
                   [cnt]() mutable { return "StorageType" + std::to_string(cnt++); });
 
     Structure StencilClass = stencilWrapperClass.addStruct(
-        stencilName, RangeToString(", ", "", "")(StencilTemplates, [](const std::string& str) {
-          return "class " + str;
-        }), "sbase");
+        stencilName, RangeToString(", ", "", "")(
+                         StencilTemplates, [](const std::string& str) { return "class " + str; }),
+        "sbase");
     std::string StencilName = StencilClass.getName();
 
     ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation.get(), StencilContext::SC_Stencil);
@@ -465,8 +465,6 @@ void CXXNaiveCodeGen::generateStencilFunctions(
           RangeToString(", ", "", "")(stencilFnTemplates,
                                       [](const std::string& str) { return "class " + str; }));
 
-      std::vector<std::string> arglist;
-
       if(fields.empty() && !stencilFun->hasReturn()) {
         DiagnosticsBuilder diag(DiagnosticsKind::Error, stencilFun->getStencilFunction()->Loc);
         diag << "no storages referenced in stencil function '" << stencilFun->getName()
@@ -485,7 +483,8 @@ void CXXNaiveCodeGen::generateStencilFunctions(
 
       // We need to generate the arguments in order (of the fn call expr)
       for(const auto& exprArg : stencilFun->getArguments()) {
-        if(exprArg->Kind != sir::StencilFunctionArg::ArgumentKind::AK_Field) continue;
+        if(exprArg->Kind != sir::StencilFunctionArg::ArgumentKind::AK_Field)
+          continue;
         const std::string argName = exprArg->Name;
 
         DAWN_ASSERT(stencilProp->paramNameToType_.count(argName));
@@ -497,12 +496,6 @@ void CXXNaiveCodeGen::generateStencilFunctions(
         stencilFunMethod.addArg("param_wrapper<" + c_gt() + "data_view<" + argType + ">> pw_" +
                                 argName);
       }
-      for(std::size_t m = 0; m < fields.size(); ++m) {
-
-        std::string paramName =
-            stencilFun->getOriginalNameFromCallerAccessID(fields[m].getAccessID());
-      }
-
       ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation.get(),
                                            StencilContext::SC_StencilFunction);
 

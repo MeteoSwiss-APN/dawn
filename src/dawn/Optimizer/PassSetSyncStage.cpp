@@ -36,8 +36,9 @@ bool PassSetSyncStage::requiresSync(const iir::Stage& stage,
     // if the intend of the field is output, we wont require sync from this stage
     // if the intend were IO, it might still not be needed if the output happens before a read,
     // however to simplify the algorithm we will be conservative and apply a sync here
-    if(field.second.getIntend() == iir::Field::IntendKind::IK_Output)
+    if(field.second.getIntend() == iir::Field::IntendKind::IK_Output) {
       continue;
+    }
 
     // we dont consider the field if the access is pointwise
     if(field.second.getExtents().isHorizontalPointwise())

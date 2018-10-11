@@ -1,5 +1,4 @@
-#include "dawn/CodeGen/Cuda/CodeGeneratorHelper.hpp"
-#include "dawn/CodeGen/Cuda/IndexIterator.h"
+#include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/Support/Assert.h"
 
 namespace dawn {
@@ -15,11 +14,21 @@ std::string CodeGeneratorHelper::generateStrideName(int dim, Array3i fieldDims) 
       break;
     }
   }
-  if(dim < firstNonNullDim)
+  if(dim < firstNonNullDim) {
     return "0";
-  if(dim == firstNonNullDim)
+  }
+  if(dim == firstNonNullDim) {
     return "1";
-  return "stride_" + IndexIterator::name(fieldDims) + "_" + std::to_string(dim);
+  }
+  return "stride_" + indexIteratorName(fieldDims) + "_" + std::to_string(dim);
+}
+
+std::string CodeGeneratorHelper::indexIteratorName(Array3i dims) {
+  std::string n_ = "";
+  for(const int i : dims) {
+    n_ = n_ + std::to_string(i);
+  }
+  return n_;
 }
 
 } // namespace cuda

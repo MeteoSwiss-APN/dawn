@@ -12,9 +12,9 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/CodeGen/StencilFunctionAsBCGenerator.h"
 #include "dawn/CodeGen/Cuda/ASTStencilDesc.h"
 #include "dawn/CodeGen/CXXUtil.h"
+#include "dawn/CodeGen/StencilFunctionAsBCGenerator.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Unreachable.h"
@@ -75,8 +75,9 @@ void ASTStencilDesc::visit(const std::shared_ptr<StencilFunArgExpr>& expr) {
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<VarAccessExpr>& expr) {
-  if(instantiation_->isGlobalVariable(instantiation_->getAccessIDFromExpr(expr)))
+  if(instantiation_->isGlobalVariable(instantiation_->getAccessIDFromExpr(expr))) {
     ss_ << "m_globals.";
+  }
 
   ss_ << getName(expr);
 
