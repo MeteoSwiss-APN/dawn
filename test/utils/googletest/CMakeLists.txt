@@ -29,7 +29,7 @@ if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(gtest ${CMAKE_THREAD_LIBS_INIT})
 endif()
 
-target_include_directories(gtest PUBLIC ${GTCLANG_GTEST_INCLUDE_DIRS})
+target_include_directories(gtest SYSTEM PUBLIC ${GTCLANG_GTEST_INCLUDE_DIRS})
 
 check_cxx_compiler_flag(-w HAVE_GCC_NO_WARNING)
 if(HAVE_GCC_NO_WARNING)

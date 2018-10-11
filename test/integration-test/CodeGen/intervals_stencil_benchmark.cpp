@@ -23,11 +23,19 @@
 #define BOOST_MPL_LIMIT_VECTOR_SIZE FUSION_MAX_VECTOR_SIZE
 #define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
 
+#include <gtest/gtest.h>
 #include "gridtools/clang/verify.hpp"
+#include "test/integration-test/CodeGen/Macros.hpp"
 #include "test/integration-test/CodeGen/Options.hpp"
 #include "test/integration-test/CodeGen/generated/intervals_stencil_c++-naive.cpp"
-#include "test/integration-test/CodeGen/generated/intervals_stencil_gridtools.cpp"
-#include <gtest/gtest.h>
+
+#ifndef OPTBACKEND
+#define OPTBACKEND gridtools
+#endif
+
+// clang-format off
+#include INCLUDE_FILE(test/integration-test/CodeGen/generated/intervals_stencil_,OPTBACKEND.cpp)
+// clang-format on
 
 using namespace dawn;
 TEST(intervals_stencil, test) {
@@ -41,7 +49,7 @@ TEST(intervals_stencil, test) {
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, in);
   verif.fill(-1.0, out_gt, out_naive);
 
-  gridtools::intervals_stencil intervals_stencil_gt(dom, in, out_gt);
+  OPTBACKEND::intervals_stencil intervals_stencil_gt(dom, in, out_gt);
   cxxnaive::intervals_stencil intervals_stencil_naive(dom, in, out_naive);
 
   intervals_stencil_gt.run();

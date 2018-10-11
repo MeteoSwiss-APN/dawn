@@ -19,7 +19,6 @@ add_subdirectory(utils)
 if(GTCLANG_UNIT_TESTING)
   add_subdirectory(unit-test)
 endif()
-
 if(GTCLANG_INTEGRATION_TESTING)
   add_subdirectory(integration-test)
 endif()

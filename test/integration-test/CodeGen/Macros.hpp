@@ -13,16 +13,17 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
+#ifndef TEST_INTEGRATIONTEST_CODEGEN_MACROS_H
+#define TEST_INTEGRATIONTEST_CODEGEN_MACROS_H
 
-#include "gridtools/clang_dsl.hpp"
-using namespace gridtools::clang;
+#define CAT(X,Y) CAT2(X,Y)
+#define CAT2(X,Y) X##Y
+#define CAT_2 CAT
 
-stencil copy_stencil {
-  storage in, out;
+// Macro for adding quotes
+#define STRINGIFY(X) STRINGIFY2(X)
+#define STRINGIFY2(X) #X
 
-  Do {
-    vertical_region(k_start, k_end) {
-      out = in;
-    }
-  }
-};
+#define INCLUDE_FILE(HEAD,TAIL) STRINGIFY( CAT_2(HEAD,TAIL) )
+
+#endif

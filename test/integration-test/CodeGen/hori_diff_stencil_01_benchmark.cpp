@@ -24,11 +24,19 @@
 #define BOOST_MPL_LIMIT_VECTOR_SIZE FUSION_MAX_VECTOR_SIZE
 #define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
 
+#include <gtest/gtest.h>
 #include "gridtools/clang/verify.hpp"
+#include "test/integration-test/CodeGen/Macros.hpp"
 #include "test/integration-test/CodeGen/Options.hpp"
 #include "test/integration-test/CodeGen/generated/hori_diff_stencil_01_c++-naive.cpp"
-#include "test/integration-test/CodeGen/generated/hori_diff_stencil_01_gridtools.cpp"
-#include <gtest/gtest.h>
+
+#ifndef OPTBACKEND
+#define OPTBACKEND gridtools
+#endif
+
+// clang-format off
+#include INCLUDE_FILE(test/integration-test/CodeGen/generated/hori_diff_stencil_01_,OPTBACKEND.cpp)
+// clang-format on
 
 using namespace dawn;
 TEST(hori_diff_stencil_01, test) {
@@ -44,7 +52,7 @@ TEST(hori_diff_stencil_01, test) {
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, u);
   verif.fill(-1.0, out_gt, out_naive);
 
-  gridtools::hori_diff_stencil hori_diff_gt(dom, u, out_gt);
+  OPTBACKEND::hori_diff_stencil hori_diff_gt(dom, u, out_gt);
   cxxnaive::hori_diff_stencil hori_diff_naive(dom, u, out_naive);
 
   hori_diff_gt.run();

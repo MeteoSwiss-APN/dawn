@@ -60,11 +60,11 @@ include(GTClangOptions)
 include(GTClangDefinitions)
 include(GTClangMacros)
 
-if(GTCLANG_BUILD_EXAMPLES_WITH_GPU)
+if(GTCLANG_HAS_CUDA)
   include(GTClangSetupCUDA)
   gtclang_setup_CUDA()
-  find_package(SLURM REQUIRED)
-endif(GTCLANG_BUILD_EXAMPLES_WITH_GPU)
+  find_package(SLURM)
+endif(GTCLANG_HAS_CUDA)
 
 # Set C++ standard
 yoda_set_cxx_standard(c++11)

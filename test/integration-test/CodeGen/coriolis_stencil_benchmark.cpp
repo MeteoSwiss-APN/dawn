@@ -24,11 +24,19 @@
 #define BOOST_MPL_LIMIT_VECTOR_SIZE FUSION_MAX_VECTOR_SIZE
 #define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
 
+#include <gtest/gtest.h>
 #include "gridtools/clang/verify.hpp"
+#include "test/integration-test/CodeGen/Macros.hpp"
 #include "test/integration-test/CodeGen/Options.hpp"
 #include "test/integration-test/CodeGen/generated/coriolis_stencil_c++-naive.cpp"
-#include "test/integration-test/CodeGen/generated/coriolis_stencil_gridtools.cpp"
-#include <gtest/gtest.h>
+
+#ifndef OPTBACKEND
+#define OPTBACKEND gridtools
+#endif
+
+// clang-format off
+#include INCLUDE_FILE(test/integration-test/CodeGen/generated/coriolis_stencil_,OPTBACKEND.cpp)
+// clang-format on
 
 using namespace dawn;
 TEST(coriolis_stencil, test) {
@@ -47,7 +55,7 @@ TEST(coriolis_stencil, test) {
   verif.fillMath(5.0, 1.2, 1.3, 1.7, 2.2, 3.5, v_nnow);
   verif.fillMath(2.0, 1.3, 1.4, 1.6, 2.1, 3.0, fc);
 
-  gridtools::coriolis_stencil coriolis_gt(dom, u_tens_gt, u_nnow, v_tens_gt, v_nnow, fc);
+  OPTBACKEND::coriolis_stencil coriolis_gt(dom, u_tens_gt, u_nnow, v_tens_gt, v_nnow, fc);
   cxxnaive::coriolis_stencil coriolis_cxxnaive(dom, u_tens_cxxnaive, u_nnow, v_tens_cxxnaive,
                                                v_nnow, fc);
 

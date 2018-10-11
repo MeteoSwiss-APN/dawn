@@ -28,39 +28,40 @@
 #include "gridtools/clang/verify.hpp"
 #include "test/integration-test/CodeGen/Macros.hpp"
 #include "test/integration-test/CodeGen/Options.hpp"
-#include "test/integration-test/CodeGen/generated/boundary_condition_2_c++-naive.cpp"
+#include "test/integration-test/CodeGen/generated/tridiagonal_solve_c++-naive.cpp"
 
 #ifndef OPTBACKEND
 #define OPTBACKEND gridtools
 #endif
 
 // clang-format off
-#include INCLUDE_FILE(test/integration-test/CodeGen/generated/boundary_condition_2_,OPTBACKEND.cpp)
+#include INCLUDE_FILE(test/integration-test/CodeGen/generated/tridiagonal_solve_,OPTBACKEND.cpp)
 // clang-format on
 
 using namespace dawn;
-TEST(split_stencil, test) {
+TEST(tridiagonal_solve, test) {
   domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1],
              Options::getInstance().m_size[2]);
-  dom.set_halos(GRIDTOOLS_CLANG_HALO_EXTEND, GRIDTOOLS_CLANG_HALO_EXTEND,
-                GRIDTOOLS_CLANG_HALO_EXTEND, GRIDTOOLS_CLANG_HALO_EXTEND, 0, 0);
+  dom.set_halos(halo::value, halo::value, halo::value, halo::value, 0, 0);
+
   verifier verif(dom);
 
   meta_data_t meta_data(dom.isize(), dom.jsize(), dom.ksize() + 1);
-  storage_t in_naive(meta_data, "in-naive"), in_gt(meta_data, "in-gt"), out_gt(meta_data, "out-gt"),
-      out_naive(meta_data, "out-naive"), bc_field(meta_data, "bc-field");
+  storage_t d_naive(meta_data, "d"), d_gt(meta_data, "d_gt"), a(meta_data, "a"), b(meta_data, "b"),
+      c_gt(meta_data, "c_gt"), c_naive(meta_data, "c_naive");
 
-  verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, in_naive, in_gt);
-  verif.fill(15, bc_field);
-  verif.fill_boundaries(15, in_naive);
-  verif.fill(-1.0, out_gt, out_naive);
+  verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, d_naive);
+  verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, d_gt);
+  verif.fillMath(7.4, 2.0, 1.5, 1.3, 2.1, 3.0, a);
+  verif.fillMath(8.0, 2.0, 1.4, 1.2, 2.3, 3.0, b);
+  verif.fillMath(7.8, 2.0, 1.1, 1.7, 1.9, 4.1, c_gt);
+  verif.fillMath(7.8, 2.0, 1.1, 1.7, 1.9, 4.1, c_naive);
 
-  OPTBACKEND::split_stencil swapconst_gt(dom, in_gt, out_gt, bc_field);
-  cxxnaive::split_stencil swapconst_naive(dom, in_naive, out_naive, bc_field);
+  OPTBACKEND::tridiagonal_solve tridiagonal_solve_gt(dom, d_gt, a, b, c_gt);
+  cxxnaive::tridiagonal_solve tridiagonal_solve_naive(dom, d_naive, a, b, c_naive);
 
-  swapconst_gt.run();
-  swapconst_naive.run();
+  tridiagonal_solve_gt.run();
+  tridiagonal_solve_naive.run();
 
-  ASSERT_TRUE(verif.verify(out_gt, out_naive));
-  ASSERT_TRUE(verif.verify(in_gt, in_naive));
+  ASSERT_TRUE(verif.verify(d_gt, d_naive));
 }

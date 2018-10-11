@@ -24,11 +24,19 @@
 #define BOOST_MPL_LIMIT_VECTOR_SIZE FUSION_MAX_VECTOR_SIZE
 #define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
 
+#include <gtest/gtest.h>
 #include "gridtools/clang/verify.hpp"
+#include "test/integration-test/CodeGen/Macros.hpp"
 #include "test/integration-test/CodeGen/Options.hpp"
 #include "test/integration-test/CodeGen/generated/stencil_functions_c++-naive.cpp"
-#include "test/integration-test/CodeGen/generated/stencil_functions_gridtools.cpp"
-#include <gtest/gtest.h>
+
+#ifndef OPTBACKEND
+#define OPTBACKEND gridtools
+#endif
+
+// clang-format off
+#include INCLUDE_FILE(test/integration-test/CodeGen/generated/stencil_functions_,OPTBACKEND.cpp)
+// clang-format on
 
 using namespace dawn;
 
@@ -121,7 +129,7 @@ TEST(stencil_functions, test_01) {
   verif.fill(-1.0, out_gt, out_naive);
   verif.fill(-2.0, out_ref);
 
-  gridtools::test_01_stencil test_01_gt(dom, in, out_gt);
+  OPTBACKEND::test_01_stencil test_01_gt(dom, in, out_gt);
   cxxnaive::test_01_stencil test_01_naive(dom, in, out_naive);
   sftest::test_01_stencil_reference(dom, in, out_ref);
 
@@ -148,7 +156,7 @@ TEST(stencil_functions, test_02) {
   verif.fill(-1.0, out_gt, out_naive);
   verif.fill(-2.0, out_ref);
 
-  gridtools::test_02_stencil test_02_gt(dom, in, out_gt);
+  OPTBACKEND::test_02_stencil test_02_gt(dom, in, out_gt);
   cxxnaive::test_02_stencil test_02_naive(dom, in, out_naive);
   sftest::test_02_stencil_reference(dom, in, out_ref);
 
@@ -175,7 +183,7 @@ TEST(stencil_functions, test_03) {
   verif.fill(-1.0, out_gt, out_naive);
   verif.fill(-2.0, out_ref);
 
-  gridtools::test_03_stencil test_03_gt(dom, in, out_gt);
+  OPTBACKEND::test_03_stencil test_03_gt(dom, in, out_gt);
   cxxnaive::test_03_stencil test_03_naive(dom, in, out_naive);
   sftest::test_03_stencil_reference(dom, in, out_ref);
 
@@ -202,7 +210,7 @@ TEST(stencil_functions, test_06) {
   verif.fill(-1.0, out_gt, out_naive);
   verif.fill(-2.0, out_ref);
 
-  gridtools::test_06_stencil test_06_gt(dom, in, out_gt);
+  OPTBACKEND::test_06_stencil test_06_gt(dom, in, out_gt);
   cxxnaive::test_06_stencil test_06_naive(dom, in, out_naive);
   sftest::test_06_stencil_reference(dom, in, out_ref);
 
@@ -229,7 +237,7 @@ TEST(stencil_functions, test_07) {
   verif.fill(-1.0, out_gt, out_naive);
   verif.fill(-2.0, out_ref);
 
-  gridtools::test_07_stencil test_07_gt(dom, in, out_gt);
+  OPTBACKEND::test_07_stencil test_07_gt(dom, in, out_gt);
   cxxnaive::test_07_stencil test_07_naive(dom, in, out_naive);
   sftest::test_07_stencil_reference(dom, in, out_ref);
 

@@ -15,14 +15,23 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "gridtools/clang_dsl.hpp"
+
 using namespace gridtools::clang;
 
-stencil copy_stencil {
-  storage in, out;
+stencil kparallel_solver {
+  storage d, a, b, c;
 
   Do {
-    vertical_region(k_start, k_end) {
-      out = in;
+    vertical_region(k_start, k_start) {
+      c = a[k + 1];
+      d = b * 2.1;
+    }
+    vertical_region(k_start + 1, k_end) {
+      c = a[k - 1];
+      d = b * 2.0 - 1;
+    }
+    vertical_region(k_end - 1, k_start) {
+      d -= d + a;
     }
   }
 };

@@ -191,8 +191,8 @@ public:
 
     double time = 0;
     auto allStencils = computation.getStencils();
-    for(auto stencil : allStencils){
-        time += stencil->get_time();
+    for(auto stencil : allStencils) {
+      time += stencil->get_time();
     }
 
     std::cout << "\033[0;33m"

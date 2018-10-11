@@ -25,11 +25,19 @@
 #define BOOST_MPL_LIMIT_VECTOR_SIZE FUSION_MAX_VECTOR_SIZE
 #define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
 
+#include <gtest/gtest.h>
 #include "gridtools/clang/verify.hpp"
+#include "test/integration-test/CodeGen/Macros.hpp"
 #include "test/integration-test/CodeGen/Options.hpp"
 #include "test/integration-test/CodeGen/generated/hd_smagorinsky_c++-naive.cpp"
-#include "test/integration-test/CodeGen/generated/hd_smagorinsky_gridtools.cpp"
-#include <gtest/gtest.h>
+
+#ifndef OPTBACKEND
+#define OPTBACKEND gridtools
+#endif
+
+// clang-format off
+#include INCLUDE_FILE(test/integration-test/CodeGen/generated/hd_smagorinsky_,OPTBACKEND.cpp)
+// clang-format on
 
 using namespace dawn;
 TEST(hd_smagorinsky, test) {
@@ -78,7 +86,7 @@ TEST(hd_smagorinsky, test) {
   verif.fill(-1.0, u_out_gt, v_out_gt, u_out_naive, v_out_naive);
 
   // Assemble the stencil ...
-  gridtools::hd_smagorinsky_stencil hd_smagorinsky_gt(
+  OPTBACKEND::hd_smagorinsky_stencil hd_smagorinsky_gt(
       dom, u_out_gt, v_out_gt, u_in, v_in, hdmaskvel, crlavo, crlavu, crlato, crlatu, acrlat0,
       eddlon, eddlat, tau_smag, weight_smag);
   cxxnaive::hd_smagorinsky_stencil hd_smagorinsky_naive(

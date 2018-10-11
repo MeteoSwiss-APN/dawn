@@ -20,7 +20,8 @@ function help {
   echo -e "Basic usage:$SCRIPT "\\n
   echo -e "The following switches are recognized. $OFF "
   echo -e "-i sets the installation directory"
-  echo -e "-g gpu build" 
+  echo -e "-g gpu build"
+  echo -e "-c cuda build" 
   echo -e "-h Shows this help"
   echo -e "-d <path> path to dawn"
   exit 1
@@ -30,7 +31,7 @@ echo "####### executing: $0 $* (PID=$$ HOST=$HOSTNAME TIME=`date '+%D %H:%M:%S'`
 
 ENABLE_GPU=false
 
-while getopts i:gd: flag; do
+while getopts i:gcd: flag; do
   case $flag in
     i)
       INSTALL_DIR=$OPTARG
@@ -40,6 +41,9 @@ while getopts i:gd: flag; do
       ;;
     g)
       ENABLE_GPU=true
+      ;;
+    c)
+      ENABLE_CUDA=true
       ;;
     d) 
       DAWN_PATH=$OPTARG
@@ -77,9 +81,11 @@ if [ ! -z ${DAWN_PATH} ]; then
 fi
 
 if [ "$ENABLE_GPU" = true ]; then
-  cmake ${CMAKE_ARGS} -DGTCLANG_BUILD_EXAMPLES_WITH_GPU=ON -DCTEST_CUDA_SUBMIT=ON -DGTCLANG_SLURM_RESOURCES="${SLURM_RESOURCES[@]}" -DGTCLANG_SLURM_PARTITION=${SLURM_PARTITION} -DGPU_DEVICE=${GPU_DEVICE} ../
+  cmake ${CMAKE_ARGS} -DGTCLANG_BUILD_CUDA_EXAMPLES=OFF -DGTCLANG_BUILD_GT_CPU_EXAMPLES=OFF -DGTCLANG_BUILD_GT_GPU_EXAMPLES=ON -DCTEST_CUDA_SUBMIT=ON -DGTCLANG_SLURM_RESOURCES="${SLURM_RESOURCES[@]}" -DGTCLANG_SLURM_PARTITION=${SLURM_PARTITION} -DGPU_DEVICE=${GPU_DEVICE} ../
+elif [ "$ENABLE_CUDA" = true ]; then
+  cmake ${CMAKE_ARGS} -DGTCLANG_BUILD_CUDA_EXAMPLES=ON -DGTCLANG_BUILD_GT_CPU_EXAMPLES=OFF -DGTCLANG_BUILD_GT_GPU_EXAMPLES=OFF -DCTEST_CUDA_SUBMIT=ON -DGTCLANG_SLURM_RESOURCES="${SLURM_RESOURCES[@]}" -DGTCLANG_SLURM_PARTITION=${SLURM_PARTITION} -DGPU_DEVICE=${GPU_DEVICE} ../
 else
-  cmake ${CMAKE_ARGS} ../
+  cmake ${CMAKE_ARGS} -DGTCLANG_BUILD_CUDA_EXAMPLES=OFF -DGTCLANG_BUILD_GT_CPU_EXAMPLES=ON -DGTCLANG_BUILD_GT_GPU_EXAMPLES=OFF ../
 fi
 
 nice make -j6 install VERBOSE=1
