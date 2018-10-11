@@ -46,6 +46,7 @@ protected:
         SIRSerializer::deserializeFromString(jsonstr, SIRSerializer::SK_Json);
 
     std::unique_ptr<OptimizerContext> optimizer = compiler_.runOptimizer(sir);
+
     // Report diganostics
     if(compiler_.getDiagnostics().hasDiags()) {
       for(const auto& diag : compiler_.getDiagnostics().getQueue())
@@ -56,22 +57,27 @@ protected:
     DAWN_ASSERT_MSG((optimizer->getNameIIRMap().count("compute_extent_test_stencil")),
                     "compute_extent_test_stencil not found in sir");
 
-    const auto& iir =
-        optimizer->getNameIIRMap()["compute_extent_test_stencil"];
+    const auto& iir = optimizer->getNameIIRMap()["compute_extent_test_stencil"];
     return iir->clone();
   }
 };
 
 TEST_F(ComputeMaxExtents, test_stencil_01) {
   std::unique_ptr<iir::IIR> IIR = loadTest("compute_extent_test_stencil_01.sir");
+  std::cout << "load ok" << std::endl;
   const auto& stencils = IIR->getChildren();
   ASSERT_TRUE((stencils.size() == 1));
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
   ASSERT_TRUE((stencil->getNumStages() == 2));
   auto exts = stencil->getFields();
+  std::cout << "this works" << std::endl;
   EXPECT_EQ(exts.size(), 3);
-  EXPECT_EQ((stencil->getIIR()->getMetaData()->getNameFromAccessID(1)), "u");
+  std::cout << "IIR->checkTreeConsistency(): " << IIR->checkTreeConsistency() << std::endl;
+  auto thing = stencil->getIIR()->getMetaData();
+  std::cout << "this breaks" << std::endl;
+  EXPECT_EQ(thing->getNameFromAccessID(1), "u");
+  std::cout << "or this?"<<std::endl;
   EXPECT_EQ((stencil->getIIR()->getMetaData()->getNameFromAccessID(2)), "out");
   EXPECT_EQ((stencil->getIIR()->getMetaData()->getNameFromAccessID(3)), "lap");
   EXPECT_EQ(exts.at(1).field.getExtentsRB(), (iir::Extents{-2, 2, -2, 2, 0, 0}));

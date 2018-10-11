@@ -98,10 +98,15 @@ std::unordered_map<std::shared_ptr<Stmt>, int>& StencilMetaInformation::getStmtT
 }
 
 const std::string& StencilMetaInformation::getNameFromAccessID(int AccessID) const {
-  if(AccessID < 0)
+  if(AccessID < 0) {
+    std::cout << "here?" << std::endl;
     return getNameFromLiteralAccessID(AccessID);
+  }
+  std::cout << "checkpoint 1 " << std::endl;
   auto it = AccessIDToNameMap_.find(AccessID);
+  std::cout << "checkpoint 2 " << std::endl;
   DAWN_ASSERT_MSG(it != AccessIDToNameMap_.end(), "Invalid AccessID");
+  std::cout << "checkpoint 3 " << std::endl;
   return it->second;
 }
 
