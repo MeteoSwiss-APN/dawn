@@ -600,8 +600,8 @@ void CudaCodeGen::generateStencilClasses(
     const auto& stencil = *stencilPtr;
 
     std::string stencilName = "stencil_" + std::to_string(stencil.getStencilID());
-    auto stencilProperties = codeGenProperties.insertStencil(StencilContext::SC_Stencil,
-                                                             stencil.getStencilID(), stencilName);
+    auto stencilProperties =
+        codeGenProperties.getStencilProperties(StencilContext::SC_Stencil, stencilName);
 
     if(stencil.isEmpty())
       continue;
