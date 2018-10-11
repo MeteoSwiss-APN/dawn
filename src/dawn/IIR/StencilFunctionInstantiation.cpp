@@ -317,6 +317,10 @@ const std::string& StencilFunctionInstantiation::getNameFromLiteralAccessID(int 
 
 int StencilFunctionInstantiation::getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) const {
   auto it = ExprToCallerAccessIDMap_.find(expr);
+  /// HACK for Literals (inserted from Globals) that are not found in SFI
+  if(it == ExprToCallerAccessIDMap_.end()) {
+    return stencilInstantiation_->getAccessIDFromExpr(expr);
+  }
   DAWN_ASSERT_MSG(it != ExprToCallerAccessIDMap_.end(), "Invalid Expr");
   return it->second;
 }

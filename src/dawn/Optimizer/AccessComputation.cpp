@@ -196,14 +196,11 @@ public:
   }
 
   void mergeReadOffset(const std::shared_ptr<LiteralAccessExpr>& lit) {
-    for(auto& callerAccesses : callerAccessesList_) {
-      // notice literals are only stored in stencil instantiation (not stencil function
-      // instantiation)
-      callerAccesses->mergeReadOffset(instantiation_->getAccessIDFromExpr(lit), Array3i{{0, 0, 0}});
-    }
-    for(auto& calleeAccesses : calleeAccessesList_) {
-      calleeAccesses->mergeReadOffset(instantiation_->getAccessIDFromExpr(lit), Array3i{{0, 0, 0}});
-    }
+    for(auto& callerAccesses : callerAccessesList_)
+      callerAccesses->mergeReadOffset(getAccessIDFromExpr(lit), Array3i{{0, 0, 0}});
+
+    for(auto& calleeAccesses : calleeAccessesList_)
+      calleeAccesses->mergeReadOffset(getAccessIDFromExpr(lit), Array3i{{0, 0, 0}});
   }
 
   void mergeReadExtent(const std::shared_ptr<FieldAccessExpr>& field, const iir::Extents& extent) {
