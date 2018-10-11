@@ -56,6 +56,7 @@ yoda_add_library(
           Type.cpp
           Type.h
           TypeTraits.h
+          UIDGenerator.cpp
           UIDGenerator.h
           Unreachable.cpp
           Unreachable.h

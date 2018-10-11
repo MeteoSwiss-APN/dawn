@@ -12,28 +12,19 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_UIDGENERATOR
-#define DAWN_SUPPORT_UIDGENERATOR
-
-#include "dawn/Support/NonCopyable.h"
+#include "dawn/Support/UIDGenerator.h"
 
 namespace dawn {
 
-/// @brief Unique identifier generator (starting from @b 1)
-/// @ingroup support
-class UIDGenerator : NonCopyable {
-  int counter_;
-  static UIDGenerator* instance_;
+/* Null, because instance will be initialized on demand. */
+UIDGenerator* UIDGenerator::instance_ = 0;
 
-  UIDGenerator() : counter_(1) {}
+UIDGenerator* UIDGenerator::getInstance() {
+  if(instance_ == 0) {
+    instance_ = new UIDGenerator();
+  }
 
-public:
-  static UIDGenerator* getInstance();
-
-  /// @brief Get a unique *strictly* positive identifer
-  int get() { return (counter_++); }
-};
+  return instance_;
+}
 
 } // namespace dawn
-
-#endif

@@ -13,12 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/Stage.h"
-#include "dawn/Optimizer/AccessUtils.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/AccessUtils.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Logging.h"
-#include "dawn/IIR/IIRNodeIterator.h"
 #include <algorithm>
 #include <iterator>
 #include <set>
@@ -56,6 +56,9 @@ const DoMethod& Stage::getSingleDoMethod() const {
 }
 
 bool Stage::hasSingleDoMethod() const { return (children_.size() == 1); }
+
+void Stage::setRequiresSync(const bool sync) { derivedInfo_.requiresSync_ = sync; }
+bool Stage::getRequiresSync() const { return derivedInfo_.requiresSync_; }
 
 boost::optional<Interval>
 Stage::computeEnclosingAccessInterval(const int accessID, const bool mergeWithDoInterval) const {
@@ -299,10 +302,11 @@ const std::unordered_set<int>& Stage::getAllGlobalVariables() const {
 }
 
 void Stage::addDoMethod(const DoMethodSmartPtr_t& doMethod) {
-  DAWN_ASSERT_MSG(
-      std::find_if(childrenBegin(), childrenEnd(), [&](const DoMethodSmartPtr_t& doMethodPtr) {
-        return doMethodPtr->getInterval() == doMethod->getInterval();
-      }) == childrenEnd(), "Do-Method with given interval already exists!");
+  DAWN_ASSERT_MSG(std::find_if(childrenBegin(), childrenEnd(),
+                               [&](const DoMethodSmartPtr_t& doMethodPtr) {
+                                 return doMethodPtr->getInterval() == doMethod->getInterval();
+                               }) == childrenEnd(),
+                  "Do-Method with given interval already exists!");
 
   insertChild(doMethod->clone());
 }

@@ -16,6 +16,7 @@
 #define DAWN_CODEGEN_CODEGEN_H
 
 #include "dawn/CodeGen/CXXUtil.h"
+#include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/CodeGen/TranslationUnit.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/IndexRange.h"
@@ -33,16 +34,23 @@ protected:
   static size_t getVerticalTmpHaloSize(iir::Stencil const& stencil);
   size_t getVerticalTmpHaloSizeForMultipleStencils(
       const std::vector<std::unique_ptr<iir::Stencil>>& stencils) const;
-  void addTempStorageTypedef(Structure& stencilClass, iir::Stencil const& stencil) const;
+  virtual void addTempStorageTypedef(Structure& stencilClass, iir::Stencil const& stencil) const;
   void addTmpStorageDeclaration(
       Structure& stencilClass,
       IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tmpFields) const;
-  void addTmpStorageInit(
+  virtual void addTmpStorageInit(
       MemberFunction& ctr, const iir::Stencil& stencil,
       IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields) const;
-  void addTmpStorageInit_wrapper(MemberFunction& ctr,
-                                 const std::vector<std::unique_ptr<iir::Stencil>>& stencils,
-                                 const std::vector<std::string>& tempFields) const;
+  void
+  addTmpStorageInitStencilWrapperCtr(MemberFunction& ctr,
+                                     const std::vector<std::unique_ptr<iir::Stencil>>& stencils,
+                                     const std::vector<std::string>& tempFields) const;
+
+  void addBCFieldInitStencilWrapperCtr(MemberFunction& ctr,
+                                       const CodeGenProperties& codeGenProperties) const;
+  void generateBCFieldMembers(Class& stencilWrapperClass,
+                              const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
+                              const CodeGenProperties& codeGenProperties) const;
 
   void addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainerMaxSize,
                     int MaxHaloPoints) const;
@@ -62,6 +70,25 @@ public:
 
   /// @brief Get the optimizer context
   const OptimizerContext* getOptimizerContext() const { return context_; }
+
+  static std::string getStorageType(const sir::Field& field);
+  static std::string getStorageType(const iir::Stencil::FieldInfo& field);
+  static std::string getStorageType(Array3i dimensions);
+
+  void generateBoundaryConditionFunctions(
+      Class& stencilWrapperClass,
+      const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation) const;
+
+  CodeGenProperties
+  computeCodeGenProperties(const iir::StencilInstantiation* stencilInstantiation) const;
+
+  virtual void generateGlobalsAPI(const iir::StencilInstantiation& stencilInstantiation,
+                                  Class& stencilWrapperClass,
+                                  const sir::GlobalVariableMap& globalsMap,
+                                  const CodeGenProperties& codeGenProperties) const;
+  virtual std::string generateGlobals(std::shared_ptr<SIR> const& sir,
+                                      std::string namespace_) const;
+  void generateBCHeaders(std::vector<std::string>& ppDefines) const;
 };
 
 } // namespace codegen

@@ -12,17 +12,18 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/CodeGen/CXXNaive/ASTStencilDesc.h"
+#include "dawn/CodeGen/Cuda/ASTStencilDesc.h"
 #include "dawn/CodeGen/CXXUtil.h"
+#include "dawn/CodeGen/StencilFunctionAsBCGenerator.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
 namespace codegen {
-namespace cxxnaive {
+namespace cuda {
 
-ASTStencilDesc::ASTStencilDesc(const iir::StencilInstantiation* instantiation,
+ASTStencilDesc::ASTStencilDesc(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
                                CodeGenProperties const& codeGenProperties)
     : ASTCodeGenCXX(), instantiation_(instantiation), codeGenProperties_(codeGenProperties) {}
 
@@ -57,7 +58,8 @@ void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
-  //  DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not yet implemented");
+  BCGenerator bcGen(instantiation_, ss_);
+  bcGen.generate(stmt);
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -73,8 +75,9 @@ void ASTStencilDesc::visit(const std::shared_ptr<StencilFunArgExpr>& expr) {
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<VarAccessExpr>& expr) {
-  if(instantiation_->isGlobalVariable(instantiation_->getAccessIDFromExpr(expr)))
+  if(instantiation_->isGlobalVariable(instantiation_->getAccessIDFromExpr(expr))) {
     ss_ << "m_globals.";
+  }
 
   ss_ << getName(expr);
 
@@ -89,6 +92,6 @@ void ASTStencilDesc::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   DAWN_ASSERT_MSG(0, "FieldAccessExpr not allowed in StencilDesc AST");
 }
 
-} // namespace cxxnaive
+} // namespace cuda
 } // namespace codegen
 } // namespace dawn

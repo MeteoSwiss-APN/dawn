@@ -15,11 +15,11 @@
 #ifndef DAWN_IIR_STENCILFUNCTIONINSTANTIATION_H
 #define DAWN_IIR_STENCILFUNCTIONINSTANTIATION_H
 
+#include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/IIR/StatementAccessesPair.h"
-#include "dawn/IIR/DoMethod.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Unreachable.h"
@@ -201,6 +201,8 @@ public:
   std::set<int>& getAccessIDSetGlobalVariables() { return GlobalVariableAccessIDSet_; }
   std::set<int> const& getAccessIDSetGlobalVariables() const { return GlobalVariableAccessIDSet_; }
   /// @}
+
+  bool hasGlobalVariables() const { return !GlobalVariableAccessIDSet_.empty(); }
 
   /// @brief remove a stencil function instantiation tagged by a StencilFunCallExpr
   void removeStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr);

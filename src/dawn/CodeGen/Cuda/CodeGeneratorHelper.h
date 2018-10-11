@@ -12,28 +12,26 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_UIDGENERATOR
-#define DAWN_SUPPORT_UIDGENERATOR
+#ifndef DAWN_CODEGEN_CUDA_CODEGENERATORHELPER_H
+#define DAWN_CODEGEN_CUDA_CODEGENERATORHELPER_H
 
-#include "dawn/Support/NonCopyable.h"
+#include "dawn/IIR/Cache.h"
+#include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Support/Array.h"
+#include <string>
 
 namespace dawn {
+namespace codegen {
+namespace cuda {
 
-/// @brief Unique identifier generator (starting from @b 1)
-/// @ingroup support
-class UIDGenerator : NonCopyable {
-  int counter_;
-  static UIDGenerator* instance_;
-
-  UIDGenerator() : counter_(1) {}
-
+class CodeGeneratorHelper {
 public:
-  static UIDGenerator* getInstance();
-
-  /// @brief Get a unique *strictly* positive identifer
-  int get() { return (counter_++); }
+  static std::string generateStrideName(int dim, Array3i fieldDims);
+  static std::string indexIteratorName(Array3i dims);
 };
 
+} // namespace cuda
+} // namespace codegen
 } // namespace dawn
 
 #endif

@@ -37,10 +37,16 @@ namespace iir {
 /// @see sir::Interval
 /// @ingroup optimizer
 class Interval {
-  int lowerLevel_;
-  int upperLevel_;
-  int lowerOffset_;
-  int upperOffset_;
+public:
+  struct IntervalLevel {
+    int levelMark_;
+    int offset_;
+    int bound() const { return (levelMark_ + offset_); }
+    bool isEnd() const { return (levelMark_ == sir::Interval::End); }
+  };
+
+private:
+  IntervalLevel lower_, upper_;
 
 public:
   enum class Bound { upper = 0, lower };
@@ -48,12 +54,11 @@ public:
   /// @name Constructors and Assignment
   /// @{
   Interval(int lowerLevel, int upperLevel, int lowerOffset = 0, int upperOffset = 0)
-      : lowerLevel_(lowerLevel), upperLevel_(upperLevel), lowerOffset_(lowerOffset),
-        upperOffset_(upperOffset) {}
+      : lower_{lowerLevel, lowerOffset}, upper_{upperLevel, upperOffset} {}
 
   Interval(const sir::Interval& interval)
-      : lowerLevel_(interval.LowerLevel), upperLevel_(interval.UpperLevel),
-        lowerOffset_(interval.LowerOffset), upperOffset_(interval.UpperOffset) {}
+      : lower_{interval.LowerLevel, interval.LowerOffset},
+        upper_{interval.UpperLevel, interval.UpperOffset} {}
 
   Interval(const Interval&) = default;
   Interval(Interval&&) = default;
@@ -61,10 +66,15 @@ public:
   Interval& operator=(Interval&&) = default;
   /// @}
 
-  int lowerLevel() const { return lowerLevel_; }
-  int upperLevel() const { return upperLevel_; }
-  int lowerOffset() const { return lowerOffset_; }
-  int upperOffset() const { return upperOffset_; }
+  int lowerLevel() const { return lower_.levelMark_; }
+  int upperLevel() const { return upper_.levelMark_; }
+  int lowerOffset() const { return lower_.offset_; }
+  int upperOffset() const { return upper_.offset_; }
+
+  void invert();
+
+  IntervalLevel upperIntervalLevel() const { return upper_; }
+  IntervalLevel lowerIntervalLevel() const { return lower_; }
 
   int offset(const Bound bound) const {
     return (bound == Bound::lower) ? lowerOffset() : upperOffset();
@@ -79,10 +89,10 @@ public:
   }
 
   /// @brief Get the lower bound of the Interval (i.e `lowerLevel + lowerOffset`)
-  inline int lowerBound() const { return (lowerLevel_ + lowerOffset_); }
+  inline int lowerBound() const { return lower_.bound(); }
 
   /// @brief Get the upper bound of the Interval (i.e `upperLevel + upperOffset`)
-  inline int upperBound() const { return (upperLevel_ + upperOffset_); }
+  inline int upperBound() const { return upper_.bound(); }
 
   /// @name Comparison operator
   /// @{
@@ -134,7 +144,7 @@ public:
 
   /// @brief Convert to SIR Interval
   inline sir::Interval asSIRInterval() const {
-    return sir::Interval(lowerLevel_, upperLevel_, lowerOffset_, upperOffset_);
+    return sir::Interval(lowerLevel(), upperLevel(), lowerOffset(), upperOffset());
   }
 
   /// @brief returns true if the level bound of the interval is the end of the axis
@@ -143,18 +153,18 @@ public:
   }
 
   inline size_t overEnd() const {
-    return (upperLevelIsEnd() && (upperOffset_ > 0)) ? upperOffset_ : 0;
+    return (upperLevelIsEnd() && (upper_.offset_ > 0)) ? upper_.offset_ : 0;
   }
 
   inline size_t belowBegin() const {
-    return (!lowerLevelIsEnd() && (lowerBound() < 0)) ? (size_t)-lowerOffset_ : 0;
+    return (!lowerLevelIsEnd() && (lowerBound() < 0)) ? (size_t)-lower_.offset_ : 0;
   }
 
   /// @brief returns true if the lower bound of the interval is the end of the axis
-  bool lowerLevelIsEnd() const { return (lowerLevel_ == sir::Interval::End); }
+  bool lowerLevelIsEnd() const { return lower_.isEnd(); }
 
   /// @brief returns true if the upper bound of the interval is the end of the axis
-  bool upperLevelIsEnd() const { return (upperLevel_ == sir::Interval::End); }
+  bool upperLevelIsEnd() const { return upper_.isEnd(); }
 
   /// @brief Convert interval to string
   std::string toString() const;
@@ -261,6 +271,25 @@ struct IntervalProperties {
   Interval interval_;
   std::string name_;
 };
+
+struct IntervalDiff {
+  enum class RangeType { literal, fullRange, minusFullRange };
+  RangeType rangeType_;
+  int value;
+
+  bool null() const {
+    if(rangeType_ != RangeType::literal)
+      return false;
+    return (value == 0);
+  }
+};
+
+IntervalDiff distance(Interval::IntervalLevel f, Interval::IntervalLevel s);
+
+IntervalDiff operator+(IntervalDiff idiff, int val);
+bool operator==(const IntervalDiff& first, const IntervalDiff& second);
+
+Interval::IntervalLevel advance(Interval::IntervalLevel& lev, LoopOrderKind loopOrder, int step);
 
 } // namespace iir
 } // namespace dawn

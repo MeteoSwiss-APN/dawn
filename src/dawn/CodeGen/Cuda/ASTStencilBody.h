@@ -12,74 +12,82 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_GRIDTOOLS_ASTSTENCILDESC_H
-#define DAWN_CODEGEN_GRIDTOOLS_ASTSTENCILDESC_H
+#ifndef DAWN_CODEGEN_CUDA_ASTSTENCILBODY_H
+#define DAWN_CODEGEN_CUDA_ASTSTENCILBODY_H
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
+#include "dawn/CodeGen/Cuda/CacheProperties.h"
+#include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
+#include "dawn/IIR/Interval.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>
 #include <unordered_map>
-#include <vector>
 
 namespace dawn {
+
 namespace iir {
 class StencilInstantiation;
+class StencilFunctionInstantiation;
 }
 
 namespace codegen {
-namespace gt {
+namespace cuda {
 
-/// @brief ASTVisitor to generate C++ gridtools code for the stencil and stencil function bodies
-/// @ingroup gt
-class ASTStencilDesc : public ASTCodeGenCXX {
+/// @brief ASTVisitor to generate C++ naive code for the stencil and stencil function bodies
+/// @ingroup cuda
+class ASTStencilBody : public ASTCodeGenCXX {
 protected:
-  const std::shared_ptr<iir::StencilInstantiation> instantiation_;
+  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
+  RangeToString offsetPrinter_;
+  const std::unordered_map<int, Array3i>& fieldIndexMap_;
+  const iir::MultiStage& ms_;
+  const CacheProperties& cacheProperties_;
+  const Array3ui blockSizes_;
 
-  /// StencilID to the name of the generated stencils for this ID
-  const CodeGenProperties& codeGenProperties_;
-  const std::unordered_map<int, std::string>& stencilIdToArguments_;
+  ///
+  /// @brief produces a string of (i,j,k) accesses for the C++ generated naive code,
+  /// from an array of offseted accesses
+  ///
+  std::array<std::string, 3> ijkfyOffset(const Array3i& offsets, bool isTemporary,
+                                         const Array3i iteratorDims);
 
 public:
   using Base = ASTCodeGenCXX;
 
-  ASTStencilDesc(const std::shared_ptr<iir::StencilInstantiation> instantiation,
-                 const CodeGenProperties& codeGenProperties,
-                 const std::unordered_map<int, std::string>& stencilIdToArguments);
+  /// @brief constructor
+  ASTStencilBody(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                 const std::unordered_map<int, Array3i>& fieldIndexMap, const iir::MultiStage& ms,
+                 const CacheProperties& cacheProperties, Array3ui blockSizes);
 
-  virtual ~ASTStencilDesc();
+  virtual ~ASTStencilBody() override;
 
   /// @name Statement implementation
   /// @{
-  virtual void visit(const std::shared_ptr<BlockStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<ExprStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<ReturnStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<VarDeclStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<IfStmt>& stmt) override;
   /// @}
 
   /// @name Expression implementation
   /// @{
-  virtual void visit(const std::shared_ptr<UnaryOperator>& expr) override;
-  virtual void visit(const std::shared_ptr<BinaryOperator>& expr) override;
-  virtual void visit(const std::shared_ptr<AssignmentExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<TernaryOperator>& expr) override;
-  virtual void visit(const std::shared_ptr<FunCallExpr>& expr) override;
   virtual void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override;
   virtual void visit(const std::shared_ptr<StencilFunArgExpr>& expr) override;
   virtual void visit(const std::shared_ptr<VarAccessExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override;
   virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override;
   /// @}
 
-  std::string getName(const std::shared_ptr<Stmt>& stmt) const override;
+  /// @brief Mapping of VarDeclStmt and Var/FieldAccessExpr to their name
   std::string getName(const std::shared_ptr<Expr>& expr) const override;
+  std::string getName(const std::shared_ptr<Stmt>& stmt) const override;
+  bool isCached(const int accessID) const;
+
+private:
+  void derefIJCache(const std::shared_ptr<FieldAccessExpr>& expr);
 };
 
-} // namespace gt
+} // namespace cuda
 } // namespace codegen
 } // namespace dawn
 

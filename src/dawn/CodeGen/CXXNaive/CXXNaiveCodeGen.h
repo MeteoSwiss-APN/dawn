@@ -44,8 +44,31 @@ public:
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 
 private:
-  std::string generateStencilInstantiation(const iir::StencilInstantiation* stencilInstantiation);
-  std::string generateGlobals(const std::shared_ptr<SIR>& sir);
+  std::string generateStencilInstantiation(
+      const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation);
+
+  void
+  generateStencilFunctions(Class& stencilWrapperClass,
+                           const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
+                           const CodeGenProperties& codeGenProperties) const;
+
+  void generateStencilClasses(const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
+                              Class& stencilWrapperClass,
+                              const CodeGenProperties& codeGenProperties) const;
+  void generateStencilWrapperMembers(
+      Class& stencilWrapperClass,
+      const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
+      CodeGenProperties& codeGenProperties) const;
+
+  void
+  generateStencilWrapperCtr(Class& stencilWrapperClass,
+                            const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
+                            const CodeGenProperties& codeGenProperties) const;
+
+  void
+  generateStencilWrapperRun(Class& stencilWrapperClass,
+                            const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
+                            const CodeGenProperties& codeGenProperties) const;
 };
 } // namespace cxxnaive
 } // namespace codegen

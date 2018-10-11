@@ -23,17 +23,20 @@
 #include "dawn/IIR/MultiInterval.h"
 #include "dawn/IIR/IntervalAlgorithms.h"
 #include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/Support/UIDGenerator.h"
 
 namespace dawn {
 namespace iir {
 
 MultiStage::MultiStage(StencilInstantiation& stencilInstantiation, LoopOrderKind loopOrder)
-    : stencilInstantiation_(stencilInstantiation), loopOrder_(loopOrder) {}
+    : stencilInstantiation_(stencilInstantiation), loopOrder_(loopOrder),
+      id_(UIDGenerator::getInstance()->get()) {}
 
 std::unique_ptr<MultiStage> MultiStage::clone() const {
   auto cloneMS = make_unique<MultiStage>(stencilInstantiation_, loopOrder_);
 
   cloneMS->caches_ = caches_;
+  cloneMS->id_ = id_;
   cloneMS->derivedInfo_ = derivedInfo_;
 
   cloneMS->cloneChildrenFrom(*this);
@@ -300,6 +303,16 @@ void MultiStage::updateFromChildren() {
     mergeFields(stagePtr->getFields(), derivedInfo_.fields_,
                 boost::make_optional(stagePtr->getExtents()));
   }
+}
+
+const Field& MultiStage::getField(int accessID) const {
+  DAWN_ASSERT(derivedInfo_.fields_.count(accessID));
+  return derivedInfo_.fields_.at(accessID);
+}
+
+const iir::Cache& MultiStage::getCache(const int accessID) const {
+  DAWN_ASSERT(caches_.count(accessID));
+  return caches_.at(accessID);
 }
 
 void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {

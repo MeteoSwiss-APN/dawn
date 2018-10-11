@@ -126,7 +126,7 @@ public:
     return getChildImpl<typename std::iterator_traits<ChildIterator>::iterator_category>(pos);
   }
   /// @brief get unique_ptr to parent
-  inline const std::unique_ptr<Parent>& getParent() {
+  inline const std::unique_ptr<Parent>& getParent() const {
     DAWN_ASSERT(parent_);
     return *parent_;
   }

@@ -29,12 +29,26 @@ yoda_add_library(
           CXXNaive/ASTStencilFunctionParamVisitor.h
           CXXNaive/CXXNaiveCodeGen.cpp
           CXXNaive/CXXNaiveCodeGen.h
+          Cuda/CacheProperties.cpp
+          Cuda/CacheProperties.h
+          Cuda/CodeGeneratorHelper.cpp
+          Cuda/CodeGeneratorHelper.h
+          Cuda/CudaCodeGen.cpp
+          Cuda/CudaCodeGen.h
+          Cuda/ASTStencilBody.cpp
+          Cuda/ASTStencilBody.h
+          Cuda/ASTStencilDesc.cpp
+          Cuda/ASTStencilDesc.h
+          Cuda/ASTStencilFunctionParamVisitor.cpp
+          Cuda/ASTStencilFunctionParamVisitor.h
           GridTools/ASTStencilBody.cpp
           GridTools/ASTStencilBody.h
           GridTools/ASTStencilDesc.cpp
           GridTools/ASTStencilDesc.h
           GridTools/GTCodeGen.cpp
           GridTools/GTCodeGen.h
+          StencilFunctionAsBCGenerator.cpp
+          StencilFunctionAsBCGenerator.h
           TranslationUnit.cpp
           TranslationUnit.h
   OBJECT

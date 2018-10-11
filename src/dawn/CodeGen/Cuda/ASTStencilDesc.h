@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_GRIDTOOLS_ASTSTENCILDESC_H
-#define DAWN_CODEGEN_GRIDTOOLS_ASTSTENCILDESC_H
+#ifndef DAWN_CODEGEN_CUDA_ASTSTENCILDESC_H
+#define DAWN_CODEGEN_CUDA_ASTSTENCILDESC_H
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
@@ -28,50 +28,37 @@ class StencilInstantiation;
 }
 
 namespace codegen {
-namespace gt {
+namespace cuda {
 
-/// @brief ASTVisitor to generate C++ gridtools code for the stencil and stencil function bodies
-/// @ingroup gt
+/// @brief ASTVisitor to generate C++ naive bakend code for the control flow code of stencils
+/// @ingroup cuda
 class ASTStencilDesc : public ASTCodeGenCXX {
 protected:
-  const std::shared_ptr<iir::StencilInstantiation> instantiation_;
+  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
 
-  /// StencilID to the name of the generated stencils for this ID
   const CodeGenProperties& codeGenProperties_;
-  const std::unordered_map<int, std::string>& stencilIdToArguments_;
 
 public:
   using Base = ASTCodeGenCXX;
 
-  ASTStencilDesc(const std::shared_ptr<iir::StencilInstantiation> instantiation,
-                 const CodeGenProperties& codeGenProperties,
-                 const std::unordered_map<int, std::string>& stencilIdToArguments);
+  ASTStencilDesc(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                 const CodeGenProperties& CodeGenProperties);
 
   virtual ~ASTStencilDesc();
 
   /// @name Statement implementation
   /// @{
-  virtual void visit(const std::shared_ptr<BlockStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<ExprStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<ReturnStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<VarDeclStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<IfStmt>& stmt) override;
   /// @}
 
   /// @name Expression implementation
   /// @{
-  virtual void visit(const std::shared_ptr<UnaryOperator>& expr) override;
-  virtual void visit(const std::shared_ptr<BinaryOperator>& expr) override;
-  virtual void visit(const std::shared_ptr<AssignmentExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<TernaryOperator>& expr) override;
-  virtual void visit(const std::shared_ptr<FunCallExpr>& expr) override;
   virtual void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override;
   virtual void visit(const std::shared_ptr<StencilFunArgExpr>& expr) override;
   virtual void visit(const std::shared_ptr<VarAccessExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override;
   virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override;
   /// @}
 
@@ -79,7 +66,7 @@ public:
   std::string getName(const std::shared_ptr<Expr>& expr) const override;
 };
 
-} // namespace gt
+} // namespace cuda
 } // namespace codegen
 } // namespace dawn
 

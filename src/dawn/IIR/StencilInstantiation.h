@@ -84,9 +84,6 @@ class StencilInstantiation : NonCopyable {
   const std::shared_ptr<sir::Stencil> SIRStencil_;
   const std::shared_ptr<SIR> SIR_;
 
-  /// Unique identifier generator
-  UIDGenerator UIDGen_;
-
   /// Map of AccessIDs and to the name of the variable/field. Note that only for fields of the "main
   /// stencil" we can get the AccessID by name. This is due the fact that fields of different
   /// stencil functions can share the same name.
@@ -170,6 +167,8 @@ public:
   StencilInstantiation(::dawn::OptimizerContext* context,
                        const std::shared_ptr<sir::Stencil>& SIRStencil,
                        const std::shared_ptr<SIR>& SIR);
+
+  std::shared_ptr<StencilInstantiation> clone() const;
 
   bool checkTreeConsistency() const;
 
@@ -499,7 +498,7 @@ public:
   }
 
   /// @brief Get a unique (positive) identifier
-  inline int nextUID() { return UIDGen_.get(); }
+  inline int nextUID() { return UIDGenerator::getInstance()->get(); }
 
   /// @brief Dump the StencilInstantiation to stdout
   void dump() const;
@@ -567,7 +566,7 @@ public:
   /// @brief this checks if the user specialized the field to a dimensionality. If not all
   /// dimensions are allow for off-center acesses and hence, {1,1,1} is returned. If we got a
   /// specialization, it is returned
-  Array3i getFieldDimensionsMask(int FieldID);
+  Array3i getFieldDimensionsMask(int FieldID) const;
 
 private:
   /// @brief Report the accesses to the console (according to `-freport-accesses`)

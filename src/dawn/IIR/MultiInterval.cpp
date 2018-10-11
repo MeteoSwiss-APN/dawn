@@ -12,6 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include <iterator>
 #include "dawn/IIR/MultiInterval.h"
 #include "dawn/IIR/IntervalAlgorithms.h"
 
@@ -26,12 +27,34 @@ std::ostream& operator<<(std::ostream& os, const MultiInterval& multiInterval) {
   return os;
 }
 
-MultiInterval::MultiInterval(std::initializer_list<iir::Interval> const& intervals)
+MultiInterval::MultiInterval(std::initializer_list<Interval> const& intervals)
     : intervals_(intervals) {}
+MultiInterval::MultiInterval(const std::vector<Interval>& intervals) : intervals_(intervals) {}
 
+bool MultiInterval::contiguous() const {
+  for(auto it = intervals_.begin(); it != intervals_.end(); it++) {
+    auto nextIt = std::next(it);
+    if(nextIt == intervals_.end()) {
+      return true;
+    }
+    if(!it->adjacent(*nextIt)) {
+      return false;
+    }
+  }
+  return true;
+}
 void MultiInterval::insert(MultiInterval const& multiInterval) {
   for(auto const& interv : multiInterval.getIntervals())
     insert(interv);
+}
+
+bool MultiInterval::overlaps(const Interval& other) const {
+  for(auto const& interv : getIntervals()) {
+    if(interv.overlaps(other)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 bool MultiInterval::operator==(const MultiInterval& other) const {

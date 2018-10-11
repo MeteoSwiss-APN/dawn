@@ -47,6 +47,8 @@ yoda_add_library(
           PassSetStageGraph.h
           PassSetStageName.cpp
           PassSetStageName.h
+          PassSetSyncStage.cpp
+          PassSetSyncStage.h
           PassSSA.cpp
           PassSSA.h
           PassStageMerger.cpp

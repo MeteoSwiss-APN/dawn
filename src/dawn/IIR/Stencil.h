@@ -191,6 +191,9 @@ public:
   /// @brief Get the global variables referenced by this stencil
   std::vector<std::string> getGlobalVariables() const;
 
+  /// @brief returns true if the stencils uses global variables
+  bool hasGlobalVariables() const;
+
   /// @brief Get the stencil instantiation
   StencilInstantiation& getStencilInstantiation() const { return stencilInstantiation_; }
 

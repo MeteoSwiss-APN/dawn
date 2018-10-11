@@ -16,8 +16,8 @@
 #define DAWN_IIR_STAGE_H
 
 #include "dawn/IIR/DoMethod.h"
-#include "dawn/IIR/IIRNode.h"
 #include "dawn/IIR/Field.h"
+#include "dawn/IIR/IIRNode.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/ArrayRef.h"
 #include <boost/optional.hpp>
@@ -66,6 +66,7 @@ class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
     std::unordered_set<int> globalVariablesFromStencilFunctionCalls_;
 
     Extents extents_;
+    bool requiresSync_ = false;
   };
 
   DerivedInfo derivedInfo_;
@@ -200,6 +201,13 @@ public:
 
   /// @brief true if it contains no do methods or they are empty
   bool isEmptyOrNullStmt() const;
+
+  /// @brief set the flag that specifies that the stage will require an explicit sync before
+  /// execution
+  void setRequiresSync(const bool sync);
+  /// @brief get the flag that specifies that the stage will require an explicit sync before
+  /// execution
+  bool getRequiresSync() const;
 
   inline virtual void updateFromChildren() override {}
 };

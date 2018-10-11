@@ -15,9 +15,9 @@
 #include "dawn/CodeGen/CXXNaive/ASTStencilBody.h"
 #include "dawn/CodeGen/CXXNaive/ASTStencilFunctionParamVisitor.h"
 #include "dawn/CodeGen/CXXUtil.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Unreachable.h"
 
@@ -111,17 +111,17 @@ void ASTStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
 
   ss_ << iir::StencilFunctionInstantiation::makeCodeGenName(*stencilFun) << "(i,j,k";
 
-  //  int n = 0;
   ASTStencilFunctionParamVisitor fieldAccessVisitor(currentFunction_, instantiation_);
 
   for(auto& arg : expr->getArguments()) {
-
     arg->accept(fieldAccessVisitor);
-    //    ++n;
   }
   ss_ << fieldAccessVisitor.getCodeAndResetStream();
 
   nestingOfStencilFunArgLists_--;
+  if(stencilFun->hasGlobalVariables()) {
+    ss_ << ",m_globals";
+  }
   ss_ << ")";
 }
 
@@ -132,7 +132,7 @@ void ASTStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
   int AccessID = getAccessID(expr);
 
   if(instantiation_->isGlobalVariable(AccessID)) {
-    ss_ << "globals::get()." << name << ".get_value()";
+    ss_ << "m_globals." << name;
   } else {
     ss_ << name;
 
