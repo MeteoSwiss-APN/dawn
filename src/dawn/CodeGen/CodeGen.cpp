@@ -62,11 +62,7 @@ std::string CodeGen::generateGlobals(std::shared_ptr<SIR> const& sir,
   GlobalsStruct.commit();
   cudaNamespace.commit();
 
-  // Remove trailing ';' as this is retained by Clang's Rewriter
-  std::string str = ss.str();
-  str[str.size() - 2] = ' ';
-
-  return str;
+  return ss.str();
 }
 
 void CodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInstantiation,
