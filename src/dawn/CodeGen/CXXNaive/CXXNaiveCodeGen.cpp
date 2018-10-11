@@ -496,6 +496,11 @@ void CXXNaiveCodeGen::generateStencilFunctions(
         stencilFunMethod.addArg("param_wrapper<" + c_gt() + "data_view<" + argType + ">> pw_" +
                                 argName);
       }
+
+      // add global parameter
+      if(stencilFun->hasGlobalVariables()) {
+        stencilFunMethod.addArg("globals& m_globals");
+      }
       ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation.get(),
                                            StencilContext::SC_StencilFunction);
 
