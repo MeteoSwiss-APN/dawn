@@ -554,14 +554,12 @@ void GTCodeGen::generateStencilClasses(
         }
 
         // Global accessor declaration
-        for(auto accessID : stencilFun->getAccessIDSetGlobalVariables()) {
-          std::string paramName = stencilFun->getNameFromAccessID(accessID);
-          StencilFunStruct.addTypeDef(paramName)
+        if(stencilFun->hasGlobalVariables()) {
+          StencilFunStruct.addTypeDef("globals")
               .addType(c_gt() + "global_accessor")
               .addTemplate(Twine(accessorID));
           accessorID++;
-
-          arglist.push_back(std::move(paramName));
+          arglist.push_back("globals");
         }
 
         // Generate arglist

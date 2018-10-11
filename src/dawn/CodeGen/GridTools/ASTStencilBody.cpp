@@ -14,9 +14,9 @@
 
 #include "dawn/CodeGen/GridTools/ASTStencilBody.h"
 #include "dawn/CodeGen/CXXUtil.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Unreachable.h"
 
@@ -129,23 +129,9 @@ void ASTStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
     arg->accept(*this);
   }
 
-  // we record in a set all global variables passed to the stencil call
-  std::set<int> globalVariablesInCallStmt;
-  for(auto& arg : expr->getArguments()) {
-    if(!isa<FieldAccessExpr>(*arg))
-      continue;
-    int accessID = currentFunction_ ? currentFunction_->getAccessIDFromExpr(arg)
-                                    : instantiation_->getAccessIDFromExpr(arg);
-    if(instantiation_->isGlobalVariable(accessID))
-      globalVariablesInCallStmt.insert(accessID);
-  }
-
-  // explicitly add all global variables parameters that are used by stencil function but not passed
-  // by user in stencil function call
-  for(const int globalAccessID : stencilFun->getAccessIDSetGlobalVariables()) {
-    if(globalVariablesInCallStmt.count(globalAccessID))
-      continue;
-    ss_ << "," << instantiation_->getNameFromAccessID(globalAccessID) << "()";
+  if(stencilFun->hasGlobalVariables()) {
+    ss_ << ","
+        << "globals()";
   }
 
   nestingOfStencilFunArgLists_--;
