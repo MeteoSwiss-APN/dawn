@@ -565,6 +565,8 @@ std::string CudaCodeGen::generateStencilInstantiation(
 
   generateStencilWrapperRun(StencilWrapperClass, stencilInstantiation, codeGenProperties);
 
+  generateStencilWrapperPublicMemberFunctions(StencilWrapperClass);
+
   StencilWrapperClass.commit();
 
   cudaNamespace.commit();
@@ -574,6 +576,14 @@ std::string CudaCodeGen::generateStencilInstantiation(
   str[str.size() - 2] = ' ';
 
   return str;
+}
+
+void CudaCodeGen::generateStencilWrapperPublicMemberFunctions(Class& stencilWrapperClass) const {
+
+  // Generate name getter
+  stencilWrapperClass.addMemberFunction("std::string", "get_name")
+      .isConst(true)
+      .addStatement("return std::string(s_name)");
 }
 
 void CudaCodeGen::generateStencilClasses(
@@ -811,6 +821,8 @@ void CudaCodeGen::generateStencilWrapperMembers(
   if(!globalsMap.empty()) {
     stencilWrapperClass.addMember("globals", "m_globals");
   }
+  stencilWrapperClass.addMember("static constexpr const char* s_name =",
+                                Twine("\"") + stencilWrapperClass.getName() + Twine("\""));
 }
 
 void CudaCodeGen::generateStencilWrapperRun(
