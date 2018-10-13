@@ -540,7 +540,11 @@ std::string CudaCodeGen::generateStencilInstantiation(
   CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
 
   // generate code for base class of all the inner stencils
-  Structure sbase = StencilWrapperClass.addStruct("sbase", "");
+  Structure sbase = StencilWrapperClass.addStruct("sbase", "", "timer_cuda");
+  auto baseCtr = sbase.addConstructor();
+  baseCtr.addArg("std::string name");
+  baseCtr.addInit("timer_cuda(name)");
+  baseCtr.commit();
   MemberFunction sbase_run = sbase.addMemberFunction("virtual void", "run");
   sbase_run.startBody();
   sbase_run.commit();
@@ -565,7 +569,7 @@ std::string CudaCodeGen::generateStencilInstantiation(
 
   generateStencilWrapperRun(StencilWrapperClass, stencilInstantiation, codeGenProperties);
 
-  generateStencilWrapperPublicMemberFunctions(StencilWrapperClass);
+  generateStencilWrapperPublicMemberFunctions(StencilWrapperClass, codeGenProperties);
 
   StencilWrapperClass.commit();
 
@@ -578,12 +582,36 @@ std::string CudaCodeGen::generateStencilInstantiation(
   return str;
 }
 
-void CudaCodeGen::generateStencilWrapperPublicMemberFunctions(Class& stencilWrapperClass) const {
+void CudaCodeGen::generateStencilWrapperPublicMemberFunctions(
+    Class& stencilWrapperClass, const CodeGenProperties& codeGenProperties) const {
 
   // Generate name getter
   stencilWrapperClass.addMemberFunction("std::string", "get_name")
       .isConst(true)
       .addStatement("return std::string(s_name)");
+
+  std::vector<std::string> stencilMembers;
+
+  for(const auto& stencilProp :
+      codeGenProperties.getAllStencilProperties(StencilContext::SC_Stencil)) {
+    stencilMembers.push_back("m_" + stencilProp.first);
+  }
+
+  // Generate stencil getter
+  MemberFunction stencilGetter =
+      stencilWrapperClass.addMemberFunction("std::vector<sbase*>", "getStencils");
+  stencilGetter.addStatement("return " +
+                             RangeToString(", ", "std::vector<sbase*>({", "})")(
+                                 stencilMembers, [](const std::string& member) { return member; }));
+  stencilGetter.commit();
+
+  MemberFunction clearMeters = stencilWrapperClass.addMemberFunction("void", "reset_meters");
+  clearMeters.startBody();
+  std::string s = RangeToString("\n", "", "")(stencilMembers, [](const std::string& member) {
+    return member + ".get_stencil()->reset_meter();";
+  });
+  clearMeters << s;
+  clearMeters.commit();
 }
 
 void CudaCodeGen::generateStencilClasses(
@@ -658,6 +686,9 @@ void CudaCodeGen::generateStencilClasses(
     //
     generateStencilRunMethod(stencilClass, stencil, stencilInstantiation, paramNameToType,
                              globalsMap);
+
+    // Generate stencil getter
+    stencilClass.addMemberFunction("sbase*", "get_stencil").addStatement("return this");
   }
 }
 
@@ -706,6 +737,7 @@ void CudaCodeGen::generateStencilClassCtr(
     stencilClassCtr.addArg(paramNameToType.at(fieldName) + "& " + fieldName + "_");
   }
 
+  stencilClassCtr.addInit("sbase(" + stencilClass.getName() + ")");
   stencilClassCtr.addInit("m_dom(dom_)");
 
   if(!globalsMap.empty()) {
