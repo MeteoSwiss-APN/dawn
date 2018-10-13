@@ -545,6 +545,9 @@ std::string CudaCodeGen::generateStencilInstantiation(
   baseCtr.addArg("std::string name");
   baseCtr.addInit("timer_cuda(name)");
   baseCtr.commit();
+  MemberFunction gettime = sbase.addMemberFunction("double", "get_time");
+  gettime.addStatement("return total_time()");
+  gettime.commit();
   MemberFunction sbase_run = sbase.addMemberFunction("virtual void", "run");
   sbase_run.startBody();
   sbase_run.commit();
@@ -853,8 +856,6 @@ void CudaCodeGen::generateStencilWrapperMembers(
   if(!globalsMap.empty()) {
     stencilWrapperClass.addMember("globals", "m_globals");
   }
-  stencilWrapperClass.addMember("static constexpr const char* s_name =",
-                                Twine("\"") + stencilWrapperClass.getName() + Twine("\""));
 }
 
 void CudaCodeGen::generateStencilWrapperRun(
