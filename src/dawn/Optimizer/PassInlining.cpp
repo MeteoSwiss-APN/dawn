@@ -129,9 +129,7 @@ public:
   }
 
   virtual void visit(const std::shared_ptr<ExprStmt>& stmt) override {
-    if(scopeDepth_ == 1) {
-      appendNewStatementAccessesPair(stmt);
-    }
+    appendNewStatementAccessesPair(stmt);
     stmt->getExpr()->accept(*this);
     removeLastChildStatementAccessesPair();
   }

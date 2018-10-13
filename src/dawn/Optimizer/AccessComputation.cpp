@@ -259,9 +259,13 @@ public:
 
     for(auto& s : stmt->getStatements()) {
 
+      DAWN_ASSERT(!curStatementAccessPairStack_.empty());
+
+      const auto& curStmt = curStatementAccessPairStack_.back();
+      DAWN_ASSERT(curStmt->Pair->hasBlockStatements());
+
       auto curBlockStmt = make_unique<CurrentStatementAccessPair>(
-          curStatementAccessPairStack_.back()
-              ->Pair->getBlockStatements()[curStatementAccessPairStack_.back()->ChildIndex]);
+          curStmt->Pair->getBlockStatements()[curStmt->ChildIndex]);
 
       curStatementAccessPairStack_.push_back(std::move(curBlockStmt));
 
