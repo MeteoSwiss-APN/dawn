@@ -740,7 +740,7 @@ void CudaCodeGen::generateStencilClassCtr(
     stencilClassCtr.addArg(paramNameToType.at(fieldName) + "& " + fieldName + "_");
   }
 
-  stencilClassCtr.addInit("sbase(" + stencilClass.getName() + ")");
+  stencilClassCtr.addInit("sbase(\"" + stencilClass.getName() + "\")");
   stencilClassCtr.addInit("m_dom(dom_)");
 
   if(!globalsMap.empty()) {
