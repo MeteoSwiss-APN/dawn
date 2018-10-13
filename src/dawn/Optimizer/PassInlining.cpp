@@ -129,7 +129,9 @@ public:
   }
 
   virtual void visit(const std::shared_ptr<ExprStmt>& stmt) override {
-    appendNewStatementAccessesPair(stmt);
+    if(scopeDepth_ == 1) {
+      appendNewStatementAccessesPair(stmt);
+    }
     stmt->getExpr()->accept(*this);
     removeLastChildStatementAccessesPair();
   }
@@ -507,7 +509,6 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
   // Iterate all statements (top -> bottom)
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {
     iir::Stage& stage = *stagePtr;
-
     for(const auto& doMethod : stage.getChildren()) {
       for(auto stmtAccIt = doMethod->childrenBegin(); stmtAccIt != doMethod->childrenEnd();
           ++stmtAccIt) {

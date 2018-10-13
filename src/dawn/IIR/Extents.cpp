@@ -14,8 +14,8 @@
 
 #include "dawn/IIR/Extents.h"
 #include "dawn/Support/Assert.h"
-#include "dawn/Support/Unreachable.h"
 #include "dawn/Support/StringUtil.h"
+#include "dawn/Support/Unreachable.h"
 #include <iostream>
 
 namespace dawn {
@@ -65,7 +65,7 @@ void Extents::merge(const Array3i& offset) {
   DAWN_ASSERT(extents_.size() == offset.size());
 
   for(std::size_t i = 0; i < extents_.size(); ++i)
-    extents_[i].merge(offset[i] >= 0 ? Extent{0, offset[i]} : Extent{offset[i], 0});
+    extents_[i].merge(Extent{offset[i], offset[i]});
 }
 
 void Extents::add(const Extents& other) {
