@@ -14,9 +14,9 @@
 
 #ifndef DAWN_CODEGEN_CACHEPROPERTIES_H
 #define DAWN_CODEGEN_CACHEPROPERTIES_H
-#include <set>
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include <set>
 
 namespace dawn {
 namespace codegen {
@@ -42,6 +42,7 @@ struct CacheProperties {
   int getOffsetCommonCache(int dim) const;
   std::string getCommonCacheIndexName(iir::Cache::CacheTypeKind cacheType) const;
   bool isThereACommonCache() const;
+  bool accessIsCached(const int accessID) const;
 
 private:
   int getStrideImpl(int dim, Array3ui blockSize, const iir::Extents& extents) const;

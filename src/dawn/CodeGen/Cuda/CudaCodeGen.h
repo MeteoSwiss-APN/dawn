@@ -62,16 +62,19 @@ private:
 
   void generateCudaKernelCode(std::stringstream& ssSW,
                               const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-                              const std::unique_ptr<iir::MultiStage>& ms);
+                              const std::unique_ptr<iir::MultiStage>& ms,
+                              const CacheProperties& cacheProperties);
   void
   generateAllCudaKernels(std::stringstream& ssSW,
-                         const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
+                         const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                         const std::unordered_map<int, CacheProperties>& cachePropertyMap);
 
   void
   generateStencilRunMethod(Structure& stencilClass, const iir::Stencil& stencil,
                            const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                            const std::unordered_map<std::string, std::string>& paramNameToType,
-                           const sir::GlobalVariableMap& globalsMap) const;
+                           const sir::GlobalVariableMap& globalsMap,
+                           const std::unordered_map<int, CacheProperties>& cachePropertyMap) const;
 
   std::vector<std::string> generateStrideArguments(
       const IndexRange<const std::unordered_map<int, iir::Field>>& nonTempFields,
@@ -81,7 +84,8 @@ private:
 
   void
   generateStencilClasses(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-                         Class& stencilWrapperClass, CodeGenProperties& codeGenProperties) const;
+                         Class& stencilWrapperClass, CodeGenProperties& codeGenProperties,
+                         const std::unordered_map<int, CacheProperties>& cachePropertyMap) const;
   void
   generateStencilWrapperCtr(Class& stencilWrapperClass,
                             const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
@@ -128,15 +132,14 @@ private:
                                 const Array3ui blockSize) const;
 
   bool useTmpIndex(const std::unique_ptr<iir::MultiStage>& ms,
-                   const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
+                   const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                   const CacheProperties& cacheProperties) const;
 
   bool useIJCaches(const std::unique_ptr<iir::MultiStage>& ms) const;
 
-  bool accessIsCached(const int accessID, const std::unique_ptr<iir::MultiStage>& ms) const;
-
-  void generateTmpIndexInit(
-      MemberFunction& kernel, const std::unique_ptr<iir::MultiStage>& ms,
-      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
+  void generateTmpIndexInit(MemberFunction& kernel, const std::unique_ptr<iir::MultiStage>& ms,
+                            const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                            const CacheProperties& cacheProperties) const;
   std::string
   getCacheName(const iir::Cache& cache,
                const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;

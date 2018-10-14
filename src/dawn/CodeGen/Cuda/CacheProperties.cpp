@@ -58,6 +58,11 @@ std::string CacheProperties::getCacheName(
   dawn_unreachable("Unknown cache for code generation");
 }
 
+bool CacheProperties::accessIsCached(const int accessID) const {
+  return ms_->isCached(accessID) &&
+         (ms_->getCache(accessID).getCacheType() == iir::Cache::CacheTypeKind::IJ);
+}
+
 iir::Extents CacheProperties::getCacheExtent(int accessID) const {
   if(isCommonCache(accessID)) {
     return extents_;

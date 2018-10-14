@@ -124,7 +124,7 @@ CudaCodeGen::computePartitionOfIntervals(const std::unique_ptr<iir::MultiStage>&
 
 void CudaCodeGen::generateCudaKernelCode(
     std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-    const std::unique_ptr<iir::MultiStage>& ms) {
+    const std::unique_ptr<iir::MultiStage>& ms, const CacheProperties& cacheProperties) {
 
   iir::Extents maxExtents{0, 0, 0, 0, 0, 0};
   for(const auto& stage : iterateIIROver<iir::Stage>(*ms)) {
@@ -145,7 +145,7 @@ void CudaCodeGen::generateCudaKernelCode(
       makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
                             std::pair<int, iir::Field> const& p) {
                   return stencilInstantiation->isTemporaryField(p.second.getAccessID()) &&
-                         !accessIsCached(p.second.getAccessID(), ms);
+                         !cacheProperties.accessIsCached(p.second.getAccessID());
                 }));
 
   const bool containsTemporary = !tempFieldsNonCached.empty();
@@ -199,8 +199,6 @@ void CudaCodeGen::generateCudaKernelCode(
   }
 
   const auto blockSize = stencilInstantiation->getIIR()->getBlockSize();
-
-  auto cacheProperties = makeCacheProperties(ms, 2);
 
   generateIJCacheDecl(cudaKernel, stencilInstantiation, *ms, cacheProperties, blockSize);
 
@@ -318,7 +316,7 @@ void CudaCodeGen::generateCudaKernelCode(
   }
 
   if(containsTemporary) {
-    generateTmpIndexInit(cudaKernel, ms, stencilInstantiation);
+    generateTmpIndexInit(cudaKernel, ms, stencilInstantiation, cacheProperties);
   }
 
   // compute the partition of the intervals
@@ -358,7 +356,7 @@ void CudaCodeGen::generateCudaKernelCode(
                                   intervalDiffToString(kmin, "ksize-1") + ")");
         }
       }
-      if(useTmpIndex(ms, stencilInstantiation) && !kmin.null()) {
+      if(useTmpIndex(ms, stencilInstantiation, cacheProperties) && !kmin.null()) {
         cudaKernel.addComment("jump tmp iterators to match the beginning of next interval");
         cudaKernel.addStatement("idx_tmp += kstride_tmp*(" + intervalDiffToString(kmin, "ksize-1") +
                                 ")");
@@ -385,7 +383,7 @@ void CudaCodeGen::generateCudaKernelCode(
           }
         }
       }
-      if(useTmpIndex(ms, stencilInstantiation)) {
+      if(useTmpIndex(ms, stencilInstantiation, cacheProperties)) {
         cudaKernel.addComment("jump tmp iterators to match the intersection of beginning of next "
                               "interval and the parallel execution block ");
         cudaKernel.addStatement("idx_tmp += max(" + intervalDiffToString(kmin, "ksize-1") +
@@ -439,7 +437,7 @@ void CudaCodeGen::generateCudaKernelCode(
                                       CodeGeneratorHelper::generateStrideName(2, index.second));
             }
           }
-          if(useTmpIndex(ms, stencilInstantiation)) {
+          if(useTmpIndex(ms, stencilInstantiation, cacheProperties)) {
             cudaKernel.addStatement("idx_tmp " + incStr + " kstride_tmp");
           }
         });
@@ -482,30 +480,26 @@ void CudaCodeGen::generateIJCacheIndexInit(MemberFunction& kernel,
 
 bool CudaCodeGen::useTmpIndex(
     const std::unique_ptr<iir::MultiStage>& ms,
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const CacheProperties& cacheProperties) const {
   const auto& fields = ms->getFields();
   const bool containsTemporary =
       (find_if(fields.begin(), fields.end(), [&](const std::pair<int, iir::Field>& field) {
          const int accessID = field.second.getAccessID();
          // we dont need to initialize tmp indices for fields that are cached
-         bool cacheBypass = accessIsCached(accessID, ms);
+         bool cacheBypass = cacheProperties.accessIsCached(accessID);
          return stencilInstantiation->isTemporaryField(accessID) && !cacheBypass;
        }) != fields.end());
 
   return containsTemporary;
 }
 
-bool CudaCodeGen::accessIsCached(const int accessID,
-                                 const std::unique_ptr<iir::MultiStage>& ms) const {
-  return ms->isCached(accessID) &&
-         (ms->getCache(accessID).getCacheType() == iir::Cache::CacheTypeKind::IJ);
-}
-
 void CudaCodeGen::generateTmpIndexInit(
     MemberFunction& kernel, const std::unique_ptr<iir::MultiStage>& ms,
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const {
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const CacheProperties& cacheProperties) const {
 
-  if(!useTmpIndex(ms, stencilInstantiation))
+  if(!useTmpIndex(ms, stencilInstantiation, cacheProperties))
     return;
 
   auto maxExtentTmps = computeTempMaxWriteExtent(*(ms->getParent()));
@@ -517,10 +511,11 @@ int CudaCodeGen::paddedBoundary(int value) {
   return value <= 1 ? 1 : value <= 2 ? 2 : value <= 4 ? 4 : 8;
 }
 void CudaCodeGen::generateAllCudaKernels(
-    std::stringstream& ssSW,
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const std::unordered_map<int, CacheProperties>& cachePropertyMap) {
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
-    generateCudaKernelCode(ssSW, stencilInstantiation, ms);
+    DAWN_ASSERT(cachePropertyMap.count(ms->getID()));
+    generateCudaKernelCode(ssSW, stencilInstantiation, ms, cachePropertyMap.at(ms->getID()));
   }
 }
 
@@ -532,7 +527,13 @@ std::string CudaCodeGen::generateStencilInstantiation(
 
   Namespace cudaNamespace("cuda", ssSW);
 
-  generateAllCudaKernels(ssSW, stencilInstantiation);
+  // map from MS ID to cacheProperty
+  std::unordered_map<int, CacheProperties> cachePropertyMap;
+  for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
+    cachePropertyMap.emplace(ms->getID(), makeCacheProperties(ms, 2));
+  }
+
+  generateAllCudaKernels(ssSW, stencilInstantiation, cachePropertyMap);
 
   Class StencilWrapperClass(stencilInstantiation->getName(), ssSW);
   StencilWrapperClass.changeAccessibility("public");
@@ -564,7 +565,8 @@ std::string CudaCodeGen::generateStencilInstantiation(
 
   generateBoundaryConditionFunctions(StencilWrapperClass, stencilInstantiation);
 
-  generateStencilClasses(stencilInstantiation, StencilWrapperClass, codeGenProperties);
+  generateStencilClasses(stencilInstantiation, StencilWrapperClass, codeGenProperties,
+                         cachePropertyMap);
 
   generateStencilWrapperMembers(StencilWrapperClass, stencilInstantiation, codeGenProperties);
 
@@ -624,7 +626,8 @@ void CudaCodeGen::generateStencilWrapperPublicMemberFunctions(
 
 void CudaCodeGen::generateStencilClasses(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-    Class& stencilWrapperClass, CodeGenProperties& codeGenProperties) const {
+    Class& stencilWrapperClass, CodeGenProperties& codeGenProperties,
+    const std::unordered_map<int, CacheProperties>& cachePropertyMap) const {
   // Generate stencils
   const auto& stencils = stencilInstantiation->getStencils();
 
@@ -693,7 +696,7 @@ void CudaCodeGen::generateStencilClasses(
     // Run-Method
     //
     generateStencilRunMethod(stencilClass, stencil, stencilInstantiation, paramNameToType,
-                             globalsMap);
+                             globalsMap, cachePropertyMap);
 
     // Generate stencil getter
     stencilClass.addMemberFunction("sbase*", "get_stencil").addStatement("return this");
@@ -923,7 +926,8 @@ void CudaCodeGen::generateStencilRunMethod(
     Structure& stencilClass, const iir::Stencil& stencil,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const std::unordered_map<std::string, std::string>& paramNameToType,
-    const sir::GlobalVariableMap& globalsMap) const {
+    const sir::GlobalVariableMap& globalsMap,
+    const std::unordered_map<int, CacheProperties>& cachePropertyMap) const {
   MemberFunction StencilRunMethod = stencilClass.addMemberFunction("virtual void", "run", "");
 
   StencilRunMethod.startBody();
@@ -935,6 +939,7 @@ void CudaCodeGen::generateStencilRunMethod(
     StencilRunMethod.addStatement("{");
 
     const iir::MultiStage& multiStage = *multiStagePtr;
+    const auto& cacheProperties = cachePropertyMap.at(multiStagePtr->getID());
 
     bool solveKLoopInParallel_ = solveKLoopInParallel(multiStagePtr);
 
@@ -950,7 +955,7 @@ void CudaCodeGen::generateStencilRunMethod(
         makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
                               std::pair<int, iir::Field> const& p) {
                     return stencilInstantiation->isTemporaryField(p.second.getAccessID()) &&
-                           !accessIsCached(p.second.getAccessID(), multiStagePtr);
+                           !cacheProperties.accessIsCached(p.second.getAccessID());
                   }));
 
     // create all the data views
