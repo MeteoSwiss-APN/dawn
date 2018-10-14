@@ -360,8 +360,8 @@ void CudaCodeGen::generateCudaKernelCode(
       }
       if(useTmpIndex(ms, stencilInstantiation) && !kmin.null()) {
         cudaKernel.addComment("jump tmp iterators to match the beginning of next interval");
-        cudaKernel.addStatement("idx_tmp += kstride_tmp*(" + std::to_string(interval.lowerBound()) +
-                                "-" + intervalDiffToString(kmin, "ksize-1") + ")");
+        cudaKernel.addStatement("idx_tmp += kstride_tmp*(" + intervalDiffToString(kmin, "ksize-1") +
+                                ")");
       }
     }
 
