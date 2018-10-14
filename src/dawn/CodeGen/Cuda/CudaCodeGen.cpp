@@ -572,6 +572,8 @@ std::string CudaCodeGen::generateStencilInstantiation(
 
   generateStencilWrapperRun(StencilWrapperClass, stencilInstantiation, codeGenProperties);
 
+  generateStencilWrapperSyncMethod(StencilWrapperClass, stencilInstantiation, codeGenProperties);
+
   generateStencilWrapperPublicMemberFunctions(StencilWrapperClass, codeGenProperties);
 
   StencilWrapperClass.commit();
@@ -866,6 +868,7 @@ void CudaCodeGen::generateStencilWrapperRun(
 
   RunMethod.finishArgs();
 
+  RunMethod.addStatement("sync_storages()");
   // generate the control flow code executing each inner stencil
   ASTStencilDesc stencilDescCGVisitor(stencilInstantiation, codeGenProperties);
   stencilDescCGVisitor.setIndent(RunMethod.getIndent());
@@ -874,7 +877,34 @@ void CudaCodeGen::generateStencilWrapperRun(
     RunMethod.addStatement(stencilDescCGVisitor.getCodeAndResetStream());
   }
 
+  RunMethod.addStatement("sync_storages()");
   RunMethod.commit();
+}
+
+void CudaCodeGen::generateStencilWrapperSyncMethod(
+    Class& stencilWrapperClass,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const CodeGenProperties& codeGenProperties) const {
+  // Generate the run method by generate code for the stencil description AST
+  MemberFunction syncMethod = stencilWrapperClass.addMemberFunction("void", "sync_storages");
+
+  syncMethod.finishArgs();
+
+  const auto& stencils = stencilInstantiation->getStencils();
+
+  // add the ctr initialization of each stencil
+  for(const auto& stencilPtr : stencils) {
+    iir::Stencil& stencil = *stencilPtr;
+    if(stencil.isEmpty())
+      continue;
+
+    const std::string stencilName =
+        codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
+
+    syncMethod.addStatement(stencilName + "->sync_storages()");
+  }
+
+  syncMethod.commit();
 }
 
 std::string CudaCodeGen::intervalDiffToString(iir::IntervalDiff intervalDiff,
@@ -894,7 +924,6 @@ void CudaCodeGen::generateStencilRunMethod(
 
   StencilRunMethod.startBody();
 
-  StencilRunMethod.addStatement("sync_storages()");
   for(const auto& multiStagePtr : stencil.getChildren()) {
     StencilRunMethod.addStatement("{");
 
@@ -1006,8 +1035,6 @@ void CudaCodeGen::generateStencilRunMethod(
     kernelCall = kernelCall + "nx,ny,nz," + RangeToString(",", "", "")(strides) + "," + args + ")";
 
     StencilRunMethod.addStatement(kernelCall);
-
-    StencilRunMethod.addStatement("sync_storages()");
 
     StencilRunMethod.addStatement("}");
   }

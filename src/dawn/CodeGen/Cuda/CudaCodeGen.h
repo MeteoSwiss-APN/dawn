@@ -96,6 +96,11 @@ private:
                             const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                             const CodeGenProperties& codeGenProperties) const;
 
+  void generateStencilWrapperSyncMethod(
+      Class& stencilWrapperClass,
+      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+      const CodeGenProperties& codeGenProperties) const;
+
   void
   generateStencilWrapperPublicMemberFunctions(Class& stencilWrapperClass,
                                               const CodeGenProperties& codeGenProperties) const;
