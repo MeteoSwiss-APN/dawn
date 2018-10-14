@@ -572,6 +572,8 @@ std::string CudaCodeGen::generateStencilInstantiation(
 
   generateStencilWrapperRun(StencilWrapperClass, stencilInstantiation, codeGenProperties);
 
+  generateStencilWrapperSyncMethod(StencilWrapperClass, stencilInstantiation);
+
   generateStencilWrapperPublicMemberFunctions(StencilWrapperClass, codeGenProperties);
 
   StencilWrapperClass.commit();
@@ -583,6 +585,23 @@ std::string CudaCodeGen::generateStencilInstantiation(
   str[str.size() - 2] = ' ';
 
   return str;
+}
+
+void CudaCodeGen::generateStencilWrapperSyncMethod(
+    Class& stencilWrapperClass,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const {
+
+  // synchronize storages method
+  MemberFunction syncStoragesMethod =
+      stencilWrapperClass.addMemberFunction("void", "sync_storages", "");
+  syncStoragesMethod.startBody();
+
+  for(int fieldId : stencilInstantiation->getAPIFieldIDs()) {
+    syncStoragesMethod.addStatement("m_" + stencilInstantiation->getNameFromAccessID(fieldId) +
+                                    ".sync()");
+  }
+
+  syncStoragesMethod.commit();
 }
 
 void CudaCodeGen::generateStencilWrapperPublicMemberFunctions(
@@ -672,16 +691,6 @@ void CudaCodeGen::generateStencilClasses(
     MemberFunction stencilClassDtr = stencilClass.addDestructor();
     stencilClassDtr.startBody();
     stencilClassDtr.commit();
-
-    // synchronize storages method
-    MemberFunction syncStoragesMethod = stencilClass.addMemberFunction("void", "sync_storages", "");
-    syncStoragesMethod.startBody();
-
-    for(auto fieldIt : nonTempFields) {
-      syncStoragesMethod.addStatement("m_" + (*fieldIt).second.Name + ".sync()");
-    }
-
-    syncStoragesMethod.commit();
 
     //
     // Run-Method
@@ -866,6 +875,7 @@ void CudaCodeGen::generateStencilWrapperRun(
 
   RunMethod.finishArgs();
 
+  RunMethod.addStatement("sync_storages()");
   // generate the control flow code executing each inner stencil
   ASTStencilDesc stencilDescCGVisitor(stencilInstantiation, codeGenProperties);
   stencilDescCGVisitor.setIndent(RunMethod.getIndent());
@@ -874,6 +884,7 @@ void CudaCodeGen::generateStencilWrapperRun(
     RunMethod.addStatement(stencilDescCGVisitor.getCodeAndResetStream());
   }
 
+  RunMethod.addStatement("sync_storages()");
   RunMethod.commit();
 }
 
@@ -894,7 +905,6 @@ void CudaCodeGen::generateStencilRunMethod(
 
   StencilRunMethod.startBody();
 
-  StencilRunMethod.addStatement("sync_storages()");
   for(const auto& multiStagePtr : stencil.getChildren()) {
     StencilRunMethod.addStatement("{");
 
@@ -1006,8 +1016,6 @@ void CudaCodeGen::generateStencilRunMethod(
     kernelCall = kernelCall + "nx,ny,nz," + RangeToString(",", "", "")(strides) + "," + args + ")";
 
     StencilRunMethod.addStatement(kernelCall);
-
-    StencilRunMethod.addStatement("sync_storages()");
 
     StencilRunMethod.addStatement("}");
   }
