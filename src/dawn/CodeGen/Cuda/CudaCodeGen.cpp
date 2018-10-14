@@ -551,6 +551,10 @@ std::string CudaCodeGen::generateStencilInstantiation(
   MemberFunction sbase_run = sbase.addMemberFunction("virtual void", "run");
   sbase_run.startBody();
   sbase_run.commit();
+  MemberFunction sbase_sync = sbase.addMemberFunction("virtual void", "sync_storages");
+  sbase_sync.startBody();
+  sbase_sync.commit();
+
   MemberFunction sbaseVdtor = sbase.addMemberFunction("virtual", "~sbase");
   sbaseVdtor.startBody();
   sbaseVdtor.commit();
