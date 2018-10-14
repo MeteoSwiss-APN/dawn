@@ -292,12 +292,12 @@ void CudaCodeGen::generateCudaKernelCode(
     indexIterators.emplace(CodeGeneratorHelper::indexIteratorName(dims), dims);
   }
 
+  cudaKernel.addComment("initialized iterators");
   for(auto index : indexIterators) {
     std::string idxStmt = "int idx" + index.first + " = ";
     bool init = false;
     if(index.second[0] != 1 && index.second[1] != 1) {
       idxStmt = idxStmt + "0";
-      continue;
     }
     if(index.second[0]) {
       init = true;
@@ -610,9 +610,8 @@ void CudaCodeGen::generateStencilWrapperPublicMemberFunctions(
 
   MemberFunction clearMeters = stencilWrapperClass.addMemberFunction("void", "reset_meters");
   clearMeters.startBody();
-  std::string s = RangeToString("\n", "", "")(stencilMembers, [](const std::string& member) {
-    return member + "->reset();";
-  });
+  std::string s = RangeToString("\n", "", "")(
+      stencilMembers, [](const std::string& member) { return member + "->reset();"; });
   clearMeters << s;
   clearMeters.commit();
 }
