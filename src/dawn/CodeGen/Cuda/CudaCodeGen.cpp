@@ -901,7 +901,7 @@ void CudaCodeGen::generateStencilWrapperSyncMethod(
     const std::string stencilName =
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
 
-    syncMethod.addStatement(stencilName + "->sync_storages()");
+    syncMethod.addStatement("m_" + stencilName + "->sync_storages()");
   }
 
   syncMethod.commit();
