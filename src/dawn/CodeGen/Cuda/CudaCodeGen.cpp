@@ -611,7 +611,7 @@ void CudaCodeGen::generateStencilWrapperPublicMemberFunctions(
   MemberFunction clearMeters = stencilWrapperClass.addMemberFunction("void", "reset_meters");
   clearMeters.startBody();
   std::string s = RangeToString("\n", "", "")(stencilMembers, [](const std::string& member) {
-    return member + ".get_stencil()->reset_meter();";
+    return member + "->reset();";
   });
   clearMeters << s;
   clearMeters.commit();
