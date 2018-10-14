@@ -18,10 +18,10 @@
 #include "dawn/Support/Printing.h"
 #include "dawn/Support/STLExtras.h"
 #include <algorithm>
+#include <iostream>
 #include <iterator>
 #include <sstream>
 #include <string>
-#include <iostream>
 
 namespace dawn {
 
@@ -96,12 +96,14 @@ public:
     const std::size_t size = std::distance(it, end);
     std::size_t i = 0;
 
+    bool initialized = false;
     for(; it != end; ++it, ++i) {
       if(!stringify(*it).empty() || !ignoreIfEmpty_) {
         ss << stringify(*it);
+        initialized = true;
       }
       if(i != size - 1 &&
-         ((!stringify(*std::next(it)).empty() && !stringify(*it).empty()) || !ignoreIfEmpty_)) {
+         ((!stringify(*std::next(it)).empty() && initialized) || !ignoreIfEmpty_)) {
         ss << delim_;
       }
     }
