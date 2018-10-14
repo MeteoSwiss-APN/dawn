@@ -928,6 +928,9 @@ void CudaCodeGen::generateStencilRunMethod(
 
   StencilRunMethod.startBody();
 
+  StencilRunMethod.addComment("starting timers");
+  StencilRunMethod.addStatement("start()");
+
   for(const auto& multiStagePtr : stencil.getChildren()) {
     StencilRunMethod.addStatement("{");
 
@@ -1042,6 +1045,10 @@ void CudaCodeGen::generateStencilRunMethod(
 
     StencilRunMethod.addStatement("}");
   }
+
+  StencilRunMethod.addComment("stopping timers");
+  StencilRunMethod.addStatement("pause()");
+
   StencilRunMethod.commit();
 }
 
