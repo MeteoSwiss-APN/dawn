@@ -108,10 +108,9 @@ void CudaCodeGen::generateKCacheDecl(
       continue;
 
     const int accessID = cache.getCachedFieldAccessID();
-    const auto& field = ms.getField(accessID);
-    auto vertExtent = field.getExtents()[2];
+    auto vertExtent = cacheProperties.getKCacheVertExtent(accessID);
 
-    kernel.addStatement("__shared__ gridtools::clang::float_type " +
+    kernel.addStatement("gridtools::clang::float_type " +
                         cacheProperties.getCacheName(accessID, stencilInstantiation) + "[" +
                         std::to_string(-vertExtent.Minus - vertExtent.Plus + 1) + "]");
   }

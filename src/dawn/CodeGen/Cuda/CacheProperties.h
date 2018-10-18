@@ -44,6 +44,11 @@ struct CacheProperties {
   bool isThereACommonCache() const;
   bool accessIsCached(const int accessID) const;
   bool hasIJCaches() const;
+  bool isIJCached(const int accessID) const;
+  bool isKCached(const int accessID) const;
+  bool isCached(const int accessID) const;
+  iir::Extent getKCacheVertExtent(const int accessID) const;
+  int getKCacheCenterOffset(const int accessID) const;
 
 private:
   int getStrideImpl(int dim, Array3ui blockSize, const iir::Extents& extents) const;

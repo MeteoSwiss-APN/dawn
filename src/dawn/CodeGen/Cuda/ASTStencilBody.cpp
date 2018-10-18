@@ -103,7 +103,6 @@ void ASTStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
 void ASTStencilBody::visit(const std::shared_ptr<StencilFunArgExpr>& expr) {
   dawn_unreachable("stencil functions not allows in cuda backend");
 }
-bool ASTStencilBody::isCached(const int accessID) const { return ms_.getCaches().count(accessID); }
 
 void ASTStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
   std::string name = getName(expr);
@@ -125,11 +124,15 @@ void ASTStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
 void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   std::string accessName = getName(expr);
   int accessID = instantiation_->getAccessIDFromExpr(expr);
-  if(isCached(accessID) &&
-     (ms_.getCache(accessID).getCacheType() == iir::Cache::CacheTypeKind::IJ)) {
+  if(cacheProperties_.isIJCached(accessID)) {
     derefIJCache(expr);
     return;
   }
+  if(cacheProperties_.isKCached(accessID)) {
+    derefKCache(expr);
+    return;
+  }
+
   bool isTemporary = instantiation_->isTemporaryField(accessID);
   DAWN_ASSERT(fieldIndexMap_.count(accessID) || isTemporary);
   std::string index = isTemporary ? "idx_tmp" : "idx" + CodeGeneratorHelper::indexIteratorName(
@@ -155,7 +158,6 @@ void ASTStencilBody::derefIJCache(const std::shared_ptr<FieldAccessExpr>& expr) 
             std::to_string(cacheProperties_.getOffset(accessID, 1)) + ")*" +
             std::to_string(cacheProperties_.getStride(accessID, 1, blockSizes_));
   }
-
   DAWN_ASSERT(expr->getOffset()[2] == 0);
 
   auto offset = expr->getOffset();
@@ -167,6 +169,25 @@ void ASTStencilBody::derefIJCache(const std::shared_ptr<FieldAccessExpr>& expr) 
                  std::to_string(cacheProperties_.getStride(accessID, 1, blockSizes_));
   ss_ << accessName
       << (offsetStr.empty() ? "[" + index + "]" : ("[" + index + "+" + offsetStr + "]"));
+}
+
+void ASTStencilBody::derefKCache(const std::shared_ptr<FieldAccessExpr>& expr) {
+  int accessID = instantiation_->getAccessIDFromExpr(expr);
+  std::string accessName = cacheProperties_.getCacheName(accessID, instantiation_);
+  auto vertExtent = cacheProperties_.getKCacheVertExtent(accessID);
+
+  const int kcacheCenterOffset = cacheProperties_.getKCacheCenterOffset(accessID);
+
+  DAWN_ASSERT((expr->getOffset()[0] == 0) && (expr->getOffset()[1] == 0));
+  DAWN_ASSERT((expr->getOffset()[2] <= vertExtent.Plus) &&
+              (expr->getOffset()[2] >= vertExtent.Minus));
+
+  int index = kcacheCenterOffset;
+
+  auto offset = expr->getOffset();
+  if(offset[2] != 0)
+    index += offset[2];
+  ss_ << accessName << "[" + std::to_string(index) + "]";
 }
 
 } // namespace cuda

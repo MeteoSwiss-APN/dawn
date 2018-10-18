@@ -58,6 +58,31 @@ std::string CacheProperties::getCacheName(
   dawn_unreachable("Unknown cache for code generation");
 }
 
+bool CacheProperties::isCached(const int accessID) const {
+  return ms_->getCaches().count(accessID);
+}
+
+bool CacheProperties::isIJCached(const int accessID) const {
+  return isCached(accessID) &&
+         (ms_->getCache(accessID).getCacheType() == iir::Cache::CacheTypeKind::IJ);
+}
+
+iir::Extent CacheProperties::getKCacheVertExtent(const int accessID) const {
+  const auto& field = ms_->getField(accessID);
+  auto vertExtent = field.getExtents()[2];
+  return vertExtent;
+}
+
+int CacheProperties::getKCacheCenterOffset(const int accessID) const {
+  auto ext = getKCacheVertExtent(accessID);
+  return -ext.Minus;
+}
+bool CacheProperties::isKCached(const int accessID) const {
+  return isCached(accessID) &&
+         ((ms_->getCache(accessID).getCacheType() == iir::Cache::CacheTypeKind::K) &&
+          (ms_->getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local));
+}
+
 bool CacheProperties::hasIJCaches() const {
   for(const auto& cacheP : ms_->getCaches()) {
     const iir::Cache& cache = cacheP.second;
@@ -69,10 +94,7 @@ bool CacheProperties::hasIJCaches() const {
 }
 
 bool CacheProperties::accessIsCached(const int accessID) const {
-  return ms_->isCached(accessID) &&
-         ((ms_->getCache(accessID).getCacheType() == iir::Cache::CacheTypeKind::IJ) ||
-          ((ms_->getCache(accessID).getCacheType() == iir::Cache::CacheTypeKind::K) &&
-           (ms_->getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local)));
+  return ms_->isCached(accessID) && (isIJCached(accessID) || isKCached(accessID));
 }
 
 iir::Extents CacheProperties::getCacheExtent(int accessID) const {
@@ -102,6 +124,7 @@ int CacheProperties::getStrideImpl(int dim, Array3ui blockSize, const iir::Exten
   }
 }
 
+// TODO rename this
 int CacheProperties::getOffset(int accessID, int dim) const {
   auto extents = getCacheExtent(accessID);
   return -extents[dim].Minus;
