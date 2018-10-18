@@ -478,8 +478,14 @@ void CudaCodeGen::generateKCacheSlide(MemberFunction& cudaKernel,
     auto cacheName = cacheProperties.getCacheName(accessID);
 
     for(int i = 0; i < -vertExtent.Minus + vertExtent.Plus; ++i) {
-      cudaKernel.addStatement(cacheName + "[" + std::to_string(i) + "] = " + cacheName + "[" +
-                              std::to_string(i + 1) + "]");
+      if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) {
+        int maxCacheIdx = -vertExtent.Minus + vertExtent.Plus;
+        cudaKernel.addStatement(cacheName + "[" + std::to_string(maxCacheIdx - i) + "] = " +
+                                cacheName + "[" + std::to_string(maxCacheIdx - i - 1) + "]");
+      } else {
+        cudaKernel.addStatement(cacheName + "[" + std::to_string(i) + "] = " + cacheName + "[" +
+                                std::to_string(i + 1) + "]");
+      }
     }
   }
 }
