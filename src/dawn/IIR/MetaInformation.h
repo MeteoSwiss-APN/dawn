@@ -83,6 +83,8 @@ private:
     int getOriginalVersionOfAccessID(const int accessID) const {
       return versionToOriginalVersionMap_.at(accessID);
     }
+
+    std::unordered_set<int> getVersionIDs() { return versionIDs_; }
     VariableVersions() = default;
   };
 
@@ -152,13 +154,13 @@ private:
                      StencilFunctionInstantiationCandidate>
       stencilFunInstantiationCandidate_;
 
-  /// BoundaryConditionCall to Extent Map. Filled my `PassSetBoundaryCondition`
-  std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>
-      BoundaryConditionToExtentsMap_;
-
   /// Field Name to BoundaryConditionDeclStmt
   std::unordered_map<std::string, std::shared_ptr<BoundaryConditionDeclStmt>>
       FieldnameToBoundaryConditionMap_;
+
+  /// BoundaryConditionCall to Extent Map. Filled my `PassSetBoundaryCondition`
+  std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>
+      BoundaryConditionToExtentsMap_;
 
   /// Set of all the IDs that are locally cached
   std::set<int> CachedVariableSet_;
@@ -177,6 +179,8 @@ private:
 
 public:
   StencilMetaInformation();
+
+  void clone(StencilMetaInformation& origin);
 
   /// @brief Insert a new AccessID - Name pair
   void setAccessIDNamePair(int AccessID, const std::string& name);
@@ -348,10 +352,17 @@ public:
 
   inline Extents getBoundaryConditionExtentsFromBCStmt(
       const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) const {
-    if(BoundaryConditionToExtentsMap_.count(stmt) == 0) {
-      DAWN_ASSERT_MSG(false, "Boundary Condition does not have a matching Extent");
+    for(auto& BCExtentPair : BoundaryConditionToExtentsMap_) {
+      if(BCExtentPair.first->equals(stmt.get())) {
+        return BCExtentPair.second;
+      }
     }
-    return BoundaryConditionToExtentsMap_.find(stmt)->second;
+    DAWN_ASSERT_MSG(false, "Boundary Condition does not have a matching Extent");
+    return Extents{0, 0, 0, 0, 0, 0};
+    //    if(BoundaryConditionToExtentsMap_.count(stmt) == 0) {
+    //       DAWN_ASSERT_MSG(false, "Boundary Condition does not have a matching Extent");
+    //    }
+    //    return BoundaryConditionToExtentsMap_.find(stmt)->second;
   }
 
   //====--------------------------------------------------------------------------------------------
@@ -366,7 +377,7 @@ public:
   }
 
   /// @brief Get the name of the StencilInstantiation (corresponds to the name of the SIRStencil)
-  const std::string getName() const { return stencilName_; }
+  std::string& getName() { return stencilName_; }
 
   /// @brief Get the `name` associated with the `AccessID`
   const std::string& getNameFromAccessID(int AccessID) const;
@@ -380,6 +391,7 @@ public:
   getOriginalNameAndLocationsFromAccessID(int AccessID, const std::shared_ptr<Stmt>& stmt) const;
 
   const std::unordered_map<std::string, std::shared_ptr<sir::Value>>& getGlobalVariableMap() const;
+  std::unordered_map<std::string, std::shared_ptr<sir::Value>>& getGlobalVariableMap();
 
   /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
   const std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
@@ -480,7 +492,7 @@ public:
 
   VariableVersions& getVariableVersions();
 
-  std::string getFileName();
+  std::string& getFileName();
 
   /// @brief Get the list of access ID of the user API fields
   inline const std::vector<int>& getAPIFieldIDs() const { return apiFieldIDs_; }
@@ -489,7 +501,8 @@ public:
                      StencilFunctionInstantiationCandidate>&
   getStencilFunInstantiationCandidate();
 
-  void insertStencilFunctionIntoSIR(const std::shared_ptr<sir::StencilFunction> &sirStencilFunction);
+  void
+  insertStencilFunctionIntoSIR(const std::shared_ptr<sir::StencilFunction>& sirStencilFunction);
 };
 } // namespace iir
 } // namespace dawn

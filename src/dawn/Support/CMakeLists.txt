@@ -61,5 +61,7 @@ yoda_add_library(
           Unreachable.h
           VisitorHelpers.h
           ../Dawn.h
+          ReportAccesses.cpp
+          ReportAccesses.h
   OBJECT
 )

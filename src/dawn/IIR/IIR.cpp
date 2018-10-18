@@ -18,6 +18,7 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Support/Json.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
 #include <algorithm>
@@ -38,9 +39,10 @@ void IIR::updateFromChildren() {}
 
 std::unique_ptr<IIR> IIR::clone() const {
 
-  auto cloneIIR = make_unique<IIR>();
-
+  auto cloneIIR = make_unique<IIR>(creator_);
   cloneIIR->cloneChildrenFrom(*this, cloneIIR);
+  cloneIIR->getMetaData()->clone(*getMetaData());
+  //  cloneIIR->getMetaData() = getMetaData();
   return cloneIIR;
 }
 
@@ -54,6 +56,64 @@ const HardwareConfig& IIR::getHardwareConfiguration() const {
 }
 
 HardwareConfig& IIR::getHardwareConfiguration() { return creator_->getHardwareConfiguration(); }
+
+void IIR::dumpTreeAsJson(std::string filename, std::string passName = "") {
+  json::json jout;
+
+  int i = 0;
+  for(const auto& stencil : getChildren()) {
+    json::json jStencil;
+
+    int j = 0;
+    for(const auto& multiStage : stencil->getChildren()) {
+      json::json jMultiStage;
+      jMultiStage["LoopOrder"] = loopOrderToString(multiStage->getLoopOrder());
+
+      int k = 0;
+      const auto& stages = multiStage->getChildren();
+      for(const auto& stage : stages) {
+        json::json jStage;
+
+        int l = 0;
+        for(const auto& doMethod : stage->getChildren()) {
+          json::json jDoMethod;
+
+          jDoMethod["Interval"] = doMethod->getInterval().toString();
+
+          const auto& statementAccessesPairs = doMethod->getChildren();
+          for(std::size_t m = 0; m < statementAccessesPairs.size(); ++m) {
+            jDoMethod["Stmt_" + std::to_string(m)] = ASTStringifer::toString(
+                statementAccessesPairs[m]->getStatement()->ASTStmt, 0, false);
+            jDoMethod["Accesses_" + std::to_string(m)] =
+                statementAccessesPairs[m]->getAccesses()->reportAccesses(this);
+          }
+
+          jStage["Do_" + std::to_string(l++)] = jDoMethod;
+        }
+
+        jMultiStage["Stage_" + std::to_string(k++)] = jStage;
+      }
+
+      jStencil["MultiStage_" + std::to_string(j++)] = jMultiStage;
+    }
+
+    if(passName.empty())
+      jout[getMetaData()->getName()]["Stencil_" + std::to_string(i)] = jStencil;
+    else
+      jout[passName][getMetaData()->getName()]["Stencil_" + std::to_string(i)] = jStencil;
+    ++i;
+  }
+
+  std::ofstream fs(filename, std::ios::out | std::ios::trunc);
+  if(!fs.is_open()) {
+    DiagnosticsBuilder diag(DiagnosticsKind::Error, SourceLocation());
+    diag << "file system error: cannot open file: " << filename;
+    getDiagnostics().report(diag);
+  }
+
+  fs << jout.dump(2) << std::endl;
+  fs.close();
+}
 
 } // namespace iir
 } // namespace dawn

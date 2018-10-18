@@ -22,6 +22,8 @@
 #include <gtest/gtest.h>
 #include <streambuf>
 
+#include "dawn/SIR/ASTStringifier.h"
+
 using namespace dawn;
 
 namespace {
@@ -114,7 +116,7 @@ TEST_F(StencilSplitAnalyzer, test_bc_extent_calc) {
   ASSERT_TRUE((myvisitor.reportBCsFound() == 1));
   ASSERT_TRUE(test->getMetaData()->getBoundaryConditions().count("intermediate"));
   auto bc = test->getMetaData()->getBoundaryConditions().find("intermediate")->second;
-  ASSERT_TRUE((test->getMetaData()->getBoundaryConditionToExtentsMap().at(bc) ==
+  ASSERT_TRUE((test->getMetaData()->getBoundaryConditionExtentsFromBCStmt(bc) ==
                iir::Extents{-1, 1, 0, 0, 0, 0}));
 }
 
@@ -123,7 +125,7 @@ TEST_F(StencilSplitAnalyzer, test_two_bc) {
   ASSERT_TRUE((test->getMetaData()->getBoundaryConditions().size() == 2));
   ASSERT_TRUE(test->getMetaData()->getBoundaryConditions().count("intermediate"));
   auto bcfoo = test->getMetaData()->getBoundaryConditions().find("intermediate")->second;
-  ASSERT_TRUE((test->getMetaData()->getBoundaryConditionToExtentsMap().at(bcfoo) ==
+  ASSERT_TRUE((test->getMetaData()->getBoundaryConditionExtentsFromBCStmt(bcfoo) ==
                iir::Extents{-1, 1, 0, 0, 0, 0}));
   ASSERT_TRUE(test->getMetaData()->getBoundaryConditions().count("out"));
   auto bcbar = test->getMetaData()->getBoundaryConditions().find("out")->second;

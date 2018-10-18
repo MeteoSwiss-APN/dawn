@@ -31,6 +31,7 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/Logging.h"
+#include "dawn/Support/ReportAccesses.h"
 #include "dawn/Support/STLExtras.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
@@ -100,9 +101,10 @@ public:
     scope_.top()->LocalFieldnameToAccessIDMap = iir_->getMetaData()->getNameToAccessIDMap();
 
     // We add all global variables which have constant values
-    for(const auto& keyValuePair : iir_->getMetaData()->getGlobalVariableMap()) {
+    for(auto& keyValuePair : *(sir->GlobalVariableMap)) {
       const std::string& key = keyValuePair.first;
-      const sir::Value& value = *keyValuePair.second;
+      sir::Value& value = *keyValuePair.second;
+      iir_->getMetaData()->getGlobalVariableMap().emplace(keyValuePair.first, keyValuePair.second);
 
       if(value.isConstexpr()) {
         switch(value.getType()) {
@@ -467,12 +469,13 @@ public:
   }
 
   void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override {
-    DAWN_ASSERT_MSG(false, "BOUNDARY CONDTITION NOT IMPLEMENTED");
+    if(iir_->getMetaData()->insertBoundaryConditions(stmt->getFields()[0]->Name, stmt) == false)
+      DAWN_ASSERT_MSG(false, "Boundary Condition specified twice for the same field");
     //      if(instantiation_->insertBoundaryConditions(stmt->getFields()[0]->Name, stmt) == false)
     //      DAWN_ASSERT_MSG(false, "Boundary Condition specified twice for the same field");
   }
 
-  void visit(const std::shared_ptr<AssignmentExpr>& expr) override {    
+  void visit(const std::shared_ptr<AssignmentExpr>& expr) override {
     for(auto& s : expr->getChildren())
       s->accept(*this);
 
@@ -576,8 +579,7 @@ public:
     iir_->getMetaData()->mapExprToAccessID(expr, AccessID);
   }
 
-  void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
-  }
+  void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {}
 };
 } // namespace anonymous
 
@@ -586,17 +588,15 @@ OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, Options& opti
     : diagnostics_(diagnostics), options_(options), SIR_(SIR) {
   DAWN_LOG(INFO) << "Intializing OptimizerContext ... ";
 
-  for(const auto& stencil : SIR_->Stencils)
+  for(const auto& stencil : SIR_->Stencils) {
     if(!stencil->Attributes.has(sir::Attr::AK_NoCodeGen)) {
       stencilNameToIIRMap_.emplace(stencil->Name, make_unique<iir::IIR>(this));
       fillIIRFromSIR(stencilNameToIIRMap_.at(stencil->Name), stencil, SIR_);
-      //      auto newIIR = make_unique<iir::IIR>(this);
-      //      fillIIRFromSIR(newIIR, stencil, SIR_);
-      //      stencilNameToIIRMap_.insert(std::make_pair(stencil->Name, std::move(newIIR)));
 
     } else {
       DAWN_LOG(INFO) << "Skipping processing of `" << stencil->Name << "`";
     }
+  }
 }
 
 bool OptimizerContext::fillIIRFromSIR(std::unique_ptr<iir::IIR>& iir,
@@ -608,6 +608,11 @@ bool OptimizerContext::fillIIRFromSIR(std::unique_ptr<iir::IIR>& iir,
   //                                                 NameToAccessIDMap_);
 
   // Process the stencil description of the "main stencil"
+  iir->getMetaData()->getName() = SIRStencil->Name;
+  iir->getMetaData()->getFileName() = fullSIR->Filename;
+  iir->getMetaData()->getStencilLocation() = SIRStencil->Loc;
+//  std::cout << "set filename form `" << fullSIR->Filename << "` to `"
+//            << iir->getMetaData()->getFileName() << "`" << std::endl;
 
   // Map the fields of the "main stencil" to unique IDs (which are used in the access maps to
   // indentify the field).
@@ -635,8 +640,7 @@ bool OptimizerContext::fillIIRFromSIR(std::unique_ptr<iir::IIR>& iir,
   PassTemporaryType::fixTemporariesSpanningMultipleStencils(iir.get(), iir->getChildren());
 
   if(iir->getOptions().ReportAccesses) {
-    // WITTODO: reenable this
-    // iir->getMetaData()->reportAccesses();
+    reportAccesses(iir.get());
   }
 
   for(const auto& MS : iterateIIROver<MultiStage>(*iir)) {

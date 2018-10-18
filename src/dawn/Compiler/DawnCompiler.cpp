@@ -148,6 +148,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   // Initialize optimizer
   std::unique_ptr<OptimizerContext> optimizer =
       make_unique<OptimizerContext>(getDiagnostics(), getOptions(), SIR);
+
   PassManager& passManager = optimizer->getPassManager();
 
   // Setup pass interface
@@ -177,7 +178,6 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   for(const auto& a : passManager.getPasses()) {
     DAWN_LOG(INFO) << a->getName();
   }
-
   // Run optimization passes
   for(auto& stencilIIR : optimizer->getNameIIRMap()) {
     const std::unique_ptr<iir::IIR>& iir = stencilIIR.second;

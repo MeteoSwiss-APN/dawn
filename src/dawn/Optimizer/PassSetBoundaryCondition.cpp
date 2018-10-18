@@ -114,8 +114,7 @@ public:
 
 PassSetBoundaryCondition::PassSetBoundaryCondition() : Pass("PassSetBoundaryCondition") {}
 
-bool PassSetBoundaryCondition::run(
-    const std::unique_ptr<iir::IIR>& iir) {
+bool PassSetBoundaryCondition::run(const std::unique_ptr<iir::IIR>& iir) {
 
   // check if we need to run this pass
   if(iir->getChildren().size() == 1) {

@@ -43,8 +43,7 @@ bool PassStageMerger::run(const std::unique_ptr<iir::IIR>& iir) {
   std::string filenameWE =
       getFilenameWithoutExtension(iir->getMetaData()->getFileName());
   if(iir->getOptions().ReportPassStageMerger) {
-    //    stencilInstantiation->dumpAsJson(filenameWE + "_before.json", getName());
-    /// Todo add the serializer here once this is merged
+      iir->dumpTreeAsJson(filenameWE + "_before.json", getName());
   }
   for(const auto& stencilPtr : iir->getChildren()) {
     iir::Stencil& stencil = *stencilPtr;
@@ -177,8 +176,7 @@ bool PassStageMerger::run(const std::unique_ptr<iir::IIR>& iir) {
   }
 
   if(iir->getOptions().ReportPassStageMerger) {
-    //    stencilInstantiation->dumpAsJson(filenameWE + "_after.json", getName());
-    /// Todo add the serializer here once this is merged
+    iir->dumpTreeAsJson(filenameWE + "_after.json", getName());
   }
 
   return true;

@@ -68,6 +68,14 @@ public:
   const HardwareConfig& getHardwareConfiguration() const;
   HardwareConfig& getHardwareConfiguration();
 
+  ///
+  /// @brief dumpTreeAsJson dumps the current IIR as a json file. This is not ment for serialization
+  /// but for testing purposes
+  /// @param filename - the filename to which serialization happens
+  /// @param passName - the name of the pass invoking the method, if left empty the IIR's name will
+  /// be the root node of the json file
+  ///
+  void dumpTreeAsJson(std::string filename, std::string passName);
 };
 } // namespace iir
 } // namespace dawn

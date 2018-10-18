@@ -33,8 +33,7 @@ bool PassStageReordering::run(
   std::string filenameWE =
       getFilenameWithoutExtension(iir->getMetaData()->getFileName());
   if(iir->getOptions().ReportPassStageReodering) {
-//        stencilInstantiation->dumpAsJson(filenameWE + "_before.json", getName());
-    ///// Todo add the serializer here once this is merged
+    iir->dumpTreeAsJson(filenameWE + "_before.json", getName());
   }
   for(const auto& stencilPtr : iir->getChildren()) {
     if(strategy_ == ReorderStrategy::RK_None)
@@ -64,8 +63,7 @@ bool PassStageReordering::run(
   }
 
   if(iir->getOptions().ReportPassStageReodering) {
-    //    stencilInstantiation->dumpAsJson(filenameWE + "_after.json", getName());
-    /// Todo add the serializer here once this is merged
+    iir->dumpTreeAsJson(filenameWE + "_after.json", getName());
   }
   return true;
 }

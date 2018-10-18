@@ -33,6 +33,20 @@ struct Statement {
 
   /// Stack trace of inlined stencil calls of this statment (might be `NULL`)
   std::shared_ptr<std::vector<sir::StencilCall*>> StackTrace;
+
+  std::shared_ptr<Statement> clone() {
+    std::shared_ptr<std::vector<sir::StencilCall*>> clonedStackTrace;
+    if(StackTrace) {
+      for(const auto call : *StackTrace) {
+        clonedStackTrace->emplace_back(call->clone().get());
+      }
+    } else {
+      clonedStackTrace = nullptr;
+    }
+    std::shared_ptr<Statement> retval =
+        std::make_shared<Statement>(ASTStmt->clone(), clonedStackTrace);
+    return retval;
+  }
 };
 
 } // namespace dawn

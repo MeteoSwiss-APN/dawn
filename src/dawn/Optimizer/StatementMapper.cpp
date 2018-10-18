@@ -327,8 +327,7 @@ void StatementMapper::visit(const std::shared_ptr<VarAccessExpr>& expr) {
           (*(scope_.top()->doMethod_.childrenRBegin()))->getStatement()->ASTStmt, expr, newExpr);
 
       int AccessID = iir_->getMetaData()->nextUID();
-      iir_->getMetaData()->getLiteralAccessIDToNameMap().emplace(
-          AccessID, newExpr->getValue());
+      iir_->getMetaData()->getLiteralAccessIDToNameMap().emplace(AccessID, newExpr->getValue());
       iir_->getMetaData()->mapExprToAccessID(newExpr, AccessID);
 
     } else {
@@ -356,8 +355,8 @@ void StatementMapper::visit(const std::shared_ptr<VarAccessExpr>& expr) {
     if(function)
       function->mapExprToAccessID(expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
     else
-      iir_->getMetaData()->mapExprToAccessID(
-          expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
+      iir_->getMetaData()->mapExprToAccessID(expr,
+                                             scope_.top()->LocalVarNameToAccessIDMap[varname]);
 
     // Resolve the index if this is an array access
     if(expr->isArrayAccess())
@@ -376,8 +375,7 @@ void StatementMapper::visit(const std::shared_ptr<LiteralAccessExpr>& expr) {
     function->getLiteralAccessIDToNameMap().emplace(AccessID, expr->getValue());
     function->mapExprToAccessID(expr, AccessID);
   } else {
-    iir_->getMetaData()->getLiteralAccessIDToNameMap().emplace(
-        AccessID, expr->getValue());
+    iir_->getMetaData()->getLiteralAccessIDToNameMap().emplace(AccessID, expr->getValue());
     iir_->getMetaData()->mapExprToAccessID(expr, AccessID);
   }
 }
