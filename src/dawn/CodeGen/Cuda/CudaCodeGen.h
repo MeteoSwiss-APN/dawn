@@ -142,9 +142,9 @@ private:
   void generateTmpIndexInit(MemberFunction& kernel, const std::unique_ptr<iir::MultiStage>& ms,
                             const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                             const CacheProperties& cacheProperties) const;
-  std::string
-  getCacheName(const iir::Cache& cache,
-               const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
+  void generateKCacheSlide(MemberFunction& cudaKernel, const CacheProperties& cacheProperties,
+                           const std::unique_ptr<iir::MultiStage>& ms,
+                           const iir::Interval& interval) const;
 
   std::string intervalDiffToString(iir::IntervalDiff intervalDiff, std::string maxRange) const;
 

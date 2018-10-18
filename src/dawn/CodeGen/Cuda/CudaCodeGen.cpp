@@ -91,8 +91,7 @@ void CudaCodeGen::generateIJCacheDecl(
     const auto& maxExtents = cacheProperties.getCacheExtent(accessID);
 
     kernel.addStatement(
-        "__shared__ gridtools::clang::float_type " +
-        cacheProperties.getCacheName(accessID, stencilInstantiation) + "[" +
+        "__shared__ gridtools::clang::float_type " + cacheProperties.getCacheName(accessID) + "[" +
         std::to_string(blockSize[0] + (maxExtents[0].Plus - maxExtents[0].Minus)) + "*" +
         std::to_string(blockSize[1] + (maxExtents[1].Plus - maxExtents[1].Minus)) + "]");
   }
@@ -110,9 +109,8 @@ void CudaCodeGen::generateKCacheDecl(
     const int accessID = cache.getCachedFieldAccessID();
     auto vertExtent = cacheProperties.getKCacheVertExtent(accessID);
 
-    kernel.addStatement("gridtools::clang::float_type " +
-                        cacheProperties.getCacheName(accessID, stencilInstantiation) + "[" +
-                        std::to_string(-vertExtent.Minus - vertExtent.Plus + 1) + "]");
+    kernel.addStatement("gridtools::clang::float_type " + cacheProperties.getCacheName(accessID) +
+                        "[" + std::to_string(-vertExtent.Minus - vertExtent.Plus + 1) + "]");
   }
 }
 
@@ -437,6 +435,9 @@ void CudaCodeGen::generateCudaKernelCode(
                   }
                 });
           }
+
+          generateKCacheSlide(cudaKernel, cacheProperties, ms, interval);
+          cudaKernel.addComment("increment iterators");
           std::string incStr =
               (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) ? "-=" : "+=";
 
@@ -457,6 +458,30 @@ void CudaCodeGen::generateCudaKernelCode(
   }
 
   cudaKernel.commit();
+}
+
+void CudaCodeGen::generateKCacheSlide(MemberFunction& cudaKernel,
+                                      const CacheProperties& cacheProperties,
+                                      const std::unique_ptr<iir::MultiStage>& ms,
+                                      const iir::Interval& interval) const {
+  for(const auto& cachePair : ms->getCaches()) {
+    const auto& cache = cachePair.second;
+    if(!cacheProperties.isKCached(cache))
+      continue;
+    auto cacheInterval = cache.getInterval();
+    DAWN_ASSERT(cacheInterval.is_initialized());
+    if(!(*cacheInterval).overlaps(interval))
+      continue;
+
+    const int accessID = cache.getCachedFieldAccessID();
+    auto vertExtent = cacheProperties.getKCacheVertExtent(accessID);
+    auto cacheName = cacheProperties.getCacheName(accessID);
+
+    for(int i = 0; i < -vertExtent.Minus + vertExtent.Plus; ++i) {
+      cudaKernel.addStatement(cacheName + "[" + std::to_string(i) + "] = " + cacheName + "[" +
+                              std::to_string(i + 1) + "]");
+    }
+  }
 }
 
 bool CudaCodeGen::solveKLoopInParallel(const std::unique_ptr<iir::MultiStage>& ms) const {
@@ -539,7 +564,7 @@ std::string CudaCodeGen::generateStencilInstantiation(
   // map from MS ID to cacheProperty
   std::unordered_map<int, CacheProperties> cachePropertyMap;
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
-    cachePropertyMap.emplace(ms->getID(), makeCacheProperties(ms, 2));
+    cachePropertyMap.emplace(ms->getID(), makeCacheProperties(ms, stencilInstantiation, 2));
   }
 
   generateAllCudaKernels(ssSW, stencilInstantiation, cachePropertyMap);

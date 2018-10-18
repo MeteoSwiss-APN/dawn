@@ -18,8 +18,10 @@ namespace dawn {
 namespace codegen {
 namespace cuda {
 
-CacheProperties makeCacheProperties(const std::unique_ptr<iir::MultiStage>& ms,
-                                    const int maxRedundantLines) {
+CacheProperties
+makeCacheProperties(const std::unique_ptr<iir::MultiStage>& ms,
+                    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                    const int maxRedundantLines) {
 
   iir::Extents maxExtents{0, 0, 0, 0, 0, 0};
   std::set<int> accessIDs;
@@ -43,17 +45,17 @@ CacheProperties makeCacheProperties(const std::unique_ptr<iir::MultiStage>& ms,
       specialCaches.emplace(accessID, extents);
     }
   }
-  return CacheProperties{ms, std::move(accessIDs), maxExtents, std::move(specialCaches)};
+  return CacheProperties{ms, std::move(accessIDs), maxExtents, std::move(specialCaches),
+                         stencilInstantiation};
 }
 
-std::string CacheProperties::getCacheName(
-    int accessID, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const {
+std::string CacheProperties::getCacheName(int accessID) const {
 
   const auto& cache = ms_->getCache(accessID);
   if(cache.getCacheType() == iir::Cache::CacheTypeKind::IJ)
-    return stencilInstantiation->getNameFromAccessID(cache.getCachedFieldAccessID()) + "_ijcache";
+    return stencilInstantiation_->getNameFromAccessID(cache.getCachedFieldAccessID()) + "_ijcache";
   else if(cache.getCacheType() == iir::Cache::CacheTypeKind::K)
-    return stencilInstantiation->getNameFromAccessID(cache.getCachedFieldAccessID()) + "_kcache";
+    return stencilInstantiation_->getNameFromAccessID(cache.getCachedFieldAccessID()) + "_kcache";
 
   dawn_unreachable("Unknown cache for code generation");
 }
@@ -77,10 +79,14 @@ int CacheProperties::getKCacheCenterOffset(const int accessID) const {
   auto ext = getKCacheVertExtent(accessID);
   return -ext.Minus;
 }
+
 bool CacheProperties::isKCached(const int accessID) const {
-  return isCached(accessID) &&
-         ((ms_->getCache(accessID).getCacheType() == iir::Cache::CacheTypeKind::K) &&
-          (ms_->getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local));
+  return isCached(accessID) && isKCached(ms_->getCache(accessID));
+}
+
+bool CacheProperties::isKCached(const iir::Cache& cache) const {
+  return ((cache.getCacheType() == iir::Cache::CacheTypeKind::K) &&
+          (cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local));
 }
 
 bool CacheProperties::hasIJCaches() const {

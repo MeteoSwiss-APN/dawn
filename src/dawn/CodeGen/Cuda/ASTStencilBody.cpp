@@ -148,7 +148,7 @@ void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
 
 void ASTStencilBody::derefIJCache(const std::shared_ptr<FieldAccessExpr>& expr) {
   int accessID = instantiation_->getAccessIDFromExpr(expr);
-  std::string accessName = cacheProperties_.getCacheName(accessID, instantiation_);
+  std::string accessName = cacheProperties_.getCacheName(accessID);
 
   std::string index;
   if(cacheProperties_.isCommonCache(accessID)) {
@@ -173,7 +173,7 @@ void ASTStencilBody::derefIJCache(const std::shared_ptr<FieldAccessExpr>& expr) 
 
 void ASTStencilBody::derefKCache(const std::shared_ptr<FieldAccessExpr>& expr) {
   int accessID = instantiation_->getAccessIDFromExpr(expr);
-  std::string accessName = cacheProperties_.getCacheName(accessID, instantiation_);
+  std::string accessName = cacheProperties_.getCacheName(accessID);
   auto vertExtent = cacheProperties_.getKCacheVertExtent(accessID);
 
   const int kcacheCenterOffset = cacheProperties_.getKCacheCenterOffset(accessID);
