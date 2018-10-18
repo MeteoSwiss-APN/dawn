@@ -58,9 +58,21 @@ std::string CacheProperties::getCacheName(
   dawn_unreachable("Unknown cache for code generation");
 }
 
+bool CacheProperties::hasIJCaches() const {
+  for(const auto& cacheP : ms_->getCaches()) {
+    const iir::Cache& cache = cacheP.second;
+    if(cache.getCacheType() != iir::Cache::CacheTypeKind::IJ)
+      continue;
+    return true;
+  }
+  return false;
+}
+
 bool CacheProperties::accessIsCached(const int accessID) const {
   return ms_->isCached(accessID) &&
-         (ms_->getCache(accessID).getCacheType() == iir::Cache::CacheTypeKind::IJ);
+         ((ms_->getCache(accessID).getCacheType() == iir::Cache::CacheTypeKind::IJ) ||
+          ((ms_->getCache(accessID).getCacheType() == iir::Cache::CacheTypeKind::K) &&
+           (ms_->getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local)));
 }
 
 iir::Extents CacheProperties::getCacheExtent(int accessID) const {

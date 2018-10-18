@@ -128,14 +128,16 @@ private:
                            const iir::MultiStage& ms, const CacheProperties& cacheProperties,
                            Array3ui blockSize) const;
 
+  void generateKCacheDecl(MemberFunction& kernel,
+                          const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                          const iir::MultiStage& ms, const CacheProperties& cacheProperties) const;
+
   void generateIJCacheIndexInit(MemberFunction& kernel, const CacheProperties& cacheProperties,
                                 const Array3ui blockSize) const;
 
   bool useTmpIndex(const std::unique_ptr<iir::MultiStage>& ms,
                    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                    const CacheProperties& cacheProperties) const;
-
-  bool useIJCaches(const std::unique_ptr<iir::MultiStage>& ms) const;
 
   void generateTmpIndexInit(MemberFunction& kernel, const std::unique_ptr<iir::MultiStage>& ms,
                             const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,

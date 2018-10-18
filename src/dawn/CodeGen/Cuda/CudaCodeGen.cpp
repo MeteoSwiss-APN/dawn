@@ -98,14 +98,23 @@ void CudaCodeGen::generateIJCacheDecl(
   }
 }
 
-bool CudaCodeGen::useIJCaches(const std::unique_ptr<iir::MultiStage>& ms) const {
-  for(const auto& cacheP : ms->getCaches()) {
+void CudaCodeGen::generateKCacheDecl(
+    MemberFunction& kernel, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const iir::MultiStage& ms, const CacheProperties& cacheProperties) const {
+  for(const auto& cacheP : ms.getCaches()) {
     const iir::Cache& cache = cacheP.second;
-    if(cache.getCacheType() != iir::Cache::CacheTypeKind::IJ)
+    if(cache.getCacheType() != iir::Cache::CacheTypeKind::K ||
+       cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::local)
       continue;
-    return true;
+
+    const int accessID = cache.getCachedFieldAccessID();
+    const auto& field = ms.getField(accessID);
+    auto vertExtent = field.getExtents()[2];
+
+    kernel.addStatement("__shared__ gridtools::clang::float_type " +
+                        cacheProperties.getCacheName(accessID, stencilInstantiation) + "[" +
+                        std::to_string(-vertExtent.Minus - vertExtent.Plus + 1) + "]");
   }
-  return false;
 }
 
 std::vector<iir::Interval>
@@ -201,6 +210,7 @@ void CudaCodeGen::generateCudaKernelCode(
   const auto blockSize = stencilInstantiation->getIIR()->getBlockSize();
 
   generateIJCacheDecl(cudaKernel, stencilInstantiation, *ms, cacheProperties, blockSize);
+  generateKCacheDecl(cudaKernel, stencilInstantiation, *ms, cacheProperties);
 
   unsigned int ntx = blockSize[0];
   unsigned int nty = blockSize[1];
@@ -311,7 +321,7 @@ void CudaCodeGen::generateCudaKernelCode(
     cudaKernel.addStatement(idxStmt);
   }
 
-  if(useIJCaches(ms)) {
+  if(cacheProperties.hasIJCaches()) {
     generateIJCacheIndexInit(cudaKernel, cacheProperties, blockSize);
   }
 
@@ -487,8 +497,8 @@ bool CudaCodeGen::useTmpIndex(
       (find_if(fields.begin(), fields.end(), [&](const std::pair<int, iir::Field>& field) {
          const int accessID = field.second.getAccessID();
          // we dont need to initialize tmp indices for fields that are cached
-         bool cacheBypass = cacheProperties.accessIsCached(accessID);
-         return stencilInstantiation->isTemporaryField(accessID) && !cacheBypass;
+         return stencilInstantiation->isTemporaryField(accessID) &&
+                !cacheProperties.accessIsCached(accessID);
        }) != fields.end());
 
   return containsTemporary;

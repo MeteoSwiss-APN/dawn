@@ -43,6 +43,7 @@ struct CacheProperties {
   std::string getCommonCacheIndexName(iir::Cache::CacheTypeKind cacheType) const;
   bool isThereACommonCache() const;
   bool accessIsCached(const int accessID) const;
+  bool hasIJCaches() const;
 
 private:
   int getStrideImpl(int dim, Array3ui blockSize, const iir::Extents& extents) const;
