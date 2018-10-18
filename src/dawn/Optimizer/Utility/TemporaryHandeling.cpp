@@ -1,11 +1,11 @@
 #include "dawn/Optimizer/Utility/TemporaryHandeling.h"
 #include "dawn/IIR/IIR.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/MetaInformation.h"
 #include "dawn/Optimizer/Replacing.h"
-#include "dawn/IIR/IIRNodeIterator.h"
 namespace dawn {
 
-namespace{
+namespace {
 
 class NameGetter : public ASTVisitorForwarding {
   const iir::IIR* iir_;
@@ -64,12 +64,18 @@ public:
 
 } // anonymous namespace
 
-
 void promoteLocalVariableToTemporaryField(iir::IIR* iir, iir::Stencil* stencil, int AccessID,
                                           const iir::Stencil::Lifetime& lifetime) {
   std::string varname = iir->getMetaData()->getNameFromAccessID(AccessID);
   std::string fieldname = iir::StencilMetaInformation::makeTemporaryFieldname(
       iir::StencilMetaInformation::extractLocalVariablename(varname), AccessID);
+  //  std::cout << "=======================================\nwe are trying to replace var : " <<
+  //  varname
+  //            << " with ID: " << AccessID << " with a temp-field\n\n"
+  //            << std::endl;
+  //  std::cout << "the size of the map is: " << iir->getMetaData()->getExprToAccessIDMap().size()
+  //            << std::endl;
+  //  std::cout << std::endl;
 
   // Replace all variable accesses with field accesses
   stencil->forEachStatementAccessesPair(
@@ -183,27 +189,25 @@ void promoteTemporaryFieldToAllocatedField(iir::IIR* iir, int AccessID) {
   iir->getMetaData()->getAllocatedFieldAccessIDSet().insert(AccessID);
 }
 
-void renameAllOccurrences(iir::IIR *iir, iir::Stencil *stencil, int oldAccessID, int newAccessID)
-{
-    // Rename the statements and accesses
-    stencil->renameAllOccurrences(oldAccessID, newAccessID);
+void renameAllOccurrences(iir::IIR* iir, iir::Stencil* stencil, int oldAccessID, int newAccessID) {
+  // Rename the statements and accesses
+  stencil->renameAllOccurrences(oldAccessID, newAccessID);
 
-    // Remove form all AccessID maps
-    iir->getMetaData()->removeAccessID(oldAccessID);
+  // Remove form all AccessID maps
+  iir->getMetaData()->removeAccessID(oldAccessID);
 }
 
-std::string getOriginalNameFromAccessID(int AccessID, const std::unique_ptr<iir::IIR>& iir)
-{
-    NameGetter orignalNameGetter(iir.get(), AccessID, true);
+std::string getOriginalNameFromAccessID(int AccessID, const std::unique_ptr<iir::IIR>& iir) {
+  NameGetter orignalNameGetter(iir.get(), AccessID, true);
 
-    for(const auto& stmtAccessesPair : iterateIIROver<iir::StatementAccessesPair>(*iir)) {
-      stmtAccessesPair->getStatement()->ASTStmt->accept(orignalNameGetter);
-      if(orignalNameGetter.hasName())
-        return orignalNameGetter.getName();
-    }
+  for(const auto& stmtAccessesPair : iterateIIROver<iir::StatementAccessesPair>(*iir)) {
+    stmtAccessesPair->getStatement()->ASTStmt->accept(orignalNameGetter);
+    if(orignalNameGetter.hasName())
+      return orignalNameGetter.getName();
+  }
 
-    // Best we can do...
-    return iir->getMetaData()->getNameFromAccessID(AccessID);
+  // Best we can do...
+  return iir->getMetaData()->getNameFromAccessID(AccessID);
 }
 
 } // namespace dawn
