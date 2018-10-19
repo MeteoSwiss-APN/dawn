@@ -292,12 +292,12 @@ void CudaCodeGen::generateCudaKernelCode(
     indexIterators.emplace(CodeGeneratorHelper::indexIteratorName(dims), dims);
   }
 
+  cudaKernel.addComment("initialized iterators");
   for(auto index : indexIterators) {
     std::string idxStmt = "int idx" + index.first + " = ";
     bool init = false;
     if(index.second[0] != 1 && index.second[1] != 1) {
       idxStmt = idxStmt + "0";
-      continue;
     }
     if(index.second[0]) {
       init = true;
@@ -355,13 +355,13 @@ void CudaCodeGen::generateCudaKernelCode(
           cudaKernel.addComment("jump iterators to match the beginning of next interval");
           cudaKernel.addStatement("idx" + index.first + " += " +
                                   CodeGeneratorHelper::generateStrideName(2, index.second) + "*(" +
-                                  intervalDiffToString(kmin, "ksize-1") + ")");
+                                  intervalDiffToString(kmin, "ksize - 1") + ")");
         }
       }
       if(useTmpIndex(ms, stencilInstantiation) && !kmin.null()) {
         cudaKernel.addComment("jump tmp iterators to match the beginning of next interval");
-        cudaKernel.addStatement("idx_tmp += kstride_tmp*(" + std::to_string(interval.lowerBound()) +
-                                "-" + intervalDiffToString(kmin, "ksize-1") + ")");
+        cudaKernel.addStatement("idx_tmp += kstride_tmp*(" +
+                                intervalDiffToString(kmin, "ksize - 1") + ")");
       }
     }
 
@@ -374,7 +374,7 @@ void CudaCodeGen::generateCudaKernelCode(
           // interval)
           // but only for the first interval we force the advance to the beginning of the parallel
           // block
-          std::string step = intervalDiffToString(kmin, "ksize-1");
+          std::string step = intervalDiffToString(kmin, "ksize - 1");
           if(firstInterval) {
             step = "max(" + step + "," + CodeGeneratorHelper::generateStrideName(2, index.second) +
                    " * blockIdx.z * " + std::to_string(blockSize[2]) + ")";
@@ -388,7 +388,7 @@ void CudaCodeGen::generateCudaKernelCode(
       if(useTmpIndex(ms, stencilInstantiation)) {
         cudaKernel.addComment("jump tmp iterators to match the intersection of beginning of next "
                               "interval and the parallel execution block ");
-        cudaKernel.addStatement("idx_tmp += max(" + intervalDiffToString(kmin, "ksize-1") +
+        cudaKernel.addStatement("idx_tmp += max(" + intervalDiffToString(kmin, "ksize - 1") +
                                 ", kstride_tmp * blockIdx.z * " + std::to_string(blockSize[2]) +
                                 ")");
       }
@@ -540,10 +540,21 @@ std::string CudaCodeGen::generateStencilInstantiation(
   CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
 
   // generate code for base class of all the inner stencils
-  Structure sbase = StencilWrapperClass.addStruct("sbase", "");
+  Structure sbase = StencilWrapperClass.addStruct("sbase", "", "timer_cuda");
+  auto baseCtr = sbase.addConstructor();
+  baseCtr.addArg("std::string name");
+  baseCtr.addInit("timer_cuda(name)");
+  baseCtr.commit();
+  MemberFunction gettime = sbase.addMemberFunction("double", "get_time");
+  gettime.addStatement("return total_time()");
+  gettime.commit();
   MemberFunction sbase_run = sbase.addMemberFunction("virtual void", "run");
   sbase_run.startBody();
   sbase_run.commit();
+  MemberFunction sbase_sync = sbase.addMemberFunction("virtual void", "sync_storages");
+  sbase_sync.startBody();
+  sbase_sync.commit();
+
   MemberFunction sbaseVdtor = sbase.addMemberFunction("virtual", "~sbase");
   sbaseVdtor.startBody();
   sbaseVdtor.commit();
@@ -565,6 +576,10 @@ std::string CudaCodeGen::generateStencilInstantiation(
 
   generateStencilWrapperRun(StencilWrapperClass, stencilInstantiation, codeGenProperties);
 
+  generateStencilWrapperSyncMethod(StencilWrapperClass, stencilInstantiation, codeGenProperties);
+
+  generateStencilWrapperPublicMemberFunctions(StencilWrapperClass, codeGenProperties);
+
   StencilWrapperClass.commit();
 
   cudaNamespace.commit();
@@ -574,6 +589,37 @@ std::string CudaCodeGen::generateStencilInstantiation(
   str[str.size() - 2] = ' ';
 
   return str;
+}
+
+void CudaCodeGen::generateStencilWrapperPublicMemberFunctions(
+    Class& stencilWrapperClass, const CodeGenProperties& codeGenProperties) const {
+
+  // Generate name getter
+  stencilWrapperClass.addMemberFunction("std::string", "get_name")
+      .isConst(true)
+      .addStatement("return std::string(s_name)");
+
+  std::vector<std::string> stencilMembers;
+
+  for(const auto& stencilProp :
+      codeGenProperties.getAllStencilProperties(StencilContext::SC_Stencil)) {
+    stencilMembers.push_back("m_" + stencilProp.first);
+  }
+
+  // Generate stencil getter
+  MemberFunction stencilGetter =
+      stencilWrapperClass.addMemberFunction("std::vector<sbase*>", "getStencils");
+  stencilGetter.addStatement("return " +
+                             RangeToString(", ", "std::vector<sbase*>({", "})")(
+                                 stencilMembers, [](const std::string& member) { return member; }));
+  stencilGetter.commit();
+
+  MemberFunction clearMeters = stencilWrapperClass.addMemberFunction("void", "reset_meters");
+  clearMeters.startBody();
+  std::string s = RangeToString("\n", "", "")(
+      stencilMembers, [](const std::string& member) { return member + "->reset();"; });
+  clearMeters << s;
+  clearMeters.commit();
 }
 
 void CudaCodeGen::generateStencilClasses(
@@ -648,6 +694,9 @@ void CudaCodeGen::generateStencilClasses(
     //
     generateStencilRunMethod(stencilClass, stencil, stencilInstantiation, paramNameToType,
                              globalsMap);
+
+    // Generate stencil getter
+    stencilClass.addMemberFunction("sbase*", "get_stencil").addStatement("return this");
   }
 }
 
@@ -696,6 +745,7 @@ void CudaCodeGen::generateStencilClassCtr(
     stencilClassCtr.addArg(paramNameToType.at(fieldName) + "& " + fieldName + "_");
   }
 
+  stencilClassCtr.addInit("sbase(\"" + stencilClass.getName() + "\")");
   stencilClassCtr.addInit("m_dom(dom_)");
 
   if(!globalsMap.empty()) {
@@ -822,6 +872,7 @@ void CudaCodeGen::generateStencilWrapperRun(
 
   RunMethod.finishArgs();
 
+  RunMethod.addStatement("sync_storages()");
   // generate the control flow code executing each inner stencil
   ASTStencilDesc stencilDescCGVisitor(stencilInstantiation, codeGenProperties);
   stencilDescCGVisitor.setIndent(RunMethod.getIndent());
@@ -830,7 +881,34 @@ void CudaCodeGen::generateStencilWrapperRun(
     RunMethod.addStatement(stencilDescCGVisitor.getCodeAndResetStream());
   }
 
+  RunMethod.addStatement("sync_storages()");
   RunMethod.commit();
+}
+
+void CudaCodeGen::generateStencilWrapperSyncMethod(
+    Class& stencilWrapperClass,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const CodeGenProperties& codeGenProperties) const {
+  // Generate the run method by generate code for the stencil description AST
+  MemberFunction syncMethod = stencilWrapperClass.addMemberFunction("void", "sync_storages");
+
+  syncMethod.finishArgs();
+
+  const auto& stencils = stencilInstantiation->getStencils();
+
+  // add the ctr initialization of each stencil
+  for(const auto& stencilPtr : stencils) {
+    iir::Stencil& stencil = *stencilPtr;
+    if(stencil.isEmpty())
+      continue;
+
+    const std::string stencilName =
+        codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
+
+    syncMethod.addStatement("m_" + stencilName + "->sync_storages()");
+  }
+
+  syncMethod.commit();
 }
 
 std::string CudaCodeGen::intervalDiffToString(iir::IntervalDiff intervalDiff,
@@ -850,7 +928,9 @@ void CudaCodeGen::generateStencilRunMethod(
 
   StencilRunMethod.startBody();
 
-  StencilRunMethod.addStatement("sync_storages()");
+  StencilRunMethod.addComment("starting timers");
+  StencilRunMethod.addStatement("start()");
+
   for(const auto& multiStagePtr : stencil.getChildren()) {
     StencilRunMethod.addStatement("{");
 
@@ -963,10 +1043,12 @@ void CudaCodeGen::generateStencilRunMethod(
 
     StencilRunMethod.addStatement(kernelCall);
 
-    StencilRunMethod.addStatement("sync_storages()");
-
     StencilRunMethod.addStatement("}");
   }
+
+  StencilRunMethod.addComment("stopping timers");
+  StencilRunMethod.addStatement("pause()");
+
   StencilRunMethod.commit();
 }
 
