@@ -60,6 +60,8 @@ yoda_add_library(
           StencilFunctionInstantiation.h
           StencilInstantiation.cpp
           StencilInstantiation.h
+          MetaInformation.cpp
+          MetaInformation.h
   OBJECT
 )
 
