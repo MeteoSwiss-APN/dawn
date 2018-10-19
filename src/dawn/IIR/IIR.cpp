@@ -20,6 +20,7 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Json.h"
 #include "dawn/Support/StringUtil.h"
+#include "dawn/Support/Twine.h"
 #include "dawn/Support/Unreachable.h"
 #include <algorithm>
 #include <iostream>
@@ -113,6 +114,63 @@ void IIR::dumpTreeAsJson(std::string filename, std::string passName = "") {
 
   fs << jout.dump(2) << std::endl;
   fs.close();
+}
+
+template <int Level>
+struct PrintDescLine {
+  PrintDescLine(const Twine& name) {
+    std::cout << MakeIndent<Level>::value << format("\e[1;3%im", Level) << name.str() << "\n"
+              << MakeIndent<Level>::value << "{\n\e[0m";
+  }
+  ~PrintDescLine() { std::cout << MakeIndent<Level>::value << format("\e[1;3%im}\n\e[0m", Level); }
+};
+
+void IIR::dump() const {
+  std::cout << "IIR : " << getMetaData()->getName() << "\n";
+
+  int i = 0;
+  for(const auto& stencil : getChildren()) {
+    PrintDescLine<1> iline("Stencil_" + Twine(i));
+
+    int j = 0;
+    const auto& multiStages = stencil->getChildren();
+    for(const auto& multiStage : multiStages) {
+      PrintDescLine<2> jline(Twine("MultiStage_") + Twine(j) + " [" +
+                             loopOrderToString(multiStage->getLoopOrder()) + "]");
+
+      int k = 0;
+      const auto& stages = multiStage->getChildren();
+      for(const auto& stage : stages) {
+        PrintDescLine<3> kline(Twine("Stage_") + Twine(k));
+
+        int l = 0;
+        const auto& doMethods = stage->getChildren();
+        for(const auto& doMethod : doMethods) {
+          PrintDescLine<4> lline(Twine("Do_") + Twine(l) + " " +
+                                 doMethod->getInterval().toString());
+
+          const auto& statementAccessesPairs = doMethod->getChildren();
+          for(std::size_t m = 0; m < statementAccessesPairs.size(); ++m) {
+            std::cout << "\e[1m"
+                      << ASTStringifer::toString(statementAccessesPairs[m]->getStatement()->ASTStmt,
+                                                 5 * DAWN_PRINT_INDENT)
+                      << "\e[0m";
+            std::cout << statementAccessesPairs[m]->getAccesses()->toString(this,
+                                                                            6 * DAWN_PRINT_INDENT)
+                      << "\n";
+          }
+          l += 1;
+        }
+        std::cout << "\e[1m" << std::string(4 * DAWN_PRINT_INDENT, ' ')
+                  << "Extents: " << stage->getExtents() << std::endl
+                  << "\e[0m";
+        k += 1;
+      }
+      j += 1;
+    }
+    ++i;
+  }
+  std::cout.flush();
 }
 
 } // namespace iir

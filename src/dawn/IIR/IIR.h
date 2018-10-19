@@ -76,6 +76,8 @@ public:
   /// be the root node of the json file
   ///
   void dumpTreeAsJson(std::string filename, std::string passName);
+
+  void dump() const;
 };
 } // namespace iir
 } // namespace dawn

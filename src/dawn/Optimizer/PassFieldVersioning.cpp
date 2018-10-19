@@ -14,11 +14,11 @@
 
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
-#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Extents.h"
+#include "dawn/IIR/IIR.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
-#include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
@@ -45,9 +45,8 @@ struct AccessIDGetter : public ASTVisitorForwarding {
 };
 
 /// @brief Compute the AccessIDs of the left and right hand side expression of the assignment
-static void getAccessIDFromAssignment(iir::IIR* iir_,
-                                      AssignmentExpr* assignment, std::set<int>& LHSAccessIDs,
-                                      std::set<int>& RHSAccessIDs) {
+static void getAccessIDFromAssignment(iir::IIR* iir_, AssignmentExpr* assignment,
+                                      std::set<int>& LHSAccessIDs, std::set<int>& RHSAccessIDs) {
   auto computeAccessIDs = [&](const std::shared_ptr<Expr>& expr, std::set<int>& AccessIDs) {
     AccessIDGetter getter{iir_};
     expr->accept(getter);
@@ -67,8 +66,7 @@ static bool isHorizontalStencilOrCounterLoopOrderExtent(const iir::Extents& exte
 }
 
 /// @brief Report a race condition in the given `statement`
-static void reportRaceCondition(const Statement& statement,
-                                iir::IIR* iir) {
+static void reportRaceCondition(const Statement& statement, iir::IIR* iir) {
   DiagnosticsBuilder diag(DiagnosticsKind::Error, statement.ASTStmt->getSourceLocation());
 
   if(isa<IfStmt>(statement.ASTStmt.get())) {
@@ -94,8 +92,7 @@ static void reportRaceCondition(const Statement& statement,
 
 PassFieldVersioning::PassFieldVersioning() : Pass("PassFieldVersioning", true), numRenames_(0) {}
 
-bool PassFieldVersioning::run(
-    const std::unique_ptr<iir::IIR>& iir) {
+bool PassFieldVersioning::run(const std::unique_ptr<iir::IIR>& iir) {
   numRenames_ = 0;
 
   for(const auto& stencilPtr : iir->getChildren()) {
@@ -109,8 +106,7 @@ bool PassFieldVersioning::run(
       iir::LoopOrderKind loopOrder = multiStage.getLoopOrder();
 
       std::shared_ptr<iir::DependencyGraphAccesses> newGraph, oldGraph;
-      newGraph =
-          std::make_shared<iir::DependencyGraphAccesses>(iir.get());
+      newGraph = std::make_shared<iir::DependencyGraphAccesses>(iir.get());
 
       // Iterate stages bottom -> top
       for(auto stageRit = multiStage.childrenRBegin(), stageRend = multiStage.childrenREnd();
@@ -126,8 +122,8 @@ bool PassFieldVersioning::run(
           newGraph->insertStatementAccessesPair(stmtAccessesPair);
 
           // Try to resolve race-conditions by using double buffering if necessary
-          auto rc = fixRaceCondition(iir.get(), newGraph.get(), stencil,
-                                     doMethod, loopOrder, stageIdx, stmtIndex);
+          auto rc = fixRaceCondition(iir.get(), newGraph.get(), stencil, doMethod, loopOrder,
+                                     stageIdx, stmtIndex);
 
           if(rc == RCKind::RK_Unresolvable) {
             // Nothing we can do ... bail out
@@ -235,7 +231,6 @@ PassFieldVersioning::fixRaceCondition(iir::IIR* iir, const iir::DependencyGraphA
   if(ExprStmt* stmt = dyn_cast<ExprStmt>(statement.ASTStmt.get()))
     assignment = dyn_cast<AssignmentExpr>(stmt->getExpr().get());
 
-
   if(!assignment) {
     if(iir->getOptions().DumpRaceConditionGraph)
       graph->toDot("rc_" + iir->getMetaData()->getName() + ".dot");
@@ -246,6 +241,37 @@ PassFieldVersioning::fixRaceCondition(iir::IIR* iir, const iir::DependencyGraphA
   // Get AccessIDs of the LHS and RHS
   std::set<int> LHSAccessIDs, RHSAccessIDs;
   getAccessIDFromAssignment(iir, assignment, LHSAccessIDs, RHSAccessIDs);
+  std::cout << "access id sets created:" << std::endl;
+  std::cout << "RHS:\n";
+  for(auto i : RHSAccessIDs) {
+    std::cout << "AccesID : " << i << std::endl;
+  }
+  std::cout << "LHS:\n";
+  for(auto i : LHSAccessIDs) {
+    std::cout << "AccesID : " << i << std::endl;
+  }
+  std::cout << std::endl;
+  std::cout << "\nThe current set of ID - Name:\n";
+  for(auto i : iir->getMetaData()->getNameToAccessIDMap()){
+      std::cout << "ID: " << i.second << " Name: " << i.first << std::endl;
+  }
+  std::cout << "and the iir looks like this: ";
+  iir->dump();
+
+  std::cout << "and the graph looks like this:" << std::endl;
+  std::cout << graph->toString() << std::endl;
+  graph->toDot("testfile.dot");
+
+  std::cout << "stencilSCCs:\n";
+  int loop = 0;
+  for(auto& scc : *stencilSCCs) {
+    std::cout << "scc # " << loop++ << " contains: " << std::endl;
+    for(auto i : scc) {
+      std::cout << i << std::endl;
+    }
+    std::cout << std::endl;
+  }
+  std::cout << std::endl;
 
   DAWN_ASSERT_MSG(LHSAccessIDs.size() == 1, "left hand side should only have only one AccessID");
   int LHSAccessID = *LHSAccessIDs.begin();
@@ -255,6 +281,7 @@ PassFieldVersioning::fixRaceCondition(iir::IIR* iir, const iir::DependencyGraphA
     if(!scc.count(LHSAccessID)) {
       if(iir->getOptions().DumpRaceConditionGraph)
         graph->toDot("rc_" + iir->getMetaData()->getName() + ".dot");
+      std::cout << "this one right?" << std::endl;
       reportRaceCondition(statement, iir);
       return RCKind::RK_Unresolvable;
     }
@@ -276,12 +303,12 @@ PassFieldVersioning::fixRaceCondition(iir::IIR* iir, const iir::DependencyGraphA
   // Create a new multi-versioned field and rename all occurences
   for(int oldAccessID : renameCandiates) {
     int newAccessID = createVersionAndRename(iir, oldAccessID, &stencil, stageIdx, index,
-                                                           assignment->getRight(),
-                                                           RenameDirection::RD_Above);
+                                             assignment->getRight(), RenameDirection::RD_Above);
 
     if(iir->getOptions().ReportPassFieldVersioning)
-      std::cout << (numRenames != 0 ? ", " : " ") << iir->getMetaData()->getNameFromAccessID(oldAccessID)
-                << ":" << iir->getMetaData()->getNameFromAccessID(newAccessID);
+      std::cout << (numRenames != 0 ? ", " : " ")
+                << iir->getMetaData()->getNameFromAccessID(oldAccessID) << ":"
+                << iir->getMetaData()->getNameFromAccessID(newAccessID);
 
     numRenames++;
   }
@@ -292,7 +319,6 @@ PassFieldVersioning::fixRaceCondition(iir::IIR* iir, const iir::DependencyGraphA
   numRenames_ += numRenames;
   return RCKind::RK_Fixed;
 }
-
 
 int createVersionAndRename(iir::IIR* iir_, int AccessID, iir::Stencil* stencil, int curStageIdx,
                            int curStmtIdx, std::shared_ptr<Expr>& expr, RenameDirection dir) {
@@ -395,6 +421,5 @@ int createVersionAndRename(iir::IIR* iir_, int AccessID, iir::Stencil* stencil, 
 
   return newAccessID;
 }
-
 
 } // namespace dawn

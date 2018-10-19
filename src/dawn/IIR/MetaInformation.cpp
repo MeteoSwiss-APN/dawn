@@ -270,13 +270,13 @@ int StencilMetaInformation::getAccessIDFromExpr(const std::shared_ptr<Expr>& exp
   //  auto it = ExprToAccessIDMap_.find(expr);
   //  DAWN_ASSERT_MSG(it != ExprToAccessIDMap_.end(), "Invalid Expr");
   //  return it->second;
-  std::cout << "map size here: " << ExprToAccessIDMap_.size() << std::endl;
-  std::cout << "we are looking for: " << ASTStringifer::toString(expr) << std::endl;
+//  std::cout << "map size here: " << ExprToAccessIDMap_.size() << std::endl;
+//  std::cout << "we are looking for: " << ASTStringifer::toString(expr) << std::endl;
 
-  std::cout << "content of the map is: " << std::endl;
-  for(const auto& exprIDpair : ExprToAccessIDMap_) {
-    std::cout << ASTStringifer::toString(exprIDpair.first) << std::endl;
-  }
+//  std::cout << "content of the map is: " << std::endl;
+//  for(const auto& exprIDpair : ExprToAccessIDMap_) {
+//    std::cout << ASTStringifer::toString(exprIDpair.first) << std::endl;
+//  }
   for(const auto& exprIDpair : ExprToAccessIDMap_) {
     if(exprIDpair.first->equals(expr.get())) {
       return exprIDpair.second;
