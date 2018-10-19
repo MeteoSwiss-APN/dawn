@@ -74,7 +74,7 @@ class Inliner : public ASTVisitor {
   };
 
   std::stack<ArgListScope> argListScope_;
-  std::stack<std::unique_ptr<iir::StatementAccessesPair> const*> currentStmtAccessesPair_;
+  std::stack<const std::unique_ptr<iir::StatementAccessesPair>*> currentStmtAccessesPair_;
 
 public:
   Inliner(PassInlining::InlineStrategyKind strategy,
