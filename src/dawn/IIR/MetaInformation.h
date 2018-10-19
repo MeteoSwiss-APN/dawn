@@ -84,7 +84,7 @@ private:
       return versionToOriginalVersionMap_.at(accessID);
     }
 
-    std::unordered_set<int> getVersionIDs() { return versionIDs_; }
+    const std::unordered_set<int>& getVersionIDs() const { return versionIDs_; }
     VariableVersions() = default;
   };
 
