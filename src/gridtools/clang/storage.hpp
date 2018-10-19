@@ -80,6 +80,10 @@
 
 #include "gridtools/clang/storage_runtime.hpp"
 
+#ifdef GRIDTOOLS_CLANG_CUDA
+#include "gridtools/clang/timer_cuda.hpp"
+#endif
+
 #endif
 
 #include "gridtools/clang/storage_dsl.hpp"
