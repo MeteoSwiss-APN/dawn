@@ -355,13 +355,13 @@ void CudaCodeGen::generateCudaKernelCode(
           cudaKernel.addComment("jump iterators to match the beginning of next interval");
           cudaKernel.addStatement("idx" + index.first + " += " +
                                   CodeGeneratorHelper::generateStrideName(2, index.second) + "*(" +
-                                  intervalDiffToString(kmin, "ksize-1") + ")");
+                                  intervalDiffToString(kmin, "ksize - 1") + ")");
         }
       }
       if(useTmpIndex(ms, stencilInstantiation) && !kmin.null()) {
         cudaKernel.addComment("jump tmp iterators to match the beginning of next interval");
-        cudaKernel.addStatement("idx_tmp += kstride_tmp*(" + intervalDiffToString(kmin, "ksize-1") +
-                                ")");
+        cudaKernel.addStatement("idx_tmp += kstride_tmp*(" +
+                                intervalDiffToString(kmin, "ksize - 1") + ")");
       }
     }
 
@@ -374,7 +374,7 @@ void CudaCodeGen::generateCudaKernelCode(
           // interval)
           // but only for the first interval we force the advance to the beginning of the parallel
           // block
-          std::string step = intervalDiffToString(kmin, "ksize-1");
+          std::string step = intervalDiffToString(kmin, "ksize - 1");
           if(firstInterval) {
             step = "max(" + step + "," + CodeGeneratorHelper::generateStrideName(2, index.second) +
                    " * blockIdx.z * " + std::to_string(blockSize[2]) + ")";
@@ -388,7 +388,7 @@ void CudaCodeGen::generateCudaKernelCode(
       if(useTmpIndex(ms, stencilInstantiation)) {
         cudaKernel.addComment("jump tmp iterators to match the intersection of beginning of next "
                               "interval and the parallel execution block ");
-        cudaKernel.addStatement("idx_tmp += max(" + intervalDiffToString(kmin, "ksize-1") +
+        cudaKernel.addStatement("idx_tmp += max(" + intervalDiffToString(kmin, "ksize - 1") +
                                 ", kstride_tmp * blockIdx.z * " + std::to_string(blockSize[2]) +
                                 ")");
       }
