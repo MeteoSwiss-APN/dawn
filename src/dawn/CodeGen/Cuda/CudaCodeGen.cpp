@@ -376,8 +376,8 @@ void CudaCodeGen::generateCudaKernelCode(
           // block
           std::string step = intervalDiffToString(kmin, "ksize - 1");
           if(firstInterval) {
-            step = "max(" + step + "," + CodeGeneratorHelper::generateStrideName(2, index.second) +
-                   " * blockIdx.z * " + std::to_string(blockSize[2]) + ")";
+            step = "max(" + step + "," + " blockIdx.z * " + std::to_string(blockSize[2]) + ") * " +
+                   CodeGeneratorHelper::generateStrideName(2, index.second);
 
             cudaKernel.addComment("jump iterators to match the intersection of beginning of next "
                                   "interval and the parallel execution block ");
