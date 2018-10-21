@@ -429,6 +429,10 @@ void CudaCodeGen::generateCudaKernelCode(
                     }
                   }
                 });
+            // only add sync if there are data dependencies
+            if(intervalRequiresSync(interval, stage, ms)) {
+              cudaKernel.addStatement("__syncthreads()");
+            }
           }
           std::string incStr =
               (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) ? "-=" : "+=";
@@ -450,6 +454,31 @@ void CudaCodeGen::generateCudaKernelCode(
   }
 
   cudaKernel.commit();
+}
+
+bool CudaCodeGen::intervalRequiresSync(const iir::Interval& interval, const iir::Stage& stage,
+                                       const std::unique_ptr<iir::MultiStage>& ms) const {
+  // if the stage is the last stage, it will require a sync (to ensure we sync before the write of a
+  // previous stage at the next k level), but only if the stencil is not pure vertical
+  int lastStageID = -1;
+  for(const auto& st : ms->getChildren()) {
+    if(st->getEnclosingInterval().overlaps(interval)) {
+      lastStageID = st->getStageID();
+    }
+  }
+  DAWN_ASSERT(lastStageID != -1);
+
+  if(stage.getStageID() == lastStageID) {
+    const auto& fields = stage.getFields();
+    for(const auto& cache : ms->getCaches()) {
+      if(cache.second.getCacheType() != iir::Cache::CacheTypeKind::IJ)
+        continue;
+      if(fields.count(cache.first)) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 bool CudaCodeGen::solveKLoopInParallel(const std::unique_ptr<iir::MultiStage>& ms) const {

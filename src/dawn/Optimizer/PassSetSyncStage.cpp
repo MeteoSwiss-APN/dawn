@@ -35,16 +35,6 @@ bool PassSetSyncStage::requiresSync(const iir::Stage& stage,
     return false;
   }
   DAWN_ASSERT(!ms->getChildren().empty());
-  // if the stage is the last stage, it will require a sync (to ensure we sync before the write of a
-  // previous stage at the next k level), but only if the stencil is not pure vertical
-  if(stageId == ms->getChildren().back()->getStageID()) {
-    for(const auto& st : ms->getChildren()) {
-      if(!st->getExtents().isPointwise()) {
-        return true;
-      }
-    }
-    return false;
-  }
 
   for(const auto& field : stage.getFields()) {
     const int accessID = field.second.getAccessID();
