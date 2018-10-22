@@ -27,12 +27,12 @@
 #include <vector>
 
 namespace dawn {
+class OptimizerContext;
 namespace iir {
 
 class Stencil;
 class StencilInstantiation;
 class DependencyGraphAccesses;
-class OptimizerContext;
 
 namespace impl {
 template <typename T>

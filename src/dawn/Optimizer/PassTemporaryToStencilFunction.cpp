@@ -13,11 +13,11 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
+#include "dawn/IIR/Stencil.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/StatementMapper.h"
-#include "dawn/IIR/Stencil.h"
-#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
@@ -224,7 +224,8 @@ protected:
   unsigned int numTmpReplaced_ = 0;
 
   std::unordered_map<std::shared_ptr<FieldAccessExpr>,
-                     std::shared_ptr<iir::StencilFunctionInstantiation>> tmpToStencilFunctionMap_;
+                     std::shared_ptr<iir::StencilFunctionInstantiation>>
+      tmpToStencilFunctionMap_;
 
 public:
   TmpReplacement(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
@@ -358,7 +359,8 @@ public:
     }
 
     // recompute the list of <statement, accesses> pairs
-    StatementMapper statementMapper(instantiation_.get(), stackTrace_,
+    // WITTODO: check if this works
+    StatementMapper statementMapper(nullptr, instantiation_.get(), stackTrace_,
                                     *(cloneStencilFun->getDoMethod()), interval_, fieldsMap,
                                     cloneStencilFun);
 
@@ -476,9 +478,10 @@ bool PassTemporaryToStencilFunction::run(
 
                 iir::DoMethod tmpStmtDoMethod(interval);
 
+                // WITTODO: Check if this works
                 StatementMapper statementMapper(
-                    stencilInstantiation.get(), stmt->StackTrace, tmpStmtDoMethod, sirInterval,
-                    stencilInstantiation->getNameToAccessIDMap(), nullptr);
+                    nullptr, stencilInstantiation.get(), stmt->StackTrace, tmpStmtDoMethod,
+                    sirInterval, stencilInstantiation->getNameToAccessIDMap(), nullptr);
 
                 std::shared_ptr<BlockStmt> blockStmt =
                     std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{stmt->ASTStmt});

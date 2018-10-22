@@ -39,8 +39,8 @@ namespace iir {
 class StencilInstantiation : NonCopyable {
 
   ::dawn::OptimizerContext* context_;
-  const std::shared_ptr<sir::Stencil> SIRStencil_;
-  const std::shared_ptr<SIR> SIR_;
+//  const std::shared_ptr<sir::Stencil> SIRStencil_;
+//  const std::shared_ptr<SIR> SIR_;
 
   StencilMetaInformation metadata_;
 
@@ -49,9 +49,9 @@ class StencilInstantiation : NonCopyable {
 
 public:
   /// @brief Assemble StencilInstantiation for stencil
-  StencilInstantiation(::dawn::OptimizerContext* context,
-                       const std::shared_ptr<sir::Stencil>& SIRStencil,
-                       const std::shared_ptr<SIR>& SIR);
+  StencilInstantiation(::dawn::OptimizerContext* context);
+
+  StencilMetaInformation& getMetaData();
 
   std::shared_ptr<StencilInstantiation> clone() const;
 
@@ -356,15 +356,15 @@ public:
   std::set<int>& getGlobalVariableAccessIDSet();
   const std::set<int>& getGlobalVariableAccessIDSet() const;
 
-  /// @brief Get the SIR
-  inline std::shared_ptr<SIR> const& getSIR() const { return SIR_; }
+//  /// @brief Get the SIR
+//  inline std::shared_ptr<SIR> const& getSIR() const { return SIR_; }
 
   /// @brief insert a new sir::StencilFunction into the IIR
   void
   insertStencilFunctionIntoSIR(const std::shared_ptr<sir::StencilFunction>& sirStencilFunction);
 
-  /// @brief Get the SIRStencil this context was built from
-  inline std::shared_ptr<sir::Stencil> const& getSIRStencil() const { return SIRStencil_; }
+//  /// @brief Get the SIRStencil this context was built from
+//  inline std::shared_ptr<sir::Stencil> const& getSIRStencil() const { return SIRStencil_; }
 
   /// @brief Get the optimizer context
   inline ::dawn::OptimizerContext* getOptimizerContext() { return context_; }
@@ -453,7 +453,6 @@ public:
   /// specialization, it is returned
   Array3i getFieldDimensionsMask(int FieldID) const;
 
-private:
   /// @brief Report the accesses to the console (according to `-freport-accesses`)
   void reportAccesses() const;
 };

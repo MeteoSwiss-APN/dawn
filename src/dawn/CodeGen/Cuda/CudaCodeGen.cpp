@@ -156,7 +156,7 @@ void CudaCodeGen::generateCudaKernelCode(
   fnDecl = fnDecl + "__global__ void";
   MemberFunction cudaKernel(fnDecl, buildCudaKernelName(stencilInstantiation, ms), ssSW);
 
-  const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
+  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
   if(!globalsMap.empty()) {
     cudaKernel.addArg("globals globals_");
   }
@@ -549,7 +549,7 @@ std::string CudaCodeGen::generateStencilInstantiation(
   sbaseVdtor.commit();
   sbase.commit();
 
-  const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
+  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
 
   generateBoundaryConditionFunctions(StencilWrapperClass, stencilInstantiation);
 
@@ -582,7 +582,7 @@ void CudaCodeGen::generateStencilClasses(
   // Generate stencils
   const auto& stencils = stencilInstantiation->getStencils();
 
-  const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
+  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
 
   // generate the code for each of the stencils
   for(const auto& stencilPtr : stencils) {
@@ -715,7 +715,7 @@ void CudaCodeGen::generateStencilWrapperCtr(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const CodeGenProperties& codeGenProperties) const {
 
-  const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
+  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
 
   // Generate stencil wrapper constructor
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
@@ -777,7 +777,7 @@ void CudaCodeGen::generateStencilWrapperMembers(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     CodeGenProperties& codeGenProperties) const {
 
-  const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
+  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
 
   stencilWrapperClass.addMember("static constexpr const char* s_name =",
                                 Twine("\"") + stencilWrapperClass.getName() + Twine("\""));

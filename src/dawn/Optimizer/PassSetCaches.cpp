@@ -156,7 +156,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
   OptimizerContext* context = instantiation->getOptimizerContext();
 
   for(const auto& stencilPtr : instantiation->getStencils()) {
-    const iir::Stencil& stencil = *stencilPtr;
+    iir::Stencil& stencil = *stencilPtr;
 
     // Set IJ-Caches
     int msIdx = 0;
@@ -215,7 +215,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
 
     // Set K-Caches
     if(context->getOptions().UseKCaches ||
-       stencil.getSIRStencil()->Attributes.has(sir::Attr::AK_UseKCaches)) {
+       stencil.getStencilAttributes().has(sir::Attr::AK_UseKCaches)) {
 
       // Get the fields of all Multi-Stages
       std::vector<std::unordered_map<int, iir::Field>> fields;

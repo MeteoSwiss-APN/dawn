@@ -178,7 +178,7 @@ std::string GTCodeGen::generateStencilInstantiation(
   StencilWrapperClass.changeAccessibility(
       "public"); // The stencils should technically be private but nvcc doesn't like it ...
 
-  const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
+  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
   CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
 
   generateBoundaryConditionFunctions(StencilWrapperClass, stencilInstantiation);
@@ -289,7 +289,7 @@ void GTCodeGen::generateStencilWrapperCtr(
     CodeGenProperties& codeGenProperties) const {
 
   const auto& stencils = stencilInstantiation->getStencils();
-  const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
+  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
 
   stencilWrapperClass.changeAccessibility("public");
   stencilWrapperClass.addCopyConstructor(Class::Deleted);
@@ -349,7 +349,7 @@ void GTCodeGen::generateStencilWrapperMembers(
     Class& stencilWrapperClass,
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     CodeGenProperties& codeGenProperties) {
-  const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
+  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
 
   //
   // Generate constructor/destructor and methods of the stencil wrapper
@@ -396,7 +396,7 @@ void GTCodeGen::generateStencilClasses(
   // K-Cache branch changes the signature of Do-Methods
   const char* DoMethodArg = "Evaluation& eval";
 
-  const auto& globalsMap = *(stencilInstantiation->getSIR()->GlobalVariableMap);
+  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
 
   // Generate stencils
   const auto& stencils = stencilInstantiation->getStencils();
@@ -416,7 +416,8 @@ void GTCodeGen::generateStencilClasses(
             [](std::pair<int, iir::Stencil::FieldInfo> const& f) { return f.second.IsTemporary; }));
 
     if(stencil.isEmpty()) {
-      DiagnosticsBuilder diag(DiagnosticsKind::Error, stencilInstantiation->getSIRStencil()->Loc);
+      DiagnosticsBuilder diag(DiagnosticsKind::Error,
+                              stencilInstantiation->getMetaData().stencilLocation_);
       diag << "empty stencil '" << stencilInstantiation->getName()
            << "', this would result in invalid gridtools code";
       context_->getDiagnostics().report(diag);
@@ -650,7 +651,7 @@ void GTCodeGen::generateStencilClasses(
         std::vector<std::string> arglist;
         if(fields.empty()) {
           DiagnosticsBuilder diag(DiagnosticsKind::Error,
-                                  stencilInstantiation->getSIRStencil()->Loc);
+                                  stencilInstantiation->getMetaData().stencilLocation_);
           diag << "no storages referenced in stencil '" << stencilInstantiation->getName()
                << "', this would result in invalid gridtools code";
           context_->getDiagnostics().report(diag);

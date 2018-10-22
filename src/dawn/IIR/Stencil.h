@@ -37,7 +37,8 @@ class IIR;
 /// @ingroup optimizer
 class Stencil : public IIRNode<IIR, Stencil, MultiStage, impl::StdList> {
   StencilInstantiation& stencilInstantiation_;
-  const std::shared_ptr<sir::Stencil> SIRStencil_;
+//  const std::shared_ptr<sir::Stencil> SIRStencil_;
+  sir::Attr stencilAttributes_;
 
   /// Identifier of the stencil. Note that this ID is only for code-generation to associate the
   /// stencil with a stencil-call in the run() method
@@ -173,8 +174,7 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
-  Stencil(StencilInstantiation& stencilInstantiation,
-          const std::shared_ptr<sir::Stencil>& SIRStencil, int StencilID);
+  Stencil(StencilInstantiation& stencilInstantiation, sir::Attr attributes, int StencilID);
 
   Stencil(Stencil&&) = default;
 
@@ -288,6 +288,8 @@ public:
   /// @brief compare stored derived info with the computed on the fly algorithm (in order to check
   /// that the update info is consistent with the current state of the tree)
   bool compareDerivedInfo() const;
+
+  sir::Attr &getStencilAttributes();
 
 private:
   void forEachStatementAccessesPairImpl(
