@@ -600,6 +600,10 @@ bool OptimizerContext::fillIIRFromSIR(
   //                                                 NameToAccessIDMap_);
 
   // Process the stencil description of the "main stencil"
+  for(auto sf : fullSIR->StencilFunctions){
+     stencilInstantation->insertStencilFunctionIntoSIR(sf);
+  }
+
   stencilInstantation->getMetaData().getName() = SIRStencil->Name;
   stencilInstantation->getMetaData().getFileName() = fullSIR->Filename;
   stencilInstantation->getMetaData().getStencilLocation() = SIRStencil->Loc;

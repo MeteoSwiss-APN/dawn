@@ -768,11 +768,20 @@ bool StencilInstantiation::isGlobalVariable(const std::string& name) const {
 
 void StencilInstantiation::insertStencilFunctionIntoSIR(
     const std::shared_ptr<sir::StencilFunction>& sirStencilFunction) {
-  //  SIR_->StencilFunctions.push_back(sirStencilFunction);
+
+//    std::string functor = sirStencilFunction->Name;
+
+//  //  SIR_->StencilFunctions.push_back(sirStencilFunction);
+//  std::shared_ptr<BoundaryConditionDeclStmt> bc = std::make_shared<BoundaryConditionDeclStmt>(functor);
+//  for(auto arg : sirStencilFunction->Args){
+//    bc->getFields().push_back(std::make_shared<sir::Field>(arg->Name, arg->Loc));
+//  }
+//  bc->getSourceLocation()=sirStencilFunction->Loc;
+//  metadata_.insertBoundaryConditions("originalFieldName", bc);
   std::cout << "\n\n\nTHIS IS NOT IMPLEMENTED YET\n We need to properly do the SIR SF to SFI in "
                "passtemporarytoSFT\n\n\n"
             << std::endl;
-  DAWN_ASSERT(false);
+//  DAWN_ASSERT(false);
 }
 
 bool StencilInstantiation::insertBoundaryConditions(std::string originalFieldName,
