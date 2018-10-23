@@ -74,6 +74,7 @@ class Inliner : public ASTVisitor {
   };
 
   std::stack<ArgListScope> argListScope_;
+  std::stack<const std::unique_ptr<iir::StatementAccessesPair>*> currentStmtAccessesPair_;
 
 public:
   Inliner(PassInlining::InlineStrategyKind strategy,
@@ -99,15 +100,38 @@ public:
   }
 
   void appendNewStatementAccessesPair(const std::shared_ptr<Stmt>& stmt) {
-    newStmtAccessesPairs_.emplace_back(make_unique<iir::StatementAccessesPair>(
-        std::make_shared<Statement>(stmt, oldStmtAccessesPair_->getStatement()->StackTrace)));
+    if(scopeDepth_ == 1) {
+      // The top-level block statement is collapsed thus we only insert at 1. Note that this works
+      // because all AST have a block statement as root node.
+      newStmtAccessesPairs_.emplace_back(make_unique<iir::StatementAccessesPair>(
+          std::make_shared<Statement>(stmt, oldStmtAccessesPair_->getStatement()->StackTrace)));
+
+      currentStmtAccessesPair_.push(&(newStmtAccessesPairs_.back()));
+
+    } else if(scopeDepth_ > 1) {
+      // We are inside a nested block statement, we add the stmt as a child of the parent statement
+      (*currentStmtAccessesPair_.top())
+          ->insertBlockStatement(make_unique<iir::StatementAccessesPair>(
+              std::make_shared<Statement>(stmt, oldStmtAccessesPair_->getStatement()->StackTrace)));
+
+      const std::unique_ptr<iir::StatementAccessesPair>& lp =
+          (*(currentStmtAccessesPair_.top()))->getBlockStatements().back();
+
+      currentStmtAccessesPair_.push(&lp);
+    }
+  }
+  void removeLastChildStatementAccessesPair() {
+    // The top-level pair is never removed
+    if(currentStmtAccessesPair_.size() <= 1)
+      return;
+
+    currentStmtAccessesPair_.pop();
   }
 
   virtual void visit(const std::shared_ptr<ExprStmt>& stmt) override {
-    if(scopeDepth_ == 1) {
-      appendNewStatementAccessesPair(stmt);
-    }
+    appendNewStatementAccessesPair(stmt);
     stmt->getExpr()->accept(*this);
+    removeLastChildStatementAccessesPair();
   }
 
   virtual void visit(const std::shared_ptr<ReturnStmt>& stmt) override {
@@ -159,6 +183,8 @@ public:
     stmt->getThenStmt()->accept(*this);
     if(stmt->hasElse())
       stmt->getElseStmt()->accept(*this);
+
+    removeLastChildStatementAccessesPair();
   }
 
   void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
@@ -173,6 +199,8 @@ public:
     // Resolve the RHS
     for(const auto& expr : stmt->getInitList())
       expr->accept(*this);
+
+    removeLastChildStatementAccessesPair();
   }
 
   void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) override {}
@@ -479,7 +507,6 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
   // Iterate all statements (top -> bottom)
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {
     iir::Stage& stage = *stagePtr;
-
     for(const auto& doMethod : stage.getChildren()) {
       for(auto stmtAccIt = doMethod->childrenBegin(); stmtAccIt != doMethod->childrenEnd();
           ++stmtAccIt) {
@@ -489,7 +516,6 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
           auto& newStmtAccList = inliner.getNewStatementAccessesPairs();
           // Compute the accesses of the new statements
           computeAccesses(stencilInstantiation.get(), newStmtAccList);
-
           // Erase the old StatementAccessPair ...
           stmtAccIt = doMethod->childrenErase(stmtAccIt);
 
