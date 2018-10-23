@@ -167,6 +167,9 @@ public:
 
   std::string fileName_;
 
+
+  std::vector<sir::StencilFunction> allStencilFunctions_;
+
 public:
   StencilMetaInformation() = default;
 

@@ -601,7 +601,7 @@ bool OptimizerContext::fillIIRFromSIR(
 
   // Process the stencil description of the "main stencil"
   for(auto sf : fullSIR->StencilFunctions){
-     stencilInstantation->insertStencilFunctionIntoSIR(sf);
+     stencilInstantation->getMetaData().allStencilFunctions_.push_back(sf);
   }
 
   stencilInstantation->getMetaData().getName() = SIRStencil->Name;
