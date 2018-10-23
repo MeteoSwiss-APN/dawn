@@ -17,13 +17,13 @@ void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<FieldAccessExpr>&
   expr->getName();
   auto getArgumentIndex = [&](const std::string& name) {
     size_t pos = std::distance(
-        function_->getArguments().begin(),
-        std::find_if(function_->getArguments().begin(), function_->getArguments().end(),
+        function_->Args.begin(),
+        std::find_if(function_->Args.begin(), function_->Args.end(),
                      [&](const std::shared_ptr<sir::StencilFunctionArg>& arg) {
                        return arg->Name == name;
                      }));
 
-    DAWN_ASSERT_MSG(pos < function_->getArguments().size(), "");
+    DAWN_ASSERT_MSG(pos < function_->Args.size(), "");
     return pos;
   };
   ss_ << dawn::format("data_field_%i(%s)", getArgumentIndex(expr->getName()),

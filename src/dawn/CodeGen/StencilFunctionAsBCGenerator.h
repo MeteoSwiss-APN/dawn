@@ -30,15 +30,15 @@ namespace codegen {
 /// every field is a template argument.
 class StencilFunctionAsBCGenerator : public ASTCodeGenCXX {
 private:
-  //  std::shared_ptr<sir::StencilFunction> function;
-  const std::shared_ptr<iir::StencilFunctionInstantiation>& function_;
+    std::shared_ptr<sir::StencilFunction> function_;
+//  const std::shared_ptr<iir::StencilFunctionInstantiation>& function_;
   const std::shared_ptr<iir::StencilInstantiation> instantiation_;
 
 public:
   using Base = ASTCodeGenCXX;
   StencilFunctionAsBCGenerator(
       const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-      const std::shared_ptr<iir::StencilFunctionInstantiation>& functionToAnalyze)
+      const std::shared_ptr<sir::StencilFunction>& functionToAnalyze)
       : function_(functionToAnalyze), instantiation_(stencilInstantiation) {}
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr);

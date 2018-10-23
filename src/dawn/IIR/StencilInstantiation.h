@@ -448,6 +448,10 @@ public:
     return metadata_.BoundaryConditionToExtentsMap_.find(stmt)->second;
   }
 
+  std::vector<std::shared_ptr<sir::StencilFunction>>& getStencilFunctions(){
+      return metadata_.allStencilFunctions_;
+  }
+
   /// @brief this checks if the user specialized the field to a dimensionality. If not all
   /// dimensions are allow for off-center acesses and hence, {1,1,1} is returned. If we got a
   /// specialization, it is returned

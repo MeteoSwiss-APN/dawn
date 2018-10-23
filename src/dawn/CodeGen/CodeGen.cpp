@@ -94,12 +94,10 @@ void CodeGen::generateBoundaryConditionFunctions(
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation) const {
   // Functions for boundary conditions
   for(auto usedBoundaryCondition : stencilInstantiation->getBoundaryConditions()) {
-    for(const auto& sf :
-        stencilInstantiation->getMetaData()
-            .stencilFunctionInstantiations_) // stencilInstantiation->getSIR()->StencilFunctions) {
-      if(sf->getName() == usedBoundaryCondition.second->getFunctor()) {
+    for(const auto& sf : stencilInstantiation->getStencilFunctions()) {
+      if(sf->Name == usedBoundaryCondition.second->getFunctor()) {
 
-        Structure BoundaryCondition = stencilWrapperClass.addStruct(Twine(sf->getName()));
+        Structure BoundaryCondition = stencilWrapperClass.addStruct(Twine(sf->Name));
         std::string templatefunctions = "typename Direction ";
         std::string functionargs = "Direction ";
 
@@ -115,12 +113,13 @@ void CodeGen::generateBoundaryConditionFunctions(
         BC.addArg(functionargs);
         BC.startBody();
         StencilFunctionAsBCGenerator reader(stencilInstantiation, sf);
-        sf->getAST()->accept(reader);
+        sf->Asts[0]->accept(reader);
         std::string output = reader.getCodeAndResetStream();
         BC << output;
         BC.commit();
         break;
       }
+    }
   }
 }
 

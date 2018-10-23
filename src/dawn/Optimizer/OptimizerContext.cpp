@@ -307,9 +307,9 @@ public:
     int AccessID = instantiation_->nextUID();
 
     std::string globalName;
-    DAWN_ASSERT_MSG(false, "impelent context access");
-    //    if(context_->getOptions().KeepVarnames)
-    if(false)
+    //    DAWN_ASSERT_MSG(false, "impelent context access");
+    //    if(false)
+    if(instantiation_->getOptimizerContext()->getOptions().KeepVarnames)
       globalName = stmt->getName();
     else
       globalName = StencilMetaInformation::makeLocalVariablename(stmt->getName(), AccessID);
@@ -600,8 +600,8 @@ bool OptimizerContext::fillIIRFromSIR(
   //                                                 NameToAccessIDMap_);
 
   // Process the stencil description of the "main stencil"
-  for(auto sf : fullSIR->StencilFunctions){
-     stencilInstantation->getMetaData().allStencilFunctions_.push_back(sf);
+  for(auto sf : fullSIR->StencilFunctions) {
+    stencilInstantation->getMetaData().allStencilFunctions_.push_back(sf);
   }
 
   stencilInstantation->getMetaData().getName() = SIRStencil->Name;
