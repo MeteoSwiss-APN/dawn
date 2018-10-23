@@ -18,7 +18,6 @@
 #include "dawn/Support/Printing.h"
 #include "dawn/Support/STLExtras.h"
 #include <algorithm>
-#include <iostream>
 #include <iterator>
 #include <sstream>
 #include <string>
