@@ -37,7 +37,6 @@ class IIR;
 /// @ingroup optimizer
 class Stencil : public IIRNode<IIR, Stencil, MultiStage, impl::StdList> {
   StencilInstantiation& stencilInstantiation_;
-//  const std::shared_ptr<sir::Stencil> SIRStencil_;
   sir::Attr stencilAttributes_;
 
   /// Identifier of the stencil. Note that this ID is only for code-generation to associate the

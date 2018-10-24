@@ -30,8 +30,7 @@ namespace codegen {
 /// every field is a template argument.
 class StencilFunctionAsBCGenerator : public ASTCodeGenCXX {
 private:
-    std::shared_ptr<sir::StencilFunction> function_;
-//  const std::shared_ptr<iir::StencilFunctionInstantiation>& function_;
+  std::shared_ptr<sir::StencilFunction> function_;
   const std::shared_ptr<iir::StencilInstantiation> instantiation_;
 
 public:

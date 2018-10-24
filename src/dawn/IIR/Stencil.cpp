@@ -519,8 +519,6 @@ boost::optional<Interval> Stencil::getEnclosingIntervalTemporaries() const {
   return tmpInterval;
 }
 
-// const std::shared_ptr<sir::Stencil> Stencil::getSIRStencil() const { return SIRStencil_; }
-
 void Stencil::accept(ASTVisitor& visitor) {
   for(const auto& stmtAccessesPairPtr : iterateIIROver<StatementAccessesPair>(*this)) {
     stmtAccessesPairPtr->getStatement()->ASTStmt->accept(visitor);

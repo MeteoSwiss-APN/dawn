@@ -38,9 +38,7 @@ namespace iir {
 /// @ingroup optimizer
 class StencilInstantiation : NonCopyable {
 
-  ::dawn::OptimizerContext* context_;
-//  const std::shared_ptr<sir::Stencil> SIRStencil_;
-//  const std::shared_ptr<SIR> SIR_;
+  OptimizerContext* context_;
 
   StencilMetaInformation metadata_;
 
@@ -356,15 +354,10 @@ public:
   std::set<int>& getGlobalVariableAccessIDSet();
   const std::set<int>& getGlobalVariableAccessIDSet() const;
 
-//  /// @brief Get the SIR
-//  inline std::shared_ptr<SIR> const& getSIR() const { return SIR_; }
-
   /// @brief insert a new sir::StencilFunction into the IIR
   void
   insertStencilFunctionIntoSIR(const std::shared_ptr<sir::StencilFunction>& sirStencilFunction);
 
-//  /// @brief Get the SIRStencil this context was built from
-//  inline std::shared_ptr<sir::Stencil> const& getSIRStencil() const { return SIRStencil_; }
 
   /// @brief Get the optimizer context
   inline ::dawn::OptimizerContext* getOptimizerContext() { return context_; }

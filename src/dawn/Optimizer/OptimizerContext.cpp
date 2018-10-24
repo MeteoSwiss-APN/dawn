@@ -583,8 +583,8 @@ OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, Options& opti
 
   for(const auto& stencil : SIR_->Stencils)
     if(!stencil->Attributes.has(sir::Attr::AK_NoCodeGen)) {
-      stencilInstantiationMap_.insert(std::make_pair(
-          stencil->Name, std::make_shared<iir::StencilInstantiation>(this /*, stencil, SIR*/)));
+      stencilInstantiationMap_.insert(
+          std::make_pair(stencil->Name, std::make_shared<iir::StencilInstantiation>(this)));
       fillIIRFromSIR(stencilInstantiationMap_.at(stencil->Name), stencil, SIR_);
     } else {
       DAWN_LOG(INFO) << "Skipping processing of `" << stencil->Name << "`";
@@ -596,8 +596,6 @@ bool OptimizerContext::fillIIRFromSIR(
     const std::shared_ptr<sir::Stencil> SIRStencil, const std::shared_ptr<SIR> fullSIR) {
   DAWN_LOG(INFO) << "Intializing StencilInstantiation of `" << SIRStencil->Name << "`";
   DAWN_ASSERT_MSG(SIRStencil, "Stencil does not exist");
-  //    StencilDescStatementMapper stencilDeclMapper(this, getName(), stencilDescStatements_,
-  //                                                 NameToAccessIDMap_);
 
   // Process the stencil description of the "main stencil"
   for(auto sf : fullSIR->StencilFunctions) {
@@ -607,10 +605,7 @@ bool OptimizerContext::fillIIRFromSIR(
   stencilInstantation->getMetaData().getName() = SIRStencil->Name;
   stencilInstantation->getMetaData().getFileName() = fullSIR->Filename;
   stencilInstantation->getMetaData().getStencilLocation() = SIRStencil->Loc;
-  //  std::cout << "set filename form `" << fullSIR->Filename << "` to `"
-  //            << iir->getMetaData().getFileName() << "`" << std::endl;
 
-  ////////////////////////////// REENABLE THIS ////////////////////////
   // Map the fields of the "main stencil" to unique IDs (which are used in the access maps to
   // indentify the field).
   for(const auto& field : SIRStencil->Fields) {
@@ -630,8 +625,7 @@ bool OptimizerContext::fillIIRFromSIR(
   auto AST = SIRStencil->StencilDescAst->clone();
   AST->accept(stencilDeclMapper);
 
-  //  // Cleanup the `stencilDescStatements` and remove the empty stencils which may have been
-  //  inserted
+  //  Cleanup the `stencilDescStatements` and remove the empty stencils which may have been inserted
   stencilDeclMapper.cleanupStencilDeclAST();
 
   //  // Repair broken references to temporaries i.e promote them to real fields
@@ -645,7 +639,6 @@ bool OptimizerContext::fillIIRFromSIR(
   for(const auto& MS : iterateIIROver<MultiStage>(*(stencilInstantation->getIIR()))) {
     MS->update(NodeUpdateType::levelAndTreeAbove);
   }
-  //  iir->printTree();
   DAWN_LOG(INFO) << "Done initializing StencilInstantiation";
 
   return true;

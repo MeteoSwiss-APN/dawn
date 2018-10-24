@@ -169,7 +169,7 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
     }
     idx++;
   }
-  for(const auto& stencil : stencilInstantiation->getStencils()) {
+  for(const auto& stencil : stencilInstantiation->getIIR()->getChildren() /*getStencils()*/) {
     std::string stencilName = "stencil_" + std::to_string(stencil->getStencilID());
     auto stencilProperties = codeGenProperties.insertStencil(StencilContext::SC_Stencil,
                                                              stencil->getStencilID(), stencilName);

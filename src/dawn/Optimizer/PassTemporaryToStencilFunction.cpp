@@ -359,7 +359,6 @@ public:
     }
 
     // recompute the list of <statement, accesses> pairs
-    // WITTODO: check if this works
     StatementMapper statementMapper(nullptr, instantiation_.get(), stackTrace_,
                                     *(cloneStencilFun->getDoMethod()), interval_, fieldsMap,
                                     cloneStencilFun);

@@ -47,11 +47,9 @@ namespace iir {
 void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
   NameToAccessIDMap_ = origin.NameToAccessIDMap_;
   AccessIDToNameMap_ = origin.AccessIDToNameMap_;
-  //  ExprToAccessIDMap_ = origin.getExprToAccessIDMap();
   for(auto pair : origin.ExprToAccessIDMap_) {
     ExprToAccessIDMap_.emplace(pair.first->clone(), pair.second);
   }
-  //  StmtToAccessIDMap_ = origin.getStmtToAccessIDMap();
   for(auto pair : origin.StmtToAccessIDMap_) {
     StmtToAccessIDMap_.emplace(pair.first->clone(), pair.second);
   }
@@ -61,15 +59,12 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
   TemporaryFieldAccessIDSet_ = origin.TemporaryFieldAccessIDSet_;
   AllocatedFieldAccessIDSet_ = origin.AllocatedFieldAccessIDSet_;
   GlobalVariableAccessIDSet_ = origin.GlobalVariableAccessIDSet_;
-  //  variableVersions_ = origin.getVariableVersions();
   for(auto id : origin.variableVersions_.getVersionIDs()) {
     variableVersions_.insert(id, origin.variableVersions_.getVersions(id));
   }
-  //  stencilDescStatements_ = origin.getStencilDescStatements();
   for(auto statement : origin.stencilDescStatements_) {
     stencilDescStatements_.emplace_back(statement->clone());
   }
-  //  IDToStencilCallMap_ = origin.getIDToStencilCallMap();
   for(const auto& pair : origin.IDToStencilCallMap_) {
     IDToStencilCallMap_.emplace(pair.first, std::make_shared<StencilCallDeclStmt>(*(pair.second)));
   }
@@ -78,18 +73,15 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
                                        pair.second);
   }
   StageIDToNameMap_ = origin.StageIDToNameMap_;
-  //  stencilFunctionInstantiations_ = origin.getStencilFunctionInstantiations();
   for(const auto& sf : origin.stencilFunctionInstantiations_) {
     stencilFunctionInstantiations_.emplace_back(
         std::make_shared<StencilFunctionInstantiation>(sf->clone()));
   }
-  //  ExprToStencilFunctionInstantiationMap_ = origin.getExprToStencilFunctionInstantiationMap();
   for(const auto& pair : origin.ExprToStencilFunctionInstantiationMap_) {
     ExprToStencilFunctionInstantiationMap_.emplace(
         std::make_shared<StencilFunCallExpr>(*(pair.first)),
         std::make_shared<StencilFunctionInstantiation>(pair.second->clone()));
   }
-  //    stencilFunInstantiationCandidate_ = origin.getStencilFunInstantiationCandidate();
   for(const auto& pair : origin.stencilFunInstantiationCandidate_) {
     StencilFunctionInstantiationCandidate candidate;
     candidate.callerStencilFunction_ =
@@ -97,19 +89,16 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
     stencilFunInstantiationCandidate_.emplace(
         std::make_shared<StencilFunctionInstantiation>(pair.first->clone()), candidate);
   }
-  //  BoundaryConditionToExtentsMap_ = origin.getBoundaryConditionToExtentsMap();
   for(const auto& pair : origin.BoundaryConditionToExtentsMap_) {
     BoundaryConditionToExtentsMap_.emplace(
         std::make_shared<BoundaryConditionDeclStmt>(*(pair.first)), pair.second);
   }
-  //  FieldnameToBoundaryConditionMap_ = ...
   for(const auto& pair : origin.FieldnameToBoundaryConditionMap_) {
     FieldnameToBoundaryConditionMap_.emplace(
         pair.first, std::make_shared<BoundaryConditionDeclStmt>(*(pair.second)));
   }
   CachedVariableSet_ = origin.CachedVariableSet_;
   fieldIDToInitializedDimensionsMap_ = origin.fieldIDToInitializedDimensionsMap_;
-  //  globalVariableMap_ = origin.getGlobalVariableMap();
   for(const auto& pair : origin.globalVariableMap_) {
     globalVariableMap_.emplace(pair.first, std::make_shared<sir::Value>(pair.second));
   }
@@ -119,7 +108,7 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
 }
 
 //===------------------------------------------------------------------------------------------===//
-//     StencilInstantiation
+//     StencilMetaInformation
 //===------------------------------------------------------------------------------------------===//
 
 std::unordered_map<std::shared_ptr<StencilFunctionInstantiation>,
@@ -128,88 +117,6 @@ StencilMetaInformation::getStencilFunInstantiationCandidate() {
   return stencilFunInstantiationCandidate_;
 }
 
-// StencilMetaInformation::StencilMetaInformation() {}
-
-// void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
-//  //  std::cout <<
-//  //  "===================================================\n=============================="
-//  //               "=====================\nclone is "
-//  // "happening\n===================================================\n==================="
-//  //               "================================\n"
-//  //            << std::endl;
-//  NameToAccessIDMap_ = origin.getNameToAccessIDMap();
-//  AccessIDToNameMap_ = origin.getAccessIDToNameMap();
-//  //  ExprToAccessIDMap_ = origin.getExprToAccessIDMap();
-//  for(auto pair : origin.getExprToAccessIDMap()) {
-//    ExprToAccessIDMap_.emplace(pair.first->clone(), pair.second);
-//  }
-//  //  StmtToAccessIDMap_ = origin.getStmtToAccessIDMap();
-//  for(auto pair : origin.getStmtToAccessIDMap()) {
-//    StmtToAccessIDMap_.emplace(pair.first->clone(), pair.second);
-//  }
-//  LiteralAccessIDToNameMap_ = origin.getLiteralAccessIDToNameMap();
-//  FieldAccessIDSet_ = origin.getFieldAccessIDSet();
-//  apiFieldIDs_ = origin.getAPIFieldIDs();
-//  TemporaryFieldAccessIDSet_ = origin.getTemporaryFieldAccessIDSet();
-//  AllocatedFieldAccessIDSet_ = origin.getAllocatedFieldAccessIDSet();
-//  GlobalVariableAccessIDSet_ = origin.getGlobalVariableAccessIDSet();
-//  //  variableVersions_ = origin.getVariableVersions();
-//  for(auto id : origin.getVariableVersions().getVersionIDs()) {
-//    variableVersions_.insert(id, origin.getVariableVersions().getVersions(id));
-//  }
-//  //  stencilDescStatements_ = origin.getStencilDescStatements();
-//  for(auto statement : origin.getStencilDescStatements()) {
-//    stencilDescStatements_.emplace_back(statement->clone());
-//  }
-//  //  IDToStencilCallMap_ = origin.getIDToStencilCallMap();
-//  for(const auto& pair : origin.getIDToStencilCallMap()) {
-//    IDToStencilCallMap_.emplace(pair.first,
-//    std::make_shared<StencilCallDeclStmt>(*(pair.second)));
-//  }
-//  for(const auto& pair : origin.getStencilCallToStencilIDMap()) {
-//    StencilCallToStencilIDMap_.emplace(std::make_shared<StencilCallDeclStmt>(*(pair.first)),
-//                                       pair.second);
-//  }
-//  StageIDToNameMap_ = origin.getStageIDToNameMap();
-//  //  stencilFunctionInstantiations_ = origin.getStencilFunctionInstantiations();
-//  for(const auto& sf : origin.getStencilFunctionInstantiations()) {
-//    stencilFunctionInstantiations_.emplace_back(
-//        std::make_shared<StencilFunctionInstantiation>(sf->clone()));
-//  }
-//  //  ExprToStencilFunctionInstantiationMap_ = origin.getExprToStencilFunctionInstantiationMap();
-//  for(const auto& pair : origin.getExprToStencilFunctionInstantiationMap()) {
-//    ExprToStencilFunctionInstantiationMap_.emplace(
-//        std::make_shared<StencilFunCallExpr>(*(pair.first)),
-//        std::make_shared<StencilFunctionInstantiation>(pair.second->clone()));
-//  }
-//  //    stencilFunInstantiationCandidate_ = origin.getStencilFunInstantiationCandidate();
-//  for(const auto& pair : origin.getStencilFunInstantiationCandidate()) {
-//    StencilFunctionInstantiationCandidate candidate;
-//    candidate.callerStencilFunction_ =
-//        std::make_shared<StencilFunctionInstantiation>(pair.second.callerStencilFunction_->clone());
-//    stencilFunInstantiationCandidate_.emplace(
-//        std::make_shared<StencilFunctionInstantiation>(pair.first->clone()), candidate);
-//  }
-//  //  BoundaryConditionToExtentsMap_ = origin.getBoundaryConditionToExtentsMap();
-//  for(const auto& pair : origin.getBoundaryConditionToExtentsMap()) {
-//    BoundaryConditionToExtentsMap_.emplace(
-//        std::make_shared<BoundaryConditionDeclStmt>(*(pair.first)), pair.second);
-//  }
-//  //  FieldnameToBoundaryConditionMap_ = ...
-//  for(const auto& pair : origin.getBoundaryConditions()) {
-//    FieldnameToBoundaryConditionMap_.emplace(
-//        pair.first, std::make_shared<BoundaryConditionDeclStmt>(*(pair.second)));
-//  }
-//  CachedVariableSet_ = origin.getCachedVariableSet();
-//  fieldIDToInitializedDimensionsMap_ = origin.getFieldIDToInitializedDimensionsMap();
-//  //  globalVariableMap_ = origin.getGlobalVariableMap();
-//  for(const auto& pair : origin.getGlobalVariableMap()) {
-//    globalVariableMap_.emplace(pair.first, std::make_shared<sir::Value>(pair.second));
-//  }
-//  stencilLocation_ = origin.getStencilLocation();
-//  stencilName_ = origin.getName();
-//  fileName_ = origin.getFileName();
-//}
 
 void StencilMetaInformation::setAccessIDNamePair(int AccessID, const std::string& name) {
   AccessIDToNameMap_.emplace(AccessID, name);
@@ -259,10 +166,7 @@ const std::string& StencilMetaInformation::getNameFromAccessID(int AccessID) con
   if(AccessID < 0) {
     return getNameFromLiteralAccessID(AccessID);
   }
-  //  std::cout << "AccessID to find is: " << AccessID << std::endl;
-  //  std::cout << "size is: " << AccessIDToNameMap_.size() << std::endl;
   auto it = AccessIDToNameMap_.find(AccessID);
-  //  std::cout << "and the find was broken" << std::endl;
   DAWN_ASSERT_MSG(it != AccessIDToNameMap_.end(), "Invalid AccessID");
   return it->second;
 }
@@ -275,12 +179,9 @@ const std::string& StencilMetaInformation::getNameFromStageID(int StageID) const
 
 void StencilMetaInformation::mapExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID) {
   ExprToAccessIDMap_.emplace(expr, accessID);
-  //  std::cout << "expr added to the map, size is now: " << ExprToAccessIDMap_.size() <<
-  //  std::endl;
 }
 
 void StencilMetaInformation::eraseExprToAccessID(std::shared_ptr<Expr> expr) {
-  //  std::cout << "\n\nwe are erasing\n" << std::endl;
   DAWN_ASSERT(ExprToAccessIDMap_.count(expr));
   ExprToAccessIDMap_.erase(expr);
 }
@@ -297,15 +198,6 @@ const std::string& StencilMetaInformation::getNameFromLiteralAccessID(int Access
 bool StencilMetaInformation::isGlobalVariable(const std::string& name) const {
   auto it = NameToAccessIDMap_.find(name);
   return it == NameToAccessIDMap_.end() ? false : isGlobalVariable(it->second);
-}
-
-void StencilMetaInformation::insertStencilFunctionIntoSIR(
-    const std::shared_ptr<sir::StencilFunction>& sirStencilFunction) {
-  //  SIR_->StencilFunctions.push_back(sirStencilFunction);
-  std::cout << "\n\n\nTHIS IS NOT IMPLEMENTED YET\n We need to properly do the SIR SF to SFI in "
-               "passtemporarytoSFT\n\n\n"
-            << std::endl;
-  DAWN_ASSERT(false);
 }
 
 bool StencilMetaInformation::insertBoundaryConditions(
@@ -343,17 +235,6 @@ int StencilMetaInformation::getAccessIDFromName(const std::string& name) const {
 }
 
 int StencilMetaInformation::getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) const {
-
-  //  auto it = ExprToAccessIDMap_.find(expr);
-  //  DAWN_ASSERT_MSG(it != ExprToAccessIDMap_.end(), "Invalid Expr");
-  //  return it->second;
-  //  std::cout << "map size here: " << ExprToAccessIDMap_.size() << std::endl;
-  //  std::cout << "we are looking for: " << ASTStringifer::toString(expr) << std::endl;
-
-  //  std::cout << "content of the map is: " << std::endl;
-  //  for(const auto& exprIDpair : ExprToAccessIDMap_) {
-  //    std::cout << ASTStringifer::toString(exprIDpair.first) << std::endl;
-  //  }
   for(const auto& exprIDpair : ExprToAccessIDMap_) {
     if(exprIDpair.first->equals(expr.get())) {
       return exprIDpair.second;
@@ -371,9 +252,6 @@ int StencilMetaInformation::getAccessIDFromStmt(const std::shared_ptr<Stmt>& stm
   }
   DAWN_ASSERT_MSG(false, "Invalid Stmt");
   return 0;
-  //  auto it = StmtToAccessIDMap_.find(stmt);
-  //  DAWN_ASSERT_MSG(it != StmtToAccessIDMap_.end(), "Invalid Stmt");
-  //  return it->second;
 }
 
 void StencilMetaInformation::setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt,
@@ -598,20 +476,6 @@ StencilMetaInformation::getOriginalNameAndLocationsFromAccessID(
   stmt->accept(orignalNameGetter);
   return orignalNameGetter.getNameLocationPair();
 }
-
-// std::string StencilMetaInformation::getOriginalNameFromAccessID(int AccessID, const IIR* iir)
-// const {
-//  OriginalNameGetter orignalNameGetter(this, AccessID, true);
-
-//  for(const auto& stmtAccessesPair : iterateIIROver<StatementAccessesPair>(iir)) {
-//    stmtAccessesPair->getStatement()->ASTStmt->accept(orignalNameGetter);
-//    if(orignalNameGetter.hasName())
-//      return orignalNameGetter.getName();
-//  }
-
-//  // Best we can do...
-//  return getNameFromAccessID(AccessID);
-//}
 
 namespace {
 

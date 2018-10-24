@@ -145,13 +145,6 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
 
   // Generate stencil wrapper constructor
   auto APIFields = stencilInstantiation->getMetaData().apiFieldIDs_;
-  //  decltype(stencilInstantiation->getSIRStencil()->Fields) SIRFieldsWithoutTemps;
-
-  //  std::copy_if(stencilInstantiation->getSIRStencil()->Fields.begin(),
-  //               stencilInstantiation->getSIRStencil()->Fields.end(),
-  //               std::back_inserter(SIRFieldsWithoutTemps),
-  //               [](std::shared_ptr<sir::Field> const& f) { return !(f->IsTemporary); });
-
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
