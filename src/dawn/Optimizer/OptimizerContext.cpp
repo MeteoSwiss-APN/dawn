@@ -82,15 +82,15 @@ public:
     DAWN_ASSERT(instantiation);
     // Create the initial scope
     scope_.push(std::make_shared<Scope>(sirStencil_->Name,
-                                        instantiation_->getMetaData().getStencilDescStatements()));
+                                        instantiation_->getMetaData().stencilDescStatements_));
     scope_.top()->LocalFieldnameToAccessIDMap =
-        instantiation_->getMetaData().getNameToAccessIDMap();
+        instantiation_->getMetaData().NameToAccessIDMap_;
 
     // We add all global variables which have constant values
     for(auto& keyValuePair : *(sir->GlobalVariableMap)) {
       const std::string& key = keyValuePair.first;
       sir::Value& value = *keyValuePair.second;
-      instantiation_->getMetaData().getGlobalVariableMap().emplace(keyValuePair.first,
+      instantiation_->getMetaData().globalVariableMap_.emplace(keyValuePair.first,
                                                                    keyValuePair.second);
 
       if(value.isConstexpr()) {
@@ -124,11 +124,11 @@ public:
     // We create a paceholder stencil-call for CodeGen to know wehere we need to insert calls to
     // this stencil
     auto placeholderStencil = std::make_shared<sir::StencilCall>(
-        instantiation_->getMetaData().makeStencilCallCodeGenName(StencilID));
+        instantiation_->makeStencilCallCodeGenName(StencilID));
     auto stencilCallDeclStmt = std::make_shared<StencilCallDeclStmt>(placeholderStencil);
 
     // Register the call and set it as a replacement for the next vertical region
-    instantiation_->getMetaData().getStencilCallToStencilIDMap().emplace(stencilCallDeclStmt,
+    instantiation_->getMetaData().StencilCallToStencilIDMap_.emplace(stencilCallDeclStmt,
                                                                          StencilID);
     stencilDescReplacement_ = stencilCallDeclStmt;
   }
@@ -173,7 +173,7 @@ public:
         if(StencilCallDeclStmt* s = dyn_cast<StencilCallDeclStmt>(stmt.get())) {
           // StencilCallDeclStmt node, remove it if it is not one of our artificial stencil call
           // nodes
-          if(!iir::StencilMetaInformation::isStencilCallCodeGenName(s->getStencilCall()->Callee))
+          if(!iir::StencilInstantiation::isStencilCallCodeGenName(s->getStencilCall()->Callee))
             return true;
 
         } else if(isa<VerticalRegionDeclStmt>(stmt.get()))
@@ -274,8 +274,8 @@ public:
           auto voidExpr = std::make_shared<LiteralAccessExpr>("0", BuiltinTypeID::Float);
           auto voidStmt = std::make_shared<ExprStmt>(voidExpr);
           int AccessID = -instantiation_->nextUID();
-          instantiation_->getMetaData().getLiteralAccessIDToNameMap().emplace(AccessID, "0");
-          instantiation_->getMetaData().mapExprToAccessID(voidExpr, AccessID);
+          instantiation_->getMetaData().LiteralAccessIDToNameMap_.emplace(AccessID, "0");
+          instantiation_->mapExprToAccessID(voidExpr, AccessID);
           replaceOldStmtWithNewStmtInStmt(scope_.top()->Statements.back()->ASTStmt, stmt, voidStmt);
         }
       }
@@ -312,10 +312,10 @@ public:
     if(instantiation_->getOptimizerContext()->getOptions().KeepVarnames)
       globalName = stmt->getName();
     else
-      globalName = StencilMetaInformation::makeLocalVariablename(stmt->getName(), AccessID);
+      globalName = StencilInstantiation::makeLocalVariablename(stmt->getName(), AccessID);
 
-    instantiation_->getMetaData().setAccessIDNamePair(AccessID, globalName);
-    instantiation_->getMetaData().getStmtToAccessIDMap().emplace(stmt, AccessID);
+    instantiation_->setAccessIDNamePair(AccessID, globalName);
+    instantiation_->getMetaData().StmtToAccessIDMap_.emplace(stmt, AccessID);
 
     // Add the mapping to the local scope
     scope_.top()->LocalVarNameToAccessIDMap.emplace(stmt->getName(), AccessID);
@@ -432,8 +432,8 @@ public:
       if(stencil.Fields[stencilArgIdx]->IsTemporary) {
         // We add a new temporary field for each temporary field argument
         AccessID = instantiation_->nextUID();
-        instantiation_->getMetaData().setAccessIDNamePairOfField(
-            AccessID, StencilMetaInformation::makeTemporaryFieldname(
+        instantiation_->setAccessIDNamePairOfField(
+            AccessID, StencilInstantiation::makeTemporaryFieldname(
                           stencil.Fields[stencilArgIdx]->Name, AccessID),
             true);
       } else {
@@ -460,7 +460,7 @@ public:
   }
 
   void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override {
-    if(instantiation_->getMetaData().insertBoundaryConditions(stmt->getFields()[0]->Name, stmt) ==
+    if(instantiation_->insertBoundaryConditions(stmt->getFields()[0]->Name, stmt) ==
        false)
       DAWN_ASSERT_MSG(false, "Boundary Condition specified twice for the same field");
     //      if(instantiation_->insertBoundaryConditions(stmt->getFields()[0]->Name, stmt) == false)
@@ -528,7 +528,7 @@ public:
     if(expr->isExternal()) {
       DAWN_ASSERT_MSG(!expr->isArrayAccess(), "global array access is not supported");
 
-      const auto& value = instantiation_->getMetaData().getGlobalVariableValue(varname);
+      const auto& value = instantiation_->getGlobalVariableValue(varname);
       if(value.isConstexpr()) {
         // Replace the variable access with the actual value
         DAWN_ASSERT_MSG(!value.empty(), "constant global variable with no value");
@@ -538,25 +538,25 @@ public:
         replaceOldExprWithNewExprInStmt(scope_.top()->Statements.back()->ASTStmt, expr, newExpr);
 
         int AccessID = instantiation_->nextUID();
-        instantiation_->getMetaData().getLiteralAccessIDToNameMap().emplace(AccessID,
+        instantiation_->getMetaData().LiteralAccessIDToNameMap_.emplace(AccessID,
                                                                             newExpr->getValue());
-        instantiation_->getMetaData().mapExprToAccessID(newExpr, AccessID);
+        instantiation_->mapExprToAccessID(newExpr, AccessID);
 
       } else {
         int AccessID = 0;
-        if(!instantiation_->getMetaData().isGlobalVariable(varname)) {
+        if(!instantiation_->isGlobalVariable(varname)) {
           AccessID = instantiation_->nextUID();
-          instantiation_->getMetaData().setAccessIDNamePairOfGlobalVariable(AccessID, varname);
+          instantiation_->setAccessIDNamePairOfGlobalVariable(AccessID, varname);
         } else {
-          AccessID = instantiation_->getMetaData().getAccessIDFromName(varname);
+          AccessID = instantiation_->getAccessIDFromName(varname);
         }
 
-        instantiation_->getMetaData().mapExprToAccessID(expr, AccessID);
+        instantiation_->mapExprToAccessID(expr, AccessID);
       }
 
     } else {
       // Register the mapping between VarAccessExpr and AccessID.
-      instantiation_->getMetaData().mapExprToAccessID(
+      instantiation_->mapExprToAccessID(
           expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
 
       // Resolve the index if this is an array access
@@ -568,8 +568,8 @@ public:
   void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override {
     // Register a literal access (Note: the negative AccessID we assign!)
     int AccessID = -instantiation_->nextUID();
-    instantiation_->getMetaData().getLiteralAccessIDToNameMap().emplace(AccessID, expr->getValue());
-    instantiation_->getMetaData().mapExprToAccessID(expr, AccessID);
+    instantiation_->getMetaData().LiteralAccessIDToNameMap_.emplace(AccessID, expr->getValue());
+    instantiation_->mapExprToAccessID(expr, AccessID);
   }
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {}
@@ -602,20 +602,20 @@ bool OptimizerContext::fillIIRFromSIR(
     stencilInstantation->getMetaData().allStencilFunctions_.push_back(sf);
   }
 
-  stencilInstantation->getMetaData().getName() = SIRStencil->Name;
-  stencilInstantation->getMetaData().getFileName() = fullSIR->Filename;
-  stencilInstantation->getMetaData().getStencilLocation() = SIRStencil->Loc;
+  stencilInstantation->getMetaData().stencilName_ = SIRStencil->Name;
+  stencilInstantation->getMetaData().fileName_ = fullSIR->Filename;
+  stencilInstantation->getMetaData().stencilLocation_ = SIRStencil->Loc;
 
   // Map the fields of the "main stencil" to unique IDs (which are used in the access maps to
   // indentify the field).
   for(const auto& field : SIRStencil->Fields) {
     int AccessID = stencilInstantation->nextUID();
     if(!field->IsTemporary) {
-      stencilInstantation->getMetaData().getAPIFieldIDs().push_back(AccessID);
+      stencilInstantation->getMetaData().apiFieldIDs_.push_back(AccessID);
     }
-    stencilInstantation->getMetaData().setAccessIDNamePairOfField(AccessID, field->Name,
+    stencilInstantation->setAccessIDNamePairOfField(AccessID, field->Name,
                                                                   field->IsTemporary);
-    stencilInstantation->getMetaData().getFieldIDToInitializedDimensionsMap().emplace(
+    stencilInstantation->getMetaData().fieldIDToInitializedDimensionsMap_.emplace(
         AccessID, field->fieldDimensions);
   }
 
