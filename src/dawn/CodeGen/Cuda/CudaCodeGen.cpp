@@ -543,7 +543,7 @@ void CudaCodeGen::generateTmpIndexInit(
 }
 
 int CudaCodeGen::paddedBoundary(int value) {
-  return value <= 1 ? 1 : value <= 2 ? 2 : value <= 4 ? 4 : 8;
+  return std::abs(value) <= 1 ? 1 : std::abs(value) <= 2 ? 2 : std::abs(value) <= 4 ? 4 : 8;
 }
 void CudaCodeGen::generateAllCudaKernels(
     std::stringstream& ssSW,
