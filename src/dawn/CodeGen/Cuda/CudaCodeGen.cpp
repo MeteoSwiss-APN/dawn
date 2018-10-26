@@ -103,7 +103,8 @@ void CudaCodeGen::generateKCacheDecl(
   for(const auto& cacheP : ms.getCaches()) {
     const iir::Cache& cache = cacheP.second;
     if(cache.getCacheType() != iir::Cache::CacheTypeKind::K ||
-       cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::local)
+       ((cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::local) &&
+        (cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::fill)))
       continue;
 
     const int accessID = cache.getCachedFieldAccessID();
@@ -401,13 +402,13 @@ void CudaCodeGen::generateCudaKernelCode(
     // for each interval, we generate naive nested loops
     cudaKernel.addBlockStatement(
         makeKLoop("dom", blockSize, ms->getLoopOrder(), interval, solveKLoopInParallel_), [&]() {
+          generateFillKCaches(cudaKernel, ms, interval, cacheProperties, fieldIndexMap,
+                              stencilInstantiation);
+
           for(const auto& stagePtr : ms->getChildren()) {
             const iir::Stage& stage = *stagePtr;
             const auto& extent = stage.getExtents();
             iir::MultiInterval enclosingInterval;
-
-            generateFillKCaches(cudaKernel, ms, interval, cacheProperties, fieldIndexMap,
-                                stencilInstantiation);
 
             // TODO add the enclosing interval in derived ?
             for(const auto& doMethodPtr : stage.getChildren()) {
