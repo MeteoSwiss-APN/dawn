@@ -110,7 +110,7 @@ void CudaCodeGen::generateKCacheDecl(
     auto vertExtent = cacheProperties.getKCacheVertExtent(accessID);
 
     kernel.addStatement("gridtools::clang::float_type " + cacheProperties.getCacheName(accessID) +
-                        "[" + std::to_string(-vertExtent.Minus - vertExtent.Plus + 1) + "]");
+                        "[" + std::to_string(-vertExtent.Minus + vertExtent.Plus + 1) + "]");
   }
 }
 
