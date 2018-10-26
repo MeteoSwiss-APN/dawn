@@ -603,9 +603,16 @@ bool CudaCodeGen::useTmpIndex(
   const bool containsTemporary =
       (find_if(fields.begin(), fields.end(), [&](const std::pair<int, iir::Field>& field) {
          const int accessID = field.second.getAccessID();
+         if(!stencilInstantiation->isTemporaryField(accessID))
+           return false;
          // we dont need to initialize tmp indices for fields that are cached
-         return stencilInstantiation->isTemporaryField(accessID) &&
-                !cacheProperties.accessIsCached(accessID);
+         if(!cacheProperties.accessIsCached(accessID))
+           return true;
+         const auto& cache = ms->getCache(accessID);
+         if(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local) {
+           return false;
+         }
+         return true;
        }) != fields.end());
 
   return containsTemporary;
