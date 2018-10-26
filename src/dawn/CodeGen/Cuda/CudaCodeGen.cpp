@@ -459,20 +459,40 @@ void CudaCodeGen::generateCudaKernelCode(
 bool CudaCodeGen::intervalRequiresSync(const iir::Interval& interval, const iir::Stage& stage,
                                        const std::unique_ptr<iir::MultiStage>& ms) const {
   // if the stage is the last stage, it will require a sync (to ensure we sync before the write of a
-  // previous stage at the next k level), but only if the stencil is not pure vertical
+  // previous stage at the next k level), but only if the stencil is not pure vertical and ij caches
+  // are used after the last sync
   int lastStageID = -1;
+  // we identified the last stage that required a sync
+  int lastStageIDWithSync = -1;
   for(const auto& st : ms->getChildren()) {
     if(st->getEnclosingInterval().overlaps(interval)) {
       lastStageID = st->getStageID();
+      if(st->getRequiresSync()) {
+        lastStageIDWithSync = st->getStageID();
+      }
     }
   }
   DAWN_ASSERT(lastStageID != -1);
 
-  if(stage.getStageID() == lastStageID) {
-    const auto& fields = stage.getFields();
+  if(stage.getStageID() != lastStageID) {
+    return false;
+  }
+  bool activateSearch = (lastStageIDWithSync == -1) ? true : false;
+  for(const auto& st : ms->getChildren()) {
+    // we only activate the search to determine if IJ caches are used after last stage that was sync
+    if(st->getStageID() == lastStageIDWithSync) {
+      activateSearch = true;
+    }
+    if(!activateSearch)
+      continue;
+    const auto& fields = st->getFields();
+
+    // If any IJ cache is used after the last synchronized stage,
+    // we will need to sync again after the last stage of the vertical loop
     for(const auto& cache : ms->getCaches()) {
       if(cache.second.getCacheType() != iir::Cache::CacheTypeKind::IJ)
         continue;
+
       if(fields.count(cache.first)) {
         return true;
       }
