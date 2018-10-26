@@ -492,6 +492,7 @@ void CudaCodeGen::generateKCacheSlide(MemberFunction& cudaKernel,
       }
     }
   }
+}
 bool CudaCodeGen::intervalRequiresSync(const iir::Interval& interval, const iir::Stage& stage,
                                        const std::unique_ptr<iir::MultiStage>& ms) const {
   // if the stage is the last stage, it will require a sync (to ensure we sync before the write of a
