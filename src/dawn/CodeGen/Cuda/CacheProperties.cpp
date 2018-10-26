@@ -75,6 +75,15 @@ iir::Extent CacheProperties::getKCacheVertExtent(const int accessID) const {
   return vertExtent;
 }
 
+int CacheProperties::getKCacheIndex(const int accessID, const int offset) const {
+  return getKCacheCenterOffset(accessID) + offset;
+}
+
+bool CacheProperties::requiresFill(const iir::Cache& cache) {
+  return ((cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill) ||
+          (cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill_and_flush));
+}
+
 int CacheProperties::getKCacheCenterOffset(const int accessID) const {
   auto ext = getKCacheVertExtent(accessID);
   return -ext.Minus;
@@ -85,8 +94,7 @@ bool CacheProperties::isKCached(const int accessID) const {
 }
 
 bool CacheProperties::isKCached(const iir::Cache& cache) const {
-  return ((cache.getCacheType() == iir::Cache::CacheTypeKind::K) &&
-          (cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local));
+  return (cache.getCacheType() == iir::Cache::CacheTypeKind::K);
 }
 
 bool CacheProperties::hasIJCaches() const {

@@ -129,7 +129,7 @@ CudaCodeGen::computePartitionOfIntervals(const std::unique_ptr<iir::MultiStage>&
 }
 
 void CudaCodeGen::generateCudaKernelCode(
-    std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
+    std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const std::unique_ptr<iir::MultiStage>& ms, const CacheProperties& cacheProperties) {
 
   iir::Extents maxExtents{0, 0, 0, 0, 0, 0};
@@ -405,6 +405,10 @@ void CudaCodeGen::generateCudaKernelCode(
             const iir::Stage& stage = *stagePtr;
             const auto& extent = stage.getExtents();
             iir::MultiInterval enclosingInterval;
+
+            generateFillKCaches(cudaKernel, ms, interval, cacheProperties, fieldIndexMap,
+                                stencilInstantiation);
+
             // TODO add the enclosing interval in derived ?
             for(const auto& doMethodPtr : stage.getChildren()) {
               enclosingInterval.insert(doMethodPtr->getInterval());
@@ -462,6 +466,31 @@ void CudaCodeGen::generateCudaKernelCode(
   }
 
   cudaKernel.commit();
+}
+
+void CudaCodeGen::generateFillKCaches(
+    MemberFunction& cudaKernel, const std::unique_ptr<iir::MultiStage>& ms,
+    const iir::Interval& interval, const CacheProperties& cacheProperties,
+    const std::unordered_map<int, Array3i>& fieldIndexMap,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const {
+  for(const auto& cachePair : ms->getCaches()) {
+    const int accessID = cachePair.first;
+    const auto& cache = cachePair.second;
+    if(!CacheProperties::requiresFill(cache))
+      continue;
+    DAWN_ASSERT(cache.getInterval().is_initialized());
+    const auto cacheInterval = *(cache.getInterval());
+    auto vertExtent = cacheProperties.getKCacheVertExtent(accessID);
+    if(cacheInterval.overlaps(interval)) {
+      auto cacheName = cacheProperties.getCacheName(accessID);
+      std::stringstream ss;
+      CodeGeneratorHelper::generateFieldAccessDeref(ss, stencilInstantiation, accessID,
+                                                    fieldIndexMap, Array3i{0, 0, 0});
+      cudaKernel.addStatement(cacheName + "[" + std::to_string(cacheProperties.getKCacheIndex(
+                                                    accessID, vertExtent.Plus)) +
+                              "] =" + ss.str());
+    }
+  }
 }
 
 void CudaCodeGen::generateKCacheSlide(MemberFunction& cudaKernel,

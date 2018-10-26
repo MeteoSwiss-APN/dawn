@@ -1,5 +1,6 @@
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/Support/Assert.h"
+#include "dawn/Support/StringUtil.h"
 
 namespace dawn {
 namespace codegen {
@@ -29,6 +30,47 @@ std::string CodeGeneratorHelper::indexIteratorName(Array3i dims) {
     n_ = n_ + std::to_string(i);
   }
   return n_;
+}
+
+void CodeGeneratorHelper::generateFieldAccessDeref(
+    std::stringstream& ss, const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+    const int accessID, const std::unordered_map<int, Array3i> fieldIndexMap, Array3i offset) {
+  std::string accessName = instantiation->getNameFromAccessID(accessID);
+  bool isTemporary = instantiation->isTemporaryField(accessID);
+  DAWN_ASSERT(fieldIndexMap.count(accessID) || isTemporary);
+  std::string index = isTemporary ? "idx_tmp" : "idx" + CodeGeneratorHelper::indexIteratorName(
+                                                            fieldIndexMap.at(accessID));
+
+  // temporaries have all 3 dimensions
+  Array3i iter = isTemporary ? Array3i{1, 1, 1} : fieldIndexMap.at(accessID);
+
+  std::string offsetStr =
+      RangeToString("+", "", "", true)(CodeGeneratorHelper::ijkfyOffset(offset, isTemporary, iter));
+  ss << accessName
+     << (offsetStr.empty() ? "[" + index + "]" : ("[" + index + "+" + offsetStr + "]"));
+}
+
+std::array<std::string, 3> CodeGeneratorHelper::ijkfyOffset(const Array3i& offsets,
+                                                            bool isTemporary,
+                                                            const Array3i iteratorDims) {
+  int n = -1;
+
+  std::array<std::string, 3> res;
+  std::transform(offsets.begin(), offsets.end(), res.begin(), [&](int const& off) {
+    ++n;
+    std::array<std::string, 3> indices{CodeGeneratorHelper::generateStrideName(0, iteratorDims),
+                                       CodeGeneratorHelper::generateStrideName(1, iteratorDims),
+                                       CodeGeneratorHelper::generateStrideName(2, iteratorDims)};
+
+    if(isTemporary) {
+      indices = {"1", "jstride_tmp", "kstride_tmp"};
+    }
+    if(!(iteratorDims[n]) || !off)
+      return std::string("");
+
+    return (indices[n] + "*" + std::to_string(off));
+  });
+  return res;
 }
 
 } // namespace cuda

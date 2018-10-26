@@ -45,13 +45,6 @@ protected:
   const CacheProperties& cacheProperties_;
   const Array3ui blockSizes_;
 
-  ///
-  /// @brief produces a string of (i,j,k) accesses for the C++ generated naive code,
-  /// from an array of offseted accesses
-  ///
-  std::array<std::string, 3> ijkfyOffset(const Array3i& offsets, bool isTemporary,
-                                         const Array3i iteratorDims);
-
 public:
   using Base = ASTCodeGenCXX;
 

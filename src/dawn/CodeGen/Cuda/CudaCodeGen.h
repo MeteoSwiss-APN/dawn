@@ -60,10 +60,11 @@ private:
                          IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>&
                              tempFields) const override;
 
-  void generateCudaKernelCode(std::stringstream& ssSW,
-                              const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-                              const std::unique_ptr<iir::MultiStage>& ms,
-                              const CacheProperties& cacheProperties);
+  void
+  generateCudaKernelCode(std::stringstream& ssSW,
+                         const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                         const std::unique_ptr<iir::MultiStage>& ms,
+                         const CacheProperties& cacheProperties);
   void
   generateAllCudaKernels(std::stringstream& ssSW,
                          const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
@@ -145,6 +146,12 @@ private:
   void generateKCacheSlide(MemberFunction& cudaKernel, const CacheProperties& cacheProperties,
                            const std::unique_ptr<iir::MultiStage>& ms,
                            const iir::Interval& interval) const;
+
+  void
+  generateFillKCaches(MemberFunction& cudaKernel, const std::unique_ptr<iir::MultiStage>& ms,
+                      const iir::Interval& interval, const CacheProperties& cacheProperties,
+                      const std::unordered_map<int, Array3i>& fieldIndexMap,
+                      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
 
   std::string intervalDiffToString(iir::IntervalDiff intervalDiff, std::string maxRange) const;
 

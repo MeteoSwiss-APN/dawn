@@ -28,6 +28,15 @@ class CodeGeneratorHelper {
 public:
   static std::string generateStrideName(int dim, Array3i fieldDims);
   static std::string indexIteratorName(Array3i dims);
+  static void generateFieldAccessDeref(
+      std::stringstream& ss, const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+      const int accessID, const std::unordered_map<int, Array3i> fieldIndexMap, Array3i offset);
+  ///
+  /// @brief produces a string of (i,j,k) accesses for the C++ generated naive code,
+  /// from an array of offseted accesses
+  ///
+  static std::array<std::string, 3> ijkfyOffset(const Array3i& offsets, bool isTemporary,
+                                                const Array3i iteratorDims);
 };
 
 } // namespace cuda
