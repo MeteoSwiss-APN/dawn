@@ -154,7 +154,11 @@ private:
   std::string generateStencilInstantiation(
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
   static int paddedBoundary(int value);
-  bool requiresSync(const iir::Stage& stage, const std::unique_ptr<iir::MultiStage>& ms) const;
+  /// @brief returns true if the stage is the last stage of an interval loop execution
+  /// which requires synchronization due to usage of 2D ij caches (which are re-written at the next
+  /// k-loop iteration)
+  bool intervalRequiresSync(const iir::Interval& interval, const iir::Stage& stage,
+                            const std::unique_ptr<iir::MultiStage>& ms) const;
 };
 } // namespace cuda
 } // namespace codegen
