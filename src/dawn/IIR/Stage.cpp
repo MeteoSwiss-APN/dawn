@@ -187,6 +187,20 @@ void Stage::updateLevel() {
   for(const auto& doMethodPtr : getChildren()) {
     const DoMethod& doMethod = *doMethodPtr;
     for(const auto& statementAccessesPair : doMethod.getChildren()) {
+      const auto& access = statementAccessesPair->getAccesses();
+      DAWN_ASSERT(access);
+      for(const auto& accessPair : access->getWriteAccesses()) {
+        int AccessID = accessPair.first;
+        // Does this AccessID correspond to a field access?
+        if(stencilInstantiation_.isGlobalVariable(AccessID))
+          derivedInfo_.globalVariables_.insert(AccessID);
+      }
+      for(const auto& accessPair : access->getReadAccesses()) {
+        int AccessID = accessPair.first;
+        if(stencilInstantiation_.isGlobalVariable(AccessID))
+          derivedInfo_.globalVariables_.insert(AccessID);
+      }
+
       const std::shared_ptr<Statement> statement = statementAccessesPair->getStatement();
       DAWN_ASSERT(statement);
       DAWN_ASSERT(statement->ASTStmt);
@@ -287,7 +301,6 @@ Stage::split(std::deque<int>& splitterIndices,
 }
 
 void Stage::updateFromChildren() {
-  //  derivedInfo_.fields_.clear();
   for(const auto& doMethod : children_) {
     mergeFields(doMethod->getFields(), derivedInfo_.fields_, boost::optional<Extents>());
   }
