@@ -28,8 +28,9 @@ namespace cuda {
 
 ASTStencilBody::ASTStencilBody(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-    const std::unordered_map<int, Array3i>& fieldIndexMap, const iir::MultiStage& ms,
-    const CacheProperties& cacheProperties, Array3ui blockSizes)
+    const std::unordered_map<int, Array3i>& fieldIndexMap,
+    const std::unique_ptr<iir::MultiStage>& ms, const CacheProperties& cacheProperties,
+    Array3ui blockSizes)
     : ASTCodeGenCXX(), instantiation_(stencilInstantiation), offsetPrinter_("+", "", "", true),
       fieldIndexMap_(fieldIndexMap), ms_(ms), cacheProperties_(cacheProperties),
       blockSizes_(blockSizes) {}
@@ -110,7 +111,7 @@ void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
     return;
   }
 
-  CodeGeneratorHelper::generateFieldAccessDeref(ss_, instantiation_, accessID, fieldIndexMap_,
+  CodeGeneratorHelper::generateFieldAccessDeref(ss_, ms_, instantiation_, accessID, fieldIndexMap_,
                                                 expr->getOffset());
 }
 

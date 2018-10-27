@@ -332,7 +332,7 @@ void CudaCodeGen::generateCudaKernelCode(
 
   DAWN_ASSERT(!partitionIntervals.empty());
 
-  ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, fieldIndexMap, *ms, cacheProperties,
+  ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, fieldIndexMap, ms, cacheProperties,
                                        blockSize);
 
   iir::Interval::IntervalLevel lastKCell{0, 0};
@@ -485,7 +485,7 @@ void CudaCodeGen::generateFillKCaches(
     if(cacheInterval.overlaps(interval)) {
       auto cacheName = cacheProperties.getCacheName(accessID);
       std::stringstream ss;
-      CodeGeneratorHelper::generateFieldAccessDeref(ss, stencilInstantiation, accessID,
+      CodeGeneratorHelper::generateFieldAccessDeref(ss, ms, stencilInstantiation, accessID,
                                                     fieldIndexMap, Array3i{0, 0, 0});
       cudaKernel.addStatement(cacheName + "[" + std::to_string(cacheProperties.getKCacheIndex(
                                                     accessID, vertExtent.Plus)) +

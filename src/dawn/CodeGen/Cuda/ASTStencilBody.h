@@ -41,7 +41,7 @@ protected:
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   RangeToString offsetPrinter_;
   const std::unordered_map<int, Array3i>& fieldIndexMap_;
-  const iir::MultiStage& ms_;
+  const std::unique_ptr<iir::MultiStage>& ms_;
   const CacheProperties& cacheProperties_;
   const Array3ui blockSizes_;
 
@@ -50,8 +50,9 @@ public:
 
   /// @brief constructor
   ASTStencilBody(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-                 const std::unordered_map<int, Array3i>& fieldIndexMap, const iir::MultiStage& ms,
-                 const CacheProperties& cacheProperties, Array3ui blockSizes);
+                 const std::unordered_map<int, Array3i>& fieldIndexMap,
+                 const std::unique_ptr<iir::MultiStage>& ms, const CacheProperties& cacheProperties,
+                 Array3ui blockSizes);
 
   virtual ~ASTStencilBody() override;
 

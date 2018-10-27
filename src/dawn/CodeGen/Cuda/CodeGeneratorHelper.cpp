@@ -33,11 +33,13 @@ std::string CodeGeneratorHelper::indexIteratorName(Array3i dims) {
 }
 
 void CodeGeneratorHelper::generateFieldAccessDeref(
-    std::stringstream& ss, const std::shared_ptr<iir::StencilInstantiation>& instantiation,
-    const int accessID, const std::unordered_map<int, Array3i> fieldIndexMap, Array3i offset) {
+    std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
+    const std::shared_ptr<iir::StencilInstantiation>& instantiation, const int accessID,
+    const std::unordered_map<int, Array3i> fieldIndexMap, Array3i offset) {
   std::string accessName = instantiation->getNameFromAccessID(accessID);
   bool isTemporary = instantiation->isTemporaryField(accessID);
   DAWN_ASSERT(fieldIndexMap.count(accessID) || isTemporary);
+  const auto& field = ms->getField(accessID);
   std::string index = isTemporary ? "idx_tmp" : "idx" + CodeGeneratorHelper::indexIteratorName(
                                                             fieldIndexMap.at(accessID));
 
@@ -46,8 +48,10 @@ void CodeGeneratorHelper::generateFieldAccessDeref(
 
   std::string offsetStr =
       RangeToString("+", "", "", true)(CodeGeneratorHelper::ijkfyOffset(offset, isTemporary, iter));
-  ss << accessName
-     << (offsetStr.empty() ? "[" + index + "]" : ("[" + index + "+" + offsetStr + "]"));
+  const bool readOnly = (field.getIntend() == iir::Field::IntendKind::IK_Input);
+  ss << (readOnly ? "__ldg(" : "") << accessName
+     << (offsetStr.empty() ? "[" + index + "]" : ("[" + index + "+" + offsetStr + "]"))
+     << (readOnly ? ")" : "");
 }
 
 std::array<std::string, 3> CodeGeneratorHelper::ijkfyOffset(const Array3i& offsets,
