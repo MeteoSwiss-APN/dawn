@@ -32,7 +32,7 @@ Stage::Stage(StencilInstantiation& context, int StageID)
 
 Stage::Stage(StencilInstantiation& context, int StageID, const Interval& interval)
     : stencilInstantiation_(context), StageID_(StageID) {
-  insertChild(make_unique<DoMethod>(interval));
+  insertChild(make_unique<DoMethod>(interval, context));
 }
 
 std::unique_ptr<Stage> Stage::clone() const {
@@ -181,60 +181,12 @@ void Stage::updateLevel() {
 
   derivedInfo_.clear();
 
-  // Compute the fields and their intended usage. Fields can be in one of three states: `Output`,
-  // `InputOutput` or `Input` which implements the following state machine:
-  //
-  //    +-------+                               +--------+
-  //    | Input |                               | Output |
-  //    +-------+                               +--------+
-  //        |                                       |
-  //        |            +-------------+            |
-  //        +----------> | InputOutput | <----------+
-  //                     +-------------+
-  //
-  std::unordered_map<int, Field> inputOutputFields;
-  std::unordered_map<int, Field> inputFields;
-  std::unordered_map<int, Field> outputFields;
-
   CaptureStencilFunctionCallGlobalParams functionCallGlobaParamVisitor(
       derivedInfo_.globalVariablesFromStencilFunctionCalls_, stencilInstantiation_);
 
   for(const auto& doMethodPtr : getChildren()) {
     const DoMethod& doMethod = *doMethodPtr;
     for(const auto& statementAccessesPair : doMethod.getChildren()) {
-      statementAccessesPair->getStatement()->ASTStmt->accept(functionCallGlobaParamVisitor);
-      const auto& access = statementAccessesPair->getAccesses();
-      DAWN_ASSERT(access);
-
-      for(const auto& accessPair : access->getWriteAccesses()) {
-        int AccessID = accessPair.first;
-        Extents const& extents = accessPair.second;
-
-        // Does this AccessID correspond to a field access?
-        if(!stencilInstantiation_.isField(AccessID)) {
-          if(stencilInstantiation_.isGlobalVariable(AccessID))
-            derivedInfo_.globalVariables_.insert(AccessID);
-          continue;
-        }
-        AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                       extents, doMethod.getInterval());
-      }
-
-      for(const auto& accessPair : access->getReadAccesses()) {
-        int AccessID = accessPair.first;
-        Extents const& extents = accessPair.second;
-
-        // Does this AccessID correspond to a field access?
-        if(!stencilInstantiation_.isField(AccessID)) {
-          if(stencilInstantiation_.isGlobalVariable(AccessID))
-            derivedInfo_.globalVariables_.insert(AccessID);
-          continue;
-        }
-
-        AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                      extents, doMethod.getInterval());
-      }
-
       const std::shared_ptr<Statement> statement = statementAccessesPair->getStatement();
       DAWN_ASSERT(statement);
       DAWN_ASSERT(statement->ASTStmt);
@@ -250,38 +202,6 @@ void Stage::updateLevel() {
   derivedInfo_.allGlobalVariables_.insert(
       derivedInfo_.globalVariablesFromStencilFunctionCalls_.begin(),
       derivedInfo_.globalVariablesFromStencilFunctionCalls_.end());
-
-  // Merge inputFields, outputFields and fields
-  derivedInfo_.fields_.insert(outputFields.begin(), outputFields.end());
-  derivedInfo_.fields_.insert(inputOutputFields.begin(), inputOutputFields.end());
-  derivedInfo_.fields_.insert(inputFields.begin(), inputFields.end());
-
-  if(derivedInfo_.fields_.empty()) {
-    DAWN_LOG(WARNING) << "no fields referenced in stage";
-    return;
-  }
-
-  // Compute the extents of each field by accumulating the extents of each access to field in the
-  // stage
-
-  for(const auto& statementAccessesPair : iterateIIROver<StatementAccessesPair>(*this)) {
-    const auto& access = statementAccessesPair->getAccesses();
-
-    // first => AccessID, second => Extent
-    for(auto& accessPair : access->getWriteAccesses()) {
-      if(!stencilInstantiation_.isField(accessPair.first))
-        continue;
-
-      derivedInfo_.fields_.at(accessPair.first).mergeWriteExtents(accessPair.second);
-    }
-
-    for(const auto& accessPair : access->getReadAccesses()) {
-      if(!stencilInstantiation_.isField(accessPair.first))
-        continue;
-
-      derivedInfo_.fields_.at(accessPair.first).mergeReadExtents(accessPair.second);
-    }
-  }
 }
 
 bool Stage::hasGlobalVariables() const {
@@ -355,15 +275,22 @@ Stage::split(std::deque<int>& splitterIndices,
       doMethod.insertChild(std::move(*it));
     }
 
-    //    for(std::size_t idx = prevSplitterIndex; idx < nextSplitterIndex; ++idx)
-
-    // Update the fields of the new stage
+    // Update the fields of the new doMethod
+    doMethod.update(NodeUpdateType::level);
+    // CARTO
     newStage.update(NodeUpdateType::level);
 
     prevSplitterIndex = nextSplitterIndex;
   }
 
   return newStages;
+}
+
+void Stage::updateFromChildren() {
+  //  derivedInfo_.fields_.clear();
+  for(const auto& doMethod : children_) {
+    mergeFields(doMethod->getFields(), derivedInfo_.fields_, boost::optional<Extents>());
+  }
 }
 
 bool Stage::isEmptyOrNullStmt() const {

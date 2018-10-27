@@ -15,14 +15,14 @@
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
-#include "dawn/Optimizer/ReadBeforeWriteConflict.h"
-#include "dawn/Optimizer/Renaming.h"
+#include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/IntervalAlgorithms.h"
+#include "dawn/IIR/MultiInterval.h"
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/ReadBeforeWriteConflict.h"
+#include "dawn/Optimizer/Renaming.h"
 #include "dawn/Support/STLExtras.h"
-#include "dawn/IIR/MultiInterval.h"
-#include "dawn/IIR/IntervalAlgorithms.h"
-#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/Support/UIDGenerator.h"
 
 namespace dawn {
@@ -123,15 +123,16 @@ std::shared_ptr<DependencyGraphAccesses> MultiStage::getDependencyGraphOfAxis() 
 iir::Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
                                  int AccessID, const Interval& interval,
                                  boost::optional<iir::Cache::window> w) {
-  return caches_.emplace(AccessID,
-                         iir::Cache(type, policy, AccessID, boost::optional<Interval>(interval), w))
+  return caches_
+      .emplace(AccessID, iir::Cache(type, policy, AccessID, boost::optional<Interval>(interval), w))
       .first->second;
 }
 
 iir::Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
                                  int AccessID) {
-  return caches_.emplace(AccessID, iir::Cache(type, policy, AccessID, boost::optional<Interval>(),
-                                              boost::optional<iir::Cache::window>()))
+  return caches_
+      .emplace(AccessID, iir::Cache(type, policy, AccessID, boost::optional<Interval>(),
+                                    boost::optional<iir::Cache::window>()))
       .first->second;
 }
 
@@ -319,14 +320,13 @@ void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
   for(auto stageIt = childrenBegin(); stageIt != childrenEnd(); ++stageIt) {
     Stage& stage = (**stageIt);
     for(const auto& doMethodPtr : stage.getChildren()) {
-      const DoMethod& doMethod = *doMethodPtr;
+      DoMethod& doMethod = *doMethodPtr;
       renameAccessIDInStmts(&stencilInstantiation_, oldAccessID, newAccessID,
                             doMethod.getChildren());
       renameAccessIDInAccesses(&stencilInstantiation_, oldAccessID, newAccessID,
                                doMethod.getChildren());
+      doMethod.update(NodeUpdateType::levelAndTreeAbove);
     }
-
-    stage.update(NodeUpdateType::levelAndTreeAbove);
   }
 }
 

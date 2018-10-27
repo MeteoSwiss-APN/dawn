@@ -13,11 +13,11 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
+#include "dawn/IIR/Stencil.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/StatementMapper.h"
-#include "dawn/IIR/Stencil.h"
-#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
@@ -224,7 +224,8 @@ protected:
   unsigned int numTmpReplaced_ = 0;
 
   std::unordered_map<std::shared_ptr<FieldAccessExpr>,
-                     std::shared_ptr<iir::StencilFunctionInstantiation>> tmpToStencilFunctionMap_;
+                     std::shared_ptr<iir::StencilFunctionInstantiation>>
+      tmpToStencilFunctionMap_;
 
 public:
   TmpReplacement(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
@@ -474,7 +475,7 @@ bool PassTemporaryToStencilFunction::run(
 
               if(tmpReplacement.getNumTmpReplaced() != 0) {
 
-                iir::DoMethod tmpStmtDoMethod(interval);
+                iir::DoMethod tmpStmtDoMethod(interval, *stencilInstantiation);
 
                 StatementMapper statementMapper(
                     stencilInstantiation.get(), stmt->StackTrace, tmpStmtDoMethod, sirInterval,
@@ -491,6 +492,8 @@ bool PassTemporaryToStencilFunction::run(
                 computeAccesses(stencilInstantiation.get(), stmtPair);
 
                 doMethodPtr->replace(stmtAccessPair, stmtPair);
+                // CARTO
+                doMethodPtr->update(iir::NodeUpdateType::level);
               }
 
               // find patterns like tmp = fn(args)...;

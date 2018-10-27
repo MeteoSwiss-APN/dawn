@@ -15,9 +15,9 @@
 #include "dawn/Optimizer/PassStageMerger.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/DependencyGraphStage.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
-#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/FileUtil.h"
 
 namespace dawn {
@@ -129,6 +129,10 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
                   if(MergeStagesOfStencil) {
                     candidateStage.appendDoMethod(*curDoMethodIt, *candidateDoMethodIt,
                                                   newDepGraph);
+                    // CARTO
+                    for(auto& doMethod : candidateStage.getChildren()) {
+                      doMethod->update(iir::NodeUpdateType::level);
+                    }
                     candidateStage.update(iir::NodeUpdateType::level);
                     mergedDoMethod = true;
 
@@ -142,6 +146,10 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
               // Interval does not exists in `candidateStage`, just insert our DoMethod
               if(MergeDoMethodsOfStencil && MergeDoMethodsOfStage) {
                 candidateStage.addDoMethod(*curDoMethodIt);
+                // CARTO
+                for(auto& doMethod : candidateStage.getChildren()) {
+                  doMethod->update(iir::NodeUpdateType::level);
+                }
                 candidateStage.update(iir::NodeUpdateType::level);
                 mergedDoMethod = true;
                 break;
@@ -161,8 +169,14 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
             curDoMethodIt++;
         }
 
-        if(updateFields)
+        if(updateFields) {
+          // CARTO
+          for(auto& doMethod : curStage.getChildren()) {
+            doMethod->update(iir::NodeUpdateType::level);
+          }
+
           curStage.update(iir::NodeUpdateType::level);
+        }
         curStageIt++;
       }
 

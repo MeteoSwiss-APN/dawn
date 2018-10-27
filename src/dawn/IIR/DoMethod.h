@@ -15,6 +15,7 @@
 #ifndef DAWN_IIR_DOMETHOD_H
 #define DAWN_IIR_DOMETHOD_H
 
+#include "dawn/IIR/Field.h"
 #include "dawn/IIR/IIRNode.h"
 #include "dawn/IIR/Interval.h"
 #include <boost/optional.hpp>
@@ -27,6 +28,7 @@ namespace iir {
 class Stage;
 class DependencyGraphAccesses;
 class StatementAccessesPair;
+class StencilInstantiation;
 
 /// @brief A Do-method is a collection of Statements with corresponding Accesses of a specific
 /// vertical region
@@ -43,9 +45,14 @@ class DoMethod : public IIRNode<Stage, DoMethod, StatementAccessesPair> {
     DerivedInfo& operator=(DerivedInfo&&) = default;
     DerivedInfo& operator=(const DerivedInfo&) = default;
 
+    void clear();
+
+    /// Declaration of the fields of this doMethod
+    std::unordered_map<int, Field> fields_;
     std::shared_ptr<DependencyGraphAccesses> dependencyGraph_;
   };
 
+  StencilInstantiation& stencilInstantiation_;
   DerivedInfo derivedInfo_;
 
 public:
@@ -55,7 +62,7 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
-  DoMethod(Interval interval);
+  DoMethod(Interval interval, StencilInstantiation& context);
   DoMethod(DoMethod&&) = default;
   DoMethod& operator=(DoMethod&&) = default;
   /// @}
@@ -94,6 +101,18 @@ public:
   /// mergeWithDoInterval is true
   boost::optional<Interval> computeEnclosingAccessInterval(const int accessID,
                                                            const bool mergeWithDoInterval) const;
+
+  /// @brief Get fields of this stage sorted according their Intend: `Output` -> `IntputOutput` ->
+  /// `Input`
+  ///
+  /// The fields are computed during `DoMethod::update`.
+  const std::unordered_map<int, Field>& getFields() const { return derivedInfo_.fields_; }
+
+  /// @brief Update the fields and global variables
+  ///
+  /// This recomputes the fields referenced in this Do-Method and computes
+  /// the @b accumulated extent of each field
+  virtual void updateLevel() override;
 
   /// @brief update the derived info from the children (currently no information are propagated,
   /// therefore the method is empty

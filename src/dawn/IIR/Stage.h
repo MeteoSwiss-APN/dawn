@@ -90,6 +90,8 @@ public:
 
   std::unique_ptr<Stage> clone() const;
 
+  virtual void updateFromChildren() override;
+
   /// @brief Check if the stage contains of a single Do-Method
   bool hasSingleDoMethod() const;
 
@@ -208,8 +210,6 @@ public:
   /// @brief get the flag that specifies that the stage will require an explicit sync before
   /// execution
   bool getRequiresSync() const;
-
-  inline virtual void updateFromChildren() override {}
 };
 
 } // namespace iir

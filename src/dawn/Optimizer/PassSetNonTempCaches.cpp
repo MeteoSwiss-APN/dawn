@@ -14,12 +14,12 @@
 
 #include "dawn/Optimizer/PassSetNonTempCaches.h"
 #include "dawn/IIR/Cache.h"
+#include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassSetCaches.h"
-#include "dawn/IIR/StatementAccessesPair.h"
-#include "dawn/IIR/IIRNodeIterator.h"
-#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/ASTExpr.h"
 #include "dawn/Support/Unreachable.h"
 #include <iostream>
@@ -186,7 +186,7 @@ private:
     // Add the cache Flush stage
     std::unique_ptr<iir::Stage> assignmentStage =
         make_unique<iir::Stage>(*instantiation_, instantiation_->nextUID(), interval);
-    iir::Stage::DoMethodSmartPtr_t domethod = make_unique<iir::DoMethod>(interval);
+    iir::Stage::DoMethodSmartPtr_t domethod = make_unique<iir::DoMethod>(interval, *instantiation_);
     domethod->clearChildren();
 
     for(int i = 0; i < assignmentIDs.size(); ++i) {
@@ -198,6 +198,9 @@ private:
     // Add the single do method to the new Stage
     assignmentStage->clearChildren();
     assignmentStage->addDoMethod(domethod);
+    for(auto& doMethod : assignmentStage->getChildren()) {
+      doMethod->update(iir::NodeUpdateType::level);
+    }
     assignmentStage->update(iir::NodeUpdateType::level);
 
     return assignmentStage;

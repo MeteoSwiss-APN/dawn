@@ -529,6 +529,8 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
           std::advance(stmtAccIt, newStmtAccList.size() - 1);
         }
       }
+      // CARTO
+      doMethod->update(iir::NodeUpdateType::level);
     }
 
     stage.update(iir::NodeUpdateType::level);
