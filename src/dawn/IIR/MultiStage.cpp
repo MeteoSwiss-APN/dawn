@@ -325,8 +325,9 @@ void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
                             doMethod.getChildren());
       renameAccessIDInAccesses(&stencilInstantiation_, oldAccessID, newAccessID,
                                doMethod.getChildren());
-      doMethod.update(NodeUpdateType::levelAndTreeAbove);
+      doMethod.update(NodeUpdateType::level);
     }
+    stage.update(NodeUpdateType::levelAndTreeAbove);
   }
 }
 
