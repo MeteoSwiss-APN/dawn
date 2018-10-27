@@ -58,13 +58,19 @@ static std::string makeKLoop(const std::string dom, const std::array<unsigned in
   std::string lower = makeIntervalBound(dom, interval, iir::Interval::Bound::lower);
   std::string upper = makeIntervalBound(dom, interval, iir::Interval::Bound::upper);
 
+  std::string str;
   if(kParallel) {
-    lower = "max(" + lower + ",blockIdx.z*" + std::to_string(blockSize[2]) + ")";
-    upper = "min(" + upper + ",(blockIdx.z+1)*" + std::to_string(blockSize[2]) + "-1)";
+    str += "int kleg_lower_bound = max(" + lower + ",blockIdx.z*" + std::to_string(blockSize[2]) +
+           ")\n";
+    str += "int kleg_upper_bound = min(" + upper + ",(blockIdx.z+1)*" +
+           std::to_string(blockSize[2]) + "-1)\n";
+
+    lower = "kleg_lower_bound";
+    upper = "kleg_upper_bound";
   }
-  return (loopOrder == iir::LoopOrderKind::LK_Backward)
-             ? makeLoopImpl(iir::Extent{}, "k", upper, lower, ">=", "--")
-             : makeLoopImpl(iir::Extent{}, "k", lower, upper, "<=", "++");
+  return str += (loopOrder == iir::LoopOrderKind::LK_Backward)
+                    ? makeLoopImpl(iir::Extent{}, "k", upper, lower, ">=", "--")
+                    : makeLoopImpl(iir::Extent{}, "k", lower, upper, "<=", "++");
 }
 
 CudaCodeGen::CudaCodeGen(OptimizerContext* context) : CodeGen(context) {}
@@ -402,6 +408,8 @@ void CudaCodeGen::generateCudaKernelCode(
     // for each interval, we generate naive nested loops
     cudaKernel.addBlockStatement(
         makeKLoop("dom", blockSize, ms->getLoopOrder(), interval, solveKLoopInParallel_), [&]() {
+          generatePreFillKCaches(cudaKernel, ms, interval, cacheProperties, fieldIndexMap,
+                                 stencilInstantiation);
           generateFillKCaches(cudaKernel, ms, interval, cacheProperties, fieldIndexMap,
                               stencilInstantiation);
 
@@ -474,6 +482,7 @@ void CudaCodeGen::generateFillKCaches(
     const iir::Interval& interval, const CacheProperties& cacheProperties,
     const std::unordered_map<int, Array3i>& fieldIndexMap,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const {
+  cudaKernel.addComment("Center fill of kcaches");
   for(const auto& cachePair : ms->getCaches()) {
     const int accessID = cachePair.first;
     const auto& cache = cachePair.second;
@@ -482,14 +491,60 @@ void CudaCodeGen::generateFillKCaches(
     DAWN_ASSERT(cache.getInterval().is_initialized());
     const auto cacheInterval = *(cache.getInterval());
     auto vertExtent = cacheProperties.getKCacheVertExtent(accessID);
-    if(cacheInterval.overlaps(interval)) {
+    const auto cacheFieldAccessedInterval = cacheInterval.extendInterval(vertExtent);
+
+    iir::Interval::Bound intervalBound = (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+                                             ? iir::Interval::Bound::lower
+                                             : iir::Interval::Bound::upper;
+
+    const bool cacheEndWithinInterval =
+        (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+            ? interval.bound(intervalBound) >= cacheFieldAccessedInterval.bound(intervalBound)
+            : interval.bound(intervalBound) <= cacheFieldAccessedInterval.bound(intervalBound);
+    std::cout << " IO " << static_cast<int>(intervalBound) << " " << interval.bound(intervalBound)
+              << " " << cacheFieldAccessedInterval.bound(intervalBound) << std::endl;
+
+    if(cacheInterval.overlaps(interval) && cacheEndWithinInterval) {
       auto cacheName = cacheProperties.getCacheName(accessID);
       std::stringstream ss;
       CodeGeneratorHelper::generateFieldAccessDeref(ss, ms, stencilInstantiation, accessID,
-                                                    fieldIndexMap, Array3i{0, 0, 0});
+                                                    fieldIndexMap, Array3i{0, 0, vertExtent.Plus});
       cudaKernel.addStatement(cacheName + "[" + std::to_string(cacheProperties.getKCacheIndex(
                                                     accessID, vertExtent.Plus)) +
                               "] =" + ss.str());
+    }
+  }
+}
+
+void CudaCodeGen::generatePreFillKCaches(
+    MemberFunction& cudaKernel, const std::unique_ptr<iir::MultiStage>& ms,
+    const iir::Interval& interval, const CacheProperties& cacheProperties,
+    const std::unordered_map<int, Array3i>& fieldIndexMap,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const {
+  cudaKernel.addComment("Pre-fill of kcaches");
+  for(const auto& cachePair : ms->getCaches()) {
+    const int accessID = cachePair.first;
+    const auto& cache = cachePair.second;
+    if(!CacheProperties::requiresFill(cache))
+      continue;
+    DAWN_ASSERT(cache.getInterval().is_initialized());
+    const auto cacheInterval = *(cache.getInterval());
+    auto vertExtent = cacheProperties.getKCacheVertExtent(accessID);
+
+    iir::Interval::Bound intervalBound = (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+                                             ? iir::Interval::Bound::upper
+                                             : iir::Interval::Bound::lower;
+
+    if(cacheInterval.bound(intervalBound) == (interval.bound(intervalBound))) {
+      auto cacheName = cacheProperties.getCacheName(accessID);
+      for(int klev = vertExtent.Plus - 1; klev >= 0; --klev) {
+        std::stringstream ss;
+        CodeGeneratorHelper::generateFieldAccessDeref(ss, ms, stencilInstantiation, accessID,
+                                                      fieldIndexMap, Array3i{0, 0, klev});
+        cudaKernel.addStatement(cacheName + "[" +
+                                std::to_string(cacheProperties.getKCacheIndex(accessID, klev)) +
+                                "] =" + ss.str());
+      }
     }
   }
 }
@@ -498,6 +553,7 @@ void CudaCodeGen::generateKCacheSlide(MemberFunction& cudaKernel,
                                       const CacheProperties& cacheProperties,
                                       const std::unique_ptr<iir::MultiStage>& ms,
                                       const iir::Interval& interval) const {
+  cudaKernel.addComment("Slide kcaches");
   for(const auto& cachePair : ms->getCaches()) {
     const auto& cache = cachePair.second;
     if(!cacheProperties.isKCached(cache))

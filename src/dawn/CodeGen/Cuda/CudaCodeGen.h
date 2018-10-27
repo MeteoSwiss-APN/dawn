@@ -153,6 +153,12 @@ private:
                       const std::unordered_map<int, Array3i>& fieldIndexMap,
                       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
 
+  void generatePreFillKCaches(
+      MemberFunction& cudaKernel, const std::unique_ptr<iir::MultiStage>& ms,
+      const iir::Interval& interval, const CacheProperties& cacheProperties,
+      const std::unordered_map<int, Array3i>& fieldIndexMap,
+      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
+
   std::string intervalDiffToString(iir::IntervalDiff intervalDiff, std::string maxRange) const;
 
   iir::Interval::IntervalLevel computeNextLevelToProcess(const iir::Interval& interval,
