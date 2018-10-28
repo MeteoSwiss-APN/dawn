@@ -13,13 +13,13 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/Optimizer/Replacing.h"
-#include "dawn/IIR/StatementAccessesPair.h"
-#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/Optimizer/StatementMapper.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTUtil.h"
@@ -385,6 +385,7 @@ public:
     computeAccesses(instantiation_, doMethod.getChildren());
 
     // Now, we compute the fields of each stage (this will give us the IO-Policy of the fields)
+    doMethod.update(iir::NodeUpdateType::level);
     stage->update(iir::NodeUpdateType::level);
 
     // Put the stage into a separate MultiStage ...
@@ -689,9 +690,9 @@ void StencilInstantiation::removeAccessID(int AccessID) {
 
   if(variableVersions_.hasVariableMultipleVersions(AccessID)) {
     auto versions = variableVersions_.getVersions(AccessID);
-    versions->erase(std::remove_if(versions->begin(), versions->end(), [&](int AID) {
-                      return AID == AccessID;
-                    }), versions->end());
+    versions->erase(std::remove_if(versions->begin(), versions->end(),
+                                   [&](int AID) { return AID == AccessID; }),
+                    versions->end());
   }
 }
 
@@ -870,7 +871,8 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
       renameAccessIDInAccesses(this, AccessID, newAccessID, doMethod.getChildren());
     }
 
-    // Updat the fields of the stage
+    // Update the fields of the doMethod and stage levels
+    doMethod.update(iir::NodeUpdateType::level);
     stage.update(iir::NodeUpdateType::level);
   }
 
@@ -1150,9 +1152,8 @@ void StencilInstantiation::deregisterStencilFunction(
 
   bool found = RemoveIf(ExprToStencilFunctionInstantiationMap_,
                         [&](std::pair<std::shared_ptr<StencilFunCallExpr>,
-                                      std::shared_ptr<StencilFunctionInstantiation>> pair) {
-                          return (pair.second == stencilFun);
-                        });
+                                      std::shared_ptr<StencilFunctionInstantiation>>
+                                pair) { return (pair.second == stencilFun); });
   // make sure the element existed and was removed
   DAWN_ASSERT(found);
   found = RemoveIf(
