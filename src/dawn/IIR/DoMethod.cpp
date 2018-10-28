@@ -90,11 +90,13 @@ const std::shared_ptr<DependencyGraphAccesses>& DoMethod::getDependencyGraph() c
   return derivedInfo_.dependencyGraph_;
 }
 
-void DoMethod::DerivedInfo::clear() { fields_.clear(); }
+void DoMethod::DerivedInfo::clear() {
+  fields_.clear();
+}
+
+void DoMethod::clearDerivedInfo() { derivedInfo_.clear(); }
 
 void DoMethod::updateLevel() {
-
-  derivedInfo_.clear();
 
   // Compute the fields and their intended usage. Fields can be in one of three states: `Output`,
   // `InputOutput` or `Input` which implements the following state machine:

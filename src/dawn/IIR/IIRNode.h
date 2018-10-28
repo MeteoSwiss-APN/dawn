@@ -15,16 +15,16 @@
 #ifndef DAWN_IIR_IIRNODE_H
 #define DAWN_IIR_IIRNODE_H
 
+#include "dawn/IIR/NodeUpdateType.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Unreachable.h"
-#include "dawn/IIR/NodeUpdateType.h"
-#include <vector>
-#include <memory>
-#include <type_traits>
 #include <algorithm>
 #include <iostream>
-#include <list>
 #include <iterator>
+#include <list>
+#include <memory>
+#include <type_traits>
+#include <vector>
 
 #ifndef PROTECT_TEMPLATE
 #define PROTECT_TEMPLATE(TEMP, TYPE)                                                               \
@@ -362,17 +362,38 @@ public:
     }
   }
 
+  /// @brief update recursively (propagating to the top of the tree) the derived info of this node
+  template <typename TNodeType>
+  inline void clearDerivedInfoRec(
+      typename std::enable_if<std::is_void<typename TNodeType::ParentType>::value>::type* = 0) {
+    clearDerivedInfo();
+  }
+
+  /// @brief update recursively (propagating to the top of the tree) the derived info of this node
+  template <typename TNodeType>
+  inline void clearDerivedInfoRec(
+      typename std::enable_if<!std::is_void<typename TNodeType::ParentType>::value>::type* = 0) {
+
+    auto parentPtr = getParentPtr();
+    if(parentPtr) {
+      (*parentPtr)->clearDerivedInfo();
+      (*parentPtr)->template clearDerivedInfoRec<typename TNodeType::ParentType>();
+    }
+  }
+
   /// @brief update the derived info of the node
   /// @param updateType determines if the update should be applied to this tree level (only) or
   /// propagate it to the top or bottom of the tree
   void update(NodeUpdateType updateType) {
     if(impl::updateLevel(updateType)) {
+      clearDerivedInfo();
       static_cast<NodeType*>(this)->updateLevel();
       if(!impl::updateTreeAbove(updateType)) {
         updateFromChildren();
       }
     }
     if(impl::updateTreeAbove(updateType)) {
+      clearDerivedInfoRec<NodeType>();
       updateFromChildrenRec<NodeType>();
     }
     if(impl::updateTreeBelow(updateType)) {
@@ -381,6 +402,7 @@ public:
   }
 
   virtual void updateLevel() {}
+  virtual void clearDerivedInfo() {}
 
 private:
   /// @brief fix the tree structure after the erase of a child

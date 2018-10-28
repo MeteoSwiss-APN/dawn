@@ -141,6 +141,10 @@ Stencil::Stencil(StencilInstantiation& stencilInstantiation,
                  const std::shared_ptr<sir::Stencil>& SIRStencil, int StencilID)
     : stencilInstantiation_(stencilInstantiation), SIRStencil_(SIRStencil), StencilID_(StencilID) {}
 
+void Stencil::DerivedInfo::clear() { fields_.clear(); }
+
+void Stencil::clearDerivedInfo() { derivedInfo_.clear(); }
+
 std::unordered_set<Interval> Stencil::getIntervals() const {
   std::unordered_set<Interval> intervals;
 

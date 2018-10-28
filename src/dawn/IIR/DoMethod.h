@@ -85,6 +85,8 @@ public:
   void setDependencyGraph(const std::shared_ptr<DependencyGraphAccesses>& DG);
   /// @}
 
+  virtual void clearDerivedInfo() override;
+
   /// @brief computes the maximum extent among all the accesses of accessID
   boost::optional<Extents> computeMaximumExtents(const int accessID) const;
 

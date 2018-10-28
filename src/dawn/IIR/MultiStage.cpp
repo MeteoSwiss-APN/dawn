@@ -296,10 +296,13 @@ std::unordered_map<int, Field> MultiStage::computeFieldsOnTheFly() const {
   return fields;
 }
 
+void MultiStage::DerivedInfo::clear() { fields_.clear(); }
+
+void MultiStage::clearDerivedInfo() { derivedInfo_.clear(); }
+
 const std::unordered_map<int, Field>& MultiStage::getFields() const { return derivedInfo_.fields_; }
 
 void MultiStage::updateFromChildren() {
-  derivedInfo_.fields_.clear();
   for(const auto& stagePtr : children_) {
     mergeFields(stagePtr->getFields(), derivedInfo_.fields_,
                 boost::make_optional(stagePtr->getExtents()));

@@ -92,6 +92,10 @@ public:
 
   virtual void updateFromChildren() override;
 
+  void updateGlobalVariablesInfo();
+
+  virtual void clearDerivedInfo() override;
+
   /// @brief Check if the stage contains of a single Do-Method
   bool hasSingleDoMethod() const;
 

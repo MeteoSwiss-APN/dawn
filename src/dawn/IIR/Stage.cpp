@@ -111,6 +111,7 @@ void Stage::DerivedInfo::clear() {
   allGlobalVariables_.clear();
 }
 
+void Stage::clearDerivedInfo() { derivedInfo_.clear(); }
 bool Stage::overlaps(const Stage& other) const {
   // This is a more conservative test.. if it fails we are certain nothing overlaps
   if(!getEnclosingExtendedInterval().overlaps(other.getEnclosingExtendedInterval()))
@@ -177,10 +178,9 @@ public:
   }
 };
 
-void Stage::updateLevel() {
+void Stage::updateLevel() { updateGlobalVariablesInfo(); }
 
-  derivedInfo_.clear();
-
+void Stage::updateGlobalVariablesInfo() {
   CaptureStencilFunctionCallGlobalParams functionCallGlobaParamVisitor(
       derivedInfo_.globalVariablesFromStencilFunctionCalls_, stencilInstantiation_);
 
@@ -217,7 +217,6 @@ void Stage::updateLevel() {
       derivedInfo_.globalVariablesFromStencilFunctionCalls_.begin(),
       derivedInfo_.globalVariablesFromStencilFunctionCalls_.end());
 }
-
 bool Stage::hasGlobalVariables() const {
   return (!derivedInfo_.globalVariables_.empty()) ||
          (!derivedInfo_.globalVariablesFromStencilFunctionCalls_.empty());
@@ -301,6 +300,8 @@ Stage::split(std::deque<int>& splitterIndices,
 }
 
 void Stage::updateFromChildren() {
+  updateGlobalVariablesInfo();
+
   for(const auto& doMethod : children_) {
     mergeFields(doMethod->getFields(), derivedInfo_.fields_, boost::optional<Extents>());
   }
