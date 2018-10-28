@@ -137,7 +137,6 @@ bool PassFieldVersioning::run(
             newGraph = oldGraph;
             newGraph->insertStatementAccessesPair(stmtAccessesPair);
           }
-          // CARTO
           doMethod.update(iir::NodeUpdateType::level);
         }
         stage.update(iir::NodeUpdateType::level);

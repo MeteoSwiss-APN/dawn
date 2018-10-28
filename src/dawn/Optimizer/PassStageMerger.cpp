@@ -129,7 +129,6 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
                   if(MergeStagesOfStencil) {
                     candidateStage.appendDoMethod(*curDoMethodIt, *candidateDoMethodIt,
                                                   newDepGraph);
-                    // CARTO
                     for(auto& doMethod : candidateStage.getChildren()) {
                       doMethod->update(iir::NodeUpdateType::level);
                     }
@@ -170,7 +169,6 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
         }
 
         if(updateFields) {
-          // CARTO
           for(auto& doMethod : curStage.getChildren()) {
             doMethod->update(iir::NodeUpdateType::level);
           }

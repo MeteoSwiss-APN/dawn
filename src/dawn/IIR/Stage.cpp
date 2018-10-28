@@ -290,7 +290,6 @@ Stage::split(std::deque<int>& splitterIndices,
 
     // Update the fields of the new doMethod
     doMethod.update(NodeUpdateType::level);
-    // CARTO
     newStage.update(NodeUpdateType::level);
 
     prevSplitterIndex = nextSplitterIndex;

@@ -258,6 +258,7 @@ public:
   /// @param useExtendedInterval    Merge the extended intervals
   Interval getAxis(bool useExtendedInterval = true) const;
 
+  /// @brief clear the derived info
   virtual void clearDerivedInfo() override;
 
   /// @brief Rename all occurences of field `oldAccessID` to `newAccessID`

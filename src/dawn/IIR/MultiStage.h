@@ -88,6 +88,7 @@ public:
   int getID() const { return id_; }
   /// @}
 
+  /// @brief clear the derived info
   virtual void clearDerivedInfo() override;
 
   std::vector<std::unique_ptr<DoMethod>> computeOrderedDoMethods() const;

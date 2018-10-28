@@ -362,14 +362,14 @@ public:
     }
   }
 
-  /// @brief update recursively (propagating to the top of the tree) the derived info of this node
+  /// @brief clear the derived info recursively (propagating to the top of the tree)
   template <typename TNodeType>
   inline void clearDerivedInfoRec(
       typename std::enable_if<std::is_void<typename TNodeType::ParentType>::value>::type* = 0) {
     clearDerivedInfo();
   }
 
-  /// @brief update recursively (propagating to the top of the tree) the derived info of this node
+  /// @brief clear the derived info recursively (propagating to the top of the tree)
   template <typename TNodeType>
   inline void clearDerivedInfoRec(
       typename std::enable_if<!std::is_void<typename TNodeType::ParentType>::value>::type* = 0) {

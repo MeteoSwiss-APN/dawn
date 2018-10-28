@@ -204,12 +204,11 @@ void Stencil::forEachStatementAccessesPairImpl(
     for(const auto& doMethodPtr : stage->getChildren()) {
       func(doMethodPtr->getChildren());
       if(updateFields) {
-        // CARTO
         doMethodPtr->update(iir::NodeUpdateType::level);
       }
-
-      if(updateFields)
-        stage->update(iir::NodeUpdateType::level);
+    }
+    if(updateFields) {
+      stage->update(iir::NodeUpdateType::level);
     }
   }
 }

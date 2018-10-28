@@ -492,7 +492,6 @@ bool PassTemporaryToStencilFunction::run(
                 computeAccesses(stencilInstantiation.get(), stmtPair);
 
                 doMethodPtr->replace(stmtAccessPair, stmtPair);
-                // CARTO
                 doMethodPtr->update(iir::NodeUpdateType::level);
               }
 

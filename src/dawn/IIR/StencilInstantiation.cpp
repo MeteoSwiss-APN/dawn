@@ -385,7 +385,6 @@ public:
     computeAccesses(instantiation_, doMethod.getChildren());
 
     // Now, we compute the fields of each stage (this will give us the IO-Policy of the fields)
-    // CARTO
     doMethod.update(iir::NodeUpdateType::level);
     stage->update(iir::NodeUpdateType::level);
 
@@ -872,9 +871,8 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
       renameAccessIDInAccesses(this, AccessID, newAccessID, doMethod.getChildren());
     }
 
-    // CARTO
+    // Update the fields of the doMethod and stage levels
     doMethod.update(iir::NodeUpdateType::level);
-    // Updat the fields of the stage
     stage.update(iir::NodeUpdateType::level);
   }
 
