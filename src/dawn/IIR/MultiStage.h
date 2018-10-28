@@ -16,10 +16,10 @@
 #define DAWN_IIR_MULTISTAGE_H
 
 #include "dawn/IIR/Cache.h"
-#include "dawn/IIR/MultiInterval.h"
-#include "dawn/IIR/LoopOrder.h"
-#include "dawn/IIR/Stage.h"
 #include "dawn/IIR/IIRNode.h"
+#include "dawn/IIR/LoopOrder.h"
+#include "dawn/IIR/MultiInterval.h"
+#include "dawn/IIR/Stage.h"
 #include <deque>
 #include <list>
 #include <memory>
@@ -53,6 +53,7 @@ class MultiStage : public IIRNode<Stencil, MultiStage, Stage, impl::StdList> {
 
   struct DerivedInfo {
     std::unordered_map<int, Field> fields_;
+    void clear();
   };
 
   DerivedInfo derivedInfo_;
@@ -86,6 +87,9 @@ public:
 
   int getID() const { return id_; }
   /// @}
+
+  /// @brief clear the derived info
+  virtual void clearDerivedInfo() override;
 
   std::vector<std::unique_ptr<DoMethod>> computeOrderedDoMethods() const;
 

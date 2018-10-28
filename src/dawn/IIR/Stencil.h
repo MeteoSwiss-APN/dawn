@@ -63,6 +63,8 @@ private:
     std::shared_ptr<DependencyGraphStage> stageDependencyGraph_;
     /// field info properties
     std::unordered_map<int, FieldInfo> fields_;
+
+    void clear();
   };
 
   DerivedInfo derivedInfo_;
@@ -255,6 +257,9 @@ public:
   ///
   /// @param useExtendedInterval    Merge the extended intervals
   Interval getAxis(bool useExtendedInterval = true) const;
+
+  /// @brief clear the derived info
+  virtual void clearDerivedInfo() override;
 
   /// @brief Rename all occurences of field `oldAccessID` to `newAccessID`
   void renameAllOccurrences(int oldAccessID, int newAccessID);

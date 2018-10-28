@@ -45,9 +45,7 @@ void mergeFields(std::unordered_map<int, Field> const& sourceFields,
     auto it = destinationFields.find(sField.getAccessID());
     if(it != destinationFields.end()) {
       // Adjust the Intend
-      if(it->second.getIntend() == Field::IK_Input && sField.getIntend() == Field::IK_Output)
-        it->second.setIntend(Field::IK_InputOutput);
-      else if(it->second.getIntend() == Field::IK_Output && sField.getIntend() == Field::IK_Input)
+      if(it->second.getIntend() != sField.getIntend())
         it->second.setIntend(Field::IK_InputOutput);
 
       // field accounting for extents of the accesses plus the base extent (i.e. normally redundant

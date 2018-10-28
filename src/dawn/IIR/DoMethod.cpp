@@ -12,26 +12,31 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/IIR/IIR.h"
-#include "dawn/IIR/Stencil.h"
-#include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/DoMethod.h"
-#include "dawn/IIR/Stage.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
+#include "dawn/IIR/IIR.h"
+#include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/MultiStage.h"
+#include "dawn/IIR/Stage.h"
 #include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/Stencil.h"
+#include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/AccessUtils.h"
 #include "dawn/SIR/Statement.h"
-#include <boost/optional.hpp>
 #include "dawn/Support/IndexGenerator.h"
+#include "dawn/Support/Logging.h"
+#include <boost/optional.hpp>
 
 namespace dawn {
 namespace iir {
 
-DoMethod::DoMethod(Interval interval)
-    : interval_(interval), id_(IndexGenerator::Instance().getIndex()) {}
+DoMethod::DoMethod(Interval interval, StencilInstantiation& stencilInstantiation)
+    : interval_(interval), id_(IndexGenerator::Instance().getIndex()),
+      stencilInstantiation_(stencilInstantiation) {}
 
 std::unique_ptr<DoMethod> DoMethod::clone() const {
-  auto cloneMS = make_unique<DoMethod>(interval_);
+  auto cloneMS = make_unique<DoMethod>(interval_, stencilInstantiation_);
 
   cloneMS->setID(id_);
   cloneMS->setDependencyGraph(derivedInfo_.dependencyGraph_);
@@ -83,6 +88,91 @@ void DoMethod::setInterval(const Interval& interval) { interval_ = interval; }
 
 const std::shared_ptr<DependencyGraphAccesses>& DoMethod::getDependencyGraph() const {
   return derivedInfo_.dependencyGraph_;
+}
+
+void DoMethod::DerivedInfo::clear() {
+  fields_.clear();
+}
+
+void DoMethod::clearDerivedInfo() { derivedInfo_.clear(); }
+
+void DoMethod::updateLevel() {
+
+  // Compute the fields and their intended usage. Fields can be in one of three states: `Output`,
+  // `InputOutput` or `Input` which implements the following state machine:
+  //
+  //    +-------+                               +--------+
+  //    | Input |                               | Output |
+  //    +-------+                               +--------+
+  //        |                                       |
+  //        |            +-------------+            |
+  //        +----------> | InputOutput | <----------+
+  //                     +-------------+
+  //
+  std::unordered_map<int, Field> inputOutputFields;
+  std::unordered_map<int, Field> inputFields;
+  std::unordered_map<int, Field> outputFields;
+
+  for(const auto& statementAccessesPair : children_) {
+    const auto& access = statementAccessesPair->getAccesses();
+    DAWN_ASSERT(access);
+
+    for(const auto& accessPair : access->getWriteAccesses()) {
+      int AccessID = accessPair.first;
+      Extents const& extents = accessPair.second;
+
+      // Does this AccessID correspond to a field access?
+      if(!stencilInstantiation_.isField(AccessID)) {
+        continue;
+      }
+      AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
+                                     extents, getInterval());
+    }
+
+    for(const auto& accessPair : access->getReadAccesses()) {
+      int AccessID = accessPair.first;
+      Extents const& extents = accessPair.second;
+
+      // Does this AccessID correspond to a field access?
+      if(!stencilInstantiation_.isField(AccessID)) {
+        continue;
+      }
+
+      AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID, extents,
+                                    getInterval());
+    }
+  }
+
+  // Merge inputFields, outputFields and fields
+  derivedInfo_.fields_.insert(outputFields.begin(), outputFields.end());
+  derivedInfo_.fields_.insert(inputOutputFields.begin(), inputOutputFields.end());
+  derivedInfo_.fields_.insert(inputFields.begin(), inputFields.end());
+
+  if(derivedInfo_.fields_.empty()) {
+    DAWN_LOG(WARNING) << "no fields referenced in stage";
+    return;
+  }
+
+  // Compute the extents of each field by accumulating the extents of each access to field in the
+  // stage
+  for(const auto& statementAccessesPair : iterateIIROver<StatementAccessesPair>(*this)) {
+    const auto& access = statementAccessesPair->getAccesses();
+
+    // first => AccessID, second => Extent
+    for(auto& accessPair : access->getWriteAccesses()) {
+      if(!stencilInstantiation_.isField(accessPair.first))
+        continue;
+
+      derivedInfo_.fields_.at(accessPair.first).mergeWriteExtents(accessPair.second);
+    }
+
+    for(const auto& accessPair : access->getReadAccesses()) {
+      if(!stencilInstantiation_.isField(accessPair.first))
+        continue;
+
+      derivedInfo_.fields_.at(accessPair.first).mergeReadExtents(accessPair.second);
+    }
+  }
 }
 
 class CheckNonNullStatementVisitor : public ASTVisitorForwarding, public NonCopyable {
