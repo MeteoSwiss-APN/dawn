@@ -40,6 +40,7 @@ namespace cuda {
 class CudaCodeGen : public CodeGen {
 
   enum class FunctionArgType { caller, callee };
+  std::unordered_map<int, CacheProperties> cachePropertyMap_;
 
 public:
   ///@brief constructor
@@ -67,15 +68,13 @@ private:
                          const CacheProperties& cacheProperties);
   void
   generateAllCudaKernels(std::stringstream& ssSW,
-                         const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-                         const std::unordered_map<int, CacheProperties>& cachePropertyMap);
+                         const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
 
   void
   generateStencilRunMethod(Structure& stencilClass, const iir::Stencil& stencil,
                            const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                            const std::unordered_map<std::string, std::string>& paramNameToType,
-                           const sir::GlobalVariableMap& globalsMap,
-                           const std::unordered_map<int, CacheProperties>& cachePropertyMap) const;
+                           const sir::GlobalVariableMap& globalsMap) const;
 
   std::vector<std::string> generateStrideArguments(
       const IndexRange<const std::unordered_map<int, iir::Field>>& nonTempFields,
@@ -85,8 +84,7 @@ private:
 
   void
   generateStencilClasses(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-                         Class& stencilWrapperClass, CodeGenProperties& codeGenProperties,
-                         const std::unordered_map<int, CacheProperties>& cachePropertyMap) const;
+                         Class& stencilWrapperClass, CodeGenProperties& codeGenProperties) const;
   void
   generateStencilWrapperCtr(Class& stencilWrapperClass,
                             const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
@@ -129,9 +127,8 @@ private:
                            const iir::MultiStage& ms, const CacheProperties& cacheProperties,
                            Array3ui blockSize) const;
 
-  void generateKCacheDecl(MemberFunction& kernel,
-                          const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-                          const iir::MultiStage& ms, const CacheProperties& cacheProperties) const;
+  void generateKCacheDecl(MemberFunction& kernel, const iir::MultiStage& ms,
+                          const CacheProperties& cacheProperties) const;
 
   void generateIJCacheIndexInit(MemberFunction& kernel, const CacheProperties& cacheProperties,
                                 const Array3ui blockSize) const;

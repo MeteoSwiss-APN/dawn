@@ -27,12 +27,12 @@
 namespace dawn {
 namespace iir {
 
-Stage::Stage(StencilInstantiation& context, int StageID)
-    : stencilInstantiation_(context), StageID_(StageID) {}
+Stage::Stage(StencilInstantiation& stencilInstantiation, int StageID)
+    : stencilInstantiation_(stencilInstantiation), StageID_(StageID) {}
 
-Stage::Stage(StencilInstantiation& context, int StageID, const Interval& interval)
-    : stencilInstantiation_(context), StageID_(StageID) {
-  insertChild(make_unique<DoMethod>(interval, context));
+Stage::Stage(StencilInstantiation& stencilInstantiation, int StageID, const Interval& interval)
+    : stencilInstantiation_(stencilInstantiation), StageID_(StageID) {
+  insertChild(make_unique<DoMethod>(interval, stencilInstantiation));
 }
 
 std::unique_ptr<Stage> Stage::clone() const {
