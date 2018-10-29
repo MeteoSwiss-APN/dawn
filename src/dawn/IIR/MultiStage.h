@@ -16,10 +16,10 @@
 #define DAWN_IIR_MULTISTAGE_H
 
 #include "dawn/IIR/Cache.h"
-#include "dawn/IIR/MultiInterval.h"
-#include "dawn/IIR/LoopOrder.h"
-#include "dawn/IIR/Stage.h"
 #include "dawn/IIR/IIRNode.h"
+#include "dawn/IIR/LoopOrder.h"
+#include "dawn/IIR/MultiInterval.h"
+#include "dawn/IIR/Stage.h"
 #include <deque>
 #include <list>
 #include <memory>
@@ -49,15 +49,18 @@ class MultiStage : public IIRNode<Stencil, MultiStage, Stage, impl::StdList> {
   StencilInstantiation& stencilInstantiation_;
 
   LoopOrderKind loopOrder_;
-  std::unordered_map<int, iir::Cache> caches_;
+
+  int id_;
 
   struct DerivedInfo {
+    ///@brrief filled by PassSetCaches and PassSetNonTempCaches
+    std::unordered_map<int, iir::Cache> caches_;
+
     std::unordered_map<int, Field> fields_;
   };
 
   DerivedInfo derivedInfo_;
 
-  int id_;
 
 public:
   static constexpr const char* name = "MultiStage";
@@ -135,7 +138,7 @@ public:
                                                            const bool mergeWithDoInterval) const;
 
   /// @brief Is the field given by the `AccessID` cached?
-  bool isCached(int AccessID) const { return caches_.count(AccessID); }
+  bool isCached(int AccessID) const { return derivedInfo_.caches_.count(AccessID); }
 
   /// @brief Get the intervals of the multi-stage
   std::unordered_set<Interval> getIntervals() const;
@@ -157,8 +160,8 @@ public:
 
   /// @brief Get the caches
   /// //TODO remove this non const getter
-  std::unordered_map<int, iir::Cache>& getCaches() { return caches_; }
-  const std::unordered_map<int, iir::Cache>& getCaches() const { return caches_; }
+  std::unordered_map<int, iir::Cache>& getCaches() { return derivedInfo_.caches_; }
+  const std::unordered_map<int, iir::Cache>& getCaches() const { return derivedInfo_.caches_; }
 
   const iir::Cache& getCache(const int accessID) const;
 

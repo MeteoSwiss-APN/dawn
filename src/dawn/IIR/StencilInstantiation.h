@@ -77,7 +77,7 @@ public:
   const std::string& getNameFromAccessID(int AccessID) const;
 
   /// @brief Get the `name` associated with the `StageID`
-  const std::string& getNameFromStageID(int StageID) const;
+//  const std::string& getNameFromStageID(int StageID) const;
 
   /// @brief insert an element to the maps of stencil functions
   void insertExprToStencilFunction(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
@@ -105,16 +105,16 @@ public:
 
   /// @brief Check whether the `AccessID` corresponds to a manually allocated field
   inline bool isAllocatedField(int AccessID) const {
-    return isField(AccessID) && metadata_.AllocatedFieldAccessIDSet_.count(AccessID);
+    return isField(AccessID) && IIR_->getAllocatedFieldAccessIDSet().count(AccessID);
   }
 
   /// @brief Get the set of fields which need to be allocated
   inline const std::set<int>& getAllocatedFieldAccessIDs() const {
-    return metadata_.AllocatedFieldAccessIDSet_;
+    return IIR_->getAllocatedFieldAccessIDSet();
   }
 
   /// @brief Check if the stencil instantiation needs to allocate fields
-  inline bool hasAllocatedFields() const { return !metadata_.AllocatedFieldAccessIDSet_.empty(); }
+  inline bool hasAllocatedFields() const { return !IIR_->getAllocatedFieldAccessIDSet().empty(); }
 
   /// @brief Check whether the `AccessID` corresponds to an accesses of a global variable
   inline bool isGlobalVariable(int AccessID) const {
@@ -342,9 +342,9 @@ public:
   std::unordered_map<int, std::string>& getLiteralAccessIDToNameMap();
   const std::unordered_map<int, std::string>& getLiteralAccessIDToNameMap() const;
 
-  /// @brief Get the StageID-to-Name map
-  std::unordered_map<int, std::string>& getStageIDToNameMap();
-  const std::unordered_map<int, std::string>& getStageIDToNameMap() const;
+//  /// @brief Get the StageID-to-Name map
+//  std::unordered_map<int, std::string>& getStageIDToNameMap();
+//  const std::unordered_map<int, std::string>& getStageIDToNameMap() const;
 
   /// @brief Get the field-AccessID set
   std::set<int>& getFieldAccessIDSet();
@@ -420,25 +420,25 @@ public:
 
   inline const std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&
   getBoundaryConditionToExtentsMap() const {
-    return metadata_.BoundaryConditionToExtentsMap_;
+    return IIR_->getBoundaryConditionToExtents();
   }
 
   inline std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&
   getBoundaryConditionToExtentsMap() {
-    return metadata_.BoundaryConditionToExtentsMap_;
+    return IIR_->getBoundaryConditionToExtents();
   }
 
   inline void insertBoundaryConditiontoExtentPair(std::shared_ptr<BoundaryConditionDeclStmt>& bc,
                                                   Extents& extents) {
-    metadata_.BoundaryConditionToExtentsMap_.emplace(bc, extents);
+    IIR_->getBoundaryConditionToExtents().emplace(bc, extents);
   }
 
   inline Extents getBoundaryConditionExtentsFromBCStmt(
       const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) const {
-    if(metadata_.BoundaryConditionToExtentsMap_.count(stmt) == 0) {
+    if(IIR_->getBoundaryConditionToExtents().count(stmt) == 0) {
       DAWN_ASSERT_MSG(false, "Boundary Condition does not have a matching Extent");
     }
-    return metadata_.BoundaryConditionToExtentsMap_.find(stmt)->second;
+    return IIR_->getBoundaryConditionToExtents().find(stmt)->second;
   }
 
   std::vector<std::shared_ptr<sir::StencilFunction>>& getStencilFunctions(){

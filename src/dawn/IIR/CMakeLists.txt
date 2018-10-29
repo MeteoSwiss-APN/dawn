@@ -12,6 +12,19 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+
+include(DawnProtobufGenerate)
+
+# Genreate C++ proto files
+dawn_protobuf_generate(
+  OUT_FILES iir_proto_cpp_files
+  OUT_INCLUDE_DIRS iir_proto_include_dirs
+  PROTOS ${CMAKE_CURRENT_SOURCE_DIR}/IIR.proto ${CMAKE_CURRENT_SOURCE_DIR}/statements.proto
+  LANGUAGE cpp
+)
+include_directories(SYSTEM ${iir_proto_include_dirs})
+
+
 yoda_add_library(
   NAME DawnIIR
   SOURCES 
@@ -40,6 +53,9 @@ yoda_add_library(
           IntervalAlgorithms.h
           IIR.cpp
           IIR.h
+          IIR.proto
+          IIRSerializer.cpp
+          IIRSerializer.h
           IIRNode.h
           IIRNodeIterator.h
           LoopOrder.cpp
@@ -62,6 +78,7 @@ yoda_add_library(
           StencilInstantiation.h
           MetaInformation.cpp
           MetaInformation.h
+          ${iir_proto_cpp_files}
   OBJECT
 )
 

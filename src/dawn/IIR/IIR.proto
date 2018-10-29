@@ -1,0 +1,201 @@
+/*===------------------------------------------------------------------------------*- proto -*-===*\
+ *                          _
+ *                         | |
+ *                       __| | __ ___      ___ ___
+ *                      / _` |/ _` \ \ /\ / / '_  |
+ *                     | (_| | (_| |\ V  V /| | | |
+ *                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+ *
+ *
+ *  This file is distributed under the MIT License (MIT).
+ *  See LICENSE.txt for details.
+ *
+\*===------------------------------------------------------------------------------------------===*/
+
+// @defgroup iir_proto IIR protobuf
+// @brief This is a IIR description for Google's protocol buffers library
+// <a href="https://developers.google.com/protocol-buffers/">Protobuf</a>.
+
+syntax = "proto3";
+
+package dawn.proto.iir;
+import "statements.proto";
+
+/* ===-------------------------------------------------------------------------------------===*/
+//      Statement
+/* ===-------------------------------------------------------------------------------------===*/
+
+// @brief Statement-Wrapper for the ASTStmt.
+//
+// This wrapper is used to have a common base for Stmts and Exprs
+message Statement{
+  // Singe ASTStmt in the Statement.
+  dawn.proto.statements.Stmt ASTStmt = 1;
+}
+
+
+/* ===-------------------------------------------------------------------------------------===*/
+//      Acesses
+/* ===-------------------------------------------------------------------------------------===*/
+// @brief Extent attached to a FieldAccess
+//
+// Each filed-access has extents in each dimension that define how far the accesses are in the respective dimension
+message Extent{
+    int32 minus = 1;
+    int32 plus = 2;
+}
+
+message Extents{
+    // the three dimensions of an access-extent [Extent<i>, Extent<j>, Extent<k>]
+    repeated Extent extents = 1;
+}
+
+message Acesses{
+    // Map of all the write accesses [their accessID] to the Extents of the access
+    map<int32, Extents> writeAccess = 1;
+
+    // Map of all the read accesses [their accessID] to the Extents of the access
+    map<int32, Extents> readAccess = 2;
+}
+
+
+/* ===-------------------------------------------------------------------------------------===*/
+//      IIR-Tree
+/* ===-------------------------------------------------------------------------------------===*/
+
+// @brief StatementAccessPair that is stored as the Leafs of the IIR
+message StatementAcessPair{
+    // the statement of the pair. To note that this can be a BlockStmt (or simiar) and therefore
+    // hold more than one stmt
+    Statement statement = 1;
+
+    // All the caller accesses of the statement
+    Acesses callerAccesses  = 2;
+
+    // All the callee accesses of the statement
+    Acesses calleeAccesses  = 3;
+}
+
+// @brief The Protobuf description of all the required members to describe a DoMethod of the IIR
+//
+// A Do-method is a collection of Statements with corresponding Accesses of a specific vertical
+// region
+message DoMethod{
+    repeated StatementAcessPair stmtaccesspairs = 1;
+    int32 DoMethodID = 2;
+    dawn.proto.statements.Interval interval = 3;
+}
+
+// @brief The Protobuf description of all the required members to describe a Stage of the IIR
+//
+// A Stage usually corresponds to a inner loop nest (usually an ij-loop). In CUDA gridtools stages
+// are separated by a `__syncthreads()` call in a kernel.
+message Stage{
+    repeated DoMethod domethods = 1;
+    int32 stageID = 2;
+
+}
+
+// @brief The Protobuf description of all the required members to describe a MultiStage of the IIR
+//
+// A MultiStage usually corresponds to the outer loop (usually over k) of the loop nest. In CUDA
+// gridtools multistages reflect kernels.
+message MultiStage{
+  enum LoopOrder { Forward = 0; Backward = 1;  Parallel = 3;}
+    repeated Stage stages = 1;
+    LoopOrder looporder = 2;
+    int32 MulitStageID = 3;
+}
+
+// @brief The Protobuf description of the Attirbutes that are part of a Stencil
+//
+// The attributes are set via pragmas in the usercode (#pragma gtclang ...) and are held by the IIR
+// Stencil one integer
+message Attributes{
+	uint32 attrBits = 1;
+}
+
+// @brief The Protobuf description of all the required members to describe a Stencil of the IIR
+//
+// A Stencil is represented by a collection of MultiStages
+message Stencil{
+    repeated MultiStage multistages = 1;
+    int32 stencilID = 2;
+    Attributes attr = 3;
+}
+
+// @brief The Protobuf description of the root node of the IIR
+//
+// A Do-method is a collection of Statements with corresponding Accesses of a specific vertical
+// region
+message IIR{
+    repeated Stencil stencils = 1;
+}
+
+/* ===-------------------------------------------------------------------------------------===*/
+//      Stencil-Metadata
+/* ===-------------------------------------------------------------------------------------===*/
+
+message AllVersionedFields{
+    repeated int32 allIDs = 1;
+}
+
+message VariableVersions{
+    map<int32,  AllVersionedFields> veriableVersionMap = 1;
+    repeated int32 versionIDs = 2;
+    map<int32, int32> VersionIDToOriginalID = 3;
+}
+
+message StmtIDPair{
+    dawn.proto.statements.Stmt stmt = 1;
+    int32 IDs = 2;
+}
+
+message ExprIDPair{
+    dawn.proto.statements.Stmt stmt = 1;
+    int32 IDs = 2;
+}
+
+message Array3i{
+    int32 int1 = 1;
+    int32 int2 = 2;
+    int32 int3 = 3;
+}
+
+/// @brief the typekind is handle like the sir::Value:
+// 1 = boolean
+// 2 = integer
+// 3 = double
+message GlobalValueAndType{
+    int32 Typekind = 1;
+    double value = 2;
+}
+
+message StencilMetaInfo{
+    map<int32, string> AccessIDToName = 1;
+    repeated ExprIDPair ExprToAccessID = 2;
+    repeated StmtIDPair StmtToAccessID = 3;
+    map<int32, string> LiteralIDToName = 4;
+    repeated int32 FieldAccessIDs = 5;
+    repeated int32 APIFieldIDs = 6;
+    repeated int32 TemporaryFieldIDs = 7;
+    repeated int32 GlobalVariableIDs = 8;
+    VariableVersions versionedFields = 9;
+    repeated dawn.proto.statements.Stmt stencilDescStatements = 10;
+    map<int32, dawn.proto.statements.StencilCallDeclStmt> IDToStencilCall = 11;
+    map<string, dawn.proto.statements.BoundaryConditionDeclStmt> FieldnameToBoundaryCondition = 12;
+    map<int32, Array3i> fieldIDtoLegalDimensions = 13;
+    map<string, GlobalValueAndType> GlobalVariableToValue = 14;
+    dawn.proto.statements.SourceLocation stencilLocation = 15;
+    string stencilMName = 16;
+    string fileName = 17;
+}
+
+/* ===-------------------------------------------------------------------------------------===*/
+//      StencilInstantiation
+/* ===-------------------------------------------------------------------------------------===*/
+
+message StencilInstantiation{
+    StencilMetaInfo metadata = 1;
+    IIR internalIR = 2;
+}

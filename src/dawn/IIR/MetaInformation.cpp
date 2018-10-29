@@ -45,7 +45,6 @@ namespace dawn {
 namespace iir {
 
 void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
-  NameToAccessIDMap_ = origin.NameToAccessIDMap_;
   AccessIDToNameMap_ = origin.AccessIDToNameMap_;
   for(auto pair : origin.ExprToAccessIDMap_) {
     ExprToAccessIDMap_.emplace(pair.first->clone(), pair.second);
@@ -57,7 +56,6 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
   FieldAccessIDSet_ = origin.FieldAccessIDSet_;
   apiFieldIDs_ = origin.apiFieldIDs_;
   TemporaryFieldAccessIDSet_ = origin.TemporaryFieldAccessIDSet_;
-  AllocatedFieldAccessIDSet_ = origin.AllocatedFieldAccessIDSet_;
   GlobalVariableAccessIDSet_ = origin.GlobalVariableAccessIDSet_;
   for(auto id : origin.variableVersions_.getVersionIDs()) {
     variableVersions_.insert(id, origin.variableVersions_.getVersions(id));
@@ -68,11 +66,6 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
   for(const auto& pair : origin.IDToStencilCallMap_) {
     IDToStencilCallMap_.emplace(pair.first, std::make_shared<StencilCallDeclStmt>(*(pair.second)));
   }
-  for(const auto& pair : origin.StencilCallToStencilIDMap_) {
-    StencilCallToStencilIDMap_.emplace(std::make_shared<StencilCallDeclStmt>(*(pair.first)),
-                                       pair.second);
-  }
-  StageIDToNameMap_ = origin.StageIDToNameMap_;
   for(const auto& sf : origin.stencilFunctionInstantiations_) {
     stencilFunctionInstantiations_.emplace_back(
         std::make_shared<StencilFunctionInstantiation>(sf->clone()));
@@ -89,15 +82,15 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
     stencilFunInstantiationCandidate_.emplace(
         std::make_shared<StencilFunctionInstantiation>(pair.first->clone()), candidate);
   }
-  for(const auto& pair : origin.BoundaryConditionToExtentsMap_) {
-    BoundaryConditionToExtentsMap_.emplace(
-        std::make_shared<BoundaryConditionDeclStmt>(*(pair.first)), pair.second);
-  }
+//  for(const auto& pair : origin.BoundaryConditionToExtentsMap_) {
+//    BoundaryConditionToExtentsMap_.emplace(
+//        std::make_shared<BoundaryConditionDeclStmt>(*(pair.first)), pair.second);
+//  }
   for(const auto& pair : origin.FieldnameToBoundaryConditionMap_) {
     FieldnameToBoundaryConditionMap_.emplace(
         pair.first, std::make_shared<BoundaryConditionDeclStmt>(*(pair.second)));
   }
-  CachedVariableSet_ = origin.CachedVariableSet_;
+//  CachedVariableSet_ = origin.CachedVariableSet_;
   fieldIDToInitializedDimensionsMap_ = origin.fieldIDToInitializedDimensionsMap_;
   for(const auto& pair : origin.globalVariableMap_) {
     globalVariableMap_.emplace(pair.first, std::make_shared<sir::Value>(pair.second));
