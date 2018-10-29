@@ -106,7 +106,9 @@ void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
     derefIJCache(expr);
     return;
   }
-  if(cacheProperties_.isKCached(accessID)) {
+  if(cacheProperties_.isKCached(accessID) &&
+     ((ms_->getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local) ||
+      (ms_->getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill))) {
     derefKCache(expr);
     return;
   }

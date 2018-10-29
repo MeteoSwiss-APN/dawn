@@ -101,6 +101,7 @@ void CudaCodeGen::generateKCacheDecl(MemberFunction& kernel, const iir::MultiSta
                                      const CacheProperties& cacheProperties) const {
   for(const auto& cacheP : ms.getCaches()) {
     const iir::Cache& cache = cacheP.second;
+
     if(cache.getCacheType() != iir::Cache::CacheTypeKind::K ||
        ((cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::local) &&
         (cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::fill)))
@@ -558,7 +559,9 @@ void CudaCodeGen::generateKCacheSlide(MemberFunction& cudaKernel,
   cudaKernel.addComment("Slide kcaches");
   for(const auto& cachePair : ms->getCaches()) {
     const auto& cache = cachePair.second;
-    if(!cacheProperties.isKCached(cache))
+    if(!cacheProperties.isKCached(cache) ||
+       ((cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::local) &&
+        (cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::fill)))
       continue;
     auto cacheInterval = cache.getInterval();
     DAWN_ASSERT(cacheInterval.is_initialized());
@@ -583,8 +586,10 @@ void CudaCodeGen::generateKCacheSlide(MemberFunction& cudaKernel,
 }
 bool CudaCodeGen::intervalRequiresSync(const iir::Interval& interval, const iir::Stage& stage,
                                        const std::unique_ptr<iir::MultiStage>& ms) const {
-  // if the stage is the last stage, it will require a sync (to ensure we sync before the write of a
-  // previous stage at the next k level), but only if the stencil is not pure vertical and ij caches
+  // if the stage is the last stage, it will require a sync (to ensure we sync before the write of
+  // a
+  // previous stage at the next k level), but only if the stencil is not pure vertical and ij
+  // caches
   // are used after the last sync
   int lastStageID = -1;
   // we identified the last stage that required a sync
@@ -604,7 +609,8 @@ bool CudaCodeGen::intervalRequiresSync(const iir::Interval& interval, const iir:
   }
   bool activateSearch = (lastStageIDWithSync == -1) ? true : false;
   for(const auto& st : ms->getChildren()) {
-    // we only activate the search to determine if IJ caches are used after last stage that was sync
+    // we only activate the search to determine if IJ caches are used after last stage that was
+    // sync
     if(st->getStageID() == lastStageIDWithSync) {
       activateSearch = true;
     }
@@ -1139,7 +1145,8 @@ void CudaCodeGen::generateStencilRunMethod(
 
     // create all the data views
     for(auto fieldIt : nonTempFields) {
-      // TODO have the same FieldInfo in ms level so that we dont need to query stencilInstantiation
+      // TODO have the same FieldInfo in ms level so that we dont need to query
+      // stencilInstantiation
       // all the time for name and IsTmpField
       const auto fieldName =
           stencilInstantiation->getNameFromAccessID((*fieldIt).second.getAccessID());
