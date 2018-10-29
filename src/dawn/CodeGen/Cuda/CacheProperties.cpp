@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/CodeGen/Cuda/CacheProperties.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/StencilInstantiation.h"
 
@@ -60,6 +61,25 @@ std::string CacheProperties::getCacheName(int accessID) const {
     return stencilInstantiation_->getNameFromAccessID(cache.getCachedFieldAccessID()) + "_kcache";
 
   dawn_unreachable("Unknown cache for code generation");
+}
+
+bool CacheProperties::requiresFillAtInterval(const std::unique_ptr<iir::MultiStage>& ms,
+                                             const int accessID, const iir::Interval& interval) {
+  for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*ms)) {
+    if(!doMethod->getFields().count(accessID) || !doMethod->getInterval().overlaps(interval)) {
+      continue;
+    }
+    const auto& field = doMethod->getFields().at(accessID);
+    auto readExtents = field.getReadExtents();
+    if(!readExtents.is_initialized())
+      continue;
+    auto verticalExtent = readExtents->getVerticalLoopOrderExtent(
+        ms->getLoopOrder(), iir::Extents::VerticalLoopOrderDir::VL_CounterLoopOrder, false);
+    if(!verticalExtent.is_initialized())
+      continue;
+    return true;
+  }
+  return false;
 }
 
 bool CacheProperties::isCached(const int accessID) const {

@@ -58,19 +58,13 @@ static std::string makeKLoop(const std::string dom, const std::array<unsigned in
   std::string lower = makeIntervalBound(dom, interval, iir::Interval::Bound::lower);
   std::string upper = makeIntervalBound(dom, interval, iir::Interval::Bound::upper);
 
-  std::string str;
   if(kParallel) {
-    str += "int kleg_lower_bound = max(" + lower + ",blockIdx.z*" + std::to_string(blockSize[2]) +
-           ")\n";
-    str += "int kleg_upper_bound = min(" + upper + ",(blockIdx.z+1)*" +
-           std::to_string(blockSize[2]) + "-1)\n";
-
     lower = "kleg_lower_bound";
     upper = "kleg_upper_bound";
   }
-  return str += (loopOrder == iir::LoopOrderKind::LK_Backward)
-                    ? makeLoopImpl(iir::Extent{}, "k", upper, lower, ">=", "--")
-                    : makeLoopImpl(iir::Extent{}, "k", lower, upper, "<=", "++");
+  return (loopOrder == iir::LoopOrderKind::LK_Backward)
+             ? makeLoopImpl(iir::Extent{}, "k", upper, lower, ">=", "--")
+             : makeLoopImpl(iir::Extent{}, "k", lower, upper, "<=", "++");
 }
 
 CudaCodeGen::CudaCodeGen(OptimizerContext* context) : CodeGen(context) {}
@@ -404,6 +398,16 @@ void CudaCodeGen::generateCudaKernelCode(
                                 ")");
       }
     }
+
+    if(solveKLoopInParallel_) {
+      // define the loop bounds of each parallel kleg
+      std::string lower = makeIntervalBound("dom", interval, iir::Interval::Bound::lower);
+      std::string upper = makeIntervalBound("dom", interval, iir::Interval::Bound::upper);
+      cudaKernel.addStatement("int kleg_lower_bound = max(" + lower + ",blockIdx.z*" +
+                              std::to_string(blockSize[2]) + ")");
+      cudaKernel.addStatement("int kleg_upper_bound = min(" + upper + ",(blockIdx.z+1)*" +
+                              std::to_string(blockSize[2]) + "-1);");
+    }
     // for each interval, we generate naive nested loops
     cudaKernel.addBlockStatement(
         makeKLoop("dom", blockSize, ms->getLoopOrder(), interval, solveKLoopInParallel_), [&]() {
@@ -485,7 +489,8 @@ void CudaCodeGen::generateFillKCaches(
   for(const auto& cachePair : ms->getCaches()) {
     const int accessID = cachePair.first;
     const auto& cache = cachePair.second;
-    if(!CacheProperties::requiresFill(cache))
+    if(!CacheProperties::requiresFill(cache) ||
+       !CacheProperties::requiresFillAtInterval(ms, accessID, interval))
       continue;
     DAWN_ASSERT(cache.getInterval().is_initialized());
     const auto cacheInterval = *(cache.getInterval());
@@ -500,8 +505,6 @@ void CudaCodeGen::generateFillKCaches(
         (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
             ? interval.bound(intervalBound) >= cacheFieldAccessedInterval.bound(intervalBound)
             : interval.bound(intervalBound) <= cacheFieldAccessedInterval.bound(intervalBound);
-    std::cout << " IO " << static_cast<int>(intervalBound) << " " << interval.bound(intervalBound)
-              << " " << cacheFieldAccessedInterval.bound(intervalBound) << std::endl;
 
     if(cacheInterval.overlaps(interval) && cacheEndWithinInterval) {
       auto cacheName = cacheProperties.getCacheName(accessID);
