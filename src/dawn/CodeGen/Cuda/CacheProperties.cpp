@@ -13,6 +13,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/CodeGen/Cuda/CacheProperties.h"
+#include "dawn/IIR/MultiStage.h"
+#include "dawn/IIR/StencilInstantiation.h"
 
 namespace dawn {
 namespace codegen {

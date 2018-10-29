@@ -15,10 +15,16 @@
 #ifndef DAWN_CODEGEN_CACHEPROPERTIES_H
 #define DAWN_CODEGEN_CACHEPROPERTIES_H
 #include "dawn/IIR/Extents.h"
-#include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/IIR/MultiStage.h"
+#include <memory>
 #include <set>
 
 namespace dawn {
+namespace iir {
+class StencilInstantiation;
+class MultiStage;
+}
+
 namespace codegen {
 namespace cuda {
 
