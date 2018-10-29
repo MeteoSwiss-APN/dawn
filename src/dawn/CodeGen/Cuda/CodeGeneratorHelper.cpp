@@ -49,9 +49,9 @@ void CodeGeneratorHelper::generateFieldAccessDeref(
   std::string offsetStr =
       RangeToString("+", "", "", true)(CodeGeneratorHelper::ijkfyOffset(offset, isTemporary, iter));
   const bool readOnly = (field.getIntend() == iir::Field::IntendKind::IK_Input);
-  ss << (readOnly ? "__ldg(" : "") << accessName
+  ss << (readOnly ? "__ldg(&(" : "") << accessName
      << (offsetStr.empty() ? "[" + index + "]" : ("[" + index + "+" + offsetStr + "]"))
-     << (readOnly ? ")" : "");
+     << (readOnly ? "))" : "");
 }
 
 std::array<std::string, 3> CodeGeneratorHelper::ijkfyOffset(const Array3i& offsets,
