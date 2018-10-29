@@ -339,6 +339,7 @@ void CudaCodeGen::generateCudaKernelCode(
   lastKCell = advance(lastKCell, ms->getLoopOrder(), -1);
 
   bool firstInterval = true;
+  int klegDeclared = false;
   for(auto interval : partitionIntervals) {
 
     // If execution is parallel we want to place the interval in a forward order
@@ -404,10 +405,13 @@ void CudaCodeGen::generateCudaKernelCode(
       // define the loop bounds of each parallel kleg
       std::string lower = makeIntervalBound("dom", interval, iir::Interval::Bound::lower);
       std::string upper = makeIntervalBound("dom", interval, iir::Interval::Bound::upper);
-      cudaKernel.addStatement("int kleg_lower_bound = max(" + lower + ",blockIdx.z*" +
+      cudaKernel.addStatement((!klegDeclared ? std::string("int ") : std::string("")) +
+                              "kleg_lower_bound = max(" + lower + ",blockIdx.z*" +
                               std::to_string(blockSize[2]) + ")");
-      cudaKernel.addStatement("int kleg_upper_bound = min(" + upper + ",(blockIdx.z+1)*" +
+      cudaKernel.addStatement((!klegDeclared ? std::string("int ") : std::string("")) +
+                              "kleg_upper_bound = min(" + upper + ",(blockIdx.z+1)*" +
                               std::to_string(blockSize[2]) + "-1);");
+      klegDeclared = true;
     }
     // for each interval, we generate naive nested loops
     cudaKernel.addBlockStatement(
