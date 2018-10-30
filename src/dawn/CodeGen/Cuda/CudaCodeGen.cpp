@@ -703,7 +703,6 @@ void CudaCodeGen::generateTmpIndexInit(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const CacheProperties& cacheProperties) const {
 
-  std::cout << "KO " << useTmpIndex(ms, stencilInstantiation, cacheProperties) << std::endl;
   if(!useTmpIndex(ms, stencilInstantiation, cacheProperties))
     return;
 
