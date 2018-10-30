@@ -414,7 +414,7 @@ void CudaCodeGen::generateCudaKernelCode(
       klegDeclared = true;
     }
 
-    if(firstInterval && !solveKLoopInParallel_) {
+    if(!solveKLoopInParallel_) {
       generatePreFillKCaches(cudaKernel, ms, interval, cacheProperties, fieldIndexMap,
                              stencilInstantiation);
     }
