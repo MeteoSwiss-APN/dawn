@@ -608,7 +608,7 @@ void CudaCodeGen::generatePreFillKCaches(
       DAWN_ASSERT(vertExtent.Minus <= 0 && vertExtent.Plus >= 0);
       kcacheFillProperty[horizontalExtent].emplace_back(
           cacheName, accessID,
-          ((ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) ? -vertExtent.Minus
+          ((ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) ? vertExtent.Minus
                                                                    : vertExtent.Plus));
     }
   }
@@ -624,16 +624,28 @@ void CudaCodeGen::generatePreFillKCaches(
             " && jblock <= block_size_j -1 + " + std::to_string(horizontalExtent[1].Plus) + ")",
         [&]() {
           for(const auto& kcacheProp : kcachesProp) {
-            for(int klev = kcacheProp.offset_ - 1; klev >= 0; --klev) {
-              std::stringstream ss;
-              CodeGeneratorHelper::generateFieldAccessDeref(
-                  ss, ms, stencilInstantiation, kcacheProp.accessID_, fieldIndexMap,
-                  Array3i{0, 0, ((ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) ? -klev
-                                                                                         : klev)});
-              cudaKernel.addStatement(
-                  kcacheProp.name_ + "[" +
-                  std::to_string(cacheProperties.getKCacheIndex(kcacheProp.accessID_, klev)) +
-                  "] =" + ss.str());
+            if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) {
+              for(int klev = kcacheProp.offset_ + 1; klev <= 0; ++klev) {
+                std::stringstream ss;
+                CodeGeneratorHelper::generateFieldAccessDeref(ss, ms, stencilInstantiation,
+                                                              kcacheProp.accessID_, fieldIndexMap,
+                                                              Array3i{0, 0, klev});
+                cudaKernel.addStatement(
+                    kcacheProp.name_ + "[" +
+                    std::to_string(cacheProperties.getKCacheIndex(kcacheProp.accessID_, klev)) +
+                    "] =" + ss.str());
+              }
+            } else {
+              for(int klev = kcacheProp.offset_ - 1; klev >= 0; --klev) {
+                std::stringstream ss;
+                CodeGeneratorHelper::generateFieldAccessDeref(ss, ms, stencilInstantiation,
+                                                              kcacheProp.accessID_, fieldIndexMap,
+                                                              Array3i{0, 0, klev});
+                cudaKernel.addStatement(
+                    kcacheProp.name_ + "[" +
+                    std::to_string(cacheProperties.getKCacheIndex(kcacheProp.accessID_, klev)) +
+                    "] =" + ss.str());
+              }
             }
           }
         });
