@@ -545,7 +545,10 @@ void CudaCodeGen::generateFillKCaches(
       DAWN_ASSERT(intervalFields.count(accessID));
       iir::Extents horizontalExtent = intervalFields.at(accessID).getExtentsRB();
 
-      kcacheFillProperty[horizontalExtent].emplace_back(cacheName, accessID, vertExtent.Plus);
+      kcacheFillProperty[horizontalExtent].emplace_back(
+          cacheName, accessID,
+          ((ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) ? vertExtent.Minus
+                                                                   : vertExtent.Plus));
     }
   }
 
@@ -602,7 +605,11 @@ void CudaCodeGen::generatePreFillKCaches(
       auto cacheName = cacheProperties.getCacheName(accessID);
       iir::Extents horizontalExtent = intervalFields.at(accessID).getExtentsRB();
 
-      kcacheFillProperty[horizontalExtent].emplace_back(cacheName, accessID, vertExtent.Plus);
+      DAWN_ASSERT(vertExtent.Minus <= 0 && vertExtent.Plus >= 0);
+      kcacheFillProperty[horizontalExtent].emplace_back(
+          cacheName, accessID,
+          ((ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) ? -vertExtent.Minus
+                                                                   : vertExtent.Plus));
     }
   }
 
@@ -619,9 +626,10 @@ void CudaCodeGen::generatePreFillKCaches(
           for(const auto& kcacheProp : kcachesProp) {
             for(int klev = kcacheProp.offset_ - 1; klev >= 0; --klev) {
               std::stringstream ss;
-              CodeGeneratorHelper::generateFieldAccessDeref(ss, ms, stencilInstantiation,
-                                                            kcacheProp.accessID_, fieldIndexMap,
-                                                            Array3i{0, 0, klev});
+              CodeGeneratorHelper::generateFieldAccessDeref(
+                  ss, ms, stencilInstantiation, kcacheProp.accessID_, fieldIndexMap,
+                  Array3i{0, 0, ((ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) ? -klev
+                                                                                         : klev)});
               cudaKernel.addStatement(
                   kcacheProp.name_ + "[" +
                   std::to_string(cacheProperties.getKCacheIndex(kcacheProp.accessID_, klev)) +
