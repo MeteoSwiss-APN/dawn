@@ -422,13 +422,23 @@ void CudaCodeGen::generateCudaKernelCode(
                               std::to_string(blockSize[2]) + "-1);");
       klegDeclared = true;
     }
+
+    if(firstInterval) {
+      generatePreFillKCaches(cudaKernel, ms, interval, cacheProperties, fieldIndexMap,
+                             stencilInstantiation);
+    }
+
     // for each interval, we generate naive nested loops
     cudaKernel.addBlockStatement(
         makeKLoop("dom", blockSize, ms->getLoopOrder(), interval, solveKLoopInParallel_), [&]() {
-          generatePreFillKCaches(cudaKernel, ms, interval, cacheProperties, fieldIndexMap,
-                                 stencilInstantiation);
-          generateFillKCaches(cudaKernel, ms, interval, cacheProperties, fieldIndexMap,
-                              stencilInstantiation);
+
+          cudaKernel.addBlockStatement("if(iblock >= 0 && iblock <= block_size_i -1 && jblock >= 0 "
+                                       "&& jblock <= block_size_j -1)",
+                                       [&]() {
+                                         generateFillKCaches(cudaKernel, ms, interval,
+                                                             cacheProperties, fieldIndexMap,
+                                                             stencilInstantiation);
+                                       });
 
           for(const auto& stagePtr : ms->getChildren()) {
             const iir::Stage& stage = *stagePtr;
@@ -504,7 +514,7 @@ void CudaCodeGen::generateFillKCaches(
     const int accessID = cachePair.first;
     const auto& cache = cachePair.second;
     if(!CacheProperties::requiresFill(cache) ||
-       !CacheProperties::requiresFillAtInterval(ms, accessID, interval, false))
+       !CacheProperties::requiresFillAtInterval(ms, accessID, interval, true))
       continue;
     DAWN_ASSERT(cache.getInterval().is_initialized());
     const auto cacheInterval = *(cache.getInterval());
