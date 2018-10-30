@@ -77,6 +77,25 @@ std::array<std::string, 3> CodeGeneratorHelper::ijkfyOffset(const Array3i& offse
   return res;
 }
 
+std::vector<iir::Interval>
+CodeGeneratorHelper::computePartitionOfIntervals(const std::unique_ptr<iir::MultiStage>& ms) {
+  auto intervals_set = ms->getIntervals();
+  std::vector<iir::Interval> intervals_v;
+  std::copy(intervals_set.begin(), intervals_set.end(), std::back_inserter(intervals_v));
+
+  // compute the partition of the intervals
+
+  auto partitionIntervals = iir::Interval::computePartition(intervals_v);
+  if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+    std::reverse(partitionIntervals.begin(), partitionIntervals.end());
+  return partitionIntervals;
+}
+
+bool CodeGeneratorHelper::solveKLoopInParallel(const std::unique_ptr<iir::MultiStage>& ms) {
+  iir::MultiInterval mInterval{CodeGeneratorHelper::computePartitionOfIntervals(ms)};
+  return mInterval.contiguous() && (ms->getLoopOrder() == iir::LoopOrderKind::LK_Parallel);
+}
+
 } // namespace cuda
 } // namespace codegen
 } // namespace dawn

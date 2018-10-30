@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/CodeGen/Cuda/CacheProperties.h"
+#include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -118,7 +119,12 @@ bool CacheProperties::isKCached(const int accessID) const {
 }
 
 bool CacheProperties::isKCached(const iir::Cache& cache) const {
-  return (cache.getCacheType() == iir::Cache::CacheTypeKind::K);
+  bool solveKLoopInParallel_ = CodeGeneratorHelper::solveKLoopInParallel(ms_);
+  if(cache.getCacheType() != iir::Cache::CacheTypeKind::K) {
+    return false;
+  }
+
+  return ((cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local) || !solveKLoopInParallel_);
 }
 
 bool CacheProperties::hasIJCaches() const {

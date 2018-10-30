@@ -127,7 +127,7 @@ private:
                            const iir::MultiStage& ms, const CacheProperties& cacheProperties,
                            Array3ui blockSize) const;
 
-  void generateKCacheDecl(MemberFunction& kernel, const iir::MultiStage& ms,
+  void generateKCacheDecl(MemberFunction& kernel, const std::unique_ptr<iir::MultiStage>& ms,
                           const CacheProperties& cacheProperties) const;
 
   void generateIJCacheIndexInit(MemberFunction& kernel, const CacheProperties& cacheProperties,
@@ -160,11 +160,6 @@ private:
 
   iir::Interval::IntervalLevel computeNextLevelToProcess(const iir::Interval& interval,
                                                          iir::LoopOrderKind loopOrder) const;
-
-  std::vector<iir::Interval>
-  computePartitionOfIntervals(const std::unique_ptr<iir::MultiStage>& ms) const;
-
-  bool solveKLoopInParallel(const std::unique_ptr<iir::MultiStage>& ms) const;
 
   std::string generateStencilInstantiation(
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);

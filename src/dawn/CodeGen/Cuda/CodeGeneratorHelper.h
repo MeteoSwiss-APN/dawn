@@ -39,6 +39,11 @@ public:
   ///
   static std::array<std::string, 3> ijkfyOffset(const Array3i& offsets, bool isTemporary,
                                                 const Array3i iteratorDims);
+
+  static bool solveKLoopInParallel(const std::unique_ptr<iir::MultiStage>& ms);
+
+  static std::vector<iir::Interval>
+  computePartitionOfIntervals(const std::unique_ptr<iir::MultiStage>& ms);
 };
 
 } // namespace cuda

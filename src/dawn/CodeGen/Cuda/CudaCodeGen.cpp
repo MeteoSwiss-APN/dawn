@@ -97,9 +97,12 @@ void CudaCodeGen::generateIJCacheDecl(
   }
 }
 
-void CudaCodeGen::generateKCacheDecl(MemberFunction& kernel, const iir::MultiStage& ms,
+void CudaCodeGen::generateKCacheDecl(MemberFunction& kernel,
+                                     const std::unique_ptr<iir::MultiStage>& ms,
                                      const CacheProperties& cacheProperties) const {
-  for(const auto& cacheP : ms.getCaches()) {
+  const bool solveKLoopInParallel_ = CodeGeneratorHelper::solveKLoopInParallel(ms);
+
+  for(const auto& cacheP : ms->getCaches()) {
     const iir::Cache& cache = cacheP.second;
 
     if(cache.getCacheType() != iir::Cache::CacheTypeKind::K ||
@@ -107,26 +110,14 @@ void CudaCodeGen::generateKCacheDecl(MemberFunction& kernel, const iir::MultiSta
         (cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::fill)))
       continue;
 
+    if(cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::local && solveKLoopInParallel_)
+      continue;
     const int accessID = cache.getCachedFieldAccessID();
     auto vertExtent = cacheProperties.getKCacheVertExtent(accessID);
 
     kernel.addStatement("gridtools::clang::float_type " + cacheProperties.getCacheName(accessID) +
                         "[" + std::to_string(-vertExtent.Minus + vertExtent.Plus + 1) + "]");
   }
-}
-
-std::vector<iir::Interval>
-CudaCodeGen::computePartitionOfIntervals(const std::unique_ptr<iir::MultiStage>& ms) const {
-  auto intervals_set = ms->getIntervals();
-  std::vector<iir::Interval> intervals_v;
-  std::copy(intervals_set.begin(), intervals_set.end(), std::back_inserter(intervals_v));
-
-  // compute the partition of the intervals
-
-  auto partitionIntervals = iir::Interval::computePartition(intervals_v);
-  if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
-    std::reverse(partitionIntervals.begin(), partitionIntervals.end());
-  return partitionIntervals;
 }
 
 void CudaCodeGen::generateCudaKernelCode(
@@ -138,7 +129,7 @@ void CudaCodeGen::generateCudaKernelCode(
     maxExtents.merge(stage->getExtents());
   }
 
-  const bool solveKLoopInParallel_ = solveKLoopInParallel(ms);
+  const bool solveKLoopInParallel_ = CodeGeneratorHelper::solveKLoopInParallel(ms);
 
   // fields used in the stencil
   const auto& fields = ms->getFields();
@@ -217,7 +208,7 @@ void CudaCodeGen::generateCudaKernelCode(
   const auto blockSize = stencilInstantiation->getIIR()->getBlockSize();
 
   generateIJCacheDecl(cudaKernel, stencilInstantiation, *ms, cacheProperties, blockSize);
-  generateKCacheDecl(cudaKernel, *ms, cacheProperties);
+  generateKCacheDecl(cudaKernel, ms, cacheProperties);
 
   unsigned int ntx = blockSize[0];
   unsigned int nty = blockSize[1];
@@ -337,7 +328,7 @@ void CudaCodeGen::generateCudaKernelCode(
   }
 
   // compute the partition of the intervals
-  auto partitionIntervals = computePartitionOfIntervals(ms);
+  auto partitionIntervals = CodeGeneratorHelper::computePartitionOfIntervals(ms);
 
   DAWN_ASSERT(!partitionIntervals.empty());
 
@@ -423,7 +414,7 @@ void CudaCodeGen::generateCudaKernelCode(
       klegDeclared = true;
     }
 
-    if(firstInterval) {
+    if(firstInterval && !solveKLoopInParallel_) {
       generatePreFillKCaches(cudaKernel, ms, interval, cacheProperties, fieldIndexMap,
                              stencilInstantiation);
     }
@@ -432,8 +423,10 @@ void CudaCodeGen::generateCudaKernelCode(
     cudaKernel.addBlockStatement(
         makeKLoop("dom", blockSize, ms->getLoopOrder(), interval, solveKLoopInParallel_), [&]() {
 
-          generateFillKCaches(cudaKernel, ms, interval, cacheProperties, fieldIndexMap,
-                              stencilInstantiation);
+          if(!solveKLoopInParallel_) {
+            generateFillKCaches(cudaKernel, ms, interval, cacheProperties, fieldIndexMap,
+                                stencilInstantiation);
+          }
 
           for(const auto& stagePtr : ms->getChildren()) {
             const iir::Stage& stage = *stagePtr;
@@ -730,11 +723,6 @@ bool CudaCodeGen::intervalRequiresSync(const iir::Interval& interval, const iir:
     }
   }
   return false;
-}
-
-bool CudaCodeGen::solveKLoopInParallel(const std::unique_ptr<iir::MultiStage>& ms) const {
-  iir::MultiInterval mInterval{computePartitionOfIntervals(ms)};
-  return mInterval.contiguous() && (ms->getLoopOrder() == iir::LoopOrderKind::LK_Parallel);
 }
 
 iir::Interval::IntervalLevel
@@ -1224,7 +1212,7 @@ void CudaCodeGen::generateStencilRunMethod(
     StencilRunMethod.addStatement("{");
 
     const iir::MultiStage& multiStage = *multiStagePtr;
-    bool solveKLoopInParallel_ = solveKLoopInParallel(multiStagePtr);
+    bool solveKLoopInParallel_ = CodeGeneratorHelper::solveKLoopInParallel(multiStagePtr);
 
     const auto& fields = multiStage.getFields();
 
