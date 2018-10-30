@@ -1140,8 +1140,6 @@ void CudaCodeGen::generateStencilRunMethod(
     StencilRunMethod.addStatement("{");
 
     const iir::MultiStage& multiStage = *multiStagePtr;
-    const auto& cacheProperties = cachePropertyMap_.at(multiStagePtr->getID());
-
     bool solveKLoopInParallel_ = solveKLoopInParallel(multiStagePtr);
 
     const auto& fields = multiStage.getFields();
@@ -1152,12 +1150,21 @@ void CudaCodeGen::generateStencilRunMethod(
                     return !stencilInstantiation->isTemporaryField(p.second.getAccessID());
                   }));
 
-    auto tempFieldsNonLocalCached =
-        makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
-                              std::pair<int, iir::Field> const& p) {
-                    return stencilInstantiation->isTemporaryField(p.second.getAccessID()) &&
-                           !cacheProperties.accessIsCached(p.second.getAccessID());
-                  }));
+    auto tempFieldsNonLocalCached = makeRange(
+        fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
+                    std::pair<int, iir::Field> const& p) {
+          const int accessID = p.first;
+          if(!stencilInstantiation->isTemporaryField(p.second.getAccessID()))
+            return false;
+          for(const auto& ms : iterateIIROver<iir::MultiStage>(stencil)) {
+            if(!ms->isCached(accessID))
+              continue;
+            if(ms->getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local)
+              return false;
+          }
+
+          return true;
+        }));
 
     // create all the data views
     for(auto fieldIt : nonTempFields) {
