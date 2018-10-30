@@ -14,11 +14,11 @@
 
 #include "dawn/Optimizer/PassSetCaches.h"
 #include "dawn/IIR/Cache.h"
-#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/IIR/IntervalAlgorithms.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Unreachable.h"
-#include "dawn/IIR/IntervalAlgorithms.h"
 #include <iostream>
 #include <set>
 #include <vector>
@@ -252,9 +252,6 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
           // Determine if we need to fill the cache by analyzing the current multi-stage
           CacheCandidate cacheCandidate = computeCacheCandidateForMS(
               field, instantiation->isTemporaryField(field.getAccessID()), MS);
-
-          //          if(cacheCandidate.intend_ == FirstAccessKind::FK_Mixed)
-          //            continue;
 
           DAWN_ASSERT((cacheCandidate.policy_ != iir::Cache::fill &&
                        cacheCandidate.policy_ != iir::Cache::bpfill) ||

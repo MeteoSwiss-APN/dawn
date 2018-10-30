@@ -148,14 +148,23 @@ void CudaCodeGen::generateCudaKernelCode(
                             std::pair<int, iir::Field> const& p) {
                   return !stencilInstantiation->isTemporaryField(p.second.getAccessID());
                 }));
-  auto tempFieldsNonCached =
+  // all the temp fields that are non local cache, and therefore will require the infrastructure of
+  // tmp storages (allocation, iterators, etc)
+  auto tempFieldsNonLocalCached =
       makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
                             std::pair<int, iir::Field> const& p) {
-                  return stencilInstantiation->isTemporaryField(p.second.getAccessID()) &&
-                         !cacheProperties.accessIsCached(p.second.getAccessID());
+                  const int accessID = p.first;
+                  if(!stencilInstantiation->isTemporaryField(p.second.getAccessID()))
+                    return false;
+                  if(!cacheProperties.accessIsCached(accessID))
+                    return true;
+                  if(ms->getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local)
+                    return false;
+
+                  return true;
                 }));
 
-  const bool containsTemporary = !tempFieldsNonCached.empty();
+  const bool containsTemporary = !tempFieldsNonLocalCached.empty();
 
   std::string fnDecl = "";
   if(containsTemporary)
@@ -172,7 +181,7 @@ void CudaCodeGen::generateCudaKernelCode(
   cudaKernel.addArg("const int ksize");
 
   std::vector<std::string> strides = generateStrideArguments(
-      nonTempFields, tempFieldsNonCached, *ms, *stencilInstantiation, FunctionArgType::callee);
+      nonTempFields, tempFieldsNonLocalCached, *ms, *stencilInstantiation, FunctionArgType::callee);
 
   for(const auto strideArg : strides) {
     cudaKernel.addArg(strideArg);
@@ -185,7 +194,7 @@ void CudaCodeGen::generateCudaKernelCode(
   }
 
   // then the temporary field arguments
-  for(auto field : tempFieldsNonCached) {
+  for(auto field : tempFieldsNonLocalCached) {
     cudaKernel.addArg(c_gt() + "data_view<TmpStorage>" +
                       stencilInstantiation->getNameFromAccessID((*field).second.getAccessID()) +
                       "_dv");
@@ -197,7 +206,7 @@ void CudaCodeGen::generateCudaKernelCode(
   cudaKernel.startBody();
   cudaKernel.addComment("Start kernel");
 
-  for(auto field : tempFieldsNonCached) {
+  for(auto field : tempFieldsNonLocalCached) {
     std::string fieldName =
         stencilInstantiation->getNameFromAccessID((*field).second.getAccessID());
 
@@ -495,7 +504,7 @@ void CudaCodeGen::generateFillKCaches(
     const int accessID = cachePair.first;
     const auto& cache = cachePair.second;
     if(!CacheProperties::requiresFill(cache) ||
-       !CacheProperties::requiresFillAtInterval(ms, accessID, interval))
+       !CacheProperties::requiresFillAtInterval(ms, accessID, interval, true))
       continue;
     DAWN_ASSERT(cache.getInterval().is_initialized());
     const auto cacheInterval = *(cache.getInterval());
@@ -515,10 +524,10 @@ void CudaCodeGen::generateFillKCaches(
       auto cacheName = cacheProperties.getCacheName(accessID);
       std::stringstream ss;
       CodeGeneratorHelper::generateFieldAccessDeref(ss, ms, stencilInstantiation, accessID,
-                                                    fieldIndexMap, Array3i{0, 0, vertExtent.Plus});
-      cudaKernel.addStatement(cacheName + "[" + std::to_string(cacheProperties.getKCacheIndex(
-                                                    accessID, vertExtent.Plus)) +
-                              "] =" + ss.str());
+                                                    fieldIndexMap, Array3i{0, 0, 0});
+      cudaKernel.addStatement(cacheName + "[" +
+                              std::to_string(cacheProperties.getKCacheIndex(accessID, 0)) + "] =" +
+                              ss.str());
     }
   }
 }
@@ -532,8 +541,10 @@ void CudaCodeGen::generatePreFillKCaches(
   for(const auto& cachePair : ms->getCaches()) {
     const int accessID = cachePair.first;
     const auto& cache = cachePair.second;
-    if(!CacheProperties::requiresFill(cache))
+    if(!CacheProperties::requiresFill(cache) ||
+       !CacheProperties::requiresFillAtInterval(ms, accessID, interval, false))
       continue;
+
     DAWN_ASSERT(cache.getInterval().is_initialized());
     const auto cacheInterval = *(cache.getInterval());
     auto vertExtent = cacheProperties.getKCacheVertExtent(accessID);
@@ -544,7 +555,7 @@ void CudaCodeGen::generatePreFillKCaches(
 
     if(cacheInterval.bound(intervalBound) == (interval.bound(intervalBound))) {
       auto cacheName = cacheProperties.getCacheName(accessID);
-      for(int klev = vertExtent.Plus - 1; klev >= 0; --klev) {
+      for(int klev = vertExtent.Plus; klev >= 1; --klev) {
         std::stringstream ss;
         CodeGeneratorHelper::generateFieldAccessDeref(ss, ms, stencilInstantiation, accessID,
                                                       fieldIndexMap, Array3i{0, 0, klev});
@@ -692,6 +703,7 @@ void CudaCodeGen::generateTmpIndexInit(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const CacheProperties& cacheProperties) const {
 
+  std::cout << "KO " << useTmpIndex(ms, stencilInstantiation, cacheProperties) << std::endl;
   if(!useTmpIndex(ms, stencilInstantiation, cacheProperties))
     return;
 
@@ -1140,7 +1152,7 @@ void CudaCodeGen::generateStencilRunMethod(
                     return !stencilInstantiation->isTemporaryField(p.second.getAccessID());
                   }));
 
-    auto tempFieldsNonCached =
+    auto tempFieldsNonLocalCached =
         makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
                               std::pair<int, iir::Field> const& p) {
                     return stencilInstantiation->isTemporaryField(p.second.getAccessID()) &&
@@ -1158,7 +1170,7 @@ void CudaCodeGen::generateStencilRunMethod(
                                     fieldName + "= " + c_gt() + "make_device_view(m_" + fieldName +
                                     ")");
     }
-    for(auto fieldIt : tempFieldsNonCached) {
+    for(auto fieldIt : tempFieldsNonLocalCached) {
       const auto fieldName =
           stencilInstantiation->getNameFromAccessID((*fieldIt).second.getAccessID());
 
@@ -1224,12 +1236,12 @@ void CudaCodeGen::generateStencilRunMethod(
       ++idx;
     }
     DAWN_ASSERT(nonTempFields.size() > 0);
-    for(auto field : tempFieldsNonCached) {
+    for(auto field : tempFieldsNonLocalCached) {
       args = args + "," + stencilInstantiation->getNameFromAccessID((*field).second.getAccessID());
     }
 
     std::vector<std::string> strides =
-        generateStrideArguments(nonTempFields, tempFieldsNonCached, multiStage,
+        generateStrideArguments(nonTempFields, tempFieldsNonLocalCached, multiStage,
                                 *stencilInstantiation, FunctionArgType::caller);
 
     DAWN_ASSERT(!strides.empty());
