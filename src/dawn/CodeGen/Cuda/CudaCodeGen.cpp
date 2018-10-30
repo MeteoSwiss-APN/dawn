@@ -504,7 +504,7 @@ void CudaCodeGen::generateFillKCaches(
     const int accessID = cachePair.first;
     const auto& cache = cachePair.second;
     if(!CacheProperties::requiresFill(cache) ||
-       !CacheProperties::requiresFillAtInterval(ms, accessID, interval, true))
+       !CacheProperties::requiresFillAtInterval(ms, accessID, interval, false))
       continue;
     DAWN_ASSERT(cache.getInterval().is_initialized());
     const auto cacheInterval = *(cache.getInterval());
@@ -542,7 +542,7 @@ void CudaCodeGen::generatePreFillKCaches(
     const int accessID = cachePair.first;
     const auto& cache = cachePair.second;
     if(!CacheProperties::requiresFill(cache) ||
-       !CacheProperties::requiresFillAtInterval(ms, accessID, interval, false))
+       !CacheProperties::requiresFillAtInterval(ms, accessID, interval, true))
       continue;
 
     DAWN_ASSERT(cache.getInterval().is_initialized());
