@@ -524,10 +524,10 @@ void CudaCodeGen::generateFillKCaches(
       auto cacheName = cacheProperties.getCacheName(accessID);
       std::stringstream ss;
       CodeGeneratorHelper::generateFieldAccessDeref(ss, ms, stencilInstantiation, accessID,
-                                                    fieldIndexMap, Array3i{0, 0, 0});
-      cudaKernel.addStatement(cacheName + "[" +
-                              std::to_string(cacheProperties.getKCacheIndex(accessID, 0)) + "] =" +
-                              ss.str());
+                                                    fieldIndexMap, Array3i{0, 0, vertExtent.Plus});
+      cudaKernel.addStatement(cacheName + "[" + std::to_string(cacheProperties.getKCacheIndex(
+                                                    accessID, vertExtent.Plus)) +
+                              "] =" + ss.str());
     }
   }
 }
@@ -555,7 +555,7 @@ void CudaCodeGen::generatePreFillKCaches(
 
     if(cacheInterval.bound(intervalBound) == (interval.bound(intervalBound))) {
       auto cacheName = cacheProperties.getCacheName(accessID);
-      for(int klev = vertExtent.Plus; klev >= 1; --klev) {
+      for(int klev = vertExtent.Plus - 1; klev >= 0; --klev) {
         std::stringstream ss;
         CodeGeneratorHelper::generateFieldAccessDeref(ss, ms, stencilInstantiation, accessID,
                                                       fieldIndexMap, Array3i{0, 0, klev});
