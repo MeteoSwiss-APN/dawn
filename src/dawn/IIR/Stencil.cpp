@@ -14,12 +14,12 @@
 
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/DependencyGraphStage.h"
-#include "dawn/Optimizer/Renaming.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/Renaming.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
-#include "dawn/IIR/IIRNodeIterator.h"
 #include <algorithm>
 #include <iostream>
 #include <numeric>
@@ -50,9 +50,12 @@ std::ostream& operator<<(std::ostream& os, const iir::Stencil& stencil) {
     os << "MultiStage " << (multiStageIdx++) << ": (" << MS->getLoopOrder() << ")\n";
     for(const auto& stage : MS->getChildren())
       os << "  " << stencil.getStencilInstantiation().getNameFromStageID(stage->getStageID()) << " "
-         << RangeToString()(stage->getFields(), [&](const std::pair<int, iir::Field>& fieldPair) {
-              return stencil.getStencilInstantiation().getNameFromAccessID(fieldPair.first);
-            }) << "\n";
+         << RangeToString()(stage->getFields(),
+                            [&](const std::pair<int, iir::Field>& fieldPair) {
+                              return stencil.getStencilInstantiation().getNameFromAccessID(
+                                  fieldPair.first);
+                            })
+         << "\n";
   }
   return os;
 }
@@ -138,6 +141,10 @@ Stencil::Stencil(StencilInstantiation& stencilInstantiation,
                  const std::shared_ptr<sir::Stencil>& SIRStencil, int StencilID)
     : stencilInstantiation_(stencilInstantiation), SIRStencil_(SIRStencil), StencilID_(StencilID) {}
 
+void Stencil::DerivedInfo::clear() { fields_.clear(); }
+
+void Stencil::clearDerivedInfo() { derivedInfo_.clear(); }
+
 std::unordered_set<Interval> Stencil::getIntervals() const {
   std::unordered_set<Interval> intervals;
 
@@ -194,11 +201,15 @@ void Stencil::forEachStatementAccessesPairImpl(
     int endStageIdx, bool updateFields) {
   for(int stageIdx = startStageIdx; stageIdx < endStageIdx; ++stageIdx) {
     const auto& stage = getStage(stageIdx);
-    for(const auto& doMethodPtr : stage->getChildren())
+    for(const auto& doMethodPtr : stage->getChildren()) {
       func(doMethodPtr->getChildren());
-
-    if(updateFields)
+      if(updateFields) {
+        doMethodPtr->update(iir::NodeUpdateType::level);
+      }
+    }
+    if(updateFields) {
       stage->update(iir::NodeUpdateType::level);
+    }
   }
 }
 
@@ -211,8 +222,12 @@ void Stencil::updateFields(const Stencil::Lifetime& lifetime) {
 void Stencil::updateFields() { updateFieldsImpl(0, getNumStages()); }
 
 void Stencil::updateFieldsImpl(int startStageIdx, int endStageIdx) {
-  for(int stageIdx = startStageIdx; stageIdx < endStageIdx; ++stageIdx)
+  for(int stageIdx = startStageIdx; stageIdx < endStageIdx; ++stageIdx) {
+    for(auto& doMethod : getStage(stageIdx)->getChildren()) {
+      doMethod->update(iir::NodeUpdateType::level);
+    }
     getStage(stageIdx)->update(iir::NodeUpdateType::level);
+  }
 }
 
 std::unordered_map<int, Field> Stencil::computeFieldsOnTheFly() const {
