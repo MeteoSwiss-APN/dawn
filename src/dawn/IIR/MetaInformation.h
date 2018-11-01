@@ -34,13 +34,13 @@ namespace iir {
 class StencilMetaInformation : NonCopyable {
   class VariableVersions {
   private:
+  public:
     /// Map of AccessIDs to the the list of all AccessIDs of the multi-versioned variables. Note
     /// that the index in the vector corresponds to the version number.
     std::unordered_map<int, std::shared_ptr<std::vector<int>>> variableVersionsMap_;
     std::unordered_map<int, int> versionToOriginalVersionMap_;
     std::unordered_set<int> versionIDs_;
 
-  public:
     bool hasVariableMultipleVersions(const int accessID) const {
       return variableVersionsMap_.count(accessID);
     }
@@ -66,6 +66,7 @@ class StencilMetaInformation : NonCopyable {
       return versionToOriginalVersionMap_.at(accessID);
     }
     const std::unordered_set<int>& getVersionIDs() const { return versionIDs_; }
+
     VariableVersions() = default;
   };
 

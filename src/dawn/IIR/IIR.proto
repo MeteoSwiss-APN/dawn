@@ -152,7 +152,7 @@ message StmtIDPair{
 }
 
 message ExprIDPair{
-    dawn.proto.statements.Stmt stmt = 1;
+    dawn.proto.statements.Expr expr = 1;
     int32 IDs = 2;
 }
 
@@ -169,7 +169,14 @@ message Array3i{
 message GlobalValueAndType{
     int32 Typekind = 1;
     double value = 2;
+    bool valueIsSet = 3;
 }
+
+message StencilDescStatement{
+    dawn.proto.statements.Stmt stmt = 1;
+    repeated dawn.proto.statements.StencilCall stacktrace = 2;
+}
+
 
 message StencilMetaInfo{
     map<int32, string> AccessIDToName = 1;
@@ -181,13 +188,13 @@ message StencilMetaInfo{
     repeated int32 TemporaryFieldIDs = 7;
     repeated int32 GlobalVariableIDs = 8;
     VariableVersions versionedFields = 9;
-    repeated dawn.proto.statements.Stmt stencilDescStatements = 10;
+    repeated StencilDescStatement stencilDescStatements = 10;
     map<int32, dawn.proto.statements.StencilCallDeclStmt> IDToStencilCall = 11;
     map<string, dawn.proto.statements.BoundaryConditionDeclStmt> FieldnameToBoundaryCondition = 12;
     map<int32, Array3i> fieldIDtoLegalDimensions = 13;
     map<string, GlobalValueAndType> GlobalVariableToValue = 14;
     dawn.proto.statements.SourceLocation stencilLocation = 15;
-    string stencilMName = 16;
+    string stencilName = 16;
     string fileName = 17;
 }
 

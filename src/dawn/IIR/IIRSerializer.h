@@ -16,6 +16,8 @@
 #define DAWN_IIR_IIRSERIALIZER_H
 
 #include "dawn/IIR/IIR.h"
+#include "dawn/IIR/IIR.pb.h"
+#include "dawn/IIR/MetaInformation.h"
 #include <memory>
 #include <string>
 
@@ -41,9 +43,9 @@ public:
   /// @param kind   The kind of serialization used in `file` (Json or Byte)
   /// @throws std::excetpion    Failed to deserialize
   /// @returns newly allocated SIR on success or `NULL`
-  static std::unique_ptr<iir::IIR>
-  deserialize(const std::string& file, std::shared_ptr<iir::StencilInstantiation> instantiation,
-              SerializationKind kind = SK_Json);
+  static void deserialize(const std::string& file,
+                          std::shared_ptr<iir::StencilInstantiation> instantiation,
+                          SerializationKind kind = SK_Json);
 
   /// @brief Deserialize the SIR from the given JSON formatted `string`
   ///
@@ -51,10 +53,9 @@ public:
   /// @param kind   The kind of serialization used in `str` (Json or Byte)
   /// @throws std::excetpion    Failed to deserialize
   /// @returns newly allocated SIR on success or `NULL`
-  static std::unique_ptr<iir::IIR>
-  deserializeFromString(const std::string& str,
-                        std::shared_ptr<iir::StencilInstantiation> instantiation,
-                        SerializationKind kind = SK_Json);
+  static void deserializeFromString(const std::string& str,
+                                    std::shared_ptr<iir::StencilInstantiation> instantiation,
+                                    SerializationKind kind = SK_Json);
 
   /// @brief Serialize the SIR as a Json or Byte formatted string to `file`
   ///
@@ -71,8 +72,45 @@ public:
   /// @param sir    SIR to serialize
   /// @param kind   The kind of serialization to use when writing to the string (Json or Byte)
   /// @returns JSON formatted strong of `sir`
-  static std::string serializeToString(const std::shared_ptr<iir::StencilInstantiation> instantiation,
-                                       SerializationKind kind = SK_Json);
+  static std::string
+  serializeToString(const std::shared_ptr<iir::StencilInstantiation> instantiation,
+                    SerializationKind kind = SK_Json);
+
+private:
+  /// \brief deserializeImpl
+  /// \param str
+  /// \param kind
+  /// \param target
+  static void deserializeImpl(const std::string& str, IIRSerializer::SerializationKind kind,
+                       std::shared_ptr<iir::StencilInstantiation>& target);
+
+  /// \brief deserializeIIR
+  /// \param target
+  /// \param protoIIR
+  static void deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& target,
+                      const proto::iir::IIR& protoIIR);
+
+  /// \brief deserializeMetaData
+  /// \param target
+  /// \param protoMetaData
+  static void deserializeMetaData(std::shared_ptr<iir::StencilInstantiation>& target,
+                           const proto::iir::StencilMetaInfo& protoMetaData);
+  /// \brief serializeImpl
+  /// \param instantiation
+  /// \param kind
+  /// \return
+  static std::string serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                            dawn::IIRSerializer::SerializationKind kind);
+  /// \brief serializeIIR
+  /// \param target
+  /// \param iir
+  static void serializeIIR(proto::iir::StencilInstantiation& target, const std::unique_ptr<iir::IIR>& iir);
+  ///
+  /// \brief serializeMetaData
+  /// \param target
+  /// \param metaData
+  static void serializeMetaData(proto::iir::StencilInstantiation& target,
+                         iir::StencilMetaInformation& metaData);
 };
 
 } // namespace dawn
