@@ -128,6 +128,7 @@ public:
   /// @brief Set a cache
   iir::Cache& setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
                        int AccessID, Interval const& interval,
+                       const Interval& enclosingAccessedInterval,
                        boost::optional<iir::Cache::window> w);
 
   iir::Cache& setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,

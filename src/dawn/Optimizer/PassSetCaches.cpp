@@ -288,15 +288,14 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
           }
 
           iir::Interval interval = field.getInterval();
-          if(cacheCandidate.policy_ == iir::Cache::CacheIOPolicy::fill) {
-            auto interval_ = MS.computeEnclosingAccessInterval(field.getAccessID(), true);
-            DAWN_ASSERT(interval_.is_initialized());
-            interval = *interval_;
-          }
+          auto interval_ = MS.computeEnclosingAccessInterval(field.getAccessID(), true);
+          DAWN_ASSERT(interval_.is_initialized());
+          auto enclosingAccessedInterval = *interval_;
 
           // Set the cache
-          iir::Cache& cache = MS.setCache(iir::Cache::K, cacheCandidate.policy_,
-                                          field.getAccessID(), interval, cacheCandidate.window_);
+          iir::Cache& cache =
+              MS.setCache(iir::Cache::K, cacheCandidate.policy_, field.getAccessID(), interval,
+                          enclosingAccessedInterval, cacheCandidate.window_);
 
           if(context->getOptions().ReportPassSetCaches) {
             std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": MS"

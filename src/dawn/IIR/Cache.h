@@ -59,7 +59,9 @@ public:
   };
 
   Cache(CacheTypeKind type, CacheIOPolicy policy, int AccessID,
-        boost::optional<Interval> const& interval, boost::optional<window> const& w);
+        boost::optional<Interval> const& interval,
+        boost::optional<Interval> const& enclosingAccessedInterval,
+        boost::optional<window> const& w);
 
   /// @brief Get the AccessID of the field
   int getCachedFieldAccessID() const;
@@ -93,6 +95,7 @@ private:
   CacheIOPolicy policy_;
   int AccessID_;
   boost::optional<Interval> interval_;
+  boost::optional<Interval> enclosingAccessedInterval_;
   boost::optional<window> window_;
 };
 
