@@ -195,7 +195,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     //////////// Trying serialization
     IIRSerializer::serialize("out.file", instantiation, IIRSerializer::SerializationKind::SK_Json);
 
-    IIRSerializer::deserialize("out.file", instantiation);
+    auto output =  IIRSerializer::deserialize("out.file", instantiation->getOptimizerContext());
   }
 
   return optimizer;

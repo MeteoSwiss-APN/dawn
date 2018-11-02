@@ -17,7 +17,7 @@
 
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIR.pb.h"
-#include "dawn/IIR/MetaInformation.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include <memory>
 #include <string>
 
@@ -43,8 +43,8 @@ public:
   /// @param kind   The kind of serialization used in `file` (Json or Byte)
   /// @throws std::excetpion    Failed to deserialize
   /// @returns newly allocated SIR on success or `NULL`
-  static void deserialize(const std::string& file,
-                          std::shared_ptr<iir::StencilInstantiation> instantiation,
+  static std::shared_ptr<iir::StencilInstantiation> deserialize(const std::string& file,
+                          dawn::OptimizerContext* context,
                           SerializationKind kind = SK_Json);
 
   /// @brief Deserialize the SIR from the given JSON formatted `string`
@@ -53,8 +53,8 @@ public:
   /// @param kind   The kind of serialization used in `str` (Json or Byte)
   /// @throws std::excetpion    Failed to deserialize
   /// @returns newly allocated SIR on success or `NULL`
-  static void deserializeFromString(const std::string& str,
-                                    std::shared_ptr<iir::StencilInstantiation> instantiation,
+  static std::shared_ptr<iir::StencilInstantiation> deserializeFromString(const std::string& str,
+                                    dawn::OptimizerContext* context,
                                     SerializationKind kind = SK_Json);
 
   /// @brief Serialize the SIR as a Json or Byte formatted string to `file`

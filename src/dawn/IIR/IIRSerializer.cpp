@@ -1074,22 +1074,28 @@ void IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Seria
   target = instantiation;
 }
 
-void dawn::IIRSerializer::deserialize(const std::string& file,
-                                      std::shared_ptr<iir::StencilInstantiation> instantiation,
-                                      dawn::IIRSerializer::SerializationKind kind) {
+std::shared_ptr<iir::StencilInstantiation>
+IIRSerializer::deserialize(const std::string& file, OptimizerContext* context,
+                           IIRSerializer::SerializationKind kind) {
   std::ifstream ifs(file);
   if(!ifs.is_open())
     throw std::runtime_error(
         dawn::format("cannot deserialize IIR: failed to open file \"%s\"", file));
 
   std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
-  deserializeImpl(str, kind, instantiation);
+  std::shared_ptr<iir::StencilInstantiation> returnvalue =
+      std::make_shared<iir::StencilInstantiation>(context);
+  deserializeImpl(str, kind, returnvalue);
+  return returnvalue;
 }
 
-void dawn::IIRSerializer::deserializeFromString(
-    const std::string& str, std::shared_ptr<iir::StencilInstantiation> instantiation,
-    dawn::IIRSerializer::SerializationKind kind) {
-  deserializeImpl(str, kind, instantiation);
+std::shared_ptr<iir::StencilInstantiation>
+IIRSerializer::deserializeFromString(const std::string& str, OptimizerContext* context,
+                                     IIRSerializer::SerializationKind kind) {
+  std::shared_ptr<iir::StencilInstantiation> returnvalue =
+      std::make_shared<iir::StencilInstantiation>(context);
+  deserializeImpl(str, kind, returnvalue);
+  return returnvalue;
 }
 
 void dawn::IIRSerializer::serialize(const std::string& file,
