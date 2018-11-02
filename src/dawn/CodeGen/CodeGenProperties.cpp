@@ -93,9 +93,6 @@ CodeGenProperties::getStencilProperties(StencilContext context, const int id) co
 }
 
 std::string CodeGenProperties::getStencilName(StencilContext context, const size_t id) const {
-  //    if(stencilContextProperties_[static_cast<int>(context)].stencilIDToName_.count(id))
-  //        return stencilContextProperties_[static_cast<int>(context)].stencilIDToName_.at(id);
-  //    return "somerandomname";
   DAWN_ASSERT_MSG(stencilContextProperties_[static_cast<int>(context)].stencilIDToName_.count(id),
                   "id of stencil not found");
   return stencilContextProperties_[static_cast<int>(context)].stencilIDToName_.at(id);

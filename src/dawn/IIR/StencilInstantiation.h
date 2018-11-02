@@ -47,7 +47,7 @@ class StencilInstantiation : NonCopyable {
 
 public:
   /// @brief Assemble StencilInstantiation for stencil
-  StencilInstantiation(::dawn::OptimizerContext* context);
+  StencilInstantiation(dawn::OptimizerContext* context);
 
   StencilMetaInformation& getMetaData();
 
@@ -130,7 +130,7 @@ public:
 
   /// @brief Check whether the `AccessID` corresponds to a literal constant
   inline bool isLiteral(int AccessID) const {
-    return AccessID < 0 && metadata_.LiteralAccessIDToNameMap_.count(AccessID);
+    return AccessID < 0 && metadata_.LiteraAccessIDToNameMap_.count(AccessID);
   }
 
   inline bool isAccessIDAVersion(const int accessID) {

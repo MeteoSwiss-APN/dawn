@@ -46,7 +46,7 @@ namespace iir {
 //     StencilInstantiation
 //===------------------------------------------------------------------------------------------===//
 
-StencilInstantiation::StencilInstantiation(::dawn::OptimizerContext* context)
+StencilInstantiation::StencilInstantiation(dawn::OptimizerContext* context)
     : context_(context), IIR_(make_unique<IIR>()) {}
 
 StencilMetaInformation& StencilInstantiation::getMetaData() { return metadata_; }
@@ -57,33 +57,9 @@ std::shared_ptr<StencilInstantiation> StencilInstantiation::clone() const {
       std::make_shared<StencilInstantiation>(context_);
 
   stencilInstantiation->metadata_.clone(metadata_);
-  stencilInstantiation->metadata_.AccessIDToNameMap_ = metadata_.AccessIDToNameMap_;
-  stencilInstantiation->metadata_.ExprToAccessIDMap_ = metadata_.ExprToAccessIDMap_;
-  stencilInstantiation->metadata_.StmtToAccessIDMap_ = metadata_.StmtToAccessIDMap_;
-  stencilInstantiation->metadata_.LiteralAccessIDToNameMap_ = metadata_.LiteralAccessIDToNameMap_;
-  stencilInstantiation->metadata_.FieldAccessIDSet_ = metadata_.FieldAccessIDSet_;
-  stencilInstantiation->metadata_.apiFieldIDs_ = metadata_.apiFieldIDs_;
-  stencilInstantiation->metadata_.TemporaryFieldAccessIDSet_ = metadata_.TemporaryFieldAccessIDSet_;
-  stencilInstantiation->metadata_.GlobalVariableAccessIDSet_ = metadata_.GlobalVariableAccessIDSet_;
-  stencilInstantiation->metadata_.variableVersions_ = metadata_.variableVersions_;
+
   stencilInstantiation->IIR_ = make_unique<iir::IIR>();
-
   IIR_->clone(stencilInstantiation->IIR_);
-
-  stencilInstantiation->metadata_.stencilDescStatements_ = metadata_.stencilDescStatements_;
-  stencilInstantiation->metadata_.IDToStencilCallMap_ = metadata_.IDToStencilCallMap_;
-//  stencilInstantiation->metadata_.StageIDToNameMap_ = metadata_.StageIDToNameMap_;
-  stencilInstantiation->metadata_.stencilFunctionInstantiations_ =
-      metadata_.stencilFunctionInstantiations_;
-  stencilInstantiation->metadata_.ExprToStencilFunctionInstantiationMap_ =
-      metadata_.ExprToStencilFunctionInstantiationMap_;
-  stencilInstantiation->metadata_.stencilFunInstantiationCandidate_ =
-      metadata_.stencilFunInstantiationCandidate_;
-  stencilInstantiation->metadata_.FieldnameToBoundaryConditionMap_ =
-      metadata_.FieldnameToBoundaryConditionMap_;
-//  stencilInstantiation->metadata_.CachedVariableSet_ = metadata_.CachedVariableSet_;
-  stencilInstantiation->metadata_.fieldIDToInitializedDimensionsMap_ =
-      metadata_.fieldIDToInitializedDimensionsMap_;
 
   return stencilInstantiation;
 }
