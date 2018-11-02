@@ -23,7 +23,7 @@
 #include "dawn/Support/NonCopyable.h"
 #include "dawn/Support/StringRef.h"
 #include "dawn/Support/UIDGenerator.h"
-#include "dawn/IIR/MetaInformation.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include <memory>
 #include <set>
 #include <string>

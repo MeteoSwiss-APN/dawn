@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/IIR/MetaInformation.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/Optimizer/AccessComputation.h"
