@@ -83,7 +83,6 @@ public:
   /// Map of AccessIDs and to the name of the variable/field. Note that only for fields of the "main
   /// stencil" we can get the AccessID by name. This is due the fact that fields of different
   /// stencil functions can share the same name.
-  std::unordered_map<std::string, int> NameToAccessIDMap_;
   std::unordered_map<int, std::string> AccessIDToNameMap_;
 
   /// Surjection of AST Nodes, Expr (FieldAccessExpr or VarAccessExpr) or Stmt (VarDeclStmt), to
@@ -110,10 +109,6 @@ public:
   /// Set containing the AccessIDs of fields which are represented by a temporary storages
   std::set<int> TemporaryFieldAccessIDSet_;
 
-  /// Set containing the AccessIDs of fields which are manually allocated by the stencil and serve
-  /// as temporaries spanning over multiple stencils
-  std::set<int> AllocatedFieldAccessIDSet_;
-
   /// Set containing the AccessIDs of "global variable" accesses. Global variable accesses are
   /// represented by global_accessor or if we know the value at compile time we do a constant
   /// folding of the variable
@@ -125,11 +120,7 @@ public:
 
   /// Stencil description statements. These are built from the StencilDescAst of the sir::Stencil
   std::vector<std::shared_ptr<Statement>> stencilDescStatements_;
-  std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int> StencilCallToStencilIDMap_;
   std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>> IDToStencilCallMap_;
-
-  /// StageID to name Map. Filled by the `PassSetStageName`.
-  std::unordered_map<int, std::string> StageIDToNameMap_;
 
   /// Referenced stencil functions in this stencil (note that nested stencil functions are not
   /// stored here but rather in the respecticve `StencilFunctionInstantiation`)
@@ -143,16 +134,9 @@ public:
                      StencilFunctionInstantiationCandidate>
       stencilFunInstantiationCandidate_;
 
-  /// BoundaryConditionCall to Extent Map. Filled my `PassSetBoundaryCondition`
-  std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>
-      BoundaryConditionToExtentsMap_;
-
   /// Field Name to BoundaryConditionDeclStmt
   std::unordered_map<std::string, std::shared_ptr<BoundaryConditionDeclStmt>>
       FieldnameToBoundaryConditionMap_;
-
-  /// Set of all the IDs that are locally cached
-  std::set<int> CachedVariableSet_;
 
   /// Map of Field ID's to their respecive legal dimensions for offsets if specified in the code
   std::unordered_map<int, Array3i> fieldIDToInitializedDimensionsMap_;
