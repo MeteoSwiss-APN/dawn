@@ -13,14 +13,14 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassFieldVersioning.h"
-#include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
-#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Extents.h"
-#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/AccessComputation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
@@ -137,6 +137,7 @@ bool PassFieldVersioning::run(
             newGraph = oldGraph;
             newGraph->insertStatementAccessesPair(stmtAccessesPair);
           }
+          doMethod.update(iir::NodeUpdateType::level);
         }
         stage.update(iir::NodeUpdateType::level);
       }

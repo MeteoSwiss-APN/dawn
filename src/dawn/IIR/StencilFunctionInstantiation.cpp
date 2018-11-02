@@ -35,7 +35,7 @@ StencilFunctionInstantiation::StencilFunctionInstantiation(
     const Interval& interval, bool isNested)
     : stencilInstantiation_(context), expr_(expr), function_(function), ast_(ast),
       interval_(interval), hasReturn_(false), isNested_(isNested),
-      doMethod_(make_unique<DoMethod>(interval)) {
+      doMethod_(make_unique<DoMethod>(interval, *context)) {
   DAWN_ASSERT(context);
   DAWN_ASSERT(function);
 }

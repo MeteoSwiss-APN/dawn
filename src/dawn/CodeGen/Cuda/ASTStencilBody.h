@@ -81,10 +81,10 @@ public:
   /// @brief Mapping of VarDeclStmt and Var/FieldAccessExpr to their name
   std::string getName(const std::shared_ptr<Expr>& expr) const override;
   std::string getName(const std::shared_ptr<Stmt>& stmt) const override;
-  bool isCached(const int accessID) const;
 
 private:
   void derefIJCache(const std::shared_ptr<FieldAccessExpr>& expr);
+  void derefKCache(const std::shared_ptr<FieldAccessExpr>& expr);
 };
 
 } // namespace cuda

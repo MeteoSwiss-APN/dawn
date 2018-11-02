@@ -272,7 +272,8 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
       renameAccessIDInAccesses(this, AccessID, newAccessID, doMethod.getChildren());
     }
 
-    // Updat the fields of the stage
+    // Update the fields of the doMethod and stage levels
+    doMethod.update(iir::NodeUpdateType::level);
     stage.update(iir::NodeUpdateType::level);
   }
 

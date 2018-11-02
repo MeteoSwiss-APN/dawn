@@ -144,6 +144,10 @@ Stencil::Stencil(StencilInstantiation& stencilInstantiation, sir::Attr attribute
     : stencilInstantiation_(stencilInstantiation), stencilAttributes_(attributes),
       StencilID_(StencilID) {}
 
+void Stencil::DerivedInfo::clear() { fields_.clear(); }
+
+void Stencil::clearDerivedInfo() { derivedInfo_.clear(); }
+
 std::unordered_set<Interval> Stencil::getIntervals() const {
   std::unordered_set<Interval> intervals;
 
@@ -200,11 +204,15 @@ void Stencil::forEachStatementAccessesPairImpl(
     int endStageIdx, bool updateFields) {
   for(int stageIdx = startStageIdx; stageIdx < endStageIdx; ++stageIdx) {
     const auto& stage = getStage(stageIdx);
-    for(const auto& doMethodPtr : stage->getChildren())
+    for(const auto& doMethodPtr : stage->getChildren()) {
       func(doMethodPtr->getChildren());
-
-    if(updateFields)
+      if(updateFields) {
+        doMethodPtr->update(iir::NodeUpdateType::level);
+      }
+    }
+    if(updateFields) {
       stage->update(iir::NodeUpdateType::level);
+    }
   }
 }
 
@@ -217,8 +225,12 @@ void Stencil::updateFields(const Stencil::Lifetime& lifetime) {
 void Stencil::updateFields() { updateFieldsImpl(0, getNumStages()); }
 
 void Stencil::updateFieldsImpl(int startStageIdx, int endStageIdx) {
-  for(int stageIdx = startStageIdx; stageIdx < endStageIdx; ++stageIdx)
+  for(int stageIdx = startStageIdx; stageIdx < endStageIdx; ++stageIdx) {
+    for(auto& doMethod : getStage(stageIdx)->getChildren()) {
+      doMethod->update(iir::NodeUpdateType::level);
+    }
     getStage(stageIdx)->update(iir::NodeUpdateType::level);
+  }
 }
 
 std::unordered_map<int, Field> Stencil::computeFieldsOnTheFly() const {

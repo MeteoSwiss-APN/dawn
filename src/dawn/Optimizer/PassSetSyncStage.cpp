@@ -30,6 +30,12 @@ bool PassSetSyncStage::requiresSync(const iir::Stage& stage,
                                     const std::unique_ptr<iir::MultiStage>& ms) const {
   const int stageId = stage.getStageID();
 
+  // if there is only one stage, there can not be horizontal data dependencies
+  if(ms->getChildren().size() <= 1) {
+    return false;
+  }
+  DAWN_ASSERT(!ms->getChildren().empty());
+
   for(const auto& field : stage.getFields()) {
     const int accessID = field.second.getAccessID();
 
@@ -70,6 +76,8 @@ PassSetSyncStage::PassSetSyncStage() : Pass("PassSetSyncStage") {}
 bool PassSetSyncStage::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(instantiation->getIIR()))) {
     for(const auto& stage : ms->getChildren()) {
+      // the last stage also requires a sync, since it will be written into by the next k level
+      // processing
       if(requiresSync(*stage, ms)) {
         stage->setRequiresSync(true);
       } else {

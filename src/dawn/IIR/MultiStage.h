@@ -57,6 +57,7 @@ class MultiStage : public IIRNode<Stencil, MultiStage, Stage, impl::StdList> {
     std::unordered_map<int, iir::Cache> caches_;
 
     std::unordered_map<int, Field> fields_;
+    void clear();
   };
 
   DerivedInfo derivedInfo_;
@@ -89,6 +90,9 @@ public:
 
   int getID() const { return id_; }
   /// @}
+
+  /// @brief clear the derived info
+  virtual void clearDerivedInfo() override;
 
   std::vector<std::unique_ptr<DoMethod>> computeOrderedDoMethods() const;
 

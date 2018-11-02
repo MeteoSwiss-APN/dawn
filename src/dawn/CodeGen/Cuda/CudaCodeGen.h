@@ -40,6 +40,7 @@ namespace cuda {
 class CudaCodeGen : public CodeGen {
 
   enum class FunctionArgType { caller, callee };
+  std::unordered_map<int, CacheProperties> cachePropertyMap_;
 
 public:
   ///@brief constructor
@@ -62,7 +63,8 @@ private:
 
   void generateCudaKernelCode(std::stringstream& ssSW,
                               const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-                              const std::unique_ptr<iir::MultiStage>& ms);
+                              const std::unique_ptr<iir::MultiStage>& ms,
+                              const CacheProperties& cacheProperties);
   void
   generateAllCudaKernels(std::stringstream& ssSW,
                          const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
@@ -124,22 +126,22 @@ private:
                            const iir::MultiStage& ms, const CacheProperties& cacheProperties,
                            Array3ui blockSize) const;
 
+  void generateKCacheDecl(MemberFunction& kernel, const iir::MultiStage& ms,
+                          const CacheProperties& cacheProperties) const;
+
   void generateIJCacheIndexInit(MemberFunction& kernel, const CacheProperties& cacheProperties,
                                 const Array3ui blockSize) const;
 
   bool useTmpIndex(const std::unique_ptr<iir::MultiStage>& ms,
-                   const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
+                   const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                   const CacheProperties& cacheProperties) const;
 
-  bool useIJCaches(const std::unique_ptr<iir::MultiStage>& ms) const;
-
-  bool accessIsCached(const int accessID, const std::unique_ptr<iir::MultiStage>& ms) const;
-
-  void generateTmpIndexInit(
-      MemberFunction& kernel, const std::unique_ptr<iir::MultiStage>& ms,
-      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
-  std::string
-  getCacheName(const iir::Cache& cache,
-               const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
+  void generateTmpIndexInit(MemberFunction& kernel, const std::unique_ptr<iir::MultiStage>& ms,
+                            const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                            const CacheProperties& cacheProperties) const;
+  void generateKCacheSlide(MemberFunction& cudaKernel, const CacheProperties& cacheProperties,
+                           const std::unique_ptr<iir::MultiStage>& ms,
+                           const iir::Interval& interval) const;
 
   std::string intervalDiffToString(iir::IntervalDiff intervalDiff, std::string maxRange) const;
 
@@ -154,7 +156,11 @@ private:
   std::string generateStencilInstantiation(
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
   static int paddedBoundary(int value);
-  bool requiresSync(const iir::Stage& stage, const std::unique_ptr<iir::MultiStage>& ms) const;
+  /// @brief returns true if the stage is the last stage of an interval loop execution
+  /// which requires synchronization due to usage of 2D ij caches (which are re-written at the next
+  /// k-loop iteration)
+  bool intervalRequiresSync(const iir::Interval& interval, const iir::Stage& stage,
+                            const std::unique_ptr<iir::MultiStage>& ms) const;
 };
 } // namespace cuda
 } // namespace codegen
