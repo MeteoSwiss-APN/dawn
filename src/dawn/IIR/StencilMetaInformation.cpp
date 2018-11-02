@@ -80,10 +80,6 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
     stencilFunInstantiationCandidate_.emplace(
         std::make_shared<StencilFunctionInstantiation>(pair.first->clone()), candidate);
   }
-  //  for(const auto& pair : origin.BoundaryConditionToExtentsMap_) {
-  //    BoundaryConditionToExtentsMap_.emplace(
-  //        std::make_shared<BoundaryConditionDeclStmt>(*(pair.first)), pair.second);
-  //  }
   for(const auto& pair : origin.FieldnameToBoundaryConditionMap_) {
     FieldnameToBoundaryConditionMap_.emplace(
         pair.first, std::make_shared<BoundaryConditionDeclStmt>(*(pair.second)));
