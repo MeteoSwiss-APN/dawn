@@ -76,9 +76,6 @@ public:
   /// @brief Get the `name` associated with the `AccessID`
   const std::string& getNameFromAccessID(int AccessID) const;
 
-  /// @brief Get the `name` associated with the `StageID`
-//  const std::string& getNameFromStageID(int StageID) const;
-
   /// @brief insert an element to the maps of stencil functions
   void insertExprToStencilFunction(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
 

@@ -102,7 +102,7 @@ void StencilInstantiation::removeAccessID(int AccessID) {
 
 const std::string StencilInstantiation::getName() const {
   return metadata_.stencilName_;
-} // SIRStencil_->Name; }
+}
 
 const std::unordered_map<std::shared_ptr<Stmt>, int>&
 StencilInstantiation::getStmtToAccessIDMap() const {
