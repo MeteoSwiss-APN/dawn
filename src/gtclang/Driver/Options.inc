@@ -38,6 +38,7 @@ OPT(bool, Verbose, false, "verbose", "", "Enable verbose output by using step-by
 OPT(bool, DumpSIR, false, "dump-sir", "", "Dump the parsed SIR to stdout", "", false, false)
 OPT(bool, DumpAST, false, "dump-ast", "", "Dump the clang AST of the preprocessed input to stdout", "", false, false)
 OPT(bool, WriteSIR, false, "write-sir", "", "Write the parsed SIR to stdout", "", false, false)
+OPT(std::string, SIRFormat, "json", "sir-format", "", "format of the output SIR", "", true, false)
 OPT(bool, DumpPP, false, "dump-pp", "", "Dump the preprocessed code to stdout", "", false, false)
 OPT(std::string, OutputFile, "", "output", "o", "Write output to <file>", "<file>", true, false)
 OPT(std::string, ConfigFile, "", "config", "", 

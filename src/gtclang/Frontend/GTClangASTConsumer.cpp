@@ -163,7 +163,16 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
     std::string generatedSIR(filename.data(), filename.data() + filename.size());
     DAWN_LOG(INFO) << "Generating SIR file " << generatedFilename;
 
-    dawn::SIRSerializer::serialize(generatedSIR, SIR.get());
+    if(context_->getOptions().SIRFormat == "json") {
+      dawn::SIRSerializer::serialize(generatedSIR, SIR.get(),
+                                     dawn::SIRSerializer::SerializationKind::SK_Json);
+    } else if(context_->getOptions().SIRFormat == "byte") {
+      dawn::SIRSerializer::serialize(generatedSIR, SIR.get(),
+                                     dawn::SIRSerializer::SerializationKind::SK_Byte);
+
+    } else {
+      dawn_unreachable("Unknown SIRFormat option");
+    }
   }
 
   // Do we generate code?
