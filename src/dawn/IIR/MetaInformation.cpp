@@ -59,7 +59,7 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
   TemporaryFieldAccessIDSet_ = origin.TemporaryFieldAccessIDSet_;
   AllocatedFieldAccessIDSet_ = origin.AllocatedFieldAccessIDSet_;
   GlobalVariableAccessIDSet_ = origin.GlobalVariableAccessIDSet_;
-  for(auto id : origin.variableVersions_.getVersionIDs()) {
+  variableVersions_.insert(origin.variableVersions_.begin(), origin.variableVersions_.end());
     variableVersions_.insert(id, origin.variableVersions_.getVersions(id));
   }
   for(auto statement : origin.stencilDescStatements_) {
