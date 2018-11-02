@@ -58,8 +58,6 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
   TemporaryFieldAccessIDSet_ = origin.TemporaryFieldAccessIDSet_;
   GlobalVariableAccessIDSet_ = origin.GlobalVariableAccessIDSet_;
   variableVersions_.insert(origin.variableVersions_.begin(), origin.variableVersions_.end());
-    variableVersions_.insert(id, origin.variableVersions_.getVersions(id));
-  }
   for(auto statement : origin.stencilDescStatements_) {
     stencilDescStatements_.emplace_back(statement->clone());
   }
@@ -82,15 +80,15 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
     stencilFunInstantiationCandidate_.emplace(
         std::make_shared<StencilFunctionInstantiation>(pair.first->clone()), candidate);
   }
-//  for(const auto& pair : origin.BoundaryConditionToExtentsMap_) {
-//    BoundaryConditionToExtentsMap_.emplace(
-//        std::make_shared<BoundaryConditionDeclStmt>(*(pair.first)), pair.second);
-//  }
+  //  for(const auto& pair : origin.BoundaryConditionToExtentsMap_) {
+  //    BoundaryConditionToExtentsMap_.emplace(
+  //        std::make_shared<BoundaryConditionDeclStmt>(*(pair.first)), pair.second);
+  //  }
   for(const auto& pair : origin.FieldnameToBoundaryConditionMap_) {
     FieldnameToBoundaryConditionMap_.emplace(
         pair.first, std::make_shared<BoundaryConditionDeclStmt>(*(pair.second)));
   }
-//  CachedVariableSet_ = origin.CachedVariableSet_;
+  //  CachedVariableSet_ = origin.CachedVariableSet_;
   fieldIDToInitializedDimensionsMap_ = origin.fieldIDToInitializedDimensionsMap_;
   for(const auto& pair : origin.globalVariableMap_) {
     globalVariableMap_.emplace(pair.first, std::make_shared<sir::Value>(pair.second));
