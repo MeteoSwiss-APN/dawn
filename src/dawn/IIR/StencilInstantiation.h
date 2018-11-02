@@ -23,7 +23,7 @@
 #include "dawn/Support/NonCopyable.h"
 #include "dawn/Support/StringRef.h"
 #include "dawn/Support/UIDGenerator.h"
-#include "dawn/IIR/MetaInformation.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include <memory>
 #include <set>
 #include <string>
@@ -47,7 +47,7 @@ class StencilInstantiation : NonCopyable {
 
 public:
   /// @brief Assemble StencilInstantiation for stencil
-  StencilInstantiation(::dawn::OptimizerContext* context);
+  StencilInstantiation(dawn::OptimizerContext* context);
 
   StencilMetaInformation& getMetaData();
 
@@ -75,9 +75,6 @@ public:
 
   /// @brief Get the `name` associated with the `AccessID`
   const std::string& getNameFromAccessID(int AccessID) const;
-
-  /// @brief Get the `name` associated with the `StageID`
-//  const std::string& getNameFromStageID(int StageID) const;
 
   /// @brief insert an element to the maps of stencil functions
   void insertExprToStencilFunction(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
@@ -130,7 +127,7 @@ public:
 
   /// @brief Check whether the `AccessID` corresponds to a literal constant
   inline bool isLiteral(int AccessID) const {
-    return AccessID < 0 && metadata_.LiteralAccessIDToNameMap_.count(AccessID);
+    return AccessID < 0 && metadata_.LiteraAccessIDToNameMap_.count(AccessID);
   }
 
   inline bool isAccessIDAVersion(const int accessID) {
@@ -341,10 +338,6 @@ public:
   /// @brief Get the Literal-AccessID-to-Name map
   std::unordered_map<int, std::string>& getLiteralAccessIDToNameMap();
   const std::unordered_map<int, std::string>& getLiteralAccessIDToNameMap() const;
-
-//  /// @brief Get the StageID-to-Name map
-//  std::unordered_map<int, std::string>& getStageIDToNameMap();
-//  const std::unordered_map<int, std::string>& getStageIDToNameMap() const;
 
   /// @brief Get the field-AccessID set
   std::set<int>& getFieldAccessIDSet();

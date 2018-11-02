@@ -288,7 +288,8 @@ public:
   /// that the update info is consistent with the current state of the tree)
   bool compareDerivedInfo() const;
 
-  sir::Attr &getStencilAttributes();
+  ///@brief Get the Attributes of the Stencil as specified in the user-code
+  sir::Attr& getStencilAttributes();
 
 private:
   void forEachStatementAccessesPairImpl(
