@@ -291,10 +291,11 @@ public:
     stmt->getThenStmt()->accept(*this);
     currentStmtProto_.pop();
 
-    currentStmtProto_.push(protoStmt->mutable_else_part());
-    stmt->getElseStmt()->accept(*this);
-    currentStmtProto_.pop();
-
+    if(stmt->hasElse()) {
+      currentStmtProto_.push(protoStmt->mutable_else_part());
+      stmt->getElseStmt()->accept(*this);
+      currentStmtProto_.pop();
+    }
     setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
   }
 
