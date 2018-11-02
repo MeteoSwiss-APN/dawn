@@ -975,17 +975,45 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
   for(auto stencilDescStmt : protoMetaData.stencildescstatements()) {
     metadata.stencilDescStatements_.push_back(makeStatement(&stencilDescStmt));
   }
-//  for(auto IDToCall : protoMetaData.idtostencilcall()) {
-//    metadata.IDToStencilCallMap_[IDToCall.first] = makeStmt((IDToCall.second));
-//  }
-//  for(auto FieldnameToBC : protoMetaData.fieldnametoboundarycondition()) {
-//    metadata.FieldnameToBoundaryConditionMap_[FieldnameToBC.first] = makeStmt((FieldnameToBC.second));
-//  }
+  //  for(auto IDToCall : protoMetaData.idtostencilcall()) {
+  //    metadata.IDToStencilCallMap_[IDToCall.first] = makeStmt((IDToCall.second));
+  //  }
+  //  for(auto FieldnameToBC : protoMetaData.fieldnametoboundarycondition()) {
+  //    metadata.FieldnameToBoundaryConditionMap_[FieldnameToBC.first] =
+  //    makeStmt((FieldnameToBC.second));
+  //  }
   for(auto fieldIDInitializedDims : protoMetaData.fieldidtolegaldimensions()) {
     Array3i dims{fieldIDInitializedDims.second.int1(), fieldIDInitializedDims.second.int2(),
                  fieldIDInitializedDims.second.int3()};
     metadata.fieldIDToInitializedDimensionsMap_[fieldIDInitializedDims.first] = dims;
   }
+  for(auto GlobalToValue : protoMetaData.globalvariabletovalue()) {
+    std::shared_ptr<sir::Value> value = std::make_shared<sir::Value>();
+    switch(GlobalToValue.second.typekind()) {
+    case 1:
+      value->setType(sir::Value::Boolean);
+      break;
+    case 2:
+      value->setType(sir::Value::Integer);
+      break;
+    case 3:
+      value->setType(sir::Value::Double);
+      break;
+    default:
+      dawn_unreachable("unsupported type");
+    }
+    if(GlobalToValue.second.valueisset()) {
+      value->setValue(GlobalToValue.second.value());
+    }
+    metadata.globalVariableMap_[GlobalToValue.first] = value;
+  }
+
+  metadata.stencilLocation_.Column = protoMetaData.stencillocation().column();
+  metadata.stencilLocation_.Line = protoMetaData.stencillocation().line();
+
+  metadata.stencilName_ = protoMetaData.stencilname();
+
+  metadata.fileName_ = protoMetaData.filename();
 }
 
 void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& target,

@@ -193,14 +193,11 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     //    instantiation->dump();
     DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `" << instantiation->getName()
                    << "`";
-<<<<<<< Updated upstream
-=======
 
     //////////// Trying serialization
     IIRSerializer::serialize("out.file", instantiation, IIRSerializer::SerializationKind::SK_Json);
 
     IIRSerializer::deserialize("out.file", instantiation);
->>>>>>> Stashed changes
   }
 
   return optimizer;
