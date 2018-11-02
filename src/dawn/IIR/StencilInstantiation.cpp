@@ -121,12 +121,6 @@ const std::string& StencilInstantiation::getNameFromAccessID(int AccessID) const
   return it->second;
 }
 
-//const std::string& StencilInstantiation::getNameFromStageID(int StageID) const {
-//  auto it = metadata_.StageIDToNameMap_.find(StageID);
-//  DAWN_ASSERT_MSG(it != metadata_.StageIDToNameMap_.end(), "Invalid StageID");
-//  return it->second;
-//}
-
 void StencilInstantiation::mapExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID) {
   metadata_.ExprToAccessIDMap_.emplace(expr, accessID);
 }
@@ -646,14 +640,6 @@ StencilInstantiation::getLiteralAccessIDToNameMap() const {
   return metadata_.LiteralAccessIDToNameMap_;
 }
 
-//std::unordered_map<int, std::string>& StencilInstantiation::getStageIDToNameMap() {
-//  return metadata_.StageIDToNameMap_;
-//}
-
-//const std::unordered_map<int, std::string>& StencilInstantiation::getStageIDToNameMap() const {
-//  return metadata_.StageIDToNameMap_;
-//}
-
 std::set<int>& StencilInstantiation::getFieldAccessIDSet() { return metadata_.FieldAccessIDSet_; }
 
 const std::set<int>& StencilInstantiation::getFieldAccessIDSet() const {
@@ -914,13 +900,6 @@ bool StencilInstantiation::isStencilCallCodeGenName(const std::string& name) {
   return StringRef(name).startswith("__code_gen_");
 }
 
-//const std::set<int>& StencilInstantiation::getCachedVariableSet() const {
-//  return metadata_.CachedVariableSet_;
-//}
-
-//void StencilInstantiation::insertCachedVariable(int fieldID) {
-//  metadata_.CachedVariableSet_.emplace(fieldID);
-//}
 
 void StencilInstantiation::reportAccesses() const {
   // Stencil functions
