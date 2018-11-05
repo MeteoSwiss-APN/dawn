@@ -582,8 +582,7 @@ void CudaCodeGen::generatePreFillKCaches(
   for(const auto& cachePair : ms->getCaches()) {
     const int accessID = cachePair.first;
     const auto& cache = cachePair.second;
-    if(!CacheProperties::requiresFill(cache) ||
-       !CacheProperties::requiresFillAtInterval(ms, accessID, interval, true))
+    if(!CacheProperties::requiresFill(cache))
       continue;
 
     DAWN_ASSERT(cache.getInterval().is_initialized());
