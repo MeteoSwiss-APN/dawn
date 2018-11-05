@@ -62,7 +62,7 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const iir::Stencil& stencil)
   for(const auto& mss : stencil.getChildren()) {
     for(const auto& cachePair : mss->getCaches()) {
       auto const& cache = cachePair.second;
-      const boost::optional<iir::Interval> interval = cache.getInterval();
+      const boost::optional<iir::Interval> interval = cache.getEnclosingAccessedInterval();
       if(interval.is_initialized())
         intervalProperties_.insert(*interval);
 
