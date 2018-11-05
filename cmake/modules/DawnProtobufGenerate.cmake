@@ -40,7 +40,7 @@ include(CMakeParseArguments)
 #   Language to compile to [default: cpp]. 
 #
 function(dawn_protobuf_generate)
-  set(one_value_args OUT_FILES OUT_INCLUDE_DIRS LANGUAGE)
+  set(one_value_args OUT_FILES OUT_INCLUDE_DIRS LANGUAGE PROTO_PATH)
   set(multi_value_args PROTOS)
   cmake_parse_arguments(ARG "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
@@ -61,6 +61,10 @@ function(dawn_protobuf_generate)
 
   if(NOT ARG_LANGUAGE)
     set(ARG_LANGUAGE cpp)
+  endif()
+
+  if(ARG_PROTO_PATH)
+    set(PRTOPATH_INCLUDE="--proto_path=${ARG_PROTO_PATH}")
   endif()
 
   if("${ARG_LANGUAGE}" STREQUAL "cpp")
@@ -91,7 +95,7 @@ function(dawn_protobuf_generate)
   set(protobuf_script ${CMAKE_CURRENT_BINARY_DIR}/run_protobuf.sh)
   file(WRITE "${protobuf_script}" "#!/usr/bin/env bash\n")
   file(APPEND "${protobuf_script}" "export LD_LIBRARY_PATH=\"${libprotoc_dir}\":$LD_LIBRARY_PATH\n")
-  file(APPEND "${protobuf_script}" "${protoc_path} $*\n")
+  file(APPEND "${protobuf_script}" "${protoc_path} ${PRTOPATH_INCLUDE} $*\n")
   set(command "${BASH_EXECUTABLE}")
 
   set(output_files)

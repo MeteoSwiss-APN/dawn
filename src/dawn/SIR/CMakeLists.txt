@@ -18,7 +18,7 @@ include(DawnProtobufGenerate)
 dawn_protobuf_generate(
   OUT_FILES sir_proto_cpp_files
   OUT_INCLUDE_DIRS sir_proto_include_dirs
-  PROTOS ${CMAKE_CURRENT_SOURCE_DIR}/SIR.proto
+  PROTOS ${CMAKE_CURRENT_SOURCE_DIR}/SIR.proto ${CMAKE_CURRENT_SOURCE_DIR}/statements.proto
   LANGUAGE cpp
 )
 include_directories(SYSTEM ${sir_proto_include_dirs})
