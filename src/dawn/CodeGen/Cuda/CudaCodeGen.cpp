@@ -494,11 +494,11 @@ void CudaCodeGen::generateCudaKernelCode(
 
 namespace impl_ {
 struct KCacheFillProperties {
-  inline KCacheFillProperties(std::string name, int accessID, int offset)
-      : name_(name), accessID_(accessID), offset_(offset) {}
+  inline KCacheFillProperties(std::string name, int accessID, iir::Extent vertExtent)
+      : name_(name), accessID_(accessID), vertExtent_(vertExtent) {}
   std::string name_;
   int accessID_;
-  int offset_;
+  iir::Extent vertExtent_;
 };
 }
 
@@ -521,7 +521,6 @@ void CudaCodeGen::generateFillKCaches(
     DAWN_ASSERT(cache.getInterval().is_initialized());
     const auto cacheInterval = *(cache.getInterval());
     auto vertExtent = cacheProperties.getKCacheVertExtent(accessID);
-    const auto cacheFieldAccessedInterval = cacheInterval.extendInterval(vertExtent);
 
     iir::Interval::Bound intervalBound = (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
                                              ? iir::Interval::Bound::lower
@@ -529,8 +528,8 @@ void CudaCodeGen::generateFillKCaches(
 
     const bool cacheEndWithinInterval =
         (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
-            ? interval.bound(intervalBound) >= cacheFieldAccessedInterval.bound(intervalBound)
-            : interval.bound(intervalBound) <= cacheFieldAccessedInterval.bound(intervalBound);
+            ? interval.bound(intervalBound) >= cacheInterval.bound(intervalBound)
+            : interval.bound(intervalBound) <= cacheInterval.bound(intervalBound);
 
     if(cacheInterval.overlaps(interval) && cacheEndWithinInterval) {
       auto cacheName = cacheProperties.getCacheName(accessID);
@@ -538,10 +537,7 @@ void CudaCodeGen::generateFillKCaches(
       DAWN_ASSERT(intervalFields.count(accessID));
       iir::Extents horizontalExtent = intervalFields.at(accessID).getExtentsRB();
 
-      kcacheFillProperty[horizontalExtent].emplace_back(
-          cacheName, accessID,
-          ((ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) ? vertExtent.Minus
-                                                                   : vertExtent.Plus));
+      kcacheFillProperty[horizontalExtent].emplace_back(cacheName, accessID, vertExtent);
     }
   }
 
@@ -556,14 +552,18 @@ void CudaCodeGen::generateFillKCaches(
             " && jblock <= block_size_j -1 + " + std::to_string(horizontalExtent[1].Plus) + ")",
         [&]() {
           for(const auto& kcacheProp : kcachesProp) {
+
+            int offset = (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+                             ? kcacheProp.vertExtent_.Minus
+                             : kcacheProp.vertExtent_.Plus;
             std::stringstream ss;
             CodeGeneratorHelper::generateFieldAccessDeref(ss, ms, stencilInstantiation,
                                                           kcacheProp.accessID_, fieldIndexMap,
-                                                          Array3i{0, 0, kcacheProp.offset_});
-            cudaKernel.addStatement(kcacheProp.name_ + "[" +
-                                    std::to_string(cacheProperties.getKCacheIndex(
-                                        kcacheProp.accessID_, kcacheProp.offset_)) +
-                                    "] =" + ss.str());
+                                                          Array3i{0, 0, offset});
+            cudaKernel.addStatement(
+                kcacheProp.name_ + "[" +
+                std::to_string(cacheProperties.getKCacheIndex(kcacheProp.accessID_, offset)) +
+                "] =" + ss.str());
           }
         });
   }
@@ -599,10 +599,7 @@ void CudaCodeGen::generatePreFillKCaches(
       iir::Extents horizontalExtent = intervalFields.at(accessID).getExtentsRB();
 
       DAWN_ASSERT(vertExtent.Minus <= 0 && vertExtent.Plus >= 0);
-      kcacheFillProperty[horizontalExtent].emplace_back(
-          cacheName, accessID,
-          ((ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) ? vertExtent.Minus
-                                                                   : vertExtent.Plus));
+      kcacheFillProperty[horizontalExtent].emplace_back(cacheName, accessID, vertExtent);
     }
   }
 
@@ -618,7 +615,8 @@ void CudaCodeGen::generatePreFillKCaches(
         [&]() {
           for(const auto& kcacheProp : kcachesProp) {
             if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) {
-              for(int klev = kcacheProp.offset_ + 1; klev <= 0; ++klev) {
+              for(int klev = kcacheProp.vertExtent_.Minus + 1; klev <= kcacheProp.vertExtent_.Plus;
+                  ++klev) {
                 std::stringstream ss;
                 CodeGeneratorHelper::generateFieldAccessDeref(ss, ms, stencilInstantiation,
                                                               kcacheProp.accessID_, fieldIndexMap,
@@ -629,7 +627,8 @@ void CudaCodeGen::generatePreFillKCaches(
                     "] =" + ss.str());
               }
             } else {
-              for(int klev = kcacheProp.offset_ - 1; klev >= 0; --klev) {
+              for(int klev = kcacheProp.vertExtent_.Plus - 1; klev >= kcacheProp.vertExtent_.Minus;
+                  --klev) {
                 std::stringstream ss;
                 CodeGeneratorHelper::generateFieldAccessDeref(ss, ms, stencilInstantiation,
                                                               kcacheProp.accessID_, fieldIndexMap,
@@ -658,8 +657,9 @@ void CudaCodeGen::generateKCacheSlide(MemberFunction& cudaKernel,
       continue;
     auto cacheInterval = cache.getInterval();
     DAWN_ASSERT(cacheInterval.is_initialized());
-    if(!(*cacheInterval).overlaps(interval))
+    if(!(*cacheInterval).overlaps(interval)) {
       continue;
+    }
 
     const int accessID = cache.getCachedFieldAccessID();
     auto vertExtent = cacheProperties.getKCacheVertExtent(accessID);
