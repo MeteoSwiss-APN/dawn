@@ -217,12 +217,6 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
     if(context->getOptions().UseKCaches ||
        stencil.getSIRStencil()->Attributes.has(sir::Attr::AK_UseKCaches)) {
 
-      // Get the fields of all Multi-Stages
-      std::vector<std::unordered_map<int, iir::Field>> fields;
-      std::transform(
-          stencil.childrenBegin(), stencil.childrenEnd(), std::back_inserter(fields),
-          [](const iir::Stencil::MultiStageSmartPtr_t& MSPtr) { return MSPtr->getFields(); });
-
       std::set<int> mssProcessedFields;
       for(int MSIndex = 0; MSIndex < stencil.getChildren().size(); ++MSIndex) {
         iir::MultiStage& ms = *stencil.getMultiStageFromMultiStageIndex(MSIndex);
@@ -270,12 +264,12 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
 
             for(int MSIndex2 = MSIndex + 1; MSIndex2 < stencil.getChildren().size(); MSIndex2++) {
               iir::MultiStage& nextMS = *stencil.getMultiStageFromMultiStageIndex(MSIndex2);
-              const auto& fields = nextMS.getFields();
+              const auto& nextMSfields = nextMS.getFields();
 
-              if(!fields.count(field.getAccessID()))
+              if(!nextMSfields.count(field.getAccessID()))
                 continue;
 
-              const iir::Field& fieldInNextMS = fields.find(field.getAccessID())->second;
+              const iir::Field& fieldInNextMS = nextMSfields.find(field.getAccessID())->second;
 
               CacheCandidate policyMS2 = computeCacheCandidateForMS(
                   fieldInNextMS, instantiation->isTemporaryField(fieldInNextMS.getAccessID()),

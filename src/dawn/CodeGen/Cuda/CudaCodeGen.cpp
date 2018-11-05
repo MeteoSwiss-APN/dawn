@@ -680,10 +680,8 @@ void CudaCodeGen::generateKCacheSlide(MemberFunction& cudaKernel,
 }
 bool CudaCodeGen::intervalRequiresSync(const iir::Interval& interval, const iir::Stage& stage,
                                        const std::unique_ptr<iir::MultiStage>& ms) const {
-  // if the stage is the last stage, it will require a sync (to ensure we sync before the write of
-  // a
-  // previous stage at the next k level), but only if the stencil is not pure vertical and ij
-  // caches
+  // if the stage is the last stage, it will require a sync (to ensure we sync before the write of a
+  // previous stage at the next k level), but only if the stencil is not pure vertical and ij caches
   // are used after the last sync
   int lastStageID = -1;
   // we identified the last stage that required a sync
