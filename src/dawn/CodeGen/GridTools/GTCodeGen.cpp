@@ -603,14 +603,16 @@ void GTCodeGen::generateStencilClasses(
             multiStage.getCaches(),
             [&](const std::pair<int, iir::Cache>& AccessIDCachePair) -> std::string {
               auto const& cache = AccessIDCachePair.second;
-              DAWN_ASSERT(cache.getInterval().is_initialized() ||
+              DAWN_ASSERT(cache.getEnclosingAccessedInterval().is_initialized() ||
                           cache.getCacheIOPolicy() == iir::Cache::local);
 
               std::string intervalName;
-              if(cache.getInterval().is_initialized()) {
-                DAWN_ASSERT(intervalDefinitions.intervalProperties_.count(*(cache.getInterval())));
-                intervalName =
-                    intervalDefinitions.intervalProperties_.find(*(cache.getInterval()))->name_;
+              if(cache.getEnclosingAccessedInterval().is_initialized()) {
+                DAWN_ASSERT(intervalDefinitions.intervalProperties_.count(
+                    *(cache.getEnclosingAccessedInterval())));
+                intervalName = intervalDefinitions.intervalProperties_
+                                   .find(*(cache.getEnclosingAccessedInterval()))
+                                   ->name_;
               }
               return (c_gt() + "cache<" +
                       // Type: IJ or K
