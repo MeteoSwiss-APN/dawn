@@ -717,7 +717,8 @@ void CudaCodeGen::generateKCacheSlide(MemberFunction& cudaKernel,
     const auto& cache = cachePair.second;
     if(!cacheProperties.isKCached(cache) ||
        ((cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::local) &&
-        (cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::fill)))
+        (cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::fill) &&
+        (cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::flush)))
       continue;
     auto cacheInterval = cache.getInterval();
     DAWN_ASSERT(cacheInterval.is_initialized());
