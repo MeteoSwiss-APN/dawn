@@ -595,7 +595,15 @@ void CudaCodeGen::generateFlushKCaches(
     const auto cacheInterval = *(cache.getInterval());
     auto vertExtent = cacheProperties.getKCacheVertExtent(accessID);
 
-    if(cacheInterval.contains(interval)) {
+    iir::Interval::Bound intervalBound = (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+                                             ? iir::Interval::Bound::upper
+                                             : iir::Interval::Bound::lower;
+    const bool cacheEndWithinInterval =
+        (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+            ? interval.bound(intervalBound) <= cacheInterval.bound(intervalBound)
+            : interval.bound(intervalBound) >= cacheInterval.bound(intervalBound);
+
+    if(cacheInterval.overlaps(interval) && cacheEndWithinInterval) {
       auto cacheName = cacheProperties.getCacheName(accessID);
 
       DAWN_ASSERT(intervalFields.count(accessID));
