@@ -150,6 +150,8 @@ private:
                       const std::unordered_map<int, Array3i>& fieldIndexMap,
                       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
 
+  /// @brief generate a pre-fill of the kcaches, i.e. it fills all the klevels of the kcache that
+  /// need to be filled before we start the k looping
   void generatePreFillKCaches(
       MemberFunction& cudaKernel, const std::unique_ptr<iir::MultiStage>& ms,
       const iir::Interval& interval, const CacheProperties& cacheProperties,

@@ -593,6 +593,8 @@ void CudaCodeGen::generatePreFillKCaches(
                                              ? iir::Interval::Bound::upper
                                              : iir::Interval::Bound::lower;
 
+    // if the bound of a kcache is the same as the interval, indicates that we will start using the
+    // kcache for the first time with this k-leg, and a pre-fill might be required
     if(cacheInterval.bound(intervalBound) == (interval.bound(intervalBound))) {
       auto cacheName = cacheProperties.getCacheName(accessID);
       iir::Extents horizontalExtent = intervalFields.at(accessID).getExtentsRB();
