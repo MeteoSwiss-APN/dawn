@@ -19,12 +19,19 @@ namespace dawn {
 namespace iir {
 
 Cache::Cache(CacheTypeKind type, CacheIOPolicy policy, int fieldAccessID,
-             const boost::optional<Interval>& interval, const boost::optional<window>& w)
-    : type_(type), policy_(policy), AccessID_(fieldAccessID), interval_(interval), window_(w) {}
+             const boost::optional<Interval>& interval,
+             const boost::optional<Interval>& enclosingAccessedInterval,
+             const boost::optional<window>& w)
+    : type_(type), policy_(policy), AccessID_(fieldAccessID), interval_(interval),
+      enclosingAccessedInterval_(enclosingAccessedInterval), window_(w) {}
 
 int Cache::getCachedFieldAccessID() const { return AccessID_; }
 
 boost::optional<Interval> Cache::getInterval() const { return interval_; }
+
+boost::optional<Interval> Cache::getEnclosingAccessedInterval() const {
+  return enclosingAccessedInterval_;
+}
 
 Cache::CacheTypeKind Cache::getCacheType() const { return type_; }
 

@@ -41,7 +41,7 @@ private:
       extentsRB_; ///< Accumulated read and write extent of the field, extended by the
   /// redundant computation of a block
   Interval interval_; ///< Enclosing Interval from the iteration space
-                      ///  where the Field has been accessed
+                      ///  from where the Field has been accessed
 public:
   Field(Field&& f) = default;
   Field(Field const& f) = default;

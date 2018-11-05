@@ -59,8 +59,8 @@ static std::string makeKLoop(const std::string dom, const std::array<unsigned in
   std::string upper = makeIntervalBound(dom, interval, iir::Interval::Bound::upper);
 
   if(kParallel) {
-    lower = "max(" + lower + ",blockIdx.z*" + std::to_string(blockSize[2]) + ")";
-    upper = "min(" + upper + ",(blockIdx.z+1)*" + std::to_string(blockSize[2]) + "-1)";
+    lower = "kleg_lower_bound";
+    upper = "kleg_upper_bound";
   }
   return (loopOrder == iir::LoopOrderKind::LK_Backward)
              ? makeLoopImpl(iir::Extent{}, "k", upper, lower, ">=", "--")
@@ -97,14 +97,21 @@ void CudaCodeGen::generateIJCacheDecl(
   }
 }
 
-void CudaCodeGen::generateKCacheDecl(MemberFunction& kernel, const iir::MultiStage& ms,
+void CudaCodeGen::generateKCacheDecl(MemberFunction& kernel,
+                                     const std::unique_ptr<iir::MultiStage>& ms,
                                      const CacheProperties& cacheProperties) const {
-  for(const auto& cacheP : ms.getCaches()) {
+  const bool solveKLoopInParallel_ = CodeGeneratorHelper::solveKLoopInParallel(ms);
+
+  for(const auto& cacheP : ms->getCaches()) {
     const iir::Cache& cache = cacheP.second;
+
     if(cache.getCacheType() != iir::Cache::CacheTypeKind::K ||
-       cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::local)
+       ((cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::local) &&
+        (cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::fill)))
       continue;
 
+    if(cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::local && solveKLoopInParallel_)
+      continue;
     const int accessID = cache.getCachedFieldAccessID();
     auto vertExtent = cacheProperties.getKCacheVertExtent(accessID);
 
@@ -113,22 +120,8 @@ void CudaCodeGen::generateKCacheDecl(MemberFunction& kernel, const iir::MultiSta
   }
 }
 
-std::vector<iir::Interval>
-CudaCodeGen::computePartitionOfIntervals(const std::unique_ptr<iir::MultiStage>& ms) const {
-  auto intervals_set = ms->getIntervals();
-  std::vector<iir::Interval> intervals_v;
-  std::copy(intervals_set.begin(), intervals_set.end(), std::back_inserter(intervals_v));
-
-  // compute the partition of the intervals
-
-  auto partitionIntervals = iir::Interval::computePartition(intervals_v);
-  if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
-    std::reverse(partitionIntervals.begin(), partitionIntervals.end());
-  return partitionIntervals;
-}
-
 void CudaCodeGen::generateCudaKernelCode(
-    std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
+    std::stringstream& ssSW, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const std::unique_ptr<iir::MultiStage>& ms, const CacheProperties& cacheProperties) {
 
   iir::Extents maxExtents{0, 0, 0, 0, 0, 0};
@@ -136,7 +129,7 @@ void CudaCodeGen::generateCudaKernelCode(
     maxExtents.merge(stage->getExtents());
   }
 
-  const bool solveKLoopInParallel_ = solveKLoopInParallel(ms);
+  const bool solveKLoopInParallel_ = CodeGeneratorHelper::solveKLoopInParallel(ms);
 
   // fields used in the stencil
   const auto& fields = ms->getFields();
@@ -146,14 +139,23 @@ void CudaCodeGen::generateCudaKernelCode(
                             std::pair<int, iir::Field> const& p) {
                   return !stencilInstantiation->isTemporaryField(p.second.getAccessID());
                 }));
-  auto tempFieldsNonCached =
+  // all the temp fields that are non local cache, and therefore will require the infrastructure of
+  // tmp storages (allocation, iterators, etc)
+  auto tempFieldsNonLocalCached =
       makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
                             std::pair<int, iir::Field> const& p) {
-                  return stencilInstantiation->isTemporaryField(p.second.getAccessID()) &&
-                         !cacheProperties.accessIsCached(p.second.getAccessID());
+                  const int accessID = p.first;
+                  if(!stencilInstantiation->isTemporaryField(p.second.getAccessID()))
+                    return false;
+                  if(!cacheProperties.accessIsCached(accessID))
+                    return true;
+                  if(ms->getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local)
+                    return false;
+
+                  return true;
                 }));
 
-  const bool containsTemporary = !tempFieldsNonCached.empty();
+  const bool containsTemporary = !tempFieldsNonLocalCached.empty();
 
   std::string fnDecl = "";
   if(containsTemporary)
@@ -170,7 +172,7 @@ void CudaCodeGen::generateCudaKernelCode(
   cudaKernel.addArg("const int ksize");
 
   std::vector<std::string> strides = generateStrideArguments(
-      nonTempFields, tempFieldsNonCached, *ms, *stencilInstantiation, FunctionArgType::callee);
+      nonTempFields, tempFieldsNonLocalCached, *ms, *stencilInstantiation, FunctionArgType::callee);
 
   for(const auto strideArg : strides) {
     cudaKernel.addArg(strideArg);
@@ -183,7 +185,7 @@ void CudaCodeGen::generateCudaKernelCode(
   }
 
   // then the temporary field arguments
-  for(auto field : tempFieldsNonCached) {
+  for(auto field : tempFieldsNonLocalCached) {
     cudaKernel.addArg(c_gt() + "data_view<TmpStorage>" +
                       stencilInstantiation->getNameFromAccessID((*field).second.getAccessID()) +
                       "_dv");
@@ -195,7 +197,7 @@ void CudaCodeGen::generateCudaKernelCode(
   cudaKernel.startBody();
   cudaKernel.addComment("Start kernel");
 
-  for(auto field : tempFieldsNonCached) {
+  for(auto field : tempFieldsNonLocalCached) {
     std::string fieldName =
         stencilInstantiation->getNameFromAccessID((*field).second.getAccessID());
 
@@ -206,7 +208,7 @@ void CudaCodeGen::generateCudaKernelCode(
   const auto blockSize = stencilInstantiation->getIIR()->getBlockSize();
 
   generateIJCacheDecl(cudaKernel, stencilInstantiation, *ms, cacheProperties, blockSize);
-  generateKCacheDecl(cudaKernel, *ms, cacheProperties);
+  generateKCacheDecl(cudaKernel, ms, cacheProperties);
 
   unsigned int ntx = blockSize[0];
   unsigned int nty = blockSize[1];
@@ -326,17 +328,18 @@ void CudaCodeGen::generateCudaKernelCode(
   }
 
   // compute the partition of the intervals
-  auto partitionIntervals = computePartitionOfIntervals(ms);
+  auto partitionIntervals = CodeGeneratorHelper::computePartitionOfIntervals(ms);
 
   DAWN_ASSERT(!partitionIntervals.empty());
 
-  ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, fieldIndexMap, *ms, cacheProperties,
+  ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation, fieldIndexMap, ms, cacheProperties,
                                        blockSize);
 
   iir::Interval::IntervalLevel lastKCell{0, 0};
   lastKCell = advance(lastKCell, ms->getLoopOrder(), -1);
 
   bool firstInterval = true;
+  int klegDeclared = false;
   for(auto interval : partitionIntervals) {
 
     // If execution is parallel we want to place the interval in a forward order
@@ -397,13 +400,39 @@ void CudaCodeGen::generateCudaKernelCode(
                                 ")");
       }
     }
+
+    if(solveKLoopInParallel_) {
+      // define the loop bounds of each parallel kleg
+      std::string lower = makeIntervalBound("dom", interval, iir::Interval::Bound::lower);
+      std::string upper = makeIntervalBound("dom", interval, iir::Interval::Bound::upper);
+      cudaKernel.addStatement((!klegDeclared ? std::string("int ") : std::string("")) +
+                              "kleg_lower_bound = max(" + lower + ",blockIdx.z*" +
+                              std::to_string(blockSize[2]) + ")");
+      cudaKernel.addStatement((!klegDeclared ? std::string("int ") : std::string("")) +
+                              "kleg_upper_bound = min(" + upper + ",(blockIdx.z+1)*" +
+                              std::to_string(blockSize[2]) + "-1);");
+      klegDeclared = true;
+    }
+
+    if(!solveKLoopInParallel_) {
+      generatePreFillKCaches(cudaKernel, ms, interval, cacheProperties, fieldIndexMap,
+                             stencilInstantiation);
+    }
+
     // for each interval, we generate naive nested loops
     cudaKernel.addBlockStatement(
         makeKLoop("dom", blockSize, ms->getLoopOrder(), interval, solveKLoopInParallel_), [&]() {
+
+          if(!solveKLoopInParallel_) {
+            generateFillKCaches(cudaKernel, ms, interval, cacheProperties, fieldIndexMap,
+                                stencilInstantiation);
+          }
+
           for(const auto& stagePtr : ms->getChildren()) {
             const iir::Stage& stage = *stagePtr;
             const auto& extent = stage.getExtents();
             iir::MultiInterval enclosingInterval;
+
             // TODO add the enclosing interval in derived ?
             for(const auto& doMethodPtr : stage.getChildren()) {
               enclosingInterval.insert(doMethodPtr->getInterval());
@@ -463,18 +492,175 @@ void CudaCodeGen::generateCudaKernelCode(
   cudaKernel.commit();
 }
 
+namespace impl_ {
+struct KCacheFillProperties {
+  inline KCacheFillProperties(std::string name, int accessID, iir::Extent vertExtent)
+      : name_(name), accessID_(accessID), vertExtent_(vertExtent) {}
+  std::string name_;
+  int accessID_;
+  iir::Extent vertExtent_;
+};
+}
+
+void CudaCodeGen::generateFillKCaches(
+    MemberFunction& cudaKernel, const std::unique_ptr<iir::MultiStage>& ms,
+    const iir::Interval& interval, const CacheProperties& cacheProperties,
+    const std::unordered_map<int, Array3i>& fieldIndexMap,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const {
+  cudaKernel.addComment("Center fill of kcaches");
+
+  auto intervalFields = ms->computeFieldsAtInterval(interval);
+  std::unordered_map<iir::Extents, std::vector<impl_::KCacheFillProperties>> kcacheFillProperty;
+
+  for(const auto& cachePair : ms->getCaches()) {
+    const int accessID = cachePair.first;
+    const auto& cache = cachePair.second;
+    if(!CacheProperties::requiresFill(cache))
+      continue;
+
+    DAWN_ASSERT(cache.getInterval().is_initialized());
+    const auto cacheInterval = *(cache.getInterval());
+    auto vertExtent = cacheProperties.getKCacheVertExtent(accessID);
+
+    iir::Interval::Bound intervalBound = (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+                                             ? iir::Interval::Bound::lower
+                                             : iir::Interval::Bound::upper;
+
+    const bool cacheEndWithinInterval =
+        (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+            ? interval.bound(intervalBound) >= cacheInterval.bound(intervalBound)
+            : interval.bound(intervalBound) <= cacheInterval.bound(intervalBound);
+
+    if(cacheInterval.overlaps(interval) && cacheEndWithinInterval) {
+      auto cacheName = cacheProperties.getCacheName(accessID);
+
+      DAWN_ASSERT(intervalFields.count(accessID));
+      iir::Extents horizontalExtent = intervalFields.at(accessID).getExtentsRB();
+
+      kcacheFillProperty[horizontalExtent].emplace_back(cacheName, accessID, vertExtent);
+    }
+  }
+
+  for(const auto& kcachePropPair : kcacheFillProperty) {
+    const auto& horizontalExtent = kcachePropPair.first;
+    const auto& kcachesProp = kcachePropPair.second;
+
+    cudaKernel.addBlockStatement(
+        "if(iblock >= " + std::to_string(horizontalExtent[0].Minus) +
+            " && iblock <= block_size_i -1 + " + std::to_string(horizontalExtent[0].Plus) +
+            " && jblock >= " + std::to_string(horizontalExtent[1].Minus) +
+            " && jblock <= block_size_j -1 + " + std::to_string(horizontalExtent[1].Plus) + ")",
+        [&]() {
+          for(const auto& kcacheProp : kcachesProp) {
+
+            int offset = (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+                             ? kcacheProp.vertExtent_.Minus
+                             : kcacheProp.vertExtent_.Plus;
+            std::stringstream ss;
+            CodeGeneratorHelper::generateFieldAccessDeref(ss, ms, stencilInstantiation,
+                                                          kcacheProp.accessID_, fieldIndexMap,
+                                                          Array3i{0, 0, offset});
+            cudaKernel.addStatement(
+                kcacheProp.name_ + "[" +
+                std::to_string(cacheProperties.getKCacheIndex(kcacheProp.accessID_, offset)) +
+                "] =" + ss.str());
+          }
+        });
+  }
+}
+
+void CudaCodeGen::generatePreFillKCaches(
+    MemberFunction& cudaKernel, const std::unique_ptr<iir::MultiStage>& ms,
+    const iir::Interval& interval, const CacheProperties& cacheProperties,
+    const std::unordered_map<int, Array3i>& fieldIndexMap,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const {
+  cudaKernel.addComment("Pre-fill of kcaches");
+
+  auto intervalFields = ms->computeFieldsAtInterval(interval);
+  std::unordered_map<iir::Extents, std::vector<impl_::KCacheFillProperties>> kcacheFillProperty;
+
+  for(const auto& cachePair : ms->getCaches()) {
+    const int accessID = cachePair.first;
+    const auto& cache = cachePair.second;
+    if(!CacheProperties::requiresFill(cache))
+      continue;
+
+    DAWN_ASSERT(cache.getInterval().is_initialized());
+    const auto cacheInterval = *(cache.getInterval());
+    auto vertExtent = cacheProperties.getKCacheVertExtent(accessID);
+
+    iir::Interval::Bound intervalBound = (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+                                             ? iir::Interval::Bound::upper
+                                             : iir::Interval::Bound::lower;
+
+    // if the bound of a kcache is the same as the interval, indicates that we will start using the
+    // kcache for the first time with this k-leg, and a pre-fill might be required
+    if(cacheInterval.bound(intervalBound) == (interval.bound(intervalBound))) {
+      auto cacheName = cacheProperties.getCacheName(accessID);
+      iir::Extents horizontalExtent = intervalFields.at(accessID).getExtentsRB();
+      kcacheFillProperty[horizontalExtent].emplace_back(cacheName, accessID, vertExtent);
+    }
+  }
+
+  for(const auto& kcachePropPair : kcacheFillProperty) {
+    const auto& horizontalExtent = kcachePropPair.first;
+    const auto& kcachesProp = kcachePropPair.second;
+
+    // we need to also box the fill of kcaches to avoid out-of-bounds
+    cudaKernel.addBlockStatement(
+        "if(iblock >= " + std::to_string(horizontalExtent[0].Minus) +
+            " && iblock <= block_size_i -1 + " + std::to_string(horizontalExtent[0].Plus) +
+            " && jblock >= " + std::to_string(horizontalExtent[1].Minus) +
+            " && jblock <= block_size_j -1 + " + std::to_string(horizontalExtent[1].Plus) + ")",
+        [&]() {
+          for(const auto& kcacheProp : kcachesProp) {
+            if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) {
+              // the last level is skipped since it will be filled in a normal kcache fill method
+              for(int klev = kcacheProp.vertExtent_.Minus + 1; klev <= kcacheProp.vertExtent_.Plus;
+                  ++klev) {
+                std::stringstream ss;
+                CodeGeneratorHelper::generateFieldAccessDeref(ss, ms, stencilInstantiation,
+                                                              kcacheProp.accessID_, fieldIndexMap,
+                                                              Array3i{0, 0, klev});
+                cudaKernel.addStatement(
+                    kcacheProp.name_ + "[" +
+                    std::to_string(cacheProperties.getKCacheIndex(kcacheProp.accessID_, klev)) +
+                    "] =" + ss.str());
+              }
+            } else {
+              for(int klev = kcacheProp.vertExtent_.Plus - 1; klev >= kcacheProp.vertExtent_.Minus;
+                  --klev) {
+                std::stringstream ss;
+                CodeGeneratorHelper::generateFieldAccessDeref(ss, ms, stencilInstantiation,
+                                                              kcacheProp.accessID_, fieldIndexMap,
+                                                              Array3i{0, 0, klev});
+                cudaKernel.addStatement(
+                    kcacheProp.name_ + "[" +
+                    std::to_string(cacheProperties.getKCacheIndex(kcacheProp.accessID_, klev)) +
+                    "] =" + ss.str());
+              }
+            }
+          }
+        });
+  }
+}
+
 void CudaCodeGen::generateKCacheSlide(MemberFunction& cudaKernel,
                                       const CacheProperties& cacheProperties,
                                       const std::unique_ptr<iir::MultiStage>& ms,
                                       const iir::Interval& interval) const {
+  cudaKernel.addComment("Slide kcaches");
   for(const auto& cachePair : ms->getCaches()) {
     const auto& cache = cachePair.second;
-    if(!cacheProperties.isKCached(cache))
+    if(!cacheProperties.isKCached(cache) ||
+       ((cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::local) &&
+        (cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::fill)))
       continue;
     auto cacheInterval = cache.getInterval();
     DAWN_ASSERT(cacheInterval.is_initialized());
-    if(!(*cacheInterval).overlaps(interval))
+    if(!(*cacheInterval).overlaps(interval)) {
       continue;
+    }
 
     const int accessID = cache.getCachedFieldAccessID();
     auto vertExtent = cacheProperties.getKCacheVertExtent(accessID);
@@ -515,7 +701,8 @@ bool CudaCodeGen::intervalRequiresSync(const iir::Interval& interval, const iir:
   }
   bool activateSearch = (lastStageIDWithSync == -1) ? true : false;
   for(const auto& st : ms->getChildren()) {
-    // we only activate the search to determine if IJ caches are used after last stage that was sync
+    // we only activate the search to determine if IJ caches are used after last stage that was
+    // sync
     if(st->getStageID() == lastStageIDWithSync) {
       activateSearch = true;
     }
@@ -537,11 +724,6 @@ bool CudaCodeGen::intervalRequiresSync(const iir::Interval& interval, const iir:
   return false;
 }
 
-bool CudaCodeGen::solveKLoopInParallel(const std::unique_ptr<iir::MultiStage>& ms) const {
-  iir::MultiInterval mInterval{computePartitionOfIntervals(ms)};
-  return mInterval.contiguous() && (ms->getLoopOrder() == iir::LoopOrderKind::LK_Parallel);
-}
-
 iir::Interval::IntervalLevel
 CudaCodeGen::computeNextLevelToProcess(const iir::Interval& interval,
                                        iir::LoopOrderKind loopOrder) const {
@@ -557,11 +739,11 @@ void CudaCodeGen::generateIJCacheIndexInit(MemberFunction& kernel,
                                            const CacheProperties& cacheProperties,
                                            const Array3ui blockSize) const {
   if(cacheProperties.isThereACommonCache()) {
-    kernel.addStatement("int " +
-                        cacheProperties.getCommonCacheIndexName(iir::Cache::CacheTypeKind::IJ) +
-                        "= iblock + " + std::to_string(cacheProperties.getOffsetCommonCache(1)) +
-                        " + (jblock + " + std::to_string(cacheProperties.getOffsetCommonCache(1)) +
-                        ")*" + std::to_string(cacheProperties.getStrideCommonCache(1, blockSize)));
+    kernel.addStatement(
+        "int " + cacheProperties.getCommonCacheIndexName(iir::Cache::CacheTypeKind::IJ) +
+        "= iblock + " + std::to_string(cacheProperties.getOffsetCommonIJCache(1)) +
+        " + (jblock + " + std::to_string(cacheProperties.getOffsetCommonIJCache(1)) + ")*" +
+        std::to_string(cacheProperties.getStrideCommonCache(1, blockSize)));
   }
 }
 
@@ -573,9 +755,16 @@ bool CudaCodeGen::useTmpIndex(
   const bool containsTemporary =
       (find_if(fields.begin(), fields.end(), [&](const std::pair<int, iir::Field>& field) {
          const int accessID = field.second.getAccessID();
+         if(!stencilInstantiation->isTemporaryField(accessID))
+           return false;
          // we dont need to initialize tmp indices for fields that are cached
-         return stencilInstantiation->isTemporaryField(accessID) &&
-                !cacheProperties.accessIsCached(accessID);
+         if(!cacheProperties.accessIsCached(accessID))
+           return true;
+         const auto& cache = ms->getCache(accessID);
+         if(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local) {
+           return false;
+         }
+         return true;
        }) != fields.end());
 
   return containsTemporary;
@@ -1022,9 +1211,7 @@ void CudaCodeGen::generateStencilRunMethod(
     StencilRunMethod.addStatement("{");
 
     const iir::MultiStage& multiStage = *multiStagePtr;
-    const auto& cacheProperties = cachePropertyMap_.at(multiStagePtr->getID());
-
-    bool solveKLoopInParallel_ = solveKLoopInParallel(multiStagePtr);
+    bool solveKLoopInParallel_ = CodeGeneratorHelper::solveKLoopInParallel(multiStagePtr);
 
     const auto& fields = multiStage.getFields();
 
@@ -1034,16 +1221,26 @@ void CudaCodeGen::generateStencilRunMethod(
                     return !stencilInstantiation->isTemporaryField(p.second.getAccessID());
                   }));
 
-    auto tempFieldsNonCached =
-        makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
-                              std::pair<int, iir::Field> const& p) {
-                    return stencilInstantiation->isTemporaryField(p.second.getAccessID()) &&
-                           !cacheProperties.accessIsCached(p.second.getAccessID());
-                  }));
+    auto tempFieldsNonLocalCached = makeRange(
+        fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
+                    std::pair<int, iir::Field> const& p) {
+          const int accessID = p.first;
+          if(!stencilInstantiation->isTemporaryField(p.second.getAccessID()))
+            return false;
+          for(const auto& ms : iterateIIROver<iir::MultiStage>(stencil)) {
+            if(!ms->isCached(accessID))
+              continue;
+            if(ms->getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local)
+              return false;
+          }
+
+          return true;
+        }));
 
     // create all the data views
     for(auto fieldIt : nonTempFields) {
-      // TODO have the same FieldInfo in ms level so that we dont need to query stencilInstantiation
+      // TODO have the same FieldInfo in ms level so that we dont need to query
+      // stencilInstantiation
       // all the time for name and IsTmpField
       const auto fieldName =
           stencilInstantiation->getNameFromAccessID((*fieldIt).second.getAccessID());
@@ -1051,7 +1248,7 @@ void CudaCodeGen::generateStencilRunMethod(
                                     fieldName + "= " + c_gt() + "make_device_view(m_" + fieldName +
                                     ")");
     }
-    for(auto fieldIt : tempFieldsNonCached) {
+    for(auto fieldIt : tempFieldsNonLocalCached) {
       const auto fieldName =
           stencilInstantiation->getNameFromAccessID((*fieldIt).second.getAccessID());
 
@@ -1117,12 +1314,12 @@ void CudaCodeGen::generateStencilRunMethod(
       ++idx;
     }
     DAWN_ASSERT(nonTempFields.size() > 0);
-    for(auto field : tempFieldsNonCached) {
+    for(auto field : tempFieldsNonLocalCached) {
       args = args + "," + stencilInstantiation->getNameFromAccessID((*field).second.getAccessID());
     }
 
     std::vector<std::string> strides =
-        generateStrideArguments(nonTempFields, tempFieldsNonCached, multiStage,
+        generateStrideArguments(nonTempFields, tempFieldsNonLocalCached, multiStage,
                                 *stencilInstantiation, FunctionArgType::caller);
 
     DAWN_ASSERT(!strides.empty());

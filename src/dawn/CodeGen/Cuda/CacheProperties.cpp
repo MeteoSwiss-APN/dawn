@@ -13,6 +13,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/CodeGen/Cuda/CacheProperties.h"
+#include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/StencilInstantiation.h"
 
@@ -77,6 +79,14 @@ iir::Extent CacheProperties::getKCacheVertExtent(const int accessID) const {
   return vertExtent;
 }
 
+int CacheProperties::getKCacheIndex(const int accessID, const int offset) const {
+  return getKCacheCenterOffset(accessID) + offset;
+}
+
+bool CacheProperties::requiresFill(const iir::Cache& cache) {
+  return ((cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill)); // ||
+}
+
 int CacheProperties::getKCacheCenterOffset(const int accessID) const {
   auto ext = getKCacheVertExtent(accessID);
   return -ext.Minus;
@@ -87,8 +97,12 @@ bool CacheProperties::isKCached(const int accessID) const {
 }
 
 bool CacheProperties::isKCached(const iir::Cache& cache) const {
-  return ((cache.getCacheType() == iir::Cache::CacheTypeKind::K) &&
-          (cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local));
+  bool solveKLoopInParallel_ = CodeGeneratorHelper::solveKLoopInParallel(ms_);
+  if(cache.getCacheType() != iir::Cache::CacheTypeKind::K) {
+    return false;
+  }
+
+  return ((cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local) || !solveKLoopInParallel_);
 }
 
 bool CacheProperties::hasIJCaches() const {
@@ -132,13 +146,12 @@ int CacheProperties::getStrideImpl(int dim, Array3ui blockSize, const iir::Exten
   }
 }
 
-// TODO rename this
-int CacheProperties::getOffset(int accessID, int dim) const {
+int CacheProperties::getOffsetBeginIJCache(int accessID, int dim) const {
   auto extents = getCacheExtent(accessID);
   return -extents[dim].Minus;
 }
 
-int CacheProperties::getOffsetCommonCache(int dim) const { return -extents_[dim].Minus; }
+int CacheProperties::getOffsetCommonIJCache(int dim) const { return -extents_[dim].Minus; }
 
 std::string CacheProperties::getCommonCacheIndexName(iir::Cache::CacheTypeKind cacheType) const {
   if(cacheType == iir::Cache::CacheTypeKind::IJ) {
