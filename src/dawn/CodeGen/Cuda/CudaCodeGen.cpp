@@ -596,8 +596,6 @@ void CudaCodeGen::generatePreFillKCaches(
     if(cacheInterval.bound(intervalBound) == (interval.bound(intervalBound))) {
       auto cacheName = cacheProperties.getCacheName(accessID);
       iir::Extents horizontalExtent = intervalFields.at(accessID).getExtentsRB();
-
-      DAWN_ASSERT(vertExtent.Minus <= 0 && vertExtent.Plus >= 0);
       kcacheFillProperty[horizontalExtent].emplace_back(cacheName, accessID, vertExtent);
     }
   }
