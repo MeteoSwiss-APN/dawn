@@ -739,11 +739,11 @@ void CudaCodeGen::generateIJCacheIndexInit(MemberFunction& kernel,
                                            const CacheProperties& cacheProperties,
                                            const Array3ui blockSize) const {
   if(cacheProperties.isThereACommonCache()) {
-    kernel.addStatement("int " +
-                        cacheProperties.getCommonCacheIndexName(iir::Cache::CacheTypeKind::IJ) +
-                        "= iblock + " + std::to_string(cacheProperties.getOffsetCommonCache(1)) +
-                        " + (jblock + " + std::to_string(cacheProperties.getOffsetCommonCache(1)) +
-                        ")*" + std::to_string(cacheProperties.getStrideCommonCache(1, blockSize)));
+    kernel.addStatement(
+        "int " + cacheProperties.getCommonCacheIndexName(iir::Cache::CacheTypeKind::IJ) +
+        "= iblock + " + std::to_string(cacheProperties.getOffsetCommonIJCache(1)) +
+        " + (jblock + " + std::to_string(cacheProperties.getOffsetCommonIJCache(1)) + ")*" +
+        std::to_string(cacheProperties.getStrideCommonCache(1, blockSize)));
   }
 }
 

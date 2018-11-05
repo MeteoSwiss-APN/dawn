@@ -146,13 +146,12 @@ int CacheProperties::getStrideImpl(int dim, Array3ui blockSize, const iir::Exten
   }
 }
 
-// TODO rename this
-int CacheProperties::getOffset(int accessID, int dim) const {
+int CacheProperties::getOffsetBeginIJCache(int accessID, int dim) const {
   auto extents = getCacheExtent(accessID);
   return -extents[dim].Minus;
 }
 
-int CacheProperties::getOffsetCommonCache(int dim) const { return -extents_[dim].Minus; }
+int CacheProperties::getOffsetCommonIJCache(int dim) const { return -extents_[dim].Minus; }
 
 std::string CacheProperties::getCommonCacheIndexName(iir::Cache::CacheTypeKind cacheType) const {
   if(cacheType == iir::Cache::CacheTypeKind::IJ) {
