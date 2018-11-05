@@ -183,9 +183,10 @@ yoda_add_custom_dummy_target(NAME GTClangQtCreatorParseProjectCodeGenTest
 if(GTCLANG_HAS_GRIDTOOLS)
   set(codegen_examples copy_stencil conditional_stencil coriolis_stencil hori_diff_stencil_01 hori_diff_stencil_02
       hori_diff_type2_stencil hd_smagorinsky intervals_stencil globals_stencil stencil_functions
-      local_kcache nested_stencil_functions stencil_desc_ast boundary_condition boundary_condition_2 tridiagonal_solve
+      nested_stencil_functions stencil_desc_ast boundary_condition boundary_condition_2 tridiagonal_solve
       kparallel_solver)
-  set(cuda_codegen_examples intervals01 intervals02 intervals03)
+  # specific examples for cuda backend
+  set(cuda_codegen_examples intervals01 intervals02 intervals03 local_kcache)
 
   set(codegen_example_benchmarks)
 
