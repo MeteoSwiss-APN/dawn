@@ -84,7 +84,6 @@ CodeGeneratorHelper::computePartitionOfIntervals(const std::unique_ptr<iir::Mult
   std::copy(intervals_set.begin(), intervals_set.end(), std::back_inserter(intervals_v));
 
   // compute the partition of the intervals
-
   auto partitionIntervals = iir::Interval::computePartition(intervals_v);
   if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
     std::reverse(partitionIntervals.begin(), partitionIntervals.end());
