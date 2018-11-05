@@ -610,7 +610,7 @@ void GTCodeGen::generateStencilClasses(
               auto const& cache = AccessIDCachePair.second;
               boost::optional<iir::Interval> cInterval;
 
-              if(cache.getCacheIOPolicy() != iir::Cache::fill) {
+              if(cache.getCacheIOPolicy() == iir::Cache::fill) {
                 cInterval = cache.getEnclosingAccessedInterval();
               } else {
                 cInterval = cache.getInterval();
