@@ -88,6 +88,11 @@ bool CacheProperties::requiresFill(const iir::Cache& cache) {
   //          (cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill_and_flush));
 }
 
+bool CacheProperties::requiresFlush(const iir::Cache& cache) {
+  return ((cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::flush)); // ||
+  //          (cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill_and_flush));
+}
+
 int CacheProperties::getKCacheCenterOffset(const int accessID) const {
   auto ext = getKCacheVertExtent(accessID);
   return -ext.Minus;

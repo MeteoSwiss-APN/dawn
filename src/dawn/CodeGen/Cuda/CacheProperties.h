@@ -57,6 +57,7 @@ struct CacheProperties {
   bool isKCached(const iir::Cache& cache) const;
   int getKCacheIndex(const int accessID, const int offset) const;
   static bool requiresFill(const iir::Cache& cache);
+  static bool requiresFlush(const iir::Cache& cache);
 
 private:
   int getStrideImpl(int dim, Array3ui blockSize, const iir::Extents& extents) const;

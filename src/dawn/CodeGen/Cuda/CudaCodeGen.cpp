@@ -107,7 +107,8 @@ void CudaCodeGen::generateKCacheDecl(MemberFunction& kernel,
 
     if(cache.getCacheType() != iir::Cache::CacheTypeKind::K ||
        ((cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::local) &&
-        (cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::fill)))
+        (cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::fill) &&
+        (cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::flush)))
       continue;
 
     if(cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::local && solveKLoopInParallel_)
@@ -468,6 +469,11 @@ void CudaCodeGen::generateCudaKernelCode(
             }
           }
 
+          if(!solveKLoopInParallel_) {
+            generateFlushKCaches(cudaKernel, ms, interval, cacheProperties, fieldIndexMap,
+                                 stencilInstantiation);
+          }
+
           generateKCacheSlide(cudaKernel, cacheProperties, ms, interval);
           cudaKernel.addComment("increment iterators");
           std::string incStr =
@@ -564,6 +570,63 @@ void CudaCodeGen::generateFillKCaches(
                 kcacheProp.name_ + "[" +
                 std::to_string(cacheProperties.getKCacheIndex(kcacheProp.accessID_, offset)) +
                 "] =" + ss.str());
+          }
+        });
+  }
+}
+
+void CudaCodeGen::generateFlushKCaches(
+    MemberFunction& cudaKernel, const std::unique_ptr<iir::MultiStage>& ms,
+    const iir::Interval& interval, const CacheProperties& cacheProperties,
+    const std::unordered_map<int, Array3i>& fieldIndexMap,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const {
+  cudaKernel.addComment("Flush of kcaches");
+
+  auto intervalFields = ms->computeFieldsAtInterval(interval);
+  std::unordered_map<iir::Extents, std::vector<impl_::KCacheFillProperties>> kcacheFillProperty;
+
+  for(const auto& cachePair : ms->getCaches()) {
+    const int accessID = cachePair.first;
+    const auto& cache = cachePair.second;
+    if(!CacheProperties::requiresFlush(cache))
+      continue;
+
+    DAWN_ASSERT(cache.getInterval().is_initialized());
+    const auto cacheInterval = *(cache.getInterval());
+    auto vertExtent = cacheProperties.getKCacheVertExtent(accessID);
+
+    if(cacheInterval.contains(interval)) {
+      auto cacheName = cacheProperties.getCacheName(accessID);
+
+      DAWN_ASSERT(intervalFields.count(accessID));
+      iir::Extents horizontalExtent = intervalFields.at(accessID).getExtentsRB();
+
+      kcacheFillProperty[horizontalExtent].emplace_back(cacheName, accessID, vertExtent);
+    }
+  }
+
+  for(const auto& kcachePropPair : kcacheFillProperty) {
+    const auto& horizontalExtent = kcachePropPair.first;
+    const auto& kcachesProp = kcachePropPair.second;
+
+    cudaKernel.addBlockStatement(
+        "if(iblock >= " + std::to_string(horizontalExtent[0].Minus) +
+            " && iblock <= block_size_i -1 + " + std::to_string(horizontalExtent[0].Plus) +
+            " && jblock >= " + std::to_string(horizontalExtent[1].Minus) +
+            " && jblock <= block_size_j -1 + " + std::to_string(horizontalExtent[1].Plus) + ")",
+        [&]() {
+          for(const auto& kcacheProp : kcachesProp) {
+
+            int offset = (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+                             ? kcacheProp.vertExtent_.Plus
+                             : kcacheProp.vertExtent_.Minus;
+            std::stringstream ss;
+            CodeGeneratorHelper::generateFieldAccessDeref(ss, ms, stencilInstantiation,
+                                                          kcacheProp.accessID_, fieldIndexMap,
+                                                          Array3i{0, 0, offset});
+            cudaKernel.addStatement(
+                ss.str() + "= " + kcacheProp.name_ + "[" +
+                std::to_string(cacheProperties.getKCacheIndex(kcacheProp.accessID_, offset)) + "]");
           }
         });
   }
