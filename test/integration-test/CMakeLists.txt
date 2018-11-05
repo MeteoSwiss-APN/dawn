@@ -124,9 +124,6 @@ function(cuda_compile_generated_examples)
       target_compile_definitions(${example}_benchmarks_${backend}_cuda PUBLIC GRIDTOOLS_CLANG_CUDA ${GTCLANG_DEFINITIONS})
       target_compile_definitions(${example}_benchmarks_${backend}_cuda PRIVATE -DOPTBACKEND=${backend})
 
-#      set_property(SOURCE ${cwd}/CodeGen/${example}_benchmark.cu APPEND PROPERTY OBJECT_DEPENDS ${cwd}/CodeGen/generated/${example}_${backend}.cpp)
-#      set_property(SOURCE ${cwd}/CodeGen/${example}_benchmark.cu APPEND PROPERTY OBJECT_DEPENDS ${cwd}/CodeGen/generated/${example}_c++-naive.cpp)
-
       add_custom_target(
         dummy_${example}_${backend}
         DEPENDS ${cwd}/CodeGen/generated/${example}_c++-naive.cpp
@@ -186,7 +183,7 @@ yoda_add_custom_dummy_target(NAME GTClangQtCreatorParseProjectCodeGenTest
 if(GTCLANG_HAS_GRIDTOOLS)
   set(codegen_examples copy_stencil conditional_stencil coriolis_stencil hori_diff_stencil_01 hori_diff_stencil_02
       hori_diff_type2_stencil hd_smagorinsky intervals_stencil globals_stencil stencil_functions
-      nested_stencil_functions stencil_desc_ast boundary_condition boundary_condition_2 tridiagonal_solve
+      local_kcache nested_stencil_functions stencil_desc_ast boundary_condition boundary_condition_2 tridiagonal_solve
       kparallel_solver)
   set(cuda_codegen_examples intervals01 intervals02 intervals03)
 
