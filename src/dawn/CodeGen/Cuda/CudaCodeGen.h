@@ -122,28 +122,35 @@ private:
       IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields,
       std::shared_ptr<StencilProperties> stencilProperties) const;
 
+  /// @brief generate all IJ cache declarations
   void generateIJCacheDecl(MemberFunction& kernel,
                            const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                            const iir::MultiStage& ms, const CacheProperties& cacheProperties,
                            Array3ui blockSize) const;
 
+  /// @brief code generate all kcache declarations
   void generateKCacheDecl(MemberFunction& kernel, const std::unique_ptr<iir::MultiStage>& ms,
                           const CacheProperties& cacheProperties) const;
 
+  /// @brief code generate the ij cache index initialization
   void generateIJCacheIndexInit(MemberFunction& kernel, const CacheProperties& cacheProperties,
                                 const Array3ui blockSize) const;
 
+  /// @brief true of a temporary iteratory is required since it will be used by a multi-stage
   bool useTmpIndex(const std::unique_ptr<iir::MultiStage>& ms,
                    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                    const CacheProperties& cacheProperties) const;
 
+  /// @brief code generate the initialization of a temporary field iterator
   void generateTmpIndexInit(MemberFunction& kernel, const std::unique_ptr<iir::MultiStage>& ms,
                             const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                             const CacheProperties& cacheProperties) const;
+  /// @brief code generate slides of the values of a kcache in a ring-buffer manner
   void generateKCacheSlide(MemberFunction& cudaKernel, const CacheProperties& cacheProperties,
                            const std::unique_ptr<iir::MultiStage>& ms,
                            const iir::Interval& interval) const;
 
+  /// @brief generate a fill of the top level of the kcache, at every k iteration
   void
   generateFillKCaches(MemberFunction& cudaKernel, const std::unique_ptr<iir::MultiStage>& ms,
                       const iir::Interval& interval, const CacheProperties& cacheProperties,
@@ -160,6 +167,7 @@ private:
 
   std::string intervalDiffToString(iir::IntervalDiff intervalDiff, std::string maxRange) const;
 
+  /// @brief return the first level that will initiate the interval processing, given a loop order
   iir::Interval::IntervalLevel computeNextLevelToProcess(const iir::Interval& interval,
                                                          iir::LoopOrderKind loopOrder) const;
 

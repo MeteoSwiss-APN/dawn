@@ -606,6 +606,7 @@ void CudaCodeGen::generatePreFillKCaches(
     const auto& horizontalExtent = kcachePropPair.first;
     const auto& kcachesProp = kcachePropPair.second;
 
+    // we need to also box the fill of kcaches to avoid out-of-bounds
     cudaKernel.addBlockStatement(
         "if(iblock >= " + std::to_string(horizontalExtent[0].Minus) +
             " && iblock <= block_size_i -1 + " + std::to_string(horizontalExtent[0].Plus) +
@@ -614,6 +615,7 @@ void CudaCodeGen::generatePreFillKCaches(
         [&]() {
           for(const auto& kcacheProp : kcachesProp) {
             if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) {
+              // the last level is skipped since it will be filled in a normal kcache fill method
               for(int klev = kcacheProp.vertExtent_.Minus + 1; klev <= kcacheProp.vertExtent_.Plus;
                   ++klev) {
                 std::stringstream ss;
