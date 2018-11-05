@@ -195,7 +195,6 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
              !field.getExtents().isHorizontalPointwise()) {
 
             iir::Cache& cache = MS.setCache(iir::Cache::IJ, iir::Cache::local, field.getAccessID());
-//            instantiation->insertCachedVariable(field.getAccessID());
 
             if(context->getOptions().ReportPassSetCaches) {
               std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": MS"

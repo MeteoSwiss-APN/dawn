@@ -86,7 +86,6 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
     FieldnameToBoundaryConditionMap_.emplace(
         pair.first, std::make_shared<BoundaryConditionDeclStmt>(*(pair.second)));
   }
-  //  CachedVariableSet_ = origin.CachedVariableSet_;
   fieldIDToInitializedDimensionsMap_ = origin.fieldIDToInitializedDimensionsMap_;
   for(const auto& pair : origin.globalVariableMap_) {
     globalVariableMap_.emplace(pair.first, std::make_shared<sir::Value>(pair.second));
