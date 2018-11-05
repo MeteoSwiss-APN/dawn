@@ -64,27 +64,6 @@ std::string CacheProperties::getCacheName(int accessID) const {
   dawn_unreachable("Unknown cache for code generation");
 }
 
-bool CacheProperties::requiresFillAtInterval(const std::unique_ptr<iir::MultiStage>& ms,
-                                             const int accessID, const iir::Interval& interval,
-                                             bool requiresCenter) {
-  for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*ms)) {
-    if(!doMethod->getFields().count(accessID) || !doMethod->getInterval().overlaps(interval)) {
-      continue;
-    }
-    const auto& field = doMethod->getFields().at(accessID);
-    auto readExtents = field.getReadExtents();
-    if(!readExtents.is_initialized())
-      continue;
-    auto verticalExtent = readExtents->getVerticalLoopOrderExtent(
-        ms->getLoopOrder(), iir::Extents::VerticalLoopOrderDir::VL_CounterLoopOrder,
-        requiresCenter);
-    if(!verticalExtent.is_initialized())
-      continue;
-    return true;
-  }
-  return false;
-}
-
 bool CacheProperties::isCached(const int accessID) const {
   return ms_->getCaches().count(accessID);
 }

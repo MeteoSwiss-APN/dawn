@@ -223,18 +223,19 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
           stencil.childrenBegin(), stencil.childrenEnd(), std::back_inserter(fields),
           [](const iir::Stencil::MultiStageSmartPtr_t& MSPtr) { return MSPtr->getFields(); });
 
-      int numMS = fields.size();
       std::set<int> mssProcessedFields;
-      for(int MSIndex = 0; MSIndex < numMS; ++MSIndex) {
-        for(const auto& AccessIDFieldPair : fields[MSIndex]) {
-          iir::MultiStage& MS = *stencil.getMultiStageFromMultiStageIndex(MSIndex);
+      for(int MSIndex = 0; MSIndex < stencil.getChildren().size(); ++MSIndex) {
+        iir::MultiStage& ms = *stencil.getMultiStageFromMultiStageIndex(MSIndex);
+
+        const auto& fields = ms.getFields();
+        for(const auto& AccessIDFieldPair : fields) {
           const iir::Field& field = AccessIDFieldPair.second;
           bool mssProcessedField = mssProcessedFields.count(field.getAccessID());
           if(!mssProcessedField)
             mssProcessedFields.emplace(field.getAccessID());
 
           // Field is already cached, skip
-          if(MS.isCached(field.getAccessID()))
+          if(ms.isCached(field.getAccessID()))
             continue;
 
           // Field has horizontal extents, can't be k-cached
@@ -251,7 +252,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
 
           // Determine if we need to fill the cache by analyzing the current multi-stage
           CacheCandidate cacheCandidate = computeCacheCandidateForMS(
-              field, instantiation->isTemporaryField(field.getAccessID()), MS);
+              field, instantiation->isTemporaryField(field.getAccessID()), ms);
 
           DAWN_ASSERT((cacheCandidate.policy_ != iir::Cache::fill &&
                        cacheCandidate.policy_ != iir::Cache::bpfill) ||
@@ -267,12 +268,14 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
                                                           field.getInterval()});
           } else {
 
-            for(int MSIndex2 = MSIndex + 1; MSIndex2 < numMS; MSIndex2++) {
-              if(!fields[MSIndex2].count(field.getAccessID()))
+            for(int MSIndex2 = MSIndex + 1; MSIndex2 < stencil.getChildren().size(); MSIndex2++) {
+              iir::MultiStage& nextMS = *stencil.getMultiStageFromMultiStageIndex(MSIndex2);
+              const auto& fields = nextMS.getFields();
+
+              if(!fields.count(field.getAccessID()))
                 continue;
 
-              const iir::MultiStage& nextMS = *stencil.getMultiStageFromMultiStageIndex(MSIndex2);
-              const iir::Field& fieldInNextMS = fields[MSIndex2].find(field.getAccessID())->second;
+              const iir::Field& fieldInNextMS = fields.find(field.getAccessID())->second;
 
               CacheCandidate policyMS2 = computeCacheCandidateForMS(
                   fieldInNextMS, instantiation->isTemporaryField(fieldInNextMS.getAccessID()),
@@ -288,13 +291,13 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
           }
 
           iir::Interval interval = field.getInterval();
-          auto interval_ = MS.computeEnclosingAccessInterval(field.getAccessID(), true);
+          auto interval_ = ms.computeEnclosingAccessInterval(field.getAccessID(), true);
           DAWN_ASSERT(interval_.is_initialized());
           auto enclosingAccessedInterval = *interval_;
 
           // Set the cache
           iir::Cache& cache =
-              MS.setCache(iir::Cache::K, cacheCandidate.policy_, field.getAccessID(), interval,
+              ms.setCache(iir::Cache::K, cacheCandidate.policy_, field.getAccessID(), interval,
                           enclosingAccessedInterval, cacheCandidate.window_);
 
           if(context->getOptions().ReportPassSetCaches) {

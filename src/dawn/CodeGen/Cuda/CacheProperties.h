@@ -57,8 +57,6 @@ struct CacheProperties {
   bool isKCached(const iir::Cache& cache) const;
   int getKCacheIndex(const int accessID, const int offset) const;
   static bool requiresFill(const iir::Cache& cache);
-  static bool requiresFillAtInterval(const std::unique_ptr<iir::MultiStage>& ms, const int accessID,
-                                     const iir::Interval& interval, bool requiresCenter);
 
 private:
   int getStrideImpl(int dim, Array3ui blockSize, const iir::Extents& extents) const;
