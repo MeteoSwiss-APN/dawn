@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/IIRSerializer.h"
+#include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/IIR.pb.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -28,14 +29,6 @@
 
 using namespace dawn;
 
-// void setAccesses(proto::iir::Acesses* protoAcesses, const std::shared_ptr<iir::Accesses>&
-// accesses);
-
-// std::shared_ptr<dawn::Statement>
-// makeStatement(const proto::iir::StencilDescStatement* protoStatement);
-
-// void serializeStmtAccessPair(proto::iir::StatementAcessPair* protoStmtAccessPair,
-//                             const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessPair);
 static void setAccesses(proto::iir::Acesses* protoAcesses,
                         const std::shared_ptr<iir::Accesses>& accesses) {
   auto protoReadAccesses = protoAcesses->mutable_readaccess();
@@ -229,8 +222,10 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
   auto protoStencilLoc = protoMetaData->mutable_stencillocation();
   protoStencilLoc->set_column(metaData.stencilLocation_.Column);
   protoStencilLoc->set_line(metaData.stencilLocation_.Line);
+
   // Filling Field: string stencilMName = 16;
   protoMetaData->set_stencilname(metaData.stencilName_);
+
   // Filling Field: string fileName = 17;
   protoMetaData->set_filename(metaData.fileName_);
 }
@@ -408,10 +403,17 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
     std::cout << "And now we deserialize the stencil" << std::endl;
     sir::Attr attributes;
     attributes.setBits(protoStencils.attr().attrbits());
-    //    target->getIIR()->insertChild(
-    //        make_unique<iir::Stencil>(*target, attributes, protoStencils.stencilid()));
+    target->getIIR()->insertChild(
+        make_unique<iir::Stencil>(*target, attributes, protoStencils.stencilid()),
+        target->getIIR());
+    auto IIRStencil = target->getIIR()->childrenEnd();
 
     for(const auto& protoMSS : protoStencils.multistages()) {
+      iir::LoopOrderKind looporder;
+      // wittodo: deserialize this
+      looporder = iir::LoopOrderKind::LK_Backward;
+
+      (*IIRStencil)->insertChild(make_unique<iir::MultiStage>(*target, looporder));
       std::cout << "And now we deserialize the mss" << std::endl;
       for(const auto& protoStage : protoMSS.stages()) {
         std::cout << "And now we deserialize the stage" << std::endl;
