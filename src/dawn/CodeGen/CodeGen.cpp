@@ -94,7 +94,7 @@ void CodeGen::generateBoundaryConditionFunctions(
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation) const {
   // Functions for boundary conditions
   for(auto usedBoundaryCondition : stencilInstantiation->getBoundaryConditions()) {
-    for(const auto& sf : stencilInstantiation->getSIR()->StencilFunctions) {
+    for(const auto& sf : stencilInstantiation->getStencilFunctions()) {
       if(sf->Name == usedBoundaryCondition.second->getFunctor()) {
 
         Structure BoundaryCondition = stencilWrapperClass.addStruct(Twine(sf->Name));
@@ -169,7 +169,7 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
     }
     idx++;
   }
-  for(const auto& stencil : stencilInstantiation->getStencils()) {
+  for(const auto& stencil : stencilInstantiation->getIIR()->getChildren()) {
     std::string stencilName = "stencil_" + std::to_string(stencil->getStencilID());
     auto stencilProperties = codeGenProperties.insertStencil(StencilContext::SC_Stencil,
                                                              stencil->getStencilID(), stencilName);

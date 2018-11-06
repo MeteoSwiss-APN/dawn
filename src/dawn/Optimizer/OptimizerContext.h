@@ -93,6 +93,15 @@ public:
     }
   }
 
+  /// @brief fillIIRFromSIR
+  /// @param stencilInstantation
+  /// @param SIRStencil
+  /// @param fullSIR
+  /// @return
+  bool fillIIRFromSIR(std::shared_ptr<iir::StencilInstantiation> stencilInstantation,
+                      const std::shared_ptr<sir::Stencil> SIRStencil,
+                      const std::shared_ptr<SIR> fullSIR);
+
   /// @brief this function check if a pass should be pushed back into the list of passes based on
   /// the options.
   ///

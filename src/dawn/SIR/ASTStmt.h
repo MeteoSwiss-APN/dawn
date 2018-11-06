@@ -71,6 +71,7 @@ public:
 
   /// @brief Get original source location
   const SourceLocation& getSourceLocation() const { return loc_; }
+  SourceLocation& getSourceLocation() { return loc_; }
 
   /// @brief Iterate children (if any)
   virtual StmtRangeType getChildren() { return StmtRangeType(); }

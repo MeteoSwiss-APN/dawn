@@ -15,8 +15,8 @@
 #ifndef DAWN_CODEGEN_STENCILFUNCTIONASBCGENERATOR_H
 #define DAWN_CODEGEN_STENCILFUNCTIONASBCGENERATOR_H
 
-#include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
+#include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include <memory>
 
@@ -30,7 +30,7 @@ namespace codegen {
 /// every field is a template argument.
 class StencilFunctionAsBCGenerator : public ASTCodeGenCXX {
 private:
-  std::shared_ptr<sir::StencilFunction> function;
+  std::shared_ptr<sir::StencilFunction> function_;
   const std::shared_ptr<iir::StencilInstantiation> instantiation_;
 
 public:
@@ -38,7 +38,7 @@ public:
   StencilFunctionAsBCGenerator(
       const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
       const std::shared_ptr<sir::StencilFunction>& functionToAnalyze)
-      : function(functionToAnalyze), instantiation_(stencilInstantiation) {}
+      : function_(functionToAnalyze), instantiation_(stencilInstantiation) {}
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr);
 

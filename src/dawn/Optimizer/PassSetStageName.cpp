@@ -21,7 +21,7 @@ namespace dawn {
 PassSetStageName::PassSetStageName() : Pass("PassSetStageName", true) {}
 
 bool PassSetStageName::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  stencilInstantiation->getStageIDToNameMap().clear();
+  stencilInstantiation->getIIR()->getStageIDToNameMap().clear();
 
   int stencilIdx = 0;
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
@@ -35,7 +35,7 @@ bool PassSetStageName::run(const std::shared_ptr<iir::StencilInstantiation>& ste
       int stageIdx = 0;
       for(const auto& stagePtr : multiStagePtr->getChildren()) {
         iir::Stage& stage = *stagePtr;
-        stencilInstantiation->getStageIDToNameMap().emplace(
+        stencilInstantiation->getIIR()->getStageIDToNameMap().emplace(
             stage.getStageID(),
             stencilName + "_ms" + std::to_string(multiStageIdx) + "_s" + std::to_string(stageIdx));
         stageIdx++;

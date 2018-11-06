@@ -29,6 +29,10 @@ int Cache::getCachedFieldAccessID() const { return AccessID_; }
 
 boost::optional<Interval> Cache::getInterval() const { return interval_; }
 
+boost::optional<Interval> Cache::getEnclosingAccessedInterval() const {
+  return enclosingAccessedInterval_;
+}
+
 Cache::CacheTypeKind Cache::getCacheType() const { return type_; }
 
 std::string Cache::getCacheTypeAsString() const {

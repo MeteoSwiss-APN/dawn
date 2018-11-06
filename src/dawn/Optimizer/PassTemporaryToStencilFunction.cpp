@@ -359,7 +359,7 @@ public:
     }
 
     // recompute the list of <statement, accesses> pairs
-    StatementMapper statementMapper(instantiation_.get(), stackTrace_,
+    StatementMapper statementMapper(nullptr, instantiation_.get(), stackTrace_,
                                     *(cloneStencilFun->getDoMethod()), interval_, fieldsMap,
                                     cloneStencilFun);
 
@@ -477,9 +477,10 @@ bool PassTemporaryToStencilFunction::run(
 
                 iir::DoMethod tmpStmtDoMethod(interval, *stencilInstantiation);
 
+                // WITTODO: Check if this works
                 StatementMapper statementMapper(
-                    stencilInstantiation.get(), stmt->StackTrace, tmpStmtDoMethod, sirInterval,
-                    stencilInstantiation->getNameToAccessIDMap(), nullptr);
+                    nullptr, stencilInstantiation.get(), stmt->StackTrace, tmpStmtDoMethod,
+                    sirInterval, stencilInstantiation->getNameToAccessIDMap(), nullptr);
 
                 std::shared_ptr<BlockStmt> blockStmt =
                     std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{stmt->ASTStmt});

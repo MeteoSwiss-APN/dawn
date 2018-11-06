@@ -156,7 +156,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
   OptimizerContext* context = instantiation->getOptimizerContext();
 
   for(const auto& stencilPtr : instantiation->getStencils()) {
-    const iir::Stencil& stencil = *stencilPtr;
+    iir::Stencil& stencil = *stencilPtr;
 
     // Set IJ-Caches
     int msIdx = 0;
@@ -195,7 +195,6 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
              !field.getExtents().isHorizontalPointwise()) {
 
             iir::Cache& cache = MS.setCache(iir::Cache::IJ, iir::Cache::local, field.getAccessID());
-            instantiation->insertCachedVariable(field.getAccessID());
 
             if(context->getOptions().ReportPassSetCaches) {
               std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": MS"
@@ -215,13 +214,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
 
     // Set K-Caches
     if(context->getOptions().UseKCaches ||
-       stencil.getSIRStencil()->Attributes.has(sir::Attr::AK_UseKCaches)) {
-
-      // Get the fields of all Multi-Stages
-      std::vector<std::unordered_map<int, iir::Field>> fields;
-      std::transform(
-          stencil.childrenBegin(), stencil.childrenEnd(), std::back_inserter(fields),
-          [](const iir::Stencil::MultiStageSmartPtr_t& MSPtr) { return MSPtr->getFields(); });
+       stencil.getStencilAttributes().has(sir::Attr::AK_UseKCaches)) {
 
       std::set<int> mssProcessedFields;
       for(int MSIndex = 0; MSIndex < stencil.getChildren().size(); ++MSIndex) {
@@ -270,12 +263,12 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
 
             for(int MSIndex2 = MSIndex + 1; MSIndex2 < stencil.getChildren().size(); MSIndex2++) {
               iir::MultiStage& nextMS = *stencil.getMultiStageFromMultiStageIndex(MSIndex2);
-              const auto& fields = nextMS.getFields();
+              const auto& nextMSfields = nextMS.getFields();
 
-              if(!fields.count(field.getAccessID()))
+              if(!nextMSfields.count(field.getAccessID()))
                 continue;
 
-              const iir::Field& fieldInNextMS = fields.find(field.getAccessID())->second;
+              const iir::Field& fieldInNextMS = nextMSfields.find(field.getAccessID())->second;
 
               CacheCandidate policyMS2 = computeCacheCandidateForMS(
                   fieldInNextMS, instantiation->isTemporaryField(fieldInNextMS.getAccessID()),

@@ -74,8 +74,11 @@ public:
   CacheIOPolicy getCacheIOPolicy() const;
   std::string getCacheIOPolicyAsString() const;
 
-  /// @brief Get the I/O policy of the cache
+  /// @brief Get the interval of the iteration space from where the cache was accessed
   boost::optional<Interval> getInterval() const;
+
+  /// @brief Get the enclosing of the iteration space interval and the accesses extent
+  boost::optional<Interval> getEnclosingAccessedInterval() const;
 
   /// @brief determines if the cache specification requires a window
   bool requiresWindow() const;

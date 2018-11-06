@@ -40,8 +40,10 @@ public:
   static std::array<std::string, 3> ijkfyOffset(const Array3i& offsets, bool isTemporary,
                                                 const Array3i iteratorDims);
 
+  /// @brief return true if the ms can be solved in parallel (in the vertical dimension)
   static bool solveKLoopInParallel(const std::unique_ptr<iir::MultiStage>& ms);
 
+  /// @brief computes the partition of all the intervals used within a multi-stage
   static std::vector<iir::Interval>
   computePartitionOfIntervals(const std::unique_ptr<iir::MultiStage>& ms);
 };

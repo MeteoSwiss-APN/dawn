@@ -85,12 +85,10 @@ int CacheProperties::getKCacheIndex(const int accessID, const int offset) const 
 
 bool CacheProperties::requiresFill(const iir::Cache& cache) {
   return ((cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill)); // ||
-  //          (cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill_and_flush));
 }
 
 bool CacheProperties::requiresFlush(const iir::Cache& cache) {
   return ((cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::flush)); // ||
-  //          (cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill_and_flush));
 }
 
 int CacheProperties::getKCacheCenterOffset(const int accessID) const {
@@ -152,13 +150,12 @@ int CacheProperties::getStrideImpl(int dim, Array3ui blockSize, const iir::Exten
   }
 }
 
-// TODO rename this
-int CacheProperties::getOffset(int accessID, int dim) const {
+int CacheProperties::getOffsetBeginIJCache(int accessID, int dim) const {
   auto extents = getCacheExtent(accessID);
   return -extents[dim].Minus;
 }
 
-int CacheProperties::getOffsetCommonCache(int dim) const { return -extents_[dim].Minus; }
+int CacheProperties::getOffsetCommonIJCache(int dim) const { return -extents_[dim].Minus; }
 
 std::string CacheProperties::getCommonCacheIndexName(iir::Cache::CacheTypeKind cacheType) const {
   if(cacheType == iir::Cache::CacheTypeKind::IJ) {

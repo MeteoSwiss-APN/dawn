@@ -41,739 +41,140 @@
 
 namespace dawn {
 namespace iir {
-namespace {
-
-//===------------------------------------------------------------------------------------------===//
-//     StencilDescStatementMapper
-//===------------------------------------------------------------------------------------------===//
-
-/// @brief Map the statements of the stencil description AST to a flat list of statements and inline
-/// all calls to other stencils
-class StencilDescStatementMapper : public ASTVisitor {
-
-  /// @brief Record of the current scope (each StencilCall will create a new scope)
-  struct Scope : public NonCopyable {
-    Scope(const std::string& name, std::vector<std::shared_ptr<Statement>>& statements)
-        : Name(name), ScopeDepth(0), Statements(statements), StackTrace(nullptr) {}
-
-    /// Name of the current stencil
-    std::string Name;
-
-    /// Nesting of scopes
-    int ScopeDepth;
-
-    /// List of statements of the stencil description
-    std::vector<std::shared_ptr<Statement>>& Statements;
-
-    /// Scope fieldnames to to (global) AccessID
-    std::unordered_map<std::string, int> LocalFieldnameToAccessIDMap;
-
-    /// Scope variable name to (global) AccessID
-    std::unordered_map<std::string, int> LocalVarNameToAccessIDMap;
-
-    /// Map of known values of variables
-    std::unordered_map<std::string, double> VariableMap;
-
-    /// Current call stack of stencil calls (may be NULL)
-    std::shared_ptr<std::vector<sir::StencilCall*>> StackTrace;
-  };
-
-  StencilInstantiation* instantiation_;
-  std::stack<std::shared_ptr<Scope>> scope_;
-
-  /// We replace the first VerticalRegionDeclStmt with a dummy node which signals code-gen that it
-  /// should insert a call to the gridtools stencil here
-  std::shared_ptr<Stmt> stencilDescReplacement_;
-
-public:
-  StencilDescStatementMapper(StencilInstantiation* instantiation, const std::string& name,
-                             std::vector<std::shared_ptr<Statement>>& statements,
-                             const std::unordered_map<std::string, int>& fieldnameToAccessIDMap)
-      : instantiation_(instantiation) {
-    DAWN_ASSERT(instantiation);
-    // Create the initial scope
-    scope_.push(std::make_shared<Scope>(name, statements));
-    scope_.top()->LocalFieldnameToAccessIDMap = fieldnameToAccessIDMap;
-
-    // We add all global variables which have constant values
-    for(const auto& keyValuePair : *instantiation->getSIR()->GlobalVariableMap) {
-      const std::string& key = keyValuePair.first;
-      const sir::Value& value = *keyValuePair.second;
-
-      if(value.isConstexpr()) {
-        switch(value.getType()) {
-        case sir::Value::Boolean:
-          scope_.top()->VariableMap[key] = value.getValue<bool>();
-          break;
-        case sir::Value::Integer:
-          scope_.top()->VariableMap[key] = value.getValue<int>();
-          break;
-        case sir::Value::Double:
-          scope_.top()->VariableMap[key] = value.getValue<double>();
-          break;
-        default:
-          break;
-        }
-      }
-    }
-
-    // We start with a single stencil
-    makeNewStencil();
-  }
-
-  /// @brief Create a new stencil in the instantiation and prepare the replacement node for the next
-  /// VerticalRegionDeclStmt
-  ///
-  /// @see tryReplaceVerticalRegionDeclStmt
-  void makeNewStencil() {
-    int StencilID = instantiation_->nextUID();
-    instantiation_->getIIR()->insertChild(
-        make_unique<Stencil>(*instantiation_, instantiation_->getSIRStencil(), StencilID),
-        instantiation_->getIIR());
-    // We create a paceholder stencil-call for CodeGen to know wehere we need to insert calls to
-    // this stencil
-    auto placeholderStencil = std::make_shared<sir::StencilCall>(
-        StencilInstantiation::makeStencilCallCodeGenName(StencilID));
-    auto stencilCallDeclStmt = std::make_shared<StencilCallDeclStmt>(placeholderStencil);
-
-    // Register the call and set it as a replacement for the next vertical region
-    instantiation_->getStencilCallToStencilIDMap().emplace(stencilCallDeclStmt, StencilID);
-    stencilDescReplacement_ = stencilCallDeclStmt;
-  }
-
-  /// @brief Replace the first VerticalRegionDeclStmt or StencilCallDelcStmt with a dummy
-  /// placeholder signaling code-gen that it should insert a call to the gridtools stencil.
-  ///
-  /// All remaining VerticalRegion/StencilCalls statements which are still in the stencil
-  /// description AST are pruned at the end
-  ///
-  /// @see removeObsoleteStencilDescNodes
-  void tryReplaceStencilDescStmt(const std::shared_ptr<Stmt>& stencilDescNode) {
-    DAWN_ASSERT(stencilDescNode->isStencilDesc());
-
-    // Nothing to do, statement was already replaced
-    if(!stencilDescReplacement_)
-      return;
-
-    // Instead of inserting the VerticalRegionDeclStmt we insert the call to the gridtools stencil
-    if(scope_.top()->ScopeDepth == 1)
-      scope_.top()->Statements.emplace_back(
-          std::make_shared<Statement>(stencilDescReplacement_, scope_.top()->StackTrace));
-    else {
-
-      // We need to replace the VerticalRegionDeclStmt in the current statement
-      replaceOldStmtWithNewStmtInStmt(scope_.top()->Statements.back()->ASTStmt, stencilDescNode,
-                                      stencilDescReplacement_);
-    }
-
-    stencilDescReplacement_ = nullptr;
-  }
-
-  /// @brief Remove all VerticalRegionDeclStmt and StencilCallDeclStmt (which do not start with
-  /// `GridToolsStencilCallPrefix`) from the list of statements and remove empty stencils
-  void cleanupStencilDeclAST() {
-
-    // We only need to remove "nested" nodes as the top-level VerticalRegions or StencilCalls are
-    // not inserted into the statement list in the frist place
-    class RemoveStencilDescNodes : public ASTVisitorForwarding {
-    public:
-      bool needsRemoval(const std::shared_ptr<Stmt>& stmt) const {
-        if(StencilCallDeclStmt* s = dyn_cast<StencilCallDeclStmt>(stmt.get())) {
-          // StencilCallDeclStmt node, remove it if it is not one of our artificial stencil call
-          // nodes
-          if(!StencilInstantiation::isStencilCallCodeGenName(s->getStencilCall()->Callee))
-            return true;
-
-        } else if(isa<VerticalRegionDeclStmt>(stmt.get()))
-          // Remove all remaining vertical regions
-          return true;
-
-        return false;
-      }
-
-      void visit(const std::shared_ptr<BlockStmt>& stmt) override {
-        for(auto it = stmt->getStatements().begin(); it != stmt->getStatements().end();) {
-          if(needsRemoval(*it)) {
-            it = stmt->getStatements().erase(it);
-          } else {
-            (*it)->accept(*this);
-            ++it;
-          }
-        }
-      }
-    };
-
-    // Remove the nested VerticalRegionDeclStmts and StencilCallDeclStmts
-    RemoveStencilDescNodes remover;
-    for(auto& statement : scope_.top()->Statements)
-      statement->ASTStmt->accept(remover);
-
-    // Remove empty stencils
-    for(auto it = instantiation_->getIIR()->childrenBegin();
-        it != instantiation_->getIIR()->childrenEnd();) {
-      Stencil& stencil = **it;
-      if(stencil.isEmpty())
-        it = instantiation_->getIIR()->childrenErase(it);
-      else
-        ++it;
-    }
-  }
-
-  /// @brief Push back a new statement to the end of the current statement list
-  void pushBackStatement(const std::shared_ptr<Stmt>& stmt) {
-    scope_.top()->Statements.emplace_back(
-        std::make_shared<Statement>(stmt, scope_.top()->StackTrace));
-  }
-
-  void visit(const std::shared_ptr<BlockStmt>& stmt) override {
-    scope_.top()->ScopeDepth++;
-    for(const auto& s : stmt->getStatements()) {
-      s->accept(*this);
-    }
-    scope_.top()->ScopeDepth--;
-  }
-
-  void visit(const std::shared_ptr<ExprStmt>& stmt) override {
-    if(scope_.top()->ScopeDepth == 1)
-      pushBackStatement(stmt);
-    stmt->getExpr()->accept(*this);
-  }
-
-  void visit(const std::shared_ptr<ReturnStmt>& stmt) override {
-    DAWN_ASSERT_MSG(0, "ReturnStmt not allowed in this context");
-  }
-
-  void visit(const std::shared_ptr<IfStmt>& stmt) override {
-    bool result;
-    if(evalExprAsBoolean(stmt->getCondExpr(), result, scope_.top()->VariableMap)) {
-
-      if(scope_.top()->ScopeDepth == 1) {
-        // The condition is known at compile time, we can remove this If statement completely by
-        // just not inserting it into the statement list
-        if(result) {
-          BlockStmt* thenBody = dyn_cast<BlockStmt>(stmt->getThenStmt().get());
-          DAWN_ASSERT_MSG(thenBody, "then-body of if-statment should be a BlockStmt!");
-          for(auto& s : thenBody->getStatements())
-            s->accept(*this);
-        } else if(stmt->hasElse()) {
-          BlockStmt* elseBody = dyn_cast<BlockStmt>(stmt->getElseStmt().get());
-          DAWN_ASSERT_MSG(elseBody, "else-body of if-statment should be a BlockStmt!");
-          for(auto& s : elseBody->getStatements())
-            s->accept(*this);
-        }
-      } else {
-        // We are inside a nested statement and we need to remove this if-statment and replace it
-        // with either the then-block or the else-block or in case we evaluted to `false` and there
-        // is no else-block we insert a `0` void statement.
-
-        if(result) {
-          // Replace the if-statement with the then-block
-          replaceOldStmtWithNewStmtInStmt(scope_.top()->Statements.back()->ASTStmt, stmt,
-                                          stmt->getThenStmt());
-          stmt->getThenStmt()->accept(*this);
-        } else if(stmt->hasElse()) {
-          // Replace the if-statement with the else-block
-          replaceOldStmtWithNewStmtInStmt(scope_.top()->Statements.back()->ASTStmt, stmt,
-                                          stmt->getElseStmt());
-          stmt->getElseStmt()->accept(*this);
-        } else {
-          // Replace the if-statement with a void `0`
-          auto voidExpr = std::make_shared<LiteralAccessExpr>("0", BuiltinTypeID::Float);
-          auto voidStmt = std::make_shared<ExprStmt>(voidExpr);
-          int AccessID = -instantiation_->nextUID();
-          instantiation_->getLiteralAccessIDToNameMap().emplace(AccessID, "0");
-          instantiation_->mapExprToAccessID(voidExpr, AccessID);
-          replaceOldStmtWithNewStmtInStmt(scope_.top()->Statements.back()->ASTStmt, stmt, voidStmt);
-        }
-      }
-
-    } else {
-      if(scope_.top()->ScopeDepth == 1)
-        pushBackStatement(stmt);
-
-      stmt->getCondExpr()->accept(*this);
-
-      // The then-part needs to go into a separate stencil ...
-      makeNewStencil();
-      stmt->getThenStmt()->accept(*this);
-
-      if(stmt->hasElse()) {
-        // ... same for the else-part
-        makeNewStencil();
-        stmt->getElseStmt()->accept(*this);
-      }
-
-      // Everything that follows needs to go into a new stencil as well
-      makeNewStencil();
-    }
-  }
-
-  void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
-    // This is the first time we encounter this variable. We have to make sure the name is not
-    // already used in another scope!
-    int AccessID = instantiation_->nextUID();
-
-    std::string globalName;
-    if(instantiation_->getOptimizerContext()->getOptions().KeepVarnames)
-      globalName = stmt->getName();
-    else
-      globalName = StencilInstantiation::makeLocalVariablename(stmt->getName(), AccessID);
-
-    instantiation_->setAccessIDNamePair(AccessID, globalName);
-    instantiation_->getStmtToAccessIDMap().emplace(stmt, AccessID);
-
-    // Add the mapping to the local scope
-    scope_.top()->LocalVarNameToAccessIDMap.emplace(stmt->getName(), AccessID);
-
-    // Push back the statement and move on
-    if(scope_.top()->ScopeDepth == 1)
-      pushBackStatement(stmt);
-
-    // Resolve the RHS
-    for(const auto& expr : stmt->getInitList())
-      expr->accept(*this);
-
-    // Check if we can evaluate the RHS to a constant expression
-    if(stmt->getInitList().size() == 1) {
-      double result;
-      if(evalExprAsDouble(stmt->getInitList().front(), result, scope_.top()->VariableMap))
-        scope_.top()->VariableMap[stmt->getName()] = result;
-    }
-  }
-
-  void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) override {
-    sir::VerticalRegion* verticalRegion = stmt->getVerticalRegion().get();
-
-    tryReplaceStencilDescStmt(stmt);
-
-    Interval interval(*verticalRegion->VerticalInterval);
-
-    // Note that we may need to operate on copies of the ASTs because we want to have a *unique*
-    // mapping of AST nodes to AccessIDs, hence we clone the ASTs of the vertical regions of
-    // stencil calls
-    bool cloneAST = scope_.size() > 1;
-    std::shared_ptr<AST> ast = cloneAST ? verticalRegion->Ast->clone() : verticalRegion->Ast;
-
-    // Create the new multi-stage
-    std::unique_ptr<MultiStage> multiStage = make_unique<MultiStage>(
-        *instantiation_, verticalRegion->LoopOrder == sir::VerticalRegion::LK_Forward
-                             ? LoopOrderKind::LK_Forward
-                             : LoopOrderKind::LK_Backward);
-    std::unique_ptr<Stage> stage =
-        make_unique<Stage>(*instantiation_, instantiation_->nextUID(), interval);
-
-    DAWN_LOG(INFO) << "Processing vertical region at " << verticalRegion->Loc;
-
-    // Here we convert the AST of the vertical region to a flat list of statements of the stage.
-    // Further, we instantiate all referenced stencil functions.
-    DAWN_LOG(INFO) << "Inserting statements ... ";
-    DoMethod& doMethod = stage->getSingleDoMethod();
-    // TODO move iterators of IIRNode to const getChildren, when we pass here begin, end instead
-
-    StatementMapper statementMapper(instantiation_, scope_.top()->StackTrace, doMethod,
-                                    doMethod.getInterval(),
-                                    scope_.top()->LocalFieldnameToAccessIDMap, nullptr);
-    ast->accept(statementMapper);
-    DAWN_LOG(INFO) << "Inserted " << doMethod.getChildren().size() << " statements";
-
-    if(instantiation_->getOptimizerContext()->getDiagnostics().hasErrors())
-      return;
-
-    // Here we compute the *actual* access of each statement and associate access to the AccessIDs
-    // we set previously.
-    DAWN_LOG(INFO) << "Filling accesses ...";
-    computeAccesses(instantiation_, doMethod.getChildren());
-
-    // Now, we compute the fields of each stage (this will give us the IO-Policy of the fields)
-    doMethod.update(iir::NodeUpdateType::level);
-    stage->update(iir::NodeUpdateType::level);
-
-    // Put the stage into a separate MultiStage ...
-    multiStage->insertChild(std::move(stage));
-
-    // ... and append the MultiStages of the current stencil
-    const auto& stencil = instantiation_->getStencils().back();
-    stencil->insertChild(std::move(multiStage));
-  }
-
-  void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
-    sir::StencilCall* stencilCall = stmt->getStencilCall().get();
-
-    tryReplaceStencilDescStmt(stmt);
-
-    DAWN_LOG(INFO) << "Processing stencil call to `" << stencilCall->Callee << "` at "
-                   << stencilCall->Loc;
-
-    // Prepare a new scope for the stencil call
-    std::shared_ptr<Scope>& curScope = scope_.top();
-    std::shared_ptr<Scope> candiateScope =
-        std::make_shared<Scope>(curScope->Name, curScope->Statements);
-
-    // Variables are inherited from the parent scope (note that this *needs* to be a copy as we
-    // cannot modify the parent scope)
-    candiateScope->VariableMap = curScope->VariableMap;
-
-    // Record the call
-    if(!curScope->StackTrace)
-      candiateScope->StackTrace = std::make_shared<std::vector<sir::StencilCall*>>();
-    else
-      candiateScope->StackTrace =
-          std::make_shared<std::vector<sir::StencilCall*>>(*curScope->StackTrace);
-    candiateScope->StackTrace->push_back(stencilCall);
-
-    // Get the sir::Stencil from the callee name
-    auto stencilIt = std::find_if(
-        instantiation_->getSIR()->Stencils.begin(), instantiation_->getSIR()->Stencils.end(),
-        [&](const std::shared_ptr<sir::Stencil>& s) { return s->Name == stencilCall->Callee; });
-    DAWN_ASSERT(stencilIt != instantiation_->getSIR()->Stencils.end());
-    sir::Stencil& stencil = **stencilIt;
-
-    // We need less or an equal amount of args as temporaries are added implicitly
-    DAWN_ASSERT(stencilCall->Args.size() <= stencil.Fields.size());
-
-    // Map the field arguments
-    for(std::size_t stencilArgIdx = 0, stencilCallArgIdx = 0; stencilArgIdx < stencil.Fields.size();
-        ++stencilArgIdx) {
-
-      int AccessID = 0;
-      if(stencil.Fields[stencilArgIdx]->IsTemporary) {
-        // We add a new temporary field for each temporary field argument
-        AccessID = instantiation_->nextUID();
-        instantiation_->setAccessIDNamePairOfField(
-            AccessID, StencilInstantiation::makeTemporaryFieldname(
-                          stencil.Fields[stencilArgIdx]->Name, AccessID),
-            true);
-      } else {
-        AccessID =
-            curScope->LocalFieldnameToAccessIDMap.find(stencilCall->Args[stencilCallArgIdx]->Name)
-                ->second;
-        stencilCallArgIdx++;
-      }
-
-      candiateScope->LocalFieldnameToAccessIDMap.emplace(stencil.Fields[stencilArgIdx]->Name,
-                                                         AccessID);
-    }
-
-    // Process the stencil description AST of the callee.
-    scope_.push(candiateScope);
-
-    // As we *may* modify the AST we better make a copy here otherwise we get funny surprises if we
-    // call this stencil multiple times ...
-    stencil.StencilDescAst->clone()->accept(*this);
-
-    scope_.pop();
-
-    DAWN_LOG(INFO) << "Done processing stencil call to `" << stencilCall->Callee << "`";
-  }
-
-  void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override {
-    if(instantiation_->insertBoundaryConditions(stmt->getFields()[0]->Name, stmt) == false)
-      DAWN_ASSERT_MSG(false, "Boundary Condition specified twice for the same field");
-  }
-
-  void visit(const std::shared_ptr<AssignmentExpr>& expr) override {
-    for(auto& s : expr->getChildren())
-      s->accept(*this);
-
-    // If the LHS is known to be a known constant, we need to update its value or remove it as
-    // being compile time constant
-    if(VarAccessExpr* var = dyn_cast<VarAccessExpr>(expr->getLeft().get())) {
-      if(scope_.top()->VariableMap.count(var->getName())) {
-        double result;
-        if(evalExprAsDouble(expr->getRight(), result, scope_.top()->VariableMap)) {
-          if(StringRef(expr->getOp()) == "=")
-            scope_.top()->VariableMap[var->getName()] = result;
-          else if(StringRef(expr->getOp()) == "+=")
-            scope_.top()->VariableMap[var->getName()] += result;
-          else if(StringRef(expr->getOp()) == "-=")
-            scope_.top()->VariableMap[var->getName()] -= result;
-          else if(StringRef(expr->getOp()) == "*=")
-            scope_.top()->VariableMap[var->getName()] *= result;
-          else if(StringRef(expr->getOp()) == "/=")
-            scope_.top()->VariableMap[var->getName()] /= result;
-          else // unknown operator
-            scope_.top()->VariableMap.erase(var->getName());
-        } else
-          scope_.top()->VariableMap.erase(var->getName());
-      }
-    }
-  }
-
-  void visit(const std::shared_ptr<UnaryOperator>& expr) override {
-    for(auto& s : expr->getChildren())
-      s->accept(*this);
-  }
-
-  void visit(const std::shared_ptr<BinaryOperator>& expr) override {
-    for(auto& s : expr->getChildren())
-      s->accept(*this);
-  }
-
-  void visit(const std::shared_ptr<TernaryOperator>& expr) override {
-    for(auto& s : expr->getChildren())
-      s->accept(*this);
-  }
-
-  void visit(const std::shared_ptr<FunCallExpr>& expr) override {
-    for(auto& s : expr->getChildren())
-      s->accept(*this);
-  }
-
-  void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
-    DAWN_ASSERT_MSG(0, "StencilFunCallExpr not allowed in this context");
-  }
-  void visit(const std::shared_ptr<StencilFunArgExpr>& expr) override {
-    DAWN_ASSERT_MSG(0, "StencilFunArgExpr not allowed in this context");
-  }
-
-  void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
-    const auto& varname = expr->getName();
-
-    if(expr->isExternal()) {
-      DAWN_ASSERT_MSG(!expr->isArrayAccess(), "global array access is not supported");
-
-      const auto& value = instantiation_->getGlobalVariableValue(varname);
-      if(value.isConstexpr()) {
-        // Replace the variable access with the actual value
-        DAWN_ASSERT_MSG(!value.empty(), "constant global variable with no value");
-
-        auto newExpr = std::make_shared<dawn::LiteralAccessExpr>(
-            value.toString(), sir::Value::typeToBuiltinTypeID(value.getType()));
-        replaceOldExprWithNewExprInStmt(scope_.top()->Statements.back()->ASTStmt, expr, newExpr);
-
-        int AccessID = instantiation_->nextUID();
-        instantiation_->getLiteralAccessIDToNameMap().emplace(AccessID, newExpr->getValue());
-        instantiation_->mapExprToAccessID(newExpr, AccessID);
-
-      } else {
-        int AccessID = 0;
-        if(!instantiation_->isGlobalVariable(varname)) {
-          AccessID = instantiation_->nextUID();
-          instantiation_->setAccessIDNamePairOfGlobalVariable(AccessID, varname);
-        } else {
-          AccessID = instantiation_->getAccessIDFromName(varname);
-        }
-
-        instantiation_->mapExprToAccessID(expr, AccessID);
-      }
-
-    } else {
-      // Register the mapping between VarAccessExpr and AccessID.
-      instantiation_->mapExprToAccessID(expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
-
-      // Resolve the index if this is an array access
-      if(expr->isArrayAccess())
-        expr->getIndex()->accept(*this);
-    }
-  }
-
-  void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override {
-    // Register a literal access (Note: the negative AccessID we assign!)
-    int AccessID = -instantiation_->nextUID();
-    instantiation_->getLiteralAccessIDToNameMap().emplace(AccessID, expr->getValue());
-    instantiation_->mapExprToAccessID(expr, AccessID);
-  }
-
-  void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {}
-};
-
-} // anonymous namespace
 
 //===------------------------------------------------------------------------------------------===//
 //     StencilInstantiation
 //===------------------------------------------------------------------------------------------===//
 
-StencilInstantiation::StencilInstantiation(::dawn::OptimizerContext* context,
-                                           std::shared_ptr<sir::Stencil> const& SIRStencil,
-                                           std::shared_ptr<SIR> const& SIR)
-    : context_(context), SIRStencil_(SIRStencil), SIR_(SIR), IIR_(make_unique<IIR>()) {
-  DAWN_LOG(INFO) << "Intializing StencilInstantiation of `" << SIRStencil->Name << "`";
-  DAWN_ASSERT_MSG(SIRStencil, "Stencil does not exist");
+StencilInstantiation::StencilInstantiation(dawn::OptimizerContext* context)
+    : context_(context), IIR_(make_unique<IIR>()) {}
 
-  // Map the fields of the "main stencil" to unique IDs (which are used in the access maps to
-  // indentify the field).
-  for(const auto& field : SIRStencil->Fields) {
-    int AccessID = nextUID();
-    if(!field->IsTemporary) {
-      apiFieldIDs_.push_back(AccessID);
-    }
-    setAccessIDNamePairOfField(AccessID, field->Name, field->IsTemporary);
-    fieldIDToInitializedDimensionsMap_.emplace(AccessID, field->fieldDimensions);
-  }
-
-  // Process the stencil description of the "main stencil"
-  StencilDescStatementMapper stencilDeclMapper(this, getName(), stencilDescStatements_,
-                                               NameToAccessIDMap_);
-
-  // We need to operate on a copy of the AST as we may modify the nodes inplace
-  auto AST = SIRStencil->StencilDescAst->clone();
-  AST->accept(stencilDeclMapper);
-
-  // Cleanup the `stencilDescStatements` and remove the empty stencils which may have been inserted
-  stencilDeclMapper.cleanupStencilDeclAST();
-
-  // Repair broken references to temporaries i.e promote them to real fields
-  PassTemporaryType::fixTemporariesSpanningMultipleStencils(this, getStencils());
-
-  if(context_->getOptions().ReportAccesses)
-    reportAccesses();
-
-  for(const auto& MS : iterateIIROver<MultiStage>(*IIR_)) {
-    MS->update(NodeUpdateType::levelAndTreeAbove);
-  }
-  DAWN_LOG(INFO) << "Done initializing StencilInstantiation";
-}
+StencilMetaInformation& StencilInstantiation::getMetaData() { return metadata_; }
 
 std::shared_ptr<StencilInstantiation> StencilInstantiation::clone() const {
 
   std::shared_ptr<StencilInstantiation> stencilInstantiation =
-      std::make_shared<StencilInstantiation>(context_, SIRStencil_, SIR_);
+      std::make_shared<StencilInstantiation>(context_);
 
-  stencilInstantiation->NameToAccessIDMap_ = NameToAccessIDMap_;
-  stencilInstantiation->AccessIDToNameMap_ = AccessIDToNameMap_;
-  stencilInstantiation->ExprToAccessIDMap_ = ExprToAccessIDMap_;
-  stencilInstantiation->StmtToAccessIDMap_ = StmtToAccessIDMap_;
-  stencilInstantiation->LiteralAccessIDToNameMap_ = LiteralAccessIDToNameMap_;
-  stencilInstantiation->FieldAccessIDSet_ = FieldAccessIDSet_;
-  stencilInstantiation->apiFieldIDs_ = apiFieldIDs_;
-  stencilInstantiation->TemporaryFieldAccessIDSet_ = TemporaryFieldAccessIDSet_;
-  stencilInstantiation->AllocatedFieldAccessIDSet_ = AllocatedFieldAccessIDSet_;
-  stencilInstantiation->GlobalVariableAccessIDSet_ = GlobalVariableAccessIDSet_;
-  stencilInstantiation->variableVersions_ = variableVersions_;
+  stencilInstantiation->metadata_.clone(metadata_);
+
   stencilInstantiation->IIR_ = make_unique<iir::IIR>();
-
   IIR_->clone(stencilInstantiation->IIR_);
-
-  stencilInstantiation->stencilDescStatements_ = stencilDescStatements_;
-  stencilInstantiation->StencilCallToStencilIDMap_ = StencilCallToStencilIDMap_;
-  stencilInstantiation->IDToStencilCallMap_ = IDToStencilCallMap_;
-  stencilInstantiation->StageIDToNameMap_ = StageIDToNameMap_;
-  stencilInstantiation->stencilFunctionInstantiations_ = stencilFunctionInstantiations_;
-  stencilInstantiation->ExprToStencilFunctionInstantiationMap_ =
-      ExprToStencilFunctionInstantiationMap_;
-  stencilInstantiation->stencilFunInstantiationCandidate_ = stencilFunInstantiationCandidate_;
-  stencilInstantiation->BoundaryConditionToExtentsMap_ = BoundaryConditionToExtentsMap_;
-  stencilInstantiation->FieldnameToBoundaryConditionMap_ = FieldnameToBoundaryConditionMap_;
-  stencilInstantiation->CachedVariableSet_ = CachedVariableSet_;
-  stencilInstantiation->fieldIDToInitializedDimensionsMap_ = fieldIDToInitializedDimensionsMap_;
 
   return stencilInstantiation;
 }
 
 void StencilInstantiation::setAccessIDNamePair(int AccessID, const std::string& name) {
-  AccessIDToNameMap_.emplace(AccessID, name);
-  NameToAccessIDMap_.emplace(name, AccessID);
+  metadata_.AccessIDToNameMap_.emplace(AccessID, name);
+  getNameToAccessIDMap().emplace(name, AccessID);
 }
 
 void StencilInstantiation::setAccessIDNamePairOfField(int AccessID, const std::string& name,
                                                       bool isTemporary) {
   setAccessIDNamePair(AccessID, name);
-  FieldAccessIDSet_.insert(AccessID);
+  metadata_.FieldAccessIDSet_.insert(AccessID);
   if(isTemporary) {
-    TemporaryFieldAccessIDSet_.insert(AccessID);
+    metadata_.TemporaryFieldAccessIDSet_.insert(AccessID);
   }
 }
 
 void StencilInstantiation::setAccessIDNamePairOfGlobalVariable(int AccessID,
                                                                const std::string& name) {
   setAccessIDNamePair(AccessID, name);
-  GlobalVariableAccessIDSet_.insert(AccessID);
+  metadata_.GlobalVariableAccessIDSet_.insert(AccessID);
 }
 
 void StencilInstantiation::removeAccessID(int AccessID) {
-  if(NameToAccessIDMap_.count(AccessIDToNameMap_[AccessID]))
-    NameToAccessIDMap_.erase(AccessIDToNameMap_[AccessID]);
+  if(getNameToAccessIDMap().count(metadata_.AccessIDToNameMap_[AccessID]))
+    getNameToAccessIDMap().erase(metadata_.AccessIDToNameMap_[AccessID]);
 
-  AccessIDToNameMap_.erase(AccessID);
-  FieldAccessIDSet_.erase(AccessID);
-  TemporaryFieldAccessIDSet_.erase(AccessID);
+  metadata_.AccessIDToNameMap_.erase(AccessID);
+  metadata_.FieldAccessIDSet_.erase(AccessID);
+  metadata_.TemporaryFieldAccessIDSet_.erase(AccessID);
 
-  if(variableVersions_.hasVariableMultipleVersions(AccessID)) {
-    auto versions = variableVersions_.getVersions(AccessID);
+  if(metadata_.variableVersions_.hasVariableMultipleVersions(AccessID)) {
+    auto versions = metadata_.variableVersions_.getVersions(AccessID);
     versions->erase(std::remove_if(versions->begin(), versions->end(),
                                    [&](int AID) { return AID == AccessID; }),
                     versions->end());
   }
 }
 
-const std::string StencilInstantiation::getName() const { return SIRStencil_->Name; }
+const std::string StencilInstantiation::getName() const {
+  return metadata_.stencilName_;
+}
 
 const std::unordered_map<std::shared_ptr<Stmt>, int>&
 StencilInstantiation::getStmtToAccessIDMap() const {
-  return StmtToAccessIDMap_;
+  return metadata_.StmtToAccessIDMap_;
 }
 
 std::unordered_map<std::shared_ptr<Stmt>, int>& StencilInstantiation::getStmtToAccessIDMap() {
-  return StmtToAccessIDMap_;
+  return metadata_.StmtToAccessIDMap_;
 }
 
 const std::string& StencilInstantiation::getNameFromAccessID(int AccessID) const {
   if(AccessID < 0)
     return getNameFromLiteralAccessID(AccessID);
-  auto it = AccessIDToNameMap_.find(AccessID);
-  DAWN_ASSERT_MSG(it != AccessIDToNameMap_.end(), "Invalid AccessID");
-  return it->second;
-}
-
-const std::string& StencilInstantiation::getNameFromStageID(int StageID) const {
-  auto it = StageIDToNameMap_.find(StageID);
-  DAWN_ASSERT_MSG(it != StageIDToNameMap_.end(), "Invalid StageID");
+  auto it = metadata_.AccessIDToNameMap_.find(AccessID);
+  DAWN_ASSERT_MSG(it != metadata_.AccessIDToNameMap_.end(), "Invalid AccessID");
   return it->second;
 }
 
 void StencilInstantiation::mapExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID) {
-  ExprToAccessIDMap_.emplace(expr, accessID);
+  metadata_.ExprToAccessIDMap_.emplace(expr, accessID);
 }
 
 void StencilInstantiation::eraseExprToAccessID(std::shared_ptr<Expr> expr) {
-  DAWN_ASSERT(ExprToAccessIDMap_.count(expr));
-  ExprToAccessIDMap_.erase(expr);
+  DAWN_ASSERT(metadata_.ExprToAccessIDMap_.count(expr));
+  metadata_.ExprToAccessIDMap_.erase(expr);
 }
 
 void StencilInstantiation::mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt, int accessID) {
-  StmtToAccessIDMap_.emplace(stmt, accessID);
+  metadata_.StmtToAccessIDMap_.emplace(stmt, accessID);
 }
 
 const std::string& StencilInstantiation::getNameFromLiteralAccessID(int AccessID) const {
   DAWN_ASSERT_MSG(isLiteral(AccessID), "Invalid literal");
-  return LiteralAccessIDToNameMap_.find(AccessID)->second;
+  return metadata_.LiteralAccessIDToNameMap_.find(AccessID)->second;
 }
 
 bool StencilInstantiation::isGlobalVariable(const std::string& name) const {
-  auto it = NameToAccessIDMap_.find(name);
-  return it == NameToAccessIDMap_.end() ? false : isGlobalVariable(it->second);
+  auto it = getNameToAccessIDMap().find(name);
+  return it == getNameToAccessIDMap().end() ? false : isGlobalVariable(it->second);
 }
 
 void StencilInstantiation::insertStencilFunctionIntoSIR(
     const std::shared_ptr<sir::StencilFunction>& sirStencilFunction) {
-  SIR_->StencilFunctions.push_back(sirStencilFunction);
+
+  metadata_.allStencilFunctions_.push_back(sirStencilFunction);
 }
 
 bool StencilInstantiation::insertBoundaryConditions(std::string originalFieldName,
                                                     std::shared_ptr<BoundaryConditionDeclStmt> bc) {
-  if(FieldnameToBoundaryConditionMap_.count(originalFieldName) != 0) {
+  if(metadata_.FieldnameToBoundaryConditionMap_.count(originalFieldName) != 0) {
     return false;
   } else {
-    FieldnameToBoundaryConditionMap_.emplace(originalFieldName, bc);
+    metadata_.FieldnameToBoundaryConditionMap_.emplace(originalFieldName, bc);
     return true;
   }
 }
 
 Array3i StencilInstantiation::getFieldDimensionsMask(int FieldID) const {
-  if(fieldIDToInitializedDimensionsMap_.count(FieldID) == 0) {
+  if(metadata_.fieldIDToInitializedDimensionsMap_.count(FieldID) == 0) {
     return Array3i{{1, 1, 1}};
   }
-  return fieldIDToInitializedDimensionsMap_.find(FieldID)->second;
+  return metadata_.fieldIDToInitializedDimensionsMap_.find(FieldID)->second;
 }
 const sir::Value& StencilInstantiation::getGlobalVariableValue(const std::string& name) const {
-  auto it = getSIR()->GlobalVariableMap->find(name);
-  DAWN_ASSERT(it != getSIR()->GlobalVariableMap->end());
+  auto it = metadata_.globalVariableMap_.find(name);
+  DAWN_ASSERT(it != metadata_.globalVariableMap_.end());
   return *it->second;
 }
 
 ArrayRef<int> StencilInstantiation::getFieldVersions(int AccessID) const {
-  return variableVersions_.hasVariableMultipleVersions(AccessID)
-             ? ArrayRef<int>(*(variableVersions_.getVersions(AccessID)))
+  return metadata_.variableVersions_.hasVariableMultipleVersions(AccessID)
+             ? ArrayRef<int>(*(metadata_.variableVersions_.getVersions(AccessID)))
              : ArrayRef<int>{};
 }
 
@@ -783,15 +184,15 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
   int newAccessID = nextUID();
 
   if(isField(AccessID)) {
-    if(variableVersions_.hasVariableMultipleVersions(AccessID)) {
+    if(metadata_.variableVersions_.hasVariableMultipleVersions(AccessID)) {
       // Field is already multi-versioned, append a new version
-      auto versions = variableVersions_.getVersions(AccessID);
+      auto versions = metadata_.variableVersions_.getVersions(AccessID);
 
       // Set the second to last field to be a temporary (only the first and the last field will be
       // real storages, all other versions will be temporaries)
       int lastAccessID = versions->back();
-      TemporaryFieldAccessIDSet_.insert(lastAccessID);
-      AllocatedFieldAccessIDSet_.erase(lastAccessID);
+      metadata_.TemporaryFieldAccessIDSet_.insert(lastAccessID);
+      IIR_->getAllocatedFieldAccessIDSet().erase(lastAccessID);
 
       // The field with version 0 contains the original name
       const std::string& originalName = getNameFromAccessID(versions->front());
@@ -799,10 +200,10 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
       // Register the new field
       setAccessIDNamePairOfField(newAccessID, originalName + "_" + std::to_string(versions->size()),
                                  false);
-      AllocatedFieldAccessIDSet_.insert(newAccessID);
+      IIR_->getAllocatedFieldAccessIDSet().insert(newAccessID);
 
       versions->push_back(newAccessID);
-      variableVersions_.insert(newAccessID, versions);
+      metadata_.variableVersions_.insert(newAccessID, versions);
 
     } else {
       const std::string& originalName = getNameFromAccessID(AccessID);
@@ -813,15 +214,15 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
       *versionsVecPtr = {AccessID, newAccessID};
 
       setAccessIDNamePairOfField(newAccessID, originalName + "_1", false);
-      AllocatedFieldAccessIDSet_.insert(newAccessID);
+      IIR_->getAllocatedFieldAccessIDSet().insert(newAccessID);
 
-      variableVersions_.insert(AccessID, versionsVecPtr);
-      variableVersions_.insert(newAccessID, versionsVecPtr);
+      metadata_.variableVersions_.insert(AccessID, versionsVecPtr);
+      metadata_.variableVersions_.insert(newAccessID, versionsVecPtr);
     }
   } else {
-    if(variableVersions_.hasVariableMultipleVersions(AccessID)) {
+    if(metadata_.variableVersions_.hasVariableMultipleVersions(AccessID)) {
       // Variable is already multi-versioned, append a new version
-      auto versions = variableVersions_.getVersions(AccessID);
+      auto versions = metadata_.variableVersions_.getVersions(AccessID);
 
       // The variable with version 0 contains the original name
       const std::string& originalName = getNameFromAccessID(versions->front());
@@ -829,7 +230,7 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
       // Register the new variable
       setAccessIDNamePair(newAccessID, originalName + "_" + std::to_string(versions->size()));
       versions->push_back(newAccessID);
-      variableVersions_.insert(newAccessID, versions);
+      metadata_.variableVersions_.insert(newAccessID, versions);
 
     } else {
       const std::string& originalName = getNameFromAccessID(AccessID);
@@ -839,8 +240,8 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
       *versionsVecPtr = {AccessID, newAccessID};
 
       setAccessIDNamePair(newAccessID, originalName + "_1");
-      variableVersions_.insert(AccessID, versionsVecPtr);
-      variableVersions_.insert(newAccessID, versionsVecPtr);
+      metadata_.variableVersions_.insert(AccessID, versionsVecPtr);
+      metadata_.variableVersions_.insert(newAccessID, versionsVecPtr);
     }
   }
 
@@ -924,7 +325,7 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
   DAWN_ASSERT_MSG(!varDeclStmt->isArray(), "cannot promote local array to temporary field");
 
   auto fieldAccessExpr = std::make_shared<FieldAccessExpr>(fieldname);
-  ExprToAccessIDMap_.emplace(fieldAccessExpr, AccessID);
+  metadata_.ExprToAccessIDMap_.emplace(fieldAccessExpr, AccessID);
   auto assignmentExpr =
       std::make_shared<AssignmentExpr>(fieldAccessExpr, varDeclStmt->getInitList().front());
   auto exprStmt = std::make_shared<ExprStmt>(assignmentExpr);
@@ -935,7 +336,7 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
 
   // Remove the variable
   removeAccessID(AccessID);
-  StmtToAccessIDMap_.erase(oldStatement->ASTStmt);
+  metadata_.StmtToAccessIDMap_.erase(oldStatement->ASTStmt);
 
   // Register the field
   setAccessIDNamePairOfField(AccessID, fieldname, true);
@@ -946,8 +347,8 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
 
 void StencilInstantiation::promoteTemporaryFieldToAllocatedField(int AccessID) {
   DAWN_ASSERT(isTemporaryField(AccessID));
-  TemporaryFieldAccessIDSet_.erase(AccessID);
-  AllocatedFieldAccessIDSet_.insert(AccessID);
+  metadata_.TemporaryFieldAccessIDSet_.erase(AccessID);
+  IIR_->getAllocatedFieldAccessIDSet().insert(AccessID);
 }
 
 void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil, int AccessID,
@@ -1000,40 +401,40 @@ void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil,
 
   // Register the variable
   setAccessIDNamePair(AccessID, varname);
-  StmtToAccessIDMap_.emplace(varDeclStmt, AccessID);
+  metadata_.StmtToAccessIDMap_.emplace(varDeclStmt, AccessID);
 
   // Update the fields of the stages we modified
   stencil->updateFields(lifetime);
 }
 
 int StencilInstantiation::getAccessIDFromName(const std::string& name) const {
-  auto it = NameToAccessIDMap_.find(name);
-  DAWN_ASSERT_MSG(it != NameToAccessIDMap_.end(), "Invalid name");
+  auto it = getNameToAccessIDMap().find(name);
+  DAWN_ASSERT_MSG(it != getNameToAccessIDMap().end(), "Invalid name");
   return it->second;
 }
 
 int StencilInstantiation::getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) const {
-  auto it = ExprToAccessIDMap_.find(expr);
-  DAWN_ASSERT_MSG(it != ExprToAccessIDMap_.end(), "Invalid Expr");
+  auto it = metadata_.ExprToAccessIDMap_.find(expr);
+  DAWN_ASSERT_MSG(it != metadata_.ExprToAccessIDMap_.end(), "Invalid Expr");
   return it->second;
 }
 
 int StencilInstantiation::getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) const {
-  auto it = StmtToAccessIDMap_.find(stmt);
-  DAWN_ASSERT_MSG(it != StmtToAccessIDMap_.end(), "Invalid Stmt");
+  auto it = metadata_.StmtToAccessIDMap_.find(stmt);
+  DAWN_ASSERT_MSG(it != metadata_.StmtToAccessIDMap_.end(), "Invalid Stmt");
   return it->second;
 }
 
 void StencilInstantiation::setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt,
                                              const int accessID) {
-  DAWN_ASSERT(StmtToAccessIDMap_.count(stmt));
-  StmtToAccessIDMap_[stmt] = accessID;
+  DAWN_ASSERT(metadata_.StmtToAccessIDMap_.count(stmt));
+  metadata_.StmtToAccessIDMap_[stmt] = accessID;
 }
 
 void StencilInstantiation::setAccessIDOfExpr(const std::shared_ptr<Expr>& expr,
                                              const int accessID) {
-  DAWN_ASSERT(ExprToAccessIDMap_.count(expr));
-  ExprToAccessIDMap_[expr] = accessID;
+  DAWN_ASSERT(metadata_.ExprToAccessIDMap_.count(expr));
+  metadata_.ExprToAccessIDMap_[expr] = accessID;
 }
 
 void StencilInstantiation::removeStencilFunctionInstantiation(
@@ -1047,13 +448,13 @@ void StencilInstantiation::removeStencilFunctionInstantiation(
     callerStencilFunctionInstantiation->removeStencilFunctionInstantiation(expr);
   } else {
     func = getStencilFunctionInstantiation(expr);
-    ExprToStencilFunctionInstantiationMap_.erase(expr);
+    metadata_.ExprToStencilFunctionInstantiationMap_.erase(expr);
   }
 
-  for(auto it = stencilFunctionInstantiations_.begin();
-      it != stencilFunctionInstantiations_.end();) {
+  for(auto it = metadata_.stencilFunctionInstantiations_.begin();
+      it != metadata_.stencilFunctionInstantiations_.end();) {
     if(*it == func)
-      it = stencilFunctionInstantiations_.erase(it);
+      it = metadata_.stencilFunctionInstantiations_.erase(it);
     else
       ++it;
   }
@@ -1062,21 +463,23 @@ void StencilInstantiation::removeStencilFunctionInstantiation(
 const std::shared_ptr<StencilFunctionInstantiation>
 StencilInstantiation::getStencilFunctionInstantiation(
     const std::shared_ptr<StencilFunCallExpr>& expr) const {
-  auto it = ExprToStencilFunctionInstantiationMap_.find(expr);
-  DAWN_ASSERT_MSG(it != ExprToStencilFunctionInstantiationMap_.end(), "Invalid stencil function");
+  auto it = metadata_.ExprToStencilFunctionInstantiationMap_.find(expr);
+  DAWN_ASSERT_MSG(it != metadata_.ExprToStencilFunctionInstantiationMap_.end(),
+                  "Invalid stencil function");
   return it->second;
 }
 
 std::shared_ptr<StencilFunctionInstantiation>
 StencilInstantiation::getStencilFunctionInstantiationCandidate(
     const std::shared_ptr<StencilFunCallExpr>& expr) {
-  auto it = std::find_if(stencilFunInstantiationCandidate_.begin(),
-                         stencilFunInstantiationCandidate_.end(),
-                         [&](std::pair<std::shared_ptr<StencilFunctionInstantiation>,
-                                       StencilFunctionInstantiationCandidate> const& pair) {
-                           return (pair.first->getExpression() == expr);
-                         });
-  DAWN_ASSERT_MSG((it != stencilFunInstantiationCandidate_.end()),
+  auto it = std::find_if(
+      metadata_.stencilFunInstantiationCandidate_.begin(),
+      metadata_.stencilFunInstantiationCandidate_.end(),
+      [&](std::pair<std::shared_ptr<StencilFunctionInstantiation>,
+                    StencilMetaInformation::StencilFunctionInstantiationCandidate> const& pair) {
+        return (pair.first->getExpression() == expr);
+      });
+  DAWN_ASSERT_MSG((it != metadata_.stencilFunInstantiationCandidate_.end()),
                   "stencil function candidate not found");
 
   return it->first;
@@ -1084,13 +487,14 @@ StencilInstantiation::getStencilFunctionInstantiationCandidate(
 
 std::shared_ptr<StencilFunctionInstantiation>
 StencilInstantiation::getStencilFunctionInstantiationCandidate(const std::string stencilFunName) {
-  auto it = std::find_if(stencilFunInstantiationCandidate_.begin(),
-                         stencilFunInstantiationCandidate_.end(),
-                         [&](std::pair<std::shared_ptr<StencilFunctionInstantiation>,
-                                       StencilFunctionInstantiationCandidate> const& pair) {
-                           return (pair.first->getExpression()->getCallee() == stencilFunName);
-                         });
-  DAWN_ASSERT_MSG((it != stencilFunInstantiationCandidate_.end()),
+  auto it = std::find_if(
+      metadata_.stencilFunInstantiationCandidate_.begin(),
+      metadata_.stencilFunInstantiationCandidate_.end(),
+      [&](std::pair<std::shared_ptr<StencilFunctionInstantiation>,
+                    StencilMetaInformation::StencilFunctionInstantiationCandidate> const& pair) {
+        return (pair.first->getExpression()->getCallee() == stencilFunName);
+      });
+  DAWN_ASSERT_MSG((it != metadata_.stencilFunInstantiationCandidate_.end()),
                   "stencil function candidate not found");
 
   return it->first;
@@ -1098,7 +502,7 @@ StencilInstantiation::getStencilFunctionInstantiationCandidate(const std::string
 
 std::shared_ptr<StencilFunctionInstantiation> StencilInstantiation::cloneStencilFunctionCandidate(
     const std::shared_ptr<StencilFunctionInstantiation>& stencilFun, std::string functionName) {
-  DAWN_ASSERT(stencilFunInstantiationCandidate_.count(stencilFun));
+  DAWN_ASSERT(metadata_.stencilFunInstantiationCandidate_.count(stencilFun));
   auto stencilFunClone = std::make_shared<StencilFunctionInstantiation>(stencilFun->clone());
 
   auto stencilFunExpr =
@@ -1111,15 +515,15 @@ std::shared_ptr<StencilFunctionInstantiation> StencilInstantiation::cloneStencil
   stencilFunClone->setExpression(stencilFunExpr);
   stencilFunClone->setStencilFunction(sirStencilFun);
 
-  stencilFunInstantiationCandidate_.emplace(stencilFunClone,
-                                            stencilFunInstantiationCandidate_[stencilFun]);
+  metadata_.stencilFunInstantiationCandidate_.emplace(
+      stencilFunClone, metadata_.stencilFunInstantiationCandidate_[stencilFun]);
   return stencilFunClone;
 }
 
 const std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
                          std::shared_ptr<StencilFunctionInstantiation>>&
 StencilInstantiation::getExprToStencilFunctionInstantiationMap() const {
-  return ExprToStencilFunctionInstantiationMap_;
+  return metadata_.ExprToStencilFunctionInstantiationMap_;
 }
 
 std::shared_ptr<StencilFunctionInstantiation>
@@ -1133,31 +537,29 @@ StencilInstantiation::makeStencilFunctionInstantiation(
       std::make_shared<StencilFunctionInstantiation>(this, expr, SIRStencilFun, ast, interval,
                                                      curStencilFunctionInstantiation != nullptr);
 
-  stencilFunInstantiationCandidate_.emplace(
-      stencilFun, StencilFunctionInstantiationCandidate{curStencilFunctionInstantiation});
+  metadata_.stencilFunInstantiationCandidate_.emplace(
+      stencilFun, StencilMetaInformation::StencilFunctionInstantiationCandidate{
+                      curStencilFunctionInstantiation});
 
   return stencilFun;
 }
 
 void StencilInstantiation::insertExprToStencilFunction(
     std::shared_ptr<StencilFunctionInstantiation> stencilFun) {
-  // TODO gather all the stencil function properties in a struct
-  //  DAWN_ASSERT(ExprToStencilFunctionInstantiationMap_.count(stencilFun->getExpression()));
-  //  DAWN_ASSERT(nameToStencilFunctionInstantiationMap_.count(stencilFun->getExpression()));
-  ExprToStencilFunctionInstantiationMap_.emplace(stencilFun->getExpression(), stencilFun);
+  metadata_.ExprToStencilFunctionInstantiationMap_.emplace(stencilFun->getExpression(), stencilFun);
 }
 
 void StencilInstantiation::deregisterStencilFunction(
     std::shared_ptr<StencilFunctionInstantiation> stencilFun) {
 
-  bool found = RemoveIf(ExprToStencilFunctionInstantiationMap_,
+  bool found = RemoveIf(metadata_.ExprToStencilFunctionInstantiationMap_,
                         [&](std::pair<std::shared_ptr<StencilFunCallExpr>,
                                       std::shared_ptr<StencilFunctionInstantiation>>
                                 pair) { return (pair.second == stencilFun); });
   // make sure the element existed and was removed
   DAWN_ASSERT(found);
   found = RemoveIf(
-      stencilFunctionInstantiations_,
+      metadata_.stencilFunctionInstantiations_,
       [&](const std::shared_ptr<StencilFunctionInstantiation>& v) { return (v == stencilFun); });
 
   // make sure the element existed and was removed
@@ -1167,11 +569,12 @@ void StencilInstantiation::deregisterStencilFunction(
 void StencilInstantiation::finalizeStencilFunctionSetup(
     std::shared_ptr<StencilFunctionInstantiation> stencilFun) {
 
-  DAWN_ASSERT(stencilFunInstantiationCandidate_.count(stencilFun));
+  DAWN_ASSERT(metadata_.stencilFunInstantiationCandidate_.count(stencilFun));
   stencilFun->closeFunctionBindings();
   // We take the candidate to stencil function and placed it in the stencil function instantiations
   // container
-  StencilFunctionInstantiationCandidate candidate = stencilFunInstantiationCandidate_[stencilFun];
+  StencilMetaInformation::StencilFunctionInstantiationCandidate candidate =
+      metadata_.stencilFunInstantiationCandidate_[stencilFun];
 
   // map of expr to stencil function instantiation is updated
   if(candidate.callerStencilFunction_) {
@@ -1182,80 +585,74 @@ void StencilInstantiation::finalizeStencilFunctionSetup(
 
   stencilFun->update();
 
-  stencilFunctionInstantiations_.push_back(stencilFun);
+  metadata_.stencilFunctionInstantiations_.push_back(stencilFun);
   // we remove the candidate to stencil function
-  stencilFunInstantiationCandidate_.erase(stencilFun);
+  metadata_.stencilFunInstantiationCandidate_.erase(stencilFun);
 }
 
 std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
 StencilInstantiation::getStencilCallToStencilIDMap() {
-  return StencilCallToStencilIDMap_;
+  return IIR_->getStencilCallToStencilIDMap();
 }
 
 const std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
 StencilInstantiation::getStencilCallToStencilIDMap() const {
-  return StencilCallToStencilIDMap_;
+  return IIR_->getStencilCallToStencilIDMap();
 }
 
 std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>>&
 StencilInstantiation::getIDToStencilCallMap() {
-  return IDToStencilCallMap_;
+  return metadata_.IDToStencilCallMap_;
 }
 
 const std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>>&
 StencilInstantiation::getIDToStencilCallMap() const {
-  return IDToStencilCallMap_;
+  return metadata_.IDToStencilCallMap_;
 }
 
 int StencilInstantiation::getStencilIDFromStmt(
     const std::shared_ptr<StencilCallDeclStmt>& stmt) const {
-  auto it = StencilCallToStencilIDMap_.find(stmt);
-  DAWN_ASSERT_MSG(it != StencilCallToStencilIDMap_.end(), "Invalid stencil call");
+  auto it = IIR_->getStencilCallToStencilIDMap().find(stmt);
+  DAWN_ASSERT_MSG(it != IIR_->getStencilCallToStencilIDMap().end(), "Invalid stencil call");
   return it->second;
 }
 
 std::unordered_map<std::string, int>& StencilInstantiation::getNameToAccessIDMap() {
-  return NameToAccessIDMap_;
+  return IIR_->getNameToAccessIDs();
 }
 
 const std::unordered_map<std::string, int>& StencilInstantiation::getNameToAccessIDMap() const {
-  return NameToAccessIDMap_;
+  return IIR_->getNameToAccessIDs();
 }
 
 std::unordered_map<int, std::string>& StencilInstantiation::getAccessIDToNameMap() {
-  return AccessIDToNameMap_;
+  return metadata_.AccessIDToNameMap_;
 }
 
 const std::unordered_map<int, std::string>& StencilInstantiation::getAccessIDToNameMap() const {
-  return AccessIDToNameMap_;
+  return metadata_.AccessIDToNameMap_;
 }
 
 std::unordered_map<int, std::string>& StencilInstantiation::getLiteralAccessIDToNameMap() {
-  return LiteralAccessIDToNameMap_;
+  return metadata_.LiteralAccessIDToNameMap_;
 }
 const std::unordered_map<int, std::string>&
 StencilInstantiation::getLiteralAccessIDToNameMap() const {
-  return LiteralAccessIDToNameMap_;
+  return metadata_.LiteralAccessIDToNameMap_;
 }
 
-std::unordered_map<int, std::string>& StencilInstantiation::getStageIDToNameMap() {
-  return StageIDToNameMap_;
+std::set<int>& StencilInstantiation::getFieldAccessIDSet() { return metadata_.FieldAccessIDSet_; }
+
+const std::set<int>& StencilInstantiation::getFieldAccessIDSet() const {
+  return metadata_.FieldAccessIDSet_;
 }
-
-const std::unordered_map<int, std::string>& StencilInstantiation::getStageIDToNameMap() const {
-  return StageIDToNameMap_;
-}
-
-std::set<int>& StencilInstantiation::getFieldAccessIDSet() { return FieldAccessIDSet_; }
-
-const std::set<int>& StencilInstantiation::getFieldAccessIDSet() const { return FieldAccessIDSet_; }
 
 std::set<int>& StencilInstantiation::getGlobalVariableAccessIDSet() {
-  return GlobalVariableAccessIDSet_;
+  return metadata_.GlobalVariableAccessIDSet_;
 }
 
 const std::set<int>& StencilInstantiation::getGlobalVariableAccessIDSet() const {
-  return GlobalVariableAccessIDSet_;
+  return metadata_.GlobalVariableAccessIDSet_;
 }
 
 namespace {
@@ -1504,17 +901,10 @@ bool StencilInstantiation::isStencilCallCodeGenName(const std::string& name) {
   return StringRef(name).startswith("__code_gen_");
 }
 
-const std::set<int>& StencilInstantiation::getCachedVariableSet() const {
-  return CachedVariableSet_;
-}
-
-void StencilInstantiation::insertCachedVariable(int fieldID) {
-  CachedVariableSet_.emplace(fieldID);
-}
 
 void StencilInstantiation::reportAccesses() const {
   // Stencil functions
-  for(const auto& stencilFun : stencilFunctionInstantiations_) {
+  for(const auto& stencilFun : metadata_.stencilFunctionInstantiations_) {
     const auto& statementAccessesPairs = stencilFun->getStatementAccessesPairs();
 
     for(std::size_t i = 0; i < statementAccessesPairs.size(); ++i) {

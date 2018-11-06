@@ -35,7 +35,6 @@ MultiStage::MultiStage(StencilInstantiation& stencilInstantiation, LoopOrderKind
 std::unique_ptr<MultiStage> MultiStage::clone() const {
   auto cloneMS = make_unique<MultiStage>(stencilInstantiation_, loopOrder_);
 
-  cloneMS->caches_ = caches_;
   cloneMS->id_ = id_;
   cloneMS->derivedInfo_ = derivedInfo_;
 
@@ -124,7 +123,7 @@ iir::Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::Cac
                                  int AccessID, const Interval& interval,
                                  const Interval& enclosingAccessedInterval,
                                  boost::optional<iir::Cache::window> w) {
-  return caches_
+  return derivedInfo_.caches_
       .emplace(AccessID, iir::Cache(type, policy, AccessID, boost::optional<Interval>(interval),
                                     boost::optional<Interval>(enclosingAccessedInterval), w))
       .first->second;
@@ -132,7 +131,7 @@ iir::Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::Cac
 
 iir::Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
                                  int AccessID) {
-  return caches_
+  return derivedInfo_.caches_
       .emplace(AccessID,
                iir::Cache(type, policy, AccessID, boost::optional<Interval>(),
                           boost::optional<Interval>(), boost::optional<iir::Cache::window>()))
@@ -318,8 +317,8 @@ const Field& MultiStage::getField(int accessID) const {
 }
 
 const iir::Cache& MultiStage::getCache(const int accessID) const {
-  DAWN_ASSERT(caches_.count(accessID));
-  return caches_.at(accessID);
+  DAWN_ASSERT(derivedInfo_.caches_.count(accessID));
+  return derivedInfo_.caches_.at(accessID);
 }
 
 void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
