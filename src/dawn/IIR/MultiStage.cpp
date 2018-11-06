@@ -121,6 +121,7 @@ std::shared_ptr<DependencyGraphAccesses> MultiStage::getDependencyGraphOfAxis() 
 
 iir::Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
                                  int AccessID, const Interval& interval,
+                                 const Interval& enclosingAccessedInterval,
                                  boost::optional<iir::Cache::window> w) {
   return derivedInfo_.caches_
       .emplace(AccessID, iir::Cache(type, policy, AccessID, boost::optional<Interval>(interval), w))
@@ -340,6 +341,19 @@ bool MultiStage::isEmptyOrNullStmt() const {
     }
   }
   return true;
+}
+
+std::unordered_map<int, Field>
+MultiStage::computeFieldsAtInterval(const iir::Interval& interval) const {
+  std::unordered_map<int, Field> fields;
+  for(const auto& stage : iterateIIROver<Stage>(*this)) {
+    for(const auto& doMethod : stage->getChildren()) {
+      if(!doMethod->getInterval().overlaps(interval))
+        continue;
+      mergeFields(doMethod->getFields(), fields, boost::make_optional(stage->getExtents()));
+    }
+  }
+  return fields;
 }
 
 } // namespace iir

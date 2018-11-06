@@ -59,7 +59,9 @@ public:
   };
 
   Cache(CacheTypeKind type, CacheIOPolicy policy, int AccessID,
-        boost::optional<Interval> const& interval, boost::optional<window> const& w);
+        boost::optional<Interval> const& interval,
+        boost::optional<Interval> const& enclosingAccessedInterval,
+        boost::optional<window> const& w);
 
   /// @brief Get the AccessID of the field
   int getCachedFieldAccessID() const;
@@ -72,8 +74,11 @@ public:
   CacheIOPolicy getCacheIOPolicy() const;
   std::string getCacheIOPolicyAsString() const;
 
-  /// @brief Get the I/O policy of the cache
+  /// @brief Get the interval of the iteration space from where the cache was accessed
   boost::optional<Interval> getInterval() const;
+
+  /// @brief Get the enclosing of the iteration space interval and the accesses extent
+  boost::optional<Interval> getEnclosingAccessedInterval() const;
 
   /// @brief determines if the cache specification requires a window
   bool requiresWindow() const;
@@ -93,6 +98,7 @@ private:
   CacheIOPolicy policy_;
   int AccessID_;
   boost::optional<Interval> interval_;
+  boost::optional<Interval> enclosingAccessedInterval_;
   boost::optional<window> window_;
 };
 

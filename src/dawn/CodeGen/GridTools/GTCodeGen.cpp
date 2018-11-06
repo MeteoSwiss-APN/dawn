@@ -62,7 +62,12 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const iir::Stencil& stencil)
   for(const auto& mss : stencil.getChildren()) {
     for(const auto& cachePair : mss->getCaches()) {
       auto const& cache = cachePair.second;
-      const boost::optional<iir::Interval> interval = cache.getInterval();
+      boost::optional<iir::Interval> interval;
+      if(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill) {
+        interval = cache.getEnclosingAccessedInterval();
+      } else {
+        interval = cache.getInterval();
+      }
       if(interval.is_initialized())
         intervalProperties_.insert(*interval);
 
@@ -604,14 +609,20 @@ void GTCodeGen::generateStencilClasses(
             multiStage.getCaches(),
             [&](const std::pair<int, iir::Cache>& AccessIDCachePair) -> std::string {
               auto const& cache = AccessIDCachePair.second;
-              DAWN_ASSERT(cache.getInterval().is_initialized() ||
+              boost::optional<iir::Interval> cInterval;
+
+              if(cache.getCacheIOPolicy() == iir::Cache::fill) {
+                cInterval = cache.getEnclosingAccessedInterval();
+              } else {
+                cInterval = cache.getInterval();
+              }
+              DAWN_ASSERT(cInterval.is_initialized() ||
                           cache.getCacheIOPolicy() == iir::Cache::local);
 
               std::string intervalName;
-              if(cache.getInterval().is_initialized()) {
-                DAWN_ASSERT(intervalDefinitions.intervalProperties_.count(*(cache.getInterval())));
-                intervalName =
-                    intervalDefinitions.intervalProperties_.find(*(cache.getInterval()))->name_;
+              if(cInterval.is_initialized()) {
+                DAWN_ASSERT(intervalDefinitions.intervalProperties_.count(*(cInterval)));
+                intervalName = intervalDefinitions.intervalProperties_.find(*cInterval)->name_;
               }
               return (c_gt() + "cache<" +
                       // Type: IJ or K
