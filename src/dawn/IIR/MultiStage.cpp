@@ -124,15 +124,17 @@ iir::Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::Cac
                                  const Interval& enclosingAccessedInterval,
                                  boost::optional<iir::Cache::window> w) {
   return derivedInfo_.caches_
-      .emplace(AccessID, iir::Cache(type, policy, AccessID, boost::optional<Interval>(interval), w))
+      .emplace(AccessID, iir::Cache(type, policy, AccessID, boost::optional<Interval>(interval),
+                                    boost::optional<Interval>(enclosingAccessedInterval), w))
       .first->second;
 }
 
 iir::Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
                                  int AccessID) {
   return derivedInfo_.caches_
-      .emplace(AccessID, iir::Cache(type, policy, AccessID, boost::optional<Interval>(),
-                                    boost::optional<iir::Cache::window>()))
+      .emplace(AccessID,
+               iir::Cache(type, policy, AccessID, boost::optional<Interval>(),
+                          boost::optional<Interval>(), boost::optional<iir::Cache::window>()))
       .first->second;
 }
 
