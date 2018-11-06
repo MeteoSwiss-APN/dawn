@@ -64,7 +64,9 @@ class StatementMapper : public ASTVisitor {
     std::stack<std::shared_ptr<Scope>> CandiateScopes;
   };
 
+  const std::shared_ptr<SIR> sir_;
   iir::StencilInstantiation* instantiation_;
+
   std::shared_ptr<std::vector<sir::StencilCall*>> stackTrace_;
 
   std::stack<std::shared_ptr<Scope>> scope_;
@@ -73,7 +75,7 @@ class StatementMapper : public ASTVisitor {
 
 public:
   StatementMapper(
-      iir::StencilInstantiation* instantiation,
+      const std::shared_ptr<SIR>& fullSIR, iir::StencilInstantiation* instantiation,
       const std::shared_ptr<std::vector<sir::StencilCall*>>& stackTrace, iir::DoMethod& doMethod,
       const iir::Interval& interval,
       const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,

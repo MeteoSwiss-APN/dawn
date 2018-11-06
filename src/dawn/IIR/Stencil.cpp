@@ -49,7 +49,7 @@ std::ostream& operator<<(std::ostream& os, const iir::Stencil& stencil) {
   for(const auto& MS : stencil.getChildren()) {
     os << "MultiStage " << (multiStageIdx++) << ": (" << MS->getLoopOrder() << ")\n";
     for(const auto& stage : MS->getChildren())
-      os << "  " << stencil.getStencilInstantiation().getNameFromStageID(stage->getStageID()) << " "
+      os << "  " << stencil.getStencilInstantiation().getIIR()->getNameFromStageID(stage->getStageID()) << " "
          << RangeToString()(stage->getFields(),
                             [&](const std::pair<int, iir::Field>& fieldPair) {
                               return stencil.getStencilInstantiation().getNameFromAccessID(
@@ -137,9 +137,12 @@ bool Stencil::Lifetime::overlaps(const Stencil::Lifetime& other) const {
   return lowerBoundOverlap && upperBoundOverlap;
 }
 
-Stencil::Stencil(StencilInstantiation& stencilInstantiation,
-                 const std::shared_ptr<sir::Stencil>& SIRStencil, int StencilID)
-    : stencilInstantiation_(stencilInstantiation), SIRStencil_(SIRStencil), StencilID_(StencilID) {}
+sir::Attr& Stencil::getStencilAttributes() { return stencilAttributes_; }
+
+
+Stencil::Stencil(StencilInstantiation& stencilInstantiation, sir::Attr attributes, int StencilID)
+    : stencilInstantiation_(stencilInstantiation), stencilAttributes_(attributes),
+      StencilID_(StencilID) {}
 
 void Stencil::DerivedInfo::clear() { fields_.clear(); }
 
@@ -155,7 +158,7 @@ std::unordered_set<Interval> Stencil::getIntervals() const {
 }
 
 std::unique_ptr<Stencil> Stencil::clone() const {
-  auto cloneStencil = make_unique<Stencil>(stencilInstantiation_, SIRStencil_, StencilID_);
+  auto cloneStencil = make_unique<Stencil>(stencilInstantiation_, stencilAttributes_, StencilID_);
 
   cloneStencil->derivedInfo_ = derivedInfo_;
   cloneStencil->cloneChildrenFrom(*this);
@@ -527,8 +530,6 @@ boost::optional<Interval> Stencil::getEnclosingIntervalTemporaries() const {
   }
   return tmpInterval;
 }
-
-const std::shared_ptr<sir::Stencil> Stencil::getSIRStencil() const { return SIRStencil_; }
 
 void Stencil::accept(ASTVisitor& visitor) {
   for(const auto& stmtAccessesPairPtr : iterateIIROver<StatementAccessesPair>(*this)) {

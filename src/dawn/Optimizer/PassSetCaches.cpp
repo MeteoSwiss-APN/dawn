@@ -156,7 +156,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
   OptimizerContext* context = instantiation->getOptimizerContext();
 
   for(const auto& stencilPtr : instantiation->getStencils()) {
-    const iir::Stencil& stencil = *stencilPtr;
+    iir::Stencil& stencil = *stencilPtr;
 
     // Set IJ-Caches
     int msIdx = 0;
@@ -195,7 +195,6 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
              !field.getExtents().isHorizontalPointwise()) {
 
             iir::Cache& cache = MS.setCache(iir::Cache::IJ, iir::Cache::local, field.getAccessID());
-            instantiation->insertCachedVariable(field.getAccessID());
 
             if(context->getOptions().ReportPassSetCaches) {
               std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": MS"
@@ -215,7 +214,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
 
     // Set K-Caches
     if(context->getOptions().UseKCaches ||
-       stencil.getSIRStencil()->Attributes.has(sir::Attr::AK_UseKCaches)) {
+       stencil.getStencilAttributes().has(sir::Attr::AK_UseKCaches)) {
 
       std::set<int> mssProcessedFields;
       for(int MSIndex = 0; MSIndex < stencil.getChildren().size(); ++MSIndex) {
