@@ -45,10 +45,19 @@ static std::string makeLoopImpl(const iir::Extent extent, const std::string& dim
       .str();
 }
 
+static std::string makeIntervalLevelBound(const std::string dom,
+                                          iir::Interval::IntervalLevel const& intervalLevel) {
+  return intervalLevel.isEnd() ? " ksize - 1 + " + std::to_string(intervalLevel.offset_)
+                               : std::to_string(intervalLevel.bound());
+}
+
 static std::string makeIntervalBound(const std::string dom, iir::Interval const& interval,
                                      iir::Interval::Bound bound) {
-  return interval.levelIsEnd(bound) ? " ksize - 1 + " + std::to_string(interval.offset(bound))
-                                    : std::to_string(interval.bound(bound));
+  if(bound == iir::Interval::Bound::lower) {
+    return makeIntervalLevelBound(dom, interval.lowerIntervalLevel());
+  } else {
+    return makeIntervalLevelBound(dom, interval.upperIntervalLevel());
+  }
 }
 
 static std::string makeKLoop(const std::string dom, const std::array<unsigned int, 3> blockSize,
@@ -659,11 +668,19 @@ void CudaCodeGen::generateFinalFlushKCaches(
                   std::stringstream pred;
                   std::string intervalKBegin = kBegin("dom", ms->getLoopOrder(), cacheInterval);
 
+                  auto lastLevelComputed = ms->lastLevelComputed(accessID);
                   if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) {
-                    pred << "if( " + intervalKBegin + " - k >= " +
+                    lastLevelComputed.offset_ -= 1;
+                  } else {
+                    lastLevelComputed.offset_ += 1;
+                  }
+                  auto lastKLevelStr = makeIntervalLevelBound("dom", lastLevelComputed);
+
+                  if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) {
+                    pred << "if( " + intervalKBegin + " - " + lastKLevelStr + " >= " +
                                 std::to_string(std::abs(offset)) + ")";
                   } else {
-                    pred << "if( k - " + intervalKBegin + " >= " +
+                    pred << "if( " + lastKLevelStr + " - " + intervalKBegin + " >= " +
                                 std::to_string(std::abs(offset)) + ")";
                   }
                   cudaKernel.addBlockStatement(pred.str(), [&]() {
