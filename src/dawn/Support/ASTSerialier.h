@@ -113,4 +113,6 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto);
 
 std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto);
 
+std::shared_ptr<AST> makeAST(const dawn::proto::statements::AST& astProto);
+
 #endif // DAWN_SUPPORT_ASTSERIALIZER_H
