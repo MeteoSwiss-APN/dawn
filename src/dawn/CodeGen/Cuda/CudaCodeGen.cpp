@@ -702,11 +702,19 @@ void CudaCodeGen::generateFinalFlushKCaches(
                   std::stringstream pred;
                   std::string intervalKBegin = kBegin("dom", ms->getLoopOrder(), cacheInterval);
 
+                  auto lastLevelComputed = ms->lastLevelComputed(accessID);
                   if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) {
-                    pred << "if( " + intervalKBegin + " - k >= " +
+                    lastLevelComputed.offset_ -= 1;
+                  } else {
+                    lastLevelComputed.offset_ += 1;
+                  }
+                  auto lastKLevelStr = makeIntervalLevelBound("dom", lastLevelComputed);
+
+                  if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) {
+                    pred << "if( " + intervalKBegin + " - " + lastKLevelStr + " >= " +
                                 std::to_string(std::abs(offset)) + ")";
                   } else {
-                    pred << "if( k - " + intervalKBegin + " >= " +
+                    pred << "if( " + lastKLevelStr + " - " + intervalKBegin + " >= " +
                                 std::to_string(std::abs(offset)) + ")";
                   }
                   cudaKernel.addBlockStatement(pred.str(), [&]() {
