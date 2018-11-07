@@ -67,6 +67,15 @@ static std::string makeKLoop(const std::string dom, const std::array<unsigned in
              : makeLoopImpl(iir::Extent{}, "k", lower, upper, "<=", "++");
 }
 
+static std::string kBegin(const std::string dom, iir::LoopOrderKind loopOrder,
+                          iir::Interval const& interval) {
+
+  std::string lower = makeIntervalBound(dom, interval, iir::Interval::Bound::lower);
+  std::string upper = makeIntervalBound(dom, interval, iir::Interval::Bound::upper);
+
+  return (loopOrder == iir::LoopOrderKind::LK_Backward) ? upper : lower;
+}
+
 CudaCodeGen::CudaCodeGen(OptimizerContext* context) : CodeGen(context) {}
 
 CudaCodeGen::~CudaCodeGen() {}
@@ -489,6 +498,11 @@ void CudaCodeGen::generateCudaKernelCode(
             cudaKernel.addStatement("idx_tmp " + incStr + " kstride_tmp");
           }
         });
+    if(!solveKLoopInParallel_) {
+      generateFinalFlushKCaches(cudaKernel, ms, interval, cacheProperties, fieldIndexMap,
+                                stencilInstantiation);
+    }
+
     lastKCell = (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
                     ? interval.lowerIntervalLevel()
                     : interval.upperIntervalLevel();
@@ -575,6 +589,122 @@ void CudaCodeGen::generateFillKCaches(
   }
 }
 
+void CudaCodeGen::generateFinalFlushKCaches(
+    MemberFunction& cudaKernel, const std::unique_ptr<iir::MultiStage>& ms,
+    const iir::Interval& interval, const CacheProperties& cacheProperties,
+    const std::unordered_map<int, Array3i>& fieldIndexMap,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const {
+  cudaKernel.addComment("Final flush of kcaches");
+
+  auto intervalFields = ms->computeFieldsAtInterval(interval);
+  std::unordered_map<iir::Extents, std::vector<impl_::KCacheFillProperties>> kcacheFillProperty;
+
+  for(const auto& cachePair : ms->getCaches()) {
+    const int accessID = cachePair.first;
+    const auto& cache = cachePair.second;
+    if(!CacheProperties::requiresFlush(cache))
+      continue;
+
+    DAWN_ASSERT(cache.getInterval().is_initialized());
+    const auto cacheInterval = *(cache.getInterval());
+    auto vertExtent = cacheProperties.getKCacheVertExtent(accessID);
+
+    iir::Interval::Bound intervalBound = (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+                                             ? iir::Interval::Bound::upper
+                                             : iir::Interval::Bound::lower;
+    const bool cacheEndWithinInterval =
+        (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+            ? interval.bound(intervalBound) <= cacheInterval.bound(intervalBound)
+            : interval.bound(intervalBound) >= cacheInterval.bound(intervalBound);
+
+    if(cacheInterval.overlaps(interval) && cacheEndWithinInterval) {
+      auto cacheName = cacheProperties.getCacheName(accessID);
+
+      DAWN_ASSERT(intervalFields.count(accessID));
+      iir::Extents horizontalExtent = intervalFields.at(accessID).getExtentsRB();
+      horizontalExtent[2] = {0, 0};
+      kcacheFillProperty[horizontalExtent].emplace_back(cacheName, accessID, vertExtent);
+    }
+  }
+
+  for(const auto& kcachePropPair : kcacheFillProperty) {
+    const auto& horizontalExtent = kcachePropPair.first;
+    const auto& kcachesProp = kcachePropPair.second;
+
+    cudaKernel.addBlockStatement(
+        "if(iblock >= " + std::to_string(horizontalExtent[0].Minus) +
+            " && iblock <= block_size_i -1 + " + std::to_string(horizontalExtent[0].Plus) +
+            " && jblock >= " + std::to_string(horizontalExtent[1].Minus) +
+            " && jblock <= block_size_j -1 + " + std::to_string(horizontalExtent[1].Plus) + ")",
+        [&]() {
+          for(const auto& kcacheProp : kcachesProp) {
+            const int accessID = kcacheProp.accessID_;
+            const auto& cache = ms->getCache(accessID);
+            DAWN_ASSERT((cache.getInterval().is_initialized()));
+            const auto& cacheInterval = *(cache.getInterval());
+
+            int offset = (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+                             ? kcacheProp.vertExtent_.Plus
+                             : kcacheProp.vertExtent_.Minus;
+
+            if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) {
+              for(int klev = offset - 1; klev >= 0; --klev) {
+                auto dist = distance(cacheInterval, interval, ms->getLoopOrder());
+                if(dist.rangeType_ != iir::IntervalDiff::RangeType::literal ||
+                   std::abs(dist.value) >= std::abs(offset)) {
+                  generateKCacheFlushStatement(cudaKernel, ms, cacheProperties, fieldIndexMap,
+                                               stencilInstantiation, kcacheProp.accessID_,
+                                               kcacheProp.name_, offset);
+                } else {
+                  std::stringstream pred;
+                  std::string intervalKBegin = kBegin("dom", ms->getLoopOrder(), cacheInterval);
+
+                  if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) {
+                    pred << "if( " + intervalKBegin + " - k >= " +
+                                std::to_string(std::abs(offset)) + ")";
+                  } else {
+                    pred << "if( k - " + intervalKBegin + " >= " +
+                                std::to_string(std::abs(offset)) + ")";
+                  }
+                  cudaKernel.addBlockStatement(pred.str(), [&]() {
+                    generateKCacheFlushStatement(cudaKernel, ms, cacheProperties, fieldIndexMap,
+                                                 stencilInstantiation, kcacheProp.accessID_,
+                                                 kcacheProp.name_, offset);
+                  });
+                }
+              }
+            } else {
+              for(int klev = offset + 1; klev <= 0; ++klev) {
+                auto dist = distance(cacheInterval, interval, ms->getLoopOrder());
+                if(dist.rangeType_ != iir::IntervalDiff::RangeType::literal ||
+                   std::abs(dist.value) >= std::abs(offset)) {
+                  generateKCacheFlushStatement(cudaKernel, ms, cacheProperties, fieldIndexMap,
+                                               stencilInstantiation, kcacheProp.accessID_,
+                                               kcacheProp.name_, offset);
+                } else {
+                  std::stringstream pred;
+                  std::string intervalKBegin = kBegin("dom", ms->getLoopOrder(), cacheInterval);
+
+                  if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) {
+                    pred << "if( " + intervalKBegin + " - k >= " +
+                                std::to_string(std::abs(offset)) + ")";
+                  } else {
+                    pred << "if( k - " + intervalKBegin + " >= " +
+                                std::to_string(std::abs(offset)) + ")";
+                  }
+                  cudaKernel.addBlockStatement(pred.str(), [&]() {
+                    generateKCacheFlushStatement(cudaKernel, ms, cacheProperties, fieldIndexMap,
+                                                 stencilInstantiation, kcacheProp.accessID_,
+                                                 kcacheProp.name_, offset);
+                  });
+                }
+              }
+            }
+          }
+        });
+  }
+}
+
 void CudaCodeGen::generateFlushKCaches(
     MemberFunction& cudaKernel, const std::unique_ptr<iir::MultiStage>& ms,
     const iir::Interval& interval, const CacheProperties& cacheProperties,
@@ -608,7 +738,7 @@ void CudaCodeGen::generateFlushKCaches(
 
       DAWN_ASSERT(intervalFields.count(accessID));
       iir::Extents horizontalExtent = intervalFields.at(accessID).getExtentsRB();
-
+      horizontalExtent[2] = {0, 0};
       kcacheFillProperty[horizontalExtent].emplace_back(cacheName, accessID, vertExtent);
     }
   }
@@ -624,22 +754,54 @@ void CudaCodeGen::generateFlushKCaches(
             " && jblock <= block_size_j -1 + " + std::to_string(horizontalExtent[1].Plus) + ")",
         [&]() {
           for(const auto& kcacheProp : kcachesProp) {
+            const int accessID = kcacheProp.accessID_;
+            const auto& cache = ms->getCache(accessID);
+            DAWN_ASSERT((cache.getInterval().is_initialized()));
+            const auto& cacheInterval = *(cache.getInterval());
 
             int offset = (ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
                              ? kcacheProp.vertExtent_.Plus
                              : kcacheProp.vertExtent_.Minus;
-            std::stringstream ss;
-            CodeGeneratorHelper::generateFieldAccessDeref(ss, ms, stencilInstantiation,
-                                                          kcacheProp.accessID_, fieldIndexMap,
-                                                          Array3i{0, 0, offset});
-            cudaKernel.addStatement(
-                ss.str() + "= " + kcacheProp.name_ + "[" +
-                std::to_string(cacheProperties.getKCacheIndex(kcacheProp.accessID_, offset)) + "]");
+
+            auto dist = distance(cacheInterval, interval, ms->getLoopOrder());
+            if(dist.rangeType_ != iir::IntervalDiff::RangeType::literal ||
+               std::abs(dist.value) >= std::abs(offset)) {
+              generateKCacheFlushStatement(cudaKernel, ms, cacheProperties, fieldIndexMap,
+                                           stencilInstantiation, kcacheProp.accessID_,
+                                           kcacheProp.name_, offset);
+            } else {
+              std::stringstream pred;
+              std::string intervalKBegin = kBegin("dom", ms->getLoopOrder(), cacheInterval);
+
+              if(ms->getLoopOrder() == iir::LoopOrderKind::LK_Backward) {
+                pred << "if( " + intervalKBegin + " - k >= " + std::to_string(std::abs(offset)) +
+                            ")";
+              } else {
+                pred << "if( k - " + intervalKBegin + " >= " + std::to_string(std::abs(offset)) +
+                            ")";
+              }
+              cudaKernel.addBlockStatement(pred.str(), [&]() {
+                generateKCacheFlushStatement(cudaKernel, ms, cacheProperties, fieldIndexMap,
+                                             stencilInstantiation, kcacheProp.accessID_,
+                                             kcacheProp.name_, offset);
+              });
+            }
           }
         });
   }
 }
 
+void CudaCodeGen::generateKCacheFlushStatement(
+    MemberFunction& cudaKernel, const std::unique_ptr<iir::MultiStage>& ms,
+    const CacheProperties& cacheProperties, const std::unordered_map<int, Array3i>& fieldIndexMap,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation, const int accessID,
+    std::string cacheName, const int offset) const {
+  std::stringstream ss;
+  CodeGeneratorHelper::generateFieldAccessDeref(ss, ms, stencilInstantiation, accessID,
+                                                fieldIndexMap, Array3i{0, 0, offset});
+  cudaKernel.addStatement(ss.str() + "= " + cacheName + "[" +
+                          std::to_string(cacheProperties.getKCacheIndex(accessID, offset)) + "]");
+}
 void CudaCodeGen::generatePreFillKCaches(
     MemberFunction& cudaKernel, const std::unique_ptr<iir::MultiStage>& ms,
     const iir::Interval& interval, const CacheProperties& cacheProperties,

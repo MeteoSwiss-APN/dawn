@@ -171,6 +171,18 @@ private:
       const std::unordered_map<int, Array3i>& fieldIndexMap,
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
 
+  void generateFinalFlushKCaches(
+      MemberFunction& cudaKernel, const std::unique_ptr<iir::MultiStage>& ms,
+      const iir::Interval& interval, const CacheProperties& cacheProperties,
+      const std::unordered_map<int, Array3i>& fieldIndexMap,
+      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
+
+  void generateKCacheFlushStatement(
+      MemberFunction& cudaKernel, const std::unique_ptr<iir::MultiStage>& ms,
+      const CacheProperties& cacheProperties, const std::unordered_map<int, Array3i>& fieldIndexMap,
+      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation, const int accessID,
+      std::string cacheName, const int offset) const;
+
   std::string intervalDiffToString(iir::IntervalDiff intervalDiff, std::string maxRange) const;
 
   /// @brief return the first level that will initiate the interval processing, given a loop order
