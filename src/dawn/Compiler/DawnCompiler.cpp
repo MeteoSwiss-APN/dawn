@@ -147,6 +147,9 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   // -max-fields
   int maxFields = options_->MaxFieldsPerStencil;
 
+
+  options_->MergeTemporaries = true;
+
   // Initialize optimizer
   std::unique_ptr<OptimizerContext> optimizer =
       make_unique<OptimizerContext>(getDiagnostics(), getOptions(), SIR);
