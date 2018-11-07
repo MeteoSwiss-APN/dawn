@@ -78,8 +78,8 @@ OPT(bool, MergeDoMethods, true, "merge-do-methods", "",
     "Merge Do-Methods with different vertical intervals into the same stage if possible", "", false, true) 
 OPT(bool, UseParallelEP, false, "use-parallel-ep", "", 
     "Make use of the parallel execution policy", "", false, true)
-OPT(bool, UseKCaches, true, "use-kcaches", "", 
-    "Make use of the k-caches", "", false, true)
+OPT(bool, DisableKCaches, true, "disable-kcaches", "",
+    "Disable use of the k-caches", "", false, true)
 OPT(bool, PassTmpToFunction, false, "pass-tmp-to-function", "",
     "Activate pass to replace temporary precomputations by stencil function calls", "", false, true)
 OPT(bool, ReportPassTmpToFunction, false, "report-pass-tmp-to-function", "",
