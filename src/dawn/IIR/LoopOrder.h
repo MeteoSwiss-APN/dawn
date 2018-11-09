@@ -40,6 +40,9 @@ extern const char* loopOrderToString(LoopOrderKind loopOrder);
 /// @ingroup optimizer
 extern std::ostream& operator<<(std::ostream& os, LoopOrderKind loopOrder);
 
+void increment(int& level, LoopOrderKind order);
+
+bool isLevelExecBeforeEqThan(int level, int limit, LoopOrderKind order);
 } // namespace iir
 } // namespace dawn
 

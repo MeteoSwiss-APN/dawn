@@ -35,6 +35,16 @@ class OptimizerContext;
 namespace codegen {
 namespace cuda {
 
+namespace impl_ {
+struct KCacheProperties {
+  inline KCacheProperties(std::string name, int accessID, iir::Extent vertExtent)
+      : name_(name), accessID_(accessID), vertExtent_(vertExtent) {}
+  std::string name_;
+  int accessID_;
+  iir::Extent vertExtent_;
+};
+}
+
 /// @brief GridTools C++ code generation for the gridtools_clang DSL
 /// @ingroup cxxnaive
 class CudaCodeGen : public CodeGen {
@@ -60,6 +70,11 @@ private:
   void addTmpStorageInit(MemberFunction& ctr, iir::Stencil const& stencil,
                          IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>&
                              tempFields) const override;
+
+  std::unordered_map<iir::Extents, std::vector<impl_::KCacheProperties>>
+  buildKCacheProperties(const std::unique_ptr<iir::MultiStage>& ms, const iir::Interval& interval,
+                        const CacheProperties& cacheProperties,
+                        const bool checkStrictIntervalBound) const;
 
   void
   generateCudaKernelCode(std::stringstream& ssSW,
@@ -177,6 +192,13 @@ private:
       const std::unordered_map<int, Array3i>& fieldIndexMap,
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
 
+  void generateKCacheFlushBlockStatement(
+      MemberFunction& cudaKernel, const std::unique_ptr<iir::MultiStage>& ms,
+      const iir::Interval& interval, const CacheProperties& cacheProperties,
+      const std::unordered_map<int, Array3i>& fieldIndexMap,
+      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+      const impl_::KCacheProperties& kcacheProp, const int klev, std::string currentKLevel) const;
+
   void generateKCacheFlushStatement(
       MemberFunction& cudaKernel, const std::unique_ptr<iir::MultiStage>& ms,
       const CacheProperties& cacheProperties, const std::unordered_map<int, Array3i>& fieldIndexMap,
@@ -193,7 +215,8 @@ private:
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
   static int paddedBoundary(int value);
   /// @brief returns true if the stage is the last stage of an interval loop execution
-  /// which requires synchronization due to usage of 2D ij caches (which are re-written at the next
+  /// which requires synchronization due to usage of 2D ij caches (which are re-written at the
+  /// next
   /// k-loop iteration)
   bool intervalRequiresSync(const iir::Interval& interval, const iir::Stage& stage,
                             const std::unique_ptr<iir::MultiStage>& ms) const;

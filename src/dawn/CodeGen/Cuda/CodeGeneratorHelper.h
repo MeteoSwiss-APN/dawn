@@ -40,6 +40,8 @@ public:
   static std::array<std::string, 3> ijkfyOffset(const Array3i& offsets, bool isTemporary,
                                                 const Array3i iteratorDims);
 
+  static bool useNormalIteratorForTmp(const std::unique_ptr<iir::MultiStage>& ms);
+
   /// @brief return true if the ms can be solved in parallel (in the vertical dimension)
   static bool solveKLoopInParallel(const std::unique_ptr<iir::MultiStage>& ms);
 

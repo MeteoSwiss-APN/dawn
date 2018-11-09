@@ -1,4 +1,5 @@
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/StringUtil.h"
 
@@ -32,6 +33,15 @@ std::string CodeGeneratorHelper::indexIteratorName(Array3i dims) {
   return n_;
 }
 
+bool CodeGeneratorHelper::useNormalIteratorForTmp(const std::unique_ptr<iir::MultiStage>& ms) {
+  for(const auto& stage : iterateIIROver<iir::Stage>(*ms)) {
+    if(!stage->getExtents().isHorizontalPointwise()) {
+      return false;
+    }
+  }
+  return true;
+}
+
 void CodeGeneratorHelper::generateFieldAccessDeref(
     std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
     const std::shared_ptr<iir::StencilInstantiation>& instantiation, const int accessID,
@@ -40,14 +50,15 @@ void CodeGeneratorHelper::generateFieldAccessDeref(
   bool isTemporary = instantiation->isTemporaryField(accessID);
   DAWN_ASSERT(fieldIndexMap.count(accessID) || isTemporary);
   const auto& field = ms->getField(accessID);
-  std::string index = isTemporary ? "idx_tmp" : "idx" + CodeGeneratorHelper::indexIteratorName(
-                                                            fieldIndexMap.at(accessID));
+  bool useTmpIndex_ = (isTemporary && !useNormalIteratorForTmp(ms));
+  std::string index = useTmpIndex_ ? "idx_tmp" : "idx" + CodeGeneratorHelper::indexIteratorName(
+                                                             fieldIndexMap.at(accessID));
 
   // temporaries have all 3 dimensions
   Array3i iter = isTemporary ? Array3i{1, 1, 1} : fieldIndexMap.at(accessID);
 
-  std::string offsetStr =
-      RangeToString("+", "", "", true)(CodeGeneratorHelper::ijkfyOffset(offset, isTemporary, iter));
+  std::string offsetStr = RangeToString("+", "", "", true)(
+      CodeGeneratorHelper::ijkfyOffset(offset, useTmpIndex_, iter));
   const bool readOnly = (field.getIntend() == iir::Field::IntendKind::IK_Input);
   ss << (readOnly ? "__ldg(&(" : "") << accessName
      << (offsetStr.empty() ? "[" + index + "]" : ("[" + index + "+" + offsetStr + "]"))
@@ -55,7 +66,7 @@ void CodeGeneratorHelper::generateFieldAccessDeref(
 }
 
 std::array<std::string, 3> CodeGeneratorHelper::ijkfyOffset(const Array3i& offsets,
-                                                            bool isTemporary,
+                                                            bool useTmpIndex,
                                                             const Array3i iteratorDims) {
   int n = -1;
 
@@ -66,7 +77,7 @@ std::array<std::string, 3> CodeGeneratorHelper::ijkfyOffset(const Array3i& offse
                                        CodeGeneratorHelper::generateStrideName(1, iteratorDims),
                                        CodeGeneratorHelper::generateStrideName(2, iteratorDims)};
 
-    if(isTemporary) {
+    if(useTmpIndex) {
       indices = {"1", "jstride_tmp", "kstride_tmp"};
     }
     if(!(iteratorDims[n]) || !off)
