@@ -100,9 +100,7 @@ void StencilInstantiation::removeAccessID(int AccessID) {
   }
 }
 
-const std::string StencilInstantiation::getName() const {
-  return metadata_.stencilName_;
-}
+const std::string StencilInstantiation::getName() const { return metadata_.stencilName_; }
 
 const std::unordered_map<std::shared_ptr<Stmt>, int>&
 StencilInstantiation::getStmtToAccessIDMap() const {
@@ -413,9 +411,14 @@ int StencilInstantiation::getAccessIDFromName(const std::string& name) const {
 }
 
 int StencilInstantiation::getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) const {
-  auto it = metadata_.ExprToAccessIDMap_.find(expr);
-  DAWN_ASSERT_MSG(it != metadata_.ExprToAccessIDMap_.end(), "Invalid Expr");
-  return it->second;
+  for(auto find : metadata_.ExprToAccessIDMap_) {
+    if(find.first->equals(expr)) {
+      return find.second;
+    }
+  }
+  std::cout << "no match, assert" << std::endl;
+  DAWN_ASSERT_MSG(false, "Invalid Expr");
+  return -1;
 }
 
 int StencilInstantiation::getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) const {
@@ -611,9 +614,22 @@ StencilInstantiation::getIDToStencilCallMap() const {
 
 int StencilInstantiation::getStencilIDFromStmt(
     const std::shared_ptr<StencilCallDeclStmt>& stmt) const {
-  auto it = IIR_->getStencilCallToStencilIDMap().find(stmt);
-  DAWN_ASSERT_MSG(it != IIR_->getStencilCallToStencilIDMap().end(), "Invalid stencil call");
-  return it->second;
+    std::cout << "we are looking for:" << std::endl;
+    std::cout << ASTStringifer::toString(stmt) << std::endl;
+    std::cout << "the mapsize is : " << IIR_->getStencilCallToStencilIDMap().size() << std::endl;
+//    std::cout << "the reversed map has size: " IIR_->get
+  for(auto callToID : IIR_->getStencilCallToStencilIDMap()){
+      if(stmt->equals(callToID.first.get())){
+          return callToID.second;
+      }
+      std::cout << ASTStringifer::toString(callToID.first) << " \nfound but does not match" << std::endl;
+  }
+  DAWN_ASSERT_MSG(false, "Invalid stencil call");
+  return -1;
+
+//  auto it = IIR_->getStencilCallToStencilIDMap().find(stmt);
+//  DAWN_ASSERT_MSG(it != IIR_->getStencilCallToStencilIDMap().end(), "Invalid stencil call");
+//  return it->second;
 }
 
 std::unordered_map<std::string, int>& StencilInstantiation::getNameToAccessIDMap() {
@@ -899,7 +915,6 @@ std::string StencilInstantiation::makeStencilCallCodeGenName(int StencilID) {
 bool StencilInstantiation::isStencilCallCodeGenName(const std::string& name) {
   return StringRef(name).startswith("__code_gen_");
 }
-
 
 void StencilInstantiation::reportAccesses() const {
   // Stencil functions

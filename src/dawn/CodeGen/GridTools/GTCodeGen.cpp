@@ -277,7 +277,9 @@ void GTCodeGen::generateStencilWrapperRun(
                                       stencilIDToRunArguments);
   stencilDescCGVisitor.setIndent(RunMethod.getIndent());
   for(const auto& statement : stencilInstantiation->getStencilDescStatements()) {
+      std::cout << "trying to codegen: "  << ASTStringifer::toString(statement->ASTStmt) << std::endl;
     statement->ASTStmt->accept(stencilDescCGVisitor);
+    std::cout << "we assert here already" << std::endl;
     RunMethod << stencilDescCGVisitor.getCodeAndResetStream();
   }
 

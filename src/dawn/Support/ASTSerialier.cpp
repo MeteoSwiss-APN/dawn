@@ -77,6 +77,10 @@ ProtoStmtBuilder::ProtoStmtBuilder(dawn::proto::statements::Stmt* stmtProto) {
   currentStmtProto_.push(stmtProto);
 }
 
+ProtoStmtBuilder::ProtoStmtBuilder(dawn::proto::statements::Expr* exprProto){
+    currentExprProto_.push(exprProto);
+}
+
 dawn::proto::statements::Stmt* ProtoStmtBuilder::getCurrentStmtProto() {
   DAWN_ASSERT(!currentStmtProto_.empty());
   return currentStmtProto_.top();
@@ -602,6 +606,7 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto) {
                                          stmtProto.op().c_str(), initList, makeLocation(stmtProto));
   }
   case proto::statements::Stmt::kStencilCallDeclStmt: {
+      auto metaloc = makeLocation(statementProto.stencil_call_decl_stmt());
     const auto& stmtProto = statementProto.stencil_call_decl_stmt();
     auto loc = makeLocation(stmtProto.stencil_call());
     std::shared_ptr<sir::StencilCall> call =
@@ -609,7 +614,7 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto) {
     for(const auto& arg : stmtProto.stencil_call().arguments()) {
       call->Args.push_back(makeField(arg));
     }
-    return std::make_shared<StencilCallDeclStmt>(call);
+    return std::make_shared<StencilCallDeclStmt>(call, metaloc);
     //    DAWN_ASSERT_MSG(false, "Vertical Region not allowed in this context");
     //    return nullptr;
   }
@@ -629,11 +634,6 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto) {
       dawn_unreachable("no looporder specified");
     }
     auto ast = makeAST(stmtProto.vertical_region().ast());
-
-    //        std::make_shared<sir::Interval>(stmtProto.vertical_region().interval().lower_level(),
-    //                                        stmtProto.vertical_region().interval().upper_level(),
-    //                                        stmtProto.vertical_region().interval().lower_offset(),
-    //                                        stmtProto.vertical_region().interval().upper_offset());
     std::shared_ptr<sir::VerticalRegion> verticalRegion =
         std::make_shared<sir::VerticalRegion>(ast, interval, looporder, loc);
     return std::make_shared<VerticalRegionDeclStmt>(verticalRegion, loc);

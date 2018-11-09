@@ -47,6 +47,8 @@ class ProtoStmtBuilder : public dawn::ASTVisitor {
 public:
   ProtoStmtBuilder(dawn::proto::statements::Stmt* stmtProto);
 
+  ProtoStmtBuilder(dawn::proto::statements::Expr* exprProto);
+
   dawn::proto::statements::Stmt* getCurrentStmtProto();
 
   dawn::proto::statements::Expr* getCurrentExprProto();

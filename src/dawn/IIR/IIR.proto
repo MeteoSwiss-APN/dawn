@@ -189,8 +189,8 @@ message StencilMetaInfo{
     repeated int32 GlobalVariableIDs = 8;
     VariableVersions versionedFields = 9;
     repeated StencilDescStatement stencilDescStatements = 10;
-    map<int32, dawn.proto.statements.StencilCallDeclStmt> IDToStencilCall = 11;
-    map<string, dawn.proto.statements.BoundaryConditionDeclStmt> FieldnameToBoundaryCondition = 12;
+    map<int32, dawn.proto.statements.Stmt> IDToStencilCall = 11;
+    map<string, dawn.proto.statements.Stmt> FieldnameToBoundaryCondition = 12;
     map<int32, Array3i> fieldIDtoLegalDimensions = 13;
     map<string, GlobalValueAndType> GlobalVariableToValue = 14;
     dawn.proto.statements.SourceLocation stencilLocation = 15;

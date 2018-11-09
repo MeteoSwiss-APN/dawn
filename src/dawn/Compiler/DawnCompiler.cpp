@@ -195,8 +195,18 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     //////////// Trying serialization
     IIRSerializer::serialize("out.file", instantiation, IIRSerializer::SerializationKind::SK_Json);
 
-    auto output =  IIRSerializer::deserialize("out.file", instantiation->getOptimizerContext());
+    auto output = IIRSerializer::deserialize("out.file", instantiation->getOptimizerContext());
     output->dump();
+    std::cout << "originals:" << std::endl;
+    for(auto a : instantiation->getStencilDescStatements()) {
+      std::cout << ASTStringifer::toString(a->ASTStmt) << std::endl;
+      std::cout << (a->StackTrace == nullptr) << std::endl;
+    }
+    std::cout << "serialzed ones:" << std::endl;
+    for(auto a : output->getStencilDescStatements()) {
+      std::cout << ASTStringifer::toString(a->ASTStmt) << std::endl;
+      std::cout << (a->StackTrace == nullptr) << std::endl;
+    }
     stencil.second = output;
   }
 
