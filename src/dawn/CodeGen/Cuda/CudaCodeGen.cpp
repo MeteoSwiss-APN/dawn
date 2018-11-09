@@ -175,9 +175,10 @@ void CudaCodeGen::generateCudaKernelCode(
                 }));
 
   const bool containsTemporary = !tempFieldsNonLocalCached.empty();
+  bool useTmpIndex_ = useTmpIndex(ms, stencilInstantiation, cacheProperties);
 
   std::string fnDecl = "";
-  if(containsTemporary)
+  if(containsTemporary && useTmpIndex_)
     fnDecl = "template<typename TmpStorage>";
   fnDecl = fnDecl + "__global__ void";
   MemberFunction cudaKernel(fnDecl, buildCudaKernelName(stencilInstantiation, ms), ssSW);
@@ -202,8 +203,6 @@ void CudaCodeGen::generateCudaKernelCode(
     cudaKernel.addArg("gridtools::clang::float_type * const " +
                       stencilInstantiation->getNameFromAccessID((*field).second.getAccessID()));
   }
-
-  bool useTmpIndex_ = useTmpIndex(ms, stencilInstantiation, cacheProperties);
 
   // then the temporary field arguments
   for(auto field : tempFieldsNonLocalCached) {
