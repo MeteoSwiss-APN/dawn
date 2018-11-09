@@ -203,11 +203,18 @@ void CudaCodeGen::generateCudaKernelCode(
                       stencilInstantiation->getNameFromAccessID((*field).second.getAccessID()));
   }
 
+  bool useTmpIndex_ = useTmpIndex(ms, stencilInstantiation, cacheProperties);
+
   // then the temporary field arguments
   for(auto field : tempFieldsNonLocalCached) {
-    cudaKernel.addArg(c_gt() + "data_view<TmpStorage>" +
-                      stencilInstantiation->getNameFromAccessID((*field).second.getAccessID()) +
-                      "_dv");
+    if(useTmpIndex_) {
+      cudaKernel.addArg(c_gt() + "data_view<TmpStorage>" +
+                        stencilInstantiation->getNameFromAccessID((*field).second.getAccessID()) +
+                        "_dv");
+    } else {
+      cudaKernel.addArg("gridtools::clang::float_type * const " +
+                        stencilInstantiation->getNameFromAccessID((*field).second.getAccessID()));
+    }
   }
 
   DAWN_ASSERT(fields.size() > 0);
@@ -216,12 +223,15 @@ void CudaCodeGen::generateCudaKernelCode(
   cudaKernel.startBody();
   cudaKernel.addComment("Start kernel");
 
-  for(auto field : tempFieldsNonLocalCached) {
-    std::string fieldName =
-        stencilInstantiation->getNameFromAccessID((*field).second.getAccessID());
+  // extract raw pointers of temporaries from the data views
+  if(useTmpIndex_) {
+    for(auto field : tempFieldsNonLocalCached) {
+      std::string fieldName =
+          stencilInstantiation->getNameFromAccessID((*field).second.getAccessID());
 
-    cudaKernel.addStatement("gridtools::clang::float_type* " + fieldName + " = &" + fieldName +
-                            "_dv(tmpBeginIIndex,tmpBeginJIndex,blockIdx.x,blockIdx.y,0)");
+      cudaKernel.addStatement("gridtools::clang::float_type* " + fieldName + " = &" + fieldName +
+                              "_dv(tmpBeginIIndex,tmpBeginJIndex,blockIdx.x,blockIdx.y,0)");
+    }
   }
 
   const auto blockSize = stencilInstantiation->getIIR()->getBlockSize();
@@ -1178,7 +1188,7 @@ void CudaCodeGen::generateStencilClassMembers(
   auto& paramNameToType = stencilProperties->paramNameToType_;
 
   stencilClass.addComment("Members");
-  stencilClass.addComment("Temporary storages");
+  stencilClass.addComment("Temporary storage typedefs");
   addTempStorageTypedef(stencilClass, stencil);
 
   if(!globalsMap.empty()) {
@@ -1187,11 +1197,13 @@ void CudaCodeGen::generateStencilClassMembers(
 
   stencilClass.addMember("const " + c_gtc() + "domain&", "m_dom");
 
+  stencilClass.addComment("storage declarations");
   for(auto fieldIt : nonTempFields) {
     stencilClass.addMember(paramNameToType.at((*fieldIt).second.Name) + "&",
                            "m_" + (*fieldIt).second.Name);
   }
 
+  stencilClass.addComment("temporary storage declarations");
   addTmpStorageDeclaration(stencilClass, tempFields);
 }
 void CudaCodeGen::generateStencilClassCtr(
@@ -1508,7 +1520,22 @@ void CudaCodeGen::generateStencilRunMethod(
     }
     DAWN_ASSERT(nonTempFields.size() > 0);
     for(auto field : tempFieldsNonLocalCached) {
-      args = args + "," + stencilInstantiation->getNameFromAccessID((*field).second.getAccessID());
+      // in some cases (where there are no horizontal extents) we dont use the special tmp index
+      // iterator, but rather a normal 3d field index iterator. In that case we pass temporaries in
+      // the same manner as normal fields
+      if(!useTmpIndex(multiStagePtr, stencilInstantiation,
+                      cachePropertyMap_.at(multiStagePtr->getID()))) {
+        const auto fieldName =
+            stencilInstantiation->getNameFromAccessID((*field).second.getAccessID());
+
+        args = args + ", (" + fieldName + ".data()+" + "m_" + fieldName +
+               ".get_storage_info_ptr()->index(" + fieldName + ".template begin<0>(), " +
+               fieldName + ".template begin<1>()," + fieldName + ".template begin<2>()," +
+               fieldName + ".template begin<3>()))";
+      } else {
+        args =
+            args + "," + stencilInstantiation->getNameFromAccessID((*field).second.getAccessID());
+      }
     }
 
     std::vector<std::string> strides =
