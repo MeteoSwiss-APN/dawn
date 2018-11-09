@@ -1531,7 +1531,7 @@ void CudaCodeGen::generateStencilRunMethod(
         args = args + ", (" + fieldName + ".data()+" + "m_" + fieldName +
                ".get_storage_info_ptr()->index(" + fieldName + ".template begin<0>(), " +
                fieldName + ".template begin<1>()," + fieldName + ".template begin<2>()," +
-               fieldName + ".template begin<3>()))";
+               fieldName + ".template begin<3>(), 0))";
       } else {
         args =
             args + "," + stencilInstantiation->getNameFromAccessID((*field).second.getAccessID());
