@@ -705,7 +705,7 @@ void CudaCodeGen::generateKCacheFlushBlockStatement(
      std::abs(dist.value) >= std::abs(kcacheTailExtent)) {
     generateKCacheFlushStatement(cudaKernel, ms, cacheProperties, fieldIndexMap,
                                  stencilInstantiation, kcacheProp.accessID_, kcacheProp.name_,
-                                 kcacheTailExtent);
+                                 klev);
   } else {
     std::stringstream pred;
     std::string intervalKBegin = kBegin("dom", ms->getLoopOrder(), cacheInterval);
