@@ -18,6 +18,7 @@
 #include "dawn/IIR/Cache.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/Array.h"
+#include "dawn/Support/IndexRange.h"
 #include <string>
 
 namespace dawn {
@@ -26,6 +27,8 @@ namespace cuda {
 
 class CodeGeneratorHelper {
 public:
+  enum class FunctionArgType { caller, callee };
+
   static std::string generateStrideName(int dim, Array3i fieldDims);
   static std::string indexIteratorName(Array3i dims);
   static void
@@ -48,6 +51,18 @@ public:
   /// @brief computes the partition of all the intervals used within a multi-stage
   static std::vector<iir::Interval>
   computePartitionOfIntervals(const std::unique_ptr<iir::MultiStage>& ms);
+
+  static iir::Extents computeTempMaxWriteExtent(iir::Stencil const& stencil);
+
+  static std::vector<std::string> generateStrideArguments(
+      const IndexRange<const std::unordered_map<int, iir::Field>>& nonTempFields,
+      const IndexRange<const std::unordered_map<int, iir::Field>>& tempFields,
+      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+      const std::unique_ptr<iir::MultiStage>& ms, CodeGeneratorHelper::FunctionArgType funArg);
+
+  static std::string
+  buildCudaKernelName(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                      const std::unique_ptr<iir::MultiStage>& ms);
 };
 
 } // namespace cuda
