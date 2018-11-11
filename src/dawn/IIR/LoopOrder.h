@@ -42,6 +42,8 @@ extern std::ostream& operator<<(std::ostream& os, LoopOrderKind loopOrder);
 
 void increment(int& level, LoopOrderKind order);
 
+void increment(int& lev, LoopOrderKind order, int step);
+
 bool isLevelExecBeforeEqThan(int level, int limit, LoopOrderKind order);
 } // namespace iir
 } // namespace dawn

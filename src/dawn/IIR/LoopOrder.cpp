@@ -48,6 +48,14 @@ void increment(int& lev, LoopOrderKind order) {
   }
 }
 
+void increment(int& lev, LoopOrderKind order, int step) {
+  if(order == LoopOrderKind::LK_Backward) {
+    lev -= step;
+  } else {
+    lev += step;
+  }
+}
+
 bool isLevelExecBeforeEqThan(int level, int limit, LoopOrderKind order) {
   if(order == LoopOrderKind::LK_Backward) {
     if(level >= limit) {

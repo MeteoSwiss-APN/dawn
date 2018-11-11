@@ -565,8 +565,13 @@ void MSCodeGen::generateFinalFlushKCaches(MemberFunction& cudaKernel, const iir:
             for(int klev = firstFlushLevel;
                 iir::isLevelExecBeforeEqThan(klev, 0, ms_->getLoopOrder());
                 iir::increment(klev, ms_->getLoopOrder())) {
+              // for the final flush, we need to do an extra decrement the levels we are flushing
+              // since the final flush happens after a last iterator increment beyond the inverla
+              // bounds
+              int klevFlushed = klev;
+              iir::increment(klevFlushed, ms_->getLoopOrder(), -1);
               generateKCacheFlushBlockStatement(cudaKernel, interval, fieldIndexMap, kcacheProp,
-                                                klev, lastKLevelStr);
+                                                klevFlushed, lastKLevelStr);
             }
           }
         });
