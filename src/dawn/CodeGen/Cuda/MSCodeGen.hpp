@@ -113,8 +113,11 @@ private:
 
   void generateFlushKCaches(MemberFunction& cudaKernel, const iir::Interval& interval,
                             const std::unordered_map<int, Array3i>& fieldIndexMap) const;
+  /// @brief computes additional information of kcaches for those kache with IO synchronization
+  /// policy
   std::unordered_map<iir::Extents, std::vector<impl_::KCacheProperties>>
-  buildKCacheProperties(const iir::Interval& interval, const bool checkStrictIntervalBound) const;
+  buildKCacheProperties(const iir::Interval& interval, const iir::Cache::CacheIOPolicy policy,
+                        const bool checkStrictIntervalBound) const;
 
   void generateKCacheFlushBlockStatement(MemberFunction& cudaKernel, const iir::Interval& interval,
                                          const std::unordered_map<int, Array3i>& fieldIndexMap,
@@ -130,7 +133,8 @@ private:
   void generateKCacheSlide(MemberFunction& cudaKernel, const iir::Interval& interval) const;
 
   void generateFinalFlushKCaches(MemberFunction& cudaKernel, const iir::Interval& interval,
-                                 const std::unordered_map<int, Array3i>& fieldIndexMap) const;
+                                 const std::unordered_map<int, Array3i>& fieldIndexMap,
+                                 const iir::Cache::CacheIOPolicy policy) const;
 };
 
 } // namespace cuda

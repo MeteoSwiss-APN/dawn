@@ -85,7 +85,6 @@ struct CacheProperties {
   int getKCacheCenterOffset(const int accessID) const;
   /// @brief if the cache is kcached
   bool isKCached(const iir::Cache& cache) const;
-  static bool requiresFlush(const iir::Cache& cache);
 
   /// @brief returns the index (of the ring buffer) for a stencil access with a vertical offset
   int getKCacheIndex(const int accessID, const int offset) const;
