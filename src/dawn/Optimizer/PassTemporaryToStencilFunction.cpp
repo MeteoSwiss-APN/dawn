@@ -475,7 +475,7 @@ bool PassTemporaryToStencilFunction::run(
 
               if(tmpReplacement.getNumTmpReplaced() != 0) {
 
-                iir::DoMethod tmpStmtDoMethod(interval);
+                iir::DoMethod tmpStmtDoMethod(interval, *stencilInstantiation);
 
                 // WITTODO: Check if this works
                 StatementMapper statementMapper(
@@ -493,6 +493,7 @@ bool PassTemporaryToStencilFunction::run(
                 computeAccesses(stencilInstantiation.get(), stmtPair);
 
                 doMethodPtr->replace(stmtAccessPair, stmtPair);
+                doMethodPtr->update(iir::NodeUpdateType::level);
               }
 
               // find patterns like tmp = fn(args)...;

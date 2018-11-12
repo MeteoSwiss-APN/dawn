@@ -13,13 +13,19 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/CodeGen/Cuda/CacheProperties.h"
+#include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
+#include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/MultiStage.h"
+#include "dawn/IIR/StencilInstantiation.h"
 
 namespace dawn {
 namespace codegen {
 namespace cuda {
 
-CacheProperties makeCacheProperties(const std::unique_ptr<iir::MultiStage>& ms,
-                                    const int maxRedundantLines) {
+CacheProperties
+makeCacheProperties(const std::unique_ptr<iir::MultiStage>& ms,
+                    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                    const int maxRedundantLines) {
 
   iir::Extents maxExtents{0, 0, 0, 0, 0, 0};
   std::set<int> accessIDs;
@@ -43,19 +49,74 @@ CacheProperties makeCacheProperties(const std::unique_ptr<iir::MultiStage>& ms,
       specialCaches.emplace(accessID, extents);
     }
   }
-  return CacheProperties{ms, std::move(accessIDs), maxExtents, std::move(specialCaches)};
+  return CacheProperties{ms, std::move(accessIDs), maxExtents, std::move(specialCaches),
+                         stencilInstantiation};
 }
 
-std::string CacheProperties::getCacheName(
-    int accessID, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const {
+std::string CacheProperties::getCacheName(int accessID) const {
 
   const auto& cache = ms_->getCache(accessID);
   if(cache.getCacheType() == iir::Cache::CacheTypeKind::IJ)
-    return stencilInstantiation->getNameFromAccessID(cache.getCachedFieldAccessID()) + "_ijcache";
+    return stencilInstantiation_->getNameFromAccessID(cache.getCachedFieldAccessID()) + "_ijcache";
   else if(cache.getCacheType() == iir::Cache::CacheTypeKind::K)
-    return stencilInstantiation->getNameFromAccessID(cache.getCachedFieldAccessID()) + "_kcache";
+    return stencilInstantiation_->getNameFromAccessID(cache.getCachedFieldAccessID()) + "_kcache";
 
   dawn_unreachable("Unknown cache for code generation");
+}
+
+bool CacheProperties::isCached(const int accessID) const {
+  return ms_->getCaches().count(accessID);
+}
+
+bool CacheProperties::isIJCached(const int accessID) const {
+  return isCached(accessID) &&
+         (ms_->getCache(accessID).getCacheType() == iir::Cache::CacheTypeKind::IJ);
+}
+
+iir::Extent CacheProperties::getKCacheVertExtent(const int accessID) const {
+  const auto& field = ms_->getField(accessID);
+  auto vertExtent = field.getExtents()[2];
+  return vertExtent;
+}
+
+int CacheProperties::getKCacheIndex(const int accessID, const int offset) const {
+  return getKCacheCenterOffset(accessID) + offset;
+}
+
+bool CacheProperties::requiresFill(const iir::Cache& cache) {
+  return ((cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill)); // ||
+}
+
+int CacheProperties::getKCacheCenterOffset(const int accessID) const {
+  auto ext = getKCacheVertExtent(accessID);
+  return -ext.Minus;
+}
+
+bool CacheProperties::isKCached(const int accessID) const {
+  return isCached(accessID) && isKCached(ms_->getCache(accessID));
+}
+
+bool CacheProperties::isKCached(const iir::Cache& cache) const {
+  bool solveKLoopInParallel_ = CodeGeneratorHelper::solveKLoopInParallel(ms_);
+  if(cache.getCacheType() != iir::Cache::CacheTypeKind::K) {
+    return false;
+  }
+
+  return ((cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local) || !solveKLoopInParallel_);
+}
+
+bool CacheProperties::hasIJCaches() const {
+  for(const auto& cacheP : ms_->getCaches()) {
+    const iir::Cache& cache = cacheP.second;
+    if(cache.getCacheType() != iir::Cache::CacheTypeKind::IJ)
+      continue;
+    return true;
+  }
+  return false;
+}
+
+bool CacheProperties::accessIsCached(const int accessID) const {
+  return ms_->isCached(accessID) && (isIJCached(accessID) || isKCached(accessID));
 }
 
 iir::Extents CacheProperties::getCacheExtent(int accessID) const {
@@ -85,12 +146,12 @@ int CacheProperties::getStrideImpl(int dim, Array3ui blockSize, const iir::Exten
   }
 }
 
-int CacheProperties::getOffset(int accessID, int dim) const {
+int CacheProperties::getOffsetBeginIJCache(int accessID, int dim) const {
   auto extents = getCacheExtent(accessID);
   return -extents[dim].Minus;
 }
 
-int CacheProperties::getOffsetCommonCache(int dim) const { return -extents_[dim].Minus; }
+int CacheProperties::getOffsetCommonIJCache(int dim) const { return -extents_[dim].Minus; }
 
 std::string CacheProperties::getCommonCacheIndexName(iir::Cache::CacheTypeKind cacheType) const {
   if(cacheType == iir::Cache::CacheTypeKind::IJ) {

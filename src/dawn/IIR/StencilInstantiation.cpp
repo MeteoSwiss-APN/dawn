@@ -100,7 +100,9 @@ void StencilInstantiation::removeAccessID(int AccessID) {
   }
 }
 
-const std::string StencilInstantiation::getName() const { return metadata_.stencilName_; }
+const std::string StencilInstantiation::getName() const {
+  return metadata_.stencilName_;
+}
 
 const std::unordered_map<std::shared_ptr<Stmt>, int>&
 StencilInstantiation::getStmtToAccessIDMap() const {
@@ -278,7 +280,8 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
       renameAccessIDInAccesses(this, AccessID, newAccessID, doMethod.getChildren());
     }
 
-    // Updat the fields of the stage
+    // Update the fields of the doMethod and stage levels
+    doMethod.update(iir::NodeUpdateType::level);
     stage.update(iir::NodeUpdateType::level);
   }
 

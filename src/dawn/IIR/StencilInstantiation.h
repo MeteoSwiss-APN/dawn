@@ -409,8 +409,6 @@ public:
 
   const std::set<int>& getCachedVariableSet() const;
 
-  void insertCachedVariable(int fieldID);
-
   inline const std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&
   getBoundaryConditionToExtentsMap() const {
     return IIR_->getBoundaryConditionToExtents();

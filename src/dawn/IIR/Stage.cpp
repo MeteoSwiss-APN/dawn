@@ -27,12 +27,12 @@
 namespace dawn {
 namespace iir {
 
-Stage::Stage(StencilInstantiation& context, int StageID)
-    : stencilInstantiation_(context), StageID_(StageID) {}
+Stage::Stage(StencilInstantiation& stencilInstantiation, int StageID)
+    : stencilInstantiation_(stencilInstantiation), StageID_(StageID) {}
 
-Stage::Stage(StencilInstantiation& context, int StageID, const Interval& interval)
-    : stencilInstantiation_(context), StageID_(StageID) {
-  insertChild(make_unique<DoMethod>(interval));
+Stage::Stage(StencilInstantiation& stencilInstantiation, int StageID, const Interval& interval)
+    : stencilInstantiation_(stencilInstantiation), StageID_(StageID) {
+  insertChild(make_unique<DoMethod>(interval, stencilInstantiation));
 }
 
 std::unique_ptr<Stage> Stage::clone() const {
@@ -111,6 +111,7 @@ void Stage::DerivedInfo::clear() {
   allGlobalVariables_.clear();
 }
 
+void Stage::clearDerivedInfo() { derivedInfo_.clear(); }
 bool Stage::overlaps(const Stage& other) const {
   // This is a more conservative test.. if it fails we are certain nothing overlaps
   if(!getEnclosingExtendedInterval().overlaps(other.getEnclosingExtendedInterval()))
@@ -177,61 +178,27 @@ public:
   }
 };
 
-void Stage::updateLevel() {
-  derivedInfo_.clear();
+void Stage::updateLevel() { updateGlobalVariablesInfo(); }
 
-  // Compute the fields and their intended usage. Fields can be in one of three states: `Output`,
-  // `InputOutput` or `Input` which implements the following state machine:
-  //
-  //    +-------+                               +--------+
-  //    | Input |                               | Output |
-  //    +-------+                               +--------+
-  //        |                                       |
-  //        |            +-------------+            |
-  //        +----------> | InputOutput | <----------+
-  //                     +-------------+
-  //
-  std::unordered_map<int, Field> inputOutputFields;
-  std::unordered_map<int, Field> inputFields;
-  std::unordered_map<int, Field> outputFields;
-
+void Stage::updateGlobalVariablesInfo() {
   CaptureStencilFunctionCallGlobalParams functionCallGlobaParamVisitor(
       derivedInfo_.globalVariablesFromStencilFunctionCalls_, stencilInstantiation_);
 
   for(const auto& doMethodPtr : getChildren()) {
     const DoMethod& doMethod = *doMethodPtr;
     for(const auto& statementAccessesPair : doMethod.getChildren()) {
-      statementAccessesPair->getStatement()->ASTStmt->accept(functionCallGlobaParamVisitor);
       const auto& access = statementAccessesPair->getAccesses();
       DAWN_ASSERT(access);
-
       for(const auto& accessPair : access->getWriteAccesses()) {
         int AccessID = accessPair.first;
-        Extents const& extents = accessPair.second;
-
         // Does this AccessID correspond to a field access?
-        if(!stencilInstantiation_.isField(AccessID)) {
-          if(stencilInstantiation_.isGlobalVariable(AccessID))
-            derivedInfo_.globalVariables_.insert(AccessID);
-          continue;
-        }
-        AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                       extents, doMethod.getInterval());
+        if(stencilInstantiation_.isGlobalVariable(AccessID))
+          derivedInfo_.globalVariables_.insert(AccessID);
       }
-
       for(const auto& accessPair : access->getReadAccesses()) {
         int AccessID = accessPair.first;
-        Extents const& extents = accessPair.second;
-
-        // Does this AccessID correspond to a field access?
-        if(!stencilInstantiation_.isField(AccessID)) {
-          if(stencilInstantiation_.isGlobalVariable(AccessID))
-            derivedInfo_.globalVariables_.insert(AccessID);
-          continue;
-        }
-
-        AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                      extents, doMethod.getInterval());
+        if(stencilInstantiation_.isGlobalVariable(AccessID))
+          derivedInfo_.globalVariables_.insert(AccessID);
       }
 
       const std::shared_ptr<Statement> statement = statementAccessesPair->getStatement();
@@ -249,40 +216,7 @@ void Stage::updateLevel() {
   derivedInfo_.allGlobalVariables_.insert(
       derivedInfo_.globalVariablesFromStencilFunctionCalls_.begin(),
       derivedInfo_.globalVariablesFromStencilFunctionCalls_.end());
-
-  // Merge inputFields, outputFields and fields
-  derivedInfo_.fields_.insert(outputFields.begin(), outputFields.end());
-  derivedInfo_.fields_.insert(inputOutputFields.begin(), inputOutputFields.end());
-  derivedInfo_.fields_.insert(inputFields.begin(), inputFields.end());
-
-  if(derivedInfo_.fields_.empty()) {
-    DAWN_LOG(WARNING) << "no fields referenced in stage";
-    return;
-  }
-
-  // Compute the extents of each field by accumulating the extents of each access to field in the
-  // stage
-
-  for(const auto& statementAccessesPair : iterateIIROver<StatementAccessesPair>(*this)) {
-    const auto& access = statementAccessesPair->getAccesses();
-
-    // first => AccessID, second => Extent
-    for(auto& accessPair : access->getWriteAccesses()) {
-      if(!stencilInstantiation_.isField(accessPair.first))
-        continue;
-
-      derivedInfo_.fields_.at(accessPair.first).mergeWriteExtents(accessPair.second);
-    }
-
-    for(const auto& accessPair : access->getReadAccesses()) {
-      if(!stencilInstantiation_.isField(accessPair.first))
-        continue;
-
-      derivedInfo_.fields_.at(accessPair.first).mergeReadExtents(accessPair.second);
-    }
-  }
 }
-
 bool Stage::hasGlobalVariables() const {
   return (!derivedInfo_.globalVariables_.empty()) ||
          (!derivedInfo_.globalVariablesFromStencilFunctionCalls_.empty());
@@ -354,15 +288,22 @@ Stage::split(std::deque<int>& splitterIndices,
       doMethod.insertChild(std::move(*it));
     }
 
-    //    for(std::size_t idx = prevSplitterIndex; idx < nextSplitterIndex; ++idx)
-
-    // Update the fields of the new stage
+    // Update the fields of the new doMethod
+    doMethod.update(NodeUpdateType::level);
     newStage.update(NodeUpdateType::level);
 
     prevSplitterIndex = nextSplitterIndex;
   }
 
   return newStages;
+}
+
+void Stage::updateFromChildren() {
+  updateGlobalVariablesInfo();
+
+  for(const auto& doMethod : children_) {
+    mergeFields(doMethod->getFields(), derivedInfo_.fields_, boost::optional<Extents>());
+  }
 }
 
 bool Stage::isEmptyOrNullStmt() const {

@@ -78,6 +78,7 @@ yoda_add_library(
           StencilInstantiation.cpp
           StencilInstantiation.h
           StencilMetaInformation.cpp
+          StencilMetaInformation.h
           ${iir_proto_cpp_files}
   OBJECT
 )

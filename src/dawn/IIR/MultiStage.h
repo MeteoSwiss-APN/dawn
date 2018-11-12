@@ -57,6 +57,7 @@ class MultiStage : public IIRNode<Stencil, MultiStage, Stage, impl::StdList> {
     std::unordered_map<int, iir::Cache> caches_;
 
     std::unordered_map<int, Field> fields_;
+    void clear();
   };
 
   DerivedInfo derivedInfo_;
@@ -89,6 +90,9 @@ public:
 
   int getID() const { return id_; }
   /// @}
+
+  /// @brief clear the derived info
+  virtual void clearDerivedInfo() override;
 
   std::vector<std::unique_ptr<DoMethod>> computeOrderedDoMethods() const;
 
@@ -127,6 +131,7 @@ public:
   /// @brief Set a cache
   iir::Cache& setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
                        int AccessID, Interval const& interval,
+                       const Interval& enclosingAccessedInterval,
                        boost::optional<iir::Cache::window> w);
 
   iir::Cache& setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
@@ -150,6 +155,9 @@ public:
 
   /// @brief Get the pair <AccessID, field> for the fields used within the multi-stage
   const std::unordered_map<int, Field>& getFields() const;
+
+  /// @brief Compute and return the pairs <AccessID, field> used for a given interval
+  std::unordered_map<int, Field> computeFieldsAtInterval(const iir::Interval& interval) const;
 
   const Field& getField(int accessID) const;
 
