@@ -120,7 +120,7 @@ static void computeInitialDerivedInfo(const std::shared_ptr<iir::StencilInstanti
   //////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  for(const auto& leaf : iterateIIROver<iir::Stage>(*target->getIIR())) {
+  for(const auto& leaf : iterateIIROver<iir::StatementAccessesPair>(*target->getIIR())) {
     leaf->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
 
@@ -508,7 +508,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
         for(const auto& protoDoMethod : protoStage.domethods()) {
           int stmtAccessPairPos = 0;
           (IIRStage)->insertChild(
-              make_unique<iir::DoMethod>(*makeInterval(protoDoMethod.interval())));
+              make_unique<iir::DoMethod>(*makeInterval(protoDoMethod.interval()), *target));
 
           auto& IIRDoMethod = (IIRStage)->getChild(doMethodPos++);
           (IIRDoMethod)->setID(protoDoMethod.domethodid());

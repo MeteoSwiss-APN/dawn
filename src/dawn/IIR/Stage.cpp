@@ -188,17 +188,31 @@ void Stage::updateGlobalVariablesInfo() {
     const DoMethod& doMethod = *doMethodPtr;
     for(const auto& statementAccessesPair : doMethod.getChildren()) {
       const auto& access = statementAccessesPair->getAccesses();
+      if(!access){
+          std::cout << "stmtaccesspair with no accesses: \n"
+                    << ASTStringifer::toString(statementAccessesPair->getStatement()->ASTStmt)
+                    << std::endl;
+          continue;
+      }
       DAWN_ASSERT(access);
       for(const auto& accessPair : access->getWriteAccesses()) {
         int AccessID = accessPair.first;
         // Does this AccessID correspond to a field access?
-        if(stencilInstantiation_.isGlobalVariable(AccessID))
+        if(stencilInstantiation_.isGlobalVariable(AccessID)){
           derivedInfo_.globalVariables_.insert(AccessID);
+        }
+        if(!stencilInstantiation_.isField(AccessID)) {
+            continue;
+        }
       }
       for(const auto& accessPair : access->getReadAccesses()) {
         int AccessID = accessPair.first;
-        if(stencilInstantiation_.isGlobalVariable(AccessID))
+        if(stencilInstantiation_.isGlobalVariable(AccessID)){
           derivedInfo_.globalVariables_.insert(AccessID);
+        }
+        if(!stencilInstantiation_.isField(AccessID)) {
+            continue;
+        }
       }
 
       const std::shared_ptr<Statement> statement = statementAccessesPair->getStatement();
