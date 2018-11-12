@@ -188,12 +188,6 @@ void Stage::updateGlobalVariablesInfo() {
     const DoMethod& doMethod = *doMethodPtr;
     for(const auto& statementAccessesPair : doMethod.getChildren()) {
       const auto& access = statementAccessesPair->getAccesses();
-      if(!access){
-          std::cout << "stmtaccesspair with no accesses: \n"
-                    << ASTStringifer::toString(statementAccessesPair->getStatement()->ASTStmt)
-                    << std::endl;
-          continue;
-      }
       DAWN_ASSERT(access);
       for(const auto& accessPair : access->getWriteAccesses()) {
         int AccessID = accessPair.first;

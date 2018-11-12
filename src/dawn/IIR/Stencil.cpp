@@ -211,7 +211,7 @@ void Stencil::forEachStatementAccessesPairImpl(
       }
     }
     if(updateFields) {
-      stage->update(iir::NodeUpdateType::level);
+        stage->update(iir::NodeUpdateType::level);
     }
   }
 }

@@ -120,10 +120,12 @@ static void computeInitialDerivedInfo(const std::shared_ptr<iir::StencilInstanti
   //////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  for(const auto& leaf : iterateIIROver<iir::StatementAccessesPair>(*target->getIIR())) {
+  for(const auto& leaf : iterateIIROver<iir::DoMethod>(*target->getIIR())) {
+    leaf->update(iir::NodeUpdateType::level);
+  }
+  for(const auto& leaf : iterateIIROver<iir::Stage>(*target->getIIR())) {
     leaf->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
-
   PassComputeStageExtents passStageExtent;
   passStageExtent.run(target);
 }
@@ -506,7 +508,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
         const auto& IIRStage = IIRMSS->getChild(stagePos++);
 
         for(const auto& protoDoMethod : protoStage.domethods()) {
-          int stmtAccessPairPos = 0;
+          //          int stmtAccessPairPos = 0;
           (IIRStage)->insertChild(
               make_unique<iir::DoMethod>(*makeInterval(protoDoMethod.interval()), *target));
 
@@ -532,11 +534,10 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
             for(auto readAccess : protoStmtAccessPair.calleeaccesses().readaccess()) {
               calleeAccesses->addReadExtent(readAccess.first, makeExtents(&readAccess.second));
             }
-            (IIRDoMethod)->insertChild(make_unique<iir::StatementAccessesPair>(statement));
-            const auto& iirStmtAccessPair = IIRDoMethod->getChild(stmtAccessPairPos);
-            iirStmtAccessPair->setCallerAccesses(callerAccesses);
-            iirStmtAccessPair->setCalleeAccesses(calleeAccesses);
-            stmtAccessPairPos++;
+            auto insertee = make_unique<iir::StatementAccessesPair>(statement);
+            insertee->setCallerAccesses(callerAccesses);
+            insertee->setCalleeAccesses(calleeAccesses);
+            (IIRDoMethod)->insertChild(std::move(insertee));
 
             //            std::cout << "And now we deserialize the stmtaccesspair" << std::endl;
             //            std::cout << stmt << std::endl;
