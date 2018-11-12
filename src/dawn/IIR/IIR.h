@@ -67,7 +67,6 @@ public:
 
   /// @brief clone the IIR
   void clone(std::unique_ptr<IIR>& dest) const;
-  }
 
   std::unordered_map<std::string, int>& getNameToAccessIDs() {
     return derivedInfo_.NameToAccessIDMap_;
