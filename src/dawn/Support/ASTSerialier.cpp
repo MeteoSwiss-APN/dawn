@@ -77,8 +77,8 @@ ProtoStmtBuilder::ProtoStmtBuilder(dawn::proto::statements::Stmt* stmtProto) {
   currentStmtProto_.push(stmtProto);
 }
 
-ProtoStmtBuilder::ProtoStmtBuilder(dawn::proto::statements::Expr* exprProto){
-    currentExprProto_.push(exprProto);
+ProtoStmtBuilder::ProtoStmtBuilder(dawn::proto::statements::Expr* exprProto) {
+  currentExprProto_.push(exprProto);
 }
 
 dawn::proto::statements::Stmt* ProtoStmtBuilder::getCurrentStmtProto() {
@@ -185,6 +185,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
 
   // StencilCall.Args
   for(const auto& arg : stencilCall->Args) {
+    std::cout << "here" << std::endl;
     auto argProto = stencilCallProto->add_arguments();
     argProto->set_name(arg->Name);
     argProto->set_is_temporary(arg->IsTemporary);
@@ -606,7 +607,7 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto) {
                                          stmtProto.op().c_str(), initList, makeLocation(stmtProto));
   }
   case proto::statements::Stmt::kStencilCallDeclStmt: {
-      auto metaloc = makeLocation(statementProto.stencil_call_decl_stmt());
+    auto metaloc = makeLocation(statementProto.stencil_call_decl_stmt());
     const auto& stmtProto = statementProto.stencil_call_decl_stmt();
     auto loc = makeLocation(stmtProto.stencil_call());
     std::shared_ptr<sir::StencilCall> call =

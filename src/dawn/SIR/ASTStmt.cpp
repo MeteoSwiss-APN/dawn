@@ -227,7 +227,13 @@ std::shared_ptr<Stmt> StencilCallDeclStmt::clone() const {
 bool StencilCallDeclStmt::equals(const Stmt* other) const {
   const StencilCallDeclStmt* otherPtr = dyn_cast<StencilCallDeclStmt>(other);
   // We just compare the shared pointers of the stencil call
-  return otherPtr && Stmt::equals(other) && stencilCall_ == otherPtr->stencilCall_;
+  if(stencilCall_){
+      auto res = stencilCall_->comparison(*otherPtr->stencilCall_);
+      if(!bool(res)){
+        return false;
+      }
+  }
+  return otherPtr && Stmt::equals(other); //&& stencilCall_.get() == otherPtr->stencilCall_.get();
 }
 
 //===------------------------------------------------------------------------------------------===//

@@ -182,9 +182,21 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     DAWN_LOG(INFO) << a->getName();
   }
 
+  bool before = getOptions().SerializeBefore;
+  bool after = getOptions().SerializeAfter;
   // Run optimization passes
   for(auto& stencil : optimizer->getStencilInstantiationMap()) {
     std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
+    if(before) {
+      DAWN_LOG(INFO) << "Serilalize before any passes are run";
+      IIRSerializer::serialize("before.file", instantiation,
+                               IIRSerializer::SerializationKind::SK_Json);
+
+      DAWN_LOG(INFO) << "And reload it";
+      auto output = IIRSerializer::deserialize("before.file", instantiation->getOptimizerContext());
+      output->dump();
+      instantiation = output;
+    }
     DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `" << instantiation->getName()
                    << "` ...";
     if(!passManager.runAllPassesOnStecilInstantiation(instantiation))
@@ -192,22 +204,20 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `" << instantiation->getName()
                    << "`";
 
-    //////////// Trying serialization
-    IIRSerializer::serialize("out.file", instantiation, IIRSerializer::SerializationKind::SK_Json);
+    instantiation->dump();
 
-    auto output = IIRSerializer::deserialize("out.file", instantiation->getOptimizerContext());
-    output->dump();
-    std::cout << "originals:" << std::endl;
-    for(auto a : instantiation->getStencilDescStatements()) {
-      std::cout << ASTStringifer::toString(a->ASTStmt) << std::endl;
-      std::cout << (a->StackTrace == nullptr) << std::endl;
+    if(after) {
+      DAWN_LOG(INFO) << "Serilalize after all the passes are run";
+      IIRSerializer::serialize("after.file", instantiation,
+                               IIRSerializer::SerializationKind::SK_Json);
+
+      DAWN_LOG(INFO) << "And reload it";
+      auto output = IIRSerializer::deserialize("after.file", instantiation->getOptimizerContext());
+      output->dump();
+      instantiation = output;
     }
-    std::cout << "serialzed ones:" << std::endl;
-    for(auto a : output->getStencilDescStatements()) {
-      std::cout << ASTStringifer::toString(a->ASTStmt) << std::endl;
-      std::cout << (a->StackTrace == nullptr) << std::endl;
-    }
-    stencil.second = output;
+
+    stencil.second = instantiation;
   }
 
   return optimizer;

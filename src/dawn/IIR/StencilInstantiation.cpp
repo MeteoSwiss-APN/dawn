@@ -124,6 +124,14 @@ void StencilInstantiation::mapExprToAccessID(const std::shared_ptr<Expr>& expr, 
 }
 
 void StencilInstantiation::eraseExprToAccessID(std::shared_ptr<Expr> expr) {
+  if(metadata_.ExprToAccessIDMap_.count(expr)) {
+    std::cout << "we try to insert an existing thing: " << ASTStringifer::toString(expr)
+              << std::endl;
+    std::cout << "here is the existing things: ";
+    for(auto b : metadata_.ExprToAccessIDMap_) {
+      std::cout << "expr: " << ASTStringifer::toString(b.first) << "ID: " << b.second << std::endl;
+    }
+  }
   DAWN_ASSERT(metadata_.ExprToAccessIDMap_.count(expr));
   metadata_.ExprToAccessIDMap_.erase(expr);
 }
@@ -435,6 +443,18 @@ void StencilInstantiation::setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt,
 
 void StencilInstantiation::setAccessIDOfExpr(const std::shared_ptr<Expr>& expr,
                                              const int accessID) {
+  if(!metadata_.ExprToAccessIDMap_.count(expr)) {
+    std::cout << "we try to insert an existing thing: " << ASTStringifer::toString(expr)
+              << " <-> ID: " << accessID << std::endl;
+  } else {
+    std::cout << "we try to insert a new thing: " << ASTStringifer::toString(expr)
+              << " <-> ID: " << accessID << std::endl;
+  }
+  std::cout << "here is the existing things: \n";
+  for(auto b : metadata_.ExprToAccessIDMap_) {
+    std::cout << "expr: " << ASTStringifer::toString(b.first) << " <-> ID: " << b.second
+              << std::endl;
+  }
   DAWN_ASSERT(metadata_.ExprToAccessIDMap_.count(expr));
   metadata_.ExprToAccessIDMap_[expr] = accessID;
 }
@@ -614,22 +634,17 @@ StencilInstantiation::getIDToStencilCallMap() const {
 
 int StencilInstantiation::getStencilIDFromStmt(
     const std::shared_ptr<StencilCallDeclStmt>& stmt) const {
-    std::cout << "we are looking for:" << std::endl;
-    std::cout << ASTStringifer::toString(stmt) << std::endl;
-    std::cout << "the mapsize is : " << IIR_->getStencilCallToStencilIDMap().size() << std::endl;
-//    std::cout << "the reversed map has size: " IIR_->get
-  for(auto callToID : IIR_->getStencilCallToStencilIDMap()){
-      if(stmt->equals(callToID.first.get())){
-          return callToID.second;
-      }
-      std::cout << ASTStringifer::toString(callToID.first) << " \nfound but does not match" << std::endl;
+  for(auto callToID : IIR_->getStencilCallToStencilIDMap()) {
+    if(stmt->equals(callToID.first.get())) {
+      return callToID.second;
+    }
   }
   DAWN_ASSERT_MSG(false, "Invalid stencil call");
   return -1;
 
-//  auto it = IIR_->getStencilCallToStencilIDMap().find(stmt);
-//  DAWN_ASSERT_MSG(it != IIR_->getStencilCallToStencilIDMap().end(), "Invalid stencil call");
-//  return it->second;
+  //  auto it = IIR_->getStencilCallToStencilIDMap().find(stmt);
+  //  DAWN_ASSERT_MSG(it != IIR_->getStencilCallToStencilIDMap().end(), "Invalid stencil call");
+  //  return it->second;
 }
 
 std::unordered_map<std::string, int>& StencilInstantiation::getNameToAccessIDMap() {

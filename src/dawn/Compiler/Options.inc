@@ -113,4 +113,8 @@ OPT(bool, Debug, false, "debug", "",
     "Compile to debug backend", "", false, true)
 OPT(bool, MaxCutMSS, false, "max-cut-mss", "",
     "Cuts the given multistages in as many multistages as possible while maintaining legal code", "", false, true)
+OPT(bool, SerializeBefore, false, "before", "",
+    "Serialize before passes", "", false, true)
+OPT(bool, SerializeAfter, false, "after", "",
+    "Serialize before code generation", "", false, true)
 // clang-format on

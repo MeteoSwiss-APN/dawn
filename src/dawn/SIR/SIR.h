@@ -267,6 +267,13 @@ struct StencilCall {
 
   /// @brief Clone the vertical region
   std::shared_ptr<StencilCall> clone() const;
+
+  /// @brief Comparison between stencils (omitting location)
+  bool operator==(const StencilCall& rhs) const;
+
+  /// @brief Comparison between stencils (omitting location)
+  /// if the comparison fails, outputs human readable reason why in the string
+  CompareResult comparison(const StencilCall& rhs) const;
 };
 
 //===------------------------------------------------------------------------------------------===//

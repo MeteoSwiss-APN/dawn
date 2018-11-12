@@ -11,12 +11,13 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-
 #include "dawn/IIR/IIRSerializer.h"
 #include "dawn/IIR/IIR.pb.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/ASTSerialier.h"
@@ -60,16 +61,29 @@ static std::shared_ptr<dawn::Statement>
 makeStatement(const proto::iir::StencilDescStatement* protoStatement) {
   std::vector<sir::StencilCall*> stackTrace;
   auto stmt = makeStmt(protoStatement->stmt());
-  for(auto protoStencilCall : protoStatement->stacktrace()) {
-    sir::StencilCall call(protoStencilCall.callee());
-    setLocation(protoStencilCall.mutable_loc(), call.Loc);
-    for(const auto& protoField : protoStencilCall.arguments()) {
-      call.Args.emplace_back(makeField(protoField));
+  if(protoStatement->stacktrace().size()) {
+    for(auto protoStencilCall : protoStatement->stacktrace()) {
+      sir::StencilCall call(protoStencilCall.callee());
+      setLocation(protoStencilCall.mutable_loc(), call.Loc);
+      for(const auto& protoField : protoStencilCall.arguments()) {
+        call.Args.emplace_back(makeField(protoField));
+      }
+      stackTrace.push_back(&call);
     }
-    stackTrace.push_back(&call);
+    return std::make_shared<Statement>(
+        stmt, std::make_shared<std::vector<sir::StencilCall*>>(stackTrace));
   }
-  return std::make_shared<Statement>(stmt,
-                                     std::make_shared<std::vector<sir::StencilCall*>>(stackTrace));
+  return std::make_shared<Statement>(stmt, nullptr);
+}
+
+static iir::Extents makeExtents(const proto::iir::Extents* protoExtents) {
+  int dim1minus = protoExtents->extents()[0].minus();
+  int dim1plus = protoExtents->extents()[0].plus();
+  int dim2minus = protoExtents->extents()[1].minus();
+  int dim2plus = protoExtents->extents()[1].plus();
+  int dim3minus = protoExtents->extents()[2].minus();
+  int dim3plus = protoExtents->extents()[2].plus();
+  return iir::Extents(dim1minus, dim1plus, dim2minus, dim2plus, dim3minus, dim3plus);
 }
 
 static void
@@ -79,7 +93,6 @@ serializeStmtAccessPair(proto::iir::StatementAcessPair* protoStmtAccessPair,
   ProtoStmtBuilder builder(protoStmtAccessPair->mutable_statement()->mutable_aststmt());
   stmtAccessPair->getStatement()->ASTStmt->accept(builder);
 
-  // TODO: I don't think this is actually needed...
   // check if caller / callee acesses are initialized, and if so, fill them
   if(stmtAccessPair->getCallerAccesses()) {
     setAccesses(protoStmtAccessPair->mutable_calleraccesses(), stmtAccessPair->getCallerAccesses());
@@ -95,10 +108,24 @@ static void computeInitialDerivedInfo(const std::shared_ptr<iir::StencilInstanti
   }
 
   for(auto StencilCallToIDPair : target->getIDToStencilCallMap()) {
-    std::cout << "fill" << std::endl;
     target->getStencilCallToStencilIDMap().insert(
         {StencilCallToIDPair.second, StencilCallToIDPair.first});
   }
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// WITTODO: check with carlos why this does not work for stmtaccesspairs
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  for(const auto& leaf : iterateIIROver<iir::Stage>(*target->getIIR())) {
+    leaf->update(iir::NodeUpdateType::levelAndTreeAbove);
+  }
+
+  PassComputeStageExtents passStageExtent;
+  passStageExtent.run(target);
 }
 
 void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
@@ -147,8 +174,8 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
 
   // Filling Field: VariableVersions versionedFields = 9;
   auto protoVariableVersions = protoMetaData->mutable_versionedfields();
-  auto protoVariableVersionMap = *protoVariableVersions->mutable_veriableversionmap();
-  auto protoVersionIDtoOriginalIDMap = *protoVariableVersions->mutable_versionidtooriginalid();
+  auto& protoVariableVersionMap = *protoVariableVersions->mutable_veriableversionmap();
+  auto& protoVersionIDtoOriginalIDMap = *protoVariableVersions->mutable_versionidtooriginalid();
 
   auto variableVersions = metaData.variableVersions_;
   for(int versionedID : variableVersions.getVersionIDs()) {
@@ -172,7 +199,6 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
     stencilDescStmt->ASTStmt->accept(builder);
     if(stencilDescStmt->StackTrace) {
       for(auto sirStackTrace : *(stencilDescStmt->StackTrace)) {
-        //        std::cout << "stack trace was filled" << std::endl;
         auto protoStackTrace = protoStmt->add_stacktrace();
         setLocation(protoStackTrace->mutable_loc(), sirStackTrace->Loc);
         protoStackTrace->set_callee(sirStackTrace->Callee);
@@ -186,8 +212,6 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
           }
         }
       }
-    } else {
-      //      std::cout << "stack trace was nullptr" << std::endl;
     }
   }
   // Filling Field: map<int32, dawn.proto.statements.StencilCallDeclStmt> IDToStencilCall = 11;
@@ -220,7 +244,7 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
   }
 
   // Filling Field: map<string, GlobalValueAndType> GlobalVariableToValue = 14;
-  auto protoGlobalVariableMap = *protoMetaData->mutable_globalvariabletovalue();
+  auto& protoGlobalVariableMap = *protoMetaData->mutable_globalvariabletovalue();
   for(auto& globalToValue : metaData.globalVariableMap_) {
     proto::iir::GlobalValueAndType protoGlobalToStore;
     int typekind = -1;
@@ -396,10 +420,16 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
 
   for(auto IDToCall : protoMetaData.idtostencilcall()) {
     auto call = IDToCall.second;
-    auto bb = makeStmt(call);
-//    std::shared_ptr<sir::StencilCall> sirStencilCall;
-//    sirStencilCall->
-//        metadata.IDToStencilCallMap_.insert({IDToCall.first, std::make_shared<StencilCallDeclStmt>()});
+    std::shared_ptr<sir::StencilCall> sirStencilCall = std::make_shared<sir::StencilCall>(
+        call.stencil_call_decl_stmt().stencil_call().callee(),
+        makeLocation(call.stencil_call_decl_stmt().stencil_call()));
+    for(const auto& protoField : call.stencil_call_decl_stmt().stencil_call().arguments()) {
+      auto field = makeField(protoField);
+      sirStencilCall->Args.push_back(field);
+    }
+    metadata.IDToStencilCallMap_.insert(
+        {IDToCall.first, std::make_shared<StencilCallDeclStmt>(
+                             sirStencilCall, makeLocation(call.stencil_call_decl_stmt()))});
   }
   //  for(auto FieldnameToBC : protoMetaData.fieldnametoboundarycondition()) {
   //    metadata.FieldnameToBoundaryConditionMap_[FieldnameToBC.first] =
@@ -444,7 +474,6 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
   int stencilPos = 0;
   for(const auto& protoStencils : protoIIR.stencils()) {
     int mssPos = 0;
-    //    std::cout << "And now we deserialize the stencil" << std::endl;
     sir::Attr attributes;
     attributes.setBits(protoStencils.attr().attrbits());
     target->getIIR()->insertChild(
@@ -455,7 +484,6 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
 
     for(const auto& protoMSS : protoStencils.multistages()) {
       int stagePos = 0;
-      //      std::cout << "And now we deserialize the mss" << std::endl;
       iir::LoopOrderKind looporder;
       if(protoMSS.looporder() == proto::iir::MultiStage_LoopOrder::MultiStage_LoopOrder_Backward) {
         looporder = iir::LoopOrderKind::LK_Backward;
@@ -472,7 +500,6 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
 
       for(const auto& protoStage : protoMSS.stages()) {
         int doMethodPos = 0;
-        //        std::cout << "And now we deserialize the stage" << std::endl;
         int stageID = protoStage.stageid();
 
         IIRMSS->insertChild(make_unique<iir::Stage>(*target, stageID));
@@ -480,11 +507,8 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
 
         for(const auto& protoDoMethod : protoStage.domethods()) {
           int stmtAccessPairPos = 0;
-          //          std::cout << "And now we deserialize the domethod" << std::endl;
-          iir::Interval doMethodInterval(
-              protoDoMethod.interval().lower_level(), protoDoMethod.interval().upper_level(),
-              protoDoMethod.interval().lower_offset(), protoDoMethod.interval().upper_offset());
-          (IIRStage)->insertChild(make_unique<iir::DoMethod>(doMethodInterval));
+          (IIRStage)->insertChild(
+              make_unique<iir::DoMethod>(*makeInterval(protoDoMethod.interval())));
 
           auto& IIRDoMethod = (IIRStage)->getChild(doMethodPos++);
           (IIRDoMethod)->setID(protoDoMethod.domethodid());
@@ -495,49 +519,18 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
 
             std::shared_ptr<iir::Accesses> callerAccesses = std::make_shared<iir::Accesses>();
             for(auto writeAccess : protoStmtAccessPair.calleraccesses().writeaccess()) {
-              int dim1minus = writeAccess.second.extents()[0].minus();
-              int dim1plus = writeAccess.second.extents()[0].plus();
-              int dim2minus = writeAccess.second.extents()[1].minus();
-              int dim2plus = writeAccess.second.extents()[1].plus();
-              int dim3minus = writeAccess.second.extents()[2].minus();
-              int dim3plus = writeAccess.second.extents()[2].plus();
-              iir::Extents IIRExtents(dim1minus, dim1plus, dim2minus, dim2plus, dim3minus,
-                                      dim3plus);
-              callerAccesses->addWriteExtent(writeAccess.first, IIRExtents);
+              callerAccesses->addWriteExtent(writeAccess.first, makeExtents(&writeAccess.second));
             }
             for(auto readAccess : protoStmtAccessPair.calleraccesses().readaccess()) {
-              int dim1minus = readAccess.second.extents()[0].minus();
-              int dim1plus = readAccess.second.extents()[0].plus();
-              int dim2minus = readAccess.second.extents()[1].minus();
-              int dim2plus = readAccess.second.extents()[1].plus();
-              int dim3minus = readAccess.second.extents()[2].minus();
-              int dim3plus = readAccess.second.extents()[2].plus();
-              iir::Extents IIRExtents(dim1minus, dim1plus, dim2minus, dim2plus, dim3minus,
-                                      dim3plus);
-              callerAccesses->addReadExtent(readAccess.first, IIRExtents);
+              callerAccesses->addReadExtent(readAccess.first, makeExtents(&readAccess.second));
             }
 
             std::shared_ptr<iir::Accesses> calleeAccesses = std::make_shared<iir::Accesses>();
             for(auto writeAccess : protoStmtAccessPair.calleeaccesses().writeaccess()) {
-              int dim1minus = writeAccess.second.extents()[0].minus();
-              int dim1plus = writeAccess.second.extents()[0].plus();
-              int dim2minus = writeAccess.second.extents()[1].minus();
-              int dim2plus = writeAccess.second.extents()[1].plus();
-              int dim3minus = writeAccess.second.extents()[2].minus();
-              int dim3plus = writeAccess.second.extents()[2].plus();
-              iir::Extents extents(dim1minus, dim1plus, dim2minus, dim2plus, dim3minus, dim3plus);
-              calleeAccesses->addWriteExtent(writeAccess.first, extents);
+              calleeAccesses->addWriteExtent(writeAccess.first, makeExtents(&writeAccess.second));
             }
             for(auto readAccess : protoStmtAccessPair.calleeaccesses().readaccess()) {
-              int dim1minus = readAccess.second.extents()[0].minus();
-              int dim1plus = readAccess.second.extents()[0].plus();
-              int dim2minus = readAccess.second.extents()[1].minus();
-              int dim2plus = readAccess.second.extents()[1].plus();
-              int dim3minus = readAccess.second.extents()[2].minus();
-              int dim3plus = readAccess.second.extents()[2].plus();
-              iir::Extents IIRExtents(dim1minus, dim1plus, dim2minus, dim2plus, dim3minus,
-                                      dim3plus);
-              calleeAccesses->addReadExtent(readAccess.first, IIRExtents);
+              calleeAccesses->addReadExtent(readAccess.first, makeExtents(&readAccess.second));
             }
             (IIRDoMethod)->insertChild(make_unique<iir::StatementAccessesPair>(statement));
             const auto& iirStmtAccessPair = IIRDoMethod->getChild(stmtAccessPairPos);

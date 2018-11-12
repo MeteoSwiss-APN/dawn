@@ -178,7 +178,6 @@ public:
 };
 
 void Stage::updateLevel() {
-
   derivedInfo_.clear();
 
   // Compute the fields and their intended usage. Fields can be in one of three states: `Output`,
