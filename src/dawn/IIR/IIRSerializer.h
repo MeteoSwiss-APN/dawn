@@ -25,8 +25,7 @@ namespace dawn {
 
 struct SIR;
 
-/// @brief Serialize/Deserialize SIR
-/// @ingroup sir
+/// @brief Serialize/Deserialize the internal representation of the user stencils
 class IIRSerializer {
 public:
   IIRSerializer() = delete;
@@ -37,80 +36,88 @@ public:
     SK_Byte  ///< Protobuf's internal byte format
   };
 
-  /// @brief Deserialize the SIR from `file`
+  /// @brief Deserialize the StencilInstantiaion from `file`
   ///
-  /// @param file   Path the file
-  /// @param kind   The kind of serialization used in `file` (Json or Byte)
+  /// @param file    Path the file
+  /// @param kind    The kind of serialization used in `file` (Json or Byte)
+  /// @param context The OptimizerContext in which we register the Instantiation
   /// @throws std::excetpion    Failed to deserialize
-  /// @returns newly allocated SIR on success or `NULL`
+  /// @returns newly allocated IIR on success or `NULL`
   static std::shared_ptr<iir::StencilInstantiation> deserialize(const std::string& file,
-                          dawn::OptimizerContext* context,
-                          SerializationKind kind = SK_Json);
+                                                                dawn::OptimizerContext* context,
+                                                                SerializationKind kind = SK_Json);
 
-  /// @brief Deserialize the SIR from the given JSON formatted `string`
+  /// @brief Deserialize the StencilInstantiaion from the given JSON formatted `string`
   ///
   /// @param str    Byte or JSON string to deserializee
   /// @param kind   The kind of serialization used in `str` (Json or Byte)
+  /// @param context The OptimizerContext in which we register the Instantiation
   /// @throws std::excetpion    Failed to deserialize
-  /// @returns newly allocated SIR on success or `NULL`
-  static std::shared_ptr<iir::StencilInstantiation> deserializeFromString(const std::string& str,
-                                    dawn::OptimizerContext* context,
-                                    SerializationKind kind = SK_Json);
+  /// @returns newly allocated IIRon success or `NULL`
+  static std::shared_ptr<iir::StencilInstantiation>
+  deserializeFromString(const std::string& str, dawn::OptimizerContext* context,
+                        SerializationKind kind = SK_Json);
 
-  /// @brief Serialize the SIR as a Json or Byte formatted string to `file`
+  /// @brief Serialize the StencilInstantiaion as a Json or Byte formatted string to `file`
   ///
-  /// @param file   Path the file
-  /// @param sir    SIR to serialize
-  /// @param kind   The kind of serialization to use to write to `file` (Json or Byte)
+  /// @param file          Path the file
+  /// @param instantiation StencilInstantiaion to serialize
+  /// @param kind          The kind of serialization to use to write to `file` (Json or Byte)
   /// @throws std::excetpion    Failed to open `file`
   static void serialize(const std::string& file,
                         const std::shared_ptr<iir::StencilInstantiation> instantiation,
                         dawn::IIRSerializer::SerializationKind kind);
 
-  /// @brief Serialize the SIR as a Json or Byte formatted string
+  /// @brief Serialize the StencilInstantiaion as a Json or Byte formatted string
   ///
-  /// @param sir    SIR to serialize
-  /// @param kind   The kind of serialization to use when writing to the string (Json or Byte)
-  /// @returns JSON formatted strong of `sir`
+  /// @param instantiation StencilInstantiaion to serialize
+  /// @param kind         The kind of serialization to use when writing to the string (Json or Byte)
+  /// @returns JSON formatted string of `StencilInstantiaion`
   static std::string
   serializeToString(const std::shared_ptr<iir::StencilInstantiation> instantiation,
                     SerializationKind kind = SK_Json);
 
 private:
-  /// \brief deserializeImpl
-  /// \param str
-  /// \param kind
-  /// \param target
-  static void deserializeImpl(const std::string& str, IIRSerializer::SerializationKind kind,
-                       std::shared_ptr<iir::StencilInstantiation>& target);
-
-  /// \brief deserializeIIR
-  /// \param target
-  /// \param protoIIR
-  static void deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& target,
-                      const proto::iir::IIR& protoIIR);
-
-  /// \brief deserializeMetaData
-  /// \param target
-  /// \param protoMetaData
-  static void deserializeMetaData(std::shared_ptr<iir::StencilInstantiation>& target,
-                           const proto::iir::StencilMetaInfo& protoMetaData);
-  /// \brief serializeImpl
-  /// \param instantiation
-  /// \param kind
-  /// \return
-  static std::string serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                            dawn::IIRSerializer::SerializationKind kind);
-  /// \brief serializeIIR
-  /// \param target
-  /// \param iir
-  static void serializeIIR(proto::iir::StencilInstantiation& target, const std::unique_ptr<iir::IIR>& iir);
+  /// @brief The implementation of deserialisation used for string and file. This delegates to the
+  /// separate implementations of deserializing the IIR and the Metadata
   ///
-  /// \brief serializeMetaData
-  /// \param target
-  /// \param metaData
+  /// @param str    the sting to deserialize
+  /// @param kind   The kind of serialization used in `str` (Json or Byte)
+  /// @param target The newly creadte StencilInstantiation
+  static void deserializeImpl(const std::string& str, IIRSerializer::SerializationKind kind,
+                              std::shared_ptr<iir::StencilInstantiation>& target);
+
+  /// @brief deserializeIIR deserializes the IIR tree
+  /// @param target     the StencilInstantiation to insert the IIR into
+  /// @param protoIIR   the serialized protobuf version of the IIR
+  static void deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& target,
+                             const proto::iir::IIR& protoIIR);
+
+  /// \brief deserializeMetaData deserializes all the required Metadata
+  /// \param target         the StencilInstantiation to insert the metadata into
+  /// \param protoMetaData  the serialized protobuf version of the metadata
+  static void deserializeMetaData(std::shared_ptr<iir::StencilInstantiation>& target,
+                                  const proto::iir::StencilMetaInfo& protoMetaData);
+
+  /// @brief The implementation of serialisation used for string and file. This delegates to the
+  /// separate implementations of serializing the IIR and the Metadata
+  ///
+  /// @param instantiation  The StencilInstantiation to fill
+  /// @param kind           The kind of serialization used in the return value (Json or Byte)
+  /// @return               The serialized string
+  static std::string serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                                   dawn::IIRSerializer::SerializationKind kind);
+  /// @brief serializeIIR serializes the IIR tree
+  /// @param target     The protobuf version of the StencilInstantiation to serilaize the IIR into
+  /// @param iir        The IIR to serialize
+  static void serializeIIR(proto::iir::StencilInstantiation& target,
+                           const std::unique_ptr<iir::IIR>& iir);
+  ///
+  /// @brief serializeMetaData serializes the Metadata
+  /// @param target    The protobuf version of the StencilInstantiation to serilaize the metadata to
+  /// @param metaData  The Metadata to serialize
   static void serializeMetaData(proto::iir::StencilInstantiation& target,
-                         iir::StencilMetaInformation& metaData);
+                                iir::StencilMetaInformation& metaData);
 };
 
 } // namespace dawn

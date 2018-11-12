@@ -33,7 +33,6 @@ namespace iir {
 /// @ingroup optimizer
 class StencilMetaInformation : NonCopyable {
   class VariableVersions {
-  private:
   public:
     /// Map of AccessIDs to the the list of all AccessIDs of the multi-versioned variables. Note
     /// that the index in the vector corresponds to the version number.

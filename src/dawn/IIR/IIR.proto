@@ -21,9 +21,9 @@ syntax = "proto3";
 package dawn.proto.iir;
 import "statements.proto";
 
-/* ===-------------------------------------------------------------------------------------===*/
+/* ===-----------------------------------------------------------------------------------------===*/
 //      Statement
-/* ===-------------------------------------------------------------------------------------===*/
+/* ===-----------------------------------------------------------------------------------------===*/
 
 // @brief Statement-Wrapper for the ASTStmt.
 //
@@ -34,12 +34,13 @@ message Statement{
 }
 
 
-/* ===-------------------------------------------------------------------------------------===*/
+/* ===-----------------------------------------------------------------------------------------===*/
 //      Acesses
-/* ===-------------------------------------------------------------------------------------===*/
+/* ===-----------------------------------------------------------------------------------------===*/
 // @brief Extent attached to a FieldAccess
 //
-// Each filed-access has extents in each dimension that define how far the accesses are in the respective dimension
+// Each filed-access has extents in each dimension that define how far the accesses are in the
+//respective dimension
 message Extent{
     int32 minus = 1;
     int32 plus = 2;
@@ -59,9 +60,9 @@ message Acesses{
 }
 
 
-/* ===-------------------------------------------------------------------------------------===*/
+/* ===-----------------------------------------------------------------------------------------===*/
 //      IIR-Tree
-/* ===-------------------------------------------------------------------------------------===*/
+/* ===-----------------------------------------------------------------------------------------===*/
 
 // @brief StatementAccessPair that is stored as the Leafs of the IIR
 message StatementAcessPair{
@@ -98,8 +99,8 @@ message Stage{
 
 // @brief The Protobuf description of all the required members to describe a MultiStage of the IIR
 //
-// A MultiStage usually corresponds to the outer loop (usually over k) of the loop nest. In CUDA
-// gridtools multistages reflect kernels.
+// A multistage usually corresponds to the outer loop (usually over k) of the loop nest. In CUDA
+// multistages reflect kernels.
 message MultiStage{
   enum LoopOrder { Forward = 0; Backward = 1;  Parallel = 3;}
     repeated Stage stages = 1;
@@ -117,7 +118,8 @@ message Attributes{
 
 // @brief The Protobuf description of all the required members to describe a Stencil of the IIR
 //
-// A Stencil is represented by a collection of MultiStages
+// A Stencil is represented by a collection of MultiStages. User Stencils can be broken up into
+// multiple stencils if necessary.
 message Stencil{
     repeated MultiStage multistages = 1;
     int32 stencilID = 2;
@@ -126,83 +128,147 @@ message Stencil{
 
 // @brief The Protobuf description of the root node of the IIR
 //
-// A Do-method is a collection of Statements with corresponding Accesses of a specific vertical
-// region
+// The root node of the tree, holding multiple stencils. There is one IIR object for each user
+// defined Stencil.
 message IIR{
     repeated Stencil stencils = 1;
 }
 
-/* ===-------------------------------------------------------------------------------------===*/
+/* ===-----------------------------------------------------------------------------------------===*/
 //      Stencil-Metadata
-/* ===-------------------------------------------------------------------------------------===*/
+/* ===-----------------------------------------------------------------------------------------===*/
 
+// @brief Helper Structure to hold all the relevant information for field-versioning
+//
+// This array represents all the versions of one specific field
 message AllVersionedFields{
     repeated int32 allIDs = 1;
 }
 
+// @brief Stucrute that holds all the information about the automatic field verisoning
 message VariableVersions{
+    // The map from the original field ID to the list of all it's versions
     map<int32,  AllVersionedFields> veriableVersionMap = 1;
+
+    // A list of all the Variables that are generated through Fieldversioning
     repeated int32 versionIDs = 2;
+
+    // Map from Versioned ID to the original
     map<int32, int32> VersionIDToOriginalID = 3;
 }
 
+// @brief Helper Sturcture as maps with custom messages as the key do not work in Protobuf
+//
+// Holds the information of wich ID belongs to a given Stmt
 message StmtIDPair{
     dawn.proto.statements.Stmt stmt = 1;
     int32 IDs = 2;
 }
 
+// @brief Helper Sturcture as maps with custom messages as the key do not work in Protobuf
+//
+// Holds the information of wich ID belongs to a given Expr
 message ExprIDPair{
     dawn.proto.statements.Expr expr = 1;
     int32 IDs = 2;
 }
 
+// @brief Helper Strucute to make sure, Arrays with fixed length are not made too big
 message Array3i{
     int32 int1 = 1;
     int32 int2 = 2;
     int32 int3 = 3;
 }
 
-/// @brief the typekind is handle like the sir::Value:
-// 1 = boolean
-// 2 = integer
-// 3 = double
+// @brief A simple representation of the sir::Value that can have multiple types
 message GlobalValueAndType{
+    // the typekind defines the type of the global variable
+    // 1 = boolean
+    // 2 = integer
+    // 3 = double
     int32 Typekind = 1;
+
+    // The value of the global Variable (if set), cast to double
     double value = 2;
+
+    // This defines if the Value is set as we can have globals with no value which otherwise would
+    // get assigned 0
     bool valueIsSet = 3;
 }
 
+// @brief Statement-Wrapper for the ASTStmt including their StackTrace
+//
+// This wrapper is used to have a common base for Stmts and Exprs
 message StencilDescStatement{
     dawn.proto.statements.Stmt stmt = 1;
     repeated dawn.proto.statements.StencilCall stacktrace = 2;
 }
 
-
+// @brief all the MetaInformation that needs to be stored in addition the the tree of computational
+// patterns to be able to fully represent the usercode
 message StencilMetaInfo{
+    // Map from AccessID's to their original name
     map<int32, string> AccessIDToName = 1;
+
+    // Surjection of AST Nodes, Stmt (VarDeclStmt) to their AccessID
     repeated ExprIDPair ExprToAccessID = 2;
+
+    // Surjection of AST Nodes, Expr (FieldAccessExpr or VarAccessExpr) to their AccessID
     repeated StmtIDPair StmtToAccessID = 3;
+
+    // Injection of AccessIDs of literal constant to their respective name
     map<int32, string> LiteralIDToName = 4;
+
+    // set of AccessIDs which correspond to fields for identification as such
     repeated int32 FieldAccessIDs = 5;
+
+    // Ordered list of IDs of fields that belong to the user API call of the program
     repeated int32 APIFieldIDs = 6;
+
+    // AccessIDs of fields which are represented by a temporary storages
     repeated int32 TemporaryFieldIDs = 7;
+
+    // AccessIDs of "global variable" accesses
     repeated int32 GlobalVariableIDs = 8;
+
+    // Strucutue for all the fieldversioning information
     VariableVersions versionedFields = 9;
+
+    // Stencil description statements for the overall program flow
     repeated StencilDescStatement stencilDescStatements = 10;
+
+    // Map of the StencilID's to their respective StencilCall
     map<int32, dawn.proto.statements.Stmt> IDToStencilCall = 11;
+
+    // Map of field names to their respective Boundary Condition
     map<string, dawn.proto.statements.Stmt> FieldnameToBoundaryCondition = 12;
+
+    // Map of field ID's to the user-specified dimensions
     map<int32, Array3i> fieldIDtoLegalDimensions = 13;
+
+    // Map of the globally defined variable names to their Values
     map<string, GlobalValueAndType> GlobalVariableToValue = 14;
+
+    // The source-location of the stencil (for better error-handeling)
     dawn.proto.statements.SourceLocation stencilLocation = 15;
+
+    // The user-given name of the stencil
+    // (remember the 1-1 mapping of user-stencil - StencilInstantiation)
     string stencilName = 16;
+
+    // The filename of the original file creating the StencilInstantiation
     string fileName = 17;
 }
 
-/* ===-------------------------------------------------------------------------------------===*/
+/* ===-----------------------------------------------------------------------------------------===*/
 //      StencilInstantiation
-/* ===-------------------------------------------------------------------------------------===*/
+/* ===-----------------------------------------------------------------------------------------===*/
 
+// The internal representation of a user Stencil
 message StencilInstantiation{
+    // All the non-recoverable information about the stencil not stored in the compuatational tree
     StencilMetaInfo metadata = 1;
+
+    // The representataion of the computational patterns of the user stencil
     IIR internalIR = 2;
 }

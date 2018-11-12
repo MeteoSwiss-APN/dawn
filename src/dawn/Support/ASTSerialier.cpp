@@ -376,9 +376,9 @@ void setAST(proto::statements::AST* astProto, const AST* ast) {
   ast->accept(builder);
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+//===------------------------------------------------------------------------------------------===//
 // Deserialization
-////////////////////////////////////////////////////////////////////////////////////////////////////
+//===------------------------------------------------------------------------------------------===//
 
 std::shared_ptr<sir::Field> makeField(const proto::statements::Field& fieldProto) {
   auto field = std::make_shared<sir::Field>(fieldProto.name(), makeLocation(fieldProto));
@@ -616,8 +616,6 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto) {
       call->Args.push_back(makeField(arg));
     }
     return std::make_shared<StencilCallDeclStmt>(call, metaloc);
-    //    DAWN_ASSERT_MSG(false, "Vertical Region not allowed in this context");
-    //    return nullptr;
   }
   case proto::statements::Stmt::kVerticalRegionDeclStmt: {
     const auto& stmtProto = statementProto.vertical_region_decl_stmt();
@@ -638,8 +636,6 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto) {
     std::shared_ptr<sir::VerticalRegion> verticalRegion =
         std::make_shared<sir::VerticalRegion>(ast, interval, looporder, loc);
     return std::make_shared<VerticalRegionDeclStmt>(verticalRegion, loc);
-    //    DAWN_ASSERT_MSG(false, "Vertical Region not allowed in this context");
-    //    return nullptr;
   }
   case proto::statements::Stmt::kBoundaryConditionDeclStmt: {
     const auto& stmtProto = statementProto.boundary_condition_decl_stmt();

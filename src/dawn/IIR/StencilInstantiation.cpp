@@ -427,7 +427,6 @@ int StencilInstantiation::getAccessIDFromExpr(const std::shared_ptr<Expr>& expr)
       return find.second;
     }
   }
-  std::cout << "no match, assert" << std::endl;
   DAWN_ASSERT_MSG(false, "Invalid Expr");
   return -1;
 }
@@ -644,10 +643,6 @@ int StencilInstantiation::getStencilIDFromStmt(
   }
   DAWN_ASSERT_MSG(false, "Invalid stencil call");
   return -1;
-
-  //  auto it = IIR_->getStencilCallToStencilIDMap().find(stmt);
-  //  DAWN_ASSERT_MSG(it != IIR_->getStencilCallToStencilIDMap().end(), "Invalid stencil call");
-  //  return it->second;
 }
 
 std::unordered_map<std::string, int>& StencilInstantiation::getNameToAccessIDMap() {

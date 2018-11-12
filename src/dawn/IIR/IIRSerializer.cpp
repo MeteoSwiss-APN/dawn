@@ -28,8 +28,10 @@
 #include <tuple>
 #include <utility>
 
-using namespace dawn;
+// using namespace dawn;
 
+namespace dawn {
+namespace {
 static void setAccesses(proto::iir::Acesses* protoAcesses,
                         const std::shared_ptr<iir::Accesses>& accesses) {
   auto protoReadAccesses = protoAcesses->mutable_readaccess();
@@ -101,6 +103,8 @@ serializeStmtAccessPair(proto::iir::StatementAcessPair* protoStmtAccessPair,
     setAccesses(protoStmtAccessPair->mutable_calleeaccesses(), stmtAccessPair->getCalleeAccesses());
   }
 }
+
+} // anonymous namespace
 
 static void computeInitialDerivedInfo(const std::shared_ptr<iir::StencilInstantiation>& target) {
   for(auto IDtoNamePair : target->getAccessIDToNameMap()) {
@@ -621,3 +625,5 @@ std::string dawn::IIRSerializer::serializeToString(
     dawn::IIRSerializer::SerializationKind kind) {
   return serializeImpl(instantiation, kind);
 }
+
+} // namespace dawn

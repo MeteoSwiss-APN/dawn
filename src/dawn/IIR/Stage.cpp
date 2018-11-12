@@ -195,17 +195,11 @@ void Stage::updateGlobalVariablesInfo() {
         if(stencilInstantiation_.isGlobalVariable(AccessID)){
           derivedInfo_.globalVariables_.insert(AccessID);
         }
-        if(!stencilInstantiation_.isField(AccessID)) {
-            continue;
-        }
       }
       for(const auto& accessPair : access->getReadAccesses()) {
         int AccessID = accessPair.first;
         if(stencilInstantiation_.isGlobalVariable(AccessID)){
           derivedInfo_.globalVariables_.insert(AccessID);
-        }
-        if(!stencilInstantiation_.isField(AccessID)) {
-            continue;
         }
       }
 
