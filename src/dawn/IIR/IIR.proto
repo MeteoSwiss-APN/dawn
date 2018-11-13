@@ -148,7 +148,7 @@ message AllVersionedFields{
 // @brief Stucrute that holds all the information about the automatic field verisoning
 message VariableVersions{
     // The map from the original field ID to the list of all it's versions
-    map<int32,  AllVersionedFields> veriableVersionMap = 1;
+    map<int32,  AllVersionedFields> variableVersionMap = 1;
 
     // A list of all the Variables that are generated through Fieldversioning
     repeated int32 versionIDs = 2;
@@ -182,11 +182,12 @@ message Array3i{
 
 // @brief A simple representation of the sir::Value that can have multiple types
 message GlobalValueAndType{
-    // the typekind defines the type of the global variable
-    // 1 = boolean
-    // 2 = integer
-    // 3 = double
-    int32 Typekind = 1;
+    enum TypeKind{
+      Boolean = 0;
+      Integer = 1;
+      Double = 2;
+    }
+    TypeKind type = 1;
 
     // The value of the global Variable (if set), cast to double
     double value = 2;

@@ -155,8 +155,6 @@ public:
   StencilMetaInformation() = default;
 
   void clone(const StencilMetaInformation& origin);
-
-
 };
 } // namespace iir
 } // namespace dawn

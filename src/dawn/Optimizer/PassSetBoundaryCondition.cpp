@@ -13,10 +13,10 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassSetBoundaryCondition.h"
-#include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/ASTExpr.h"
 #include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/ASTUtil.h"

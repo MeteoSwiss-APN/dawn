@@ -62,7 +62,6 @@ class MultiStage : public IIRNode<Stencil, MultiStage, Stage, impl::StdList> {
 
   DerivedInfo derivedInfo_;
 
-
 public:
   static constexpr const char* name = "MultiStage";
 

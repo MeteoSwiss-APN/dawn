@@ -673,21 +673,22 @@ bool sir::StencilCall::operator==(const sir::StencilCall& rhs) const {
 
 sir::CompareResult sir::StencilCall::comparison(const sir::StencilCall& rhs) const {
   std::string output;
-  if(Callee != rhs.Callee){
-      output += dawn::format("[StencilCall mismatch] Callees do not match\n"
-                             "  Actual:\n"
-                             "    %s\n"
-                             "  Expected:\n"
-                             "    %s", Callee, rhs.Callee);
-      return CompareResult{output, false};
+  if(Callee != rhs.Callee) {
+    output += dawn::format("[StencilCall mismatch] Callees do not match\n"
+                           "  Actual:\n"
+                           "    %s\n"
+                           "  Expected:\n"
+                           "    %s",
+                           Callee, rhs.Callee);
+    return CompareResult{output, false};
   }
-  for(int i=0;i<Args.size();++i){
-      auto ArgComparison = Args[i]->comparison(*rhs.Args[i]);
-      if(!bool(ArgComparison)){
-          output += "[StencilCall mismatch] Arguments do not match\n";
-          output += ArgComparison.why();
-          return CompareResult{output, false};
-      }
+  for(int i = 0; i < Args.size(); ++i) {
+    auto ArgComparison = Args[i]->comparison(*rhs.Args[i]);
+    if(!bool(ArgComparison)) {
+      output += "[StencilCall mismatch] Arguments do not match\n";
+      output += ArgComparison.why();
+      return CompareResult{output, false};
+    }
   }
   return CompareResult{output, true};
 }

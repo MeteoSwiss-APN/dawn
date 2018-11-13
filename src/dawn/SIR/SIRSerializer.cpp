@@ -221,8 +221,6 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::SerializationKin
   return str;
 }
 
-
-
 void SIRSerializer::serialize(const std::string& file, const SIR* sir, SerializationKind kind) {
   std::ofstream ofs(file);
   if(!ofs.is_open())
@@ -267,7 +265,8 @@ static std::shared_ptr<sir::Field> makeField(const dawn::proto::statements::Fiel
   return field;
 }
 
-static BuiltinTypeID makeBuiltinTypeID(const dawn::proto::statements::BuiltinType& builtinTypeProto) {
+static BuiltinTypeID
+makeBuiltinTypeID(const dawn::proto::statements::BuiltinType& builtinTypeProto) {
   switch(builtinTypeProto.type_id()) {
   case dawn::proto::statements::BuiltinType_TypeID_Invalid:
     return BuiltinTypeID::Invalid;
@@ -285,7 +284,8 @@ static BuiltinTypeID makeBuiltinTypeID(const dawn::proto::statements::BuiltinTyp
   return BuiltinTypeID::Invalid;
 }
 
-static std::shared_ptr<sir::Direction> makeDirection(const dawn::proto::statements::Direction& directionProto) {
+static std::shared_ptr<sir::Direction>
+makeDirection(const dawn::proto::statements::Direction& directionProto) {
   return std::make_shared<sir::Direction>(directionProto.name(), makeLocation(directionProto));
 }
 
@@ -293,7 +293,8 @@ static std::shared_ptr<sir::Offset> makeOffset(const dawn::proto::statements::Of
   return std::make_shared<sir::Offset>(offsetProto.name(), makeLocation(offsetProto));
 }
 
-static std::shared_ptr<sir::Interval> makeInterval(const dawn::proto::statements::Interval& intervalProto) {
+static std::shared_ptr<sir::Interval>
+makeInterval(const dawn::proto::statements::Interval& intervalProto) {
   int lowerLevel = -1, upperLevel = -1, lowerOffset = -1, upperOffset = -1;
 
   if(intervalProto.LowerLevel_case() == dawn::proto::statements::Interval::kSpecialLowerLevel)
@@ -329,9 +330,10 @@ makeVerticalRegion(const dawn::proto::statements::VerticalRegion& verticalRegion
   auto interval = makeInterval(verticalRegionProto.interval());
 
   // VerticalRegion.LoopOrder
-  auto loopOrder = verticalRegionProto.loop_order() == dawn::proto::statements::VerticalRegion::Backward
-                       ? sir::VerticalRegion::LK_Backward
-                       : sir::VerticalRegion::LK_Forward;
+  auto loopOrder =
+      verticalRegionProto.loop_order() == dawn::proto::statements::VerticalRegion::Backward
+          ? sir::VerticalRegion::LK_Backward
+          : sir::VerticalRegion::LK_Forward;
 
   return std::make_shared<sir::VerticalRegion>(ast, interval, loopOrder, loc);
 }
@@ -610,7 +612,8 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str,
       stencilFunction->Loc = makeLocation(stencilFunctionProto);
 
       // StencilFunction.Args
-      for(const dawn::proto::statements::StencilFunctionArg& sirArg : stencilFunctionProto.arguments()) {
+      for(const dawn::proto::statements::StencilFunctionArg& sirArg :
+          stencilFunctionProto.arguments()) {
         switch(sirArg.Arg_case()) {
         case dawn::proto::statements::StencilFunctionArg::kFieldValue:
           stencilFunction->Args.emplace_back(makeField(sirArg.field_value()));

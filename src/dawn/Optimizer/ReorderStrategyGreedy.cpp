@@ -13,14 +13,14 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/ReorderStrategyGreedy.h"
-#include "dawn/Optimizer/BoundaryExtent.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/IIR/MultiStage.h"
-#include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/BoundaryExtent.h"
+#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 #include <algorithm>
 #include <set>
 #include <vector>
@@ -90,8 +90,8 @@ ReoderStrategyGreedy::reorder(const std::unique_ptr<iir::Stencil>& stencilPtr) {
   iir::DependencyGraphStage& stageDAG = *stencil.getStageDependencyGraph();
   iir::StencilInstantiation& instantiation = stencil.getStencilInstantiation();
 
-  std::unique_ptr<iir::Stencil> newStencil =
-      make_unique<iir::Stencil>(instantiation, stencil.getStencilAttributes(), stencilPtr->getStencilID());
+  std::unique_ptr<iir::Stencil> newStencil = make_unique<iir::Stencil>(
+      instantiation, stencil.getStencilAttributes(), stencilPtr->getStencilID());
 
   newStencil->setStageDependencyGraph(stencil.getStageDependencyGraph());
   int newNumStages = 0;

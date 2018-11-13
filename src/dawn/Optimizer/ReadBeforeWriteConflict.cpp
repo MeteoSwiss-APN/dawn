@@ -35,7 +35,8 @@ class ReadBeforeWriteConflictDetector {
   iir::LoopOrderKind loopOrder_;
 
 public:
-  ReadBeforeWriteConflictDetector(const iir::DependencyGraphAccesses* graph, iir::LoopOrderKind loopOrder)
+  ReadBeforeWriteConflictDetector(const iir::DependencyGraphAccesses* graph,
+                                  iir::LoopOrderKind loopOrder)
       : graph_(graph), loopOrder_(loopOrder) {}
 
   ReadBeforeWriteConflict check() const {
@@ -138,8 +139,9 @@ ReadBeforeWriteConflict& ReadBeforeWriteConflict::operator|=(const ReadBeforeWri
   return *this;
 }
 
-ReadBeforeWriteConflict hasVerticalReadBeforeWriteConflict(const iir::DependencyGraphAccesses* graph,
-                                                           iir::LoopOrderKind loopOrder) {
+ReadBeforeWriteConflict
+hasVerticalReadBeforeWriteConflict(const iir::DependencyGraphAccesses* graph,
+                                   iir::LoopOrderKind loopOrder) {
   return ReadBeforeWriteConflictDetector<true>(graph, loopOrder).check();
 }
 

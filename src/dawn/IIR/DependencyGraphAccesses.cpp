@@ -13,10 +13,10 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/DependencyGraphAccesses.h"
-#include "dawn/Optimizer/BoundaryExtent.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/BoundaryExtent.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Json.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>
@@ -255,17 +255,19 @@ bool DependencyGraphAccesses::isDAG() const {
 
 std::vector<std::size_t> DependencyGraphAccesses::getOutputVertexIDs() const {
   std::vector<std::size_t> outputVertexIDs;
-  getOutputVertexIDsImpl(*this, vertices_, [](const std::pair<int, Vertex>& IDVertexPair) {
-    return IDVertexPair.second.VertexID;
-  }, outputVertexIDs);
+  getOutputVertexIDsImpl(
+      *this, vertices_,
+      [](const std::pair<int, Vertex>& IDVertexPair) { return IDVertexPair.second.VertexID; },
+      outputVertexIDs);
   return outputVertexIDs;
 }
 
 std::vector<std::size_t> DependencyGraphAccesses::getInputVertexIDs() const {
   std::vector<std::size_t> inputVertexIDs;
-  getInputVertexIDsImpl(*this, vertices_, [](const std::pair<int, Vertex>& IDVertexPair) {
-    return IDVertexPair.second.VertexID;
-  }, inputVertexIDs);
+  getInputVertexIDsImpl(
+      *this, vertices_,
+      [](const std::pair<int, Vertex>& IDVertexPair) { return IDVertexPair.second.VertexID; },
+      inputVertexIDs);
   return inputVertexIDs;
 }
 

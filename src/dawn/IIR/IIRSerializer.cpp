@@ -28,8 +28,6 @@
 #include <tuple>
 #include <utility>
 
-// using namespace dawn;
-
 namespace dawn {
 namespace {
 static void setAccesses(proto::iir::Acesses* protoAcesses,
@@ -37,8 +35,7 @@ static void setAccesses(proto::iir::Acesses* protoAcesses,
   auto protoReadAccesses = protoAcesses->mutable_readaccess();
   for(auto IDExtentsPair : accesses->getReadAccesses()) {
     proto::iir::Extents protoExtents;
-    iir::Extents e = IDExtentsPair.second;
-    for(auto extent : e.getExtents()) {
+    for(auto extent : IDExtentsPair.second.getExtents()) {
       auto protoExtent = protoExtents.add_extents();
       protoExtent->set_minus(extent.Minus);
       protoExtent->set_plus(extent.Plus);
@@ -49,8 +46,7 @@ static void setAccesses(proto::iir::Acesses* protoAcesses,
   auto protoWriteAccesses = protoAcesses->mutable_writeaccess();
   for(auto IDExtentsPair : accesses->getWriteAccesses()) {
     proto::iir::Extents protoExtents;
-    iir::Extents e = IDExtentsPair.second;
-    for(auto extent : e.getExtents()) {
+    for(auto extent : IDExtentsPair.second.getExtents()) {
       auto protoExtent = protoExtents.add_extents();
       protoExtent->set_minus(extent.Minus);
       protoExtent->set_plus(extent.Plus);
@@ -63,6 +59,8 @@ static std::shared_ptr<dawn::Statement>
 makeStatement(const proto::iir::StencilDescStatement* protoStatement) {
   std::vector<sir::StencilCall*> stackTrace;
   auto stmt = makeStmt(protoStatement->stmt());
+
+  // only create the shared pointer if necessary
   if(protoStatement->stacktrace().size()) {
     for(auto protoStencilCall : protoStatement->stacktrace()) {
       sir::StencilCall call(protoStencilCall.callee());
@@ -137,6 +135,7 @@ static void computeInitialDerivedInfo(const std::shared_ptr<iir::StencilInstanti
 void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
                                       iir::StencilMetaInformation& metaData) {
   auto protoMetaData = target.mutable_metadata();
+
   // Filling Field: map<int32, string> AccessIDToName = 1;
   auto& protoAccessIDtoNameMap = *protoMetaData->mutable_accessidtoname();
   for(const auto& accessIDtoNamePair : metaData.AccessIDToNameMap_) {
@@ -180,7 +179,7 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
 
   // Filling Field: VariableVersions versionedFields = 9;
   auto protoVariableVersions = protoMetaData->mutable_versionedfields();
-  auto& protoVariableVersionMap = *protoVariableVersions->mutable_veriableversionmap();
+  auto& protoVariableVersionMap = *protoVariableVersions->mutable_variableversionmap();
   auto& protoVersionIDtoOriginalIDMap = *protoVariableVersions->mutable_versionidtooriginalid();
 
   auto variableVersions = metaData.variableVersions_;
@@ -231,7 +230,7 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
 
   // Filling Field:
   // map<string, dawn.proto.statements.BoundaryConditionDeclStmt> FieldnameToBoundaryCondition = 12;
-  auto protoFieldNameToBC = *protoMetaData->mutable_fieldnametoboundarycondition();
+  auto& protoFieldNameToBC = *protoMetaData->mutable_fieldnametoboundarycondition();
   for(auto fieldNameToBC : metaData.FieldnameToBoundaryConditionMap_) {
     proto::statements::Stmt protoStencilCall;
     ProtoStmtBuilder builder(&protoStencilCall);
@@ -253,8 +252,7 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
   auto& protoGlobalVariableMap = *protoMetaData->mutable_globalvariabletovalue();
   for(auto& globalToValue : metaData.globalVariableMap_) {
     proto::iir::GlobalValueAndType protoGlobalToStore;
-    int typekind = -1;
-    double value;
+    double value = -1;
     bool valueIsSet = false;
     switch(globalToValue.second->getType()) {
     case sir::Value::Boolean:
@@ -262,32 +260,32 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
         value = globalToValue.second->getValue<bool>();
         valueIsSet = true;
       }
-      typekind = 1;
+      protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Boolean);
       break;
     case sir::Value::Integer:
       if(!globalToValue.second->empty()) {
         value = globalToValue.second->getValue<int>();
         valueIsSet = true;
       }
-      typekind = 2;
+      protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Integer);
       break;
     case sir::Value::Double:
       if(!globalToValue.second->empty()) {
         value = globalToValue.second->getValue<double>();
         valueIsSet = true;
       }
-      typekind = 3;
+      protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Double);
       break;
     default:
       dawn_unreachable("non-supported global type");
     }
-    protoGlobalToStore.set_typekind(typekind);
     if(valueIsSet) {
       protoGlobalToStore.set_value(value);
     }
     protoGlobalToStore.set_valueisset(valueIsSet);
     protoGlobalVariableMap.insert({globalToValue.first, protoGlobalToStore});
   }
+
   // Filling Field: dawn.proto.statements.SourceLocation stencilLocation = 15;
   auto protoStencilLoc = protoMetaData->mutable_stencillocation();
   protoStencilLoc->set_column(metaData.stencilLocation_.Column);
@@ -343,10 +341,6 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
           for(const auto& stmtaccesspair : domethod->getChildren()) {
             auto protoStmtAccessPair = protoDoMethod->add_stmtaccesspairs();
             serializeStmtAccessPair(protoStmtAccessPair, stmtaccesspair);
-            //            std::cout << "serializing this stmt\n"
-            //                      <<
-            //                      stmtaccesspair->toString(&stencils->getStencilInstantiation())
-            //                      << std::endl;
           }
         }
       }
@@ -404,21 +398,34 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
   for(auto literalIDToName : protoMetaData.literalidtoname()) {
     metadata.LiteralAccessIDToNameMap_[literalIDToName.first] = literalIDToName.second;
   }
-  for(int i = 0; i < protoMetaData.fieldaccessids_size(); ++i) {
-    metadata.FieldAccessIDSet_.insert(protoMetaData.fieldaccessids(i));
+  for(auto fieldaccessID : protoMetaData.fieldaccessids()) {
+    metadata.FieldAccessIDSet_.insert(fieldaccessID);
   }
-  for(int i = 0; i < protoMetaData.apifieldids_size(); ++i) {
-    metadata.apiFieldIDs_.push_back(protoMetaData.apifieldids(i));
+  for(auto ApiFieldID : protoMetaData.apifieldids()) {
+    metadata.apiFieldIDs_.push_back(ApiFieldID);
   }
-  for(int i = 0; i < protoMetaData.temporaryfieldids_size(); ++i) {
-    metadata.TemporaryFieldAccessIDSet_.insert(protoMetaData.temporaryfieldids(i));
+  for(auto temporaryFieldID : protoMetaData.temporaryfieldids()) {
+    metadata.TemporaryFieldAccessIDSet_.insert(temporaryFieldID);
   }
-  for(int i = 0; i < protoMetaData.globalvariableids_size(); ++i) {
-    metadata.GlobalVariableAccessIDSet_.insert(protoMetaData.globalvariableids(i));
+  for(auto globalVariableID : protoMetaData.globalvariableids()) {
+    metadata.GlobalVariableAccessIDSet_.insert(globalVariableID);
   }
-  //
-  // Variable Versions
-  //
+
+  for(auto variableVersionMap : protoMetaData.versionedfields().variableversionmap()) {
+    std::shared_ptr<std::vector<int>> versions;
+    for(auto versionedID : variableVersionMap.second.allids()) {
+      versions->push_back(versionedID);
+    }
+    metadata.variableVersions_.insert(variableVersionMap.first, versions);
+  }
+
+  for(auto versionID : protoMetaData.versionedfields().versionids()) {
+    metadata.variableVersions_.versionIDs_.insert(versionID);
+  }
+
+  for(auto VersionIDOriginalIDPair : protoMetaData.versionedfields().versionidtooriginalid()) {
+    metadata.variableVersions_.versionToOriginalVersionMap_.insert(VersionIDOriginalIDPair);
+  }
 
   for(auto stencilDescStmt : protoMetaData.stencildescstatements()) {
     metadata.stencilDescStatements_.push_back(makeStatement(&stencilDescStmt));
@@ -437,25 +444,29 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
         {IDToCall.first, std::make_shared<StencilCallDeclStmt>(
                              sirStencilCall, makeLocation(call.stencil_call_decl_stmt()))});
   }
-  //  for(auto FieldnameToBC : protoMetaData.fieldnametoboundarycondition()) {
-  //    metadata.FieldnameToBoundaryConditionMap_[FieldnameToBC.first] =
-  //    makeStmt((FieldnameToBC.second));
-  //  }
+
+  for(auto FieldnameToBC : protoMetaData.fieldnametoboundarycondition()) {
+    std::shared_ptr<BoundaryConditionDeclStmt> bc =
+        dyn_pointer_cast<BoundaryConditionDeclStmt>(makeStmt((FieldnameToBC.second)));
+    metadata.FieldnameToBoundaryConditionMap_[FieldnameToBC.first] = bc;
+  }
+
   for(auto fieldIDInitializedDims : protoMetaData.fieldidtolegaldimensions()) {
     Array3i dims{fieldIDInitializedDims.second.int1(), fieldIDInitializedDims.second.int2(),
                  fieldIDInitializedDims.second.int3()};
     metadata.fieldIDToInitializedDimensionsMap_[fieldIDInitializedDims.first] = dims;
   }
+
   for(auto GlobalToValue : protoMetaData.globalvariabletovalue()) {
     std::shared_ptr<sir::Value> value = std::make_shared<sir::Value>();
-    switch(GlobalToValue.second.typekind()) {
-    case 1:
+    switch(GlobalToValue.second.type()) {
+    case proto::iir::GlobalValueAndType_TypeKind_Boolean:
       value->setType(sir::Value::Boolean);
       break;
-    case 2:
+    case proto::iir::GlobalValueAndType_TypeKind_Integer:
       value->setType(sir::Value::Integer);
       break;
-    case 3:
+    case proto::iir::GlobalValueAndType_TypeKind_Double:
       value->setType(sir::Value::Double);
       break;
     default:
@@ -512,7 +523,6 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
         const auto& IIRStage = IIRMSS->getChild(stagePos++);
 
         for(const auto& protoDoMethod : protoStage.domethods()) {
-          //          int stmtAccessPairPos = 0;
           (IIRStage)->insertChild(
               make_unique<iir::DoMethod>(*makeInterval(protoDoMethod.interval()), *target));
 
@@ -542,9 +552,6 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
             insertee->setCallerAccesses(callerAccesses);
             insertee->setCalleeAccesses(calleeAccesses);
             (IIRDoMethod)->insertChild(std::move(insertee));
-
-            //            std::cout << "And now we deserialize the stmtaccesspair" << std::endl;
-            //            std::cout << stmt << std::endl;
           }
         }
       }
@@ -567,8 +574,7 @@ void IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Seria
   }
   case dawn::IIRSerializer::SK_Byte: {
     if(!protoStencilInstantiation.ParseFromString(str))
-      throw std::runtime_error(dawn::format("cannot deserialize StencilInstantiation: %s")); //,
-    // ProtobufLogger::getInstance().getErrorMessagesAndReset()));
+      throw std::runtime_error(dawn::format("cannot deserialize StencilInstantiation: %s"));
     break;
   }
   default:

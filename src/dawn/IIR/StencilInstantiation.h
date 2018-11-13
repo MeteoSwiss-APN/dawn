@@ -15,15 +15,15 @@
 #ifndef DAWN_IIR_STENCILINSTANTIATION_H
 #define DAWN_IIR_STENCILINSTANTIATION_H
 
-#include "dawn/IIR/IIR.h"
 #include "dawn/IIR/Accesses.h"
+#include "dawn/IIR/IIR.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/NonCopyable.h"
 #include "dawn/Support/StringRef.h"
 #include "dawn/Support/UIDGenerator.h"
-#include "dawn/IIR/StencilMetaInformation.h"
 #include <memory>
 #include <set>
 #include <string>
@@ -41,7 +41,6 @@ class StencilInstantiation : NonCopyable {
   OptimizerContext* context_;
 
   StencilMetaInformation metadata_;
-
 
   std::unique_ptr<IIR> IIR_;
 
@@ -145,7 +144,8 @@ public:
 
   /// @brief Check whether the `AccessID` corresponds to a multi-versioned variable
   inline bool isMultiVersionedVariable(int AccessID) const {
-    return isVariable(AccessID) && metadata_.variableVersions_.hasVariableMultipleVersions(AccessID);
+    return isVariable(AccessID) &&
+           metadata_.variableVersions_.hasVariableMultipleVersions(AccessID);
   }
 
   /// @brief Get a list of all field AccessIDs of this multi-versioned field
@@ -351,7 +351,6 @@ public:
   void
   insertStencilFunctionIntoSIR(const std::shared_ptr<sir::StencilFunction>& sirStencilFunction);
 
-
   /// @brief Get the optimizer context
   inline ::dawn::OptimizerContext* getOptimizerContext() { return context_; }
 
@@ -432,8 +431,8 @@ public:
     return IIR_->getBoundaryConditionToExtents().find(stmt)->second;
   }
 
-  std::vector<std::shared_ptr<sir::StencilFunction>>& getStencilFunctions(){
-      return metadata_.allStencilFunctions_;
+  std::vector<std::shared_ptr<sir::StencilFunction>>& getStencilFunctions() {
+    return metadata_.allStencilFunctions_;
   }
 
   /// @brief this checks if the user specialized the field to a dimensionality. If not all

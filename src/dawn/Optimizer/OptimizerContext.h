@@ -17,8 +17,8 @@
 
 #include "dawn/Compiler/DiagnosticsEngine.h"
 #include "dawn/Compiler/Options.h"
-#include "dawn/Optimizer/PassManager.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/PassManager.h"
 #include "dawn/Support/NonCopyable.h"
 #include <map>
 #include <memory>
