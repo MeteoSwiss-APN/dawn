@@ -18,6 +18,7 @@
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/PassComputeStageExtents.h"
+#include "dawn/Optimizer/PassInlining.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/ASTSerialier.h"
@@ -239,7 +240,7 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
   }
 
   // Filling Field: map<int32, Array3i> fieldIDtoLegalDimensions = 13;
-  auto protoInitializedDimensionsMap = *protoMetaData->mutable_fieldidtolegaldimensions();
+  auto& protoInitializedDimensionsMap = *protoMetaData->mutable_fieldidtolegaldimensions();
   for(auto IDToLegalDimension : metaData.fieldIDToInitializedDimensionsMap_) {
     proto::iir::Array3i array;
     array.set_int1(IDToLegalDimension.second[0]);
@@ -352,6 +353,38 @@ std::string
 IIRSerializer::serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
                              dawn::IIRSerializer::SerializationKind kind) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
+  // Before Serialization we need to ensure there are no stencilfunctions present. This is why we
+  // inline everything here.
+  /////////////////////////////// WITTODO //////////////////////////////////////////////////////////
+  //==------------------------------------------------------------------------------------------==//
+  // After we have the merge of carlos' new inliner that distinguishes between full inlining (as
+  // used for optimized code generation) and precomputation (store stencil function computation one
+  // for one into temporaries), we need to make sure we use the latter as those expressions can be
+  // properly flagged to be revertible and we can actually go back. An example here:
+  //
+  // stencil_function harm_avg{
+  //     return 0.5*(u[i+1] + u[i-1]);
+  // }
+  // stencil_function upwind_flux{
+  //     return u[j+1] - u[j]
+  //}
+  //
+  // out = upwind_flux(harm_avg(u))
+  //
+  // can be represented either by [precomputation]:
+  //
+  // tmp_1 = 0.5*(u[i+1] + u[i-1])
+  // tmp_2 = tmp_1[j+1] - tmp_1[j]
+  // out = tmp_2
+  //
+  // or by [full inlining]
+  //
+  // out = 0.5*(u[i+1, j+1] + u[i-1, j+1]) - 0.5*(u[i+1] + u[i-1])
+  //==------------------------------------------------------------------------------------------==//
+
+  PassInlining inliner(PassInlining::InlineStrategyKind::IK_Precomputation);
+  inliner.run(instantiation);
+
   using namespace dawn::proto::iir;
   proto::iir::StencilInstantiation protoStencilInstantiation;
   serializeMetaData(protoStencilInstantiation, instantiation->getMetaData());

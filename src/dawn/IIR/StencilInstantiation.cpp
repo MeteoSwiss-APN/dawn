@@ -430,9 +430,16 @@ int StencilInstantiation::getAccessIDFromExpr(const std::shared_ptr<Expr>& expr)
 }
 
 int StencilInstantiation::getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) const {
-  auto it = metadata_.StmtToAccessIDMap_.find(stmt);
-  DAWN_ASSERT_MSG(it != metadata_.StmtToAccessIDMap_.end(), "Invalid Stmt");
-  return it->second;
+  for(auto find : metadata_.StmtToAccessIDMap_) {
+    if(find.first->equals(stmt.get())) {
+      return find.second;
+    }
+  }
+  DAWN_ASSERT_MSG(false, "Invalid Stmt");
+  return -1;
+  //  auto it = metadata_.StmtToAccessIDMap_.find(stmt);
+  //  DAWN_ASSERT_MSG(it != metadata_.StmtToAccessIDMap_.end(), "Invalid Stmt");
+  //  return it->second;
 }
 
 void StencilInstantiation::setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt,

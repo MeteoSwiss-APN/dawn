@@ -154,7 +154,8 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   PassManager& passManager = optimizer->getPassManager();
 
   // Setup pass interface
-  optimizer->checkAndPushBack<PassInlining>(inlineStrategy);
+  optimizer->checkAndPushBack<PassInlining>(
+      PassInlining::InlineStrategyKind::IK_ComputationOnTheFly);
   optimizer->checkAndPushBack<PassTemporaryFirstAccess>();
   optimizer->checkAndPushBack<PassFieldVersioning>();
   optimizer->checkAndPushBack<PassSSA>();
@@ -176,6 +177,8 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   optimizer->checkAndPushBack<PassSetBoundaryCondition>();
   optimizer->checkAndPushBack<PassDataLocalityMetric>();
   optimizer->checkAndPushBack<PassSetSyncStage>();
+  if(inlineStrategy == PassInlining::InlineStrategyKind::IK_Precomputation)
+    optimizer->checkAndPushBack<PassInlining>(PassInlining::InlineStrategyKind::IK_Precomputation);
 
   DAWN_LOG(INFO) << "All the passes ran with the current command line arugments:";
   for(const auto& a : passManager.getPasses()) {
@@ -209,10 +212,11 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     if(after) {
       DAWN_LOG(INFO) << "Serilalize after all the passes are run";
       IIRSerializer::serialize("after.file", instantiation,
-                               IIRSerializer::SerializationKind::SK_Json);
+                               IIRSerializer::SerializationKind::SK_Byte);
 
       DAWN_LOG(INFO) << "And reload it";
-      auto output = IIRSerializer::deserialize("after.file", instantiation->getOptimizerContext());
+      auto output = IIRSerializer::deserialize("after.file", instantiation->getOptimizerContext(),
+                                               IIRSerializer::SerializationKind::SK_Byte);
       output->dump();
       instantiation = output;
     }
