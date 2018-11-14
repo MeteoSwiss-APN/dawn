@@ -28,30 +28,30 @@ import "statements.proto";
 // @brief Statement-Wrapper for the ASTStmt.
 //
 // This wrapper is used to have a common base for Stmts and Exprs
-message Statement{
+message Statement {
   // Singe ASTStmt in the Statement.
   dawn.proto.statements.Stmt ASTStmt = 1;
 }
 
 
 /* ===-----------------------------------------------------------------------------------------===*/
-//      Acesses
+//      Accesses
 /* ===-----------------------------------------------------------------------------------------===*/
 // @brief Extent attached to a FieldAccess
 //
 // Each filed-access has extents in each dimension that define how far the accesses are in the
 //respective dimension
-message Extent{
+message Extent {
     int32 minus = 1;
     int32 plus = 2;
 }
 
-message Extents{
+message Extents {
     // the three dimensions of an access-extent [Extent<i>, Extent<j>, Extent<k>]
     repeated Extent extents = 1;
 }
 
-message Acesses{
+message Accesses {
     // Map of all the write accesses [their accessID] to the Extents of the access
     map<int32, Extents> writeAccess = 1;
 
@@ -59,31 +59,65 @@ message Acesses{
     map<int32, Extents> readAccess = 2;
 }
 
+/* ===-----------------------------------------------------------------------------------------===*/
+//      Caches
+/* ===-----------------------------------------------------------------------------------------===*/
+message Window {
+    int32 minus = 1;
+    int32 plus = 2;
+}
+
+/// @brief Cache specification of cuda kernels (also used in Gridtools)
+message Cache {
+    // Available cache types
+    enum CacheType { CT_IJ = 0; CT_K = 1; CT_IJK = 2; CT_Bypass = 3; }
+
+    // IO policies of the cache
+    enum CachePolicy { CP_Unknown = 0; CP_FillFlush = 1; CP_Fill = 2; CP_Flush = 3; CP_EPFlush = 4;
+                       CP_BPFill = 5; CP_Local = 6; }
+    // Used Cache-Type
+    CacheType type = 1;
+
+    // Used IO-policy of the cace
+    CachePolicy policy = 2;
+
+    // Field-ID of the cached field
+    int32 accessID = 3;
+
+    // optional field: Interval on which cache is used
+    dawn.proto.statements.Interval interval = 4;
+
+    // optional field: Interval that is the union of all the accessIntervals
+    dawn.proto.statements.Interval enclosingAccessInterval = 5;
+
+    // optional field: Window on which we need to fill and flush
+    Window cacheWindow = 6;
+}
 
 /* ===-----------------------------------------------------------------------------------------===*/
 //      IIR-Tree
 /* ===-----------------------------------------------------------------------------------------===*/
 
 // @brief StatementAccessPair that is stored as the Leafs of the IIR
-message StatementAcessPair{
+message StatementAccessPair {
     // the statement of the pair. To note that this can be a BlockStmt (or simiar) and therefore
     // hold more than one stmt
     Statement statement = 1;
 
     // All the caller accesses of the statement
-    Acesses callerAccesses  = 2;
+    Accesses callerAccesses  = 2;
 
     // All the callee accesses of the statement
-    Acesses calleeAccesses  = 3;
+    Accesses calleeAccesses  = 3;
 }
 
 // @brief The Protobuf description of all the required members to describe a DoMethod of the IIR
 //
 // A Do-method is a collection of Statements with corresponding Accesses of a specific vertical
 // region
-message DoMethod{
-    repeated StatementAcessPair stmtaccesspairs = 1;
-    int32 DoMethodID = 2;
+message DoMethod {
+    repeated StatementAccessPair stmtaccesspairs = 1;
+    int32 doMethodID = 2;
     dawn.proto.statements.Interval interval = 3;
 }
 
@@ -91,8 +125,8 @@ message DoMethod{
 //
 // A Stage usually corresponds to a inner loop nest (usually an ij-loop). In CUDA gridtools stages
 // are separated by a `__syncthreads()` call in a kernel.
-message Stage{
-    repeated DoMethod domethods = 1;
+message Stage {
+    repeated DoMethod doMethods = 1;
     int32 stageID = 2;
 
 }
@@ -101,18 +135,27 @@ message Stage{
 //
 // A multistage usually corresponds to the outer loop (usually over k) of the loop nest. In CUDA
 // multistages reflect kernels.
-message MultiStage{
-  enum LoopOrder { Forward = 0; Backward = 1;  Parallel = 3;}
+message MultiStage {
+  enum LoopOrder { Forward = 0; Backward = 1;  Parallel = 2;}
+
+    // The stages of the MultiStage
     repeated Stage stages = 1;
-    LoopOrder looporder = 2;
-    int32 MulitStageID = 3;
+
+    // The loop-order in which the stage has to be executed (for-loop is start : end or end : start)
+    LoopOrder loopOrder = 2;
+
+    // The unique ID of the MultiStage
+    int32 multiStageID = 3;
+
+    // The set of Cached variables. If no caches are set, they can be computed internally
+    map<int32, Cache> multiStageCaches = 4;
 }
 
 // @brief The Protobuf description of the Attirbutes that are part of a Stencil
 //
 // The attributes are set via pragmas in the usercode (#pragma gtclang ...) and are held by the IIR
 // Stencil one integer
-message Attributes{
+message Attributes {
 	uint32 attrBits = 1;
 }
 
@@ -120,8 +163,8 @@ message Attributes{
 //
 // A Stencil is represented by a collection of MultiStages. User Stencils can be broken up into
 // multiple stencils if necessary.
-message Stencil{
-    repeated MultiStage multistages = 1;
+message Stencil {
+    repeated MultiStage multiStages = 1;
     int32 stencilID = 2;
     Attributes attr = 3;
 }
@@ -130,7 +173,7 @@ message Stencil{
 //
 // The root node of the tree, holding multiple stencils. There is one IIR object for each user
 // defined Stencil.
-message IIR{
+message IIR {
     repeated Stencil stencils = 1;
 }
 
@@ -141,12 +184,12 @@ message IIR{
 // @brief Helper Structure to hold all the relevant information for field-versioning
 //
 // This array represents all the versions of one specific field
-message AllVersionedFields{
+message AllVersionedFields {
     repeated int32 allIDs = 1;
 }
 
 // @brief Stucrute that holds all the information about the automatic field verisoning
-message VariableVersions{
+message VariableVersions {
     // The map from the original field ID to the list of all it's versions
     map<int32,  AllVersionedFields> variableVersionMap = 1;
 
@@ -154,13 +197,13 @@ message VariableVersions{
     repeated int32 versionIDs = 2;
 
     // Map from Versioned ID to the original
-    map<int32, int32> VersionIDToOriginalID = 3;
+    map<int32, int32> versionIDToOriginalID = 3;
 }
 
 // @brief Helper Sturcture as maps with custom messages as the key do not work in Protobuf
 //
 // Holds the information of wich ID belongs to a given Stmt
-message StmtIDPair{
+message StmtIDPair {
     dawn.proto.statements.Stmt stmt = 1;
     int32 IDs = 2;
 }
@@ -168,25 +211,21 @@ message StmtIDPair{
 // @brief Helper Sturcture as maps with custom messages as the key do not work in Protobuf
 //
 // Holds the information of wich ID belongs to a given Expr
-message ExprIDPair{
+message ExprIDPair {
     dawn.proto.statements.Expr expr = 1;
     int32 IDs = 2;
 }
 
 // @brief Helper Strucute to make sure, Arrays with fixed length are not made too big
-message Array3i{
+message Array3i {
     int32 int1 = 1;
     int32 int2 = 2;
     int32 int3 = 3;
 }
 
 // @brief A simple representation of the sir::Value that can have multiple types
-message GlobalValueAndType{
-    enum TypeKind{
-      Boolean = 0;
-      Integer = 1;
-      Double = 2;
-    }
+message GlobalValueAndType {
+    enum TypeKind { Boolean = 0; Integer = 1; Double = 2; }
     TypeKind type = 1;
 
     // The value of the global Variable (if set), cast to double
@@ -200,37 +239,37 @@ message GlobalValueAndType{
 // @brief Statement-Wrapper for the ASTStmt including their StackTrace
 //
 // This wrapper is used to have a common base for Stmts and Exprs
-message StencilDescStatement{
+message StencilDescStatement {
     dawn.proto.statements.Stmt stmt = 1;
     repeated dawn.proto.statements.StencilCall stacktrace = 2;
 }
 
 // @brief all the MetaInformation that needs to be stored in addition the the tree of computational
 // patterns to be able to fully represent the usercode
-message StencilMetaInfo{
+message StencilMetaInfo {
     // Map from AccessID's to their original name
-    map<int32, string> AccessIDToName = 1;
+    map<int32, string> accessIDToName = 1;
 
     // Surjection of AST Nodes, Stmt (VarDeclStmt) to their AccessID
-    repeated ExprIDPair ExprToAccessID = 2;
+    repeated ExprIDPair exprToAccessID = 2;
 
     // Surjection of AST Nodes, Expr (FieldAccessExpr or VarAccessExpr) to their AccessID
-    repeated StmtIDPair StmtToAccessID = 3;
+    repeated StmtIDPair stmtToAccessID = 3;
 
     // Injection of AccessIDs of literal constant to their respective name
-    map<int32, string> LiteralIDToName = 4;
+    map<int32, string> literalIDToName = 4;
 
     // set of AccessIDs which correspond to fields for identification as such
-    repeated int32 FieldAccessIDs = 5;
+    repeated int32 fieldAccessIDs = 5;
 
     // Ordered list of IDs of fields that belong to the user API call of the program
     repeated int32 APIFieldIDs = 6;
 
     // AccessIDs of fields which are represented by a temporary storages
-    repeated int32 TemporaryFieldIDs = 7;
+    repeated int32 temporaryFieldIDs = 7;
 
     // AccessIDs of "global variable" accesses
-    repeated int32 GlobalVariableIDs = 8;
+    repeated int32 globalVariableIDs = 8;
 
     // Strucutue for all the fieldversioning information
     VariableVersions versionedFields = 9;
@@ -242,13 +281,13 @@ message StencilMetaInfo{
     map<int32, dawn.proto.statements.Stmt> IDToStencilCall = 11;
 
     // Map of field names to their respective Boundary Condition
-    map<string, dawn.proto.statements.Stmt> FieldnameToBoundaryCondition = 12;
+    map<string, dawn.proto.statements.Stmt> fieldnameToBoundaryCondition = 12;
 
     // Map of field ID's to the user-specified dimensions
     map<int32, Array3i> fieldIDtoLegalDimensions = 13;
 
     // Map of the globally defined variable names to their Values
-    map<string, GlobalValueAndType> GlobalVariableToValue = 14;
+    map<string, GlobalValueAndType> globalVariableToValue = 14;
 
     // The source-location of the stencil (for better error-handeling)
     dawn.proto.statements.SourceLocation stencilLocation = 15;
@@ -266,7 +305,7 @@ message StencilMetaInfo{
 /* ===-----------------------------------------------------------------------------------------===*/
 
 // The internal representation of a user Stencil
-message StencilInstantiation{
+message StencilInstantiation {
     // All the non-recoverable information about the stencil not stored in the compuatational tree
     StencilMetaInfo metadata = 1;
 

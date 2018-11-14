@@ -62,7 +62,7 @@ yoda_add_library(
           Unreachable.h
           VisitorHelpers.h
           ../Dawn.h
-          ASTSerialier.h
-          ASTSerialier.cpp
+          ASTSerializer.h
+          ASTSerializer.cpp
   OBJECT
 )

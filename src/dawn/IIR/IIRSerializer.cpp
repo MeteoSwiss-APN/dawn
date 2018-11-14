@@ -21,7 +21,7 @@
 #include "dawn/Optimizer/PassInlining.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/Support/ASTSerialier.h"
+#include "dawn/Support/ASTSerializer.h"
 #include <fstream>
 #include <google/protobuf/util/json_util.h>
 #include <list>
@@ -30,10 +30,9 @@
 #include <utility>
 
 namespace dawn {
-namespace {
-static void setAccesses(proto::iir::Acesses* protoAcesses,
+static void setAccesses(proto::iir::Accesses* protoAccesses,
                         const std::shared_ptr<iir::Accesses>& accesses) {
-  auto protoReadAccesses = protoAcesses->mutable_readaccess();
+  auto protoReadAccesses = protoAccesses->mutable_readaccess();
   for(auto IDExtentsPair : accesses->getReadAccesses()) {
     proto::iir::Extents protoExtents;
     for(auto extent : IDExtentsPair.second.getExtents()) {
@@ -44,7 +43,7 @@ static void setAccesses(proto::iir::Acesses* protoAcesses,
     protoReadAccesses->insert({IDExtentsPair.first, protoExtents});
   }
 
-  auto protoWriteAccesses = protoAcesses->mutable_writeaccess();
+  auto protoWriteAccesses = protoAccesses->mutable_writeaccess();
   for(auto IDExtentsPair : accesses->getWriteAccesses()) {
     proto::iir::Extents protoExtents;
     for(auto extent : IDExtentsPair.second.getExtents()) {
@@ -88,13 +87,13 @@ static iir::Extents makeExtents(const proto::iir::Extents* protoExtents) {
 }
 
 static void
-serializeStmtAccessPair(proto::iir::StatementAcessPair* protoStmtAccessPair,
+serializeStmtAccessPair(proto::iir::StatementAccessPair* protoStmtAccessPair,
                         const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessPair) {
   // serialize the statement
   ProtoStmtBuilder builder(protoStmtAccessPair->mutable_statement()->mutable_aststmt());
   stmtAccessPair->getStatement()->ASTStmt->accept(builder);
 
-  // check if caller / callee acesses are initialized, and if so, fill them
+  // check if caller / callee accesses are initialized, and if so, fill them
   if(stmtAccessPair->getCallerAccesses()) {
     setAccesses(protoStmtAccessPair->mutable_calleraccesses(), stmtAccessPair->getCallerAccesses());
   }
@@ -103,7 +102,124 @@ serializeStmtAccessPair(proto::iir::StatementAcessPair* protoStmtAccessPair,
   }
 }
 
-} // anonymous namespace
+static void setCache(proto::iir::Cache* protoCache, const iir::Cache& cache) {
+  protoCache->set_accessid(cache.getCachedFieldAccessID());
+  switch(cache.getCacheIOPolicy()) {
+  case iir::Cache::bpfill:
+    protoCache->set_policy(proto::iir::Cache_CachePolicy_CP_BPFill);
+    break;
+  case iir::Cache::epflush:
+    protoCache->set_policy(proto::iir::Cache_CachePolicy_CP_EPFlush);
+    break;
+  case iir::Cache::fill:
+    protoCache->set_policy(proto::iir::Cache_CachePolicy_CP_Fill);
+    break;
+  case iir::Cache::fill_and_flush:
+    protoCache->set_policy(proto::iir::Cache_CachePolicy_CP_FillFlush);
+    break;
+  case iir::Cache::flush:
+    protoCache->set_policy(proto::iir::Cache_CachePolicy_CP_Flush);
+    break;
+  case iir::Cache::local:
+    protoCache->set_policy(proto::iir::Cache_CachePolicy_CP_Local);
+    break;
+  case iir::Cache::unknown:
+    protoCache->set_policy(proto::iir::Cache_CachePolicy_CP_Unknown);
+    break;
+  default:
+    dawn_unreachable("unknown cache policy");
+  }
+  switch(cache.getCacheType()) {
+  case iir::Cache::bypass:
+    protoCache->set_type(proto::iir::Cache_CacheType_CT_Bypass);
+    break;
+  case iir::Cache::IJ:
+    protoCache->set_type(proto::iir::Cache_CacheType_CT_IJ);
+    break;
+  case iir::Cache::IJK:
+    protoCache->set_type(proto::iir::Cache_CacheType_CT_IJK);
+    break;
+  case iir::Cache::K:
+    protoCache->set_type(proto::iir::Cache_CacheType_CT_K);
+    break;
+  default:
+    dawn_unreachable("unknown cache type");
+  }
+  if(cache.getInterval().is_initialized()) {
+    auto sirInterval = cache.getInterval()->asSIRInterval();
+    setInterval(protoCache->mutable_interval(), &sirInterval);
+  }
+  if(cache.getEnclosingAccessedInterval().is_initialized()) {
+    auto sirInterval = cache.getEnclosingAccessedInterval()->asSIRInterval();
+    setInterval(protoCache->mutable_enclosingaccessinterval(), &sirInterval);
+  }
+  if(cache.getWindow().is_initialized()) {
+    protoCache->mutable_cachewindow()->set_minus(cache.getWindow()->m_m);
+    protoCache->mutable_cachewindow()->set_plus(cache.getWindow()->m_p);
+  }
+}
+
+static iir::Cache makeCache(const proto::iir::Cache* protoCache) {
+  iir::Cache::CacheTypeKind cacheType;
+  iir::Cache::CacheIOPolicy cachePolicy;
+  boost::optional<iir::Interval> interval;
+  boost::optional<iir::Interval> enclosingInverval;
+  boost::optional<iir::Cache::window> cacheWindow;
+  int ID = protoCache->accessid();
+  switch(protoCache->type()) {
+  case proto::iir::Cache_CacheType_CT_Bypass:
+    cacheType = iir::Cache::bypass;
+    break;
+  case proto::iir::Cache_CacheType_CT_IJ:
+    cacheType = iir::Cache::IJ;
+    break;
+  case proto::iir::Cache_CacheType_CT_IJK:
+    cacheType = iir::Cache::IJK;
+    break;
+  case proto::iir::Cache_CacheType_CT_K:
+    cacheType = iir::Cache::K;
+    break;
+  default:
+    dawn_unreachable("unknow cache type");
+  }
+  switch(protoCache->policy()) {
+  case proto::iir::Cache_CachePolicy_CP_BPFill:
+    cachePolicy = iir::Cache::bpfill;
+    break;
+  case proto::iir::Cache_CachePolicy_CP_EPFlush:
+    cachePolicy = iir::Cache::epflush;
+    break;
+  case proto::iir::Cache_CachePolicy_CP_Fill:
+    cachePolicy = iir::Cache::fill;
+    break;
+  case proto::iir::Cache_CachePolicy_CP_FillFlush:
+    cachePolicy = iir::Cache::fill_and_flush;
+    break;
+  case proto::iir::Cache_CachePolicy_CP_Flush:
+    cachePolicy = iir::Cache::flush;
+    break;
+  case proto::iir::Cache_CachePolicy_CP_Local:
+    cachePolicy = iir::Cache::local;
+    break;
+  case proto::iir::Cache_CachePolicy_CP_Unknown:
+    cachePolicy = iir::Cache::unknown;
+    break;
+  default:
+    dawn_unreachable("unknown cache policy");
+  }
+  if(protoCache->has_interval()) {
+    interval = boost::make_optional(*makeInterval(protoCache->interval()));
+  }
+  if(protoCache->has_enclosingaccessinterval()) {
+    enclosingInverval = boost::make_optional(*makeInterval(protoCache->enclosingaccessinterval()));
+  }
+  if(protoCache->has_cachewindow()) {
+    cacheWindow = boost::make_optional(
+        iir::Cache::window{protoCache->cachewindow().plus(), protoCache->cachewindow().minus()});
+  }
+
+  return iir::Cache(cacheType, cachePolicy, ID, interval, enclosingInverval, cacheWindow);
+}
 
 static void computeInitialDerivedInfo(const std::shared_ptr<iir::StencilInstantiation>& target) {
   for(auto IDtoNamePair : target->getAccessIDToNameMap()) {
@@ -323,7 +439,13 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
       } else {
         protoMSS->set_looporder(proto::iir::MultiStage::Parallel);
       }
-      protoMSS->set_mulitstageid(multistages->getID());
+      protoMSS->set_multistageid(multistages->getID());
+      auto& protoMSSCacheMap = *protoMSS->mutable_multistagecaches();
+      for(const auto& IDCachePair : multistages->getCaches()) {
+        proto::iir::Cache protoCache;
+        setCache(&protoCache, IDCachePair.second);
+        protoMSSCacheMap.insert({IDCachePair.first, protoCache});
+      }
       // adding it's children
       for(const auto& stages : multistages->getChildren()) {
         auto protoStage = protoMSS->add_stages();
@@ -547,6 +669,10 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
       (IIRStencil)->insertChild(make_unique<iir::MultiStage>(*target, looporder));
 
       const auto& IIRMSS = (IIRStencil)->getChild(mssPos++);
+
+      for(const auto& IDCachePair : protoMSS.multistagecaches()) {
+        IIRMSS->getCaches().insert({IDCachePair.first, makeCache(&IDCachePair.second)});
+      }
 
       for(const auto& protoStage : protoMSS.stages()) {
         int doMethodPos = 0;

@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/ASTSerialier.h"
+#include "dawn/Support/ASTSerializer.h"
 #include <fstream>
 #include <google/protobuf/util/json_util.h>
 #include <list>
