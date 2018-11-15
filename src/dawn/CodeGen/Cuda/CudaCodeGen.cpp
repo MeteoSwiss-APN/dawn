@@ -82,7 +82,9 @@ static std::string kBegin(const std::string dom, iir::LoopOrderKind loopOrder,
   std::string lower = makeIntervalBound(dom, interval, iir::Interval::Bound::lower);
   std::string upper = makeIntervalBound(dom, interval, iir::Interval::Bound::upper);
 
-  return (loopOrder == iir::LoopOrderKind::LK_Backward) ? upper : lower;
+  return (loopOrder == iir::LoopOrderKind::LK_Backward)
+             ? makeIntervalBound(dom, interval, iir::Interval::Bound::upper)
+             : makeIntervalBound(dom, interval, iir::Interval::Bound::lower);
 }
 
 CudaCodeGen::CudaCodeGen(OptimizerContext* context) : CodeGen(context) {}
