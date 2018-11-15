@@ -35,7 +35,7 @@ std::string CodeGeneratorHelper::indexIteratorName(Array3i dims) {
 }
 
 bool CodeGeneratorHelper::useNormalIteratorForTmp(const std::unique_ptr<iir::MultiStage>& ms) {
-  for(const auto& stage : iterateIIROver<iir::Stage>(*ms)) {
+  for(const auto& stage : ms->getChildren()) {
     if(!stage->getExtents().isHorizontalPointwise()) {
       return false;
     }

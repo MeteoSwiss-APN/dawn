@@ -315,10 +315,8 @@ std::string MSCodeGen::makeKLoop(const std::string dom, iir::Interval const& int
 }
 
 bool MSCodeGen::intervalRequiresSync(const iir::Interval& interval, const iir::Stage& stage) const {
-  // if the stage is the last stage, it will require a sync (to ensure we sync before the write of
-  // a
-  // previous stage at the next k level), but only if the stencil is not pure vertical and ij
-  // caches
+  // if the stage is the last stage, it will require a sync (to ensure we sync before the write of a
+  // previous stage at the next k level), but only if the stencil is not pure vertical and ij caches
   // are used after the last sync
   int lastStageID = -1;
   // we identified the last stage that required a sync
@@ -369,9 +367,9 @@ MSCodeGen::buildKCacheProperties(const iir::Interval& interval,
   std::unordered_map<iir::Extents, std::vector<impl_::KCacheProperties>> kCacheProperty;
   auto intervalFields = ms_->computeFieldsAtInterval(interval);
 
-  for(const auto& cachePair : ms_->getCaches()) {
-    const int accessID = cachePair.first;
-    const auto& cache = cachePair.second;
+  for(const auto& IDCachePair : ms_->getCaches()) {
+    const int accessID = IDCachePair.first;
+    const auto& cache = IDCachePair.second;
 
     if(policy != cache.getCacheIOPolicy()) {
       continue;
