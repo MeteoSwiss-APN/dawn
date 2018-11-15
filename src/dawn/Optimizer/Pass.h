@@ -15,8 +15,10 @@
 #ifndef DAWN_OPTIMIZER_PASS_H
 #define DAWN_OPTIMIZER_PASS_H
 
+#include "dawn/Support/Assert.h"
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace dawn {
@@ -43,11 +45,15 @@ protected:
   /// Name of the passes this pass depends on (empty implies no dependency)
   std::vector<std::string> dependencies_;
   /// Categroy of the pass
-  const bool isDebug_;
+  std::unordered_map<std::string, bool> categorySet_;
 
 public:
-  Pass(const std::string& name) : Pass(name, false) {}
-  Pass(const std::string& name, bool isDebug) : name_(name), isDebug_(isDebug) {}
+  Pass(const std::string& name) : Pass(name, false, true) {}
+  Pass(const std::string& name, bool isDebug) : Pass(name, isDebug, true) {}
+  Pass(const std::string& name, bool isDebug, bool afterSerialization) : name_(name) {
+    categorySet_.insert({"Debug", isDebug});
+    categorySet_.insert({"Deserialization", afterSerialization});
+  }
   virtual ~Pass() {}
 
   /// @brief Run the the Pass
@@ -60,7 +66,11 @@ public:
   /// @brief Get the dependencies of this pass
   std::vector<std::string> getDependencies() const { return dependencies_; }
 
-  bool isDebug() const { return isDebug_; }
+  bool checkFlag(std::string flag) const {
+    DAWN_ASSERT_MSG(categorySet_.count(flag), "unsupported flag");
+    auto it = categorySet_.find(flag);
+    return it->second;
+  }
 };
 
 } // namespace dawn

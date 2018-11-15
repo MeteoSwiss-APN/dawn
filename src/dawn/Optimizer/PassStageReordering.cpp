@@ -48,6 +48,10 @@ bool PassStageReordering::run(
     case ReorderStrategy::RK_Partitioning:
       strategy = make_unique<ReoderStrategyPartitioning>();
       break;
+    case ReorderStrategy::RK_GeneticAlgorithm:
+      std::cout << "Stage Reordering for GA not implemented yet" << std::endl;
+      strategy = make_unique<ReoderStrategyGreedy>();
+      break;
     default:
       dawn_unreachable("invalid reorder strategy");
     }

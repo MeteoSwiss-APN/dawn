@@ -162,6 +162,22 @@ multiStageSplitterDebug() {
       };
 }
 
+std::function<void(iir::MultiStage::child_reverse_iterator_t&, iir::DependencyGraphAccesses&,
+                   iir::LoopOrderKind&, iir::LoopOrderKind&,
+                   std::deque<iir::MultiStage::SplitIndex>&, int, int, int&, const std::string&,
+                   const std::string&, const Options&)>
+multiStageSplitterGA() {
+  return
+      [&](iir::MultiStage::child_reverse_iterator_t& stageIt, iir::DependencyGraphAccesses& graph,
+          iir::LoopOrderKind& userSpecifiedLoopOrder, iir::LoopOrderKind& curLoopOrder,
+          std::deque<iir::MultiStage::SplitIndex>& splitterIndices, int stageIndex,
+          int multiStageIndex, int& numSplit, const std::string& StencilName,
+          const std::string& PassName, const Options& options) {
+        //          DAWN_ASSERT_MSG(false, "MulitStageSpliiter with GA not yet implemented");
+        std::cout << "MulitStageSpliiter with GA not yet implemented" << std::endl;
+      };
+}
+
 } // namespace
 
 bool PassMultiStageSplitter::run(
@@ -175,8 +191,10 @@ bool PassMultiStageSplitter::run(
 
   if(strategy_ == MultiStageSplittingStrategy::SS_Optimized) {
     multistagesplitter = multiStageSplitterOptimized();
-  } else {
+  } else if(strategy_ == SS_MaxCut) {
     multistagesplitter = multiStageSplitterDebug();
+  } else if(strategy_ == SS_GeneticAlgorithm) {
+    multistagesplitter = multiStageSplitterGA();
   }
 
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();

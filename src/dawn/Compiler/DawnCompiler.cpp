@@ -82,11 +82,12 @@ struct ComputeEditDistance<std::string> {
                                 : "";
   }
 };
+} // anonymous namespace
 
 /// @brief Report a diagnostic concering an invalid Option
 template <class T>
-DiagnosticsBuilder buildDiag(const std::string& option, const T& value, std::string reason,
-                             std::vector<T> possibleValues = std::vector<T>{}) {
+static DiagnosticsBuilder buildDiag(const std::string& option, const T& value, std::string reason,
+                                    std::vector<T> possibleValues = std::vector<T>{}) {
   DiagnosticsBuilder diag(DiagnosticsKind::Error, SourceLocation());
   diag << "invalid value '" << value << "' of option '" << option << "'";
 
@@ -103,7 +104,15 @@ DiagnosticsBuilder buildDiag(const std::string& option, const T& value, std::str
   return diag;
 }
 
-} // anonymous namespace
+static std::string remove_fileextension(std::string fullName, std::string extension) {
+  std::string truncation = "";
+  std::size_t pos = 0;
+  while((pos = fullName.find(extension)) != std::string::npos) {
+    truncation += fullName.substr(0, pos);
+    fullName.erase(0, pos + extension.length());
+  }
+  return truncation;
+}
 
 DawnCompiler::DawnCompiler(Options* options) : diagnostics_(make_unique<DiagnosticsEngine>()) {
   options_ = options ? make_unique<Options>(*options) : make_unique<Options>();
@@ -145,8 +154,21 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     mssSplitStrategy = MultistageSplitStrategy::SS_Optimized;
   }
 
+  using CachingStrategy = PassSetCaches::CachingStrategy;
+  CachingStrategy cachingStrategy = CachingStrategy::CS_MaximizeCaches;
+
   // -max-fields
   int maxFields = options_->MaxFieldsPerStencil;
+
+  // If we load serialized data, we set the strategy of multiple passes to do different things,
+  // mostly we want them to do genetic-algorithm stuff
+  if(options_->LoadSerialized != "") {
+    inlineStrategy = InlineStrategyKind::IK_GeneticAlgorithm;
+    mssSplitStrategy = MultistageSplitStrategy::SS_GeneticAlgorithm;
+    reorderStrategy = ReorderStrategyKind::RK_GeneticAlgorithm;
+    cachingStrategy = CachingStrategy::CS_GeneticAlgorithm;
+    options_->PassTmpToFunction = false;
+  }
 
   // Initialize optimizer
   std::unique_ptr<OptimizerContext> optimizer =
@@ -154,8 +176,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   PassManager& passManager = optimizer->getPassManager();
 
   // Setup pass interface
-  optimizer->checkAndPushBack<PassInlining>(
-      PassInlining::InlineStrategyKind::IK_ComputationOnTheFly);
+  optimizer->checkAndPushBack<PassInlining>(InlineStrategyKind::IK_NonReturnInlining);
   optimizer->checkAndPushBack<PassTemporaryFirstAccess>();
   optimizer->checkAndPushBack<PassFieldVersioning>();
   optimizer->checkAndPushBack<PassSSA>();
@@ -172,19 +193,22 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   optimizer->checkAndPushBack<PassTemporaryMerger>();
   optimizer->checkAndPushBack<PassTemporaryToStencilFunction>();
   optimizer->checkAndPushBack<PassSetNonTempCaches>();
-  optimizer->checkAndPushBack<PassSetCaches>();
+  optimizer->checkAndPushBack<PassSetCaches>(cachingStrategy);
   optimizer->checkAndPushBack<PassComputeStageExtents>();
   optimizer->checkAndPushBack<PassSetBoundaryCondition>();
   optimizer->checkAndPushBack<PassDataLocalityMetric>();
   optimizer->checkAndPushBack<PassSetSyncStage>();
-  if(inlineStrategy == PassInlining::InlineStrategyKind::IK_Precomputation)
-    optimizer->checkAndPushBack<PassInlining>(PassInlining::InlineStrategyKind::IK_Precomputation);
+  optimizer->checkAndPushBack<PassInlining>(inlineStrategy);
 
   DAWN_LOG(INFO) << "All the passes ran with the current command line arugments:";
   for(const auto& a : passManager.getPasses()) {
     DAWN_LOG(INFO) << a->getName();
   }
 
+  //==============================================================================================//
+  // WITTODOD: Remove this once testing is done and we are sure that erialization works as we want
+  // We need to remove before, after, the Options for it and the two if-blocks
+  //==============================================================================================//
   bool before = getOptions().SerializeBefore;
   bool after = getOptions().SerializeAfter;
   // Run optimization passes
@@ -200,6 +224,16 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
       output->dump();
       instantiation = output;
     }
+    if(options_->LoadSerialized != "") {
+      //==========================================================================================//
+      // Wittodo: change to byte as our default once debugging is done
+      //==========================================================================================//
+      auto output =
+          IIRSerializer::deserialize(options_->LoadSerialized, instantiation->getOptimizerContext(),
+                                     IIRSerializer::SerializationKind::SK_Json);
+      output->dump();
+      instantiation = output;
+    }
     DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `" << instantiation->getName()
                    << "` ...";
     if(!passManager.runAllPassesOnStecilInstantiation(instantiation))
@@ -208,6 +242,15 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
                    << "`";
 
     instantiation->dump();
+
+    if(options_->SerializeIIR) {
+      //==========================================================================================//
+      // Wittodo: change to byte as our default once debugging is done
+      //==========================================================================================//
+      IIRSerializer::serialize(
+          remove_fileextension(instantiation->getMetaData().fileName_, ".cpp") + ".iir",
+          instantiation, IIRSerializer::SerializationKind::SK_Json);
+    }
 
     if(after) {
       DAWN_LOG(INFO) << "Serilalize after all the passes are run";

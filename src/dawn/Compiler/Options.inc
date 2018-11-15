@@ -117,4 +117,8 @@ OPT(bool, SerializeBefore, false, "before", "",
     "Serialize before passes", "", false, true)
 OPT(bool, SerializeAfter, false, "after", "",
     "Serialize before code generation", "", false, true)
+OPT(std::string, LoadSerialized, "", "load-serialized", "",
+    "Load the serialized data from <file> and only run the passes enabled after deserialization", "<file>", true, false)
+OPT(bool, SerializeIIR, false, "serialize-iir", "",
+    "Serialize the Internal datastructure after Optimization", "", false, true)
 // clang-format on

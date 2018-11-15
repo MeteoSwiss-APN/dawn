@@ -28,7 +28,7 @@
 
 namespace dawn {
 
-PassStageSplitter::PassStageSplitter() : Pass("PassStageSplitter", true) {}
+PassStageSplitter::PassStageSplitter() : Pass("PassStageSplitter", true, true) {}
 
 bool PassStageSplitter::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {

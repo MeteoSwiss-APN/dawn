@@ -30,10 +30,22 @@ namespace dawn {
 /// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassSetCaches : public Pass {
 public:
-  PassSetCaches();
+  enum CachingStrategy {
+    CS_MaximizeCaches,  ///< Sets Caches
+    CS_GeneticAlgorithm ///< Runs on a Working IIR and does mating and mutation
+  };
+
+  PassSetCaches(CachingStrategy strategy);
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+
+private:
+  void setAllCaches(const std::shared_ptr<iir::StencilInstantiation>& instantiation);
+
+  void geneticAlgorithm(const std::shared_ptr<iir::StencilInstantiation>& instantiation);
+
+  CachingStrategy strategy_;
 };
 
 } // namespace dawn

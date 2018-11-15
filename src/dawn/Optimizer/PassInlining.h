@@ -36,9 +36,12 @@ public:
   /// @brief Inlining strategies
   enum InlineStrategyKind {
     IK_Unknown,
-    IK_None,                ///< Skip inlining pass
+    IK_None,              ///< Skip inlining pass
+    IK_NonReturnInlining, ///< We always inline non-returning stencilFunctions to help with general
+                          /// optimization while keeping readability high in the user-code
     IK_ComputationOnTheFly, ///< Favor computations on the fly
-    IK_Precomputation       ///< Favor precomputation when possible
+    IK_Precomputation,      ///< Favor precomputation when possible
+    IK_GeneticAlgorithm     ///< Runs on a Working IIR and does mating and mutation
   };
 
   PassInlining(InlineStrategyKind strategy);

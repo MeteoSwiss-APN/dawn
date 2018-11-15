@@ -502,6 +502,10 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
   if(strategy_ == IK_None)
     return true;
 
+  // This is not properly implemented yet
+  if(strategy_ == IK_ComputationOnTheFly)
+      return true;
+
   DetectInlineCandiates inliner(strategy_, stencilInstantiation);
 
   // Iterate all statements (top -> bottom)
