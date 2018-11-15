@@ -455,7 +455,7 @@ void GTCodeGen::generateStencilClasses(
                                                        intervalDefinitions.Levels.find(level)));
       int gt_offset =
           (level != sir::Interval::End) ? offset + 1 : (offset <= 0) ? offset - 1 : offset;
-      tss << "gridtools::level<" << gt_level << ", " << gt_offset << ", " << std::abs(gt_offset + 1)
+      tss << "gridtools::level<" << gt_level << ", " << gt_offset << ", " << std::abs(gt_offset) + 1
           << ">";
 
       return tss.str();
