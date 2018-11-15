@@ -606,9 +606,18 @@ void GTCodeGen::generateStencilClasses(
 
       // Add the MultiStage caches
       if(!multiStage.getCaches().empty()) {
+
+        std::vector<iir::Cache> ioCaches;
+        for(const auto& cacheP : multiStage.getCaches()) {
+          if((cacheP.second.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::bpfill) ||
+             (cacheP.second.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::epflush)) {
+            continue;
+          }
+          ioCaches.push_back(cacheP.second);
+        }
+
         ssMS << RangeToString(", ", "gridtools::define_caches(", "),")(
-            multiStage.getCaches(),
-            [&](const std::pair<int, iir::Cache>& AccessIDCachePair) -> std::string {
+            ioCaches, [&](const std::pair<int, iir::Cache>& AccessIDCachePair) -> std::string {
               auto const& cache = AccessIDCachePair.second;
               boost::optional<iir::Interval> cInterval;
 
@@ -631,13 +640,11 @@ void GTCodeGen::generateStencilClasses(
                       // IOPolicy: local, fill, bpfill, flush, epflush or flush_and_fill
                       c_gt() + "cache_io_policy::" + cache.getCacheIOPolicyAsString() +
                       // Interval: if IOPolicy is not local, we need to provide the interval
-                      (cache.getCacheIOPolicy() != iir::Cache::local ? ", " + intervalName
-                                                                     : std::string()) +
-                      // cache window if policy is bpfill
-                      ((cache.requiresWindow()) ? "," + cacheWindowToString(*(cache.getWindow()))
-                                                : std::string()) +
-                      // Placeholder which will be cached
-                      ">(p_" + stencilInstantiation->getNameFromAccessID(AccessIDCachePair.first) +
+                      (cache.getCacheIOPolicy() != iir::Cache::local
+                           ? ", " + intervalName
+                           : std::string()) + // Placeholder which will be cached
+                      ">(p_" +
+                      stencilInstantiation->getNameFromAccessID(cache.getCachedFieldAccessID()) +
                       "())")
                   .str();
             });

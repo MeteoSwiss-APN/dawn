@@ -132,9 +132,7 @@ void CodeGen::generateBCHeaders(std::vector<std::string>& ppDefines) const {
   }
 
   if(containBC) {
-    ppDefines.push_back("#ifdef __CUDACC__\n#include "
-                        "<boundary-conditions/apply_gpu.hpp>\n#else\n#include "
-                        "<boundary-conditions/apply.hpp>\n#endif\n");
+    ppDefines.push_back("<gridtools/boundary-conditions/boundary.hpp>\n");
   }
 }
 
