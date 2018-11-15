@@ -455,7 +455,8 @@ void GTCodeGen::generateStencilClasses(
                                                        intervalDefinitions.Levels.find(level)));
       int gt_offset =
           (level != sir::Interval::End) ? offset + 1 : (offset <= 0) ? offset - 1 : offset;
-      tss << "gridtools::level<" << gt_level << ", " << gt_offset << ">";
+      tss << "gridtools::level<" << gt_level << ", " << gt_offset << ", " << std::abs(gt_offset + 1)
+          << ">";
 
       return tss.str();
     };
@@ -775,8 +776,7 @@ void GTCodeGen::generateStencilClasses(
 
     if(!globalsMap.empty()) {
       StencilConstructor.addInit("m_globals(globals)");
-      StencilConstructor.addInit(
-          "m_globals_gp_(gridtools::clang::backend_t::make_global_parameter(m_globals))");
+      StencilConstructor.addInit("m_globals_gp_(backend_t::make_global_parameter(m_globals))");
     }
     StencilConstructor.startBody();
 
@@ -881,7 +881,7 @@ void GTCodeGen::generateStencilClasses(
 
     // This is a memory leak.. but nothing we can do ;)
     StencilConstructor.addStatement(
-        Twine("m_stencil = gridtools::make_computation<gridtools::clang::backend_t>(grid_, " +
+        Twine("m_stencil = gridtools::make_computation<backend_t>(grid_, " +
               RangeToString(", ", "", "")(DomainMapPlaceholders) +
               RangeToString(", ", ", ", ")")(makeComputation)));
     StencilConstructor.commit();
@@ -894,8 +894,7 @@ void GTCodeGen::generateStencilClasses(
 
       // update globals
       StencilClass.addMemberFunction("void", "update_globals")
-          .addStatement(
-              "gridtools::clang::backend_t::update_global_parameter(m_globals_gp_, m_globals)");
+          .addStatement("backend_t::update_global_parameter(m_globals_gp_, m_globals)");
     }
 
     // Generate stencil getter
