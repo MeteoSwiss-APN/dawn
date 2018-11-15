@@ -132,7 +132,7 @@ void CodeGen::generateBCHeaders(std::vector<std::string>& ppDefines) const {
   }
 
   if(containBC) {
-    ppDefines.push_back("<gridtools/boundary-conditions/boundary.hpp>\n");
+    ppDefines.push_back("#include <gridtools/boundary-conditions/boundary.hpp>\n");
   }
 }
 
