@@ -638,9 +638,6 @@ void GTCodeGen::generateStencilClasses(
                   // IOPolicy: local, fill, bpfill, flush, epflush or flush_and_fill
                   c_gt() + "cache_io_policy::" + cache.getCacheIOPolicyAsString() +
                   // Interval: if IOPolicy is not local, we need to provide the interval
-                  (cache.getCacheIOPolicy() != iir::Cache::local
-                       ? ", " + intervalName
-                       : std::string()) + // Placeholder which will be cached
                   ">(p_" +
                   stencilInstantiation->getNameFromAccessID(cache.getCachedFieldAccessID()) + "())")
               .str();
