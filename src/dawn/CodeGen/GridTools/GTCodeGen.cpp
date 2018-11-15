@@ -26,6 +26,7 @@
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringUtil.h"
 #include <boost/optional.hpp>
+#include <string>
 #include <unordered_map>
 
 namespace dawn {
@@ -617,8 +618,7 @@ void GTCodeGen::generateStencilClasses(
         }
 
         ssMS << RangeToString(", ", "gridtools::define_caches(", "),")(
-            ioCaches, [&](const std::pair<int, iir::Cache>& AccessIDCachePair) -> std::string {
-              auto const& cache = AccessIDCachePair.second;
+            ioCaches, [&](const iir::Cache& cache) -> std::string {
               boost::optional<iir::Interval> cInterval;
 
               if(cache.getCacheIOPolicy() == iir::Cache::fill) {
@@ -645,8 +645,7 @@ void GTCodeGen::generateStencilClasses(
                            : std::string()) + // Placeholder which will be cached
                       ">(p_" +
                       stencilInstantiation->getNameFromAccessID(cache.getCachedFieldAccessID()) +
-                      "())")
-                  .str();
+                      "())").str();
             });
       }
 
