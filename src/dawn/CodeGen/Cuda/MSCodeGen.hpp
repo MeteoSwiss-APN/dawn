@@ -31,19 +31,17 @@ class StencilInstantiation;
 namespace codegen {
 namespace cuda {
 
-namespace impl_ {
-struct KCacheProperties {
-  inline KCacheProperties(std::string name, int accessID, iir::Extent vertExtent)
-      : name_(name), accessID_(accessID), vertExtent_(vertExtent) {}
-  std::string name_;
-  int accessID_;
-  iir::Extent vertExtent_;
-};
-}
-
 /// @brief GridTools C++ code generation for the gridtools_clang DSL
 /// @ingroup cxxnaive
 class MSCodeGen {
+  struct KCacheProperties {
+    inline KCacheProperties(std::string name, int accessID, iir::Extent vertExtent)
+        : name_(name), accessID_(accessID), vertExtent_(vertExtent) {}
+    std::string name_;
+    int accessID_;
+    iir::Extent vertExtent_;
+  };
+
 private:
   std::stringstream& ss_;
   const std::unique_ptr<iir::MultiStage>& ms_;
@@ -115,7 +113,7 @@ private:
                             const std::unordered_map<int, Array3i>& fieldIndexMap) const;
   /// @brief computes additional information of kcaches for those kache with IO synchronization
   /// policy
-  std::unordered_map<iir::Extents, std::vector<impl_::KCacheProperties>>
+  std::unordered_map<iir::Extents, std::vector<KCacheProperties>>
   buildKCacheProperties(const iir::Interval& interval, const iir::Cache::CacheIOPolicy policy,
                         const bool checkStrictIntervalBound) const;
 
@@ -124,7 +122,7 @@ private:
   /// interval range where cache is declared
   void generateKCacheFlushBlockStatement(MemberFunction& cudaKernel, const iir::Interval& interval,
                                          const std::unordered_map<int, Array3i>& fieldIndexMap,
-                                         const impl_::KCacheProperties& kcacheProp, const int klev,
+                                         const KCacheProperties& kcacheProp, const int klev,
                                          std::string currentKLevel) const;
 
   /// @brief generates the kcache flush statement

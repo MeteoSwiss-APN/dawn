@@ -156,7 +156,7 @@ void MSCodeGen::generatePreFillKCaches(
   cudaKernel.addComment("Pre-fill of kcaches");
 
   auto intervalFields = ms_->computeFieldsAtInterval(interval);
-  std::unordered_map<iir::Extents, std::vector<impl_::KCacheProperties>> kCacheProperty;
+  std::unordered_map<iir::Extents, std::vector<KCacheProperties>> kCacheProperty;
 
   for(const auto& cachePair : ms_->getCaches()) {
     const int accessID = cachePair.first;
@@ -238,7 +238,7 @@ void MSCodeGen::generateFillKCaches(MemberFunction& cudaKernel, const iir::Inter
   cudaKernel.addComment("Center fill of kcaches");
 
   auto intervalFields = ms_->computeFieldsAtInterval(interval);
-  std::unordered_map<iir::Extents, std::vector<impl_::KCacheProperties>> kCacheProperty;
+  std::unordered_map<iir::Extents, std::vector<KCacheProperties>> kCacheProperty;
 
   for(const auto& cachePair : ms_->getCaches()) {
     const int accessID = cachePair.first;
@@ -359,12 +359,12 @@ bool MSCodeGen::intervalRequiresSync(const iir::Interval& interval, const iir::S
   return false;
 }
 
-std::unordered_map<iir::Extents, std::vector<impl_::KCacheProperties>>
+std::unordered_map<iir::Extents, std::vector<MSCodeGen::KCacheProperties>>
 MSCodeGen::buildKCacheProperties(const iir::Interval& interval,
                                  const iir::Cache::CacheIOPolicy policy,
                                  const bool checkStrictIntervalBound) const {
 
-  std::unordered_map<iir::Extents, std::vector<impl_::KCacheProperties>> kCacheProperty;
+  std::unordered_map<iir::Extents, std::vector<KCacheProperties>> kCacheProperty;
   auto intervalFields = ms_->computeFieldsAtInterval(interval);
 
   for(const auto& IDCachePair : ms_->getCaches()) {
@@ -418,8 +418,8 @@ std::string MSCodeGen::kBegin(const std::string dom, iir::LoopOrderKind loopOrde
 
 void MSCodeGen::generateKCacheFlushBlockStatement(
     MemberFunction& cudaKernel, const iir::Interval& interval,
-    const std::unordered_map<int, Array3i>& fieldIndexMap,
-    const impl_::KCacheProperties& kcacheProp, const int klev, std::string currentKLevel) const {
+    const std::unordered_map<int, Array3i>& fieldIndexMap, const KCacheProperties& kcacheProp,
+    const int klev, std::string currentKLevel) const {
 
   const int accessID = kcacheProp.accessID_;
   const auto& cache = ms_->getCache(accessID);
