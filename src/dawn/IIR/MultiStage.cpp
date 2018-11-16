@@ -129,6 +129,30 @@ iir::Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::Cac
       .first->second;
 }
 
+Interval::IntervalLevel MultiStage::lastLevelComputed(const int accessID) const {
+  Interval::IntervalLevel level;
+  bool init = false;
+  for(const auto& doMethod : iterateIIROver<DoMethod>(*this)) {
+    if(!doMethod->getFields().count(accessID)) {
+      continue;
+    }
+    const auto& interval = doMethod->getInterval();
+
+    if(loopOrder_ == LoopOrderKind::LK_Backward) {
+      if(interval.bound(Interval::Bound::lower) < level.bound() || !init) {
+        level = interval.lowerIntervalLevel();
+        init = true;
+      }
+    } else {
+      if(interval.bound(Interval::Bound::upper) > level.bound() || !init) {
+        level = interval.upperIntervalLevel();
+        init = true;
+      }
+    }
+  }
+  return level;
+}
+
 iir::Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
                                  int AccessID) {
   return derivedInfo_.caches_

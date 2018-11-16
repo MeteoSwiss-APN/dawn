@@ -285,6 +285,7 @@ struct IntervalDiff {
 };
 
 IntervalDiff distance(Interval::IntervalLevel f, Interval::IntervalLevel s);
+IntervalDiff distance(Interval f, Interval s, LoopOrderKind order);
 
 IntervalDiff operator+(IntervalDiff idiff, int val);
 bool operator==(const IntervalDiff& first, const IntervalDiff& second);

@@ -256,8 +256,9 @@ void CodeGen::addTmpStorageDeclaration(
   if(!(tempFields.empty())) {
     stencilClass.addMember(tmpMetadataTypename_, tmpMetadataName_);
 
-    for(auto field : tempFields)
+    for(auto field : tempFields) {
       stencilClass.addMember(tmpStorageTypename_, "m_" + (*field).second.Name);
+    }
   }
 }
 

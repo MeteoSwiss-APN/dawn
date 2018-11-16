@@ -76,7 +76,16 @@ bool CacheProperties::isIJCached(const int accessID) const {
 iir::Extent CacheProperties::getKCacheVertExtent(const int accessID) const {
   const auto& field = ms_->getField(accessID);
   auto vertExtent = field.getExtents()[2];
-  return vertExtent;
+  const auto& cache = ms_->getCache(accessID);
+  // in the case of epflush, the extent of the cache required is not determined only by the access
+  // pattern, but also by the window required to epflush
+  if(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::epflush) {
+    DAWN_ASSERT(cache.getWindow().is_initialized());
+    auto window = *(cache.getWindow());
+    return vertExtent.merge(iir::Extent{window.m_m, window.m_p});
+  } else {
+    return vertExtent;
+  }
 }
 
 int CacheProperties::getKCacheIndex(const int accessID, const int offset) const {
@@ -84,7 +93,7 @@ int CacheProperties::getKCacheIndex(const int accessID, const int offset) const 
 }
 
 bool CacheProperties::requiresFill(const iir::Cache& cache) {
-  return ((cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill)); // ||
+  return ((cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill));
 }
 
 int CacheProperties::getKCacheCenterOffset(const int accessID) const {
