@@ -586,7 +586,7 @@ void CudaCodeGen::generateStencilRunMethod(
 
     std::vector<std::string> strides = CodeGeneratorHelper::generateStrideArguments(
         nonTempFields, tempFieldsNonLocalCached, stencilInstantiation, multiStagePtr,
-        CodeGeneratorHelper::FunctionArgType::caller);
+        CodeGeneratorHelper::FunctionArgType::FT_Caller);
 
     DAWN_ASSERT(!strides.empty());
 

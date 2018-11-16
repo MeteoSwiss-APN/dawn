@@ -27,7 +27,7 @@ namespace cuda {
 
 class CodeGeneratorHelper {
 public:
-  enum class FunctionArgType { caller, callee };
+  enum class FunctionArgType { FT_Caller, FT_Callee };
 
   static std::string generateStrideName(int dim, Array3i fieldDims);
   static std::string indexIteratorName(Array3i dims);

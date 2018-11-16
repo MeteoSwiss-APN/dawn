@@ -625,7 +625,7 @@ void MSCodeGen::generateCudaKernelCode() {
 
   std::vector<std::string> strides = CodeGeneratorHelper::generateStrideArguments(
       nonTempFields, tempFieldsNonLocalCached, stencilInstantiation_, ms_,
-      CodeGeneratorHelper::FunctionArgType::callee);
+      CodeGeneratorHelper::FunctionArgType::FT_Callee);
 
   for(const auto strideArg : strides) {
     cudaKernel.addArg(strideArg);
