@@ -43,6 +43,8 @@ public:
   static std::array<std::string, 3> ijkfyOffset(const Array3i& offsets, bool isTemporary,
                                                 const Array3i iteratorDims);
 
+  /// @brief returns true if a normal ijk field iterator should be used for temporaries instead of a
+  /// custom iterator
   static bool useNormalIteratorForTmp(const std::unique_ptr<iir::MultiStage>& ms);
 
   /// @brief return true if the ms can be solved in parallel (in the vertical dimension)
@@ -52,6 +54,8 @@ public:
   static std::vector<iir::Interval>
   computePartitionOfIntervals(const std::unique_ptr<iir::MultiStage>& ms);
 
+  /// @brief computes the maximum extent required by all temporaries, which will be used for proper
+  /// allocation
   static iir::Extents computeTempMaxWriteExtent(iir::Stencil const& stencil);
 
   static std::vector<std::string> generateStrideArguments(
@@ -60,6 +64,7 @@ public:
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
       const std::unique_ptr<iir::MultiStage>& ms, CodeGeneratorHelper::FunctionArgType funArg);
 
+  /// @brief compose the cuda kernel name of a stencil instantiation
   static std::string
   buildCudaKernelName(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
                       const std::unique_ptr<iir::MultiStage>& ms);

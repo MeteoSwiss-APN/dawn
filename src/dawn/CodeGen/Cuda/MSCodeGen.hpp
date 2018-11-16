@@ -119,11 +119,15 @@ private:
   buildKCacheProperties(const iir::Interval& interval, const iir::Cache::CacheIOPolicy policy,
                         const bool checkStrictIntervalBound) const;
 
+  /// @brief generates the kcache flush statement, that can be guarded by a conitional to protect
+  /// for out-of-bounds or not, depending on the distance from the interval being executed to the
+  /// interval range where cache is declared
   void generateKCacheFlushBlockStatement(MemberFunction& cudaKernel, const iir::Interval& interval,
                                          const std::unordered_map<int, Array3i>& fieldIndexMap,
                                          const impl_::KCacheProperties& kcacheProp, const int klev,
                                          std::string currentKLevel) const;
 
+  /// @brief generates the kcache flush statement
   void generateKCacheFlushStatement(MemberFunction& cudaKernel,
                                     const std::unordered_map<int, Array3i>& fieldIndexMap,
                                     const int accessID, std::string cacheName,
@@ -132,6 +136,8 @@ private:
   /// @brief code generate slides of the values of a kcache in a ring-buffer manner
   void generateKCacheSlide(MemberFunction& cudaKernel, const iir::Interval& interval) const;
 
+  /// @brief generates a final kcache flush statement, i.e. it flushes all the levels at the end of
+  /// an interval iteration
   void generateFinalFlushKCaches(MemberFunction& cudaKernel, const iir::Interval& interval,
                                  const std::unordered_map<int, Array3i>& fieldIndexMap,
                                  const iir::Cache::CacheIOPolicy policy) const;

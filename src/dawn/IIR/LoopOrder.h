@@ -40,10 +40,14 @@ extern const char* loopOrderToString(LoopOrderKind loopOrder);
 /// @ingroup optimizer
 extern std::ostream& operator<<(std::ostream& os, LoopOrderKind loopOrder);
 
+/// @brief increments a level according to a loop order
 void increment(int& level, LoopOrderKind order);
 
+/// @brief increments a level with certain step according to a loop order
 void increment(int& lev, LoopOrderKind order, int step);
 
+/// @brief determines whether a level < limit, where the less than comparison is performed according
+/// to the loop order
 bool isLevelExecBeforeEqThan(int level, int limit, LoopOrderKind order);
 } // namespace iir
 } // namespace dawn
