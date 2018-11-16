@@ -18,13 +18,6 @@
 
 #define GT_VECTOR_LIMIT_SIZE 30
 
-#undef FUSION_MAX_VECTOR_SIZE
-#undef FUSION_MAX_MAP_SIZE
-#define FUSION_MAX_VECTOR_SIZE GT_VECTOR_LIMIT_SIZE
-#define FUSION_MAX_MAP_SIZE FUSION_MAX_VECTOR_SIZE
-#define BOOST_MPL_LIMIT_VECTOR_SIZE FUSION_MAX_VECTOR_SIZE
-#define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
-
 #include <gtest/gtest.h>
 #include "test/integration-test/CodeGen/Macros.hpp"
 #include "gridtools/clang/verify.hpp"

@@ -186,7 +186,8 @@ if(GTCLANG_HAS_GRIDTOOLS)
       nested_stencil_functions stencil_desc_ast boundary_condition boundary_condition_2 tridiagonal_solve
       kparallel_solver)
   # specific examples for cuda backend
-  set(cuda_codegen_examples intervals01 intervals02 intervals03 local_kcache kcache_fill kcache_fill_kparallel kcache_fill_backward)
+  set(cuda_codegen_examples intervals01 intervals02 intervals03 local_kcache kcache_fill kcache_fill_kparallel
+      kcache_fill_backward kcache_flush kcache_epflush)
 
   set(codegen_example_benchmarks)
 
@@ -195,6 +196,10 @@ if(GTCLANG_HAS_GRIDTOOLS)
   
   ADD_COMPILER_FLAG_TO_EXAMPLE("boundary_condition" "-max-fields=2")
   ADD_COMPILER_FLAG_TO_EXAMPLE("boundary_condition" "-fsplit-stencils")
+
+  ADD_COMPILER_FLAG_TO_EXAMPLE("intervals02" "-disable-kcaches")
+  ADD_COMPILER_FLAG_TO_EXAMPLE("intervals03" "-disable-kcaches")
+
   set(include_dirs)
   list(APPEND include_dirs "${CMAKE_SOURCE_DIR}/src")
   list(APPEND include_dirs "${GRIDTOOLS_INCLUDE_DIRS}")

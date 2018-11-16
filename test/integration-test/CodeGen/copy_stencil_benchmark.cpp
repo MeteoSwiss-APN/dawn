@@ -15,7 +15,6 @@
 //===------------------------------------------------------------------------------------------===//
 #define GRIDTOOLS_CLANG_GENERATED 1
 #define GRIDTOOLS_CLANG_HALO_EXTEND 3
-
 #define GT_VECTOR_LIMIT_SIZE 30
 
 #undef FUSION_MAX_VECTOR_SIZE

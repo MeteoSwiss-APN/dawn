@@ -88,7 +88,7 @@ else
   cmake ${CMAKE_ARGS} -DGTCLANG_BUILD_CUDA_EXAMPLES=OFF -DGTCLANG_BUILD_GT_CPU_EXAMPLES=ON -DGTCLANG_BUILD_GT_GPU_EXAMPLES=OFF ../
 fi
 
-nice make -j6 install VERBOSE=1
+nice make -j6 install
 
 # Run unittests
 ctest -VV -C ${build_type} --output-on-failure --force-new-ctest-process  
