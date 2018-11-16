@@ -80,7 +80,7 @@ std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(
         continue;
       if(!(usedDim++))
         continue;
-      if(funArg == CodeGeneratorHelper::FunctionArgType::caller) {
+      if(funArg == CodeGeneratorHelper::FunctionArgType::FT_Caller) {
         strides.push_back("m_" + fieldName + ".strides()[" + std::to_string(i) + "]");
       } else {
         strides.push_back("const int stride_" + CodeGeneratorHelper::indexIteratorName(dims) + "_" +
@@ -92,7 +92,7 @@ std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(
     auto firstTmpField = **(tempFields.begin());
     std::string fieldName =
         stencilInstantiation->getNameFromAccessID(firstTmpField.second.getAccessID());
-    if(funArg == CodeGeneratorHelper::FunctionArgType::caller) {
+    if(funArg == CodeGeneratorHelper::FunctionArgType::FT_Caller) {
       strides.push_back("m_" + fieldName + ".get_storage_info_ptr()->template begin<0>()," + "m_" +
                         fieldName + ".get_storage_info_ptr()->template begin<1>()," + "m_" +
                         fieldName + ".get_storage_info_ptr()->template stride<1>()," + "m_" +
