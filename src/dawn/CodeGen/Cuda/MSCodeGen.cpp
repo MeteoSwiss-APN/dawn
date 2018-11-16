@@ -829,7 +829,7 @@ void MSCodeGen::generateCudaKernelCode() {
                                   intervalDiffToString(kmin, "ksize - 1") + ")");
         }
       }
-      if(useTmpIndex_ && !kmin.null()) {
+      if(useTmpIndex_ && !kmin.null() && !((solveKLoopInParallel_) && firstInterval)) {
         cudaKernel.addComment("jump tmp iterators to match the beginning of next interval");
         cudaKernel.addStatement("idx_tmp += kstride_tmp*(" +
                                 intervalDiffToString(kmin, "ksize - 1") + ")");
