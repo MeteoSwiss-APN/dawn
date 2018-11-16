@@ -62,7 +62,6 @@ class MultiStage : public IIRNode<Stencil, MultiStage, Stage, impl::StdList> {
 
   DerivedInfo derivedInfo_;
 
-
 public:
   static constexpr const char* name = "MultiStage";
 
@@ -144,6 +143,9 @@ public:
 
   /// @brief Is the field given by the `AccessID` cached?
   bool isCached(int AccessID) const { return derivedInfo_.caches_.count(AccessID); }
+
+  /// @brief returns the last interval level that was computed by an accessID
+  Interval::IntervalLevel lastLevelComputed(const int accessID) const;
 
   /// @brief Get the intervals of the multi-stage
   std::unordered_set<Interval> getIntervals() const;
