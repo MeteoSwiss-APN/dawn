@@ -15,10 +15,9 @@
 ##===------------------------------------------------------------------------------------------===##
 
 include(yodaExportPackage)
-find_package(GridTools CONFIG QUIET)
+find_package(GridTools)
 
 if(GridTools_FOUND)
-  set(GRIDTOOLS_INCLUDE_DIRS "${GridTools_DIR}/include" "${GridTools_DIR}/include/gridtools")
   set(GTCLANG_HAS_GRIDTOOLS 1)
 endif()
 

@@ -1,6 +1,8 @@
 #!/bin/bash
 
-module load CMake
+module rm CMake
+module load /users/jenkins/easybuild/daint/haswell/modules/all/CMake/3.12.4
+
 module swap PrgEnv-cray PrgEnv-gnu
 module swap gcc/5.3.0
 module load cudatoolkit

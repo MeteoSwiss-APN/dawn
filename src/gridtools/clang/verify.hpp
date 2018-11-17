@@ -30,7 +30,7 @@ namespace clang {
 class verifier {
 public:
   verifier(const domain& dom,
-           double precision = std::is_same<gridtools::float_type, double>::value ? 1e-10 : 1e-6)
+           double precision = std::is_same<gridtools::clang::float_type, double>::value ? 1e-10 : 1e-6)
       : m_domain(dom), m_precision(precision) {}
 
   template <class FunctorType, class... StorageTypes>
@@ -50,17 +50,17 @@ public:
   template <class... StorageTypes>
   void fillMath(double a, double b, double c, double d, double e, double f,
                 StorageTypes&... storages) const {
-    const gridtools::float_type pi = std::atan(1.) * 4.;
+    const gridtools::clang::float_type pi = std::atan(1.) * 4.;
     for_each(
         [&](std::array<unsigned int, 3> dims, int i, int j, int k) {
           // 8,2,1.5,1.5,2,4
-          double x = i / (gridtools::float_type)dims[0];
-          double y = j / (gridtools::float_type)dims[1];
+          double x = i / (gridtools::clang::float_type)dims[0];
+          double y = j / (gridtools::clang::float_type)dims[1];
           return k * 10e-3 +
-                 (gridtools::float_type)a *
-                     ((gridtools::float_type)b + cos(pi * (x + (gridtools::float_type)c * y)) +
-                      sin((gridtools::float_type)d * pi * (x + (gridtools::float_type)e * y))) /
-                     (gridtools::float_type)f;
+                 (gridtools::clang::float_type)a *
+                     ((gridtools::clang::float_type)b + cos(pi * (x + (gridtools::clang::float_type)c * y)) +
+                      sin((gridtools::clang::float_type)d * pi * (x + (gridtools::clang::float_type)e * y))) /
+                     (gridtools::clang::float_type)f;
         },
         storages...);
   }

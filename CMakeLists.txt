@@ -102,7 +102,7 @@ foreach(package bash ccache Python3 Boost clang-format Clang Dawn OpenMP Threads
   endif()
 endforeach()
 
-if(DEFINED GridTools_DIR)
+if(DEFINED GRIDTOOLS_ROOT)
   include("AddGridTools")
   yoda_create_package_string(GridTools info)
   list(APPEND package_info ${info})
