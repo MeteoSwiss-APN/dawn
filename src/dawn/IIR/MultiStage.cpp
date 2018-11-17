@@ -172,8 +172,7 @@ boost::optional<Extents> MultiStage::computeExtents(const int accessID,
       extents = boost::make_optional(doMethod->getField(accessID).getExtents());
     }
   }
-  DAWN_ASSERT(extents.is_initialized());
-  return *extents;
+  return extents;
 }
 Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
                             int AccessID) {
