@@ -185,7 +185,7 @@ public:
   MultiInterval computeReadAccessInterval(int accessID) const;
 
   /// @brief computes the extents of an accessID field at a given interval
-  Extents computeExtents(const int accessID, const Interval& interval) const;
+  boost::optional<Extents> computeExtents(const int accessID, const Interval& interval) const;
 };
 
 } // namespace iir

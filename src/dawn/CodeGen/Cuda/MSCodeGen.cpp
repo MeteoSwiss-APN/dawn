@@ -180,7 +180,11 @@ void MSCodeGen::generatePreFillKCaches(
     // This is because extents in the inner part of the vertical iteration can be larger, and if
     // applied at the intervals on the bounds of the iteration, they can generate out of bound
     // accesses
-    iir::Extent vertExtent = ms_->computeExtents(accessID, interval)[2];
+    auto extents = ms_->computeExtents(accessID, interval);
+    if(!extents.is_initialized()) {
+      continue;
+    }
+    auto vertExtent = (*extents)[2];
 
     DAWN_ASSERT(cache.getInterval().is_initialized());
     const auto cacheInterval = *(cache.getInterval());

@@ -153,7 +153,8 @@ Interval::IntervalLevel MultiStage::lastLevelComputed(const int accessID) const 
   return level;
 }
 
-Extents MultiStage::computeExtents(const int accessID, const Interval& interval) const {
+boost::optional<Extents> MultiStage::computeExtents(const int accessID,
+                                                    const Interval& interval) const {
 
   boost::optional<Extents> extents;
   for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*this)) {
