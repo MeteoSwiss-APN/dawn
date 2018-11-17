@@ -92,6 +92,10 @@ private:
   void generateFillKCaches(MemberFunction& cudaKernel, const iir::Interval& interval,
                            const std::unordered_map<int, Array3i>& fieldIndexMap) const;
 
+  void generateKCacheFillStatement(MemberFunction& cudaKernel,
+                                   const std::unordered_map<int, Array3i>& fieldIndexMap,
+                                   const KCacheProperties& kcacheProp, int klev) const;
+
   static std::string makeIntervalBound(const std::string dom, iir::Interval const& interval,
                                        iir::Interval::Bound bound);
   std::string makeKLoop(const std::string dom, iir::Interval const& interval, bool kParallel);

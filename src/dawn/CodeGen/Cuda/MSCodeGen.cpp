@@ -150,6 +150,17 @@ std::string MSCodeGen::makeIntervalBound(const std::string dom, iir::Interval co
   }
 }
 
+void MSCodeGen::generateKCacheFillStatement(MemberFunction& cudaKernel,
+                                            const std::unordered_map<int, Array3i>& fieldIndexMap,
+                                            const KCacheProperties& kcacheProp, int klev) const {
+  std::stringstream ss;
+  CodeGeneratorHelper::generateFieldAccessDeref(
+      ss, ms_, stencilInstantiation_, kcacheProp.accessID_, fieldIndexMap, Array3i{0, 0, klev});
+  cudaKernel.addStatement(kcacheProp.name_ + "[" + std::to_string(cacheProperties_.getKCacheIndex(
+                                                       kcacheProp.accessID_, klev)) +
+                          "] =" + ss.str());
+}
+
 void MSCodeGen::generatePreFillKCaches(
     MemberFunction& cudaKernel, const iir::Interval& interval,
     const std::unordered_map<int, Array3i>& fieldIndexMap) const {
@@ -164,9 +175,19 @@ void MSCodeGen::generatePreFillKCaches(
     if(!CacheProperties::requiresFill(cache))
       continue;
 
+    // for a pre-fill operation, we dont take into account the extent over the whole ms (i.e. all
+    // intervals) but rather the current interval, which is the first in full vertical iteration.
+    // This is because extents in the inner part of the vertical iteration can be larger, and if
+    // applied at the intervals on the bounds of the iteration, they can generate out of bound
+    // accesses
+    auto extents = ms_->computeExtents(accessID, interval);
+    if(!extents.is_initialized()) {
+      continue;
+    }
+    auto vertExtent = (*extents)[2];
+
     DAWN_ASSERT(cache.getInterval().is_initialized());
     const auto cacheInterval = *(cache.getInterval());
-    auto vertExtent = cacheProperties_.getKCacheVertExtent(accessID);
 
     iir::Interval::Bound intervalBound = (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
                                              ? iir::Interval::Bound::upper
@@ -197,26 +218,12 @@ void MSCodeGen::generatePreFillKCaches(
               // the last level is skipped since it will be filled in a normal kcache fill method
               for(int klev = kcacheProp.vertExtent_.Minus + 1; klev <= kcacheProp.vertExtent_.Plus;
                   ++klev) {
-                std::stringstream ss;
-                CodeGeneratorHelper::generateFieldAccessDeref(ss, ms_, stencilInstantiation_,
-                                                              kcacheProp.accessID_, fieldIndexMap,
-                                                              Array3i{0, 0, klev});
-                cudaKernel.addStatement(
-                    kcacheProp.name_ + "[" +
-                    std::to_string(cacheProperties_.getKCacheIndex(kcacheProp.accessID_, klev)) +
-                    "] =" + ss.str());
+                generateKCacheFillStatement(cudaKernel, fieldIndexMap, kcacheProp, klev);
               }
             } else {
               for(int klev = kcacheProp.vertExtent_.Plus - 1; klev >= kcacheProp.vertExtent_.Minus;
                   --klev) {
-                std::stringstream ss;
-                CodeGeneratorHelper::generateFieldAccessDeref(ss, ms_, stencilInstantiation_,
-                                                              kcacheProp.accessID_, fieldIndexMap,
-                                                              Array3i{0, 0, klev});
-                cudaKernel.addStatement(
-                    kcacheProp.name_ + "[" +
-                    std::to_string(cacheProperties_.getKCacheIndex(kcacheProp.accessID_, klev)) +
-                    "] =" + ss.str());
+                generateKCacheFillStatement(cudaKernel, fieldIndexMap, kcacheProp, klev);
               }
             }
           }
@@ -429,6 +436,10 @@ void MSCodeGen::generateKCacheFlushBlockStatement(
                              ? kcacheProp.vertExtent_.Plus
                              : kcacheProp.vertExtent_.Minus;
 
+  // we can not flush the cache beyond the interval where the field is accessed, since that would
+  // write un-initialized data back into main memory of the field. If the distance of the
+  // computation interval to the interval limits of the cache is larger than the tail of the kcache
+  // being flushed, we need to insert a conditional guard
   auto dist = distance(cacheInterval, interval, ms_->getLoopOrder());
   if(dist.rangeType_ != iir::IntervalDiff::RangeType::literal ||
      std::abs(dist.value) >= std::abs(kcacheTailExtent)) {
@@ -829,7 +840,7 @@ void MSCodeGen::generateCudaKernelCode() {
                                   intervalDiffToString(kmin, "ksize - 1") + ")");
         }
       }
-      if(useTmpIndex_ && !kmin.null()) {
+      if(useTmpIndex_ && !kmin.null() && !((solveKLoopInParallel_) && firstInterval)) {
         cudaKernel.addComment("jump tmp iterators to match the beginning of next interval");
         cudaKernel.addStatement("idx_tmp += kstride_tmp*(" +
                                 intervalDiffToString(kmin, "ksize - 1") + ")");

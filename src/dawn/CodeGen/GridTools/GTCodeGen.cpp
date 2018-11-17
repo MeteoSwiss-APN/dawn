@@ -26,6 +26,7 @@
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringUtil.h"
 #include <boost/optional.hpp>
+#include <string>
 #include <unordered_map>
 
 namespace dawn {
@@ -455,7 +456,7 @@ void GTCodeGen::generateStencilClasses(
                                                        intervalDefinitions.Levels.find(level)));
       int gt_offset =
           (level != sir::Interval::End) ? offset + 1 : (offset <= 0) ? offset - 1 : offset;
-      tss << "gridtools::level<" << gt_level << ", " << gt_offset << ">";
+      tss << "gridtools::level<" << gt_level << ", " << gt_offset << ", 4>";
 
       return tss.str();
     };
@@ -605,41 +606,42 @@ void GTCodeGen::generateStencilClasses(
 
       // Add the MultiStage caches
       if(!multiStage.getCaches().empty()) {
-        ssMS << RangeToString(", ", "gridtools::define_caches(", "),")(
-            multiStage.getCaches(),
-            [&](const std::pair<int, iir::Cache>& AccessIDCachePair) -> std::string {
-              auto const& cache = AccessIDCachePair.second;
-              boost::optional<iir::Interval> cInterval;
 
-              if(cache.getCacheIOPolicy() == iir::Cache::fill) {
-                cInterval = cache.getEnclosingAccessedInterval();
-              } else {
-                cInterval = cache.getInterval();
-              }
-              DAWN_ASSERT(cInterval.is_initialized() ||
-                          cache.getCacheIOPolicy() == iir::Cache::local);
+        std::vector<iir::Cache> ioCaches;
+        for(const auto& cacheP : multiStage.getCaches()) {
+          if((cacheP.second.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::bpfill) ||
+             (cacheP.second.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::epflush)) {
+            continue;
+          }
+          ioCaches.push_back(cacheP.second);
+        }
 
-              std::string intervalName;
-              if(cInterval.is_initialized()) {
-                DAWN_ASSERT(intervalDefinitions.intervalProperties_.count(*(cInterval)));
-                intervalName = intervalDefinitions.intervalProperties_.find(*cInterval)->name_;
-              }
-              return (c_gt() + "cache<" +
-                      // Type: IJ or K
-                      c_gt() + cache.getCacheTypeAsString() + ", " +
-                      // IOPolicy: local, fill, bpfill, flush, epflush or flush_and_fill
-                      c_gt() + "cache_io_policy::" + cache.getCacheIOPolicyAsString() +
-                      // Interval: if IOPolicy is not local, we need to provide the interval
-                      (cache.getCacheIOPolicy() != iir::Cache::local ? ", " + intervalName
-                                                                     : std::string()) +
-                      // cache window if policy is bpfill
-                      ((cache.requiresWindow()) ? "," + cacheWindowToString(*(cache.getWindow()))
-                                                : std::string()) +
-                      // Placeholder which will be cached
-                      ">(p_" + stencilInstantiation->getNameFromAccessID(AccessIDCachePair.first) +
-                      "())")
-                  .str();
-            });
+        ssMS << RangeToString(", ", "gridtools::define_caches(",
+                              "),")(ioCaches, [&](const iir::Cache& cache) -> std::string {
+          boost::optional<iir::Interval> cInterval;
+
+          if(cache.getCacheIOPolicy() == iir::Cache::fill) {
+            cInterval = cache.getEnclosingAccessedInterval();
+          } else {
+            cInterval = cache.getInterval();
+          }
+          DAWN_ASSERT(cInterval.is_initialized() || cache.getCacheIOPolicy() == iir::Cache::local);
+
+          std::string intervalName;
+          if(cInterval.is_initialized()) {
+            DAWN_ASSERT(intervalDefinitions.intervalProperties_.count(*(cInterval)));
+            intervalName = intervalDefinitions.intervalProperties_.find(*cInterval)->name_;
+          }
+          return (c_gt() + "cache<" +
+                  // Type: IJ or K
+                  c_gt() + cache.getCacheTypeAsString() + ", " +
+                  // IOPolicy: local, fill, bpfill, flush, epflush or flush_and_fill
+                  c_gt() + "cache_io_policy::" + cache.getCacheIOPolicyAsString() +
+                  // Interval: if IOPolicy is not local, we need to provide the interval
+                  ">(p_" +
+                  stencilInstantiation->getNameFromAccessID(cache.getCachedFieldAccessID()) + "())")
+              .str();
+        });
       }
 
       std::size_t stageIdx = 0;
@@ -775,8 +777,7 @@ void GTCodeGen::generateStencilClasses(
 
     if(!globalsMap.empty()) {
       StencilConstructor.addInit("m_globals(globals)");
-      StencilConstructor.addInit(
-          "m_globals_gp_(gridtools::clang::backend_t::make_global_parameter(m_globals))");
+      StencilConstructor.addInit("m_globals_gp_(backend_t::make_global_parameter(m_globals))");
     }
     StencilConstructor.startBody();
 
@@ -881,7 +882,7 @@ void GTCodeGen::generateStencilClasses(
 
     // This is a memory leak.. but nothing we can do ;)
     StencilConstructor.addStatement(
-        Twine("m_stencil = gridtools::make_computation<gridtools::clang::backend_t>(grid_, " +
+        Twine("m_stencil = gridtools::make_computation<backend_t>(grid_, " +
               RangeToString(", ", "", "")(DomainMapPlaceholders) +
               RangeToString(", ", ", ", ")")(makeComputation)));
     StencilConstructor.commit();
@@ -894,8 +895,7 @@ void GTCodeGen::generateStencilClasses(
 
       // update globals
       StencilClass.addMemberFunction("void", "update_globals")
-          .addStatement(
-              "gridtools::clang::backend_t::update_global_parameter(m_globals_gp_, m_globals)");
+          .addStatement("backend_t::update_global_parameter(m_globals_gp_, m_globals)");
     }
 
     // Generate stencil getter
