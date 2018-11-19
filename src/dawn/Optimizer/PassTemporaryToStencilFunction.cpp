@@ -358,8 +358,13 @@ public:
       }
     }
 
+    auto asir = std::make_shared<SIR>();
+    for(const auto& sf : instantiation_->getStencilFunctions()) {
+      asir->StencilFunctions.push_back(sf);
+    }
+
     // recompute the list of <statement, accesses> pairs
-    StatementMapper statementMapper(nullptr, instantiation_.get(), stackTrace_,
+    StatementMapper statementMapper(asir, instantiation_.get(), stackTrace_,
                                     *(cloneStencilFun->getDoMethod()), interval_, fieldsMap,
                                     cloneStencilFun);
 
