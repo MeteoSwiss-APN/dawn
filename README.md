@@ -1,4 +1,4 @@
-Dawn <br/> <a target="_blank" href="http://semver.org">![Version][Version.Badge]</a> <a href='http://jenkins-mch.cscs.ch/job/dawn'><img src='http://jenkins-mch.cscs.ch/job/dawn/badge/icon'></a> <a target="_blank" href="https://opensource.org/licenses/MIT">![License: MIT][MIT.License]</a> <a target="_blank" href="https://MeteoSwiss-APN.github.io/dawn">![Documentation][Documentation.Badge]</a>
+Dawn <br/> <a target="_blank" href="http://semver.org">![Version][Version.Badge]</a> <a href='http://jenkins-mch.cscs.ch/view/PASCHA/job/dawn/'><img src='http://jenkins-mch.cscs.ch/view/PASCHA/job/dawn/badge/icon'></a> <a target="_blank" href="https://opensource.org/licenses/MIT">![License: MIT][MIT.License]</a> <a target="_blank" href="https://MeteoSwiss-APN.github.io/dawn">![Documentation][Documentation.Badge]</a>
 ====
 
 ## Introduction
