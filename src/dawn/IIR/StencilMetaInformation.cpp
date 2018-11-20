@@ -46,11 +46,11 @@ namespace iir {
 
 void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
   AccessIDToNameMap_ = origin.AccessIDToNameMap_;
-  for(auto pair : origin.ExprToAccessIDMap_) {
-    ExprToAccessIDMap_.emplace(pair.first->clone(), pair.second);
+  for(auto pair : origin.ExprIDToAccessIDMap_) {
+    ExprIDToAccessIDMap_.emplace(pair.first, pair.second);
   }
-  for(auto pair : origin.StmtToAccessIDMap_) {
-    StmtToAccessIDMap_.emplace(pair.first->clone(), pair.second);
+  for(auto pair : origin.StmtIDToAccessIDMap_) {
+    StmtIDToAccessIDMap_.emplace(pair.first, pair.second);
   }
   LiteralAccessIDToNameMap_ = origin.LiteralAccessIDToNameMap_;
   FieldAccessIDSet_ = origin.FieldAccessIDSet_;

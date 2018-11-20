@@ -19,7 +19,7 @@
 #include "dawn/Support/ArrayRef.h"
 #include "dawn/Support/SourceLocation.h"
 #include "dawn/Support/Type.h"
-#include "dawn/Support/VisitorHelpers.h"
+#include "dawn/Support/UIDGenerator.h"
 #include "dawn/Support/VisitorHelpers.h"
 #include <cstdint>
 #include <memory>
@@ -53,7 +53,8 @@ public:
 
   /// @name Constructor & Destructor
   /// @{
-  Expr(ExprKind kind, SourceLocation loc = SourceLocation()) : kind_(kind), loc_(loc) {}
+  Expr(ExprKind kind, SourceLocation loc = SourceLocation())
+      : kind_(kind), loc_(loc), expressionID_(UIDGenerator::getInstance()->get()) {}
   virtual ~Expr() {}
   /// @}
 
@@ -91,6 +92,11 @@ public:
   bool operator!=(const Expr& other) const { return !(*this == other); }
   /// @}
 
+  /// @brief get the expressionID for mapping
+  int getID() const { return expressionID_; }
+
+  void setID(int id) { expressionID_ = id; }
+
 protected:
   void assign(const Expr& other) {
     kind_ = other.kind_;
@@ -100,6 +106,8 @@ protected:
 protected:
   ExprKind kind_;
   SourceLocation loc_;
+
+  int expressionID_;
 };
 
 //===------------------------------------------------------------------------------------------===//
