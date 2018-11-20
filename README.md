@@ -3,7 +3,7 @@ Dawn <br/> <a target="_blank" href="http://semver.org">![Version][Version.Badge]
 
 ## Introduction
 
-
+[![Build Status](http://jenkins-mch.cscs.ch/view/PASCHA/job/clang-gridtools/badge/icon)](http://jenkins-mch.cscs.ch/view/PASCHA/job/clang-gridtools/)
 
 Dawn is a compiler toolchain for developing high-level DSLs for geophysical fluid dynamics models. A tutorial and reference documentation is provided [here](https://MeteoSwiss-APN.github.io/dawn) (or you can download it as a pdf [here](https://github.com/MeteoSwiss-APN/dawn/raw/gh-pages/dawn.pdf)).
 
