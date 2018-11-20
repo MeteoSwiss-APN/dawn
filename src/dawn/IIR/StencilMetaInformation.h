@@ -89,8 +89,8 @@ public:
   /// their AccessID. The surjection implies that multiple AST Nodes can have the same AccessID,
   /// which is the intended behaviour as we want to get the same ID back when we access the same
   /// field for example
-  std::unordered_map<std::shared_ptr<Expr>, int> ExprToAccessIDMap_;
-  std::unordered_map<std::shared_ptr<Stmt>, int> StmtToAccessIDMap_;
+  std::unordered_map<int, int> ExprIDToAccessIDMap_;
+  std::unordered_map<int, int> StmtIDToAccessIDMap_;
 
   /// Injection of AccessIDs of literal constant to their respective name (usually the name is just
   /// the string representation of the value). Note that literals always have *strictly* negative

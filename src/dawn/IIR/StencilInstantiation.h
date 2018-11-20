@@ -324,8 +324,7 @@ public:
   }
 
   /// @brief Get map which associates Stmts with AccessIDs
-  std::unordered_map<std::shared_ptr<Stmt>, int>& getStmtToAccessIDMap();
-  const std::unordered_map<std::shared_ptr<Stmt>, int>& getStmtToAccessIDMap() const;
+  std::unordered_map<int, int>& getStmtIDToAccessIDMap();
 
   /// @brief Get the AccessID-to-Name map
   std::unordered_map<std::string, int>& getNameToAccessIDMap();

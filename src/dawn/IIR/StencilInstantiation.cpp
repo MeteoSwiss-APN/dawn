@@ -102,13 +102,8 @@ void StencilInstantiation::removeAccessID(int AccessID) {
 
 const std::string StencilInstantiation::getName() const { return metadata_.stencilName_; }
 
-const std::unordered_map<std::shared_ptr<Stmt>, int>&
-StencilInstantiation::getStmtToAccessIDMap() const {
-  return metadata_.StmtToAccessIDMap_;
-}
-
-std::unordered_map<std::shared_ptr<Stmt>, int>& StencilInstantiation::getStmtToAccessIDMap() {
-  return metadata_.StmtToAccessIDMap_;
+std::unordered_map<int, int>& StencilInstantiation::getStmtIDToAccessIDMap() {
+  return metadata_.StmtIDToAccessIDMap_;
 }
 
 const std::string& StencilInstantiation::getNameFromAccessID(int AccessID) const {
@@ -120,24 +115,16 @@ const std::string& StencilInstantiation::getNameFromAccessID(int AccessID) const
 }
 
 void StencilInstantiation::mapExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID) {
-  metadata_.ExprToAccessIDMap_.emplace(expr, accessID);
+  metadata_.ExprIDToAccessIDMap_.emplace(expr->getID(), accessID);
 }
 
 void StencilInstantiation::eraseExprToAccessID(std::shared_ptr<Expr> expr) {
-  if(metadata_.ExprToAccessIDMap_.count(expr)) {
-    std::cout << "we try to insert an existing thing: " << ASTStringifer::toString(expr)
-              << std::endl;
-    std::cout << "here is the existing things: ";
-    for(auto b : metadata_.ExprToAccessIDMap_) {
-      std::cout << "expr: " << ASTStringifer::toString(b.first) << "ID: " << b.second << std::endl;
-    }
-  }
-  DAWN_ASSERT(metadata_.ExprToAccessIDMap_.count(expr));
-  metadata_.ExprToAccessIDMap_.erase(expr);
+  DAWN_ASSERT(metadata_.ExprIDToAccessIDMap_.count(expr->getID()));
+  metadata_.ExprIDToAccessIDMap_.erase(expr->getID());
 }
 
 void StencilInstantiation::mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt, int accessID) {
-  metadata_.StmtToAccessIDMap_.emplace(stmt, accessID);
+  metadata_.StmtIDToAccessIDMap_.emplace(stmt->getID(), accessID);
 }
 
 const std::string& StencilInstantiation::getNameFromLiteralAccessID(int AccessID) const {
@@ -331,7 +318,7 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
   DAWN_ASSERT_MSG(!varDeclStmt->isArray(), "cannot promote local array to temporary field");
 
   auto fieldAccessExpr = std::make_shared<FieldAccessExpr>(fieldname);
-  metadata_.ExprToAccessIDMap_.emplace(fieldAccessExpr, AccessID);
+  metadata_.ExprIDToAccessIDMap_.emplace(fieldAccessExpr->getID(), AccessID);
   auto assignmentExpr =
       std::make_shared<AssignmentExpr>(fieldAccessExpr, varDeclStmt->getInitList().front());
   auto exprStmt = std::make_shared<ExprStmt>(assignmentExpr);
@@ -342,7 +329,7 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
 
   // Remove the variable
   removeAccessID(AccessID);
-  metadata_.StmtToAccessIDMap_.erase(oldStatement->ASTStmt);
+  metadata_.StmtIDToAccessIDMap_.erase(oldStatement->ASTStmt->getID());
 
   // Register the field
   setAccessIDNamePairOfField(AccessID, fieldname, true);
@@ -407,7 +394,7 @@ void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil,
 
   // Register the variable
   setAccessIDNamePair(AccessID, varname);
-  metadata_.StmtToAccessIDMap_.emplace(varDeclStmt, AccessID);
+  metadata_.StmtIDToAccessIDMap_.emplace(varDeclStmt->getID(), AccessID);
 
   // Update the fields of the stages we modified
   stencil->updateFields(lifetime);
@@ -420,50 +407,27 @@ int StencilInstantiation::getAccessIDFromName(const std::string& name) const {
 }
 
 int StencilInstantiation::getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) const {
-  for(auto find : metadata_.ExprToAccessIDMap_) {
-    if(find.first->equals(expr)) {
-      return find.second;
-    }
-  }
-  DAWN_ASSERT_MSG(false, "Invalid Expr");
-  return -1;
+    auto it = metadata_.ExprIDToAccessIDMap_.find(expr->getID());
+    DAWN_ASSERT_MSG(it != metadata_.ExprIDToAccessIDMap_.end(), "Invalid Expr");
+    return it->second;
 }
 
 int StencilInstantiation::getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) const {
-  for(auto find : metadata_.StmtToAccessIDMap_) {
-    if(find.first->equals(stmt.get())) {
-      return find.second;
-    }
-  }
-  DAWN_ASSERT_MSG(false, "Invalid Stmt");
-  return -1;
-  //  auto it = metadata_.StmtToAccessIDMap_.find(stmt);
-  //  DAWN_ASSERT_MSG(it != metadata_.StmtToAccessIDMap_.end(), "Invalid Stmt");
-  //  return it->second;
+    auto it = metadata_.StmtIDToAccessIDMap_.find(stmt->getID());
+    DAWN_ASSERT_MSG(it != metadata_.StmtIDToAccessIDMap_.end(), "Invalid Stmt");
+    return it->second;
 }
 
 void StencilInstantiation::setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt,
                                              const int accessID) {
-  DAWN_ASSERT(metadata_.StmtToAccessIDMap_.count(stmt));
-  metadata_.StmtToAccessIDMap_[stmt] = accessID;
+  DAWN_ASSERT(metadata_.StmtIDToAccessIDMap_.count(stmt->getID()));
+  metadata_.StmtIDToAccessIDMap_[stmt->getID()] = accessID;
 }
 
 void StencilInstantiation::setAccessIDOfExpr(const std::shared_ptr<Expr>& expr,
                                              const int accessID) {
-  if(!metadata_.ExprToAccessIDMap_.count(expr)) {
-    std::cout << "we try to insert an existing thing: " << ASTStringifer::toString(expr)
-              << " <-> ID: " << accessID << std::endl;
-  } else {
-    std::cout << "we try to insert a new thing: " << ASTStringifer::toString(expr)
-              << " <-> ID: " << accessID << std::endl;
-  }
-  std::cout << "here is the existing things: \n";
-  for(auto b : metadata_.ExprToAccessIDMap_) {
-    std::cout << "expr: " << ASTStringifer::toString(b.first) << " <-> ID: " << b.second
-              << std::endl;
-  }
-  DAWN_ASSERT(metadata_.ExprToAccessIDMap_.count(expr));
-  metadata_.ExprToAccessIDMap_[expr] = accessID;
+  DAWN_ASSERT(metadata_.ExprIDToAccessIDMap_.count(expr->getID()));
+  metadata_.ExprIDToAccessIDMap_[expr->getID()] = accessID;
 }
 
 void StencilInstantiation::removeStencilFunctionInstantiation(

@@ -144,6 +144,9 @@ public:
   /// @brief Is the field given by the `AccessID` cached?
   bool isCached(int AccessID) const { return derivedInfo_.caches_.count(AccessID); }
 
+  /// @brief returns the last interval level that was computed by an accessID
+  Interval::IntervalLevel lastLevelComputed(const int accessID) const;
+
   /// @brief Get the intervals of the multi-stage
   std::unordered_set<Interval> getIntervals() const;
 
@@ -180,6 +183,9 @@ public:
 
   // TODO doc
   MultiInterval computeReadAccessInterval(int accessID) const;
+
+  /// @brief computes the extents of an accessID field at a given interval
+  boost::optional<Extents> computeExtents(const int accessID, const Interval& interval) const;
 };
 
 } // namespace iir

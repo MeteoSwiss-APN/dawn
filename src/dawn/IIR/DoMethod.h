@@ -110,6 +110,12 @@ public:
   /// The fields are computed during `DoMethod::update`.
   const std::unordered_map<int, Field>& getFields() const { return derivedInfo_.fields_; }
 
+  /// @brief field getter
+  const Field& getField(const int accessID) const {
+    DAWN_ASSERT(derivedInfo_.fields_.count(accessID));
+    return derivedInfo_.fields_.at(accessID);
+  }
+
   /// @brief Update the fields and global variables
   ///
   /// This recomputes the fields referenced in this Do-Method and computes

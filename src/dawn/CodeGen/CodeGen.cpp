@@ -132,9 +132,7 @@ void CodeGen::generateBCHeaders(std::vector<std::string>& ppDefines) const {
   }
 
   if(containBC) {
-    ppDefines.push_back("#ifdef __CUDACC__\n#include "
-                        "<boundary-conditions/apply_gpu.hpp>\n#else\n#include "
-                        "<boundary-conditions/apply.hpp>\n#endif\n");
+    ppDefines.push_back("#include <gridtools/boundary-conditions/boundary.hpp>\n");
   }
 }
 
@@ -258,8 +256,9 @@ void CodeGen::addTmpStorageDeclaration(
   if(!(tempFields.empty())) {
     stencilClass.addMember(tmpMetadataTypename_, tmpMetadataName_);
 
-    for(auto field : tempFields)
+    for(auto field : tempFields) {
       stencilClass.addMember(tmpStorageTypename_, "m_" + (*field).second.Name);
+    }
   }
 }
 

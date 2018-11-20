@@ -40,5 +40,35 @@ const char* loopOrderToString(LoopOrderKind loopOrder) {
       std::string("invalid loop order" + std::to_string((unsigned int)loopOrder)).c_str());
 }
 
+void increment(int& lev, LoopOrderKind order) {
+  if(order == LoopOrderKind::LK_Backward) {
+    lev--;
+  } else {
+    lev++;
+  }
+}
+
+void increment(int& lev, LoopOrderKind order, int step) {
+  if(order == LoopOrderKind::LK_Backward) {
+    lev -= step;
+  } else {
+    lev += step;
+  }
+}
+
+bool isLevelExecBeforeEqThan(int level, int limit, LoopOrderKind order) {
+  if(order == LoopOrderKind::LK_Backward) {
+    if(level >= limit) {
+      return true;
+    }
+    return false;
+  } else {
+    if(level <= limit) {
+      return true;
+    }
+    return false;
+  }
+}
+
 } // namespace iir
 } // namespace dawn

@@ -129,8 +129,53 @@ iir::Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::Cac
       .first->second;
 }
 
-iir::Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
-                                 int AccessID) {
+Interval::IntervalLevel MultiStage::lastLevelComputed(const int accessID) const {
+  Interval::IntervalLevel level;
+  bool init = false;
+  for(const auto& doMethod : iterateIIROver<DoMethod>(*this)) {
+    if(!doMethod->getFields().count(accessID)) {
+      continue;
+    }
+    const auto& interval = doMethod->getInterval();
+
+    if(loopOrder_ == LoopOrderKind::LK_Backward) {
+      if(interval.bound(Interval::Bound::lower) < level.bound() || !init) {
+        level = interval.lowerIntervalLevel();
+        init = true;
+      }
+    } else {
+      if(interval.bound(Interval::Bound::upper) > level.bound() || !init) {
+        level = interval.upperIntervalLevel();
+        init = true;
+      }
+    }
+  }
+  return level;
+}
+
+boost::optional<Extents> MultiStage::computeExtents(const int accessID,
+                                                    const Interval& interval) const {
+
+  boost::optional<Extents> extents;
+  for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*this)) {
+    if(!doMethod->getInterval().overlaps(interval)) {
+      continue;
+    }
+
+    if(!doMethod->getFields().count(accessID)) {
+      continue;
+    }
+
+    if(extents.is_initialized()) {
+      extents->merge(doMethod->getField(accessID).getExtents());
+    } else {
+      extents = boost::make_optional(doMethod->getField(accessID).getExtents());
+    }
+  }
+  return extents;
+}
+Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
+                            int AccessID) {
   return derivedInfo_.caches_
       .emplace(AccessID,
                iir::Cache(type, policy, AccessID, boost::optional<Interval>(),

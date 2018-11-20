@@ -18,6 +18,7 @@
 #include "dawn/IIR/Cache.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/Array.h"
+#include "dawn/Support/IndexRange.h"
 #include <string>
 
 namespace dawn {
@@ -26,6 +27,8 @@ namespace cuda {
 
 class CodeGeneratorHelper {
 public:
+  enum class FunctionArgType { FT_Caller, FT_Callee };
+
   static std::string generateStrideName(int dim, Array3i fieldDims);
   static std::string indexIteratorName(Array3i dims);
   static void
@@ -40,12 +43,31 @@ public:
   static std::array<std::string, 3> ijkfyOffset(const Array3i& offsets, bool isTemporary,
                                                 const Array3i iteratorDims);
 
+  /// @brief returns true if a normal ijk field iterator should be used for temporaries instead of a
+  /// custom iterator
+  static bool useNormalIteratorForTmp(const std::unique_ptr<iir::MultiStage>& ms);
+
   /// @brief return true if the ms can be solved in parallel (in the vertical dimension)
   static bool solveKLoopInParallel(const std::unique_ptr<iir::MultiStage>& ms);
 
   /// @brief computes the partition of all the intervals used within a multi-stage
   static std::vector<iir::Interval>
   computePartitionOfIntervals(const std::unique_ptr<iir::MultiStage>& ms);
+
+  /// @brief computes the maximum extent required by all temporaries, which will be used for proper
+  /// allocation
+  static iir::Extents computeTempMaxWriteExtent(iir::Stencil const& stencil);
+
+  static std::vector<std::string> generateStrideArguments(
+      const IndexRange<const std::unordered_map<int, iir::Field>>& nonTempFields,
+      const IndexRange<const std::unordered_map<int, iir::Field>>& tempFields,
+      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+      const std::unique_ptr<iir::MultiStage>& ms, CodeGeneratorHelper::FunctionArgType funArg);
+
+  /// @brief compose the cuda kernel name of a stencil instantiation
+  static std::string
+  buildCudaKernelName(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+                      const std::unique_ptr<iir::MultiStage>& ms);
 };
 
 } // namespace cuda
