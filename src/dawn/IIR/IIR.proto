@@ -200,21 +200,21 @@ message VariableVersions {
     map<int32, int32> versionIDToOriginalID = 3;
 }
 
-// @brief Helper Sturcture as maps with custom messages as the key do not work in Protobuf
-//
-// Holds the information of wich ID belongs to a given Stmt
-message StmtIDPair {
-    dawn.proto.statements.Stmt stmt = 1;
-    int32 IDs = 2;
-}
+//// @brief Helper Sturcture as maps with custom messages as the key do not work in Protobuf
+////
+//// Holds the information of wich ID belongs to a given Stmt
+//message StmtIDPair {
+//    dawn.proto.statements.Stmt stmt = 1;
+//    int32 IDs = 2;
+//}
 
-// @brief Helper Sturcture as maps with custom messages as the key do not work in Protobuf
-//
-// Holds the information of wich ID belongs to a given Expr
-message ExprIDPair {
-    dawn.proto.statements.Expr expr = 1;
-    int32 IDs = 2;
-}
+//// @brief Helper Sturcture as maps with custom messages as the key do not work in Protobuf
+////
+//// Holds the information of wich ID belongs to a given Expr
+//message ExprIDPair {
+//    dawn.proto.statements.Expr expr = 1;
+//    int32 IDs = 2;
+//}
 
 // @brief Helper Strucute to make sure, Arrays with fixed length are not made too big
 message Array3i {
@@ -251,10 +251,10 @@ message StencilMetaInfo {
     map<int32, string> accessIDToName = 1;
 
     // Surjection of AST Nodes, Stmt (VarDeclStmt) to their AccessID
-    repeated ExprIDPair exprToAccessID = 2;
+    map<int32, int32> exprIDToAccessID = 2;
 
     // Surjection of AST Nodes, Expr (FieldAccessExpr or VarAccessExpr) to their AccessID
-    repeated StmtIDPair stmtToAccessID = 3;
+    map<int32, int32> stmtIDToAccessID = 3;
 
     // Injection of AccessIDs of literal constant to their respective name
     map<int32, string> literalIDToName = 4;

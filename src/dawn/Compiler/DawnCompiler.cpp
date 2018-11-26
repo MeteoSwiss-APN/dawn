@@ -255,11 +255,11 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     if(after) {
       DAWN_LOG(INFO) << "Serilalize after all the passes are run";
       IIRSerializer::serialize("after.file", instantiation,
-                               IIRSerializer::SerializationKind::SK_Byte);
+                               IIRSerializer::SerializationKind::SK_Json);
 
       DAWN_LOG(INFO) << "And reload it";
       auto output = IIRSerializer::deserialize("after.file", instantiation->getOptimizerContext(),
-                                               IIRSerializer::SerializationKind::SK_Byte);
+                                               IIRSerializer::SerializationKind::SK_Json);
       output->dump();
       instantiation = output;
     }

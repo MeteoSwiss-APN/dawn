@@ -101,6 +101,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<BlockStmt>& stmt) {
   }
 
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
+  protoStmt->set_id(stmt->getID());
 }
 
 void ProtoStmtBuilder::visit(const std::shared_ptr<ExprStmt>& stmt) {
@@ -110,6 +111,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<ExprStmt>& stmt) {
   currentExprProto_.pop();
 
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
+  protoStmt->set_id(stmt->getID());
 }
 
 void ProtoStmtBuilder::visit(const std::shared_ptr<ReturnStmt>& stmt) {
@@ -120,6 +122,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<ReturnStmt>& stmt) {
   currentExprProto_.pop();
 
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
+  protoStmt->set_id(stmt->getID());
 }
 
 void ProtoStmtBuilder::visit(const std::shared_ptr<VarDeclStmt>& stmt) {
@@ -144,6 +147,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<VarDeclStmt>& stmt) {
   }
 
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
+  protoStmt->set_id(stmt->getID());
 }
 
 void ProtoStmtBuilder::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) {
@@ -169,6 +173,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt
                                           : dawn::proto::statements::VerticalRegion::Forward);
 
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
+  protoStmt->set_id(stmt->getID());
 }
 
 void ProtoStmtBuilder::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
@@ -194,6 +199,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
   }
 
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
+  protoStmt->set_id(stmt->getID());
 }
 
 void ProtoStmtBuilder::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
@@ -209,6 +215,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& s
   }
 
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
+  protoStmt->set_id(stmt->getID());
 }
 
 void ProtoStmtBuilder::visit(const std::shared_ptr<IfStmt>& stmt) {
@@ -228,6 +235,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<IfStmt>& stmt) {
   currentStmtProto_.pop();
 
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
+  protoStmt->set_id(stmt->getID());
 }
 
 void ProtoStmtBuilder::visit(const std::shared_ptr<UnaryOperator>& expr) {
@@ -239,6 +247,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<UnaryOperator>& expr) {
   currentExprProto_.pop();
 
   setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());
+  protoExpr->set_id(expr->getID());
 }
 
 void ProtoStmtBuilder::visit(const std::shared_ptr<BinaryOperator>& expr) {
@@ -254,6 +263,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<BinaryOperator>& expr) {
   currentExprProto_.pop();
 
   setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());
+  protoExpr->set_id(expr->getID());
 }
 
 void ProtoStmtBuilder::visit(const std::shared_ptr<AssignmentExpr>& expr) {
@@ -269,6 +279,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<AssignmentExpr>& expr) {
   currentExprProto_.pop();
 
   setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());
+  protoExpr->set_id(expr->getID());
 }
 
 void ProtoStmtBuilder::visit(const std::shared_ptr<TernaryOperator>& expr) {
@@ -287,6 +298,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<TernaryOperator>& expr) {
   currentExprProto_.pop();
 
   setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());
+  protoExpr->set_id(expr->getID());
 }
 
 void ProtoStmtBuilder::visit(const std::shared_ptr<FunCallExpr>& expr) {
@@ -300,6 +312,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<FunCallExpr>& expr) {
   }
 
   setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());
+  protoExpr->set_id(expr->getID());
 }
 
 void ProtoStmtBuilder::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
@@ -313,6 +326,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
   }
 
   setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());
+  protoExpr->set_id(expr->getID());
 }
 
 void ProtoStmtBuilder::visit(const std::shared_ptr<StencilFunArgExpr>& expr) {
@@ -326,6 +340,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<StencilFunArgExpr>& expr) {
   protoExpr->set_argument_index(expr->getArgumentIndex());
 
   setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());
+  protoExpr->set_id(expr->getID());
 }
 
 void ProtoStmtBuilder::visit(const std::shared_ptr<VarAccessExpr>& expr) {
@@ -341,6 +356,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<VarAccessExpr>& expr) {
   }
 
   setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());
+  protoExpr->set_id(expr->getID());
 }
 
 void ProtoStmtBuilder::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
@@ -360,6 +376,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   protoExpr->set_negate_offset(expr->negateOffset());
 
   setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());
+  protoExpr->set_id(expr->getID());
 }
 
 void ProtoStmtBuilder::visit(const std::shared_ptr<LiteralAccessExpr>& expr) {
@@ -369,6 +386,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<LiteralAccessExpr>& expr) {
   setBuiltinType(protoExpr->mutable_type(), expr->getBuiltinType());
 
   setLocation(protoExpr->mutable_loc(), expr->getSourceLocation());
+  protoExpr->set_id(expr->getID());
 }
 
 void setAST(proto::statements::AST* astProto, const AST* ast) {
@@ -451,29 +469,41 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto) {
   switch(expressionProto.expr_case()) {
   case proto::statements::Expr::kUnaryOperator: {
     const auto& exprProto = expressionProto.unary_operator();
-    return std::make_shared<UnaryOperator>(makeExpr(exprProto.operand()), exprProto.op(),
-                                           makeLocation(exprProto));
+    auto expr = std::make_shared<UnaryOperator>(makeExpr(exprProto.operand()), exprProto.op(),
+                                                makeLocation(exprProto));
+    expr->setID(exprProto.id());
+    return expr;
   }
   case proto::statements::Expr::kBinaryOperator: {
     const auto& exprProto = expressionProto.binary_operator();
-    return std::make_shared<BinaryOperator>(makeExpr(exprProto.left()), exprProto.op(),
-                                            makeExpr(exprProto.right()), makeLocation(exprProto));
+    auto expr =
+        std::make_shared<BinaryOperator>(makeExpr(exprProto.left()), exprProto.op(),
+                                         makeExpr(exprProto.right()), makeLocation(exprProto));
+    expr->setID(exprProto.id());
+    return expr;
   }
   case proto::statements::Expr::kAssignmentExpr: {
     const auto& exprProto = expressionProto.assignment_expr();
-    return std::make_shared<AssignmentExpr>(makeExpr(exprProto.left()), makeExpr(exprProto.right()),
-                                            exprProto.op(), makeLocation(exprProto));
+    auto expr =
+        std::make_shared<AssignmentExpr>(makeExpr(exprProto.left()), makeExpr(exprProto.right()),
+                                         exprProto.op(), makeLocation(exprProto));
+    expr->setID(exprProto.id());
+    return expr;
   }
   case proto::statements::Expr::kTernaryOperator: {
     const auto& exprProto = expressionProto.ternary_operator();
-    return std::make_shared<TernaryOperator>(makeExpr(exprProto.cond()), makeExpr(exprProto.left()),
-                                             makeExpr(exprProto.right()), makeLocation(exprProto));
+    auto expr =
+        std::make_shared<TernaryOperator>(makeExpr(exprProto.cond()), makeExpr(exprProto.left()),
+                                          makeExpr(exprProto.right()), makeLocation(exprProto));
+    expr->setID(exprProto.id());
+    return expr;
   }
   case proto::statements::Expr::kFunCallExpr: {
     const auto& exprProto = expressionProto.fun_call_expr();
     auto expr = std::make_shared<FunCallExpr>(exprProto.callee(), makeLocation(exprProto));
     for(const auto& argProto : exprProto.arguments())
       expr->getArguments().emplace_back(makeExpr(argProto));
+    expr->setID(exprProto.id());
     return expr;
   }
   case proto::statements::Expr::kStencilFunCallExpr: {
@@ -481,6 +511,7 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto) {
     auto expr = std::make_shared<StencilFunCallExpr>(exprProto.callee(), makeLocation(exprProto));
     for(const auto& argProto : exprProto.arguments())
       expr->getArguments().emplace_back(makeExpr(argProto));
+    expr->setID(exprProto.id());
     return expr;
   }
   case proto::statements::Expr::kStencilFunArgExpr: {
@@ -506,8 +537,10 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto) {
     }
     offset = exprProto.offset();
     argumentIndex = exprProto.argument_index();
-    return std::make_shared<StencilFunArgExpr>(direction, offset, argumentIndex,
-                                               makeLocation(exprProto));
+    auto expr = std::make_shared<StencilFunArgExpr>(direction, offset, argumentIndex,
+                                                    makeLocation(exprProto));
+    expr->setID(exprProto.id());
+    return expr;
   }
   case proto::statements::Expr::kVarAccessExpr: {
     const auto& exprProto = expressionProto.var_access_expr();
@@ -515,6 +548,7 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto) {
         exprProto.name(), exprProto.has_index() ? makeExpr(exprProto.index()) : nullptr,
         makeLocation(exprProto));
     expr->setIsExternal(exprProto.is_external());
+    expr->setID(exprProto.id());
     return expr;
   }
   case proto::statements::Expr::kFieldAccessExpr: {
@@ -553,13 +587,17 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto) {
                 argumentMap.begin());
     }
 
-    return std::make_shared<FieldAccessExpr>(name, offset, argumentMap, argumentOffset,
-                                             negateOffset, makeLocation(exprProto));
+    auto expr = std::make_shared<FieldAccessExpr>(name, offset, argumentMap, argumentOffset,
+                                                  negateOffset, makeLocation(exprProto));
+    expr->setID(exprProto.id());
+    return expr;
   }
   case proto::statements::Expr::kLiteralAccessExpr: {
     const auto& exprProto = expressionProto.literal_access_expr();
-    return std::make_shared<LiteralAccessExpr>(
+    auto expr = std::make_shared<LiteralAccessExpr>(
         exprProto.value(), makeBuiltinTypeID(exprProto.type()), makeLocation(exprProto));
+    expr->setID(exprProto.id());
+    return expr;
   }
   case proto::statements::Expr::EXPR_NOT_SET:
   default:
@@ -576,16 +614,21 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto) {
 
     for(const auto& s : stmtProto.statements())
       stmt->push_back(makeStmt(s));
+    stmt->setID(stmtProto.id());
 
     return stmt;
   }
   case proto::statements::Stmt::kExprStmt: {
     const auto& stmtProto = statementProto.expr_stmt();
-    return std::make_shared<ExprStmt>(makeExpr(stmtProto.expr()), makeLocation(stmtProto));
+    auto stmt = std::make_shared<ExprStmt>(makeExpr(stmtProto.expr()), makeLocation(stmtProto));
+    stmt->setID(stmtProto.id());
+    return stmt;
   }
   case proto::statements::Stmt::kReturnStmt: {
     const auto& stmtProto = statementProto.return_stmt();
-    return std::make_shared<ReturnStmt>(makeExpr(stmtProto.expr()), makeLocation(stmtProto));
+    auto stmt = std::make_shared<ReturnStmt>(makeExpr(stmtProto.expr()), makeLocation(stmtProto));
+    stmt->setID(stmtProto.id());
+    return stmt;
   }
   case proto::statements::Stmt::kVarDeclStmt: {
     const auto& stmtProto = statementProto.var_decl_stmt();
@@ -603,8 +646,11 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto) {
     Type type = typeProto.name().empty() ? Type(makeBuiltinTypeID(typeProto.builtin_type()), cvQual)
                                          : Type(typeProto.name(), cvQual);
 
-    return std::make_shared<VarDeclStmt>(type, stmtProto.name(), stmtProto.dimension(),
-                                         stmtProto.op().c_str(), initList, makeLocation(stmtProto));
+    auto stmt =
+        std::make_shared<VarDeclStmt>(type, stmtProto.name(), stmtProto.dimension(),
+                                      stmtProto.op().c_str(), initList, makeLocation(stmtProto));
+    stmt->setID(stmtProto.id());
+    return stmt;
   }
   case proto::statements::Stmt::kStencilCallDeclStmt: {
     auto metaloc = makeLocation(statementProto.stencil_call_decl_stmt());
@@ -615,7 +661,9 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto) {
     for(const auto& arg : stmtProto.stencil_call().arguments()) {
       call->Args.push_back(makeField(arg));
     }
-    return std::make_shared<StencilCallDeclStmt>(call, metaloc);
+    auto stmt = std::make_shared<StencilCallDeclStmt>(call, metaloc);
+    stmt->setID(stmtProto.id());
+    return stmt;
   }
   case proto::statements::Stmt::kVerticalRegionDeclStmt: {
     const auto& stmtProto = statementProto.vertical_region_decl_stmt();
@@ -635,7 +683,9 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto) {
     auto ast = makeAST(stmtProto.vertical_region().ast());
     std::shared_ptr<sir::VerticalRegion> verticalRegion =
         std::make_shared<sir::VerticalRegion>(ast, interval, looporder, loc);
-    return std::make_shared<VerticalRegionDeclStmt>(verticalRegion, loc);
+    auto stmt = std::make_shared<VerticalRegionDeclStmt>(verticalRegion, loc);
+    stmt->setID(stmtProto.id());
+    return stmt;
   }
   case proto::statements::Stmt::kBoundaryConditionDeclStmt: {
     const auto& stmtProto = statementProto.boundary_condition_decl_stmt();
@@ -643,14 +693,17 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto) {
         std::make_shared<BoundaryConditionDeclStmt>(stmtProto.functor(), makeLocation(stmtProto));
     for(const auto& fieldProto : stmtProto.fields())
       stmt->getFields().emplace_back(makeField(fieldProto));
+    stmt->setID(stmtProto.id());
     return stmt;
   }
   case proto::statements::Stmt::kIfStmt: {
     const auto& stmtProto = statementProto.if_stmt();
-    return std::make_shared<IfStmt>(
+    auto stmt = std::make_shared<IfStmt>(
         makeStmt(stmtProto.cond_part()), makeStmt(stmtProto.then_part()),
         stmtProto.has_else_part() ? makeStmt(stmtProto.else_part()) : nullptr,
         makeLocation(stmtProto));
+    stmt->setID(stmtProto.id());
+    return stmt;
   }
   case proto::statements::Stmt::STMT_NOT_SET:
   default:

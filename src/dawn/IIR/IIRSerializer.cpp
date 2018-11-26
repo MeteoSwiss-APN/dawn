@@ -259,18 +259,14 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
     protoAccessIDtoNameMap.insert({accessIDtoNamePair.first, accessIDtoNamePair.second});
   }
   // Filling Field: repeated ExprIDPair ExprToAccessID = 2;
-  for(const auto& exprToAccessIDPair : metaData.ExprToAccessIDMap_) {
-    auto protoExprToAccessID = protoMetaData->add_exprtoaccessid();
-    ProtoStmtBuilder builder(protoExprToAccessID->mutable_expr());
-    exprToAccessIDPair.first->accept(builder);
-    protoExprToAccessID->set_ids(exprToAccessIDPair.second);
+  auto& protoExprIDtoAccessID = *protoMetaData->mutable_expridtoaccessid();
+  for(const auto& exprIDToAccessIDPair : metaData.ExprIDToAccessIDMap_) {
+    protoExprIDtoAccessID.insert({exprIDToAccessIDPair.first, exprIDToAccessIDPair.second});
   }
   // Filling Field: repeated StmtIDPair StmtToAccessID = 3;
-  for(const auto& stmtToAccessIDPair : metaData.StmtToAccessIDMap_) {
-    auto protoStmtToAccessID = protoMetaData->add_stmttoaccessid();
-    ProtoStmtBuilder builder(protoStmtToAccessID->mutable_stmt());
-    stmtToAccessIDPair.first->accept(builder);
-    protoStmtToAccessID->set_ids(stmtToAccessIDPair.second);
+  auto& protoStmtIDtoAccessID = *protoMetaData->mutable_stmtidtoaccessid();
+  for(const auto& stmtIDToAccessIDPair : metaData.StmtIDToAccessIDMap_) {
+    protoStmtIDtoAccessID.insert({stmtIDToAccessIDPair.first, stmtIDToAccessIDPair.second});
   }
   // Filling Field: map<int32, string> LiteralIDToName = 4;
   auto& protoLiteralIDToNameMap = *protoMetaData->mutable_literalidtoname();
@@ -544,12 +540,20 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
   for(auto IDtoName : protoMetaData.accessidtoname()) {
     metadata.AccessIDToNameMap_.insert({IDtoName.first, IDtoName.second});
   }
-  for(auto exprToID : protoMetaData.exprtoaccessid()) {
-    metadata.ExprToAccessIDMap_[makeExpr(exprToID.expr())] = exprToID.ids();
+
+  std::cout << "expressions =============================================================\n";
+  std::cout << "size of exprid list: " << protoMetaData.expridtoaccessid_size() << std::endl;
+  for(auto exprIDToAccessID : protoMetaData.expridtoaccessid()) {
+    metadata.ExprIDToAccessIDMap_[exprIDToAccessID.first] = exprIDToAccessID.second;
   }
-  for(auto stmtToID : protoMetaData.stmttoaccessid()) {
-    metadata.StmtToAccessIDMap_[makeStmt(stmtToID.stmt())] = stmtToID.ids();
+  std::cout << "and now the real list: " << metadata.ExprIDToAccessIDMap_.size() << std::endl;
+  std::cout << "statements =============================================================\n";
+  std::cout << "size of stmtid list: " << protoMetaData.stmtidtoaccessid_size() << std::endl;
+  for(auto stmtIDToAccessID : protoMetaData.stmtidtoaccessid()) {
+    metadata.StmtIDToAccessIDMap_[stmtIDToAccessID.first] = stmtIDToAccessID.second;
   }
+  std::cout << "and now the real list: " << metadata.StmtIDToAccessIDMap_.size() << std::endl;
+
   for(auto literalIDToName : protoMetaData.literalidtoname()) {
     metadata.LiteralAccessIDToNameMap_[literalIDToName.first] = literalIDToName.second;
   }
