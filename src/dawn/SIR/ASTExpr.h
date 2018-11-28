@@ -400,7 +400,8 @@ public:
   /// @}
 
   const std::string& getName() const { return name_; }
-  std::string& getName() { return name_; }
+
+  void setName(std::string name) { name_ = name; }
 
   void setIsExternal(bool external) { isExternal_ = external; }
 
@@ -492,7 +493,8 @@ public:
   void setPureOffset(const Array3i& offset);
 
   const std::string& getName() const { return name_; }
-  std::string& getName() { return name_; }
+
+  void setName(std::string name) { name_ = name; }
 
   const Array3i& getOffset() const { return offset_; }
   Array3i& getOffset() { return offset_; }
