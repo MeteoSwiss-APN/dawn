@@ -28,6 +28,27 @@ std::string Interval::toString() const {
   return ss.str();
 }
 
+std::string Interval::toStringGen() const {
+  std::stringstream ss;
+
+  auto printLevel = [&](int level, int offset) -> void {
+    if(level == sir::Interval::Start)
+      ss << "Start";
+    else if(level == sir::Interval::End)
+      ss << "End";
+    else
+      ss << level;
+
+    if(offset != 0)
+      ss << (offset > 0 ? "_plus" : "_minus") << offset;
+  };
+
+  printLevel(lowerLevel(), lowerOffset());
+  printLevel(upperLevel(), upperOffset());
+
+  return ss.str();
+}
+
 std::ostream& operator<<(std::ostream& os, const Interval& interval) {
   auto printLevel = [&](int level, int offset) -> void {
     if(level == sir::Interval::Start)

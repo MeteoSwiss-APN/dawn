@@ -216,7 +216,7 @@ void StatementMapper::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
           diag << "no viable Do-Method overload for stencil function call '" << expr->getCallee()
                << "'";
           instantiation_->getOptimizerContext()->getDiagnostics().report(diag);
-          return;
+          dawn_unreachable_internal("no viable do-method overload for stencil function call");
         }
       } else {
         ast = SIRStencilFun->Asts.front();

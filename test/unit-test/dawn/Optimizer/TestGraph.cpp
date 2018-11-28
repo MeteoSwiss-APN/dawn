@@ -107,4 +107,45 @@ TEST(GraphTest, InputOutputNodes3) {
   ASSERT_TRUE(graph.getInputVertexIDs().empty());
 }
 
+TEST(GraphTest, cycle) {
+  TestGraph graph;
+
+  graph.insertEdge(0, 1);
+  graph.insertEdge(1, 2);
+  graph.insertEdge(2, 3);
+  graph.insertEdge(3, 4);
+
+  graph.insertEdge(0, 5);
+  graph.insertEdge(5, 6);
+  graph.insertEdge(1, 7);
+  graph.insertEdge(7, 0);
+
+  EXPECT_TRUE((graph.hasCycleDependency(0)));
+  EXPECT_TRUE((graph.hasCycleDependency(1)));
+  EXPECT_TRUE((!graph.hasCycleDependency(2)));
+  EXPECT_TRUE((!graph.hasCycleDependency(3)));
+  EXPECT_TRUE((!graph.hasCycleDependency(4)));
+  EXPECT_TRUE((!graph.hasCycleDependency(5)));
+  EXPECT_TRUE((!graph.hasCycleDependency(6)));
+  EXPECT_TRUE((graph.hasCycleDependency(7)));
+}
+
+TEST(GraphTest, computeIDsWithCycle) {
+  TestGraph graph;
+
+  graph.insertEdge(0, 1);
+  graph.insertEdge(1, 2);
+  graph.insertEdge(2, 3);
+  graph.insertEdge(3, 4);
+
+  graph.insertEdge(0, 5);
+  graph.insertEdge(5, 6);
+  graph.insertEdge(1, 7);
+  graph.insertEdge(7, 0);
+
+  auto ids = graph.computeIDsWithCycles();
+  std::vector<int> ref = {7, 1, 0};
+  EXPECT_TRUE((std::equal(ids.begin(), ids.end(), ref.begin())));
+}
+
 } // anonymous namespace

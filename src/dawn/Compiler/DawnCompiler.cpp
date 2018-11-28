@@ -153,8 +153,8 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   PassManager& passManager = optimizer->getPassManager();
 
   // Setup pass interface
-  optimizer->checkAndPushBack<PassInlining>(inlineStrategy);
-  optimizer->checkAndPushBack<PassTemporaryFirstAccess>();
+  optimizer->checkAndPushBack<PassInlining>(PassInlining::IK_ComputationOnTheFly);
+  //  optimizer->checkAndPushBack<PassTemporaryFirstAccess>();
   optimizer->checkAndPushBack<PassFieldVersioning>();
   optimizer->checkAndPushBack<PassSSA>();
   optimizer->checkAndPushBack<PassMultiStageSplitter>(mssSplitStrategy);
@@ -168,6 +168,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   optimizer->checkAndPushBack<PassStencilSplitter>(maxFields);
   optimizer->checkAndPushBack<PassTemporaryType>();
   optimizer->checkAndPushBack<PassTemporaryMerger>();
+  optimizer->checkAndPushBack<PassInlining>(PassInlining::InlineStrategyKind::IK_Precomputation);
   optimizer->checkAndPushBack<PassTemporaryToStencilFunction>();
   optimizer->checkAndPushBack<PassSetNonTempCaches>();
   optimizer->checkAndPushBack<PassSetCaches>();

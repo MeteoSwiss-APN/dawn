@@ -392,18 +392,16 @@ void StencilFunctionInstantiation::removeStencilFunctionInstantiation(
 
 std::shared_ptr<StencilFunctionInstantiation>
 StencilFunctionInstantiation::getStencilFunctionInstantiation(
-    const std::shared_ptr<StencilFunCallExpr>& expr) {
+    const std::shared_ptr<StencilFunCallExpr>& expr) const {
   auto it = ExprToStencilFunctionInstantiationMap_.find(expr);
   DAWN_ASSERT_MSG(it != ExprToStencilFunctionInstantiationMap_.end(), "Invalid stencil function");
   return it->second;
 }
 
-const std::shared_ptr<StencilFunctionInstantiation>
-StencilFunctionInstantiation::getStencilFunctionInstantiation(
+bool StencilFunctionInstantiation::hasStencilFunctionInstantiation(
     const std::shared_ptr<StencilFunCallExpr>& expr) const {
-  auto it = ExprToStencilFunctionInstantiationMap_.find(expr);
-  DAWN_ASSERT_MSG(it != ExprToStencilFunctionInstantiationMap_.end(), "Invalid stencil function");
-  return it->second;
+  return (ExprToStencilFunctionInstantiationMap_.find(expr) !=
+          ExprToStencilFunctionInstantiationMap_.end());
 }
 
 const std::vector<std::unique_ptr<StatementAccessesPair>>&

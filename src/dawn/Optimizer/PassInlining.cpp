@@ -310,6 +310,10 @@ public:
 
   void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
 
+    std::string callerName = instantiation_->getNameFromAccessID(
+        curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
+    expr->setName(callerName);
+
     instantiation_->mapExprToAccessID(expr,
                                       curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
     if(expr->isArrayAccess())
@@ -317,6 +321,11 @@ public:
   }
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
+
+    std::string callerName = instantiation_->getNameFromAccessID(
+        curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
+    expr->setName(callerName);
+
     instantiation_->mapExprToAccessID(expr,
                                       curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
 

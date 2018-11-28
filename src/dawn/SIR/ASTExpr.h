@@ -402,6 +402,8 @@ public:
   const std::string& getName() const { return name_; }
   std::string& getName() { return name_; }
 
+  void setName(std::string name) { name_ = name; }
+
   void setIsExternal(bool external) { isExternal_ = external; }
 
   /// @brief Is the variable externally defined (e.g access to a global)?
@@ -493,6 +495,8 @@ public:
 
   const std::string& getName() const { return name_; }
   std::string& getName() { return name_; }
+
+  void setName(std::string name) { name_ = name; }
 
   const Array3i& getOffset() const { return offset_; }
   Array3i& getOffset() { return offset_; }

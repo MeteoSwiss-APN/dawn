@@ -174,6 +174,19 @@ boost::optional<Extents> MultiStage::computeExtents(const int accessID,
   }
   return extents;
 }
+
+MultiInterval MultiStage::computePartitionOfIntervals() const {
+  auto intervals_set = getIntervals();
+  std::vector<iir::Interval> intervals_v;
+  std::copy(intervals_set.begin(), intervals_set.end(), std::back_inserter(intervals_v));
+
+  // compute the partition of the intervals
+  auto partitionIntervals = iir::Interval::computePartition(intervals_v);
+  if(getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+    std::reverse(partitionIntervals.begin(), partitionIntervals.end());
+  return MultiInterval{partitionIntervals};
+}
+
 Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
                             int AccessID) {
   return derivedInfo_.caches_

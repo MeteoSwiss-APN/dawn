@@ -20,9 +20,11 @@
 #include <algorithm>
 #include <fstream>
 #include <iosfwd>
+#include <iostream>
 #include <iterator>
 #include <list>
 #include <memory>
+#include <set>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -63,6 +65,11 @@ public:
     int ID;               ///< ID of the data to be stored
   };
 
+protected:
+  std::unordered_map<int, Vertex> vertices_;
+  std::vector<std::shared_ptr<EdgeList>> adjacencyList_;
+
+public:
   /// @brief Get the adjacency list
   /// @{
   std::vector<std::shared_ptr<EdgeList>>& getAdjacencyList() { return adjacencyList_; }
@@ -88,6 +95,18 @@ public:
     if(insertPair.second)
       adjacencyList_.push_back(std::make_shared<EdgeList>());
     return insertPair.first->second;
+  }
+
+  std::set<int> computeIDsWithCycles() const {
+    std::set<int> ids;
+    for(const auto& vertexPair : vertices_) {
+      const auto& vertex = vertexPair.second;
+
+      if(hasCycleDependency(vertex.ID)) {
+        ids.insert(vertex.ID);
+      }
+    }
+    return ids;
   }
 
   /// @brief Insert a new edge from `IDFrom` to `IDTo` containing `data`
@@ -129,6 +148,12 @@ public:
     auto it = vertices_.find(ID);
     DAWN_ASSERT_MSG(it != vertices_.end(), "Node with given ID does not exist");
     return it->second.VertexID;
+  }
+
+  bool hasCycleDependency(const int ID) const {
+    std::set<int> a{};
+    // TODO implement a perfect fwd
+    return hasCycleDependencyImpl(ID, getVertexIDFromID(ID), a);
   }
 
   /// @brief Get the ID of the vertex given by ID
@@ -192,6 +217,23 @@ public:
   }
 
 protected:
+  bool hasCycleDependencyImpl(const int ID, const int vertexID, std::set<int>& visited) const {
+    // DFS search for cycles on access to ID
+    for(auto& edge : *(getAdjacencyList()[vertexID])) {
+      if(edge.ToVertexID == vertexID) {
+        return true;
+      }
+      if(visited.count(ID)) {
+        continue;
+      }
+      visited.insert(ID);
+      if(hasCycleDependencyImpl(ID, edge.ToVertexID, visited)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   template <class StreamType>
   void toDotImpl(StreamType& os) const {
     std::unordered_set<std::string> nodeStrs;
@@ -221,10 +263,6 @@ protected:
     std::copy(edgeStrs.begin(), edgeStrs.end(), std::ostream_iterator<std::string>(os, ";\n"));
     os << "}\n";
   }
-
-protected:
-  std::unordered_map<int, Vertex> vertices_;
-  std::vector<std::shared_ptr<EdgeList>> adjacencyList_;
 };
 
 } // namespace iir
