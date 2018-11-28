@@ -112,7 +112,8 @@ public:
   void reset() { stencilCallsToReplace_.clear(); }
 };
 
-PassSetBoundaryCondition::PassSetBoundaryCondition() : Pass("PassSetBoundaryCondition") {}
+PassSetBoundaryCondition::PassSetBoundaryCondition()
+    : Pass("PassSetBoundaryCondition", Pass::PG_CodeLegality) {}
 
 bool PassSetBoundaryCondition::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {

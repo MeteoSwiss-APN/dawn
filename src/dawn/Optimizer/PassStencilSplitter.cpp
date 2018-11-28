@@ -43,7 +43,12 @@ static int mergePossible(const std::set<int>& fields, const iir::Stage* stage, i
 }
 
 PassStencilSplitter::PassStencilSplitter(int maxNumberOfFilelds)
-    : Pass("PassStencilSplitter"), MaxFieldPerStencil(maxNumberOfFilelds) {
+    : Pass("PassStencilSplitter", Pass::PG_Optimizer), MaxFieldPerStencil(maxNumberOfFilelds) {
+  dependencies_.push_back("PassSetStageGraph");
+}
+
+PassStencilSplitter::PassStencilSplitter(bool isEnabled, int maxNumberOfFilelds)
+    : Pass("PassStencilSplitter", Pass::PG_Optimizer, isEnabled), MaxFieldPerStencil(maxNumberOfFilelds) {
   dependencies_.push_back("PassSetStageGraph");
 }
 

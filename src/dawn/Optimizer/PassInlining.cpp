@@ -11,7 +11,6 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-
 #include "dawn/Optimizer/PassInlining.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StatementAccessesPair.h"
@@ -21,6 +20,7 @@
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTUtil.h"
 #include "dawn/SIR/ASTVisitor.h"
+#include "dawn/Support/Logging.h"
 #include "dawn/Support/STLExtras.h"
 #include <iostream>
 #include <stack>
@@ -502,8 +502,13 @@ static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
 
 } // anonymous namespace
 
+// If no strategy is passed, we inline non-returning functions (usually the first step in the
+// optimization process). This mode is required that the optimizers work
+PassInlining::PassInlining()
+    : Pass("PassInlining", Pass::PG_CodeLegality), strategy_(IK_NonReturnInlining) {}
+
 PassInlining::PassInlining(InlineStrategyKind strategy)
-    : Pass("PassInlining", true), strategy_(strategy) {}
+    : Pass("PassInlining", Pass::PG_Optimizer), strategy_(strategy) {}
 
 bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   // Nothing to do ...
@@ -512,7 +517,14 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
 
   // This is not properly implemented yet
   if(strategy_ == IK_ComputationOnTheFly)
-      return true;
+    return true;
+
+  // This is not properly implemented yet
+  if(strategy_ == IK_GeneticAlgorithm) {
+    DAWN_LOG(INFO) << "Genetic algorithm Launched for inlining";
+    std::cout << "nothing happened for inlining (Genetic Algorithm applied)" << std::endl;
+    return true;
+  }
 
   DetectInlineCandiates inliner(strategy_, stencilInstantiation);
 

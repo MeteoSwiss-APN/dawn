@@ -376,6 +376,7 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Boolean);
       break;
     case sir::Value::Integer:
+      std::cout << "serialize int" << std::endl;
       if(!globalToValue.second->empty()) {
         value = globalToValue.second->getValue<int>();
         valueIsSet = true;
@@ -383,6 +384,7 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Integer);
       break;
     case sir::Value::Double:
+      std::cout << "serialize double" << std::endl;
       if(!globalToValue.second->empty()) {
         value = globalToValue.second->getValue<double>();
         valueIsSet = true;
@@ -541,19 +543,12 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
     metadata.AccessIDToNameMap_.insert({IDtoName.first, IDtoName.second});
   }
 
-  std::cout << "expressions =============================================================\n";
-  std::cout << "size of exprid list: " << protoMetaData.expridtoaccessid_size() << std::endl;
   for(auto exprIDToAccessID : protoMetaData.expridtoaccessid()) {
     metadata.ExprIDToAccessIDMap_[exprIDToAccessID.first] = exprIDToAccessID.second;
   }
-  std::cout << "and now the real list: " << metadata.ExprIDToAccessIDMap_.size() << std::endl;
-  std::cout << "statements =============================================================\n";
-  std::cout << "size of stmtid list: " << protoMetaData.stmtidtoaccessid_size() << std::endl;
   for(auto stmtIDToAccessID : protoMetaData.stmtidtoaccessid()) {
     metadata.StmtIDToAccessIDMap_[stmtIDToAccessID.first] = stmtIDToAccessID.second;
   }
-  std::cout << "and now the real list: " << metadata.StmtIDToAccessIDMap_.size() << std::endl;
-
   for(auto literalIDToName : protoMetaData.literalidtoname()) {
     metadata.LiteralAccessIDToNameMap_[literalIDToName.first] = literalIDToName.second;
   }
@@ -599,9 +594,10 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
       auto field = makeField(protoField);
       sirStencilCall->Args.push_back(field);
     }
-    metadata.IDToStencilCallMap_.insert(
-        {IDToCall.first, std::make_shared<StencilCallDeclStmt>(
-                             sirStencilCall, makeLocation(call.stencil_call_decl_stmt()))});
+    auto stmt = std::make_shared<StencilCallDeclStmt>(sirStencilCall,
+                                                      makeLocation(call.stencil_call_decl_stmt()));
+    stmt->setID(call.stencil_call_decl_stmt().id());
+    metadata.IDToStencilCallMap_.insert({IDToCall.first, stmt});
   }
 
   for(auto FieldnameToBC : protoMetaData.fieldnametoboundarycondition()) {
@@ -624,9 +620,11 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
       break;
     case proto::iir::GlobalValueAndType_TypeKind_Integer:
       value->setType(sir::Value::Integer);
+      std::cout << "set to int" << std::endl;
       break;
     case proto::iir::GlobalValueAndType_TypeKind_Double:
       value->setType(sir::Value::Double);
+      std::cout << "set to double" << std::endl;
       break;
     default:
       dawn_unreachable("unsupported type");
@@ -673,6 +671,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
       (IIRStencil)->insertChild(make_unique<iir::MultiStage>(*target, looporder));
 
       const auto& IIRMSS = (IIRStencil)->getChild(mssPos++);
+      IIRMSS->setID(protoMSS.multistageid());
 
       for(const auto& IDCachePair : protoMSS.multistagecaches()) {
         IIRMSS->getCaches().insert({IDCachePair.first, makeCache(&IDCachePair.second)});
@@ -704,16 +703,20 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
               callerAccesses->addReadExtent(readAccess.first, makeExtents(&readAccess.second));
             }
 
-            std::shared_ptr<iir::Accesses> calleeAccesses = std::make_shared<iir::Accesses>();
-            for(auto writeAccess : protoStmtAccessPair.calleeaccesses().writeaccess()) {
-              calleeAccesses->addWriteExtent(writeAccess.first, makeExtents(&writeAccess.second));
-            }
-            for(auto readAccess : protoStmtAccessPair.calleeaccesses().readaccess()) {
-              calleeAccesses->addReadExtent(readAccess.first, makeExtents(&readAccess.second));
-            }
+            //            std::shared_ptr<iir::Accesses> calleeAccesses =
+            //            std::make_shared<iir::Accesses>();
+            //            for(auto writeAccess : protoStmtAccessPair.calleeaccesses().writeaccess())
+            //            {
+            //              calleeAccesses->addWriteExtent(writeAccess.first,
+            //              makeExtents(&writeAccess.second));
+            //            }
+            //            for(auto readAccess : protoStmtAccessPair.calleeaccesses().readaccess()) {
+            //              calleeAccesses->addReadExtent(readAccess.first,
+            //              makeExtents(&readAccess.second));
+            //            }
             auto insertee = make_unique<iir::StatementAccessesPair>(statement);
             insertee->setCallerAccesses(callerAccesses);
-            insertee->setCalleeAccesses(calleeAccesses);
+            //            insertee->setCalleeAccesses(calleeAccesses);
             (IIRDoMethod)->insertChild(std::move(insertee));
           }
         }

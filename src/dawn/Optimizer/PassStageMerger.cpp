@@ -22,7 +22,7 @@
 
 namespace dawn {
 
-PassStageMerger::PassStageMerger() : Pass("PassStageMerger") {
+PassStageMerger::PassStageMerger() : Pass("PassStageMerger", Pass::PG_Optimizer) {
   dependencies_.push_back("PassSetStageGraph");
 }
 

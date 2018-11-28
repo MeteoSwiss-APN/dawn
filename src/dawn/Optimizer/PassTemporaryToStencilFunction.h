@@ -40,6 +40,7 @@ class PassTemporaryToStencilFunction : public Pass {
 
 public:
   PassTemporaryToStencilFunction();
+  PassTemporaryToStencilFunction(bool isEnabled);
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;

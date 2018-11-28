@@ -40,6 +40,10 @@ OPT(std::string, Backend, "gridtools", "backend", "",
     "\n - c++-naive   = naive C++ code\n"
     "\n - c++-opt     = optimized C++ code"
     "\n - cuda        = optimized cuda", "<backend>", true, false)
+OPT(std::string, LoadSerialized, "", "load-serialized", "",
+    "Load the serialized data from <file> and only run the passes enabled after deserialization", "<file>", true, false)
+OPT(bool, SerializeIIR, false, "serialize-iir", "",
+    "Serialize the low level intermediate representation after Optimization", "", false, true)
 OPT(std::string, InlineStrategy, "cof", "inline", "", 
     "Set the strategy used to inline stencil functions. Possible values for <strategy> are:"
     "\n - none = Disable inlining"
@@ -52,22 +56,11 @@ OPT(std::string, ReorderStrategy, "greedy", "reorder", "",
     "\n - scut   = Use S-cut graph partitioning\n", "<strategy>", true, false)
 OPT(int, MaxFieldsPerStencil, 40, "max-fields", "",
     "Set the maximum number of fields in any given stencils", "<N>", true, false)
+
+OPT(bool, GeneticAlgorithm, false, "GA", "",
+    "Allow for alternative use of passes by genetic algorithms", "", false, true)
 OPT(bool, SSA, false, "ssa", "",
     "Transform all statements into static single assigment (SSA) form", "", false, true)
-OPT(bool, DumpSplitGraphs, false, "dump-split-dags", "", 
-    "Dump the access dependency graph of all stages and multi-stages during the splitting passes to dot files", "", false, true)
-OPT(bool, DumpStencilGraph, false, "dump-stencil-dag", "", 
-    "Dump the initial access dependency graph of each stencil to a dot file", "", false, true)
-OPT(bool, DumpStageGraph, false, "dump-stage-dag", "", 
-    "Dump the initial dependency graph of the stages of each stencil to a dot file", "", false, true)
-OPT(bool, DumpTemporaryGraphs, false, "dump-tmp-dag", "", 
-    "Dump the dependency graph of the temporaries of each stencil to a dot file", "", false, true)
-OPT(bool, DumpRaceConditionGraph, false, "dump-rc-dag", "", 
-    "In case an unresolvable race-condition is detected, dump the dependency graph to a dot file", "", false, true)
-OPT(bool, KeepVarnames, false, "keep-varnames", "", 
-    "Keep the names of locally defined variables (this should merely be used for debugging as it may result in invalid code)", "", false, true)
-OPT(bool, ReportDataLocalityMetric, false, "report-dl", "", 
-    "Compute and report the data-locality metric for each stencil", "", false, true)
 OPT(bool, MergeTemporaries, false, "merge-temporaries", "", 
     "Merge temporaries if possible", "", false, true)
 OPT(bool, SplitStencils, false, "split-stencils", "", 
@@ -82,6 +75,13 @@ OPT(bool, DisableKCaches, false, "disable-kcaches", "",
     "Disable use of the k-caches", "", false, true)
 OPT(bool, PassTmpToFunction, false, "pass-tmp-to-function", "",
     "Activate pass to replace temporary precomputations by stencil function calls", "", false, true)
+OPT(bool, UseNonTempCaches, false, "cache-non-temp-fields", "",
+    "Allows for caching of non-temporary fields", "", false, true)
+OPT(bool, Debug, false, "debug", "",
+    "Compile to debug backend", "", false, true)
+OPT(bool, MaxCutMSS, false, "max-cut-mss", "",
+    "Cuts the given multistages in as many multistages as possible while maintaining legal code", "", false, true)
+
 OPT(bool, ReportPassTmpToFunction, false, "report-pass-tmp-to-function", "",
     "Detailed report on the actions taken during the replace temporary by stencil function call pass", "", false, true)
 OPT(bool, ReportAccesses, false, "report-accesses", "", 
@@ -103,22 +103,26 @@ OPT(bool, ReportPassStageMerger, false, "report-pass-stage-merger", "",
     "Dump the stencil-instantiation before and after the stage merger pass to JSON", "", false, true)
 OPT(bool, ReportPassSetCaches, false, "report-pass-set-caches", "", 
     "Report which fields are cached for each multi-stage", "", false, true)
-OPT(bool, UseNonTempCaches, false, "cache-non-temp-fields", "",
-    "Allows for caching of non-temporary fields", "", false, true)
 OPT(bool, ReportPassSetNonTempCaches, false, "report-cache-non-temp-fields", "",
     "Report which non temporary fields are cached for each multi-stage", "", false, true)
 OPT(bool, ReportBoundaryConditions, false, "report-bc", "",
     "Report where boundary conditions are inserted", "", false, true)
-OPT(bool, Debug, false, "debug", "",
-    "Compile to debug backend", "", false, true)
-OPT(bool, MaxCutMSS, false, "max-cut-mss", "",
-    "Cuts the given multistages in as many multistages as possible while maintaining legal code", "", false, true)
-OPT(bool, SerializeBefore, false, "before", "",
-    "Serialize before passes", "", false, true)
+
+OPT(bool, DumpSplitGraphs, false, "dump-split-dags", "",
+    "Dump the access dependency graph of all stages and multi-stages during the splitting passes to dot files", "", false, true)
+OPT(bool, DumpStencilGraph, false, "dump-stencil-dag", "",
+    "Dump the initial access dependency graph of each stencil to a dot file", "", false, true)
+OPT(bool, DumpStageGraph, false, "dump-stage-dag", "",
+    "Dump the initial dependency graph of the stages of each stencil to a dot file", "", false, true)
+OPT(bool, DumpTemporaryGraphs, false, "dump-tmp-dag", "",
+    "Dump the dependency graph of the temporaries of each stencil to a dot file", "", false, true)
+OPT(bool, DumpRaceConditionGraph, false, "dump-rc-dag", "",
+    "In case an unresolvable race-condition is detected, dump the dependency graph to a dot file", "", false, true)
+OPT(bool, ReportDataLocalityMetric, false, "report-dl", "",
+    "Compute and report the data-locality metric for each stencil", "", false, true)
+OPT(bool, KeepVarnames, false, "keep-varnames", "",
+    "Keep the names of locally defined variables (this should merely be used for debugging as it may result in invalid code)", "", false, true)
+
 OPT(bool, SerializeAfter, false, "after", "",
     "Serialize before code generation", "", false, true)
-OPT(std::string, LoadSerialized, "", "load-serialized", "",
-    "Load the serialized data from <file> and only run the passes enabled after deserialization", "<file>", true, false)
-OPT(bool, SerializeIIR, false, "serialize-iir", "",
-    "Serialize the Internal datastructure after Optimization", "", false, true)
 // clang-format on

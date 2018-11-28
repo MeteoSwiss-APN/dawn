@@ -90,7 +90,7 @@ struct Temporary {
 
 } // anonymous namespace
 
-PassTemporaryType::PassTemporaryType() : Pass("PassTemporaryType", true) {}
+PassTemporaryType::PassTemporaryType() : Pass("PassTemporaryType", Pass::PG_CodeLegality) {}
 
 bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
   OptimizerContext* context = instantiation->getOptimizerContext();

@@ -35,6 +35,7 @@ struct ReadWriteAccumulator {
 class PassDataLocalityMetric : public Pass {
 public:
   PassDataLocalityMetric();
+  PassDataLocalityMetric(bool isEnabled);
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;

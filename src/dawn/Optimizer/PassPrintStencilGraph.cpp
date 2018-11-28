@@ -19,7 +19,13 @@
 
 namespace dawn {
 
-PassPrintStencilGraph::PassPrintStencilGraph() : Pass("PassPrintStencilGraph") {
+PassPrintStencilGraph::PassPrintStencilGraph()
+    : Pass("PassPrintStencilGraph", Pass::PG_Diganostics) {
+  dependencies_.push_back("PassStageSplitter");
+}
+
+PassPrintStencilGraph::PassPrintStencilGraph(bool isEnabled)
+    : Pass("PassPrintStencilGraph", Pass::PG_Diganostics, isEnabled) {
   dependencies_.push_back("PassStageSplitter");
 }
 

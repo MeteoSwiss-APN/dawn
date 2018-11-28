@@ -28,7 +28,7 @@
 namespace dawn {
 
 PassMultiStageSplitter::PassMultiStageSplitter(MultiStageSplittingStrategy strategy)
-    : Pass("PassMultiStageSplitter", true), strategy_(strategy) {}
+    : Pass("PassMultiStageSplitter", Pass::PG_LegalAndOpti), strategy_(strategy) {}
 namespace {
 
 int checkDependencies(const std::unique_ptr<iir::Stage>& stage, int stmtIdx) {

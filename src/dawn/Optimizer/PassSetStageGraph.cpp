@@ -56,7 +56,7 @@ static bool depends(const iir::Stage& fromStage, const iir::Stage& toStage) {
   return false;
 }
 
-PassSetStageGraph::PassSetStageGraph() : Pass("PassSetStageGraph") {
+PassSetStageGraph::PassSetStageGraph() : Pass("PassSetStageGraph", Pass::PG_Optimizer) {
   dependencies_.push_back("PassSetStageName");
 }
 

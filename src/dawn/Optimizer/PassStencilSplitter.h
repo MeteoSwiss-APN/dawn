@@ -29,6 +29,7 @@ namespace dawn {
 class PassStencilSplitter : public Pass {
 public:
   PassStencilSplitter(int maxNumberOfFilelds);
+  PassStencilSplitter(bool isEnabled, int maxNumberOfFilelds);
 
   /// @brief Maximum number of allowed fields per stencil
   ///

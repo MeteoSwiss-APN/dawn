@@ -21,7 +21,8 @@
 
 namespace dawn {
 
-PassComputeStageExtents::PassComputeStageExtents() : Pass("PassComputeStageExtents", true) {
+PassComputeStageExtents::PassComputeStageExtents()
+    : Pass("PassComputeStageExtents", Pass::PG_CodeLegality) {
   dependencies_.push_back("PassSetStageName");
 }
 

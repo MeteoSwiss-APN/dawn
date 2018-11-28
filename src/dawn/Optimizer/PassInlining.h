@@ -44,7 +44,9 @@ public:
     IK_GeneticAlgorithm     ///< Runs on a Working IIR and does mating and mutation
   };
 
+  PassInlining();
   PassInlining(InlineStrategyKind strategy);
+
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;

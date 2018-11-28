@@ -162,12 +162,16 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
 
   // If we load serialized data, we set the strategy of multiple passes to do different things,
   // mostly we want them to do genetic-algorithm stuff
+  double doFieldVersioning = true;
   if(options_->LoadSerialized != "") {
-    inlineStrategy = InlineStrategyKind::IK_GeneticAlgorithm;
-    mssSplitStrategy = MultistageSplitStrategy::SS_GeneticAlgorithm;
-    reorderStrategy = ReorderStrategyKind::RK_GeneticAlgorithm;
-    cachingStrategy = CachingStrategy::CS_GeneticAlgorithm;
-    options_->PassTmpToFunction = false;
+    doFieldVersioning = false;
+  }
+  if(options_->GeneticAlgorithm){
+      inlineStrategy = InlineStrategyKind::IK_GeneticAlgorithm;
+      mssSplitStrategy = MultistageSplitStrategy::SS_GeneticAlgorithm;
+      reorderStrategy = ReorderStrategyKind::RK_GeneticAlgorithm;
+      cachingStrategy = CachingStrategy::CS_GeneticAlgorithm;
+      options_->PassTmpToFunction = false;
   }
 
   // Initialize optimizer
@@ -176,54 +180,38 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   PassManager& passManager = optimizer->getPassManager();
 
   // Setup pass interface
-  optimizer->checkAndPushBack<PassInlining>(InlineStrategyKind::IK_NonReturnInlining);
+  optimizer->checkAndPushBack<PassInlining>();
   optimizer->checkAndPushBack<PassTemporaryFirstAccess>();
-  optimizer->checkAndPushBack<PassFieldVersioning>();
-  optimizer->checkAndPushBack<PassSSA>();
+  optimizer->checkAndPushBack<PassInlining>(inlineStrategy);
+  optimizer->checkAndPushBack<PassFieldVersioning>(doFieldVersioning);
+  optimizer->checkAndPushBack<PassSSA>(getOptions().SSA);
   optimizer->checkAndPushBack<PassMultiStageSplitter>(mssSplitStrategy);
   optimizer->checkAndPushBack<PassStageSplitter>();
-  optimizer->checkAndPushBack<PassPrintStencilGraph>();
+  optimizer->checkAndPushBack<PassPrintStencilGraph>(getOptions().DumpStencilGraph);
   optimizer->checkAndPushBack<PassTemporaryType>();
   optimizer->checkAndPushBack<PassSetStageName>();
   optimizer->checkAndPushBack<PassSetStageGraph>();
   optimizer->checkAndPushBack<PassStageReordering>(reorderStrategy);
   optimizer->checkAndPushBack<PassStageMerger>();
-  optimizer->checkAndPushBack<PassStencilSplitter>(maxFields);
+  optimizer->checkAndPushBack<PassStencilSplitter>(getOptions().SplitStencils, maxFields);
   optimizer->checkAndPushBack<PassTemporaryType>();
-  optimizer->checkAndPushBack<PassTemporaryMerger>();
-  optimizer->checkAndPushBack<PassTemporaryToStencilFunction>();
-  optimizer->checkAndPushBack<PassSetNonTempCaches>();
+  optimizer->checkAndPushBack<PassTemporaryMerger>(getOptions().MergeTemporaries);
+  optimizer->checkAndPushBack<PassTemporaryToStencilFunction>(getOptions().PassTmpToFunction);
+  optimizer->checkAndPushBack<PassSetNonTempCaches>(getOptions().UseNonTempCaches);
   optimizer->checkAndPushBack<PassSetCaches>(cachingStrategy);
   optimizer->checkAndPushBack<PassComputeStageExtents>();
   optimizer->checkAndPushBack<PassSetBoundaryCondition>();
-  optimizer->checkAndPushBack<PassDataLocalityMetric>();
+  optimizer->checkAndPushBack<PassDataLocalityMetric>(getOptions().ReportDataLocalityMetric);
   optimizer->checkAndPushBack<PassSetSyncStage>();
-  optimizer->checkAndPushBack<PassInlining>(inlineStrategy);
 
   DAWN_LOG(INFO) << "All the passes ran with the current command line arugments:";
   for(const auto& a : passManager.getPasses()) {
     DAWN_LOG(INFO) << a->getName();
   }
-
-  //==============================================================================================//
-  // WITTODOD: Remove this once testing is done and we are sure that erialization works as we want
-  // We need to remove before, after, the Options for it and the two if-blocks
-  //==============================================================================================//
-  bool before = getOptions().SerializeBefore;
-  bool after = getOptions().SerializeAfter;
+    bool after = getOptions().SerializeAfter;
   // Run optimization passes
   for(auto& stencil : optimizer->getStencilInstantiationMap()) {
     std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
-    if(before) {
-      DAWN_LOG(INFO) << "Serilalize before any passes are run";
-      IIRSerializer::serialize("before.file", instantiation,
-                               IIRSerializer::SerializationKind::SK_Json);
-
-      DAWN_LOG(INFO) << "And reload it";
-      auto output = IIRSerializer::deserialize("before.file", instantiation->getOptimizerContext());
-      output->dump();
-      instantiation = output;
-    }
     if(options_->LoadSerialized != "") {
       //==========================================================================================//
       // Wittodo: change to byte as our default once debugging is done
@@ -231,7 +219,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
       auto output =
           IIRSerializer::deserialize(options_->LoadSerialized, instantiation->getOptimizerContext(),
                                      IIRSerializer::SerializationKind::SK_Json);
-      output->dump();
+      //      output->dump();
       instantiation = output;
     }
     DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `" << instantiation->getName()
@@ -240,8 +228,6 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
       return nullptr;
     DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `" << instantiation->getName()
                    << "`";
-
-    instantiation->dump();
 
     if(options_->SerializeIIR) {
       //==========================================================================================//

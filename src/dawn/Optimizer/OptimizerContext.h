@@ -110,6 +110,10 @@ public:
   /// that are currently hiden in the passes run-methods
   template <typename T>
   bool compareOptionsToPassFlags(const std::unique_ptr<T>& p) {
+    int manuallySwitched = p->isManuallySwitched();
+    if(manuallySwitched != -1) {
+      return manuallySwitched;
+    }
     bool retval = true;
     bool valueIsSet = false;
     if(getOptions().Debug) {
@@ -118,11 +122,17 @@ public:
       retval = p->checkFlag("Debug");
       valueIsSet = true;
     }
-    if(getOptions().LoadSerialized != ""){
-        DAWN_ASSERT_MSG(!(valueIsSet && (retval != p->checkFlag("Deserialization"))),
-                        "`LoadSerialized` option is not compatible with the other flags set");
-        retval = p->checkFlag("Deserialization");
+    if(getOptions().GeneticAlgorithm && getOptions().LoadSerialized != ""){
+        DAWN_ASSERT_MSG(!(valueIsSet && (retval != p->checkFlag("GeneticAlgorithm"))),
+                        "`GeneticAlgorithm` option is not compatible with the other flags set");
+        retval = p->checkFlag("GeneticAlgorithm");
         valueIsSet = true;
+    }
+    else if(getOptions().LoadSerialized != "") {
+      DAWN_ASSERT_MSG(!(valueIsSet && (retval != p->checkFlag("Deserialization"))),
+                      "`LoadSerialized` option is not compatible with the other flags set");
+      retval = p->checkFlag("Deserialization");
+      valueIsSet = true;
     }
     return retval;
   }

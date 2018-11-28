@@ -151,7 +151,7 @@ CacheCandidate computeCacheCandidateForMS(iir::Field const& field, bool isTempor
 } // anonymous namespace
 
 PassSetCaches::PassSetCaches(CachingStrategy strategy)
-    : Pass("PassSetCaches"), strategy_(strategy) {}
+    : Pass("PassSetCaches", PG_Optimizer), strategy_(strategy) {}
 
 bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
 

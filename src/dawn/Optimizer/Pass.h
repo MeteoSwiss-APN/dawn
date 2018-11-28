@@ -38,22 +38,43 @@ class StencilInstantiation;
 ///
 /// @ingroup Optimizer
 class Pass {
-  /// Name of the pass (should be unique)
-  std::string name_;
-
-protected:
-  /// Name of the passes this pass depends on (empty implies no dependency)
-  std::vector<std::string> dependencies_;
-  /// Categroy of the pass
-  std::unordered_map<std::string, bool> categorySet_;
-
 public:
-  Pass(const std::string& name) : Pass(name, false, true) {}
-  Pass(const std::string& name, bool isDebug) : Pass(name, isDebug, true) {}
-  Pass(const std::string& name, bool isDebug, bool afterSerialization) : name_(name) {
-    categorySet_.insert({"Debug", isDebug});
-    categorySet_.insert({"Deserialization", afterSerialization});
+  enum PassGroup {
+    PG_Optimizer,    ///< Passes that do Optimization but are not required to generate legal code
+    PG_CodeLegality, ///< Passes that need to run to generate valid code
+    PG_LegalAndOpti, ///< Passes that are required to run to generate legal code but have modes that
+                     /// are used for optimization only
+    PG_Diganostics   ///< Passes that are only required for diagnostics
+  };
+
+  Pass(const std::string& name, PassGroup group) : name_(name) {
+    switch(group) {
+    case PG_Optimizer:
+      categorySet_.insert({"Debug", false});
+      categorySet_.insert({"Deserialization", false});
+      categorySet_.insert({"GeneticAlgorithm", false});
+      break;
+    case PG_CodeLegality:
+      categorySet_.insert({"Debug", true});
+      categorySet_.insert({"Deserialization", true});
+      categorySet_.insert({"GeneticAlgorithm", true});
+      break;
+    case PG_LegalAndOpti:
+      categorySet_.insert({"Debug", true});
+      categorySet_.insert({"Deserialization", false});
+      categorySet_.insert({"GeneticAlgorithm", true});
+      break;
+    case PG_Diganostics:
+      categorySet_.insert({"Debug", true});
+      categorySet_.insert({"Deserialization", false});
+      categorySet_.insert({"GeneticAlgorithm", false});
+      break;
+    }
   }
+  Pass(const std::string& name, PassGroup group, bool isEnabled) : Pass(name, group) {
+    categorySet_.insert({"MaunallyEnabled", isEnabled});
+  }
+
   virtual ~Pass() {}
 
   /// @brief Run the the Pass
@@ -71,6 +92,24 @@ public:
     auto it = categorySet_.find(flag);
     return it->second;
   }
+
+  int isManuallySwitched() const {
+    if(categorySet_.count("MaunallyEnabled")) {
+      auto it = categorySet_.find("MaunallyEnabled");
+      return it->second;
+    }
+    return -1;
+  }
+
+private:
+  /// Name of the pass (should be unique)
+  std::string name_;
+
+protected:
+  /// Name of the passes this pass depends on (empty implies no dependency)
+  std::vector<std::string> dependencies_;
+  /// Categroy of the pass
+  std::unordered_map<std::string, bool> categorySet_;
 };
 
 } // namespace dawn

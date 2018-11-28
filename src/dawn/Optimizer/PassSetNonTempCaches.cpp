@@ -278,7 +278,9 @@ private:
   std::vector<NameToImprovementMetric> originalNameToCache_;
 };
 
-PassSetNonTempCaches::PassSetNonTempCaches() : Pass("PassSetNonTempCaches") {}
+PassSetNonTempCaches::PassSetNonTempCaches() : Pass("PassSetNonTempCaches", Pass::PG_Optimizer) {}
+PassSetNonTempCaches::PassSetNonTempCaches(bool isEnabled)
+    : Pass("PassSetNonTempCaches", Pass::PG_Optimizer, isEnabled) {}
 
 bool dawn::PassSetNonTempCaches::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
