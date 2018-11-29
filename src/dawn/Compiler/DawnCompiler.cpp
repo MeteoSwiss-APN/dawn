@@ -109,19 +109,6 @@ DawnCompiler::DawnCompiler(Options* options) : diagnostics_(make_unique<Diagnost
 }
 
 std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR> const& SIR) {
-  // -inline
-  using InlineStrategyKind = PassInlining::InlineStrategyKind;
-  InlineStrategyKind inlineStrategy = StringSwitch<InlineStrategyKind>(options_->InlineStrategy)
-                                          .Case("none", InlineStrategyKind::IK_None)
-                                          .Case("cof", InlineStrategyKind::IK_ComputationOnTheFly)
-                                          .Case("pc", InlineStrategyKind::IK_Precomputation)
-                                          .Default(InlineStrategyKind::IK_Unknown);
-
-  if(inlineStrategy == InlineStrategyKind::IK_Unknown) {
-    diagnostics_->report(buildDiag("-inline", options_->InlineStrategy, "", {"none", "cof", "pc"}));
-    return nullptr;
-  }
-
   // -reorder
   using ReorderStrategyKind = ReorderStrategy::ReorderStrategyKind;
   ReorderStrategyKind reorderStrategy = StringSwitch<ReorderStrategyKind>(options_->ReorderStrategy)
@@ -153,8 +140,8 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   PassManager& passManager = optimizer->getPassManager();
 
   // Setup pass interface
-  optimizer->checkAndPushBack<PassInlining>(PassInlining::IK_ComputationOnTheFly);
-  //  optimizer->checkAndPushBack<PassTemporaryFirstAccess>();
+  optimizer->checkAndPushBack<PassInlining>(PassInlining::IK_InlineProcedures);
+  optimizer->checkAndPushBack<PassTemporaryFirstAccess>();
   optimizer->checkAndPushBack<PassFieldVersioning>();
   optimizer->checkAndPushBack<PassSSA>();
   optimizer->checkAndPushBack<PassMultiStageSplitter>(mssSplitStrategy);
@@ -168,7 +155,9 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   optimizer->checkAndPushBack<PassStencilSplitter>(maxFields);
   optimizer->checkAndPushBack<PassTemporaryType>();
   optimizer->checkAndPushBack<PassTemporaryMerger>();
-  optimizer->checkAndPushBack<PassInlining>(PassInlining::InlineStrategyKind::IK_Precomputation);
+  if(getOptions().InlineSF || getOptions().PassTmpToFunction) {
+    optimizer->checkAndPushBack<PassInlining>(PassInlining::IK_ComputationsOnTheFly);
+  }
   optimizer->checkAndPushBack<PassTemporaryToStencilFunction>();
   optimizer->checkAndPushBack<PassSetNonTempCaches>();
   optimizer->checkAndPushBack<PassSetCaches>();

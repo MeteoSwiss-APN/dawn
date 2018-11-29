@@ -491,7 +491,7 @@ static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
 
   // Function which do not return a value are *always* inlined. Function which do return a value
   // are only inlined if we favor precomputations.
-  if(!stencilFunc->hasReturn() || strategy == PassInlining::IK_Precomputation) {
+  if(!stencilFunc->hasReturn() || strategy == PassInlining::IK_ComputationsOnTheFly) {
     auto inliner =
         std::make_shared<Inliner>(strategy, stencilFunc, oldStmtAccessesPair, newStmtAccessesPairs,
                                   AccessIDOfCaller, stencilInstantiation);
@@ -507,10 +507,6 @@ PassInlining::PassInlining(InlineStrategyKind strategy)
     : Pass("PassInlining", true), strategy_(strategy) {}
 
 bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  // Nothing to do ...
-  if(strategy_ == IK_None)
-    return true;
-
   DetectInlineCandiates inliner(strategy_, stencilInstantiation);
 
   // Iterate all statements (top -> bottom)

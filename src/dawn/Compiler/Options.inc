@@ -40,11 +40,8 @@ OPT(std::string, Backend, "gridtools", "backend", "",
     "\n - c++-naive   = naive C++ code\n"
     "\n - c++-opt     = optimized C++ code"
     "\n - cuda        = optimized cuda", "<backend>", true, false)
-OPT(std::string, InlineStrategy, "cof", "inline", "", 
-    "Set the strategy used to inline stencil functions. Possible values for <strategy> are:"
-    "\n - none = Disable inlining"
-    "\n - cof  = Favor computations on the fly"
-    "\n - pc   = Favor pre-computations\n", "<strategy>", true, false)
+OPT(bool, InlineSF, false, "inline", "",
+    "Inline stencil functions","", false, false)
 OPT(std::string, ReorderStrategy, "greedy", "reorder", "", 
     "Set the strategy used to reorder the stages (or statements) of the stencils. Possible values for <strategy> are:"
     "\n - none   = Disable reordering"
