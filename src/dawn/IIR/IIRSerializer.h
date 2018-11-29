@@ -66,7 +66,7 @@ public:
   /// @throws std::excetpion    Failed to open `file`
   static void serialize(const std::string& file,
                         const std::shared_ptr<iir::StencilInstantiation> instantiation,
-                        dawn::IIRSerializer::SerializationKind kind);
+                        dawn::IIRSerializer::SerializationKind kind = SK_Json);
 
   /// @brief Serialize the StencilInstantiaion as a Json or Byte formatted string
   ///
