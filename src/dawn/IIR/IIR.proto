@@ -295,9 +295,6 @@ message StencilMetaInfo {
     // The user-given name of the stencil
     // (remember the 1-1 mapping of user-stencil - StencilInstantiation)
     string stencilName = 16;
-
-    // The filename of the original file creating the StencilInstantiation
-    string fileName = 17;
 }
 
 /* ===-----------------------------------------------------------------------------------------===*/
@@ -311,4 +308,7 @@ message StencilInstantiation {
 
     // The representataion of the computational patterns of the user stencil
     IIR internalIR = 2;
+
+    // The filename of the original file creating the StencilInstantiation
+    string filename = 3;
 }

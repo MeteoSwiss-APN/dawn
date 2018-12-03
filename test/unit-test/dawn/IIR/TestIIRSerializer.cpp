@@ -37,10 +37,69 @@ namespace {
 bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
   IIR_EARLY_EXIT(lhs->checkTreeConsistency());
   IIR_EARLY_EXIT(rhs->checkTreeConsistency());
+  // checking the stencils
   for(int stencils = 0, size = lhs->getChildren().size(); stencils < size; ++stencils) {
-    const auto& b = lhs->getChild(stencils);
-    const auto& bb = rhs->getChild(stencils);
-    IIR_EARLY_EXIT((b->getStencilAttributes() == bb->getStencilAttributes()));
+    const auto& lhsStencil = lhs->getChild(stencils);
+    const auto& rhsStencil = rhs->getChild(stencils);
+    IIR_EARLY_EXIT((lhsStencil->getStencilAttributes() == rhsStencil->getStencilAttributes()));
+    IIR_EARLY_EXIT((lhsStencil->getStencilID() == rhsStencil->getStencilID()));
+
+    // checking each of the multistages
+    for(int mssidx = 0, mssSize = lhsStencil->getChildren().size(); mssidx < mssSize; ++mssidx) {
+      const auto& lhsMSS = lhsStencil->getChild(mssidx);
+      const auto& rhsMSS = rhsStencil->getChild(mssidx);
+      IIR_EARLY_EXIT((lhsMSS->getLoopOrder() == rhsMSS->getLoopOrder()));
+      IIR_EARLY_EXIT((lhsMSS->getID() == rhsMSS->getID()));
+      IIR_EARLY_EXIT((lhsMSS->getCaches().size() == rhsMSS->getCaches().size()));
+      for(const auto& lhsPair : lhsMSS->getCaches()) {
+        IIR_EARLY_EXIT(rhsMSS->getCaches().count(lhsPair.first));
+        auto rhsValue = rhsMSS->getCaches().at(lhsPair.first);
+        IIR_EARLY_EXIT((rhsValue == lhsPair.second));
+      }
+      // checking each of the stages
+      for(int stageidx = 0, stageSize = lhsMSS->getChildren().size(); stageidx < stageSize;
+          ++stageidx) {
+        const auto& lhsStage = lhsMSS->getChild(stageidx);
+        const auto& rhsStage = rhsMSS->getChild(stageidx);
+        IIR_EARLY_EXIT((lhsStage->getStageID() == rhsStage->getStageID()));
+
+        // checking each of the doMethods
+        for(int doMethodidx = 0, doMethodSize = lhsStage->getChildren().size();
+            doMethodidx < doMethodSize; ++doMethodidx) {
+          const auto& lhsDoMethod = lhsStage->getChild(doMethodidx);
+          const auto& rhsDoMethod = rhsStage->getChild(doMethodidx);
+          IIR_EARLY_EXIT((lhsDoMethod->getID() == rhsDoMethod->getID()));
+          IIR_EARLY_EXIT((lhsDoMethod->getInterval() == rhsDoMethod->getInterval()));
+
+          // checking each of the StmtAccesspairs
+          for(int stmtidx = 0, stmtSize = lhsDoMethod->getChildren().size(); stmtidx < stmtSize;
+              ++stageidx) {
+            const auto& lhsStmt = lhsDoMethod->getChild(stmtidx);
+            const auto& rhsStmt = rhsDoMethod->getChild(stmtidx);
+            // check the statement
+            IIR_EARLY_EXIT(
+                (lhsStmt->getStatement()->ASTStmt->equals(rhsStmt->getStatement()->ASTStmt.get())));
+
+            // check the accesses
+            IIR_EARLY_EXIT((lhsStmt->getCallerAccesses() == rhsStmt->getCallerAccesses()));
+            if(lhsStmt->getCallerAccesses()) {
+              for(const auto& lhsPair : rhsStmt->getCallerAccesses()->getReadAccesses()) {
+                IIR_EARLY_EXIT(
+                    rhsStmt->getCallerAccesses()->getReadAccesses().count(lhsPair.first));
+                auto rhsValue = rhsStmt->getCallerAccesses()->getReadAccesses().at(lhsPair.first);
+                IIR_EARLY_EXIT((rhsValue == lhsPair.second));
+              }
+              for(const auto& lhsPair : rhsStmt->getCallerAccesses()->getWriteAccesses()) {
+                IIR_EARLY_EXIT(
+                    rhsStmt->getCallerAccesses()->getWriteAccesses().count(lhsPair.first));
+                auto rhsValue = rhsStmt->getCallerAccesses()->getWriteAccesses().at(lhsPair.first);
+                IIR_EARLY_EXIT((rhsValue == lhsPair.second));
+              }
+            }
+          }
+        }
+      }
+    }
   }
   return true;
 }
@@ -213,10 +272,41 @@ TEST_F(IIRSerializerTest, IIRTests) {
   referenceInstantiaton->getIIR()->insertChild(
       make_unique<iir::Stencil>(*referenceInstantiaton, attributes, 10),
       referenceInstantiaton->getIIR());
-  auto b = serializeAndDeserializeRef();
-  IIR_EXPECT_EQ(b, referenceInstantiaton);
-  referenceInstantiaton->getIIR()->getChild(0)->getStencilAttributes().set(sir::Attr::AK_NoCodeGen);
-  IIR_EXPECT_NE(b, referenceInstantiaton);
+  const auto& IIRStencil = referenceInstantiaton->getIIR()->getChild(0);
+  auto deserialized = serializeAndDeserializeRef();
+  IIR_EXPECT_EQ(deserialized, referenceInstantiaton);
+  IIRStencil->getStencilAttributes().set(sir::Attr::AK_NoCodeGen);
+  IIR_EXPECT_NE(deserialized, referenceInstantiaton);
+
+  (IIRStencil)
+      ->insertChild(
+          make_unique<iir::MultiStage>(*referenceInstantiaton, iir::LoopOrderKind::LK_Backward));
+  const auto& IIRMSS = (IIRStencil)->getChild(0);
+  IIRMSS->getCaches().emplace(
+      10, iir::Cache(iir::Cache::IJ, iir::Cache::fill, 10, boost::none, boost::none, boost::none));
+  deserialized = serializeAndDeserializeRef();
+  IIR_EXPECT_EQ(deserialized, referenceInstantiaton);
+  IIRMSS->setLoopOrder(iir::LoopOrderKind::LK_Forward);
+  IIR_EXPECT_NE(deserialized, referenceInstantiaton);
+
+  IIRMSS->insertChild(make_unique<iir::Stage>(*referenceInstantiaton, 12));
+  const auto& IIRStage = IIRMSS->getChild(0);
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
+
+  (IIRStage)->insertChild(
+      make_unique<iir::DoMethod>(iir::Interval(1, 5, 0, 1), *referenceInstantiaton));
+  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
+
+    auto& IIRDoMethod = (IIRStage)->getChild(0);
+    auto expr = std::make_shared<VarAccessExpr>("name");
+    auto stmt = std::make_shared<ExprStmt>(expr);
+    stmt->setID(22);
+    auto statement = std::make_shared<Statement>(stmt, nullptr);
+    auto stmtAccessPair = make_unique<iir::StatementAccessesPair>(statement);
+    std::shared_ptr<iir::Accesses> callerAccesses = std::make_shared<iir::Accesses>();
+    stmtAccessPair->setCallerAccesses(callerAccesses);
+
+    (IIRDoMethod)->insertChild(std::move(stmtAccessPair));
 }
 
 } // anonymous namespace

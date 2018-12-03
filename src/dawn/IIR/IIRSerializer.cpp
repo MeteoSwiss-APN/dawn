@@ -408,9 +408,6 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
 
   // Filling Field: string stencilMName = 16;
   protoMetaData->set_stencilname(metaData.stencilName_);
-
-  // Filling Field: string fileName = 17;
-  protoMetaData->set_filename(metaData.fileName_);
 }
 
 void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
@@ -509,6 +506,8 @@ IIRSerializer::serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& i
   proto::iir::StencilInstantiation protoStencilInstantiation;
   serializeMetaData(protoStencilInstantiation, instantiation->getMetaData());
   serializeIIR(protoStencilInstantiation, instantiation->getIIR());
+  protoStencilInstantiation.set_filename(instantiation->getMetaData().fileName_);
+
 
   // Encode the message
   std::string str;
@@ -639,8 +638,6 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
   metadata.stencilLocation_.Line = protoMetaData.stencillocation().line();
 
   metadata.stencilName_ = protoMetaData.stencilname();
-
-  metadata.fileName_ = protoMetaData.filename();
 }
 
 void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& target,
@@ -752,6 +749,7 @@ void IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Seria
 
   deserializeMetaData(instantiation, (protoStencilInstantiation.metadata()));
   deserializeIIR(instantiation, (protoStencilInstantiation.internalir()));
+  instantiation->getMetaData().fileName_ = protoStencilInstantiation.filename();
   computeInitialDerivedInfo(instantiation);
 
   target = instantiation;
