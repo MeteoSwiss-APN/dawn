@@ -123,6 +123,4 @@ OPT(bool, ReportDataLocalityMetric, false, "report-dl", "",
 OPT(bool, KeepVarnames, false, "keep-varnames", "",
     "Keep the names of locally defined variables (this should merely be used for debugging as it may result in invalid code)", "", false, true)
 
-OPT(bool, SerializeAfter, false, "after", "",
-    "Serialize before code generation", "", false, true)
 // clang-format on

@@ -208,14 +208,10 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   for(const auto& a : passManager.getPasses()) {
     DAWN_LOG(INFO) << a->getName();
   }
-    bool after = getOptions().SerializeAfter;
   // Run optimization passes
   for(auto& stencil : optimizer->getStencilInstantiationMap()) {
     std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
     if(options_->LoadSerialized != "") {
-      //==========================================================================================//
-      // Wittodo: change to byte as our default once debugging is done
-      //==========================================================================================//
       auto output =
           IIRSerializer::deserialize(options_->LoadSerialized, instantiation->getOptimizerContext(),
                                      IIRSerializer::SerializationKind::SK_Json);
@@ -230,24 +226,9 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
                    << "`";
 
     if(options_->SerializeIIR) {
-      //==========================================================================================//
-      // Wittodo: change to byte as our default once debugging is done
-      //==========================================================================================//
       IIRSerializer::serialize(
           remove_fileextension(instantiation->getMetaData().fileName_, ".cpp") + ".iir",
           instantiation, IIRSerializer::SerializationKind::SK_Json);
-    }
-
-    if(after) {
-      DAWN_LOG(INFO) << "Serilalize after all the passes are run";
-      IIRSerializer::serialize("after.file", instantiation,
-                               IIRSerializer::SerializationKind::SK_Json);
-
-      DAWN_LOG(INFO) << "And reload it";
-      auto output = IIRSerializer::deserialize("after.file", instantiation->getOptimizerContext(),
-                                               IIRSerializer::SerializationKind::SK_Json);
-      output->dump();
-      instantiation = output;
     }
 
     stencil.second = instantiation;
