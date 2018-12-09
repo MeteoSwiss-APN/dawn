@@ -630,6 +630,7 @@ void MSCodeGen::generateCudaKernelCode() {
   if(!globalsMap.empty()) {
     cudaKernel.addArg("globals globals_");
   }
+  cudaKernel.addArg("atlas::mesh::BlockConnectivity table");
   cudaKernel.addArg("const int isize");
   cudaKernel.addArg("const int jsize");
   cudaKernel.addArg("const int ksize");
@@ -682,6 +683,7 @@ void MSCodeGen::generateCudaKernelCode() {
 
   unsigned int ntx = blockSize_[0];
   unsigned int nty = blockSize_[1];
+
   cudaKernel.addStatement("const unsigned int nx = isize");
   cudaKernel.addStatement("const unsigned int ny = jsize");
   cudaKernel.addStatement("const int block_size_i = (blockIdx.x + 1) * " + std::to_string(ntx) +
@@ -773,7 +775,18 @@ void MSCodeGen::generateCudaKernelCode() {
     indexIterators.emplace(CodeGeneratorHelper::indexIteratorName(dims), dims);
   }
 
-  cudaKernel.addComment("initialized iterators");
+  cudaKernel.addStatement("__shared__ STable<" + std::to_string(ntx) + "," + std::to_string(nty) +
+                          "> stable");
+  cudaKernel.addStatement("const int uindex = threadIdx.x+threadIdx.y*" + std::to_string(nty));
+  cudaKernel.addStatement("const int uindexg = (blockIdx.x * " + std::to_string(ntx) +
+                          " + iblock) * 1 + (blockIdx.y * " + std::to_string(nty) +
+                          "+ jblock) * stride_111_1");
+
+  cudaKernel.addBlockStatement("for(int n = 0; n < 4 /* neigh */; ++n)", [&]() {
+    cudaKernel.addStatement("stable.index(uindex, n) = table(uindexg, n)");
+  });
+
+  cudaKernel.addComment("initialize iterators");
   for(auto index : indexIterators) {
     std::string idxStmt = "int idx" + index.first + " = ";
     bool init = false;

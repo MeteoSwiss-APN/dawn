@@ -44,6 +44,7 @@ CudaCodeGen::~CudaCodeGen() {}
 void CudaCodeGen::generateAllCudaKernels(
     std::stringstream& ssSW,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
     DAWN_ASSERT(cachePropertyMap_.count(ms->getID()));
 
@@ -250,6 +251,7 @@ void CudaCodeGen::generateStencilClassMembers(
   }
 
   stencilClass.addMember("const " + c_gtc() + "domain&", "m_dom");
+  stencilClass.addMember("const atlas::mesh::BlockConnectivity&", "m_table");
 
   stencilClass.addComment("storage declarations");
   for(auto fieldIt : nonTempFields) {
@@ -274,6 +276,7 @@ void CudaCodeGen::generateStencilClassCtr(
   if(!globalsMap.empty()) {
     stencilClassCtr.addArg("globals& globals_");
   }
+  stencilClassCtr.addArg("const atlas::mesh::BlockConnectivity& table");
 
   for(auto fieldIt : nonTempFields) {
     std::string fieldName = (*fieldIt).second.Name;
@@ -282,6 +285,7 @@ void CudaCodeGen::generateStencilClassCtr(
 
   stencilClassCtr.addInit("sbase(\"" + stencilClass.getName() + "\")");
   stencilClassCtr.addInit("m_dom(dom_)");
+  stencilClassCtr.addInit("m_table(table)");
 
   if(!globalsMap.empty()) {
     stencilClassCtr.addInit("m_globals(globals_)");
@@ -305,6 +309,7 @@ void CudaCodeGen::generateStencilWrapperCtr(
   // Generate stencil wrapper constructor
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
+  StencilWrapperConstructor.addArg("const atlas::mesh::BlockConnectivity& table");
 
   for(int fieldId : stencilInstantiation->getAPIFieldIDs()) {
     StencilWrapperConstructor.addArg(
@@ -327,7 +332,7 @@ void CudaCodeGen::generateStencilWrapperCtr(
 
     std::string initCtr = "m_" + stencilName + "(new " + stencilName;
 
-    initCtr += "(dom";
+    initCtr += "(dom, table";
     if(!globalsMap.empty()) {
       initCtr += ",m_globals";
     }
@@ -547,7 +552,7 @@ void CudaCodeGen::generateStencilRunMethod(
     StencilRunMethod.addStatement("dim3 blocks(nbx, nby, nbz)");
     std::string kernelCall =
         CodeGeneratorHelper::buildCudaKernelName(stencilInstantiation, multiStagePtr) +
-        "<<<blocks, threads>>>(";
+        "<<<blocks, threads>>>(m_table,";
 
     if(!globalsMap.empty()) {
       kernelCall = kernelCall + "m_globals,";
@@ -680,7 +685,25 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
   //==============------------------------------------------------------------------------------===
   CodeGen::addMplIfdefs(ppDefines, 30, context_->getOptions().MaxHaloPoints);
 
+  ppDefines.push_back("#include \"atlas/mesh/Connectivity.h\"\n");
+
   generateBCHeaders(ppDefines);
+
+  std::stringstream sss;
+  Structure stable("struct", "STable", sss, "int ntx, int nty");
+
+  stable.addMember("int", "data[ntx * nty * 4]");
+  auto idxFn = stable.addMemberFunction("__device__ int&", "index");
+  idxFn.addArg("int i");
+  idxFn.addArg("int neigh");
+  idxFn.startBody();
+  idxFn.addStatement("assert(i >= 0 && i < ntx * nty )");
+  idxFn.addStatement("assert(neigh < 4)");
+  idxFn.addStatement("return data[i*4+neigh]");
+  idxFn.commit();
+  stable.commit();
+
+  ppDefines.push_back(sss.str());
 
   DAWN_LOG(INFO) << "Done generating code";
 
