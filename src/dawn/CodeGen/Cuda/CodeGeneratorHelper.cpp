@@ -151,9 +151,22 @@ std::string CodeGeneratorHelper::getUIndex(Array3i offset) {
   if(offset[0] == 1 && offset[1] == 0) {
     return "stable(uindex, 2) + k*stride_111_2";
   }
+  if(offset[0] == 1 && offset[1] == 1) {
+    return "stable(stable(uindex, 2), 1) + k*stride_111_2";
+  }
+  if(offset[0] == 1 && offset[1] == -1) {
+    return "stable(stable(uindex, 2), 3) + k*stride_111_2";
+  }
   if(offset[0] == -1 && offset[1] == 0) {
     return "stable(uindex, 0)+ k*stride_111_2";
   }
+  if(offset[0] == -1 && offset[1] == 1) {
+    return "stable(stable(uindex, 0), 1)+ k*stride_111_2";
+  }
+  if(offset[0] == -1 && offset[1] == 1) {
+    return "stable(stable(uindex, 0), 3)+ k*stride_111_2";
+  }
+
   if(offset[0] == 0 && offset[1] == 1) {
     return "stable(uindex, 1)+ k*stride_111_2";
   }
@@ -172,7 +185,9 @@ std::string CodeGeneratorHelper::getUIndex(Array3i offset) {
   if(offset[0] == 0 && offset[1] == -2) {
     return "stable(stable(uindex,-1), -1)+ k*stride_111_2";
   }
-  dawn_unreachable("non supported offset");
+  dawn_unreachable(std::string("non supported offset " + std::to_string(offset[0]) + "," +
+                               std::to_string(offset[1]))
+                       .c_str());
 }
 std::array<std::string, 3> CodeGeneratorHelper::ijkfyOffset(const Array3i& offsets,
                                                             bool useTmpIndex,
