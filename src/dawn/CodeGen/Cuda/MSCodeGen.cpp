@@ -627,10 +627,10 @@ void MSCodeGen::generateCudaKernelCode() {
   MemberFunction cudaKernel(fnDecl, cudaKernelName_, ss_);
 
   const auto& globalsMap = stencilInstantiation_->getMetaData().globalVariableMap_;
+  cudaKernel.addArg("atlas::mesh::BlockConnectivity table");
   if(!globalsMap.empty()) {
     cudaKernel.addArg("globals globals_");
   }
-  cudaKernel.addArg("atlas::mesh::BlockConnectivity table");
   cudaKernel.addArg("const int isize");
   cudaKernel.addArg("const int jsize");
   cudaKernel.addArg("const int ksize");

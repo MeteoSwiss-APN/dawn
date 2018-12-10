@@ -273,10 +273,10 @@ void CudaCodeGen::generateStencilClassCtr(
   auto& paramNameToType = stencilProperties->paramNameToType_;
 
   stencilClassCtr.addArg("const " + c_gtc() + "domain& dom_");
+  stencilClassCtr.addArg("const atlas::mesh::BlockConnectivity& table");
   if(!globalsMap.empty()) {
     stencilClassCtr.addArg("globals& globals_");
   }
-  stencilClassCtr.addArg("const atlas::mesh::BlockConnectivity& table");
 
   for(auto fieldIt : nonTempFields) {
     std::string fieldName = (*fieldIt).second.Name;
