@@ -169,6 +169,8 @@ public:
   /// @brief Convert interval to string
   std::string toString() const;
 
+  std::string toStringGen() const;
+
   friend std::ostream& operator<<(std::ostream& os, const Interval& interval);
 
   /// @brief Generate a name uniquely identifying the interval for code generation

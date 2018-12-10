@@ -149,6 +149,9 @@ void GTCodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInsta
 
   for(const auto& globalProp : globalsMap) {
     auto globalValue = globalProp.second;
+    if(globalValue->isConstexpr()) {
+      continue;
+    }
     auto getter = stencilWrapperClass.addMemberFunction(
         sir::Value::typeToString(globalValue->getType()), "get_" + globalProp.first);
     getter.finishArgs();
