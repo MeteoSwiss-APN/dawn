@@ -149,28 +149,28 @@ void CodeGeneratorHelper::generateFieldAccessDeref(
 
 std::string CodeGeneratorHelper::getUIndex(Array3i offset) {
   if(offset[0] == 1 && offset[1] == 0) {
-    return "stable(uindex, 2)";
+    return "stable(uindex, 2) + k*stride_111_2";
   }
   if(offset[0] == -1 && offset[1] == 0) {
-    return "stable(uindex, 0)";
+    return "stable(uindex, 0)+ k*stride_111_2";
   }
   if(offset[0] == 0 && offset[1] == 1) {
-    return "stable(uindex, 1)";
+    return "stable(uindex, 1)+ k*stride_111_2";
   }
   if(offset[0] == 0 && offset[1] == -1) {
-    return "stable(uindex, 3)";
+    return "stable(uindex, 3)+ k*stride_111_2";
   }
   if(offset[0] == 2 && offset[1] == 0) {
-    return "stable(stable(uindex,2), 2)";
+    return "stable(stable(uindex,2), 2)+ k*stride_111_2";
   }
   if(offset[0] == -2 && offset[1] == 0) {
-    return "stable(stable(uindex,0), 0)";
+    return "stable(stable(uindex,0), 0)+ k*stride_111_2";
   }
   if(offset[0] == 0 && offset[1] == 2) {
-    return "stable(stable(uindex,1), 1)";
+    return "stable(stable(uindex,1), 1)+ k*stride_111_2";
   }
   if(offset[0] == 0 && offset[1] == -2) {
-    return "stable(stable(uindex,-1), -1)";
+    return "stable(stable(uindex,-1), -1)+ k*stride_111_2";
   }
   dawn_unreachable("non supported offset");
 }
