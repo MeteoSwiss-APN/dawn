@@ -783,7 +783,7 @@ void MSCodeGen::generateCudaKernelCode() {
                           "+ jblock) * stride_111_1");
 
   cudaKernel.addBlockStatement("for(int n = 0; n < 4 /* neigh */; ++n)", [&]() {
-    cudaKernel.addStatement("stable.index(uindex, n) = table(uindexg, n)");
+    cudaKernel.addStatement("stable(uindex, n) = table(uindexg, n)");
   });
 
   cudaKernel.addComment("initialize iterators");

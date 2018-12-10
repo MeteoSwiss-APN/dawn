@@ -693,7 +693,7 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
   Structure stable("struct", "STable", sss, "int ntx, int nty");
 
   stable.addMember("int", "data[ntx * nty * 4]");
-  auto idxFn = stable.addMemberFunction("__device__ int&", "index");
+  auto idxFn = stable.addMemberFunction("__device__ int&", "operator()");
   idxFn.addArg("int i");
   idxFn.addArg("int neigh");
   idxFn.startBody();

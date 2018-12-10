@@ -137,11 +137,43 @@ void CodeGeneratorHelper::generateFieldAccessDeref(
   std::string offsetStr = RangeToString("+", "", "", true)(
       CodeGeneratorHelper::ijkfyOffset(offset, useTmpIndex_, iter));
   const bool readOnly = (field.getIntend() == iir::Field::IntendKind::IK_Input);
-  ss << (readOnly ? "__ldg(&(" : "") << accessName
-     << (offsetStr.empty() ? "[" + index + "]" : ("[" + index + "+" + offsetStr + "]"))
-     << (readOnly ? "))" : "");
+  if(offset[2] == 0 && !offsetStr.empty()) {
+    ss << (readOnly ? "__ldg(&(" : "") << accessName << "[" + getUIndex(offset) << "]"
+       << (readOnly ? "))" : "");
+  } else {
+    ss << (readOnly ? "__ldg(&(" : "") << accessName
+       << (offsetStr.empty() ? "[" + index + "]" : ("[" + index + "+" + offsetStr + "]"))
+       << (readOnly ? "))" : "");
+  }
 }
 
+std::string CodeGeneratorHelper::getUIndex(Array3i offset) {
+  if(offset[0] == 1 && offset[1] == 0) {
+    return "stable(uindex, 2)";
+  }
+  if(offset[0] == -1 && offset[1] == 0) {
+    return "stable(uindex, 0)";
+  }
+  if(offset[0] == 0 && offset[1] == 1) {
+    return "stable(uindex, 1)";
+  }
+  if(offset[0] == 0 && offset[1] == -1) {
+    return "stable(uindex, 3)";
+  }
+  if(offset[0] == 2 && offset[1] == 0) {
+    return "stable(stable(uindex,2), 2)";
+  }
+  if(offset[0] == -2 && offset[1] == 0) {
+    return "stable(stable(uindex,0), 0)";
+  }
+  if(offset[0] == 0 && offset[1] == 2) {
+    return "stable(stable(uindex,1), 1)";
+  }
+  if(offset[0] == 0 && offset[1] == -2) {
+    return "stable(stable(uindex,-1), -1)";
+  }
+  dawn_unreachable("non supported offset");
+}
 std::array<std::string, 3> CodeGeneratorHelper::ijkfyOffset(const Array3i& offsets,
                                                             bool useTmpIndex,
                                                             const Array3i iteratorDims) {

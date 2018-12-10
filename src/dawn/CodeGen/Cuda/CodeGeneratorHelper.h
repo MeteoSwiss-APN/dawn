@@ -68,6 +68,8 @@ public:
   static std::string
   buildCudaKernelName(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
                       const std::unique_ptr<iir::MultiStage>& ms);
+
+  static std::string getUIndex(Array3i offset);
 };
 
 } // namespace cuda
