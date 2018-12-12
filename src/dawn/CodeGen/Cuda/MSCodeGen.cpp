@@ -803,41 +803,39 @@ void MSCodeGen::generateCudaKernelCode() {
 
   cudaKernel.addBlockStatement("for(int n = 0; n < 4 /* neigh */; ++n)", [&]() {
     cudaKernel.addStatement("stable(uindex, n) = table(uindexg, n)");
-    if(maxReadExtent.getExtents()[1].Minus != 0) {
-      for(int i = 1; i <= std::abs(mmaxReadExtents.getExtents()[0].Minus); ++i) {
-        cudaKernel.addBlockStatement("if(threadIdx.x == 0)", [&]() {
-          cudaKernel.addStatement("stable(uindex-" + std::to_string(i) + ", n) = table(uindexg-" +
-                                  std::to_string(i) + ", n)");
+    for(int i = 1; i <= std::abs(mmaxReadExtents.getExtents()[0].Minus); ++i) {
+      cudaKernel.addBlockStatement("if(threadIdx.x == 0)", [&]() {
+        cudaKernel.addStatement("stable(uindex-" + std::to_string(i) + ", n) = table(uindexg-" +
+                                std::to_string(i) + ", n)");
 
-        });
-      }
-      for(int i = 1; i <= std::abs(mmaxReadExtents.getExtents()[0].Plus); ++i) {
-        cudaKernel.addBlockStatement("if(threadIdx.x == " + std::to_string(ntx) + "-1)", [&]() {
-          cudaKernel.addStatement("stable(uindex+" + std::to_string(i) + ", n) = table(uindexg+" +
-                                  std::to_string(i) + ", n)");
+      });
+    }
+    for(int i = 1; i <= std::abs(mmaxReadExtents.getExtents()[0].Plus); ++i) {
+      cudaKernel.addBlockStatement("if(threadIdx.x == " + std::to_string(ntx) + "-1)", [&]() {
+        cudaKernel.addStatement("stable(uindex+" + std::to_string(i) + ", n) = table(uindexg+" +
+                                std::to_string(i) + ", n)");
 
-        });
-      }
-      for(int i = 1; i <= std::abs(mmaxReadExtents.getExtents()[1].Minus); ++i) {
-        cudaKernel.addBlockStatement("if(threadIdx.y == 0)", [&]() {
-          cudaKernel.addStatement(
-              "stable(uindex-" + std::to_string(i) + "*(" + std::to_string(ntx) + "+" +
-              std::to_string(std::abs(mmaxReadExtents[0].Minus)) + "+" +
-              std::to_string(std::abs(mmaxReadExtents[0].Plus)) + "),n) = table(uindexg - " +
-              std::to_string(i) + " * stride_111_1, n) ");
+      });
+    }
+    for(int i = 1; i <= std::abs(mmaxReadExtents.getExtents()[1].Minus); ++i) {
+      cudaKernel.addBlockStatement("if(threadIdx.y == 0)", [&]() {
+        cudaKernel.addStatement("stable(uindex-" + std::to_string(i) + "*(" + std::to_string(ntx) +
+                                "+" + std::to_string(std::abs(mmaxReadExtents[0].Minus)) + "+" +
+                                std::to_string(std::abs(mmaxReadExtents[0].Plus)) +
+                                "),n) = table(uindexg - " + std::to_string(i) +
+                                " * stride_111_1, n) ");
 
-        });
-      }
-      for(int i = 1; i <= std::abs(mmaxReadExtents.getExtents()[1].Plus); ++i) {
-        cudaKernel.addBlockStatement("if(threadIdx.y == " + std::to_string(nty) + ")", [&]() {
-          cudaKernel.addStatement(
-              "stable(uindex+" + std::to_string(i) + "*(" + std::to_string(ntx) + "+" +
-              std::to_string(std::abs(mmaxReadExtents[0].Minus)) + "+" +
-              std::to_string(std::abs(mmaxReadExtents[0].Plus)) + "), n) = table(uindexg - " +
-              std::to_string(i) + "*stride_111_1, n)");
+      });
+    }
+    for(int i = 1; i <= std::abs(mmaxReadExtents.getExtents()[1].Plus); ++i) {
+      cudaKernel.addBlockStatement("if(threadIdx.y == " + std::to_string(nty) + ")", [&]() {
+        cudaKernel.addStatement("stable(uindex+" + std::to_string(i) + "*(" + std::to_string(ntx) +
+                                "+" + std::to_string(std::abs(mmaxReadExtents[0].Minus)) + "+" +
+                                std::to_string(std::abs(mmaxReadExtents[0].Plus)) +
+                                "), n) = table(uindexg - " + std::to_string(i) +
+                                "*stride_111_1, n)");
 
-        });
-      }
+      });
     }
   });
   if(!maxReadExtent.isHorizontalPointwise()) {
