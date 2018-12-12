@@ -840,6 +840,9 @@ void MSCodeGen::generateCudaKernelCode() {
       }
     }
   });
+  if(!maxReadExtent.isHorizontalPointwise()) {
+    cudaKernel.addStatement("__syncthreads()");
+  }
 
   cudaKernel.addComment("initialize iterators");
   for(auto index : indexIterators) {
