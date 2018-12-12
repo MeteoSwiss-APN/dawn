@@ -789,13 +789,13 @@ void MSCodeGen::generateCudaKernelCode() {
                                0};
 
   cudaKernel.addStatement("__shared__ STable<" + std::to_string(ntx) + "," + std::to_string(nty) +
-                          "," + std::to_string(std::abs(mmaxReadExtents[0].Minus)) + "," +
-                          std::to_string(std::abs(mmaxReadExtents[0].Plus)) + "," +
-                          std::to_string(std::abs(mmaxReadExtents[1].Minus)) + "," +
-                          std::to_string(std::abs(mmaxReadExtents[1].Plus)) + "> stable");
+                          "," + std::to_string(std::abs(maxReadExtent[0].Minus)) + "," +
+                          std::to_string(std::abs(maxReadExtent[0].Plus)) + "," +
+                          std::to_string(std::abs(maxReadExtent[1].Minus)) + "," +
+                          std::to_string(std::abs(maxReadExtent[1].Plus)) + "> stable");
   cudaKernel.addStatement("const int uindex = (iblock+" +
-                          std::to_string(std::abs(mmaxReadExtents[0].Minus)) + ") + (jblock+" +
-                          std::to_string(std::abs(mmaxReadExtents[1].Minus)) + ")*" +
+                          std::to_string(std::abs(maxReadExtent[0].Minus)) + ") + (jblock+" +
+                          std::to_string(std::abs(maxReadExtent[1].Minus)) + ")*" +
                           std::to_string(nty));
   cudaKernel.addStatement("const int uindexg = (blockIdx.x * " + std::to_string(ntx) +
                           " + iblock+3) * 1 + (blockIdx.y * " + std::to_string(nty) +
