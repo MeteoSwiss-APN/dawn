@@ -793,10 +793,10 @@ void MSCodeGen::generateCudaKernelCode() {
                           std::to_string(std::abs(maxReadExtent[0].Plus)) + "," +
                           std::to_string(std::abs(maxReadExtent[1].Minus)) + "," +
                           std::to_string(std::abs(maxReadExtent[1].Plus)) + "> stable");
-  cudaKernel.addStatement("const int uindex = (iblock+" +
-                          std::to_string(std::abs(maxReadExtent[0].Minus)) + ") + (jblock+" +
-                          std::to_string(std::abs(maxReadExtent[1].Minus)) + ")*" +
-                          std::to_string(nty));
+  cudaKernel.addStatement(
+      "const int uindex = (iblock+" + std::to_string(std::abs(maxReadExtent[0].Minus)) +
+      ") + (jblock+" + std::to_string(std::abs(maxReadExtent[1].Minus)) + ")*" +
+      std::to_string(nty + std::abs(maxReadExtent[0].Minus) + std::abs(maxReadExtent[0].Plus)));
   cudaKernel.addStatement("const int uindexg = (blockIdx.x * " + std::to_string(ntx) +
                           " + iblock+3) * 1 + (blockIdx.y * " + std::to_string(nty) +
                           "+ jblock+3) * (isize+3*2)");
