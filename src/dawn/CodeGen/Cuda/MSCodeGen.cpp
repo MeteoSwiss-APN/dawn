@@ -799,7 +799,7 @@ void MSCodeGen::generateCudaKernelCode() {
                           std::to_string(nty));
   cudaKernel.addStatement("const int uindexg = (blockIdx.x * " + std::to_string(ntx) +
                           " + iblock+3) * 1 + (blockIdx.y * " + std::to_string(nty) +
-                          "+ jblock+3) * stride_111_1");
+                          "+ jblock+3) * (isize+3*2)");
 
   cudaKernel.addBlockStatement("for(int n = 0; n < 4 /* neigh */; ++n)", [&]() {
     cudaKernel.addStatement("stable(uindex, n) = table(uindexg, n)");
