@@ -702,7 +702,7 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
   idxFn.addArg("int i");
   idxFn.addArg("int neigh");
   idxFn.startBody();
-  idxFn.addStatement("assert(i >= 0 && i < ntx * nty )");
+  idxFn.addStatement("assert(i >= 0 && i < (ntx + hxm + hxp) * (nty + hym + hyp)");
   idxFn.addStatement("assert(neigh < 4)");
   idxFn.addStatement("return data[i*4+neigh]");
   idxFn.commit();
