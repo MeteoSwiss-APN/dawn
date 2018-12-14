@@ -695,14 +695,14 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
   generateBCHeaders(ppDefines);
 
   std::stringstream sss;
-  Structure stable("struct", "STable", sss, "int ntx, int nty, int hxm, int hxp, int hym, int hyp");
+  Structure stable("struct", "STable", sss, "int ntx, int nty");
 
-  stable.addMember("int", "data[(ntx + hxm + hxp) * (nty + hym + hyp) * 4]");
+  stable.addMember("int", "data[ntx * nty * 4]");
   auto idxFn = stable.addMemberFunction("__device__ int&", "operator()");
   idxFn.addArg("int i");
   idxFn.addArg("int neigh");
   idxFn.startBody();
-  idxFn.addStatement("assert(i >= 0 && i < (ntx + hxm + hxp) * (nty + hym + hyp))");
+  idxFn.addStatement("assert(i >= 0 && i < ntx * nty)");
   idxFn.addStatement("assert(neigh < 4)");
   idxFn.addStatement("return data[i*4+neigh]");
   idxFn.commit();
