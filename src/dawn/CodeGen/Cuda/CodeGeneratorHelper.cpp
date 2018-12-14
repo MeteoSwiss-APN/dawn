@@ -152,19 +152,19 @@ std::string CodeGeneratorHelper::getUIndex(Array3i offset) {
     return "stable(uindex, 2) + k*stride_111_2";
   }
   if(offset[0] == 1 && offset[1] == 1) {
-    return "table(stable(uindex, 2), 1) + k*stride_111_2";
+    return "table(stable(uindex, 2) + 3*(stride_111_1)+3, 1) + k*stride_111_2";
   }
   if(offset[0] == 1 && offset[1] == -1) {
-    return "table(stable(uindex, 2), 3) + k*stride_111_2";
+    return "table(stable(uindex, 2) + 3*(stride_111_1)+3, 3) + k*stride_111_2";
   }
   if(offset[0] == -1 && offset[1] == 0) {
     return "stable(uindex, 0)+ k*stride_111_2";
   }
   if(offset[0] == -1 && offset[1] == 1) {
-    return "table(stable(uindex, 0), 1)+ k*stride_111_2";
+    return "table(stable(uindex, 0) + 3*(stride_111_1)+3, 1)+ k*stride_111_2";
   }
   if(offset[0] == -1 && offset[1] == 1) {
-    return "table(stable(uindex, 0), 3)+ k*stride_111_2";
+    return "table(stable(uindex, 0) + 3*(stride_111_1)+3, 3)+ k*stride_111_2";
   }
 
   if(offset[0] == 0 && offset[1] == 1) {
@@ -174,28 +174,32 @@ std::string CodeGeneratorHelper::getUIndex(Array3i offset) {
     return "stable(uindex, 3)+ k*stride_111_2";
   }
   if(offset[0] == 2 && offset[1] == 0) {
-    return "table(stable(uindex,2), 2)+ k*stride_111_2";
+    return "table(stable(uindex,2) + 3*(stride_111_1)+3, 2)+ k*stride_111_2";
   }
   if(offset[0] == -2 && offset[1] == 0) {
-    return "table(stable(uindex,0), 0)+ k*stride_111_2";
+    return "table(stable(uindex,0) + 3*(stride_111_1)+3, 0)+ k*stride_111_2";
   }
   if(offset[0] == 0 && offset[1] == 2) {
-    return "table(stable(uindex,1), 1)+ k*stride_111_2";
+    return "table(stable(uindex,1) + 3*(stride_111_1)+3, 1)+ k*stride_111_2";
   }
   if(offset[0] == 0 && offset[1] == -2) {
-    return "table(stable(uindex,-1), -1)+ k*stride_111_2";
+    return "table(stable(uindex,-1) + 3*(stride_111_1)+3, -1)+ k*stride_111_2";
   }
   if(offset[0] == 3 && offset[1] == 0) {
-    return "table(table(stable(uindex,2), 2), 2)+ k*stride_111_2";
+    return "table(table(stable(uindex,2) + 3*(stride_111_1)+3, 2) + 3*(stride_111_1)+3, 2)+ "
+           "k*stride_111_2";
   }
   if(offset[0] == -3 && offset[1] == 0) {
-    return "table(table(stable(uindex,0), 0), 0)+ k*stride_111_2";
+    return "table(table(stable(uindex,0) + 3*(stride_111_1)+3, 0) + 3*(stride_111_1)+3, 0)+ "
+           "k*stride_111_2";
   }
   if(offset[0] == 0 && offset[1] == 3) {
-    return "table(table(stable(uindex,1), 1), 1)+ k*stride_111_2";
+    return "table(table(stable(uindex,1) + 3*(stride_111_1)+3, 1) + 3*(stride_111_1)+3, 1)+ "
+           "k*stride_111_2";
   }
   if(offset[0] == 0 && offset[1] == -3) {
-    return "table(table(stable(uindex,3), 3), 3)+ k*stride_111_2";
+    return "table(table(stable(uindex,3) + 3*(stride_111_1)+3, 3) + 3*(stride_111_1)+3, 3)+ "
+           "k*stride_111_2";
   }
 
   dawn_unreachable(std::string("non supported offset " + std::to_string(offset[0]) + "," +
