@@ -212,8 +212,10 @@ public:
 
   virtual bool preVisitNode(std::shared_ptr<VarAccessExpr> const& expr) override {
     DAWN_ASSERT(tmpFunction_);
-    // record the var access as an argument to the stencil funcion
-    dawn_unreachable_internal("All the var access should have been promoted to temporaries");
+    if(!instantiation_->isGlobalVariable(instantiation_->getAccessIDFromExpr(expr))) {
+      // record the var access as an argument to the stencil funcion
+      dawn_unreachable_internal("All the var access should have been promoted to temporaries");
+    }
     return true;
   }
 
@@ -589,8 +591,12 @@ bool PassTemporaryToStencilFunction::run(
         }
       }
     }
+
     // perform the promotion "local var"->temporary
     for(auto varID : localVarAccessIDs) {
+      if(stencilInstantiation->isGlobalVariable(varID))
+        continue;
+
       stencilInstantiation->promoteLocalVariableToTemporaryField(stencilPtr.get(), varID,
                                                                  stencilPtr->getLifetime(varID));
     }
