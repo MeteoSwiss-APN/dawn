@@ -41,11 +41,11 @@ TEST(GraphTest, InputOutputNodes1) {
 
   ASSERT_EQ(outputNodes.size(), 1);
   EXPECT_TRUE((std::set<std::size_t>(outputNodes.begin(), outputNodes.end()) ==
-               std::set<std::size_t>{graph.getVertexIDFromID(0)}));
+               std::set<std::size_t>{graph.getVertexIDFromValue(0)}));
 
   ASSERT_EQ(inputNodes.size(), 1);
   EXPECT_TRUE((std::set<std::size_t>(inputNodes.begin(), inputNodes.end()) ==
-               std::set<std::size_t>{graph.getVertexIDFromID(1)}));
+               std::set<std::size_t>{graph.getVertexIDFromValue(1)}));
 }
 
 TEST(GraphTest, InputOutputNodes2) {
@@ -76,11 +76,12 @@ TEST(GraphTest, InputOutputNodes2) {
 
   ASSERT_EQ(outputNodes.size(), 1);
   EXPECT_TRUE((std::set<std::size_t>(outputNodes.begin(), outputNodes.end()) ==
-               std::set<std::size_t>{graph.getVertexIDFromID(0)}));
+               std::set<std::size_t>{graph.getVertexIDFromValue(0)}));
 
   ASSERT_EQ(inputNodes.size(), 2);
-  EXPECT_TRUE((std::set<std::size_t>(inputNodes.begin(), inputNodes.end()) ==
-               std::set<std::size_t>{graph.getVertexIDFromID(4), graph.getVertexIDFromID(6)}));
+  EXPECT_TRUE(
+      (std::set<std::size_t>(inputNodes.begin(), inputNodes.end()) ==
+       std::set<std::size_t>{graph.getVertexIDFromValue(4), graph.getVertexIDFromValue(6)}));
 }
 
 TEST(GraphTest, InputOutputNodes3) {
@@ -133,18 +134,18 @@ TEST(GraphTest, cycle) {
 TEST(GraphTest, computeIDsWithCycle) {
   TestGraph graph;
 
-  graph.insertEdge(0, 1);
-  graph.insertEdge(1, 2);
-  graph.insertEdge(2, 3);
-  graph.insertEdge(3, 4);
-
-  graph.insertEdge(0, 5);
+  graph.insertEdge(3, 5);
   graph.insertEdge(5, 6);
-  graph.insertEdge(1, 7);
-  graph.insertEdge(7, 0);
+  graph.insertEdge(6, 7);
+  graph.insertEdge(7, 8);
+
+  graph.insertEdge(3, 9);
+  graph.insertEdge(9, 10);
+  graph.insertEdge(5, 11);
+  graph.insertEdge(11, 3);
 
   auto ids = graph.computeIDsWithCycles();
-  std::vector<int> ref = {7, 1, 0};
+  std::vector<int> ref = {3, 5, 11};
   EXPECT_TRUE((std::equal(ids.begin(), ids.end(), ref.begin())));
 }
 

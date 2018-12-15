@@ -15,8 +15,8 @@
 #include "dawn/Optimizer/PassTemporaryMerger.h"
 #include "dawn/IIR/DependencyGraph.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/StringUtil.h"
 #include <iostream>
@@ -36,8 +36,7 @@ bool PassTemporaryMerger::run(
 
   bool stencilNeedsMergePass = false;
   for(const auto& stencilPtr : stencilInstantiation->getStencils())
-    stencilNeedsMergePass |=
-        stencilPtr->getStencilAttributes().has(sir::Attr::AK_MergeTemporaries);
+    stencilNeedsMergePass |= stencilPtr->getStencilAttributes().has(sir::Attr::AK_MergeTemporaries);
 
   if(!(context->getOptions().MergeTemporaries || stencilNeedsMergePass))
     return true;
@@ -93,7 +92,8 @@ bool PassTemporaryMerger::run(
           int newAccessIDOfLastTemporary = AccessIDOfLastTemporary;
 
           if(stencilInstantiation->isTemporaryField(ToAccessID) && AccessIDOfLastTemporary != -1) {
-            TemporaryDAG.insertEdge(AccessIDOfLastTemporary, ToAccessID, iir::Extents{0, 0, 0, 0, 0, 0});
+            TemporaryDAG.insertEdge(AccessIDOfLastTemporary, ToAccessID,
+                                    iir::Extents{0, 0, 0, 0, 0, 0});
             newAccessIDOfLastTemporary = ToAccessID;
           }
 
@@ -112,7 +112,7 @@ bool PassTemporaryMerger::run(
     std::unordered_set<int> temporaries;
     std::for_each(TemporaryDAG.getVertices().begin(), TemporaryDAG.getVertices().end(),
                   [&](const std::pair<int, Vertex>& vertexPair) {
-                    temporaries.emplace(vertexPair.second.ID);
+                    temporaries.emplace(vertexPair.second.value);
                   });
     auto LifeTimeMap = stencil.getLifetime(temporaries);
 

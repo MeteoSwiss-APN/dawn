@@ -38,7 +38,7 @@ template <class... IDTypes>
 bool partitionIsIn(TestGraph& graph, std::vector<std::set<std::size_t>> partitions,
                    IDTypes... IDs) {
   for(const auto& partition : partitions)
-    if(partition == std::set<std::size_t>{graph.getVertexIDFromID(IDs)...})
+    if(partition == std::set<std::size_t>{graph.getVertexIDFromValue(IDs)...})
       return true;
   return false;
 }

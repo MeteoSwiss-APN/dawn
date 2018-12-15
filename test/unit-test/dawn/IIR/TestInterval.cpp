@@ -12,9 +12,9 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/IIR/Interval.h"
 #include "dawn/IIR/IntervalAlgorithms.h"
 #include "dawn/IIR/MultiInterval.h"
-#include "dawn/IIR/Interval.h"
 #include <gtest/gtest.h>
 #include <unordered_set>
 
@@ -413,4 +413,24 @@ TEST(IntervalTest, Distance) {
       (distance(Interval::IntervalLevel{sir::Interval::End, 1}, Interval::IntervalLevel{1, 1})),
       (IntervalDiff{IntervalDiff::RangeType::minusFullRange, 1}));
 }
+
+TEST(IntervalTest, CodeGenName) {
+  Interval I1(0, 2, 1, -1);
+
+  EXPECT_EQ(Interval::makeCodeGenName(I1), "interval_start_plus_1_2_minus_1");
+
+  Interval I2(sir::Interval::End, sir::Interval::End, 1, -2);
+
+  EXPECT_EQ(Interval::makeCodeGenName(I2), "interval_end_plus_1_end_minus_2");
+}
+TEST(IntervalTest, toStringGen) {
+  Interval I1(0, 2, 1, -1);
+
+  EXPECT_EQ(I1.toStringGen(), "start_plus_1_2_minus_1");
+
+  Interval I2(sir::Interval::End, sir::Interval::End, 1, -2);
+
+  EXPECT_EQ(I2.toStringGen(), "end_plus_1_end_minus_2");
+}
+
 } // anonymous namespace
