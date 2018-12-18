@@ -41,8 +41,10 @@ StencilFunctionInstantiation::StencilFunctionInstantiation(
 }
 
 StencilFunctionInstantiation StencilFunctionInstantiation::clone() const {
-  StencilFunctionInstantiation stencilFun(stencilInstantiation_, expr_, function_, ast_, interval_,
-                                          isNested_);
+  // The SIR object function_ is not cloned, but copied, since the SIR is considered immuatble
+  StencilFunctionInstantiation stencilFun(
+      stencilInstantiation_, std::static_pointer_cast<StencilFunCallExpr>(expr_->clone()),
+      function_, ast_->clone(), interval_, isNested_);
 
   stencilFun.hasReturn_ = hasReturn_;
   stencilFun.argsBound_ = argsBound_;

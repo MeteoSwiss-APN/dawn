@@ -413,6 +413,8 @@ public:
     // insert the sir::stencilFunction into the StencilInstantiation
     instantiation_->insertStencilFunctionIntoSIR(sirStencilFunctionInstance);
 
+    // we clone the stencil function instantiation of the candidate so that each instance of the st
+    // function has its own private copy of the expressions (i.e. ast)
     std::shared_ptr<iir::StencilFunctionInstantiation> cloneStencilFun =
         instantiation_->cloneStencilFunctionCandidate(stencilFun, fnClone);
 
@@ -710,6 +712,12 @@ bool PassTemporaryToStencilFunction::run(
 
                   // first instantiation of the stencil function that is inserted in the IIR as a
                   // candidate stencil function
+                  // notice we clone the ast, so that every stencil function instantiation has a
+                  // private copy of the ast (so that it can be transformed). However that is not
+                  // enough since this function is inserted as a candidate, and a candidate can be
+                  // inserted as multiple st function instances. Later when the candidate
+                  // is finalized in a concrete instance, the ast will have to be cloned again
+                  ast = ast->clone();
                   auto stencilFun = stencilInstantiation->makeStencilFunctionInstantiation(
                       stencilFunCallExpr, stencilFunction, ast, sirInterval, nullptr);
 
