@@ -255,7 +255,12 @@ void MSCodeGen::generateFillKCaches(MemberFunction& cudaKernel, const iir::Inter
 
     DAWN_ASSERT(cache.getInterval().is_initialized());
     const auto cacheInterval = *(cache.getInterval());
-    auto vertExtent = cacheProperties_.getKCacheVertExtent(accessID);
+    auto extents = ms_->computeExtents(accessID, interval);
+    if(!extents.is_initialized()) {
+      continue;
+    }
+
+    auto vertExtent = (*extents)[2];
 
     iir::Interval::Bound intervalBound = (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
                                              ? iir::Interval::Bound::lower
