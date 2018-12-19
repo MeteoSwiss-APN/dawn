@@ -37,10 +37,10 @@ protected:
   virtual void addTempStorageTypedef(Structure& stencilClass, iir::Stencil const& stencil) const;
   void addTmpStorageDeclaration(
       Structure& stencilClass,
-      IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tmpFields) const;
+      const std::vector<std::string>& tmpFields) const;
   virtual void addTmpStorageInit(
       MemberFunction& ctr, const iir::Stencil& stencil,
-      IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields) const;
+      std::vector<std::string>& tempFields) const;
   void
   addTmpStorageInitStencilWrapperCtr(MemberFunction& ctr,
                                      const std::vector<std::unique_ptr<iir::Stencil>>& stencils,

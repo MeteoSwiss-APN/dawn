@@ -54,9 +54,8 @@ private:
 
   void addTempStorageTypedef(Structure& stencilClass, iir::Stencil const& stencil) const override;
 
-  void addTmpStorageInit(MemberFunction& ctr, iir::Stencil const& stencil,
-                         IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>&
-                             tempFields) const override;
+  void addTmpStorageInit(MemberFunction& ctr, const iir::Stencil& stencil,
+                         std::vector<std::string>& tempFields) const override;
 
   void
   generateCudaKernelCode(std::stringstream& ssSW,
@@ -102,16 +101,14 @@ private:
   void generateStencilClassCtr(
       Structure& stencilClass, const iir::Stencil& stencil,
       const sir::GlobalVariableMap& globalsMap,
-      IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& nonTempFields,
-      IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields,
+      std::vector<std::string>& nonTempFields,
+      std::vector<std::string>& tempFields,
       std::shared_ptr<StencilProperties> stencilProperties) const;
 
-  void generateStencilClassMembers(
-      Structure& stencilClass, const iir::Stencil& stencil,
-      const sir::GlobalVariableMap& globalsMap,
-      IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& nonTempFields,
-      IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields,
-      std::shared_ptr<StencilProperties> stencilProperties) const;
+  void generateStencilClassMembers(Structure& stencilClass, const iir::Stencil& stencil,
+                                   const sir::GlobalVariableMap& globalsMap,
+                                   std::vector<std::string>& nonTempFields,
+                                   std::vector<std::string>& tempFields) const;
 
   std::string generateStencilInstantiation(
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);

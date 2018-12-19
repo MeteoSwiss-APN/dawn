@@ -273,8 +273,22 @@ void CXXNaiveCodeGen::generateStencilClasses(
         std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
             [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
 
+    // In order for the code-generation to be reporducable, we wan the fields to be ordered:
+    std::vector<std::string> nonTempFieldNames;
+    std::vector<std::string> tempFieldNames;
+
+    for(auto fieldIt : nonTempFields) {
+      nonTempFieldNames.push_back((*fieldIt).second.Name);
+    }
+    std::sort(nonTempFieldNames.begin(), nonTempFieldNames.end());
+
+    for(auto fieldIt : tempFields) {
+      tempFieldNames.push_back((*fieldIt).second.Name);
+    }
+    std::sort(tempFieldNames.begin(), tempFieldNames.end());
+
     // list of template for storages used in the stencil class
-    std::vector<std::string> StencilTemplates(nonTempFields.size());
+    std::vector<std::string> StencilTemplates(nonTempFieldNames.size());
     int cnt = 0;
     std::generate(StencilTemplates.begin(), StencilTemplates.end(),
                   [cnt]() mutable { return "StorageType" + std::to_string(cnt++); });
@@ -296,11 +310,12 @@ void CXXNaiveCodeGen::generateStencilClasses(
       StencilClass.addMember("const globals&", "m_globals");
     }
 
-    for(auto fieldIt : nonTempFields) {
-      StencilClass.addMember(StencilTemplates[fieldIt.idx()] + "&", "m_" + (*fieldIt).second.Name);
+    cnt = 0;
+    for(auto fieldName : nonTempFieldNames) {
+      StencilClass.addMember(StencilTemplates[cnt++] + "&", "m_" + fieldName);
     }
 
-    addTmpStorageDeclaration(StencilClass, tempFields);
+    addTmpStorageDeclaration(StencilClass, tempFieldNames);
 
     StencilClass.changeAccessibility("public");
 
@@ -310,20 +325,20 @@ void CXXNaiveCodeGen::generateStencilClasses(
     if(!globalsMap.empty()) {
       stencilClassCtr.addArg("const globals& globals_");
     }
-    for(auto fieldIt : nonTempFields) {
-      stencilClassCtr.addArg(StencilTemplates[fieldIt.idx()] + "& " + (*fieldIt).second.Name + "_");
+    cnt = 0;
+    for(auto fieldName : nonTempFieldNames) {
+      stencilClassCtr.addArg(StencilTemplates[cnt++] + "& " + fieldName + "_");
     }
 
     stencilClassCtr.addInit("m_dom(dom_)");
     if(!globalsMap.empty()) {
       stencilClassCtr.addArg("m_globals(globals_)");
     }
-
-    for(auto fieldIt : nonTempFields) {
-      stencilClassCtr.addInit("m_" + (*fieldIt).second.Name + "(" + (*fieldIt).second.Name + "_)");
+    for(auto fieldName : nonTempFieldNames) {
+      stencilClassCtr.addInit("m_" + fieldName + "(" + fieldName + "_)");
     }
 
-    addTmpStorageInit(stencilClassCtr, stencil, tempFields);
+    addTmpStorageInit(stencilClassCtr, stencil, tempFieldNames);
     stencilClassCtr.commit();
 
     // virtual dtor
@@ -335,8 +350,8 @@ void CXXNaiveCodeGen::generateStencilClasses(
     MemberFunction syncStoragesMethod = StencilClass.addMemberFunction("void", "sync_storages", "");
     syncStoragesMethod.startBody();
 
-    for(auto fieldIt : nonTempFields) {
-      syncStoragesMethod.addStatement("m_" + (*fieldIt).second.Name + ".sync()");
+    for(auto fieldName : nonTempFieldNames) {
+      syncStoragesMethod.addStatement("m_" + fieldName + ".sync()");
     }
 
     syncStoragesMethod.commit();
@@ -355,16 +370,14 @@ void CXXNaiveCodeGen::generateStencilClasses(
       const iir::MultiStage& multiStage = *multiStagePtr;
 
       // create all the data views
-      for(auto fieldIt : nonTempFields) {
-        const auto fieldName = (*fieldIt).second.Name;
-        StencilRunMethod.addStatement(c_gt() + "data_view<" + StencilTemplates[fieldIt.idx()] +
+      cnt=0;
+      for(auto fieldName : nonTempFieldNames) {
+        StencilRunMethod.addStatement(c_gt() + "data_view<" + StencilTemplates[cnt++] +
                                       "> " + fieldName + "= " + c_gt() + "make_host_view(m_" +
                                       fieldName + ")");
         StencilRunMethod.addStatement("std::array<int,3> " + fieldName + "_offsets{0,0,0}");
       }
-      for(auto fieldIt : tempFields) {
-        const auto fieldName = (*fieldIt).second.Name;
-
+      for(auto fieldName : tempFieldNames) {
         StencilRunMethod.addStatement(c_gt() + "data_view<tmp_storage_t> " + fieldName + "= " +
                                       c_gt() + "make_host_view(m_" + fieldName + ")");
         StencilRunMethod.addStatement("std::array<int,3> " + fieldName + "_offsets{0,0,0}");
