@@ -389,7 +389,11 @@ MSCodeGen::buildKCacheProperties(const iir::Interval& interval,
     DAWN_ASSERT(policy != iir::Cache::CacheIOPolicy::local);
     DAWN_ASSERT(cache.getInterval().is_initialized());
     const auto cacheInterval = *(cache.getInterval());
-    auto vertExtent = cacheProperties_.getKCacheVertExtent(accessID);
+    auto extents = ms_->computeExtents(accessID, interval);
+    if(!extents.is_initialized()) {
+      continue;
+    }
+    auto vertExtent = (*extents)[2];
 
     iir::Interval::Bound endBound = (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
                                         ? iir::Interval::Bound::lower
