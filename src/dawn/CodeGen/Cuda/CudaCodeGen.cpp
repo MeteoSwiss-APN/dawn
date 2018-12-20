@@ -117,11 +117,7 @@ std::string CudaCodeGen::generateStencilInstantiation(
 
   cudaNamespace.commit();
 
-  // Remove trailing ';' as this is retained by Clang's Rewriter
-  std::string str = ssSW.str();
-  str[str.size() - 2] = ' ';
-
-  return str;
+  return ssSW.str();
 }
 
 void CudaCodeGen::generateStencilWrapperPublicMemberFunctions(
