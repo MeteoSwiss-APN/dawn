@@ -161,6 +161,43 @@ void MSCodeGen::generateKCacheFillStatement(MemberFunction& cudaKernel,
                           "] =" + ss.str());
 }
 
+bool MSCodeGen::intervalPreviouslyAccessed(const int accessID, iir::Interval const& targetInterval,
+                                           iir::Interval const& interval,
+                                           const iir::Extent& vertExtent) const {
+  iir::MultiInterval res{targetInterval};
+  auto partitionIntervals = CodeGeneratorHelper::computePartitionOfIntervals(ms_);
+
+  for(const auto& aInterval : partitionIntervals) {
+    // we only need to check intervals that were computed before the current interval of execution
+    if(aInterval.overlaps(interval)) {
+      continue;
+    }
+    for(auto const& doMethod : iterateIIROver<iir::DoMethod>(*ms_)) {
+      if(!doMethod->getInterval().overlaps(aInterval)) {
+        continue;
+      }
+      if(!doMethod->hasField(accessID)) {
+        continue;
+      }
+      auto doMethodInterval = doMethod->getInterval();
+      const auto& field = doMethod->getField(accessID);
+      auto accessedInterval = doMethodInterval.extendInterval(field.getExtents()[2]);
+
+      if(accessedInterval.overlaps(interval)) {
+        auto extents = ms_->computeExtents(accessID, aInterval);
+        DAWN_ASSERT(extents.is_initialized());
+        auto aVertExtent = (*extents)[2];
+
+        if(aVertExtent != vertExtent) {
+          return false;
+        }
+        res.substract(accessedInterval);
+      }
+    }
+  }
+  return res.empty();
+}
+
 void MSCodeGen::generatePreFillKCaches(
     MemberFunction& cudaKernel, const iir::Interval& interval,
     const std::unordered_map<int, Array3i>& fieldIndexMap) const {
@@ -193,9 +230,17 @@ void MSCodeGen::generatePreFillKCaches(
                                              ? iir::Interval::Bound::upper
                                              : iir::Interval::Bound::lower;
 
-    // if the bound of a kcache is the same as the interval, indicates that we will start using the
+    auto prevInterval = (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+                            ? iir::Interval(interval.upperLevel(), interval.upperLevel(),
+                                            vertExtent.Minus, vertExtent.Plus)
+                            : iir::Interval(interval.lowerLevel(), interval.lowerLevel(),
+                                            vertExtent.Minus, vertExtent.Plus);
+
+    // if the bound of a kcgeneratePreFillKCachesache is the same as the interval, indicates that we
+    // will start using the
     // kcache for the first time with this k-leg, and a pre-fill might be required
-    if(cacheInterval.bound(intervalBound) == (interval.bound(intervalBound))) {
+    if(!intervalPreviouslyAccessed(accessID, prevInterval, interval, vertExtent)) {
+      //    if(cacheInterval.bound(intervalBound) == (interval.bound(intervalBound))) {
       auto cacheName = cacheProperties_.getCacheName(accessID);
       iir::Extents horizontalExtent = intervalFields.at(accessID).getExtentsRB();
       kCacheProperty[horizontalExtent].emplace_back(cacheName, accessID, vertExtent);
