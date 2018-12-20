@@ -49,5 +49,6 @@ OPT(bool, CodeGen, true, "codegen", "", "Generate code", "", false, true)
 OPT(bool, ClangFormat, true, "clang-format", "", "Run clang-format on the generated code", "", false, true)
 OPT(bool, ReportPassPreprocessor, false, "report-pass-preprocessor", "", 
     "Print each line of the preprocessed source prepended by the line number (comments and indentation are removed)", "", false, true)
+OPT(bool, Serialized, false, "loaded-serialized", "", "is the passed file serialized data", "", false, true)
 
 // clang-format on

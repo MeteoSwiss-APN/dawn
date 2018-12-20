@@ -42,7 +42,7 @@ ReturnValue Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
   std::shared_ptr<dawn::SIR> returnSIR = nullptr;
 
   // Initialize the GTClangContext
-  auto context = llvm::make_unique<GTClangContext>();
+  std::unique_ptr<GTClangContext> context = llvm::make_unique<GTClangContext>();
 
   // Parse command-line options
   OptionsParser optionsParser(&context->getOptions());

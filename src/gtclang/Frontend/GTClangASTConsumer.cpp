@@ -34,7 +34,9 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/Basic/FileManager.h"
+#include "clang/Basic/TokenKinds.h"
 #include "clang/Basic/Version.h"
+#include "clang/Lex/Lexer.h"
 #include "clang/Rewrite/Core/Rewriter.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringSwitch.h"
@@ -187,51 +189,83 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   clang::FileManager files(clang::FileSystemOptions(), memFS);
   clang::SourceManager sources(context_->getASTContext().getDiagnostics(), files);
 
-  // Get a copy of the main-file's code
-  std::unique_ptr<llvm::MemoryBuffer> generatedCode =
-      llvm::MemoryBuffer::getMemBufferCopy(SM.getBufferData(SM.getMainFileID()));
-
-  // Create the generated file
-  DAWN_LOG(INFO) << "Creating generated file " << generatedFilename;
-  clang::FileID generatedFileID =
-      createInMemoryFile(generatedFilename, generatedCode.get(), sources, files, memFS.get());
-
-  // Replace clang DSL with gridtools
-  clang::Rewriter rewriter(sources, context_->getASTContext().getLangOpts());
-  for(const auto& stencilPair : stencilParser.getStencilMap()) {
-    clang::CXXRecordDecl* stencilDecl = stencilPair.first;
-    if(rewriter.ReplaceText(stencilDecl->getSourceRange(),
-                            stencilPair.second->Attributes.has(dawn::sir::Attr::AK_NoCodeGen)
-                                ? ""
-                                : DawnTranslationUnit->getStencils().at(stencilPair.second->Name)))
-      context_->getDiagnostics().report(Diagnostics::err_fs_error) << dawn::format(
-          "unable to replace stencil code at: %s", stencilDecl->getLocation().printToString(SM));
-  }
-
-  // Replace globals struct
-  if(!globalsParser.isEmpty() && !DawnTranslationUnit->getGlobals().empty()) {
-    if(rewriter.ReplaceText(globalsParser.getRecordDecl()->getSourceRange(),
-                            DawnTranslationUnit->getGlobals()))
-      context_->getDiagnostics().report(Diagnostics::err_fs_error)
-          << dawn::format("unable to replace globals code at: %s",
-                          globalsParser.getRecordDecl()->getLocation().printToString(SM));
-  }
-
-  // Replace interval
-  for(const clang::VarDecl* a : visitor_->getIntervalDecls()) {
-    rewriter.ReplaceText(a->getSourceRange(), "");
-  }
-
-  // Remove the code from stencil-functions
-  for(const auto& stencilFunPair : stencilParser.getStencilFunctionMap()) {
-    clang::CXXRecordDecl* stencilFunDecl = stencilFunPair.first;
-    rewriter.ReplaceText(stencilFunDecl->getSourceRange(), "");
-  }
-
   std::string code;
-  llvm::raw_string_ostream os(code);
-  rewriter.getEditBuffer(generatedFileID).write(os);
-  os.flush();
+  if(context_->getOptions().Serialized) {
+    DAWN_LOG(INFO) << "Data was loaded from serialized IR, codegen ";
+    std::cout << "Data was loaded from serialized IR, codegen " << std::endl;
+
+    code += DawnTranslationUnit->getGlobals();
+
+    code += "\n\n";
+
+    for(auto p : DawnTranslationUnit->getStencils()) {
+      code += p.second;
+    }
+  } else {
+    // Get a copy of the main-file's code
+    std::unique_ptr<llvm::MemoryBuffer> generatedCode =
+        llvm::MemoryBuffer::getMemBufferCopy(SM.getBufferData(SM.getMainFileID()));
+
+    // Create the generated file
+    DAWN_LOG(INFO) << "Creating generated file " << generatedFilename;
+    clang::FileID generatedFileID =
+        createInMemoryFile(generatedFilename, generatedCode.get(), sources, files, memFS.get());
+
+    // Replace clang DSL with gridtools
+    clang::Rewriter rewriter(sources, context_->getASTContext().getLangOpts());
+    for(const auto& stencilPair : stencilParser.getStencilMap()) {
+      clang::CXXRecordDecl* stencilDecl = stencilPair.first;
+      bool skipNewLines = false;
+      auto semiAfterDef = clang::Lexer::findLocationAfterToken(
+          stencilDecl->getSourceRange().getEnd(), clang::tok::semi, sources,
+          context_->getASTContext().getLangOpts(), skipNewLines);
+      if(rewriter.ReplaceText(
+             clang::SourceRange(stencilDecl->getSourceRange().getBegin(), semiAfterDef),
+             stencilPair.second->Attributes.has(dawn::sir::Attr::AK_NoCodeGen)
+                 ? ""
+                 : DawnTranslationUnit->getStencils().at(stencilPair.second->Name)))
+        context_->getDiagnostics().report(Diagnostics::err_fs_error) << dawn::format(
+            "unable to replace stencil code at: %s", stencilDecl->getLocation().printToString(SM));
+    }
+
+    // Replace globals struct
+    if(!globalsParser.isEmpty() && !DawnTranslationUnit->getGlobals().empty()) {
+      bool skipNewLines = false;
+      auto semiAfterDef = clang::Lexer::findLocationAfterToken(
+          globalsParser.getRecordDecl()->getSourceRange().getEnd(), clang::tok::semi, sources,
+          context_->getASTContext().getLangOpts(), skipNewLines);
+      if(rewriter.ReplaceText(
+             clang::SourceRange(globalsParser.getRecordDecl()->getSourceRange().getBegin(),
+                                semiAfterDef),
+             DawnTranslationUnit->getGlobals()))
+        context_->getDiagnostics().report(Diagnostics::err_fs_error)
+            << dawn::format("unable to replace globals code at: %s",
+                            globalsParser.getRecordDecl()->getLocation().printToString(SM));
+    }
+
+    // Replace interval
+    for(const clang::VarDecl* a : visitor_->getIntervalDecls()) {
+      bool skipNewLines = false;
+      auto semiAfterDef = clang::Lexer::findLocationAfterToken(
+          a->getSourceRange().getEnd(), clang::tok::semi, sources,
+          context_->getASTContext().getLangOpts(), skipNewLines);
+      rewriter.ReplaceText(clang::SourceRange(a->getSourceRange().getBegin(), semiAfterDef), "");
+    }
+
+    // Remove the code from stencil-functions
+    for(const auto& stencilFunPair : stencilParser.getStencilFunctionMap()) {
+      clang::CXXRecordDecl* stencilFunDecl = stencilFunPair.first;
+      bool skipNewLines = false;
+      auto semiAfterDef = clang::Lexer::findLocationAfterToken(
+          stencilFunDecl->getSourceRange().getEnd(), clang::tok::semi, sources,
+          context_->getASTContext().getLangOpts(), skipNewLines);
+      rewriter.ReplaceText(
+          clang::SourceRange(stencilFunDecl->getSourceRange().getBegin(), semiAfterDef), "");
+    }
+    llvm::raw_string_ostream os(code);
+    rewriter.getEditBuffer(generatedFileID).write(os);
+    os.flush();
+  }
 
   // Format the file
   if(context_->getOptions().ClangFormat) {
