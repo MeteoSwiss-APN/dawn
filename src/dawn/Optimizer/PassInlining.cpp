@@ -329,6 +329,10 @@ public:
     instantiation_->mapExprToAccessID(expr,
                                       curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
 
+    std::string callerName = instantiation_->getNameFromAccessID(
+        curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
+    expr->setName(callerName);
+
     // Set the fully evaluated offset as the new offset of the field. Note that this renders the
     // AST of the current stencil function incorrent which is why it needs to be removed!
     expr->setPureOffset(curStencilFunctioninstantiation_->evalOffsetOfFieldAccessExpr(expr, true));

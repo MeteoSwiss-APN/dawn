@@ -400,7 +400,8 @@ public:
   /// @}
 
   const std::string& getName() const { return name_; }
-  std::string& getName() { return name_; }
+
+  void setName(std::string name) { name_ = name; }
 
   void setName(std::string name) { name_ = name; }
 
@@ -494,7 +495,8 @@ public:
   void setPureOffset(const Array3i& offset);
 
   const std::string& getName() const { return name_; }
-  std::string& getName() { return name_; }
+
+  void setName(std::string name) { name_ = name; }
 
   void setName(std::string name) { name_ = name; }
 
