@@ -543,8 +543,8 @@ void MSCodeGen::generateFlushKCaches(MemberFunction& cudaKernel, const iir::Inte
           for(const auto& kcacheProp : kcachesProp) {
             // we flush the last level of the cache, that is determined by its size
             int kcacheTailExtent = (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
-                                       ? kcacheProp.sizeExtent_.Plus
-                                       : kcacheProp.sizeExtent_.Minus;
+                                       ? kcacheProp.intervalVertExtent_.Plus
+                                       : kcacheProp.intervalVertExtent_.Minus;
 
             generateKCacheFlushBlockStatement(cudaKernel, interval, fieldIndexMap, kcacheProp,
                                               kcacheTailExtent, "k");
