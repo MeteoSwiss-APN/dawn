@@ -90,5 +90,4 @@ fi
 
 nice make -j6 install
 
-# Run unittests
-ctest -VV -C ${build_type} --output-on-failure --force-new-ctest-process  
+salloc -n 1 ${SLURM_RESOURCES} -p ${SLURM_PARTITION} ctest -VV -C ${build_type} --output-on-failure --force-new-ctest-process  
