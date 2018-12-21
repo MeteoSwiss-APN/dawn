@@ -107,8 +107,10 @@ private:
   static std::string kBegin(const std::string dom, iir::LoopOrderKind loopOrder,
                             iir::Interval const& interval);
 
-  bool intervalPreviouslyAccessed(const int accessID, iir::Interval const& targetInterval,
-                                  iir::Interval const& interval,
+  /// @brief determines if a given interval (targetInterval) has been accessed before the execution
+  /// of the queryInterval by a given accessID, with a vertical extent vertExtent
+  bool intervalPreviouslyAccessed(const int accessID, const iir::Interval& targetInterval,
+                                  iir::Interval const& queryInterval,
                                   const iir::Extent& vertExtent) const;
 
   /// @brief returns true if the stage is the last stage of an interval loop execution
