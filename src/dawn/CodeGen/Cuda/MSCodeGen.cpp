@@ -494,8 +494,8 @@ void MSCodeGen::generateKCacheFlushBlockStatement(
   const auto& cacheInterval = *(cache.getInterval());
 
   int kcacheTailExtent = (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
-                             ? kcacheProp.sizeExtent_.Plus
-                             : kcacheProp.sizeExtent_.Minus;
+                             ? kcacheProp.intervalVertExtent_.Plus
+                             : kcacheProp.intervalVertExtent_.Minus;
 
   // we can not flush the cache beyond the interval where the field is accessed, since that would
   // write un-initialized data back into main memory of the field. If the distance of the
