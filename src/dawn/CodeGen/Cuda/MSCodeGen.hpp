@@ -35,11 +35,14 @@ namespace cuda {
 /// @ingroup cxxnaive
 class MSCodeGen {
   struct KCacheProperties {
-    inline KCacheProperties(std::string name, int accessID, iir::Extent vertExtent)
-        : name_(name), accessID_(accessID), vertExtent_(vertExtent) {}
+    inline KCacheProperties(std::string name, int accessID, iir::Extent intervalVertExtent,
+                            iir::Extent msVertExtent)
+        : name_(name), accessID_(accessID), intervalVertExtent_(intervalVertExtent),
+          sizeExtent_(msVertExtent) {}
     std::string name_;
     int accessID_;
-    iir::Extent vertExtent_;
+    iir::Extent intervalVertExtent_;
+    iir::Extent sizeExtent_;
   };
 
 private:
@@ -110,8 +113,7 @@ private:
   /// @brief determines if a given interval (targetInterval) has been accessed before the execution
   /// of the queryInterval by a given accessID, with a vertical extent vertExtent
   bool intervalPreviouslyAccessed(const int accessID, const iir::Interval& targetInterval,
-                                  iir::Interval const& queryInterval,
-                                  const iir::Extent& vertExtent) const;
+                                  iir::Interval const& queryInterval) const;
 
   /// @brief returns true if the stage is the last stage of an interval loop execution
   /// which requires synchronization due to usage of 2D ij caches (which are re-written at the

@@ -153,6 +153,21 @@ Interval::IntervalLevel MultiStage::lastLevelComputed(const int accessID) const 
   return level;
 }
 
+Extent MultiStage::getKCacheVertExtent(const int accessID) const {
+  const auto& field = getField(accessID);
+  auto vertExtent = field.getExtents()[2];
+  const auto& cache = getCache(accessID);
+  // in the case of epflush, the extent of the cache required is not determined only by the access
+  // pattern, but also by the window required to epflush
+  if(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::epflush) {
+    DAWN_ASSERT(cache.getWindow().is_initialized());
+    auto window = *(cache.getWindow());
+    return vertExtent.merge(iir::Extent{window.m_m, window.m_p});
+  } else {
+    return vertExtent;
+  }
+}
+
 boost::optional<Extents> MultiStage::computeExtents(const int accessID,
                                                     const Interval& interval) const {
 
