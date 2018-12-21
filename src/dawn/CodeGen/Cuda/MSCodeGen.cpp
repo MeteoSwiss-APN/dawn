@@ -614,8 +614,8 @@ void MSCodeGen::generateFinalFlushKCaches(MemberFunction& cudaKernel, const iir:
             int kcacheTailExtent;
             if(policy == iir::Cache::CacheIOPolicy::flush) {
               kcacheTailExtent = (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
-                                     ? kcacheProp.sizeExtent_.Plus
-                                     : kcacheProp.sizeExtent_.Minus;
+                                     ? kcacheProp.intervalVertExtent_.Plus
+                                     : kcacheProp.intervalVertExtent_.Minus;
             } else if(policy == iir::Cache::CacheIOPolicy::epflush) {
               DAWN_ASSERT(cache.getWindow().is_initialized());
               auto window = *(cache.getWindow());
