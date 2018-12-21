@@ -403,8 +403,6 @@ public:
 
   void setName(std::string name) { name_ = name; }
 
-  void setName(std::string name) { name_ = name; }
-
   void setIsExternal(bool external) { isExternal_ = external; }
 
   /// @brief Is the variable externally defined (e.g access to a global)?
@@ -495,8 +493,6 @@ public:
   void setPureOffset(const Array3i& offset);
 
   const std::string& getName() const { return name_; }
-
-  void setName(std::string name) { name_ = name; }
 
   void setName(std::string name) { name_ = name; }
 
