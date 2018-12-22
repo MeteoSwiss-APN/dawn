@@ -594,7 +594,7 @@ void MSCodeGen::generateFinalFlushKCaches(MemberFunction& cudaKernel, const iir:
 
   DAWN_ASSERT((policy == iir::Cache::CacheIOPolicy::epflush) ||
               (policy == iir::Cache::CacheIOPolicy::flush));
-  auto kCacheProperty = buildKCacheProperties(interval, policy, true);
+  auto kCacheProperty = buildKCacheProperties(interval, policy, false);
 
   for(const auto& kcachePropPair : kCacheProperty) {
     const auto& horizontalExtent = kcachePropPair.first;
@@ -633,6 +633,7 @@ void MSCodeGen::generateFinalFlushKCaches(MemberFunction& cudaKernel, const iir:
             iir::increment(lastLevelComputed.offset_, ms_->getLoopOrder());
             auto lastKLevelStr = makeIntervalLevelBound("dom", lastLevelComputed);
 
+            std::cout << "FOR INTERVAL " << interval << " " << firstFlushLevel << std::endl;
             for(int klev = firstFlushLevel;
                 iir::isLevelExecBeforeEqThan(klev, 0, ms_->getLoopOrder());
                 iir::increment(klev, ms_->getLoopOrder())) {
