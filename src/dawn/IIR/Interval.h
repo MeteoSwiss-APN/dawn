@@ -76,6 +76,9 @@ public:
   IntervalLevel upperIntervalLevel() const { return upper_; }
   IntervalLevel lowerIntervalLevel() const { return lower_; }
 
+  Interval intersect(const Interval& other) const;
+  Interval crop(Bound bound, std::array<int, 2> window) const;
+
   int offset(const Bound bound) const {
     return (bound == Bound::lower) ? lowerOffset() : upperOffset();
   }

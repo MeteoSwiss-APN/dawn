@@ -121,14 +121,16 @@ private:
   /// k-loop iteration)
   bool intervalRequiresSync(const iir::Interval& interval, const iir::Stage& stage) const;
 
+  bool checkIfCacheNeedsToFlush(const iir::Cache& cache, iir::Interval interval) const;
+
   void generateFlushKCaches(MemberFunction& cudaKernel, const iir::Interval& interval,
                             const std::unordered_map<int, Array3i>& fieldIndexMap,
                             iir::Cache::CacheIOPolicy policy) const;
   /// @brief computes additional information of kcaches for those kache with IO synchronization
   /// policy
   std::unordered_map<iir::Extents, std::vector<KCacheProperties>>
-  buildKCacheProperties(const iir::Interval& interval, const iir::Cache::CacheIOPolicy policy,
-                        const bool checkStrictIntervalBound) const;
+  buildKCacheProperties(const iir::Interval& interval,
+                        const iir::Cache::CacheIOPolicy policy) const;
 
   /// @brief generates the kcache flush statement, that can be guarded by a conitional to protect
   /// for out-of-bounds or not, depending on the distance from the interval being executed to the

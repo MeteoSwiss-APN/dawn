@@ -55,6 +55,10 @@ Interval Interval::extendInterval(const Extent& verticalExtent) const {
                   upper_.offset_ + verticalExtent.Plus);
 }
 
+Interval Interval::crop(Bound bound, std::array<int, 2> window) const {
+  return Interval{level(bound), level(bound), offset(bound) + window[0], offset(bound) + window[1]};
+}
+
 std::string Interval::makeCodeGenName(const Interval& interval) {
   std::stringstream ss;
   ss << "interval";
@@ -318,6 +322,22 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
     }
   }
   return newIntervals;
+}
+
+Interval Interval::intersect(const Interval& other) const {
+
+  // TODO impose this in ctrs
+  DAWN_ASSERT(lowerBound() <= upperBound());
+  DAWN_ASSERT(other.lowerBound() <= other.upperBound());
+
+  IntervalLevel lowerLevel_ =
+      (lowerBound() > other.lowerBound()) ? lower_ : other.lowerIntervalLevel();
+
+  IntervalLevel upperLevel_ =
+      (upperBound() < other.upperBound()) ? upper_ : other.upperIntervalLevel();
+
+  return Interval{lowerLevel_.levelMark_, upperLevel_.levelMark_, lowerLevel_.offset_,
+                  upperLevel_.offset_};
 }
 
 void Interval::invert() {
