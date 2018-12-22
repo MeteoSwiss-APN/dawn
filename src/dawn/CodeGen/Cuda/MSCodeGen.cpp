@@ -554,11 +554,7 @@ void MSCodeGen::generateKCacheSlide(MemberFunction& cudaKernel,
   cudaKernel.addComment("Slide kcaches");
   for(const auto& cachePair : ms_->getCaches()) {
     const auto& cache = cachePair.second;
-    if(!cacheProperties_.isKCached(cache) ||
-       ((cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::local) &&
-        (cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::fill) &&
-        (cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::flush) &&
-        (cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::epflush)))
+    if(!cacheProperties_.isKCached(cache))
       continue;
     auto cacheInterval = cache.getInterval();
     DAWN_ASSERT(cacheInterval.is_initialized());
