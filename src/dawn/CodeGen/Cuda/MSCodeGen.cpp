@@ -75,11 +75,7 @@ void MSCodeGen::generateKCacheDecl(MemberFunction& kernel) const {
   for(const auto& cacheP : ms_->getCaches()) {
     const iir::Cache& cache = cacheP.second;
 
-    if(cache.getCacheType() != iir::Cache::CacheTypeKind::K ||
-       ((cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::local) &&
-        (cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::fill) &&
-        (cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::flush) &&
-        (cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::epflush)))
+    if(cache.getCacheType() != iir::Cache::CacheTypeKind::K)
       continue;
 
     if(cache.getCacheIOPolicy() != iir::Cache::CacheIOPolicy::local && solveKLoopInParallel_)
