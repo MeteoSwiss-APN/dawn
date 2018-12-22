@@ -585,7 +585,8 @@ void MSCodeGen::generateFinalFlushKCaches(MemberFunction& cudaKernel, const iir:
   cudaKernel.addComment("Final flush of kcaches");
 
   DAWN_ASSERT((policy == iir::Cache::CacheIOPolicy::epflush) ||
-              (policy == iir::Cache::CacheIOPolicy::flush));
+              (policy == iir::Cache::CacheIOPolicy::flush) ||
+              (policy == iir::Cache::CacheIOPolicy::fill_and_flush));
   auto kCacheProperty =
       buildKCacheProperties(interval, policy, (policy == iir::Cache::CacheIOPolicy::epflush));
 
