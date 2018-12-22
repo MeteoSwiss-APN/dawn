@@ -219,7 +219,6 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
       std::set<int> mssProcessedFields;
       for(int MSIndex = 0; MSIndex < stencil.getChildren().size(); ++MSIndex) {
         iir::MultiStage& ms = *stencil.getMultiStageFromMultiStageIndex(MSIndex);
-        std::cout << "FOR MS " << std::endl;
         const auto& fields = ms.getFields();
         for(const auto& AccessIDFieldPair : fields) {
           const iir::Field& field = AccessIDFieldPair.second;
@@ -282,9 +281,6 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
               break;
             }
           }
-
-          std::cout << " POL " << instantiation->getNameFromAccessID(field.getAccessID()) << " "
-                    << cacheCandidate.policy_ << std::endl;
 
           iir::Interval interval = field.getInterval();
           auto interval_ = ms.computeEnclosingAccessInterval(field.getAccessID(), true);

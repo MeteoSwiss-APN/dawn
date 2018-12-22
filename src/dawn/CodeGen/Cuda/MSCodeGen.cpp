@@ -1016,6 +1016,8 @@ void MSCodeGen::generateCudaKernelCode() {
     });
     if(!solveKLoopInParallel_) {
       generateFinalFlushKCaches(cudaKernel, interval, fieldIndexMap,
+                                iir::Cache::CacheIOPolicy::fill_and_flush);
+      generateFinalFlushKCaches(cudaKernel, interval, fieldIndexMap,
                                 iir::Cache::CacheIOPolicy::flush);
       generateFinalFlushKCaches(cudaKernel, interval, fieldIndexMap,
                                 iir::Cache::CacheIOPolicy::epflush);
