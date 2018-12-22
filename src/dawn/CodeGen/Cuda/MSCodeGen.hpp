@@ -122,7 +122,8 @@ private:
   bool intervalRequiresSync(const iir::Interval& interval, const iir::Stage& stage) const;
 
   void generateFlushKCaches(MemberFunction& cudaKernel, const iir::Interval& interval,
-                            const std::unordered_map<int, Array3i>& fieldIndexMap) const;
+                            const std::unordered_map<int, Array3i>& fieldIndexMap,
+                            iir::Cache::CacheIOPolicy policy) const;
   /// @brief computes additional information of kcaches for those kache with IO synchronization
   /// policy
   std::unordered_map<iir::Extents, std::vector<KCacheProperties>>

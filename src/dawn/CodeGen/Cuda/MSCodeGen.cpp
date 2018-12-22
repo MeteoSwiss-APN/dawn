@@ -521,10 +521,11 @@ void MSCodeGen::generateKCacheFlushBlockStatement(
 }
 
 void MSCodeGen::generateFlushKCaches(MemberFunction& cudaKernel, const iir::Interval& interval,
-                                     const std::unordered_map<int, Array3i>& fieldIndexMap) const {
+                                     const std::unordered_map<int, Array3i>& fieldIndexMap,
+                                     iir::Cache::CacheIOPolicy policy) const {
   cudaKernel.addComment("Flush of kcaches");
 
-  auto kCacheProperty = buildKCacheProperties(interval, iir::Cache::CacheIOPolicy::flush, false);
+  auto kCacheProperty = buildKCacheProperties(interval, policy, false);
 
   for(const auto& kcachePropPair : kCacheProperty) {
     const auto& horizontalExtent = kcachePropPair.first;
@@ -998,7 +999,9 @@ void MSCodeGen::generateCudaKernelCode() {
       }
 
       if(!solveKLoopInParallel_) {
-        generateFlushKCaches(cudaKernel, interval, fieldIndexMap);
+        generateFlushKCaches(cudaKernel, interval, fieldIndexMap, iir::Cache::CacheIOPolicy::flush);
+        generateFlushKCaches(cudaKernel, interval, fieldIndexMap,
+                             iir::Cache::CacheIOPolicy::fill_and_flush);
       }
 
       generateKCacheSlide(cudaKernel, interval);
