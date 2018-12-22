@@ -594,7 +594,8 @@ void MSCodeGen::generateFinalFlushKCaches(MemberFunction& cudaKernel, const iir:
 
   DAWN_ASSERT((policy == iir::Cache::CacheIOPolicy::epflush) ||
               (policy == iir::Cache::CacheIOPolicy::flush));
-  auto kCacheProperty = buildKCacheProperties(interval, policy, false);
+  auto kCacheProperty =
+      buildKCacheProperties(interval, policy, (policy == iir::Cache::CacheIOPolicy::epflush));
 
   for(const auto& kcachePropPair : kCacheProperty) {
     const auto& horizontalExtent = kcachePropPair.first;
