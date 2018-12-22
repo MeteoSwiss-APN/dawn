@@ -79,7 +79,8 @@ int CacheProperties::getKCacheIndex(const int accessID, const int offset) const 
 
 bool CacheProperties::requiresFill(const iir::Cache& cache) {
   return ((cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill) ||
-          (cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::bpfill));
+          (cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::bpfill) ||
+          (cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill_and_flush));
 }
 
 int CacheProperties::getKCacheCenterOffset(const int accessID) const {
