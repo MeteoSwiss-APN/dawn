@@ -157,8 +157,9 @@ void MSCodeGen::generateKCacheFillStatement(MemberFunction& cudaKernel,
                           "] =" + ss.str());
 }
 
-bool MSCodeGen::intervalPreviouslyAccessed(const int accessID, const iir::Interval& targetInterval,
-                                           const iir::Interval& queryInterval) const {
+iir::MultiInterval
+MSCodeGen::intervalNotPreviouslyAccessed(const int accessID, const iir::Interval& targetInterval,
+                                         const iir::Interval& queryInterval) const {
   iir::MultiInterval res{targetInterval};
   auto partitionIntervals = CodeGeneratorHelper::computePartitionOfIntervals(ms_);
 
@@ -174,7 +175,7 @@ bool MSCodeGen::intervalPreviouslyAccessed(const int accessID, const iir::Interv
       if(!doMethod->hasField(accessID)) {
         continue;
       }
-      auto doMethodInterval = doMethod->getInterval();
+      auto doMethodInterval = doMethod->getInterval().intersect(aInterval);
       const auto& field = doMethod->getField(accessID);
       auto accessedInterval = doMethodInterval.extendInterval(field.getExtents()[2]);
 
@@ -183,7 +184,7 @@ bool MSCodeGen::intervalPreviouslyAccessed(const int accessID, const iir::Interv
       }
     }
   }
-  return res.empty();
+  return res;
 }
 
 void MSCodeGen::generatePreFillKCaches(
@@ -219,6 +220,10 @@ void MSCodeGen::generatePreFillKCaches(
     // check the interval of levels accessed beyond the iteration interval. This will mark all the
     // levels of the kcache that will be accessed but are not filled (they will have to be
     // prefilled) at the beginning of the processing of the interval
+
+    if(intervalVertExtent.Minus == intervalVertExtent.Plus)
+      continue;
+
     auto outOfRangeAccessedInterval =
         (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
             ? interval.crop(iir::Interval::Bound::upper,
@@ -232,10 +237,29 @@ void MSCodeGen::generatePreFillKCaches(
 
     /// we check if the levels beyond the iteration interval are filled already by the processing of
     /// previous intervals
-    if(!intervalPreviouslyAccessed(accessID, outOfRangeAccessedInterval, interval)) {
+    auto notYetAccessedInterval =
+        intervalNotPreviouslyAccessed(accessID, outOfRangeAccessedInterval, interval);
+    if(!notYetAccessedInterval.empty()) {
       auto cacheName = cacheProperties_.getCacheName(accessID);
       iir::Extents horizontalExtent = intervalFields.at(accessID).getExtentsRB();
-      kCacheProperty[horizontalExtent].emplace_back(cacheName, accessID, intervalVertExtent,
+      // TODO is msVertExtent really used? delete...
+
+      auto firstInterval = notYetAccessedInterval.getIntervals()[0];
+      auto lastInterval =
+          notYetAccessedInterval.getIntervals()[notYetAccessedInterval.numPartitions() - 1];
+
+      iir::Interval preFillInterval(firstInterval.lowerLevel(), lastInterval.upperLevel(),
+                                    firstInterval.lowerOffset(), lastInterval.upperOffset());
+
+      auto preFillMarkLevel = (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
+                                  ? interval.upperIntervalLevel()
+                                  : interval.lowerIntervalLevel();
+
+      iir::Extent preFillExtent{
+          iir::distance(preFillMarkLevel, preFillInterval.lowerIntervalLevel()).value,
+          iir::distance(preFillMarkLevel, preFillInterval.upperIntervalLevel()).value};
+
+      kCacheProperty[horizontalExtent].emplace_back(cacheName, accessID, preFillExtent,
                                                     msVertExtent);
     }
   }
@@ -254,12 +278,12 @@ void MSCodeGen::generatePreFillKCaches(
           for(const auto& kcacheProp : kcachesProp) {
             if(ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward) {
               // the last level is skipped since it will be filled in a normal kcache fill method
-              for(int klev = kcacheProp.intervalVertExtent_.Minus + 1;
+              for(int klev = kcacheProp.intervalVertExtent_.Minus;
                   klev <= kcacheProp.intervalVertExtent_.Plus; ++klev) {
                 generateKCacheFillStatement(cudaKernel, fieldIndexMap, kcacheProp, klev);
               }
             } else {
-              for(int klev = kcacheProp.intervalVertExtent_.Plus - 1;
+              for(int klev = kcacheProp.intervalVertExtent_.Plus;
                   klev >= kcacheProp.intervalVertExtent_.Minus; --klev) {
                 generateKCacheFillStatement(cudaKernel, fieldIndexMap, kcacheProp, klev);
               }

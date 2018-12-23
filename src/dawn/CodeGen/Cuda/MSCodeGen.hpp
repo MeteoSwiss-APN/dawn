@@ -112,8 +112,9 @@ private:
 
   /// @brief determines if a given interval (targetInterval) has been accessed before the execution
   /// of the queryInterval by a given accessID, with a vertical extent vertExtent
-  bool intervalPreviouslyAccessed(const int accessID, const iir::Interval& targetInterval,
-                                  iir::Interval const& queryInterval) const;
+  iir::MultiInterval intervalNotPreviouslyAccessed(const int accessID,
+                                                   const iir::Interval& targetInterval,
+                                                   iir::Interval const& queryInterval) const;
 
   /// @brief returns true if the stage is the last stage of an interval loop execution
   /// which requires synchronization due to usage of 2D ij caches (which are re-written at the
