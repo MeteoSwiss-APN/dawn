@@ -731,7 +731,7 @@ void MSCodeGen::generateCudaKernelCode() {
     minBlocksPerSM *= 80 / blockSize_[2];
   minBlocksPerSM /= 56;
 
-  fnDecl = fnDecl + "__launch_bounds__(" + std::to_string(maxThreadsPerBlock) + "," +
+  fnDecl = fnDecl + " __launch_bounds__(" + std::to_string(maxThreadsPerBlock) + "," +
            std::to_string(minBlocksPerSM) + ") ";
 
   MemberFunction cudaKernel(fnDecl, cudaKernelName_, ss_);
