@@ -184,6 +184,10 @@ public:
   // TODO doc
   MultiInterval computeReadAccessInterval(int accessID) const;
 
+  /// @brief returns the vertical extent of the kcache associated with an accessID
+  /// (determined from all accesses of a full MS)
+  Extent getKCacheVertExtent(const int accessID) const;
+
   /// @brief computes the extents of an accessID field at a given interval
   boost::optional<Extents> computeExtents(const int accessID, const Interval& interval) const;
 

@@ -219,7 +219,6 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
       std::set<int> mssProcessedFields;
       for(int MSIndex = 0; MSIndex < stencil.getChildren().size(); ++MSIndex) {
         iir::MultiStage& ms = *stencil.getMultiStageFromMultiStageIndex(MSIndex);
-
         const auto& fields = ms.getFields();
         for(const auto& AccessIDFieldPair : fields) {
           const iir::Field& field = AccessIDFieldPair.second;

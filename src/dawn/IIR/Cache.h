@@ -77,6 +77,8 @@ public:
   /// @brief Get the interval of the iteration space from where the cache was accessed
   boost::optional<Interval> getInterval() const;
 
+  Interval getWindowInterval(Interval::Bound bound) const;
+
   /// @brief Get the enclosing of the iteration space interval and the accesses extent
   boost::optional<Interval> getEnclosingAccessedInterval() const;
 

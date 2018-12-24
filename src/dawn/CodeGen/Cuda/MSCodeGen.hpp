@@ -35,11 +35,14 @@ namespace cuda {
 /// @ingroup cxxnaive
 class MSCodeGen {
   struct KCacheProperties {
-    inline KCacheProperties(std::string name, int accessID, iir::Extent vertExtent)
-        : name_(name), accessID_(accessID), vertExtent_(vertExtent) {}
+    inline KCacheProperties(std::string name, int accessID, iir::Extent intervalVertExtent,
+                            iir::Extent msVertExtent)
+        : name_(name), accessID_(accessID), intervalVertExtent_(intervalVertExtent),
+          sizeExtent_(msVertExtent) {}
     std::string name_;
     int accessID_;
-    iir::Extent vertExtent_;
+    iir::Extent intervalVertExtent_;
+    iir::Extent sizeExtent_;
   };
 
 private:
@@ -109,9 +112,9 @@ private:
 
   /// @brief determines if a given interval (targetInterval) has been accessed before the execution
   /// of the queryInterval by a given accessID, with a vertical extent vertExtent
-  bool intervalPreviouslyAccessed(const int accessID, const iir::Interval& targetInterval,
-                                  iir::Interval const& queryInterval,
-                                  const iir::Extent& vertExtent) const;
+  iir::MultiInterval intervalNotPreviouslyAccessed(const int accessID,
+                                                   const iir::Interval& targetInterval,
+                                                   iir::Interval const& queryInterval) const;
 
   /// @brief returns true if the stage is the last stage of an interval loop execution
   /// which requires synchronization due to usage of 2D ij caches (which are re-written at the
@@ -119,13 +122,16 @@ private:
   /// k-loop iteration)
   bool intervalRequiresSync(const iir::Interval& interval, const iir::Stage& stage) const;
 
+  bool checkIfCacheNeedsToFlush(const iir::Cache& cache, iir::Interval interval) const;
+
   void generateFlushKCaches(MemberFunction& cudaKernel, const iir::Interval& interval,
-                            const std::unordered_map<int, Array3i>& fieldIndexMap) const;
+                            const std::unordered_map<int, Array3i>& fieldIndexMap,
+                            iir::Cache::CacheIOPolicy policy) const;
   /// @brief computes additional information of kcaches for those kache with IO synchronization
   /// policy
   std::unordered_map<iir::Extents, std::vector<KCacheProperties>>
-  buildKCacheProperties(const iir::Interval& interval, const iir::Cache::CacheIOPolicy policy,
-                        const bool checkStrictIntervalBound) const;
+  buildKCacheProperties(const iir::Interval& interval,
+                        const iir::Cache::CacheIOPolicy policy) const;
 
   /// @brief generates the kcache flush statement, that can be guarded by a conitional to protect
   /// for out-of-bounds or not, depending on the distance from the interval being executed to the
