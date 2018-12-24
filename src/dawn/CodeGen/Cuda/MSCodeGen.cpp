@@ -721,6 +721,19 @@ void MSCodeGen::generateCudaKernelCode() {
   if(containsTemporary && useTmpIndex_)
     fnDecl = "template<typename TmpStorage>";
   fnDecl = fnDecl + "__global__ void";
+
+  int maxThreadsPerBlock = blockSize_[0] * blockSize_[1];
+  if(solveKLoopInParallel_)
+    maxThreadsPerBlock *= blockSize_[2];
+
+  int minBlocksPerSM = 128 * 128 / (blockSize_[0] * blockSize_[1]);
+  if(solveKLoopInParallel_)
+    minBlocksPerSM *= 80 / blockSize_[2];
+  minBlocksPerSM /= 56;
+
+  fnDecl = fnDecl + "__launch_bounds__(" + std::to_string(maxThreadsPerBlock) + "," +
+           std::to_string(minBlocksPerSM) + ") ";
+
   MemberFunction cudaKernel(fnDecl, cudaKernelName_, ss_);
 
   const auto& globalsMap = stencilInstantiation_->getMetaData().globalVariableMap_;

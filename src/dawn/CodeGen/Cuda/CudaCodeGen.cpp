@@ -548,17 +548,7 @@ void CudaCodeGen::generateStencilRunMethod(
     std::string kernelCall =
         CodeGeneratorHelper::buildCudaKernelName(stencilInstantiation, multiStagePtr) +
         "<<<blocks, threads>>>(";
-    int maxThreadsPerBlock = blockSize[0] * blockSize[1];
-    if(solveKLoopInParallel_)
-      maxThreadsPerBlock *= blockSize[2];
 
-    int minBlocksPerSM = 128 * 128 / (blockSize[0] * blockSize[1]);
-    if(solveKLoopInParallel_)
-      minBlocksPerSM *= 80 / blockSize[2];
-    minBlocksPerSM /= 56;
-
-    kernelCall = "__launch_bounds__(" + std::to_string(maxThreadsPerBlock) + "," +
-                 std::to_string(minBlocksPerSM) + ") " + kernelCall;
     if(!globalsMap.empty()) {
       kernelCall = kernelCall + "m_globals,";
     }
