@@ -722,11 +722,13 @@ void MSCodeGen::generateCudaKernelCode() {
     fnDecl = "template<typename TmpStorage>";
   fnDecl = fnDecl + "__global__ void";
 
-  int maxThreadsPerBlock = blockSize_[0] * blockSize_[1];
+  int maxThreadsPerBlock =
+      blockSize_[0] * (blockSize_[1] + maxExtents[1].Plus - maxExtents[1].Minus +
+                       (maxExtents[0].Minus < 0 ? 1 : 0) + (maxExtents[0].Plus > 0 ? 1 : 0));
   if(solveKLoopInParallel_)
     maxThreadsPerBlock *= blockSize_[2];
 
-  int minBlocksPerSM = 128 * 128 / (blockSize_[0] * blockSize_[1]);
+  int minBlocksPerSM = 128 * 128 / (maxThreadsPerBlock);
   if(solveKLoopInParallel_)
     minBlocksPerSM *= 80 / blockSize_[2];
   minBlocksPerSM /= 56;
