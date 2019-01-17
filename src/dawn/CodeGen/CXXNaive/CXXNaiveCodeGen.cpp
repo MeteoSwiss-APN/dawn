@@ -164,6 +164,15 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
       continue;
 
     const auto& StencilFields = stencil.getFields();
+    std::vector<std::pair<int, iir::Stencil::FieldInfo>> sortedStencilFields;
+    for(auto stencilField : StencilFields) {
+      sortedStencilFields.push_back(stencilField);
+    }
+    std::sort(sortedStencilFields.begin(), sortedStencilFields.end(),
+              [&](std::pair<int, iir::Stencil::FieldInfo> field1,
+                  std::pair<int, iir::Stencil::FieldInfo> field2) {
+                return field1.first < field2.first;
+              });
 
     const std::string stencilName =
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
@@ -171,7 +180,7 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
     std::string initCtr = "m_" + stencilName + "(new " + stencilName;
 
     int i = 0;
-    for(const auto& fieldInfoPair : StencilFields) {
+    for(const auto& fieldInfoPair : sortedStencilFields) {
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
         continue;
@@ -186,7 +195,7 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
     if(!globalsMap.empty()) {
       initCtr += ",m_globals";
     }
-    for(const auto& fieldInfoPair : StencilFields) {
+    for(const auto& fieldInfoPair : sortedStencilFields) {
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
         continue;
@@ -274,18 +283,34 @@ void CXXNaiveCodeGen::generateStencilClasses(
             [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
 
     // In order for the code-generation to be reporducable, we wan the fields to be ordered:
-    std::vector<std::string> nonTempFieldNames;
-    std::vector<std::string> tempFieldNames;
+    std::vector<std::pair<int, iir::Stencil::FieldInfo>> nonTempFieldSorted;
+    std::vector<std::pair<int, iir::Stencil::FieldInfo>> tempFieldSorted;
 
     for(auto fieldIt : nonTempFields) {
-      nonTempFieldNames.push_back((*fieldIt).second.Name);
+      nonTempFieldSorted.push_back(*fieldIt);
     }
-    std::sort(nonTempFieldNames.begin(), nonTempFieldNames.end());
+    std::sort(nonTempFieldSorted.begin(), nonTempFieldSorted.end(),
+              [&](std::pair<int, iir::Stencil::FieldInfo> field1,
+                  std::pair<int, iir::Stencil::FieldInfo> field2) {
+                return field1.first < field2.first;
+              });
 
     for(auto fieldIt : tempFields) {
-      tempFieldNames.push_back((*fieldIt).second.Name);
+      tempFieldSorted.push_back(*fieldIt);
     }
-    std::sort(tempFieldNames.begin(), tempFieldNames.end());
+    std::sort(tempFieldSorted.begin(), tempFieldSorted.end(),
+              [&](std::pair<int, iir::Stencil::FieldInfo> field1,
+                  std::pair<int, iir::Stencil::FieldInfo> field2) {
+                return field1.first < field2.first;
+              });
+    std::vector<std::string> nonTempFieldNames;
+    std::vector<std::string> tempFieldNames;
+    for(auto field : tempFieldSorted){
+        tempFieldNames.push_back(field.second.Name);
+    }
+    for(auto field : nonTempFieldSorted){
+        nonTempFieldNames.push_back(field.second.Name);
+    }
 
     // list of template for storages used in the stencil class
     std::vector<std::string> StencilTemplates(nonTempFieldNames.size());
@@ -370,11 +395,11 @@ void CXXNaiveCodeGen::generateStencilClasses(
       const iir::MultiStage& multiStage = *multiStagePtr;
 
       // create all the data views
-      cnt=0;
+      cnt = 0;
       for(auto fieldName : nonTempFieldNames) {
-        StencilRunMethod.addStatement(c_gt() + "data_view<" + StencilTemplates[cnt++] +
-                                      "> " + fieldName + "= " + c_gt() + "make_host_view(m_" +
-                                      fieldName + ")");
+        StencilRunMethod.addStatement(c_gt() + "data_view<" + StencilTemplates[cnt++] + "> " +
+                                      fieldName + "= " + c_gt() + "make_host_view(m_" + fieldName +
+                                      ")");
         StencilRunMethod.addStatement("std::array<int,3> " + fieldName + "_offsets{0,0,0}");
       }
       for(auto fieldName : tempFieldNames) {
