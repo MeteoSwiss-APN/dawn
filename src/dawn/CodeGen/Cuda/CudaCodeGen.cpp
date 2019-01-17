@@ -188,18 +188,35 @@ void CudaCodeGen::generateStencilClasses(
             [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
 
     // In order for the code-generation to be reporducable, we wan the fields to be ordered:
+    std::vector<std::pair<int, iir::Stencil::FieldInfo>> nonTempFieldSorted;
+    std::vector<std::pair<int, iir::Stencil::FieldInfo>> tempFieldSorted;
+    for(auto fieldIt : nonTempFields) {
+      nonTempFieldSorted.push_back(*fieldIt);
+    }
+    std::sort(nonTempFieldSorted.begin(), nonTempFieldSorted.end(),
+              [&](std::pair<int, iir::Stencil::FieldInfo> field1,
+                  std::pair<int, iir::Stencil::FieldInfo> field2) {
+                return field1.first < field2.first;
+              });
+
+    for(auto fieldIt : tempFields) {
+      tempFieldSorted.push_back(*fieldIt);
+    }
+    std::sort(tempFieldSorted.begin(), tempFieldSorted.end(),
+              [&](std::pair<int, iir::Stencil::FieldInfo> field1,
+                  std::pair<int, iir::Stencil::FieldInfo> field2) {
+                return field1.first < field2.first;
+              });
     std::vector<std::string> tempFieldNames;
     std::vector<std::string> nonTempFieldNames;
 
-    for(auto fieldIt : nonTempFields) {
-      nonTempFieldNames.push_back((*fieldIt).second.Name);
+    for(auto fieldIt : nonTempFieldSorted) {
+      nonTempFieldNames.push_back(fieldIt.second.Name);
     }
-    std::sort(nonTempFieldNames.begin(), nonTempFieldNames.end());
-
-    for(auto fieldIt : tempFields) {
-      tempFieldNames.push_back((*fieldIt).second.Name);
+    for(auto fieldIt : tempFieldSorted) {
+      tempFieldNames.push_back((fieldIt).second.Name);
     }
-    std::sort(tempFieldNames.begin(), tempFieldNames.end());
+    // From here one use nonTempFieldsSorted / TempFieldsSorted and their respecite nameStrings
 
     Structure stencilClass = stencilWrapperClass.addStruct(stencilName, "", "sbase");
     auto& paramNameToType = stencilProperties->paramNameToType_;
@@ -499,20 +516,38 @@ void CudaCodeGen::generateStencilRunMethod(
         }));
 
     // In order for the code-generation to be reporducable, we wan the fields to be ordered:
+    // In order for the code-generation to be reporducable, we wan the fields to be ordered:
+    std::vector<std::pair<int, iir::Field>> nonTempFieldSorted;
+    std::vector<std::pair<int, iir::Field>> tempFieldSorted;
+    for(auto fieldIt : nonTempFields) {
+      nonTempFieldSorted.push_back(*fieldIt);
+    }
+    std::sort(nonTempFieldSorted.begin(), nonTempFieldSorted.end(),
+              [&](std::pair<int, iir::Field> field1,
+                  std::pair<int, iir::Field> field2) {
+                return field1.first < field2.first;
+              });
+
+    for(auto fieldIt : tempFieldsNonLocalCached) {
+      tempFieldSorted.push_back(*fieldIt);
+    }
+    std::sort(tempFieldSorted.begin(), tempFieldSorted.end(),
+              [&](std::pair<int, iir::Field> field1,
+                  std::pair<int, iir::Field> field2) {
+                return field1.first < field2.first;
+              });
     std::vector<std::string> nonTempFieldNames;
     std::vector<std::string> tempFieldNamesNonLocalCached;
 
-    for(auto fieldIt : tempFieldsNonLocalCached) {
+    for(auto fieldIt : tempFieldSorted) {
       tempFieldNamesNonLocalCached.push_back(
-          stencilInstantiation->getNameFromAccessID((*fieldIt).second.getAccessID()));
+          stencilInstantiation->getNameFromAccessID((fieldIt).second.getAccessID()));
     }
-    std::sort(tempFieldNamesNonLocalCached.begin(), tempFieldNamesNonLocalCached.end());
 
-    for(auto fieldIt : nonTempFields) {
+    for(auto fieldIt : nonTempFieldSorted) {
       nonTempFieldNames.push_back(
-          stencilInstantiation->getNameFromAccessID((*fieldIt).second.getAccessID()));
+          stencilInstantiation->getNameFromAccessID((fieldIt).second.getAccessID()));
     }
-    std::sort(nonTempFieldNames.begin(), nonTempFieldNames.end());
 
     // create all the data views
     for(auto fieldName : nonTempFieldNames) {
