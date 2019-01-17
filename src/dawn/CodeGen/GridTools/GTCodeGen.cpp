@@ -17,6 +17,7 @@
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/GridTools/ASTStencilBody.h"
 #include "dawn/CodeGen/GridTools/ASTStencilDesc.h"
+#include "dawn/IIR/Field.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -107,7 +108,7 @@ std::string GTCodeGen::cacheWindowToString(iir::Cache::window const& cacheWindow
 
 void GTCodeGen::generateSyncStorages(
     MemberFunction& method,
-    IndexRange<std::unordered_map<int, iir::Stencil::FieldInfo>> const& stencilFields) const {
+    IndexRange<std::vector<std::pair<int, iir::Stencil::FieldInfo>>> const& stencilFields) const {
   // synchronize storages method
   for(auto fieldIt : stencilFields) {
     method.addStatement((*fieldIt).second.Name + ".sync()");
@@ -117,7 +118,7 @@ void GTCodeGen::generateSyncStorages(
 void GTCodeGen::buildPlaceholderDefinitions(
     MemberFunction& function,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-    std::unordered_map<int, iir::Stencil::FieldInfo> const& stencilFields,
+    const std::vector<std::pair<int, iir::Stencil::FieldInfo>>& stencilFields,
     std::vector<std::string> const& stencilGlobalVariables,
     const sir::GlobalVariableMap& globalsMap, const CodeGenProperties& codeGenProperties) const {
 
@@ -187,6 +188,7 @@ std::string GTCodeGen::generateStencilInstantiation(
   const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
   CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
 
+  /// TBD
   generateBoundaryConditionFunctions(StencilWrapperClass, stencilInstantiation);
 
   generateStencilClasses(stencilInstantiation, StencilWrapperClass, codeGenProperties);
@@ -258,9 +260,19 @@ void GTCodeGen::generateStencilWrapperRun(
   for(const auto& stencil : stencils) {
 
     const auto& fields = stencil->getFields();
+
+    std::vector<std::pair<int, iir::Stencil::FieldInfo>> sortedFields;
+    for(auto field : fields) {
+      sortedFields.push_back(field);
+    }
+    std::sort(sortedFields.begin(), sortedFields.end(),
+              [&](std::pair<int, iir::Stencil::FieldInfo> field1,
+                  std::pair<int, iir::Stencil::FieldInfo> field2) {
+                return field1.first < field2.first;
+              });
     std::vector<iir::Stencil::FieldInfo> nonTempFields;
 
-    for(const auto& field : fields) {
+    for(const auto& field : sortedFields) {
       if(!field.second.IsTemporary) {
         nonTempFields.push_back(field.second);
       }
@@ -315,6 +327,7 @@ void GTCodeGen::generateStencilWrapperCtr(
     for(auto accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
       tempFields.push_back(stencilInstantiation->getNameFromAccessID(accessID));
     }
+    std::sort(tempFields.begin(), tempFields.end());
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
   }
   StencilWrapperConstructor.addInit("m_dom(dom)");
@@ -324,10 +337,19 @@ void GTCodeGen::generateStencilWrapperCtr(
   // Initialize stencils
   for(const auto& stencil : stencils) {
     const auto& fields = stencil->getFields();
+    std::vector<std::pair<int, iir::Stencil::FieldInfo>> sortedFields;
+    for(auto field : fields) {
+      sortedFields.push_back(field);
+    }
+    std::sort(sortedFields.begin(), sortedFields.end(),
+              [&](std::pair<int, iir::Stencil::FieldInfo> field1,
+                  std::pair<int, iir::Stencil::FieldInfo> field2) {
+                return field1.first < field2.first;
+              });
 
     std::vector<iir::Stencil::FieldInfo> nonTempFields;
 
-    for(const auto& field : fields) {
+    for(const auto& field : sortedFields) {
       if(!field.second.IsTemporary) {
         nonTempFields.push_back(field.second);
       }
@@ -411,11 +433,21 @@ void GTCodeGen::generateStencilClasses(
     const iir::Stencil& stencil = *stencils[stencilIdx];
 
     std::unordered_map<int, iir::Stencil::FieldInfo> StencilFields = stencil.getFields();
+    std::vector<std::pair<int, iir::Stencil::FieldInfo>> sortedFields;
+    for(auto field : StencilFields) {
+      sortedFields.push_back(field);
+    }
+    std::sort(sortedFields.begin(), sortedFields.end(),
+              [&](std::pair<int, iir::Stencil::FieldInfo> field1,
+                  std::pair<int, iir::Stencil::FieldInfo> field2) {
+                return field1.first < field2.first;
+              });
 
-    auto nonTempFields = makeRange(
-        StencilFields,
-        std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>([](
-            std::pair<int, iir::Stencil::FieldInfo> const& f) { return !f.second.IsTemporary; }));
+    auto nonTempFields =
+        makeRange(sortedFields, std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
+                                    [](std::pair<int, iir::Stencil::FieldInfo> const& f) {
+                                      return !f.second.IsTemporary;
+                                    }));
     auto tempFields = makeRange(
         StencilFields,
         std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
@@ -659,10 +691,19 @@ void GTCodeGen::generateStencilClasses(
              << extents[1].Plus << "> >(";
 
         const auto& fields = stage.getFields();
+        std::vector<std::pair<int, iir::Field>> fieldsSorted;
+        for(auto field : fields) {
+          fieldsSorted.push_back(field);
+        }
+        std::sort(fieldsSorted.begin(), fieldsSorted.end(),
+                  [&](std::pair<int, iir::Field> field1,
+                      std::pair<int, iir::Field> field2) {
+                    return field1.first < field2.first;
+                  });
 
         // Field declaration
         std::vector<std::string> arglist;
-        if(fields.empty()) {
+        if(sortedFields.empty()) {
           DiagnosticsBuilder diag(DiagnosticsKind::Error,
                                   stencilInstantiation->getMetaData().stencilLocation_);
           diag << "no storages referenced in stencil '" << stencilInstantiation->getName()
@@ -671,7 +712,7 @@ void GTCodeGen::generateStencilClasses(
         }
 
         std::size_t accessorIdx = 0;
-        for(const auto& fieldPair : fields) {
+        for(const auto& fieldPair : fieldsSorted) {
           const auto& field = fieldPair.second;
           const int accessID = fieldPair.first;
 
@@ -692,7 +733,9 @@ void GTCodeGen::generateStencilClasses(
 
           // Generate placeholder mapping of the field in `make_stage`
           ssMS << "p_" << paramName << "()"
-               << ((!stage.hasGlobalVariables() && (accessorIdx == fields.size() - 1)) ? "" : ", ");
+               << ((!stage.hasGlobalVariables() && (accessorIdx == fieldsSorted.size() - 1))
+                       ? ""
+                       : ", ");
 
           arglist.push_back(std::move(paramName));
           ++accessorIdx;
@@ -756,7 +799,7 @@ void GTCodeGen::generateStencilClasses(
     // Generate constructor/destructor and methods of the stencil
     //
     std::vector<std::string> StencilGlobalVariables = stencil.getGlobalVariables();
-    std::size_t numFields = StencilFields.size();
+    std::size_t numFields = sortedFields.size();
 
     mplContainerMaxSize_ = std::max(mplContainerMaxSize_, numFields);
 
@@ -784,7 +827,7 @@ void GTCodeGen::generateStencilClasses(
     // Add static asserts to check halos against extents
     StencilConstructor.addComment("Check if extents do not exceed the halos");
     int nonTempFieldId = 0;
-    for(const auto& fieldPair : StencilFields) {
+    for(const auto& fieldPair : sortedFields) {
       const auto& fieldInfo = fieldPair.second;
       if(!fieldInfo.IsTemporary) {
         auto const& ext = fieldInfo.field.getExtentsRB();
@@ -821,11 +864,11 @@ void GTCodeGen::generateStencilClasses(
     }
 
     // Generate domain
-    buildPlaceholderDefinitions(StencilConstructor, stencilInstantiation, StencilFields,
+    buildPlaceholderDefinitions(StencilConstructor, stencilInstantiation, sortedFields,
                                 StencilGlobalVariables, globalsMap, codeGenProperties);
 
     std::vector<std::string> ArglistPlaceholders;
-    for(const auto& field : StencilFields)
+    for(const auto& field : sortedFields)
       ArglistPlaceholders.push_back("p_" + field.second.Name);
     if(!globalsMap.empty()) {
       ArglistPlaceholders.push_back("p_globals");

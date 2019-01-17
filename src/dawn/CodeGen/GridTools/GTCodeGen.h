@@ -70,7 +70,7 @@ private:
   void buildPlaceholderDefinitions(
       MemberFunction& function,
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-      const std::unordered_map<int, iir::Stencil::FieldInfo>& stencilFields,
+      const std::vector<std::pair<int, iir::Stencil::FieldInfo>>& stencilFields,
       std::vector<std::string> const& stencilGlobalVariables,
       const sir::GlobalVariableMap& globalsMap, const CodeGenProperties& codeGenProperties) const;
 
@@ -112,7 +112,7 @@ private:
   /// code generate sync methods statements for all the fields passed
   void generateSyncStorages(
       MemberFunction& method,
-      const IndexRange<std::unordered_map<int, iir::Stencil::FieldInfo>>& stencilFields) const;
+      const IndexRange<std::vector<std::pair<int, iir::Stencil::FieldInfo>>>& stencilFields) const;
 
   /// construct a string of template parameters for storages
   std::vector<std::string> buildFieldTemplateNames(
