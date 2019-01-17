@@ -221,10 +221,10 @@ void CudaCodeGen::generateStencilClasses(
     Structure stencilClass = stencilWrapperClass.addStruct(stencilName, "", "sbase");
     auto& paramNameToType = stencilProperties->paramNameToType_;
 
-    for(auto fieldIt : nonTempFields) {
+    for(auto fieldIt : tempFieldSorted) {
       paramNameToType.emplace(
-          (*fieldIt).second.Name,
-          getStorageType(stencilInstantiation->getFieldDimensionsMask((*fieldIt).first)));
+          (fieldIt).second.Name,
+          getStorageType(stencilInstantiation->getFieldDimensionsMask((fieldIt).first)));
     }
 
     for(auto fieldName : nonTempFieldNames) {
@@ -345,7 +345,8 @@ void CudaCodeGen::generateStencilWrapperCtr(
     if(stencil.isEmpty())
       continue;
 
-    const auto& StencilFields = stencil.getFields();
+
+
 
     const std::string stencilName =
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
@@ -357,7 +358,17 @@ void CudaCodeGen::generateStencilWrapperCtr(
       initCtr += ",m_globals";
     }
 
-    for(const auto& fieldInfoPair : StencilFields) {
+    const auto& StencilFields = stencil.getFields();
+    std::vector<std::pair<int, iir::Stencil::FieldInfo>> nonTempFieldSorted;
+    for(auto fieldIt : StencilFields) {
+      nonTempFieldSorted.push_back(fieldIt);
+    }
+    std::sort(nonTempFieldSorted.begin(), nonTempFieldSorted.end(),
+              [&](std::pair<int, iir::Stencil::FieldInfo> field1,
+                  std::pair<int, iir::Stencil::FieldInfo> field2) {
+                return field1.first < field2.first;
+              });
+    for(const auto& fieldInfoPair : nonTempFieldSorted) {
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
         continue;
