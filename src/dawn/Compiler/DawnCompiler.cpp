@@ -232,6 +232,7 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
                                    "backend options must be : " +
                                        dawn::RangeToString(", ", "", "")(std::vector<std::string>{
                                            "gridtools", "c++-naive", "c++-opt"})));
+    return nullptr;
   }
 
   return CG->generateCode();
