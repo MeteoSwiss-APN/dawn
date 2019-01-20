@@ -46,6 +46,8 @@ OPT(std::string, arch, "", "arch", "",
     "\n - p100\n", "<arch>", true, false)
 OPT(std::string, domain_size, "", "domain-size", "",
     "domain size for compiler optimization", "", true, false)
+OPT(std::string, block_size, "", "block-size", "",
+        "block size for compiler optimization", "", true, false)
 OPT(bool, InlineSF, false, "inline", "",
     "Inline stencil functions","", false, false)
 OPT(std::string, ReorderStrategy, "greedy", "reorder", "", 

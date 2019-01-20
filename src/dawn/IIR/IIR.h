@@ -25,7 +25,7 @@ namespace iir {
 /// @ingroup optimizer
 class IIR : public IIRNode<void, IIR, Stencil> {
 
-  const std::array<unsigned int, 3> blockSize_ = {{32, 4, 4}};
+  std::array<unsigned int, 3> blockSize_ = {{32, 4, 4}};
 
   struct DerivedInfo {
     /// Can be filled from the AccessIDToName map that is in Metainformation
@@ -68,28 +68,33 @@ public:
   /// @brief clone the IIR
   void clone(std::unique_ptr<IIR>& dest) const;
 
-  std::unordered_map<std::string, int>& getNameToAccessIDs() {
+  inline void setBlockSize(const std::array<unsigned int, 3> blockSize) { blockSize_ = blockSize; }
+
+  inline std::unordered_map<std::string, int>& getNameToAccessIDs() {
     return derivedInfo_.NameToAccessIDMap_;
   }
 
-  std::unordered_map<int, std::string>& getStageIDToNameMap() {
+  inline std::unordered_map<int, std::string>& getStageIDToNameMap() {
     return derivedInfo_.StageIDToNameMap_;
   }
-  const std::string& getNameFromStageID(int StageID) const {
+  inline const std::string& getNameFromStageID(int StageID) const {
     auto it = derivedInfo_.StageIDToNameMap_.find(StageID);
     DAWN_ASSERT_MSG(it != derivedInfo_.StageIDToNameMap_.end(), "Invalid StageID");
     return it->second;
   }
 
-  std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&
+  inline std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&
   getBoundaryConditionToExtents() {
     return derivedInfo_.BoundaryConditionToExtentsMap_;
   }
 
-  std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>& getStencilCallToStencilIDMap() {
+  inline std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
+  getStencilCallToStencilIDMap() {
     return derivedInfo_.StencilCallToStencilIDMap_;
   }
-  std::set<int>& getAllocatedFieldAccessIDSet() { return derivedInfo_.AllocatedFieldAccessIDSet_; }
+  inline std::set<int>& getAllocatedFieldAccessIDSet() {
+    return derivedInfo_.AllocatedFieldAccessIDSet_;
+  }
 };
 } // namespace iir
 } // namespace dawn

@@ -12,30 +12,28 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/IIR/DependencyGraphStage.h"
-#include "dawn/IIR/Stencil.h"
-#include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/Renaming.h"
-#include "dawn/SIR/SIR.h"
-#include "dawn/Support/StringUtil.h"
-#include "dawn/Support/Unreachable.h"
-#include <algorithm>
-#include <iostream>
-#include <numeric>
+#ifndef DAWN_OPTIMIZER_PASSSETBLOCKSIZE_H
+#define DAWN_OPTIMIZER_PASSSETBLOCKSIZE_H
+
+#include "dawn/Optimizer/Pass.h"
 
 namespace dawn {
-namespace iir {
 
-std::unique_ptr<IIR> IIR::clone() const {
-  auto cloneIIR = make_unique<IIR>();
-  clone(cloneIIR);
-  return cloneIIR;
-}
+/// @brief This Pass computes and assign the block size of each IIR
+///
+/// This Pass depends on `PassSetBlockSize`.
+///
+/// @ingroup optimizer
+///
+/// This pass is not necessary to create legal code and is hence not in the debug-group
+class PassSetBlockSize : public Pass {
+public:
+  PassSetBlockSize();
 
-void IIR::clone(std::unique_ptr<IIR>& dest) const {
-  dest->cloneChildrenFrom(*this, dest);
-  dest->setBlockSize(blockSize_);
-}
+  /// @brief Pass implementation
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+};
 
-} // namespace iir
 } // namespace dawn
+
+#endif

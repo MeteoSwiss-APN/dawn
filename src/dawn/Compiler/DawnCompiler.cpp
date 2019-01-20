@@ -25,6 +25,7 @@
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
 #include "dawn/Optimizer/PassSSA.h"
+#include "dawn/Optimizer/PassSetBlockSize.h"
 #include "dawn/Optimizer/PassSetBoundaryCondition.h"
 #include "dawn/Optimizer/PassSetCaches.h"
 #include "dawn/Optimizer/PassSetNonTempCaches.h"
@@ -165,6 +166,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   optimizer->checkAndPushBack<PassSetBoundaryCondition>();
   optimizer->checkAndPushBack<PassDataLocalityMetric>();
   optimizer->checkAndPushBack<PassSetSyncStage>();
+  optimizer->checkAndPushBack<PassSetBlockSize>();
 
   DAWN_LOG(INFO) << "All the passes ran with the current command line arugments:";
   for(const auto& a : passManager.getPasses()) {
