@@ -73,10 +73,21 @@ public:
 
   void invert();
 
+  /// @brief the Interval allows to construct mathematically invalid intervals where the lower bound
+  /// is higher than the upper bound. This method allows to check if the interval is mathematically
+  /// well defined
+  inline bool valid() { return (lowerBound() <= upperBound()); }
+
   IntervalLevel upperIntervalLevel() const { return upper_; }
   IntervalLevel lowerIntervalLevel() const { return lower_; }
 
+  /// @brief computes the intersection of two intervals
   Interval intersect(const Interval& other) const;
+
+  /// @brief crop the interval around the window of one of the bounds of the interval
+  /// (notice that the window can specify offsets so that the cropped interval can also extend and
+  /// go beyod the limits of the
+  /// original window)
   Interval crop(Bound bound, std::array<int, 2> window) const;
 
   int offset(const Bound bound) const {

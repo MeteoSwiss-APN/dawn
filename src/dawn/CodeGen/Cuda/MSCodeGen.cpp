@@ -192,6 +192,10 @@ void MSCodeGen::generatePreFillKCaches(
     const std::unordered_map<int, Array3i>& fieldIndexMap) const {
   cudaKernel.addComment("Pre-fill of kcaches");
 
+  // the algorithm consists of two parts:
+  // 1) identify all the caches that require a prefill for each of the intervals of the partition.
+  //    Insert into kCacheProperty
+  // 2) generation of the prefill code for all cache/intervals in KCacheProperty
   auto intervalFields = ms_->computeFieldsAtInterval(interval);
   std::unordered_map<iir::Extents, std::vector<KCacheProperties>> kCacheProperty;
 
@@ -200,8 +204,6 @@ void MSCodeGen::generatePreFillKCaches(
     const auto& cache = cachePair.second;
     if(!CacheProperties::requiresFill(cache))
       continue;
-
-    // TODO merge
 
     // for a pre-fill operation, we dont take into account the extent over the whole ms (i.e. all
     // intervals) but rather the current interval, which is the first in full vertical iteration.
@@ -213,17 +215,17 @@ void MSCodeGen::generatePreFillKCaches(
       continue;
     }
     auto intervalVertExtent = (*extents)[2];
-    auto msVertExtent = ms_->getKCacheVertExtent(accessID);
 
     DAWN_ASSERT(cache.getInterval().is_initialized());
+
+    // if only one level is accessed (the head of the cache) this level will be provided by the fill
+    // operation
+    if(intervalVertExtent.Minus == intervalVertExtent.Plus)
+      continue;
 
     // check the interval of levels accessed beyond the iteration interval. This will mark all the
     // levels of the kcache that will be accessed but are not filled (they will have to be
     // prefilled) at the beginning of the processing of the interval
-
-    if(intervalVertExtent.Minus == intervalVertExtent.Plus)
-      continue;
-
     auto outOfRangeAccessedInterval =
         (ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
             ? interval.crop(iir::Interval::Bound::upper,
@@ -240,10 +242,10 @@ void MSCodeGen::generatePreFillKCaches(
     auto notYetAccessedInterval =
         intervalNotPreviouslyAccessed(accessID, outOfRangeAccessedInterval, interval);
     if(!notYetAccessedInterval.empty()) {
+      // if the outOfRangeAccessInterval has not been accessed (and therefore filled in the cache)
+      // by the processing of a previous interval we need to add a prefill action
       auto cacheName = cacheProperties_.getCacheName(accessID);
       iir::Extents horizontalExtent = intervalFields.at(accessID).getExtentsRB();
-      // TODO is msVertExtent really used? delete...
-
       auto firstInterval = notYetAccessedInterval.getIntervals()[0];
       auto lastInterval =
           notYetAccessedInterval.getIntervals()[notYetAccessedInterval.numPartitions() - 1];
@@ -259,8 +261,7 @@ void MSCodeGen::generatePreFillKCaches(
           iir::distance(preFillMarkLevel, preFillInterval.lowerIntervalLevel()).value,
           iir::distance(preFillMarkLevel, preFillInterval.upperIntervalLevel()).value};
 
-      kCacheProperty[horizontalExtent].emplace_back(cacheName, accessID, preFillExtent,
-                                                    msVertExtent);
+      kCacheProperty[horizontalExtent].emplace_back(cacheName, accessID, preFillExtent);
     }
   }
 
@@ -339,8 +340,7 @@ void MSCodeGen::generateFillKCaches(MemberFunction& cudaKernel, const iir::Inter
       DAWN_ASSERT(intervalFields.count(accessID));
       iir::Extents horizontalExtent = intervalFields.at(accessID).getExtentsRB();
 
-      kCacheProperty[horizontalExtent].emplace_back(cacheName, accessID, intervalVertExtent,
-                                                    ms_->getKCacheVertExtent(accessID));
+      kCacheProperty[horizontalExtent].emplace_back(cacheName, accessID, intervalVertExtent);
     }
   }
 
@@ -464,7 +464,6 @@ MSCodeGen::buildKCacheProperties(const iir::Interval& interval,
     }
     DAWN_ASSERT(policy != iir::Cache::CacheIOPolicy::local);
     DAWN_ASSERT(cache.getInterval().is_initialized());
-    const auto cacheInterval = *(cache.getInterval());
     auto extents = ms_->computeExtents(accessID, interval);
     if(!extents.is_initialized()) {
       continue;
@@ -474,13 +473,11 @@ MSCodeGen::buildKCacheProperties(const iir::Interval& interval,
     if(applyEpflush) {
       auto cacheName = cacheProperties_.getCacheName(accessID);
       auto intervalVertExtent = (*extents)[2];
-      auto msVertExtent = ms_->getKCacheVertExtent(accessID);
 
       DAWN_ASSERT(intervalFields.count(accessID));
       iir::Extents horizontalExtent = intervalFields.at(accessID).getExtentsRB();
       horizontalExtent[2] = {0, 0};
-      kCacheProperty[horizontalExtent].emplace_back(cacheName, accessID, intervalVertExtent,
-                                                    msVertExtent);
+      kCacheProperty[horizontalExtent].emplace_back(cacheName, accessID, intervalVertExtent);
     }
   }
   return kCacheProperty;
@@ -640,8 +637,6 @@ void MSCodeGen::generateFinalFlushKCaches(MemberFunction& cudaKernel, const iir:
                                      : kcacheProp.intervalVertExtent_.Minus;
             } else if(policy == iir::Cache::CacheIOPolicy::epflush) {
               DAWN_ASSERT(cache.getWindow().is_initialized());
-              auto window = *(cache.getWindow());
-
               auto intervalToFlush =
                   cache
                       .getWindowInterval((ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
