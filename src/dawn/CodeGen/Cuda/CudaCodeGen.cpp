@@ -47,7 +47,8 @@ void CudaCodeGen::generateAllCudaKernels(
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
     DAWN_ASSERT(cachePropertyMap_.count(ms->getID()));
 
-    MSCodeGen msCodeGen(ssSW, ms, stencilInstantiation, cachePropertyMap_.at(ms->getID()));
+    MSCodeGen msCodeGen(ssSW, context_, ms, stencilInstantiation,
+                        cachePropertyMap_.at(ms->getID()));
     msCodeGen.generateCudaKernelCode();
   }
 }

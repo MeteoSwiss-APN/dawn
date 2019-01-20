@@ -46,6 +46,7 @@ class MSCodeGen {
 
 private:
   std::stringstream& ss_;
+  OptimizerContext* context_;
   const std::unique_ptr<iir::MultiStage>& ms_;
   const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation_;
   const CacheProperties& cacheProperties_;
@@ -55,7 +56,8 @@ private:
   const bool solveKLoopInParallel_;
 
 public:
-  MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
+  MSCodeGen(std::stringstream& ss, OptimizerContext* context,
+            const std::unique_ptr<iir::MultiStage>& ms,
             const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
             const CacheProperties& cacheProperties);
 

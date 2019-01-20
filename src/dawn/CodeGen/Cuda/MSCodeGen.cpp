@@ -17,6 +17,7 @@
 #include "dawn/CodeGen/Cuda/ASTStencilBody.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/IndexRange.h"
 #include <functional>
 #include <numeric>
@@ -24,10 +25,11 @@
 namespace dawn {
 namespace codegen {
 namespace cuda {
-MSCodeGen::MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
+MSCodeGen::MSCodeGen(std::stringstream& ss, OptimizerContext* context,
+                     const std::unique_ptr<iir::MultiStage>& ms,
                      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                      const CacheProperties& cacheProperties)
-    : ss_(ss), ms_(ms), stencilInstantiation_(stencilInstantiation),
+    : ss_(ss), context_(context), ms_(ms), stencilInstantiation_(stencilInstantiation),
       cacheProperties_(cacheProperties),
       blockSize_(stencilInstantiation_->getIIR()->getBlockSize()),
       solveKLoopInParallel_(CodeGeneratorHelper::solveKLoopInParallel(ms_)) {
@@ -720,17 +722,36 @@ void MSCodeGen::generateCudaKernelCode() {
   int maxThreadsPerBlock =
       blockSize_[0] * (blockSize_[1] + maxExtents[1].Plus - maxExtents[1].Minus +
                        (maxExtents[0].Minus < 0 ? 1 : 0) + (maxExtents[0].Plus > 0 ? 1 : 0));
-  if(solveKLoopInParallel_)
-    maxThreadsPerBlock *= blockSize_[2];
 
-  int minBlocksPerSM = 128 * 128 / (maxThreadsPerBlock);
-  if(solveKLoopInParallel_)
-    minBlocksPerSM *= 80 / blockSize_[2];
-  minBlocksPerSM /= 56;
+  std::string arch = context_->getOptions().arch;
+  std::string domain_size = context_->getOptions().domain_size;
+  // if we have information about the architecture and the domain sizes we can further specify the
+  // minimum number of blocks per SM of the GPU
+  if((arch == "p100" || arch == "k40" || arch == "k80") && !domain_size.empty()) {
+    std::istringstream idomain_size(domain_size);
+    std::string arg;
+    getline(idomain_size, arg, ',');
+    int isize = std::stoi(arg);
+    getline(idomain_size, arg, ',');
+    int jsize = std::stoi(arg);
 
-  fnDecl = fnDecl + " __launch_bounds__(" + std::to_string(maxThreadsPerBlock) + "," +
-           std::to_string(minBlocksPerSM) + ") ";
+    int nSM = -1;
+    if(context_->getOptions().arch == "p100") {
+      nSM = 56;
+    } else if(arch == "k40" || arch == "k80") {
+      nSM = 15;
+    }
 
+    int minBlocksPerSM = isize * jsize / (blockSize_[0] * blockSize_[1]);
+    if(solveKLoopInParallel_)
+      minBlocksPerSM *= 80 / blockSize_[2];
+    minBlocksPerSM /= nSM;
+
+    fnDecl = fnDecl + " __launch_bounds__(" + std::to_string(maxThreadsPerBlock) + "," +
+             std::to_string(minBlocksPerSM) + ") ";
+  } else {
+    fnDecl = fnDecl + " __launch_bounds__(" + std::to_string(maxThreadsPerBlock) + ") ";
+  }
   MemberFunction cudaKernel(fnDecl, cudaKernelName_, ss_);
 
   const auto& globalsMap = stencilInstantiation_->getMetaData().globalVariableMap_;
