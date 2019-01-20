@@ -35,14 +35,13 @@ namespace cuda {
 /// @ingroup cxxnaive
 class MSCodeGen {
   struct KCacheProperties {
-    inline KCacheProperties(std::string name, int accessID, iir::Extent intervalVertExtent,
-                            iir::Extent msVertExtent)
-        : name_(name), accessID_(accessID), intervalVertExtent_(intervalVertExtent),
-          sizeExtent_(msVertExtent) {}
+    inline KCacheProperties(std::string name, int accessID, iir::Extent intervalVertExtent)
+        : name_(name), accessID_(accessID), intervalVertExtent_(intervalVertExtent) {}
     std::string name_;
     int accessID_;
-    iir::Extent intervalVertExtent_;
-    iir::Extent sizeExtent_;
+    iir::Extent intervalVertExtent_; // extent of the cache used within the interval,
+    // this information is used for IO policies, to know
+    // which portion of the interval needs to be sync with mem
   };
 
 private:
@@ -110,8 +109,8 @@ private:
   static std::string kBegin(const std::string dom, iir::LoopOrderKind loopOrder,
                             iir::Interval const& interval);
 
-  /// @brief determines if a given interval (targetInterval) has been accessed before the execution
-  /// of the queryInterval by a given accessID, with a vertical extent vertExtent
+  /// @brief determines the multi interval of an interval (targetInterval) has not been accessed
+  /// before the execution of the queryInterval by a given accessID
   iir::MultiInterval intervalNotPreviouslyAccessed(const int accessID,
                                                    const iir::Interval& targetInterval,
                                                    iir::Interval const& queryInterval) const;
@@ -122,6 +121,7 @@ private:
   /// k-loop iteration)
   bool intervalRequiresSync(const iir::Interval& interval, const iir::Stage& stage) const;
 
+  /// @brief determines if a cache needs to flush for a given interval
   bool checkIfCacheNeedsToFlush(const iir::Cache& cache, iir::Interval interval) const;
 
   void generateFlushKCaches(MemberFunction& cudaKernel, const iir::Interval& interval,

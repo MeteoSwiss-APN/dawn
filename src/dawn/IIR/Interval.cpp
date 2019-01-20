@@ -333,8 +333,6 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
 }
 
 Interval Interval::intersect(const Interval& other) const {
-
-  // TODO impose this in ctrs
   DAWN_ASSERT(lowerBound() <= upperBound());
   DAWN_ASSERT(other.lowerBound() <= other.upperBound());
 

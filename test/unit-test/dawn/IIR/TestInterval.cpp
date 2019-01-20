@@ -432,5 +432,21 @@ TEST(IntervalTest, toStringGen) {
 
   EXPECT_EQ(I2.toStringGen(), "end_plus_1_end_minus_2");
 }
+TEST(IntervalTest, crop) {
+  Interval I1(0, 2, 1, -1);
+
+  EXPECT_EQ((I1.crop(Interval::Bound::upper, {0, 0})), Interval(2, 2, -1, -1));
+  EXPECT_EQ((I1.crop(Interval::Bound::upper, {-2, 1})), Interval(2, 2, -3, 0));
+  EXPECT_EQ((I1.crop(Interval::Bound::lower, {0, 0})), Interval(0, 0, 1, 1));
+  EXPECT_EQ((I1.crop(Interval::Bound::lower, {-2, 1})), Interval(0, 0, -1, 2));
+}
+TEST(IntervalTest, intersect) {
+  Interval I1(0, 7, 1, -1);
+
+  EXPECT_EQ(I1.intersect(Interval{0, 7, 1, -1}), (Interval{0, 7, 1, -1}));
+  EXPECT_EQ(I1.intersect(Interval{0, 1, 0, 4}), (Interval{1, 5, 0, 0}));
+  EXPECT_EQ(I1.intersect(Interval{0, 7, 0, 2}), (Interval{1, 6, 0, 0}));
+  EXPECT_TRUE(!I1.intersect(Interval{0, 0, 0, 0}).valid());
+}
 
 } // anonymous namespace
