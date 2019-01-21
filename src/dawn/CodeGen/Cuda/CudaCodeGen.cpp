@@ -171,14 +171,14 @@ void CudaCodeGen::generateStencilClasses(
       continue;
 
     // fields used in the stencil
-    const auto& StencilFields = orderMap(stencil.getFields());
+    const auto stencilFields = orderMap(stencil.getFields());
 
     auto nonTempFields = makeRange(
-        StencilFields,
+        stencilFields,
         std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>([](
             std::pair<int, iir::Stencil::FieldInfo> const& p) { return !p.second.IsTemporary; }));
     auto tempFields = makeRange(
-        StencilFields,
+        stencilFields,
         std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
             [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
 
@@ -314,7 +314,7 @@ void CudaCodeGen::generateStencilWrapperCtr(
     if(stencil.isEmpty())
       continue;
 
-    const auto& StencilFields = orderMap(stencil.getFields());
+    const auto stencilFields = orderMap(stencil.getFields());
 
     const std::string stencilName =
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
@@ -326,7 +326,7 @@ void CudaCodeGen::generateStencilWrapperCtr(
       initCtr += ",m_globals";
     }
 
-    for(const auto& fieldInfoPair : StencilFields) {
+    for(const auto& fieldInfoPair : stencilFields) {
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
         continue;
@@ -458,7 +458,7 @@ void CudaCodeGen::generateStencilRunMethod(
     const iir::MultiStage& multiStage = *multiStagePtr;
     bool solveKLoopInParallel_ = CodeGeneratorHelper::solveKLoopInParallel(multiStagePtr);
 
-    const auto& fields = orderMap(multiStage.getFields());
+    const auto fields = orderMap(multiStage.getFields());
 
     auto nonTempFields =
         makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](

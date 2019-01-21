@@ -596,7 +596,7 @@ void MSCodeGen::generateCudaKernelCode() {
   }
 
   // fields used in the stencil
-  const auto& fields = orderMap(ms_->getFields());
+  const auto fields = orderMap(ms_->getFields());
 
   auto nonTempFields =
       makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
