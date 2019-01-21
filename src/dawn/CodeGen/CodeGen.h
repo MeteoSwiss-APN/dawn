@@ -26,7 +26,7 @@ namespace dawn {
 namespace codegen {
 
 template <typename Key, typename Value>
-std::map<Key, Value> orderMap(const std::unordered_map<Key, Value>& umap) {
+extern std::map<Key, Value> orderMap(const std::unordered_map<Key, Value>& umap) {
   std::map<Key, Value> m;
   for(const auto& f : umap)
     m.insert(f);
