@@ -57,8 +57,11 @@ OPT(std::string, ReorderStrategy, "greedy", "reorder", "",
 OPT(int, MaxFieldsPerStencil, 40, "max-fields", "",
     "Set the maximum number of fields in any given stencils", "<N>", true, false)
 
-OPT(bool, GeneticAlgorithm, false, "GA", "",
-    "Allow for alternative use of passes by genetic algorithms", "", false, true)
+OPT(bool, PermutationMode, false, "permutation", "",
+    "Allow for alternative use of passes by making permutations", "", false, true)
+OPT(bool, DebugMode, false, "debug", "",
+    "Compile to debug backend", "", false, true)
+
 OPT(bool, SSA, false, "ssa", "",
     "Transform all statements into static single assigment (SSA) form", "", false, true)
 OPT(bool, MergeTemporaries, false, "merge-temporaries", "", 
@@ -77,8 +80,6 @@ OPT(bool, PassTmpToFunction, false, "pass-tmp-to-function", "",
     "Activate pass to replace temporary precomputations by stencil function calls", "", false, true)
 OPT(bool, UseNonTempCaches, false, "cache-non-temp-fields", "",
     "Allows for caching of non-temporary fields", "", false, true)
-OPT(bool, Debug, false, "debug", "",
-    "Compile to debug backend", "", false, true)
 OPT(bool, MaxCutMSS, false, "max-cut-mss", "",
     "Cuts the given multistages in as many multistages as possible while maintaining legal code", "", false, true)
 

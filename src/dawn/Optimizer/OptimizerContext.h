@@ -116,13 +116,13 @@ public:
     }
     bool retval = true;
     bool valueIsSet = false;
-    if(getOptions().Debug) {
+    if(getOptions().DebugMode) {
       DAWN_ASSERT_MSG(!(valueIsSet && retval != p->checkFlag("Debug")),
                       "`Debug` option is not compatible with the other flags set");
       retval = p->checkFlag("Debug");
       valueIsSet = true;
     }
-    if(getOptions().GeneticAlgorithm && getOptions().LoadSerialized != ""){
+    if(getOptions().PermutationMode && getOptions().LoadSerialized != ""){
         DAWN_ASSERT_MSG(!(valueIsSet && (retval != p->checkFlag("GeneticAlgorithm"))),
                         "`GeneticAlgorithm` option is not compatible with the other flags set");
         retval = p->checkFlag("GeneticAlgorithm");

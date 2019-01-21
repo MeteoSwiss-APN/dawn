@@ -166,7 +166,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   if(options_->LoadSerialized != "") {
     doFieldVersioning = false;
   }
-  if(options_->GeneticAlgorithm){
+  if(options_->PermutationMode){
       inlineStrategy = InlineStrategyKind::IK_GeneticAlgorithm;
       mssSplitStrategy = MultistageSplitStrategy::SS_GeneticAlgorithm;
       reorderStrategy = ReorderStrategyKind::RK_GeneticAlgorithm;
