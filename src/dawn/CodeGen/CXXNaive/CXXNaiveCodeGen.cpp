@@ -159,7 +159,7 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
     if(stencil.isEmpty())
       continue;
 
-    const auto& StencilFields = stencil.getFields();
+    const auto& StencilFields = orderMap(stencil.getFields());
 
     const std::string stencilName =
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
@@ -258,7 +258,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
       continue;
 
     // fields used in the stencil
-    const auto& StencilFields = stencil.getFields();
+    const auto& StencilFields = orderMap(stencil.getFields());
 
     auto nonTempFields = makeRange(
         StencilFields,

@@ -55,7 +55,7 @@ private:
   void addTempStorageTypedef(Structure& stencilClass, iir::Stencil const& stencil) const override;
 
   void addTmpStorageInit(MemberFunction& ctr, iir::Stencil const& stencil,
-                         IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>&
+                         IndexRange<const std::map<int, iir::Stencil::FieldInfo>>&
                              tempFields) const override;
 
   void
@@ -102,15 +102,15 @@ private:
   void generateStencilClassCtr(
       Structure& stencilClass, const iir::Stencil& stencil,
       const sir::GlobalVariableMap& globalsMap,
-      IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& nonTempFields,
-      IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields,
+      IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
+      IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields,
       std::shared_ptr<StencilProperties> stencilProperties) const;
 
   void generateStencilClassMembers(
       Structure& stencilClass, const iir::Stencil& stencil,
       const sir::GlobalVariableMap& globalsMap,
-      IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& nonTempFields,
-      IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields,
+      IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
+      IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields,
       std::shared_ptr<StencilProperties> stencilProperties) const;
 
   std::string generateStencilInstantiation(

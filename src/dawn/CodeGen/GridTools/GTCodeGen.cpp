@@ -107,7 +107,7 @@ std::string GTCodeGen::cacheWindowToString(iir::Cache::window const& cacheWindow
 
 void GTCodeGen::generateSyncStorages(
     MemberFunction& method,
-    IndexRange<std::unordered_map<int, iir::Stencil::FieldInfo>> const& stencilFields) const {
+    const IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& stencilFields) const {
   // synchronize storages method
   for(auto fieldIt : stencilFields) {
     method.addStatement((*fieldIt).second.Name + ".sync()");
@@ -117,8 +117,7 @@ void GTCodeGen::generateSyncStorages(
 void GTCodeGen::buildPlaceholderDefinitions(
     MemberFunction& function,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-    std::unordered_map<int, iir::Stencil::FieldInfo> const& stencilFields,
-    std::vector<std::string> const& stencilGlobalVariables,
+    const std::map<int, iir::Stencil::FieldInfo>& stencilFields,
     const sir::GlobalVariableMap& globalsMap, const CodeGenProperties& codeGenProperties) const {
 
   int accessorIdx = 0;
@@ -253,7 +252,7 @@ void GTCodeGen::generateStencilWrapperRun(
 
   for(const auto& stencil : stencils) {
 
-    const auto& fields = stencil->getFields();
+    const auto& fields = orderMap(stencil->getFields());
     std::vector<iir::Stencil::FieldInfo> nonTempFields;
 
     for(const auto& field : fields) {
@@ -319,7 +318,7 @@ void GTCodeGen::generateStencilWrapperCtr(
 
   // Initialize stencils
   for(const auto& stencil : stencils) {
-    const auto& fields = stencil->getFields();
+    const auto& fields = orderMap(stencil->getFields());
 
     std::vector<iir::Stencil::FieldInfo> nonTempFields;
 
@@ -406,17 +405,12 @@ void GTCodeGen::generateStencilClasses(
     std::string stencilType;
     const iir::Stencil& stencil = *stencils[stencilIdx];
 
-    std::unordered_map<int, iir::Stencil::FieldInfo> StencilFields = stencil.getFields();
+    const auto& StencilFields = orderMap(stencil.getFields());
 
     auto nonTempFields = makeRange(
         StencilFields,
         std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>([](
             std::pair<int, iir::Stencil::FieldInfo> const& f) { return !f.second.IsTemporary; }));
-    auto tempFields = makeRange(
-        StencilFields,
-        std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
-            [](std::pair<int, iir::Stencil::FieldInfo> const& f) { return f.second.IsTemporary; }));
-
     if(stencil.isEmpty()) {
       DiagnosticsBuilder diag(DiagnosticsKind::Error,
                               stencilInstantiation->getMetaData().stencilLocation_);
@@ -654,7 +648,7 @@ void GTCodeGen::generateStencilClasses(
         ssMS << extents[0].Minus << ", " << extents[0].Plus << ", " << extents[1].Minus << ", "
              << extents[1].Plus << "> >(";
 
-        const auto& fields = stage.getFields();
+        const auto& fields = orderMap(stage.getFields());
 
         // Field declaration
         std::vector<std::string> arglist;
@@ -817,8 +811,8 @@ void GTCodeGen::generateStencilClasses(
     }
 
     // Generate domain
-    buildPlaceholderDefinitions(StencilConstructor, stencilInstantiation, StencilFields,
-                                StencilGlobalVariables, globalsMap, codeGenProperties);
+    buildPlaceholderDefinitions(StencilConstructor, stencilInstantiation, StencilFields, globalsMap,
+                                codeGenProperties);
 
     std::vector<std::string> ArglistPlaceholders;
     for(const auto& field : StencilFields)
