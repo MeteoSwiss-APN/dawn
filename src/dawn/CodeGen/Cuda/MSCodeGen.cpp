@@ -727,7 +727,7 @@ void MSCodeGen::generateCudaKernelCode() {
   std::string domain_size = context_->getOptions().domain_size;
   // if we have information about the architecture and the domain sizes we can further specify the
   // minimum number of blocks per SM of the GPU
-  if((arch == "p100" || arch == "k40" || arch == "k80") && !domain_size.empty()) {
+  if((arch == "P100" || arch == "K40" || arch == "K80") && !domain_size.empty()) {
     std::istringstream idomain_size(domain_size);
     std::string arg;
     getline(idomain_size, arg, ',');
@@ -736,9 +736,9 @@ void MSCodeGen::generateCudaKernelCode() {
     int jsize = std::stoi(arg);
 
     int nSM = -1;
-    if(context_->getOptions().arch == "p100") {
+    if(context_->getOptions().arch == "P100") {
       nSM = 56;
-    } else if(arch == "k40" || arch == "k80") {
+    } else if(arch == "K40" || arch == "K80") {
       nSM = 15;
     }
 
