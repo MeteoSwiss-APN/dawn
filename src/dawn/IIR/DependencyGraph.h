@@ -20,7 +20,6 @@
 #include <algorithm>
 #include <fstream>
 #include <iosfwd>
-#include <iostream>
 #include <iterator>
 #include <list>
 #include <memory>
