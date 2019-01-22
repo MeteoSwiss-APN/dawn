@@ -5,7 +5,7 @@ set -e
 BASEPATH_SCRIPT=$(dirname "${0}")
 source ${BASEPATH_SCRIPT}/machine_env.sh
 source ${BASEPATH_SCRIPT}/env_${myhost}.sh
-
+env_file=`realpath ${BASEPATH_SCRIPT}`/env_${myhost}.sh
 
 if [ -z ${SLURM_RESOURCES+x} ]; then 
   echo "SLURM_RESOURCES is unset"
@@ -25,6 +25,28 @@ function help {
   echo -e "-h Shows this help"
   echo -e "-d <path> path to dawn"
   exit 1
+}
+
+function check_output() {
+  local outfile=$1
+  # check if generation has been successfull
+  set +e
+  res=`egrep -i '^100% tests passed, 0 tests failed out of ' ${outfile}`
+
+  if [ $? -ne 0 ] ; then
+    # echo outfileput to stdoutfile
+    test -f ${outfile} || echo "batch job outfileput file missing"
+    echo "=== ${outfile} BEGIN ==="
+    cat ${outfile} | /bin/sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g"
+    echo "=== ${outfile} END ==="
+    # abort
+    echo "problem with unittests detected"
+    exit 1
+  else
+    echo "Unittests successfull (see ${outfile} for detailed log)"
+    cat ${outfile}
+  fi
+  set -e
 }
 
 echo "####### executing: $0 $* (PID=$$ HOST=$HOSTNAME TIME=`date '+%D %H:%M:%S'`)"
@@ -66,7 +88,6 @@ fi
 
 base_dir=$(pwd)
 build_dir=${base_dir}/bundle/build
-
 mkdir -p $build_dir
 cd $build_dir
 
@@ -90,4 +111,15 @@ fi
 
 nice make -j6 install
 
-salloc -n 1 ${SLURM_RESOURCES} -p ${SLURM_PARTITION} ctest -VV -C ${build_type} --output-on-failure --force-new-ctest-process  
+slurm_script_template=${base_dir}/scripts/jenkins/submit.${myhost}.slurm
+slurm_script=${build_dir}/submit.${myhost}.slurm.job
+
+cp ${slurm_script_template} ${slurm_script} 
+/bin/sed -i 's|<BUILD_DIR>|'"${build_dir}"'|g' ${slurm_script}
+/bin/sed -i 's|<ENV>|'"source ${env_file}"'|g' ${slurm_script}
+/bin/sed -i 's|<CMD>|'"ctest -VV  -C ${build_type} --output-on-failure --force-new-ctest-process"'|g' ${slurm_script}
+
+sbatch --wait ${slurm_script}
+# wait for all jobs to finish
+out=${build_dir}/test.log
+check_output ${out}
