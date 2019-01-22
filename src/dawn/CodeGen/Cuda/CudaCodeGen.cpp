@@ -651,7 +651,7 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
     //    std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = origSI->clone();
     std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = origSI;
 
-    PassInlining inliner(PassInlining::InlineStrategyKind::IK_ComputationsOnTheFly);
+    PassInlining inliner(true, PassInlining::InlineStrategyKind::IK_ComputationsOnTheFly);
 
     inliner.run(stencilInstantiation);
 

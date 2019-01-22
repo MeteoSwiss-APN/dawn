@@ -503,11 +503,14 @@ static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
 
 } // anonymous namespace
 
-PassInlining::PassInlining(InlineStrategyKind strategy)
-    : Pass("PassInlining", true), strategy_(strategy) {}
+PassInlining::PassInlining(bool activate, InlineStrategyKind strategy)
+    : Pass("PassInlining", true), activate_(activate), strategy_(strategy) {}
 
 bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   DetectInlineCandiates inliner(strategy_, stencilInstantiation);
+
+  if(!activate_)
+    return true;
 
   // Iterate all statements (top -> bottom)
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {

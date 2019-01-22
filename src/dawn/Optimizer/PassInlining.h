@@ -39,12 +39,13 @@ public:
     IK_ComputationsOnTheFly ///< Inline stencil functions as computations on the fly
   };
 
-  PassInlining(InlineStrategyKind strategy);
+  PassInlining(bool activate, InlineStrategyKind strategy);
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
 
 private:
+  bool activate_;
   InlineStrategyKind strategy_;
 };
 
