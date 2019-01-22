@@ -579,18 +579,19 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
     for(auto versionedID : variableVersionMap.second.allids()) {
       versions->push_back(versionedID);
       metadata.variableVersions_.versionIDs_.insert(versionedID);
-      metadata.variableVersions_.versionToOriginalVersionMap_.emplace(versionedID, variableVersionMap.first);
+      metadata.variableVersions_.versionToOriginalVersionMap_.emplace(versionedID,
+                                                                      variableVersionMap.first);
     }
     metadata.variableVersions_.insert(variableVersionMap.first, versions);
   }
 
-//  for(auto versionID : protoMetaData.versionedfields().versionids()) {
-//    metadata.variableVersions_.versionIDs_.insert(versionID);
-//  }
+  //  for(auto versionID : protoMetaData.versionedfields().versionids()) {
+  //    metadata.variableVersions_.versionIDs_.insert(versionID);
+  //  }
 
-//  for(auto VersionIDOriginalIDPair : protoMetaData.versionedfields().versionidtooriginalid()) {
-//    metadata.variableVersions_.versionToOriginalVersionMap_.insert(VersionIDOriginalIDPair);
-//  }
+  //  for(auto VersionIDOriginalIDPair : protoMetaData.versionedfields().versionidtooriginalid()) {
+  //    metadata.variableVersions_.versionToOriginalVersionMap_.insert(VersionIDOriginalIDPair);
+  //  }
 
   for(auto stencilDescStmt : protoMetaData.stencildescstatements()) {
     metadata.stencilDescStatements_.push_back(makeStatement(&stencilDescStmt));

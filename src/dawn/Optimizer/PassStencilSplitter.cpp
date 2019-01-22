@@ -48,7 +48,8 @@ PassStencilSplitter::PassStencilSplitter(int maxNumberOfFilelds)
 }
 
 PassStencilSplitter::PassStencilSplitter(bool isEnabled, int maxNumberOfFilelds)
-    : Pass("PassStencilSplitter", Pass::PG_Optimizer, isEnabled), MaxFieldPerStencil(maxNumberOfFilelds) {
+    : Pass("PassStencilSplitter", Pass::PG_Optimizer, isEnabled),
+      MaxFieldPerStencil(maxNumberOfFilelds) {
   dependencies_.push_back("PassSetStageGraph");
 }
 

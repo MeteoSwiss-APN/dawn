@@ -407,32 +407,32 @@ int StencilInstantiation::getAccessIDFromName(const std::string& name) const {
 }
 
 int StencilInstantiation::getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) const {
-    auto it = metadata_.ExprIDToAccessIDMap_.find(expr->getID());
-    if(it == metadata_.ExprIDToAccessIDMap_.end()){
-        std::cout << "we are looking for ID: " << expr->getID() << std::endl;
-        std::cout << "and here are all the elements:\n\n";
-        for(auto b : metadata_.ExprIDToAccessIDMap_){
-            std::cout << b.first << "\t\t" << b.second << "\n";
-        }
-        std::cout << std::endl;
+  auto it = metadata_.ExprIDToAccessIDMap_.find(expr->getID());
+  if(it == metadata_.ExprIDToAccessIDMap_.end()) {
+    std::cout << "we are looking for ID: " << expr->getID() << std::endl;
+    std::cout << "and here are all the elements:\n\n";
+    for(auto b : metadata_.ExprIDToAccessIDMap_) {
+      std::cout << b.first << "\t\t" << b.second << "\n";
     }
+    std::cout << std::endl;
+  }
 
-    DAWN_ASSERT_MSG(it != metadata_.ExprIDToAccessIDMap_.end(), "Invalid Expr");
-    return it->second;
+  DAWN_ASSERT_MSG(it != metadata_.ExprIDToAccessIDMap_.end(), "Invalid Expr");
+  return it->second;
 }
 
 int StencilInstantiation::getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) const {
-    auto it = metadata_.StmtIDToAccessIDMap_.find(stmt->getID());
-    if(it == metadata_.StmtIDToAccessIDMap_.end()){
-        std::cout << "we are looking for ID: " << stmt->getID() << std::endl;
-        std::cout << "and here are all the elements:\n\n";
-        for(auto b : metadata_.StmtIDToAccessIDMap_){
-            std::cout << b.first << "\t\t" << b.second << "\n";
-        }
-        std::cout << std::endl;
+  auto it = metadata_.StmtIDToAccessIDMap_.find(stmt->getID());
+  if(it == metadata_.StmtIDToAccessIDMap_.end()) {
+    std::cout << "we are looking for ID: " << stmt->getID() << std::endl;
+    std::cout << "and here are all the elements:\n\n";
+    for(auto b : metadata_.StmtIDToAccessIDMap_) {
+      std::cout << b.first << "\t\t" << b.second << "\n";
     }
-    DAWN_ASSERT_MSG(it != metadata_.StmtIDToAccessIDMap_.end(), "Invalid Stmt");
-    return it->second;
+    std::cout << std::endl;
+  }
+  DAWN_ASSERT_MSG(it != metadata_.StmtIDToAccessIDMap_.end(), "Invalid Stmt");
+  return it->second;
 }
 
 void StencilInstantiation::setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt,

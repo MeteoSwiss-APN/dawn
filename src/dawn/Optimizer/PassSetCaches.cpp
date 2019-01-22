@@ -158,7 +158,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
   if(strategy_ == CachingStrategy::CS_MaximizeCaches) {
     setAllCaches(instantiation);
   } else if(strategy_ == CachingStrategy::CS_Permutations) {
-    geneticAlgorithm(instantiation);
+    cachePermutation(instantiation);
   }
   return true;
 }
@@ -319,13 +319,13 @@ void PassSetCaches::setAllCaches(const std::shared_ptr<iir::StencilInstantiation
   }
 }
 
-void PassSetCaches::geneticAlgorithm(const std::shared_ptr<iir::StencilInstantiation> &instantiation)
-{
-    OptimizerContext* context = instantiation->getOptimizerContext();
-    if(context->getOptions().ReportPassSetCaches) {
-      std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": MS"
-                << "launched in GA mode, no changes" << std::endl;
-    }
+void PassSetCaches::cachePermutation(
+    const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
+  OptimizerContext* context = instantiation->getOptimizerContext();
+  if(context->getOptions().ReportPassSetCaches) {
+    std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": MS"
+              << "launched in permuation mode, no changes" << std::endl;
+  }
 }
 
 } // namespace dawn

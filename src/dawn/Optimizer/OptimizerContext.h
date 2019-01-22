@@ -122,13 +122,12 @@ public:
       retval = p->checkFlag("Debug");
       valueIsSet = true;
     }
-    if(getOptions().PermutationMode && getOptions().LoadSerialized != ""){
-        DAWN_ASSERT_MSG(!(valueIsSet && (retval != p->checkFlag("GeneticAlgorithm"))),
-                        "`GeneticAlgorithm` option is not compatible with the other flags set");
-        retval = p->checkFlag("GeneticAlgorithm");
-        valueIsSet = true;
-    }
-    else if(getOptions().LoadSerialized != "") {
+    if(getOptions().PermutationMode && getOptions().LoadSerialized != "") {
+      DAWN_ASSERT_MSG(!(valueIsSet && (retval != p->checkFlag("Permutations"))),
+                      "`Permutations` option is not compatible with the other flags set");
+      retval = p->checkFlag("Permutations");
+      valueIsSet = true;
+    } else if(getOptions().LoadSerialized != "") {
       DAWN_ASSERT_MSG(!(valueIsSet && (retval != p->checkFlag("Deserialization"))),
                       "`LoadSerialized` option is not compatible with the other flags set");
       retval = p->checkFlag("Deserialization");

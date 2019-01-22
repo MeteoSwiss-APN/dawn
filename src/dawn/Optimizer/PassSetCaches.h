@@ -43,7 +43,7 @@ public:
 private:
   void setAllCaches(const std::shared_ptr<iir::StencilInstantiation>& instantiation);
 
-  void geneticAlgorithm(const std::shared_ptr<iir::StencilInstantiation>& instantiation);
+  void cachePermutation(const std::shared_ptr<iir::StencilInstantiation>& instantiation);
 
   CachingStrategy strategy_;
 };

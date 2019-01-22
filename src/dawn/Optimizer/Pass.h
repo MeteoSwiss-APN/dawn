@@ -52,22 +52,22 @@ public:
     case PG_Optimizer:
       categorySet_.insert({"Debug", false});
       categorySet_.insert({"Deserialization", false});
-      categorySet_.insert({"GeneticAlgorithm", false});
+      categorySet_.insert({"Permutations", false});
       break;
     case PG_CodeLegality:
       categorySet_.insert({"Debug", true});
       categorySet_.insert({"Deserialization", true});
-      categorySet_.insert({"GeneticAlgorithm", true});
+      categorySet_.insert({"Permutations", true});
       break;
     case PG_LegalAndOpti:
       categorySet_.insert({"Debug", true});
       categorySet_.insert({"Deserialization", false});
-      categorySet_.insert({"GeneticAlgorithm", true});
+      categorySet_.insert({"Permutations", true});
       break;
     case PG_Diganostics:
       categorySet_.insert({"Debug", true});
       categorySet_.insert({"Deserialization", false});
-      categorySet_.insert({"GeneticAlgorithm", false});
+      categorySet_.insert({"Permutations", false});
       break;
     }
   }
