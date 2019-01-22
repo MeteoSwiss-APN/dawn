@@ -147,8 +147,10 @@ message MultiStage {
     // The unique ID of the MultiStage
     int32 multiStageID = 3;
 
-    // The set of Cached variables. If no caches are set, they can be computed internally
-    map<int32, Cache> multiStageCaches = 4;
+    // The set of Cached variables.
+    // This is part of the optimization and can be serialized if need be but the optimizer has a
+    // mechanism in place to set caches if none are provided
+    map<int32, Cache> Caches = 4;
 }
 
 // @brief The Protobuf description of the Attirbutes that are part of a Stencil
@@ -156,7 +158,9 @@ message MultiStage {
 // The attributes are set via pragmas in the usercode (#pragma gtclang ...) and are held by the IIR
 // Stencil one integer
 message Attributes {
-	uint32 attrBits = 1;
+    enum StencilAttributes { NoCodeGen = 0; MergeStages = 1; MergeDoMethods = 2;
+                             MergeTemporaries = 3; UseKCaches = 4;}
+        repeated StencilAttributes attributes = 1;
 }
 
 // @brief The Protobuf description of all the required members to describe a Stencil of the IIR
@@ -183,7 +187,8 @@ message IIR {
 
 // @brief Helper Structure to hold all the relevant information for field-versioning
 //
-// This array represents all the versions of one specific field
+// This array specifies all the access ID's of all the field versions that correspond to an a
+// specific original field
 message AllVersionedFields {
     repeated int32 allIDs = 1;
 }
@@ -193,11 +198,11 @@ message VariableVersions {
     // The map from the original field ID to the list of all it's versions
     map<int32,  AllVersionedFields> variableVersionMap = 1;
 
-    // A list of all the Variables that are generated through Fieldversioning
-    repeated int32 versionIDs = 2;
+//    // A list of all the Variables that are generated through Fieldversioning
+//    repeated int32 versionIDs = 2;
 
-    // Map from Versioned ID to the original
-    map<int32, int32> versionIDToOriginalID = 3;
+//    // Map from Versioned ID to the original
+//    map<int32, int32> versionIDToOriginalID = 3;
 }
 
 //// @brief Helper Sturcture as maps with custom messages as the key do not work in Protobuf

@@ -157,7 +157,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
 
   if(strategy_ == CachingStrategy::CS_MaximizeCaches) {
     setAllCaches(instantiation);
-  } else if(strategy_ == CachingStrategy::CS_GeneticAlgorithm) {
+  } else if(strategy_ == CachingStrategy::CS_Permutations) {
     geneticAlgorithm(instantiation);
   }
   return true;

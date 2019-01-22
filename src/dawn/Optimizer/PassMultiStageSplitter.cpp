@@ -166,7 +166,7 @@ std::function<void(iir::MultiStage::child_reverse_iterator_t&, iir::DependencyGr
                    iir::LoopOrderKind&, iir::LoopOrderKind&,
                    std::deque<iir::MultiStage::SplitIndex>&, int, int, int&, const std::string&,
                    const std::string&, const Options&)>
-multiStageSplitterGA() {
+multiStageSplitterPermutations() {
   return
       [&](iir::MultiStage::child_reverse_iterator_t& stageIt, iir::DependencyGraphAccesses& graph,
           iir::LoopOrderKind& userSpecifiedLoopOrder, iir::LoopOrderKind& curLoopOrder,
@@ -193,8 +193,8 @@ bool PassMultiStageSplitter::run(
     multistagesplitter = multiStageSplitterOptimized();
   } else if(strategy_ == SS_MaxCut) {
     multistagesplitter = multiStageSplitterDebug();
-  } else if(strategy_ == SS_GeneticAlgorithm) {
-    multistagesplitter = multiStageSplitterGA();
+  } else if(strategy_ == SS_Permutations) {
+    multistagesplitter = multiStageSplitterPermutations();
   }
 
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();

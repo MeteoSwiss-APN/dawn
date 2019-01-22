@@ -520,7 +520,7 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
     return true;
 
   // This is not properly implemented yet
-  if(strategy_ == IK_GeneticAlgorithm) {
+  if(strategy_ == IK_Permutations) {
     DAWN_LOG(INFO) << "Genetic algorithm Launched for inlining";
     std::cout << "nothing happened for inlining (Genetic Algorithm applied)" << std::endl;
     return true;

@@ -41,12 +41,11 @@ public:
                           /// optimization while keeping readability high in the user-code
     IK_ComputationOnTheFly, ///< Favor computations on the fly
     IK_Precomputation,      ///< Favor precomputation when possible
-    IK_GeneticAlgorithm     ///< Runs on a Working IIR and does mating and mutation
+    IK_Permutations         ///< Runs on a Working IIR and does mutations going from mode to mode
   };
 
   PassInlining();
   PassInlining(InlineStrategyKind strategy);
-
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;

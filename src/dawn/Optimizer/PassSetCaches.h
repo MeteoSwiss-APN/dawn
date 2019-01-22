@@ -31,8 +31,8 @@ namespace dawn {
 class PassSetCaches : public Pass {
 public:
   enum CachingStrategy {
-    CS_MaximizeCaches,  ///< Sets Caches
-    CS_GeneticAlgorithm ///< Runs on a Working IIR and does mating and mutation
+    CS_MaximizeCaches, ///< Sets Caches
+    CS_Permutations    ///< Runs on a Working IIR and does permuations on the caches
   };
 
   PassSetCaches(CachingStrategy strategy);

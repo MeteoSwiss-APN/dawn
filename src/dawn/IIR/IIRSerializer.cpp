@@ -293,12 +293,7 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
   // Filling Field: VariableVersions versionedFields = 9;
   auto protoVariableVersions = protoMetaData->mutable_versionedfields();
   auto& protoVariableVersionMap = *protoVariableVersions->mutable_variableversionmap();
-  auto& protoVersionIDtoOriginalIDMap = *protoVariableVersions->mutable_versionidtooriginalid();
-
   auto variableVersions = metaData.variableVersions_;
-  for(int versionedID : variableVersions.getVersionIDs()) {
-    protoVariableVersions->add_versionids(versionedID);
-  }
   for(auto& IDtoVectorOfVersionsPair : variableVersions.variableVersionsMap_) {
     proto::iir::AllVersionedFields protoFieldVersions;
     for(int id : *(IDtoVectorOfVersionsPair.second)) {
@@ -306,10 +301,7 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
     }
     protoVariableVersionMap.insert({IDtoVectorOfVersionsPair.first, protoFieldVersions});
   }
-  for(auto& VersionedIDToOriginalID : variableVersions.versionToOriginalVersionMap_) {
-    protoVersionIDtoOriginalIDMap.insert(
-        {VersionedIDToOriginalID.first, VersionedIDToOriginalID.second});
-  }
+
   // Filling Field: repeated StencilDescStatement stencilDescStatements = 10;
   for(const auto& stencilDescStmt : metaData.stencilDescStatements_) {
     auto protoStmt = protoMetaData->add_stencildescstatements();
@@ -420,7 +412,26 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
     // Information other than the children
     protoStencil->set_stencilid(stencils->getStencilID());
     auto protoAttribute = protoStencil->mutable_attr();
-    protoAttribute->set_attrbits(stencils->getStencilAttributes().getBits());
+    if(stencils->getStencilAttributes().has(sir::Attr::AK_MergeDoMethods)) {
+      protoAttribute->add_attributes(
+          proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeDoMethods);
+    }
+    if(stencils->getStencilAttributes().has(sir::Attr::AK_MergeStages)) {
+      protoAttribute->add_attributes(
+          proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeStages);
+    }
+    if(stencils->getStencilAttributes().has(sir::Attr::AK_MergeTemporaries)) {
+      protoAttribute->add_attributes(
+          proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeTemporaries);
+    }
+    if(stencils->getStencilAttributes().has(sir::Attr::AK_NoCodeGen)) {
+      protoAttribute->add_attributes(
+          proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_NoCodeGen);
+    }
+    if(stencils->getStencilAttributes().has(sir::Attr::AK_UseKCaches)) {
+      protoAttribute->add_attributes(
+          proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_UseKCaches);
+    }
 
     // adding it's children
     for(const auto& multistages : stencils->getChildren()) {
@@ -435,7 +446,7 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
         protoMSS->set_looporder(proto::iir::MultiStage::Parallel);
       }
       protoMSS->set_multistageid(multistages->getID());
-      auto& protoMSSCacheMap = *protoMSS->mutable_multistagecaches();
+      auto& protoMSSCacheMap = *protoMSS->mutable_caches();
       for(const auto& IDCachePair : multistages->getCaches()) {
         proto::iir::Cache protoCache;
         setCache(&protoCache, IDCachePair.second);
@@ -508,7 +519,6 @@ IIRSerializer::serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& i
   serializeIIR(protoStencilInstantiation, instantiation->getIIR());
   protoStencilInstantiation.set_filename(instantiation->getMetaData().fileName_);
 
-
   // Encode the message
   std::string str;
   switch(kind) {
@@ -568,17 +578,19 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
     std::shared_ptr<std::vector<int>> versions = std::make_shared<std::vector<int>>();
     for(auto versionedID : variableVersionMap.second.allids()) {
       versions->push_back(versionedID);
+      metadata.variableVersions_.versionIDs_.insert(versionedID);
+      metadata.variableVersions_.versionToOriginalVersionMap_.emplace(versionedID, variableVersionMap.first);
     }
     metadata.variableVersions_.insert(variableVersionMap.first, versions);
   }
 
-  for(auto versionID : protoMetaData.versionedfields().versionids()) {
-    metadata.variableVersions_.versionIDs_.insert(versionID);
-  }
+//  for(auto versionID : protoMetaData.versionedfields().versionids()) {
+//    metadata.variableVersions_.versionIDs_.insert(versionID);
+//  }
 
-  for(auto VersionIDOriginalIDPair : protoMetaData.versionedfields().versionidtooriginalid()) {
-    metadata.variableVersions_.versionToOriginalVersionMap_.insert(VersionIDOriginalIDPair);
-  }
+//  for(auto VersionIDOriginalIDPair : protoMetaData.versionedfields().versionidtooriginalid()) {
+//    metadata.variableVersions_.versionToOriginalVersionMap_.insert(VersionIDOriginalIDPair);
+//  }
 
   for(auto stencilDescStmt : protoMetaData.stencildescstatements()) {
     metadata.stencilDescStatements_.push_back(makeStatement(&stencilDescStmt));
@@ -646,12 +658,33 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
   for(const auto& protoStencils : protoIIR.stencils()) {
     int mssPos = 0;
     sir::Attr attributes;
-    attributes.setBits(protoStencils.attr().attrbits());
     target->getIIR()->insertChild(
         make_unique<iir::Stencil>(*target, attributes, protoStencils.stencilid()),
         target->getIIR());
-
     const auto& IIRStencil = target->getIIR()->getChild(stencilPos++);
+
+    for(auto attribute : protoStencils.attr().attributes()) {
+      if(attribute ==
+         proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeDoMethods) {
+        IIRStencil->getStencilAttributes().set(sir::Attr::AK_MergeDoMethods);
+      }
+      if(attribute ==
+         proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeStages) {
+        IIRStencil->getStencilAttributes().set(sir::Attr::AK_MergeStages);
+      }
+      if(attribute ==
+         proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_MergeTemporaries) {
+        IIRStencil->getStencilAttributes().set(sir::Attr::AK_MergeTemporaries);
+      }
+      if(attribute ==
+         proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_NoCodeGen) {
+        IIRStencil->getStencilAttributes().set(sir::Attr::AK_NoCodeGen);
+      }
+      if(attribute ==
+         proto::iir::Attributes::StencilAttributes::Attributes_StencilAttributes_UseKCaches) {
+        IIRStencil->getStencilAttributes().set(sir::Attr::AK_UseKCaches);
+      }
+    }
 
     for(const auto& protoMSS : protoStencils.multistages()) {
       int stagePos = 0;
@@ -670,7 +703,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
       const auto& IIRMSS = (IIRStencil)->getChild(mssPos++);
       IIRMSS->setID(protoMSS.multistageid());
 
-      for(const auto& IDCachePair : protoMSS.multistagecaches()) {
+      for(const auto& IDCachePair : protoMSS.caches()) {
         IIRMSS->getCaches().insert({IDCachePair.first, makeCache(&IDCachePair.second)});
       }
 

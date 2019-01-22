@@ -79,7 +79,6 @@ public:
   unsigned getBits() const { return attrBits_; }
   /// @brief Set `attr`bit
   void set(AttrKind attr) { attrBits_ |= 1 << attr; }
-  void setBits(unsigned bits) { attrBits_ = bits; }
 
   /// @brief Unset `attr` bit
   void unset(AttrKind attr) { attrBits_ &= ~(1 << attr); }

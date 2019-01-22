@@ -166,12 +166,24 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   if(options_->LoadSerialized != "") {
     doFieldVersioning = false;
   }
-  if(options_->PermutationMode){
-      inlineStrategy = InlineStrategyKind::IK_GeneticAlgorithm;
-      mssSplitStrategy = MultistageSplitStrategy::SS_GeneticAlgorithm;
-      reorderStrategy = ReorderStrategyKind::RK_GeneticAlgorithm;
-      cachingStrategy = CachingStrategy::CS_GeneticAlgorithm;
-      options_->PassTmpToFunction = false;
+  if(options_->PermutationMode) {
+    inlineStrategy = InlineStrategyKind::IK_Permutations;
+    mssSplitStrategy = MultistageSplitStrategy::SS_Permutations;
+    reorderStrategy = ReorderStrategyKind::RK_Permutations;
+    cachingStrategy = CachingStrategy::CS_Permutations;
+    options_->PassTmpToFunction = false;
+  }
+
+  IIRSerializer::SerializationKind serializationKind = IIRSerializer::SK_Json;
+  if(options_->SerializeIIR || (options_->LoadSerialized != "")) {
+    if(options_->IIRFormat == "json") {
+      serializationKind = IIRSerializer::SK_Json;
+    } else if(options_->IIRFormat == "byte") {
+      serializationKind = IIRSerializer::SK_Byte;
+
+    } else {
+      dawn_unreachable("Unknown SIRFormat option");
+    }
   }
 
   // Initialize optimizer
@@ -212,10 +224,8 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   for(auto& stencil : optimizer->getStencilInstantiationMap()) {
     std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
     if(options_->LoadSerialized != "") {
-      auto output =
-          IIRSerializer::deserialize(options_->LoadSerialized, instantiation->getOptimizerContext(),
-                                     IIRSerializer::SerializationKind::SK_Json);
-      //      output->dump();
+      auto output = IIRSerializer::deserialize(
+          options_->LoadSerialized, instantiation->getOptimizerContext(), serializationKind);
       instantiation = output;
     }
     DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `" << instantiation->getName()
@@ -228,7 +238,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     if(options_->SerializeIIR) {
       IIRSerializer::serialize(
           remove_fileextension(instantiation->getMetaData().fileName_, ".cpp") + ".iir",
-          instantiation, IIRSerializer::SerializationKind::SK_Json);
+          instantiation, serializationKind);
     }
 
     stencil.second = instantiation;
