@@ -159,7 +159,7 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
     if(stencil.isEmpty())
       continue;
 
-    const auto& StencilFields = stencil.getFields();
+    const auto stencilFields = orderMap(stencil.getFields());
 
     const std::string stencilName =
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
@@ -167,7 +167,7 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
     std::string initCtr = "m_" + stencilName + "(new " + stencilName;
 
     int i = 0;
-    for(const auto& fieldInfoPair : StencilFields) {
+    for(const auto& fieldInfoPair : stencilFields) {
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
         continue;
@@ -182,7 +182,7 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
     if(!globalsMap.empty()) {
       initCtr += ",m_globals";
     }
-    for(const auto& fieldInfoPair : StencilFields) {
+    for(const auto& fieldInfoPair : stencilFields) {
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
         continue;
@@ -258,14 +258,14 @@ void CXXNaiveCodeGen::generateStencilClasses(
       continue;
 
     // fields used in the stencil
-    const auto& StencilFields = stencil.getFields();
+    const auto stencilFields = orderMap(stencil.getFields());
 
     auto nonTempFields = makeRange(
-        StencilFields,
+        stencilFields,
         std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>([](
             std::pair<int, iir::Stencil::FieldInfo> const& p) { return !p.second.IsTemporary; }));
     auto tempFields = makeRange(
-        StencilFields,
+        stencilFields,
         std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
             [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
 
