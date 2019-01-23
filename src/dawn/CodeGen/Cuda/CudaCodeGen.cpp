@@ -118,11 +118,7 @@ std::string CudaCodeGen::generateStencilInstantiation(
 
   cudaNamespace.commit();
 
-  // Remove trailing ';' as this is retained by Clang's Rewriter
-  std::string str = ssSW.str();
-  str[str.size() - 2] = ' ';
-
-  return str;
+  return ssSW.str();
 }
 
 void CudaCodeGen::generateStencilWrapperPublicMemberFunctions(
@@ -176,14 +172,14 @@ void CudaCodeGen::generateStencilClasses(
       continue;
 
     // fields used in the stencil
-    const auto& StencilFields = stencil.getFields();
+    const auto stencilFields = orderMap(stencil.getFields());
 
     auto nonTempFields = makeRange(
-        StencilFields,
+        stencilFields,
         std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>([](
             std::pair<int, iir::Stencil::FieldInfo> const& p) { return !p.second.IsTemporary; }));
     auto tempFields = makeRange(
-        StencilFields,
+        stencilFields,
         std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
             [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
 
@@ -234,10 +230,9 @@ void CudaCodeGen::generateStencilClasses(
   }
 }
 
-void CudaCodeGen::generateStencilClassMembers(
-    Structure& stencilClass, const iir::Stencil& stencil, const sir::GlobalVariableMap& globalsMap,
-    IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& nonTempFields,
-    IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields,
+void CudaCodeGen::generateStencilClassMembers(Structure& stencilClass, const iir::Stencil& stencil, const sir::GlobalVariableMap& globalsMap,
+    IndexRange<const std::map<int, iir::Stencil::FieldInfo> > &nonTempFields,
+    IndexRange<const std::map<int, iir::Stencil::FieldInfo> > &tempFields,
     std::shared_ptr<StencilProperties> stencilProperties) const {
 
   auto& paramNameToType = stencilProperties->paramNameToType_;
@@ -261,10 +256,9 @@ void CudaCodeGen::generateStencilClassMembers(
   stencilClass.addComment("temporary storage declarations");
   addTmpStorageDeclaration(stencilClass, tempFields);
 }
-void CudaCodeGen::generateStencilClassCtr(
-    Structure& stencilClass, const iir::Stencil& stencil, const sir::GlobalVariableMap& globalsMap,
-    IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& nonTempFields,
-    IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields,
+void CudaCodeGen::generateStencilClassCtr(Structure& stencilClass, const iir::Stencil& stencil, const sir::GlobalVariableMap& globalsMap,
+    IndexRange<const std::map<int, iir::Stencil::FieldInfo> > &nonTempFields,
+    IndexRange<const std::map<int, iir::Stencil::FieldInfo> > &tempFields,
     std::shared_ptr<StencilProperties> stencilProperties) const {
 
   auto stencilClassCtr = stencilClass.addConstructor();
@@ -321,7 +315,7 @@ void CudaCodeGen::generateStencilWrapperCtr(
     if(stencil.isEmpty())
       continue;
 
-    const auto& StencilFields = stencil.getFields();
+    const auto stencilFields = orderMap(stencil.getFields());
 
     const std::string stencilName =
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
@@ -333,7 +327,7 @@ void CudaCodeGen::generateStencilWrapperCtr(
       initCtr += ",m_globals";
     }
 
-    for(const auto& fieldInfoPair : StencilFields) {
+    for(const auto& fieldInfoPair : stencilFields) {
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
         continue;
@@ -465,7 +459,7 @@ void CudaCodeGen::generateStencilRunMethod(
     const iir::MultiStage& multiStage = *multiStagePtr;
     bool solveKLoopInParallel_ = CodeGeneratorHelper::solveKLoopInParallel(multiStagePtr);
 
-    const auto& fields = multiStage.getFields();
+    const auto fields = orderMap(multiStage.getFields());
 
     auto nonTempFields =
         makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
@@ -621,7 +615,7 @@ void CudaCodeGen::addTempStorageTypedef(Structure& stencilClass,
 
 void CudaCodeGen::addTmpStorageInit(
     MemberFunction& ctr, iir::Stencil const& stencil,
-    IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields) const {
+    IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields) const {
   auto maxExtents = CodeGeneratorHelper::computeTempMaxWriteExtent(stencil);
 
   const auto blockSize = stencil.getParent()->getBlockSize();
@@ -652,7 +646,7 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
     //    std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = origSI->clone();
     std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = origSI;
 
-    PassInlining inliner(PassInlining::InlineStrategyKind::IK_ComputationsOnTheFly);
+    PassInlining inliner(true, PassInlining::InlineStrategyKind::IK_ComputationsOnTheFly);
 
     inliner.run(stencilInstantiation);
 
