@@ -23,6 +23,7 @@
 #include <iterator>
 #include <list>
 #include <memory>
+#include <set>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -60,9 +61,14 @@ public:
 
   struct Vertex {
     std::size_t VertexID; ///< Unqiue ID of the Vertex
-    int ID;               ///< ID of the data to be stored
+    int value;            ///< value of the data to be stored
   };
 
+protected:
+  std::unordered_map<int, Vertex> vertices_;
+  std::vector<std::shared_ptr<EdgeList>> adjacencyList_;
+
+public:
   /// @brief Get the adjacency list
   /// @{
   std::vector<std::shared_ptr<EdgeList>>& getAdjacencyList() { return adjacencyList_; }
@@ -90,6 +96,18 @@ public:
     return insertPair.first->second;
   }
 
+  std::set<int> computeIDsWithCycles() const {
+    std::set<int> ids;
+    for(const auto& vertexPair : vertices_) {
+      const auto& vertex = vertexPair.second;
+
+      if(hasCycleDependency(vertex.value)) {
+        ids.insert(vertex.value);
+      }
+    }
+    return ids;
+  }
+
   /// @brief Insert a new edge from `IDFrom` to `IDTo` containing `data`
   ///
   /// @verbatim
@@ -98,16 +116,16 @@ public:
   ///    IDFrom                              IDTo
   /// @endverbatim
   template <typename TEdgeData>
-  void insertEdge(int IDFrom, int IDTo, TEdgeData&& data) {
+  void insertEdge(int vertexValueFrom, int vertexValueTo, TEdgeData&& data) {
 
     // Create `IDTo` node (We shift the burden to the `insertNode` to take appropriate actions
     // if the node does already exist)
-    static_cast<Derived*>(this)->insertNode(IDTo);
+    static_cast<Derived*>(this)->insertNode(vertexValueTo);
 
     // Traverse the edge-list of node `IDFrom` to check if we already have such an edge
-    auto& edgeList = adjacencyList_[getVertexIDFromID(IDFrom)];
-    const Edge edge{std::forward<TEdgeData>(data), getVertexIDFromID(IDFrom),
-                    getVertexIDFromID(IDTo)};
+    auto& edgeList = adjacencyList_[getVertexIDFromValue(vertexValueFrom)];
+    const Edge edge{std::forward<TEdgeData>(data), getVertexIDFromValue(vertexValueFrom),
+                    getVertexIDFromValue(vertexValueTo)};
 
     auto it = std::find_if(edgeList->begin(), edgeList->end(), [&edge](const Edge& e) {
       return e.FromVertexID == edge.FromVertexID && e.ToVertexID == edge.ToVertexID;
@@ -124,15 +142,21 @@ public:
   /// This is useful for access graph which want to merge the extents (= EdgeData).
   void edgeAlreadyExists(EdgeData& existingEdge, const EdgeData& newEdge) {}
 
-  /// @brief Get the ID of the Vertex in the graph given an ID
-  std::size_t getVertexIDFromID(int ID) const {
-    auto it = vertices_.find(ID);
+  /// @brief Get the ID of the Vertex in the graph given the vertex value
+  std::size_t getVertexIDFromValue(int value) const {
+    auto it = vertices_.find(value);
     DAWN_ASSERT_MSG(it != vertices_.end(), "Node with given ID does not exist");
     return it->second.VertexID;
   }
 
+  bool hasCycleDependency(const int value) const {
+    std::set<int> a{};
+    // TODO implement a perfect fwd
+    return hasCycleDependencyImpl(getVertexIDFromValue(value), getVertexIDFromValue(value), a);
+  }
+
   /// @brief Get the ID of the vertex given by ID
-  int getIDFromVertexID(std::size_t VertexID) const {
+  int getValueFromVertexID(std::size_t VertexID) const {
     for(const auto& vertexPair : vertices_)
       if(vertexPair.second.VertexID == VertexID)
         return vertexPair.first;
@@ -140,8 +164,12 @@ public:
   }
 
   /// @brief Get the list of edges of node given by `ID`
-  EdgeList& edgesOf(int ID) { return *(adjacencyList_[getVertexIDFromID(ID)]); }
-  const EdgeList& edgesOf(int ID) const { return *(adjacencyList_[getVertexIDFromID(ID)]); }
+  EdgeList& edgesOf(int vertexValue) {
+    return *(adjacencyList_[getVertexIDFromValue(vertexValue)]);
+  }
+  const EdgeList& edgesOf(int vertexValue) const {
+    return *(adjacencyList_[getVertexIDFromValue(vertexValue)]);
+  }
 
   /// @brief Clear the graph
   void clear() {
@@ -192,6 +220,25 @@ public:
   }
 
 protected:
+  bool hasCycleDependencyImpl(const int targetVertexID, const int seedID,
+                              std::set<int>& visited) const {
+    // DFS search for cycles on access to ID
+    for(auto& edge : *(getAdjacencyList()[seedID])) {
+      if(edge.ToVertexID == targetVertexID) {
+        return true;
+      }
+      visited.insert(seedID);
+
+      if(visited.count(edge.ToVertexID)) {
+        return true;
+      }
+      if(hasCycleDependencyImpl(targetVertexID, edge.ToVertexID, visited)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   template <class StreamType>
   void toDotImpl(StreamType& os) const {
     std::unordered_set<std::string> nodeStrs;
@@ -221,10 +268,6 @@ protected:
     std::copy(edgeStrs.begin(), edgeStrs.end(), std::ostream_iterator<std::string>(os, ";\n"));
     os << "}\n";
   }
-
-protected:
-  std::unordered_map<int, Vertex> vertices_;
-  std::vector<std::shared_ptr<EdgeList>> adjacencyList_;
 };
 
 } // namespace iir

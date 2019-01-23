@@ -368,9 +368,9 @@ public:
 
   /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
   std::shared_ptr<StencilFunctionInstantiation>
-  getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr);
-  const std::shared_ptr<StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) const;
+
+  bool hasStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) const;
 
   void insertExprToStencilFunction(const std::shared_ptr<StencilFunctionInstantiation>& stencilFun);
 

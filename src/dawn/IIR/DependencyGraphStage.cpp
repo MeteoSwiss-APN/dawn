@@ -28,7 +28,7 @@ bool DependencyGraphStage::depends(int StageIDFrom, int StageIDTo) const {
   if(edgeList.empty())
     return false;
 
-  int VertedIDTo = getVertexIDFromID(StageIDTo);
+  int VertedIDTo = getVertexIDFromValue(StageIDTo);
   for(const Edge& edge : edgeList)
     if(edge.ToVertexID == VertedIDTo)
       return true;
@@ -42,7 +42,7 @@ const char* DependencyGraphStage::edgeDataToString(const EdgeData& data) const {
 std::string DependencyGraphStage::edgeDataToDot(const EdgeData& data) const { return ""; }
 
 std::string DependencyGraphStage::getVertexNameByVertexID(std::size_t VertexID) const {
-  return stencilInstantiation_->getIIR()->getNameFromStageID(getIDFromVertexID(VertexID));
+  return stencilInstantiation_->getIIR()->getNameFromStageID(getValueFromVertexID(VertexID));
 }
 
 const char* DependencyGraphStage::getDotShape() const { return "box"; }

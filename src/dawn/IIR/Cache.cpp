@@ -27,6 +27,11 @@ Cache::Cache(CacheTypeKind type, CacheIOPolicy policy, int fieldAccessID,
 
 int Cache::getCachedFieldAccessID() const { return AccessID_; }
 
+Interval Cache::getWindowInterval(Interval::Bound bound) const {
+  DAWN_ASSERT(interval_.is_initialized() && window_.is_initialized());
+  return interval_->crop(bound, {window_->m_m, window_->m_p});
+}
+
 boost::optional<Interval> Cache::getInterval() const { return interval_; }
 
 boost::optional<Interval> Cache::getEnclosingAccessedInterval() const {

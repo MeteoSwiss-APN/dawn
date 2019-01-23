@@ -41,8 +41,10 @@ StencilFunctionInstantiation::StencilFunctionInstantiation(
 }
 
 StencilFunctionInstantiation StencilFunctionInstantiation::clone() const {
-  StencilFunctionInstantiation stencilFun(stencilInstantiation_, expr_, function_, ast_, interval_,
-                                          isNested_);
+  // The SIR object function_ is not cloned, but copied, since the SIR is considered immuatble
+  StencilFunctionInstantiation stencilFun(
+      stencilInstantiation_, std::static_pointer_cast<StencilFunCallExpr>(expr_->clone()),
+      function_, ast_->clone(), interval_, isNested_);
 
   stencilFun.hasReturn_ = hasReturn_;
   stencilFun.argsBound_ = argsBound_;
@@ -392,18 +394,16 @@ void StencilFunctionInstantiation::removeStencilFunctionInstantiation(
 
 std::shared_ptr<StencilFunctionInstantiation>
 StencilFunctionInstantiation::getStencilFunctionInstantiation(
-    const std::shared_ptr<StencilFunCallExpr>& expr) {
+    const std::shared_ptr<StencilFunCallExpr>& expr) const {
   auto it = ExprToStencilFunctionInstantiationMap_.find(expr);
   DAWN_ASSERT_MSG(it != ExprToStencilFunctionInstantiationMap_.end(), "Invalid stencil function");
   return it->second;
 }
 
-const std::shared_ptr<StencilFunctionInstantiation>
-StencilFunctionInstantiation::getStencilFunctionInstantiation(
+bool StencilFunctionInstantiation::hasStencilFunctionInstantiation(
     const std::shared_ptr<StencilFunCallExpr>& expr) const {
-  auto it = ExprToStencilFunctionInstantiationMap_.find(expr);
-  DAWN_ASSERT_MSG(it != ExprToStencilFunctionInstantiationMap_.end(), "Invalid stencil function");
-  return it->second;
+  return (ExprToStencilFunctionInstantiationMap_.find(expr) !=
+          ExprToStencilFunctionInstantiationMap_.end());
 }
 
 const std::vector<std::unique_ptr<StatementAccessesPair>>&

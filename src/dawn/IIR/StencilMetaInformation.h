@@ -129,6 +129,7 @@ public:
                      std::shared_ptr<StencilFunctionInstantiation>>
       ExprToStencilFunctionInstantiationMap_;
 
+  // TODO a set here would be enough
   /// lookup table containing all the stencil function candidates, whose arguments are not yet bound
   std::unordered_map<std::shared_ptr<StencilFunctionInstantiation>,
                      StencilFunctionInstantiationCandidate>
@@ -155,8 +156,6 @@ public:
   StencilMetaInformation() = default;
 
   void clone(const StencilMetaInformation& origin);
-
-
 };
 } // namespace iir
 } // namespace dawn

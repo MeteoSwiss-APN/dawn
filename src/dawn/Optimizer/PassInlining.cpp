@@ -321,12 +321,13 @@ public:
   }
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
-    instantiation_->mapExprToAccessID(expr,
-                                      curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
 
     std::string callerName = instantiation_->getNameFromAccessID(
         curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
     expr->setName(callerName);
+
+    instantiation_->mapExprToAccessID(expr,
+                                      curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
 
     // Set the fully evaluated offset as the new offset of the field. Note that this renders the
     // AST of the current stencil function incorrent which is why it needs to be removed!
@@ -490,7 +491,7 @@ static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
 
   // Function which do not return a value are *always* inlined. Function which do return a value
   // are only inlined if we favor precomputations.
-  if(!stencilFunc->hasReturn() || strategy == PassInlining::IK_Precomputation) {
+  if(!stencilFunc->hasReturn() || strategy == PassInlining::IK_ComputationsOnTheFly) {
     auto inliner =
         std::make_shared<Inliner>(strategy, stencilFunc, oldStmtAccessesPair, newStmtAccessesPairs,
                                   AccessIDOfCaller, stencilInstantiation);
@@ -502,15 +503,14 @@ static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
 
 } // anonymous namespace
 
-PassInlining::PassInlining(InlineStrategyKind strategy)
-    : Pass("PassInlining", true), strategy_(strategy) {}
+PassInlining::PassInlining(bool activate, InlineStrategyKind strategy)
+    : Pass("PassInlining", true), activate_(activate), strategy_(strategy) {}
 
 bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  // Nothing to do ...
-  if(strategy_ == IK_None)
-    return true;
-
   DetectInlineCandiates inliner(strategy_, stencilInstantiation);
+
+  if(!activate_)
+    return true;
 
   // Iterate all statements (top -> bottom)
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {

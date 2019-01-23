@@ -555,8 +555,8 @@ void CudaCodeGen::generateStencilRunMethod(
           stencilInstantiation->getNameFromAccessID((*field).second.getAccessID());
 
       args = args + (idx == 0 ? "" : ",") + "(" + fieldName + ".data()+" + "m_" + fieldName +
-             ".get_storage_info_ptr()->index(" + fieldName + ".template begin<0>(), " + fieldName +
-             ".template begin<1>(),0 ))";
+             ".get_storage_info_ptr()->index(" + fieldName + ".begin<0>(), " + fieldName +
+             ".begin<1>(),0 ))";
       ++idx;
     }
     DAWN_ASSERT(nonTempFields.size() > 0);
@@ -569,9 +569,8 @@ void CudaCodeGen::generateStencilRunMethod(
             stencilInstantiation->getNameFromAccessID((*field).second.getAccessID());
 
         args = args + ", (" + fieldName + ".data()+" + "m_" + fieldName +
-               ".get_storage_info_ptr()->index(" + fieldName + ".template begin<0>(), " +
-               fieldName + ".template begin<1>()," + fieldName + ".template begin<2>()," +
-               fieldName + ".template begin<3>(), 0))";
+               ".get_storage_info_ptr()->index(" + fieldName + ".begin<0>(), " + fieldName +
+               ".begin<1>()," + fieldName + ".begin<2>()," + fieldName + ".begin<3>(), 0))";
       } else {
         args =
             args + "," + stencilInstantiation->getNameFromAccessID((*field).second.getAccessID());
@@ -646,7 +645,7 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
     //    std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = origSI->clone();
     std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = origSI;
 
-    PassInlining inliner(PassInlining::InlineStrategyKind::IK_Precomputation);
+    PassInlining inliner(true, PassInlining::InlineStrategyKind::IK_ComputationsOnTheFly);
 
     inliner.run(stencilInstantiation);
 
