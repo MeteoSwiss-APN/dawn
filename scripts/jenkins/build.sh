@@ -119,7 +119,10 @@ cp ${slurm_script_template} ${slurm_script}
 /bin/sed -i 's|<ENV>|'"source ${env_file}"'|g' ${slurm_script}
 /bin/sed -i 's|<CMD>|'"ctest -VV  -C ${build_type} --output-on-failure --force-new-ctest-process"'|g' ${slurm_script}
 
+set +e
 sbatch --wait ${slurm_script}
+set -e
+
 # wait for all jobs to finish
 out=${build_dir}/test.log
 check_output ${out}

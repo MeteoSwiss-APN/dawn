@@ -42,70 +42,66 @@ using namespace dawn;
 
 namespace sdesctest {
 
-void test_01_stencil_reference(const domain& dom, storage_t& in_s, storage_t& out_s) {
+void test_01_stencil_reference(const domain& dom, int var_runtime, storage_t& in_s, storage_t& out_s) {
   in_s.sync();
   out_s.sync();
   auto in = make_host_view(in_s);
   auto out = make_host_view(out_s);
-  cxxnaive::globals globals_;
 
-  if(globals_.var_runtime == 1) {
+  if(var_runtime == 1) {
     for(int i = dom.iminus(); i < (dom.isize() - dom.iplus()); ++i) {
       for(int j = dom.jminus(); j < (dom.jsize() - dom.jplus()); ++j) {
         for(int k = dom.kminus(); k < (dom.ksize() - dom.kplus()); ++k) {
-          out(i, j, k) = in(i, j, k) + globals_.var_runtime;
+          out(i, j, k) = in(i, j, k) + var_runtime;
         }
       }
     }
   }
 }
-void test_02_stencil_reference(const domain& dom, storage_t& in_s, storage_t& out_s) {
+void test_02_stencil_reference(const domain& dom, int var_compiletime, storage_t& in_s, storage_t& out_s) {
   in_s.sync();
   out_s.sync();
 
   auto in = make_host_view(in_s);
   auto out = make_host_view(out_s);
-  cxxnaive::globals globals_;
 
-  if(globals_.var_compiletime == 2) {
+  if(var_compiletime == 2) {
     for(int i = dom.iminus(); i < (dom.isize() - dom.iplus()); ++i) {
       for(int j = dom.jminus(); j < (dom.jsize() - dom.jplus()); ++j) {
         for(int k = dom.kminus(); k < (dom.ksize() - dom.kplus()); ++k) {
-          out(i, j, k) = in(i, j, k) + globals_.var_compiletime;
+          out(i, j, k) = in(i, j, k) + var_compiletime;
         }
       }
     }
   }
 }
-void test_03_stencil_reference(const domain& dom, storage_t& in_s, storage_t& out_s) {
+void test_03_stencil_reference(const domain& dom, int var_runtime, int var_compiletime, storage_t& in_s, storage_t& out_s) {
   in_s.sync();
   out_s.sync();
 
   auto in = make_host_view(in_s);
   auto out = make_host_view(out_s);
-  cxxnaive::globals globals_;
-  if(globals_.var_runtime == 1) {
-    if(globals_.var_compiletime == 2) {
+  if(var_runtime == 1) {
+    if(var_compiletime == 2) {
       for(int i = dom.iminus(); i < (dom.isize() - dom.iplus()); ++i) {
         for(int j = dom.jminus(); j < (dom.jsize() - dom.jplus()); ++j) {
           for(int k = dom.kminus(); k < (dom.ksize() - dom.kplus()); ++k) {
-            out(i, j, k) = in(i, j, k) + globals_.var_runtime +
-                           globals_.var_compiletime;
+            out(i, j, k) = in(i, j, k) + var_runtime +
+                           var_compiletime;
           }
         }
       }
     }
   }
 }
-void test_04_stencil_reference(const domain& dom, storage_t& in_s, storage_t& out_s) {
+void test_04_stencil_reference(const domain& dom, int var_runtime, int var_compiletime, storage_t& in_s, storage_t& out_s) {
   in_s.sync();
   out_s.sync();
 
   auto in = make_host_view(in_s);
   auto out = make_host_view(out_s);
-  cxxnaive::globals globals_;
-  if(globals_.var_compiletime == 2) {
-    if(globals_.var_compiletime != 1) {
+  if(var_compiletime == 2) {
+    if(var_compiletime != 1) {
       for(int i = dom.iminus(); i < (dom.isize() - dom.iplus()); ++i) {
         for(int j = dom.jminus(); j < (dom.jsize() - dom.jplus()); ++j) {
           for(int k = dom.kminus(); k < (dom.ksize() - dom.kplus()); ++k) {
@@ -113,7 +109,7 @@ void test_04_stencil_reference(const domain& dom, storage_t& in_s, storage_t& ou
           }
         }
       }
-      if(globals_.var_compiletime == 2) {
+      if(var_compiletime == 2) {
         for(int i = dom.iminus(); i < (dom.isize() - dom.iplus()); ++i) {
           for(int j = dom.jminus(); j < (dom.jsize() - dom.jplus()); ++j) {
             for(int k = dom.kminus(); k < (dom.ksize() - dom.kplus()); ++k) {
@@ -125,16 +121,15 @@ void test_04_stencil_reference(const domain& dom, storage_t& in_s, storage_t& ou
     }
   }
 }
-void test_05_stencil_reference(const domain& dom, storage_t& in_s, storage_t& out_s) {
+void test_05_stencil_reference(const domain& dom, int var_runtime, int var_compiletime, storage_t& in_s, storage_t& out_s) {
   in_s.sync();
   out_s.sync();
 
   auto in = make_host_view(in_s);
   auto out = make_host_view(out_s);
-  cxxnaive::globals globals_;
-  if(globals_.var_compiletime == 2) {
+  if(var_compiletime == 2) {
     double some_var = 5.0;
-    if(globals_.var_runtime < some_var) {
+    if(var_runtime < some_var) {
       for(int i = dom.iminus(); i < (dom.isize() - dom.iplus()); ++i) {
         for(int j = dom.jminus(); j < (dom.jsize() - dom.jplus()); ++j) {
           for(int k = dom.kminus(); k < (dom.ksize() - dom.kplus()); ++k) {
@@ -145,16 +140,15 @@ void test_05_stencil_reference(const domain& dom, storage_t& in_s, storage_t& ou
     }
   }
 }
-void test_06_stencil_reference(const domain& dom, storage_t& in_s, storage_t& out_s) {
+void test_06_stencil_reference(const domain& dom, int var_compiletime, storage_t& in_s, storage_t& out_s) {
   in_s.sync();
   out_s.sync();
 
   auto in = make_host_view(in_s);
   auto out = make_host_view(out_s);
-  cxxnaive::globals globals_;
-  if(globals_.var_compiletime == 2) {
+  if(var_compiletime == 2) {
     double some_var = 5.0;
-    if(globals_.var_compiletime < some_var) {
+    if(var_compiletime < some_var) {
       for(int i = dom.iminus(); i < (dom.isize() - dom.iplus()); ++i) {
         for(int j = dom.jminus(); j < (dom.jsize() - dom.jplus()); ++j) {
           for(int k = dom.kminus(); k < (dom.ksize() - dom.kplus()); ++k) {
@@ -165,20 +159,19 @@ void test_06_stencil_reference(const domain& dom, storage_t& in_s, storage_t& ou
     }
   }
 }
-void test_07_stencil_reference(const domain& dom, storage_t& in_s, storage_t& out_s) {
+void test_07_stencil_reference(const domain& dom, int var_compiletime, storage_t& in_s, storage_t& out_s) {
   in_s.sync();
   out_s.sync();
 
   auto in = make_host_view(in_s);
   auto out = make_host_view(out_s);
-  cxxnaive::globals globals_;
-  if(globals_.var_compiletime == 2) {
+  if(var_compiletime == 2) {
     double some_var = 5.0;
-    double some_other_var = globals_.var_compiletime;
+    double some_other_var = var_compiletime;
 
     some_var += 1.0;
 
-    if((globals_.var_compiletime + some_var + some_other_var) == 10) {
+    if((var_compiletime + some_var + some_other_var) == 10) {
       for(int i = dom.iminus(); i < (dom.isize() - dom.iplus()); ++i) {
         for(int j = dom.jminus(); j < (dom.jsize() - dom.jplus()); ++j) {
           for(int k = dom.kminus(); k < (dom.ksize() - dom.kplus()); ++k) {
@@ -189,14 +182,13 @@ void test_07_stencil_reference(const domain& dom, storage_t& in_s, storage_t& ou
     }
   }
 }
-void test_08_stencil_reference(const domain& dom, storage_t& in_s, storage_t& out_s) {
+void test_08_stencil_reference(const domain& dom, int var_compiletime, storage_t& in_s, storage_t& out_s) {
   in_s.sync();
   out_s.sync();
 
   auto in = make_host_view(in_s);
   auto out = make_host_view(out_s);
-  cxxnaive::globals globals_;
-  if(globals_.var_compiletime == 2) {
+  if(var_compiletime == 2) {
     for(int i = dom.iminus(); i < (dom.isize() - dom.iplus()); ++i) {
       for(int j = dom.jminus(); j < (dom.jsize() - dom.jplus()); ++j) {
         for(int k = dom.kminus(); k < (dom.ksize() - dom.kplus()); ++k) {
@@ -206,15 +198,14 @@ void test_08_stencil_reference(const domain& dom, storage_t& in_s, storage_t& ou
     }
   }
 }
-void test_09_stencil_reference(const domain& dom, storage_t& in_s, storage_t& out_s) {
+void test_09_stencil_reference(const domain& dom, int var_compiletime, storage_t& in_s, storage_t& out_s) {
   in_s.sync();
   out_s.sync();
 
   auto in = make_host_view(in_s);
   auto out = make_host_view(out_s);
-  cxxnaive::globals globals_;
-  if(globals_.var_compiletime == 2) {
-    if(globals_.var_compiletime == 2) {
+  if(var_compiletime == 2) {
+    if(var_compiletime == 2) {
       for(int i = dom.iminus(); i < (dom.isize() - dom.iplus()); ++i) {
         for(int j = dom.jminus(); j < (dom.jsize() - dom.jplus()); ++j) {
           for(int k = dom.kminus(); k < (dom.ksize() - dom.kplus()); ++k) {
@@ -246,7 +237,7 @@ TEST(stencil_desc_ast, test_01) {
 
   OPTBACKEND::test_01_stencil test_01_gt(dom, in, out_gt);
   cxxnaive::test_01_stencil test_01_naive(dom, in, out_naive);
-  sdesctest::test_01_stencil_reference(dom, in, out_ref);
+  sdesctest::test_01_stencil_reference(dom, test_01_naive.get_var_runtime(), in, out_ref);
 
   //  test_01_gt.set_var_runtime(5);
   //  test_01_gt.set_var_compiletime(6);
@@ -276,7 +267,7 @@ TEST(stencil_desc_ast, test_02) {
 
   OPTBACKEND::test_02_stencil test_02_gt(dom, in, out_gt);
   cxxnaive::test_02_stencil test_02_naive(dom, in, out_naive);
-  sdesctest::test_02_stencil_reference(dom, in, out_ref);
+  sdesctest::test_02_stencil_reference(dom, 2 /*var_compiletime*/, in, out_ref);
 
   test_02_gt.run();
   test_02_naive.run();
@@ -303,7 +294,7 @@ TEST(stencil_desc_ast, test_03) {
 
   OPTBACKEND::test_03_stencil test_03_gt(dom, in, out_gt);
   cxxnaive::test_03_stencil test_03_naive(dom, in, out_naive);
-  sdesctest::test_03_stencil_reference(dom, in, out_ref);
+  sdesctest::test_03_stencil_reference(dom, test_03_naive.get_var_runtime(), 2 /*var_compiletime*/, in, out_ref);
 
   test_03_gt.run();
   test_03_naive.run();
@@ -330,7 +321,7 @@ TEST(stencil_desc_ast, test_04) {
 
   OPTBACKEND::test_04_stencil test_04_gt(dom, in, out_gt);
   cxxnaive::test_04_stencil test_04_naive(dom, in, out_naive);
-  sdesctest::test_04_stencil_reference(dom, in, out_ref);
+  sdesctest::test_04_stencil_reference(dom, test_04_naive.get_var_runtime(), 2 /*var_compiletime*/, in, out_ref);
 
   test_04_gt.run();
   test_04_naive.run();
@@ -357,7 +348,7 @@ TEST(stencil_desc_ast, test_05) {
 
   OPTBACKEND::test_05_stencil test_05_gt(dom, in, out_gt);
   cxxnaive::test_05_stencil test_05_naive(dom, in, out_naive);
-  sdesctest::test_05_stencil_reference(dom, in, out_ref);
+  sdesctest::test_05_stencil_reference(dom, test_05_naive.get_var_runtime(), 2 /*var_compiletime*/, in, out_ref);
 
   test_05_gt.run();
   test_05_naive.run();
@@ -383,7 +374,7 @@ TEST(stencil_desc_ast, test_06) {
 
   OPTBACKEND::test_06_stencil test_06_gt(dom, in, out_gt);
   cxxnaive::test_06_stencil test_06_naive(dom, in, out_naive);
-  sdesctest::test_06_stencil_reference(dom, in, out_ref);
+  sdesctest::test_06_stencil_reference(dom, 2 /*var_compiletime*/, in, out_ref);
 
   test_06_gt.run();
   test_06_naive.run();
@@ -408,7 +399,7 @@ TEST(stencil_desc_ast, test_07) {
 
   OPTBACKEND::test_07_stencil test_07_gt(dom, in, out_gt);
   cxxnaive::test_07_stencil test_07_naive(dom, in, out_naive);
-  sdesctest::test_07_stencil_reference(dom, in, out_ref);
+  sdesctest::test_07_stencil_reference(dom, 2 /*var_compiletime*/, in, out_ref);
 
   test_07_gt.run();
   test_07_naive.run();
@@ -434,7 +425,7 @@ TEST(stencil_desc_ast, test_08) {
 
   OPTBACKEND::test_08_stencil test_08_gt(dom, in, out_gt);
   cxxnaive::test_08_stencil test_08_naive(dom, in, out_naive);
-  sdesctest::test_08_stencil_reference(dom, in, out_ref);
+  sdesctest::test_08_stencil_reference(dom, 2 /*var_compiletime*/, in, out_ref);
 
   test_08_gt.run();
   test_08_naive.run();
@@ -460,7 +451,7 @@ TEST(stencil_desc_ast, test_09) {
 
   OPTBACKEND::test_09_stencil test_09_gt(dom, in, out_gt);
   cxxnaive::test_09_stencil test_09_naive(dom, in, out_naive);
-  sdesctest::test_09_stencil_reference(dom, in, out_ref);
+  sdesctest::test_09_stencil_reference(dom, 2 /*var_compiletime*/, in, out_ref);
 
   test_09_gt.run();
   test_09_naive.run();

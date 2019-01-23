@@ -14,27 +14,17 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-// RUN: %gtclang% %file% -fno-codegen -freport-accesses -inline=none
-
 #include "gridtools/clang_dsl.hpp"
-
 using namespace gridtools::clang;
 
-stencil_function foo {
-  storage in;
-  Do {
-    return in;
-  }
-};
-
-stencil Test {
-  storage field_a, field_b;
+stencil lap {
+  storage in, out;
+  var tmp;
 
   Do {
     vertical_region(k_start, k_end) {
-      field_a = foo(field_b); // EXPECTED_ACCESSES: R:field_b:<0,0,0,0,0,0>
+      tmp = in[j - 2] + in[j + 2] + in[i - 2] + in[i + 2];
+      out = tmp[i + 1] + tmp[j + 1] + tmp[i - 1] + tmp[i - 1];
     }
   }
 };
-
-int main() {}

@@ -63,10 +63,10 @@ public:
 
 private:
   /// @brief lets the implementation add fields to the local storage
-  void addField(std::string field) { fields_.push_back(field); }
+  void addField(const std::string& field) { fields_.push_back(field); }
 
   /// @brief lets the implementation add variables to the local storage
-  void addVariable(std::string variable) { variables_.push_back(variable); }
+  void addVariable(const std::string& variable) { variables_.push_back(variable); }
 
   /// @brief recursive argument parsing to read all the fields given to specify the function call
   void argumentParsingImpl(const std::shared_ptr<dawn::Expr>& argument);

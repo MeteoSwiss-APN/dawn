@@ -188,7 +188,7 @@ yoda_add_custom_dummy_target(NAME GTClangQtCreatorParseProjectCodeGenTest
 
 # Codegen tests require GridTools
 if(GTCLANG_HAS_GRIDTOOLS)
-  set(codegen_examples copy_stencil conditional_stencil coriolis_stencil hori_diff_stencil_01 hori_diff_stencil_02
+  set(codegen_examples copy_stencil lap conditional_stencil coriolis_stencil hori_diff_stencil_01 hori_diff_stencil_02
       hori_diff_type2_stencil hd_smagorinsky intervals_stencil globals_stencil stencil_functions
       nested_stencil_functions stencil_desc_ast boundary_condition boundary_condition_2 tridiagonal_solve
       kparallel_solver)
@@ -206,6 +206,8 @@ if(GTCLANG_HAS_GRIDTOOLS)
 
   ADD_COMPILER_FLAG_TO_EXAMPLE("intervals02" "-disable-kcaches")
   ADD_COMPILER_FLAG_TO_EXAMPLE("intervals03" "-disable-kcaches")
+
+  ADD_COMPILER_FLAG_TO_EXAMPLE("lap" "-fpass-tmp-to-function")
 
   set(include_dirs)
   list(APPEND include_dirs "${CMAKE_SOURCE_DIR}/src")
