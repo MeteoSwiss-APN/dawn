@@ -23,8 +23,6 @@ dawn_protobuf_generate(
   PROTO_PATH ${PROJECT_SOURCE_DIR}/src/dawn/Support/
   LANGUAGE cpp
 )
-include_directories(SYSTEM ${iir_proto_include_dirs})
-
 
 yoda_add_library(
   NAME DawnIIR
@@ -83,4 +81,7 @@ yoda_add_library(
   OBJECT
 )
 
-target_include_directories(DawnIIRObjects SYSTEM PUBLIC ${Boost_INCLUDE_DIR})
+target_include_directories(DawnIIRObjects SYSTEM PUBLIC ${Boost_INCLUDE_DIR} ${iir_proto_include_dirs})
+# we need to pass the include directories from SIR to here since protobuf is just including the
+# header without any path
+target_include_directories(DawnIIRObjects PUBLIC $<TARGET_PROPERTY:DawnSIRObjects,INCLUDE_DIRECTORIES>)

@@ -26,4 +26,5 @@ dawn_add_unittest_impl(
 #          TestStencil.cpp
           TestIIRSerializer.cpp
 )
+target_include_directories(DawnUnittestIIR PUBLIC $<TARGET_PROPERTY:DawnIIRObjects,INCLUDE_DIRECTORIES>)
 

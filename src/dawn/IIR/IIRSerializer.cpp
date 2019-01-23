@@ -21,7 +21,7 @@
 #include "dawn/Optimizer/PassInlining.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/Support/ASTSerializer.h"
+#include "dawn/Serialization/ASTSerializer.h"
 #include <fstream>
 #include <google/protobuf/util/json_util.h>
 #include <list>

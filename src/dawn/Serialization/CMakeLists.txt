@@ -13,18 +13,8 @@
 ##===------------------------------------------------------------------------------------------===##
 
 yoda_add_library(
-  NAME DawnCompiler
-  SOURCES DawnCompiler.h
-          DawnCompiler.cpp
-          DiagnosticsEngine.cpp
-          DiagnosticsEngine.h
-          DiagnosticsMessage.h
-          DiagnosticsQueue.cpp
-          DiagnosticsQueue.h
-          Options.h
-          Options.inc
+  NAME DawnSerializer
+  SOURCES ASTSerializer.h
+          ASTSerializer.cpp
   OBJECT
 )
-
-#to propagate the dependencies from IIR to here (where the serializer is used) needs this linking
-target_link_libraries(DawnCompilerObjects DawnIIRObjects)
