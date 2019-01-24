@@ -20,7 +20,6 @@ dawn_protobuf_generate(
   OUT_FILES iir_proto_cpp_files
   OUT_INCLUDE_DIRS iir_proto_include_dirs
   PROTOS ${CMAKE_CURRENT_SOURCE_DIR}/IIR.proto
-  PROTO_PATH ${PROJECT_SOURCE_DIR}/src/dawn/Support/
   LANGUAGE cpp
 )
 
