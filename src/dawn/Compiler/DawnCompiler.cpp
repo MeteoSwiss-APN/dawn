@@ -119,19 +119,6 @@ DawnCompiler::DawnCompiler(Options* options) : diagnostics_(make_unique<Diagnost
 }
 
 std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR> const& SIR) {
-  // -inline
-  using InlineStrategyKind = PassInlining::InlineStrategyKind;
-  InlineStrategyKind inlineStrategy = StringSwitch<InlineStrategyKind>(options_->InlineStrategy)
-                                          .Case("none", InlineStrategyKind::IK_None)
-                                          .Case("cof", InlineStrategyKind::IK_ComputationOnTheFly)
-                                          .Case("pc", InlineStrategyKind::IK_Precomputation)
-                                          .Default(InlineStrategyKind::IK_Unknown);
-
-  if(inlineStrategy == InlineStrategyKind::IK_Unknown) {
-    diagnostics_->report(buildDiag("-inline", options_->InlineStrategy, "", {"none", "cof", "pc"}));
-    return nullptr;
-  }
-
   // -reorder
   using ReorderStrategyKind = ReorderStrategy::ReorderStrategyKind;
   ReorderStrategyKind reorderStrategy = StringSwitch<ReorderStrategyKind>(options_->ReorderStrategy)
@@ -192,9 +179,8 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   PassManager& passManager = optimizer->getPassManager();
 
   // Setup pass interface
-  optimizer->checkAndPushBack<PassInlining>();
+  optimizer->checkAndPushBack<PassInlining>(true, PassInlining::IK_InlineProcedures);
   optimizer->checkAndPushBack<PassTemporaryFirstAccess>();
-  optimizer->checkAndPushBack<PassInlining>(inlineStrategy);
   optimizer->checkAndPushBack<PassFieldVersioning>(doFieldVersioning);
   optimizer->checkAndPushBack<PassSSA>(getOptions().SSA);
   optimizer->checkAndPushBack<PassMultiStageSplitter>(mssSplitStrategy);
@@ -208,7 +194,9 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   optimizer->checkAndPushBack<PassStencilSplitter>(getOptions().SplitStencils, maxFields);
   optimizer->checkAndPushBack<PassTemporaryType>();
   optimizer->checkAndPushBack<PassTemporaryMerger>(getOptions().MergeTemporaries);
-  optimizer->checkAndPushBack<PassTemporaryToStencilFunction>(getOptions().PassTmpToFunction);
+  optimizer->checkAndPushBack<PassInlining>(
+      (getOptions().InlineSF || getOptions().PassTmpToFunction),
+      PassInlining::IK_ComputationsOnTheFly);
   optimizer->checkAndPushBack<PassSetNonTempCaches>(getOptions().UseNonTempCaches);
   optimizer->checkAndPushBack<PassSetCaches>(cachingStrategy);
   optimizer->checkAndPushBack<PassComputeStageExtents>();
@@ -284,6 +272,7 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
                                    "backend options must be : " +
                                        dawn::RangeToString(", ", "", "")(std::vector<std::string>{
                                            "gridtools", "c++-naive", "c++-opt"})));
+    return nullptr;
   }
 
   return CG->generateCode();

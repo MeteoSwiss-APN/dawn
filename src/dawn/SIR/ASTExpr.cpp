@@ -17,6 +17,7 @@
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Casting.h"
+#include "dawn/Support/StringRef.h"
 
 namespace dawn {
 

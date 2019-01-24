@@ -243,7 +243,8 @@ public:
 
   /// @brief get a stencil function candidate by name
   std::shared_ptr<StencilFunctionInstantiation>
-  getStencilFunctionInstantiationCandidate(const std::string stencilFunName);
+  getStencilFunctionInstantiationCandidate(const std::string stencilFunName,
+                                           const Interval& interval);
 
   /// @brief clone a stencil function candidate and set its name fo functionName
   /// @returns the clone of the stencil function

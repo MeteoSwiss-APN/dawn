@@ -106,10 +106,7 @@ void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
     derefIJCache(expr);
     return;
   }
-  if(cacheProperties_.isKCached(accessID) &&
-     ((ms_->getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local) ||
-      (ms_->getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill) ||
-      (ms_->getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::flush))) {
+  if(cacheProperties_.isKCached(accessID)) {
     derefKCache(expr);
     return;
   }
@@ -146,7 +143,7 @@ void ASTStencilBody::derefIJCache(const std::shared_ptr<FieldAccessExpr>& expr) 
 void ASTStencilBody::derefKCache(const std::shared_ptr<FieldAccessExpr>& expr) {
   int accessID = instantiation_->getAccessIDFromExpr(expr);
   std::string accessName = cacheProperties_.getCacheName(accessID);
-  auto vertExtent = cacheProperties_.getKCacheVertExtent(accessID);
+  auto vertExtent = ms_->getKCacheVertExtent(accessID);
 
   const int kcacheCenterOffset = cacheProperties_.getKCacheCenterOffset(accessID);
 

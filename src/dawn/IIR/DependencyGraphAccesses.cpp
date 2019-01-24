@@ -44,7 +44,7 @@ void DependencyGraphAccesses::insertStatementAccessesPair(
 
 DependencyGraphAccesses::Vertex& DependencyGraphAccesses::insertNode(int ID) {
   Vertex& vertex = Base::insertNode(ID);
-  VertexIDToAccessIDMap_.emplace(vertex.VertexID, vertex.ID);
+  VertexIDToAccessIDMap_.emplace(vertex.VertexID, vertex.value);
   return vertex;
 }
 
@@ -375,7 +375,7 @@ private:
 
         VertexData& vertexData = vertexData_[VertexID];
         vertexData.OnStack = false;
-        SCC.insert(vertexData.Vertex->ID);
+        SCC.insert(vertexData.Vertex->value);
 
       } while(VertexID != FromVertexID);
 

@@ -183,10 +183,10 @@ PassFieldVersioning::fixRaceCondition(const iir::DependencyGraphAccesses* graph,
   for(std::set<int>& scc : *SCCs) {
     bool isStencilSCC = false;
 
-    for(int FromAccessID : scc) {
-      std::size_t FromVertexID = graph->getVertexIDFromID(FromAccessID);
+    for(int fromAccessID : scc) {
+      std::size_t fromVertexID = graph->getVertexIDFromValue(fromAccessID);
 
-      for(const Edge& edge : *graph->getAdjacencyList()[FromVertexID]) {
+      for(const Edge& edge : *graph->getAdjacencyList()[fromVertexID]) {
         if(scc.count(graph->getIDFromVertexID(edge.ToVertexID)) &&
            isHorizontalStencilOrCounterLoopOrderExtent(edge.Data, loopOrder)) {
           isStencilSCC = true;
@@ -209,7 +209,7 @@ PassFieldVersioning::fixRaceCondition(const iir::DependencyGraphAccesses* graph,
       for(const Edge& edge : *graph->getAdjacencyList()[vertex.VertexID]) {
         if(edge.FromVertexID == edge.ToVertexID &&
            isHorizontalStencilOrCounterLoopOrderExtent(edge.Data, loopOrder)) {
-          stencilSCCs->emplace_back(std::set<int>{vertex.ID});
+          stencilSCCs->emplace_back(std::set<int>{vertex.value});
           break;
         }
       }

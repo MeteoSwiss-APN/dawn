@@ -43,6 +43,9 @@ std::string CodeGen::generateGlobals(std::shared_ptr<SIR> const& sir,
 
   for(const auto& globalsPair : globalsMap) {
     sir::Value& value = *globalsPair.second;
+    if(value.isConstexpr()) {
+      continue;
+    }
     std::string Name = globalsPair.first;
     std::string Type = sir::Value::typeToString(value.getType());
 
@@ -51,6 +54,9 @@ std::string CodeGen::generateGlobals(std::shared_ptr<SIR> const& sir,
   auto ctr = GlobalsStruct.addConstructor();
   for(const auto& globalsPair : globalsMap) {
     sir::Value& value = *globalsPair.second;
+    if(value.isConstexpr()) {
+      continue;
+    }
     std::string Name = globalsPair.first;
     if(!value.empty()) {
       ctr.addInit(Name + "(" + value.toString() + ")");
@@ -74,6 +80,9 @@ void CodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInstant
 
   for(const auto& globalProp : globalsMap) {
     auto globalValue = globalProp.second;
+    if(globalValue->isConstexpr()) {
+      continue;
+    }
     auto getter = stencilWrapperClass.addMemberFunction(
         sir::Value::typeToString(globalValue->getType()), "get_" + globalProp.first);
     getter.finishArgs();
@@ -250,9 +259,8 @@ void CodeGen::addTempStorageTypedef(Structure& stencilClass, iir::Stencil const&
       .addType("storage_traits_t::data_store_t< float_type, " + tmpMetadataTypename_ + ">");
 }
 
-void CodeGen::addTmpStorageDeclaration(
-    Structure& stencilClass,
-    IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields) const {
+void CodeGen::addTmpStorageDeclaration(Structure& stencilClass,
+    IndexRange<const std::map<int, iir::Stencil::FieldInfo> > &tempFields) const {
   if(!(tempFields.empty())) {
     stencilClass.addMember(tmpMetadataTypename_, tmpMetadataName_);
 
@@ -262,9 +270,8 @@ void CodeGen::addTmpStorageDeclaration(
   }
 }
 
-void CodeGen::addTmpStorageInit(
-    MemberFunction& ctr, iir::Stencil const& stencil,
-    IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields) const {
+void CodeGen::addTmpStorageInit(MemberFunction& ctr, iir::Stencil const& stencil,
+    IndexRange<const std::map<int, iir::Stencil::FieldInfo> > &tempFields) const {
   if(!(tempFields.empty())) {
     ctr.addInit(tmpMetadataName_ + "(dom_.isize(), dom_.jsize(), dom_.ksize() + 2*" +
                 std::to_string(getVerticalTmpHaloSize(stencil)) + ")");

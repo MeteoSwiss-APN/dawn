@@ -35,22 +35,20 @@ class PassInlining : public Pass {
 public:
   /// @brief Inlining strategies
   enum InlineStrategyKind {
-    IK_Unknown,
-    IK_None,              ///< Skip inlining pass
-    IK_NonReturnInlining, ///< We always inline non-returning stencilFunctions to help with general
-                          /// optimization while keeping readability high in the user-code
-    IK_ComputationOnTheFly, ///< Favor computations on the fly
-    IK_Precomputation,      ///< Favor precomputation when possible
+    IK_InlineProcedures,    ///< Inline functions with no return
+    IK_ComputationsOnTheFly ///< Inline stencil functions as computations on the fly
     IK_Permutations         ///< Runs on a Working IIR and does mutations going from mode to mode
   };
 
-  PassInlining();
   PassInlining(InlineStrategyKind strategy);
+  PassInlining();
+  PassInlining(bool activate, InlineStrategyKind strategy);
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
 
 private:
+  bool activate_;
   InlineStrategyKind strategy_;
 };
 

@@ -496,13 +496,15 @@ StencilInstantiation::getStencilFunctionInstantiationCandidate(
 }
 
 std::shared_ptr<StencilFunctionInstantiation>
-StencilInstantiation::getStencilFunctionInstantiationCandidate(const std::string stencilFunName) {
+StencilInstantiation::getStencilFunctionInstantiationCandidate(const std::string stencilFunName,
+                                                               const Interval& interval) {
   auto it = std::find_if(
       metadata_.stencilFunInstantiationCandidate_.begin(),
       metadata_.stencilFunInstantiationCandidate_.end(),
       [&](std::pair<std::shared_ptr<StencilFunctionInstantiation>,
                     StencilMetaInformation::StencilFunctionInstantiationCandidate> const& pair) {
-        return (pair.first->getExpression()->getCallee() == stencilFunName);
+        return (pair.first->getExpression()->getCallee() == stencilFunName &&
+                (pair.first->getInterval() == interval));
       });
   DAWN_ASSERT_MSG((it != metadata_.stencilFunInstantiationCandidate_.end()),
                   "stencil function candidate not found");

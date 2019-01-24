@@ -50,9 +50,8 @@ std::string CodeGeneratorHelper::buildCudaKernelName(
          "_ms" + std::to_string(ms->getID()) + "_kernel";
 }
 
-std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(
-    const IndexRange<const std::unordered_map<int, iir::Field>>& nonTempFields,
-    const IndexRange<const std::unordered_map<int, iir::Field>>& tempFields,
+std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(const IndexRange<const std::map<int, iir::Field> > &nonTempFields,
+    const IndexRange<const std::map<int, iir::Field> > &tempFields,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const std::unique_ptr<iir::MultiStage>& ms, CodeGeneratorHelper::FunctionArgType funArg) {
 

@@ -20,6 +20,7 @@
 #include "dawn/Support/Array.h"
 #include "dawn/Support/IndexRange.h"
 #include <string>
+#include <map>
 
 namespace dawn {
 namespace codegen {
@@ -59,8 +60,8 @@ public:
   static iir::Extents computeTempMaxWriteExtent(iir::Stencil const& stencil);
 
   static std::vector<std::string> generateStrideArguments(
-      const IndexRange<const std::unordered_map<int, iir::Field>>& nonTempFields,
-      const IndexRange<const std::unordered_map<int, iir::Field>>& tempFields,
+      const IndexRange<const std::map<int, iir::Field>>& nonTempFields,
+      const IndexRange<const std::map<int, iir::Field>>& tempFields,
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
       const std::unique_ptr<iir::MultiStage>& ms, CodeGeneratorHelper::FunctionArgType funArg);
 

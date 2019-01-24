@@ -16,6 +16,9 @@
 #define DAWN_OPTIMIZER_PASSTEMPORARYTOSTENCILFUNCTION_H
 
 #include "dawn/Optimizer/Pass.h"
+#include "dawn/Support/Assert.h"
+#include <set>
+#include <unordered_map>
 
 namespace dawn {
 
@@ -23,6 +26,16 @@ namespace iir {
 class Stencil;
 class DoMethod;
 }
+
+struct SkipIDs {
+  std::unordered_map<int, std::set<int>> accessIDs;
+  void insertAccessIDsOfMS(int MSID, std::set<int>&& ids) { accessIDs[MSID] = std::move(ids); }
+  void appendAccessIDsToMS(int MSID, const int id) { accessIDs[MSID].insert(id); }
+  bool skipID(const int MSID, const int id) const {
+    DAWN_ASSERT(accessIDs.count(MSID));
+    return accessIDs.at(MSID).count(id);
+  }
+};
 
 /// @brief PassTemporaryToStencilFunction pass will identify temporaries of a stencil and replace
 /// their pre-computations
@@ -37,13 +50,17 @@ class DoMethod;
 ///
 /// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassTemporaryToStencilFunction : public Pass {
-
 public:
   PassTemporaryToStencilFunction();
   PassTemporaryToStencilFunction(bool isEnabled);
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+
+private:
+  SkipIDs computeSkipAccessIDs(
+      const std::unique_ptr<iir::Stencil>& stencilPtr,
+      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const;
 };
 
 } // namespace dawn

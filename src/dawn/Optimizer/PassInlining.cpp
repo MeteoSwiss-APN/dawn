@@ -321,6 +321,11 @@ public:
   }
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
+
+    std::string callerName = instantiation_->getNameFromAccessID(
+        curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
+    expr->setName(callerName);
+
     instantiation_->mapExprToAccessID(expr,
                                       curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
 
@@ -490,7 +495,7 @@ static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
 
   // Function which do not return a value are *always* inlined. Function which do return a value
   // are only inlined if we favor precomputations.
-  if(!stencilFunc->hasReturn() || strategy == PassInlining::IK_Precomputation) {
+  if(!stencilFunc->hasReturn() || strategy == PassInlining::IK_ComputationsOnTheFly) {
     auto inliner =
         std::make_shared<Inliner>(strategy, stencilFunc, oldStmtAccessesPair, newStmtAccessesPairs,
                                   AccessIDOfCaller, stencilInstantiation);
@@ -502,6 +507,8 @@ static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
 
 } // anonymous namespace
 
+PassInlining::PassInlining(bool activate, InlineStrategyKind strategy)
+    : Pass("PassInlining", true), activate_(activate), strategy_(strategy) {}
 // If no strategy is passed, we inline non-returning functions (usually the first step in the
 // optimization process). This mode is required that the optimizers work
 PassInlining::PassInlining()
@@ -511,20 +518,17 @@ PassInlining::PassInlining(InlineStrategyKind strategy)
     : Pass("PassInlining", Pass::PG_Optimizer), strategy_(strategy) {}
 
 bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  // Nothing to do ...
-  if(strategy_ == IK_None)
-    return true;
+  DetectInlineCandiates inliner(strategy_, stencilInstantiation);
 
-  // This is not properly implemented yet
-  if(strategy_ == IK_ComputationOnTheFly)
+  if(!activate_)
     return true;
 
   // This is not properly implemented yet
   if(strategy_ == IK_Permutations) {
     DAWN_LOG(INFO) << "permuation mode launched for inlining";
     std::cout << "nothing happened for inlining (not yet implementd)" << std::endl;
-    return true;
   }
+    return true;
 
   DetectInlineCandiates inliner(strategy_, stencilInstantiation);
 

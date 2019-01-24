@@ -114,7 +114,7 @@ bool PassTemporaryMerger::run(
     std::unordered_set<int> temporaries;
     std::for_each(TemporaryDAG.getVertices().begin(), TemporaryDAG.getVertices().end(),
                   [&](const std::pair<int, Vertex>& vertexPair) {
-                    temporaries.emplace(vertexPair.second.ID);
+                    temporaries.emplace(vertexPair.second.value);
                   });
     auto LifeTimeMap = stencil.getLifetime(temporaries);
 

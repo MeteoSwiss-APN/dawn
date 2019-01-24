@@ -43,19 +43,16 @@ OPT(std::string, Backend, "gridtools", "backend", "",
 OPT(std::string, LoadSerialized, "", "load-serialized", "",
     "Load the serialized data from <file> and only run the passes enabled after deserialization", "<file>", true, false)
 OPT(bool, SerializeIIR, false, "write-iir", "",
-    "Serialize the low level intermediate representation after Optimization", "", false, true)
 OPT(std::string, IIRFormat, "json", "iir-format", "", "format of the output IIR", "", true, false)
+    "Serialize the low level intermediate representation after Optimization", "", false, true)
 
 OPT(bool, PermutationMode, false, "permutation", "",
     "Allow for alternative use of passes by making permutations", "", false, true)
-OPT(bool, DebugMode, false, "debug", "",
     "Compile to debug backend", "", false, true)
+OPT(bool, DebugMode, false, "debug", "",
 
-OPT(std::string, InlineStrategy, "cof", "inline", "", 
-    "Set the strategy used to inline stencil functions. Possible values for <strategy> are:"
-    "\n - none = Disable inlining"
-    "\n - cof  = Favor computations on the fly"
-    "\n - pc   = Favor pre-computations\n", "<strategy>", true, false)
+OPT(bool, InlineSF, false, "inline", "",
+    "Inline stencil functions","", false, false)
 OPT(std::string, ReorderStrategy, "greedy", "reorder", "", 
     "Set the strategy used to reorder the stages (or statements) of the stencils. Possible values for <strategy> are:"
     "\n - none   = Disable reordering"
