@@ -90,7 +90,7 @@ static void
 serializeStmtAccessPair(proto::iir::StatementAccessPair* protoStmtAccessPair,
                         const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessPair) {
   // serialize the statement
-  ProtoStmtBuilder builder(protoStmtAccessPair->mutable_statement()->mutable_aststmt());
+  ProtoStmtBuilder builder(protoStmtAccessPair->mutable_aststmt());
   stmtAccessPair->getStatement()->ASTStmt->accept(builder);
 
   // check if caller / callee accesses are initialized, and if so, fill them
@@ -723,7 +723,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
           (IIRDoMethod)->setID(protoDoMethod.domethodid());
 
           for(const auto& protoStmtAccessPair : protoDoMethod.stmtaccesspairs()) {
-            auto stmt = makeStmt(protoStmtAccessPair.statement().aststmt());
+            auto stmt = makeStmt(protoStmtAccessPair.aststmt());
             auto statement = std::make_shared<Statement>(stmt, nullptr);
 
             std::shared_ptr<iir::Accesses> callerAccesses = std::make_shared<iir::Accesses>();
@@ -733,18 +733,6 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
             for(auto readAccess : protoStmtAccessPair.calleraccesses().readaccess()) {
               callerAccesses->addReadExtent(readAccess.first, makeExtents(&readAccess.second));
             }
-
-            //            std::shared_ptr<iir::Accesses> calleeAccesses =
-            //            std::make_shared<iir::Accesses>();
-            //            for(auto writeAccess : protoStmtAccessPair.calleeaccesses().writeaccess())
-            //            {
-            //              calleeAccesses->addWriteExtent(writeAccess.first,
-            //              makeExtents(&writeAccess.second));
-            //            }
-            //            for(auto readAccess : protoStmtAccessPair.calleeaccesses().readaccess()) {
-            //              calleeAccesses->addReadExtent(readAccess.first,
-            //              makeExtents(&readAccess.second));
-            //            }
             auto insertee = make_unique<iir::StatementAccessesPair>(statement);
             insertee->setCallerAccesses(callerAccesses);
             //            insertee->setCalleeAccesses(calleeAccesses);

@@ -25,13 +25,13 @@ import "statements.proto";
 //      Statement
 /* ===-----------------------------------------------------------------------------------------===*/
 
-// @brief Statement-Wrapper for the ASTStmt.
-//
-// This wrapper is used to have a common base for Stmts and Exprs
-message Statement {
-  // Singe ASTStmt in the Statement.
-  dawn.proto.statements.Stmt ASTStmt = 1;
-}
+//// @brief Statement-Wrapper for the ASTStmt.
+////
+//// This wrapper is used to have a common base for Stmts and Exprs
+//message Statement {
+//  // Singe ASTStmt in the Statement.
+//  dawn.proto.statements.Stmt ASTStmt = 1;
+//}
 
 
 /* ===-----------------------------------------------------------------------------------------===*/
@@ -102,7 +102,7 @@ message Cache {
 message StatementAccessPair {
     // the statement of the pair. To note that this can be a BlockStmt (or simiar) and therefore
     // hold more than one stmt
-    Statement statement = 1;
+    dawn.proto.statements.Stmt ASTStmt = 1;
 
     // All the caller accesses of the statement
     Accesses callerAccesses  = 2;
@@ -205,21 +205,6 @@ message VariableVersions {
 //    map<int32, int32> versionIDToOriginalID = 3;
 }
 
-//// @brief Helper Sturcture as maps with custom messages as the key do not work in Protobuf
-////
-//// Holds the information of wich ID belongs to a given Stmt
-//message StmtIDPair {
-//    dawn.proto.statements.Stmt stmt = 1;
-//    int32 IDs = 2;
-//}
-
-//// @brief Helper Sturcture as maps with custom messages as the key do not work in Protobuf
-////
-//// Holds the information of wich ID belongs to a given Expr
-//message ExprIDPair {
-//    dawn.proto.statements.Expr expr = 1;
-//    int32 IDs = 2;
-//}
 
 // @brief Helper Strucute to make sure, Arrays with fixed length are not made too big
 message Array3i {
