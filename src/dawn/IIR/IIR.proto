@@ -104,11 +104,8 @@ message StatementAccessPair {
     // hold more than one stmt
     dawn.proto.statements.Stmt ASTStmt = 1;
 
-    // All the caller accesses of the statement
-    Accesses callerAccesses  = 2;
-
-    // All the callee accesses of the statement
-    Accesses calleeAccesses  = 3;
+    // All the accesses of the statement
+    Accesses accesses  = 2;
 }
 
 // @brief The Protobuf description of all the required members to describe a DoMethod of the IIR
@@ -226,13 +223,13 @@ message GlobalValueAndType {
     bool valueIsSet = 3;
 }
 
-// @brief Statement-Wrapper for the ASTStmt including their StackTrace
-//
-// This wrapper is used to have a common base for Stmts and Exprs
-message StencilDescStatement {
-    dawn.proto.statements.Stmt stmt = 1;
-    repeated dawn.proto.statements.StencilCall stacktrace = 2;
-}
+//// @brief Statement-Wrapper for the ASTStmt including their StackTrace
+////
+//// This wrapper is used to have a common base for Stmts and Exprs
+//message StencilDescStatement {
+//    dawn.proto.statements.Stmt stmt = 1;
+//    repeated dawn.proto.statements.StencilCall stacktrace = 2;
+//}
 
 // @brief all the MetaInformation that needs to be stored in addition the the tree of computational
 // patterns to be able to fully represent the usercode
@@ -265,7 +262,7 @@ message StencilMetaInfo {
     VariableVersions versionedFields = 9;
 
     // Stencil description statements for the overall program flow
-    repeated StencilDescStatement stencilDescStatements = 10;
+    repeated dawn.proto.statements.Stmt stencilDescStatements = 10;
 
     // Map of the StencilID's to their respective StencilCall
     map<int32, dawn.proto.statements.Stmt> IDToStencilCall = 11;

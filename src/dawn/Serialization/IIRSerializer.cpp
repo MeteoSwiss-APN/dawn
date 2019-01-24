@@ -52,23 +52,8 @@ static void setAccesses(proto::iir::Accesses* protoAccesses,
 }
 
 static std::shared_ptr<dawn::Statement>
-makeStatement(const proto::iir::StencilDescStatement* protoStatement) {
-  std::vector<sir::StencilCall*> stackTrace;
-  auto stmt = makeStmt(protoStatement->stmt());
-
-  // only create the shared pointer if necessary
-  if(protoStatement->stacktrace().size()) {
-    for(auto protoStencilCall : protoStatement->stacktrace()) {
-      sir::StencilCall call(protoStencilCall.callee());
-      setLocation(protoStencilCall.mutable_loc(), call.Loc);
-      for(const auto& protoField : protoStencilCall.arguments()) {
-        call.Args.emplace_back(makeField(protoField));
-      }
-      stackTrace.push_back(&call);
-    }
-    return std::make_shared<Statement>(
-        stmt, std::make_shared<std::vector<sir::StencilCall*>>(stackTrace));
-  }
+makeStatement(const proto::statements::Stmt* protoStatement) {
+  auto stmt = makeStmt(*protoStatement);
   return std::make_shared<Statement>(stmt, nullptr);
 }
 
@@ -89,13 +74,12 @@ serializeStmtAccessPair(proto::iir::StatementAccessPair* protoStmtAccessPair,
   ProtoStmtBuilder builder(protoStmtAccessPair->mutable_aststmt());
   stmtAccessPair->getStatement()->ASTStmt->accept(builder);
 
-  // check if caller / callee accesses are initialized, and if so, fill them
+  // check if caller accesses are initialized, and if so, fill them
   if(stmtAccessPair->getCallerAccesses()) {
-    setAccesses(protoStmtAccessPair->mutable_calleraccesses(), stmtAccessPair->getCallerAccesses());
+    setAccesses(protoStmtAccessPair->mutable_accesses(), stmtAccessPair->getCallerAccesses());
   }
-  if(stmtAccessPair->getCalleeAccesses()) {
-    setAccesses(protoStmtAccessPair->mutable_calleeaccesses(), stmtAccessPair->getCalleeAccesses());
-  }
+  DAWN_ASSERT_MSG(!stmtAccessPair->getCalleeAccesses(),
+                  "inlining did not work as we have calee-accesses");
 }
 
 static void setCache(proto::iir::Cache* protoCache, const iir::Cache& cache) {
@@ -301,24 +285,25 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
   // Filling Field: repeated StencilDescStatement stencilDescStatements = 10;
   for(const auto& stencilDescStmt : metaData.stencilDescStatements_) {
     auto protoStmt = protoMetaData->add_stencildescstatements();
-    ProtoStmtBuilder builder(protoStmt->mutable_stmt());
+    ProtoStmtBuilder builder(protoStmt);
     stencilDescStmt->ASTStmt->accept(builder);
-    if(stencilDescStmt->StackTrace) {
-      for(auto sirStackTrace : *(stencilDescStmt->StackTrace)) {
-        auto protoStackTrace = protoStmt->add_stacktrace();
-        setLocation(protoStackTrace->mutable_loc(), sirStackTrace->Loc);
-        protoStackTrace->set_callee(sirStackTrace->Callee);
-        for(auto argument : sirStackTrace->Args) {
-          auto arg = protoStackTrace->add_arguments();
-          arg->set_name(argument->Name);
-          setLocation(arg->mutable_loc(), argument->Loc);
-          arg->set_is_temporary(argument->IsTemporary);
-          for(int dim : argument->fieldDimensions) {
-            arg->add_field_dimensions(dim);
-          }
-        }
-      }
-    }
+    DAWN_ASSERT_MSG(!stencilDescStmt->StackTrace, "there should be no stack trace if inlining worked");
+//    if(stencilDescStmt->StackTrace) {
+//      for(auto sirStackTrace : *(stencilDescStmt->StackTrace)) {
+//        auto protoStackTrace = protoStmt->add_stacktrace();
+//        setLocation(protoStackTrace->mutable_loc(), sirStackTrace->Loc);
+//        protoStackTrace->set_callee(sirStackTrace->Callee);
+//        for(auto argument : sirStackTrace->Args) {
+//          auto arg = protoStackTrace->add_arguments();
+//          arg->set_name(argument->Name);
+//          setLocation(arg->mutable_loc(), argument->Loc);
+//          arg->set_is_temporary(argument->IsTemporary);
+//          for(int dim : argument->fieldDimensions) {
+//            arg->add_field_dimensions(dim);
+//          }
+//        }
+//      }
+//    }
   }
   // Filling Field: map<int32, dawn.proto.statements.StencilCallDeclStmt> IDToStencilCall = 11;
   auto& protoIDToStencilCallMap = *protoMetaData->mutable_idtostencilcall();
@@ -581,14 +566,6 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
     metadata.variableVersions_.insert(variableVersionMap.first, versions);
   }
 
-  //  for(auto versionID : protoMetaData.versionedfields().versionids()) {
-  //    metadata.variableVersions_.versionIDs_.insert(versionID);
-  //  }
-
-  //  for(auto VersionIDOriginalIDPair : protoMetaData.versionedfields().versionidtooriginalid()) {
-  //    metadata.variableVersions_.versionToOriginalVersionMap_.insert(VersionIDOriginalIDPair);
-  //  }
-
   for(auto stencilDescStmt : protoMetaData.stencildescstatements()) {
     metadata.stencilDescStatements_.push_back(makeStatement(&stencilDescStmt));
   }
@@ -723,15 +700,14 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
             auto statement = std::make_shared<Statement>(stmt, nullptr);
 
             std::shared_ptr<iir::Accesses> callerAccesses = std::make_shared<iir::Accesses>();
-            for(auto writeAccess : protoStmtAccessPair.calleraccesses().writeaccess()) {
+            for(auto writeAccess : protoStmtAccessPair.accesses().writeaccess()) {
               callerAccesses->addWriteExtent(writeAccess.first, makeExtents(&writeAccess.second));
             }
-            for(auto readAccess : protoStmtAccessPair.calleraccesses().readaccess()) {
+            for(auto readAccess : protoStmtAccessPair.accesses().readaccess()) {
               callerAccesses->addReadExtent(readAccess.first, makeExtents(&readAccess.second));
             }
             auto insertee = make_unique<iir::StatementAccessesPair>(statement);
             insertee->setCallerAccesses(callerAccesses);
-            //            insertee->setCalleeAccesses(calleeAccesses);
             (IIRDoMethod)->insertChild(std::move(insertee));
           }
         }
