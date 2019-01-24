@@ -24,10 +24,6 @@
 #include "dawn/Serialization/ASTSerializer.h"
 #include <fstream>
 #include <google/protobuf/util/json_util.h>
-#include <list>
-#include <stack>
-#include <tuple>
-#include <utility>
 
 namespace dawn {
 static void setAccesses(proto::iir::Accesses* protoAccesses,
