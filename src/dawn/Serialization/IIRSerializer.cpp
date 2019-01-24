@@ -287,23 +287,8 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
     auto protoStmt = protoMetaData->add_stencildescstatements();
     ProtoStmtBuilder builder(protoStmt);
     stencilDescStmt->ASTStmt->accept(builder);
-    DAWN_ASSERT_MSG(!stencilDescStmt->StackTrace, "there should be no stack trace if inlining worked");
-//    if(stencilDescStmt->StackTrace) {
-//      for(auto sirStackTrace : *(stencilDescStmt->StackTrace)) {
-//        auto protoStackTrace = protoStmt->add_stacktrace();
-//        setLocation(protoStackTrace->mutable_loc(), sirStackTrace->Loc);
-//        protoStackTrace->set_callee(sirStackTrace->Callee);
-//        for(auto argument : sirStackTrace->Args) {
-//          auto arg = protoStackTrace->add_arguments();
-//          arg->set_name(argument->Name);
-//          setLocation(arg->mutable_loc(), argument->Loc);
-//          arg->set_is_temporary(argument->IsTemporary);
-//          for(int dim : argument->fieldDimensions) {
-//            arg->add_field_dimensions(dim);
-//          }
-//        }
-//      }
-//    }
+    DAWN_ASSERT_MSG(!stencilDescStmt->StackTrace,
+                    "there should be no stack trace if inlining worked");
   }
   // Filling Field: map<int32, dawn.proto.statements.StencilCallDeclStmt> IDToStencilCall = 11;
   auto& protoIDToStencilCallMap = *protoMetaData->mutable_idtostencilcall();
