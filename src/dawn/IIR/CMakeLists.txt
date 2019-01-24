@@ -53,8 +53,6 @@ yoda_add_library(
           IIR.cpp
           IIR.h
           IIR.proto
-          IIRSerializer.cpp
-          IIRSerializer.h
           IIRNode.h
           IIRNodeIterator.h
           LoopOrder.cpp
@@ -80,6 +78,9 @@ yoda_add_library(
           ${iir_proto_cpp_files}
   OBJECT
 )
+
+add_custom_target(IIR_Proto_Generated ALL DEPENDS ${iir_proto_cpp_files})
+add_dependencies(IIR_Proto_Generated SIR_Proto_Generated)
 
 target_include_directories(DawnIIRObjects SYSTEM PUBLIC ${Boost_INCLUDE_DIR} ${iir_proto_include_dirs})
 # we need to pass the include directories from SIR to here since protobuf is just including the

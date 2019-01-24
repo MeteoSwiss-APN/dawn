@@ -40,14 +40,14 @@ yoda_add_library(
           SIR.cpp
           SIR.h
           SIR.proto
-          SIRSerializer.h
-          SIRSerializer.cpp
           Statement.h
           ${sir_proto_cpp_files}
   OBJECT
 )
 # only include proto since protobuf uses relative path "statements.proto" -> export to dependent
 target_include_directories(DawnSIRObjects PUBLIC ${sir_proto_include_dirs})
+
+add_custom_target(SIR_Proto_Generated ALL DEPENDS ${sir_proto_cpp_files})
 
 # Genreate python proto files
 dawn_protobuf_generate(

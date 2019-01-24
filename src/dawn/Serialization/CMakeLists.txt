@@ -16,5 +16,12 @@ yoda_add_library(
   NAME DawnSerializer
   SOURCES ASTSerializer.h
           ASTSerializer.cpp
+          IIRSerializer.h
+          IIRSerializer.cpp
+          SIRSerializer.h
+          SIRSerializer.cpp
   OBJECT
 )
+
+add_dependencies(DawnSerializerObjects IIR_Proto_Generated)
+target_include_directories(DawnSerializerObjects PUBLIC $<TARGET_PROPERTY:DawnSIRObjects,INCLUDE_DIRECTORIES>)

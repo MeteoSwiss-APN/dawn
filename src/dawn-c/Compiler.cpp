@@ -17,7 +17,7 @@
 #include "dawn-c/util/Allocate.h"
 #include "dawn-c/util/CompilerWrapper.h"
 #include "dawn-c/util/OptionsWrapper.h"
-#include "dawn/SIR/SIRSerializer.h"
+#include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/STLExtras.h"
 #include "dawn/Support/Unreachable.h"
 #include <iostream>
