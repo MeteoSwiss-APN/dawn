@@ -47,6 +47,17 @@ bool PassSetBlockSize::run(const std::shared_ptr<iir::StencilInstantiation>& ste
         verticalPattern = false;
       }
     }
+    for(const auto& stencil : (*IIR).getChildren()) {
+      for(const auto& fieldP : stencil->getFields()) {
+        const auto& field = fieldP.second;
+
+        auto jExtents = field.field.getExtentsRB()[1];
+        if(jExtents.Plus != 0 || jExtents.Minus != 0) {
+          verticalPattern = false;
+        }
+      }
+    }
+
     if(verticalPattern) {
       IIR->setBlockSize({32, 1, 4});
     } else {
