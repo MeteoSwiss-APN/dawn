@@ -154,7 +154,6 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     doFieldVersioning = false;
   }
   if(options_->PermutationMode) {
-    inlineStrategy = InlineStrategyKind::IK_Permutations;
     mssSplitStrategy = MultistageSplitStrategy::SS_Permutations;
     reorderStrategy = ReorderStrategyKind::RK_Permutations;
     cachingStrategy = CachingStrategy::CS_Permutations;

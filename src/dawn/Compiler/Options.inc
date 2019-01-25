@@ -43,13 +43,13 @@ OPT(std::string, Backend, "gridtools", "backend", "",
 OPT(std::string, LoadSerialized, "", "load-serialized", "",
     "Load the serialized data from <file> and only run the passes enabled after deserialization", "<file>", true, false)
 OPT(bool, SerializeIIR, false, "write-iir", "",
-OPT(std::string, IIRFormat, "json", "iir-format", "", "format of the output IIR", "", true, false)
     "Serialize the low level intermediate representation after Optimization", "", false, true)
+OPT(std::string, IIRFormat, "json", "iir-format", "", "format of the output IIR", "", true, false)
 
 OPT(bool, PermutationMode, false, "permutation", "",
     "Allow for alternative use of passes by making permutations", "", false, true)
-    "Compile to debug backend", "", false, true)
 OPT(bool, DebugMode, false, "debug", "",
+    "Compile to debug backend", "", false, true)
 
 OPT(bool, InlineSF, false, "inline", "",
     "Inline stencil functions","", false, false)

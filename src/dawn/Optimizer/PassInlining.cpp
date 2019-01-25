@@ -329,10 +329,6 @@ public:
     instantiation_->mapExprToAccessID(expr,
                                       curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
 
-    std::string callerName = instantiation_->getNameFromAccessID(
-        curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
-    expr->setName(callerName);
-
     // Set the fully evaluated offset as the new offset of the field. Note that this renders the
     // AST of the current stencil function incorrent which is why it needs to be removed!
     expr->setPureOffset(curStencilFunctioninstantiation_->evalOffsetOfFieldAccessExpr(expr, true));
@@ -508,7 +504,7 @@ static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
 } // anonymous namespace
 
 PassInlining::PassInlining(bool isEnabled, InlineStrategyKind strategy)
-    : Pass("PassInlining", isEnabled), activate_(isEnabled), strategy_(strategy) {
+    : Pass("PassInlining", Pass::PG_CodeLegality, isEnabled), activate_(isEnabled), strategy_(strategy) {
   if(strategy == IK_InlineProcedures) {
     setPassGroup(Pass::PG_CodeLegality);
   } else {
@@ -517,8 +513,6 @@ PassInlining::PassInlining(bool isEnabled, InlineStrategyKind strategy)
 }
 
 bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  DetectInlineCandiates inliner(strategy_, stencilInstantiation);
-
   if(!activate_)
     return true;
 

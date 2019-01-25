@@ -476,7 +476,7 @@ IIRSerializer::serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& i
   // out = 0.5*(u[i+1, j+1] + u[i-1, j+1]) - 0.5*(u[i+1] + u[i-1])
   //==------------------------------------------------------------------------------------------==//
 
-  PassInlining inliner(PassInlining::InlineStrategyKind::IK_Precomputation);
+  PassInlining inliner(true, PassInlining::IK_ComputationsOnTheFly);
   inliner.run(instantiation);
 
   using namespace dawn::proto::iir;
