@@ -507,15 +507,14 @@ static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
 
 } // anonymous namespace
 
-PassInlining::PassInlining(bool activate, InlineStrategyKind strategy)
-    : Pass("PassInlining", true), activate_(activate), strategy_(strategy) {}
-// If no strategy is passed, we inline non-returning functions (usually the first step in the
-// optimization process). This mode is required that the optimizers work
-PassInlining::PassInlining()
-    : Pass("PassInlining", Pass::PG_CodeLegality), strategy_(IK_NonReturnInlining) {}
-
-PassInlining::PassInlining(InlineStrategyKind strategy)
-    : Pass("PassInlining", Pass::PG_Optimizer), strategy_(strategy) {}
+PassInlining::PassInlining(bool isEnabled, InlineStrategyKind strategy)
+    : Pass("PassInlining", isEnabled), activate_(isEnabled), strategy_(strategy) {
+  if(strategy == IK_InlineProcedures) {
+    setPassGroup(Pass::PG_CodeLegality);
+  } else {
+    setPassGroup(Pass::PG_Optimizer);
+  }
+}
 
 bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   DetectInlineCandiates inliner(strategy_, stencilInstantiation);
@@ -528,7 +527,7 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
     DAWN_LOG(INFO) << "permuation mode launched for inlining";
     std::cout << "nothing happened for inlining (not yet implementd)" << std::endl;
   }
-    return true;
+  return true;
 
   DetectInlineCandiates inliner(strategy_, stencilInstantiation);
 

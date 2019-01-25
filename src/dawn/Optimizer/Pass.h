@@ -48,28 +48,7 @@ public:
   };
 
   Pass(const std::string& name, PassGroup group) : name_(name) {
-    switch(group) {
-    case PG_Optimizer:
-      categorySet_.insert({"Debug", false});
-      categorySet_.insert({"Deserialization", false});
-      categorySet_.insert({"Permutations", false});
-      break;
-    case PG_CodeLegality:
-      categorySet_.insert({"Debug", true});
-      categorySet_.insert({"Deserialization", true});
-      categorySet_.insert({"Permutations", true});
-      break;
-    case PG_LegalAndOpti:
-      categorySet_.insert({"Debug", true});
-      categorySet_.insert({"Deserialization", false});
-      categorySet_.insert({"Permutations", true});
-      break;
-    case PG_Diganostics:
-      categorySet_.insert({"Debug", true});
-      categorySet_.insert({"Deserialization", false});
-      categorySet_.insert({"Permutations", false});
-      break;
-    }
+    setPassGroup(group);
   }
   Pass(const std::string& name, PassGroup group, bool isEnabled) : Pass(name, group) {
     categorySet_.insert({"MaunallyEnabled", isEnabled});
@@ -99,6 +78,33 @@ public:
       return it->second;
     }
     return -1;
+  }
+
+  void setPassGroup(PassGroup group){
+      categorySet_.clear();
+      switch(group) {
+      case PG_Optimizer:
+        categorySet_.insert({"Debug", false});
+        categorySet_.insert({"Deserialization", false});
+        categorySet_.insert({"Permutations", false});
+        break;
+      case PG_CodeLegality:
+        categorySet_.insert({"Debug", true});
+        categorySet_.insert({"Deserialization", true});
+        categorySet_.insert({"Permutations", true});
+        break;
+      case PG_LegalAndOpti:
+        categorySet_.insert({"Debug", true});
+        categorySet_.insert({"Deserialization", false});
+        categorySet_.insert({"Permutations", true});
+        break;
+      case PG_Diganostics:
+        categorySet_.insert({"Debug", true});
+        categorySet_.insert({"Deserialization", false});
+        categorySet_.insert({"Permutations", false});
+        break;
+      }
+
   }
 
 private:
