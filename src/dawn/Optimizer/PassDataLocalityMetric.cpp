@@ -303,10 +303,7 @@ computeReadWriteAccessesMetric(const std::shared_ptr<iir::StencilInstantiation>&
   return std::make_pair(readWriteCounter.getNumReads(), readWriteCounter.getNumWrites());
 }
 
-PassDataLocalityMetric::PassDataLocalityMetric()
-    : Pass("PassDataLocalityMetric", Pass::PG_Diganostics) {}
-PassDataLocalityMetric::PassDataLocalityMetric(bool isEnabled)
-    : Pass("PassDataLocalityMetric", Pass::PG_Diganostics, isEnabled) {}
+PassDataLocalityMetric::PassDataLocalityMetric() : Pass("PassDataLocalityMetric") {}
 
 bool PassDataLocalityMetric::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {

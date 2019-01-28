@@ -15,10 +15,8 @@
 #ifndef DAWN_OPTIMIZER_PASS_H
 #define DAWN_OPTIMIZER_PASS_H
 
-#include "dawn/Support/Assert.h"
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace dawn {
@@ -38,22 +36,18 @@ class StencilInstantiation;
 ///
 /// @ingroup Optimizer
 class Pass {
+  /// Name of the pass (should be unique)
+  std::string name_;
+
+protected:
+  /// Name of the passes this pass depends on (empty implies no dependency)
+  std::vector<std::string> dependencies_;
+  /// Categroy of the pass
+  const bool isDebug_;
+
 public:
-  enum PassGroup {
-    PG_Optimizer,    ///< Passes that do Optimization but are not required to generate legal code
-    PG_CodeLegality, ///< Passes that need to run to generate valid code
-    PG_LegalAndOpti, ///< Passes that are required to run to generate legal code but have modes that
-                     /// are used for optimization only
-    PG_Diganostics   ///< Passes that are only required for diagnostics
-  };
-
-  Pass(const std::string& name, PassGroup group) : name_(name) {
-    setPassGroup(group);
-  }
-  Pass(const std::string& name, PassGroup group, bool isEnabled) : Pass(name, group) {
-    categorySet_.insert({"MaunallyEnabled", isEnabled});
-  }
-
+  Pass(const std::string& name) : Pass(name, false) {}
+  Pass(const std::string& name, bool isDebug) : name_(name), isDebug_(isDebug) {}
   virtual ~Pass() {}
 
   /// @brief Run the the Pass
@@ -66,56 +60,7 @@ public:
   /// @brief Get the dependencies of this pass
   std::vector<std::string> getDependencies() const { return dependencies_; }
 
-  bool checkFlag(std::string flag) const {
-    DAWN_ASSERT_MSG(categorySet_.count(flag), "unsupported flag");
-    auto it = categorySet_.find(flag);
-    return it->second;
-  }
-
-  int isManuallySwitched() const {
-    if(categorySet_.count("MaunallyEnabled")) {
-      auto it = categorySet_.find("MaunallyEnabled");
-      return it->second;
-    }
-    return -1;
-  }
-
-  void setPassGroup(PassGroup group){
-      categorySet_.clear();
-      switch(group) {
-      case PG_Optimizer:
-        categorySet_.insert({"Debug", false});
-        categorySet_.insert({"Deserialization", false});
-        categorySet_.insert({"Permutations", false});
-        break;
-      case PG_CodeLegality:
-        categorySet_.insert({"Debug", true});
-        categorySet_.insert({"Deserialization", true});
-        categorySet_.insert({"Permutations", true});
-        break;
-      case PG_LegalAndOpti:
-        categorySet_.insert({"Debug", true});
-        categorySet_.insert({"Deserialization", false});
-        categorySet_.insert({"Permutations", true});
-        break;
-      case PG_Diganostics:
-        categorySet_.insert({"Debug", true});
-        categorySet_.insert({"Deserialization", false});
-        categorySet_.insert({"Permutations", false});
-        break;
-      }
-
-  }
-
-private:
-  /// Name of the pass (should be unique)
-  std::string name_;
-
-protected:
-  /// Name of the passes this pass depends on (empty implies no dependency)
-  std::vector<std::string> dependencies_;
-  /// Categroy of the pass
-  std::unordered_map<std::string, bool> categorySet_;
+  bool isDebug() const { return isDebug_; }
 };
 
 } // namespace dawn
