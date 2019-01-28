@@ -433,7 +433,7 @@ private:
           !std::is_same<IteratorCategory, std::random_access_iterator_tag>::value>::type* = 0) {
 
     auto it = std::next(children_.begin(), pos);
-    return children_[it];
+    return *it;
   }
 
   template <typename TChild>

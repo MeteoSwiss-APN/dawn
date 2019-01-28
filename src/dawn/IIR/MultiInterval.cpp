@@ -12,9 +12,9 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include <iterator>
 #include "dawn/IIR/MultiInterval.h"
 #include "dawn/IIR/IntervalAlgorithms.h"
+#include <iterator>
 
 namespace dawn {
 namespace iir {

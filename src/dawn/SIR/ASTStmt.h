@@ -19,6 +19,7 @@
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/SourceLocation.h"
 #include "dawn/Support/Type.h"
+#include "dawn/Support/UIDGenerator.h"
 #include "dawn/Support/VisitorHelpers.h"
 #include <memory>
 #include <vector>
@@ -54,7 +55,8 @@ public:
 
   /// @name Constructor & Destructor
   /// @{
-  Stmt(StmtKind kind, SourceLocation loc = SourceLocation()) : kind_(kind), loc_(loc) {}
+  Stmt(StmtKind kind, SourceLocation loc = SourceLocation())
+      : kind_(kind), loc_(loc), statementID_(UIDGenerator::getInstance()->get()) {}
   virtual ~Stmt() {}
   /// @}
 
@@ -92,6 +94,11 @@ public:
   bool operator!=(const Stmt& other) const { return !(*this == other); }
   /// @}
 
+  /// @brief get the statementID for mapping
+  int getID() const { return statementID_; }
+
+  void setID(int id) { statementID_ = id; }
+
 protected:
   void assign(const Stmt& other) {
     kind_ = other.kind_;
@@ -101,6 +108,8 @@ protected:
 protected:
   StmtKind kind_;
   SourceLocation loc_;
+
+  int statementID_;
 };
 
 //===------------------------------------------------------------------------------------------===//

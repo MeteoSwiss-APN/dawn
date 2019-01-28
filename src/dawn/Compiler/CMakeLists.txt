@@ -25,3 +25,6 @@ yoda_add_library(
           Options.inc
   OBJECT
 )
+
+#to propagate the dependencies from IIR to here (where the serializer is used) needs this linking
+target_link_libraries(DawnCompilerObjects DawnIIRObjects)

@@ -91,7 +91,11 @@ static void reportRaceCondition(const Statement& statement,
 
 } // anonymous namespace
 
-PassFieldVersioning::PassFieldVersioning() : Pass("PassFieldVersioning", true), numRenames_(0) {}
+PassFieldVersioning::PassFieldVersioning()
+    : Pass("PassFieldVersioning", Pass::PG_CodeLegality), numRenames_(0) {}
+
+PassFieldVersioning::PassFieldVersioning(bool isEnabled)
+    : Pass("PassFieldVersioning", Pass::PG_CodeLegality, isEnabled), numRenames_(0) {}
 
 bool PassFieldVersioning::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {

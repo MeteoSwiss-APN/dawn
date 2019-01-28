@@ -23,7 +23,9 @@
 
 namespace dawn {
 
-PassTemporaryMerger::PassTemporaryMerger() : Pass("PassTemporaryMerger") {}
+PassTemporaryMerger::PassTemporaryMerger() : Pass("PassTemporaryMerger", Pass::PG_Optimizer) {}
+PassTemporaryMerger::PassTemporaryMerger(bool isEnabled)
+    : Pass("PassTemporaryMerger", Pass::PG_Optimizer, isEnabled) {}
 
 bool PassTemporaryMerger::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {

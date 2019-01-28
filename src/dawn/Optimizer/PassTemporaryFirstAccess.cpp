@@ -13,10 +13,10 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassTemporaryFirstAccess.h"
-#include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/IndexRange.h"
 #include <algorithm>
@@ -65,7 +65,8 @@ public:
 
 } // anonymous namespace
 
-PassTemporaryFirstAccess::PassTemporaryFirstAccess() : Pass("PassTemporaryFirstAccess", true) {}
+PassTemporaryFirstAccess::PassTemporaryFirstAccess()
+    : Pass("PassTemporaryFirstAccess", Pass::PG_Diganostics) {}
 
 bool PassTemporaryFirstAccess::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {

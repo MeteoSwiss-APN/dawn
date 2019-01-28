@@ -134,7 +134,7 @@ void StatementMapper::visit(const std::shared_ptr<VarDeclStmt>& stmt) {
     function->mapStmtToAccessID(stmt, AccessID);
   } else {
     instantiation_->setAccessIDNamePair(AccessID, globalName);
-    instantiation_->getStmtToAccessIDMap().emplace(stmt, AccessID);
+    instantiation_->getStmtIDToAccessIDMap().emplace(stmt->getID(), AccessID);
   }
 
   // Add the mapping to the local scope

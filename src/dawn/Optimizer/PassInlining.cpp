@@ -11,7 +11,6 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-
 #include "dawn/Optimizer/PassInlining.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StatementAccessesPair.h"
@@ -21,6 +20,7 @@
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTUtil.h"
 #include "dawn/SIR/ASTVisitor.h"
+#include "dawn/Support/Logging.h"
 #include "dawn/Support/STLExtras.h"
 #include <iostream>
 #include <stack>
@@ -503,14 +503,27 @@ static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
 
 } // anonymous namespace
 
-PassInlining::PassInlining(bool activate, InlineStrategyKind strategy)
-    : Pass("PassInlining", true), activate_(activate), strategy_(strategy) {}
+PassInlining::PassInlining(bool isEnabled, InlineStrategyKind strategy)
+    : Pass("PassInlining", Pass::PG_CodeLegality, isEnabled), activate_(isEnabled), strategy_(strategy) {
+  if(strategy == IK_InlineProcedures) {
+    setPassGroup(Pass::PG_CodeLegality);
+  } else {
+    setPassGroup(Pass::PG_Optimizer);
+  }
+}
 
 bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  DetectInlineCandiates inliner(strategy_, stencilInstantiation);
-
   if(!activate_)
     return true;
+
+  // This is not properly implemented yet
+  if(strategy_ == IK_Permutations) {
+    DAWN_LOG(INFO) << "permuation mode launched for inlining";
+    std::cout << "nothing happened for inlining (not yet implementd)" << std::endl;
+    return true;
+  }
+
+  DetectInlineCandiates inliner(strategy_, stencilInstantiation);
 
   // Iterate all statements (top -> bottom)
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {

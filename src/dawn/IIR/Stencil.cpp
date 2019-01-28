@@ -49,12 +49,13 @@ std::ostream& operator<<(std::ostream& os, const iir::Stencil& stencil) {
   for(const auto& MS : stencil.getChildren()) {
     os << "MultiStage " << (multiStageIdx++) << ": (" << MS->getLoopOrder() << ")\n";
     for(const auto& stage : MS->getChildren())
-      os << "  " << stencil.getStencilInstantiation().getIIR()->getNameFromStageID(stage->getStageID()) << " "
-         << RangeToString()(stage->getFields(),
-                            [&](const std::pair<int, iir::Field>& fieldPair) {
-                              return stencil.getStencilInstantiation().getNameFromAccessID(
-                                  fieldPair.first);
-                            })
+      os << "  "
+         << stencil.getStencilInstantiation().getIIR()->getNameFromStageID(stage->getStageID())
+         << " " << RangeToString()(stage->getFields(),
+                                   [&](const std::pair<int, iir::Field>& fieldPair) {
+                                     return stencil.getStencilInstantiation().getNameFromAccessID(
+                                         fieldPair.first);
+                                   })
          << "\n";
   }
   return os;
@@ -138,7 +139,6 @@ bool Stencil::Lifetime::overlaps(const Stencil::Lifetime& other) const {
 }
 
 sir::Attr& Stencil::getStencilAttributes() { return stencilAttributes_; }
-
 
 Stencil::Stencil(StencilInstantiation& stencilInstantiation, sir::Attr attributes, int StencilID)
     : stencilInstantiation_(stencilInstantiation), stencilAttributes_(attributes),

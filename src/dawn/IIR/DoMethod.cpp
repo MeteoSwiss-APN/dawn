@@ -90,9 +90,7 @@ const std::shared_ptr<DependencyGraphAccesses>& DoMethod::getDependencyGraph() c
   return derivedInfo_.dependencyGraph_;
 }
 
-void DoMethod::DerivedInfo::clear() {
-  fields_.clear();
-}
+void DoMethod::DerivedInfo::clear() { fields_.clear(); }
 
 void DoMethod::clearDerivedInfo() { derivedInfo_.clear(); }
 

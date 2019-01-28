@@ -192,13 +192,15 @@ void Stage::updateGlobalVariablesInfo() {
       for(const auto& accessPair : access->getWriteAccesses()) {
         int AccessID = accessPair.first;
         // Does this AccessID correspond to a field access?
-        if(stencilInstantiation_.isGlobalVariable(AccessID))
+        if(stencilInstantiation_.isGlobalVariable(AccessID)) {
           derivedInfo_.globalVariables_.insert(AccessID);
+        }
       }
       for(const auto& accessPair : access->getReadAccesses()) {
         int AccessID = accessPair.first;
-        if(stencilInstantiation_.isGlobalVariable(AccessID))
+        if(stencilInstantiation_.isGlobalVariable(AccessID)) {
           derivedInfo_.globalVariables_.insert(AccessID);
+        }
       }
 
       const std::shared_ptr<Statement> statement = statementAccessesPair->getStatement();

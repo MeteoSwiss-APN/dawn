@@ -15,13 +15,13 @@
 #ifndef DAWN_CODEGEN_CODEGENPROPERTIES_H
 #define DAWN_CODEGEN_CODEGENPROPERTIES_H
 
-#include "dawn/Support/Assert.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Support/Assert.h"
 #include <memory>
+#include <set>
 #include <unordered_map>
 #include <vector>
-#include <set>
 
 namespace dawn {
 namespace codegen {

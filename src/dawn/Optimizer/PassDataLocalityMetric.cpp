@@ -13,9 +13,9 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Format.h"
@@ -303,7 +303,10 @@ computeReadWriteAccessesMetric(const std::shared_ptr<iir::StencilInstantiation>&
   return std::make_pair(readWriteCounter.getNumReads(), readWriteCounter.getNumWrites());
 }
 
-PassDataLocalityMetric::PassDataLocalityMetric() : Pass("PassDataLocalityMetric") {}
+PassDataLocalityMetric::PassDataLocalityMetric()
+    : Pass("PassDataLocalityMetric", Pass::PG_Diganostics) {}
+PassDataLocalityMetric::PassDataLocalityMetric(bool isEnabled)
+    : Pass("PassDataLocalityMetric", Pass::PG_Diganostics, isEnabled) {}
 
 bool PassDataLocalityMetric::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {

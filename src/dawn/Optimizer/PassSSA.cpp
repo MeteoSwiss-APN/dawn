@@ -13,15 +13,16 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassSSA.h"
-#include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/AccessComputation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include <unordered_set>
 
 namespace dawn {
 
-PassSSA::PassSSA() : Pass("PassSSA") {}
+PassSSA::PassSSA() : Pass("PassSSA", Pass::PG_Optimizer) {}
+PassSSA::PassSSA(bool isEnabled) : Pass("PassSSA", Pass::PG_Optimizer, isEnabled) {}
 
 bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();

@@ -13,12 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassTemporaryType.h"
-#include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/IIRNodeIterator.h"
-#include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/NodeUpdateType.h"
+#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include <iostream>
 #include <memory>
@@ -90,7 +90,7 @@ struct Temporary {
 
 } // anonymous namespace
 
-PassTemporaryType::PassTemporaryType() : Pass("PassTemporaryType", true) {}
+PassTemporaryType::PassTemporaryType() : Pass("PassTemporaryType", Pass::PG_CodeLegality) {}
 
 bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
   OptimizerContext* context = instantiation->getOptimizerContext();

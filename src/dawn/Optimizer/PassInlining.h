@@ -35,11 +35,12 @@ class PassInlining : public Pass {
 public:
   /// @brief Inlining strategies
   enum InlineStrategyKind {
-    IK_InlineProcedures,    ///< Inline functions with no return
-    IK_ComputationsOnTheFly ///< Inline stencil functions as computations on the fly
+    IK_InlineProcedures,     ///< Inline functions with no return
+    IK_ComputationsOnTheFly, ///< Inline stencil functions as computations on the fly
+    IK_Permutations          ///< Runs on a Working IIR and does mutations going from mode to mode
   };
 
-  PassInlining(bool activate, InlineStrategyKind strategy);
+  PassInlining(bool isEnabled, InlineStrategyKind strategy);
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;

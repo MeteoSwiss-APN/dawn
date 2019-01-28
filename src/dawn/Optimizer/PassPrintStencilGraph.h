@@ -29,6 +29,7 @@ namespace dawn {
 class PassPrintStencilGraph : public Pass {
 public:
   PassPrintStencilGraph();
+  PassPrintStencilGraph(bool isEnabled);
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;

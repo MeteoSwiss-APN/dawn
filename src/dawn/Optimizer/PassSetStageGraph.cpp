@@ -14,8 +14,8 @@
 
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/IIR/DependencyGraphStage.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/STLExtras.h"
 
 namespace dawn {
@@ -56,7 +56,7 @@ static bool depends(const iir::Stage& fromStage, const iir::Stage& toStage) {
   return false;
 }
 
-PassSetStageGraph::PassSetStageGraph() : Pass("PassSetStageGraph") {
+PassSetStageGraph::PassSetStageGraph() : Pass("PassSetStageGraph", Pass::PG_Optimizer) {
   dependencies_.push_back("PassSetStageName");
 }
 

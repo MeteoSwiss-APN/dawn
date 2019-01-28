@@ -43,6 +43,7 @@ yoda_combine_libraries(
           DawnIIRObjects
           DawnOptimizerObjects
           DawnCodeGenObjects
+          DawnSerializerObjects
   INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
   VERSION ${DAWN_VERSION}
   DEPENDS ${DAWN_EXTERNAL_LIBRARIES}

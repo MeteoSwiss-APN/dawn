@@ -15,10 +15,10 @@
 #ifndef DAWN_IIR_STATEMENTACCESSESPAIR_H
 #define DAWN_IIR_STATEMENTACCESSESPAIR_H
 
-#include "dawn/IIR/BlockStatements.h"
 #include "dawn/IIR/Accesses.h"
-#include "dawn/SIR/Statement.h"
+#include "dawn/IIR/BlockStatements.h"
 #include "dawn/IIR/IIRNode.h"
+#include "dawn/SIR/Statement.h"
 #include <boost/optional.hpp>
 #include <memory>
 #include <vector>

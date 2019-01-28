@@ -12,16 +12,17 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/IIR/DependencyGraphStage.h"
-#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/STLExtras.h"
 
 namespace dawn {
 
-PassComputeStageExtents::PassComputeStageExtents() : Pass("PassComputeStageExtents", true) {
+PassComputeStageExtents::PassComputeStageExtents()
+    : Pass("PassComputeStageExtents", Pass::PG_CodeLegality) {
   dependencies_.push_back("PassSetStageName");
 }
 

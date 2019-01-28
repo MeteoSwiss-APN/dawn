@@ -504,7 +504,10 @@ public:
 } // anonymous namespace
 
 PassTemporaryToStencilFunction::PassTemporaryToStencilFunction()
-    : Pass("PassTemporaryToStencilFunction") {}
+    : Pass("PassTemporaryToStencilFunction", Pass::PG_Optimizer) {}
+
+PassTemporaryToStencilFunction::PassTemporaryToStencilFunction(bool isEnabled)
+    : Pass("PassTemporaryToStencilFunction", Pass::PG_Optimizer, isEnabled) {}
 
 SkipIDs PassTemporaryToStencilFunction::computeSkipAccessIDs(
     const std::unique_ptr<iir::Stencil>& stencilPtr,
