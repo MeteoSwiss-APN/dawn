@@ -14,10 +14,10 @@
 
 #include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
-#include "dawn/IIR/StatementAccessesPair.h"
-#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
+#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Logging.h"
@@ -28,7 +28,7 @@
 
 namespace dawn {
 
-PassStageSplitter::PassStageSplitter() : Pass("PassStageSplitter", Pass::PG_LegalAndOpti) {}
+PassStageSplitter::PassStageSplitter() : Pass("PassStageSplitter", true) {}
 
 bool PassStageSplitter::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {

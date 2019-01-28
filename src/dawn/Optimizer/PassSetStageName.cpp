@@ -13,12 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassSetStageName.h"
-#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/IIR/StencilInstantiation.h"
 
 namespace dawn {
 
-PassSetStageName::PassSetStageName() : Pass("PassSetStageName", Pass::PG_CodeLegality) {}
+PassSetStageName::PassSetStageName() : Pass("PassSetStageName", true) {}
 
 bool PassSetStageName::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   stencilInstantiation->getIIR()->getStageIDToNameMap().clear();

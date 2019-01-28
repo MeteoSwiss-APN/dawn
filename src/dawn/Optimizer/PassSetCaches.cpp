@@ -150,21 +150,11 @@ CacheCandidate computeCacheCandidateForMS(iir::Field const& field, bool isTempor
 
 } // anonymous namespace
 
-PassSetCaches::PassSetCaches(CachingStrategy strategy)
-    : Pass("PassSetCaches", PG_Optimizer), strategy_(strategy) {}
+PassSetCaches::PassSetCaches() : Pass("PassSetCaches") {}
 
 bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
-
-  if(strategy_ == CachingStrategy::CS_MaximizeCaches) {
-    setAllCaches(instantiation);
-  } else if(strategy_ == CachingStrategy::CS_Permutations) {
-    cachePermutation(instantiation);
-  }
-  return true;
-}
-
-void PassSetCaches::setAllCaches(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
   OptimizerContext* context = instantiation->getOptimizerContext();
+
   for(const auto& stencilPtr : instantiation->getStencils()) {
     iir::Stencil& stencil = *stencilPtr;
 
@@ -316,15 +306,8 @@ void PassSetCaches::setAllCaches(const std::shared_ptr<iir::StencilInstantiation
       }
     }
   }
-}
 
-void PassSetCaches::cachePermutation(
-    const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
-  OptimizerContext* context = instantiation->getOptimizerContext();
-  if(context->getOptions().ReportPassSetCaches) {
-    std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": MS"
-              << "launched in permuation mode, no changes" << std::endl;
-  }
+  return true;
 }
 
 } // namespace dawn

@@ -13,8 +13,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassStageReordering.h"
-#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/FileUtil.h"
 #include "dawn/Support/Unreachable.h"
 
@@ -24,7 +24,7 @@
 namespace dawn {
 
 PassStageReordering::PassStageReordering(ReorderStrategy::ReorderStrategyKind strategy)
-    : Pass("PassStageReordering", Pass::PG_Optimizer), strategy_(strategy) {
+    : Pass("PassStageReordering"), strategy_(strategy) {
   dependencies_.push_back("PassSetStageGraph");
 }
 
@@ -47,10 +47,6 @@ bool PassStageReordering::run(
       break;
     case ReorderStrategy::RK_Partitioning:
       strategy = make_unique<ReoderStrategyPartitioning>();
-      break;
-    case ReorderStrategy::RK_Permutations:
-      std::cout << "Stage Reordering for GA not implemented yet" << std::endl;
-      strategy = make_unique<ReoderStrategyGreedy>();
       break;
     default:
       dawn_unreachable("invalid reorder strategy");

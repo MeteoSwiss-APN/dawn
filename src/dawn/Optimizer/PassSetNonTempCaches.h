@@ -40,7 +40,6 @@ namespace dawn {
 class PassSetNonTempCaches : public Pass {
 public:
   PassSetNonTempCaches();
-  PassSetNonTempCaches(bool isEnabled);
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;

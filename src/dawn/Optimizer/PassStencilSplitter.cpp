@@ -14,11 +14,11 @@
 
 #include "dawn/Optimizer/PassStencilSplitter.h"
 #include "dawn/IIR/DependencyGraphStage.h"
-#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/Replacing.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include <iostream>
 
 namespace dawn {
@@ -43,13 +43,7 @@ static int mergePossible(const std::set<int>& fields, const iir::Stage* stage, i
 }
 
 PassStencilSplitter::PassStencilSplitter(int maxNumberOfFilelds)
-    : Pass("PassStencilSplitter", Pass::PG_Optimizer), MaxFieldPerStencil(maxNumberOfFilelds) {
-  dependencies_.push_back("PassSetStageGraph");
-}
-
-PassStencilSplitter::PassStencilSplitter(bool isEnabled, int maxNumberOfFilelds)
-    : Pass("PassStencilSplitter", Pass::PG_Optimizer, isEnabled),
-      MaxFieldPerStencil(maxNumberOfFilelds) {
+    : Pass("PassStencilSplitter"), MaxFieldPerStencil(maxNumberOfFilelds) {
   dependencies_.push_back("PassSetStageGraph");
 }
 
@@ -104,9 +98,8 @@ bool PassStencilSplitter::run(
 
           } else {
             // Make a new stencil
-            newStencils.emplace_back(make_unique<iir::Stencil>(*stencilInstantiation,
-                                                               stencil.getStencilAttributes(),
-                                                               stencilInstantiation->nextUID()));
+            newStencils.emplace_back(make_unique<iir::Stencil>(
+                *stencilInstantiation, stencil.getStencilAttributes(), stencilInstantiation->nextUID()));
             const std::unique_ptr<iir::Stencil>& newStencil2 = newStencils.back();
 
             fieldsInNewStencil.clear();

@@ -26,7 +26,6 @@ namespace dawn {
 class PassTemporaryMerger : public Pass {
 public:
   PassTemporaryMerger();
-  PassTemporaryMerger(bool isEnabled);
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;

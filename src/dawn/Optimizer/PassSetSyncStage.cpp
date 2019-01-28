@@ -71,7 +71,7 @@ bool PassSetSyncStage::requiresSync(const iir::Stage& stage,
   return false;
 }
 
-PassSetSyncStage::PassSetSyncStage() : Pass("PassSetSyncStage", Pass::PG_CodeLegality) {}
+PassSetSyncStage::PassSetSyncStage() : Pass("PassSetSyncStage") {}
 
 bool PassSetSyncStage::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(instantiation->getIIR()))) {

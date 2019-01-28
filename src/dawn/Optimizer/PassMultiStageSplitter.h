@@ -29,8 +29,7 @@ public:
   enum MultiStageSplittingStrategy {
     SS_MaxCut, ///< Splitting the multistage into as many multistages as possible while maintaining
                /// code legality
-    SS_Optimized,   ///< Optimized splitting of Multistages, only when needed
-    SS_Permutations ///< Runs on a Working IIR and applies permutations on how splitting happens
+    SS_Optimized   ///< Optimized splitting of Multistages, only when needed
   };
   PassMultiStageSplitter(MultiStageSplittingStrategy strategy);
 
