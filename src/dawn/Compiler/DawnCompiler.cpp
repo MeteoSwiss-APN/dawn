@@ -196,6 +196,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   optimizer->checkAndPushBack<PassInlining>(
       (getOptions().InlineSF || getOptions().PassTmpToFunction),
       PassInlining::IK_ComputationsOnTheFly);
+  optimizer->checkAndPushBack<PassTemporaryToStencilFunction>();
   optimizer->checkAndPushBack<PassSetNonTempCaches>(getOptions().UseNonTempCaches);
   optimizer->checkAndPushBack<PassSetCaches>(cachingStrategy);
   optimizer->checkAndPushBack<PassComputeStageExtents>();
