@@ -15,15 +15,15 @@
 dawn_add_unittest_impl(
   NAME DawnUnittestIIR
   SOURCES
-#          TestExtent.cpp
-#          TestField.cpp
-#          TestInterval.cpp
-#          TestIntervalAlgorithms.cpp
-#          TestIIRNode.cpp
-#          TestIIRNodeIterator.cpp
+          TestExtent.cpp
+          TestField.cpp
+          TestInterval.cpp
+          TestIntervalAlgorithms.cpp
+          TestIIRNode.cpp
+          TestIIRNodeIterator.cpp
           TestMain.cpp
-#          TestMultiInterval.cpp
-#          TestStencil.cpp
+          TestMultiInterval.cpp
+          TestStencil.cpp
           TestIIRSerializer.cpp
 )
 target_include_directories(DawnUnittestIIR PUBLIC $<TARGET_PROPERTY:DawnIIRObjects,INCLUDE_DIRECTORIES>)
