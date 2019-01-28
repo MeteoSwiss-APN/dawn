@@ -520,8 +520,8 @@ bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencil
   if(strategy_ == IK_Permutations) {
     DAWN_LOG(INFO) << "permuation mode launched for inlining";
     std::cout << "nothing happened for inlining (not yet implementd)" << std::endl;
+    return true;
   }
-  return true;
 
   DetectInlineCandiates inliner(strategy_, stencilInstantiation);
 
