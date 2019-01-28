@@ -141,27 +141,27 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     mssSplitStrategy = MultistageSplitStrategy::SS_Optimized;
   }
 
-//  using CachingStrategy = PassSetCaches::CachingStrategy;
-//  CachingStrategy cachingStrategy = CachingStrategy::CS_MaximizeCaches;
+  //  using CachingStrategy = PassSetCaches::CachingStrategy;
+  //  CachingStrategy cachingStrategy = CachingStrategy::CS_MaximizeCaches;
 
   // -max-fields
   int maxFields = options_->MaxFieldsPerStencil;
 
-//  // If we load serialized data, we set the strategy of multiple passes to do different things,
-//  // mostly we want them to do genetic-algorithm stuff
-//  double doFieldVersioning = true;
-//  if(options_->LoadSerialized != "") {
-//    doFieldVersioning = false;
-//  }
-//  if(options_->PermutationMode) {
-//    mssSplitStrategy = MultistageSplitStrategy::SS_Permutations;
-//    reorderStrategy = ReorderStrategyKind::RK_Permutations;
-//    cachingStrategy = CachingStrategy::CS_Permutations;
-//    options_->PassTmpToFunction = false;
-//  }
+  //  // If we load serialized data, we set the strategy of multiple passes to do different things,
+  //  // mostly we want them to do genetic-algorithm stuff
+  //  double doFieldVersioning = true;
+  //  if(options_->LoadSerialized != "") {
+  //    doFieldVersioning = false;
+  //  }
+  //  if(options_->PermutationMode) {
+  //    mssSplitStrategy = MultistageSplitStrategy::SS_Permutations;
+  //    reorderStrategy = ReorderStrategyKind::RK_Permutations;
+  //    cachingStrategy = CachingStrategy::CS_Permutations;
+  //    options_->PassTmpToFunction = false;
+  //  }
 
   IIRSerializer::SerializationKind serializationKind = IIRSerializer::SK_Json;
-  if(options_->SerializeIIR || (options_->LoadSerialized != "")) {
+  if(options_->SerializeIIR) { /*|| (options_->LoadSerialized != "")) {*/
     if(options_->IIRFormat == "json") {
       serializationKind = IIRSerializer::SK_Json;
     } else if(options_->IIRFormat == "byte") {
@@ -210,11 +210,11 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   // Run optimization passes
   for(auto& stencil : optimizer->getStencilInstantiationMap()) {
     std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
-//    if(options_->LoadSerialized != "") {
-//      auto output = IIRSerializer::deserialize(
-//          options_->LoadSerialized, instantiation->getOptimizerContext(), serializationKind);
-//      instantiation = output;
-//    }
+    //    if(options_->LoadSerialized != "") {
+    //      auto output = IIRSerializer::deserialize(
+    //          options_->LoadSerialized, instantiation->getOptimizerContext(), serializationKind);
+    //      instantiation = output;
+    //    }
     DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `" << instantiation->getName()
                    << "` ...";
     if(!passManager.runAllPassesOnStecilInstantiation(instantiation))

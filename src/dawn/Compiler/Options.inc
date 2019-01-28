@@ -44,7 +44,7 @@ OPT(bool, SerializeIIR, false, "write-iir", "",
     "Serialize the low level intermediate representation after Optimization", "", false, true)
 OPT(std::string, IIRFormat, "json", "iir-format", "", "format of the output IIR", "", true, false)
 
-OPT(bool, DebugMode, false, "debug", "",
+OPT(bool, Debug, false, "debug", "",
     "Compile to debug backend", "", false, true)
 
 OPT(bool, InlineSF, false, "inline", "",
@@ -56,7 +56,6 @@ OPT(std::string, ReorderStrategy, "greedy", "reorder", "",
     "\n - scut   = Use S-cut graph partitioning\n", "<strategy>", true, false)
 OPT(int, MaxFieldsPerStencil, 40, "max-fields", "",
     "Set the maximum number of fields in any given stencils", "<N>", true, false)
-
 
 
 OPT(bool, SSA, false, "ssa", "",
