@@ -36,7 +36,6 @@ class PassFieldVersioning : public Pass {
 
 public:
   PassFieldVersioning();
-//  PassFieldVersioning(bool isEnabled);
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;

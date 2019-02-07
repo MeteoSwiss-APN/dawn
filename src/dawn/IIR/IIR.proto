@@ -22,19 +22,6 @@ package dawn.proto.iir;
 import "statements.proto";
 
 /* ===-----------------------------------------------------------------------------------------===*/
-//      Statement
-/* ===-----------------------------------------------------------------------------------------===*/
-
-//// @brief Statement-Wrapper for the ASTStmt.
-////
-//// This wrapper is used to have a common base for Stmts and Exprs
-//message Statement {
-//  // Singe ASTStmt in the Statement.
-//  dawn.proto.statements.Stmt ASTStmt = 1;
-//}
-
-
-/* ===-----------------------------------------------------------------------------------------===*/
 //      Accesses
 /* ===-----------------------------------------------------------------------------------------===*/
 // @brief Extent attached to a FieldAccess
@@ -194,12 +181,6 @@ message AllVersionedFields {
 message VariableVersions {
     // The map from the original field ID to the list of all it's versions
     map<int32,  AllVersionedFields> variableVersionMap = 1;
-
-//    // A list of all the Variables that are generated through Fieldversioning
-//    repeated int32 versionIDs = 2;
-
-//    // Map from Versioned ID to the original
-//    map<int32, int32> versionIDToOriginalID = 3;
 }
 
 
@@ -222,14 +203,6 @@ message GlobalValueAndType {
     // get assigned 0
     bool valueIsSet = 3;
 }
-
-//// @brief Statement-Wrapper for the ASTStmt including their StackTrace
-////
-//// This wrapper is used to have a common base for Stmts and Exprs
-//message StencilDescStatement {
-//    dawn.proto.statements.Stmt stmt = 1;
-//    repeated dawn.proto.statements.StencilCall stacktrace = 2;
-//}
 
 // @brief all the MetaInformation that needs to be stored in addition the the tree of computational
 // patterns to be able to fully represent the usercode

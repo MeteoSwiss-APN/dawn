@@ -24,7 +24,7 @@ using namespace dawn;
 namespace {
 #define IIR_EARLY_EXIT(value)                                                                      \
   if(!value)                                                                                       \
-    return value;
+    return false;
 
 #define IIR_EXPECT_IMPL(iir1, iir2, VALUE)                                                         \
   do {                                                                                             \
