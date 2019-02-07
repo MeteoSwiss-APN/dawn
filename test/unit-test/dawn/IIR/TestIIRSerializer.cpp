@@ -15,7 +15,7 @@
 #include "dawn/Compiler/DiagnosticsEngine.h"
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
-#include "dawn/IIR/IIRSerializer.h"
+#include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include <gtest/gtest.h>
 
