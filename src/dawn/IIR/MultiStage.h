@@ -90,6 +90,8 @@ public:
   int getID() const { return id_; }
   /// @}
 
+  void setID(int id) { id_ = id; }
+
   /// @brief clear the derived info
   virtual void clearDerivedInfo() override;
 

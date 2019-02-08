@@ -15,9 +15,9 @@
 #ifndef DAWN_SUPPORT_INDEXGENERATOR_H
 #define DAWN_SUPPORT_INDEXGENERATOR_H
 
-#include <memory>
-#include <limits>
 #include "dawn/Support/Assert.h"
+#include <limits>
+#include <memory>
 
 namespace dawn {
 

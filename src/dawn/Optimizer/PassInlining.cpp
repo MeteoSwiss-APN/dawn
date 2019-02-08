@@ -11,7 +11,6 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-
 #include "dawn/Optimizer/PassInlining.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StatementAccessesPair.h"
@@ -21,6 +20,7 @@
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTUtil.h"
 #include "dawn/SIR/ASTVisitor.h"
+#include "dawn/Support/Logging.h"
 #include "dawn/Support/STLExtras.h"
 #include <iostream>
 #include <stack>
@@ -507,10 +507,12 @@ PassInlining::PassInlining(bool activate, InlineStrategyKind strategy)
     : Pass("PassInlining", true), activate_(activate), strategy_(strategy) {}
 
 bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  DetectInlineCandiates inliner(strategy_, stencilInstantiation);
+
+    DetectInlineCandiates inliner(strategy_, stencilInstantiation);
 
   if(!activate_)
     return true;
+
 
   // Iterate all statements (top -> bottom)
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {

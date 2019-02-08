@@ -13,9 +13,9 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Format.h"

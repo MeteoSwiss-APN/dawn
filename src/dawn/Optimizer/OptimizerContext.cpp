@@ -314,7 +314,7 @@ public:
       globalName = StencilInstantiation::makeLocalVariablename(stmt->getName(), AccessID);
 
     instantiation_->setAccessIDNamePair(AccessID, globalName);
-    instantiation_->getMetaData().StmtToAccessIDMap_.emplace(stmt, AccessID);
+    instantiation_->getMetaData().StmtIDToAccessIDMap_.emplace(stmt->getID(), AccessID);
 
     // Add the mapping to the local scope
     scope_.top()->LocalVarNameToAccessIDMap.emplace(stmt->getName(), AccessID);
@@ -636,6 +636,18 @@ bool OptimizerContext::fillIIRFromSIR(
     MS->update(NodeUpdateType::levelAndTreeAbove);
   }
   DAWN_LOG(INFO) << "Done initializing StencilInstantiation";
+
+  // Iterate all statements (top -> bottom)
+  for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantation->getIIR()))) {
+    iir::Stage& stage = *stagePtr;
+    for(const auto& doMethod : stage.getChildren()) {
+      doMethod->update(iir::NodeUpdateType::level);
+    }
+    stage.update(iir::NodeUpdateType::level);
+  }
+  for(const auto& MSPtr : iterateIIROver<iir::Stage>(*(stencilInstantation->getIIR()))) {
+    MSPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
+  }
 
   return true;
 }

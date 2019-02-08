@@ -18,10 +18,9 @@ include(DawnProtobufGenerate)
 dawn_protobuf_generate(
   OUT_FILES sir_proto_cpp_files
   OUT_INCLUDE_DIRS sir_proto_include_dirs
-  PROTOS ${CMAKE_CURRENT_SOURCE_DIR}/SIR.proto
+  PROTOS ${CMAKE_CURRENT_SOURCE_DIR}/SIR.proto ${CMAKE_CURRENT_SOURCE_DIR}/statements.proto
   LANGUAGE cpp
 )
-include_directories(SYSTEM ${sir_proto_include_dirs})
 
 yoda_add_library(
   NAME DawnSIR
@@ -41,12 +40,14 @@ yoda_add_library(
           SIR.cpp
           SIR.h
           SIR.proto
-          SIRSerializer.h
-          SIRSerializer.cpp
           Statement.h
           ${sir_proto_cpp_files}
   OBJECT
 )
+# only include proto since protobuf uses relative path "statements.proto" -> export to dependent
+target_include_directories(DawnSIRObjects PUBLIC ${sir_proto_include_dirs})
+
+add_custom_target(SIR_Proto_Generated ALL DEPENDS ${sir_proto_cpp_files})
 
 # Genreate python proto files
 dawn_protobuf_generate(
