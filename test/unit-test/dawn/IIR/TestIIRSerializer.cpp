@@ -146,7 +146,6 @@ bool compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformati
   }
   IIR_EARLY_EXIT(
       (lhs.fieldIDToInitializedDimensionsMap_ == rhs.fieldIDToInitializedDimensionsMap_));
-  //  IIR_EARLY_EXIT((lhs.globalVariableMap_ == rhs.globalVariableMap_)););
   IIR_EARLY_EXIT((lhs.stencilLocation_ == rhs.stencilLocation_));
   IIR_EARLY_EXIT((lhs.stencilName_ == rhs.stencilName_));
   IIR_EARLY_EXIT((lhs.fileName_ == rhs.fileName_));
