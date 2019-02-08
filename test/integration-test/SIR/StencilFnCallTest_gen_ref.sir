@@ -1,5 +1,5 @@
 {
- "filename": "/home/thfabian/Desktop/gtclang/test/integration-test/SIR/StencilFnCallTest.cpp",
+ "filename": "StencilFnCallTest.cpp",
  "stencils": [
   {
    "name": "Test",
@@ -48,7 +48,8 @@
                     "loc": {
                      "Line": 36,
                      "Column": 9
-                    }
+                    },
+                    "ID": 9
                    }
                   },
                   "op": "=",
@@ -78,33 +79,38 @@
                        "loc": {
                         "Line": 36,
                         "Column": 16
-                       }
+                       },
+                       "ID": 8
                       }
                      }
                     ],
                     "loc": {
                      "Line": 36,
                      "Column": 13
-                    }
+                    },
+                    "ID": 7
                    }
                   },
                   "loc": {
                    "Line": 36,
                    "Column": 9
-                  }
+                  },
+                  "ID": 10
                  }
                 },
                 "loc": {
                  "Line": 36,
                  "Column": 9
-                }
+                },
+                "ID": 11
                }
               }
              ],
              "loc": {
               "Line": 35,
               "Column": 5
-             }
+             },
+             "ID": 6
             }
            }
           },
@@ -119,14 +125,16 @@
          "loc": {
           "Line": 35,
           "Column": 5
-         }
+         },
+         "ID": 12
         }
        }
       ],
       "loc": {
        "Line": -1,
        "Column": -1
-      }
+      },
+      "ID": 5
      }
     }
    },
@@ -196,20 +204,23 @@
             "loc": {
              "Line": 27,
              "Column": 12
-            }
+            },
+            "ID": 2
            }
           },
           "loc": {
            "Line": 27,
            "Column": 5
-          }
+          },
+          "ID": 3
          }
         }
        ],
        "loc": {
         "Line": 26,
         "Column": 16
-       }
+       },
+       "ID": 1
       }
      }
     }

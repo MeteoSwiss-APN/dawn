@@ -1,5 +1,5 @@
 {
- "filename": "/home/tobias/Documents/Work/gtclang/test/integration-test/SIR/AccessTest.cpp",
+ "filename": "AccessTest.cpp",
  "stencils": [
   {
    "name": "Test",
@@ -47,8 +47,9 @@
                     "negate_offset": false,
                     "loc": {
                      "Line": 29,
-                     "Column": 9
-                    }
+                     "Column": 7
+                    },
+                    "ID": 15
                    }
                   },
                   "op": "=",
@@ -83,8 +84,9 @@
                               "negate_offset": false,
                               "loc": {
                                "Line": 29,
-                               "Column": 13
-                              }
+                               "Column": 11
+                              },
+                              "ID": 9
                              }
                             },
                             "op": "+",
@@ -109,14 +111,16 @@
                               "negate_offset": false,
                               "loc": {
                                "Line": 29,
-                               "Column": 24
-                              }
+                               "Column": 22
+                              },
+                              "ID": 8
                              }
                             },
                             "loc": {
                              "Line": 29,
-                             "Column": 13
-                            }
+                             "Column": 11
+                            },
+                            "ID": 10
                            }
                           },
                           "op": "+",
@@ -141,14 +145,16 @@
                             "negate_offset": false,
                             "loc": {
                              "Line": 29,
-                             "Column": 35
-                            }
+                             "Column": 33
+                            },
+                            "ID": 7
                            }
                           },
                           "loc": {
                            "Line": 29,
-                           "Column": 13
-                          }
+                           "Column": 11
+                          },
+                          "ID": 11
                          }
                         },
                         "op": "+",
@@ -173,14 +179,16 @@
                           "negate_offset": false,
                           "loc": {
                            "Line": 29,
-                           "Column": 49
-                          }
+                           "Column": 47
+                          },
+                          "ID": 6
                          }
                         },
                         "loc": {
                          "Line": 29,
-                         "Column": 13
-                        }
+                         "Column": 11
+                        },
+                        "ID": 12
                        }
                       },
                       "op": "+",
@@ -205,14 +213,16 @@
                         "negate_offset": false,
                         "loc": {
                          "Line": 29,
-                         "Column": 63
-                        }
+                         "Column": 61
+                        },
+                        "ID": 5
                        }
                       },
                       "loc": {
                        "Line": 29,
-                       "Column": 13
-                      }
+                       "Column": 11
+                      },
+                      "ID": 13
                      }
                     },
                     "op": "+",
@@ -237,33 +247,38 @@
                       "negate_offset": false,
                       "loc": {
                        "Line": 29,
-                       "Column": 74
-                      }
+                       "Column": 72
+                      },
+                      "ID": 4
                      }
                     },
                     "loc": {
                      "Line": 29,
-                     "Column": 13
-                    }
+                     "Column": 11
+                    },
+                    "ID": 14
                    }
                   },
                   "loc": {
                    "Line": 29,
-                   "Column": 9
-                  }
+                   "Column": 7
+                  },
+                  "ID": 16
                  }
                 },
                 "loc": {
                  "Line": 29,
-                 "Column": 9
-                }
+                 "Column": 7
+                },
+                "ID": 17
                }
               }
              ],
              "loc": {
               "Line": 28,
               "Column": 5
-             }
+             },
+             "ID": 3
             }
            }
           },
@@ -278,14 +293,16 @@
          "loc": {
           "Line": 28,
           "Column": 5
-         }
+         },
+         "ID": 18
         }
        }
       ],
       "loc": {
        "Line": -1,
        "Column": -1
-      }
+      },
+      "ID": 2
      }
     }
    },

@@ -13,11 +13,21 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-#include "test/integration-test/CodeGen/Options.hpp"
 
-namespace dawn {
-Options& Options::getInstance() {
-  static Options instance;
-  return instance;
-}
-}
+// RUN: %gtclang% %file% -fwrite-iir -fno-codegen -o %filename%_gen.cpp
+// EXPECTED_FILE: OUTPUT:%filename%.iir REFERENCE:%filename%_ref.iir IGNORE:filename
+
+#include "gridtools/clang_dsl.hpp"
+
+using namespace gridtools::clang;
+
+stencil Test {
+  storage a, b;
+
+  Do {
+    vertical_region(k_start, k_end) b =
+        a[i + 1] + a[i - 1] + a[j + 1] + a[j - 1] + a[k - 1] + a[j + 1, k + 1];
+  }
+};
+
+int main() {}

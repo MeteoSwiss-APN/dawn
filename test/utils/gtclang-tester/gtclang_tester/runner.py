@@ -18,7 +18,7 @@
 
 from collections import defaultdict
 from difflib import unified_diff
-from json import load, dumps
+from json import load, dumps, loads
 from os import rename, remove
 from signal import SIGSEGV
 from time import time
@@ -127,6 +127,9 @@ class TestRunner(object):
                         try:
                             output_json = load(open(outputfile, 'r'))
                             reference_json = load(open(referencefile, 'r'))
+                            # Json does not enforce sorting, so we sort the files by sorting here
+                            output_json = loads(dumps(output_json, sort_keys=True))
+                            reference_json = loads(dumps(reference_json, sort_keys=True))
                         except FileNotFoundError as e:
                             self.add_failure(file, "EXECUTION", "%s" % e)
                             break

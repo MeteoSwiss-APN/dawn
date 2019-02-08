@@ -12,6 +12,7 @@
 # Build directories
 build*/
 install*/
+test/integration-test/CodeGen/generated*/
 
 # Meta project information
 bundle/yoda/*

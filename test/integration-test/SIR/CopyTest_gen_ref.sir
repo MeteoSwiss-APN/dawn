@@ -1,5 +1,5 @@
 {
- "filename": "/home/tobias/Documents/Work/gtclang/test/integration-test/SIR/CopyTest.cpp",
+ "filename": "CopyTest.cpp",
  "stencils": [
   {
    "name": "Test",
@@ -48,7 +48,8 @@
                     "loc": {
                      "Line": 29,
                      "Column": 7
-                    }
+                    },
+                    "ID": 5
                    }
                   },
                   "op": "=",
@@ -74,26 +75,30 @@
                     "loc": {
                      "Line": 29,
                      "Column": 17
-                    }
+                    },
+                    "ID": 4
                    }
                   },
                   "loc": {
                    "Line": 29,
                    "Column": 7
-                  }
+                  },
+                  "ID": 6
                  }
                 },
                 "loc": {
                  "Line": 29,
                  "Column": 7
-                }
+                },
+                "ID": 7
                }
               }
              ],
              "loc": {
               "Line": 28,
               "Column": 5
-             }
+             },
+             "ID": 3
             }
            }
           },
@@ -108,14 +113,16 @@
          "loc": {
           "Line": 28,
           "Column": 5
-         }
+         },
+         "ID": 8
         }
        }
       ],
       "loc": {
        "Line": -1,
        "Column": -1
-      }
+      },
+      "ID": 2
      }
     }
    },

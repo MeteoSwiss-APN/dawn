@@ -163,6 +163,7 @@ set(directories
   ${cwd}/PassSetNonTempCaches
   ${cwd}/PassSetBoundaryCondition
   ${cwd}/SIR
+  ${cwd}/IIRSerializer
 )
 
 list(APPEND compiler_flags -std=c++11 -O2)
