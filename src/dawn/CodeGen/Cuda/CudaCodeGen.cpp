@@ -47,8 +47,7 @@ void CudaCodeGen::generateAllCudaKernels(
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
     DAWN_ASSERT(cachePropertyMap_.count(ms->getID()));
 
-    MSCodeGen msCodeGen(ssSW, context_, ms, stencilInstantiation,
-                        cachePropertyMap_.at(ms->getID()));
+    MSCodeGen msCodeGen(ssSW, ms, stencilInstantiation, cachePropertyMap_.at(ms->getID()));
     msCodeGen.generateCudaKernelCode();
   }
 }
@@ -230,9 +229,10 @@ void CudaCodeGen::generateStencilClasses(
   }
 }
 
-void CudaCodeGen::generateStencilClassMembers(Structure& stencilClass, const iir::Stencil& stencil, const sir::GlobalVariableMap& globalsMap,
-    IndexRange<const std::map<int, iir::Stencil::FieldInfo> > &nonTempFields,
-    IndexRange<const std::map<int, iir::Stencil::FieldInfo> > &tempFields,
+void CudaCodeGen::generateStencilClassMembers(
+    Structure& stencilClass, const iir::Stencil& stencil, const sir::GlobalVariableMap& globalsMap,
+    IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
+    IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields,
     std::shared_ptr<StencilProperties> stencilProperties) const {
 
   auto& paramNameToType = stencilProperties->paramNameToType_;
@@ -256,9 +256,10 @@ void CudaCodeGen::generateStencilClassMembers(Structure& stencilClass, const iir
   stencilClass.addComment("temporary storage declarations");
   addTmpStorageDeclaration(stencilClass, tempFields);
 }
-void CudaCodeGen::generateStencilClassCtr(Structure& stencilClass, const iir::Stencil& stencil, const sir::GlobalVariableMap& globalsMap,
-    IndexRange<const std::map<int, iir::Stencil::FieldInfo> > &nonTempFields,
-    IndexRange<const std::map<int, iir::Stencil::FieldInfo> > &tempFields,
+void CudaCodeGen::generateStencilClassCtr(
+    Structure& stencilClass, const iir::Stencil& stencil, const sir::GlobalVariableMap& globalsMap,
+    IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
+    IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields,
     std::shared_ptr<StencilProperties> stencilProperties) const {
 
   auto stencilClassCtr = stencilClass.addConstructor();

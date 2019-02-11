@@ -18,9 +18,7 @@
 
 namespace dawn {
 
-PassSetBlockSize::PassSetBlockSize() : Pass("PassSetBlockSize") {
-  dependencies_.push_back("PassSetStageName");
-}
+PassSetBlockSize::PassSetBlockSize() : Pass("PassSetBlockSize") {}
 
 bool PassSetBlockSize::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();

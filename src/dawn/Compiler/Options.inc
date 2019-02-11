@@ -40,14 +40,12 @@ OPT(std::string, Backend, "gridtools", "backend", "",
     "\n - c++-naive   = naive C++ code\n"
     "\n - c++-opt     = optimized C++ code"
     "\n - cuda        = optimized cuda", "<backend>", true, false)
-OPT(std::string, arch, "", "arch", "",
-    "Set the computing architecture. Possible values for cuda backend are:"
-    "\n - K80\n"
-    "\n - P100\n", "<arch>", true, false)
+OPT(int, nsms, 0, "nsms", "",
+    "Number of (CUDA) SMs", "<nsms>", true, false)
 OPT(std::string, domain_size, "", "domain-size", "",
     "domain size for compiler optimization", "", true, false)
 OPT(std::string, block_size, "", "block-size", "",
-        "block size for compiler optimization", "", true, false)
+        "block size for tiled computations", "", true, false)
 OPT(bool, InlineSF, false, "inline", "",
     "Inline stencil functions","", false, false)
 OPT(std::string, ReorderStrategy, "greedy", "reorder", "", 

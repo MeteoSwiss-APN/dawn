@@ -14,23 +14,21 @@
 
 #include "dawn/CodeGen/Cuda/MSCodeGen.hpp"
 #include "dawn/CodeGen/CXXUtil.h"
+#include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/Cuda/ASTStencilBody.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/IIR/IIRNodeIterator.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/IndexRange.h"
-#include "dawn/CodeGen/CodeGen.h"
 #include <functional>
 #include <numeric>
 
 namespace dawn {
 namespace codegen {
 namespace cuda {
-MSCodeGen::MSCodeGen(std::stringstream& ss, OptimizerContext* context,
-                     const std::unique_ptr<iir::MultiStage>& ms,
+MSCodeGen::MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
                      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                      const CacheProperties& cacheProperties)
-    : ss_(ss), context_(context), ms_(ms), stencilInstantiation_(stencilInstantiation),
+    : ss_(ss), ms_(ms), stencilInstantiation_(stencilInstantiation),
       cacheProperties_(cacheProperties),
       blockSize_(stencilInstantiation_->getIIR()->getBlockSize()),
       solveKLoopInParallel_(CodeGeneratorHelper::solveKLoopInParallel(ms_)) {
@@ -724,24 +722,16 @@ void MSCodeGen::generateCudaKernelCode() {
       blockSize_[0] * (blockSize_[1] + maxExtents[1].Plus - maxExtents[1].Minus +
                        (maxExtents[0].Minus < 0 ? 1 : 0) + (maxExtents[0].Plus > 0 ? 1 : 0));
 
-  std::string arch = context_->getOptions().arch;
-  std::string domain_size = context_->getOptions().domain_size;
-  // if we have information about the architecture and the domain sizes we can further specify the
-  // minimum number of blocks per SM of the GPU
-  if((arch == "P100" || arch == "K40" || arch == "K80") && !domain_size.empty()) {
+  int nSM = stencilInstantiation_->getOptimizerContext()->getOptions().nsms;
+
+  std::string domain_size = stencilInstantiation_->getOptimizerContext()->getOptions().domain_size;
+  if(nSM > 0 && !domain_size.empty()) {
     std::istringstream idomain_size(domain_size);
     std::string arg;
     getline(idomain_size, arg, ',');
     int isize = std::stoi(arg);
     getline(idomain_size, arg, ',');
     int jsize = std::stoi(arg);
-
-    int nSM = -1;
-    if(arch == "P100") {
-      nSM = 56;
-    } else if(arch == "K40" || arch == "K80") {
-      nSM = 15;
-    }
 
     int minBlocksPerSM = isize * jsize / (blockSize_[0] * blockSize_[1]);
     if(solveKLoopInParallel_)

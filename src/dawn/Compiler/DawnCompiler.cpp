@@ -164,9 +164,9 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   optimizer->checkAndPushBack<PassSetCaches>();
   optimizer->checkAndPushBack<PassComputeStageExtents>();
   optimizer->checkAndPushBack<PassSetBoundaryCondition>();
+  optimizer->checkAndPushBack<PassSetBlockSize>();
   optimizer->checkAndPushBack<PassDataLocalityMetric>();
   optimizer->checkAndPushBack<PassSetSyncStage>();
-  optimizer->checkAndPushBack<PassSetBlockSize>();
 
   DAWN_LOG(INFO) << "All the passes ran with the current command line arugments:";
   for(const auto& a : passManager.getPasses()) {
