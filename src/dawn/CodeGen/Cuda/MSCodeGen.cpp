@@ -737,7 +737,7 @@ void MSCodeGen::generateCudaKernelCode() {
     int jsize = std::stoi(arg);
 
     int nSM = -1;
-    if(context_->getOptions().arch == "P100") {
+    if(arch == "P100") {
       nSM = 56;
     } else if(arch == "K40" || arch == "K80") {
       nSM = 15;
