@@ -50,7 +50,7 @@ include(GTClangCloneRepository)
 
 set(GTCLANG_YODA_GIT_URL "https:///github.com/MeteoSwiss-APN/yoda.git" 
     CACHE PATH "URL of the yoda git repository to clone")
-set(GTCLANG_YODA_GIT_BRANCH "master" CACHE STRING "Branch of the yoda git repository to clone")
+set(GTCLANG_YODA_GIT_BRANCH "1.0.1" CACHE STRING "Branch of the yoda git repository to clone")
 
 gtclang_clone_repository(NAME yoda URL ${GTCLANG_YODA_GIT_URL} BRANCH ${GTCLANG_YODA_GIT_BRANCH} SOURCE_DIR GTCLANG_YODA_SOURCE_DIR )
 
@@ -91,7 +91,7 @@ yoda_find_package(
   ADDITIONAL
     DOWNLOAD_DIR ${YODA_DOWNLOAD_DIR}
     GIT_REPOSITORY "git@github.com:MeteoSwiss-APN/dawn.git"
-    GIT_TAG "master 
+    GIT_TAG "master" 
     YODA_ROOT "${GTCLANG_YODA_SOURCE_DIR}"
     CMAKE_ARGS ${dawn_cmake_args}
 )
@@ -152,4 +152,3 @@ install(
   FILES ${conf_bundle_filename}
   DESTINATION bundle_conf
 )
-
