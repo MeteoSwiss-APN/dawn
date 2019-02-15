@@ -64,3 +64,12 @@ yoda_add_library(
           ../Dawn.h
   OBJECT
 )
+
+yoda_combine_libraries(
+  NAME DawnSupport
+  OBJECTS DawnSupportObjects
+  INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
+  VERSION ${DAWN_VERSION}
+  EXPORT_GROUP DawnTargets
+)
+

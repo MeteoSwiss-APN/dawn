@@ -32,7 +32,7 @@ yoda_combine_libraries(
           DawnCodeGenObjects
   INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
   VERSION ${DAWN_VERSION}
-  DEPENDS ${DAWN_EXTERNAL_LIBRARIES} DawnSIRStatic DawnSerializerStatic DawnIIRStatic
+  DEPENDS ${DAWN_EXTERNAL_LIBRARIES} DawnSerializerStatic
 )
 
 target_include_directories(DawnShared SYSTEM INTERFACE ${Boost_INCLUDE_DIRS})
