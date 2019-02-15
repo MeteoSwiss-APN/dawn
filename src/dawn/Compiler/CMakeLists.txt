@@ -27,4 +27,5 @@ yoda_add_library(
 )
 
 #to propagate the dependencies from IIR to here (where the serializer is used) needs this linking
-target_link_libraries(DawnCompilerObjects DawnIIRObjects)
+#target_link_libraries(DawnCompilerObjects $<TARGET_OBJECTS:DawnIIRObjects>)
+target_include_directories(DawnCompilerObjects PUBLIC $<TARGET_PROPERTY:DawnIIRStatic,INCLUDE_DIRECTORIES>)

@@ -12,6 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+set(sir_proto_include_dirs "")
 add_subdirectory(Support)
 add_subdirectory(SIR)
 add_subdirectory(Compiler)
@@ -26,15 +27,12 @@ include(yodaCombineLibraries)
 yoda_combine_libraries(
   NAME Dawn
   OBJECTS DawnSupportObjects
-          DawnSIRObjects
           DawnCompilerObjects
-          DawnIIRObjects
           DawnOptimizerObjects
           DawnCodeGenObjects
-	  DawnSerializerObjects
   INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
   VERSION ${DAWN_VERSION}
-  DEPENDS ${DAWN_EXTERNAL_LIBRARIES}
+  DEPENDS ${DAWN_EXTERNAL_LIBRARIES} DawnSIRStatic DawnSerializerStatic DawnIIRStatic
 )
 
 target_include_directories(DawnShared SYSTEM INTERFACE ${Boost_INCLUDE_DIRS})

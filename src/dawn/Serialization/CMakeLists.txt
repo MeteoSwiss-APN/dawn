@@ -23,5 +23,22 @@ yoda_add_library(
   OBJECT
 )
 
-add_dependencies(DawnSerializerObjects IIR_Proto_Generated)
-target_include_directories(DawnSerializerObjects PUBLIC $<TARGET_PROPERTY:DawnSIRObjects,INCLUDE_DIRECTORIES>)
+yoda_combine_libraries(
+  NAME DawnSerializer
+  OBJECTS DawnSerializerObjects
+  DEPENDS DawnSIRStatic
+  INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
+  VERSION ${DAWN_VERSION}
+  EXPORT_GROUP DawnTargets
+)
+
+add_dependencies(DawnSerializerStatic IIR_Proto_Generated)
+message("OOO ${sir_proto_include_dirs}")
+message("KKKKKK ${sir_proto_include_dirs}")
+target_include_directories(DawnSerializerObjects PUBLIC $<TARGET_PROPERTY:DawnIIRStatic,INCLUDE_DIRECTORIES>)
+target_include_directories(DawnSerializerStatic PUBLIC $<TARGET_PROPERTY:DawnIIRStatic,INCLUDE_DIRECTORIES>)
+
+
+#target_include_directories(DawnSerializerObjects PUBLIC ${sir_proto_include_dirs})
+install(EXPORT DawnTargets NAMESPACE Dawn:: DESTINATION ${DAWN_INSTALL_CMAKE_DIR})
+
