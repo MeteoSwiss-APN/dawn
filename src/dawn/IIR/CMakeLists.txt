@@ -78,13 +78,11 @@ yoda_add_library(
   OBJECT
 )
 
+target_include_directories(DawnIIRObjects PUBLIC $<TARGET_PROPERTY:DawnSIRStatic,INCLUDE_DIRECTORIES>)
+target_include_directories(DawnIIRObjects SYSTEM PUBLIC ${Boost_INCLUDE_DIR} ${iir_proto_include_dirs})
+
 add_custom_target(IIR_Proto_Generated ALL DEPENDS ${iir_proto_cpp_files})
 add_dependencies(IIR_Proto_Generated SIR_Proto_Generated)
-
-target_include_directories(DawnIIRObjects SYSTEM PUBLIC ${Boost_INCLUDE_DIR} ${iir_proto_include_dirs})
-# we need to pass the include directories from SIR to here since protobuf is just including the
-# header without any path
-target_include_directories(DawnIIRObjects PUBLIC $<TARGET_PROPERTY:DawnSIRStatic,INCLUDE_DIRECTORIES>)
 
 yoda_combine_libraries(
   NAME DawnIIR
@@ -94,6 +92,4 @@ yoda_combine_libraries(
   VERSION ${DAWN_VERSION}
   EXPORT_GROUP DawnTargets
 )
-
-target_include_directories(DawnIIRStatic PUBLIC $<TARGET_PROPERTY:DawnSIRStatic,INCLUDE_DIRECTORIES>)
 

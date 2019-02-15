@@ -33,8 +33,6 @@ yoda_combine_libraries(
 )
 
 add_dependencies(DawnSerializerObjects IIR_Proto_Generated)
-message("OOO ${sir_proto_include_dirs}")
-message("KKKKKK ${sir_proto_include_dirs}")
 target_include_directories(DawnSerializerObjects PUBLIC $<TARGET_PROPERTY:DawnIIRStatic,INCLUDE_DIRECTORIES>)
 
 

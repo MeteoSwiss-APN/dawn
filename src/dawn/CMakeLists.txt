@@ -12,7 +12,6 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-set(sir_proto_include_dirs "")
 add_subdirectory(Support)
 add_subdirectory(SIR)
 add_subdirectory(Compiler)
