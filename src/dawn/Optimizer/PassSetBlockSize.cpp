@@ -37,8 +37,10 @@ bool PassSetBlockSize::run(const std::shared_ptr<iir::StencilInstantiation>& ste
     getline(idomain_size, arg, ',');
     unsigned int kBlockSize = std::stoi(arg);
 
+    assert(arg.empty());
+
     blockSize = {iBlockSize, jBlockSize, kBlockSize};
-  } else if(context->getOptions().Backend == "cuda") {
+  } else {
     bool verticalPattern = true;
     for(const auto& stage : iterateIIROver<iir::Stage>(*IIR)) {
       if(!stage->getExtents().isHorizontalPointwise()) {
@@ -56,13 +58,26 @@ bool PassSetBlockSize::run(const std::shared_ptr<iir::StencilInstantiation>& ste
       }
     }
 
+    // recent generation of GPU architectures show good memory bandwidth with <32,1> block sizes,
+    // but if there are horizontal data dependencies, the redundant accesses across different blocks
+    // limit the performance
     if(verticalPattern) {
-      IIR->setBlockSize({32, 1, 4});
+      blockSize = {32, 1, 4};
     } else {
-      IIR->setBlockSize({32, 4, 4});
+      blockSize = {32, 4, 4};
     }
   }
-  // Other backends not supported yet, and gridtools currently ignores the value for block size
+
+  IIR->setBlockSize(blockSize);
+
+  if(context->getOptions().ReportPassSetBlockSize) {
+    std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName() << ": blockSize"
+              << "[" << blockSize[0] << "," << blockSize[1] << "," << blockSize[2] << "]"
+              << std::endl;
+  }
+
+  // Notice that gridtools does not supported yet setting different block sizes, therefore the block
+  // size of the IIR is currently ignored by GT
 
   return true;
 }

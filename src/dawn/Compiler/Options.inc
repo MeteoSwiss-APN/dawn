@@ -106,6 +106,8 @@ OPT(bool, ReportPassStageMerger, false, "report-pass-stage-merger", "",
     "Dump the stencil-instantiation before and after the stage merger pass to JSON", "", false, true)
 OPT(bool, ReportPassSetCaches, false, "report-pass-set-caches", "", 
     "Report which fields are cached for each multi-stage", "", false, true)
+OPT(bool, ReportPassSetBlockSize, false, "report-pass-set-block-size", "",
+    "Report on the pass that sets the block size", "", false, true)
 OPT(bool, UseNonTempCaches, false, "cache-non-temp-fields", "",
     "Allows for caching of non-temporary fields", "", false, true)
 OPT(bool, ReportPassSetNonTempCaches, false, "report-cache-non-temp-fields", "",
