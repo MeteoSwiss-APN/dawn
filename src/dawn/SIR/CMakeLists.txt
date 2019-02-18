@@ -44,8 +44,18 @@ yoda_add_library(
           ${sir_proto_cpp_files}
   OBJECT
 )
+
+yoda_combine_libraries(
+  NAME DawnSIR
+  OBJECTS DawnSIRObjects
+  INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
+  DEPENDS DawnSupportStatic protobuf::libprotobuf
+  VERSION ${DAWN_VERSION}
+  EXPORT_GROUP DawnTargets
+)
+
 # only include proto since protobuf uses relative path "statements.proto" -> export to dependent
-target_include_directories(DawnSIRObjects PUBLIC ${sir_proto_include_dirs})
+target_include_directories(DawnSIRStatic PUBLIC $<BUILD_INTERFACE:${sir_proto_include_dirs}> $<INSTALL_INTERFACE:include/>)
 
 add_custom_target(SIR_Proto_Generated ALL DEPENDS ${sir_proto_cpp_files})
 
