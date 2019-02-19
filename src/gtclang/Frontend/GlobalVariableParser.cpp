@@ -18,6 +18,7 @@
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Unreachable.h"
 #include "gtclang/Frontend/GTClangContext.h"
+#include "gtclang/Support/ASTUtils.h"
 #include "gtclang/Support/FileUtil.h"
 #include "gtclang/Support/Logger.h"
 #include "clang/AST/AST.h"
@@ -39,28 +40,20 @@ class StringInitArgResolver {
 public:
   void resolve(clang::Expr* expr) {
     using namespace clang;
+    // ignore implicit nodes
+    expr = skipAllImplicitNodes(expr);
 
-    if(CXXBindTemporaryExpr* e = dyn_cast<CXXBindTemporaryExpr>(expr))
-      resolve(e);
-    else if(CXXDefaultArgExpr* e = dyn_cast<CXXDefaultArgExpr>(expr))
+    if(CXXDefaultArgExpr* e = dyn_cast<CXXDefaultArgExpr>(expr))
       resolve(e);
     else if(CXXConstructExpr* e = dyn_cast<CXXConstructExpr>(expr))
       resolve(e);
-    else if(ExprWithCleanups* e = dyn_cast<ExprWithCleanups>(expr))
-      resolve(e);
-    else if(ImplicitCastExpr* e = dyn_cast<ImplicitCastExpr>(expr))
-      resolve(e);
     else if(StringLiteral* e = dyn_cast<StringLiteral>(expr))
-      resolve(e);
-    else if(MaterializeTemporaryExpr* e = dyn_cast<MaterializeTemporaryExpr>(expr))
       resolve(e);
     else {
       DAWN_ASSERT_MSG(0, "unresolved expression in StringInitArgResolver");
       llvm_unreachable("invalid expr");
     }
   }
-
-  void resolve(clang::CXXBindTemporaryExpr* expr) { resolve(expr->getSubExpr()); }
 
   void resolve(clang::CXXDefaultArgExpr* expr) { resolve(expr->getExpr()); }
 
@@ -69,13 +62,7 @@ public:
       resolve(expr->getArg(i));
   }
 
-  void resolve(clang::ExprWithCleanups* expr) { resolve(expr->getSubExpr()); }
-
-  void resolve(clang::ImplicitCastExpr* expr) { resolve(expr->getSubExpr()); }
-
   void resolve(clang::StringLiteral* expr) { str_ = expr->getString().str(); }
-
-  void resolve(clang::MaterializeTemporaryExpr* expr) { resolve(expr->GetTemporaryExpr()); }
 
   /// @brief Get the parsed string (may be empty)
   std::string getStr() { return str_; }
@@ -153,16 +140,13 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
 
     // Check if we have a default value `value` i.e `T var = value`
     if(arg->hasInClassInitializer()) {
-      Expr* init = arg->getInClassInitializer();
+      Expr* init = skipAllImplicitNodes(arg->getInClassInitializer());
 
       auto reportError = [&]() {
         context_->getDiagnostics().report(init->getLocStart(),
                                           Diagnostics::err_globals_invalid_default_value)
             << init->getType().getAsString() << name;
       };
-
-      if(ImplicitCastExpr* castExpr = dyn_cast<ImplicitCastExpr>(init))
-        init = castExpr->getSubExpr();
 
       if(IntegerLiteral* il = dyn_cast<IntegerLiteral>(init)) {
         std::string valueStr = il->getValue().toString(10, true);

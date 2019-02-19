@@ -68,7 +68,7 @@ std::string ClangFormat::format(const std::string& code) {
       clang::format::reformat(style, codeBuffer->getBuffer(), ranges, "X.cpp", &incompleteFormat);
 
   std::string changedCode =
-      clang::tooling::applyAllReplacements(codeBuffer->getBuffer(), replacements);
+      clang::tooling::applyAllReplacements(codeBuffer->getBuffer(), replacements).get();
 
   DAWN_LOG(INFO) << "Done reformatting stencil code: "
                  << (changedCode.empty() ? "FAIL" : "Success");

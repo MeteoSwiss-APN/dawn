@@ -109,9 +109,7 @@ private:
   std::shared_ptr<dawn::Expr> resolve(clang::ConditionalOperator* expr);
   std::shared_ptr<dawn::Expr> resolve(clang::DeclRefExpr* expr);
   std::shared_ptr<dawn::Expr> resolve(clang::FloatingLiteral* expr);
-  std::shared_ptr<dawn::Expr> resolve(clang::ImplicitCastExpr* expr);
   std::shared_ptr<dawn::Expr> resolve(clang::IntegerLiteral* expr);
-  std::shared_ptr<dawn::Expr> resolve(clang::MaterializeTemporaryExpr* expr);
   std::shared_ptr<dawn::Expr> resolve(clang::MemberExpr* expr);
   std::shared_ptr<dawn::Expr> resolve(clang::ParenExpr* expr);
   std::shared_ptr<dawn::Expr> resolve(clang::UnaryOperator* expr);

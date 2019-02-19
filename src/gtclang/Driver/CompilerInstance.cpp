@@ -100,7 +100,7 @@ clang::CompilerInstance* createCompilerInstance(llvm::SmallVectorImpl<const char
   ccArgs.push_back(GTCLANG_CLANG_RESSOURCE_INCLUDE_PATH "/../../../../include/c++/v1/");
 #endif
 
-  std::unique_ptr<CompilerInvocation> CI(new CompilerInvocation);
+  std::shared_ptr<CompilerInvocation> CI(new CompilerInvocation);
   CompilerInvocation::CreateFromArgs(*CI, const_cast<const char**>(ccArgs.data()),
                                      const_cast<const char**>(ccArgs.data()) + ccArgs.size(),
                                      diagnostics);
@@ -116,7 +116,7 @@ clang::CompilerInstance* createCompilerInstance(llvm::SmallVectorImpl<const char
   // Create a compiler instance to handle the actual work.
   DAWN_LOG(INFO) << "Creating GTClang compiler instance ...";
   CompilerInstance* GTClang = new CompilerInstance;
-  GTClang->setInvocation(CI.release());
+  GTClang->setInvocation(CI);
 
   // Create the compilers actual diagnostics engine
   GTClang->createDiagnostics();
@@ -125,7 +125,7 @@ clang::CompilerInstance* createCompilerInstance(llvm::SmallVectorImpl<const char
 
   // Check that we are atleast in C++11 mode and correct if necessary
   auto& langOpts = GTClang->getLangOpts();
-  if(!langOpts.CPlusPlus11 && !langOpts.CPlusPlus14 && !langOpts.CPlusPlus1z) {
+  if(!langOpts.CPlusPlus11 && !langOpts.CPlusPlus14 && !langOpts.CPlusPlus17) {
     DAWN_LOG(WARNING) << "C++98 mode detected; switchting to C++11";
     langOpts.CPlusPlus11 = 1;
   }

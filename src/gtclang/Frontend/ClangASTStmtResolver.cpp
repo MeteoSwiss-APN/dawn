@@ -18,6 +18,7 @@
 #include "dawn/SIR/AST.h"
 #include "gtclang/Frontend/ClangASTExprResolver.h"
 #include "gtclang/Frontend/StencilParser.h"
+#include "gtclang/Support/ASTUtils.h"
 #include "clang/AST/AST.h"
 
 namespace gtclang {
@@ -50,6 +51,8 @@ const std::vector<std::shared_ptr<dawn::Stmt>>& ClangASTStmtResolver::getStateme
 
 void ClangASTStmtResolver::resolve(clang::Stmt* stmt) {
   using namespace clang;
+  // skip implicit nodes
+  stmt = skipAllImplicitNodes(stmt);
 
   if(BinaryOperator* s = dyn_cast<BinaryOperator>(stmt))
     resolve(s);
@@ -150,10 +153,7 @@ void ClangASTStmtResolver::resolve(clang::IfStmt* stmt) {
 
   // Parse `cond` in `if(cond)` (Note that we currently don't allow variable declarations (which
   // would ofcourse be valid C++ code) in the condition)
-  Expr* clangCond = stmt->getCond();
-
-  while(ImplicitCastExpr* castExpr = dyn_cast<ImplicitCastExpr>(clangCond))
-    clangCond = castExpr->getSubExpr();
+  Expr* clangCond = skipAllImplicitNodes(stmt->getCond());
 
   if(BinaryOperator* s = dyn_cast<BinaryOperator>(clangCond))
     condStmt = clangASTExprResolver_->resolveExpr(s);

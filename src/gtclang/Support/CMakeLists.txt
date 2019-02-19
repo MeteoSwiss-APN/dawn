@@ -27,6 +27,7 @@ yoda_add_library(
           Logger.h
           StringUtil.cpp
           StringUtil.h
-
+          ASTUtils.cpp
+          ASTUtils.h
   OBJECT
 )

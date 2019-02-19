@@ -24,6 +24,7 @@
 #include "gtclang/Frontend/ClangASTStmtResolver.h"
 #include "gtclang/Frontend/GTClangContext.h"
 #include "gtclang/Frontend/GlobalVariableParser.h"
+#include "gtclang/Support/ASTUtils.h"
 #include "gtclang/Support/FileUtil.h"
 #include "clang/AST/AST.h"
 #include <numeric>
@@ -92,9 +93,7 @@ private:
     } else {
 
       // If it is not an integer literal, it may still be a constant integer expression
-      Expr* arg1 = expr->getArg(1);
-      if(ImplicitCastExpr* castExpr = dyn_cast<ImplicitCastExpr>(arg1))
-        arg1 = castExpr->getSubExpr();
+      Expr* arg1 = skipAllImplicitNodes(expr->getArg(1));
 
       DeclRefExpr* var = dyn_cast<DeclRefExpr>(arg1);
       llvm::APSInt res;
@@ -127,22 +126,16 @@ private:
     }
   }
 
-  void resolve(clang::MaterializeTemporaryExpr* expr) { resolve(expr->GetTemporaryExpr()); }
-
-  void resolve(clang::ImplicitCastExpr* expr) { resolve(expr->getSubExpr()); }
-
   void resolve(clang::Expr* expr) {
     using namespace clang;
+    // ignore implicit nodes
+    expr = skipAllImplicitNodes(expr);
 
     if(CXXOperatorCallExpr* e = dyn_cast<CXXOperatorCallExpr>(expr))
       return resolve(e);
     else if(CXXConstructExpr* e = dyn_cast<CXXConstructExpr>(expr))
       return resolve(e);
     else if(DeclRefExpr* e = dyn_cast<DeclRefExpr>(expr))
-      return resolve(e);
-    else if(ImplicitCastExpr* e = dyn_cast<ImplicitCastExpr>(expr))
-      return resolve(e);
-    else if(MaterializeTemporaryExpr* e = dyn_cast<MaterializeTemporaryExpr>(expr))
       return resolve(e);
     else {
       expr->dumpColor();
@@ -234,8 +227,6 @@ public:
   const std::string& getVerticalIndexName() const { return verticalIndexName_; }
 
 private:
-  void resolve(clang::MaterializeTemporaryExpr* expr) { resolve(expr->GetTemporaryExpr()); }
-
   void resolve(clang::CXXStdInitializerListExpr* expr) { resolve(expr->getSubExpr()); }
 
   void resolve(clang::InitListExpr* expr) {
@@ -259,9 +250,7 @@ private:
     } else {
 
       // If it is not an integer literal, it may still be a constant integer expression
-      Expr* arg1 = expr->getArg(1);
-      if(ImplicitCastExpr* castExpr = dyn_cast<ImplicitCastExpr>(arg1))
-        arg1 = castExpr->getSubExpr();
+      Expr* arg1 = skipAllImplicitNodes(expr->getArg(1));
 
       DeclRefExpr* var = dyn_cast<DeclRefExpr>(arg1);
       llvm::APSInt res;
@@ -279,8 +268,6 @@ private:
   }
 
   void resolve(clang::CXXConstructExpr* expr) { resolve(expr->getArg(0)); }
-
-  void resolve(clang::ImplicitCastExpr* expr) { resolve(expr->getSubExpr()); }
 
   void resolve(clang::DeclRefExpr* expr) {
     std::string typeStr = expr->getType().getAsString();
@@ -319,6 +306,8 @@ private:
 
   void resolve(clang::Expr* expr) {
     using namespace clang;
+    // ignore implicit nodes
+    expr = skipAllImplicitNodes(expr);
 
     if(CXXConstructExpr* e = dyn_cast<CXXConstructExpr>(expr))
       return resolve(e);
@@ -329,10 +318,6 @@ private:
     else if(DeclRefExpr* e = dyn_cast<DeclRefExpr>(expr))
       return resolve(e);
     else if(InitListExpr* e = dyn_cast<InitListExpr>(expr))
-      return resolve(e);
-    else if(ImplicitCastExpr* e = dyn_cast<ImplicitCastExpr>(expr))
-      return resolve(e);
-    else if(MaterializeTemporaryExpr* e = dyn_cast<MaterializeTemporaryExpr>(expr))
       return resolve(e);
     else if(MemberExpr* e = dyn_cast<MemberExpr>(expr))
       return resolve(e);
@@ -362,7 +347,7 @@ public:
   BoundaryConditionResolver(StencilParser* parser) : parser_(parser) {}
 
   void resolve(clang::CXXConstructExpr* boundaryCondition) {
-    for(auto e : boundaryCondition->arguments()) {
+    for(clang::Expr* e : boundaryCondition->arguments()) {
       resolve(e);
     }
   }
@@ -374,11 +359,9 @@ public:
   const std::vector<std::string>& getFields() const { return fields_; }
 
 private:
-  void resolve(clang::MaterializeTemporaryExpr* expr) { resolve(expr->GetTemporaryExpr()); }
-
   void resolve(clang::CXXTemporaryObjectExpr* expr) {
     DAWN_ASSERT(functor_.empty());
-    functor_ = expr->getConstructor()->getNameAsString();
+    functor_ = getClassNameFromConstructExpr(expr);
 
     // Check the stencil function exists
     if(!parser_->hasStencilFunction(functor_)) {
@@ -402,8 +385,6 @@ private:
 
   void resolve(clang::CXXStdInitializerListExpr* expr) { resolve(expr->getSubExpr()); }
 
-  void resolve(clang::ImplicitCastExpr* expr) { resolve(expr->getSubExpr()); }
-
   void resolve(clang::MemberExpr* expr) {
     fields_.push_back(expr->getMemberDecl()->getNameAsString());
   }
@@ -418,6 +399,8 @@ private:
 
   void resolve(clang::Expr* expr) {
     using namespace clang;
+    // ignore all implicit nodes
+    expr = skipAllImplicitNodes(expr);
 
     // Has to be before `CXXConstructExpr`
     if(CXXTemporaryObjectExpr* e = dyn_cast<CXXTemporaryObjectExpr>(expr))
@@ -426,10 +409,6 @@ private:
     if(CXXConstructExpr* e = dyn_cast<CXXConstructExpr>(expr))
       return resolve(e);
     else if(DeclRefExpr* e = dyn_cast<DeclRefExpr>(expr))
-      return resolve(e);
-    else if(ImplicitCastExpr* e = dyn_cast<ImplicitCastExpr>(expr))
-      return resolve(e);
-    else if(MaterializeTemporaryExpr* e = dyn_cast<MaterializeTemporaryExpr>(expr))
       return resolve(e);
     else if(MemberExpr* e = dyn_cast<MemberExpr>(expr))
       return resolve(e);
@@ -622,7 +601,7 @@ void StencilParser::parseStorage(clang::FieldDecl* field) {
     DAWN_LOG(INFO) << "Parsing temporary field: " << name;
     auto SIRField = std::make_shared<dawn::sir::Field>(name, getLocation(field));
     SIRField->IsTemporary = true;
-    SIRField->fieldDimensions = {{1,1,1}};
+    SIRField->fieldDimensions = {{1, 1, 1}};
     currentParserRecord_->CurrentStencil->Fields.emplace_back(SIRField);
     currentParserRecord_->addArgDecl(name, field);
 
@@ -724,6 +703,9 @@ void StencilParser::parseStencilFunctionDoMethod(clang::CXXMethodDecl* DoMethod)
 
       // DoMethod is a CompoundStmt, start iterating
       for(Stmt* stmt : bodyStmt->body()) {
+        // ignore implicit nodes
+        stmt = skipAllImplicitNodes(stmt);
+
         // Stmt is a range-based for loop which corresponds to a vertical region (not allowed here!)
         if(isa<CXXForRangeStmt>(stmt)) {
           reportDiagnostic(stmt->getLocStart(),
@@ -771,6 +753,8 @@ void StencilParser::parseStencilDoMethod(clang::CXXMethodDecl* DoMethod) {
 
       // DoMethod is a CompoundStmt, start iterating
       for(Stmt* stmt : bodyStmt->body()) {
+        // ignore implicit nodes
+        stmt = skipAllImplicitNodes(stmt);
 
         if(CXXForRangeStmt* s = dyn_cast<CXXForRangeStmt>(stmt)) {
           // stmt is a range-based for loop which corresponds to a VerticalRegion
@@ -778,7 +762,7 @@ void StencilParser::parseStencilDoMethod(clang::CXXMethodDecl* DoMethod) {
 
         } else if(CXXConstructExpr* s = dyn_cast<CXXConstructExpr>(stmt)) {
 
-          if(s->getConstructor()->getNameAsString() == "boundary_condition")
+          if(getClassNameFromConstructExpr(s) == "boundary_condition")
             // stmt is a declaration of a boundary condition
             stencilDescAst->getRoot()->push_back(parseBoundaryCondition(s));
           else
@@ -817,7 +801,8 @@ void StencilParser::parseStencilDoMethod(clang::CXXMethodDecl* DoMethod) {
 
 std::shared_ptr<dawn::StencilCallDeclStmt>
 StencilParser::parseStencilCall(clang::CXXConstructExpr* stencilCall) {
-  std::string callee = stencilCall->getConstructor()->getNameAsString();
+
+  std::string callee = getClassNameFromConstructExpr(stencilCall);
 
   DAWN_LOG(INFO)
       << "Parsing stencil-call at "
@@ -938,9 +923,13 @@ StencilParser::parseVerticalRegion(clang::CXXForRangeStmt* verticalRegion) {
 
     if(CompoundStmt* compoundStmt = dyn_cast<CompoundStmt>(verticalRegion->getBody())) {
       // Case for(...) { XXX }
-      for(Stmt* stmt : compoundStmt->body())
+      for(Stmt* stmt : compoundStmt->body()) {
+        // ignore implicit nodes
+        stmt = skipAllImplicitNodes(stmt);
+
         SIRBlockStmt->insert_back(
             stmtResolver.resolveStmt(stmt, ClangASTStmtResolver::AK_StencilBody));
+      }
 
     } else {
       // Case for(...) XXX
@@ -966,7 +955,7 @@ StencilParser::parseBoundaryCondition(clang::CXXConstructExpr* boundaryCondition
   using namespace clang;
   using namespace llvm;
 
-  DAWN_ASSERT(boundaryCondition->getConstructor()->getNameAsString() == "boundary_condition");
+  DAWN_ASSERT(getClassNameFromConstructExpr(boundaryCondition) == "boundary_condition");
 
   DAWN_LOG(INFO) << "Parsing boundary-condition at "
                  << getFilename(boundaryCondition->getLocation().printToString(
@@ -1013,6 +1002,8 @@ StencilParser::parseBoundaryConditions(clang::CXXMethodDecl* allBoundaryConditio
   // they all share the same signature:
   //    boundary_condition(functor(), Field [, arguments...]);
   for(Stmt* stmt : bodyStmt->body()) {
+    // ignore implicit nodes
+    stmt = skipAllImplicitNodes(stmt);
     if(CXXTemporaryObjectExpr* temporary = dyn_cast<CXXTemporaryObjectExpr>(stmt)) {
       if(CXXConstructExpr* e = dyn_cast<CXXConstructExpr>(temporary)) {
         // Resolve the statement
