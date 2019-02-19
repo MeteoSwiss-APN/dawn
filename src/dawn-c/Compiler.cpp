@@ -17,7 +17,7 @@
 #include "dawn-c/util/Allocate.h"
 #include "dawn-c/util/CompilerWrapper.h"
 #include "dawn-c/util/OptionsWrapper.h"
-#include "dawn/SIR/SIRSerializer.h"
+#include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/STLExtras.h"
 #include "dawn/Support/Unreachable.h"
 #include <iostream>
@@ -42,11 +42,14 @@ static void dawnDefaultDiagnosticsHandler(DawnDiagnosticsKind diag, int line, in
   std::cerr << filename << ":" << line << ":" << column << ": ";
   switch(diag) {
   case DD_Note:
-    std::cerr << "note"; break;
+    std::cerr << "note";
+    break;
   case DD_Warning:
-    std::cerr << "warning"; break;
+    std::cerr << "warning";
+    break;
   case DD_Error:
-    std::cerr << "error"; break;
+    std::cerr << "error";
+    break;
   default:
     dawn_unreachable("invalid DawnDiagnosticsKind");
   }

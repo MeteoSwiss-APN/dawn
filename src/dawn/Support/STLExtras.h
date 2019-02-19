@@ -105,7 +105,7 @@ public:
 
 /// @brief Get length of an array
 template <class T, std::size_t N>
-constexpr inline size_t array_lengthof(T(&)[N]) {
+constexpr inline size_t array_lengthof(T (&)[N]) {
   return N;
 }
 

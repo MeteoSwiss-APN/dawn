@@ -46,6 +46,12 @@ OPT(std::string, domain_size, "", "domain-size", "",
     "domain size for compiler optimization", "", true, false)
 OPT(std::string, block_size, "", "block-size", "",
         "block size for tiled computations", "", true, false)
+OPT(bool, SerializeIIR, false, "write-iir", "",
+    "Serialize the low level intermediate representation after Optimization", "", false, true)
+OPT(std::string, IIRFormat, "json", "iir-format", "", "format of the output IIR", "", true, false)
+
+OPT(bool, Debug, false, "debug", "",
+    "Compile to debug backend", "", false, true)
 OPT(bool, InlineSF, false, "inline", "",
     "Inline stencil functions","", false, false)
 OPT(std::string, ReorderStrategy, "greedy", "reorder", "", 
@@ -55,22 +61,10 @@ OPT(std::string, ReorderStrategy, "greedy", "reorder", "",
     "\n - scut   = Use S-cut graph partitioning\n", "<strategy>", true, false)
 OPT(int, MaxFieldsPerStencil, 40, "max-fields", "",
     "Set the maximum number of fields in any given stencils", "<N>", true, false)
+
+
 OPT(bool, SSA, false, "ssa", "",
     "Transform all statements into static single assigment (SSA) form", "", false, true)
-OPT(bool, DumpSplitGraphs, false, "dump-split-dags", "", 
-    "Dump the access dependency graph of all stages and multi-stages during the splitting passes to dot files", "", false, true)
-OPT(bool, DumpStencilGraph, false, "dump-stencil-dag", "", 
-    "Dump the initial access dependency graph of each stencil to a dot file", "", false, true)
-OPT(bool, DumpStageGraph, false, "dump-stage-dag", "", 
-    "Dump the initial dependency graph of the stages of each stencil to a dot file", "", false, true)
-OPT(bool, DumpTemporaryGraphs, false, "dump-tmp-dag", "", 
-    "Dump the dependency graph of the temporaries of each stencil to a dot file", "", false, true)
-OPT(bool, DumpRaceConditionGraph, false, "dump-rc-dag", "", 
-    "In case an unresolvable race-condition is detected, dump the dependency graph to a dot file", "", false, true)
-OPT(bool, KeepVarnames, false, "keep-varnames", "", 
-    "Keep the names of locally defined variables (this should merely be used for debugging as it may result in invalid code)", "", false, true)
-OPT(bool, ReportDataLocalityMetric, false, "report-dl", "", 
-    "Compute and report the data-locality metric for each stencil", "", false, true)
 OPT(bool, MergeTemporaries, false, "merge-temporaries", "", 
     "Merge temporaries if possible", "", false, true)
 OPT(bool, SplitStencils, false, "split-stencils", "", 
@@ -85,6 +79,11 @@ OPT(bool, DisableKCaches, false, "disable-kcaches", "",
     "Disable use of the k-caches", "", false, true)
 OPT(bool, PassTmpToFunction, false, "pass-tmp-to-function", "",
     "Activate pass to replace temporary precomputations by stencil function calls", "", false, true)
+OPT(bool, UseNonTempCaches, false, "cache-non-temp-fields", "",
+    "Allows for caching of non-temporary fields", "", false, true)
+OPT(bool, MaxCutMSS, false, "max-cut-mss", "",
+    "Cuts the given multistages in as many multistages as possible while maintaining legal code", "", false, true)
+
 OPT(bool, ReportPassTmpToFunction, false, "report-pass-tmp-to-function", "",
     "Detailed report on the actions taken during the replace temporary by stencil function call pass", "", false, true)
 OPT(bool, ReportAccesses, false, "report-accesses", "", 
@@ -114,8 +113,20 @@ OPT(bool, ReportPassSetNonTempCaches, false, "report-cache-non-temp-fields", "",
     "Report which non temporary fields are cached for each multi-stage", "", false, true)
 OPT(bool, ReportBoundaryConditions, false, "report-bc", "",
     "Report where boundary conditions are inserted", "", false, true)
-OPT(bool, Debug, false, "debug", "",
-    "Compile to debug backend", "", false, true)
-OPT(bool, MaxCutMSS, false, "max-cut-mss", "",
-    "Cuts the given multistages in as many multistages as possible while maintaining legal code", "", false, true)
+
+OPT(bool, DumpSplitGraphs, false, "dump-split-dags", "",
+    "Dump the access dependency graph of all stages and multi-stages during the splitting passes to dot files", "", false, true)
+OPT(bool, DumpStencilGraph, false, "dump-stencil-dag", "",
+    "Dump the initial access dependency graph of each stencil to a dot file", "", false, true)
+OPT(bool, DumpStageGraph, false, "dump-stage-dag", "",
+    "Dump the initial dependency graph of the stages of each stencil to a dot file", "", false, true)
+OPT(bool, DumpTemporaryGraphs, false, "dump-tmp-dag", "",
+    "Dump the dependency graph of the temporaries of each stencil to a dot file", "", false, true)
+OPT(bool, DumpRaceConditionGraph, false, "dump-rc-dag", "",
+    "In case an unresolvable race-condition is detected, dump the dependency graph to a dot file", "", false, true)
+OPT(bool, ReportDataLocalityMetric, false, "report-dl", "",
+    "Compute and report the data-locality metric for each stencil", "", false, true)
+OPT(bool, KeepVarnames, false, "keep-varnames", "",
+    "Keep the names of locally defined variables (this should merely be used for debugging as it may result in invalid code)", "", false, true)
+
 // clang-format on

@@ -97,7 +97,7 @@ void MSCodeGen::generateIJCacheIndexInit(MemberFunction& kernel) const {
   if(cacheProperties_.isThereACommonCache()) {
     kernel.addStatement(
         "int " + cacheProperties_.getCommonCacheIndexName(iir::Cache::CacheTypeKind::IJ) +
-        "= iblock + " + std::to_string(cacheProperties_.getOffsetCommonIJCache(1)) +
+        "= iblock + " + std::to_string(cacheProperties_.getOffsetCommonIJCache(0)) +
         " + (jblock + " + std::to_string(cacheProperties_.getOffsetCommonIJCache(1)) + ")*" +
         std::to_string(cacheProperties_.getStrideCommonCache(1, blockSize_)));
   }

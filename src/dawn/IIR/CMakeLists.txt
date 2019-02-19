@@ -12,6 +12,17 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
+
+include(DawnProtobufGenerate)
+
+# Genreate C++ proto files
+dawn_protobuf_generate(
+  OUT_FILES iir_proto_cpp_files
+  OUT_INCLUDE_DIRS iir_proto_include_dirs
+  PROTOS ${CMAKE_CURRENT_SOURCE_DIR}/IIR.proto
+  LANGUAGE cpp
+)
+
 yoda_add_library(
   NAME DawnIIR
   SOURCES 
@@ -40,6 +51,7 @@ yoda_add_library(
           IntervalAlgorithms.h
           IIR.cpp
           IIR.h
+          IIR.proto
           IIRNode.h
           IIRNodeIterator.h
           LoopOrder.cpp
@@ -62,7 +74,22 @@ yoda_add_library(
           StencilInstantiation.h
           StencilMetaInformation.cpp
           StencilMetaInformation.h
+          ${iir_proto_cpp_files}
   OBJECT
 )
 
-target_include_directories(DawnIIRObjects SYSTEM PUBLIC ${Boost_INCLUDE_DIR})
+target_include_directories(DawnIIRObjects PUBLIC $<TARGET_PROPERTY:DawnSIRStatic,INCLUDE_DIRECTORIES>)
+target_include_directories(DawnIIRObjects SYSTEM PUBLIC ${Boost_INCLUDE_DIR} ${iir_proto_include_dirs})
+
+add_custom_target(IIR_Proto_Generated ALL DEPENDS ${iir_proto_cpp_files})
+add_dependencies(IIR_Proto_Generated SIR_Proto_Generated)
+
+yoda_combine_libraries(
+  NAME DawnIIR
+  OBJECTS DawnIIRObjects
+  INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
+  DEPENDS DawnSIRStatic
+  VERSION ${DAWN_VERSION}
+  EXPORT_GROUP DawnTargets
+)
+

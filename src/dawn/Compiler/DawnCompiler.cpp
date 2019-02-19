@@ -17,6 +17,7 @@
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/CodeGen/GridTools/GTCodeGen.h"
+#include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
@@ -82,11 +83,12 @@ struct ComputeEditDistance<std::string> {
                                 : "";
   }
 };
+} // anonymous namespace
 
 /// @brief Report a diagnostic concering an invalid Option
 template <class T>
-DiagnosticsBuilder buildDiag(const std::string& option, const T& value, std::string reason,
-                             std::vector<T> possibleValues = std::vector<T>{}) {
+static DiagnosticsBuilder buildDiag(const std::string& option, const T& value, std::string reason,
+                                    std::vector<T> possibleValues = std::vector<T>{}) {
   DiagnosticsBuilder diag(DiagnosticsKind::Error, SourceLocation());
   diag << "invalid value '" << value << "' of option '" << option << "'";
 
@@ -103,7 +105,15 @@ DiagnosticsBuilder buildDiag(const std::string& option, const T& value, std::str
   return diag;
 }
 
-} // anonymous namespace
+static std::string remove_fileextension(std::string fullName, std::string extension) {
+  std::string truncation = "";
+  std::size_t pos = 0;
+  while((pos = fullName.find(extension)) != std::string::npos) {
+    truncation += fullName.substr(0, pos);
+    fullName.erase(0, pos + extension.length());
+  }
+  return truncation;
+}
 
 DawnCompiler::DawnCompiler(Options* options) : diagnostics_(make_unique<DiagnosticsEngine>()) {
   options_ = options ? make_unique<Options>(*options) : make_unique<Options>();
@@ -134,6 +144,19 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
 
   // -max-fields
   int maxFields = options_->MaxFieldsPerStencil;
+
+
+  IIRSerializer::SerializationKind serializationKind = IIRSerializer::SK_Json;
+  if(options_->SerializeIIR) { /*|| (options_->LoadSerialized != "")) {*/
+    if(options_->IIRFormat == "json") {
+      serializationKind = IIRSerializer::SK_Json;
+    } else if(options_->IIRFormat == "byte") {
+      serializationKind = IIRSerializer::SK_Byte;
+
+    } else {
+      dawn_unreachable("Unknown SIRFormat option");
+    }
+  }
 
   // Initialize optimizer
   std::unique_ptr<OptimizerContext> optimizer =
@@ -172,7 +195,6 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   for(const auto& a : passManager.getPasses()) {
     DAWN_LOG(INFO) << a->getName();
   }
-
   // Run optimization passes
   for(auto& stencil : optimizer->getStencilInstantiationMap()) {
     std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
@@ -182,6 +204,14 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
       return nullptr;
     DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `" << instantiation->getName()
                    << "`";
+
+    if(options_->SerializeIIR) {
+      IIRSerializer::serialize(
+          remove_fileextension(instantiation->getMetaData().fileName_, ".cpp") + ".iir",
+          instantiation, serializationKind);
+    }
+
+    stencil.second = instantiation;
   }
 
   return optimizer;
