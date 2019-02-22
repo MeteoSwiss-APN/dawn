@@ -37,6 +37,8 @@ yoda_add_library(
           PassMultiStageSplitter.h
           PassPrintStencilGraph.cpp
           PassPrintStencilGraph.h
+          PassSetBlockSize.cpp
+          PassSetBlockSize.h
           PassSetBoundaryCondition.cpp
           PassSetBoundaryCondition.h
           PassSetCaches.cpp

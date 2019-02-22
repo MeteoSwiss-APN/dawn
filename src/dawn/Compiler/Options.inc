@@ -40,13 +40,18 @@ OPT(std::string, Backend, "gridtools", "backend", "",
     "\n - c++-naive   = naive C++ code\n"
     "\n - c++-opt     = optimized C++ code"
     "\n - cuda        = optimized cuda", "<backend>", true, false)
+OPT(int, nsms, 0, "nsms", "",
+    "Number of (CUDA) SMs", "<nsms>", true, false)
+OPT(std::string, domain_size, "", "domain-size", "",
+    "domain size for compiler optimization", "", true, false)
+OPT(std::string, block_size, "", "block-size", "",
+        "block size for tiled computations", "", true, false)
 OPT(bool, SerializeIIR, false, "write-iir", "",
     "Serialize the low level intermediate representation after Optimization", "", false, true)
 OPT(std::string, IIRFormat, "json", "iir-format", "", "format of the output IIR", "", true, false)
 
 OPT(bool, Debug, false, "debug", "",
     "Compile to debug backend", "", false, true)
-
 OPT(bool, InlineSF, false, "inline", "",
     "Inline stencil functions","", false, false)
 OPT(std::string, ReorderStrategy, "greedy", "reorder", "", 
@@ -100,6 +105,8 @@ OPT(bool, ReportPassStageMerger, false, "report-pass-stage-merger", "",
     "Dump the stencil-instantiation before and after the stage merger pass to JSON", "", false, true)
 OPT(bool, ReportPassSetCaches, false, "report-pass-set-caches", "", 
     "Report which fields are cached for each multi-stage", "", false, true)
+OPT(bool, ReportPassSetBlockSize, false, "report-pass-set-block-size", "",
+    "Report on the pass that sets the block size", "", false, true)
 OPT(bool, ReportPassSetNonTempCaches, false, "report-cache-non-temp-fields", "",
     "Report which non temporary fields are cached for each multi-stage", "", false, true)
 OPT(bool, ReportBoundaryConditions, false, "report-bc", "",

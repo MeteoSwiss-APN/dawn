@@ -14,11 +14,11 @@
 
 #include "dawn/CodeGen/Cuda/MSCodeGen.hpp"
 #include "dawn/CodeGen/CXXUtil.h"
+#include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/Cuda/ASTStencilBody.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/Support/IndexRange.h"
-#include "dawn/CodeGen/CodeGen.h"
 #include <functional>
 #include <numeric>
 
@@ -717,6 +717,32 @@ void MSCodeGen::generateCudaKernelCode() {
   if(containsTemporary && useTmpIndex_)
     fnDecl = "template<typename TmpStorage>";
   fnDecl = fnDecl + "__global__ void";
+
+  int maxThreadsPerBlock =
+      blockSize_[0] * (blockSize_[1] + maxExtents[1].Plus - maxExtents[1].Minus +
+                       (maxExtents[0].Minus < 0 ? 1 : 0) + (maxExtents[0].Plus > 0 ? 1 : 0));
+
+  int nSM = stencilInstantiation_->getOptimizerContext()->getOptions().nsms;
+
+  std::string domain_size = stencilInstantiation_->getOptimizerContext()->getOptions().domain_size;
+  if(nSM > 0 && !domain_size.empty()) {
+    std::istringstream idomain_size(domain_size);
+    std::string arg;
+    getline(idomain_size, arg, ',');
+    int isize = std::stoi(arg);
+    getline(idomain_size, arg, ',');
+    int jsize = std::stoi(arg);
+
+    int minBlocksPerSM = isize * jsize / (blockSize_[0] * blockSize_[1]);
+    if(solveKLoopInParallel_)
+      minBlocksPerSM *= 80 / blockSize_[2];
+    minBlocksPerSM /= nSM;
+
+    fnDecl = fnDecl + " __launch_bounds__(" + std::to_string(maxThreadsPerBlock) + "," +
+             std::to_string(minBlocksPerSM) + ") ";
+  } else {
+    fnDecl = fnDecl + " __launch_bounds__(" + std::to_string(maxThreadsPerBlock) + ") ";
+  }
   MemberFunction cudaKernel(fnDecl, cudaKernelName_, ss_);
 
   const auto& globalsMap = stencilInstantiation_->getMetaData().globalVariableMap_;
