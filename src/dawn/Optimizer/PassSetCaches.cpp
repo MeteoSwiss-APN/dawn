@@ -102,8 +102,6 @@ CacheCandidate computeCacheCandidateForMS(iir::Field const& field, bool isTempor
     return CacheCandidate{iir::Cache::fill, boost::optional<iir::Cache::window>(), *interval};
   }
   if(field.getIntend() == iir::Field::IK_Output) {
-    // we do not cache output only normal fields since there is not data reuse
-    DAWN_ASSERT(isTemporaryField);
     return CacheCandidate{iir::Cache::local, boost::optional<iir::Cache::window>(),
                           field.getInterval()};
   }
