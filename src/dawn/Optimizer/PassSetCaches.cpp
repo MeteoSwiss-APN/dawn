@@ -102,8 +102,6 @@ CacheCandidate computeCacheCandidateForMS(iir::Field const& field, bool isTempor
     return CacheCandidate{iir::Cache::fill, boost::optional<iir::Cache::window>(), *interval};
   }
   if(field.getIntend() == iir::Field::IK_Output) {
-    // we do not cache output only normal fields since there is not data reuse
-    DAWN_ASSERT(isTemporaryField);
     return CacheCandidate{iir::Cache::local, boost::optional<iir::Cache::window>(),
                           field.getInterval()};
   }
@@ -174,39 +172,40 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
       for(const auto& stage : MS.getChildren()) {
         for(const auto& fieldPair : stage->getFields()) {
           const iir::Field& field = fieldPair.second;
+          const int accessID = field.getAccessID();
+          const iir::Field& msField = MS.getField(accessID);
 
           // Field is already cached, skip
-          if(MS.isCached(field.getAccessID())) {
+          if(MS.isCached(accessID)) {
             continue;
           }
 
           // Field has vertical extents, can't be ij-cached
-          if(!field.getExtents().isVerticalPointwise()) {
+          if(!msField.getExtents().isVerticalPointwise()) {
             continue;
           }
 
           // Currently we only cache temporaries!
-          if(!instantiation->isTemporaryField(field.getAccessID())) {
+          if(!instantiation->isTemporaryField(accessID)) {
             continue;
           }
 
           // Cache the field
-          if(field.getIntend() == iir::Field::IK_Input && outputFields.count(field.getAccessID()) &&
+          if(field.getIntend() == iir::Field::IK_Input && outputFields.count(accessID) &&
              !field.getExtents().isHorizontalPointwise()) {
 
-            iir::Cache& cache = MS.setCache(iir::Cache::IJ, iir::Cache::local, field.getAccessID());
+            iir::Cache& cache = MS.setCache(iir::Cache::IJ, iir::Cache::local, accessID);
 
             if(context->getOptions().ReportPassSetCaches) {
               std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": MS"
-                        << msIdx << ": "
-                        << instantiation->getOriginalNameFromAccessID(field.getAccessID()) << ":"
-                        << cache.getCacheTypeAsString() << ":" << cache.getCacheIOPolicyAsString()
-                        << std::endl;
+                        << msIdx << ": " << instantiation->getOriginalNameFromAccessID(accessID)
+                        << ":" << cache.getCacheTypeAsString() << ":"
+                        << cache.getCacheIOPolicyAsString() << std::endl;
             }
           }
 
           if(isOutput(field))
-            outputFields.insert(field.getAccessID());
+            outputFields.insert(accessID);
         }
       }
       msIdx++;
