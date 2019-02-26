@@ -11,8 +11,9 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-
 #include "dawn/IIR/FieldAccessExtents.h"
+#include "dawn/IIR/IIRPrinter.h"
+#include <sstream>
 
 namespace dawn {
 namespace iir {
@@ -23,6 +24,25 @@ void FieldAccessExtents::mergeReadExtents(Extents const& extents) {
     readAccessExtents_ = boost::make_optional(extents);
   updateTotalExtents();
 }
+void FieldAccessExtents::print(IIRPrinter printer) const {
+  std::stringstream ss;
+  if(readAccessExtents_.is_initialized()) {
+    ss << *readAccessExtents_;
+  } else {
+    ss << "null";
+  }
+
+  printer.dump("read access: ", ss.str());
+  ss.str("");
+  if(writeAccessExtents_.is_initialized()) {
+    ss << *writeAccessExtents_;
+  } else {
+    ss << "null";
+  }
+
+  printer.dump("write access: ", ss.str());
+}
+
 void FieldAccessExtents::mergeWriteExtents(Extents const& extents) {
   if(writeAccessExtents_.is_initialized())
     writeAccessExtents_->merge(extents);

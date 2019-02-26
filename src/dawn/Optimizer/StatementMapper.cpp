@@ -270,7 +270,7 @@ void StatementMapper::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
   stencilFun->checkFunctionBindings();
 
   for(auto id : stencilFun->getAccessIDSetGlobalVariables()) {
-    scope_.top()->LocalVarNameToAccessIDMap.emplace(stencilFun->getNameFromAccessID(id), id);
+    scope_.top()->LocalVarNameToAccessIDMap.emplace(stencilFun->getFieldNameFromAccessID(id), id);
   }
 
   scope_.pop();

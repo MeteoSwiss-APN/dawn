@@ -15,9 +15,11 @@
 #ifndef DAWN_IIR_STATEMENTACCESSESPAIR_H
 #define DAWN_IIR_STATEMENTACCESSESPAIR_H
 
+#include "dawn/IIR/AccessToNameMapper.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/BlockStatements.h"
 #include "dawn/IIR/IIRNode.h"
+#include "dawn/IIR/IIRPrinter.h"
 #include "dawn/SIR/Statement.h"
 #include <boost/optional.hpp>
 #include <memory>
@@ -97,6 +99,10 @@ public:
   std::string toString(const StencilFunctionInstantiation* stencilFunc,
                        std::size_t initialIndent = 0) const;
   /// @}
+
+  void dump(IIRPrinter printer) const;
+  void print(IIRPrinter& printer, const AccessToNameMapper& accessToNameMapper,
+             const std::unordered_map<int, Extents>& accesses) const;
 };
 
 } // namespace iir

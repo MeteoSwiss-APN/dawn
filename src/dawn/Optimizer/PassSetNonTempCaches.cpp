@@ -209,9 +209,9 @@ private:
                                int assigneeID) {
     // Create the StatementAccessPair of the assignment with the new and old variables
     auto fa_assignee =
-        std::make_shared<FieldAccessExpr>(instantiation_->getNameFromAccessID(assigneeID));
+        std::make_shared<FieldAccessExpr>(instantiation_->getFieldNameFromAccessID(assigneeID));
     auto fa_assignment =
-        std::make_shared<FieldAccessExpr>(instantiation_->getNameFromAccessID(assignmentID));
+        std::make_shared<FieldAccessExpr>(instantiation_->getFieldNameFromAccessID(assignmentID));
     auto assignmentExpression = std::make_shared<AssignmentExpr>(fa_assignment, fa_assignee, "=");
     auto expAssignment = std::make_shared<ExprStmt>(assignmentExpression);
     auto assignmentStatement = std::make_shared<Statement>(expAssignment, nullptr);

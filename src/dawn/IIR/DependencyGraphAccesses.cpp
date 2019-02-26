@@ -80,7 +80,7 @@ std::string DependencyGraphAccesses::edgeDataToDot(const EdgeData& data) const {
 const char* DependencyGraphAccesses::getDotShape() const { return "circle"; }
 
 std::string DependencyGraphAccesses::getVertexNameByVertexID(std::size_t VertexID) const {
-  return instantiation_ ? instantiation_->getNameFromAccessID(getIDFromVertexID(VertexID))
+  return instantiation_ ? instantiation_->getFieldNameFromAccessID(getIDFromVertexID(VertexID))
                         : std::to_string(getIDFromVertexID(VertexID));
 }
 

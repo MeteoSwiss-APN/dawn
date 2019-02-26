@@ -237,7 +237,7 @@ public:
       tmpFieldAccessExpr_ = std::dynamic_pointer_cast<FieldAccessExpr>(expr->getLeft());
 
       // otherwise we create a new stencil function
-      std::string tmpFieldName = instantiation_->getNameFromAccessID(accessID);
+      std::string tmpFieldName = instantiation_->getFieldNameFromAccessID(accessID);
       tmpFunction_ = std::make_shared<sir::StencilFunction>();
 
       tmpFunction_->Name = makeOnTheFlyFunctionCandidateName(tmpFieldName, interval_);
@@ -426,7 +426,7 @@ public:
     // to the offset used to access the temporary
     for(auto accessID_ : (accessIDsOfArgs)) {
       std::shared_ptr<FieldAccessExpr> arg = std::make_shared<FieldAccessExpr>(
-          instantiation_->getNameFromAccessID(accessID_), expr->getOffset());
+          instantiation_->getFieldNameFromAccessID(accessID_), expr->getOffset());
       cloneStencilFun->getExpression()->insertArgument(arg);
 
       instantiation_->mapExprToAccessID(arg, accessID_);
@@ -743,7 +743,7 @@ bool PassTemporaryToStencilFunction::run(
           int accessID = tmpFieldPair.first;
           auto tmpProperties = tmpFieldPair.second;
           if(context->getOptions().ReportPassTmpToFunction)
-            std::cout << " [ replace tmp:" << stencilInstantiation->getNameFromAccessID(accessID)
+            std::cout << " [ replace tmp:" << stencilInstantiation->getFieldNameFromAccessID(accessID)
                       << "; line : " << tmpProperties.tmpFieldAccessExpr_->getSourceLocation().Line
                       << " ] ";
         }

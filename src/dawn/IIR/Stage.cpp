@@ -35,6 +35,23 @@ Stage::Stage(StencilInstantiation& stencilInstantiation, int StageID, const Inte
   insertChild(make_unique<DoMethod>(interval, stencilInstantiation));
 }
 
+void Stage::dump(IIRPrinter printer) const {
+  printer.dumpHeader("Stage:");
+  printer.dump("Fields:");
+  for(const auto& field : derivedInfo_.fields_) {
+    field.second.dump(++IIRPrinter(printer));
+    printer.dump("  ----------------------");
+  }
+  printer.dump("------------------");
+  printer.dump("Extents:", derivedInfo_.extents_);
+  printer.dump("RequiresSync:", derivedInfo_.requiresSync_);
+
+  for(const auto& doMethod : children_) {
+    doMethod->dump(++IIRPrinter(printer));
+  }
+  printer.close();
+}
+
 std::unique_ptr<Stage> Stage::clone() const {
 
   auto cloneStage = make_unique<Stage>(stencilInstantiation_, StageID_);

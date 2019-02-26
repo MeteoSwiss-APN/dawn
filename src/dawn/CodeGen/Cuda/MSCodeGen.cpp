@@ -764,18 +764,18 @@ void MSCodeGen::generateCudaKernelCode() {
   // first we construct non temporary field arguments
   for(auto field : nonTempFields) {
     cudaKernel.addArg("gridtools::clang::float_type * const " +
-                      stencilInstantiation_->getNameFromAccessID((*field).second.getAccessID()));
+                      stencilInstantiation_->getFieldNameFromAccessID((*field).second.getAccessID()));
   }
 
   // then the temporary field arguments
   for(auto field : tempFieldsNonLocalCached) {
     if(useTmpIndex_) {
       cudaKernel.addArg(c_gt() + "data_view<TmpStorage>" +
-                        stencilInstantiation_->getNameFromAccessID((*field).second.getAccessID()) +
+                        stencilInstantiation_->getFieldNameFromAccessID((*field).second.getAccessID()) +
                         "_dv");
     } else {
       cudaKernel.addArg("gridtools::clang::float_type * const " +
-                        stencilInstantiation_->getNameFromAccessID((*field).second.getAccessID()));
+                        stencilInstantiation_->getFieldNameFromAccessID((*field).second.getAccessID()));
     }
   }
 
@@ -789,7 +789,7 @@ void MSCodeGen::generateCudaKernelCode() {
   if(useTmpIndex_) {
     for(auto field : tempFieldsNonLocalCached) {
       std::string fieldName =
-          stencilInstantiation_->getNameFromAccessID((*field).second.getAccessID());
+          stencilInstantiation_->getFieldNameFromAccessID((*field).second.getAccessID());
 
       cudaKernel.addStatement("gridtools::clang::float_type* " + fieldName + " = &" + fieldName +
                               "_dv(tmpBeginIIndex,tmpBeginJIndex,blockIdx.x,blockIdx.y,0)");

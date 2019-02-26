@@ -24,33 +24,16 @@ namespace iir {
 
 namespace {
 
-template <class MapType, class FieldAccessIDToStringFunctionType, class IsFieldFunctionType,
-          class LiteralAccessIDToStringFunctionFunctionType,
-          class VarAccessIDToStringFunctionFunctionType>
-std::string
-toStringImpl(FieldAccessIDToStringFunctionType&& fieldAccessIDToStringFunction,
-             IsFieldFunctionType&& isField,
-             LiteralAccessIDToStringFunctionFunctionType&& literalAccessIDToStringFunction,
-             VarAccessIDToStringFunctionFunctionType&& varAccessIDToStringFunction,
-             std::size_t initialIndent, const MapType& writeAccessMap,
-             const MapType& readAccessMap) {
+template <class MapType, class AccessIDToStringFunctionType>
+std::string toStringImpl(AccessIDToStringFunctionType&& accessIDToStringFunction,
+                         std::size_t initialIndent, const MapType& writeAccessMap,
+                         const MapType& readAccessMap) {
   std::stringstream ss;
   std::string indent(initialIndent, ' ');
 
-  auto AccessIDToString = [&](int AccessID) -> std::string {
-    if(AccessID < 0)
-      return literalAccessIDToStringFunction(AccessID);
-    else {
-      if(isField(AccessID))
-        return fieldAccessIDToStringFunction(AccessID);
-      else
-        return varAccessIDToStringFunction(AccessID);
-    }
-  };
-
   auto printMap = [&](const MapType& map) {
     for(auto it = map.begin(), end = map.end(); it != end; ++it)
-      ss << indent << "  " << AccessIDToString(it->first) << " : " << it->second << "\n";
+      ss << indent << "  " << accessIDToStringFunction(it->first) << " : " << it->second << "\n";
   };
 
   ss << indent << "Write Accesses:\n";
@@ -62,29 +45,16 @@ toStringImpl(FieldAccessIDToStringFunctionType&& fieldAccessIDToStringFunction,
   return ss.str();
 }
 
-template <class MapType, class FieldAccessIDToStringFunctionType, class IsFieldFunctionType,
-          class LiteralAccessIDToStringFunctionFunctionType,
-          class VarAccessIDToStringFunctionFunctionType>
-std::string
-reportAccessesImpl(FieldAccessIDToStringFunctionType&& fieldAccessIDToStringFunction,
-                   IsFieldFunctionType&& isField,
-                   LiteralAccessIDToStringFunctionFunctionType&& literalAccessIDToStringFunction,
-                   VarAccessIDToStringFunctionFunctionType&& varAccessIDToStringFunction,
-                   const MapType& writeAccessMap, const MapType& readAccessMap) {
+template <class MapType, class AccessIDToStringFunctionType>
+std::string reportAccessesImpl(AccessIDToStringFunctionType&& accessIDToStringFunction,
+                               const MapType& writeAccessMap, const MapType& readAccessMap) {
   std::stringstream ss;
 
   auto printMap = [&](const MapType& map, const char* intent) {
     for(auto it = map.begin(), end = map.end(); it != end; ++it) {
       ss << (it != map.begin() ? " " : "") << intent << ":";
       int AccessID = it->first;
-      if(AccessID < 0)
-        ss << literalAccessIDToStringFunction(AccessID);
-      else {
-        if(isField(AccessID))
-          ss << fieldAccessIDToStringFunction(AccessID);
-        else
-          ss << varAccessIDToStringFunction(AccessID);
-      }
+      ss << accessIDToStringFunction(AccessID);
       ss << ":<";
       const auto& extents = it->second.getExtents();
       for(std::size_t i = 0; i < extents.size(); ++i)
@@ -173,63 +143,27 @@ const Extents& Accesses::getWriteAccess(int AccessID) const {
 
 std::string Accesses::reportAccesses(const StencilInstantiation* instantiation) const {
   return reportAccessesImpl(
-      [&instantiation](int AccessID) {
-        return instantiation->getNameFromAccessID(AccessID).c_str();
-      },
-      [&instantiation](int AccessID) { return instantiation->isField(AccessID); },
-      [&instantiation](int AccessID) {
-        return instantiation->getNameFromLiteralAccessID(AccessID).c_str();
-      },
-      [&instantiation](int AccessID) {
-        return instantiation->getNameFromAccessID(AccessID).c_str();
-      },
+      [&instantiation](int AccessID) { return instantiation->getNameFromAccessID(AccessID); },
       writeAccesses_, readAccesses_);
 }
 
 std::string Accesses::reportAccesses(const StencilFunctionInstantiation* stencilFunc) const {
   return reportAccessesImpl(
-      [&stencilFunc](int AccessID) {
-        return stencilFunc->getOriginalNameFromCallerAccessID(AccessID).c_str();
-      },
-      [&stencilFunc](int AccessID) {
-        return stencilFunc->getStencilInstantiation()->isField(AccessID) ||
-               stencilFunc->isProvidedByStencilFunctionCall(AccessID);
-      },
-      [&stencilFunc](int AccessID) {
-        return stencilFunc->getNameFromLiteralAccessID(AccessID).c_str();
-      },
-      [&stencilFunc](int AccessID) { return stencilFunc->getNameFromAccessID(AccessID).c_str(); },
+      [&stencilFunc](int AccessID) { return stencilFunc->getNameFromAccessID(AccessID); },
       writeAccesses_, readAccesses_);
 }
 
 std::string Accesses::toString(const StencilInstantiation* instantiation,
                                std::size_t initialIndent) const {
   return toStringImpl(
-      [&instantiation](int AccessID) {
-        return instantiation->getNameFromAccessID(AccessID).c_str();
-      },
-      [&instantiation](int AccessID) { return instantiation->isField(AccessID); },
-      [&instantiation](int AccessID) {
-        return instantiation->getNameFromLiteralAccessID(AccessID);
-      },
-      [&instantiation](int AccessID) {
-        return instantiation->getNameFromAccessID(AccessID).c_str();
-      },
+      [&instantiation](int AccessID) { return instantiation->getNameFromAccessID(AccessID); },
       initialIndent, writeAccesses_, readAccesses_);
 }
 
 std::string Accesses::toString(const StencilFunctionInstantiation* stencilFunc,
                                std::size_t initialIndent) const {
   return toStringImpl(
-      [&stencilFunc](int AccessID) {
-        return stencilFunc->getOriginalNameFromCallerAccessID(AccessID).c_str();
-      },
-      [&stencilFunc](int AccessID) {
-        return stencilFunc->getStencilInstantiation()->isField(AccessID) ||
-               stencilFunc->isProvidedByStencilFunctionCall(AccessID);
-      },
-      [&stencilFunc](int AccessID) { return stencilFunc->getNameFromLiteralAccessID(AccessID); },
-      [&stencilFunc](int AccessID) { return stencilFunc->getNameFromAccessID(AccessID).c_str(); },
+      [&stencilFunc](int AccessID) { return stencilFunc->getNameFromAccessID(AccessID); },
       initialIndent, writeAccesses_, readAccesses_);
 }
 

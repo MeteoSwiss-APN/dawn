@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/AccessToNameMapper.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -158,6 +159,33 @@ void StatementAccessesPair::setCalleeAccesses(const std::shared_ptr<Accesses>& a
 }
 
 bool StatementAccessesPair::hasCalleeAccesses() { return calleeAccesses_ != nullptr; }
+
+void StatementAccessesPair::print(IIRPrinter& printer, const AccessToNameMapper& accessToNameMapper,
+                                  const std::unordered_map<int, Extents>& accesses) const {
+  for(const auto& accessPair : accesses) {
+    int accessID = accessPair.first;
+    std::string name = "unknown";
+    if(accessToNameMapper.hasAccessID(accessID)) {
+      name = accessToNameMapper.getNameFromAccessID(accessID);
+    }
+    if(printer.getStencilInstantiation()->isLiteral(accessID)) {
+      continue;
+    }
+    printer.dump("access id: ", accessID, "; name: ", name, "; extents: ", accessPair.second);
+  }
+}
+void StatementAccessesPair::dump(IIRPrinter printer) const {
+  printer.dump(ASTStringifer::toString(getStatement()->ASTStmt, 5 * DAWN_PRINT_INDENT));
+  AccessToNameMapper accessToNameMapper(printer.getStencilInstantiation());
+  getStatement()->ASTStmt->accept(accessToNameMapper);
+  printer.dump("Write accesses:");
+  printer.level_++;
+  print(printer, accessToNameMapper, getAccesses()->getWriteAccesses());
+  printer.level_--;
+  printer.dump("Read accesses:");
+  printer.level_++;
+  print(printer, accessToNameMapper, getAccesses()->getReadAccesses());
+}
 
 std::string StatementAccessesPair::toString(const StencilInstantiation* instantiation,
                                             std::size_t initialIndent) const {
