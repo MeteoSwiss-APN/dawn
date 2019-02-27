@@ -101,30 +101,28 @@ bool Stencil::StatementPosition::inSameDoMethod(const Stencil::StatementPosition
   return StagePos == other.StagePos && DoMethodIndex == other.DoMethodIndex;
 }
 
-json::json Stencil::FieldInfo::jsonDump() const {
-  json::json node;
-  node["name"] = Name;
-  node["dim"] = format("[%i,%i,%i]", Dimensions[0], Dimensions[1], Dimensions[2]);
-  node["field"] = field.jsonDump();
-  node["IsTemporary"] = IsTemporary;
-  return node;
+void Stencil::FieldInfo::dump(IIRPrinter printer) const {
+  printer.dump("name :", Name);
+  printer.dump("dim : [", Dimensions[0], ",", Dimensions[1], ",", Dimensions[2], "]");
+  field.dump(printer);
+  printer.dump("IsTemporary : ", IsTemporary);
 }
 
-json::json Stencil::jsonDump() const {
-  json::json node;
-  node["ID"] = std::to_string(StencilID_);
-  json::json fieldsJson;
+void Stencil::dump(IIRPrinter printer) const {
+  printer.jsondump("stencil", StencilID_);
+  printer.dumpHeader("stencil");
+  printer.dump("ID: ", StencilID_);
+  printer.dump("Fields:");
   for(const auto& f : derivedInfo_.fields_) {
-    fieldsJson.push_back(f.second.jsonDump());
+    f.second.dump(++IIRPrinter(printer));
+    printer.dump("  ----------------------");
   }
-  node["Fields"] = fieldsJson;
+  printer.dump("---------------------");
 
-  int cnt = 0;
   for(const auto& child : children_) {
-    node["MultiStage" + std::to_string(cnt)] = child->jsonDump(stencilInstantiation_);
-    cnt++;
+    child->dump(++IIRPrinter(printer));
   }
-  return node;
+  printer.close();
 }
 
 void Stencil::updateFromChildren() {

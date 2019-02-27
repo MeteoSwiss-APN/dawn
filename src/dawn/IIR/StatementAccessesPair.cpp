@@ -160,31 +160,42 @@ void StatementAccessesPair::setCalleeAccesses(const std::shared_ptr<Accesses>& a
 
 bool StatementAccessesPair::hasCalleeAccesses() { return calleeAccesses_ != nullptr; }
 
-void StatementAccessesPair::print(IIRPrinter& printer, const AccessToNameMapper& accessToNameMapper,
-                                  const std::unordered_map<int, Extents>& accesses) const {
+json::json StatementAccessesPair::print(const StencilInstantiation& instantiation,
+                                        const AccessToNameMapper& accessToNameMapper,
+                                        const std::unordered_map<int, Extents>& accesses) const {
+  json::json node;
   for(const auto& accessPair : accesses) {
+    json::json accessNode;
     int accessID = accessPair.first;
     std::string name = "unknown";
     if(accessToNameMapper.hasAccessID(accessID)) {
       name = accessToNameMapper.getNameFromAccessID(accessID);
     }
-    if(printer.getStencilInstantiation()->isLiteral(accessID)) {
+    if(instantiation.isLiteral(accessID)) {
       continue;
     }
-    printer.dump("access id: ", accessID, "; name: ", name, "; extents: ", accessPair.second);
+    accessNode["access_id"] = accessID;
+    accessNode["name"] = name;
+    std::stringstream ss;
+    ss << accessPair.second;
+    accessNode["extents"] = ss.str();
+    node.push_back(accessNode);
   }
+  return node;
 }
-void StatementAccessesPair::dump(IIRPrinter printer) const {
-  printer.dump(ASTStringifer::toString(getStatement()->ASTStmt, 5 * DAWN_PRINT_INDENT));
-  AccessToNameMapper accessToNameMapper(printer.getStencilInstantiation());
+
+json::json StatementAccessesPair::jsonDump(const StencilInstantiation& instantiation) const {
+  json::json node;
+  node["stmt"] = ASTStringifer::toString(getStatement()->ASTStmt, 0);
+
+  AccessToNameMapper accessToNameMapper(&instantiation);
   getStatement()->ASTStmt->accept(accessToNameMapper);
-  printer.dump("Write accesses:");
-  printer.level_++;
-  print(printer, accessToNameMapper, getAccesses()->getWriteAccesses());
-  printer.level_--;
-  printer.dump("Read accesses:");
-  printer.level_++;
-  print(printer, accessToNameMapper, getAccesses()->getReadAccesses());
+
+  node["write_accesses"] =
+      print(instantiation, accessToNameMapper, getAccesses()->getWriteAccesses());
+  node["read_accesses"] =
+      print(instantiation, accessToNameMapper, getAccesses()->getReadAccesses());
+  return node;
 }
 
 std::string StatementAccessesPair::toString(const StencilInstantiation* instantiation,

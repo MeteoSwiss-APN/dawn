@@ -68,7 +68,7 @@ public:
   DoMethod& operator=(DoMethod&&) = default;
   /// @}
 
-  void dump(IIRPrinter printer) const;
+  json::json jsonDump(const StencilInstantiation& instantiation) const;
 
   /// @brief clone the object creating and returning a new unique_ptr
   std::unique_ptr<DoMethod> clone() const;

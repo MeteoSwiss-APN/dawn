@@ -60,7 +60,7 @@ public:
   void setWriteExtents(Extents const& extents);
   /// @}
   ///
-  void print(dawn::iir::IIRPrinter printer) const;
+  json::json jsonDump() const;
 
 private:
   /// @brief update the total extent from read/write extents

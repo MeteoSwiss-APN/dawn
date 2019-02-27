@@ -374,7 +374,7 @@ public:
   inline int nextUID() { return UIDGenerator::getInstance()->get(); }
 
   /// @brief Dump the StencilInstantiation to stdout
-  std::string dump() const;
+  void jsonDump(std::string filename) const;
 
   /// @brief Generate a unique name for a local variable
   static std::string makeLocalVariablename(const std::string& name, int AccessID);

@@ -67,25 +67,34 @@ Interval Cache::getWindowInterval(Interval::Bound bound) const {
   return interval_->crop(bound, {window_->m_m, window_->m_p});
 }
 
-void Cache::dump(IIRPrinter printer) const {
-  printer.dump("access id:", AccessID_);
-  printer.dump("type:", cacheTypeToString(type_));
-  printer.dump("policy:", cachePolicyToString(policy_));
+json::json Cache::jsonDump() const {
+  json::json node;
+  node["accessid"] = AccessID_;
+  node["type"] = cacheTypeToString(type_);
+  node["policy"] = cachePolicyToString(policy_);
+  std::stringstream ss;
   if(interval_.is_initialized()) {
-    printer.dump("interval:", *interval_);
+    ss << *interval_;
   } else {
-    printer.dump("interval: null");
+    ss << "null";
   }
+  node["interval"] = ss.str();
+  ss.str("");
+
   if(enclosingAccessedInterval_.is_initialized()) {
-    printer.dump("enclosing accessed interval:", *enclosingAccessedInterval_);
+    ss << *enclosingAccessedInterval_;
   } else {
-    printer.dump("enclosing accessed interval: null");
+    ss << "null";
   }
+  node["enclosing_accessed_interval"] = ss.str();
+  ss.str("");
   if(window_.is_initialized()) {
-    printer.dump("window:", *window_);
+    ss << *window_;
   } else {
-    printer.dump("window: null");
+    ss << "null";
   }
+  node["window"] = ss.str();
+  return node;
 }
 
 boost::optional<Interval> Cache::getInterval() const { return interval_; }

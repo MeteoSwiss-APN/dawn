@@ -100,9 +100,10 @@ public:
                        std::size_t initialIndent = 0) const;
   /// @}
 
-  void dump(IIRPrinter printer) const;
-  void print(IIRPrinter& printer, const AccessToNameMapper& accessToNameMapper,
-             const std::unordered_map<int, Extents>& accesses) const;
+  json::json jsonDump(const StencilInstantiation& instantiation) const;
+  json::json print(const StencilInstantiation& instantiation,
+                   const AccessToNameMapper& accessToNameMapper,
+                   const std::unordered_map<int, Extents>& accesses) const;
 };
 
 } // namespace iir

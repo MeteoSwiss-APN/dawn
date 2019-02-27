@@ -54,9 +54,7 @@ bool PassManager::runPassOnStecilInstantiation(
   }
 
   if(instantiation->getOptimizerContext()->getOptions().PassVerbose) {
-    std::ofstream verbFile(pass->getName() + ".log");
-    verbFile << instantiation->dump();
-    verbFile.close();
+    instantiation->jsonDump(pass->getName() + "Log.json");
   }
 
   DAWN_ASSERT_MSG(instantiation->getIIR()->checkTreeConsistency(),

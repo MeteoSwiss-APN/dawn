@@ -91,7 +91,7 @@ public:
 
   std::unique_ptr<Stage> clone() const;
 
-  void dump(IIRPrinter printer) const;
+  json::json jsonDump(const StencilInstantiation& instantiation) const;
 
   /// @brief update the derived info from children
   virtual void updateFromChildren() override;

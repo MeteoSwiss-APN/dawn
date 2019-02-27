@@ -79,7 +79,7 @@ public:
 
   std::unique_ptr<MultiStage> clone() const;
 
-  void dump(IIRPrinter printer) const;
+  json::json jsonDump(const StencilInstantiation& instantiation) const;
 
   /// @brief getters
   /// @{

@@ -32,6 +32,17 @@ std::unique_ptr<IIR> IIR::clone() const {
   return cloneIIR;
 }
 
+json::json IIR::jsonDump() const {
+  json::json node;
+
+  int cnt = 0;
+  for(const auto& stencil : children_) {
+    node["Stencil" + std::to_string(cnt)] = stencil->jsonDump();
+    cnt++;
+  }
+  return node;
+}
+
 void IIR::clone(std::unique_ptr<IIR>& dest) const {
   dest->cloneChildrenFrom(*this, dest);
   dest->setBlockSize(blockSize_);

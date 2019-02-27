@@ -19,6 +19,7 @@
 #include "dawn/IIR/FieldAccessExtents.h"
 #include "dawn/IIR/IIRPrinter.h"
 #include "dawn/IIR/Interval.h"
+#include "dawn/Support/Json.h"
 #include <utility>
 
 namespace dawn {
@@ -90,7 +91,7 @@ public:
     return extentsRB_.getWriteExtents();
   }
 
-  void dump(IIRPrinter printer) const;
+  json::json jsonDump(const StencilInstantiation& instantiation) const;
 
   inline Extents const& getExtents() const { return extents_.getExtents(); }
   inline Extents const& getExtentsRB() const { return extentsRB_.getExtents(); }

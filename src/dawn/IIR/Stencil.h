@@ -56,7 +56,7 @@ public:
     Array3i Dimensions;
     Field field;
     bool IsTemporary;
-    void dump(IIRPrinter printer) const;
+    json::json jsonDump() const;
   };
 
 private:
@@ -228,7 +228,7 @@ public:
   /// @brief Get number of stages
   int getNumStages() const;
 
-  void dump(IIRPrinter printer) const;
+  json::json jsonDump() const;
 
   /// @brief Run `func` on each StatementAccessesPair of the stencil (or on the given
   /// StatementAccessesPair of the stages specified in `lifetime`)
