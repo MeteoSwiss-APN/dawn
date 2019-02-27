@@ -34,6 +34,8 @@ class OptimizerContext;
 
 namespace iir {
 
+enum class TemporaryScope { TT_LocalVariable, TT_StencilTemporary, TT_Field };
+
 /// @brief Specific instantiation of a stencil
 /// @ingroup optimizer
 class StencilInstantiation : NonCopyable {
@@ -202,7 +204,8 @@ public:
   /// This will take care of registering the new field (and removing the variable) as well as
   /// replacing the variable accesses with point-wise field accesses.
   void promoteLocalVariableToTemporaryField(Stencil* stencil, int AccessID,
-                                            const Stencil::Lifetime& lifetime);
+                                            const Stencil::Lifetime& lifetime,
+                                            TemporaryScope temporaryScope);
 
   /// @brief Promote the temporary field, given by `AccessID`, to a real storage which needs to be
   /// allocated by the stencil

@@ -67,30 +67,30 @@ bool usedAsArgumentInStencilFun(const std::unique_ptr<iir::Stencil>& stencil, in
 
 /// @brief Representation of a Temporary field or variable
 struct Temporary {
-  enum TemporaryType { TT_LocalVariable, TT_Field };
 
   Temporary(Temporary const& other) = default;
   Temporary(Temporary&& other) = default;
   Temporary() = delete;
-  Temporary(int accessID, TemporaryType type, const iir::Extents& extent)
-      : AccessID(accessID), Type(type), Extent(extent) {}
+  Temporary(int accessID, iir::TemporaryScope type, const iir::Extents& extent)
+      : accessID_(accessID), type_(type), extent_(extent) {}
 
-  int AccessID;                    ///< AccessID of the field or variable
-  TemporaryType Type : 1;          ///< Type of the temporary
-  iir::Stencil::Lifetime Lifetime; ///< Lifetime of the temporary
-  iir::Extents Extent;             ///< Accumulated access of the temporary during its lifetime
+  int accessID_;                    ///< AccessID of the field or variable
+  iir::TemporaryScope type_;        ///< Type of the temporary
+  iir::Stencil::Lifetime lifetime_; ///< Lifetime of the temporary
+  iir::Extents extent_;             ///< Accumulated access of the temporary during its lifetime
 
   /// @brief Dump the temporary
   void dump(const std::shared_ptr<iir::StencilInstantiation>& instantiation) const {
-    std::cout << "Temporary : " << instantiation->getNameFromAccessID(AccessID) << " {"
-              << "\n  Type=" << (Type == TT_LocalVariable ? "LocalVariable" : "Field")
-              << ",\n  Lifetime=" << Lifetime << ",\n  Extent=" << Extent << "\n}\n";
+    std::cout << "Temporary : " << instantiation->getNameFromAccessID(accessID_) << " {"
+              << "\n  Type="
+              << (type_ == iir::TemporaryScope::TT_LocalVariable ? "LocalVariable" : "Field")
+              << ",\n  Lifetime=" << lifetime_ << ",\n  Extent=" << extent_ << "\n}\n";
   }
 };
 
 } // anonymous namespace
 
-PassTemporaryType::PassTemporaryType() : Pass("PassTemporaryType", true) {}
+PassTemporaryType::PassTemporaryType() : Pass("Passiir::TemporaryScope", true) {}
 
 bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
   OptimizerContext* context = instantiation->getOptimizerContext();
@@ -122,14 +122,17 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
             auto it = temporaries.find(AccessID);
             if(it != temporaries.end()) {
               // If we already registered it, update the extent
-              it->second.Extent.merge(extent);
+              it->second.extent_.merge(extent);
             } else {
               // Register the temporary
               AccessIDs.insert(AccessID);
-              temporaries.emplace(AccessID, Temporary(AccessID, isTemporaryField
-                                                                    ? Temporary::TT_Field
-                                                                    : Temporary::TT_LocalVariable,
-                                                      extent));
+              iir::TemporaryScope ttype =
+                  instantiation->isIDAccessedMultipleStencils(AccessID)
+                      ? iir::TemporaryScope::TT_Field
+                      : (isTemporaryField ? iir::TemporaryScope::TT_StencilTemporary
+                                          : iir::TemporaryScope::TT_LocalVariable);
+
+              temporaries.emplace(AccessID, Temporary(AccessID, ttype, extent));
             }
           }
         }
@@ -143,7 +146,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
     std::for_each(LifetimeMap.begin(), LifetimeMap.end(),
                   [&](const std::pair<int, iir::Stencil::Lifetime>& lifetimePair) {
                     DAWN_ASSERT(temporaries.count(lifetimePair.first));
-                    temporaries.at(lifetimePair.first).Lifetime = lifetimePair.second;
+                    temporaries.at(lifetimePair.first).lifetime_ = lifetimePair.second;
                   });
 
     // Process each temporary
@@ -156,29 +159,30 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
                   << ":" << instantiation->getOriginalNameFromAccessID(AccessID) << std::endl;
       };
 
-      if(temporary.Type == Temporary::TT_LocalVariable) {
+      if(temporary.type_ == iir::TemporaryScope::TT_LocalVariable ||
+         temporary.type_ == iir::TemporaryScope::TT_Field) {
         // If the variable is accessed in multiple Do-Methods, we need to promote it to a field!
-        if(!temporary.Lifetime.Begin.inSameDoMethod(temporary.Lifetime.End)) {
+        if(!temporary.lifetime_.Begin.inSameDoMethod(temporary.lifetime_.End)) {
 
           if(context->getOptions().ReportPassTemporaryType)
             report("promote");
 
           report_.push_back(Report{AccessID, TmpActionMod::promote});
           instantiation->promoteLocalVariableToTemporaryField(stencilPtr.get(), AccessID,
-                                                              temporary.Lifetime);
+                                                              temporary.lifetime_, temporary.type_);
         }
       } else {
         // If the field is only accessed within the same Do-Method, does not have an extent and is
         // not argument to a stencil function, we can demote it to a local variable
-        if(temporary.Lifetime.Begin.inSameDoMethod(temporary.Lifetime.End) &&
-           temporary.Extent.isPointwise() && !usedAsArgumentInStencilFun(stencilPtr, AccessID)) {
+        if(temporary.lifetime_.Begin.inSameDoMethod(temporary.lifetime_.End) &&
+           temporary.extent_.isPointwise() && !usedAsArgumentInStencilFun(stencilPtr, AccessID)) {
 
           if(context->getOptions().ReportPassTemporaryType)
             report("demote");
 
           report_.push_back(Report{AccessID, TmpActionMod::demote});
           instantiation->demoteTemporaryFieldToLocalVariable(stencilPtr.get(), AccessID,
-                                                             temporary.Lifetime);
+                                                             temporary.lifetime_);
         }
       }
     }

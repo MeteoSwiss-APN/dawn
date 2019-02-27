@@ -295,7 +295,8 @@ bool StencilInstantiation::isIDAccessedMultipleStencils(int accessID) const {
 }
 
 void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil, int accessID,
-                                                                const Stencil::Lifetime& lifetime) {
+                                                                const Stencil::Lifetime& lifetime,
+                                                                TemporaryScope temporaryScope) {
   std::string varname = getNameFromAccessID(accessID);
   std::string fieldname = StencilInstantiation::makeTemporaryFieldname(
       StencilInstantiation::extractLocalVariablename(varname), accessID);
@@ -316,18 +317,21 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
   std::shared_ptr<Statement> oldStatement =
       statementAccessesPairs[lifetime.Begin.StatementIndex]->getStatement();
 
-  if(!isIDAccessedMultipleStencils(accessID)) {
-    // The oldStmt has to be a `VarDeclStmt`. For example
-    //
-    //   double __local_foo = ...
-    //
-    // will be replaced with
-    //
-    //   __tmp_foo(0, 0, 0) = ...
-    //
-    VarDeclStmt* varDeclStmt = dyn_cast<VarDeclStmt>(oldStatement->ASTStmt.get());
-    DAWN_ASSERT_MSG(varDeclStmt,
-                    "first access to variable (i.e lifetime.Begin) is not an `VarDeclStmt`");
+  // The oldStmt has to be a `VarDeclStmt`. For example
+  //
+  //   double __local_foo = ...
+  //
+  // will be replaced with
+  //
+  //   __tmp_foo(0, 0, 0) = ...
+  //
+  VarDeclStmt* varDeclStmt = dyn_cast<VarDeclStmt>(oldStatement->ASTStmt.get());
+  if(!varDeclStmt && temporaryScope != TemporaryScope::TT_Field) {
+    throw std::runtime_error(format("Promote local variable to temporary field: a var decl is not "
+                                    "found for accessid: %i , name :%s",
+                                    accessID, getNameFromAccessID(accessID)));
+  }
+  if(varDeclStmt) {
     DAWN_ASSERT_MSG(!varDeclStmt->isArray(), "cannot promote local array to temporary field");
 
     auto fieldAccessExpr = std::make_shared<FieldAccessExpr>(fieldname);
