@@ -94,6 +94,9 @@ public:
   /// @brief Check whether the `AccessID` corresponds to a field
   inline bool isField(int AccessID) const { return metadata_.FieldAccessIDSet_.count(AccessID); }
 
+  /// @brief check whether the `accessID` is accessed in more than one stencil
+  bool isIDAccessedMultipleStencils(int accessID) const;
+
   /// @brief Check whether the `AccessID` corresponds to a temporary field
   inline bool isTemporaryField(int AccessID) const {
     return isField(AccessID) && metadata_.TemporaryFieldAccessIDSet_.count(AccessID);

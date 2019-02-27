@@ -282,16 +282,28 @@ void StencilInstantiation::renameAllOccurrences(Stencil* stencil, int oldAccessI
   removeAccessID(oldAccessID);
 }
 
-void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil, int AccessID,
+bool StencilInstantiation::isIDAccessedMultipleStencils(int accessID) const {
+
+  int count = 0;
+  for(const auto& stencil : IIR_->getChildren()) {
+    if(stencil->hasFieldAccessID(accessID)) {
+      if(++count > 1)
+        return true;
+    }
+  }
+  return false;
+}
+
+void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil, int accessID,
                                                                 const Stencil::Lifetime& lifetime) {
-  std::string varname = getNameFromAccessID(AccessID);
+  std::string varname = getNameFromAccessID(accessID);
   std::string fieldname = StencilInstantiation::makeTemporaryFieldname(
-      StencilInstantiation::extractLocalVariablename(varname), AccessID);
+      StencilInstantiation::extractLocalVariablename(varname), accessID);
 
   // Replace all variable accesses with field accesses
   stencil->forEachStatementAccessesPair(
       [&](ArrayRef<std::unique_ptr<StatementAccessesPair>> statementAccessesPair) -> void {
-        replaceVarWithFieldAccessInStmts(stencil, AccessID, fieldname, statementAccessesPair);
+        replaceVarWithFieldAccessInStmts(stencil, accessID, fieldname, statementAccessesPair);
       },
       lifetime);
 
@@ -304,35 +316,36 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
   std::shared_ptr<Statement> oldStatement =
       statementAccessesPairs[lifetime.Begin.StatementIndex]->getStatement();
 
-  // The oldStmt has to be a `VarDeclStmt`. For example
-  //
-  //   double __local_foo = ...
-  //
-  // will be replaced with
-  //
-  //   __tmp_foo(0, 0, 0) = ...
-  //
-  VarDeclStmt* varDeclStmt = dyn_cast<VarDeclStmt>(oldStatement->ASTStmt.get());
-  DAWN_ASSERT_MSG(varDeclStmt,
-                  "first access to variable (i.e lifetime.Begin) is not an `VarDeclStmt`");
-  DAWN_ASSERT_MSG(!varDeclStmt->isArray(), "cannot promote local array to temporary field");
+  if(!isIDAccessedMultipleStencils(accessID)) {
+    // The oldStmt has to be a `VarDeclStmt`. For example
+    //
+    //   double __local_foo = ...
+    //
+    // will be replaced with
+    //
+    //   __tmp_foo(0, 0, 0) = ...
+    //
+    VarDeclStmt* varDeclStmt = dyn_cast<VarDeclStmt>(oldStatement->ASTStmt.get());
+    DAWN_ASSERT_MSG(varDeclStmt,
+                    "first access to variable (i.e lifetime.Begin) is not an `VarDeclStmt`");
+    DAWN_ASSERT_MSG(!varDeclStmt->isArray(), "cannot promote local array to temporary field");
 
-  auto fieldAccessExpr = std::make_shared<FieldAccessExpr>(fieldname);
-  metadata_.ExprIDToAccessIDMap_.emplace(fieldAccessExpr->getID(), AccessID);
-  auto assignmentExpr =
-      std::make_shared<AssignmentExpr>(fieldAccessExpr, varDeclStmt->getInitList().front());
-  auto exprStmt = std::make_shared<ExprStmt>(assignmentExpr);
+    auto fieldAccessExpr = std::make_shared<FieldAccessExpr>(fieldname);
+    metadata_.ExprIDToAccessIDMap_.emplace(fieldAccessExpr->getID(), accessID);
+    auto assignmentExpr =
+        std::make_shared<AssignmentExpr>(fieldAccessExpr, varDeclStmt->getInitList().front());
+    auto exprStmt = std::make_shared<ExprStmt>(assignmentExpr);
 
-  // Replace the statement
-  statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(
-      std::make_shared<Statement>(exprStmt, oldStatement->StackTrace));
+    // Replace the statement
+    statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(
+        std::make_shared<Statement>(exprStmt, oldStatement->StackTrace));
 
-  // Remove the variable
-  removeAccessID(AccessID);
-  metadata_.StmtIDToAccessIDMap_.erase(oldStatement->ASTStmt->getID());
-
+    // Remove the variable
+    removeAccessID(accessID);
+    metadata_.StmtIDToAccessIDMap_.erase(oldStatement->ASTStmt->getID());
+  }
   // Register the field
-  setAccessIDNamePairOfField(AccessID, fieldname, true);
+  setAccessIDNamePairOfField(accessID, fieldname, true);
 
   // Update the fields of the stages we modified
   stencil->updateFields(lifetime);

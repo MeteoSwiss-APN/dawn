@@ -195,6 +195,9 @@ public:
   /// @brief returns true if the stencils uses global variables
   bool hasGlobalVariables() const;
 
+  /// @brief returns true if the accessid is used within the stencil
+  bool hasFieldAccessID(const int accessID) const { return derivedInfo_.fields_.count(accessID); }
+
   /// @brief Get the stencil instantiation
   StencilInstantiation& getStencilInstantiation() const { return stencilInstantiation_; }
 

@@ -13,12 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassTemporaryType.h"
-#include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/IIRNodeIterator.h"
-#include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/NodeUpdateType.h"
+#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include <iostream>
 #include <memory>
@@ -199,23 +199,13 @@ void PassTemporaryType::fixTemporariesSpanningMultipleStencils(
     return;
 
   for(int i = 0; i < stencils.size(); ++i) {
-    for(const auto& fieldi : stencils[i]->getFields()) {
-
+    for(const auto& field : stencils[i]->getFields()) {
+      const int accessID = field.first;
       // Is fieldi a temporary?
-      if(fieldi.second.IsTemporary) {
-
-        // Is it referenced in another stencil?
-        for(int j = i + 1; j < stencils.size(); ++j) {
-          for(const auto& fieldj : stencils[j]->getFields()) {
-
-            // Yes and yes ... promote it to a real storage
-            if(fieldi.second.field.getAccessID() == fieldj.second.field.getAccessID() &&
-               fieldj.second.IsTemporary) {
-              instantiation->promoteTemporaryFieldToAllocatedField(
-                  fieldi.second.field.getAccessID());
-            }
-          }
-        }
+      // TODO could it happen that the access is not a temporary (but a local var) and even if it is
+      // used in multiple stencils there is no need to promote it ?
+      if(field.second.IsTemporary && instantiation->isIDAccessedMultipleStencils(accessID)) {
+        instantiation->promoteTemporaryFieldToAllocatedField(accessID);
       }
     }
   }
