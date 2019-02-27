@@ -18,6 +18,7 @@
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/IIRNode.h"
+#include "dawn/IIR/IIRPrinter.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/ArrayRef.h"
 #include <boost/optional.hpp>
@@ -89,6 +90,8 @@ public:
   /// @}
 
   std::unique_ptr<Stage> clone() const;
+
+  void dump(IIRPrinter printer) const;
 
   /// @brief update the derived info from children
   virtual void updateFromChildren() override;

@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/Stencil.h"
+#include "IIRPrinter.h"
 #include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -51,11 +52,12 @@ std::ostream& operator<<(std::ostream& os, const iir::Stencil& stencil) {
     for(const auto& stage : MS->getChildren())
       os << "  "
          << stencil.getStencilInstantiation().getIIR()->getNameFromStageID(stage->getStageID())
-         << " " << RangeToString()(stage->getFields(),
-                                   [&](const std::pair<int, iir::Field>& fieldPair) {
-                                     return stencil.getStencilInstantiation().getNameFromAccessID(
-                                         fieldPair.first);
-                                   })
+         << " "
+         << RangeToString()(stage->getFields(),
+                            [&](const std::pair<int, iir::Field>& fieldPair) {
+                              return stencil.getStencilInstantiation().getFieldNameFromAccessID(
+                                  fieldPair.first);
+                            })
          << "\n";
   }
   return os;
@@ -99,6 +101,29 @@ bool Stencil::StatementPosition::inSameDoMethod(const Stencil::StatementPosition
   return StagePos == other.StagePos && DoMethodIndex == other.DoMethodIndex;
 }
 
+void Stencil::FieldInfo::dump(IIRPrinter printer) const {
+  printer.dump("name :", Name);
+  printer.dump("dim : [", Dimensions[0], ",", Dimensions[1], ",", Dimensions[2], "]");
+  field.dump(printer);
+  printer.dump("IsTemporary : ", IsTemporary);
+}
+
+void Stencil::dump(IIRPrinter printer) const {
+  printer.dumpHeader("stencil");
+  printer.dump("ID: ", StencilID_);
+  printer.dump("Fields:");
+  for(const auto& f : derivedInfo_.fields_) {
+    f.second.dump(++IIRPrinter(printer));
+    printer.dump("  ----------------------");
+  }
+  printer.dump("---------------------");
+
+  for(const auto& child : children_) {
+    child->dump(++IIRPrinter(printer));
+  }
+  printer.close();
+}
+
 void Stencil::updateFromChildren() {
   derivedInfo_.fields_.clear();
   std::unordered_map<int, Field> fields;
@@ -111,7 +136,7 @@ void Stencil::updateFromChildren() {
     const int accessID = fieldPair.first;
     const Field& field = fieldPair.second;
 
-    std::string name = stencilInstantiation_.getNameFromAccessID(accessID);
+    std::string name = stencilInstantiation_.getFieldNameFromAccessID(accessID);
     bool isTemporary = stencilInstantiation_.isTemporaryField(accessID);
     Array3i specifiedDimension = stencilInstantiation_.getFieldDimensionsMask(accessID);
 
@@ -174,7 +199,7 @@ std::vector<std::string> Stencil::getGlobalVariables() const {
 
   std::vector<std::string> globalVariables;
   for(const auto& AccessID : globalVariableAccessIDs)
-    globalVariables.push_back(stencilInstantiation_.getNameFromAccessID(AccessID));
+    globalVariables.push_back(stencilInstantiation_.getFieldNameFromAccessID(AccessID));
 
   return globalVariables;
 }

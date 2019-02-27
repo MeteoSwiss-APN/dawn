@@ -79,6 +79,8 @@ public:
 
   std::unique_ptr<MultiStage> clone() const;
 
+  void dump(IIRPrinter printer) const;
+
   /// @brief getters
   /// @{
   /// @brief Get the execution policy

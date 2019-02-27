@@ -409,6 +409,27 @@ void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
   }
 }
 
+void MultiStage::dump(IIRPrinter printer) const {
+  printer.dumpHeader("MultiStage");
+  printer.dump("ID: ", id_);
+  printer.dump("Loop: ", loopOrderToString(loopOrder_));
+  printer.dump("Fields:");
+  for(const auto& field : derivedInfo_.fields_) {
+    field.second.dump(++IIRPrinter(printer));
+    printer.dump("  ----------------------");
+  }
+  printer.dump("------------------");
+  printer.dump("Caches:");
+  for(const auto& cache : derivedInfo_.caches_) {
+    cache.second.dump(++IIRPrinter(printer));
+    printer.dump("  ----------------------");
+  }
+  printer.dump("------------------");
+  for(const auto& stage : children_) {
+    stage->dump(++IIRPrinter(printer));
+  }
+  printer.close();
+}
 bool MultiStage::isEmptyOrNullStmt() const {
   for(const auto& stage : getChildren()) {
     if(!(stage)->isEmptyOrNullStmt()) {

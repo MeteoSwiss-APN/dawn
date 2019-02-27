@@ -13,6 +13,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/Field.h"
+#include "dawn/IIR/IIRPrinter.h"
+#include "dawn/IIR/StencilInstantiation.h"
 
 namespace dawn {
 namespace iir {
@@ -21,6 +23,17 @@ Interval Field::computeAccessedInterval() const {
   Interval accessedInterval = interval_;
   accessedInterval = accessedInterval.extendInterval(getExtents());
   return accessedInterval;
+}
+
+void Field::dump(IIRPrinter printer) const {
+  printer.dump("accessID: ", accessID_);
+  printer.dump("name: ", printer.getStencilInstantiation()->getNameFromAccessID(accessID_));
+  printer.dump("intend: ", intend_);
+  printer.dump("extents: ");
+  extents_.print(++IIRPrinter(printer));
+  printer.dump("redundant extents: ");
+  extentsRB_.print(++IIRPrinter(printer));
+  printer.dump("interval: ", interval_);
 }
 
 void mergeFields(std::unordered_map<int, Field> const& sourceFields,

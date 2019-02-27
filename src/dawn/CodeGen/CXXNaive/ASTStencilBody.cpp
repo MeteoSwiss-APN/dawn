@@ -34,16 +34,16 @@ ASTStencilBody::~ASTStencilBody() {}
 
 std::string ASTStencilBody::getName(const std::shared_ptr<Stmt>& stmt) const {
   if(currentFunction_)
-    return currentFunction_->getNameFromAccessID(currentFunction_->getAccessIDFromStmt(stmt));
+    return currentFunction_->getFieldNameFromAccessID(currentFunction_->getAccessIDFromStmt(stmt));
   else
-    return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
+    return instantiation_->getFieldNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
 }
 
 std::string ASTStencilBody::getName(const std::shared_ptr<Expr>& expr) const {
   if(currentFunction_)
-    return currentFunction_->getNameFromAccessID(currentFunction_->getAccessIDFromExpr(expr));
+    return currentFunction_->getFieldNameFromAccessID(currentFunction_->getAccessIDFromExpr(expr));
   else
-    return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromExpr(expr));
+    return instantiation_->getFieldNameFromAccessID(instantiation_->getAccessIDFromExpr(expr));
 }
 
 int ASTStencilBody::getAccessID(const std::shared_ptr<Expr>& expr) const {

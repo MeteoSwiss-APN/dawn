@@ -303,7 +303,7 @@ void GTCodeGen::generateStencilWrapperCtr(
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
 
   for(const auto& fieldID : stencilInstantiation->getAPIFieldIDs()) {
-    std::string name = stencilInstantiation->getNameFromAccessID(fieldID);
+    std::string name = stencilInstantiation->getFieldNameFromAccessID(fieldID);
     StencilWrapperConstructor.addArg(codeGenProperties.getParamType(name) + " " + name);
   }
 
@@ -311,7 +311,7 @@ void GTCodeGen::generateStencilWrapperCtr(
   if(stencilInstantiation->hasAllocatedFields()) {
     std::vector<std::string> tempFields;
     for(auto accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
-      tempFields.push_back(stencilInstantiation->getNameFromAccessID(accessID));
+      tempFields.push_back(stencilInstantiation->getFieldNameFromAccessID(accessID));
     }
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
   }
@@ -632,7 +632,7 @@ void GTCodeGen::generateStencilClasses(
                   c_gt() + "cache_io_policy::" + cache.getCacheIOPolicyAsString() +
                   // Interval: if IOPolicy is not local, we need to provide the interval
                   ">(p_" +
-                  stencilInstantiation->getNameFromAccessID(cache.getCachedFieldAccessID()) + "())")
+                  stencilInstantiation->getFieldNameFromAccessID(cache.getCachedFieldAccessID()) + "())")
               .str();
         });
       }
@@ -668,7 +668,7 @@ void GTCodeGen::generateStencilClasses(
           const auto& field = fieldPair.second;
           const int accessID = fieldPair.first;
 
-          std::string paramName = stencilInstantiation->getNameFromAccessID(accessID);
+          std::string paramName = stencilInstantiation->getFieldNameFromAccessID(accessID);
 
           // Generate parameter of stage
           std::stringstream tss;

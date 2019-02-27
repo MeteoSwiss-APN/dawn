@@ -292,14 +292,14 @@ void StencilFunctionInstantiation::renameCallerAccessID(int oldAccessID, int new
 //     Expr/Stmt to Caller AccessID Maps
 //===----------------------------------------------------------------------------------------===//
 
-std::string StencilFunctionInstantiation::getNameFromAccessID(int AccessID) const {
+std::string StencilFunctionInstantiation::getFieldNameFromAccessID(int AccessID) const {
   // As we store the caller accessIDs, we have to get the name of the field from the context!
   // TODO have a check for what is a literal range
   if(AccessID < 0)
     return getNameFromLiteralAccessID(AccessID);
   else if(stencilInstantiation_->isField(AccessID) ||
           stencilInstantiation_->isGlobalVariable(AccessID))
-    return stencilInstantiation_->getNameFromAccessID(AccessID);
+    return stencilInstantiation_->getFieldNameFromAccessID(AccessID);
   else {
     DAWN_ASSERT(AccessIDToNameMap_.count(AccessID));
     return AccessIDToNameMap_.find(AccessID)->second;
@@ -315,6 +315,17 @@ const std::string& StencilFunctionInstantiation::getNameFromLiteralAccessID(int 
   auto it = LiteralAccessIDToNameMap_.find(AccessID);
   DAWN_ASSERT_MSG(it != LiteralAccessIDToNameMap_.end(), "Invalid Literal");
   return it->second;
+}
+
+std::string StencilFunctionInstantiation::getNameFromAccessID(int accessID) const {
+  if(isLiteral(accessID)) {
+    return getNameFromLiteralAccessID(accessID);
+  } else if(getStencilInstantiation()->isField(accessID) ||
+            isProvidedByStencilFunctionCall(accessID)) {
+    return getOriginalNameFromCallerAccessID(accessID);
+  } else {
+    return getFieldNameFromAccessID(accessID);
+  }
 }
 
 int StencilFunctionInstantiation::getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) const {
@@ -633,7 +644,7 @@ void StencilFunctionInstantiation::dump() const {
                   << getFunctionInstantiationOfArgField(argIdx)->getName();
       } else {
         int callerAccessID = getCallerAccessIDOfArgField(argIdx);
-        std::cout << stencilInstantiation_->getNameFromAccessID(callerAccessID) << "  "
+        std::cout << stencilInstantiation_->getFieldNameFromAccessID(callerAccessID) << "  "
                   << getCallerInitialOffsetFromAccessID(callerAccessID);
       }
 

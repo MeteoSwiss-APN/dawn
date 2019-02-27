@@ -15,6 +15,7 @@
 #ifndef DAWN_IIR_CACHE_H
 #define DAWN_IIR_CACHE_H
 
+#include "dawn/IIR/IIRPrinter.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/HashCombine.h"
 #include <boost/optional.hpp>
@@ -65,6 +66,8 @@ public:
 
   /// @brief Get the AccessID of the field
   int getCachedFieldAccessID() const;
+
+  void dump(IIRPrinter printer) const;
 
   /// @brief Get the type of cache
   CacheTypeKind getCacheType() const;

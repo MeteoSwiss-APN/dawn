@@ -74,8 +74,8 @@ public:
   /// @brief Get the list of access ID of the user API fields
   inline const std::vector<int>& getAPIFieldIDs() const { return metadata_.apiFieldIDs_; }
 
-  /// @brief Get the `name` associated with the `AccessID`
-  const std::string& getNameFromAccessID(int AccessID) const;
+  /// @brief Get the `name` associated with the `AccessID` of a Field or a Var
+  const std::string& getFieldNameFromAccessID(int AccessID) const;
 
   /// @brief insert an element to the maps of stencil functions
   void insertExprToStencilFunction(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
@@ -89,6 +89,9 @@ public:
 
   /// @brief Get the original name of the field (as registered in the AST)
   std::string getOriginalNameFromAccessID(int AccessID) const;
+
+  /// @brief get the `name` associated with the `accessID` of any access type
+  std::string getNameFromAccessID(int accessID) const;
 
   /// @brief Get the `name` associated with the literal `AccessID`
   const std::string& getNameFromLiteralAccessID(int AccessID) const;
@@ -377,10 +380,7 @@ public:
   inline int nextUID() { return UIDGenerator::getInstance()->get(); }
 
   /// @brief Dump the StencilInstantiation to stdout
-  void dump() const;
-
-  /// @brief Dump the StencilInstantiation to a JSON file
-  void dumpAsJson(std::string filename, std::string passName = "") const;
+  std::string dump() const;
 
   /// @brief Generate a unique name for a local variable
   static std::string makeLocalVariablename(const std::string& name, int AccessID);

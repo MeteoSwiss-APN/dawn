@@ -58,7 +58,7 @@ std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(const Inde
   std::unordered_set<std::string> processedDims;
   std::vector<std::string> strides;
   for(auto field : nonTempFields) {
-    const auto fieldName = stencilInstantiation->getNameFromAccessID((*field).second.getAccessID());
+    const auto fieldName = stencilInstantiation->getFieldNameFromAccessID((*field).second.getAccessID());
     Array3i dims{-1, -1, -1};
     // TODO this is a hack, we need to have dimensions also at ms level
     for(const auto& fieldInfo : ms->getParent()->getFields()) {
@@ -90,7 +90,7 @@ std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(const Inde
   if(!tempFields.empty()) {
     auto firstTmpField = **(tempFields.begin());
     std::string fieldName =
-        stencilInstantiation->getNameFromAccessID(firstTmpField.second.getAccessID());
+        stencilInstantiation->getFieldNameFromAccessID(firstTmpField.second.getAccessID());
     if(funArg == CodeGeneratorHelper::FunctionArgType::FT_Caller) {
       strides.push_back("m_" + fieldName + ".get_storage_info_ptr()->template begin<0>()," + "m_" +
                         fieldName + ".get_storage_info_ptr()->template begin<1>()," + "m_" +
@@ -122,7 +122,7 @@ void CodeGeneratorHelper::generateFieldAccessDeref(
     std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
     const std::shared_ptr<iir::StencilInstantiation>& instantiation, const int accessID,
     const std::unordered_map<int, Array3i> fieldIndexMap, Array3i offset) {
-  std::string accessName = instantiation->getNameFromAccessID(accessID);
+  std::string accessName = instantiation->getFieldNameFromAccessID(accessID);
   bool isTemporary = instantiation->isTemporaryField(accessID);
   DAWN_ASSERT(fieldIndexMap.count(accessID) || isTemporary);
   const auto& field = ms->getField(accessID);

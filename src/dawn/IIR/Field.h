@@ -17,6 +17,7 @@
 
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/FieldAccessExtents.h"
+#include "dawn/IIR/IIRPrinter.h"
 #include "dawn/IIR/Interval.h"
 #include <utility>
 
@@ -88,6 +89,8 @@ public:
   inline boost::optional<Extents> const& getWriteExtentsRB() const {
     return extentsRB_.getWriteExtents();
   }
+
+  void dump(IIRPrinter printer) const;
 
   inline Extents const& getExtents() const { return extents_.getExtents(); }
   inline Extents const& getExtentsRB() const { return extentsRB_.getExtents(); }

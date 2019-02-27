@@ -18,6 +18,41 @@
 namespace dawn {
 namespace iir {
 
+static const char* cacheTypeToString(Cache::CacheTypeKind cacheType) {
+  switch(cacheType) {
+  case Cache::CacheTypeKind::K:
+    return "K";
+  case Cache::CacheTypeKind::IJ:
+    return "IJ";
+  case Cache::CacheTypeKind::IJK:
+    return "IJK";
+  case Cache::CacheTypeKind::bypass:
+    return "bypass";
+  }
+  dawn_unreachable(
+      std::string("invalid cache type" + std::to_string((unsigned int)cacheType)).c_str());
+}
+static const char* cachePolicyToString(Cache::CacheIOPolicy cachePolicy) {
+  switch(cachePolicy) {
+  case Cache::CacheIOPolicy::fill:
+    return "fill";
+  case Cache::CacheIOPolicy::flush:
+    return "flush";
+  case Cache::CacheIOPolicy::local:
+    return "local";
+  case Cache::CacheIOPolicy::bpfill:
+    return "bpfill";
+  case Cache::CacheIOPolicy::epflush:
+    return "epflush";
+  case Cache::CacheIOPolicy::fill_and_flush:
+    return "fill_and_flush";
+  case Cache::CacheIOPolicy::unknown:
+    return "unknown";
+  }
+  dawn_unreachable(
+      std::string("invalid cache io policy" + std::to_string((unsigned int)cachePolicy)).c_str());
+}
+
 Cache::Cache(CacheTypeKind type, CacheIOPolicy policy, int fieldAccessID,
              const boost::optional<Interval>& interval,
              const boost::optional<Interval>& enclosingAccessedInterval,
@@ -30,6 +65,27 @@ int Cache::getCachedFieldAccessID() const { return AccessID_; }
 Interval Cache::getWindowInterval(Interval::Bound bound) const {
   DAWN_ASSERT(interval_.is_initialized() && window_.is_initialized());
   return interval_->crop(bound, {window_->m_m, window_->m_p});
+}
+
+void Cache::dump(IIRPrinter printer) const {
+  printer.dump("access id:", AccessID_);
+  printer.dump("type:", cacheTypeToString(type_));
+  printer.dump("policy:", cachePolicyToString(policy_));
+  if(interval_.is_initialized()) {
+    printer.dump("interval:", *interval_);
+  } else {
+    printer.dump("interval: null");
+  }
+  if(enclosingAccessedInterval_.is_initialized()) {
+    printer.dump("enclosing accessed interval:", *enclosingAccessedInterval_);
+  } else {
+    printer.dump("enclosing accessed interval: null");
+  }
+  if(window_.is_initialized()) {
+    printer.dump("window:", *window_);
+  } else {
+    printer.dump("window: null");
+  }
 }
 
 boost::optional<Interval> Cache::getInterval() const { return interval_; }

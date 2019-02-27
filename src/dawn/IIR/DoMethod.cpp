@@ -94,6 +94,23 @@ void DoMethod::DerivedInfo::clear() { fields_.clear(); }
 
 void DoMethod::clearDerivedInfo() { derivedInfo_.clear(); }
 
+void DoMethod::dump(IIRPrinter printer) const {
+  printer.dumpHeader("DoMethod");
+  printer.dump("ID:", id_);
+  printer.dump("interval:", interval_);
+  printer.dump("Fields:");
+  for(const auto& field : derivedInfo_.fields_) {
+    field.second.dump(++IIRPrinter(printer));
+    printer.dump("  ----------------------");
+  }
+  printer.dump("------------------");
+  for(const auto& stmt : children_) {
+    stmt->dump(++IIRPrinter(printer));
+    printer.dump("  ----------------------");
+  }
+  printer.close();
+}
+
 void DoMethod::updateLevel() {
 
   // Compute the fields and their intended usage. Fields can be in one of three states: `Output`,

@@ -305,7 +305,7 @@ void CudaCodeGen::generateStencilWrapperCtr(
   for(int fieldId : stencilInstantiation->getAPIFieldIDs()) {
     StencilWrapperConstructor.addArg(
         getStorageType(stencilInstantiation->getFieldDimensionsMask(fieldId)) + "& " +
-        stencilInstantiation->getNameFromAccessID(fieldId));
+        stencilInstantiation->getFieldNameFromAccessID(fieldId));
   }
 
   const auto& stencils = stencilInstantiation->getStencils();
@@ -343,7 +343,7 @@ void CudaCodeGen::generateStencilWrapperCtr(
   if(stencilInstantiation->hasAllocatedFields()) {
     std::vector<std::string> tempFields;
     for(auto accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
-      tempFields.push_back(stencilInstantiation->getNameFromAccessID(accessID));
+      tempFields.push_back(stencilInstantiation->getFieldNameFromAccessID(accessID));
     }
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
   }
@@ -386,7 +386,7 @@ void CudaCodeGen::generateStencilWrapperMembers(
 
     for(int AccessID : stencilInstantiation->getAllocatedFieldAccessIDs())
       stencilWrapperClass.addMember(c_gtc() + "storage_t",
-                                    "m_" + stencilInstantiation->getNameFromAccessID(AccessID));
+                                    "m_" + stencilInstantiation->getFieldNameFromAccessID(AccessID));
   }
 
   if(!globalsMap.empty()) {
@@ -490,14 +490,14 @@ void CudaCodeGen::generateStencilRunMethod(
       // stencilInstantiation
       // all the time for name and IsTmpField
       const auto fieldName =
-          stencilInstantiation->getNameFromAccessID((*fieldIt).second.getAccessID());
+          stencilInstantiation->getFieldNameFromAccessID((*fieldIt).second.getAccessID());
       StencilRunMethod.addStatement(c_gt() + "data_view<" + paramNameToType.at(fieldName) + "> " +
                                     fieldName + "= " + c_gt() + "make_device_view(m_" + fieldName +
                                     ")");
     }
     for(auto fieldIt : tempFieldsNonLocalCached) {
       const auto fieldName =
-          stencilInstantiation->getNameFromAccessID((*fieldIt).second.getAccessID());
+          stencilInstantiation->getFieldNameFromAccessID((*fieldIt).second.getAccessID());
 
       StencilRunMethod.addStatement(c_gt() + "data_view<tmp_storage_t> " + fieldName + "= " +
                                     c_gt() + "make_device_view(m_" + fieldName + ")");
@@ -554,7 +554,7 @@ void CudaCodeGen::generateStencilRunMethod(
     int idx = 0;
     for(auto field : nonTempFields) {
       const auto fieldName =
-          stencilInstantiation->getNameFromAccessID((*field).second.getAccessID());
+          stencilInstantiation->getFieldNameFromAccessID((*field).second.getAccessID());
 
       args = args + (idx == 0 ? "" : ",") + "(" + fieldName + ".data()+" + "m_" + fieldName +
              ".get_storage_info_ptr()->index(" + fieldName + ".begin<0>(), " + fieldName +
@@ -568,14 +568,14 @@ void CudaCodeGen::generateStencilRunMethod(
       // the same manner as normal fields
       if(CodeGeneratorHelper::useNormalIteratorForTmp(multiStagePtr)) {
         const auto fieldName =
-            stencilInstantiation->getNameFromAccessID((*field).second.getAccessID());
+            stencilInstantiation->getFieldNameFromAccessID((*field).second.getAccessID());
 
         args = args + ", (" + fieldName + ".data()+" + "m_" + fieldName +
                ".get_storage_info_ptr()->index(" + fieldName + ".begin<0>(), " + fieldName +
                ".begin<1>()," + fieldName + ".begin<2>()," + fieldName + ".begin<3>(), 0))";
       } else {
         args =
-            args + "," + stencilInstantiation->getNameFromAccessID((*field).second.getAccessID());
+            args + "," + stencilInstantiation->getFieldNameFromAccessID((*field).second.getAccessID());
       }
     }
 

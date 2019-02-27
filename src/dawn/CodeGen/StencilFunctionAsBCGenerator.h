@@ -65,11 +65,11 @@ public:
   void visit(const std::shared_ptr<VarAccessExpr>& expr);
 
   inline std::string getName(const std::shared_ptr<Stmt>& stmt) const {
-    return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
+    return instantiation_->getFieldNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
   }
 
   inline std::string getName(const std::shared_ptr<Expr>& expr) const {
-    return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromExpr(expr));
+    return instantiation_->getFieldNameFromAccessID(instantiation_->getAccessIDFromExpr(expr));
   }
 };
 

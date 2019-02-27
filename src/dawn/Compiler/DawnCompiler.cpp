@@ -17,7 +17,6 @@
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/CodeGen/GridTools/GTCodeGen.h"
-#include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
@@ -42,6 +41,7 @@
 #include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/EditDistance.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringSwitch.h"
@@ -144,7 +144,6 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
 
   // -max-fields
   int maxFields = options_->MaxFieldsPerStencil;
-
 
   IIRSerializer::SerializationKind serializationKind = IIRSerializer::SK_Json;
   if(options_->SerializeIIR) { /*|| (options_->LoadSerialized != "")) {*/

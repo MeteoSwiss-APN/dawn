@@ -28,6 +28,8 @@ yoda_add_library(
   SOURCES 
           Accesses.cpp  
           Accesses.h
+	  AccessToNameMapper.cpp
+	  AccessToNameMapper.h
           BlockStatements.cpp
           BlockStatements.h
           Cache.cpp
@@ -54,6 +56,8 @@ yoda_add_library(
           IIR.proto
           IIRNode.h
           IIRNodeIterator.h
+	  IIRPrinter.cpp
+	  IIRPrinter.h
           LoopOrder.cpp
           LoopOrder.h
           MultiInterval.cpp

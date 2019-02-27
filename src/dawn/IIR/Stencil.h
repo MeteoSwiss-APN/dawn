@@ -15,6 +15,7 @@
 #ifndef DAWN_IIR_STENCIL_H
 #define DAWN_IIR_STENCIL_H
 
+#include "dawn/IIR/IIRPrinter.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/Statement.h"
@@ -55,6 +56,7 @@ public:
     Array3i Dimensions;
     Field field;
     bool IsTemporary;
+    void dump(IIRPrinter printer) const;
   };
 
 private:
@@ -228,6 +230,8 @@ public:
 
   /// @brief Get number of stages
   int getNumStages() const;
+
+  void dump(IIRPrinter printer) const;
 
   /// @brief Run `func` on each StatementAccessesPair of the stencil (or on the given
   /// StatementAccessesPair of the stages specified in `lifetime`)

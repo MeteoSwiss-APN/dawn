@@ -16,6 +16,7 @@
 #define DAWN_IIR_FIELDACCESSEXTENTS_H
 
 #include "dawn/IIR/Extents.h"
+#include "dawn/IIR/IIRPrinter.h"
 
 namespace dawn {
 namespace iir {
@@ -59,6 +60,8 @@ public:
   void setWriteExtents(Extents const& extents);
   /// @}
   ///
+  void print(dawn::iir::IIRPrinter printer) const;
+
 private:
   /// @brief update the total extent from read/write extents
   void updateTotalExtents();
