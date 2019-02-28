@@ -186,6 +186,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
         }
       }
     }
+    fixTemporariesSpanningMultipleStencils(instantiation.get(), instantiation->getStencils());
 
     if(!report_.empty()) {
       for(const auto& ms : iterateIIROver<iir::MultiStage>(*stencilPtr)) {
@@ -202,15 +203,23 @@ void PassTemporaryType::fixTemporariesSpanningMultipleStencils(
   if(stencils.size() <= 1)
     return;
 
+  bool updated = false;
   for(int i = 0; i < stencils.size(); ++i) {
     for(const auto& field : stencils[i]->getFields()) {
       const int accessID = field.first;
       // Is fieldi a temporary?
       // TODO could it happen that the access is not a temporary (but a local var) and even if it is
       // used in multiple stencils there is no need to promote it ?
-      if(field.second.IsTemporary && instantiation->isIDAccessedMultipleStencils(accessID)) {
+      if(instantiation->isTemporaryField(accessID) &&
+         instantiation->isIDAccessedMultipleStencils(accessID)) {
+        updated = true;
         instantiation->promoteTemporaryFieldToAllocatedField(accessID);
       }
+    }
+  }
+  if(updated) {
+    for(const auto& stencil : stencils) {
+      stencil->updateFromChildren();
     }
   }
 }

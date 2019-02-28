@@ -62,9 +62,6 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
   for(auto statement : origin.stencilDescStatements_) {
     stencilDescStatements_.emplace_back(statement->clone());
   }
-  for(const auto& pair : origin.IDToStencilCallMap_) {
-    IDToStencilCallMap_.emplace(pair.first, std::make_shared<StencilCallDeclStmt>(*(pair.second)));
-  }
   for(const auto& sf : origin.stencilFunctionInstantiations_) {
     stencilFunctionInstantiations_.emplace_back(
         std::make_shared<StencilFunctionInstantiation>(sf->clone()));
@@ -181,11 +178,6 @@ json::json StencilMetaInformation::jsonDump() const {
     accessIDToNameJson[std::to_string(pair.first)] = pair.second;
   }
   node["AccessIDToName"] = accessIDToNameJson;
-  json::json idToStencilCallJson;
-  for(const auto& pair : IDToStencilCallMap_) {
-    idToStencilCallJson[std::to_string(pair.first)] = ASTStringifer::toString(pair.second);
-  }
-  node["IDToStencilCall"] = idToStencilCallJson;
 
   return node;
 }

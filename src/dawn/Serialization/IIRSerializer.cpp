@@ -206,15 +206,15 @@ static void computeInitialDerivedInfo(const std::shared_ptr<iir::StencilInstanti
     target->getNameToAccessIDMap().insert({IDtoNamePair.second, IDtoNamePair.first});
   }
 
-  for(auto StencilCallToIDPair : target->getIDToStencilCallMap()) {
+  for(auto StencilCallToIDPair : target->getStencilCallToStencilIDMap()) {
     target->getStencilCallToStencilIDMap().insert(
-        {StencilCallToIDPair.second, StencilCallToIDPair.first});
+        {StencilCallToIDPair.first, StencilCallToIDPair.second});
   }
 
-  for(const auto& leaf : iterateIIROver<iir::StatementAccessesPair>(*target->getIIR())){
+  for(const auto& leaf : iterateIIROver<iir::StatementAccessesPair>(*target->getIIR())) {
     leaf->update(iir::NodeUpdateType::level);
   }
-  for(const auto& leaf : iterateIIROver<iir::DoMethod>(*target->getIIR())){
+  for(const auto& leaf : iterateIIROver<iir::DoMethod>(*target->getIIR())) {
     leaf->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
 }
@@ -279,14 +279,6 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
     stencilDescStmt->ASTStmt->accept(builder);
     DAWN_ASSERT_MSG(!stencilDescStmt->StackTrace,
                     "there should be no stack trace if inlining worked");
-  }
-  // Filling Field: map<int32, dawn.proto.statements.StencilCallDeclStmt> IDToStencilCall = 11;
-  auto& protoIDToStencilCallMap = *protoMetaData->mutable_idtostencilcall();
-  for(auto IDToStencilCall : metaData.IDToStencilCallMap_) {
-    proto::statements::Stmt protoStencilCall;
-    ProtoStmtBuilder builder(&protoStencilCall);
-    IDToStencilCall.second->accept(builder);
-    protoIDToStencilCallMap.insert({IDToStencilCall.first, protoStencilCall});
   }
 
   // Filling Field:
@@ -543,21 +535,6 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
 
   for(auto stencilDescStmt : protoMetaData.stencildescstatements()) {
     metadata.stencilDescStatements_.push_back(makeStatement(&stencilDescStmt));
-  }
-
-  for(auto IDToCall : protoMetaData.idtostencilcall()) {
-    auto call = IDToCall.second;
-    std::shared_ptr<sir::StencilCall> sirStencilCall = std::make_shared<sir::StencilCall>(
-        call.stencil_call_decl_stmt().stencil_call().callee(),
-        makeLocation(call.stencil_call_decl_stmt().stencil_call()));
-    for(const auto& protoField : call.stencil_call_decl_stmt().stencil_call().arguments()) {
-      auto field = makeField(protoField);
-      sirStencilCall->Args.push_back(field);
-    }
-    auto stmt = std::make_shared<StencilCallDeclStmt>(sirStencilCall,
-                                                      makeLocation(call.stencil_call_decl_stmt()));
-    stmt->setID(call.stencil_call_decl_stmt().id());
-    metadata.IDToStencilCallMap_.insert({IDToCall.first, stmt});
   }
 
   for(auto FieldnameToBC : protoMetaData.fieldnametoboundarycondition()) {

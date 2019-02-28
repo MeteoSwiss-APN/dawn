@@ -309,16 +309,17 @@ public:
   const std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
   getStencilCallToStencilIDMap() const;
 
-  /// @brief Get StencilID of the StencilCallDeclStmt
-  std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>>& getIDToStencilCallMap();
-  const std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>>&
-  getIDToStencilCallMap() const;
-
   /// @brief Get the StencilID of the StencilCallDeclStmt `stmt`
   int getStencilIDFromStmt(const std::shared_ptr<StencilCallDeclStmt>& stmt) const;
 
   /// @brief Get the stencil description AST
   inline const std::vector<std::shared_ptr<Statement>>& getStencilDescStatements() const {
+    return metadata_.stencilDescStatements_;
+  }
+
+  // TODO do not have a non const
+  /// @brief Get the stencil description AST
+  inline std::vector<std::shared_ptr<Statement>>& getStencilDescStatements() {
     return metadata_.stencilDescStatements_;
   }
 

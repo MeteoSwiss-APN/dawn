@@ -302,9 +302,10 @@ bool StencilInstantiation::isIDAccessedMultipleStencils(int accessID) const {
   return false;
 }
 
-void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil, int AccessID,
-                                                                const Stencil::Lifetime& lifetime) {
-  std::string varname = getFieldNameFromAccessID(AccessID);
+void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil, int accessID,
+                                                                const Stencil::Lifetime& lifetime,
+                                                                TemporaryScope temporaryScope) {
+  std::string varname = getFieldNameFromAccessID(accessID);
   std::string fieldname = StencilInstantiation::makeTemporaryFieldname(
       StencilInstantiation::extractLocalVariablename(varname), accessID);
 
@@ -634,16 +635,6 @@ StencilInstantiation::getStencilCallToStencilIDMap() {
 const std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
 StencilInstantiation::getStencilCallToStencilIDMap() const {
   return IIR_->getStencilCallToStencilIDMap();
-}
-
-std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>>&
-StencilInstantiation::getIDToStencilCallMap() {
-  return metadata_.IDToStencilCallMap_;
-}
-
-const std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>>&
-StencilInstantiation::getIDToStencilCallMap() const {
-  return metadata_.IDToStencilCallMap_;
 }
 
 int StencilInstantiation::getStencilIDFromStmt(

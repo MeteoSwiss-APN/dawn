@@ -171,7 +171,6 @@ void replaceStencilCalls(const std::shared_ptr<iir::StencilInstantiation>& insta
       instantiation->getStencilCallToStencilIDMap().erase(oldStencilCall);
       for(std::size_t i = 0; i < newStencilIDs.size(); ++i) {
         instantiation->getStencilCallToStencilIDMap().emplace(newStencilCalls[i], newStencilIDs[i]);
-        instantiation->getIDToStencilCallMap().emplace(newStencilIDs[i], newStencilCalls[i]);
       }
     }
   }

@@ -27,7 +27,7 @@ void CodeGenProperties::insertParam(const size_t paramPosition, std::string para
 }
 
 void CodeGenProperties::setParamBC(std::string name) {
-  DAWN_ASSERT(paramNameToType_.count(name));
+  //  DAWN_ASSERT(paramNameToType_.count(name));
   paramBC_.insert(name);
 }
 

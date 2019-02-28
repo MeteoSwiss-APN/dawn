@@ -19,6 +19,7 @@
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/StatementMapper.h"
+#include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/ASTUtil.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Logging.h"
@@ -128,7 +129,6 @@ public:
 
     // Register the call and set it as a replacement for the next vertical region
     instantiation_->getStencilCallToStencilIDMap().emplace(stencilCallDeclStmt, StencilID);
-    instantiation_->getIDToStencilCallMap().emplace(StencilID, stencilCallDeclStmt);
     stencilDescReplacement_ = stencilCallDeclStmt;
   }
 
@@ -168,16 +168,19 @@ public:
     // not inserted into the statement list in the frist place
     class RemoveStencilDescNodes : public ASTVisitorForwarding {
     public:
+      RemoveStencilDescNodes() {}
+
       bool needsRemoval(const std::shared_ptr<Stmt>& stmt) const {
         if(StencilCallDeclStmt* s = dyn_cast<StencilCallDeclStmt>(stmt.get())) {
           // StencilCallDeclStmt node, remove it if it is not one of our artificial stencil call
           // nodes
           if(!iir::StencilInstantiation::isStencilCallCodeGenName(s->getStencilCall()->Callee))
             return true;
-
-        } else if(isa<VerticalRegionDeclStmt>(stmt.get()))
+          // COSUNA Why do we need to do this?
+        } else if(isa<VerticalRegionDeclStmt>(stmt.get())) {
           // Remove all remaining vertical regions
           return true;
+        }
 
         return false;
       }
@@ -193,21 +196,47 @@ public:
         }
       }
     };
+    std::set<int> emptyStencilIDsRemoved;
+    // Remove empty stencils
+    for(auto it = instantiation_->getIIR()->childrenBegin();
+        it != instantiation_->getIIR()->childrenEnd();) {
+      Stencil& stencil = **it;
+      if(stencil.isEmpty()) {
+        emptyStencilIDsRemoved.insert(stencil.getStencilID());
+        it = instantiation_->getIIR()->childrenErase(it);
+      } else
+        ++it;
+    }
+
+    for(auto it = instantiation_->getStencilDescStatements().begin();
+        it != instantiation_->getStencilDescStatements().end(); ++it) {
+      std::shared_ptr<Stmt> stmt = (*it)->ASTStmt;
+      if(isa<StencilCallDeclStmt>(stmt.get())) {
+        auto callDecl = std::static_pointer_cast<StencilCallDeclStmt>(stmt);
+        bool remove = false;
+        for(int id : emptyStencilIDsRemoved) {
+          if(instantiation_->getStencilCallToStencilIDMap().at(callDecl) == id) {
+            remove = true;
+          }
+        }
+        if(remove) {
+          it = instantiation_->getStencilDescStatements().erase(it);
+        }
+      }
+    }
+    for(auto stencilID : emptyStencilIDsRemoved) {
+      for(const auto& pair : instantiation_->getStencilCallToStencilIDMap()) {
+        if(pair.second == stencilID) {
+          instantiation_->getStencilCallToStencilIDMap().erase(pair.first);
+          break;
+        }
+      }
+    }
 
     // Remove the nested VerticalRegionDeclStmts and StencilCallDeclStmts
     RemoveStencilDescNodes remover;
     for(auto& statement : scope_.top()->Statements)
       statement->ASTStmt->accept(remover);
-
-    // Remove empty stencils
-    for(auto it = instantiation_->getIIR()->childrenBegin();
-        it != instantiation_->getIIR()->childrenEnd();) {
-      Stencil& stencil = **it;
-      if(stencil.isEmpty())
-        it = instantiation_->getIIR()->childrenErase(it);
-      else
-        ++it;
-    }
   }
 
   /// @brief Push back a new statement to the end of the current statement list

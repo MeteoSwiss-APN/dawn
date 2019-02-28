@@ -15,8 +15,8 @@
 #include "dawn/Compiler/DiagnosticsEngine.h"
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
-#include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Serialization/IIRSerializer.h"
 #include <gtest/gtest.h>
 
 using namespace dawn;
@@ -127,13 +127,6 @@ bool compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformati
       }
       return false;
     }
-  }
-  // we compare the content of the maps since the shared-ptr's are not the same
-  IIR_EARLY_EXIT((lhs.IDToStencilCallMap_.size() == rhs.IDToStencilCallMap_.size()));
-  for(const auto& lhsPair : lhs.IDToStencilCallMap_) {
-    IIR_EARLY_EXIT(rhs.IDToStencilCallMap_.count(lhsPair.first));
-    auto rhsValue = rhs.IDToStencilCallMap_[lhsPair.first];
-    IIR_EARLY_EXIT(rhsValue->equals(lhsPair.second.get()));
   }
 
   // we compare the content of the maps since the shared-ptr's are not the same
@@ -255,7 +248,6 @@ TEST_F(IIRSerializerTest, ComplexStrucutes) {
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   auto stmt = std::make_shared<StencilCallDeclStmt>(std::make_shared<sir::StencilCall>("test"));
-  referenceInstantiaton->getMetaData().IDToStencilCallMap_.emplace(10, stmt);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   auto bcstmt = std::make_shared<BoundaryConditionDeclStmt>("callee");
@@ -296,16 +288,16 @@ TEST_F(IIRSerializerTest, IIRTests) {
       make_unique<iir::DoMethod>(iir::Interval(1, 5, 0, 1), *referenceInstantiaton));
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-    auto& IIRDoMethod = (IIRStage)->getChild(0);
-    auto expr = std::make_shared<VarAccessExpr>("name");
-    auto stmt = std::make_shared<ExprStmt>(expr);
-    stmt->setID(22);
-    auto statement = std::make_shared<Statement>(stmt, nullptr);
-    auto stmtAccessPair = make_unique<iir::StatementAccessesPair>(statement);
-    std::shared_ptr<iir::Accesses> callerAccesses = std::make_shared<iir::Accesses>();
-    stmtAccessPair->setCallerAccesses(callerAccesses);
+  auto& IIRDoMethod = (IIRStage)->getChild(0);
+  auto expr = std::make_shared<VarAccessExpr>("name");
+  auto stmt = std::make_shared<ExprStmt>(expr);
+  stmt->setID(22);
+  auto statement = std::make_shared<Statement>(stmt, nullptr);
+  auto stmtAccessPair = make_unique<iir::StatementAccessesPair>(statement);
+  std::shared_ptr<iir::Accesses> callerAccesses = std::make_shared<iir::Accesses>();
+  stmtAccessPair->setCallerAccesses(callerAccesses);
 
-    (IIRDoMethod)->insertChild(std::move(stmtAccessPair));
+  (IIRDoMethod)->insertChild(std::move(stmtAccessPair));
 }
 
 } // anonymous namespace
