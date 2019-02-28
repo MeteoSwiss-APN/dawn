@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/IIR/FieldAccessExtents.h"
-#include "dawn/IIR/IIRPrinter.h"
+#include "dawn/Support/Json.h"
 #include <sstream>
 
 namespace dawn {
@@ -24,7 +24,8 @@ void FieldAccessExtents::mergeReadExtents(Extents const& extents) {
     readAccessExtents_ = boost::make_optional(extents);
   updateTotalExtents();
 }
-void FieldAccessExtents::print(IIRPrinter printer) const {
+json::json FieldAccessExtents::jsonDump() const {
+  json::json node;
   std::stringstream ss;
   if(readAccessExtents_.is_initialized()) {
     ss << *readAccessExtents_;
@@ -32,7 +33,7 @@ void FieldAccessExtents::print(IIRPrinter printer) const {
     ss << "null";
   }
 
-  printer.dump("read access: ", ss.str());
+  node["read_access"] = ss.str();
   ss.str("");
   if(writeAccessExtents_.is_initialized()) {
     ss << *writeAccessExtents_;
@@ -40,7 +41,8 @@ void FieldAccessExtents::print(IIRPrinter printer) const {
     ss << "null";
   }
 
-  printer.dump("write access: ", ss.str());
+  node["write_access"] = ss.str();
+  return node;
 }
 
 void FieldAccessExtents::mergeWriteExtents(Extents const& extents) {

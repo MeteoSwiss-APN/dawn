@@ -35,21 +35,24 @@ Stage::Stage(StencilInstantiation& stencilInstantiation, int StageID, const Inte
   insertChild(make_unique<DoMethod>(interval, stencilInstantiation));
 }
 
-void Stage::dump(IIRPrinter printer) const {
-  printer.dumpHeader("Stage:");
-  printer.dump("Fields:");
+json::json Stage::jsonDump(const StencilInstantiation& instantiation) const {
+  json::json node;
+  json::json fieldsJson;
   for(const auto& field : derivedInfo_.fields_) {
-    field.second.dump(++IIRPrinter(printer));
-    printer.dump("  ----------------------");
+    fieldsJson.push_back(field.second.jsonDump(&instantiation));
   }
-  printer.dump("------------------");
-  printer.dump("Extents:", derivedInfo_.extents_);
-  printer.dump("RequiresSync:", derivedInfo_.requiresSync_);
+  node["Fields"] = fieldsJson;
+  std::stringstream ss;
+  ss << derivedInfo_.extents_;
+  node["Extents"] = ss.str();
+  node["RequiresSync"] = derivedInfo_.requiresSync_;
 
+  int cnt = 0;
   for(const auto& doMethod : children_) {
-    doMethod->dump(++IIRPrinter(printer));
+    node["DoMethod" + std::to_string(cnt)] = doMethod->jsonDump(instantiation);
+    cnt++;
   }
-  printer.close();
+  return node;
 }
 
 std::unique_ptr<Stage> Stage::clone() const {

@@ -409,26 +409,28 @@ void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
   }
 }
 
-void MultiStage::dump(IIRPrinter printer) const {
-  printer.dumpHeader("MultiStage");
-  printer.dump("ID: ", id_);
-  printer.dump("Loop: ", loopOrderToString(loopOrder_));
-  printer.dump("Fields:");
+json::json MultiStage::jsonDump(const StencilInstantiation& instantiation) const {
+  json::json node;
+  node["ID"] = id_;
+  node["Loop"] = loopOrderToString(loopOrder_);
+  json::json fieldsJson;
   for(const auto& field : derivedInfo_.fields_) {
-    field.second.dump(++IIRPrinter(printer));
-    printer.dump("  ----------------------");
+    fieldsJson.push_back(field.second.jsonDump(&instantiation));
   }
-  printer.dump("------------------");
-  printer.dump("Caches:");
+  node["Fields"] = fieldsJson;
+
+  json::json cachesJson;
   for(const auto& cache : derivedInfo_.caches_) {
-    cache.second.dump(++IIRPrinter(printer));
-    printer.dump("  ----------------------");
+    cachesJson.push_back(cache.second.jsonDump());
   }
-  printer.dump("------------------");
+  node["Caches"] = cachesJson;
+
+  int cnt = 0;
   for(const auto& stage : children_) {
-    stage->dump(++IIRPrinter(printer));
+    node["Stage" + std::to_string(cnt)] = stage->jsonDump(instantiation);
+    cnt++;
   }
-  printer.close();
+  return node;
 }
 bool MultiStage::isEmptyOrNullStmt() const {
   for(const auto& stage : getChildren()) {

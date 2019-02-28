@@ -94,21 +94,25 @@ void DoMethod::DerivedInfo::clear() { fields_.clear(); }
 
 void DoMethod::clearDerivedInfo() { derivedInfo_.clear(); }
 
-void DoMethod::dump(IIRPrinter printer) const {
-  printer.dumpHeader("DoMethod");
-  printer.dump("ID:", id_);
-  printer.dump("interval:", interval_);
-  printer.dump("Fields:");
+json::json DoMethod::jsonDump(const StencilInstantiation& instantiation) const {
+  json::json node;
+  node["ID"] = id_;
+  std::stringstream ss;
+  ss << interval_;
+  node["interval"] = ss.str();
+
+  json::json fieldsJson;
   for(const auto& field : derivedInfo_.fields_) {
-    field.second.dump(++IIRPrinter(printer));
-    printer.dump("  ----------------------");
+    fieldsJson.push_back(field.second.jsonDump(&instantiation));
   }
-  printer.dump("------------------");
+  node["Fields"] = fieldsJson;
+
+  json::json stmtsJson;
   for(const auto& stmt : children_) {
-    stmt->dump(++IIRPrinter(printer));
-    printer.dump("  ----------------------");
+    stmtsJson.push_back(stmt->jsonDump(instantiation));
   }
-  printer.close();
+  node["Stmts"] = stmtsJson;
+  return node;
 }
 
 void DoMethod::updateLevel() {

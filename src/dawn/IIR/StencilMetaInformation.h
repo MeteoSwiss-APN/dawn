@@ -31,7 +31,7 @@ namespace iir {
 
 /// @brief Specific instantiation of a stencil
 /// @ingroup optimizer
-class StencilMetaInformation : NonCopyable {
+class StencilMetaInformation : public NonCopyable {
   class VariableVersions {
   public:
     /// Map of AccessIDs to the the list of all AccessIDs of the multi-versioned variables. Note
@@ -67,6 +67,8 @@ class StencilMetaInformation : NonCopyable {
     const std::unordered_set<int>& getVersionIDs() const { return versionIDs_; }
 
     VariableVersions() = default;
+
+    json::json jsonDump() const;
   };
 
 public:
@@ -154,6 +156,8 @@ public:
   std::vector<std::shared_ptr<sir::StencilFunction>> allStencilFunctions_;
 
   StencilMetaInformation() = default;
+
+  json::json jsonDump() const;
 
   void clone(const StencilMetaInformation& origin);
 };

@@ -56,8 +56,6 @@ yoda_add_library(
           IIR.proto
           IIRNode.h
           IIRNodeIterator.h
-	  IIRPrinter.cpp
-	  IIRPrinter.h
           LoopOrder.cpp
           LoopOrder.h
           MultiInterval.cpp

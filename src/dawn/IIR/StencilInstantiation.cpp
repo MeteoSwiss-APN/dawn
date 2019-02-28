@@ -779,16 +779,20 @@ std::string StencilInstantiation::getOriginalNameFromAccessID(int AccessID) cons
 
 bool StencilInstantiation::checkTreeConsistency() const { return IIR_->checkTreeConsistency(); }
 
-std::string StencilInstantiation::dump() const {
-  std::stringstream ss;
-  IIRPrinter printer(0, ss, this);
+void StencilInstantiation::jsonDump(std::string filename) const {
 
-  printer.dumpHeader("StencilInstantiation");
-  printer.dump("name :", getName());
-  for(const auto& stencil : getStencils()) {
-    stencil->dump(++IIRPrinter(printer));
+  std::ofstream fs(filename, std::ios::out | std::ios::trunc);
+  if(!fs.is_open()) {
+    DiagnosticsBuilder diag(DiagnosticsKind::Error, SourceLocation());
+    diag << "file system error: cannot open file: " << filename;
+    context_->getDiagnostics().report(diag);
   }
-  return ss.str();
+
+  json::json node;
+  node["MetaInformation"] = metadata_.jsonDump();
+  node["IIR"] = IIR_->jsonDump();
+  fs << node.dump(2) << std::endl;
+  fs.close();
 }
 
 static std::string makeNameImpl(const char* prefix, const std::string& name, int AccessID) {
