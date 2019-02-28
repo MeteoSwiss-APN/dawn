@@ -15,7 +15,6 @@
 #ifndef DAWN_IIR_CACHE_H
 #define DAWN_IIR_CACHE_H
 
-#include "dawn/IIR/IIRPrinter.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/HashCombine.h"
 #include <boost/optional.hpp>

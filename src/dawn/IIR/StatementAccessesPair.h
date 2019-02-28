@@ -19,7 +19,6 @@
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/BlockStatements.h"
 #include "dawn/IIR/IIRNode.h"
-#include "dawn/IIR/IIRPrinter.h"
 #include "dawn/SIR/Statement.h"
 #include <boost/optional.hpp>
 #include <memory>

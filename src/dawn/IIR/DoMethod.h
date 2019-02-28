@@ -17,7 +17,6 @@
 
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/IIRNode.h"
-#include "dawn/IIR/IIRPrinter.h"
 #include "dawn/IIR/Interval.h"
 #include <boost/optional.hpp>
 #include <memory>

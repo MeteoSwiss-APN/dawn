@@ -15,7 +15,6 @@
 #ifndef DAWN_IIR_STENCIL_H
 #define DAWN_IIR_STENCIL_H
 
-#include "dawn/IIR/IIRPrinter.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/Statement.h"
@@ -56,7 +55,7 @@ public:
     Array3i Dimensions;
     Field field;
     bool IsTemporary;
-    json::json jsonDump() const;
+    json::json jsonDump(const StencilInstantiation* instantiation) const;
   };
 
 private:

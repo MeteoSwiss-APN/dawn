@@ -13,7 +13,6 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/Stencil.h"
-#include "IIRPrinter.h"
 #include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -101,11 +100,11 @@ bool Stencil::StatementPosition::inSameDoMethod(const Stencil::StatementPosition
   return StagePos == other.StagePos && DoMethodIndex == other.DoMethodIndex;
 }
 
-json::json Stencil::FieldInfo::jsonDump() const {
+json::json Stencil::FieldInfo::jsonDump(const StencilInstantiation* instantiation) const {
   json::json node;
   node["name"] = Name;
   node["dim"] = format("[%i,%i,%i]", Dimensions[0], Dimensions[1], Dimensions[2]);
-  node["field"] = field.jsonDump();
+  node["field"] = field.jsonDump(instantiation);
   node["IsTemporary"] = IsTemporary;
   return node;
 }
@@ -115,7 +114,7 @@ json::json Stencil::jsonDump() const {
   node["ID"] = std::to_string(StencilID_);
   json::json fieldsJson;
   for(const auto& f : derivedInfo_.fields_) {
-    fieldsJson.push_back(f.second.jsonDump());
+    fieldsJson.push_back(f.second.jsonDump(&stencilInstantiation_));
   }
   node["Fields"] = fieldsJson;
 

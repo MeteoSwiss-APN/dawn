@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/IIR/FieldAccessExtents.h"
-#include "dawn/IIR/IIRPrinter.h"
+#include "dawn/Support/Json.h"
 #include <sstream>
 
 namespace dawn {

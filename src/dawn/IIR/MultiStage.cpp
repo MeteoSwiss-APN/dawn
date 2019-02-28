@@ -415,7 +415,7 @@ json::json MultiStage::jsonDump(const StencilInstantiation& instantiation) const
   node["Loop"] = loopOrderToString(loopOrder_);
   json::json fieldsJson;
   for(const auto& field : derivedInfo_.fields_) {
-    fieldsJson.push_back(field.second.jsonDump(instantiation));
+    fieldsJson.push_back(field.second.jsonDump(&instantiation));
   }
   node["Fields"] = fieldsJson;
 

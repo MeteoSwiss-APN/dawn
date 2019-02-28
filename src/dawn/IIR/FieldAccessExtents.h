@@ -16,7 +16,7 @@
 #define DAWN_IIR_FIELDACCESSEXTENTS_H
 
 #include "dawn/IIR/Extents.h"
-#include "dawn/IIR/IIRPrinter.h"
+#include "dawn/Support/Json.h"
 
 namespace dawn {
 namespace iir {

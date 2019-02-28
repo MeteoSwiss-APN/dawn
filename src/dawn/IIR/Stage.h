@@ -18,7 +18,6 @@
 #include "dawn/IIR/DoMethod.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/IIRNode.h"
-#include "dawn/IIR/IIRPrinter.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/ArrayRef.h"
 #include <boost/optional.hpp>

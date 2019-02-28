@@ -772,7 +772,9 @@ void StencilInstantiation::jsonDump(std::string filename) const {
     context_->getDiagnostics().report(diag);
   }
 
-  json::json node = IIR_->jsonDump();
+  json::json node;
+  node["MetaInformation"] = metadata_.jsonDump();
+  node["IIR"] = IIR_->jsonDump();
   fs << node.dump(2) << std::endl;
   fs.close();
 }

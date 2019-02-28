@@ -18,6 +18,7 @@
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Format.h"
+#include "dawn/Support/Json.h"
 #include "dawn/Support/NonCopyable.h"
 #include "dawn/Support/SourceLocation.h"
 #include "dawn/Support/Type.h"
@@ -359,6 +360,14 @@ struct Value : NonCopyable {
 
   bool operator==(const Value& rhs) const;
   CompareResult comparison(const sir::Value& rhs) const;
+
+  json::json jsonDump() const {
+    json::json node;
+    node["type"] = Value::typeToString(type_);
+    node["isConstexpr"] = isConstexpr();
+    node["value"] = toString();
+    return node;
+  }
 
 private:
   struct ValueImplBase {
