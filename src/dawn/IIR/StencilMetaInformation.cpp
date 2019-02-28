@@ -106,7 +106,7 @@ json::json StencilMetaInformation::VariableVersions::jsonDump() const {
     for(const int id : *(pair.second)) {
       versions.push_back(id);
     }
-    versionMap[pair.first] = versions;
+    versionMap[std::to_string(pair.first)] = versions;
   }
   node["versions"] = versionMap;
   json::json versionID;
@@ -118,40 +118,6 @@ json::json StencilMetaInformation::VariableVersions::jsonDump() const {
 }
 
 json::json StencilMetaInformation::jsonDump() const {
-
-  //  /// Surjection of AST Nodes, Expr (FieldAccessExpr or VarAccessExpr) or Stmt
-  //  (VarDeclStmt), to
-  //  /// their AccessID. The surjection implies that multiple AST Nodes can have the same
-  //  AccessID,
-  //  /// which is the intended behaviour as we want to get the same ID back when we access the
-  //  same
-  //  /// field for example
-  //  std::unordered_map<int, int> ExprIDToAccessIDMap_;
-  //  std::unordered_map<int, int> StmtIDToAccessIDMap_;
-
-  //  /// Stencil description statements. These are built from the StencilDescAst of the
-  //  sir::Stencil
-  //  std::vector<std::shared_ptr<Statement>> stencilDescStatements_;
-  //  std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>> IDToStencilCallMap_;
-
-  //  /// Referenced stencil functions in this stencil (note that nested stencil functions are
-  //  not
-  //  /// stored here but rather in the respecticve `StencilFunctionInstantiation`)
-  //  std::vector<std::shared_ptr<StencilFunctionInstantiation>> stencilFunctionInstantiations_;
-  //  std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
-  //                     std::shared_ptr<StencilFunctionInstantiation>>
-  //      ExprToStencilFunctionInstantiationMap_;
-
-  //  // TODO a set here would be enough
-  //  /// lookup table containing all the stencil function candidates, whose arguments are not
-  //  yet
-  //  bound
-  //  std::unordered_map<std::shared_ptr<StencilFunctionInstantiation>,
-  //                     StencilFunctionInstantiationCandidate>
-  //      stencilFunInstantiationCandidate_;
-
-  //  std::vector<std::shared_ptr<sir::StencilFunction>> allStencilFunctions_;
-
   json::json node;
   node["VariableVersions"] = variableVersions_.jsonDump();
   node["filename"] = fileName_;
@@ -176,7 +142,7 @@ json::json StencilMetaInformation::jsonDump() const {
   json::json fieldsMapJson;
   for(const auto& pair : fieldIDToInitializedDimensionsMap_) {
     auto dims = pair.second;
-    fieldsMapJson[pair.first] = format("[%i,%i,%i]", dims[0], dims[1], dims[2]);
+    fieldsMapJson[std::to_string(pair.first)] = format("[%i,%i,%i]", dims[0], dims[1], dims[2]);
   }
   node["FieldDims"] = fieldsMapJson;
 
@@ -185,7 +151,6 @@ json::json StencilMetaInformation::jsonDump() const {
     bcJson[bc.first] = ASTStringifer::toString(bc.second);
   }
   node["FieldToBC"] = bcJson;
-  return node;
 
   json::json tmpAccessIDsJson;
   for(const auto& id : TemporaryFieldAccessIDSet_) {
@@ -207,21 +172,22 @@ json::json StencilMetaInformation::jsonDump() const {
 
   json::json literalAccessIDsJson;
   for(const auto& pair : LiteralAccessIDToNameMap_) {
-    fieldAccessIDsJson[pair.first] = pair.second;
+    literalAccessIDsJson[std::to_string(pair.first)] = pair.second;
   }
   node["literalAccessIDs"] = literalAccessIDsJson;
 
   json::json accessIDToNameJson;
   for(const auto& pair : AccessIDToNameMap_) {
-    accessIDToNameJson[pair.first] = accessIDToNameJson[pair.second];
+    accessIDToNameJson[std::to_string(pair.first)] = pair.second;
   }
   node["AccessIDToName"] = accessIDToNameJson;
-
   json::json idToStencilCallJson;
   for(const auto& pair : IDToStencilCallMap_) {
-    idToStencilCallJson[pair.first] = ASTStringifer::toString(pair.second);
+    idToStencilCallJson[std::to_string(pair.first)] = ASTStringifer::toString(pair.second);
   }
   node["IDToStencilCall"] = idToStencilCallJson;
+
+  return node;
 }
 
 } // namespace iir
