@@ -362,11 +362,11 @@ struct Value : NonCopyable {
   CompareResult comparison(const sir::Value& rhs) const;
 
   json::json jsonDump() const {
-    json::json node;
-    node["type"] = Value::typeToString(type_);
-    node["isConstexpr"] = isConstexpr();
-    node["value"] = toString();
-    return node;
+    json::json valueJson;
+    valueJson["type"] = Value::typeToString(type_);
+    valueJson["isConstexpr"] = isConstexpr();
+    valueJson["value"] = toString();
+    return valueJson;
   }
 
 private:

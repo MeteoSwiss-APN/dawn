@@ -85,19 +85,16 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
     FieldnameToBoundaryConditionMap_.emplace(
         pair.first, std::make_shared<BoundaryConditionDeclStmt>(*(pair.second)));
     fieldIDToInitializedDimensionsMap_ = origin.fieldIDToInitializedDimensionsMap_;
-    for(const auto& pair : origin.globalVariableMap_) {
-      globalVariableMap_.emplace(pair.first, std::make_shared<sir::Value>(pair.second));
-    }
-    stencilLocation_ = origin.stencilLocation_;
-    stencilName_ = origin.stencilName_;
-    fileName_ = origin.fileName_;
   }
+  for(const auto& pair : origin.globalVariableMap_) {
+    globalVariableMap_.emplace(pair.first, std::make_shared<sir::Value>(pair.second));
+  }
+  stencilLocation_ = origin.stencilLocation_;
+  stencilName_ = origin.stencilName_;
+  fileName_ = origin.fileName_;
 }
 
 json::json StencilMetaInformation::VariableVersions::jsonDump() const {
-  std::unordered_map<int, std::shared_ptr<std::vector<int>>> variableVersionsMap_;
-  std::unordered_map<int, int> versionToOriginalVersionMap_;
-  std::unordered_set<int> versionIDs_;
   json::json node;
 
   json::json versionMap;
@@ -118,76 +115,76 @@ json::json StencilMetaInformation::VariableVersions::jsonDump() const {
 }
 
 json::json StencilMetaInformation::jsonDump() const {
-  json::json node;
-  node["VariableVersions"] = variableVersions_.jsonDump();
-  node["filename"] = fileName_;
-  node["stencilname"] = stencilName_;
+  json::json metaDataJson;
+  metaDataJson["VariableVersions"] = variableVersions_.jsonDump();
+  metaDataJson["filename"] = fileName_;
+  metaDataJson["stencilname"] = stencilName_;
   std::stringstream ss;
   ss << stencilLocation_;
-  node["stencilLocation"] = ss.str();
+  metaDataJson["stencilLocation"] = ss.str();
   ss.str("");
 
   json::json globalsJson;
   for(const auto& globalPair : globalVariableMap_) {
     globalsJson[globalPair.first] = globalPair.second->jsonDump();
   }
-  node["globals"] = globalsJson;
+  metaDataJson["globals"] = globalsJson;
 
   json::json globalAccessIDsJson;
   for(const auto& id : GlobalVariableAccessIDSet_) {
     globalAccessIDsJson.push_back(id);
   }
-  node["GlobalAccessIDs"] = globalAccessIDsJson;
+  metaDataJson["GlobalAccessIDs"] = globalAccessIDsJson;
 
   json::json fieldsMapJson;
   for(const auto& pair : fieldIDToInitializedDimensionsMap_) {
     auto dims = pair.second;
     fieldsMapJson[std::to_string(pair.first)] = format("[%i,%i,%i]", dims[0], dims[1], dims[2]);
   }
-  node["FieldDims"] = fieldsMapJson;
+  metaDataJson["FieldDims"] = fieldsMapJson;
 
   json::json bcJson;
   for(const auto& bc : FieldnameToBoundaryConditionMap_) {
     bcJson[bc.first] = ASTStringifer::toString(bc.second);
   }
-  node["FieldToBC"] = bcJson;
+  metaDataJson["FieldToBC"] = bcJson;
 
   json::json tmpAccessIDsJson;
   for(const auto& id : TemporaryFieldAccessIDSet_) {
     tmpAccessIDsJson.push_back(id);
   }
-  node["TemporaryAccessIDs"] = tmpAccessIDsJson;
+  metaDataJson["TemporaryAccessIDs"] = tmpAccessIDsJson;
 
   json::json apiAccessIDsJson;
   for(const auto& id : apiFieldIDs_) {
     apiAccessIDsJson.push_back(id);
   }
-  node["apiAccessIDs"] = apiAccessIDsJson;
+  metaDataJson["apiAccessIDs"] = apiAccessIDsJson;
 
   json::json fieldAccessIDsJson;
   for(const auto& id : FieldAccessIDSet_) {
     fieldAccessIDsJson.push_back(id);
   }
-  node["fieldAccessIDs"] = fieldAccessIDsJson;
+  metaDataJson["fieldAccessIDs"] = fieldAccessIDsJson;
 
   json::json literalAccessIDsJson;
   for(const auto& pair : LiteralAccessIDToNameMap_) {
     literalAccessIDsJson[std::to_string(pair.first)] = pair.second;
   }
-  node["literalAccessIDs"] = literalAccessIDsJson;
+  metaDataJson["literalAccessIDs"] = literalAccessIDsJson;
 
   json::json accessIDToNameJson;
   for(const auto& pair : AccessIDToNameMap_) {
     accessIDToNameJson[std::to_string(pair.first)] = pair.second;
   }
-  node["AccessIDToName"] = accessIDToNameJson;
+  metaDataJson["AccessIDToName"] = accessIDToNameJson;
   json::json idToStencilCallJson;
   for(const auto& pair : IDToStencilCallMap_) {
     idToStencilCallJson[std::to_string(pair.first)] = ASTStringifer::toString(pair.second);
   }
-  node["IDToStencilCall"] = idToStencilCallJson;
+  metaDataJson["IDToStencilCall"] = idToStencilCallJson;
 
-  return node;
+  return metaDataJson;
 }
 
 } // namespace iir

@@ -16,8 +16,6 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Logging.h"
-#include <fstream>
-#include <iostream>
 #include <vector>
 
 namespace dawn {
@@ -54,7 +52,7 @@ bool PassManager::runPassOnStecilInstantiation(
   }
 
   if(instantiation->getOptimizerContext()->getOptions().PassVerbose) {
-    instantiation->jsonDump(pass->getName() + "Log.json");
+    instantiation->jsonDump(pass->getName() + "_" + std::to_string(counter_) + "_Log.json");
   }
 
   DAWN_ASSERT_MSG(instantiation->getIIR()->checkTreeConsistency(),
@@ -66,6 +64,7 @@ bool PassManager::runPassOnStecilInstantiation(
   }
 #endif
 
+  counter_++;
   DAWN_LOG(INFO) << "Done with " << pass->getName() << " : Success";
   return true;
 }

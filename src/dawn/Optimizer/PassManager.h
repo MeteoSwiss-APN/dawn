@@ -30,6 +30,7 @@ class StencilInstantiation;
 /// @brief Handle registering and running of passes
 class PassManager : public NonCopyable {
   std::list<std::unique_ptr<Pass>> passes_;
+  int counter_ = 0;
 
 public:
   /// @brief Create a new pass at the end of the pass list
