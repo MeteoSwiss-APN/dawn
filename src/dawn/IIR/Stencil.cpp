@@ -120,7 +120,7 @@ json::json Stencil::jsonDump() const {
 
   int cnt = 0;
   for(const auto& child : children_) {
-    node["MultiStage" + std::to_string(cnt)] = child->jsonDump(stencilInstantiation_);
+    node["MultiStage" + std::to_string(cnt)] = child->jsonDump();
     cnt++;
   }
   return node;

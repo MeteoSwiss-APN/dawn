@@ -388,9 +388,9 @@ public:
 
     // Create the new multi-stage
     std::unique_ptr<MultiStage> multiStage = make_unique<MultiStage>(
-        *instantiation_, verticalRegion->LoopOrder == sir::VerticalRegion::LK_Forward
-                             ? LoopOrderKind::LK_Forward
-                             : LoopOrderKind::LK_Backward);
+        instantiation_->getMetaData(), verticalRegion->LoopOrder == sir::VerticalRegion::LK_Forward
+                                           ? LoopOrderKind::LK_Forward
+                                           : LoopOrderKind::LK_Backward);
     std::unique_ptr<Stage> stage =
         make_unique<Stage>(instantiation_->getMetaData(), instantiation_->nextUID(), interval);
 

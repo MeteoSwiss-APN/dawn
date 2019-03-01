@@ -17,6 +17,7 @@
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/Statement.h"
 #include <unordered_map>
@@ -80,9 +81,9 @@ static void renameAccessesMaps(std::unordered_map<int, iir::Extents>& accessesMa
 } // anonymous namespace
 
 void renameAccessIDInStmts(
-    iir::StencilInstantiation* instantiation, int oldAccessID, int newAccessID,
+    iir::StencilMetaInformation* metadata, int oldAccessID, int newAccessID,
     ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
-  AccessIDRemapper<iir::StencilInstantiation> remapper(instantiation, oldAccessID, newAccessID);
+  AccessIDRemapper<iir::StencilMetaInformation> remapper(metadata, oldAccessID, newAccessID);
 
   for(auto& statementAccessesPair : statementAccessesPairs)
     statementAccessesPair->getStatement()->ASTStmt->accept(remapper);
@@ -105,7 +106,7 @@ void renameAccessIDInExpr(iir::StencilInstantiation* instantiation, int oldAcces
 }
 
 void renameAccessIDInAccesses(
-    iir::StencilInstantiation* instantiation, int oldAccessID, int newAccessID,
+    const iir::StencilMetaInformation* metadata, int oldAccessID, int newAccessID,
     ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
   for(auto& statementAccessesPair : statementAccessesPairs) {
     renameAccessesMaps(statementAccessesPair->getAccesses()->getReadAccesses(), oldAccessID,

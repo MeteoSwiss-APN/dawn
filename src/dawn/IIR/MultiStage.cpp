@@ -15,11 +15,13 @@
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
+#include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/IntervalAlgorithms.h"
 #include "dawn/IIR/MultiInterval.h"
 #include "dawn/IIR/Stage.h"
-#include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/Stencil.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/Support/STLExtras.h"
@@ -28,12 +30,11 @@
 namespace dawn {
 namespace iir {
 
-MultiStage::MultiStage(StencilInstantiation& stencilInstantiation, LoopOrderKind loopOrder)
-    : stencilInstantiation_(stencilInstantiation), loopOrder_(loopOrder),
-      id_(UIDGenerator::getInstance()->get()) {}
+MultiStage::MultiStage(StencilMetaInformation& metadata, LoopOrderKind loopOrder)
+    : metadata_(metadata), loopOrder_(loopOrder), id_(UIDGenerator::getInstance()->get()) {}
 
 std::unique_ptr<MultiStage> MultiStage::clone() const {
-  auto cloneMS = make_unique<MultiStage>(stencilInstantiation_, loopOrder_);
+  auto cloneMS = make_unique<MultiStage>(metadata_, loopOrder_);
 
   cloneMS->id_ = id_;
   cloneMS->derivedInfo_ = derivedInfo_;
@@ -52,7 +53,7 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
   auto curStageIt = children_.begin();
   std::deque<int> curStageSplitterIndices;
 
-  newMultiStages.push_back(make_unique<MultiStage>(stencilInstantiation_, lastLoopOrder));
+  newMultiStages.push_back(make_unique<MultiStage>(metadata_, lastLoopOrder));
 
   for(std::size_t i = 0; i < splitterIndices.size(); ++i) {
     SplitIndex& splitIndex = splitterIndices[i];
@@ -60,8 +61,7 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
     if(splitIndex.StageIndex == curStageIndex) {
 
       curStageSplitterIndices.push_back(splitIndex.StmtIndex);
-      newMultiStages.push_back(
-          make_unique<MultiStage>(stencilInstantiation_, splitIndex.LowerLoopOrder));
+      newMultiStages.push_back(make_unique<MultiStage>(metadata_, splitIndex.LowerLoopOrder));
       lastLoopOrder = splitIndex.LowerLoopOrder;
     }
 
@@ -84,7 +84,7 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
       }
 
       if(i != (splitterIndices.size() - 1))
-        newMultiStages.push_back(make_unique<MultiStage>(stencilInstantiation_, lastLoopOrder));
+        newMultiStages.push_back(make_unique<MultiStage>(metadata_, lastLoopOrder));
 
       // Handle the next stage
       curStageIndex++;
@@ -97,8 +97,7 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
 
 std::shared_ptr<DependencyGraphAccesses>
 MultiStage::getDependencyGraphOfInterval(const Interval& interval) const {
-  auto dependencyGraph =
-      std::make_shared<DependencyGraphAccesses>(stencilInstantiation_.getMetaData());
+  auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(metadata_);
   std::for_each(children_.begin(), children_.end(), [&](const std::unique_ptr<Stage>& stagePtr) {
     if(interval.overlaps(stagePtr->getEnclosingExtendedInterval()))
       std::for_each(stagePtr->childrenBegin(), stagePtr->childrenEnd(),
@@ -110,8 +109,7 @@ MultiStage::getDependencyGraphOfInterval(const Interval& interval) const {
 }
 
 std::shared_ptr<DependencyGraphAccesses> MultiStage::getDependencyGraphOfAxis() const {
-  auto dependencyGraph =
-      std::make_shared<DependencyGraphAccesses>(stencilInstantiation_.getMetaData());
+  auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(metadata_);
   std::for_each(children_.begin(), children_.end(), [&](const std::unique_ptr<Stage>& stagePtr) {
     std::for_each(stagePtr->childrenBegin(), stagePtr->childrenEnd(),
                   [&](const Stage::DoMethodSmartPtr_t& DoMethodPtr) {
@@ -349,7 +347,7 @@ boost::optional<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() co
       const Field& field = fieldPair.second;
       int AccessID = fieldPair.first;
 
-      if(!stencilInstantiation_.isTemporaryField(AccessID))
+      if(!metadata_.isTemporaryField(AccessID))
         continue;
 
       if(!interval.is_initialized()) {
@@ -401,23 +399,21 @@ void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
     Stage& stage = (**stageIt);
     for(const auto& doMethodPtr : stage.getChildren()) {
       DoMethod& doMethod = *doMethodPtr;
-      renameAccessIDInStmts(&stencilInstantiation_, oldAccessID, newAccessID,
-                            doMethod.getChildren());
-      renameAccessIDInAccesses(&stencilInstantiation_, oldAccessID, newAccessID,
-                               doMethod.getChildren());
+      renameAccessIDInStmts(&metadata_, oldAccessID, newAccessID, doMethod.getChildren());
+      renameAccessIDInAccesses(&metadata_, oldAccessID, newAccessID, doMethod.getChildren());
       doMethod.update(NodeUpdateType::level);
     }
     stage.update(NodeUpdateType::levelAndTreeAbove);
   }
 }
 
-json::json MultiStage::jsonDump(const StencilInstantiation& instantiation) const {
+json::json MultiStage::jsonDump() const {
   json::json node;
   node["ID"] = id_;
   node["Loop"] = loopOrderToString(loopOrder_);
   json::json fieldsJson;
   for(const auto& field : derivedInfo_.fields_) {
-    fieldsJson.push_back(field.second.jsonDump(instantiation.getMetaData()));
+    fieldsJson.push_back(field.second.jsonDump(metadata_));
   }
   node["Fields"] = fieldsJson;
 
@@ -429,7 +425,7 @@ json::json MultiStage::jsonDump(const StencilInstantiation& instantiation) const
 
   int cnt = 0;
   for(const auto& stage : children_) {
-    node["Stage" + std::to_string(cnt)] = stage->jsonDump(instantiation.getMetaData());
+    node["Stage" + std::to_string(cnt)] = stage->jsonDump(metadata_);
     cnt++;
   }
   return node;

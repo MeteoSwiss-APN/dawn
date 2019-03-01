@@ -248,13 +248,13 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
       for(int i = dir == RD_Above ? (curStmtIdx - 1) : (curStmtIdx + 1);
           dir == RD_Above ? (i >= 0) : (i < doMethod.getChildren().size());
           dir == RD_Above ? (--i) : (++i)) {
-        renameAccessIDInStmts(this, AccessID, newAccessID, doMethod.getChildren()[i]);
-        renameAccessIDInAccesses(this, AccessID, newAccessID, doMethod.getChildren()[i]);
+        renameAccessIDInStmts(&metadata_, AccessID, newAccessID, doMethod.getChildren()[i]);
+        renameAccessIDInAccesses(&metadata_, AccessID, newAccessID, doMethod.getChildren()[i]);
       }
 
     } else {
-      renameAccessIDInStmts(this, AccessID, newAccessID, doMethod.getChildren());
-      renameAccessIDInAccesses(this, AccessID, newAccessID, doMethod.getChildren());
+      renameAccessIDInStmts(&metadata_, AccessID, newAccessID, doMethod.getChildren());
+      renameAccessIDInAccesses(&metadata_, AccessID, newAccessID, doMethod.getChildren());
     }
 
     // Update the fields of the doMethod and stage levels

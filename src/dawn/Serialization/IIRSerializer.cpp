@@ -620,7 +620,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
       if(protoMSS.looporder() == proto::iir::MultiStage_LoopOrder::MultiStage_LoopOrder_Parallel) {
         looporder = iir::LoopOrderKind::LK_Parallel;
       }
-      (IIRStencil)->insertChild(make_unique<iir::MultiStage>(*target, looporder));
+      (IIRStencil)->insertChild(make_unique<iir::MultiStage>(target->getMetaData(), looporder));
 
       const auto& IIRMSS = (IIRStencil)->getChild(mssPos++);
       IIRMSS->setID(protoMSS.multistageid());

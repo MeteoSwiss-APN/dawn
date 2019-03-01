@@ -273,8 +273,8 @@ TEST_F(IIRSerializerTest, IIRTests) {
   IIR_EXPECT_NE(deserialized, referenceInstantiaton);
 
   (IIRStencil)
-      ->insertChild(
-          make_unique<iir::MultiStage>(*referenceInstantiaton, iir::LoopOrderKind::LK_Backward));
+      ->insertChild(make_unique<iir::MultiStage>(referenceInstantiaton->getMetaData(),
+                                                 iir::LoopOrderKind::LK_Backward));
   const auto& IIRMSS = (IIRStencil)->getChild(0);
   IIRMSS->getCaches().emplace(
       10, iir::Cache(iir::Cache::IJ, iir::Cache::fill, 10, boost::none, boost::none, boost::none));

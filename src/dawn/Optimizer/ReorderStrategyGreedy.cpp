@@ -100,7 +100,7 @@ ReoderStrategyGreedy::reorder(const std::unique_ptr<iir::Stencil>& stencilPtr) {
   const int maxBoundaryExtent = instantiation.getOptimizerContext()->getOptions().MaxHaloPoints;
 
   auto pushBackNewMultiStage = [&](iir::LoopOrderKind loopOrder) -> void {
-    newStencil->insertChild(make_unique<iir::MultiStage>(instantiation, loopOrder));
+    newStencil->insertChild(make_unique<iir::MultiStage>(instantiation.getMetaData(), loopOrder));
     newNumMultiStages++;
   };
 
