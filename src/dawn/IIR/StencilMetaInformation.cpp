@@ -117,7 +117,10 @@ json::json StencilMetaInformation::VariableVersions::jsonDump() const {
 json::json StencilMetaInformation::jsonDump() const {
   json::json metaDataJson;
   metaDataJson["VariableVersions"] = variableVersions_.jsonDump();
-  metaDataJson["filename"] = fileName_;
+
+  size_t pos = fileName_.find_last_of("\\/");
+  DAWN_ASSERT(pos + 1 < fileName_.size() - 1);
+  metaDataJson["filename"] = fileName_.substr(pos + 1, fileName_.size() - pos - 1);
   metaDataJson["stencilname"] = stencilName_;
   std::stringstream ss;
   ss << stencilLocation_;
