@@ -40,8 +40,9 @@ class StencilDescStatementMapper : public ASTVisitor {
 
   /// @brief Record of the current scope (each StencilCall will create a new scope)
   struct Scope : public NonCopyable {
-    Scope(const std::string& name, std::vector<std::shared_ptr<Statement>>& statements)
-        : Name(name), ScopeDepth(0), Statements(statements), StackTrace(nullptr) {}
+    Scope(const std::string& name, ControlFlowDescriptor& controlFlowDescriptor)
+        : Name(name), ScopeDepth(0), controlFlowDescriptor_(controlFlowDescriptor),
+          StackTrace(nullptr) {}
 
     /// Name of the current stencil
     std::string Name;
@@ -50,7 +51,7 @@ class StencilDescStatementMapper : public ASTVisitor {
     int ScopeDepth;
 
     /// List of statements of the stencil description
-    std::vector<std::shared_ptr<Statement>>& Statements;
+    ControlFlowDescriptor& controlFlowDescriptor_;
 
     /// Scope fieldnames to to (global) AccessID
     std::unordered_map<std::string, int> LocalFieldnameToAccessIDMap;
@@ -83,7 +84,7 @@ public:
     DAWN_ASSERT(instantiation);
     // Create the initial scope
     scope_.push(std::make_shared<Scope>(sirStencil_->Name,
-                                        instantiation_->getMetaData().stencilDescStatements_));
+                                        instantiation_->getIIR()->getControlFlowDescriptor()));
     scope_.top()->LocalFieldnameToAccessIDMap = instantiation_->getNameToAccessIDMap();
 
     // We add all global variables which have constant values
@@ -146,15 +147,17 @@ public:
     if(!stencilDescReplacement_)
       return;
 
+    // TODO redo
     // Instead of inserting the VerticalRegionDeclStmt we insert the call to the gridtools stencil
     if(scope_.top()->ScopeDepth == 1)
-      scope_.top()->Statements.emplace_back(
+      scope_.top()->controlFlowDescriptor_.insertStmt(
           std::make_shared<Statement>(stencilDescReplacement_, scope_.top()->StackTrace));
     else {
 
       // We need to replace the VerticalRegionDeclStmt in the current statement
-      replaceOldStmtWithNewStmtInStmt(scope_.top()->Statements.back()->ASTStmt, stencilDescNode,
-                                      stencilDescReplacement_);
+      replaceOldStmtWithNewStmtInStmt(
+          scope_.top()->controlFlowDescriptor_.getStatements().back()->ASTStmt, stencilDescNode,
+          stencilDescReplacement_);
     }
 
     stencilDescReplacement_ = nullptr;
@@ -196,6 +199,7 @@ public:
         }
       }
     };
+    ControlFlowDescriptor& controlFlow = instantiation_->getIIR()->getControlFlowDescriptor();
     std::set<int> emptyStencilIDsRemoved;
     // Remove empty stencils
     for(auto it = instantiation_->getIIR()->childrenBegin();
@@ -208,8 +212,8 @@ public:
         ++it;
     }
 
-    for(auto it = instantiation_->getStencilDescStatements().begin();
-        it != instantiation_->getStencilDescStatements().end(); ++it) {
+    for(auto it = controlFlow.getStatements().begin(); it != controlFlow.getStatements().end();
+        ++it) {
       std::shared_ptr<Stmt> stmt = (*it)->ASTStmt;
       if(isa<StencilCallDeclStmt>(stmt.get())) {
         auto callDecl = std::static_pointer_cast<StencilCallDeclStmt>(stmt);
@@ -220,7 +224,8 @@ public:
           }
         }
         if(remove) {
-          it = instantiation_->getStencilDescStatements().erase(it);
+          // TODO Do not do erase directly
+          it = controlFlow.eraseStmt(it);
         }
       }
     }
@@ -235,13 +240,13 @@ public:
 
     // Remove the nested VerticalRegionDeclStmts and StencilCallDeclStmts
     RemoveStencilDescNodes remover;
-    for(auto& statement : scope_.top()->Statements)
+    for(auto& statement : scope_.top()->controlFlowDescriptor_.getStatements())
       statement->ASTStmt->accept(remover);
   }
 
   /// @brief Push back a new statement to the end of the current statement list
   void pushBackStatement(const std::shared_ptr<Stmt>& stmt) {
-    scope_.top()->Statements.emplace_back(
+    scope_.top()->controlFlowDescriptor_.insertStmt(
         std::make_shared<Statement>(stmt, scope_.top()->StackTrace));
   }
 
@@ -289,13 +294,16 @@ public:
 
         if(result) {
           // Replace the if-statement with the then-block
-          replaceOldStmtWithNewStmtInStmt(scope_.top()->Statements.back()->ASTStmt, stmt,
-                                          stmt->getThenStmt());
+          // TODO very repetitive scope_.top()->control....getStatements() ...
+          replaceOldStmtWithNewStmtInStmt(
+              scope_.top()->controlFlowDescriptor_.getStatements().back()->ASTStmt, stmt,
+              stmt->getThenStmt());
           stmt->getThenStmt()->accept(*this);
         } else if(stmt->hasElse()) {
           // Replace the if-statement with the else-block
-          replaceOldStmtWithNewStmtInStmt(scope_.top()->Statements.back()->ASTStmt, stmt,
-                                          stmt->getElseStmt());
+          replaceOldStmtWithNewStmtInStmt(
+              scope_.top()->controlFlowDescriptor_.getStatements().back()->ASTStmt, stmt,
+              stmt->getElseStmt());
           stmt->getElseStmt()->accept(*this);
         } else {
           // Replace the if-statement with a void `0`
@@ -304,7 +312,8 @@ public:
           int AccessID = -instantiation_->nextUID();
           instantiation_->getMetaData().LiteralAccessIDToNameMap_.emplace(AccessID, "0");
           instantiation_->mapExprToAccessID(voidExpr, AccessID);
-          replaceOldStmtWithNewStmtInStmt(scope_.top()->Statements.back()->ASTStmt, stmt, voidStmt);
+          replaceOldStmtWithNewStmtInStmt(
+              scope_.top()->controlFlowDescriptor_.getStatements().back()->ASTStmt, stmt, voidStmt);
         }
       }
 
@@ -383,7 +392,7 @@ public:
                              ? LoopOrderKind::LK_Forward
                              : LoopOrderKind::LK_Backward);
     std::unique_ptr<Stage> stage =
-        make_unique<Stage>(*instantiation_, instantiation_->nextUID(), interval);
+        make_unique<Stage>(instantiation_->getMetaData(), instantiation_->nextUID(), interval);
 
     DAWN_LOG(INFO) << "Processing vertical region at " << verticalRegion->Loc;
 
@@ -428,7 +437,7 @@ public:
     // Prepare a new scope for the stencil call
     std::shared_ptr<Scope>& curScope = scope_.top();
     std::shared_ptr<Scope> candiateScope =
-        std::make_shared<Scope>(curScope->Name, curScope->Statements);
+        std::make_shared<Scope>(curScope->Name, curScope->controlFlowDescriptor_);
 
     // Variables are inherited from the parent scope (note that this *needs* to be a copy as we
     // cannot modify the parent scope)
@@ -562,7 +571,8 @@ public:
 
         auto newExpr = std::make_shared<dawn::LiteralAccessExpr>(
             value.toString(), sir::Value::typeToBuiltinTypeID(value.getType()));
-        replaceOldExprWithNewExprInStmt(scope_.top()->Statements.back()->ASTStmt, expr, newExpr);
+        replaceOldExprWithNewExprInStmt(
+            scope_.top()->controlFlowDescriptor_.getStatements().back()->ASTStmt, expr, newExpr);
 
         int AccessID = instantiation_->nextUID();
         instantiation_->getMetaData().LiteralAccessIDToNameMap_.emplace(AccessID,

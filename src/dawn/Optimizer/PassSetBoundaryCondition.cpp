@@ -13,10 +13,11 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassSetBoundaryCondition.h"
-#include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/IIR/Stencil.h"
+#include "dawn/IIR/ControlFlowDescriptor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/ASTExpr.h"
 #include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/ASTUtil.h"
@@ -172,8 +173,10 @@ bool PassSetBoundaryCondition::run(
   // Get the order in which the stencils are called:
   VisitStencilCalls findStencilCalls;
 
-  for(const std::shared_ptr<Statement>& statement :
-      stencilInstantiation->getStencilDescStatements()) {
+  const iir::ControlFlowDescriptor& controlFlow =
+      stencilInstantiation->getIIR()->getControlFlowDescriptor();
+
+  for(const std::shared_ptr<Statement>& statement : controlFlow.getStatements()) {
     statement->ASTStmt->accept(findStencilCalls);
   }
   std::unordered_set<int> StencilIDsVisited_;
@@ -275,7 +278,7 @@ bool PassSetBoundaryCondition::run(
         // condition. These calls are then replaced by {boundary_condition, stencil_call}
         AddBoundaryConditions visitor(stencilInstantiation, stencil.getStencilID());
 
-        for(auto& statement : stencilInstantiation->getStencilDescStatements()) {
+        for(auto& statement : controlFlow.getStatements()) {
           visitor.reset();
 
           std::shared_ptr<Stmt>& stmt = statement->ASTStmt;

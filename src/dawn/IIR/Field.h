@@ -18,12 +18,12 @@
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/FieldAccessExtents.h"
 #include "dawn/IIR/Interval.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/Json.h"
 #include <utility>
 
 namespace dawn {
 namespace iir {
-class StencilInstantiation;
 
 /// @brief Information of a field
 ///
@@ -91,7 +91,7 @@ public:
     return extentsRB_.getWriteExtents();
   }
 
-  json::json jsonDump(const StencilInstantiation* instantiation) const;
+  json::json jsonDump(const StencilMetaInformation& metaData) const;
 
   inline Extents const& getExtents() const { return extents_.getExtents(); }
   inline Extents const& getExtentsRB() const { return extentsRB_.getExtents(); }

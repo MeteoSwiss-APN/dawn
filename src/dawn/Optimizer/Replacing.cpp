@@ -138,7 +138,7 @@ void replaceStencilCalls(const std::shared_ptr<iir::StencilInstantiation>& insta
                          int oldStencilID, const std::vector<int>& newStencilIDs) {
   GetStencilCalls visitor(instantiation, oldStencilID);
 
-  for(auto& statement : instantiation->getStencilDescStatements()) {
+  for(auto& statement : instantiation->getIIR()->getControlFlowDescriptor().getStatements()) {
     visitor.reset();
 
     std::shared_ptr<Stmt>& stmt = statement->ASTStmt;

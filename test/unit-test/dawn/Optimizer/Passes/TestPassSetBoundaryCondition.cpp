@@ -92,7 +92,7 @@ TEST_F(StencilSplitAnalyzer, test_no_bc_inserted) {
       loadTest("boundary_condition_test_stencil_01.sir", false);
   ASSERT_TRUE((test->getBoundaryConditions().size() == 1));
   BCFinder myvisitor;
-  for(const auto& stmt : test->getStencilDescStatements()) {
+  for(const auto& stmt : test->getIIR()->getControlFlowDescriptor().getStatements()) {
     stmt->ASTStmt->accept(myvisitor);
   }
   ASSERT_TRUE((myvisitor.reportBCsFound() == 0));
@@ -112,7 +112,7 @@ TEST_F(StencilSplitAnalyzer, test_bc_extent_calc) {
       loadTest("boundary_condition_test_stencil_01.sir", true, 2);
   ASSERT_TRUE((test->getBoundaryConditions().size() == 1));
   BCFinder myvisitor;
-  for(const auto& stmt : test->getStencilDescStatements()) {
+  for(const auto& stmt : test->getIIR()->getControlFlowDescriptor().getStatements()) {
     stmt->ASTStmt->accept(myvisitor);
   }
   ASSERT_TRUE((myvisitor.reportBCsFound() == 1));
@@ -127,7 +127,8 @@ TEST_F(StencilSplitAnalyzer, test_two_bc) {
   ASSERT_TRUE((test->getBoundaryConditions().size() == 2));
   ASSERT_TRUE(test->getBoundaryConditions().count("intermediate"));
   auto bcfoo = test->getBoundaryConditions().find("intermediate")->second;
-  ASSERT_TRUE((test->getBoundaryConditionToExtentsMap().at(bcfoo) == iir::Extents{-1, 1, 0, 0, 0, 0}));
+  ASSERT_TRUE(
+      (test->getBoundaryConditionToExtentsMap().at(bcfoo) == iir::Extents{-1, 1, 0, 0, 0, 0}));
   ASSERT_TRUE(test->getBoundaryConditions().count("out"));
   auto bcbar = test->getBoundaryConditions().find("out")->second;
   ASSERT_TRUE((test->getBoundaryConditionToExtentsMap().count(bcbar) == 0));

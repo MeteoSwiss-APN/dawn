@@ -104,7 +104,7 @@ json::json Stencil::FieldInfo::jsonDump(const StencilInstantiation* instantiatio
   json::json node;
   node["name"] = Name;
   node["dim"] = format("[%i,%i,%i]", Dimensions[0], Dimensions[1], Dimensions[2]);
-  node["field"] = field.jsonDump(instantiation);
+  node["field"] = field.jsonDump(instantiation->getMetaData());
   node["IsTemporary"] = IsTemporary;
   return node;
 }

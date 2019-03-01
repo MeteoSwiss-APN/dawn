@@ -46,6 +46,8 @@ json::json IIR::jsonDump() const {
 void IIR::clone(std::unique_ptr<IIR>& dest) const {
   dest->cloneChildrenFrom(*this, dest);
   dest->setBlockSize(blockSize_);
+  // notice the control flow is not deep cloned, but copied
+  dest->controlFlowDesc_ = controlFlowDesc_;
 }
 
 } // namespace iir

@@ -124,7 +124,8 @@ void CXXNaiveCodeGen::generateStencilWrapperRun(
   // generate the control flow code executing each inner stencil
   ASTStencilDesc stencilDescCGVisitor(stencilInstantiation.get(), codeGenProperties);
   stencilDescCGVisitor.setIndent(RunMethod.getIndent());
-  for(const auto& statement : stencilInstantiation->getStencilDescStatements()) {
+  for(const auto& statement :
+      stencilInstantiation->getIIR()->getControlFlowDescriptor().getStatements()) {
     statement->ASTStmt->accept(stencilDescCGVisitor);
     RunMethod.addStatement(stencilDescCGVisitor.getCodeAndResetStream());
   }
@@ -235,8 +236,8 @@ void CXXNaiveCodeGen::generateStencilWrapperMembers(
     stencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
 
     for(int AccessID : stencilInstantiation->getAllocatedFieldAccessIDs())
-      stencilWrapperClass.addMember(c_gtc() + "storage_t",
-                                    "m_" + stencilInstantiation->getFieldNameFromAccessID(AccessID));
+      stencilWrapperClass.addMember(
+          c_gtc() + "storage_t", "m_" + stencilInstantiation->getFieldNameFromAccessID(AccessID));
   }
 }
 void CXXNaiveCodeGen::generateStencilClasses(

@@ -101,6 +101,26 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
       }
     }
   }
+  const auto& lhsControlFlowStmts = lhs->getControlFlowDescriptor().getStatements();
+  const auto& rhsControlFlowStmts = rhs->getControlFlowDescriptor().getStatements();
+
+  IIR_EARLY_EXIT((lhsControlFlowStmts.size() == rhsControlFlowStmts.size()));
+  for(int i = 0, size = lhsControlFlowStmts.size(); i < size; ++i) {
+    if(!lhsControlFlowStmts[i]->ASTStmt->equals(rhsControlFlowStmts[i]->ASTStmt.get()))
+      return false;
+    if(lhsControlFlowStmts[i]->StackTrace) {
+      if(rhsControlFlowStmts[i]->StackTrace) {
+        for(int j = 0, jsize = lhsControlFlowStmts[i]->StackTrace->size(); j < jsize; ++j) {
+          if(!(lhsControlFlowStmts[i]->StackTrace->at(j) ==
+               rhsControlFlowStmts[i]->StackTrace->at(j))) {
+            return false;
+          }
+        }
+      }
+      return false;
+    }
+  }
+
   return true;
 }
 bool compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformation& rhs) {
@@ -111,23 +131,6 @@ bool compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformati
   IIR_EARLY_EXIT((lhs.apiFieldIDs_ == rhs.apiFieldIDs_));
   IIR_EARLY_EXIT((lhs.TemporaryFieldAccessIDSet_ == rhs.TemporaryFieldAccessIDSet_));
   IIR_EARLY_EXIT((lhs.GlobalVariableAccessIDSet_ == rhs.GlobalVariableAccessIDSet_));
-  IIR_EARLY_EXIT((lhs.stencilDescStatements_.size() == rhs.stencilDescStatements_.size()));
-  for(int i = 0, size = lhs.stencilDescStatements_.size(); i < size; ++i) {
-    if(!lhs.stencilDescStatements_[i]->ASTStmt->equals(
-           rhs.stencilDescStatements_[i]->ASTStmt.get()))
-      return false;
-    if(lhs.stencilDescStatements_[i]->StackTrace) {
-      if(rhs.stencilDescStatements_[i]->StackTrace) {
-        for(int j = 0, jsize = lhs.stencilDescStatements_[i]->StackTrace->size(); j < jsize; ++j) {
-          if(!(lhs.stencilDescStatements_[i]->StackTrace->at(j) ==
-               rhs.stencilDescStatements_[i]->StackTrace->at(j))) {
-            return false;
-          }
-        }
-      }
-      return false;
-    }
-  }
 
   // we compare the content of the maps since the shared-ptr's are not the same
   IIR_EARLY_EXIT(
@@ -244,7 +247,7 @@ TEST_F(IIRSerializerTest, ComplexStrucutes) {
       std::make_shared<StencilCallDeclStmt>(std::make_shared<sir::StencilCall>("me")), nullptr);
   statement->ASTStmt->getSourceLocation().Line = 10;
   statement->ASTStmt->getSourceLocation().Column = 12;
-  referenceInstantiaton->getMetaData().stencilDescStatements_.push_back(statement);
+  referenceInstantiaton->getIIR()->getControlFlowDescriptor().insertStmt(statement);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   auto stmt = std::make_shared<StencilCallDeclStmt>(std::make_shared<sir::StencilCall>("test"));
@@ -280,12 +283,12 @@ TEST_F(IIRSerializerTest, IIRTests) {
   IIRMSS->setLoopOrder(iir::LoopOrderKind::LK_Forward);
   IIR_EXPECT_NE(deserialized, referenceInstantiaton);
 
-  IIRMSS->insertChild(make_unique<iir::Stage>(*referenceInstantiaton, 12));
+  IIRMSS->insertChild(make_unique<iir::Stage>(referenceInstantiaton->getMetaData(), 12));
   const auto& IIRStage = IIRMSS->getChild(0);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   (IIRStage)->insertChild(
-      make_unique<iir::DoMethod>(iir::Interval(1, 5, 0, 1), *referenceInstantiaton));
+      make_unique<iir::DoMethod>(iir::Interval(1, 5, 0, 1), referenceInstantiaton->getMetaData()));
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   auto& IIRDoMethod = (IIRStage)->getChild(0);

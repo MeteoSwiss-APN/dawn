@@ -51,22 +51,23 @@ public:
   StencilInstantiation(dawn::OptimizerContext* context);
 
   StencilMetaInformation& getMetaData();
+  const StencilMetaInformation& getMetaData() const { return metadata_; }
 
   std::shared_ptr<StencilInstantiation> clone() const;
 
   bool checkTreeConsistency() const;
 
   /// @brief Insert a new AccessID - Name pair
-  void setAccessIDNamePair(int AccessID, const std::string& name);
+  void setAccessIDNamePair(int accessID, const std::string& name);
 
   /// @brief Insert a new AccessID - Name pair of a field
-  void setAccessIDNamePairOfField(int AccessID, const std::string& name, bool isTemporary = false);
+  void setAccessIDNamePairOfField(int accessID, const std::string& name, bool isTemporary = false);
 
   /// @brief Insert a new AccessID - Name pair of a global variable (i.e scalar field access)
-  void setAccessIDNamePairOfGlobalVariable(int AccessID, const std::string& name);
+  void setAccessIDNamePairOfGlobalVariable(int accessID, const std::string& name);
 
   /// @brief Remove the field, variable or literal given by `AccessID`
-  void removeAccessID(int AccesssID);
+  void removeAccessID(int accessID);
 
   /// @brief Get the name of the StencilInstantiation (corresponds to the name of the SIRStencil)
   const std::string getName() const;
@@ -304,6 +305,10 @@ public:
   /// @brief get the IIR tree
   inline const std::unique_ptr<IIR>& getIIR() const { return IIR_; }
 
+  // TODO do not have non const ?
+  /// @brief get the IIR tree
+  inline std::unique_ptr<IIR>& getIIR() { return IIR_; }
+
   /// @brief Get StencilID of the StencilCallDeclStmt
   std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>& getStencilCallToStencilIDMap();
   const std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
@@ -311,17 +316,6 @@ public:
 
   /// @brief Get the StencilID of the StencilCallDeclStmt `stmt`
   int getStencilIDFromStmt(const std::shared_ptr<StencilCallDeclStmt>& stmt) const;
-
-  /// @brief Get the stencil description AST
-  inline const std::vector<std::shared_ptr<Statement>>& getStencilDescStatements() const {
-    return metadata_.stencilDescStatements_;
-  }
-
-  // TODO do not have a non const
-  /// @brief Get the stencil description AST
-  inline std::vector<std::shared_ptr<Statement>>& getStencilDescStatements() {
-    return metadata_.stencilDescStatements_;
-  }
 
   /// @brief Get the list of stencil functions
   inline std::vector<std::shared_ptr<StencilFunctionInstantiation>>&

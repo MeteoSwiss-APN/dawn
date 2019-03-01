@@ -163,6 +163,9 @@ message Stencil {
 // defined Stencil.
 message IIR {
     repeated Stencil stencils = 1;
+
+    // Stencil description statements for the overall program flow
+    repeated dawn.proto.statements.Stmt controlFlowStatements = 2;
 }
 
 /* ===-----------------------------------------------------------------------------------------===*/
@@ -234,24 +237,21 @@ message StencilMetaInfo {
     // Strucutue for all the fieldversioning information
     VariableVersions versionedFields = 9;
 
-    // Stencil description statements for the overall program flow
-    repeated dawn.proto.statements.Stmt stencilDescStatements = 10;
-
     // Map of field names to their respective Boundary Condition
-    map<string, dawn.proto.statements.Stmt> fieldnameToBoundaryCondition = 11;
+    map<string, dawn.proto.statements.Stmt> fieldnameToBoundaryCondition = 10;
 
     // Map of field ID's to the user-specified dimensions
-    map<int32, Array3i> fieldIDtoLegalDimensions = 12;
+    map<int32, Array3i> fieldIDtoLegalDimensions = 11;
 
     // Map of the globally defined variable names to their Values
-    map<string, GlobalValueAndType> globalVariableToValue = 13;
+    map<string, GlobalValueAndType> globalVariableToValue = 12;
 
     // The source-location of the stencil (for better error-handeling)
-    dawn.proto.statements.SourceLocation stencilLocation = 14;
+    dawn.proto.statements.SourceLocation stencilLocation = 13;
 
     // The user-given name of the stencil
     // (remember the 1-1 mapping of user-stencil - StencilInstantiation)
-    string stencilName = 15;
+    string stencilName = 14;
 }
 
 /* ===-----------------------------------------------------------------------------------------===*/

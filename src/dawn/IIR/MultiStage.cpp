@@ -97,7 +97,8 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
 
 std::shared_ptr<DependencyGraphAccesses>
 MultiStage::getDependencyGraphOfInterval(const Interval& interval) const {
-  auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(&stencilInstantiation_);
+  auto dependencyGraph =
+      std::make_shared<DependencyGraphAccesses>(stencilInstantiation_.getMetaData());
   std::for_each(children_.begin(), children_.end(), [&](const std::unique_ptr<Stage>& stagePtr) {
     if(interval.overlaps(stagePtr->getEnclosingExtendedInterval()))
       std::for_each(stagePtr->childrenBegin(), stagePtr->childrenEnd(),
@@ -109,7 +110,8 @@ MultiStage::getDependencyGraphOfInterval(const Interval& interval) const {
 }
 
 std::shared_ptr<DependencyGraphAccesses> MultiStage::getDependencyGraphOfAxis() const {
-  auto dependencyGraph = std::make_shared<DependencyGraphAccesses>(&stencilInstantiation_);
+  auto dependencyGraph =
+      std::make_shared<DependencyGraphAccesses>(stencilInstantiation_.getMetaData());
   std::for_each(children_.begin(), children_.end(), [&](const std::unique_ptr<Stage>& stagePtr) {
     std::for_each(stagePtr->childrenBegin(), stagePtr->childrenEnd(),
                   [&](const Stage::DoMethodSmartPtr_t& DoMethodPtr) {
@@ -415,7 +417,7 @@ json::json MultiStage::jsonDump(const StencilInstantiation& instantiation) const
   node["Loop"] = loopOrderToString(loopOrder_);
   json::json fieldsJson;
   for(const auto& field : derivedInfo_.fields_) {
-    fieldsJson.push_back(field.second.jsonDump(&instantiation));
+    fieldsJson.push_back(field.second.jsonDump(instantiation.getMetaData()));
   }
   node["Fields"] = fieldsJson;
 
@@ -427,7 +429,7 @@ json::json MultiStage::jsonDump(const StencilInstantiation& instantiation) const
 
   int cnt = 0;
   for(const auto& stage : children_) {
-    node["Stage" + std::to_string(cnt)] = stage->jsonDump(instantiation);
+    node["Stage" + std::to_string(cnt)] = stage->jsonDump(instantiation.getMetaData());
     cnt++;
   }
   return node;

@@ -14,7 +14,7 @@
 
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/StatementAccessesPair.h"
-#include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Optimizer/BoundaryExtent.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Json.h"
@@ -80,8 +80,8 @@ std::string DependencyGraphAccesses::edgeDataToDot(const EdgeData& data) const {
 const char* DependencyGraphAccesses::getDotShape() const { return "circle"; }
 
 std::string DependencyGraphAccesses::getVertexNameByVertexID(std::size_t VertexID) const {
-  return instantiation_ ? instantiation_->getFieldNameFromAccessID(getIDFromVertexID(VertexID))
-                        : std::to_string(getIDFromVertexID(VertexID));
+  return metaData_.getFieldNameFromAccessID(getIDFromVertexID(VertexID));
+  //                        : std::to_string(getIDFromVertexID(VertexID));
 }
 
 void DependencyGraphAccesses::merge(const DependencyGraphAccesses* other) {
@@ -101,7 +101,7 @@ void DependencyGraphAccesses::merge(const DependencyGraphAccesses* other) {
 }
 
 std::shared_ptr<DependencyGraphAccesses> DependencyGraphAccesses::clone() const {
-  auto graph = std::make_shared<DependencyGraphAccesses>(instantiation_);
+  auto graph = std::make_shared<DependencyGraphAccesses>(metaData_);
   graph->vertices_ = vertices_;
   graph->VertexIDToAccessIDMap_ = VertexIDToAccessIDMap_;
   for(const auto& edgeListPtr : adjacencyList_)
@@ -494,13 +494,13 @@ void DependencyGraphAccesses::toJSON(const std::string& file) const {
     jvertex["extent"] = extentsToVec(extentMap.at(VertexID));
 
     int AccessID = getIDFromVertexID(VertexID);
-    if(instantiation_->isTemporaryField(AccessID))
+    if(metaData_.isTemporaryField(AccessID))
       jvertex["type"] = "field_temporary";
-    else if(instantiation_->isField(AccessID))
+    else if(metaData_.isField(AccessID))
       jvertex["type"] = "field";
-    else if(instantiation_->isVariable(AccessID) || instantiation_->isGlobalVariable(AccessID))
+    else if(metaData_.isVariable(AccessID) || metaData_.isGlobalVariable(AccessID))
       jvertex["type"] = "variable";
-    else if(instantiation_->isLiteral(AccessID))
+    else if(metaData_.isLiteral(AccessID))
       jvertex["type"] = "literal";
     else
       dawn_unreachable("invalid vertex type");
@@ -522,13 +522,14 @@ void DependencyGraphAccesses::toJSON(const std::string& file) const {
   jgraph["num_vertices"] = getNumVertices();
   jgraph["num_edges"] = EdgeID;
 
+  // TODO deal with it w/o stencilInstantiation
   std::ofstream ofs;
   ofs.open(file);
-  if(!ofs.is_open()) {
-    DiagnosticsBuilder diag(DiagnosticsKind::Error);
-    diag << "failed to open file: \"" << file << "\"";
-    instantiation_->getOptimizerContext()->getDiagnostics().report(diag);
-  }
+  //  if(!ofs.is_open()) {
+  //    DiagnosticsBuilder diag(DiagnosticsKind::Error);
+  //    diag << "failed to open file: \"" << file << "\"";
+  //    instantiation_->getOptimizerContext()->getDiagnostics().report(diag);
+  //  }
 
   ofs << jgraph.dump(2);
   ofs.close();

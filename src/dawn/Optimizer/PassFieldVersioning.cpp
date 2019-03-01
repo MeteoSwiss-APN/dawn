@@ -109,7 +109,8 @@ bool PassFieldVersioning::run(
       iir::LoopOrderKind loopOrder = multiStage.getLoopOrder();
 
       std::shared_ptr<iir::DependencyGraphAccesses> newGraph, oldGraph;
-      newGraph = std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation.get());
+      newGraph =
+          std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation->getMetaData());
 
       // Iterate stages bottom -> top
       for(auto stageRit = multiStage.childrenRBegin(), stageRend = multiStage.childrenREnd();
@@ -281,8 +282,9 @@ PassFieldVersioning::fixRaceCondition(const iir::DependencyGraphAccesses* graph,
                                                            iir::StencilInstantiation::RD_Above);
 
     if(context->getOptions().ReportPassFieldVersioning)
-      std::cout << (numRenames != 0 ? ", " : " ") << instantiation.getFieldNameFromAccessID(oldAccessID)
-                << ":" << instantiation.getFieldNameFromAccessID(newAccessID);
+      std::cout << (numRenames != 0 ? ", " : " ")
+                << instantiation.getFieldNameFromAccessID(oldAccessID) << ":"
+                << instantiation.getFieldNameFromAccessID(newAccessID);
 
     numRenames++;
   }

@@ -272,15 +272,6 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
     protoVariableVersionMap.insert({IDtoVectorOfVersionsPair.first, protoFieldVersions});
   }
 
-  // Filling Field: repeated StencilDescStatement stencilDescStatements = 10;
-  for(const auto& stencilDescStmt : metaData.stencilDescStatements_) {
-    auto protoStmt = protoMetaData->add_stencildescstatements();
-    ProtoStmtBuilder builder(protoStmt);
-    stencilDescStmt->ASTStmt->accept(builder);
-    DAWN_ASSERT_MSG(!stencilDescStmt->StackTrace,
-                    "there should be no stack trace if inlining worked");
-  }
-
   // Filling Field:
   // map<string, dawn.proto.statements.BoundaryConditionDeclStmt> FieldnameToBoundaryCondition = 12;
   auto& protoFieldNameToBC = *protoMetaData->mutable_fieldnametoboundarycondition();
@@ -423,6 +414,15 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
       }
     }
   }
+
+  // Filling Field: repeated StencilDescStatement stencilDescStatements = 10;
+  for(const auto& stencilDescStmt : iir->getControlFlowDescriptor().getStatements()) {
+    auto protoStmt = protoIIR->add_controlflowstatements();
+    ProtoStmtBuilder builder(protoStmt);
+    stencilDescStmt->ASTStmt->accept(builder);
+    DAWN_ASSERT_MSG(!stencilDescStmt->StackTrace,
+                    "there should be no stack trace if inlining worked");
+  }
 }
 
 std::string
@@ -533,10 +533,6 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
     metadata.variableVersions_.insert(variableVersionMap.first, versions);
   }
 
-  for(auto stencilDescStmt : protoMetaData.stencildescstatements()) {
-    metadata.stencilDescStatements_.push_back(makeStatement(&stencilDescStmt));
-  }
-
   for(auto FieldnameToBC : protoMetaData.fieldnametoboundarycondition()) {
     std::shared_ptr<BoundaryConditionDeclStmt> bc =
         dyn_pointer_cast<BoundaryConditionDeclStmt>(makeStmt((FieldnameToBC.second)));
@@ -637,12 +633,12 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
         int doMethodPos = 0;
         int stageID = protoStage.stageid();
 
-        IIRMSS->insertChild(make_unique<iir::Stage>(*target, stageID));
+        IIRMSS->insertChild(make_unique<iir::Stage>(target->getMetaData(), stageID));
         const auto& IIRStage = IIRMSS->getChild(stagePos++);
 
         for(const auto& protoDoMethod : protoStage.domethods()) {
-          (IIRStage)->insertChild(
-              make_unique<iir::DoMethod>(*makeInterval(protoDoMethod.interval()), *target));
+          (IIRStage)->insertChild(make_unique<iir::DoMethod>(
+              *makeInterval(protoDoMethod.interval()), target->getMetaData()));
 
           auto& IIRDoMethod = (IIRStage)->getChild(doMethodPos++);
           (IIRDoMethod)->setID(protoDoMethod.domethodid());
@@ -665,6 +661,9 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
         }
       }
     }
+  }
+  for(auto controlFlowStmt : protoIIR.controlflowstatements()) {
+    target->getIIR()->getControlFlowDescriptor().insertStmt(makeStatement(&controlFlowStmt));
   }
 }
 

@@ -16,12 +16,12 @@
 #define DAWN_IIR_ACCESSES_H
 
 #include "dawn/IIR/Extents.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include <unordered_map>
 
 namespace dawn {
 namespace iir {
 
-class StencilInstantiation;
 class StencilFunctionInstantiation;
 
 /// @brief Read and write accesses of a statement
@@ -81,8 +81,7 @@ public:
 
   /// @brief Convert the accesses of a stencil or stencil-function instantiation to string
   /// @{
-  std::string toString(const StencilInstantiation* instantiation,
-                       std::size_t initialIndent = 0) const;
+  std::string toString(const StencilMetaInformation* metadata, std::size_t initialIndent = 0) const;
   std::string toString(const StencilFunctionInstantiation* stencilFunc,
                        std::size_t initialIndent = 0) const;
   /// @}
@@ -90,7 +89,7 @@ public:
   /// @brief Report the accesses of a stencil or stencil-function instantiation
   /// @{
   std::string reportAccesses(const StencilFunctionInstantiation* stencilFunc) const;
-  std::string reportAccesses(const StencilInstantiation* instantiation) const;
+  std::string reportAccesses(const StencilMetaInformation& metadata) const;
   /// @}
 };
 

@@ -183,8 +183,9 @@ private:
                                                     const std::vector<int>& assigneeIDs) {
     // Add the cache Flush stage
     std::unique_ptr<iir::Stage> assignmentStage =
-        make_unique<iir::Stage>(*instantiation_, instantiation_->nextUID(), interval);
-    iir::Stage::DoMethodSmartPtr_t domethod = make_unique<iir::DoMethod>(interval, *instantiation_);
+        make_unique<iir::Stage>(instantiation_->getMetaData(), instantiation_->nextUID(), interval);
+    iir::Stage::DoMethodSmartPtr_t domethod =
+        make_unique<iir::DoMethod>(interval, instantiation_->getMetaData());
     domethod->clearChildren();
 
     for(int i = 0; i < assignmentIDs.size(); ++i) {
@@ -280,6 +281,7 @@ private:
 
 PassSetNonTempCaches::PassSetNonTempCaches() : Pass("PassSetNonTempCaches") {}
 
+// TODO delete this pass
 bool dawn::PassSetNonTempCaches::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 

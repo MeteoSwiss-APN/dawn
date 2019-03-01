@@ -34,6 +34,8 @@ yoda_add_library(
           BlockStatements.h
           Cache.cpp
           Cache.h
+	  ControlFlowDescriptor.cpp
+	  ControlFlowDescriptor.h
           DependencyGraph.h
           DependencyGraphAccesses.cpp      
           DependencyGraphAccesses.h

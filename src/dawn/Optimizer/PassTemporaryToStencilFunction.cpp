@@ -514,7 +514,7 @@ SkipIDs PassTemporaryToStencilFunction::computeSkipAccessIDs(
   // Iterate multi-stages backwards in order to identify local variables that need to be promoted
   // to temporaries
   for(const auto& multiStage : stencilPtr->getChildren()) {
-    iir::DependencyGraphAccesses graph(stencilInstantiation.get());
+    iir::DependencyGraphAccesses graph(stencilInstantiation->getMetaData());
     for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*multiStage)) {
       for(const auto& stmt : doMethod->getChildren()) {
         graph.insertStatementAccessesPair(stmt);
@@ -651,7 +651,8 @@ bool PassTemporaryToStencilFunction::run(
 
                 if(tmpReplacement.getNumTmpReplaced() != 0) {
 
-                  iir::DoMethod tmpStmtDoMethod(doMethodInterval, *stencilInstantiation);
+                  iir::DoMethod tmpStmtDoMethod(doMethodInterval,
+                                                stencilInstantiation->getMetaData());
 
                   auto asir = std::make_shared<SIR>();
                   for(const auto sf : stencilInstantiation->getStencilFunctions()) {
@@ -744,7 +745,8 @@ bool PassTemporaryToStencilFunction::run(
           int accessID = tmpFieldPair.first;
           auto tmpProperties = tmpFieldPair.second;
           if(context->getOptions().ReportPassTmpToFunction)
-            std::cout << " [ replace tmp:" << stencilInstantiation->getFieldNameFromAccessID(accessID)
+            std::cout << " [ replace tmp:"
+                      << stencilInstantiation->getFieldNameFromAccessID(accessID)
                       << "; line : " << tmpProperties.tmpFieldAccessExpr_->getSourceLocation().Line
                       << " ] ";
         }

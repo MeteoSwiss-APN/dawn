@@ -13,7 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/Accesses.h"
-#include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/StringUtil.h"
 #include <iostream>
@@ -141,23 +141,22 @@ const Extents& Accesses::getWriteAccess(int AccessID) const {
 // StencilInstantiation and StencilFunctionInstantiation into a common base class to clean this
 // mess up.
 
-std::string Accesses::reportAccesses(const StencilInstantiation* instantiation) const {
+std::string Accesses::reportAccesses(const StencilMetaInformation& metadata) const {
   return reportAccessesImpl(
-      [&instantiation](int AccessID) { return instantiation->getNameFromAccessID(AccessID); },
-      writeAccesses_, readAccesses_);
+      [&metadata](int AccessID) { return metadata.getNameFromAccessID(AccessID); }, writeAccesses_,
+      readAccesses_);
 }
 
 std::string Accesses::reportAccesses(const StencilFunctionInstantiation* stencilFunc) const {
   return reportAccessesImpl(
-      [&stencilFunc](int AccessID) { return stencilFunc->getNameFromAccessID(AccessID); },
-      writeAccesses_, readAccesses_);
+      [&](int AccessID) { return stencilFunc->getNameFromAccessID(AccessID); }, writeAccesses_,
+      readAccesses_);
 }
 
-std::string Accesses::toString(const StencilInstantiation* instantiation,
+std::string Accesses::toString(const StencilMetaInformation* metadata,
                                std::size_t initialIndent) const {
-  return toStringImpl(
-      [&instantiation](int AccessID) { return instantiation->getNameFromAccessID(AccessID); },
-      initialIndent, writeAccesses_, readAccesses_);
+  return toStringImpl([&](int AccessID) { return metadata->getNameFromAccessID(AccessID); },
+                      initialIndent, writeAccesses_, readAccesses_);
 }
 
 std::string Accesses::toString(const StencilFunctionInstantiation* stencilFunc,

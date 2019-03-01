@@ -15,6 +15,7 @@
 #ifndef DAWN_IIR_IIR_H
 #define DAWN_IIR_IIR_H
 
+#include "dawn/IIR/ControlFlowDescriptor.h"
 #include "dawn/IIR/Stencil.h"
 #include <set>
 
@@ -26,11 +27,9 @@ namespace iir {
 class IIR : public IIRNode<void, IIR, Stencil> {
 
   std::array<unsigned int, 3> blockSize_ = {{32, 4, 4}};
+  ControlFlowDescriptor controlFlowDesc_;
 
   struct DerivedInfo {
-    /// Can be filled from the AccessIDToName map that is in Metainformation
-    std::unordered_map<std::string, int> NameToAccessIDMap_;
-
     /// Can be filled from the StencilIDToStencilCallMap that is in Metainformation
     std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int> StencilCallToStencilIDMap_;
 
@@ -70,11 +69,10 @@ public:
 
   json::json jsonDump() const;
 
+  const ControlFlowDescriptor& getControlFlowDescriptor() const { return controlFlowDesc_; }
+  // TODO do not have non const?
+  ControlFlowDescriptor& getControlFlowDescriptor() { return controlFlowDesc_; }
   inline void setBlockSize(const std::array<unsigned int, 3> blockSize) { blockSize_ = blockSize; }
-
-  inline std::unordered_map<std::string, int>& getNameToAccessIDs() {
-    return derivedInfo_.NameToAccessIDMap_;
-  }
 
   inline std::unordered_map<int, std::string>& getStageIDToNameMap() {
     return derivedInfo_.StageIDToNameMap_;

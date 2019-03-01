@@ -17,6 +17,7 @@
 
 #include "dawn/IIR/DependencyGraph.h"
 #include "dawn/IIR/Extents.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/TypeTraits.h"
 #include <set>
 #include <unordered_map>
@@ -28,7 +29,6 @@ class Stmt;
 namespace iir {
 
 class Accesses;
-class StencilInstantiation;
 class StatementAccessesPair;
 
 /// @enum DependencyGraphAccessesEdgeData
@@ -60,23 +60,22 @@ using DependencyGraphAccessesEdgeData = Extents;
 class DependencyGraphAccesses
     : public DependencyGraph<DependencyGraphAccesses, DependencyGraphAccessesEdgeData> {
 
-  StencilInstantiation* instantiation_;
+  const StencilMetaInformation& metaData_;
   std::unordered_map<std::size_t, int> VertexIDToAccessIDMap_;
 
 public:
   using Base = DependencyGraph<DependencyGraphAccesses, DependencyGraphAccessesEdgeData>;
   using EdgeData = DependencyGraphAccessesEdgeData;
 
-  DependencyGraphAccesses(StencilInstantiation* stencilInstantiation)
-      : Base(), instantiation_(stencilInstantiation) {}
+  DependencyGraphAccesses(const StencilMetaInformation& metaData) : Base(), metaData_(metaData) {}
 
   /// @brief Construct graph by merging the given `graphs`
   ///
   /// @param graphs       Graphs to merge
   /// @tparam GraphTypes  Varidaic pack of `std::shared_ptr<DependencyGraphAccesses>`
   template <class... GraphTypes>
-  DependencyGraphAccesses(StencilInstantiation* stencilInstantiation, const GraphTypes&... graphs)
-      : DependencyGraphAccesses(stencilInstantiation) {
+  DependencyGraphAccesses(const StencilMetaInformation& metaData, const GraphTypes&... graphs)
+      : DependencyGraphAccesses(metaData) {
     static_assert(
         and_<std::is_same<GraphTypes, std::shared_ptr<DependencyGraphAccesses>>...>::value,
         "GraphTypes needs to be a varidaic pack of `std::shared_ptr<DependencyGraphAccesses>`");
@@ -172,9 +171,6 @@ public:
 
   /// @brief Clear the graph
   void clear();
-
-  /// @brief Get stencil instantiation
-  StencilInstantiation* getStencilInstantiation() const { return instantiation_; }
 
   /// @brief Serialize the graph to JSON
   void toJSON(const std::string& file) const;

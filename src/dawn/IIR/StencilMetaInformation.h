@@ -15,8 +15,6 @@
 #ifndef DAWN_IIR_METAINFORMATION_H
 #define DAWN_IIR_METAINFORMATION_H
 
-#include "dawn/IIR/Accesses.h"
-#include "dawn/IIR/Stencil.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/NonCopyable.h"
 #include "dawn/Support/StringRef.h"
@@ -25,9 +23,11 @@
 #include <set>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace dawn {
 namespace iir {
+class StencilFunctionInstantiation;
 
 /// @brief Specific instantiation of a stencil
 /// @ingroup optimizer
@@ -72,6 +72,79 @@ class StencilMetaInformation : public NonCopyable {
   };
 
 public:
+  /// @brief get the `name` associated with the `accessID` of any access type
+  const std::string& getFieldNameFromAccessID(int AccessID) const;
+
+  /// @brief Get the `name` associated with the literal `AccessID`
+  const std::string& getNameFromLiteralAccessID(int AccessID) const;
+
+  /// @brief Check whether the `AccessID` corresponds to a literal constant
+  inline bool isLiteral(int AccessID) const {
+    return AccessID < 0 && LiteralAccessIDToNameMap_.count(AccessID);
+  }
+
+  /// @brief Check whether the `AccessID` corresponds to a field
+  inline bool isField(int AccessID) const { return FieldAccessIDSet_.count(AccessID); }
+
+  /// @brief check whether the `accessID` is accessed in more than one stencil
+  bool isIDAccessedMultipleStencils(int accessID) const;
+
+  /// @brief Check whether the `AccessID` corresponds to a temporary field
+  inline bool isTemporaryField(int AccessID) const {
+    return isField(AccessID) && TemporaryFieldAccessIDSet_.count(AccessID);
+  }
+
+  /// @brief Check whether the `AccessID` corresponds to an accesses of a global variable
+  inline bool isGlobalVariable(int AccessID) const {
+    return GlobalVariableAccessIDSet_.count(AccessID);
+  }
+  // TODO who is using this ? Do we need the NameToAccessID because of this?
+  bool isGlobalVariable(const std::string& name) const;
+
+  /// @brief Check whether the `AccessID` corresponds to a variable
+  bool isVariable(int AccessID) const { return !isField(AccessID) && !isLiteral(AccessID); }
+
+  /// @brief Get the AccessID-to-Name map
+  std::unordered_map<std::string, int>& getNameToAccessIDMap();
+  const std::unordered_map<std::string, int>& getNameToAccessIDMap() const;
+
+  /// @brief get the `name` associated with the `accessID` of any access type
+  std::string getNameFromAccessID(int accessID) const;
+
+  /// @brief Get the `AccessID` associated with the `name`
+  ///
+  /// Note that this only works for field and variable names, the mapping of literals AccessIDs
+  /// and their name is a not bijective!
+  int getAccessIDFromName(const std::string& name) const;
+
+  /// @brief get a stencil function instantiation by StencilFunCallExpr
+  const std::shared_ptr<StencilFunctionInstantiation>
+  getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) const;
+
+  /// @brief Get the `AccessID` of the Expr (VarAccess or FieldAccess)
+  int getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) const;
+
+  /// @brief Get the `AccessID` of the Stmt (VarDeclStmt)
+  int getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) const;
+
+  /// @brief Set the `AccessID` of the Expr (VarAccess or FieldAccess)
+  void setAccessIDOfExpr(const std::shared_ptr<Expr>& expr, const int accessID);
+
+  /// @brief Set the `AccessID` of the Stmt (VarDeclStmt)
+  void setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt, const int accessID);
+
+  /// @brief Insert a new AccessID - Name pair
+  void setAccessIDNamePair(int accessID, const std::string& name);
+
+  /// @brief Insert a new AccessID - Name pair of a field
+  void setAccessIDNamePairOfField(int AccessID, const std::string& name, bool isTemporary = false);
+
+  /// @brief Insert a new AccessID - Name pair of a global variable (i.e scalar field access)
+  void setAccessIDNamePairOfGlobalVariable(int AccessID, const std::string& name);
+
+  /// @brief Remove the field, variable or literal given by `AccessID`
+  void removeAccessID(int AccesssID);
+
   ///@brief struct with properties of a stencil function instantiation candidate
   struct StencilFunctionInstantiationCandidate {
     /// stencil function instantiation from where the stencil function instantiation candidate is
@@ -79,6 +152,7 @@ public:
     std::shared_ptr<StencilFunctionInstantiation> callerStencilFunction_;
   };
 
+  // TODO make all these private
   //================================================================================================
   // Stored MetaInformation
   //================================================================================================
@@ -86,6 +160,9 @@ public:
   /// stencil" we can get the AccessID by name. This is due the fact that fields of different
   /// stencil functions can share the same name.
   std::unordered_map<int, std::string> AccessIDToNameMap_;
+
+  /// Can be filled from the AccessIDToName map that is in Metainformation
+  std::unordered_map<std::string, int> NameToAccessIDMap_;
 
   /// Surjection of AST Nodes, Expr (FieldAccessExpr or VarAccessExpr) or Stmt (VarDeclStmt), to
   /// their AccessID. The surjection implies that multiple AST Nodes can have the same AccessID,
@@ -119,9 +196,6 @@ public:
   /// Map of AccessIDs to the list of all AccessIDs of the multi-versioned field, for fields and
   /// variables
   VariableVersions variableVersions_;
-
-  /// Stencil description statements. These are built from the StencilDescAst of the sir::Stencil
-  std::vector<std::shared_ptr<Statement>> stencilDescStatements_;
 
   /// Referenced stencil functions in this stencil (note that nested stencil functions are not
   /// stored here but rather in the respecticve `StencilFunctionInstantiation`)
