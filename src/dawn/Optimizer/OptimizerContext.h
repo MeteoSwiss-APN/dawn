@@ -117,30 +117,6 @@ public:
     else
       retval = true;
     return retval;
-//    int manuallySwitched = p->isManuallySwitched();
-//    if(manuallySwitched != -1) {
-//      return manuallySwitched;
-//    }
-//    bool retval = true;
-//    bool valueIsSet = false;
-//    if(getOptions().DebugMode) {
-//      DAWN_ASSERT_MSG(!(valueIsSet && retval != p->checkFlag("Debug")),
-//                      "`Debug` option is not compatible with the other flags set");
-//      retval = p->checkFlag("Debug");
-//      valueIsSet = true;
-//    }
-//    if(getOptions().PermutationMode && getOptions().LoadSerialized != "") {
-//      DAWN_ASSERT_MSG(!(valueIsSet && (retval != p->checkFlag("Permutations"))),
-//                      "`Permutations` option is not compatible with the other flags set");
-//      retval = p->checkFlag("Permutations");
-//      valueIsSet = true;
-//    } else if(getOptions().LoadSerialized != "") {
-//      DAWN_ASSERT_MSG(!(valueIsSet && (retval != p->checkFlag("Deserialization"))),
-//                      "`LoadSerialized` option is not compatible with the other flags set");
-//      retval = p->checkFlag("Deserialization");
-//      valueIsSet = true;
-//    }
-//    return retval;
   }
 };
 
