@@ -1,18 +1,173 @@
 {
-  "PassStageReordering": {
-    "Test": {
-      "Stencil_0": {
-        "MultiStage_0": {
-          "LoopOrder": "parallel",
-          "Stage_0": {
-            "Do_0": {
-              "Accesses_0": "W:field_a1:<0,0,0,0,0,0> R:field_a0:<0,0,0,0,0,0>",
-              "Interval": "{ Start : End }",
-              "Stmt_0": "field_a1[0, 0, 0] = field_a0[0, 0, 0];"
+  "IIR": {
+    "Stencil0": {
+      "Fields": [
+        {
+          "IsTemporary": false,
+          "dim": "[1,1,1]",
+          "field": {
+            "accessID": 9,
+            "extents": {
+              "read_access": "[(0, 0), (0, 0), (0, 0)]",
+              "write_access": "null"
+            },
+            "intend": 2,
+            "interval": "{ Start : End }",
+            "name": "field_a0",
+            "redundant extents": {
+              "read_access": "[(0, 0), (0, 0), (0, 0)]",
+              "write_access": "null"
+            }
+          },
+          "name": "field_a0"
+        },
+        {
+          "IsTemporary": false,
+          "dim": "[1,1,1]",
+          "field": {
+            "accessID": 10,
+            "extents": {
+              "read_access": "null",
+              "write_access": "[(0, 0), (0, 0), (0, 0)]"
+            },
+            "intend": 0,
+            "interval": "{ Start : End }",
+            "name": "field_a1",
+            "redundant extents": {
+              "read_access": "null",
+              "write_access": "[(0, 0), (0, 0), (0, 0)]"
+            }
+          },
+          "name": "field_a1"
+        }
+      ],
+      "ID": "11",
+      "MultiStage0": {
+        "Caches": null,
+        "Fields": [
+          {
+            "accessID": 9,
+            "extents": {
+              "read_access": "[(0, 0), (0, 0), (0, 0)]",
+              "write_access": "null"
+            },
+            "intend": 2,
+            "interval": "{ Start : End }",
+            "name": "field_a0",
+            "redundant extents": {
+              "read_access": "[(0, 0), (0, 0), (0, 0)]",
+              "write_access": "null"
+            }
+          },
+          {
+            "accessID": 10,
+            "extents": {
+              "read_access": "null",
+              "write_access": "[(0, 0), (0, 0), (0, 0)]"
+            },
+            "intend": 0,
+            "interval": "{ Start : End }",
+            "name": "field_a1",
+            "redundant extents": {
+              "read_access": "null",
+              "write_access": "[(0, 0), (0, 0), (0, 0)]"
             }
           }
+        ],
+        "ID": 22,
+        "Loop": "parallel",
+        "Stage0": {
+          "DoMethod0": {
+            "Fields": null,
+            "ID": 0,
+            "Stmts": [
+              {
+                "read_accesses": [
+                  {
+                    "access_id": 9,
+                    "extents": "[(0, 0), (0, 0), (0, 0)]",
+                    "name": "field_a0"
+                  }
+                ],
+                "stmt": "field_a1[0, 0, 0] = field_a0[0, 0, 0];\n",
+                "write_accesses": [
+                  {
+                    "access_id": 10,
+                    "extents": "[(0, 0), (0, 0), (0, 0)]",
+                    "name": "field_a1"
+                  }
+                ]
+              }
+            ],
+            "interval": "{ Start : End }"
+          },
+          "Extents": "[(0, 0), (0, 0), (0, 0)]",
+          "Fields": [
+            {
+              "accessID": 10,
+              "extents": {
+                "read_access": "null",
+                "write_access": "[(0, 0), (0, 0), (0, 0)]"
+              },
+              "intend": 0,
+              "interval": "{ Start : End }",
+              "name": "field_a1",
+              "redundant extents": {
+                "read_access": "null",
+                "write_access": "[(0, 0), (0, 0), (0, 0)]"
+              }
+            },
+            {
+              "accessID": 9,
+              "extents": {
+                "read_access": "[(0, 0), (0, 0), (0, 0)]",
+                "write_access": "null"
+              },
+              "intend": 2,
+              "interval": "{ Start : End }",
+              "name": "field_a0",
+              "redundant extents": {
+                "read_access": "[(0, 0), (0, 0), (0, 0)]",
+                "write_access": "null"
+              }
+            }
+          ],
+          "RequiresSync": false
         }
       }
     }
+  },
+  "MetaInformation": {
+    "AccessIDToName": {
+      "10": "field_a1",
+      "9": "field_a0"
+    },
+    "FieldDims": {
+      "10": "[1,1,1]",
+      "9": "[1,1,1]"
+    },
+    "FieldToBC": null,
+    "GlobalAccessIDs": null,
+    "IDToStencilCall": {
+      "11": "stencil-call:__code_gen_11();\n"
+    },
+    "TemporaryAccessIDs": null,
+    "VariableVersions": {
+      "versionIDs": null,
+      "versions": null
+    },
+    "apiAccessIDs": [
+      9,
+      10
+    ],
+    "fieldAccessIDs": [
+      9,
+      10
+    ],
+    "filename": "Test01.cpp",
+    "globals": null,
+    "literalAccessIDs": null,
+    "stencilLocation": "24:8",
+    "stencilname": "Test"
   }
 }

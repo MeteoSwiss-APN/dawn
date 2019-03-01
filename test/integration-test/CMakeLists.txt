@@ -43,6 +43,11 @@ function(code_generate_examples)
         set(config_str "--config=${cwd}/CodeGen/${example}.json")
       endif()
   
+      if(CMAKE_BUILD_TYPE MATCHES DEBUG)
+        set(config_str "${config_str}" "-fpass-verbose")
+      endif(CMAKE_BUILD_TYPE MATCHES DEBUG)
+
+
       # Add the specified compilerflags
       GET_COMPILER_FLAGS(${example} flags)
       set(config_str "${config_str}" "${flags}")
