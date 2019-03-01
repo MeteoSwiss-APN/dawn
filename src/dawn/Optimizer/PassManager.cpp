@@ -46,11 +46,6 @@ bool PassManager::runPassOnStecilInstantiation(
     const std::shared_ptr<iir::StencilInstantiation>& instantiation, Pass* pass) {
   DAWN_LOG(INFO) << "Starting " << pass->getName() << " ...";
 
-  if(instantiation->getOptimizerContext()->getOptions().PassVerbose) {
-    instantiation->jsonDump(pass->getName() + "_" + std::to_string(passCounter_[pass->getName()]) +
-                            "_beforeLog.json");
-  }
-
   if(!pass->run(instantiation)) {
     DAWN_LOG(WARNING) << "Done with " << pass->getName() << " : FAIL";
     return false;
@@ -58,7 +53,7 @@ bool PassManager::runPassOnStecilInstantiation(
 
   if(instantiation->getOptimizerContext()->getOptions().PassVerbose) {
     instantiation->jsonDump(pass->getName() + "_" + std::to_string(passCounter_[pass->getName()]) +
-                            "_afterLog.json");
+                            "_Log.json");
   }
 
   DAWN_ASSERT_MSG(instantiation->getIIR()->checkTreeConsistency(),
