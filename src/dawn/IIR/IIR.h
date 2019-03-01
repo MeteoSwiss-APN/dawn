@@ -68,6 +68,8 @@ public:
   /// @brief clone the IIR
   void clone(std::unique_ptr<IIR>& dest) const;
 
+  json::json jsonDump() const;
+
   inline void setBlockSize(const std::array<unsigned int, 3> blockSize) { blockSize_ = blockSize; }
 
   inline std::unordered_map<std::string, int>& getNameToAccessIDs() {

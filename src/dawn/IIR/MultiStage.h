@@ -79,6 +79,8 @@ public:
 
   std::unique_ptr<MultiStage> clone() const;
 
+  json::json jsonDump(const StencilInstantiation& instantiation) const;
+
   /// @brief getters
   /// @{
   /// @brief Get the execution policy

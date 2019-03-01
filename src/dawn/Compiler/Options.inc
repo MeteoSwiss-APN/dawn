@@ -49,7 +49,6 @@ OPT(std::string, block_size, "", "block-size", "",
 OPT(bool, SerializeIIR, false, "write-iir", "",
     "Serialize the low level intermediate representation after Optimization", "", false, true)
 OPT(std::string, IIRFormat, "json", "iir-format", "", "format of the output IIR", "", true, false)
-
 OPT(bool, Debug, false, "debug", "",
     "Compile to debug backend", "", false, true)
 OPT(bool, InlineSF, false, "inline", "",
@@ -61,8 +60,8 @@ OPT(std::string, ReorderStrategy, "greedy", "reorder", "",
     "\n - scut   = Use S-cut graph partitioning\n", "<strategy>", true, false)
 OPT(int, MaxFieldsPerStencil, 40, "max-fields", "",
     "Set the maximum number of fields in any given stencils", "<N>", true, false)
-
-
+OPT(bool, PassVerbose, false, "pass-verbose", "",
+    "Compile in verbose mode", "", false, true)
 OPT(bool, SSA, false, "ssa", "",
     "Transform all statements into static single assigment (SSA) form", "", false, true)
 OPT(bool, MergeTemporaries, false, "merge-temporaries", "", 
@@ -111,7 +110,6 @@ OPT(bool, ReportPassSetNonTempCaches, false, "report-cache-non-temp-fields", "",
     "Report which non temporary fields are cached for each multi-stage", "", false, true)
 OPT(bool, ReportBoundaryConditions, false, "report-bc", "",
     "Report where boundary conditions are inserted", "", false, true)
-
 OPT(bool, DumpSplitGraphs, false, "dump-split-dags", "",
     "Dump the access dependency graph of all stages and multi-stages during the splitting passes to dot files", "", false, true)
 OPT(bool, DumpStencilGraph, false, "dump-stencil-dag", "",

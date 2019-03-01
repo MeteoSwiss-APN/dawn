@@ -212,7 +212,7 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
   int i = 0;
   for(const auto& fieldID : stencilInstantiation->getAPIFieldIDs()) {
     codeGenProperties.insertParam(
-        i, stencilInstantiation->getNameFromAccessID(fieldID),
+        i, stencilInstantiation->getFieldNameFromAccessID(fieldID),
         getStorageType(stencilInstantiation->getFieldDimensionsMask(fieldID)));
     ++i;
   }
@@ -223,7 +223,7 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
   }
   if(stencilInstantiation->hasAllocatedFields()) {
     for(int accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
-      codeGenProperties.insertAllocateField(stencilInstantiation->getNameFromAccessID(accessID));
+      codeGenProperties.insertAllocateField(stencilInstantiation->getFieldNameFromAccessID(accessID));
     }
   }
 

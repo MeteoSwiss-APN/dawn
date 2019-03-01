@@ -15,6 +15,7 @@
 #ifndef DAWN_IIR_STATEMENTACCESSESPAIR_H
 #define DAWN_IIR_STATEMENTACCESSESPAIR_H
 
+#include "dawn/IIR/AccessToNameMapper.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/BlockStatements.h"
 #include "dawn/IIR/IIRNode.h"
@@ -97,6 +98,11 @@ public:
   std::string toString(const StencilFunctionInstantiation* stencilFunc,
                        std::size_t initialIndent = 0) const;
   /// @}
+
+  json::json jsonDump(const StencilInstantiation& instantiation) const;
+  json::json print(const StencilInstantiation& instantiation,
+                   const AccessToNameMapper& accessToNameMapper,
+                   const std::unordered_map<int, Extents>& accesses) const;
 };
 
 } // namespace iir

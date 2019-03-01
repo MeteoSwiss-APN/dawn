@@ -260,7 +260,7 @@ bool PassSetBoundaryCondition::run(
         }
         // Calculate the extent and add it to the boundary-condition - Extent map
         iir::Extents fullExtents =
-            calculateHaloExtents(stencilInstantiation->getNameFromAccessID(readaccess.first));
+            calculateHaloExtents(stencilInstantiation->getFieldNameFromAccessID(readaccess.first));
         stencilInstantiation->insertBoundaryConditiontoExtentPair(IDtoBCpair->second, fullExtents);
 
         auto it = std::find_if(stencilInstantiation->getIIR()->childrenBegin(),

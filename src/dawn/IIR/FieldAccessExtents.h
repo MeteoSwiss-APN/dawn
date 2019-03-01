@@ -16,6 +16,7 @@
 #define DAWN_IIR_FIELDACCESSEXTENTS_H
 
 #include "dawn/IIR/Extents.h"
+#include "dawn/Support/Json.h"
 
 namespace dawn {
 namespace iir {
@@ -59,6 +60,8 @@ public:
   void setWriteExtents(Extents const& extents);
   /// @}
   ///
+  json::json jsonDump() const;
+
 private:
   /// @brief update the total extent from read/write extents
   void updateTotalExtents();

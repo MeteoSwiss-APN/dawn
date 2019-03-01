@@ -35,6 +35,26 @@ Stage::Stage(StencilInstantiation& stencilInstantiation, int StageID, const Inte
   insertChild(make_unique<DoMethod>(interval, stencilInstantiation));
 }
 
+json::json Stage::jsonDump(const StencilInstantiation& instantiation) const {
+  json::json node;
+  json::json fieldsJson;
+  for(const auto& field : derivedInfo_.fields_) {
+    fieldsJson.push_back(field.second.jsonDump(&instantiation));
+  }
+  node["Fields"] = fieldsJson;
+  std::stringstream ss;
+  ss << derivedInfo_.extents_;
+  node["Extents"] = ss.str();
+  node["RequiresSync"] = derivedInfo_.requiresSync_;
+
+  int cnt = 0;
+  for(const auto& doMethod : children_) {
+    node["DoMethod" + std::to_string(cnt)] = doMethod->jsonDump(instantiation);
+    cnt++;
+  }
+  return node;
+}
+
 std::unique_ptr<Stage> Stage::clone() const {
 
   auto cloneStage = make_unique<Stage>(stencilInstantiation_, StageID_);

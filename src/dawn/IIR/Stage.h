@@ -90,6 +90,8 @@ public:
 
   std::unique_ptr<Stage> clone() const;
 
+  json::json jsonDump(const StencilInstantiation& instantiation) const;
+
   /// @brief update the derived info from children
   virtual void updateFromChildren() override;
 

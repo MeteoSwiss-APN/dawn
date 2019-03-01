@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/AccessToNameMapper.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -158,6 +159,44 @@ void StatementAccessesPair::setCalleeAccesses(const std::shared_ptr<Accesses>& a
 }
 
 bool StatementAccessesPair::hasCalleeAccesses() { return calleeAccesses_ != nullptr; }
+
+json::json StatementAccessesPair::print(const StencilInstantiation& instantiation,
+                                        const AccessToNameMapper& accessToNameMapper,
+                                        const std::unordered_map<int, Extents>& accesses) const {
+  json::json node;
+  for(const auto& accessPair : accesses) {
+    json::json accessNode;
+    int accessID = accessPair.first;
+    std::string name = "unknown";
+    if(accessToNameMapper.hasAccessID(accessID)) {
+      name = accessToNameMapper.getNameFromAccessID(accessID);
+    }
+    if(instantiation.isLiteral(accessID)) {
+      continue;
+    }
+    accessNode["access_id"] = accessID;
+    accessNode["name"] = name;
+    std::stringstream ss;
+    ss << accessPair.second;
+    accessNode["extents"] = ss.str();
+    node.push_back(accessNode);
+  }
+  return node;
+}
+
+json::json StatementAccessesPair::jsonDump(const StencilInstantiation& instantiation) const {
+  json::json node;
+  node["stmt"] = ASTStringifer::toString(getStatement()->ASTStmt, 0);
+
+  AccessToNameMapper accessToNameMapper(&instantiation);
+  getStatement()->ASTStmt->accept(accessToNameMapper);
+
+  node["write_accesses"] =
+      print(instantiation, accessToNameMapper, getAccesses()->getWriteAccesses());
+  node["read_accesses"] =
+      print(instantiation, accessToNameMapper, getAccesses()->getReadAccesses());
+  return node;
+}
 
 std::string StatementAccessesPair::toString(const StencilInstantiation* instantiation,
                                             std::size_t initialIndent) const {

@@ -51,11 +51,12 @@ std::ostream& operator<<(std::ostream& os, const iir::Stencil& stencil) {
     for(const auto& stage : MS->getChildren())
       os << "  "
          << stencil.getStencilInstantiation().getIIR()->getNameFromStageID(stage->getStageID())
-         << " " << RangeToString()(stage->getFields(),
-                                   [&](const std::pair<int, iir::Field>& fieldPair) {
-                                     return stencil.getStencilInstantiation().getNameFromAccessID(
-                                         fieldPair.first);
-                                   })
+         << " "
+         << RangeToString()(stage->getFields(),
+                            [&](const std::pair<int, iir::Field>& fieldPair) {
+                              return stencil.getStencilInstantiation().getFieldNameFromAccessID(
+                                  fieldPair.first);
+                            })
          << "\n";
   }
   return os;
@@ -99,6 +100,32 @@ bool Stencil::StatementPosition::inSameDoMethod(const Stencil::StatementPosition
   return StagePos == other.StagePos && DoMethodIndex == other.DoMethodIndex;
 }
 
+json::json Stencil::FieldInfo::jsonDump(const StencilInstantiation* instantiation) const {
+  json::json node;
+  node["name"] = Name;
+  node["dim"] = format("[%i,%i,%i]", Dimensions[0], Dimensions[1], Dimensions[2]);
+  node["field"] = field.jsonDump(instantiation);
+  node["IsTemporary"] = IsTemporary;
+  return node;
+}
+
+json::json Stencil::jsonDump() const {
+  json::json node;
+  node["ID"] = std::to_string(StencilID_);
+  json::json fieldsJson;
+  for(const auto& f : derivedInfo_.fields_) {
+    fieldsJson.push_back(f.second.jsonDump(&stencilInstantiation_));
+  }
+  node["Fields"] = fieldsJson;
+
+  int cnt = 0;
+  for(const auto& child : children_) {
+    node["MultiStage" + std::to_string(cnt)] = child->jsonDump(stencilInstantiation_);
+    cnt++;
+  }
+  return node;
+}
+
 void Stencil::updateFromChildren() {
   derivedInfo_.fields_.clear();
   std::unordered_map<int, Field> fields;
@@ -111,7 +138,7 @@ void Stencil::updateFromChildren() {
     const int accessID = fieldPair.first;
     const Field& field = fieldPair.second;
 
-    std::string name = stencilInstantiation_.getNameFromAccessID(accessID);
+    std::string name = stencilInstantiation_.getFieldNameFromAccessID(accessID);
     bool isTemporary = stencilInstantiation_.isTemporaryField(accessID);
     Array3i specifiedDimension = stencilInstantiation_.getFieldDimensionsMask(accessID);
 
@@ -174,7 +201,7 @@ std::vector<std::string> Stencil::getGlobalVariables() const {
 
   std::vector<std::string> globalVariables;
   for(const auto& AccessID : globalVariableAccessIDs)
-    globalVariables.push_back(stencilInstantiation_.getNameFromAccessID(AccessID));
+    globalVariables.push_back(stencilInstantiation_.getFieldNameFromAccessID(AccessID));
 
   return globalVariables;
 }

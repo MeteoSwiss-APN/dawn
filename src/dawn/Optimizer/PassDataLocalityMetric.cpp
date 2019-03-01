@@ -99,8 +99,8 @@ public:
   }
 
   std::string getNameFromAccessID(int AccessID) {
-    return stencilFunCalls_.empty() ? instantiation_->getNameFromAccessID(AccessID)
-                                    : stencilFunCalls_.top()->getNameFromAccessID(AccessID);
+    return stencilFunCalls_.empty() ? instantiation_->getFieldNameFromAccessID(AccessID)
+                                    : stencilFunCalls_.top()->getFieldNameFromAccessID(AccessID);
   }
 
   std::shared_ptr<iir::StencilFunctionInstantiation>

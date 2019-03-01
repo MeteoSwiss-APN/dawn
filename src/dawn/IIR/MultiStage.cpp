@@ -409,6 +409,29 @@ void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
   }
 }
 
+json::json MultiStage::jsonDump(const StencilInstantiation& instantiation) const {
+  json::json node;
+  node["ID"] = id_;
+  node["Loop"] = loopOrderToString(loopOrder_);
+  json::json fieldsJson;
+  for(const auto& field : derivedInfo_.fields_) {
+    fieldsJson.push_back(field.second.jsonDump(&instantiation));
+  }
+  node["Fields"] = fieldsJson;
+
+  json::json cachesJson;
+  for(const auto& cache : derivedInfo_.caches_) {
+    cachesJson.push_back(cache.second.jsonDump());
+  }
+  node["Caches"] = cachesJson;
+
+  int cnt = 0;
+  for(const auto& stage : children_) {
+    node["Stage" + std::to_string(cnt)] = stage->jsonDump(instantiation);
+    cnt++;
+  }
+  return node;
+}
 bool MultiStage::isEmptyOrNullStmt() const {
   for(const auto& stage : getChildren()) {
     if(!(stage)->isEmptyOrNullStmt()) {

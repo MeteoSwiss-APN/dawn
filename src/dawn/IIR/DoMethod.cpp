@@ -94,6 +94,27 @@ void DoMethod::DerivedInfo::clear() { fields_.clear(); }
 
 void DoMethod::clearDerivedInfo() { derivedInfo_.clear(); }
 
+json::json DoMethod::jsonDump(const StencilInstantiation& instantiation) const {
+  json::json node;
+  node["ID"] = id_;
+  std::stringstream ss;
+  ss << interval_;
+  node["interval"] = ss.str();
+
+  json::json fieldsJson;
+  for(const auto& field : derivedInfo_.fields_) {
+    fieldsJson.push_back(field.second.jsonDump(&instantiation));
+  }
+  node["Fields"] = fieldsJson;
+
+  json::json stmtsJson;
+  for(const auto& stmt : children_) {
+    stmtsJson.push_back(stmt->jsonDump(instantiation));
+  }
+  node["Stmts"] = stmtsJson;
+  return node;
+}
+
 void DoMethod::updateLevel() {
 
   // Compute the fields and their intended usage. Fields can be in one of three states: `Output`,

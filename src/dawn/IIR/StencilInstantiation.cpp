@@ -106,7 +106,7 @@ std::unordered_map<int, int>& StencilInstantiation::getStmtIDToAccessIDMap() {
   return metadata_.StmtIDToAccessIDMap_;
 }
 
-const std::string& StencilInstantiation::getNameFromAccessID(int AccessID) const {
+const std::string& StencilInstantiation::getFieldNameFromAccessID(int AccessID) const {
   if(AccessID < 0)
     return getNameFromLiteralAccessID(AccessID);
   auto it = metadata_.AccessIDToNameMap_.find(AccessID);
@@ -130,6 +130,14 @@ void StencilInstantiation::mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt, 
 const std::string& StencilInstantiation::getNameFromLiteralAccessID(int AccessID) const {
   DAWN_ASSERT_MSG(isLiteral(AccessID), "Invalid literal");
   return metadata_.LiteralAccessIDToNameMap_.find(AccessID)->second;
+}
+
+std::string StencilInstantiation::getNameFromAccessID(int accessID) const {
+  if(isLiteral(accessID)) {
+    return getNameFromLiteralAccessID(accessID);
+  } else {
+    return getFieldNameFromAccessID(accessID);
+  }
 }
 
 bool StencilInstantiation::isGlobalVariable(const std::string& name) const {
@@ -188,7 +196,7 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
       IIR_->getAllocatedFieldAccessIDSet().erase(lastAccessID);
 
       // The field with version 0 contains the original name
-      const std::string& originalName = getNameFromAccessID(versions->front());
+      const std::string& originalName = getFieldNameFromAccessID(versions->front());
 
       // Register the new field
       setAccessIDNamePairOfField(newAccessID, originalName + "_" + std::to_string(versions->size()),
@@ -199,7 +207,7 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
       metadata_.variableVersions_.insert(newAccessID, versions);
 
     } else {
-      const std::string& originalName = getNameFromAccessID(AccessID);
+      const std::string& originalName = getFieldNameFromAccessID(AccessID);
 
       // Register the new *and* old field as being multi-versioned and indicate code-gen it has to
       // allocate the second version
@@ -218,7 +226,7 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
       auto versions = metadata_.variableVersions_.getVersions(AccessID);
 
       // The variable with version 0 contains the original name
-      const std::string& originalName = getNameFromAccessID(versions->front());
+      const std::string& originalName = getFieldNameFromAccessID(versions->front());
 
       // Register the new variable
       setAccessIDNamePair(newAccessID, originalName + "_" + std::to_string(versions->size()));
@@ -226,7 +234,7 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
       metadata_.variableVersions_.insert(newAccessID, versions);
 
     } else {
-      const std::string& originalName = getNameFromAccessID(AccessID);
+      const std::string& originalName = getFieldNameFromAccessID(AccessID);
 
       // Register the new *and* old variable as being multi-versioned
       auto versionsVecPtr = std::make_shared<std::vector<int>>();
@@ -284,7 +292,7 @@ void StencilInstantiation::renameAllOccurrences(Stencil* stencil, int oldAccessI
 
 void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil, int AccessID,
                                                                 const Stencil::Lifetime& lifetime) {
-  std::string varname = getNameFromAccessID(AccessID);
+  std::string varname = getFieldNameFromAccessID(AccessID);
   std::string fieldname = StencilInstantiation::makeTemporaryFieldname(
       StencilInstantiation::extractLocalVariablename(varname), AccessID);
 
@@ -346,7 +354,7 @@ void StencilInstantiation::promoteTemporaryFieldToAllocatedField(int AccessID) {
 
 void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil, int AccessID,
                                                                const Stencil::Lifetime& lifetime) {
-  std::string fieldname = getNameFromAccessID(AccessID);
+  std::string fieldname = getFieldNameFromAccessID(AccessID);
   std::string varname = StencilInstantiation::makeLocalVariablename(
       StencilInstantiation::extractTemporaryFieldname(fieldname), AccessID);
 
@@ -733,118 +741,12 @@ std::string StencilInstantiation::getOriginalNameFromAccessID(int AccessID) cons
   }
 
   // Best we can do...
-  return getNameFromAccessID(AccessID);
+  return getFieldNameFromAccessID(AccessID);
 }
-
-namespace {
-
-template <int Level>
-struct PrintDescLine {
-  PrintDescLine(const Twine& name) {
-    std::cout << MakeIndent<Level>::value << format("\e[1;3%im", Level) << name.str() << "\n"
-              << MakeIndent<Level>::value << "{\n\e[0m";
-  }
-  ~PrintDescLine() { std::cout << MakeIndent<Level>::value << format("\e[1;3%im}\n\e[0m", Level); }
-};
-
-} // anonymous namespace
 
 bool StencilInstantiation::checkTreeConsistency() const { return IIR_->checkTreeConsistency(); }
 
-void StencilInstantiation::dump() const {
-  std::cout << "StencilInstantiation : " << getName() << "\n";
-
-  int i = 0;
-  for(const auto& stencil : getStencils()) {
-    PrintDescLine<1> iline("Stencil_" + Twine(i));
-
-    int j = 0;
-    const auto& multiStages = stencil->getChildren();
-    for(const auto& multiStage : multiStages) {
-      PrintDescLine<2> jline(Twine("MultiStage_") + Twine(j) + " [" +
-                             loopOrderToString(multiStage->getLoopOrder()) + "]");
-
-      int k = 0;
-      const auto& stages = multiStage->getChildren();
-      for(const auto& stage : stages) {
-        PrintDescLine<3> kline(Twine("Stage_") + Twine(k));
-
-        int l = 0;
-        const auto& doMethods = stage->getChildren();
-        for(const auto& doMethod : doMethods) {
-          PrintDescLine<4> lline(Twine("Do_") + Twine(l) + " " +
-                                 doMethod->getInterval().toString());
-
-          const auto& statementAccessesPairs = doMethod->getChildren();
-          for(std::size_t m = 0; m < statementAccessesPairs.size(); ++m) {
-            std::cout << "\e[1m"
-                      << ASTStringifer::toString(statementAccessesPairs[m]->getStatement()->ASTStmt,
-                                                 5 * DAWN_PRINT_INDENT)
-                      << "\e[0m";
-            std::cout << statementAccessesPairs[m]->getAccesses()->toString(this,
-                                                                            6 * DAWN_PRINT_INDENT)
-                      << "\n";
-          }
-          l += 1;
-        }
-        std::cout << "\e[1m" << std::string(4 * DAWN_PRINT_INDENT, ' ')
-                  << "Extents: " << stage->getExtents() << std::endl
-                  << "\e[0m";
-        k += 1;
-      }
-      j += 1;
-    }
-    ++i;
-  }
-  std::cout.flush();
-}
-
-void StencilInstantiation::dumpAsJson(std::string filename, std::string passName) const {
-  json::json jout;
-
-  int i = 0;
-  for(const auto& stencil : getStencils()) {
-    json::json jStencil;
-
-    int j = 0;
-    for(const auto& multiStage : stencil->getChildren()) {
-      json::json jMultiStage;
-      jMultiStage["LoopOrder"] = loopOrderToString(multiStage->getLoopOrder());
-
-      int k = 0;
-      const auto& stages = multiStage->getChildren();
-      for(const auto& stage : stages) {
-        json::json jStage;
-
-        int l = 0;
-        for(const auto& doMethod : stage->getChildren()) {
-          json::json jDoMethod;
-
-          jDoMethod["Interval"] = doMethod->getInterval().toString();
-
-          const auto& statementAccessesPairs = doMethod->getChildren();
-          for(std::size_t m = 0; m < statementAccessesPairs.size(); ++m) {
-            jDoMethod["Stmt_" + std::to_string(m)] = ASTStringifer::toString(
-                statementAccessesPairs[m]->getStatement()->ASTStmt, 0, false);
-            jDoMethod["Accesses_" + std::to_string(m)] =
-                statementAccessesPairs[m]->getAccesses()->reportAccesses(this);
-          }
-
-          jStage["Do_" + std::to_string(l++)] = jDoMethod;
-        }
-
-        jMultiStage["Stage_" + std::to_string(k++)] = jStage;
-      }
-
-      jStencil["MultiStage_" + std::to_string(j++)] = jMultiStage;
-    }
-
-    if(passName.empty())
-      jout[getName()]["Stencil_" + std::to_string(i)] = jStencil;
-    else
-      jout[passName][getName()]["Stencil_" + std::to_string(i)] = jStencil;
-    ++i;
-  }
+void StencilInstantiation::jsonDump(std::string filename) const {
 
   std::ofstream fs(filename, std::ios::out | std::ios::trunc);
   if(!fs.is_open()) {
@@ -853,7 +755,10 @@ void StencilInstantiation::dumpAsJson(std::string filename, std::string passName
     context_->getDiagnostics().report(diag);
   }
 
-  fs << jout.dump(2) << std::endl;
+  json::json node;
+  node["MetaInformation"] = metadata_.jsonDump();
+  node["IIR"] = IIR_->jsonDump();
+  fs << node.dump(2) << std::endl;
   fs.close();
 }
 
