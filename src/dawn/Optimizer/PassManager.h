@@ -20,6 +20,7 @@
 #include "dawn/Support/STLExtras.h"
 #include <list>
 #include <memory>
+#include <unordered_map>
 
 namespace dawn {
 
@@ -30,7 +31,7 @@ class StencilInstantiation;
 /// @brief Handle registering and running of passes
 class PassManager : public NonCopyable {
   std::list<std::unique_ptr<Pass>> passes_;
-  int counter_ = 0;
+  std::unordered_map<std::string, int> passCounter_;
 
 public:
   /// @brief Create a new pass at the end of the pass list
