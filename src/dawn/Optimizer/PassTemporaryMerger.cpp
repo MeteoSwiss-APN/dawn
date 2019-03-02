@@ -160,8 +160,7 @@ bool PassTemporaryMerger::run(
       if(context->getOptions().ReportPassTemporaryMerger && AccessIDOfRenameCandiates.size() >= 2) {
         std::vector<std::string> renameCandiatesNames;
         for(int AccessID : AccessIDOfRenameCandiates)
-          renameCandiatesNames.emplace_back(
-              stencilInstantiation->getFieldNameFromAccessID(AccessID));
+          renameCandiatesNames.emplace_back(stencilInstantiation->getFieldNameFromAccessID(AccessID));
         std::sort(renameCandiatesNames.begin(), renameCandiatesNames.end());
         std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
                   << ": merging: " << RangeToString(", ", "", "\n")(renameCandiatesNames);

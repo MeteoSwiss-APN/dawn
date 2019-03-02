@@ -236,8 +236,8 @@ void CXXNaiveCodeGen::generateStencilWrapperMembers(
     stencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
 
     for(int AccessID : stencilInstantiation->getAllocatedFieldAccessIDs())
-      stencilWrapperClass.addMember(
-          c_gtc() + "storage_t", "m_" + stencilInstantiation->getFieldNameFromAccessID(AccessID));
+      stencilWrapperClass.addMember(c_gtc() + "storage_t",
+                                    "m_" + stencilInstantiation->getFieldNameFromAccessID(AccessID));
   }
 }
 void CXXNaiveCodeGen::generateStencilClasses(

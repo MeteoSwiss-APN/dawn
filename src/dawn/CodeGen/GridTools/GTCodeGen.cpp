@@ -633,8 +633,7 @@ void GTCodeGen::generateStencilClasses(
                   c_gt() + "cache_io_policy::" + cache.getCacheIOPolicyAsString() +
                   // Interval: if IOPolicy is not local, we need to provide the interval
                   ">(p_" +
-                  stencilInstantiation->getFieldNameFromAccessID(cache.getCachedFieldAccessID()) +
-                  "())")
+                  stencilInstantiation->getFieldNameFromAccessID(cache.getCachedFieldAccessID()) + "())")
               .str();
         });
       }

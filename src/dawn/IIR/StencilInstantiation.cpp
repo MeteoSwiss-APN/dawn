@@ -619,19 +619,13 @@ StencilInstantiation::getLiteralAccessIDToNameMap() const {
   return metadata_.LiteralAccessIDToNameMap_;
 }
 
-std::set<int>& StencilInstantiation::getFieldAccessIDSet() { return metadata_.FieldAccessIDSet_; }
+// std::set<int>& StencilInstantiation::getGlobalVariableAccessIDSet() {
+//  return metadata_.GlobalVariableAccessIDSet_;
+//}
 
-const std::set<int>& StencilInstantiation::getFieldAccessIDSet() const {
-  return metadata_.FieldAccessIDSet_;
-}
-
-std::set<int>& StencilInstantiation::getGlobalVariableAccessIDSet() {
-  return metadata_.GlobalVariableAccessIDSet_;
-}
-
-const std::set<int>& StencilInstantiation::getGlobalVariableAccessIDSet() const {
-  return metadata_.GlobalVariableAccessIDSet_;
-}
+// const std::set<int>& StencilInstantiation::getGlobalVariableAccessIDSet() const {
+//  return metadata_.GlobalVariableAccessIDSet_;
+//}
 
 namespace {
 

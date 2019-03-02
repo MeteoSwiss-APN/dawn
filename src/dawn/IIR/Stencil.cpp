@@ -82,11 +82,11 @@ bool Stencil::StatementPosition::inSameDoMethod(const Stencil::StatementPosition
   return StagePos == other.StagePos && DoMethodIndex == other.DoMethodIndex;
 }
 
-json::json Stencil::FieldInfo::jsonDump(const StencilMetaInformation& metadata_) const {
+json::json Stencil::FieldInfo::jsonDump() const {
   json::json node;
   node["name"] = Name;
   node["dim"] = format("[%i,%i,%i]", Dimensions[0], Dimensions[1], Dimensions[2]);
-  node["field"] = field.jsonDump(metadata_);
+  node["field"] = field.jsonDump();
   node["IsTemporary"] = IsTemporary;
   return node;
 }
@@ -96,7 +96,7 @@ json::json Stencil::jsonDump() const {
   node["ID"] = std::to_string(StencilID_);
   json::json fieldsJson;
   for(const auto& f : derivedInfo_.fields_) {
-    fieldsJson.push_back(f.second.jsonDump(metadata_));
+    fieldsJson[f.second.Name] = f.second.jsonDump();
   }
   node["Fields"] = fieldsJson;
 

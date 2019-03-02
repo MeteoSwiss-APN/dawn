@@ -33,6 +33,8 @@ bool PassStageReordering::run(
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   std::string filenameWE = getFilenameWithoutExtension(context->getSIR()->Filename);
+  if(context->getOptions().ReportPassStageReodering)
+    stencilInstantiation->jsonDump(filenameWE + "_before.json");
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     if(strategy_ == ReorderStrategy::RK_None)
@@ -60,6 +62,8 @@ bool PassStageReordering::run(
     if(!stencilPtr)
       return false;
   }
+  if(context->getOptions().ReportPassStageReodering)
+    stencilInstantiation->jsonDump(filenameWE + "_after.json");
 
   return true;
 }

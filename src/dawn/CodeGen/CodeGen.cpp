@@ -223,8 +223,7 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
   }
   if(stencilInstantiation->hasAllocatedFields()) {
     for(int accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
-      codeGenProperties.insertAllocateField(
-          stencilInstantiation->getFieldNameFromAccessID(accessID));
+      codeGenProperties.insertAllocateField(stencilInstantiation->getFieldNameFromAccessID(accessID));
     }
   }
 

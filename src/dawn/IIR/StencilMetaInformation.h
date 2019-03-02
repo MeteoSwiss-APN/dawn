@@ -117,6 +117,12 @@ public:
   /// and their name is a not bijective!
   int getAccessIDFromName(const std::string& name) const;
 
+  /// @brief Get the field-AccessID set
+  const std::set<int>& getFieldAccessIDSet() const;
+
+  /// @brief Get the field-AccessID set
+  const std::set<int>& getGlobalVariableAccessIDSet() const;
+
   /// @brief get a stencil function instantiation by StencilFunCallExpr
   const std::shared_ptr<StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) const;

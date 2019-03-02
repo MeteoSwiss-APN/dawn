@@ -43,7 +43,7 @@ json::json Stage::jsonDump(const StencilMetaInformation& metaData) const {
   json::json node;
   json::json fieldsJson;
   for(const auto& field : derivedInfo_.fields_) {
-    fieldsJson.push_back(field.second.jsonDump(metaData));
+    fieldsJson[metaData.getNameFromAccessID(field.first)] = field.second.jsonDump();
   }
   node["Fields"] = fieldsJson;
   std::stringstream ss;

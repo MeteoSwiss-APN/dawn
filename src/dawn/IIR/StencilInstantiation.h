@@ -343,13 +343,9 @@ public:
   std::unordered_map<int, std::string>& getLiteralAccessIDToNameMap();
   const std::unordered_map<int, std::string>& getLiteralAccessIDToNameMap() const;
 
-  /// @brief Get the field-AccessID set
-  std::set<int>& getFieldAccessIDSet();
-  const std::set<int>& getFieldAccessIDSet() const;
-
-  /// @brief Get the field-AccessID set
-  std::set<int>& getGlobalVariableAccessIDSet();
-  const std::set<int>& getGlobalVariableAccessIDSet() const;
+  //  /// @brief Get the field-AccessID set
+  //  std::set<int>& getGlobalVariableAccessIDSet();
+  //  const std::set<int>& getGlobalVariableAccessIDSet() const;
 
   /// @brief insert a new sir::StencilFunction into the IIR
   void

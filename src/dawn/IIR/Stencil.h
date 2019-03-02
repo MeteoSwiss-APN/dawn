@@ -55,7 +55,7 @@ public:
     Array3i Dimensions;
     Field field;
     bool IsTemporary;
-    json::json jsonDump(const StencilMetaInformation& metadata_) const;
+    json::json jsonDump() const;
   };
 
 private:

@@ -24,10 +24,9 @@ Interval Field::computeAccessedInterval() const {
   return accessedInterval;
 }
 
-json::json Field::jsonDump(const StencilMetaInformation& metaData) const {
+json::json Field::jsonDump() const {
   json::json node;
   node["accessID"] = accessID_;
-  node["name"] = metaData.getNameFromAccessID(accessID_);
   node["intend"] = intend_;
   node["extents"] = extents_.jsonDump();
   node["redundant extents"] = extentsRB_.jsonDump();

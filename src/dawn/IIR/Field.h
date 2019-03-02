@@ -24,6 +24,7 @@
 
 namespace dawn {
 namespace iir {
+class StencilInstantiation;
 
 /// @brief Information of a field
 ///
@@ -91,7 +92,7 @@ public:
     return extentsRB_.getWriteExtents();
   }
 
-  json::json jsonDump(const StencilMetaInformation& metaData) const;
+  json::json jsonDump() const;
 
   inline Extents const& getExtents() const { return extents_.getExtents(); }
   inline Extents const& getExtentsRB() const { return extentsRB_.getExtents(); }

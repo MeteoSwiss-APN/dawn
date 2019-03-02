@@ -413,7 +413,7 @@ json::json MultiStage::jsonDump() const {
   node["Loop"] = loopOrderToString(loopOrder_);
   json::json fieldsJson;
   for(const auto& field : derivedInfo_.fields_) {
-    fieldsJson.push_back(field.second.jsonDump(metadata_));
+    fieldsJson[metadata_.getNameFromAccessID(field.first)] = field.second.jsonDump();
   }
   node["Fields"] = fieldsJson;
 

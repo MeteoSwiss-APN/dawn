@@ -142,15 +142,14 @@ const Extents& Accesses::getWriteAccess(int AccessID) const {
 // mess up.
 
 std::string Accesses::reportAccesses(const StencilMetaInformation& metadata) const {
-  return reportAccessesImpl(
-      [&metadata](int AccessID) { return metadata.getNameFromAccessID(AccessID); }, writeAccesses_,
-      readAccesses_);
+  return reportAccessesImpl([&](int AccessID) { return metadata.getNameFromAccessID(AccessID); },
+                            writeAccesses_, readAccesses_);
 }
 
 std::string Accesses::reportAccesses(const StencilFunctionInstantiation* stencilFunc) const {
   return reportAccessesImpl(
-      [&](int AccessID) { return stencilFunc->getNameFromAccessID(AccessID); }, writeAccesses_,
-      readAccesses_);
+      [&stencilFunc](int AccessID) { return stencilFunc->getNameFromAccessID(AccessID); },
+      writeAccesses_, readAccesses_);
 }
 
 std::string Accesses::toString(const StencilMetaInformation* metadata,

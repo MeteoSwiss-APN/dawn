@@ -54,7 +54,8 @@ bool PassManager::runPassOnStecilInstantiation(
   }
 
   if(instantiation->getOptimizerContext()->getOptions().PassVerbose) {
-    instantiation->jsonDump(pass->getName() + "Log.json");
+    instantiation->jsonDump(pass->getName() + "_" + std::to_string(passCounter_[pass->getName()]) +
+                            "_Log.json");
   }
 
   DAWN_ASSERT_MSG(instantiation->getIIR()->checkTreeConsistency(),
@@ -66,6 +67,7 @@ bool PassManager::runPassOnStecilInstantiation(
   }
 #endif
 
+  passCounter_[pass->getName()]++;
   DAWN_LOG(INFO) << "Done with " << pass->getName() << " : Success";
   return true;
 }

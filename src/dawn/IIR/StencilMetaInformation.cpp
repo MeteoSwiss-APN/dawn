@@ -67,8 +67,8 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
   for(const auto& pair : origin.FieldnameToBoundaryConditionMap_) {
     FieldnameToBoundaryConditionMap_.emplace(
         pair.first, std::make_shared<BoundaryConditionDeclStmt>(*(pair.second)));
+    fieldIDToInitializedDimensionsMap_ = origin.fieldIDToInitializedDimensionsMap_;
   }
-  fieldIDToInitializedDimensionsMap_ = origin.fieldIDToInitializedDimensionsMap_;
   for(const auto& pair : origin.globalVariableMap_) {
     globalVariableMap_.emplace(pair.first, std::make_shared<sir::Value>(pair.second));
   }
@@ -233,7 +233,9 @@ void StencilMetaInformation::removeAccessID(int AccessID) {
 json::json StencilMetaInformation::jsonDump() const {
   json::json metaDataJson;
   metaDataJson["VariableVersions"] = variableVersions_.jsonDump();
-  metaDataJson["filename"] = fileName_;
+  size_t pos = fileName_.find_last_of("\\/");
+  DAWN_ASSERT(pos + 1 < fileName_.size() - 1);
+  metaDataJson["filename"] = fileName_.substr(pos + 1, fileName_.size() - pos - 1);
   metaDataJson["stencilname"] = stencilName_;
   std::stringstream ss;
   ss << stencilLocation_;
@@ -294,8 +296,22 @@ json::json StencilMetaInformation::jsonDump() const {
     accessIDToNameJson[std::to_string(pair.first)] = pair.second;
   }
   metaDataJson["AccessIDToName"] = accessIDToNameJson;
-
+  // TODO recover?
+  //  json::json idToStencilCallJson;
+  //  for(const auto& pair : IDToStencilCallMap_) {
+  //    idToStencilCallJson[std::to_string(pair.first)] = ASTStringifer::toString(pair.second);
+  //  }
+  //  metaDataJson["IDToStencilCall"] = idToStencilCallJson;
   return metaDataJson;
+}
+
+/// @brief Get the field-AccessID set
+const std::set<int>& StencilMetaInformation::getFieldAccessIDSet() const {
+  return FieldAccessIDSet_;
+}
+
+const std::set<int>& StencilMetaInformation::getGlobalVariableAccessIDSet() const {
+  return GlobalVariableAccessIDSet_;
 }
 
 } // namespace iir
