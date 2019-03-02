@@ -67,6 +67,7 @@ class StencilDescStatementMapper : public ASTVisitor {
   };
 
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
+  iir::StencilMetaInformation& metadata_;
   std::stack<std::shared_ptr<Scope>> scope_;
 
   sir::Stencil* sirStencil_;
@@ -80,7 +81,8 @@ class StencilDescStatementMapper : public ASTVisitor {
 public:
   StencilDescStatementMapper(std::shared_ptr<iir::StencilInstantiation>& instantiation,
                              sir::Stencil* sirStencil, const std::shared_ptr<SIR>& sir)
-      : instantiation_(instantiation), sirStencil_(sirStencil), sir_(sir) {
+      : instantiation_(instantiation), metadata_(instantiation->getMetaData()),
+        sirStencil_(sirStencil), sir_(sir) {
     DAWN_ASSERT(instantiation);
     // Create the initial scope
     scope_.push(std::make_shared<Scope>(sirStencil_->Name,
@@ -91,8 +93,7 @@ public:
     for(auto& keyValuePair : *(sir->GlobalVariableMap)) {
       const std::string& key = keyValuePair.first;
       sir::Value& value = *keyValuePair.second;
-      instantiation_->getMetaData().globalVariableMap_.emplace(keyValuePair.first,
-                                                               keyValuePair.second);
+      metadata_.globalVariableMap_.emplace(keyValuePair.first, keyValuePair.second);
 
       if(value.isConstexpr()) {
         switch(value.getType()) {
@@ -120,7 +121,7 @@ public:
   void makeNewStencil() {
     int StencilID = instantiation_->nextUID();
     instantiation_->getIIR()->insertChild(
-        make_unique<Stencil>(instantiation_->getMetaData(), sirStencil_->Attributes, StencilID),
+        make_unique<Stencil>(metadata_, sirStencil_->Attributes, StencilID),
         instantiation_->getIIR());
     // We create a paceholder stencil-call for CodeGen to know wehere we need to insert calls to
     // this stencil
@@ -310,8 +311,8 @@ public:
           auto voidExpr = std::make_shared<LiteralAccessExpr>("0", BuiltinTypeID::Float);
           auto voidStmt = std::make_shared<ExprStmt>(voidExpr);
           int AccessID = -instantiation_->nextUID();
-          instantiation_->getMetaData().LiteralAccessIDToNameMap_.emplace(AccessID, "0");
-          instantiation_->mapExprToAccessID(voidExpr, AccessID);
+          metadata_.LiteralAccessIDToNameMap_.emplace(AccessID, "0");
+          metadata_.mapExprToAccessID(voidExpr, AccessID);
           replaceOldStmtWithNewStmtInStmt(
               scope_.top()->controlFlowDescriptor_.getStatements().back()->ASTStmt, stmt, voidStmt);
         }
@@ -352,7 +353,7 @@ public:
       globalName = StencilInstantiation::makeLocalVariablename(stmt->getName(), AccessID);
 
     instantiation_->setAccessIDNamePair(AccessID, globalName);
-    instantiation_->getMetaData().StmtIDToAccessIDMap_.emplace(stmt->getID(), AccessID);
+    metadata_.StmtIDToAccessIDMap_.emplace(stmt->getID(), AccessID);
 
     // Add the mapping to the local scope
     scope_.top()->LocalVarNameToAccessIDMap.emplace(stmt->getName(), AccessID);
@@ -388,11 +389,11 @@ public:
 
     // Create the new multi-stage
     std::unique_ptr<MultiStage> multiStage = make_unique<MultiStage>(
-        instantiation_->getMetaData(), verticalRegion->LoopOrder == sir::VerticalRegion::LK_Forward
-                                           ? LoopOrderKind::LK_Forward
-                                           : LoopOrderKind::LK_Backward);
+        metadata_, verticalRegion->LoopOrder == sir::VerticalRegion::LK_Forward
+                       ? LoopOrderKind::LK_Forward
+                       : LoopOrderKind::LK_Backward);
     std::unique_ptr<Stage> stage =
-        make_unique<Stage>(instantiation_->getMetaData(), instantiation_->nextUID(), interval);
+        make_unique<Stage>(metadata_, instantiation_->nextUID(), interval);
 
     DAWN_LOG(INFO) << "Processing vertical region at " << verticalRegion->Loc;
 
@@ -560,7 +561,6 @@ public:
 
   void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
     const auto& varname = expr->getName();
-
     if(expr->isExternal()) {
       DAWN_ASSERT_MSG(!expr->isArrayAccess(), "global array access is not supported");
 
@@ -575,25 +575,24 @@ public:
             scope_.top()->controlFlowDescriptor_.getStatements().back()->ASTStmt, expr, newExpr);
 
         int AccessID = instantiation_->nextUID();
-        instantiation_->getMetaData().LiteralAccessIDToNameMap_.emplace(AccessID,
-                                                                        newExpr->getValue());
-        instantiation_->mapExprToAccessID(newExpr, AccessID);
+        metadata_.LiteralAccessIDToNameMap_.emplace(AccessID, newExpr->getValue());
+        metadata_.mapExprToAccessID(newExpr, AccessID);
 
       } else {
         int AccessID = 0;
-        if(!instantiation_->isGlobalVariable(varname)) {
+        if(!metadata_.isGlobalVariable(varname)) {
           AccessID = instantiation_->nextUID();
           instantiation_->setAccessIDNamePairOfGlobalVariable(AccessID, varname);
         } else {
-          AccessID = instantiation_->getAccessIDFromName(varname);
+          AccessID = metadata_.getAccessIDFromName(varname);
         }
 
-        instantiation_->mapExprToAccessID(expr, AccessID);
+        metadata_.mapExprToAccessID(expr, AccessID);
       }
 
     } else {
       // Register the mapping between VarAccessExpr and AccessID.
-      instantiation_->mapExprToAccessID(expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
+      metadata_.mapExprToAccessID(expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
 
       // Resolve the index if this is an array access
       if(expr->isArrayAccess())
@@ -604,8 +603,8 @@ public:
   void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override {
     // Register a literal access (Note: the negative AccessID we assign!)
     int AccessID = -instantiation_->nextUID();
-    instantiation_->getMetaData().LiteralAccessIDToNameMap_.emplace(AccessID, expr->getValue());
-    instantiation_->mapExprToAccessID(expr, AccessID);
+    metadata_.LiteralAccessIDToNameMap_.emplace(AccessID, expr->getValue());
+    metadata_.mapExprToAccessID(expr, AccessID);
   }
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {}

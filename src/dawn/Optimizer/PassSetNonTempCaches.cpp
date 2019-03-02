@@ -44,12 +44,20 @@ struct NameToImprovementMetric {
 
 /// @brief The GlobalFieldCacher class handles the caching for a given Multistage
 class GlobalFieldCacher {
+  const std::unique_ptr<iir::MultiStage>& multiStagePrt_;
+  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
+  iir::StencilMetaInformation& metadata_;
+  std::unordered_map<int, int> accessIDToDataLocality_;
+  std::unordered_map<int, int> oldAccessIDtoNewAccessID_;
+  std::vector<AcessIDTolocalityMetric> sortedAccesses_;
+  std::vector<NameToImprovementMetric> originalNameToCache_;
+
 public:
   /// @param[in, out]  msprt   Pointer to the multistage to handle
   /// @param[in, out]  si      Stencil Instanciation [ISIR] holding all the Stencils
   GlobalFieldCacher(const std::unique_ptr<iir::MultiStage>& msptr,
                     const std::shared_ptr<iir::StencilInstantiation>& si)
-      : multiStagePrt_(msptr), instantiation_(si) {}
+      : multiStagePrt_(msptr), instantiation_(si), metadata_(si->getMetaData()) {}
 
   /// @brief Entry method for the pass: processes a given multistage and applies all changes
   /// required
@@ -224,8 +232,8 @@ private:
     domethod->insertChild(std::move(pair));
 
     // Add the new expressions to the map
-    instantiation_->mapExprToAccessID(fa_assignment, assignmentID);
-    instantiation_->mapExprToAccessID(fa_assignee, assigneeID);
+    metadata_.mapExprToAccessID(fa_assignment, assignmentID);
+    metadata_.mapExprToAccessID(fa_assignee, assigneeID);
   }
 
   /// @brief Checks if there is a read operation before the first write operation in the given
@@ -268,15 +276,6 @@ private:
     }
     return true;
   }
-
-  const std::unique_ptr<iir::MultiStage>& multiStagePrt_;
-  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
-
-  std::unordered_map<int, int> accessIDToDataLocality_;
-  std::unordered_map<int, int> oldAccessIDtoNewAccessID_;
-  std::vector<AcessIDTolocalityMetric> sortedAccesses_;
-
-  std::vector<NameToImprovementMetric> originalNameToCache_;
 };
 
 PassSetNonTempCaches::PassSetNonTempCaches() : Pass("PassSetNonTempCaches") {}

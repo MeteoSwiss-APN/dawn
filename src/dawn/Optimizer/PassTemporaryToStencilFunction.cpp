@@ -429,7 +429,7 @@ public:
           instantiation_->getFieldNameFromAccessID(accessID_), expr->getOffset());
       cloneStencilFun->getExpression()->insertArgument(arg);
 
-      instantiation_->mapExprToAccessID(arg, accessID_);
+      instantiation_->getMetaData().mapExprToAccessID(arg, accessID_);
     }
 
     for(int idx : expr->getArgumentMap()) {

@@ -21,7 +21,8 @@ StatementMapper::StatementMapper(
     const iir::Interval& interval,
     const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,
     const std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation)
-    : sir_(fullSIR), instantiation_(instantiation), stackTrace_(stackTrace) {
+    : sir_(fullSIR), instantiation_(instantiation), metadata_(instantiation->getMetaData()),
+      stackTrace_(stackTrace) {
 
   // Create the initial scope
   scope_.push(std::make_shared<Scope>(doMethod, interval, stencilFunctionInstantiation));
@@ -327,7 +328,7 @@ void StatementMapper::visit(const std::shared_ptr<VarAccessExpr>& expr) {
 
       int AccessID = instantiation_->nextUID();
       instantiation_->getLiteralAccessIDToNameMap().emplace(AccessID, newExpr->getValue());
-      instantiation_->mapExprToAccessID(newExpr, AccessID);
+      metadata_.mapExprToAccessID(newExpr, AccessID);
 
     } else {
       iir::StencilInstantiation* stencilInstantiation =
@@ -346,9 +347,9 @@ void StatementMapper::visit(const std::shared_ptr<VarAccessExpr>& expr) {
 
       if(function) {
         function->mapExprToAccessID(expr, AccessID);
-        instantiation_->mapExprToAccessID(expr, AccessID);
+        metadata_.mapExprToAccessID(expr, AccessID);
       } else
-        instantiation_->mapExprToAccessID(expr, AccessID);
+        metadata_.mapExprToAccessID(expr, AccessID);
     }
 
   } else {
@@ -356,7 +357,7 @@ void StatementMapper::visit(const std::shared_ptr<VarAccessExpr>& expr) {
     if(function)
       function->mapExprToAccessID(expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
     else
-      instantiation_->mapExprToAccessID(expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
+      metadata_.mapExprToAccessID(expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
 
     // Resolve the index if this is an array access
     if(expr->isArrayAccess())
@@ -376,7 +377,7 @@ void StatementMapper::visit(const std::shared_ptr<LiteralAccessExpr>& expr) {
     function->mapExprToAccessID(expr, AccessID);
   } else {
     instantiation_->getLiteralAccessIDToNameMap().emplace(AccessID, expr->getValue());
-    instantiation_->mapExprToAccessID(expr, AccessID);
+    metadata_.mapExprToAccessID(expr, AccessID);
   }
 }
 
@@ -390,7 +391,7 @@ void StatementMapper::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   if(function) {
     function->mapExprToAccessID(expr, AccessID);
   } else {
-    instantiation_->mapExprToAccessID(expr, AccessID);
+    metadata_.mapExprToAccessID(expr, AccessID);
   }
 
   if(Scope* candiateScope = getCurrentCandidateScope()) {

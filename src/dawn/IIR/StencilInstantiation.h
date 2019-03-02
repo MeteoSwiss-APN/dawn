@@ -262,14 +262,14 @@ public:
   cloneStencilFunctionCandidate(const std::shared_ptr<StencilFunctionInstantiation>& stencilFun,
                                 std::string functionName);
 
-  /// @brief Add entry to the map between a given expr to its access ID
-  void mapExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID);
+  //  /// @brief Add entry to the map between a given expr to its access ID
+  //  void mapExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID);
 
-  /// @brief Add entry to the map between a given stmt to its access ID
-  void mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt, int accessID);
+  //  /// @brief Add entry to the map between a given stmt to its access ID
+  //  void mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt, int accessID);
 
-  /// @brief Add entry of the Expr to AccessID map
-  void eraseExprToAccessID(std::shared_ptr<Expr> expr);
+  //  /// @brief Add entry of the Expr to AccessID map
+  //  void eraseExprToAccessID(std::shared_ptr<Expr> expr);
 
   /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
   const std::unordered_map<std::shared_ptr<StencilFunCallExpr>,

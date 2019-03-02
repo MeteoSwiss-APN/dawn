@@ -94,17 +94,17 @@ const std::string& StencilInstantiation::getFieldNameFromAccessID(int AccessID) 
   return it->second;
 }
 
-void StencilInstantiation::mapExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID) {
-  metadata_.mapExprToAccessID(expr, accessID);
-}
+// void StencilInstantiation::mapExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID) {
+//  metadata_.mapExprToAccessID(expr, accessID);
+//}
 
-void StencilInstantiation::eraseExprToAccessID(std::shared_ptr<Expr> expr) {
-  metadata_.eraseExprToAccessID(expr);
-}
+// void StencilInstantiation::eraseExprToAccessID(std::shared_ptr<Expr> expr) {
+//  metadata_.eraseExprToAccessID(expr);
+//}
 
-void StencilInstantiation::mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt, int accessID) {
-  metadata_.mapStmtToAccessID(stmt, accessID);
-}
+// void StencilInstantiation::mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt, int accessID) {
+//  metadata_.mapStmtToAccessID(stmt, accessID);
+//}
 
 const std::string& StencilInstantiation::getNameFromLiteralAccessID(int AccessID) const {
   DAWN_ASSERT_MSG(isLiteral(AccessID), "Invalid literal");
