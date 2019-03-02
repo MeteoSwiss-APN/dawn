@@ -31,16 +31,15 @@ namespace dawn {
 namespace {
 
 class StencilFunArgumentDetector : public ASTVisitorForwarding {
-  iir::StencilInstantiation& instantiation_;
+  const iir::StencilMetaInformation& metadata_;
   int AccessID_;
 
   int argListNesting_;
   bool usedInStencilFun_;
 
 public:
-  StencilFunArgumentDetector(iir::StencilInstantiation& instantiation, int AccessID)
-      : instantiation_(instantiation), AccessID_(AccessID), argListNesting_(0),
-        usedInStencilFun_(false) {}
+  StencilFunArgumentDetector(const iir::StencilMetaInformation& metadata, int AccessID)
+      : metadata_(metadata), AccessID_(AccessID), argListNesting_(0), usedInStencilFun_(false) {}
 
   virtual void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
     argListNesting_++;
@@ -49,7 +48,7 @@ public:
   }
 
   virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
-    if(argListNesting_ > 0 && instantiation_.getAccessIDFromExpr(expr) == AccessID_)
+    if(argListNesting_ > 0 && metadata_.getAccessIDFromExpr(expr) == AccessID_)
       usedInStencilFun_ = true;
   }
 
@@ -60,7 +59,7 @@ public:
 /// any statement of the `stencil`
 /// @returns `true` if field is used as an argument
 bool usedAsArgumentInStencilFun(const std::unique_ptr<iir::Stencil>& stencil, int AccessID) {
-  StencilFunArgumentDetector visitor(stencil->getStencilInstantiation(), AccessID);
+  StencilFunArgumentDetector visitor(stencil->getMetadata(), AccessID);
   stencil->accept(visitor);
   return visitor.usedInStencilFun();
 }

@@ -46,7 +46,7 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const iir::Stencil& stencil)
   DAWN_ASSERT(!intervalProperties_.empty());
 
   // Add intervals for the stencil functions
-  for(const auto& stencilFun : stencil.getStencilInstantiation().getStencilFunctionInstantiations())
+  for(const auto& stencilFun : stencil.getMetadata().getStencilFunctionInstantiations())
     intervalProperties_.insert(stencilFun->getInterval());
 
   // Compute axis and populate the levels

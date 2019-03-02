@@ -264,7 +264,7 @@ TEST_F(IIRSerializerTest, IIRTests) {
   sir::Attr attributes;
   attributes.set(sir::Attr::AK_MergeStages);
   referenceInstantiaton->getIIR()->insertChild(
-      make_unique<iir::Stencil>(*referenceInstantiaton, attributes, 10),
+      make_unique<iir::Stencil>(referenceInstantiaton->getMetaData(), attributes, 10),
       referenceInstantiaton->getIIR());
   const auto& IIRStencil = referenceInstantiaton->getIIR()->getChild(0);
   auto deserialized = serializeAndDeserializeRef();

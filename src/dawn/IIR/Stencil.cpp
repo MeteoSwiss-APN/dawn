@@ -44,24 +44,6 @@ std::ostream& operator<<(std::ostream& os, const iir::Stencil::Lifetime& lifetim
   return (os << "[Begin=" << lifetime.Begin << ", End=" << lifetime.End << "]");
 }
 
-std::ostream& operator<<(std::ostream& os, const iir::Stencil& stencil) {
-  int multiStageIdx = 0;
-  for(const auto& MS : stencil.getChildren()) {
-    os << "MultiStage " << (multiStageIdx++) << ": (" << MS->getLoopOrder() << ")\n";
-    for(const auto& stage : MS->getChildren())
-      os << "  "
-         << stencil.getStencilInstantiation().getIIR()->getNameFromStageID(stage->getStageID())
-         << " "
-         << RangeToString()(stage->getFields(),
-                            [&](const std::pair<int, iir::Field>& fieldPair) {
-                              return stencil.getStencilInstantiation().getFieldNameFromAccessID(
-                                  fieldPair.first);
-                            })
-         << "\n";
-  }
-  return os;
-}
-
 namespace iir {
 
 bool Stencil::StagePosition::operator<(const Stencil::StagePosition& other) const {
@@ -100,11 +82,11 @@ bool Stencil::StatementPosition::inSameDoMethod(const Stencil::StatementPosition
   return StagePos == other.StagePos && DoMethodIndex == other.DoMethodIndex;
 }
 
-json::json Stencil::FieldInfo::jsonDump(const StencilInstantiation* instantiation) const {
+json::json Stencil::FieldInfo::jsonDump(const StencilMetaInformation& metadata_) const {
   json::json node;
   node["name"] = Name;
   node["dim"] = format("[%i,%i,%i]", Dimensions[0], Dimensions[1], Dimensions[2]);
-  node["field"] = field.jsonDump(instantiation->getMetaData());
+  node["field"] = field.jsonDump(metadata_);
   node["IsTemporary"] = IsTemporary;
   return node;
 }
@@ -114,7 +96,7 @@ json::json Stencil::jsonDump() const {
   node["ID"] = std::to_string(StencilID_);
   json::json fieldsJson;
   for(const auto& f : derivedInfo_.fields_) {
-    fieldsJson.push_back(f.second.jsonDump(&stencilInstantiation_));
+    fieldsJson.push_back(f.second.jsonDump(metadata_));
   }
   node["Fields"] = fieldsJson;
 
@@ -138,9 +120,9 @@ void Stencil::updateFromChildren() {
     const int accessID = fieldPair.first;
     const Field& field = fieldPair.second;
 
-    std::string name = stencilInstantiation_.getFieldNameFromAccessID(accessID);
-    bool isTemporary = stencilInstantiation_.isTemporaryField(accessID);
-    Array3i specifiedDimension = stencilInstantiation_.getFieldDimensionsMask(accessID);
+    std::string name = metadata_.getFieldNameFromAccessID(accessID);
+    bool isTemporary = metadata_.isTemporaryField(accessID);
+    Array3i specifiedDimension = metadata_.getFieldDimensionsMask(accessID);
 
     derivedInfo_.fields_.emplace(
         std::make_pair(accessID, FieldInfo{isTemporary, name, specifiedDimension, field}));
@@ -167,9 +149,8 @@ bool Stencil::Lifetime::overlaps(const Stencil::Lifetime& other) const {
 
 sir::Attr& Stencil::getStencilAttributes() { return stencilAttributes_; }
 
-Stencil::Stencil(StencilInstantiation& stencilInstantiation, sir::Attr attributes, int StencilID)
-    : stencilInstantiation_(stencilInstantiation), stencilAttributes_(attributes),
-      StencilID_(StencilID) {}
+Stencil::Stencil(const StencilMetaInformation& metadata, sir::Attr attributes, int StencilID)
+    : metadata_(metadata), stencilAttributes_(attributes), StencilID_(StencilID) {}
 
 void Stencil::DerivedInfo::clear() { fields_.clear(); }
 
@@ -185,7 +166,7 @@ std::unordered_set<Interval> Stencil::getIntervals() const {
 }
 
 std::unique_ptr<Stencil> Stencil::clone() const {
-  auto cloneStencil = make_unique<Stencil>(stencilInstantiation_, stencilAttributes_, StencilID_);
+  auto cloneStencil = make_unique<Stencil>(metadata_, stencilAttributes_, StencilID_);
 
   cloneStencil->derivedInfo_ = derivedInfo_;
   cloneStencil->cloneChildrenFrom(*this);
@@ -201,7 +182,7 @@ std::vector<std::string> Stencil::getGlobalVariables() const {
 
   std::vector<std::string> globalVariables;
   for(const auto& AccessID : globalVariableAccessIDs)
-    globalVariables.push_back(stencilInstantiation_.getFieldNameFromAccessID(AccessID));
+    globalVariables.push_back(metadata_.getFieldNameFromAccessID(AccessID));
 
   return globalVariables;
 }

@@ -581,7 +581,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
     int mssPos = 0;
     sir::Attr attributes;
     target->getIIR()->insertChild(
-        make_unique<iir::Stencil>(*target, attributes, protoStencils.stencilid()),
+        make_unique<iir::Stencil>(target->getMetaData(), attributes, protoStencils.stencilid()),
         target->getIIR());
     const auto& IIRStencil = target->getIIR()->getChild(stencilPos++);
 

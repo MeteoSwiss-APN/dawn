@@ -26,7 +26,8 @@ class ReoderStrategyPartitioning : public ReorderStrategy {
 public:
   /// @brief Apply the reordering strategy and return the stencil
   virtual std::unique_ptr<iir::Stencil>
-  reorder(const std::unique_ptr<iir::Stencil>& stencilPtr) override;
+  reorder(iir::StencilInstantiation* instantiation,
+          const std::unique_ptr<iir::Stencil>& stencilPtr) override;
 };
 
 } // namespace dawn

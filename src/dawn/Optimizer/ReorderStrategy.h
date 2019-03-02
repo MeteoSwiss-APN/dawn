@@ -21,6 +21,7 @@ namespace dawn {
 
 namespace iir {
 class Stencil;
+class StencilInstantiation;
 class DependencyGraphStage;
 }
 
@@ -42,7 +43,8 @@ public:
   /// @brief Reorder the stages of the `stencilPtr` according to the implemented strategy
   /// @returns New stencil with the reordered stages
   virtual std::unique_ptr<iir::Stencil>
-  reorder(const std::unique_ptr<iir::Stencil>& stencilPtr) = 0;
+  reorder(iir::StencilInstantiation* instantiation,
+          const std::unique_ptr<iir::Stencil>& stencilPtr) = 0;
 };
 
 } // namespace dawn

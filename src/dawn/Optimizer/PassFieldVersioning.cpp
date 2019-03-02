@@ -126,8 +126,8 @@ bool PassFieldVersioning::run(
           newGraph->insertStatementAccessesPair(stmtAccessesPair);
 
           // Try to resolve race-conditions by using double buffering if necessary
-          auto rc =
-              fixRaceCondition(newGraph.get(), stencil, doMethod, loopOrder, stageIdx, stmtIndex);
+          auto rc = fixRaceCondition(stencilInstantiation, newGraph.get(), stencil, doMethod,
+                                     loopOrder, stageIdx, stmtIndex);
 
           if(rc == RCKind::RK_Unresolvable) {
             // Nothing we can do ... bail out
@@ -156,17 +156,16 @@ bool PassFieldVersioning::run(
   return true;
 }
 
-PassFieldVersioning::RCKind
-PassFieldVersioning::fixRaceCondition(const iir::DependencyGraphAccesses* graph,
-                                      iir::Stencil& stencil, iir::DoMethod& doMethod,
-                                      iir::LoopOrderKind loopOrder, int stageIdx, int index) {
+PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
+    const std::shared_ptr<iir::StencilInstantiation> instantiation,
+    const iir::DependencyGraphAccesses* graph, iir::Stencil& stencil, iir::DoMethod& doMethod,
+    iir::LoopOrderKind loopOrder, int stageIdx, int index) {
   using Vertex = iir::DependencyGraphAccesses::Vertex;
   using Edge = iir::DependencyGraphAccesses::Edge;
 
   Statement& statement = *doMethod.getChildren()[index]->getStatement();
 
-  auto& instantiation = stencil.getStencilInstantiation();
-  OptimizerContext* context = instantiation.getOptimizerContext();
+  OptimizerContext* context = instantiation->getOptimizerContext();
   int numRenames = 0;
 
   // Vector of strongly connected components with atleast one stencil access
@@ -240,14 +239,14 @@ PassFieldVersioning::fixRaceCondition(const iir::DependencyGraphAccesses* graph,
 
   if(!assignment) {
     if(context->getOptions().DumpRaceConditionGraph)
-      graph->toDot("rc_" + instantiation.getName() + ".dot");
-    reportRaceCondition(statement, instantiation);
+      graph->toDot("rc_" + instantiation->getName() + ".dot");
+    reportRaceCondition(statement, *instantiation);
     return RCKind::RK_Unresolvable;
   }
 
   // Get AccessIDs of the LHS and RHS
   std::set<int> LHSAccessIDs, RHSAccessIDs;
-  getAccessIDFromAssignment(instantiation, assignment, LHSAccessIDs, RHSAccessIDs);
+  getAccessIDFromAssignment(*instantiation, assignment, LHSAccessIDs, RHSAccessIDs);
 
   DAWN_ASSERT_MSG(LHSAccessIDs.size() == 1, "left hand side should only have only one AccessID");
   int LHSAccessID = *LHSAccessIDs.begin();
@@ -256,8 +255,8 @@ PassFieldVersioning::fixRaceCondition(const iir::DependencyGraphAccesses* graph,
   for(std::set<int>& scc : *stencilSCCs) {
     if(!scc.count(LHSAccessID)) {
       if(context->getOptions().DumpRaceConditionGraph)
-        graph->toDot("rc_" + instantiation.getName() + ".dot");
-      reportRaceCondition(statement, instantiation);
+        graph->toDot("rc_" + instantiation->getName() + ".dot");
+      reportRaceCondition(statement, *instantiation);
       return RCKind::RK_Unresolvable;
     }
   }
@@ -272,19 +271,19 @@ PassFieldVersioning::fixRaceCondition(const iir::DependencyGraphAccesses* graph,
   }
 
   if(context->getOptions().ReportPassFieldVersioning)
-    std::cout << "\nPASS: " << getName() << ": " << instantiation.getName()
+    std::cout << "\nPASS: " << getName() << ": " << instantiation->getName()
               << ": rename:" << statement.ASTStmt->getSourceLocation().Line;
 
   // Create a new multi-versioned field and rename all occurences
   for(int oldAccessID : renameCandiates) {
-    int newAccessID = instantiation.createVersionAndRename(oldAccessID, &stencil, stageIdx, index,
-                                                           assignment->getRight(),
-                                                           iir::StencilInstantiation::RD_Above);
+    int newAccessID = instantiation->createVersionAndRename(oldAccessID, &stencil, stageIdx, index,
+                                                            assignment->getRight(),
+                                                            iir::StencilInstantiation::RD_Above);
 
     if(context->getOptions().ReportPassFieldVersioning)
       std::cout << (numRenames != 0 ? ", " : " ")
-                << instantiation.getFieldNameFromAccessID(oldAccessID) << ":"
-                << instantiation.getFieldNameFromAccessID(newAccessID);
+                << instantiation->getFieldNameFromAccessID(oldAccessID) << ":"
+                << instantiation->getFieldNameFromAccessID(newAccessID);
 
     numRenames++;
   }

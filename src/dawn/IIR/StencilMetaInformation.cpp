@@ -132,6 +132,26 @@ int StencilMetaInformation::getAccessIDFromName(const std::string& name) const {
   return NameToAccessIDMap_.at(name);
 }
 
+Array3i StencilMetaInformation::getFieldDimensionsMask(int FieldID) const {
+  if(fieldIDToInitializedDimensionsMap_.count(FieldID) == 0) {
+    return Array3i{{1, 1, 1}};
+  }
+  return fieldIDToInitializedDimensionsMap_.find(FieldID)->second;
+}
+
+void StencilMetaInformation::mapExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID) {
+  ExprIDToAccessIDMap_.emplace(expr->getID(), accessID);
+}
+
+void StencilMetaInformation::eraseExprToAccessID(std::shared_ptr<Expr> expr) {
+  DAWN_ASSERT(ExprIDToAccessIDMap_.count(expr->getID()));
+  ExprIDToAccessIDMap_.erase(expr->getID());
+}
+
+void StencilMetaInformation::mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt, int accessID) {
+  StmtIDToAccessIDMap_.emplace(stmt->getID(), accessID);
+}
+
 std::string StencilMetaInformation::getNameFromAccessID(int accessID) const {
   if(isLiteral(accessID)) {
     return getNameFromLiteralAccessID(accessID);

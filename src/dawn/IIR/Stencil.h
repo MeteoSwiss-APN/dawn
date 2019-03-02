@@ -16,6 +16,7 @@
 #define DAWN_IIR_STENCIL_H
 
 #include "dawn/IIR/MultiStage.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/Statement.h"
 #include <functional>
@@ -29,14 +30,13 @@ namespace dawn {
 namespace iir {
 
 class DependencyGraphStage;
-class StencilInstantiation;
 class StatementAccessesPair;
 class IIR;
 
 /// @brief A Stencil is represented by a collection of MultiStages
 /// @ingroup optimizer
 class Stencil : public IIRNode<IIR, Stencil, MultiStage, impl::StdList> {
-  StencilInstantiation& stencilInstantiation_;
+  const StencilMetaInformation& metadata_;
   sir::Attr stencilAttributes_;
 
   /// Identifier of the stencil. Note that this ID is only for code-generation to associate the
@@ -55,7 +55,7 @@ public:
     Array3i Dimensions;
     Field field;
     bool IsTemporary;
-    json::json jsonDump(const StencilInstantiation* instantiation) const;
+    json::json jsonDump(const StencilMetaInformation& metadata_) const;
   };
 
 private:
@@ -176,7 +176,7 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
-  Stencil(StencilInstantiation& stencilInstantiation, sir::Attr attributes, int StencilID);
+  Stencil(const StencilMetaInformation& metadata, sir::Attr attributes, int StencilID);
 
   Stencil(Stencil&&) = default;
 
@@ -186,6 +186,9 @@ public:
 
   /// @brief clone the stencil returning a smart ptr
   std::unique_ptr<Stencil> clone() const;
+
+  /// @brief return the meta information
+  const StencilMetaInformation& getMetadata() const { return metadata_; }
 
   /// @brief Compute a set of intervals for this stencil
   std::unordered_set<Interval> getIntervals() const;
@@ -198,9 +201,6 @@ public:
 
   /// @brief returns true if the accessid is used within the stencil
   bool hasFieldAccessID(const int accessID) const { return derivedInfo_.fields_.count(accessID); }
-
-  /// @brief Get the stencil instantiation
-  StencilInstantiation& getStencilInstantiation() const { return stencilInstantiation_; }
 
   /// @brief Get the enclosing interval of accesses of temporaries used in this stencil
   boost::optional<Interval> getEnclosingIntervalTemporaries() const;
@@ -283,9 +283,6 @@ public:
 
   /// @brief Apply the visitor to all statements in the stencil
   void accept(ASTVisitor& visitor);
-
-  /// @brief Convert stencil to string (i.e print the list of multi-stage -> stages)
-  friend std::ostream& operator<<(std::ostream& os, const Stencil& stencil);
 
   /// @brief Get the pair <AccessID, field> for the fields used within the multi-stage
   const std::unordered_map<int, FieldInfo>& getFields() const { return derivedInfo_.fields_; }

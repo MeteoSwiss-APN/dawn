@@ -120,7 +120,7 @@ public:
   void makeNewStencil() {
     int StencilID = instantiation_->nextUID();
     instantiation_->getIIR()->insertChild(
-        make_unique<Stencil>(*instantiation_, sirStencil_->Attributes, StencilID),
+        make_unique<Stencil>(instantiation_->getMetaData(), sirStencil_->Attributes, StencilID),
         instantiation_->getIIR());
     // We create a paceholder stencil-call for CodeGen to know wehere we need to insert calls to
     // this stencil

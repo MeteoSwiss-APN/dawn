@@ -358,6 +358,9 @@ public:
   /// @brief Get the optimizer context
   inline ::dawn::OptimizerContext* getOptimizerContext() { return context_; }
 
+  /// @brief Get the optimizer context
+  const ::dawn::OptimizerContext* getOptimizerContext() const { return context_; }
+
   bool insertBoundaryConditions(std::string originalFieldName,
                                 std::shared_ptr<BoundaryConditionDeclStmt> bc);
 
@@ -439,7 +442,7 @@ public:
   /// @brief this checks if the user specialized the field to a dimensionality. If not all
   /// dimensions are allow for off-center acesses and hence, {1,1,1} is returned. If we got a
   /// specialization, it is returned
-  Array3i getFieldDimensionsMask(int FieldID) const;
+  Array3i getFieldDimensionsMask(int fieldID) const;
 
   /// @brief Report the accesses to the console (according to `-freport-accesses`)
   void reportAccesses() const;

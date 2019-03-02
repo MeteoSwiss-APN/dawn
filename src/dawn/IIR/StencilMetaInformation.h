@@ -127,6 +127,16 @@ public:
   /// @brief Get the `AccessID` of the Stmt (VarDeclStmt)
   int getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) const;
 
+  const std::vector<std::shared_ptr<StencilFunctionInstantiation>>&
+  getStencilFunctionInstantiations() const {
+    return stencilFunctionInstantiations_;
+  }
+
+  /// @brief this checks if the user specialized the field to a dimensionality. If not all
+  /// dimensions are allow for off-center acesses and hence, {1,1,1} is returned. If we got a
+  /// specialization, it is returned
+  Array3i getFieldDimensionsMask(int FieldID) const;
+
   /// @brief Set the `AccessID` of the Expr (VarAccess or FieldAccess)
   void setAccessIDOfExpr(const std::shared_ptr<Expr>& expr, const int accessID);
 
@@ -144,6 +154,15 @@ public:
 
   /// @brief Remove the field, variable or literal given by `AccessID`
   void removeAccessID(int AccesssID);
+
+  /// @brief Add entry to the map between a given expr to its access ID
+  void mapExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID);
+
+  /// @brief Add entry to the map between a given stmt to its access ID
+  void mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt, int accessID);
+
+  /// @brief Add entry of the Expr to AccessID map
+  void eraseExprToAccessID(std::shared_ptr<Expr> expr);
 
   ///@brief struct with properties of a stencil function instantiation candidate
   struct StencilFunctionInstantiationCandidate {

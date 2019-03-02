@@ -25,23 +25,23 @@ namespace {
 
 /// @brief Get all field and variable accesses identifier by `AccessID`
 class GetFieldAndVarAccesses : public ASTVisitorForwarding {
-  iir::StencilInstantiation& instantiation_;
+  const iir::StencilMetaInformation& metadata_;
   int AccessID_;
 
   std::vector<std::shared_ptr<FieldAccessExpr>> fieldAccessExprToReplace_;
   std::vector<std::shared_ptr<VarAccessExpr>> varAccessesToReplace_;
 
 public:
-  GetFieldAndVarAccesses(iir::StencilInstantiation& instantiation, int AccessID)
-      : instantiation_(instantiation), AccessID_(AccessID) {}
+  GetFieldAndVarAccesses(iir::StencilMetaInformation& metadata, int AccessID)
+      : metadata_(metadata), AccessID_(AccessID) {}
 
   void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
-    if(instantiation_.getAccessIDFromExpr(expr) == AccessID_)
+    if(metadata_.getAccessIDFromExpr(expr) == AccessID_)
       varAccessesToReplace_.emplace_back(expr);
   }
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
-    if(instantiation_.getAccessIDFromExpr(expr) == AccessID_)
+    if(metadata_.getAccessIDFromExpr(expr) == AccessID_)
       fieldAccessExprToReplace_.emplace_back(expr);
   }
 
@@ -62,11 +62,11 @@ public:
 } // anonymous namespace
 
 void replaceFieldWithVarAccessInStmts(
-    iir::Stencil* stencil, int AccessID, const std::string& varname,
+    iir::StencilMetaInformation& metadata, iir::Stencil* stencil, int AccessID,
+    const std::string& varname,
     ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
-  iir::StencilInstantiation& instantiation = stencil->getStencilInstantiation();
 
-  GetFieldAndVarAccesses visitor(instantiation, AccessID);
+  GetFieldAndVarAccesses visitor(metadata, AccessID);
   for(const auto& statementAccessesPair : statementAccessesPairs) {
     visitor.reset();
 
@@ -78,18 +78,18 @@ void replaceFieldWithVarAccessInStmts(
 
       replaceOldExprWithNewExprInStmt(stmt, oldExpr, newExpr);
 
-      instantiation.mapExprToAccessID(newExpr, AccessID);
-      instantiation.eraseExprToAccessID(oldExpr);
+      metadata.mapExprToAccessID(newExpr, AccessID);
+      metadata.eraseExprToAccessID(oldExpr);
     }
   }
 }
 
 void replaceVarWithFieldAccessInStmts(
-    iir::Stencil* stencil, int AccessID, const std::string& fieldname,
+    iir::StencilMetaInformation& metadata, iir::Stencil* stencil, int AccessID,
+    const std::string& fieldname,
     ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
-  iir::StencilInstantiation& instantiation = stencil->getStencilInstantiation();
 
-  GetFieldAndVarAccesses visitor(instantiation, AccessID);
+  GetFieldAndVarAccesses visitor(metadata, AccessID);
   for(const auto& statementAccessesPair : statementAccessesPairs) {
     visitor.reset();
 
@@ -101,8 +101,8 @@ void replaceVarWithFieldAccessInStmts(
 
       replaceOldExprWithNewExprInStmt(stmt, oldExpr, newExpr);
 
-      instantiation.mapExprToAccessID(newExpr, AccessID);
-      instantiation.eraseExprToAccessID(oldExpr);
+      metadata.mapExprToAccessID(newExpr, AccessID);
+      metadata.eraseExprToAccessID(oldExpr);
     }
   }
 }

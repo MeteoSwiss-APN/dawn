@@ -95,16 +95,15 @@ const std::string& StencilInstantiation::getFieldNameFromAccessID(int AccessID) 
 }
 
 void StencilInstantiation::mapExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID) {
-  metadata_.ExprIDToAccessIDMap_.emplace(expr->getID(), accessID);
+  metadata_.mapExprToAccessID(expr, accessID);
 }
 
 void StencilInstantiation::eraseExprToAccessID(std::shared_ptr<Expr> expr) {
-  DAWN_ASSERT(metadata_.ExprIDToAccessIDMap_.count(expr->getID()));
-  metadata_.ExprIDToAccessIDMap_.erase(expr->getID());
+  metadata_.eraseExprToAccessID(expr);
 }
 
 void StencilInstantiation::mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt, int accessID) {
-  metadata_.StmtIDToAccessIDMap_.emplace(stmt->getID(), accessID);
+  metadata_.mapStmtToAccessID(stmt, accessID);
 }
 
 const std::string& StencilInstantiation::getNameFromLiteralAccessID(int AccessID) const {
@@ -145,12 +144,10 @@ bool StencilInstantiation::insertBoundaryConditions(std::string originalFieldNam
   }
 }
 
-Array3i StencilInstantiation::getFieldDimensionsMask(int FieldID) const {
-  if(metadata_.fieldIDToInitializedDimensionsMap_.count(FieldID) == 0) {
-    return Array3i{{1, 1, 1}};
-  }
-  return metadata_.fieldIDToInitializedDimensionsMap_.find(FieldID)->second;
+Array3i StencilInstantiation::getFieldDimensionsMask(int fieldID) const {
+  return metadata_.getFieldDimensionsMask(fieldID);
 }
+
 const sir::Value& StencilInstantiation::getGlobalVariableValue(const std::string& name) const {
   auto it = metadata_.globalVariableMap_.find(name);
   DAWN_ASSERT(it != metadata_.globalVariableMap_.end());
@@ -296,7 +293,8 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
   // Replace all variable accesses with field accesses
   stencil->forEachStatementAccessesPair(
       [&](ArrayRef<std::unique_ptr<StatementAccessesPair>> statementAccessesPair) -> void {
-        replaceVarWithFieldAccessInStmts(stencil, accessID, fieldname, statementAccessesPair);
+        replaceVarWithFieldAccessInStmts(metadata_, stencil, accessID, fieldname,
+                                         statementAccessesPair);
       },
       lifetime);
 
@@ -362,7 +360,8 @@ void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil,
   // Replace all field accesses with variable accesses
   stencil->forEachStatementAccessesPair(
       [&](ArrayRef<std::unique_ptr<StatementAccessesPair>> statementAccessesPairs) -> void {
-        replaceFieldWithVarAccessInStmts(stencil, AccessID, varname, statementAccessesPairs);
+        replaceFieldWithVarAccessInStmts(metadata_, stencil, AccessID, varname,
+                                         statementAccessesPairs);
       },
       lifetime);
 

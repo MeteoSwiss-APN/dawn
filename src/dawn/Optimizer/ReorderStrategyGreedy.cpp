@@ -84,23 +84,24 @@ ReturnType isMergable(const iir::Stage& stage, iir::LoopOrderKind stageLoopOrder
 }
 
 std::unique_ptr<iir::Stencil>
-ReoderStrategyGreedy::reorder(const std::unique_ptr<iir::Stencil>& stencilPtr) {
+ReoderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
+                              const std::unique_ptr<iir::Stencil>& stencilPtr) {
   iir::Stencil& stencil = *stencilPtr;
 
   iir::DependencyGraphStage& stageDAG = *stencil.getStageDependencyGraph();
-  iir::StencilInstantiation& instantiation = stencil.getStencilInstantiation();
 
+  auto& metadata = instantiation->getMetaData();
   std::unique_ptr<iir::Stencil> newStencil = make_unique<iir::Stencil>(
-      instantiation, stencil.getStencilAttributes(), stencilPtr->getStencilID());
+      metadata, stencil.getStencilAttributes(), stencilPtr->getStencilID());
 
   newStencil->setStageDependencyGraph(stencil.getStageDependencyGraph());
   int newNumStages = 0;
   int newNumMultiStages = 0;
 
-  const int maxBoundaryExtent = instantiation.getOptimizerContext()->getOptions().MaxHaloPoints;
+  const int maxBoundaryExtent = instantiation->getOptimizerContext()->getOptions().MaxHaloPoints;
 
   auto pushBackNewMultiStage = [&](iir::LoopOrderKind loopOrder) -> void {
-    newStencil->insertChild(make_unique<iir::MultiStage>(instantiation.getMetaData(), loopOrder));
+    newStencil->insertChild(make_unique<iir::MultiStage>(metadata, loopOrder));
     newNumMultiStages++;
   };
 
@@ -146,10 +147,10 @@ ReoderStrategyGreedy::reorder(const std::unique_ptr<iir::Stencil>& stencilPtr) {
             } else if(lastChance) {
               // Our stage exceeds the maximum allowed boundary extents... nothing we can do
               DiagnosticsBuilder diag(DiagnosticsKind::Error, SourceLocation());
-              diag << "stencil '" << instantiation.getName()
+              diag << "stencil '" << instantiation->getName()
                    << "' exceeds maximum number of allowed halo lines (" << maxBoundaryExtent
                    << ")";
-              instantiation.getOptimizerContext()->getDiagnostics().report(diag);
+              instantiation->getOptimizerContext()->getDiagnostics().report(diag);
               return nullptr;
             }
           }
