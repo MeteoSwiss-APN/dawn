@@ -327,7 +327,7 @@ void StatementMapper::visit(const std::shared_ptr<VarAccessExpr>& expr) {
           (*(scope_.top()->doMethod_.childrenRBegin()))->getStatement()->ASTStmt, expr, newExpr);
 
       int AccessID = instantiation_->nextUID();
-      instantiation_->getLiteralAccessIDToNameMap().emplace(AccessID, newExpr->getValue());
+      metadata_.insertLiteralAccessID(AccessID, newExpr->getValue());
       metadata_.mapExprToAccessID(newExpr, AccessID);
 
     } else {
@@ -376,7 +376,7 @@ void StatementMapper::visit(const std::shared_ptr<LiteralAccessExpr>& expr) {
     function->getLiteralAccessIDToNameMap().emplace(AccessID, expr->getValue());
     function->mapExprToAccessID(expr, AccessID);
   } else {
-    instantiation_->getLiteralAccessIDToNameMap().emplace(AccessID, expr->getValue());
+    metadata_.insertLiteralAccessID(AccessID, expr->getValue());
     metadata_.mapExprToAccessID(expr, AccessID);
   }
 }

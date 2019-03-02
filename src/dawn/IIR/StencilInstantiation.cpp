@@ -611,13 +611,13 @@ const std::unordered_map<int, std::string>& StencilInstantiation::getAccessIDToN
   return metadata_.AccessIDToNameMap_;
 }
 
-std::unordered_map<int, std::string>& StencilInstantiation::getLiteralAccessIDToNameMap() {
-  return metadata_.LiteralAccessIDToNameMap_;
-}
-const std::unordered_map<int, std::string>&
-StencilInstantiation::getLiteralAccessIDToNameMap() const {
-  return metadata_.LiteralAccessIDToNameMap_;
-}
+// std::unordered_map<int, std::string>& StencilInstantiation::getLiteralAccessIDToNameMap() {
+//  return metadata_.LiteralAccessIDToNameMap_;
+//}
+// const std::unordered_map<int, std::string>&
+// StencilInstantiation::getLiteralAccessIDToNameMap() const {
+//  return metadata_.LiteralAccessIDToNameMap_;
+//}
 
 // std::set<int>& StencilInstantiation::getGlobalVariableAccessIDSet() {
 //  return metadata_.GlobalVariableAccessIDSet_;

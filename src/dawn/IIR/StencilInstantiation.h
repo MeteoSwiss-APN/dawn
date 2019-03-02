@@ -339,9 +339,9 @@ public:
   std::unordered_map<int, std::string>& getAccessIDToNameMap();
   const std::unordered_map<int, std::string>& getAccessIDToNameMap() const;
 
-  /// @brief Get the Literal-AccessID-to-Name map
-  std::unordered_map<int, std::string>& getLiteralAccessIDToNameMap();
-  const std::unordered_map<int, std::string>& getLiteralAccessIDToNameMap() const;
+  //  /// @brief Get the Literal-AccessID-to-Name map
+  //  std::unordered_map<int, std::string>& getLiteralAccessIDToNameMap();
+  //  const std::unordered_map<int, std::string>& getLiteralAccessIDToNameMap() const;
 
   //  /// @brief Get the field-AccessID set
   //  std::set<int>& getGlobalVariableAccessIDSet();

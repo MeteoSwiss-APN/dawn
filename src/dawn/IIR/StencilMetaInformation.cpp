@@ -313,6 +313,14 @@ const std::set<int>& StencilMetaInformation::getFieldAccessIDSet() const {
 const std::set<int>& StencilMetaInformation::getGlobalVariableAccessIDSet() const {
   return GlobalVariableAccessIDSet_;
 }
+const std::unordered_map<int, std::string>&
+StencilMetaInformation::getLiteralAccessIDToNameMap() const {
+  return LiteralAccessIDToNameMap_;
+}
+
+void StencilMetaInformation::insertLiteralAccessID(const int accessID, const std::string& name) {
+  LiteralAccessIDToNameMap_.emplace(accessID, name);
+}
 
 } // namespace iir
 } // namespace dawn

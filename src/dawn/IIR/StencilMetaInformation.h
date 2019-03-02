@@ -123,6 +123,13 @@ public:
   /// @brief Get the field-AccessID set
   const std::set<int>& getGlobalVariableAccessIDSet() const;
 
+  /// @brief Get the Literal-AccessID-to-Name map
+  const std::unordered_map<int, std::string>& getLiteralAccessIDToNameMap() const;
+
+  /// @brief Get StencilID of the StencilCallDeclStmt
+  const std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
+  getStencilCallToStencilIDMap() const;
+
   /// @brief get a stencil function instantiation by StencilFunCallExpr
   const std::shared_ptr<StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) const;
@@ -143,6 +150,7 @@ public:
   /// specialization, it is returned
   Array3i getFieldDimensionsMask(int FieldID) const;
 
+  // TODO rename all these to insert
   /// @brief Set the `AccessID` of the Expr (VarAccess or FieldAccess)
   void setAccessIDOfExpr(const std::shared_ptr<Expr>& expr, const int accessID);
 
@@ -166,6 +174,8 @@ public:
 
   /// @brief Add entry to the map between a given stmt to its access ID
   void mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt, int accessID);
+
+  void insertLiteralAccessID(const int accessID, const std::string& name);
 
   /// @brief Add entry of the Expr to AccessID map
   void eraseExprToAccessID(std::shared_ptr<Expr> expr);

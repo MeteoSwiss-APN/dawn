@@ -338,7 +338,7 @@ public:
 
   void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override {
     int AccessID = curStencilFunctioninstantiation_->getAccessIDFromExpr(expr);
-    instantiation_->getLiteralAccessIDToNameMap().emplace(AccessID, expr->getValue());
+    metadata_.insertLiteralAccessID(AccessID, expr->getValue());
     metadata_.mapExprToAccessID(expr, AccessID);
   }
 };
