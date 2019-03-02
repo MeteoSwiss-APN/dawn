@@ -14,6 +14,7 @@
 
 #include "dawn/Optimizer/PassSetBlockSize.h"
 #include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 
 namespace dawn {

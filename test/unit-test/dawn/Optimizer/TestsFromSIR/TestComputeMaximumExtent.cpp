@@ -14,6 +14,7 @@
 
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Compiler/Options.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/SIRSerializer.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
@@ -84,8 +85,8 @@ TEST_F(TestComputeMaximumExtent, test_field_access_interval_02) {
 
   ASSERT_TRUE((doMethod1->getChildren().size() == 1));
   const auto& stmtAccessPair = doMethod1->getChildren()[0];
-  ASSERT_TRUE((stmtAccessPair->computeMaximumExtents(
-                   stencilInstantiation->getAccessIDFromName("u")) == iir::Extents{-1, 1, -1, 1, 0, 0}));
+  ASSERT_TRUE((stmtAccessPair->computeMaximumExtents(stencilInstantiation->getAccessIDFromName(
+                   "u")) == iir::Extents{-1, 1, -1, 1, 0, 0}));
 
   EXPECT_EQ(
       stmtAccessPair->computeMaximumExtents(stencilInstantiation->getAccessIDFromName("coeff")),

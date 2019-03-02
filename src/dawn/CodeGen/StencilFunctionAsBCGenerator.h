@@ -17,10 +17,13 @@
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CXXUtil.h"
-#include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/SIR/SIR.h"
 #include <memory>
 
 namespace dawn {
+namespace iir {
+class StencilInstantiation;
+}
 namespace codegen {
 
 /// @brief The StencilFunctionAsBCGenerator class parses a stencil function that is used as a
@@ -64,13 +67,8 @@ public:
 
   void visit(const std::shared_ptr<VarAccessExpr>& expr);
 
-  inline std::string getName(const std::shared_ptr<Stmt>& stmt) const {
-    return instantiation_->getFieldNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
-  }
-
-  inline std::string getName(const std::shared_ptr<Expr>& expr) const {
-    return instantiation_->getFieldNameFromAccessID(instantiation_->getAccessIDFromExpr(expr));
-  }
+  std::string getName(const std::shared_ptr<Stmt>& stmt) const;
+  std::string getName(const std::shared_ptr<Expr>& expr) const;
 };
 
 class BCGenerator {

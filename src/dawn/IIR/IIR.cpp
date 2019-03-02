@@ -12,9 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/IIR/IIR.h"
 #include "dawn/IIR/DependencyGraphStage.h"
+#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
-#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/StringUtil.h"

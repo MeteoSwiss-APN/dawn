@@ -16,13 +16,17 @@
 #define DAWN_CODEGEN_CUDA_CODEGENERATORHELPER_H
 
 #include "dawn/IIR/Cache.h"
-#include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/IIR/Stencil.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/IndexRange.h"
-#include <string>
 #include <map>
+#include <string>
 
 namespace dawn {
+namespace iir {
+class MultiStage;
+class StencilInstantiation;
+}
 namespace codegen {
 namespace cuda {
 
@@ -59,11 +63,12 @@ public:
   /// allocation
   static iir::Extents computeTempMaxWriteExtent(iir::Stencil const& stencil);
 
-  static std::vector<std::string> generateStrideArguments(
-      const IndexRange<const std::map<int, iir::Field>>& nonTempFields,
-      const IndexRange<const std::map<int, iir::Field>>& tempFields,
-      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-      const std::unique_ptr<iir::MultiStage>& ms, CodeGeneratorHelper::FunctionArgType funArg);
+  static std::vector<std::string>
+  generateStrideArguments(const IndexRange<const std::map<int, iir::Field>>& nonTempFields,
+                          const IndexRange<const std::map<int, iir::Field>>& tempFields,
+                          const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                          const std::unique_ptr<iir::MultiStage>& ms,
+                          CodeGeneratorHelper::FunctionArgType funArg);
 
   /// @brief compose the cuda kernel name of a stencil instantiation
   static std::string

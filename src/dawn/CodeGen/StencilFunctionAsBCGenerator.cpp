@@ -1,7 +1,16 @@
 #include "dawn/CodeGen/StencilFunctionAsBCGenerator.h"
+#include "dawn/IIR/StencilInstantiation.h"
 
 namespace dawn {
 namespace codegen {
+
+std::string StencilFunctionAsBCGenerator::getName(const std::shared_ptr<Stmt>& stmt) const {
+  return instantiation_->getFieldNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
+}
+
+std::string StencilFunctionAsBCGenerator::getName(const std::shared_ptr<Expr>& expr) const {
+  return instantiation_->getFieldNameFromAccessID(instantiation_->getAccessIDFromExpr(expr));
+}
 
 void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   auto printOffset = [](const Array3i& argumentoffsets) {

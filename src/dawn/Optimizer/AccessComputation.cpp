@@ -24,6 +24,9 @@
 
 namespace dawn {
 
+namespace iir {
+class StencilInstantiation;
+}
 namespace {
 
 /// @brief Compute and fill the access map of the given statement
