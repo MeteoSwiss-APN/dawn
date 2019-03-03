@@ -130,7 +130,7 @@ public:
     auto stencilCallDeclStmt = std::make_shared<StencilCallDeclStmt>(placeholderStencil);
 
     // Register the call and set it as a replacement for the next vertical region
-    instantiation_->getStencilCallToStencilIDMap().emplace(stencilCallDeclStmt, StencilID);
+    metadata_.insertStencilCallStmt(stencilCallDeclStmt, StencilID);
     stencilDescReplacement_ = stencilCallDeclStmt;
   }
 
@@ -217,10 +217,11 @@ public:
         ++it) {
       std::shared_ptr<Stmt> stmt = (*it)->ASTStmt;
       if(isa<StencilCallDeclStmt>(stmt.get())) {
+        // TODO here there are two erase, the stmt and the id. Do it at once
         auto callDecl = std::static_pointer_cast<StencilCallDeclStmt>(stmt);
         bool remove = false;
         for(int id : emptyStencilIDsRemoved) {
-          if(instantiation_->getStencilCallToStencilIDMap().at(callDecl) == id) {
+          if(metadata_.getStencilIDFromStencilCallStmt(callDecl) == id) {
             remove = true;
           }
         }
@@ -231,12 +232,7 @@ public:
       }
     }
     for(auto stencilID : emptyStencilIDsRemoved) {
-      for(const auto& pair : instantiation_->getStencilCallToStencilIDMap()) {
-        if(pair.second == stencilID) {
-          instantiation_->getStencilCallToStencilIDMap().erase(pair.first);
-          break;
-        }
-      }
+      metadata_.eraseStencilID(stencilID);
     }
 
     // Remove the nested VerticalRegionDeclStmts and StencilCallDeclStmts

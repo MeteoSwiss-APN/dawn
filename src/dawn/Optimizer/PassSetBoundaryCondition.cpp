@@ -85,6 +85,7 @@ public:
 /// conditions.
 class AddBoundaryConditions : public ASTVisitorForwarding {
   std::shared_ptr<iir::StencilInstantiation> instantiation_;
+  iir::StencilMetaInformation& metadata_;
   int StencilID_;
 
   std::vector<std::shared_ptr<StencilCallDeclStmt>> stencilCallsToReplace_;
@@ -92,16 +93,17 @@ class AddBoundaryConditions : public ASTVisitorForwarding {
 public:
   AddBoundaryConditions(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
                         int StencilID)
-      : instantiation_(instantiation), StencilID_(StencilID) {}
+      : instantiation_(instantiation), metadata_(instantiation->getMetaData()),
+        StencilID_(StencilID) {}
 
-  void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
     auto iter = std::find_if(
-        instantiation_->getStencilCallToStencilIDMap().begin(),
-        instantiation_->getStencilCallToStencilIDMap().end(),
+        metadata_.getStencilCallToStencilIDMap().begin(),
+        metadata_.getStencilCallToStencilIDMap().end(),
         [this, stmt](const std::pair<std::shared_ptr<StencilCallDeclStmt>, int>& pair) {
           return pair.first == stmt && pair.second == StencilID_;
         });
-    if(iter != instantiation_->getStencilCallToStencilIDMap().end()) {
+    if(iter != metadata_.getStencilCallToStencilIDMap().end()) {
       stencilCallsToReplace_.emplace_back(stmt);
     }
   }
@@ -117,6 +119,8 @@ PassSetBoundaryCondition::PassSetBoundaryCondition() : Pass("PassSetBoundaryCond
 
 bool PassSetBoundaryCondition::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+
+  iir::StencilMetaInformation& metadata = stencilInstantiation->getMetaData();
 
   // check if we need to run this pass
   if(stencilInstantiation->getStencils().size() == 1) {
@@ -181,9 +185,8 @@ bool PassSetBoundaryCondition::run(
   }
   std::unordered_set<int> StencilIDsVisited_;
   for(const auto& stencilcall : findStencilCalls.getStencilCalls()) {
-    DAWN_ASSERT_MSG(stencilInstantiation->getStencilCallToStencilIDMap().count(stencilcall),
-                    "no StencilID for the stencilcall found");
-    StencilIDsVisited_.emplace(stencilInstantiation->getStencilCallToStencilIDMap()[stencilcall]);
+    int stencilID = metadata.getStencilIDFromStencilCallStmt(stencilcall);
+    StencilIDsVisited_.emplace(stencilID);
   }
 
   auto calculateHaloExtents = [&](std::string fieldname) {

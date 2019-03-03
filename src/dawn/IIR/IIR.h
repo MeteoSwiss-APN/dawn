@@ -30,9 +30,6 @@ class IIR : public IIRNode<void, IIR, Stencil> {
   ControlFlowDescriptor controlFlowDesc_;
 
   struct DerivedInfo {
-    /// Can be filled from the StencilIDToStencilCallMap that is in Metainformation
-    std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int> StencilCallToStencilIDMap_;
-
     /// StageID to name Map. Filled by the `PassSetStageName`.
     std::unordered_map<int, std::string> StageIDToNameMap_;
 
@@ -88,10 +85,6 @@ public:
     return derivedInfo_.BoundaryConditionToExtentsMap_;
   }
 
-  inline std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
-  getStencilCallToStencilIDMap() {
-    return derivedInfo_.StencilCallToStencilIDMap_;
-  }
   inline std::set<int>& getAllocatedFieldAccessIDSet() {
     return derivedInfo_.AllocatedFieldAccessIDSet_;
   }

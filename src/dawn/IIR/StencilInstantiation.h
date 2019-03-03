@@ -309,13 +309,13 @@ public:
   /// @brief get the IIR tree
   inline std::unique_ptr<IIR>& getIIR() { return IIR_; }
 
-  /// @brief Get StencilID of the StencilCallDeclStmt
-  std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>& getStencilCallToStencilIDMap();
-  const std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
-  getStencilCallToStencilIDMap() const;
+  //  /// @brief Get StencilID of the StencilCallDeclStmt
+  //  std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>& getStencilCallToStencilIDMap();
+  //  const std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
+  //  getStencilCallToStencilIDMap() const;
 
-  /// @brief Get the StencilID of the StencilCallDeclStmt `stmt`
-  int getStencilIDFromStmt(const std::shared_ptr<StencilCallDeclStmt>& stmt) const;
+  //  /// @brief Get the StencilID of the StencilCallDeclStmt `stmt`
+  //  int getStencilIDFromStmt(const std::shared_ptr<StencilCallDeclStmt>& stmt) const;
 
   /// @brief Get the list of stencil functions
   inline std::vector<std::shared_ptr<StencilFunctionInstantiation>>&

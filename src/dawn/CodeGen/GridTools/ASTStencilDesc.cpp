@@ -57,7 +57,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) 
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
-  int StencilID = instantiation_->getStencilIDFromStmt(stmt);
+  int StencilID = instantiation_->getMetaData().getStencilIDFromStencilCallStmt(stmt);
 
   std::string stencilName =
       codeGenProperties_.getStencilName(StencilContext::SC_Stencil, StencilID);

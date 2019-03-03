@@ -110,6 +110,8 @@ void replaceVarWithFieldAccessInStmts(
 namespace {
 
 /// @brief Get all field and variable accesses identifier by `AccessID`
+// TODO this is useless since it i only querying the stencilid to call map. Not sure since it does
+// it per stmt
 class GetStencilCalls : public ASTVisitorForwarding {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   int StencilID_;
@@ -121,7 +123,7 @@ public:
       : instantiation_(instantiation), StencilID_(StencilID) {}
 
   void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
-    if(instantiation_->getStencilIDFromStmt(stmt) == StencilID_)
+    if(instantiation_->getMetaData().getStencilIDFromStencilCallStmt(stmt) == StencilID_)
       stencilCallsToReplace_.emplace_back(stmt);
   }
 
@@ -168,9 +170,10 @@ void replaceStencilCalls(const std::shared_ptr<iir::StencilInstantiation>& insta
         replaceOldStmtWithNewStmtInStmt(stmt, oldStencilCall, newBlockStmt);
       }
 
-      instantiation->getStencilCallToStencilIDMap().erase(oldStencilCall);
+      auto& metadata = instantiation->getMetaData();
+      metadata.eraseStencilCallStmt(oldStencilCall);
       for(std::size_t i = 0; i < newStencilIDs.size(); ++i) {
-        instantiation->getStencilCallToStencilIDMap().emplace(newStencilCalls[i], newStencilIDs[i]);
+        metadata.insertStencilCallStmt(newStencilCalls[i], newStencilIDs[i]);
       }
     }
   }

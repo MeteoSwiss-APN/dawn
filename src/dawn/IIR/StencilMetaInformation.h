@@ -16,8 +16,10 @@
 #define DAWN_IIR_METAINFORMATION_H
 
 #include "dawn/SIR/SIR.h"
+#include "dawn/Support/DoubleSidedMap.h"
 #include "dawn/Support/NonCopyable.h"
 #include "dawn/Support/StringRef.h"
+#include "dawn/Support/UIDGenerator.h"
 #include "dawn/Support/UIDGenerator.h"
 #include <memory>
 #include <set>
@@ -129,6 +131,10 @@ public:
   /// @brief Get StencilID of the StencilCallDeclStmt
   const std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
   getStencilCallToStencilIDMap() const;
+  const std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>>&
+  getStencilIDToStencilCallMap() const;
+
+  int getStencilIDFromStencilCallStmt(const std::shared_ptr<StencilCallDeclStmt>& stmt) const;
 
   /// @brief get a stencil function instantiation by StencilFunCallExpr
   const std::shared_ptr<StencilFunctionInstantiation>
@@ -166,6 +172,8 @@ public:
   /// @brief Insert a new AccessID - Name pair of a global variable (i.e scalar field access)
   void setAccessIDNamePairOfGlobalVariable(int AccessID, const std::string& name);
 
+  void insertStencilCallStmt(std::shared_ptr<StencilCallDeclStmt> stmt, int stencilID);
+
   /// @brief Remove the field, variable or literal given by `AccessID`
   void removeAccessID(int AccesssID);
 
@@ -179,6 +187,9 @@ public:
 
   /// @brief Add entry of the Expr to AccessID map
   void eraseExprToAccessID(std::shared_ptr<Expr> expr);
+
+  void eraseStencilCallStmt(std::shared_ptr<StencilCallDeclStmt> stmt);
+  void eraseStencilID(const int stencilID);
 
   ///@brief struct with properties of a stencil function instantiation candidate
   struct StencilFunctionInstantiationCandidate {
@@ -254,6 +265,9 @@ public:
 
   /// Map of the globally defined variable names to their Values
   std::unordered_map<std::string, std::shared_ptr<sir::Value>> globalVariableMap_;
+
+  /// Can be filled from the StencilIDToStencilCallMap that is in Metainformation
+  DoubleSidedMap<int, std::shared_ptr<StencilCallDeclStmt>> StencilIDToStencilCallMap_;
 
   SourceLocation stencilLocation_;
 

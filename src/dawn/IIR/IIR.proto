@@ -246,12 +246,15 @@ message StencilMetaInfo {
     // Map of the globally defined variable names to their Values
     map<string, GlobalValueAndType> globalVariableToValue = 12;
 
+    // Map of the StencilID's to their respective StencilCall
+    map<int32, dawn.proto.statements.Stmt> idToStencilCall = 13;
+
     // The source-location of the stencil (for better error-handeling)
-    dawn.proto.statements.SourceLocation stencilLocation = 13;
+    dawn.proto.statements.SourceLocation stencilLocation = 14;
 
     // The user-given name of the stencil
     // (remember the 1-1 mapping of user-stencil - StencilInstantiation)
-    string stencilName = 14;
+    string stencilName = 15;
 }
 
 /* ===-----------------------------------------------------------------------------------------===*/

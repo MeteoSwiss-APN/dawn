@@ -582,26 +582,26 @@ void StencilInstantiation::finalizeStencilFunctionSetup(
   metadata_.stencilFunInstantiationCandidate_.erase(stencilFun);
 }
 
-std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
-StencilInstantiation::getStencilCallToStencilIDMap() {
-  return IIR_->getStencilCallToStencilIDMap();
-}
+// std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
+// StencilInstantiation::getStencilCallToStencilIDMap() {
+//  return IIR_->getStencilCallToStencilIDMap();
+//}
 
-const std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
-StencilInstantiation::getStencilCallToStencilIDMap() const {
-  return IIR_->getStencilCallToStencilIDMap();
-}
+// const std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
+// StencilInstantiation::getStencilCallToStencilIDMap() const {
+//  return IIR_->getStencilCallToStencilIDMap();
+//}
 
-int StencilInstantiation::getStencilIDFromStmt(
-    const std::shared_ptr<StencilCallDeclStmt>& stmt) const {
-  for(auto callToID : IIR_->getStencilCallToStencilIDMap()) {
-    if(stmt->equals(callToID.first.get())) {
-      return callToID.second;
-    }
-  }
-  DAWN_ASSERT_MSG(false, "Invalid stencil call");
-  return -1;
-}
+// int StencilInstantiation::getStencilIDFromStmt(
+//    const std::shared_ptr<StencilCallDeclStmt>& stmt) const {
+//  for(auto callToID : metadata_.getStencilCallToStencilIDMap()) {
+//    if(stmt->equals(callToID.first.get())) {
+//      return callToID.second;
+//    }
+//  }
+//  DAWN_ASSERT_MSG(false, "Invalid stencil call");
+//  return -1;
+//}
 
 std::unordered_map<int, std::string>& StencilInstantiation::getAccessIDToNameMap() {
   return metadata_.AccessIDToNameMap_;

@@ -310,6 +310,32 @@ const std::set<int>& StencilMetaInformation::getFieldAccessIDSet() const {
   return FieldAccessIDSet_;
 }
 
+const std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
+StencilMetaInformation::getStencilCallToStencilIDMap() const {
+  return StencilIDToStencilCallMap_.getReverseMap();
+}
+const std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>>&
+StencilMetaInformation::getStencilIDToStencilCallMap() const {
+  return StencilIDToStencilCallMap_.getDirectMap();
+}
+
+void StencilMetaInformation::eraseStencilCallStmt(std::shared_ptr<StencilCallDeclStmt> stmt) {
+  StencilIDToStencilCallMap_.reverseEraseKey(stmt);
+}
+void StencilMetaInformation::eraseStencilID(const int stencilID) {
+  StencilIDToStencilCallMap_.directEraseKey(stencilID);
+}
+
+int StencilMetaInformation::getStencilIDFromStencilCallStmt(
+    const std::shared_ptr<StencilCallDeclStmt>& stmt) const {
+  return StencilIDToStencilCallMap_.reverseAt(stmt);
+}
+
+void StencilMetaInformation::insertStencilCallStmt(std::shared_ptr<StencilCallDeclStmt> stmt,
+                                                   int stencilID) {
+  StencilIDToStencilCallMap_.emplace(stencilID, stmt);
+}
+
 const std::set<int>& StencilMetaInformation::getGlobalVariableAccessIDSet() const {
   return GlobalVariableAccessIDSet_;
 }
