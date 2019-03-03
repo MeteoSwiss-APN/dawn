@@ -121,7 +121,7 @@ void CodeGen::generateBoundaryConditionFunctions(
         BC.isConst(true);
         BC.addArg(functionargs);
         BC.startBody();
-        StencilFunctionAsBCGenerator reader(stencilInstantiation, sf);
+        StencilFunctionAsBCGenerator reader(stencilInstantiation->getMetaData(), sf);
         sf->Asts[0]->accept(reader);
         std::string output = reader.getCodeAndResetStream();
         BC << output;
@@ -223,7 +223,8 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
   }
   if(stencilInstantiation->hasAllocatedFields()) {
     for(int accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
-      codeGenProperties.insertAllocateField(stencilInstantiation->getFieldNameFromAccessID(accessID));
+      codeGenProperties.insertAllocateField(
+          stencilInstantiation->getFieldNameFromAccessID(accessID));
     }
   }
 

@@ -231,17 +231,17 @@ public:
   /// and their name is a not bijective!
   int getAccessIDFromName(const std::string& name) const;
 
-  /// @brief Get the `AccessID` of the Expr (VarAccess or FieldAccess)
-  int getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) const;
+  //  /// @brief Get the `AccessID` of the Expr (VarAccess or FieldAccess)
+  //  int getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) const;
 
-  /// @brief Set the `AccessID` of the Expr (VarAccess or FieldAccess)
-  void setAccessIDOfExpr(const std::shared_ptr<Expr>& expr, const int accessID);
+  //  /// @brief Set the `AccessID` of the Expr (VarAccess or FieldAccess)
+  //  void setAccessIDOfExpr(const std::shared_ptr<Expr>& expr, const int accessID);
 
-  /// @brief Set the `AccessID` of the Stmt (VarDeclStmt)
-  void setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt, const int accessID);
+  //  /// @brief Set the `AccessID` of the Stmt (VarDeclStmt)
+  //  void setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt, const int accessID);
 
-  /// @brief Get the `AccessID` of the Stmt (VarDeclStmt)
-  int getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) const;
+  //  /// @brief Get the `AccessID` of the Stmt (VarDeclStmt)
+  //  int getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) const;
 
   /// @brief get a stencil function instantiation by StencilFunCallExpr
   const std::shared_ptr<StencilFunctionInstantiation>
@@ -408,28 +408,29 @@ public:
 
   const std::set<int>& getCachedVariableSet() const;
 
-  inline const std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&
-  getBoundaryConditionToExtentsMap() const {
-    return IIR_->getBoundaryConditionToExtents();
-  }
+  //  inline const std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&
+  //  getBoundaryConditionToExtentsMap() const {
+  //    return IIR_->getBoundaryConditionToExtents();
+  //  }
 
-  inline std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&
-  getBoundaryConditionToExtentsMap() {
-    return IIR_->getBoundaryConditionToExtents();
-  }
+  //  inline std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&
+  //  getBoundaryConditionToExtentsMap() {
+  //    return IIR_->getBoundaryConditionToExtents();
+  //  }
 
-  inline void insertBoundaryConditiontoExtentPair(std::shared_ptr<BoundaryConditionDeclStmt>& bc,
-                                                  Extents& extents) {
-    IIR_->getBoundaryConditionToExtents().emplace(bc, extents);
-  }
+  //  inline void insertBoundaryConditiontoExtentPair(std::shared_ptr<BoundaryConditionDeclStmt>&
+  //  bc,
+  //                                                  Extents& extents) {
+  //    IIR_->getBoundaryConditionToExtents().emplace(bc, extents);
+  //  }
 
-  inline Extents getBoundaryConditionExtentsFromBCStmt(
-      const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) const {
-    if(IIR_->getBoundaryConditionToExtents().count(stmt) == 0) {
-      DAWN_ASSERT_MSG(false, "Boundary Condition does not have a matching Extent");
-    }
-    return IIR_->getBoundaryConditionToExtents().find(stmt)->second;
-  }
+  //  inline Extents getBoundaryConditionExtentsFromBCStmt(
+  //      const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) const {
+  //    if(IIR_->getBoundaryConditionToExtents().count(stmt) == 0) {
+  //      DAWN_ASSERT_MSG(false, "Boundary Condition does not have a matching Extent");
+  //    }
+  //    return IIR_->getBoundaryConditionToExtents().find(stmt)->second;
+  //  }
 
   std::vector<std::shared_ptr<sir::StencilFunction>>& getStencilFunctions() {
     return metadata_.allStencilFunctions_;

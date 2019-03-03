@@ -25,23 +25,22 @@ namespace dawn {
 namespace codegen {
 namespace cuda {
 
-ASTStencilBody::ASTStencilBody(
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-    const std::unordered_map<int, Array3i>& fieldIndexMap,
-    const std::unique_ptr<iir::MultiStage>& ms, const CacheProperties& cacheProperties,
-    Array3ui blockSizes)
-    : ASTCodeGenCXX(), instantiation_(stencilInstantiation), offsetPrinter_("+", "", "", true),
+ASTStencilBody::ASTStencilBody(const iir::StencilMetaInformation& metadata,
+                               const std::unordered_map<int, Array3i>& fieldIndexMap,
+                               const std::unique_ptr<iir::MultiStage>& ms,
+                               const CacheProperties& cacheProperties, Array3ui blockSizes)
+    : ASTCodeGenCXX(), metadata_(metadata), offsetPrinter_("+", "", "", true),
       fieldIndexMap_(fieldIndexMap), ms_(ms), cacheProperties_(cacheProperties),
       blockSizes_(blockSizes) {}
 
 ASTStencilBody::~ASTStencilBody() {}
 
 std::string ASTStencilBody::getName(const std::shared_ptr<Expr>& expr) const {
-  return instantiation_->getFieldNameFromAccessID(instantiation_->getAccessIDFromExpr(expr));
+  return metadata_.getFieldNameFromAccessID(metadata_.getAccessIDFromExpr(expr));
 }
 
 std::string ASTStencilBody::getName(const std::shared_ptr<Stmt>& stmt) const {
-  return instantiation_->getFieldNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
+  return metadata_.getFieldNameFromAccessID(metadata_.getAccessIDFromStmt(stmt));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -84,9 +83,9 @@ void ASTStencilBody::visit(const std::shared_ptr<StencilFunArgExpr>& expr) {
 
 void ASTStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
   std::string name = getName(expr);
-  int accessID = instantiation_->getAccessIDFromExpr(expr);
+  int accessID = metadata_.getAccessIDFromExpr(expr);
 
-  if(instantiation_->isGlobalVariable(accessID)) {
+  if(metadata_.isGlobalVariable(accessID)) {
     ss_ << "globals_." << name;
   } else {
     ss_ << name;
@@ -100,7 +99,7 @@ void ASTStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
-  int accessID = instantiation_->getAccessIDFromExpr(expr);
+  int accessID = metadata_.getAccessIDFromExpr(expr);
   if(cacheProperties_.isIJCached(accessID)) {
     derefIJCache(expr);
     return;
@@ -110,12 +109,12 @@ void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
     return;
   }
 
-  CodeGeneratorHelper::generateFieldAccessDeref(ss_, ms_, instantiation_, accessID, fieldIndexMap_,
+  CodeGeneratorHelper::generateFieldAccessDeref(ss_, ms_, metadata_, accessID, fieldIndexMap_,
                                                 expr->getOffset());
 }
 
 void ASTStencilBody::derefIJCache(const std::shared_ptr<FieldAccessExpr>& expr) {
-  int accessID = instantiation_->getAccessIDFromExpr(expr);
+  int accessID = metadata_.getAccessIDFromExpr(expr);
   std::string accessName = cacheProperties_.getCacheName(accessID);
 
   std::string index;
@@ -140,7 +139,7 @@ void ASTStencilBody::derefIJCache(const std::shared_ptr<FieldAccessExpr>& expr) 
 }
 
 void ASTStencilBody::derefKCache(const std::shared_ptr<FieldAccessExpr>& expr) {
-  int accessID = instantiation_->getAccessIDFromExpr(expr);
+  int accessID = metadata_.getAccessIDFromExpr(expr);
   std::string accessName = cacheProperties_.getCacheName(accessID);
   auto vertExtent = ms_->getKCacheVertExtent(accessID);
 

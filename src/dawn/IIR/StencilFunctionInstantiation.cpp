@@ -33,8 +33,8 @@ StencilFunctionInstantiation::StencilFunctionInstantiation(
     StencilInstantiation* context, const std::shared_ptr<StencilFunCallExpr>& expr,
     const std::shared_ptr<sir::StencilFunction>& function, const std::shared_ptr<AST>& ast,
     const Interval& interval, bool isNested)
-    : stencilInstantiation_(context), expr_(expr), function_(function), ast_(ast),
-      interval_(interval), hasReturn_(false), isNested_(isNested),
+    : stencilInstantiation_(context), metadata_(context->getMetaData()), expr_(expr),
+      function_(function), ast_(ast), interval_(interval), hasReturn_(false), isNested_(isNested),
       doMethod_(make_unique<DoMethod>(interval, context->getMetaData())) {
   DAWN_ASSERT(context);
   DAWN_ASSERT(function);
@@ -332,7 +332,7 @@ int StencilFunctionInstantiation::getAccessIDFromExpr(const std::shared_ptr<Expr
   auto it = ExprToCallerAccessIDMap_.find(expr);
   /// HACK for Literals (inserted from Globals) that are not found in SFI
   if(it == ExprToCallerAccessIDMap_.end()) {
-    return stencilInstantiation_->getAccessIDFromExpr(expr);
+    return metadata_.getAccessIDFromExpr(expr);
   }
   DAWN_ASSERT_MSG(it != ExprToCallerAccessIDMap_.end(), "Invalid Expr");
   return it->second;

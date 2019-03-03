@@ -32,11 +32,6 @@ class IIR : public IIRNode<void, IIR, Stencil> {
   struct DerivedInfo {
     /// StageID to name Map. Filled by the `PassSetStageName`.
     std::unordered_map<int, std::string> StageIDToNameMap_;
-
-    /// BoundaryConditionCall to Extent Map. Filled my `PassSetBoundaryCondition`
-    std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>
-        BoundaryConditionToExtentsMap_;
-
     /// Set containing the AccessIDs of fields which are manually allocated by the stencil and serve
     /// as temporaries spanning over multiple stencils
     std::set<int> AllocatedFieldAccessIDSet_;
@@ -80,10 +75,10 @@ public:
     return it->second;
   }
 
-  inline std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&
-  getBoundaryConditionToExtents() {
-    return derivedInfo_.BoundaryConditionToExtentsMap_;
-  }
+  //  inline std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&
+  //  getBoundaryConditionToExtents() {
+  //    return derivedInfo_.BoundaryConditionToExtentsMap_;
+  //  }
 
   inline std::set<int>& getAllocatedFieldAccessIDSet() {
     return derivedInfo_.AllocatedFieldAccessIDSet_;

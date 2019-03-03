@@ -21,18 +21,18 @@ namespace dawn {
 namespace codegen {
 namespace cxxnaive {
 
-ASTStencilDesc::ASTStencilDesc(const iir::StencilInstantiation* instantiation,
+ASTStencilDesc::ASTStencilDesc(const iir::StencilMetaInformation& metadata,
                                CodeGenProperties const& codeGenProperties)
-    : ASTCodeGenCXX(), instantiation_(instantiation), codeGenProperties_(codeGenProperties) {}
+    : ASTCodeGenCXX(), metadata_(metadata), codeGenProperties_(codeGenProperties) {}
 
 ASTStencilDesc::~ASTStencilDesc() {}
 
 std::string ASTStencilDesc::getName(const std::shared_ptr<Stmt>& stmt) const {
-  return instantiation_->getFieldNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
+  return metadata_.getFieldNameFromAccessID(metadata_.getAccessIDFromStmt(stmt));
 }
 
 std::string ASTStencilDesc::getName(const std::shared_ptr<Expr>& expr) const {
-  return instantiation_->getFieldNameFromAccessID(instantiation_->getAccessIDFromExpr(expr));
+  return metadata_.getFieldNameFromAccessID(metadata_.getAccessIDFromExpr(expr));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -48,7 +48,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) 
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
-  int stencilID = instantiation_->getMetaData().getStencilIDFromStencilCallStmt(stmt);
+  int stencilID = metadata_.getStencilIDFromStencilCallStmt(stmt);
 
   std::string stencilName =
       codeGenProperties_.getStencilName(StencilContext::SC_Stencil, stencilID);
@@ -72,7 +72,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<StencilFunArgExpr>& expr) {
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<VarAccessExpr>& expr) {
-  if(instantiation_->isGlobalVariable(instantiation_->getAccessIDFromExpr(expr)))
+  if(metadata_.isGlobalVariable(metadata_.getAccessIDFromExpr(expr)))
     ss_ << "m_globals.";
 
   ss_ << getName(expr);

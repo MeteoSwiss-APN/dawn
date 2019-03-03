@@ -277,7 +277,7 @@ void GTCodeGen::generateStencilWrapperRun(
   MemberFunction RunMethod = stencilWrapperClass.addMemberFunction("void", "run");
   RunMethod.startBody();
 
-  ASTStencilDesc stencilDescCGVisitor(stencilInstantiation, codeGenProperties,
+  ASTStencilDesc stencilDescCGVisitor(stencilInstantiation->getMetaData(), codeGenProperties,
                                       stencilIDToRunArguments);
   stencilDescCGVisitor.setIndent(RunMethod.getIndent());
   for(const auto& statement :
@@ -468,7 +468,7 @@ void GTCodeGen::generateStencilClasses(
       codeGenInterval(intervalProperties.name_, intervalProperties.interval_);
     }
 
-    ASTStencilBody stencilBodyCGVisitor(stencilInstantiation.get(),
+    ASTStencilBody stencilBodyCGVisitor(stencilInstantiation->getMetaData(),
                                         intervalDefinitions.intervalProperties_);
 
     // Generate typedef for the axis
@@ -633,7 +633,8 @@ void GTCodeGen::generateStencilClasses(
                   c_gt() + "cache_io_policy::" + cache.getCacheIOPolicyAsString() +
                   // Interval: if IOPolicy is not local, we need to provide the interval
                   ">(p_" +
-                  stencilInstantiation->getFieldNameFromAccessID(cache.getCachedFieldAccessID()) + "())")
+                  stencilInstantiation->getFieldNameFromAccessID(cache.getCachedFieldAccessID()) +
+                  "())")
               .str();
         });
       }

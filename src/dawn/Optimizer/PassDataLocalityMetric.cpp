@@ -31,6 +31,7 @@ namespace {
 
 class ReadWriteCounter : public ASTVisitorForwarding {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
+  const iir::StencilMetaInformation& metadata_;
 
   std::size_t numReads_, numWrites_;
 
@@ -61,8 +62,8 @@ class ReadWriteCounter : public ASTVisitorForwarding {
 public:
   ReadWriteCounter(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
                    const iir::MultiStage& multiStage)
-      : instantiation_(instantiation), numReads_(0), numWrites_(0), multiStage_(multiStage),
-        fields_(multiStage_.getFields()) {}
+      : instantiation_(instantiation), metadata_(instantiation->getMetaData()), numReads_(0),
+        numWrites_(0), multiStage_(multiStage), fields_(multiStage_.getFields()) {}
 
   std::size_t getNumReads() const { return numReads_; }
   std::size_t getNumWrites() const { return numWrites_; }
@@ -94,18 +95,18 @@ public:
   }
 
   int getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) {
-    return stencilFunCalls_.empty() ? instantiation_->getAccessIDFromExpr(expr)
+    return stencilFunCalls_.empty() ? metadata_.getAccessIDFromExpr(expr)
                                     : stencilFunCalls_.top()->getAccessIDFromExpr(expr);
   }
 
   std::string getNameFromAccessID(int AccessID) {
-    return stencilFunCalls_.empty() ? instantiation_->getFieldNameFromAccessID(AccessID)
+    return stencilFunCalls_.empty() ? metadata_.getFieldNameFromAccessID(AccessID)
                                     : stencilFunCalls_.top()->getFieldNameFromAccessID(AccessID);
   }
 
   std::shared_ptr<iir::StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) {
-    return stencilFunCalls_.empty() ? instantiation_->getStencilFunctionInstantiation(expr)
+    return stencilFunCalls_.empty() ? metadata_.getStencilFunctionInstantiation(expr)
                                     : stencilFunCalls_.top()->getStencilFunctionInstantiation(expr);
   }
 

@@ -33,22 +33,22 @@ namespace {
 
 /// @brief Register all referenced AccessIDs
 struct AccessIDGetter : public ASTVisitorForwarding {
-  const iir::StencilInstantiation& Instantiation;
+  const iir::StencilMetaInformation& metadata_;
   std::set<int> AccessIDs;
 
-  AccessIDGetter(const iir::StencilInstantiation& instantiation) : Instantiation(instantiation) {}
+  AccessIDGetter(const iir::StencilMetaInformation& metadata) : metadata_(metadata) {}
 
   virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
-    AccessIDs.insert(Instantiation.getAccessIDFromExpr(expr));
+    AccessIDs.insert(metadata_.getAccessIDFromExpr(expr));
   }
 };
 
 /// @brief Compute the AccessIDs of the left and right hand side expression of the assignment
-static void getAccessIDFromAssignment(const iir::StencilInstantiation& instantiation,
+static void getAccessIDFromAssignment(const iir::StencilMetaInformation& metadata,
                                       AssignmentExpr* assignment, std::set<int>& LHSAccessIDs,
                                       std::set<int>& RHSAccessIDs) {
   auto computeAccessIDs = [&](const std::shared_ptr<Expr>& expr, std::set<int>& AccessIDs) {
-    AccessIDGetter getter{instantiation};
+    AccessIDGetter getter{metadata};
     expr->accept(getter);
     AccessIDs = std::move(getter.AccessIDs);
   };
@@ -246,7 +246,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
 
   // Get AccessIDs of the LHS and RHS
   std::set<int> LHSAccessIDs, RHSAccessIDs;
-  getAccessIDFromAssignment(*instantiation, assignment, LHSAccessIDs, RHSAccessIDs);
+  getAccessIDFromAssignment(instantiation->getMetaData(), assignment, LHSAccessIDs, RHSAccessIDs);
 
   DAWN_ASSERT_MSG(LHSAccessIDs.size() == 1, "left hand side should only have only one AccessID");
   int LHSAccessID = *LHSAccessIDs.begin();

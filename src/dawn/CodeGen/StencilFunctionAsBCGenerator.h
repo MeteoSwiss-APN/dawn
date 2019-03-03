@@ -17,6 +17,7 @@
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CXXUtil.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/SIR/SIR.h"
 #include <memory>
 
@@ -34,14 +35,13 @@ namespace codegen {
 class StencilFunctionAsBCGenerator : public ASTCodeGenCXX {
 private:
   std::shared_ptr<sir::StencilFunction> function_;
-  const std::shared_ptr<iir::StencilInstantiation> instantiation_;
+  const iir::StencilMetaInformation& metadata_;
 
 public:
   using Base = ASTCodeGenCXX;
-  StencilFunctionAsBCGenerator(
-      const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-      const std::shared_ptr<sir::StencilFunction>& functionToAnalyze)
-      : function_(functionToAnalyze), instantiation_(stencilInstantiation) {}
+  StencilFunctionAsBCGenerator(const iir::StencilMetaInformation& metadata,
+                               const std::shared_ptr<sir::StencilFunction>& functionToAnalyze)
+      : function_(functionToAnalyze), metadata_(metadata) {}
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr);
 
@@ -72,13 +72,12 @@ public:
 };
 
 class BCGenerator {
-  const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation_;
+  const iir::StencilMetaInformation& metadata_;
   std::stringstream& ss_;
 
 public:
-  BCGenerator(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-              std::stringstream& ss)
-      : stencilInstantiation_(stencilInstantiation), ss_(ss) {}
+  BCGenerator(const iir::StencilMetaInformation& metadata, std::stringstream& ss)
+      : metadata_(metadata), ss_(ss) {}
 
   void generate(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt);
 };

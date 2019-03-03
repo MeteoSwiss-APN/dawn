@@ -101,7 +101,8 @@ void renameAccessIDInStmts(
 
 void renameAccessIDInExpr(iir::StencilInstantiation* instantiation, int oldAccessID,
                           int newAccessID, std::shared_ptr<Expr>& expr) {
-  AccessIDRemapper<iir::StencilInstantiation> remapper(instantiation, oldAccessID, newAccessID);
+  AccessIDRemapper<iir::StencilMetaInformation> remapper(&(instantiation->getMetaData()),
+                                                         oldAccessID, newAccessID);
   expr->accept(remapper);
 }
 

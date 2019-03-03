@@ -412,23 +412,23 @@ int StencilInstantiation::getAccessIDFromName(const std::string& name) const {
   return metadata_.getAccessIDFromName(name);
 }
 
-int StencilInstantiation::getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) const {
-  return metadata_.getAccessIDFromExpr(expr);
-}
+// int StencilInstantiation::getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) const {
+//  return metadata_.getAccessIDFromExpr(expr);
+//}
 
-int StencilInstantiation::getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) const {
-  return metadata_.getAccessIDFromStmt(stmt);
-}
+// int StencilInstantiation::getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) const {
+//  return metadata_.getAccessIDFromStmt(stmt);
+//}
 
-void StencilInstantiation::setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt,
-                                             const int accessID) {
-  metadata_.setAccessIDOfStmt(stmt, accessID);
-}
+// void StencilInstantiation::setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt,
+//                                             const int accessID) {
+//  metadata_.setAccessIDOfStmt(stmt, accessID);
+//}
 
-void StencilInstantiation::setAccessIDOfExpr(const std::shared_ptr<Expr>& expr,
-                                             const int accessID) {
-  metadata_.setAccessIDOfExpr(expr, accessID);
-}
+// void StencilInstantiation::setAccessIDOfExpr(const std::shared_ptr<Expr>& expr,
+//                                             const int accessID) {
+//  metadata_.setAccessIDOfExpr(expr, accessID);
+//}
 
 void StencilInstantiation::removeStencilFunctionInstantiation(
     const std::shared_ptr<StencilFunCallExpr>& expr,
@@ -632,7 +632,7 @@ namespace {
 /// @brief Get the orignal name of the field (or variable) given by AccessID and a list of
 /// SourceLocations where this field (or variable) was accessed.
 class OriginalNameGetter : public ASTVisitorForwarding {
-  const StencilInstantiation* instantiation_;
+  const StencilMetaInformation& metadata_;
   const int AccessID_;
   const bool captureLocation_;
 
@@ -640,11 +640,11 @@ class OriginalNameGetter : public ASTVisitorForwarding {
   std::vector<SourceLocation> locations_;
 
 public:
-  OriginalNameGetter(const StencilInstantiation* instantiation, int AccessID, bool captureLocation)
-      : instantiation_(instantiation), AccessID_(AccessID), captureLocation_(captureLocation) {}
+  OriginalNameGetter(const StencilMetaInformation& metadata, int AccessID, bool captureLocation)
+      : metadata_(metadata), AccessID_(AccessID), captureLocation_(captureLocation) {}
 
   virtual void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
-    if(instantiation_->getAccessIDFromStmt(stmt) == AccessID_) {
+    if(metadata_.getAccessIDFromStmt(stmt) == AccessID_) {
       name_ = stmt->getName();
       if(captureLocation_)
         locations_.push_back(stmt->getSourceLocation());
@@ -655,7 +655,7 @@ public:
   }
 
   void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
-    if(instantiation_->getAccessIDFromExpr(expr) == AccessID_) {
+    if(metadata_.getAccessIDFromExpr(expr) == AccessID_) {
       name_ = expr->getName();
       if(captureLocation_)
         locations_.push_back(expr->getSourceLocation());
@@ -663,7 +663,7 @@ public:
   }
 
   void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override {
-    if(instantiation_->getAccessIDFromExpr(expr) == AccessID_) {
+    if(metadata_.getAccessIDFromExpr(expr) == AccessID_) {
       name_ = expr->getValue();
       if(captureLocation_)
         locations_.push_back(expr->getSourceLocation());
@@ -671,7 +671,7 @@ public:
   }
 
   virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
-    if(instantiation_->getAccessIDFromExpr(expr) == AccessID_) {
+    if(metadata_.getAccessIDFromExpr(expr) == AccessID_) {
       name_ = expr->getName();
       if(captureLocation_)
         locations_.push_back(expr->getSourceLocation());
@@ -691,13 +691,13 @@ public:
 std::pair<std::string, std::vector<SourceLocation>>
 StencilInstantiation::getOriginalNameAndLocationsFromAccessID(
     int AccessID, const std::shared_ptr<Stmt>& stmt) const {
-  OriginalNameGetter orignalNameGetter(this, AccessID, true);
+  OriginalNameGetter orignalNameGetter(metadata_, AccessID, true);
   stmt->accept(orignalNameGetter);
   return orignalNameGetter.getNameLocationPair();
 }
 
 std::string StencilInstantiation::getOriginalNameFromAccessID(int AccessID) const {
-  OriginalNameGetter orignalNameGetter(this, AccessID, true);
+  OriginalNameGetter orignalNameGetter(metadata_, AccessID, true);
 
   for(const auto& stmtAccessesPair : iterateIIROver<StatementAccessesPair>(*getIIR())) {
     stmtAccessesPair->getStatement()->ASTStmt->accept(orignalNameGetter);

@@ -15,6 +15,7 @@
 #ifndef DAWN_IIR_METAINFORMATION_H
 #define DAWN_IIR_METAINFORMATION_H
 
+#include "dawn/IIR/Extents.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/DoubleSidedMap.h"
 #include "dawn/Support/NonCopyable.h"
@@ -135,6 +136,23 @@ public:
   getStencilIDToStencilCallMap() const;
 
   int getStencilIDFromStencilCallStmt(const std::shared_ptr<StencilCallDeclStmt>& stmt) const;
+
+  Extents getBoundaryConditionExtentsFromBCStmt(
+      const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) const {
+    DAWN_ASSERT_MSG(BoundaryConditionToExtentsMap_.count(stmt),
+                    "Boundary Condition does not have a matching Extent");
+    return BoundaryConditionToExtentsMap_.at(stmt);
+  }
+
+  bool
+  hasBoundaryConditionStmtToExtent(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) const {
+    return BoundaryConditionToExtentsMap_.count(stmt);
+  }
+
+  void insertBoundaryConditiontoExtentPair(std::shared_ptr<BoundaryConditionDeclStmt>& bc,
+                                           Extents& extents) {
+    BoundaryConditionToExtentsMap_.emplace(bc, extents);
+  }
 
   /// @brief get a stencil function instantiation by StencilFunCallExpr
   const std::shared_ptr<StencilFunctionInstantiation>
@@ -268,6 +286,10 @@ public:
 
   /// Can be filled from the StencilIDToStencilCallMap that is in Metainformation
   DoubleSidedMap<int, std::shared_ptr<StencilCallDeclStmt>> StencilIDToStencilCallMap_;
+
+  /// BoundaryConditionCall to Extent Map. Filled my `PassSetBoundaryCondition`
+  std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>
+      BoundaryConditionToExtentsMap_;
 
   SourceLocation stencilLocation_;
 

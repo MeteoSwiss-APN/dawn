@@ -123,10 +123,10 @@ iir::Extents CodeGeneratorHelper::computeTempMaxWriteExtent(iir::Stencil const& 
 
 void CodeGeneratorHelper::generateFieldAccessDeref(
     std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
-    const std::shared_ptr<iir::StencilInstantiation>& instantiation, const int accessID,
+    const iir::StencilMetaInformation& metadata, const int accessID,
     const std::unordered_map<int, Array3i> fieldIndexMap, Array3i offset) {
-  std::string accessName = instantiation->getFieldNameFromAccessID(accessID);
-  bool isTemporary = instantiation->isTemporaryField(accessID);
+  std::string accessName = metadata.getFieldNameFromAccessID(accessID);
+  bool isTemporary = metadata.isTemporaryField(accessID);
   DAWN_ASSERT(fieldIndexMap.count(accessID) || isTemporary);
   const auto& field = ms->getField(accessID);
   bool useTmpIndex_ = (isTemporary && !useNormalIteratorForTmp(ms));

@@ -151,8 +151,9 @@ void MSCodeGen::generateKCacheFillStatement(MemberFunction& cudaKernel,
                                             const std::unordered_map<int, Array3i>& fieldIndexMap,
                                             const KCacheProperties& kcacheProp, int klev) const {
   std::stringstream ss;
-  CodeGeneratorHelper::generateFieldAccessDeref(
-      ss, ms_, stencilInstantiation_, kcacheProp.accessID_, fieldIndexMap, Array3i{0, 0, klev});
+  CodeGeneratorHelper::generateFieldAccessDeref(ss, ms_, stencilInstantiation_->getMetaData(),
+                                                kcacheProp.accessID_, fieldIndexMap,
+                                                Array3i{0, 0, klev});
   cudaKernel.addStatement(kcacheProp.name_ + "[" + std::to_string(cacheProperties_.getKCacheIndex(
                                                        kcacheProp.accessID_, klev)) +
                           "] =" + ss.str());
@@ -361,9 +362,9 @@ void MSCodeGen::generateFillKCaches(MemberFunction& cudaKernel, const iir::Inter
                              ? kcacheProp.intervalVertExtent_.Minus
                              : kcacheProp.intervalVertExtent_.Plus;
             std::stringstream ss;
-            CodeGeneratorHelper::generateFieldAccessDeref(ss, ms_, stencilInstantiation_,
-                                                          kcacheProp.accessID_, fieldIndexMap,
-                                                          Array3i{0, 0, offset});
+            CodeGeneratorHelper::generateFieldAccessDeref(
+                ss, ms_, stencilInstantiation_->getMetaData(), kcacheProp.accessID_, fieldIndexMap,
+                Array3i{0, 0, offset});
             cudaKernel.addStatement(
                 kcacheProp.name_ + "[" +
                 std::to_string(cacheProperties_.getKCacheIndex(kcacheProp.accessID_, offset)) +
@@ -489,8 +490,8 @@ void MSCodeGen::generateKCacheFlushStatement(MemberFunction& cudaKernel,
                                              const int accessID, std::string cacheName,
                                              const int offset) const {
   std::stringstream ss;
-  CodeGeneratorHelper::generateFieldAccessDeref(ss, ms_, stencilInstantiation_, accessID,
-                                                fieldIndexMap, Array3i{0, 0, offset});
+  CodeGeneratorHelper::generateFieldAccessDeref(ss, ms_, stencilInstantiation_->getMetaData(),
+                                                accessID, fieldIndexMap, Array3i{0, 0, offset});
   cudaKernel.addStatement(ss.str() + "= " + cacheName + "[" +
                           std::to_string(cacheProperties_.getKCacheIndex(accessID, offset)) + "]");
 }
@@ -763,19 +764,21 @@ void MSCodeGen::generateCudaKernelCode() {
 
   // first we construct non temporary field arguments
   for(auto field : nonTempFields) {
-    cudaKernel.addArg("gridtools::clang::float_type * const " +
-                      stencilInstantiation_->getFieldNameFromAccessID((*field).second.getAccessID()));
+    cudaKernel.addArg(
+        "gridtools::clang::float_type * const " +
+        stencilInstantiation_->getFieldNameFromAccessID((*field).second.getAccessID()));
   }
 
   // then the temporary field arguments
   for(auto field : tempFieldsNonLocalCached) {
     if(useTmpIndex_) {
-      cudaKernel.addArg(c_gt() + "data_view<TmpStorage>" +
-                        stencilInstantiation_->getFieldNameFromAccessID((*field).second.getAccessID()) +
-                        "_dv");
+      cudaKernel.addArg(
+          c_gt() + "data_view<TmpStorage>" +
+          stencilInstantiation_->getFieldNameFromAccessID((*field).second.getAccessID()) + "_dv");
     } else {
-      cudaKernel.addArg("gridtools::clang::float_type * const " +
-                        stencilInstantiation_->getFieldNameFromAccessID((*field).second.getAccessID()));
+      cudaKernel.addArg(
+          "gridtools::clang::float_type * const " +
+          stencilInstantiation_->getFieldNameFromAccessID((*field).second.getAccessID()));
     }
   }
 
@@ -926,8 +929,8 @@ void MSCodeGen::generateCudaKernelCode() {
 
   DAWN_ASSERT(!partitionIntervals.empty());
 
-  ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation_, fieldIndexMap, ms_, cacheProperties_,
-                                       blockSize_);
+  ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation_->getMetaData(), fieldIndexMap, ms_,
+                                       cacheProperties_, blockSize_);
 
   iir::Interval::IntervalLevel lastKCell{0, 0};
   lastKCell = advance(lastKCell, ms_->getLoopOrder(), -1);

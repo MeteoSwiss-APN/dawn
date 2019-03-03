@@ -17,13 +17,13 @@
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/IIR/Interval.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>
 #include <unordered_map>
 
 namespace dawn {
 namespace iir {
-class StencilInstantiation;
 class StencilFunctionInstantiation;
 }
 
@@ -35,7 +35,7 @@ namespace cuda {
 /// @ingroup cuda
 class ASTStencilFunctionParamVisitor : public ASTVisitorDisabled, public NonCopyable {
 protected:
-  const iir::StencilInstantiation* instantiation_;
+  const iir::StencilMetaInformation& metadata_;
   const std::shared_ptr<iir::StencilFunctionInstantiation>& currentFunction_;
   /// Underlying stream
   std::stringstream ss_;
@@ -44,7 +44,7 @@ public:
   using Base = ASTVisitorDisabled;
 
   ASTStencilFunctionParamVisitor(const std::shared_ptr<iir::StencilFunctionInstantiation>& function,
-                                 iir::StencilInstantiation const* instantiation);
+                                 const iir::StencilMetaInformation& metadata);
   virtual ~ASTStencilFunctionParamVisitor();
 
   std::string getCodeAndResetStream();
