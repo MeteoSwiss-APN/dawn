@@ -240,7 +240,7 @@ TEST_F(MultiStageTest, test_compute_read_access_interval) {
 
   auto const& mss = *stencil->childrenBegin();
 
-  int accessID = stencilInstantiation->getAccessIDFromName("tmp");
+  int accessID = stencilInstantiation->getMetaData().getAccessIDFromName("tmp");
   auto interval = mss->computeReadAccessInterval(accessID);
 
   EXPECT_EQ(interval, (iir::MultiInterval{iir::Interval{0, 1}}));
@@ -309,7 +309,7 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_02) {
 
   auto const& mss = *stencil->childrenBegin();
 
-  int accessID = stencilInstantiation->getAccessIDFromName("tmp");
+  int accessID = stencilInstantiation->getMetaData().getAccessIDFromName("tmp");
   auto interval = mss->computeReadAccessInterval(accessID);
 
   EXPECT_EQ(interval,
@@ -375,7 +375,7 @@ TEST_F(MultiStageTest, test_field_access_interval_04) {
 
   auto const& mss = *stencil->childrenBegin();
 
-  int accessID = stencilInstantiation->getAccessIDFromName("u");
+  int accessID = stencilInstantiation->getMetaData().getAccessIDFromName("u");
   auto interval = mss->computeReadAccessInterval(accessID);
 
   EXPECT_EQ(interval, (iir::MultiInterval{iir::Interval{4, 14}}));
@@ -454,7 +454,7 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_03) {
   auto const mss0it = stencil->childrenBegin();
   auto const& mss0 = *mss0it;
 
-  int accessID = stencilInstantiation->getAccessIDFromName("tmp");
+  int accessID = stencilInstantiation->getMetaData().getAccessIDFromName("tmp");
   auto interval0 = mss0->computeReadAccessInterval(accessID);
 
   EXPECT_EQ(interval0, (iir::MultiInterval{iir::Interval{1, sir::Interval::End - 1}}));
@@ -570,7 +570,7 @@ TEST_F(MultiStageTest, test_compute_read_access_interval_04) {
   auto const mss0it = stencil->childrenBegin();
   auto const& mss0 = *(mss0it);
 
-  int accessID = stencilInstantiation->getAccessIDFromName("tmp");
+  int accessID = stencilInstantiation->getMetaData().getAccessIDFromName("tmp");
   auto interval0 = mss0->computeReadAccessInterval(accessID);
 
   auto const mss1it = std::next(mss0it);

@@ -65,6 +65,8 @@ protected:
 TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_01) {
   auto stencilInstantiation = loadTest("test_field_access_interval_01.sir");
   const auto& stencils = stencilInstantiation->getStencils();
+  const auto& metadata = stencilInstantiation->getMetaData();
+
   ASSERT_TRUE((stencils.size() == 1));
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
 
@@ -82,11 +84,11 @@ TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_01) {
   std::unique_ptr<iir::Stage> const& stage2 = *stage2_ptr;
 
   boost::optional<iir::Interval> intervalU1 =
-      stage1->computeEnclosingAccessInterval(stencilInstantiation->getAccessIDFromName("u"), false);
-  boost::optional<iir::Interval> intervalOut1 = stage1->computeEnclosingAccessInterval(
-      stencilInstantiation->getAccessIDFromName("out"), false);
-  boost::optional<iir::Interval> intervalLap1 = stage1->computeEnclosingAccessInterval(
-      stencilInstantiation->getAccessIDFromName("lap"), false);
+      stage1->computeEnclosingAccessInterval(metadata.getAccessIDFromName("u"), false);
+  boost::optional<iir::Interval> intervalOut1 =
+      stage1->computeEnclosingAccessInterval(metadata.getAccessIDFromName("out"), false);
+  boost::optional<iir::Interval> intervalLap1 =
+      stage1->computeEnclosingAccessInterval(metadata.getAccessIDFromName("lap"), false);
 
   ASSERT_TRUE(intervalU1.is_initialized());
   ASSERT_TRUE(!intervalOut1.is_initialized());
@@ -96,11 +98,11 @@ TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_01) {
   ASSERT_TRUE((*intervalLap1 == iir::Interval{0, sir::Interval::End, 11, 0}));
 
   boost::optional<iir::Interval> intervalU2 =
-      stage2->computeEnclosingAccessInterval(stencilInstantiation->getAccessIDFromName("u"), false);
-  boost::optional<iir::Interval> intervalOut2 = stage2->computeEnclosingAccessInterval(
-      stencilInstantiation->getAccessIDFromName("out"), false);
-  boost::optional<iir::Interval> intervalLap2 = stage2->computeEnclosingAccessInterval(
-      stencilInstantiation->getAccessIDFromName("lap"), false);
+      stage2->computeEnclosingAccessInterval(metadata.getAccessIDFromName("u"), false);
+  boost::optional<iir::Interval> intervalOut2 =
+      stage2->computeEnclosingAccessInterval(metadata.getAccessIDFromName("out"), false);
+  boost::optional<iir::Interval> intervalLap2 =
+      stage2->computeEnclosingAccessInterval(metadata.getAccessIDFromName("lap"), false);
 
   ASSERT_TRUE(intervalU2.is_initialized());
   ASSERT_TRUE(intervalOut2.is_initialized());
@@ -113,6 +115,7 @@ TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_01) {
 
 TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_02) {
   auto stencilInstantiation = loadTest("test_field_access_interval_02.sir");
+  const auto& metadata = stencilInstantiation->getMetaData();
   const auto& stencils = stencilInstantiation->getStencils();
 
   ASSERT_TRUE((stencils.size() == 1));
@@ -128,16 +131,16 @@ TEST_F(ComputeEnclosingAccessInterval, test_field_access_interval_02) {
   std::unique_ptr<iir::Stage> const& stage1 = *stage1_ptr;
 
   {
-    boost::optional<iir::Interval> intervalcoeff1 = stage1->computeEnclosingAccessInterval(
-        stencilInstantiation->getAccessIDFromName("coeff"), false);
+    boost::optional<iir::Interval> intervalcoeff1 =
+        stage1->computeEnclosingAccessInterval(metadata.getAccessIDFromName("coeff"), false);
 
     ASSERT_TRUE(intervalcoeff1.is_initialized());
 
     EXPECT_EQ(*intervalcoeff1, (iir::Interval{12, sir::Interval::End + 1}));
   }
   {
-    boost::optional<iir::Interval> intervalcoeff1 = stage1->computeEnclosingAccessInterval(
-        stencilInstantiation->getAccessIDFromName("coeff"), true);
+    boost::optional<iir::Interval> intervalcoeff1 =
+        stage1->computeEnclosingAccessInterval(metadata.getAccessIDFromName("coeff"), true);
 
     ASSERT_TRUE(intervalcoeff1.is_initialized());
 

@@ -149,8 +149,7 @@ bool PassSetBoundaryCondition::run(
     //
     if(checkIfFieldWasOriginallyDefined(ID)) {
       if(stencilInstantiation->isField(ID)) {
-        return stencilInstantiation->getAccessIDFromName(
-            stencilInstantiation->getOriginalNameFromAccessID(ID));
+        return metadata.getAccessIDFromName(stencilInstantiation->getOriginalNameFromAccessID(ID));
       } else {
         return (int)FieldType::FT_NotOriginal;
       }
@@ -168,8 +167,7 @@ bool PassSetBoundaryCondition::run(
                  stencilInstantiation->getBoundaryConditions().end(),
                  std::inserter(allBCs, allBCs.begin()),
                  [&](std::pair<std::string, std::shared_ptr<BoundaryConditionDeclStmt>> bcPair) {
-                   return std::make_pair(stencilInstantiation->getAccessIDFromName(bcPair.first),
-                                         bcPair.second);
+                   return std::make_pair(metadata.getAccessIDFromName(bcPair.first), bcPair.second);
                  });
 
   // Get the order in which the stencils are called:
@@ -201,8 +199,7 @@ bool PassSetBoundaryCondition::run(
     }
     for(const auto& stencil : stencilInstantiation->getStencils()) {
       if(stencilIDsToVisit.count(stencil->getStencilID())) {
-        fullExtent.merge(
-            analyzeStencilExtents(stencil, stencilInstantiation->getAccessIDFromName(fieldname)));
+        fullExtent.merge(analyzeStencilExtents(stencil, metadata.getAccessIDFromName(fieldname)));
         if(StencilBCsApplied_.count(fieldname) == 0) {
           StencilBCsApplied_.emplace(fieldname, std::vector<int>{stencil->getStencilID()});
         } else {

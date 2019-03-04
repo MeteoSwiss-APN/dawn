@@ -224,23 +224,11 @@ public:
   void demoteTemporaryFieldToLocalVariable(Stencil* stencil, int AccessID,
                                            const Stencil::Lifetime& lifetime);
 
-  /// @brief Get the `AccessID` associated with the `name`
-  ///
-  /// Note that this only works for field and variable names, the mapping of literals AccessIDs
-  /// and their name is a not bijective!
-  int getAccessIDFromName(const std::string& name) const;
-
-  //  /// @brief Get the `AccessID` of the Expr (VarAccess or FieldAccess)
-  //  int getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) const;
-
-  //  /// @brief Set the `AccessID` of the Expr (VarAccess or FieldAccess)
-  //  void setAccessIDOfExpr(const std::shared_ptr<Expr>& expr, const int accessID);
-
-  //  /// @brief Set the `AccessID` of the Stmt (VarDeclStmt)
-  //  void setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt, const int accessID);
-
-  //  /// @brief Get the `AccessID` of the Stmt (VarDeclStmt)
-  //  int getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) const;
+  //  /// @brief Get the `AccessID` associated with the `name`
+  //  ///
+  //  /// Note that this only works for field and variable names, the mapping of literals AccessIDs
+  //  /// and their name is a not bijective!
+  //  int getAccessIDFromName(const std::string& name) const;
 
   /// @brief get a stencil function instantiation by StencilFunCallExpr
   const std::shared_ptr<StencilFunctionInstantiation>
@@ -260,15 +248,6 @@ public:
   std::shared_ptr<StencilFunctionInstantiation>
   cloneStencilFunctionCandidate(const std::shared_ptr<StencilFunctionInstantiation>& stencilFun,
                                 std::string functionName);
-
-  //  /// @brief Add entry to the map between a given expr to its access ID
-  //  void mapExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID);
-
-  //  /// @brief Add entry to the map between a given stmt to its access ID
-  //  void mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt, int accessID);
-
-  //  /// @brief Add entry of the Expr to AccessID map
-  //  void eraseExprToAccessID(std::shared_ptr<Expr> expr);
 
   /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
   const std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
@@ -318,12 +297,6 @@ public:
   getStencilFunctionInstantiations() const {
     return metadata_.stencilFunctionInstantiations_;
   }
-
-  //  /// @brief Get the AccessID-to-Name map
-  //  const std::unordered_map<std::string, int>& getNameToAccessIDMap() const;
-
-  //  /// @brief Get the Name-to-AccessID map
-  //  const std::unordered_map<int, std::string>& getAccessIDToNameMap() const;
 
   /// @brief insert a new sir::StencilFunction into the IIR
   void

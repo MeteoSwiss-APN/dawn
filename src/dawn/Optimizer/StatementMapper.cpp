@@ -340,7 +340,7 @@ void StatementMapper::visit(const std::shared_ptr<VarAccessExpr>& expr) {
         AccessID = stencilInstantiation->nextUID();
         stencilInstantiation->setAccessIDNamePairOfGlobalVariable(AccessID, varname);
       } else {
-        AccessID = stencilInstantiation->getAccessIDFromName(varname);
+        AccessID = metadata_.getAccessIDFromName(varname);
       }
 
       if(function)

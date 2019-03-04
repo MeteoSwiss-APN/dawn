@@ -65,6 +65,7 @@ protected:
 TEST_F(ComputeMaxExtents, test_stencil_01) {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation =
       loadTest("compute_extent_test_stencil_01.sir");
+  const auto& metadata = instantiation->getMetaData();
   const std::unique_ptr<iir::IIR>& IIR = instantiation->getIIR();
   const auto& stencils = IIR->getChildren();
   ASSERT_TRUE((stencils.size() == 1));
@@ -73,9 +74,9 @@ TEST_F(ComputeMaxExtents, test_stencil_01) {
   ASSERT_TRUE((stencil->getNumStages() == 2));
   auto exts = stencil->getFields();
   EXPECT_EQ(exts.size(), 3);
-  int u_id = instantiation->getAccessIDFromName("u");
-  int out_id = instantiation->getAccessIDFromName("out");
-  int lap_id = instantiation->getAccessIDFromName("lap");
+  int u_id = metadata.getAccessIDFromName("u");
+  int out_id = metadata.getAccessIDFromName("out");
+  int lap_id = metadata.getAccessIDFromName("lap");
 
   EXPECT_EQ(exts.at(u_id).field.getExtentsRB(), (iir::Extents{-2, 2, -2, 2, 0, 0}));
   EXPECT_EQ(exts.at(out_id).field.getExtentsRB(), (iir::Extents{0, 0, 0, 0, 0, 0}));
@@ -85,6 +86,7 @@ TEST_F(ComputeMaxExtents, test_stencil_01) {
 TEST_F(ComputeMaxExtents, test_stencil_02) {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation =
       loadTest("compute_extent_test_stencil_02.sir");
+  const auto& metadata = instantiation->getMetaData();
   const std::unique_ptr<iir::IIR>& IIR = instantiation->getIIR();
   const auto& stencils = IIR->getChildren();
   ASSERT_TRUE((stencils.size() == 1));
@@ -93,9 +95,9 @@ TEST_F(ComputeMaxExtents, test_stencil_02) {
   ASSERT_TRUE((stencil->getNumStages() == 3));
   auto exts = stencil->getFields();
   EXPECT_EQ(exts.size(), 6);
-  int u_id = instantiation->getAccessIDFromName("u");
-  int out_id = instantiation->getAccessIDFromName("out");
-  int coeff_id = instantiation->getAccessIDFromName("coeff");
+  int u_id = metadata.getAccessIDFromName("u");
+  int out_id = metadata.getAccessIDFromName("out");
+  int coeff_id = metadata.getAccessIDFromName("coeff");
 
   EXPECT_EQ(exts.at(u_id).field.getExtentsRB(), (iir::Extents{-2, 2, -2, 2, 0, 0}));
   EXPECT_EQ(exts.at(out_id).field.getExtentsRB(), (iir::Extents{0, 0, 0, 0, 0, 0}));
@@ -104,6 +106,7 @@ TEST_F(ComputeMaxExtents, test_stencil_02) {
 TEST_F(ComputeMaxExtents, test_stencil_03) {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation =
       loadTest("compute_extent_test_stencil_03.sir");
+  const auto& metadata = instantiation->getMetaData();
   const std::unique_ptr<iir::IIR>& IIR = instantiation->getIIR();
   const auto& stencils = IIR->getChildren();
   ASSERT_TRUE((stencils.size() == 1));
@@ -112,9 +115,9 @@ TEST_F(ComputeMaxExtents, test_stencil_03) {
   ASSERT_TRUE((stencil->getNumStages() == 4));
   auto exts = stencil->getFields();
   EXPECT_EQ(exts.size(), 7);
-  int u_id = instantiation->getAccessIDFromName("u");
-  int out_id = instantiation->getAccessIDFromName("out");
-  int coeff_id = instantiation->getAccessIDFromName("coeff");
+  int u_id = metadata.getAccessIDFromName("u");
+  int out_id = metadata.getAccessIDFromName("out");
+  int coeff_id = metadata.getAccessIDFromName("coeff");
 
   EXPECT_EQ(exts.at(u_id).field.getExtentsRB(), (iir::Extents{-2, 2, -2, 3, 0, 0}));
   EXPECT_EQ(exts.at(out_id).field.getExtentsRB(), (iir::Extents{0, 0, 0, 0, 0, 0}));
@@ -124,6 +127,7 @@ TEST_F(ComputeMaxExtents, test_stencil_03) {
 TEST_F(ComputeMaxExtents, test_stencil_04) {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation =
       loadTest("compute_extent_test_stencil_04.sir");
+  const auto& metadata = instantiation->getMetaData();
   const std::unique_ptr<iir::IIR>& IIR = instantiation->getIIR();
   const auto& stencils = IIR->getChildren();
 
@@ -134,8 +138,8 @@ TEST_F(ComputeMaxExtents, test_stencil_04) {
   auto exts = stencil->getFields();
   EXPECT_EQ(exts.size(), 6);
 
-  int u_id = instantiation->getAccessIDFromName("u");
-  int out_id = instantiation->getAccessIDFromName("out");
+  int u_id = metadata.getAccessIDFromName("u");
+  int out_id = metadata.getAccessIDFromName("out");
   EXPECT_EQ(exts.at(u_id).field.getExtentsRB(), (iir::Extents{-3, 4, -2, 1, 0, 0}));
   EXPECT_EQ(exts.at(out_id).field.getExtentsRB(), (iir::Extents{0, 0, 0, 0, 0, 0}));
 }
@@ -143,6 +147,7 @@ TEST_F(ComputeMaxExtents, test_stencil_04) {
 TEST_F(ComputeMaxExtents, test_stencil_05) {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation =
       loadTest("compute_extent_test_stencil_05.sir");
+  const auto& metadata = instantiation->getMetaData();
   const std::unique_ptr<iir::IIR>& IIR = instantiation->getIIR();
   const auto& stencils = IIR->getChildren();
 
@@ -152,8 +157,8 @@ TEST_F(ComputeMaxExtents, test_stencil_05) {
   ASSERT_TRUE((stencil->getNumStages() == 4));
   auto exts = stencil->getFields();
   EXPECT_EQ(exts.size(), 6);
-  int u_id = instantiation->getAccessIDFromName("u");
-  int out_id = instantiation->getAccessIDFromName("out");
+  int u_id = metadata.getAccessIDFromName("u");
+  int out_id = metadata.getAccessIDFromName("out");
 
   EXPECT_EQ(exts.at(u_id).field.getExtentsRB(), (iir::Extents{-3, 4, -2, 1, 0, 0}));
   EXPECT_EQ(exts.at(out_id).field.getExtentsRB(), (iir::Extents{0, 0, 0, 0, 0, 0}));

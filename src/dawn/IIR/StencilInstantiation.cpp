@@ -399,26 +399,8 @@ void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil,
   stencil->updateFields(lifetime);
 }
 
-int StencilInstantiation::getAccessIDFromName(const std::string& name) const {
-  return metadata_.getAccessIDFromName(name);
-}
-
-// int StencilInstantiation::getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) const {
-//  return metadata_.getAccessIDFromExpr(expr);
-//}
-
-// int StencilInstantiation::getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) const {
-//  return metadata_.getAccessIDFromStmt(stmt);
-//}
-
-// void StencilInstantiation::setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt,
-//                                             const int accessID) {
-//  metadata_.setAccessIDOfStmt(stmt, accessID);
-//}
-
-// void StencilInstantiation::setAccessIDOfExpr(const std::shared_ptr<Expr>& expr,
-//                                             const int accessID) {
-//  metadata_.setAccessIDOfExpr(expr, accessID);
+// int StencilInstantiation::getAccessIDFromName(const std::string& name) const {
+//  return metadata_.getAccessIDFromName(name);
 //}
 
 void StencilInstantiation::removeStencilFunctionInstantiation(
@@ -572,47 +554,6 @@ void StencilInstantiation::finalizeStencilFunctionSetup(
   // we remove the candidate to stencil function
   metadata_.stencilFunInstantiationCandidate_.erase(stencilFun);
 }
-
-// std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
-// StencilInstantiation::getStencilCallToStencilIDMap() {
-//  return IIR_->getStencilCallToStencilIDMap();
-//}
-
-// const std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
-// StencilInstantiation::getStencilCallToStencilIDMap() const {
-//  return IIR_->getStencilCallToStencilIDMap();
-//}
-
-// int StencilInstantiation::getStencilIDFromStmt(
-//    const std::shared_ptr<StencilCallDeclStmt>& stmt) const {
-//  for(auto callToID : metadata_.getStencilCallToStencilIDMap()) {
-//    if(stmt->equals(callToID.first.get())) {
-//      return callToID.second;
-//    }
-//  }
-//  DAWN_ASSERT_MSG(false, "Invalid stencil call");
-//  return -1;
-//}
-
-// const std::unordered_map<int, std::string>& StencilInstantiation::getAccessIDToNameMap() const {
-//  return metadata_.getAccessIDToNameMap();
-//}
-
-// std::unordered_map<int, std::string>& StencilInstantiation::getLiteralAccessIDToNameMap() {
-//  return metadata_.LiteralAccessIDToNameMap_;
-//}
-// const std::unordered_map<int, std::string>&
-// StencilInstantiation::getLiteralAccessIDToNameMap() const {
-//  return metadata_.LiteralAccessIDToNameMap_;
-//}
-
-// std::set<int>& StencilInstantiation::getGlobalVariableAccessIDSet() {
-//  return metadata_.GlobalVariableAccessIDSet_;
-//}
-
-// const std::set<int>& StencilInstantiation::getGlobalVariableAccessIDSet() const {
-//  return metadata_.GlobalVariableAccessIDSet_;
-//}
 
 namespace {
 
