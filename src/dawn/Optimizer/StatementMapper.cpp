@@ -134,9 +134,9 @@ void StatementMapper::visit(const std::shared_ptr<VarDeclStmt>& stmt) {
     function->getAccessIDToNameMap().emplace(AccessID, globalName);
     function->mapStmtToAccessID(stmt, AccessID);
   } else {
-    instantiation_->setAccessIDNamePair(AccessID, globalName);
+    metadata_.setAccessIDNamePair(AccessID, globalName);
     // TODO the set below triggers an assertion that stmt already exists
-    instantiation_->getMetaData().insertStmtToAccessID(stmt, AccessID);
+    metadata_.insertStmtToAccessID(stmt, AccessID);
   }
 
   // Add the mapping to the local scope
@@ -338,7 +338,7 @@ void StatementMapper::visit(const std::shared_ptr<VarAccessExpr>& expr) {
       int AccessID = 0;
       if(!stencilInstantiation->isGlobalVariable(varname)) {
         AccessID = stencilInstantiation->nextUID();
-        stencilInstantiation->setAccessIDNamePairOfGlobalVariable(AccessID, varname);
+        metadata_.setAccessIDNamePairOfGlobalVariable(AccessID, varname);
       } else {
         AccessID = metadata_.getAccessIDFromName(varname);
       }

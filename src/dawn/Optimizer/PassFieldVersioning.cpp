@@ -282,8 +282,8 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
 
     if(context->getOptions().ReportPassFieldVersioning)
       std::cout << (numRenames != 0 ? ", " : " ")
-                << instantiation->getFieldNameFromAccessID(oldAccessID) << ":"
-                << instantiation->getFieldNameFromAccessID(newAccessID);
+                << instantiation->getMetaData().getFieldNameFromAccessID(oldAccessID) << ":"
+                << instantiation->getMetaData().getFieldNameFromAccessID(newAccessID);
 
     numRenames++;
   }

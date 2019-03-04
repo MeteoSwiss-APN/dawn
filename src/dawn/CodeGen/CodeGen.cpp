@@ -148,6 +148,7 @@ void CodeGen::generateBCHeaders(std::vector<std::string>& ppDefines) const {
 CodeGenProperties
 CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstantiation) const {
   CodeGenProperties codeGenProperties;
+  const auto& metadata = stencilInstantiation->getMetaData();
 
   int idx = 0;
   std::unordered_set<std::string> generatedStencilFun;
@@ -210,9 +211,9 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
   }
 
   int i = 0;
-  for(const auto& fieldID : stencilInstantiation->getAPIFieldIDs()) {
+  for(const auto& fieldID : metadata.getAPIFieldIDs()) {
     codeGenProperties.insertParam(
-        i, stencilInstantiation->getFieldNameFromAccessID(fieldID),
+        i, metadata.getFieldNameFromAccessID(fieldID),
         getStorageType(stencilInstantiation->getFieldDimensionsMask(fieldID)));
     ++i;
   }
@@ -223,8 +224,7 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
   }
   if(stencilInstantiation->hasAllocatedFields()) {
     for(int accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
-      codeGenProperties.insertAllocateField(
-          stencilInstantiation->getFieldNameFromAccessID(accessID));
+      codeGenProperties.insertAllocateField(metadata.getFieldNameFromAccessID(accessID));
     }
   }
 

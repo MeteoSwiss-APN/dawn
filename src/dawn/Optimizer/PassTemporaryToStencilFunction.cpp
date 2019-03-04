@@ -560,6 +560,7 @@ SkipIDs PassTemporaryToStencilFunction::computeSkipAccessIDs(
 bool PassTemporaryToStencilFunction::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 
+  const auto& metadata = stencilInstantiation->getMetaData();
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
   if(!context->getOptions().PassTmpToFunction)
@@ -573,8 +574,8 @@ bool PassTemporaryToStencilFunction::run(
     SkipIDs skipIDs = computeSkipAccessIDs(stencilPtr, stencilInstantiation);
 
     std::unordered_set<int> localVarAccessIDs;
-    LocalVariablePromotion localVariablePromotion(stencilInstantiation->getMetaData(), *stencilPtr,
-                                                  fields, skipIDs, localVarAccessIDs);
+    LocalVariablePromotion localVariablePromotion(metadata, *stencilPtr, fields, skipIDs,
+                                                  localVarAccessIDs);
 
     for(auto multiStageIt = stencilPtr->childrenRBegin();
         multiStageIt != stencilPtr->childrenREnd(); ++multiStageIt) {
@@ -651,8 +652,7 @@ bool PassTemporaryToStencilFunction::run(
 
                 if(tmpReplacement.getNumTmpReplaced() != 0) {
 
-                  iir::DoMethod tmpStmtDoMethod(doMethodInterval,
-                                                stencilInstantiation->getMetaData());
+                  iir::DoMethod tmpStmtDoMethod(doMethodInterval, metadata);
 
                   auto asir = std::make_shared<SIR>();
                   for(const auto sf : stencilInstantiation->getStencilFunctions()) {
@@ -678,8 +678,7 @@ bool PassTemporaryToStencilFunction::run(
                 }
 
                 // find patterns like tmp = fn(args)...;
-                TmpAssignment tmpAssignment(stencilInstantiation->getMetaData(), sirInterval,
-                                            skipAccessIDsOfMS);
+                TmpAssignment tmpAssignment(metadata, sirInterval, skipAccessIDsOfMS);
                 stmt->ASTStmt->acceptAndReplace(tmpAssignment);
                 if(tmpAssignment.foundTemporaryToReplace()) {
                   std::shared_ptr<sir::StencilFunction> stencilFunction =
@@ -695,8 +694,8 @@ bool PassTemporaryToStencilFunction::run(
                   // all the temporary computations captured are stored in this map of <ID, tmp
                   // properties>
                   // for later use of the replacer visitor
-                  const int accessID = stencilInstantiation->getMetaData().getAccessIDFromExpr(
-                      tmpAssignment.getTemporaryFieldAccessExpr());
+                  const int accessID =
+                      metadata.getAccessIDFromExpr(tmpAssignment.getTemporaryFieldAccessExpr());
 
                   if(!temporaryFieldExprToFunction.count(accessID)) {
                     temporaryFieldExprToFunction.emplace(
@@ -747,8 +746,7 @@ bool PassTemporaryToStencilFunction::run(
           int accessID = tmpFieldPair.first;
           auto tmpProperties = tmpFieldPair.second;
           if(context->getOptions().ReportPassTmpToFunction)
-            std::cout << " [ replace tmp:"
-                      << stencilInstantiation->getFieldNameFromAccessID(accessID)
+            std::cout << " [ replace tmp:" << metadata.getFieldNameFromAccessID(accessID)
                       << "; line : " << tmpProperties.tmpFieldAccessExpr_->getSourceLocation().Line
                       << " ] ";
         }

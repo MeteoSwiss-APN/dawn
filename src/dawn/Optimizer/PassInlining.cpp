@@ -311,7 +311,7 @@ public:
 
   void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
 
-    std::string callerName = instantiation_->getFieldNameFromAccessID(
+    std::string callerName = metadata_.getFieldNameFromAccessID(
         curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
     expr->setName(callerName);
 
@@ -322,7 +322,7 @@ public:
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
 
-    std::string callerName = instantiation_->getFieldNameFromAccessID(
+    std::string callerName = metadata_.getFieldNameFromAccessID(
         curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
     expr->setName(callerName);
 

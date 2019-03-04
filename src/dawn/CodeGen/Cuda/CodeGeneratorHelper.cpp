@@ -57,11 +57,12 @@ std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const std::unique_ptr<iir::MultiStage>& ms, CodeGeneratorHelper::FunctionArgType funArg) {
 
+  const auto& metadata = stencilInstantiation->getMetaData();
+
   std::unordered_set<std::string> processedDims;
   std::vector<std::string> strides;
   for(auto field : nonTempFields) {
-    const auto fieldName =
-        stencilInstantiation->getFieldNameFromAccessID((*field).second.getAccessID());
+    const auto fieldName = metadata.getFieldNameFromAccessID((*field).second.getAccessID());
     Array3i dims{-1, -1, -1};
     // TODO this is a hack, we need to have dimensions also at ms level
     for(const auto& fieldInfo : ms->getParent()->getFields()) {
@@ -92,8 +93,7 @@ std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(
   }
   if(!tempFields.empty()) {
     auto firstTmpField = **(tempFields.begin());
-    std::string fieldName =
-        stencilInstantiation->getFieldNameFromAccessID(firstTmpField.second.getAccessID());
+    std::string fieldName = metadata.getFieldNameFromAccessID(firstTmpField.second.getAccessID());
     if(funArg == CodeGeneratorHelper::FunctionArgType::FT_Caller) {
       strides.push_back("m_" + fieldName + ".get_storage_info_ptr()->template begin<0>()," + "m_" +
                         fieldName + ".get_storage_info_ptr()->template begin<1>()," + "m_" +

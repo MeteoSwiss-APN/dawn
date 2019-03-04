@@ -296,16 +296,17 @@ void CudaCodeGen::generateStencilWrapperCtr(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const CodeGenProperties& codeGenProperties) const {
 
+  const auto& metadata = stencilInstantiation->getMetaData();
   const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
 
   // Generate stencil wrapper constructor
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
 
-  for(int fieldId : stencilInstantiation->getAPIFieldIDs()) {
+  for(int fieldId : stencilInstantiation->getMetaData().getAPIFieldIDs()) {
     StencilWrapperConstructor.addArg(
         getStorageType(stencilInstantiation->getFieldDimensionsMask(fieldId)) + "& " +
-        stencilInstantiation->getFieldNameFromAccessID(fieldId));
+        metadata.getFieldNameFromAccessID(fieldId));
   }
 
   const auto& stencils = stencilInstantiation->getStencils();
@@ -343,7 +344,7 @@ void CudaCodeGen::generateStencilWrapperCtr(
   if(stencilInstantiation->hasAllocatedFields()) {
     std::vector<std::string> tempFields;
     for(auto accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
-      tempFields.push_back(stencilInstantiation->getFieldNameFromAccessID(accessID));
+      tempFields.push_back(metadata.getFieldNameFromAccessID(accessID));
     }
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
   }
@@ -386,7 +387,8 @@ void CudaCodeGen::generateStencilWrapperMembers(
 
     for(int AccessID : stencilInstantiation->getAllocatedFieldAccessIDs())
       stencilWrapperClass.addMember(
-          c_gtc() + "storage_t", "m_" + stencilInstantiation->getFieldNameFromAccessID(AccessID));
+          c_gtc() + "storage_t",
+          "m_" + stencilInstantiation->getMetaData().getFieldNameFromAccessID(AccessID));
   }
 
   if(!globalsMap.empty()) {
@@ -449,6 +451,7 @@ void CudaCodeGen::generateStencilRunMethod(
     const std::unordered_map<std::string, std::string>& paramNameToType,
     const sir::GlobalVariableMap& globalsMap) const {
   MemberFunction StencilRunMethod = stencilClass.addMemberFunction("virtual void", "run", "");
+  const auto& metadata = stencilInstantiation->getMetaData();
 
   StencilRunMethod.startBody();
 
@@ -464,16 +467,16 @@ void CudaCodeGen::generateStencilRunMethod(
     const auto fields = orderMap(multiStage.getFields());
 
     auto nonTempFields =
-        makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
-                              std::pair<int, iir::Field> const& p) {
-                    return !stencilInstantiation->isTemporaryField(p.second.getAccessID());
-                  }));
+        makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>(
+                              [&](std::pair<int, iir::Field> const& p) {
+                                return !metadata.isTemporaryField(p.second.getAccessID());
+                              }));
 
     auto tempFieldsNonLocalCached = makeRange(
         fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
                     std::pair<int, iir::Field> const& p) {
           const int accessID = p.first;
-          if(!stencilInstantiation->isTemporaryField(p.second.getAccessID()))
+          if(!metadata.isTemporaryField(p.second.getAccessID()))
             return false;
           for(const auto& ms : iterateIIROver<iir::MultiStage>(stencil)) {
             if(!ms->isCached(accessID))
@@ -490,15 +493,13 @@ void CudaCodeGen::generateStencilRunMethod(
       // TODO have the same FieldInfo in ms level so that we dont need to query
       // stencilInstantiation
       // all the time for name and IsTmpField
-      const auto fieldName =
-          stencilInstantiation->getFieldNameFromAccessID((*fieldIt).second.getAccessID());
+      const auto fieldName = metadata.getFieldNameFromAccessID((*fieldIt).second.getAccessID());
       StencilRunMethod.addStatement(c_gt() + "data_view<" + paramNameToType.at(fieldName) + "> " +
                                     fieldName + "= " + c_gt() + "make_device_view(m_" + fieldName +
                                     ")");
     }
     for(auto fieldIt : tempFieldsNonLocalCached) {
-      const auto fieldName =
-          stencilInstantiation->getFieldNameFromAccessID((*fieldIt).second.getAccessID());
+      const auto fieldName = metadata.getFieldNameFromAccessID((*fieldIt).second.getAccessID());
 
       StencilRunMethod.addStatement(c_gt() + "data_view<tmp_storage_t> " + fieldName + "= " +
                                     c_gt() + "make_device_view(m_" + fieldName + ")");
@@ -554,8 +555,7 @@ void CudaCodeGen::generateStencilRunMethod(
     std::string args;
     int idx = 0;
     for(auto field : nonTempFields) {
-      const auto fieldName =
-          stencilInstantiation->getFieldNameFromAccessID((*field).second.getAccessID());
+      const auto fieldName = metadata.getFieldNameFromAccessID((*field).second.getAccessID());
 
       args = args + (idx == 0 ? "" : ",") + "(" + fieldName + ".data()+" + "m_" + fieldName +
              ".get_storage_info_ptr()->index(" + fieldName + ".begin<0>(), " + fieldName +
@@ -568,15 +568,13 @@ void CudaCodeGen::generateStencilRunMethod(
       // iterator, but rather a normal 3d field index iterator. In that case we pass temporaries in
       // the same manner as normal fields
       if(CodeGeneratorHelper::useNormalIteratorForTmp(multiStagePtr)) {
-        const auto fieldName =
-            stencilInstantiation->getFieldNameFromAccessID((*field).second.getAccessID());
+        const auto fieldName = metadata.getFieldNameFromAccessID((*field).second.getAccessID());
 
         args = args + ", (" + fieldName + ".data()+" + "m_" + fieldName +
                ".get_storage_info_ptr()->index(" + fieldName + ".begin<0>(), " + fieldName +
                ".begin<1>()," + fieldName + ".begin<2>()," + fieldName + ".begin<3>(), 0))";
       } else {
-        args = args + "," +
-               stencilInstantiation->getFieldNameFromAccessID((*field).second.getAccessID());
+        args = args + "," + metadata.getFieldNameFromAccessID((*field).second.getAccessID());
       }
     }
 

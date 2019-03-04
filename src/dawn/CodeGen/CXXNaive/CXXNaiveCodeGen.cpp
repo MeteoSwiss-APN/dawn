@@ -138,7 +138,8 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
     const CodeGenProperties& codeGenProperties) const {
 
   const auto& stencils = stencilInstantiation->getStencils();
-  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
+  const auto& metadata = stencilInstantiation->getMetaData();
+  const auto& globalsMap = metadata.globalVariableMap_;
 
   // Generate stencil wrapper constructor
   auto APIFields = stencilInstantiation->getMetaData().apiFieldIDs_;
@@ -149,9 +150,9 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
   std::string ctrArgs("(dom");
   for(auto APIfieldID : APIFields) {
     StencilWrapperConstructor.addArg(
-        codeGenProperties.getParamType(stencilInstantiation->getFieldNameFromAccessID(APIfieldID)) +
-        "& " + stencilInstantiation->getFieldNameFromAccessID(APIfieldID));
-    ctrArgs += "," + stencilInstantiation->getFieldNameFromAccessID(APIfieldID);
+        codeGenProperties.getParamType(metadata.getFieldNameFromAccessID(APIfieldID)) + "& " +
+        metadata.getFieldNameFromAccessID(APIfieldID));
+    ctrArgs += "," + metadata.getFieldNameFromAccessID(APIfieldID);
   }
 
   // add the ctr initialization of each stencil
@@ -198,7 +199,7 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
   if(stencilInstantiation->hasAllocatedFields()) {
     std::vector<std::string> tempFields;
     for(auto accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
-      tempFields.push_back(stencilInstantiation->getFieldNameFromAccessID(accessID));
+      tempFields.push_back(metadata.getFieldNameFromAccessID(accessID));
     }
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
   }
@@ -210,7 +211,8 @@ void CXXNaiveCodeGen::generateStencilWrapperMembers(
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     CodeGenProperties& codeGenProperties) const {
 
-  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
+  const auto& metadata = stencilInstantiation->getMetaData();
+  const auto& globalsMap = metadata.globalVariableMap_;
 
   stencilWrapperClass.addMember("static constexpr const char* s_name =",
                                 Twine("\"") + stencilWrapperClass.getName() + Twine("\""));
@@ -236,8 +238,8 @@ void CXXNaiveCodeGen::generateStencilWrapperMembers(
     stencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
 
     for(int AccessID : stencilInstantiation->getAllocatedFieldAccessIDs())
-      stencilWrapperClass.addMember(
-          c_gtc() + "storage_t", "m_" + stencilInstantiation->getFieldNameFromAccessID(AccessID));
+      stencilWrapperClass.addMember(c_gtc() + "storage_t",
+                                    "m_" + metadata.getFieldNameFromAccessID(AccessID));
   }
 }
 void CXXNaiveCodeGen::generateStencilClasses(

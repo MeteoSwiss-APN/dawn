@@ -152,7 +152,6 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_03) {
 
 TEST_F(TestFieldAccessIntervals, test_field_access_interval_04) {
   auto stencilInstantiation = loadTest("test_field_access_interval_04.sir");
-  const auto& metadata = stencilInstantiation->getMetaData();
   const auto& stencils = stencilInstantiation->getStencils();
   EXPECT_EQ(stencils.size(), 1);
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];

@@ -56,26 +56,11 @@ public:
 
   bool checkTreeConsistency() const;
 
-  /// @brief Insert a new AccessID - Name pair
-  void setAccessIDNamePair(int accessID, const std::string& name);
-
-  /// @brief Insert a new AccessID - Name pair of a field
-  void setAccessIDNamePairOfField(int accessID, const std::string& name, bool isTemporary = false);
-
-  /// @brief Insert a new AccessID - Name pair of a global variable (i.e scalar field access)
-  void setAccessIDNamePairOfGlobalVariable(int accessID, const std::string& name);
-
   /// @brief Remove the field, variable or literal given by `AccessID`
   void removeAccessID(int accessID);
 
   /// @brief Get the name of the StencilInstantiation (corresponds to the name of the SIRStencil)
   const std::string getName() const;
-
-  /// @brief Get the list of access ID of the user API fields
-  inline const std::vector<int>& getAPIFieldIDs() const { return metadata_.apiFieldIDs_; }
-
-  /// @brief Get the `name` associated with the `AccessID` of a Field or a Var
-  const std::string& getFieldNameFromAccessID(int AccessID) const;
 
   /// @brief insert an element to the maps of stencil functions
   void insertExprToStencilFunction(std::shared_ptr<StencilFunctionInstantiation> stencilFun);

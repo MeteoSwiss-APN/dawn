@@ -29,7 +29,7 @@ MSCodeGen::MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStag
                      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                      const CacheProperties& cacheProperties)
     : ss_(ss), ms_(ms), stencilInstantiation_(stencilInstantiation),
-      cacheProperties_(cacheProperties),
+      metadata_(stencilInstantiation->getMetaData()), cacheProperties_(cacheProperties),
       blockSize_(stencilInstantiation_->getIIR()->getBlockSize()),
       solveKLoopInParallel_(CodeGeneratorHelper::solveKLoopInParallel(ms_)) {
 
@@ -690,11 +690,10 @@ void MSCodeGen::generateCudaKernelCode() {
   // fields used in the stencil
   const auto fields = orderMap(ms_->getFields());
 
-  auto nonTempFields =
-      makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
-                            std::pair<int, iir::Field> const& p) {
-                  return !stencilInstantiation_->isTemporaryField(p.second.getAccessID());
-                }));
+  auto nonTempFields = makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
+                                             std::pair<int, iir::Field> const& p) {
+                                   return !metadata_.isTemporaryField(p.second.getAccessID());
+                                 }));
   // all the temp fields that are non local cache, and therefore will require the infrastructure
   // of
   // tmp storages (allocation, iterators, etc)
@@ -764,21 +763,18 @@ void MSCodeGen::generateCudaKernelCode() {
 
   // first we construct non temporary field arguments
   for(auto field : nonTempFields) {
-    cudaKernel.addArg(
-        "gridtools::clang::float_type * const " +
-        stencilInstantiation_->getFieldNameFromAccessID((*field).second.getAccessID()));
+    cudaKernel.addArg("gridtools::clang::float_type * const " +
+                      metadata_.getFieldNameFromAccessID((*field).second.getAccessID()));
   }
 
   // then the temporary field arguments
   for(auto field : tempFieldsNonLocalCached) {
     if(useTmpIndex_) {
-      cudaKernel.addArg(
-          c_gt() + "data_view<TmpStorage>" +
-          stencilInstantiation_->getFieldNameFromAccessID((*field).second.getAccessID()) + "_dv");
+      cudaKernel.addArg(c_gt() + "data_view<TmpStorage>" +
+                        metadata_.getFieldNameFromAccessID((*field).second.getAccessID()) + "_dv");
     } else {
-      cudaKernel.addArg(
-          "gridtools::clang::float_type * const " +
-          stencilInstantiation_->getFieldNameFromAccessID((*field).second.getAccessID()));
+      cudaKernel.addArg("gridtools::clang::float_type * const " +
+                        metadata_.getFieldNameFromAccessID((*field).second.getAccessID()));
     }
   }
 
@@ -791,8 +787,7 @@ void MSCodeGen::generateCudaKernelCode() {
   // extract raw pointers of temporaries from the data views
   if(useTmpIndex_) {
     for(auto field : tempFieldsNonLocalCached) {
-      std::string fieldName =
-          stencilInstantiation_->getFieldNameFromAccessID((*field).second.getAccessID());
+      std::string fieldName = metadata_.getFieldNameFromAccessID((*field).second.getAccessID());
 
       cudaKernel.addStatement("gridtools::clang::float_type* " + fieldName + " = &" + fieldName +
                               "_dv(tmpBeginIIndex,tmpBeginJIndex,blockIdx.x,blockIdx.y,0)");

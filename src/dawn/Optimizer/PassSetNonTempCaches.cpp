@@ -131,7 +131,7 @@ private:
       // Create new temporary field and register in the instantiation
       int newID = instantiation_->nextUID();
 
-      instantiation_->setAccessIDNamePairOfField(newID, "__tmp_cache_" + std::to_string(i), true);
+      metadata_.setAccessIDNamePairOfField(newID, "__tmp_cache_" + std::to_string(i), true);
 
       // Rename all the fields in this multistage
       multiStagePrt_->renameAllOccurrences(oldID, newID);
@@ -218,9 +218,9 @@ private:
                                int assigneeID) {
     // Create the StatementAccessPair of the assignment with the new and old variables
     auto fa_assignee =
-        std::make_shared<FieldAccessExpr>(instantiation_->getFieldNameFromAccessID(assigneeID));
+        std::make_shared<FieldAccessExpr>(metadata_.getFieldNameFromAccessID(assigneeID));
     auto fa_assignment =
-        std::make_shared<FieldAccessExpr>(instantiation_->getFieldNameFromAccessID(assignmentID));
+        std::make_shared<FieldAccessExpr>(metadata_.getFieldNameFromAccessID(assignmentID));
     auto assignmentExpression = std::make_shared<AssignmentExpr>(fa_assignment, fa_assignee, "=");
     auto expAssignment = std::make_shared<ExprStmt>(assignmentExpression);
     auto assignmentStatement = std::make_shared<Statement>(expAssignment, nullptr);

@@ -348,7 +348,7 @@ public:
     else
       globalName = StencilInstantiation::makeLocalVariablename(stmt->getName(), AccessID);
 
-    instantiation_->setAccessIDNamePair(AccessID, globalName);
+    metadata_.setAccessIDNamePair(AccessID, globalName);
     metadata_.StmtIDToAccessIDMap_.emplace(stmt->getID(), AccessID);
 
     // Add the mapping to the local scope
@@ -466,10 +466,10 @@ public:
       if(stencil.Fields[stencilArgIdx]->IsTemporary) {
         // We add a new temporary field for each temporary field argument
         AccessID = instantiation_->nextUID();
-        instantiation_->setAccessIDNamePairOfField(
-            AccessID, StencilInstantiation::makeTemporaryFieldname(
-                          stencil.Fields[stencilArgIdx]->Name, AccessID),
-            true);
+        metadata_.setAccessIDNamePairOfField(AccessID,
+                                             StencilInstantiation::makeTemporaryFieldname(
+                                                 stencil.Fields[stencilArgIdx]->Name, AccessID),
+                                             true);
       } else {
         AccessID =
             curScope->LocalFieldnameToAccessIDMap.find(stencilCall->Args[stencilCallArgIdx]->Name)
@@ -578,7 +578,7 @@ public:
         int AccessID = 0;
         if(!metadata_.isGlobalVariable(varname)) {
           AccessID = instantiation_->nextUID();
-          instantiation_->setAccessIDNamePairOfGlobalVariable(AccessID, varname);
+          metadata_.setAccessIDNamePairOfGlobalVariable(AccessID, varname);
         } else {
           AccessID = metadata_.getAccessIDFromName(varname);
         }
@@ -628,21 +628,20 @@ bool OptimizerContext::fillIIRFromSIR(
     const std::shared_ptr<sir::Stencil> SIRStencil, const std::shared_ptr<SIR> fullSIR) {
   DAWN_LOG(INFO) << "Intializing StencilInstantiation of `" << SIRStencil->Name << "`";
   DAWN_ASSERT_MSG(SIRStencil, "Stencil does not exist");
-
-  stencilInstantation->getMetaData().stencilName_ = SIRStencil->Name;
-  stencilInstantation->getMetaData().fileName_ = fullSIR->Filename;
-  stencilInstantation->getMetaData().stencilLocation_ = SIRStencil->Loc;
+  auto& metadata = stencilInstantation->getMetaData();
+  metadata.stencilName_ = SIRStencil->Name;
+  metadata.fileName_ = fullSIR->Filename;
+  metadata.stencilLocation_ = SIRStencil->Loc;
 
   // Map the fields of the "main stencil" to unique IDs (which are used in the access maps to
   // indentify the field).
   for(const auto& field : SIRStencil->Fields) {
     int AccessID = stencilInstantation->nextUID();
     if(!field->IsTemporary) {
-      stencilInstantation->getMetaData().apiFieldIDs_.push_back(AccessID);
+      metadata.apiFieldIDs_.push_back(AccessID);
     }
-    stencilInstantation->setAccessIDNamePairOfField(AccessID, field->Name, field->IsTemporary);
-    stencilInstantation->getMetaData().fieldIDToInitializedDimensionsMap_.emplace(
-        AccessID, field->fieldDimensions);
+    metadata.setAccessIDNamePairOfField(AccessID, field->Name, field->IsTemporary);
+    metadata.fieldIDToInitializedDimensionsMap_.emplace(AccessID, field->fieldDimensions);
   }
 
   StencilDescStatementMapper stencilDeclMapper(stencilInstantation, SIRStencil.get(), fullSIR);

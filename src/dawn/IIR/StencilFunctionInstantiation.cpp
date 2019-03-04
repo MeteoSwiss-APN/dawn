@@ -297,9 +297,8 @@ std::string StencilFunctionInstantiation::getFieldNameFromAccessID(int AccessID)
   // TODO have a check for what is a literal range
   if(AccessID < 0)
     return getNameFromLiteralAccessID(AccessID);
-  else if(stencilInstantiation_->isField(AccessID) ||
-          stencilInstantiation_->isGlobalVariable(AccessID))
-    return stencilInstantiation_->getFieldNameFromAccessID(AccessID);
+  else if(metadata_.isField(AccessID) || metadata_.isGlobalVariable(AccessID))
+    return metadata_.getFieldNameFromAccessID(AccessID);
   else {
     DAWN_ASSERT(AccessIDToNameMap_.count(AccessID));
     return AccessIDToNameMap_.find(AccessID)->second;
@@ -644,7 +643,7 @@ void StencilFunctionInstantiation::dump() const {
                   << getFunctionInstantiationOfArgField(argIdx)->getName();
       } else {
         int callerAccessID = getCallerAccessIDOfArgField(argIdx);
-        std::cout << stencilInstantiation_->getFieldNameFromAccessID(callerAccessID) << "  "
+        std::cout << metadata_.getFieldNameFromAccessID(callerAccessID) << "  "
                   << getCallerInitialOffsetFromAccessID(callerAccessID);
       }
 

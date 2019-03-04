@@ -116,6 +116,8 @@ public:
   /// @brief get the `name` associated with the `accessID` of any access type
   std::string getNameFromAccessID(int accessID) const;
 
+  const std::vector<int>& getAPIFieldIDs() const { return apiFieldIDs_; }
+
   /// @brief Get the `AccessID` associated with the `name`
   ///
   /// Note that this only works for field and variable names, the mapping of literals AccessIDs
