@@ -615,6 +615,7 @@ OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, Options& opti
   for(const auto& stencil : SIR_->Stencils)
     if(!stencil->Attributes.has(sir::Attr::AK_NoCodeGen)) {
       stencilInstantiationMap_.insert(
+          // TODO this wrong, stencil should not import Context that is in the optimizer
           std::make_pair(stencil->Name, std::make_shared<iir::StencilInstantiation>(this)));
       fillIIRFromSIR(stencilInstantiationMap_.at(stencil->Name), stencil, SIR_);
     } else {
@@ -627,11 +628,6 @@ bool OptimizerContext::fillIIRFromSIR(
     const std::shared_ptr<sir::Stencil> SIRStencil, const std::shared_ptr<SIR> fullSIR) {
   DAWN_LOG(INFO) << "Intializing StencilInstantiation of `" << SIRStencil->Name << "`";
   DAWN_ASSERT_MSG(SIRStencil, "Stencil does not exist");
-
-  // Process the stencil description of the "main stencil"
-  for(auto sf : fullSIR->StencilFunctions) {
-    stencilInstantation->getMetaData().allStencilFunctions_.push_back(sf);
-  }
 
   stencilInstantation->getMetaData().stencilName_ = SIRStencil->Name;
   stencilInstantation->getMetaData().fileName_ = fullSIR->Filename;

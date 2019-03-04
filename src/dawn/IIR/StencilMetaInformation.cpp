@@ -179,6 +179,16 @@ void StencilMetaInformation::setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt
   StmtIDToAccessIDMap_[stmt->getID()] = accessID;
 }
 
+bool StencilMetaInformation::hasStmtToAccessID(const std::shared_ptr<Stmt>& stmt) const {
+  return StmtIDToAccessIDMap_.count(stmt->getID());
+}
+
+void StencilMetaInformation::insertStmtToAccessID(const std::shared_ptr<Stmt>& stmt,
+                                                  const int accessID) {
+  DAWN_ASSERT(!StmtIDToAccessIDMap_.count(stmt->getID()));
+  StmtIDToAccessIDMap_[stmt->getID()] = accessID;
+}
+
 void StencilMetaInformation::setAccessIDOfExpr(const std::shared_ptr<Expr>& expr,
                                                const int accessID) {
   DAWN_ASSERT(ExprIDToAccessIDMap_.count(expr->getID()));

@@ -70,7 +70,7 @@ public:
   const PassManager& getPassManager() const { return passManager_; }
 
   /// @brief Get the SIR
-  const std::shared_ptr<SIR> getSIR() const { return SIR_; }
+  const std::shared_ptr<SIR>& getSIR() const { return SIR_; }
 
   /// @brief Get options
   const Options& getOptions() const;

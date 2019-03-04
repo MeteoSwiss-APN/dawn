@@ -41,10 +41,9 @@ enum class TemporaryScope { TT_LocalVariable, TT_StencilTemporary, TT_Field };
 class StencilInstantiation : NonCopyable {
 
   OptimizerContext* context_;
-
   StencilMetaInformation metadata_;
-
   std::unique_ptr<IIR> IIR_;
+  std::shared_ptr<SIR> SIR_;
 
 public:
   /// @brief Assemble StencilInstantiation for stencil
@@ -328,8 +327,8 @@ public:
     return metadata_.stencilFunctionInstantiations_;
   }
 
-  /// @brief Get map which associates Stmts with AccessIDs
-  std::unordered_map<int, int>& getStmtIDToAccessIDMap();
+  //  /// @brief Get map which associates Stmts with AccessIDs
+  //  std::unordered_map<int, int>& getStmtIDToAccessIDMap();
 
   /// @brief Get the AccessID-to-Name map
   std::unordered_map<std::string, int>& getNameToAccessIDMap();
@@ -406,8 +405,6 @@ public:
   /// stencil functions of the stencil instantiation are updated
   void finalizeStencilFunctionSetup(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
 
-  const std::set<int>& getCachedVariableSet() const;
-
   //  inline const std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&
   //  getBoundaryConditionToExtentsMap() const {
   //    return IIR_->getBoundaryConditionToExtents();
@@ -432,8 +429,8 @@ public:
   //    return IIR_->getBoundaryConditionToExtents().find(stmt)->second;
   //  }
 
-  std::vector<std::shared_ptr<sir::StencilFunction>>& getStencilFunctions() {
-    return metadata_.allStencilFunctions_;
+  const std::vector<std::shared_ptr<sir::StencilFunction>>& getStencilFunctions() {
+    return SIR_->StencilFunctions;
   }
 
   /// @brief this checks if the user specialized the field to a dimensionality. If not all

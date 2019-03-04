@@ -169,7 +169,8 @@ public:
     return stencilFunctionInstantiations_;
   }
 
-  /// @brief this checks if the user specialized the field to a dimensionality. If not all
+  /// @brief th
+  /// is checks if the user specialized the field to a dimensionality. If not all
   /// dimensions are allow for off-center acesses and hence, {1,1,1} is returned. If we got a
   /// specialization, it is returned
   Array3i getFieldDimensionsMask(int FieldID) const;
@@ -180,6 +181,10 @@ public:
 
   /// @brief Set the `AccessID` of the Stmt (VarDeclStmt)
   void setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt, const int accessID);
+
+  bool hasStmtToAccessID(const std::shared_ptr<Stmt>& stmt) const;
+
+  void insertStmtToAccessID(const std::shared_ptr<Stmt>& stmt, const int accessID);
 
   /// @brief Insert a new AccessID - Name pair
   void setAccessIDNamePair(int accessID, const std::string& name);
@@ -296,8 +301,6 @@ public:
   std::string stencilName_;
 
   std::string fileName_;
-
-  std::vector<std::shared_ptr<sir::StencilFunction>> allStencilFunctions_;
 
   StencilMetaInformation() = default;
 

@@ -47,7 +47,7 @@ namespace iir {
 //===------------------------------------------------------------------------------------------===//
 
 StencilInstantiation::StencilInstantiation(dawn::OptimizerContext* context)
-    : context_(context), IIR_(make_unique<IIR>()) {}
+    : context_(context), IIR_(make_unique<IIR>()), SIR_(context->getSIR()) {}
 
 StencilMetaInformation& StencilInstantiation::getMetaData() { return metadata_; }
 
@@ -82,9 +82,9 @@ void StencilInstantiation::removeAccessID(int accessID) { metadata_.removeAccess
 
 const std::string StencilInstantiation::getName() const { return metadata_.stencilName_; }
 
-std::unordered_map<int, int>& StencilInstantiation::getStmtIDToAccessIDMap() {
-  return metadata_.StmtIDToAccessIDMap_;
-}
+// std::unordered_map<int, int>& StencilInstantiation::getStmtIDToAccessIDMap() {
+//  return metadata_.StmtIDToAccessIDMap_;
+//}
 
 const std::string& StencilInstantiation::getFieldNameFromAccessID(int AccessID) const {
   if(AccessID < 0)
@@ -130,8 +130,7 @@ bool StencilInstantiation::isGlobalVariable(const std::string& name) const {
 
 void StencilInstantiation::insertStencilFunctionIntoSIR(
     const std::shared_ptr<sir::StencilFunction>& sirStencilFunction) {
-
-  metadata_.allStencilFunctions_.push_back(sirStencilFunction);
+  SIR_->StencilFunctions.push_back(sirStencilFunction);
 }
 
 bool StencilInstantiation::insertBoundaryConditions(std::string originalFieldName,
