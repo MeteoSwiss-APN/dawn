@@ -122,6 +122,9 @@ public:
   /// and their name is a not bijective!
   int getAccessIDFromName(const std::string& name) const;
 
+  bool hasNameToAccessID(const std::string& name) const {
+    return AccessIDToNameMap_.reverseHas(name);
+  }
   /// @brief Get the field-AccessID set
   const std::set<int>& getFieldAccessIDSet() const;
 

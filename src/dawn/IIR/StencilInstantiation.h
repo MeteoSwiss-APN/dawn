@@ -319,11 +319,11 @@ public:
     return metadata_.stencilFunctionInstantiations_;
   }
 
-  /// @brief Get the AccessID-to-Name map
-  const std::unordered_map<std::string, int>& getNameToAccessIDMap() const;
+  //  /// @brief Get the AccessID-to-Name map
+  //  const std::unordered_map<std::string, int>& getNameToAccessIDMap() const;
 
-  /// @brief Get the Name-to-AccessID map
-  const std::unordered_map<int, std::string>& getAccessIDToNameMap() const;
+  //  /// @brief Get the Name-to-AccessID map
+  //  const std::unordered_map<int, std::string>& getAccessIDToNameMap() const;
 
   /// @brief insert a new sir::StencilFunction into the IIR
   void

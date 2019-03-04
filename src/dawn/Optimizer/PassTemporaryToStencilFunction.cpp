@@ -660,7 +660,8 @@ bool PassTemporaryToStencilFunction::run(
                   }
                   StatementMapper statementMapper(
                       asir, stencilInstantiation.get(), stmt->StackTrace, tmpStmtDoMethod,
-                      sirInterval, stencilInstantiation->getNameToAccessIDMap(), nullptr);
+                      sirInterval, stencilInstantiation->getMetaData().getNameToAccessIDMap(),
+                      nullptr);
 
                   std::shared_ptr<BlockStmt> blockStmt = std::make_shared<BlockStmt>(
                       std::vector<std::shared_ptr<Stmt>>{stmt->ASTStmt});

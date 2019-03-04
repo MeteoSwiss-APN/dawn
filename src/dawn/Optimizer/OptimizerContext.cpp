@@ -87,7 +87,7 @@ public:
     // Create the initial scope
     scope_.push(std::make_shared<Scope>(sirStencil_->Name,
                                         instantiation_->getIIR()->getControlFlowDescriptor()));
-    scope_.top()->LocalFieldnameToAccessIDMap = instantiation_->getNameToAccessIDMap();
+    scope_.top()->LocalFieldnameToAccessIDMap = metadata_.getNameToAccessIDMap();
 
     // We add all global variables which have constant values
     for(auto& keyValuePair : *(sir->GlobalVariableMap)) {

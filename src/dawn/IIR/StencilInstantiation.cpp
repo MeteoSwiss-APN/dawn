@@ -111,10 +111,10 @@ std::string StencilInstantiation::getNameFromAccessID(int accessID) const {
   return metadata_.getNameFromAccessID(accessID);
 }
 
-/// @brief Get the AccessID-to-Name map
-const std::unordered_map<std::string, int>& StencilInstantiation::getNameToAccessIDMap() const {
-  return metadata_.getNameToAccessIDMap();
-}
+///// @brief Get the AccessID-to-Name map
+// const std::unordered_map<std::string, int>& StencilInstantiation::getNameToAccessIDMap() const {
+//  return metadata_.getNameToAccessIDMap();
+//}
 
 bool StencilInstantiation::isGlobalVariable(const std::string& name) const {
   return metadata_.isGlobalVariable(name);
@@ -594,9 +594,9 @@ void StencilInstantiation::finalizeStencilFunctionSetup(
 //  return -1;
 //}
 
-const std::unordered_map<int, std::string>& StencilInstantiation::getAccessIDToNameMap() const {
-  return metadata_.getAccessIDToNameMap();
-}
+// const std::unordered_map<int, std::string>& StencilInstantiation::getAccessIDToNameMap() const {
+//  return metadata_.getAccessIDToNameMap();
+//}
 
 // std::unordered_map<int, std::string>& StencilInstantiation::getLiteralAccessIDToNameMap() {
 //  return metadata_.LiteralAccessIDToNameMap_;
