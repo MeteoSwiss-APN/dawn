@@ -196,7 +196,7 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
   //===------------------------------------------------------------------------------------------===
   // Checking inserts into the various maps
   //===------------------------------------------------------------------------------------------===
-  referenceInstantiaton->getMetaData().AccessIDToNameMap_.insert({1, "test"});
+  referenceInstantiaton->getMetaData().setAccessIDNamePair(1, "test");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   referenceInstantiaton->getMetaData().ExprIDToAccessIDMap_.emplace(10, 5);

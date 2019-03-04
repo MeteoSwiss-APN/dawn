@@ -108,8 +108,10 @@ public:
   bool isVariable(int AccessID) const { return !isField(AccessID) && !isLiteral(AccessID); }
 
   /// @brief Get the AccessID-to-Name map
-  std::unordered_map<std::string, int>& getNameToAccessIDMap();
   const std::unordered_map<std::string, int>& getNameToAccessIDMap() const;
+
+  /// @brief Get the AccessID-to-Name map
+  const std::unordered_map<int, std::string>& getAccessIDToNameMap() const;
 
   /// @brief get the `name` associated with the `accessID` of any access type
   std::string getNameFromAccessID(int accessID) const;
@@ -228,10 +230,7 @@ public:
   /// Map of AccessIDs and to the name of the variable/field. Note that only for fields of the "main
   /// stencil" we can get the AccessID by name. This is due the fact that fields of different
   /// stencil functions can share the same name.
-  std::unordered_map<int, std::string> AccessIDToNameMap_;
-
-  /// Can be filled from the AccessIDToName map that is in Metainformation
-  std::unordered_map<std::string, int> NameToAccessIDMap_;
+  DoubleSidedMap<int, std::string> AccessIDToNameMap_;
 
   /// Surjection of AST Nodes, Expr (FieldAccessExpr or VarAccessExpr) or Stmt (VarDeclStmt), to
   /// their AccessID. The surjection implies that multiple AST Nodes can have the same AccessID,

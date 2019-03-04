@@ -87,11 +87,7 @@ const std::string StencilInstantiation::getName() const { return metadata_.stenc
 //}
 
 const std::string& StencilInstantiation::getFieldNameFromAccessID(int AccessID) const {
-  if(AccessID < 0)
-    return getNameFromLiteralAccessID(AccessID);
-  auto it = metadata_.AccessIDToNameMap_.find(AccessID);
-  DAWN_ASSERT_MSG(it != metadata_.AccessIDToNameMap_.end(), "Invalid AccessID");
-  return it->second;
+  return metadata_.getFieldNameFromAccessID(AccessID);
 }
 
 // void StencilInstantiation::mapExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID) {
@@ -116,10 +112,6 @@ std::string StencilInstantiation::getNameFromAccessID(int accessID) const {
 }
 
 /// @brief Get the AccessID-to-Name map
-std::unordered_map<std::string, int>& StencilInstantiation::getNameToAccessIDMap() {
-  return metadata_.getNameToAccessIDMap();
-}
-
 const std::unordered_map<std::string, int>& StencilInstantiation::getNameToAccessIDMap() const {
   return metadata_.getNameToAccessIDMap();
 }
@@ -602,12 +594,8 @@ void StencilInstantiation::finalizeStencilFunctionSetup(
 //  return -1;
 //}
 
-std::unordered_map<int, std::string>& StencilInstantiation::getAccessIDToNameMap() {
-  return metadata_.AccessIDToNameMap_;
-}
-
 const std::unordered_map<int, std::string>& StencilInstantiation::getAccessIDToNameMap() const {
-  return metadata_.AccessIDToNameMap_;
+  return metadata_.getAccessIDToNameMap();
 }
 
 // std::unordered_map<int, std::string>& StencilInstantiation::getLiteralAccessIDToNameMap() {

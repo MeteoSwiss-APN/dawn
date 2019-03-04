@@ -202,10 +202,6 @@ static iir::Cache makeCache(const proto::iir::Cache* protoCache) {
 }
 
 static void computeInitialDerivedInfo(const std::shared_ptr<iir::StencilInstantiation>& target) {
-  for(auto IDtoNamePair : target->getAccessIDToNameMap()) {
-    target->getNameToAccessIDMap().insert({IDtoNamePair.second, IDtoNamePair.first});
-  }
-
   for(const auto& leaf : iterateIIROver<iir::StatementAccessesPair>(*target->getIIR())) {
     leaf->update(iir::NodeUpdateType::level);
   }
@@ -220,7 +216,7 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
 
   // Filling Field: map<int32, string> AccessIDToName = 1;
   auto& protoAccessIDtoNameMap = *protoMetaData->mutable_accessidtoname();
-  for(const auto& accessIDtoNamePair : metaData.AccessIDToNameMap_) {
+  for(const auto& accessIDtoNamePair : metaData.getAccessIDToNameMap()) {
     protoAccessIDtoNameMap.insert({accessIDtoNamePair.first, accessIDtoNamePair.second});
   }
   // Filling Field: repeated ExprIDPair ExprToAccessID = 2;
@@ -501,7 +497,7 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
                                         const proto::iir::StencilMetaInfo& protoMetaData) {
   auto& metadata = target->getMetaData();
   for(auto IDtoName : protoMetaData.accessidtoname()) {
-    metadata.AccessIDToNameMap_.insert({IDtoName.first, IDtoName.second});
+    metadata.setAccessIDNamePair(IDtoName.first, IDtoName.second);
   }
 
   for(auto exprIDToAccessID : protoMetaData.expridtoaccessid()) {

@@ -308,14 +308,6 @@ public:
   /// @brief get the IIR tree
   inline std::unique_ptr<IIR>& getIIR() { return IIR_; }
 
-  //  /// @brief Get StencilID of the StencilCallDeclStmt
-  //  std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>& getStencilCallToStencilIDMap();
-  //  const std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
-  //  getStencilCallToStencilIDMap() const;
-
-  //  /// @brief Get the StencilID of the StencilCallDeclStmt `stmt`
-  //  int getStencilIDFromStmt(const std::shared_ptr<StencilCallDeclStmt>& stmt) const;
-
   /// @brief Get the list of stencil functions
   inline std::vector<std::shared_ptr<StencilFunctionInstantiation>>&
   getStencilFunctionInstantiations() {
@@ -327,24 +319,11 @@ public:
     return metadata_.stencilFunctionInstantiations_;
   }
 
-  //  /// @brief Get map which associates Stmts with AccessIDs
-  //  std::unordered_map<int, int>& getStmtIDToAccessIDMap();
-
   /// @brief Get the AccessID-to-Name map
-  std::unordered_map<std::string, int>& getNameToAccessIDMap();
   const std::unordered_map<std::string, int>& getNameToAccessIDMap() const;
 
   /// @brief Get the Name-to-AccessID map
-  std::unordered_map<int, std::string>& getAccessIDToNameMap();
   const std::unordered_map<int, std::string>& getAccessIDToNameMap() const;
-
-  //  /// @brief Get the Literal-AccessID-to-Name map
-  //  std::unordered_map<int, std::string>& getLiteralAccessIDToNameMap();
-  //  const std::unordered_map<int, std::string>& getLiteralAccessIDToNameMap() const;
-
-  //  /// @brief Get the field-AccessID set
-  //  std::set<int>& getGlobalVariableAccessIDSet();
-  //  const std::set<int>& getGlobalVariableAccessIDSet() const;
 
   /// @brief insert a new sir::StencilFunction into the IIR
   void
@@ -404,30 +383,6 @@ public:
   /// moved from candidate to the final storage of stencil instantiations. And maps storing
   /// stencil functions of the stencil instantiation are updated
   void finalizeStencilFunctionSetup(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
-
-  //  inline const std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&
-  //  getBoundaryConditionToExtentsMap() const {
-  //    return IIR_->getBoundaryConditionToExtents();
-  //  }
-
-  //  inline std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&
-  //  getBoundaryConditionToExtentsMap() {
-  //    return IIR_->getBoundaryConditionToExtents();
-  //  }
-
-  //  inline void insertBoundaryConditiontoExtentPair(std::shared_ptr<BoundaryConditionDeclStmt>&
-  //  bc,
-  //                                                  Extents& extents) {
-  //    IIR_->getBoundaryConditionToExtents().emplace(bc, extents);
-  //  }
-
-  //  inline Extents getBoundaryConditionExtentsFromBCStmt(
-  //      const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) const {
-  //    if(IIR_->getBoundaryConditionToExtents().count(stmt) == 0) {
-  //      DAWN_ASSERT_MSG(false, "Boundary Condition does not have a matching Extent");
-  //    }
-  //    return IIR_->getBoundaryConditionToExtents().find(stmt)->second;
-  //  }
 
   const std::vector<std::shared_ptr<sir::StencilFunction>>& getStencilFunctions() {
     return SIR_->StencilFunctions;

@@ -105,12 +105,10 @@ const std::string& StencilMetaInformation::getNameFromLiteralAccessID(int Access
   return LiteralAccessIDToNameMap_.find(AccessID)->second;
 }
 
-const std::string& StencilMetaInformation::getFieldNameFromAccessID(int AccessID) const {
-  if(AccessID < 0)
-    return getNameFromLiteralAccessID(AccessID);
-  auto it = AccessIDToNameMap_.find(AccessID);
-  DAWN_ASSERT_MSG(it != AccessIDToNameMap_.end(), "Invalid AccessID");
-  return it->second;
+const std::string& StencilMetaInformation::getFieldNameFromAccessID(int accessID) const {
+  if(accessID < 0)
+    return getNameFromLiteralAccessID(accessID);
+  return AccessIDToNameMap_.directAt(accessID);
 }
 
 bool StencilMetaInformation::isGlobalVariable(const std::string& name) const {
@@ -118,18 +116,18 @@ bool StencilMetaInformation::isGlobalVariable(const std::string& name) const {
   return it == getNameToAccessIDMap().end() ? false : isGlobalVariable(it->second);
 }
 
-std::unordered_map<std::string, int>& StencilMetaInformation::getNameToAccessIDMap() {
-  return NameToAccessIDMap_;
+const std::unordered_map<std::string, int>& StencilMetaInformation::getNameToAccessIDMap() const {
+  return AccessIDToNameMap_.getReverseMap();
 }
 
-const std::unordered_map<std::string, int>& StencilMetaInformation::getNameToAccessIDMap() const {
-  return NameToAccessIDMap_;
+/// @brief Get the AccessID-to-Name map
+const std::unordered_map<int, std::string>& StencilMetaInformation::getAccessIDToNameMap() const {
+  return AccessIDToNameMap_.getDirectMap();
 }
 
 // TODO what if there is no map 1 to map from name to id ?
 int StencilMetaInformation::getAccessIDFromName(const std::string& name) const {
-  DAWN_ASSERT_MSG(NameToAccessIDMap_.count(name), "Invalid name");
-  return NameToAccessIDMap_.at(name);
+  return AccessIDToNameMap_.reverseAt(name);
 }
 
 Array3i StencilMetaInformation::getFieldDimensionsMask(int FieldID) const {
@@ -203,9 +201,9 @@ StencilMetaInformation::getStencilFunctionInstantiation(
   return it->second;
 }
 
+// TODO set or emplace ? have a convention
 void StencilMetaInformation::setAccessIDNamePair(int accessID, const std::string& name) {
   AccessIDToNameMap_.emplace(accessID, name);
-  NameToAccessIDMap_.emplace(name, accessID);
 }
 
 void StencilMetaInformation::setAccessIDNamePairOfField(int AccessID, const std::string& name,
@@ -224,11 +222,8 @@ void StencilMetaInformation::setAccessIDNamePairOfGlobalVariable(int accessID,
 }
 
 void StencilMetaInformation::removeAccessID(int AccessID) {
-  if(getNameToAccessIDMap().count(AccessIDToNameMap_[AccessID]))
-    getNameToAccessIDMap().erase(AccessIDToNameMap_[AccessID]);
-
   // TODO do we need to remove from all of them ?
-  AccessIDToNameMap_.erase(AccessID);
+  AccessIDToNameMap_.directEraseKey(AccessID);
   FieldAccessIDSet_.erase(AccessID);
   TemporaryFieldAccessIDSet_.erase(AccessID);
 
@@ -302,7 +297,7 @@ json::json StencilMetaInformation::jsonDump() const {
   metaDataJson["literalAccessIDs"] = literalAccessIDsJson;
 
   json::json accessIDToNameJson;
-  for(const auto& pair : AccessIDToNameMap_) {
+  for(const auto& pair : AccessIDToNameMap_.getDirectMap()) {
     accessIDToNameJson[std::to_string(pair.first)] = pair.second;
   }
   metaDataJson["AccessIDToName"] = accessIDToNameJson;
