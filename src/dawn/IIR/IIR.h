@@ -73,11 +73,6 @@ public:
     DAWN_ASSERT_MSG(it != derivedInfo_.StageIDToNameMap_.end(), "Invalid StageID");
     return it->second;
   }
-
-  //  inline std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&
-  //  getBoundaryConditionToExtents() {
-  //    return derivedInfo_.BoundaryConditionToExtentsMap_;
-  //  }
 };
 } // namespace iir
 } // namespace dawn
