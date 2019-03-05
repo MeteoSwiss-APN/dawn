@@ -64,22 +64,7 @@ std::shared_ptr<StencilInstantiation> StencilInstantiation::clone() const {
   return stencilInstantiation;
 }
 
-void StencilInstantiation::removeAccessID(int accessID) { metadata_.removeAccessID(accessID); }
-
 const std::string StencilInstantiation::getName() const { return metadata_.stencilName_; }
-
-// const std::string& StencilInstantiation::getNameFromLiteralAccessID(int AccessID) const {
-//  DAWN_ASSERT_MSG(isLiteral(AccessID), "Invalid literal");
-//  return metadata_.LiteralAccessIDToNameMap_.find(AccessID)->second;
-//}
-
-// std::string StencilInstantiation::getNameFromAccessID(int accessID) const {
-//  return metadata_.getNameFromAccessID(accessID);
-//}
-
-// bool StencilInstantiation::isGlobalVariable(const std::string& name) const {
-//  return metadata_.isGlobalVariable(name);
-//}
 
 void StencilInstantiation::insertStencilFunctionIntoSIR(
     const std::shared_ptr<sir::StencilFunction>& sirStencilFunction) {
@@ -95,10 +80,6 @@ bool StencilInstantiation::insertBoundaryConditions(std::string originalFieldNam
     return true;
   }
 }
-
-// Array3i StencilInstantiation::getFieldDimensionsMask(int fieldID) const {
-//  return metadata_.getFieldDimensionsMask(fieldID);
-//}
 
 const sir::Value& StencilInstantiation::getGlobalVariableValue(const std::string& name) const {
   auto it = metadata_.globalVariableMap_.find(name);
@@ -221,7 +202,7 @@ void StencilInstantiation::renameAllOccurrences(Stencil* stencil, int oldAccessI
   stencil->renameAllOccurrences(oldAccessID, newAccessID);
 
   // Remove form all AccessID maps
-  removeAccessID(oldAccessID);
+  metadata_.removeAccessID(oldAccessID);
 }
 
 bool StencilInstantiation::isIDAccessedMultipleStencils(int accessID) const {
@@ -288,7 +269,7 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
         std::make_shared<Statement>(exprStmt, oldStatement->StackTrace));
 
     // Remove the variable
-    removeAccessID(accessID);
+    metadata_.removeAccessID(accessID);
     metadata_.StmtIDToAccessIDMap_.erase(oldStatement->ASTStmt->getID());
   }
   // Register the field
@@ -351,7 +332,7 @@ void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil,
       std::make_shared<Statement>(varDeclStmt, oldStatement->StackTrace));
 
   // Remove the field
-  removeAccessID(AccessID);
+  metadata_.removeAccessID(AccessID);
 
   // Register the variable
   metadata_.setAccessIDNamePair(AccessID, varname);

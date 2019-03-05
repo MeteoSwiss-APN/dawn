@@ -204,6 +204,11 @@ public:
   /// @brief Check if the stencil instantiation needs to allocate fields
   bool hasAllocatedFields() const { return !AllocatedFieldAccessIDSet_.empty(); }
 
+  /// @brief Check whether the `AccessID` corresponds to a manually allocated field
+  bool isAllocatedField(int AccessID) const {
+    return isField(AccessID) && hasAllocateField(AccessID);
+  }
+
   void insertAllocatedField(const int accessID);
   void eraseAllocatedField(const int accessID);
 
