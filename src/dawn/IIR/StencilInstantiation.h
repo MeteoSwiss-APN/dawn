@@ -75,71 +75,67 @@ public:
   /// @brief Get the original name of the field (as registered in the AST)
   std::string getOriginalNameFromAccessID(int AccessID) const;
 
-  /// @brief get the `name` associated with the `accessID` of any access type
-  std::string getNameFromAccessID(int accessID) const;
+  //  /// @brief get the `name` associated with the `accessID` of any access type
+  //  std::string getNameFromAccessID(int accessID) const;
 
-  /// @brief Get the `name` associated with the literal `AccessID`
-  const std::string& getNameFromLiteralAccessID(int AccessID) const;
+  //  /// @brief Get the `name` associated with the literal `AccessID`
+  //  const std::string& getNameFromLiteralAccessID(int AccessID) const;
 
-  /// @brief Check whether the `AccessID` corresponds to a field
-  inline bool isField(int AccessID) const { return metadata_.FieldAccessIDSet_.count(AccessID); }
+  //  /// @brief Check whether the `AccessID` corresponds to a field
+  //  inline bool isField(int AccessID) const { return metadata_.FieldAccessIDSet_.count(AccessID);
+  //  }
 
   /// @brief check whether the `accessID` is accessed in more than one stencil
   bool isIDAccessedMultipleStencils(int accessID) const;
 
-  /// @brief Check whether the `AccessID` corresponds to a temporary field
-  inline bool isTemporaryField(int AccessID) const {
-    return isField(AccessID) && metadata_.TemporaryFieldAccessIDSet_.count(AccessID);
-  }
+  //  /// @brief Check whether the `AccessID` corresponds to a temporary field
+  //  inline bool isTemporaryField(int AccessID) const {
+  //    return isField(AccessID) && metadata_.TemporaryFieldAccessIDSet_.count(AccessID);
+  //  }
 
   /// @brief Check whether the `AccessID` corresponds to a manually allocated field
   inline bool isAllocatedField(int AccessID) const {
-    return isField(AccessID) && IIR_->getAllocatedFieldAccessIDSet().count(AccessID);
+    return metadata_.isField(AccessID) && metadata_.hasAllocateField(AccessID);
   }
 
-  /// @brief Get the set of fields which need to be allocated
-  inline const std::set<int>& getAllocatedFieldAccessIDs() const {
-    return IIR_->getAllocatedFieldAccessIDSet();
-  }
-
-  /// @brief Check if the stencil instantiation needs to allocate fields
-  inline bool hasAllocatedFields() const { return !IIR_->getAllocatedFieldAccessIDSet().empty(); }
-
-  /// @brief Check whether the `AccessID` corresponds to an accesses of a global variable
-  inline bool isGlobalVariable(int AccessID) const {
-    return metadata_.GlobalVariableAccessIDSet_.count(AccessID);
-  }
-  bool isGlobalVariable(const std::string& name) const;
+  //  /// @brief Check whether the `AccessID` corresponds to an accesses of a global variable
+  //  inline bool isGlobalVariable(int AccessID) const {
+  //    return metadata_.GlobalVariableAccessIDSet_.count(AccessID);
+  //  }
+  //  bool isGlobalVariable(const std::string& name) const;
 
   /// @brief Get the value of the global variable `name`
   const sir::Value& getGlobalVariableValue(const std::string& name) const;
 
-  /// @brief Check whether the `AccessID` corresponds to a variable
-  inline bool isVariable(int AccessID) const { return !isField(AccessID) && !isLiteral(AccessID); }
+  //  /// @brief Check whether the `AccessID` corresponds to a variable
+  //  inline bool isVariable(int AccessID) const {
+  //    return !metadata_.isField(AccessID) && !isLiteral(AccessID);
+  //  }
 
-  /// @brief Check whether the `AccessID` corresponds to a literal constant
-  inline bool isLiteral(int AccessID) const {
-    return AccessID < 0 && metadata_.LiteralAccessIDToNameMap_.count(AccessID);
-  }
+  //  /// @brief Check whether the `AccessID` corresponds to a literal constant
+  //  inline bool isLiteral(int AccessID) const {
+  //    return AccessID < 0 && metadata_.LiteralAccessIDToNameMap_.count(AccessID);
+  //  }
 
-  inline bool isAccessIDAVersion(const int accessID) {
-    return metadata_.variableVersions_.isAccessIDAVersion(accessID);
-  }
+  //  inline bool isAccessIDAVersion(const int accessID) {
+  //    return metadata_.variableVersions_.isAccessIDAVersion(accessID);
+  //  }
 
-  inline int getOriginalVersionOfAccessID(const int accessID) const {
-    return metadata_.variableVersions_.getOriginalVersionOfAccessID(accessID);
-  }
+  //  inline int getOriginalVersionOfAccessID(const int accessID) const {
+  //    return metadata_.variableVersions_.getOriginalVersionOfAccessID(accessID);
+  //  }
 
-  /// @brief Check whether the `AccessID` corresponds to a multi-versioned field
-  inline bool isMultiVersionedField(int AccessID) const {
-    return isField(AccessID) && metadata_.variableVersions_.hasVariableMultipleVersions(AccessID);
-  }
+  //  /// @brief Check whether the `AccessID` corresponds to a multi-versioned field
+  //  inline bool isMultiVersionedField(int AccessID) const {
+  //    return metadata_.isField(AccessID) &&
+  //           metadata_.variableVersions_.hasVariableMultipleVersions(AccessID);
+  //  }
 
-  /// @brief Check whether the `AccessID` corresponds to a multi-versioned variable
-  inline bool isMultiVersionedVariable(int AccessID) const {
-    return isVariable(AccessID) &&
-           metadata_.variableVersions_.hasVariableMultipleVersions(AccessID);
-  }
+  //  /// @brief Check whether the `AccessID` corresponds to a multi-versioned variable
+  //  inline bool isMultiVersionedVariable(int AccessID) const {
+  //    return isVariable(AccessID) &&
+  //           metadata_.variableVersions_.hasVariableMultipleVersions(AccessID);
+  //  }
 
   /// @brief Get a list of all field AccessIDs of this multi-versioned field
   ArrayRef<int> getFieldVersions(int AccessID) const;
@@ -346,10 +342,10 @@ public:
     return SIR_->StencilFunctions;
   }
 
-  /// @brief this checks if the user specialized the field to a dimensionality. If not all
-  /// dimensions are allow for off-center acesses and hence, {1,1,1} is returned. If we got a
-  /// specialization, it is returned
-  Array3i getFieldDimensionsMask(int fieldID) const;
+  //  /// @brief this checks if the user specialized the field to a dimensionality. If not all
+  //  /// dimensions are allow for off-center acesses and hence, {1,1,1} is returned. If we got a
+  //  /// specialization, it is returned
+  //  Array3i getFieldDimensionsMask(int fieldID) const;
 
   /// @brief Report the accesses to the console (according to `-freport-accesses`)
   void reportAccesses() const;

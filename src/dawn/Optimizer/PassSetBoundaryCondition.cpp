@@ -148,7 +148,7 @@ bool PassSetBoundaryCondition::run(
     // name:optimizer_var       ID:7
     //
     if(checkIfFieldWasOriginallyDefined(ID)) {
-      if(stencilInstantiation->isField(ID)) {
+      if(metadata.isField(ID)) {
         return metadata.getAccessIDFromName(stencilInstantiation->getOriginalNameFromAccessID(ID));
       } else {
         return (int)FieldType::FT_NotOriginal;

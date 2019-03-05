@@ -196,9 +196,9 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
     StencilWrapperConstructor.addInit(initCtr);
   }
 
-  if(stencilInstantiation->hasAllocatedFields()) {
+  if(metadata.hasAllocatedFields()) {
     std::vector<std::string> tempFields;
-    for(auto accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
+    for(auto accessID : metadata.getAllocatedFieldAccessIDSet()) {
       tempFields.push_back(metadata.getFieldNameFromAccessID(accessID));
     }
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
@@ -234,10 +234,10 @@ void CXXNaiveCodeGen::generateStencilWrapperMembers(
   // Members
   //
   // Define allocated memebers if necessary
-  if(stencilInstantiation->hasAllocatedFields()) {
+  if(metadata.hasAllocatedFields()) {
     stencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
 
-    for(int AccessID : stencilInstantiation->getAllocatedFieldAccessIDs())
+    for(int AccessID : metadata.getAllocatedFieldAccessIDSet())
       stencilWrapperClass.addMember(c_gtc() + "storage_t",
                                     "m_" + metadata.getFieldNameFromAccessID(AccessID));
   }

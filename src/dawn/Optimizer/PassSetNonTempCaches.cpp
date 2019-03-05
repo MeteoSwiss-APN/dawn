@@ -91,7 +91,7 @@ private:
           continue;
 
         // This is caching non-temporary fields
-        if(instantiation_->isTemporaryField(field.getAccessID()))
+        if(metadata_.isTemporaryField(field.getAccessID()))
           continue;
 
         int cachedReadAndWrites = dataLocality.find(field.getAccessID())->second.totalAccesses();

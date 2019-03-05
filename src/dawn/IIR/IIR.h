@@ -34,7 +34,6 @@ class IIR : public IIRNode<void, IIR, Stencil> {
     std::unordered_map<int, std::string> StageIDToNameMap_;
     /// Set containing the AccessIDs of fields which are manually allocated by the stencil and serve
     /// as temporaries spanning over multiple stencils
-    std::set<int> AllocatedFieldAccessIDSet_;
   };
 
   DerivedInfo derivedInfo_;
@@ -79,10 +78,6 @@ public:
   //  getBoundaryConditionToExtents() {
   //    return derivedInfo_.BoundaryConditionToExtentsMap_;
   //  }
-
-  inline std::set<int>& getAllocatedFieldAccessIDSet() {
-    return derivedInfo_.AllocatedFieldAccessIDSet_;
-  }
 };
 } // namespace iir
 } // namespace dawn

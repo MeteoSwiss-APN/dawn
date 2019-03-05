@@ -510,6 +510,7 @@ SkipIDs PassTemporaryToStencilFunction::computeSkipAccessIDs(
     const std::unique_ptr<iir::Stencil>& stencilPtr,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const {
 
+  const auto& metadata = stencilInstantiation->getMetaData();
   SkipIDs skipIDs;
   // Iterate multi-stages backwards in order to identify local variables that need to be promoted
   // to temporaries
@@ -529,7 +530,7 @@ SkipIDs PassTemporaryToStencilFunction::computeSkipAccessIDs(
       const auto& field = fieldPair.second;
 
       // we dont consider non temporary fields
-      if(!stencilInstantiation->isTemporaryField(field.getAccessID())) {
+      if(!metadata.isTemporaryField(field.getAccessID())) {
         skipIDs.appendAccessIDsToMS(multiStage->getID(), field.getAccessID());
         continue;
       }
@@ -597,7 +598,7 @@ bool PassTemporaryToStencilFunction::run(
 
     // perform the promotion "local var"->temporary
     for(auto varID : localVarAccessIDs) {
-      if(stencilInstantiation->isGlobalVariable(varID))
+      if(metadata.isGlobalVariable(varID))
         continue;
 
       stencilInstantiation->promoteLocalVariableToTemporaryField(

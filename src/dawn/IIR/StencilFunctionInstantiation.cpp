@@ -319,8 +319,7 @@ const std::string& StencilFunctionInstantiation::getNameFromLiteralAccessID(int 
 std::string StencilFunctionInstantiation::getNameFromAccessID(int accessID) const {
   if(isLiteral(accessID)) {
     return getNameFromLiteralAccessID(accessID);
-  } else if(getStencilInstantiation()->isField(accessID) ||
-            isProvidedByStencilFunctionCall(accessID)) {
+  } else if(metadata_.isField(accessID) || isProvidedByStencilFunctionCall(accessID)) {
     return getOriginalNameFromCallerAccessID(accessID);
   } else {
     return getFieldNameFromAccessID(accessID);
@@ -453,7 +452,7 @@ void StencilFunctionInstantiation::update() {
       int AccessID = accessPair.first;
 
       // Does this AccessID correspond to a field access?
-      if(!isProvidedByStencilFunctionCall(AccessID) && !stencilInstantiation_->isField(AccessID))
+      if(!isProvidedByStencilFunctionCall(AccessID) && !metadata_.isField(AccessID))
         continue;
 
       AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
@@ -464,7 +463,7 @@ void StencilFunctionInstantiation::update() {
       int AccessID = accessPair.first;
 
       // Does this AccessID correspond to a field access?
-      if(!isProvidedByStencilFunctionCall(AccessID) && !stencilInstantiation_->isField(AccessID))
+      if(!isProvidedByStencilFunctionCall(AccessID) && !metadata_.isField(AccessID))
         continue;
 
       AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
@@ -526,7 +525,7 @@ void StencilFunctionInstantiation::update() {
         // first => AccessID, second => Extent
         for(auto& accessPair : access->getWriteAccesses()) {
           if(!isProvidedByStencilFunctionCall(accessPair.first) &&
-             !stencilInstantiation_->isField(accessPair.first))
+             !metadata_.isField(accessPair.first))
             continue;
 
           AccessIDToFieldMap[accessPair.first]->mergeWriteExtents(accessPair.second);
@@ -534,7 +533,7 @@ void StencilFunctionInstantiation::update() {
 
         for(const auto& accessPair : access->getReadAccesses()) {
           if(!isProvidedByStencilFunctionCall(accessPair.first) &&
-             !stencilInstantiation_->isField(accessPair.first))
+             !metadata_.isField(accessPair.first))
             continue;
 
           AccessIDToFieldMap[accessPair.first]->mergeReadExtents(accessPair.second);

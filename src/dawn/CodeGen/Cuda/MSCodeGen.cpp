@@ -38,7 +38,7 @@ MSCodeGen::MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStag
   const bool containsTemporary =
       (find_if(fields.begin(), fields.end(), [&](const std::pair<int, iir::Field>& field) {
          const int accessID = field.second.getAccessID();
-         if(!stencilInstantiation_->isTemporaryField(accessID))
+         if(!metadata_.isTemporaryField(accessID))
            return false;
          // we dont need to initialize tmp indices for fields that are cached
          if(!cacheProperties_.accessIsCached(accessID))
@@ -701,7 +701,7 @@ void MSCodeGen::generateCudaKernelCode() {
       makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
                             std::pair<int, iir::Field> const& p) {
                   const int accessID = p.first;
-                  if(!stencilInstantiation_->isTemporaryField(p.second.getAccessID()))
+                  if(!metadata_.isTemporaryField(p.second.getAccessID()))
                     return false;
                   if(!cacheProperties_.accessIsCached(accessID))
                     return true;

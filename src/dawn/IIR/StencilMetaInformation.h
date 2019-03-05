@@ -87,25 +87,41 @@ public:
   }
 
   /// @brief Check whether the `AccessID` corresponds to a field
-  inline bool isField(int AccessID) const { return FieldAccessIDSet_.count(AccessID); }
+  bool isField(int AccessID) const { return FieldAccessIDSet_.count(AccessID); }
 
   /// @brief check whether the `accessID` is accessed in more than one stencil
   bool isIDAccessedMultipleStencils(int accessID) const;
 
   /// @brief Check whether the `AccessID` corresponds to a temporary field
-  inline bool isTemporaryField(int AccessID) const {
+  bool isTemporaryField(int AccessID) const {
     return isField(AccessID) && TemporaryFieldAccessIDSet_.count(AccessID);
   }
 
   /// @brief Check whether the `AccessID` corresponds to an accesses of a global variable
-  inline bool isGlobalVariable(int AccessID) const {
-    return GlobalVariableAccessIDSet_.count(AccessID);
-  }
+  bool isGlobalVariable(int AccessID) const { return GlobalVariableAccessIDSet_.count(AccessID); }
   // TODO who is using this ? Do we need the NameToAccessID because of this?
   bool isGlobalVariable(const std::string& name) const;
 
   /// @brief Check whether the `AccessID` corresponds to a variable
   bool isVariable(int AccessID) const { return !isField(AccessID) && !isLiteral(AccessID); }
+
+  bool isAccessIDAVersion(const int accessID) {
+    return variableVersions_.isAccessIDAVersion(accessID);
+  }
+
+  /// @brief Check whether the `AccessID` corresponds to a multi-versioned field
+  bool isMultiVersionedField(int AccessID) const {
+    return isField(AccessID) && variableVersions_.hasVariableMultipleVersions(AccessID);
+  }
+
+  /// @brief Check whether the `AccessID` corresponds to a multi-versioned variable
+  bool isMultiVersionedVariable(int AccessID) const {
+    return isVariable(AccessID) && variableVersions_.hasVariableMultipleVersions(AccessID);
+  }
+
+  int getOriginalVersionOfAccessID(const int accessID) const {
+    return variableVersions_.getOriginalVersionOfAccessID(accessID);
+  }
 
   /// @brief Get the AccessID-to-Name map
   const std::unordered_map<std::string, int>& getNameToAccessIDMap() const;
@@ -115,6 +131,11 @@ public:
 
   /// @brief get the `name` associated with the `accessID` of any access type
   std::string getNameFromAccessID(int accessID) const;
+
+  /// @brief this checks if the user specialized the field to a dimensionality. If not all
+  /// dimensions are allow for off-center acesses and hence, {1,1,1} is returned. If we got a
+  /// specialization, it is returned
+  Array3i getFieldDimensionsMask(int fieldID) const;
 
   const std::vector<int>& getAPIFieldIDs() const { return apiFieldIDs_; }
 
@@ -176,11 +197,15 @@ public:
     return stencilFunctionInstantiations_;
   }
 
-  /// @brief th
-  /// is checks if the user specialized the field to a dimensionality. If not all
-  /// dimensions are allow for off-center acesses and hence, {1,1,1} is returned. If we got a
-  /// specialization, it is returned
-  Array3i getFieldDimensionsMask(int FieldID) const;
+  const std::set<int>& getAllocatedFieldAccessIDSet() const { return AllocatedFieldAccessIDSet_; }
+  bool hasAllocateField(const int accessID) const {
+    return AllocatedFieldAccessIDSet_.count(accessID);
+  }
+  /// @brief Check if the stencil instantiation needs to allocate fields
+  bool hasAllocatedFields() const { return !AllocatedFieldAccessIDSet_.empty(); }
+
+  void insertAllocatedField(const int accessID);
+  void eraseAllocatedField(const int accessID);
 
   // TODO rename all these to insert
   /// @brief Set the `AccessID` of the Expr (VarAccess or FieldAccess)
@@ -250,6 +275,7 @@ public:
   /// mind that each access to a literal creates a new AccessID!
   std::unordered_map<int, std::string> LiteralAccessIDToNameMap_;
 
+  // TODO have a field metadata that agglomerate all this
   /// This is a set of AccessIDs which correspond to fields. This allows to fully identify if a
   /// AccessID is a field, variable or literal as literals have always strictly negative IDs and
   /// variables are neither field nor literals.
@@ -295,6 +321,8 @@ public:
 
   /// Can be filled from the StencilIDToStencilCallMap that is in Metainformation
   DoubleSidedMap<int, std::shared_ptr<StencilCallDeclStmt>> StencilIDToStencilCallMap_;
+
+  std::set<int> AllocatedFieldAccessIDSet_;
 
   /// BoundaryConditionCall to Extent Map. Filled my `PassSetBoundaryCondition`
   std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>

@@ -111,6 +111,13 @@ const std::string& StencilMetaInformation::getFieldNameFromAccessID(int accessID
   return AccessIDToNameMap_.directAt(accessID);
 }
 
+void StencilMetaInformation::insertAllocatedField(const int accessID) {
+  AllocatedFieldAccessIDSet_.insert(accessID);
+}
+void StencilMetaInformation::eraseAllocatedField(const int accessID) {
+  AllocatedFieldAccessIDSet_.erase(accessID);
+}
+
 bool StencilMetaInformation::isGlobalVariable(const std::string& name) const {
   auto it = getNameToAccessIDMap().find(name);
   return it == getNameToAccessIDMap().end() ? false : isGlobalVariable(it->second);

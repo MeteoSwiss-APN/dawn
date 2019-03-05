@@ -78,9 +78,11 @@ struct Temporary {
   iir::Stencil::Lifetime lifetime_; ///< Lifetime of the temporary
   iir::Extents extent_;             ///< Accumulated access of the temporary during its lifetime
 
+  // TODO remove the dump and should tne lifetime go into the Field as derived info?
   /// @brief Dump the temporary
   void dump(const std::shared_ptr<iir::StencilInstantiation>& instantiation) const {
-    std::cout << "Temporary : " << instantiation->getNameFromAccessID(accessID_) << " {"
+    std::cout << "Temporary : " << instantiation->getMetaData().getNameFromAccessID(accessID_)
+              << " {"
               << "\n  Type="
               << (type_ == iir::TemporaryScope::TT_LocalVariable ? "LocalVariable" : "Field")
               << ",\n  Lifetime=" << lifetime_ << ",\n  Extent=" << extent_ << "\n}\n";
@@ -93,6 +95,7 @@ PassTemporaryType::PassTemporaryType() : Pass("PassTemporaryType", true) {}
 
 bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
   OptimizerContext* context = instantiation->getOptimizerContext();
+  const auto& metadata = instantiation->getMetaData();
 
   report_.clear();
   std::unordered_map<int, Temporary> temporaries;
@@ -114,9 +117,9 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
           const iir::Extents& extent = AccessIDExtentPair.second;
 
           // Is it a temporary?
-          bool isTemporaryField = instantiation->isTemporaryField(AccessID);
+          bool isTemporaryField = metadata.isTemporaryField(AccessID);
           if(isTemporaryField ||
-             (!instantiation->isGlobalVariable(AccessID) && instantiation->isVariable(AccessID))) {
+             (!metadata.isGlobalVariable(AccessID) && metadata.isVariable(AccessID))) {
 
             auto it = temporaries.find(AccessID);
             if(it != temporaries.end()) {
@@ -202,6 +205,7 @@ void PassTemporaryType::fixTemporariesSpanningMultipleStencils(
   if(stencils.size() <= 1)
     return;
 
+  const auto& metadata = instantiation->getMetaData();
   bool updated = false;
   for(int i = 0; i < stencils.size(); ++i) {
     for(const auto& field : stencils[i]->getFields()) {
@@ -209,7 +213,7 @@ void PassTemporaryType::fixTemporariesSpanningMultipleStencils(
       // Is fieldi a temporary?
       // TODO could it happen that the access is not a temporary (but a local var) and even if it is
       // used in multiple stencils there is no need to promote it ?
-      if(instantiation->isTemporaryField(accessID) &&
+      if(metadata.isTemporaryField(accessID) &&
          instantiation->isIDAccessedMultipleStencils(accessID)) {
         updated = true;
         instantiation->promoteTemporaryFieldToAllocatedField(accessID);
