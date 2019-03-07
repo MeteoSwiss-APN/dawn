@@ -49,6 +49,8 @@ yoda_add_library(
           Field.cpp
           FieldAccessExtents.cpp
           FieldAccessExtents.h
+	  FieldAccessMetadata.cpp
+	  FieldAccessMetadata.h
           Interval.cpp
           Interval.h
           IntervalAlgorithms.cpp

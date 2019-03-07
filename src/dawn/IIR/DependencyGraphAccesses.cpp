@@ -496,7 +496,7 @@ void DependencyGraphAccesses::toJSON(const std::string& file) const {
     int AccessID = getIDFromVertexID(VertexID);
     if(metaData_.isTemporaryField(AccessID))
       jvertex["type"] = "field_temporary";
-    else if(metaData_.isField(AccessID))
+    else if(metaData_.isAccessType(FieldAccessType::FAT_MemoryField, AccessID))
       jvertex["type"] = "field";
     else if(metaData_.isVariable(AccessID) || metaData_.isGlobalVariable(AccessID))
       jvertex["type"] = "variable";

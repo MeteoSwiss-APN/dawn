@@ -307,7 +307,7 @@ public:
           auto voidExpr = std::make_shared<LiteralAccessExpr>("0", BuiltinTypeID::Float);
           auto voidStmt = std::make_shared<ExprStmt>(voidExpr);
           int AccessID = -instantiation_->nextUID();
-          metadata_.LiteralAccessIDToNameMap_.emplace(AccessID, "0");
+          metadata_.getLiteralAccessIDToNameMap().emplace(AccessID, "0");
           metadata_.mapExprToAccessID(voidExpr, AccessID);
           replaceOldStmtWithNewStmtInStmt(
               scope_.top()->controlFlowDescriptor_.getStatements().back()->ASTStmt, stmt, voidStmt);
@@ -571,7 +571,7 @@ public:
             scope_.top()->controlFlowDescriptor_.getStatements().back()->ASTStmt, expr, newExpr);
 
         int AccessID = instantiation_->nextUID();
-        metadata_.LiteralAccessIDToNameMap_.emplace(AccessID, newExpr->getValue());
+        metadata_.getLiteralAccessIDToNameMap().emplace(AccessID, newExpr->getValue());
         metadata_.mapExprToAccessID(newExpr, AccessID);
 
       } else {
@@ -599,7 +599,7 @@ public:
   void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override {
     // Register a literal access (Note: the negative AccessID we assign!)
     int AccessID = -instantiation_->nextUID();
-    metadata_.LiteralAccessIDToNameMap_.emplace(AccessID, expr->getValue());
+    metadata_.getLiteralAccessIDToNameMap().emplace(AccessID, expr->getValue());
     metadata_.mapExprToAccessID(expr, AccessID);
   }
 
@@ -638,7 +638,7 @@ bool OptimizerContext::fillIIRFromSIR(
   for(const auto& field : SIRStencil->Fields) {
     int AccessID = stencilInstantation->nextUID();
     if(!field->IsTemporary) {
-      metadata.apiFieldIDs_.push_back(AccessID);
+      metadata.getAPIFieldIDs().push_back(AccessID);
     }
     metadata.setAccessIDNamePairOfField(AccessID, field->Name, field->IsTemporary);
     metadata.fieldIDToInitializedDimensionsMap_.emplace(AccessID, field->fieldDimensions);

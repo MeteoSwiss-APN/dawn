@@ -128,11 +128,15 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
 bool compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformation& rhs) {
   IIR_EARLY_EXIT((lhs.ExprIDToAccessIDMap_ == rhs.ExprIDToAccessIDMap_));
   IIR_EARLY_EXIT((lhs.StmtIDToAccessIDMap_ == rhs.StmtIDToAccessIDMap_));
-  IIR_EARLY_EXIT((lhs.LiteralAccessIDToNameMap_ == rhs.LiteralAccessIDToNameMap_));
-  IIR_EARLY_EXIT((lhs.FieldAccessIDSet_ == rhs.FieldAccessIDSet_));
-  IIR_EARLY_EXIT((lhs.apiFieldIDs_ == rhs.apiFieldIDs_));
-  IIR_EARLY_EXIT((lhs.TemporaryFieldAccessIDSet_ == rhs.TemporaryFieldAccessIDSet_));
-  IIR_EARLY_EXIT((lhs.GlobalVariableAccessIDSet_ == rhs.GlobalVariableAccessIDSet_));
+  IIR_EARLY_EXIT((lhs.fieldAccessMetadata_.LiteralAccessIDToNameMap_ ==
+                  rhs.fieldAccessMetadata_.LiteralAccessIDToNameMap_));
+  IIR_EARLY_EXIT(
+      (lhs.fieldAccessMetadata_.FieldAccessIDSet_ == rhs.fieldAccessMetadata_.FieldAccessIDSet_));
+  IIR_EARLY_EXIT((lhs.fieldAccessMetadata_.apiFieldIDs_ == rhs.fieldAccessMetadata_.apiFieldIDs_));
+  IIR_EARLY_EXIT((lhs.fieldAccessMetadata_.TemporaryFieldAccessIDSet_ ==
+                  rhs.fieldAccessMetadata_.TemporaryFieldAccessIDSet_));
+  IIR_EARLY_EXIT((lhs.fieldAccessMetadata_.GlobalVariableAccessIDSet_ ==
+                  rhs.fieldAccessMetadata_.GlobalVariableAccessIDSet_));
 
   // we compare the content of the maps since the shared-ptr's are not the same
   IIR_EARLY_EXIT(
@@ -189,7 +193,7 @@ protected:
 TEST_F(IIRSerializerTest, EmptySetup) {
   auto desered = serializeAndDeserializeRef();
   IIR_EXPECT_EQ(desered, referenceInstantiaton);
-  desered->getMetaData().apiFieldIDs_.push_back(10);
+  desered->getMetaData().fieldAccessMetadata_.apiFieldIDs_.push_back(10);
   IIR_EXPECT_NE(desered, referenceInstantiaton);
 }
 TEST_F(IIRSerializerTest, SimpleDataStructures) {
@@ -205,34 +209,35 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
   referenceInstantiaton->getMetaData().StmtIDToAccessIDMap_.emplace(5, 10);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  referenceInstantiaton->getMetaData().LiteralAccessIDToNameMap_.emplace(5, "test");
+  referenceInstantiaton->getMetaData().fieldAccessMetadata_.LiteralAccessIDToNameMap_.emplace(
+      5, "test");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  referenceInstantiaton->getMetaData().FieldAccessIDSet_.emplace(712);
+  referenceInstantiaton->getMetaData().fieldAccessMetadata_.FieldAccessIDSet_.emplace(712);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  referenceInstantiaton->getMetaData().apiFieldIDs_.push_back(10);
-  referenceInstantiaton->getMetaData().apiFieldIDs_.push_back(12);
+  referenceInstantiaton->getMetaData().fieldAccessMetadata_.apiFieldIDs_.push_back(10);
+  referenceInstantiaton->getMetaData().fieldAccessMetadata_.apiFieldIDs_.push_back(12);
   auto deserializedStencilInstantiaion = serializeAndDeserializeRef();
   IIR_EXPECT_EQ(deserializedStencilInstantiaion, referenceInstantiaton);
 
   // check that ordering is preserved
-  referenceInstantiaton->getMetaData().apiFieldIDs_.clear();
-  referenceInstantiaton->getMetaData().apiFieldIDs_.push_back(12);
-  referenceInstantiaton->getMetaData().apiFieldIDs_.push_back(10);
+  referenceInstantiaton->getMetaData().fieldAccessMetadata_.apiFieldIDs_.clear();
+  referenceInstantiaton->getMetaData().fieldAccessMetadata_.apiFieldIDs_.push_back(12);
+  referenceInstantiaton->getMetaData().fieldAccessMetadata_.apiFieldIDs_.push_back(10);
   IIR_EXPECT_NE(deserializedStencilInstantiaion, referenceInstantiaton);
 
-  referenceInstantiaton->getMetaData().TemporaryFieldAccessIDSet_.emplace(712);
+  referenceInstantiaton->getMetaData().fieldAccessMetadata_.TemporaryFieldAccessIDSet_.emplace(712);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  referenceInstantiaton->getMetaData().GlobalVariableAccessIDSet_.emplace(712);
+  referenceInstantiaton->getMetaData().fieldAccessMetadata_.GlobalVariableAccessIDSet_.emplace(712);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   auto refvec = std::make_shared<std::vector<int>>();
   refvec->push_back(6);
   refvec->push_back(7);
   refvec->push_back(8);
-  referenceInstantiaton->getMetaData().variableVersions_.insert(5, refvec);
+  referenceInstantiaton->getMetaData().fieldAccessMetadata_.variableVersions_.insert(5, refvec);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   referenceInstantiaton->getMetaData().fileName_ = "fileName";

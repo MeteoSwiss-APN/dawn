@@ -332,9 +332,9 @@ void CudaCodeGen::generateStencilWrapperCtr(
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
         continue;
-      initCtr += "," + (stencilInstantiation->isAllocatedField(fieldInfo.field.getAccessID())
-                            ? ("m_" + fieldInfo.Name)
-                            : (fieldInfo.Name));
+      initCtr +=
+          "," + (metadata.isAllocatedField(fieldInfo.field.getAccessID()) ? ("m_" + fieldInfo.Name)
+                                                                          : (fieldInfo.Name));
     }
     initCtr += ") )";
     StencilWrapperConstructor.addInit(initCtr);

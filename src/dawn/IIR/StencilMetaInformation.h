@@ -16,6 +16,7 @@
 #define DAWN_IIR_METAINFORMATION_H
 
 #include "dawn/IIR/Extents.h"
+#include "dawn/IIR/FieldAccessMetadata.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/DoubleSidedMap.h"
 #include "dawn/Support/NonCopyable.h"
@@ -35,44 +36,6 @@ class StencilFunctionInstantiation;
 /// @brief Specific instantiation of a stencil
 /// @ingroup optimizer
 class StencilMetaInformation : public NonCopyable {
-  class VariableVersions {
-  public:
-    /// Map of AccessIDs to the the list of all AccessIDs of the multi-versioned variables. Note
-    /// that the index in the vector corresponds to the version number.
-    std::unordered_map<int, std::shared_ptr<std::vector<int>>> variableVersionsMap_;
-    std::unordered_map<int, int> versionToOriginalVersionMap_;
-    std::unordered_set<int> versionIDs_;
-
-    bool hasVariableMultipleVersions(const int accessID) const {
-      return variableVersionsMap_.count(accessID);
-    }
-
-    std::shared_ptr<std::vector<int>> getVersions(const int accessID) {
-      return variableVersionsMap_.at(accessID);
-    }
-    const std::shared_ptr<std::vector<int>> getVersions(const int accessID) const {
-      return variableVersionsMap_.at(accessID);
-    }
-
-    void insert(const int accessID, std::shared_ptr<std::vector<int>> versionsID) {
-      variableVersionsMap_.emplace(accessID, versionsID);
-      for(auto it : *versionsID) {
-        versionIDs_.emplace(it);
-        versionToOriginalVersionMap_[it] = accessID;
-      }
-    }
-
-    bool isAccessIDAVersion(const int accessID) { return versionIDs_.count(accessID); }
-
-    int getOriginalVersionOfAccessID(const int accessID) const {
-      return versionToOriginalVersionMap_.at(accessID);
-    }
-    const std::unordered_set<int>& getVersionIDs() const { return versionIDs_; }
-
-    VariableVersions() = default;
-
-    json::json jsonDump() const;
-  };
 
 public:
   /// @brief get the `name` associated with the `accessID` of any access type
@@ -81,46 +44,52 @@ public:
   /// @brief Get the `name` associated with the literal `AccessID`
   const std::string& getNameFromLiteralAccessID(int AccessID) const;
 
+  bool isAccessType(FieldAccessType fType, const int accessID) const;
+
   /// @brief Check whether the `AccessID` corresponds to a literal constant
   inline bool isLiteral(int AccessID) const {
-    return AccessID < 0 && LiteralAccessIDToNameMap_.count(AccessID);
+    return AccessID < 0 && fieldAccessMetadata_.LiteralAccessIDToNameMap_.count(AccessID);
   }
-
-  /// @brief Check whether the `AccessID` corresponds to a field
-  bool isField(int AccessID) const { return FieldAccessIDSet_.count(AccessID); }
 
   /// @brief check whether the `accessID` is accessed in more than one stencil
   bool isIDAccessedMultipleStencils(int accessID) const;
 
-  /// @brief Check whether the `AccessID` corresponds to a temporary field
-  bool isTemporaryField(int AccessID) const {
-    return isField(AccessID) && TemporaryFieldAccessIDSet_.count(AccessID);
-  }
+  //  /// @brief Check whether the `AccessID` corresponds to a temporary field
+  //  bool isTemporaryField(int AccessID) const {
+  //    return isAccessType(FieldAccessType::FAT_MemoryField, AccessID) &&
+  //           fieldAccessMetadata_.TemporaryFieldAccessIDSet_.count(AccessID);
+  //  }
 
   /// @brief Check whether the `AccessID` corresponds to an accesses of a global variable
-  bool isGlobalVariable(int AccessID) const { return GlobalVariableAccessIDSet_.count(AccessID); }
+  bool isGlobalVariable(int AccessID) const {
+    return fieldAccessMetadata_.GlobalVariableAccessIDSet_.count(AccessID);
+  }
   // TODO who is using this ? Do we need the NameToAccessID because of this?
   bool isGlobalVariable(const std::string& name) const;
 
   /// @brief Check whether the `AccessID` corresponds to a variable
-  bool isVariable(int AccessID) const { return !isField(AccessID) && !isLiteral(AccessID); }
+  bool isVariable(int AccessID) const {
+    return !isAccessType(FieldAccessType::FAT_MemoryField, AccessID) && !isLiteral(AccessID);
+  }
 
   bool isAccessIDAVersion(const int accessID) {
-    return variableVersions_.isAccessIDAVersion(accessID);
+    return fieldAccessMetadata_.variableVersions_.isAccessIDAVersion(accessID);
   }
 
   /// @brief Check whether the `AccessID` corresponds to a multi-versioned field
   bool isMultiVersionedField(int AccessID) const {
-    return isField(AccessID) && variableVersions_.hasVariableMultipleVersions(AccessID);
+    return isAccessType(FieldAccessType::FAT_MemoryField, AccessID) &&
+           fieldAccessMetadata_.variableVersions_.hasVariableMultipleVersions(AccessID);
   }
 
   /// @brief Check whether the `AccessID` corresponds to a multi-versioned variable
   bool isMultiVersionedVariable(int AccessID) const {
-    return isVariable(AccessID) && variableVersions_.hasVariableMultipleVersions(AccessID);
+    return isVariable(AccessID) &&
+           fieldAccessMetadata_.variableVersions_.hasVariableMultipleVersions(AccessID);
   }
 
   int getOriginalVersionOfAccessID(const int accessID) const {
-    return variableVersions_.getOriginalVersionOfAccessID(accessID);
+    return fieldAccessMetadata_.variableVersions_.getOriginalVersionOfAccessID(accessID);
   }
 
   /// @brief Get the AccessID-to-Name map
@@ -137,7 +106,8 @@ public:
   /// specialization, it is returned
   Array3i getFieldDimensionsMask(int fieldID) const;
 
-  const std::vector<int>& getAPIFieldIDs() const { return apiFieldIDs_; }
+  const std::vector<int>& getAPIFieldIDs() const { return fieldAccessMetadata_.apiFieldIDs_; }
+  std::vector<int>& getAPIFieldIDs() { return fieldAccessMetadata_.apiFieldIDs_; }
 
   /// @brief Get the `AccessID` associated with the `name`
   ///
@@ -156,6 +126,10 @@ public:
 
   /// @brief Get the Literal-AccessID-to-Name map
   const std::unordered_map<int, std::string>& getLiteralAccessIDToNameMap() const;
+
+  std::unordered_map<int, std::string>& getLiteralAccessIDToNameMap() {
+    return fieldAccessMetadata_.LiteralAccessIDToNameMap_;
+  }
 
   /// @brief Get StencilID of the StencilCallDeclStmt
   const std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
@@ -197,17 +171,32 @@ public:
     return stencilFunctionInstantiations_;
   }
 
-  const std::set<int>& getAllocatedFieldAccessIDSet() const { return AllocatedFieldAccessIDSet_; }
-  bool hasAllocateField(const int accessID) const {
-    return AllocatedFieldAccessIDSet_.count(accessID);
+  const std::set<int>& getAllocatedFieldAccessIDSet() const {
+    return fieldAccessMetadata_.AllocatedFieldAccessIDSet_;
   }
-  /// @brief Check if the stencil instantiation needs to allocate fields
-  bool hasAllocatedFields() const { return !AllocatedFieldAccessIDSet_.empty(); }
+  bool isFieldScope(FieldAccessScope fieldScope, const int accessID) const {
+    if(!isAccessType(FieldAccessType::FAT_MemoryField, accessID))
+      return false;
+    if(fieldScope == FieldAccessScope::FAS_InterStencilTemporary) {
+      return fieldAccessMetadata_.AllocatedFieldAccessIDSet_.count(accessID);
+    } else if(fieldScope == FieldAccessScope::FAS_StencilTemporary) {
+      return fieldAccessMetadata_.TemporaryFieldAccessIDSet_.count(accessID);
+    }
+  }
 
-  /// @brief Check whether the `AccessID` corresponds to a manually allocated field
-  bool isAllocatedField(int AccessID) const {
-    return isField(AccessID) && hasAllocateField(AccessID);
+  //  bool hasAllocateField(const int accessID) const {
+  //    return fieldAccessMetadata_.AllocatedFieldAccessIDSet_.count(accessID);
+  //  }
+  /// @brief Check if the stencil instantiation needs to allocate fields
+  bool hasAllocatedFields() const {
+    return !fieldAccessMetadata_.AllocatedFieldAccessIDSet_.empty();
   }
+
+  //  /// @brief Check whether the `AccessID` corresponds to a manually allocated field
+  //  bool isAllocatedField(int AccessID) const {
+  //    return isAccessType(FieldAccessType::FAT_MemoryField, AccessID) &&
+  //    hasAllocateField(AccessID);
+  //  }
 
   void insertAllocatedField(const int accessID);
   void eraseAllocatedField(const int accessID);
@@ -262,7 +251,11 @@ public:
   //================================================================================================
   // Stored MetaInformation
   //================================================================================================
-  /// Map of AccessIDs and to the name of the variable/field. Note that only for fields of the "main
+
+  FieldAccessMetadata fieldAccessMetadata_;
+
+  /// Map of AccessIDs and to the name of the variable/field. Note that only for fields of the
+  /// "main
   /// stencil" we can get the AccessID by name. This is due the fact that fields of different
   /// stencil functions can share the same name.
   DoubleSidedMap<int, std::string> AccessIDToNameMap_;
@@ -273,33 +266,6 @@ public:
   /// field for example
   std::unordered_map<int, int> ExprIDToAccessIDMap_;
   std::unordered_map<int, int> StmtIDToAccessIDMap_;
-
-  /// Injection of AccessIDs of literal constant to their respective name (usually the name is just
-  /// the string representation of the value). Note that literals always have *strictly* negative
-  /// AccessIDs, which makes them distinguishable from field or variable AccessIDs. Further keep in
-  /// mind that each access to a literal creates a new AccessID!
-  std::unordered_map<int, std::string> LiteralAccessIDToNameMap_;
-
-  // TODO have a field metadata that agglomerate all this
-  /// This is a set of AccessIDs which correspond to fields. This allows to fully identify if a
-  /// AccessID is a field, variable or literal as literals have always strictly negative IDs and
-  /// variables are neither field nor literals.
-  std::set<int> FieldAccessIDSet_;
-
-  /// This is an ordered list of IDs of fields that belong to the user API call of the program
-  std::vector<int> apiFieldIDs_;
-
-  /// Set containing the AccessIDs of fields which are represented by a temporary storages
-  std::set<int> TemporaryFieldAccessIDSet_;
-
-  /// Set containing the AccessIDs of "global variable" accesses. Global variable accesses are
-  /// represented by global_accessor or if we know the value at compile time we do a constant
-  /// folding of the variable
-  std::set<int> GlobalVariableAccessIDSet_;
-
-  /// Map of AccessIDs to the list of all AccessIDs of the multi-versioned field, for fields and
-  /// variables
-  VariableVersions variableVersions_;
 
   /// Referenced stencil functions in this stencil (note that nested stencil functions are not
   /// stored here but rather in the respecticve `StencilFunctionInstantiation`)
@@ -326,8 +292,6 @@ public:
 
   /// Can be filled from the StencilIDToStencilCallMap that is in Metainformation
   DoubleSidedMap<int, std::shared_ptr<StencilCallDeclStmt>> StencilIDToStencilCallMap_;
-
-  std::set<int> AllocatedFieldAccessIDSet_;
 
   /// BoundaryConditionCall to Extent Map. Filled my `PassSetBoundaryCondition`
   std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>

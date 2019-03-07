@@ -266,7 +266,7 @@ void GTCodeGen::generateStencilWrapperRun(
     stencilIDToRunArguments[stencil->getStencilID()] =
         "m_dom," +
         RangeToString(", ", "", "")(nonTempFields, [&](const iir::Stencil::FieldInfo& fieldInfo) {
-          if(stencilInstantiation->isAllocatedField(fieldInfo.field.getAccessID()))
+          if(stencilInstantiation->getMetaData().isAllocatedField(fieldInfo.field.getAccessID()))
             return "m_" + fieldInfo.Name;
           else
             return fieldInfo.Name;
@@ -342,7 +342,7 @@ void GTCodeGen::generateStencilWrapperCtr(
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil->getStencilID()) +
         RangeToString(", ", initctr.c_str(),
                       ")")(nonTempFields, [&](const iir::Stencil::FieldInfo& fieldInfo) {
-          if(stencilInstantiation->isAllocatedField(fieldInfo.field.getAccessID()))
+          if(metadata.isAllocatedField(fieldInfo.field.getAccessID()))
             return "m_" + fieldInfo.Name;
           else
             return fieldInfo.Name;

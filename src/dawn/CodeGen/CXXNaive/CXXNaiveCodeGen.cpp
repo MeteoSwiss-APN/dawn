@@ -142,7 +142,7 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
   const auto& globalsMap = metadata.globalVariableMap_;
 
   // Generate stencil wrapper constructor
-  auto APIFields = stencilInstantiation->getMetaData().apiFieldIDs_;
+  auto APIFields = stencilInstantiation->getMetaData().getAPIFieldIDs();
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
@@ -173,10 +173,9 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
         continue;
-      initCtr += (i != 0 ? "," : "<") +
-                 (stencilInstantiation->isAllocatedField(fieldInfo.field.getAccessID())
-                      ? (c_gtc().str() + "storage_t")
-                      : (codeGenProperties.getParamType(fieldInfo.Name)));
+      initCtr += (i != 0 ? "," : "<") + (metadata.isAllocatedField(fieldInfo.field.getAccessID())
+                                             ? (c_gtc().str() + "storage_t")
+                                             : (codeGenProperties.getParamType(fieldInfo.Name)));
       i++;
     }
 
@@ -188,9 +187,9 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
         continue;
-      initCtr += "," + (stencilInstantiation->isAllocatedField(fieldInfo.field.getAccessID())
-                            ? ("m_" + fieldInfo.Name)
-                            : (fieldInfo.Name));
+      initCtr +=
+          "," + (metadata.isAllocatedField(fieldInfo.field.getAccessID()) ? ("m_" + fieldInfo.Name)
+                                                                          : (fieldInfo.Name));
     }
     initCtr += ") )";
     StencilWrapperConstructor.addInit(initCtr);
