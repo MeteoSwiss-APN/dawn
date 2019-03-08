@@ -40,7 +40,8 @@ void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<FieldAccessExpr>&
 }
 
 void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<VarAccessExpr>& expr) {
-  if(metadata_.isGlobalVariable(metadata_.getAccessIDFromExpr(expr)))
+  if(metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable,
+                            metadata_.getAccessIDFromExpr(expr)))
     ss_ << "m_globals.";
 
   ss_ << getName(expr);

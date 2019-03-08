@@ -297,8 +297,8 @@ std::string StencilFunctionInstantiation::getFieldNameFromAccessID(int AccessID)
   // TODO have a check for what is a literal range
   if(AccessID < 0)
     return getNameFromLiteralAccessID(AccessID);
-  else if(metadata_.isAccessType(FieldAccessType::FAT_MemoryField, AccessID) ||
-          metadata_.isGlobalVariable(AccessID))
+  else if(metadata_.isAccessType(FieldAccessType::FAT_Field, AccessID) ||
+          metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, AccessID))
     return metadata_.getFieldNameFromAccessID(AccessID);
   else {
     DAWN_ASSERT(AccessIDToNameMap_.count(AccessID));
@@ -320,7 +320,7 @@ const std::string& StencilFunctionInstantiation::getNameFromLiteralAccessID(int 
 std::string StencilFunctionInstantiation::getNameFromAccessID(int accessID) const {
   if(isLiteral(accessID)) {
     return getNameFromLiteralAccessID(accessID);
-  } else if(metadata_.isAccessType(FieldAccessType::FAT_MemoryField, accessID) ||
+  } else if(metadata_.isAccessType(FieldAccessType::FAT_Field, accessID) ||
             isProvidedByStencilFunctionCall(accessID)) {
     return getOriginalNameFromCallerAccessID(accessID);
   } else {
@@ -455,7 +455,7 @@ void StencilFunctionInstantiation::update() {
 
       // Does this AccessID correspond to a field access?
       if(!isProvidedByStencilFunctionCall(AccessID) &&
-         !metadata_.isAccessType(FieldAccessType::FAT_MemoryField, AccessID))
+         !metadata_.isAccessType(FieldAccessType::FAT_Field, AccessID))
         continue;
 
       AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
@@ -467,7 +467,7 @@ void StencilFunctionInstantiation::update() {
 
       // Does this AccessID correspond to a field access?
       if(!isProvidedByStencilFunctionCall(AccessID) &&
-         !metadata_.isAccessType(FieldAccessType::FAT_MemoryField, AccessID))
+         !metadata_.isAccessType(FieldAccessType::FAT_Field, AccessID))
         continue;
 
       AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
@@ -529,7 +529,7 @@ void StencilFunctionInstantiation::update() {
         // first => AccessID, second => Extent
         for(auto& accessPair : access->getWriteAccesses()) {
           if(!isProvidedByStencilFunctionCall(accessPair.first) &&
-             !metadata_.isAccessType(FieldAccessType::FAT_MemoryField, accessPair.first))
+             !metadata_.isAccessType(FieldAccessType::FAT_Field, accessPair.first))
             continue;
 
           AccessIDToFieldMap[accessPair.first]->mergeWriteExtents(accessPair.second);
@@ -537,7 +537,7 @@ void StencilFunctionInstantiation::update() {
 
         for(const auto& accessPair : access->getReadAccesses()) {
           if(!isProvidedByStencilFunctionCall(accessPair.first) &&
-             !metadata_.isAccessType(FieldAccessType::FAT_MemoryField, accessPair.first))
+             !metadata_.isAccessType(FieldAccessType::FAT_Field, accessPair.first))
             continue;
 
           AccessIDToFieldMap[accessPair.first]->mergeReadExtents(accessPair.second);

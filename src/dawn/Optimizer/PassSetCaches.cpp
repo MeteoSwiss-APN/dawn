@@ -187,7 +187,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
           }
 
           // Currently we only cache temporaries!
-          if(!metadata.isTemporaryField(accessID)) {
+          if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID)) {
             continue;
           }
 
@@ -237,20 +237,25 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
           if(field.getWriteExtents().is_initialized() && !field.getWriteExtents()->isPointwise())
             continue;
 
-          if(!metadata.isTemporaryField(field.getAccessID()) &&
+          if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
+                                    field.getAccessID()) &&
              (field.getIntend() == iir::Field::IK_Output ||
               (field.getIntend() == iir::Field::IK_Input && field.getExtents().isPointwise())))
             continue;
 
           // Determine if we need to fill the cache by analyzing the current multi-stage
-          CacheCandidate cacheCandidate =
-              computeCacheCandidateForMS(field, metadata.isTemporaryField(field.getAccessID()), ms);
+          CacheCandidate cacheCandidate = computeCacheCandidateForMS(
+              field, metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
+                                           field.getAccessID()),
+              ms);
 
           DAWN_ASSERT((cacheCandidate.policy_ != iir::Cache::fill &&
                        cacheCandidate.policy_ != iir::Cache::bpfill) ||
-                      !metadata.isTemporaryField(field.getAccessID() || mssProcessedField));
+                      !metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
+                                             field.getAccessID() || mssProcessedField));
 
-          if(!metadata.isTemporaryField(field.getAccessID()) &&
+          if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
+                                    field.getAccessID()) &&
              field.getIntend() != iir::Field::IK_Input) {
 
             cacheCandidate = combinePolicy(cacheCandidate, field.getIntend(),
@@ -270,7 +275,9 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
               const iir::Field& fieldInNextMS = nextMSfields.find(field.getAccessID())->second;
 
               CacheCandidate policyMS2 = computeCacheCandidateForMS(
-                  fieldInNextMS, metadata.isTemporaryField(fieldInNextMS.getAccessID()), nextMS);
+                  fieldInNextMS, metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
+                                                       fieldInNextMS.getAccessID()),
+                  nextMS);
               // if the interval of the two cache candidate do not overlap, there is no data
               // dependency, therefore we skip it
               if(!cacheCandidate.interval_.overlaps(policyMS2.interval_))

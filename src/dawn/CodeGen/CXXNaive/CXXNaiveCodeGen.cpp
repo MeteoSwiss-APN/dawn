@@ -142,7 +142,8 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
   const auto& globalsMap = metadata.globalVariableMap_;
 
   // Generate stencil wrapper constructor
-  auto APIFields = stencilInstantiation->getMetaData().getAPIFieldIDs();
+  const auto& APIFields =
+      stencilInstantiation->getMetaData().getAccessesOfType<iir::FieldAccessType::FAT_APIField>();
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
@@ -173,9 +174,11 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
         continue;
-      initCtr += (i != 0 ? "," : "<") + (metadata.isAllocatedField(fieldInfo.field.getAccessID())
-                                             ? (c_gtc().str() + "storage_t")
-                                             : (codeGenProperties.getParamType(fieldInfo.Name)));
+      initCtr += (i != 0 ? "," : "<") +
+                 (metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
+                                        fieldInfo.field.getAccessID())
+                      ? (c_gtc().str() + "storage_t")
+                      : (codeGenProperties.getParamType(fieldInfo.Name)));
       i++;
     }
 
@@ -187,9 +190,10 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
         continue;
-      initCtr +=
-          "," + (metadata.isAllocatedField(fieldInfo.field.getAccessID()) ? ("m_" + fieldInfo.Name)
-                                                                          : (fieldInfo.Name));
+      initCtr += "," + (metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
+                                              fieldInfo.field.getAccessID())
+                            ? ("m_" + fieldInfo.Name)
+                            : (fieldInfo.Name));
     }
     initCtr += ") )";
     StencilWrapperConstructor.addInit(initCtr);

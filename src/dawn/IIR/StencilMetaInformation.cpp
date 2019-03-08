@@ -71,7 +71,7 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
 }
 
 const std::string& StencilMetaInformation::getNameFromLiteralAccessID(int AccessID) const {
-  DAWN_ASSERT_MSG(isLiteral(AccessID), "Invalid literal");
+  DAWN_ASSERT_MSG(isAccessType(iir::FieldAccessType::FAT_Literal, AccessID), "Invalid literal");
   return fieldAccessMetadata_.LiteralAccessIDToNameMap_.find(AccessID)->second;
 }
 
@@ -88,10 +88,12 @@ void StencilMetaInformation::eraseAllocatedField(const int accessID) {
   fieldAccessMetadata_.AllocatedFieldAccessIDSet_.erase(accessID);
 }
 
-bool StencilMetaInformation::isGlobalVariable(const std::string& name) const {
-  auto it = getNameToAccessIDMap().find(name);
-  return it == getNameToAccessIDMap().end() ? false : isGlobalVariable(it->second);
-}
+// bool StencilMetaInformation::isGlobalVariable(const std::string& name) const {
+//  auto it = getNameToAccessIDMap().find(name);
+//  return it == getNameToAccessIDMap().end()
+//             ? false
+//             : isAccessType(iir::FieldAccessType::FAT_GlobalVariable, it->second);
+//}
 
 const std::unordered_map<std::string, int>& StencilMetaInformation::getNameToAccessIDMap() const {
   return AccessIDToNameMap_.getReverseMap();
@@ -107,16 +109,44 @@ int StencilMetaInformation::getAccessIDFromName(const std::string& name) const {
   return AccessIDToNameMap_.reverseAt(name);
 }
 
+bool StencilMetaInformation::isAccessType(FieldAccessType fType, const std::string& name) const {
+  if(fType == FieldAccessType::FAT_Literal) {
+    throw std::runtime_error("Literal can not be queried by name");
+  }
+  if(!hasNameToAccessID(name))
+    return false;
+
+  return isAccessType(fType, getAccessIDFromName(name));
+}
 bool StencilMetaInformation::isAccessType(FieldAccessType fType, const int accessID) const {
   if(fType == FieldAccessType::FAT_Literal) {
     return accessID < 0 && fieldAccessMetadata_.LiteralAccessIDToNameMap_.count(accessID);
-  } else if(fType == FieldAccessType::FAT_MemoryField) {
+  } else if(fType == FieldAccessType::FAT_Field) {
     return fieldAccessMetadata_.FieldAccessIDSet_.count(accessID);
   } else if(fType == FieldAccessType::FAT_GlobalVariable) {
     return fieldAccessMetadata_.GlobalVariableAccessIDSet_.count(accessID);
+  } else if(fType == FieldAccessType::FAT_InterStencilTemporary) {
+    // make sure that a temporary field is also stored as a field
+    DAWN_ASSERT(!fieldAccessMetadata_.AllocatedFieldAccessIDSet_.count(accessID) ||
+                isAccessType(FieldAccessType::FAT_Field, accessID));
+    return fieldAccessMetadata_.AllocatedFieldAccessIDSet_.count(accessID);
+  } else if(fType == FieldAccessType::FAT_StencilTemporary) {
+    // make sure that a temporary field is also stored as a field
+    DAWN_ASSERT(!fieldAccessMetadata_.TemporaryFieldAccessIDSet_.count(accessID) ||
+                isAccessType(FieldAccessType::FAT_Field, accessID));
+    return fieldAccessMetadata_.TemporaryFieldAccessIDSet_.count(accessID);
+  } else if(fType == FieldAccessType::FAT_LocalVariable) {
+    return !isAccessType(FieldAccessType::FAT_Field, accessID) &&
+           !isAccessType(FieldAccessType::FAT_Literal,
+                         accessID); // TODO arent we missing +isGlobalVariable
+  } else if(fType == FieldAccessType::FAT_APIField) {
+    // TODO is this convention right andthe same as it is stored in apifield?
+    return isAccessType(FieldAccessType::FAT_Field, accessID) &&
+           !isAccessType(FieldAccessType::FAT_StencilTemporary, accessID) &&
+           !isAccessType(FieldAccessType::FAT_InterStencilTemporary, accessID);
   }
-  DAWN_ASSERT(false);
-  return false;
+
+  dawn_unreachable("unknown field access type");
 }
 
 Array3i StencilMetaInformation::getFieldDimensionsMask(int FieldID) const {
@@ -140,7 +170,7 @@ void StencilMetaInformation::mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt
 }
 
 std::string StencilMetaInformation::getNameFromAccessID(int accessID) const {
-  if(isLiteral(accessID)) {
+  if(isAccessType(iir::FieldAccessType::FAT_Literal, accessID)) {
     return getNameFromLiteralAccessID(accessID);
   } else {
     return getFieldNameFromAccessID(accessID);

@@ -18,9 +18,6 @@ namespace dawn {
 namespace iir {
 
 json::json VariableVersions::jsonDump() const {
-  std::unordered_map<int, std::shared_ptr<std::vector<int>>> variableVersionsMap_;
-  std::unordered_map<int, int> versionToOriginalVersionMap_;
-  std::unordered_set<int> versionIDs_;
   json::json node;
 
   json::json versionMap;

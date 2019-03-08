@@ -15,6 +15,7 @@
 #ifndef DAWN_IIR_FIELDACCESSMETADATA_H
 #define DAWN_IIR_FIELDACCESSMETADATA_H
 
+#include "boost/variant.hpp"
 #include "dawn/Support/Json.h"
 #include <set>
 #include <unordered_map>
@@ -65,22 +66,104 @@ public:
 enum class FieldAccessType {
   FAT_GlobalVariable, // a global variable (i.e. not field with grid dimensiontality)
   FAT_Literal,        // a literal that is not stored in memory
-  FAT_MemoryField // a access to data tha resides in memory with a field dimensionality (i.e. not
-                  // scalar value)
+  FAT_LocalVariable,
+  FAT_StencilTemporary,
+  FAT_InterStencilTemporary,
+  FAT_Field,
+  FAT_APIField
 };
 
-enum class FieldAccessScope {
-  FAS_LocalVariable,
-  FAS_StencilTemporary,
-  FAS_InterStencilTemporary,
-  FAS_Field
+namespace impl {
+// Needed for some older versions of GCC
+template <typename...>
+struct voider {
+  using type = void;
+};
+
+// std::void_t will be part of C++17, but until then define it ourselves:
+template <typename... T>
+using void_t = typename voider<T...>::type;
+
+template <typename T, typename U = void>
+struct is_mapp_impl : std::false_type {};
+
+template <typename T>
+struct is_mapp_impl<
+    T, void_t<typename T::key_type, typename T::mapped_type,
+              decltype(std::declval<T&>()[std::declval<const typename T::key_type&>()])>>
+    : std::true_type {
+  void t() { T::kk(); }
+};
+}
+
+template <FieldAccessType TFieldAccessType>
+struct TypeOfAccessContainer;
+
+template <>
+struct TypeOfAccessContainer<FieldAccessType::FAT_GlobalVariable> {
+  using type = std::set<int>;
+};
+template <>
+struct TypeOfAccessContainer<FieldAccessType::FAT_Literal> {
+  using type = std::unordered_map<int, std::string>;
+};
+template <>
+struct TypeOfAccessContainer<FieldAccessType::FAT_LocalVariable> {
+  using type = void;
+};
+template <>
+struct TypeOfAccessContainer<FieldAccessType::FAT_StencilTemporary> {
+  using type = std::set<int>;
+};
+template <>
+struct TypeOfAccessContainer<FieldAccessType::FAT_InterStencilTemporary> {
+  using type = std::set<int>;
+};
+template <>
+struct TypeOfAccessContainer<FieldAccessType::FAT_Field> {
+  using type = std::set<int>;
+};
+template <>
+struct TypeOfAccessContainer<FieldAccessType::FAT_APIField> {
+  using type = std::vector<int>;
+};
+
+template <typename T>
+struct key_of {
+  using type = typename T::key_type;
+};
+template <typename T>
+struct value_of {
+  using type = typename T::value_type;
+};
+
+template <FieldAccessType TFieldAccessType>
+struct AccessesContainerKeyValue {
+  using key_t = typename std::conditional<
+      impl::is_mapp_impl<typename TypeOfAccessContainer<TFieldAccessType>::type>::value,
+      key_of<typename TypeOfAccessContainer<TFieldAccessType>::type>,
+      value_of<typename TypeOfAccessContainer<TFieldAccessType>::type>>::type;
+  using value_t = typename TypeOfAccessContainer<TFieldAccessType>::type::value_type;
 };
 
 struct FieldAccessMetadata {
 
-  /// Injection of AccessIDs of literal constant to their respective name (usually the name is just
-  /// the string representation of the value). Note that literals always have *strictly* negative
-  /// AccessIDs, which makes them distinguishable from field or variable AccessIDs. Further keep in
+  using allContainerTypes =
+      boost::variant<std::unordered_map<int, std::string>&, std::set<int>&, std::vector<int>&>;
+
+  using allConstContainerTypes = boost::variant<const std::unordered_map<int, std::string>&,
+                                                const std::set<int>&, const std::vector<int>&>;
+  // Rules:
+  // - FieldAccessIDSet_ includes : apiFieldIDs_, TemporaryFieldAccessIDSet_,
+  // AllocatedFieldAccessIDSet_
+  // - GlobalVariableAccessIDSet_, LiteralAccessIDToNameMap_, FieldAccessIDSet_ are exclusive
+
+  /// Injection of AccessIDs of literal constant to their respective name (usually the name is
+  /// just
+  /// the string representation of the value). Note that literals always have *strictly*
+  /// negative
+  /// AccessIDs, which makes them distinguishable from field or variable AccessIDs. Further keep
+  /// in
   /// mind that each access to a literal creates a new AccessID!
   std::unordered_map<int, std::string> LiteralAccessIDToNameMap_;
 

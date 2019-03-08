@@ -576,7 +576,7 @@ public:
 
       } else {
         int AccessID = 0;
-        if(!metadata_.isGlobalVariable(varname)) {
+        if(!metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, varname)) {
           AccessID = instantiation_->nextUID();
           metadata_.setAccessIDNamePairOfGlobalVariable(AccessID, varname);
         } else {
@@ -638,7 +638,8 @@ bool OptimizerContext::fillIIRFromSIR(
   for(const auto& field : SIRStencil->Fields) {
     int AccessID = stencilInstantation->nextUID();
     if(!field->IsTemporary) {
-      metadata.getAPIFieldIDs().push_back(AccessID);
+      metadata.insertAccessOfType<iir::FieldAccessType::FAT_APIField>(AccessID);
+      //      metadata.getAPIFieldIDs().push_back(AccessID);
     }
     metadata.setAccessIDNamePairOfField(AccessID, field->Name, field->IsTemporary);
     metadata.fieldIDToInitializedDimensionsMap_.emplace(AccessID, field->fieldDimensions);

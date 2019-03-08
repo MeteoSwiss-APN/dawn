@@ -100,7 +100,7 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
                                                  RenameDirection dir) {
   int newAccessID = nextUID();
 
-  if(metadata_.isAccessType(FieldAccessType::FAT_MemoryField, AccessID)) {
+  if(metadata_.isAccessType(FieldAccessType::FAT_Field, AccessID)) {
     if(metadata_.fieldAccessMetadata_.variableVersions_.hasVariableMultipleVersions(AccessID)) {
       // Field is already multi-versioned, append a new version
       auto versions = metadata_.fieldAccessMetadata_.variableVersions_.getVersions(AccessID);
@@ -282,7 +282,7 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
 }
 
 void StencilInstantiation::promoteTemporaryFieldToAllocatedField(int AccessID) {
-  DAWN_ASSERT(metadata_.isTemporaryField(AccessID));
+  DAWN_ASSERT(metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, AccessID));
   metadata_.fieldAccessMetadata_.TemporaryFieldAccessIDSet_.erase(AccessID);
   metadata_.insertAllocatedField(AccessID);
 }

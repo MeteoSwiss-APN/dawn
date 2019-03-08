@@ -91,7 +91,7 @@ private:
           continue;
 
         // This is caching non-temporary fields
-        if(metadata_.isTemporaryField(field.getAccessID()))
+        if(metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, field.getAccessID()))
           continue;
 
         int cachedReadAndWrites = dataLocality.find(field.getAccessID())->second.totalAccesses();

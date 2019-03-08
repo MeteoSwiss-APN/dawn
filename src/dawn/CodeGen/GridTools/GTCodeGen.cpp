@@ -266,7 +266,8 @@ void GTCodeGen::generateStencilWrapperRun(
     stencilIDToRunArguments[stencil->getStencilID()] =
         "m_dom," +
         RangeToString(", ", "", "")(nonTempFields, [&](const iir::Stencil::FieldInfo& fieldInfo) {
-          if(stencilInstantiation->getMetaData().isAllocatedField(fieldInfo.field.getAccessID()))
+          if(stencilInstantiation->getMetaData().isAccessType(
+                 iir::FieldAccessType::FAT_InterStencilTemporary, fieldInfo.field.getAccessID()))
             return "m_" + fieldInfo.Name;
           else
             return fieldInfo.Name;
@@ -304,7 +305,8 @@ void GTCodeGen::generateStencilWrapperCtr(
 
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
 
-  for(const auto& fieldID : stencilInstantiation->getMetaData().getAPIFieldIDs()) {
+  for(const auto& fieldID :
+      stencilInstantiation->getMetaData().getAccessesOfType<iir::FieldAccessType::FAT_APIField>()) {
     std::string name = metadata.getFieldNameFromAccessID(fieldID);
     StencilWrapperConstructor.addArg(codeGenProperties.getParamType(name) + " " + name);
   }
@@ -342,7 +344,8 @@ void GTCodeGen::generateStencilWrapperCtr(
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil->getStencilID()) +
         RangeToString(", ", initctr.c_str(),
                       ")")(nonTempFields, [&](const iir::Stencil::FieldInfo& fieldInfo) {
-          if(metadata.isAllocatedField(fieldInfo.field.getAccessID()))
+          if(metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
+                                   fieldInfo.field.getAccessID()))
             return "m_" + fieldInfo.Name;
           else
             return fieldInfo.Name;

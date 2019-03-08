@@ -22,7 +22,7 @@
 #include "dawn/Support/NonCopyable.h"
 #include "dawn/Support/StringRef.h"
 #include "dawn/Support/UIDGenerator.h"
-#include "dawn/Support/UIDGenerator.h"
+#include "dawn/Support/Unreachable.h"
 #include <memory>
 #include <set>
 #include <string>
@@ -45,32 +45,10 @@ public:
   const std::string& getNameFromLiteralAccessID(int AccessID) const;
 
   bool isAccessType(FieldAccessType fType, const int accessID) const;
-
-  /// @brief Check whether the `AccessID` corresponds to a literal constant
-  inline bool isLiteral(int AccessID) const {
-    return AccessID < 0 && fieldAccessMetadata_.LiteralAccessIDToNameMap_.count(AccessID);
-  }
+  bool isAccessType(FieldAccessType fType, const std::string& name) const;
 
   /// @brief check whether the `accessID` is accessed in more than one stencil
   bool isIDAccessedMultipleStencils(int accessID) const;
-
-  //  /// @brief Check whether the `AccessID` corresponds to a temporary field
-  //  bool isTemporaryField(int AccessID) const {
-  //    return isAccessType(FieldAccessType::FAT_MemoryField, AccessID) &&
-  //           fieldAccessMetadata_.TemporaryFieldAccessIDSet_.count(AccessID);
-  //  }
-
-  /// @brief Check whether the `AccessID` corresponds to an accesses of a global variable
-  bool isGlobalVariable(int AccessID) const {
-    return fieldAccessMetadata_.GlobalVariableAccessIDSet_.count(AccessID);
-  }
-  // TODO who is using this ? Do we need the NameToAccessID because of this?
-  bool isGlobalVariable(const std::string& name) const;
-
-  /// @brief Check whether the `AccessID` corresponds to a variable
-  bool isVariable(int AccessID) const {
-    return !isAccessType(FieldAccessType::FAT_MemoryField, AccessID) && !isLiteral(AccessID);
-  }
 
   bool isAccessIDAVersion(const int accessID) {
     return fieldAccessMetadata_.variableVersions_.isAccessIDAVersion(accessID);
@@ -78,13 +56,7 @@ public:
 
   /// @brief Check whether the `AccessID` corresponds to a multi-versioned field
   bool isMultiVersionedField(int AccessID) const {
-    return isAccessType(FieldAccessType::FAT_MemoryField, AccessID) &&
-           fieldAccessMetadata_.variableVersions_.hasVariableMultipleVersions(AccessID);
-  }
-
-  /// @brief Check whether the `AccessID` corresponds to a multi-versioned variable
-  bool isMultiVersionedVariable(int AccessID) const {
-    return isVariable(AccessID) &&
+    return isAccessType(FieldAccessType::FAT_Field, AccessID) &&
            fieldAccessMetadata_.variableVersions_.hasVariableMultipleVersions(AccessID);
   }
 
@@ -106,8 +78,36 @@ public:
   /// specialization, it is returned
   Array3i getFieldDimensionsMask(int fieldID) const;
 
-  const std::vector<int>& getAPIFieldIDs() const { return fieldAccessMetadata_.apiFieldIDs_; }
-  std::vector<int>& getAPIFieldIDs() { return fieldAccessMetadata_.apiFieldIDs_; }
+  template <FieldAccessType TFieldAccessType>
+  typename TypeOfAccessContainer<TFieldAccessType>::type getAccessesOfType() const {
+    return boost::get<const typename TypeOfAccessContainer<TFieldAccessType>::type>(
+        getAccessesOfTypeImpl(TFieldAccessType));
+  }
+
+  template <FieldAccessType TFieldAccessType>
+  void insertAccessOfType(
+      typename AccessesContainerKeyValue<TFieldAccessType>::key_t key,
+      typename AccessesContainerKeyValue<TFieldAccessType>::value_t value,
+      typename std::enable_if<impl::is_mapp_impl<
+          typename TypeOfAccessContainer<TFieldAccessType>::type>::value>::type* = 0) {
+
+    if(TFieldAccessType == FieldAccessType::FAT_Literal) {
+      fieldAccessMetadata_.LiteralAccessIDToNameMap_.emplace(key, value);
+    } else {
+      dawn_unreachable("non supported field access type");
+    }
+  }
+
+  template <FieldAccessType TFieldAccessType>
+  void insertAccessOfType(
+      typename AccessesContainerKeyValue<TFieldAccessType>::value_t value,
+      typename std::enable_if<!impl::is_mapp_impl<
+          typename TypeOfAccessContainer<TFieldAccessType>::type>::value>::type* = 0) {
+
+    if(TFieldAccessType == FieldAccessType::FAT_APIField) {
+      fieldAccessMetadata_.apiFieldIDs_.push_back(value);
+    }
+  }
 
   /// @brief Get the `AccessID` associated with the `name`
   ///
@@ -174,29 +174,11 @@ public:
   const std::set<int>& getAllocatedFieldAccessIDSet() const {
     return fieldAccessMetadata_.AllocatedFieldAccessIDSet_;
   }
-  bool isFieldScope(FieldAccessScope fieldScope, const int accessID) const {
-    if(!isAccessType(FieldAccessType::FAT_MemoryField, accessID))
-      return false;
-    if(fieldScope == FieldAccessScope::FAS_InterStencilTemporary) {
-      return fieldAccessMetadata_.AllocatedFieldAccessIDSet_.count(accessID);
-    } else if(fieldScope == FieldAccessScope::FAS_StencilTemporary) {
-      return fieldAccessMetadata_.TemporaryFieldAccessIDSet_.count(accessID);
-    }
-  }
 
-  //  bool hasAllocateField(const int accessID) const {
-  //    return fieldAccessMetadata_.AllocatedFieldAccessIDSet_.count(accessID);
-  //  }
   /// @brief Check if the stencil instantiation needs to allocate fields
   bool hasAllocatedFields() const {
     return !fieldAccessMetadata_.AllocatedFieldAccessIDSet_.empty();
   }
-
-  //  /// @brief Check whether the `AccessID` corresponds to a manually allocated field
-  //  bool isAllocatedField(int AccessID) const {
-  //    return isAccessType(FieldAccessType::FAT_MemoryField, AccessID) &&
-  //    hasAllocateField(AccessID);
-  //  }
 
   void insertAllocatedField(const int accessID);
   void eraseAllocatedField(const int accessID);
@@ -308,6 +290,53 @@ public:
   json::json jsonDump() const;
 
   void clone(const StencilMetaInformation& origin);
+
+private:
+  FieldAccessMetadata::allConstContainerTypes
+  getAccessesOfTypeImpl(FieldAccessType fieldAccessType) const {
+    if(fieldAccessType == FieldAccessType::FAT_Literal) {
+      return FieldAccessMetadata::allConstContainerTypes(
+          fieldAccessMetadata_.LiteralAccessIDToNameMap_);
+    } else if(fieldAccessType == FieldAccessType::FAT_GlobalVariable) {
+      return FieldAccessMetadata::allConstContainerTypes(
+          fieldAccessMetadata_.GlobalVariableAccessIDSet_);
+    } else if(fieldAccessType == FieldAccessType::FAT_Field) {
+      return FieldAccessMetadata::allConstContainerTypes(fieldAccessMetadata_.FieldAccessIDSet_);
+    } else if(fieldAccessType == FieldAccessType::FAT_LocalVariable) {
+      dawn_unreachable("getter of local accesses ids not supported");
+    } else if(fieldAccessType == FieldAccessType::FAT_StencilTemporary) {
+      return FieldAccessMetadata::allConstContainerTypes(
+          fieldAccessMetadata_.TemporaryFieldAccessIDSet_);
+    } else if(fieldAccessType == FieldAccessType::FAT_InterStencilTemporary) {
+      return FieldAccessMetadata::allConstContainerTypes(
+          fieldAccessMetadata_.AllocatedFieldAccessIDSet_);
+    } else if(fieldAccessType == FieldAccessType::FAT_APIField) {
+      return FieldAccessMetadata::allConstContainerTypes(fieldAccessMetadata_.apiFieldIDs_);
+    }
+    dawn_unreachable("unknown field access type");
+  }
+
+  FieldAccessMetadata::allContainerTypes getAccessesOfTypeImpl(FieldAccessType fieldAccessType) {
+    if(fieldAccessType == FieldAccessType::FAT_Literal) {
+      return FieldAccessMetadata::allContainerTypes(fieldAccessMetadata_.LiteralAccessIDToNameMap_);
+    } else if(fieldAccessType == FieldAccessType::FAT_GlobalVariable) {
+      return FieldAccessMetadata::allContainerTypes(
+          fieldAccessMetadata_.GlobalVariableAccessIDSet_);
+    } else if(fieldAccessType == FieldAccessType::FAT_Field) {
+      return FieldAccessMetadata::allContainerTypes(fieldAccessMetadata_.FieldAccessIDSet_);
+    } else if(fieldAccessType == FieldAccessType::FAT_LocalVariable) {
+      dawn_unreachable("getter of local accesses ids not supported");
+    } else if(fieldAccessType == FieldAccessType::FAT_StencilTemporary) {
+      return FieldAccessMetadata::allContainerTypes(
+          fieldAccessMetadata_.TemporaryFieldAccessIDSet_);
+    } else if(fieldAccessType == FieldAccessType::FAT_InterStencilTemporary) {
+      return FieldAccessMetadata::allContainerTypes(
+          fieldAccessMetadata_.AllocatedFieldAccessIDSet_);
+    } else if(fieldAccessType == FieldAccessType::FAT_APIField) {
+      return FieldAccessMetadata::allContainerTypes(fieldAccessMetadata_.apiFieldIDs_);
+    }
+    dawn_unreachable("unknown field access type");
+  }
 };
 } // namespace iir
 } // namespace dawn

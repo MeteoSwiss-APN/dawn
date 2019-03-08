@@ -140,7 +140,7 @@ void DoMethod::updateLevel() {
       Extents const& extents = accessPair.second;
 
       // Does this AccessID correspond to a field access?
-      if(!metaData_.isAccessType(FieldAccessType::FAT_MemoryField, AccessID)) {
+      if(!metaData_.isAccessType(FieldAccessType::FAT_Field, AccessID)) {
         continue;
       }
       AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
@@ -152,7 +152,7 @@ void DoMethod::updateLevel() {
       Extents const& extents = accessPair.second;
 
       // Does this AccessID correspond to a field access?
-      if(!metaData_.isAccessType(FieldAccessType::FAT_MemoryField, AccessID)) {
+      if(!metaData_.isAccessType(FieldAccessType::FAT_Field, AccessID)) {
         continue;
       }
 
@@ -178,14 +178,14 @@ void DoMethod::updateLevel() {
 
     // first => AccessID, second => Extent
     for(auto& accessPair : access->getWriteAccesses()) {
-      if(!metaData_.isAccessType(FieldAccessType::FAT_MemoryField, accessPair.first))
+      if(!metaData_.isAccessType(FieldAccessType::FAT_Field, accessPair.first))
         continue;
 
       derivedInfo_.fields_.at(accessPair.first).mergeWriteExtents(accessPair.second);
     }
 
     for(const auto& accessPair : access->getReadAccesses()) {
-      if(!metaData_.isAccessType(FieldAccessType::FAT_MemoryField, accessPair.first))
+      if(!metaData_.isAccessType(FieldAccessType::FAT_Field, accessPair.first))
         continue;
 
       derivedInfo_.fields_.at(accessPair.first).mergeReadExtents(accessPair.second);

@@ -303,7 +303,7 @@ void CudaCodeGen::generateStencilWrapperCtr(
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
 
-  for(int fieldId : metadata.getAPIFieldIDs()) {
+  for(int fieldId : metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>()) {
     StencilWrapperConstructor.addArg(getStorageType(metadata.getFieldDimensionsMask(fieldId)) +
                                      "& " + metadata.getFieldNameFromAccessID(fieldId));
   }
@@ -332,9 +332,10 @@ void CudaCodeGen::generateStencilWrapperCtr(
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
         continue;
-      initCtr +=
-          "," + (metadata.isAllocatedField(fieldInfo.field.getAccessID()) ? ("m_" + fieldInfo.Name)
-                                                                          : (fieldInfo.Name));
+      initCtr += "," + (metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
+                                              fieldInfo.field.getAccessID())
+                            ? ("m_" + fieldInfo.Name)
+                            : (fieldInfo.Name));
     }
     initCtr += ") )";
     StencilWrapperConstructor.addInit(initCtr);
@@ -467,16 +468,18 @@ void CudaCodeGen::generateStencilRunMethod(
     const auto fields = orderMap(multiStage.getFields());
 
     auto nonTempFields =
-        makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>(
-                              [&](std::pair<int, iir::Field> const& p) {
-                                return !metadata.isTemporaryField(p.second.getAccessID());
-                              }));
+        makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
+                              std::pair<int, iir::Field> const& p) {
+                    return !metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
+                                                  p.second.getAccessID());
+                  }));
 
     auto tempFieldsNonLocalCached = makeRange(
         fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
                     std::pair<int, iir::Field> const& p) {
           const int accessID = p.first;
-          if(!metadata.isTemporaryField(p.second.getAccessID()))
+          if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
+                                    p.second.getAccessID()))
             return false;
           for(const auto& ms : iterateIIROver<iir::MultiStage>(stencil)) {
             if(!ms->isCached(accessID))
