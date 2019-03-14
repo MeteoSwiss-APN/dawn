@@ -907,7 +907,7 @@ void MSCodeGen::generateCudaKernelCode() {
   DAWN_ASSERT(!partitionIntervals.empty());
 
   ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation_->getMetaData(), fieldIndexMap, ms_,
-                                       cacheProperties_, blockSize_, useTmpIndex_);
+                                       cacheProperties_, blockSize_);
 
   iir::Interval::IntervalLevel lastKCell{0, 0};
   lastKCell = advance(lastKCell, ms_->getLoopOrder(), -1);

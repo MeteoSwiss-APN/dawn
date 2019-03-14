@@ -43,7 +43,6 @@ protected:
   const std::unique_ptr<iir::MultiStage>& ms_;
   const CacheProperties& cacheProperties_;
   const Array3ui blockSizes_;
-  const bool useTmpIndex_;
 
 public:
   using Base = ASTCodeGenCXX;
@@ -52,7 +51,7 @@ public:
   ASTStencilBody(const iir::StencilMetaInformation& metadata,
                  const std::unordered_map<int, Array3i>& fieldIndexMap,
                  const std::unique_ptr<iir::MultiStage>& ms, const CacheProperties& cacheProperties,
-                 Array3ui blockSizes, bool useTmpIndex);
+                 Array3ui blockSizes);
 
   virtual ~ASTStencilBody() override;
 

@@ -156,7 +156,7 @@ void CodeGeneratorHelper::generateFieldAccessDeref(
   bool isTemporary = metadata.isTemporaryField(accessID);
   DAWN_ASSERT(fieldIndexMap.count(accessID) || isTemporary);
   const auto& field = ms->getField(accessID);
-  bool useTmpIndex = (useTemporaries(ms->getParent(), metadata));
+  bool useTmpIndex = isTemporary && useTemporaries(ms->getParent(), metadata);
   std::string index = useTmpIndex ? "idx_tmp" : "idx" + CodeGeneratorHelper::indexIteratorName(
                                                             fieldIndexMap.at(accessID));
 
