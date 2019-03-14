@@ -132,14 +132,14 @@ bool CodeGeneratorHelper::hasAccessIDMemAccess(const int accessID,
 
 bool CodeGeneratorHelper::useTemporaries(
     const std::unique_ptr<iir::Stencil>& stencil,
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const iir::StencilMetaInformation& metadata) {
 
   const auto& fields = stencil->getFields();
   const bool containsMemTemporary =
       (find_if(fields.begin(), fields.end(),
                [&](const std::pair<int, iir::Stencil::FieldInfo>& field) {
                  const int accessID = field.second.field.getAccessID();
-                 if(!stencilInstantiation->isTemporaryField(accessID))
+                 if(!metadata.isTemporaryField(accessID))
                    return false;
                  // we dont need to use temporaries infrastructure for fields that are cached
                  return hasAccessIDMemAccess(accessID, stencil);
@@ -156,7 +156,7 @@ void CodeGeneratorHelper::generateFieldAccessDeref(
   bool isTemporary = metadata.isTemporaryField(accessID);
   DAWN_ASSERT(fieldIndexMap.count(accessID) || isTemporary);
   const auto& field = ms->getField(accessID);
-  bool useTmpIndex = (useTemporaries(ms->getParent(), instantiation));
+  bool useTmpIndex = (useTemporaries(ms->getParent(), metadata));
   std::string index = useTmpIndex ? "idx_tmp" : "idx" + CodeGeneratorHelper::indexIteratorName(
                                                             fieldIndexMap.at(accessID));
 

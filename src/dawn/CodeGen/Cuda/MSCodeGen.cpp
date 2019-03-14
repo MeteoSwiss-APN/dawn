@@ -36,7 +36,7 @@ MSCodeGen::MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStag
   // useTmpIndex_
   const auto& fields = ms_->getFields();
 
-  useTmpIndex_ = CodeGeneratorHelper::useTemporaries(ms->getParent(), stencilInstantiation);
+  useTmpIndex_ = CodeGeneratorHelper::useTemporaries(ms->getParent(), metadata_);
 
   cudaKernelName_ = CodeGeneratorHelper::buildCudaKernelName(stencilInstantiation_, ms_);
 }

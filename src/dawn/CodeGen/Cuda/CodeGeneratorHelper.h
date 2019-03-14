@@ -59,7 +59,7 @@ public:
 
   static bool
   useTemporaries(const std::unique_ptr<iir::Stencil>& stencil,
-                 const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
+                 const iir::StencilMetaInformation& metadata);
 
   /// @brief computes the maximum extent required by all temporaries, which will be used for proper
   /// allocation

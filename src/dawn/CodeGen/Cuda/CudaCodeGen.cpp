@@ -567,7 +567,7 @@ void CudaCodeGen::generateStencilRunMethod(
       // in some cases (where there are no horizontal extents) we dont use the special tmp index
       // iterator, but rather a normal 3d field index iterator. In that case we pass temporaries in
       // the same manner as normal fields
-      if(!CodeGeneratorHelper::useTemporaries(multiStagePtr->getParent(), stencilInstantiation)) {
+      if(!CodeGeneratorHelper::useTemporaries(multiStagePtr->getParent(), metadata)) {
         const auto fieldName = metadata.getFieldNameFromAccessID((*field).second.getAccessID());
 
         args = args + ", (" + fieldName + ".data()+" + "m_" + fieldName +
