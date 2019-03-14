@@ -726,7 +726,7 @@ void MSCodeGen::generateCudaKernelCode() {
     minBlocksPerSM /= nSM;
 
     fnDecl = fnDecl + " __launch_bounds__(" + std::to_string(maxThreadsPerBlock) + "," +
-             std::to_string(minBlocksPerSM) + ") ";
+             std::to_string(std::max(32, minBlocksPerSM)) + ") ";
   } else {
     fnDecl = fnDecl + " __launch_bounds__(" + std::to_string(maxThreadsPerBlock) + ") ";
   }
