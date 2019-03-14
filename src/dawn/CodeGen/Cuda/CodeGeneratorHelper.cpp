@@ -139,7 +139,7 @@ bool CodeGeneratorHelper::useTemporaries(
       (find_if(fields.begin(), fields.end(),
                [&](const std::pair<int, iir::Stencil::FieldInfo>& field) {
                  const int accessID = field.second.field.getAccessID();
-                 if(!metadata.isTemporaryField(accessID))
+                 if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID))
                    return false;
                  // we dont need to use temporaries infrastructure for fields that are cached
                  return hasAccessIDMemAccess(accessID, stencil);
