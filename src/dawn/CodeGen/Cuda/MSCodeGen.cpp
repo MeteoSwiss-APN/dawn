@@ -974,8 +974,8 @@ void MSCodeGen::generateCudaKernelCode() {
         cudaKernel.addComment("jump tmp iterators to match the intersection of beginning of next "
                               "interval and the parallel execution block ");
         cudaKernel.addStatement("idx_tmp += max(" + intervalDiffToString(kmin, "ksize - 1") +
-                                ", kstride_tmp * blockIdx.z * " + std::to_string(blockSize_[2]) +
-                                ")");
+                                ", blockIdx.z * " + std::to_string(blockSize_[2]) +
+                                ") * kstride_tmp");
       }
     }
 
