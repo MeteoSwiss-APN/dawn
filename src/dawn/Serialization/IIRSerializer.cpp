@@ -264,10 +264,11 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
   auto protoVariableVersions = protoMetaData->mutable_versionedfields();
   auto& protoVariableVersionMap = *protoVariableVersions->mutable_variableversionmap();
   auto variableVersions = metaData.variableVersions_;
-  for(auto& IDtoVectorOfVersionsPair : variableVersions.variableVersionsMap_) {
+  for(const auto& IDtoVectorOfVersionsPair : variableVersions.getvariableVersionsMap()) {
     proto::iir::AllVersionedFields protoFieldVersions;
     for(int id : *(IDtoVectorOfVersionsPair.second)) {
       protoFieldVersions.add_allids(id);
+      //////////////// WITTODO: Check this
     }
     protoVariableVersionMap.insert({IDtoVectorOfVersionsPair.first, protoFieldVersions});
   }
@@ -533,10 +534,11 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
   for(auto variableVersionMap : protoMetaData.versionedfields().variableversionmap()) {
     std::shared_ptr<std::vector<int>> versions = std::make_shared<std::vector<int>>();
     for(auto versionedID : variableVersionMap.second.allids()) {
-      versions->push_back(versionedID);
-      metadata.variableVersions_.versionIDs_.insert(versionedID);
-      metadata.variableVersions_.versionToOriginalVersionMap_.emplace(versionedID,
-                                                                      variableVersionMap.first);
+        /// WITTODO: check this
+//      versions->push_back(versionedID);
+//      metadata.variableVersions_.versionIDs_.insert(versionedID);
+//      metadata.variableVersions_.versionToOriginalVersionMap_.emplace(versionedID,
+//                                                                      variableVersionMap.first);
     }
     metadata.variableVersions_.insert(variableVersionMap.first, versions);
   }

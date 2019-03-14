@@ -34,41 +34,79 @@ namespace iir {
 class StencilMetaInformation : public NonCopyable {
   class VariableVersions {
   public:
-    /// Map of AccessIDs to the the list of all AccessIDs of the multi-versioned variables. Note
-    /// that the index in the vector corresponds to the version number.
-    std::unordered_map<int, std::shared_ptr<std::vector<int>>> variableVersionsMap_;
-    std::unordered_map<int, int> versionToOriginalVersionMap_;
-    std::unordered_set<int> versionIDs_;
+    VariableVersions() = default;
 
-    bool hasVariableMultipleVersions(const int accessID) const {
+    ///@brief checks if the field is versioned at least once
+    bool hasMultipleVariableVersions(const int accessID) const {
       return variableVersionsMap_.count(accessID);
     }
 
-    std::shared_ptr<std::vector<int>> getVersions(const int accessID) {
-      return variableVersionsMap_.at(accessID);
-    }
+    ///@brief returns the vector of all versioned fields of a given accessID
     const std::shared_ptr<std::vector<int>> getVersions(const int accessID) const {
       return variableVersionsMap_.at(accessID);
+    }
+
+    void insertIDPair(const int originalAccessID, const int versionedAccessID) {
+      derivedInfo_.versionIDs_.insert(versionedAccessID);
+      if(hasMultipleVariableVersions(originalAccessID)) {
+        variableVersionsMap_[originalAccessID]->push_back(versionedAccessID);
+      } else {
+        variableVersionsMap_[originalAccessID] =
+            std::make_shared<std::vector<int>>(versionedAccessID);
+      }
+      versionToOriginalVersionMap_[versionedAccessID] = originalAccessID;
+    }
+
+    void removeID(const int accessID){
+        if(derivedInfo_.versionIDs_.count(accessID) > 0){
+            int originalID = getOriginalVersionOfAccessID(accessID);
+            auto vec = variableVersionsMap_[originalID];
+            std::remove_if(vec->begin(), vec->end(), [&accessID](int id){return id == accessID;});
+
+            versionToOriginalVersionMap_.erase(accessID);
+
+            derivedInfo_.versionIDs_.erase(accessID);
+        }
     }
 
     void insert(const int accessID, std::shared_ptr<std::vector<int>> versionsID) {
       variableVersionsMap_.emplace(accessID, versionsID);
       for(auto it : *versionsID) {
-        versionIDs_.emplace(it);
+        derivedInfo_.versionIDs_.emplace(it);
         versionToOriginalVersionMap_[it] = accessID;
       }
     }
 
-    bool isAccessIDAVersion(const int accessID) { return versionIDs_.count(accessID); }
+    bool isAccessIDAVersion(const int accessID) { return derivedInfo_.versionIDs_.count(accessID); }
 
     int getOriginalVersionOfAccessID(const int accessID) const {
       return versionToOriginalVersionMap_.at(accessID);
     }
-    const std::unordered_set<int>& getVersionIDs() const { return versionIDs_; }
 
-    VariableVersions() = default;
+    const std::unordered_set<int>& getVersionIDs() const { return derivedInfo_.versionIDs_; }
+
+    const std::unordered_map<int, std::shared_ptr<std::vector<int>>>& getvariableVersionsMap() {
+      return variableVersionsMap_;
+    }
 
     json::json jsonDump() const;
+
+  private:
+    /// This map links all the versions of a field to their original field
+    std::unordered_map<int, int> versionToOriginalVersionMap_;
+
+    /// This map links the original fieldID with a list of all it's versioned fields. The index of
+    /// the field in the vector denotes the version of the field
+    std::unordered_map<int, std::shared_ptr<std::vector<int>>> variableVersionsMap_;
+
+    struct DerivedInfo {
+      /// This set contrains all the Fields that are versions of an original variable (excluding the
+      /// originals). This is derived as it is the collection of keys in
+      /// versionToOriginalVersionMap_
+      std::unordered_set<int> versionIDs_;
+    };
+
+    DerivedInfo derivedInfo_;
   };
 
 public:
