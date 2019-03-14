@@ -153,7 +153,7 @@ void CodeGeneratorHelper::generateFieldAccessDeref(
     const iir::StencilMetaInformation& metadata, const int accessID,
     const std::unordered_map<int, Array3i> fieldIndexMap, Array3i offset) {
   std::string accessName = metadata.getFieldNameFromAccessID(accessID);
-  bool isTemporary = metadata.isTemporaryField(accessID);
+  bool isTemporary = metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID);
   DAWN_ASSERT(fieldIndexMap.count(accessID) || isTemporary);
   const auto& field = ms->getField(accessID);
   bool useTmpIndex = isTemporary && useTemporaries(ms->getParent(), metadata);

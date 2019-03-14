@@ -112,7 +112,7 @@ public:
       if(skip) {
         return false;
       }
-      if(!metadata_.isTemporaryField(accessID))
+      if(!metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID))
         return false;
 
       if(field.getExtents().isHorizontalPointwise())
@@ -211,7 +211,8 @@ public:
 
   virtual bool preVisitNode(std::shared_ptr<VarAccessExpr> const& expr) override {
     DAWN_ASSERT(tmpFunction_);
-    if(!metadata_.isGlobalVariable(metadata_.getAccessIDFromExpr(expr))) {
+    if(!metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable,
+                               metadata_.getAccessIDFromExpr(expr))) {
       // record the var access as an argument to the stencil funcion
       dawn_unreachable_internal("All the var access should have been promoted to temporaries");
     }
@@ -254,7 +255,7 @@ public:
     if(isa<FieldAccessExpr>(*(expr->getLeft()))) {
       DAWN_ASSERT(tmpFieldAccessExpr_);
       const int accessID = metadata_.getAccessIDFromExpr(tmpFieldAccessExpr_);
-      if(!metadata_.isTemporaryField(accessID))
+      if(!metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID))
         return expr;
 
       DAWN_ASSERT(tmpFunction_);
@@ -510,6 +511,7 @@ SkipIDs PassTemporaryToStencilFunction::computeSkipAccessIDs(
     const std::unique_ptr<iir::Stencil>& stencilPtr,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) const {
 
+  const auto& metadata = stencilInstantiation->getMetaData();
   SkipIDs skipIDs;
   // Iterate multi-stages backwards in order to identify local variables that need to be promoted
   // to temporaries
@@ -529,7 +531,7 @@ SkipIDs PassTemporaryToStencilFunction::computeSkipAccessIDs(
       const auto& field = fieldPair.second;
 
       // we dont consider non temporary fields
-      if(!stencilInstantiation->isTemporaryField(field.getAccessID())) {
+      if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, field.getAccessID())) {
         skipIDs.appendAccessIDsToMS(multiStage->getID(), field.getAccessID());
         continue;
       }
@@ -597,7 +599,7 @@ bool PassTemporaryToStencilFunction::run(
 
     // perform the promotion "local var"->temporary
     for(auto varID : localVarAccessIDs) {
-      if(stencilInstantiation->isGlobalVariable(varID))
+      if(metadata.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, varID))
         continue;
 
       stencilInstantiation->promoteLocalVariableToTemporaryField(

@@ -40,14 +40,7 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
   for(auto pair : origin.StmtIDToAccessIDMap_) {
     StmtIDToAccessIDMap_.emplace(pair.first, pair.second);
   }
-  LiteralAccessIDToNameMap_ = origin.LiteralAccessIDToNameMap_;
-  FieldAccessIDSet_ = origin.FieldAccessIDSet_;
-  apiFieldIDs_ = origin.apiFieldIDs_;
-  TemporaryFieldAccessIDSet_ = origin.TemporaryFieldAccessIDSet_;
-  GlobalVariableAccessIDSet_ = origin.GlobalVariableAccessIDSet_;
-  for(auto id : origin.variableVersions_.getVersionIDs()) {
-    variableVersions_.insert(id, origin.variableVersions_.getVersions(id));
-  }
+  fieldAccessMetadata_.clone(origin.fieldAccessMetadata_);
   for(const auto& sf : origin.stencilFunctionInstantiations_) {
     stencilFunctionInstantiations_.emplace_back(
         std::make_shared<StencilFunctionInstantiation>(sf->clone()));
@@ -77,32 +70,9 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
   fileName_ = origin.fileName_;
 }
 
-json::json StencilMetaInformation::VariableVersions::jsonDump() const {
-  std::unordered_map<int, std::shared_ptr<std::vector<int>>> variableVersionsMap_;
-  std::unordered_map<int, int> versionToOriginalVersionMap_;
-  std::unordered_set<int> versionIDs_;
-  json::json node;
-
-  json::json versionMap;
-  for(const auto& pair : variableVersionsMap_) {
-    json::json versions;
-    for(const int id : *(pair.second)) {
-      versions.push_back(id);
-    }
-    versionMap[std::to_string(pair.first)] = versions;
-  }
-  node["versions"] = versionMap;
-  json::json versionID;
-  for(const int id : versionIDs_) {
-    versionID.push_back(id);
-  }
-  node["versionIDs"] = versionID;
-  return node;
-}
-
 const std::string& StencilMetaInformation::getNameFromLiteralAccessID(int AccessID) const {
-  DAWN_ASSERT_MSG(isLiteral(AccessID), "Invalid literal");
-  return LiteralAccessIDToNameMap_.find(AccessID)->second;
+  DAWN_ASSERT_MSG(isAccessType(iir::FieldAccessType::FAT_Literal, AccessID), "Invalid literal");
+  return fieldAccessMetadata_.LiteralAccessIDToNameMap_.find(AccessID)->second;
 }
 
 const std::string& StencilMetaInformation::getFieldNameFromAccessID(int accessID) const {
@@ -111,10 +81,19 @@ const std::string& StencilMetaInformation::getFieldNameFromAccessID(int accessID
   return AccessIDToNameMap_.directAt(accessID);
 }
 
-bool StencilMetaInformation::isGlobalVariable(const std::string& name) const {
-  auto it = getNameToAccessIDMap().find(name);
-  return it == getNameToAccessIDMap().end() ? false : isGlobalVariable(it->second);
+void StencilMetaInformation::insertAllocatedField(const int accessID) {
+  fieldAccessMetadata_.AllocatedFieldAccessIDSet_.insert(accessID);
 }
+void StencilMetaInformation::eraseAllocatedField(const int accessID) {
+  fieldAccessMetadata_.AllocatedFieldAccessIDSet_.erase(accessID);
+}
+
+// bool StencilMetaInformation::isGlobalVariable(const std::string& name) const {
+//  auto it = getNameToAccessIDMap().find(name);
+//  return it == getNameToAccessIDMap().end()
+//             ? false
+//             : isAccessType(iir::FieldAccessType::FAT_GlobalVariable, it->second);
+//}
 
 const std::unordered_map<std::string, int>& StencilMetaInformation::getNameToAccessIDMap() const {
   return AccessIDToNameMap_.getReverseMap();
@@ -128,6 +107,46 @@ const std::unordered_map<int, std::string>& StencilMetaInformation::getAccessIDT
 // TODO what if there is no map 1 to map from name to id ?
 int StencilMetaInformation::getAccessIDFromName(const std::string& name) const {
   return AccessIDToNameMap_.reverseAt(name);
+}
+
+bool StencilMetaInformation::isAccessType(FieldAccessType fType, const std::string& name) const {
+  if(fType == FieldAccessType::FAT_Literal) {
+    throw std::runtime_error("Literal can not be queried by name");
+  }
+  if(!hasNameToAccessID(name))
+    return false;
+
+  return isAccessType(fType, getAccessIDFromName(name));
+}
+bool StencilMetaInformation::isAccessType(FieldAccessType fType, const int accessID) const {
+  if(fType == FieldAccessType::FAT_Literal) {
+    return accessID < 0 && fieldAccessMetadata_.LiteralAccessIDToNameMap_.count(accessID);
+  } else if(fType == FieldAccessType::FAT_Field) {
+    return fieldAccessMetadata_.FieldAccessIDSet_.count(accessID);
+  } else if(fType == FieldAccessType::FAT_GlobalVariable) {
+    return fieldAccessMetadata_.GlobalVariableAccessIDSet_.count(accessID);
+  } else if(fType == FieldAccessType::FAT_InterStencilTemporary) {
+    // make sure that a temporary field is also stored as a field
+    DAWN_ASSERT(!fieldAccessMetadata_.AllocatedFieldAccessIDSet_.count(accessID) ||
+                isAccessType(FieldAccessType::FAT_Field, accessID));
+    return fieldAccessMetadata_.AllocatedFieldAccessIDSet_.count(accessID);
+  } else if(fType == FieldAccessType::FAT_StencilTemporary) {
+    // make sure that a temporary field is also stored as a field
+    DAWN_ASSERT(!fieldAccessMetadata_.TemporaryFieldAccessIDSet_.count(accessID) ||
+                isAccessType(FieldAccessType::FAT_Field, accessID));
+    return fieldAccessMetadata_.TemporaryFieldAccessIDSet_.count(accessID);
+  } else if(fType == FieldAccessType::FAT_LocalVariable) {
+    return !isAccessType(FieldAccessType::FAT_Field, accessID) &&
+           !isAccessType(FieldAccessType::FAT_Literal,
+                         accessID); // TODO arent we missing +isGlobalVariable
+  } else if(fType == FieldAccessType::FAT_APIField) {
+    // TODO is this convention right andthe same as it is stored in apifield?
+    return isAccessType(FieldAccessType::FAT_Field, accessID) &&
+           !isAccessType(FieldAccessType::FAT_StencilTemporary, accessID) &&
+           !isAccessType(FieldAccessType::FAT_InterStencilTemporary, accessID);
+  }
+
+  dawn_unreachable("unknown field access type");
 }
 
 Array3i StencilMetaInformation::getFieldDimensionsMask(int FieldID) const {
@@ -151,7 +170,7 @@ void StencilMetaInformation::mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt
 }
 
 std::string StencilMetaInformation::getNameFromAccessID(int accessID) const {
-  if(isLiteral(accessID)) {
+  if(isAccessType(iir::FieldAccessType::FAT_Literal, accessID)) {
     return getNameFromLiteralAccessID(accessID);
   } else {
     return getFieldNameFromAccessID(accessID);
@@ -209,26 +228,26 @@ void StencilMetaInformation::setAccessIDNamePair(int accessID, const std::string
 void StencilMetaInformation::setAccessIDNamePairOfField(int AccessID, const std::string& name,
                                                         bool isTemporary) {
   setAccessIDNamePair(AccessID, name);
-  FieldAccessIDSet_.insert(AccessID);
+  fieldAccessMetadata_.FieldAccessIDSet_.insert(AccessID);
   if(isTemporary) {
-    TemporaryFieldAccessIDSet_.insert(AccessID);
+    fieldAccessMetadata_.TemporaryFieldAccessIDSet_.insert(AccessID);
   }
 }
 
 void StencilMetaInformation::setAccessIDNamePairOfGlobalVariable(int accessID,
                                                                  const std::string& name) {
   setAccessIDNamePair(accessID, name);
-  GlobalVariableAccessIDSet_.insert(accessID);
+  fieldAccessMetadata_.GlobalVariableAccessIDSet_.insert(accessID);
 }
 
 void StencilMetaInformation::removeAccessID(int AccessID) {
   // TODO do we need to remove from all of them ?
   AccessIDToNameMap_.directEraseKey(AccessID);
-  FieldAccessIDSet_.erase(AccessID);
-  TemporaryFieldAccessIDSet_.erase(AccessID);
+  fieldAccessMetadata_.FieldAccessIDSet_.erase(AccessID);
+  fieldAccessMetadata_.TemporaryFieldAccessIDSet_.erase(AccessID);
 
-  if(variableVersions_.hasVariableMultipleVersions(AccessID)) {
-    auto versions = variableVersions_.getVersions(AccessID);
+  if(fieldAccessMetadata_.variableVersions_.hasVariableMultipleVersions(AccessID)) {
+    auto versions = fieldAccessMetadata_.variableVersions_.getVersions(AccessID);
     versions->erase(std::remove_if(versions->begin(), versions->end(),
                                    [&](int AID) { return AID == AccessID; }),
                     versions->end());
@@ -237,7 +256,7 @@ void StencilMetaInformation::removeAccessID(int AccessID) {
 
 json::json StencilMetaInformation::jsonDump() const {
   json::json metaDataJson;
-  metaDataJson["VariableVersions"] = variableVersions_.jsonDump();
+  metaDataJson["VariableVersions"] = fieldAccessMetadata_.variableVersions_.jsonDump();
   size_t pos = fileName_.find_last_of("\\/");
   DAWN_ASSERT(pos + 1 < fileName_.size() - 1);
   metaDataJson["filename"] = fileName_.substr(pos + 1, fileName_.size() - pos - 1);
@@ -254,7 +273,7 @@ json::json StencilMetaInformation::jsonDump() const {
   metaDataJson["globals"] = globalsJson;
 
   json::json globalAccessIDsJson;
-  for(const auto& id : GlobalVariableAccessIDSet_) {
+  for(const auto& id : fieldAccessMetadata_.GlobalVariableAccessIDSet_) {
     globalAccessIDsJson.push_back(id);
   }
   metaDataJson["GlobalAccessIDs"] = globalAccessIDsJson;
@@ -273,25 +292,25 @@ json::json StencilMetaInformation::jsonDump() const {
   metaDataJson["FieldToBC"] = bcJson;
 
   json::json tmpAccessIDsJson;
-  for(const auto& id : TemporaryFieldAccessIDSet_) {
+  for(const auto& id : fieldAccessMetadata_.TemporaryFieldAccessIDSet_) {
     tmpAccessIDsJson.push_back(id);
   }
   metaDataJson["TemporaryAccessIDs"] = tmpAccessIDsJson;
 
   json::json apiAccessIDsJson;
-  for(const auto& id : apiFieldIDs_) {
+  for(const auto& id : fieldAccessMetadata_.apiFieldIDs_) {
     apiAccessIDsJson.push_back(id);
   }
   metaDataJson["apiAccessIDs"] = apiAccessIDsJson;
 
   json::json fieldAccessIDsJson;
-  for(const auto& id : FieldAccessIDSet_) {
+  for(const auto& id : fieldAccessMetadata_.FieldAccessIDSet_) {
     fieldAccessIDsJson.push_back(id);
   }
   metaDataJson["fieldAccessIDs"] = fieldAccessIDsJson;
 
   json::json literalAccessIDsJson;
-  for(const auto& pair : LiteralAccessIDToNameMap_) {
+  for(const auto& pair : fieldAccessMetadata_.LiteralAccessIDToNameMap_) {
     literalAccessIDsJson[std::to_string(pair.first)] = pair.second;
   }
   metaDataJson["literalAccessIDs"] = literalAccessIDsJson;
@@ -312,7 +331,7 @@ json::json StencilMetaInformation::jsonDump() const {
 
 /// @brief Get the field-AccessID set
 const std::set<int>& StencilMetaInformation::getFieldAccessIDSet() const {
-  return FieldAccessIDSet_;
+  return fieldAccessMetadata_.FieldAccessIDSet_;
 }
 
 const std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
@@ -342,15 +361,16 @@ void StencilMetaInformation::insertStencilCallStmt(std::shared_ptr<StencilCallDe
 }
 
 const std::set<int>& StencilMetaInformation::getGlobalVariableAccessIDSet() const {
-  return GlobalVariableAccessIDSet_;
+  return fieldAccessMetadata_.GlobalVariableAccessIDSet_;
 }
+
 const std::unordered_map<int, std::string>&
 StencilMetaInformation::getLiteralAccessIDToNameMap() const {
-  return LiteralAccessIDToNameMap_;
+  return fieldAccessMetadata_.LiteralAccessIDToNameMap_;
 }
 
 void StencilMetaInformation::insertLiteralAccessID(const int accessID, const std::string& name) {
-  LiteralAccessIDToNameMap_.emplace(accessID, name);
+  fieldAccessMetadata_.LiteralAccessIDToNameMap_.emplace(accessID, name);
 }
 
 } // namespace iir

@@ -156,8 +156,9 @@ void CudaCodeGen::generateStencilClasses(
     Class& stencilWrapperClass, CodeGenProperties& codeGenProperties) const {
   // Generate stencils
   const auto& stencils = stencilInstantiation->getStencils();
+  const auto& metadata = stencilInstantiation->getMetaData();
 
-  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
+  const auto& globalsMap = metadata.globalVariableMap_;
 
   // generate the code for each of the stencils
   for(const auto& stencilPtr : stencils) {
@@ -186,9 +187,8 @@ void CudaCodeGen::generateStencilClasses(
     auto& paramNameToType = stencilProperties->paramNameToType_;
 
     for(auto fieldIt : nonTempFields) {
-      paramNameToType.emplace(
-          (*fieldIt).second.Name,
-          getStorageType(stencilInstantiation->getFieldDimensionsMask((*fieldIt).first)));
+      paramNameToType.emplace((*fieldIt).second.Name,
+                              getStorageType(metadata.getFieldDimensionsMask((*fieldIt).first)));
     }
 
     for(auto fieldIt : tempFields) {
@@ -297,16 +297,15 @@ void CudaCodeGen::generateStencilWrapperCtr(
     const CodeGenProperties& codeGenProperties) const {
 
   const auto& metadata = stencilInstantiation->getMetaData();
-  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
+  const auto& globalsMap = metadata.globalVariableMap_;
 
   // Generate stencil wrapper constructor
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
 
-  for(int fieldId : stencilInstantiation->getMetaData().getAPIFieldIDs()) {
-    StencilWrapperConstructor.addArg(
-        getStorageType(stencilInstantiation->getFieldDimensionsMask(fieldId)) + "& " +
-        metadata.getFieldNameFromAccessID(fieldId));
+  for(int fieldId : metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>()) {
+    StencilWrapperConstructor.addArg(getStorageType(metadata.getFieldDimensionsMask(fieldId)) +
+                                     "& " + metadata.getFieldNameFromAccessID(fieldId));
   }
 
   const auto& stencils = stencilInstantiation->getStencils();
@@ -333,7 +332,8 @@ void CudaCodeGen::generateStencilWrapperCtr(
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
         continue;
-      initCtr += "," + (stencilInstantiation->isAllocatedField(fieldInfo.field.getAccessID())
+      initCtr += "," + (metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
+                                              fieldInfo.field.getAccessID())
                             ? ("m_" + fieldInfo.Name)
                             : (fieldInfo.Name));
     }
@@ -341,9 +341,9 @@ void CudaCodeGen::generateStencilWrapperCtr(
     StencilWrapperConstructor.addInit(initCtr);
   }
 
-  if(stencilInstantiation->hasAllocatedFields()) {
+  if(metadata.hasAllocatedFields()) {
     std::vector<std::string> tempFields;
-    for(auto accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
+    for(auto accessID : metadata.getAllocatedFieldAccessIDSet()) {
       tempFields.push_back(metadata.getFieldNameFromAccessID(accessID));
     }
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
@@ -359,7 +359,8 @@ void CudaCodeGen::generateStencilWrapperMembers(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     CodeGenProperties& codeGenProperties) const {
 
-  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
+  const auto& metadata = stencilInstantiation->getMetaData();
+  const auto& globalsMap = metadata.globalVariableMap_;
 
   stencilWrapperClass.addMember("static constexpr const char* s_name =",
                                 Twine("\"") + stencilWrapperClass.getName() + Twine("\""));
@@ -382,10 +383,10 @@ void CudaCodeGen::generateStencilWrapperMembers(
   stencilWrapperClass.addComment("Stencil-Data");
 
   // Define allocated memebers if necessary
-  if(stencilInstantiation->hasAllocatedFields()) {
+  if(metadata.hasAllocatedFields()) {
     stencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
 
-    for(int AccessID : stencilInstantiation->getAllocatedFieldAccessIDs())
+    for(int AccessID : metadata.getAllocatedFieldAccessIDSet())
       stencilWrapperClass.addMember(
           c_gtc() + "storage_t",
           "m_" + stencilInstantiation->getMetaData().getFieldNameFromAccessID(AccessID));
@@ -467,16 +468,18 @@ void CudaCodeGen::generateStencilRunMethod(
     const auto fields = orderMap(multiStage.getFields());
 
     auto nonTempFields =
-        makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>(
-                              [&](std::pair<int, iir::Field> const& p) {
-                                return !metadata.isTemporaryField(p.second.getAccessID());
-                              }));
+        makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
+                              std::pair<int, iir::Field> const& p) {
+                    return !metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
+                                                  p.second.getAccessID());
+                  }));
 
     auto tempFieldsNonLocalCached = makeRange(
         fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
                     std::pair<int, iir::Field> const& p) {
           const int accessID = p.first;
-          if(!metadata.isTemporaryField(p.second.getAccessID()))
+          if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
+                                    p.second.getAccessID()))
             return false;
           for(const auto& ms : iterateIIROver<iir::MultiStage>(stencil)) {
             if(!ms->isCached(accessID))

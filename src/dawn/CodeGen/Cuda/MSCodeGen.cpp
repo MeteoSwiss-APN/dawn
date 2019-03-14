@@ -676,10 +676,12 @@ void MSCodeGen::generateCudaKernelCode() {
   // fields used in the stencil
   const auto fields = orderMap(ms_->getFields());
 
-  auto nonTempFields = makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
-                                             std::pair<int, iir::Field> const& p) {
-                                   return !metadata_.isTemporaryField(p.second.getAccessID());
-                                 }));
+  auto nonTempFields =
+      makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
+                            std::pair<int, iir::Field> const& p) {
+                  return !metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
+                                                 p.second.getAccessID());
+                }));
   // all the temp fields that are non local cache, and therefore will require the infrastructure
   // of
   // tmp storages (allocation, iterators, etc)
@@ -687,7 +689,8 @@ void MSCodeGen::generateCudaKernelCode() {
       makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
                             std::pair<int, iir::Field> const& p) {
                   const int accessID = p.first;
-                  if(!stencilInstantiation_->isTemporaryField(p.second.getAccessID()))
+                  if(!metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
+                                             p.second.getAccessID()))
                     return false;
                   if(!cacheProperties_.accessIsCached(accessID))
                     return true;

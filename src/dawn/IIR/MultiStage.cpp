@@ -347,7 +347,7 @@ boost::optional<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() co
       const Field& field = fieldPair.second;
       int AccessID = fieldPair.first;
 
-      if(!metadata_.isTemporaryField(AccessID))
+      if(!metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, AccessID))
         continue;
 
       if(!interval.is_initialized()) {

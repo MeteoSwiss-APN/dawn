@@ -336,7 +336,7 @@ void StatementMapper::visit(const std::shared_ptr<VarAccessExpr>& expr) {
           (function) ? function->getStencilInstantiation() : instantiation_;
 
       int AccessID = 0;
-      if(!stencilInstantiation->isGlobalVariable(varname)) {
+      if(!metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, varname)) {
         AccessID = stencilInstantiation->nextUID();
         metadata_.setAccessIDNamePairOfGlobalVariable(AccessID, varname);
       } else {
