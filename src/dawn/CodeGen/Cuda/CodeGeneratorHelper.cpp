@@ -155,7 +155,7 @@ void CodeGeneratorHelper::generateFieldAccessDeref(
   bool isTemporary = instantiation->isTemporaryField(accessID);
   DAWN_ASSERT(fieldIndexMap.count(accessID) || isTemporary);
   const auto& field = ms->getField(accessID);
-  bool useTmpIndex = (useTemporaries(ms->getParent(), instantiation));
+  bool useTmpIndex = isTemporary && useTemporaries(ms->getParent(), instantiation);
   std::string index = useTmpIndex ? "idx_tmp" : "idx" + CodeGeneratorHelper::indexIteratorName(
                                                             fieldIndexMap.at(accessID));
 
