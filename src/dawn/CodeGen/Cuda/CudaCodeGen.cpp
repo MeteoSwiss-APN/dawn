@@ -385,8 +385,8 @@ void CudaCodeGen::generateStencilWrapperMembers(
     stencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
 
     for(int AccessID : stencilInstantiation->getAllocatedFieldAccessIDs())
-      stencilWrapperClass.addMember(c_gtc() + "storage_t",
-                                    "m_" + stencilInstantiation->getFieldNameFromAccessID(AccessID));
+      stencilWrapperClass.addMember(
+          c_gtc() + "storage_t", "m_" + stencilInstantiation->getFieldNameFromAccessID(AccessID));
   }
 
   if(!globalsMap.empty()) {
@@ -566,7 +566,7 @@ void CudaCodeGen::generateStencilRunMethod(
       // in some cases (where there are no horizontal extents) we dont use the special tmp index
       // iterator, but rather a normal 3d field index iterator. In that case we pass temporaries in
       // the same manner as normal fields
-      if(CodeGeneratorHelper::useNormalIteratorForTmp(multiStagePtr)) {
+      if(!CodeGeneratorHelper::useTemporaries(multiStagePtr->getParent(), stencilInstantiation)) {
         const auto fieldName =
             stencilInstantiation->getFieldNameFromAccessID((*field).second.getAccessID());
 
@@ -574,8 +574,8 @@ void CudaCodeGen::generateStencilRunMethod(
                ".get_storage_info_ptr()->index(" + fieldName + ".begin<0>(), " + fieldName +
                ".begin<1>()," + fieldName + ".begin<2>()," + fieldName + ".begin<3>(), 0))";
       } else {
-        args =
-            args + "," + stencilInstantiation->getFieldNameFromAccessID((*field).second.getAccessID());
+        args = args + "," +
+               stencilInstantiation->getFieldNameFromAccessID((*field).second.getAccessID());
       }
     }
 

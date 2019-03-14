@@ -165,6 +165,8 @@ public:
   /// @brief Compute and return the pairs <AccessID, field> used for a given interval
   std::unordered_map<int, Field> computeFieldsAtInterval(const iir::Interval& interval) const;
 
+  bool hasField(const int accessID) const;
+
   const Field& getField(int accessID) const;
 
   std::unordered_map<int, Field> computeFieldsOnTheFly() const;

@@ -30,10 +30,10 @@ ASTStencilBody::ASTStencilBody(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const std::unordered_map<int, Array3i>& fieldIndexMap,
     const std::unique_ptr<iir::MultiStage>& ms, const CacheProperties& cacheProperties,
-    Array3ui blockSizes)
+    Array3ui blockSizes, bool useTmpIndex)
     : ASTCodeGenCXX(), instantiation_(stencilInstantiation), offsetPrinter_("+", "", "", true),
       fieldIndexMap_(fieldIndexMap), ms_(ms), cacheProperties_(cacheProperties),
-      blockSizes_(blockSizes) {}
+      blockSizes_(blockSizes), useTmpIndex_(useTmpIndex) {}
 
 ASTStencilBody::~ASTStencilBody() {}
 

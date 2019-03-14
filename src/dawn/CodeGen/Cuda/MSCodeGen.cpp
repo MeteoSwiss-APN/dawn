@@ -35,22 +35,8 @@ MSCodeGen::MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStag
 
   // useTmpIndex_
   const auto& fields = ms_->getFields();
-  const bool containsTemporary =
-      (find_if(fields.begin(), fields.end(), [&](const std::pair<int, iir::Field>& field) {
-         const int accessID = field.second.getAccessID();
-         if(!stencilInstantiation_->isTemporaryField(accessID))
-           return false;
-         // we dont need to initialize tmp indices for fields that are cached
-         if(!cacheProperties_.accessIsCached(accessID))
-           return true;
-         const auto& cache = ms_->getCache(accessID);
-         if(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local) {
-           return false;
-         }
-         return true;
-       }) != fields.end());
 
-  useTmpIndex_ = containsTemporary && !CodeGeneratorHelper::useNormalIteratorForTmp(ms_);
+  useTmpIndex_ = CodeGeneratorHelper::useTemporaries(ms->getParent(), stencilInstantiation);
 
   cudaKernelName_ = CodeGeneratorHelper::buildCudaKernelName(stencilInstantiation_, ms_);
 }
@@ -711,10 +697,8 @@ void MSCodeGen::generateCudaKernelCode() {
                   return true;
                 }));
 
-  const bool containsTemporary = !tempFieldsNonLocalCached.empty();
-
   std::string fnDecl = "";
-  if(containsTemporary && useTmpIndex_)
+  if(useTmpIndex_)
     fnDecl = "template<typename TmpStorage>";
   fnDecl = fnDecl + "__global__ void";
 
@@ -763,19 +747,21 @@ void MSCodeGen::generateCudaKernelCode() {
 
   // first we construct non temporary field arguments
   for(auto field : nonTempFields) {
-    cudaKernel.addArg("gridtools::clang::float_type * const " +
-                      stencilInstantiation_->getFieldNameFromAccessID((*field).second.getAccessID()));
+    cudaKernel.addArg(
+        "gridtools::clang::float_type * const " +
+        stencilInstantiation_->getFieldNameFromAccessID((*field).second.getAccessID()));
   }
 
   // then the temporary field arguments
   for(auto field : tempFieldsNonLocalCached) {
     if(useTmpIndex_) {
-      cudaKernel.addArg(c_gt() + "data_view<TmpStorage>" +
-                        stencilInstantiation_->getFieldNameFromAccessID((*field).second.getAccessID()) +
-                        "_dv");
+      cudaKernel.addArg(
+          c_gt() + "data_view<TmpStorage>" +
+          stencilInstantiation_->getFieldNameFromAccessID((*field).second.getAccessID()) + "_dv");
     } else {
-      cudaKernel.addArg("gridtools::clang::float_type * const " +
-                        stencilInstantiation_->getFieldNameFromAccessID((*field).second.getAccessID()));
+      cudaKernel.addArg(
+          "gridtools::clang::float_type * const " +
+          stencilInstantiation_->getFieldNameFromAccessID((*field).second.getAccessID()));
     }
   }
 
@@ -917,9 +903,7 @@ void MSCodeGen::generateCudaKernelCode() {
     generateIJCacheIndexInit(cudaKernel);
   }
 
-  if(containsTemporary) {
-    generateTmpIndexInit(cudaKernel);
-  }
+  generateTmpIndexInit(cudaKernel);
 
   // compute the partition of the intervals
   auto partitionIntervals = CodeGeneratorHelper::computePartitionOfIntervals(ms_);
@@ -927,7 +911,7 @@ void MSCodeGen::generateCudaKernelCode() {
   DAWN_ASSERT(!partitionIntervals.empty());
 
   ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation_, fieldIndexMap, ms_, cacheProperties_,
-                                       blockSize_);
+                                       blockSize_, useTmpIndex_);
 
   iir::Interval::IntervalLevel lastKCell{0, 0};
   lastKCell = advance(lastKCell, ms_->getLoopOrder(), -1);

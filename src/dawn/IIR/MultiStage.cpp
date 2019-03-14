@@ -415,7 +415,7 @@ json::json MultiStage::jsonDump(const StencilInstantiation& instantiation) const
   node["Loop"] = loopOrderToString(loopOrder_);
   json::json fieldsJson;
   for(const auto& field : derivedInfo_.fields_) {
-    fieldsJson.push_back(field.second.jsonDump(&instantiation));
+    fieldsJson[instantiation.getNameFromAccessID(field.first)] = field.second.jsonDump();
   }
   node["Fields"] = fieldsJson;
 
@@ -432,6 +432,9 @@ json::json MultiStage::jsonDump(const StencilInstantiation& instantiation) const
   }
   return node;
 }
+
+bool MultiStage::hasField(const int accessID) const { return derivedInfo_.fields_.count(accessID); }
+
 bool MultiStage::isEmptyOrNullStmt() const {
   for(const auto& stage : getChildren()) {
     if(!(stage)->isEmptyOrNullStmt()) {
