@@ -15,6 +15,7 @@
 #ifndef DAWN_IIR_STENCIL_H
 #define DAWN_IIR_STENCIL_H
 
+#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/SIR/SIR.h"
@@ -257,6 +258,8 @@ public:
   const std::shared_ptr<DependencyGraphStage>& getStageDependencyGraph() const;
   void setStageDependencyGraph(const std::shared_ptr<DependencyGraphStage>& stageDAG);
   /// @}
+
+  bool containsRedundantComputations() const;
 
   /// @brief Get the axis of the stencil (i.e the interval of all stages)
   ///

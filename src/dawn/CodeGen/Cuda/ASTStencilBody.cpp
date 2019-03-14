@@ -28,10 +28,10 @@ namespace cuda {
 ASTStencilBody::ASTStencilBody(const iir::StencilMetaInformation& metadata,
                                const std::unordered_map<int, Array3i>& fieldIndexMap,
                                const std::unique_ptr<iir::MultiStage>& ms,
-                               const CacheProperties& cacheProperties, Array3ui blockSizes)
+                               const CacheProperties& cacheProperties, Array3ui blockSizes, bool useTmpIndex)
     : ASTCodeGenCXX(), metadata_(metadata), offsetPrinter_("+", "", "", true),
       fieldIndexMap_(fieldIndexMap), ms_(ms), cacheProperties_(cacheProperties),
-      blockSizes_(blockSizes) {}
+      blockSizes_(blockSizes), useTmpIndex_(useTmpIndex) {}
 
 ASTStencilBody::~ASTStencilBody() {}
 

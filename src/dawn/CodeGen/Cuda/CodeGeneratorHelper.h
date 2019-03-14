@@ -47,9 +47,8 @@ public:
   static std::array<std::string, 3> ijkfyOffset(const Array3i& offsets, bool isTemporary,
                                                 const Array3i iteratorDims);
 
-  /// @brief returns true if a normal ijk field iterator should be used for temporaries instead of a
-  /// custom iterator
-  static bool useNormalIteratorForTmp(const std::unique_ptr<iir::MultiStage>& ms);
+  static bool hasAccessIDMemAccess(const int accessID,
+                                   const std::unique_ptr<iir::Stencil>& stencil);
 
   /// @brief return true if the ms can be solved in parallel (in the vertical dimension)
   static bool solveKLoopInParallel(const std::unique_ptr<iir::MultiStage>& ms);
@@ -57,6 +56,10 @@ public:
   /// @brief computes the partition of all the intervals used within a multi-stage
   static std::vector<iir::Interval>
   computePartitionOfIntervals(const std::unique_ptr<iir::MultiStage>& ms);
+
+  static bool
+  useTemporaries(const std::unique_ptr<iir::Stencil>& stencil,
+                 const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
 
   /// @brief computes the maximum extent required by all temporaries, which will be used for proper
   /// allocation

@@ -430,6 +430,9 @@ json::json MultiStage::jsonDump() const {
   }
   return node;
 }
+
+bool MultiStage::hasField(const int accessID) const { return derivedInfo_.fields_.count(accessID); }
+
 bool MultiStage::isEmptyOrNullStmt() const {
   for(const auto& stage : getChildren()) {
     if(!(stage)->isEmptyOrNullStmt()) {

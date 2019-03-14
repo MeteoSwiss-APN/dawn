@@ -109,6 +109,15 @@ json::json Stencil::jsonDump() const {
   return node;
 }
 
+bool Stencil::containsRedundantComputations() const {
+  for(const auto& stage : iterateIIROver<Stage>(*this)) {
+    if(!stage->getExtents().isHorizontalPointwise()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void Stencil::updateFromChildren() {
   derivedInfo_.fields_.clear();
   std::unordered_map<int, Field> fields;
