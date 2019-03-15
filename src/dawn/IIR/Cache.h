@@ -89,6 +89,8 @@ public:
   /// @brief determines if the cache specification requires a window
   bool requiresWindow() const;
 
+  bool requiresMemMemoryAccess() const;
+
   /// @name Comparison operator
   /// @{
   bool operator==(const Cache& other) const {

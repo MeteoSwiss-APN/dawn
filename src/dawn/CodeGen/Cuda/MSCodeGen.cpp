@@ -30,12 +30,12 @@ MSCodeGen::MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStag
                      const CacheProperties& cacheProperties)
     : ss_(ss), ms_(ms), stencilInstantiation_(stencilInstantiation),
       cacheProperties_(cacheProperties),
+      useCodeGenTemporaries_(
+          CodeGeneratorHelper::useTemporaries(ms->getParent(), stencilInstantiation) &&
+          ms->hasMemAccessTemporaries()),
+      cudaKernelName_(CodeGeneratorHelper::buildCudaKernelName(stencilInstantiation_, ms_)),
       blockSize_(stencilInstantiation_->getIIR()->getBlockSize()),
-      solveKLoopInParallel_(CodeGeneratorHelper::solveKLoopInParallel(ms_)) {
-
-  useTmpIndex_ = CodeGeneratorHelper::useTemporaries(ms->getParent(), stencilInstantiation);
-  cudaKernelName_ = CodeGeneratorHelper::buildCudaKernelName(stencilInstantiation_, ms_);
-}
+      solveKLoopInParallel_(CodeGeneratorHelper::solveKLoopInParallel(ms_)) {}
 
 void MSCodeGen::generateIJCacheDecl(MemberFunction& kernel) const {
   for(const auto& cacheP : ms_->getCaches()) {
@@ -99,7 +99,7 @@ MSCodeGen::computeNextLevelToProcess(const iir::Interval& interval,
 
 void MSCodeGen::generateTmpIndexInit(MemberFunction& kernel) const {
 
-  if(!useTmpIndex_)
+  if(!useCodeGenTemporaries_)
     return;
 
   auto maxExtentTmps = CodeGeneratorHelper::computeTempMaxWriteExtent(*(ms_->getParent()));
@@ -680,21 +680,14 @@ void MSCodeGen::generateCudaKernelCode() {
   // of
   // tmp storages (allocation, iterators, etc)
   auto tempFieldsNonLocalCached =
-      makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
-                            std::pair<int, iir::Field> const& p) {
-                  const int accessID = p.first;
-                  if(!stencilInstantiation_->isTemporaryField(p.second.getAccessID()))
-                    return false;
-                  if(!cacheProperties_.accessIsCached(accessID))
-                    return true;
-                  if(ms_->getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local)
-                    return false;
-
-                  return true;
-                }));
+      makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>(
+                            [&](std::pair<int, iir::Field> const& p) {
+                              const int accessID = p.first;
+                              return ms_->isMemAccessTemporary(accessID);
+                            }));
 
   std::string fnDecl = "";
-  if(useTmpIndex_)
+  if(useCodeGenTemporaries_)
     fnDecl = "template<typename TmpStorage>";
   fnDecl = fnDecl + "__global__ void";
 
@@ -754,7 +747,7 @@ void MSCodeGen::generateCudaKernelCode() {
 
   // then the temporary field arguments
   for(auto field : tempFieldsNonLocalCached) {
-    if(useTmpIndex_) {
+    if(useCodeGenTemporaries_) {
       cudaKernel.addArg(
           c_gt() + "data_view<TmpStorage>" +
           stencilInstantiation_->getFieldNameFromAccessID((*field).second.getAccessID()) + "_dv");
@@ -772,7 +765,7 @@ void MSCodeGen::generateCudaKernelCode() {
   cudaKernel.addComment("Start kernel");
 
   // extract raw pointers of temporaries from the data views
-  if(useTmpIndex_) {
+  if(useCodeGenTemporaries_) {
     for(auto field : tempFieldsNonLocalCached) {
       std::string fieldName =
           stencilInstantiation_->getFieldNameFromAccessID((*field).second.getAccessID());
@@ -943,7 +936,7 @@ void MSCodeGen::generateCudaKernelCode() {
                                   intervalDiffToString(kmin, "ksize - 1") + ")");
         }
       }
-      if(useTmpIndex_ && !kmin.null() && !((solveKLoopInParallel_) && firstInterval)) {
+      if(useCodeGenTemporaries_ && !kmin.null() && !((solveKLoopInParallel_) && firstInterval)) {
         cudaKernel.addComment("jump tmp iterators to match the beginning of next interval");
         cudaKernel.addStatement("idx_tmp += kstride_tmp*(" +
                                 intervalDiffToString(kmin, "ksize - 1") + ")");
@@ -970,7 +963,7 @@ void MSCodeGen::generateCudaKernelCode() {
           }
         }
       }
-      if(useTmpIndex_) {
+      if(useCodeGenTemporaries_) {
         cudaKernel.addComment("jump tmp iterators to match the intersection of beginning of next "
                               "interval and the parallel execution block ");
         cudaKernel.addStatement("idx_tmp += max(" + intervalDiffToString(kmin, "ksize - 1") +
@@ -1059,7 +1052,7 @@ void MSCodeGen::generateCudaKernelCode() {
                                   CodeGeneratorHelper::generateStrideName(2, index.second));
         }
       }
-      if(useTmpIndex_) {
+      if(useCodeGenTemporaries_) {
         cudaKernel.addStatement("idx_tmp " + incStr + " kstride_tmp");
       }
     });
