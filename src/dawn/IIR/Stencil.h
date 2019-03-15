@@ -15,7 +15,6 @@
 #ifndef DAWN_IIR_STENCIL_H
 #define DAWN_IIR_STENCIL_H
 
-#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/Statement.h"
@@ -256,6 +255,8 @@ public:
   void setStageDependencyGraph(const std::shared_ptr<DependencyGraphStage>& stageDAG);
   /// @}
 
+  /// @brief determines whether the stencil contains redundant computations, i.e. if any of the
+  /// stages has a non null extent
   bool containsRedundantComputations() const;
 
   /// @brief Get the axis of the stencil (i.e the interval of all stages)
