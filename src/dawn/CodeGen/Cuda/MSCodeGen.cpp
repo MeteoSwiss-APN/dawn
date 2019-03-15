@@ -33,11 +33,7 @@ MSCodeGen::MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStag
       blockSize_(stencilInstantiation_->getIIR()->getBlockSize()),
       solveKLoopInParallel_(CodeGeneratorHelper::solveKLoopInParallel(ms_)) {
 
-  // useTmpIndex_
-  const auto& fields = ms_->getFields();
-
   useTmpIndex_ = CodeGeneratorHelper::useTemporaries(ms->getParent(), stencilInstantiation);
-
   cudaKernelName_ = CodeGeneratorHelper::buildCudaKernelName(stencilInstantiation_, ms_);
 }
 
@@ -707,9 +703,13 @@ void MSCodeGen::generateCudaKernelCode() {
                        (maxExtents[0].Minus < 0 ? 1 : 0) + (maxExtents[0].Plus > 0 ? 1 : 0));
 
   int nSM = stencilInstantiation_->getOptimizerContext()->getOptions().nsms;
+  int maxBlocksPerSM = stencilInstantiation_->getOptimizerContext()->getOptions().maxBlocksPerSM;
 
   std::string domain_size = stencilInstantiation_->getOptimizerContext()->getOptions().domain_size;
   if(nSM > 0 && !domain_size.empty()) {
+    if(maxBlocksPerSM <= 0) {
+      throw std::runtime_error("--max-blocks-sm must be defined");
+    }
     std::istringstream idomain_size(domain_size);
     std::string arg;
     getline(idomain_size, arg, ',');
@@ -723,7 +723,7 @@ void MSCodeGen::generateCudaKernelCode() {
     minBlocksPerSM /= nSM;
 
     fnDecl = fnDecl + " __launch_bounds__(" + std::to_string(maxThreadsPerBlock) + "," +
-             std::to_string(minBlocksPerSM) + ") ";
+             std::to_string(std::min(maxBlocksPerSM, minBlocksPerSM)) + ") ";
   } else {
     fnDecl = fnDecl + " __launch_bounds__(" + std::to_string(maxThreadsPerBlock) + ") ";
   }
