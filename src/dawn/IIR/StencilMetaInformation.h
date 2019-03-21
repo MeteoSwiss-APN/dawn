@@ -42,64 +42,67 @@ class StencilMetaInformation : public NonCopyable {
     }
 
     ///@brief returns the vector of all versioned fields of a given accessID
-    const std::shared_ptr<std::vector<int>> getVersions(const int accessID) const {
+    const std::shared_ptr<std::vector<int>>& getVersions(const int accessID) const {
       return variableVersionsMap_.at(accessID);
     }
 
     void insertIDPair(const int originalAccessID, const int versionedAccessID) {
+      // Insert the versioned ID into the list of all versioned fields
       derivedInfo_.versionIDs_.insert(versionedAccessID);
+      // Insert the versioned ID into the list of verisons for its origial field
       if(hasMultipleVariableVersions(originalAccessID)) {
         variableVersionsMap_[originalAccessID]->push_back(versionedAccessID);
       } else {
         variableVersionsMap_[originalAccessID] =
-            std::make_shared<std::vector<int>>(versionedAccessID);
+            std::make_shared<std::vector<int>>(1, versionedAccessID);
       }
-      versionToOriginalVersionMap_[versionedAccessID] = originalAccessID;
+      // and map it to it's origin
+      derivedInfo_.versionToOriginalVersionMap_[versionedAccessID] = originalAccessID;
     }
 
-    void removeID(const int accessID){
-        if(derivedInfo_.versionIDs_.count(accessID) > 0){
-            int originalID = getOriginalVersionOfAccessID(accessID);
-            auto vec = variableVersionsMap_[originalID];
-            std::remove_if(vec->begin(), vec->end(), [&accessID](int id){return id == accessID;});
+    void removeID(const int accessID) {
+      if(derivedInfo_.versionIDs_.count(accessID) > 0) {
+        int originalID = getOriginalVersionOfAccessID(accessID);
+        auto vec = variableVersionsMap_[originalID];
+        std::remove_if(vec->begin(), vec->end(), [&accessID](int id) { return id == accessID; });
 
-            versionToOriginalVersionMap_.erase(accessID);
+        derivedInfo_.versionToOriginalVersionMap_.erase(accessID);
 
-            derivedInfo_.versionIDs_.erase(accessID);
-        }
-    }
-
-    void insert(const int accessID, std::shared_ptr<std::vector<int>> versionsID) {
-      variableVersionsMap_.emplace(accessID, versionsID);
-      for(auto it : *versionsID) {
-        derivedInfo_.versionIDs_.emplace(it);
-        versionToOriginalVersionMap_[it] = accessID;
+        derivedInfo_.versionIDs_.erase(accessID);
       }
     }
 
-    bool isAccessIDAVersion(const int accessID) { return derivedInfo_.versionIDs_.count(accessID); }
+    bool isAccessIDAVersion(const int accessID) const {
+      return derivedInfo_.versionIDs_.count(accessID);
+    }
 
     int getOriginalVersionOfAccessID(const int accessID) const {
-      return versionToOriginalVersionMap_.at(accessID);
+      if(isAccessIDAVersion(accessID)) {
+        return derivedInfo_.versionToOriginalVersionMap_.at(accessID);
+      } else {
+        DAWN_ASSERT_MSG(0, "try to access original version of non-versioned field");
+      }
+      return 0;
     }
 
     const std::unordered_set<int>& getVersionIDs() const { return derivedInfo_.versionIDs_; }
 
-    const std::unordered_map<int, std::shared_ptr<std::vector<int>>>& getvariableVersionsMap() {
+    const std::unordered_map<int, std::shared_ptr<std::vector<int>>>&
+    getvariableVersionsMap() const {
       return variableVersionsMap_;
     }
 
     json::json jsonDump() const;
 
   private:
-    /// This map links all the versions of a field to their original field
-    std::unordered_map<int, int> versionToOriginalVersionMap_;
-
     /// This map links the original fieldID with a list of all it's versioned fields. The index of
     /// the field in the vector denotes the version of the field
     std::unordered_map<int, std::shared_ptr<std::vector<int>>> variableVersionsMap_;
 
     struct DerivedInfo {
+      /// This map links all the versions of a field to their original field. Can be derived by
+      /// looping the variable-version map.
+      std::unordered_map<int, int> versionToOriginalVersionMap_;
       /// This set contrains all the Fields that are versions of an original variable (excluding the
       /// originals). This is derived as it is the collection of keys in
       /// versionToOriginalVersionMap_

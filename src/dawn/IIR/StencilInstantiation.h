@@ -152,7 +152,7 @@ public:
   }
 
   /// @brief Get a list of all field AccessIDs of this multi-versioned field
-//  ArrayRef<int> getFieldVersions(int AccessID) const;
+  //  ArrayRef<int> getFieldVersions(int AccessID) const;
 
   enum RenameDirection {
     RD_Above, ///< Rename all fields above the current statement
