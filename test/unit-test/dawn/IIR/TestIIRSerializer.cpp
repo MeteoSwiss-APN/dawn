@@ -15,8 +15,8 @@
 #include "dawn/Compiler/DiagnosticsEngine.h"
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
-#include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Serialization/IIRSerializer.h"
 #include <gtest/gtest.h>
 
 using namespace dawn;
@@ -230,11 +230,9 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
   referenceInstantiaton->getMetaData().GlobalVariableAccessIDSet_.emplace(712);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  auto refvec = std::make_shared<std::vector<int>>();
-  refvec->push_back(6);
-  refvec->push_back(7);
-  refvec->push_back(8);
-  referenceInstantiaton->getMetaData().variableVersions_.insert(5, refvec);
+  referenceInstantiaton->getMetaData().variableVersions_.insertIDPair(5, 6);
+  referenceInstantiaton->getMetaData().variableVersions_.insertIDPair(5, 7);
+  referenceInstantiaton->getMetaData().variableVersions_.insertIDPair(5, 8);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   referenceInstantiaton->getMetaData().fileName_ = "fileName";
@@ -296,16 +294,16 @@ TEST_F(IIRSerializerTest, IIRTests) {
       make_unique<iir::DoMethod>(iir::Interval(1, 5, 0, 1), *referenceInstantiaton));
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-    auto& IIRDoMethod = (IIRStage)->getChild(0);
-    auto expr = std::make_shared<VarAccessExpr>("name");
-    auto stmt = std::make_shared<ExprStmt>(expr);
-    stmt->setID(22);
-    auto statement = std::make_shared<Statement>(stmt, nullptr);
-    auto stmtAccessPair = make_unique<iir::StatementAccessesPair>(statement);
-    std::shared_ptr<iir::Accesses> callerAccesses = std::make_shared<iir::Accesses>();
-    stmtAccessPair->setCallerAccesses(callerAccesses);
+  auto& IIRDoMethod = (IIRStage)->getChild(0);
+  auto expr = std::make_shared<VarAccessExpr>("name");
+  auto stmt = std::make_shared<ExprStmt>(expr);
+  stmt->setID(22);
+  auto statement = std::make_shared<Statement>(stmt, nullptr);
+  auto stmtAccessPair = make_unique<iir::StatementAccessesPair>(statement);
+  std::shared_ptr<iir::Accesses> callerAccesses = std::make_shared<iir::Accesses>();
+  stmtAccessPair->setCallerAccesses(callerAccesses);
 
-    (IIRDoMethod)->insertChild(std::move(stmtAccessPair));
+  (IIRDoMethod)->insertChild(std::move(stmtAccessPair));
 }
 
 } // anonymous namespace

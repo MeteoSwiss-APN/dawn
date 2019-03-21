@@ -56,8 +56,12 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
   apiFieldIDs_ = origin.apiFieldIDs_;
   TemporaryFieldAccessIDSet_ = origin.TemporaryFieldAccessIDSet_;
   GlobalVariableAccessIDSet_ = origin.GlobalVariableAccessIDSet_;
-  for(auto id : origin.variableVersions_.getVersionIDs()) {
-    variableVersions_.insert(id, origin.variableVersions_.getVersions(id));
+
+  for(auto idToVersionsPair : origin.variableVersions_.getvariableVersionsMap()) {
+    int originalID = idToVersionsPair.first;
+    for(auto versionID : *idToVersionsPair.second) {
+      variableVersions_.insertIDPair(originalID, versionID);
+    }
   }
   for(auto statement : origin.stencilDescStatements_) {
     stencilDescStatements_.emplace_back(statement->clone());
@@ -107,7 +111,7 @@ json::json StencilMetaInformation::VariableVersions::jsonDump() const {
   }
   node["versions"] = versionMap;
   json::json versionID;
-  for(const int id : versionIDs_) {
+  for(const int id : getVersionIDs()) {
     versionID.push_back(id);
   }
   node["versionIDs"] = versionID;

@@ -142,17 +142,14 @@ public:
 
   /// @brief Check whether the `AccessID` corresponds to a multi-versioned field
   inline bool isMultiVersionedField(int AccessID) const {
-    return isField(AccessID) && metadata_.variableVersions_.hasVariableMultipleVersions(AccessID);
+    return isField(AccessID) && metadata_.variableVersions_.hasMultipleVariableVersions(AccessID);
   }
 
   /// @brief Check whether the `AccessID` corresponds to a multi-versioned variable
   inline bool isMultiVersionedVariable(int AccessID) const {
     return isVariable(AccessID) &&
-           metadata_.variableVersions_.hasVariableMultipleVersions(AccessID);
+           metadata_.variableVersions_.hasMultipleVariableVersions(AccessID);
   }
-
-  /// @brief Get a list of all field AccessIDs of this multi-versioned field
-  ArrayRef<int> getFieldVersions(int AccessID) const;
 
   enum RenameDirection {
     RD_Above, ///< Rename all fields above the current statement
