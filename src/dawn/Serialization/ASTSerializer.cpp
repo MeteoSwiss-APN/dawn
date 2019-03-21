@@ -190,7 +190,6 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
 
   // StencilCall.Args
   for(const auto& arg : stencilCall->Args) {
-    std::cout << "here" << std::endl;
     auto argProto = stencilCallProto->add_arguments();
     argProto->set_name(arg->Name);
     argProto->set_is_temporary(arg->IsTemporary);
