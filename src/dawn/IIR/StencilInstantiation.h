@@ -151,9 +151,6 @@ public:
            metadata_.variableVersions_.hasMultipleVariableVersions(AccessID);
   }
 
-  /// @brief Get a list of all field AccessIDs of this multi-versioned field
-  //  ArrayRef<int> getFieldVersions(int AccessID) const;
-
   enum RenameDirection {
     RD_Above, ///< Rename all fields above the current statement
     RD_Below  ///< Rename all fields below the current statement

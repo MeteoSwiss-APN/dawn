@@ -93,12 +93,6 @@ void StencilInstantiation::removeAccessID(int AccessID) {
   metadata_.TemporaryFieldAccessIDSet_.erase(AccessID);
 
   metadata_.variableVersions_.removeID(AccessID);
-  //  if(metadata_.variableVersions_.hasVariableMultipleVersions(AccessID)) {
-  //    auto versions = metadata_.variableVersions_.getVersions(AccessID);
-  //    versions->erase(std::remove_if(versions->begin(), versions->end(),
-  //                                   [&](int AID) { return AID == AccessID; }),
-  //                    versions->end());
-  //  }
 }
 
 const std::string StencilInstantiation::getName() const { return metadata_.stencilName_; }
@@ -173,12 +167,6 @@ const sir::Value& StencilInstantiation::getGlobalVariableValue(const std::string
   DAWN_ASSERT(it != metadata_.globalVariableMap_.end());
   return *it->second;
 }
-
-// ArrayRef<int> StencilInstantiation::getFieldVersions(int AccessID) const {
-//  return metadata_.variableVersions_.hasMultipleVariableVersions(AccessID)
-//             ? ArrayRef<int>(*(metadata_.variableVersions_.getVersions(AccessID)))
-//             : ArrayRef<int>{};
-//}
 
 int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil, int curStageIdx,
                                                  int curStmtIdx, std::shared_ptr<Expr>& expr,
