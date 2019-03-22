@@ -14,11 +14,11 @@
 
 #include "dawn/Optimizer/PassStencilSplitter.h"
 #include "dawn/IIR/DependencyGraphStage.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/Replacing.h"
-#include "dawn/IIR/StencilInstantiation.h"
 #include <iostream>
 
 namespace dawn {
@@ -98,8 +98,9 @@ bool PassStencilSplitter::run(
 
           } else {
             // Make a new stencil
-            newStencils.emplace_back(make_unique<iir::Stencil>(
-                *stencilInstantiation, stencil.getStencilAttributes(), stencilInstantiation->nextUID()));
+            newStencils.emplace_back(make_unique<iir::Stencil>(*stencilInstantiation,
+                                                               stencil.getStencilAttributes(),
+                                                               stencilInstantiation->nextUID()));
             const std::unique_ptr<iir::Stencil>& newStencil2 = newStencils.back();
 
             fieldsInNewStencil.clear();

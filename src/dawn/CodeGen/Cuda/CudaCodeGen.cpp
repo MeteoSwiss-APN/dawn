@@ -385,8 +385,8 @@ void CudaCodeGen::generateStencilWrapperMembers(
     stencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
 
     for(int AccessID : stencilInstantiation->getAllocatedFieldAccessIDs())
-      stencilWrapperClass.addMember(c_gtc() + "storage_t",
-                                    "m_" + stencilInstantiation->getFieldNameFromAccessID(AccessID));
+      stencilWrapperClass.addMember(
+          c_gtc() + "storage_t", "m_" + stencilInstantiation->getFieldNameFromAccessID(AccessID));
   }
 
   if(!globalsMap.empty()) {
@@ -574,8 +574,8 @@ void CudaCodeGen::generateStencilRunMethod(
                ".get_storage_info_ptr()->index(" + fieldName + ".begin<0>(), " + fieldName +
                ".begin<1>()," + fieldName + ".begin<2>()," + fieldName + ".begin<3>(), 0))";
       } else {
-        args =
-            args + "," + stencilInstantiation->getFieldNameFromAccessID((*field).second.getAccessID());
+        args = args + "," +
+               stencilInstantiation->getFieldNameFromAccessID((*field).second.getAccessID());
       }
     }
 

@@ -281,8 +281,9 @@ PassFieldVersioning::fixRaceCondition(const iir::DependencyGraphAccesses* graph,
                                                            iir::StencilInstantiation::RD_Above);
 
     if(context->getOptions().ReportPassFieldVersioning)
-      std::cout << (numRenames != 0 ? ", " : " ") << instantiation.getFieldNameFromAccessID(oldAccessID)
-                << ":" << instantiation.getFieldNameFromAccessID(newAccessID);
+      std::cout << (numRenames != 0 ? ", " : " ")
+                << instantiation.getFieldNameFromAccessID(oldAccessID) << ":"
+                << instantiation.getFieldNameFromAccessID(newAccessID);
 
     numRenames++;
   }

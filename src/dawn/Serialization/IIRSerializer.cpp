@@ -211,10 +211,10 @@ static void computeInitialDerivedInfo(const std::shared_ptr<iir::StencilInstanti
         {StencilCallToIDPair.second, StencilCallToIDPair.first});
   }
 
-  for(const auto& leaf : iterateIIROver<iir::StatementAccessesPair>(*target->getIIR())){
+  for(const auto& leaf : iterateIIROver<iir::StatementAccessesPair>(*target->getIIR())) {
     leaf->update(iir::NodeUpdateType::level);
   }
-  for(const auto& leaf : iterateIIROver<iir::DoMethod>(*target->getIIR())){
+  for(const auto& leaf : iterateIIROver<iir::DoMethod>(*target->getIIR())) {
     leaf->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
 }

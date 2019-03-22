@@ -508,11 +508,10 @@ PassInlining::PassInlining(bool activate, InlineStrategyKind strategy)
 
 bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 
-    DetectInlineCandiates inliner(strategy_, stencilInstantiation);
+  DetectInlineCandiates inliner(strategy_, stencilInstantiation);
 
   if(!activate_)
     return true;
-
 
   // Iterate all statements (top -> bottom)
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {

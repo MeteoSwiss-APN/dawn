@@ -50,15 +50,17 @@ std::string CodeGeneratorHelper::buildCudaKernelName(
          "_ms" + std::to_string(ms->getID()) + "_kernel";
 }
 
-std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(const IndexRange<const std::map<int, iir::Field> > &nonTempFields,
-    const IndexRange<const std::map<int, iir::Field> > &tempFields,
+std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(
+    const IndexRange<const std::map<int, iir::Field>>& nonTempFields,
+    const IndexRange<const std::map<int, iir::Field>>& tempFields,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const std::unique_ptr<iir::MultiStage>& ms, CodeGeneratorHelper::FunctionArgType funArg) {
 
   std::unordered_set<std::string> processedDims;
   std::vector<std::string> strides;
   for(auto field : nonTempFields) {
-    const auto fieldName = stencilInstantiation->getFieldNameFromAccessID((*field).second.getAccessID());
+    const auto fieldName =
+        stencilInstantiation->getFieldNameFromAccessID((*field).second.getAccessID());
     Array3i dims{-1, -1, -1};
     // TODO this is a hack, we need to have dimensions also at ms level
     for(const auto& fieldInfo : ms->getParent()->getFields()) {

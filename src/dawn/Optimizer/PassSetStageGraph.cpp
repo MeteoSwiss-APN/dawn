@@ -14,8 +14,8 @@
 
 #include "dawn/Optimizer/PassSetStageGraph.h"
 #include "dawn/IIR/DependencyGraphStage.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/STLExtras.h"
 
 namespace dawn {

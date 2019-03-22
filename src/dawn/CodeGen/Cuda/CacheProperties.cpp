@@ -57,9 +57,11 @@ std::string CacheProperties::getCacheName(int accessID) const {
 
   const auto& cache = ms_->getCache(accessID);
   if(cache.getCacheType() == iir::Cache::CacheTypeKind::IJ)
-    return stencilInstantiation_->getFieldNameFromAccessID(cache.getCachedFieldAccessID()) + "_ijcache";
+    return stencilInstantiation_->getFieldNameFromAccessID(cache.getCachedFieldAccessID()) +
+           "_ijcache";
   else if(cache.getCacheType() == iir::Cache::CacheTypeKind::K)
-    return stencilInstantiation_->getFieldNameFromAccessID(cache.getCachedFieldAccessID()) + "_kcache";
+    return stencilInstantiation_->getFieldNameFromAccessID(cache.getCachedFieldAccessID()) +
+           "_kcache";
 
   dawn_unreachable("Unknown cache for code generation");
 }
