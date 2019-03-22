@@ -421,7 +421,7 @@ json::json MultiStage::jsonDump(const StencilInstantiation& instantiation) const
 
   json::json cachesJson;
   for(const auto& cache : derivedInfo_.caches_) {
-    cachesJson.push_back(cache.second.jsonDump());
+    cachesJson[cache.first] = cache.second.jsonDump();
   }
   node["Caches"] = cachesJson;
 
