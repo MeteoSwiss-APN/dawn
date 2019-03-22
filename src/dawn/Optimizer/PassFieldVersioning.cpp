@@ -212,40 +212,30 @@ bool PassFieldVersioning::run(
     return true;
   } else if(mode_ == FieldVersioningPassMode::FM_FixAccess) {
     // check all versioned variables:
-    for(auto id : stencilInstantiation->getMetaData().variableVersions_.versionIDs_) {
-      // This conditional is broken as the original version is broken. This should check if the
-      // field is a version or not.
-      if(std::find(stencilInstantiation->getMetaData().apiFieldIDs_.begin(),
-                   stencilInstantiation->getMetaData().apiFieldIDs_.end(),
-                   id) != stencilInstantiation->getMetaData().apiFieldIDs_.end()) {
-        std::cout << "this was the original field" << std::endl;
-        std::cout << "id:" << id << std::endl;
-      } else {
-        for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
-          iir::Stencil& stencil = *stencilPtr;
-          for(const auto& mss : iterateIIROver<iir::MultiStage>(stencil)) {
-            // For every mulitstage, check if the versioned field as a read-access first
-            auto multiInterval = mss->computeReadAccessInterval(id);
-            if(multiInterval.empty())
-              continue;
+    for(auto id : stencilInstantiation->getMetaData().variableVersions_.getVersionIDs()) {
+      for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
+        iir::Stencil& stencil = *stencilPtr;
+        for(const auto& mss : iterateIIROver<iir::MultiStage>(stencil)) {
+          // For every mulitstage, check if the versioned field as a read-access first
+          auto multiInterval = mss->computeReadAccessInterval(id);
+          if(multiInterval.empty())
+            continue;
 
-            // If it has one, we need to generate a domethod that fills that access from the
-            // original field in every interval that is being accessed before it's first write
-            std::cout << multiInterval << std::endl;
-            auto extents = mss->getField(id).getReadExtentsRB();
-            for(auto interval : multiInterval.getIntervals()) {
+          // If it has one, we need to generate a domethod that fills that access from the
+          // original field in every interval that is being accessed before it's first write
+          auto extents = mss->getField(id).getReadExtentsRB();
+          for(auto interval : multiInterval.getIntervals()) {
 
-              // we create the new stage that holds these do-methods
-              auto insertedStage = createAssignmentStage(
-                  interval, id, stencilInstantiation->getOriginalVersionOfAccessID(id),
-                  stencilInstantiation, extents);
-              /////////// WITTODO: change back to the original version as soon as fixed
-              //              auto insertedStage =
-              //                  createAssignmentStage(interval, id, 15, stencilInstantiation,
-              //                  extents);
-              // and insert them at the beginnning of the MultiStage
-              mss->insertChild(mss->childrenBegin(), std::move(insertedStage));
-            }
+            // we create the new stage that holds these do-methods
+            auto insertedStage = createAssignmentStage(
+                interval, id, stencilInstantiation->getOriginalVersionOfAccessID(id),
+                stencilInstantiation, extents);
+            // and insert them at the beginnning of the MultiStage
+            mss->insertChild(mss->childrenBegin(), std::move(insertedStage));
+          }
+          // update the mss: #TODO: this is still a workaround since we don't have level-and below:
+          for(const auto& domethods : iterateIIROver<iir::DoMethod>(*mss)){
+              domethods->update(iir::NodeUpdateType::levelAndTreeAbove);
           }
         }
       }
