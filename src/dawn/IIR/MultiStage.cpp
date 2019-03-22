@@ -415,7 +415,7 @@ json::json MultiStage::jsonDump(const StencilInstantiation& instantiation) const
   node["Loop"] = loopOrderToString(loopOrder_);
   json::json fieldsJson;
   for(const auto& field : derivedInfo_.fields_) {
-    fieldsJson[instantiation.getNameFromAccessID(field.first)] = field.second.jsonDump(&instantiation);
+    fieldsJson[instantiation.getNameFromAccessID(field.first)] = field.second.jsonDump();
   }
   node["Fields"] = fieldsJson;
 
@@ -432,6 +432,25 @@ json::json MultiStage::jsonDump(const StencilInstantiation& instantiation) const
   }
   return node;
 }
+
+bool MultiStage::hasMemAccessTemporaries() const {
+  for(const auto& field : derivedInfo_.fields_) {
+    if(isMemAccessTemporary(field.first)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool MultiStage::isMemAccessTemporary(const int accessID) const {
+  if(!stencilInstantiation_.isTemporaryField(accessID))
+    return false;
+  if(!derivedInfo_.caches_.count(accessID))
+    return true;
+  return (derivedInfo_.caches_.at(accessID).requiresMemMemoryAccess());
+}
+bool MultiStage::hasField(const int accessID) const { return derivedInfo_.fields_.count(accessID); }
+
 bool MultiStage::isEmptyOrNullStmt() const {
   for(const auto& stage : getChildren()) {
     if(!(stage)->isEmptyOrNullStmt()) {

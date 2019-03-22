@@ -67,6 +67,10 @@ Interval Cache::getWindowInterval(Interval::Bound bound) const {
   return interval_->crop(bound, {window_->m_m, window_->m_p});
 }
 
+bool Cache::requiresMemMemoryAccess() const {
+  return (policy_ != CacheIOPolicy::local) || (type_ == CacheTypeKind::bypass);
+}
+
 json::json Cache::jsonDump() const {
   json::json node;
   node["accessid"] = AccessID_;

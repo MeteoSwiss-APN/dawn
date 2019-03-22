@@ -42,6 +42,8 @@ OPT(std::string, Backend, "gridtools", "backend", "",
     "\n - cuda        = optimized cuda", "<backend>", true, false)
 OPT(int, nsms, 0, "nsms", "",
     "Number of (CUDA) SMs", "<nsms>", true, false)
+OPT(int, maxBlocksPerSM, 0, "max-blocks-sm", "",
+    "Maximum number of blocks that can be registered per SM", "<max-blocks-sm>", true, false)
 OPT(std::string, domain_size, "", "domain-size", "",
     "domain size for compiler optimization", "", true, false)
 OPT(std::string, block_size, "", "block-size", "",
