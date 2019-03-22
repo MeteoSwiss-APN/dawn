@@ -91,7 +91,7 @@ public:
     return extentsRB_.getWriteExtents();
   }
 
-  json::json jsonDump(const StencilInstantiation* instantiation) const;
+  json::json jsonDump() const;
 
   inline Extents const& getExtents() const { return extents_.getExtents(); }
   inline Extents const& getExtentsRB() const { return extentsRB_.getExtents(); }

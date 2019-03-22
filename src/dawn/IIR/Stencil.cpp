@@ -100,10 +100,10 @@ bool Stencil::StatementPosition::inSameDoMethod(const Stencil::StatementPosition
   return StagePos == other.StagePos && DoMethodIndex == other.DoMethodIndex;
 }
 
-json::json Stencil::FieldInfo::jsonDump(const StencilInstantiation* instantiation) const {
+json::json Stencil::FieldInfo::jsonDump() const {
   json::json node;
   node["dim"] = format("[%i,%i,%i]", Dimensions[0], Dimensions[1], Dimensions[2]);
-  node["field"] = field.jsonDump(instantiation);
+  node["field"] = field.jsonDump();
   node["IsTemporary"] = IsTemporary;
   return node;
 }
@@ -113,7 +113,7 @@ json::json Stencil::jsonDump() const {
   node["ID"] = std::to_string(StencilID_);
   json::json fieldsJson;
   for(const auto& f : derivedInfo_.fields_) {
-    fieldsJson[f.second.Name] = f.second.jsonDump(&stencilInstantiation_);
+    fieldsJson[f.second.Name] = f.second.jsonDump();
   }
   node["Fields"] = fieldsJson;
 
@@ -123,6 +123,15 @@ json::json Stencil::jsonDump() const {
     cnt++;
   }
   return node;
+}
+
+bool Stencil::containsRedundantComputations() const {
+  for(const auto& stage : iterateIIROver<Stage>(*this)) {
+    if(!stage->getExtents().isHorizontalPointwise()) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void Stencil::updateFromChildren() {
