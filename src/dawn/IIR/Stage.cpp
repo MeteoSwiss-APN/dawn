@@ -39,7 +39,7 @@ json::json Stage::jsonDump(const StencilInstantiation& instantiation) const {
   json::json node;
   json::json fieldsJson;
   for(const auto& field : derivedInfo_.fields_) {
-    fieldsJson[instantiation.getNameFromAccessID(field.first)] = field.second.jsonDump(&instantiation);
+    fieldsJson[instantiation.getNameFromAccessID(field.first)] = field.second.jsonDump();
   }
   node["Fields"] = fieldsJson;
   std::stringstream ss;

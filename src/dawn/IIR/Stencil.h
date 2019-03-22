@@ -55,7 +55,7 @@ public:
     Array3i Dimensions;
     Field field;
     bool IsTemporary;
-    json::json jsonDump(const StencilInstantiation* instantiation) const;
+    json::json jsonDump() const;
   };
 
 private:
@@ -254,6 +254,10 @@ public:
   const std::shared_ptr<DependencyGraphStage>& getStageDependencyGraph() const;
   void setStageDependencyGraph(const std::shared_ptr<DependencyGraphStage>& stageDAG);
   /// @}
+
+  /// @brief determines whether the stencil contains redundant computations, i.e. if any of the
+  /// stages has a non null extent
+  bool containsRedundantComputations() const;
 
   /// @brief Get the axis of the stencil (i.e the interval of all stages)
   ///
