@@ -102,7 +102,6 @@ bool Stencil::StatementPosition::inSameDoMethod(const Stencil::StatementPosition
 
 json::json Stencil::FieldInfo::jsonDump(const StencilInstantiation* instantiation) const {
   json::json node;
-  node["name"] = Name;
   node["dim"] = format("[%i,%i,%i]", Dimensions[0], Dimensions[1], Dimensions[2]);
   node["field"] = field.jsonDump(instantiation);
   node["IsTemporary"] = IsTemporary;
@@ -114,7 +113,7 @@ json::json Stencil::jsonDump() const {
   node["ID"] = std::to_string(StencilID_);
   json::json fieldsJson;
   for(const auto& f : derivedInfo_.fields_) {
-    fieldsJson.push_back(f.second.jsonDump(&stencilInstantiation_));
+    fieldsJson[f.second.Name] = f.second.jsonDump(&stencilInstantiation_);
   }
   node["Fields"] = fieldsJson;
 
