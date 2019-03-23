@@ -14,7 +14,6 @@
 
 #include "dawn/Optimizer/BoundaryExtent.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
-#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/STLExtras.h"
 #include <unordered_map>
 #include <unordered_set>

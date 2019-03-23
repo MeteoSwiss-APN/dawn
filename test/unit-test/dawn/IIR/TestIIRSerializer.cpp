@@ -15,8 +15,10 @@
 #include "dawn/Compiler/DiagnosticsEngine.h"
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
-#include "dawn/Serialization/IIRSerializer.h"
+#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Serialization/IIRSerializer.h"
 #include <gtest/gtest.h>
 
 using namespace dawn;
@@ -101,26 +103,18 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
       }
     }
   }
-  return true;
-}
-bool compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformation& rhs) {
-  IIR_EARLY_EXIT((lhs.ExprIDToAccessIDMap_ == rhs.ExprIDToAccessIDMap_));
-  IIR_EARLY_EXIT((lhs.StmtIDToAccessIDMap_ == rhs.StmtIDToAccessIDMap_));
-  IIR_EARLY_EXIT((lhs.LiteralAccessIDToNameMap_ == rhs.LiteralAccessIDToNameMap_));
-  IIR_EARLY_EXIT((lhs.FieldAccessIDSet_ == rhs.FieldAccessIDSet_));
-  IIR_EARLY_EXIT((lhs.apiFieldIDs_ == rhs.apiFieldIDs_));
-  IIR_EARLY_EXIT((lhs.TemporaryFieldAccessIDSet_ == rhs.TemporaryFieldAccessIDSet_));
-  IIR_EARLY_EXIT((lhs.GlobalVariableAccessIDSet_ == rhs.GlobalVariableAccessIDSet_));
-  IIR_EARLY_EXIT((lhs.stencilDescStatements_.size() == rhs.stencilDescStatements_.size()));
-  for(int i = 0, size = lhs.stencilDescStatements_.size(); i < size; ++i) {
-    if(!lhs.stencilDescStatements_[i]->ASTStmt->equals(
-           rhs.stencilDescStatements_[i]->ASTStmt.get()))
+  const auto& lhsControlFlowStmts = lhs->getControlFlowDescriptor().getStatements();
+  const auto& rhsControlFlowStmts = rhs->getControlFlowDescriptor().getStatements();
+
+  IIR_EARLY_EXIT((lhsControlFlowStmts.size() == rhsControlFlowStmts.size()));
+  for(int i = 0, size = lhsControlFlowStmts.size(); i < size; ++i) {
+    if(!lhsControlFlowStmts[i]->ASTStmt->equals(rhsControlFlowStmts[i]->ASTStmt.get()))
       return false;
-    if(lhs.stencilDescStatements_[i]->StackTrace) {
-      if(rhs.stencilDescStatements_[i]->StackTrace) {
-        for(int j = 0, jsize = lhs.stencilDescStatements_[i]->StackTrace->size(); j < jsize; ++j) {
-          if(!(lhs.stencilDescStatements_[i]->StackTrace->at(j) ==
-               rhs.stencilDescStatements_[i]->StackTrace->at(j))) {
+    if(lhsControlFlowStmts[i]->StackTrace) {
+      if(rhsControlFlowStmts[i]->StackTrace) {
+        for(int j = 0, jsize = lhsControlFlowStmts[i]->StackTrace->size(); j < jsize; ++j) {
+          if(!(lhsControlFlowStmts[i]->StackTrace->at(j) ==
+               rhsControlFlowStmts[i]->StackTrace->at(j))) {
             return false;
           }
         }
@@ -128,13 +122,21 @@ bool compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformati
       return false;
     }
   }
-  // we compare the content of the maps since the shared-ptr's are not the same
-  IIR_EARLY_EXIT((lhs.IDToStencilCallMap_.size() == rhs.IDToStencilCallMap_.size()));
-  for(const auto& lhsPair : lhs.IDToStencilCallMap_) {
-    IIR_EARLY_EXIT(rhs.IDToStencilCallMap_.count(lhsPair.first));
-    auto rhsValue = rhs.IDToStencilCallMap_[lhsPair.first];
-    IIR_EARLY_EXIT(rhsValue->equals(lhsPair.second.get()));
-  }
+
+  return true;
+}
+bool compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformation& rhs) {
+  IIR_EARLY_EXIT((lhs.ExprIDToAccessIDMap_ == rhs.ExprIDToAccessIDMap_));
+  IIR_EARLY_EXIT((lhs.StmtIDToAccessIDMap_ == rhs.StmtIDToAccessIDMap_));
+  IIR_EARLY_EXIT((lhs.fieldAccessMetadata_.LiteralAccessIDToNameMap_ ==
+                  rhs.fieldAccessMetadata_.LiteralAccessIDToNameMap_));
+  IIR_EARLY_EXIT(
+      (lhs.fieldAccessMetadata_.FieldAccessIDSet_ == rhs.fieldAccessMetadata_.FieldAccessIDSet_));
+  IIR_EARLY_EXIT((lhs.fieldAccessMetadata_.apiFieldIDs_ == rhs.fieldAccessMetadata_.apiFieldIDs_));
+  IIR_EARLY_EXIT((lhs.fieldAccessMetadata_.TemporaryFieldAccessIDSet_ ==
+                  rhs.fieldAccessMetadata_.TemporaryFieldAccessIDSet_));
+  IIR_EARLY_EXIT((lhs.fieldAccessMetadata_.GlobalVariableAccessIDSet_ ==
+                  rhs.fieldAccessMetadata_.GlobalVariableAccessIDSet_));
 
   // we compare the content of the maps since the shared-ptr's are not the same
   IIR_EARLY_EXIT(
@@ -191,14 +193,14 @@ protected:
 TEST_F(IIRSerializerTest, EmptySetup) {
   auto desered = serializeAndDeserializeRef();
   IIR_EXPECT_EQ(desered, referenceInstantiaton);
-  desered->getMetaData().apiFieldIDs_.push_back(10);
+  desered->getMetaData().fieldAccessMetadata_.apiFieldIDs_.push_back(10);
   IIR_EXPECT_NE(desered, referenceInstantiaton);
 }
 TEST_F(IIRSerializerTest, SimpleDataStructures) {
   //===------------------------------------------------------------------------------------------===
   // Checking inserts into the various maps
   //===------------------------------------------------------------------------------------------===
-  referenceInstantiaton->getMetaData().AccessIDToNameMap_.insert({1, "test"});
+  referenceInstantiaton->getMetaData().setAccessIDNamePair(1, "test");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   referenceInstantiaton->getMetaData().ExprIDToAccessIDMap_.emplace(10, 5);
@@ -207,34 +209,35 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
   referenceInstantiaton->getMetaData().StmtIDToAccessIDMap_.emplace(5, 10);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  referenceInstantiaton->getMetaData().LiteralAccessIDToNameMap_.emplace(5, "test");
+  referenceInstantiaton->getMetaData().fieldAccessMetadata_.LiteralAccessIDToNameMap_.emplace(
+      5, "test");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  referenceInstantiaton->getMetaData().FieldAccessIDSet_.emplace(712);
+  referenceInstantiaton->getMetaData().fieldAccessMetadata_.FieldAccessIDSet_.emplace(712);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  referenceInstantiaton->getMetaData().apiFieldIDs_.push_back(10);
-  referenceInstantiaton->getMetaData().apiFieldIDs_.push_back(12);
+  referenceInstantiaton->getMetaData().fieldAccessMetadata_.apiFieldIDs_.push_back(10);
+  referenceInstantiaton->getMetaData().fieldAccessMetadata_.apiFieldIDs_.push_back(12);
   auto deserializedStencilInstantiaion = serializeAndDeserializeRef();
   IIR_EXPECT_EQ(deserializedStencilInstantiaion, referenceInstantiaton);
 
   // check that ordering is preserved
-  referenceInstantiaton->getMetaData().apiFieldIDs_.clear();
-  referenceInstantiaton->getMetaData().apiFieldIDs_.push_back(12);
-  referenceInstantiaton->getMetaData().apiFieldIDs_.push_back(10);
+  referenceInstantiaton->getMetaData().fieldAccessMetadata_.apiFieldIDs_.clear();
+  referenceInstantiaton->getMetaData().fieldAccessMetadata_.apiFieldIDs_.push_back(12);
+  referenceInstantiaton->getMetaData().fieldAccessMetadata_.apiFieldIDs_.push_back(10);
   IIR_EXPECT_NE(deserializedStencilInstantiaion, referenceInstantiaton);
 
-  referenceInstantiaton->getMetaData().TemporaryFieldAccessIDSet_.emplace(712);
+  referenceInstantiaton->getMetaData().fieldAccessMetadata_.TemporaryFieldAccessIDSet_.emplace(712);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  referenceInstantiaton->getMetaData().GlobalVariableAccessIDSet_.emplace(712);
+  referenceInstantiaton->getMetaData().fieldAccessMetadata_.GlobalVariableAccessIDSet_.emplace(712);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   auto refvec = std::make_shared<std::vector<int>>();
   refvec->push_back(6);
   refvec->push_back(7);
   refvec->push_back(8);
-  referenceInstantiaton->getMetaData().variableVersions_.insert(5, refvec);
+  referenceInstantiaton->getMetaData().fieldAccessMetadata_.variableVersions_.insert(5, refvec);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   referenceInstantiaton->getMetaData().fileName_ = "fileName";
@@ -251,11 +254,10 @@ TEST_F(IIRSerializerTest, ComplexStrucutes) {
       std::make_shared<StencilCallDeclStmt>(std::make_shared<sir::StencilCall>("me")), nullptr);
   statement->ASTStmt->getSourceLocation().Line = 10;
   statement->ASTStmt->getSourceLocation().Column = 12;
-  referenceInstantiaton->getMetaData().stencilDescStatements_.push_back(statement);
+  referenceInstantiaton->getIIR()->getControlFlowDescriptor().insertStmt(statement);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   auto stmt = std::make_shared<StencilCallDeclStmt>(std::make_shared<sir::StencilCall>("test"));
-  referenceInstantiaton->getMetaData().IDToStencilCallMap_.emplace(10, stmt);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   auto bcstmt = std::make_shared<BoundaryConditionDeclStmt>("callee");
@@ -269,7 +271,7 @@ TEST_F(IIRSerializerTest, IIRTests) {
   sir::Attr attributes;
   attributes.set(sir::Attr::AK_MergeStages);
   referenceInstantiaton->getIIR()->insertChild(
-      make_unique<iir::Stencil>(*referenceInstantiaton, attributes, 10),
+      make_unique<iir::Stencil>(referenceInstantiaton->getMetaData(), attributes, 10),
       referenceInstantiaton->getIIR());
   const auto& IIRStencil = referenceInstantiaton->getIIR()->getChild(0);
   auto deserialized = serializeAndDeserializeRef();
@@ -278,8 +280,8 @@ TEST_F(IIRSerializerTest, IIRTests) {
   IIR_EXPECT_NE(deserialized, referenceInstantiaton);
 
   (IIRStencil)
-      ->insertChild(
-          make_unique<iir::MultiStage>(*referenceInstantiaton, iir::LoopOrderKind::LK_Backward));
+      ->insertChild(make_unique<iir::MultiStage>(referenceInstantiaton->getMetaData(),
+                                                 iir::LoopOrderKind::LK_Backward));
   const auto& IIRMSS = (IIRStencil)->getChild(0);
   IIRMSS->getCaches().emplace(
       10, iir::Cache(iir::Cache::IJ, iir::Cache::fill, 10, boost::none, boost::none, boost::none));
@@ -288,24 +290,24 @@ TEST_F(IIRSerializerTest, IIRTests) {
   IIRMSS->setLoopOrder(iir::LoopOrderKind::LK_Forward);
   IIR_EXPECT_NE(deserialized, referenceInstantiaton);
 
-  IIRMSS->insertChild(make_unique<iir::Stage>(*referenceInstantiaton, 12));
+  IIRMSS->insertChild(make_unique<iir::Stage>(referenceInstantiaton->getMetaData(), 12));
   const auto& IIRStage = IIRMSS->getChild(0);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   (IIRStage)->insertChild(
-      make_unique<iir::DoMethod>(iir::Interval(1, 5, 0, 1), *referenceInstantiaton));
+      make_unique<iir::DoMethod>(iir::Interval(1, 5, 0, 1), referenceInstantiaton->getMetaData()));
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-    auto& IIRDoMethod = (IIRStage)->getChild(0);
-    auto expr = std::make_shared<VarAccessExpr>("name");
-    auto stmt = std::make_shared<ExprStmt>(expr);
-    stmt->setID(22);
-    auto statement = std::make_shared<Statement>(stmt, nullptr);
-    auto stmtAccessPair = make_unique<iir::StatementAccessesPair>(statement);
-    std::shared_ptr<iir::Accesses> callerAccesses = std::make_shared<iir::Accesses>();
-    stmtAccessPair->setCallerAccesses(callerAccesses);
+  auto& IIRDoMethod = (IIRStage)->getChild(0);
+  auto expr = std::make_shared<VarAccessExpr>("name");
+  auto stmt = std::make_shared<ExprStmt>(expr);
+  stmt->setID(22);
+  auto statement = std::make_shared<Statement>(stmt, nullptr);
+  auto stmtAccessPair = make_unique<iir::StatementAccessesPair>(statement);
+  std::shared_ptr<iir::Accesses> callerAccesses = std::make_shared<iir::Accesses>();
+  stmtAccessPair->setCallerAccesses(callerAccesses);
 
-    (IIRDoMethod)->insertChild(std::move(stmtAccessPair));
+  (IIRDoMethod)->insertChild(std::move(stmtAccessPair));
 }
 
 } // anonymous namespace

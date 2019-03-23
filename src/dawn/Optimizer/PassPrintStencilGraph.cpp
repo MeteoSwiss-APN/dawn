@@ -14,8 +14,8 @@
 
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 
 namespace dawn {
 
@@ -32,7 +32,7 @@ bool PassPrintStencilGraph::run(
   int stencilIdx = 0;
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     iir::Stencil& stencil = *stencilPtr;
-    auto DAG = std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation.get());
+    auto DAG = std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation->getMetaData());
 
     // Merge all stages into a single DAG
     int numStages = stencil.getNumStages();

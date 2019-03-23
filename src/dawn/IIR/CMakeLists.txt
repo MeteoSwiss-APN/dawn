@@ -28,10 +28,14 @@ yoda_add_library(
   SOURCES 
           Accesses.cpp  
           Accesses.h
+	  AccessToNameMapper.cpp
+	  AccessToNameMapper.h
           BlockStatements.cpp
           BlockStatements.h
           Cache.cpp
           Cache.h
+	  ControlFlowDescriptor.cpp
+	  ControlFlowDescriptor.h
           DependencyGraph.h
           DependencyGraphAccesses.cpp      
           DependencyGraphAccesses.h
@@ -45,6 +49,8 @@ yoda_add_library(
           Field.cpp
           FieldAccessExtents.cpp
           FieldAccessExtents.h
+	  FieldAccessMetadata.cpp
+	  FieldAccessMetadata.h
           Interval.cpp
           Interval.h
           IntervalAlgorithms.cpp

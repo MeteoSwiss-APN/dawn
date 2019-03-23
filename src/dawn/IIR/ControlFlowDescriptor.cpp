@@ -11,25 +11,14 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-
-#ifndef DAWN_OPTIMIZER_REORDERSTRATEGYPARTITIONING_H
-#define DAWN_OPTIMIZER_REORDERSTRATEGYPARTITIONING_H
-
-#include "dawn/Optimizer/ReorderStrategy.h"
+#include "ControlFlowDescriptor.h"
 
 namespace dawn {
+namespace iir {
 
-/// @brief Reordering strategy which uses S-cut graph partitioning to reorder the stages and
-/// statements
-/// @ingroup optimizer
-class ReoderStrategyPartitioning : public ReorderStrategy {
-public:
-  /// @brief Apply the reordering strategy and return the stencil
-  virtual std::unique_ptr<iir::Stencil>
-  reorder(iir::StencilInstantiation* instantiation,
-          const std::unique_ptr<iir::Stencil>& stencilPtr) override;
-};
+void ControlFlowDescriptor::insertStmt(std::shared_ptr<Statement>&& statment) {
+  controlFlowStatements_.push_back(statment);
+}
 
+} // namespace iir
 } // namespace dawn
-
-#endif

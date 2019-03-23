@@ -16,13 +16,17 @@
 #define DAWN_CODEGEN_CUDA_CODEGENERATORHELPER_H
 
 #include "dawn/IIR/Cache.h"
-#include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/IIR/Stencil.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/IndexRange.h"
-#include <string>
 #include <map>
+#include <string>
 
 namespace dawn {
+namespace iir {
+class MultiStage;
+class StencilInstantiation;
+}
 namespace codegen {
 namespace cuda {
 
@@ -34,9 +38,8 @@ public:
   static std::string indexIteratorName(Array3i dims);
   static void
   generateFieldAccessDeref(std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
-                           const std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                           const int accessID, const std::unordered_map<int, Array3i> fieldIndexMap,
-                           Array3i offset);
+                           const iir::StencilMetaInformation& metadata, const int accessID,
+                           const std::unordered_map<int, Array3i> fieldIndexMap, Array3i offset);
   ///
   /// @brief produces a string of (i,j,k) accesses for the C++ generated naive code,
   /// from an array of offseted accesses
@@ -44,9 +47,8 @@ public:
   static std::array<std::string, 3> ijkfyOffset(const Array3i& offsets, bool isTemporary,
                                                 const Array3i iteratorDims);
 
-  /// @brief returns true if a normal ijk field iterator should be used for temporaries instead of a
-  /// custom iterator
-  static bool useNormalIteratorForTmp(const std::unique_ptr<iir::MultiStage>& ms);
+  static bool hasAccessIDMemAccess(const int accessID,
+                                   const std::unique_ptr<iir::Stencil>& stencil);
 
   /// @brief return true if the ms can be solved in parallel (in the vertical dimension)
   static bool solveKLoopInParallel(const std::unique_ptr<iir::MultiStage>& ms);
@@ -55,15 +57,20 @@ public:
   static std::vector<iir::Interval>
   computePartitionOfIntervals(const std::unique_ptr<iir::MultiStage>& ms);
 
+  static bool
+  useTemporaries(const std::unique_ptr<iir::Stencil>& stencil,
+                 const iir::StencilMetaInformation& metadata);
+
   /// @brief computes the maximum extent required by all temporaries, which will be used for proper
   /// allocation
   static iir::Extents computeTempMaxWriteExtent(iir::Stencil const& stencil);
 
-  static std::vector<std::string> generateStrideArguments(
-      const IndexRange<const std::map<int, iir::Field>>& nonTempFields,
-      const IndexRange<const std::map<int, iir::Field>>& tempFields,
-      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-      const std::unique_ptr<iir::MultiStage>& ms, CodeGeneratorHelper::FunctionArgType funArg);
+  static std::vector<std::string>
+  generateStrideArguments(const IndexRange<const std::map<int, iir::Field>>& nonTempFields,
+                          const IndexRange<const std::map<int, iir::Field>>& tempFields,
+                          const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                          const std::unique_ptr<iir::MultiStage>& ms,
+                          CodeGeneratorHelper::FunctionArgType funArg);
 
   /// @brief compose the cuda kernel name of a stencil instantiation
   static std::string

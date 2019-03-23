@@ -16,8 +16,6 @@ yoda_add_library(
   NAME DawnUnittest
   SOURCES ASTSimplifier.cpp
           ASTSimplifier.h
-          PrintAllExpressionTypes.cpp
-          PrintAllExpressionTypes.h
           UnittestLogger.cpp
           UnittestLogger.h
   ARCHIVE

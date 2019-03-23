@@ -27,7 +27,6 @@
 namespace dawn {
 
 namespace iir {
-class StencilInstantiation;
 class StencilFunctionInstantiation;
 }
 
@@ -38,7 +37,7 @@ namespace cuda {
 /// @ingroup cuda
 class ASTStencilBody : public ASTCodeGenCXX {
 protected:
-  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
+  const iir::StencilMetaInformation& metadata_;
   RangeToString offsetPrinter_;
   const std::unordered_map<int, Array3i>& fieldIndexMap_;
   const std::unique_ptr<iir::MultiStage>& ms_;
@@ -49,7 +48,7 @@ public:
   using Base = ASTCodeGenCXX;
 
   /// @brief constructor
-  ASTStencilBody(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+  ASTStencilBody(const iir::StencilMetaInformation& metadata,
                  const std::unordered_map<int, Array3i>& fieldIndexMap,
                  const std::unique_ptr<iir::MultiStage>& ms, const CacheProperties& cacheProperties,
                  Array3ui blockSizes);

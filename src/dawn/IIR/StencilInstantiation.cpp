@@ -47,7 +47,7 @@ namespace iir {
 //===------------------------------------------------------------------------------------------===//
 
 StencilInstantiation::StencilInstantiation(dawn::OptimizerContext* context)
-    : context_(context), IIR_(make_unique<IIR>()) {}
+    : context_(context), IIR_(make_unique<IIR>()), SIR_(context->getSIR()) {}
 
 StencilMetaInformation& StencilInstantiation::getMetaData() { return metadata_; }
 
@@ -64,83 +64,11 @@ std::shared_ptr<StencilInstantiation> StencilInstantiation::clone() const {
   return stencilInstantiation;
 }
 
-void StencilInstantiation::setAccessIDNamePair(int AccessID, const std::string& name) {
-  metadata_.AccessIDToNameMap_.emplace(AccessID, name);
-  getNameToAccessIDMap().emplace(name, AccessID);
-}
-
-void StencilInstantiation::setAccessIDNamePairOfField(int AccessID, const std::string& name,
-                                                      bool isTemporary) {
-  setAccessIDNamePair(AccessID, name);
-  metadata_.FieldAccessIDSet_.insert(AccessID);
-  if(isTemporary) {
-    metadata_.TemporaryFieldAccessIDSet_.insert(AccessID);
-  }
-}
-
-void StencilInstantiation::setAccessIDNamePairOfGlobalVariable(int AccessID,
-                                                               const std::string& name) {
-  setAccessIDNamePair(AccessID, name);
-  metadata_.GlobalVariableAccessIDSet_.insert(AccessID);
-}
-
-void StencilInstantiation::removeAccessID(int AccessID) {
-  if(getNameToAccessIDMap().count(metadata_.AccessIDToNameMap_[AccessID]))
-    getNameToAccessIDMap().erase(metadata_.AccessIDToNameMap_[AccessID]);
-
-  metadata_.AccessIDToNameMap_.erase(AccessID);
-  metadata_.FieldAccessIDSet_.erase(AccessID);
-  metadata_.TemporaryFieldAccessIDSet_.erase(AccessID);
-
-  if(metadata_.variableVersions_.hasVariableMultipleVersions(AccessID)) {
-    auto versions = metadata_.variableVersions_.getVersions(AccessID);
-    versions->erase(std::remove_if(versions->begin(), versions->end(),
-                                   [&](int AID) { return AID == AccessID; }),
-                    versions->end());
-  }
-}
-
 const std::string StencilInstantiation::getName() const { return metadata_.stencilName_; }
-
-std::unordered_map<int, int>& StencilInstantiation::getStmtIDToAccessIDMap() {
-  return metadata_.StmtIDToAccessIDMap_;
-}
-
-const std::string& StencilInstantiation::getNameFromAccessID(int AccessID) const {
-  if(AccessID < 0)
-    return getNameFromLiteralAccessID(AccessID);
-  auto it = metadata_.AccessIDToNameMap_.find(AccessID);
-  DAWN_ASSERT_MSG(it != metadata_.AccessIDToNameMap_.end(), "Invalid AccessID");
-  return it->second;
-}
-
-void StencilInstantiation::mapExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID) {
-  metadata_.ExprIDToAccessIDMap_.emplace(expr->getID(), accessID);
-}
-
-void StencilInstantiation::eraseExprToAccessID(std::shared_ptr<Expr> expr) {
-  DAWN_ASSERT(metadata_.ExprIDToAccessIDMap_.count(expr->getID()));
-  metadata_.ExprIDToAccessIDMap_.erase(expr->getID());
-}
-
-void StencilInstantiation::mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt, int accessID) {
-  metadata_.StmtIDToAccessIDMap_.emplace(stmt->getID(), accessID);
-}
-
-const std::string& StencilInstantiation::getNameFromLiteralAccessID(int AccessID) const {
-  DAWN_ASSERT_MSG(isLiteral(AccessID), "Invalid literal");
-  return metadata_.LiteralAccessIDToNameMap_.find(AccessID)->second;
-}
-
-bool StencilInstantiation::isGlobalVariable(const std::string& name) const {
-  auto it = getNameToAccessIDMap().find(name);
-  return it == getNameToAccessIDMap().end() ? false : isGlobalVariable(it->second);
-}
 
 void StencilInstantiation::insertStencilFunctionIntoSIR(
     const std::shared_ptr<sir::StencilFunction>& sirStencilFunction) {
-
-  metadata_.allStencilFunctions_.push_back(sirStencilFunction);
+  SIR_->StencilFunctions.push_back(sirStencilFunction);
 }
 
 bool StencilInstantiation::insertBoundaryConditions(std::string originalFieldName,
@@ -153,21 +81,17 @@ bool StencilInstantiation::insertBoundaryConditions(std::string originalFieldNam
   }
 }
 
-Array3i StencilInstantiation::getFieldDimensionsMask(int FieldID) const {
-  if(metadata_.fieldIDToInitializedDimensionsMap_.count(FieldID) == 0) {
-    return Array3i{{1, 1, 1}};
-  }
-  return metadata_.fieldIDToInitializedDimensionsMap_.find(FieldID)->second;
-}
 const sir::Value& StencilInstantiation::getGlobalVariableValue(const std::string& name) const {
   auto it = metadata_.globalVariableMap_.find(name);
   DAWN_ASSERT(it != metadata_.globalVariableMap_.end());
   return *it->second;
 }
 
+// TODO move this away
 ArrayRef<int> StencilInstantiation::getFieldVersions(int AccessID) const {
-  return metadata_.variableVersions_.hasVariableMultipleVersions(AccessID)
-             ? ArrayRef<int>(*(metadata_.variableVersions_.getVersions(AccessID)))
+  return metadata_.fieldAccessMetadata_.variableVersions_.hasVariableMultipleVersions(AccessID)
+             ? ArrayRef<int>(
+                   *(metadata_.fieldAccessMetadata_.variableVersions_.getVersions(AccessID)))
              : ArrayRef<int>{};
 }
 
@@ -176,65 +100,66 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
                                                  RenameDirection dir) {
   int newAccessID = nextUID();
 
-  if(isField(AccessID)) {
-    if(metadata_.variableVersions_.hasVariableMultipleVersions(AccessID)) {
+  if(metadata_.isAccessType(FieldAccessType::FAT_Field, AccessID)) {
+    if(metadata_.fieldAccessMetadata_.variableVersions_.hasVariableMultipleVersions(AccessID)) {
       // Field is already multi-versioned, append a new version
-      auto versions = metadata_.variableVersions_.getVersions(AccessID);
+      auto versions = metadata_.fieldAccessMetadata_.variableVersions_.getVersions(AccessID);
 
       // Set the second to last field to be a temporary (only the first and the last field will be
       // real storages, all other versions will be temporaries)
       int lastAccessID = versions->back();
-      metadata_.TemporaryFieldAccessIDSet_.insert(lastAccessID);
-      IIR_->getAllocatedFieldAccessIDSet().erase(lastAccessID);
+      metadata_.fieldAccessMetadata_.TemporaryFieldAccessIDSet_.insert(lastAccessID);
+      metadata_.eraseAllocatedField(lastAccessID);
 
       // The field with version 0 contains the original name
-      const std::string& originalName = getNameFromAccessID(versions->front());
+      const std::string& originalName = metadata_.getFieldNameFromAccessID(versions->front());
 
       // Register the new field
-      setAccessIDNamePairOfField(newAccessID, originalName + "_" + std::to_string(versions->size()),
-                                 false);
-      IIR_->getAllocatedFieldAccessIDSet().insert(newAccessID);
+      metadata_.setAccessIDNamePairOfField(
+          newAccessID, originalName + "_" + std::to_string(versions->size()), false);
+      metadata_.insertAllocatedField(newAccessID);
 
       versions->push_back(newAccessID);
-      metadata_.variableVersions_.insert(newAccessID, versions);
+      metadata_.fieldAccessMetadata_.variableVersions_.insert(newAccessID, versions);
 
     } else {
-      const std::string& originalName = getNameFromAccessID(AccessID);
+      const std::string& originalName = metadata_.getFieldNameFromAccessID(AccessID);
 
       // Register the new *and* old field as being multi-versioned and indicate code-gen it has to
       // allocate the second version
       auto versionsVecPtr = std::make_shared<std::vector<int>>();
       *versionsVecPtr = {AccessID, newAccessID};
 
-      setAccessIDNamePairOfField(newAccessID, originalName + "_1", false);
-      IIR_->getAllocatedFieldAccessIDSet().insert(newAccessID);
+      metadata_.setAccessIDNamePairOfField(newAccessID, originalName + "_1", false);
+      metadata_.insertAllocatedField(newAccessID);
 
-      metadata_.variableVersions_.insert(AccessID, versionsVecPtr);
-      metadata_.variableVersions_.insert(newAccessID, versionsVecPtr);
+      metadata_.fieldAccessMetadata_.variableVersions_.insert(AccessID, versionsVecPtr);
+      metadata_.fieldAccessMetadata_.variableVersions_.insert(newAccessID, versionsVecPtr);
     }
   } else {
-    if(metadata_.variableVersions_.hasVariableMultipleVersions(AccessID)) {
+    if(metadata_.fieldAccessMetadata_.variableVersions_.hasVariableMultipleVersions(AccessID)) {
       // Variable is already multi-versioned, append a new version
-      auto versions = metadata_.variableVersions_.getVersions(AccessID);
+      auto versions = metadata_.fieldAccessMetadata_.variableVersions_.getVersions(AccessID);
 
       // The variable with version 0 contains the original name
-      const std::string& originalName = getNameFromAccessID(versions->front());
+      const std::string& originalName = metadata_.getFieldNameFromAccessID(versions->front());
 
       // Register the new variable
-      setAccessIDNamePair(newAccessID, originalName + "_" + std::to_string(versions->size()));
+      metadata_.setAccessIDNamePair(newAccessID,
+                                    originalName + "_" + std::to_string(versions->size()));
       versions->push_back(newAccessID);
-      metadata_.variableVersions_.insert(newAccessID, versions);
+      metadata_.fieldAccessMetadata_.variableVersions_.insert(newAccessID, versions);
 
     } else {
-      const std::string& originalName = getNameFromAccessID(AccessID);
+      const std::string& originalName = metadata_.getFieldNameFromAccessID(AccessID);
 
       // Register the new *and* old variable as being multi-versioned
       auto versionsVecPtr = std::make_shared<std::vector<int>>();
       *versionsVecPtr = {AccessID, newAccessID};
 
-      setAccessIDNamePair(newAccessID, originalName + "_1");
-      metadata_.variableVersions_.insert(AccessID, versionsVecPtr);
-      metadata_.variableVersions_.insert(newAccessID, versionsVecPtr);
+      metadata_.setAccessIDNamePair(newAccessID, originalName + "_1");
+      metadata_.fieldAccessMetadata_.variableVersions_.insert(AccessID, versionsVecPtr);
+      metadata_.fieldAccessMetadata_.variableVersions_.insert(newAccessID, versionsVecPtr);
     }
   }
 
@@ -256,13 +181,13 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
       for(int i = dir == RD_Above ? (curStmtIdx - 1) : (curStmtIdx + 1);
           dir == RD_Above ? (i >= 0) : (i < doMethod.getChildren().size());
           dir == RD_Above ? (--i) : (++i)) {
-        renameAccessIDInStmts(this, AccessID, newAccessID, doMethod.getChildren()[i]);
-        renameAccessIDInAccesses(this, AccessID, newAccessID, doMethod.getChildren()[i]);
+        renameAccessIDInStmts(&metadata_, AccessID, newAccessID, doMethod.getChildren()[i]);
+        renameAccessIDInAccesses(&metadata_, AccessID, newAccessID, doMethod.getChildren()[i]);
       }
 
     } else {
-      renameAccessIDInStmts(this, AccessID, newAccessID, doMethod.getChildren());
-      renameAccessIDInAccesses(this, AccessID, newAccessID, doMethod.getChildren());
+      renameAccessIDInStmts(&metadata_, AccessID, newAccessID, doMethod.getChildren());
+      renameAccessIDInAccesses(&metadata_, AccessID, newAccessID, doMethod.getChildren());
     }
 
     // Update the fields of the doMethod and stage levels
@@ -279,7 +204,7 @@ void StencilInstantiation::renameAllOccurrences(Stencil* stencil, int oldAccessI
   stencil->renameAllOccurrences(oldAccessID, newAccessID);
 
   // Remove form all AccessID maps
-  removeAccessID(oldAccessID);
+  metadata_.removeAccessID(oldAccessID);
 }
 
 bool StencilInstantiation::isIDAccessedMultipleStencils(int accessID) const {
@@ -297,14 +222,15 @@ bool StencilInstantiation::isIDAccessedMultipleStencils(int accessID) const {
 void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil, int accessID,
                                                                 const Stencil::Lifetime& lifetime,
                                                                 TemporaryScope temporaryScope) {
-  std::string varname = getNameFromAccessID(accessID);
+  std::string varname = metadata_.getFieldNameFromAccessID(accessID);
   std::string fieldname = StencilInstantiation::makeTemporaryFieldname(
       StencilInstantiation::extractLocalVariablename(varname), accessID);
 
   // Replace all variable accesses with field accesses
   stencil->forEachStatementAccessesPair(
       [&](ArrayRef<std::unique_ptr<StatementAccessesPair>> statementAccessesPair) -> void {
-        replaceVarWithFieldAccessInStmts(stencil, accessID, fieldname, statementAccessesPair);
+        replaceVarWithFieldAccessInStmts(metadata_, stencil, accessID, fieldname,
+                                         statementAccessesPair);
       },
       lifetime);
 
@@ -329,7 +255,7 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
   if(!varDeclStmt && temporaryScope != TemporaryScope::TT_Field) {
     throw std::runtime_error(format("Promote local variable to temporary field: a var decl is not "
                                     "found for accessid: %i , name :%s",
-                                    accessID, getNameFromAccessID(accessID)));
+                                    accessID, metadata_.getNameFromAccessID(accessID)));
   }
   if(varDeclStmt) {
     DAWN_ASSERT_MSG(!varDeclStmt->isArray(), "cannot promote local array to temporary field");
@@ -345,32 +271,33 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
         std::make_shared<Statement>(exprStmt, oldStatement->StackTrace));
 
     // Remove the variable
-    removeAccessID(accessID);
+    metadata_.removeAccessID(accessID);
     metadata_.StmtIDToAccessIDMap_.erase(oldStatement->ASTStmt->getID());
   }
   // Register the field
-  setAccessIDNamePairOfField(accessID, fieldname, true);
+  metadata_.setAccessIDNamePairOfField(accessID, fieldname, true);
 
   // Update the fields of the stages we modified
   stencil->updateFields(lifetime);
 }
 
 void StencilInstantiation::promoteTemporaryFieldToAllocatedField(int AccessID) {
-  DAWN_ASSERT(isTemporaryField(AccessID));
-  metadata_.TemporaryFieldAccessIDSet_.erase(AccessID);
-  IIR_->getAllocatedFieldAccessIDSet().insert(AccessID);
+  DAWN_ASSERT(metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, AccessID));
+  metadata_.fieldAccessMetadata_.TemporaryFieldAccessIDSet_.erase(AccessID);
+  metadata_.insertAllocatedField(AccessID);
 }
 
 void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil, int AccessID,
                                                                const Stencil::Lifetime& lifetime) {
-  std::string fieldname = getNameFromAccessID(AccessID);
+  std::string fieldname = metadata_.getFieldNameFromAccessID(AccessID);
   std::string varname = StencilInstantiation::makeLocalVariablename(
       StencilInstantiation::extractTemporaryFieldname(fieldname), AccessID);
 
   // Replace all field accesses with variable accesses
   stencil->forEachStatementAccessesPair(
       [&](ArrayRef<std::unique_ptr<StatementAccessesPair>> statementAccessesPairs) -> void {
-        replaceFieldWithVarAccessInStmts(stencil, AccessID, varname, statementAccessesPairs);
+        replaceFieldWithVarAccessInStmts(metadata_, stencil, AccessID, varname,
+                                         statementAccessesPairs);
       },
       lifetime);
 
@@ -407,61 +334,14 @@ void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil,
       std::make_shared<Statement>(varDeclStmt, oldStatement->StackTrace));
 
   // Remove the field
-  removeAccessID(AccessID);
+  metadata_.removeAccessID(AccessID);
 
   // Register the variable
-  setAccessIDNamePair(AccessID, varname);
+  metadata_.setAccessIDNamePair(AccessID, varname);
   metadata_.StmtIDToAccessIDMap_.emplace(varDeclStmt->getID(), AccessID);
 
   // Update the fields of the stages we modified
   stencil->updateFields(lifetime);
-}
-
-int StencilInstantiation::getAccessIDFromName(const std::string& name) const {
-  auto it = getNameToAccessIDMap().find(name);
-  DAWN_ASSERT_MSG(it != getNameToAccessIDMap().end(), "Invalid name");
-  return it->second;
-}
-
-int StencilInstantiation::getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) const {
-  auto it = metadata_.ExprIDToAccessIDMap_.find(expr->getID());
-  if(it == metadata_.ExprIDToAccessIDMap_.end()) {
-    std::cout << "we are looking for ID: " << expr->getID() << std::endl;
-    std::cout << "and here are all the elements:\n\n";
-    for(auto b : metadata_.ExprIDToAccessIDMap_) {
-      std::cout << b.first << "\t\t" << b.second << "\n";
-    }
-    std::cout << std::endl;
-  }
-
-  DAWN_ASSERT_MSG(it != metadata_.ExprIDToAccessIDMap_.end(), "Invalid Expr");
-  return it->second;
-}
-
-int StencilInstantiation::getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) const {
-  auto it = metadata_.StmtIDToAccessIDMap_.find(stmt->getID());
-  if(it == metadata_.StmtIDToAccessIDMap_.end()) {
-    std::cout << "we are looking for ID: " << stmt->getID() << std::endl;
-    std::cout << "and here are all the elements:\n\n";
-    for(auto b : metadata_.StmtIDToAccessIDMap_) {
-      std::cout << b.first << "\t\t" << b.second << "\n";
-    }
-    std::cout << std::endl;
-  }
-  DAWN_ASSERT_MSG(it != metadata_.StmtIDToAccessIDMap_.end(), "Invalid Stmt");
-  return it->second;
-}
-
-void StencilInstantiation::setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt,
-                                             const int accessID) {
-  DAWN_ASSERT(metadata_.StmtIDToAccessIDMap_.count(stmt->getID()));
-  metadata_.StmtIDToAccessIDMap_[stmt->getID()] = accessID;
-}
-
-void StencilInstantiation::setAccessIDOfExpr(const std::shared_ptr<Expr>& expr,
-                                             const int accessID) {
-  DAWN_ASSERT(metadata_.ExprIDToAccessIDMap_.count(expr->getID()));
-  metadata_.ExprIDToAccessIDMap_[expr->getID()] = accessID;
 }
 
 void StencilInstantiation::removeStencilFunctionInstantiation(
@@ -490,10 +370,7 @@ void StencilInstantiation::removeStencilFunctionInstantiation(
 const std::shared_ptr<StencilFunctionInstantiation>
 StencilInstantiation::getStencilFunctionInstantiation(
     const std::shared_ptr<StencilFunCallExpr>& expr) const {
-  auto it = metadata_.ExprToStencilFunctionInstantiationMap_.find(expr);
-  DAWN_ASSERT_MSG(it != metadata_.ExprToStencilFunctionInstantiationMap_.end(),
-                  "Invalid stencil function");
-  return it->second;
+  return metadata_.getStencilFunctionInstantiation(expr);
 }
 
 std::shared_ptr<StencilFunctionInstantiation>
@@ -619,81 +496,12 @@ void StencilInstantiation::finalizeStencilFunctionSetup(
   metadata_.stencilFunInstantiationCandidate_.erase(stencilFun);
 }
 
-std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
-StencilInstantiation::getStencilCallToStencilIDMap() {
-  return IIR_->getStencilCallToStencilIDMap();
-}
-
-const std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
-StencilInstantiation::getStencilCallToStencilIDMap() const {
-  return IIR_->getStencilCallToStencilIDMap();
-}
-
-std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>>&
-StencilInstantiation::getIDToStencilCallMap() {
-  return metadata_.IDToStencilCallMap_;
-}
-
-const std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>>&
-StencilInstantiation::getIDToStencilCallMap() const {
-  return metadata_.IDToStencilCallMap_;
-}
-
-int StencilInstantiation::getStencilIDFromStmt(
-    const std::shared_ptr<StencilCallDeclStmt>& stmt) const {
-  for(auto callToID : IIR_->getStencilCallToStencilIDMap()) {
-    if(stmt->equals(callToID.first.get())) {
-      return callToID.second;
-    }
-  }
-  DAWN_ASSERT_MSG(false, "Invalid stencil call");
-  return -1;
-}
-
-std::unordered_map<std::string, int>& StencilInstantiation::getNameToAccessIDMap() {
-  return IIR_->getNameToAccessIDs();
-}
-
-const std::unordered_map<std::string, int>& StencilInstantiation::getNameToAccessIDMap() const {
-  return IIR_->getNameToAccessIDs();
-}
-
-std::unordered_map<int, std::string>& StencilInstantiation::getAccessIDToNameMap() {
-  return metadata_.AccessIDToNameMap_;
-}
-
-const std::unordered_map<int, std::string>& StencilInstantiation::getAccessIDToNameMap() const {
-  return metadata_.AccessIDToNameMap_;
-}
-
-std::unordered_map<int, std::string>& StencilInstantiation::getLiteralAccessIDToNameMap() {
-  return metadata_.LiteralAccessIDToNameMap_;
-}
-const std::unordered_map<int, std::string>&
-StencilInstantiation::getLiteralAccessIDToNameMap() const {
-  return metadata_.LiteralAccessIDToNameMap_;
-}
-
-std::set<int>& StencilInstantiation::getFieldAccessIDSet() { return metadata_.FieldAccessIDSet_; }
-
-const std::set<int>& StencilInstantiation::getFieldAccessIDSet() const {
-  return metadata_.FieldAccessIDSet_;
-}
-
-std::set<int>& StencilInstantiation::getGlobalVariableAccessIDSet() {
-  return metadata_.GlobalVariableAccessIDSet_;
-}
-
-const std::set<int>& StencilInstantiation::getGlobalVariableAccessIDSet() const {
-  return metadata_.GlobalVariableAccessIDSet_;
-}
-
 namespace {
 
 /// @brief Get the orignal name of the field (or variable) given by AccessID and a list of
 /// SourceLocations where this field (or variable) was accessed.
 class OriginalNameGetter : public ASTVisitorForwarding {
-  const StencilInstantiation* instantiation_;
+  const StencilMetaInformation& metadata_;
   const int AccessID_;
   const bool captureLocation_;
 
@@ -701,11 +509,11 @@ class OriginalNameGetter : public ASTVisitorForwarding {
   std::vector<SourceLocation> locations_;
 
 public:
-  OriginalNameGetter(const StencilInstantiation* instantiation, int AccessID, bool captureLocation)
-      : instantiation_(instantiation), AccessID_(AccessID), captureLocation_(captureLocation) {}
+  OriginalNameGetter(const StencilMetaInformation& metadata, int AccessID, bool captureLocation)
+      : metadata_(metadata), AccessID_(AccessID), captureLocation_(captureLocation) {}
 
   virtual void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
-    if(instantiation_->getAccessIDFromStmt(stmt) == AccessID_) {
+    if(metadata_.getAccessIDFromStmt(stmt) == AccessID_) {
       name_ = stmt->getName();
       if(captureLocation_)
         locations_.push_back(stmt->getSourceLocation());
@@ -716,7 +524,7 @@ public:
   }
 
   void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
-    if(instantiation_->getAccessIDFromExpr(expr) == AccessID_) {
+    if(metadata_.getAccessIDFromExpr(expr) == AccessID_) {
       name_ = expr->getName();
       if(captureLocation_)
         locations_.push_back(expr->getSourceLocation());
@@ -724,7 +532,7 @@ public:
   }
 
   void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override {
-    if(instantiation_->getAccessIDFromExpr(expr) == AccessID_) {
+    if(metadata_.getAccessIDFromExpr(expr) == AccessID_) {
       name_ = expr->getValue();
       if(captureLocation_)
         locations_.push_back(expr->getSourceLocation());
@@ -732,7 +540,7 @@ public:
   }
 
   virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
-    if(instantiation_->getAccessIDFromExpr(expr) == AccessID_) {
+    if(metadata_.getAccessIDFromExpr(expr) == AccessID_) {
       name_ = expr->getName();
       if(captureLocation_)
         locations_.push_back(expr->getSourceLocation());
@@ -752,13 +560,13 @@ public:
 std::pair<std::string, std::vector<SourceLocation>>
 StencilInstantiation::getOriginalNameAndLocationsFromAccessID(
     int AccessID, const std::shared_ptr<Stmt>& stmt) const {
-  OriginalNameGetter orignalNameGetter(this, AccessID, true);
+  OriginalNameGetter orignalNameGetter(metadata_, AccessID, true);
   stmt->accept(orignalNameGetter);
   return orignalNameGetter.getNameLocationPair();
 }
 
 std::string StencilInstantiation::getOriginalNameFromAccessID(int AccessID) const {
-  OriginalNameGetter orignalNameGetter(this, AccessID, true);
+  OriginalNameGetter orignalNameGetter(metadata_, AccessID, true);
 
   for(const auto& stmtAccessesPair : iterateIIROver<StatementAccessesPair>(*getIIR())) {
     stmtAccessesPair->getStatement()->ASTStmt->accept(orignalNameGetter);
@@ -767,118 +575,12 @@ std::string StencilInstantiation::getOriginalNameFromAccessID(int AccessID) cons
   }
 
   // Best we can do...
-  return getNameFromAccessID(AccessID);
+  return metadata_.getFieldNameFromAccessID(AccessID);
 }
-
-namespace {
-
-template <int Level>
-struct PrintDescLine {
-  PrintDescLine(const Twine& name) {
-    std::cout << MakeIndent<Level>::value << format("\e[1;3%im", Level) << name.str() << "\n"
-              << MakeIndent<Level>::value << "{\n\e[0m";
-  }
-  ~PrintDescLine() { std::cout << MakeIndent<Level>::value << format("\e[1;3%im}\n\e[0m", Level); }
-};
-
-} // anonymous namespace
 
 bool StencilInstantiation::checkTreeConsistency() const { return IIR_->checkTreeConsistency(); }
 
-void StencilInstantiation::dump() const {
-  std::cout << "StencilInstantiation : " << getName() << "\n";
-
-  int i = 0;
-  for(const auto& stencil : getStencils()) {
-    PrintDescLine<1> iline("Stencil_" + Twine(i));
-
-    int j = 0;
-    const auto& multiStages = stencil->getChildren();
-    for(const auto& multiStage : multiStages) {
-      PrintDescLine<2> jline(Twine("MultiStage_") + Twine(j) + " [" +
-                             loopOrderToString(multiStage->getLoopOrder()) + "]");
-
-      int k = 0;
-      const auto& stages = multiStage->getChildren();
-      for(const auto& stage : stages) {
-        PrintDescLine<3> kline(Twine("Stage_") + Twine(k));
-
-        int l = 0;
-        const auto& doMethods = stage->getChildren();
-        for(const auto& doMethod : doMethods) {
-          PrintDescLine<4> lline(Twine("Do_") + Twine(l) + " " +
-                                 doMethod->getInterval().toString());
-
-          const auto& statementAccessesPairs = doMethod->getChildren();
-          for(std::size_t m = 0; m < statementAccessesPairs.size(); ++m) {
-            std::cout << "\e[1m"
-                      << ASTStringifer::toString(statementAccessesPairs[m]->getStatement()->ASTStmt,
-                                                 5 * DAWN_PRINT_INDENT)
-                      << "\e[0m";
-            std::cout << statementAccessesPairs[m]->getAccesses()->toString(this,
-                                                                            6 * DAWN_PRINT_INDENT)
-                      << "\n";
-          }
-          l += 1;
-        }
-        std::cout << "\e[1m" << std::string(4 * DAWN_PRINT_INDENT, ' ')
-                  << "Extents: " << stage->getExtents() << std::endl
-                  << "\e[0m";
-        k += 1;
-      }
-      j += 1;
-    }
-    ++i;
-  }
-  std::cout.flush();
-}
-
-void StencilInstantiation::dumpAsJson(std::string filename, std::string passName) const {
-  json::json jout;
-
-  int i = 0;
-  for(const auto& stencil : getStencils()) {
-    json::json jStencil;
-
-    int j = 0;
-    for(const auto& multiStage : stencil->getChildren()) {
-      json::json jMultiStage;
-      jMultiStage["LoopOrder"] = loopOrderToString(multiStage->getLoopOrder());
-
-      int k = 0;
-      const auto& stages = multiStage->getChildren();
-      for(const auto& stage : stages) {
-        json::json jStage;
-
-        int l = 0;
-        for(const auto& doMethod : stage->getChildren()) {
-          json::json jDoMethod;
-
-          jDoMethod["Interval"] = doMethod->getInterval().toString();
-
-          const auto& statementAccessesPairs = doMethod->getChildren();
-          for(std::size_t m = 0; m < statementAccessesPairs.size(); ++m) {
-            jDoMethod["Stmt_" + std::to_string(m)] = ASTStringifer::toString(
-                statementAccessesPairs[m]->getStatement()->ASTStmt, 0, false);
-            jDoMethod["Accesses_" + std::to_string(m)] =
-                statementAccessesPairs[m]->getAccesses()->reportAccesses(this);
-          }
-
-          jStage["Do_" + std::to_string(l++)] = jDoMethod;
-        }
-
-        jMultiStage["Stage_" + std::to_string(k++)] = jStage;
-      }
-
-      jStencil["MultiStage_" + std::to_string(j++)] = jMultiStage;
-    }
-
-    if(passName.empty())
-      jout[getName()]["Stencil_" + std::to_string(i)] = jStencil;
-    else
-      jout[passName][getName()]["Stencil_" + std::to_string(i)] = jStencil;
-    ++i;
-  }
+void StencilInstantiation::jsonDump(std::string filename) const {
 
   std::ofstream fs(filename, std::ios::out | std::ios::trunc);
   if(!fs.is_open()) {
@@ -887,7 +589,10 @@ void StencilInstantiation::dumpAsJson(std::string filename, std::string passName
     context_->getDiagnostics().report(diag);
   }
 
-  fs << jout.dump(2) << std::endl;
+  json::json node;
+  node["MetaInformation"] = metadata_.jsonDump();
+  node["IIR"] = IIR_->jsonDump();
+  fs << node.dump(2) << std::endl;
   fs.close();
 }
 
@@ -953,7 +658,7 @@ void StencilInstantiation::reportAccesses() const {
   for(const auto& stmtAccessesPair : iterateIIROver<StatementAccessesPair>(*getIIR())) {
     std::cout << "\nACCESSES: line "
               << stmtAccessesPair->getStatement()->ASTStmt->getSourceLocation().Line << ": "
-              << stmtAccessesPair->getAccesses()->reportAccesses(this) << "\n";
+              << stmtAccessesPair->getAccesses()->reportAccesses(metadata_) << "\n";
   }
 }
 

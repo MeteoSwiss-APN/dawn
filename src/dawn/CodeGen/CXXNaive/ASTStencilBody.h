@@ -18,6 +18,7 @@
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/IIR/Interval.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>
 #include <unordered_map>
@@ -25,7 +26,6 @@
 namespace dawn {
 
 namespace iir {
-class StencilInstantiation;
 class StencilFunctionInstantiation;
 }
 
@@ -36,7 +36,7 @@ namespace cxxnaive {
 /// @ingroup cxxnaive
 class ASTStencilBody : public ASTCodeGenCXX {
 protected:
-  const iir::StencilInstantiation* instantiation_;
+  const iir::StencilMetaInformation& metadata_;
   RangeToString offsetPrinter_;
 
   /// The stencil function we are currently generating or NULL
@@ -72,8 +72,7 @@ public:
   using Base = ASTCodeGenCXX;
 
   /// @brief constructor
-  ASTStencilBody(const iir::StencilInstantiation* stencilInstantiation,
-                 StencilContext stencilContext);
+  ASTStencilBody(const iir::StencilMetaInformation& metadata, StencilContext stencilContext);
 
   virtual ~ASTStencilBody();
 

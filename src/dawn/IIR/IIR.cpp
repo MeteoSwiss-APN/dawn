@@ -12,9 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/IIR/IIR.h"
 #include "dawn/IIR/DependencyGraphStage.h"
+#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
-#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/StringUtil.h"
@@ -32,9 +33,22 @@ std::unique_ptr<IIR> IIR::clone() const {
   return cloneIIR;
 }
 
+json::json IIR::jsonDump() const {
+  json::json node;
+
+  int cnt = 0;
+  for(const auto& stencil : children_) {
+    node["Stencil" + std::to_string(cnt)] = stencil->jsonDump();
+    cnt++;
+  }
+  return node;
+}
+
 void IIR::clone(std::unique_ptr<IIR>& dest) const {
   dest->cloneChildrenFrom(*this, dest);
   dest->setBlockSize(blockSize_);
+  // notice the control flow is not deep cloned, but copied
+  dest->controlFlowDesc_ = controlFlowDesc_;
 }
 
 } // namespace iir

@@ -14,10 +14,10 @@
 
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/Support/STLExtras.h"
-#include <gtest/gtest.h>
-#include <set>
 #include <algorithm>
+#include <gtest/gtest.h>
 #include <numeric>
+#include <set>
 
 using namespace dawn;
 
@@ -28,7 +28,7 @@ class TestGraph : public iir::DependencyGraphAccesses {
   using Base = iir::DependencyGraphAccesses;
 
 public:
-  TestGraph() : Base(nullptr) {}
+  TestGraph() : Base(iir::StencilMetaInformation{}) {}
   void insertEdge(int IDFrom, int IDTo) {
     Base::insertNode(IDFrom);
     Base::insertEdge(IDFrom, IDTo, iir::Extents{0, 0, 0, 0, 0, 0});

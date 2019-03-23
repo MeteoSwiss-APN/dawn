@@ -17,16 +17,13 @@
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>
 #include <unordered_map>
 #include <vector>
 
 namespace dawn {
-namespace iir {
-class StencilInstantiation;
-}
-
 namespace codegen {
 namespace cxxnaive {
 
@@ -34,14 +31,14 @@ namespace cxxnaive {
 /// @ingroup cxxnaive
 class ASTStencilDesc : public ASTCodeGenCXX {
 protected:
-  const iir::StencilInstantiation* instantiation_;
+  const iir::StencilMetaInformation& metadata_;
 
   const CodeGenProperties& codeGenProperties_;
 
 public:
   using Base = ASTCodeGenCXX;
 
-  ASTStencilDesc(const iir::StencilInstantiation* instantiation,
+  ASTStencilDesc(const iir::StencilMetaInformation& metadata,
                  const CodeGenProperties& CodeGenProperties);
 
   virtual ~ASTStencilDesc();

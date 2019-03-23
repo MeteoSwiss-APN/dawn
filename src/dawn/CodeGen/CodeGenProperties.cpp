@@ -27,7 +27,7 @@ void CodeGenProperties::insertParam(const size_t paramPosition, std::string para
 }
 
 void CodeGenProperties::setParamBC(std::string name) {
-  DAWN_ASSERT(paramNameToType_.count(name));
+  //  DAWN_ASSERT(paramNameToType_.count(name));
   paramBC_.insert(name);
 }
 
@@ -36,7 +36,9 @@ bool CodeGenProperties::isParamBC(std::string name) const { return paramBC_.coun
 std::string CodeGenProperties::getParamType(
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     const iir::Stencil::FieldInfo& field) const {
-  return (stencilInstantiation->isAllocatedField(field.field.getAccessID()) || field.IsTemporary)
+  return (stencilInstantiation->getMetaData().isAccessType(
+              iir::FieldAccessType::FAT_InterStencilTemporary, field.field.getAccessID()) ||
+          field.IsTemporary)
              ? "storage_t"
              : getParamType(field.Name);
 }

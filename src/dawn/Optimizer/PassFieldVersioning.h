@@ -76,7 +76,8 @@ public:
   /// @param loopOrder  Current loop order of the stage
   /// @param stageIdx   @b Linear index of the stage in the stencil
   /// @param stmtIdx    Index of the statement inside the stage
-  RCKind fixRaceCondition(const iir::DependencyGraphAccesses* graph, iir::Stencil& stencil,
+  RCKind fixRaceCondition(const std::shared_ptr<iir::StencilInstantiation> instantiation,
+                          const iir::DependencyGraphAccesses* graph, iir::Stencil& stencil,
                           iir::DoMethod& doMethod, iir::LoopOrderKind loopOrder, int stageIdx,
                           int stmtIdx);
 };

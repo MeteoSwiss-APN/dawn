@@ -15,6 +15,7 @@
 #ifndef DAWN_IIR_IIR_H
 #define DAWN_IIR_IIR_H
 
+#include "dawn/IIR/ControlFlowDescriptor.h"
 #include "dawn/IIR/Stencil.h"
 #include <set>
 
@@ -26,24 +27,13 @@ namespace iir {
 class IIR : public IIRNode<void, IIR, Stencil> {
 
   std::array<unsigned int, 3> blockSize_ = {{32, 4, 4}};
+  ControlFlowDescriptor controlFlowDesc_;
 
   struct DerivedInfo {
-    /// Can be filled from the AccessIDToName map that is in Metainformation
-    std::unordered_map<std::string, int> NameToAccessIDMap_;
-
-    /// Can be filled from the StencilIDToStencilCallMap that is in Metainformation
-    std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int> StencilCallToStencilIDMap_;
-
     /// StageID to name Map. Filled by the `PassSetStageName`.
     std::unordered_map<int, std::string> StageIDToNameMap_;
-
-    /// BoundaryConditionCall to Extent Map. Filled my `PassSetBoundaryCondition`
-    std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>
-        BoundaryConditionToExtentsMap_;
-
     /// Set containing the AccessIDs of fields which are manually allocated by the stencil and serve
     /// as temporaries spanning over multiple stencils
-    std::set<int> AllocatedFieldAccessIDSet_;
   };
 
   DerivedInfo derivedInfo_;
@@ -68,11 +58,12 @@ public:
   /// @brief clone the IIR
   void clone(std::unique_ptr<IIR>& dest) const;
 
-  inline void setBlockSize(const std::array<unsigned int, 3> blockSize) { blockSize_ = blockSize; }
+  json::json jsonDump() const;
 
-  inline std::unordered_map<std::string, int>& getNameToAccessIDs() {
-    return derivedInfo_.NameToAccessIDMap_;
-  }
+  const ControlFlowDescriptor& getControlFlowDescriptor() const { return controlFlowDesc_; }
+  // TODO do not have non const?
+  ControlFlowDescriptor& getControlFlowDescriptor() { return controlFlowDesc_; }
+  inline void setBlockSize(const std::array<unsigned int, 3> blockSize) { blockSize_ = blockSize; }
 
   inline std::unordered_map<int, std::string>& getStageIDToNameMap() {
     return derivedInfo_.StageIDToNameMap_;
@@ -81,19 +72,6 @@ public:
     auto it = derivedInfo_.StageIDToNameMap_.find(StageID);
     DAWN_ASSERT_MSG(it != derivedInfo_.StageIDToNameMap_.end(), "Invalid StageID");
     return it->second;
-  }
-
-  inline std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&
-  getBoundaryConditionToExtents() {
-    return derivedInfo_.BoundaryConditionToExtentsMap_;
-  }
-
-  inline std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
-  getStencilCallToStencilIDMap() {
-    return derivedInfo_.StencilCallToStencilIDMap_;
-  }
-  inline std::set<int>& getAllocatedFieldAccessIDSet() {
-    return derivedInfo_.AllocatedFieldAccessIDSet_;
   }
 };
 } // namespace iir

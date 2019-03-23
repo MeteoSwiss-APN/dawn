@@ -66,6 +66,8 @@ public:
   /// @brief Get the AccessID of the field
   int getCachedFieldAccessID() const;
 
+  json::json jsonDump() const;
+
   /// @brief Get the type of cache
   CacheTypeKind getCacheType() const;
   std::string getCacheTypeAsString() const;

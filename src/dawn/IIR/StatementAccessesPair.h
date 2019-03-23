@@ -15,9 +15,11 @@
 #ifndef DAWN_IIR_STATEMENTACCESSESPAIR_H
 #define DAWN_IIR_STATEMENTACCESSESPAIR_H
 
+#include "dawn/IIR/AccessToNameMapper.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/BlockStatements.h"
 #include "dawn/IIR/IIRNode.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/SIR/Statement.h"
 #include <boost/optional.hpp>
 #include <memory>
@@ -92,11 +94,15 @@ public:
 
   /// @brief Convert the StatementAccessesPair of a stencil or stencil-function to string
   /// @{
-  std::string toString(const StencilInstantiation* instantiation,
-                       std::size_t initialIndent = 0) const;
+  std::string toString(const StencilMetaInformation* metadata, std::size_t initialIndent = 0) const;
   std::string toString(const StencilFunctionInstantiation* stencilFunc,
                        std::size_t initialIndent = 0) const;
   /// @}
+
+  json::json jsonDump(const StencilMetaInformation& metaData) const;
+  json::json print(const StencilMetaInformation& metaData,
+                   const AccessToNameMapper& accessToNameMapper,
+                   const std::unordered_map<int, Extents>& accesses) const;
 };
 
 } // namespace iir

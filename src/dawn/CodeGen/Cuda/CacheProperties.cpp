@@ -53,13 +53,21 @@ makeCacheProperties(const std::unique_ptr<iir::MultiStage>& ms,
                          stencilInstantiation};
 }
 
+CacheProperties::CacheProperties(
+    const std::unique_ptr<iir::MultiStage>& ms, const std::set<int>& accessIDsCommonCache,
+    iir::Extents extents, const std::unordered_map<int, iir::Extents>& specialCaches,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation)
+    : ms_(ms), accessIDsCommonCache_(accessIDsCommonCache), extents_(extents),
+      specialCaches_(specialCaches), stencilInstantiation_(stencilInstantiation),
+      metadata_(stencilInstantiation->getMetaData()) {}
+
 std::string CacheProperties::getCacheName(int accessID) const {
 
   const auto& cache = ms_->getCache(accessID);
   if(cache.getCacheType() == iir::Cache::CacheTypeKind::IJ)
-    return stencilInstantiation_->getNameFromAccessID(cache.getCachedFieldAccessID()) + "_ijcache";
+    return metadata_.getFieldNameFromAccessID(cache.getCachedFieldAccessID()) + "_ijcache";
   else if(cache.getCacheType() == iir::Cache::CacheTypeKind::K)
-    return stencilInstantiation_->getNameFromAccessID(cache.getCachedFieldAccessID()) + "_kcache";
+    return metadata_.getFieldNameFromAccessID(cache.getCachedFieldAccessID()) + "_kcache";
 
   dawn_unreachable("Unknown cache for code generation");
 }

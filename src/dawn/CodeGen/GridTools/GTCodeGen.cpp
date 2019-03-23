@@ -46,7 +46,7 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const iir::Stencil& stencil)
   DAWN_ASSERT(!intervalProperties_.empty());
 
   // Add intervals for the stencil functions
-  for(const auto& stencilFun : stencil.getStencilInstantiation().getStencilFunctionInstantiations())
+  for(const auto& stencilFun : stencil.getMetadata().getStencilFunctionInstantiations())
     intervalProperties_.insert(stencilFun->getInterval());
 
   // Compute axis and populate the levels
@@ -266,7 +266,8 @@ void GTCodeGen::generateStencilWrapperRun(
     stencilIDToRunArguments[stencil->getStencilID()] =
         "m_dom," +
         RangeToString(", ", "", "")(nonTempFields, [&](const iir::Stencil::FieldInfo& fieldInfo) {
-          if(stencilInstantiation->isAllocatedField(fieldInfo.field.getAccessID()))
+          if(stencilInstantiation->getMetaData().isAccessType(
+                 iir::FieldAccessType::FAT_InterStencilTemporary, fieldInfo.field.getAccessID()))
             return "m_" + fieldInfo.Name;
           else
             return fieldInfo.Name;
@@ -277,10 +278,11 @@ void GTCodeGen::generateStencilWrapperRun(
   MemberFunction RunMethod = stencilWrapperClass.addMemberFunction("void", "run");
   RunMethod.startBody();
 
-  ASTStencilDesc stencilDescCGVisitor(stencilInstantiation, codeGenProperties,
+  ASTStencilDesc stencilDescCGVisitor(stencilInstantiation->getMetaData(), codeGenProperties,
                                       stencilIDToRunArguments);
   stencilDescCGVisitor.setIndent(RunMethod.getIndent());
-  for(const auto& statement : stencilInstantiation->getStencilDescStatements()) {
+  for(const auto& statement :
+      stencilInstantiation->getIIR()->getControlFlowDescriptor().getStatements()) {
     statement->ASTStmt->accept(stencilDescCGVisitor);
     RunMethod << stencilDescCGVisitor.getCodeAndResetStream();
   }
@@ -292,6 +294,7 @@ void GTCodeGen::generateStencilWrapperCtr(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     CodeGenProperties& codeGenProperties) const {
 
+  const auto& metadata = stencilInstantiation->getMetaData();
   const auto& stencils = stencilInstantiation->getStencils();
   const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
 
@@ -302,16 +305,17 @@ void GTCodeGen::generateStencilWrapperCtr(
 
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
 
-  for(const auto& fieldID : stencilInstantiation->getAPIFieldIDs()) {
-    std::string name = stencilInstantiation->getNameFromAccessID(fieldID);
+  for(const auto& fieldID :
+      stencilInstantiation->getMetaData().getAccessesOfType<iir::FieldAccessType::FAT_APIField>()) {
+    std::string name = metadata.getFieldNameFromAccessID(fieldID);
     StencilWrapperConstructor.addArg(codeGenProperties.getParamType(name) + " " + name);
   }
 
   // Initialize allocated fields
-  if(stencilInstantiation->hasAllocatedFields()) {
+  if(metadata.hasAllocatedFields()) {
     std::vector<std::string> tempFields;
-    for(auto accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
-      tempFields.push_back(stencilInstantiation->getNameFromAccessID(accessID));
+    for(auto accessID : metadata.getAllocatedFieldAccessIDSet()) {
+      tempFields.push_back(metadata.getFieldNameFromAccessID(accessID));
     }
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
   }
@@ -340,7 +344,8 @@ void GTCodeGen::generateStencilWrapperCtr(
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil->getStencilID()) +
         RangeToString(", ", initctr.c_str(),
                       ")")(nonTempFields, [&](const iir::Stencil::FieldInfo& fieldInfo) {
-          if(stencilInstantiation->isAllocatedField(fieldInfo.field.getAccessID()))
+          if(metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
+                                   fieldInfo.field.getAccessID()))
             return "m_" + fieldInfo.Name;
           else
             return fieldInfo.Name;
@@ -397,6 +402,7 @@ void GTCodeGen::generateStencilClasses(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     Class& stencilWrapperClass, CodeGenProperties& codeGenProperties) {
 
+  const auto& metadata = stencilInstantiation->getMetaData();
   // K-Cache branch changes the signature of Do-Methods
   const char* DoMethodArg = "Evaluation& eval";
 
@@ -467,7 +473,7 @@ void GTCodeGen::generateStencilClasses(
       codeGenInterval(intervalProperties.name_, intervalProperties.interval_);
     }
 
-    ASTStencilBody stencilBodyCGVisitor(stencilInstantiation.get(),
+    ASTStencilBody stencilBodyCGVisitor(stencilInstantiation->getMetaData(),
                                         intervalDefinitions.intervalProperties_);
 
     // Generate typedef for the axis
@@ -631,8 +637,8 @@ void GTCodeGen::generateStencilClasses(
                   // IOPolicy: local, fill, bpfill, flush, epflush or flush_and_fill
                   c_gt() + "cache_io_policy::" + cache.getCacheIOPolicyAsString() +
                   // Interval: if IOPolicy is not local, we need to provide the interval
-                  ">(p_" +
-                  stencilInstantiation->getNameFromAccessID(cache.getCachedFieldAccessID()) + "())")
+                  ">(p_" + metadata.getFieldNameFromAccessID(cache.getCachedFieldAccessID()) +
+                  "())")
               .str();
         });
       }
@@ -668,7 +674,7 @@ void GTCodeGen::generateStencilClasses(
           const auto& field = fieldPair.second;
           const int accessID = fieldPair.first;
 
-          std::string paramName = stencilInstantiation->getNameFromAccessID(accessID);
+          std::string paramName = metadata.getFieldNameFromAccessID(accessID);
 
           // Generate parameter of stage
           std::stringstream tss;

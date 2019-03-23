@@ -28,7 +28,6 @@ namespace iir {
 class Stage;
 class DependencyGraphAccesses;
 class StatementAccessesPair;
-class StencilInstantiation;
 
 /// @brief A Do-method is a collection of Statements with corresponding Accesses of a specific
 /// vertical region
@@ -52,7 +51,7 @@ class DoMethod : public IIRNode<Stage, DoMethod, StatementAccessesPair> {
     std::shared_ptr<DependencyGraphAccesses> dependencyGraph_;
   };
 
-  StencilInstantiation& stencilInstantiation_;
+  const StencilMetaInformation& metaData_;
   DerivedInfo derivedInfo_;
 
 public:
@@ -62,10 +61,12 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
-  DoMethod(Interval interval, StencilInstantiation& context);
+  DoMethod(Interval interval, const StencilMetaInformation& metaData);
   DoMethod(DoMethod&&) = default;
   DoMethod& operator=(DoMethod&&) = default;
   /// @}
+
+  json::json jsonDump(const StencilMetaInformation& metaData) const;
 
   /// @brief clone the object creating and returning a new unique_ptr
   std::unique_ptr<DoMethod> clone() const;

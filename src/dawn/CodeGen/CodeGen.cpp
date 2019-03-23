@@ -121,7 +121,7 @@ void CodeGen::generateBoundaryConditionFunctions(
         BC.isConst(true);
         BC.addArg(functionargs);
         BC.startBody();
-        StencilFunctionAsBCGenerator reader(stencilInstantiation, sf);
+        StencilFunctionAsBCGenerator reader(stencilInstantiation->getMetaData(), sf);
         sf->Asts[0]->accept(reader);
         std::string output = reader.getCodeAndResetStream();
         BC << output;
@@ -148,6 +148,7 @@ void CodeGen::generateBCHeaders(std::vector<std::string>& ppDefines) const {
 CodeGenProperties
 CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstantiation) const {
   CodeGenProperties codeGenProperties;
+  const auto& metadata = stencilInstantiation->getMetaData();
 
   int idx = 0;
   std::unordered_set<std::string> generatedStencilFun;
@@ -210,10 +211,9 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
   }
 
   int i = 0;
-  for(const auto& fieldID : stencilInstantiation->getAPIFieldIDs()) {
-    codeGenProperties.insertParam(
-        i, stencilInstantiation->getNameFromAccessID(fieldID),
-        getStorageType(stencilInstantiation->getFieldDimensionsMask(fieldID)));
+  for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>()) {
+    codeGenProperties.insertParam(i, metadata.getFieldNameFromAccessID(fieldID),
+                                  getStorageType(metadata.getFieldDimensionsMask(fieldID)));
     ++i;
   }
   for(auto usedBoundaryCondition : stencilInstantiation->getBoundaryConditions()) {
@@ -221,9 +221,9 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
       codeGenProperties.setParamBC(field->Name);
     }
   }
-  if(stencilInstantiation->hasAllocatedFields()) {
-    for(int accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
-      codeGenProperties.insertAllocateField(stencilInstantiation->getNameFromAccessID(accessID));
+  if(metadata.hasAllocatedFields()) {
+    for(int accessID : metadata.getAllocatedFieldAccessIDSet()) {
+      codeGenProperties.insertAllocateField(metadata.getFieldNameFromAccessID(accessID));
     }
   }
 
@@ -259,8 +259,9 @@ void CodeGen::addTempStorageTypedef(Structure& stencilClass, iir::Stencil const&
       .addType("storage_traits_t::data_store_t< float_type, " + tmpMetadataTypename_ + ">");
 }
 
-void CodeGen::addTmpStorageDeclaration(Structure& stencilClass,
-    IndexRange<const std::map<int, iir::Stencil::FieldInfo> > &tempFields) const {
+void CodeGen::addTmpStorageDeclaration(
+    Structure& stencilClass,
+    IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields) const {
   if(!(tempFields.empty())) {
     stencilClass.addMember(tmpMetadataTypename_, tmpMetadataName_);
 
@@ -270,8 +271,9 @@ void CodeGen::addTmpStorageDeclaration(Structure& stencilClass,
   }
 }
 
-void CodeGen::addTmpStorageInit(MemberFunction& ctr, iir::Stencil const& stencil,
-    IndexRange<const std::map<int, iir::Stencil::FieldInfo> > &tempFields) const {
+void CodeGen::addTmpStorageInit(
+    MemberFunction& ctr, iir::Stencil const& stencil,
+    IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields) const {
   if(!(tempFields.empty())) {
     ctr.addInit(tmpMetadataName_ + "(dom_.isize(), dom_.jsize(), dom_.ksize() + 2*" +
                 std::to_string(getVerticalTmpHaloSize(stencil)) + ")");

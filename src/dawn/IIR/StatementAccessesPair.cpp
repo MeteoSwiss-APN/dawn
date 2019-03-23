@@ -13,9 +13,10 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/AccessToNameMapper.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
-#include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/SIR/ASTStringifier.h"
 #include "dawn/SIR/Statement.h"
 #include "dawn/Support/Printing.h"
@@ -159,9 +160,45 @@ void StatementAccessesPair::setCalleeAccesses(const std::shared_ptr<Accesses>& a
 
 bool StatementAccessesPair::hasCalleeAccesses() { return calleeAccesses_ != nullptr; }
 
-std::string StatementAccessesPair::toString(const StencilInstantiation* instantiation,
+json::json StatementAccessesPair::print(const StencilMetaInformation& metaData,
+                                        const AccessToNameMapper& accessToNameMapper,
+                                        const std::unordered_map<int, Extents>& accesses) const {
+  json::json node;
+  for(const auto& accessPair : accesses) {
+    json::json accessNode;
+    int accessID = accessPair.first;
+    std::string name = "unknown";
+    if(accessToNameMapper.hasAccessID(accessID)) {
+      name = accessToNameMapper.getNameFromAccessID(accessID);
+    }
+    if(metaData.isAccessType(iir::FieldAccessType::FAT_Literal, accessID)) {
+      continue;
+    }
+    accessNode["access_id"] = accessID;
+    accessNode["name"] = name;
+    std::stringstream ss;
+    ss << accessPair.second;
+    accessNode["extents"] = ss.str();
+    node.push_back(accessNode);
+  }
+  return node;
+}
+
+json::json StatementAccessesPair::jsonDump(const StencilMetaInformation& metaData) const {
+  json::json node;
+  node["stmt"] = ASTStringifer::toString(getStatement()->ASTStmt, 0);
+
+  AccessToNameMapper accessToNameMapper(metaData);
+  getStatement()->ASTStmt->accept(accessToNameMapper);
+
+  node["write_accesses"] = print(metaData, accessToNameMapper, getAccesses()->getWriteAccesses());
+  node["read_accesses"] = print(metaData, accessToNameMapper, getAccesses()->getReadAccesses());
+  return node;
+}
+
+std::string StatementAccessesPair::toString(const StencilMetaInformation* metadata,
                                             std::size_t initialIndent) const {
-  return toStringImpl(this, instantiation, initialIndent);
+  return toStringImpl(this, metadata, initialIndent);
 }
 
 std::string StatementAccessesPair::toString(const StencilFunctionInstantiation* stencilFunc,

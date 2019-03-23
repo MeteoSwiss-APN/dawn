@@ -44,7 +44,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
 
   std::string filenameWE = getFilenameWithoutExtension(context->getSIR()->Filename);
   if(context->getOptions().ReportPassStageMerger)
-    stencilInstantiation->dumpAsJson(filenameWE + "_before.json", getName());
+    stencilInstantiation->jsonDump(filenameWE + "_before.json");
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     iir::Stencil& stencil = *stencilPtr;
@@ -121,7 +121,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
                 auto& curDepGraph = curDoMethod.getDependencyGraph();
 
                 auto newDepGraph = std::make_shared<iir::DependencyGraphAccesses>(
-                    stencilInstantiation.get(), candiateDepGraph, curDepGraph);
+                    stencilInstantiation->getMetaData(), candiateDepGraph, curDepGraph);
 
                 if(newDepGraph->isDAG() &&
                    !hasHorizontalReadBeforeWriteConflict(newDepGraph.get())) {
@@ -189,7 +189,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
   }
 
   if(context->getOptions().ReportPassStageMerger)
-    stencilInstantiation->dumpAsJson(filenameWE + "_after.json", getName());
+    stencilInstantiation->jsonDump(filenameWE + "_after.json");
 
   return true;
 }
