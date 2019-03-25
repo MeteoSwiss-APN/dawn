@@ -85,7 +85,6 @@ bool Stencil::StatementPosition::inSameDoMethod(const Stencil::StatementPosition
 
 json::json Stencil::FieldInfo::jsonDump() const {
   json::json node;
-  node["name"] = Name;
   node["dim"] = format("[%i,%i,%i]", Dimensions[0], Dimensions[1], Dimensions[2]);
   node["field"] = field.jsonDump();
   node["IsTemporary"] = IsTemporary;

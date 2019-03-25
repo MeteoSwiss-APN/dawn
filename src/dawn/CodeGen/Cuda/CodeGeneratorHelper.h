@@ -47,6 +47,7 @@ public:
   static std::array<std::string, 3> ijkfyOffset(const Array3i& offsets, bool isTemporary,
                                                 const Array3i iteratorDims);
 
+  /// @brief determines wheter an accessID will perform an access to main memory
   static bool hasAccessIDMemAccess(const int accessID,
                                    const std::unique_ptr<iir::Stencil>& stencil);
 
@@ -57,6 +58,10 @@ public:
   static std::vector<iir::Interval>
   computePartitionOfIntervals(const std::unique_ptr<iir::MultiStage>& ms);
 
+  /// @brief determines whether for code generation, using temporaries will be required.
+  /// Even if the stencil contains temporaries, in some cases, like when they are local cached, they
+  /// are not required for code generation. Also in the case of no redundant computations,
+  /// temporaries will become normal fields
   static bool
   useTemporaries(const std::unique_ptr<iir::Stencil>& stencil,
                  const iir::StencilMetaInformation& metadata);

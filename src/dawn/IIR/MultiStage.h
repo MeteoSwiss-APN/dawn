@@ -160,10 +160,20 @@ public:
   /// @brief Compute and return the pairs <AccessID, field> used for a given interval
   std::unordered_map<int, Field> computeFieldsAtInterval(const iir::Interval& interval) const;
 
+  /// @brief determines whether an accessID corresponds to a temporary that will perform accesses to
+  /// main memory
+  bool isMemAccessTemporary(const int accessID) const;
+
+  /// @brief true if there is at least a temporary that requires access to main mem
+  bool hasMemAccessTemporaries() const;
+
+  /// @brief determines whether the multistage contains the field with an accessID
   bool hasField(const int accessID) const;
 
+  /// @brief field getter with an accessID
   const Field& getField(int accessID) const;
 
+  /// @brief computes the collection of fields of the multistage on the fly (returns copy)
   std::unordered_map<int, Field> computeFieldsOnTheFly() const;
 
   /// @brief Get the enclosing interval of all access to temporaries
