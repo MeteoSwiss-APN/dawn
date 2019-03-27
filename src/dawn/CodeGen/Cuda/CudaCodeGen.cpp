@@ -474,7 +474,7 @@ void CudaCodeGen::generateStencilRunMethod(
                                                   p.second.getAccessID());
                   }));
 
-    auto tempFieldsNonLocalCached = makeRange(
+    auto tempStencilFieldsNonLocalCached = makeRange(
         fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
                     std::pair<int, iir::Field> const& p) {
           const int accessID = p.first;
@@ -501,7 +501,7 @@ void CudaCodeGen::generateStencilRunMethod(
                                     fieldName + "= " + c_gt() + "make_device_view(m_" + fieldName +
                                     ")");
     }
-    for(auto fieldIt : tempFieldsNonLocalCached) {
+    for(auto fieldIt : tempStencilFieldsNonLocalCached) {
       const auto fieldName = metadata.getFieldNameFromAccessID((*fieldIt).second.getAccessID());
 
       StencilRunMethod.addStatement(c_gt() + "data_view<tmp_storage_t> " + fieldName + "= " +
@@ -554,6 +554,21 @@ void CudaCodeGen::generateStencilRunMethod(
       kernelCall = kernelCall + "m_globals,";
     }
 
+    auto tempMSFieldsNonLocalCached = makeRange(
+        fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
+                    std::pair<int, iir::Field> const& p) {
+          const int accessID = p.first;
+          if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
+                                    p.second.getAccessID()))
+            return false;
+          if(!multiStage.isCached(accessID))
+            return true;
+          if(multiStage.getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local)
+            return false;
+
+          return true;
+        }));
+
     // TODO enable const auto& below and/or enable use RangeToString
     std::string args;
     int idx = 0;
@@ -566,7 +581,7 @@ void CudaCodeGen::generateStencilRunMethod(
       ++idx;
     }
     DAWN_ASSERT(nonTempFields.size() > 0);
-    for(auto field : tempFieldsNonLocalCached) {
+    for(auto field : tempMSFieldsNonLocalCached) {
       // in some cases (where there are no horizontal extents) we dont use the special tmp index
       // iterator, but rather a normal 3d field index iterator. In that case we pass temporaries in
       // the same manner as normal fields
@@ -582,7 +597,7 @@ void CudaCodeGen::generateStencilRunMethod(
     }
 
     std::vector<std::string> strides = CodeGeneratorHelper::generateStrideArguments(
-        nonTempFields, tempFieldsNonLocalCached, stencilInstantiation, multiStagePtr,
+        nonTempFields, tempMSFieldsNonLocalCached, stencilInstantiation, multiStagePtr,
         CodeGeneratorHelper::FunctionArgType::FT_Caller);
 
     DAWN_ASSERT(!strides.empty());
