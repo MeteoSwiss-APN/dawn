@@ -479,16 +479,16 @@ void CudaCodeGen::generateStencilRunMethod(
                     std::pair<int, iir::Field> const& p) {
           const int accessID = p.first;
           if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
-                                    p.second.getAccessID()))
+                                    p.second.getAccessID())) {
             return false;
+          }
           for(const auto& ms : iterateIIROver<iir::MultiStage>(stencil)) {
-            if(!ms->isCached(accessID))
-              continue;
-            if(ms->getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local)
-              return false;
+            if(!ms->isCached(accessID) || (ms->getCache(accessID).getCacheIOPolicy() != iir::Cache::CacheIOPolicy::local)) {
+              return true;
+            }
           }
 
-          return true;
+          return false;
         }));
 
     // create all the data views
@@ -501,6 +501,7 @@ void CudaCodeGen::generateStencilRunMethod(
                                     fieldName + "= " + c_gt() + "make_device_view(m_" + fieldName +
                                     ")");
     }
+
     for(auto fieldIt : tempStencilFieldsNonLocalCached) {
       const auto fieldName = metadata.getFieldNameFromAccessID((*fieldIt).second.getAccessID());
 
@@ -568,6 +569,7 @@ void CudaCodeGen::generateStencilRunMethod(
 
           return true;
         }));
+
 
     // TODO enable const auto& below and/or enable use RangeToString
     std::string args;
