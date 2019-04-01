@@ -65,9 +65,23 @@ dawn_protobuf_generate(
   PROTOS ${CMAKE_CURRENT_SOURCE_DIR}/SIR.proto
   LANGUAGE python
 )
+
 add_custom_target(DawnSIRPythonProto ALL 
   COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_python_files} ${CMAKE_BINARY_DIR}/python/dawn
   DEPENDS ${sir_proto_python_files}
 )
 
+# Genreate python proto files
+dawn_protobuf_generate(
+  OUT_FILES sir_proto_java_dirs
+  PROTOS ${CMAKE_CURRENT_SOURCE_DIR}/SIR.proto
+  LANGUAGE java
+)
+
+add_custom_target(DawnSIRJavaProto ALL
+  COMMAND ${CMAKE_COMMAND} -E copy ${sir_proto_java_dirs} ${CMAKE_BINARY_DIR}/java/dawn
+  DEPENDS ${sir_proto_java_dirs}
+)
+
 install(FILES ${sir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/dawn)
+install(DIRECTORY ${sir_proto_java_dirs} DESTINATION ${DAWN_INSTALL_JAVA_DIR}/dawn)

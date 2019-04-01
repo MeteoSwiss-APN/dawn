@@ -21,6 +21,9 @@ syntax = "proto3";
 package dawn.sir.proto;
 import "statements.proto";
 
+option java_package = "dawn.sir";
+option java_outer_classname = "SIR_pb2";
+
 /*===------------------------------------------------------------------------------------------===*\
  *     Stencil
 \*===------------------------------------------------------------------------------------------===*/
