@@ -65,6 +65,9 @@ yoda_add_target_clean_all(
 )
 
 include("thirdparty/DawnAddProtobuf")
+
+install(DIRECTORY ${PROTOBUF_PYTHON_INSTALL}/google DESTINATION ${CMAKE_INSTALL_PREFIX}/python)
+
 include("thirdparty/DawnAddBoost")
 
 set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR} -DBOOST_ROOT=${BOOST_ROOT})

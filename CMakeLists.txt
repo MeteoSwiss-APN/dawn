@@ -136,6 +136,10 @@ if(DAWN_PYTHON)
   add_subdirectory(python)
 endif()
 
+if(DAWN_EXAMPLES)
+  add_subdirectory(examples)
+endif()
+
 if(DAWN_TESTING)
   enable_testing()
   add_subdirectory(test)

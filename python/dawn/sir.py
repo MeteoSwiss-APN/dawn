@@ -28,6 +28,7 @@ sys_path.insert(1, __dawn_install_protobuf_module__)
 # Export all SIR classes
 #
 from .SIR_pb2 import *
+from .statements_pb2 import *
 from google.protobuf import json_format
 
 ExprType = TypeVar('Expr',

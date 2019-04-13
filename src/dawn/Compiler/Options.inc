@@ -60,7 +60,7 @@ OPT(std::string, ReorderStrategy, "greedy", "reorder", "",
     "\n - scut   = Use S-cut graph partitioning\n", "<strategy>", true, false)
 OPT(int, MaxFieldsPerStencil, 40, "max-fields", "",
     "Set the maximum number of fields in any given stencils", "<N>", true, false)
-OPT(bool, PassVerbose, false, "pass-verbose", "",
+OPT(bool, PassVerbose, true, "pass-verbose", "",
     "Compile in verbose mode", "", false, true)
 OPT(bool, SSA, false, "ssa", "",
     "Transform all statements into static single assigment (SSA) form", "", false, true)

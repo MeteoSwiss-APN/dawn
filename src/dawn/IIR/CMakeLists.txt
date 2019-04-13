@@ -19,7 +19,10 @@ include(DawnProtobufGenerate)
 dawn_protobuf_generate(
   OUT_FILES iir_proto_cpp_files
   OUT_INCLUDE_DIRS iir_proto_include_dirs
-  PROTOS ${CMAKE_CURRENT_SOURCE_DIR}/IIR.proto
+  PROTOS IIR/IIR.proto
+  INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
+  WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
+  PACKG IIR
   LANGUAGE cpp
 )
 
@@ -53,7 +56,7 @@ yoda_add_library(
           IntervalAlgorithms.h
           IIR.cpp
           IIR.h
-          IIR.proto
+	  proto/IIR/IIR.proto
           IIRNode.h
           IIRNodeIterator.h
           LoopOrder.cpp
@@ -79,6 +82,7 @@ yoda_add_library(
           ${iir_proto_cpp_files}
   OBJECT
 )
+target_include_directories(DawnIIRObjects PUBLIC ${iir_proto_include_dirs}/../)
 
 target_include_directories(DawnIIRObjects PUBLIC $<TARGET_PROPERTY:DawnSIRStatic,INCLUDE_DIRECTORIES>)
 target_include_directories(DawnIIRObjects SYSTEM PUBLIC ${Boost_INCLUDE_DIR} ${iir_proto_include_dirs})
@@ -94,4 +98,39 @@ yoda_combine_libraries(
   VERSION ${DAWN_VERSION}
   EXPORT_GROUP DawnTargets
 )
+
+# Genreate python proto files
+dawn_protobuf_generate(
+  OUT_FILES iir_proto_python_files
+  PROTOS IIR/IIR.proto
+  INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
+  WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
+  PACKG IIR
+  LANGUAGE python
+)
+
+add_custom_target(DawnIIRPythonProto ALL
+  COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${CMAKE_BINARY_DIR}/python/dawn
+  DEPENDS ${iir_proto_python_files}
+)
+
+# Genreate python proto files
+dawn_protobuf_generate(
+  OUT_FILES iir_proto_java_files
+  OUT_DIRS iir_proto_java_dirs
+  PROTOS IIR/IIR.proto
+  INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
+  WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
+  PACKG IIR
+  LANGUAGE java
+)
+
+add_custom_target(DawnIIRJavaProto ALL
+  COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_java_dirs} ${CMAKE_BINARY_DIR}/java/dawn
+  DEPENDS ${iir_proto_java_files}
+)
+
+install(FILES ${iir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/IIR)
+install(FILES ${CMAKE_SOURCE_DIR}/python/IIR/__init__.py DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/IIR)
+install(DIRECTORY ${iir_proto_java_dirs} DESTINATION ${DAWN_INSTALL_JAVA_DIR}/dawn)
 
