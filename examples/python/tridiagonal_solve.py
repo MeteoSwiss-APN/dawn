@@ -3,6 +3,8 @@ import sys
 import argparse
 import ctypes
 import os.path
+from optparse import OptionParser
+
 from ctypes import *
 
 from config import __dawn_install_module__,__dawn_install_dawnclib__ 
@@ -118,6 +120,12 @@ def createVerticalRegionStmt3() -> VerticalRegionDeclStmt :
   verticalRegionStmt = makeVerticalRegionDeclStmt(bodyAST, interval, VerticalRegion.Backward)
   return verticalRegionStmt
 
+parser = OptionParser()
+parser.add_option("-v", "--verbose",
+                  action="store_true", dest="verbose", default=False,
+                  help="print the SIR")
+
+(options, args) = parser.parse_args()
 
 hir = makeSIR("mystencil.cpp", [
         makeStencil(
@@ -132,13 +140,15 @@ hir = makeSIR("mystencil.cpp", [
 
       ])
 
-T = textwrap.TextWrapper(initial_indent=' '*1, width=120,subsequent_indent=' '*1)
-des = sir_printer.SIRPrinter()
+## Print the SIR to stdout only in verbose mode
+if options.verbose:
+  T = textwrap.TextWrapper(initial_indent=' '*1, width=120,subsequent_indent=' '*1)
+  des = sir_printer.SIRPrinter()
 
-#des.visitGlobalVariables(hir.global_variables)
+  #des.visitGlobalVariables(hir.global_variables)
 
-for stencil in hir.stencils:
-  des.visitStencil(stencil)
+  for stencil in hir.stencils:
+    des.visitStencil(stencil)
 
 # serialize the hir to pass it to the compiler
 hirstr = hir.SerializeToString()
