@@ -64,13 +64,17 @@ yoda_add_target_clean_all(
   "${CMAKE_BINARY_DIR}/protobuf-prefix"
 )
 
+if(NOT DEFINED PYTHON_EXECUTABLE)
+  find_package(PythonInterp 3.4 REQUIRED)
+endif()
+
 include("thirdparty/DawnAddProtobuf")
 
 install(DIRECTORY ${PROTOBUF_PYTHON_INSTALL}/google DESTINATION ${CMAKE_INSTALL_PREFIX}/python)
 
 include("thirdparty/DawnAddBoost")
 
-set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR} -DBOOST_ROOT=${BOOST_ROOT})
+set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR} -DBOOST_ROOT=${BOOST_ROOT} -DDAWN_PYTHON=ON -DDAWN_EXAMPLES=ON)
 
 yoda_find_package(
   PACKAGE dawn

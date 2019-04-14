@@ -1,5 +1,5 @@
 namespace cuda{
-__global__ void __launch_bounds__(32)  mystencil_stencil53_ms106_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, gridtools::clang::float_type * const a, gridtools::clang::float_type * const b, gridtools::clang::float_type * const c, gridtools::clang::float_type * const d) {
+__global__ void __launch_bounds__(32)  tridiagonal_solve_stencil53_ms106_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, gridtools::clang::float_type * const a, gridtools::clang::float_type * const b, gridtools::clang::float_type * const c, gridtools::clang::float_type * const d) {
 
   // Start kernel
   gridtools::clang::float_type c_kcache[2];
@@ -112,7 +112,7 @@ if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= bloc
 
   // Final flush of kcaches
 }
-__global__ void __launch_bounds__(32)  mystencil_stencil53_ms107_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, gridtools::clang::float_type * const c, gridtools::clang::float_type * const d) {
+__global__ void __launch_bounds__(32)  tridiagonal_solve_stencil53_ms107_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, gridtools::clang::float_type * const c, gridtools::clang::float_type * const d) {
 
   // Start kernel
   gridtools::clang::float_type d_kcache[2];
@@ -194,7 +194,7 @@ if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= bloc
   // Final flush of kcaches
 }
 
-class mystencil {
+class tridiagonal_solve {
 public:
 
   struct sbase : public timer_cuda {
@@ -263,7 +263,7 @@ public:
       const unsigned int nby = (ny + 1 - 1) / 1;
       const unsigned int nbz = 1;
       dim3 blocks(nbx, nby, nbz);
-      mystencil_stencil53_ms106_kernel<<<blocks, threads>>>(nx,ny,nz,m_a.strides()[1],m_a.strides()[2],(a.data()+m_a.get_storage_info_ptr()->index(a.begin<0>(), a.begin<1>(),0 )),(b.data()+m_b.get_storage_info_ptr()->index(b.begin<0>(), b.begin<1>(),0 )),(c.data()+m_c.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+m_d.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )));
+      tridiagonal_solve_stencil53_ms106_kernel<<<blocks, threads>>>(nx,ny,nz,m_a.strides()[1],m_a.strides()[2],(a.data()+m_a.get_storage_info_ptr()->index(a.begin<0>(), a.begin<1>(),0 )),(b.data()+m_b.get_storage_info_ptr()->index(b.begin<0>(), b.begin<1>(),0 )),(c.data()+m_c.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+m_d.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )));
       };
       {;
       gridtools::data_view<storage_ijk_t> c= gridtools::make_device_view(m_c);
@@ -276,7 +276,7 @@ public:
       const unsigned int nby = (ny + 1 - 1) / 1;
       const unsigned int nbz = 1;
       dim3 blocks(nbx, nby, nbz);
-      mystencil_stencil53_ms107_kernel<<<blocks, threads>>>(nx,ny,nz,m_c.strides()[1],m_c.strides()[2],(c.data()+m_c.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+m_d.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )));
+      tridiagonal_solve_stencil53_ms107_kernel<<<blocks, threads>>>(nx,ny,nz,m_c.strides()[1],m_c.strides()[2],(c.data()+m_c.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+m_d.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )));
       };
 
       // stopping timers
@@ -287,17 +287,17 @@ public:
       return this;
     }
   };
-  static constexpr const char* s_name = "mystencil";
+  static constexpr const char* s_name = "tridiagonal_solve";
   sbase* m_stencil_53;
 public:
 
-  mystencil(const mystencil&) = delete;
+  tridiagonal_solve(const tridiagonal_solve&) = delete;
 
   // Members
 
   // Stencil-Data
 
-  mystencil(const gridtools::clang::domain& dom, storage_ijk_t& a, storage_ijk_t& b, storage_ijk_t& c, storage_ijk_t& d) : m_stencil_53(new stencil_53(dom,a,b,c,d) ){}
+  tridiagonal_solve(const gridtools::clang::domain& dom, storage_ijk_t& a, storage_ijk_t& b, storage_ijk_t& c, storage_ijk_t& d) : m_stencil_53(new stencil_53(dom,a,b,c,d) ){}
 
   void run() {
     sync_storages();

@@ -21,28 +21,80 @@ def createVerticalRegionStmt() -> VerticalRegionDeclStmt :
 
   # create the out = in[i+1] statement
   bodyAST = makeAST(
-      [makeAssignmentStmt(
-        makeFieldAccessExpr("out",[0,0,0]),
+      [
+      makeAssignmentStmt(
+        makeFieldAccessExpr("lap"),
         makeBinaryOperator(
-          makeFieldAccessExpr("in",[1,0,0]),
+          makeBinaryOperator(
+            makeLiteralAccessExpr("-4.0", BuiltinType.Float),
+            "*",
+            makeFieldAccessExpr("in")
+          ),
           "+",
           makeBinaryOperator(
-            makeFieldAccessExpr("in",[-1,0,0]),
-            "+",
+            makeFieldAccessExpr("coeff"),
+            "*",
             makeBinaryOperator(
-              makeFieldAccessExpr("in",[0,1,0]),
+              makeFieldAccessExpr("in",[1,0,0]),
               "+",
-              makeFieldAccessExpr("in",[0,-1,0])
+              makeBinaryOperator(
+                makeFieldAccessExpr("in",[-1,0,0]),
+                "+",
+                makeBinaryOperator(
+                  makeFieldAccessExpr("in",[0,1,0]),
+                  "+",
+                  makeFieldAccessExpr("in",[0,-1,0])
+                )
+              )
             )
-          )
+          )  
+        ),
+        "="
+      ),
+      makeAssignmentStmt(
+        makeFieldAccessExpr("out"),
+        makeBinaryOperator(
+          makeBinaryOperator(
+            makeLiteralAccessExpr("-4.0", BuiltinType.Float),
+            "*",
+            makeFieldAccessExpr("lap")
+          ),
+          "+",
+          makeBinaryOperator(
+            makeFieldAccessExpr("coeff"),
+            "*",
+            makeBinaryOperator(
+              makeFieldAccessExpr("lap",[1,0,0]),
+              "+",
+              makeBinaryOperator(
+                makeFieldAccessExpr("lap",[-1,0,0]),
+                "+",
+                makeBinaryOperator(
+                  makeFieldAccessExpr("lap",[0,1,0]),
+                  "+",
+                  makeFieldAccessExpr("lap",[0,-1,0])
+                )
+              )
+            )
+          )  
         ),
         "="
       )
+
       ]
   )
 
   verticalRegionStmt = makeVerticalRegionDeclStmt(bodyAST, interval, VerticalRegion.Forward)
   return verticalRegionStmt
+
+hir = makeSIR("hori_diff.cpp", [
+        makeStencil(
+          "hori_diff",
+          makeAST([createVerticalRegionStmt()]),
+          [makeField("in"), makeField("out"), makeField("coeff"), makeField("lap", is_temporary=True)]
+        )
+
+      ])
 
 parser = OptionParser()
 parser.add_option("-v", "--verbose",
@@ -50,15 +102,6 @@ parser.add_option("-v", "--verbose",
                   help="print the SIR")
 
 (options, args) = parser.parse_args()
-
-hir = makeSIR("mystencil.cpp", [
-        makeStencil(
-          "mystencil",
-          makeAST([createVerticalRegionStmt()]),
-          [makeField("in"), makeField("out")]
-        )
-
-      ])
 
 ## Print the SIR to stdout only in verbose mode
 if options.verbose:
@@ -81,7 +124,7 @@ dawn.dawnOptionsSet(options, "Backend".encode('utf-8'), backend)
 
 # call the compiler that generates a translation unit
 tu = dawn.dawnCompile(hirstr, len(hirstr), options)
-stencilname = "mystencil"
+stencilname = "hori_diff"
 b_stencilName = stencilname.encode('utf-8')
 # get the code of the translation unit for the given stencil
 code = dawn.dawnTranslationUnitGetStencil(tu, b_stencilName)

@@ -127,9 +127,9 @@ parser.add_option("-v", "--verbose",
 
 (options, args) = parser.parse_args()
 
-hir = makeSIR("mystencil.cpp", [
+hir = makeSIR("tridiagonal_solve.cpp", [
         makeStencil(
-          "mystencil",
+          "tridiagonal_solve",
           makeAST([
               createVerticalRegionStmt1(),
               createVerticalRegionStmt2(),
@@ -161,7 +161,7 @@ dawn.dawnOptionsSet(options, "Backend".encode('utf-8'), backend)
 
 # call the compiler that generates a translation unit
 tu = dawn.dawnCompile(hirstr, len(hirstr), options)
-stencilname = "mystencil"
+stencilname = "tridiagonal_solve"
 b_stencilName = stencilname.encode('utf-8')
 # get the code of the translation unit for the given stencil
 code = dawn.dawnTranslationUnitGetStencil(tu, b_stencilName)

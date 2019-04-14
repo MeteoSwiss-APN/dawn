@@ -33,9 +33,9 @@ def createVerticalRegionStmt() -> VerticalRegionDeclStmt :
   verticalRegionStmt = makeVerticalRegionDeclStmt(bodyAST, interval, VerticalRegion.Forward)
   return verticalRegionStmt
 
-hir = makeSIR("mystencil.cpp", [
+hir = makeSIR("copy_stencil.cpp", [
         makeStencil(
-          "mystencil",
+          "copy_stencil",
           makeAST([createVerticalRegionStmt()]),
           [makeField("in"), makeField("out")]
         )
@@ -71,7 +71,7 @@ dawn.dawnOptionsSet(options, "Backend".encode('utf-8'), backend)
 
 # call the compiler that generates a translation unit
 tu = dawn.dawnCompile(hirstr, len(hirstr), options)
-stencilname = "mystencil"
+stencilname = "copy_stencil"
 b_stencilName = stencilname.encode('utf-8')
 # get the code of the translation unit for the given stencil
 code = dawn.dawnTranslationUnitGetStencil(tu, b_stencilName)

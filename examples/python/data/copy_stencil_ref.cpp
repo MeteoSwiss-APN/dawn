@@ -1,5 +1,5 @@
 namespace cuda{
-__global__ void __launch_bounds__(32)  mystencil_stencil13_ms24_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, gridtools::clang::float_type * const in, gridtools::clang::float_type * const out) {
+__global__ void __launch_bounds__(32)  copy_stencil_stencil13_ms24_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, gridtools::clang::float_type * const in, gridtools::clang::float_type * const out) {
 
   // Start kernel
   const unsigned int nx = isize;
@@ -57,7 +57,7 @@ out[idx111] = __ldg(&(in[idx111+1*1]));
     idx111+=stride_111_2;
 }}
 
-class mystencil {
+class copy_stencil {
 public:
 
   struct sbase : public timer_cuda {
@@ -120,7 +120,7 @@ public:
       const unsigned int nby = (ny + 1 - 1) / 1;
       const unsigned int nbz = (m_dom.ksize()+4-1) / 4;
       dim3 blocks(nbx, nby, nbz);
-      mystencil_stencil13_ms24_kernel<<<blocks, threads>>>(nx,ny,nz,m_in.strides()[1],m_in.strides()[2],(in.data()+m_in.get_storage_info_ptr()->index(in.begin<0>(), in.begin<1>(),0 )),(out.data()+m_out.get_storage_info_ptr()->index(out.begin<0>(), out.begin<1>(),0 )));
+      copy_stencil_stencil13_ms24_kernel<<<blocks, threads>>>(nx,ny,nz,m_in.strides()[1],m_in.strides()[2],(in.data()+m_in.get_storage_info_ptr()->index(in.begin<0>(), in.begin<1>(),0 )),(out.data()+m_out.get_storage_info_ptr()->index(out.begin<0>(), out.begin<1>(),0 )));
       };
 
       // stopping timers
@@ -131,17 +131,17 @@ public:
       return this;
     }
   };
-  static constexpr const char* s_name = "mystencil";
+  static constexpr const char* s_name = "copy_stencil";
   sbase* m_stencil_13;
 public:
 
-  mystencil(const mystencil&) = delete;
+  copy_stencil(const copy_stencil&) = delete;
 
   // Members
 
   // Stencil-Data
 
-  mystencil(const gridtools::clang::domain& dom, storage_ijk_t& in, storage_ijk_t& out) : m_stencil_13(new stencil_13(dom,in,out) ){}
+  copy_stencil(const gridtools::clang::domain& dom, storage_ijk_t& in, storage_ijk_t& out) : m_stencil_13(new stencil_13(dom,in,out) ){}
 
   void run() {
     sync_storages();
