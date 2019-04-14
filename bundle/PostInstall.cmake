@@ -1,4 +1,4 @@
-set(examples "copy_stencil;tridiagonal_solve")
+set(examples "copy_stencil;hori_diff;tridiagonal_solve")
 
 foreach(example ${examples})
   execute_process(COMMAND python3 ${CMAKE_INSTALL_PREFIX}/examples/python/${example}.py)

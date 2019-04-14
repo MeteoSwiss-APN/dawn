@@ -77,7 +77,7 @@ b_stencilName = stencilname.encode('utf-8')
 code = dawn.dawnTranslationUnitGetStencil(tu, b_stencilName)
 
 # write to file
-f = open(os.path.dirname(os.path.realpath(__file__))+"/data/copy_stencil.cpp","w")
+f = open(os.path.dirname(os.path.realpath(__file__))+"/data/hori_diff.cpp","w")
 f.write(ctypes.c_char_p(code).value.decode("utf-8"))
 
 f.close()
