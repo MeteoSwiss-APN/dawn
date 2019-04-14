@@ -1,14 +1,25 @@
+"""Copy stencil HIR generator
+
+This program creates the HIR corresponding to a copy stencil using the Python API of the HIR.
+The copy stencil is a hello world for stencil computations.
+The code is meant as an example for high-level DSLs that could generate HIR from their own 
+internal IR. 
+The program contains two parts: 
+    1. construct the HIR of the example
+    2. pass the HIR to the dawn compiler in order to run all optimizer passes and code generation.
+       In this example the compiler is configured with the CUDA backend, therefore will code generate
+       an optimized CUDA implementation.
+
+"""
+
 import textwrap
 import sys
 import argparse
 import ctypes
 import os.path
 from optparse import OptionParser
-
 from ctypes import *
-
 from config import __dawn_install_module__,__dawn_install_dawnclib__ 
-
 from dawn import *
 from dawn import sir_printer
 

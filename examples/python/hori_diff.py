@@ -1,3 +1,18 @@
+"""Horizontal diffusion stencil HIR generator
+
+This program creates the HIR corresponding to an horizontal diffusion stencil using the Python API of the HIR.
+The horizontal diffusion is a basic example that contains horizontal data dependencies that need to be resolved 
+by the compiler passes. 
+The code is meant as an example for high-level DSLs that could generate HIR from their own 
+internal IR. 
+The program contains two parts: 
+    1. construct the HIR of the example
+    2. pass the HIR to the dawn compiler in order to run all optimizer passes and code generation.
+       In this example the compiler is configured with the CUDA backend, therefore will code generate
+       an optimized CUDA implementation.
+
+"""
+
 import textwrap
 import sys
 import argparse
