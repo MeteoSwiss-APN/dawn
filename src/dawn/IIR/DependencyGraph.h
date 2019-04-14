@@ -62,7 +62,7 @@ public:
 
   struct Vertex {
     std::size_t VertexID; ///< Unqiue ID of the Vertex
-    int ID;               ///< ID of the data to be stored
+    int value;            ///< value of the data to be stored
   };
 
 protected:
@@ -102,8 +102,8 @@ public:
     for(const auto& vertexPair : vertices_) {
       const auto& vertex = vertexPair.second;
 
-      if(hasCycleDependency(vertex.ID)) {
-        ids.insert(vertex.ID);
+      if(hasCycleDependency(vertex.value)) {
+        ids.insert(vertex.value);
       }
     }
     return ids;
@@ -117,16 +117,16 @@ public:
   ///    IDFrom                              IDTo
   /// @endverbatim
   template <typename TEdgeData>
-  void insertEdge(int IDFrom, int IDTo, TEdgeData&& data) {
+  void insertEdge(int vertexValueFrom, int vertexValueTo, TEdgeData&& data) {
 
     // Create `IDTo` node (We shift the burden to the `insertNode` to take appropriate actions
     // if the node does already exist)
-    static_cast<Derived*>(this)->insertNode(IDTo);
+    static_cast<Derived*>(this)->insertNode(vertexValueTo);
 
     // Traverse the edge-list of node `IDFrom` to check if we already have such an edge
-    auto& edgeList = adjacencyList_[getVertexIDFromID(IDFrom)];
-    const Edge edge{std::forward<TEdgeData>(data), getVertexIDFromID(IDFrom),
-                    getVertexIDFromID(IDTo)};
+    auto& edgeList = adjacencyList_[getVertexIDFromValue(vertexValueFrom)];
+    const Edge edge{std::forward<TEdgeData>(data), getVertexIDFromValue(vertexValueFrom),
+                    getVertexIDFromValue(vertexValueTo)};
 
     auto it = std::find_if(edgeList->begin(), edgeList->end(), [&edge](const Edge& e) {
       return e.FromVertexID == edge.FromVertexID && e.ToVertexID == edge.ToVertexID;
@@ -143,21 +143,21 @@ public:
   /// This is useful for access graph which want to merge the extents (= EdgeData).
   void edgeAlreadyExists(EdgeData& existingEdge, const EdgeData& newEdge) {}
 
-  /// @brief Get the ID of the Vertex in the graph given an ID
-  std::size_t getVertexIDFromID(int ID) const {
-    auto it = vertices_.find(ID);
+  /// @brief Get the ID of the Vertex in the graph given the vertex value
+  std::size_t getVertexIDFromValue(int value) const {
+    auto it = vertices_.find(value);
     DAWN_ASSERT_MSG(it != vertices_.end(), "Node with given ID does not exist");
     return it->second.VertexID;
   }
 
-  bool hasCycleDependency(const int ID) const {
+  bool hasCycleDependency(const int value) const {
     std::set<int> a{};
     // TODO implement a perfect fwd
-    return hasCycleDependencyImpl(ID, getVertexIDFromID(ID), a);
+    return hasCycleDependencyImpl(getVertexIDFromValue(value), getVertexIDFromValue(value), a);
   }
 
   /// @brief Get the ID of the vertex given by ID
-  int getIDFromVertexID(std::size_t VertexID) const {
+  int getValueFromVertexID(std::size_t VertexID) const {
     for(const auto& vertexPair : vertices_)
       if(vertexPair.second.VertexID == VertexID)
         return vertexPair.first;
@@ -165,8 +165,12 @@ public:
   }
 
   /// @brief Get the list of edges of node given by `ID`
-  EdgeList& edgesOf(int ID) { return *(adjacencyList_[getVertexIDFromID(ID)]); }
-  const EdgeList& edgesOf(int ID) const { return *(adjacencyList_[getVertexIDFromID(ID)]); }
+  EdgeList& edgesOf(int vertexValue) {
+    return *(adjacencyList_[getVertexIDFromValue(vertexValue)]);
+  }
+  const EdgeList& edgesOf(int vertexValue) const {
+    return *(adjacencyList_[getVertexIDFromValue(vertexValue)]);
+  }
 
   /// @brief Clear the graph
   void clear() {
@@ -217,17 +221,19 @@ public:
   }
 
 protected:
-  bool hasCycleDependencyImpl(const int ID, const int vertexID, std::set<int>& visited) const {
+  bool hasCycleDependencyImpl(const int targetVertexID, const int seedID,
+                              std::set<int>& visited) const {
     // DFS search for cycles on access to ID
-    for(auto& edge : *(getAdjacencyList()[vertexID])) {
-      if(edge.ToVertexID == vertexID) {
+    for(auto& edge : *(getAdjacencyList()[seedID])) {
+      if(edge.ToVertexID == targetVertexID) {
         return true;
       }
-      if(visited.count(ID)) {
-        continue;
+      visited.insert(seedID);
+
+      if(visited.count(edge.ToVertexID)) {
+        return true;
       }
-      visited.insert(ID);
-      if(hasCycleDependencyImpl(ID, edge.ToVertexID, visited)) {
+      if(hasCycleDependencyImpl(targetVertexID, edge.ToVertexID, visited)) {
         return true;
       }
     }

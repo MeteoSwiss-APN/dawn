@@ -134,7 +134,7 @@ void StatementMapper::visit(const std::shared_ptr<VarDeclStmt>& stmt) {
     function->mapStmtToAccessID(stmt, AccessID);
   } else {
     instantiation_->setAccessIDNamePair(AccessID, globalName);
-    instantiation_->getStmtToAccessIDMap().emplace(stmt, AccessID);
+    instantiation_->getStmtIDToAccessIDMap().emplace(stmt->getID(), AccessID);
   }
 
   // Add the mapping to the local scope
@@ -216,7 +216,7 @@ void StatementMapper::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
           diag << "no viable Do-Method overload for stencil function call '" << expr->getCallee()
                << "'";
           instantiation_->getOptimizerContext()->getDiagnostics().report(diag);
-          dawn_unreachable_internal("no viable do-method overload for stencil function call");
+          dawn_unreachable("no viable do-method overload for stencil function call");
         }
       } else {
         ast = SIRStencilFun->Asts.front();
@@ -270,7 +270,7 @@ void StatementMapper::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
   stencilFun->checkFunctionBindings();
 
   for(auto id : stencilFun->getAccessIDSetGlobalVariables()) {
-    scope_.top()->LocalVarNameToAccessIDMap.emplace(stencilFun->getNameFromAccessID(id), id);
+    scope_.top()->LocalVarNameToAccessIDMap.emplace(stencilFun->getFieldNameFromAccessID(id), id);
   }
 
   scope_.pop();

@@ -13,9 +13,9 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Format.h"
@@ -99,8 +99,8 @@ public:
   }
 
   std::string getNameFromAccessID(int AccessID) {
-    return stencilFunCalls_.empty() ? instantiation_->getNameFromAccessID(AccessID)
-                                    : stencilFunCalls_.top()->getNameFromAccessID(AccessID);
+    return stencilFunCalls_.empty() ? instantiation_->getFieldNameFromAccessID(AccessID)
+                                    : stencilFunCalls_.top()->getFieldNameFromAccessID(AccessID);
   }
 
   std::shared_ptr<iir::StencilFunctionInstantiation>

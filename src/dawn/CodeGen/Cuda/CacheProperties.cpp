@@ -57,9 +57,9 @@ std::string CacheProperties::getCacheName(int accessID) const {
 
   const auto& cache = ms_->getCache(accessID);
   if(cache.getCacheType() == iir::Cache::CacheTypeKind::IJ)
-    return stencilInstantiation_->getNameFromAccessID(cache.getCachedFieldAccessID()) + "_ijcache";
+    return stencilInstantiation_->getFieldNameFromAccessID(cache.getCachedFieldAccessID()) + "_ijcache";
   else if(cache.getCacheType() == iir::Cache::CacheTypeKind::K)
-    return stencilInstantiation_->getNameFromAccessID(cache.getCachedFieldAccessID()) + "_kcache";
+    return stencilInstantiation_->getFieldNameFromAccessID(cache.getCachedFieldAccessID()) + "_kcache";
 
   dawn_unreachable("Unknown cache for code generation");
 }
@@ -73,31 +73,18 @@ bool CacheProperties::isIJCached(const int accessID) const {
          (ms_->getCache(accessID).getCacheType() == iir::Cache::CacheTypeKind::IJ);
 }
 
-iir::Extent CacheProperties::getKCacheVertExtent(const int accessID) const {
-  const auto& field = ms_->getField(accessID);
-  auto vertExtent = field.getExtents()[2];
-  const auto& cache = ms_->getCache(accessID);
-  // in the case of epflush, the extent of the cache required is not determined only by the access
-  // pattern, but also by the window required to epflush
-  if(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::epflush) {
-    DAWN_ASSERT(cache.getWindow().is_initialized());
-    auto window = *(cache.getWindow());
-    return vertExtent.merge(iir::Extent{window.m_m, window.m_p});
-  } else {
-    return vertExtent;
-  }
-}
-
 int CacheProperties::getKCacheIndex(const int accessID, const int offset) const {
   return getKCacheCenterOffset(accessID) + offset;
 }
 
 bool CacheProperties::requiresFill(const iir::Cache& cache) {
-  return ((cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill));
+  return ((cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill) ||
+          (cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::bpfill) ||
+          (cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill_and_flush));
 }
 
 int CacheProperties::getKCacheCenterOffset(const int accessID) const {
-  auto ext = getKCacheVertExtent(accessID);
+  auto ext = ms_->getKCacheVertExtent(accessID);
   return -ext.Minus;
 }
 

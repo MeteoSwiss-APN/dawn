@@ -12,10 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/DependencyGraphStage.h"
-#include "dawn/Optimizer/Renaming.h"
+#include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/Renaming.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
@@ -32,7 +32,21 @@ std::unique_ptr<IIR> IIR::clone() const {
   return cloneIIR;
 }
 
-void IIR::clone(std::unique_ptr<IIR>& dest) const { dest->cloneChildrenFrom(*this, dest); }
+json::json IIR::jsonDump() const {
+  json::json node;
+
+  int cnt = 0;
+  for(const auto& stencil : children_) {
+    node["Stencil" + std::to_string(cnt)] = stencil->jsonDump();
+    cnt++;
+  }
+  return node;
+}
+
+void IIR::clone(std::unique_ptr<IIR>& dest) const {
+  dest->cloneChildrenFrom(*this, dest);
+  dest->setBlockSize(blockSize_);
+}
 
 } // namespace iir
 } // namespace dawn

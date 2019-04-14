@@ -66,6 +66,8 @@ public:
   /// @brief Get the AccessID of the field
   int getCachedFieldAccessID() const;
 
+  json::json jsonDump() const;
+
   /// @brief Get the type of cache
   CacheTypeKind getCacheType() const;
   std::string getCacheTypeAsString() const;
@@ -77,11 +79,17 @@ public:
   /// @brief Get the interval of the iteration space from where the cache was accessed
   boost::optional<Interval> getInterval() const;
 
+  /// @brief returns a crop of the interval with the window of the cache (according to the specified
+  /// bound)
+  Interval getWindowInterval(Interval::Bound bound) const;
+
   /// @brief Get the enclosing of the iteration space interval and the accesses extent
   boost::optional<Interval> getEnclosingAccessedInterval() const;
 
   /// @brief determines if the cache specification requires a window
   bool requiresWindow() const;
+
+  bool requiresMemMemoryAccess() const;
 
   /// @name Comparison operator
   /// @{

@@ -212,8 +212,10 @@ public:
 
   virtual bool preVisitNode(std::shared_ptr<VarAccessExpr> const& expr) override {
     DAWN_ASSERT(tmpFunction_);
-    // record the var access as an argument to the stencil funcion
-    dawn_unreachable_internal("All the var access should have been promoted to temporaries");
+    if(!instantiation_->isGlobalVariable(instantiation_->getAccessIDFromExpr(expr))) {
+      // record the var access as an argument to the stencil funcion
+      dawn_unreachable_internal("All the var access should have been promoted to temporaries");
+    }
     return true;
   }
 
@@ -235,7 +237,7 @@ public:
       tmpFieldAccessExpr_ = std::dynamic_pointer_cast<FieldAccessExpr>(expr->getLeft());
 
       // otherwise we create a new stencil function
-      std::string tmpFieldName = instantiation_->getNameFromAccessID(accessID);
+      std::string tmpFieldName = instantiation_->getFieldNameFromAccessID(accessID);
       tmpFunction_ = std::make_shared<sir::StencilFunction>();
 
       tmpFunction_->Name = makeOnTheFlyFunctionCandidateName(tmpFieldName, interval_);
@@ -411,6 +413,8 @@ public:
     // insert the sir::stencilFunction into the StencilInstantiation
     instantiation_->insertStencilFunctionIntoSIR(sirStencilFunctionInstance);
 
+    // we clone the stencil function instantiation of the candidate so that each instance of the st
+    // function has its own private copy of the expressions (i.e. ast)
     std::shared_ptr<iir::StencilFunctionInstantiation> cloneStencilFun =
         instantiation_->cloneStencilFunctionCandidate(stencilFun, fnClone);
 
@@ -422,7 +426,7 @@ public:
     // to the offset used to access the temporary
     for(auto accessID_ : (accessIDsOfArgs)) {
       std::shared_ptr<FieldAccessExpr> arg = std::make_shared<FieldAccessExpr>(
-          instantiation_->getNameFromAccessID(accessID_), expr->getOffset());
+          instantiation_->getFieldNameFromAccessID(accessID_), expr->getOffset());
       cloneStencilFun->getExpression()->insertArgument(arg);
 
       instantiation_->mapExprToAccessID(arg, accessID_);
@@ -589,8 +593,12 @@ bool PassTemporaryToStencilFunction::run(
         }
       }
     }
+
     // perform the promotion "local var"->temporary
     for(auto varID : localVarAccessIDs) {
+      if(stencilInstantiation->isGlobalVariable(varID))
+        continue;
+
       stencilInstantiation->promoteLocalVariableToTemporaryField(stencilPtr.get(), varID,
                                                                  stencilPtr->getLifetime(varID));
     }
@@ -704,6 +712,12 @@ bool PassTemporaryToStencilFunction::run(
 
                   // first instantiation of the stencil function that is inserted in the IIR as a
                   // candidate stencil function
+                  // notice we clone the ast, so that every stencil function instantiation has a
+                  // private copy of the ast (so that it can be transformed). However that is not
+                  // enough since this function is inserted as a candidate, and a candidate can be
+                  // inserted as multiple st function instances. Later when the candidate
+                  // is finalized in a concrete instance, the ast will have to be cloned again
+                  ast = ast->clone();
                   auto stencilFun = stencilInstantiation->makeStencilFunctionInstantiation(
                       stencilFunCallExpr, stencilFunction, ast, sirInterval, nullptr);
 
@@ -729,7 +743,7 @@ bool PassTemporaryToStencilFunction::run(
           int accessID = tmpFieldPair.first;
           auto tmpProperties = tmpFieldPair.second;
           if(context->getOptions().ReportPassTmpToFunction)
-            std::cout << " [ replace tmp:" << stencilInstantiation->getNameFromAccessID(accessID)
+            std::cout << " [ replace tmp:" << stencilInstantiation->getFieldNameFromAccessID(accessID)
                       << "; line : " << tmpProperties.tmpFieldAccessExpr_->getSourceLocation().Line
                       << " ] ";
         }

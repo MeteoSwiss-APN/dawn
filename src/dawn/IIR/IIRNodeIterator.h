@@ -17,11 +17,9 @@
 
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Unreachable.h"
+#include <iterator>
 #include <memory>
 #include <type_traits>
-
-#include <iterator>
-#include <iostream>
 
 namespace dawn {
 namespace iir {

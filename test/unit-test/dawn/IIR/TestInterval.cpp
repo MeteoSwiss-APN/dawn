@@ -12,9 +12,9 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/IIR/Interval.h"
 #include "dawn/IIR/IntervalAlgorithms.h"
 #include "dawn/IIR/MultiInterval.h"
-#include "dawn/IIR/Interval.h"
 #include <gtest/gtest.h>
 #include <unordered_set>
 
@@ -413,4 +413,40 @@ TEST(IntervalTest, Distance) {
       (distance(Interval::IntervalLevel{sir::Interval::End, 1}, Interval::IntervalLevel{1, 1})),
       (IntervalDiff{IntervalDiff::RangeType::minusFullRange, 1}));
 }
+
+TEST(IntervalTest, CodeGenName) {
+  Interval I1(0, 2, 1, -1);
+
+  EXPECT_EQ(Interval::makeCodeGenName(I1), "interval_start_plus_1_2_minus_1");
+
+  Interval I2(sir::Interval::End, sir::Interval::End, 1, -2);
+
+  EXPECT_EQ(Interval::makeCodeGenName(I2), "interval_end_plus_1_end_minus_2");
+}
+TEST(IntervalTest, toStringGen) {
+  Interval I1(0, 2, 1, -1);
+
+  EXPECT_EQ(I1.toStringGen(), "start_plus_1_2_minus_1");
+
+  Interval I2(sir::Interval::End, sir::Interval::End, 1, -2);
+
+  EXPECT_EQ(I2.toStringGen(), "end_plus_1_end_minus_2");
+}
+TEST(IntervalTest, crop) {
+  Interval I1(0, 2, 1, -1);
+
+  EXPECT_EQ((I1.crop(Interval::Bound::upper, {0, 0})), Interval(2, 2, -1, -1));
+  EXPECT_EQ((I1.crop(Interval::Bound::upper, {-2, 1})), Interval(2, 2, -3, 0));
+  EXPECT_EQ((I1.crop(Interval::Bound::lower, {0, 0})), Interval(0, 0, 1, 1));
+  EXPECT_EQ((I1.crop(Interval::Bound::lower, {-2, 1})), Interval(0, 0, -1, 2));
+}
+TEST(IntervalTest, intersect) {
+  Interval I1(0, 7, 1, -1);
+
+  EXPECT_EQ(I1.intersect(Interval{0, 7, 1, -1}), (Interval{0, 7, 1, -1}));
+  EXPECT_EQ(I1.intersect(Interval{0, 1, 0, 4}), (Interval{1, 5, 0, 0}));
+  EXPECT_EQ(I1.intersect(Interval{0, 7, 0, 2}), (Interval{1, 6, 0, 0}));
+  EXPECT_TRUE(!I1.intersect(Interval{0, 0, 0, 0}).valid());
+}
+
 } // anonymous namespace

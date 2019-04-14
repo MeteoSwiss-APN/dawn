@@ -16,12 +16,12 @@ void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<FieldAccessExpr>&
   };
   expr->getName();
   auto getArgumentIndex = [&](const std::string& name) {
-    size_t pos = std::distance(
-        function_->Args.begin(),
-        std::find_if(function_->Args.begin(), function_->Args.end(),
-                     [&](const std::shared_ptr<sir::StencilFunctionArg>& arg) {
-                       return arg->Name == name;
-                     }));
+    size_t pos =
+        std::distance(function_->Args.begin(),
+                      std::find_if(function_->Args.begin(), function_->Args.end(),
+                                   [&](const std::shared_ptr<sir::StencilFunctionArg>& arg) {
+                                     return arg->Name == name;
+                                   }));
 
     DAWN_ASSERT_MSG(pos < function_->Args.size(), "");
     return pos;

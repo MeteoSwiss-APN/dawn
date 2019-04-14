@@ -32,11 +32,11 @@ ASTStencilDesc::ASTStencilDesc(const std::shared_ptr<iir::StencilInstantiation> 
 ASTStencilDesc::~ASTStencilDesc() {}
 
 std::string ASTStencilDesc::getName(const std::shared_ptr<Stmt>& stmt) const {
-  return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
+  return instantiation_->getFieldNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
 }
 
 std::string ASTStencilDesc::getName(const std::shared_ptr<Expr>& expr) const {
-  return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromExpr(expr));
+  return instantiation_->getFieldNameFromAccessID(instantiation_->getAccessIDFromExpr(expr));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -58,7 +58,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) 
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
-  int StencilID = instantiation_->getStencilCallToStencilIDMap().find(stmt)->second;
+  int StencilID = instantiation_->getStencilIDFromStmt(stmt);
 
   std::string stencilName =
       codeGenProperties_.getStencilName(StencilContext::SC_Stencil, StencilID);

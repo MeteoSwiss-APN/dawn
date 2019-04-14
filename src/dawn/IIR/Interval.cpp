@@ -33,17 +33,19 @@ std::string Interval::toStringGen() const {
 
   auto printLevel = [&](int level, int offset) -> void {
     if(level == sir::Interval::Start)
-      ss << "Start";
+      ss << "start";
     else if(level == sir::Interval::End)
-      ss << "End";
+      ss << "end";
     else
       ss << level;
 
+    ss << "_";
     if(offset != 0)
-      ss << (offset > 0 ? "_plus" : "_minus") << offset;
+      ss << (offset > 0 ? "plus_" : "minus_") << std::abs(offset);
   };
 
   printLevel(lowerLevel(), lowerOffset());
+  ss << "_";
   printLevel(upperLevel(), upperOffset());
 
   return ss.str();
@@ -76,26 +78,15 @@ Interval Interval::extendInterval(const Extent& verticalExtent) const {
                   upper_.offset_ + verticalExtent.Plus);
 }
 
+Interval Interval::crop(Bound bound, std::array<int, 2> window) const {
+  return Interval{level(bound), level(bound), offset(bound) + window[0], offset(bound) + window[1]};
+}
+
 std::string Interval::makeCodeGenName(const Interval& interval) {
   std::stringstream ss;
-  ss << "interval";
+  ss << "interval_";
 
-  auto printLevelAndOffset = [&](int level, int offset) -> void {
-    ss << "_";
-    if(level == sir::Interval::Start)
-      ss << "start";
-    else if(level == sir::Interval::End)
-      ss << "end";
-    else
-      ss << level;
-    ss << "_";
-    if(offset != 0)
-      ss << (offset > 0 ? "plus_" : "minus_");
-    ss << std::abs(offset);
-  };
-
-  printLevelAndOffset(interval.lowerLevel(), interval.lowerOffset());
-  printLevelAndOffset(interval.upperLevel(), interval.upperOffset());
+  ss << interval.toStringGen();
   return ss.str();
 }
 
@@ -339,6 +330,20 @@ std::vector<Interval> Interval::computePartition(std::vector<Interval> const& in
     }
   }
   return newIntervals;
+}
+
+Interval Interval::intersect(const Interval& other) const {
+  DAWN_ASSERT(lowerBound() <= upperBound());
+  DAWN_ASSERT(other.lowerBound() <= other.upperBound());
+
+  IntervalLevel lowerLevel_ =
+      (lowerBound() > other.lowerBound()) ? lower_ : other.lowerIntervalLevel();
+
+  IntervalLevel upperLevel_ =
+      (upperBound() < other.upperBound()) ? upper_ : other.upperIntervalLevel();
+
+  return Interval{lowerLevel_.levelMark_, upperLevel_.levelMark_, lowerLevel_.offset_,
+                  upperLevel_.offset_};
 }
 
 void Interval::invert() {

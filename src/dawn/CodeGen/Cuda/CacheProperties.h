@@ -78,9 +78,6 @@ struct CacheProperties {
   /// @brief true if the accessID should be cached
   bool isCached(const int accessID) const;
 
-  /// @brief returns the vertical extent of the kcache associated with an accessID
-  iir::Extent getKCacheVertExtent(const int accessID) const;
-
   /// @brief returns the offset (in the ring buffer) of the center of the kcache
   int getKCacheCenterOffset(const int accessID) const;
   /// @brief if the cache is kcached

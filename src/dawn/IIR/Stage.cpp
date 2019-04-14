@@ -35,6 +35,26 @@ Stage::Stage(StencilInstantiation& stencilInstantiation, int StageID, const Inte
   insertChild(make_unique<DoMethod>(interval, stencilInstantiation));
 }
 
+json::json Stage::jsonDump(const StencilInstantiation& instantiation) const {
+  json::json node;
+  json::json fieldsJson;
+  for(const auto& field : derivedInfo_.fields_) {
+    fieldsJson[instantiation.getNameFromAccessID(field.first)] = field.second.jsonDump();
+  }
+  node["Fields"] = fieldsJson;
+  std::stringstream ss;
+  ss << derivedInfo_.extents_;
+  node["Extents"] = ss.str();
+  node["RequiresSync"] = derivedInfo_.requiresSync_;
+
+  int cnt = 0;
+  for(const auto& doMethod : children_) {
+    node["DoMethod" + std::to_string(cnt)] = doMethod->jsonDump(instantiation);
+    cnt++;
+  }
+  return node;
+}
+
 std::unique_ptr<Stage> Stage::clone() const {
 
   auto cloneStage = make_unique<Stage>(stencilInstantiation_, StageID_);
@@ -192,13 +212,15 @@ void Stage::updateGlobalVariablesInfo() {
       for(const auto& accessPair : access->getWriteAccesses()) {
         int AccessID = accessPair.first;
         // Does this AccessID correspond to a field access?
-        if(stencilInstantiation_.isGlobalVariable(AccessID))
+        if(stencilInstantiation_.isGlobalVariable(AccessID)) {
           derivedInfo_.globalVariables_.insert(AccessID);
+        }
       }
       for(const auto& accessPair : access->getReadAccesses()) {
         int AccessID = accessPair.first;
-        if(stencilInstantiation_.isGlobalVariable(AccessID))
+        if(stencilInstantiation_.isGlobalVariable(AccessID)) {
           derivedInfo_.globalVariables_.insert(AccessID);
+        }
       }
 
       const std::shared_ptr<Statement> statement = statementAccessesPair->getStatement();

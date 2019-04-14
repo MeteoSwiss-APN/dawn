@@ -37,6 +37,8 @@ yoda_add_library(
           PassMultiStageSplitter.h
           PassPrintStencilGraph.cpp
           PassPrintStencilGraph.h
+          PassSetBlockSize.cpp
+          PassSetBlockSize.h
           PassSetBoundaryCondition.cpp
           PassSetBoundaryCondition.h
           PassSetCaches.cpp
@@ -84,3 +86,13 @@ yoda_add_library(
 )
 
 target_include_directories(DawnOptimizerObjects SYSTEM PUBLIC ${Boost_INCLUDE_DIR})
+
+yoda_combine_libraries(
+  NAME DawnOptimizer
+  OBJECTS DawnOptimizerObjects
+  DEPENDS DawnSupportStatic
+  INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
+  VERSION ${DAWN_VERSION}
+  EXPORT_GROUP DawnTargets
+)
+

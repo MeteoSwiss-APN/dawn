@@ -16,9 +16,9 @@
 #include "dawn/CodeGen/CXXNaive/ASTStencilFunctionParamVisitor.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/CXXUtil.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
@@ -35,9 +35,9 @@ ASTStencilFunctionParamVisitor::~ASTStencilFunctionParamVisitor() {}
 std::string ASTStencilFunctionParamVisitor::getName(const std::shared_ptr<Expr>& expr) const {
 
   if(currentFunction_)
-    return currentFunction_->getNameFromAccessID(getAccessID(expr));
+    return currentFunction_->getFieldNameFromAccessID(getAccessID(expr));
   else
-    return instantiation_->getNameFromAccessID(getAccessID(expr));
+    return instantiation_->getFieldNameFromAccessID(getAccessID(expr));
 }
 
 int ASTStencilFunctionParamVisitor::getAccessID(const std::shared_ptr<Expr>& expr) const {

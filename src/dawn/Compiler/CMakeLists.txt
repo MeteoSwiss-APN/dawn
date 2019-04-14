@@ -25,3 +25,6 @@ yoda_add_library(
           Options.inc
   OBJECT
 )
+
+target_include_directories(DawnCompilerObjects PUBLIC $<TARGET_PROPERTY:DawnSIRStatic,INCLUDE_DIRECTORIES>)
+

@@ -108,11 +108,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
 
   cxxnaiveNamespace.commit();
 
-  // Remove trailing ';' as this is retained by Clang's Rewriter
-  std::string str = ssSW.str();
-  str[str.size() - 2] = ' ';
-
-  return str;
+  return ssSW.str();
 }
 
 void CXXNaiveCodeGen::generateStencilWrapperRun(
@@ -152,9 +148,9 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
   std::string ctrArgs("(dom");
   for(auto APIfieldID : APIFields) {
     StencilWrapperConstructor.addArg(
-        codeGenProperties.getParamType(stencilInstantiation->getNameFromAccessID(APIfieldID)) +
-        "& " + stencilInstantiation->getNameFromAccessID(APIfieldID));
-    ctrArgs += "," + stencilInstantiation->getNameFromAccessID(APIfieldID);
+        codeGenProperties.getParamType(stencilInstantiation->getFieldNameFromAccessID(APIfieldID)) +
+        "& " + stencilInstantiation->getFieldNameFromAccessID(APIfieldID));
+    ctrArgs += "," + stencilInstantiation->getFieldNameFromAccessID(APIfieldID);
   }
 
   // add the ctr initialization of each stencil
@@ -163,7 +159,7 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
     if(stencil.isEmpty())
       continue;
 
-    const auto& StencilFields = stencil.getFields();
+    const auto stencilFields = orderMap(stencil.getFields());
 
     const std::string stencilName =
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
@@ -171,7 +167,7 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
     std::string initCtr = "m_" + stencilName + "(new " + stencilName;
 
     int i = 0;
-    for(const auto& fieldInfoPair : StencilFields) {
+    for(const auto& fieldInfoPair : stencilFields) {
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
         continue;
@@ -186,7 +182,7 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
     if(!globalsMap.empty()) {
       initCtr += ",m_globals";
     }
-    for(const auto& fieldInfoPair : StencilFields) {
+    for(const auto& fieldInfoPair : stencilFields) {
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
         continue;
@@ -201,7 +197,7 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
   if(stencilInstantiation->hasAllocatedFields()) {
     std::vector<std::string> tempFields;
     for(auto accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
-      tempFields.push_back(stencilInstantiation->getNameFromAccessID(accessID));
+      tempFields.push_back(stencilInstantiation->getFieldNameFromAccessID(accessID));
     }
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
   }
@@ -240,7 +236,7 @@ void CXXNaiveCodeGen::generateStencilWrapperMembers(
 
     for(int AccessID : stencilInstantiation->getAllocatedFieldAccessIDs())
       stencilWrapperClass.addMember(c_gtc() + "storage_t",
-                                    "m_" + stencilInstantiation->getNameFromAccessID(AccessID));
+                                    "m_" + stencilInstantiation->getFieldNameFromAccessID(AccessID));
   }
 }
 void CXXNaiveCodeGen::generateStencilClasses(
@@ -262,14 +258,14 @@ void CXXNaiveCodeGen::generateStencilClasses(
       continue;
 
     // fields used in the stencil
-    const auto& StencilFields = stencil.getFields();
+    const auto stencilFields = orderMap(stencil.getFields());
 
     auto nonTempFields = makeRange(
-        StencilFields,
+        stencilFields,
         std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>([](
             std::pair<int, iir::Stencil::FieldInfo> const& p) { return !p.second.IsTemporary; }));
     auto tempFields = makeRange(
-        StencilFields,
+        stencilFields,
         std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
             [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
 

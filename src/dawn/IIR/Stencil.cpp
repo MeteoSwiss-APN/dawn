@@ -49,10 +49,12 @@ std::ostream& operator<<(std::ostream& os, const iir::Stencil& stencil) {
   for(const auto& MS : stencil.getChildren()) {
     os << "MultiStage " << (multiStageIdx++) << ": (" << MS->getLoopOrder() << ")\n";
     for(const auto& stage : MS->getChildren())
-      os << "  " << stencil.getStencilInstantiation().getIIR()->getNameFromStageID(stage->getStageID()) << " "
+      os << "  "
+         << stencil.getStencilInstantiation().getIIR()->getNameFromStageID(stage->getStageID())
+         << " "
          << RangeToString()(stage->getFields(),
                             [&](const std::pair<int, iir::Field>& fieldPair) {
-                              return stencil.getStencilInstantiation().getNameFromAccessID(
+                              return stencil.getStencilInstantiation().getFieldNameFromAccessID(
                                   fieldPair.first);
                             })
          << "\n";
@@ -98,6 +100,40 @@ bool Stencil::StatementPosition::inSameDoMethod(const Stencil::StatementPosition
   return StagePos == other.StagePos && DoMethodIndex == other.DoMethodIndex;
 }
 
+json::json Stencil::FieldInfo::jsonDump() const {
+  json::json node;
+  node["dim"] = format("[%i,%i,%i]", Dimensions[0], Dimensions[1], Dimensions[2]);
+  node["field"] = field.jsonDump();
+  node["IsTemporary"] = IsTemporary;
+  return node;
+}
+
+json::json Stencil::jsonDump() const {
+  json::json node;
+  node["ID"] = std::to_string(StencilID_);
+  json::json fieldsJson;
+  for(const auto& f : derivedInfo_.fields_) {
+    fieldsJson[f.second.Name] = f.second.jsonDump();
+  }
+  node["Fields"] = fieldsJson;
+
+  int cnt = 0;
+  for(const auto& child : children_) {
+    node["MultiStage" + std::to_string(cnt)] = child->jsonDump(stencilInstantiation_);
+    cnt++;
+  }
+  return node;
+}
+
+bool Stencil::containsRedundantComputations() const {
+  for(const auto& stage : iterateIIROver<Stage>(*this)) {
+    if(!stage->getExtents().isHorizontalPointwise()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void Stencil::updateFromChildren() {
   derivedInfo_.fields_.clear();
   std::unordered_map<int, Field> fields;
@@ -110,7 +146,7 @@ void Stencil::updateFromChildren() {
     const int accessID = fieldPair.first;
     const Field& field = fieldPair.second;
 
-    std::string name = stencilInstantiation_.getNameFromAccessID(accessID);
+    std::string name = stencilInstantiation_.getFieldNameFromAccessID(accessID);
     bool isTemporary = stencilInstantiation_.isTemporaryField(accessID);
     Array3i specifiedDimension = stencilInstantiation_.getFieldDimensionsMask(accessID);
 
@@ -138,7 +174,6 @@ bool Stencil::Lifetime::overlaps(const Stencil::Lifetime& other) const {
 }
 
 sir::Attr& Stencil::getStencilAttributes() { return stencilAttributes_; }
-
 
 Stencil::Stencil(StencilInstantiation& stencilInstantiation, sir::Attr attributes, int StencilID)
     : stencilInstantiation_(stencilInstantiation), stencilAttributes_(attributes),
@@ -174,7 +209,7 @@ std::vector<std::string> Stencil::getGlobalVariables() const {
 
   std::vector<std::string> globalVariables;
   for(const auto& AccessID : globalVariableAccessIDs)
-    globalVariables.push_back(stencilInstantiation_.getNameFromAccessID(AccessID));
+    globalVariables.push_back(stencilInstantiation_.getFieldNameFromAccessID(AccessID));
 
   return globalVariables;
 }

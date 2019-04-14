@@ -1,7 +1,7 @@
 #!/bin/bash
 
 module load git
-module load cmake
+module load /users/jenkins/easybuild/kesch/modules/all/cmake/3.12.4
 module load gcc/5.4.0-2.26
 module load python/3.6.2-gmvolf-17.02
 

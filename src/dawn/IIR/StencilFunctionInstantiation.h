@@ -325,12 +325,18 @@ public:
   /// @brief Rename all occurences of the caller AccessID from `oldAccessID` to `newAccessID`
   void renameCallerAccessID(int oldAccessID, int newAccessID);
 
+  /// @brief determines if accessid corresponds to a literal
+  bool isLiteral(int accessID) const { return accessID < 0; }
+
   //===----------------------------------------------------------------------------------------===//
   //     Expr/Stmt to Caller AccessID Maps
   //===----------------------------------------------------------------------------------------===//
 
-  /// @brief Get the `name` associated with the `AccessID`
-  std::string getNameFromAccessID(int AccessID) const;
+  /// @brief Get the `name` associated with the `AccessID` of a Field or a Var
+  std::string getFieldNameFromAccessID(int AccessID) const;
+
+  /// @brief Get the `name` associated with the `AccessID` of any access type
+  std::string getNameFromAccessID(int accessID) const;
 
   /// @brief Get the `name` associated with the literal `AccessID`
   const std::string& getNameFromLiteralAccessID(int AccessID) const;

@@ -82,7 +82,7 @@ struct Temporary {
 
   /// @brief Dump the temporary
   void dump(const std::shared_ptr<iir::StencilInstantiation>& instantiation) const {
-    std::cout << "Temporary : " << instantiation->getNameFromAccessID(AccessID) << " {"
+    std::cout << "Temporary : " << instantiation->getFieldNameFromAccessID(AccessID) << " {"
               << "\n  Type=" << (Type == TT_LocalVariable ? "LocalVariable" : "Field")
               << ",\n  Lifetime=" << Lifetime << ",\n  Extent=" << Extent << "\n}\n";
   }

@@ -11,8 +11,9 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-
 #include "dawn/IIR/FieldAccessExtents.h"
+#include "dawn/Support/Json.h"
+#include <sstream>
 
 namespace dawn {
 namespace iir {
@@ -23,6 +24,27 @@ void FieldAccessExtents::mergeReadExtents(Extents const& extents) {
     readAccessExtents_ = boost::make_optional(extents);
   updateTotalExtents();
 }
+json::json FieldAccessExtents::jsonDump() const {
+  json::json node;
+  std::stringstream ss;
+  if(readAccessExtents_.is_initialized()) {
+    ss << *readAccessExtents_;
+  } else {
+    ss << "null";
+  }
+
+  node["read_access"] = ss.str();
+  ss.str("");
+  if(writeAccessExtents_.is_initialized()) {
+    ss << *writeAccessExtents_;
+  } else {
+    ss << "null";
+  }
+
+  node["write_access"] = ss.str();
+  return node;
+}
+
 void FieldAccessExtents::mergeWriteExtents(Extents const& extents) {
   if(writeAccessExtents_.is_initialized())
     writeAccessExtents_->merge(extents);

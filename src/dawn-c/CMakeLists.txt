@@ -24,7 +24,6 @@ yoda_add_library(
           TranslationUnit.cpp
           TranslationUnit.h
           Types.h
-          
           util/Allocate.h
           util/CompilerWrapper.h          
           util/OptionsWrapper.cpp
@@ -38,15 +37,15 @@ yoda_combine_libraries(
   NAME DawnC
   OBJECTS DawnCObjects
           DawnSupportObjects
-          DawnSIRObjects
           DawnCompilerObjects
           DawnIIRObjects
           DawnOptimizerObjects
           DawnCodeGenObjects
   INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
   VERSION ${DAWN_VERSION}
-  DEPENDS ${DAWN_EXTERNAL_LIBRARIES}
+  DEPENDS ${DAWN_EXTERNAL_LIBRARIES} DawnSIRStatic DawnSerializerStatic
+  EXPORT_GROUP DawnTargets
 )
 
 # Export the targets
-install(EXPORT DawnCTargets NAMESPACE Dawn:: DESTINATION ${DAWN_INSTALL_CMAKE_DIR})
+install(EXPORT DawnTargets NAMESPACE Dawn:: DESTINATION ${DAWN_INSTALL_CMAKE_DIR})

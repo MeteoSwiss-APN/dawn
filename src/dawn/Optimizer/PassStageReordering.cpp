@@ -13,8 +13,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassStageReordering.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/FileUtil.h"
 #include "dawn/Support/Unreachable.h"
 
@@ -34,7 +34,7 @@ bool PassStageReordering::run(
 
   std::string filenameWE = getFilenameWithoutExtension(context->getSIR()->Filename);
   if(context->getOptions().ReportPassStageReodering)
-    stencilInstantiation->dumpAsJson(filenameWE + "_before.json", getName());
+    stencilInstantiation->jsonDump(filenameWE + "_before.json");
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     if(strategy_ == ReorderStrategy::RK_None)
@@ -62,9 +62,8 @@ bool PassStageReordering::run(
     if(!stencilPtr)
       return false;
   }
-
   if(context->getOptions().ReportPassStageReodering)
-    stencilInstantiation->dumpAsJson(filenameWE + "_after.json", getName());
+    stencilInstantiation->jsonDump(filenameWE + "_after.json");
 
   return true;
 }

@@ -79,6 +79,8 @@ public:
 
   std::unique_ptr<MultiStage> clone() const;
 
+  json::json jsonDump(const StencilInstantiation& instantiation) const;
+
   /// @brief getters
   /// @{
   /// @brief Get the execution policy
@@ -89,6 +91,8 @@ public:
 
   int getID() const { return id_; }
   /// @}
+
+  void setID(int id) { id_ = id; }
 
   /// @brief clear the derived info
   virtual void clearDerivedInfo() override;
@@ -161,8 +165,20 @@ public:
   /// @brief Compute and return the pairs <AccessID, field> used for a given interval
   std::unordered_map<int, Field> computeFieldsAtInterval(const iir::Interval& interval) const;
 
+  /// @brief determines whether an accessID corresponds to a temporary that will perform accesses to
+  /// main memory
+  bool isMemAccessTemporary(const int accessID) const;
+
+  /// @brief true if there is at least a temporary that requires access to main mem
+  bool hasMemAccessTemporaries() const;
+
+  /// @brief determines whether the multistage contains the field with an accessID
+  bool hasField(const int accessID) const;
+
+  /// @brief field getter with an accessID
   const Field& getField(int accessID) const;
 
+  /// @brief computes the collection of fields of the multistage on the fly (returns copy)
   std::unordered_map<int, Field> computeFieldsOnTheFly() const;
 
   /// @brief Get the enclosing interval of all access to temporaries
@@ -183,6 +199,10 @@ public:
 
   // TODO doc
   MultiInterval computeReadAccessInterval(int accessID) const;
+
+  /// @brief returns the vertical extent of the kcache associated with an accessID
+  /// (determined from all accesses of a full MS)
+  Extent getKCacheVertExtent(const int accessID) const;
 
   /// @brief computes the extents of an accessID field at a given interval
   boost::optional<Extents> computeExtents(const int accessID, const Interval& interval) const;

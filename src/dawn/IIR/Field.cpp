@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/Field.h"
+#include "dawn/IIR/StencilInstantiation.h"
 
 namespace dawn {
 namespace iir {
@@ -21,6 +22,18 @@ Interval Field::computeAccessedInterval() const {
   Interval accessedInterval = interval_;
   accessedInterval = accessedInterval.extendInterval(getExtents());
   return accessedInterval;
+}
+
+json::json Field::jsonDump() const {
+  json::json node;
+  node["accessID"] = accessID_;
+  node["intend"] = intend_;
+  node["extents"] = extents_.jsonDump();
+  node["redundant extents"] = extentsRB_.jsonDump();
+  std::stringstream ss;
+  ss << interval_;
+  node["interval"] = ss.str();
+  return node;
 }
 
 void mergeFields(std::unordered_map<int, Field> const& sourceFields,

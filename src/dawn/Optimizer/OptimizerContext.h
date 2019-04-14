@@ -17,8 +17,8 @@
 
 #include "dawn/Compiler/DiagnosticsEngine.h"
 #include "dawn/Compiler/Options.h"
-#include "dawn/Optimizer/PassManager.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/PassManager.h"
 #include "dawn/Support/NonCopyable.h"
 #include <map>
 #include <memory>
@@ -110,6 +110,7 @@ public:
   /// that are currently hiden in the passes run-methods
   template <typename T>
   bool compareOptionsToPassFlags(const std::unique_ptr<T>& p) {
+
     bool retval;
     if(getOptions().Debug)
       retval = p->isDebug();

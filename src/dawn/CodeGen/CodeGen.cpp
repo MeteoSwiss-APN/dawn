@@ -212,7 +212,7 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
   int i = 0;
   for(const auto& fieldID : stencilInstantiation->getAPIFieldIDs()) {
     codeGenProperties.insertParam(
-        i, stencilInstantiation->getNameFromAccessID(fieldID),
+        i, stencilInstantiation->getFieldNameFromAccessID(fieldID),
         getStorageType(stencilInstantiation->getFieldDimensionsMask(fieldID)));
     ++i;
   }
@@ -223,7 +223,7 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
   }
   if(stencilInstantiation->hasAllocatedFields()) {
     for(int accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
-      codeGenProperties.insertAllocateField(stencilInstantiation->getNameFromAccessID(accessID));
+      codeGenProperties.insertAllocateField(stencilInstantiation->getFieldNameFromAccessID(accessID));
     }
   }
 
@@ -259,9 +259,8 @@ void CodeGen::addTempStorageTypedef(Structure& stencilClass, iir::Stencil const&
       .addType("storage_traits_t::data_store_t< float_type, " + tmpMetadataTypename_ + ">");
 }
 
-void CodeGen::addTmpStorageDeclaration(
-    Structure& stencilClass,
-    IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields) const {
+void CodeGen::addTmpStorageDeclaration(Structure& stencilClass,
+    IndexRange<const std::map<int, iir::Stencil::FieldInfo> > &tempFields) const {
   if(!(tempFields.empty())) {
     stencilClass.addMember(tmpMetadataTypename_, tmpMetadataName_);
 
@@ -271,9 +270,8 @@ void CodeGen::addTmpStorageDeclaration(
   }
 }
 
-void CodeGen::addTmpStorageInit(
-    MemberFunction& ctr, iir::Stencil const& stencil,
-    IndexRange<const std::unordered_map<int, iir::Stencil::FieldInfo>>& tempFields) const {
+void CodeGen::addTmpStorageInit(MemberFunction& ctr, iir::Stencil const& stencil,
+    IndexRange<const std::map<int, iir::Stencil::FieldInfo> > &tempFields) const {
   if(!(tempFields.empty())) {
     ctr.addInit(tmpMetadataName_ + "(dom_.isize(), dom_.jsize(), dom_.ksize() + 2*" +
                 std::to_string(getVerticalTmpHaloSize(stencil)) + ")");

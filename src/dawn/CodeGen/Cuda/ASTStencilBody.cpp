@@ -38,11 +38,11 @@ ASTStencilBody::ASTStencilBody(
 ASTStencilBody::~ASTStencilBody() {}
 
 std::string ASTStencilBody::getName(const std::shared_ptr<Expr>& expr) const {
-  return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromExpr(expr));
+  return instantiation_->getFieldNameFromAccessID(instantiation_->getAccessIDFromExpr(expr));
 }
 
 std::string ASTStencilBody::getName(const std::shared_ptr<Stmt>& stmt) const {
-  return instantiation_->getNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
+  return instantiation_->getFieldNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -106,10 +106,7 @@ void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
     derefIJCache(expr);
     return;
   }
-  if(cacheProperties_.isKCached(accessID) &&
-     ((ms_->getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local) ||
-      (ms_->getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill) ||
-      (ms_->getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::flush))) {
+  if(cacheProperties_.isKCached(accessID)) {
     derefKCache(expr);
     return;
   }
@@ -126,9 +123,9 @@ void ASTStencilBody::derefIJCache(const std::shared_ptr<FieldAccessExpr>& expr) 
   if(cacheProperties_.isCommonCache(accessID)) {
     index = cacheProperties_.getCommonCacheIndexName(iir::Cache::CacheTypeKind::IJ);
   } else {
-    index = "iblock - " + std::to_string(cacheProperties_.getOffsetBeginIJCache(accessID, 0)) + " (jblock - " +
-            std::to_string(cacheProperties_.getOffsetBeginIJCache(accessID, 1)) + ")*" +
-            std::to_string(cacheProperties_.getStride(accessID, 1, blockSizes_));
+    index = "iblock - " + std::to_string(cacheProperties_.getOffsetBeginIJCache(accessID, 0)) +
+            " (jblock - " + std::to_string(cacheProperties_.getOffsetBeginIJCache(accessID, 1)) +
+            ")*" + std::to_string(cacheProperties_.getStride(accessID, 1, blockSizes_));
   }
   DAWN_ASSERT(expr->getOffset()[2] == 0);
 
@@ -146,7 +143,7 @@ void ASTStencilBody::derefIJCache(const std::shared_ptr<FieldAccessExpr>& expr) 
 void ASTStencilBody::derefKCache(const std::shared_ptr<FieldAccessExpr>& expr) {
   int accessID = instantiation_->getAccessIDFromExpr(expr);
   std::string accessName = cacheProperties_.getCacheName(accessID);
-  auto vertExtent = cacheProperties_.getKCacheVertExtent(accessID);
+  auto vertExtent = ms_->getKCacheVertExtent(accessID);
 
   const int kcacheCenterOffset = cacheProperties_.getKCacheCenterOffset(accessID);
 

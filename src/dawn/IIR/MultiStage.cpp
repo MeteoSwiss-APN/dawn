@@ -153,6 +153,21 @@ Interval::IntervalLevel MultiStage::lastLevelComputed(const int accessID) const 
   return level;
 }
 
+Extent MultiStage::getKCacheVertExtent(const int accessID) const {
+  const auto& field = getField(accessID);
+  auto vertExtent = field.getExtents()[2];
+  const auto& cache = getCache(accessID);
+  // in the case of epflush, the extent of the cache required is not determined only by the access
+  // pattern, but also by the window required to epflush
+  if(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::epflush) {
+    DAWN_ASSERT(cache.getWindow().is_initialized());
+    auto window = *(cache.getWindow());
+    return vertExtent.merge(iir::Extent{window.m_m, window.m_p});
+  } else {
+    return vertExtent;
+  }
+}
+
 boost::optional<Extents> MultiStage::computeExtents(const int accessID,
                                                     const Interval& interval) const {
 
@@ -393,6 +408,48 @@ void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
     stage.update(NodeUpdateType::levelAndTreeAbove);
   }
 }
+
+json::json MultiStage::jsonDump(const StencilInstantiation& instantiation) const {
+  json::json node;
+  node["ID"] = id_;
+  node["Loop"] = loopOrderToString(loopOrder_);
+  json::json fieldsJson;
+  for(const auto& field : derivedInfo_.fields_) {
+    fieldsJson[instantiation.getNameFromAccessID(field.first)] = field.second.jsonDump();
+  }
+  node["Fields"] = fieldsJson;
+
+  json::json cachesJson;
+  for(const auto& cache : derivedInfo_.caches_) {
+    cachesJson[cache.first] = cache.second.jsonDump();
+  }
+  node["Caches"] = cachesJson;
+
+  int cnt = 0;
+  for(const auto& stage : children_) {
+    node["Stage" + std::to_string(cnt)] = stage->jsonDump(instantiation);
+    cnt++;
+  }
+  return node;
+}
+
+bool MultiStage::hasMemAccessTemporaries() const {
+  for(const auto& field : derivedInfo_.fields_) {
+    if(isMemAccessTemporary(field.first)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool MultiStage::isMemAccessTemporary(const int accessID) const {
+  if(!stencilInstantiation_.isTemporaryField(accessID))
+    return false;
+  if(!derivedInfo_.caches_.count(accessID))
+    return true;
+  return (derivedInfo_.caches_.at(accessID).requiresMemMemoryAccess());
+}
+bool MultiStage::hasField(const int accessID) const { return derivedInfo_.fields_.count(accessID); }
 
 bool MultiStage::isEmptyOrNullStmt() const {
   for(const auto& stage : getChildren()) {

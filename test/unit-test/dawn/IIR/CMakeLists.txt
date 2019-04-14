@@ -14,7 +14,8 @@
 
 dawn_add_unittest_impl(
   NAME DawnUnittestIIR
-  SOURCES TestExtent.cpp
+  SOURCES
+          TestExtent.cpp
           TestField.cpp
           TestInterval.cpp
           TestIntervalAlgorithms.cpp
@@ -23,5 +24,7 @@ dawn_add_unittest_impl(
           TestMain.cpp
           TestMultiInterval.cpp
           TestStencil.cpp
+          TestIIRSerializer.cpp
 )
+target_include_directories(DawnUnittestIIR PUBLIC $<TARGET_PROPERTY:DawnIIRObjects,INCLUDE_DIRECTORIES>)
 

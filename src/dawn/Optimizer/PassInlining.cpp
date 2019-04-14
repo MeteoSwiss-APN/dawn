@@ -11,7 +11,6 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-
 #include "dawn/Optimizer/PassInlining.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StatementAccessesPair.h"
@@ -21,6 +20,7 @@
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTUtil.h"
 #include "dawn/SIR/ASTVisitor.h"
+#include "dawn/Support/Logging.h"
 #include "dawn/Support/STLExtras.h"
 #include <iostream>
 #include <stack>
@@ -189,7 +189,7 @@ public:
 
   void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
     int AccessID = curStencilFunctioninstantiation_->getAccessIDFromStmt(stmt);
-    const std::string& name = curStencilFunctioninstantiation_->getNameFromAccessID(AccessID);
+    const std::string& name = curStencilFunctioninstantiation_->getFieldNameFromAccessID(AccessID);
     instantiation_->setAccessIDNamePair(AccessID, name);
     instantiation_->mapStmtToAccessID(stmt, AccessID);
 
@@ -310,7 +310,7 @@ public:
 
   void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
 
-    std::string callerName = instantiation_->getNameFromAccessID(
+    std::string callerName = instantiation_->getFieldNameFromAccessID(
         curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
     expr->setName(callerName);
 
@@ -322,7 +322,7 @@ public:
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
 
-    std::string callerName = instantiation_->getNameFromAccessID(
+    std::string callerName = instantiation_->getFieldNameFromAccessID(
         curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
     expr->setName(callerName);
 
@@ -503,11 +503,14 @@ static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
 
 } // anonymous namespace
 
-PassInlining::PassInlining(InlineStrategyKind strategy)
-    : Pass("PassInlining", true), strategy_(strategy) {}
+PassInlining::PassInlining(bool activate, InlineStrategyKind strategy)
+    : Pass("PassInlining", true), activate_(activate), strategy_(strategy) {}
 
 bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   DetectInlineCandiates inliner(strategy_, stencilInstantiation);
+
+  if(!activate_)
+    return true;
 
   // Iterate all statements (top -> bottom)
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {

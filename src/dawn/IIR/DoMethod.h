@@ -67,6 +67,8 @@ public:
   DoMethod& operator=(DoMethod&&) = default;
   /// @}
 
+  json::json jsonDump(const StencilInstantiation& instantiation) const;
+
   /// @brief clone the object creating and returning a new unique_ptr
   std::unique_ptr<DoMethod> clone() const;
 
@@ -109,6 +111,8 @@ public:
   ///
   /// The fields are computed during `DoMethod::update`.
   const std::unordered_map<int, Field>& getFields() const { return derivedInfo_.fields_; }
+
+  bool hasField(int accessID) const { return derivedInfo_.fields_.count(accessID); }
 
   /// @brief field getter
   const Field& getField(const int accessID) const {

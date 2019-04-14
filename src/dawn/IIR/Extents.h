@@ -17,15 +17,15 @@
 
 #include "dawn/IIR/LoopOrder.h"
 #include "dawn/Support/Array.h"
-#include "dawn/Support/HashCombine.h"
 #include "dawn/Support/Assert.h"
+#include "dawn/Support/HashCombine.h"
 #include <array>
+#include <boost/optional.hpp>
 #include <cmath>
 #include <functional>
 #include <initializer_list>
 #include <iosfwd>
 #include <vector>
-#include <boost/optional.hpp>
 
 namespace dawn {
 namespace iir {
