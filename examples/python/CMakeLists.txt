@@ -48,7 +48,5 @@ else()
 	  DESTINATION ${DAWN_INSTALL_EXAMPLES_DIR}/python)
   install(DIRECTORY . 
 	  DESTINATION ${DAWN_INSTALL_EXAMPLES_DIR}/python/
-          FILES_MATCHING PATTERN "*.py"
-
   )
 endif()

@@ -100,3 +100,4 @@ install(
   DESTINATION bundle_conf
 )
 
+install (SCRIPT "${CMAKE_SOURCE_DIR}/PostInstall.cmake")
