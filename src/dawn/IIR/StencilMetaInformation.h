@@ -229,7 +229,6 @@ public:
     std::shared_ptr<StencilFunctionInstantiation> callerStencilFunction_;
   };
 
-  // TODO make all these private
   //================================================================================================
   // Stored MetaInformation
   //================================================================================================

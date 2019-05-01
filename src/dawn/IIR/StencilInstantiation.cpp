@@ -358,13 +358,7 @@ void StencilInstantiation::removeStencilFunctionInstantiation(
     metadata_.ExprToStencilFunctionInstantiationMap_.erase(expr);
   }
 
-  for(auto it = metadata_.stencilFunctionInstantiations_.begin();
-      it != metadata_.stencilFunctionInstantiations_.end();) {
-    if(*it == func)
-      it = metadata_.stencilFunctionInstantiations_.erase(it);
-    else
-      ++it;
-  }
+  IIR_->eraseStencilFunctionInstantation(func);
 }
 
 const std::shared_ptr<StencilFunctionInstantiation>
@@ -464,9 +458,7 @@ void StencilInstantiation::deregisterStencilFunction(
                                 pair) { return (pair.second == stencilFun); });
   // make sure the element existed and was removed
   DAWN_ASSERT(found);
-  found = RemoveIf(
-      metadata_.stencilFunctionInstantiations_,
-      [&](const std::shared_ptr<StencilFunctionInstantiation>& v) { return (v == stencilFun); });
+  found = IIR_->eraseStencilFunctionInstantation(stencilFun);
 
   // make sure the element existed and was removed
   DAWN_ASSERT(found);
@@ -641,7 +633,7 @@ bool StencilInstantiation::isStencilCallCodeGenName(const std::string& name) {
 
 void StencilInstantiation::reportAccesses() const {
   // Stencil functions
-  for(const auto& stencilFun : metadata_.stencilFunctionInstantiations_) {
+  for(const auto& stencilFun : IIR_->getStencilFunctionInstantiation()) {
     const auto& statementAccessesPairs = stencilFun->getStatementAccessesPairs();
 
     for(std::size_t i = 0; i < statementAccessesPairs.size(); ++i) {

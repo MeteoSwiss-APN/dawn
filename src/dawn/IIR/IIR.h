@@ -17,6 +17,7 @@
 
 #include "dawn/IIR/ControlFlowDescriptor.h"
 #include "dawn/IIR/Stencil.h"
+#include "dawn/Support/RemoveIf.hpp"
 #include <set>
 
 namespace dawn {
@@ -28,6 +29,9 @@ class IIR : public IIRNode<void, IIR, Stencil> {
 
   std::array<unsigned int, 3> blockSize_ = {{32, 4, 4}};
   ControlFlowDescriptor controlFlowDesc_;
+  /// Referenced stencil functions in this stencil (note that nested stencil functions are not
+  /// stored here but rather in the respecticve `StencilFunctionInstantiation`)
+  std::vector<std::shared_ptr<StencilFunctionInstantiation>> stencilFunctionInstantiations_;
 
   struct DerivedInfo {
     /// StageID to name Map. Filled by the `PassSetStageName`.
@@ -59,6 +63,18 @@ public:
   void clone(std::unique_ptr<IIR>& dest) const;
 
   json::json jsonDump() const;
+
+  const std::vector<std::shared_ptr<StencilFunctionInstantiation>>&
+  getStencilFunctionInstantiation() const {
+    return stencilFunctionInstantiations_;
+  }
+
+  bool
+  eraseStencilFunctionInstantation(const std::shared_ptr<StencilFunctionInstantiation>& function) {
+    return RemoveIf(
+        stencilFunctionInstantiations_,
+        [&](const std::shared_ptr<StencilFunctionInstantiation>& v) { return (v == function); });
+  }
 
   const ControlFlowDescriptor& getControlFlowDescriptor() const { return controlFlowDesc_; }
   // TODO do not have non const?

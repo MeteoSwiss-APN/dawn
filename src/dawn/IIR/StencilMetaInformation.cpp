@@ -88,13 +88,6 @@ void StencilMetaInformation::eraseAllocatedField(const int accessID) {
   fieldAccessMetadata_.AllocatedFieldAccessIDSet_.erase(accessID);
 }
 
-// bool StencilMetaInformation::isGlobalVariable(const std::string& name) const {
-//  auto it = getNameToAccessIDMap().find(name);
-//  return it == getNameToAccessIDMap().end()
-//             ? false
-//             : isAccessType(iir::FieldAccessType::FAT_GlobalVariable, it->second);
-//}
-
 const std::unordered_map<std::string, int>& StencilMetaInformation::getNameToAccessIDMap() const {
   return AccessIDToNameMap_.getReverseMap();
 }

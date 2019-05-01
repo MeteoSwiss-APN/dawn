@@ -38,7 +38,6 @@ json::json VariableVersions::jsonDump() const {
 }
 
 void FieldAccessMetadata::clone(const FieldAccessMetadata& origin) {
-  // TODO move this to
   LiteralAccessIDToNameMap_ = origin.LiteralAccessIDToNameMap_;
   FieldAccessIDSet_ = origin.FieldAccessIDSet_;
   apiFieldIDs_ = origin.apiFieldIDs_;

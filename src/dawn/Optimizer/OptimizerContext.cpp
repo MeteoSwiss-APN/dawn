@@ -615,7 +615,6 @@ OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, Options& opti
   for(const auto& stencil : SIR_->Stencils)
     if(!stencil->Attributes.has(sir::Attr::AK_NoCodeGen)) {
       stencilInstantiationMap_.insert(
-          // TODO this wrong, stencil should not import Context that is in the optimizer
           std::make_pair(stencil->Name, std::make_shared<iir::StencilInstantiation>(this)));
       fillIIRFromSIR(stencilInstantiationMap_.at(stencil->Name), stencil, SIR_);
     } else {
@@ -639,7 +638,6 @@ bool OptimizerContext::fillIIRFromSIR(
     int AccessID = stencilInstantation->nextUID();
     if(!field->IsTemporary) {
       metadata.insertAccessOfType<iir::FieldAccessType::FAT_APIField>(AccessID);
-      //      metadata.getAPIFieldIDs().push_back(AccessID);
     }
     metadata.setAccessIDNamePairOfField(AccessID, field->Name, field->IsTemporary);
     metadata.fieldIDToInitializedDimensionsMap_.emplace(AccessID, field->fieldDimensions);

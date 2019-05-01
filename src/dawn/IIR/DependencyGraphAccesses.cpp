@@ -81,7 +81,6 @@ const char* DependencyGraphAccesses::getDotShape() const { return "circle"; }
 
 std::string DependencyGraphAccesses::getVertexNameByVertexID(std::size_t VertexID) const {
   return metaData_.getFieldNameFromAccessID(getIDFromVertexID(VertexID));
-  //                        : std::to_string(getIDFromVertexID(VertexID));
 }
 
 void DependencyGraphAccesses::merge(const DependencyGraphAccesses* other) {
