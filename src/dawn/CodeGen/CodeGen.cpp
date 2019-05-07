@@ -102,7 +102,8 @@ void CodeGen::generateBoundaryConditionFunctions(
     Class& stencilWrapperClass,
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation) const {
   // Functions for boundary conditions
-  for(auto usedBoundaryCondition : stencilInstantiation->getBoundaryConditions()) {
+  const auto& metadata = stencilInstantiation->getMetaData();
+  for(auto usedBoundaryCondition : metadata.getFieldNameToBCMap()) {
     for(const auto& sf : stencilInstantiation->getStencilFunctions()) {
       if(sf->Name == usedBoundaryCondition.second->getFunctor()) {
 
@@ -133,14 +134,13 @@ void CodeGen::generateBoundaryConditionFunctions(
 }
 
 void CodeGen::generateBCHeaders(std::vector<std::string>& ppDefines) const {
-  bool containBC = false;
-  for(const auto& stencilInstantiation : context_->getStencilInstantiationMap()) {
-    if(!stencilInstantiation.second->getBoundaryConditions().empty()) {
-      containBC = true;
-    }
-  }
+  auto hasBCFold =
+      [](bool res, const std::pair<std::string, std::shared_ptr<iir::StencilInstantiation>>& si) {
+        return res || si.second->getMetaData().hasBC();
+      };
 
-  if(containBC) {
+  if(std::accumulate(context_->getStencilInstantiationMap().begin(),
+                     context_->getStencilInstantiationMap().end(), false, hasBCFold)) {
     ppDefines.push_back("#include <gridtools/boundary-conditions/boundary.hpp>\n");
   }
 }
@@ -152,7 +152,8 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
 
   int idx = 0;
   std::unordered_set<std::string> generatedStencilFun;
-  for(const auto& stencilFun : stencilInstantiation->getStencilFunctionInstantiations()) {
+
+  for(const auto& stencilFun : metadata.getStencilFunctionInstantiations()) {
     std::string stencilFunName = iir::StencilFunctionInstantiation::makeCodeGenName(*stencilFun);
 
     if(generatedStencilFun.emplace(stencilFunName).second) {
@@ -216,7 +217,7 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
                                   getStorageType(metadata.getFieldDimensionsMask(fieldID)));
     ++i;
   }
-  for(auto usedBoundaryCondition : stencilInstantiation->getBoundaryConditions()) {
+  for(auto usedBoundaryCondition : metadata.getFieldNameToBCMap()) {
     for(const auto& field : usedBoundaryCondition.second->getFields()) {
       codeGenProperties.setParamBC(field->Name);
     }
@@ -310,7 +311,9 @@ void CodeGen::generateBCFieldMembers(
     Class& stencilWrapperClass,
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     const CodeGenProperties& codeGenProperties) const {
-  if(!stencilInstantiation->getBoundaryConditions().empty())
+  const auto& metadata = stencilInstantiation->getMetaData();
+
+  if(metadata.hasBC())
     stencilWrapperClass.addComment("Fields that require Boundary Conditions");
   // add all fields that require a boundary condition as members since they need to be called from
   // this class and not from individual stencils

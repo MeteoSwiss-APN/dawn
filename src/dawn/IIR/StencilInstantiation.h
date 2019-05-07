@@ -203,17 +203,6 @@ public:
   /// @brief get the IIR tree
   inline std::unique_ptr<IIR>& getIIR() { return IIR_; }
 
-  /// @brief Get the list of stencil functions
-  inline std::vector<std::shared_ptr<StencilFunctionInstantiation>>&
-  getStencilFunctionInstantiations() {
-    return metadata_.stencilFunctionInstantiations_;
-  }
-
-  inline const std::vector<std::shared_ptr<StencilFunctionInstantiation>>&
-  getStencilFunctionInstantiations() const {
-    return metadata_.stencilFunctionInstantiations_;
-  }
-
   /// @brief insert a new sir::StencilFunction into the IIR
   void
   insertStencilFunctionIntoSIR(const std::shared_ptr<sir::StencilFunction>& sirStencilFunction);
@@ -227,46 +216,11 @@ public:
   bool insertBoundaryConditions(std::string originalFieldName,
                                 std::shared_ptr<BoundaryConditionDeclStmt> bc);
 
-  inline const std::unordered_map<std::string, std::shared_ptr<BoundaryConditionDeclStmt>>&
-  getBoundaryConditions() const {
-    return metadata_.FieldnameToBoundaryConditionMap_;
-  }
-
-  inline std::unordered_map<std::string, std::shared_ptr<BoundaryConditionDeclStmt>>&
-  getBoundaryConditions() {
-    return metadata_.FieldnameToBoundaryConditionMap_;
-  }
-
   /// @brief Get a unique (positive) identifier
   inline int nextUID() { return UIDGenerator::getInstance()->get(); }
 
   /// @brief Dump the StencilInstantiation to stdout
   void jsonDump(std::string filename) const;
-
-  /// @brief Generate a unique name for a local variable
-  static std::string makeLocalVariablename(const std::string& name, int AccessID);
-
-  /// @brief Generate a unique name for a temporary field
-  static std::string makeTemporaryFieldname(const std::string& name, int AccessID);
-
-  /// @brief Extract the name of a local variable
-  ///
-  /// Reverse the effect of `makeLocalVariablename`.
-  static std::string extractLocalVariablename(const std::string& name);
-
-  /// @brief Extract the name of a local variable
-  ///
-  /// Reverse the effect of `makeTemporaryFieldname`.
-  static std::string extractTemporaryFieldname(const std::string& name);
-
-  /// @brief Name used for all `StencilCallDeclStmt` in the stencil description AST
-  /// (`getStencilDescStatements`) to signal code-gen it should insert a call to the gridtools
-  /// stencil here
-  static std::string makeStencilCallCodeGenName(int StencilID);
-
-  /// @brief Check if the given name of a `StencilCallDeclStmt` was generate by
-  /// `makeStencilCallCodeGenName`
-  static bool isStencilCallCodeGenName(const std::string& name);
 
   /// @brief it finalizes the stencil function instantation. The stencil function instantatiation is
   /// moved from candidate to the final storage of stencil instantiations. And maps storing

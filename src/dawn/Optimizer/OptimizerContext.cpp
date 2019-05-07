@@ -89,11 +89,12 @@ public:
                                         instantiation_->getIIR()->getControlFlowDescriptor()));
     scope_.top()->LocalFieldnameToAccessIDMap = metadata_.getNameToAccessIDMap();
 
+    // TODO redo this, we dont need to copy again the variable map into scope::top
+
     // We add all global variables which have constant values
     for(auto& keyValuePair : *(sir->GlobalVariableMap)) {
       const std::string& key = keyValuePair.first;
       sir::Value& value = *keyValuePair.second;
-      metadata_.globalVariableMap_.emplace(keyValuePair.first, keyValuePair.second);
 
       if(value.isConstexpr()) {
         switch(value.getType()) {
@@ -125,8 +126,8 @@ public:
         instantiation_->getIIR());
     // We create a paceholder stencil-call for CodeGen to know wehere we need to insert calls to
     // this stencil
-    auto placeholderStencil =
-        std::make_shared<sir::StencilCall>(instantiation_->makeStencilCallCodeGenName(StencilID));
+    auto placeholderStencil = std::make_shared<sir::StencilCall>(
+        InstantiationHelper::makeStencilCallCodeGenName(StencilID));
     auto stencilCallDeclStmt = std::make_shared<StencilCallDeclStmt>(placeholderStencil);
 
     // Register the call and set it as a replacement for the next vertical region
@@ -178,7 +179,7 @@ public:
         if(StencilCallDeclStmt* s = dyn_cast<StencilCallDeclStmt>(stmt.get())) {
           // StencilCallDeclStmt node, remove it if it is not one of our artificial stencil call
           // nodes
-          if(!iir::StencilInstantiation::isStencilCallCodeGenName(s->getStencilCall()->Callee))
+          if(!InstantiationHelper::isStencilCallCodeGenName(s->getStencilCall()->Callee))
             return true;
           // COSUNA Why do we need to do this?
         } else if(isa<VerticalRegionDeclStmt>(stmt.get())) {
@@ -261,7 +262,7 @@ public:
     stmt->getExpr()->accept(*this);
   }
 
-  void visit(const std::shared_ptr<ReturnStmt>& stmt) override {
+  void visit(const std::shared_ptr<ReturnStmt>&) override {
     DAWN_ASSERT_MSG(0, "ReturnStmt not allowed in this context");
   }
 
@@ -338,18 +339,9 @@ public:
   void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
     // This is the first time we encounter this variable. We have to make sure the name is not
     // already used in another scope!
-    int AccessID = instantiation_->nextUID();
 
-    std::string globalName;
-    //    DAWN_ASSERT_MSG(false, "impelent context access");
-    //    if(false)
-    if(instantiation_->getOptimizerContext()->getOptions().KeepVarnames)
-      globalName = stmt->getName();
-    else
-      globalName = StencilInstantiation::makeLocalVariablename(stmt->getName(), AccessID);
-
-    metadata_.setAccessIDNamePair(AccessID, globalName);
-    metadata_.StmtIDToAccessIDMap_.emplace(stmt->getID(), AccessID);
+    int AccessID = metadata_.insertStmt(
+        instantiation_->getOptimizerContext()->getOptions().KeepVarnames, stmt);
 
     // Add the mapping to the local scope
     scope_.top()->LocalVarNameToAccessIDMap.emplace(stmt->getName(), AccessID);
@@ -465,11 +457,11 @@ public:
       int AccessID = 0;
       if(stencil.Fields[stencilArgIdx]->IsTemporary) {
         // We add a new temporary field for each temporary field argument
-        AccessID = instantiation_->nextUID();
-        metadata_.setAccessIDNamePairOfField(AccessID,
-                                             StencilInstantiation::makeTemporaryFieldname(
-                                                 stencil.Fields[stencilArgIdx]->Name, AccessID),
-                                             true);
+        metadata_.insertField(
+            iir::FieldAccessType::FAT_StencilTemporary,
+            InstantiationHelper::makeTemporaryFieldname(stencil.Fields[stencilArgIdx]->Name,
+                                                        UIDGenerator::getInstance()->get() + 1),
+            {1, 1, 1});
       } else {
         AccessID =
             curScope->LocalFieldnameToAccessIDMap.find(stencilCall->Args[stencilCallArgIdx]->Name)
@@ -548,10 +540,10 @@ public:
       s->accept(*this);
   }
 
-  void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
+  void visit(const std::shared_ptr<StencilFunCallExpr>&) override {
     DAWN_ASSERT_MSG(0, "StencilFunCallExpr not allowed in this context");
   }
-  void visit(const std::shared_ptr<StencilFunArgExpr>& expr) override {
+  void visit(const std::shared_ptr<StencilFunArgExpr>&) override {
     DAWN_ASSERT_MSG(0, "StencilFunArgExpr not allowed in this context");
   }
 
@@ -575,15 +567,7 @@ public:
         metadata_.mapExprToAccessID(newExpr, AccessID);
 
       } else {
-        int AccessID = 0;
-        if(!metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, varname)) {
-          AccessID = instantiation_->nextUID();
-          metadata_.setAccessIDNamePairOfGlobalVariable(AccessID, varname);
-        } else {
-          AccessID = metadata_.getAccessIDFromName(varname);
-        }
-
-        metadata_.mapExprToAccessID(expr, AccessID);
+        metadata_.mapExprToAccessID(expr, metadata_.getAccessIDFromName(varname));
       }
 
     } else {
@@ -628,19 +612,16 @@ bool OptimizerContext::fillIIRFromSIR(
   DAWN_LOG(INFO) << "Intializing StencilInstantiation of `" << SIRStencil->Name << "`";
   DAWN_ASSERT_MSG(SIRStencil, "Stencil does not exist");
   auto& metadata = stencilInstantation->getMetaData();
-  metadata.stencilName_ = SIRStencil->Name;
-  metadata.fileName_ = fullSIR->Filename;
-  metadata.stencilLocation_ = SIRStencil->Loc;
+  metadata.setStencilname(SIRStencil->Name);
+  metadata.setFileName(fullSIR->Filename);
+  metadata.setStencilLocation(SIRStencil->Loc);
 
   // Map the fields of the "main stencil" to unique IDs (which are used in the access maps to
   // indentify the field).
   for(const auto& field : SIRStencil->Fields) {
-    int AccessID = stencilInstantation->nextUID();
-    if(!field->IsTemporary) {
-      metadata.insertAccessOfType<iir::FieldAccessType::FAT_APIField>(AccessID);
-    }
-    metadata.setAccessIDNamePairOfField(AccessID, field->Name, field->IsTemporary);
-    metadata.fieldIDToInitializedDimensionsMap_.emplace(AccessID, field->fieldDimensions);
+    metadata.insertField((field->IsTemporary ? iir::FieldAccessType::FAT_StencilTemporary
+                                             : iir::FieldAccessType::FAT_APIField),
+                         field->Name, field->fieldDimensions);
   }
 
   StencilDescStatementMapper stencilDeclMapper(stencilInstantation, SIRStencil.get(), fullSIR);

@@ -57,13 +57,10 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
     stencilFunInstantiationCandidate_.emplace(
         std::make_shared<StencilFunctionInstantiation>(pair.first->clone()), candidate);
   }
-  for(const auto& pair : origin.FieldnameToBoundaryConditionMap_) {
-    FieldnameToBoundaryConditionMap_.emplace(
+  for(const auto& pair : origin.fieldnameToBoundaryConditionMap_) {
+    fieldnameToBoundaryConditionMap_.emplace(
         pair.first, std::make_shared<BoundaryConditionDeclStmt>(*(pair.second)));
     fieldIDToInitializedDimensionsMap_ = origin.fieldIDToInitializedDimensionsMap_;
-  }
-  for(const auto& pair : origin.globalVariableMap_) {
-    globalVariableMap_.emplace(pair.first, std::make_shared<sir::Value>(pair.second));
   }
   stencilLocation_ = origin.stencilLocation_;
   stencilName_ = origin.stencilName_;
@@ -81,12 +78,12 @@ const std::string& StencilMetaInformation::getFieldNameFromAccessID(int accessID
   return AccessIDToNameMap_.directAt(accessID);
 }
 
-void StencilMetaInformation::insertAllocatedField(const int accessID) {
-  fieldAccessMetadata_.AllocatedFieldAccessIDSet_.insert(accessID);
-}
-void StencilMetaInformation::eraseAllocatedField(const int accessID) {
-  fieldAccessMetadata_.AllocatedFieldAccessIDSet_.erase(accessID);
-}
+// void StencilMetaInformation::insertAllocatedField(const int accessID) {
+//  fieldAccessMetadata_.AllocatedFieldAccessIDSet_.insert(accessID);
+//}
+// void StencilMetaInformation::eraseAllocatedField(const int accessID) {
+//  fieldAccessMetadata_.AllocatedFieldAccessIDSet_.erase(accessID);
+//}
 
 const std::unordered_map<std::string, int>& StencilMetaInformation::getNameToAccessIDMap() const {
   return AccessIDToNameMap_.getReverseMap();
@@ -214,23 +211,17 @@ StencilMetaInformation::getStencilFunctionInstantiation(
 }
 
 // TODO set or emplace ? have a convention
+// TODO private ?
 void StencilMetaInformation::setAccessIDNamePair(int accessID, const std::string& name) {
   AccessIDToNameMap_.emplace(accessID, name);
 }
 
-void StencilMetaInformation::setAccessIDNamePairOfField(int AccessID, const std::string& name,
-                                                        bool isTemporary) {
-  setAccessIDNamePair(AccessID, name);
-  fieldAccessMetadata_.FieldAccessIDSet_.insert(AccessID);
-  if(isTemporary) {
-    fieldAccessMetadata_.TemporaryFieldAccessIDSet_.insert(AccessID);
-  }
-}
-
-void StencilMetaInformation::setAccessIDNamePairOfGlobalVariable(int accessID,
-                                                                 const std::string& name) {
-  setAccessIDNamePair(accessID, name);
-  fieldAccessMetadata_.GlobalVariableAccessIDSet_.insert(accessID);
+void StencilMetaInformation::insertField(FieldAccessType type, const std::string& name,
+                                         const Array3i fieldDimensions) {
+  int accessID = UIDGenerator::getInstance()->get();
+  DAWN_ASSERT(isFieldType(type));
+  insertAccessOfType(type, accessID, name);
+  fieldIDToInitializedDimensionsMap_.emplace(accessID, fieldDimensions);
 }
 
 void StencilMetaInformation::removeAccessID(int AccessID) {
@@ -247,6 +238,12 @@ void StencilMetaInformation::removeAccessID(int AccessID) {
   }
 }
 
+StencilMetaInformation::StencilMetaInformation(const sir::GlobalVariableMap& globalVariables) {
+  for(const auto& global : globalVariables) {
+    insertAccessOfType(iir::FieldAccessType::FAT_GlobalVariable, global.first);
+  }
+}
+
 json::json StencilMetaInformation::jsonDump() const {
   json::json metaDataJson;
   metaDataJson["VariableVersions"] = fieldAccessMetadata_.variableVersions_.jsonDump();
@@ -258,12 +255,6 @@ json::json StencilMetaInformation::jsonDump() const {
   ss << stencilLocation_;
   metaDataJson["stencilLocation"] = ss.str();
   ss.str("");
-
-  json::json globalsJson;
-  for(const auto& globalPair : globalVariableMap_) {
-    globalsJson[globalPair.first] = globalPair.second->jsonDump();
-  }
-  metaDataJson["globals"] = globalsJson;
 
   json::json globalAccessIDsJson;
   for(const auto& id : fieldAccessMetadata_.GlobalVariableAccessIDSet_) {
@@ -279,7 +270,7 @@ json::json StencilMetaInformation::jsonDump() const {
   metaDataJson["FieldDims"] = fieldsMapJson;
 
   json::json bcJson;
-  for(const auto& bc : FieldnameToBoundaryConditionMap_) {
+  for(const auto& bc : fieldnameToBoundaryConditionMap_) {
     bcJson[bc.first] = ASTStringifer::toString(bc.second);
   }
   metaDataJson["FieldToBC"] = bcJson;

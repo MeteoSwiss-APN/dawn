@@ -152,7 +152,7 @@ void replaceStencilCalls(const std::shared_ptr<iir::StencilInstantiation>& insta
       std::vector<std::shared_ptr<StencilCallDeclStmt>> newStencilCalls;
       for(int StencilID : newStencilIDs) {
         auto placeholderStencil = std::make_shared<sir::StencilCall>(
-            iir::StencilInstantiation::makeStencilCallCodeGenName(StencilID));
+            iir::InstantiationHelper::makeStencilCallCodeGenName(StencilID));
         newStencilCalls.push_back(std::make_shared<StencilCallDeclStmt>(placeholderStencil));
       }
 

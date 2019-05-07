@@ -266,7 +266,7 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
   // Filling Field:
   // map<string, dawn.proto.statements.BoundaryConditionDeclStmt> FieldnameToBoundaryCondition = 12;
   auto& protoFieldNameToBC = *protoMetaData->mutable_fieldnametoboundarycondition();
-  for(auto fieldNameToBC : metaData.FieldnameToBoundaryConditionMap_) {
+  for(auto fieldNameToBC : metaData.fieldnameToBoundaryConditionMap_) {
     proto::statements::Stmt protoStencilCall;
     ProtoStmtBuilder builder(&protoStencilCall);
     fieldNameToBC.second->accept(builder);
@@ -292,9 +292,21 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
     protoIDToStencilCallMap.insert({IDToStencilCall.first, protoStencilCall});
   }
 
-  // Filling Field: map<string, GlobalValueAndType> GlobalVariableToValue = 14;
-  auto& protoGlobalVariableMap = *protoMetaData->mutable_globalvariabletovalue();
-  for(auto& globalToValue : metaData.globalVariableMap_) {
+  // Filling Field: dawn.proto.statements.SourceLocation stencilLocation = 15;
+  auto protoStencilLoc = protoMetaData->mutable_stencillocation();
+  protoStencilLoc->set_column(metaData.stencilLocation_.Column);
+  protoStencilLoc->set_line(metaData.stencilLocation_.Line);
+
+  // Filling Field: string stencilMName = 16;
+  protoMetaData->set_stencilname(metaData.stencilName_);
+}
+
+void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
+                                 const std::unique_ptr<iir::IIR>& iir) {
+  auto protoIIR = target.mutable_internalir();
+
+  auto& protoGlobalVariableMap = *protoIIR->mutable_globalvariabletovalue();
+  for(auto& globalToValue : iir->getGlobalVariableMap()) {
     proto::iir::GlobalValueAndType protoGlobalToStore;
     double value = -1;
     bool valueIsSet = false;
@@ -332,18 +344,6 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
     protoGlobalVariableMap.insert({globalToValue.first, protoGlobalToStore});
   }
 
-  // Filling Field: dawn.proto.statements.SourceLocation stencilLocation = 15;
-  auto protoStencilLoc = protoMetaData->mutable_stencillocation();
-  protoStencilLoc->set_column(metaData.stencilLocation_.Column);
-  protoStencilLoc->set_line(metaData.stencilLocation_.Line);
-
-  // Filling Field: string stencilMName = 16;
-  protoMetaData->set_stencilname(metaData.stencilName_);
-}
-
-void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
-                                 const std::unique_ptr<iir::IIR>& iir) {
-  auto protoIIR = target.mutable_internalir();
   // Get all the stencils
   for(const auto& stencils : iir->getChildren()) {
     // creation of a new protobuf stencil
@@ -552,7 +552,7 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
   for(auto FieldnameToBC : protoMetaData.fieldnametoboundarycondition()) {
     std::shared_ptr<BoundaryConditionDeclStmt> bc =
         dyn_pointer_cast<BoundaryConditionDeclStmt>(makeStmt((FieldnameToBC.second)));
-    metadata.FieldnameToBoundaryConditionMap_[FieldnameToBC.first] = bc;
+    metadata.fieldnameToBoundaryConditionMap_[FieldnameToBC.first] = bc;
   }
 
   for(auto fieldIDInitializedDims : protoMetaData.fieldidtolegaldimensions()) {
@@ -561,7 +561,15 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
     metadata.fieldIDToInitializedDimensionsMap_[fieldIDInitializedDims.first] = dims;
   }
 
-  for(auto GlobalToValue : protoMetaData.globalvariabletovalue()) {
+  metadata.stencilLocation_.Column = protoMetaData.stencillocation().column();
+  metadata.stencilLocation_.Line = protoMetaData.stencillocation().line();
+
+  metadata.stencilName_ = protoMetaData.stencilname();
+}
+
+void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& target,
+                                   const proto::iir::IIR& protoIIR) {
+  for(auto GlobalToValue : protoIIR.globalvariabletovalue()) {
     std::shared_ptr<sir::Value> value = std::make_shared<sir::Value>();
     switch(GlobalToValue.second.type()) {
     case proto::iir::GlobalValueAndType_TypeKind_Boolean:
@@ -581,17 +589,9 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
     if(GlobalToValue.second.valueisset()) {
       value->setValue(GlobalToValue.second.value());
     }
-    metadata.globalVariableMap_[GlobalToValue.first] = value;
+    target->getIIR()->insertGlobalVariable(GlobalToValue.first, value);
   }
 
-  metadata.stencilLocation_.Column = protoMetaData.stencillocation().column();
-  metadata.stencilLocation_.Line = protoMetaData.stencillocation().line();
-
-  metadata.stencilName_ = protoMetaData.stencilname();
-}
-
-void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& target,
-                                   const proto::iir::IIR& protoIIR) {
   int stencilPos = 0;
   for(const auto& protoStencils : protoIIR.stencils()) {
     int mssPos = 0;

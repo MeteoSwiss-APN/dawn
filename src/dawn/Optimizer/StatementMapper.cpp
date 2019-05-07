@@ -126,7 +126,7 @@ void StatementMapper::visit(const std::shared_ptr<VarDeclStmt>& stmt) {
   if(instantiation_->getOptimizerContext()->getOptions().KeepVarnames)
     globalName = stmt->getName();
   else
-    globalName = iir::StencilInstantiation::makeLocalVariablename(stmt->getName(), AccessID);
+    globalName = iir::InstantiationHelper::makeLocalVariablename(stmt->getName(), AccessID);
 
   // We generate a new AccessID and insert it into the AccessMaps (using the global name)
   auto& function = scope_.top()->FunctionInstantiation;
@@ -337,8 +337,7 @@ void StatementMapper::visit(const std::shared_ptr<VarAccessExpr>& expr) {
 
       int AccessID = 0;
       if(!metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, varname)) {
-        AccessID = stencilInstantiation->nextUID();
-        metadata_.setAccessIDNamePairOfGlobalVariable(AccessID, varname);
+        AccessID = metadata_.insertAccessOfType(iir::FieldAccessType::FAT_GlobalVariable, varname);
       } else {
         AccessID = metadata_.getAccessIDFromName(varname);
       }

@@ -28,7 +28,7 @@ namespace dawn {
 namespace iir {
 
 std::unique_ptr<IIR> IIR::clone() const {
-  auto cloneIIR = make_unique<IIR>();
+  auto cloneIIR = make_unique<IIR>(globalVariableMap_);
   clone(cloneIIR);
   return cloneIIR;
 }
@@ -41,14 +41,24 @@ json::json IIR::jsonDump() const {
     node["Stencil" + std::to_string(cnt)] = stencil->jsonDump();
     cnt++;
   }
+
+  json::json globalsJson;
+  for(const auto& globalPair : globalVariableMap_) {
+    globalsJson[globalPair.first] = globalPair.second->jsonDump();
+  }
+  node["globals"] = globalsJson;
+
   return node;
 }
+
+IIR::IIR(const sir::GlobalVariableMap& sirGlobals) { globalVariableMap_ = sirGlobals; }
 
 void IIR::clone(std::unique_ptr<IIR>& dest) const {
   dest->cloneChildrenFrom(*this, dest);
   dest->setBlockSize(blockSize_);
   // notice the control flow is not deep cloned, but copied
   dest->controlFlowDesc_ = controlFlowDesc_;
+  dest->globalVariableMap_ = globalVariableMap_;
 }
 
 } // namespace iir

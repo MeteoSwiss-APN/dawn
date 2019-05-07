@@ -186,7 +186,7 @@ std::string GTCodeGen::generateStencilInstantiation(
   StencilWrapperClass.changeAccessibility(
       "public"); // The stencils should technically be private but nvcc doesn't like it ...
 
-  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
   CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
 
   generateBoundaryConditionFunctions(StencilWrapperClass, stencilInstantiation);
@@ -296,7 +296,7 @@ void GTCodeGen::generateStencilWrapperCtr(
 
   const auto& metadata = stencilInstantiation->getMetaData();
   const auto& stencils = stencilInstantiation->getStencils();
-  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   stencilWrapperClass.changeAccessibility("public");
   stencilWrapperClass.addCopyConstructor(Class::Deleted);
@@ -358,7 +358,7 @@ void GTCodeGen::generateStencilWrapperMembers(
     Class& stencilWrapperClass,
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     CodeGenProperties& codeGenProperties) {
-  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   //
   // Generate constructor/destructor and methods of the stencil wrapper
@@ -406,7 +406,7 @@ void GTCodeGen::generateStencilClasses(
   // K-Cache branch changes the signature of Do-Methods
   const char* DoMethodArg = "Evaluation& eval";
 
-  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // Generate stencils
   const auto& stencils = stencilInstantiation->getStencils();
@@ -494,7 +494,7 @@ void GTCodeGen::generateStencilClasses(
     // Generate stencil functions code for stencils instantiated by this stencil
     //
     std::unordered_set<std::string> generatedStencilFun;
-    for(const auto& stencilFun : stencilInstantiation->getStencilFunctionInstantiations()) {
+    for(const auto& stencilFun : metadata.getStencilFunctionInstantiations()) {
       std::string stencilFunName = iir::StencilFunctionInstantiation::makeCodeGenName(*stencilFun);
       if(generatedStencilFun.emplace(stencilFunName).second) {
         Structure StencilFunStruct = StencilClass.addStruct(stencilFunName);

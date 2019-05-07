@@ -33,6 +33,8 @@ class IIR : public IIRNode<void, IIR, Stencil> {
   /// stored here but rather in the respecticve `StencilFunctionInstantiation`)
   std::vector<std::shared_ptr<StencilFunctionInstantiation>> stencilFunctionInstantiations_;
 
+  sir::GlobalVariableMap globalVariableMap_;
+
   struct DerivedInfo {
     /// StageID to name Map. Filled by the `PassSetStageName`.
     std::unordered_map<int, std::string> StageIDToNameMap_;
@@ -50,7 +52,7 @@ public:
   inline std::array<unsigned int, 3> getBlockSize() const { return blockSize_; }
 
   /// @brief constructors and assignment
-  IIR() = default;
+  IIR(const sir::GlobalVariableMap& sirGlobals);
   IIR(const IIR&) = default;
   IIR(IIR&&) = default;
   IIR& operator=(const IIR&) = default;
@@ -88,6 +90,12 @@ public:
     auto it = derivedInfo_.StageIDToNameMap_.find(StageID);
     DAWN_ASSERT_MSG(it != derivedInfo_.StageIDToNameMap_.end(), "Invalid StageID");
     return it->second;
+  }
+
+  const sir::GlobalVariableMap& getGlobalVariableMap() const { return globalVariableMap_; }
+
+  void insertGlobalVariable(std::string name, std::shared_ptr<sir::Value> value) {
+    globalVariableMap_.emplace(name, value);
   }
 };
 } // namespace iir

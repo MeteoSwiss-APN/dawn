@@ -162,10 +162,13 @@ message Stencil {
 // The root node of the tree, holding multiple stencils. There is one IIR object for each user
 // defined Stencil.
 message IIR {
-    repeated Stencil stencils = 1;
+    // Map of the globally defined variable names to their Values
+    map<string, GlobalValueAndType> globalVariableToValue = 1;
+
+    repeated Stencil stencils = 2;
 
     // Stencil description statements for the overall program flow
-    repeated dawn.proto.statements.Stmt controlFlowStatements = 2;
+    repeated dawn.proto.statements.Stmt controlFlowStatements = 3;
 }
 
 /* ===-----------------------------------------------------------------------------------------===*/
@@ -243,18 +246,15 @@ message StencilMetaInfo {
     // Map of field ID's to the user-specified dimensions
     map<int32, Array3i> fieldIDtoLegalDimensions = 11;
 
-    // Map of the globally defined variable names to their Values
-    map<string, GlobalValueAndType> globalVariableToValue = 12;
-
     // Map of the StencilID's to their respective StencilCall
-    map<int32, dawn.proto.statements.Stmt> idToStencilCall = 13;
+    map<int32, dawn.proto.statements.Stmt> idToStencilCall = 12;
 
     // The source-location of the stencil (for better error-handeling)
-    dawn.proto.statements.SourceLocation stencilLocation = 14;
+    dawn.proto.statements.SourceLocation stencilLocation = 13;
 
     // The user-given name of the stencil
     // (remember the 1-1 mapping of user-stencil - StencilInstantiation)
-    string stencilName = 15;
+    string stencilName = 14;
 }
 
 /* ===-----------------------------------------------------------------------------------------===*/

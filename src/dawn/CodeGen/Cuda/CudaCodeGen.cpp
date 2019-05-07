@@ -93,7 +93,7 @@ std::string CudaCodeGen::generateStencilInstantiation(
   sbaseVdtor.commit();
   sbase.commit();
 
-  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   generateBoundaryConditionFunctions(StencilWrapperClass, stencilInstantiation);
 
@@ -158,7 +158,7 @@ void CudaCodeGen::generateStencilClasses(
   const auto& stencils = stencilInstantiation->getStencils();
   const auto& metadata = stencilInstantiation->getMetaData();
 
-  const auto& globalsMap = metadata.globalVariableMap_;
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // generate the code for each of the stencils
   for(const auto& stencilPtr : stencils) {
@@ -297,7 +297,7 @@ void CudaCodeGen::generateStencilWrapperCtr(
     const CodeGenProperties& codeGenProperties) const {
 
   const auto& metadata = stencilInstantiation->getMetaData();
-  const auto& globalsMap = metadata.globalVariableMap_;
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // Generate stencil wrapper constructor
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
@@ -360,7 +360,7 @@ void CudaCodeGen::generateStencilWrapperMembers(
     CodeGenProperties& codeGenProperties) const {
 
   const auto& metadata = stencilInstantiation->getMetaData();
-  const auto& globalsMap = metadata.globalVariableMap_;
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   stencilWrapperClass.addMember("static constexpr const char* s_name =",
                                 Twine("\"") + stencilWrapperClass.getName() + Twine("\""));

@@ -28,11 +28,11 @@ namespace cuda {
 MSCodeGen::MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
                      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                      const CacheProperties& cacheProperties)
-    : ss_(ss), ms_(ms), stencilInstantiation_(stencilInstantiation), metadata_(stencilInstantiation->getMetaData()),
-      cacheProperties_(cacheProperties),
-      useCodeGenTemporaries_(
-          CodeGeneratorHelper::useTemporaries(ms->getParent(), stencilInstantiation->getMetaData()) &&
-          ms->hasMemAccessTemporaries()),
+    : ss_(ss), ms_(ms), stencilInstantiation_(stencilInstantiation),
+      metadata_(stencilInstantiation->getMetaData()), cacheProperties_(cacheProperties),
+      useCodeGenTemporaries_(CodeGeneratorHelper::useTemporaries(
+                                 ms->getParent(), stencilInstantiation->getMetaData()) &&
+                             ms->hasMemAccessTemporaries()),
       cudaKernelName_(CodeGeneratorHelper::buildCudaKernelName(stencilInstantiation_, ms_)),
       blockSize_(stencilInstantiation_->getIIR()->getBlockSize()),
       solveKLoopInParallel_(CodeGeneratorHelper::solveKLoopInParallel(ms_)) {}
@@ -724,7 +724,7 @@ void MSCodeGen::generateCudaKernelCode() {
   }
   MemberFunction cudaKernel(fnDecl, cudaKernelName_, ss_);
 
-  const auto& globalsMap = stencilInstantiation_->getMetaData().globalVariableMap_;
+  const auto& globalsMap = stencilInstantiation_->getIIR()->getGlobalVariableMap();
   if(!globalsMap.empty()) {
     cudaKernel.addArg("globals globals_");
   }
@@ -749,13 +749,11 @@ void MSCodeGen::generateCudaKernelCode() {
   // then the temporary field arguments
   for(auto field : tempFieldsNonLocalCached) {
     if(useCodeGenTemporaries_) {
-      cudaKernel.addArg(
-          c_gt() + "data_view<TmpStorage>" +
-          metadata_.getFieldNameFromAccessID((*field).second.getAccessID()) + "_dv");
+      cudaKernel.addArg(c_gt() + "data_view<TmpStorage>" +
+                        metadata_.getFieldNameFromAccessID((*field).second.getAccessID()) + "_dv");
     } else {
-      cudaKernel.addArg(
-          "gridtools::clang::float_type * const " +
-          metadata_.getFieldNameFromAccessID((*field).second.getAccessID()));
+      cudaKernel.addArg("gridtools::clang::float_type * const " +
+                        metadata_.getFieldNameFromAccessID((*field).second.getAccessID()));
     }
   }
 

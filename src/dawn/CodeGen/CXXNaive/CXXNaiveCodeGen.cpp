@@ -75,7 +75,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
 
   Namespace cxxnaiveNamespace("cxxnaive", ssSW);
 
-  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   Class StencilWrapperClass(stencilInstantiation->getName(), ssSW);
   StencilWrapperClass.changeAccessibility("private");
@@ -139,7 +139,7 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
 
   const auto& stencils = stencilInstantiation->getStencils();
   const auto& metadata = stencilInstantiation->getMetaData();
-  const auto& globalsMap = metadata.globalVariableMap_;
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // Generate stencil wrapper constructor
   const auto& APIFields =
@@ -215,7 +215,7 @@ void CXXNaiveCodeGen::generateStencilWrapperMembers(
     CodeGenProperties& codeGenProperties) const {
 
   const auto& metadata = stencilInstantiation->getMetaData();
-  const auto& globalsMap = metadata.globalVariableMap_;
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   stencilWrapperClass.addMember("static constexpr const char* s_name =",
                                 Twine("\"") + stencilWrapperClass.getName() + Twine("\""));
@@ -250,7 +250,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
     Class& stencilWrapperClass, const CodeGenProperties& codeGenProperties) const {
 
   const auto& stencils = stencilInstantiation->getStencils();
-  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // Stencil members:
   // generate the code for each of the stencils
@@ -426,13 +426,14 @@ void CXXNaiveCodeGen::generateStencilFunctions(
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     const CodeGenProperties& codeGenProperties) const {
 
+  const auto& metadata = stencilInstantiation->getMetaData();
   // stencil functions
   //
   // Generate stencil functions code for stencils instantiated by this stencil
   //
   std::unordered_set<std::string> generatedStencilFun;
   size_t idx = 0;
-  for(const auto& stencilFun : stencilInstantiation->getStencilFunctionInstantiations()) {
+  for(const auto& stencilFun : metadata.getStencilFunctionInstantiations()) {
     std::string stencilFunName = iir::StencilFunctionInstantiation::makeCodeGenName(*stencilFun);
     if(generatedStencilFun.emplace(stencilFunName).second) {
 

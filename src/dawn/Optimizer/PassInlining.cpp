@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/Optimizer/PassInlining.h"
 #include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/AccessComputation.h"
@@ -143,7 +144,7 @@ public:
       // We are *not* called within an arugment list of a stencil function, meaning we can store the
       // return value in a local variable.
       int AccessID = instantiation_->nextUID();
-      auto returnVarName = iir::StencilInstantiation::makeLocalVariablename(
+      auto returnVarName = iir::InstantiationHelper::makeLocalVariablename(
           curStencilFunctioninstantiation_->getName(), AccessID);
 
       newExpr_ = std::make_shared<VarAccessExpr>(returnVarName);
@@ -160,7 +161,7 @@ public:
     } else {
       // We are called within an arugment list of a stencil function, we thus need to store the
       // return value in temporary storage (we only land here if we do precomputations).
-      auto returnFieldName = iir::StencilInstantiation::makeTemporaryFieldname(
+      auto returnFieldName = iir::InstantiationHelper::makeTemporaryFieldname(
           curStencilFunctioninstantiation_->getName(), AccessIDOfCaller_);
 
       newExpr_ = std::make_shared<FieldAccessExpr>(returnFieldName);
@@ -169,7 +170,8 @@ public:
       appendNewStatementAccessesPair(newStmt);
 
       // Promote the "temporary" storage we used to mock the argument to an actual temporary field
-      metadata_.setAccessIDNamePairOfField(AccessIDOfCaller_, returnFieldName, true);
+      metadata_.insertAccessOfType(iir::FieldAccessType::FAT_StencilTemporary, AccessIDOfCaller_,
+                                   returnFieldName);
       metadata_.mapExprToAccessID(newExpr_, AccessIDOfCaller_);
     }
 
@@ -204,9 +206,9 @@ public:
     removeLastChildStatementAccessesPair();
   }
 
-  void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) override {}
-  void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {}
-  void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override {}
+  void visit(const std::shared_ptr<VerticalRegionDeclStmt>&) override {}
+  void visit(const std::shared_ptr<StencilCallDeclStmt>&) override {}
+  void visit(const std::shared_ptr<BoundaryConditionDeclStmt>&) override {}
 
   void visit(const std::shared_ptr<AssignmentExpr>& expr) override {
     for(auto& s : expr->getChildren())
@@ -304,7 +306,7 @@ public:
       argListScope_.top().ArgumentIndex++;
   }
 
-  void visit(const std::shared_ptr<StencilFunArgExpr>& expr) override {
+  void visit(const std::shared_ptr<StencilFunArgExpr>&) override {
     if(!argListScope_.empty())
       argListScope_.top().ArgumentIndex++;
   }
@@ -453,12 +455,12 @@ public:
       argListScope_.top().ArgumentIndex++;
   }
 
-  void visit(const std::shared_ptr<StencilFunArgExpr>& expr) override {
+  void visit(const std::shared_ptr<StencilFunArgExpr>&) override {
     if(!argListScope_.empty())
       argListScope_.top().ArgumentIndex++;
   }
 
-  void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<FieldAccessExpr>&) override {
     if(!argListScope_.empty())
       argListScope_.top().ArgumentIndex++;
   }

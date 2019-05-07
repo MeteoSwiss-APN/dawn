@@ -163,8 +163,7 @@ bool PassSetBoundaryCondition::run(
   std::unordered_map<int, std::shared_ptr<BoundaryConditionDeclStmt>> allBCs;
 
   //  // Fetch all the boundary conditions stored in the instantiation
-  std::transform(stencilInstantiation->getBoundaryConditions().begin(),
-                 stencilInstantiation->getBoundaryConditions().end(),
+  std::transform(metadata.getFieldNameToBCMap().begin(), metadata.getFieldNameToBCMap().end(),
                  std::inserter(allBCs, allBCs.begin()),
                  [&](std::pair<std::string, std::shared_ptr<BoundaryConditionDeclStmt>> bcPair) {
                    return std::make_pair(metadata.getAccessIDFromName(bcPair.first), bcPair.second);

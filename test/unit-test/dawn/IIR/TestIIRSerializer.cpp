@@ -140,10 +140,10 @@ bool compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformati
 
   // we compare the content of the maps since the shared-ptr's are not the same
   IIR_EARLY_EXIT(
-      (lhs.FieldnameToBoundaryConditionMap_.size() == rhs.FieldnameToBoundaryConditionMap_.size()));
-  for(const auto& lhsPair : lhs.FieldnameToBoundaryConditionMap_) {
-    IIR_EARLY_EXIT(rhs.FieldnameToBoundaryConditionMap_.count(lhsPair.first));
-    auto rhsValue = rhs.FieldnameToBoundaryConditionMap_[lhsPair.first];
+      (lhs.fieldnameToBoundaryConditionMap_.size() == rhs.fieldnameToBoundaryConditionMap_.size()));
+  for(const auto& lhsPair : lhs.fieldnameToBoundaryConditionMap_) {
+    IIR_EARLY_EXIT(rhs.fieldnameToBoundaryConditionMap_.count(lhsPair.first));
+    auto rhsValue = rhs.fieldnameToBoundaryConditionMap_[lhsPair.first];
     IIR_EARLY_EXIT(rhsValue->equals(lhsPair.second.get()));
   }
   IIR_EARLY_EXIT(
@@ -263,7 +263,7 @@ TEST_F(IIRSerializerTest, ComplexStrucutes) {
   auto bcstmt = std::make_shared<BoundaryConditionDeclStmt>("callee");
   bcstmt->getFields().push_back(std::make_shared<sir::Field>("field1"));
   bcstmt->getFields().push_back(std::make_shared<sir::Field>("field2"));
-  referenceInstantiaton->getMetaData().FieldnameToBoundaryConditionMap_.emplace("bc", bcstmt);
+  referenceInstantiaton->getMetaData().insertFieldBC("bc", bcstmt);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 }
 

@@ -129,9 +129,8 @@ private:
       int oldID = sortedAccesses_[i].accessID;
 
       // Create new temporary field and register in the instantiation
-      int newID = instantiation_->nextUID();
-
-      metadata_.setAccessIDNamePairOfField(newID, "__tmp_cache_" + std::to_string(i), true);
+      int newID = metadata_.insertAccessOfType(iir::FieldAccessType::FAT_StencilTemporary,
+                                               "__tmp_cache_" + std::to_string(i));
 
       // Rename all the fields in this multistage
       multiStagePrt_->renameAllOccurrences(oldID, newID);
