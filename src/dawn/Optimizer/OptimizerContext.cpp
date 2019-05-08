@@ -309,7 +309,7 @@ public:
           auto voidStmt = std::make_shared<ExprStmt>(voidExpr);
           int AccessID = -instantiation_->nextUID();
           metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, "0");
-          metadata_.mapExprToAccessID(voidExpr, AccessID);
+          metadata_.insertExprToAccessID(voidExpr, AccessID);
           replaceOldStmtWithNewStmtInStmt(
               scope_.top()->controlFlowDescriptor_.getStatements().back()->ASTStmt, stmt, voidStmt);
         }
@@ -565,15 +565,15 @@ public:
         int AccessID = instantiation_->nextUID();
         metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID,
                                      newExpr->getValue());
-        metadata_.mapExprToAccessID(newExpr, AccessID);
+        metadata_.insertExprToAccessID(newExpr, AccessID);
 
       } else {
-        metadata_.mapExprToAccessID(expr, metadata_.getAccessIDFromName(varname));
+        metadata_.insertExprToAccessID(expr, metadata_.getAccessIDFromName(varname));
       }
 
     } else {
       // Register the mapping between VarAccessExpr and AccessID.
-      metadata_.mapExprToAccessID(expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
+      metadata_.insertExprToAccessID(expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
 
       // Resolve the index if this is an array access
       if(expr->isArrayAccess())
@@ -585,7 +585,7 @@ public:
     // Register a literal access (Note: the negative AccessID we assign!)
     int AccessID = -instantiation_->nextUID();
     metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, expr->getValue());
-    metadata_.mapExprToAccessID(expr, AccessID);
+    metadata_.insertExprToAccessID(expr, AccessID);
   }
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {}

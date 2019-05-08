@@ -78,7 +78,7 @@ void replaceFieldWithVarAccessInStmts(
 
       replaceOldExprWithNewExprInStmt(stmt, oldExpr, newExpr);
 
-      metadata.mapExprToAccessID(newExpr, AccessID);
+      metadata.insertExprToAccessID(newExpr, AccessID);
       metadata.eraseExprToAccessID(oldExpr);
     }
   }
@@ -101,7 +101,7 @@ void replaceVarWithFieldAccessInStmts(
 
       replaceOldExprWithNewExprInStmt(stmt, oldExpr, newExpr);
 
-      metadata.mapExprToAccessID(newExpr, AccessID);
+      metadata.insertExprToAccessID(newExpr, AccessID);
       metadata.eraseExprToAccessID(oldExpr);
     }
   }

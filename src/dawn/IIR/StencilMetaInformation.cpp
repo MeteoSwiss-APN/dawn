@@ -124,7 +124,14 @@ Array3i StencilMetaInformation::getFieldDimensionsMask(int FieldID) const {
   return fieldIDToInitializedDimensionsMap_.find(FieldID)->second;
 }
 
-void StencilMetaInformation::mapExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID) {
+const std::unordered_map<int, int>& StencilMetaInformation::getExprIDToAccessIDMap() const {
+  return ExprIDToAccessIDMap_;
+}
+const std::unordered_map<int, int>& StencilMetaInformation::getStmtIDToAccessIDMap() const {
+  return StmtIDToAccessIDMap_;
+}
+
+void StencilMetaInformation::insertExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID) {
   ExprIDToAccessIDMap_.emplace(expr->getID(), accessID);
 }
 
@@ -133,7 +140,12 @@ void StencilMetaInformation::eraseExprToAccessID(std::shared_ptr<Expr> expr) {
   ExprIDToAccessIDMap_.erase(expr->getID());
 }
 
-void StencilMetaInformation::mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt, int accessID) {
+void StencilMetaInformation::eraseStmtToAccessID(std::shared_ptr<Stmt> stmt) {
+  DAWN_ASSERT(StmtIDToAccessIDMap_.count(stmt->getID()));
+  StmtIDToAccessIDMap_.erase(stmt->getID());
+}
+
+void StencilMetaInformation::insertStmtToAccessID(const std::shared_ptr<Stmt>& stmt, int accessID) {
   StmtIDToAccessIDMap_.emplace(stmt->getID(), accessID);
 }
 
@@ -166,12 +178,6 @@ void StencilMetaInformation::setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt
 
 bool StencilMetaInformation::hasStmtToAccessID(const std::shared_ptr<Stmt>& stmt) const {
   return StmtIDToAccessIDMap_.count(stmt->getID());
-}
-
-void StencilMetaInformation::insertStmtToAccessID(const std::shared_ptr<Stmt>& stmt,
-                                                  const int accessID) {
-  DAWN_ASSERT(!StmtIDToAccessIDMap_.count(stmt->getID()));
-  StmtIDToAccessIDMap_[stmt->getID()] = accessID;
 }
 
 void StencilMetaInformation::setAccessIDOfExpr(const std::shared_ptr<Expr>& expr,

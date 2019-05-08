@@ -231,8 +231,8 @@ private:
     domethod->insertChild(std::move(pair));
 
     // Add the new expressions to the map
-    metadata_.mapExprToAccessID(fa_assignment, assignmentID);
-    metadata_.mapExprToAccessID(fa_assignee, assigneeID);
+    metadata_.insertExprToAccessID(fa_assignment, assignmentID);
+    metadata_.insertExprToAccessID(fa_assignee, assigneeID);
   }
 
   /// @brief Checks if there is a read operation before the first write operation in the given

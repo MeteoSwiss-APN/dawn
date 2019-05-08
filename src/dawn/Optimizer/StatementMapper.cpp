@@ -330,7 +330,7 @@ void StatementMapper::visit(const std::shared_ptr<VarAccessExpr>& expr) {
       int AccessID = instantiation_->nextUID();
       metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID,
                                    newExpr->getValue());
-      metadata_.mapExprToAccessID(newExpr, AccessID);
+      metadata_.insertExprToAccessID(newExpr, AccessID);
 
     } else {
       int AccessID = 0;
@@ -345,9 +345,9 @@ void StatementMapper::visit(const std::shared_ptr<VarAccessExpr>& expr) {
 
       if(function) {
         function->mapExprToAccessID(expr, AccessID);
-        metadata_.mapExprToAccessID(expr, AccessID);
+        metadata_.insertExprToAccessID(expr, AccessID);
       } else
-        metadata_.mapExprToAccessID(expr, AccessID);
+        metadata_.insertExprToAccessID(expr, AccessID);
     }
 
   } else {
@@ -355,7 +355,7 @@ void StatementMapper::visit(const std::shared_ptr<VarAccessExpr>& expr) {
     if(function)
       function->mapExprToAccessID(expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
     else
-      metadata_.mapExprToAccessID(expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
+      metadata_.insertExprToAccessID(expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
 
     // Resolve the index if this is an array access
     if(expr->isArrayAccess())
@@ -375,7 +375,7 @@ void StatementMapper::visit(const std::shared_ptr<LiteralAccessExpr>& expr) {
     function->mapExprToAccessID(expr, AccessID);
   } else {
     metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, expr->getValue());
-    metadata_.mapExprToAccessID(expr, AccessID);
+    metadata_.insertExprToAccessID(expr, AccessID);
   }
 }
 
@@ -389,7 +389,7 @@ void StatementMapper::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   if(function) {
     function->mapExprToAccessID(expr, AccessID);
   } else {
-    metadata_.mapExprToAccessID(expr, AccessID);
+    metadata_.insertExprToAccessID(expr, AccessID);
   }
 
   if(Scope* candiateScope = getCurrentCandidateScope()) {

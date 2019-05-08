@@ -126,8 +126,8 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
   return true;
 }
 bool compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformation& rhs) {
-  IIR_EARLY_EXIT((lhs.ExprIDToAccessIDMap_ == rhs.ExprIDToAccessIDMap_));
-  IIR_EARLY_EXIT((lhs.StmtIDToAccessIDMap_ == rhs.StmtIDToAccessIDMap_));
+  IIR_EARLY_EXIT((lhs.getExprIDToAccessIDMap() == rhs.getExprIDToAccessIDMap()));
+  IIR_EARLY_EXIT((lhs.getStmtIDToAccessIDMap() == rhs.getStmtIDToAccessIDMap()));
   IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::FAT_Literal>() ==
                   rhs.getAccessesOfType<iir::FieldAccessType::FAT_Literal>()));
   IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::FAT_Field>() ==
@@ -205,10 +205,11 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
   referenceInstantiaton->getMetaData().setAccessIDNamePair(1, "test");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  referenceInstantiaton->getMetaData().ExprIDToAccessIDMap_.emplace(10, 5);
+  referenceInstantiaton->getMetaData().insertExprToAccessID(std::make_shared<NOPExpr>(), 5);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  referenceInstantiaton->getMetaData().StmtIDToAccessIDMap_.emplace(5, 10);
+  referenceInstantiaton->getMetaData().insertStmtToAccessID(
+      std::make_shared<ExprStmt>(std::make_shared<NOPExpr>()), 10);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_Literal, 5,

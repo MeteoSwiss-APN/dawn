@@ -264,7 +264,7 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
     DAWN_ASSERT_MSG(!varDeclStmt->isArray(), "cannot promote local array to temporary field");
 
     auto fieldAccessExpr = std::make_shared<FieldAccessExpr>(fieldname);
-    metadata_.ExprIDToAccessIDMap_.emplace(fieldAccessExpr->getID(), accessID);
+    metadata_.insertExprToAccessID(fieldAccessExpr, accessID);
     auto assignmentExpr =
         std::make_shared<AssignmentExpr>(fieldAccessExpr, varDeclStmt->getInitList().front());
     auto exprStmt = std::make_shared<ExprStmt>(assignmentExpr);
@@ -275,7 +275,7 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
 
     // Remove the variable
     metadata_.removeAccessID(accessID);
-    metadata_.StmtIDToAccessIDMap_.erase(oldStatement->ASTStmt->getID());
+    metadata_.eraseStmtToAccessID(oldStatement->ASTStmt);
   }
   // Register the field
   metadata_.insertAccessOfType(FieldAccessType::FAT_StencilTemporary, accessID, fieldname);
@@ -340,7 +340,7 @@ void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil,
 
   // Register the variable
   metadata_.setAccessIDNamePair(AccessID, varname);
-  metadata_.StmtIDToAccessIDMap_.emplace(varDeclStmt->getID(), AccessID);
+  metadata_.insertStmtToAccessID(varDeclStmt, AccessID);
 
   // Update the fields of the stages we modified
   stencil->updateFields(lifetime);

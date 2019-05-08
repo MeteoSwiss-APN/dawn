@@ -236,13 +236,13 @@ public:
   void removeAccessID(int AccesssID);
 
   /// @brief Add entry to the map between a given expr to its access ID
-  void mapExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID);
-
-  /// @brief Add entry to the map between a given stmt to its access ID
-  void mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt, int accessID);
+  void insertExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID);
 
   /// @brief Add entry of the Expr to AccessID map
   void eraseExprToAccessID(std::shared_ptr<Expr> expr);
+
+  /// @brief Add entry of the Stmt to AccessID map
+  void eraseStmtToAccessID(std::shared_ptr<Stmt> stmt);
 
   void eraseStencilCallStmt(std::shared_ptr<StencilCallDeclStmt> stmt);
   void eraseStencilID(const int stencilID);
@@ -291,6 +291,9 @@ public:
 
   std::shared_ptr<std::vector<int>> getVersionsOf(const int accessID) const;
 
+  const std::unordered_map<int, int>& getExprIDToAccessIDMap() const;
+  const std::unordered_map<int, int>& getStmtIDToAccessIDMap() const;
+
 private:
   //================================================================================================
   // Stored MetaInformation
@@ -304,7 +307,6 @@ private:
   /// stencil functions can share the same name.
   DoubleSidedMap<int, std::string> AccessIDToNameMap_;
 
-public:
   /// Surjection of AST Nodes, Expr (FieldAccessExpr or VarAccessExpr) or Stmt (VarDeclStmt), to
   /// their AccessID. The surjection implies that multiple AST Nodes can have the same AccessID,
   /// which is the intended behaviour as we want to get the same ID back when we access the same
@@ -312,6 +314,7 @@ public:
   std::unordered_map<int, int> ExprIDToAccessIDMap_;
   std::unordered_map<int, int> StmtIDToAccessIDMap_;
 
+public:
   /// Referenced stencil functions in this stencil (note that nested stencil functions are not
   /// stored here but rather in the respecticve `StencilFunctionInstantiation`)
   std::vector<std::shared_ptr<StencilFunctionInstantiation>> stencilFunctionInstantiations_;
