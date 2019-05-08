@@ -31,12 +31,15 @@
 #include <unordered_set>
 
 namespace dawn {
+class IIRSerializer;
+
 namespace iir {
 class StencilFunctionInstantiation;
 
 /// @brief Specific instantiation of a stencil
 /// @ingroup optimizer
 class StencilMetaInformation : public NonCopyable {
+  friend IIRSerializer;
 
 public:
   StencilMetaInformation(const sir::GlobalVariableMap& globalVariables);
@@ -84,6 +87,11 @@ public:
   Array3i getFieldDimensionsMask(int fieldID) const;
 
   template <FieldAccessType TFieldAccessType>
+  bool hasAccessesOfType() const {
+    return !getAccessesOfType<TFieldAccessType>().empty();
+  }
+
+  template <FieldAccessType TFieldAccessType>
   typename TypeOfAccessContainer<TFieldAccessType>::type getAccessesOfType() const {
     return boost::get<const typename TypeOfAccessContainer<TFieldAccessType>::type>(
         getAccessesOfTypeImpl(TFieldAccessType));
@@ -92,9 +100,10 @@ public:
   void moveRegisteredFieldTo(FieldAccessType type, int accessID) {
     // we can not move it into an API field, since the original order would not be preserved
     DAWN_ASSERT(type != FieldAccessType::FAT_APIField);
-    if(!isFieldType(type)) {
-      dawn_unreachable("non field access type can not be moved");
-    }
+    DAWN_ASSERT_MSG(isFieldType(type), "non field access type can not be moved");
+
+    fieldAccessMetadata_.accessIDType_[accessID] = type;
+
     if(fieldAccessMetadata_.TemporaryFieldAccessIDSet_.count(accessID)) {
       fieldAccessMetadata_.TemporaryFieldAccessIDSet_.erase(accessID);
     }
@@ -117,6 +126,7 @@ public:
 
   void insertAccessOfType(FieldAccessType type, int AccessID, const std::string& name) {
     setAccessIDNamePair(AccessID, name);
+    fieldAccessMetadata_.accessIDType_[AccessID] = type;
     if(isFieldType(type)) {
       fieldAccessMetadata_.FieldAccessIDSet_.insert(AccessID);
       if(type == FieldAccessType::FAT_StencilTemporary) {
@@ -167,13 +177,6 @@ public:
   /// @brief Get the field-AccessID set
   const std::set<int>& getGlobalVariableAccessIDSet() const;
 
-  /// @brief Get the Literal-AccessID-to-Name map
-  const std::unordered_map<int, std::string>& getLiteralAccessIDToNameMap() const;
-
-  std::unordered_map<int, std::string>& getLiteralAccessIDToNameMap() {
-    return fieldAccessMetadata_.LiteralAccessIDToNameMap_;
-  }
-
   /// @brief Get StencilID of the StencilCallDeclStmt
   const std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
   getStencilCallToStencilIDMap() const;
@@ -214,19 +217,6 @@ public:
     return stencilFunctionInstantiations_;
   }
 
-  const std::set<int>& getAllocatedFieldAccessIDSet() const {
-    return fieldAccessMetadata_.AllocatedFieldAccessIDSet_;
-  }
-
-  /// @brief Check if the stencil instantiation needs to allocate fields
-  bool hasAllocatedFields() const {
-    return !fieldAccessMetadata_.AllocatedFieldAccessIDSet_.empty();
-  }
-
-  void insertAllocatedField(const int accessID);
-  void eraseAllocatedField(const int accessID);
-
-  // TODO rename all these to insert
   /// @brief Set the `AccessID` of the Expr (VarAccess or FieldAccess)
   void setAccessIDOfExpr(const std::shared_ptr<Expr>& expr, const int accessID);
 
@@ -250,8 +240,6 @@ public:
 
   /// @brief Add entry to the map between a given stmt to its access ID
   void mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt, int accessID);
-
-  void insertLiteralAccessID(const int accessID, const std::string& name);
 
   /// @brief Add entry of the Expr to AccessID map
   void eraseExprToAccessID(std::shared_ptr<Expr> expr);
@@ -295,7 +283,15 @@ public:
 
   const FieldAccessMetadata& getFieldAccessMetadata() const { return fieldAccessMetadata_; }
 
-public:
+  void insertVersions(const int accessID, std::shared_ptr<std::vector<int>> versionsID);
+
+  bool hasVariableMultipleVersions(const int accessID) const {
+    return fieldAccessMetadata_.variableVersions_.hasVariableMultipleVersions(accessID);
+  }
+
+  std::shared_ptr<std::vector<int>> getVersionsOf(const int accessID) const;
+
+private:
   //================================================================================================
   // Stored MetaInformation
   //================================================================================================
@@ -308,6 +304,7 @@ public:
   /// stencil functions can share the same name.
   DoubleSidedMap<int, std::string> AccessIDToNameMap_;
 
+public:
   /// Surjection of AST Nodes, Expr (FieldAccessExpr or VarAccessExpr) or Stmt (VarDeclStmt), to
   /// their AccessID. The surjection implies that multiple AST Nodes can have the same AccessID,
   /// which is the intended behaviour as we want to get the same ID back when we access the same
@@ -322,7 +319,6 @@ public:
                      std::shared_ptr<StencilFunctionInstantiation>>
       ExprToStencilFunctionInstantiationMap_;
 
-  // TODO a set here would be enough
   /// lookup table containing all the stencil function candidates, whose arguments are not yet bound
   std::unordered_map<std::shared_ptr<StencilFunctionInstantiation>,
                      StencilFunctionInstantiationCandidate>
@@ -342,10 +338,12 @@ public:
   std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>
       BoundaryConditionToExtentsMap_;
 
+public:
   SourceLocation stencilLocation_;
   std::string stencilName_;
   std::string fileName_;
 
+private:
   FieldAccessMetadata::allConstContainerTypes
   getAccessesOfTypeImpl(FieldAccessType fieldAccessType) const {
     if(fieldAccessType == FieldAccessType::FAT_Literal) {
@@ -366,29 +364,6 @@ public:
           fieldAccessMetadata_.AllocatedFieldAccessIDSet_);
     } else if(fieldAccessType == FieldAccessType::FAT_APIField) {
       return FieldAccessMetadata::allConstContainerTypes(fieldAccessMetadata_.apiFieldIDs_);
-    }
-    dawn_unreachable("unknown field access type");
-  }
-
-  // TODO remove this
-  FieldAccessMetadata::allContainerTypes getAccessesOfTypeImpl(FieldAccessType fieldAccessType) {
-    if(fieldAccessType == FieldAccessType::FAT_Literal) {
-      return FieldAccessMetadata::allContainerTypes(fieldAccessMetadata_.LiteralAccessIDToNameMap_);
-    } else if(fieldAccessType == FieldAccessType::FAT_GlobalVariable) {
-      return FieldAccessMetadata::allContainerTypes(
-          fieldAccessMetadata_.GlobalVariableAccessIDSet_);
-    } else if(fieldAccessType == FieldAccessType::FAT_Field) {
-      return FieldAccessMetadata::allContainerTypes(fieldAccessMetadata_.FieldAccessIDSet_);
-    } else if(fieldAccessType == FieldAccessType::FAT_LocalVariable) {
-      dawn_unreachable("getter of local accesses ids not supported");
-    } else if(fieldAccessType == FieldAccessType::FAT_StencilTemporary) {
-      return FieldAccessMetadata::allContainerTypes(
-          fieldAccessMetadata_.TemporaryFieldAccessIDSet_);
-    } else if(fieldAccessType == FieldAccessType::FAT_InterStencilTemporary) {
-      return FieldAccessMetadata::allContainerTypes(
-          fieldAccessMetadata_.AllocatedFieldAccessIDSet_);
-    } else if(fieldAccessType == FieldAccessType::FAT_APIField) {
-      return FieldAccessMetadata::allContainerTypes(fieldAccessMetadata_.apiFieldIDs_);
     }
     dawn_unreachable("unknown field access type");
   }

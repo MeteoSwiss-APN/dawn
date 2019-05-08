@@ -78,13 +78,6 @@ const std::string& StencilMetaInformation::getFieldNameFromAccessID(int accessID
   return AccessIDToNameMap_.directAt(accessID);
 }
 
-// void StencilMetaInformation::insertAllocatedField(const int accessID) {
-//  fieldAccessMetadata_.AllocatedFieldAccessIDSet_.insert(accessID);
-//}
-// void StencilMetaInformation::eraseAllocatedField(const int accessID) {
-//  fieldAccessMetadata_.AllocatedFieldAccessIDSet_.erase(accessID);
-//}
-
 const std::unordered_map<std::string, int>& StencilMetaInformation::getNameToAccessIDMap() const {
   return AccessIDToNameMap_.getReverseMap();
 }
@@ -109,34 +102,19 @@ bool StencilMetaInformation::isAccessType(FieldAccessType fType, const std::stri
   return isAccessType(fType, getAccessIDFromName(name));
 }
 bool StencilMetaInformation::isAccessType(FieldAccessType fType, const int accessID) const {
-  if(fType == FieldAccessType::FAT_Literal) {
-    return accessID < 0 && fieldAccessMetadata_.LiteralAccessIDToNameMap_.count(accessID);
-  } else if(fType == FieldAccessType::FAT_Field) {
-    return fieldAccessMetadata_.FieldAccessIDSet_.count(accessID);
-  } else if(fType == FieldAccessType::FAT_GlobalVariable) {
-    return fieldAccessMetadata_.GlobalVariableAccessIDSet_.count(accessID);
-  } else if(fType == FieldAccessType::FAT_InterStencilTemporary) {
-    // make sure that a temporary field is also stored as a field
-    DAWN_ASSERT(!fieldAccessMetadata_.AllocatedFieldAccessIDSet_.count(accessID) ||
-                isAccessType(FieldAccessType::FAT_Field, accessID));
-    return fieldAccessMetadata_.AllocatedFieldAccessIDSet_.count(accessID);
-  } else if(fType == FieldAccessType::FAT_StencilTemporary) {
-    // make sure that a temporary field is also stored as a field
-    DAWN_ASSERT(!fieldAccessMetadata_.TemporaryFieldAccessIDSet_.count(accessID) ||
-                isAccessType(FieldAccessType::FAT_Field, accessID));
-    return fieldAccessMetadata_.TemporaryFieldAccessIDSet_.count(accessID);
-  } else if(fType == FieldAccessType::FAT_LocalVariable) {
-    return !isAccessType(FieldAccessType::FAT_Field, accessID) &&
-           !isAccessType(FieldAccessType::FAT_Literal,
-                         accessID); // TODO arent we missing +isGlobalVariable
-  } else if(fType == FieldAccessType::FAT_APIField) {
-    // TODO is this convention right andthe same as it is stored in apifield?
-    return isAccessType(FieldAccessType::FAT_Field, accessID) &&
-           !isAccessType(FieldAccessType::FAT_StencilTemporary, accessID) &&
-           !isAccessType(FieldAccessType::FAT_InterStencilTemporary, accessID);
+  if(fType == FieldAccessType::FAT_Field) {
+    return isAccessType(FieldAccessType::FAT_APIField, accessID) ||
+           isAccessType(FieldAccessType::FAT_StencilTemporary, accessID) ||
+           isAccessType(FieldAccessType::FAT_InterStencilTemporary, accessID);
   }
-
-  dawn_unreachable("unknown field access type");
+  if(fType == FieldAccessType::FAT_LocalVariable) {
+    return !isAccessType(FieldAccessType::FAT_Field, accessID) &&
+           !isAccessType(FieldAccessType::FAT_Literal, accessID) &&
+           !isAccessType(FieldAccessType::FAT_GlobalVariable, accessID);
+  }
+  // not all the accessIDs are registered
+  return (fieldAccessMetadata_.accessIDType_.count(accessID) &&
+          fieldAccessMetadata_.accessIDType_.at(accessID) == fType);
 }
 
 Array3i StencilMetaInformation::getFieldDimensionsMask(int FieldID) const {
@@ -210,7 +188,6 @@ StencilMetaInformation::getStencilFunctionInstantiation(
   return it->second;
 }
 
-// TODO set or emplace ? have a convention
 // TODO private ?
 void StencilMetaInformation::setAccessIDNamePair(int accessID, const std::string& name) {
   AccessIDToNameMap_.emplace(accessID, name);
@@ -225,10 +202,33 @@ void StencilMetaInformation::insertField(FieldAccessType type, const std::string
 }
 
 void StencilMetaInformation::removeAccessID(int AccessID) {
-  // TODO do we need to remove from all of them ?
   AccessIDToNameMap_.directEraseKey(AccessID);
+
+  // we can only remove fields that are not API fields (since it would make sense to transform the
+  // API)
+  DAWN_ASSERT(isAccessType(FieldAccessType::FAT_Field, AccessID));
+
   fieldAccessMetadata_.FieldAccessIDSet_.erase(AccessID);
-  fieldAccessMetadata_.TemporaryFieldAccessIDSet_.erase(AccessID);
+  if(isAccessType(FieldAccessType::FAT_InterStencilTemporary, AccessID)) {
+    fieldAccessMetadata_.AllocatedFieldAccessIDSet_.erase(AccessID);
+  }
+  if(isAccessType(FieldAccessType::FAT_StencilTemporary, AccessID)) {
+    fieldAccessMetadata_.TemporaryFieldAccessIDSet_.erase(AccessID);
+  }
+  if(isAccessType(FieldAccessType::FAT_APIField, AccessID)) {
+    // remote on a vector
+    auto begin = fieldAccessMetadata_.apiFieldIDs_.begin();
+    auto end = fieldAccessMetadata_.apiFieldIDs_.end();
+    auto first = std::find(begin, end, AccessID);
+    if(first != end) {
+      for(auto i = first; ++i != end;) {
+        if(!(*i == AccessID)) {
+          *first++ = std::move(*i);
+        }
+      }
+    }
+  }
+  fieldAccessMetadata_.accessIDType_.erase(AccessID);
 
   if(fieldAccessMetadata_.variableVersions_.hasVariableMultipleVersions(AccessID)) {
     auto versions = fieldAccessMetadata_.variableVersions_.getVersions(AccessID);
@@ -242,6 +242,15 @@ StencilMetaInformation::StencilMetaInformation(const sir::GlobalVariableMap& glo
   for(const auto& global : globalVariables) {
     insertAccessOfType(iir::FieldAccessType::FAT_GlobalVariable, global.first);
   }
+}
+
+void StencilMetaInformation::insertVersions(const int accessID,
+                                            std::shared_ptr<std::vector<int>> versionsID) {
+  fieldAccessMetadata_.variableVersions_.insert(accessID, versionsID);
+}
+
+std::shared_ptr<std::vector<int>> StencilMetaInformation::getVersionsOf(const int accessID) const {
+  return fieldAccessMetadata_.variableVersions_.getVersions(accessID);
 }
 
 json::json StencilMetaInformation::jsonDump() const {
@@ -275,6 +284,10 @@ json::json StencilMetaInformation::jsonDump() const {
   }
   metaDataJson["FieldToBC"] = bcJson;
 
+  json::json accessIdToTypeJson;
+  for(const auto& p : fieldAccessMetadata_.accessIDType_) {
+    accessIdToTypeJson[p.first] = toString(p.second);
+  }
   json::json tmpAccessIDsJson;
   for(const auto& id : fieldAccessMetadata_.TemporaryFieldAccessIDSet_) {
     tmpAccessIDsJson.push_back(id);
@@ -304,18 +317,7 @@ json::json StencilMetaInformation::jsonDump() const {
     accessIDToNameJson[std::to_string(pair.first)] = pair.second;
   }
   metaDataJson["AccessIDToName"] = accessIDToNameJson;
-  // TODO recover?
-  //  json::json idToStencilCallJson;
-  //  for(const auto& pair : IDToStencilCallMap_) {
-  //    idToStencilCallJson[std::to_string(pair.first)] = ASTStringifer::toString(pair.second);
-  //  }
-  //  metaDataJson["IDToStencilCall"] = idToStencilCallJson;
   return metaDataJson;
-}
-
-/// @brief Get the field-AccessID set
-const std::set<int>& StencilMetaInformation::getFieldAccessIDSet() const {
-  return fieldAccessMetadata_.FieldAccessIDSet_;
 }
 
 const std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
@@ -342,19 +344,6 @@ int StencilMetaInformation::getStencilIDFromStencilCallStmt(
 void StencilMetaInformation::insertStencilCallStmt(std::shared_ptr<StencilCallDeclStmt> stmt,
                                                    int stencilID) {
   StencilIDToStencilCallMap_.emplace(stencilID, stmt);
-}
-
-const std::set<int>& StencilMetaInformation::getGlobalVariableAccessIDSet() const {
-  return fieldAccessMetadata_.GlobalVariableAccessIDSet_;
-}
-
-const std::unordered_map<int, std::string>&
-StencilMetaInformation::getLiteralAccessIDToNameMap() const {
-  return fieldAccessMetadata_.LiteralAccessIDToNameMap_;
-}
-
-void StencilMetaInformation::insertLiteralAccessID(const int accessID, const std::string& name) {
-  fieldAccessMetadata_.LiteralAccessIDToNameMap_.emplace(accessID, name);
 }
 
 } // namespace iir

@@ -308,7 +308,7 @@ public:
           auto voidExpr = std::make_shared<LiteralAccessExpr>("0", BuiltinTypeID::Float);
           auto voidStmt = std::make_shared<ExprStmt>(voidExpr);
           int AccessID = -instantiation_->nextUID();
-          metadata_.getLiteralAccessIDToNameMap().emplace(AccessID, "0");
+          metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, "0");
           metadata_.mapExprToAccessID(voidExpr, AccessID);
           replaceOldStmtWithNewStmtInStmt(
               scope_.top()->controlFlowDescriptor_.getStatements().back()->ASTStmt, stmt, voidStmt);
@@ -563,7 +563,8 @@ public:
             scope_.top()->controlFlowDescriptor_.getStatements().back()->ASTStmt, expr, newExpr);
 
         int AccessID = instantiation_->nextUID();
-        metadata_.getLiteralAccessIDToNameMap().emplace(AccessID, newExpr->getValue());
+        metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID,
+                                     newExpr->getValue());
         metadata_.mapExprToAccessID(newExpr, AccessID);
 
       } else {
@@ -583,7 +584,7 @@ public:
   void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override {
     // Register a literal access (Note: the negative AccessID we assign!)
     int AccessID = -instantiation_->nextUID();
-    metadata_.getLiteralAccessIDToNameMap().emplace(AccessID, expr->getValue());
+    metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, expr->getValue());
     metadata_.mapExprToAccessID(expr, AccessID);
   }
 

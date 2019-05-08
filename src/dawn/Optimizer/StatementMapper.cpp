@@ -328,13 +328,11 @@ void StatementMapper::visit(const std::shared_ptr<VarAccessExpr>& expr) {
           (*(scope_.top()->doMethod_.childrenRBegin()))->getStatement()->ASTStmt, expr, newExpr);
 
       int AccessID = instantiation_->nextUID();
-      metadata_.insertLiteralAccessID(AccessID, newExpr->getValue());
+      metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID,
+                                   newExpr->getValue());
       metadata_.mapExprToAccessID(newExpr, AccessID);
 
     } else {
-      iir::StencilInstantiation* stencilInstantiation =
-          (function) ? function->getStencilInstantiation() : instantiation_;
-
       int AccessID = 0;
       if(!metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, varname)) {
         AccessID = metadata_.insertAccessOfType(iir::FieldAccessType::FAT_GlobalVariable, varname);
@@ -376,7 +374,7 @@ void StatementMapper::visit(const std::shared_ptr<LiteralAccessExpr>& expr) {
     function->getLiteralAccessIDToNameMap().emplace(AccessID, expr->getValue());
     function->mapExprToAccessID(expr, AccessID);
   } else {
-    metadata_.insertLiteralAccessID(AccessID, expr->getValue());
+    metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, expr->getValue());
     metadata_.mapExprToAccessID(expr, AccessID);
   }
 }

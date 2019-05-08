@@ -340,7 +340,7 @@ public:
 
   void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override {
     int AccessID = curStencilFunctioninstantiation_->getAccessIDFromExpr(expr);
-    metadata_.insertLiteralAccessID(AccessID, expr->getValue());
+    metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, expr->getValue());
     metadata_.mapExprToAccessID(expr, AccessID);
   }
 };

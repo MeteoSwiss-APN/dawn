@@ -36,10 +36,7 @@ public:
     return variableVersionsMap_.count(accessID);
   }
 
-  std::shared_ptr<std::vector<int>> getVersions(const int accessID) {
-    return variableVersionsMap_.at(accessID);
-  }
-  const std::shared_ptr<std::vector<int>> getVersions(const int accessID) const {
+  std::shared_ptr<std::vector<int>> getVersions(const int accessID) const {
     return variableVersionsMap_.at(accessID);
   }
 
@@ -72,6 +69,8 @@ enum class FieldAccessType {
   FAT_Field,
   FAT_APIField
 };
+
+std::string toString(FieldAccessType type);
 
 namespace impl {
 // Needed for some older versions of GCC
@@ -188,6 +187,8 @@ struct FieldAccessMetadata {
   VariableVersions variableVersions_;
 
   std::set<int> AllocatedFieldAccessIDSet_;
+
+  std::unordered_map<int, FieldAccessType> accessIDType_;
 
   void clone(const FieldAccessMetadata& origin);
 };

@@ -312,9 +312,10 @@ void GTCodeGen::generateStencilWrapperCtr(
   }
 
   // Initialize allocated fields
-  if(metadata.hasAllocatedFields()) {
+  if(metadata.hasAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
     std::vector<std::string> tempFields;
-    for(auto accessID : metadata.getAllocatedFieldAccessIDSet()) {
+    for(auto accessID :
+        metadata.getAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
       tempFields.push_back(metadata.getFieldNameFromAccessID(accessID));
     }
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);

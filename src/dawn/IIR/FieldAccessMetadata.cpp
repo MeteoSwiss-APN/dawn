@@ -17,6 +17,25 @@
 namespace dawn {
 namespace iir {
 
+std::string toString(FieldAccessType type) {
+  if(type == FieldAccessType::FAT_GlobalVariable) {
+    return "GlobalVariable";
+  } else if(type == FieldAccessType::FAT_Literal) {
+    return "Literal";
+  } else if(type == FieldAccessType::FAT_LocalVariable) {
+    return "LocalVariable";
+  } else if(type == FieldAccessType::FAT_StencilTemporary) {
+    return "StencilTemporary";
+  } else if(type == FieldAccessType::FAT_InterStencilTemporary) {
+    return "InterStencilTemporary";
+  } else if(type == FieldAccessType::FAT_Field) {
+    return "Field";
+  } else if(type == FieldAccessType::FAT_APIField) {
+    return "APIField";
+  }
+  return "Unkown";
+}
+
 json::json VariableVersions::jsonDump() const {
   json::json node;
 
@@ -46,6 +65,7 @@ void FieldAccessMetadata::clone(const FieldAccessMetadata& origin) {
   for(auto id : origin.variableVersions_.getVersionIDs()) {
     variableVersions_.insert(id, origin.variableVersions_.getVersions(id));
   }
+  accessIDType_ = origin.accessIDType_;
 }
 } // namespace iir
 } // namespace dawn

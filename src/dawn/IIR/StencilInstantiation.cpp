@@ -120,7 +120,7 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
                                        originalName + "_" + std::to_string(versions->size()));
 
       versions->push_back(newAccessID);
-      metadata_.fieldAccessMetadata_.variableVersions_.insert(newAccessID, versions);
+      metadata_.insertVersions(newAccessID, versions);
 
     } else {
       const std::string& originalName = metadata_.getFieldNameFromAccessID(AccessID);
@@ -133,14 +133,14 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
       auto versionsVecPtr = std::make_shared<std::vector<int>>();
       *versionsVecPtr = {AccessID, newAccessID};
 
-      metadata_.fieldAccessMetadata_.variableVersions_.insert(AccessID, versionsVecPtr);
-      metadata_.fieldAccessMetadata_.variableVersions_.insert(newAccessID, versionsVecPtr);
+      metadata_.insertVersions(AccessID, versionsVecPtr);
+      metadata_.insertVersions(newAccessID, versionsVecPtr);
     }
   } else {
     // if not a field, it is a variable
-    if(metadata_.fieldAccessMetadata_.variableVersions_.hasVariableMultipleVersions(AccessID)) {
+    if(metadata_.hasVariableMultipleVersions(AccessID)) {
       // Variable is already multi-versioned, append a new version
-      auto versions = metadata_.fieldAccessMetadata_.variableVersions_.getVersions(AccessID);
+      auto versions = metadata_.getVersionsOf(AccessID);
 
       // The variable with version 0 contains the original name
       const std::string& originalName = metadata_.getFieldNameFromAccessID(versions->front());
@@ -150,7 +150,7 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
           metadata_.insertAccessOfType(iir::FieldAccessType::FAT_LocalVariable,
                                        originalName + "_" + std::to_string(versions->size()));
       versions->push_back(newAccessID);
-      metadata_.fieldAccessMetadata_.variableVersions_.insert(newAccessID, versions);
+      metadata_.insertVersions(newAccessID, versions);
 
     } else {
       const std::string& originalName = metadata_.getFieldNameFromAccessID(AccessID);
@@ -161,8 +161,8 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
       auto versionsVecPtr = std::make_shared<std::vector<int>>();
       *versionsVecPtr = {AccessID, newAccessID};
 
-      metadata_.fieldAccessMetadata_.variableVersions_.insert(AccessID, versionsVecPtr);
-      metadata_.fieldAccessMetadata_.variableVersions_.insert(newAccessID, versionsVecPtr);
+      metadata_.insertVersions(AccessID, versionsVecPtr);
+      metadata_.insertVersions(newAccessID, versionsVecPtr);
     }
   }
 

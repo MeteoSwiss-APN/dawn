@@ -222,39 +222,42 @@ message StencilMetaInfo {
     // Surjection of AST Nodes, Expr (FieldAccessExpr or VarAccessExpr) to their AccessID
     map<int32, int32> stmtIDToAccessID = 3;
 
+    // Injection of AccessIDs of the access type
+    map<int32, int32> accessIDToType = 4;
+
     // Injection of AccessIDs of literal constant to their respective name
-    map<int32, string> literalIDToName = 4;
+    map<int32, string> literalIDToName = 5;
 
     // set of AccessIDs which correspond to fields for identification as such
-    repeated int32 fieldAccessIDs = 5;
+    repeated int32 fieldAccessIDs = 6;
 
     // Ordered list of IDs of fields that belong to the user API call of the program
-    repeated int32 APIFieldIDs = 6;
+    repeated int32 APIFieldIDs = 7;
 
     // AccessIDs of fields which are represented by a temporary storages
-    repeated int32 temporaryFieldIDs = 7;
+    repeated int32 temporaryFieldIDs = 8;
 
     // AccessIDs of "global variable" accesses
-    repeated int32 globalVariableIDs = 8;
+    repeated int32 globalVariableIDs = 9;
 
     // Strucutue for all the fieldversioning information
-    VariableVersions versionedFields = 9;
+    VariableVersions versionedFields = 10;
 
     // Map of field names to their respective Boundary Condition
-    map<string, dawn.proto.statements.Stmt> fieldnameToBoundaryCondition = 10;
+    map<string, dawn.proto.statements.Stmt> fieldnameToBoundaryCondition = 11;
 
     // Map of field ID's to the user-specified dimensions
-    map<int32, Array3i> fieldIDtoLegalDimensions = 11;
+    map<int32, Array3i> fieldIDtoLegalDimensions = 12;
 
     // Map of the StencilID's to their respective StencilCall
-    map<int32, dawn.proto.statements.Stmt> idToStencilCall = 12;
+    map<int32, dawn.proto.statements.Stmt> idToStencilCall = 13;
 
     // The source-location of the stencil (for better error-handeling)
-    dawn.proto.statements.SourceLocation stencilLocation = 13;
+    dawn.proto.statements.SourceLocation stencilLocation = 14;
 
     // The user-given name of the stencil
     // (remember the 1-1 mapping of user-stencil - StencilInstantiation)
-    string stencilName = 14;
+    string stencilName = 15;
 }
 
 /* ===-----------------------------------------------------------------------------------------===*/
