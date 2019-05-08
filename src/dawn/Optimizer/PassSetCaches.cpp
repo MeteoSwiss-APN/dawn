@@ -249,12 +249,6 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
                                            field.getAccessID()),
               ms);
 
-          DAWN_ASSERT((cacheCandidate.policy_ != iir::Cache::fill &&
-                       cacheCandidate.policy_ != iir::Cache::bpfill) ||
-                      !metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
-                                             field.getAccessID()) ||
-                      mssProcessedField);
-
           if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
                                     field.getAccessID()) &&
              field.getIntend() != iir::Field::IK_Input) {

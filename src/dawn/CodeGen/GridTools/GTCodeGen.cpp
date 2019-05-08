@@ -423,7 +423,7 @@ void GTCodeGen::generateStencilClasses(
             std::pair<int, iir::Stencil::FieldInfo> const& f) { return !f.second.IsTemporary; }));
     if(stencil.isEmpty()) {
       DiagnosticsBuilder diag(DiagnosticsKind::Error,
-                              stencilInstantiation->getMetaData().stencilLocation_);
+                              stencilInstantiation->getMetaData().getStencilLocation());
       diag << "empty stencil '" << stencilInstantiation->getName()
            << "', this would result in invalid gridtools code";
       context_->getDiagnostics().report(diag);
@@ -664,7 +664,7 @@ void GTCodeGen::generateStencilClasses(
         std::vector<std::string> arglist;
         if(fields.empty()) {
           DiagnosticsBuilder diag(DiagnosticsKind::Error,
-                                  stencilInstantiation->getMetaData().stencilLocation_);
+                                  stencilInstantiation->getMetaData().getStencilLocation());
           diag << "no storages referenced in stencil '" << stencilInstantiation->getName()
                << "', this would result in invalid gridtools code";
           context_->getDiagnostics().report(diag);

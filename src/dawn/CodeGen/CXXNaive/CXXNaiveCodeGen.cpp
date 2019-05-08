@@ -444,7 +444,7 @@ void CXXNaiveCodeGen::generateStencilFunctions(
 
       if(fields.empty()) {
         DiagnosticsBuilder diag(DiagnosticsKind::Error,
-                                stencilInstantiation->getMetaData().stencilLocation_);
+                                stencilInstantiation->getMetaData().getStencilLocation());
         diag << "no storages referenced in stencil '" << stencilInstantiation->getName()
              << "', this would result in invalid gridtools code";
         context_->getDiagnostics().report(diag);

@@ -149,9 +149,9 @@ bool compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformati
   }
   IIR_EARLY_EXIT(
       (lhs.fieldIDToInitializedDimensionsMap_ == rhs.fieldIDToInitializedDimensionsMap_));
-  IIR_EARLY_EXIT((lhs.stencilLocation_ == rhs.stencilLocation_));
-  IIR_EARLY_EXIT((lhs.stencilName_ == rhs.stencilName_));
-  IIR_EARLY_EXIT((lhs.fileName_ == rhs.fileName_));
+  IIR_EARLY_EXIT((lhs.getStencilLocation() == rhs.getStencilLocation()));
+  IIR_EARLY_EXIT((lhs.getStencilName() == rhs.getStencilName()));
+  IIR_EARLY_EXIT((lhs.getFileName() == rhs.getFileName()));
 
   return true;
 }
@@ -253,12 +253,11 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
   referenceInstantiaton->getMetaData().insertVersions(5, refvec);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  referenceInstantiaton->getMetaData().fileName_ = "fileName";
+  referenceInstantiaton->getMetaData().setFileName("fileName");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
-  referenceInstantiaton->getMetaData().stencilName_ = "stencilName";
+  referenceInstantiaton->getMetaData().setStencilname("stencilName");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
-  referenceInstantiaton->getMetaData().stencilLocation_.Line = 1;
-  referenceInstantiaton->getMetaData().stencilLocation_.Column = 2;
+  referenceInstantiaton->getMetaData().setStencilLocation(SourceLocation{1, 2});
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 }
 
