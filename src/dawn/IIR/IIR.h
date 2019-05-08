@@ -29,9 +29,6 @@ class IIR : public IIRNode<void, IIR, Stencil> {
 
   std::array<unsigned int, 3> blockSize_ = {{32, 4, 4}};
   ControlFlowDescriptor controlFlowDesc_;
-  /// Referenced stencil functions in this stencil (note that nested stencil functions are not
-  /// stored here but rather in the respecticve `StencilFunctionInstantiation`)
-  std::vector<std::shared_ptr<StencilFunctionInstantiation>> stencilFunctionInstantiations_;
 
   sir::GlobalVariableMap globalVariableMap_;
 
@@ -65,18 +62,6 @@ public:
   void clone(std::unique_ptr<IIR>& dest) const;
 
   json::json jsonDump() const;
-
-  const std::vector<std::shared_ptr<StencilFunctionInstantiation>>&
-  getStencilFunctionInstantiation() const {
-    return stencilFunctionInstantiations_;
-  }
-
-  bool
-  eraseStencilFunctionInstantation(const std::shared_ptr<StencilFunctionInstantiation>& function) {
-    return RemoveIf(
-        stencilFunctionInstantiations_,
-        [&](const std::shared_ptr<StencilFunctionInstantiation>& v) { return (v == function); });
-  }
 
   const ControlFlowDescriptor& getControlFlowDescriptor() const { return controlFlowDesc_; }
   // TODO do not have non const?

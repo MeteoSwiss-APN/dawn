@@ -21,6 +21,7 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/DoubleSidedMap.h"
 #include "dawn/Support/NonCopyable.h"
+#include "dawn/Support/RemoveIf.hpp"
 #include "dawn/Support/StringRef.h"
 #include "dawn/Support/UIDGenerator.h"
 #include "dawn/Support/Unreachable.h"
@@ -162,6 +163,16 @@ public:
     return accessID;
   }
 
+  void eraseStencilFunctionInstantiation(
+      const std::shared_ptr<StencilFunctionInstantiation>& stencilFun) {
+    RemoveIf(
+        stencilFunctionInstantiations_,
+        [&](const std::shared_ptr<StencilFunctionInstantiation>& v) { return (v == stencilFun); });
+  }
+  void eraseExprToStencilFunction(const std::shared_ptr<StencilFunCallExpr>& expr) {
+    ExprToStencilFunctionInstantiationMap_.erase(expr);
+  }
+
   /// @brief Get the `AccessID` associated with the `name`
   ///
   /// Note that this only works for field and variable names, the mapping of literals AccessIDs
@@ -294,6 +305,57 @@ public:
   const std::unordered_map<int, int>& getExprIDToAccessIDMap() const;
   const std::unordered_map<int, int>& getStmtIDToAccessIDMap() const;
 
+  const std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
+                           std::shared_ptr<StencilFunctionInstantiation>>&
+  getExprToStencilFunctionInstantiation() const {
+    return ExprToStencilFunctionInstantiationMap_;
+  }
+
+  void insertExprToStencilFunctionInstantiation(
+      const std::shared_ptr<StencilFunCallExpr>& expr,
+      const std::shared_ptr<StencilFunctionInstantiation>& stencilFun) {
+    ExprToStencilFunctionInstantiationMap_.emplace(expr, stencilFun);
+  }
+
+  const std::unordered_map<std::shared_ptr<StencilFunctionInstantiation>,
+                           StencilFunctionInstantiationCandidate>&
+  getStencilFunInstantiationCandidates() const {
+    return stencilFunInstantiationCandidate_;
+  }
+
+  void markStencilFunctionInstantiationFinal(
+      const std::shared_ptr<StencilFunctionInstantiation>& stencilFun) {
+    stencilFunInstantiationCandidate_.erase(stencilFun);
+    stencilFunctionInstantiations_.push_back(stencilFun);
+  }
+  void insertStencilFunctionInstantiation(
+      const std::shared_ptr<StencilFunctionInstantiation>& stencilFunctionInstantiation) {
+    return stencilFunctionInstantiations_.push_back(stencilFunctionInstantiation);
+  }
+
+  void deregisterStencilFunction(std::shared_ptr<StencilFunctionInstantiation> stencilFun) {
+
+    bool found = RemoveIf(ExprToStencilFunctionInstantiationMap_,
+                          [&](std::pair<std::shared_ptr<StencilFunCallExpr>,
+                                        std::shared_ptr<StencilFunctionInstantiation>>
+                                  pair) { return (pair.second == stencilFun); });
+    DAWN_ASSERT(found);
+    found = RemoveIf(
+        stencilFunctionInstantiations_,
+        [&](const std::shared_ptr<StencilFunctionInstantiation>& v) { return (v == stencilFun); });
+    DAWN_ASSERT(found);
+  }
+
+  void insertStencilFunInstantiationCandidate(
+      const std::shared_ptr<StencilFunctionInstantiation>& stencilFun,
+      const StencilFunctionInstantiationCandidate& candidate) {
+    stencilFunInstantiationCandidate_.emplace(stencilFun, candidate);
+  }
+
+  const std::unordered_map<int, Array3i>& getFieldIDToDimsMap() const {
+    return fieldIDToInitializedDimensionsMap_;
+  }
+
 private:
   //================================================================================================
   // Stored MetaInformation
@@ -314,7 +376,6 @@ private:
   std::unordered_map<int, int> ExprIDToAccessIDMap_;
   std::unordered_map<int, int> StmtIDToAccessIDMap_;
 
-public:
   /// Referenced stencil functions in this stencil (note that nested stencil functions are not
   /// stored here but rather in the respecticve `StencilFunctionInstantiation`)
   std::vector<std::shared_ptr<StencilFunctionInstantiation>> stencilFunctionInstantiations_;
@@ -341,12 +402,10 @@ public:
   std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>
       BoundaryConditionToExtentsMap_;
 
-public:
   SourceLocation stencilLocation_;
   std::string stencilName_;
   std::string fileName_;
 
-private:
   FieldAccessMetadata::allConstContainerTypes
   getAccessesOfTypeImpl(FieldAccessType fieldAccessType) const {
     if(fieldAccessType == FieldAccessType::FAT_Literal) {

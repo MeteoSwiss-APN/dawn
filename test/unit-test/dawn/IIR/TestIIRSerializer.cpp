@@ -140,15 +140,13 @@ bool compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformati
                   rhs.getAccessesOfType<iir::FieldAccessType::FAT_GlobalVariable>()));
 
   // we compare the content of the maps since the shared-ptr's are not the same
-  IIR_EARLY_EXIT(
-      (lhs.fieldnameToBoundaryConditionMap_.size() == rhs.fieldnameToBoundaryConditionMap_.size()));
-  for(const auto& lhsPair : lhs.fieldnameToBoundaryConditionMap_) {
-    IIR_EARLY_EXIT(rhs.fieldnameToBoundaryConditionMap_.count(lhsPair.first));
-    auto rhsValue = rhs.fieldnameToBoundaryConditionMap_[lhsPair.first];
+  IIR_EARLY_EXIT((lhs.getFieldNameToBCMap().size() == rhs.getFieldNameToBCMap().size()));
+  for(const auto& lhsPair : lhs.getFieldNameToBCMap()) {
+    IIR_EARLY_EXIT(rhs.getFieldNameToBCMap().count(lhsPair.first));
+    auto rhsValue = rhs.getFieldNameToBCMap().at(lhsPair.first);
     IIR_EARLY_EXIT(rhsValue->equals(lhsPair.second.get()));
   }
-  IIR_EARLY_EXIT(
-      (lhs.fieldIDToInitializedDimensionsMap_ == rhs.fieldIDToInitializedDimensionsMap_));
+  IIR_EARLY_EXIT((lhs.getFieldIDToDimsMap() == rhs.getFieldIDToDimsMap()));
   IIR_EARLY_EXIT((lhs.getStencilLocation() == rhs.getStencilLocation()));
   IIR_EARLY_EXIT((lhs.getStencilName() == rhs.getStencilName()));
   IIR_EARLY_EXIT((lhs.getFileName() == rhs.getFileName()));
