@@ -181,7 +181,6 @@ public:
           // nodes
           if(!InstantiationHelper::isStencilCallCodeGenName(s->getStencilCall()->Callee))
             return true;
-          // COSUNA Why do we need to do this?
         } else if(isa<VerticalRegionDeclStmt>(stmt.get())) {
           // Remove all remaining vertical regions
           return true;
@@ -214,27 +213,7 @@ public:
         ++it;
     }
 
-    for(auto it = controlFlow.getStatements().begin(); it != controlFlow.getStatements().end();
-        ++it) {
-      std::shared_ptr<Stmt> stmt = (*it)->ASTStmt;
-      if(isa<StencilCallDeclStmt>(stmt.get())) {
-        // TODO here there are two erase, the stmt and the id. Do it at once
-        auto callDecl = std::static_pointer_cast<StencilCallDeclStmt>(stmt);
-        bool remove = false;
-        for(int id : emptyStencilIDsRemoved) {
-          if(metadata_.getStencilIDFromStencilCallStmt(callDecl) == id) {
-            remove = true;
-          }
-        }
-        if(remove) {
-          // TODO Do not do erase directly
-          it = controlFlow.eraseStmt(it);
-        }
-      }
-    }
-    for(auto stencilID : emptyStencilIDsRemoved) {
-      metadata_.eraseStencilID(stencilID);
-    }
+    controlFlow.removeStencilCalls(emptyStencilIDsRemoved, metadata_);
 
     // Remove the nested VerticalRegionDeclStmts and StencilCallDeclStmts
     RemoveStencilDescNodes remover;

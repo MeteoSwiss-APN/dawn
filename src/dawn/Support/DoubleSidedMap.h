@@ -27,11 +27,6 @@ class DoubleSidedMap {
 
 public:
   void emplace(const Key1& key1, const Key2& key2) {
-    // TODO is assert enough, it is name to accessID not replicate entries protected in gtclang ?
-    // TODO the emplace can not check for existance, should be a set method instead
-    //    DAWN_ASSERT(!directMap_.count(key1));
-    //    DAWN_ASSERT(!reverseMap_.count(key2));
-
     directMap_.emplace(key1, key2);
     reverseMap_.emplace(key2, key1);
   }

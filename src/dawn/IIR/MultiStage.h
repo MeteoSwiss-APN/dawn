@@ -20,7 +20,6 @@
 #include "dawn/IIR/LoopOrder.h"
 #include "dawn/IIR/MultiInterval.h"
 #include "dawn/IIR/Stage.h"
-#include "dawn/IIR/StencilMetaInformation.h"
 #include <deque>
 #include <list>
 #include <memory>
@@ -33,6 +32,7 @@ namespace iir {
 
 class Stencil;
 class DependencyGraphAccesses;
+class StencilMetaInformation;
 
 namespace impl {
 template <typename T>

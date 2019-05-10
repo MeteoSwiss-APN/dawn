@@ -48,7 +48,8 @@ namespace iir {
 
 StencilInstantiation::StencilInstantiation(dawn::OptimizerContext* context)
     : context_(context), metadata_(*(context->getSIR()->GlobalVariableMap)),
-      IIR_(make_unique<IIR>(*(context->getSIR()->GlobalVariableMap))), SIR_(context->getSIR()) {}
+      IIR_(make_unique<IIR>(*(context->getSIR()->GlobalVariableMap),
+                            context->getSIR()->StencilFunctions)) {}
 
 StencilMetaInformation& StencilInstantiation::getMetaData() { return metadata_; }
 
@@ -60,18 +61,14 @@ std::shared_ptr<StencilInstantiation> StencilInstantiation::clone() const {
   stencilInstantiation->metadata_.clone(metadata_);
 
   stencilInstantiation->IIR_ =
-      make_unique<iir::IIR>(stencilInstantiation->getIIR()->getGlobalVariableMap());
+      make_unique<iir::IIR>(stencilInstantiation->getIIR()->getGlobalVariableMap(),
+                            stencilInstantiation->getIIR()->getStencilFunctions());
   IIR_->clone(stencilInstantiation->IIR_);
 
   return stencilInstantiation;
 }
 
 const std::string StencilInstantiation::getName() const { return metadata_.getStencilName(); }
-
-void StencilInstantiation::insertStencilFunctionIntoSIR(
-    const std::shared_ptr<sir::StencilFunction>& sirStencilFunction) {
-  SIR_->StencilFunctions.push_back(sirStencilFunction);
-}
 
 bool StencilInstantiation::insertBoundaryConditions(std::string originalFieldName,
                                                     std::shared_ptr<BoundaryConditionDeclStmt> bc) {
@@ -86,14 +83,6 @@ bool StencilInstantiation::insertBoundaryConditions(std::string originalFieldNam
 const sir::Value& StencilInstantiation::getGlobalVariableValue(const std::string& name) const {
   DAWN_ASSERT(IIR_->getGlobalVariableMap().count(name));
   return *(IIR_->getGlobalVariableMap().at(name));
-}
-
-// TODO move this away
-ArrayRef<int> StencilInstantiation::getFieldVersions(int AccessID) const {
-  return metadata_.getFieldAccessMetadata().variableVersions_.hasVariableMultipleVersions(AccessID)
-             ? ArrayRef<int>(
-                   *(metadata_.getFieldAccessMetadata().variableVersions_.getVersions(AccessID)))
-             : ArrayRef<int>{};
 }
 
 int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil, int curStageIdx,
@@ -255,11 +244,16 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
   //   __tmp_foo(0, 0, 0) = ...
   //
   VarDeclStmt* varDeclStmt = dyn_cast<VarDeclStmt>(oldStatement->ASTStmt.get());
-  if(!varDeclStmt && temporaryScope != TemporaryScope::TT_Field) {
-    throw std::runtime_error(format("Promote local variable to temporary field: a var decl is not "
-                                    "found for accessid: %i , name :%s",
-                                    accessID, metadata_.getNameFromAccessID(accessID)));
-  }
+  // If the TemporaryScope is within this stencil, then a VarDecl should be found (otherwise we have
+  // a bug)
+  DAWN_ASSERT_MSG((varDeclStmt || temporaryScope == TemporaryScope::TS_Field),
+                  format("Promote local variable to temporary field: a var decl is not "
+                         "found for accessid: %i , name :%s",
+                         accessID, metadata_.getNameFromAccessID(accessID))
+                      .c_str());
+  // If a vardecl is found, then during the promotion we would like to replace it as an assignment
+  // statement to a field expression
+  // Otherwise, the vardecl is in a different stencil (which is legal) therefore we take no action
   if(varDeclStmt) {
     DAWN_ASSERT_MSG(!varDeclStmt->isArray(), "cannot promote local array to temporary field");
 
@@ -346,86 +340,6 @@ void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil,
   stencil->updateFields(lifetime);
 }
 
-void StencilInstantiation::removeStencilFunctionInstantiation(
-    const std::shared_ptr<StencilFunCallExpr>& expr,
-    std::shared_ptr<StencilFunctionInstantiation> callerStencilFunctionInstantiation) {
-
-  std::shared_ptr<StencilFunctionInstantiation> func = nullptr;
-
-  if(callerStencilFunctionInstantiation) {
-    func = callerStencilFunctionInstantiation->getStencilFunctionInstantiation(expr);
-    callerStencilFunctionInstantiation->removeStencilFunctionInstantiation(expr);
-  } else {
-    func = getStencilFunctionInstantiation(expr);
-    metadata_.eraseExprToStencilFunction(expr);
-  }
-
-  metadata_.eraseStencilFunctionInstantiation(func);
-}
-
-const std::shared_ptr<StencilFunctionInstantiation>
-StencilInstantiation::getStencilFunctionInstantiation(
-    const std::shared_ptr<StencilFunCallExpr>& expr) const {
-  return metadata_.getStencilFunctionInstantiation(expr);
-}
-
-std::shared_ptr<StencilFunctionInstantiation>
-StencilInstantiation::getStencilFunctionInstantiationCandidate(
-    const std::shared_ptr<StencilFunCallExpr>& expr) {
-  const auto& candidates = metadata_.getStencilFunInstantiationCandidates();
-  auto it = std::find_if(
-      candidates.begin(), candidates.end(),
-      [&](std::pair<std::shared_ptr<StencilFunctionInstantiation>,
-                    StencilMetaInformation::StencilFunctionInstantiationCandidate> const& pair) {
-        return (pair.first->getExpression() == expr);
-      });
-  DAWN_ASSERT_MSG((it != candidates.end()), "stencil function candidate not found");
-
-  return it->first;
-}
-
-std::shared_ptr<StencilFunctionInstantiation>
-StencilInstantiation::getStencilFunctionInstantiationCandidate(const std::string stencilFunName,
-                                                               const Interval& interval) {
-  const auto& candidates = metadata_.getStencilFunInstantiationCandidates();
-  auto it = std::find_if(
-      candidates.begin(), candidates.end(),
-      [&](std::pair<std::shared_ptr<StencilFunctionInstantiation>,
-                    StencilMetaInformation::StencilFunctionInstantiationCandidate> const& pair) {
-        return (pair.first->getExpression()->getCallee() == stencilFunName &&
-                (pair.first->getInterval() == interval));
-      });
-  DAWN_ASSERT_MSG((it != candidates.end()), "stencil function candidate not found");
-
-  return it->first;
-}
-
-std::shared_ptr<StencilFunctionInstantiation> StencilInstantiation::cloneStencilFunctionCandidate(
-    const std::shared_ptr<StencilFunctionInstantiation>& stencilFun, std::string functionName) {
-  DAWN_ASSERT(metadata_.getStencilFunInstantiationCandidates().count(stencilFun));
-  auto stencilFunClone = std::make_shared<StencilFunctionInstantiation>(stencilFun->clone());
-
-  auto stencilFunExpr =
-      std::dynamic_pointer_cast<StencilFunCallExpr>(stencilFun->getExpression()->clone());
-  stencilFunExpr->setCallee(functionName);
-
-  auto sirStencilFun = std::make_shared<sir::StencilFunction>(*(stencilFun->getStencilFunction()));
-  sirStencilFun->Name = functionName;
-
-  stencilFunClone->setExpression(stencilFunExpr);
-  stencilFunClone->setStencilFunction(sirStencilFun);
-
-  metadata_.insertStencilFunInstantiationCandidate(
-      stencilFunClone, metadata_.getStencilFunInstantiationCandidates().at(stencilFun));
-  return stencilFunClone;
-}
-
-const std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
-                         std::shared_ptr<StencilFunctionInstantiation>>&
-StencilInstantiation::getExprToStencilFunctionInstantiationMap() const {
-  return metadata_.getExprToStencilFunctionInstantiation();
-}
-
 std::shared_ptr<StencilFunctionInstantiation>
 StencilInstantiation::makeStencilFunctionInstantiation(
     const std::shared_ptr<StencilFunCallExpr>& expr,
@@ -442,39 +356,6 @@ StencilInstantiation::makeStencilFunctionInstantiation(
                       curStencilFunctionInstantiation});
 
   return stencilFun;
-}
-
-void StencilInstantiation::insertExprToStencilFunction(
-    std::shared_ptr<StencilFunctionInstantiation> stencilFun) {
-  metadata_.insertExprToStencilFunctionInstantiation(stencilFun->getExpression(), stencilFun);
-}
-
-void StencilInstantiation::deregisterStencilFunction(
-    std::shared_ptr<StencilFunctionInstantiation> stencilFun) {
-  metadata_.deregisterStencilFunction(stencilFun);
-}
-
-void StencilInstantiation::finalizeStencilFunctionSetup(
-    std::shared_ptr<StencilFunctionInstantiation> stencilFun) {
-
-  DAWN_ASSERT(metadata_.getStencilFunInstantiationCandidates().count(stencilFun));
-  stencilFun->closeFunctionBindings();
-  // We take the candidate to stencil function and placed it in the stencil function instantiations
-  // container
-  StencilMetaInformation::StencilFunctionInstantiationCandidate candidate =
-      metadata_.getStencilFunInstantiationCandidates().at(stencilFun);
-
-  // map of expr to stencil function instantiation is updated
-  if(candidate.callerStencilFunction_) {
-    candidate.callerStencilFunction_->insertExprToStencilFunction(stencilFun);
-  } else {
-    insertExprToStencilFunction(stencilFun);
-  }
-
-  stencilFun->update();
-
-  // we move the candidate to stencil function to a final stencil function
-  metadata_.markStencilFunctionInstantiationFinal(stencilFun);
 }
 
 namespace {

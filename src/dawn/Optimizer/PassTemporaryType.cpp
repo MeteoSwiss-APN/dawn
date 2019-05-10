@@ -84,7 +84,7 @@ struct Temporary {
     std::cout << "Temporary : " << instantiation->getMetaData().getNameFromAccessID(accessID_)
               << " {"
               << "\n  Type="
-              << (type_ == iir::TemporaryScope::TT_LocalVariable ? "LocalVariable" : "Field")
+              << (type_ == iir::TemporaryScope::TS_LocalVariable ? "LocalVariable" : "Field")
               << ",\n  Lifetime=" << lifetime_ << ",\n  Extent=" << extent_ << "\n}\n";
   }
 };
@@ -132,9 +132,9 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
               AccessIDs.insert(AccessID);
               iir::TemporaryScope ttype =
                   instantiation->isIDAccessedMultipleStencils(AccessID)
-                      ? iir::TemporaryScope::TT_Field
-                      : (isTemporaryField ? iir::TemporaryScope::TT_StencilTemporary
-                                          : iir::TemporaryScope::TT_LocalVariable);
+                      ? iir::TemporaryScope::TS_Field
+                      : (isTemporaryField ? iir::TemporaryScope::TS_StencilTemporary
+                                          : iir::TemporaryScope::TS_LocalVariable);
 
               temporaries.emplace(AccessID, Temporary(AccessID, ttype, extent));
             }
@@ -163,8 +163,8 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
                   << ":" << instantiation->getOriginalNameFromAccessID(AccessID) << std::endl;
       };
 
-      if(temporary.type_ == iir::TemporaryScope::TT_LocalVariable ||
-         temporary.type_ == iir::TemporaryScope::TT_Field) {
+      if(temporary.type_ == iir::TemporaryScope::TS_LocalVariable ||
+         temporary.type_ == iir::TemporaryScope::TS_Field) {
         // If the variable is accessed in multiple Do-Methods, we need to promote it to a field!
         if(!temporary.lifetime_.Begin.inSameDoMethod(temporary.lifetime_.End)) {
 
@@ -224,7 +224,7 @@ void PassTemporaryType::fixTemporariesSpanningMultipleStencils(
   }
   if(updated) {
     for(const auto& stencil : stencils) {
-      stencil->updateFromChildren();
+      stencil->update(iir::NodeUpdateType::level);
     }
   }
 }

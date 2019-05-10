@@ -16,13 +16,13 @@
 #define DAWN_IIR_ACCESSES_H
 
 #include "dawn/IIR/Extents.h"
-#include "dawn/IIR/StencilMetaInformation.h"
 #include <unordered_map>
 
 namespace dawn {
 namespace iir {
 
 class StencilFunctionInstantiation;
+class StencilMetaInformation;
 
 /// @brief Read and write accesses of a statement
 ///

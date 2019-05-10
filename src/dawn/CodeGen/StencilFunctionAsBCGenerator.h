@@ -17,13 +17,15 @@
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CXXUtil.h"
-#include "dawn/IIR/StencilMetaInformation.h"
-#include "dawn/SIR/SIR.h"
 #include <memory>
 
 namespace dawn {
 namespace iir {
 class StencilInstantiation;
+class StencilMetaInformation;
+}
+namespace sir {
+struct StencilFunction;
 }
 namespace codegen {
 

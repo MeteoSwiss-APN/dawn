@@ -142,8 +142,7 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // Generate stencil wrapper constructor
-  const auto& APIFields =
-      stencilInstantiation->getMetaData().getAccessesOfType<iir::FieldAccessType::FAT_APIField>();
+  const auto& APIFields = metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>();
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");

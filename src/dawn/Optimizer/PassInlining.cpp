@@ -240,7 +240,7 @@ public:
     // stencil function)
     std::shared_ptr<iir::StencilFunctionInstantiation> func =
         curStencilFunctioninstantiation_->getStencilFunctionInstantiation(expr);
-    instantiation_->insertExprToStencilFunction(func);
+    metadata_.insertExprToStencilFunctionInstantiation(func);
 
     int AccessIDOfCaller = 0;
     if(!argListScope_.empty()) {
@@ -295,11 +295,11 @@ public:
       newStmtAccessesPairs_.erase(newStmtAccessesPairs_.begin() + stmtIdxOfFunc);
 
       // Remove the function
-      instantiation_->removeStencilFunctionInstantiation(expr, curStencilFunctioninstantiation_);
+      metadata_.removeStencilFunctionInstantiation(expr, curStencilFunctioninstantiation_);
 
     } else {
       // Inlining failed, transfer ownership
-      instantiation_->insertExprToStencilFunction(func);
+      metadata_.insertExprToStencilFunctionInstantiation(func);
     }
 
     if(!argListScope_.empty())
@@ -418,7 +418,7 @@ public:
 
   void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
     std::shared_ptr<iir::StencilFunctionInstantiation> func =
-        instantiation_->getStencilFunctionInstantiation(expr);
+        instantiation_->getMetaData().getStencilFunctionInstantiation(expr);
 
     int AccessIDOfCaller = 0;
     if(!argListScope_.empty()) {
@@ -450,7 +450,7 @@ public:
         replacmentOfOldStmtMap_.emplace(expr, inlineResult.second->getNewExpr());
 
       // Remove the stencil-function (`nullptr` means we don't have a nested stencil function)
-      instantiation_->removeStencilFunctionInstantiation(expr, nullptr);
+      instantiation_->getMetaData().removeStencilFunctionInstantiation(expr, nullptr);
     }
 
     if(!argListScope_.empty())

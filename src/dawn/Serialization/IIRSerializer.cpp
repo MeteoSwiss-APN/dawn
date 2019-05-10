@@ -290,7 +290,7 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
 
   // Filling Field: map<int32, dawn.proto.statements.StencilCallDeclStmt> IDToStencilCall = 13;
   auto& protoIDToStencilCallMap = *protoMetaData->mutable_idtostencilcall();
-  for(auto IDToStencilCall : metaData.getStencilIDToStencilCallMap()) {
+  for(auto IDToStencilCall : metaData.getStencilIDToStencilCallMap().getDirectMap()) {
     proto::statements::Stmt protoStencilCall;
     ProtoStmtBuilder builder(&protoStencilCall);
     IDToStencilCall.second->accept(builder);

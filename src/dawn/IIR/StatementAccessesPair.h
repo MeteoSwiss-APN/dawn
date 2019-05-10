@@ -19,7 +19,6 @@
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/BlockStatements.h"
 #include "dawn/IIR/IIRNode.h"
-#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/SIR/Statement.h"
 #include <boost/optional.hpp>
 #include <memory>
@@ -29,6 +28,7 @@ namespace dawn {
 namespace iir {
 
 class DoMethod;
+class StencilMetaInformation;
 
 /// @brief Statement with corresponding Accesses
 ///
@@ -99,8 +99,8 @@ public:
                        std::size_t initialIndent = 0) const;
   /// @}
 
-  json::json jsonDump(const StencilMetaInformation& metaData) const;
-  json::json print(const StencilMetaInformation& metaData,
+  json::json jsonDump(const StencilMetaInformation& metadata) const;
+  json::json print(const StencilMetaInformation& metadata,
                    const AccessToNameMapper& accessToNameMapper,
                    const std::unordered_map<int, Extents>& accesses) const;
 };

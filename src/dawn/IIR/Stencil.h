@@ -17,7 +17,6 @@
 
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/MultiStage.h"
-#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/Statement.h"
 #include <functional>
@@ -33,6 +32,7 @@ namespace iir {
 class DependencyGraphStage;
 class StatementAccessesPair;
 class IIR;
+class StencilMetaInformation;
 
 /// @brief A Stencil is represented by a collection of MultiStages
 /// @ingroup optimizer

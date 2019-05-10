@@ -18,7 +18,6 @@
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/FieldAccessExtents.h"
 #include "dawn/IIR/Interval.h"
-#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/Json.h"
 #include <utility>
 

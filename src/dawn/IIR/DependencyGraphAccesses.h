@@ -17,7 +17,6 @@
 
 #include "dawn/IIR/DependencyGraph.h"
 #include "dawn/IIR/Extents.h"
-#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/TypeTraits.h"
 #include <set>
 #include <unordered_map>
@@ -30,6 +29,7 @@ namespace iir {
 
 class Accesses;
 class StatementAccessesPair;
+class StencilMetaInformation;
 
 /// @enum DependencyGraphAccessesEdgeData
 /// @brief Edges contain the extent of the access between the two nodes

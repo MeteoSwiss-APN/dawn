@@ -36,6 +36,7 @@ class IIRSerializer;
 
 namespace iir {
 class StencilFunctionInstantiation;
+class Interval;
 
 /// @brief Specific instantiation of a stencil
 /// @ingroup optimizer
@@ -73,7 +74,7 @@ public:
     return fieldAccessMetadata_.variableVersions_.getOriginalVersionOfAccessID(accessID);
   }
 
-  /// @brief Get the AccessID-to-Name map
+  /// @brief Get the Name-to-AccessID map
   const std::unordered_map<std::string, int>& getNameToAccessIDMap() const;
 
   /// @brief Get the AccessID-to-Name map
@@ -98,70 +99,15 @@ public:
         getAccessesOfTypeImpl(TFieldAccessType));
   }
 
-  void moveRegisteredFieldTo(FieldAccessType type, int accessID) {
-    // we can not move it into an API field, since the original order would not be preserved
-    DAWN_ASSERT(type != FieldAccessType::FAT_APIField);
-    DAWN_ASSERT_MSG(isFieldType(type), "non field access type can not be moved");
+  void moveRegisteredFieldTo(FieldAccessType type, int accessID);
 
-    fieldAccessMetadata_.accessIDType_[accessID] = type;
+  int insertAccessOfType(FieldAccessType type, const std::string& name);
 
-    if(fieldAccessMetadata_.TemporaryFieldAccessIDSet_.count(accessID)) {
-      fieldAccessMetadata_.TemporaryFieldAccessIDSet_.erase(accessID);
-    }
-    if(fieldAccessMetadata_.AllocatedFieldAccessIDSet_.count(accessID)) {
-      fieldAccessMetadata_.AllocatedFieldAccessIDSet_.erase(accessID);
-    }
-
-    if(type == FieldAccessType::FAT_StencilTemporary) {
-      fieldAccessMetadata_.TemporaryFieldAccessIDSet_.insert(accessID);
-    } else if(type == FieldAccessType::FAT_InterStencilTemporary) {
-      fieldAccessMetadata_.AllocatedFieldAccessIDSet_.insert(accessID);
-    }
-  }
-
-  int insertAccessOfType(FieldAccessType type, const std::string& name) {
-    int accessID = UIDGenerator::getInstance()->get();
-    insertAccessOfType(type, accessID, name);
-    return accessID;
-  }
-
-  void insertAccessOfType(FieldAccessType type, int AccessID, const std::string& name) {
-    setAccessIDNamePair(AccessID, name);
-    fieldAccessMetadata_.accessIDType_[AccessID] = type;
-    if(isFieldType(type)) {
-      fieldAccessMetadata_.FieldAccessIDSet_.insert(AccessID);
-      if(type == FieldAccessType::FAT_StencilTemporary) {
-        fieldAccessMetadata_.TemporaryFieldAccessIDSet_.insert(AccessID);
-      } else if(type == FieldAccessType::FAT_InterStencilTemporary) {
-        fieldAccessMetadata_.AllocatedFieldAccessIDSet_.insert(AccessID);
-      } else if(type == FieldAccessType::FAT_APIField) {
-        fieldAccessMetadata_.apiFieldIDs_.push_back(AccessID);
-      }
-    } else if(type == FieldAccessType::FAT_GlobalVariable) {
-      fieldAccessMetadata_.GlobalVariableAccessIDSet_.insert(AccessID);
-    } else if(type == FieldAccessType::FAT_LocalVariable) {
-      // local variables are not stored
-    } else if(type == FieldAccessType::FAT_Literal) {
-      fieldAccessMetadata_.LiteralAccessIDToNameMap_.emplace(AccessID, name);
-    }
-  }
+  void insertAccessOfType(FieldAccessType type, int AccessID, const std::string& name);
 
   void insertField(FieldAccessType type, const std::string& name, const Array3i fieldDimensions);
 
-  int insertStmt(bool keepVarNames, const std::shared_ptr<VarDeclStmt>& stmt) {
-    int accessID = UIDGenerator::getInstance()->get();
-
-    std::string globalName;
-    if(keepVarNames)
-      globalName = stmt->getName();
-    else
-      globalName = InstantiationHelper::makeLocalVariablename(stmt->getName(), accessID);
-
-    setAccessIDNamePair(accessID, globalName);
-    StmtIDToAccessIDMap_.emplace(stmt->getID(), accessID);
-
-    return accessID;
-  }
+  int insertStmt(bool keepVarNames, const std::shared_ptr<VarDeclStmt>& stmt);
 
   void eraseStencilFunctionInstantiation(
       const std::shared_ptr<StencilFunctionInstantiation>& stencilFun) {
@@ -172,6 +118,11 @@ public:
   void eraseExprToStencilFunction(const std::shared_ptr<StencilFunCallExpr>& expr) {
     ExprToStencilFunctionInstantiationMap_.erase(expr);
   }
+
+  /// @brief it finalizes the stencil function instantation. The stencil function instantatiation is
+  /// moved from candidate to the final storage of stencil instantiations. And maps storing
+  /// stencil functions of the stencil instantiation are updated
+  void finalizeStencilFunctionSetup(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
 
   /// @brief Get the `AccessID` associated with the `name`
   ///
@@ -282,12 +233,7 @@ public:
     fieldnameToBoundaryConditionMap_.emplace(name, bc);
   }
 
-  bool isFieldType(FieldAccessType accessType) const {
-    return accessType == FieldAccessType::FAT_Field ||
-           accessType == FieldAccessType::FAT_APIField ||
-           accessType == FieldAccessType::FAT_StencilTemporary ||
-           accessType == FieldAccessType::FAT_InterStencilTemporary;
-  }
+  bool isFieldType(FieldAccessType accessType) const;
   void setStencilname(const std::string& name) { stencilName_ = name; }
   void setFileName(const std::string& name) { fileName_ = name; }
   void setStencilLocation(const SourceLocation& location) { stencilLocation_ = location; }
@@ -317,34 +263,49 @@ public:
     ExprToStencilFunctionInstantiationMap_.emplace(expr, stencilFun);
   }
 
+  void insertExprToStencilFunctionInstantiation(
+      const std::shared_ptr<StencilFunctionInstantiation>& stencilFun);
+
   const std::unordered_map<std::shared_ptr<StencilFunctionInstantiation>,
                            StencilFunctionInstantiationCandidate>&
   getStencilFunInstantiationCandidates() const {
     return stencilFunInstantiationCandidate_;
   }
 
+  /// @brief clone a stencil function candidate and set its name fo functionName
+  /// @returns the clone of the stencil function
+  std::shared_ptr<StencilFunctionInstantiation>
+  cloneStencilFunctionCandidate(const std::shared_ptr<StencilFunctionInstantiation>& stencilFun,
+                                std::string functionName);
+
+  /// @brief Remove the stencil function given by `expr`
+  ///
+  /// If `callerStencilFunctionInstantiation` is not NULL (i.e the stencil function is called
+  /// within
+  /// the scope of another stencil function), the stencil function will be removed
+  /// from the `callerStencilFunctionInstantiation` instead of this `StencilInstantiation`.
+  void removeStencilFunctionInstantiation(
+      const std::shared_ptr<StencilFunCallExpr>& expr,
+      std::shared_ptr<StencilFunctionInstantiation> callerStencilFunctionInstantiation = nullptr);
+
+  /// @brief get a stencil function candidate by StencilFunCallExpr
+  std::shared_ptr<StencilFunctionInstantiation>
+  getStencilFunctionInstantiationCandidate(const std::shared_ptr<StencilFunCallExpr>& expr);
+
+  /// @brief get a stencil function candidate by name
+  std::shared_ptr<StencilFunctionInstantiation>
+  getStencilFunctionInstantiationCandidate(const std::string stencilFunName,
+                                           const Interval& interval);
+
   void markStencilFunctionInstantiationFinal(
-      const std::shared_ptr<StencilFunctionInstantiation>& stencilFun) {
-    stencilFunInstantiationCandidate_.erase(stencilFun);
-    stencilFunctionInstantiations_.push_back(stencilFun);
-  }
+      const std::shared_ptr<StencilFunctionInstantiation>& stencilFun);
+
   void insertStencilFunctionInstantiation(
       const std::shared_ptr<StencilFunctionInstantiation>& stencilFunctionInstantiation) {
     return stencilFunctionInstantiations_.push_back(stencilFunctionInstantiation);
   }
 
-  void deregisterStencilFunction(std::shared_ptr<StencilFunctionInstantiation> stencilFun) {
-
-    bool found = RemoveIf(ExprToStencilFunctionInstantiationMap_,
-                          [&](std::pair<std::shared_ptr<StencilFunCallExpr>,
-                                        std::shared_ptr<StencilFunctionInstantiation>>
-                                  pair) { return (pair.second == stencilFun); });
-    DAWN_ASSERT(found);
-    found = RemoveIf(
-        stencilFunctionInstantiations_,
-        [&](const std::shared_ptr<StencilFunctionInstantiation>& v) { return (v == stencilFun); });
-    DAWN_ASSERT(found);
-  }
+  void deregisterStencilFunction(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
 
   void insertStencilFunInstantiationCandidate(
       const std::shared_ptr<StencilFunctionInstantiation>& stencilFun,
@@ -356,6 +317,10 @@ public:
     return fieldIDToInitializedDimensionsMap_;
   }
 
+  const DoubleSidedMap<int, std::shared_ptr<StencilCallDeclStmt>>& getStencilIDToStencilCallMap() {
+    return StencilIDToStencilCallMap_;
+  }
+
 private:
   //================================================================================================
   // Stored MetaInformation
@@ -364,8 +329,7 @@ private:
   FieldAccessMetadata fieldAccessMetadata_;
 
   /// Map of AccessIDs and to the name of the variable/field. Note that only for fields of the
-  /// "main
-  /// stencil" we can get the AccessID by name. This is due the fact that fields of different
+  /// "main stencil" we can get the AccessID by name. This is due the fact that fields of different
   /// stencil functions can share the same name.
   DoubleSidedMap<int, std::string> AccessIDToNameMap_;
 
@@ -407,28 +371,7 @@ private:
   std::string fileName_;
 
   FieldAccessMetadata::allConstContainerTypes
-  getAccessesOfTypeImpl(FieldAccessType fieldAccessType) const {
-    if(fieldAccessType == FieldAccessType::FAT_Literal) {
-      return FieldAccessMetadata::allConstContainerTypes(
-          fieldAccessMetadata_.LiteralAccessIDToNameMap_);
-    } else if(fieldAccessType == FieldAccessType::FAT_GlobalVariable) {
-      return FieldAccessMetadata::allConstContainerTypes(
-          fieldAccessMetadata_.GlobalVariableAccessIDSet_);
-    } else if(fieldAccessType == FieldAccessType::FAT_Field) {
-      return FieldAccessMetadata::allConstContainerTypes(fieldAccessMetadata_.FieldAccessIDSet_);
-    } else if(fieldAccessType == FieldAccessType::FAT_LocalVariable) {
-      dawn_unreachable("getter of local accesses ids not supported");
-    } else if(fieldAccessType == FieldAccessType::FAT_StencilTemporary) {
-      return FieldAccessMetadata::allConstContainerTypes(
-          fieldAccessMetadata_.TemporaryFieldAccessIDSet_);
-    } else if(fieldAccessType == FieldAccessType::FAT_InterStencilTemporary) {
-      return FieldAccessMetadata::allConstContainerTypes(
-          fieldAccessMetadata_.AllocatedFieldAccessIDSet_);
-    } else if(fieldAccessType == FieldAccessType::FAT_APIField) {
-      return FieldAccessMetadata::allConstContainerTypes(fieldAccessMetadata_.apiFieldIDs_);
-    }
-    dawn_unreachable("unknown field access type");
-  }
+  getAccessesOfTypeImpl(FieldAccessType fieldAccessType) const;
 };
 } // namespace iir
 } // namespace dawn

@@ -110,8 +110,6 @@ void replaceVarWithFieldAccessInStmts(
 namespace {
 
 /// @brief Get all field and variable accesses identifier by `AccessID`
-// TODO this is useless since it i only querying the stencilid to call map. Not sure since it does
-// it per stmt
 class GetStencilCalls : public ASTVisitorForwarding {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   int StencilID_;

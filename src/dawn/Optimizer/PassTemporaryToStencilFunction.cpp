@@ -351,7 +351,7 @@ public:
 
     // we need to remove the previous stencil function that had "tmp" field as argument from the
     // registry, before we replace it with a StencilFunCallExpr (that computes "tmp") argument
-    stencilInstantiation_->deregisterStencilFunction(thisStencilFun);
+    metadata_.deregisterStencilFunction(thisStencilFun);
     // reset the use of nested function calls to continue using the visitor
     replaceInNestedFun_.pop();
 
@@ -394,7 +394,7 @@ public:
     // times
     std::string callee = makeOnTheFlyFunctionCandidateName(expr, interval_);
     std::shared_ptr<iir::StencilFunctionInstantiation> stencilFun =
-        stencilInstantiation_->getStencilFunctionInstantiationCandidate(callee, interval_);
+        metadata_.getStencilFunctionInstantiationCandidate(callee, interval_);
 
     std::string fnClone = makeOnTheFlyFunctionName(expr, interval_);
 
@@ -412,12 +412,12 @@ public:
     // TODO is this really needed, we only change the name, can we map multiple function
     // instantiations (i.e. different offsets) to the same sir stencil function
     // insert the sir::stencilFunction into the StencilInstantiation
-    stencilInstantiation_->insertStencilFunctionIntoSIR(sirStencilFunctionInstance);
+    stencilInstantiation_->getIIR()->insertStencilFunction(sirStencilFunctionInstance);
 
     // we clone the stencil function instantiation of the candidate so that each instance of the st
     // function has its own private copy of the expressions (i.e. ast)
     std::shared_ptr<iir::StencilFunctionInstantiation> cloneStencilFun =
-        stencilInstantiation_->cloneStencilFunctionCandidate(stencilFun, fnClone);
+        metadata_.cloneStencilFunctionCandidate(stencilFun, fnClone);
 
     auto& accessIDsOfArgs = tempFuncProperties.accessIDArgs_;
 
@@ -445,7 +445,7 @@ public:
       cloneStencilFun->setCallerInitialOffsetFromAccessID(accessID_, expr->getOffset());
     }
 
-    stencilInstantiation_->finalizeStencilFunctionSetup(cloneStencilFun);
+    metadata_.finalizeStencilFunctionSetup(cloneStencilFun);
     std::unordered_map<std::string, int> fieldsMap;
 
     const auto& arguments = cloneStencilFun->getArguments();
@@ -457,7 +457,7 @@ public:
     }
 
     auto asir = std::make_shared<SIR>();
-    for(const auto& sf : stencilInstantiation_->getStencilFunctions()) {
+    for(const auto& sf : stencilInstantiation_->getIIR()->getStencilFunctions()) {
       asir->StencilFunctions.push_back(sf);
     }
 
@@ -604,7 +604,7 @@ bool PassTemporaryToStencilFunction::run(
 
       stencilInstantiation->promoteLocalVariableToTemporaryField(
           stencilPtr.get(), varID, stencilPtr->getLifetime(varID),
-          iir::TemporaryScope::TT_StencilTemporary);
+          iir::TemporaryScope::TS_StencilTemporary);
     }
 
     skipIDs = computeSkipAccessIDs(stencilPtr, stencilInstantiation);
@@ -657,7 +657,7 @@ bool PassTemporaryToStencilFunction::run(
                   iir::DoMethod tmpStmtDoMethod(doMethodInterval, metadata);
 
                   auto asir = std::make_shared<SIR>();
-                  for(const auto sf : stencilInstantiation->getStencilFunctions()) {
+                  for(const auto sf : stencilInstantiation->getIIR()->getStencilFunctions()) {
                     asir->StencilFunctions.push_back(sf);
                   }
                   StatementMapper statementMapper(

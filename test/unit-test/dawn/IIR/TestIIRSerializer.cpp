@@ -151,6 +151,14 @@ bool compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformati
   IIR_EARLY_EXIT((lhs.getStencilName() == rhs.getStencilName()));
   IIR_EARLY_EXIT((lhs.getFileName() == rhs.getFileName()));
 
+  // we compare the content of the maps since the shared-ptr's are not the same
+  IIR_EARLY_EXIT((lhs.getStencilIDToStencilCallMap().getDirectMap().size() ==
+                  rhs.getStencilIDToStencilCallMap().getDirectMap().size()));
+  for(const auto& lhsPair : lhs.getStencilIDToStencilCallMap().getDirectMap()) {
+    IIR_EARLY_EXIT(rhs.getStencilIDToStencilCallMap().getDirectMap().count(lhsPair.first));
+    auto rhsValue = rhs.getStencilIDToStencilCallMap().getDirectMap().at(lhsPair.first);
+    IIR_EARLY_EXIT(rhsValue->equals(lhsPair.second.get()));
+  }
   return true;
 }
 

@@ -13,6 +13,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/DependencyGraphAccesses.h"
+#include "dawn/IIR/StencilMetaInformation.h"
+#include "dawn/SIR/SIR.h"
 #include "dawn/Support/STLExtras.h"
 #include <algorithm>
 #include <gtest/gtest.h>

@@ -122,11 +122,8 @@ multiStageSplitterDebug() {
         // }
         //
         // This pattern, an iterative solver as we call it, has vertical dependencies that need to
-        // be
-        // detected and the statements need to be linked. The splitting then splits only if no links
-        // to
-        // other statements are found.
-
+        // be detected and the statements need to be linked. The splitting then splits only if no
+        // links to other statements are found.
         // Iterate statements backwards
         int openDependencies = 0;
         for(int stmtIndex = doMethod.getChildren().size() - 2; stmtIndex >= 0; --stmtIndex) {
@@ -139,14 +136,10 @@ multiStageSplitterDebug() {
         }
 
         // After splitting all the statements into their own Multistages, we need to ensure that if
-        // we
-        // have loop-order conflicts in one of those, that we resolve them properly.
-        //
+        // we have loop-order conflicts in one of those, that we resolve them properly.
         // For example if we find a multistage with an offset read/write pattern (a = b * a[k-1]),
-        // even
-        // though this statement is independent from all other statements, we still need to ensure
-        // the
-        // proper loop order and cannot just assume parallel.
+        // even though this statement is independent from all other statements, we still need to
+        // ensure the proper loop order and cannot just assume parallel.
         for(int stmtIndex = doMethod.getChildren().size() - 1; stmtIndex >= 0; --stmtIndex) {
           auto& stmtAccessesPair = doMethod.getChildren()[stmtIndex];
           graph.insertStatementAccessesPair(stmtAccessesPair);

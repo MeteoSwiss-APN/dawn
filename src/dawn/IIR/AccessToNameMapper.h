@@ -15,7 +15,6 @@
 #ifndef DAWN_IIR_ACCESSTONAMEMAPPER_H
 #define DAWN_IIR_ACCESSTONAMEMAPPER_H
 
-#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include <stack>
 #include <unordered_map>
@@ -24,6 +23,7 @@ namespace dawn {
 namespace iir {
 
 class StencilFunctionInstantiation;
+class StencilMetaInformation;
 
 /// @brief Dump AST to string
 class AccessToNameMapper : public ASTVisitorForwarding {

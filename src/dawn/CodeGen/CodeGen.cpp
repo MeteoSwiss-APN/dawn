@@ -104,7 +104,7 @@ void CodeGen::generateBoundaryConditionFunctions(
   // Functions for boundary conditions
   const auto& metadata = stencilInstantiation->getMetaData();
   for(auto usedBoundaryCondition : metadata.getFieldNameToBCMap()) {
-    for(const auto& sf : stencilInstantiation->getStencilFunctions()) {
+    for(const auto& sf : stencilInstantiation->getIIR()->getStencilFunctions()) {
       if(sf->Name == usedBoundaryCondition.second->getFunctor()) {
 
         Structure BoundaryCondition = stencilWrapperClass.addStruct(Twine(sf->Name));

@@ -16,8 +16,6 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Logging.h"
-#include <fstream>
-#include <iostream>
 #include <vector>
 
 namespace dawn {

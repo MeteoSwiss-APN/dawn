@@ -34,7 +34,7 @@ class OptimizerContext;
 
 namespace iir {
 
-enum class TemporaryScope { TT_LocalVariable, TT_StencilTemporary, TT_Field };
+enum class TemporaryScope { TS_LocalVariable, TS_StencilTemporary, TS_Field };
 
 /// @brief Specific instantiation of a stencil
 /// @ingroup optimizer
@@ -43,7 +43,6 @@ class StencilInstantiation : NonCopyable {
   OptimizerContext* context_;
   StencilMetaInformation metadata_;
   std::unique_ptr<IIR> IIR_;
-  std::shared_ptr<SIR> SIR_;
 
 public:
   /// @brief Assemble StencilInstantiation for stencil
@@ -59,11 +58,6 @@ public:
   /// @brief Get the name of the StencilInstantiation (corresponds to the name of the SIRStencil)
   const std::string getName() const;
 
-  /// @brief insert an element to the maps of stencil functions
-  void insertExprToStencilFunction(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
-
-  void deregisterStencilFunction(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
-
   /// @brief Get the orginal `name` and a list of source locations of the field (or variable)
   /// associated with the `AccessID` in the given statement.
   std::pair<std::string, std::vector<SourceLocation>>
@@ -77,9 +71,6 @@ public:
 
   /// @brief Get the value of the global variable `name`
   const sir::Value& getGlobalVariableValue(const std::string& name) const;
-
-  /// @brief Get a list of all field AccessIDs of this multi-versioned field
-  ArrayRef<int> getFieldVersions(int AccessID) const;
 
   enum RenameDirection {
     RD_Above, ///< Rename all fields above the current statement
@@ -146,51 +137,6 @@ public:
   void demoteTemporaryFieldToLocalVariable(Stencil* stencil, int AccessID,
                                            const Stencil::Lifetime& lifetime);
 
-  /// @brief get a stencil function instantiation by StencilFunCallExpr
-  const std::shared_ptr<StencilFunctionInstantiation>
-  getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) const;
-
-  /// @brief get a stencil function candidate by StencilFunCallExpr
-  std::shared_ptr<StencilFunctionInstantiation>
-  getStencilFunctionInstantiationCandidate(const std::shared_ptr<StencilFunCallExpr>& expr);
-
-  /// @brief get a stencil function candidate by name
-  std::shared_ptr<StencilFunctionInstantiation>
-  getStencilFunctionInstantiationCandidate(const std::string stencilFunName,
-                                           const Interval& interval);
-
-  /// @brief clone a stencil function candidate and set its name fo functionName
-  /// @returns the clone of the stencil function
-  std::shared_ptr<StencilFunctionInstantiation>
-  cloneStencilFunctionCandidate(const std::shared_ptr<StencilFunctionInstantiation>& stencilFun,
-                                std::string functionName);
-
-  /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
-  const std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
-                           std::shared_ptr<StencilFunctionInstantiation>>&
-  getExprToStencilFunctionInstantiationMap() const;
-
-  /// @brief Remove the stencil function given by `expr`
-  ///
-  /// If `callerStencilFunctionInstantiation` is not NULL (i.e the stencil function is called
-  /// within
-  /// the scope of another stencil function), the stencil function will be removed
-  /// from the `callerStencilFunctionInstantiation` instead of this `StencilInstantiation`.
-  void removeStencilFunctionInstantiation(
-      const std::shared_ptr<StencilFunCallExpr>& expr,
-      std::shared_ptr<StencilFunctionInstantiation> callerStencilFunctionInstantiation = nullptr);
-
-  /// @brief Register a new stencil function
-  ///
-  /// If `curStencilFunctionInstantiation` is not NULL, the stencil function is treated as a
-  /// nested
-  /// stencil function.
-  std::shared_ptr<StencilFunctionInstantiation> makeStencilFunctionInstantiation(
-      const std::shared_ptr<StencilFunCallExpr>& expr,
-      const std::shared_ptr<sir::StencilFunction>& SIRStencilFun, const std::shared_ptr<AST>& ast,
-      const Interval& interval,
-      const std::shared_ptr<StencilFunctionInstantiation>& curStencilFunctionInstantiation);
-
   /// @brief Get the list of stencils
   inline const std::vector<std::unique_ptr<Stencil>>& getStencils() const {
     return getIIR()->getChildren();
@@ -199,13 +145,8 @@ public:
   /// @brief get the IIR tree
   inline const std::unique_ptr<IIR>& getIIR() const { return IIR_; }
 
-  // TODO do not have non const ?
   /// @brief get the IIR tree
   inline std::unique_ptr<IIR>& getIIR() { return IIR_; }
-
-  /// @brief insert a new sir::StencilFunction into the IIR
-  void
-  insertStencilFunctionIntoSIR(const std::shared_ptr<sir::StencilFunction>& sirStencilFunction);
 
   /// @brief Get the optimizer context
   inline ::dawn::OptimizerContext* getOptimizerContext() { return context_; }
@@ -222,14 +163,16 @@ public:
   /// @brief Dump the StencilInstantiation to stdout
   void jsonDump(std::string filename) const;
 
-  /// @brief it finalizes the stencil function instantation. The stencil function instantatiation is
-  /// moved from candidate to the final storage of stencil instantiations. And maps storing
-  /// stencil functions of the stencil instantiation are updated
-  void finalizeStencilFunctionSetup(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
-
-  const std::vector<std::shared_ptr<sir::StencilFunction>>& getStencilFunctions() {
-    return SIR_->StencilFunctions;
-  }
+  /// @brief Register a new stencil function
+  ///
+  /// If `curStencilFunctionInstantiation` is not NULL, the stencil function is treated as a
+  /// nested
+  /// stencil function.
+  std::shared_ptr<StencilFunctionInstantiation> makeStencilFunctionInstantiation(
+      const std::shared_ptr<StencilFunCallExpr>& expr,
+      const std::shared_ptr<sir::StencilFunction>& SIRStencilFun, const std::shared_ptr<AST>& ast,
+      const Interval& interval,
+      const std::shared_ptr<StencilFunctionInstantiation>& curStencilFunctionInstantiation);
 
   /// @brief Report the accesses to the console (according to `-freport-accesses`)
   void reportAccesses() const;

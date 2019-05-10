@@ -16,7 +16,6 @@
 #define DAWN_CODEGEN_CUDA_CODEGENERATORHELPER_H
 
 #include "dawn/IIR/Cache.h"
-#include "dawn/IIR/Stencil.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/IndexRange.h"
 #include <map>
@@ -26,6 +25,9 @@ namespace dawn {
 namespace iir {
 class MultiStage;
 class StencilInstantiation;
+class Stencil;
+class StencilMetaInformation;
+class Field;
 }
 namespace codegen {
 namespace cuda {
@@ -62,9 +64,8 @@ public:
   /// Even if the stencil contains temporaries, in some cases, like when they are local cached, they
   /// are not required for code generation. Also in the case of no redundant computations,
   /// temporaries will become normal fields
-  static bool
-  useTemporaries(const std::unique_ptr<iir::Stencil>& stencil,
-                 const iir::StencilMetaInformation& metadata);
+  static bool useTemporaries(const std::unique_ptr<iir::Stencil>& stencil,
+                             const iir::StencilMetaInformation& metadata);
 
   /// @brief computes the maximum extent required by all temporaries, which will be used for proper
   /// allocation

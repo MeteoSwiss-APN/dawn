@@ -158,12 +158,9 @@ struct FieldAccessMetadata {
   // - GlobalVariableAccessIDSet_, LiteralAccessIDToNameMap_, FieldAccessIDSet_ are exclusive
 
   /// Injection of AccessIDs of literal constant to their respective name (usually the name is
-  /// just
-  /// the string representation of the value). Note that literals always have *strictly*
-  /// negative
-  /// AccessIDs, which makes them distinguishable from field or variable AccessIDs. Further keep
-  /// in
-  /// mind that each access to a literal creates a new AccessID!
+  /// just the string representation of the value). Note that literals always have *strictly*
+  /// negative AccessIDs, which makes them distinguishable from field or variable AccessIDs. Further
+  /// keep in mind that each access to a literal creates a new AccessID!
   std::unordered_map<int, std::string> LiteralAccessIDToNameMap_;
 
   /// This is a set of AccessIDs which correspond to fields. This allows to fully identify if a

@@ -31,6 +31,7 @@ class IIR : public IIRNode<void, IIR, Stencil> {
   ControlFlowDescriptor controlFlowDesc_;
 
   sir::GlobalVariableMap globalVariableMap_;
+  std::vector<std::shared_ptr<sir::StencilFunction>> stencilFunctions_;
 
   struct DerivedInfo {
     /// StageID to name Map. Filled by the `PassSetStageName`.
@@ -49,7 +50,8 @@ public:
   inline std::array<unsigned int, 3> getBlockSize() const { return blockSize_; }
 
   /// @brief constructors and assignment
-  IIR(const sir::GlobalVariableMap& sirGlobals);
+  IIR(const sir::GlobalVariableMap& sirGlobals,
+      const std::vector<std::shared_ptr<sir::StencilFunction>>& stencilFunction);
   IIR(const IIR&) = default;
   IIR(IIR&&) = default;
   IIR& operator=(const IIR&) = default;
@@ -63,14 +65,20 @@ public:
 
   json::json jsonDump() const;
 
+  const std::vector<std::shared_ptr<sir::StencilFunction>>& getStencilFunctions() {
+    return stencilFunctions_;
+  }
   const ControlFlowDescriptor& getControlFlowDescriptor() const { return controlFlowDesc_; }
-  // TODO do not have non const?
   ControlFlowDescriptor& getControlFlowDescriptor() { return controlFlowDesc_; }
   inline void setBlockSize(const std::array<unsigned int, 3> blockSize) { blockSize_ = blockSize; }
 
   inline std::unordered_map<int, std::string>& getStageIDToNameMap() {
     return derivedInfo_.StageIDToNameMap_;
   }
+  void insertStencilFunction(const std::shared_ptr<sir::StencilFunction>& sirStencilFunction) {
+    stencilFunctions_.push_back(sirStencilFunction);
+  }
+
   inline const std::string& getNameFromStageID(int StageID) const {
     auto it = derivedInfo_.StageIDToNameMap_.find(StageID);
     DAWN_ASSERT_MSG(it != derivedInfo_.StageIDToNameMap_.end(), "Invalid StageID");

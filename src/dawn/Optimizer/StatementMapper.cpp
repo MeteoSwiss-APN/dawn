@@ -135,7 +135,6 @@ void StatementMapper::visit(const std::shared_ptr<VarDeclStmt>& stmt) {
     function->mapStmtToAccessID(stmt, AccessID);
   } else {
     metadata_.setAccessIDNamePair(AccessID, globalName);
-    // TODO the set below triggers an assertion that stmt already exists
     metadata_.insertStmtToAccessID(stmt, AccessID);
   }
 
@@ -251,7 +250,7 @@ void StatementMapper::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
   for(auto& arg : expr->getArguments())
     arg->accept(*this);
 
-  instantiation_->finalizeStencilFunctionSetup(stencilFun);
+  metadata_.finalizeStencilFunctionSetup(stencilFun);
 
   Scope* candiateScope = getCurrentCandidateScope();
 

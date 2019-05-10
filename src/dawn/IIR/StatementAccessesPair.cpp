@@ -160,7 +160,7 @@ void StatementAccessesPair::setCalleeAccesses(const std::shared_ptr<Accesses>& a
 
 bool StatementAccessesPair::hasCalleeAccesses() { return calleeAccesses_ != nullptr; }
 
-json::json StatementAccessesPair::print(const StencilMetaInformation& metaData,
+json::json StatementAccessesPair::print(const StencilMetaInformation& metadata,
                                         const AccessToNameMapper& accessToNameMapper,
                                         const std::unordered_map<int, Extents>& accesses) const {
   json::json node;
@@ -171,7 +171,7 @@ json::json StatementAccessesPair::print(const StencilMetaInformation& metaData,
     if(accessToNameMapper.hasAccessID(accessID)) {
       name = accessToNameMapper.getNameFromAccessID(accessID);
     }
-    if(metaData.isAccessType(iir::FieldAccessType::FAT_Literal, accessID)) {
+    if(metadata.isAccessType(iir::FieldAccessType::FAT_Literal, accessID)) {
       continue;
     }
     accessNode["access_id"] = accessID;
@@ -184,15 +184,15 @@ json::json StatementAccessesPair::print(const StencilMetaInformation& metaData,
   return node;
 }
 
-json::json StatementAccessesPair::jsonDump(const StencilMetaInformation& metaData) const {
+json::json StatementAccessesPair::jsonDump(const StencilMetaInformation& metadata) const {
   json::json node;
   node["stmt"] = ASTStringifer::toString(getStatement()->ASTStmt, 0);
 
-  AccessToNameMapper accessToNameMapper(metaData);
+  AccessToNameMapper accessToNameMapper(metadata);
   getStatement()->ASTStmt->accept(accessToNameMapper);
 
-  node["write_accesses"] = print(metaData, accessToNameMapper, getAccesses()->getWriteAccesses());
-  node["read_accesses"] = print(metaData, accessToNameMapper, getAccesses()->getReadAccesses());
+  node["write_accesses"] = print(metadata, accessToNameMapper, getAccesses()->getWriteAccesses());
+  node["read_accesses"] = print(metadata, accessToNameMapper, getAccesses()->getReadAccesses());
   return node;
 }
 

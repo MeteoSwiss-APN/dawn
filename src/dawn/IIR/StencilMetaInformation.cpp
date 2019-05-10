@@ -101,6 +101,147 @@ bool StencilMetaInformation::isAccessType(FieldAccessType fType, const std::stri
 
   return isAccessType(fType, getAccessIDFromName(name));
 }
+void StencilMetaInformation::markStencilFunctionInstantiationFinal(
+    const std::shared_ptr<StencilFunctionInstantiation>& stencilFun) {
+  stencilFunInstantiationCandidate_.erase(stencilFun);
+  stencilFunctionInstantiations_.push_back(stencilFun);
+}
+
+void StencilMetaInformation::deregisterStencilFunction(
+    std::shared_ptr<StencilFunctionInstantiation> stencilFun) {
+
+  bool found = RemoveIf(ExprToStencilFunctionInstantiationMap_,
+                        [&](std::pair<std::shared_ptr<StencilFunCallExpr>,
+                                      std::shared_ptr<StencilFunctionInstantiation>>
+                                pair) { return (pair.second == stencilFun); });
+  DAWN_ASSERT(found);
+  found = RemoveIf(
+      stencilFunctionInstantiations_,
+      [&](const std::shared_ptr<StencilFunctionInstantiation>& v) { return (v == stencilFun); });
+  DAWN_ASSERT(found);
+}
+
+std::shared_ptr<StencilFunctionInstantiation> StencilMetaInformation::cloneStencilFunctionCandidate(
+    const std::shared_ptr<StencilFunctionInstantiation>& stencilFun, std::string functionName) {
+  DAWN_ASSERT(getStencilFunInstantiationCandidates().count(stencilFun));
+  auto stencilFunClone = std::make_shared<StencilFunctionInstantiation>(stencilFun->clone());
+
+  auto stencilFunExpr =
+      std::dynamic_pointer_cast<StencilFunCallExpr>(stencilFun->getExpression()->clone());
+  stencilFunExpr->setCallee(functionName);
+
+  auto sirStencilFun = std::make_shared<sir::StencilFunction>(*(stencilFun->getStencilFunction()));
+  sirStencilFun->Name = functionName;
+
+  stencilFunClone->setExpression(stencilFunExpr);
+  stencilFunClone->setStencilFunction(sirStencilFun);
+
+  insertStencilFunInstantiationCandidate(stencilFunClone,
+                                         getStencilFunInstantiationCandidates().at(stencilFun));
+  return stencilFunClone;
+}
+
+void StencilMetaInformation::removeStencilFunctionInstantiation(
+    const std::shared_ptr<StencilFunCallExpr>& expr,
+    std::shared_ptr<StencilFunctionInstantiation> callerStencilFunctionInstantiation) {
+
+  std::shared_ptr<StencilFunctionInstantiation> func = nullptr;
+
+  if(callerStencilFunctionInstantiation) {
+    func = callerStencilFunctionInstantiation->getStencilFunctionInstantiation(expr);
+    callerStencilFunctionInstantiation->removeStencilFunctionInstantiation(expr);
+  } else {
+    func = getStencilFunctionInstantiation(expr);
+    eraseExprToStencilFunction(expr);
+  }
+
+  eraseStencilFunctionInstantiation(func);
+}
+
+std::shared_ptr<StencilFunctionInstantiation>
+StencilMetaInformation::getStencilFunctionInstantiationCandidate(
+    const std::shared_ptr<StencilFunCallExpr>& expr) {
+  const auto& candidates = getStencilFunInstantiationCandidates();
+  auto it = std::find_if(
+      candidates.begin(), candidates.end(),
+      [&](std::pair<std::shared_ptr<StencilFunctionInstantiation>,
+                    StencilMetaInformation::StencilFunctionInstantiationCandidate> const& pair) {
+        return (pair.first->getExpression() == expr);
+      });
+  DAWN_ASSERT_MSG((it != candidates.end()), "stencil function candidate not found");
+
+  return it->first;
+}
+
+std::shared_ptr<StencilFunctionInstantiation>
+StencilMetaInformation::getStencilFunctionInstantiationCandidate(const std::string stencilFunName,
+                                                                 const Interval& interval) {
+  const auto& candidates = getStencilFunInstantiationCandidates();
+  auto it = std::find_if(
+      candidates.begin(), candidates.end(),
+      [&](std::pair<std::shared_ptr<StencilFunctionInstantiation>,
+                    StencilMetaInformation::StencilFunctionInstantiationCandidate> const& pair) {
+        return (pair.first->getExpression()->getCallee() == stencilFunName &&
+                (pair.first->getInterval() == interval));
+      });
+  DAWN_ASSERT_MSG((it != candidates.end()), "stencil function candidate not found");
+
+  return it->first;
+}
+
+void StencilMetaInformation::finalizeStencilFunctionSetup(
+    std::shared_ptr<StencilFunctionInstantiation> stencilFun) {
+
+  DAWN_ASSERT(getStencilFunInstantiationCandidates().count(stencilFun));
+  stencilFun->closeFunctionBindings();
+  // We take the candidate to stencil function and placed it in the stencil function instantiations
+  // container
+  StencilMetaInformation::StencilFunctionInstantiationCandidate candidate =
+      getStencilFunInstantiationCandidates().at(stencilFun);
+
+  // map of expr to stencil function instantiation is updated
+  if(candidate.callerStencilFunction_) {
+    candidate.callerStencilFunction_->insertExprToStencilFunction(stencilFun);
+  } else {
+    insertExprToStencilFunctionInstantiation(stencilFun);
+  }
+
+  stencilFun->update();
+
+  // we move the candidate to stencil function to a final stencil function
+  markStencilFunctionInstantiationFinal(stencilFun);
+}
+
+void StencilMetaInformation::insertExprToStencilFunctionInstantiation(
+    const std::shared_ptr<StencilFunctionInstantiation>& stencilFun) {
+  insertExprToStencilFunctionInstantiation(stencilFun->getExpression(), stencilFun);
+}
+
+FieldAccessMetadata::allConstContainerTypes
+StencilMetaInformation::getAccessesOfTypeImpl(FieldAccessType fieldAccessType) const {
+  switch(fieldAccessType) {
+  case FieldAccessType::FAT_Literal:
+    return FieldAccessMetadata::allConstContainerTypes(
+        fieldAccessMetadata_.LiteralAccessIDToNameMap_);
+  case FieldAccessType::FAT_GlobalVariable:
+    return FieldAccessMetadata::allConstContainerTypes(
+        fieldAccessMetadata_.GlobalVariableAccessIDSet_);
+  case FieldAccessType::FAT_Field:
+    return FieldAccessMetadata::allConstContainerTypes(fieldAccessMetadata_.FieldAccessIDSet_);
+  case FieldAccessType::FAT_LocalVariable:
+    dawn_unreachable("getter of local accesses ids not supported");
+  case FieldAccessType::FAT_StencilTemporary:
+    return FieldAccessMetadata::allConstContainerTypes(
+        fieldAccessMetadata_.TemporaryFieldAccessIDSet_);
+  case FieldAccessType::FAT_InterStencilTemporary:
+    return FieldAccessMetadata::allConstContainerTypes(
+        fieldAccessMetadata_.AllocatedFieldAccessIDSet_);
+  case FieldAccessType::FAT_APIField:
+    return FieldAccessMetadata::allConstContainerTypes(fieldAccessMetadata_.apiFieldIDs_);
+  }
+  return FieldAccessMetadata::allConstContainerTypes{std::set<int>{}};
+}
+
 bool StencilMetaInformation::isAccessType(FieldAccessType fType, const int accessID) const {
   if(fType == FieldAccessType::FAT_Field) {
     return isAccessType(FieldAccessType::FAT_APIField, accessID) ||
@@ -115,6 +256,77 @@ bool StencilMetaInformation::isAccessType(FieldAccessType fType, const int acces
   // not all the accessIDs are registered
   return (fieldAccessMetadata_.accessIDType_.count(accessID) &&
           fieldAccessMetadata_.accessIDType_.at(accessID) == fType);
+}
+
+void StencilMetaInformation::moveRegisteredFieldTo(FieldAccessType type, int accessID) {
+  // we can not move it into an API field, since the original order would not be preserved
+  DAWN_ASSERT(type != FieldAccessType::FAT_APIField);
+  DAWN_ASSERT_MSG(isFieldType(type), "non field access type can not be moved");
+
+  fieldAccessMetadata_.accessIDType_[accessID] = type;
+
+  if(fieldAccessMetadata_.TemporaryFieldAccessIDSet_.count(accessID)) {
+    fieldAccessMetadata_.TemporaryFieldAccessIDSet_.erase(accessID);
+  }
+  if(fieldAccessMetadata_.AllocatedFieldAccessIDSet_.count(accessID)) {
+    fieldAccessMetadata_.AllocatedFieldAccessIDSet_.erase(accessID);
+  }
+
+  if(type == FieldAccessType::FAT_StencilTemporary) {
+    fieldAccessMetadata_.TemporaryFieldAccessIDSet_.insert(accessID);
+  } else if(type == FieldAccessType::FAT_InterStencilTemporary) {
+    fieldAccessMetadata_.AllocatedFieldAccessIDSet_.insert(accessID);
+  }
+}
+
+int StencilMetaInformation::insertAccessOfType(FieldAccessType type, const std::string& name) {
+  int accessID = UIDGenerator::getInstance()->get();
+  insertAccessOfType(type, accessID, name);
+  return accessID;
+}
+
+void StencilMetaInformation::insertAccessOfType(FieldAccessType type, int AccessID,
+                                                const std::string& name) {
+  setAccessIDNamePair(AccessID, name);
+  fieldAccessMetadata_.accessIDType_[AccessID] = type;
+  if(isFieldType(type)) {
+    fieldAccessMetadata_.FieldAccessIDSet_.insert(AccessID);
+    if(type == FieldAccessType::FAT_StencilTemporary) {
+      fieldAccessMetadata_.TemporaryFieldAccessIDSet_.insert(AccessID);
+    } else if(type == FieldAccessType::FAT_InterStencilTemporary) {
+      fieldAccessMetadata_.AllocatedFieldAccessIDSet_.insert(AccessID);
+    } else if(type == FieldAccessType::FAT_APIField) {
+      fieldAccessMetadata_.apiFieldIDs_.push_back(AccessID);
+    }
+  } else if(type == FieldAccessType::FAT_GlobalVariable) {
+    fieldAccessMetadata_.GlobalVariableAccessIDSet_.insert(AccessID);
+  } else if(type == FieldAccessType::FAT_LocalVariable) {
+    // local variables are not stored
+  } else if(type == FieldAccessType::FAT_Literal) {
+    fieldAccessMetadata_.LiteralAccessIDToNameMap_.emplace(AccessID, name);
+  }
+}
+
+int StencilMetaInformation::insertStmt(bool keepVarNames,
+                                       const std::shared_ptr<VarDeclStmt>& stmt) {
+  int accessID = UIDGenerator::getInstance()->get();
+
+  std::string globalName;
+  if(keepVarNames)
+    globalName = stmt->getName();
+  else
+    globalName = InstantiationHelper::makeLocalVariablename(stmt->getName(), accessID);
+
+  setAccessIDNamePair(accessID, globalName);
+  StmtIDToAccessIDMap_.emplace(stmt->getID(), accessID);
+
+  return accessID;
+}
+
+bool StencilMetaInformation::isFieldType(FieldAccessType accessType) const {
+  return accessType == FieldAccessType::FAT_Field || accessType == FieldAccessType::FAT_APIField ||
+         accessType == FieldAccessType::FAT_StencilTemporary ||
+         accessType == FieldAccessType::FAT_InterStencilTemporary;
 }
 
 Array3i StencilMetaInformation::getFieldDimensionsMask(int FieldID) const {
@@ -136,7 +348,7 @@ void StencilMetaInformation::insertExprToAccessID(const std::shared_ptr<Expr>& e
 }
 
 void StencilMetaInformation::eraseExprToAccessID(std::shared_ptr<Expr> expr) {
-  DAWN_ASSERT(ExprIDToAccessIDMap_.count(expr->getID()));
+  DAWN_ASSERT_MSG(ExprIDToAccessIDMap_.count(expr->getID()), "Field with given ID does not exist");
   ExprIDToAccessIDMap_.erase(expr->getID());
 }
 
@@ -159,7 +371,6 @@ std::string StencilMetaInformation::getNameFromAccessID(int accessID) const {
 
 int StencilMetaInformation::getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) const {
   auto it = ExprIDToAccessIDMap_.find(expr->getID());
-
   DAWN_ASSERT_MSG(it != ExprIDToAccessIDMap_.end(), "Invalid Expr");
   return it->second;
 }
@@ -323,6 +534,13 @@ json::json StencilMetaInformation::jsonDump() const {
     accessIDToNameJson[std::to_string(pair.first)] = pair.second;
   }
   metaDataJson["AccessIDToName"] = accessIDToNameJson;
+
+  json::json idToStencilCallJson;
+  for(const auto& pair : StencilIDToStencilCallMap_.getDirectMap()) {
+    idToStencilCallJson[std::to_string(pair.first)] = ASTStringifer::toString(pair.second);
+  }
+  metaDataJson["IDToStencilCall"] = idToStencilCallJson;
+
   return metaDataJson;
 }
 

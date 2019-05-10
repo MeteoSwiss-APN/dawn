@@ -14,6 +14,7 @@
 
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/StringUtil.h"
 #include <iostream>

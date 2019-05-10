@@ -15,9 +15,12 @@
 #define DAWN_IIR_CONTROLFLOWDESCRIPTOR_H
 
 #include "dawn/SIR/Statement.h"
+#include <set>
 
 namespace dawn {
 namespace iir {
+class StencilMetaInformation;
+
 class ControlFlowDescriptor {
 public:
   using StmtContainer = std::vector<std::shared_ptr<Statement>>;
@@ -37,10 +40,8 @@ public:
     controlFlowStatements_.push_back(stmt);
   }
 
-  //  // TODO do not have a non const
-  //  /// @brief Get the stencil description AST
-  //  std::vector<std::shared_ptr<Statement>>& getStatements() { return controlFlowStatements_; }
-
+  void removeStencilCalls(const std::set<int>& emptyStencilIDs,
+                          iir::StencilMetaInformation& metadata);
   void insertStmt(std::shared_ptr<Statement>&& statment);
 };
 }

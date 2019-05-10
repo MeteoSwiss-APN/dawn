@@ -17,13 +17,16 @@
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
-#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>
 #include <unordered_map>
 #include <vector>
 
 namespace dawn {
+namespace iir {
+class StencilMetaInformation;
+}
+
 namespace codegen {
 namespace cxxnaive {
 
