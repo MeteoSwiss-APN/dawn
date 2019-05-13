@@ -421,9 +421,10 @@ void StencilMetaInformation::insertField(FieldAccessType type, const std::string
 void StencilMetaInformation::removeAccessID(int AccessID) {
   AccessIDToNameMap_.directEraseKey(AccessID);
 
-  // we can only remove fields that are not API fields (since it would make sense to transform the
-  // API)
-  DAWN_ASSERT(isAccessType(FieldAccessType::FAT_Field, AccessID));
+  // we can only remove field or local variables (i.e. we can not remove niether globals nor
+  // literals
+  DAWN_ASSERT(isAccessType(FieldAccessType::FAT_Field, AccessID) ||
+              isAccessType(FieldAccessType::FAT_LocalVariable, AccessID));
 
   fieldAccessMetadata_.FieldAccessIDSet_.erase(AccessID);
   if(isAccessType(FieldAccessType::FAT_InterStencilTemporary, AccessID)) {
