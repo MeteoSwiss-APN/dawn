@@ -44,6 +44,7 @@
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Path.h"
+#include "llvm/Support/raw_os_ostream.h"
 #include <cstdio>
 #include <ctime>
 #include <iostream>
@@ -273,22 +274,28 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
     code = clangformat.format(code);
   }
 
-  // Write file to disk
-  DAWN_LOG(INFO) << "Writing file to disk... ";
+  std::shared_ptr<llvm::raw_ostream> ost;
   std::error_code ec;
   llvm::sys::fs::OpenFlags flags = llvm::sys::fs::OpenFlags::F_RW;
-  llvm::raw_fd_ostream fout(generatedFilename, ec, flags);
+  if(context_->getOptions().OutputFile.empty()) {
+    ost = std::make_shared<llvm::raw_os_ostream>(std::cout);
+  } else {
+    ost = std::make_shared<llvm::raw_fd_ostream>(generatedFilename, ec, flags);
+  }
+
+  // Write file to specified output
+  DAWN_LOG(INFO) << "Writing file to output... ";
 
   // Print a header
-  fout << dawn::format("// gtclang (%s)\n// based on LLVM/Clang (%s), Dawn (%s)\n",
+  *ost << dawn::format("// gtclang (%s)\n// based on LLVM/Clang (%s), Dawn (%s)\n",
                        GTCLANG_FULL_VERSION_STR, LLVM_VERSION_STRING, DAWN_VERSION_STR);
-  fout << "// Generated on " << currentDateTime() << "\n\n";
+  *ost << "// Generated on " << currentDateTime() << "\n\n";
 
   // Add the macro definitions
   for(const auto& macroDefine : DawnTranslationUnit->getPPDefines())
-    fout << macroDefine << "\n";
+    *ost << macroDefine << "\n";
 
-  fout.write(code.data(), code.size());
+  ost->write(code.data(), code.size());
   if(ec.value())
     context_->getDiagnostics().report(Diagnostics::err_fs_error) << ec.message();
 }
