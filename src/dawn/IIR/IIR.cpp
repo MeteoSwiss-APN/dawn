@@ -58,8 +58,7 @@ IIR::IIR(const sir::GlobalVariableMap& sirGlobals,
 void IIR::clone(std::unique_ptr<IIR>& dest) const {
   dest->cloneChildrenFrom(*this, dest);
   dest->setBlockSize(blockSize_);
-  // notice the control flow is not deep cloned, but copied
-  dest->controlFlowDesc_ = controlFlowDesc_;
+  dest->controlFlowDesc_ = controlFlowDesc_.clone();
   dest->globalVariableMap_ = globalVariableMap_;
 }
 

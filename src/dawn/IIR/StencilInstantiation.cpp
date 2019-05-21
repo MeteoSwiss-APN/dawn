@@ -14,6 +14,7 @@
 
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/OptimizerContext.h"

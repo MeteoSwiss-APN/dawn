@@ -17,10 +17,13 @@
 namespace dawn {
 namespace iir {
 
-void ControlFlowDescriptor::insertStmt(std::shared_ptr<Statement>&& statment) {
-  controlFlowStatements_.push_back(statment);
+ControlFlowDescriptor ControlFlowDescriptor::clone() const {
+  ControlFlowDescriptor copy;
+  for(const auto stmt : controlFlowStatements_) {
+    copy.controlFlowStatements_.push_back(stmt->clone());
+  }
+  return copy;
 }
-
 void ControlFlowDescriptor::removeStencilCalls(const std::set<int>& stencilIDs,
                                                iir::StencilMetaInformation& metadata) {
   for(auto it = getStatements().begin(); it != getStatements().end(); ++it) {

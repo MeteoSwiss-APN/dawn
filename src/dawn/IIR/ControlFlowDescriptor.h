@@ -32,17 +32,21 @@ private:
   StmtContainer controlFlowStatements_;
 
 public:
+  // deep clone
+  ControlFlowDescriptor clone() const;
+
   /// @brief Get the stencil description AST
   const StmtContainer& getStatements() const { return controlFlowStatements_; }
 
   StmtConstIterator eraseStmt(StmtConstIterator it) { return controlFlowStatements_.erase(it); }
-  void insertStmt(const std::shared_ptr<Statement>& stmt) {
-    controlFlowStatements_.push_back(stmt);
+
+  template <typename TStmt>
+  void insertStmt(TStmt&& stmt) {
+    controlFlowStatements_.push_back(std::forward<TStmt>(stmt));
   }
 
   void removeStencilCalls(const std::set<int>& emptyStencilIDs,
                           iir::StencilMetaInformation& metadata);
-  void insertStmt(std::shared_ptr<Statement>&& statment);
 };
 }
 }

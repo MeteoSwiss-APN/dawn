@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/StencilMetaInformation.h"
+#include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTStringifier.h"
@@ -87,7 +88,6 @@ const std::unordered_map<int, std::string>& StencilMetaInformation::getAccessIDT
   return AccessIDToNameMap_.getDirectMap();
 }
 
-// TODO what if there is no map 1 to map from name to id ?
 int StencilMetaInformation::getAccessIDFromName(const std::string& name) const {
   return AccessIDToNameMap_.reverseAt(name);
 }
@@ -312,10 +312,11 @@ int StencilMetaInformation::insertStmt(bool keepVarNames,
   int accessID = UIDGenerator::getInstance()->get();
 
   std::string globalName;
-  if(keepVarNames)
+  if(keepVarNames) {
     globalName = stmt->getName();
-  else
+  } else {
     globalName = InstantiationHelper::makeLocalVariablename(stmt->getName(), accessID);
+  }
 
   setAccessIDNamePair(accessID, globalName);
   StmtIDToAccessIDMap_.emplace(stmt->getID(), accessID);
@@ -405,7 +406,6 @@ StencilMetaInformation::getStencilFunctionInstantiation(
   return it->second;
 }
 
-// TODO private ?
 void StencilMetaInformation::setAccessIDNamePair(int accessID, const std::string& name) {
   AccessIDToNameMap_.emplace(accessID, name);
 }

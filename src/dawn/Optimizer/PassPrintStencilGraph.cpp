@@ -42,7 +42,8 @@ bool PassPrintStencilGraph::run(
     DAG->toDot("stencil_" + stencilInstantiation->getName() + "_s" + std::to_string(stencilIdx) +
                ".dot");
     DAG->toJSON("stencil_" + stencilInstantiation->getName() + "_s" + std::to_string(stencilIdx) +
-                ".json");
+                    ".json",
+                stencilInstantiation->getOptimizerContext()->getDiagnostics());
 
     stencilIdx++;
   }

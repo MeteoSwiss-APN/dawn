@@ -472,7 +472,7 @@ void DependencyGraphAccesses::clear() {
   VertexIDToAccessIDMap_.clear();
 }
 
-void DependencyGraphAccesses::toJSON(const std::string& file) const {
+void DependencyGraphAccesses::toJSON(const std::string& file, DiagnosticsEngine& diagEngine) const {
   std::unordered_map<std::size_t, Extents> extentMap = *computeBoundaryExtents(this);
   json::json jgraph;
 
@@ -525,11 +525,11 @@ void DependencyGraphAccesses::toJSON(const std::string& file) const {
   // TODO deal with it w/o stencilInstantiation
   std::ofstream ofs;
   ofs.open(file);
-  //  if(!ofs.is_open()) {
-  //    DiagnosticsBuilder diag(DiagnosticsKind::Error);
-  //    diag << "failed to open file: \"" << file << "\"";
-  //    instantiation_->getOptimizerContext()->getDiagnostics().report(diag);
-  //  }
+  if(!ofs.is_open()) {
+    DiagnosticsBuilder diag(DiagnosticsKind::Error);
+    diag << "failed to open file: \"" << file << "\"";
+    diagEngine.report(diag);
+  }
 
   ofs << jgraph.dump(2);
   ofs.close();

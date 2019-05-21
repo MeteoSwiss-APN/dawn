@@ -18,19 +18,20 @@ namespace dawn {
 namespace iir {
 
 std::string toString(FieldAccessType type) {
-  if(type == FieldAccessType::FAT_GlobalVariable) {
+  switch(type) {
+  case FieldAccessType::FAT_GlobalVariable:
     return "GlobalVariable";
-  } else if(type == FieldAccessType::FAT_Literal) {
+  case FieldAccessType::FAT_Literal:
     return "Literal";
-  } else if(type == FieldAccessType::FAT_LocalVariable) {
+  case FieldAccessType::FAT_LocalVariable:
     return "LocalVariable";
-  } else if(type == FieldAccessType::FAT_StencilTemporary) {
+  case FieldAccessType::FAT_StencilTemporary:
     return "StencilTemporary";
-  } else if(type == FieldAccessType::FAT_InterStencilTemporary) {
+  case FieldAccessType::FAT_InterStencilTemporary:
     return "InterStencilTemporary";
-  } else if(type == FieldAccessType::FAT_Field) {
+  case FieldAccessType::FAT_Field:
     return "Field";
-  } else if(type == FieldAccessType::FAT_APIField) {
+  case FieldAccessType::FAT_APIField:
     return "APIField";
   }
   return "Unkown";

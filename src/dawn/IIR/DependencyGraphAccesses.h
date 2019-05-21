@@ -15,6 +15,7 @@
 #ifndef DAWN_IIR_DEPENDENCYGRAPHACCESSES_H
 #define DAWN_IIR_DEPENDENCYGRAPHACCESSES_H
 
+#include "dawn/Compiler/DiagnosticsEngine.h"
 #include "dawn/IIR/DependencyGraph.h"
 #include "dawn/IIR/Extents.h"
 #include "dawn/Support/TypeTraits.h"
@@ -173,7 +174,7 @@ public:
   void clear();
 
   /// @brief Serialize the graph to JSON
-  void toJSON(const std::string& file) const;
+  void toJSON(const std::string& file, DiagnosticsEngine& diagEngine) const;
 };
 
 } // namespace iir

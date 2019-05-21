@@ -165,8 +165,7 @@ public:
 
   /// @brief Register a new stencil function
   ///
-  /// If `curStencilFunctionInstantiation` is not NULL, the stencil function is treated as a
-  /// nested
+  /// If `curStencilFunctionInstantiation` is not NULL, the stencil function is treated as a nested
   /// stencil function.
   std::shared_ptr<StencilFunctionInstantiation> makeStencilFunctionInstantiation(
       const std::shared_ptr<StencilFunCallExpr>& expr,

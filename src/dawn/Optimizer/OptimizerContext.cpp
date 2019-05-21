@@ -15,6 +15,7 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
@@ -88,8 +89,6 @@ public:
     scope_.push(std::make_shared<Scope>(sirStencil_->Name,
                                         instantiation_->getIIR()->getControlFlowDescriptor()));
     scope_.top()->LocalFieldnameToAccessIDMap = metadata_.getNameToAccessIDMap();
-
-    // TODO redo this, we dont need to copy again the variable map into scope::top
 
     // We add all global variables which have constant values
     for(auto& keyValuePair : *(sir->GlobalVariableMap)) {

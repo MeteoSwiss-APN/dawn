@@ -17,7 +17,6 @@
 
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/FieldAccessMetadata.h"
-#include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/DoubleSidedMap.h"
 #include "dawn/Support/NonCopyable.h"
