@@ -410,12 +410,27 @@ void StencilMetaInformation::setAccessIDNamePair(int accessID, const std::string
   AccessIDToNameMap_.emplace(accessID, name);
 }
 
-void StencilMetaInformation::insertField(FieldAccessType type, const std::string& name,
-                                         const Array3i fieldDimensions) {
+int StencilMetaInformation::insertField(FieldAccessType type, const std::string& name,
+                                        const Array3i fieldDimensions) {
   int accessID = UIDGenerator::getInstance()->get();
   DAWN_ASSERT(isFieldType(type));
   insertAccessOfType(type, accessID, name);
   fieldIDToInitializedDimensionsMap_.emplace(accessID, fieldDimensions);
+
+  return accessID;
+}
+
+int StencilMetaInformation::insertTmpField(FieldAccessType type, const std::string& basename,
+                                           const Array3i fieldDimensions) {
+  int accessID = UIDGenerator::getInstance()->get();
+
+  std::string fname = InstantiationHelper::makeTemporaryFieldname(basename, accessID);
+
+  DAWN_ASSERT(isFieldType(type));
+  insertAccessOfType(type, accessID, fname);
+  fieldIDToInitializedDimensionsMap_.emplace(accessID, fieldDimensions);
+
+  return accessID;
 }
 
 void StencilMetaInformation::removeAccessID(int AccessID) {

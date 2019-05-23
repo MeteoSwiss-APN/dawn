@@ -435,15 +435,11 @@ public:
       int AccessID = 0;
       if(stencil.Fields[stencilArgIdx]->IsTemporary) {
         // We add a new temporary field for each temporary field argument
-        metadata_.insertField(
-            iir::FieldAccessType::FAT_StencilTemporary,
-            InstantiationHelper::makeTemporaryFieldname(stencil.Fields[stencilArgIdx]->Name,
-                                                        UIDGenerator::getInstance()->get() + 1),
-            {1, 1, 1});
+        AccessID = metadata_.insertTmpField(iir::FieldAccessType::FAT_StencilTemporary,
+                                            stencil.Fields[stencilArgIdx]->Name, {1, 1, 1});
       } else {
         AccessID =
-            curScope->LocalFieldnameToAccessIDMap.find(stencilCall->Args[stencilCallArgIdx]->Name)
-                ->second;
+            curScope->LocalFieldnameToAccessIDMap.at(stencilCall->Args[stencilCallArgIdx]->Name);
         stencilCallArgIdx++;
       }
 

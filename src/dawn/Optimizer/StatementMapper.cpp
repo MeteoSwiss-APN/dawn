@@ -381,9 +381,8 @@ void StatementMapper::visit(const std::shared_ptr<LiteralAccessExpr>& expr) {
 
 void StatementMapper::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   DAWN_ASSERT(initializedWithBlockStmt_);
-
   // Register the mapping between FieldAccessExpr and AccessID
-  int AccessID = scope_.top()->LocalFieldnameToAccessIDMap[expr->getName()];
+  int AccessID = scope_.top()->LocalFieldnameToAccessIDMap.at(expr->getName());
 
   auto& function = scope_.top()->FunctionInstantiation;
   if(function) {

@@ -158,7 +158,7 @@ void StencilFunctionInstantiation::setCallerOffsetOfArgOffset(int argumentIndex,
 }
 
 int StencilFunctionInstantiation::getCallerAccessIDOfArgField(int argumentIndex) const {
-  return ArgumentIndexToCallerAccessIDMap_.find(argumentIndex)->second;
+  return ArgumentIndexToCallerAccessIDMap_.at(argumentIndex);
 }
 
 void StencilFunctionInstantiation::setCallerAccessIDOfArgField(int argumentIndex,
@@ -181,10 +181,6 @@ const Array3i&
 StencilFunctionInstantiation::getCallerInitialOffsetFromAccessID(int callerAccessID) const {
   DAWN_ASSERT(CallerAcceessIDToInitialOffsetMap_.count(callerAccessID));
   return CallerAcceessIDToInitialOffsetMap_.find(callerAccessID)->second;
-}
-
-void StencilFunctionInstantiation::setArgumentIndexToCallerAccessID(int argIdx, int accessID) {
-  ArgumentIndexToCallerAccessIDMap_[argIdx] = accessID;
 }
 
 void StencilFunctionInstantiation::setCallerInitialOffsetFromAccessID(int callerAccessID,
