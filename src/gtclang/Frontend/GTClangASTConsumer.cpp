@@ -21,6 +21,7 @@
 #include "dawn/Support/Config.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/StringUtil.h"
+#include "dawn/Support/Unreachable.h"
 #include "gtclang/Frontend/ClangFormat.h"
 #include "gtclang/Frontend/GTClangASTAction.h"
 #include "gtclang/Frontend/GTClangASTVisitor.h"

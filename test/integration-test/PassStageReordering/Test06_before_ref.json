@@ -472,7 +472,8 @@
           "RequiresSync": false
         }
       }
-    }
+    },
+    "globals": null
   },
   "MetaInformation": {
     "AccessIDToName": {
@@ -518,7 +519,6 @@
       28
     ],
     "filename": "Test06.cpp",
-    "globals": null,
     "literalAccessIDs": null,
     "stencilLocation": "24:8",
     "stencilname": "Test"

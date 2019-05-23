@@ -6,13 +6,17 @@
    "31": "__local_fn_31"
   },
   "exprIDToAccessID": {
-   "29": 13,
    "22": 13,
    "23": 14,
-   "32": 31
+   "32": 31,
+   "29": 13
   },
   "stmtIDToAccessID": {
    "33": 31
+  },
+  "accessIDToType": {
+   "13": 6,
+   "14": 6
   },
   "literalIDToName": {},
   "fieldAccessIDs": [
@@ -28,26 +32,20 @@
   "versionedFields": {
    "variableVersionMap": {}
   },
-  "stencilDescStatements": [
-   {
-    "stencil_call_decl_stmt": {
-     "stencil_call": {
-      "loc": {
-       "Line": -1,
-       "Column": -1
-      },
-      "callee": "__code_gen_15",
-      "arguments": []
-     },
-     "loc": {
-      "Line": -1,
-      "Column": -1
-     },
-     "ID": 16
-    }
+  "fieldnameToBoundaryCondition": {},
+  "fieldIDtoLegalDimensions": {
+   "14": {
+    "int1": 1,
+    "int2": 1,
+    "int3": 1
+   },
+   "13": {
+    "int1": 1,
+    "int2": 1,
+    "int3": 1
    }
-  ],
-  "IDToStencilCall": {
+  },
+  "idToStencilCall": {
    "15": {
     "stencil_call_decl_stmt": {
      "stencil_call": {
@@ -66,20 +64,6 @@
     }
    }
   },
-  "fieldnameToBoundaryCondition": {},
-  "fieldIDtoLegalDimensions": {
-   "13": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
-   },
-   "14": {
-    "int1": 1,
-    "int2": 1,
-    "int3": 1
-   }
-  },
-  "globalVariableToValue": {},
   "stencilLocation": {
    "Line": 29,
    "Column": 8
@@ -87,6 +71,7 @@
   "stencilName": "Test"
  },
  "internalIR": {
+  "globalVariableToValue": {},
   "stencils": [
    {
     "multiStages": [
@@ -302,7 +287,26 @@
      "attributes": []
     }
    }
+  ],
+  "controlFlowStatements": [
+   {
+    "stencil_call_decl_stmt": {
+     "stencil_call": {
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "callee": "__code_gen_15",
+      "arguments": []
+     },
+     "loc": {
+      "Line": -1,
+      "Column": -1
+     },
+     "ID": 16
+    }
+   }
   ]
  },
- "filename": "/home/tobias/Documents/Work/gtclang/test/integration-test/IIRSerializer/StencilFnCallTest.cpp"
+ "filename": "/code/gtclang/test/integration-test/IIRSerializer/StencilFnCallTest.cpp"
 }
