@@ -14,6 +14,7 @@
 
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Compiler/Options.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/SIRSerializer.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
@@ -63,6 +64,7 @@ protected:
 
 TEST_F(TestComputeMaximumExtent, test_field_access_interval_02) {
   auto stencilInstantiation = loadTest("test_field_access_interval_02.sir");
+  const auto& metadata = stencilInstantiation->getMetaData();
   const auto& stencils = stencilInstantiation->getStencils();
   ASSERT_TRUE((stencils.size() == 1));
   const std::unique_ptr<iir::Stencil>& stencil = stencils[0];
@@ -84,12 +86,11 @@ TEST_F(TestComputeMaximumExtent, test_field_access_interval_02) {
 
   ASSERT_TRUE((doMethod1->getChildren().size() == 1));
   const auto& stmtAccessPair = doMethod1->getChildren()[0];
-  ASSERT_TRUE((stmtAccessPair->computeMaximumExtents(
-                   stencilInstantiation->getAccessIDFromName("u")) == iir::Extents{-1, 1, -1, 1, 0, 0}));
+  ASSERT_TRUE((stmtAccessPair->computeMaximumExtents(metadata.getAccessIDFromName("u")) ==
+               iir::Extents{-1, 1, -1, 1, 0, 0}));
 
-  EXPECT_EQ(
-      stmtAccessPair->computeMaximumExtents(stencilInstantiation->getAccessIDFromName("coeff")),
-      (iir::Extents{0, 0, 0, 0, 1, 1}));
+  EXPECT_EQ(stmtAccessPair->computeMaximumExtents(metadata.getAccessIDFromName("coeff")),
+            (iir::Extents{0, 0, 0, 0, 1, 1}));
 }
 
 TEST_F(TestComputeMaximumExtent, test_compute_maximum_extent_01) {
@@ -111,7 +112,8 @@ TEST_F(TestComputeMaximumExtent, test_compute_maximum_extent_01) {
 
   const auto& doMethod1 = stage1->getSingleDoMethod();
 
-  ASSERT_TRUE((doMethod1.computeMaximumExtents(stencilInstantiation->getAccessIDFromName("u")) ==
+  ASSERT_TRUE((doMethod1.computeMaximumExtents(
+                   stencilInstantiation->getMetaData().getAccessIDFromName("u")) ==
                iir::Extents{0, 1, -1, 0, 0, 2}));
 }
 

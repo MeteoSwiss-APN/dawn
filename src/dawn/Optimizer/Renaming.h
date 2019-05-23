@@ -25,6 +25,7 @@ namespace iir {
 class StatementAccessesPair;
 class StencilFunctionInstantiation;
 class StencilInstantiation;
+class StencilMetaInformation;
 }
 
 /// @name Renaming routines
@@ -42,7 +43,7 @@ class StencilInstantiation;
 /// @ingroup optimizer
 /// @{
 void renameAccessIDInStmts(
-    iir::StencilInstantiation* instantiation, int oldAccessID, int newAccessID,
+    iir::StencilMetaInformation* instantiation, int oldAccessID, int newAccessID,
     ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
 void renameAccessIDInStmts(
     iir::StencilFunctionInstantiation* instantiation, int oldAccessID, int newAccessID,
@@ -62,7 +63,7 @@ void renameAccessIDInExpr(iir::StencilInstantiation* instantiation, int oldAcces
 ///
 /// @ingroup optimizer
 void renameAccessIDInAccesses(
-    iir::StencilInstantiation* instantiation, int oldAccessID, int newAccessID,
+    const iir::StencilMetaInformation* metadata, int oldAccessID, int newAccessID,
     ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
 void renameAccessIDInAccesses(
     iir::StencilFunctionInstantiation* instantiation, int oldAccessID, int newAccessID,

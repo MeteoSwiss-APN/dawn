@@ -15,7 +15,6 @@
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
-#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/ASTStringifier.h"
 #include "dawn/SIR/Statement.h"
 #include "dawn/Support/Printing.h"

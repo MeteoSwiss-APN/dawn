@@ -14,8 +14,12 @@
 
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
+#include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIRNodeIterator.h"
-#include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/IIR/MultiStage.h"
+#include "dawn/IIR/Stencil.h"
+#include "dawn/IIR/StencilFunctionInstantiation.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Optimizer/AccessUtils.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Logging.h"
@@ -27,19 +31,19 @@
 namespace dawn {
 namespace iir {
 
-Stage::Stage(StencilInstantiation& stencilInstantiation, int StageID)
-    : stencilInstantiation_(stencilInstantiation), StageID_(StageID) {}
+Stage::Stage(const StencilMetaInformation& metaData, int StageID)
+    : metaData_(metaData), StageID_(StageID) {}
 
-Stage::Stage(StencilInstantiation& stencilInstantiation, int StageID, const Interval& interval)
-    : stencilInstantiation_(stencilInstantiation), StageID_(StageID) {
-  insertChild(make_unique<DoMethod>(interval, stencilInstantiation));
+Stage::Stage(const StencilMetaInformation& metaData, int StageID, const Interval& interval)
+    : metaData_(metaData), StageID_(StageID) {
+  insertChild(make_unique<DoMethod>(interval, metaData));
 }
 
-json::json Stage::jsonDump(const StencilInstantiation& instantiation) const {
+json::json Stage::jsonDump(const StencilMetaInformation& metaData) const {
   json::json node;
   json::json fieldsJson;
   for(const auto& field : derivedInfo_.fields_) {
-    fieldsJson[instantiation.getNameFromAccessID(field.first)] = field.second.jsonDump();
+    fieldsJson[metaData.getNameFromAccessID(field.first)] = field.second.jsonDump();
   }
   node["Fields"] = fieldsJson;
   std::stringstream ss;
@@ -49,7 +53,7 @@ json::json Stage::jsonDump(const StencilInstantiation& instantiation) const {
 
   int cnt = 0;
   for(const auto& doMethod : children_) {
-    node["DoMethod" + std::to_string(cnt)] = doMethod->jsonDump(instantiation);
+    node["DoMethod" + std::to_string(cnt)] = doMethod->jsonDump(metaData);
     cnt++;
   }
   return node;
@@ -57,7 +61,7 @@ json::json Stage::jsonDump(const StencilInstantiation& instantiation) const {
 
 std::unique_ptr<Stage> Stage::clone() const {
 
-  auto cloneStage = make_unique<Stage>(stencilInstantiation_, StageID_);
+  auto cloneStage = make_unique<Stage>(metaData_, StageID_);
 
   cloneStage->derivedInfo_ = derivedInfo_;
 
@@ -172,20 +176,19 @@ class CaptureStencilFunctionCallGlobalParams : public ASTVisitorForwarding {
 
   std::unordered_set<int>& globalVariables_;
   StencilFunctionInstantiation* currentFunction_;
-  StencilInstantiation& stencilInstantiation_;
+  const StencilMetaInformation& metaData_;
   std::shared_ptr<const StencilFunctionInstantiation> function_;
 
 public:
   CaptureStencilFunctionCallGlobalParams(std::unordered_set<int>& globalVariables,
-                                         StencilInstantiation& stencilInstantiation)
-      : globalVariables_(globalVariables), stencilInstantiation_(stencilInstantiation),
-        function_(nullptr) {}
+                                         const StencilMetaInformation& metaData)
+      : globalVariables_(globalVariables), metaData_(metaData), function_(nullptr) {}
 
   void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
     // Find the referenced stencil function
     std::shared_ptr<const StencilFunctionInstantiation> stencilFun =
         function_ ? function_->getStencilFunctionInstantiation(expr)
-                  : stencilInstantiation_.getStencilFunctionInstantiation(expr);
+                  : metaData_.getStencilFunctionInstantiation(expr);
 
     DAWN_ASSERT(stencilFun);
     for(auto it : stencilFun->getAccessIDSetGlobalVariables()) {
@@ -202,7 +205,7 @@ void Stage::updateLevel() { updateGlobalVariablesInfo(); }
 
 void Stage::updateGlobalVariablesInfo() {
   CaptureStencilFunctionCallGlobalParams functionCallGlobaParamVisitor(
-      derivedInfo_.globalVariablesFromStencilFunctionCalls_, stencilInstantiation_);
+      derivedInfo_.globalVariablesFromStencilFunctionCalls_, metaData_);
 
   for(const auto& doMethodPtr : getChildren()) {
     const DoMethod& doMethod = *doMethodPtr;
@@ -212,13 +215,13 @@ void Stage::updateGlobalVariablesInfo() {
       for(const auto& accessPair : access->getWriteAccesses()) {
         int AccessID = accessPair.first;
         // Does this AccessID correspond to a field access?
-        if(stencilInstantiation_.isGlobalVariable(AccessID)) {
+        if(metaData_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, AccessID)) {
           derivedInfo_.globalVariables_.insert(AccessID);
         }
       }
       for(const auto& accessPair : access->getReadAccesses()) {
         int AccessID = accessPair.first;
-        if(stencilInstantiation_.isGlobalVariable(AccessID)) {
+        if(metaData_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, AccessID)) {
           derivedInfo_.globalVariables_.insert(AccessID);
         }
       }
@@ -297,7 +300,7 @@ Stage::split(std::deque<int>& splitterIndices,
     DoMethod::StatementAccessesIterator nextSplitterIndex =
         std::next(thisDoMethod.childrenBegin(), splitterIndices[i] + 1);
 
-    newStages.push_back(make_unique<Stage>(stencilInstantiation_, stencilInstantiation_.nextUID(),
+    newStages.push_back(make_unique<Stage>(metaData_, UIDGenerator::getInstance()->get(),
                                            thisDoMethod.getInterval()));
     Stage& newStage = *newStages.back();
     DoMethod& doMethod = newStage.getSingleDoMethod();

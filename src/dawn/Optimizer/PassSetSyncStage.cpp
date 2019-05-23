@@ -74,6 +74,10 @@ bool PassSetSyncStage::requiresSync(const iir::Stage& stage,
 PassSetSyncStage::PassSetSyncStage() : Pass("PassSetSyncStage") {}
 
 bool PassSetSyncStage::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
+  for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*(instantiation->getIIR()))) {
+    doMethod->update(iir::NodeUpdateType::levelAndTreeAbove);
+  }
+
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(instantiation->getIIR()))) {
     for(const auto& stage : ms->getChildren()) {
       // the last stage also requires a sync, since it will be written into by the next k level

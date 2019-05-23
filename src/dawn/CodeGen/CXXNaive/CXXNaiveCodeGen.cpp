@@ -75,7 +75,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
 
   Namespace cxxnaiveNamespace("cxxnaive", ssSW);
 
-  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   Class StencilWrapperClass(stencilInstantiation->getName(), ssSW);
   StencilWrapperClass.changeAccessibility("private");
@@ -122,9 +122,10 @@ void CXXNaiveCodeGen::generateStencilWrapperRun(
   RunMethod.finishArgs();
 
   // generate the control flow code executing each inner stencil
-  ASTStencilDesc stencilDescCGVisitor(stencilInstantiation.get(), codeGenProperties);
+  ASTStencilDesc stencilDescCGVisitor(stencilInstantiation->getMetaData(), codeGenProperties);
   stencilDescCGVisitor.setIndent(RunMethod.getIndent());
-  for(const auto& statement : stencilInstantiation->getStencilDescStatements()) {
+  for(const auto& statement :
+      stencilInstantiation->getIIR()->getControlFlowDescriptor().getStatements()) {
     statement->ASTStmt->accept(stencilDescCGVisitor);
     RunMethod.addStatement(stencilDescCGVisitor.getCodeAndResetStream());
   }
@@ -137,10 +138,11 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
     const CodeGenProperties& codeGenProperties) const {
 
   const auto& stencils = stencilInstantiation->getStencils();
-  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
+  const auto& metadata = stencilInstantiation->getMetaData();
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // Generate stencil wrapper constructor
-  auto APIFields = stencilInstantiation->getMetaData().apiFieldIDs_;
+  const auto& APIFields = metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>();
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
@@ -148,9 +150,9 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
   std::string ctrArgs("(dom");
   for(auto APIfieldID : APIFields) {
     StencilWrapperConstructor.addArg(
-        codeGenProperties.getParamType(stencilInstantiation->getFieldNameFromAccessID(APIfieldID)) +
-        "& " + stencilInstantiation->getFieldNameFromAccessID(APIfieldID));
-    ctrArgs += "," + stencilInstantiation->getFieldNameFromAccessID(APIfieldID);
+        codeGenProperties.getParamType(metadata.getFieldNameFromAccessID(APIfieldID)) + "& " +
+        metadata.getFieldNameFromAccessID(APIfieldID));
+    ctrArgs += "," + metadata.getFieldNameFromAccessID(APIfieldID);
   }
 
   // add the ctr initialization of each stencil
@@ -172,7 +174,8 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
       if(fieldInfo.IsTemporary)
         continue;
       initCtr += (i != 0 ? "," : "<") +
-                 (stencilInstantiation->isAllocatedField(fieldInfo.field.getAccessID())
+                 (metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
+                                        fieldInfo.field.getAccessID())
                       ? (c_gtc().str() + "storage_t")
                       : (codeGenProperties.getParamType(fieldInfo.Name)));
       i++;
@@ -186,7 +189,8 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
       const auto& fieldInfo = fieldInfoPair.second;
       if(fieldInfo.IsTemporary)
         continue;
-      initCtr += "," + (stencilInstantiation->isAllocatedField(fieldInfo.field.getAccessID())
+      initCtr += "," + (metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
+                                              fieldInfo.field.getAccessID())
                             ? ("m_" + fieldInfo.Name)
                             : (fieldInfo.Name));
     }
@@ -194,10 +198,11 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
     StencilWrapperConstructor.addInit(initCtr);
   }
 
-  if(stencilInstantiation->hasAllocatedFields()) {
+  if(metadata.hasAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
     std::vector<std::string> tempFields;
-    for(auto accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
-      tempFields.push_back(stencilInstantiation->getFieldNameFromAccessID(accessID));
+    for(auto accessID :
+        metadata.getAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
+      tempFields.push_back(metadata.getFieldNameFromAccessID(accessID));
     }
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
   }
@@ -209,7 +214,8 @@ void CXXNaiveCodeGen::generateStencilWrapperMembers(
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     CodeGenProperties& codeGenProperties) const {
 
-  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
+  const auto& metadata = stencilInstantiation->getMetaData();
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   stencilWrapperClass.addMember("static constexpr const char* s_name =",
                                 Twine("\"") + stencilWrapperClass.getName() + Twine("\""));
@@ -231,12 +237,13 @@ void CXXNaiveCodeGen::generateStencilWrapperMembers(
   // Members
   //
   // Define allocated memebers if necessary
-  if(stencilInstantiation->hasAllocatedFields()) {
+  if(metadata.hasAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
     stencilWrapperClass.addMember(c_gtc() + "meta_data_t", "m_meta_data");
 
-    for(int AccessID : stencilInstantiation->getAllocatedFieldAccessIDs())
+    for(int AccessID :
+        metadata.getAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>())
       stencilWrapperClass.addMember(c_gtc() + "storage_t",
-                                    "m_" + stencilInstantiation->getFieldNameFromAccessID(AccessID));
+                                    "m_" + metadata.getFieldNameFromAccessID(AccessID));
   }
 }
 void CXXNaiveCodeGen::generateStencilClasses(
@@ -244,7 +251,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
     Class& stencilWrapperClass, const CodeGenProperties& codeGenProperties) const {
 
   const auto& stencils = stencilInstantiation->getStencils();
-  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // Stencil members:
   // generate the code for each of the stencils
@@ -280,7 +287,8 @@ void CXXNaiveCodeGen::generateStencilClasses(
                          StencilTemplates, [](const std::string& str) { return "class " + str; }),
         "sbase");
 
-    ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation.get(), StencilContext::SC_Stencil);
+    ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
+                                         StencilContext::SC_Stencil);
 
     StencilClass.addComment("Members");
     StencilClass.addComment("Temporary storages");
@@ -419,13 +427,14 @@ void CXXNaiveCodeGen::generateStencilFunctions(
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     const CodeGenProperties& codeGenProperties) const {
 
+  const auto& metadata = stencilInstantiation->getMetaData();
   // stencil functions
   //
   // Generate stencil functions code for stencils instantiated by this stencil
   //
   std::unordered_set<std::string> generatedStencilFun;
   size_t idx = 0;
-  for(const auto& stencilFun : stencilInstantiation->getStencilFunctionInstantiations()) {
+  for(const auto& stencilFun : metadata.getStencilFunctionInstantiations()) {
     std::string stencilFunName = iir::StencilFunctionInstantiation::makeCodeGenName(*stencilFun);
     if(generatedStencilFun.emplace(stencilFunName).second) {
 
@@ -434,7 +443,7 @@ void CXXNaiveCodeGen::generateStencilFunctions(
 
       if(fields.empty()) {
         DiagnosticsBuilder diag(DiagnosticsKind::Error,
-                                stencilInstantiation->getMetaData().stencilLocation_);
+                                stencilInstantiation->getMetaData().getStencilLocation());
         diag << "no storages referenced in stencil '" << stencilInstantiation->getName()
              << "', this would result in invalid gridtools code";
         context_->getDiagnostics().report(diag);
@@ -489,7 +498,7 @@ void CXXNaiveCodeGen::generateStencilFunctions(
       if(stencilFun->hasGlobalVariables()) {
         stencilFunMethod.addArg("const globals& m_globals");
       }
-      ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation.get(),
+      ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
                                            StencilContext::SC_StencilFunction);
 
       stencilFunMethod.startBody();

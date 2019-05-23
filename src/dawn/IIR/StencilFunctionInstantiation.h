@@ -97,7 +97,7 @@ inline std::string dim2str(int dim) {
 class StencilFunctionInstantiation {
 private:
   StencilInstantiation* stencilInstantiation_;
-
+  const StencilMetaInformation& metadata_;
   // TODO put all members in a struct to avoid having to implement a clone for all of them
   // except the vector<unique_ptr>
   std::shared_ptr<StencilFunCallExpr> expr_;
@@ -184,8 +184,6 @@ public:
   std::unordered_map<int, int> const& ArgumentIndexToCallerAccessIDMap() const {
     return ArgumentIndexToCallerAccessIDMap_;
   }
-
-  void setArgumentIndexToCallerAccessID(int argIdx, int accessID);
 
   /// @brief check if all the stencil function arguments are bound
   bool isArgsBound() const { return argsBound_; }
