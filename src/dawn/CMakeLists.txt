@@ -34,7 +34,7 @@ yoda_combine_libraries(
   DEPENDS ${DAWN_EXTERNAL_LIBRARIES} DawnSerializerStatic
 )
 
-target_include_directories(DawnShared SYSTEM INTERFACE ${Boost_INCLUDE_DIRS})
+target_include_directories(DawnShared SYSTEM INTERFACE $<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>)
 
 # Export the targets
 install(EXPORT DawnTargets NAMESPACE Dawn:: DESTINATION ${DAWN_INSTALL_CMAKE_DIR})

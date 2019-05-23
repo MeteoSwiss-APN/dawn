@@ -104,7 +104,10 @@ public:
 
   void insertAccessOfType(FieldAccessType type, int AccessID, const std::string& name);
 
-  void insertField(FieldAccessType type, const std::string& name, const Array3i fieldDimensions);
+  int insertField(FieldAccessType type, const std::string& name, const Array3i fieldDimensions);
+
+  int insertTmpField(FieldAccessType type, const std::string& basename,
+                     const Array3i fieldDimensions);
 
   int insertStmt(bool keepVarNames, const std::shared_ptr<VarDeclStmt>& stmt);
 
