@@ -319,6 +319,7 @@ int StencilMetaInformation::insertStmt(bool keepVarNames,
   }
 
   setAccessIDNamePair(accessID, globalName);
+  DAWN_ASSERT(!StmtIDToAccessIDMap_.count(stmt->getID()));
   StmtIDToAccessIDMap_.emplace(stmt->getID(), accessID);
 
   return accessID;
@@ -359,6 +360,7 @@ void StencilMetaInformation::eraseStmtToAccessID(std::shared_ptr<Stmt> stmt) {
 }
 
 void StencilMetaInformation::insertStmtToAccessID(const std::shared_ptr<Stmt>& stmt, int accessID) {
+  DAWN_ASSERT(!StmtIDToAccessIDMap_.count(stmt->getID()));
   StmtIDToAccessIDMap_.emplace(stmt->getID(), accessID);
 }
 
