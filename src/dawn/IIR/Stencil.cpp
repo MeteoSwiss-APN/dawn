@@ -100,11 +100,11 @@ json::json Stencil::jsonDump() const {
   }
   node["Fields"] = fieldsJson;
 
-  int cnt = 0;
+  auto multiStagesArray = json::json::array();
   for(const auto& child : children_) {
-    node["MultiStage" + std::to_string(cnt)] = child->jsonDump();
-    cnt++;
+    multiStagesArray.push_back(child->jsonDump());
   }
+  node["MultiStages"] = multiStagesArray;
   return node;
 }
 

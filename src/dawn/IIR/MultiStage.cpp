@@ -423,11 +423,12 @@ json::json MultiStage::jsonDump() const {
   }
   node["Caches"] = cachesJson;
 
-  int cnt = 0;
+  auto stagesArray = json::json::array();
   for(const auto& stage : children_) {
-    node["Stage" + std::to_string(cnt)] = stage->jsonDump(metadata_);
-    cnt++;
+    stagesArray.push_back(stage->jsonDump(metadata_));
   }
+  node["Stages"] = stagesArray;
+
   return node;
 }
 
