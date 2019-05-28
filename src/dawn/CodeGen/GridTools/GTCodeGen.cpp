@@ -785,7 +785,7 @@ void GTCodeGen::generateStencilClasses(
     // Add static asserts to check halos against extents
     StencilConstructor.addComment("Check if extents do not exceed the halos");
     int nonTempFieldId = 0;
-    std::map<std::string, iir::Extents> fieldsExtsMap;
+    std::map<std::string, iir::Extents> parameterTypeToFullExtentsMap;
     for(const auto& fieldPair : stencilFields) {
       const auto& fieldInfo = fieldPair.second;
       if(!fieldInfo.IsTemporary) {
@@ -796,20 +796,21 @@ void GTCodeGen::generateStencilClasses(
         // is resolved
         // https://github.com/MeteoSwiss-APN/dawn/issues/110
         // ===-----------------------------------------------------------------------------------===
-        std::string storage = codeGenProperties.getParamType(stencilInstantiation, fieldInfo);
-        if(fieldsExtsMap.find(storage) == fieldsExtsMap.end()) {
-          fieldsExtsMap.insert(std::make_pair(storage, ext));
+        std::string parameterType = codeGenProperties.getParamType(stencilInstantiation, fieldInfo);
+        auto searchIterator = parameterTypeToFullExtentsMap.find(parameterType);
+        if(searchIterator == parameterTypeToFullExtentsMap.end()) {
+          parameterTypeToFullExtentsMap.emplace(parameterType, ext);
         } else {
-          fieldsExtsMap.at(storage).merge(ext);
+          (*searchIterator).second.merge(ext);
         }
         ++nonTempFieldId;
       }
     }
 
-    for(const auto& fieldPair : fieldsExtsMap) {
-      const auto& storage = fieldPair.first;
-      const auto& ext = fieldPair.second;
-      for(int dim = 0; dim < ext.getSize() - 1; ++dim) {
+    for(const auto& parameterTypeFullExtentsPair : parameterTypeToFullExtentsMap) {
+      const auto& parameterType = parameterTypeFullExtentsPair.first;
+      const auto& fullExtents = parameterTypeFullExtentsPair.second;
+      for(int dim = 0; dim < fullExtents.getSize() - 1; ++dim) {
         std::string at_call = "template at<" + std::to_string(dim) + ">()";
 
         // assert for + accesses
@@ -818,21 +819,21 @@ void GTCodeGen::generateStencilClasses(
         // we need the staggering offset in K in order to have valid production code
         // https://github.com/MeteoSwiss-APN/dawn/issues/108
         // ===---------------------------------------------------------------------------------===
-        const int staggeringoffset = (dim == 2) ? -1 : 0;
-        int compRHSide = ext[dim].Plus + staggeringoffset;
+        const int staggeringOffset = (dim == 2) ? -1 : 0;
+        int compRHSide = fullExtents[dim].Plus + staggeringOffset;
         if(compRHSide > 0)
-          StencilConstructor.addStatement("static_assert((static_cast<int>(" + storage +
+          StencilConstructor.addStatement("static_assert((static_cast<int>(" + parameterType +
                                           "::storage_info_t::halo_t::" + at_call +
                                           ") >= " + std::to_string(compRHSide) + ") || " + "(" +
-                                          storage + "::storage_info_t::layout_t::" + at_call +
+                                          parameterType + "::storage_info_t::layout_t::" + at_call +
                                           " == -1)," + "\"Used extents exceed halo limits.\")");
         // assert for - accesses
-        compRHSide = ext[dim].Minus;
+        compRHSide = fullExtents[dim].Minus;
         if(compRHSide < 0)
-          StencilConstructor.addStatement("static_assert(((-1)*static_cast<int>(" + storage +
+          StencilConstructor.addStatement("static_assert(((-1)*static_cast<int>(" + parameterType +
                                           "::storage_info_t::halo_t::" + at_call +
                                           ") <= " + std::to_string(compRHSide) + ") || " + "(" +
-                                          storage + "::storage_info_t::layout_t::" + at_call +
+                                          parameterType + "::storage_info_t::layout_t::" + at_call +
                                           " == -1)," + "\"Used extents exceed halo limits.\")");
       }
     }
