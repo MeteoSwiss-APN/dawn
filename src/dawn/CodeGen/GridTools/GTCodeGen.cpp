@@ -26,6 +26,7 @@
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringUtil.h"
 #include <boost/optional.hpp>
+#include <map>
 #include <string>
 #include <unordered_map>
 
@@ -418,9 +419,10 @@ void GTCodeGen::generateStencilClasses(
     const auto stencilFields = orderMap(stencil.getFields());
 
     auto nonTempFields = makeRange(
-        stencilFields,
-        std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>([](
-            std::pair<int, iir::Stencil::FieldInfo> const& f) { return !f.second.IsTemporary; }));
+        stencilFields, std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
+                           [](std::pair<int, iir::Stencil::FieldInfo> const& f) {
+                             return !f.second.IsTemporary;
+                           }));
     if(stencil.isEmpty()) {
       DiagnosticsBuilder diag(DiagnosticsKind::Error,
                               stencilInstantiation->getMetaData().getStencilLocation());
@@ -782,7 +784,7 @@ void GTCodeGen::generateStencilClasses(
 
     // Add static asserts to check halos against extents
     StencilConstructor.addComment("Check if extents do not exceed the halos");
-    int nonTempFieldId = 0;
+    std::map<std::string, iir::Extents> parameterTypeToFullExtentsMap;
     for(const auto& fieldPair : stencilFields) {
       const auto& fieldInfo = fieldPair.second;
       if(!fieldInfo.IsTemporary) {
@@ -793,29 +795,44 @@ void GTCodeGen::generateStencilClasses(
         // is resolved
         // https://github.com/MeteoSwiss-APN/dawn/issues/110
         // ===-----------------------------------------------------------------------------------===
-        for(int dim = 0; dim < ext.getSize() - 1; ++dim) {
-          std::string at_call = "template at<" + std::to_string(dim) + ">()";
-          std::string storage = codeGenProperties.getParamType(stencilInstantiation, fieldInfo);
-          // assert for + accesses
-          // ===---------------------------------------------------------------------------------===
-          // PRODUCTIONTODO: [STAGGERING]
-          // we need the staggering offset in K in order to have valid production code
-          // https://github.com/MeteoSwiss-APN/dawn/issues/108
-          // ===---------------------------------------------------------------------------------===
-          std::string staggeringoffset = (dim == 2) ? " - 1" : "";
-          StencilConstructor.addStatement(
-              "static_assert((static_cast<int>(" + storage + "::storage_info_t::halo_t::" +
-              at_call + ") >= " + std::to_string(ext[dim].Plus) + staggeringoffset + ") || " + "(" +
-              storage + "::storage_info_t::layout_t::" + at_call + " == -1)," +
-              "\"Used extents exceed halo limits.\")");
-          // assert for - accesses
-          StencilConstructor.addStatement("static_assert(((-1)*static_cast<int>(" + storage +
-                                          "::storage_info_t::halo_t::" + at_call + ") <= " +
-                                          std::to_string(ext[dim].Minus) + ") || " + "(" + storage +
-                                          "::storage_info_t::layout_t::" + at_call + " == -1)," +
-                                          "\"Used extents exceed halo limits.\")");
+        std::string parameterType = codeGenProperties.getParamType(stencilInstantiation, fieldInfo);
+        auto searchIterator = parameterTypeToFullExtentsMap.find(parameterType);
+        if(searchIterator == parameterTypeToFullExtentsMap.end()) {
+          parameterTypeToFullExtentsMap.emplace(parameterType, ext);
+        } else {
+          (*searchIterator).second.merge(ext);
         }
-        ++nonTempFieldId;
+      }
+    }
+
+    for(const auto& parameterTypeFullExtentsPair : parameterTypeToFullExtentsMap) {
+      const auto& parameterType = parameterTypeFullExtentsPair.first;
+      const auto& fullExtents = parameterTypeFullExtentsPair.second;
+      for(int dim = 0; dim < fullExtents.getSize() - 1; ++dim) {
+        std::string at_call = "template at<" + std::to_string(dim) + ">()";
+
+        // assert for + accesses
+        // ===---------------------------------------------------------------------------------===
+        // PRODUCTIONTODO: [STAGGERING]
+        // we need the staggering offset in K in order to have valid production code
+        // https://github.com/MeteoSwiss-APN/dawn/issues/108
+        // ===---------------------------------------------------------------------------------===
+        const int staggeringOffset = (dim == 2) ? -1 : 0;
+        int compRHSide = fullExtents[dim].Plus + staggeringOffset;
+        if(compRHSide > 0)
+          StencilConstructor.addStatement("static_assert((static_cast<int>(" + parameterType +
+                                          "::storage_info_t::halo_t::" + at_call +
+                                          ") >= " + std::to_string(compRHSide) + ") || " + "(" +
+                                          parameterType + "::storage_info_t::layout_t::" + at_call +
+                                          " == -1)," + "\"Used extents exceed halo limits.\")");
+        // assert for - accesses
+        compRHSide = fullExtents[dim].Minus;
+        if(compRHSide < 0)
+          StencilConstructor.addStatement("static_assert(((-1)*static_cast<int>(" + parameterType +
+                                          "::storage_info_t::halo_t::" + at_call +
+                                          ") <= " + std::to_string(compRHSide) + ") || " + "(" +
+                                          parameterType + "::storage_info_t::layout_t::" + at_call +
+                                          " == -1)," + "\"Used extents exceed halo limits.\")");
       }
     }
 
@@ -870,8 +887,8 @@ void GTCodeGen::generateStencilClasses(
     // notice we skip the first level since it is kstart and not included in the GT grid definition
     for(auto it = intervalDefinitions.Levels.begin(), end = intervalDefinitions.Levels.end();
         it != end; ++it, ++levelIdx)
-      StencilConstructor.addStatement("grid_.value_list[" + std::to_string(levelIdx) + "] = " +
-                                      getLevelSize(*it));
+      StencilConstructor.addStatement("grid_.value_list[" + std::to_string(levelIdx) +
+                                      "] = " + getLevelSize(*it));
 
     // generate sync storage calls
     generateSyncStorages(StencilConstructor, nonTempFields);
