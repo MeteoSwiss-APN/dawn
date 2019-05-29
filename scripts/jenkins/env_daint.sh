@@ -12,6 +12,6 @@ module load /project/c14/install/daint/clang/module_6.0.0
 export CXX=`which g++`
 export CC=`which gcc`
 
-export SLURM_RESOURCES=('--gres=gpu:1 -C gpu --account=c14')
+export SLURM_RESOURCES=('--gres=gpu:1 -C gpu --account=g110')
 export SLURM_PARTITION="debug"
 export GPU_DEVICE="P100"
