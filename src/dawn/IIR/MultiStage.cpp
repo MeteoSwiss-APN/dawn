@@ -428,7 +428,6 @@ json::json MultiStage::jsonDump() const {
     stagesArray.push_back(stage->jsonDump(metadata_));
   }
   node["Stages"] = stagesArray;
-
   return node;
 }
 
