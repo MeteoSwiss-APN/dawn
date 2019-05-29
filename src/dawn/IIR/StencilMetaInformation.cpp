@@ -438,7 +438,7 @@ int StencilMetaInformation::insertTmpField(FieldAccessType type, const std::stri
 void StencilMetaInformation::removeAccessID(int AccessID) {
   AccessIDToNameMap_.directEraseKey(AccessID);
 
-  // we can only remove field or local variables (i.e. we can not remove niether globals nor
+  // we can only remove field or local variables (i.e. we can not remove neither globals nor
   // literals
   DAWN_ASSERT(isAccessType(FieldAccessType::FAT_Field, AccessID) ||
               isAccessType(FieldAccessType::FAT_LocalVariable, AccessID));
@@ -465,7 +465,7 @@ void StencilMetaInformation::removeAccessID(int AccessID) {
   }
   fieldAccessMetadata_.accessIDType_.erase(AccessID);
 
-  if(fieldAccessMetadata_.variableVersions_.hasVariableMultipleVersions(AccessID)) {
+  if(fieldAccessMetadata_.variableVersions_.variableHasMultipleVersions(AccessID)) {
     auto versions = fieldAccessMetadata_.variableVersions_.getVersions(AccessID);
     versions->erase(std::remove_if(versions->begin(), versions->end(),
                                    [&](int AID) { return AID == AccessID; }),
@@ -477,11 +477,6 @@ StencilMetaInformation::StencilMetaInformation(const sir::GlobalVariableMap& glo
   for(const auto& global : globalVariables) {
     insertAccessOfType(iir::FieldAccessType::FAT_GlobalVariable, global.first);
   }
-}
-
-void StencilMetaInformation::insertVersions(const int accessID,
-                                            std::shared_ptr<std::vector<int>> versionsID) {
-  fieldAccessMetadata_.variableVersions_.insert(accessID, versionsID);
 }
 
 std::shared_ptr<std::vector<int>> StencilMetaInformation::getVersionsOf(const int accessID) const {

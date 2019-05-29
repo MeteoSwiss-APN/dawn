@@ -66,7 +66,7 @@ public:
   /// @brief Check whether the `AccessID` corresponds to a multi-versioned field
   bool isMultiVersionedField(int AccessID) const {
     return isAccessType(FieldAccessType::FAT_Field, AccessID) &&
-           fieldAccessMetadata_.variableVersions_.hasVariableMultipleVersions(AccessID);
+           fieldAccessMetadata_.variableVersions_.variableHasMultipleVersions(AccessID);
   }
 
   int getOriginalVersionOfAccessID(const int accessID) const {
@@ -242,10 +242,12 @@ public:
 
   const FieldAccessMetadata& getFieldAccessMetadata() const { return fieldAccessMetadata_; }
 
-  void insertVersions(const int accessID, std::shared_ptr<std::vector<int>> versionsID);
+  void insertFieldVersionIDPair(const int originalAccessID, const int versionedAccessID){
+      fieldAccessMetadata_.variableVersions_.insertIDPair(originalAccessID, versionedAccessID);
+  }
 
-  bool hasVariableMultipleVersions(const int accessID) const {
-    return fieldAccessMetadata_.variableVersions_.hasVariableMultipleVersions(accessID);
+  bool variableHasMultipleVersions(const int accessID) const {
+    return fieldAccessMetadata_.variableVersions_.variableHasMultipleVersions(accessID);
   }
 
   std::shared_ptr<std::vector<int>> getVersionsOf(const int accessID) const;

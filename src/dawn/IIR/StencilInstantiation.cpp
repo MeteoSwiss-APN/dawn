@@ -92,9 +92,9 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
 
   int newAccessID = -1;
   if(metadata_.isAccessType(FieldAccessType::FAT_Field, AccessID)) {
-    if(metadata_.getFieldAccessMetadata().variableVersions_.hasVariableMultipleVersions(AccessID)) {
+    if(metadata_.variableHasMultipleVersions(AccessID)) {
       // Field is already multi-versioned, append a new version
-      auto versions = metadata_.getFieldAccessMetadata().variableVersions_.getVersions(AccessID);
+      const auto versions = metadata_.getVersionsOf(AccessID);
 
       // Set the second to last field to be a temporary (only the first and the last field will be
       // real storages, all other versions will be temporaries)
@@ -102,57 +102,56 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
       metadata_.moveRegisteredFieldTo(iir::FieldAccessType::FAT_StencilTemporary, lastAccessID);
 
       // The field with version 0 contains the original name
-      const std::string& originalName = metadata_.getFieldNameFromAccessID(versions->front());
+      int originalID =
+          metadata_.getFieldAccessMetadata().variableVersions_.getOriginalVersionOfAccessID(
+              lastAccessID);
+      const std::string& originalName = metadata_.getFieldNameFromAccessID(originalID);
 
       // Register the new field
       newAccessID =
           metadata_.insertAccessOfType(iir::FieldAccessType::FAT_InterStencilTemporary,
                                        originalName + "_" + std::to_string(versions->size()));
 
-      versions->push_back(newAccessID);
-      metadata_.insertVersions(newAccessID, versions);
+      // and register in field-versioning
+      metadata_.insertFieldVersionIDPair(originalID, newAccessID);
 
     } else {
       const std::string& originalName = metadata_.getFieldNameFromAccessID(AccessID);
 
       newAccessID = metadata_.insertAccessOfType(iir::FieldAccessType::FAT_InterStencilTemporary,
-                                                 originalName + "_1");
+                                                 originalName + "_0");
 
       // Register the new *and* old field as being multi-versioned and indicate code-gen it has to
       // allocate the second version
-      auto versionsVecPtr = std::make_shared<std::vector<int>>();
-      *versionsVecPtr = {AccessID, newAccessID};
-
-      metadata_.insertVersions(AccessID, versionsVecPtr);
-      metadata_.insertVersions(newAccessID, versionsVecPtr);
+      metadata_.insertFieldVersionIDPair(AccessID, newAccessID);
     }
   } else {
     // if not a field, it is a variable
-    if(metadata_.hasVariableMultipleVersions(AccessID)) {
+    if(metadata_.variableHasMultipleVersions(AccessID)) {
       // Variable is already multi-versioned, append a new version
       auto versions = metadata_.getVersionsOf(AccessID);
 
-      // The variable with version 0 contains the original name
-      const std::string& originalName = metadata_.getFieldNameFromAccessID(versions->front());
+      int lastAccessID = versions->back();
+      // The field with version 0 contains the original name
+      int originalID =
+          metadata_.getFieldAccessMetadata().variableVersions_.getOriginalVersionOfAccessID(
+              lastAccessID);
+      const std::string& originalName = metadata_.getFieldNameFromAccessID(originalID);
 
       // Register the new variable
       newAccessID =
           metadata_.insertAccessOfType(iir::FieldAccessType::FAT_LocalVariable,
                                        originalName + "_" + std::to_string(versions->size()));
-      versions->push_back(newAccessID);
-      metadata_.insertVersions(newAccessID, versions);
+
+      metadata_.insertFieldVersionIDPair(originalID, newAccessID);
 
     } else {
       const std::string& originalName = metadata_.getFieldNameFromAccessID(AccessID);
 
       newAccessID = metadata_.insertAccessOfType(iir::FieldAccessType::FAT_LocalVariable,
-                                                 originalName + "_1");
+                                                 originalName + "_0");
       // Register the new *and* old variable as being multi-versioned
-      auto versionsVecPtr = std::make_shared<std::vector<int>>();
-      *versionsVecPtr = {AccessID, newAccessID};
-
-      metadata_.insertVersions(AccessID, versionsVecPtr);
-      metadata_.insertVersions(newAccessID, versionsVecPtr);
+      metadata_.insertFieldVersionIDPair(AccessID, newAccessID);
     }
   }
 
