@@ -17,6 +17,7 @@
 
 #include "boost/variant.hpp"
 #include "dawn/Support/Assert.h"
+#include "dawn/Support/Assert.h"
 #include "dawn/Support/Json.h"
 #include <set>
 #include <unordered_map>
@@ -47,11 +48,16 @@ private:
 
 public:
   bool variableHasMultipleVersions(const int accessID) const {
-    return variableVersionsMap_.count(accessID);
+    return variableVersionsMap_.count(accessID) || derivedInfo_.versionIDs_.count(accessID);
   }
 
   std::shared_ptr<std::vector<int>> getVersions(const int accessID) const {
-    return variableVersionsMap_.at(accessID);
+
+    if(variableVersionsMap_.count(accessID)) {
+      return variableVersionsMap_.at(accessID);
+    } else {
+      return variableVersionsMap_.at(derivedInfo_.versionToOriginalVersionMap_.at(accessID));
+    }
   }
 
   void insertIDPair(const int originalAccessID, const int versionedAccessID) {
@@ -78,6 +84,24 @@ public:
       derivedInfo_.versionToOriginalVersionMap_.erase(accessID);
       // and clear it from the list of all versioned fields
       derivedInfo_.versionIDs_.erase(accessID);
+    } else if(variableVersionsMap_.count(accessID) > 0) {
+      int newOriginalID = variableVersionsMap_[accessID]->at(0);
+      // This is now an original field
+      derivedInfo_.versionIDs_.erase(newOriginalID);
+      // change the orignial to version map:
+      std::shared_ptr<std::vector<int>> newVec = std::make_shared<std::vector<int>>();
+      for(auto ID : (*variableVersionsMap_[accessID])) {
+        if(ID != newOriginalID) {
+          newVec->push_back(ID);
+          // And hook the versions to it's new original
+          derivedInfo_.versionToOriginalVersionMap_.erase(ID);
+          derivedInfo_.versionToOriginalVersionMap_.emplace(ID, newOriginalID);
+        }
+      }
+      variableVersionsMap_.erase(accessID);
+      variableVersionsMap_.emplace(newOriginalID, newVec);
+    } else {
+      DAWN_ASSERT_MSG(false, "field is not versioned");
     }
   }
 
