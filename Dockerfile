@@ -1,6 +1,6 @@
 FROM nvidia/cuda:10.0-devel-ubuntu18.04 AS builder
 LABEL maintainer="Carlos Osuna <Carlos.Osuna@meteoswiss.ch>"
-LABEL description="This is a gtclang container" 
+LABEL description="GTClang build stage"
 RUN apt-get update                                                                                                              && \
     apt-get install -y clang-6.0 libclang-6.0-dev git cmake openssh-client python3.7 libboost-all-dev                           && \
     mkdir /usr/local/gtclang_build                                                                                              && \
@@ -16,8 +16,8 @@ RUN cd /usr/local/gtclang_build                                                 
     make -j2
 
 FROM nvidia/cuda:10.0-devel-ubuntu18.04
-MAINTAINER Carlos Osuna <Carlos.Osuna@meteoswiss.ch>
-LABEL description="This is a gtclang container"
+LABEL maintainer="Carlos Osuna <Carlos.Osuna@meteoswiss.ch>"
+LABEL description="GTClang execution stage"
 RUN apt-get update                                                                                                              && \
     apt-get install -y clang-6.0                                                                                                 && \
     mkdir /usr/local/gtclang  && mkdir /usr/local/gtclang_build                                                                 && \
