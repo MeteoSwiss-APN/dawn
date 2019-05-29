@@ -13,7 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/Field.h"
-#include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 
 namespace dawn {
 namespace iir {
@@ -24,7 +24,7 @@ Interval Field::computeAccessedInterval() const {
   return accessedInterval;
 }
 
-json::json Field::jsonDump(const StencilInstantiation* instantiation) const {
+json::json Field::jsonDump() const {
   json::json node;
   node["accessID"] = accessID_;
   node["intend"] = intend_;

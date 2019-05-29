@@ -1,5 +1,6 @@
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/IndexRange.h"
 #include "dawn/Support/StringUtil.h"
@@ -34,15 +35,6 @@ std::string CodeGeneratorHelper::indexIteratorName(Array3i dims) {
   return n_;
 }
 
-bool CodeGeneratorHelper::useNormalIteratorForTmp(const std::unique_ptr<iir::MultiStage>& ms) {
-  for(const auto& stage : ms->getChildren()) {
-    if(!stage->getExtents().isHorizontalPointwise()) {
-      return false;
-    }
-  }
-  return true;
-}
-
 std::string CodeGeneratorHelper::buildCudaKernelName(
     const std::shared_ptr<iir::StencilInstantiation>& instantiation,
     const std::unique_ptr<iir::MultiStage>& ms) {
@@ -50,15 +42,18 @@ std::string CodeGeneratorHelper::buildCudaKernelName(
          "_ms" + std::to_string(ms->getID()) + "_kernel";
 }
 
-std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(const IndexRange<const std::map<int, iir::Field> > &nonTempFields,
-    const IndexRange<const std::map<int, iir::Field> > &tempFields,
+std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(
+    const IndexRange<const std::map<int, iir::Field>>& nonTempFields,
+    const IndexRange<const std::map<int, iir::Field>>& tempFields,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const std::unique_ptr<iir::MultiStage>& ms, CodeGeneratorHelper::FunctionArgType funArg) {
+
+  const auto& metadata = stencilInstantiation->getMetaData();
 
   std::unordered_set<std::string> processedDims;
   std::vector<std::string> strides;
   for(auto field : nonTempFields) {
-    const auto fieldName = stencilInstantiation->getFieldNameFromAccessID((*field).second.getAccessID());
+    const auto fieldName = metadata.getFieldNameFromAccessID((*field).second.getAccessID());
     Array3i dims{-1, -1, -1};
     // TODO this is a hack, we need to have dimensions also at ms level
     for(const auto& fieldInfo : ms->getParent()->getFields()) {
@@ -89,8 +84,7 @@ std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(const Inde
   }
   if(!tempFields.empty()) {
     auto firstTmpField = **(tempFields.begin());
-    std::string fieldName =
-        stencilInstantiation->getFieldNameFromAccessID(firstTmpField.second.getAccessID());
+    std::string fieldName = metadata.getFieldNameFromAccessID(firstTmpField.second.getAccessID());
     if(funArg == CodeGeneratorHelper::FunctionArgType::FT_Caller) {
       strides.push_back("m_" + fieldName + ".get_storage_info_ptr()->template begin<0>()," + "m_" +
                         fieldName + ".get_storage_info_ptr()->template begin<1>()," + "m_" +
@@ -118,23 +112,59 @@ iir::Extents CodeGeneratorHelper::computeTempMaxWriteExtent(iir::Stencil const& 
   return maxExtents;
 }
 
+bool CodeGeneratorHelper::hasAccessIDMemAccess(const int accessID,
+                                               const std::unique_ptr<iir::Stencil>& stencil) {
+
+  for(const auto& ms : stencil->getChildren()) {
+    if(!ms->hasField(accessID))
+      continue;
+    if(!ms->isCached(accessID))
+      return true;
+    if(ms->getCache(accessID).getCacheType() == iir::Cache::CacheTypeKind::bypass) {
+      return true;
+    }
+    if(ms->getCache(accessID).getCacheIOPolicy() != iir::Cache::CacheIOPolicy::local) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool CodeGeneratorHelper::useTemporaries(
+    const std::unique_ptr<iir::Stencil>& stencil,
+    const iir::StencilMetaInformation& metadata) {
+
+  const auto& fields = stencil->getFields();
+  const bool containsMemTemporary =
+      (find_if(fields.begin(), fields.end(),
+               [&](const std::pair<int, iir::Stencil::FieldInfo>& field) {
+                 const int accessID = field.second.field.getAccessID();
+                 if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID))
+                   return false;
+                 // we dont need to use temporaries infrastructure for fields that are cached
+                 return hasAccessIDMemAccess(accessID, stencil);
+               }) != fields.end());
+
+  return containsMemTemporary && stencil->containsRedundantComputations();
+}
+
 void CodeGeneratorHelper::generateFieldAccessDeref(
     std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
-    const std::shared_ptr<iir::StencilInstantiation>& instantiation, const int accessID,
+    const iir::StencilMetaInformation& metadata, const int accessID,
     const std::unordered_map<int, Array3i> fieldIndexMap, Array3i offset) {
-  std::string accessName = instantiation->getFieldNameFromAccessID(accessID);
-  bool isTemporary = instantiation->isTemporaryField(accessID);
+  std::string accessName = metadata.getFieldNameFromAccessID(accessID);
+  bool isTemporary = metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID);
   DAWN_ASSERT(fieldIndexMap.count(accessID) || isTemporary);
   const auto& field = ms->getField(accessID);
-  bool useTmpIndex_ = (isTemporary && !useNormalIteratorForTmp(ms));
-  std::string index = useTmpIndex_ ? "idx_tmp" : "idx" + CodeGeneratorHelper::indexIteratorName(
-                                                             fieldIndexMap.at(accessID));
+  bool useTmpIndex = isTemporary && useTemporaries(ms->getParent(), metadata);
+  std::string index = useTmpIndex ? "idx_tmp" : "idx" + CodeGeneratorHelper::indexIteratorName(
+                                                            fieldIndexMap.at(accessID));
 
   // temporaries have all 3 dimensions
   Array3i iter = isTemporary ? Array3i{1, 1, 1} : fieldIndexMap.at(accessID);
 
-  std::string offsetStr = RangeToString("+", "", "", true)(
-      CodeGeneratorHelper::ijkfyOffset(offset, useTmpIndex_, iter));
+  std::string offsetStr =
+      RangeToString("+", "", "", true)(CodeGeneratorHelper::ijkfyOffset(offset, useTmpIndex, iter));
   const bool readOnly = (field.getIntend() == iir::Field::IntendKind::IK_Input);
   ss << (readOnly ? "__ldg(&(" : "") << accessName
      << (offsetStr.empty() ? "[" + index + "]" : ("[" + index + "+" + offsetStr + "]"))

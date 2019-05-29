@@ -162,7 +162,13 @@ message Stencil {
 // The root node of the tree, holding multiple stencils. There is one IIR object for each user
 // defined Stencil.
 message IIR {
-    repeated Stencil stencils = 1;
+    // Map of the globally defined variable names to their Values
+    map<string, GlobalValueAndType> globalVariableToValue = 1;
+
+    repeated Stencil stencils = 2;
+
+    // Stencil description statements for the overall program flow
+    repeated dawn.proto.statements.Stmt controlFlowStatements = 3;
 }
 
 /* ===-----------------------------------------------------------------------------------------===*/
@@ -216,45 +222,42 @@ message StencilMetaInfo {
     // Surjection of AST Nodes, Expr (FieldAccessExpr or VarAccessExpr) to their AccessID
     map<int32, int32> stmtIDToAccessID = 3;
 
+    // Injection of AccessIDs of the access type
+    map<int32, int32> accessIDToType = 4;
+
     // Injection of AccessIDs of literal constant to their respective name
-    map<int32, string> literalIDToName = 4;
+    map<int32, string> literalIDToName = 5;
 
     // set of AccessIDs which correspond to fields for identification as such
-    repeated int32 fieldAccessIDs = 5;
+    repeated int32 fieldAccessIDs = 6;
 
     // Ordered list of IDs of fields that belong to the user API call of the program
-    repeated int32 APIFieldIDs = 6;
+    repeated int32 APIFieldIDs = 7;
 
     // AccessIDs of fields which are represented by a temporary storages
-    repeated int32 temporaryFieldIDs = 7;
+    repeated int32 temporaryFieldIDs = 8;
 
     // AccessIDs of "global variable" accesses
-    repeated int32 globalVariableIDs = 8;
+    repeated int32 globalVariableIDs = 9;
 
     // Strucutue for all the fieldversioning information
-    VariableVersions versionedFields = 9;
-
-    // Stencil description statements for the overall program flow
-    repeated dawn.proto.statements.Stmt stencilDescStatements = 10;
-
-    // Map of the StencilID's to their respective StencilCall
-    map<int32, dawn.proto.statements.Stmt> IDToStencilCall = 11;
+    VariableVersions versionedFields = 10;
 
     // Map of field names to their respective Boundary Condition
-    map<string, dawn.proto.statements.Stmt> fieldnameToBoundaryCondition = 12;
+    map<string, dawn.proto.statements.Stmt> fieldnameToBoundaryCondition = 11;
 
     // Map of field ID's to the user-specified dimensions
-    map<int32, Array3i> fieldIDtoLegalDimensions = 13;
+    map<int32, Array3i> fieldIDtoLegalDimensions = 12;
 
-    // Map of the globally defined variable names to their Values
-    map<string, GlobalValueAndType> globalVariableToValue = 14;
+    // Map of the StencilID's to their respective StencilCall
+    map<int32, dawn.proto.statements.Stmt> idToStencilCall = 13;
 
     // The source-location of the stencil (for better error-handeling)
-    dawn.proto.statements.SourceLocation stencilLocation = 15;
+    dawn.proto.statements.SourceLocation stencilLocation = 14;
 
     // The user-given name of the stencil
     // (remember the 1-1 mapping of user-stencil - StencilInstantiation)
-    string stencilName = 16;
+    string stencilName = 15;
 }
 
 /* ===-----------------------------------------------------------------------------------------===*/

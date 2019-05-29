@@ -15,7 +15,6 @@
 #include "dawn/CodeGen/Cuda/ASTStencilDesc.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/StencilFunctionAsBCGenerator.h"
-#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Unreachable.h"
 
@@ -23,18 +22,18 @@ namespace dawn {
 namespace codegen {
 namespace cuda {
 
-ASTStencilDesc::ASTStencilDesc(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+ASTStencilDesc::ASTStencilDesc(const iir::StencilMetaInformation& metadata,
                                CodeGenProperties const& codeGenProperties)
-    : ASTCodeGenCXX(), instantiation_(instantiation), codeGenProperties_(codeGenProperties) {}
+    : ASTCodeGenCXX(), metadata_(metadata), codeGenProperties_(codeGenProperties) {}
 
 ASTStencilDesc::~ASTStencilDesc() {}
 
 std::string ASTStencilDesc::getName(const std::shared_ptr<Stmt>& stmt) const {
-  return instantiation_->getFieldNameFromAccessID(instantiation_->getAccessIDFromStmt(stmt));
+  return metadata_.getFieldNameFromAccessID(metadata_.getAccessIDFromStmt(stmt));
 }
 
 std::string ASTStencilDesc::getName(const std::shared_ptr<Expr>& expr) const {
-  return instantiation_->getFieldNameFromAccessID(instantiation_->getAccessIDFromExpr(expr));
+  return metadata_.getFieldNameFromAccessID(metadata_.getAccessIDFromExpr(expr));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -50,7 +49,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) 
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
-  int stencilID = instantiation_->getStencilCallToStencilIDMap().find(stmt)->second;
+  int stencilID = metadata_.getStencilIDFromStencilCallStmt(stmt);
 
   std::string stencilName =
       codeGenProperties_.getStencilName(StencilContext::SC_Stencil, stencilID);
@@ -58,7 +57,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
-  BCGenerator bcGen(instantiation_, ss_);
+  BCGenerator bcGen(metadata_, ss_);
   bcGen.generate(stmt);
 }
 
@@ -75,7 +74,8 @@ void ASTStencilDesc::visit(const std::shared_ptr<StencilFunArgExpr>& expr) {
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<VarAccessExpr>& expr) {
-  if(instantiation_->isGlobalVariable(instantiation_->getAccessIDFromExpr(expr))) {
+  if(metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable,
+                            metadata_.getAccessIDFromExpr(expr))) {
     ss_ << "m_globals.";
   }
 

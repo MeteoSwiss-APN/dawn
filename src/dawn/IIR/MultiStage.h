@@ -31,8 +31,8 @@ class OptimizerContext;
 namespace iir {
 
 class Stencil;
-class StencilInstantiation;
 class DependencyGraphAccesses;
+class StencilMetaInformation;
 
 namespace impl {
 template <typename T>
@@ -46,7 +46,7 @@ using StdList = std::list<T, std::allocator<T>>;
 ///
 /// @ingroup optimizer
 class MultiStage : public IIRNode<Stencil, MultiStage, Stage, impl::StdList> {
-  StencilInstantiation& stencilInstantiation_;
+  StencilMetaInformation& metadata_;
 
   LoopOrderKind loopOrder_;
 
@@ -70,7 +70,7 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
-  MultiStage(StencilInstantiation& stencilInstantiation, LoopOrderKind loopOrder);
+  MultiStage(StencilMetaInformation& metadata, LoopOrderKind loopOrder);
   MultiStage(MultiStage&&) = default;
 
   MultiStage& operator=(const MultiStage&) = default;
@@ -79,12 +79,7 @@ public:
 
   std::unique_ptr<MultiStage> clone() const;
 
-  json::json jsonDump(const StencilInstantiation& instantiation) const;
-
-  /// @brief getters
-  /// @{
-  /// @brief Get the execution policy
-  StencilInstantiation& getStencilInstantiation() const { return stencilInstantiation_; }
+  json::json jsonDump() const;
 
   /// @brief Get the loop order
   LoopOrderKind getLoopOrder() const { return loopOrder_; }
@@ -165,8 +160,20 @@ public:
   /// @brief Compute and return the pairs <AccessID, field> used for a given interval
   std::unordered_map<int, Field> computeFieldsAtInterval(const iir::Interval& interval) const;
 
+  /// @brief determines whether an accessID corresponds to a temporary that will perform accesses to
+  /// main memory
+  bool isMemAccessTemporary(const int accessID) const;
+
+  /// @brief true if there is at least a temporary that requires access to main mem
+  bool hasMemAccessTemporaries() const;
+
+  /// @brief determines whether the multistage contains the field with an accessID
+  bool hasField(const int accessID) const;
+
+  /// @brief field getter with an accessID
   const Field& getField(int accessID) const;
 
+  /// @brief computes the collection of fields of the multistage on the fly (returns copy)
   std::unordered_map<int, Field> computeFieldsOnTheFly() const;
 
   /// @brief Get the enclosing interval of all access to temporaries

@@ -17,6 +17,7 @@
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/IIR/Interval.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>
 #include <unordered_map>
@@ -24,7 +25,6 @@
 namespace dawn {
 
 namespace iir {
-class StencilInstantiation;
 class StencilFunctionInstantiation;
 }
 
@@ -35,7 +35,7 @@ namespace gt {
 /// @ingroup gt
 class ASTStencilBody : public ASTCodeGenCXX {
 protected:
-  const iir::StencilInstantiation* instantiation_;
+  const iir::StencilMetaInformation& metadata_;
   const std::unordered_set<iir::IntervalProperties>& intervalProperties_;
   RangeToString offsetPrinter_;
 
@@ -50,7 +50,7 @@ protected:
 public:
   using Base = ASTCodeGenCXX;
 
-  ASTStencilBody(const iir::StencilInstantiation* stencilInstantiation,
+  ASTStencilBody(const iir::StencilMetaInformation& metadata,
                  const std::unordered_set<iir::IntervalProperties>& intervalProperties);
   virtual ~ASTStencilBody();
 

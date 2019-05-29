@@ -24,6 +24,9 @@
 namespace dawn {
 
 struct SIR;
+namespace iir {
+class StencilInstantiation;
+}
 
 /// @brief Serialize/Deserialize the internal representation of the user stencils
 class IIRSerializer {

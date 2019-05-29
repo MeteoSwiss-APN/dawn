@@ -53,7 +53,7 @@ bool PassStageReordering::run(
     }
 
     // TODO should we have Iterators so to prevent unique_ptr swaps
-    auto newStencil = strategy->reorder(stencilPtr);
+    auto newStencil = strategy->reorder(stencilInstantiation.get(), stencilPtr);
 
     stencilInstantiation->getIIR()->replace(stencilPtr, newStencil, stencilInstantiation->getIIR());
 

@@ -48,8 +48,9 @@ private:
   std::stringstream& ss_;
   const std::unique_ptr<iir::MultiStage>& ms_;
   const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation_;
+  const iir::StencilMetaInformation& metadata_;
   const CacheProperties& cacheProperties_;
-  bool useTmpIndex_;
+  bool useCodeGenTemporaries_;
   std::string cudaKernelName_;
   Array3ui blockSize_;
   const bool solveKLoopInParallel_;

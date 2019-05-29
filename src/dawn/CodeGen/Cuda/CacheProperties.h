@@ -34,6 +34,12 @@ struct CacheProperties {
   iir::Extents extents_;
   std::unordered_map<int, iir::Extents> specialCaches_;
   const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation_;
+  const iir::StencilMetaInformation& metadata_;
+
+  CacheProperties(const std::unique_ptr<iir::MultiStage>& ms,
+                  const std::set<int>& accessIDsCommonCache_, iir::Extents extents_,
+                  const std::unordered_map<int, iir::Extents>& specialCaches_,
+                  const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation_);
 
   /// @brief in order to minimize the integer iterator operations, IJ caches are allocated with a
   /// common size (up to a predefined maximum) so that the can reuse the same iterator. This

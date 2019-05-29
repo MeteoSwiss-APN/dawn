@@ -44,12 +44,20 @@ struct NameToImprovementMetric {
 
 /// @brief The GlobalFieldCacher class handles the caching for a given Multistage
 class GlobalFieldCacher {
+  const std::unique_ptr<iir::MultiStage>& multiStagePrt_;
+  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
+  iir::StencilMetaInformation& metadata_;
+  std::unordered_map<int, int> accessIDToDataLocality_;
+  std::unordered_map<int, int> oldAccessIDtoNewAccessID_;
+  std::vector<AcessIDTolocalityMetric> sortedAccesses_;
+  std::vector<NameToImprovementMetric> originalNameToCache_;
+
 public:
   /// @param[in, out]  msprt   Pointer to the multistage to handle
   /// @param[in, out]  si      Stencil Instanciation [ISIR] holding all the Stencils
   GlobalFieldCacher(const std::unique_ptr<iir::MultiStage>& msptr,
                     const std::shared_ptr<iir::StencilInstantiation>& si)
-      : multiStagePrt_(msptr), instantiation_(si) {}
+      : multiStagePrt_(msptr), instantiation_(si), metadata_(si->getMetaData()) {}
 
   /// @brief Entry method for the pass: processes a given multistage and applies all changes
   /// required
@@ -83,7 +91,7 @@ private:
           continue;
 
         // This is caching non-temporary fields
-        if(instantiation_->isTemporaryField(field.getAccessID()))
+        if(metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, field.getAccessID()))
           continue;
 
         int cachedReadAndWrites = dataLocality.find(field.getAccessID())->second.totalAccesses();
@@ -121,9 +129,8 @@ private:
       int oldID = sortedAccesses_[i].accessID;
 
       // Create new temporary field and register in the instantiation
-      int newID = instantiation_->nextUID();
-
-      instantiation_->setAccessIDNamePairOfField(newID, "__tmp_cache_" + std::to_string(i), true);
+      int newID = metadata_.insertAccessOfType(iir::FieldAccessType::FAT_StencilTemporary,
+                                               "__tmp_cache_" + std::to_string(i));
 
       // Rename all the fields in this multistage
       multiStagePrt_->renameAllOccurrences(oldID, newID);
@@ -183,8 +190,9 @@ private:
                                                     const std::vector<int>& assigneeIDs) {
     // Add the cache Flush stage
     std::unique_ptr<iir::Stage> assignmentStage =
-        make_unique<iir::Stage>(*instantiation_, instantiation_->nextUID(), interval);
-    iir::Stage::DoMethodSmartPtr_t domethod = make_unique<iir::DoMethod>(interval, *instantiation_);
+        make_unique<iir::Stage>(instantiation_->getMetaData(), instantiation_->nextUID(), interval);
+    iir::Stage::DoMethodSmartPtr_t domethod =
+        make_unique<iir::DoMethod>(interval, instantiation_->getMetaData());
     domethod->clearChildren();
 
     for(int i = 0; i < assignmentIDs.size(); ++i) {
@@ -209,9 +217,9 @@ private:
                                int assigneeID) {
     // Create the StatementAccessPair of the assignment with the new and old variables
     auto fa_assignee =
-        std::make_shared<FieldAccessExpr>(instantiation_->getFieldNameFromAccessID(assigneeID));
+        std::make_shared<FieldAccessExpr>(metadata_.getFieldNameFromAccessID(assigneeID));
     auto fa_assignment =
-        std::make_shared<FieldAccessExpr>(instantiation_->getFieldNameFromAccessID(assignmentID));
+        std::make_shared<FieldAccessExpr>(metadata_.getFieldNameFromAccessID(assignmentID));
     auto assignmentExpression = std::make_shared<AssignmentExpr>(fa_assignment, fa_assignee, "=");
     auto expAssignment = std::make_shared<ExprStmt>(assignmentExpression);
     auto assignmentStatement = std::make_shared<Statement>(expAssignment, nullptr);
@@ -223,8 +231,8 @@ private:
     domethod->insertChild(std::move(pair));
 
     // Add the new expressions to the map
-    instantiation_->mapExprToAccessID(fa_assignment, assignmentID);
-    instantiation_->mapExprToAccessID(fa_assignee, assigneeID);
+    metadata_.insertExprToAccessID(fa_assignment, assignmentID);
+    metadata_.insertExprToAccessID(fa_assignee, assigneeID);
   }
 
   /// @brief Checks if there is a read operation before the first write operation in the given
@@ -267,19 +275,11 @@ private:
     }
     return true;
   }
-
-  const std::unique_ptr<iir::MultiStage>& multiStagePrt_;
-  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
-
-  std::unordered_map<int, int> accessIDToDataLocality_;
-  std::unordered_map<int, int> oldAccessIDtoNewAccessID_;
-  std::vector<AcessIDTolocalityMetric> sortedAccesses_;
-
-  std::vector<NameToImprovementMetric> originalNameToCache_;
 };
 
 PassSetNonTempCaches::PassSetNonTempCaches() : Pass("PassSetNonTempCaches") {}
 
+// TODO delete this pass
 bool dawn::PassSetNonTempCaches::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 

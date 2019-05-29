@@ -21,7 +21,7 @@
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
-#include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Optimizer/AccessUtils.h"
 #include "dawn/SIR/Statement.h"
 #include "dawn/Support/IndexGenerator.h"
@@ -31,12 +31,11 @@
 namespace dawn {
 namespace iir {
 
-DoMethod::DoMethod(Interval interval, StencilInstantiation& stencilInstantiation)
-    : interval_(interval), id_(IndexGenerator::Instance().getIndex()),
-      stencilInstantiation_(stencilInstantiation) {}
+DoMethod::DoMethod(Interval interval, const StencilMetaInformation& metaData)
+    : interval_(interval), id_(IndexGenerator::Instance().getIndex()), metaData_(metaData) {}
 
 std::unique_ptr<DoMethod> DoMethod::clone() const {
-  auto cloneMS = make_unique<DoMethod>(interval_, stencilInstantiation_);
+  auto cloneMS = make_unique<DoMethod>(interval_, metaData_);
 
   cloneMS->setID(id_);
   cloneMS->setDependencyGraph(derivedInfo_.dependencyGraph_);
@@ -94,7 +93,7 @@ void DoMethod::DerivedInfo::clear() { fields_.clear(); }
 
 void DoMethod::clearDerivedInfo() { derivedInfo_.clear(); }
 
-json::json DoMethod::jsonDump(const StencilInstantiation& instantiation) const {
+json::json DoMethod::jsonDump(const StencilMetaInformation& metaData) const {
   json::json node;
   node["ID"] = id_;
   std::stringstream ss;
@@ -103,13 +102,13 @@ json::json DoMethod::jsonDump(const StencilInstantiation& instantiation) const {
 
   json::json fieldsJson;
   for(const auto& field : derivedInfo_.fields_) {
-    fieldsJson[instantiation.getNameFromAccessID(field.first)] = field.second.jsonDump(&instantiation);
+    fieldsJson[metaData.getNameFromAccessID(field.first)] = field.second.jsonDump();
   }
   node["Fields"] = fieldsJson;
 
   json::json stmtsJson;
   for(const auto& stmt : children_) {
-    stmtsJson.push_back(stmt->jsonDump(instantiation));
+    stmtsJson.push_back(stmt->jsonDump(metaData));
   }
   node["Stmts"] = stmtsJson;
   return node;
@@ -141,7 +140,7 @@ void DoMethod::updateLevel() {
       Extents const& extents = accessPair.second;
 
       // Does this AccessID correspond to a field access?
-      if(!stencilInstantiation_.isField(AccessID)) {
+      if(!metaData_.isAccessType(FieldAccessType::FAT_Field, AccessID)) {
         continue;
       }
       AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
@@ -153,7 +152,7 @@ void DoMethod::updateLevel() {
       Extents const& extents = accessPair.second;
 
       // Does this AccessID correspond to a field access?
-      if(!stencilInstantiation_.isField(AccessID)) {
+      if(!metaData_.isAccessType(FieldAccessType::FAT_Field, AccessID)) {
         continue;
       }
 
@@ -179,14 +178,14 @@ void DoMethod::updateLevel() {
 
     // first => AccessID, second => Extent
     for(auto& accessPair : access->getWriteAccesses()) {
-      if(!stencilInstantiation_.isField(accessPair.first))
+      if(!metaData_.isAccessType(FieldAccessType::FAT_Field, accessPair.first))
         continue;
 
       derivedInfo_.fields_.at(accessPair.first).mergeWriteExtents(accessPair.second);
     }
 
     for(const auto& accessPair : access->getReadAccesses()) {
-      if(!stencilInstantiation_.isField(accessPair.first))
+      if(!metaData_.isAccessType(FieldAccessType::FAT_Field, accessPair.first))
         continue;
 
       derivedInfo_.fields_.at(accessPair.first).mergeReadExtents(accessPair.second);

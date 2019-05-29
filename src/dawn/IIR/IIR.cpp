@@ -12,9 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/IIR/IIR.h"
 #include "dawn/IIR/DependencyGraphStage.h"
+#include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
-#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/StringUtil.h"
@@ -27,7 +28,7 @@ namespace dawn {
 namespace iir {
 
 std::unique_ptr<IIR> IIR::clone() const {
-  auto cloneIIR = make_unique<IIR>();
+  auto cloneIIR = make_unique<IIR>(globalVariableMap_, stencilFunctions_);
   clone(cloneIIR);
   return cloneIIR;
 }
@@ -40,12 +41,25 @@ json::json IIR::jsonDump() const {
     node["Stencil" + std::to_string(cnt)] = stencil->jsonDump();
     cnt++;
   }
+
+  json::json globalsJson;
+  for(const auto& globalPair : globalVariableMap_) {
+    globalsJson[globalPair.first] = globalPair.second->jsonDump();
+  }
+  node["globals"] = globalsJson;
+
   return node;
 }
+
+IIR::IIR(const sir::GlobalVariableMap& sirGlobals,
+         const std::vector<std::shared_ptr<sir::StencilFunction>>& stencilFunction)
+    : globalVariableMap_(sirGlobals), stencilFunctions_(stencilFunction) {}
 
 void IIR::clone(std::unique_ptr<IIR>& dest) const {
   dest->cloneChildrenFrom(*this, dest);
   dest->setBlockSize(blockSize_);
+  dest->controlFlowDesc_ = controlFlowDesc_.clone();
+  dest->globalVariableMap_ = globalVariableMap_;
 }
 
 } // namespace iir
