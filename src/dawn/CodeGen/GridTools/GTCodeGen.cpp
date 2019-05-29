@@ -784,7 +784,6 @@ void GTCodeGen::generateStencilClasses(
 
     // Add static asserts to check halos against extents
     StencilConstructor.addComment("Check if extents do not exceed the halos");
-    int nonTempFieldId = 0;
     std::map<std::string, iir::Extents> parameterTypeToFullExtentsMap;
     for(const auto& fieldPair : stencilFields) {
       const auto& fieldInfo = fieldPair.second;
@@ -803,7 +802,6 @@ void GTCodeGen::generateStencilClasses(
         } else {
           (*searchIterator).second.merge(ext);
         }
-        ++nonTempFieldId;
       }
     }
 
