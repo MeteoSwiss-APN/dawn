@@ -294,8 +294,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
 
   if(stencilSCCs->empty()) {
     // Check if we have self dependencies e.g `u = u(i+1)` (Our SCC algorithm does not capture
-    // SCCs
-    // of size one i.e single nodes)
+    // SCCs of size one i.e single nodes)
     for(const auto& AccessIDVertexPair : graph->getVertices()) {
       const Vertex& vertex = AccessIDVertexPair.second;
 
@@ -310,8 +309,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   }
 
   // If we only have non-stencil SCCs and there are no input and output fields (i.e we don't
-  // have a
-  // DAG) we have to break (by renaming) one of the SCCs to get a DAG. For example:
+  // have a DAG) we have to break (by renaming) one of the SCCs to get a DAG. For example:
   //
   //  field_a = field_b;
   //  field_b = field_a;
@@ -330,8 +328,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
 
   // Check whether our statement is an `ExprStmt` and contains an `AssignmentExpr`. If not,
   // we cannot perform any double buffering (e.g if there is a problem inside an `IfStmt`,
-  // nothing
-  // we can do (yet ;))
+  // nothing we can do (yet ;))
   AssignmentExpr* assignment = nullptr;
   if(ExprStmt* stmt = dyn_cast<ExprStmt>(statement.ASTStmt.get()))
     assignment = dyn_cast<AssignmentExpr>(stmt->getExpr().get());
