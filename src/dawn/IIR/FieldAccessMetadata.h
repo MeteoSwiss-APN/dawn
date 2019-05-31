@@ -17,7 +17,6 @@
 
 #include "boost/variant.hpp"
 #include "dawn/Support/Assert.h"
-#include "dawn/Support/Assert.h"
 #include "dawn/Support/Json.h"
 #include <set>
 #include <unordered_map>
