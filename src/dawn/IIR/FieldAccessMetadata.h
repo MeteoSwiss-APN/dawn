@@ -274,6 +274,8 @@ struct FieldAccessMetadata {
   std::unordered_map<int, FieldAccessType> accessIDType_;
 
   void clone(const FieldAccessMetadata& origin);
+
+  const VariableVersions& getVariableVersions() const { return variableVersions_; }
 };
 } // namespace iir
 } // namespace dawn

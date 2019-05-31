@@ -32,10 +32,15 @@ class DoMethod;
 /// @see fixRaceCondition
 /// @ingroup optimizer
 class PassFieldVersioning : public Pass {
+public:
+  enum class FieldVersioningPassMode { FM_CreateVersion, FM_FixAccess };
+
+private:
+  FieldVersioningPassMode mode_;
   int numRenames_;
 
 public:
-  PassFieldVersioning();
+  PassFieldVersioning(FieldVersioningPassMode mode);
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;

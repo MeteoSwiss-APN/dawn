@@ -166,7 +166,8 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   optimizer->checkAndPushBack<PassInlining>(true, PassInlining::IK_InlineProcedures);
   // This pass is currently broken and needs to be redesigned before it can be enabled
   //  optimizer->checkAndPushBack<PassTemporaryFirstAccss>();
-  optimizer->checkAndPushBack<PassFieldVersioning>();
+  optimizer->checkAndPushBack<PassFieldVersioning>(
+      PassFieldVersioning::FieldVersioningPassMode::FM_CreateVersion);
   optimizer->checkAndPushBack<PassSSA>();
   optimizer->checkAndPushBack<PassMultiStageSplitter>(mssSplitStrategy);
   optimizer->checkAndPushBack<PassStageSplitter>();
@@ -179,6 +180,8 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   optimizer->checkAndPushBack<PassStencilSplitter>(maxFields);
   optimizer->checkAndPushBack<PassTemporaryType>();
   optimizer->checkAndPushBack<PassTemporaryMerger>();
+  optimizer->checkAndPushBack<PassFieldVersioning>(
+      PassFieldVersioning::FieldVersioningPassMode::FM_FixAccess);
   optimizer->checkAndPushBack<PassInlining>(
       (getOptions().InlineSF || getOptions().PassTmpToFunction),
       PassInlining::IK_ComputationsOnTheFly);
