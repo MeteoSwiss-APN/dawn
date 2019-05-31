@@ -242,8 +242,8 @@ public:
 
   const FieldAccessMetadata& getFieldAccessMetadata() const { return fieldAccessMetadata_; }
 
-  void insertFieldVersionIDPair(const int originalAccessID, const int versionedAccessID){
-      fieldAccessMetadata_.variableVersions_.insertIDPair(originalAccessID, versionedAccessID);
+  void insertFieldVersionIDPair(const int originalAccessID, const int versionedAccessID) {
+    fieldAccessMetadata_.variableVersions_.insertIDPair(originalAccessID, versionedAccessID);
   }
 
   bool variableHasMultipleVersions(const int accessID) const {
