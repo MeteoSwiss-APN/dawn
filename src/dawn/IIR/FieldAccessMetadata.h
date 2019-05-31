@@ -125,25 +125,6 @@ public:
   }
 
   json::json jsonDump() const;
-
-  // now that we only have getters and setters this should always be in a consistent state.
-  // Should we remove this enirely, have it here as a safety valve if one wants to mess with the
-  // versioning and needs a clean update or have this as part of the update-level step for the
-  // top-most level holding the metadata?
-  // I personally think option 1 should be desired as this is (hopefully) never necessary but I've
-  // put it here if the reviewers think this would be helpful
-  void recomputeDerivedInfo() {
-    derivedInfo_.versionIDs_.clear();
-    derivedInfo_.versionToOriginalVersionMap_.clear();
-    for(auto IDToVersionsPair : variableVersionsMap_) {
-      int originalID = IDToVersionsPair.first;
-      std::shared_ptr<std::vector<int>> listOfVersions = IDToVersionsPair.second;
-      for(auto versionID : *listOfVersions) {
-        derivedInfo_.versionIDs_.insert(versionID);
-        derivedInfo_.versionToOriginalVersionMap_[versionID] = originalID;
-      }
-    }
-  }
 };
 
 enum class FieldAccessType {
