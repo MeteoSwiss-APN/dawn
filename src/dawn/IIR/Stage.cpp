@@ -51,11 +51,11 @@ json::json Stage::jsonDump(const StencilMetaInformation& metaData) const {
   node["Extents"] = ss.str();
   node["RequiresSync"] = derivedInfo_.requiresSync_;
 
-  int cnt = 0;
+  auto doMethodsArray = json::json::array();
   for(const auto& doMethod : children_) {
-    node["DoMethod" + std::to_string(cnt)] = doMethod->jsonDump(metaData);
-    cnt++;
+    doMethodsArray.push_back(doMethod->jsonDump(metaData));
   }
+  node["DoMethods"] = doMethodsArray;
   return node;
 }
 
