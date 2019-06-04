@@ -105,20 +105,24 @@ yoda_combine_libraries(
   EXPORT_GROUP DawnTargets
 )
 
-# Genreate python proto files
-dawn_protobuf_generate(
-  OUT_FILES iir_proto_python_files
-  PROTOS IIR/IIR.proto
-  INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
-  WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
-  PACKG IIR
-  LANGUAGE python
-)
+if(DAWN_PYTHON) 
+  # Genreate python proto files
+  dawn_protobuf_generate(
+    OUT_FILES iir_proto_python_files
+    PROTOS IIR/IIR.proto
+    INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
+    WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
+    PACKG IIR
+    LANGUAGE python
+  )
 
-add_custom_target(DawnIIRPythonProto ALL
-  COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${CMAKE_BINARY_DIR}/python/dawn
-  DEPENDS ${iir_proto_python_files}
-)
+  add_custom_target(DawnIIRPythonProto ALL
+    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_python_files} ${CMAKE_BINARY_DIR}/python/dawn
+    DEPENDS ${iir_proto_python_files}
+  )
+  install(FILES ${iir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/IIR)
+  install(FILES ${CMAKE_SOURCE_DIR}/python/IIR/__init__.py DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/IIR)
+endif(DAWN_PYTHON)
 
 # Genreate python proto files
 dawn_protobuf_generate(
@@ -136,7 +140,5 @@ add_custom_target(DawnIIRJavaProto ALL
   DEPENDS ${iir_proto_java_files}
 )
 
-install(FILES ${iir_proto_python_files} DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/IIR)
-install(FILES ${CMAKE_SOURCE_DIR}/python/IIR/__init__.py DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/IIR)
 install(DIRECTORY ${iir_proto_java_dirs} DESTINATION ${DAWN_INSTALL_JAVA_DIR}/dawn)
 

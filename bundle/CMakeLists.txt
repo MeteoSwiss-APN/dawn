@@ -39,7 +39,7 @@ include(DawnCloneRepository)
 
 set(DAWN_YODA_GIT_URL "https:///github.com/Meteoswiss-APN/yoda.git"
     CACHE PATH "URL of the dawn git repository to clone")
-set(DAWN_YODA_GIT_BRANCH "1.0.2" CACHE STRING "Branch of the dawn git repository to clone")
+set(DAWN_YODA_GIT_BRANCH "1.0.3" CACHE STRING "Branch of the dawn git repository to clone")
 dawn_clone_repository(NAME yoda URL ${DAWN_YODA_GIT_URL} BRANCH ${DAWN_YODA_GIT_BRANCH} SOURCE_DIR DAWN_YODA_SOURCE_DIR )
 #
 list(APPEND CMAKE_MODULE_PATH "${DAWN_YODA_SOURCE_DIR}/cmake")
