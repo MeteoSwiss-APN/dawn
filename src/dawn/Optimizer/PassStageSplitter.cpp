@@ -28,8 +28,6 @@
 
 namespace dawn {
 
-namespace {
-
 static void reportDataDependencyInsideConditionalBlock(
     const std::shared_ptr<Statement>& statement,
     const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
@@ -38,8 +36,6 @@ static void reportDataDependencyInsideConditionalBlock(
   diag << "Read-before-Write conflict inside conditional block is not supported.";
   instantiation->getOptimizerContext()->getDiagnostics().report(diag);
 }
-
-} // anonymous namespace
 
 PassStageSplitter::PassStageSplitter() : Pass("PassStageSplitter", true) {}
 
