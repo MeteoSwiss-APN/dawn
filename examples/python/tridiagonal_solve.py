@@ -29,14 +29,15 @@ from dawn import sir_printer
 
 dawn = CDLL(__dawn_install_dawnclib__)
 
-def createVerticalRegionStmt1() -> VerticalRegionDeclStmt :
-  """ create a vertical region statement for the stencil
-  """
 
-  interval = makeInterval(Interval.Start, Interval.Start, 0, 0)
+def create_vertical_region_stmt1() -> VerticalRegionDeclStmt :
+    """ create a vertical region statement for the stencil
+    """
 
-  # create the out = in[i+1] statement
-  bodyAST = makeAST(
+    interval = makeInterval(Interval.Start, Interval.Start, 0, 0)
+
+    # create the out = in[i+1] statement
+    body_ast = makeAST(
       [makeAssignmentStmt(
         makeFieldAccessExpr("c"),
         makeBinaryOperator(
@@ -47,19 +48,20 @@ def createVerticalRegionStmt1() -> VerticalRegionDeclStmt :
         "="
       )
       ]
-  )
+    )
 
-  verticalRegionStmt = makeVerticalRegionDeclStmt(bodyAST, interval, VerticalRegion.Forward)
-  return verticalRegionStmt
+    vertical_region_stmt = makeVerticalRegionDeclStmt(body_ast, interval, VerticalRegion.Forward)
+    return vertical_region_stmt
 
-def createVerticalRegionStmt2() -> VerticalRegionDeclStmt :
-  """ create a vertical region statement for the stencil
-  """
 
-  interval = makeInterval(Interval.Start, Interval.End, 1, 0)
+def create_vertical_region_stmt2() -> VerticalRegionDeclStmt :
+    """ create a vertical region statement for the stencil
+    """
 
-  # create the out = in[i+1] statement
-  bodyAST = makeAST(
+    interval = makeInterval(Interval.Start, Interval.End, 1, 0)
+
+    # create the out = in[i+1] statement
+    body_ast = makeAST(
     [
       makeVarDeclStmt(
         makeType(BuiltinType.Integer),
@@ -84,8 +86,8 @@ def createVerticalRegionStmt2() -> VerticalRegionDeclStmt :
           makeFieldAccessExpr("c"),
           makeBinaryOperator(
              makeFieldAccessExpr("c"),
-              "*",
-              makeVarAccessExpr("m")
+             "*",
+             makeVarAccessExpr("m")
           ),
           "="
       ),
@@ -107,19 +109,20 @@ def createVerticalRegionStmt2() -> VerticalRegionDeclStmt :
           "="
       )
     ]
-  )
+    )
 
-  verticalRegionStmt = makeVerticalRegionDeclStmt(bodyAST, interval, VerticalRegion.Forward)
-  return verticalRegionStmt
+    vertical_region_stmt = makeVerticalRegionDeclStmt(body_ast, interval, VerticalRegion.Forward)
+    return vertical_region_stmt
 
-def createVerticalRegionStmt3() -> VerticalRegionDeclStmt :
-  """ create a vertical region statement for the stencil
-  """
 
-  interval = makeInterval(Interval.Start, Interval.End, 0, -1)
+def create_vertical_region_stmt3() -> VerticalRegionDeclStmt :
+    """ create a vertical region statement for the stencil
+    """
 
-  # create the out = in[i+1] statement
-  bodyAST = makeAST(
+    interval = makeInterval(Interval.Start, Interval.End, 0, -1)
+
+    # create the out = in[i+1] statement
+    body_ast = makeAST(
       [makeAssignmentStmt(
         makeFieldAccessExpr("d"),
         makeBinaryOperator(
@@ -130,10 +133,11 @@ def createVerticalRegionStmt3() -> VerticalRegionDeclStmt :
         "-="
       )
       ]
-  )
+    )
 
-  verticalRegionStmt = makeVerticalRegionDeclStmt(bodyAST, interval, VerticalRegion.Backward)
-  return verticalRegionStmt
+    vertical_region_stmt = makeVerticalRegionDeclStmt(body_ast, interval, VerticalRegion.Backward)
+    return vertical_region_stmt
+
 
 parser = OptionParser()
 parser.add_option("-v", "--verbose",
@@ -146,24 +150,22 @@ hir = makeSIR("tridiagonal_solve.cpp", [
         makeStencil(
           "tridiagonal_solve",
           makeAST([
-              createVerticalRegionStmt1(),
-              createVerticalRegionStmt2(),
-              createVerticalRegionStmt3()
+              create_vertical_region_stmt1(),
+              create_vertical_region_stmt2(),
+              create_vertical_region_stmt3()
           ]),
           [makeField("a"), makeField("b"), makeField("c"), makeField("d")]
         )
 
       ])
 
-## Print the SIR to stdout only in verbose mode
+# Print the SIR to stdout only in verbose mode
 if options.verbose:
-  T = textwrap.TextWrapper(initial_indent=' '*1, width=120,subsequent_indent=' '*1)
-  des = sir_printer.SIRPrinter()
+    T = textwrap.TextWrapper(initial_indent=' '*1, width=120,subsequent_indent=' '*1)
+    des = sir_printer.SIRPrinter()
 
-  #des.visitGlobalVariables(hir.global_variables)
-
-  for stencil in hir.stencils:
-    des.visitStencil(stencil)
+    for stencil in hir.stencils:
+        des.visitStencil(stencil)
 
 # serialize the hir to pass it to the compiler
 hirstr = hir.SerializeToString()
