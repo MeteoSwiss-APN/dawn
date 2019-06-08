@@ -34,23 +34,23 @@ def create_vertical_region_stmt1() -> VerticalRegionDeclStmt :
     """ create a vertical region statement for the stencil
     """
 
-    interval = makeInterval(Interval.Start, Interval.Start, 0, 0)
+    interval = make_interval(Interval.Start, Interval.Start, 0, 0)
 
     # create the out = in[i+1] statement
-    body_ast = makeAST(
-      [makeAssignmentStmt(
-        makeFieldAccessExpr("c"),
-        makeBinaryOperator(
-          makeFieldAccessExpr("c"),
+    body_ast = make_ast(
+      [make_assignment_stmt(
+        make_field_access_expr("c"),
+        make_binary_operator(
+          make_field_access_expr("c"),
           "/",
-          makeFieldAccessExpr("b")
+          make_field_access_expr("b")
         ),
         "="
       )
       ]
     )
 
-    vertical_region_stmt = makeVerticalRegionDeclStmt(body_ast, interval, VerticalRegion.Forward)
+    vertical_region_stmt = make_vertical_region_decl_stmt(body_ast, interval, VerticalRegion.Forward)
     return vertical_region_stmt
 
 
@@ -58,60 +58,60 @@ def create_vertical_region_stmt2() -> VerticalRegionDeclStmt :
     """ create a vertical region statement for the stencil
     """
 
-    interval = makeInterval(Interval.Start, Interval.End, 1, 0)
+    interval = make_interval(Interval.Start, Interval.End, 1, 0)
 
     # create the out = in[i+1] statement
-    body_ast = makeAST(
+    body_ast = make_ast(
     [
-      makeVarDeclStmt(
-        makeType(BuiltinType.Integer),
+      make_var_decl_stmt(
+        make_type(BuiltinType.Integer),
         "m", 0, "=",
-        makeExpr(
-          makeBinaryOperator(
-            makeLiteralAccessExpr("1.0", BuiltinType.Float),
+        make_expr(
+          make_binary_operator(
+            make_literal_access_expr("1.0", BuiltinType.Float),
             "/",
-            makeBinaryOperator(
-              makeFieldAccessExpr("b"),
+            make_binary_operator(
+              make_field_access_expr("b"),
               "-",
-              makeBinaryOperator(
-                makeFieldAccessExpr("a"),
+              make_binary_operator(
+                make_field_access_expr("a"),
                 "*",
-                makeFieldAccessExpr("c", [0, 0, -1])
+                make_field_access_expr("c", [0, 0, -1])
               )
             )
           )
         )
       ),
-      makeAssignmentStmt(
-          makeFieldAccessExpr("c"),
-          makeBinaryOperator(
-             makeFieldAccessExpr("c"),
+      make_assignment_stmt(
+          make_field_access_expr("c"),
+          make_binary_operator(
+             make_field_access_expr("c"),
              "*",
-             makeVarAccessExpr("m")
+             make_var_access_expr("m")
           ),
           "="
       ),
-      makeAssignmentStmt(
-          makeFieldAccessExpr("d"),
-          makeBinaryOperator(
-              makeBinaryOperator(
-                  makeFieldAccessExpr("d"),
+      make_assignment_stmt(
+          make_field_access_expr("d"),
+          make_binary_operator(
+              make_binary_operator(
+                  make_field_access_expr("d"),
                   "-",
-                  makeBinaryOperator(
-                    makeFieldAccessExpr("a"),
+                  make_binary_operator(
+                    make_field_access_expr("a"),
                     "*",
-                    makeFieldAccessExpr("d",[0,0,-1])
+                    make_field_access_expr("d",[0,0,-1])
                   )
               ),
               "*",
-              makeVarAccessExpr("m")
+              make_var_access_expr("m")
           ),
           "="
       )
     ]
     )
 
-    vertical_region_stmt = makeVerticalRegionDeclStmt(body_ast, interval, VerticalRegion.Forward)
+    vertical_region_stmt = make_vertical_region_decl_stmt(body_ast, interval, VerticalRegion.Forward)
     return vertical_region_stmt
 
 
@@ -119,23 +119,23 @@ def create_vertical_region_stmt3() -> VerticalRegionDeclStmt :
     """ create a vertical region statement for the stencil
     """
 
-    interval = makeInterval(Interval.Start, Interval.End, 0, -1)
+    interval = make_interval(Interval.Start, Interval.End, 0, -1)
 
     # create the out = in[i+1] statement
-    body_ast = makeAST(
-      [makeAssignmentStmt(
-        makeFieldAccessExpr("d"),
-        makeBinaryOperator(
-          makeFieldAccessExpr("c"),
+    body_ast = make_ast(
+      [make_assignment_stmt(
+        make_field_access_expr("d"),
+        make_binary_operator(
+          make_field_access_expr("c"),
           "*",
-          makeFieldAccessExpr("d",[0,0,1])
+          make_field_access_expr("d",[0,0,1])
         ),
         "-="
       )
       ]
     )
 
-    vertical_region_stmt = makeVerticalRegionDeclStmt(body_ast, interval, VerticalRegion.Backward)
+    vertical_region_stmt = make_vertical_region_decl_stmt(body_ast, interval, VerticalRegion.Backward)
     return vertical_region_stmt
 
 
@@ -146,15 +146,15 @@ parser.add_option("-v", "--verbose",
 
 (options, args) = parser.parse_args()
 
-hir = makeSIR("tridiagonal_solve.cpp", [
-        makeStencil(
+hir = make_sir("tridiagonal_solve.cpp", [
+        make_stencil(
           "tridiagonal_solve",
-          makeAST([
+          make_ast([
               create_vertical_region_stmt1(),
               create_vertical_region_stmt2(),
               create_vertical_region_stmt3()
           ]),
-          [makeField("a"), makeField("b"), makeField("c"), makeField("d")]
+          [make_field("a"), make_field("b"), make_field("c"), make_field("d")]
         )
 
       ])

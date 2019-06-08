@@ -33,33 +33,33 @@ def create_vertical_region_stmt() -> VerticalRegionDeclStmt :
     """ create a vertical region statement for the stencil
     """
 
-    interval = makeInterval(Interval.Start, Interval.End, 0, 0)
+    interval = make_interval(Interval.Start, Interval.End, 0, 0)
 
     # create the out = in[i+1] statement
-    body_ast = makeAST(
+    body_ast = make_ast(
       [
-      makeAssignmentStmt(
-        makeFieldAccessExpr("lap"),
-        makeBinaryOperator(
-          makeBinaryOperator(
-            makeLiteralAccessExpr("-4.0", BuiltinType.Float),
+      make_assignment_stmt(
+        make_field_access_expr("lap"),
+        make_binary_operator(
+          make_binary_operator(
+            make_literal_access_expr("-4.0", BuiltinType.Float),
             "*",
-            makeFieldAccessExpr("in")
+            make_field_access_expr("in")
           ),
           "+",
-          makeBinaryOperator(
-            makeFieldAccessExpr("coeff"),
+          make_binary_operator(
+            make_field_access_expr("coeff"),
             "*",
-            makeBinaryOperator(
-              makeFieldAccessExpr("in",[1,0,0]),
+            make_binary_operator(
+              make_field_access_expr("in",[1,0,0]),
               "+",
-              makeBinaryOperator(
-                makeFieldAccessExpr("in",[-1,0,0]),
+              make_binary_operator(
+                make_field_access_expr("in",[-1,0,0]),
                 "+",
-                makeBinaryOperator(
-                  makeFieldAccessExpr("in",[0,1,0]),
+                make_binary_operator(
+                  make_field_access_expr("in",[0,1,0]),
                   "+",
-                  makeFieldAccessExpr("in",[0,-1,0])
+                  make_field_access_expr("in",[0,-1,0])
                 )
               )
             )
@@ -67,28 +67,28 @@ def create_vertical_region_stmt() -> VerticalRegionDeclStmt :
         ),
         "="
       ),
-      makeAssignmentStmt(
-        makeFieldAccessExpr("out"),
-        makeBinaryOperator(
-          makeBinaryOperator(
-            makeLiteralAccessExpr("-4.0", BuiltinType.Float),
+      make_assignment_stmt(
+        make_field_access_expr("out"),
+        make_binary_operator(
+          make_binary_operator(
+            make_literal_access_expr("-4.0", BuiltinType.Float),
             "*",
-            makeFieldAccessExpr("lap")
+            make_field_access_expr("lap")
           ),
           "+",
-          makeBinaryOperator(
-            makeFieldAccessExpr("coeff"),
+          make_binary_operator(
+            make_field_access_expr("coeff"),
             "*",
-            makeBinaryOperator(
-              makeFieldAccessExpr("lap",[1,0,0]),
+            make_binary_operator(
+              make_field_access_expr("lap",[1,0,0]),
               "+",
-              makeBinaryOperator(
-                makeFieldAccessExpr("lap",[-1,0,0]),
+              make_binary_operator(
+                make_field_access_expr("lap",[-1,0,0]),
                 "+",
-                makeBinaryOperator(
-                  makeFieldAccessExpr("lap",[0,1,0]),
+                make_binary_operator(
+                  make_field_access_expr("lap",[0,1,0]),
                   "+",
-                  makeFieldAccessExpr("lap",[0,-1,0])
+                  make_field_access_expr("lap",[0,-1,0])
                 )
               )
             )
@@ -100,15 +100,15 @@ def create_vertical_region_stmt() -> VerticalRegionDeclStmt :
       ]
     )
 
-    vertical_region_stmt = makeVerticalRegionDeclStmt(body_ast, interval, VerticalRegion.Forward)
+    vertical_region_stmt = make_vertical_region_decl_stmt(body_ast, interval, VerticalRegion.Forward)
     return vertical_region_stmt
 
 
-hir = makeSIR("hori_diff.cpp", [
-        makeStencil(
+hir = make_sir("hori_diff.cpp", [
+        make_stencil(
           "hori_diff",
-          makeAST([create_vertical_region_stmt()]),
-          [makeField("in"), makeField("out"), makeField("coeff"), makeField("lap", is_temporary=True)]
+          make_ast([create_vertical_region_stmt()]),
+          [make_field("in"), make_field("out"), make_field("coeff"), make_field("lap", is_temporary=True)]
         )
 
       ])

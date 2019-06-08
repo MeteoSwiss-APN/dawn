@@ -30,27 +30,27 @@ def create_vertical_region_stmt() -> VerticalRegionDeclStmt :
     """ create a vertical region statement for the stencil
     """
 
-    interval = makeInterval(Interval.Start, Interval.End, 0, 0)
+    interval = make_interval(Interval.Start, Interval.End, 0, 0)
 
     # create the out = in[i+1] statement
-    body_ast = makeAST(
-      [makeAssignmentStmt(
-        makeFieldAccessExpr("out",[0,0,0]),
-        makeFieldAccessExpr("in",[1,0,0]),
+    body_ast = make_ast(
+      [make_assignment_stmt(
+        make_field_access_expr("out",[0,0,0]),
+        make_field_access_expr("in",[1,0,0]),
         "="
       )
       ]
     )
 
-    vertical_region_stmt = makeVerticalRegionDeclStmt(body_ast, interval, VerticalRegion.Forward)
+    vertical_region_stmt = make_vertical_region_decl_stmt(body_ast, interval, VerticalRegion.Forward)
     return vertical_region_stmt
 
 
-hir = makeSIR("copy_stencil.cpp", [
-        makeStencil(
+hir = make_sir("copy_stencil.cpp", [
+        make_stencil(
           "copy_stencil",
-          makeAST([create_vertical_region_stmt()]),
-          [makeField("in"), makeField("out")]
+          make_ast([create_vertical_region_stmt()]),
+          [make_field("in"), make_field("out")]
         )
 
       ])
