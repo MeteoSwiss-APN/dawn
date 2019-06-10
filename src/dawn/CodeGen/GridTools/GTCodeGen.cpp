@@ -26,6 +26,7 @@
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringUtil.h"
 #include <boost/optional.hpp>
+#include <map>
 #include <string>
 #include <unordered_map>
 
@@ -46,7 +47,7 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const iir::Stencil& stencil)
   DAWN_ASSERT(!intervalProperties_.empty());
 
   // Add intervals for the stencil functions
-  for(const auto& stencilFun : stencil.getStencilInstantiation().getStencilFunctionInstantiations())
+  for(const auto& stencilFun : stencil.getMetadata().getStencilFunctionInstantiations())
     intervalProperties_.insert(stencilFun->getInterval());
 
   // Compute axis and populate the levels
@@ -186,7 +187,7 @@ std::string GTCodeGen::generateStencilInstantiation(
   StencilWrapperClass.changeAccessibility(
       "public"); // The stencils should technically be private but nvcc doesn't like it ...
 
-  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
   CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
 
   generateBoundaryConditionFunctions(StencilWrapperClass, stencilInstantiation);
@@ -266,7 +267,8 @@ void GTCodeGen::generateStencilWrapperRun(
     stencilIDToRunArguments[stencil->getStencilID()] =
         "m_dom," +
         RangeToString(", ", "", "")(nonTempFields, [&](const iir::Stencil::FieldInfo& fieldInfo) {
-          if(stencilInstantiation->isAllocatedField(fieldInfo.field.getAccessID()))
+          if(stencilInstantiation->getMetaData().isAccessType(
+                 iir::FieldAccessType::FAT_InterStencilTemporary, fieldInfo.field.getAccessID()))
             return "m_" + fieldInfo.Name;
           else
             return fieldInfo.Name;
@@ -277,10 +279,11 @@ void GTCodeGen::generateStencilWrapperRun(
   MemberFunction RunMethod = stencilWrapperClass.addMemberFunction("void", "run");
   RunMethod.startBody();
 
-  ASTStencilDesc stencilDescCGVisitor(stencilInstantiation, codeGenProperties,
+  ASTStencilDesc stencilDescCGVisitor(stencilInstantiation->getMetaData(), codeGenProperties,
                                       stencilIDToRunArguments);
   stencilDescCGVisitor.setIndent(RunMethod.getIndent());
-  for(const auto& statement : stencilInstantiation->getStencilDescStatements()) {
+  for(const auto& statement :
+      stencilInstantiation->getIIR()->getControlFlowDescriptor().getStatements()) {
     statement->ASTStmt->accept(stencilDescCGVisitor);
     RunMethod << stencilDescCGVisitor.getCodeAndResetStream();
   }
@@ -292,8 +295,9 @@ void GTCodeGen::generateStencilWrapperCtr(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     CodeGenProperties& codeGenProperties) const {
 
+  const auto& metadata = stencilInstantiation->getMetaData();
   const auto& stencils = stencilInstantiation->getStencils();
-  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   stencilWrapperClass.changeAccessibility("public");
   stencilWrapperClass.addCopyConstructor(Class::Deleted);
@@ -302,16 +306,18 @@ void GTCodeGen::generateStencilWrapperCtr(
 
   StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
 
-  for(const auto& fieldID : stencilInstantiation->getAPIFieldIDs()) {
-    std::string name = stencilInstantiation->getFieldNameFromAccessID(fieldID);
+  for(const auto& fieldID :
+      stencilInstantiation->getMetaData().getAccessesOfType<iir::FieldAccessType::FAT_APIField>()) {
+    std::string name = metadata.getFieldNameFromAccessID(fieldID);
     StencilWrapperConstructor.addArg(codeGenProperties.getParamType(name) + " " + name);
   }
 
   // Initialize allocated fields
-  if(stencilInstantiation->hasAllocatedFields()) {
+  if(metadata.hasAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
     std::vector<std::string> tempFields;
-    for(auto accessID : stencilInstantiation->getAllocatedFieldAccessIDs()) {
-      tempFields.push_back(stencilInstantiation->getFieldNameFromAccessID(accessID));
+    for(auto accessID :
+        metadata.getAccessesOfType<iir::FieldAccessType::FAT_InterStencilTemporary>()) {
+      tempFields.push_back(metadata.getFieldNameFromAccessID(accessID));
     }
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
   }
@@ -340,7 +346,8 @@ void GTCodeGen::generateStencilWrapperCtr(
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil->getStencilID()) +
         RangeToString(", ", initctr.c_str(),
                       ")")(nonTempFields, [&](const iir::Stencil::FieldInfo& fieldInfo) {
-          if(stencilInstantiation->isAllocatedField(fieldInfo.field.getAccessID()))
+          if(metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
+                                   fieldInfo.field.getAccessID()))
             return "m_" + fieldInfo.Name;
           else
             return fieldInfo.Name;
@@ -353,7 +360,7 @@ void GTCodeGen::generateStencilWrapperMembers(
     Class& stencilWrapperClass,
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     CodeGenProperties& codeGenProperties) {
-  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   //
   // Generate constructor/destructor and methods of the stencil wrapper
@@ -397,10 +404,11 @@ void GTCodeGen::generateStencilClasses(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     Class& stencilWrapperClass, CodeGenProperties& codeGenProperties) {
 
+  const auto& metadata = stencilInstantiation->getMetaData();
   // K-Cache branch changes the signature of Do-Methods
   const char* DoMethodArg = "Evaluation& eval";
 
-  const auto& globalsMap = stencilInstantiation->getMetaData().globalVariableMap_;
+  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // Generate stencils
   const auto& stencils = stencilInstantiation->getStencils();
@@ -411,12 +419,13 @@ void GTCodeGen::generateStencilClasses(
     const auto stencilFields = orderMap(stencil.getFields());
 
     auto nonTempFields = makeRange(
-        stencilFields,
-        std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>([](
-            std::pair<int, iir::Stencil::FieldInfo> const& f) { return !f.second.IsTemporary; }));
+        stencilFields, std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
+                           [](std::pair<int, iir::Stencil::FieldInfo> const& f) {
+                             return !f.second.IsTemporary;
+                           }));
     if(stencil.isEmpty()) {
       DiagnosticsBuilder diag(DiagnosticsKind::Error,
-                              stencilInstantiation->getMetaData().stencilLocation_);
+                              stencilInstantiation->getMetaData().getStencilLocation());
       diag << "empty stencil '" << stencilInstantiation->getName()
            << "', this would result in invalid gridtools code";
       context_->getDiagnostics().report(diag);
@@ -467,7 +476,7 @@ void GTCodeGen::generateStencilClasses(
       codeGenInterval(intervalProperties.name_, intervalProperties.interval_);
     }
 
-    ASTStencilBody stencilBodyCGVisitor(stencilInstantiation.get(),
+    ASTStencilBody stencilBodyCGVisitor(stencilInstantiation->getMetaData(),
                                         intervalDefinitions.intervalProperties_);
 
     // Generate typedef for the axis
@@ -488,7 +497,7 @@ void GTCodeGen::generateStencilClasses(
     // Generate stencil functions code for stencils instantiated by this stencil
     //
     std::unordered_set<std::string> generatedStencilFun;
-    for(const auto& stencilFun : stencilInstantiation->getStencilFunctionInstantiations()) {
+    for(const auto& stencilFun : metadata.getStencilFunctionInstantiations()) {
       std::string stencilFunName = iir::StencilFunctionInstantiation::makeCodeGenName(*stencilFun);
       if(generatedStencilFun.emplace(stencilFunName).second) {
         Structure StencilFunStruct = StencilClass.addStruct(stencilFunName);
@@ -631,8 +640,8 @@ void GTCodeGen::generateStencilClasses(
                   // IOPolicy: local, fill, bpfill, flush, epflush or flush_and_fill
                   c_gt() + "cache_io_policy::" + cache.getCacheIOPolicyAsString() +
                   // Interval: if IOPolicy is not local, we need to provide the interval
-                  ">(p_" +
-                  stencilInstantiation->getFieldNameFromAccessID(cache.getCachedFieldAccessID()) + "())")
+                  ">(p_" + metadata.getFieldNameFromAccessID(cache.getCachedFieldAccessID()) +
+                  "())")
               .str();
         });
       }
@@ -657,7 +666,7 @@ void GTCodeGen::generateStencilClasses(
         std::vector<std::string> arglist;
         if(fields.empty()) {
           DiagnosticsBuilder diag(DiagnosticsKind::Error,
-                                  stencilInstantiation->getMetaData().stencilLocation_);
+                                  stencilInstantiation->getMetaData().getStencilLocation());
           diag << "no storages referenced in stencil '" << stencilInstantiation->getName()
                << "', this would result in invalid gridtools code";
           context_->getDiagnostics().report(diag);
@@ -668,7 +677,7 @@ void GTCodeGen::generateStencilClasses(
           const auto& field = fieldPair.second;
           const int accessID = fieldPair.first;
 
-          std::string paramName = stencilInstantiation->getFieldNameFromAccessID(accessID);
+          std::string paramName = metadata.getFieldNameFromAccessID(accessID);
 
           // Generate parameter of stage
           std::stringstream tss;
@@ -775,7 +784,7 @@ void GTCodeGen::generateStencilClasses(
 
     // Add static asserts to check halos against extents
     StencilConstructor.addComment("Check if extents do not exceed the halos");
-    int nonTempFieldId = 0;
+    std::map<std::string, iir::Extents> parameterTypeToFullExtentsMap;
     for(const auto& fieldPair : stencilFields) {
       const auto& fieldInfo = fieldPair.second;
       if(!fieldInfo.IsTemporary) {
@@ -786,29 +795,44 @@ void GTCodeGen::generateStencilClasses(
         // is resolved
         // https://github.com/MeteoSwiss-APN/dawn/issues/110
         // ===-----------------------------------------------------------------------------------===
-        for(int dim = 0; dim < ext.getSize() - 1; ++dim) {
-          std::string at_call = "template at<" + std::to_string(dim) + ">()";
-          std::string storage = codeGenProperties.getParamType(stencilInstantiation, fieldInfo);
-          // assert for + accesses
-          // ===---------------------------------------------------------------------------------===
-          // PRODUCTIONTODO: [STAGGERING]
-          // we need the staggering offset in K in order to have valid production code
-          // https://github.com/MeteoSwiss-APN/dawn/issues/108
-          // ===---------------------------------------------------------------------------------===
-          std::string staggeringoffset = (dim == 2) ? " - 1" : "";
-          StencilConstructor.addStatement(
-              "static_assert((static_cast<int>(" + storage + "::storage_info_t::halo_t::" +
-              at_call + ") >= " + std::to_string(ext[dim].Plus) + staggeringoffset + ") || " + "(" +
-              storage + "::storage_info_t::layout_t::" + at_call + " == -1)," +
-              "\"Used extents exceed halo limits.\")");
-          // assert for - accesses
-          StencilConstructor.addStatement("static_assert(((-1)*static_cast<int>(" + storage +
-                                          "::storage_info_t::halo_t::" + at_call + ") <= " +
-                                          std::to_string(ext[dim].Minus) + ") || " + "(" + storage +
-                                          "::storage_info_t::layout_t::" + at_call + " == -1)," +
-                                          "\"Used extents exceed halo limits.\")");
+        std::string parameterType = codeGenProperties.getParamType(stencilInstantiation, fieldInfo);
+        auto searchIterator = parameterTypeToFullExtentsMap.find(parameterType);
+        if(searchIterator == parameterTypeToFullExtentsMap.end()) {
+          parameterTypeToFullExtentsMap.emplace(parameterType, ext);
+        } else {
+          (*searchIterator).second.merge(ext);
         }
-        ++nonTempFieldId;
+      }
+    }
+
+    for(const auto& parameterTypeFullExtentsPair : parameterTypeToFullExtentsMap) {
+      const auto& parameterType = parameterTypeFullExtentsPair.first;
+      const auto& fullExtents = parameterTypeFullExtentsPair.second;
+      for(int dim = 0; dim < fullExtents.getSize() - 1; ++dim) {
+        std::string at_call = "template at<" + std::to_string(dim) + ">()";
+
+        // assert for + accesses
+        // ===---------------------------------------------------------------------------------===
+        // PRODUCTIONTODO: [STAGGERING]
+        // we need the staggering offset in K in order to have valid production code
+        // https://github.com/MeteoSwiss-APN/dawn/issues/108
+        // ===---------------------------------------------------------------------------------===
+        const int staggeringOffset = (dim == 2) ? -1 : 0;
+        int compRHSide = fullExtents[dim].Plus + staggeringOffset;
+        if(compRHSide > 0)
+          StencilConstructor.addStatement("static_assert((static_cast<int>(" + parameterType +
+                                          "::storage_info_t::halo_t::" + at_call +
+                                          ") >= " + std::to_string(compRHSide) + ") || " + "(" +
+                                          parameterType + "::storage_info_t::layout_t::" + at_call +
+                                          " == -1)," + "\"Used extents exceed halo limits.\")");
+        // assert for - accesses
+        compRHSide = fullExtents[dim].Minus;
+        if(compRHSide < 0)
+          StencilConstructor.addStatement("static_assert(((-1)*static_cast<int>(" + parameterType +
+                                          "::storage_info_t::halo_t::" + at_call +
+                                          ") <= " + std::to_string(compRHSide) + ") || " + "(" +
+                                          parameterType + "::storage_info_t::layout_t::" + at_call +
+                                          " == -1)," + "\"Used extents exceed halo limits.\")");
       }
     }
 
@@ -863,8 +887,8 @@ void GTCodeGen::generateStencilClasses(
     // notice we skip the first level since it is kstart and not included in the GT grid definition
     for(auto it = intervalDefinitions.Levels.begin(), end = intervalDefinitions.Levels.end();
         it != end; ++it, ++levelIdx)
-      StencilConstructor.addStatement("grid_.value_list[" + std::to_string(levelIdx) + "] = " +
-                                      getLevelSize(*it));
+      StencilConstructor.addStatement("grid_.value_list[" + std::to_string(levelIdx) +
+                                      "] = " + getLevelSize(*it));
 
     // generate sync storage calls
     generateSyncStorages(StencilConstructor, nonTempFields);

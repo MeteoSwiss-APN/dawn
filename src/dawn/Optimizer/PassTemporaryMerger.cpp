@@ -31,6 +31,7 @@ bool PassTemporaryMerger::run(
 
   using Edge = iir::DependencyGraphAccesses::Edge;
   using Vertex = iir::DependencyGraphAccesses::Vertex;
+  const iir::StencilMetaInformation& metadata = stencilInstantiation->getMetaData();
 
   bool merged = false;
 
@@ -51,7 +52,7 @@ bool PassTemporaryMerger::run(
     iir::Stencil& stencil = *stencilPtr;
 
     // Build the dependency graph of the stencil (merge all dependency graphs of the multi-stages)
-    iir::DependencyGraphAccesses AccessesDAG(stencilInstantiation.get());
+    iir::DependencyGraphAccesses AccessesDAG(stencilInstantiation->getMetaData());
     for(const auto& multiStagePtr : stencilPtr->getChildren()) {
       iir::MultiStage& multiStage = *multiStagePtr;
       AccessesDAG.merge(multiStage.getDependencyGraphOfAxis().get());
@@ -59,7 +60,7 @@ bool PassTemporaryMerger::run(
     const auto& adjacencyList = AccessesDAG.getAdjacencyList();
 
     // Build the dependency graph of the temporaries
-    iir::DependencyGraphAccesses TemporaryDAG(stencilInstantiation.get());
+    iir::DependencyGraphAccesses TemporaryDAG(stencilInstantiation->getMetaData());
     int AccessIDOfLastTemporary = -1;
     for(std::size_t VertexID : AccessesDAG.getOutputVertexIDs()) {
       nodesToVisit.clear();
@@ -74,7 +75,7 @@ bool PassTemporaryMerger::run(
         AccessIDOfLastTemporary = nodesToVisit.back().second;
         nodesToVisit.pop_back();
 
-        if(stencilInstantiation->isTemporaryField(FromAccessID)) {
+        if(metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, FromAccessID)) {
           TemporaryDAG.insertNode(FromAccessID);
           AccessIDOfLastTemporary = FromAccessID;
         }
@@ -91,7 +92,8 @@ bool PassTemporaryMerger::run(
           int ToAccessID = AccessesDAG.getIDFromVertexID(ToVertexID);
           int newAccessIDOfLastTemporary = AccessIDOfLastTemporary;
 
-          if(stencilInstantiation->isTemporaryField(ToAccessID) && AccessIDOfLastTemporary != -1) {
+          if(metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, ToAccessID) &&
+             AccessIDOfLastTemporary != -1) {
             TemporaryDAG.insertEdge(AccessIDOfLastTemporary, ToAccessID,
                                     iir::Extents{0, 0, 0, 0, 0, 0});
             newAccessIDOfLastTemporary = ToAccessID;
@@ -160,7 +162,7 @@ bool PassTemporaryMerger::run(
       if(context->getOptions().ReportPassTemporaryMerger && AccessIDOfRenameCandiates.size() >= 2) {
         std::vector<std::string> renameCandiatesNames;
         for(int AccessID : AccessIDOfRenameCandiates)
-          renameCandiatesNames.emplace_back(stencilInstantiation->getFieldNameFromAccessID(AccessID));
+          renameCandiatesNames.emplace_back(metadata.getFieldNameFromAccessID(AccessID));
         std::sort(renameCandiatesNames.begin(), renameCandiatesNames.end());
         std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
                   << ": merging: " << RangeToString(", ", "", "\n")(renameCandiatesNames);

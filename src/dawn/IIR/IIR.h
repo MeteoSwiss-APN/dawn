@@ -15,7 +15,9 @@
 #ifndef DAWN_IIR_IIR_H
 #define DAWN_IIR_IIR_H
 
+#include "dawn/IIR/ControlFlowDescriptor.h"
 #include "dawn/IIR/Stencil.h"
+#include "dawn/Support/RemoveIf.hpp"
 #include <set>
 
 namespace dawn {
@@ -26,24 +28,16 @@ namespace iir {
 class IIR : public IIRNode<void, IIR, Stencil> {
 
   std::array<unsigned int, 3> blockSize_ = {{32, 4, 4}};
+  ControlFlowDescriptor controlFlowDesc_;
+
+  sir::GlobalVariableMap globalVariableMap_;
+  std::vector<std::shared_ptr<sir::StencilFunction>> stencilFunctions_;
 
   struct DerivedInfo {
-    /// Can be filled from the AccessIDToName map that is in Metainformation
-    std::unordered_map<std::string, int> NameToAccessIDMap_;
-
-    /// Can be filled from the StencilIDToStencilCallMap that is in Metainformation
-    std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int> StencilCallToStencilIDMap_;
-
     /// StageID to name Map. Filled by the `PassSetStageName`.
     std::unordered_map<int, std::string> StageIDToNameMap_;
-
-    /// BoundaryConditionCall to Extent Map. Filled my `PassSetBoundaryCondition`
-    std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>
-        BoundaryConditionToExtentsMap_;
-
     /// Set containing the AccessIDs of fields which are manually allocated by the stencil and serve
     /// as temporaries spanning over multiple stencils
-    std::set<int> AllocatedFieldAccessIDSet_;
   };
 
   DerivedInfo derivedInfo_;
@@ -56,7 +50,8 @@ public:
   inline std::array<unsigned int, 3> getBlockSize() const { return blockSize_; }
 
   /// @brief constructors and assignment
-  IIR() = default;
+  IIR(const sir::GlobalVariableMap& sirGlobals,
+      const std::vector<std::shared_ptr<sir::StencilFunction>>& stencilFunction);
   IIR(const IIR&) = default;
   IIR(IIR&&) = default;
   IIR& operator=(const IIR&) = default;
@@ -70,32 +65,30 @@ public:
 
   json::json jsonDump() const;
 
-  inline void setBlockSize(const std::array<unsigned int, 3> blockSize) { blockSize_ = blockSize; }
-
-  inline std::unordered_map<std::string, int>& getNameToAccessIDs() {
-    return derivedInfo_.NameToAccessIDMap_;
+  const std::vector<std::shared_ptr<sir::StencilFunction>>& getStencilFunctions() {
+    return stencilFunctions_;
   }
+  const ControlFlowDescriptor& getControlFlowDescriptor() const { return controlFlowDesc_; }
+  ControlFlowDescriptor& getControlFlowDescriptor() { return controlFlowDesc_; }
+  inline void setBlockSize(const std::array<unsigned int, 3> blockSize) { blockSize_ = blockSize; }
 
   inline std::unordered_map<int, std::string>& getStageIDToNameMap() {
     return derivedInfo_.StageIDToNameMap_;
   }
+  void insertStencilFunction(const std::shared_ptr<sir::StencilFunction>& sirStencilFunction) {
+    stencilFunctions_.push_back(sirStencilFunction);
+  }
+
   inline const std::string& getNameFromStageID(int StageID) const {
     auto it = derivedInfo_.StageIDToNameMap_.find(StageID);
     DAWN_ASSERT_MSG(it != derivedInfo_.StageIDToNameMap_.end(), "Invalid StageID");
     return it->second;
   }
 
-  inline std::unordered_map<std::shared_ptr<BoundaryConditionDeclStmt>, Extents>&
-  getBoundaryConditionToExtents() {
-    return derivedInfo_.BoundaryConditionToExtentsMap_;
-  }
+  const sir::GlobalVariableMap& getGlobalVariableMap() const { return globalVariableMap_; }
 
-  inline std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
-  getStencilCallToStencilIDMap() {
-    return derivedInfo_.StencilCallToStencilIDMap_;
-  }
-  inline std::set<int>& getAllocatedFieldAccessIDSet() {
-    return derivedInfo_.AllocatedFieldAccessIDSet_;
+  void insertGlobalVariable(std::string name, std::shared_ptr<sir::Value> value) {
+    globalVariableMap_.emplace(name, value);
   }
 };
 } // namespace iir

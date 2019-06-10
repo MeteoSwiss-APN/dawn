@@ -27,6 +27,7 @@ namespace iir {
 class Stencil;
 class StatementAccessesPair;
 class StencilInstantiation;
+class StencilMetaInformation;
 }
 
 /// @name Replacing routines
@@ -37,14 +38,16 @@ class StencilInstantiation;
 ///
 /// This will also modify the underlying AccessID maps of the StencilInstantiation.
 void replaceFieldWithVarAccessInStmts(
-    iir::Stencil* stencil, int AccessID, const std::string& varname,
+    iir::StencilMetaInformation& metadata, iir::Stencil* stencil, int AccessID,
+    const std::string& varname,
     ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
 
 /// @brief Replace all variable accesses with field accesses in the given `stmts`
 ///
 /// This will also modify the underlying AccessID maps of the StencilInstantiation.
 void replaceVarWithFieldAccessInStmts(
-    iir::Stencil* stencil, int AccessID, const std::string& fieldname,
+    iir::StencilMetaInformation& metadata, iir::Stencil* stencil, int AccessID,
+    const std::string& fieldname,
     ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
 
 /// @brief Replace all stencil calls to `oldStencilID` with a series of stencil calls to

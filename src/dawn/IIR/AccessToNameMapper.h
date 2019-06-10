@@ -22,14 +22,14 @@
 namespace dawn {
 namespace iir {
 
-class StencilInstantiation;
 class StencilFunctionInstantiation;
+class StencilMetaInformation;
 
 /// @brief Dump AST to string
 class AccessToNameMapper : public ASTVisitorForwarding {
   int scopeDepth_;
-  const iir::StencilInstantiation* stencilInstantiation_;
-  std::stack<iir::StencilFunctionInstantiation*> curFunctionInstantiation_;
+  const StencilMetaInformation& metaData_;
+  std::stack<StencilFunctionInstantiation*> curFunctionInstantiation_;
 
   // this is a map from accessID to name of all accesses within the AST,
   // It is computed here since the accessIDs can be stored in different stencil/function
@@ -37,8 +37,8 @@ class AccessToNameMapper : public ASTVisitorForwarding {
   std::unordered_map<int, std::string> accessIDToName_;
 
 public:
-  AccessToNameMapper(const iir::StencilInstantiation* instantiation)
-      : scopeDepth_(0), stencilInstantiation_(instantiation) {}
+  AccessToNameMapper(const StencilMetaInformation& metaData)
+      : scopeDepth_(0), metaData_(metaData) {}
 
   virtual void visit(const std::shared_ptr<VarDeclStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override;

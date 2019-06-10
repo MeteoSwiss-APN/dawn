@@ -19,6 +19,7 @@
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/IIRNode.h"
 #include "dawn/IIR/Interval.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/ArrayRef.h"
 #include <boost/optional.hpp>
 #include <deque>
@@ -30,7 +31,6 @@ namespace dawn {
 namespace iir {
 
 class DependencyGraphAccesses;
-class StencilInstantiation;
 class MultiStage;
 
 /// @brief A Stage is represented by a collection of statements grouped into DoMethod of
@@ -42,7 +42,7 @@ class MultiStage;
 /// @ingroup optimizer
 class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
 
-  StencilInstantiation& stencilInstantiation_;
+  const StencilMetaInformation& metaData_;
 
   /// Unique identifier of the stage
   int StageID_;
@@ -79,8 +79,8 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
-  Stage(StencilInstantiation& context, int StageID, const Interval& interval);
-  Stage(StencilInstantiation& context, int StageID);
+  Stage(const StencilMetaInformation& metaData, int StageID, const Interval& interval);
+  Stage(const StencilMetaInformation& metaData, int StageID);
 
   Stage(Stage&&) = default;
 
@@ -90,7 +90,7 @@ public:
 
   std::unique_ptr<Stage> clone() const;
 
-  json::json jsonDump(const StencilInstantiation& instantiation) const;
+  json::json jsonDump(const StencilMetaInformation& metaData) const;
 
   /// @brief update the derived info from children
   virtual void updateFromChildren() override;

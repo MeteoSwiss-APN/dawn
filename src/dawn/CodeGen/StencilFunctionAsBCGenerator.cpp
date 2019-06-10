@@ -1,7 +1,16 @@
 #include "dawn/CodeGen/StencilFunctionAsBCGenerator.h"
+#include "dawn/IIR/StencilInstantiation.h"
 
 namespace dawn {
 namespace codegen {
+
+std::string StencilFunctionAsBCGenerator::getName(const std::shared_ptr<Stmt>& stmt) const {
+  return metadata_.getFieldNameFromAccessID(metadata_.getAccessIDFromStmt(stmt));
+}
+
+std::string StencilFunctionAsBCGenerator::getName(const std::shared_ptr<Expr>& expr) const {
+  return metadata_.getFieldNameFromAccessID(metadata_.getAccessIDFromExpr(expr));
+}
 
 void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
   auto printOffset = [](const Array3i& argumentoffsets) {
@@ -31,7 +40,8 @@ void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<FieldAccessExpr>&
 }
 
 void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<VarAccessExpr>& expr) {
-  if(instantiation_->isGlobalVariable(instantiation_->getAccessIDFromExpr(expr)))
+  if(metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable,
+                            metadata_.getAccessIDFromExpr(expr)))
     ss_ << "m_globals.";
 
   ss_ << getName(expr);
@@ -44,7 +54,7 @@ void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<VarAccessExpr>& e
 }
 
 void BCGenerator::generate(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
-  iir::Extents extents = stencilInstantiation_->getBoundaryConditionExtentsFromBCStmt(stmt);
+  iir::Extents extents = metadata_.getBoundaryConditionExtentsFromBCStmt(stmt);
   int haloIMinus = abs(extents[0].Minus);
   int haloIPlus = abs(extents[0].Plus);
   int haloJMinus = abs(extents[1].Minus);

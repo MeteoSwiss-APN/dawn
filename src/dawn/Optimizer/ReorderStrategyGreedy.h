@@ -19,6 +19,9 @@
 
 namespace dawn {
 
+namespace iir {
+class StencilInstantiation;
+}
 /// @brief Reordering strategy which tries to move each stage upwards as far as possible under the
 /// sole constraint that the extent of any field does not exeed the maximum halo points
 /// @ingroup optimizer
@@ -26,7 +29,8 @@ class ReoderStrategyGreedy : public ReorderStrategy {
 public:
   /// @brief Apply the reordering strategy and return stencil
   virtual std::unique_ptr<iir::Stencil>
-  reorder(const std::unique_ptr<iir::Stencil>& stencilPtr) override;
+  reorder(iir::StencilInstantiation* instantiation,
+          const std::unique_ptr<iir::Stencil>& stencilPtr) override;
 };
 
 } // namespace dawn

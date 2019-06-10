@@ -17,7 +17,6 @@
 
 #include "dawn/Compiler/DiagnosticsEngine.h"
 #include "dawn/Compiler/Options.h"
-#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/PassManager.h"
 #include "dawn/Support/NonCopyable.h"
 #include <map>
@@ -26,6 +25,9 @@
 namespace dawn {
 
 struct SIR;
+namespace sir {
+class Stencil;
+}
 namespace iir {
 class StencilInstantiation;
 }
@@ -70,7 +72,7 @@ public:
   const PassManager& getPassManager() const { return passManager_; }
 
   /// @brief Get the SIR
-  const std::shared_ptr<SIR> getSIR() const { return SIR_; }
+  const std::shared_ptr<SIR>& getSIR() const { return SIR_; }
 
   /// @brief Get options
   const Options& getOptions() const;

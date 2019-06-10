@@ -42,7 +42,7 @@ public:
   getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) {
     if(!functionInstantiationStack_.empty())
       return functionInstantiationStack_.top()->getStencilFunctionInstantiation(expr);
-    return instantiation_->getStencilFunctionInstantiation(expr);
+    return instantiation_->getMetaData().getStencilFunctionInstantiation(expr);
   }
 
   void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {

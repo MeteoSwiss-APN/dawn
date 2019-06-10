@@ -14,10 +14,10 @@
 
 #include "dawn/Optimizer/PassStageSplitter.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
-#include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Logging.h"
@@ -55,7 +55,8 @@ bool PassStageSplitter::run(
         graphs.clear();
 
         std::shared_ptr<iir::DependencyGraphAccesses> newGraph, oldGraph;
-        newGraph = std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation.get());
+        newGraph =
+            std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation->getMetaData());
 
         // Build the Dependency graph (bottom to top)
         for(int stmtIndex = doMethod.getChildren().size() - 1; stmtIndex >= 0; --stmtIndex) {

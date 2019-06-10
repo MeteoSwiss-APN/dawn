@@ -13,10 +13,10 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassSSA.h"
-#include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/AccessComputation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include <unordered_set>
 
 namespace dawn {
@@ -33,7 +33,7 @@ bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInsta
     iir::Stencil& stencil = *stencilPtr;
 
     std::shared_ptr<iir::DependencyGraphAccesses> DAG =
-        std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation.get());
+        std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation->getMetaData());
 
     std::unordered_set<int> tochedAccessIDs;
 

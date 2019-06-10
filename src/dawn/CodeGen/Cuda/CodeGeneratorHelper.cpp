@@ -1,5 +1,6 @@
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/IndexRange.h"
 #include "dawn/Support/StringUtil.h"
@@ -47,11 +48,12 @@ std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const std::unique_ptr<iir::MultiStage>& ms, CodeGeneratorHelper::FunctionArgType funArg) {
 
+  const auto& metadata = stencilInstantiation->getMetaData();
+
   std::unordered_set<std::string> processedDims;
   std::vector<std::string> strides;
   for(auto field : nonTempFields) {
-    const auto fieldName =
-        stencilInstantiation->getFieldNameFromAccessID((*field).second.getAccessID());
+    const auto fieldName = metadata.getFieldNameFromAccessID((*field).second.getAccessID());
     Array3i dims{-1, -1, -1};
     // TODO this is a hack, we need to have dimensions also at ms level
     for(const auto& fieldInfo : ms->getParent()->getFields()) {
@@ -82,8 +84,7 @@ std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(
   }
   if(!tempFields.empty()) {
     auto firstTmpField = **(tempFields.begin());
-    std::string fieldName =
-        stencilInstantiation->getFieldNameFromAccessID(firstTmpField.second.getAccessID());
+    std::string fieldName = metadata.getFieldNameFromAccessID(firstTmpField.second.getAccessID());
     if(funArg == CodeGeneratorHelper::FunctionArgType::FT_Caller) {
       strides.push_back("m_" + fieldName + ".get_storage_info_ptr()->template begin<0>()," + "m_" +
                         fieldName + ".get_storage_info_ptr()->template begin<1>()," + "m_" +
@@ -131,14 +132,14 @@ bool CodeGeneratorHelper::hasAccessIDMemAccess(const int accessID,
 
 bool CodeGeneratorHelper::useTemporaries(
     const std::unique_ptr<iir::Stencil>& stencil,
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
+    const iir::StencilMetaInformation& metadata) {
 
   const auto& fields = stencil->getFields();
   const bool containsMemTemporary =
       (find_if(fields.begin(), fields.end(),
                [&](const std::pair<int, iir::Stencil::FieldInfo>& field) {
                  const int accessID = field.second.field.getAccessID();
-                 if(!stencilInstantiation->isTemporaryField(accessID))
+                 if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID))
                    return false;
                  // we dont need to use temporaries infrastructure for fields that are cached
                  return hasAccessIDMemAccess(accessID, stencil);
@@ -149,13 +150,13 @@ bool CodeGeneratorHelper::useTemporaries(
 
 void CodeGeneratorHelper::generateFieldAccessDeref(
     std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
-    const std::shared_ptr<iir::StencilInstantiation>& instantiation, const int accessID,
+    const iir::StencilMetaInformation& metadata, const int accessID,
     const std::unordered_map<int, Array3i> fieldIndexMap, Array3i offset) {
-  std::string accessName = instantiation->getFieldNameFromAccessID(accessID);
-  bool isTemporary = instantiation->isTemporaryField(accessID);
+  std::string accessName = metadata.getFieldNameFromAccessID(accessID);
+  bool isTemporary = metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID);
   DAWN_ASSERT(fieldIndexMap.count(accessID) || isTemporary);
   const auto& field = ms->getField(accessID);
-  bool useTmpIndex = isTemporary && useTemporaries(ms->getParent(), instantiation);
+  bool useTmpIndex = isTemporary && useTemporaries(ms->getParent(), metadata);
   std::string index = useTmpIndex ? "idx_tmp" : "idx" + CodeGeneratorHelper::indexIteratorName(
                                                             fieldIndexMap.at(accessID));
 

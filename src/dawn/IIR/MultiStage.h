@@ -31,8 +31,8 @@ class OptimizerContext;
 namespace iir {
 
 class Stencil;
-class StencilInstantiation;
 class DependencyGraphAccesses;
+class StencilMetaInformation;
 
 namespace impl {
 template <typename T>
@@ -46,7 +46,7 @@ using StdList = std::list<T, std::allocator<T>>;
 ///
 /// @ingroup optimizer
 class MultiStage : public IIRNode<Stencil, MultiStage, Stage, impl::StdList> {
-  StencilInstantiation& stencilInstantiation_;
+  StencilMetaInformation& metadata_;
 
   LoopOrderKind loopOrder_;
 
@@ -70,7 +70,7 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
-  MultiStage(StencilInstantiation& stencilInstantiation, LoopOrderKind loopOrder);
+  MultiStage(StencilMetaInformation& metadata, LoopOrderKind loopOrder);
   MultiStage(MultiStage&&) = default;
 
   MultiStage& operator=(const MultiStage&) = default;
@@ -79,12 +79,7 @@ public:
 
   std::unique_ptr<MultiStage> clone() const;
 
-  json::json jsonDump(const StencilInstantiation& instantiation) const;
-
-  /// @brief getters
-  /// @{
-  /// @brief Get the execution policy
-  StencilInstantiation& getStencilInstantiation() const { return stencilInstantiation_; }
+  json::json jsonDump() const;
 
   /// @brief Get the loop order
   LoopOrderKind getLoopOrder() const { return loopOrder_; }

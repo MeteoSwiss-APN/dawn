@@ -14,7 +14,7 @@
 
 #include "dawn/IIR/AccessToNameMapper.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
-#include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 
 namespace dawn {
 namespace iir {
@@ -30,8 +30,7 @@ void AccessToNameMapper::visit(const std::shared_ptr<StencilFunCallExpr>& expr) 
         curFunctionInstantiation_.top()->getStencilFunctionInstantiation(expr).get();
     curFunctionInstantiation_.push(stencilFunctionInstantiation);
   } else {
-    auto* stencilFunctionInstantiation =
-        stencilInstantiation_->getStencilFunctionInstantiation(expr).get();
+    auto* stencilFunctionInstantiation = metaData_.getStencilFunctionInstantiation(expr).get();
     curFunctionInstantiation_.push(stencilFunctionInstantiation);
   }
   curFunctionInstantiation_.top()->getAST()->accept(*this);
@@ -42,20 +41,20 @@ void AccessToNameMapper::visit(const std::shared_ptr<StencilFunCallExpr>& expr) 
 
 void AccessToNameMapper::insertAccessInfo(const std::shared_ptr<Expr>& expr) {
   int accessID = (curFunctionInstantiation_.empty())
-                     ? stencilInstantiation_->getAccessIDFromExpr(expr)
+                     ? metaData_.getAccessIDFromExpr(expr)
                      : curFunctionInstantiation_.top()->getAccessIDFromExpr(expr);
   std::string name = (curFunctionInstantiation_.empty())
-                         ? stencilInstantiation_->getNameFromAccessID(accessID)
+                         ? metaData_.getNameFromAccessID(accessID)
                          : curFunctionInstantiation_.top()->getNameFromAccessID(accessID);
 
   accessIDToName_.emplace(accessID, name);
 }
 void AccessToNameMapper::insertAccessInfo(const std::shared_ptr<Stmt>& stmt) {
   int accessID = (curFunctionInstantiation_.empty())
-                     ? stencilInstantiation_->getAccessIDFromStmt(stmt)
+                     ? metaData_.getAccessIDFromStmt(stmt)
                      : curFunctionInstantiation_.top()->getAccessIDFromStmt(stmt);
   std::string name = (curFunctionInstantiation_.empty())
-                         ? stencilInstantiation_->getNameFromAccessID(accessID)
+                         ? metaData_.getNameFromAccessID(accessID)
                          : curFunctionInstantiation_.top()->getNameFromAccessID(accessID);
 
   accessIDToName_.emplace(accessID, name);

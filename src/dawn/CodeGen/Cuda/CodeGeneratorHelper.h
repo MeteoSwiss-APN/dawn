@@ -16,13 +16,19 @@
 #define DAWN_CODEGEN_CUDA_CODEGENERATORHELPER_H
 
 #include "dawn/IIR/Cache.h"
-#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/IndexRange.h"
 #include <map>
 #include <string>
 
 namespace dawn {
+namespace iir {
+class MultiStage;
+class StencilInstantiation;
+class Stencil;
+class StencilMetaInformation;
+class Field;
+}
 namespace codegen {
 namespace cuda {
 
@@ -34,9 +40,8 @@ public:
   static std::string indexIteratorName(Array3i dims);
   static void
   generateFieldAccessDeref(std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
-                           const std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                           const int accessID, const std::unordered_map<int, Array3i> fieldIndexMap,
-                           Array3i offset);
+                           const iir::StencilMetaInformation& metadata, const int accessID,
+                           const std::unordered_map<int, Array3i> fieldIndexMap, Array3i offset);
   ///
   /// @brief produces a string of (i,j,k) accesses for the C++ generated naive code,
   /// from an array of offseted accesses
@@ -59,9 +64,8 @@ public:
   /// Even if the stencil contains temporaries, in some cases, like when they are local cached, they
   /// are not required for code generation. Also in the case of no redundant computations,
   /// temporaries will become normal fields
-  static bool
-  useTemporaries(const std::unique_ptr<iir::Stencil>& stencil,
-                 const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
+  static bool useTemporaries(const std::unique_ptr<iir::Stencil>& stencil,
+                             const iir::StencilMetaInformation& metadata);
 
   /// @brief computes the maximum extent required by all temporaries, which will be used for proper
   /// allocation
