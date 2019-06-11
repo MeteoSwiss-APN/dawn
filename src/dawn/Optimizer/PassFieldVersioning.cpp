@@ -91,51 +91,45 @@ static void reportRaceCondition(const Statement& statement,
   }
 }
 
-static void addAssignmentToDoMethod(std::unique_ptr<iir::DoMethod>& domethod, int assignmentID,
-                                    int assigneeID,
-                                    const std::shared_ptr<iir::StencilInstantiation>& context,
-                                    boost::optional<iir::Extents>& readExtents) {
-  // Create the StatementAccessPair of the assignment with the new and old variables
-  auto fa_assignee =
-      std::make_shared<FieldAccessExpr>(context->getMetaData().getNameFromAccessID(assigneeID));
+static std::unique_ptr<iir::StatementAccessesPair>
+makeAssignmentStatement(int assignmentID, int assigneeID, iir::StencilMetaInformation& metadata) {
+  auto fa_assignee = std::make_shared<FieldAccessExpr>(metadata.getNameFromAccessID(assigneeID));
   auto fa_assignment =
-      std::make_shared<FieldAccessExpr>(context->getMetaData().getNameFromAccessID(assignmentID));
+      std::make_shared<FieldAccessExpr>(metadata.getNameFromAccessID(assignmentID));
   auto assignmentExpression = std::make_shared<AssignmentExpr>(fa_assignment, fa_assignee, "=");
   auto expAssignment = std::make_shared<ExprStmt>(assignmentExpression);
   auto assignmentStatement = std::make_shared<Statement>(expAssignment, nullptr);
-  auto pair = make_unique<iir::StatementAccessesPair>(assignmentStatement);
-  auto newAccess = std::make_shared<iir::Accesses>();
-
-  // The exetens were computed on a multistage-level and are passed to here. If they are
-  // uninitialized, we just copy the compute-domain, otherwise the read-extents of the versioned
-  // field determines how much copying needs to happen
-  if(readExtents.is_initialized()) {
-    newAccess->addWriteExtent(assignmentID, readExtents.get());
-    newAccess->addReadExtent(assigneeID, readExtents.get());
-  } else {
-    newAccess->addWriteExtent(assignmentID, iir::Extents(Array3i{{0, 0, 0}}));
-    newAccess->addReadExtent(assigneeID, iir::Extents(Array3i{{0, 0, 0}}));
-  }
-  pair->setAccesses(newAccess);
-  domethod->insertChild(std::move(pair));
 
   // Add the new expressions to the map
-  context->getMetaData().insertExprToAccessID(fa_assignment, assignmentID);
-  context->getMetaData().insertExprToAccessID(fa_assignee, assigneeID);
+  metadata.insertExprToAccessID(fa_assignment, assignmentID);
+  metadata.insertExprToAccessID(fa_assignee, assigneeID);
+
+  return make_unique<iir::StatementAccessesPair>(assignmentStatement);
 }
-/// @brief Creates the stage in which assignment happens (fill and flush)
-static std::unique_ptr<iir::Stage>
-createAssignmentStage(const iir::Interval& interval, int assignmentID, int assigneeID,
-                      const std::shared_ptr<iir::StencilInstantiation>& context,
-                      boost::optional<iir::Extents>& readExtents) {
+
+static void addAssignmentToDoMethod(std::unique_ptr<iir::DoMethod>& domethod, int assignmentID,
+                                    int assigneeID, iir::StencilMetaInformation& metadata) {
+  // Create the StatementAccessPair of the assignment with the new and old variables
+  auto assignmentStmtAccessPair = makeAssignmentStatement(assignmentID, assigneeID, metadata);
+  auto newAccess = std::make_shared<iir::Accesses>();
+
+  newAccess->addWriteExtent(assignmentID, iir::Extents(Array3i{{0, 0, 0}}));
+  newAccess->addReadExtent(assigneeID, iir::Extents(Array3i{{0, 0, 0}}));
+  assignmentStmtAccessPair->setAccesses(newAccess);
+  domethod->insertChild(std::move(assignmentStmtAccessPair));
+}
+/// @brief Creates the stage in which assignment happens (where the temporary gets filled)
+static std::unique_ptr<iir::Stage> createAssignmentStage(const iir::Interval& interval,
+                                                         int assignmentID, int assigneeID,
+                                                         iir::StencilMetaInformation& metadata,
+                                                         int newStageID) {
   // Add the stage that assined the assingee to the assignment
   std::unique_ptr<iir::Stage> assignmentStage =
-      make_unique<iir::Stage>(context->getMetaData(), context->nextUID(), interval);
-  iir::Stage::DoMethodSmartPtr_t domethod =
-      make_unique<iir::DoMethod>(interval, context->getMetaData());
+      make_unique<iir::Stage>(metadata, newStageID, interval);
+  iir::Stage::DoMethodSmartPtr_t domethod = make_unique<iir::DoMethod>(interval, metadata);
   domethod->clearChildren();
 
-  addAssignmentToDoMethod(domethod, assignmentID, assigneeID, context, readExtents);
+  addAssignmentToDoMethod(domethod, assignmentID, assigneeID, metadata);
 
   // Add the single do method to the new Stage
   assignmentStage->clearChildren();
@@ -234,7 +228,7 @@ bool PassFieldVersioning::run(
             // we create the new stage that holds these do-methods
             auto insertedStage = createAssignmentStage(
                 interval, id, stencilInstantiation->getMetaData().getOriginalVersionOfAccessID(id),
-                stencilInstantiation, extents);
+                stencilInstantiation->getMetaData(), stencilInstantiation->nextUID());
             // and insert them at the beginnning of the MultiStage
             mss->insertChild(mss->childrenBegin(), std::move(insertedStage));
           }
