@@ -28,15 +28,6 @@
 
 namespace dawn {
 
-static void reportDataDependencyInsideConditionalBlock(
-    const std::shared_ptr<Statement>& statement,
-    const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
-
-  DiagnosticsBuilder diag(DiagnosticsKind::Error, statement->ASTStmt->getSourceLocation());
-  diag << "Read-before-Write conflict inside conditional block is not supported.";
-  instantiation->getOptimizerContext()->getDiagnostics().report(diag);
-}
-
 PassStageSplitter::PassStageSplitter() : Pass("PassStageSplitter", true) {}
 
 bool PassStageSplitter::run(
@@ -87,8 +78,11 @@ bool PassStageSplitter::run(
               if(hasHorizontalReadBeforeWriteConflict(&conditionalBlockGraph)) {
                 // Since splitting inside a conditional block is not supported, report and return an
                 // error.
-                reportDataDependencyInsideConditionalBlock(stmtAccessesPair->getStatement(),
-                                                           stencilInstantiation);
+                auto statement = stmtAccessesPair->getStatement();
+                DiagnosticsBuilder diag(DiagnosticsKind::Error,
+                                        statement->ASTStmt->getSourceLocation());
+                diag << "Read-before-Write conflict inside conditional block is not supported.";
+                stencilInstantiation->getOptimizerContext()->getDiagnostics().report(diag);
                 return false;
               }
             }
