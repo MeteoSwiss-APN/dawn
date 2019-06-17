@@ -516,7 +516,6 @@ json::json StencilMetaInformation::jsonDump() const {
 
   json::json accessIdToTypeJson;
   for(const auto& p : fieldAccessMetadata_.accessIDType_) {
-    std::cout << std::to_string(p.first) << " : " << toString(p.second) << std::endl;
     accessIdToTypeJson[std::to_string(p.first)] = toString(p.second);
   }
   json::json tmpAccessIDsJson;
