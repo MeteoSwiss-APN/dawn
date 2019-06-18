@@ -19,8 +19,8 @@
 
 namespace dawn {
 
-/// @brief This pass assigns a unique name to each stage and makes
-/// `StencilInstantiation::getNameFromStageID` usable
+/// @brief This pass ensures that if input-fields are versioned and the version is used first with a
+/// read-access that is is filled with the correct inputdata beforehand
 ///
 /// @ingroup optimizer
 class PassFixVersionedInputFields : public Pass {
