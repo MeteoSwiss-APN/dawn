@@ -120,7 +120,7 @@ TEST_F(StencilSplitAnalyzer, test_bc_extent_calc) {
   ASSERT_TRUE(test->getMetaData().getFieldNameToBCMap().count("intermediate"));
   auto bc = test->getMetaData().getFieldNameToBCMap().find("intermediate")->second;
   ASSERT_TRUE((test->getMetaData().getBoundaryConditionExtentsFromBCStmt(bc) ==
-               iir::Extents{-1, 1, 0, 0, 0, 0}));
+               iir::Extents{-1, 0, 0, 0, 0, 0}));
 }
 
 TEST_F(StencilSplitAnalyzer, test_two_bc) {
@@ -130,7 +130,7 @@ TEST_F(StencilSplitAnalyzer, test_two_bc) {
   ASSERT_TRUE(test->getMetaData().getFieldNameToBCMap().count("intermediate"));
   auto bcfoo = test->getMetaData().getFieldNameToBCMap().find("intermediate")->second;
   ASSERT_TRUE((test->getMetaData().getBoundaryConditionExtentsFromBCStmt(bcfoo) ==
-               iir::Extents{-1, 1, 0, 0, 0, 0}));
+               iir::Extents{-1, 0, 0, 0, 0, 0}));
   ASSERT_TRUE(test->getMetaData().getFieldNameToBCMap().count("out"));
   auto bcbar = test->getMetaData().getFieldNameToBCMap().find("out")->second;
   ASSERT_TRUE((!test->getMetaData().hasBoundaryConditionStmtToExtent(bcbar)));
