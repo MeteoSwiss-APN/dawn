@@ -419,7 +419,7 @@ json::json MultiStage::jsonDump() const {
 
   json::json cachesJson;
   for(const auto& cache : derivedInfo_.caches_) {
-    cachesJson[cache.first] = cache.second.jsonDump();
+    cachesJson[std::to_string(cache.first)] = cache.second.jsonDump();
   }
   node["Caches"] = cachesJson;
 
