@@ -312,8 +312,9 @@ bool PassDataLocalityMetric::run(
 
   if(context->getOptions().ReportDataLocalityMetric) {
     std::string title = " DataLocality - " + stencilInstantiation->getName() + " ";
-    std::cout << std::string((51 - title.size()) / 2, '-') << title
-              << std::string((51 - title.size() + 1) / 2, '-') << "\n";
+    const int paddingLength = std::max(int(TERMINAL_CHAR_WIDTH - title.size()), 0);
+    std::cout << std::string((paddingLength) / 2, '-') << title
+              << std::string((paddingLength + 1) / 2, '-') << "\n";
 
     std::size_t perStencilNumReads = 0, perStencilNumWrites = 0;
 
