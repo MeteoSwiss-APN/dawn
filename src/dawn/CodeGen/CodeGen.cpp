@@ -141,7 +141,7 @@ void CodeGen::generateBCHeaders(std::vector<std::string>& ppDefines) const {
 
   if(std::accumulate(context_->getStencilInstantiationMap().begin(),
                      context_->getStencilInstantiationMap().end(), false, hasBCFold)) {
-    ppDefines.push_back("#include <gridtools/boundary-conditions/boundary.hpp>\n");
+    ppDefines.push_back("#include <gridtools/boundary_conditions/boundary.hpp>\n");
   }
 }
 
