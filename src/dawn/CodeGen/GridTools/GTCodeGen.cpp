@@ -569,7 +569,9 @@ void GTCodeGen::generateStencilClasses(
         }
 
         // Generate arglist
-        StencilFunStruct.addTypeDef("arg_list").addType("boost::mpl::vector").addTemplates(arglist);
+        StencilFunStruct.addTypeDef("param_list")
+            .addType(c_gt() + "make_param_list")
+            .addTemplates(arglist);
         mplContainerMaxSize_ = std::max(mplContainerMaxSize_, arglist.size());
 
         // Generate Do-Method
@@ -729,7 +731,9 @@ void GTCodeGen::generateStencilClasses(
         ssMS << ")" << ((stageIdx != multiStage.getChildren().size() - 1) ? "," : ")");
 
         // Generate arglist
-        StageStruct.addTypeDef("arg_list").addType("boost::mpl::vector").addTemplates(arglist);
+        StageStruct.addTypeDef("param_list")
+            .addType(c_gt() + "make_param_list")
+            .addTemplates(arglist);
         mplContainerMaxSize_ = std::max(mplContainerMaxSize_, arglist.size());
 
         // Generate Do-Method
@@ -862,9 +866,6 @@ void GTCodeGen::generateStencilClasses(
     if(!globalsMap.empty()) {
       ArglistPlaceholders.push_back("p_globals");
     }
-    StencilConstructor.addTypeDef("domain_arg_list")
-        .addType("boost::mpl::vector")
-        .addTemplates(ArglistPlaceholders);
 
     // Placeholders to map the real storages to the placeholders (no temporaries)
     std::vector<std::string> DomainMapPlaceholders;
