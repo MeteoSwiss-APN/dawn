@@ -28,7 +28,7 @@ class Stencil;
 class StatementAccessesPair;
 class StencilInstantiation;
 class StencilMetaInformation;
-}
+} // namespace iir
 
 /// @name Replacing routines
 /// @ingroup optimizer

@@ -401,4 +401,4 @@ void StatementMapper::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
     candiateScope->ArgumentIndex += 1;
   }
 }
-}
+} // namespace dawn

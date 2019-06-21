@@ -28,7 +28,7 @@ class StencilInstantiation;
 class Stencil;
 class StencilMetaInformation;
 class Field;
-}
+} // namespace iir
 namespace codegen {
 namespace cuda {
 

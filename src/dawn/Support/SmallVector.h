@@ -107,14 +107,14 @@ public:
   typedef const T* const_pointer;
 
   // forward iterator creation methods.
-  inline iterator begin() { return (iterator) this->BeginX; }
-  inline const_iterator begin() const { return (const_iterator) this->BeginX; }
-  inline iterator end() { return (iterator) this->EndX; }
-  inline const_iterator end() const { return (const_iterator) this->EndX; }
+  inline iterator begin() { return (iterator)this->BeginX; }
+  inline const_iterator begin() const { return (const_iterator)this->BeginX; }
+  inline iterator end() { return (iterator)this->EndX; }
+  inline const_iterator end() const { return (const_iterator)this->EndX; }
 
 protected:
-  iterator capacity_ptr() { return (iterator) this->CapacityX; }
-  const_iterator capacity_ptr() const { return (const_iterator) this->CapacityX; }
+  iterator capacity_ptr() { return (iterator)this->CapacityX; }
+  const_iterator capacity_ptr() const { return (const_iterator)this->CapacityX; }
 
 public:
   // reverse iterator creation methods.

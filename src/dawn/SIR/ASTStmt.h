@@ -30,7 +30,7 @@ namespace sir {
 struct VerticalRegion;
 struct StencilCall;
 struct Field;
-}
+} // namespace sir
 
 class ASTVisitor;
 class Expr;
