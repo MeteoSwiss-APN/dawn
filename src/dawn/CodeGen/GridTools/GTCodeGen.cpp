@@ -434,9 +434,10 @@ void GTCodeGen::generateStencilClasses(
     const auto stencilFields = orderMap(stencil.getFields());
 
     auto nonTempFields = makeRange(
-        stencilFields,
-        std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>([](
-            std::pair<int, iir::Stencil::FieldInfo> const& f) { return !f.second.IsTemporary; }));
+        stencilFields, std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
+                           [](std::pair<int, iir::Stencil::FieldInfo> const& f) {
+                             return !f.second.IsTemporary;
+                           }));
     if(stencil.isEmpty()) {
       DiagnosticsBuilder diag(DiagnosticsKind::Error,
                               stencilInstantiation->getMetaData().getStencilLocation());
@@ -532,7 +533,7 @@ void GTCodeGen::generateStencilClasses(
         int accessorID = 0;
         if(stencilFun->hasReturn()) {
           StencilFunStruct.addStatement("using __out = gridtools::accessor<0, "
-                                        "gridtools::enumtype::inout, gridtools::extent<0, 0, 0, 0, "
+                                        "gridtools::intent::inout, gridtools::extent<0, 0, 0, 0, "
                                         "0, 0>>");
           arglist.push_back("__out");
           accessorID++;
@@ -612,7 +613,7 @@ void GTCodeGen::generateStencilClasses(
       const iir::MultiStage& multiStage = **multiStageIt;
 
       // Generate `make_multistage`
-      ssMS << "gridtools::make_multistage(gridtools::enumtype::execute<gridtools::execute::";
+      ssMS << "gridtools::make_multistage(gridtools::execute::";
       if(!context_->getOptions().UseParallelEP &&
          multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Parallel)
         ssMS << iir::LoopOrderKind::LK_Forward << " /*parallel*/ ";
@@ -839,16 +840,16 @@ void GTCodeGen::generateStencilClasses(
         int compRHSide = fullExtents[dim].Plus + staggeringOffset;
         if(compRHSide > 0)
           StencilConstructor.addStatement("static_assert((static_cast<int>(" + parameterType +
-                                          "::storage_info_t::halo_t::" + at_call + ") >= " +
-                                          std::to_string(compRHSide) + ") || " + "(" +
+                                          "::storage_info_t::halo_t::" + at_call +
+                                          ") >= " + std::to_string(compRHSide) + ") || " + "(" +
                                           parameterType + "::storage_info_t::layout_t::" + at_call +
                                           " == -1)," + "\"Used extents exceed halo limits.\")");
         // assert for - accesses
         compRHSide = fullExtents[dim].Minus;
         if(compRHSide < 0)
           StencilConstructor.addStatement("static_assert(((-1)*static_cast<int>(" + parameterType +
-                                          "::storage_info_t::halo_t::" + at_call + ") <= " +
-                                          std::to_string(compRHSide) + ") || " + "(" +
+                                          "::storage_info_t::halo_t::" + at_call +
+                                          ") <= " + std::to_string(compRHSide) + ") || " + "(" +
                                           parameterType + "::storage_info_t::layout_t::" + at_call +
                                           " == -1)," + "\"Used extents exceed halo limits.\")");
       }
@@ -902,8 +903,8 @@ void GTCodeGen::generateStencilClasses(
     // notice we skip the first level since it is kstart and not included in the GT grid definition
     for(auto it = intervalDefinitions.Levels.begin(), end = intervalDefinitions.Levels.end();
         it != end; ++it, ++levelIdx)
-      StencilConstructor.addStatement("grid_.value_list[" + std::to_string(levelIdx) + "] = " +
-                                      getLevelSize(*it));
+      StencilConstructor.addStatement("grid_.value_list[" + std::to_string(levelIdx) +
+                                      "] = " + getLevelSize(*it));
 
     // generate sync storage calls
     generateSyncStorages(StencilConstructor, nonTempFields);
