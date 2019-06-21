@@ -41,4 +41,4 @@ skipAllImplicitNodes(T* e) {
     e = e->IgnoreImplicit();
   return e;
 }
-}
+} // namespace gtclang

@@ -16,7 +16,7 @@
 
 include(yodaExportPackage)
 
-find_package(clang-format)
+find_package(clang-format EXACT 6.0)
 
 yoda_export_package(
   NAME clang-format

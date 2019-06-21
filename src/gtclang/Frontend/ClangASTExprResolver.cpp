@@ -596,8 +596,9 @@ public:
   /// stencil function is a field, which will be resolved elsewhere
   std::shared_ptr<dawn::StencilFunArgExpr>
   makeStencilFunArgExpr(const dawn::SourceLocation& loc) const {
-    return isStorage_ ? nullptr : std::make_shared<dawn::StencilFunArgExpr>(direction_, offset_,
-                                                                            argumentIndex_, loc);
+    return isStorage_ ? nullptr
+                      : std::make_shared<dawn::StencilFunArgExpr>(direction_, offset_,
+                                                                  argumentIndex_, loc);
   }
 
 private:
@@ -726,9 +727,10 @@ std::shared_ptr<dawn::Stmt> ClangASTExprResolver::resolveDecl(clang::VarDecl* de
   auto it = parser_->getCurrentParserRecord()->CurrentArgDeclMap.find(varname);
   if(it != argDeclMap.end()) {
     reportDiagnostic(decl->getLocStart(), Diagnostics::err_do_method_var_shadowing)
-        << varname << (parser_->getCurrentParserRecord()->CurrentKind == StencilParser::SK_Stencil
-                           ? "stencil"
-                           : "stencil function");
+        << varname
+        << (parser_->getCurrentParserRecord()->CurrentKind == StencilParser::SK_Stencil
+                ? "stencil"
+                : "stencil function");
     reportDiagnostic(it->second.Decl->getLocation(), Diagnostics::note_previous_definition);
   }
 

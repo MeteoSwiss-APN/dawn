@@ -45,7 +45,7 @@ std::string getExecutablePath(const char* argv0) {
   return llvm::sys::fs::getMainExecutable(argv0, main_addr);
 }
 
-} // namespace anonymous
+} // namespace
 
 clang::CompilerInstance* createCompilerInstance(llvm::SmallVectorImpl<const char*>& args) {
   using namespace clang;
