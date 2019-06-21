@@ -33,6 +33,10 @@ struct ReadWriteAccumulator {
 ///
 /// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassDataLocalityMetric : public Pass {
+
+private:
+  static const int TERMINAL_CHAR_WIDTH = 70;
+
 public:
   PassDataLocalityMetric();
 
