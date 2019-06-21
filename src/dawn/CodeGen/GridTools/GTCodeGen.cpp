@@ -532,8 +532,8 @@ void GTCodeGen::generateStencilClasses(
         // If we have a return argument, we generate a special `__out` field
         int accessorID = 0;
         if(stencilFun->hasReturn()) {
-          StencilFunStruct.addStatement("using __out = gridtools::accessor<0, "
-                                        "gridtools::intent::inout, gridtools::extent<0, 0, 0, 0, "
+          StencilFunStruct.addStatement("using __out = gridtools::accessor<0, " + c_gt_intent() +
+                                        "inout, gridtools::extent<0, 0, 0, 0, "
                                         "0, 0>>");
           arglist.push_back("__out");
           accessorID++;
@@ -552,7 +552,7 @@ void GTCodeGen::generateStencilClasses(
           StencilFunStruct.addTypeDef(paramName)
               .addType(c_gt() + "accessor")
               .addTemplate(Twine(accessorID))
-              .addTemplate(c_gt_enum() +
+              .addTemplate(c_gt_intent() +
                            ((fields[m].getIntend() == iir::Field::IK_Input) ? "in" : "inout"))
               .addTemplate(extent);
 
@@ -619,7 +619,7 @@ void GTCodeGen::generateStencilClasses(
         ssMS << iir::LoopOrderKind::LK_Forward << " /*parallel*/ ";
       else
         ssMS << multiStage.getLoopOrder();
-      ssMS << ">(),";
+      ssMS << "(),";
 
       // Add the MultiStage caches
       if(!multiStage.getCaches().empty()) {
@@ -703,7 +703,7 @@ void GTCodeGen::generateStencilClasses(
           StageStruct.addTypeDef(paramName)
               .addType(c_gt() + "accessor")
               .addTemplate(Twine(accessorIdx))
-              .addTemplate(c_gt_enum() +
+              .addTemplate(c_gt_intent() +
                            ((field.getIntend() == iir::Field::IK_Input) ? "in" : "inout"))
               .addTemplate(extent);
 
