@@ -598,7 +598,7 @@ void GTCodeGen::generateStencilClasses(
       const iir::MultiStage& multiStage = **multiStageIt;
 
       // Generate `make_multistage`
-      ssMS << "gridtools::make_multistage(gridtools::enumtype::execute<gridtools::enumtype::";
+      ssMS << "gridtools::make_multistage(gridtools::enumtype::execute<gridtools::execute::";
       if(!context_->getOptions().UseParallelEP &&
          multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Parallel)
         ssMS << iir::LoopOrderKind::LK_Forward << " /*parallel*/ ";
