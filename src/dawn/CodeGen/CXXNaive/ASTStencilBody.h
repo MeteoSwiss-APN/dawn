@@ -27,7 +27,7 @@ namespace dawn {
 namespace iir {
 class StencilFunctionInstantiation;
 class StencilMetaInformation;
-}
+} // namespace iir
 
 namespace codegen {
 namespace cxxnaive {

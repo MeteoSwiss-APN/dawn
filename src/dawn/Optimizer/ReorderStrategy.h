@@ -23,7 +23,7 @@ namespace iir {
 class Stencil;
 class StencilInstantiation;
 class DependencyGraphStage;
-}
+} // namespace iir
 
 /// @brief Abstract class for various reodering strategies
 /// @ingroup optimizer

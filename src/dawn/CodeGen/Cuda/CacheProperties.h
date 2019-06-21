@@ -23,7 +23,7 @@ namespace dawn {
 namespace iir {
 class StencilInstantiation;
 class MultiStage;
-}
+} // namespace iir
 
 namespace codegen {
 namespace cuda {

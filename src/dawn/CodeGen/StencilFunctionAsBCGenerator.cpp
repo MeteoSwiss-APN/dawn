@@ -104,5 +104,5 @@ void BCGenerator::generate(const std::shared_ptr<BoundaryConditionDeclStmt>& stm
   ss_ << makeView;
   ss_ << bcapply;
 }
-}
-}
+} // namespace codegen
+} // namespace dawn

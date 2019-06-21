@@ -30,7 +30,7 @@ namespace iir {
 class StencilInstantiation;
 class Stage;
 class Stencil;
-}
+} // namespace iir
 
 namespace codegen {
 namespace gt {
@@ -67,7 +67,8 @@ private:
   //  std::string generateGlobals(const std::shared_ptr<SIR>& Sir);
   std::string cacheWindowToString(const iir::Cache::window& cacheWindow);
 
-  void buildPlaceholderDefinitions(MemberFunction& function,
+  void buildPlaceholderDefinitions(
+      MemberFunction& function,
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
       const std::map<int, iir::Stencil::FieldInfo>& stencilFields,
       const sir::GlobalVariableMap& globalsMap, const CodeGenProperties& codeGenProperties) const;

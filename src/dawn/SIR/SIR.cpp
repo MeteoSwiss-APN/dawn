@@ -259,9 +259,8 @@ sir::CompareResult sir::Stencil::comparison(const sir::Stencil& rhs) const {
                                       Name, rhs.Name),
                          false};
 
-  if(!Fields.empty() &&
-     !std::equal(Fields.begin(), Fields.end(), rhs.Fields.begin(),
-                 pointeeComparisonWithOutput<Field>)) {
+  if(!Fields.empty() && !std::equal(Fields.begin(), Fields.end(), rhs.Fields.begin(),
+                                    pointeeComparisonWithOutput<Field>)) {
     std::string output = "[Stencil mismatch] Fields do not match\n";
     for(int i = 0; i < Fields.size(); ++i) {
       auto comp = pointeeComparisonWithOutput(Fields[i], rhs.Fields[i]);
@@ -335,9 +334,8 @@ sir::CompareResult sir::StencilFunction::comparison(const sir::StencilFunction& 
   }
 
   // Intervals
-  if(!Intervals.empty() &&
-     !std::equal(Intervals.begin(), Intervals.end(), rhs.Intervals.begin(),
-                 pointeeComparison<sir::Interval>)) {
+  if(!Intervals.empty() && !std::equal(Intervals.begin(), Intervals.end(), rhs.Intervals.begin(),
+                                       pointeeComparison<sir::Interval>)) {
     std::string output = "[StencilFunction mismatch] Intervals do not match\n";
     for(int i = 0; i < Intervals.size(); ++i) {
       auto comp = pointeeComparisonWithOutput(Intervals[i], rhs.Intervals[i]);

@@ -25,7 +25,7 @@ namespace dawn {
 namespace iir {
 class Stencil;
 class DoMethod;
-}
+} // namespace iir
 
 struct SkipIDs {
   std::unordered_map<int, std::set<int>> accessIDs;

@@ -190,6 +190,6 @@ struct iterator_traits<dawn::iir::IIRNodeIterator<RootNode, LeafNode>> {
   using iterator_category =
       typename iterator_traits<typename LeafNode::ChildIterator>::iterator_category;
 };
-}
+} // namespace std
 
 #endif

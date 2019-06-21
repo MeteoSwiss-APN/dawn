@@ -281,9 +281,11 @@ IfStmt::IfStmt(const std::shared_ptr<Stmt>& condStmt, const std::shared_ptr<Stmt
     : Stmt(SK_IfStmt, loc), subStmts_{condStmt, thenStmt, elseStmt} {}
 
 IfStmt::IfStmt(const IfStmt& stmt)
-    : Stmt(SK_IfStmt, stmt.getSourceLocation()),
-      subStmts_{stmt.getCondStmt()->clone(), stmt.getThenStmt()->clone(),
-                stmt.hasElse() ? stmt.getElseStmt()->clone() : nullptr} {}
+    : Stmt(SK_IfStmt, stmt.getSourceLocation()), subStmts_{stmt.getCondStmt()->clone(),
+                                                           stmt.getThenStmt()->clone(),
+                                                           stmt.hasElse()
+                                                               ? stmt.getElseStmt()->clone()
+                                                               : nullptr} {}
 
 IfStmt& IfStmt::operator=(IfStmt stmt) {
   assign(stmt);

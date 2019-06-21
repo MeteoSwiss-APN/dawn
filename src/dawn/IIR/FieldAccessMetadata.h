@@ -159,7 +159,7 @@ struct is_mapp_impl<
     : std::true_type {
   void t() { T::kk(); }
 };
-}
+} // namespace impl
 
 template <FieldAccessType TFieldAccessType>
 struct TypeOfAccessContainer;

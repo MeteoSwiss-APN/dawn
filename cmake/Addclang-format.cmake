@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-find_package(clang-format EXACT 3.8)
+find_package(clang-format EXACT 6.0)
 
 yoda_export_package(
   NAME clang-format

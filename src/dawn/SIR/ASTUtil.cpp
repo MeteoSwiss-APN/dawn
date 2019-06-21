@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTUtil.h"
+#include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/Statement.h"
 #include "dawn/Support/StringSwitch.h"
