@@ -145,7 +145,7 @@ GTCodeGen::buildListPlaceholders(const std::map<int, iir::Stencil::FieldInfo>& s
   std::vector<std::string> plchdrs;
   for(const auto& fieldInfoPair : stencilFields) {
     const auto& fieldInfo = fieldInfoPair.second;
-    plchdrs.push_back(fieldInfo.Name);
+    plchdrs.push_back("p_" + fieldInfo.Name);
   }
 
   if(!globalsMap.empty()) {
