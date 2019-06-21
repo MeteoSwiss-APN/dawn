@@ -67,10 +67,15 @@ private:
   //  std::string generateGlobals(const std::shared_ptr<SIR>& Sir);
   std::string cacheWindowToString(const iir::Cache::window& cacheWindow);
 
-  void buildPlaceholderDefinitions(MemberFunction& function,
-      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+  void buildPlaceholderDefinitions(
+      Structure& function, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
       const std::map<int, iir::Stencil::FieldInfo>& stencilFields,
       const sir::GlobalVariableMap& globalsMap, const CodeGenProperties& codeGenProperties) const;
+
+  // build the collection of placeholder typedef names
+  std::vector<std::string>
+  buildListPlaceholders(const std::map<int, iir::Stencil::FieldInfo>& stencilFields,
+                        const sir::GlobalVariableMap& globalsMap) const;
 
   std::string getFieldName(std::shared_ptr<sir::Field> const& f) const { return f->Name; }
 

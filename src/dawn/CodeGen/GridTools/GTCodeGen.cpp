@@ -116,8 +116,7 @@ void GTCodeGen::generateSyncStorages(
 }
 
 void GTCodeGen::buildPlaceholderDefinitions(
-    MemberFunction& function,
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    Structure& stencilClass, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const std::map<int, iir::Stencil::FieldInfo>& stencilFields,
     const sir::GlobalVariableMap& globalsMap, const CodeGenProperties& codeGenProperties) const {
 
@@ -125,7 +124,7 @@ void GTCodeGen::buildPlaceholderDefinitions(
   for(const auto& fieldInfoPair : stencilFields) {
     const auto& fieldInfo = fieldInfoPair.second;
     // Fields
-    function.addTypeDef("p_" + fieldInfo.Name)
+    stencilClass.addTypeDef("p_" + fieldInfo.Name)
         .addType(c_gt() + (fieldInfo.IsTemporary ? "tmp_arg" : "arg"))
         .addTemplate(Twine(accessorIdx))
         .addTemplate(codeGenProperties.getParamType(stencilInstantiation, fieldInfo));
@@ -133,11 +132,26 @@ void GTCodeGen::buildPlaceholderDefinitions(
   }
 
   if(!globalsMap.empty()) {
-    function.addTypeDef("p_globals")
+    stencilClass.addTypeDef("p_globals")
         .addType(c_gt() + "arg")
         .addTemplate(Twine(accessorIdx))
         .addTemplate("decltype(m_globals_gp_)");
   }
+}
+
+std::vector<std::string>
+GTCodeGen::buildListPlaceholders(const std::map<int, iir::Stencil::FieldInfo>& stencilFields,
+                                 const sir::GlobalVariableMap& globalsMap) const {
+  std::vector<std::string> plchdrs;
+  for(const auto& fieldInfoPair : stencilFields) {
+    const auto& fieldInfo = fieldInfoPair.second;
+    plchdrs.push_back(fieldInfo.Name);
+  }
+
+  if(!globalsMap.empty()) {
+    plchdrs.push_back("p_globals");
+  }
+  return plchdrs;
 }
 
 void GTCodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInstantiation,
@@ -227,6 +241,7 @@ void GTCodeGen::generateStencilWrapperPublicMemberFunctions(
       codeGenProperties.getAllStencilProperties(StencilContext::SC_Stencil)) {
     stencilMembers.push_back("m_" + stencilProp.first);
   }
+
   // Generate stencil getter
   MemberFunction stencilGetter =
       stencilWrapperClass.addMemberFunction("std::vector<computation<void>*>", "getStencils");
@@ -419,10 +434,9 @@ void GTCodeGen::generateStencilClasses(
     const auto stencilFields = orderMap(stencil.getFields());
 
     auto nonTempFields = makeRange(
-        stencilFields, std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
-                           [](std::pair<int, iir::Stencil::FieldInfo> const& f) {
-                             return !f.second.IsTemporary;
-                           }));
+        stencilFields,
+        std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>([](
+            std::pair<int, iir::Stencil::FieldInfo> const& f) { return !f.second.IsTemporary; }));
     if(stencil.isEmpty()) {
       DiagnosticsBuilder diag(DiagnosticsKind::Error,
                               stencilInstantiation->getMetaData().getStencilLocation());
@@ -761,6 +775,10 @@ void GTCodeGen::generateStencilClasses(
 
     mplContainerMaxSize_ = std::max(mplContainerMaxSize_, numFields);
 
+    // Generate placeholders
+    buildPlaceholderDefinitions(StencilClass, stencilInstantiation, stencilFields, globalsMap,
+                                codeGenProperties);
+
     // Generate constructor
     auto StencilConstructor = StencilClass.addConstructor();
 
@@ -821,25 +839,22 @@ void GTCodeGen::generateStencilClasses(
         int compRHSide = fullExtents[dim].Plus + staggeringOffset;
         if(compRHSide > 0)
           StencilConstructor.addStatement("static_assert((static_cast<int>(" + parameterType +
-                                          "::storage_info_t::halo_t::" + at_call +
-                                          ") >= " + std::to_string(compRHSide) + ") || " + "(" +
+                                          "::storage_info_t::halo_t::" + at_call + ") >= " +
+                                          std::to_string(compRHSide) + ") || " + "(" +
                                           parameterType + "::storage_info_t::layout_t::" + at_call +
                                           " == -1)," + "\"Used extents exceed halo limits.\")");
         // assert for - accesses
         compRHSide = fullExtents[dim].Minus;
         if(compRHSide < 0)
           StencilConstructor.addStatement("static_assert(((-1)*static_cast<int>(" + parameterType +
-                                          "::storage_info_t::halo_t::" + at_call +
-                                          ") <= " + std::to_string(compRHSide) + ") || " + "(" +
+                                          "::storage_info_t::halo_t::" + at_call + ") <= " +
+                                          std::to_string(compRHSide) + ") || " + "(" +
                                           parameterType + "::storage_info_t::layout_t::" + at_call +
                                           " == -1)," + "\"Used extents exceed halo limits.\")");
       }
     }
 
     // Generate domain
-    buildPlaceholderDefinitions(StencilConstructor, stencilInstantiation, stencilFields, globalsMap,
-                                codeGenProperties);
-
     std::vector<std::string> ArglistPlaceholders;
     for(const auto& field : stencilFields)
       ArglistPlaceholders.push_back("p_" + field.second.Name);
@@ -887,8 +902,8 @@ void GTCodeGen::generateStencilClasses(
     // notice we skip the first level since it is kstart and not included in the GT grid definition
     for(auto it = intervalDefinitions.Levels.begin(), end = intervalDefinitions.Levels.end();
         it != end; ++it, ++levelIdx)
-      StencilConstructor.addStatement("grid_.value_list[" + std::to_string(levelIdx) +
-                                      "] = " + getLevelSize(*it));
+      StencilConstructor.addStatement("grid_.value_list[" + std::to_string(levelIdx) + "] = " +
+                                      getLevelSize(*it));
 
     // generate sync storage calls
     generateSyncStorages(StencilConstructor, nonTempFields);
@@ -904,7 +919,11 @@ void GTCodeGen::generateStencilClasses(
     StencilConstructor.commit();
 
     StencilClass.addComment("Members");
-    stencilType = "computation<void>";
+
+    auto plchdrs = buildListPlaceholders(stencilFields, globalsMap);
+
+    stencilType = "computation" + RangeToString(",", "<", ">")(plchdrs);
+
     StencilClass.addMember(stencilType, "m_stencil");
 
     if(!globalsMap.empty()) {
