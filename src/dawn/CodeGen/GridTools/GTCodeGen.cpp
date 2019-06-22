@@ -288,7 +288,7 @@ void GTCodeGen::generateStencilWrapperRun(
     Class& stencilWrapperClass,
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     const CodeGenProperties& codeGenProperties) const {
-
+  const auto& metadata = stencilInstantiation->getMetaData();
   const auto& stencils = stencilInstantiation->getStencils();
   // Create the StencilID -> stencil name map
   std::unordered_map<int, std::string> stencilIDToRunArguments;
@@ -306,8 +306,8 @@ void GTCodeGen::generateStencilWrapperRun(
     stencilIDToRunArguments[stencil->getStencilID()] =
         "m_dom," +
         RangeToString(", ", "", "")(nonTempFields, [&](const iir::Stencil::FieldInfo& fieldInfo) {
-          if(stencilInstantiation->getMetaData().isAccessType(
-                 iir::FieldAccessType::FAT_InterStencilTemporary, fieldInfo.field.getAccessID()))
+          if(metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
+                                   fieldInfo.field.getAccessID()))
             return "m_" + fieldInfo.Name;
           else
             return fieldInfo.Name;
@@ -316,6 +316,11 @@ void GTCodeGen::generateStencilWrapperRun(
 
   // Generate the run method by generate code for the stencil description AST
   MemberFunction RunMethod = stencilWrapperClass.addMemberFunction("void", "run");
+  for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>()) {
+    std::string name = metadata.getFieldNameFromAccessID(fieldID);
+    RunMethod.addArg(codeGenProperties.getParamType(name) + " " + name);
+  }
+
   RunMethod.startBody();
 
   ASTStencilDesc stencilDescCGVisitor(stencilInstantiation, codeGenProperties,
