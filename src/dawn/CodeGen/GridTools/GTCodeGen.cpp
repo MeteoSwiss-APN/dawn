@@ -139,10 +139,12 @@ void GTCodeGen::generateGridConstruction(MemberFunction& stencilConstructor,
     gridLevels.push_back(getLevelSize(*it));
   }
 
-  stencilConstructor.addStatement(
-      "auto grid_ = grid_" +
-      codeGenProperties.getStencilName(StencilContext::SC_Stencil, (size_t)stencil.getStencilID()) +
-      "(di, dj, " + RangeToString(",", "{", "}")(gridLevels) + ")");
+  std::string stencilName =
+      codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
+
+  stencilConstructor.addStatement(getGridName(stencilName) + " grid_(di, dj, " +
+                                  getAxisName(stencilName) +
+                                  RangeToString(",", "{", "}")(gridLevels) + ")");
 }
 
 void GTCodeGen::generateSyncStorages(
@@ -444,6 +446,9 @@ void GTCodeGen::generateStencilWrapperMembers(
   }
 }
 
+std::string GTCodeGen::getAxisName(const std::string& stencilName) { return "axis_" + stencilName; }
+std::string GTCodeGen::getGridName(const std::string& stencilName) { return "grid_" + stencilName; }
+
 void GTCodeGen::generateStencilClasses(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     Class& stencilWrapperClass, CodeGenProperties& codeGenProperties) {
@@ -525,7 +530,7 @@ void GTCodeGen::generateStencilClasses(
 
     // Generate typedef for the axis
     const iir::Interval& axis = intervalDefinitions.Axis;
-    StencilClass.addTypeDef(Twine("axis_") + StencilName)
+    StencilClass.addTypeDef(getAxisName(StencilName))
         .addType(c_gt() + "interval")
         .addTemplates(makeArrayRef(
             {makeLevelName(axis.lowerLevel(), axis.lowerOffset() - 2),
@@ -533,9 +538,9 @@ void GTCodeGen::generateStencilClasses(
                            (axis.upperOffset() + 1) == 0 ? 1 : (axis.upperOffset() + 1))}));
 
     // Generate typedef of the grid
-    StencilClass.addTypeDef(Twine("grid_") + StencilName)
+    StencilClass.addTypeDef(getGridName(StencilName))
         .addType(c_gt() + "grid")
-        .addTemplate(Twine("axis_") + StencilName);
+        .addTemplate(getAxisName(StencilName));
 
     //
     // Generate stencil functions code for stencils instantiated by this stencil
@@ -931,7 +936,6 @@ void GTCodeGen::generateStencilClasses(
     StencilClass.addMember(stencilType, "m_stencil");
 
     if(!globalsMap.empty()) {
-
       // update globals
       StencilClass.addMemberFunction("void", "update_globals")
           .addStatement("update_global_parameter(m_globals_gp_, m_globals)");

@@ -116,6 +116,9 @@ private:
       MemberFunction& method,
       const IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& stencilFields) const;
 
+  static std::string getAxisName(const std::string& stencilName);
+  static std::string getGridName(const std::string& stencilName);
+
   /// construct a string of template parameters for storages
   std::vector<std::string> buildFieldTemplateNames(
       IndexRange<std::vector<iir::Stencil::FieldInfo>> const& stencilFields) const;
