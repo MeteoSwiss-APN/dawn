@@ -25,15 +25,6 @@
 namespace dawn {
 namespace codegen {
 
-template <typename Key, typename Value>
-extern std::map<Key, Value> orderMap(const std::unordered_map<Key, Value>& umap) {
-  std::map<Key, Value> m;
-  for(const auto& f : umap)
-    m.insert(f);
-
-  return m;
-}
-
 /// @brief Interface of the backend code generation
 /// @ingroup codegen
 class CodeGen {
@@ -47,9 +38,9 @@ protected:
   void addTmpStorageDeclaration(
       Structure& stencilClass,
       IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tmpFields) const;
-  virtual void addTmpStorageInit(
-      MemberFunction& ctr, const iir::Stencil& stencil,
-      IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields) const;
+  virtual void
+  addTmpStorageInit(MemberFunction& ctr, const iir::Stencil& stencil,
+                    IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields) const;
   void
   addTmpStorageInitStencilWrapperCtr(MemberFunction& ctr,
                                      const std::vector<std::unique_ptr<iir::Stencil>>& stencils,

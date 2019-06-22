@@ -25,6 +25,7 @@ yoda_add_library(
           Casting.h
           Compiler.h
           Config.h.cmake
+          ContainerUtils.h
           DoubleSidedMap.h
           EditDistance.h
           FileUtil.cpp

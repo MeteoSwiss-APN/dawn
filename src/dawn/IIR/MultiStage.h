@@ -156,6 +156,7 @@ public:
 
   /// @brief Get the pair <AccessID, field> for the fields used within the multi-stage
   const std::unordered_map<int, Field>& getFields() const;
+  std::map<int, Field> getOrderedFields() const;
 
   /// @brief Compute and return the pairs <AccessID, field> used for a given interval
   std::unordered_map<int, Field> computeFieldsAtInterval(const iir::Interval& interval) const;

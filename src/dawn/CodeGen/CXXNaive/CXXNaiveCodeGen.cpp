@@ -161,7 +161,7 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
     if(stencil.isEmpty())
       continue;
 
-    const auto stencilFields = orderMap(stencil.getFields());
+    const auto stencilFields = stencil.getOrderedFields();
 
     const std::string stencilName =
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
@@ -265,12 +265,13 @@ void CXXNaiveCodeGen::generateStencilClasses(
       continue;
 
     // fields used in the stencil
-    const auto stencilFields = orderMap(stencil.getFields());
+    const auto stencilFields = stencil.getOrderedFields();
 
     auto nonTempFields = makeRange(
-        stencilFields,
-        std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>([](
-            std::pair<int, iir::Stencil::FieldInfo> const& p) { return !p.second.IsTemporary; }));
+        stencilFields, std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
+                           [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
+                             return !p.second.IsTemporary;
+                           }));
     auto tempFields = makeRange(
         stencilFields,
         std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
@@ -283,8 +284,9 @@ void CXXNaiveCodeGen::generateStencilClasses(
                   [cnt]() mutable { return "StorageType" + std::to_string(cnt++); });
 
     Structure StencilClass = stencilWrapperClass.addStruct(
-        stencilName, RangeToString(", ", "", "")(
-                         StencilTemplates, [](const std::string& str) { return "class " + str; }),
+        stencilName,
+        RangeToString(", ", "", "")(StencilTemplates,
+                                    [](const std::string& str) { return "class " + str; }),
         "sbase");
 
     ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
@@ -397,7 +399,6 @@ void CXXNaiveCodeGen::generateStencilClasses(
                     makeIJLoop(stage.getExtents()[0], "m_dom", "i"), [&]() {
                       StencilRunMethod.addBlockStatement(
                           makeIJLoop(stage.getExtents()[1], "m_dom", "j"), [&]() {
-
                             // Generate Do-Method
                             for(const auto& doMethodPtr : stage.getChildren()) {
                               const iir::DoMethod& doMethod = *doMethodPtr;
@@ -409,7 +410,6 @@ void CXXNaiveCodeGen::generateStencilClasses(
                                 StencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
                               }
                             }
-
                           });
                     });
               }

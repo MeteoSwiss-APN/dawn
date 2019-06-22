@@ -27,6 +27,16 @@
 namespace dawn {
 namespace iir {
 
+const Stencil& IIR::getStencil(const int stencilID) const {
+  auto lamb = [&](const std::unique_ptr<Stencil>& stencil) -> bool {
+    return (stencil->getStencilID() == stencilID);
+  };
+
+  auto it = std::find_if(getChildren().begin(), getChildren().end(), lamb);
+  DAWN_ASSERT(it != getChildren().end());
+  return *(*it);
+}
+
 std::unique_ptr<IIR> IIR::clone() const {
   auto cloneIIR = make_unique<IIR>(globalVariableMap_, stencilFunctions_);
   clone(cloneIIR);

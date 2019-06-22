@@ -30,7 +30,7 @@ namespace iir {
 class StencilInstantiation;
 class Stage;
 class Stencil;
-}
+} // namespace iir
 
 namespace codegen {
 namespace gt {
@@ -72,11 +72,6 @@ private:
       const std::map<int, iir::Stencil::FieldInfo>& stencilFields,
       const sir::GlobalVariableMap& globalsMap, const CodeGenProperties& codeGenProperties) const;
 
-  // build the collection of placeholder typedef names
-  std::vector<std::string>
-  buildListPlaceholders(const std::map<int, iir::Stencil::FieldInfo>& stencilFields,
-                        const sir::GlobalVariableMap& globalsMap) const;
-
   std::string getFieldName(std::shared_ptr<sir::Field> const& f) const { return f->Name; }
 
   std::string getFieldName(iir::Stencil::FieldInfo const& f) const { return f.Name; }
@@ -111,6 +106,10 @@ private:
   void
   generateStencilClasses(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                          Class& stencilWrapperClass, CodeGenProperties& codeGenProperties);
+
+  void generateGridConstruction(MemberFunction& stencilConstructor, const iir::Stencil& stencil,
+                                IntervalDefinitions& intervalDefinitions,
+                                const CodeGenProperties& codeGenProperties) const;
 
   /// code generate sync methods statements for all the fields passed
   void generateSyncStorages(

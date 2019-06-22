@@ -90,6 +90,8 @@ public:
   void insertGlobalVariable(std::string name, std::shared_ptr<sir::Value> value) {
     globalVariableMap_.emplace(name, value);
   }
+
+  const Stencil& getStencil(const int stencilID) const;
 };
 } // namespace iir
 } // namespace dawn
