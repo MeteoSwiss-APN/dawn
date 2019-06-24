@@ -24,7 +24,6 @@
 namespace dawn {
 namespace iir {
 
-
 template <typename RootIIRNode, typename LeafNode>
 class IIRNodeIterator {
   template <class A, class B>
@@ -58,14 +57,15 @@ public:
     }
   }
 
-
   bool isVoidIter() const {
     if(voidIter_)
       return true;
     return restIterator_.isVoidIter();
   }
+
 private:
   IIRNodeIterator() = default;
+
 public:
   IIRNodeIterator(IIRNodeIterator&&) = default;
   IIRNodeIterator(const IIRNodeIterator&) = default;
@@ -134,16 +134,16 @@ public:
       return true;
     return iterator_ == end_;
   }
-private:
-  IIRNodeIterator() = default;
 };
 
 template <typename LeafNode>
 class IIRNodeIterator<LeafNode, LeafNode> {
   template <class A, class B>
   friend class IIRNodeIterator;
+
 private:
   IIRNodeIterator() = default;
+
 public:
   IIRNodeIterator(const LeafNode* root) {}
   IIRNodeIterator(IIRNodeIterator&&) = default;
@@ -179,8 +179,6 @@ public:
     it.setToEnd();
     return it;
   }
-private:
-  IIRNodeIterator() = default;
 };
 
 } // namespace iir
