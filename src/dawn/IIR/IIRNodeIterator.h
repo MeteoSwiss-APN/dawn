@@ -26,6 +26,8 @@ namespace iir {
 
 template <typename RootIIRNode, typename LeafNode>
 class IIRNodeIterator {
+  template <class A, class B>
+  friend class IIRNodeIterator;
 
   typename RootIIRNode::ChildConstIterator iterator_;
   typename RootIIRNode::ChildConstIterator end_;
@@ -60,7 +62,6 @@ public:
       return true;
     return restIterator_.isVoidIter();
   }
-  IIRNodeIterator() = default;
   IIRNodeIterator(IIRNodeIterator&&) = default;
   IIRNodeIterator(const IIRNodeIterator&) = default;
   IIRNodeIterator& operator=(IIRNodeIterator&&) = default;
@@ -128,12 +129,15 @@ public:
       return true;
     return iterator_ == end_;
   }
+private:
+  IIRNodeIterator() = default;
 };
 
 template <typename LeafNode>
 class IIRNodeIterator<LeafNode, LeafNode> {
+  template <class A, class B>
+  friend class IIRNodeIterator;
 public:
-  IIRNodeIterator() = default;
   IIRNodeIterator(const LeafNode* root) {}
   IIRNodeIterator(IIRNodeIterator&&) = default;
   IIRNodeIterator(const IIRNodeIterator&) = default;
@@ -168,6 +172,8 @@ public:
     it.setToEnd();
     return it;
   }
+private:
+  IIRNodeIterator() = default;
 };
 
 } // namespace iir
