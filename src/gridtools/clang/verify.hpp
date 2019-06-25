@@ -163,12 +163,16 @@ public:
     using namespace gridtools;
 
     storage.sync();
+    auto sinfo = *(storage.get_storage_info_ptr());
+    const uint_t d3 = sinfo.template total_length<2>();
+
+
 
     auto storage_v = make_host_view<access_mode::ReadOnly>(storage);
     std::cout << "==============================================\n";
     std::cout << "printing Storage " << storage.name() << "\n";
     std::cout << "==============================================\n";
-    for(int k = m_domain.kminus(); k < (m_domain.ksize() - m_domain.kplus()); ++k) {
+    for(uint_t k = 0; k < d3; ++k) {
       std::cout << "Level " << k << "\n";
       for(int j = m_domain.jminus(); j < (m_domain.jsize() - m_domain.jplus()); ++j) {
         for(int i = m_domain.iminus(); i < (m_domain.isize() - m_domain.iplus()); ++i) {
