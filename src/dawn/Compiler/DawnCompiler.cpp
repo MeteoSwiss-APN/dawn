@@ -178,9 +178,9 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   optimizer->checkAndPushBack<PassStageReordering>(reorderStrategy);
   optimizer->checkAndPushBack<PassStageMerger>();
   optimizer->checkAndPushBack<PassStencilSplitter>(maxFields);
+  optimizer->checkAndPushBack<PassFixVersionedInputFields>();
   optimizer->checkAndPushBack<PassTemporaryType>();
   optimizer->checkAndPushBack<PassTemporaryMerger>();
-  optimizer->checkAndPushBack<PassFixVersionedInputFields>();
   optimizer->checkAndPushBack<PassInlining>(
       (getOptions().InlineSF || getOptions().PassTmpToFunction),
       PassInlining::IK_ComputationsOnTheFly);
