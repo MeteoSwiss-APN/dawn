@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "gridtools/clang/halo.hpp"
 #include <array>
 #include <type_traits>
 
@@ -42,8 +43,9 @@ public:
    * @param k   Size of the third dimension
    */
   domain(unsigned int i, unsigned int j, unsigned int k)
-      : m_dims{i, j, k}, m_halos{0, 0, 0, 0, 0, 0} {}
-  domain(const std::array<unsigned int, 3>& dims) : m_dims(dims), m_halos{0, 0, 0, 0, 0, 0} {}
+      : m_dims{i, j, k}, m_halos{halo::value, halo::value, halo::value, halo::value, 0, 0} {}
+  domain(const std::array<unsigned int, 3>& dims)
+      : m_dims(dims), m_halos{halo::value, halo::value, halo::value, halo::value, 0, 0} {}
 
   domain(const domain&) = default;
   domain(domain&&) = default;

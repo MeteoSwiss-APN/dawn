@@ -23,10 +23,11 @@
 #define BOOST_MPL_LIMIT_VECTOR_SIZE FUSION_MAX_VECTOR_SIZE
 #define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
 
+#include "test/integration-test/CodeGen/generated/intervals_stencil_c++-naive.cpp"
+
 #include "gridtools/clang/verify.hpp"
 #include "test/integration-test/CodeGen/Macros.hpp"
 #include "test/integration-test/CodeGen/Options.hpp"
-#include "test/integration-test/CodeGen/generated/intervals_stencil_c++-naive.cpp"
 #include <gtest/gtest.h>
 
 #ifndef OPTBACKEND
