@@ -68,7 +68,6 @@ static std::unique_ptr<iir::Stage> createAssignmentStage(const iir::Interval& in
   return assignmentStage;
 }
 
-
 PassFixVersionedInputFields::PassFixVersionedInputFields() : Pass("PassSetStageName", true) {}
 
 bool PassFixVersionedInputFields::run(

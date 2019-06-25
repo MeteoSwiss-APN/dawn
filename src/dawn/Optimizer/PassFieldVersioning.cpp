@@ -91,8 +91,7 @@ static void reportRaceCondition(const Statement& statement,
   }
 }
 
-PassFieldVersioning::PassFieldVersioning()
-    : Pass("PassFieldVersioning", true), numRenames_(0) {}
+PassFieldVersioning::PassFieldVersioning() : Pass("PassFieldVersioning", true), numRenames_(0) {}
 
 bool PassFieldVersioning::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {

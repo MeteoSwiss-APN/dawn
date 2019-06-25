@@ -49,10 +49,10 @@ static iir::Extents analyzeStencilExtents(const std::unique_ptr<iir::Stencil>& s
 
     iir::Extents const& stageExtent = stage.getExtents();
     for(const auto& fieldPair : stage.getFields()) {
-      if(fieldPair.first == fieldID){
-          const iir::Field& field = fieldPair.second;
-          fullExtents.merge(field.getExtents());
-          fullExtents.add(stageExtent);
+      if(fieldPair.first == fieldID) {
+        const iir::Field& field = fieldPair.second;
+        fullExtents.merge(field.getExtents());
+        fullExtents.add(stageExtent);
       }
     }
   }
@@ -186,7 +186,6 @@ bool PassSetBoundaryCondition::run(
   }
 
   auto calculateHaloExtents = [&](std::string fieldname) {
-
     // Did we already apply a BoundaryCondition for this field?
     iir::Extents fullExtent{0, 0, 0, 0, 0, 0};
     std::unordered_set<int> stencilIDsToVisit(StencilIDsVisited_);
