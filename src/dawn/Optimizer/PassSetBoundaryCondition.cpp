@@ -61,7 +61,7 @@ static iir::Extents analyzeStencilExtents(const std::unique_ptr<iir::Stencil>& s
 }
 
 enum FieldType { FT_NotOriginal = -1 };
-}
+} // namespace
 ///
 /// @brief The VisitStencilCalls class traverses the StencilDescAST to determine an order of the
 /// stencil calls. This is required to properly evaluate boundary conditions
@@ -158,7 +158,6 @@ bool PassSetBoundaryCondition::run(
     } else {
       return (int)FieldType::FT_NotOriginal;
     }
-
   };
 
   std::unordered_map<int, iir::Extents> dirtyFields;

@@ -245,8 +245,9 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
 
           // Determine if we need to fill the cache by analyzing the current multi-stage
           CacheCandidate cacheCandidate = computeCacheCandidateForMS(
-              field, metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
-                                           field.getAccessID()),
+              field,
+              metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
+                                    field.getAccessID()),
               ms);
 
           if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
@@ -270,8 +271,9 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
               const iir::Field& fieldInNextMS = nextMSfields.find(field.getAccessID())->second;
 
               CacheCandidate policyMS2 = computeCacheCandidateForMS(
-                  fieldInNextMS, metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
-                                                       fieldInNextMS.getAccessID()),
+                  fieldInNextMS,
+                  metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
+                                        fieldInNextMS.getAccessID()),
                   nextMS);
               // if the interval of the two cache candidate do not overlap, there is no data
               // dependency, therefore we skip it

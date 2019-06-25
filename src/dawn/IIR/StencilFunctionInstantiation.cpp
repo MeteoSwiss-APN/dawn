@@ -511,7 +511,6 @@ void StencilFunctionInstantiation::update() {
     // as the caller fields have the *initial* extent (e.g in `avg(u(i+1))` u has an initial extent
     // of [1, 0, 0])
     auto computeAccesses = [&](std::vector<Field>& fields, bool callerAccesses) {
-
       // Index to speedup lookup into fields map
       std::unordered_map<int, std::vector<Field>::iterator> AccessIDToFieldMap;
       for(auto it = fields.begin(), end = fields.end(); it != end; ++it)

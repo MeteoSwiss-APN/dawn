@@ -13,8 +13,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTVisitor.h"
+#include "dawn/SIR/AST.h"
 #include "dawn/SIR/SIR.h"
 
 namespace dawn {
