@@ -1,4 +1,4 @@
-gtclang <br/> <a target="_blank" href="http://semver.org">![Version][Version.Badge]</a> <a target="_blank" href="https://travis-ci.org/MeteoSwiss-APN/gtclang">![Travis status][TravisCI.Badge]</a> <a target="_blank" href="https://opensource.org/licenses/MIT">![License: MIT][MIT.License]</a>
+gtclang <br/> <a target="_blank" href="http://semver.org">![Version][Version.Badge]</a><!-- <a target="_blank" href="https://travis-ci.org/MeteoSwiss-APN/gtclang">![Travis status][TravisCI.Badge]</a>--> <a target="_blank" href="https://opensource.org/licenses/MIT">![License: MIT][MIT.License]</a>
 ===========
 
 **gtclang** is a source-to-source compiler with a high level DSL (Domain-Specifc Language) to execute stencil-like computations on a variety of different parallel architectures. The target applications for gtclang are regional weather models (regular grids) as well as global weather and climate simulations (irregular grids). gtclang is built on top of the [LLVM/Clang](https://clang.llvm.org/) compiler framework and [Dawn](https://github.com/MeteoSwiss-APN/dawn) and produces highly optimized C++ source code for the gridtools library.
@@ -28,7 +28,7 @@ make install
 ```
 
 This will install gtclang locally into `<gtclang-dir>/install/`. The `gtclang` compiler can be found in the `bin/` directory.
-
+<!--
 ## Continuous Integration
 
 ### Linux
@@ -45,7 +45,7 @@ This will install gtclang locally into `<gtclang-dir>/install/`. The `gtclang` c
 | Clang 4.0    | RelWithDebInfo |  <a target="_blank" href="https://travis-ci.org/MeteoSwiss-APN/gtclang">![Clang 4.0][Clang_40_RelWithDebInfo.Badge]</a>  |
 | Clang 5.0    | Release        |  <a target="_blank" href="https://travis-ci.org/MeteoSwiss-APN/gtclang">![Clang 5.0][Clang_50_Release.Badge]</a>         |
 | Clang 5.0    | RelWithDebInfo |  <a target="_blank" href="https://travis-ci.org/MeteoSwiss-APN/gtclang">![Clang 5.0][Clang_50_RelWithDebInfo.Badge]</a>  |
-
+-->
 ## About
 
 This project is funded by the [PASCHA](http://www.pasc-ch.org/projects/2017-2020/pascha) project and developed by ETH Zurich and MeteoSwiss.
