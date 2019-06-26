@@ -1,4 +1,4 @@
-Dawn <br/> <a target="_blank" href="http://semver.org">![Version][Version.Badge]</a> <a target="_blank" href="https://travis-ci.org/MeteoSwiss-APN/dawn">![Travis status][TravisCI.Badge]</a> <a target="_blank" href="https://opensource.org/licenses/MIT">![License: MIT][MIT.License]</a> <a target="_blank" href="https://MeteoSwiss-APN.github.io/dawn">![Documentation][Documentation.Badge]</a>
+Dawn <br/> <a target="_blank" href="http://semver.org">![Version][Version.Badge]</a> <!--<a target="_blank" href="https://travis-ci.org/MeteoSwiss-APN/dawn">![Travis status][TravisCI.Badge]</a>--> <a target="_blank" href="https://opensource.org/licenses/MIT">![License: MIT][MIT.License]</a> <a target="_blank" href="https://MeteoSwiss-APN.github.io/dawn">![Documentation][Documentation.Badge]</a>
 ====
 
 ## Introduction
@@ -38,7 +38,7 @@ make install
 ```
 
 For a more detailed guide on how to build Dawn (and Protobuf), see [here](https://MeteoSwiss-APN.github.io/dawn/basics.html).
-
+<!--
 ## Continuous Integration
 
 ### Linux
@@ -54,7 +54,7 @@ For a more detailed guide on how to build Dawn (and Protobuf), see [here](https:
 | Clang 4.0    | RelWithDebInfo |  <a target="_blank" href="https://travis-ci.org/MeteoSwiss-APN/dawn">![Clang 4.0][Clang_40_RelWithDebInfo.Badge]</a> |
 | Clang 5.0    | Release        |  <a target="_blank" href="https://travis-ci.org/MeteoSwiss-APN/dawn">![Clang 5.0][Clang_50_Release.Badge]</a>        |
 | Clang 5.0    | RelWithDebInfo |  <a target="_blank" href="https://travis-ci.org/MeteoSwiss-APN/dawn">![Clang 5.0][Clang_50_RelWithDebInfo.Badge]</a> |
-
+-->
 ## About
 
 This project is funded by the [PASCHA](http://www.pasc-ch.org/projects/2017-2020/pascha) project and developed by ETH Zurich and MeteoSwiss.
