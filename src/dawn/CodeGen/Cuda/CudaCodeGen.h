@@ -54,9 +54,9 @@ private:
 
   void addTempStorageTypedef(Structure& stencilClass, iir::Stencil const& stencil) const override;
 
-  void addTmpStorageInit(MemberFunction& ctr, iir::Stencil const& stencil,
-                         IndexRange<const std::map<int, iir::Stencil::FieldInfo>>&
-                             tempFields) const override;
+  void addTmpStorageInit(
+      MemberFunction& ctr, iir::Stencil const& stencil,
+      IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields) const override;
 
   void
   generateCudaKernelCode(std::stringstream& ssSW,
@@ -99,12 +99,12 @@ private:
   generateStencilWrapperPublicMemberFunctions(Class& stencilWrapperClass,
                                               const CodeGenProperties& codeGenProperties) const;
 
-  void generateStencilClassCtr(
-      Structure& stencilClass, const iir::Stencil& stencil,
-      const sir::GlobalVariableMap& globalsMap,
-      IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
-      IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields,
-      std::shared_ptr<StencilProperties> stencilProperties) const;
+  void
+  generateStencilClassCtr(Structure& stencilClass, const iir::Stencil& stencil,
+                          const sir::GlobalVariableMap& globalsMap,
+                          IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
+                          IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields,
+                          std::shared_ptr<StencilProperties> stencilProperties) const;
 
   void generateStencilClassMembers(
       Structure& stencilClass, const iir::Stencil& stencil,

@@ -29,8 +29,8 @@ public:
   /// @{
   FieldAccessExtents(boost::optional<Extents> const& readExtents,
                      boost::optional<Extents> const& writeExtents)
-      : readAccessExtents_(readExtents), writeAccessExtents_(writeExtents),
-        totalExtents_{0, 0, 0, 0, 0, 0} {
+      : readAccessExtents_(readExtents),
+        writeAccessExtents_(writeExtents), totalExtents_{0, 0, 0, 0, 0, 0} {
     updateTotalExtents();
   }
 

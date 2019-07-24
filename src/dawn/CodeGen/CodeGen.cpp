@@ -188,9 +188,10 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
     const auto& StencilFields = stencil->getFields();
 
     auto nonTempFields = makeRange(
-        StencilFields,
-        std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>([](
-            std::pair<int, iir::Stencil::FieldInfo> const& p) { return !p.second.IsTemporary; }));
+        StencilFields, std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
+                           [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
+                             return !p.second.IsTemporary;
+                           }));
     auto tempFields = makeRange(
         StencilFields,
         std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(

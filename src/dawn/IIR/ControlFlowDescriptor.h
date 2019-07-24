@@ -48,7 +48,7 @@ public:
   void removeStencilCalls(const std::set<int>& emptyStencilIDs,
                           iir::StencilMetaInformation& metadata);
 };
-}
-}
+} // namespace iir
+} // namespace dawn
 
 #endif

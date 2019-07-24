@@ -175,9 +175,10 @@ void CudaCodeGen::generateStencilClasses(
     const auto stencilFields = orderMap(stencil.getFields());
 
     auto nonTempFields = makeRange(
-        stencilFields,
-        std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>([](
-            std::pair<int, iir::Stencil::FieldInfo> const& p) { return !p.second.IsTemporary; }));
+        stencilFields, std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
+                           [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
+                             return !p.second.IsTemporary;
+                           }));
     auto tempFields = makeRange(
         stencilFields,
         std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
@@ -469,29 +470,30 @@ void CudaCodeGen::generateStencilRunMethod(
 
     const auto fields = orderMap(multiStage.getFields());
 
-    auto nonTempFields =
-        makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
-                              std::pair<int, iir::Field> const& p) {
-                    return !metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
-                                                  p.second.getAccessID());
-                  }));
+    auto nonTempFields = makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>(
+                                               [&](std::pair<int, iir::Field> const& p) {
+                                                 return !metadata.isAccessType(
+                                                     iir::FieldAccessType::FAT_StencilTemporary,
+                                                     p.second.getAccessID());
+                                               }));
 
     auto tempStencilFieldsNonLocalCached = makeRange(
-        fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
-                    std::pair<int, iir::Field> const& p) {
-          const int accessID = p.first;
-          if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
-                                    p.second.getAccessID()))
-            return false;
-          for(const auto& ms : iterateIIROver<iir::MultiStage>(stencil)) {
-            if(!ms->isCached(accessID))
-              continue;
-            if(ms->getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local)
-              return false;
-          }
+        fields,
+        std::function<bool(std::pair<int, iir::Field> const&)>(
+            [&](std::pair<int, iir::Field> const& p) {
+              const int accessID = p.first;
+              if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
+                                        p.second.getAccessID()))
+                return false;
+              for(const auto& ms : iterateIIROver<iir::MultiStage>(stencil)) {
+                if(!ms->isCached(accessID))
+                  continue;
+                if(ms->getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local)
+                  return false;
+              }
 
-          return true;
-        }));
+              return true;
+            }));
 
     // create all the data views
     for(auto fieldIt : nonTempFields) {
@@ -557,19 +559,20 @@ void CudaCodeGen::generateStencilRunMethod(
     }
 
     auto tempMSFieldsNonLocalCached = makeRange(
-        fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
-                    std::pair<int, iir::Field> const& p) {
-          const int accessID = p.first;
-          if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
-                                    p.second.getAccessID()))
-            return false;
-          if(!multiStage.isCached(accessID))
-            return true;
-          if(multiStage.getCache(accessID).getCacheIOPolicy() == iir::Cache::CacheIOPolicy::local)
-            return false;
+        fields, std::function<bool(std::pair<int, iir::Field> const&)>(
+                    [&](std::pair<int, iir::Field> const& p) {
+                      const int accessID = p.first;
+                      if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
+                                                p.second.getAccessID()))
+                        return false;
+                      if(!multiStage.isCached(accessID))
+                        return true;
+                      if(multiStage.getCache(accessID).getCacheIOPolicy() ==
+                         iir::Cache::CacheIOPolicy::local)
+                        return false;
 
-          return true;
-        }));
+                      return true;
+                    }));
 
     // TODO enable const auto& below and/or enable use RangeToString
     std::string args;

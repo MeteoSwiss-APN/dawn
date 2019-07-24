@@ -47,7 +47,6 @@ multiStageSplitterOptimized() {
           std::deque<iir::MultiStage::SplitIndex>& splitterIndices, int stageIndex,
           int multiStageIndex, int& numSplit, const std::string& StencilName,
           const std::string& PassName, const Options& options) {
-
         iir::Stage& stage = (**stageIt);
         iir::DoMethod& doMethod = stage.getSingleDoMethod();
 
