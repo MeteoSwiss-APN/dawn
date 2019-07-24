@@ -253,11 +253,9 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
                                                           712, "field4");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  auto refvec = std::make_shared<std::vector<int>>();
-  refvec->push_back(6);
-  refvec->push_back(7);
-  refvec->push_back(8);
-  referenceInstantiaton->getMetaData().insertVersions(5, refvec);
+  referenceInstantiaton->getMetaData().insertFieldVersionIDPair(5, 6);
+  referenceInstantiaton->getMetaData().insertFieldVersionIDPair(5, 7);
+  referenceInstantiaton->getMetaData().insertFieldVersionIDPair(5, 8);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   referenceInstantiaton->getMetaData().setFileName("fileName");
