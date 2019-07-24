@@ -74,7 +74,7 @@ install(DIRECTORY ${PROTOBUF_PYTHON_INSTALL}/google DESTINATION ${CMAKE_INSTALL_
 
 include("thirdparty/DawnAddBoost")
 
-set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR} -DBOOST_ROOT=${BOOST_ROOT} -DDAWN_PYTHON=ON -DDAWN_EXAMPLES=ON)
+set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR} -DBOOST_ROOT=${BOOST_ROOT} -DDAWN_PYTHON=ON -DDAWN_EXAMPLES=ON -DDAWN_JAVA=ON)
 
 yoda_find_package(
   PACKAGE dawn
