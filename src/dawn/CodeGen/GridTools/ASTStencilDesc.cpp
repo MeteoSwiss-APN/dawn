@@ -70,7 +70,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
   std::string stencilName =
       codeGenProperties_.getStencilName(StencilContext::SC_Stencil, stencilID);
   ss_ << std::string(indent_, ' ') << "m_" << stencilName
-      << ".get_stencil()->run(" + RangeToString(",", "", "")(plchdrs) + ") " << std::endl;
+      << ".get_stencil()->run(" + RangeToString(",", "", "")(plchdrs) + "); " << std::endl;
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {

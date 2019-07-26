@@ -272,15 +272,6 @@ void GTCodeGen::generateStencilWrapperPublicMemberFunctions(
     stencilMembers.push_back("m_" + stencilProp.first);
   }
 
-  // Generate stencil getter
-  MemberFunction stencilGetter =
-      stencilWrapperClass.addMemberFunction("std::vector<computation<void>*>", "getStencils");
-  stencilGetter.addStatement(
-      "return " +
-      RangeToString(", ", "std::vector<gridtools::computation<void>*>({", "})")(
-          stencilMembers, [](const std::string& member) { return member + ".get_stencil()"; }));
-  stencilGetter.commit();
-
   MemberFunction clearMeters = stencilWrapperClass.addMemberFunction("void", "reset_meters");
   clearMeters.startBody();
   std::string s = RangeToString("\n", "", "")(stencilMembers, [](const std::string& member) {
