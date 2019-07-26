@@ -38,6 +38,7 @@ class IIR : public IIRNode<void, IIR, Stencil> {
     std::unordered_map<int, std::string> StageIDToNameMap_;
     /// field info properties
     std::unordered_map<int, Stencil::FieldInfo> fields_;
+    void clear();
   };
 
   DerivedInfo derivedInfo_;
