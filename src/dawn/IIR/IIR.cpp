@@ -14,10 +14,12 @@
 
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/DependencyGraphStage.h"
+#include "dawn/IIR/Field.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Support/Assert.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
 #include <algorithm>
@@ -26,6 +28,27 @@
 
 namespace dawn {
 namespace iir {
+
+void mergeFields(std::unordered_map<int, Stencil::FieldInfo> const& sourceFields,
+                 std::unordered_map<int, Stencil::FieldInfo>& destinationFields) {
+
+  for(const auto& fieldPair : sourceFields) {
+    Stencil::FieldInfo sField = fieldPair.second;
+
+    auto it = destinationFields.find(fieldPair.first);
+    if(it != destinationFields.end()) {
+      Stencil::FieldInfo dField = destinationFields.at(fieldPair.first);
+
+      DAWN_ASSERT(dField.Name == sField.Name);
+      DAWN_ASSERT(dField.Dimensions == sField.Dimensions);
+      DAWN_ASSERT(dField.IsTemporary == sField.IsTemporary);
+
+      mergeField(sField.field, dField.field);
+    } else {
+      destinationFields.emplace(fieldPair.first, sField);
+    }
+  }
+}
 
 const Stencil& IIR::getStencil(const int stencilID) const {
   auto lamb = [&](const std::unique_ptr<Stencil>& stencil) -> bool {
@@ -43,8 +66,25 @@ std::unique_ptr<IIR> IIR::clone() const {
   return cloneIIR;
 }
 
+void IIR::updateFromChildren() {
+  derivedInfo_.fields_.clear();
+  std::unordered_map<int, Stencil::FieldInfo> fields;
+
+  for(const auto& stencil : children_) {
+    mergeFields(stencil->getFields(), fields);
+  }
+}
+
+void Stencil::DerivedInfo::clear() { fields_.clear(); }
+
 json::json IIR::jsonDump() const {
   json::json node;
+
+  json::json fieldsJson;
+  for(const auto& f : derivedInfo_.fields_) {
+    fieldsJson[f.second.Name] = f.second.jsonDump();
+  }
+  node["Fields"] = fieldsJson;
 
   int cnt = 0;
   for(const auto& stencil : children_) {

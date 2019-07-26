@@ -143,7 +143,6 @@ void GTCodeGen::generateGridConstruction(MemberFunction& stencilConstructor,
       codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
 
   stencilConstructor.addStatement(getGridName(stencilName) + " grid_(di, dj, " +
-                                  getAxisName(stencilName) +
                                   RangeToString(",", "{", "}")(gridLevels) + ")");
 }
 
@@ -156,10 +155,11 @@ void GTCodeGen::generateSyncStorages(
   }
 }
 
-void GTCodeGen::buildPlaceholderDefinitions(
+void GTCodeGen::generatePlaceholderDefinitions(
     Structure& stencilClass, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-    const std::map<int, iir::Stencil::FieldInfo>& stencilFields,
     const sir::GlobalVariableMap& globalsMap, const CodeGenProperties& codeGenProperties) const {
+
+  const auto& stencilFields = stencilInstantiation->getIIR()->getFields();
 
   int accessorIdx = 0;
   for(const auto& fieldInfoPair : stencilFields) {
@@ -231,6 +231,10 @@ std::string GTCodeGen::generateStencilInstantiation(
   CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
 
   generateBoundaryConditionFunctions(StencilWrapperClass, stencilInstantiation);
+
+  // Generate placeholders
+  generatePlaceholderDefinitions(StencilWrapperClass, stencilInstantiation, globalsMap,
+                                 codeGenProperties);
 
   generateStencilClasses(stencilInstantiation, StencilWrapperClass, codeGenProperties);
 
@@ -813,10 +817,6 @@ void GTCodeGen::generateStencilClasses(
     std::size_t numFields = stencilFields.size();
 
     mplContainerMaxSize_ = std::max(mplContainerMaxSize_, numFields);
-
-    // Generate placeholders
-    buildPlaceholderDefinitions(StencilClass, stencilInstantiation, stencilFields, globalsMap,
-                                codeGenProperties);
 
     // Generate constructor
     auto StencilConstructor = StencilClass.addConstructor();

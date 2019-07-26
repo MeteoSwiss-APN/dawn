@@ -36,8 +36,8 @@ class IIR : public IIRNode<void, IIR, Stencil> {
   struct DerivedInfo {
     /// StageID to name Map. Filled by the `PassSetStageName`.
     std::unordered_map<int, std::string> StageIDToNameMap_;
-    /// Set containing the AccessIDs of fields which are manually allocated by the stencil and serve
-    /// as temporaries spanning over multiple stencils
+    /// field info properties
+    std::unordered_map<int, Stencil::FieldInfo> fields_;
   };
 
   DerivedInfo derivedInfo_;
@@ -64,6 +64,17 @@ public:
   void clone(std::unique_ptr<IIR>& dest) const;
 
   json::json jsonDump() const;
+
+  /// @brief update the derived info from children
+  virtual void updateFromChildren() override;
+
+  /// @brief returns true if the accessid is used within the stencil
+  bool hasFieldAccessID(const int accessID) const { return derivedInfo_.fields_.count(accessID); }
+
+  /// @brief Get the pair <AccessID, field> for the fields used within the multi-stage
+  const std::unordered_map<int, Stencil::FieldInfo>& getFields() const {
+    return derivedInfo_.fields_;
+  }
 
   const std::vector<std::shared_ptr<sir::StencilFunction>>& getStencilFunctions() {
     return stencilFunctions_;
