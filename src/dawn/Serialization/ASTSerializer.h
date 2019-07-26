@@ -20,7 +20,7 @@
 #include "dawn/SIR/SIR/statements.pb.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/SIR/statements.pb.h"
+#include "dawn/SIR/SIR/statements.pb.h"
 #include <stack>
 
 using namespace dawn;
