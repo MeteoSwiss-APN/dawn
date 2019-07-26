@@ -24,7 +24,7 @@ namespace iir {
 class Stencil;
 class DependencyGraphAccesses;
 class DoMethod;
-}
+} // namespace iir
 
 /// @brief This pass resolves potential race condition by introducing double buffering i.e
 /// versioning of fields
@@ -32,6 +32,8 @@ class DoMethod;
 /// @see fixRaceCondition
 /// @ingroup optimizer
 class PassFieldVersioning : public Pass {
+
+private:
   int numRenames_;
 
 public:

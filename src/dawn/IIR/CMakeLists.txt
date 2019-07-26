@@ -62,7 +62,7 @@ yoda_add_library(
           IntervalAlgorithms.h
           IIR.cpp
           IIR.h
-	  proto/IIR/IIR.proto
+          proto/IIR/IIR.proto
           IIRNode.h
           IIRNodeIterator.h
           LoopOrder.cpp
@@ -124,21 +124,23 @@ if(DAWN_PYTHON)
   install(FILES ${CMAKE_SOURCE_DIR}/python/IIR/__init__.py DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/IIR)
 endif(DAWN_PYTHON)
 
-# Genreate python proto files
-dawn_protobuf_generate(
-  OUT_FILES iir_proto_java_files
-  OUT_DIRS iir_proto_java_dirs
-  PROTOS IIR/IIR.proto
-  INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
-  WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
-  PACKG IIR
-  LANGUAGE java
-)
+if(DAWN_JAVA)
+  # Genreate python proto files
+  dawn_protobuf_generate(
+    OUT_FILES iir_proto_java_files
+    OUT_DIRS iir_proto_java_dirs
+    PROTOS IIR/IIR.proto
+    INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../SIR/proto/
+    WDIR ${CMAKE_CURRENT_SOURCE_DIR}/proto
+    PACKG IIR
+    LANGUAGE java
+  )
 
-add_custom_target(DawnIIRJavaProto ALL
-  COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_java_dirs} ${CMAKE_BINARY_DIR}/java/dawn
-  DEPENDS ${iir_proto_java_files}
-)
+  add_custom_target(DawnIIRJavaProto ALL
+    COMMAND ${CMAKE_COMMAND} -E copy ${iir_proto_java_dirs} ${CMAKE_BINARY_DIR}/java/dawn
+    DEPENDS ${iir_proto_java_files}
+  )
 
-install(DIRECTORY ${iir_proto_java_dirs} DESTINATION ${DAWN_INSTALL_JAVA_DIR}/dawn)
+  install(DIRECTORY ${iir_proto_java_dirs} DESTINATION ${DAWN_INSTALL_JAVA_DIR}/dawn)
+endif(DAWN_JAVA)
 

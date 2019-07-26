@@ -22,7 +22,8 @@ endif()
 # Building
 option(DAWN_ASSERTS "Enable asserts" ${BUILD_IS_NOT_RELEASE})
 option(DAWN_USE_CCACHE "Use compile cache (ccache)" ON)
-option(DAWN_PYTHON "Build and install the Python module" ON)
+option(DAWN_PYTHON "Build and install the Python module interface to HIR" ON)
+option(DAWN_JAVA "Build and install the java interface to HIR" ON)
 
 # Testing
 option(DAWN_TESTING "Enable testing" ON)

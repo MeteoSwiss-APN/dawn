@@ -136,9 +136,10 @@ void MSCodeGen::generateKCacheFillStatement(MemberFunction& cudaKernel,
   CodeGeneratorHelper::generateFieldAccessDeref(ss, ms_, stencilInstantiation_->getMetaData(),
                                                 kcacheProp.accessID_, fieldIndexMap,
                                                 Array3i{0, 0, klev});
-  cudaKernel.addStatement(kcacheProp.name_ + "[" + std::to_string(cacheProperties_.getKCacheIndex(
-                                                       kcacheProp.accessID_, klev)) +
-                          "] =" + ss.str());
+  cudaKernel.addStatement(
+      kcacheProp.name_ + "[" +
+      std::to_string(cacheProperties_.getKCacheIndex(kcacheProp.accessID_, klev)) +
+      "] =" + ss.str());
 }
 
 iir::MultiInterval
@@ -515,11 +516,11 @@ void MSCodeGen::generateKCacheFlushBlockStatement(
     std::string intervalKBegin = kBegin("dom", ms_->getLoopOrder(), cacheInterval);
 
     if(ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward) {
-      pred << "if( " + intervalKBegin + " - " + currentKLevel + " >= " +
-                  std::to_string(std::abs(kcacheTailExtent)) + ")";
+      pred << "if( " + intervalKBegin + " - " + currentKLevel +
+                  " >= " + std::to_string(std::abs(kcacheTailExtent)) + ")";
     } else {
-      pred << "if( " + currentKLevel + " - " + intervalKBegin + " >= " +
-                  std::to_string(std::abs(kcacheTailExtent)) + ")";
+      pred << "if( " + currentKLevel + " - " + intervalKBegin +
+                  " >= " + std::to_string(std::abs(kcacheTailExtent)) + ")";
     }
     cudaKernel.addBlockStatement(pred.str(), [&]() {
       generateKCacheFlushStatement(cudaKernel, fieldIndexMap, kcacheProp.accessID_,
@@ -672,12 +673,12 @@ void MSCodeGen::generateCudaKernelCode() {
   // fields used in the stencil
   const auto fields = orderMap(ms_->getFields());
 
-  auto nonTempFields =
-      makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>([&](
-                            std::pair<int, iir::Field> const& p) {
-                  return !metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
-                                                 p.second.getAccessID());
-                }));
+  auto nonTempFields = makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>(
+                                             [&](std::pair<int, iir::Field> const& p) {
+                                               return !metadata_.isAccessType(
+                                                   iir::FieldAccessType::FAT_StencilTemporary,
+                                                   p.second.getAccessID());
+                                             }));
   // all the temp fields that are non local cache, and therefore will require the infrastructure
   // of
   // tmp storages (allocation, iterators, etc)
@@ -989,7 +990,6 @@ void MSCodeGen::generateCudaKernelCode() {
 
     // for each interval, we generate naive nested loops
     cudaKernel.addBlockStatement(makeKLoop("dom", interval, solveKLoopInParallel_), [&]() {
-
       if(!solveKLoopInParallel_) {
         generateFillKCaches(cudaKernel, interval, fieldIndexMap);
       }
@@ -1013,9 +1013,9 @@ void MSCodeGen::generateCudaKernelCode() {
 
         cudaKernel.addBlockStatement(
             "if(iblock >= " + std::to_string(extent[0].Minus) + " && iblock <= block_size_i -1 + " +
-                std::to_string(extent[0].Plus) + " && jblock >= " +
-                std::to_string(extent[1].Minus) + " && jblock <= block_size_j -1 + " +
-                std::to_string(extent[1].Plus) + ")",
+                std::to_string(extent[0].Plus) +
+                " && jblock >= " + std::to_string(extent[1].Minus) +
+                " && jblock <= block_size_j -1 + " + std::to_string(extent[1].Plus) + ")",
             [&]() {
               // Generate Do-Method
               for(const auto& doMethodPtr : stage.getChildren()) {

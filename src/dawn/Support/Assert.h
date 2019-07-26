@@ -36,8 +36,9 @@ extern void assertionFailedMsg(char const* expr, char const* msg, char const* fu
 /// @brief Assert macro
 /// @ingroup support
 #define DAWN_ASSERT(expr)                                                                          \
-  (DAWN_BUILTIN_LIKELY(!!(expr)) ? ((void)0) : dawn::assertionFailed(#expr, DAWN_CURRENT_FUNCTION, \
-                                                                     __FILE__, __LINE__))
+  (DAWN_BUILTIN_LIKELY(!!(expr))                                                                   \
+       ? ((void)0)                                                                                 \
+       : dawn::assertionFailed(#expr, DAWN_CURRENT_FUNCTION, __FILE__, __LINE__))
 
 /// @macro DAWN_ASSERT_MSG
 /// @brief Assert macro with additional message

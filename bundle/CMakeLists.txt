@@ -39,7 +39,7 @@ include(DawnCloneRepository)
 
 set(DAWN_YODA_GIT_URL "https:///github.com/Meteoswiss-APN/yoda.git"
     CACHE PATH "URL of the dawn git repository to clone")
-set(DAWN_YODA_GIT_BRANCH "1.0.3" CACHE STRING "Branch of the dawn git repository to clone")
+set(DAWN_YODA_GIT_BRANCH "1.0.5" CACHE STRING "Branch of the dawn git repository to clone")
 dawn_clone_repository(NAME yoda URL ${DAWN_YODA_GIT_URL} BRANCH ${DAWN_YODA_GIT_BRANCH} SOURCE_DIR DAWN_YODA_SOURCE_DIR )
 #
 list(APPEND CMAKE_MODULE_PATH "${DAWN_YODA_SOURCE_DIR}/cmake")
@@ -64,17 +64,22 @@ yoda_add_target_clean_all(
   "${CMAKE_BINARY_DIR}/protobuf-prefix"
 )
 
-if(NOT DEFINED PYTHON_EXECUTABLE)
-  find_package(PythonInterp 3.4 REQUIRED)
-endif()
-
 include("thirdparty/DawnAddProtobuf")
 
 install(DIRECTORY ${PROTOBUF_PYTHON_INSTALL}/google DESTINATION ${CMAKE_INSTALL_PREFIX}/python)
 
 include("thirdparty/DawnAddBoost")
 
-set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR} -DBOOST_ROOT=${BOOST_ROOT} -DDAWN_PYTHON=ON -DDAWN_EXAMPLES=ON)
+option(DAWN_BUNDLE_PYTHON "Build and install the Python module interface to HIR" OFF)
+option(DAWN_BUNDLE_JAVA "Build and install the java interface to HIR" OFF)
+
+if( DAWN_BUNDLE_PYTHON )
+  if(NOT DEFINED PYTHON_EXECUTABLE)
+    find_package(PythonInterp 3.4 REQUIRED)
+  endif()
+endif()
+
+set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR} -DBOOST_ROOT=${BOOST_ROOT} -DDAWN_PYTHON=${DAWN_BUNDLE_PYTHON} -DDAWN_EXAMPLES=ON -DDAWN_JAVA=${DAWN_BUNDLE_JAVA})
 
 yoda_find_package(
   PACKAGE dawn
@@ -104,4 +109,6 @@ install(
   DESTINATION bundle_conf
 )
 
-install (SCRIPT "${CMAKE_SOURCE_DIR}/PostInstall.cmake")
+if(DAWN_BUNDLE_PYTHON)
+  install (SCRIPT "${CMAKE_SOURCE_DIR}/PostInstall.cmake")
+endif(DAWN_BUNDLE_PYTHON)

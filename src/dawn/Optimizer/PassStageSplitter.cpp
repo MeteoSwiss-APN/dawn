@@ -57,6 +57,7 @@ bool PassStageSplitter::run(
         std::shared_ptr<iir::DependencyGraphAccesses> newGraph, oldGraph;
         newGraph =
             std::make_shared<iir::DependencyGraphAccesses>(stencilInstantiation->getMetaData());
+        oldGraph = newGraph->clone();
 
         // Build the Dependency graph (bottom to top)
         for(int stmtIndex = doMethod.getChildren().size() - 1; stmtIndex >= 0; --stmtIndex) {
@@ -67,6 +68,24 @@ bool PassStageSplitter::run(
           // If we have a horizontal read-before-write conflict, we record the current index for
           // splitting
           if(hasHorizontalReadBeforeWriteConflict(newGraph.get())) {
+
+            // Check if the conflict is related to a conditional block
+            if(isa<IfStmt>(stmtAccessesPair->getStatement()->ASTStmt.get())) {
+              // Check if the conflict is inside the conditional block
+              iir::DependencyGraphAccesses conditionalBlockGraph =
+                  iir::DependencyGraphAccesses(stencilInstantiation->getMetaData());
+              conditionalBlockGraph.insertStatementAccessesPair(stmtAccessesPair);
+              if(hasHorizontalReadBeforeWriteConflict(&conditionalBlockGraph)) {
+                // Since splitting inside a conditional block is not supported, report and return an
+                // error.
+                auto statement = stmtAccessesPair->getStatement();
+                DiagnosticsBuilder diag(DiagnosticsKind::Error,
+                                        statement->ASTStmt->getSourceLocation());
+                diag << "Read-before-Write conflict inside conditional block is not supported.";
+                stencilInstantiation->getOptimizerContext()->getDiagnostics().report(diag);
+                return false;
+              }
+            }
 
             if(context->getOptions().DumpSplitGraphs)
               oldGraph->toDot(

@@ -25,7 +25,7 @@ namespace iir {
 class StatementAccessesPair;
 class StencilInstantiation;
 class StencilFunctionInstantiation;
-}
+} // namespace iir
 
 /// @name Access computation routines
 /// @ingroup optimizer

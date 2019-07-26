@@ -249,7 +249,7 @@ public:
   std::string toString() const { return ss_.str(); }
 };
 
-} // namespace anonymous
+} // namespace
 
 std::string ASTStringifer::toString(const AST& ast, int initialIndent, bool newLines) {
   StringVisitor strVisitor(initialIndent, newLines);
