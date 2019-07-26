@@ -75,7 +75,7 @@ void IIR::updateFromChildren() {
   }
 }
 
-void Stencil::DerivedInfo::clear() { fields_.clear(); }
+void IIR::DerivedInfo::clear() { fields_.clear(); }
 
 json::json IIR::jsonDump() const {
   json::json node;
