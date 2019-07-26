@@ -68,10 +68,9 @@ std::unique_ptr<IIR> IIR::clone() const {
 
 void IIR::updateFromChildren() {
   derivedInfo_.fields_.clear();
-  std::unordered_map<int, Stencil::FieldInfo> fields;
 
   for(const auto& stencil : children_) {
-    mergeFields(stencil->getFields(), fields);
+    mergeFields(stencil->getFields(), derivedInfo_.fields_);
   }
 }
 
