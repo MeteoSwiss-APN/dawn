@@ -15,15 +15,18 @@
 #include "dawn/CodeGen/CXXNaive/ASTStencilDesc.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/SIR/AST.h"
+#include "dawn/Support/IndexRange.h"
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
 namespace codegen {
 namespace cxxnaive {
 
-ASTStencilDesc::ASTStencilDesc(const iir::StencilMetaInformation& metadata,
-                               CodeGenProperties const& codeGenProperties)
-    : ASTCodeGenCXX(), metadata_(metadata), codeGenProperties_(codeGenProperties) {}
+ASTStencilDesc::ASTStencilDesc(
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    CodeGenProperties const& codeGenProperties)
+    : ASTCodeGenCXX(), instantiation_(stencilInstantiation),
+      metadata_(instantiation_->getMetaData()), codeGenProperties_(codeGenProperties) {}
 
 ASTStencilDesc::~ASTStencilDesc() {}
 
@@ -50,9 +53,31 @@ void ASTStencilDesc::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) 
 void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
   int stencilID = metadata_.getStencilIDFromStencilCallStmt(stmt);
 
+  const iir::Stencil& stencil = instantiation_->getIIR()->getStencil(stencilID);
+
+  // fields used in the stencil
+  const auto stencilFields = stencil.getOrderedFields();
+
+  auto nonTempFields = makeRange(
+      stencilFields,
+      std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
+          [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return !p.second.IsTemporary; }));
+
   std::string stencilName =
       codeGenProperties_.getStencilName(StencilContext::SC_Stencil, stencilID);
-  ss_ << "m_" << stencilName + "->run();\n";
+  ss_ << "m_" << stencilName + "->run";
+
+  RangeToString fieldArgs(",", "(", ")");
+
+  ss_ << fieldArgs(nonTempFields,
+                   [&](IndexRangeIterator<std::map<int, iir::Stencil::FieldInfo>>& fieldIt) {
+                     std::string name = (*(*fieldIt)).second.Name;
+                     std::string type = codeGenProperties_.getParamType(name);
+
+                     return type + "& " + name;
+                   });
+
+  ss_ << std::endl;
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {

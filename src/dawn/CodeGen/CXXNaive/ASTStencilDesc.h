@@ -34,6 +34,7 @@ namespace cxxnaive {
 /// @ingroup cxxnaive
 class ASTStencilDesc : public ASTCodeGenCXX {
 protected:
+  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   const iir::StencilMetaInformation& metadata_;
 
   const CodeGenProperties& codeGenProperties_;
@@ -41,7 +42,7 @@ protected:
 public:
   using Base = ASTCodeGenCXX;
 
-  ASTStencilDesc(const iir::StencilMetaInformation& metadata,
+  ASTStencilDesc(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                  const CodeGenProperties& CodeGenProperties);
 
   virtual ~ASTStencilDesc();
