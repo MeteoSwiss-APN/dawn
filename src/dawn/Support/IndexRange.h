@@ -101,7 +101,7 @@ struct IndexRangeIterator {
 template <typename T>
 typename IndexRangeIterator<T>::difference_type distance(IndexRangeIterator<T> first,
                                                          IndexRangeIterator<T> last) {
-  return std::distance(last.it_, first.it_);
+  return std::distance(first.it_, last.it_);
 }
 
 /// @brief comparison operators
