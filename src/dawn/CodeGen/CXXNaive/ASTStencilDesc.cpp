@@ -69,13 +69,12 @@ void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
 
   RangeToString fieldArgs(",", "(", ")");
 
-  ss_ << fieldArgs(nonTempFields,
-                   [&](IndexRangeIterator<std::map<int, iir::Stencil::FieldInfo>>& fieldIt) {
-                     std::string name = (*(*fieldIt)).second.Name;
-                     std::string type = codeGenProperties_.getParamType(name);
+  ss_ << fieldArgs(nonTempFields, [&](const std::pair<const int, iir::Stencil::FieldInfo>& fieldp) {
+    std::string name = fieldp.second.Name;
+    std::string type = codeGenProperties_.getParamType(name);
 
-                     return type + "& " + name;
-                   });
+    return type + "& " + name;
+  });
 
   ss_ << std::endl;
 }

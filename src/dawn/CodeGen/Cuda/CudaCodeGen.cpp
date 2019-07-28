@@ -187,13 +187,13 @@ void CudaCodeGen::generateStencilClasses(
     Structure stencilClass = stencilWrapperClass.addStruct(stencilName, "", "sbase");
     auto& paramNameToType = stencilProperties->paramNameToType_;
 
-    for(auto fieldIt : nonTempFields) {
-      paramNameToType.emplace((*fieldIt).second.Name,
-                              getStorageType(metadata.getFieldDimensionsMask((*fieldIt).first)));
+    for(const auto& fieldPair : nonTempFields) {
+      paramNameToType.emplace(fieldPair.second.Name,
+                              getStorageType(metadata.getFieldDimensionsMask(fieldPair.first)));
     }
 
-    for(auto fieldIt : tempFields) {
-      paramNameToType.emplace((*fieldIt).second.Name, c_gtc().str() + "storage_t");
+    for(const auto& fieldPair : tempFields) {
+      paramNameToType.emplace(fieldPair.second.Name, c_gtc().str() + "storage_t");
     }
 
     generateStencilClassMembers(stencilClass, stencil, globalsMap, nonTempFields, tempFields,
@@ -213,8 +213,8 @@ void CudaCodeGen::generateStencilClasses(
     MemberFunction syncStoragesMethod = stencilClass.addMemberFunction("void", "sync_storages", "");
     syncStoragesMethod.startBody();
 
-    for(auto fieldIt : nonTempFields) {
-      syncStoragesMethod.addStatement("m_" + (*fieldIt).second.Name + ".sync()");
+    for(const auto& fieldPair : nonTempFields) {
+      syncStoragesMethod.addStatement("m_" + fieldPair.second.Name + ".sync()");
     }
 
     syncStoragesMethod.commit();
@@ -249,9 +249,9 @@ void CudaCodeGen::generateStencilClassMembers(
   stencilClass.addMember("const " + c_gtc() + "domain&", "m_dom");
 
   stencilClass.addComment("storage declarations");
-  for(auto fieldIt : nonTempFields) {
-    stencilClass.addMember(paramNameToType.at((*fieldIt).second.Name) + "&",
-                           "m_" + (*fieldIt).second.Name);
+  for(const auto& fieldPair : nonTempFields) {
+    stencilClass.addMember(paramNameToType.at(fieldPair.second.Name) + "&",
+                           "m_" + fieldPair.second.Name);
   }
 
   stencilClass.addComment("temporary storage declarations");
@@ -272,8 +272,8 @@ void CudaCodeGen::generateStencilClassCtr(
     stencilClassCtr.addArg("globals& globals_");
   }
 
-  for(auto fieldIt : nonTempFields) {
-    std::string fieldName = (*fieldIt).second.Name;
+  for(const auto& fieldPair : nonTempFields) {
+    std::string fieldName = fieldPair.second.Name;
     stencilClassCtr.addArg(paramNameToType.at(fieldName) + "& " + fieldName + "_");
   }
 
@@ -284,8 +284,8 @@ void CudaCodeGen::generateStencilClassCtr(
     stencilClassCtr.addInit("m_globals(globals_)");
   }
 
-  for(auto fieldIt : nonTempFields) {
-    stencilClassCtr.addInit("m_" + (*fieldIt).second.Name + "(" + (*fieldIt).second.Name + "_)");
+  for(const auto& fieldPair : nonTempFields) {
+    stencilClassCtr.addInit("m_" + fieldPair.second.Name + "(" + fieldPair.second.Name + "_)");
   }
 
   addTmpStorageInit(stencilClassCtr, stencil, tempFields);
@@ -496,17 +496,17 @@ void CudaCodeGen::generateStencilRunMethod(
             }));
 
     // create all the data views
-    for(auto fieldIt : nonTempFields) {
+    for(const auto& fieldPair : nonTempFields) {
       // TODO have the same FieldInfo in ms level so that we dont need to query
       // stencilInstantiation
       // all the time for name and IsTmpField
-      const auto fieldName = metadata.getFieldNameFromAccessID((*fieldIt).second.getAccessID());
+      const auto fieldName = metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
       StencilRunMethod.addStatement(c_gt() + "data_view<" + paramNameToType.at(fieldName) + "> " +
                                     fieldName + "= " + c_gt() + "make_device_view(m_" + fieldName +
                                     ")");
     }
-    for(auto fieldIt : tempStencilFieldsNonLocalCached) {
-      const auto fieldName = metadata.getFieldNameFromAccessID((*fieldIt).second.getAccessID());
+    for(const auto& fieldPair : tempStencilFieldsNonLocalCached) {
+      const auto fieldName = metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
 
       StencilRunMethod.addStatement(c_gt() + "data_view<tmp_storage_t> " + fieldName + "= " +
                                     c_gt() + "make_device_view(m_" + fieldName + ")");
@@ -577,8 +577,8 @@ void CudaCodeGen::generateStencilRunMethod(
     // TODO enable const auto& below and/or enable use RangeToString
     std::string args;
     int idx = 0;
-    for(auto field : nonTempFields) {
-      const auto fieldName = metadata.getFieldNameFromAccessID((*field).second.getAccessID());
+    for(const auto& fieldPair : nonTempFields) {
+      const auto fieldName = metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
 
       args = args + (idx == 0 ? "" : ",") + "(" + fieldName + ".data()+" + "m_" + fieldName +
              ".get_storage_info_ptr()->index(" + fieldName + ".begin<0>(), " + fieldName +
@@ -586,18 +586,18 @@ void CudaCodeGen::generateStencilRunMethod(
       ++idx;
     }
     DAWN_ASSERT(nonTempFields.size() > 0);
-    for(auto field : tempMSFieldsNonLocalCached) {
+    for(const auto& fieldPair : tempMSFieldsNonLocalCached) {
       // in some cases (where there are no horizontal extents) we dont use the special tmp index
       // iterator, but rather a normal 3d field index iterator. In that case we pass temporaries in
       // the same manner as normal fields
       if(!CodeGeneratorHelper::useTemporaries(multiStagePtr->getParent(), metadata)) {
-        const auto fieldName = metadata.getFieldNameFromAccessID((*field).second.getAccessID());
+        const auto fieldName = metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
 
         args = args + ", (" + fieldName + ".data()+" + "m_" + fieldName +
                ".get_storage_info_ptr()->index(" + fieldName + ".begin<0>(), " + fieldName +
                ".begin<1>()," + fieldName + ".begin<2>()," + fieldName + ".begin<3>(), 0))";
       } else {
-        args = args + "," + metadata.getFieldNameFromAccessID((*field).second.getAccessID());
+        args = args + "," + metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
       }
     }
 
@@ -652,8 +652,8 @@ void CudaCodeGen::addTmpStorageInit(
                 ", (dom_.jsize()+ " + std::to_string(blockSize[1]) + " - 1) / " +
                 std::to_string(blockSize[1]) + ", dom_.ksize() + 2 * " +
                 std::to_string(getVerticalTmpHaloSize(stencil)) + ")");
-    for(auto fieldIt : tempFields) {
-      ctr.addInit("m_" + (*fieldIt).second.Name + "(" + tmpMetadataName_ + ")");
+    for(const auto& fieldPair : tempFields) {
+      ctr.addInit("m_" + fieldPair.second.Name + "(" + tmpMetadataName_ + ")");
     }
   }
 }

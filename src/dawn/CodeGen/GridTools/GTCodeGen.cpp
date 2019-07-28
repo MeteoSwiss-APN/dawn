@@ -150,8 +150,8 @@ void GTCodeGen::generateSyncStorages(
     MemberFunction& method,
     const IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& stencilFields) const {
   // synchronize storages method
-  for(auto fieldIt : stencilFields) {
-    method.addStatement((*fieldIt).second.Name + ".sync()");
+  for(const auto& fieldPair : stencilFields) {
+    method.addStatement(fieldPair.second.Name + ".sync()");
   }
 }
 
@@ -817,10 +817,10 @@ void GTCodeGen::generateStencilClasses(
       StencilConstructor.addArg("const globals& globals");
     }
     int index = 0;
-    for(auto field : nonTempFields) {
+    for(const auto& fieldPair : nonTempFields) {
       StencilConstructor.addArg(
-          codeGenProperties.getParamType(stencilInstantiation, (*field).second) + " " +
-          (*field).second.Name);
+          codeGenProperties.getParamType(stencilInstantiation, fieldPair.second) + " " +
+          fieldPair.second.Name);
       index++;
     }
 
@@ -894,9 +894,9 @@ void GTCodeGen::generateStencilClasses(
 
     // Placeholders to map the real storages to the placeholders (no temporaries)
     std::vector<std::string> DomainMapPlaceholders;
-    for(auto field : nonTempFields) {
+    for(const auto& fieldPair : nonTempFields) {
       DomainMapPlaceholders.push_back(
-          std::string("(p_" + (*field).second.Name + "() = " + (*field).second.Name + ")"));
+          std::string("(p_" + fieldPair.second.Name + "() = " + fieldPair.second.Name + ")"));
     }
     if(stencil.hasGlobalVariables()) {
       DomainMapPlaceholders.push_back("(p_globals() = m_globals_gp_)");

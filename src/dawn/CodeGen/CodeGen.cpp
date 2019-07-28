@@ -188,9 +188,10 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
     const auto& StencilFields = stencil->getFields();
 
     auto nonTempFields = makeRange(
-        StencilFields,
-        std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>([](
-            std::pair<int, iir::Stencil::FieldInfo> const& p) { return !p.second.IsTemporary; }));
+        StencilFields, std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
+                           [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
+                             return !p.second.IsTemporary;
+                           }));
     auto tempFields = makeRange(
         StencilFields,
         std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
@@ -202,12 +203,12 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
     std::generate(StencilTemplates.begin(), StencilTemplates.end(),
                   [cnt]() mutable { return "StorageType" + std::to_string(cnt++); });
 
-    for(auto fieldIt : nonTempFields) {
-      paramNameToType.emplace((*fieldIt).second.Name, getStorageType((*fieldIt).second.Dimensions));
+    for(const auto& field : nonTempFields) {
+      paramNameToType.emplace(field.second.Name, getStorageType(field.second.Dimensions));
     }
 
-    for(auto fieldIt : tempFields) {
-      paramNameToType.emplace((*fieldIt).second.Name, c_gtc().str() + "storage_t");
+    for(const auto& field : tempFields) {
+      paramNameToType.emplace(field.second.Name, c_gtc().str() + "storage_t");
     }
   }
 
@@ -265,8 +266,8 @@ void CodeGen::addTmpStorageDeclaration(
   if(!(tempFields.empty())) {
     stencilClass.addMember(tmpMetadataTypename_, tmpMetadataName_);
 
-    for(auto field : tempFields) {
-      stencilClass.addMember(tmpStorageTypename_, "m_" + (*field).second.Name);
+    for(const auto& field : tempFields) {
+      stencilClass.addMember(tmpStorageTypename_, "m_" + field.second.Name);
     }
   }
 }
@@ -277,8 +278,8 @@ void CodeGen::addTmpStorageInit(
   if(!(tempFields.empty())) {
     ctr.addInit(tmpMetadataName_ + "(dom_.isize(), dom_.jsize(), dom_.ksize() + 2*" +
                 std::to_string(getVerticalTmpHaloSize(stencil)) + ")");
-    for(auto fieldIt : tempFields) {
-      ctr.addInit("m_" + (*fieldIt).second.Name + "(" + tmpMetadataName_ + ")");
+    for(const auto& field : tempFields) {
+      ctr.addInit("m_" + field.second.Name + "(" + tmpMetadataName_ + ")");
     }
   }
 }

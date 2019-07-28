@@ -90,9 +90,10 @@ public:
   inline std::string operator()(Range&& range, StrinfigyFunctor&& stringify) {
     std::stringstream ss;
 
+    using namespace std;
     ss << start_;
     auto it = std::begin(range), end = std::end(range);
-    const std::size_t size = std::distance(it, end);
+    const std::size_t size = distance(it, end);
     std::size_t i = 0;
 
     bool initialized = false;
