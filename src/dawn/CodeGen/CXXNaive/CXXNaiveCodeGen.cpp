@@ -117,20 +117,35 @@ void CXXNaiveCodeGen::generateStencilWrapperRun(
     const CodeGenProperties& codeGenProperties) const {
 
   // Generate the run method by generate code for the stencil description AST
-  MemberFunction RunMethod = stencilWrapperClass.addMemberFunction("void", "run", "");
+  MemberFunction runMethod = stencilWrapperClass.addMemberFunction("void", "run", "");
 
-  RunMethod.finishArgs();
+  // fields used in the stencil
+  const auto& StencilFields = stencilInstantiation->getIIR()->getFields();
+
+  auto nonTempFields = makeRange(
+      StencilFields,
+      std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
+          [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return !p.second.IsTemporary; }));
+
+  for(const auto& fieldp : nonTempFields) {
+    std::string name = fieldp.second.Name;
+    std::string type = codeGenProperties.getParamType(name);
+
+    runMethod.addArg(type + "& " + name);
+  }
+
+  runMethod.finishArgs();
 
   // generate the control flow code executing each inner stencil
   ASTStencilDesc stencilDescCGVisitor(stencilInstantiation, codeGenProperties);
-  stencilDescCGVisitor.setIndent(RunMethod.getIndent());
+  stencilDescCGVisitor.setIndent(runMethod.getIndent());
   for(const auto& statement :
       stencilInstantiation->getIIR()->getControlFlowDescriptor().getStatements()) {
     statement->ASTStmt->accept(stencilDescCGVisitor);
-    RunMethod.addStatement(stencilDescCGVisitor.getCodeAndResetStream());
+    runMethod.addStatement(stencilDescCGVisitor.getCodeAndResetStream());
   }
 
-  RunMethod.commit();
+  runMethod.commit();
 }
 void CXXNaiveCodeGen::generateStencilWrapperCtr(
     Class& stencilWrapperClass,
