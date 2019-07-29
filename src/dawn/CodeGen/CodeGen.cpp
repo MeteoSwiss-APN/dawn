@@ -76,7 +76,9 @@ void CodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInstant
                                  const sir::GlobalVariableMap& globalsMap,
                                  const CodeGenProperties& codeGenProperties) const {
 
-  stencilWrapperClass.addComment("Access-wrapper for globally defined variables");
+  if(!globalsMap.empty()) {
+    stencilWrapperClass.addComment("Access-wrapper for globally defined variables");
+  }
 
   for(const auto& globalProp : globalsMap) {
     auto globalValue = globalProp.second;

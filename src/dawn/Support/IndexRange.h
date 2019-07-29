@@ -54,7 +54,12 @@ struct IndexRangeIterator {
   iterator begin_;
   iterator end_;
   std::function<bool(T const&)> pred_;
-  int idx_ = -1;
+  int idx_ = 0;
+
+  /// @brief constructor
+  IndexRangeIterator(Cont& cont, std::function<bool(T const&)> pred)
+      : it_(nextValid(cont.begin(), cont.end(), pred)), begin_(cont.begin()), end_(cont.end()),
+        pred_(pred) {}
 
   /// @brief constructor
   IndexRangeIterator(iterator it, iterator begin, iterator end, std::function<bool(T const&)> pred,
@@ -63,7 +68,6 @@ struct IndexRangeIterator {
 
   /// @brief it dereferences the value of an iterator
   /// @returns an IteratorWrap
-  //  IteratorWrap<T> operator*() { return IteratorWrap<T>(*it_, idx_); }
   T& operator*() { return *it_; }
 
   /// @returns the next valid iterators, for which the predicate evaluates to true
@@ -71,6 +75,11 @@ struct IndexRangeIterator {
     while((it != end) && (!pred(*it)))
       it++;
     return (it);
+  }
+
+  void setToEnd() {
+    while(it_ != end_)
+      this->operator++();
   }
 
   int idx() const { return idx_; }
@@ -101,7 +110,7 @@ struct IndexRangeIterator {
 template <typename T>
 typename IndexRangeIterator<T>::difference_type distance(IndexRangeIterator<T> first,
                                                          IndexRangeIterator<T> last) {
-  return std::distance(first.it_, last.it_);
+  return last.idx() - first.idx();
 }
 
 /// @brief comparison operators
@@ -148,20 +157,22 @@ struct IndexRange {
 
   /// @returns iterator to the end of the range
   IndexRangeIterator<Cont> end() {
-    return IndexRangeIterator<Cont>(cont_.end(), cont_.begin(), cont_.end(), pred_, size_);
+    auto it = IndexRangeIterator<Cont>(cont_, pred_);
+    it.setToEnd();
+    return it;
   }
   /// @returns iterator to the end of the range
   IndexRangeIterator<const Cont> end() const {
-    return IndexRangeIterator<const Cont>(cont_.end(), cont_.begin(), cont_.end(), pred_, size_);
+    auto it = IndexRangeIterator<Cont>(cont_, pred_);
+    it.setToEnd();
+    return it;
   }
 
   /// @returns iterator to the beginning of the range
-  IndexRangeIterator<Cont> begin() {
-    return IndexRangeIterator<Cont>(cont_.begin(), cont_.begin(), cont_.end(), pred_, 0);
-  }
+  IndexRangeIterator<Cont> begin() { return IndexRangeIterator<Cont>(cont_, pred_); }
   /// @returns iterator to the beginning of the range
   IndexRangeIterator<const Cont> begin() const {
-    return IndexRangeIterator<const Cont>(cont_.begin(), cont_.begin(), cont_.end(), pred_, 0);
+    return IndexRangeIterator<const Cont>(cont_, pred_);
   }
 
   /// @returns true if range contains no elements (compatible with the predicate)

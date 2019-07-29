@@ -893,13 +893,9 @@ void GTCodeGen::generateStencilClasses(
     }
 
     // Placeholders to map the real storages to the placeholders (no temporaries)
-    std::vector<std::string> DomainMapPlaceholders;
-    for(const auto& fieldPair : nonTempFields) {
-      DomainMapPlaceholders.push_back(
-          std::string("(p_" + fieldPair.second.Name + "() = " + fieldPair.second.Name + ")"));
-    }
+    std::vector<std::string> domainMapPlaceholders;
     if(stencil.hasGlobalVariables()) {
-      DomainMapPlaceholders.push_back("(p_globals() = m_globals_gp_)");
+      domainMapPlaceholders.push_back("(p_globals() = m_globals_gp_)");
     }
 
     // Construct grid
@@ -911,11 +907,13 @@ void GTCodeGen::generateStencilClasses(
     // Generate make_computation
     StencilConstructor.addComment("Computation");
 
+    std::string plchdrStr =
+        (!domainMapPlaceholders.empty() ? RangeToString(", ", ",", "")(domainMapPlaceholders) : "");
+
     // This is a memory leak.. but nothing we can do ;)
     StencilConstructor.addStatement(
-        Twine("m_stencil = gridtools::make_computation<backend_t>(grid_, " +
-              RangeToString(", ", "", "")(DomainMapPlaceholders) +
-              RangeToString(", ", ", ", ")")(makeComputation)));
+        Twine("m_stencil = gridtools::make_computation<backend_t>(grid_, " + plchdrStr +
+              RangeToString(", ", "", ")")(makeComputation)));
     StencilConstructor.commit();
 
     StencilClass.addComment("Members");

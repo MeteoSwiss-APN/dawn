@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/CodeGen/GridTools/CodeGenUtils.h"
+#include "dawn/Support/IndexRange.h"
 
 namespace dawn {
 namespace codegen {
@@ -21,8 +22,13 @@ namespace gt {
 std::vector<std::string>
 CodeGenUtils::buildPlaceholderList(const std::map<int, iir::Stencil::FieldInfo>& stencilFields,
                                    const sir::GlobalVariableMap& globalsMap, bool buildPair) {
+  auto nonTempFields = makeRange(
+      stencilFields,
+      std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
+          [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return !p.second.IsTemporary; }));
+
   std::vector<std::string> plchdrs;
-  for(const auto& fieldInfoPair : stencilFields) {
+  for(const auto& fieldInfoPair : nonTempFields) {
     const auto& fieldInfo = fieldInfoPair.second;
     if(buildPair) {
       plchdrs.push_back("p_" + fieldInfo.Name + "{} = " + fieldInfo.Name);
