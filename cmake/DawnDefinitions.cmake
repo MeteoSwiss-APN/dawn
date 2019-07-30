@@ -61,4 +61,8 @@ set(DAWN_INSTALL_CMAKE_DIR cmake
     CACHE INTERNAL "Relative path of the cmake install location" FORCE)
 set(DAWN_INSTALL_PYTHON_DIR python 
     CACHE INTERNAL "Relative path of the cmake install location" FORCE)
+set(DAWN_INSTALL_EXAMPLES_DIR examples
+    CACHE INTERNAL "Relative path of the cmake install location" FORCE)
+set(DAWN_INSTALL_JAVA_DIR java 
+    CACHE INTERNAL "Relative path of the cmake install location" FORCE)
 
