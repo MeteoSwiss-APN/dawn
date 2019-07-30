@@ -208,10 +208,6 @@ class TestStmt(VerticalRegionTestBase):
         self.assertEqual(stmt.type, makeType(BuiltinType.Float))
         self.assertEqual(stmt.name, "var")
 
-    def test_vertical_region_decl_stmt(self):
-        stmt = makeVerticalRegionDeclStmt(self.vertical_region())
-        self.assertEqual(stmt.vertical_region, self.vertical_region())
-
     def test_boundary_condition_decl_stmt(self):
         stmt = makeBoundaryConditionDeclStmt("foo", ["a", makeField("b")])
         self.assertEqual(stmt.functor, "foo")
@@ -300,13 +296,8 @@ class TestExpr(ExprTestBase):
 
 class TestAST(StmtTestBase):
     def test_make_ast(self):
-        ast = makeAST(makeBlockStmt(self.var_stmt()))
+        ast = makeAST([self.var_stmt()])
         self.assertEqual(ast.root, makeStmt(makeBlockStmt(self.var_stmt())))
-
-    def test_make_ast_invalid(self):
-        with self.assertRaises(SIRError):
-            makeAST(self.var_stmt())
-
 
 class TestSIR(unittest.TestCase):
     def test_filename(self):

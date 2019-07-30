@@ -17,6 +17,7 @@ get_filename_component(camke_dir  "${Protobuf_DIR}" DIRECTORY)
 get_filename_component(lib_dir "${camke_dir}" DIRECTORY)
 get_filename_component(protobuf_root "${lib_dir}" DIRECTORY)
 
+#
 # Check the python libraries were installed in <protobuf_root>/python/
 set(protobuf_python "${protobuf_root}/python")
 set(protobuf_init_py "${protobuf_python}/google/protobuf/__init__.py")
@@ -27,12 +28,15 @@ if(NOT EXISTS "${protobuf_init_py}")
     "    ${protobuf_init_py}\n"
     "Disabling python module of Dawn."
   )
-  set(DAWN_PYTHON OFF)
 else()
   set(DAWN_INSTALL_PROTOBUF_MODULE "${protobuf_python}")
 
-  set(config_in "${CMAKE_SOURCE_DIR}/python/dawn/config.py.in")
-  set(config_out "${CMAKE_BINARY_DIR}/python/dawn/config.py")
+  set(config_in "${CMAKE_SOURCE_DIR}/examples/python/config.py.in")
+  set(config_out "${CMAKE_BINARY_DIR}/examples/python/config.py")
+
+  set(DAWN_INSTALL_MODULE ${CMAKE_BINARY_DIR}/python/)
+  set(DAWN_INSTALL_DAWNCLIB ${CMAKE_INSTALL_PREFIX}/lib/libDawnC.so)
+
   configure_file(${config_in} ${config_out})
 
   # Copy to build directory
@@ -41,10 +45,8 @@ else()
 
   # Copy to install
   install(FILES ${config_out} 
-          DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/dawn/)
-  install(DIRECTORY dawn/ 
-          DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/dawn
-          FILES_MATCHING PATTERN "*.py"
-
+	  DESTINATION ${DAWN_INSTALL_EXAMPLES_DIR}/python)
+  install(DIRECTORY . 
+	  DESTINATION ${DAWN_INSTALL_EXAMPLES_DIR}/python/
   )
 endif()
