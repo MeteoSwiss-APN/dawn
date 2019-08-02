@@ -243,6 +243,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
 
   const auto& stencils = stencilInstantiation->getStencils();
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
+  const auto& metadata = stencilInstantiation->getMetaData();
 
   // Stencil members:
   // generate the code for each of the stencils
@@ -270,8 +271,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
 
     Structure stencilClass = stencilWrapperClass.addStruct(stencilName);
 
-    ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
-                                         StencilContext::SC_Stencil);
+    ASTStencilBody stencilBodyCXXVisitor(metadata, StencilContext::SC_Stencil);
 
     stencilClass.addComment("Members");
     stencilClass.addComment("Temporary storages");
@@ -335,9 +335,10 @@ void CXXNaiveCodeGen::generateStencilClasses(
     // Run-Method
     //
     MemberFunction stencilRunMethod = stencilClass.addMemberFunction("virtual void", "run", "");
-    for(auto it = nonTempFields.begin(); it != nonTempFields.end(); ++it) {
-      std::string type = codeGenProperties.getParamType((*it).second.Name);
-      stencilRunMethod.addArg(type + "& " + (*it).second.Name + "_");
+
+    for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>()) {
+      std::string name = metadata.getFieldNameFromAccessID(fieldID);
+      stencilRunMethod.addArg(codeGenProperties.getParamType(name) + " " + name);
     }
 
     stencilRunMethod.startBody();
