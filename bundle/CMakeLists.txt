@@ -66,8 +66,6 @@ yoda_add_target_clean_all(
 
 include("thirdparty/DawnAddProtobuf")
 
-install(DIRECTORY ${PROTOBUF_PYTHON_INSTALL}/google DESTINATION ${CMAKE_INSTALL_PREFIX}/python)
-
 include("thirdparty/DawnAddBoost")
 
 option(DAWN_BUNDLE_PYTHON "Build and install the Python module interface to HIR" OFF)
@@ -111,5 +109,6 @@ install(
 )
 
 if(DAWN_BUNDLE_PYTHON)
+  install(DIRECTORY ${PROTOBUF_PYTHON_INSTALL}/google DESTINATION ${CMAKE_INSTALL_PREFIX}/python)
   install (SCRIPT "${CMAKE_SOURCE_DIR}/PostInstall.cmake")
 endif(DAWN_BUNDLE_PYTHON)
