@@ -18,9 +18,9 @@ if [ -z ${PROTOBUFDIR+x} ]; then
  echo "PROTOBUFDIF needs to be set in the machine env"
 fi
 
-cmake -DDAWN_BUNDLE_PYTHON=ON -DDAWN_BUNDLE_JAVA=ON -DCMAKE_BUILD_TYPE=${build_type} -DBOOST_ROOT=${BOOST_DIR}  \
+cmake -DDAWN_BUNDLE_PYTHON=ON -DDAWN_BUNDLE_JAVA=ON -DDAWN_PYTHON_EXAMPLES=ON -DCMAKE_BUILD_TYPE=${build_type} -DBOOST_ROOT=${BOOST_DIR}  \
         -DProtobuf_DIR=${PROTOBUFDIR} ../
-make -j2
+make -j2 install
 
 # Run unittests
 ctest -VV -C ${build_type} --output-on-failure --force-new-ctest-process  
