@@ -28,6 +28,7 @@ if(NOT EXISTS "${protobuf_init_py}")
     "    ${protobuf_init_py}\n"
     "Disabling python module of Dawn."
   )
+  set(DAWN_PYTHON OFF)
 else()
   set(DAWN_INSTALL_PROTOBUF_MODULE "${protobuf_python}")
 
