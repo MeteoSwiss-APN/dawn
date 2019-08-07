@@ -72,6 +72,7 @@ include("thirdparty/DawnAddBoost")
 
 option(DAWN_BUNDLE_PYTHON "Build and install the Python module interface to HIR" OFF)
 option(DAWN_BUNDLE_JAVA "Build and install the java interface to HIR" OFF)
+option(DAWN_PYTHON_EXAMPLES "Build the python examples of generating HIR" OFF)
 
 if( DAWN_BUNDLE_PYTHON )
   if(NOT DEFINED PYTHON_EXECUTABLE)
@@ -79,7 +80,7 @@ if( DAWN_BUNDLE_PYTHON )
   endif()
 endif()
 
-set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR} -DBOOST_ROOT=${BOOST_ROOT} -DDAWN_PYTHON=${DAWN_BUNDLE_PYTHON} -DDAWN_EXAMPLES=ON -DDAWN_JAVA=${DAWN_BUNDLE_JAVA})
+set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR} -DBOOST_ROOT=${BOOST_ROOT} -DDAWN_PYTHON=${DAWN_BUNDLE_PYTHON} -DDAWN_EXAMPLES=${DAWN_PYTHON_EXAMPLES} -DDAWN_JAVA=${DAWN_BUNDLE_JAVA})
 
 yoda_find_package(
   PACKAGE dawn
