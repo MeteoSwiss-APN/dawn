@@ -24,29 +24,31 @@ if(NOT ZLIB_FOUND)
 endif()
 
 if(NOT Protobuf_FOUND)
-  set(Protobuf_DIR "@DAWN_INSTALL_PROTOBUF_ROOT@/lib/cmake/protobuf")
-  find_package(Protobuf @DAWN_INSTALL_PROTOBUF_VERSION@ NO_MODULE REQUIRED)
+  set(Protobuf_DIR "@DAWN_CONFIGURE_PROTOBUF_ROOT@/lib/cmake/protobuf")
+  find_package(Protobuf @DAWN_CONFIGURE_PROTOBUF_VERSION@ REQUIRED)
 else()
-  if(${Protobuf_VERSION} VERSION_LESS "@DAWN_INSTALL_PROTOBUF_VERSION@")
+  if(${Protobuf_VERSION} VERSION_LESS "@DAWN_CONFIGURE_PROTOBUF_VERSION@")
     message(FATAL_ERROR 
-      "Dawn was compiled with Protobuf (@DAWN_INSTALL_PROTOBUF_VERSION@), already found (${Protobuf_VERSION})")
+      "Dawn was compiled with Protobuf (@DAWN_CONFIGURE_PROTOBUF_VERSION@), already found (${Protobuf_VERSION})")
   endif()
 endif()
 
 # Dawn include directories
-set_and_check(DAWN_INCLUDE_DIRS 
-  "@PACKAGE_DAWN_INSTALL_INCLUDE_DIR@"
-  "@DAWN_INSTALL_PROTOBUF_ROOT@/include"
-)
+set(DAWN_INCLUDE_DIRS "")
+foreach(_include_dir "@PACKAGE_DAWN_CONFIGURE_INCLUDE_DIR@" "@PACKAGE_DAWN_CONFIGURE_GENERATED_INCLUDE_DIR@" "@DAWN_CONFIGURE_PROTOBUF_ROOT@/include")
+    set_and_check(_include_dir ${_include_dir})
+    list(APPEND DAWN_INCLUDE_DIRS ${_include_dir})
+endforeach()
+message(STATUS "${DAWN_INCLUDE_DIRS}")
 
 # Link directories for Dawn libraries
-set_and_check(DAWN_LIBRARY_DIRS "@PACKAGE_DAWN_INSTALL_LIB_DIR@")
+set_and_check(DAWN_LIBRARY_DIRS "${DAWN_ROOT}/@DAWN_CONFIGURE_LIB_DIR@")
 
 # Was Dawn compiled with asserts?
 set(DAWN_ASSERTS @DAWN_ASSERTS@)
 
 # Import Dawn library targets (DawnStatic and DawnShared)
-include("@PACKAGE_DAWN_INSTALL_CMAKE_DIR@/DawnTargets.cmake")
+include("@PACKAGE_DAWN_CONFIGURE_CMAKE_DIR@/DawnTargets.cmake")
 
 set(DAWN_HAS_SHARED_LIBRARY FALSE)
 if(TARGET Dawn::DawnShared)

@@ -12,7 +12,7 @@
 ##
 ##===------------------------------------------------------------------------------------------===##
 
-find_package(Protobuf 3.4 NO_MODULE REQUIRED)
+find_package(Protobuf 3.4 REQUIRED)
 
 get_property(Protobuf_INCLUDE_DIRS 
   TARGET protobuf::libprotobuf 
