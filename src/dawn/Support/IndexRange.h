@@ -32,7 +32,7 @@ public:
   IteratorWrap(T& t, int idx) : t_(t), idx_(idx) {}
   int idx() const { return idx_; }
   T& operator*() { return t_; }
-  T& operator->() { return t_; }
+  T* operator->() { return &t_; }
 };
 
 /// @brief Iterator class of an IndexRange
