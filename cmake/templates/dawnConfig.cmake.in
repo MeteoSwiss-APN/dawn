@@ -39,10 +39,9 @@ foreach(_include_dir "@PACKAGE_DAWN_CONFIGURE_INCLUDE_DIR@" "@PACKAGE_DAWN_CONFI
     set_and_check(_include_dir ${_include_dir})
     list(APPEND DAWN_INCLUDE_DIRS ${_include_dir})
 endforeach()
-message(STATUS "${DAWN_INCLUDE_DIRS}")
 
 # Link directories for Dawn libraries
-set_and_check(DAWN_LIBRARY_DIRS "${DAWN_ROOT}/@DAWN_CONFIGURE_LIB_DIR@")
+set_and_check(DAWN_LIBRARY_DIRS "@PACKAGE_DAWN_CONFIGURE_LIB_DIR@")
 
 # Was Dawn compiled with asserts?
 set(DAWN_ASSERTS @DAWN_ASSERTS@)
