@@ -280,14 +280,12 @@ void CXXNaiveCodeGen::generateStencilClasses(
     // maps storage access ID to storage type
     std::map<int, std::string> StencilTemplates;
     int cnt = 0;
-    for(const auto& lists : {tempFields, nonTempFields}) {
-      std::transform(lists.begin(), lists.end(),
-                     std::inserter(StencilTemplates, StencilTemplates.end()),
-                     [cnt](const decltype(*tempFields.begin())& it) mutable {
-                       return std::make_pair(it->second.field.getAccessID(),
-                                             "StorageType" + std::to_string(cnt++));
-                     });
-    }
+    std::transform(nonTempFields.begin(), nonTempFields.end(),
+                   std::inserter(StencilTemplates, StencilTemplates.end()),
+                   [cnt](const decltype(*nonTempFields.begin())& it) mutable {
+                     return std::make_pair(it->second.field.getAccessID(),
+                                           "StorageType" + std::to_string(cnt++));
+                   });
 
     Structure StencilClass = stencilWrapperClass.addStruct(
         stencilName,
