@@ -109,6 +109,7 @@ std::vector<Interval> Stage::getIntervals() const {
 }
 
 Interval Stage::getEnclosingInterval() const {
+  DAWN_ASSERT_MSG(getChildren().size() > 0, "Stage does not contain any children");
   Interval interval = getChildren().front()->getInterval();
   for(const auto& doMethod : getChildren())
     interval.merge(doMethod->getInterval());
