@@ -33,6 +33,9 @@ public:
   int idx() const { return idx_; }
   T& operator*() { return t_; }
   T* operator->() { return &t_; }
+
+  const T& operator*() const { return t_; }
+  const T* operator->() const { return &t_; }
 };
 
 /// @brief Iterator class of an IndexRange

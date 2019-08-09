@@ -284,7 +284,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
       std::transform(lists.begin(), lists.end(),
                      std::inserter(StencilTemplates, StencilTemplates.end()),
                      [cnt](const decltype(*tempFields.begin())& it) mutable {
-                       return std::make_pair((*it).second.field.getAccessID(),
+                       return std::make_pair(it->second.field.getAccessID(),
                                              "StorageType" + std::to_string(cnt++));
                      });
     }
