@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+# set -e
 
 BASEPATH_SCRIPT=$(dirname "${0}")
 source ${BASEPATH_SCRIPT}/machine_env.sh
