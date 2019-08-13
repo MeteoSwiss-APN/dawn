@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# set -e
+set -e
 
 BASEPATH_SCRIPT=$(dirname "${0}")
 source ${BASEPATH_SCRIPT}/machine_env.sh
@@ -50,9 +50,10 @@ if [ -z ${PROTOBUFDIR+x} ]; then
  echo "PROTOBUFDIF needs to be set in the machine env"
 fi
 CMAKE_ARGS="-DDAWN_BUNDLE_PYTHON=ON -DDAWN_BUNDLE_JAVA=ON -DDAWN_PYTHON_EXAMPLES=ON -DCMAKE_BUILD_TYPE=${build_type} -DBOOST_ROOT=${BOOST_DIR}  \
-        -DProtobuf_DIR=${PROTOBUFDIR}"
+        -DProtobuf_DIR=${PROTOBUFDIR} -DPROTOBUF_PYTHON_INSTALL=${PROTOBUFDIR}/../../../python"
 
 if [ -n ${INSTALL_DIR} ]; then
+  rm -rf ${INSTALL_DIR}
   CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}"
 fi
 
