@@ -103,6 +103,8 @@ public:
   bool fillIIRFromSIR(std::shared_ptr<iir::StencilInstantiation> stencilInstantation,
                       const std::shared_ptr<sir::Stencil> SIRStencil,
                       const std::shared_ptr<SIR> fullSIR);
+  bool restoreIIR(std::shared_ptr<iir::StencilInstantiation> stencilInstantiation);
+  void fillIIR();
 
   /// @brief this function check if a pass should be pushed back into the list of passes based on
   /// the options.

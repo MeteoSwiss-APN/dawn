@@ -570,23 +570,13 @@ OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, Options& opti
                                    const std::shared_ptr<SIR>& SIR)
     : diagnostics_(diagnostics), options_(options), SIR_(SIR) {
   DAWN_LOG(INFO) << "Intializing OptimizerContext ... ";
-
-  for(const auto& stencil : SIR_->Stencils)
-    if(!stencil->Attributes.has(sir::Attr::AK_NoCodeGen)) {
-      stencilInstantiationMap_.insert(
-          std::make_pair(stencil->Name, std::make_shared<iir::StencilInstantiation>(this)));
-      fillIIRFromSIR(stencilInstantiationMap_.at(stencil->Name), stencil, SIR_);
-    } else {
-      DAWN_LOG(INFO) << "Skipping processing of `" << stencil->Name << "`";
-    }
 }
-
 bool OptimizerContext::fillIIRFromSIR(
-    std::shared_ptr<iir::StencilInstantiation> stencilInstantation,
+    std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     const std::shared_ptr<sir::Stencil> SIRStencil, const std::shared_ptr<SIR> fullSIR) {
   DAWN_LOG(INFO) << "Intializing StencilInstantiation of `" << SIRStencil->Name << "`";
   DAWN_ASSERT_MSG(SIRStencil, "Stencil does not exist");
-  auto& metadata = stencilInstantation->getMetaData();
+  auto& metadata = stencilInstantiation->getMetaData();
   metadata.setStencilname(SIRStencil->Name);
   metadata.setFileName(fullSIR->Filename);
   metadata.setStencilLocation(SIRStencil->Loc);
@@ -599,7 +589,7 @@ bool OptimizerContext::fillIIRFromSIR(
                          field->Name, field->fieldDimensions);
   }
 
-  StencilDescStatementMapper stencilDeclMapper(stencilInstantation, SIRStencil.get(), fullSIR);
+  StencilDescStatementMapper stencilDeclMapper(stencilInstantiation, SIRStencil.get(), fullSIR);
 
   //  // We need to operate on a copy of the AST as we may modify the nodes inplace
   auto AST = SIRStencil->StencilDescAst->clone();
@@ -610,26 +600,26 @@ bool OptimizerContext::fillIIRFromSIR(
 
   //  // Repair broken references to temporaries i.e promote them to real fields
   PassTemporaryType::fixTemporariesSpanningMultipleStencils(
-      stencilInstantation.get(), stencilInstantation->getIIR()->getChildren());
+      stencilInstantiation.get(), stencilInstantiation->getIIR()->getChildren());
 
-  if(stencilInstantation->getOptimizerContext()->getOptions().ReportAccesses) {
-    stencilInstantation->reportAccesses();
+  if(stencilInstantiation->getOptimizerContext()->getOptions().ReportAccesses) {
+    stencilInstantiation->reportAccesses();
   }
 
-  for(const auto& MS : iterateIIROver<MultiStage>(*(stencilInstantation->getIIR()))) {
+  for(const auto& MS : iterateIIROver<MultiStage>(*(stencilInstantiation->getIIR()))) {
     MS->update(NodeUpdateType::levelAndTreeAbove);
   }
   DAWN_LOG(INFO) << "Done initializing StencilInstantiation";
 
   // Iterate all statements (top -> bottom)
-  for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantation->getIIR()))) {
+  for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {
     iir::Stage& stage = *stagePtr;
     for(const auto& doMethod : stage.getChildren()) {
       doMethod->update(iir::NodeUpdateType::level);
     }
     stage.update(iir::NodeUpdateType::level);
   }
-  for(const auto& MSPtr : iterateIIROver<iir::Stage>(*(stencilInstantation->getIIR()))) {
+  for(const auto& MSPtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {
     MSPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
 
@@ -653,5 +643,75 @@ DiagnosticsEngine& OptimizerContext::getDiagnostics() { return diagnostics_; }
 const Options& OptimizerContext::getOptions() const { return options_; }
 
 Options& OptimizerContext::getOptions() { return options_; }
+
+void OptimizerContext::fillIIR() {
+  for(const auto& stencil : SIR_->Stencils)
+    if(!stencil->Attributes.has(sir::Attr::AK_NoCodeGen)) {
+      stencilInstantiationMap_.insert(
+          std::make_pair(stencil->Name, std::make_shared<iir::StencilInstantiation>(this)));
+      fillIIRFromSIR(stencilInstantiationMap_.at(stencil->Name), stencil, SIR_);
+    } else {
+      DAWN_LOG(INFO) << "Skipping processing of `" << stencil->Name << "`";
+    }
+}
+
+bool OptimizerContext::restoreIIR(std::shared_ptr<iir::StencilInstantiation> stencilInstantiation) {
+  auto& metadata = stencilInstantiation->getMetaData();
+  metadata.setStencilname(stencilInstantiation->getName());
+  metadata.setFileName(getSIR()->Filename);
+  std::shared_ptr<sir::Stencil> SIRStencil;
+  for(const auto& s : getSIR()->Stencils)
+    if(s->Name == stencilInstantiation->getName())
+      SIRStencil = s;
+  DAWN_ASSERT(SIRStencil);
+
+  stencilInstantiationMap_.insert(std::make_pair(SIRStencil->Name, stencilInstantiation));
+
+  metadata.setStencilLocation(SIRStencil->Loc);
+
+  // Map the fields of the "main stencil" to unique IDs (which are used in the access maps to
+  // indentify the field).
+  // for(const auto& field : SIRStencil->Fields) {
+  // metadata.insertField((field->IsTemporary ? iir::FieldAccessType::FAT_StencilTemporary
+  //                                        : iir::FieldAccessType::FAT_APIField),
+  //                  field->Name, field->fieldDimensions);
+  // }
+
+  // StencilDescStatementMapper stencilDeclMapper(stencilInstantiation, SIRStencil.get(), getSIR());
+
+  //  // We need to operate on a copy of the AST as we may modify the nodes inplace
+  // auto AST = SIRStencil->StencilDescAst->clone();
+  // AST->accept(stencilDeclMapper);
+
+  //  Cleanup the `stencilDescStatements` and remove the empty stencils which may have been inserted
+  // stencilDeclMapper.cleanupStencilDeclAST();
+
+  //  // Repair broken references to temporaries i.e promote them to real fields
+  PassTemporaryType::fixTemporariesSpanningMultipleStencils(
+      stencilInstantiation.get(), stencilInstantiation->getIIR()->getChildren());
+
+  if(stencilInstantiation->getOptimizerContext()->getOptions().ReportAccesses) {
+    stencilInstantiation->reportAccesses();
+  }
+
+  for(const auto& MS : iterateIIROver<MultiStage>(*(stencilInstantiation->getIIR()))) {
+    MS->update(NodeUpdateType::levelAndTreeAbove);
+  }
+  DAWN_LOG(INFO) << "Done initializing StencilInstantiation";
+
+  // Iterate all statements (top -> bottom)
+  for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {
+    iir::Stage& stage = *stagePtr;
+    for(const auto& doMethod : stage.getChildren()) {
+      doMethod->update(iir::NodeUpdateType::level);
+    }
+    stage.update(iir::NodeUpdateType::level);
+  }
+  for(const auto& MSPtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {
+    MSPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
+  }
+
+  return true;
+}
 
 } // namespace dawn
