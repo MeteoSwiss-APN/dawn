@@ -27,29 +27,24 @@
 #include <google/protobuf/util/json_util.h>
 
 namespace dawn {
+static proto::iir::Extents makeProtoExtents(dawn::iir::Extents const& extents) {
+  proto::iir::Extents protoExtents;
+  for(auto extent : extents.getExtents()) {
+    auto protoExtent = protoExtents.add_extents();
+    protoExtent->set_minus(extent.Minus);
+    protoExtent->set_plus(extent.Plus);
+  }
+  return protoExtents;
+}
 static void setAccesses(proto::iir::Accesses* protoAccesses,
                         const std::shared_ptr<iir::Accesses>& accesses) {
   auto protoReadAccesses = protoAccesses->mutable_readaccess();
-  for(auto IDExtentsPair : accesses->getReadAccesses()) {
-    proto::iir::Extents protoExtents;
-    for(auto extent : IDExtentsPair.second.getExtents()) {
-      auto protoExtent = protoExtents.add_extents();
-      protoExtent->set_minus(extent.Minus);
-      protoExtent->set_plus(extent.Plus);
-    }
-    protoReadAccesses->insert({IDExtentsPair.first, protoExtents});
-  }
+  for(auto IDExtentsPair : accesses->getReadAccesses())
+    protoReadAccesses->insert({IDExtentsPair.first, makeProtoExtents(IDExtentsPair.second)});
 
   auto protoWriteAccesses = protoAccesses->mutable_writeaccess();
-  for(auto IDExtentsPair : accesses->getWriteAccesses()) {
-    proto::iir::Extents protoExtents;
-    for(auto extent : IDExtentsPair.second.getExtents()) {
-      auto protoExtent = protoExtents.add_extents();
-      protoExtent->set_minus(extent.Minus);
-      protoExtent->set_plus(extent.Plus);
-    }
-    protoWriteAccesses->insert({IDExtentsPair.first, protoExtents});
-  }
+  for(auto IDExtentsPair : accesses->getWriteAccesses())
+    protoWriteAccesses->insert({IDExtentsPair.first, makeProtoExtents(IDExtentsPair.second)});
 }
 
 static std::shared_ptr<dawn::Statement>
@@ -298,12 +293,18 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
     protoIDToStencilCallMap.insert({IDToStencilCall.first, protoStencilCall});
   }
 
-  // Filling Field: dawn.proto.statements.SourceLocation stencilLocation = 14;
+  // Filling Field: map<int32, Extents> boundaryCallToExtent = 14;
+  auto& protoBoundaryCallToExtent = *protoMetaData->mutable_boundarycalltoextent();
+  for(auto boundaryCallToExtent : metaData.boundaryConditionToExtentsMap_)
+    protoBoundaryCallToExtent.insert(
+        {boundaryCallToExtent.first->getID(), makeProtoExtents(boundaryCallToExtent.second)});
+
+  // Filling Field: dawn.proto.statements.SourceLocation stencilLocation = 15;
   auto protoStencilLoc = protoMetaData->mutable_stencillocation();
   protoStencilLoc->set_column(metaData.stencilLocation_.Column);
   protoStencilLoc->set_line(metaData.stencilLocation_.Line);
 
-  // Filling Field: string stencilMName = 15;
+  // Filling Field: string stencilMName = 16;
   protoMetaData->set_stencilname(metaData.stencilName_);
 }
 
@@ -541,15 +542,21 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
     }
   }
 
-  struct StencilCallDeclStmtFinder : public ASTVisitorForwarding {
+  struct DeclStmtFinder : public ASTVisitorForwarding {
     void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
-      map.insert(std::make_pair(stmt->getID(), stmt));
+      stencilCallDecl.insert(std::make_pair(stmt->getID(), stmt));
+      ASTVisitorForwarding::visit(stmt);
     }
-    std::map<int, std::shared_ptr<StencilCallDeclStmt>> map;
+    void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override {
+      boundaryConditionDecl.insert(std::make_pair(stmt->getID(), stmt));
+      ASTVisitorForwarding::visit(stmt);
+    }
+    std::map<int, std::shared_ptr<StencilCallDeclStmt>> stencilCallDecl;
+    std::map<int, std::shared_ptr<BoundaryConditionDeclStmt>> boundaryConditionDecl;
   };
-  StencilCallDeclStmtFinder stencilCallDeclStmtFinder;
+  DeclStmtFinder declStmtFinder;
   for(auto& stmt : target->getIIR()->getControlFlowDescriptor().getStatements())
-    stmt->ASTStmt->accept(stencilCallDeclStmtFinder);
+    stmt->ASTStmt->accept(declStmtFinder);
 
   for(auto IDToCall : protoMetaData.idtostencilcall()) {
     auto call = IDToCall.second;
@@ -561,13 +568,14 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
       sirStencilCall->Args.push_back(field);
     }
 
-    auto stmt = stencilCallDeclStmtFinder.map[call.stencil_call_decl_stmt().id()];
+    auto stmt = declStmtFinder.stencilCallDecl[call.stencil_call_decl_stmt().id()];
     metadata.insertStencilCallStmt(stmt, IDToCall.first);
   }
 
   for(auto FieldnameToBC : protoMetaData.fieldnametoboundarycondition()) {
     std::shared_ptr<BoundaryConditionDeclStmt> bc =
-        dyn_pointer_cast<BoundaryConditionDeclStmt>(makeStmt((FieldnameToBC.second)));
+        declStmtFinder
+            .boundaryConditionDecl[FieldnameToBC.second.boundary_condition_decl_stmt().id()];
     metadata.fieldnameToBoundaryConditionMap_[FieldnameToBC.first] = bc;
   }
 
@@ -576,6 +584,11 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
                  fieldIDInitializedDims.second.int3()};
     metadata.fieldIDToInitializedDimensionsMap_[fieldIDInitializedDims.first] = dims;
   }
+
+  for(auto boundaryCallToExtent : protoMetaData.boundarycalltoextent())
+    metadata.boundaryConditionToExtentsMap_.insert(
+        std::make_pair(declStmtFinder.boundaryConditionDecl[boundaryCallToExtent.first],
+                       makeExtents(&boundaryCallToExtent.second)));
 
   metadata.stencilLocation_.Column = protoMetaData.stencillocation().column();
   metadata.stencilLocation_.Line = protoMetaData.stencillocation().line();
