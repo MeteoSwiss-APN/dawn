@@ -541,12 +541,15 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
     }
   }
 
-  std::map<int, std::shared_ptr<StencilCallDeclStmt>> stencilCallMap;
-  for(auto& stmt : target->getIIR()->getControlFlowDescriptor().getStatements()) {
-    auto stencilCallStmt = std::dynamic_pointer_cast<StencilCallDeclStmt>(stmt->ASTStmt);
-    if(stencilCallStmt)
-      stencilCallMap.insert(std::make_pair(stencilCallStmt->getID(), stencilCallStmt));
-  }
+  struct StencilCallDeclStmtFinder : public ASTVisitorForwarding {
+    void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
+      map.insert(std::make_pair(stmt->getID(), stmt));
+    }
+    std::map<int, std::shared_ptr<StencilCallDeclStmt>> map;
+  };
+  StencilCallDeclStmtFinder stencilCallDeclStmtFinder;
+  for(auto& stmt : target->getIIR()->getControlFlowDescriptor().getStatements())
+    stmt->ASTStmt->accept(stencilCallDeclStmtFinder);
 
   for(auto IDToCall : protoMetaData.idtostencilcall()) {
     auto call = IDToCall.second;
@@ -558,7 +561,7 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
       sirStencilCall->Args.push_back(field);
     }
 
-    auto stmt = stencilCallMap[call.stencil_call_decl_stmt().id()];
+    auto stmt = stencilCallDeclStmtFinder.map[call.stencil_call_decl_stmt().id()];
     metadata.insertStencilCallStmt(stmt, IDToCall.first);
   }
 
