@@ -50,6 +50,8 @@ OPT(std::string, block_size, "", "block-size", "",
         "block size for tiled computations", "", true, false)
 OPT(bool, SerializeIIR, false, "write-iir", "",
     "Serialize the low level intermediate representation after Optimization", "", false, true)
+OPT(std::string, DeserializeIIR, "", "read-iir", "",
+    "Deserialize the low level intermediate representation from file", "", true, true)
 OPT(std::string, IIRFormat, "json", "iir-format", "", "format of the output IIR", "", true, false)
 OPT(bool, Debug, false, "debug", "",
     "Compile to debug backend", "", false, true)
