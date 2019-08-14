@@ -252,12 +252,15 @@ message StencilMetaInfo {
     // Map of the StencilID's to their respective StencilCall
     map<int32, dawn.proto.statements.Stmt> idToStencilCall = 13;
 
+    // Map of the BoundaryConditionCall to its extent
+    map<int32, Extents> boundaryCallToExtent = 14;
+
     // The source-location of the stencil (for better error-handeling)
-    dawn.proto.statements.SourceLocation stencilLocation = 14;
+    dawn.proto.statements.SourceLocation stencilLocation = 15;
 
     // The user-given name of the stencil
     // (remember the 1-1 mapping of user-stencil - StencilInstantiation)
-    string stencilName = 15;
+    string stencilName = 16;
 }
 
 /* ===-----------------------------------------------------------------------------------------===*/
