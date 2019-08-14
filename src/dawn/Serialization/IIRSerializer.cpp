@@ -19,6 +19,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassInlining.h"
+#include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/ASTSerializer.h"
@@ -540,6 +541,13 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
     }
   }
 
+  std::map<int, std::shared_ptr<StencilCallDeclStmt>> stencilCallMap;
+  for(auto& stmt : target->getIIR()->getControlFlowDescriptor().getStatements()) {
+    auto stencilCallStmt = std::dynamic_pointer_cast<StencilCallDeclStmt>(stmt->ASTStmt);
+    if(stencilCallStmt)
+      stencilCallMap.insert(std::make_pair(stencilCallStmt->getID(), stencilCallStmt));
+  }
+
   for(auto IDToCall : protoMetaData.idtostencilcall()) {
     auto call = IDToCall.second;
     std::shared_ptr<sir::StencilCall> sirStencilCall = std::make_shared<sir::StencilCall>(
@@ -549,9 +557,8 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
       auto field = makeField(protoField);
       sirStencilCall->Args.push_back(field);
     }
-    auto stmt = std::make_shared<StencilCallDeclStmt>(sirStencilCall,
-                                                      makeLocation(call.stencil_call_decl_stmt()));
-    stmt->setID(call.stencil_call_decl_stmt().id());
+
+    auto stmt = stencilCallMap[call.stencil_call_decl_stmt().id()];
     metadata.insertStencilCallStmt(stmt, IDToCall.first);
   }
 
@@ -711,15 +718,10 @@ void IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Seria
     dawn_unreachable("invalid SerializationKind");
   }
 
-  std::shared_ptr<iir::StencilInstantiation> instantiation =
-      std::make_shared<iir::StencilInstantiation>(target->getOptimizerContext());
-
-  deserializeMetaData(instantiation, (protoStencilInstantiation.metadata()));
-  deserializeIIR(instantiation, (protoStencilInstantiation.internalir()));
-  instantiation->getMetaData().fileName_ = protoStencilInstantiation.filename();
-  computeInitialDerivedInfo(instantiation);
-
-  target = instantiation;
+  deserializeIIR(target, (protoStencilInstantiation.internalir()));
+  deserializeMetaData(target, (protoStencilInstantiation.metadata()));
+  target->getMetaData().fileName_ = protoStencilInstantiation.filename();
+  computeInitialDerivedInfo(target);
 }
 
 std::shared_ptr<iir::StencilInstantiation>
