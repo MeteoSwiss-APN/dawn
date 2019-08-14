@@ -300,11 +300,16 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
         {boundaryCallToExtent.first->getID(), makeProtoExtents(boundaryCallToExtent.second)});
 
   // Filling Field: dawn.proto.statements.SourceLocation stencilLocation = 15;
+  for(auto allocatedFieldID : metaData.fieldAccessMetadata_.AllocatedFieldAccessIDSet_) {
+    protoMetaData->add_allocatedfieldids(allocatedFieldID);
+  }
+
+  // Filling Field: dawn.proto.statements.SourceLocation stencilLocation = 16;
   auto protoStencilLoc = protoMetaData->mutable_stencillocation();
   protoStencilLoc->set_column(metaData.stencilLocation_.Column);
   protoStencilLoc->set_line(metaData.stencilLocation_.Line);
 
-  // Filling Field: string stencilMName = 16;
+  // Filling Field: string stencilMName = 17;
   protoMetaData->set_stencilname(metaData.stencilName_);
 }
 
@@ -534,6 +539,9 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
   }
   for(auto globalVariableID : protoMetaData.globalvariableids()) {
     metadata.fieldAccessMetadata_.GlobalVariableAccessIDSet_.insert(globalVariableID);
+  }
+  for(auto allocatedFieldID : protoMetaData.allocatedfieldids()) {
+    metadata.fieldAccessMetadata_.AllocatedFieldAccessIDSet_.insert(allocatedFieldID);
   }
 
   for(auto variableVersionMap : protoMetaData.versionedfields().variableversionmap()) {
