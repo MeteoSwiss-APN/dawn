@@ -51,6 +51,11 @@ StencilInstantiation::StencilInstantiation(dawn::OptimizerContext* context)
     : context_(context), metadata_(*(context->getSIR()->GlobalVariableMap)),
       IIR_(make_unique<IIR>(*(context->getSIR()->GlobalVariableMap),
                             context->getSIR()->StencilFunctions)) {}
+// TODO Cleanup
+StencilInstantiation::StencilInstantiation(dawn::OptimizerContext* context, bool)
+    : context_(context), metadata_(sir::GlobalVariableMap{}),
+      IIR_(make_unique<IIR>(sir::GlobalVariableMap{},
+                            std::vector<std::shared_ptr<sir::StencilFunction>>{})) {}
 
 StencilMetaInformation& StencilInstantiation::getMetaData() { return metadata_; }
 

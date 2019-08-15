@@ -679,7 +679,8 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
   }
 
-  std::string globals = generateGlobals(context_->getSIR(), "cuda");
+  auto& firstStencil = context_->getStencilInstantiationMap().begin()->second;
+  std::string globals = generateGlobals(firstStencil->getIIR()->getGlobalVariableMap(), "cuda");
 
   std::vector<std::string> ppDefines;
   auto makeDefine = [](std::string define, int value) {
@@ -702,8 +703,9 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
   DAWN_LOG(INFO) << "Done generating code";
 
   // TODO missing the BC
-  return make_unique<TranslationUnit>(context_->getSIR()->Filename, std::move(ppDefines),
-                                      std::move(stencils), std::move(globals));
+  return make_unique<TranslationUnit>(firstStencil->getMetaData().getFileName(),
+                                      std::move(ppDefines), std::move(stencils),
+                                      std::move(globals));
 }
 
 } // namespace cuda

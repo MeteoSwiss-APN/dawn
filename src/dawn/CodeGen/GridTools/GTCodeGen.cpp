@@ -934,7 +934,9 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   }
 
   // Generate globals
-  std::string globals = generateGlobals(context_->getSIR(), "gridtools");
+  auto& firstStencil = context_->getStencilInstantiationMap().begin()->second;
+  std::string globals =
+      generateGlobals(firstStencil->getIIR()->getGlobalVariableMap(), "gridtools");
 
   // If we need more than 20 elements in boost::mpl containers, we need to increment to the nearest
   // multiple of ten
@@ -961,8 +963,9 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
 
   DAWN_LOG(INFO) << "Done generating code";
 
-  return make_unique<TranslationUnit>(context_->getSIR()->Filename, std::move(ppDefines),
-                                      std::move(stencils), std::move(globals));
+  return make_unique<TranslationUnit>(firstStencil->getMetaData().getFileName(),
+                                      std::move(ppDefines), std::move(stencils),
+                                      std::move(globals));
 }
 
 std::vector<std::string> GTCodeGen::buildFieldTemplateNames(

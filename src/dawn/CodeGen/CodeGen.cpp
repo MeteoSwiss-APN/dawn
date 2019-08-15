@@ -1,5 +1,6 @@
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/StencilFunctionAsBCGenerator.h"
+#include "dawn/SIR/SIR.h"
 
 namespace dawn {
 namespace codegen {
@@ -28,11 +29,10 @@ size_t CodeGen::getVerticalTmpHaloSizeForMultipleStencils(
              : 0;
 }
 
-std::string CodeGen::generateGlobals(std::shared_ptr<SIR> const& sir,
+std::string CodeGen::generateGlobals(sir::GlobalVariableMap const& globals,
                                      std::string namespace_) const {
 
-  const auto& globalsMap = *(sir->GlobalVariableMap);
-  if(globalsMap.empty())
+  if(globals.empty())
     return "";
 
   std::stringstream ss;
@@ -41,7 +41,7 @@ std::string CodeGen::generateGlobals(std::shared_ptr<SIR> const& sir,
 
   Struct GlobalsStruct("globals", ss);
 
-  for(const auto& globalsPair : globalsMap) {
+  for(const auto& globalsPair : globals) {
     sir::Value& value = *globalsPair.second;
     if(value.isConstexpr()) {
       continue;
@@ -52,7 +52,7 @@ std::string CodeGen::generateGlobals(std::shared_ptr<SIR> const& sir,
     GlobalsStruct.addMember(Type, Name);
   }
   auto ctr = GlobalsStruct.addConstructor();
-  for(const auto& globalsPair : globalsMap) {
+  for(const auto& globalsPair : globals) {
     sir::Value& value = *globalsPair.second;
     if(value.isConstexpr()) {
       continue;

@@ -95,8 +95,7 @@ public:
                                   Class& stencilWrapperClass,
                                   const sir::GlobalVariableMap& globalsMap,
                                   const CodeGenProperties& codeGenProperties) const;
-  virtual std::string generateGlobals(std::shared_ptr<SIR> const& sir,
-                                      std::string namespace_) const;
+  std::string generateGlobals(sir::GlobalVariableMap const& globals, std::string namespace_) const;
   void generateBCHeaders(std::vector<std::string>& ppDefines) const;
 };
 

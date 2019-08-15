@@ -47,6 +47,8 @@ class StencilInstantiation : NonCopyable {
 public:
   /// @brief Assemble StencilInstantiation for stencil
   StencilInstantiation(dawn::OptimizerContext* context);
+  // TODO cleanup...
+  StencilInstantiation(dawn::OptimizerContext* context, bool);
 
   StencilMetaInformation& getMetaData();
   const StencilMetaInformation& getMetaData() const { return metadata_; }

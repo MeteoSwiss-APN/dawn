@@ -658,16 +658,11 @@ void OptimizerContext::fillIIR() {
 bool OptimizerContext::restoreIIR(std::shared_ptr<iir::StencilInstantiation> stencilInstantiation) {
   auto& metadata = stencilInstantiation->getMetaData();
   metadata.setStencilname(stencilInstantiation->getName());
-  metadata.setFileName(getSIR()->Filename);
-  std::shared_ptr<sir::Stencil> SIRStencil;
-  for(const auto& s : getSIR()->Stencils)
-    if(s->Name == stencilInstantiation->getName())
-      SIRStencil = s;
-  DAWN_ASSERT(SIRStencil);
+  metadata.setFileName("<unknown>");
 
-  stencilInstantiationMap_.insert(std::make_pair(SIRStencil->Name, stencilInstantiation));
+  stencilInstantiationMap_.insert(std::make_pair("Stencil", stencilInstantiation));
 
-  metadata.setStencilLocation(SIRStencil->Loc);
+  // metadata.setStencilLocation({});
 
   // Map the fields of the "main stencil" to unique IDs (which are used in the access maps to
   // indentify the field).

@@ -581,9 +581,8 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
   }
 
   for(auto FieldnameToBC : protoMetaData.fieldnametoboundarycondition()) {
-    std::shared_ptr<BoundaryConditionDeclStmt> bc =
-        declStmtFinder
-            .boundaryConditionDecl[FieldnameToBC.second.boundary_condition_decl_stmt().id()];
+    std::shared_ptr<BoundaryConditionDeclStmt> bc = declStmtFinder.boundaryConditionDecl.at(
+        FieldnameToBC.second.boundary_condition_decl_stmt().id());
     metadata.fieldnameToBoundaryConditionMap_[FieldnameToBC.first] = bc;
   }
 
@@ -595,7 +594,7 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
 
   for(auto boundaryCallToExtent : protoMetaData.boundarycalltoextent())
     metadata.boundaryConditionToExtentsMap_.insert(
-        std::make_pair(declStmtFinder.boundaryConditionDecl[boundaryCallToExtent.first],
+        std::make_pair(declStmtFinder.boundaryConditionDecl.at(boundaryCallToExtent.first),
                        makeExtents(&boundaryCallToExtent.second)));
 
   metadata.stencilLocation_.Column = protoMetaData.stencillocation().column();
@@ -758,7 +757,7 @@ IIRSerializer::deserialize(const std::string& file, OptimizerContext* context,
 
   std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
   std::shared_ptr<iir::StencilInstantiation> returnvalue =
-      std::make_shared<iir::StencilInstantiation>(context);
+      std::make_shared<iir::StencilInstantiation>(context, false);
   deserializeImpl(str, kind, returnvalue);
   return returnvalue;
 }

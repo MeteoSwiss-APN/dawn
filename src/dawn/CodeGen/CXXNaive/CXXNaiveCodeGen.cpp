@@ -538,7 +538,8 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
   }
 
-  std::string globals = generateGlobals(context_->getSIR(), "cxxnaive");
+  auto& firstStencil = context_->getStencilInstantiationMap().begin()->second;
+  std::string globals = generateGlobals(firstStencil->getIIR()->getGlobalVariableMap(), "cxxnaive");
 
   std::vector<std::string> ppDefines;
   auto makeDefine = [](std::string define, int value) {
@@ -556,8 +557,9 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
   CodeGen::addMplIfdefs(ppDefines, 30, context_->getOptions().MaxHaloPoints);
   DAWN_LOG(INFO) << "Done generating code";
 
-  return make_unique<TranslationUnit>(context_->getSIR()->Filename, std::move(ppDefines),
-                                      std::move(stencils), std::move(globals));
+  return make_unique<TranslationUnit>(firstStencil->getMetaData().getFileName(),
+                                      std::move(ppDefines), std::move(stencils),
+                                      std::move(globals));
 }
 
 } // namespace cxxnaive
