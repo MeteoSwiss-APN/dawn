@@ -157,6 +157,12 @@ message Stencil {
     Attributes attr = 3;
 }
 
+message BoundaryConditionFunctor {
+    string name = 1;
+    repeated string args = 2;
+    dawn.proto.statements.Stmt ASTStmt = 3;
+}
+
 // @brief The Protobuf description of the root node of the IIR
 //
 // The root node of the tree, holding multiple stencils. There is one IIR object for each user
@@ -169,6 +175,8 @@ message IIR {
 
     // Stencil description statements for the overall program flow
     repeated dawn.proto.statements.Stmt controlFlowStatements = 3;
+
+    repeated BoundaryConditionFunctor boundaryConditions = 4;
 }
 
 /* ===-----------------------------------------------------------------------------------------===*/
