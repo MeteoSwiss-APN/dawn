@@ -605,9 +605,13 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
   }
 
   for(auto FieldnameToBC : protoMetaData.fieldnametoboundarycondition()) {
-    std::shared_ptr<BoundaryConditionDeclStmt> bc = declStmtFinder.boundaryConditionDecl.at(
+    auto foundDecl = declStmtFinder.boundaryConditionDecl.find(
         FieldnameToBC.second.boundary_condition_decl_stmt().id());
-    metadata.fieldnameToBoundaryConditionMap_[FieldnameToBC.first] = bc;
+
+    metadata.fieldnameToBoundaryConditionMap_[FieldnameToBC.first] =
+        foundDecl != declStmtFinder.boundaryConditionDecl.end()
+            ? foundDecl->second
+            : dyn_pointer_cast<BoundaryConditionDeclStmt>(makeStmt((FieldnameToBC.second)));
   }
 
   for(auto fieldIDInitializedDims : protoMetaData.fieldidtolegaldimensions()) {
