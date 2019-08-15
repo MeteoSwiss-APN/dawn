@@ -662,33 +662,6 @@ bool OptimizerContext::restoreIIR(std::shared_ptr<iir::StencilInstantiation> ste
 
   stencilInstantiationMap_.insert(std::make_pair("Stencil", stencilInstantiation));
 
-  // metadata.setStencilLocation({});
-
-  // Map the fields of the "main stencil" to unique IDs (which are used in the access maps to
-  // indentify the field).
-  // for(const auto& field : SIRStencil->Fields) {
-  // metadata.insertField((field->IsTemporary ? iir::FieldAccessType::FAT_StencilTemporary
-  //                                        : iir::FieldAccessType::FAT_APIField),
-  //                  field->Name, field->fieldDimensions);
-  // }
-
-  // StencilDescStatementMapper stencilDeclMapper(stencilInstantiation, SIRStencil.get(), getSIR());
-
-  //  // We need to operate on a copy of the AST as we may modify the nodes inplace
-  // auto AST = SIRStencil->StencilDescAst->clone();
-  // AST->accept(stencilDeclMapper);
-
-  //  Cleanup the `stencilDescStatements` and remove the empty stencils which may have been inserted
-  // stencilDeclMapper.cleanupStencilDeclAST();
-
-  //  // Repair broken references to temporaries i.e promote them to real fields
-  PassTemporaryType::fixTemporariesSpanningMultipleStencils(
-      stencilInstantiation.get(), stencilInstantiation->getIIR()->getChildren());
-
-  if(stencilInstantiation->getOptimizerContext()->getOptions().ReportAccesses) {
-    stencilInstantiation->reportAccesses();
-  }
-
   for(const auto& MS : iterateIIROver<MultiStage>(*(stencilInstantiation->getIIR()))) {
     MS->update(NodeUpdateType::levelAndTreeAbove);
   }
