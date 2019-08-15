@@ -334,7 +334,6 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Boolean);
       break;
     case sir::Value::Integer:
-      std::cout << "serialize int" << std::endl;
       if(!globalToValue.second->empty()) {
         value = globalToValue.second->getValue<int>();
         valueIsSet = true;
@@ -342,7 +341,6 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Integer);
       break;
     case sir::Value::Double:
-      std::cout << "serialize double" << std::endl;
       if(!globalToValue.second->empty()) {
         value = globalToValue.second->getValue<double>();
         valueIsSet = true;
@@ -641,11 +639,9 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
       break;
     case proto::iir::GlobalValueAndType_TypeKind_Integer:
       value->setType(sir::Value::Integer);
-      std::cout << "set to int" << std::endl;
       break;
     case proto::iir::GlobalValueAndType_TypeKind_Double:
       value->setType(sir::Value::Double);
-      std::cout << "set to double" << std::endl;
       break;
     default:
       dawn_unreachable("unsupported type");
