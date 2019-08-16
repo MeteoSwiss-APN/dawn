@@ -24,7 +24,7 @@
 
 #define TINYFORMAT_ERROR(reason) DAWN_ASSERT_MSG(0, reason)
 #define TINYFORMAT_USE_VARIADIC_TEMPLATES
-#include "dawn/Support/External/tinyformat/tinyformat.h"
+#include <tinyformat/tinyformat.h>
 
 namespace dawn {
 

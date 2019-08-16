@@ -1,19 +1,19 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
-##                          _                      
-##                         | |                     
-##                       __| | __ ___      ___ ___  
-##                      / _` |/ _` \ \ /\ / / '_  | 
+##                          _
+##                         | |
+##                       __| | __ ___      ___ ___
+##                      / _` |/ _` \ \ /\ / / '_  |
 ##                     | (_| | (_| |\ V  V /| | | |
 ##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
 
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING 
+  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
       "Choose the type of build, options are: Debug Release RelWithDebInfo." FORCE)
 endif()
 
@@ -70,7 +70,7 @@ dawn_set_cxx_flags()
 
 # Add custom targets
 yoda_add_target_clean_all(
-  ${CMAKE_BINARY_DIR}/docs 
+  ${CMAKE_BINARY_DIR}/docs
   ${CMAKE_BINARY_DIR}/sphinx
   ${CMAKE_BINARY_DIR}/src
   ${CMAKE_BINARY_DIR}/test
@@ -94,7 +94,7 @@ make_config_string("Build shared " ${BUILD_SHARED_LIBS})
 make_config_string("Install prefix" ${CMAKE_INSTALL_PREFIX})
 yoda_report_result("Configuration summary" ${config_info})
 
-# Include the packages 
+# Include the packages
 if(DAWN_DOCUMENTATION)
   set(doc_packages Python3 Sphinx LaTeX Doxygen)
 endif()
@@ -128,6 +128,7 @@ yoda_add_target_clang_format(DIRECTORIES ${CMAKE_SOURCE_DIR}/src EXTENSION ".h;.
 include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${CMAKE_BINARY_DIR}/src)
 include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/test/utils/googletest/include)
+include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/src/dawn/Support/External)
 
 add_subdirectory(src)
 add_subdirectory(cmake)
@@ -147,8 +148,8 @@ endif()
 
 # Install headers
 install(
-  DIRECTORY ${CMAKE_SOURCE_DIR}/src/ 
-  DESTINATION ${DAWN_INSTALL_INCLUDE_DIR} 
+  DIRECTORY ${CMAKE_SOURCE_DIR}/src/
+  DESTINATION ${DAWN_INSTALL_INCLUDE_DIR}
   FILES_MATCHING PATTERN "*.h" PATTERN "*.inc" PATTERN "*.hpp"
 )
 
