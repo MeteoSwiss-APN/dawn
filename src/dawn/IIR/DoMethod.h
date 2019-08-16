@@ -64,7 +64,6 @@ public:
   /// @{
   DoMethod(Interval interval, const StencilMetaInformation& metaData);
   DoMethod(DoMethod&&) = default;
-  DoMethod& operator=(DoMethod&&) = default;
   /// @}
 
   json::json jsonDump(const StencilMetaInformation& metaData) const;

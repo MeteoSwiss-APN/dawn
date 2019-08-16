@@ -183,8 +183,12 @@ public:
   const std::shared_ptr<Expr>& getExpr() const { return expr_; }
   std::shared_ptr<Expr>& getExpr() { return expr_; }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
   virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
                                const std::shared_ptr<Expr>& newExpr);
+#pragma GCC diagnostic pop
+
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_ExprStmt; }
@@ -213,8 +217,11 @@ public:
   const std::shared_ptr<Expr>& getExpr() const { return expr_; }
   std::shared_ptr<Expr>& getExpr() { return expr_; }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
   virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
                                const std::shared_ptr<Expr>& newExpr);
+#pragma GCC diagnostic pop
 
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;
@@ -263,8 +270,11 @@ public:
   const std::vector<std::shared_ptr<Expr>>& getInitList() const { return initList_; }
   std::vector<std::shared_ptr<Expr>>& getInitList() { return initList_; }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
   virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
                                const std::shared_ptr<Expr>& newExpr);
+#pragma GCC diagnostic pop
 
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;

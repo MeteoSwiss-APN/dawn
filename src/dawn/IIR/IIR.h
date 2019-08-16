@@ -87,8 +87,8 @@ public:
 
   const sir::GlobalVariableMap& getGlobalVariableMap() const { return globalVariableMap_; }
 
-  void insertGlobalVariable(std::string name, std::shared_ptr<sir::Value> value) {
-    globalVariableMap_.emplace(name, value);
+  void insertGlobalVariable(std::string var_name, std::shared_ptr<sir::Value> value) {
+    globalVariableMap_.emplace(var_name, value);
   }
 };
 } // namespace iir
