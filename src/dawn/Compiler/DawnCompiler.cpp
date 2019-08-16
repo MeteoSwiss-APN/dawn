@@ -44,6 +44,7 @@
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/EditDistance.h"
 #include "dawn/Support/Logging.h"
+#include "dawn/Support/SourceLocation.h"
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
@@ -146,7 +147,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   int maxFields = options_->MaxFieldsPerStencil;
 
   IIRSerializer::SerializationKind serializationKind = IIRSerializer::SK_Json;
-  if(options_->SerializeIIR) { /*|| (options_->LoadSerialized != "")) {*/
+  if(options_->SerializeIIR || (options_->DeserializeIIR != "")) {
     if(options_->IIRFormat == "json") {
       serializationKind = IIRSerializer::SK_Json;
     } else if(options_->IIRFormat == "byte") {
@@ -156,62 +157,58 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
       dawn_unreachable("Unknown SIRFormat option");
     }
   }
-
   // Initialize optimizer
-  std::unique_ptr<OptimizerContext> optimizer =
-      make_unique<OptimizerContext>(getDiagnostics(), getOptions(), SIR);
-  PassManager& passManager = optimizer->getPassManager();
+  std::unique_ptr<OptimizerContext> optimizer;
+  if(options_->DeserializeIIR == "") {
+    optimizer = make_unique<OptimizerContext>(getDiagnostics(), getOptions(), SIR);
+    optimizer->fillIIR();
 
-  // Setup pass interface
-  optimizer->checkAndPushBack<PassInlining>(true, PassInlining::IK_InlineProcedures);
-  // This pass is currently broken and needs to be redesigned before it can be enabled
-  //  optimizer->checkAndPushBack<PassTemporaryFirstAccss>();
-  optimizer->checkAndPushBack<PassFieldVersioning>();
-  optimizer->checkAndPushBack<PassSSA>();
-  optimizer->checkAndPushBack<PassMultiStageSplitter>(mssSplitStrategy);
-  optimizer->checkAndPushBack<PassStageSplitter>();
-  optimizer->checkAndPushBack<PassPrintStencilGraph>();
-  optimizer->checkAndPushBack<PassTemporaryType>();
-  optimizer->checkAndPushBack<PassSetStageName>();
-  optimizer->checkAndPushBack<PassSetStageGraph>();
-  optimizer->checkAndPushBack<PassStageReordering>(reorderStrategy);
-  optimizer->checkAndPushBack<PassStageMerger>();
-  optimizer->checkAndPushBack<PassStencilSplitter>(maxFields);
-  optimizer->checkAndPushBack<PassTemporaryType>();
-  optimizer->checkAndPushBack<PassTemporaryMerger>();
-  optimizer->checkAndPushBack<PassInlining>(
-      (getOptions().InlineSF || getOptions().PassTmpToFunction),
-      PassInlining::IK_ComputationsOnTheFly);
-  optimizer->checkAndPushBack<PassTemporaryToStencilFunction>();
-  optimizer->checkAndPushBack<PassSetNonTempCaches>();
-  optimizer->checkAndPushBack<PassSetCaches>();
-  optimizer->checkAndPushBack<PassComputeStageExtents>();
-  optimizer->checkAndPushBack<PassSetBoundaryCondition>();
-  optimizer->checkAndPushBack<PassSetBlockSize>();
-  optimizer->checkAndPushBack<PassDataLocalityMetric>();
-  optimizer->checkAndPushBack<PassSetSyncStage>();
+    optimizer->checkAndPushBack<PassInlining>(true, PassInlining::IK_InlineProcedures);
+    // This pass is currently broken and needs to be redesigned before it can be enabled
+    //  optimizer->checkAndPushBack<PassTemporaryFirstAccss>();
+    optimizer->checkAndPushBack<PassFieldVersioning>();
+    optimizer->checkAndPushBack<PassSSA>();
+    optimizer->checkAndPushBack<PassMultiStageSplitter>(mssSplitStrategy);
+    optimizer->checkAndPushBack<PassStageSplitter>();
+    optimizer->checkAndPushBack<PassPrintStencilGraph>();
+    optimizer->checkAndPushBack<PassTemporaryType>();
+    optimizer->checkAndPushBack<PassSetStageName>();
+    optimizer->checkAndPushBack<PassSetStageGraph>();
+    optimizer->checkAndPushBack<PassStageReordering>(reorderStrategy);
+    optimizer->checkAndPushBack<PassStageMerger>();
+    optimizer->checkAndPushBack<PassStencilSplitter>(maxFields);
+    optimizer->checkAndPushBack<PassTemporaryType>();
+    optimizer->checkAndPushBack<PassTemporaryMerger>();
+    optimizer->checkAndPushBack<PassInlining>(
+        (getOptions().InlineSF || getOptions().PassTmpToFunction),
+        PassInlining::IK_ComputationsOnTheFly);
+    optimizer->checkAndPushBack<PassTemporaryToStencilFunction>();
+    optimizer->checkAndPushBack<PassSetNonTempCaches>();
+    optimizer->checkAndPushBack<PassSetCaches>();
+    optimizer->checkAndPushBack<PassComputeStageExtents>();
+    optimizer->checkAndPushBack<PassSetBoundaryCondition>();
+    optimizer->checkAndPushBack<PassSetBlockSize>();
 
-  DAWN_LOG(INFO) << "All the passes ran with the current command line arugments:";
-  for(const auto& a : passManager.getPasses()) {
-    DAWN_LOG(INFO) << a->getName();
-  }
-  // Run optimization passes
-  for(auto& stencil : optimizer->getStencilInstantiationMap()) {
-    std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
-    DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `" << instantiation->getName()
-                   << "` ...";
-    if(!passManager.runAllPassesOnStecilInstantiation(instantiation))
-      return nullptr;
-    DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `" << instantiation->getName()
-                   << "`";
-
-    if(options_->SerializeIIR) {
-      IIRSerializer::serialize(
-          remove_fileextension(instantiation->getMetaData().getFileName(), ".cpp") + ".iir",
-          instantiation, serializationKind);
+    int i = 0;
+    for(auto& instantiation : optimizer->getStencilInstantiationMap()) {
+      // Run optimization passes
+      DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `" << instantiation.first
+                     << "` ...";
+      optimizer->getPassManager().runAllPassesOnStecilInstantiation(instantiation.second);
+      DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `" << instantiation.first
+                     << "`";
+      if(options_->SerializeIIR)
+        IIRSerializer::serialize(
+            remove_fileextension(instantiation.second->getMetaData().getFileName(), ".cpp") + "." +
+                std::to_string(i) + ".iir",
+            instantiation.second, serializationKind);
     }
 
-    stencil.second = instantiation;
+  } else {
+    optimizer = make_unique<OptimizerContext>(getDiagnostics(), getOptions(), nullptr);
+    auto new_instantiation =
+        IIRSerializer::deserialize(options_->DeserializeIIR, optimizer.get(), serializationKind);
+    optimizer->restoreIIR(new_instantiation);
   }
 
   return optimizer;
