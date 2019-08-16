@@ -49,6 +49,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     iir::Stencil& stencil = *stencilPtr;
+    auto stencilAxis = stencil.getAxis(false);
 
     // Do we need to run the analysis for thist stencil?
     const std::shared_ptr<iir::DependencyGraphStage>& stageDAG = stencil.getStageDependencyGraph();
@@ -75,7 +76,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
         bool updateFields = false;
 
         // If our Do-Methods already spans the entire axis, we don't want to destroy that property
-        bool MergeDoMethodsOfStage = curStage.getEnclosingInterval() != stencil.getAxis(false);
+        bool MergeDoMethodsOfStage = curStage.getEnclosingInterval() != stencilAxis;
         if(!MergeDoMethodsOfStage && !MergeDoMethodsOfStencil) {
           continue;
         }

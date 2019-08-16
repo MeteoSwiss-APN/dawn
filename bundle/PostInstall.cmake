@@ -1,7 +1,7 @@
 set(examples "copy_stencil;hori_diff;tridiagonal_solve")
 
 if(NOT DEFINED PYTHON_EXECUTABLE)
-  find_package(PythonInterp 3.4 REQUIRED)
+  find_package(PythonInterp 3.5 REQUIRED)
 endif()
 
 execute_process(COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_INSTALL_PREFIX}/python/dawn/test_sir.py RESULT_VARIABLE res)

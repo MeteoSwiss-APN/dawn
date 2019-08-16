@@ -277,16 +277,21 @@ void CXXNaiveCodeGen::generateStencilClasses(
         std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
             [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
 
-    // list of template for storages used in the stencil class
-    std::vector<std::string> StencilTemplates(nonTempFields.size());
+    // maps storage access ID to storage type
+    std::map<int, std::string> StencilTemplates;
     int cnt = 0;
-    std::generate(StencilTemplates.begin(), StencilTemplates.end(),
-                  [cnt]() mutable { return "StorageType" + std::to_string(cnt++); });
+    std::transform(nonTempFields.begin(), nonTempFields.end(),
+                   std::inserter(StencilTemplates, StencilTemplates.end()),
+                   [cnt](const decltype(*nonTempFields.begin())& it) mutable {
+                     return std::make_pair(it->second.field.getAccessID(),
+                                           "StorageType" + std::to_string(cnt++));
+                   });
 
     Structure StencilClass = stencilWrapperClass.addStruct(
         stencilName,
-        RangeToString(", ", "", "")(StencilTemplates,
-                                    [](const std::string& str) { return "class " + str; }),
+        RangeToString(", ", "",
+                      "")(StencilTemplates,
+                          [](const std::pair<int, std::string>& s) { return "class " + s.second; }),
         "sbase");
 
     ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
@@ -303,7 +308,8 @@ void CXXNaiveCodeGen::generateStencilClasses(
     }
 
     for(auto fieldIt : nonTempFields) {
-      StencilClass.addMember(StencilTemplates[fieldIt.idx()] + "&", "m_" + (*fieldIt).second.Name);
+      StencilClass.addMember(StencilTemplates[fieldIt->second.field.getAccessID()] + "&",
+                             "m_" + (*fieldIt).second.Name);
     }
 
     addTmpStorageDeclaration(StencilClass, tempFields);
@@ -317,7 +323,8 @@ void CXXNaiveCodeGen::generateStencilClasses(
       stencilClassCtr.addArg("const globals& globals_");
     }
     for(auto fieldIt : nonTempFields) {
-      stencilClassCtr.addArg(StencilTemplates[fieldIt.idx()] + "& " + (*fieldIt).second.Name + "_");
+      stencilClassCtr.addArg(StencilTemplates[fieldIt->second.field.getAccessID()] + "& " +
+                             (*fieldIt).second.Name + "_");
     }
 
     stencilClassCtr.addInit("m_dom(dom_)");
@@ -361,21 +368,14 @@ void CXXNaiveCodeGen::generateStencilClasses(
       const iir::MultiStage& multiStage = *multiStagePtr;
 
       // create all the data views
-      for(auto fieldIt : nonTempFields) {
-        const auto fieldName = (*fieldIt).second.Name;
-        StencilRunMethod.addStatement(c_gt() + "data_view<" + StencilTemplates[fieldIt.idx()] +
-                                      "> " + fieldName + "= " + c_gt() + "make_host_view(m_" +
-                                      fieldName + ")");
-        StencilRunMethod.addStatement("std::array<int,3> " + fieldName + "_offsets{0,0,0}");
+      const auto& usedFields = multiStage.getFields();
+      for(const auto& usedField : usedFields) {
+        auto field = stencilFields.at(usedField.first);
+        auto storageName = field.IsTemporary ? "tmp_storage_t" : StencilTemplates[usedField.first];
+        StencilRunMethod.addStatement(c_gt() + "data_view<" + storageName + "> " + field.Name +
+                                      "= " + c_gt() + "make_host_view(m_" + field.Name + ")");
+        StencilRunMethod.addStatement("std::array<int,3> " + field.Name + "_offsets{0,0,0}");
       }
-      for(auto fieldIt : tempFields) {
-        const auto fieldName = (*fieldIt).second.Name;
-
-        StencilRunMethod.addStatement(c_gt() + "data_view<tmp_storage_t> " + fieldName + "= " +
-                                      c_gt() + "make_host_view(m_" + fieldName + ")");
-        StencilRunMethod.addStatement("std::array<int,3> " + fieldName + "_offsets{0,0,0}");
-      }
-
       auto intervals_set = multiStage.getIntervals();
       std::vector<iir::Interval> intervals_v;
       std::copy(intervals_set.begin(), intervals_set.end(), std::back_inserter(intervals_v));
