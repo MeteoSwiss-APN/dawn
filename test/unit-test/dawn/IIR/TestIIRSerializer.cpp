@@ -185,7 +185,8 @@ class IIRSerializerTest : public createEmptyOptimizerContext {
 protected:
   virtual void SetUp() override {
     createEmptyOptimizerContext::SetUp();
-    referenceInstantiaton = std::make_shared<iir::StencilInstantiation>(context_);
+    referenceInstantiaton = std::make_shared<iir::StencilInstantiation>(
+        context_, *context_->getSIR()->GlobalVariableMap, context_->getSIR()->StencilFunctions);
   }
   virtual void TearDown() override { referenceInstantiaton.reset(); }
 

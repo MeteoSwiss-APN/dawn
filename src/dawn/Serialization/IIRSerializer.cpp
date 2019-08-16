@@ -796,7 +796,7 @@ IIRSerializer::deserialize(const std::string& file, OptimizerContext* context,
 
   std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
   std::shared_ptr<iir::StencilInstantiation> returnvalue =
-      std::make_shared<iir::StencilInstantiation>(context, false);
+      std::make_shared<iir::StencilInstantiation>(context);
   deserializeImpl(str, kind, returnvalue);
   return returnvalue;
 }
