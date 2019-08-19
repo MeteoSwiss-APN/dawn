@@ -120,7 +120,9 @@ private:
   std::size_t mplContainerMaxSize_;
 
   /// Use the parallel keyword for mulistages
-  bool useParallelEP_;
+  struct GTCodeGenOptions {
+    bool useParallelEP_;
+  } codeGenOptions_;
 };
 
 } // namespace gt

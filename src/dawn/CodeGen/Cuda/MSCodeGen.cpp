@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/CodeGen/Cuda/MSCodeGen.hpp"
+#include "dawn/CodeGen/Cuda/MSCodeGen.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/Cuda/ASTStencilBody.h"
@@ -28,7 +28,7 @@ namespace cuda {
 MSCodeGen::MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
                      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                      const CacheProperties& cacheProperties,
-                     CudaCodeGen::CudaCodeGenOptions& options)
+                     CudaCodeGen::CudaCodeGenOptions options)
     : ss_(ss), ms_(ms), stencilInstantiation_(stencilInstantiation),
       metadata_(stencilInstantiation->getMetaData()), cacheProperties_(cacheProperties),
       useCodeGenTemporaries_(CodeGeneratorHelper::useTemporaries(

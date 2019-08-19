@@ -19,7 +19,7 @@
 #include "dawn/CodeGen/Cuda/ASTStencilDesc.h"
 #include "dawn/CodeGen/Cuda/CacheProperties.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
-#include "dawn/CodeGen/Cuda/MSCodeGen.hpp"
+#include "dawn/CodeGen/Cuda/MSCodeGen.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
@@ -677,11 +677,7 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
   }
 
-  std::string globals = "";
-  if(context.size() > 0) {
-    const auto& globalsMap = context.begin()->second->getIIR()->getGlobalVariableMap();
-    globals = generateGlobals(globalsMap, "cuda");
-  }
+  std::string globals = generateGlobals(context, "cuda");
 
   std::vector<std::string> ppDefines;
   auto makeDefine = [](std::string define, int value) {

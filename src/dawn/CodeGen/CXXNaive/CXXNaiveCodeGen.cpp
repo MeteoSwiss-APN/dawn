@@ -540,11 +540,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
   }
 
-  std::string globals = "";
-  if(context.size() > 0) {
-    const auto& globalsMap = context.begin()->second->getIIR()->getGlobalVariableMap();
-    globals = generateGlobals(globalsMap, "cxxnaive");
-  }
+  std::string globals = generateGlobals(context, "cxxnaive");
 
   std::vector<std::string> ppDefines;
   auto makeDefine = [](std::string define, int value) {

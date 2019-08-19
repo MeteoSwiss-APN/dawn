@@ -36,8 +36,8 @@ namespace gt {
 
 GTCodeGen::GTCodeGen(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& ctx,
                      DiagnosticsEngine& engine, bool useParallelEP, int maxHaloPoints)
-    : CodeGen(ctx, engine, maxHaloPoints), mplContainerMaxSize_(20), useParallelEP_(useParallelEP) {
-}
+    : CodeGen(ctx, engine, maxHaloPoints),
+      mplContainerMaxSize_(20), codeGenOptions_{useParallelEP} {}
 
 GTCodeGen::~GTCodeGen() {}
 
@@ -602,7 +602,8 @@ void GTCodeGen::generateStencilClasses(
 
       // Generate `make_multistage`
       ssMS << "gridtools::make_multistage(gridtools::enumtype::execute<gridtools::enumtype::";
-      if(!useParallelEP_ && multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Parallel)
+      if(!codeGenOptions_.useParallelEP_ &&
+         multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Parallel)
         ssMS << iir::LoopOrderKind::LK_Forward << " /*parallel*/ ";
       else
         ssMS << multiStage.getLoopOrder();
@@ -936,11 +937,7 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   }
 
   // Generate globals
-  std::string globals = "";
-  if(context.size() > 0) {
-    const auto& globalsMap = context.begin()->second->getIIR()->getGlobalVariableMap();
-    globals = generateGlobals(globalsMap, "gridtools");
-  }
+  std::string globals = generateGlobals(context, "gridtools");
 
   // If we need more than 20 elements in boost::mpl containers, we need to increment to the
   // nearest multiple of ten

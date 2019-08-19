@@ -28,6 +28,15 @@ size_t CodeGen::getVerticalTmpHaloSizeForMultipleStencils(
              : 0;
 }
 
+std::string
+CodeGen::generateGlobals(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& context,
+                         std::string namespace_) {
+  if(context.size() > 0) {
+    const auto& globalsMap = context.begin()->second->getIIR()->getGlobalVariableMap();
+    return generateGlobals(globalsMap, namespace_);
+  }
+  return "";
+}
 std::string CodeGen::generateGlobals(const sir::GlobalVariableMap& globalsMap,
                                      std::string namespace_) const {
 

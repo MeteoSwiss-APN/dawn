@@ -34,19 +34,19 @@ namespace dawn {
 class PassInlining : public Pass {
 public:
   /// @brief Inlining strategies
-  enum class InlineStrategyKind {
-    IK_InlineProcedures,    ///< Inline functions with no return
-    IK_ComputationsOnTheFly ///< Inline stencil functions as computations on the fly
+  enum class InlineStrategy {
+    InlineProcedures,    ///< Inline functions with no return
+    ComputationsOnTheFly ///< Inline stencil functions as computations on the fly
   };
 
-  PassInlining(bool activate, InlineStrategyKind strategy);
+  PassInlining(bool activate, InlineStrategy strategy);
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
 
 private:
   bool activate_;
-  InlineStrategyKind strategy_;
+  InlineStrategy strategy_;
 };
 
 } // namespace dawn
