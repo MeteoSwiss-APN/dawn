@@ -409,8 +409,7 @@ StencilMetaInformation::getStencilFunctionInstantiation(
   return it->second;
 }
 
-void StencilMetaInformation::setAccessIDNamePair(int accessID, const std::string& name) {
-  printf("DBG StencilMetaInformation: accessID %d\n", accessID);
+void StencilMetaInformation::setAccessIDNamePair(int accessID, const std::string& name) {  
   AccessIDToNameMap_.emplace(accessID, name);
 }
 
@@ -583,8 +582,7 @@ int StencilMetaInformation::getStencilIDFromStencilCallStmt(
 }
 
 void StencilMetaInformation::insertStencilCallStmt(std::shared_ptr<StencilCallDeclStmt> stmt,
-                                                   int stencilID) {
-  printf("DBG insertStencilCallStmt: sencilID %d\n", stencilID);                                                   
+                                                   int stencilID) {                                                     
   StencilIDToStencilCallMap_.add(stencilID, stmt);
 }
 
