@@ -62,9 +62,8 @@ static std::string makeKLoop(const std::string dom, bool isBackward,
                     : makeLoopImpl(iir::Extent{}, "k", lower, upper, "<=", "++");
 }
 
-CXXNaiveCodeGen::CXXNaiveCodeGen(
-    std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& ctx,
-    DiagnosticsEngine& engine, int maxHaloPoint)
+CXXNaiveCodeGen::CXXNaiveCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
+                                 int maxHaloPoint)
     : CodeGen(ctx, engine, maxHaloPoint) {}
 
 CXXNaiveCodeGen::~CXXNaiveCodeGen() {}
@@ -533,14 +532,14 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
 
   // Generate code for StencilInstantiations
   std::map<std::string, std::string> stencils;
-  for(const auto& nameStencilCtxPair : context) {
+  for(const auto& nameStencilCtxPair : context_) {
     std::string code = generateStencilInstantiation(nameStencilCtxPair.second);
     if(code.empty())
       return nullptr;
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
   }
 
-  std::string globals = generateGlobals(context, "cxxnaive");
+  std::string globals = generateGlobals(context_, "cxxnaive");
 
   std::vector<std::string> ppDefines;
   auto makeDefine = [](std::string define, int value) {
@@ -558,7 +557,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
   CodeGen::addMplIfdefs(ppDefines, 30);
   DAWN_LOG(INFO) << "Done generating code";
 
-  return make_unique<TranslationUnit>(context.begin()->second->getMetaData().getFileName(),
+  return make_unique<TranslationUnit>(context_.begin()->second->getMetaData().getFileName(),
                                       std::move(ppDefines), std::move(stencils),
                                       std::move(globals));
 }

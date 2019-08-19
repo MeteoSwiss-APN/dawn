@@ -35,9 +35,8 @@ namespace dawn {
 namespace codegen {
 namespace cuda {
 
-CudaCodeGen::CudaCodeGen(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& ctx,
-                         DiagnosticsEngine& engine, int maxHaloPoints, int nsms, int maxBlocksPerSM,
-                         std::string domainSize)
+CudaCodeGen::CudaCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
+                         int maxHaloPoints, int nsms, int maxBlocksPerSM, std::string domainSize)
     : CodeGen(ctx, engine, maxHaloPoints), codeGenOptions{nsms, maxBlocksPerSM, domainSize} {}
 
 CudaCodeGen::~CudaCodeGen() {}
@@ -665,7 +664,7 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
 
   // Generate code for StencilInstantiations
   std::map<std::string, std::string> stencils;
-  for(const auto& nameStencilCtxPair : context) {
+  for(const auto& nameStencilCtxPair : context_) {
     std::shared_ptr<iir::StencilInstantiation> origSI = nameStencilCtxPair.second;
     // TODO the clone seems to be broken
     //    std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = origSI->clone();
@@ -677,7 +676,7 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
   }
 
-  std::string globals = generateGlobals(context, "cuda");
+  std::string globals = generateGlobals(context_, "cuda");
 
   std::vector<std::string> ppDefines;
   auto makeDefine = [](std::string define, int value) {
@@ -700,7 +699,7 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
   DAWN_LOG(INFO) << "Done generating code";
 
   // TODO missing the BC
-  return make_unique<TranslationUnit>(context.begin()->second->getMetaData().getFileName(),
+  return make_unique<TranslationUnit>(context_.begin()->second->getMetaData().getFileName(),
                                       std::move(ppDefines), std::move(stencils),
                                       std::move(globals));
 }

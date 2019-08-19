@@ -34,8 +34,8 @@ namespace dawn {
 namespace codegen {
 namespace gt {
 
-GTCodeGen::GTCodeGen(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& ctx,
-                     DiagnosticsEngine& engine, bool useParallelEP, int maxHaloPoints)
+GTCodeGen::GTCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
+                     bool useParallelEP, int maxHaloPoints)
     : CodeGen(ctx, engine, maxHaloPoints),
       mplContainerMaxSize_(20), codeGenOptions_{useParallelEP} {}
 
@@ -928,7 +928,7 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
 
   // Generate StencilInstantiations
   std::map<std::string, std::string> stencils;
-  for(const auto& nameStencilCtxPair : context) {
+  for(const auto& nameStencilCtxPair : context_) {
     std::string code = generateStencilInstantiation(nameStencilCtxPair.second);
 
     if(code.empty())
@@ -937,7 +937,7 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   }
 
   // Generate globals
-  std::string globals = generateGlobals(context, "gridtools");
+  std::string globals = generateGlobals(context_, "gridtools");
 
   // If we need more than 20 elements in boost::mpl containers, we need to increment to the
   // nearest multiple of ten
@@ -964,7 +964,7 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
 
   DAWN_LOG(INFO) << "Done generating code";
 
-  return make_unique<TranslationUnit>(context.begin()->second->getMetaData().getFileName(),
+  return make_unique<TranslationUnit>(context_.begin()->second->getMetaData().getFileName(),
                                       std::move(ppDefines), std::move(stencils),
                                       std::move(globals));
 }

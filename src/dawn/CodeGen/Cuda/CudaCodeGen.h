@@ -41,9 +41,8 @@ class CudaCodeGen : public CodeGen {
 
 public:
   ///@brief constructor
-  CudaCodeGen(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& ctx,
-              DiagnosticsEngine& engine, int maxHaloPoints, int nsms, int maxBlocksPerSM,
-              std::string domainSize);
+  CudaCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine, int maxHaloPoints,
+              int nsms, int maxBlocksPerSM, std::string domainSize);
   virtual ~CudaCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 

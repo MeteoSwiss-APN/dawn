@@ -28,9 +28,7 @@ size_t CodeGen::getVerticalTmpHaloSizeForMultipleStencils(
              : 0;
 }
 
-std::string
-CodeGen::generateGlobals(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& context,
-                         std::string namespace_) {
+std::string CodeGen::generateGlobals(stencilInstantiationContext& context, std::string namespace_) {
   if(context.size() > 0) {
     const auto& globalsMap = context.begin()->second->getIIR()->getGlobalVariableMap();
     return generateGlobals(globalsMap, namespace_);
@@ -147,7 +145,7 @@ void CodeGen::generateBCHeaders(std::vector<std::string>& ppDefines) const {
         return res || si.second->getMetaData().hasBC();
       };
 
-  if(std::accumulate(context.begin(), context.end(), false, hasBCFold)) {
+  if(std::accumulate(context_.begin(), context_.end(), false, hasBCFold)) {
     ppDefines.push_back("#include <gridtools/boundary-conditions/boundary.hpp>\n");
   }
 }

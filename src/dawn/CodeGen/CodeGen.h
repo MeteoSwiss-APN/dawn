@@ -34,12 +34,14 @@ extern std::map<Key, Value> orderMap(const std::unordered_map<Key, Value>& umap)
 
   return m;
 }
+using stencilInstantiationContext =
+    std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>;
 
 /// @brief Interface of the backend code generation
 /// @ingroup codegen
 class CodeGen {
 protected:
-  std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& context;
+  stencilInstantiationContext context_;
   DiagnosticsEngine& diagEngine;
   struct codeGenOption {
     int MaxHaloPoints;
@@ -75,9 +77,8 @@ protected:
   const std::string bigWrapperMetadata_ = "m_meta_data";
 
 public:
-  CodeGen(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& ctx,
-          DiagnosticsEngine& engine, int maxHaloPoints)
-      : context(ctx), diagEngine(engine), codeGenOptions{maxHaloPoints} {};
+  CodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine, int maxHaloPoints)
+      : context_(ctx), diagEngine(engine), codeGenOptions{maxHaloPoints} {};
   virtual ~CodeGen() {}
 
   /// @brief Generate code
@@ -98,9 +99,7 @@ public:
                                   Class& stencilWrapperClass,
                                   const sir::GlobalVariableMap& globalsMap,
                                   const CodeGenProperties& codeGenProperties) const;
-  virtual std::string
-  generateGlobals(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& context,
-                  std::string namespace_);
+  virtual std::string generateGlobals(stencilInstantiationContext& context, std::string namespace_);
   virtual std::string generateGlobals(const sir::GlobalVariableMap& globalsMaps,
                                       std::string namespace_) const;
   void generateBCHeaders(std::vector<std::string>& ppDefines) const;
