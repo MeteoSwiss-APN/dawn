@@ -73,7 +73,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
 
   std::stringstream ssSW;
 
-  Namespace cxxnaiveNamespace("cxxnaive_dawn", ssSW);		
+  Namespace cxxnaiveNamespace("dawn::cxxnaive", ssSW);		
 
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
