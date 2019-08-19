@@ -411,7 +411,7 @@ StencilMetaInformation::getStencilFunctionInstantiation(
 
 void StencilMetaInformation::setAccessIDNamePair(int accessID, const std::string& name) {
   printf("DBG StencilMetaInformation: accessID %d\n", accessID);
-  AccessIDToNameMap_.add(accessID, name);
+  AccessIDToNameMap_.emplace(accessID, name);
 }
 
 int StencilMetaInformation::insertField(FieldAccessType type, const std::string& name,
