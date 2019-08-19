@@ -30,8 +30,6 @@ namespace iir {
 class StencilInstantiation;
 }
 
-class OptimizerContext;
-
 namespace codegen {
 namespace cuda {
 
@@ -43,9 +41,17 @@ class CudaCodeGen : public CodeGen {
 
 public:
   ///@brief constructor
-  CudaCodeGen(OptimizerContext* context);
+  CudaCodeGen(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& ctx,
+              DiagnosticsEngine& engine, int maxHaloPoints, int nsms, int maxBlocksPerSM,
+              std::string domainSize);
   virtual ~CudaCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
+
+  struct CudaCodeGenOptions {
+    int nsms;
+    int maxBlocksPerSM;
+    std::string domainSize;
+  };
 
 private:
   static std::string
@@ -115,6 +121,8 @@ private:
 
   std::string generateStencilInstantiation(
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
+
+  CudaCodeGenOptions codeGenOptions;
 };
 } // namespace cuda
 } // namespace codegen

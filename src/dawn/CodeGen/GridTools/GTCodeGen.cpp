@@ -20,9 +20,9 @@
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
+#include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringUtil.h"
 #include <boost/optional.hpp>
@@ -34,7 +34,10 @@ namespace dawn {
 namespace codegen {
 namespace gt {
 
-GTCodeGen::GTCodeGen(OptimizerContext* context) : CodeGen(context), mplContainerMaxSize_(20) {}
+GTCodeGen::GTCodeGen(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& ctx,
+                     DiagnosticsEngine& engine, bool useParallelEP, int maxHaloPoints)
+    : CodeGen(ctx, engine, maxHaloPoints), mplContainerMaxSize_(20), useParallelEP_(useParallelEP) {
+}
 
 GTCodeGen::~GTCodeGen() {}
 
@@ -428,7 +431,7 @@ void GTCodeGen::generateStencilClasses(
                               stencilInstantiation->getMetaData().getStencilLocation());
       diag << "empty stencil '" << stencilInstantiation->getName()
            << "', this would result in invalid gridtools code";
-      context_->getDiagnostics().report(diag);
+      diagEngine.report(diag);
       return;
     }
 
@@ -510,7 +513,7 @@ void GTCodeGen::generateStencilClasses(
           DiagnosticsBuilder diag(DiagnosticsKind::Error, stencilFun->getStencilFunction()->Loc);
           diag << "no storages referenced in stencil function '" << stencilFun->getName()
                << "', this would result in invalid gridtools code";
-          context_->getDiagnostics().report(diag);
+          diagEngine.report(diag);
           return;
         }
 
@@ -599,8 +602,7 @@ void GTCodeGen::generateStencilClasses(
 
       // Generate `make_multistage`
       ssMS << "gridtools::make_multistage(gridtools::enumtype::execute<gridtools::enumtype::";
-      if(!context_->getOptions().UseParallelEP &&
-         multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Parallel)
+      if(!useParallelEP_ && multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Parallel)
         ssMS << iir::LoopOrderKind::LK_Forward << " /*parallel*/ ";
       else
         ssMS << multiStage.getLoopOrder();
@@ -669,7 +671,7 @@ void GTCodeGen::generateStencilClasses(
                                   stencilInstantiation->getMetaData().getStencilLocation());
           diag << "no storages referenced in stencil '" << stencilInstantiation->getName()
                << "', this would result in invalid gridtools code";
-          context_->getDiagnostics().report(diag);
+          diagEngine.report(diag);
         }
 
         std::size_t accessorIdx = 0;
@@ -925,7 +927,7 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
 
   // Generate StencilInstantiations
   std::map<std::string, std::string> stencils;
-  for(const auto& nameStencilCtxPair : context_->getStencilInstantiationMap()) {
+  for(const auto& nameStencilCtxPair : context) {
     std::string code = generateStencilInstantiation(nameStencilCtxPair.second);
 
     if(code.empty())
@@ -934,10 +936,14 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   }
 
   // Generate globals
-  std::string globals = generateGlobals(context_->getSIR(), "gridtools");
+  std::string globals = "";
+  if(context.size() > 0) {
+    const auto& globalsMap = context.begin()->second->getIIR()->getGlobalVariableMap();
+    globals = generateGlobals(globalsMap, "gridtools");
+  }
 
-  // If we need more than 20 elements in boost::mpl containers, we need to increment to the nearest
-  // multiple of ten
+  // If we need more than 20 elements in boost::mpl containers, we need to increment to the
+  // nearest multiple of ten
   // http://www.boost.org/doc/libs/1_61_0/libs/mpl/doc/refmanual/limit-vector-size.html
   if(mplContainerMaxSize_ > 20) {
     mplContainerMaxSize_ += (10 - mplContainerMaxSize_ % 10);
@@ -955,14 +961,15 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
   ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T GT");
 
-  CodeGen::addMplIfdefs(ppDefines, mplContainerMaxSize_, context_->getOptions().MaxHaloPoints);
+  CodeGen::addMplIfdefs(ppDefines, mplContainerMaxSize_);
 
   generateBCHeaders(ppDefines);
 
   DAWN_LOG(INFO) << "Done generating code";
 
-  return make_unique<TranslationUnit>(context_->getSIR()->Filename, std::move(ppDefines),
-                                      std::move(stencils), std::move(globals));
+  return make_unique<TranslationUnit>(context.begin()->second->getMetaData().getFileName(),
+                                      std::move(ppDefines), std::move(stencils),
+                                      std::move(globals));
 }
 
 std::vector<std::string> GTCodeGen::buildFieldTemplateNames(

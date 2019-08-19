@@ -34,7 +34,7 @@ namespace dawn {
 class PassInlining : public Pass {
 public:
   /// @brief Inlining strategies
-  enum InlineStrategyKind {
+  enum class InlineStrategyKind {
     IK_InlineProcedures,    ///< Inline functions with no return
     IK_ComputationsOnTheFly ///< Inline stencil functions as computations on the fly
   };

@@ -27,7 +27,8 @@ namespace codegen {
 namespace cuda {
 MSCodeGen::MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
                      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-                     const CacheProperties& cacheProperties)
+                     const CacheProperties& cacheProperties,
+                     CudaCodeGen::CudaCodeGenOptions& options)
     : ss_(ss), ms_(ms), stencilInstantiation_(stencilInstantiation),
       metadata_(stencilInstantiation->getMetaData()), cacheProperties_(cacheProperties),
       useCodeGenTemporaries_(CodeGeneratorHelper::useTemporaries(
@@ -35,7 +36,7 @@ MSCodeGen::MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStag
                              ms->hasMemAccessTemporaries()),
       cudaKernelName_(CodeGeneratorHelper::buildCudaKernelName(stencilInstantiation_, ms_)),
       blockSize_(stencilInstantiation_->getIIR()->getBlockSize()),
-      solveKLoopInParallel_(CodeGeneratorHelper::solveKLoopInParallel(ms_)) {}
+      solveKLoopInParallel_(CodeGeneratorHelper::solveKLoopInParallel(ms_)), options_(options) {}
 
 void MSCodeGen::generateIJCacheDecl(MemberFunction& kernel) const {
   for(const auto& cacheP : ms_->getCaches()) {
@@ -698,10 +699,10 @@ void MSCodeGen::generateCudaKernelCode() {
       blockSize_[0] * (blockSize_[1] + maxExtents[1].Plus - maxExtents[1].Minus +
                        (maxExtents[0].Minus < 0 ? 1 : 0) + (maxExtents[0].Plus > 0 ? 1 : 0));
 
-  int nSM = stencilInstantiation_->getOptimizerContext()->getOptions().nsms;
-  int maxBlocksPerSM = stencilInstantiation_->getOptimizerContext()->getOptions().maxBlocksPerSM;
+  int nSM = options_.nsms;
+  int maxBlocksPerSM = options_.maxBlocksPerSM;
 
-  std::string domain_size = stencilInstantiation_->getOptimizerContext()->getOptions().domain_size;
+  std::string domain_size = options_.domainSize;
   if(nSM > 0 && !domain_size.empty()) {
     if(maxBlocksPerSM <= 0) {
       throw std::runtime_error("--max-blocks-sm must be defined");

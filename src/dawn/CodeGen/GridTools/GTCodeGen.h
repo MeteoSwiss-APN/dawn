@@ -24,8 +24,6 @@
 
 namespace dawn {
 
-class OptimizerContext;
-
 namespace iir {
 class StencilInstantiation;
 class Stage;
@@ -39,7 +37,8 @@ namespace gt {
 /// @ingroup gt
 class GTCodeGen : public CodeGen {
 public:
-  GTCodeGen(OptimizerContext* context);
+  GTCodeGen(std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>& ctx,
+            DiagnosticsEngine& engine, bool useParallelEP, int maxHaloPoints);
   virtual ~GTCodeGen();
 
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
@@ -119,6 +118,9 @@ private:
 
   /// Maximum needed vector size of boost::fusion containers
   std::size_t mplContainerMaxSize_;
+
+  /// Use the parallel keyword for mulistages
+  bool useParallelEP_;
 };
 
 } // namespace gt

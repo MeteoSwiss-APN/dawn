@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_COMPILER_DIAGNOSTICMESSAGE_H
-#define DAWN_COMPILER_DIAGNOSTICMESSAGE_H
+#ifndef DAWN_SUPPORT_DIAGNOSTICMESSAGE_H
+#define DAWN_SUPPORT_DIAGNOSTICMESSAGE_H
 
 #include "dawn/Support/SourceLocation.h"
 #include <sstream>
