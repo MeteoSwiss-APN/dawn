@@ -134,7 +134,14 @@ add_subdirectory(src)
 add_subdirectory(cmake)
 
 if(DAWN_PYTHON)
+  if(NOT DEFINED PYTHON_EXECUTABLE)
+    find_package(PythonInterp 3.4 REQUIRED)
+  endif()
   add_subdirectory(python)
+endif()
+
+if(DAWN_EXAMPLES)
+  add_subdirectory(examples)
 endif()
 
 if(DAWN_TESTING)

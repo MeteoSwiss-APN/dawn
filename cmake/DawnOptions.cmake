@@ -22,13 +22,17 @@ endif()
 # Building
 option(DAWN_ASSERTS "Enable asserts" ${BUILD_IS_NOT_RELEASE})
 option(DAWN_USE_CCACHE "Use compile cache (ccache)" ON)
-option(DAWN_PYTHON "Build and install the Python module" ON)
+option(DAWN_PYTHON "Build and install the Python module interface to HIR" ON)
+option(DAWN_JAVA "Build and install the java interface to HIR" ON)
 
 # Testing
 option(DAWN_TESTING "Enable testing" ON)
 
 # Documentation
 option(DAWN_DOCUMENTATION "Enable documentation" OFF)
+
+# Build examples
+option(DAWN_EXAMPLES "Compile the examples" OFF)
 
 # Export options for meta projects
 yoda_export_options(DAWN 
