@@ -24,7 +24,7 @@ bundle/CMakeFiles/*
 # Ignore gh-pages folder
 gh-pages*
 
-#ignore vscodes
+# Ignore IDEs
 .idea
 .vscode/
 **/compile_commands.json
