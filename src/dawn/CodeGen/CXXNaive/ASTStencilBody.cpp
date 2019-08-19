@@ -94,7 +94,9 @@ void ASTStencilBody::visit(const std::shared_ptr<UnaryOperator>& expr) { Base::v
 
 void ASTStencilBody::visit(const std::shared_ptr<BinaryOperator>& expr) { Base::visit(expr); }
 
-void ASTStencilBody::visit(const std::shared_ptr<AssignmentExpr>& expr) { Base::visit(expr); }
+void ASTStencilBody::visit(const std::shared_ptr<AssignmentExpr>& expr) { 
+  Base::visit(expr); 
+  }
 
 void ASTStencilBody::visit(const std::shared_ptr<TernaryOperator>& expr) { Base::visit(expr); }
 

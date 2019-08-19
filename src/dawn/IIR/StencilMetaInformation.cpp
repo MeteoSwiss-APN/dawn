@@ -346,6 +346,7 @@ const std::unordered_map<int, int>& StencilMetaInformation::getStmtIDToAccessIDM
 }
 
 void StencilMetaInformation::insertExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID) {
+  DAWN_ASSERT(!ExprIDToAccessIDMap_.count(expr->getID()));
   ExprIDToAccessIDMap_.emplace(expr->getID(), accessID);
 }
 
@@ -409,7 +410,8 @@ StencilMetaInformation::getStencilFunctionInstantiation(
 }
 
 void StencilMetaInformation::setAccessIDNamePair(int accessID, const std::string& name) {
-  AccessIDToNameMap_.emplace(accessID, name);
+  printf("DBG StencilMetaInformation: accessID %d\n", accessID);
+  AccessIDToNameMap_.add(accessID, name);
 }
 
 int StencilMetaInformation::insertField(FieldAccessType type, const std::string& name,
@@ -417,6 +419,7 @@ int StencilMetaInformation::insertField(FieldAccessType type, const std::string&
   int accessID = UIDGenerator::getInstance()->get();
   DAWN_ASSERT(isFieldType(type));
   insertAccessOfType(type, accessID, name);
+  DAWN_ASSERT(!fieldIDToInitializedDimensionsMap_.count(accessID));
   fieldIDToInitializedDimensionsMap_.emplace(accessID, fieldDimensions);
 
   return accessID;
@@ -430,6 +433,7 @@ int StencilMetaInformation::insertTmpField(FieldAccessType type, const std::stri
 
   DAWN_ASSERT(isFieldType(type));
   insertAccessOfType(type, accessID, fname);
+  DAWN_ASSERT(!fieldIDToInitializedDimensionsMap_.count(accessID));
   fieldIDToInitializedDimensionsMap_.emplace(accessID, fieldDimensions);
 
   return accessID;
@@ -580,7 +584,8 @@ int StencilMetaInformation::getStencilIDFromStencilCallStmt(
 
 void StencilMetaInformation::insertStencilCallStmt(std::shared_ptr<StencilCallDeclStmt> stmt,
                                                    int stencilID) {
-  StencilIDToStencilCallMap_.emplace(stencilID, stmt);
+  printf("DBG insertStencilCallStmt: sencilID %d\n", stencilID);                                                   
+  StencilIDToStencilCallMap_.add(stencilID, stmt);
 }
 
 } // namespace iir
