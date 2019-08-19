@@ -27,7 +27,8 @@ sys_path.insert(1, __dawn_install_protobuf_module__)
 #
 # Export all SIR classes
 #
-from .SIR_pb2 import *
+from SIR.SIR_pb2 import *
+from SIR.statements_pb2 import *
 from google.protobuf import json_format
 
 ExprType = TypeVar('Expr',
@@ -107,29 +108,29 @@ def makeType(builtin_type_or_name, is_const: bool = False, is_volatile: bool = F
     return t
 
 
-def makeAST(root: StmtType) -> AST:
+def makeAST(root: List[StmtType]) -> AST:
     """ Create an AST
 
     :param root:    Root node of the AST (needs to be of type BlockStmt)
     """
     ast = AST()
-    if isinstance(root, BlockStmt) or (
-        isinstance(root, Stmt) and root.WhichOneof("stmt") == "block_stmt"):
-        ast.root.CopyFrom(makeStmt(root))
-    else:
-        raise SIRError("root statement of an AST needs to be a BlockStmt")
+
+    blockStmt = makeBlockStmt( root )
+
+    ast.root.CopyFrom(makeStmt(blockStmt))
     return ast
 
-
-def makeField(name: str, is_temporary: bool = False) -> Field:
+def makeField(name: str, is_temporary: bool = False, dimensions: List[int] = [1,1,1]) -> Field:
     """ Create a Field
 
     :param name:         Name of the field
     :param is_temporary: Is it a temporary field?
+    :param dimensions:   mask list to identify dimensions contained by the field
     """
     field = Field()
     field.name = name
     field.is_temporary = is_temporary
+    field.field_dimensions.extend(dimensions)
     return field
 
 
@@ -166,6 +167,39 @@ def makeInterval(lower_level, upper_level, lower_offset: int = 0,
     interval.upper_offset = upper_offset
     return interval
 
+def makeStencil(name: str, ast: AST, fields: List[Field]) -> Stencil:
+    """ Create a Stencil
+
+    :param name:      Name of the stencil
+    :param ast:       AST with stmts of the stencil
+    :param fields:    list of input-output fields
+    """
+
+    stencil = Stencil()
+    stencil.name = name
+    stencil.ast.CopyFrom(ast)
+    stencil.fields.extend(fields)
+
+    return stencil
+
+def makeSIR(filename: str, stencils: List[Stencil], functions: List[StencilFunction] = [],
+                                                global_variables: GlobalVariableMap = None) -> SIR:
+    """ Create a SIR
+
+    :param filename:          Source filename
+    :param stencils:          list of stencils that compose the SIR
+    :param functions:         list of functions used in the SIR
+    :param global_variables:  global variable map used in the SIR
+    """
+
+    sir = SIR()
+    sir.filename = filename
+    sir.stencils.extend(stencils)
+    sir.stencil_functions.extend(functions)
+    if global_variables:
+        sir.global_variables.CopyFrom(global_variables)
+
+    return sir
 
 def makeStencilCall(callee: str, arguments: List[Field]) -> StencilCall:
     """ Create a StencilCall
@@ -225,7 +259,7 @@ def makeExpr(expr: ExprType):
     elif isinstance(expr, VarAccessExpr):
         wrapped_expr.var_access_expr.CopyFrom(expr)
     elif isinstance(expr, FieldAccessExpr):
-        wrapped_expr.var_access_expr.CopyFrom(expr)
+        wrapped_expr.field_access_expr.CopyFrom(expr)
     elif isinstance(expr, LiteralAccessExpr):
         wrapped_expr.literal_access_expr.CopyFrom(expr)
     else:
@@ -252,7 +286,7 @@ def makeStmt(stmt: StmtType):
     elif isinstance(stmt, VarDeclStmt):
         wrapped_stmt.var_decl_stmt.CopyFrom(stmt)
     elif isinstance(stmt, VerticalRegionDeclStmt):
-        wrapped_stmt.var_decl_stmt.CopyFrom(stmt)
+        wrapped_stmt.vertical_region_decl_stmt.CopyFrom(stmt)
     elif isinstance(stmt, StencilCallDeclStmt):
         wrapped_stmt.var_decl_stmt.CopyFrom(stmt)
     elif isinstance(stmt, BoundaryConditionDeclStmt):
@@ -342,7 +376,17 @@ def makeVerticalRegionDeclStmt(vertical_region: VerticalRegion) -> VerticalRegio
     stmt.vertical_region.CopyFrom(vertical_region)
     return stmt
 
+def makeVerticalRegionDeclStmt(ast: AST, interval: Interval,
+                       loop_order: VerticalRegion.LoopOrder) -> VerticalRegionDeclStmt:
+    """ Create a VerticalRegionDeclStmt
 
+    :param vertical_region:   Vertical region.
+    """
+    stmt = VerticalRegionDeclStmt()
+    stmt.vertical_region.CopyFrom(makeVerticalRegion(ast, interval, loop_order))
+    return stmt
+
+ 
 def makeBoundaryConditionDeclStmt(functor: str,
                                   fields: List[Field]) -> BoundaryConditionDeclStmt:
     """ Create a BoundaryConditionDeclStmt
@@ -400,6 +444,14 @@ def makeBinaryOperator(left: ExprType, op: str, right: ExprType) -> BinaryOperat
     expr.right.CopyFrom(makeExpr(right))
     return expr
 
+def makeAssignmentStmt(left: ExprType, right: ExprType, op: str = "=") -> ExprStmt:
+    """ Create an AssignmentStmt
+
+    :param left:    Left-hand side.
+    :param right:   Right-hand side.
+    :param op:      Operation (e.g "=" or "+=").
+    """
+    return makeExprStmt( makeAssignmentExpr(left, right, op))
 
 def makeAssignmentExpr(left: ExprType, right: ExprType, op: str = "=") -> AssignmentExpr:
     """ Create an AssignmentExpr
@@ -546,6 +598,8 @@ __all__ = [
     'makeVerticalRegion',
     'StencilCall',
     'makeStencilCall',
+    'makeStencil',
+    'makeSIR',
 
     # Stmt
     'Stmt',
@@ -576,6 +630,7 @@ __all__ = [
     'makeBinaryOperator',
     'AssignmentExpr',
     'makeAssignmentExpr',
+    'makeAssignmentStmt',
     'TernaryOperator',
     'makeTernaryOperator',
     'FunCallExpr',

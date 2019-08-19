@@ -38,3 +38,4 @@ target_include_directories(DawnShared SYSTEM INTERFACE $<BUILD_INTERFACE:${Boost
 
 # Export the targets
 install(EXPORT DawnTargets NAMESPACE Dawn:: DESTINATION ${DAWN_INSTALL_CMAKE_DIR})
+export(EXPORT DawnTargets NAMESPACE Dawn:: FILE ${PROJECT_BINARY_DIR}/DawnTargets.cmake)

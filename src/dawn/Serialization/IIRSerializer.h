@@ -16,7 +16,7 @@
 #define DAWN_IIR_IIRSERIALIZER_H
 
 #include "dawn/IIR/IIR.h"
-#include "dawn/IIR/IIR.pb.h"
+#include "dawn/IIR/IIR/IIR.pb.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include <memory>
 #include <string>
