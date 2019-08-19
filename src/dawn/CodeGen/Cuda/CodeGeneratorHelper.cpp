@@ -75,7 +75,7 @@ std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(
       if(!(usedDim++))
         continue;
       if(funArg == CodeGeneratorHelper::FunctionArgType::FT_Caller) {
-        strides.push_back("m_" + fieldName + ".strides()[" + std::to_string(i) + "]");
+        strides.push_back(fieldName + "_ds.strides()[" + std::to_string(i) + "]");
       } else {
         strides.push_back("const int stride_" + CodeGeneratorHelper::indexIteratorName(dims) + "_" +
                           std::to_string(i));

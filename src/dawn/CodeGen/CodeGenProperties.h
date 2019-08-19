@@ -81,7 +81,8 @@ public:
   bool hasAllocatedFields() const;
 
   /// @brief get the type associate to parameter with name paramName
-  std::string getParamType(const std::string paramName) const;
+  std::string getParamType(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+                           const std::string paramName) const;
 
   /// @brief stencil properties map getter
   std::unordered_map<std::string, std::shared_ptr<StencilProperties>>&
@@ -115,7 +116,7 @@ public:
   const std::unordered_map<std::string, std::string>& getParameterNameToType() const;
 
   /// @brief get the parameter type
-  std::string getParamType(const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
+  std::string getParamType(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                            const iir::Stencil::FieldInfo& field) const;
 
 private:

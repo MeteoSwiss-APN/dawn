@@ -113,7 +113,7 @@ void CXXNaiveCodeGen::generateStencilWrapperRun(
 
   for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>()) {
     std::string name = metadata.getFieldNameFromAccessID(fieldID);
-    runMethod.addArg(codeGenProperties.getParamType(name) + " " + name);
+    runMethod.addArg(codeGenProperties.getParamType(stencilInstantiation, name) + " " + name);
   }
 
   runMethod.finishArgs();
@@ -147,8 +147,9 @@ void CXXNaiveCodeGen::generateStencilWrapperCtr(
   std::string ctrArgs("(dom");
   for(auto APIfieldID : APIFields) {
     StencilWrapperConstructor.addArg(
-        codeGenProperties.getParamType(metadata.getFieldNameFromAccessID(APIfieldID)) + "& " +
-        metadata.getFieldNameFromAccessID(APIfieldID));
+        codeGenProperties.getParamType(stencilInstantiation,
+                                       metadata.getFieldNameFromAccessID(APIfieldID)) +
+        "& " + metadata.getFieldNameFromAccessID(APIfieldID));
     ctrArgs += "," + metadata.getFieldNameFromAccessID(APIfieldID);
   }
 
@@ -277,7 +278,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
 
     stencilClass.addComment("Input/Output storages");
     for(auto it = nonTempFields.begin(); it != nonTempFields.end(); ++it) {
-      std::string type = codeGenProperties.getParamType((*it).second.Name);
+      std::string type = codeGenProperties.getParamType(stencilInstantiation, (*it).second.Name);
       stencilClass.addMember(type + "&", "m_" + (*it).second.Name);
     }
 
@@ -292,7 +293,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
       stencilClassCtr.addArg("const globals& globals_");
     }
     for(auto it = nonTempFields.begin(); it != nonTempFields.end(); ++it) {
-      std::string type = codeGenProperties.getParamType((*it).second.Name);
+      std::string type = codeGenProperties.getParamType(stencilInstantiation, (*it).second.Name);
       stencilClassCtr.addArg(type + "& " + (*it).second.Name + "_");
     }
 
@@ -309,7 +310,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
     stencilClassCtr.commit();
 
     // virtual dtor
-    MemberFunction stencilClassDtr = stencilClass.addDestructor();
+    MemberFunction stencilClassDtr = stencilClass.addDestructor(true);
     stencilClassDtr.startBody();
     stencilClassDtr.commit();
 
@@ -328,7 +329,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
     //
     MemberFunction stencilRunMethod = stencilClass.addMemberFunction("virtual void", "run", "");
     for(auto it = nonTempFields.begin(); it != nonTempFields.end(); ++it) {
-      std::string type = codeGenProperties.getParamType((*it).second.Name);
+      std::string type = codeGenProperties.getParamType(stencilInstantiation, (*it).second.Name);
       stencilRunMethod.addArg(type + "& " + (*it).second.Name + "_");
     }
 
@@ -344,7 +345,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
       // create all the data views
       for(auto it = nonTempFields.begin(); it != nonTempFields.end(); ++it) {
         const auto fieldName = (*it).second.Name;
-        std::string type = codeGenProperties.getParamType(fieldName);
+        std::string type = codeGenProperties.getParamType(stencilInstantiation, fieldName);
         stencilRunMethod.addStatement(c_gt() + "data_view<" + type + "> " + fieldName + "= " +
                                       c_gt() + "make_host_view(m_" + fieldName + ")");
         stencilRunMethod.addStatement("std::array<int,3> " + fieldName + "_offsets{0,0,0}");

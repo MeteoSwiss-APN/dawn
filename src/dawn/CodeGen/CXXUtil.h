@@ -521,8 +521,9 @@ struct Structure : public Statement {
   ///   template< templateName >
   ///   Structure(...) {...}
   /// @endcode
-  MemberFunction addDestructor() {
-    return addMemberFunction(Twine::createNull(), Twine("~") + StructureName);
+  MemberFunction addDestructor(bool isvirtual) {
+    return addMemberFunction(Twine::createNull(),
+                             (isvirtual ? Twine("virtual ~") : Twine("~")) + StructureName);
   }
 
   /// @brief Add a member function (mehtod)

@@ -67,10 +67,14 @@ void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
       codeGenProperties_.getStencilName(StencilContext::SC_Stencil, stencilID);
   ss_ << "m_" << stencilName + ".run";
 
-  RangeToString fieldArgs(",", "(", ")");
+  RangeToString fieldArgs(",", "(", ");");
 
   ss_ << fieldArgs(nonTempFields, [&](const std::pair<const int, iir::Stencil::FieldInfo>& fieldp) {
-    return fieldp.second.Name;
+    if(metadata_.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary, fieldp.first)) {
+      return "m_" + fieldp.second.Name;
+    } else {
+      return fieldp.second.Name;
+    }
   });
 
   ss_ << std::endl;
