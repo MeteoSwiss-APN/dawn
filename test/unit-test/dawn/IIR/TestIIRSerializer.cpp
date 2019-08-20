@@ -191,8 +191,8 @@ protected:
   virtual void TearDown() override { referenceInstantiaton.reset(); }
 
   std::shared_ptr<iir::StencilInstantiation> serializeAndDeserializeRef() {
-    return std::move(IIRSerializer::deserializeFromString(
-        IIRSerializer::serializeToString(referenceInstantiaton), context_));
+    return IIRSerializer::deserializeFromString(
+        IIRSerializer::serializeToString(referenceInstantiaton), context_);
   }
 
   std::shared_ptr<iir::StencilInstantiation> referenceInstantiaton;

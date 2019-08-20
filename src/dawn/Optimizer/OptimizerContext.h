@@ -25,7 +25,7 @@ namespace dawn {
 
 struct SIR;
 namespace sir {
-class Stencil;
+struct Stencil;
 }
 namespace iir {
 class StencilInstantiation;
