@@ -138,12 +138,11 @@ void CudaCodeGen::generateStencilWrapperPublicMemberFunctions(
 
   MemberFunction totalTime = stencilWrapperClass.addMemberFunction("double", "get_total_time");
   totalTime.startBody();
-  totalTime.addStatement("double res = 0;");
-  std::string s1 = RangeToString("\n", "", "")(stencilMembers, [](const std::string& member) {
-    return "res +=" + member + "->get_time();";
-  });
+  totalTime.addStatement("double res = 0");
+  std::string s1 = RangeToString("\n", "", "")(
+      stencilMembers, [](const std::string& member) { return "res +=" + member + "->get_time()"; });
   totalTime.addStatement(s1);
-  totalTime.addStatement("return res;");
+  totalTime.addStatement("return res");
   totalTime.commit();
 }
 
@@ -218,8 +217,6 @@ void CudaCodeGen::generateStencilClassMembers(
     IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& nonTempFields,
     IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& tempFields,
     std::shared_ptr<StencilProperties> stencilProperties) const {
-
-  auto& paramNameToType = stencilProperties->paramNameToType_;
 
   stencilClass.addComment("Members");
   stencilClass.addComment("Temporary storage typedefs");
@@ -376,30 +373,6 @@ void CudaCodeGen::generateStencilWrapperMembers(
   }
 }
 
-void CudaCodeGen::generateStencilWrapperSyncMethod(Class& stencilWrapperClass) const {
-  // synchronize storages method
-  // typical recursion methods that would look cleaner with a C++17 fold expression
-
-  MemberFunction syncStorageMethod =
-      stencilWrapperClass.addMemberFunction("void", "sync_storages", "typename S");
-  syncStorageMethod.addArg("S field");
-  syncStorageMethod.startBody();
-
-  syncStorageMethod.addStatement("field.sync();");
-
-  syncStorageMethod.commit();
-
-  MemberFunction syncStoragesMethod =
-      stencilWrapperClass.addMemberFunction("void", "sync_storages", "typename S0, typename ... S");
-  syncStoragesMethod.addArg("S0 f0, S... fields");
-  syncStoragesMethod.startBody();
-
-  syncStoragesMethod.addStatement("f0.sync();");
-  syncStoragesMethod.addStatement("sync_storages(fields...);");
-
-  syncStoragesMethod.commit();
-}
-
 void CudaCodeGen::generateStencilWrapperRun(
     Class& stencilWrapperClass,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
@@ -473,12 +446,12 @@ void CudaCodeGen::generateStencilRunMethod(
 
     const auto fields = multiStage.getOrderedFields();
 
-    auto nonTempFields = makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>(
-                                               [&](std::pair<int, iir::Field> const& p) {
-                                                 return !metadata.isAccessType(
-                                                     iir::FieldAccessType::FAT_StencilTemporary,
-                                                     p.second.getAccessID());
-                                               }));
+    auto msNonTempFields = makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>(
+                                                 [&](std::pair<int, iir::Field> const& p) {
+                                                   return !metadata.isAccessType(
+                                                       iir::FieldAccessType::FAT_StencilTemporary,
+                                                       p.second.getAccessID());
+                                                 }));
 
     auto tempStencilFieldsNonLocalCached = makeRange(
         fields,
@@ -499,7 +472,7 @@ void CudaCodeGen::generateStencilRunMethod(
             }));
 
     // create all the data views
-    for(const auto& fieldPair : nonTempFields) {
+    for(const auto& fieldPair : msNonTempFields) {
       // TODO have the same FieldInfo in ms level so that we dont need to query
       // stencilInstantiation
       // all the time for name and IsTmpField
@@ -515,7 +488,7 @@ void CudaCodeGen::generateStencilRunMethod(
                                     c_gt() + "make_device_view( m_" + fieldName + ")");
     }
 
-    DAWN_ASSERT(nonTempFields.size() > 0);
+    DAWN_ASSERT(msNonTempFields.size() > 0);
 
     iir::Extents maxExtents{0, 0, 0, 0, 0, 0};
     for(const auto& stage : iterateIIROver<iir::Stage>(*multiStagePtr)) {
@@ -580,7 +553,7 @@ void CudaCodeGen::generateStencilRunMethod(
     // TODO enable const auto& below and/or enable use RangeToString
     std::string args;
     int idx = 0;
-    for(const auto& fieldPair : nonTempFields) {
+    for(const auto& fieldPair : msNonTempFields) {
       const auto fieldName = metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
 
       args = args + (idx == 0 ? "" : ",") + "(" + fieldName + ".data()+" + fieldName +
@@ -588,7 +561,7 @@ void CudaCodeGen::generateStencilRunMethod(
              ".begin<1>(),0 ))";
       ++idx;
     }
-    DAWN_ASSERT(nonTempFields.size() > 0);
+    DAWN_ASSERT(msNonTempFields.size() > 0);
     for(const auto& fieldPair : tempMSFieldsNonLocalCached) {
       // in some cases (where there are no horizontal extents) we dont use the special tmp index
       // iterator, but rather a normal 3d field index iterator. In that case we pass temporaries in
@@ -605,7 +578,7 @@ void CudaCodeGen::generateStencilRunMethod(
     }
 
     std::vector<std::string> strides = CodeGeneratorHelper::generateStrideArguments(
-        nonTempFields, tempMSFieldsNonLocalCached, stencilInstantiation, multiStagePtr,
+        msNonTempFields, tempMSFieldsNonLocalCached, stencilInstantiation, multiStagePtr,
         CodeGeneratorHelper::FunctionArgType::FT_Caller);
 
     DAWN_ASSERT(!strides.empty());
