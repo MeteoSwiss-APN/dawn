@@ -181,7 +181,7 @@ std::string GTCodeGen::generateStencilInstantiation(
 
   std::stringstream ssSW, ssMS, tss;
 
-  Namespace gridtoolsNamespace("gridtools", ssSW);
+  Namespace gridtoolsNamespace("dawn::gridtools", ssSW);
 
   Class StencilWrapperClass(stencilInstantiation->getName(), ssSW);
   StencilWrapperClass.changeAccessibility(

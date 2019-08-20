@@ -58,7 +58,7 @@ std::string CudaCodeGen::generateStencilInstantiation(
 
   std::stringstream ssSW;
 
-  Namespace cudaNamespace("cuda", ssSW);
+  Namespace cudaNamespace("dawn::cuda", ssSW);
 
   // map from MS ID to cacheProperty
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
