@@ -146,15 +146,6 @@ void GTCodeGen::generateGridConstruction(MemberFunction& stencilConstructor,
                                   RangeToString(",", "{", "}")(gridLevels) + ")");
 }
 
-void GTCodeGen::generateSyncStorages(
-    MemberFunction& method,
-    const IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& stencilFields) const {
-  // synchronize storages method
-  for(const auto& fieldPair : stencilFields) {
-    method.addStatement(fieldPair.second.Name + ".sync()");
-  }
-}
-
 void GTCodeGen::generatePlaceholderDefinitions(
     Structure& stencilClass, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const sir::GlobalVariableMap& globalsMap, const CodeGenProperties& codeGenProperties) const {
@@ -225,34 +216,36 @@ std::string GTCodeGen::generateStencilInstantiation(
 
   Namespace gridtoolsNamespace("gridtools", ssSW);
 
-  Class StencilWrapperClass(stencilInstantiation->getName(), ssSW);
-  StencilWrapperClass.changeAccessibility(
+  Class stencilWrapperClass(stencilInstantiation->getName(), ssSW);
+  stencilWrapperClass.changeAccessibility(
       "public"); // The stencils should technically be private but nvcc doesn't like it ...
 
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
   CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
 
-  generateBoundaryConditionFunctions(StencilWrapperClass, stencilInstantiation);
+  generateBoundaryConditionFunctions(stencilWrapperClass, stencilInstantiation);
 
   // Generate placeholders
-  generatePlaceholderDefinitions(StencilWrapperClass, stencilInstantiation, globalsMap,
+  generatePlaceholderDefinitions(stencilWrapperClass, stencilInstantiation, globalsMap,
                                  codeGenProperties);
 
-  generateStencilClasses(stencilInstantiation, StencilWrapperClass, codeGenProperties);
+  generateStencilClasses(stencilInstantiation, stencilWrapperClass, codeGenProperties);
 
-  generateStencilWrapperMembers(StencilWrapperClass, stencilInstantiation, codeGenProperties);
+  generateStencilWrapperMembers(stencilWrapperClass, stencilInstantiation, codeGenProperties);
 
-  generateStencilWrapperCtr(StencilWrapperClass, stencilInstantiation, codeGenProperties);
+  generateStencilWrapperCtr(stencilWrapperClass, stencilInstantiation, codeGenProperties);
 
-  generateStencilWrapperRun(StencilWrapperClass, stencilInstantiation, codeGenProperties);
+  generateStencilWrapperSyncMethod(stencilWrapperClass);
+
+  generateStencilWrapperRun(stencilWrapperClass, stencilInstantiation, codeGenProperties);
 
   if(!globalsMap.empty()) {
-    generateGlobalsAPI(*stencilInstantiation, StencilWrapperClass, globalsMap, codeGenProperties);
+    generateGlobalsAPI(*stencilInstantiation, stencilWrapperClass, globalsMap, codeGenProperties);
   }
 
-  generateStencilWrapperPublicMemberFunctions(StencilWrapperClass, codeGenProperties);
+  generateStencilWrapperPublicMemberFunctions(stencilWrapperClass, codeGenProperties);
 
-  StencilWrapperClass.commit();
+  stencilWrapperClass.commit();
 
   gridtoolsNamespace.commit();
 
@@ -281,6 +274,16 @@ void GTCodeGen::generateStencilWrapperPublicMemberFunctions(
   });
   clearMeters << s;
   clearMeters.commit();
+
+  MemberFunction totalTime = stencilWrapperClass.addMemberFunction("double", "get_total_time");
+  totalTime.startBody();
+  totalTime.addStatement("double res = 0");
+  std::string s1 = RangeToString("\n", "", "")(stencilMembers, [](const std::string& member) {
+    return "res +=" + member + ".get_stencil()->get_time()";
+  });
+  totalTime.addStatement(s1);
+  totalTime.addStatement("return res");
+  totalTime.commit();
 }
 
 void GTCodeGen::generateStencilWrapperRun(
@@ -315,12 +318,23 @@ void GTCodeGen::generateStencilWrapperRun(
 
   // Generate the run method by generate code for the stencil description AST
   MemberFunction RunMethod = stencilWrapperClass.addMemberFunction("void", "run");
+
+  std::vector<std::string> apiFieldNames;
+
   for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>()) {
     std::string name = metadata.getFieldNameFromAccessID(fieldID);
-    RunMethod.addArg(codeGenProperties.getParamType(stencilInstantiation, name) + " " + name);
+    apiFieldNames.push_back(name);
+  }
+
+  for(const auto& fieldName : apiFieldNames) {
+    RunMethod.addArg(codeGenProperties.getParamType(stencilInstantiation, fieldName) + " " +
+                     fieldName);
   }
 
   RunMethod.startBody();
+
+  RangeToString apiFieldArgs(",", "", "");
+  RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
 
   ASTStencilDesc stencilDescCGVisitor(stencilInstantiation, codeGenProperties,
                                       stencilIDToRunArguments);
@@ -331,6 +345,7 @@ void GTCodeGen::generateStencilWrapperRun(
     RunMethod << stencilDescCGVisitor.getCodeAndResetStream();
   }
 
+  RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
   RunMethod.commit();
 }
 void GTCodeGen::generateStencilWrapperCtr(
@@ -897,9 +912,6 @@ void GTCodeGen::generateStencilClasses(
 
     // Construct grid
     generateGridConstruction(StencilConstructor, stencil, intervalDefinitions, codeGenProperties);
-
-    // generate sync storage calls
-    generateSyncStorages(StencilConstructor, nonTempFields);
 
     // Generate make_computation
     StencilConstructor.addComment("Computation");

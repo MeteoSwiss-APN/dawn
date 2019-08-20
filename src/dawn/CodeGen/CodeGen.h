@@ -52,6 +52,8 @@ protected:
                               const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
                               const CodeGenProperties& codeGenProperties) const;
 
+  void generateStencilWrapperSyncMethod(Class& stencilWrapperClass) const;
+
   void addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainerMaxSize,
                     int MaxHaloPoints) const;
 

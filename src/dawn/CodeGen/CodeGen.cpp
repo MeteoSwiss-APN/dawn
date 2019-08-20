@@ -233,6 +233,30 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
   return codeGenProperties;
 }
 
+void CodeGen::generateStencilWrapperSyncMethod(Class& stencilWrapperClass) const {
+  // synchronize storages method
+  // typical recursion methods that would look cleaner with a C++17 fold expression
+
+  MemberFunction syncStorageMethod =
+      stencilWrapperClass.addMemberFunction("void", "sync_storages", "typename S");
+  syncStorageMethod.addArg("S field");
+  syncStorageMethod.startBody();
+
+  syncStorageMethod.addStatement("field.sync()");
+
+  syncStorageMethod.commit();
+
+  MemberFunction syncStoragesMethod =
+      stencilWrapperClass.addMemberFunction("void", "sync_storages", "typename S0, typename ... S");
+  syncStoragesMethod.addArg("S0 f0, S... fields");
+  syncStoragesMethod.startBody();
+
+  syncStoragesMethod.addStatement("f0.sync()");
+  syncStoragesMethod.addStatement("sync_storages(fields...)");
+
+  syncStoragesMethod.commit();
+}
+
 std::string CodeGen::getStorageType(Array3i dimensions) {
   std::string storageType = "storage_";
   storageType += dimensions[0] ? "i" : "";
