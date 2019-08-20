@@ -1,5 +1,6 @@
 FROM ubuntu:latest
-
+LABEL maintainer="Carlos Osuna <Carlos.Osuna@meteoswiss.ch>"
+LABEL description="Dawn build stage"
 # Setup base environment
 RUN apt-get update && apt-get install -y \
     build-essential \
