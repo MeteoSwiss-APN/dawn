@@ -50,8 +50,8 @@ public:
   // The dimensions is an array of numberes in x,y and z describing if the field is allowed to have
   // extens in this dimension: [1,0,0] is a storage_i and cannot be accessed with field[j+1]
   struct FieldInfo {
-    FieldInfo(bool t, std::string name, Array3i dim, const Field& f)
-        : Name(name), Dimensions(dim), field(f), IsTemporary(t) {}
+    FieldInfo(bool t, std::string fieldName, Array3i dim, const Field& f)
+        : Name(fieldName), Dimensions(dim), field(f), IsTemporary(t) {}
 
     std::string Name;
     Array3i Dimensions;
@@ -181,9 +181,6 @@ public:
   Stencil(const StencilMetaInformation& metadata, sir::Attr attributes, int StencilID);
 
   Stencil(Stencil&&) = default;
-
-  Stencil& operator=(const Stencil&) = default;
-  Stencil& operator=(Stencil&&) = default;
   /// @}
 
   /// @brief clone the stencil returning a smart ptr

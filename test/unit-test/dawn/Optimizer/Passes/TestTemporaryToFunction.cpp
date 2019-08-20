@@ -59,7 +59,9 @@ protected:
 
     // Generate code
     std::unique_ptr<codegen::CodeGen> CG;
-    CG = make_unique<codegen::gt::GTCodeGen>(optimizer.get());
+    CG = make_unique<codegen::gt::GTCodeGen>(
+        optimizer->getStencilInstantiationMap(), optimizer->getDiagnostics(),
+        optimizer->getOptions().UseParallelEP, optimizer->getOptions().MaxHaloPoints);
     auto translationUnit = CG->generateCode();
 
     if(optimizer->getDiagnostics().hasDiags()) {

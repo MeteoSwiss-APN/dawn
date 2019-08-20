@@ -84,9 +84,6 @@ public:
   Stage(const StencilMetaInformation& metaData, int StageID);
 
   Stage(Stage&&) = default;
-
-  Stage& operator=(const Stage&) = default;
-  Stage& operator=(Stage&&) = default;
   /// @}
 
   std::unique_ptr<Stage> clone() const;

@@ -60,8 +60,6 @@ protected:
   /// @brief constructors
   /// @{
   virtual ~IIRNode() = default;
-  IIRNode() = default;
-  IIRNode(IIRNode&&) = default;
   /// @}
 
   const std::unique_ptr<Parent>* parent_ = nullptr;
