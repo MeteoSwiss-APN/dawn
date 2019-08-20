@@ -72,9 +72,6 @@ public:
   /// @{
   MultiStage(StencilMetaInformation& metadata, LoopOrderKind loopOrder);
   MultiStage(MultiStage&&) = default;
-
-  MultiStage& operator=(const MultiStage&) = default;
-  MultiStage& operator=(MultiStage&&) = default;
   /// @}
 
   std::unique_ptr<MultiStage> clone() const;

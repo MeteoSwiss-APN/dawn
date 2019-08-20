@@ -172,7 +172,6 @@ public:
                                bool isNested);
 
   StencilFunctionInstantiation(StencilFunctionInstantiation&&) = default;
-  StencilFunctionInstantiation& operator=(StencilFunctionInstantiation&&) = default;
 
   StencilFunctionInstantiation clone() const;
 
