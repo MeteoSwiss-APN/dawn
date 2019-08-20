@@ -770,8 +770,8 @@ void GTCodeGen::generateStencilClasses(
         for(const auto& doMethodPtr : stage.getChildren()) {
           const iir::DoMethod& doMethod = *doMethodPtr;
 
-          auto DoMethodCodeGen =
-              StageStruct.addMemberFunction("GT_FUNCTION static void", "Do", "typename Evaluation");
+          auto DoMethodCodeGen = StageStruct.addMemberFunction("GT_FUNCTION static void", "apply",
+                                                               "typename Evaluation");
           DoMethodCodeGen.addArg(DoMethodArg);
           DAWN_ASSERT(intervalDefinitions.intervalProperties_.count(
               iir::IntervalProperties{doMethod.getInterval()}));
