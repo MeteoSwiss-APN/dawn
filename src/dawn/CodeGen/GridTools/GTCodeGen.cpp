@@ -173,10 +173,12 @@ void GTCodeGen::generatePlaceholderDefinitions(
   }
 
   if(!globalsMap.empty()) {
+    stencilClass.addTypeDef("globals_gp_t")
+        .addType("decltype(make_global_parameter<backend_t>(std::declval<globals>()))");
     stencilClass.addTypeDef("p_globals")
         .addType(c_gt() + "arg")
         .addTemplate(Twine(accessorIdx))
-        .addTemplate("decltype(m_globals_gp_)");
+        .addTemplate("globals_gp_t");
   }
 }
 
@@ -481,12 +483,6 @@ void GTCodeGen::generateStencilClasses(
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID()));
     std::string StencilName = stencilClass.getName();
 
-    if(!globalsMap.empty()) {
-      stencilClass.addMember("const globals&", "m_globals");
-      stencilClass.addMember("decltype(make_global_parameter<backend_t>(m_globals))",
-                             "m_globals_gp_");
-    }
-
     //
     // Interval typedefs
     //
@@ -605,7 +601,7 @@ void GTCodeGen::generateStencilClasses(
         mplContainerMaxSize_ = std::max(mplContainerMaxSize_, arglist.size());
 
         // Generate Do-Method
-        auto doMethod = StencilFunStruct.addMemberFunction("GT_FUNCTION static void", "Do",
+        auto doMethod = StencilFunStruct.addMemberFunction("GT_FUNCTION static void", "apply",
                                                            "typename Evaluation");
 
         DAWN_ASSERT_MSG(intervalDefinitions.intervalProperties_.count(stencilFun->getInterval()),
@@ -786,13 +782,13 @@ void GTCodeGen::generateStencilClasses(
           }
         }
 
-        // Generate empty Do-Methods
+        // Generate empty apply-Methods
         // See https://github.com/eth-cscs/gridtools/issues/330
         const auto& stageIntervals = stage.getIntervals();
         for(const auto& interval : intervalDefinitions.StageIntervals[stagePtr->getStageID()]) {
           if(std::find(stageIntervals.begin(), stageIntervals.end(), interval) ==
              stageIntervals.end()) {
-            StageStruct.addMemberFunction("GT_FUNCTION static void", "Do", "typename Evaluation")
+            StageStruct.addMemberFunction("GT_FUNCTION static void", "apply", "typename Evaluation")
                 .addArg(DoMethodArg)
                 .addArg(iir::Interval::makeCodeGenName(interval));
           }
@@ -926,6 +922,9 @@ void GTCodeGen::generateStencilClasses(
     stencilClass.addMember(stencilType, "m_stencil");
 
     if(!globalsMap.empty()) {
+      stencilClass.addMember("const globals&", "m_globals");
+      stencilClass.addMember("decltype(make_global_parameter<backend_t>(m_globals))",
+                             "m_globals_gp_");
       // update globals
       stencilClass.addMemberFunction("void", "update_globals")
           .addStatement("update_global_parameter(m_globals_gp_, m_globals)");
