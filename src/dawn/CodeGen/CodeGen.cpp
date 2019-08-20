@@ -353,5 +353,12 @@ void CodeGen::addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainer
       makeIfNotDefinedString("BOOST_MPL_LIMIT_VECTOR_SIZE", "GT_VECTOR_LIMIT_SIZE"));
 }
 
+std::string CodeGen::generateFileName(const stencilInstantiationContext& context) const {
+  if(context.size() > 0) {
+    return context_.begin()->second->getMetaData().getFileName();
+  }
+  return "";
+}
+
 } // namespace codegen
 } // namespace dawn
