@@ -323,33 +323,6 @@ void CodeGen::addTmpStorageInitStencilWrapperCtr(
   }
 }
 
-void CodeGen::addBCFieldInitStencilWrapperCtr(MemberFunction& ctr,
-                                              const CodeGenProperties& codeGenProperties) const {
-  // Initialize storages that require boundary conditions
-  for(const auto& param : codeGenProperties.getParameterNameToType()) {
-    if(!codeGenProperties.isParamBC(param.first))
-      continue;
-    ctr.addInit("m_" + param.first + "(" + param.first + ")");
-  }
-}
-
-void CodeGen::generateBCFieldMembers(
-    Class& stencilWrapperClass,
-    const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-    const CodeGenProperties& codeGenProperties) const {
-  const auto& metadata = stencilInstantiation->getMetaData();
-
-  if(metadata.hasBC())
-    stencilWrapperClass.addComment("Fields that require Boundary Conditions");
-  // add all fields that require a boundary condition as members since they need to be called from
-  // this class and not from individual stencils
-  for(const auto& field : codeGenProperties.getParameterNameToType()) {
-    if(!codeGenProperties.isParamBC(field.first))
-      continue;
-    stencilWrapperClass.addMember(field.second, "m_" + field.first);
-  }
-}
-
 void CodeGen::addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainerMaxSize,
                            int MaxHaloPoints) const {
   auto makeIfNotDefined = [](std::string define, int value) {

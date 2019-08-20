@@ -61,7 +61,7 @@ void BCGenerator::generate(const std::shared_ptr<BoundaryConditionDeclStmt>& stm
   int haloJPlus = abs(extents[1].Plus);
   int haloKMinus = abs(extents[2].Minus);
   int haloKPlus = abs(extents[2].Plus);
-  std::string fieldname = "m_" + stmt->getFields()[0]->Name;
+  std::string fieldname = stmt->getFields()[0]->Name;
 
   // Set up the halos
   std::string halosetup = dawn::format(

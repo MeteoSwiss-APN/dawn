@@ -368,7 +368,7 @@ void GTCodeGen::generateStencilWrapperCtr(
       stencilInstantiation->getMetaData().getAccessesOfType<iir::FieldAccessType::FAT_APIField>()) {
     std::string name = metadata.getFieldNameFromAccessID(fieldID);
     StencilWrapperConstructor.addArg(codeGenProperties.getParamType(stencilInstantiation, name) +
-                                     " " + name);
+                                     "/*unused*/");
   }
 
   // Initialize allocated fields
@@ -381,8 +381,6 @@ void GTCodeGen::generateStencilWrapperCtr(
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
   }
   StencilWrapperConstructor.addInit("m_dom(dom)");
-
-  addBCFieldInitStencilWrapperCtr(StencilWrapperConstructor, codeGenProperties);
 
   // Initialize stencils
   for(const auto& stencil : stencils) {
@@ -398,19 +396,12 @@ void GTCodeGen::generateStencilWrapperCtr(
 
     std::string initctr = "(dom, ";
     if(!globalsMap.empty()) {
-      initctr = initctr + "m_globals,";
+      initctr = initctr + "m_globals_gp";
     }
     StencilWrapperConstructor.addInit(
         "m_" +
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil->getStencilID()) +
-        RangeToString(", ", initctr.c_str(),
-                      ")")(nonTempFields, [&](const iir::Stencil::FieldInfo& fieldInfo) {
-          if(metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
-                                   fieldInfo.field.getAccessID()))
-            return "m_" + fieldInfo.Name;
-          else
-            return fieldInfo.Name;
-        }));
+        initctr + ")");
   }
 
   StencilWrapperConstructor.commit();
@@ -424,8 +415,6 @@ void GTCodeGen::generateStencilWrapperMembers(
   //
   // Generate constructor/destructor and methods of the stencil wrapper
   //
-  generateBCFieldMembers(stencilWrapperClass, stencilInstantiation, codeGenProperties);
-
   stencilWrapperClass.addComment("Stencil-Data");
 
   if(codeGenProperties.hasAllocatedFields()) {
@@ -446,10 +435,10 @@ void GTCodeGen::generateStencilWrapperMembers(
   // globals member
   if(!globalsMap.empty()) {
     stencilWrapperClass.addMember("globals", "m_globals");
-    stencilWrapperClass.addMember("globals_gp_t", "m_globals_gp_");
+    stencilWrapperClass.addMember("globals_gp_t", "m_globals_gp");
     // update globals
     stencilWrapperClass.addMemberFunction("void", "update_globals")
-        .addStatement("update_global_parameter(m_globals_gp_, m_globals)");
+        .addStatement("update_global_parameter(m_globals_gp, m_globals)");
   }
 
   // Stencil members
@@ -832,13 +821,6 @@ void GTCodeGen::generateStencilClasses(
     if(!globalsMap.empty()) {
       StencilConstructor.addArg("const globals_gp_t& globals_gp");
     }
-    int index = 0;
-    for(const auto& fieldPair : nonTempFields) {
-      StencilConstructor.addArg(
-          codeGenProperties.getParamType(stencilInstantiation, fieldPair.second) + " " +
-          fieldPair.second.Name);
-      index++;
-    }
 
     StencilConstructor.startBody();
 
@@ -907,7 +889,7 @@ void GTCodeGen::generateStencilClasses(
     // Placeholders to map the real storages to the placeholders (no temporaries)
     std::vector<std::string> domainMapPlaceholders;
     if(stencil.hasGlobalVariables()) {
-      domainMapPlaceholders.push_back("(p_globals() = globals_gp)");
+      domainMapPlaceholders.push_back("p_globals() = globals_gp");
     }
 
     // Construct grid
@@ -917,7 +899,7 @@ void GTCodeGen::generateStencilClasses(
     StencilConstructor.addComment("Computation");
 
     std::string plchdrStr =
-        (!domainMapPlaceholders.empty() ? RangeToString(", ", ",", "")(domainMapPlaceholders) : "");
+        (!domainMapPlaceholders.empty() ? RangeToString(", ", "", ",")(domainMapPlaceholders) : "");
 
     // This is a memory leak.. but nothing we can do ;)
     StencilConstructor.addStatement(

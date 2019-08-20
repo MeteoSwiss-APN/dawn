@@ -36,10 +36,6 @@ CodeGenUtils::buildPlaceholderList(const std::map<int, iir::Stencil::FieldInfo>&
       plchdrs.push_back("p_" + fieldInfo.Name);
     }
   }
-
-  if(!globalsMap.empty()) {
-    plchdrs.push_back("p_globals");
-  }
   return plchdrs;
 }
 

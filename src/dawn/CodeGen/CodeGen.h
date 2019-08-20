@@ -46,12 +46,6 @@ protected:
                                      const std::vector<std::unique_ptr<iir::Stencil>>& stencils,
                                      const std::vector<std::string>& tempFields) const;
 
-  void addBCFieldInitStencilWrapperCtr(MemberFunction& ctr,
-                                       const CodeGenProperties& codeGenProperties) const;
-  void generateBCFieldMembers(Class& stencilWrapperClass,
-                              const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-                              const CodeGenProperties& codeGenProperties) const;
-
   void generateStencilWrapperSyncMethod(Class& stencilWrapperClass) const;
 
   void addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainerMaxSize,
