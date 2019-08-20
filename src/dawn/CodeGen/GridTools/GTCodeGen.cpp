@@ -431,6 +431,10 @@ void GTCodeGen::generateStencilWrapperMembers(
   // globals member
   if(!globalsMap.empty()) {
     stencilWrapperClass.addMember("globals", "m_globals");
+    stencilWrapperClass.addMember("globals_gp_t", "m_globals_gp_");
+    // update globals
+    stencilWrapperClass.addMemberFunction("void", "update_globals")
+        .addStatement("update_global_parameter(m_globals_gp_, m_globals)");
   }
 
   // Stencil members
@@ -811,7 +815,7 @@ void GTCodeGen::generateStencilClasses(
 
     StencilConstructor.addArg("const gridtools::clang::domain& dom");
     if(!globalsMap.empty()) {
-      StencilConstructor.addArg("const globals& globals");
+      StencilConstructor.addArg("const globals_gp_t& globals_gp");
     }
     int index = 0;
     for(const auto& fieldPair : nonTempFields) {
@@ -821,10 +825,6 @@ void GTCodeGen::generateStencilClasses(
       index++;
     }
 
-    if(!globalsMap.empty()) {
-      StencilConstructor.addInit("m_globals(globals)");
-      StencilConstructor.addInit("m_globals_gp_(make_global_parameter<backend_t>(m_globals))");
-    }
     StencilConstructor.startBody();
 
     // Add static asserts to check halos against extents
@@ -892,7 +892,7 @@ void GTCodeGen::generateStencilClasses(
     // Placeholders to map the real storages to the placeholders (no temporaries)
     std::vector<std::string> domainMapPlaceholders;
     if(stencil.hasGlobalVariables()) {
-      domainMapPlaceholders.push_back("(p_globals() = m_globals_gp_)");
+      domainMapPlaceholders.push_back("(p_globals() = globals_gp)");
     }
 
     // Construct grid
@@ -920,15 +920,6 @@ void GTCodeGen::generateStencilClasses(
     stencilType = "computation" + RangeToString(",", "<", ">")(plchdrs);
 
     stencilClass.addMember(stencilType, "m_stencil");
-
-    if(!globalsMap.empty()) {
-      stencilClass.addMember("const globals&", "m_globals");
-      stencilClass.addMember("decltype(make_global_parameter<backend_t>(m_globals))",
-                             "m_globals_gp_");
-      // update globals
-      stencilClass.addMemberFunction("void", "update_globals")
-          .addStatement("update_global_parameter(m_globals_gp_, m_globals)");
-    }
 
     // Generate stencil getter
     stencilClass.addMemberFunction(stencilType + "*", "get_stencil")
