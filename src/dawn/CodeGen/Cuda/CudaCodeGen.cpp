@@ -567,6 +567,7 @@ void CudaCodeGen::generateStencilRunMethod(
                       return true;
                     }));
 
+    // TODO enable const auto& below and/or enable use RangeToString
     std::string args;
     int idx = 0;
     for(const auto& fieldPair : nonTempFields) {

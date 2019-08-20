@@ -29,8 +29,10 @@ include(CMakeParseArguments)
 #   dawn_protobuf_generate(OUT_FILES PROTOS LANGUAGE)
 # 
 # ``OUT_FILES``
-#   On output this variable contains a List of paths which contain the location of the header and 
+#   On output this variable contains a List of output files which contain the location of the header and 
 #   source files.
+# ``OUT_DIRS``
+#   On output this variable contains a List of paths
 # ``OUT_INCLUDE_DIRS``
 #   On output this variable contains a list of include directories which need to be added to compile 
 #   the generated sources (C++ only).
@@ -40,7 +42,7 @@ include(CMakeParseArguments)
 #   Language to compile to [default: cpp]. 
 #
 function(dawn_protobuf_generate)
-  set(one_value_args OUT_FILES OUT_INCLUDE_DIRS LANGUAGE)
+	set(one_value_args OUT_FILES OUT_DIRS OUT_INCLUDE_DIRS WDIR PACKG INC_DIR LANGUAGE)
   set(multi_value_args PROTOS)
   cmake_parse_arguments(ARG "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
@@ -50,6 +52,15 @@ function(dawn_protobuf_generate)
 
   if(NOT ARG_PROTOS)
     message(FATAL_ERROR "dawn_protobuf_generate: called without any source files")
+    return()
+  endif()
+
+  if(NOT ARG_WDIR)
+    message(FATAL_ERROR "dawn_protobuf_generate: called without any workding directory argument")
+    return()
+  endif()
+  if(NOT ARG_PACKG)
+    message(FATAL_ERROR "dawn_protobuf_generate: called without any package argument")
     return()
   endif()
 
@@ -68,20 +79,17 @@ function(dawn_protobuf_generate)
     set(extensions .pb.h .pb.cc)
   elseif("${ARG_LANGUAGE}" STREQUAL "python")
     set(extensions _pb2.py)
+  elseif("${ARG_LANGUAGE}" STREQUAL "java")
+    set(extensions _pb2.java)
   else()
     message(FATAL_ERROR "dawn_protobuf_generate: unknown Language ${ARG_LANGUAGE}")
     return()
   endif()
 
-  # Create an include path for each file specified
-  foreach(proto ${ARG_PROTOS})
-    get_filename_component(abs_file ${proto} ABSOLUTE)
-    get_filename_component(abs_path ${proto} PATH)
-    list(FIND include_path ${abs_path} existing)
-    if("${existing}" EQUAL "-1")
-      list(APPEND include_path "-I${abs_path}")
-    endif()
-  endforeach()
+  set(include_path "-I.")
+  if(ARG_INC_DIR)
+    set(include_path ${include_path} -I${ARG_INC_DIR})
+  endif()
 
   # Generate a script to invoke protoc (this is needed to set the LD_LIBRARY_PATH as google 
   # doesn't know about RPATH support in CMake ...)
@@ -92,6 +100,7 @@ function(dawn_protobuf_generate)
   set(protobuf_script ${CMAKE_CURRENT_BINARY_DIR}/run_protobuf.sh)
   file(WRITE "${protobuf_script}" "#!/usr/bin/env bash\n")
   file(APPEND "${protobuf_script}" "export LD_LIBRARY_PATH=\"${libprotoc_dir}\":$LD_LIBRARY_PATH\n")
+  file(APPEND "${protobuf_script}" "cd ${ARG_WDIR}\n")
   file(APPEND "${protobuf_script}" "${protoc_path} $*\n")
   set(command "${BASH_EXECUTABLE}")
 
@@ -99,19 +108,23 @@ function(dawn_protobuf_generate)
   set(output_include_dirs)
 
   foreach(proto ${ARG_PROTOS})
-    get_filename_component(abs_file ${proto} ABSOLUTE)
+    set(abs_file ${ARG_WDIR}/${proto})
     get_filename_component(basename ${proto} NAME_WE)
 
     unset(generated_srcs)
     foreach(ext ${extensions})
-      list(APPEND generated_srcs "${CMAKE_CURRENT_BINARY_DIR}/${basename}${ext}")
+      if(${ARG_LANGUAGE} STREQUAL "java" )
+        list(APPEND generated_srcs "${CMAKE_CURRENT_BINARY_DIR}/dawn/sir/${basename}${ext}")
+      else()
+        list(APPEND generated_srcs "${CMAKE_CURRENT_BINARY_DIR}/${ARG_PACKG}/${basename}${ext}")
+      endif()
     endforeach()
 
     add_custom_command(
       OUTPUT ${generated_srcs}
       COMMAND ${command} 
       ARGS ${protobuf_script} --${ARG_LANGUAGE}_out "${CMAKE_CURRENT_BINARY_DIR}" 
-           ${include_path} "${abs_file}"
+           ${include_path} "${proto}"
       COMMENT "Running ${ARG_LANGUAGE} protocol buffer compiler on ${proto}"
       DEPENDS ${abs_file}
       VERBATIM 
@@ -128,6 +141,14 @@ function(dawn_protobuf_generate)
       endif()
     endforeach()
   endforeach()
+
+  if(ARG_OUT_DIRS) 
+    if(${ARG_LANGUAGE} STREQUAL "java" )
+      set("${ARG_OUT_DIRS}" "${CMAKE_CURRENT_BINARY_DIR}/dawn/" PARENT_SCOPE)
+    else()
+      set("${ARG_OUT_DIRS}" "${CMAKE_CURRENT_BINARY_DIR}" PARENT_SCOPE)
+    endif()
+  endif()
 
   set("${ARG_OUT_FILES}" ${output_files} PARENT_SCOPE)
   if(ARG_OUT_INCLUDE_DIRS)

@@ -18,6 +18,7 @@
 #include "dawn/CodeGen/Cuda/ASTStencilBody.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/Support/ContainerUtils.h"
 #include "dawn/Support/IndexRange.h"
 #include <functional>
 #include <numeric>
@@ -671,7 +672,7 @@ void MSCodeGen::generateCudaKernelCode() {
   }
 
   // fields used in the stencil
-  const auto fields = ms_->getOrderedFields();
+  const auto fields = support::orderMap(ms_->getFields());
 
   auto nonTempFields = makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>(
                                              [&](std::pair<int, iir::Field> const& p) {

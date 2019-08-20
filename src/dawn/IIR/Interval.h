@@ -57,8 +57,8 @@ public:
       : lower_{lowerLevel, lowerOffset}, upper_{upperLevel, upperOffset} {}
 
   Interval(const sir::Interval& interval)
-      : lower_{interval.LowerLevel, interval.LowerOffset},
-        upper_{interval.UpperLevel, interval.UpperOffset} {}
+      : lower_{interval.LowerLevel, interval.LowerOffset}, upper_{interval.UpperLevel,
+                                                                  interval.UpperOffset} {}
 
   Interval(const Interval&) = default;
   Interval(Interval&&) = default;

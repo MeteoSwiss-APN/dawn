@@ -23,7 +23,7 @@ namespace dawn {
 namespace iir {
 class StencilInstantiation;
 class StencilMetaInformation;
-}
+} // namespace iir
 namespace sir {
 struct StencilFunction;
 }

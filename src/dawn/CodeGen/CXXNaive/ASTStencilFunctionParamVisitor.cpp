@@ -12,13 +12,12 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/SIR/AST.h"
 #include "dawn/CodeGen/CXXNaive/ASTStencilFunctionParamVisitor.h"
-#include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/SIR/AST.h"
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
@@ -62,10 +61,9 @@ void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<StencilFunCallE
 
 void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
 
-  std::string fieldName = (currentFunction_)
-                              ? currentFunction_->getOriginalNameFromCallerAccessID(
-                                    currentFunction_->getAccessIDFromExpr(expr))
-                              : getName(expr);
+  std::string fieldName = (currentFunction_) ? currentFunction_->getOriginalNameFromCallerAccessID(
+                                                   currentFunction_->getAccessIDFromExpr(expr))
+                                             : getName(expr);
 
   ss_ << ",param_wrapper<decltype(" << fieldName << ")>(" << fieldName << ","
       << "std::array<int, 3>{" << RangeToString(", ", "", "")(expr->getOffset())

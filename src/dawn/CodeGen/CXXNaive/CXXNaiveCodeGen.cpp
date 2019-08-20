@@ -343,6 +343,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
       const iir::MultiStage& multiStage = *multiStagePtr;
 
       // create all the data views
+      const auto& usedFields = multiStage.getFields();
       for(auto it = nonTempFields.begin(); it != nonTempFields.end(); ++it) {
         const auto fieldName = (*it).second.Name;
         std::string type = codeGenProperties.getParamType(stencilInstantiation, fieldName);
@@ -352,7 +353,6 @@ void CXXNaiveCodeGen::generateStencilClasses(
       }
       for(const auto& fieldPair : tempFields) {
         const auto fieldName = fieldPair.second.Name;
-
         stencilRunMethod.addStatement(c_gt() + "data_view<tmp_storage_t> " + fieldName + "= " +
                                       c_gt() + "make_host_view(m_" + fieldName + ")");
         stencilRunMethod.addStatement("std::array<int,3> " + fieldName + "_offsets{0,0,0}");
@@ -530,8 +530,8 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
   ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
   ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T CXXNAIVE");
   // ==============------------------------------------------------------------------------------===
-  // BENCHMARKTODO: since we're importing two cpp files into the benchmark API we need to set these
-  // variables also in the naive code-generation in order to not break it. Once the move to
+  // BENCHMARKTODO: since we're importing two cpp files into the benchmark API we need to set
+  // these variables also in the naive code-generation in order to not break it. Once the move to
   // different TU's is completed, this is no longer necessary.
   // [https://github.com/MeteoSwiss-APN/gtclang/issues/32]
   // ==============------------------------------------------------------------------------------===

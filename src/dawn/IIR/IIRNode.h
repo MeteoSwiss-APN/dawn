@@ -17,6 +17,7 @@
 
 #include "dawn/IIR/NodeUpdateType.h"
 #include "dawn/Support/Assert.h"
+#include "dawn/Support/RemoveIf.hpp"
 #include "dawn/Support/Unreachable.h"
 #include <algorithm>
 #include <iostream>

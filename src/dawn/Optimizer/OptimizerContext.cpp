@@ -564,7 +564,7 @@ public:
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {}
 };
-} // namespace anonymous
+} // namespace
 
 OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, Options& options,
                                    const std::shared_ptr<SIR>& SIR)

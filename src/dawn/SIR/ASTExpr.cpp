@@ -67,8 +67,9 @@ BinaryOperator::BinaryOperator(const std::shared_ptr<Expr>& left, std::string op
     : Expr(EK_BinaryOperator, loc), operands_{left, right}, op_(std::move(op)) {}
 
 BinaryOperator::BinaryOperator(const BinaryOperator& expr)
-    : Expr(EK_BinaryOperator, expr.getSourceLocation()),
-      operands_{expr.getLeft()->clone(), expr.getRight()->clone()}, op_(expr.getOp()) {}
+    : Expr(EK_BinaryOperator, expr.getSourceLocation()), operands_{expr.getLeft()->clone(),
+                                                                   expr.getRight()->clone()},
+      op_(expr.getOp()) {}
 
 BinaryOperator& BinaryOperator::operator=(BinaryOperator expr) {
   assign(expr);
@@ -166,8 +167,9 @@ TernaryOperator::TernaryOperator(const std::shared_ptr<Expr>& cond,
     : Expr(EK_TernaryOperator, loc), operands_{cond, left, right} {}
 
 TernaryOperator::TernaryOperator(const TernaryOperator& expr)
-    : Expr(EK_TernaryOperator, expr.getSourceLocation()),
-      operands_{expr.getCondition()->clone(), expr.getLeft()->clone(), expr.getRight()->clone()} {}
+    : Expr(EK_TernaryOperator, expr.getSourceLocation()), operands_{expr.getCondition()->clone(),
+                                                                    expr.getLeft()->clone(),
+                                                                    expr.getRight()->clone()} {}
 
 TernaryOperator& TernaryOperator::operator=(TernaryOperator expr) {
   assign(expr);

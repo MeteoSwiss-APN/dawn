@@ -15,11 +15,11 @@
 #ifndef DAWN_OPTIMIZER_PASSSETMULTISTAGECACHES_H
 #define DAWN_OPTIMIZER_PASSSETMULTISTAGECACHES_H
 
-#include "dawn/IIR/Stencil.h"
-#include "dawn/IIR/Interval.h"
-#include "dawn/Optimizer/Pass.h"
-#include "dawn/IIR/Stage.h"
 #include "dawn/IIR/Cache.h"
+#include "dawn/IIR/Interval.h"
+#include "dawn/IIR/Stage.h"
+#include "dawn/IIR/Stencil.h"
+#include "dawn/Optimizer/Pass.h"
 
 namespace dawn {
 
