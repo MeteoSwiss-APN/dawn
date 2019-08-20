@@ -110,11 +110,6 @@ private:
                                 IntervalDefinitions& intervalDefinitions,
                                 const CodeGenProperties& codeGenProperties) const;
 
-  /// code generate sync methods statements for all the fields passed
-  void generateSyncStorages(
-      MemberFunction& method,
-      const IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& stencilFields) const;
-
   static std::string getAxisName(const std::string& stencilName);
   static std::string getGridName(const std::string& stencilName);
 
