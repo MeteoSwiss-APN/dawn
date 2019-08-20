@@ -168,7 +168,10 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   }
 
   // Initialize optimizer
-  auto optimizerOptions = createOptimizerOptionsFromAllOptions(*options_);
+  OptimizerContext::OptimizerContextOptions optimizerOptions;
+  if(options_) {
+    optimizerOptions = createOptimizerOptionsFromAllOptions(*options_);
+  }
   std::unique_ptr<OptimizerContext> optimizer =
       make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, SIR);
   PassManager& passManager = optimizer->getPassManager();

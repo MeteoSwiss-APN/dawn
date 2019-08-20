@@ -171,7 +171,7 @@ bool compareStencilInstantiations(const std::shared_ptr<iir::StencilInstantiatio
 
 class createEmptyOptimizerContext : public ::testing::Test {
 protected:
-  virtual void SetUp() {
+  virtual void SetUp() override {
     dawn::DiagnosticsEngine diag;
     dawn::Options options;
     std::shared_ptr<SIR> sir = std::make_shared<SIR>();

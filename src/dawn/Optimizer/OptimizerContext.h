@@ -15,7 +15,6 @@
 #ifndef DAWN_OPTIMIZER_OPTIMIZERCONTEXT_H
 #define DAWN_OPTIMIZER_OPTIMIZERCONTEXT_H
 
-#include "dawn/Compiler/Options.h"
 #include "dawn/Optimizer/PassManager.h"
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/NonCopyable.h"
