@@ -45,9 +45,19 @@ struct HardwareConfig {
 /// @brief Context of handling all Optimizations
 /// @ingroup optimizer
 class OptimizerContext : NonCopyable {
+public:
+  struct OptimizerContextOptions {
+#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
+  TYPE NAME = DEFAULT_VALUE;
+#include "dawn/Optimizer/OptimizerOptions.inc"
+#undef OPT
+  };
 
+private:
   DiagnosticsEngine& diagnostics_;
-  Options& options_;
+  // Options& options_;
+  OptimizerContextOptions options_;
+  // compileOptions options_;
 
   const std::shared_ptr<SIR> SIR_;
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiationMap_;
@@ -56,7 +66,7 @@ class OptimizerContext : NonCopyable {
 
 public:
   /// @brief Initialize the context with a SIR
-  OptimizerContext(DiagnosticsEngine& diagnostics, Options& options,
+  OptimizerContext(DiagnosticsEngine& diagnostics, OptimizerContextOptions options,
                    const std::shared_ptr<SIR>& SIR);
 
   /// @brief Get StencilInstantiation map
@@ -75,8 +85,8 @@ public:
   const std::shared_ptr<SIR>& getSIR() const { return SIR_; }
 
   /// @brief Get options
-  const Options& getOptions() const;
-  Options& getOptions();
+  const OptimizerContextOptions& getOptions() const;
+  OptimizerContextOptions& getOptions();
 
   /// @brief Get the diagnostics engine
   const DiagnosticsEngine& getDiagnostics() const;
@@ -107,14 +117,14 @@ public:
   /// @brief this function check if a pass should be pushed back into the list of passes based on
   /// the options.
   ///
-  /// Currently this is a placeholder for the final design once a more elaborate scheme of grouping
-  /// is in place that enables more paths. This should also eventaully replace the option-checks
-  /// that are currently hiden in the passes run-methods
+  /// Currently this is a placeholder for the final design once a more elaborate scheme of
+  /// grouping is in place that enables more paths. This should also eventaully replace the
+  /// option-checks that are currently hiden in the passes run-methods
   template <typename T>
   bool compareOptionsToPassFlags(const std::unique_ptr<T>& p) {
 
     bool retval;
-    if(getOptions().Debug)
+    if(options_.Debug)
       retval = p->isDebug();
     else
       retval = true;

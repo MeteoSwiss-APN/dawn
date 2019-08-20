@@ -175,7 +175,8 @@ protected:
     dawn::DiagnosticsEngine diag;
     dawn::Options options;
     std::shared_ptr<SIR> sir = std::make_shared<SIR>();
-    context_ = new OptimizerContext(diag, options, sir);
+    dawn::OptimizerContext::OptimizerContextOptions optionss_;
+    context_ = new OptimizerContext(diag, optionss_, sir);
   }
   virtual void TearDown() override {}
   OptimizerContext* context_;
