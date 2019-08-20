@@ -679,7 +679,7 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
   }
 
-  std::string globals = generateGlobals(context_->getSIR(), "cuda");
+  std::string globals = generateGlobals(context_->getSIR(), "dawn::cuda");
 
   std::vector<std::string> ppDefines;
   auto makeDefine = [](std::string define, int value) {

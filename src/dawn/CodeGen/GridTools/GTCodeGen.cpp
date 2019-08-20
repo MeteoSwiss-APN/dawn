@@ -934,7 +934,7 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   }
 
   // Generate globals
-  std::string globals = generateGlobals(context_->getSIR(), "gridtools");
+  std::string globals = generateGlobals(context_->getSIR(), "dawn::gridtools");
 
   // If we need more than 20 elements in boost::mpl containers, we need to increment to the nearest
   // multiple of ten
