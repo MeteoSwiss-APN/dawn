@@ -103,6 +103,8 @@ public:
   virtual std::string generateGlobals(const sir::GlobalVariableMap& globalsMaps,
                                       std::string namespace_) const;
   void generateBCHeaders(std::vector<std::string>& ppDefines) const;
+
+  std::string generateFileName(const stencilInstantiationContext& context) const;
 };
 
 } // namespace codegen

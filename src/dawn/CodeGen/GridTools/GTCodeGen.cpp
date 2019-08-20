@@ -964,8 +964,8 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
 
   DAWN_LOG(INFO) << "Done generating code";
 
-  return make_unique<TranslationUnit>(context_.begin()->second->getMetaData().getFileName(),
-                                      std::move(ppDefines), std::move(stencils),
+  std::string filename = generateFileName(context_);
+  return make_unique<TranslationUnit>(filename, std::move(ppDefines), std::move(stencils),
                                       std::move(globals));
 }
 
