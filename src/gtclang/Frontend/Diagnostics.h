@@ -17,7 +17,7 @@
 #ifndef GTCLANG_FRONTEND_DIAGNOSTICS
 #define GTCLANG_FRONTEND_DIAGNOSTICS
 
-#include "dawn/Compiler/DiagnosticsMessage.h"
+#include "dawn/Support/DiagnosticsMessage.h"
 #include "dawn/Support/NonCopyable.h"
 #include "clang/Basic/Diagnostic.h"
 
