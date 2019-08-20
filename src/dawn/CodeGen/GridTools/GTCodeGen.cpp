@@ -199,13 +199,13 @@ void GTCodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInsta
                   globalProp.first);
     setter.finishArgs();
     setter.addStatement("m_globals." + globalProp.first + "=" + globalProp.first);
-
-    for(const auto& stencil : stencilInstantiation.getStencils()) {
-      setter.addStatement(
-          "m_" +
-          codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil->getStencilID()) +
-          ".update_globals()");
-    }
+    setter.addStatement("update_globals()");
+    // for(const auto& stencil : stencilInstantiation.getStencils()) {
+    //   setter.addStatement(
+    //       "m_" +
+    //       codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil->getStencilID()) +
+    //       ".update_globals()");
+    // }
 
     setter.commit();
   }
@@ -281,7 +281,7 @@ void GTCodeGen::generateStencilWrapperPublicMemberFunctions(
   MemberFunction totalTime = stencilWrapperClass.addMemberFunction("double", "get_total_time");
   totalTime.startBody();
   totalTime.addStatement("double res = 0");
-  std::string s1 = RangeToString("\n", "", "")(stencilMembers, [](const std::string& member) {
+  std::string s1 = RangeToString(";\n", "", "")(stencilMembers, [](const std::string& member) {
     return "res +=" + member + ".get_stencil()->get_time()";
   });
   totalTime.addStatement(s1);
@@ -397,9 +397,9 @@ void GTCodeGen::generateStencilWrapperCtr(
       }
     }
 
-    std::string initctr = "(dom, ";
+    std::string initctr = "(dom";
     if(!globalsMap.empty()) {
-      initctr = initctr + "m_globals_gp";
+      initctr = initctr + ", m_globals_gp";
     }
     StencilWrapperConstructor.addInit(
         "m_" +

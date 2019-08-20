@@ -86,14 +86,14 @@ void BCGenerator::generate(const std::shared_ptr<BoundaryConditionDeclStmt>& stm
 
   // Create the views for the fields
   for(int i = 0; i < stmt->getFields().size(); ++i) {
-    auto fieldName = "m_" + stmt->getFields()[i]->Name;
+    auto fieldName = stmt->getFields()[i]->Name;
     makeView +=
         dawn::format("auto %s_view = GT_BACKEND_DECISION_viewmaker(%s);\n", fieldName, fieldName);
   }
   std::string bcapply = "GT_BACKEND_DECISION_bcapply<" + stmt->getFunctor() + " >(halos, " +
                         stmt->getFunctor() + "()).apply(";
   for(int i = 0; i < stmt->getFields().size(); ++i) {
-    bcapply += "m_" + stmt->getFields()[i]->Name + "_view";
+    bcapply += stmt->getFields()[i]->Name + "_view";
     if(i < stmt->getFields().size() - 1) {
       bcapply += ", ";
     }
