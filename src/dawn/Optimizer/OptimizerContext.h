@@ -54,9 +54,7 @@ public:
 
 private:
   DiagnosticsEngine& diagnostics_;
-  // Options& options_;
   OptimizerContextOptions options_;
-  // compileOptions options_;
 
   const std::shared_ptr<SIR> SIR_;
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiationMap_;
