@@ -17,7 +17,7 @@
 #include "dawn/CodeGen/Cuda/ASTStencilFunctionParamVisitor.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/SIR/AST.h"
+#include "dawn/IIR/AST.h"
 #include "dawn/Support/Unreachable.h"
 #include <string>
 
@@ -35,11 +35,11 @@ ASTStencilBody::ASTStencilBody(const iir::StencilMetaInformation& metadata,
 
 ASTStencilBody::~ASTStencilBody() {}
 
-std::string ASTStencilBody::getName(const std::shared_ptr<Expr>& expr) const {
+std::string ASTStencilBody::getName(const std::shared_ptr<iir::Expr>& expr) const {
   return metadata_.getFieldNameFromAccessID(metadata_.getAccessIDFromExpr(expr));
 }
 
-std::string ASTStencilBody::getName(const std::shared_ptr<Stmt>& stmt) const {
+std::string ASTStencilBody::getName(const std::shared_ptr<iir::Stmt>& stmt) const {
   return metadata_.getFieldNameFromAccessID(metadata_.getAccessIDFromStmt(stmt));
 }
 
@@ -47,7 +47,7 @@ std::string ASTStencilBody::getName(const std::shared_ptr<Stmt>& stmt) const {
 //     Stmt
 //===------------------------------------------------------------------------------------------===//
 
-void ASTStencilBody::visit(const std::shared_ptr<ReturnStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
   if(scopeDepth_ == 0)
     ss_ << std::string(indent_, ' ');
 
@@ -57,15 +57,15 @@ void ASTStencilBody::visit(const std::shared_ptr<ReturnStmt>& stmt) {
   ss_ << ";\n";
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) {
   DAWN_ASSERT_MSG(0, "VerticalRegionDeclStmt not allowed in this context");
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) {
   DAWN_ASSERT_MSG(0, "StencilCallDeclStmt not allowed in this context");
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
+void ASTStencilBody::visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) {
   DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not allowed in this context");
 }
 
@@ -73,15 +73,15 @@ void ASTStencilBody::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stm
 //     Expr
 //===------------------------------------------------------------------------------------------===//
 
-void ASTStencilBody::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
+void ASTStencilBody::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
   dawn_unreachable("stencil functions not allows in cuda backend");
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<StencilFunArgExpr>& expr) {
+void ASTStencilBody::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) {
   dawn_unreachable("stencil functions not allows in cuda backend");
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
+void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   std::string name = getName(expr);
   int accessID = metadata_.getAccessIDFromExpr(expr);
 
@@ -98,7 +98,7 @@ void ASTStencilBody::visit(const std::shared_ptr<VarAccessExpr>& expr) {
   }
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
+void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   int accessID = metadata_.getAccessIDFromExpr(expr);
   if(cacheProperties_.isIJCached(accessID)) {
     derefIJCache(expr);
@@ -113,7 +113,7 @@ void ASTStencilBody::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
                                                 expr->getOffset());
 }
 
-void ASTStencilBody::derefIJCache(const std::shared_ptr<FieldAccessExpr>& expr) {
+void ASTStencilBody::derefIJCache(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   int accessID = metadata_.getAccessIDFromExpr(expr);
   std::string accessName = cacheProperties_.getCacheName(accessID);
 
@@ -138,7 +138,7 @@ void ASTStencilBody::derefIJCache(const std::shared_ptr<FieldAccessExpr>& expr) 
       << (offsetStr.empty() ? "[" + index + "]" : ("[" + index + "+" + offsetStr + "]"));
 }
 
-void ASTStencilBody::derefKCache(const std::shared_ptr<FieldAccessExpr>& expr) {
+void ASTStencilBody::derefKCache(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   int accessID = metadata_.getAccessIDFromExpr(expr);
   std::string accessName = cacheProperties_.getCacheName(accessID);
   auto vertExtent = ms_->getKCacheVertExtent(accessID);

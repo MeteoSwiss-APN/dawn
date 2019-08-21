@@ -47,9 +47,9 @@ bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInsta
         const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessesPair =
             doMethod.getChildren()[stmtIdx];
 
-        AssignmentExpr* assignment = nullptr;
-        if(ExprStmt* stmt = dyn_cast<ExprStmt>(stmtAccessesPair->getStatement()->ASTStmt.get()))
-          assignment = dyn_cast<AssignmentExpr>(stmt->getExpr().get());
+        iir::AssignmentExpr* assignment = nullptr;
+        if(iir::ExprStmt* stmt = dyn_cast<iir::ExprStmt>(stmtAccessesPair->getStatement()->ASTStmt.get()))
+          assignment = dyn_cast<iir::AssignmentExpr>(stmt->getExpr().get());
 
         std::vector<int> AccessIDsToRename;
 

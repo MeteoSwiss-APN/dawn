@@ -15,15 +15,16 @@
 #ifndef DAWN_SUPPORT_ASTSERIALIZER_H
 #define DAWN_SUPPORT_ASTSERIALIZER_H
 
+#include "dawn/AST/ASTFwd.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/SIR/SIR/statements.pb.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/SIR/statements.pb.h"
 #include <stack>
 
 using namespace dawn;
+using namespace ast;
 
 void setAST(dawn::proto::statements::AST* astProto, const AST* ast);
 
@@ -41,7 +42,7 @@ void setOffset(dawn::proto::statements::Offset* offsetProto, const sir::Offset* 
 
 void setField(dawn::proto::statements::Field* fieldProto, const sir::Field* field);
 
-class ProtoStmtBuilder : public dawn::ASTVisitor {
+class ProtoStmtBuilder : public ASTVisitor {
   std::stack<dawn::proto::statements::Stmt*> currentStmtProto_;
   std::stack<dawn::proto::statements::Expr*> currentExprProto_;
 

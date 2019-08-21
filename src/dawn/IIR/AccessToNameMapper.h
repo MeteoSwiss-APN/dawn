@@ -15,7 +15,8 @@
 #ifndef DAWN_IIR_ACCESSTONAMEMAPPER_H
 #define DAWN_IIR_ACCESSTONAMEMAPPER_H
 
-#include "dawn/SIR/ASTVisitor.h"
+#include "dawn/IIR/ASTFwd.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include <stack>
 #include <unordered_map>
 
@@ -26,7 +27,7 @@ class StencilFunctionInstantiation;
 class StencilMetaInformation;
 
 /// @brief Dump AST to string
-class AccessToNameMapper : public ASTVisitorForwarding {
+class AccessToNameMapper : public iir::ASTVisitorForwarding {
   int scopeDepth_;
   const StencilMetaInformation& metaData_;
   std::stack<StencilFunctionInstantiation*> curFunctionInstantiation_;
@@ -40,17 +41,17 @@ public:
   AccessToNameMapper(const StencilMetaInformation& metaData)
       : scopeDepth_(0), metaData_(metaData) {}
 
-  virtual void visit(const std::shared_ptr<VarDeclStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<VarAccessExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override;
 
   std::string getNameFromAccessID(int accessID) const { return accessIDToName_.at(accessID); }
   bool hasAccessID(int accessID) const { return accessIDToName_.count(accessID); }
 
 private:
-  void insertAccessInfo(const std::shared_ptr<Expr>& expr);
-  void insertAccessInfo(const std::shared_ptr<Stmt>& stmt);
+  void insertAccessInfo(const std::shared_ptr<iir::Expr>& expr);
+  void insertAccessInfo(const std::shared_ptr<iir::Stmt>& stmt);
 };
 
 } // namespace iir
