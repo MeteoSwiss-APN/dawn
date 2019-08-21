@@ -97,6 +97,8 @@ public:
                                   const CodeGenProperties& codeGenProperties) const;
   virtual std::string generateGlobals(std::shared_ptr<SIR> const& sir,
                                       std::string namespace_) const;
+  virtual std::string generateGlobals(std::shared_ptr<SIR> const& sir,
+                                      std::string outer_namespace_, std::string inner_namespace_) const;
   void generateBCHeaders(std::vector<std::string>& ppDefines) const;
 };
 

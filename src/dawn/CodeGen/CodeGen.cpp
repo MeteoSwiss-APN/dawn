@@ -29,6 +29,17 @@ size_t CodeGen::getVerticalTmpHaloSizeForMultipleStencils(
 }
 
 std::string CodeGen::generateGlobals(std::shared_ptr<SIR> const& sir,
+                                     std::string outer_namespace_, std::string inner_namespace_) const {
+
+  std::stringstream ss;
+  Namespace outerNamespace(outer_namespace_, ss);                                          
+  std::string globals = generateGlobals(sir, inner_namespace_);        
+  ss << globals;
+  outerNamespace.commit();
+  return ss.str();
+}
+
+std::string CodeGen::generateGlobals(std::shared_ptr<SIR> const& sir,
                                      std::string namespace_) const {
 
   const auto& globalsMap = *(sir->GlobalVariableMap);
@@ -37,7 +48,7 @@ std::string CodeGen::generateGlobals(std::shared_ptr<SIR> const& sir,
 
   std::stringstream ss;
 
-  Namespace cudaNamespace(namespace_, ss);
+  Namespace cudaNamespace(namespace_, ss);  //why is this named cudaNamespace?
 
   Struct GlobalsStruct("globals", ss);
 
