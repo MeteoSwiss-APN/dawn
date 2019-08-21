@@ -211,6 +211,16 @@ bool StencilInstantiation::isIDAccessedMultipleStencils(int accessID) const {
   return false;
 }
 
+bool StencilInstantiation::hasSolverAccess(int accessID) const {
+  for(const auto& ms : iterateIIROver<MultiStage>(*getIIR())) {
+    const auto& field = ms->getField(accessID);
+    if(field.getExtents().getVerticalLoopOrderAccesses(ms->getLoopOrder()).LoopOrder) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil, int accessID,
                                                                 const Stencil::Lifetime& lifetime,
                                                                 TemporaryScope temporaryScope) {
@@ -246,7 +256,7 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
   VarDeclStmt* varDeclStmt = dyn_cast<VarDeclStmt>(oldStatement->ASTStmt.get());
   // If the TemporaryScope is within this stencil, then a VarDecl should be found (otherwise we have
   // a bug)
-  DAWN_ASSERT_MSG((varDeclStmt || temporaryScope == TemporaryScope::TS_Field),
+  DAWN_ASSERT_MSG((varDeclStmt || isIDAccessedMultipleStencils(accessID)),
                   format("Promote local variable to temporary field: a var decl is not "
                          "found for accessid: %i , name :%s",
                          accessID, metadata_.getNameFromAccessID(accessID))
