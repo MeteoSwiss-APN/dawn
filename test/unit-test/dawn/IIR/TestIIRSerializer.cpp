@@ -173,10 +173,9 @@ class createEmptyOptimizerContext : public ::testing::Test {
 protected:
   virtual void SetUp() override {
     dawn::DiagnosticsEngine diag;
-    dawn::Options options;
     std::shared_ptr<SIR> sir = std::make_shared<SIR>();
-    dawn::OptimizerContext::OptimizerContextOptions optionss_;
-    context_ = new OptimizerContext(diag, optionss_, sir);
+    dawn::OptimizerContext::OptimizerContextOptions options;
+    context_ = new OptimizerContext(diag, options, sir);
   }
   virtual void TearDown() override {}
   OptimizerContext* context_;
