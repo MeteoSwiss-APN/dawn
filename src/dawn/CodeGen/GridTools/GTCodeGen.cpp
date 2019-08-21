@@ -912,7 +912,8 @@ void GTCodeGen::generateStencilClasses(
 
     stencilClass.addComment("Members");
 
-    auto plchdrs = CodeGenUtils::buildPlaceholderList(stencilFields, globalsMap);
+    auto plchdrs = CodeGenUtils::buildPlaceholderList(stencilInstantiation->getMetaData(),
+                                                      stencilFields, globalsMap);
 
     stencilType = "computation" + RangeToString(",", "<", ">")(plchdrs);
 

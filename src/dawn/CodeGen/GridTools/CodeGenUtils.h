@@ -27,7 +27,8 @@ namespace gt {
 struct CodeGenUtils {
   // build the collection of placeholder typedef names
   static std::vector<std::string>
-  buildPlaceholderList(const std::map<int, iir::Stencil::FieldInfo>& stencilFields,
+  buildPlaceholderList(const iir::StencilMetaInformation& metadata,
+                       const std::map<int, iir::Stencil::FieldInfo>& stencilFields,
                        const sir::GlobalVariableMap& globalsMap, bool buildPair = false);
 };
 

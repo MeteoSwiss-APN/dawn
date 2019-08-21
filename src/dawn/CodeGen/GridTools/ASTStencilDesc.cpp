@@ -65,7 +65,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
   const auto& stencil = instantiation_->getIIR()->getStencil(stencilID);
   const auto fields = stencil.getOrderedFields();
   const auto& globalsMap = instantiation_->getIIR()->getGlobalVariableMap();
-  auto plchdrs = CodeGenUtils::buildPlaceholderList(fields, globalsMap, true);
+  auto plchdrs = CodeGenUtils::buildPlaceholderList(metadata_, fields, globalsMap, true);
 
   std::string stencilName =
       codeGenProperties_.getStencilName(StencilContext::SC_Stencil, stencilID);

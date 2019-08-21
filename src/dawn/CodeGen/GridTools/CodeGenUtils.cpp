@@ -20,7 +20,8 @@ namespace codegen {
 namespace gt {
 
 std::vector<std::string>
-CodeGenUtils::buildPlaceholderList(const std::map<int, iir::Stencil::FieldInfo>& stencilFields,
+CodeGenUtils::buildPlaceholderList(const iir::StencilMetaInformation& metadata,
+                                   const std::map<int, iir::Stencil::FieldInfo>& stencilFields,
                                    const sir::GlobalVariableMap& globalsMap, bool buildPair) {
   auto nonTempFields = makeRange(
       stencilFields,
@@ -31,7 +32,12 @@ CodeGenUtils::buildPlaceholderList(const std::map<int, iir::Stencil::FieldInfo>&
   for(const auto& fieldInfoPair : nonTempFields) {
     const auto& fieldInfo = fieldInfoPair.second;
     if(buildPair) {
-      plchdrs.push_back("p_" + fieldInfo.Name + "{} = " + fieldInfo.Name);
+      if(metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
+                               fieldInfoPair.first)) {
+        plchdrs.push_back("p_" + fieldInfo.Name + "{} = m_" + fieldInfo.Name);
+      } else {
+        plchdrs.push_back("p_" + fieldInfo.Name + "{} = " + fieldInfo.Name);
+      }
     } else {
       plchdrs.push_back("p_" + fieldInfo.Name);
     }
