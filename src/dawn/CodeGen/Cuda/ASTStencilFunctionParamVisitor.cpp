@@ -16,7 +16,6 @@
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/Support/Unreachable.h"
 

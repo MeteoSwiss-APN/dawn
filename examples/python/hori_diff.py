@@ -13,105 +13,104 @@ The program contains two parts:
 
 """
 
-import textwrap
-import sys
 import argparse
 import ctypes
 import os.path
-from optparse import OptionParser
+import sys
+import textwrap
 from ctypes import *
+from optparse import OptionParser
 
-from config import __dawn_install_module__,__dawn_install_dawnclib__ 
-
+from config import __dawn_install_module__, __dawn_install_dawnclib__
 from dawn import *
 from dawn import sir_printer
 
 dawn = CDLL(__dawn_install_dawnclib__)
 
 
-def create_vertical_region_stmt() -> VerticalRegionDeclStmt :
+def create_vertical_region_stmt() -> VerticalRegionDeclStmt:
     """ create a vertical region statement for the stencil
     """
 
-    interval = makeInterval(Interval.Start, Interval.End, 0, 0)
+    interval = make_interval(Interval.Start, Interval.End, 0, 0)
 
     # create the out = in[i+1] statement
-    body_ast = makeAST(
-      [
-      makeAssignmentStmt(
-        makeFieldAccessExpr("lap"),
-        makeBinaryOperator(
-          makeBinaryOperator(
-            makeLiteralAccessExpr("-4.0", BuiltinType.Float),
-            "*",
-            makeFieldAccessExpr("in")
-          ),
-          "+",
-          makeBinaryOperator(
-            makeFieldAccessExpr("coeff"),
-            "*",
-            makeBinaryOperator(
-              makeFieldAccessExpr("in",[1,0,0]),
-              "+",
-              makeBinaryOperator(
-                makeFieldAccessExpr("in",[-1,0,0]),
-                "+",
-                makeBinaryOperator(
-                  makeFieldAccessExpr("in",[0,1,0]),
-                  "+",
-                  makeFieldAccessExpr("in",[0,-1,0])
-                )
-              )
+    body_ast = make_ast(
+        [
+            make_assignment_stmt(
+                make_field_access_expr("lap"),
+                make_binary_operator(
+                    make_binary_operator(
+                        make_literal_access_expr("-4.0", BuiltinType.Float),
+                        "*",
+                        make_field_access_expr("in")
+                    ),
+                    "+",
+                    make_binary_operator(
+                        make_field_access_expr("coeff"),
+                        "*",
+                        make_binary_operator(
+                            make_field_access_expr("in", [1, 0, 0]),
+                            "+",
+                            make_binary_operator(
+                                make_field_access_expr("in", [-1, 0, 0]),
+                                "+",
+                                make_binary_operator(
+                                    make_field_access_expr("in", [0, 1, 0]),
+                                    "+",
+                                    make_field_access_expr("in", [0, -1, 0])
+                                )
+                            )
+                        )
+                    )
+                ),
+                "="
+            ),
+            make_assignment_stmt(
+                make_field_access_expr("out"),
+                make_binary_operator(
+                    make_binary_operator(
+                        make_literal_access_expr("-4.0", BuiltinType.Float),
+                        "*",
+                        make_field_access_expr("lap")
+                    ),
+                    "+",
+                    make_binary_operator(
+                        make_field_access_expr("coeff"),
+                        "*",
+                        make_binary_operator(
+                            make_field_access_expr("lap", [1, 0, 0]),
+                            "+",
+                            make_binary_operator(
+                                make_field_access_expr("lap", [-1, 0, 0]),
+                                "+",
+                                make_binary_operator(
+                                    make_field_access_expr("lap", [0, 1, 0]),
+                                    "+",
+                                    make_field_access_expr("lap", [0, -1, 0])
+                                )
+                            )
+                        )
+                    )
+                ),
+                "="
             )
-          )  
-        ),
-        "="
-      ),
-      makeAssignmentStmt(
-        makeFieldAccessExpr("out"),
-        makeBinaryOperator(
-          makeBinaryOperator(
-            makeLiteralAccessExpr("-4.0", BuiltinType.Float),
-            "*",
-            makeFieldAccessExpr("lap")
-          ),
-          "+",
-          makeBinaryOperator(
-            makeFieldAccessExpr("coeff"),
-            "*",
-            makeBinaryOperator(
-              makeFieldAccessExpr("lap",[1,0,0]),
-              "+",
-              makeBinaryOperator(
-                makeFieldAccessExpr("lap",[-1,0,0]),
-                "+",
-                makeBinaryOperator(
-                  makeFieldAccessExpr("lap",[0,1,0]),
-                  "+",
-                  makeFieldAccessExpr("lap",[0,-1,0])
-                )
-              )
-            )
-          )  
-        ),
-        "="
-      )
 
-      ]
+        ]
     )
 
-    vertical_region_stmt = makeVerticalRegionDeclStmt(body_ast, interval, VerticalRegion.Forward)
+    vertical_region_stmt = make_vertical_region_decl_stmt(body_ast, interval, VerticalRegion.Forward)
     return vertical_region_stmt
 
 
-hir = makeSIR("hori_diff.cpp", [
-        makeStencil(
-          "hori_diff",
-          makeAST([create_vertical_region_stmt()]),
-          [makeField("in"), makeField("out"), makeField("coeff"), makeField("lap", is_temporary=True)]
-        )
+hir = make_sir("hori_diff.cpp", [
+    make_stencil(
+        "hori_diff",
+        make_ast([create_vertical_region_stmt()]),
+        [make_field("in"), make_field("out"), make_field("coeff"), make_field("lap", is_temporary=True)]
+    )
 
-      ])
+])
 
 parser = OptionParser()
 parser.add_option("-v", "--verbose",
@@ -122,7 +121,7 @@ parser.add_option("-v", "--verbose",
 
 # Print the SIR to stdout only in verbose mode
 if options.verbose:
-    T = textwrap.TextWrapper(initial_indent=' '*1, width=120,subsequent_indent=' '*1)
+    T = textwrap.TextWrapper(initial_indent=' ' * 1, width=120, subsequent_indent=' ' * 1)
     des = sir_printer.SIRPrinter()
 
     for stencil in hir.stencils:
@@ -145,7 +144,7 @@ b_stencilName = stencilname.encode('utf-8')
 code = dawn.dawnTranslationUnitGetStencil(tu, b_stencilName)
 
 # write to file
-f = open(os.path.dirname(os.path.realpath(__file__))+"/data/hori_diff.cpp","w")
+f = open(os.path.dirname(os.path.realpath(__file__)) + "/data/hori_diff.cpp", "w")
 f.write(ctypes.c_char_p(code).value.decode("utf-8"))
 
 f.close()

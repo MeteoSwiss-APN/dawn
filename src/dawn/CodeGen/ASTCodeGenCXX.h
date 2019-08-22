@@ -50,6 +50,7 @@ public:
   virtual void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) override = 0;
   virtual void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override = 0;
   virtual void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override = 0;
+  virtual void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override = 0;
   /// @}
 
   /// @name Expression implementation

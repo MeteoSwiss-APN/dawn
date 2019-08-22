@@ -18,8 +18,6 @@
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/PassComputeStageExtents.h"
-#include "dawn/Optimizer/PassInlining.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/ASTSerializer.h"
 #include <fstream>
@@ -434,8 +432,6 @@ std::string
 IIRSerializer::serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
                              dawn::IIRSerializer::SerializationKind kind) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
-  // Before Serialization we need to ensure there are no stencilfunctions present. This is why we
-  // inline everything here.
   /////////////////////////////// WITTODO //////////////////////////////////////////////////////////
   //==------------------------------------------------------------------------------------------==//
   // After we have the merge of carlos' new inliner that distinguishes between full inlining (as
@@ -462,9 +458,6 @@ IIRSerializer::serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& i
   //
   // out = 0.5*(u[i+1, j+1] + u[i-1, j+1]) - 0.5*(u[i+1] + u[i-1])
   //==------------------------------------------------------------------------------------------==//
-
-  PassInlining inliner(true, PassInlining::IK_ComputationsOnTheFly);
-  inliner.run(instantiation);
 
   using namespace dawn::proto::iir;
   proto::iir::StencilInstantiation protoStencilInstantiation;

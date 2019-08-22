@@ -167,15 +167,15 @@ json::json StatementAccessesPair::print(const StencilMetaInformation& metadata,
   for(const auto& accessPair : accesses) {
     json::json accessNode;
     int accessID = accessPair.first;
-    std::string name = "unknown";
+    std::string accessName = "unknown";
     if(accessToNameMapper.hasAccessID(accessID)) {
-      name = accessToNameMapper.getNameFromAccessID(accessID);
+      accessName = accessToNameMapper.getNameFromAccessID(accessID);
     }
     if(metadata.isAccessType(iir::FieldAccessType::FAT_Literal, accessID)) {
       continue;
     }
     accessNode["access_id"] = accessID;
-    accessNode["name"] = name;
+    accessNode["name"] = accessName;
     std::stringstream ss;
     ss << accessPair.second;
     accessNode["extents"] = ss.str();

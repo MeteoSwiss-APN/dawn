@@ -28,7 +28,6 @@ class StencilMetaInformation;
 
 /// @brief Dump AST to string
 class AccessToNameMapper : public iir::ASTVisitorForwarding {
-  int scopeDepth_;
   const StencilMetaInformation& metaData_;
   std::stack<StencilFunctionInstantiation*> curFunctionInstantiation_;
 
@@ -38,8 +37,7 @@ class AccessToNameMapper : public iir::ASTVisitorForwarding {
   std::unordered_map<int, std::string> accessIDToName_;
 
 public:
-  AccessToNameMapper(const StencilMetaInformation& metaData)
-      : scopeDepth_(0), metaData_(metaData) {}
+  AccessToNameMapper(const StencilMetaInformation& metaData) : metaData_(metaData) {}
 
   virtual void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override;

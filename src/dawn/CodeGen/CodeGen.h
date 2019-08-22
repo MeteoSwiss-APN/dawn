@@ -18,7 +18,8 @@
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/CodeGen/TranslationUnit.h"
-#include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/IndexRange.h"
 #include <memory>
 
@@ -33,12 +34,18 @@ extern std::map<Key, Value> orderMap(const std::unordered_map<Key, Value>& umap)
 
   return m;
 }
+using stencilInstantiationContext =
+    std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>;
 
 /// @brief Interface of the backend code generation
 /// @ingroup codegen
 class CodeGen {
 protected:
-  OptimizerContext* context_;
+  stencilInstantiationContext context_;
+  DiagnosticsEngine& diagEngine;
+  struct codeGenOption {
+    int MaxHaloPoints;
+  } codeGenOptions;
 
   static size_t getVerticalTmpHaloSize(iir::Stencil const& stencil);
   size_t getVerticalTmpHaloSizeForMultipleStencils(
@@ -61,8 +68,7 @@ protected:
                               const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
                               const CodeGenProperties& codeGenProperties) const;
 
-  void addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainerMaxSize,
-                    int MaxHaloPoints) const;
+  void addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainerMaxSize) const;
 
   const std::string tmpStorageTypename_ = "tmp_storage_t";
   const std::string tmpMetadataTypename_ = "tmp_meta_data_t";
@@ -71,14 +77,12 @@ protected:
   const std::string bigWrapperMetadata_ = "m_meta_data";
 
 public:
-  CodeGen(OptimizerContext* context) : context_(context){};
+  CodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine, int maxHaloPoints)
+      : context_(ctx), diagEngine(engine), codeGenOptions{maxHaloPoints} {};
   virtual ~CodeGen() {}
 
   /// @brief Generate code
   virtual std::unique_ptr<TranslationUnit> generateCode() = 0;
-
-  /// @brief Get the optimizer context
-  const OptimizerContext* getOptimizerContext() const { return context_; }
 
   static std::string getStorageType(const sir::Field& field);
   static std::string getStorageType(const iir::Stencil::FieldInfo& field);
@@ -95,9 +99,12 @@ public:
                                   Class& stencilWrapperClass,
                                   const sir::GlobalVariableMap& globalsMap,
                                   const CodeGenProperties& codeGenProperties) const;
-  virtual std::string generateGlobals(std::shared_ptr<SIR> const& sir,
+  virtual std::string generateGlobals(stencilInstantiationContext& context, std::string namespace_);
+  virtual std::string generateGlobals(const sir::GlobalVariableMap& globalsMaps,
                                       std::string namespace_) const;
   void generateBCHeaders(std::vector<std::string>& ppDefines) const;
+
+  std::string generateFileName(const stencilInstantiationContext& context) const;
 };
 
 } // namespace codegen

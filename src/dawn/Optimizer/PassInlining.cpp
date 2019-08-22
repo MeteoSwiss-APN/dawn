@@ -35,7 +35,7 @@ namespace {
 class Inliner;
 
 static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
-    PassInlining::InlineStrategyKind strategy,
+    PassInlining::InlineStrategy strategy,
     const std::shared_ptr<iir::StencilFunctionInstantiation>& stencilFunctioninstantiation,
     const std::unique_ptr<iir::StatementAccessesPair>& oldStmt,
     std::vector<std::unique_ptr<iir::StatementAccessesPair>>& newStmts, int AccessIDOfCaller,
@@ -43,7 +43,7 @@ static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
 
 /// @brief Perform the inlining of a stencil-function
 class Inliner : public iir::ASTVisitor {
-  PassInlining::InlineStrategyKind strategy_;
+  PassInlining::InlineStrategy strategy_;
   const std::shared_ptr<iir::StencilFunctionInstantiation>& curStencilFunctioninstantiation_;
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   iir::StencilMetaInformation& metadata_;
@@ -79,7 +79,7 @@ class Inliner : public iir::ASTVisitor {
   std::stack<const std::unique_ptr<iir::StatementAccessesPair>*> currentStmtAccessesPair_;
 
 public:
-  Inliner(PassInlining::InlineStrategyKind strategy,
+  Inliner(PassInlining::InlineStrategy strategy,
           const std::shared_ptr<iir::StencilFunctionInstantiation>& stencilFunctioninstantiation,
           const std::unique_ptr<iir::StatementAccessesPair>& oldStmtAccessesPair,
           std::vector<std::unique_ptr<iir::StatementAccessesPair>>& newStmtAccessesPairs,
@@ -349,7 +349,7 @@ public:
 
 /// @brief Detect inline candidates
 class DetectInlineCandiates : public iir::ASTVisitorForwarding {
-  PassInlining::InlineStrategyKind strategy_;
+  PassInlining::InlineStrategy strategy_;
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
 
   /// The statement we are currently analyzing
@@ -379,7 +379,7 @@ class DetectInlineCandiates : public iir::ASTVisitorForwarding {
 public:
   using Base = iir::ASTVisitorForwarding;
 
-  DetectInlineCandiates(PassInlining::InlineStrategyKind strategy,
+  DetectInlineCandiates(PassInlining::InlineStrategy strategy,
                         const std::shared_ptr<iir::StencilInstantiation>& instantiation)
       : strategy_(strategy), instantiation_(instantiation), inlineCandiatesFound_(false) {}
 
@@ -487,7 +487,7 @@ public:
 /// @returns `true` if the stencil-function was inlined, `false` otherwise (the corresponding
 /// `Inliner` instance (or NULL) is returned as well)
 static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
-    PassInlining::InlineStrategyKind strategy,
+    PassInlining::InlineStrategy strategy,
     const std::shared_ptr<iir::StencilFunctionInstantiation>& stencilFunc,
     const std::unique_ptr<iir::StatementAccessesPair>& oldStmtAccessesPair,
     std::vector<std::unique_ptr<iir::StatementAccessesPair>>& newStmtAccessesPairs,
@@ -495,7 +495,7 @@ static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
 
   // Function which do not return a value are *always* inlined. Function which do return a value
   // are only inlined if we favor precomputations.
-  if(!stencilFunc->hasReturn() || strategy == PassInlining::IK_ComputationsOnTheFly) {
+  if(!stencilFunc->hasReturn() || strategy == PassInlining::InlineStrategy::ComputationsOnTheFly) {
     auto inliner =
         std::make_shared<Inliner>(strategy, stencilFunc, oldStmtAccessesPair, newStmtAccessesPairs,
                                   AccessIDOfCaller, stencilInstantiation);
@@ -507,15 +507,15 @@ static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
 
 } // anonymous namespace
 
-PassInlining::PassInlining(bool activate, InlineStrategyKind strategy)
+PassInlining::PassInlining(bool activate, InlineStrategy strategy)
     : Pass("PassInlining", true), activate_(activate), strategy_(strategy) {}
 
 bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 
-  DetectInlineCandiates inliner(strategy_, stencilInstantiation);
-
   if(!activate_)
     return true;
+
+  DetectInlineCandiates inliner(strategy_, stencilInstantiation);
 
   // Iterate all statements (top -> bottom)
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {

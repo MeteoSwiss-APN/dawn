@@ -12,11 +12,11 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_COMPILER_DIAGNOSTICSENGINE_H
-#define DAWN_COMPILER_DIAGNOSTICSENGINE_H
+#ifndef DAWN_SUPPORT_DIAGNOSTICSENGINE_H
+#define DAWN_SUPPORT_DIAGNOSTICSENGINE_H
 
-#include "dawn/Compiler/DiagnosticsMessage.h"
-#include "dawn/Compiler/DiagnosticsQueue.h"
+#include "dawn/Support/DiagnosticsMessage.h"
+#include "dawn/Support/DiagnosticsQueue.h"
 #include "dawn/Support/NonCopyable.h"
 
 namespace dawn {

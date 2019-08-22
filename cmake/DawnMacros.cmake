@@ -1,13 +1,13 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
-##                          _                      
-##                         | |                     
-##                       __| | __ ___      ___ ___  
-##                      / _` |/ _` \ \ /\ / / '_  | 
+##                          _
+##                         | |
+##                       __| | __ ___      ___ ___
+##                      / _` |/ _` \ \ /\ / / '_  |
 ##                     | (_| | (_| |\ V  V /| | | |
 ##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
@@ -30,7 +30,7 @@ macro(dawn_set_cxx_flags)
 
   # Architecture
   yoda_check_and_set_cxx_flag("-march=native" HAVE_GCC_MARCH_NATIVE)
-  
+
   # Pthread
   yoda_check_and_set_cxx_flag("-pthread" HAVE_GCC_PTHREAD)
 
@@ -54,7 +54,7 @@ macro(dawn_set_cxx_flags)
   yoda_check_and_set_cxx_flag("-Wno-sign-promo" HAVE_GCC_WNO_SIGN_PROMO)
   yoda_check_and_set_cxx_flag("-Wno-sign-compare" HAVE_GCC_WNO_SIGN_COMPARE)
   yoda_check_and_set_cxx_flag("-Wno-unused-parameter" HAVE_GCC_WNO_UNUSDED_PARAMETER)
-  
+
   if(BUILD_SHARED_LIBS)
     yoda_check_and_set_cxx_flag("-fPIC" HAVE_GCC_PIC)
   endif()
@@ -63,7 +63,7 @@ macro(dawn_set_cxx_flags)
     if(DAWN_COMPILER_CLANG)
       yoda_check_and_set_cxx_flag("-Qunused-arguments" HAVE_CLANG_UNUSED_ARGUMENTS)
       yoda_check_and_set_cxx_flag("-fcolor-diagnostics" HAVE_CLANG_COLOR_DIAGNOSTICS)
-      yoda_check_and_set_cxx_flag("-Wno-undefined-var-template" 
+      yoda_check_and_set_cxx_flag("-Wno-undefined-var-template"
                                      HAVE_CLANG_WNO_UNDEFINED_VAR_TEMPLATE)
     endif()
 
@@ -89,6 +89,7 @@ macro(dawn_gen_install_config)
   set(DAWN_CONFIGURE_ROOT "")
   set(DAWN_CONFIGURE_CMAKE_DIR "${DAWN_INSTALL_CMAKE_DIR}")
   set(DAWN_CONFIGURE_INCLUDE_DIR "${DAWN_INSTALL_INCLUDE_DIR}")
+  set(DAWN_CONFIGURE_EXTERNAL_INCLUDE_DIR "${DAWN_CONFIGURE_INCLUDE_DIR}/dawn/Support/External")
   set(DAWN_CONFIGURE_GENERATED_INCLUDE_DIR "${DAWN_INSTALL_INCLUDE_DIR}")
   set(DAWN_CONFIGURE_LIB_DIR "${DAWN_INSTALL_LIB_DIR}")
 
@@ -97,12 +98,13 @@ macro(dawn_gen_install_config)
   set(DAWN_CONFIGURE_PROTOBUF_VERSION ${DAWN_PROTOBUF_VERSION})
 
   configure_package_config_file(
-    ${CMAKE_SOURCE_DIR}/cmake/templates/dawnConfig.cmake.in 
+    ${CMAKE_SOURCE_DIR}/cmake/templates/dawnConfig.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_FILES_DIRECTORY}/install/dawnConfig.cmake
     INSTALL_DESTINATION ${DAWN_INSTALL_CMAKE_DIR}
-    PATH_VARS 
+    PATH_VARS
       DAWN_CONFIGURE_ROOT
       DAWN_CONFIGURE_INCLUDE_DIR
+      DAWN_CONFIGURE_EXTERNAL_INCLUDE_DIR
       DAWN_CONFIGURE_GENERATED_INCLUDE_DIR
       DAWN_CONFIGURE_LIB_DIR
       DAWN_CONFIGURE_CMAKE_DIR
@@ -117,16 +119,18 @@ macro(dawn_gen_install_config)
   # in source installation
   set(DAWN_CONFIGURE_ROOT "${PROJECT_BINARY_DIR}")
   set(DAWN_CONFIGURE_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/src")
+  set(DAWN_CONFIGURE_EXTERNAL_INCLUDE_DIR "${DAWN_CONFIGURE_INCLUDE_DIR}/dawn/Support/External")
   set(DAWN_CONFIGURE_GENERATED_INCLUDE_DIR "${PROJECT_BINARY_DIR}/src")
   set(DAWN_CONFIGURE_LIB_DIR "")
   set(DAWN_CONFIGURE_CMAKE_DIR "${PROJECT_BINARY_DIR}")
   configure_package_config_file(
-    ${CMAKE_SOURCE_DIR}/cmake/templates/dawnConfig.cmake.in 
+    ${CMAKE_SOURCE_DIR}/cmake/templates/dawnConfig.cmake.in
     ${PROJECT_BINARY_DIR}/dawnConfig.cmake
     INSTALL_DESTINATION ${PROJECT_BINARY_DIR}
-    PATH_VARS 
+    PATH_VARS
       DAWN_CONFIGURE_ROOT
       DAWN_CONFIGURE_INCLUDE_DIR
+      DAWN_CONFIGURE_EXTERNAL_INCLUDE_DIR
       DAWN_CONFIGURE_GENERATED_INCLUDE_DIR
       DAWN_CONFIGURE_LIB_DIR
       DAWN_CONFIGURE_CMAKE_DIR

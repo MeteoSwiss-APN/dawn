@@ -140,7 +140,7 @@ public:
   static bool classof(const Expr* expr) { return expr->getKind() == EK_UnaryOperator; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(operand_); }
   virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
-                               const std::shared_ptr<Expr>& newExpr);
+                               const std::shared_ptr<Expr>& newExpr) override;
   ACCEPTVISITOR(Expr, UnaryOperator)
 };
 
@@ -181,7 +181,7 @@ public:
   static bool classof(const Expr* expr) { return expr->getKind() == EK_BinaryOperator; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(operands_); }
   virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
-                               const std::shared_ptr<Expr>& newExpr);
+                               const std::shared_ptr<Expr>& newExpr) override;
 
   ACCEPTVISITOR(Expr, BinaryOperator)
 };
@@ -272,7 +272,7 @@ public:
   static bool classof(const Expr* expr) { return expr->getKind() == EK_TernaryOperator; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(operands_); }
   virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
-                               const std::shared_ptr<Expr>& newExpr);
+                               const std::shared_ptr<Expr>& newExpr) override;
   ACCEPTVISITOR(Expr, TernaryOperator)
 };
 
@@ -318,7 +318,7 @@ public:
   static bool classof(const Expr* expr) { return expr->getKind() == EK_FunCallExpr; }
   virtual ExprRangeType getChildren() override { return ExprRangeType(arguments_); }
   virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
-                               const std::shared_ptr<Expr>& newExpr);
+                               const std::shared_ptr<Expr>& newExpr) override;
   ACCEPTVISITOR(Expr, FunCallExpr)
 };
 
@@ -431,7 +431,7 @@ public:
     return (isArrayAccess() ? ExprRangeType(index_) : ExprRangeType());
   }
   virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
-                               const std::shared_ptr<Expr>& newExpr);
+                               const std::shared_ptr<Expr>& newExpr) override;
   ACCEPTVISITOR(Expr, VarAccessExpr)
 };
 
