@@ -420,9 +420,11 @@ void CudaCodeGen::generateStencilRunMethod(
   const auto stencilFields = stencil.getOrderedFields();
 
   auto nonTempFields = makeRange(
-      stencilFields,
-      std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
-          [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return !p.second.IsTemporary; }));
+      stencilFields, std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
+                         [&](std::pair<int, iir::Stencil::FieldInfo> const& p) {
+                           return !p.second.IsTemporary &&
+                                  metadata.isAccessType(iir::FieldAccessType::FAT_Field, p.first);
+                         }));
 
   for(const auto& field : nonTempFields) {
     stencilRunMethod.addArg(
