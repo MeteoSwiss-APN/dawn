@@ -69,6 +69,9 @@ public:
   /// @brief check whether the `accessID` is accessed in more than one stencil
   bool isIDAccessedMultipleStencils(int accessID) const;
 
+  /// @brief check whether the `accessID` is accessed in more than one MS
+  bool isIDAccessedMultipleMSs(int accessID) const;
+
   /// @brief check if there is any (iterative) solver type of accesses for the accessID
   bool hasSolverAccess(int accessID) const;
 
