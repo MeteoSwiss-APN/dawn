@@ -211,6 +211,18 @@ bool StencilInstantiation::isIDAccessedMultipleStencils(int accessID) const {
   return false;
 }
 
+bool StencilInstantiation::isIDAccessedMultipleMSs(int accessID) const {
+
+  int count = 0;
+  for(const auto& ms : iterateIIROver<MultiStage>(*IIR_)) {
+    if(ms->hasField(accessID)) {
+      if(++count > 1)
+        return true;
+    }
+  }
+  return false;
+}
+
 bool StencilInstantiation::hasSolverAccess(int accessID) const {
   for(const auto& ms : iterateIIROver<MultiStage>(*getIIR())) {
     const auto& field = ms->getField(accessID);

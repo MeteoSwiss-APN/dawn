@@ -168,7 +168,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
         // Since the Lifetime only records the position within one stencil we additionally check if
         // the accessID is accessed in multiple stencils
         if(!temporary.lifetime_.Begin.inSameDoMethod(temporary.lifetime_.End) ||
-           instantiation->isIDAccessedMultipleStencils(accessID)) {
+           instantiation->isIDAccessedMultipleMSs(accessID)) {
 
           if(context->getOptions().ReportPassTemporaryType)
             report("promote");
@@ -183,7 +183,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
         // Also solver accesses can not be demoted to local variable
         if(temporary.lifetime_.Begin.inSameDoMethod(temporary.lifetime_.End) &&
            temporary.extent_.isPointwise() && !usedAsArgumentInStencilFun(stencilPtr, accessID) &&
-           !instantiation->hasSolverAccess(accessID)) {
+           !instantiation->isIDAccessedMultipleMSs(accessID)) {
 
           if(context->getOptions().ReportPassTemporaryType)
             report("demote");
