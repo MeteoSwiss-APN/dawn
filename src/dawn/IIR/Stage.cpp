@@ -176,7 +176,6 @@ bool Stage::overlaps(const Interval& interval, const std::unordered_map<int, Fie
 class CaptureStencilFunctionCallGlobalParams : public ASTVisitorForwarding {
 
   std::unordered_set<int>& globalVariables_;
-  StencilFunctionInstantiation* currentFunction_;
   const StencilMetaInformation& metaData_;
   std::shared_ptr<const StencilFunctionInstantiation> function_;
 

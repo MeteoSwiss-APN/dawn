@@ -16,9 +16,9 @@
 #define DAWN_COMPILER_DAWNCOMPILER_H
 
 #include "dawn/CodeGen/TranslationUnit.h"
-#include "dawn/Compiler/DiagnosticsEngine.h"
 #include "dawn/Compiler/Options.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/NonCopyable.h"
 #include <memory>
 

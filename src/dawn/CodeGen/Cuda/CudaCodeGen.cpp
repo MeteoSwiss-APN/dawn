@@ -19,11 +19,9 @@
 #include "dawn/CodeGen/Cuda/ASTStencilDesc.h"
 #include "dawn/CodeGen/Cuda/CacheProperties.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
-#include "dawn/CodeGen/Cuda/MSCodeGen.hpp"
+#include "dawn/CodeGen/Cuda/MSCodeGen.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/PassInlining.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Logging.h"
@@ -37,7 +35,9 @@ namespace dawn {
 namespace codegen {
 namespace cuda {
 
-CudaCodeGen::CudaCodeGen(OptimizerContext* context) : CodeGen(context) {}
+CudaCodeGen::CudaCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
+                         int maxHaloPoints, int nsms, int maxBlocksPerSM, std::string domainSize)
+    : CodeGen(ctx, engine, maxHaloPoints), codeGenOptions{nsms, maxBlocksPerSM, domainSize} {}
 
 CudaCodeGen::~CudaCodeGen() {}
 
@@ -47,7 +47,8 @@ void CudaCodeGen::generateAllCudaKernels(
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
     DAWN_ASSERT(cachePropertyMap_.count(ms->getID()));
 
-    MSCodeGen msCodeGen(ssSW, ms, stencilInstantiation, cachePropertyMap_.at(ms->getID()));
+    MSCodeGen msCodeGen(ssSW, ms, stencilInstantiation, cachePropertyMap_.at(ms->getID()),
+                        codeGenOptions);
     msCodeGen.generateCudaKernelCode();
   }
 }
@@ -665,15 +666,11 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
 
   // Generate code for StencilInstantiations
   std::map<std::string, std::string> stencils;
-  for(const auto& nameStencilCtxPair : context_->getStencilInstantiationMap()) {
+  for(const auto& nameStencilCtxPair : context_) {
     std::shared_ptr<iir::StencilInstantiation> origSI = nameStencilCtxPair.second;
     // TODO the clone seems to be broken
     //    std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = origSI->clone();
     std::shared_ptr<iir::StencilInstantiation> stencilInstantiation = origSI;
-
-    PassInlining inliner(true, PassInlining::InlineStrategyKind::IK_ComputationsOnTheFly);
-
-    inliner.run(stencilInstantiation);
 
     std::string code = generateStencilInstantiation(stencilInstantiation);
     if(code.empty())
@@ -681,7 +678,7 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
   }
 
-  std::string globals = generateGlobals(context_->getSIR(), "dawn_generated", "cuda");
+  std::string globals = generateGlobals(context_, "dawn_generated", "cuda");
 
   std::vector<std::string> ppDefines;
   auto makeDefine = [](std::string define, int value) {
@@ -697,15 +694,16 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
   // different TU's is completed, this is no longer necessary.
   // [https://github.com/MeteoSwiss-APN/gtclang/issues/32]
   //==============------------------------------------------------------------------------------===
-  CodeGen::addMplIfdefs(ppDefines, 30, context_->getOptions().MaxHaloPoints);
+  CodeGen::addMplIfdefs(ppDefines, 30);
 
   generateBCHeaders(ppDefines);
 
   DAWN_LOG(INFO) << "Done generating code";
 
+  std::string filename = generateFileName(context_);
   // TODO missing the BC
-  return make_unique<TranslationUnit>(context_->getSIR()->Filename, std::move(ppDefines),
-                                      std::move(stencils), std::move(globals));
+  return make_unique<TranslationUnit>(filename, std::move(ppDefines), std::move(stencils),
+                                      std::move(globals));
 }
 
 } // namespace cuda

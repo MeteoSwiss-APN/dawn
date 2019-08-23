@@ -16,11 +16,6 @@ yoda_add_library(
   NAME DawnCompiler
   SOURCES DawnCompiler.h
           DawnCompiler.cpp
-          DiagnosticsEngine.cpp
-          DiagnosticsEngine.h
-          DiagnosticsMessage.h
-          DiagnosticsQueue.cpp
-          DiagnosticsQueue.h
           Options.h
           Options.inc
   OBJECT

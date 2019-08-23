@@ -49,6 +49,7 @@ public:
   virtual void visit(const std::shared_ptr<ReturnStmt>& stmt) override = 0;
   virtual void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) override = 0;
   virtual void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override = 0;
+  virtual void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override = 0;
   /// @}
 
   /// @name Expression implementation
