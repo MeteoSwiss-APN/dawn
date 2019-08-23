@@ -181,7 +181,8 @@ std::string GTCodeGen::generateStencilInstantiation(
 
   std::stringstream ssSW, ssMS, tss;
 
-  Namespace gridtoolsNamespace("dawn::gridtools", ssSW);
+  Namespace dawnNamespace("dawn_generated", ssSW);		
+  Namespace gridtoolsNamespace("gt", ssSW);		
 
   Class StencilWrapperClass(stencilInstantiation->getName(), ssSW);
   StencilWrapperClass.changeAccessibility(
@@ -209,6 +210,7 @@ std::string GTCodeGen::generateStencilInstantiation(
   StencilWrapperClass.commit();
 
   gridtoolsNamespace.commit();
+  dawnNamespace.commit();
 
   return ssSW.str();
 }
@@ -229,7 +231,7 @@ void GTCodeGen::generateStencilWrapperPublicMemberFunctions(
   }
   // Generate stencil getter
   MemberFunction stencilGetter =
-      stencilWrapperClass.addMemberFunction("std::vector<computation<void>*>", "getStencils");
+      stencilWrapperClass.addMemberFunction("std::vector<gridtools::computation<void>*>", "getStencils");
   stencilGetter.addStatement(
       "return " +
       RangeToString(", ", "std::vector<gridtools::computation<void>*>({", "})")(
@@ -655,7 +657,7 @@ void GTCodeGen::generateStencilClasses(
         Structure StageStruct =
             StencilClass.addStruct(Twine("stage_") + Twine(multiStageIdx) + "_" + Twine(stageIdx));
 
-        ssMS << "gridtools::make_stage_with_extent<" << StageStruct.getName() << ", extent< ";
+        ssMS << "gridtools::make_stage_with_extent<" << StageStruct.getName() << ", gridtools::extent< ";
         auto extents = stage.getExtents().getExtents();
         ssMS << extents[0].Minus << ", " << extents[0].Plus << ", " << extents[1].Minus << ", "
              << extents[1].Plus << "> >(";
@@ -904,7 +906,7 @@ void GTCodeGen::generateStencilClasses(
     StencilConstructor.commit();
 
     StencilClass.addComment("Members");
-    stencilType = "computation<void>";
+    stencilType = "gridtools::computation<void>";
     StencilClass.addMember(stencilType, "m_stencil");
 
     if(!globalsMap.empty()) {
@@ -934,7 +936,7 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   }
 
   // Generate globals
-  std::string globals = generateGlobals(context_->getSIR(), "dawn::gridtools");
+  std::string globals = generateGlobals(context_->getSIR(), "dawn_generated", "gt");  
 
   // If we need more than 20 elements in boost::mpl containers, we need to increment to the nearest
   // multiple of ten

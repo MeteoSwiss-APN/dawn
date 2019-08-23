@@ -241,7 +241,7 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
   // Generate code
   std::unique_ptr<codegen::CodeGen> CG;
 
-  if(options_->Backend == "gridtools") {
+  if(options_->Backend == "gt" || options_->Backend == "gridtools") {
     CG = make_unique<codegen::gt::GTCodeGen>(optimizer.get());
   } else if(options_->Backend == "c++-naive") {
     CG = make_unique<codegen::cxxnaive::CXXNaiveCodeGen>(optimizer.get());
