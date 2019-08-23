@@ -541,7 +541,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
   }
 
-  std::string globals = generateGlobals(context_, "dawn_generated, ""cxxnaive");
+  std::string globals = generateGlobals(context_, "dawn_generated", "cxxnaive");
 
   std::vector<std::string> ppDefines;
   auto makeDefine = [](std::string define, int value) {
