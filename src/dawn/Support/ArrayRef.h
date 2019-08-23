@@ -78,7 +78,7 @@ public:
 
   /// @brief Construct an ArrayRef from a std::initializer_list
   ArrayRef(const std::initializer_list<T>& Vec)
-      : data_(Vec.begin() == Vec.end() ? (T*)nullptr : Vec.begin()), length_(Vec.size()) {}
+      : data_(Vec.begin() == Vec.end() ? nullptr : Vec.begin()), length_(Vec.size()) {}
 
   /// @brief Construct an ArrayRef from a SmallVector.
   ///

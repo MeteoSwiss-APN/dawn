@@ -18,7 +18,6 @@
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Logging.h"
@@ -63,7 +62,9 @@ static std::string makeKLoop(const std::string dom, bool isBackward,
                     : makeLoopImpl(iir::Extent{}, "k", lower, upper, "<=", "++");
 }
 
-CXXNaiveCodeGen::CXXNaiveCodeGen(OptimizerContext* context) : CodeGen(context) {}
+CXXNaiveCodeGen::CXXNaiveCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
+                                 int maxHaloPoint)
+    : CodeGen(ctx, engine, maxHaloPoint) {}
 
 CXXNaiveCodeGen::~CXXNaiveCodeGen() {}
 
@@ -446,7 +447,7 @@ void CXXNaiveCodeGen::generateStencilFunctions(
                                 stencilInstantiation->getMetaData().getStencilLocation());
         diag << "no storages referenced in stencil '" << stencilInstantiation->getName()
              << "', this would result in invalid gridtools code";
-        context_->getDiagnostics().report(diag);
+        diagEngine.report(diag);
         return;
       }
 
@@ -466,7 +467,7 @@ void CXXNaiveCodeGen::generateStencilFunctions(
         DiagnosticsBuilder diag(DiagnosticsKind::Error, stencilFun->getStencilFunction()->Loc);
         diag << "no storages referenced in stencil function '" << stencilFun->getName()
              << "', this would result in invalid gridtools code";
-        context_->getDiagnostics().report(diag);
+        diagEngine.report(diag);
         return;
       }
 
@@ -531,14 +532,14 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
 
   // Generate code for StencilInstantiations
   std::map<std::string, std::string> stencils;
-  for(const auto& nameStencilCtxPair : context_->getStencilInstantiationMap()) {
+  for(const auto& nameStencilCtxPair : context_) {
     std::string code = generateStencilInstantiation(nameStencilCtxPair.second);
     if(code.empty())
       return nullptr;
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
   }
 
-  std::string globals = generateGlobals(context_->getSIR(), "cxxnaive");
+  std::string globals = generateGlobals(context_, "cxxnaive");
 
   std::vector<std::string> ppDefines;
   auto makeDefine = [](std::string define, int value) {
@@ -548,16 +549,17 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
   ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
   ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T CXXNAIVE");
   // ==============------------------------------------------------------------------------------===
-  // BENCHMARKTODO: since we're importing two cpp files into the benchmark API we need to set these
-  // variables also in the naive code-generation in order to not break it. Once the move to
+  // BENCHMARKTODO: since we're importing two cpp files into the benchmark API we need to set
+  // these variables also in the naive code-generation in order to not break it. Once the move to
   // different TU's is completed, this is no longer necessary.
   // [https://github.com/MeteoSwiss-APN/gtclang/issues/32]
   // ==============------------------------------------------------------------------------------===
-  CodeGen::addMplIfdefs(ppDefines, 30, context_->getOptions().MaxHaloPoints);
+  CodeGen::addMplIfdefs(ppDefines, 30);
   DAWN_LOG(INFO) << "Done generating code";
 
-  return make_unique<TranslationUnit>(context_->getSIR()->Filename, std::move(ppDefines),
-                                      std::move(stencils), std::move(globals));
+  std::string filename = generateFileName(context_);
+  return make_unique<TranslationUnit>(filename, std::move(ppDefines), std::move(stencils),
+                                      std::move(globals));
 }
 
 } // namespace cxxnaive
