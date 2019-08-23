@@ -18,7 +18,6 @@
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Logging.h"
@@ -63,7 +62,9 @@ static std::string makeKLoop(const std::string dom, bool isBackward,
                     : makeLoopImpl(iir::Extent{}, "k", lower, upper, "<=", "++");
 }
 
-CXXNaiveCodeGen::CXXNaiveCodeGen(OptimizerContext* context) : CodeGen(context) {}
+CXXNaiveCodeGen::CXXNaiveCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
+                                 int maxHaloPoint)
+    : CodeGen(ctx, engine, maxHaloPoint) {}
 
 CXXNaiveCodeGen::~CXXNaiveCodeGen() {}
 
@@ -73,7 +74,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
 
   std::stringstream ssSW;
 
-  Namespace dawnNamespace("dawn_generated", ssSW);
+  Namespace dawnNamespace("dawn_generated", ssW);
   Namespace cxxnaiveNamespace("cxxnaive", ssSW);
 
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
@@ -279,16 +280,21 @@ void CXXNaiveCodeGen::generateStencilClasses(
         std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
             [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
 
-    // list of template for storages used in the stencil class
-    std::vector<std::string> StencilTemplates(nonTempFields.size());
+    // maps storage access ID to storage type
+    std::map<int, std::string> StencilTemplates;
     int cnt = 0;
-    std::generate(StencilTemplates.begin(), StencilTemplates.end(),
-                  [cnt]() mutable { return "StorageType" + std::to_string(cnt++); });
+    std::transform(nonTempFields.begin(), nonTempFields.end(),
+                   std::inserter(StencilTemplates, StencilTemplates.end()),
+                   [cnt](const decltype(*nonTempFields.begin())& it) mutable {
+                     return std::make_pair(it->second.field.getAccessID(),
+                                           "StorageType" + std::to_string(cnt++));
+                   });
 
     Structure StencilClass = stencilWrapperClass.addStruct(
         stencilName,
-        RangeToString(", ", "", "")(StencilTemplates,
-                                    [](const std::string& str) { return "class " + str; }),
+        RangeToString(", ", "",
+                      "")(StencilTemplates,
+                          [](const std::pair<int, std::string>& s) { return "class " + s.second; }),
         "sbase");
 
     ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
@@ -305,7 +311,8 @@ void CXXNaiveCodeGen::generateStencilClasses(
     }
 
     for(auto fieldIt : nonTempFields) {
-      StencilClass.addMember(StencilTemplates[fieldIt.idx()] + "&", "m_" + (*fieldIt).second.Name);
+      StencilClass.addMember(StencilTemplates[fieldIt->second.field.getAccessID()] + "&",
+                             "m_" + (*fieldIt).second.Name);
     }
 
     addTmpStorageDeclaration(StencilClass, tempFields);
@@ -319,7 +326,8 @@ void CXXNaiveCodeGen::generateStencilClasses(
       stencilClassCtr.addArg("const globals& globals_");
     }
     for(auto fieldIt : nonTempFields) {
-      stencilClassCtr.addArg(StencilTemplates[fieldIt.idx()] + "& " + (*fieldIt).second.Name + "_");
+      stencilClassCtr.addArg(StencilTemplates[fieldIt->second.field.getAccessID()] + "& " +
+                             (*fieldIt).second.Name + "_");
     }
 
     stencilClassCtr.addInit("m_dom(dom_)");
@@ -363,21 +371,14 @@ void CXXNaiveCodeGen::generateStencilClasses(
       const iir::MultiStage& multiStage = *multiStagePtr;
 
       // create all the data views
-      for(auto fieldIt : nonTempFields) {
-        const auto fieldName = (*fieldIt).second.Name;
-        StencilRunMethod.addStatement(c_gt() + "data_view<" + StencilTemplates[fieldIt.idx()] +
-                                      "> " + fieldName + "= " + c_gt() + "make_host_view(m_" +
-                                      fieldName + ")");
-        StencilRunMethod.addStatement("std::array<int,3> " + fieldName + "_offsets{0,0,0}");
+      const auto& usedFields = multiStage.getFields();
+      for(const auto& usedField : usedFields) {
+        auto field = stencilFields.at(usedField.first);
+        auto storageName = field.IsTemporary ? "tmp_storage_t" : StencilTemplates[usedField.first];
+        StencilRunMethod.addStatement(c_gt() + "data_view<" + storageName + "> " + field.Name +
+                                      "= " + c_gt() + "make_host_view(m_" + field.Name + ")");
+        StencilRunMethod.addStatement("std::array<int,3> " + field.Name + "_offsets{0,0,0}");
       }
-      for(auto fieldIt : tempFields) {
-        const auto fieldName = (*fieldIt).second.Name;
-
-        StencilRunMethod.addStatement(c_gt() + "data_view<tmp_storage_t> " + fieldName + "= " +
-                                      c_gt() + "make_host_view(m_" + fieldName + ")");
-        StencilRunMethod.addStatement("std::array<int,3> " + fieldName + "_offsets{0,0,0}");
-      }
-
       auto intervals_set = multiStage.getIntervals();
       std::vector<iir::Interval> intervals_v;
       std::copy(intervals_set.begin(), intervals_set.end(), std::back_inserter(intervals_v));
@@ -448,7 +449,7 @@ void CXXNaiveCodeGen::generateStencilFunctions(
                                 stencilInstantiation->getMetaData().getStencilLocation());
         diag << "no storages referenced in stencil '" << stencilInstantiation->getName()
              << "', this would result in invalid gridtools code";
-        context_->getDiagnostics().report(diag);
+        diagEngine.report(diag);
         return;
       }
 
@@ -468,7 +469,7 @@ void CXXNaiveCodeGen::generateStencilFunctions(
         DiagnosticsBuilder diag(DiagnosticsKind::Error, stencilFun->getStencilFunction()->Loc);
         diag << "no storages referenced in stencil function '" << stencilFun->getName()
              << "', this would result in invalid gridtools code";
-        context_->getDiagnostics().report(diag);
+        diagEngine.report(diag);
         return;
       }
 
@@ -533,14 +534,14 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
 
   // Generate code for StencilInstantiations
   std::map<std::string, std::string> stencils;
-  for(const auto& nameStencilCtxPair : context_->getStencilInstantiationMap()) {
+  for(const auto& nameStencilCtxPair : context_) {
     std::string code = generateStencilInstantiation(nameStencilCtxPair.second);
     if(code.empty())
       return nullptr;
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
   }
-    
-  std::string globals = generateGlobals(context_->getSIR(), "dawn_generated", "cxxnaive");  
+
+  std::string globals = generateGlobals(context_, "dawn_generated, ""cxxnaive");
 
   std::vector<std::string> ppDefines;
   auto makeDefine = [](std::string define, int value) {
@@ -550,16 +551,17 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
   ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
   ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T CXXNAIVE");
   // ==============------------------------------------------------------------------------------===
-  // BENCHMARKTODO: since we're importing two cpp files into the benchmark API we need to set these
-  // variables also in the naive code-generation in order to not break it. Once the move to
+  // BENCHMARKTODO: since we're importing two cpp files into the benchmark API we need to set
+  // these variables also in the naive code-generation in order to not break it. Once the move to
   // different TU's is completed, this is no longer necessary.
   // [https://github.com/MeteoSwiss-APN/gtclang/issues/32]
   // ==============------------------------------------------------------------------------------===
-  CodeGen::addMplIfdefs(ppDefines, 30, context_->getOptions().MaxHaloPoints);
+  CodeGen::addMplIfdefs(ppDefines, 30);
   DAWN_LOG(INFO) << "Done generating code";
 
-  return make_unique<TranslationUnit>(context_->getSIR()->Filename, std::move(ppDefines),
-                                      std::move(stencils), std::move(globals));
+  std::string filename = generateFileName(context_);
+  return make_unique<TranslationUnit>(filename, std::move(ppDefines), std::move(stencils),
+                                      std::move(globals));
 }
 
 } // namespace cxxnaive
