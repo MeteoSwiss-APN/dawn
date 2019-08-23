@@ -127,8 +127,7 @@ public:
       ss_ << std::string(curIndent_, ' ');
     ss_ << "boundary-condition:";
     ss_ << stmt->getFunctor();
-    ss_ << RangeToString(", ", "(", ")")(
-        stmt->getFields(), [&](const std::shared_ptr<sir::Field>& field) { return field->Name; });
+    ss_ << RangeToString(", ", "(", ")")(stmt->getFields());
     ss_ << ";" << (newLines_ ? "\n" : "");
   }
 

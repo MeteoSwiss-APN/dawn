@@ -267,9 +267,7 @@ bool BoundaryConditionDeclStmt::equals(const Stmt* other) const {
   return otherPtr && Stmt::equals(other) && functor_ == otherPtr->functor_ &&
          fields_.size() == otherPtr->fields_.size() &&
          std::equal(fields_.begin(), fields_.end(), otherPtr->fields_.begin(),
-                    [](const std::shared_ptr<sir::Field>& a, const std::shared_ptr<sir::Field>& b) {
-                      return a->Name == b->Name && a->IsTemporary == b->IsTemporary;
-                    });
+                    [](const std::string& a, const std::string& b) { return a == b; });
 }
 
 //===------------------------------------------------------------------------------------------===//

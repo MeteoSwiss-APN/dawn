@@ -205,13 +205,8 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& s
   auto protoStmt = getCurrentStmtProto()->mutable_boundary_condition_decl_stmt();
   protoStmt->set_functor(stmt->getFunctor());
 
-  for(const auto& field : stmt->getFields()) {
-    auto fieldProto = protoStmt->add_fields();
-    fieldProto->set_name(field->Name);
-    fieldProto->set_is_temporary(field->IsTemporary);
-    fieldProto->mutable_loc()->set_column(field->Loc.Column);
-    fieldProto->mutable_loc()->set_line(field->Loc.Line);
-  }
+  for(const auto& fieldName : stmt->getFields())
+    protoStmt->add_fields(fieldName);
 
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
   protoStmt->set_id(stmt->getID());
@@ -690,8 +685,8 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto) {
     const auto& stmtProto = statementProto.boundary_condition_decl_stmt();
     auto stmt =
         std::make_shared<BoundaryConditionDeclStmt>(stmtProto.functor(), makeLocation(stmtProto));
-    for(const auto& fieldProto : stmtProto.fields())
-      stmt->getFields().emplace_back(makeField(fieldProto));
+    for(const auto& fieldName : stmtProto.fields())
+      stmt->getFields().emplace_back(fieldName);
     stmt->setID(stmtProto.id());
     return stmt;
   }

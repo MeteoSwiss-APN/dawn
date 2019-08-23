@@ -15,14 +15,7 @@
         "boundary_condition_decl_stmt": {
          "functor": "zero",
          "fields": [
-          {
-           "name": "intermediate",
-           "loc": {
-            "Line": -1,
-            "Column": -1
-           },
-           "is_temporary": false
-          }
+          "intermediate"
          ],
          "loc": {
           "Line": -1,

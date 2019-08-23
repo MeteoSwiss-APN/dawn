@@ -347,7 +347,7 @@ public:
 /// @ingroup sir
 class BoundaryConditionDeclStmt : public Stmt {
   std::string functor_;
-  std::vector<std::shared_ptr<sir::Field>> fields_;
+  std::vector<std::string> fields_;
 
 public:
   /// @name Constructor & Destructor
@@ -360,8 +360,8 @@ public:
 
   const std::string& getFunctor() const { return functor_; }
 
-  std::vector<std::shared_ptr<sir::Field>>& getFields() { return fields_; }
-  const std::vector<std::shared_ptr<sir::Field>>& getFields() const { return fields_; }
+  std::vector<std::string>& getFields() { return fields_; }
+  const std::vector<std::string>& getFields() const { return fields_; }
 
   virtual bool isStencilDesc() const override { return true; }
   virtual std::shared_ptr<Stmt> clone() const override;

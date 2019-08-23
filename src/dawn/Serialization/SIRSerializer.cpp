@@ -355,22 +355,25 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
   case dawn::proto::statements::Expr::kUnaryOperator: {
     const auto& exprProto = expressionProto.unary_operator();
     return std::make_shared<sir::UnaryOperator>(makeExpr(exprProto.operand()), exprProto.op(),
-                                           makeLocation(exprProto));
+                                                makeLocation(exprProto));
   }
   case dawn::proto::statements::Expr::kBinaryOperator: {
     const auto& exprProto = expressionProto.binary_operator();
     return std::make_shared<sir::BinaryOperator>(makeExpr(exprProto.left()), exprProto.op(),
-                                            makeExpr(exprProto.right()), makeLocation(exprProto));
+                                                 makeExpr(exprProto.right()),
+                                                 makeLocation(exprProto));
   }
   case dawn::proto::statements::Expr::kAssignmentExpr: {
     const auto& exprProto = expressionProto.assignment_expr();
-    return std::make_shared<sir::AssignmentExpr>(makeExpr(exprProto.left()), makeExpr(exprProto.right()),
-                                            exprProto.op(), makeLocation(exprProto));
+    return std::make_shared<sir::AssignmentExpr>(makeExpr(exprProto.left()),
+                                                 makeExpr(exprProto.right()), exprProto.op(),
+                                                 makeLocation(exprProto));
   }
   case dawn::proto::statements::Expr::kTernaryOperator: {
     const auto& exprProto = expressionProto.ternary_operator();
-    return std::make_shared<sir::TernaryOperator>(makeExpr(exprProto.cond()), makeExpr(exprProto.left()),
-                                             makeExpr(exprProto.right()), makeLocation(exprProto));
+    return std::make_shared<sir::TernaryOperator>(
+        makeExpr(exprProto.cond()), makeExpr(exprProto.left()), makeExpr(exprProto.right()),
+        makeLocation(exprProto));
   }
   case dawn::proto::statements::Expr::kFunCallExpr: {
     const auto& exprProto = expressionProto.fun_call_expr();
@@ -381,7 +384,8 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
   }
   case dawn::proto::statements::Expr::kStencilFunCallExpr: {
     const auto& exprProto = expressionProto.stencil_fun_call_expr();
-    auto expr = std::make_shared<sir::StencilFunCallExpr>(exprProto.callee(), makeLocation(exprProto));
+    auto expr =
+        std::make_shared<sir::StencilFunCallExpr>(exprProto.callee(), makeLocation(exprProto));
     for(const auto& argProto : exprProto.arguments())
       expr->getArguments().emplace_back(makeExpr(argProto));
     return expr;
@@ -410,7 +414,7 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
     offset = exprProto.offset();
     argumentIndex = exprProto.argument_index();
     return std::make_shared<sir::StencilFunArgExpr>(direction, offset, argumentIndex,
-                                               makeLocation(exprProto));
+                                                    makeLocation(exprProto));
   }
   case dawn::proto::statements::Expr::kVarAccessExpr: {
     const auto& exprProto = expressionProto.var_access_expr();
@@ -457,7 +461,7 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
     }
 
     return std::make_shared<sir::FieldAccessExpr>(name, offset, argumentMap, argumentOffset,
-                                             negateOffset, makeLocation(exprProto));
+                                                  negateOffset, makeLocation(exprProto));
   }
   case dawn::proto::statements::Expr::kLiteralAccessExpr: {
     const auto& exprProto = expressionProto.literal_access_expr();
@@ -507,24 +511,25 @@ static std::shared_ptr<sir::Stmt> makeStmt(const dawn::proto::statements::Stmt& 
                                          : Type(typeProto.name(), cvQual);
 
     return std::make_shared<sir::VarDeclStmt>(type, stmtProto.name(), stmtProto.dimension(),
-                                         stmtProto.op().c_str(), initList, makeLocation(stmtProto));
+                                              stmtProto.op().c_str(), initList,
+                                              makeLocation(stmtProto));
   }
   case dawn::proto::statements::Stmt::kStencilCallDeclStmt: {
     const auto& stmtProto = statementProto.stencil_call_decl_stmt();
     return std::make_shared<sir::StencilCallDeclStmt>(makeStencilCall(stmtProto.stencil_call()),
-                                                 makeLocation(stmtProto));
+                                                      makeLocation(stmtProto));
   }
   case dawn::proto::statements::Stmt::kVerticalRegionDeclStmt: {
     const auto& stmtProto = statementProto.vertical_region_decl_stmt();
-    return std::make_shared<sir::VerticalRegionDeclStmt>(makeVerticalRegion(stmtProto.vertical_region()),
-                                                    makeLocation(stmtProto));
+    return std::make_shared<sir::VerticalRegionDeclStmt>(
+        makeVerticalRegion(stmtProto.vertical_region()), makeLocation(stmtProto));
   }
   case dawn::proto::statements::Stmt::kBoundaryConditionDeclStmt: {
     const auto& stmtProto = statementProto.boundary_condition_decl_stmt();
-    auto stmt =
-        std::make_shared<sir::BoundaryConditionDeclStmt>(stmtProto.functor(), makeLocation(stmtProto));
-    for(const auto& fieldProto : stmtProto.fields())
-      stmt->getFields().emplace_back(makeField(fieldProto));
+    auto stmt = std::make_shared<sir::BoundaryConditionDeclStmt>(stmtProto.functor(),
+                                                                 makeLocation(stmtProto));
+    for(const auto& fieldName : stmtProto.fields())
+      stmt->getFields().emplace_back(fieldName);
     return stmt;
   }
   case dawn::proto::statements::Stmt::kIfStmt: {
