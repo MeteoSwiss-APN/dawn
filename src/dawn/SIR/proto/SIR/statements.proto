@@ -161,9 +161,9 @@ message VerticalRegion {
 // @brief Stencil call declaration
 // @ingroup sir_proto
 message StencilCall {
-  SourceLocation loc = 1;       // Source location of the stencil call
-  string callee = 2;            // Name of the called stencil (i.e callee)
-  repeated Field arguments = 3; // Fields passed as arguments during the stencil call
+  SourceLocation loc = 1;        // Source location of the stencil call
+  string callee = 2;             // Name of the called stencil (i.e callee)
+  repeated string arguments = 3; // Fields passed as arguments during the stencil call
 }
 
 /*===------------------------------------------------------------------------------------------===*\

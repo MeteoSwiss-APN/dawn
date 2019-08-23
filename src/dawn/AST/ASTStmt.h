@@ -18,6 +18,7 @@
 #include "dawn/AST/ASTVisitorHelpers.h"
 #include "dawn/Support/ArrayRef.h"
 #include "dawn/Support/Casting.h"
+#include "dawn/Support/ComparisonHelpers.h"
 #include "dawn/Support/SourceLocation.h"
 #include "dawn/Support/Type.h"
 #include "dawn/Support/UIDGenerator.h"
@@ -28,8 +29,6 @@ namespace dawn {
 
 namespace sir {
 struct VerticalRegion;
-struct StencilCall;
-struct Field;
 } // namespace sir
 
 namespace ast {
@@ -311,26 +310,48 @@ public:
   ACCEPTVISITOR(Stmt, VerticalRegionDeclStmt)
 };
 
+/// @brief Call to another stencil
+/// @ingroup sir
+struct StencilCall {
+
+  SourceLocation Loc;            ///< Source location of the call
+  std::string Callee;            ///< Name of the callee stencil
+  std::vector<std::string> Args; ///< List of fields used as arguments
+
+  StencilCall(std::string callee, SourceLocation loc = SourceLocation())
+      : Loc(loc), Callee(callee) {}
+
+  /// @brief Clone the vertical region
+  std::shared_ptr<StencilCall> clone() const;
+
+  /// @brief Comparison between stencils (omitting location)
+  bool operator==(const StencilCall& rhs) const;
+
+  /// @brief Comparison between stencils (omitting location)
+  /// if the comparison fails, outputs human readable reason why in the string
+  CompareResult comparison(const StencilCall& rhs) const;
+};
+
 //===------------------------------------------------------------------------------------------===//
 //     StencilCallDeclStmt
 //===------------------------------------------------------------------------------------------===//
 
-/// @brief This represents a declaration of a sir::StencilCall
+/// @brief This represents a declaration of a StencilCall
 /// @ingroup sir
 class StencilCallDeclStmt : public Stmt {
-  std::shared_ptr<sir::StencilCall> stencilCall_;
+  std::shared_ptr<StencilCall> stencilCall_;
 
 public:
   /// @name Constructor & Destructor
   /// @{
-  StencilCallDeclStmt(const std::shared_ptr<sir::StencilCall>& stencilCall,
+  StencilCallDeclStmt(const std::shared_ptr<StencilCall>& stencilCall,
                       SourceLocation loc = SourceLocation());
   StencilCallDeclStmt(const StencilCallDeclStmt& stmt);
   StencilCallDeclStmt& operator=(StencilCallDeclStmt stmt);
   virtual ~StencilCallDeclStmt();
   /// @}
 
-  const std::shared_ptr<sir::StencilCall>& getStencilCall() const { return stencilCall_; }
+  const std::shared_ptr<StencilCall>& getStencilCall() const { return stencilCall_; }
 
   virtual bool isStencilDesc() const override { return true; }
   virtual std::shared_ptr<Stmt> clone() const override;

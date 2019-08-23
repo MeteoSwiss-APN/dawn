@@ -268,7 +268,7 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
 
 TEST_F(IIRSerializerTest, ComplexStrucutes) {
   auto statement = std::make_shared<Statement>(
-      std::make_shared<iir::StencilCallDeclStmt>(std::make_shared<sir::StencilCall>("me")),
+      std::make_shared<iir::StencilCallDeclStmt>(std::make_shared<ast::StencilCall>("me")),
       nullptr);
   statement->ASTStmt->getSourceLocation().Line = 10;
   statement->ASTStmt->getSourceLocation().Column = 12;
@@ -276,7 +276,7 @@ TEST_F(IIRSerializerTest, ComplexStrucutes) {
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   auto stmt =
-      std::make_shared<iir::StencilCallDeclStmt>(std::make_shared<sir::StencilCall>("test"));
+      std::make_shared<iir::StencilCallDeclStmt>(std::make_shared<ast::StencilCall>("test"));
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   auto bcstmt = std::make_shared<iir::BoundaryConditionDeclStmt>("callee");

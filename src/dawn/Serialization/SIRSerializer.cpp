@@ -339,13 +339,13 @@ makeVerticalRegion(const dawn::proto::statements::VerticalRegion& verticalRegion
   return std::make_shared<sir::VerticalRegion>(ast, interval, loopOrder, loc);
 }
 
-static std::shared_ptr<sir::StencilCall>
+static std::shared_ptr<ast::StencilCall>
 makeStencilCall(const dawn::proto::statements::StencilCall& stencilCallProto) {
   auto stencilCall =
-      std::make_shared<sir::StencilCall>(stencilCallProto.callee(), makeLocation(stencilCallProto));
+      std::make_shared<ast::StencilCall>(stencilCallProto.callee(), makeLocation(stencilCallProto));
 
-  for(const auto& arg : stencilCallProto.arguments())
-    stencilCall->Args.emplace_back(makeField(arg));
+  for(const auto& argName : stencilCallProto.arguments())
+    stencilCall->Args.emplace_back(argName);
 
   return stencilCall;
 }

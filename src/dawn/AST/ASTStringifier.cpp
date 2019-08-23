@@ -116,9 +116,8 @@ public:
       ss_ << std::string(curIndent_, ' ');
     ss_ << "stencil-call:";
     ss_ << stmt->getStencilCall()->Callee;
-    ss_ << RangeToString(", ", "(", ")")(
-        stmt->getStencilCall()->Args,
-        [&](const std::shared_ptr<sir::Field>& field) { return field->Name; });
+    ss_ << RangeToString(", ", "(", ")")(stmt->getStencilCall()->Args,
+                                         [&](const std::string& fieldName) { return fieldName; });
     ss_ << ";" << (newLines_ ? "\n" : "");
   }
 
