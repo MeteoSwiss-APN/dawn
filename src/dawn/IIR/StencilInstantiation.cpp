@@ -76,7 +76,7 @@ bool StencilInstantiation::insertBoundaryConditions(std::string originalFieldNam
   if(metadata_.hasFieldBC(originalFieldName) != 0) {
     return false;
   } else {
-    metadata_.insertFieldBC(originalFieldName, bc);
+    metadata_.addFieldBC(originalFieldName, bc);
     return true;
   }
 }
@@ -113,7 +113,7 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
                                        originalName + "_" + std::to_string(versions->size()));
 
       // and register in field-versioning
-      metadata_.insertFieldVersionIDPair(originalID, newAccessID);
+      metadata_.addFieldVersionIDPair(originalID, newAccessID);
 
     } else {
       const std::string& originalName = metadata_.getFieldNameFromAccessID(AccessID);
@@ -123,7 +123,7 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
 
       // Register the new *and* old field as being multi-versioned and indicate code-gen it has to
       // allocate the second version
-      metadata_.insertFieldVersionIDPair(AccessID, newAccessID);
+      metadata_.addFieldVersionIDPair(AccessID, newAccessID);
     }
   } else {
     // if not a field, it is a variable
@@ -143,7 +143,7 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
           metadata_.insertAccessOfType(iir::FieldAccessType::FAT_LocalVariable,
                                        originalName + "_" + std::to_string(versions->size()));
 
-      metadata_.insertFieldVersionIDPair(originalID, newAccessID);
+      metadata_.addFieldVersionIDPair(originalID, newAccessID);
 
     } else {
       const std::string& originalName = metadata_.getFieldNameFromAccessID(AccessID);
@@ -151,7 +151,7 @@ int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil,
       newAccessID = metadata_.insertAccessOfType(iir::FieldAccessType::FAT_LocalVariable,
                                                  originalName + "_0");
       // Register the new *and* old variable as being multi-versioned
-      metadata_.insertFieldVersionIDPair(AccessID, newAccessID);
+      metadata_.addFieldVersionIDPair(AccessID, newAccessID);
     }
   }
 
@@ -333,8 +333,8 @@ void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil,
   metadata_.removeAccessID(AccessID);
 
   // Register the variable
-  metadata_.setAccessIDNamePair(AccessID, varname);
-  metadata_.insertStmtToAccessID(varDeclStmt, AccessID);
+  metadata_.insertAccessIDNamePair(AccessID, varname);
+  metadata_.addStmtToAccessID(varDeclStmt, AccessID);
 
   // Update the fields of the stages we modified
   stencil->updateFields(lifetime);
@@ -351,7 +351,7 @@ StencilInstantiation::makeStencilFunctionInstantiation(
       std::make_shared<StencilFunctionInstantiation>(this, expr, SIRStencilFun, ast, interval,
                                                      curStencilFunctionInstantiation != nullptr);
 
-  metadata_.insertStencilFunInstantiationCandidate(
+  metadata_.addStencilFunInstantiationCandidate(
       stencilFun, StencilMetaInformation::StencilFunctionInstantiationCandidate{
                       curStencilFunctionInstantiation});
 

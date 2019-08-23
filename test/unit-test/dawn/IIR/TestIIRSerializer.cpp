@@ -208,13 +208,13 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
   //===------------------------------------------------------------------------------------------===
   // Checking inserts into the various maps
   //===------------------------------------------------------------------------------------------===
-  referenceInstantiaton->getMetaData().setAccessIDNamePair(1, "test");
+  referenceInstantiaton->getMetaData().insertAccessIDNamePair(1, "test");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   referenceInstantiaton->getMetaData().insertExprToAccessID(std::make_shared<NOPExpr>(), 5);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  referenceInstantiaton->getMetaData().insertStmtToAccessID(
+  referenceInstantiaton->getMetaData().addStmtToAccessID(
       std::make_shared<ExprStmt>(std::make_shared<NOPExpr>()), 10);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
@@ -253,9 +253,9 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
                                                           712, "field4");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  referenceInstantiaton->getMetaData().insertFieldVersionIDPair(5, 6);
-  referenceInstantiaton->getMetaData().insertFieldVersionIDPair(5, 7);
-  referenceInstantiaton->getMetaData().insertFieldVersionIDPair(5, 8);
+  referenceInstantiaton->getMetaData().addFieldVersionIDPair(5, 6);
+  referenceInstantiaton->getMetaData().addFieldVersionIDPair(5, 7);
+  referenceInstantiaton->getMetaData().addFieldVersionIDPair(5, 8);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   referenceInstantiaton->getMetaData().setFileName("fileName");
@@ -280,7 +280,7 @@ TEST_F(IIRSerializerTest, ComplexStrucutes) {
   auto bcstmt = std::make_shared<BoundaryConditionDeclStmt>("callee");
   bcstmt->getFields().push_back(std::make_shared<sir::Field>("field1"));
   bcstmt->getFields().push_back(std::make_shared<sir::Field>("field2"));
-  referenceInstantiaton->getMetaData().insertFieldBC("bc", bcstmt);
+  referenceInstantiaton->getMetaData().addFieldBC("bc", bcstmt);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 }
 

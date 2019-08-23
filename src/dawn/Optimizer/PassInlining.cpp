@@ -154,8 +154,8 @@ public:
       appendNewStatementAccessesPair(newStmt);
 
       // Register the variable
-      metadata_.setAccessIDNamePair(AccessID, returnVarName);
-      metadata_.insertStmtToAccessID(newStmt, AccessID);
+      metadata_.insertAccessIDNamePair(AccessID, returnVarName);
+      metadata_.addStmtToAccessID(newStmt, AccessID);
       metadata_.insertExprToAccessID(newExpr_, AccessID);
 
     } else {
@@ -193,8 +193,8 @@ public:
   void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
     int AccessID = curStencilFunctioninstantiation_->getAccessIDFromStmt(stmt);
     const std::string& name = curStencilFunctioninstantiation_->getFieldNameFromAccessID(AccessID);
-    metadata_.setAccessIDNamePair(AccessID, name);
-    metadata_.insertStmtToAccessID(stmt, AccessID);
+    metadata_.insertAccessIDNamePair(AccessID, name);
+    metadata_.addStmtToAccessID(stmt, AccessID);
 
     // Push back the statement and move on
     appendNewStatementAccessesPair(stmt);
