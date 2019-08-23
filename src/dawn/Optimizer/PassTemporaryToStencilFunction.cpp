@@ -164,12 +164,11 @@ protected:
                                // will become arguments of the stencil fn
 
   std::shared_ptr<iir::FieldAccessExpr> tmpFieldAccessExpr_ =
-      nullptr;                             // the field access expr of the
-                                           // temporary that is captured and
-                                           // being replaced by stencil fn
-  const std::set<int>& skipAccessIDsOfMS_; // list of ids that will be skipped, since they dont
-                                           // fulfil the requirements, like they contain cycle
-                                           // dependencies, etc
+      nullptr; // the field access expr of the temporary that is captured and being replaced by
+               // stencil fn
+  const std::set<int>&
+      skipAccessIDsOfMS_; // list of ids that will be skipped, since they dont fulfil the
+                          // requirements, like they contain cycle dependencies, etc
 
 public:
   TmpAssignment(const iir::StencilMetaInformation& metadata, sir::Interval const& interval,

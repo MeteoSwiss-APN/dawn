@@ -15,10 +15,6 @@
 #ifndef DAWN_AST_ASTFWD_H
 #define DAWN_AST_ASTFWD_H
 
-#include "dawn/Support/Array.h"
-#include "dawn/Support/SourceLocation.h"
-#include "dawn/Support/Type.h"
-
 namespace dawn {
 namespace ast {
 class AST;
@@ -47,7 +43,7 @@ class FieldAccessExpr;
 class LiteralAccessExpr;
 
 class ASTHelper;
-struct ASTVisitor; //   Compiler complains if declared as class
+class ASTVisitor; //   Compiler complains if declared as class
 } // namespace ast
 } // namespace dawn
 
