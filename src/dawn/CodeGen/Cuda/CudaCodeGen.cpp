@@ -58,7 +58,7 @@ std::string CudaCodeGen::generateStencilInstantiation(
 
   std::stringstream ssSW;
 
-  Namespace dawnNamespace("dawn", ssSW);	
+  Namespace dawnNamespace("dawn_generated", ssSW);	
   Namespace cudaNamespace("cuda", ssSW);	
 
   // map from MS ID to cacheProperty
@@ -681,7 +681,7 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
   }
 
-  std::string globals = generateGlobals(context_->getSIR(), "dawn", "cuda");
+  std::string globals = generateGlobals(context_->getSIR(), "dawn_generated", "cuda");
 
   std::vector<std::string> ppDefines;
   auto makeDefine = [](std::string define, int value) {

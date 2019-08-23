@@ -181,8 +181,8 @@ std::string GTCodeGen::generateStencilInstantiation(
 
   std::stringstream ssSW, ssMS, tss;
 
-  Namespace dawnNamespace("dawn", ssSW);		
-  Namespace gridtoolsNamespace("gridtools", ssSW);		
+  Namespace dawnNamespace("dawn_generated", ssSW);		
+  Namespace gridtoolsNamespace("gt", ssSW);		
 
   Class StencilWrapperClass(stencilInstantiation->getName(), ssSW);
   StencilWrapperClass.changeAccessibility(
@@ -657,7 +657,7 @@ void GTCodeGen::generateStencilClasses(
         Structure StageStruct =
             StencilClass.addStruct(Twine("stage_") + Twine(multiStageIdx) + "_" + Twine(stageIdx));
 
-        ssMS << "gridtools::make_stage_with_extent<" << StageStruct.getName() << ", extent< ";
+        ssMS << "gridtools::make_stage_with_extent<" << StageStruct.getName() << ", gridtools::extent< ";
         auto extents = stage.getExtents().getExtents();
         ssMS << extents[0].Minus << ", " << extents[0].Plus << ", " << extents[1].Minus << ", "
              << extents[1].Plus << "> >(";
@@ -936,7 +936,7 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   }
 
   // Generate globals
-  std::string globals = generateGlobals(context_->getSIR(), "dawn", "gridtools");
+  std::string globals = generateGlobals(context_->getSIR(), "dawn_generated", "gt");  
 
   // If we need more than 20 elements in boost::mpl containers, we need to increment to the nearest
   // multiple of ten
