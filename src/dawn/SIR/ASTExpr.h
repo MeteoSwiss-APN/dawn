@@ -19,6 +19,9 @@
 
 namespace dawn {
 namespace sir {
+//
+// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
+//
 using Expr = ast::Expr;
 using NOPExpr = ast::NOPExpr;
 using UnaryOperator = ast::UnaryOperator;

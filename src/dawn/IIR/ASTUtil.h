@@ -87,7 +87,9 @@ extern bool evalExprAsBoolean(const std::shared_ptr<Expr>& expr, bool& result,
 /// @returns                a Vector of all the Fields used in the stencil
 /// @ingroup testing
 extern std::vector<sir::Field> getFieldFromStencilAST(const std::shared_ptr<AST>& ast);
-
+//
+// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
+//
 using ASTHelper = ast::ASTHelper;
 } // namespace iir
 } // namespace dawn

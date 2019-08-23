@@ -20,6 +20,9 @@
 
 namespace dawn {
 namespace sir {
+//
+// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
+//
 using ASTVisitor = ast::ASTVisitor;
 using ASTVisitorNonConst = ast::ASTVisitorNonConst;
 using ASTVisitorForwarding = ast::ASTVisitorForwarding;

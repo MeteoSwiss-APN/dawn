@@ -20,6 +20,9 @@
 
 namespace dawn {
 namespace sir {
+//
+// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
+//
 using ASTStringifier = ast::ASTStringifier;
 extern inline std::ostream& operator<<(std::ostream& os, const AST& ast) {
   return ast::operator<<(os, ast);
