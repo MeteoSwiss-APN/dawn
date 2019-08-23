@@ -22,7 +22,9 @@
 
 namespace dawn {
 namespace iir {
-
+//
+// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
+//
 void replaceOldExprWithNewExprInStmt(const std::shared_ptr<Stmt>& stmt,
                                      const std::shared_ptr<Expr>& oldExpr,
                                      const std::shared_ptr<Expr>& newExpr) {

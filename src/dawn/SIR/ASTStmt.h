@@ -19,7 +19,9 @@
 
 namespace dawn {
 namespace sir {
-
+//
+// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
+//
 using Stmt = ast::Stmt;
 using BlockStmt = ast::BlockStmt;
 using ExprStmt = ast::ExprStmt;
