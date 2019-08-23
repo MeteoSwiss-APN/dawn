@@ -23,6 +23,8 @@
 #include "gtclang/Frontend/GTClangContext.h"
 #include "gtclang/Frontend/StencilParser.h"
 #include "gtclang/Support/ASTUtils.h"
+#include "gtclang/Support/ClangCompat/EvalResult.h"
+#include "gtclang/Support/ClangCompat/SourceLocation.h"
 #include "gtclang/Support/Logger.h"
 #include "gtclang/Support/StringUtil.h"
 #include "clang/AST/AST.h"
@@ -392,7 +394,8 @@ public:
       } else if(declName == "offset") {
         currentArgumentKind_ = CK_Offset;
       } else {
-        resolver_->reportDiagnostic(expr->getLocStart(), Diagnostics::err_index_invalid_type)
+        resolver_->reportDiagnostic(clang_compat::getBeginLoc(*expr),
+                                    Diagnostics::err_index_invalid_type)
             << expr->getType().getAsString() << name << expr->getSourceRange();
         return;
       }
@@ -405,7 +408,8 @@ public:
       const auto& argDeclMap = resolver_->getParser()->getCurrentParserRecord()->CurrentArgDeclMap;
       auto it = argDeclMap.find(name);
       if(it == argDeclMap.end())
-        resolver_->reportDiagnostic(expr->getLocStart(), Diagnostics::err_index_illegal_argument)
+        resolver_->reportDiagnostic(clang_compat::getBeginLoc(*expr),
+                                    Diagnostics::err_index_illegal_argument)
             << name << expr->getSourceRange();
 
       argumentMap_[curArg_] = it->second.Index;
@@ -456,13 +460,13 @@ public:
           Expr* arg1 = skipAllImplicitNodes(expr->getArg(1));
 
           DeclRefExpr* var = dyn_cast<DeclRefExpr>(arg1);
-          llvm::APSInt res;
+          clang_compat::Expr::EvalResultInt res;
 
           if(var && var->EvaluateAsInt(res, resolver_->getContext()->getASTContext())) {
-            offset = static_cast<int>(res.getExtValue());
+            offset = static_cast<int>(clang_compat::Expr::getInt(res));
             offset *= expr->getOperator() == clang::OO_Minus ? -1 : 1;
           } else {
-            resolver_->reportDiagnostic(expr->getArg(1)->getLocStart(),
+            resolver_->reportDiagnostic(clang_compat::getBeginLoc(*expr->getArg(1)),
                                         Diagnostics::err_index_not_constexpr)
                 << expr->getSourceRange();
             return;
@@ -479,7 +483,7 @@ public:
             dimensionOutput += legalDimensions_[2] ? "k " : "";
             dimensionOutput.pop_back();
             dimensionOutput += " dimensions";
-            resolver_->reportDiagnostic(expr->getLocStart(),
+            resolver_->reportDiagnostic(clang_compat::getBeginLoc(*expr),
                                         Diagnostics::err_off_with_bad_storage_dim)
                 << name_ << dimensionOutput << expr->getSourceRange();
           }
@@ -550,13 +554,13 @@ public:
       Expr* arg1 = skipAllImplicitNodes(expr->getArg(1));
 
       DeclRefExpr* var = dyn_cast<DeclRefExpr>(arg1);
-      llvm::APSInt res;
+      clang_compat::Expr::EvalResultInt res;
 
       if(var && var->EvaluateAsInt(res, resolver_->getContext()->getASTContext())) {
-        offset_ = static_cast<int>(res.getExtValue());
+        offset_ = static_cast<int>(clang_compat::Expr::getInt(res));
         offset_ *= expr->getOperator() == clang::OO_Minus ? -1 : 1;
       } else {
-        resolver_->reportDiagnostic(expr->getArg(1)->getLocStart(),
+        resolver_->reportDiagnostic(clang_compat::getBeginLoc(*expr->getArg(1)),
                                     Diagnostics::err_index_not_constexpr)
             << expr->getSourceRange();
       }
@@ -582,7 +586,7 @@ public:
       const auto& argDeclMap = resolver_->getParser()->getCurrentParserRecord()->CurrentArgDeclMap;
       auto it = argDeclMap.find(name);
       if(it == argDeclMap.end()) {
-        resolver_->reportDiagnostic(expr->getLocStart(),
+        resolver_->reportDiagnostic(clang_compat::getBeginLoc(*expr),
                                     Diagnostics::err_stencilfun_invalid_argument)
             << name << expr->getSourceRange();
       }
@@ -726,7 +730,7 @@ std::shared_ptr<dawn::Stmt> ClangASTExprResolver::resolveDecl(clang::VarDecl* de
   const auto& argDeclMap = parser_->getCurrentParserRecord()->CurrentArgDeclMap;
   auto it = parser_->getCurrentParserRecord()->CurrentArgDeclMap.find(varname);
   if(it != argDeclMap.end()) {
-    reportDiagnostic(decl->getLocStart(), Diagnostics::err_do_method_var_shadowing)
+    reportDiagnostic(clang_compat::getBeginLoc(*decl), Diagnostics::err_do_method_var_shadowing)
         << varname
         << (parser_->getCurrentParserRecord()->CurrentKind == StencilParser::SK_Stencil
                 ? "stencil"
@@ -748,7 +752,8 @@ std::shared_ptr<dawn::Stmt> ClangASTExprResolver::resolveDecl(clang::VarDecl* de
     else // int, float, double...
       builtinType = dawn::BuiltinTypeID::Float;
   } else {
-    reportDiagnostic(decl->getLocStart(), Diagnostics::err_do_method_invalid_type_of_local_var)
+    reportDiagnostic(clang_compat::getBeginLoc(*decl),
+                     Diagnostics::err_do_method_invalid_type_of_local_var)
         << qualType.getAsString() << varname;
     return nullptr;
   }
@@ -773,7 +778,8 @@ std::shared_ptr<dawn::Stmt> ClangASTExprResolver::resolveDecl(clang::VarDecl* de
   int dimension = 0;
   if(qualType->isArrayType()) {
     if(!qualType->isConstantArrayType()) {
-      reportDiagnostic(decl->getLocStart(), Diagnostics::err_do_method_non_const_array_type)
+      reportDiagnostic(clang_compat::getBeginLoc(*decl),
+                       Diagnostics::err_do_method_non_const_array_type)
           << qualType.getAsString() << varname;
       return nullptr;
     }
@@ -801,12 +807,14 @@ std::shared_ptr<dawn::Stmt> ClangASTExprResolver::resolveStmt(clang::ReturnStmt*
 }
 
 dawn::SourceLocation ClangASTExprResolver::getSourceLocation(clang::Stmt* stmt) const {
-  clang::PresumedLoc ploc = context_->getSourceManager().getPresumedLoc(stmt->getLocStart());
+  clang::PresumedLoc ploc =
+      context_->getSourceManager().getPresumedLoc(clang_compat::getBeginLoc(*stmt));
   return dawn::SourceLocation(ploc.getLine(), ploc.getColumn());
 }
 
 dawn::SourceLocation ClangASTExprResolver::getSourceLocation(clang::Decl* decl) const {
-  clang::PresumedLoc ploc = context_->getSourceManager().getPresumedLoc(decl->getLocStart());
+  clang::PresumedLoc ploc =
+      context_->getSourceManager().getPresumedLoc(clang_compat::getBeginLoc(*decl));
   return dawn::SourceLocation(ploc.getLine(), ploc.getColumn());
 }
 
@@ -886,7 +894,8 @@ std::shared_ptr<dawn::Expr> ClangASTExprResolver::resolve(clang::BinaryOperator*
     functionResolver_->addArgument(expr, binary);
 
   if(functionResolver_->isActiveOnStencilFunction())
-    reportDiagnostic(expr->getLocStart(), Diagnostics::err_stencilfun_expression_in_arg_list)
+    reportDiagnostic(clang_compat::getBeginLoc(*expr),
+                     Diagnostics::err_stencilfun_expression_in_arg_list)
         << expr->getSourceRange();
 
   return binary;
@@ -1126,7 +1135,8 @@ std::shared_ptr<dawn::Expr> ClangASTExprResolver::resolve(clang::UnaryOperator* 
     functionResolver_->addArgument(expr, unary);
 
   if(functionResolver_->isActiveOnStencilFunction())
-    reportDiagnostic(expr->getLocStart(), Diagnostics::err_stencilfun_expression_in_arg_list)
+    reportDiagnostic(clang_compat::getBeginLoc(*expr),
+                     Diagnostics::err_stencilfun_expression_in_arg_list)
         << expr->getSourceRange();
 
   return unary;

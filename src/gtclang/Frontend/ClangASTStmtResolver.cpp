@@ -19,6 +19,7 @@
 #include "gtclang/Frontend/ClangASTExprResolver.h"
 #include "gtclang/Frontend/StencilParser.h"
 #include "gtclang/Support/ASTUtils.h"
+#include "gtclang/Support/ClangCompat/SourceLocation.h"
 #include "clang/AST/AST.h"
 
 namespace gtclang {
@@ -67,7 +68,7 @@ void ClangASTStmtResolver::resolve(clang::Stmt* stmt) {
       resolve(s);
     else
       clangASTExprResolver_->getParser()->reportDiagnostic(
-          stmt->getLocStart(), Diagnostics::err_do_method_nested_vertical_region);
+          clang_compat::getBeginLoc(*stmt), Diagnostics::err_do_method_nested_vertical_region);
   } else if(DeclStmt* s = dyn_cast<DeclStmt>(stmt))
     resolve(s);
   else if(DeclRefExpr* s = dyn_cast<DeclRefExpr>(stmt))
@@ -147,7 +148,7 @@ void ClangASTStmtResolver::resolve(clang::IfStmt* stmt) {
   // We currently don't support expression with variable decls in the condition
   if(stmt->getConditionVariable())
     clangASTExprResolver_->getParser()->reportDiagnostic(
-        stmt->getConditionVariable()->getLocStart(),
+        clang_compat::getBeginLoc(*stmt->getConditionVariable()),
         Diagnostics::DiagKind::err_do_method_invalid_expr_if_cond)
         << stmt->getConditionVariable()->getSourceRange();
 
@@ -175,7 +176,8 @@ void ClangASTStmtResolver::resolve(clang::IfStmt* stmt) {
     condStmt = clangASTExprResolver_->resolveExpr(s);
   else {
     clangASTExprResolver_->getParser()->reportDiagnostic(
-        clangCond->getLocStart(), Diagnostics::DiagKind::err_do_method_invalid_expr_if_cond)
+        clang_compat::getBeginLoc(*clangCond),
+        Diagnostics::DiagKind::err_do_method_invalid_expr_if_cond)
         << clangCond->getSourceRange();
   }
 

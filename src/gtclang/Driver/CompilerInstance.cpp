@@ -85,7 +85,7 @@ clang::CompilerInstance* createCompilerInstance(llvm::SmallVectorImpl<const char
   }
 
   // Initialize a compiler invocation object from the clang (-cc1) arguments
-  driver::ArgStringList& ccArgs = const_cast<driver::ArgStringList&>(command.getArguments());
+  llvm::opt::ArgStringList& ccArgs = const_cast<llvm::opt::ArgStringList&>(command.getArguments());
 
   // NOTE: This is a kind of a hack. The problem is that Clang tools are meant to be run from the
   // the same binary directory as Clang itself and thus rely on finding the internal header files in

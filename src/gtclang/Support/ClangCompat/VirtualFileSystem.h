@@ -14,29 +14,35 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef GTCLANG_SUPPORT_FILEUTIL_H
-#define GTCLANG_SUPPORT_FILEUTIL_H
+#ifndef GTCLANG_SUPPORT_CLANGCOMPAT_VIRTUALFILESYSTEM_H
+#define GTCLANG_SUPPORT_CLANGCOMPAT_VIRTUALFILESYSTEM_H
 
-#include "gtclang/Support/ClangCompat/VirtualFileSystem.h"
-#include "clang/Basic/FileManager.h"
-#include "clang/Basic/SourceLocation.h"
-#include "llvm/ADT/StringRef.h"
+#include "clang/Basic/Version.h"
+
+#if CLANG_VERSION_MAJOR < 8
+#include "clang/Basic/VirtualFileSystem.h"
+#else
+#include "llvm/Support/VirtualFileSystem.h"
+#endif
 
 namespace gtclang {
+namespace clang_compat {
+#if CLANG_VERSION_MAJOR < 8
 
-/// @brief Extract the filename from `path`
-///
-/// This will only work on UNIX like platforms.
-///
-/// @ingroup support
-extern llvm::StringRef getFilename(llvm::StringRef path);
+namespace llvm {
+namespace vfs {
+using InMemoryFileSystem = ::clang::vfs::InMemoryFileSystem;
+}
+} // namespace llvm
+#else
+namespace llvm {
+namespace vfs {
+using InMemoryFileSystem = ::llvm::vfs::InMemoryFileSystem;
+}
+} // namespace llvm
+#endif
 
-/// @brief Create a new "in-memory" file
-/// @ingroup support
-extern clang::FileID createInMemoryFile(llvm::StringRef filename, llvm::MemoryBuffer* source,
-                                        clang::SourceManager& sources, clang::FileManager& files,
-                                        clang_compat::llvm::vfs::InMemoryFileSystem* memFS);
-
+} // namespace clang_compat
 } // namespace gtclang
 
-#endif
+#endif // GTCLANG_SUPPORT_CLANGCOMPAT_VIRTUALFILESYSTEM_H

@@ -14,29 +14,36 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef GTCLANG_SUPPORT_FILEUTIL_H
-#define GTCLANG_SUPPORT_FILEUTIL_H
+#ifndef GTCLANG_SUPPORT_CLANGCOMPAT_FILESYSTEM_H
+#define GTCLANG_SUPPORT_CLANGCOMPAT_FILESYSTEM_H
 
-#include "gtclang/Support/ClangCompat/VirtualFileSystem.h"
-#include "clang/Basic/FileManager.h"
-#include "clang/Basic/SourceLocation.h"
-#include "llvm/ADT/StringRef.h"
+#include "llvm/Config/llvm-config.h"
+#include "llvm/Support/FileSystem.h"
 
 namespace gtclang {
-
-/// @brief Extract the filename from `path`
-///
-/// This will only work on UNIX like platforms.
-///
-/// @ingroup support
-extern llvm::StringRef getFilename(llvm::StringRef path);
-
-/// @brief Create a new "in-memory" file
-/// @ingroup support
-extern clang::FileID createInMemoryFile(llvm::StringRef filename, llvm::MemoryBuffer* source,
-                                        clang::SourceManager& sources, clang::FileManager& files,
-                                        clang_compat::llvm::vfs::InMemoryFileSystem* memFS);
-
+namespace clang_compat {
+#if LLVM_VERSION_MAJOR < 7
+namespace llvm {
+namespace sys {
+namespace fs {
+namespace OpenFlags {
+static constexpr ::llvm::sys::fs::OpenFlags OF_Text = ::llvm::sys::fs::OpenFlags::F_Text;
+}
+} // namespace fs
+} // namespace sys
+} // namespace llvm
+#else
+namespace llvm {
+namespace sys {
+namespace fs {
+namespace OpenFlags {
+static constexpr ::llvm::sys::fs::OpenFlags OF_Text = ::llvm::sys::fs::OpenFlags::OF_Text;
+}
+} // namespace fs
+} // namespace sys
+} // namespace llvm
+#endif
+} // namespace clang_compat
 } // namespace gtclang
 
-#endif
+#endif // GTCLANG_SUPPORT_CLANGCOMPAT_FILESYSTEM_H

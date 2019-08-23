@@ -28,6 +28,8 @@
 #include "gtclang/Frontend/GTClangContext.h"
 #include "gtclang/Frontend/GlobalVariableParser.h"
 #include "gtclang/Frontend/StencilParser.h"
+#include "gtclang/Support/ClangCompat/FileSystem.h"
+#include "gtclang/Support/ClangCompat/VirtualFileSystem.h"
 #include "gtclang/Support/Config.h"
 #include "gtclang/Support/FileUtil.h"
 #include "gtclang/Support/Logger.h"
@@ -185,8 +187,8 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
   }
 
   // Create new in-memory FS
-  llvm::IntrusiveRefCntPtr<clang::vfs::InMemoryFileSystem> memFS(
-      new clang::vfs::InMemoryFileSystem);
+  llvm::IntrusiveRefCntPtr<clang_compat::llvm::vfs::InMemoryFileSystem> memFS(
+      new clang_compat::llvm::vfs::InMemoryFileSystem);
   clang::FileManager files(clang::FileSystemOptions(), memFS);
   clang::SourceManager sources(context_->getASTContext().getDiagnostics(), files);
 
@@ -276,7 +278,7 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
 
   std::shared_ptr<llvm::raw_ostream> ost;
   std::error_code ec;
-  llvm::sys::fs::OpenFlags flags = llvm::sys::fs::OpenFlags::F_RW;
+  llvm::sys::fs::OpenFlags flags = clang_compat::llvm::sys::fs::OpenFlags::OF_Text;
   if(context_->getOptions().OutputFile.empty()) {
     ost = std::make_shared<llvm::raw_os_ostream>(std::cout);
   } else {

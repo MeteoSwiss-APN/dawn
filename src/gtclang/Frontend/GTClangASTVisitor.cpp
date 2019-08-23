@@ -18,6 +18,7 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Logging.h"
 #include "gtclang/Frontend/GTClangContext.h"
+#include "gtclang/Support/ClangCompat/SourceLocation.h"
 #include "gtclang/Support/FileUtil.h"
 #include "clang/AST/ASTContext.h"
 
@@ -78,7 +79,7 @@ bool GTClangASTVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl* recordDecl) {
           auto name = recordDecl->getIdentifier()->getName().str();
 
           DAWN_LOG(INFO) << "Parsing stencil `" << name << "` at "
-                         << getFilename(base.getLocStart().printToString(SM)).str();
+                         << getFilename(clang_compat::getBeginLoc(base).printToString(SM)).str();
 
           stencilParser_.parseStencil(recordDecl, name);
         }
@@ -88,7 +89,7 @@ bool GTClangASTVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl* recordDecl) {
           auto name = recordDecl->getIdentifier()->getName().str();
 
           DAWN_LOG(INFO) << "Parsing stencil function `" << name << "` at "
-                         << getFilename(base.getLocStart().printToString(SM)).str();
+                         << getFilename(clang_compat::getBeginLoc(base).printToString(SM)).str();
 
           stencilParser_.parseStencilFunction(recordDecl, name);
         }

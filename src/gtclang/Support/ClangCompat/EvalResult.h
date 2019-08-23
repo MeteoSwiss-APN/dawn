@@ -14,29 +14,26 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef GTCLANG_SUPPORT_FILEUTIL_H
-#define GTCLANG_SUPPORT_FILEUTIL_H
+#ifndef GTCLANG_SUPPORT_CLANGCOMPAT_EVALRESULT_H
+#define GTCLANG_SUPPORT_CLANGCOMPAT_EVALRESULT_H
 
-#include "gtclang/Support/ClangCompat/VirtualFileSystem.h"
-#include "clang/Basic/FileManager.h"
-#include "clang/Basic/SourceLocation.h"
-#include "llvm/ADT/StringRef.h"
+#include "clang/AST/Expr.h"
+#include "clang/Basic/Version.h"
 
 namespace gtclang {
+namespace clang_compat {
+namespace Expr {
+#if CLANG_VERSION_MAJOR < 8
+using EvalResultInt = ::llvm::APSInt;
+inline int64_t getInt(EvalResultInt const& res) { return res.getExtValue(); }
 
-/// @brief Extract the filename from `path`
-///
-/// This will only work on UNIX like platforms.
-///
-/// @ingroup support
-extern llvm::StringRef getFilename(llvm::StringRef path);
-
-/// @brief Create a new "in-memory" file
-/// @ingroup support
-extern clang::FileID createInMemoryFile(llvm::StringRef filename, llvm::MemoryBuffer* source,
-                                        clang::SourceManager& sources, clang::FileManager& files,
-                                        clang_compat::llvm::vfs::InMemoryFileSystem* memFS);
-
-} // namespace gtclang
+#else
+using EvalResultInt = ::clang::Expr::EvalResult;
+inline int64_t getInt(EvalResultInt const& res) { return res.Val.getInt().getExtValue(); }
 
 #endif
+} // namespace Expr
+} // namespace clang_compat
+} // namespace gtclang
+
+#endif // GTCLANG_SUPPORT_CLANGCOMPAT_EVALRESULT_H

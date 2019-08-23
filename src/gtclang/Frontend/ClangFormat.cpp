@@ -17,6 +17,7 @@
 
 #include "gtclang/Frontend/ClangFormat.h"
 #include "gtclang/Frontend/GTClangContext.h"
+#include "gtclang/Support/ClangCompat/VirtualFileSystem.h"
 #include "gtclang/Support/FileUtil.h"
 #include "gtclang/Support/Logger.h"
 #include "clang/Basic/FileManager.h"
@@ -42,8 +43,8 @@ std::string ClangFormat::format(const std::string& code) {
   std::unique_ptr<llvm::MemoryBuffer> codeBuffer = llvm::MemoryBuffer::getMemBuffer(code);
 
   // Create in-memory FS
-  clang::IntrusiveRefCntPtr<clang::vfs::InMemoryFileSystem> memFS(
-      new clang::vfs::InMemoryFileSystem);
+  clang::IntrusiveRefCntPtr<clang_compat::llvm::vfs::InMemoryFileSystem> memFS(
+      new clang_compat::llvm::vfs::InMemoryFileSystem);
   clang::FileManager files(clang::FileSystemOptions(), memFS);
 
   // Create in-memory file

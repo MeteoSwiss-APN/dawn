@@ -19,6 +19,7 @@
 #include "dawn/Support/Unreachable.h"
 #include "gtclang/Frontend/GTClangContext.h"
 #include "gtclang/Support/ASTUtils.h"
+#include "gtclang/Support/ClangCompat/SourceLocation.h"
 #include "gtclang/Support/FileUtil.h"
 #include "gtclang/Support/Logger.h"
 #include "clang/AST/AST.h"
@@ -143,7 +144,7 @@ void GlobalVariableParser::parseGlobals(clang::CXXRecordDecl* recordDecl) {
       Expr* init = skipAllImplicitNodes(arg->getInClassInitializer());
 
       auto reportError = [&]() {
-        context_->getDiagnostics().report(init->getLocStart(),
+        context_->getDiagnostics().report(clang_compat::getBeginLoc(*init),
                                           Diagnostics::err_globals_invalid_default_value)
             << init->getType().getAsString() << name;
       };
