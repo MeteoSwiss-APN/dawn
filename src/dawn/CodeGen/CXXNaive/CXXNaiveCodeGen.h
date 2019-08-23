@@ -29,8 +29,6 @@ namespace iir {
 class StencilInstantiation;
 }
 
-class OptimizerContext;
-
 namespace codegen {
 namespace cxxnaive {
 
@@ -39,7 +37,7 @@ namespace cxxnaive {
 class CXXNaiveCodeGen : public CodeGen {
 public:
   ///@brief constructor
-  CXXNaiveCodeGen(OptimizerContext* context);
+  CXXNaiveCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine, int maxHaloPoint);
   virtual ~CXXNaiveCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 
