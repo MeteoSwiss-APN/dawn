@@ -19,6 +19,7 @@
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/TemporaryHandeling.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include <iostream>
 #include <memory>
@@ -172,8 +173,11 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
             report("promote");
 
           report_.push_back(Report{AccessID, TmpActionMod::promote});
-          instantiation->promoteLocalVariableToTemporaryField(stencilPtr.get(), AccessID,
-                                                              temporary.lifetime_, temporary.type_);
+          promoteLocalVariableToTemporaryField(instantiation.get(), stencilPtr.get(), AccessID,
+                                               temporary.lifetime_, temporary.type_);
+          // instantiation->promoteLocalVariableToTemporaryField(stencilPtr.get(), AccessID,
+          //                                                     temporary.lifetime_,
+          //                                                     temporary.type_);
         }
       } else {
         // If the field is only accessed within the same Do-Method, does not have an extent and is
@@ -185,8 +189,8 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
             report("demote");
 
           report_.push_back(Report{AccessID, TmpActionMod::demote});
-          instantiation->demoteTemporaryFieldToLocalVariable(stencilPtr.get(), AccessID,
-                                                             temporary.lifetime_);
+          demoteTemporaryFieldToLocalVariable(instantiation.get(), stencilPtr.get(), AccessID,
+                                              temporary.lifetime_);
         }
       }
     }
@@ -218,7 +222,7 @@ void PassTemporaryType::fixTemporariesSpanningMultipleStencils(
       if(metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID) &&
          instantiation->isIDAccessedMultipleStencils(accessID)) {
         updated = true;
-        instantiation->promoteTemporaryFieldToAllocatedField(accessID);
+        promoteTemporaryFieldToAllocatedField(instantiation, accessID);
       }
     }
   }

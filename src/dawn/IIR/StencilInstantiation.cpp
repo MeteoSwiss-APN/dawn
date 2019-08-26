@@ -17,14 +17,12 @@
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/Renaming.h"
-#include "dawn/Optimizer/Replacing.h"
-#include "dawn/Optimizer/StatementMapper.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTUtil.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Casting.h"
+#include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/FileUtil.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Json.h"
@@ -190,14 +188,14 @@ const sir::Value& StencilInstantiation::getGlobalVariableValue(const std::string
 //   return newAccessID;
 // }
 
-void StencilInstantiation::renameAllOccurrences(Stencil* stencil, int oldAccessID,
-                                                int newAccessID) {
-  // Rename the statements and accesses
-  renameAccessIDInStencil(stencil, oldAccessID, newAccessID);
+// void StencilInstantiation::renameAllOccurrences(Stencil* stencil, int oldAccessID,
+//                                                 int newAccessID) {
+//   // Rename the statements and accesses
+//   renameAccessIDInStencil(stencil, oldAccessID, newAccessID);
 
-  // Remove form all AccessID maps
-  metadata_.removeAccessID(oldAccessID);
-}
+//   // Remove form all AccessID maps
+//   metadata_.removeAccessID(oldAccessID);
+// }
 
 bool StencilInstantiation::isIDAccessedMultipleStencils(int accessID) const {
 
@@ -211,134 +209,138 @@ bool StencilInstantiation::isIDAccessedMultipleStencils(int accessID) const {
   return false;
 }
 
-void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil, int accessID,
-                                                                const Stencil::Lifetime& lifetime,
-                                                                TemporaryScope temporaryScope) {
-  std::string varname = metadata_.getFieldNameFromAccessID(accessID);
-  std::string fieldname = InstantiationHelper::makeTemporaryFieldname(
-      InstantiationHelper::extractLocalVariablename(varname), accessID);
+// void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil, int accessID,
+//                                                                 const Stencil::Lifetime&
+//                                                                 lifetime, TemporaryScope
+//                                                                 temporaryScope) {
+// std::string varname = metadata_.getFieldNameFromAccessID(accessID);
+// std::string fieldname = InstantiationHelper::makeTemporaryFieldname(
+//     InstantiationHelper::extractLocalVariablename(varname), accessID);
 
-  // Replace all variable accesses with field accesses
-  stencil->forEachStatementAccessesPair(
-      [&](ArrayRef<std::unique_ptr<StatementAccessesPair>> statementAccessesPair) -> void {
-        replaceVarWithFieldAccessInStmts(metadata_, stencil, accessID, fieldname,
-                                         statementAccessesPair);
-      },
-      lifetime);
+// // Replace all variable accesses with field accesses
+// stencil->forEachStatementAccessesPair(
+//     [&](ArrayRef<std::unique_ptr<StatementAccessesPair>> statementAccessesPair) -> void {
+//       replaceVarWithFieldAccessInStmts(metadata_, stencil, accessID, fieldname,
+//                                        statementAccessesPair);
+//     },
+//     lifetime);
 
-  // Replace the the variable declaration with an assignment to the temporary field
-  const std::vector<std::unique_ptr<StatementAccessesPair>>& statementAccessesPairs =
-      stencil->getStage(lifetime.Begin.StagePos)
-          ->getChildren()
-          .at(lifetime.Begin.DoMethodIndex)
-          ->getChildren();
-  std::shared_ptr<Statement> oldStatement =
-      statementAccessesPairs[lifetime.Begin.StatementIndex]->getStatement();
+// // Replace the the variable declaration with an assignment to the temporary field
+// const std::vector<std::unique_ptr<StatementAccessesPair>>& statementAccessesPairs =
+//     stencil->getStage(lifetime.Begin.StagePos)
+//         ->getChildren()
+//         .at(lifetime.Begin.DoMethodIndex)
+//         ->getChildren();
+// std::shared_ptr<Statement> oldStatement =
+//     statementAccessesPairs[lifetime.Begin.StatementIndex]->getStatement();
 
-  // The oldStmt has to be a `VarDeclStmt`. For example
-  //
-  //   double __local_foo = ...
-  //
-  // will be replaced with
-  //
-  //   __tmp_foo(0, 0, 0) = ...
-  //
-  VarDeclStmt* varDeclStmt = dyn_cast<VarDeclStmt>(oldStatement->ASTStmt.get());
-  // If the TemporaryScope is within this stencil, then a VarDecl should be found (otherwise we have
-  // a bug)
-  DAWN_ASSERT_MSG((varDeclStmt || temporaryScope == TemporaryScope::TS_Field),
-                  format("Promote local variable to temporary field: a var decl is not "
-                         "found for accessid: %i , name :%s",
-                         accessID, metadata_.getNameFromAccessID(accessID))
-                      .c_str());
-  // If a vardecl is found, then during the promotion we would like to replace it as an assignment
-  // statement to a field expression
-  // Otherwise, the vardecl is in a different stencil (which is legal) therefore we take no action
-  if(varDeclStmt) {
-    DAWN_ASSERT_MSG(!varDeclStmt->isArray(), "cannot promote local array to temporary field");
+// // The oldStmt has to be a `VarDeclStmt`. For example
+// //
+// //   double __local_foo = ...
+// //
+// // will be replaced with
+// //
+// //   __tmp_foo(0, 0, 0) = ...
+// //
+// VarDeclStmt* varDeclStmt = dyn_cast<VarDeclStmt>(oldStatement->ASTStmt.get());
+// // If the TemporaryScope is within this stencil, then a VarDecl should be found (otherwise we
+// have
+// // a bug)
+// DAWN_ASSERT_MSG((varDeclStmt || temporaryScope == TemporaryScope::TS_Field),
+//                 format("Promote local variable to temporary field: a var decl is not "
+//                        "found for accessid: %i , name :%s",
+//                        accessID, metadata_.getNameFromAccessID(accessID))
+//                     .c_str());
+// // If a vardecl is found, then during the promotion we would like to replace it as an
+// assignment
+// // statement to a field expression
+// // Otherwise, the vardecl is in a different stencil (which is legal) therefore we take no
+// action if(varDeclStmt) {
+//   DAWN_ASSERT_MSG(!varDeclStmt->isArray(), "cannot promote local array to temporary field");
 
-    auto fieldAccessExpr = std::make_shared<FieldAccessExpr>(fieldname);
-    metadata_.insertExprToAccessID(fieldAccessExpr, accessID);
-    auto assignmentExpr =
-        std::make_shared<AssignmentExpr>(fieldAccessExpr, varDeclStmt->getInitList().front());
-    auto exprStmt = std::make_shared<ExprStmt>(assignmentExpr);
+//   auto fieldAccessExpr = std::make_shared<FieldAccessExpr>(fieldname);
+//   metadata_.insertExprToAccessID(fieldAccessExpr, accessID);
+//   auto assignmentExpr =
+//       std::make_shared<AssignmentExpr>(fieldAccessExpr, varDeclStmt->getInitList().front());
+//   auto exprStmt = std::make_shared<ExprStmt>(assignmentExpr);
 
-    // Replace the statement
-    statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(
-        std::make_shared<Statement>(exprStmt, oldStatement->StackTrace));
+//   // Replace the statement
+//   statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(
+//       std::make_shared<Statement>(exprStmt, oldStatement->StackTrace));
 
-    // Remove the variable
-    metadata_.removeAccessID(accessID);
-    metadata_.eraseStmtToAccessID(oldStatement->ASTStmt);
-  }
-  // Register the field
-  metadata_.insertAccessOfType(FieldAccessType::FAT_StencilTemporary, accessID, fieldname);
+//   // Remove the variable
+//   metadata_.removeAccessID(accessID);
+//   metadata_.eraseStmtToAccessID(oldStatement->ASTStmt);
+// }
+// // Register the field
+// metadata_.insertAccessOfType(FieldAccessType::FAT_StencilTemporary, accessID, fieldname);
 
-  // Update the fields of the stages we modified
-  stencil->updateFields(lifetime);
-}
+// // Update the fields of the stages we modified
+// stencil->updateFields(lifetime);
+// }
 
-void StencilInstantiation::promoteTemporaryFieldToAllocatedField(int AccessID) {
-  DAWN_ASSERT(metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, AccessID));
-  metadata_.moveRegisteredFieldTo(FieldAccessType::FAT_InterStencilTemporary, AccessID);
-}
+// void StencilInstantiation::promoteTemporaryFieldToAllocatedField(int AccessID) {
+//   DAWN_ASSERT(metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, AccessID));
+//   metadata_.moveRegisteredFieldTo(FieldAccessType::FAT_InterStencilTemporary, AccessID);
+// }
 
-void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil, int AccessID,
-                                                               const Stencil::Lifetime& lifetime) {
-  std::string fieldname = metadata_.getFieldNameFromAccessID(AccessID);
-  std::string varname = InstantiationHelper::makeLocalVariablename(
-      InstantiationHelper::extractTemporaryFieldname(fieldname), AccessID);
+// void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil, int AccessID,
+//                                                                const Stencil::Lifetime& lifetime)
+//                                                                {
+//   std::string fieldname = metadata_.getFieldNameFromAccessID(AccessID);
+//   std::string varname = InstantiationHelper::makeLocalVariablename(
+//       InstantiationHelper::extractTemporaryFieldname(fieldname), AccessID);
 
-  // Replace all field accesses with variable accesses
-  stencil->forEachStatementAccessesPair(
-      [&](ArrayRef<std::unique_ptr<StatementAccessesPair>> statementAccessesPairs) -> void {
-        replaceFieldWithVarAccessInStmts(metadata_, stencil, AccessID, varname,
-                                         statementAccessesPairs);
-      },
-      lifetime);
+//   // Replace all field accesses with variable accesses
+//   stencil->forEachStatementAccessesPair(
+//       [&](ArrayRef<std::unique_ptr<StatementAccessesPair>> statementAccessesPairs) -> void {
+//         replaceFieldWithVarAccessInStmts(metadata_, stencil, AccessID, varname,
+//                                          statementAccessesPairs);
+//       },
+//       lifetime);
 
-  // Replace the first access to the field with a VarDeclStmt
-  const std::vector<std::unique_ptr<StatementAccessesPair>>& statementAccessesPairs =
-      stencil->getStage(lifetime.Begin.StagePos)
-          ->getChildren()
-          .at(lifetime.Begin.DoMethodIndex)
-          ->getChildren();
-  std::shared_ptr<Statement> oldStatement =
-      statementAccessesPairs[lifetime.Begin.StatementIndex]->getStatement();
+//   // Replace the first access to the field with a VarDeclStmt
+//   const std::vector<std::unique_ptr<StatementAccessesPair>>& statementAccessesPairs =
+//       stencil->getStage(lifetime.Begin.StagePos)
+//           ->getChildren()
+//           .at(lifetime.Begin.DoMethodIndex)
+//           ->getChildren();
+//   std::shared_ptr<Statement> oldStatement =
+//       statementAccessesPairs[lifetime.Begin.StatementIndex]->getStatement();
 
-  // The oldStmt has to be an `ExprStmt` with an `AssignmentExpr`. For example
-  //
-  //   __tmp_foo(0, 0, 0) = ...
-  //
-  // will be replaced with
-  //
-  //   double __local_foo = ...
-  //
-  ExprStmt* exprStmt = dyn_cast<ExprStmt>(oldStatement->ASTStmt.get());
-  DAWN_ASSERT_MSG(exprStmt, "first access of field (i.e lifetime.Begin) is not an `ExprStmt`");
-  AssignmentExpr* assignmentExpr = dyn_cast<AssignmentExpr>(exprStmt->getExpr().get());
-  DAWN_ASSERT_MSG(assignmentExpr,
-                  "first access of field (i.e lifetime.Begin) is not an `AssignmentExpr`");
+//   // The oldStmt has to be an `ExprStmt` with an `AssignmentExpr`. For example
+//   //
+//   //   __tmp_foo(0, 0, 0) = ...
+//   //
+//   // will be replaced with
+//   //
+//   //   double __local_foo = ...
+//   //
+//   ExprStmt* exprStmt = dyn_cast<ExprStmt>(oldStatement->ASTStmt.get());
+//   DAWN_ASSERT_MSG(exprStmt, "first access of field (i.e lifetime.Begin) is not an `ExprStmt`");
+//   AssignmentExpr* assignmentExpr = dyn_cast<AssignmentExpr>(exprStmt->getExpr().get());
+//   DAWN_ASSERT_MSG(assignmentExpr,
+//                   "first access of field (i.e lifetime.Begin) is not an `AssignmentExpr`");
 
-  // Create the new `VarDeclStmt` which will replace the old `ExprStmt`
-  std::shared_ptr<Stmt> varDeclStmt =
-      std::make_shared<VarDeclStmt>(Type(BuiltinTypeID::Float), varname, 0, "=",
-                                    std::vector<std::shared_ptr<Expr>>{assignmentExpr->getRight()});
+//   // Create the new `VarDeclStmt` which will replace the old `ExprStmt`
+//   std::shared_ptr<Stmt> varDeclStmt =
+//       std::make_shared<VarDeclStmt>(Type(BuiltinTypeID::Float), varname, 0, "=",
+//                                     std::vector<std::shared_ptr<Expr>>{assignmentExpr->getRight()});
 
-  // Replace the statement
-  statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(
-      std::make_shared<Statement>(varDeclStmt, oldStatement->StackTrace));
+//   // Replace the statement
+//   statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(
+//       std::make_shared<Statement>(varDeclStmt, oldStatement->StackTrace));
 
-  // Remove the field
-  metadata_.removeAccessID(AccessID);
+//   // Remove the field
+//   metadata_.removeAccessID(AccessID);
 
-  // Register the variable
-  metadata_.setAccessIDNamePair(AccessID, varname);
-  metadata_.insertStmtToAccessID(varDeclStmt, AccessID);
+//   // Register the variable
+//   metadata_.setAccessIDNamePair(AccessID, varname);
+//   metadata_.insertStmtToAccessID(varDeclStmt, AccessID);
 
-  // Update the fields of the stages we modified
-  stencil->updateFields(lifetime);
-}
+//   // Update the fields of the stages we modified
+//   stencil->updateFields(lifetime);
+// }
 
 std::shared_ptr<StencilFunctionInstantiation>
 StencilInstantiation::makeStencilFunctionInstantiation(

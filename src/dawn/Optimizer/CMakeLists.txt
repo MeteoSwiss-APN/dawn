@@ -16,8 +16,6 @@ yoda_add_library(
   NAME DawnOptimizer
   SOURCES AccessComputation.h
           AccessComputation.cpp   
-          BoundaryExtent.cpp  
-          BoundaryExtent.h
           CreateVersionAndRename.cpp
           CreateVersionAndRename.h
           OptimizerContext.cpp 
@@ -82,8 +80,10 @@ yoda_add_library(
           Replacing.h
           StatementMapper.cpp
           StatementMapper.h
-  OBJECT
-)
+          TemporaryHandeling.cpp
+          TemporaryHandeling.h
+          OBJECT
+          )
 
 target_include_directories(DawnOptimizerObjects SYSTEM PUBLIC ${Boost_INCLUDE_DIR})
 

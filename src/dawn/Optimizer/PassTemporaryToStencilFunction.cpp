@@ -20,6 +20,7 @@
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/StatementMapper.h"
+#include "dawn/Optimizer/TemporaryHandeling.h"
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
@@ -602,9 +603,12 @@ bool PassTemporaryToStencilFunction::run(
       if(metadata.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, varID))
         continue;
 
-      stencilInstantiation->promoteLocalVariableToTemporaryField(
-          stencilPtr.get(), varID, stencilPtr->getLifetime(varID),
-          iir::TemporaryScope::TS_StencilTemporary);
+      // stencilInstantiation->promoteLocalVariableToTemporaryField(
+      //     stencilPtr.get(), varID, stencilPtr->getLifetime(varID),
+      //     iir::TemporaryScope::TS_StencilTemporary);
+      promoteLocalVariableToTemporaryField(stencilInstantiation.get(), stencilPtr.get(), varID,
+                                           stencilPtr->getLifetime(varID),
+                                           iir::TemporaryScope::TS_StencilTemporary);
     }
 
     skipIDs = computeSkipAccessIDs(stencilPtr, stencilInstantiation);

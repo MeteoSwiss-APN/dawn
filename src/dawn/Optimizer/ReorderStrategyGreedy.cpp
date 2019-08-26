@@ -18,7 +18,6 @@
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/BoundaryExtent.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 #include <algorithm>
@@ -139,7 +138,7 @@ ReoderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
           if(multiStageDependencyGraph) {
 
             // 3) Do we not exceed the maximum allowed boundary extents?
-            if(!exceedsMaxBoundaryPoints(multiStageDependencyGraph.get(), maxBoundaryExtent)) {
+            if(!multiStageDependencyGraph->exceedsMaxBoundaryPoints(maxBoundaryExtent)) {
 
               // Yes, Yes and Yes ... stop and insert the stage!
               MS->setLoopOrder(dependencyGraphLoopOrderPair.second);

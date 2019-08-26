@@ -175,8 +175,13 @@ public:
 
   /// @brief Serialize the graph to JSON
   void toJSON(const std::string& file, DiagnosticsEngine& diagEngine) const;
-};
 
+  /// @fn exceedsMaxBoundaryPoints
+  /// @brief Check if any field, referenced in `graph`, exceeds the maximum number of boundary
+  /// points in the @b horizontal
+  /// @ingroup optimizer
+  bool exceedsMaxBoundaryPoints(int maxHorizontalBoundaryExtent);
+};
 } // namespace iir
 } // namespace dawn
 
