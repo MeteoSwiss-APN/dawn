@@ -45,32 +45,32 @@ public:
                                const std::shared_ptr<sir::StencilFunction>& functionToAnalyze)
       : function_(functionToAnalyze), metadata_(metadata) {}
 
-  void visit(const std::shared_ptr<FieldAccessExpr>& expr);
+  void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr);
 
-  inline void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) {
+  inline void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) {
     DAWN_ASSERT_MSG(0, "VerticalRegionDeclStmt not allowed in this context");
   }
-  inline void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
+  inline void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) {
     DAWN_ASSERT_MSG(0, "StencilCallDeclStmt not allowed in this context");
   }
-  inline void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
+  inline void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) {
     DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not allowed in this context");
   }
-  inline void visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
+  inline void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
     DAWN_ASSERT_MSG(0, "StencilFunCallExpr not allowed in this context");
   }
-  inline void visit(const std::shared_ptr<StencilFunArgExpr>& expr) {
+  inline void visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) {
     DAWN_ASSERT_MSG(0, "StencilFunArgExpr not allowed in this context");
   }
 
-  inline void visit(const std::shared_ptr<ReturnStmt>& stmt) {
+  inline void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
     DAWN_ASSERT_MSG(0, "ReturnStmt not allowed in this context");
   }
 
-  void visit(const std::shared_ptr<VarAccessExpr>& expr);
+  void visit(const std::shared_ptr<iir::VarAccessExpr>& expr);
 
-  std::string getName(const std::shared_ptr<Stmt>& stmt) const;
-  std::string getName(const std::shared_ptr<Expr>& expr) const;
+  std::string getName(const std::shared_ptr<iir::Stmt>& stmt) const;
+  std::string getName(const std::shared_ptr<iir::Expr>& expr) const;
 };
 
 class BCGenerator {
@@ -81,7 +81,7 @@ public:
   BCGenerator(const iir::StencilMetaInformation& metadata, std::stringstream& ss)
       : metadata_(metadata), ss_(ss) {}
 
-  void generate(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt);
+  void generate(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt);
 };
 } // namespace codegen
 } // namespace dawn

@@ -16,8 +16,8 @@
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/SIR/AST.h"
-#include "dawn/SIR/ASTVisitor.h"
+#include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/StringUtil.h"
 #include <deque>
@@ -29,7 +29,7 @@ namespace dawn {
 
 namespace {
 
-class ReadWriteCounter : public ASTVisitorForwarding {
+class ReadWriteCounter : public iir::ASTVisitorForwarding {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   const iir::StencilMetaInformation& metadata_;
 
@@ -94,7 +94,7 @@ public:
                         }) != textureCache_.end();
   }
 
-  int getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) {
+  int getAccessIDFromExpr(const std::shared_ptr<iir::Expr>& expr) {
     return stencilFunCalls_.empty() ? metadata_.getAccessIDFromExpr(expr)
                                     : stencilFunCalls_.top()->getAccessIDFromExpr(expr);
   }
@@ -105,12 +105,12 @@ public:
   }
 
   std::shared_ptr<iir::StencilFunctionInstantiation>
-  getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) {
+  getStencilFunctionInstantiation(const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
     return stencilFunCalls_.empty() ? metadata_.getStencilFunctionInstantiation(expr)
                                     : stencilFunCalls_.top()->getStencilFunctionInstantiation(expr);
   }
 
-  Array3i getOffset(const std::shared_ptr<FieldAccessExpr>& field) {
+  Array3i getOffset(const std::shared_ptr<iir::FieldAccessExpr>& field) {
     return stencilFunCalls_.empty()
                ? field->getOffset()
                : stencilFunCalls_.top()->evalOffsetOfFieldAccessExpr(field, true);
@@ -141,7 +141,7 @@ public:
     kCacheLoaded_.insert(AccessID);
   }
 
-  void processWriteAccess(const std::shared_ptr<FieldAccessExpr>& field) {
+  void processWriteAccess(const std::shared_ptr<iir::FieldAccessExpr>& field) {
     int AccessID = getAccessIDFromExpr(field);
 
     // Is field stored in cache?
@@ -157,7 +157,7 @@ public:
     }
   }
 
-  void processReadAccess(const std::shared_ptr<FieldAccessExpr>& fieldExpr) {
+  void processReadAccess(const std::shared_ptr<iir::FieldAccessExpr>& fieldExpr) {
     int AccessID = getAccessIDFromExpr(fieldExpr);
     int kOffset = fieldExpr->getOffset()[2];
 
@@ -198,14 +198,14 @@ public:
       updateTextureCache(AccessID, kOffset);
   }
 
-  void visit(const std::shared_ptr<AssignmentExpr>& expr) override {
+  void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override {
     // LHS is a write and maybe a read if we have an expression like `a += 5`
     bool readAndWrite = StringRef(expr->getOp()) == "+=" || StringRef(expr->getOp()) == "-=" ||
                         StringRef(expr->getOp()) == "/=" || StringRef(expr->getOp()) == "*=" ||
                         StringRef(expr->getOp()) == "|=" || StringRef(expr->getOp()) == "&=";
 
-    if(isa<FieldAccessExpr>(expr->getLeft().get())) {
-      auto field = std::static_pointer_cast<FieldAccessExpr>(expr->getLeft());
+    if(isa<iir::FieldAccessExpr>(expr->getLeft().get())) {
+      auto field = std::static_pointer_cast<iir::FieldAccessExpr>(expr->getLeft());
       processWriteAccess(field);
       if(readAndWrite)
         processReadAccess(field);
@@ -215,13 +215,13 @@ public:
     expr->getRight()->accept(*this);
   }
 
-  void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
+  void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override {
     stencilFunCalls_.push(getStencilFunctionInstantiation(expr));
     stencilFunCalls_.top()->getAST()->accept(*this);
     stencilFunCalls_.pop();
   }
 
-  void visit(const std::shared_ptr<FieldAccessExpr>& expr) override { processReadAccess(expr); }
+  void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override { processReadAccess(expr); }
   const std::unordered_map<int, ReadWriteAccumulator>& getIndividualReadWrites() const {
     return individualReadWrites_;
   }

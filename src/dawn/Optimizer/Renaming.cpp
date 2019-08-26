@@ -18,7 +18,7 @@
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
-#include "dawn/SIR/ASTVisitor.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/SIR/Statement.h"
 #include <unordered_map>
 
@@ -28,7 +28,7 @@ namespace {
 
 /// @brief Remap all accesses from `oldAccessID` to `newAccessID` in all statements
 template <class InstantiationType>
-class AccessIDRemapper : public ASTVisitorForwarding {
+class AccessIDRemapper : public iir::ASTVisitorForwarding {
   InstantiationType* instantiation_;
 
   int oldAccessID_;
@@ -38,27 +38,27 @@ public:
   AccessIDRemapper(InstantiationType* instantiation, int oldAccessID, int newAccessID)
       : instantiation_(instantiation), oldAccessID_(oldAccessID), newAccessID_(newAccessID) {}
 
-  virtual void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
     int varAccessID = instantiation_->getAccessIDFromStmt(stmt);
     if(varAccessID == oldAccessID_)
       instantiation_->setAccessIDOfStmt(stmt, newAccessID_);
-    ASTVisitorForwarding::visit(stmt);
+    iir::ASTVisitorForwarding::visit(stmt);
   }
 
-  virtual void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
+  virtual void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override {
     std::shared_ptr<iir::StencilFunctionInstantiation> fun =
         instantiation_->getStencilFunctionInstantiation(expr);
     fun->renameCallerAccessID(oldAccessID_, newAccessID_);
-    ASTVisitorForwarding::visit(expr);
+    iir::ASTVisitorForwarding::visit(expr);
   }
 
-  void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
     int varAccessID = instantiation_->getAccessIDFromExpr(expr);
     if(varAccessID == oldAccessID_)
       instantiation_->setAccessIDOfExpr(expr, newAccessID_);
   }
 
-  void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
     int fieldAccessID = instantiation_->getAccessIDFromExpr(expr);
     if(fieldAccessID == oldAccessID_)
       instantiation_->setAccessIDOfExpr(expr, newAccessID_);
@@ -100,7 +100,7 @@ void renameAccessIDInStmts(
 }
 
 void renameAccessIDInExpr(iir::StencilInstantiation* instantiation, int oldAccessID,
-                          int newAccessID, std::shared_ptr<Expr>& expr) {
+                          int newAccessID, std::shared_ptr<iir::Expr>& expr) {
   AccessIDRemapper<iir::StencilMetaInformation> remapper(&(instantiation->getMetaData()),
                                                          oldAccessID, newAccessID);
   expr->accept(remapper);

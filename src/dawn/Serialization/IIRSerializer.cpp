@@ -12,12 +12,12 @@
 //
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/Serialization/IIRSerializer.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIR/IIR.pb.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/ASTSerializer.h"
 #include <fstream>
@@ -542,15 +542,15 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
       auto field = makeField(protoField);
       sirStencilCall->Args.push_back(field);
     }
-    auto stmt = std::make_shared<StencilCallDeclStmt>(sirStencilCall,
+    auto stmt = std::make_shared<iir::StencilCallDeclStmt>(sirStencilCall,
                                                       makeLocation(call.stencil_call_decl_stmt()));
     stmt->setID(call.stencil_call_decl_stmt().id());
     metadata.insertStencilCallStmt(stmt, IDToCall.first);
   }
 
   for(auto FieldnameToBC : protoMetaData.fieldnametoboundarycondition()) {
-    std::shared_ptr<BoundaryConditionDeclStmt> bc =
-        dyn_pointer_cast<BoundaryConditionDeclStmt>(makeStmt((FieldnameToBC.second)));
+    std::shared_ptr<iir::BoundaryConditionDeclStmt> bc =
+        dyn_pointer_cast<iir::BoundaryConditionDeclStmt>(makeStmt((FieldnameToBC.second)));
     metadata.fieldnameToBoundaryConditionMap_[FieldnameToBC.first] = bc;
   }
 

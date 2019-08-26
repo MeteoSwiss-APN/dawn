@@ -14,6 +14,7 @@
 
 #include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTUtil.h"
+#include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/STLExtras.h"
 #include <cmath>
@@ -24,31 +25,32 @@ using namespace dawn;
 
 namespace {
 
-class ReplaceVisitor : public ASTVisitorPostOrder, public NonCopyable {
+class ReplaceVisitor : public sir::ASTVisitorPostOrder, public NonCopyable {
 protected:
 public:
   ReplaceVisitor() {}
 
   virtual ~ReplaceVisitor() {}
 
-  virtual std::shared_ptr<Expr>
-  postVisitNode(std::shared_ptr<FieldAccessExpr> const& expr) override {
-    return std::make_shared<FieldAccessExpr>(expr->getName() + "post");
+  virtual std::shared_ptr<sir::Expr>
+  postVisitNode(std::shared_ptr<sir::FieldAccessExpr> const& expr) override {
+    return std::make_shared<sir::FieldAccessExpr>(expr->getName() + "post");
   }
 
-  virtual std::shared_ptr<Expr>
-  postVisitNode(std::shared_ptr<LiteralAccessExpr> const& expr) override {
-    return std::make_shared<LiteralAccessExpr>(
+  virtual std::shared_ptr<sir::Expr>
+  postVisitNode(std::shared_ptr<sir::LiteralAccessExpr> const& expr) override {
+    return std::make_shared<sir::LiteralAccessExpr>(
         std::to_string((std::stof(expr->getValue()) + 2) * 7), BuiltinTypeID::Integer);
   }
 
-  virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<VarAccessExpr> const& expr) override {
-    return std::make_shared<VarAccessExpr>(
-        expr->getName(), std::make_shared<LiteralAccessExpr>("99", BuiltinTypeID::Integer));
+  virtual std::shared_ptr<sir::Expr>
+  postVisitNode(std::shared_ptr<sir::VarAccessExpr> const& expr) override {
+    return std::make_shared<sir::VarAccessExpr>(
+        expr->getName(), std::make_shared<sir::LiteralAccessExpr>("99", BuiltinTypeID::Integer));
   }
 };
 
-class CheckVisitor : public ASTVisitorForwarding, public NonCopyable {
+class CheckVisitor : public sir::ASTVisitorForwarding, public NonCopyable {
 
   bool result_ = true;
 
@@ -58,70 +60,75 @@ public:
   bool result() const { return result_; }
   virtual ~CheckVisitor() {}
 
-  virtual void visit(std::shared_ptr<FieldAccessExpr> const& expr) override {
+  virtual void visit(std::shared_ptr<sir::FieldAccessExpr> const& expr) override {
     std::regex self_regex("post", std::regex_constants::basic);
     result_ = result_ && (std::regex_search(expr->getName(), self_regex));
   }
 
-  virtual void visit(std::shared_ptr<LiteralAccessExpr> const& expr) override {
+  virtual void visit(std::shared_ptr<sir::LiteralAccessExpr> const& expr) override {
     double val = std::stof(expr->getValue()) / (double)7.0 - 2;
     if(val != 0 && val != 1 && std::fabs((val - 3.14)) / 3.14 > 1e-6) {
       result_ = false;
     }
   }
 
-  virtual void visit(std::shared_ptr<VarAccessExpr> const& expr) override {
-    DAWN_ASSERT(isa<LiteralAccessExpr>(*(expr->getIndex())));
-    result_ = result_ &&
-              (std::dynamic_pointer_cast<LiteralAccessExpr>(expr->getIndex())->getValue() == "99");
+  virtual void visit(std::shared_ptr<sir::VarAccessExpr> const& expr) override {
+    DAWN_ASSERT(isa<sir::LiteralAccessExpr>(*(expr->getIndex())));
+    result_ =
+        result_ &&
+        (std::dynamic_pointer_cast<sir::LiteralAccessExpr>(expr->getIndex())->getValue() == "99");
   }
 };
 class ASTPostOrderVisitor : public ::testing::Test {
 protected:
-  std::shared_ptr<BlockStmt> blockStmt_;
+  std::shared_ptr<sir::BlockStmt> blockStmt_;
 
   void SetUp() override {
-    blockStmt_ = std::make_shared<BlockStmt>();
+    blockStmt_ = std::make_shared<sir::BlockStmt>();
 
     // pi = {3.14, 3.14, 3.14};
     Type floatType(BuiltinTypeID::Float);
-    std::shared_ptr<LiteralAccessExpr> pi =
-        std::make_shared<LiteralAccessExpr>("3.14", BuiltinTypeID::Float);
-    std::vector<std::shared_ptr<Expr>> initList = {pi, pi, pi};
-    std::shared_ptr<VarDeclStmt> varDcl =
-        std::make_shared<VarDeclStmt>(floatType, "u1", 3, "=", initList);
+    std::shared_ptr<sir::LiteralAccessExpr> pi =
+        std::make_shared<sir::LiteralAccessExpr>("3.14", BuiltinTypeID::Float);
+    std::vector<std::shared_ptr<sir::Expr>> initList = {pi, pi, pi};
+    std::shared_ptr<sir::VarDeclStmt> varDcl =
+        std::make_shared<sir::VarDeclStmt>(floatType, "u1", 3, "=", initList);
 
     blockStmt_->push_back(varDcl);
 
     // index to access pi[1]
-    std::shared_ptr<LiteralAccessExpr> index0 =
-        std::make_shared<LiteralAccessExpr>("0", BuiltinTypeID::Integer);
-    std::shared_ptr<LiteralAccessExpr> index1 =
-        std::make_shared<LiteralAccessExpr>("1", BuiltinTypeID::Integer);
+    std::shared_ptr<sir::LiteralAccessExpr> index0 =
+        std::make_shared<sir::LiteralAccessExpr>("0", BuiltinTypeID::Integer);
+    std::shared_ptr<sir::LiteralAccessExpr> index1 =
+        std::make_shared<sir::LiteralAccessExpr>("1", BuiltinTypeID::Integer);
 
     // f1 = f2+pi[1]
-    std::shared_ptr<FieldAccessExpr> f1 = std::make_shared<FieldAccessExpr>("f1");
-    std::shared_ptr<FieldAccessExpr> f2 = std::make_shared<FieldAccessExpr>("f2");
-    std::shared_ptr<VarAccessExpr> varAccess = std::make_shared<VarAccessExpr>("pi", index1);
-    std::shared_ptr<BinaryOperator> rightExpr =
-        std::make_shared<BinaryOperator>(f2, "+", varAccess);
-    std::shared_ptr<AssignmentExpr> assignExpr = std::make_shared<AssignmentExpr>(f1, rightExpr);
-    std::shared_ptr<ExprStmt> exprStmt1 = std::make_shared<ExprStmt>(assignExpr);
+    std::shared_ptr<sir::FieldAccessExpr> f1 = std::make_shared<sir::FieldAccessExpr>("f1");
+    std::shared_ptr<sir::FieldAccessExpr> f2 = std::make_shared<sir::FieldAccessExpr>("f2");
+    std::shared_ptr<sir::VarAccessExpr> varAccess =
+        std::make_shared<sir::VarAccessExpr>("pi", index1);
+    std::shared_ptr<sir::BinaryOperator> rightExpr =
+        std::make_shared<sir::BinaryOperator>(f2, "+", varAccess);
+    std::shared_ptr<sir::AssignmentExpr> assignExpr =
+        std::make_shared<sir::AssignmentExpr>(f1, rightExpr);
+    std::shared_ptr<sir::ExprStmt> exprStmt1 = std::make_shared<sir::ExprStmt>(assignExpr);
 
     blockStmt_->push_back(exprStmt1);
 
-    std::shared_ptr<VarAccessExpr> varAccess1 = std::make_shared<VarAccessExpr>("pi", index0);
+    std::shared_ptr<sir::VarAccessExpr> varAccess1 =
+        std::make_shared<sir::VarAccessExpr>("pi", index0);
 
-    std::shared_ptr<LiteralAccessExpr> val0 =
-        std::make_shared<LiteralAccessExpr>("0", BuiltinTypeID::Float);
+    std::shared_ptr<sir::LiteralAccessExpr> val0 =
+        std::make_shared<sir::LiteralAccessExpr>("0", BuiltinTypeID::Float);
 
-    std::shared_ptr<BinaryOperator> equal =
-        std::make_shared<BinaryOperator>(varAccess1, "==", val0);
-    std::shared_ptr<ExprStmt> condStmt = std::make_shared<ExprStmt>(equal);
-    std::shared_ptr<ReturnStmt> returnIf = std::make_shared<ReturnStmt>(f1);
-    std::shared_ptr<ReturnStmt> returnElse = std::make_shared<ReturnStmt>(f2);
+    std::shared_ptr<sir::BinaryOperator> equal =
+        std::make_shared<sir::BinaryOperator>(varAccess1, "==", val0);
+    std::shared_ptr<sir::ExprStmt> condStmt = std::make_shared<sir::ExprStmt>(equal);
+    std::shared_ptr<sir::ReturnStmt> returnIf = std::make_shared<sir::ReturnStmt>(f1);
+    std::shared_ptr<sir::ReturnStmt> returnElse = std::make_shared<sir::ReturnStmt>(f2);
 
-    std::shared_ptr<IfStmt> ifStmt = std::make_shared<IfStmt>(condStmt, returnIf, returnElse);
+    std::shared_ptr<sir::IfStmt> ifStmt =
+        std::make_shared<sir::IfStmt>(condStmt, returnIf, returnElse);
     blockStmt_->push_back(ifStmt);
   }
 };
@@ -137,21 +144,21 @@ TEST_F(ASTPostOrderVisitor, accesors) {
   ASSERT_TRUE(checker.result());
 }
 
-class ReplaceAssignVisitor : public ASTVisitorPostOrder, public NonCopyable {
+class ReplaceAssignVisitor : public sir::ASTVisitorPostOrder, public NonCopyable {
 protected:
 public:
   ReplaceAssignVisitor() {}
 
   virtual ~ReplaceAssignVisitor() {}
 
-  virtual std::shared_ptr<Expr>
-  postVisitNode(std::shared_ptr<AssignmentExpr> const& expr) override {
-    return std::make_shared<AssignmentExpr>(std::make_shared<FieldAccessExpr>("demo_out"),
-                                            std::make_shared<FieldAccessExpr>("demo_in"));
+  virtual std::shared_ptr<sir::Expr>
+  postVisitNode(std::shared_ptr<sir::AssignmentExpr> const& expr) override {
+    return std::make_shared<sir::AssignmentExpr>(std::make_shared<sir::FieldAccessExpr>("demo_out"),
+                                                 std::make_shared<sir::FieldAccessExpr>("demo_in"));
   }
 };
 
-class CheckAssignVisitor : public ASTVisitorForwarding, public NonCopyable {
+class CheckAssignVisitor : public sir::ASTVisitorForwarding, public NonCopyable {
 
   bool result_ = true;
 
@@ -161,13 +168,15 @@ public:
   bool result() const { return result_; }
   virtual ~CheckAssignVisitor() {}
 
-  virtual void visit(std::shared_ptr<AssignmentExpr> const& expr) override {
-    DAWN_ASSERT(isa<FieldAccessExpr>(*(expr->getLeft())));
+  virtual void visit(std::shared_ptr<sir::AssignmentExpr> const& expr) override {
+    DAWN_ASSERT(isa<sir::FieldAccessExpr>(*(expr->getLeft())));
 
-    result_ = result_ && (std::dynamic_pointer_cast<FieldAccessExpr>(expr->getLeft())->getName() ==
-                          "demo_out");
-    result_ = result_ && (std::dynamic_pointer_cast<FieldAccessExpr>(expr->getRight())->getName() ==
-                          "demo_in");
+    result_ =
+        result_ &&
+        (std::dynamic_pointer_cast<sir::FieldAccessExpr>(expr->getLeft())->getName() == "demo_out");
+    result_ =
+        result_ &&
+        (std::dynamic_pointer_cast<sir::FieldAccessExpr>(expr->getRight())->getName() == "demo_in");
   }
 };
 
@@ -182,30 +191,33 @@ TEST_F(ASTPostOrderVisitor, assignment) {
   ASSERT_TRUE(checker.result());
 }
 
-class ReplaceIfVisitor : public ASTVisitorPostOrder, public NonCopyable {
+class ReplaceIfVisitor : public sir::ASTVisitorPostOrder, public NonCopyable {
 protected:
 public:
   ReplaceIfVisitor() {}
 
   virtual ~ReplaceIfVisitor() {}
 
-  virtual std::shared_ptr<Stmt> postVisitNode(std::shared_ptr<IfStmt> const& stmt) override {
-    DAWN_ASSERT(isa<BinaryOperator>(*(stmt->getCondExpr())));
+  virtual std::shared_ptr<sir::Stmt>
+  postVisitNode(std::shared_ptr<sir::IfStmt> const& stmt) override {
+    DAWN_ASSERT(isa<sir::BinaryOperator>(*(stmt->getCondExpr())));
 
-    std::shared_ptr<BinaryOperator> op =
-        std::dynamic_pointer_cast<BinaryOperator>(stmt->getCondExpr());
+    std::shared_ptr<sir::BinaryOperator> op =
+        std::dynamic_pointer_cast<sir::BinaryOperator>(stmt->getCondExpr());
 
-    std::shared_ptr<ExprStmt> gt = std::make_shared<ExprStmt>(
-        std::make_shared<BinaryOperator>(op->getLeft(), ">=", op->getRight()));
+    std::shared_ptr<sir::ExprStmt> gt = std::make_shared<sir::ExprStmt>(
+        std::make_shared<sir::BinaryOperator>(op->getLeft(), ">=", op->getRight()));
 
-    std::shared_ptr<ExprStmt> ifStmt = std::make_shared<ExprStmt>(std::make_shared<NOPExpr>());
-    std::shared_ptr<ExprStmt> elseStmt = std::make_shared<ExprStmt>(std::make_shared<NOPExpr>());
+    std::shared_ptr<sir::ExprStmt> ifStmt =
+        std::make_shared<sir::ExprStmt>(std::make_shared<sir::NOPExpr>());
+    std::shared_ptr<sir::ExprStmt> elseStmt =
+        std::make_shared<sir::ExprStmt>(std::make_shared<sir::NOPExpr>());
 
-    return std::make_shared<IfStmt>(gt, ifStmt, elseStmt);
+    return std::make_shared<sir::IfStmt>(gt, ifStmt, elseStmt);
   }
 };
 
-class CheckIfVisitor : public ASTVisitorForwarding, public NonCopyable {
+class CheckIfVisitor : public sir::ASTVisitorForwarding, public NonCopyable {
 
   bool result_ = true;
 
@@ -215,19 +227,21 @@ public:
   bool result() const { return result_; }
   virtual ~CheckIfVisitor() {}
 
-  virtual void visit(std::shared_ptr<IfStmt> const& stmt) override {
-    DAWN_ASSERT(isa<BinaryOperator>(*(stmt->getCondExpr())));
+  virtual void visit(std::shared_ptr<sir::IfStmt> const& stmt) override {
+    DAWN_ASSERT(isa<sir::BinaryOperator>(*(stmt->getCondExpr())));
 
-    std::shared_ptr<BinaryOperator> op =
-        std::dynamic_pointer_cast<BinaryOperator>(stmt->getCondExpr());
+    std::shared_ptr<sir::BinaryOperator> op =
+        std::dynamic_pointer_cast<sir::BinaryOperator>(stmt->getCondExpr());
 
     result_ = result_ && (std::string(op->getOp()) == ">=");
 
-    DAWN_ASSERT(isa<ExprStmt>(*(stmt->getThenStmt())));
-    std::shared_ptr<ExprStmt> thenExpr = std::dynamic_pointer_cast<ExprStmt>(stmt->getThenStmt());
-    result_ = result_ && isa<NOPExpr>(*(thenExpr->getExpr()));
-    std::shared_ptr<ExprStmt> elseExpr = std::dynamic_pointer_cast<ExprStmt>(stmt->getElseStmt());
-    result_ = result_ && isa<NOPExpr>(*(elseExpr->getExpr()));
+    DAWN_ASSERT(isa<sir::ExprStmt>(*(stmt->getThenStmt())));
+    std::shared_ptr<sir::ExprStmt> thenExpr =
+        std::dynamic_pointer_cast<sir::ExprStmt>(stmt->getThenStmt());
+    result_ = result_ && isa<sir::NOPExpr>(*(thenExpr->getExpr()));
+    std::shared_ptr<sir::ExprStmt> elseExpr =
+        std::dynamic_pointer_cast<sir::ExprStmt>(stmt->getElseStmt());
+    result_ = result_ && isa<sir::NOPExpr>(*(elseExpr->getExpr()));
   }
 };
 
