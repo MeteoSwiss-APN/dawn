@@ -12,6 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/Serialization/IIRSerializer.h"
+#include "dawn/AST/ASTStmt.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIR/IIR.pb.h"
 #include "dawn/IIR/IIRNodeIterator.h"
@@ -730,6 +731,21 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
   }
   for(auto controlFlowStmt : protoIIR.controlflowstatements()) {
     target->getIIR()->getControlFlowDescriptor().insertStmt(makeStatement(&controlFlowStmt));
+  }
+  for(auto& boundaryCondition : protoIIR.boundaryconditions()) {
+    auto stencilFunction = std::make_shared<sir::StencilFunction>();
+    stencilFunction->Name = boundaryCondition.name();
+
+    for(auto& proto_arg : boundaryCondition.args()) {
+      auto new_arg = std::make_shared<sir::StencilFunctionArg>();
+      new_arg->Name = proto_arg;
+      new_arg->Kind = sir::StencilFunctionArg::AK_Field;
+      stencilFunction->Args.push_back(std::move(new_arg));
+    }
+    auto stmt = std::dynamic_pointer_cast<ast::BlockStmt>(makeStmt(boundaryCondition.aststmt()));
+    stencilFunction->Asts.push_back(std::make_shared<ast::AST>(stmt));
+
+    target->getIIR()->insertStencilFunction(stencilFunction);
   }
 }
 

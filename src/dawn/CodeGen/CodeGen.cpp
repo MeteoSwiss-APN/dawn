@@ -138,8 +138,8 @@ void CodeGen::generateBoundaryConditionFunctions(
         found = true;
         break;
       }
-      DAWN_ASSERT(found);
     }
+    DAWN_ASSERT(found);
   }
 }
 
