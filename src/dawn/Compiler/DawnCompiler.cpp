@@ -44,7 +44,6 @@
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/EditDistance.h"
 #include "dawn/Support/Logging.h"
-#include "dawn/Support/SourceLocation.h"
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
@@ -197,6 +196,8 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     optimizer->checkAndPushBack<PassInlining>(getOptions().Backend == "cuda" ||
                                                   getOptions().SerializeIIR,
                                               PassInlining::InlineStrategy::ComputationsOnTheFly);
+    optimizer->checkAndPushBack<PassInlining>(true,
+                                              PassInlining::InlineStrategy::ComputationsOnTheFly);
 
     DAWN_LOG(INFO) << "All the passes ran with the current command line arguments:";
     for(const auto& a : optimizer->getPassManager().getPasses()) {
@@ -224,7 +225,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     optimizer = make_unique<OptimizerContext>(getDiagnostics(), getOptions(), nullptr);
     auto instantiation =
         IIRSerializer::deserialize(options_->DeserializeIIR, optimizer.get(), serializationKind);
-    optimizer->restoreIIR("Stencil", instantiation);
+    optimizer->restoreIIR("<restored>", instantiation);
   }
 
   return optimizer;

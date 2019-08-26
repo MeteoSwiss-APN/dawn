@@ -662,7 +662,7 @@ bool OptimizerContext::restoreIIR(std::string const& name,
   metadata.setStencilname(stencilInstantiation->getName());
   metadata.setFileName("<unknown>");
 
-  stencilInstantiationMap_.insert(std::make_pair("Stencil", stencilInstantiation));
+  stencilInstantiationMap_.insert(std::make_pair(name, stencilInstantiation));
 
   for(const auto& MS : iterateIIROver<MultiStage>(*(stencilInstantiation->getIIR()))) {
     MS->update(NodeUpdateType::levelAndTreeAbove);
