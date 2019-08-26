@@ -16,8 +16,6 @@ yoda_add_library(
   NAME DawnOptimizer
   SOURCES AccessComputation.h
           AccessComputation.cpp   
-          AccessUtils.cpp
-          AccessUtils.h
           BoundaryExtent.cpp  
           BoundaryExtent.h
           CreateVersionAndRename.cpp

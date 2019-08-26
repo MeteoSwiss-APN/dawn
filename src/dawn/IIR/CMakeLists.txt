@@ -31,6 +31,8 @@ yoda_add_library(
   SOURCES 
           Accesses.cpp  
           Accesses.h
+          AccessUtils.cpp
+          AccessUtils.h
           AccessToNameMapper.cpp
           AccessToNameMapper.h
           BlockStatements.cpp
