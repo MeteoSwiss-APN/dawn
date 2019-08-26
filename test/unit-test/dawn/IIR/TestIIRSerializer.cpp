@@ -12,13 +12,13 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Compiler/DiagnosticsEngine.h"
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Serialization/IIRSerializer.h"
+#include "dawn/Support/DiagnosticsEngine.h"
 #include <gtest/gtest.h>
 
 using namespace dawn;
@@ -171,7 +171,7 @@ bool compareStencilInstantiations(const std::shared_ptr<iir::StencilInstantiatio
 
 class createEmptyOptimizerContext : public ::testing::Test {
 protected:
-  virtual void SetUp() {
+  virtual void SetUp() override {
     dawn::DiagnosticsEngine diag;
     dawn::Options options;
     std::shared_ptr<SIR> sir = std::make_shared<SIR>();
@@ -191,8 +191,8 @@ protected:
   virtual void TearDown() override { referenceInstantiaton.reset(); }
 
   std::shared_ptr<iir::StencilInstantiation> serializeAndDeserializeRef() {
-    return std::move(IIRSerializer::deserializeFromString(
-        IIRSerializer::serializeToString(referenceInstantiaton), context_));
+    return IIRSerializer::deserializeFromString(
+        IIRSerializer::serializeToString(referenceInstantiaton), context_);
   }
 
   std::shared_ptr<iir::StencilInstantiation> referenceInstantiaton;

@@ -17,16 +17,11 @@
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/PassComputeStageExtents.h"
-#include "dawn/Optimizer/PassInlining.h"
-#include "dawn/SIR/AST.h"
-#include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/ASTSerializer.h"
 #include <fstream>
 #include <google/protobuf/util/json_util.h>
-#include <memory>
 
 namespace dawn {
 static proto::iir::Extents makeProtoExtents(dawn::iir::Extents const& extents) {
@@ -456,8 +451,6 @@ std::string
 IIRSerializer::serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
                              dawn::IIRSerializer::SerializationKind kind) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
-  // Before Serialization we need to ensure there are no stencilfunctions present. This is why we
-  // inline everything here.
   /////////////////////////////// WITTODO //////////////////////////////////////////////////////////
   //==------------------------------------------------------------------------------------------==//
   // After we have the merge of carlos' new inliner that distinguishes between full inlining (as
@@ -484,9 +477,6 @@ IIRSerializer::serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& i
   //
   // out = 0.5*(u[i+1, j+1] + u[i-1, j+1]) - 0.5*(u[i+1] + u[i-1])
   //==------------------------------------------------------------------------------------------==//
-
-  PassInlining inliner(true, PassInlining::IK_ComputationsOnTheFly);
-  inliner.run(instantiation);
 
   using namespace dawn::proto::iir;
   proto::iir::StencilInstantiation protoStencilInstantiation;
@@ -740,21 +730,6 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
   }
   for(auto controlFlowStmt : protoIIR.controlflowstatements()) {
     target->getIIR()->getControlFlowDescriptor().insertStmt(makeStatement(&controlFlowStmt));
-  }
-  for(auto& boundaryCondition : protoIIR.boundaryconditions()) {
-    auto stencilFunction = std::make_shared<sir::StencilFunction>();
-    stencilFunction->Name = boundaryCondition.name();
-
-    for(auto& proto_arg : boundaryCondition.args()) {
-      auto new_arg = std::make_shared<sir::StencilFunctionArg>();
-      new_arg->Name = proto_arg;
-      new_arg->Kind = sir::StencilFunctionArg::AK_Field;
-      stencilFunction->Args.push_back(std::move(new_arg));
-    }
-    auto stmt = std::dynamic_pointer_cast<BlockStmt>(makeStmt(boundaryCondition.aststmt()));
-    stencilFunction->Asts.push_back(std::make_shared<AST>(stmt));
-
-    target->getIIR()->insertStencilFunction(stencilFunction);
   }
 }
 

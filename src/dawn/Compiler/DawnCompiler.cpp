@@ -157,13 +157,15 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
       dawn_unreachable("Unknown SIRFormat option");
     }
   }
+
   // Initialize optimizer
   std::unique_ptr<OptimizerContext> optimizer;
   if(options_->DeserializeIIR == "") {
     optimizer = make_unique<OptimizerContext>(getDiagnostics(), getOptions(), SIR);
     optimizer->fillIIR();
 
-    optimizer->checkAndPushBack<PassInlining>(true, PassInlining::IK_InlineProcedures);
+    // Setup pass interface
+    optimizer->checkAndPushBack<PassInlining>(true, PassInlining::InlineStrategy::InlineProcedures);
     // This pass is currently broken and needs to be redesigned before it can be enabled
     //  optimizer->checkAndPushBack<PassTemporaryFirstAccss>();
     optimizer->checkAndPushBack<PassFieldVersioning>();
@@ -181,29 +183,38 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     optimizer->checkAndPushBack<PassTemporaryMerger>();
     optimizer->checkAndPushBack<PassInlining>(
         (getOptions().InlineSF || getOptions().PassTmpToFunction),
-        PassInlining::IK_ComputationsOnTheFly);
+        PassInlining::InlineStrategy::ComputationsOnTheFly);
     optimizer->checkAndPushBack<PassTemporaryToStencilFunction>();
     optimizer->checkAndPushBack<PassSetNonTempCaches>();
     optimizer->checkAndPushBack<PassSetCaches>();
     optimizer->checkAndPushBack<PassComputeStageExtents>();
     optimizer->checkAndPushBack<PassSetBoundaryCondition>();
     optimizer->checkAndPushBack<PassSetBlockSize>();
+    optimizer->checkAndPushBack<PassDataLocalityMetric>();
+    optimizer->checkAndPushBack<PassSetSyncStage>();
 
-    int i = 0;
-    for(auto& instantiation : optimizer->getStencilInstantiationMap()) {
-      // Run optimization passes
-      DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `" << instantiation.first
-                     << "` ...";
-      optimizer->getPassManager().runAllPassesOnStecilInstantiation(instantiation.second);
-      DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `" << instantiation.first
-                     << "`";
-      if(options_->SerializeIIR)
-        IIRSerializer::serialize(
-            remove_fileextension(instantiation.second->getMetaData().getFileName(), ".cpp") + "." +
-                std::to_string(i) + ".iir",
-            instantiation.second, serializationKind);
+    DAWN_LOG(INFO) << "All the passes ran with the current command line arguments:";
+    for(const auto& a : optimizer->getPassManager().getPasses()) {
+      DAWN_LOG(INFO) << a->getName();
     }
+    int i = 0;
+    for(auto& stencil : optimizer->getStencilInstantiationMap()) {
+      // Run optimization passes
+      std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
+      DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `"
+                     << instantiation->getName() << "` ...";
+      if(!optimizer->getPassManager().runAllPassesOnStecilInstantiation(instantiation))
+        return nullptr;
+      DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `"
+                     << instantiation->getName() << "`";
 
+      if(options_->SerializeIIR) {
+        IIRSerializer::serialize(
+            remove_fileextension(instantiation->getMetaData().getFileName(), ".cpp") + "." +
+                std::to_string(i) + ".iir",
+            instantiation, serializationKind);
+      }
+    }
   } else {
     optimizer = make_unique<OptimizerContext>(getDiagnostics(), getOptions(), nullptr);
     auto instantiation =
@@ -212,7 +223,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   }
 
   return optimizer;
-}
+} // namespace dawn
 
 std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::shared_ptr<SIR>& SIR) {
   diagnostics_->clear();
@@ -239,11 +250,15 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
   std::unique_ptr<codegen::CodeGen> CG;
 
   if(options_->Backend == "gridtools") {
-    CG = make_unique<codegen::gt::GTCodeGen>(optimizer.get());
+    CG = make_unique<codegen::gt::GTCodeGen>(optimizer->getStencilInstantiationMap(), *diagnostics_,
+                                             options_->UseParallelEP, options_->MaxHaloPoints);
   } else if(options_->Backend == "c++-naive") {
-    CG = make_unique<codegen::cxxnaive::CXXNaiveCodeGen>(optimizer.get());
+    CG = make_unique<codegen::cxxnaive::CXXNaiveCodeGen>(optimizer->getStencilInstantiationMap(),
+                                                         *diagnostics_, options_->MaxHaloPoints);
   } else if(options_->Backend == "cuda") {
-    CG = make_unique<codegen::cuda::CudaCodeGen>(optimizer.get());
+    CG = make_unique<codegen::cuda::CudaCodeGen>(
+        optimizer->getStencilInstantiationMap(), *diagnostics_, options_->MaxHaloPoints,
+        options_->nsms, options_->maxBlocksPerSM, options_->domain_size);
   } else if(options_->Backend == "c++-opt") {
     dawn_unreachable("GTClangOptCXX not supported yet");
   } else {

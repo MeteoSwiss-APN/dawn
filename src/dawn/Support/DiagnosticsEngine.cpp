@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Compiler/DiagnosticsEngine.h"
+#include "dawn/Support/DiagnosticsEngine.h"
 
 namespace dawn {
 

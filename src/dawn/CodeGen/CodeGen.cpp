@@ -1,6 +1,5 @@
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/StencilFunctionAsBCGenerator.h"
-#include "dawn/SIR/SIR.h"
 
 namespace dawn {
 namespace codegen {
@@ -29,10 +28,17 @@ size_t CodeGen::getVerticalTmpHaloSizeForMultipleStencils(
              : 0;
 }
 
-std::string CodeGen::generateGlobals(sir::GlobalVariableMap const& globals,
+std::string CodeGen::generateGlobals(stencilInstantiationContext& context, std::string namespace_) {
+  if(context.size() > 0) {
+    const auto& globalsMap = context.begin()->second->getIIR()->getGlobalVariableMap();
+    return generateGlobals(globalsMap, namespace_);
+  }
+  return "";
+}
+std::string CodeGen::generateGlobals(const sir::GlobalVariableMap& globalsMap,
                                      std::string namespace_) const {
 
-  if(globals.empty())
+  if(globalsMap.empty())
     return "";
 
   std::stringstream ss;
@@ -41,7 +47,7 @@ std::string CodeGen::generateGlobals(sir::GlobalVariableMap const& globals,
 
   Struct GlobalsStruct("globals", ss);
 
-  for(const auto& globalsPair : globals) {
+  for(const auto& globalsPair : globalsMap) {
     sir::Value& value = *globalsPair.second;
     if(value.isConstexpr()) {
       continue;
@@ -52,7 +58,7 @@ std::string CodeGen::generateGlobals(sir::GlobalVariableMap const& globals,
     GlobalsStruct.addMember(Type, Name);
   }
   auto ctr = GlobalsStruct.addConstructor();
-  for(const auto& globalsPair : globals) {
+  for(const auto& globalsPair : globalsMap) {
     sir::Value& value = *globalsPair.second;
     if(value.isConstexpr()) {
       continue;
@@ -143,8 +149,7 @@ void CodeGen::generateBCHeaders(std::vector<std::string>& ppDefines) const {
         return res || si.second->getMetaData().hasBC();
       };
 
-  if(std::accumulate(context_->getStencilInstantiationMap().begin(),
-                     context_->getStencilInstantiationMap().end(), false, hasBCFold)) {
+  if(std::accumulate(context_.begin(), context_.end(), false, hasBCFold)) {
     ppDefines.push_back("#include <gridtools/boundary-conditions/boundary.hpp>\n");
   }
 }
@@ -328,8 +333,7 @@ void CodeGen::generateBCFieldMembers(
   }
 }
 
-void CodeGen::addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainerMaxSize,
-                           int MaxHaloPoints) const {
+void CodeGen::addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainerMaxSize) const {
   auto makeIfNotDefined = [](std::string define, int value) {
     return "#ifndef " + define + "\n #define " + define + " " + std::to_string(value) + "\n#endif";
   };
@@ -339,7 +343,8 @@ void CodeGen::addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainer
 
   ppDefines.push_back(makeIfNotDefined("BOOST_RESULT_OF_USE_TR1", 1));
   ppDefines.push_back(makeIfNotDefined("BOOST_NO_CXX11_DECLTYPE", 1));
-  ppDefines.push_back(makeIfNotDefined("GRIDTOOLS_CLANG_HALO_EXTEND", MaxHaloPoints));
+  ppDefines.push_back(
+      makeIfNotDefined("GRIDTOOLS_CLANG_HALO_EXTEND", codeGenOptions.MaxHaloPoints));
   ppDefines.push_back(makeIfNotDefined("BOOST_PP_VARIADICS", 1));
   ppDefines.push_back(makeIfNotDefined("BOOST_FUSION_DONT_USE_PREPROCESSED_FILES", 1));
   ppDefines.push_back(makeIfNotDefined("BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS", 1));
@@ -350,6 +355,13 @@ void CodeGen::addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainer
   ppDefines.push_back(makeIfNotDefinedString("FUSION_MAX_MAP_SIZE", "GT_VECTOR_LIMIT_SIZE"));
   ppDefines.push_back(
       makeIfNotDefinedString("BOOST_MPL_LIMIT_VECTOR_SIZE", "GT_VECTOR_LIMIT_SIZE"));
+}
+
+std::string CodeGen::generateFileName(const stencilInstantiationContext& context) const {
+  if(context.size() > 0) {
+    return context_.begin()->second->getMetaData().getFileName();
+  }
+  return "";
 }
 
 } // namespace codegen
