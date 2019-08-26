@@ -14,7 +14,9 @@
 
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/IIR/Accesses.h"
+#include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
@@ -129,6 +131,27 @@ void renameAccessIDInAccesses(
                        newAccessID);
     renameAccessesMaps(statementAccessesPair->getCalleeAccesses()->getWriteAccesses(), oldAccessID,
                        newAccessID);
+  }
+}
+
+void renameAccessIDInMultiStage(iir::MultiStage* multiStage, int oldAccessID, int newAccessID) {
+  for(auto stageIt = multiStage->childrenBegin(), stageEnd = multiStage->childrenEnd();
+      stageIt != stageEnd; ++stageIt) {
+    iir::Stage& stage = (**stageIt);
+    for(const auto& doMethodPtr : stage.getChildren()) {
+      iir::DoMethod& doMethod = *doMethodPtr;
+      renameAccessIDInStmts(&(multiStage->getMetadata()), oldAccessID, newAccessID,
+                            doMethod.getChildren());
+      renameAccessIDInAccesses(&(multiStage->getMetadata()), oldAccessID, newAccessID,
+                               doMethod.getChildren());
+      doMethod.update(iir::NodeUpdateType::level);
+    }
+    stage.update(iir::NodeUpdateType::levelAndTreeAbove);
+  }
+}
+void renameAccessIDInStencil(iir::Stencil* stencil, int oldAccessID, int newAccessID) {
+  for(const auto& multistage : stencil->getChildren()) {
+    renameAccessIDInMultiStage(multistage.get(), oldAccessID, newAccessID);
   }
 }
 

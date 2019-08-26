@@ -20,6 +20,7 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassSetCaches.h"
+#include "dawn/Optimizer/Renaming.h"
 #include "dawn/SIR/ASTExpr.h"
 #include "dawn/Support/Unreachable.h"
 #include <iostream>
@@ -133,7 +134,7 @@ private:
                                                "__tmp_cache_" + std::to_string(i));
 
       // Rename all the fields in this multistage
-      multiStagePrt_->renameAllOccurrences(oldID, newID);
+      renameAccessIDInMultiStage(multiStagePrt_.get(), oldID, newID);
 
       oldAccessIDtoNewAccessID_.emplace(oldID, newID);
       iir::Cache& cache = multiStagePrt_->setCache(iir::Cache::IJ, iir::Cache::local, newID);

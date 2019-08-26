@@ -17,7 +17,6 @@
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StatementAccessesPair.h"
-#include "dawn/Optimizer/Renaming.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
@@ -455,12 +454,6 @@ Interval Stencil::getAxis(bool useExtendedInterval) const {
     axis.merge(useExtendedInterval ? getStage(stageIdx)->getEnclosingExtendedInterval()
                                    : getStage(stageIdx)->getEnclosingInterval());
   return axis;
-}
-
-void Stencil::renameAllOccurrences(int oldAccessID, int newAccessID) {
-  for(const auto& multistage : getChildren()) {
-    multistage->renameAllOccurrences(oldAccessID, newAccessID);
-  }
 }
 
 std::unordered_map<int, Stencil::Lifetime>

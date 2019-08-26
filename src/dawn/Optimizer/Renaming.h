@@ -15,6 +15,7 @@
 #ifndef DAWN_OPTIMIZER_RENAMING_H
 #define DAWN_OPTIMIZER_RENAMING_H
 
+#include "dawn/IIR/DoMethod.h"
 #include "dawn/Support/ArrayRef.h"
 #include <memory>
 
@@ -26,6 +27,8 @@ class StatementAccessesPair;
 class StencilFunctionInstantiation;
 class StencilInstantiation;
 class StencilMetaInformation;
+class MultiStage;
+class Stencil;
 } // namespace iir
 
 /// @name Renaming routines
@@ -69,6 +72,10 @@ void renameAccessIDInAccesses(
     iir::StencilFunctionInstantiation* instantiation, int oldAccessID, int newAccessID,
     ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
 /// @}
+
+void renameAccessIDInMultiStage(iir::MultiStage* multiStage, int oldAccessID, int newAccessID);
+
+void renameAccessIDInStencil(iir::Stencil* stencil, int oldAccessID, int newAccessID);
 
 } // namespace dawn
 

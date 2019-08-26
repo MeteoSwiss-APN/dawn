@@ -109,8 +109,8 @@ public:
   /// @param expr       Expression to be renamed (usually the left- or right-hand side of an
   ///                   assignment). Can be `NULL`.
   /// @returns AccessID of the new field
-  int createVersionAndRename(int AccessID, Stencil* stencil, int stageIndex, int stmtIndex,
-                             std::shared_ptr<Expr>& expr, RenameDirection dir);
+  // int createVersionAndRename(int AccessID, Stencil* stencil, int stageIndex, int stmtIndex,
+  //                            std::shared_ptr<Expr>& expr, RenameDirection dir);
 
   /// @brief Rename all occurences of field `oldAccessID` to `newAccessID`
   void renameAllOccurrences(Stencil* stencil, int oldAccessID, int newAccessID);

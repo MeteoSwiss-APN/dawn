@@ -20,6 +20,8 @@ yoda_add_library(
           AccessUtils.h
           BoundaryExtent.cpp  
           BoundaryExtent.h
+          CreateVersionAndRename.cpp
+          CreateVersionAndRename.h
           OptimizerContext.cpp 
           OptimizerContext.h
           Pass.h

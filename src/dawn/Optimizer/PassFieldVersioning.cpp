@@ -27,6 +27,7 @@
 #include <iostream>
 #include <set>
 
+#include "dawn/Optimizer/CreateVersionAndRename.h"
 namespace dawn {
 
 namespace {
@@ -276,9 +277,12 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
 
   // Create a new multi-versioned field and rename all occurences
   for(int oldAccessID : renameCandiates) {
-    int newAccessID = instantiation->createVersionAndRename(oldAccessID, &stencil, stageIdx, index,
-                                                            assignment->getRight(),
-                                                            iir::StencilInstantiation::RD_Above);
+    int newAccessID = createVersionAndRename(instantiation.get(), oldAccessID, &stencil, stageIdx,
+                                             index, assignment->getRight(), RenameDirection::Above);
+    // int newAccessID = instantiation->createVersionAndRename(oldAccessID, &stencil, stageIdx,
+    // index,
+    //                                                         assignment->getRight(),
+    //                                                         iir::StencilInstantiation::RD_Above);
 
     if(context->getOptions().ReportPassFieldVersioning)
       std::cout << (numRenames != 0 ? ", " : " ")

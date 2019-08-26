@@ -16,7 +16,6 @@
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Optimizer/BoundaryExtent.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Json.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>

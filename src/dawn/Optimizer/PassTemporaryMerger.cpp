@@ -17,6 +17,7 @@
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/Optimizer/Renaming.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/StringUtil.h"
 #include <iostream>
@@ -175,7 +176,7 @@ bool PassTemporaryMerger::run(
       for(int i = 1; i < AccessIDOfRenameCandiates.size(); ++i) {
         merged = true;
         int oldAccessID = AccessIDOfRenameCandiates[i];
-        stencilInstantiation->renameAllOccurrences(stencilPtr.get(), oldAccessID, newAccessID);
+        renameAccessIDInStencil(stencilPtr.get(), oldAccessID, newAccessID);
       }
     }
 
