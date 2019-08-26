@@ -188,6 +188,8 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     optimizer->checkAndPushBack<PassComputeStageExtents>();
     optimizer->checkAndPushBack<PassSetBoundaryCondition>();
     optimizer->checkAndPushBack<PassSetBlockSize>();
+    optimizer->checkAndPushBack<PassDataLocalityMetric>();
+    optimizer->checkAndPushBack<PassSetSyncStage>();
 
     int i = 0;
     for(auto& instantiation : optimizer->getStencilInstantiationMap()) {
