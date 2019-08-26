@@ -12,13 +12,13 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/SIR/AST.h"
-#include "dawn/SIR/ASTStmt.h"
+#include "dawn/AST/AST.h"
+#include "dawn/AST/ASTStmt.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Casting.h"
 
 namespace dawn {
-
+namespace ast {
 AST::AST() : root_(std::make_shared<BlockStmt>()) {}
 
 AST::AST(const std::shared_ptr<BlockStmt>& root) : root_(root) { DAWN_ASSERT(root_ != nullptr); }
@@ -62,5 +62,5 @@ std::shared_ptr<AST> AST::clone() const {
 }
 
 void AST::clear() { root_.reset(); }
-
+} // namespace ast
 } // namespace dawn

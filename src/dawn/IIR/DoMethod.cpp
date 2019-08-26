@@ -193,7 +193,7 @@ void DoMethod::updateLevel() {
   }
 }
 
-class CheckNonNullStatementVisitor : public ASTVisitorForwarding, public NonCopyable {
+class CheckNonNullStatementVisitor : public iir::ASTVisitorForwarding, public NonCopyable {
 private:
   bool result_ = false;
 
@@ -203,18 +203,18 @@ public:
 
   bool getResult() const { return result_; }
 
-  virtual void visit(const std::shared_ptr<ExprStmt>& expr) override {
-    if(!isa<NOPExpr>(expr->getExpr().get()))
+  virtual void visit(const std::shared_ptr<iir::ExprStmt>& expr) override {
+    if(!isa<iir::NOPExpr>(expr->getExpr().get()))
       result_ = true;
     else {
-      ASTVisitorForwarding::visit(expr);
+      iir::ASTVisitorForwarding::visit(expr);
     }
   }
 };
 
 bool DoMethod::isEmptyOrNullStmt() const {
   for(auto const& statementAccessPair : children_) {
-    const std::shared_ptr<Stmt>& root = statementAccessPair->getStatement()->ASTStmt;
+    const std::shared_ptr<iir::Stmt>& root = statementAccessPair->getStatement()->ASTStmt;
     CheckNonNullStatementVisitor checker;
     root->accept(checker);
 
