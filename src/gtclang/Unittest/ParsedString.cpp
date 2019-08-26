@@ -39,10 +39,10 @@ void ParsedString::dump() {
   std::cout << "all variables: " << dawn::RangeToString()(variables_) << std::endl;
 }
 
-void ParsedString::argumentParsingImpl(const std::shared_ptr<dawn::Expr>& argument) {
-  if(dawn::VarAccessExpr* expr = dawn::dyn_cast<dawn::VarAccessExpr>(argument.get())) {
+void ParsedString::argumentParsingImpl(const std::shared_ptr<dawn::sir::Expr>& argument) {
+  if(dawn::sir::VarAccessExpr* expr = dawn::dyn_cast<dawn::sir::VarAccessExpr>(argument.get())) {
     addVariable(expr->getName());
-  } else if(dawn::FieldAccessExpr* expr = dawn::dyn_cast<dawn::FieldAccessExpr>(argument.get())) {
+  } else if(dawn::sir::FieldAccessExpr* expr = dawn::dyn_cast<dawn::sir::FieldAccessExpr>(argument.get())) {
     addField(expr->getName());
   } else {
     dawn_unreachable("invalid expression");

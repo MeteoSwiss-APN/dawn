@@ -48,10 +48,10 @@ public:
   ClangASTStmtResolver(GTClangContext* context, StencilParser* parser);
 
   /// @brief Resolve a single statment into (possibly multiple) SIR Stmts
-  llvm::ArrayRef<std::shared_ptr<dawn::Stmt>> resolveStmt(clang::Stmt* stmt, ASTKind kind);
+  llvm::ArrayRef<std::shared_ptr<dawn::sir::Stmt>> resolveStmt(clang::Stmt* stmt, ASTKind kind);
 
-  std::vector<std::shared_ptr<dawn::Stmt>>& getStatements();
-  const std::vector<std::shared_ptr<dawn::Stmt>>& getStatements() const;
+  std::vector<std::shared_ptr<dawn::sir::Stmt>>& getStatements();
+  const std::vector<std::shared_ptr<dawn::sir::Stmt>>& getStatements() const;
 
 private:
   //===----------------------------------------------------------------------------------------===//
@@ -79,7 +79,7 @@ private:
   std::shared_ptr<ClangASTExprResolver> clangASTExprResolver_;
 
   // State variables
-  std::vector<std::shared_ptr<dawn::Stmt>> statements_;
+  std::vector<std::shared_ptr<dawn::sir::Stmt>> statements_;
   ASTKind AstKind_;
 };
 

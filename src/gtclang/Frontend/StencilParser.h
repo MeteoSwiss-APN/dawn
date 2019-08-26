@@ -145,23 +145,23 @@ private:
   void parseStencilFunctionDoMethod(clang::CXXMethodDecl* DoMethod);
 
   /// @brief Parse call to another stencil
-  std::shared_ptr<dawn::StencilCallDeclStmt> parseStencilCall(clang::CXXConstructExpr* stencilCall);
+  std::shared_ptr<dawn::sir::StencilCallDeclStmt> parseStencilCall(clang::CXXConstructExpr* stencilCall);
 
   /// @brief Parse a vertical-region
-  std::shared_ptr<dawn::VerticalRegionDeclStmt>
+  std::shared_ptr<dawn::sir::VerticalRegionDeclStmt>
   parseVerticalRegion(clang::CXXForRangeStmt* verticalRegionDecl);
 
   /// @brief Parse a decription of a boundary condition
-  std::shared_ptr<dawn::BoundaryConditionDeclStmt>
+  std::shared_ptr<dawn::sir::BoundaryConditionDeclStmt>
   parseBoundaryCondition(clang::CXXConstructExpr* boundaryCondition);
 
   /// @brief Parses the MethodDeclaration that the preprocessor generates that contains all the
   /// boundary-condition statements
-  std::vector<std::shared_ptr<dawn::BoundaryConditionDeclStmt>>
+  std::vector<std::shared_ptr<dawn::sir::BoundaryConditionDeclStmt>>
   parseBoundaryConditions(clang::CXXMethodDecl* allBoundaryConditions);
 
   /// @brief Resolve Clang AST statements by passing them to ClangASTResolver
-  std::shared_ptr<dawn::Stmt> resolveStmt(ClangASTExprResolver& clangASTResolver,
+  std::shared_ptr<dawn::sir::Stmt> resolveStmt(ClangASTExprResolver& clangASTResolver,
                                           clang::Stmt* stmt);
 
   /// @brief Get SourceLocation

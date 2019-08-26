@@ -511,7 +511,7 @@ void StencilParser::parseStencilImpl(clang::CXXRecordDecl* recordDecl, const std
             .first->second.get();
     currentParserRecord_->CurrentStencil->Name = name;
     currentParserRecord_->CurrentStencil->Loc = getLocation(recordDecl);
-    currentParserRecord_->CurrentStencil->StencilDescAst = std::make_shared<dawn::AST>();
+    currentParserRecord_->CurrentStencil->StencilDescAst = std::make_shared<dawn::sir::AST>();
 
     // Parse the arguments
     for(FieldDecl* field : recordDecl->fields())
@@ -703,7 +703,7 @@ void StencilParser::parseStencilFunctionDoMethod(clang::CXXMethodDecl* DoMethod)
   if(DoMethod->hasBody()) {
 
     ClangASTStmtResolver stmtResolver(context_, this);
-    auto SIRBlockStmt = std::make_shared<dawn::BlockStmt>(getLocation(DoMethod->getBody()));
+    auto SIRBlockStmt = std::make_shared<dawn::sir::BlockStmt>(getLocation(DoMethod->getBody()));
 
     if(CompoundStmt* bodyStmt = dyn_cast<CompoundStmt>(DoMethod->getBody())) {
 
@@ -727,7 +727,7 @@ void StencilParser::parseStencilFunctionDoMethod(clang::CXXMethodDecl* DoMethod)
 
     // Assemble the stencil function
     currentParserRecord_->CurrentStencilFunction->Asts.emplace_back(
-        std::make_shared<dawn::AST>(std::move(SIRBlockStmt)));
+        std::make_shared<dawn::sir::AST>(std::move(SIRBlockStmt)));
 
     if(intervals)
       currentParserRecord_->CurrentStencilFunction->Intervals.emplace_back(std::move(intervals));
@@ -754,7 +754,7 @@ void StencilParser::parseStencilDoMethod(clang::CXXMethodDecl* DoMethod) {
 
       ClangASTStmtResolver stmtResolver(context_, this);
 
-      std::shared_ptr<dawn::AST>& stencilDescAst =
+      std::shared_ptr<dawn::sir::AST>& stencilDescAst =
           currentParserRecord_->CurrentStencil->StencilDescAst;
 
       // DoMethod is a CompoundStmt, start iterating
@@ -806,7 +806,7 @@ void StencilParser::parseStencilDoMethod(clang::CXXMethodDecl* DoMethod) {
   DAWN_LOG(INFO) << "Done parsing Do-Method";
 }
 
-std::shared_ptr<dawn::StencilCallDeclStmt>
+std::shared_ptr<dawn::sir::StencilCallDeclStmt>
 StencilParser::parseStencilCall(clang::CXXConstructExpr* stencilCall) {
 
   std::string callee = getClassNameFromConstructExpr(stencilCall);
@@ -897,10 +897,10 @@ StencilParser::parseStencilCall(clang::CXXConstructExpr* stencilCall) {
   SIRStencilCall->Args = std::move(fields);
 
   DAWN_LOG(INFO) << "Done parsing stencil call";
-  return std::make_shared<dawn::StencilCallDeclStmt>(SIRStencilCall, SIRStencilCall->Loc);
+  return std::make_shared<dawn::sir::StencilCallDeclStmt>(SIRStencilCall, SIRStencilCall->Loc);
 }
 
-std::shared_ptr<dawn::VerticalRegionDeclStmt>
+std::shared_ptr<dawn::sir::VerticalRegionDeclStmt>
 StencilParser::parseVerticalRegion(clang::CXXForRangeStmt* verticalRegion) {
   using namespace clang;
   using namespace llvm;
@@ -915,7 +915,7 @@ StencilParser::parseVerticalRegion(clang::CXXForRangeStmt* verticalRegion) {
   intervalResolver.resolve(verticalRegion);
 
   // Extract the Do-Method body (AST) from the loop body
-  auto SIRBlockStmt = std::make_shared<dawn::BlockStmt>(getLocation(verticalRegion));
+  auto SIRBlockStmt = std::make_shared<dawn::sir::BlockStmt>(getLocation(verticalRegion));
 
   // There is a difference between
   //
@@ -946,7 +946,7 @@ StencilParser::parseVerticalRegion(clang::CXXForRangeStmt* verticalRegion) {
   }
 
   // Assemble the vertical region and register it within the current Stencil
-  auto SIRAST = std::make_shared<dawn::AST>(std::move(SIRBlockStmt));
+  auto SIRAST = std::make_shared<dawn::sir::AST>(std::move(SIRBlockStmt));
 
   auto intervalPair = intervalResolver.getInterval();
 
@@ -954,10 +954,11 @@ StencilParser::parseVerticalRegion(clang::CXXForRangeStmt* verticalRegion) {
       SIRAST, intervalPair.first, intervalPair.second, getLocation(verticalRegion));
 
   DAWN_LOG(INFO) << "Done parsing vertical region";
-  return std::make_shared<dawn::VerticalRegionDeclStmt>(SIRVerticalRegion, SIRVerticalRegion->Loc);
+  return std::make_shared<dawn::sir::VerticalRegionDeclStmt>(SIRVerticalRegion,
+                                                             SIRVerticalRegion->Loc);
 }
 
-std::shared_ptr<dawn::BoundaryConditionDeclStmt>
+std::shared_ptr<dawn::sir::BoundaryConditionDeclStmt>
 StencilParser::parseBoundaryCondition(clang::CXXConstructExpr* boundaryCondition) {
   using namespace clang;
   using namespace llvm;
@@ -973,7 +974,7 @@ StencilParser::parseBoundaryCondition(clang::CXXConstructExpr* boundaryCondition
   BoundaryConditionResolver resolver(this);
   resolver.resolve(boundaryCondition);
 
-  auto ASTBoundaryCondition = std::make_shared<dawn::BoundaryConditionDeclStmt>(
+  auto ASTBoundaryCondition = std::make_shared<dawn::sir::BoundaryConditionDeclStmt>(
       resolver.getFunctor(), getLocation(boundaryCondition));
 
   for(const auto& name : resolver.getFields()) {
@@ -996,13 +997,13 @@ StencilParser::parseBoundaryCondition(clang::CXXConstructExpr* boundaryCondition
   return ASTBoundaryCondition;
 }
 
-std::vector<std::shared_ptr<dawn::BoundaryConditionDeclStmt>>
+std::vector<std::shared_ptr<dawn::sir::BoundaryConditionDeclStmt>>
 StencilParser::parseBoundaryConditions(clang::CXXMethodDecl* allBoundaryConditions) {
   using namespace clang;
   using namespace llvm;
   DAWN_LOG(INFO) << "Parsing all the boundary conditions at " << getLocation(allBoundaryConditions);
 
-  std::vector<std::shared_ptr<dawn::BoundaryConditionDeclStmt>> parsedBoundayConditions;
+  std::vector<std::shared_ptr<dawn::sir::BoundaryConditionDeclStmt>> parsedBoundayConditions;
   CompoundStmt* bodyStmt = dyn_cast<CompoundStmt>(allBoundaryConditions->getBody());
 
   // loop over all the bounary condition stmts
@@ -1019,7 +1020,7 @@ StencilParser::parseBoundaryConditions(clang::CXXMethodDecl* allBoundaryConditio
 
         // create that DeclStmt with the functor and add the Fields / Arugments, where the field to
         // apply to is at Field[0] and all the arguments follow
-        auto bc = std::make_shared<dawn::BoundaryConditionDeclStmt>(res.getFunctor());
+        auto bc = std::make_shared<dawn::sir::BoundaryConditionDeclStmt>(res.getFunctor());
         for(const auto& field : res.getFields()) {
           bc->getFields().emplace_back(std::make_shared<dawn::sir::Field>(field));
         }

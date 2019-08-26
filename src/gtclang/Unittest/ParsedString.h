@@ -51,7 +51,7 @@ public:
   /// @brief recursive argument parsing to read all the fields given to specify the function call
   /// @{
   template <typename... Args>
-  void argumentParsing(const std::shared_ptr<dawn::Expr>& argument, Args&&... args) {
+  void argumentParsing(const std::shared_ptr<dawn::sir::Expr>& argument, Args&&... args) {
     argumentParsingImpl(argument);
     argumentParsing(std::forward<Args>(args)...);
   }
@@ -69,7 +69,7 @@ private:
   void addVariable(const std::string& variable) { variables_.push_back(variable); }
 
   /// @brief recursive argument parsing to read all the fields given to specify the function call
-  void argumentParsingImpl(const std::shared_ptr<dawn::Expr>& argument);
+  void argumentParsingImpl(const std::shared_ptr<dawn::sir::Expr>& argument);
 
   std::vector<std::string> fields_;
   std::vector<std::string> variables_;

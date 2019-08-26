@@ -50,9 +50,9 @@ public:
   /// and and empty string if we have a mismatch, we get a human-readable message of what failed and
   /// false
   /// @{
-  CompareResult compare(const ParsedString& ps, const std::shared_ptr<dawn::Stmt>& stmt);
+  CompareResult compare(const ParsedString& ps, const std::shared_ptr<dawn::sir::Stmt>& stmt);
 
-  CompareResult compare(const ParsedString& ps, const std::shared_ptr<dawn::Expr>& expr);
+  CompareResult compare(const ParsedString& ps, const std::shared_ptr<dawn::sir::Expr>& expr);
   ///@}
 
   /// @brief get singleton instance
@@ -60,7 +60,7 @@ public:
 
 private:
   void wrapStatementInStencil(std::unique_ptr<dawn::SIR>& sir,
-                              const std::shared_ptr<dawn::Stmt>& stmt);
+                              const std::shared_ptr<dawn::sir::Stmt>& stmt);
   static ParsingComparison* instance_;
 };
 

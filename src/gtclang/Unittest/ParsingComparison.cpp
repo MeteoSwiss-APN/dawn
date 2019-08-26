@@ -184,7 +184,7 @@ private:
 };
 
 CompareResult ParsingComparison::compare(const ParsedString& ps,
-                                         const std::shared_ptr<dawn::Stmt>& stmt) {
+                                         const std::shared_ptr<dawn::sir::Stmt>& stmt) {
   std::unique_ptr<dawn::SIR> test01SIR = dawn::make_unique<dawn::SIR>();
   wrapStatementInStencil(test01SIR, stmt);
   test01SIR->Filename = "In Memory Generated SIR";
@@ -207,8 +207,8 @@ CompareResult ParsingComparison::compare(const ParsedString& ps,
 }
 
 CompareResult ParsingComparison::compare(const ParsedString& ps,
-                                         const std::shared_ptr<dawn::Expr>& expr) {
-  return compare(ps, std::make_shared<dawn::ExprStmt>(expr));
+                                         const std::shared_ptr<dawn::sir::Expr>& expr) {
+  return compare(ps, std::make_shared<dawn::sir::ExprStmt>(expr));
 }
 
 ParsingComparison* ParsingComparison::instance_ = nullptr;
@@ -220,24 +220,24 @@ ParsingComparison& ParsingComparison::getSingleton() {
 }
 
 void ParsingComparison::wrapStatementInStencil(std::unique_ptr<dawn::SIR>& sir,
-                                               const std::shared_ptr<dawn::Stmt>& stmt) {
+                                               const std::shared_ptr<dawn::sir::Stmt>& stmt) {
   using namespace dawn;
-  if(BlockStmt* blockstmt = dawn::dyn_cast<BlockStmt>(stmt.get())) {
+  if(sir::BlockStmt* blockstmt = dawn::dyn_cast<sir::BlockStmt>(stmt.get())) {
     sir->Stencils.push_back(std::make_shared<sir::Stencil>());
     sir->Stencils[0]->Name = "test01";
-    sir->Stencils[0]->StencilDescAst =
-        std::make_shared<AST>(std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{
-            std::make_shared<VerticalRegionDeclStmt>(std::make_shared<sir::VerticalRegion>(
-                std::make_shared<AST>(std::make_shared<BlockStmt>(*blockstmt)),
+    sir->Stencils[0]->StencilDescAst = std::make_shared<sir::AST>(
+        std::make_shared<sir::BlockStmt>(std::vector<std::shared_ptr<sir::Stmt>>{
+            std::make_shared<sir::VerticalRegionDeclStmt>(std::make_shared<sir::VerticalRegion>(
+                std::make_shared<sir::AST>(std::make_shared<sir::BlockStmt>(*blockstmt)),
                 std::make_shared<sir::Interval>(sir::Interval::Start, sir::Interval::End),
                 sir::VerticalRegion::LoopOrderKind::LK_Forward))}));
-    auto allFields = dawn::getFieldFromStencilAST(sir->Stencils[0]->StencilDescAst);
+    auto allFields = dawn::sir::getFieldFromStencilAST(sir->Stencils[0]->StencilDescAst);
     for(const auto& a : allFields) {
       sir->Stencils[0]->Fields.push_back(std::make_shared<dawn::sir::Field>(a));
     }
   } else {
-    wrapStatementInStencil(sir,
-                           std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{stmt}));
+    wrapStatementInStencil(
+        sir, std::make_shared<sir::BlockStmt>(std::vector<std::shared_ptr<sir::Stmt>>{stmt}));
   }
 }
 
