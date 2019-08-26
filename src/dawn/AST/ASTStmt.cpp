@@ -12,16 +12,16 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/SIR/ASTStmt.h"
-#include "dawn/SIR/ASTExpr.h"
-#include "dawn/SIR/ASTUtil.h"
-#include "dawn/SIR/ASTVisitor.h"
+#include "dawn/AST/ASTStmt.h"
+#include "dawn/AST/ASTExpr.h"
+#include "dawn/AST/ASTUtil.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Casting.h"
 
 namespace dawn {
-
+namespace ast {
 //===------------------------------------------------------------------------------------------===//
 //     BlockStmt
 //===------------------------------------------------------------------------------------------===//
@@ -325,5 +325,5 @@ void IfStmt::replaceChildren(std::shared_ptr<Stmt> const& oldStmt,
   }
   DAWN_ASSERT_MSG((false), ("Expression not found"));
 }
-
+} // namespace ast
 } // namespace dawn

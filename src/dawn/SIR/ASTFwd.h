@@ -15,39 +15,41 @@
 #ifndef DAWN_SIR_ASTFWD_H
 #define DAWN_SIR_ASTFWD_H
 
-#include "dawn/Support/Array.h"
-#include "dawn/Support/SourceLocation.h"
-#include "dawn/Support/Type.h"
+#include "dawn/AST/ASTFwd.h"
 
 namespace dawn {
+namespace sir {
+//
+// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
+//
+using AST = ast::AST;
 
-class AST;
+using Stmt = ast::Stmt;
+using BlockStmt = ast::BlockStmt;
+using ExprStmt = ast::ExprStmt;
+using ReturnStmt = ast::ReturnStmt;
+using VarDeclStmt = ast::VarDeclStmt;
+using VerticalRegionDeclStmt = ast::VerticalRegionDeclStmt;
+using StencilCallDeclStmt = ast::StencilCallDeclStmt;
+using BoundaryConditionDeclStmt = ast::BoundaryConditionDeclStmt;
+using IfStmt = ast::IfStmt;
 
-class Stmt;
-class BlockStmt;
-class ExprStmt;
-class ReturnStmt;
-class VarDeclStmt;
-class VerticalRegionDeclStmt;
-class StencilCallDeclStmt;
-class BoundaryConditionDeclStmt;
-class IfStmt;
+using Expr = ast::Expr;
+using NOPExpr = ast::NOPExpr;
+using UnaryOperator = ast::UnaryOperator;
+using BinaryOperator = ast::BinaryOperator;
+using AssignmentExpr = ast::AssignmentExpr;
+using TernaryOperator = ast::TernaryOperator;
+using FunCallExpr = ast::FunCallExpr;
+using StencilFunCallExpr = ast::StencilFunCallExpr;
+using StencilFunArgExpr = ast::StencilFunArgExpr;
+using VarAccessExpr = ast::VarAccessExpr;
+using FieldAccessExpr = ast::FieldAccessExpr;
+using LiteralAccessExpr = ast::LiteralAccessExpr;
 
-class Expr;
-class NOPExpr;
-class UnaryOperator;
-class BinaryOperator;
-class AssignmentExpr;
-class TernaryOperator;
-class FunCallExpr;
-class StencilFunCallExpr;
-class StencilFunArgExpr;
-class VarAccessExpr;
-class FieldAccessExpr;
-class LiteralAccessExpr;
-
-class ASTVisitor;
-
+using ASTHelper = ast::ASTHelper;
+using ASTVisitor = ast::ASTVisitor;
+} // namespace sir
 } // namespace dawn
 
 #endif

@@ -20,6 +20,7 @@
 #include <utility>
 
 using namespace dawn;
+using namespace ast;
 
 void setAST(dawn::proto::statements::AST* astProto, const AST* ast);
 

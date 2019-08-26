@@ -27,17 +27,12 @@ dawn_protobuf_generate(
 yoda_add_library(
   NAME DawnSIR
   SOURCES AST.h
-          AST.cpp
-          ASTExpr.cpp
           ASTExpr.h
           ASTFwd.h
-          ASTStmt.cpp
           ASTStmt.h
-          ASTStringifier.cpp
           ASTStringifier.h
-          ASTUtil.cpp
           ASTUtil.h
-          ASTVisitor.cpp
+          ASTUtil.cpp
           ASTVisitor.h
           SIR.cpp
           SIR.h
@@ -51,7 +46,7 @@ yoda_combine_libraries(
   NAME DawnSIR
   OBJECTS DawnSIRObjects
   INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
-  DEPENDS DawnSupportStatic protobuf::libprotobuf
+  DEPENDS DawnSupportStatic DawnASTStatic protobuf::libprotobuf
   VERSION ${DAWN_VERSION}
   EXPORT_GROUP DawnTargets
 )

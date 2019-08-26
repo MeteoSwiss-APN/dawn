@@ -12,15 +12,15 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/SIR/ASTExpr.h"
-#include "dawn/SIR/ASTUtil.h"
-#include "dawn/SIR/ASTVisitor.h"
+#include "dawn/AST/ASTExpr.h"
+#include "dawn/AST/ASTUtil.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/StringRef.h"
 
 namespace dawn {
-
+namespace ast {
 //===------------------------------------------------------------------------------------------===//
 //     UnaryOperator
 //===------------------------------------------------------------------------------------------===//
@@ -430,5 +430,5 @@ bool LiteralAccessExpr::equals(const Expr* other) const {
   return otherPtr && Expr::equals(other) && value_ == otherPtr->value_ &&
          builtinType_ == otherPtr->builtinType_;
 }
-
+} // namespace ast
 } // namespace dawn

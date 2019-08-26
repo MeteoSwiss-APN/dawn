@@ -20,7 +20,7 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassSetCaches.h"
-#include "dawn/SIR/ASTExpr.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/Support/Unreachable.h"
 #include <iostream>
 #include <set>
@@ -217,11 +217,11 @@ private:
                                int assigneeID) {
     // Create the StatementAccessPair of the assignment with the new and old variables
     auto fa_assignee =
-        std::make_shared<FieldAccessExpr>(metadata_.getFieldNameFromAccessID(assigneeID));
+        std::make_shared<iir::FieldAccessExpr>(metadata_.getFieldNameFromAccessID(assigneeID));
     auto fa_assignment =
-        std::make_shared<FieldAccessExpr>(metadata_.getFieldNameFromAccessID(assignmentID));
-    auto assignmentExpression = std::make_shared<AssignmentExpr>(fa_assignment, fa_assignee, "=");
-    auto expAssignment = std::make_shared<ExprStmt>(assignmentExpression);
+        std::make_shared<iir::FieldAccessExpr>(metadata_.getFieldNameFromAccessID(assignmentID));
+    auto assignmentExpression = std::make_shared<iir::AssignmentExpr>(fa_assignment, fa_assignee, "=");
+    auto expAssignment = std::make_shared<iir::ExprStmt>(assignmentExpression);
     auto assignmentStatement = std::make_shared<Statement>(expAssignment, nullptr);
     auto pair = make_unique<iir::StatementAccessesPair>(assignmentStatement);
     auto newAccess = std::make_shared<iir::Accesses>();

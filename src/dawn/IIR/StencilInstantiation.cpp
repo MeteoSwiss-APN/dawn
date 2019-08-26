@@ -22,9 +22,9 @@
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/Optimizer/Replacing.h"
 #include "dawn/Optimizer/StatementMapper.h"
-#include "dawn/SIR/AST.h"
-#include "dawn/SIR/ASTUtil.h"
-#include "dawn/SIR/ASTVisitor.h"
+#include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTUtil.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/FileUtil.h"
@@ -74,7 +74,7 @@ std::shared_ptr<StencilInstantiation> StencilInstantiation::clone() const {
 const std::string StencilInstantiation::getName() const { return metadata_.getStencilName(); }
 
 bool StencilInstantiation::insertBoundaryConditions(std::string originalFieldName,
-                                                    std::shared_ptr<BoundaryConditionDeclStmt> bc) {
+                                                    std::shared_ptr<iir::BoundaryConditionDeclStmt> bc) {
   if(metadata_.hasFieldBC(originalFieldName) != 0) {
     return false;
   } else {
@@ -89,7 +89,7 @@ const sir::Value& StencilInstantiation::getGlobalVariableValue(const std::string
 }
 
 int StencilInstantiation::createVersionAndRename(int AccessID, Stencil* stencil, int curStageIdx,
-                                                 int curStmtIdx, std::shared_ptr<Expr>& expr,
+                                                 int curStmtIdx, std::shared_ptr<iir::Expr>& expr,
                                                  RenameDirection dir) {
 
   int newAccessID = -1;
@@ -245,7 +245,7 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
   //
   //   __tmp_foo(0, 0, 0) = ...
   //
-  VarDeclStmt* varDeclStmt = dyn_cast<VarDeclStmt>(oldStatement->ASTStmt.get());
+  VarDeclStmt* varDeclStmt = dyn_cast<iir::VarDeclStmt>(oldStatement->ASTStmt.get());
   // If the TemporaryScope is within this stencil, then a VarDecl should be found (otherwise we have
   // a bug)
   DAWN_ASSERT_MSG((varDeclStmt || temporaryScope == TemporaryScope::TS_Field),
@@ -259,11 +259,11 @@ void StencilInstantiation::promoteLocalVariableToTemporaryField(Stencil* stencil
   if(varDeclStmt) {
     DAWN_ASSERT_MSG(!varDeclStmt->isArray(), "cannot promote local array to temporary field");
 
-    auto fieldAccessExpr = std::make_shared<FieldAccessExpr>(fieldname);
+    auto fieldAccessExpr = std::make_shared<iir::FieldAccessExpr>(fieldname);
     metadata_.insertExprToAccessID(fieldAccessExpr, accessID);
     auto assignmentExpr =
-        std::make_shared<AssignmentExpr>(fieldAccessExpr, varDeclStmt->getInitList().front());
-    auto exprStmt = std::make_shared<ExprStmt>(assignmentExpr);
+        std::make_shared<iir::AssignmentExpr>(fieldAccessExpr, varDeclStmt->getInitList().front());
+    auto exprStmt = std::make_shared<iir::ExprStmt>(assignmentExpr);
 
     // Replace the statement
     statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(
@@ -316,16 +316,16 @@ void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil,
   //
   //   double __local_foo = ...
   //
-  ExprStmt* exprStmt = dyn_cast<ExprStmt>(oldStatement->ASTStmt.get());
+  iir::ExprStmt* exprStmt = dyn_cast<iir::ExprStmt>(oldStatement->ASTStmt.get());
   DAWN_ASSERT_MSG(exprStmt, "first access of field (i.e lifetime.Begin) is not an `ExprStmt`");
-  AssignmentExpr* assignmentExpr = dyn_cast<AssignmentExpr>(exprStmt->getExpr().get());
+  iir::AssignmentExpr* assignmentExpr = dyn_cast<iir::AssignmentExpr>(exprStmt->getExpr().get());
   DAWN_ASSERT_MSG(assignmentExpr,
                   "first access of field (i.e lifetime.Begin) is not an `AssignmentExpr`");
 
   // Create the new `VarDeclStmt` which will replace the old `ExprStmt`
-  std::shared_ptr<Stmt> varDeclStmt =
-      std::make_shared<VarDeclStmt>(Type(BuiltinTypeID::Float), varname, 0, "=",
-                                    std::vector<std::shared_ptr<Expr>>{assignmentExpr->getRight()});
+  std::shared_ptr<iir::Stmt> varDeclStmt =
+      std::make_shared<iir::VarDeclStmt>(Type(BuiltinTypeID::Float), varname, 0, "=",
+                                    std::vector<std::shared_ptr<iir::Expr>>{assignmentExpr->getRight()});
 
   // Replace the statement
   statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(
@@ -344,8 +344,8 @@ void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil,
 
 std::shared_ptr<StencilFunctionInstantiation>
 StencilInstantiation::makeStencilFunctionInstantiation(
-    const std::shared_ptr<StencilFunCallExpr>& expr,
-    const std::shared_ptr<sir::StencilFunction>& SIRStencilFun, const std::shared_ptr<AST>& ast,
+    const std::shared_ptr<iir::StencilFunCallExpr>& expr,
+    const std::shared_ptr<sir::StencilFunction>& SIRStencilFun, const std::shared_ptr<iir::AST>& ast,
     const Interval& interval,
     const std::shared_ptr<StencilFunctionInstantiation>& curStencilFunctionInstantiation) {
 
@@ -364,7 +364,7 @@ namespace {
 
 /// @brief Get the orignal name of the field (or variable) given by AccessID and a list of
 /// SourceLocations where this field (or variable) was accessed.
-class OriginalNameGetter : public ASTVisitorForwarding {
+class OriginalNameGetter : public iir::ASTVisitorForwarding {
   const StencilMetaInformation& metadata_;
   const int AccessID_;
   const bool captureLocation_;
@@ -376,7 +376,7 @@ public:
   OriginalNameGetter(const StencilMetaInformation& metadata, int AccessID, bool captureLocation)
       : metadata_(metadata), AccessID_(AccessID), captureLocation_(captureLocation) {}
 
-  virtual void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
     if(metadata_.getAccessIDFromStmt(stmt) == AccessID_) {
       name_ = stmt->getName();
       if(captureLocation_)
@@ -387,7 +387,7 @@ public:
       expr->accept(*this);
   }
 
-  void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
     if(metadata_.getAccessIDFromExpr(expr) == AccessID_) {
       name_ = expr->getName();
       if(captureLocation_)
@@ -395,7 +395,7 @@ public:
     }
   }
 
-  void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override {
     if(metadata_.getAccessIDFromExpr(expr) == AccessID_) {
       name_ = expr->getValue();
       if(captureLocation_)
@@ -403,7 +403,7 @@ public:
     }
   }
 
-  virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
+  virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
     if(metadata_.getAccessIDFromExpr(expr) == AccessID_) {
       name_ = expr->getName();
       if(captureLocation_)
@@ -423,7 +423,7 @@ public:
 
 std::pair<std::string, std::vector<SourceLocation>>
 StencilInstantiation::getOriginalNameAndLocationsFromAccessID(
-    int AccessID, const std::shared_ptr<Stmt>& stmt) const {
+    int AccessID, const std::shared_ptr<iir::Stmt>& stmt) const {
   OriginalNameGetter orignalNameGetter(metadata_, AccessID, true);
   stmt->accept(orignalNameGetter);
   return orignalNameGetter.getNameLocationPair();
