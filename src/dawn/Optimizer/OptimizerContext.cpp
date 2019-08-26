@@ -656,7 +656,8 @@ void OptimizerContext::fillIIR() {
     }
 }
 
-bool OptimizerContext::restoreIIR(std::shared_ptr<iir::StencilInstantiation> stencilInstantiation) {
+bool OptimizerContext::restoreIIR(std::string const& name,
+                                  std::shared_ptr<iir::StencilInstantiation> stencilInstantiation) {
   auto& metadata = stencilInstantiation->getMetaData();
   metadata.setStencilname(stencilInstantiation->getName());
   metadata.setFileName("<unknown>");

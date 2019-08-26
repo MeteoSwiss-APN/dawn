@@ -206,9 +206,9 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
 
   } else {
     optimizer = make_unique<OptimizerContext>(getDiagnostics(), getOptions(), nullptr);
-    auto new_instantiation =
+    auto instantiation =
         IIRSerializer::deserialize(options_->DeserializeIIR, optimizer.get(), serializationKind);
-    optimizer->restoreIIR(new_instantiation);
+    optimizer->restoreIIR("Stencil", instantiation);
   }
 
   return optimizer;
