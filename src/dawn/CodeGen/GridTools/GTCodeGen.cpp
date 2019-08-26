@@ -923,6 +923,22 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   mplContainerMaxSize_ = 30;
   DAWN_LOG(INFO) << "Starting code generation for GTClang ...";
 
+  std::vector<std::string> ppDefines;
+  auto makeDefine = [](std::string define, int value) {
+    return "#define " + define + " " + std::to_string(value);
+  };
+
+  ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
+  ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T GT");
+
+  CodeGen::addMplIfdefs(ppDefines, mplContainerMaxSize_, context_->getOptions().MaxHaloPoints);
+
+  generateBCHeaders(ppDefines);
+
+  if(context_->getStencilInstantiationMap().size() == 0)
+    return make_unique<TranslationUnit>("", std::move(ppDefines),
+                                        std::map<std::string, std::string>{}, "");
+
   // Generate StencilInstantiations
   std::map<std::string, std::string> stencils;
   for(const auto& nameStencilCtxPair : context_->getStencilInstantiationMap()) {
@@ -948,18 +964,6 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
 
   DAWN_ASSERT_MSG(mplContainerMaxSize_ % 10 == 0,
                   "boost::mpl template limit needs to be multiple of 10");
-
-  std::vector<std::string> ppDefines;
-  auto makeDefine = [](std::string define, int value) {
-    return "#define " + define + " " + std::to_string(value);
-  };
-
-  ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
-  ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T GT");
-
-  CodeGen::addMplIfdefs(ppDefines, mplContainerMaxSize_, context_->getOptions().MaxHaloPoints);
-
-  generateBCHeaders(ppDefines);
 
   DAWN_LOG(INFO) << "Done generating code";
 
