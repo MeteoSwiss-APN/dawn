@@ -155,4 +155,29 @@ void renameAccessIDInStencil(iir::Stencil* stencil, int oldAccessID, int newAcce
   }
 }
 
+void renameCallerAccessIDInStencilFunction(iir::StencilFunctionInstantiation* function,
+                                           int oldAccessID, int newAccessID) {
+  // Update argument maps
+  for(auto& argumentAccessIDPair : function->ArgumentIndexToCallerAccessIDMap_) {
+    int& AccessID = argumentAccessIDPair.second;
+    if(AccessID == oldAccessID)
+      AccessID = newAccessID;
+  }
+  replaceKeyInMap(CallerAcceessIDToInitialOffsetMap_, oldAccessID, newAccessID);
+
+  // Update AccessID to name map
+  replaceKeyInMap(AccessIDToNameMap_, oldAccessID, newAccessID);
+
+  ////////////////////////// WITTODO: Continue fixing stuff here
+
+  // Update statements
+  renameAccessIDInStmts(function, oldAccessID, newAccessID, doMethod_->getChildren());
+
+  // Update accesses
+  renameAccessIDInAccesses(function, oldAccessID, newAccessID, doMethod_->getChildren());
+
+  // Recompute the fields
+  update();
+}
+
 } // namespace dawn
