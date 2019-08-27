@@ -31,7 +31,7 @@
 #include "test/integration-test/CodeGen/generated/boundary_condition_2_c++-naive.cpp"
 
 #ifndef OPTBACKEND
-#define OPTBACKEND gridtools
+#define OPTBACKEND gt
 #endif
 
 // clang-format off
@@ -55,8 +55,8 @@ TEST(split_stencil, test) {
   verif.fill_boundaries(15, in_naive);
   verif.fill(-1.0, out_gt, out_naive);
 
-  OPTBACKEND::split_stencil swapconst_gt(dom, in_gt, out_gt, bc_field);
-  cxxnaive::split_stencil swapconst_naive(dom, in_naive, out_naive, bc_field);
+  dawn_generated::OPTBACKEND::split_stencil swapconst_gt(dom, in_gt, out_gt, bc_field);
+  dawn_generated::cxxnaive::split_stencil swapconst_naive(dom, in_naive, out_naive, bc_field);
 
   swapconst_gt.run();
   swapconst_naive.run();

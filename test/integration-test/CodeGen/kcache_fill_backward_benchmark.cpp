@@ -31,7 +31,7 @@
 #include "test/integration-test/CodeGen/generated/kcache_fill_backward_c++-naive.cpp"
 
 #ifndef OPTBACKEND
-#define OPTBACKEND gridtools
+#define OPTBACKEND gt
 #endif
 
 // clang-format off
@@ -52,8 +52,8 @@ TEST(kcache_fill_backward, test) {
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, in);
   verif.fill(-1.0, out_gt, out_naive);
 
-  OPTBACKEND::kcache_fill_backward kcache_fill_backward_gt(dom, in, out_gt);
-  cxxnaive::kcache_fill_backward kcache_fill_backward_naive(dom, in, out_naive);
+  dawn_generated::OPTBACKEND::kcache_fill_backward kcache_fill_backward_gt(dom, in, out_gt);
+  dawn_generated::cxxnaive::kcache_fill_backward kcache_fill_backward_naive(dom, in, out_naive);
 
   kcache_fill_backward_gt.run();
   kcache_fill_backward_naive.run();

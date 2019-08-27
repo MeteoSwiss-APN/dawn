@@ -86,7 +86,7 @@ TEST(nested_stencil_functions, test_04) {
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, in);
   verif.fill(-1.0, out_ref, out_naive);
 
-  //  cxxnaive::test_04_stencil test_04_naive(dom, in, out_naive);
+  //  dawn_generated::cxxnaive::test_04_stencil test_04_naive(dom, in, out_naive);
   //  nsftest::test_04_stencil_reference(dom, in, out_ref);
 
   //  test_04_naive.run();
@@ -107,7 +107,7 @@ TEST(nested_stencil_functions, test_05) {
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, in);
   verif.fill(-1.0, out_ref, out_naive);
 
-  //  cxxnaive::test_05_stencil test_05_naive(dom, in, out_naive);
+  //  dawn_generated::cxxnaive::test_05_stencil test_05_naive(dom, in, out_naive);
   //  nsftest::test_05_stencil_reference(dom, in, out_ref);
 
   //  test_05_naive.run();

@@ -31,7 +31,7 @@
 #include "test/integration-test/CodeGen/generated/lap_c++-naive.cpp"
 
 #ifndef OPTBACKEND
-#define OPTBACKEND gridtools
+#define OPTBACKEND gt
 #endif
 
 // clang-format off
@@ -52,8 +52,8 @@ TEST(lap, test) {
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, in);
   verif.fill(-1.0, out_gt, out_naive);
 
-  OPTBACKEND::lap lap_gt(dom, in, out_gt);
-  cxxnaive::lap lap_naive(dom, in, out_naive);
+  dawn_generated::OPTBACKEND::lap lap_gt(dom, in, out_gt);
+  dawn_generated::cxxnaive::lap lap_naive(dom, in, out_naive);
 
   lap_gt.run();
   lap_naive.run();

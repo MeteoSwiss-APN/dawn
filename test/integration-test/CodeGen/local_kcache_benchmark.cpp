@@ -31,7 +31,7 @@
 #include "test/integration-test/CodeGen/generated/local_kcache_c++-naive.cpp"
 
 #ifndef OPTBACKEND
-#define OPTBACKEND gridtools
+#define OPTBACKEND gt
 #endif
 
 // clang-format off
@@ -59,8 +59,8 @@ TEST(local_kcache, test) {
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, d_naive);
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, d_opt);
 
-  OPTBACKEND::local_kcache local_kcache_opt(dom, a_opt, b_opt, c_opt, d_opt);
-  cxxnaive::local_kcache local_kcache_naive(dom, a_naive, b_naive, c_naive, d_naive);
+  dawn_generated::OPTBACKEND::local_kcache local_kcache_opt(dom, a_opt, b_opt, c_opt, d_opt);
+  dawn_generated::cxxnaive::local_kcache local_kcache_naive(dom, a_naive, b_naive, c_naive, d_naive);
 
   local_kcache_opt.run();
   local_kcache_naive.run();

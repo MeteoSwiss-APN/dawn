@@ -31,7 +31,7 @@
 #include <gtest/gtest.h>
 
 #ifndef OPTBACKEND
-#define OPTBACKEND gridtools
+#define OPTBACKEND gt
 #endif
 
 // clang-format off
@@ -52,8 +52,8 @@ TEST(asymmetric, test) {
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, in);
   verif.fill(-1.0, out_opt, out_naive);
 
-  OPTBACKEND::asymmetric_stencil stencil_opt(dom, in, out_opt);
-  cxxnaive::asymmetric_stencil stencil_naive(dom, in, out_naive);
+  dawn_generated::OPTBACKEND::asymmetric_stencil stencil_opt(dom, in, out_opt);
+  dawn_generated::cxxnaive::asymmetric_stencil stencil_naive(dom, in, out_naive);
 
   stencil_opt.run();
   stencil_naive.run();

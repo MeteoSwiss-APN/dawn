@@ -32,7 +32,7 @@
 #include "test/integration-test/CodeGen/generated/hd_smagorinsky_c++-naive.cpp"
 
 #ifndef OPTBACKEND
-#define OPTBACKEND gridtools
+#define OPTBACKEND gt
 #endif
 
 // clang-format off
@@ -86,10 +86,10 @@ TEST(hd_smagorinsky, test) {
   verif.fill(-1.0, u_out_gt, v_out_gt, u_out_naive, v_out_naive);
 
   // Assemble the stencil ...
-  OPTBACKEND::hd_smagorinsky_stencil hd_smagorinsky_gt(
+  dawn_generated::OPTBACKEND::hd_smagorinsky_stencil hd_smagorinsky_gt(
       dom, u_out_gt, v_out_gt, u_in, v_in, hdmaskvel, crlavo, crlavu, crlato, crlatu, acrlat0,
       eddlon, eddlat, tau_smag, weight_smag);
-  cxxnaive::hd_smagorinsky_stencil hd_smagorinsky_naive(
+  dawn_generated::cxxnaive::hd_smagorinsky_stencil hd_smagorinsky_naive(
       dom, u_out_naive, v_out_naive, u_in, v_in, hdmaskvel, crlavo, crlavu, crlato, crlatu, acrlat0,
       eddlon, eddlat, tau_smag, weight_smag);
 

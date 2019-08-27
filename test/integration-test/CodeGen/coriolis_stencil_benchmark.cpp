@@ -31,7 +31,7 @@
 #include "test/integration-test/CodeGen/generated/coriolis_stencil_c++-naive.cpp"
 
 #ifndef OPTBACKEND
-#define OPTBACKEND gridtools
+#define OPTBACKEND gt
 #endif
 
 // clang-format off
@@ -55,8 +55,8 @@ TEST(coriolis_stencil, test) {
   verif.fillMath(5.0, 1.2, 1.3, 1.7, 2.2, 3.5, v_nnow);
   verif.fillMath(2.0, 1.3, 1.4, 1.6, 2.1, 3.0, fc);
 
-  OPTBACKEND::coriolis_stencil coriolis_gt(dom, u_tens_gt, u_nnow, v_tens_gt, v_nnow, fc);
-  cxxnaive::coriolis_stencil coriolis_cxxnaive(dom, u_tens_cxxnaive, u_nnow, v_tens_cxxnaive,
+  dawn_generated::OPTBACKEND::coriolis_stencil coriolis_gt(dom, u_tens_gt, u_nnow, v_tens_gt, v_nnow, fc);
+  dawn_generated::cxxnaive::coriolis_stencil coriolis_cxxnaive(dom, u_tens_cxxnaive, u_nnow, v_tens_cxxnaive,
                                                v_nnow, fc);
 
   coriolis_gt.run();

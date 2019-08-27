@@ -31,7 +31,7 @@
 #include "test/integration-test/CodeGen/generated/copy_stencil_c++-naive.cpp"
 
 #ifndef OPTBACKEND
-#define OPTBACKEND gridtools
+#define OPTBACKEND gt
 #endif
 
 // clang-format off
@@ -52,8 +52,8 @@ TEST(copy_stencil, test) {
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, in);
   verif.fill(-1.0, out_gt, out_naive);
 
-  OPTBACKEND::copy_stencil copy_gt(dom, in, out_gt);
-  cxxnaive::copy_stencil copy_naive(dom, in, out_naive);
+  dawn_generated::OPTBACKEND::copy_stencil copy_gt(dom, in, out_gt);
+  dawn_generated::cxxnaive::copy_stencil copy_naive(dom, in, out_naive);
 
   copy_gt.run();
   copy_naive.run();

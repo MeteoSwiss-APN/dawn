@@ -31,7 +31,7 @@
 #include "test/integration-test/CodeGen/generated/intervals01_c++-naive.cpp"
 
 #ifndef OPTBACKEND
-#define OPTBACKEND gridtools
+#define OPTBACKEND gt
 #endif
 
 // clang-format off
@@ -52,8 +52,8 @@ TEST(intervals01, test) {
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, in);
   verif.fill(-1.0, out_gt, out_naive);
 
-  OPTBACKEND::intervals01 intervals01_gt(dom, in, out_gt);
-  cxxnaive::intervals01 intervals01_naive(dom, in, out_naive);
+  dawn_generated::OPTBACKEND::intervals01 intervals01_gt(dom, in, out_gt);
+  dawn_generated::cxxnaive::intervals01 intervals01_naive(dom, in, out_naive);
 
   intervals01_gt.run();
   intervals01_naive.run();

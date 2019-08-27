@@ -31,7 +31,7 @@
 #include "test/integration-test/CodeGen/generated/hori_diff_stencil_02_c++-naive.cpp"
 
 #ifndef OPTBACKEND
-#define OPTBACKEND gridtools
+#define OPTBACKEND gt
 #endif
 
 // clang-format off
@@ -52,8 +52,8 @@ TEST(hori_diff_stencil_02, test) {
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, u);
   verif.fill(-1.0, out_gt, out_naive);
 
-  OPTBACKEND::hori_diff_stencil hori_diff_gt(dom, u, out_gt);
-  cxxnaive::hori_diff_stencil hori_diff_naive(dom, u, out_naive);
+  dawn_generated::OPTBACKEND::hori_diff_stencil hori_diff_gt(dom, u, out_gt);
+  dawn_generated::cxxnaive::hori_diff_stencil hori_diff_naive(dom, u, out_naive);
 
   hori_diff_gt.run();
   hori_diff_naive.run();

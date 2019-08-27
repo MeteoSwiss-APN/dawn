@@ -31,7 +31,7 @@
 #include "test/integration-test/CodeGen/generated/tridiagonal_solve_c++-naive.cpp"
 
 #ifndef OPTBACKEND
-#define OPTBACKEND gridtools
+#define OPTBACKEND gt
 #endif
 
 // clang-format off
@@ -57,8 +57,8 @@ TEST(tridiagonal_solve, test) {
   verif.fillMath(7.8, 2.0, 1.1, 1.7, 1.9, 4.1, c_gt);
   verif.fillMath(7.8, 2.0, 1.1, 1.7, 1.9, 4.1, c_naive);
 
-  OPTBACKEND::tridiagonal_solve tridiagonal_solve_gt(dom, d_gt, a, b, c_gt);
-  cxxnaive::tridiagonal_solve tridiagonal_solve_naive(dom, d_naive, a, b, c_naive);
+  dawn_generated::OPTBACKEND::tridiagonal_solve tridiagonal_solve_gt(dom, d_gt, a, b, c_gt);
+  dawn_generated::cxxnaive::tridiagonal_solve tridiagonal_solve_naive(dom, d_naive, a, b, c_naive);
 
   tridiagonal_solve_gt.run();
   tridiagonal_solve_naive.run();

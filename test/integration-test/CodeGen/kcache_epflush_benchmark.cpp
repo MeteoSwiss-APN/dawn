@@ -31,7 +31,7 @@
 #include "test/integration-test/CodeGen/generated/kcache_epflush_c++-naive.cpp"
 
 #ifndef OPTBACKEND
-#define OPTBACKEND gridtools
+#define OPTBACKEND gt
 #endif
 
 // clang-format off
@@ -56,8 +56,8 @@ TEST(kcache_epflush, test) {
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, in);
   verif.fill(-1.0, out_opt, out_naive);
 
-  OPTBACKEND::kcache_epflush kcache_epflush_gt(dom, in, out_opt);
-  cxxnaive::kcache_epflush kcache_epflush_naive(dom, in, out_naive);
+  dawn_generated::OPTBACKEND::kcache_epflush kcache_epflush_gt(dom, in, out_opt);
+  dawn_generated::cxxnaive::kcache_epflush kcache_epflush_naive(dom, in, out_naive);
 
   kcache_epflush_gt.run();
   kcache_epflush_naive.run();

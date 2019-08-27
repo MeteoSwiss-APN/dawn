@@ -31,7 +31,7 @@
 #include "test/integration-test/CodeGen/Options.hpp"
 
 #ifndef OPTBACKEND
-#define OPTBACKEND gridtools
+#define OPTBACKEND gt
 #endif
 
 // clang-format off
@@ -50,9 +50,9 @@ TEST(globals_stencil, test) {
   verif.fillMath(8.0, 2.0, 1.5, 1.5, 2.0, 4.0, in);
   verif.fill(-1.0, out_gt, out_naive);
 
-  OPTBACKEND::globals_stencil globals_gt(dom, in, out_gt);
+  dawn_generated::OPTBACKEND::globals_stencil globals_gt(dom, in, out_gt);
   globals_gt.set_var_runtime(1);
-  cxxnaive::globals_stencil globals_naive(dom, in, out_naive);
+  dawn_generated::cxxnaive::globals_stencil globals_naive(dom, in, out_naive);
   globals_naive.set_var_runtime(1);
 
   globals_gt.run();

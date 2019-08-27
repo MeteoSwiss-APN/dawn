@@ -31,7 +31,7 @@
 #include "test/integration-test/CodeGen/generated/hori_diff_type2_stencil_c++-naive.cpp"
 
 #ifndef OPTBACKEND
-#define OPTBACKEND gridtools
+#define OPTBACKEND gt
 #endif
 
 // clang-format off
@@ -63,8 +63,8 @@ TEST(hori_diff_type2_stencil, test) {
 
   verif.fill(-1.0, u_out_gt, u_out_naive);
 
-  OPTBACKEND::hori_diff_type2_stencil hd_gt(dom, u_out_gt, u, crlato, crlatu, hdmask);
-  cxxnaive::hori_diff_type2_stencil hd_naive(dom, u_out_naive, u, crlato, crlatu, hdmask);
+  dawn_generated::OPTBACKEND::hori_diff_type2_stencil hd_gt(dom, u_out_gt, u, crlato, crlatu, hdmask);
+  dawn_generated::cxxnaive::hori_diff_type2_stencil hd_naive(dom, u_out_naive, u, crlato, crlatu, hdmask);
 
   hd_gt.run();
   hd_naive.run();
