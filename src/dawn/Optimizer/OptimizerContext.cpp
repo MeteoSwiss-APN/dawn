@@ -39,9 +39,9 @@ namespace dawn {
 static void createIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target) {
   ///////////////// Generation of the IIR
   sir::Attr attributes;
+  int stencilID = target->nextUID();
   target->getIIR()->insertChild(
-      make_unique<iir::Stencil>(target->getMetaData(), attributes, target->nextUID()),
-      target->getIIR());
+      make_unique<iir::Stencil>(target->getMetaData(), attributes, stencilID), target->getIIR());
   const auto& IIRStencil = target->getIIR()->getChild(0);
   // One Multistage with a parallel looporder
   IIRStencil->insertChild(
@@ -89,18 +89,14 @@ static void createIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target
   callerAccesses->addWriteExtent(out_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
   callerAccesses->addReadExtent(in_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
   insertee->setCallerAccesses(callerAccesses);
-  std::cout << "size here" << std::endl;
-  std::cout << insertee->getAccesses()->getReadAccesses().size() << std::endl;
-  std::cout << insertee->getAccesses()->getWriteAccesses().size() << std::endl;
   // And add the StmtAccesspair to it
   IIRDoMethod->insertChild(std::move(insertee));
   IIRDoMethod->updateLevel();
 
   // Add the control flow descriptor to the IIR
-  auto stencilCall = std::make_shared<sir::StencilCall>("<generatedDriver>");
+  auto stencilCall = std::make_shared<sir::StencilCall>("generatedDriver");
   stencilCall->Args.push_back(sirInField);
   stencilCall->Args.push_back(sirOutField);
-  int stencilID = target->nextUID();
   auto placeholderStencil = std::make_shared<sir::StencilCall>(
       iir::InstantiationHelper::makeStencilCallCodeGenName(stencilID));
   auto stencilCallDeclStmt = std::make_shared<iir::StencilCallDeclStmt>(placeholderStencil);
@@ -110,23 +106,20 @@ static void createIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target
   // auto stencilCallStmt = std::make_shared<ast::StencilCallDeclStmt>(stencilCall);
   // stencilCallStmt->setID(target->nextUID());
   // target->getMetaData().insertStencilCallStmt(stencilCallStmt, target->nextUID());
-  // auto stencilCallStatement = std::make_shared<Statement>(stencilCallStmt, nullptr);
-  // target->getIIR()->getControlFlowDescriptor().insertStmt(stencilCallStatement);
+  auto stencilCallStatement = std::make_shared<Statement>(stencilCallDeclStmt, nullptr);
+  target->getIIR()->getControlFlowDescriptor().insertStmt(stencilCallStatement);
 
   ///////////////// Generation of the Metadata
 
   target->getMetaData().setAccessIDNamePair(in_fieldID, "in_field");
   target->getMetaData().setAccessIDNamePair(out_fieldID, "out_field");
-  // target->getMetaData().setAccessIDOfExpr(expr, in_fieldID);
   target->getMetaData().insertExprToAccessID(lhs, out_fieldID);
   target->getMetaData().insertExprToAccessID(rhs, in_fieldID);
-  target->getMetaData().setStencilname("<<generated>>");
+  target->getMetaData().setStencilname("generated");
 
   for(const auto& MS : iterateIIROver<iir::MultiStage>(*(target->getIIR()))) {
     MS->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
-  DAWN_LOG(INFO) << "Done initializing StencilInstantiation";
-
   // Iterate all statements (top -> bottom)
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(target->getIIR()))) {
     iir::Stage& stage = *stagePtr;
@@ -686,6 +679,10 @@ OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, Options& opti
   stencilInstantiationMap_.insert(
       std::make_pair("<unstructured>", std::make_shared<iir::StencilInstantiation>(this)));
   createIIRInMemory(stencilInstantiationMap_.at("<unstructured>"));
+  if(options.Debug) {
+    stencilInstantiationMap_.at("<unstructured>")->dump();
+  }
+
   // for(const auto& stencil : SIR_->Stencils)
   //   if(!stencil->Attributes.has(sir::Attr::AK_NoCodeGen)) {
   //     stencilInstantiationMap_.insert(
@@ -694,7 +691,6 @@ OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, Options& opti
   //   } else {
   //     DAWN_LOG(INFO) << "Skipping processing of `" << stencil->Name << "`";
   //   }
-  stencilInstantiationMap_.at("<unstructured>")->dump();
 }
 
 bool OptimizerContext::fillIIRFromSIR(
