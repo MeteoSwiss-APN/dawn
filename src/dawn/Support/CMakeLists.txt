@@ -25,6 +25,11 @@ yoda_add_library(
           Casting.h
           Compiler.h
           Config.h.cmake
+          DiagnosticsEngine.cpp
+          DiagnosticsEngine.h
+          DiagnosticsMessage.h
+          DiagnosticsQueue.cpp
+          DiagnosticsQueue.h
           DoubleSidedMap.h
           EditDistance.h
           FileUtil.cpp
@@ -61,7 +66,6 @@ yoda_add_library(
           UIDGenerator.h
           Unreachable.cpp
           Unreachable.h
-          VisitorHelpers.h
           ../Dawn.h
   OBJECT
 )

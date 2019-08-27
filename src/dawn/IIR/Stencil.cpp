@@ -129,12 +129,12 @@ void Stencil::updateFromChildren() {
     const int accessID = fieldPair.first;
     const Field& field = fieldPair.second;
 
-    std::string name = metadata_.getFieldNameFromAccessID(accessID);
+    std::string fieldName = metadata_.getFieldNameFromAccessID(accessID);
     bool isTemporary = metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID);
     Array3i specifiedDimension = metadata_.getFieldDimensionsMask(accessID);
 
     derivedInfo_.fields_.emplace(
-        std::make_pair(accessID, FieldInfo{isTemporary, name, specifiedDimension, field}));
+        std::make_pair(accessID, FieldInfo{isTemporary, fieldName, specifiedDimension, field}));
   }
 }
 
@@ -548,7 +548,7 @@ boost::optional<Interval> Stencil::getEnclosingIntervalTemporaries() const {
   return tmpInterval;
 }
 
-void Stencil::accept(ASTVisitor& visitor) {
+void Stencil::accept(iir::ASTVisitor& visitor) {
   for(const auto& stmtAccessesPairPtr : iterateIIROver<StatementAccessesPair>(*this)) {
     stmtAccessesPairPtr->getStatement()->ASTStmt->accept(visitor);
   }

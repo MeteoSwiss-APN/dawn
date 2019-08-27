@@ -17,7 +17,7 @@
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
-#include "dawn/SIR/ASTStringifier.h"
+#include "dawn/IIR/ASTStringifier.h"
 #include "dawn/SIR/Statement.h"
 #include "dawn/Support/Printing.h"
 #include <sstream>
@@ -38,7 +38,7 @@ static std::string toStringImpl(const StatementAccessesPair* pair,
 
   ss << initialIndentStr << "[\n" << curIndentStr << "Statement:\n";
   ss << "\e[1m"
-     << ASTStringifer::toString(pair->getStatement()->ASTStmt, curIndent + DAWN_PRINT_INDENT)
+     << ASTStringifier::toString(pair->getStatement()->ASTStmt, curIndent + DAWN_PRINT_INDENT)
      << "\e[0m\n";
 
   if(pair->getCallerAccesses()) {
@@ -167,15 +167,15 @@ json::json StatementAccessesPair::print(const StencilMetaInformation& metadata,
   for(const auto& accessPair : accesses) {
     json::json accessNode;
     int accessID = accessPair.first;
-    std::string name = "unknown";
+    std::string accessName = "unknown";
     if(accessToNameMapper.hasAccessID(accessID)) {
-      name = accessToNameMapper.getNameFromAccessID(accessID);
+      accessName = accessToNameMapper.getNameFromAccessID(accessID);
     }
     if(metadata.isAccessType(iir::FieldAccessType::FAT_Literal, accessID)) {
       continue;
     }
     accessNode["access_id"] = accessID;
-    accessNode["name"] = name;
+    accessNode["name"] = accessName;
     std::stringstream ss;
     ss << accessPair.second;
     accessNode["extents"] = ss.str();
@@ -186,7 +186,7 @@ json::json StatementAccessesPair::print(const StencilMetaInformation& metadata,
 
 json::json StatementAccessesPair::jsonDump(const StencilMetaInformation& metadata) const {
   json::json node;
-  node["stmt"] = ASTStringifer::toString(getStatement()->ASTStmt, 0);
+  node["stmt"] = ASTStringifier::toString(getStatement()->ASTStmt, 0);
 
   AccessToNameMapper accessToNameMapper(metadata);
   getStatement()->ASTStmt->accept(accessToNameMapper);

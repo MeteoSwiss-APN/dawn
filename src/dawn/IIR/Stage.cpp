@@ -21,7 +21,7 @@
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Optimizer/AccessUtils.h"
-#include "dawn/SIR/ASTVisitor.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/Support/Logging.h"
 #include <algorithm>
 #include <iterator>
@@ -109,6 +109,7 @@ std::vector<Interval> Stage::getIntervals() const {
 }
 
 Interval Stage::getEnclosingInterval() const {
+  DAWN_ASSERT_MSG(getChildren().size() > 0, "Stage does not contain any children");
   Interval interval = getChildren().front()->getInterval();
   for(const auto& doMethod : getChildren())
     interval.merge(doMethod->getInterval());
@@ -172,10 +173,9 @@ bool Stage::overlaps(const Interval& interval, const std::unordered_map<int, Fie
 /// @brief The CaptureStencilFunctionCallGlobalParams class
 /// is an AST visitor used to capture accesses to global accessor from within
 /// stencil functions called from a stage
-class CaptureStencilFunctionCallGlobalParams : public ASTVisitorForwarding {
+class CaptureStencilFunctionCallGlobalParams : public iir::ASTVisitorForwarding {
 
   std::unordered_set<int>& globalVariables_;
-  StencilFunctionInstantiation* currentFunction_;
   const StencilMetaInformation& metaData_;
   std::shared_ptr<const StencilFunctionInstantiation> function_;
 
@@ -184,7 +184,7 @@ public:
                                          const StencilMetaInformation& metaData)
       : globalVariables_(globalVariables), metaData_(metaData), function_(nullptr) {}
 
-  void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
+  void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override {
     // Find the referenced stencil function
     std::shared_ptr<const StencilFunctionInstantiation> stencilFun =
         function_ ? function_->getStencilFunctionInstantiation(expr)

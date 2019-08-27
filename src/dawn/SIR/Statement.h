@@ -15,6 +15,7 @@
 #ifndef DAWN_SIR_STATEMENT_H
 #define DAWN_SIR_STATEMENT_H
 
+#include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/SIR.h"
 #include <memory>
 #include <vector>
@@ -24,12 +25,12 @@ namespace dawn {
 /// @brief Wrapper for AST statements of the SIR which contains additional information
 /// @ingroup optimizer
 struct Statement {
-  Statement(const std::shared_ptr<Stmt>& stmt,
+  Statement(const std::shared_ptr<sir::Stmt>& stmt,
             const std::shared_ptr<std::vector<sir::StencilCall*>>& stackTrace)
       : ASTStmt(stmt), StackTrace(stackTrace) {}
 
   /// SIR AST statement
-  std::shared_ptr<Stmt> ASTStmt;
+  std::shared_ptr<sir::Stmt> ASTStmt;
 
   /// Stack trace of inlined stencil calls of this statment (might be `NULL`)
   std::shared_ptr<std::vector<sir::StencilCall*>> StackTrace;

@@ -12,16 +12,39 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Compiler/DiagnosticsEngine.h"
+#ifndef DAWN_AST_ASTFWD_H
+#define DAWN_AST_ASTFWD_H
 
 namespace dawn {
+namespace ast {
+class AST;
 
-void DiagnosticsEngine::report(const DiagnosticsMessage& diag) { queue_.push_back(diag); }
+class Stmt;
+class BlockStmt;
+class ExprStmt;
+class ReturnStmt;
+class VarDeclStmt;
+class VerticalRegionDeclStmt;
+class StencilCallDeclStmt;
+class BoundaryConditionDeclStmt;
+class IfStmt;
 
-void DiagnosticsEngine::report(DiagnosticsMessage&& diag) { queue_.push_back(std::move(diag)); }
+class Expr;
+class NOPExpr;
+class UnaryOperator;
+class BinaryOperator;
+class AssignmentExpr;
+class TernaryOperator;
+class FunCallExpr;
+class StencilFunCallExpr;
+class StencilFunArgExpr;
+class VarAccessExpr;
+class FieldAccessExpr;
+class LiteralAccessExpr;
 
-void DiagnosticsEngine::report(const DiagnosticsBuilder& diagBuilder) {
-  report(diagBuilder.getMessage(filename_));
-}
-
+class ASTHelper;
+class ASTVisitor; //   Compiler complains if declared as class
+} // namespace ast
 } // namespace dawn
+
+#endif

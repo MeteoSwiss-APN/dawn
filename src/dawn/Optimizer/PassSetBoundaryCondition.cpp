@@ -13,15 +13,15 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassSetBoundaryCondition.h"
+#include "dawn/IIR/ASTExpr.h"
+#include "dawn/IIR/ASTStmt.h"
+#include "dawn/IIR/ASTUtil.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/ControlFlowDescriptor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/SIR/ASTExpr.h"
-#include "dawn/SIR/ASTStmt.h"
-#include "dawn/SIR/ASTUtil.h"
-#include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Logging.h"
 #include <iostream>
@@ -64,18 +64,18 @@ enum FieldType { FT_NotOriginal = -1 };
 /// @brief The VisitStencilCalls class traverses the StencilDescAST to determine an order of the
 /// stencil calls. This is required to properly evaluate boundary conditions
 ///
-class VisitStencilCalls : public ASTVisitorForwarding {
-  std::vector<std::shared_ptr<StencilCallDeclStmt>> stencilCallsInOrder_;
+class VisitStencilCalls : public iir::ASTVisitorForwarding {
+  std::vector<std::shared_ptr<iir::StencilCallDeclStmt>> stencilCallsInOrder_;
 
 public:
-  const std::vector<std::shared_ptr<StencilCallDeclStmt>>& getStencilCalls() const {
+  const std::vector<std::shared_ptr<iir::StencilCallDeclStmt>>& getStencilCalls() const {
     return stencilCallsInOrder_;
   }
-  std::vector<std::shared_ptr<StencilCallDeclStmt>>& getStencilCalls() {
+  std::vector<std::shared_ptr<iir::StencilCallDeclStmt>>& getStencilCalls() {
     return stencilCallsInOrder_;
   }
 
-  void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
+  void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) {
     stencilCallsInOrder_.push_back(stmt);
   }
 };
@@ -83,12 +83,12 @@ public:
 /// @brief The AddBoundaryConditions class traverses the StencilDescAST to extract all the
 /// StencilCallStmts for a stencili with a given ID. This is required to properly insert boundary
 /// conditions.
-class AddBoundaryConditions : public ASTVisitorForwarding {
+class AddBoundaryConditions : public iir::ASTVisitorForwarding {
   std::shared_ptr<iir::StencilInstantiation> instantiation_;
   iir::StencilMetaInformation& metadata_;
   int StencilID_;
 
-  std::vector<std::shared_ptr<StencilCallDeclStmt>> stencilCallsToReplace_;
+  std::vector<std::shared_ptr<iir::StencilCallDeclStmt>> stencilCallsToReplace_;
 
 public:
   AddBoundaryConditions(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
@@ -96,11 +96,11 @@ public:
       : instantiation_(instantiation), metadata_(instantiation->getMetaData()),
         StencilID_(StencilID) {}
 
-  virtual void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override {
     auto iter = std::find_if(
         metadata_.getStencilCallToStencilIDMap().begin(),
         metadata_.getStencilCallToStencilIDMap().end(),
-        [this, stmt](const std::pair<std::shared_ptr<StencilCallDeclStmt>, int>& pair) {
+        [this, stmt](const std::pair<std::shared_ptr<iir::StencilCallDeclStmt>, int>& pair) {
           return pair.first == stmt && pair.second == StencilID_;
         });
     if(iter != metadata_.getStencilCallToStencilIDMap().end()) {
@@ -108,7 +108,7 @@ public:
     }
   }
 
-  std::vector<std::shared_ptr<StencilCallDeclStmt>>& getStencilCallsToReplace() {
+  std::vector<std::shared_ptr<iir::StencilCallDeclStmt>>& getStencilCallsToReplace() {
     return stencilCallsToReplace_;
   }
 
@@ -159,14 +159,15 @@ bool PassSetBoundaryCondition::run(
   };
 
   std::unordered_map<int, iir::Extents> dirtyFields;
-  std::unordered_map<int, std::shared_ptr<BoundaryConditionDeclStmt>> allBCs;
+  std::unordered_map<int, std::shared_ptr<iir::BoundaryConditionDeclStmt>> allBCs;
 
   //  // Fetch all the boundary conditions stored in the instantiation
-  std::transform(metadata.getFieldNameToBCMap().begin(), metadata.getFieldNameToBCMap().end(),
-                 std::inserter(allBCs, allBCs.begin()),
-                 [&](std::pair<std::string, std::shared_ptr<BoundaryConditionDeclStmt>> bcPair) {
-                   return std::make_pair(metadata.getAccessIDFromName(bcPair.first), bcPair.second);
-                 });
+  std::transform(
+      metadata.getFieldNameToBCMap().begin(), metadata.getFieldNameToBCMap().end(),
+      std::inserter(allBCs, allBCs.begin()),
+      [&](std::pair<std::string, std::shared_ptr<iir::BoundaryConditionDeclStmt>> bcPair) {
+        return std::make_pair(metadata.getAccessIDFromName(bcPair.first), bcPair.second);
+      });
 
   // Get the order in which the stencils are called:
   VisitStencilCalls findStencilCalls;
@@ -277,14 +278,14 @@ bool PassSetBoundaryCondition::run(
         for(auto& statement : controlFlow.getStatements()) {
           visitor.reset();
 
-          std::shared_ptr<Stmt>& stmt = statement->ASTStmt;
+          std::shared_ptr<iir::Stmt>& stmt = statement->ASTStmt;
 
           stmt->accept(visitor);
-          std::vector<std::shared_ptr<Stmt>> stencilCallWithBC_;
+          std::vector<std::shared_ptr<iir::Stmt>> stencilCallWithBC_;
           stencilCallWithBC_.emplace_back(IDtoBCpair->second);
           for(auto& oldStencilCall : visitor.getStencilCallsToReplace()) {
             stencilCallWithBC_.emplace_back(oldStencilCall);
-            auto newBlockStmt = std::make_shared<BlockStmt>();
+            auto newBlockStmt = std::make_shared<iir::BlockStmt>();
             std::copy(stencilCallWithBC_.begin(), stencilCallWithBC_.end(),
                       std::back_inserter(newBlockStmt->getStatements()));
             if(oldStencilCall == stmt) {
@@ -293,7 +294,7 @@ bool PassSetBoundaryCondition::run(
               stmt = newBlockStmt;
             } else {
               // Recursively replace the statement
-              replaceOldStmtWithNewStmtInStmt(stmt, oldStencilCall, newBlockStmt);
+              iir::replaceOldStmtWithNewStmtInStmt(stmt, oldStencilCall, newBlockStmt);
             }
             stencilCallWithBC_.pop_back();
           }

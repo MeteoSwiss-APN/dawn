@@ -20,6 +20,7 @@
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/Cuda/CacheProperties.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
+#include "dawn/CodeGen/Cuda/CudaCodeGen.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/Support/IndexRange.h"
 
@@ -54,11 +55,12 @@ private:
   std::string cudaKernelName_;
   Array3ui blockSize_;
   const bool solveKLoopInParallel_;
+  CudaCodeGen::CudaCodeGenOptions options_;
 
 public:
   MSCodeGen(std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
             const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-            const CacheProperties& cacheProperties);
+            const CacheProperties& cacheProperties, CudaCodeGen::CudaCodeGenOptions options);
 
   void generateCudaKernelCode();
 

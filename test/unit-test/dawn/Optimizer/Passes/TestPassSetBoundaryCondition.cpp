@@ -14,8 +14,8 @@
 
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/Compiler/Options.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/SIRSerializer.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
@@ -72,11 +72,11 @@ protected:
   }
 };
 
-class BCFinder : public ASTVisitorForwarding {
+class BCFinder : public iir::ASTVisitorForwarding {
 public:
-  using Base = ASTVisitorForwarding;
+  using Base = iir::ASTVisitorForwarding;
   BCFinder() : BCsFound_(0) {}
-  void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
+  void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) {
     BCsFound_++;
     Base::visit(stmt);
   }

@@ -15,9 +15,9 @@
 #ifndef DAWN_SUPPORT_ASTSERIALIZER_H
 #define DAWN_SUPPORT_ASTSERIALIZER_H
 
+#include "dawn/AST/ASTFwd.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/SIR/SIR/statements.pb.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/SIR/statements.pb.h"
@@ -25,7 +25,7 @@
 
 using namespace dawn;
 
-void setAST(dawn::proto::statements::AST* astProto, const AST* ast);
+void setAST(dawn::proto::statements::AST* astProto, const ast::AST* ast);
 
 void setLocation(dawn::proto::statements::SourceLocation* locProto, const SourceLocation& loc);
 
@@ -41,7 +41,7 @@ void setOffset(dawn::proto::statements::Offset* offsetProto, const sir::Offset* 
 
 void setField(dawn::proto::statements::Field* fieldProto, const sir::Field* field);
 
-class ProtoStmtBuilder : public dawn::ASTVisitor {
+class ProtoStmtBuilder : public ast::ASTVisitor {
   std::stack<dawn::proto::statements::Stmt*> currentStmtProto_;
   std::stack<dawn::proto::statements::Expr*> currentExprProto_;
 
@@ -54,43 +54,43 @@ public:
 
   dawn::proto::statements::Expr* getCurrentExprProto();
 
-  void visit(const std::shared_ptr<BlockStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::BlockStmt>& stmt) override;
 
-  void visit(const std::shared_ptr<ExprStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::ExprStmt>& stmt) override;
 
-  void visit(const std::shared_ptr<ReturnStmt>& stmt) override;
-  void visit(const std::shared_ptr<VarDeclStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::ReturnStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) override;
 
-  void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::VerticalRegionDeclStmt>& stmt) override;
 
-  void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::StencilCallDeclStmt>& stmt) override;
 
-  void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::BoundaryConditionDeclStmt>& stmt) override;
 
-  void visit(const std::shared_ptr<IfStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::IfStmt>& stmt) override;
 
-  void visit(const std::shared_ptr<UnaryOperator>& expr) override;
+  void visit(const std::shared_ptr<ast::UnaryOperator>& expr) override;
 
-  void visit(const std::shared_ptr<BinaryOperator>& expr) override;
+  void visit(const std::shared_ptr<ast::BinaryOperator>& expr) override;
 
-  void visit(const std::shared_ptr<AssignmentExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::AssignmentExpr>& expr) override;
 
-  void visit(const std::shared_ptr<TernaryOperator>& expr) override;
+  void visit(const std::shared_ptr<ast::TernaryOperator>& expr) override;
 
-  void visit(const std::shared_ptr<FunCallExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::FunCallExpr>& expr) override;
 
-  void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) override;
 
-  void visit(const std::shared_ptr<StencilFunArgExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::StencilFunArgExpr>& expr) override;
 
-  void visit(const std::shared_ptr<VarAccessExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::VarAccessExpr>& expr) override;
 
-  void visit(const std::shared_ptr<FieldAccessExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override;
 
-  void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::LiteralAccessExpr>& expr) override;
 };
 
-void setAST(proto::statements::AST* astProto, const AST* ast);
+void setAST(proto::statements::AST* astProto, const ast::AST* ast);
 
 //===------------------------------------------------------------------------------------------===//
 // Deserialization
@@ -112,10 +112,10 @@ std::shared_ptr<sir::Offset> makeOffset(const proto::statements::Offset& offsetP
 
 std::shared_ptr<sir::Interval> makeInterval(const proto::statements::Interval& intervalProto);
 
-std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto);
+std::shared_ptr<ast::Expr> makeExpr(const proto::statements::Expr& expressionProto);
 
-std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto);
+std::shared_ptr<ast::Stmt> makeStmt(const proto::statements::Stmt& statementProto);
 
-std::shared_ptr<AST> makeAST(const dawn::proto::statements::AST& astProto);
+std::shared_ptr<ast::AST> makeAST(const dawn::proto::statements::AST& astProto);
 
 #endif // DAWN_SUPPORT_ASTSERIALIZER_H

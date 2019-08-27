@@ -12,15 +12,15 @@
 //
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/Optimizer/PassInlining.h"
+#include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTUtil.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/SIR/AST.h"
-#include "dawn/SIR/ASTUtil.h"
-#include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/STLExtras.h"
 #include <iostream>
@@ -35,15 +35,15 @@ namespace {
 class Inliner;
 
 static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
-    PassInlining::InlineStrategyKind strategy,
+    PassInlining::InlineStrategy strategy,
     const std::shared_ptr<iir::StencilFunctionInstantiation>& stencilFunctioninstantiation,
     const std::unique_ptr<iir::StatementAccessesPair>& oldStmt,
     std::vector<std::unique_ptr<iir::StatementAccessesPair>>& newStmts, int AccessIDOfCaller,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
 
 /// @brief Perform the inlining of a stencil-function
-class Inliner : public ASTVisitor {
-  PassInlining::InlineStrategyKind strategy_;
+class Inliner : public iir::ASTVisitor {
+  PassInlining::InlineStrategy strategy_;
   const std::shared_ptr<iir::StencilFunctionInstantiation>& curStencilFunctioninstantiation_;
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   iir::StencilMetaInformation& metadata_;
@@ -56,15 +56,15 @@ class Inliner : public ASTVisitor {
 
   /// If a stencil function is called within the argument list of another stencil function, this
   /// stores the AccessID of the "temporary" storage we would need to store the return value of the
-  /// stencil function (See StatementMapper::visit(const std::shared_ptr<StencilFunCallExpr>& expr)
-  /// in StencilInstantiation.cpp). An AccessID of 0 indicates we are not in this scenario.
+  /// stencil function (See StatementMapper::visit(const std::shared_ptr<iir::StencilFunCallExpr>&
+  /// expr) in StencilInstantiation.cpp). An AccessID of 0 indicates we are not in this scenario.
   int AccessIDOfCaller_;
 
   /// Nesting of the scopes
   int scopeDepth_;
 
   /// New expression which will be substitued for the `StencilFunCallExpr` (may be NULL)
-  std::shared_ptr<Expr> newExpr_;
+  std::shared_ptr<iir::Expr> newExpr_;
 
   /// Scope of the current argument list being parsed
   struct ArgListScope {
@@ -79,7 +79,7 @@ class Inliner : public ASTVisitor {
   std::stack<const std::unique_ptr<iir::StatementAccessesPair>*> currentStmtAccessesPair_;
 
 public:
-  Inliner(PassInlining::InlineStrategyKind strategy,
+  Inliner(PassInlining::InlineStrategy strategy,
           const std::shared_ptr<iir::StencilFunctionInstantiation>& stencilFunctioninstantiation,
           const std::unique_ptr<iir::StatementAccessesPair>& oldStmtAccessesPair,
           std::vector<std::unique_ptr<iir::StatementAccessesPair>>& newStmtAccessesPairs,
@@ -92,16 +92,16 @@ public:
 
   /// @brief Get the new expression which will be substitued for the `StencilFunCallExpr` of this
   /// `StencilFunctionInstantiation` (may be NULL)
-  std::shared_ptr<Expr> getNewExpr() const { return newExpr_; }
+  std::shared_ptr<iir::Expr> getNewExpr() const { return newExpr_; }
 
-  virtual void visit(const std::shared_ptr<BlockStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override {
     scopeDepth_++;
     for(const auto& s : stmt->getStatements())
       s->accept(*this);
     scopeDepth_--;
   }
 
-  void appendNewStatementAccessesPair(const std::shared_ptr<Stmt>& stmt) {
+  void appendNewStatementAccessesPair(const std::shared_ptr<iir::Stmt>& stmt) {
     if(scopeDepth_ == 1) {
       // The top-level block statement is collapsed thus we only insert at 1. Note that this works
       // because all AST have a block statement as root node.
@@ -130,13 +130,13 @@ public:
     currentStmtAccessesPair_.pop();
   }
 
-  virtual void visit(const std::shared_ptr<ExprStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override {
     appendNewStatementAccessesPair(stmt);
     stmt->getExpr()->accept(*this);
     removeLastChildStatementAccessesPair();
   }
 
-  virtual void visit(const std::shared_ptr<ReturnStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) override {
     DAWN_ASSERT_MSG(scopeDepth_ == 1, "cannot inline nested return statement!");
 
     // Instead of returning a value, we assign it to a local variable
@@ -147,10 +147,10 @@ public:
       auto returnVarName = iir::InstantiationHelper::makeLocalVariablename(
           curStencilFunctioninstantiation_->getName(), AccessID);
 
-      newExpr_ = std::make_shared<VarAccessExpr>(returnVarName);
-      auto newStmt = std::make_shared<VarDeclStmt>(
+      newExpr_ = std::make_shared<iir::VarAccessExpr>(returnVarName);
+      auto newStmt = std::make_shared<iir::VarDeclStmt>(
           dawn::Type(BuiltinTypeID::Float, CVQualifier::Const), returnVarName, 0, "=",
-          std::vector<std::shared_ptr<Expr>>{stmt->getExpr()});
+          std::vector<std::shared_ptr<iir::Expr>>{stmt->getExpr()});
       appendNewStatementAccessesPair(newStmt);
 
       // Register the variable
@@ -164,9 +164,9 @@ public:
       auto returnFieldName = iir::InstantiationHelper::makeTemporaryFieldname(
           curStencilFunctioninstantiation_->getName(), AccessIDOfCaller_);
 
-      newExpr_ = std::make_shared<FieldAccessExpr>(returnFieldName);
-      auto newStmt =
-          std::make_shared<ExprStmt>(std::make_shared<AssignmentExpr>(newExpr_, stmt->getExpr()));
+      newExpr_ = std::make_shared<iir::FieldAccessExpr>(returnFieldName);
+      auto newStmt = std::make_shared<iir::ExprStmt>(
+          std::make_shared<iir::AssignmentExpr>(newExpr_, stmt->getExpr()));
       appendNewStatementAccessesPair(newStmt);
 
       // Promote the "temporary" storage we used to mock the argument to an actual temporary field
@@ -179,7 +179,7 @@ public:
     stmt->getExpr()->accept(*this);
   }
 
-  void visit(const std::shared_ptr<IfStmt>& stmt) override {
+  void visit(const std::shared_ptr<iir::IfStmt>& stmt) override {
     appendNewStatementAccessesPair(stmt);
     stmt->getCondExpr()->accept(*this);
 
@@ -190,7 +190,7 @@ public:
     removeLastChildStatementAccessesPair();
   }
 
-  void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
+  void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
     int AccessID = curStencilFunctioninstantiation_->getAccessIDFromStmt(stmt);
     const std::string& name = curStencilFunctioninstantiation_->getFieldNameFromAccessID(AccessID);
     metadata_.setAccessIDNamePair(AccessID, name);
@@ -206,36 +206,36 @@ public:
     removeLastChildStatementAccessesPair();
   }
 
-  void visit(const std::shared_ptr<VerticalRegionDeclStmt>&) override {}
-  void visit(const std::shared_ptr<StencilCallDeclStmt>&) override {}
-  void visit(const std::shared_ptr<BoundaryConditionDeclStmt>&) override {}
+  void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>&) override {}
+  void visit(const std::shared_ptr<iir::StencilCallDeclStmt>&) override {}
+  void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>&) override {}
 
-  void visit(const std::shared_ptr<AssignmentExpr>& expr) override {
+  void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override {
     for(auto& s : expr->getChildren())
       s->accept(*this);
   }
 
-  void visit(const std::shared_ptr<UnaryOperator>& expr) override {
+  void visit(const std::shared_ptr<iir::UnaryOperator>& expr) override {
     for(auto& s : expr->getChildren())
       s->accept(*this);
   }
 
-  void visit(const std::shared_ptr<BinaryOperator>& expr) override {
+  void visit(const std::shared_ptr<iir::BinaryOperator>& expr) override {
     for(auto& s : expr->getChildren())
       s->accept(*this);
   }
 
-  void visit(const std::shared_ptr<TernaryOperator>& expr) override {
+  void visit(const std::shared_ptr<iir::TernaryOperator>& expr) override {
     for(auto& s : expr->getChildren())
       s->accept(*this);
   }
 
-  virtual void visit(const std::shared_ptr<FunCallExpr>& expr) override {
+  virtual void visit(const std::shared_ptr<iir::FunCallExpr>& expr) override {
     for(auto& s : expr->getChildren())
       s->accept(*this);
   }
 
-  void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
+  void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override {
     // This is a nested stencil function call (i.e a stencil function call within the current
     // stencil function)
     std::shared_ptr<iir::StencilFunctionInstantiation> func =
@@ -285,7 +285,7 @@ public:
         std::iter_swap(newStmtAccessesPairs_.begin() + stmtIdxOfFunc,
                        std::prev(newStmtAccessesPairs_.end()));
 
-        replaceOldExprWithNewExprInStmt(
+        iir::replaceOldExprWithNewExprInStmt(
             newStmtAccessesPairs_[newStmtAccessesPairs_.size() - 1]->getStatement()->ASTStmt, expr,
             inliner->getNewExpr());
       }
@@ -306,12 +306,12 @@ public:
       argListScope_.top().ArgumentIndex++;
   }
 
-  void visit(const std::shared_ptr<StencilFunArgExpr>&) override {
+  void visit(const std::shared_ptr<iir::StencilFunArgExpr>&) override {
     if(!argListScope_.empty())
       argListScope_.top().ArgumentIndex++;
   }
 
-  void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
 
     std::string callerName = metadata_.getFieldNameFromAccessID(
         curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
@@ -323,7 +323,7 @@ public:
       expr->getIndex()->accept(*this);
   }
 
-  void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
 
     std::string callerName = metadata_.getFieldNameFromAccessID(
         curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
@@ -340,7 +340,7 @@ public:
       argListScope_.top().ArgumentIndex++;
   }
 
-  void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override {
     int AccessID = curStencilFunctioninstantiation_->getAccessIDFromExpr(expr);
     metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, expr->getValue());
     metadata_.insertExprToAccessID(expr, AccessID);
@@ -348,15 +348,16 @@ public:
 };
 
 /// @brief Detect inline candidates
-class DetectInlineCandiates : public ASTVisitorForwarding {
-  PassInlining::InlineStrategyKind strategy_;
+class DetectInlineCandiates : public iir::ASTVisitorForwarding {
+  PassInlining::InlineStrategy strategy_;
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
 
   /// The statement we are currently analyzing
   std::unique_ptr<iir::StatementAccessesPair> oldStmtAccessesPair_;
 
   /// If non-empty the `oldStmt` will be appended to `newStmts` with the given replacements
-  std::unordered_map<std::shared_ptr<Expr>, std::shared_ptr<Expr>> replacmentOfOldStmtMap_;
+  std::unordered_map<std::shared_ptr<iir::Expr>, std::shared_ptr<iir::Expr>>
+      replacmentOfOldStmtMap_;
 
   /// The new list of StatementAccessesPair which can serve as a replacement for `oldStmt`
   std::vector<std::unique_ptr<iir::StatementAccessesPair>> newStmtAccessesPairs_;
@@ -376,9 +377,9 @@ class DetectInlineCandiates : public ASTVisitorForwarding {
   std::stack<ArgListScope> argListScope_;
 
 public:
-  using Base = ASTVisitorForwarding;
+  using Base = iir::ASTVisitorForwarding;
 
-  DetectInlineCandiates(PassInlining::InlineStrategyKind strategy,
+  DetectInlineCandiates(PassInlining::InlineStrategy strategy,
                         const std::shared_ptr<iir::StencilInstantiation>& instantiation)
       : strategy_(strategy), instantiation_(instantiation), inlineCandiatesFound_(false) {}
 
@@ -405,7 +406,7 @@ public:
       newStmtAccessesPairs_.push_back(oldStmtAccessesPair_->clone());
 
       for(const auto& oldNewPair : replacmentOfOldStmtMap_)
-        replaceOldExprWithNewExprInStmt(
+        iir::replaceOldExprWithNewExprInStmt(
             newStmtAccessesPairs_[newStmtAccessesPairs_.size() - 1]->getStatement()->ASTStmt,
             oldNewPair.first, oldNewPair.second);
 
@@ -416,7 +417,7 @@ public:
     return newStmtAccessesPairs_;
   }
 
-  void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
+  void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override {
     std::shared_ptr<iir::StencilFunctionInstantiation> func =
         instantiation_->getMetaData().getStencilFunctionInstantiation(expr);
 
@@ -457,12 +458,12 @@ public:
       argListScope_.top().ArgumentIndex++;
   }
 
-  void visit(const std::shared_ptr<StencilFunArgExpr>&) override {
+  void visit(const std::shared_ptr<iir::StencilFunArgExpr>&) override {
     if(!argListScope_.empty())
       argListScope_.top().ArgumentIndex++;
   }
 
-  void visit(const std::shared_ptr<FieldAccessExpr>&) override {
+  void visit(const std::shared_ptr<iir::FieldAccessExpr>&) override {
     if(!argListScope_.empty())
       argListScope_.top().ArgumentIndex++;
   }
@@ -486,7 +487,7 @@ public:
 /// @returns `true` if the stencil-function was inlined, `false` otherwise (the corresponding
 /// `Inliner` instance (or NULL) is returned as well)
 static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
-    PassInlining::InlineStrategyKind strategy,
+    PassInlining::InlineStrategy strategy,
     const std::shared_ptr<iir::StencilFunctionInstantiation>& stencilFunc,
     const std::unique_ptr<iir::StatementAccessesPair>& oldStmtAccessesPair,
     std::vector<std::unique_ptr<iir::StatementAccessesPair>>& newStmtAccessesPairs,
@@ -494,7 +495,7 @@ static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
 
   // Function which do not return a value are *always* inlined. Function which do return a value
   // are only inlined if we favor precomputations.
-  if(!stencilFunc->hasReturn() || strategy == PassInlining::IK_ComputationsOnTheFly) {
+  if(!stencilFunc->hasReturn() || strategy == PassInlining::InlineStrategy::ComputationsOnTheFly) {
     auto inliner =
         std::make_shared<Inliner>(strategy, stencilFunc, oldStmtAccessesPair, newStmtAccessesPairs,
                                   AccessIDOfCaller, stencilInstantiation);
@@ -506,15 +507,15 @@ static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
 
 } // anonymous namespace
 
-PassInlining::PassInlining(bool activate, InlineStrategyKind strategy)
+PassInlining::PassInlining(bool activate, InlineStrategy strategy)
     : Pass("PassInlining", true), activate_(activate), strategy_(strategy) {}
 
 bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 
-  DetectInlineCandiates inliner(strategy_, stencilInstantiation);
-
   if(!activate_)
     return true;
+
+  DetectInlineCandiates inliner(strategy_, stencilInstantiation);
 
   // Iterate all statements (top -> bottom)
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {

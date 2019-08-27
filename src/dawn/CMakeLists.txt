@@ -13,6 +13,7 @@
 ##===------------------------------------------------------------------------------------------===##
 
 add_subdirectory(Support)
+add_subdirectory(AST)
 add_subdirectory(SIR)
 add_subdirectory(Compiler)
 add_subdirectory(Optimizer)
@@ -26,6 +27,7 @@ include(yodaCombineLibraries)
 yoda_combine_libraries(
   NAME Dawn
   OBJECTS DawnSupportObjects
+          DawnASTObjects
           DawnCompilerObjects
           DawnOptimizerObjects
           DawnCodeGenObjects
@@ -38,3 +40,4 @@ target_include_directories(DawnShared SYSTEM INTERFACE $<BUILD_INTERFACE:${Boost
 
 # Export the targets
 install(EXPORT DawnTargets NAMESPACE Dawn:: DESTINATION ${DAWN_INSTALL_CMAKE_DIR})
+export(EXPORT DawnTargets NAMESPACE Dawn:: FILE ${PROJECT_BINARY_DIR}/DawnTargets.cmake)

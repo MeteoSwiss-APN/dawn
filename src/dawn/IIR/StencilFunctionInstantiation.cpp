@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/StencilFunctionInstantiation.h"
+#include "dawn/IIR/ASTStringifier.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/AccessUtils.h"
@@ -30,8 +31,8 @@ namespace iir {
 using ::dawn::operator<<;
 
 StencilFunctionInstantiation::StencilFunctionInstantiation(
-    StencilInstantiation* context, const std::shared_ptr<StencilFunCallExpr>& expr,
-    const std::shared_ptr<sir::StencilFunction>& function, const std::shared_ptr<AST>& ast,
+    StencilInstantiation* context, const std::shared_ptr<iir::StencilFunCallExpr>& expr,
+    const std::shared_ptr<sir::StencilFunction>& function, const std::shared_ptr<iir::AST>& ast,
     const Interval& interval, bool isNested)
     : stencilInstantiation_(context), metadata_(context->getMetaData()), expr_(expr),
       function_(function), ast_(ast), interval_(interval), hasReturn_(false), isNested_(isNested),
@@ -43,7 +44,7 @@ StencilFunctionInstantiation::StencilFunctionInstantiation(
 StencilFunctionInstantiation StencilFunctionInstantiation::clone() const {
   // The SIR object function_ is not cloned, but copied, since the SIR is considered immuatble
   StencilFunctionInstantiation stencilFun(
-      stencilInstantiation_, std::static_pointer_cast<StencilFunCallExpr>(expr_->clone()),
+      stencilInstantiation_, std::static_pointer_cast<iir::StencilFunCallExpr>(expr_->clone()),
       function_, ast_->clone(), interval_, isNested_);
 
   stencilFun.hasReturn_ = hasReturn_;
@@ -70,7 +71,7 @@ StencilFunctionInstantiation StencilFunctionInstantiation::clone() const {
 }
 
 Array3i StencilFunctionInstantiation::evalOffsetOfFieldAccessExpr(
-    const std::shared_ptr<FieldAccessExpr>& expr, bool applyInitialOffset) const {
+    const std::shared_ptr<iir::FieldAccessExpr>& expr, bool applyInitialOffset) const {
 
   // Get the offsets we know so far (i.e the constant offset)
   Array3i offset = expr->getOffset();
@@ -324,7 +325,8 @@ std::string StencilFunctionInstantiation::getNameFromAccessID(int accessID) cons
   }
 }
 
-int StencilFunctionInstantiation::getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) const {
+int StencilFunctionInstantiation::getAccessIDFromExpr(
+    const std::shared_ptr<iir::Expr>& expr) const {
   auto it = ExprToCallerAccessIDMap_.find(expr);
   /// HACK for Literals (inserted from Globals) that are not found in SFI
   if(it == ExprToCallerAccessIDMap_.end()) {
@@ -334,18 +336,19 @@ int StencilFunctionInstantiation::getAccessIDFromExpr(const std::shared_ptr<Expr
   return it->second;
 }
 
-int StencilFunctionInstantiation::getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) const {
+int StencilFunctionInstantiation::getAccessIDFromStmt(
+    const std::shared_ptr<iir::Stmt>& stmt) const {
   auto it = StmtToCallerAccessIDMap_.find(stmt);
   DAWN_ASSERT_MSG(it != StmtToCallerAccessIDMap_.end(), "Invalid Stmt");
   return it->second;
 }
 
-void StencilFunctionInstantiation::setAccessIDOfExpr(const std::shared_ptr<Expr>& expr,
+void StencilFunctionInstantiation::setAccessIDOfExpr(const std::shared_ptr<iir::Expr>& expr,
                                                      const int accessID) {
   ExprToCallerAccessIDMap_[expr] = accessID;
 }
 
-void StencilFunctionInstantiation::mapExprToAccessID(const std::shared_ptr<Expr>& expr,
+void StencilFunctionInstantiation::mapExprToAccessID(const std::shared_ptr<iir::Expr>& expr,
                                                      int accessID) {
   DAWN_ASSERT(!ExprToCallerAccessIDMap_.count(expr) ||
               ExprToCallerAccessIDMap_.at(expr) == accessID);
@@ -353,13 +356,13 @@ void StencilFunctionInstantiation::mapExprToAccessID(const std::shared_ptr<Expr>
   ExprToCallerAccessIDMap_.emplace(expr, accessID);
 }
 
-void StencilFunctionInstantiation::setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt,
+void StencilFunctionInstantiation::setAccessIDOfStmt(const std::shared_ptr<iir::Stmt>& stmt,
                                                      const int accessID) {
   DAWN_ASSERT(StmtToCallerAccessIDMap_.count(stmt));
   StmtToCallerAccessIDMap_[stmt] = accessID;
 }
 
-void StencilFunctionInstantiation::mapStmtToAccessID(const std::shared_ptr<Stmt>& stmt,
+void StencilFunctionInstantiation::mapStmtToAccessID(const std::shared_ptr<iir::Stmt>& stmt,
                                                      int accessID) {
   StmtToCallerAccessIDMap_.emplace(stmt, accessID);
 }
@@ -381,7 +384,7 @@ StencilFunctionInstantiation::getAccessIDToNameMap() const {
   return AccessIDToNameMap_;
 }
 
-const std::unordered_map<std::shared_ptr<StencilFunCallExpr>,
+const std::unordered_map<std::shared_ptr<iir::StencilFunCallExpr>,
                          std::shared_ptr<StencilFunctionInstantiation>>&
 StencilFunctionInstantiation::getExprToStencilFunctionInstantiationMap() const {
   return ExprToStencilFunctionInstantiationMap_;
@@ -395,20 +398,20 @@ void StencilFunctionInstantiation::insertExprToStencilFunction(
 }
 
 void StencilFunctionInstantiation::removeStencilFunctionInstantiation(
-    const std::shared_ptr<StencilFunCallExpr>& expr) {
+    const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
   ExprToStencilFunctionInstantiationMap_.erase(expr);
 }
 
 std::shared_ptr<StencilFunctionInstantiation>
 StencilFunctionInstantiation::getStencilFunctionInstantiation(
-    const std::shared_ptr<StencilFunCallExpr>& expr) const {
+    const std::shared_ptr<iir::StencilFunCallExpr>& expr) const {
   auto it = ExprToStencilFunctionInstantiationMap_.find(expr);
   DAWN_ASSERT_MSG(it != ExprToStencilFunctionInstantiationMap_.end(), "Invalid stencil function");
   return it->second;
 }
 
 bool StencilFunctionInstantiation::hasStencilFunctionInstantiation(
-    const std::shared_ptr<StencilFunCallExpr>& expr) const {
+    const std::shared_ptr<iir::StencilFunCallExpr>& expr) const {
   return (ExprToStencilFunctionInstantiationMap_.find(expr) !=
           ExprToStencilFunctionInstantiationMap_.end());
 }
@@ -655,7 +658,7 @@ void StencilFunctionInstantiation::dump() const {
 
   const auto& statements = getAST()->getRoot()->getStatements();
   for(std::size_t i = 0; i < statements.size(); ++i) {
-    std::cout << "\e[1m" << ASTStringifer::toString(statements[i], 2 * DAWN_PRINT_INDENT)
+    std::cout << "\e[1m" << iir::ASTStringifier::toString(statements[i], 2 * DAWN_PRINT_INDENT)
               << "\e[0m";
     if(doMethod_->getChild(i)->getCallerAccesses())
       std::cout << doMethod_->getChild(i)->getCallerAccesses()->toString(this,

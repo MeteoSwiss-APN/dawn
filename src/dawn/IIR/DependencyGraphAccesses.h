@@ -15,19 +15,17 @@
 #ifndef DAWN_IIR_DEPENDENCYGRAPHACCESSES_H
 #define DAWN_IIR_DEPENDENCYGRAPHACCESSES_H
 
-#include "dawn/Compiler/DiagnosticsEngine.h"
 #include "dawn/IIR/DependencyGraph.h"
 #include "dawn/IIR/Extents.h"
+#include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/TypeTraits.h"
 #include <set>
 #include <unordered_map>
 
 namespace dawn {
 class OptimizerContext;
-class Stmt;
 
 namespace iir {
-
 class Accesses;
 class StatementAccessesPair;
 class StencilMetaInformation;

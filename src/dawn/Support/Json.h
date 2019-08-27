@@ -20,7 +20,7 @@
 #ifndef DAWN_SUPPORT_JSON_H
 #define DAWN_SUPPORT_JSON_H
 
-#include "dawn/Support/External/json/json.hpp"
+#include <nlohmann/json.hpp>
 
 namespace dawn {
 
