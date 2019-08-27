@@ -542,8 +542,8 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
       auto field = makeField(protoField);
       sirStencilCall->Args.push_back(field);
     }
-    auto stmt = std::make_shared<iir::StencilCallDeclStmt>(sirStencilCall,
-                                                      makeLocation(call.stencil_call_decl_stmt()));
+    auto stmt = std::make_shared<iir::StencilCallDeclStmt>(
+        sirStencilCall, makeLocation(call.stencil_call_decl_stmt()));
     stmt->setID(call.stencil_call_decl_stmt().id());
     metadata.insertStencilCallStmt(stmt, IDToCall.first);
   }
@@ -595,6 +595,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
   for(const auto& protoStencils : protoIIR.stencils()) {
     int mssPos = 0;
     sir::Attr attributes;
+
     target->getIIR()->insertChild(
         make_unique<iir::Stencil>(target->getMetaData(), attributes, protoStencils.stencilid()),
         target->getIIR());
