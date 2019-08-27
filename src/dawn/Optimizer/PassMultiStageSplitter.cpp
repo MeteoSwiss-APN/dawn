@@ -18,7 +18,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
-#include "dawn/SIR/AST.h"
+#include "dawn/IIR/AST.h"
 #include "dawn/Support/Format.h"
 #include <deque>
 #include <iostream>

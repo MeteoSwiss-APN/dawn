@@ -260,7 +260,7 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
   // Generate code
   std::unique_ptr<codegen::CodeGen> CG;
 
-  if(options_->Backend == "gridtools") {
+  if(options_->Backend == "gt" || options_->Backend == "gridtools") {
     CG = make_unique<codegen::gt::GTCodeGen>(optimizer->getStencilInstantiationMap(), *diagnostics_,
                                              options_->UseParallelEP, options_->MaxHaloPoints);
   } else if(options_->Backend == "c++-naive") {
@@ -269,7 +269,7 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
   } else if(options_->Backend == "cuda") {
     CG = make_unique<codegen::cuda::CudaCodeGen>(
         optimizer->getStencilInstantiationMap(), *diagnostics_, options_->MaxHaloPoints,
-        options_->nsms, options_->maxBlocksPerSM, options_->block_size);
+        options_->nsms, options_->maxBlocksPerSM, options_->domain_size);
   } else if(options_->Backend == "c++-opt") {
     dawn_unreachable("GTClangOptCXX not supported yet");
   } else {

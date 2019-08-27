@@ -66,7 +66,6 @@ yoda_add_library(
           UIDGenerator.h
           Unreachable.cpp
           Unreachable.h
-          VisitorHelpers.h
           ../Dawn.h
   OBJECT
 )

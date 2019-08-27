@@ -11,9 +11,9 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-#ifndef DAWN_SIR_VISITORHELPERS_H
-#define DAWN_SIR_VISITORHELPERS_H
-#include "dawn/SIR/ASTVisitor.h"
+#ifndef DAWN_AST_ASTVISITORHELPERS_H
+#define DAWN_AST_ASTVISITORHELPERS_H
+#include "dawn/AST/ASTVisitor.h"
 
 #define ACCEPTVISITOR(subtype, type)                                                               \
   virtual inline void accept(ASTVisitor& visitor) override {                                       \

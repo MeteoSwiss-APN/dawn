@@ -24,10 +24,8 @@
 
 namespace dawn {
 class OptimizerContext;
-class Stmt;
 
 namespace iir {
-
 class Accesses;
 class StatementAccessesPair;
 class StencilMetaInformation;
