@@ -208,7 +208,7 @@ void CudaCodeGen::generateStencilClasses(
     //
     // Run-Method
     //
-    generateStencilRunMethod(stencilClass, stencil, codeGenProperties, stencilInstantiation,
+    generateStencilRunMethod(stencilClass, stencil, stencilProperties, stencilInstantiation,
                              paramNameToType, globalsMap);
   }
 }
@@ -409,7 +409,7 @@ void CudaCodeGen::generateStencilWrapperRun(
 
 void CudaCodeGen::generateStencilRunMethod(
     Structure& stencilClass, const iir::Stencil& stencil,
-    const CodeGenProperties& codeGenProperties,
+    const std::shared_ptr<StencilProperties>& stencilProperties,
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const std::unordered_map<std::string, std::string>& paramNameToType,
     const sir::GlobalVariableMap& globalsMap) const {
@@ -427,9 +427,8 @@ void CudaCodeGen::generateStencilRunMethod(
                          }));
 
   for(const auto& field : nonTempFields) {
-    stencilRunMethod.addArg(
-        codeGenProperties.getParamType(stencilInstantiation, field.second.Name) + " " +
-        field.second.Name + "_ds");
+    stencilRunMethod.addArg(stencilProperties->paramNameToType_.at(field.second.Name) + " " +
+                            field.second.Name + "_ds");
   }
 
   stencilRunMethod.startBody();

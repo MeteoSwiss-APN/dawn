@@ -74,7 +74,7 @@ private:
 
   void
   generateStencilRunMethod(Structure& stencilClass, const iir::Stencil& stencil,
-                           const CodeGenProperties& codeGenProperties,
+                           const std::shared_ptr<StencilProperties>& stencilProperties,
                            const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                            const std::unordered_map<std::string, std::string>& paramNameToType,
                            const sir::GlobalVariableMap& globalsMap) const;
