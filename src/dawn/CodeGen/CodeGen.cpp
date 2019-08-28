@@ -204,12 +204,6 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
         std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
             [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
 
-    // list of template for storages used in the stencil class
-    std::vector<std::string> StencilTemplates(nonTempFields.size());
-    int cnt = 0;
-    std::generate(StencilTemplates.begin(), StencilTemplates.end(),
-                  [cnt]() mutable { return "StorageType" + std::to_string(cnt++); });
-
     for(const auto& field : nonTempFields) {
       paramNameToType.emplace(field.second.Name, getStorageType(field.second.Dimensions));
     }
