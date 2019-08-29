@@ -217,7 +217,8 @@ std::string GTCodeGen::generateStencilInstantiation(
 
   std::stringstream ssSW, ssMS, tss;
 
-  Namespace gridtoolsNamespace("gridtools", ssSW);
+  Namespace dawnNamespace("dawn_generated", ssSW);		
+  Namespace gridtoolsNamespace("gt", ssSW);		
 
   Class stencilWrapperClass(stencilInstantiation->getName(), ssSW);
   stencilWrapperClass.changeAccessibility(
@@ -251,6 +252,7 @@ std::string GTCodeGen::generateStencilInstantiation(
   stencilWrapperClass.commit();
 
   gridtoolsNamespace.commit();
+  dawnNamespace.commit();
 
   return ssSW.str();
 }
@@ -939,7 +941,7 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   }
 
   // Generate globals
-  std::string globals = generateGlobals(context_, "gridtools");
+  std::string globals = generateGlobals(context_, "dawn_generated", "gt");  
 
   // If we need more than 20 elements in boost::mpl containers, we need to increment to the
   // nearest multiple of ten

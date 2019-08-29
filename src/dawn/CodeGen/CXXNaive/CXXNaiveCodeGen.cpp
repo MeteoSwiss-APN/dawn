@@ -74,6 +74,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
 
   std::stringstream ssSW;
 
+  Namespace dawnNamespace("dawn_generated", ssSW);
   Namespace cxxnaiveNamespace("cxxnaive", ssSW);
 
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
@@ -98,6 +99,7 @@ std::string CXXNaiveCodeGen::generateStencilInstantiation(
   StencilWrapperClass.commit();
 
   cxxnaiveNamespace.commit();
+  dawnNamespace.commit();
 
   return ssSW.str();
 }
@@ -523,7 +525,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
   }
 
-  std::string globals = generateGlobals(context_, "cxxnaive");
+  std::string globals = generateGlobals(context_, "dawn_generated", "cxxnaive");
 
   std::vector<std::string> ppDefines;
   auto makeDefine = [](std::string define, int value) {

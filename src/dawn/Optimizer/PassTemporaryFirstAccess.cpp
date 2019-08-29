@@ -17,7 +17,7 @@
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/SIR/ASTVisitor.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/Support/IndexRange.h"
 #include <algorithm>
 #include <set>
@@ -28,7 +28,7 @@ namespace dawn {
 
 namespace {
 
-class UnusedFieldVisitor : public ASTVisitorForwarding {
+class UnusedFieldVisitor : public iir::ASTVisitorForwarding {
   int AccessID_;
   bool fieldIsUnused_;
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
@@ -39,13 +39,13 @@ public:
       : AccessID_(AccessID), fieldIsUnused_(false), instantiation_(instantiation) {}
 
   std::shared_ptr<const iir::StencilFunctionInstantiation>
-  getStencilFunctionInstantiation(const std::shared_ptr<StencilFunCallExpr>& expr) {
+  getStencilFunctionInstantiation(const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
     if(!functionInstantiationStack_.empty())
       return functionInstantiationStack_.top()->getStencilFunctionInstantiation(expr);
     return instantiation_->getMetaData().getStencilFunctionInstantiation(expr);
   }
 
-  void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
+  void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override {
     std::shared_ptr<const iir::StencilFunctionInstantiation> funCall =
         getStencilFunctionInstantiation(expr);
 
@@ -56,7 +56,7 @@ public:
     funCall->getAST()->accept(*this);
 
     // Visit arguments
-    ASTVisitorForwarding::visit(expr);
+    iir::ASTVisitorForwarding::visit(expr);
     functionInstantiationStack_.pop();
   }
 
@@ -84,7 +84,7 @@ bool PassTemporaryFirstAccess::run(
     }
 
     // {AccesID : (isFirstAccessWrite, Stmt)}
-    std::unordered_map<int, std::pair<bool, std::shared_ptr<Stmt>>> accessMap;
+    std::unordered_map<int, std::pair<bool, std::shared_ptr<iir::Stmt>>> accessMap;
 
     for(const auto& stmtAccessesPair : iterateIIROver<iir::StatementAccessesPair>(*stencilPtr)) {
       const auto& accesses = stmtAccessesPair->getAccesses();
@@ -104,7 +104,7 @@ bool PassTemporaryFirstAccess::run(
       // Is first access to the temporary a read?
       if(accessPair.second.first == false) {
         int AccessID = accessPair.first;
-        const std::shared_ptr<Stmt>& stmt = accessPair.second.second;
+        const std::shared_ptr<iir::Stmt>& stmt = accessPair.second.second;
 
         // Check if the statment contains a stencil function call in which the field is unused.
         // If a field is unused, we still have to add it as an input field of the stencil function.

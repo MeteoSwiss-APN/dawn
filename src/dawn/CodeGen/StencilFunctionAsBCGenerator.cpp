@@ -4,15 +4,15 @@
 namespace dawn {
 namespace codegen {
 
-std::string StencilFunctionAsBCGenerator::getName(const std::shared_ptr<Stmt>& stmt) const {
+std::string StencilFunctionAsBCGenerator::getName(const std::shared_ptr<iir::Stmt>& stmt) const {
   return metadata_.getFieldNameFromAccessID(metadata_.getAccessIDFromStmt(stmt));
 }
 
-std::string StencilFunctionAsBCGenerator::getName(const std::shared_ptr<Expr>& expr) const {
+std::string StencilFunctionAsBCGenerator::getName(const std::shared_ptr<iir::Expr>& expr) const {
   return metadata_.getFieldNameFromAccessID(metadata_.getAccessIDFromExpr(expr));
 }
 
-void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
+void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   auto printOffset = [](const Array3i& argumentoffsets) {
     std::string retval = "";
     std::array<std::string, 3> dims{"i", "j", "k"};
@@ -39,7 +39,7 @@ void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<FieldAccessExpr>&
                       printOffset(expr->getOffset()));
 }
 
-void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<VarAccessExpr>& expr) {
+void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   if(metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable,
                             metadata_.getAccessIDFromExpr(expr)))
     ss_ << "m_globals.";
@@ -53,7 +53,7 @@ void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<VarAccessExpr>& e
   }
 }
 
-void BCGenerator::generate(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
+void BCGenerator::generate(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) {
   iir::Extents extents = metadata_.getBoundaryConditionExtentsFromBCStmt(stmt);
   int haloIMinus = abs(extents[0].Minus);
   int haloIPlus = abs(extents[0].Plus);

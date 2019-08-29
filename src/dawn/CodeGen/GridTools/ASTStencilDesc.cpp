@@ -16,7 +16,7 @@
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/GridTools/CodeGenUtils.h"
 #include "dawn/CodeGen/StencilFunctionAsBCGenerator.h"
-#include "dawn/SIR/AST.h"
+#include "dawn/IIR/AST.h"
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
@@ -33,11 +33,11 @@ ASTStencilDesc::ASTStencilDesc(
 
 ASTStencilDesc::~ASTStencilDesc() {}
 
-std::string ASTStencilDesc::getName(const std::shared_ptr<Stmt>& stmt) const {
+std::string ASTStencilDesc::getName(const std::shared_ptr<iir::Stmt>& stmt) const {
   return metadata_.getFieldNameFromAccessID(metadata_.getAccessIDFromStmt(stmt));
 }
 
-std::string ASTStencilDesc::getName(const std::shared_ptr<Expr>& expr) const {
+std::string ASTStencilDesc::getName(const std::shared_ptr<iir::Expr>& expr) const {
   return metadata_.getFieldNameFromAccessID(metadata_.getAccessIDFromExpr(expr));
 }
 
@@ -45,21 +45,21 @@ std::string ASTStencilDesc::getName(const std::shared_ptr<Expr>& expr) const {
 //     Stmt
 //===------------------------------------------------------------------------------------------===//
 
-void ASTStencilDesc::visit(const std::shared_ptr<BlockStmt>& stmt) { Base::visit(stmt); }
+void ASTStencilDesc::visit(const std::shared_ptr<iir::BlockStmt>& stmt) { Base::visit(stmt); }
 
-void ASTStencilDesc::visit(const std::shared_ptr<ExprStmt>& stmt) { Base::visit(stmt); }
+void ASTStencilDesc::visit(const std::shared_ptr<iir::ExprStmt>& stmt) { Base::visit(stmt); }
 
-void ASTStencilDesc::visit(const std::shared_ptr<ReturnStmt>& stmt) {
+void ASTStencilDesc::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
   dawn_unreachable("ReturnStmt not allowed in StencilDesc AST");
 }
 
-void ASTStencilDesc::visit(const std::shared_ptr<VarDeclStmt>& stmt) { Base::visit(stmt); }
+void ASTStencilDesc::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) { Base::visit(stmt); }
 
-void ASTStencilDesc::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) {
+void ASTStencilDesc::visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) {
   dawn_unreachable("VerticalRegionDeclStmt not allowed in StencilDesc AST");
 }
 
-void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
+void ASTStencilDesc::visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) {
   int stencilID = metadata_.getStencilIDFromStencilCallStmt(stmt);
 
   const auto& stencil = instantiation_->getIIR()->getStencil(stencilID);
@@ -73,37 +73,37 @@ void ASTStencilDesc::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
       << ".get_stencil()->run(" + RangeToString(",", "", "")(plchdrs) + "); " << std::endl;
 }
 
-void ASTStencilDesc::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) {
+void ASTStencilDesc::visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) {
   BCGenerator bcGen(metadata_, ss_);
   bcGen.generate(stmt);
 }
 
-void ASTStencilDesc::visit(const std::shared_ptr<IfStmt>& stmt) { Base::visit(stmt); }
+void ASTStencilDesc::visit(const std::shared_ptr<iir::IfStmt>& stmt) { Base::visit(stmt); }
 
 //===------------------------------------------------------------------------------------------===//
 //     Expr
 //===------------------------------------------------------------------------------------------===//
 
 // TODO use the forwarding visitor?
-void ASTStencilDesc::visit(const std::shared_ptr<UnaryOperator>& expr) { Base::visit(expr); }
+void ASTStencilDesc::visit(const std::shared_ptr<iir::UnaryOperator>& expr) { Base::visit(expr); }
 
-void ASTStencilDesc::visit(const std::shared_ptr<BinaryOperator>& expr) { Base::visit(expr); }
+void ASTStencilDesc::visit(const std::shared_ptr<iir::BinaryOperator>& expr) { Base::visit(expr); }
 
-void ASTStencilDesc::visit(const std::shared_ptr<AssignmentExpr>& expr) { Base::visit(expr); }
+void ASTStencilDesc::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) { Base::visit(expr); }
 
-void ASTStencilDesc::visit(const std::shared_ptr<TernaryOperator>& expr) { Base::visit(expr); }
+void ASTStencilDesc::visit(const std::shared_ptr<iir::TernaryOperator>& expr) { Base::visit(expr); }
 
-void ASTStencilDesc::visit(const std::shared_ptr<FunCallExpr>& expr) { Base::visit(expr); }
+void ASTStencilDesc::visit(const std::shared_ptr<iir::FunCallExpr>& expr) { Base::visit(expr); }
 
-void ASTStencilDesc::visit(const std::shared_ptr<StencilFunCallExpr>& expr) {
+void ASTStencilDesc::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
   dawn_unreachable("StencilFunCallExpr not allowed in StencilDesc AST");
 }
 
-void ASTStencilDesc::visit(const std::shared_ptr<StencilFunArgExpr>& expr) {
+void ASTStencilDesc::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) {
   dawn_unreachable("StencilFunArgExpr not allowed in StencilDesc AST");
 }
 
-void ASTStencilDesc::visit(const std::shared_ptr<VarAccessExpr>& expr) {
+void ASTStencilDesc::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   if(metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable,
                             metadata_.getAccessIDFromExpr(expr)))
     ss_ << "m_globals.";
@@ -117,9 +117,9 @@ void ASTStencilDesc::visit(const std::shared_ptr<VarAccessExpr>& expr) {
   }
 }
 
-void ASTStencilDesc::visit(const std::shared_ptr<LiteralAccessExpr>& expr) { Base::visit(expr); }
+void ASTStencilDesc::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) { Base::visit(expr); }
 
-void ASTStencilDesc::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
+void ASTStencilDesc::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   dawn_unreachable("FieldAccessExpr not allowed in StencilDesc AST");
 }
 
