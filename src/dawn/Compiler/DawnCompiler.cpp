@@ -115,6 +115,16 @@ static std::string remove_fileextension(std::string fullName, std::string extens
   return truncation;
 }
 
+static OptimizerContext::OptimizerContextOptions
+createOptimizerOptionsFromAllOptions(const Options& options) {
+  OptimizerContext::OptimizerContextOptions retval;
+#define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
+  retval.NAME = options.NAME;
+#include "dawn/Optimizer/OptimizerOptions.inc"
+#undef OPT
+  return retval;
+}
+
 DawnCompiler::DawnCompiler(Options* options) : diagnostics_(make_unique<DiagnosticsEngine>()) {
   options_ = options ? make_unique<Options>(*options) : make_unique<Options>();
 }
@@ -158,8 +168,12 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
   }
 
   // Initialize optimizer
+  OptimizerContext::OptimizerContextOptions optimizerOptions;
+  if(options_) {
+    optimizerOptions = createOptimizerOptionsFromAllOptions(*options_);
+  }
   std::unique_ptr<OptimizerContext> optimizer =
-      make_unique<OptimizerContext>(getDiagnostics(), getOptions(), SIR);
+      make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, SIR);
   PassManager& passManager = optimizer->getPassManager();
 
   // Setup pass interface
@@ -246,7 +260,7 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
   // Generate code
   std::unique_ptr<codegen::CodeGen> CG;
 
-  if(options_->Backend == "gridtools") {
+  if(options_->Backend == "gt" || options_->Backend == "gridtools") {
     CG = make_unique<codegen::gt::GTCodeGen>(optimizer->getStencilInstantiationMap(), *diagnostics_,
                                              options_->UseParallelEP, options_->MaxHaloPoints);
   } else if(options_->Backend == "c++-naive") {

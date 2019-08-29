@@ -13,9 +13,6 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Compiler/DawnCompiler.h"
-#include "dawn/IIR/ASTStmt.h"
-#include "dawn/IIR/ASTUtil.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -565,7 +562,7 @@ public:
 };
 } // namespace
 
-OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, Options& options,
+OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, OptimizerContextOptions options,
                                    const std::shared_ptr<SIR>& SIR)
     : diagnostics_(diagnostics), options_(options), SIR_(SIR) {
   DAWN_LOG(INFO) << "Intializing OptimizerContext ... ";
@@ -649,8 +646,10 @@ const DiagnosticsEngine& OptimizerContext::getDiagnostics() const { return diagn
 
 DiagnosticsEngine& OptimizerContext::getDiagnostics() { return diagnostics_; }
 
-const Options& OptimizerContext::getOptions() const { return options_; }
+const OptimizerContext::OptimizerContextOptions& OptimizerContext::getOptions() const {
+  return options_;
+}
 
-Options& OptimizerContext::getOptions() { return options_; }
+OptimizerContext::OptimizerContextOptions& OptimizerContext::getOptions() { return options_; }
 
 } // namespace dawn

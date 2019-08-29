@@ -408,7 +408,7 @@ StencilMetaInformation::getStencilFunctionInstantiation(
   return it->second;
 }
 
-void StencilMetaInformation::setAccessIDNamePair(int accessID, const std::string& name) {
+void StencilMetaInformation::setAccessIDNamePair(int accessID, const std::string& name) {  
   AccessIDToNameMap_.emplace(accessID, name);
 }
 
