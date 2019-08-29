@@ -145,6 +145,11 @@ public:
       stmt->getElseStmt()->accept(*this);
     }
   }
+  void visit(const std::shared_ptr<ReductionOverNeighborStmt>& stmt) override {
+    if(scopeDepth_ == 0)
+      ss_ << std::string(curIndent_, ' ');
+    ss_ << "Reduce (" << stmt->getOp() << "): " << '\n';
+  }
 
   void visit(const std::shared_ptr<UnaryOperator>& expr) override {
     ss_ << "(";

@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/ASTUtil.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include <stack>
 
 namespace dawn {
@@ -120,6 +120,7 @@ public:
   void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override;
 
   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override;
+  void visit(const std::shared_ptr<iir::ReductionOverNeighborStmt>& expr) override;
 };
 
 } // namespace dawn

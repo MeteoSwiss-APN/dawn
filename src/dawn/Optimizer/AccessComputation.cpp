@@ -13,12 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/AccessComputation.h"
+#include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/IIR/AST.h"
-#include "dawn/IIR/ASTVisitor.h"
 #include <iostream>
 #include <stack>
 
@@ -163,7 +163,8 @@ public:
       calleeAccesses->mergeWriteOffset(getAccessIDFromStmt(var), Array3i{{0, 0, 0}});
   }
 
-  void mergeWriteExtent(const std::shared_ptr<iir::FieldAccessExpr>& field, const iir::Extents& extent) {
+  void mergeWriteExtent(const std::shared_ptr<iir::FieldAccessExpr>& field,
+                        const iir::Extents& extent) {
     for(auto& callerAccesses : callerAccessesList_)
       callerAccesses->mergeWriteExtent(getAccessIDFromExpr(field), extent);
 
@@ -203,7 +204,8 @@ public:
       calleeAccesses->mergeReadOffset(getAccessIDFromExpr(lit), Array3i{{0, 0, 0}});
   }
 
-  void mergeReadExtent(const std::shared_ptr<iir::FieldAccessExpr>& field, const iir::Extents& extent) {
+  void mergeReadExtent(const std::shared_ptr<iir::FieldAccessExpr>& field,
+                       const iir::Extents& extent) {
     for(auto& callerAccesses : callerAccessesList_)
       callerAccesses->mergeReadExtent(getAccessIDFromExpr(field), extent);
 
@@ -313,6 +315,9 @@ public:
       expr->accept(*this);
 
     removeLastChildAccesses();
+  }
+  virtual void visit(const std::shared_ptr<iir::ReductionOverNeighborStmt>& stmt) override {
+    DAWN_ASSERT_MSG(0, "ReductionOverNeighborStmt not allowed in this context");
   }
 
   virtual void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override {

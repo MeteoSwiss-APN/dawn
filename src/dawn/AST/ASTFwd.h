@@ -28,6 +28,7 @@ class VerticalRegionDeclStmt;
 class StencilCallDeclStmt;
 class BoundaryConditionDeclStmt;
 class IfStmt;
+class ReductionOverNeighborStmt;
 
 class Expr;
 class NOPExpr;

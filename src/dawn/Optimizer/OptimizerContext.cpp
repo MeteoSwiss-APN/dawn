@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/AST/ASTStmt.h"
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTUtil.h"
@@ -78,9 +79,7 @@ static void createIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target
   int out_fieldID = target->getMetaData().insertField(
       iir::FieldAccessType::FAT_APIField, sirOutField->Name, sirOutField->fieldDimensions);
 
-  auto expr = std::make_shared<ast::AssignmentExpr>(lhs, rhs);
-  expr->setID(target->nextUID());
-  auto stmt = std::make_shared<ast::ExprStmt>(expr);
+  auto stmt = std::make_shared<ast::ReductionOverNeighborStmt>(lhs, "+", rhs);
   stmt->setID(target->nextUID());
   auto statement = std::make_shared<Statement>(stmt, nullptr);
   auto insertee = make_unique<iir::StatementAccessesPair>(statement);
@@ -664,6 +663,9 @@ public:
     int AccessID = -instantiation_->nextUID();
     metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, expr->getValue());
     metadata_.insertExprToAccessID(expr, AccessID);
+  }
+  void visit(const std::shared_ptr<iir::ReductionOverNeighborStmt>& stmt) override {
+    pushBackStatement(stmt);
   }
 
   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {}
