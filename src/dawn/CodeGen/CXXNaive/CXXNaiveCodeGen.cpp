@@ -246,6 +246,9 @@ void CXXNaiveCodeGen::generateStencilClasses(
     std::string stencilName =
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
 
+    auto stencilProperties =
+        codeGenProperties.getStencilProperties(StencilContext::SC_Stencil, stencilName);
+
     if(stencil.isEmpty())
       continue;
 
@@ -279,7 +282,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
 
     stencilClass.addComment("Input/Output storages");
     for(auto it = nonTempFields.begin(); it != nonTempFields.end(); ++it) {
-      std::string type = codeGenProperties.getParamType(stencilInstantiation, (*it).second.Name);
+      std::string type = stencilProperties->paramNameToType_.at((*it).second.Name);
       stencilClass.addMember(type + "&", "m_" + (*it).second.Name);
     }
 
@@ -294,7 +297,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
       stencilClassCtr.addArg("const globals& globals_");
     }
     for(auto it = nonTempFields.begin(); it != nonTempFields.end(); ++it) {
-      std::string type = codeGenProperties.getParamType(stencilInstantiation, (*it).second.Name);
+      std::string type = stencilProperties->paramNameToType_.at((*it).second.Name);
       stencilClassCtr.addArg(type + "& " + (*it).second.Name + "_");
     }
 
@@ -330,7 +333,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
     //
     MemberFunction stencilRunMethod = stencilClass.addMemberFunction("virtual void", "run", "");
     for(auto it = nonTempFields.begin(); it != nonTempFields.end(); ++it) {
-      std::string type = codeGenProperties.getParamType(stencilInstantiation, (*it).second.Name);
+      std::string type = stencilProperties->paramNameToType_.at((*it).second.Name);
       stencilRunMethod.addArg(type + "& " + (*it).second.Name + "_");
     }
 
@@ -344,10 +347,9 @@ void CXXNaiveCodeGen::generateStencilClasses(
       const iir::MultiStage& multiStage = *multiStagePtr;
 
       // create all the data views
-      const auto& usedFields = multiStage.getFields();
       for(auto it = nonTempFields.begin(); it != nonTempFields.end(); ++it) {
         const auto fieldName = (*it).second.Name;
-        std::string type = codeGenProperties.getParamType(stencilInstantiation, fieldName);
+        std::string type = stencilProperties->paramNameToType_.at(fieldName);
         stencilRunMethod.addStatement(c_gt() + "data_view<" + type + "> " + fieldName + "= " +
                                       c_gt() + "make_host_view(m_" + fieldName + ")");
         stencilRunMethod.addStatement("std::array<int,3> " + fieldName + "_offsets{0,0,0}");
