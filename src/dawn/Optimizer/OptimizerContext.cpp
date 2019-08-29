@@ -645,7 +645,9 @@ const Options& OptimizerContext::getOptions() const { return options_; }
 Options& OptimizerContext::getOptions() { return options_; }
 
 void OptimizerContext::fillIIR() {
-  for(const auto& stencil : SIR_->Stencils)
+  DAWN_ASSERT(SIR_);
+  for(const auto& stencil : SIR_->Stencils) {
+    DAWN_ASSERT(stencil);
     if(!stencil->Attributes.has(sir::Attr::AK_NoCodeGen)) {
       stencilInstantiationMap_.insert(std::make_pair(
           stencil->Name, std::make_shared<iir::StencilInstantiation>(
@@ -654,6 +656,7 @@ void OptimizerContext::fillIIR() {
     } else {
       DAWN_LOG(INFO) << "Skipping processing of `" << stencil->Name << "`";
     }
+  }
 }
 
 bool OptimizerContext::restoreIIR(std::string const& name,

@@ -486,7 +486,7 @@ IIRSerializer::serializeImpl(const std::shared_ptr<iir::StencilInstantiation>& i
   std::set<std::string> usedBC;
   std::transform(
       fieldNameToBCMap.begin(), fieldNameToBCMap.end(), std::inserter(usedBC, usedBC.end()),
-      [](std::pair<std::string, std::shared_ptr<ast::BoundaryConditionDeclStmt>> const& bc) {
+      [](std::pair<std::string, std::shared_ptr<iir::BoundaryConditionDeclStmt>> const& bc) {
         return bc.second->getFunctor();
       });
   serializeIIR(protoStencilInstantiation, instantiation->getIIR(), usedBC);
@@ -563,17 +563,17 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
     }
   }
 
-  struct DeclStmtFinder : public ast::ASTVisitorForwarding {
-    void visit(const std::shared_ptr<ast::StencilCallDeclStmt>& stmt) override {
+  struct DeclStmtFinder : public iir::ASTVisitorForwarding {
+    void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override {
       stencilCallDecl.insert(std::make_pair(stmt->getID(), stmt));
       ASTVisitorForwarding::visit(stmt);
     }
-    void visit(const std::shared_ptr<ast::BoundaryConditionDeclStmt>& stmt) override {
+    void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override {
       boundaryConditionDecl.insert(std::make_pair(stmt->getID(), stmt));
       ASTVisitorForwarding::visit(stmt);
     }
-    std::map<int, std::shared_ptr<ast::StencilCallDeclStmt>> stencilCallDecl;
-    std::map<int, std::shared_ptr<ast::BoundaryConditionDeclStmt>> boundaryConditionDecl;
+    std::map<int, std::shared_ptr<iir::StencilCallDeclStmt>> stencilCallDecl;
+    std::map<int, std::shared_ptr<iir::BoundaryConditionDeclStmt>> boundaryConditionDecl;
   };
   DeclStmtFinder declStmtFinder;
   for(auto& stmt : target->getIIR()->getControlFlowDescriptor().getStatements())
@@ -600,7 +600,7 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
     metadata.fieldnameToBoundaryConditionMap_[FieldnameToBC.first] =
         foundDecl != declStmtFinder.boundaryConditionDecl.end()
             ? foundDecl->second
-            : dyn_pointer_cast<ast::BoundaryConditionDeclStmt>(makeStmt((FieldnameToBC.second)));
+            : dyn_pointer_cast<iir::BoundaryConditionDeclStmt>(makeStmt((FieldnameToBC.second)));
   }
 
   for(auto fieldIDInitializedDims : protoMetaData.fieldidtolegaldimensions()) {
@@ -742,8 +742,9 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
       new_arg->Kind = sir::StencilFunctionArg::AK_Field;
       stencilFunction->Args.push_back(std::move(new_arg));
     }
-    auto stmt = std::dynamic_pointer_cast<ast::BlockStmt>(makeStmt(boundaryCondition.aststmt()));
-    stencilFunction->Asts.push_back(std::make_shared<ast::AST>(stmt));
+    auto stmt = std::dynamic_pointer_cast<iir::BlockStmt>(makeStmt(boundaryCondition.aststmt()));
+    DAWN_ASSERT(stmt);
+    stencilFunction->Asts.push_back(std::make_shared<iir::AST>(stmt));
 
     target->getIIR()->insertStencilFunction(stencilFunction);
   }

@@ -196,8 +196,6 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     optimizer->checkAndPushBack<PassInlining>(getOptions().Backend == "cuda" ||
                                                   getOptions().SerializeIIR,
                                               PassInlining::InlineStrategy::ComputationsOnTheFly);
-    optimizer->checkAndPushBack<PassInlining>(true,
-                                              PassInlining::InlineStrategy::ComputationsOnTheFly);
 
     DAWN_LOG(INFO) << "All the passes ran with the current command line arguments:";
     for(const auto& a : optimizer->getPassManager().getPasses()) {
