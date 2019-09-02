@@ -24,6 +24,8 @@
 #include <fstream>
 #include <google/protobuf/util/json_util.h>
 
+#include "dawn/Support/test_mat.h"
+
 namespace dawn {
 static proto::iir::Extents makeProtoExtents(dawn::iir::Extents const& extents) {
   proto::iir::Extents protoExtents;
@@ -624,22 +626,30 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
                                    const proto::iir::IIR& protoIIR) {
   for(auto GlobalToValue : protoIIR.globalvariabletovalue()) {
     std::shared_ptr<sir::Value> value = std::make_shared<sir::Value>();
+
     switch(GlobalToValue.second.type()) {
     case proto::iir::GlobalValueAndType_TypeKind_Boolean:
       value->setType(sir::Value::Boolean);
+      if(GlobalToValue.second.valueisset()) {
+        value->setValue(GlobalToValue.second.value());
+      }
       break;
     case proto::iir::GlobalValueAndType_TypeKind_Integer:
       value->setType(sir::Value::Integer);
+      if(GlobalToValue.second.valueisset()) {
+        value->setValue((int) GlobalToValue.second.value());
+      }
       break;
     case proto::iir::GlobalValueAndType_TypeKind_Double:
       value->setType(sir::Value::Double);
+      if(GlobalToValue.second.valueisset()) {
+        value->setValue((double) GlobalToValue.second.value());
+      }
       break;
     default:
       dawn_unreachable("unsupported type");
     }
-    if(GlobalToValue.second.valueisset()) {
-      value->setValue(GlobalToValue.second.value());
-    }
+
     target->getIIR()->insertGlobalVariable(GlobalToValue.first, value);
   }
 

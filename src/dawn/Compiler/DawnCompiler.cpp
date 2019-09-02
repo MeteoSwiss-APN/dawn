@@ -48,6 +48,8 @@
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
 
+#include "dawn/Support/test_mat.h"
+
 namespace dawn {
 
 namespace {
@@ -166,7 +168,6 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
       dawn_unreachable("Unknown SIRFormat option");
     }
   }
-
   // Initialize optimizer
   OptimizerContext::OptimizerContextOptions optimizerOptions;
   if(options_) {
@@ -215,10 +216,12 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     for(const auto& a : optimizer->getPassManager().getPasses()) {
       DAWN_LOG(INFO) << a->getName();
     }
+    
     int i = 0;
     for(auto& stencil : optimizer->getStencilInstantiationMap()) {
       // Run optimization passes
       std::shared_ptr<iir::StencilInstantiation> instantiation = stencil.second;
+
       DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `"
                      << instantiation->getName() << "` ...";
       if(!optimizer->getPassManager().runAllPassesOnStecilInstantiation(instantiation))
@@ -231,6 +234,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
             remove_fileextension(instantiation->getMetaData().getFileName(), ".cpp") + "." +
                 std::to_string(i) + ".iir",
             instantiation, serializationKind);
+        i++;
       }
     }
   } else {
