@@ -76,7 +76,6 @@ private:
   std::vector<Field> allFields_;
 };
 
-template <typename DataTraits>
 extern std::vector<Field> getFieldFromStencilAST(const std::shared_ptr<AST>& ast) {
   FieldFinder finder;
   ast->accept(finder);
