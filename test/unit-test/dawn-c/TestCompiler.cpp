@@ -65,10 +65,9 @@ TEST(CompilerTest, CompileCopyStencil) {
 
   auto ast = std::make_shared<dawn::sir::AST>(block(assign(field("out"), field("in"))));
   auto vr = std::make_shared<dawn::sir::VerticalRegion>(
-      ast,
       std::make_shared<dawn::sir::Interval>(dawn::sir::Interval::Start, dawn::sir::Interval::End),
       dawn::sir::VerticalRegion::LK_Forward);
-  stencil->StencilDescAst = std::make_shared<dawn::sir::AST>(block(verticalRegion(vr)));
+  stencil->StencilDescAst = std::make_shared<dawn::sir::AST>(block(verticalRegion(ast, vr)));
   sir->Stencils.emplace_back(stencil);
 
   std::string sirStr =

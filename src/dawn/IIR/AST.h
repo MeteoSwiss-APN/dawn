@@ -16,13 +16,11 @@
 #define DAWN_IIR_AST_H
 
 #include "dawn/AST/AST.h"
+#include "dawn/IIR/ASTData.h"
 
 namespace dawn {
 namespace iir {
-//
-// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
-//
-using AST = ast::AST;
+using AST = ast::AST<IIRASTData>;
 } // namespace iir
 } // namespace dawn
 

@@ -13,12 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/ASTStmt.h"
+#include "dawn/IIR/ASTStringifier.h"
 #include "dawn/IIR/AccessToNameMapper.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
-#include "dawn/IIR/ASTStringifier.h"
-#include "dawn/SIR/Statement.h"
 #include "dawn/Support/Printing.h"
 #include <sstream>
 
@@ -37,8 +37,7 @@ static std::string toStringImpl(const StatementAccessesPair* pair,
   std::string curIndentStr = std::string(curIndent, ' ');
 
   ss << initialIndentStr << "[\n" << curIndentStr << "Statement:\n";
-  ss << "\e[1m"
-     << ASTStringifier::toString(pair->getStatement()->ASTStmt, curIndent + DAWN_PRINT_INDENT)
+  ss << "\e[1m" << ASTStringifier::toString(pair->getStatement(), curIndent + DAWN_PRINT_INDENT)
      << "\e[0m\n";
 
   if(pair->getCallerAccesses()) {
@@ -63,11 +62,11 @@ static std::string toStringImpl(const StatementAccessesPair* pair,
 
 } // anonymous namespace
 
-StatementAccessesPair::StatementAccessesPair(const std::shared_ptr<Statement>& statement)
-    : statement_(statement), callerAccesses_(nullptr), calleeAccesses_(nullptr) {}
+StatementAccessesPair::StatementAccessesPair(const std::shared_ptr<iir::Stmt>& stmt)
+    : stmt_(stmt), callerAccesses_(nullptr), calleeAccesses_(nullptr) {}
 
 std::unique_ptr<StatementAccessesPair> StatementAccessesPair::clone() const {
-  auto cloneSAP = make_unique<StatementAccessesPair>(statement_);
+  auto cloneSAP = make_unique<StatementAccessesPair>(stmt_);
 
   if(callerAccesses_) {
     cloneSAP->callerAccesses_ = std::make_shared<Accesses>(*callerAccesses_);
@@ -86,11 +85,9 @@ std::unique_ptr<StatementAccessesPair> StatementAccessesPair::clone() const {
   return cloneSAP;
 }
 
-std::shared_ptr<Statement> StatementAccessesPair::getStatement() const { return statement_; }
+std::shared_ptr<iir::Stmt> StatementAccessesPair::getStatement() const { return stmt_; }
 
-void StatementAccessesPair::setStatement(const std::shared_ptr<Statement>& statement) {
-  statement_ = statement;
-}
+void StatementAccessesPair::setStatement(const std::shared_ptr<iir::Stmt>& stmt) { stmt_ = stmt; }
 
 std::shared_ptr<Accesses> StatementAccessesPair::getAccesses() const { return callerAccesses_; }
 
@@ -186,10 +183,10 @@ json::json StatementAccessesPair::print(const StencilMetaInformation& metadata,
 
 json::json StatementAccessesPair::jsonDump(const StencilMetaInformation& metadata) const {
   json::json node;
-  node["stmt"] = ASTStringifier::toString(getStatement()->ASTStmt, 0);
+  node["stmt"] = ASTStringifier::toString(getStatement(), 0);
 
   AccessToNameMapper accessToNameMapper(metadata);
-  getStatement()->ASTStmt->accept(accessToNameMapper);
+  getStatement()->accept(accessToNameMapper);
 
   node["write_accesses"] = print(metadata, accessToNameMapper, getAccesses()->getWriteAccesses());
   node["read_accesses"] = print(metadata, accessToNameMapper, getAccesses()->getReadAccesses());

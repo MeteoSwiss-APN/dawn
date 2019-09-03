@@ -13,12 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/StencilMetaInformation.h"
-#include "dawn/IIR/InstantiationHelper.h"
-#include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTStringifier.h"
 #include "dawn/IIR/ASTUtil.h"
 #include "dawn/IIR/ASTVisitor.h"
+#include "dawn/IIR/InstantiationHelper.h"
+#include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/FileUtil.h"
@@ -130,7 +130,7 @@ std::shared_ptr<StencilFunctionInstantiation> StencilMetaInformation::cloneStenc
       std::dynamic_pointer_cast<iir::StencilFunCallExpr>(stencilFun->getExpression()->clone());
   stencilFunExpr->setCallee(functionName);
 
-  auto sirStencilFun = std::make_shared<sir::StencilFunction>(*(stencilFun->getStencilFunction()));
+  auto sirStencilFun = std::make_shared<iir::StencilFunction>(*(stencilFun->getStencilFunction()));
   sirStencilFun->Name = functionName;
 
   stencilFunClone->setExpression(stencilFunExpr);
@@ -345,7 +345,8 @@ const std::unordered_map<int, int>& StencilMetaInformation::getStmtIDToAccessIDM
   return StmtIDToAccessIDMap_;
 }
 
-void StencilMetaInformation::insertExprToAccessID(const std::shared_ptr<iir::Expr>& expr, int accessID) {
+void StencilMetaInformation::insertExprToAccessID(const std::shared_ptr<iir::Expr>& expr,
+                                                  int accessID) {
   ExprIDToAccessIDMap_.emplace(expr->getID(), accessID);
 }
 
@@ -359,7 +360,8 @@ void StencilMetaInformation::eraseStmtToAccessID(std::shared_ptr<iir::Stmt> stmt
   StmtIDToAccessIDMap_.erase(stmt->getID());
 }
 
-void StencilMetaInformation::insertStmtToAccessID(const std::shared_ptr<iir::Stmt>& stmt, int accessID) {
+void StencilMetaInformation::insertStmtToAccessID(const std::shared_ptr<iir::Stmt>& stmt,
+                                                  int accessID) {
   DAWN_ASSERT(!StmtIDToAccessIDMap_.count(stmt->getID()));
   StmtIDToAccessIDMap_.emplace(stmt->getID(), accessID);
 }

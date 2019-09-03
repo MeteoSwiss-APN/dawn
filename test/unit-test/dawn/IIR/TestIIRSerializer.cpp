@@ -79,8 +79,7 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
             const auto& lhsStmt = lhsDoMethod->getChild(stmtidx);
             const auto& rhsStmt = rhsDoMethod->getChild(stmtidx);
             // check the statement
-            IIR_EARLY_EXIT(
-                (lhsStmt->getStatement()->ASTStmt->equals(rhsStmt->getStatement()->ASTStmt.get())));
+            IIR_EARLY_EXIT((lhsStmt->getStatement()->equals(rhsStmt->getStatement().get())));
 
             // check the accesses
             IIR_EARLY_EXIT((lhsStmt->getCallerAccesses() == rhsStmt->getCallerAccesses()));
@@ -108,7 +107,7 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
 
   IIR_EARLY_EXIT((lhsControlFlowStmts.size() == rhsControlFlowStmts.size()));
   for(int i = 0, size = lhsControlFlowStmts.size(); i < size; ++i) {
-    if(!lhsControlFlowStmts[i]->ASTStmt->equals(rhsControlFlowStmts[i]->ASTStmt.get()))
+    if(!lhsControlFlowStmts[i]->equals(rhsControlFlowStmts[i].get()))
       return false;
     if(lhsControlFlowStmts[i]->StackTrace) {
       if(rhsControlFlowStmts[i]->StackTrace) {
@@ -267,16 +266,13 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
 }
 
 TEST_F(IIRSerializerTest, ComplexStrucutes) {
-  auto statement = std::make_shared<Statement>(
-      std::make_shared<iir::StencilCallDeclStmt>(std::make_shared<ast::StencilCall>("me")),
-      nullptr);
-  statement->ASTStmt->getSourceLocation().Line = 10;
-  statement->ASTStmt->getSourceLocation().Column = 12;
-  referenceInstantiaton->getIIR()->getControlFlowDescriptor().insertStmt(statement);
+  auto stmt = std::make_shared<iir::StencilCallDeclStmt>(std::make_shared<ast::StencilCall>("me"));
+  stmt->getSourceLocation().Line = 10;
+  stmt->getSourceLocation().Column = 12;
+  referenceInstantiaton->getIIR()->getControlFlowDescriptor().insertStmt(stmt);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  auto stmt =
-      std::make_shared<iir::StencilCallDeclStmt>(std::make_shared<ast::StencilCall>("test"));
+  stmt = std::make_shared<iir::StencilCallDeclStmt>(std::make_shared<ast::StencilCall>("test"));
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   auto bcstmt = std::make_shared<iir::BoundaryConditionDeclStmt>("callee");
@@ -321,8 +317,7 @@ TEST_F(IIRSerializerTest, IIRTests) {
   auto expr = std::make_shared<iir::VarAccessExpr>("name");
   auto stmt = std::make_shared<iir::ExprStmt>(expr);
   stmt->setID(22);
-  auto statement = std::make_shared<Statement>(stmt, nullptr);
-  auto stmtAccessPair = make_unique<iir::StatementAccessesPair>(statement);
+  auto stmtAccessPair = make_unique<iir::StatementAccessesPair>(stmt);
   std::shared_ptr<iir::Accesses> callerAccesses = std::make_shared<iir::Accesses>();
   stmtAccessPair->setCallerAccesses(callerAccesses);
 

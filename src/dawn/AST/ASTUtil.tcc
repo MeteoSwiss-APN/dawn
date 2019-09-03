@@ -12,154 +12,166 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/AST/ASTUtil.h"
 #include "dawn/AST/AST.h"
-#include "dawn/AST/ASTVisitor.h"
 #include "dawn/Support/StringSwitch.h"
+#include "dawn/Support/Type.h"
 #include "dawn/Support/Unreachable.h"
 #include <functional>
 
 namespace dawn {
 namespace ast {
+
 //===------------------------------------------------------------------------------------------===//
 //     ExprReplacer
 //===------------------------------------------------------------------------------------------===//
 
-namespace {
+template <typename DataTraits>
+ExprReplacer<DataTraits>::ExprReplacer(const std::shared_ptr<Expr<DataTraits>>& oldExpr,
+                                       const std::shared_ptr<Expr<DataTraits>>& newExpr)
+    : oldExpr_(oldExpr), newExpr_(newExpr) {}
 
-/// @brief Replace `oldExpr` with `newExpr`
-class ExprReplacer : public ASTVisitor {
-  std::shared_ptr<Expr> oldExpr_;
-  std::shared_ptr<Expr> newExpr_;
+template <typename DataTraits>
+void ExprReplacer<DataTraits>::visit(const std::shared_ptr<BlockStmt<DataTraits>>& stmt) {
+  for(const auto& s : stmt->getChildren())
+    s->accept(*this);
+}
 
-public:
-  ExprReplacer(const std::shared_ptr<Expr>& oldExpr, const std::shared_ptr<Expr>& newExpr)
-      : oldExpr_(oldExpr), newExpr_(newExpr) {}
+template <typename DataTraits>
+void ExprReplacer<DataTraits>::visit(const std::shared_ptr<ExprStmt<DataTraits>>& stmt) {
+  if(stmt->getExpr() == oldExpr_)
+    stmt->setExpr(newExpr_);
+  else
+    stmt->getExpr()->accept(*this);
+}
 
-  void visit(const std::shared_ptr<BlockStmt>& stmt) override {
-    for(const auto& s : stmt->getChildren())
-      s->accept(*this);
-  }
+template <typename DataTraits>
+void ExprReplacer<DataTraits>::visit(const std::shared_ptr<ReturnStmt<DataTraits>>& stmt) {
+  if(stmt->getExpr() == oldExpr_)
+    stmt->setExpr(newExpr_);
+  else
+    stmt->getExpr()->accept(*this);
+}
 
-  void visit(const std::shared_ptr<ExprStmt>& stmt) override {
-    if(stmt->getExpr() == oldExpr_)
-      stmt->setExpr(newExpr_);
+template <typename DataTraits>
+void ExprReplacer<DataTraits>::visit(const std::shared_ptr<VarDeclStmt<DataTraits>>& stmt) {
+  for(auto& expr : stmt->getInitList()) {
+    if(expr == oldExpr_)
+      expr = newExpr_;
     else
-      stmt->getExpr()->accept(*this);
+      expr->accept(*this);
   }
+}
 
-  void visit(const std::shared_ptr<ReturnStmt>& stmt) override {
-    if(stmt->getExpr() == oldExpr_)
-      stmt->setExpr(newExpr_);
+template <typename DataTraits>
+void ExprReplacer<DataTraits>::visit(const std::shared_ptr<StencilCallDeclStmt<DataTraits>>& stmt) {
+}
+
+template <typename DataTraits>
+void ExprReplacer<DataTraits>::visit(
+    const std::shared_ptr<BoundaryConditionDeclStmt<DataTraits>>& stmt) {}
+
+template <typename DataTraits>
+void ExprReplacer<DataTraits>::visit(const std::shared_ptr<IfStmt<DataTraits>>& stmt) {
+  for(const auto& s : stmt->getChildren())
+    s->accept(*this);
+}
+
+template <typename DataTraits>
+void ExprReplacer<DataTraits>::visit(const std::shared_ptr<UnaryOperator<DataTraits>>& expr) {
+  if(expr->getOperand() == oldExpr_)
+    expr->setOperand(newExpr_);
+  else
+    expr->getOperand()->accept(*this);
+}
+
+template <typename DataTraits>
+void ExprReplacer<DataTraits>::visit(const std::shared_ptr<BinaryOperator<DataTraits>>& expr) {
+  if(expr->getLeft() == oldExpr_)
+    expr->setLeft(newExpr_);
+  else
+    expr->getLeft()->accept(*this);
+
+  if(expr->getRight() == oldExpr_)
+    expr->setRight(newExpr_);
+  else
+    expr->getRight()->accept(*this);
+}
+
+template <typename DataTraits>
+void ExprReplacer<DataTraits>::visit(const std::shared_ptr<AssignmentExpr<DataTraits>>& expr) {
+  if(expr->getLeft() == oldExpr_)
+    expr->setLeft(newExpr_);
+  else
+    expr->getLeft()->accept(*this);
+
+  if(expr->getRight() == oldExpr_)
+    expr->setRight(newExpr_);
+  else
+    expr->getRight()->accept(*this);
+}
+
+template <typename DataTraits>
+void ExprReplacer<DataTraits>::visit(const std::shared_ptr<TernaryOperator<DataTraits>>& expr) {
+  if(expr->getCondition() == oldExpr_)
+    expr->setCondition(newExpr_);
+  else
+    expr->getCondition()->accept(*this);
+
+  if(expr->getLeft() == oldExpr_)
+    expr->setLeft(newExpr_);
+  else
+    expr->getLeft()->accept(*this);
+
+  if(expr->getRight() == oldExpr_)
+    expr->setRight(newExpr_);
+  else
+    expr->getRight()->accept(*this);
+}
+
+template <typename DataTraits>
+void ExprReplacer<DataTraits>::visit(const std::shared_ptr<FunCallExpr<DataTraits>>& expr) {
+  for(auto& e : expr->getArguments()) {
+    if(e == oldExpr_)
+      e = newExpr_;
     else
-      stmt->getExpr()->accept(*this);
+      e->accept(*this);
   }
+}
 
-  void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
-    for(auto& expr : stmt->getInitList()) {
-      if(expr == oldExpr_)
-        expr = newExpr_;
-      else
-        expr->accept(*this);
-    }
-  }
-
-  void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) override {}
-  void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {}
-  void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override {}
-
-  void visit(const std::shared_ptr<IfStmt>& stmt) override {
-    for(const auto& s : stmt->getChildren())
-      s->accept(*this);
-  }
-
-  void visit(const std::shared_ptr<UnaryOperator>& expr) override {
-    if(expr->getOperand() == oldExpr_)
-      expr->setOperand(newExpr_);
+template <typename DataTraits>
+void ExprReplacer<DataTraits>::visit(const std::shared_ptr<StencilFunCallExpr<DataTraits>>& expr) {
+  for(auto& e : expr->getArguments()) {
+    if(e == oldExpr_)
+      e = newExpr_;
     else
-      expr->getOperand()->accept(*this);
+      e->accept(*this);
   }
+}
 
-  void visit(const std::shared_ptr<BinaryOperator>& expr) override {
-    if(expr->getLeft() == oldExpr_)
-      expr->setLeft(newExpr_);
-    else
-      expr->getLeft()->accept(*this);
+template <typename DataTraits>
+void ExprReplacer<DataTraits>::visit(const std::shared_ptr<StencilFunArgExpr<DataTraits>>& expr) {}
 
-    if(expr->getRight() == oldExpr_)
-      expr->setRight(newExpr_);
+template <typename DataTraits>
+void ExprReplacer<DataTraits>::visit(const std::shared_ptr<VarAccessExpr<DataTraits>>& expr) {
+  if(expr->isArrayAccess()) {
+    if(expr->getIndex() == oldExpr_)
+      expr->setIndex(newExpr_);
     else
-      expr->getRight()->accept(*this);
+      expr->getIndex()->accept(*this);
   }
+}
 
-  void visit(const std::shared_ptr<AssignmentExpr>& expr) override {
-    if(expr->getLeft() == oldExpr_)
-      expr->setLeft(newExpr_);
-    else
-      expr->getLeft()->accept(*this);
+template <typename DataTraits>
+void ExprReplacer<DataTraits>::visit(const std::shared_ptr<FieldAccessExpr<DataTraits>>& expr) {}
 
-    if(expr->getRight() == oldExpr_)
-      expr->setRight(newExpr_);
-    else
-      expr->getRight()->accept(*this);
-  }
+template <typename DataTraits>
+void ExprReplacer<DataTraits>::visit(const std::shared_ptr<LiteralAccessExpr<DataTraits>>& expr) {}
 
-  void visit(const std::shared_ptr<TernaryOperator>& expr) override {
-    if(expr->getCondition() == oldExpr_)
-      expr->setCondition(newExpr_);
-    else
-      expr->getCondition()->accept(*this);
-
-    if(expr->getLeft() == oldExpr_)
-      expr->setLeft(newExpr_);
-    else
-      expr->getLeft()->accept(*this);
-
-    if(expr->getRight() == oldExpr_)
-      expr->setRight(newExpr_);
-    else
-      expr->getRight()->accept(*this);
-  }
-
-  void visit(const std::shared_ptr<FunCallExpr>& expr) override {
-    for(auto& e : expr->getArguments()) {
-      if(e == oldExpr_)
-        e = newExpr_;
-      else
-        e->accept(*this);
-    }
-  }
-
-  void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
-    for(auto& e : expr->getArguments()) {
-      if(e == oldExpr_)
-        e = newExpr_;
-      else
-        e->accept(*this);
-    }
-  }
-
-  void visit(const std::shared_ptr<StencilFunArgExpr>& expr) override {}
-
-  void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
-    if(expr->isArrayAccess()) {
-      if(expr->getIndex() == oldExpr_)
-        expr->setIndex(newExpr_);
-      else
-        expr->getIndex()->accept(*this);
-    }
-  }
-
-  void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {}
-  void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override {}
-};
-
-} // anonymous namespace
-
-void replaceOldExprWithNewExprInStmt(const std::shared_ptr<Stmt>& stmt,
-                                     const std::shared_ptr<Expr>& oldExpr,
-                                     const std::shared_ptr<Expr>& newExpr) {
-  ExprReplacer replacer(oldExpr, newExpr);
+template <typename DataTraits>
+void replaceOldExprWithNewExprInStmt(const std::shared_ptr<Stmt<DataTraits>>& stmt,
+                                     const std::shared_ptr<Expr<DataTraits>>& oldExpr,
+                                     const std::shared_ptr<Expr<DataTraits>>& newExpr) {
+  ExprReplacer<DataTraits> replacer(oldExpr, newExpr);
   stmt->accept(replacer);
 }
 
@@ -167,47 +179,41 @@ void replaceOldExprWithNewExprInStmt(const std::shared_ptr<Stmt>& stmt,
 //     StmtReplacer
 //===------------------------------------------------------------------------------------------===//
 
-namespace {
+template <typename DataTraits>
+StmtReplacer<DataTraits>::StmtReplacer(const std::shared_ptr<Stmt<DataTraits>>& oldStmt,
+                                       const std::shared_ptr<Stmt<DataTraits>>& newStmt)
+    : oldStmt_(oldStmt), newStmt_(newStmt) {}
 
-/// @brief Replace `oldStmt` with `newStmt`
-class StmtReplacer : public ASTVisitorForwarding {
-  std::shared_ptr<Stmt> oldStmt_;
-  std::shared_ptr<Stmt> newStmt_;
-
-public:
-  StmtReplacer(const std::shared_ptr<Stmt>& oldStmt, const std::shared_ptr<Stmt>& newStmt)
-      : oldStmt_(oldStmt), newStmt_(newStmt) {}
-
-  void visit(const std::shared_ptr<BlockStmt>& stmt) override {
-    for(auto& s : stmt->getStatements()) {
-      if(s == oldStmt_)
-        s = newStmt_;
-      else
-        s->accept(*this);
-    }
-  }
-
-  void visit(const std::shared_ptr<IfStmt>& stmt) override {
-    if(stmt->getThenStmt() == oldStmt_)
-      stmt->setThenStmt(newStmt_);
+template <typename DataTraits>
+void StmtReplacer<DataTraits>::visit(const std::shared_ptr<BlockStmt<DataTraits>>& stmt) {
+  for(auto& s : stmt->getStatements()) {
+    if(s == oldStmt_)
+      s = newStmt_;
     else
-      stmt->getThenStmt()->accept(*this);
-
-    if(stmt->hasElse()) {
-      if(stmt->getElseStmt() == oldStmt_)
-        stmt->setElseStmt(newStmt_);
-      else
-        stmt->getElseStmt()->accept(*this);
-    }
+      s->accept(*this);
   }
-};
+}
 
-} // anonymous namespace
+template <typename DataTraits>
+void StmtReplacer<DataTraits>::visit(const std::shared_ptr<IfStmt<DataTraits>>& stmt) {
+  if(stmt->getThenStmt() == oldStmt_)
+    stmt->setThenStmt(newStmt_);
+  else
+    stmt->getThenStmt()->accept(*this);
 
-void replaceOldStmtWithNewStmtInStmt(const std::shared_ptr<Stmt>& stmt,
-                                     const std::shared_ptr<Stmt>& oldStmt,
-                                     const std::shared_ptr<Stmt>& newStmt) {
-  StmtReplacer replacer(oldStmt, newStmt);
+  if(stmt->hasElse()) {
+    if(stmt->getElseStmt() == oldStmt_)
+      stmt->setElseStmt(newStmt_);
+    else
+      stmt->getElseStmt()->accept(*this);
+  }
+}
+
+template <typename DataTraits>
+void replaceOldStmtWithNewStmtInStmt(const std::shared_ptr<Stmt<DataTraits>>& stmt,
+                                     const std::shared_ptr<Stmt<DataTraits>>& oldStmt,
+                                     const std::shared_ptr<Stmt<DataTraits>>& newStmt) {
+  StmtReplacer<DataTraits> replacer(oldStmt, newStmt);
   stmt->accept(replacer);
 }
 
@@ -269,6 +275,8 @@ static bool evalImpl(ResultType& result, ValueTypes... operands) {
 //
 // Unary operations
 //
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
 bool evalUnary(const char* opStr, double& result, double operand) {
   switch(toOpKind(opStr)) {
   case OK_Negate:
@@ -280,10 +288,13 @@ bool evalUnary(const char* opStr, double& result, double operand) {
     return false;
   }
 }
+#pragma GCC diagnostic push
 
 //
 // Binary operations
 //
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
 bool evalBinary(const char* opStr, double& result, double op1, double op2) {
   switch(toOpKind(opStr)) {
   case OK_Plus:
@@ -314,11 +325,13 @@ bool evalBinary(const char* opStr, double& result, double op1, double op2) {
     return false;
   }
 }
+#pragma GCC diagnostic push
 
 /// @brief Evaluate `expr` treating everything as `double`s
 ///
 /// Given that we only have 32-bit integers it should be safe to treat them as double.
-class ExprEvaluator : public ASTVisitor {
+template <typename DataTraits>
+class ExprEvaluator : public ASTVisitor<DataTraits> {
   const std::unordered_map<std::string, double>& variableMap_;
 
   bool valid_;
@@ -337,39 +350,35 @@ public:
   /// @brief Check if evaluation succeeded
   bool isValid() const { return valid_; }
 
-  void visit(const std::shared_ptr<BlockStmt>& stmt) override {
+  void visit(const std::shared_ptr<BlockStmt<DataTraits>>& stmt) override {
     dawn_unreachable("cannot evaluate stmt");
   }
 
-  void visit(const std::shared_ptr<ExprStmt>& stmt) override {
+  void visit(const std::shared_ptr<ExprStmt<DataTraits>>& stmt) override {
     dawn_unreachable("cannot evaluate stmt");
   }
 
-  void visit(const std::shared_ptr<ReturnStmt>& stmt) override {
+  void visit(const std::shared_ptr<ReturnStmt<DataTraits>>& stmt) override {
     dawn_unreachable("cannot evaluate stmt");
   }
 
-  void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
+  void visit(const std::shared_ptr<VarDeclStmt<DataTraits>>& stmt) override {
     dawn_unreachable("cannot evaluate stmt");
   }
 
-  void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) override {
+  void visit(const std::shared_ptr<StencilCallDeclStmt<DataTraits>>& stmt) override {
     dawn_unreachable("cannot evaluate stmt");
   }
 
-  void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
+  void visit(const std::shared_ptr<BoundaryConditionDeclStmt<DataTraits>>& stmt) override {
     dawn_unreachable("cannot evaluate stmt");
   }
 
-  void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override {
+  void visit(const std::shared_ptr<IfStmt<DataTraits>>& stmt) override {
     dawn_unreachable("cannot evaluate stmt");
   }
 
-  void visit(const std::shared_ptr<IfStmt>& stmt) override {
-    dawn_unreachable("cannot evaluate stmt");
-  }
-
-  void visit(const std::shared_ptr<UnaryOperator>& expr) override {
+  void visit(const std::shared_ptr<UnaryOperator<DataTraits>>& expr) override {
     if(!valid_)
       return;
 
@@ -380,7 +389,7 @@ public:
       valid_ = evalUnary(expr->getOp(), result_, evaluator.getResult());
   }
 
-  void visit(const std::shared_ptr<BinaryOperator>& expr) override {
+  void visit(const std::shared_ptr<BinaryOperator<DataTraits>>& expr) override {
     if(!valid_)
       return;
 
@@ -395,12 +404,12 @@ public:
           evalBinary(expr->getOp(), result_, evaluatorLeft.getResult(), evaluatorRight.getResult());
   }
 
-  void visit(const std::shared_ptr<AssignmentExpr>& expr) override {
+  void visit(const std::shared_ptr<AssignmentExpr<DataTraits>>& expr) override {
     // In C++ this can actually be evaluated but we don't do it for now
     valid_ = false;
   }
 
-  void visit(const std::shared_ptr<TernaryOperator>& expr) override {
+  void visit(const std::shared_ptr<TernaryOperator<DataTraits>>& expr) override {
     if(!valid_)
       return;
 
@@ -423,13 +432,17 @@ public:
     }
   }
 
-  void visit(const std::shared_ptr<FunCallExpr>& expr) override { valid_ = false; }
+  void visit(const std::shared_ptr<FunCallExpr<DataTraits>>& expr) override { valid_ = false; }
 
-  void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override { valid_ = false; }
+  void visit(const std::shared_ptr<StencilFunCallExpr<DataTraits>>& expr) override {
+    valid_ = false;
+  }
 
-  void visit(const std::shared_ptr<StencilFunArgExpr>& expr) override { valid_ = false; }
+  void visit(const std::shared_ptr<StencilFunArgExpr<DataTraits>>& expr) override {
+    valid_ = false;
+  }
 
-  void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<VarAccessExpr<DataTraits>>& expr) override {
     auto it = variableMap_.find(expr->getName());
     if(it != variableMap_.end())
       result_ = it->second;
@@ -437,9 +450,9 @@ public:
       valid_ = false;
   }
 
-  void visit(const std::shared_ptr<FieldAccessExpr>& expr) override { valid_ = false; }
+  void visit(const std::shared_ptr<FieldAccessExpr<DataTraits>>& expr) override { valid_ = false; }
 
-  void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<LiteralAccessExpr<DataTraits>>& expr) override {
     switch(expr->getBuiltinType()) {
     case BuiltinTypeID::Boolean:
       result_ = expr->getValue() == "1" || expr->getValue() == "true";
@@ -456,10 +469,10 @@ public:
   }
 };
 
-template <class T>
-bool evalExprImpl(const std::shared_ptr<Expr>& expr, T& result,
+template <typename DataTraits, class T>
+bool evalExprImpl(const std::shared_ptr<Expr<DataTraits>>& expr, T& result,
                   const std::unordered_map<std::string, double>& variableMap) {
-  ExprEvaluator evaluator(variableMap);
+  ExprEvaluator<DataTraits> evaluator(variableMap);
   expr->accept(evaluator);
   if(evaluator.isValid()) {
     result = static_cast<T>(evaluator.getResult());
@@ -470,46 +483,22 @@ bool evalExprImpl(const std::shared_ptr<Expr>& expr, T& result,
 
 } // anonymous namespace
 
-bool evalExprAsDouble(const std::shared_ptr<Expr>& expr, double& result,
+template <typename DataTraits>
+bool evalExprAsDouble(const std::shared_ptr<Expr<DataTraits>>& expr, double& result,
                       const std::unordered_map<std::string, double>& variableMap) {
   return evalExprImpl(expr, result, variableMap);
 }
 
-bool evalExprAsInteger(const std::shared_ptr<Expr>& expr, int& result,
+template <typename DataTraits>
+bool evalExprAsInteger(const std::shared_ptr<Expr<DataTraits>>& expr, int& result,
                        const std::unordered_map<std::string, double>& variableMap) {
   return evalExprImpl(expr, result, variableMap);
 }
 
-bool evalExprAsBoolean(const std::shared_ptr<Expr>& expr, bool& result,
+template <typename DataTraits>
+bool evalExprAsBoolean(const std::shared_ptr<Expr<DataTraits>>& expr, bool& result,
                        const std::unordered_map<std::string, double>& variableMap) {
   return evalExprImpl(expr, result, variableMap);
-}
-
-/// @brief helper to find all the fields in a statement
-class FieldFinder : public ASTVisitorForwarding {
-public:
-  virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) {
-    auto fieldFromExpression = sir::Field(expr->getName());
-    auto iter = std::find(allFields_.begin(), allFields_.end(), fieldFromExpression);
-    if(iter == allFields_.end())
-      allFields_.push_back(fieldFromExpression);
-    ASTVisitorForwarding::visit(expr);
-  }
-
-  virtual void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) {
-    stmt->getVerticalRegion()->Ast->accept(*this);
-  }
-
-  const std::vector<sir::Field>& getFields() const { return allFields_; }
-
-private:
-  std::vector<sir::Field> allFields_;
-};
-
-extern std::vector<sir::Field> getFieldFromStencilAST(const std::shared_ptr<AST>& ast) {
-  FieldFinder finder;
-  ast->accept(finder);
-  return finder.getFields();
 }
 
 } // namespace ast

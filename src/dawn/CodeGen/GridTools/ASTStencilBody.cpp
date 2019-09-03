@@ -14,9 +14,9 @@
 
 #include "dawn/CodeGen/GridTools/ASTStencilBody.h"
 #include "dawn/CodeGen/CXXUtil.h"
+#include "dawn/IIR/AST.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/IIR/AST.h"
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
@@ -80,10 +80,6 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) { Base::visit(stmt); }
-
-void ASTStencilBody::visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) {
-  dawn_unreachable("VerticalRegionDeclStmt not allowed in this context");
-}
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) {
   dawn_unreachable("StencilCallDeclStmt not allowed in this context");
@@ -164,7 +160,9 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   }
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) { Base::visit(expr); }
+void ASTStencilBody::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) {
+  Base::visit(expr);
+}
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   if(!nestingOfStencilFunArgLists_)

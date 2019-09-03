@@ -36,6 +36,9 @@ namespace dawn {
 /// @ingroup sir
 namespace sir {
 
+std::pair<std::string, bool> compareAst(const std::shared_ptr<AST>& lhs,
+                                        const std::shared_ptr<AST>& rhs);
+
 /// @brief Attributes attached to various SIR objects which allow to change the behavior on per
 /// stencil basis
 /// @ingroup sir
@@ -219,21 +222,23 @@ struct StencilFunction {
 //     StencilDescription
 //===------------------------------------------------------------------------------------------===//
 
-/// @brief A vertical region is given by a list of statements (given as an AST) executed on a
-/// specific vertical interval in a given loop order
+/// @brief A vertical region describes how a list of statements is executed on a specific vertical
+/// interval in a given loop order
 /// @ingroup sir
 struct VerticalRegion {
   enum LoopOrderKind { LK_Forward = 0, LK_Backward };
 
   SourceLocation Loc;                         ///< Source location of the vertical region
-  std::shared_ptr<sir::AST> Ast;              ///< AST of the region
   std::shared_ptr<Interval> VerticalInterval; ///< Interval description of the region
   LoopOrderKind LoopOrder;                    /// Loop order (usually associated with the k-loop)
 
-  VerticalRegion(const std::shared_ptr<sir::AST>& ast,
-                 const std::shared_ptr<Interval>& verticalInterval, LoopOrderKind loopOrder,
+  VerticalRegion(const std::shared_ptr<Interval>& verticalInterval, LoopOrderKind loopOrder,
                  SourceLocation loc = SourceLocation())
-      : Loc(loc), Ast(ast), VerticalInterval(verticalInterval), LoopOrder(loopOrder) {}
+      : Loc(loc), VerticalInterval(verticalInterval), LoopOrder(loopOrder) {}
+  VerticalRegion(const VerticalRegion& verticalRegion)
+      : Loc(verticalRegion.Loc),
+        VerticalInterval(std::make_shared<Interval>(*verticalRegion.VerticalInterval)),
+        LoopOrder(verticalRegion.LoopOrder) {}
 
   /// @brief Clone the vertical region
   std::shared_ptr<VerticalRegion> clone() const;

@@ -88,7 +88,7 @@ bool PassTemporaryFirstAccess::run(
 
     for(const auto& stmtAccessesPair : iterateIIROver<iir::StatementAccessesPair>(*stencilPtr)) {
       const auto& accesses = stmtAccessesPair->getAccesses();
-      const auto& astStatement = stmtAccessesPair->getStatement()->ASTStmt;
+      const auto& astStatement = stmtAccessesPair->getStatement();
 
       for(const auto& writeAccess : accesses->getWriteAccesses())
         if(temporaryFields.count(writeAccess.first))

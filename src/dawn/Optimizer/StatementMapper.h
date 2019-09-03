@@ -12,11 +12,15 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/ASTUtil.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include <stack>
 
 namespace dawn {
+
+namespace iir {
+struct StencilFunction;
+}
 
 //===------------------------------------------------------------------------------------------===//
 //     StatementMapper
@@ -64,7 +68,7 @@ class StatementMapper : public iir::ASTVisitor {
     std::stack<std::shared_ptr<Scope>> CandiateScopes;
   };
 
-  const std::shared_ptr<SIR> sir_;
+  const std::vector<std::shared_ptr<iir::StencilFunction>>& stencilFunctions_;
   iir::StencilInstantiation* instantiation_;
   iir::StencilMetaInformation& metadata_;
   std::shared_ptr<std::vector<ast::StencilCall*>> stackTrace_;
@@ -73,7 +77,8 @@ class StatementMapper : public iir::ASTVisitor {
 
 public:
   StatementMapper(
-      const std::shared_ptr<SIR>& fullSIR, iir::StencilInstantiation* instantiation,
+      const std::vector<std::shared_ptr<iir::StencilFunction>>& stencilFunctions,
+      iir::StencilInstantiation* instantiation,
       const std::shared_ptr<std::vector<ast::StencilCall*>>& stackTrace, iir::DoMethod& doMethod,
       const iir::Interval& interval,
       const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,
@@ -94,8 +99,6 @@ public:
   void visit(const std::shared_ptr<iir::IfStmt>& stmt) override;
 
   void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override;
-
-  void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override;
 
   void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override;
 

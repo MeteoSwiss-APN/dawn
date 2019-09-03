@@ -44,10 +44,6 @@ void ASTStencilDesc::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
   DAWN_ASSERT_MSG(0, "ReturnStmt not allowed in StencilDesc AST");
 }
 
-void ASTStencilDesc::visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) {
-  DAWN_ASSERT_MSG(0, "VerticalRegionDeclStmt not allowed in StencilDesc AST");
-}
-
 void ASTStencilDesc::visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) {
   int stencilID = metadata_.getStencilIDFromStencilCallStmt(stmt);
 

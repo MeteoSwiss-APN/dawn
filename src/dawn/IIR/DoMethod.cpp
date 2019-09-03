@@ -23,7 +23,6 @@
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Optimizer/AccessUtils.h"
-#include "dawn/SIR/Statement.h"
 #include "dawn/Support/IndexGenerator.h"
 #include "dawn/Support/Logging.h"
 #include <boost/optional.hpp>
@@ -214,7 +213,7 @@ public:
 
 bool DoMethod::isEmptyOrNullStmt() const {
   for(auto const& statementAccessPair : children_) {
-    const std::shared_ptr<iir::Stmt>& root = statementAccessPair->getStatement()->ASTStmt;
+    const std::shared_ptr<iir::Stmt>& root = statementAccessPair->getStatement();
     CheckNonNullStatementVisitor checker;
     root->accept(checker);
 

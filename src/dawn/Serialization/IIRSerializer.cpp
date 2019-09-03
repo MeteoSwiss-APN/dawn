@@ -12,6 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/Serialization/IIRSerializer.h"
+#include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIR/IIR.pb.h"
 #include "dawn/IIR/IIRNodeIterator.h"
@@ -49,12 +50,6 @@ static void setAccesses(proto::iir::Accesses* protoAccesses,
   }
 }
 
-static std::shared_ptr<dawn::Statement>
-makeStatement(const proto::statements::Stmt* protoStatement) {
-  auto stmt = makeStmt(*protoStatement);
-  return std::make_shared<Statement>(stmt, nullptr);
-}
-
 static iir::Extents makeExtents(const proto::iir::Extents* protoExtents) {
   int dim1minus = protoExtents->extents()[0].minus();
   int dim1plus = protoExtents->extents()[0].plus();
@@ -69,8 +64,8 @@ static void
 serializeStmtAccessPair(proto::iir::StatementAccessPair* protoStmtAccessPair,
                         const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessPair) {
   // serialize the statement
-  ProtoStmtBuilder builder(protoStmtAccessPair->mutable_aststmt());
-  stmtAccessPair->getStatement()->ASTStmt->accept(builder);
+  IIRProtoStmtBuilder builder(protoStmtAccessPair->mutable_aststmt());
+  stmtAccessPair->getStatement()->accept(builder);
 
   // check if caller accesses are initialized, and if so, fill them
   if(stmtAccessPair->getCallerAccesses()) {
@@ -271,7 +266,7 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
   auto& protoFieldNameToBC = *protoMetaData->mutable_fieldnametoboundarycondition();
   for(auto fieldNameToBC : metaData.fieldnameToBoundaryConditionMap_) {
     proto::statements::Stmt protoStencilCall;
-    ProtoStmtBuilder builder(&protoStencilCall);
+    IIRProtoStmtBuilder builder(&protoStencilCall);
     fieldNameToBC.second->accept(builder);
     protoFieldNameToBC.insert({fieldNameToBC.first, protoStencilCall});
   }
@@ -290,7 +285,7 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
   auto& protoIDToStencilCallMap = *protoMetaData->mutable_idtostencilcall();
   for(auto IDToStencilCall : metaData.getStencilIDToStencilCallMap().getDirectMap()) {
     proto::statements::Stmt protoStencilCall;
-    ProtoStmtBuilder builder(&protoStencilCall);
+    IIRProtoStmtBuilder builder(&protoStencilCall);
     IDToStencilCall.second->accept(builder);
     protoIDToStencilCallMap.insert({IDToStencilCall.first, protoStencilCall});
   }
@@ -421,8 +416,8 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
   // Filling Field: repeated StencilDescStatement stencilDescStatements = 10;
   for(const auto& stencilDescStmt : iir->getControlFlowDescriptor().getStatements()) {
     auto protoStmt = protoIIR->add_controlflowstatements();
-    ProtoStmtBuilder builder(protoStmt);
-    stencilDescStmt->ASTStmt->accept(builder);
+    IIRProtoStmtBuilder builder(protoStmt);
+    stencilDescStmt->accept(builder);
     DAWN_ASSERT_MSG(!stencilDescStmt->StackTrace,
                     "there should be no stack trace if inlining worked");
   }
@@ -549,7 +544,8 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
 
   for(auto FieldnameToBC : protoMetaData.fieldnametoboundarycondition()) {
     std::shared_ptr<iir::BoundaryConditionDeclStmt> bc =
-        dyn_pointer_cast<iir::BoundaryConditionDeclStmt>(makeStmt((FieldnameToBC.second)));
+        dyn_pointer_cast<iir::BoundaryConditionDeclStmt>(
+            makeStmt<iir::IIRASTData>((FieldnameToBC.second)));
     metadata.fieldnameToBoundaryConditionMap_[FieldnameToBC.first] = bc;
   }
 
@@ -658,8 +654,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
           (IIRDoMethod)->setID(protoDoMethod.domethodid());
 
           for(const auto& protoStmtAccessPair : protoDoMethod.stmtaccesspairs()) {
-            auto stmt = makeStmt(protoStmtAccessPair.aststmt());
-            auto statement = std::make_shared<Statement>(stmt, nullptr);
+            auto stmt = makeStmt<iir::IIRASTData>(protoStmtAccessPair.aststmt());
 
             std::shared_ptr<iir::Accesses> callerAccesses = std::make_shared<iir::Accesses>();
             for(auto writeAccess : protoStmtAccessPair.accesses().writeaccess()) {
@@ -668,7 +663,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
             for(auto readAccess : protoStmtAccessPair.accesses().readaccess()) {
               callerAccesses->addReadExtent(readAccess.first, makeExtents(&readAccess.second));
             }
-            auto insertee = make_unique<iir::StatementAccessesPair>(statement);
+            auto insertee = make_unique<iir::StatementAccessesPair>(stmt);
             insertee->setCallerAccesses(callerAccesses);
             (IIRDoMethod)->insertChild(std::move(insertee));
           }
@@ -676,8 +671,9 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
       }
     }
   }
-  for(auto controlFlowStmt : protoIIR.controlflowstatements()) {
-    target->getIIR()->getControlFlowDescriptor().insertStmt(makeStatement(&controlFlowStmt));
+  for(auto& controlFlowStmt : protoIIR.controlflowstatements()) {
+    target->getIIR()->getControlFlowDescriptor().insertStmt(
+        makeStmt<iir::IIRASTData>(controlFlowStmt));
   }
 }
 

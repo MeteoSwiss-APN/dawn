@@ -16,39 +16,36 @@
 #define DAWN_IIR_ASTFWD_H
 
 #include "dawn/AST/ASTFwd.h"
+#include "dawn/IIR/ASTData.h"
 
 namespace dawn {
 namespace iir {
-//
-// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
-//
-using AST = ast::AST;
+using AST = ast::AST<IIRASTData>;
 
-using Stmt = ast::Stmt;
-using BlockStmt = ast::BlockStmt;
-using ExprStmt = ast::ExprStmt;
-using ReturnStmt = ast::ReturnStmt;
-using VarDeclStmt = ast::VarDeclStmt;
-using VerticalRegionDeclStmt = ast::VerticalRegionDeclStmt;
-using StencilCallDeclStmt = ast::StencilCallDeclStmt;
-using BoundaryConditionDeclStmt = ast::BoundaryConditionDeclStmt;
-using IfStmt = ast::IfStmt;
+using Stmt = ast::Stmt<IIRASTData>;
+using BlockStmt = ast::BlockStmt<IIRASTData>;
+using ExprStmt = ast::ExprStmt<IIRASTData>;
+using ReturnStmt = ast::ReturnStmt<IIRASTData>;
+using VarDeclStmt = ast::VarDeclStmt<IIRASTData>;
+using StencilCallDeclStmt = ast::StencilCallDeclStmt<IIRASTData>;
+using BoundaryConditionDeclStmt = ast::BoundaryConditionDeclStmt<IIRASTData>;
+using IfStmt = ast::IfStmt<IIRASTData>;
 
-using Expr = ast::Expr;
-using NOPExpr = ast::NOPExpr;
-using UnaryOperator = ast::UnaryOperator;
-using BinaryOperator = ast::BinaryOperator;
-using AssignmentExpr = ast::AssignmentExpr;
-using TernaryOperator = ast::TernaryOperator;
-using FunCallExpr = ast::FunCallExpr;
-using StencilFunCallExpr = ast::StencilFunCallExpr;
-using StencilFunArgExpr = ast::StencilFunArgExpr;
-using VarAccessExpr = ast::VarAccessExpr;
-using FieldAccessExpr = ast::FieldAccessExpr;
-using LiteralAccessExpr = ast::LiteralAccessExpr;
+using Expr = ast::Expr<IIRASTData>;
+using NOPExpr = ast::NOPExpr<IIRASTData>;
+using UnaryOperator = ast::UnaryOperator<IIRASTData>;
+using BinaryOperator = ast::BinaryOperator<IIRASTData>;
+using AssignmentExpr = ast::AssignmentExpr<IIRASTData>;
+using TernaryOperator = ast::TernaryOperator<IIRASTData>;
+using FunCallExpr = ast::FunCallExpr<IIRASTData>;
+using StencilFunCallExpr = ast::StencilFunCallExpr<IIRASTData>;
+using StencilFunArgExpr = ast::StencilFunArgExpr<IIRASTData>;
+using VarAccessExpr = ast::VarAccessExpr<IIRASTData>;
+using FieldAccessExpr = ast::FieldAccessExpr<IIRASTData>;
+using LiteralAccessExpr = ast::LiteralAccessExpr<IIRASTData>;
 
 using ASTHelper = ast::ASTHelper;
-using ASTVisitor = ast::ASTVisitor;
+using ASTVisitor = ast::ASTVisitor<IIRASTData>;
 } // namespace iir
 } // namespace dawn
 

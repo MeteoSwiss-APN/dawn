@@ -16,13 +16,11 @@
 #define DAWN_SIR_AST_H
 
 #include "dawn/AST/AST.h"
+#include "dawn/SIR/ASTData.h"
 
 namespace dawn {
 namespace sir {
-//
-// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
-//
-using AST = ast::AST;
+using AST = ast::AST<SIRASTData>;
 } // namespace sir
 } // namespace dawn
 

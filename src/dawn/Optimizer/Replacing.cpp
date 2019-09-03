@@ -17,7 +17,6 @@
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/SIR/Statement.h"
 #include <unordered_map>
 
 namespace dawn {
@@ -71,7 +70,7 @@ void replaceFieldWithVarAccessInStmts(
   for(const auto& statementAccessesPair : statementAccessesPairs) {
     visitor.reset();
 
-    const auto& stmt = statementAccessesPair->getStatement()->ASTStmt;
+    const auto& stmt = statementAccessesPair->getStatement();
     stmt->accept(visitor);
 
     for(auto& oldExpr : visitor.getFieldAccessExprToReplace()) {
@@ -94,7 +93,7 @@ void replaceVarWithFieldAccessInStmts(
   for(const auto& statementAccessesPair : statementAccessesPairs) {
     visitor.reset();
 
-    const auto& stmt = statementAccessesPair->getStatement()->ASTStmt;
+    const auto& stmt = statementAccessesPair->getStatement();
     stmt->accept(visitor);
 
     for(auto& oldExpr : visitor.getVarAccessesToReplace()) {
@@ -139,10 +138,8 @@ void replaceStencilCalls(const std::shared_ptr<iir::StencilInstantiation>& insta
                          int oldStencilID, const std::vector<int>& newStencilIDs) {
   GetStencilCalls visitor(instantiation, oldStencilID);
 
-  for(auto& statement : instantiation->getIIR()->getControlFlowDescriptor().getStatements()) {
+  for(auto& stmt : instantiation->getIIR()->getControlFlowDescriptor().getStatements()) {
     visitor.reset();
-
-    std::shared_ptr<iir::Stmt>& stmt = statement->ASTStmt;
 
     stmt->accept(visitor);
     for(auto& oldStencilCall : visitor.getStencilCallsToReplace()) {

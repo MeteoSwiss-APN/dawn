@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/Stage.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIRNodeIterator.h"
@@ -21,7 +22,6 @@
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Optimizer/AccessUtils.h"
-#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/Support/Logging.h"
 #include <algorithm>
 #include <iterator>
@@ -226,13 +226,12 @@ void Stage::updateGlobalVariablesInfo() {
         }
       }
 
-      const std::shared_ptr<Statement> statement = statementAccessesPair->getStatement();
-      DAWN_ASSERT(statement);
-      DAWN_ASSERT(statement->ASTStmt);
+      const std::shared_ptr<iir::Stmt> stmt = statementAccessesPair->getStatement();
+      DAWN_ASSERT(stmt);
 
       // capture all the accesses to global accesses of stencil function called
       // from this statement
-      statement->ASTStmt->accept(functionCallGlobaParamVisitor);
+      stmt->accept(functionCallGlobaParamVisitor);
     }
   }
 

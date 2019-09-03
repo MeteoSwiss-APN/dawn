@@ -27,7 +27,7 @@ ControlFlowDescriptor ControlFlowDescriptor::clone() const {
 void ControlFlowDescriptor::removeStencilCalls(const std::set<int>& stencilIDs,
                                                iir::StencilMetaInformation& metadata) {
   for(auto it = getStatements().begin(); it != getStatements().end(); ++it) {
-    std::shared_ptr<iir::Stmt> stmt = (*it)->ASTStmt;
+    std::shared_ptr<iir::Stmt> stmt = (*it);
     if(isa<iir::StencilCallDeclStmt>(stmt.get())) {
       auto callDecl = std::static_pointer_cast<iir::StencilCallDeclStmt>(stmt);
       bool remove = false;

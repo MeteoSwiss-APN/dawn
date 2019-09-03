@@ -13,13 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/Renaming.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
-#include "dawn/IIR/ASTVisitor.h"
-#include "dawn/SIR/Statement.h"
 #include <unordered_map>
 
 namespace dawn {
@@ -86,7 +85,7 @@ void renameAccessIDInStmts(
   AccessIDRemapper<iir::StencilMetaInformation> remapper(metadata, oldAccessID, newAccessID);
 
   for(auto& statementAccessesPair : statementAccessesPairs)
-    statementAccessesPair->getStatement()->ASTStmt->accept(remapper);
+    statementAccessesPair->getStatement()->accept(remapper);
 }
 
 void renameAccessIDInStmts(
@@ -96,7 +95,7 @@ void renameAccessIDInStmts(
                                                                newAccessID);
 
   for(const auto& statementAccessesPair : statementAccessesPairs)
-    statementAccessesPair->getStatement()->ASTStmt->accept(remapper);
+    statementAccessesPair->getStatement()->accept(remapper);
 }
 
 void renameAccessIDInExpr(iir::StencilInstantiation* instantiation, int oldAccessID,

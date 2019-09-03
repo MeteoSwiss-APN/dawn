@@ -153,9 +153,8 @@ message VerticalRegion {
   }
 
   SourceLocation loc = 1;   // Source location of the vertical region
-  AST ast = 2;              // Syntax tree of the body of the vertical region
-  Interval interval = 3;    // Vertical interval
-  LoopOrder loop_order = 4; // Loop order of execution
+  Interval interval = 2;    // Vertical interval
+  LoopOrder loop_order = 3; // Loop order of execution
 }
 
 // @brief Stencil call declaration
@@ -280,9 +279,10 @@ message VarDeclStmt {
 //
 // @ingroup sir_proto
 message VerticalRegionDeclStmt {
-  VerticalRegion vertical_region = 1;
-  SourceLocation loc = 2; // Source location
-  int32 ID = 3;           // ID of the Stmt
+  AST ast = 1;              // Syntax tree of the body of the vertical region
+  VerticalRegion vertical_region = 2;
+  SourceLocation loc = 3; // Source location
+  int32 ID = 4;           // ID of the Stmt
 }
 
 // @brief Declaration of a stencil call

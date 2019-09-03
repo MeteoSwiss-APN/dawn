@@ -23,6 +23,8 @@
 namespace dawn {
 namespace iir {
 
+struct StencilFunction;
+
 /// @brief A Stencil is represented by a collection of MultiStages
 /// @ingroup optimizer
 class IIR : public IIRNode<void, IIR, Stencil> {
@@ -31,7 +33,7 @@ class IIR : public IIRNode<void, IIR, Stencil> {
   ControlFlowDescriptor controlFlowDesc_;
 
   sir::GlobalVariableMap globalVariableMap_;
-  std::vector<std::shared_ptr<sir::StencilFunction>> stencilFunctions_;
+  std::vector<std::shared_ptr<iir::StencilFunction>> stencilFunctions_;
 
   struct DerivedInfo {
     /// StageID to name Map. Filled by the `PassSetStageName`.
@@ -51,7 +53,7 @@ public:
 
   /// @brief constructors and assignment
   IIR(const sir::GlobalVariableMap& sirGlobals,
-      const std::vector<std::shared_ptr<sir::StencilFunction>>& stencilFunction);
+      const std::vector<std::shared_ptr<iir::StencilFunction>>& stencilFunctions);
   IIR(const IIR&) = default;
   IIR(IIR&&) = default;
   IIR& operator=(const IIR&) = default;
@@ -65,7 +67,7 @@ public:
 
   json::json jsonDump() const;
 
-  const std::vector<std::shared_ptr<sir::StencilFunction>>& getStencilFunctions() {
+  const std::vector<std::shared_ptr<iir::StencilFunction>>& getStencilFunctions() {
     return stencilFunctions_;
   }
   const ControlFlowDescriptor& getControlFlowDescriptor() const { return controlFlowDesc_; }
@@ -75,7 +77,7 @@ public:
   inline std::unordered_map<int, std::string>& getStageIDToNameMap() {
     return derivedInfo_.StageIDToNameMap_;
   }
-  void insertStencilFunction(const std::shared_ptr<sir::StencilFunction>& sirStencilFunction) {
+  void insertStencilFunction(const std::shared_ptr<iir::StencilFunction>& sirStencilFunction) {
     stencilFunctions_.push_back(sirStencilFunction);
   }
 

@@ -13,12 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
+#include "dawn/IIR/AST.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
-#include "dawn/IIR/AST.h"
 #include "dawn/Support/Format.h"
 #include <deque>
 #include <iostream>
@@ -41,57 +41,54 @@ std::function<void(iir::MultiStage::child_reverse_iterator_t&, iir::DependencyGr
                    std::deque<iir::MultiStage::SplitIndex>&, int, int, int&, const std::string&,
                    const std::string&, const Options&)>
 multiStageSplitterOptimized() {
-  return
-      [&](iir::MultiStage::child_reverse_iterator_t& stageIt, iir::DependencyGraphAccesses& graph,
-          iir::LoopOrderKind userSpecifiedLoopOrder, iir::LoopOrderKind& curLoopOrder,
-          std::deque<iir::MultiStage::SplitIndex>& splitterIndices, int stageIndex,
-          int multiStageIndex, int& numSplit, const std::string& StencilName,
-          const std::string& PassName, const Options& options) {
-        iir::Stage& stage = (**stageIt);
-        iir::DoMethod& doMethod = stage.getSingleDoMethod();
+  return [&](iir::MultiStage::child_reverse_iterator_t& stageIt,
+             iir::DependencyGraphAccesses& graph, iir::LoopOrderKind userSpecifiedLoopOrder,
+             iir::LoopOrderKind& curLoopOrder,
+             std::deque<iir::MultiStage::SplitIndex>& splitterIndices, int stageIndex,
+             int multiStageIndex, int& numSplit, const std::string& StencilName,
+             const std::string& PassName, const Options& options) {
+    iir::Stage& stage = (**stageIt);
+    iir::DoMethod& doMethod = stage.getSingleDoMethod();
 
-        // Iterate statements backwards
-        for(int stmtIndex = doMethod.getChildren().size() - 1; stmtIndex >= 0; --stmtIndex) {
-          auto& stmtAccessesPair = doMethod.getChildren()[stmtIndex];
-          graph.insertStatementAccessesPair(stmtAccessesPair);
+    // Iterate statements backwards
+    for(int stmtIndex = doMethod.getChildren().size() - 1; stmtIndex >= 0; --stmtIndex) {
+      auto& stmtAccessesPair = doMethod.getChildren()[stmtIndex];
+      graph.insertStatementAccessesPair(stmtAccessesPair);
 
-          // Check for read-before-write conflicts in the loop order and counter loop order.
-          // Conflicts in the loop order will assure us that the multi-stage can't be
-          // parallel. A conflict in the counter loop order is more severe and needs the current
-          // multistage be splitted!
-          auto conflict = hasVerticalReadBeforeWriteConflict(&graph, userSpecifiedLoopOrder);
-          if(conflict.CounterLoopOrderConflict) {
+      // Check for read-before-write conflicts in the loop order and counter loop order.
+      // Conflicts in the loop order will assure us that the multi-stage can't be
+      // parallel. A conflict in the counter loop order is more severe and needs the current
+      // multistage be splitted!
+      auto conflict = hasVerticalReadBeforeWriteConflict(&graph, userSpecifiedLoopOrder);
+      if(conflict.CounterLoopOrderConflict) {
 
-            // The loop order of the lower part is what we recoreded in the last steps
-            splitterIndices.emplace_front(
-                iir::MultiStage::SplitIndex{stageIndex, stmtIndex, curLoopOrder});
+        // The loop order of the lower part is what we recoreded in the last steps
+        splitterIndices.emplace_front(
+            iir::MultiStage::SplitIndex{stageIndex, stmtIndex, curLoopOrder});
 
-            if(options.ReportPassMultiStageSplit)
-              std::cout << "\nPASS: " << PassName << ": " << StencilName << ": split:"
-                        << doMethod.getChildren()[stmtIndex]
-                               ->getStatement()
-                               ->ASTStmt->getSourceLocation()
-                               .Line
-                        << " looporder:" << curLoopOrder << "\n";
+        if(options.ReportPassMultiStageSplit)
+          std::cout << "\nPASS: " << PassName << ": " << StencilName << ": split:"
+                    << doMethod.getChildren()[stmtIndex]->getStatement()->getSourceLocation().Line
+                    << " looporder:" << curLoopOrder << "\n";
 
-            if(options.DumpSplitGraphs)
-              graph.toDot(format("stmt_vd_ms%i_%02i.dot", multiStageIndex, numSplit));
+        if(options.DumpSplitGraphs)
+          graph.toDot(format("stmt_vd_ms%i_%02i.dot", multiStageIndex, numSplit));
 
-            // Clear the graph ...
-            graph.clear();
-            curLoopOrder = iir::LoopOrderKind::LK_Parallel;
+        // Clear the graph ...
+        graph.clear();
+        curLoopOrder = iir::LoopOrderKind::LK_Parallel;
 
-            // ... and process the current statement again
-            graph.insertStatementAccessesPair(stmtAccessesPair);
+        // ... and process the current statement again
+        graph.insertStatementAccessesPair(stmtAccessesPair);
 
-            numSplit++;
+        numSplit++;
 
-          } else if(conflict.LoopOrderConflict)
-            // We have a conflict in the loop order, the multi-stage cannot be executed in
-            // parallel and we use the loop order specified by the user
-            curLoopOrder = userSpecifiedLoopOrder;
-        }
-      };
+      } else if(conflict.LoopOrderConflict)
+        // We have a conflict in the loop order, the multi-stage cannot be executed in
+        // parallel and we use the loop order specified by the user
+        curLoopOrder = userSpecifiedLoopOrder;
+    }
+  };
 }
 std::function<void(iir::MultiStage::child_reverse_iterator_t&, iir::DependencyGraphAccesses&,
                    iir::LoopOrderKind&, iir::LoopOrderKind&,

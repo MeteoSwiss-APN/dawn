@@ -102,19 +102,23 @@ public:
   }
 
   void appendNewStatementAccessesPair(const std::shared_ptr<iir::Stmt>& stmt) {
+
+    stmt->StackTrace = oldStmtAccessesPair_->getStatement()->StackTrace
+                           ? std::make_shared<std::vector<ast::StencilCall*>>(
+                                 *oldStmtAccessesPair_->getStatement()->StackTrace)
+                           : nullptr;
+
     if(scopeDepth_ == 1) {
       // The top-level block statement is collapsed thus we only insert at 1. Note that this works
       // because all AST have a block statement as root node.
-      newStmtAccessesPairs_.emplace_back(make_unique<iir::StatementAccessesPair>(
-          std::make_shared<Statement>(stmt, oldStmtAccessesPair_->getStatement()->StackTrace)));
+      newStmtAccessesPairs_.emplace_back(make_unique<iir::StatementAccessesPair>(stmt));
 
       currentStmtAccessesPair_.push(&(newStmtAccessesPairs_.back()));
 
     } else if(scopeDepth_ > 1) {
       // We are inside a nested block statement, we add the stmt as a child of the parent statement
       (*currentStmtAccessesPair_.top())
-          ->insertBlockStatement(make_unique<iir::StatementAccessesPair>(
-              std::make_shared<Statement>(stmt, oldStmtAccessesPair_->getStatement()->StackTrace)));
+          ->insertBlockStatement(make_unique<iir::StatementAccessesPair>(stmt));
 
       const std::unique_ptr<iir::StatementAccessesPair>& lp =
           (*(currentStmtAccessesPair_.top()))->getBlockStatements().back();
@@ -206,7 +210,6 @@ public:
     removeLastChildStatementAccessesPair();
   }
 
-  void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>&) override {}
   void visit(const std::shared_ptr<iir::StencilCallDeclStmt>&) override {}
   void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>&) override {}
 
@@ -280,13 +283,12 @@ public:
         // push backed all the new statements). Hence, we need to insert an empty statement in the
         // back -> swap with our statement -> replace the expr in our statement and evict the empty
         // statement)
-        newStmtAccessesPairs_.emplace_back(
-            make_unique<iir::StatementAccessesPair>(std::make_shared<Statement>(nullptr, nullptr)));
+        newStmtAccessesPairs_.emplace_back(make_unique<iir::StatementAccessesPair>(nullptr));
         std::iter_swap(newStmtAccessesPairs_.begin() + stmtIdxOfFunc,
                        std::prev(newStmtAccessesPairs_.end()));
 
         iir::replaceOldExprWithNewExprInStmt(
-            newStmtAccessesPairs_[newStmtAccessesPairs_.size() - 1]->getStatement()->ASTStmt, expr,
+            newStmtAccessesPairs_[newStmtAccessesPairs_.size() - 1]->getStatement(), expr,
             inliner->getNewExpr());
       }
 
@@ -391,7 +393,7 @@ public:
     newStmtAccessesPairs_.clear();
 
     // Detect the stencil functions suitable for inlining
-    oldStmtAccessesPair_->getStatement()->ASTStmt->accept(*this);
+    oldStmtAccessesPair_->getStatement()->accept(*this);
   }
 
   /// @brief Atleast one inline candiate was found and the given `stmt` should be replaced with
@@ -407,7 +409,7 @@ public:
 
       for(const auto& oldNewPair : replacmentOfOldStmtMap_)
         iir::replaceOldExprWithNewExprInStmt(
-            newStmtAccessesPairs_[newStmtAccessesPairs_.size() - 1]->getStatement()->ASTStmt,
+            newStmtAccessesPairs_[newStmtAccessesPairs_.size() - 1]->getStatement(),
             oldNewPair.first, oldNewPair.second);
 
       // Clear the map in case someone would call getNewStatments multiple times

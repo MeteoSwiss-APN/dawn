@@ -13,12 +13,7 @@
       "statements": [
        {
         "vertical_region_decl_stmt": {
-         "vertical_region": {
-          "loc": {
-           "Line": 26,
-           "Column": 5
-          },
-          "ast": {
+         "ast": {
            "root": {
             "block_stmt": {
              "statements": [
@@ -97,6 +92,11 @@
             }
            }
           },
+         "vertical_region": {
+          "loc": {
+           "Line": 26,
+           "Column": 5
+          },
           "interval": {
            "lower_offset": 0,
            "upper_offset": 0,
@@ -113,12 +113,7 @@
        },
        {
         "vertical_region_decl_stmt": {
-         "vertical_region": {
-          "loc": {
-           "Line": 29,
-           "Column": 5
-          },
-          "ast": {
+         "ast": {
            "root": {
             "block_stmt": {
              "statements": [
@@ -197,6 +192,11 @@
             }
            }
           },
+         "vertical_region": {
+          "loc": {
+           "Line": 29,
+           "Column": 5
+          },
           "interval": {
            "lower_offset": 1,
            "upper_offset": -1,
@@ -213,12 +213,7 @@
        },
        {
         "vertical_region_decl_stmt": {
-         "vertical_region": {
-          "loc": {
-           "Line": 32,
-           "Column": 5
-          },
-          "ast": {
+         "ast": {
            "root": {
             "block_stmt": {
              "statements": [
@@ -331,6 +326,11 @@
             }
            }
           },
+         "vertical_region": {
+          "loc": {
+           "Line": 32,
+           "Column": 5
+          },
           "interval": {
            "lower_offset": 0,
            "upper_offset": 0,
@@ -347,12 +347,7 @@
        },
        {
         "vertical_region_decl_stmt": {
-         "vertical_region": {
-          "loc": {
-           "Line": 36,
-           "Column": 5
-          },
-          "ast": {
+         "ast": {
            "root": {
             "block_stmt": {
              "statements": [
@@ -431,6 +426,11 @@
             }
            }
           },
+         "vertical_region": {
+          "loc": {
+           "Line": 36,
+           "Column": 5
+          },
           "interval": {
            "lower_offset": 0,
            "upper_offset": 0,
@@ -447,12 +447,7 @@
        },
        {
         "vertical_region_decl_stmt": {
-         "vertical_region": {
-          "loc": {
-           "Line": 39,
-           "Column": 5
-          },
-          "ast": {
+         "ast": {
            "root": {
             "block_stmt": {
              "statements": [
@@ -531,6 +526,11 @@
             }
            }
           },
+         "vertical_region": {
+          "loc": {
+           "Line": 39,
+           "Column": 5
+          },
           "interval": {
            "lower_offset": 1,
            "upper_offset": -4,
@@ -547,12 +547,7 @@
        },
        {
         "vertical_region_decl_stmt": {
-         "vertical_region": {
-          "loc": {
-           "Line": 42,
-           "Column": 5
-          },
-          "ast": {
+         "ast": {
            "root": {
             "block_stmt": {
              "statements": [
@@ -664,6 +659,11 @@
              }
             }
            }
+          },
+         "vertical_region": {
+          "loc": {
+           "Line": 42,
+           "Column": 5
           },
           "interval": {
            "lower_offset": -3,

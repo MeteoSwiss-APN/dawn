@@ -22,12 +22,14 @@
 
 namespace dawn {
 namespace ast {
+template <typename DataTraits>
 class ASTVisitor;
 
 /// @brief Abstract syntax tree of the AST
 /// @ingroup AST
+template <typename DataTraits>
 class AST {
-  std::shared_ptr<BlockStmt> root_;
+  std::shared_ptr<BlockStmt<DataTraits>> root_;
 
 public:
   /// @brief Construct with empty root
@@ -36,40 +38,42 @@ public:
   /// @brief Construct with existing root
   ///
   /// Note that root has to be of dynamic type `BlockStmt`.
-  explicit AST(const std::shared_ptr<BlockStmt>& root);
-  explicit AST(std::shared_ptr<BlockStmt>&& root);
+  explicit AST(const std::shared_ptr<BlockStmt<DataTraits>>& root);
+  explicit AST(std::shared_ptr<BlockStmt<DataTraits>>&& root);
 
   /// @name Copy/Move construct/assign
   /// @{
-  AST(const AST&);
-  AST& operator=(const AST&);
-  AST(AST&&);
-  AST& operator=(AST&&);
+  AST(const AST<DataTraits>&);
+  AST& operator=(const AST<DataTraits>&);
+  AST(AST<DataTraits>&&);
+  AST& operator=(AST<DataTraits>&&);
   /// @}
 
   /// @brief Deallocate the AST
   ~AST();
 
   /// @brief Apply the visitor to all nodes of the AST
-  void accept(ASTVisitor& visitor) const;
-  void accept(ASTVisitorNonConst& visitor) const;
-  std::shared_ptr<AST> acceptAndReplace(ASTVisitorPostOrder& visitor) const;
+  void accept(ASTVisitor<DataTraits>& visitor) const;
+  void accept(ASTVisitorNonConst<DataTraits>& visitor) const;
+  std::shared_ptr<AST<DataTraits>> acceptAndReplace(ASTVisitorPostOrder<DataTraits>& visitor) const;
 
   /// @brief Get root node
-  const std::shared_ptr<BlockStmt>& getRoot() const;
-  std::shared_ptr<BlockStmt>& getRoot();
+  const std::shared_ptr<BlockStmt<DataTraits>>& getRoot() const;
+  std::shared_ptr<BlockStmt<DataTraits>>& getRoot();
 
   /// @brief Set root (this will call `clear()` first)
-  void setRoot(const std::shared_ptr<BlockStmt>& root);
-  void setRoot(std::shared_ptr<BlockStmt>&& root);
+  void setRoot(const std::shared_ptr<BlockStmt<DataTraits>>& root);
+  void setRoot(std::shared_ptr<BlockStmt<DataTraits>>&& root);
 
   /// @brief Clone the AST
-  std::shared_ptr<AST> clone() const;
+  std::shared_ptr<AST<DataTraits>> clone() const;
 
   /// @brief Clear the AST
   void clear();
 };
 } // namespace ast
 } // namespace dawn
+
+#include "dawn/AST/AST.tcc"
 
 #endif

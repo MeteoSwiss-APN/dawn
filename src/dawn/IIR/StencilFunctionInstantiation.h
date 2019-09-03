@@ -20,6 +20,7 @@
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/StencilFunction.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Unreachable.h"
@@ -101,7 +102,7 @@ private:
   // TODO put all members in a struct to avoid having to implement a clone for all of them
   // except the vector<unique_ptr>
   std::shared_ptr<iir::StencilFunCallExpr> expr_;
-  std::shared_ptr<sir::StencilFunction> function_;
+  std::shared_ptr<iir::StencilFunction> function_;
   std::shared_ptr<iir::AST> ast_;
 
   Interval interval_;
@@ -167,7 +168,7 @@ private:
 public:
   StencilFunctionInstantiation(StencilInstantiation* context,
                                const std::shared_ptr<iir::StencilFunCallExpr>& expr,
-                               const std::shared_ptr<sir::StencilFunction>& function,
+                               const std::shared_ptr<iir::StencilFunction>& function,
                                const std::shared_ptr<iir::AST>& ast, const Interval& interval,
                                bool isNested);
 
@@ -220,9 +221,9 @@ public:
   const StencilInstantiation* getStencilInstantiation() const { return stencilInstantiation_; }
 
   /// @brief Get the SIR stencil function
-  std::shared_ptr<sir::StencilFunction> getStencilFunction() const { return function_; }
+  std::shared_ptr<iir::StencilFunction> getStencilFunction() const { return function_; }
 
-  void setStencilFunction(std::shared_ptr<sir::StencilFunction> fun) { function_ = fun; }
+  void setStencilFunction(std::shared_ptr<iir::StencilFunction> fun) { function_ = fun; }
 
   /// @brief Get the name of the stencil function
   const std::string& getName() const { return function_->Name; }

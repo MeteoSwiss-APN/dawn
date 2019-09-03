@@ -49,7 +49,6 @@ public:
   /// @name Statement implementation
   /// @{
   virtual void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override;
   /// @}

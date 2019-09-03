@@ -16,6 +16,7 @@
 #define DAWN_SUPPORT_ASTSERIALIZER_H
 
 #include "dawn/AST/ASTFwd.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/ASTVisitor.h"
@@ -25,7 +26,8 @@
 
 using namespace dawn;
 
-void setAST(dawn::proto::statements::AST* astProto, const ast::AST* ast);
+template <typename DataTraits>
+void setAST(dawn::proto::statements::AST* astProto, const ast::AST<DataTraits>* ast);
 
 void setLocation(dawn::proto::statements::SourceLocation* locProto, const SourceLocation& loc);
 
@@ -41,7 +43,9 @@ void setOffset(dawn::proto::statements::Offset* offsetProto, const sir::Offset* 
 
 void setField(dawn::proto::statements::Field* fieldProto, const sir::Field* field);
 
-class ProtoStmtBuilder : public ast::ASTVisitor {
+template <typename DataTraits>
+class ProtoStmtBuilder : virtual public ast::ASTVisitor<DataTraits> {
+protected:
   std::stack<dawn::proto::statements::Stmt*> currentStmtProto_;
   std::stack<dawn::proto::statements::Expr*> currentExprProto_;
 
@@ -54,43 +58,39 @@ public:
 
   dawn::proto::statements::Expr* getCurrentExprProto();
 
-  void visit(const std::shared_ptr<ast::BlockStmt>& stmt) override;
-
-  void visit(const std::shared_ptr<ast::ExprStmt>& stmt) override;
-
-  void visit(const std::shared_ptr<ast::ReturnStmt>& stmt) override;
-  void visit(const std::shared_ptr<ast::VarDeclStmt>& stmt) override;
-
-  void visit(const std::shared_ptr<ast::VerticalRegionDeclStmt>& stmt) override;
-
-  void visit(const std::shared_ptr<ast::StencilCallDeclStmt>& stmt) override;
-
-  void visit(const std::shared_ptr<ast::BoundaryConditionDeclStmt>& stmt) override;
-
-  void visit(const std::shared_ptr<ast::IfStmt>& stmt) override;
-
-  void visit(const std::shared_ptr<ast::UnaryOperator>& expr) override;
-
-  void visit(const std::shared_ptr<ast::BinaryOperator>& expr) override;
-
-  void visit(const std::shared_ptr<ast::AssignmentExpr>& expr) override;
-
-  void visit(const std::shared_ptr<ast::TernaryOperator>& expr) override;
-
-  void visit(const std::shared_ptr<ast::FunCallExpr>& expr) override;
-
-  void visit(const std::shared_ptr<ast::StencilFunCallExpr>& expr) override;
-
-  void visit(const std::shared_ptr<ast::StencilFunArgExpr>& expr) override;
-
-  void visit(const std::shared_ptr<ast::VarAccessExpr>& expr) override;
-
-  void visit(const std::shared_ptr<ast::FieldAccessExpr>& expr) override;
-
-  void visit(const std::shared_ptr<ast::LiteralAccessExpr>& expr) override;
+  void visit(const std::shared_ptr<ast::BlockStmt<DataTraits>>& stmt) override;
+  void visit(const std::shared_ptr<ast::ExprStmt<DataTraits>>& stmt) override;
+  void visit(const std::shared_ptr<ast::ReturnStmt<DataTraits>>& stmt) override;
+  void visit(const std::shared_ptr<ast::VarDeclStmt<DataTraits>>& stmt) override;
+  void visit(const std::shared_ptr<ast::StencilCallDeclStmt<DataTraits>>& stmt) override;
+  void visit(const std::shared_ptr<ast::BoundaryConditionDeclStmt<DataTraits>>& stmt) override;
+  void visit(const std::shared_ptr<ast::IfStmt<DataTraits>>& stmt) override;
+  void visit(const std::shared_ptr<ast::UnaryOperator<DataTraits>>& expr) override;
+  void visit(const std::shared_ptr<ast::BinaryOperator<DataTraits>>& expr) override;
+  void visit(const std::shared_ptr<ast::AssignmentExpr<DataTraits>>& expr) override;
+  void visit(const std::shared_ptr<ast::TernaryOperator<DataTraits>>& expr) override;
+  void visit(const std::shared_ptr<ast::FunCallExpr<DataTraits>>& expr) override;
+  void visit(const std::shared_ptr<ast::StencilFunCallExpr<DataTraits>>& expr) override;
+  void visit(const std::shared_ptr<ast::StencilFunArgExpr<DataTraits>>& expr) override;
+  void visit(const std::shared_ptr<ast::VarAccessExpr<DataTraits>>& expr) override;
+  void visit(const std::shared_ptr<ast::FieldAccessExpr<DataTraits>>& expr) override;
+  void visit(const std::shared_ptr<ast::LiteralAccessExpr<DataTraits>>& expr) override;
 };
 
-void setAST(proto::statements::AST* astProto, const ast::AST* ast);
+using IIRProtoStmtBuilder = ProtoStmtBuilder<iir::IIRASTData>;
+
+class SIRProtoStmtBuilder : ProtoStmtBuilder<sir::SIRASTData>, public sir::ASTVisitor {
+public:
+  SIRProtoStmtBuilder(dawn::proto::statements::Stmt* stmtProto)
+      : ProtoStmtBuilder<sir::SIRASTData>(stmtProto) {}
+  SIRProtoStmtBuilder(dawn::proto::statements::Expr* exprProto)
+      : ProtoStmtBuilder<sir::SIRASTData>(exprProto) {}
+
+  void visit(const std::shared_ptr<sir::VerticalRegionDeclStmt>& stmt) override;
+};
+
+template <typename DataTraits>
+void setAST(proto::statements::AST* astProto, const ast::AST<DataTraits>* ast);
 
 //===------------------------------------------------------------------------------------------===//
 // Deserialization
@@ -112,10 +112,15 @@ std::shared_ptr<sir::Offset> makeOffset(const proto::statements::Offset& offsetP
 
 std::shared_ptr<sir::Interval> makeInterval(const proto::statements::Interval& intervalProto);
 
-std::shared_ptr<ast::Expr> makeExpr(const proto::statements::Expr& expressionProto);
+template <typename DataTraits>
+std::shared_ptr<ast::Expr<DataTraits>> makeExpr(const proto::statements::Expr& expressionProto);
 
-std::shared_ptr<ast::Stmt> makeStmt(const proto::statements::Stmt& statementProto);
+template <typename DataTraits>
+std::shared_ptr<ast::Stmt<DataTraits>> makeStmt(const proto::statements::Stmt& statementProto);
 
-std::shared_ptr<ast::AST> makeAST(const dawn::proto::statements::AST& astProto);
+template <typename DataTraits>
+std::shared_ptr<ast::AST<DataTraits>> makeAST(const dawn::proto::statements::AST& astProto);
+
+#include "dawn/Serialization/ASTSerializer.tcc"
 
 #endif // DAWN_SUPPORT_ASTSERIALIZER_H

@@ -19,7 +19,7 @@
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/BlockStatements.h"
 #include "dawn/IIR/IIRNode.h"
-#include "dawn/SIR/Statement.h"
+#include "dawn/Support/Json.h"
 #include <boost/optional.hpp>
 #include <memory>
 #include <vector>
@@ -36,7 +36,7 @@ class StencilMetaInformation;
 /// @ingroup optimizer
 class StatementAccessesPair : public IIRNode<DoMethod, StatementAccessesPair, void> {
 
-  std::shared_ptr<Statement> statement_;
+  std::shared_ptr<iir::Stmt> stmt_;
 
   // In case of a non function call stmt, the accesses are stored in callerAccesses_, while
   // calleeAccesses_ will be nullptr
@@ -59,7 +59,7 @@ public:
 
   inline virtual void updateFromChildren() override {}
 
-  explicit StatementAccessesPair(const std::shared_ptr<Statement>& statement);
+  explicit StatementAccessesPair(const std::shared_ptr<iir::Stmt>& stmt);
 
   StatementAccessesPair(StatementAccessesPair&&) = default;
 
@@ -67,8 +67,8 @@ public:
   std::unique_ptr<StatementAccessesPair> clone() const;
 
   /// @brief Get/Set the statement
-  std::shared_ptr<Statement> getStatement() const;
-  void setStatement(const std::shared_ptr<Statement>& statement);
+  std::shared_ptr<iir::Stmt> getStatement() const;
+  void setStatement(const std::shared_ptr<iir::Stmt>& stmt);
 
   /// @brief Get/Set the accesses
   std::shared_ptr<Accesses> getAccesses() const;

@@ -15,27 +15,18 @@
 yoda_add_library(
   NAME DawnAST
   SOURCES AST.h
-          AST.cpp
-          ASTExpr.cpp
+          AST.tcc
+          ASTExpr.tcc
           ASTExpr.h
           ASTFwd.h
-          ASTStmt.cpp
+          ASTStmt.tcc
           ASTStmt.h
-          ASTStringifier.cpp
+          ASTStringifier.tcc
           ASTStringifier.h
           ASTUtil.h
-          ASTUtil.cpp
-          ASTVisitor.cpp
+          ASTUtil.tcc
+          ASTVisitor.tcc
           ASTVisitor.h
           ASTVisitorHelpers.h
   OBJECT
-)
-
-yoda_combine_libraries(
-  NAME DawnAST
-  OBJECTS DawnASTObjects
-  INSTALL_DESTINATION ${DAWN_INSTALL_LIB_DIR}
-  DEPENDS DawnSupportStatic
-  VERSION ${DAWN_VERSION}
-  EXPORT_GROUP DawnTargets
 )

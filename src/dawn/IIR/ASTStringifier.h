@@ -16,13 +16,13 @@
 #define DAWN_IIR_ASTSTRINGIFER_H
 
 #include "dawn/AST/ASTStringifier.h"
+#include "dawn/IIR/ASTData.h"
+#include "dawn/IIR/ASTFwd.h"
 
 namespace dawn {
 namespace iir {
-//
-// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
-//
-using ASTStringifier = ast::ASTStringifier;
+
+using ASTStringifier = ast::ASTStringifier<IIRASTData, ast::StringVisitor<IIRASTData>>;
 extern inline std::ostream& operator<<(std::ostream& os, const AST& ast) {
   return ast::operator<<(os, ast);
 }

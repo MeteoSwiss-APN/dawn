@@ -24,7 +24,7 @@ namespace iir {
 class StencilInstantiation;
 class StencilMetaInformation;
 } // namespace iir
-namespace sir {
+namespace iir {
 struct StencilFunction;
 }
 namespace codegen {
@@ -36,20 +36,17 @@ namespace codegen {
 /// every field is a template argument.
 class StencilFunctionAsBCGenerator : public ASTCodeGenCXX {
 private:
-  std::shared_ptr<sir::StencilFunction> function_;
+  std::shared_ptr<iir::StencilFunction> function_;
   const iir::StencilMetaInformation& metadata_;
 
 public:
   using Base = ASTCodeGenCXX;
   StencilFunctionAsBCGenerator(const iir::StencilMetaInformation& metadata,
-                               const std::shared_ptr<sir::StencilFunction>& functionToAnalyze)
+                               const std::shared_ptr<iir::StencilFunction>& functionToAnalyze)
       : function_(functionToAnalyze), metadata_(metadata) {}
 
   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr);
 
-  inline void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) {
-    DAWN_ASSERT_MSG(0, "VerticalRegionDeclStmt not allowed in this context");
-  }
   inline void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) {
     DAWN_ASSERT_MSG(0, "StencilCallDeclStmt not allowed in this context");
   }

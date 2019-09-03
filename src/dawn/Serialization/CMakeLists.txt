@@ -16,6 +16,7 @@ yoda_add_library(
   NAME DawnSerializer
   SOURCES ASTSerializer.h
           ASTSerializer.cpp
+          ASTSerializer.tcc
           IIRSerializer.h
           IIRSerializer.cpp
           SIRSerializer.h

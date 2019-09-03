@@ -16,24 +16,22 @@
 #define DAWN_IIR_ASTEXPR_H
 
 #include "dawn/AST/ASTExpr.h"
+#include "dawn/IIR/ASTData.h"
 
 namespace dawn {
 namespace iir {
-//
-// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
-//
-using Expr = ast::Expr;
-using NOPExpr = ast::NOPExpr;
-using UnaryOperator = ast::UnaryOperator;
-using BinaryOperator = ast::BinaryOperator;
-using AssignmentExpr = ast::AssignmentExpr;
-using TernaryOperator = ast::TernaryOperator;
-using FunCallExpr = ast::FunCallExpr;
-using StencilFunCallExpr = ast::StencilFunCallExpr;
-using StencilFunArgExpr = ast::StencilFunArgExpr;
-using VarAccessExpr = ast::VarAccessExpr;
-using FieldAccessExpr = ast::FieldAccessExpr;
-using LiteralAccessExpr = ast::LiteralAccessExpr;
+using Expr = ast::Expr<IIRASTData>;
+using NOPExpr = ast::NOPExpr<IIRASTData>;
+using UnaryOperator = ast::UnaryOperator<IIRASTData>;
+using BinaryOperator = ast::BinaryOperator<IIRASTData>;
+using AssignmentExpr = ast::AssignmentExpr<IIRASTData>;
+using TernaryOperator = ast::TernaryOperator<IIRASTData>;
+using FunCallExpr = ast::FunCallExpr<IIRASTData>;
+using StencilFunCallExpr = ast::StencilFunCallExpr<IIRASTData>;
+using StencilFunArgExpr = ast::StencilFunArgExpr<IIRASTData>;
+using VarAccessExpr = ast::VarAccessExpr<IIRASTData>;
+using FieldAccessExpr = ast::FieldAccessExpr<IIRASTData>;
+using LiteralAccessExpr = ast::LiteralAccessExpr<IIRASTData>;
 } // namespace iir
 } // namespace dawn
 

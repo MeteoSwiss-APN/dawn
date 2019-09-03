@@ -16,24 +16,22 @@
 #define DAWN_SIR_ASTEXPR_H
 
 #include "dawn/AST/ASTExpr.h"
+#include "dawn/SIR/ASTData.h"
 
 namespace dawn {
 namespace sir {
-//
-// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
-//
-using Expr = ast::Expr;
-using NOPExpr = ast::NOPExpr;
-using UnaryOperator = ast::UnaryOperator;
-using BinaryOperator = ast::BinaryOperator;
-using AssignmentExpr = ast::AssignmentExpr;
-using TernaryOperator = ast::TernaryOperator;
-using FunCallExpr = ast::FunCallExpr;
-using StencilFunCallExpr = ast::StencilFunCallExpr;
-using StencilFunArgExpr = ast::StencilFunArgExpr;
-using VarAccessExpr = ast::VarAccessExpr;
-using FieldAccessExpr = ast::FieldAccessExpr;
-using LiteralAccessExpr = ast::LiteralAccessExpr;
+using Expr = ast::Expr<SIRASTData>;
+using NOPExpr = ast::NOPExpr<SIRASTData>;
+using UnaryOperator = ast::UnaryOperator<SIRASTData>;
+using BinaryOperator = ast::BinaryOperator<SIRASTData>;
+using AssignmentExpr = ast::AssignmentExpr<SIRASTData>;
+using TernaryOperator = ast::TernaryOperator<SIRASTData>;
+using FunCallExpr = ast::FunCallExpr<SIRASTData>;
+using StencilFunCallExpr = ast::StencilFunCallExpr<SIRASTData>;
+using StencilFunArgExpr = ast::StencilFunArgExpr<SIRASTData>;
+using VarAccessExpr = ast::VarAccessExpr<SIRASTData>;
+using FieldAccessExpr = ast::FieldAccessExpr<SIRASTData>;
+using LiteralAccessExpr = ast::LiteralAccessExpr<SIRASTData>;
 } // namespace sir
 } // namespace dawn
 

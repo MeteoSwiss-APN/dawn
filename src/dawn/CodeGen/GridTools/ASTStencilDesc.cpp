@@ -52,10 +52,6 @@ void ASTStencilDesc::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
 
 void ASTStencilDesc::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) { Base::visit(stmt); }
 
-void ASTStencilDesc::visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) {
-  dawn_unreachable("VerticalRegionDeclStmt not allowed in StencilDesc AST");
-}
-
 void ASTStencilDesc::visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) {
   int StencilID = metadata_.getStencilIDFromStencilCallStmt(stmt);
 
@@ -108,7 +104,9 @@ void ASTStencilDesc::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   }
 }
 
-void ASTStencilDesc::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) { Base::visit(expr); }
+void ASTStencilDesc::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) {
+  Base::visit(expr);
+}
 
 void ASTStencilDesc::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   dawn_unreachable("FieldAccessExpr not allowed in StencilDesc AST");

@@ -13,12 +13,7 @@
       "statements": [
        {
         "vertical_region_decl_stmt": {
-         "vertical_region": {
-          "loc": {
-           "Line": 28,
-           "Column": 5
-          },
-          "ast": {
+         "ast": {
            "root": {
             "block_stmt": {
              "statements": [
@@ -131,6 +126,11 @@
             }
            }
           },
+         "vertical_region": {
+          "loc": {
+           "Line": 28,
+           "Column": 5
+          },
           "interval": {
            "lower_offset": 0,
            "upper_offset": 0,
@@ -147,12 +147,7 @@
        },
        {
         "vertical_region_decl_stmt": {
-         "vertical_region": {
-          "loc": {
-           "Line": 31,
-           "Column": 5
-          },
-          "ast": {
+         "ast": {
            "root": {
             "block_stmt": {
              "statements": [
@@ -366,6 +361,11 @@
             }
            }
           },
+         "vertical_region": {
+          "loc": {
+           "Line": 31,
+           "Column": 5
+          },
           "interval": {
            "lower_offset": 0,
            "upper_offset": 0,
@@ -382,12 +382,7 @@
        },
        {
         "vertical_region_decl_stmt": {
-         "vertical_region": {
-          "loc": {
-           "Line": 35,
-           "Column": 5
-          },
-          "ast": {
+         "ast": {
            "root": {
             "block_stmt": {
              "statements": [
@@ -500,6 +495,11 @@
             }
            }
           },
+         "vertical_region": {
+          "loc": {
+           "Line": 35,
+           "Column": 5
+          },
           "interval": {
            "lower_offset": 1,
            "upper_offset": 0,
@@ -516,12 +516,7 @@
        },
        {
         "vertical_region_decl_stmt": {
-         "vertical_region": {
-          "loc": {
-           "Line": 38,
-           "Column": 5
-          },
-          "ast": {
+         "ast": {
            "root": {
             "block_stmt": {
              "statements": [
@@ -633,6 +628,11 @@
              }
             }
            }
+          },
+         "vertical_region": {
+          "loc": {
+           "Line": 38,
+           "Column": 5
           },
           "interval": {
            "lower_offset": 0,

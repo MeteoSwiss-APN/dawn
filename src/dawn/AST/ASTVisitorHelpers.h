@@ -11,20 +11,17 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-#ifndef DAWN_AST_ASTVISITORHELPERS_H
-#define DAWN_AST_ASTVISITORHELPERS_H
+
 #include "dawn/AST/ASTVisitor.h"
 
 #define ACCEPTVISITOR(subtype, type)                                                               \
-  virtual inline void accept(ASTVisitor& visitor) override {                                       \
-    visitor.visit(std::static_pointer_cast<type>(shared_from_this()));                             \
+  virtual inline void accept(ASTVisitor<DataTraits>& visitor) override {                           \
+    visitor.visit(std::static_pointer_cast<type>(this->shared_from_this()));                       \
   }                                                                                                \
-  virtual inline void accept(ASTVisitorNonConst& visitor) override {                               \
-    visitor.visit(std::static_pointer_cast<type>(shared_from_this()));                             \
+  virtual inline void accept(ASTVisitorNonConst<DataTraits>& visitor) override {                   \
+    visitor.visit(std::static_pointer_cast<type>(this->shared_from_this()));                       \
   }                                                                                                \
-  virtual inline std::shared_ptr<subtype> acceptAndReplace(ASTVisitorPostOrder& visitor)           \
-      override {                                                                                   \
-    return visitor.visitAndReplace(std::static_pointer_cast<type>(shared_from_this()));            \
+  virtual inline std::shared_ptr<subtype> acceptAndReplace(                                        \
+      ASTVisitorPostOrder<DataTraits>& visitor) override {                                         \
+    return visitor.visitAndReplace(std::static_pointer_cast<type>(this->shared_from_this()));      \
   }
-
-#endif

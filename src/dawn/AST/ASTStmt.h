@@ -27,17 +27,19 @@
 
 namespace dawn {
 
-namespace sir {
-struct VerticalRegion;
-} // namespace sir
-
 namespace ast {
+template <typename DataTraits>
+class AST;
+template <typename DataTraits>
 class ASTVisitor;
+template <typename DataTraits>
 class Expr;
 
 /// @brief Abstract base class of all statements
-/// @ingroup sir
-class Stmt : public std::enable_shared_from_this<Stmt> {
+/// @ingroup ast
+template <typename DataTraits>
+class Stmt : virtual public DataTraits::StmtData,
+             public std::enable_shared_from_this<Stmt<DataTraits>> {
 public:
   /// @brief Discriminator for RTTI (dyn_cast<> et al.)
   enum StmtKind {
@@ -51,7 +53,7 @@ public:
     SK_IfStmt
   };
 
-  using StmtRangeType = MutableArrayRef<std::shared_ptr<Stmt>>;
+  using StmtRangeType = MutableArrayRef<std::shared_ptr<Stmt<DataTraits>>>;
 
   /// @name Constructor & Destructor
   /// @{
@@ -61,12 +63,13 @@ public:
   /// @}
 
   /// @brief Hook for Visitors
-  virtual void accept(ASTVisitor& visitor) = 0;
-  virtual void accept(ASTVisitorNonConst& visitor) = 0;
-  virtual std::shared_ptr<Stmt> acceptAndReplace(ASTVisitorPostOrder& visitor) = 0;
+  virtual void accept(ASTVisitor<DataTraits>& visitor) = 0;
+  virtual void accept(ASTVisitorNonConst<DataTraits>& visitor) = 0;
+  virtual std::shared_ptr<Stmt<DataTraits>>
+  acceptAndReplace(ASTVisitorPostOrder<DataTraits>& visitor) = 0;
 
   /// @brief Clone the current statement
-  virtual std::shared_ptr<Stmt> clone() const = 0;
+  virtual std::shared_ptr<Stmt<DataTraits>> clone() const = 0;
 
   /// @brief Get kind of Stmt (used by RTTI dyn_cast<> et al.)
   StmtKind getKind() const { return kind_; }
@@ -78,11 +81,11 @@ public:
   /// @brief Iterate children (if any)
   virtual StmtRangeType getChildren() { return StmtRangeType(); }
 
-  virtual void replaceChildren(std::shared_ptr<Stmt> const& oldStmt,
-                               std::shared_ptr<Stmt> const& newStmt) {}
+  virtual void replaceChildren(std::shared_ptr<Stmt<DataTraits>> const& oldStmt,
+                               std::shared_ptr<Stmt<DataTraits>> const& newStmt) {}
 
   /// @brief Compare for equality
-  virtual bool equals(const Stmt* other) const { return kind_ == other->kind_; }
+  virtual bool equals(const Stmt<DataTraits>* other) const { return kind_ == other->kind_; }
 
   /// @brief Is the statement used for stencil description and has no real analogon in C++
   /// (e.g a VerticalRegion or StencilCall)?
@@ -90,8 +93,8 @@ public:
 
   /// @name Operators
   /// @{
-  bool operator==(const Stmt& other) const { return other.equals(this); }
-  bool operator!=(const Stmt& other) const { return !(*this == other); }
+  bool operator==(const Stmt<DataTraits>& other) const { return other.equals(this); }
+  bool operator!=(const Stmt<DataTraits>& other) const { return !(*this == other); }
   /// @}
 
   /// @brief get the statementID for mapping
@@ -100,7 +103,7 @@ public:
   void setID(int id) { statementID_ = id; }
 
 protected:
-  void assign(const Stmt& other) {
+  void assign(const Stmt<DataTraits>& other) {
     kind_ = other.kind_;
     loc_ = other.loc_;
   }
@@ -108,29 +111,42 @@ protected:
 protected:
   StmtKind kind_;
   SourceLocation loc_;
-
   int statementID_;
 };
+
+#define USING_STMT_BASE_NAMES                                                                      \
+  using typename Stmt<DataTraits>::StmtRangeType;                                                  \
+  using typename Stmt<DataTraits>::StmtKind;                                                       \
+  using Stmt<DataTraits>::SK_BlockStmt;                                                            \
+  using Stmt<DataTraits>::SK_ExprStmt;                                                             \
+  using Stmt<DataTraits>::SK_ReturnStmt;                                                           \
+  using Stmt<DataTraits>::SK_VarDeclStmt;                                                          \
+  using Stmt<DataTraits>::SK_StencilCallDeclStmt;                                                  \
+  using Stmt<DataTraits>::SK_VerticalRegionDeclStmt;                                               \
+  using Stmt<DataTraits>::SK_BoundaryConditionDeclStmt;                                            \
+  using Stmt<DataTraits>::SK_IfStmt;                                                               \
+  using Stmt<DataTraits>::kind_;                                                                   \
+  using Stmt<DataTraits>::loc_;                                                                    \
+  using Stmt<DataTraits>::statementID_;
 
 //===------------------------------------------------------------------------------------------===//
 //     BlockStmt
 //===------------------------------------------------------------------------------------------===//
 
 /// @brief Block of statements
-/// @ingroup sir
-class BlockStmt : public Stmt {
-  std::vector<std::shared_ptr<Stmt>> statements_;
-
+/// @ingroup ast
+template <typename DataTraits>
+class BlockStmt : public DataTraits::BlockStmt, public Stmt<DataTraits> {
 public:
-  using StatementList = std::vector<std::shared_ptr<Stmt>>;
+  USING_STMT_BASE_NAMES
+  using StatementList = std::vector<std::shared_ptr<Stmt<DataTraits>>>;
 
   /// @name Constructor & Destructor
   /// @{
   BlockStmt(SourceLocation loc = SourceLocation());
-  BlockStmt(const std::vector<std::shared_ptr<Stmt>>& statements,
-            SourceLocation loc = SourceLocation());
-  BlockStmt(const BlockStmt& stmt);
-  BlockStmt& operator=(BlockStmt const& stmt);
+  BlockStmt(const StatementList& statements, SourceLocation loc = SourceLocation());
+  BlockStmt(const BlockStmt<DataTraits>& stmt);
+  BlockStmt<DataTraits>& operator=(BlockStmt<DataTraits> const& stmt);
   virtual ~BlockStmt();
   /// @}
 
@@ -144,21 +160,24 @@ public:
     statements_.insert(statements_.end(), begin, end);
   }
 
-  void push_back(const std::shared_ptr<Stmt>& stmt) { statements_.push_back(stmt); }
+  void push_back(const std::shared_ptr<Stmt<DataTraits>>& stmt) { statements_.push_back(stmt); }
 
-  std::vector<std::shared_ptr<Stmt>>& getStatements() { return statements_; }
-  const std::vector<std::shared_ptr<Stmt>>& getStatements() const { return statements_; }
+  StatementList& getStatements() { return statements_; }
+  const StatementList& getStatements() const { return statements_; }
 
-  virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
-  static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_BlockStmt; }
+  virtual std::shared_ptr<Stmt<DataTraits>> clone() const override;
+  virtual bool equals(const Stmt<DataTraits>* other) const override;
+  static bool classof(const Stmt<DataTraits>* stmt) { return stmt->getKind() == SK_BlockStmt; }
   virtual StmtRangeType getChildren() override { return StmtRangeType(statements_); }
-  virtual void replaceChildren(const std::shared_ptr<Stmt>& oldStmt,
-                               const std::shared_ptr<Stmt>& newStmt) override;
+  virtual void replaceChildren(const std::shared_ptr<Stmt<DataTraits>>& oldStmt,
+                               const std::shared_ptr<Stmt<DataTraits>>& newStmt) override;
 
   bool isEmpty() const { return statements_.empty(); }
 
-  ACCEPTVISITOR(Stmt, BlockStmt)
+  ACCEPTVISITOR(Stmt<DataTraits>, BlockStmt<DataTraits>)
+
+private:
+  StatementList statements_;
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -166,33 +185,35 @@ public:
 //===------------------------------------------------------------------------------------------===//
 
 /// @brief Block of statements
-/// @ingroup sir
-class ExprStmt : public Stmt {
-  std::shared_ptr<Expr> expr_;
+/// @ingroup ast
+template <typename DataTraits>
+class ExprStmt : public DataTraits::ExprStmt, public Stmt<DataTraits> {
+  std::shared_ptr<Expr<DataTraits>> expr_;
 
 public:
+  USING_STMT_BASE_NAMES
   /// @name Constructor & Destructor
   /// @{
-  ExprStmt(const std::shared_ptr<Expr>& expr, SourceLocation loc = SourceLocation());
-  ExprStmt(const ExprStmt& stmt);
-  ExprStmt& operator=(ExprStmt stmt);
+  ExprStmt(const std::shared_ptr<Expr<DataTraits>>& expr, SourceLocation loc = SourceLocation());
+  ExprStmt(const ExprStmt<DataTraits>& stmt);
+  ExprStmt<DataTraits>& operator=(ExprStmt<DataTraits> stmt);
   virtual ~ExprStmt();
   /// @}
 
-  void setExpr(const std::shared_ptr<Expr>& expr) { expr_ = expr; }
-  const std::shared_ptr<Expr>& getExpr() const { return expr_; }
-  std::shared_ptr<Expr>& getExpr() { return expr_; }
+  void setExpr(const std::shared_ptr<Expr<DataTraits>>& expr) { expr_ = expr; }
+  const std::shared_ptr<Expr<DataTraits>>& getExpr() const { return expr_; }
+  std::shared_ptr<Expr<DataTraits>>& getExpr() { return expr_; }
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Woverloaded-virtual"
-  virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
-                               const std::shared_ptr<Expr>& newExpr);
+  virtual void replaceChildren(const std::shared_ptr<Expr<DataTraits>>& oldExpr,
+                               const std::shared_ptr<Expr<DataTraits>>& newExpr);
 #pragma GCC diagnostic pop
 
-  virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
-  static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_ExprStmt; }
-  ACCEPTVISITOR(Stmt, ExprStmt)
+  virtual std::shared_ptr<Stmt<DataTraits>> clone() const override;
+  virtual bool equals(const Stmt<DataTraits>* other) const override;
+  static bool classof(const Stmt<DataTraits>* stmt) { return stmt->getKind() == SK_ExprStmt; }
+  ACCEPTVISITOR(Stmt<DataTraits>, ExprStmt<DataTraits>)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -200,33 +221,35 @@ public:
 //===------------------------------------------------------------------------------------------===//
 
 /// @brief This represents a return of an expression
-/// @ingroup sir
-class ReturnStmt : public Stmt {
-  std::shared_ptr<Expr> expr_;
+/// @ingroup ast
+template <typename DataTraits>
+class ReturnStmt : public DataTraits::ReturnStmt, public Stmt<DataTraits> {
+  std::shared_ptr<Expr<DataTraits>> expr_;
 
 public:
+  USING_STMT_BASE_NAMES
   /// @name Constructor & Destructor
   /// @{
-  ReturnStmt(const std::shared_ptr<Expr>& expr, SourceLocation loc = SourceLocation());
-  ReturnStmt(const ReturnStmt& stmt);
-  ReturnStmt& operator=(ReturnStmt stmt);
+  ReturnStmt(const std::shared_ptr<Expr<DataTraits>>& expr, SourceLocation loc = SourceLocation());
+  ReturnStmt(const ReturnStmt<DataTraits>& stmt);
+  ReturnStmt<DataTraits>& operator=(ReturnStmt<DataTraits> stmt);
   virtual ~ReturnStmt();
   /// @}
 
-  void setExpr(const std::shared_ptr<Expr>& expr) { expr_ = expr; }
-  const std::shared_ptr<Expr>& getExpr() const { return expr_; }
-  std::shared_ptr<Expr>& getExpr() { return expr_; }
+  void setExpr(const std::shared_ptr<Expr<DataTraits>>& expr) { expr_ = expr; }
+  const std::shared_ptr<Expr<DataTraits>>& getExpr() const { return expr_; }
+  std::shared_ptr<Expr<DataTraits>>& getExpr() { return expr_; }
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Woverloaded-virtual"
-  virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
-                               const std::shared_ptr<Expr>& newExpr);
+  virtual void replaceChildren(const std::shared_ptr<Expr<DataTraits>>& oldExpr,
+                               const std::shared_ptr<Expr<DataTraits>>& newExpr);
 #pragma GCC diagnostic pop
 
-  virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
-  static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_ReturnStmt; }
-  ACCEPTVISITOR(Stmt, ReturnStmt)
+  virtual std::shared_ptr<Stmt<DataTraits>> clone() const override;
+  virtual bool equals(const Stmt<DataTraits>* other) const override;
+  static bool classof(const Stmt<DataTraits>* stmt) { return stmt->getKind() == SK_ReturnStmt; }
+  ACCEPTVISITOR(Stmt<DataTraits>, ReturnStmt<DataTraits>)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -234,25 +257,19 @@ public:
 //===------------------------------------------------------------------------------------------===//
 
 /// @brief This represents a declaration of a local variable or C-array
-/// @ingroup sir
-class VarDeclStmt : public Stmt {
-  Type type_;
-  std::string name_;
-
-  // Dimension of the array or 0 for variables
-  int dimension_;
-  std::string op_;
-
-  // List of expression used for initializaion or just 1 element for variables
-  std::vector<std::shared_ptr<Expr>> initList_;
-
+/// @ingroup ast
+template <typename DataTraits>
+class VarDeclStmt : public DataTraits::VarDeclStmt, public Stmt<DataTraits> {
 public:
+  USING_STMT_BASE_NAMES
+  using InitList = std::vector<std::shared_ptr<Expr<DataTraits>>>;
+
   /// @name Constructor & Destructor
   /// @{
   VarDeclStmt(const Type& type, const std::string& name, int dimension, const char* op,
-              std::vector<std::shared_ptr<Expr>> initList, SourceLocation loc = SourceLocation());
-  VarDeclStmt(const VarDeclStmt& stmt);
-  VarDeclStmt& operator=(VarDeclStmt stmt);
+              InitList initList, SourceLocation loc = SourceLocation());
+  VarDeclStmt(const VarDeclStmt<DataTraits>& stmt);
+  VarDeclStmt<DataTraits>& operator=(VarDeclStmt<DataTraits> stmt);
   virtual ~VarDeclStmt();
   /// @}
 
@@ -267,51 +284,34 @@ public:
 
   bool isArray() const { return (dimension_ > 0); }
   bool hasInit() const { return (!initList_.empty()); }
-  const std::vector<std::shared_ptr<Expr>>& getInitList() const { return initList_; }
-  std::vector<std::shared_ptr<Expr>>& getInitList() { return initList_; }
+  const InitList& getInitList() const { return initList_; }
+  InitList& getInitList() { return initList_; }
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Woverloaded-virtual"
-  virtual void replaceChildren(const std::shared_ptr<Expr>& oldExpr,
-                               const std::shared_ptr<Expr>& newExpr);
+  virtual void replaceChildren(const std::shared_ptr<Expr<DataTraits>>& oldExpr,
+                               const std::shared_ptr<Expr<DataTraits>>& newExpr);
 #pragma GCC diagnostic pop
 
-  virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
-  static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_VarDeclStmt; }
-  ACCEPTVISITOR(Stmt, VarDeclStmt)
-};
+  virtual std::shared_ptr<Stmt<DataTraits>> clone() const override;
+  virtual bool equals(const Stmt<DataTraits>* other) const override;
+  static bool classof(const Stmt<DataTraits>* stmt) { return stmt->getKind() == SK_VarDeclStmt; }
+  ACCEPTVISITOR(Stmt<DataTraits>, VarDeclStmt<DataTraits>)
 
-//===------------------------------------------------------------------------------------------===//
-//     VerticalRegionDeclStmt
-//===------------------------------------------------------------------------------------------===//
+private:
+  Type type_;
+  std::string name_;
 
-/// @brief This represents a declaration of a sir::VerticalRegion
-/// @ingroup sir
-class VerticalRegionDeclStmt : public Stmt {
-  std::shared_ptr<sir::VerticalRegion> verticalRegion_;
+  // Dimension of the array or 0 for variables
+  int dimension_;
+  std::string op_;
 
-public:
-  /// @name Constructor & Destructor
-  /// @{
-  VerticalRegionDeclStmt(const std::shared_ptr<sir::VerticalRegion>& verticalRegion,
-                         SourceLocation loc = SourceLocation());
-  VerticalRegionDeclStmt(const VerticalRegionDeclStmt& stmt);
-  VerticalRegionDeclStmt& operator=(VerticalRegionDeclStmt stmt);
-  virtual ~VerticalRegionDeclStmt();
-  /// @}
-
-  const std::shared_ptr<sir::VerticalRegion>& getVerticalRegion() const { return verticalRegion_; }
-
-  virtual bool isStencilDesc() const override { return true; }
-  virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
-  static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_VerticalRegionDeclStmt; }
-  ACCEPTVISITOR(Stmt, VerticalRegionDeclStmt)
+  // List of expression used for initializaion or just 1 element for variables
+  InitList initList_;
 };
 
 /// @brief Call to another stencil
-/// @ingroup sir
+/// @ingroup ast
 struct StencilCall {
 
   SourceLocation Loc;            ///< Source location of the call
@@ -322,14 +322,14 @@ struct StencilCall {
       : Loc(loc), Callee(callee) {}
 
   /// @brief Clone the vertical region
-  std::shared_ptr<StencilCall> clone() const;
+  inline std::shared_ptr<StencilCall> clone() const;
 
   /// @brief Comparison between stencils (omitting location)
-  bool operator==(const StencilCall& rhs) const;
+  inline bool operator==(const StencilCall& rhs) const;
 
   /// @brief Comparison between stencils (omitting location)
   /// if the comparison fails, outputs human readable reason why in the string
-  CompareResult comparison(const StencilCall& rhs) const;
+  inline CompareResult comparison(const StencilCall& rhs) const;
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -337,27 +337,31 @@ struct StencilCall {
 //===------------------------------------------------------------------------------------------===//
 
 /// @brief This represents a declaration of a StencilCall
-/// @ingroup sir
-class StencilCallDeclStmt : public Stmt {
+/// @ingroup ast
+template <typename DataTraits>
+class StencilCallDeclStmt : public DataTraits::StencilCallDeclStmt, public Stmt<DataTraits> {
   std::shared_ptr<StencilCall> stencilCall_;
 
 public:
+  USING_STMT_BASE_NAMES
   /// @name Constructor & Destructor
   /// @{
   StencilCallDeclStmt(const std::shared_ptr<StencilCall>& stencilCall,
                       SourceLocation loc = SourceLocation());
-  StencilCallDeclStmt(const StencilCallDeclStmt& stmt);
-  StencilCallDeclStmt& operator=(StencilCallDeclStmt stmt);
+  StencilCallDeclStmt(const StencilCallDeclStmt<DataTraits>& stmt);
+  StencilCallDeclStmt<DataTraits>& operator=(StencilCallDeclStmt<DataTraits> stmt);
   virtual ~StencilCallDeclStmt();
   /// @}
 
   const std::shared_ptr<StencilCall>& getStencilCall() const { return stencilCall_; }
 
   virtual bool isStencilDesc() const override { return true; }
-  virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
-  static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_StencilCallDeclStmt; }
-  ACCEPTVISITOR(Stmt, StencilCallDeclStmt)
+  virtual std::shared_ptr<Stmt<DataTraits>> clone() const override;
+  virtual bool equals(const Stmt<DataTraits>* other) const override;
+  static bool classof(const Stmt<DataTraits>* stmt) {
+    return stmt->getKind() == SK_StencilCallDeclStmt;
+  }
+  ACCEPTVISITOR(Stmt<DataTraits>, StencilCallDeclStmt<DataTraits>)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -365,17 +369,20 @@ public:
 //===------------------------------------------------------------------------------------------===//
 
 /// @brief This represents a declaration of a boundary condition
-/// @ingroup sir
-class BoundaryConditionDeclStmt : public Stmt {
+/// @ingroup ast
+template <typename DataTraits>
+class BoundaryConditionDeclStmt : public DataTraits::BoundaryConditionDeclStmt,
+                                  public Stmt<DataTraits> {
   std::string functor_;
   std::vector<std::string> fields_;
 
 public:
+  USING_STMT_BASE_NAMES
   /// @name Constructor & Destructor
   /// @{
   BoundaryConditionDeclStmt(const std::string& callee, SourceLocation loc = SourceLocation());
-  BoundaryConditionDeclStmt(const BoundaryConditionDeclStmt& stmt);
-  BoundaryConditionDeclStmt& operator=(BoundaryConditionDeclStmt stmt);
+  BoundaryConditionDeclStmt(const BoundaryConditionDeclStmt<DataTraits>& stmt);
+  BoundaryConditionDeclStmt<DataTraits>& operator=(BoundaryConditionDeclStmt<DataTraits> stmt);
   virtual ~BoundaryConditionDeclStmt();
   /// @}
 
@@ -385,10 +392,12 @@ public:
   const std::vector<std::string>& getFields() const { return fields_; }
 
   virtual bool isStencilDesc() const override { return true; }
-  virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
-  static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_BoundaryConditionDeclStmt; }
-  ACCEPTVISITOR(Stmt, BoundaryConditionDeclStmt)
+  virtual std::shared_ptr<Stmt<DataTraits>> clone() const override;
+  virtual bool equals(const Stmt<DataTraits>* other) const override;
+  static bool classof(const Stmt<DataTraits>* stmt) {
+    return stmt->getKind() == SK_BoundaryConditionDeclStmt;
+  }
+  ACCEPTVISITOR(Stmt<DataTraits>, BoundaryConditionDeclStmt<DataTraits>)
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -396,51 +405,57 @@ public:
 //===------------------------------------------------------------------------------------------===//
 
 /// @brief This represents an if/then/else block
-/// @ingroup sir
-class IfStmt : public Stmt {
+/// @ingroup ast
+template <typename DataTraits>
+class IfStmt : public DataTraits::IfStmt, public Stmt<DataTraits> {
   enum OperandKind { OK_Cond, OK_Then, OK_Else, OK_End };
-  std::shared_ptr<Stmt> subStmts_[OK_End];
+  std::shared_ptr<Stmt<DataTraits>> subStmts_[OK_End];
 
 public:
+  USING_STMT_BASE_NAMES
   /// @name Constructor & Destructor
   /// @{
-  IfStmt(const std::shared_ptr<Stmt>& condExpr, const std::shared_ptr<Stmt>& thenStmt,
-         const std::shared_ptr<Stmt>& elseStmt = nullptr, SourceLocation loc = SourceLocation());
-  IfStmt(const IfStmt& stmt);
-  IfStmt& operator=(IfStmt stmt);
+  IfStmt(const std::shared_ptr<Stmt<DataTraits>>& condExpr,
+         const std::shared_ptr<Stmt<DataTraits>>& thenStmt,
+         const std::shared_ptr<Stmt<DataTraits>>& elseStmt = nullptr,
+         SourceLocation loc = SourceLocation());
+  IfStmt(const IfStmt<DataTraits>& stmt);
+  IfStmt<DataTraits>& operator=(IfStmt<DataTraits> stmt);
   virtual ~IfStmt();
   /// @}
 
-  const std::shared_ptr<Expr>& getCondExpr() const {
-    return dyn_cast<ExprStmt>(subStmts_[OK_Cond].get())->getExpr();
+  const std::shared_ptr<Expr<DataTraits>>& getCondExpr() const {
+    return dyn_cast<ExprStmt<DataTraits>>(subStmts_[OK_Cond].get())->getExpr();
   }
-  std::shared_ptr<Expr>& getCondExpr() {
-    return dyn_cast<ExprStmt>(subStmts_[OK_Cond].get())->getExpr();
+  std::shared_ptr<Expr<DataTraits>>& getCondExpr() {
+    return dyn_cast<ExprStmt<DataTraits>>(subStmts_[OK_Cond].get())->getExpr();
   }
 
-  const std::shared_ptr<Stmt>& getCondStmt() const { return subStmts_[OK_Cond]; }
-  std::shared_ptr<Stmt>& getCondStmt() { return subStmts_[OK_Cond]; }
+  const std::shared_ptr<Stmt<DataTraits>>& getCondStmt() const { return subStmts_[OK_Cond]; }
+  std::shared_ptr<Stmt<DataTraits>>& getCondStmt() { return subStmts_[OK_Cond]; }
 
-  const std::shared_ptr<Stmt>& getThenStmt() const { return subStmts_[OK_Then]; }
-  std::shared_ptr<Stmt>& getThenStmt() { return subStmts_[OK_Then]; }
-  void setThenStmt(std::shared_ptr<Stmt>& thenStmt) { subStmts_[OK_Then] = thenStmt; }
+  const std::shared_ptr<Stmt<DataTraits>>& getThenStmt() const { return subStmts_[OK_Then]; }
+  std::shared_ptr<Stmt<DataTraits>>& getThenStmt() { return subStmts_[OK_Then]; }
+  void setThenStmt(std::shared_ptr<Stmt<DataTraits>>& thenStmt) { subStmts_[OK_Then] = thenStmt; }
 
-  const std::shared_ptr<Stmt>& getElseStmt() const { return subStmts_[OK_Else]; }
-  std::shared_ptr<Stmt>& getElseStmt() { return subStmts_[OK_Else]; }
+  const std::shared_ptr<Stmt<DataTraits>>& getElseStmt() const { return subStmts_[OK_Else]; }
+  std::shared_ptr<Stmt<DataTraits>>& getElseStmt() { return subStmts_[OK_Else]; }
   bool hasElse() const { return getElseStmt() != nullptr; }
-  void setElseStmt(std::shared_ptr<Stmt>& elseStmt) { subStmts_[OK_Else] = elseStmt; }
+  void setElseStmt(std::shared_ptr<Stmt<DataTraits>>& elseStmt) { subStmts_[OK_Else] = elseStmt; }
 
-  virtual std::shared_ptr<Stmt> clone() const override;
-  virtual bool equals(const Stmt* other) const override;
-  static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_IfStmt; }
+  virtual std::shared_ptr<Stmt<DataTraits>> clone() const override;
+  virtual bool equals(const Stmt<DataTraits>* other) const override;
+  static bool classof(const Stmt<DataTraits>* stmt) { return stmt->getKind() == SK_IfStmt; }
   virtual StmtRangeType getChildren() override {
     return hasElse() ? StmtRangeType(subStmts_) : StmtRangeType(&subStmts_[0], OK_End - 1);
   }
-  virtual void replaceChildren(const std::shared_ptr<Stmt>& oldStmt,
-                               const std::shared_ptr<Stmt>& newStmt) override;
-  ACCEPTVISITOR(Stmt, IfStmt)
+  virtual void replaceChildren(const std::shared_ptr<Stmt<DataTraits>>& oldStmt,
+                               const std::shared_ptr<Stmt<DataTraits>>& newStmt) override;
+  ACCEPTVISITOR(Stmt<DataTraits>, IfStmt<DataTraits>)
 };
 } // namespace ast
 } // namespace dawn
+
+#include "dawn/AST/ASTStmt.tcc"
 
 #endif

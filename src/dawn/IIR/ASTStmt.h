@@ -16,21 +16,18 @@
 #define DAWN_IIR_ASTSTMT_H
 
 #include "dawn/AST/ASTStmt.h"
+#include "dawn/IIR/ASTData.h"
 
 namespace dawn {
 namespace iir {
-//
-// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
-//
-using Stmt = ast::Stmt;
-using BlockStmt = ast::BlockStmt;
-using ExprStmt = ast::ExprStmt;
-using ReturnStmt = ast::ReturnStmt;
-using VarDeclStmt = ast::VarDeclStmt;
-using VerticalRegionDeclStmt = ast::VerticalRegionDeclStmt;
-using StencilCallDeclStmt = ast::StencilCallDeclStmt;
-using BoundaryConditionDeclStmt = ast::BoundaryConditionDeclStmt;
-using IfStmt = ast::IfStmt;
+using Stmt = ast::Stmt<IIRASTData>;
+using BlockStmt = ast::BlockStmt<IIRASTData>;
+using ExprStmt = ast::ExprStmt<IIRASTData>;
+using ReturnStmt = ast::ReturnStmt<IIRASTData>;
+using VarDeclStmt = ast::VarDeclStmt<IIRASTData>;
+using StencilCallDeclStmt = ast::StencilCallDeclStmt<IIRASTData>;
+using BoundaryConditionDeclStmt = ast::BoundaryConditionDeclStmt<IIRASTData>;
+using IfStmt = ast::IfStmt<IIRASTData>;
 
 } // namespace iir
 } // namespace dawn

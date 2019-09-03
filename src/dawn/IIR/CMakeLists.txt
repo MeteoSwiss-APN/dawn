@@ -29,6 +29,7 @@ dawn_protobuf_generate(
 yoda_add_library(
   NAME DawnIIR
   SOURCES AST.h
+          ASTData.h
           ASTExpr.h
           ASTFwd.h
           ASTStmt.h
@@ -86,6 +87,9 @@ yoda_add_library(
           StatementAccessesPair.h
           Stencil.cpp
           Stencil.h
+          StencilFunction.h
+          StencilFunction.cpp
+          SIRToIIRASTMapper.h
           StencilFunctionInstantiation.cpp
           StencilFunctionInstantiation.h
           StencilInstantiation.cpp

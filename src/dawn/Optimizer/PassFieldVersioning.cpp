@@ -14,6 +14,7 @@
 
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/Extents.h"
@@ -65,12 +66,12 @@ static bool isHorizontalStencilOrCounterLoopOrderExtent(const iir::Extents& exte
          extent.getVerticalLoopOrderAccesses(loopOrder).CounterLoopOrder;
 }
 
-/// @brief Report a race condition in the given `statement`
-static void reportRaceCondition(const Statement& statement,
+/// @brief Report a race condition in the given `stmt`
+static void reportRaceCondition(const std::shared_ptr<iir::Stmt>& stmt,
                                 iir::StencilInstantiation& instantiation) {
-  DiagnosticsBuilder diag(DiagnosticsKind::Error, statement.ASTStmt->getSourceLocation());
+  DiagnosticsBuilder diag(DiagnosticsKind::Error, stmt->getSourceLocation());
 
-  if(isa<iir::IfStmt>(statement.ASTStmt.get())) {
+  if(isa<iir::IfStmt>(stmt.get())) {
     diag << "unresolvable race-condition in body of if-statement";
   } else {
     diag << "unresolvable race-condition in statement";
@@ -79,8 +80,8 @@ static void reportRaceCondition(const Statement& statement,
   instantiation.getOptimizerContext()->getDiagnostics().report(diag);
 
   // Print stack trace of stencil calls
-  if(statement.StackTrace) {
-    std::vector<ast::StencilCall*>& stackTrace = *statement.StackTrace;
+  if(stmt->StackTrace) {
+    std::vector<ast::StencilCall*>& stackTrace = *stmt->StackTrace;
     for(int i = stackTrace.size() - 1; i >= 0; --i) {
       DiagnosticsBuilder note(DiagnosticsKind::Note, stackTrace[i]->Loc);
       note << "detected during instantiation of stencil-call '" << stackTrace[i]->Callee << "'";
@@ -163,7 +164,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   using Vertex = iir::DependencyGraphAccesses::Vertex;
   using Edge = iir::DependencyGraphAccesses::Edge;
 
-  Statement& statement = *doMethod.getChildren()[index]->getStatement();
+  std::shared_ptr<iir::Stmt> stmt = doMethod.getChildren()[index]->getStatement();
 
   OptimizerContext* context = instantiation->getOptimizerContext();
   int numRenames = 0;
@@ -234,13 +235,13 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   // we cannot perform any double buffering (e.g if there is a problem inside an `IfStmt`, nothing
   // we can do (yet ;))
   iir::AssignmentExpr* assignment = nullptr;
-  if(iir::ExprStmt* stmt = dyn_cast<iir::ExprStmt>(statement.ASTStmt.get()))
-    assignment = dyn_cast<iir::AssignmentExpr>(stmt->getExpr().get());
+  if(iir::ExprStmt* stmtPtr = dyn_cast<iir::ExprStmt>(stmt.get()))
+    assignment = dyn_cast<iir::AssignmentExpr>(stmtPtr->getExpr().get());
 
   if(!assignment) {
     if(context->getOptions().DumpRaceConditionGraph)
       graph->toDot("rc_" + instantiation->getName() + ".dot");
-    reportRaceCondition(statement, *instantiation);
+    reportRaceCondition(stmt, *instantiation);
     return RCKind::RK_Unresolvable;
   }
 
@@ -256,7 +257,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
     if(!scc.count(LHSAccessID)) {
       if(context->getOptions().DumpRaceConditionGraph)
         graph->toDot("rc_" + instantiation->getName() + ".dot");
-      reportRaceCondition(statement, *instantiation);
+      reportRaceCondition(stmt, *instantiation);
       return RCKind::RK_Unresolvable;
     }
   }
@@ -272,7 +273,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
 
   if(context->getOptions().ReportPassFieldVersioning)
     std::cout << "\nPASS: " << getName() << ": " << instantiation->getName()
-              << ": rename:" << statement.ASTStmt->getSourceLocation().Line;
+              << ": rename:" << stmt->getSourceLocation().Line;
 
   // Create a new multi-versioned field and rename all occurences
   for(int oldAccessID : renameCandiates) {

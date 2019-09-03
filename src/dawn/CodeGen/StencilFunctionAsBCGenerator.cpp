@@ -1,4 +1,5 @@
 #include "dawn/CodeGen/StencilFunctionAsBCGenerator.h"
+#include "dawn/IIR/StencilFunction.h"
 #include "dawn/IIR/StencilInstantiation.h"
 
 namespace dawn {

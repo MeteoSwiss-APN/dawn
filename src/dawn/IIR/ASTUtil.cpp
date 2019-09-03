@@ -15,16 +15,12 @@
 #include "dawn/IIR/ASTUtil.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTVisitor.h"
-#include "dawn/SIR/Statement.h"
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/Unreachable.h"
 #include <functional>
 
 namespace dawn {
 namespace iir {
-//
-// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
-//
 void replaceOldExprWithNewExprInStmt(const std::shared_ptr<Stmt>& stmt,
                                      const std::shared_ptr<Expr>& oldExpr,
                                      const std::shared_ptr<Expr>& newExpr) {
@@ -48,10 +44,6 @@ bool evalExprAsInteger(const std::shared_ptr<Expr>& expr, int& result,
 bool evalExprAsBoolean(const std::shared_ptr<Expr>& expr, bool& result,
                        const std::unordered_map<std::string, double>& variableMap) {
   return ast::evalExprAsBoolean(expr, result, variableMap);
-}
-
-extern std::vector<sir::Field> getFieldFromStencilAST(const std::shared_ptr<AST>& ast) {
-  return ast::getFieldFromStencilAST(ast);
 }
 
 } // namespace iir

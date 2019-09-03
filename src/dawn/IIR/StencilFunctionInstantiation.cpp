@@ -32,7 +32,7 @@ using ::dawn::operator<<;
 
 StencilFunctionInstantiation::StencilFunctionInstantiation(
     StencilInstantiation* context, const std::shared_ptr<iir::StencilFunCallExpr>& expr,
-    const std::shared_ptr<sir::StencilFunction>& function, const std::shared_ptr<iir::AST>& ast,
+    const std::shared_ptr<iir::StencilFunction>& function, const std::shared_ptr<iir::AST>& ast,
     const Interval& interval, bool isNested)
     : stencilInstantiation_(context), metadata_(context->getMetaData()), expr_(expr),
       function_(function), ast_(ast), interval_(interval), hasReturn_(false), isNested_(isNested),

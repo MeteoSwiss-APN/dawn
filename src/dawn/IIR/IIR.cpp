@@ -52,8 +52,8 @@ json::json IIR::jsonDump() const {
 }
 
 IIR::IIR(const sir::GlobalVariableMap& sirGlobals,
-         const std::vector<std::shared_ptr<sir::StencilFunction>>& stencilFunction)
-    : globalVariableMap_(sirGlobals), stencilFunctions_(stencilFunction) {}
+         const std::vector<std::shared_ptr<iir::StencilFunction>>& stencilFunctions)
+    : globalVariableMap_(sirGlobals), stencilFunctions_(stencilFunctions) {}
 
 void IIR::clone(std::unique_ptr<IIR>& dest) const {
   dest->cloneChildrenFrom(*this, dest);

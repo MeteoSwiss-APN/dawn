@@ -13,21 +13,27 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/AST/ASTVisitor.h"
 #include "dawn/AST/AST.h"
-#include "dawn/SIR/SIR.h"
+#include "dawn/Support/Assert.h"
 
 namespace dawn {
 namespace ast {
-ASTVisitor::~ASTVisitor() {}
-ASTVisitorNonConst::~ASTVisitorNonConst() {}
-ASTVisitorForwarding::~ASTVisitorForwarding() {}
-ASTVisitorForwardingNonConst::~ASTVisitorForwardingNonConst() {}
-ASTVisitorDisabled::~ASTVisitorDisabled() {}
-ASTVisitorPostOrder::~ASTVisitorPostOrder() {}
+template <typename DataTraits>
+ASTVisitor<DataTraits>::~ASTVisitor() {}
+template <typename DataTraits>
+ASTVisitorNonConst<DataTraits>::~ASTVisitorNonConst() {}
+template <typename DataTraits>
+ASTVisitorForwarding<DataTraits>::~ASTVisitorForwarding() {}
+template <typename DataTraits>
+ASTVisitorForwardingNonConst<DataTraits>::~ASTVisitorForwardingNonConst() {}
+template <typename DataTraits>
+ASTVisitorDisabled<DataTraits>::~ASTVisitorDisabled() {}
+template <typename DataTraits>
+ASTVisitorPostOrder<DataTraits>::~ASTVisitorPostOrder() {}
 
 #define ASTVISITORFORWARDING_VISIT_IMPL(Type)                                                      \
-  void ASTVisitorForwarding::visit(const std::shared_ptr<Type>& node) {                            \
+  template <typename DataTraits>                                                                   \
+  void ASTVisitorForwarding<DataTraits>::visit(const std::shared_ptr<Type<DataTraits>>& node) {    \
     for(const auto& s : node->getChildren())                                                       \
       s->accept(*this);                                                                            \
   }
@@ -49,25 +55,25 @@ ASTVISITORFORWARDING_VISIT_IMPL(LiteralAccessExpr)
 
 #undef ASTVISITORFORWARDING_VISIT_IMPL
 
-void ASTVisitorForwarding::visit(const std::shared_ptr<ExprStmt>& node) {
+template <typename DataTraits>
+void ASTVisitorForwarding<DataTraits>::visit(const std::shared_ptr<ExprStmt<DataTraits>>& node) {
   node->getExpr()->accept(*this);
 }
 
-void ASTVisitorForwarding::visit(const std::shared_ptr<ReturnStmt>& node) {
+template <typename DataTraits>
+void ASTVisitorForwarding<DataTraits>::visit(const std::shared_ptr<ReturnStmt<DataTraits>>& node) {
   node->getExpr()->accept(*this);
 }
 
-void ASTVisitorForwarding::visit(const std::shared_ptr<VarDeclStmt>& node) {
+template <typename DataTraits>
+void ASTVisitorForwarding<DataTraits>::visit(const std::shared_ptr<VarDeclStmt<DataTraits>>& node) {
   for(const auto& expr : node->getInitList())
     expr->accept(*this);
 }
 
-void ASTVisitorForwarding::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) {
-  stmt->getVerticalRegion()->Ast->accept(*this);
-}
-
 #define ASTVISITORFORWARDINGNONCONST_VISIT_IMPL(Type)                                              \
-  void ASTVisitorForwardingNonConst::visit(std::shared_ptr<Type> node) {                           \
+  template <typename DataTraits>                                                                   \
+  void ASTVisitorForwardingNonConst<DataTraits>::visit(std::shared_ptr<Type<DataTraits>> node) {   \
     for(auto& s : node->getChildren())                                                             \
       s->accept(*this);                                                                            \
   }
@@ -89,26 +95,27 @@ ASTVISITORFORWARDINGNONCONST_VISIT_IMPL(LiteralAccessExpr)
 
 #undef ASTVISITORFORWARDINGNONCONST_VISIT_IMPL
 
-void ASTVisitorForwardingNonConst::visit(std::shared_ptr<ExprStmt> node) {
+template <typename DataTraits>
+void ASTVisitorForwardingNonConst<DataTraits>::visit(std::shared_ptr<ExprStmt<DataTraits>> node) {
   node->getExpr()->accept(*this);
 }
 
-void ASTVisitorForwardingNonConst::visit(std::shared_ptr<ReturnStmt> node) {
+template <typename DataTraits>
+void ASTVisitorForwardingNonConst<DataTraits>::visit(std::shared_ptr<ReturnStmt<DataTraits>> node) {
   node->getExpr()->accept(*this);
 }
 
-void ASTVisitorForwardingNonConst::visit(std::shared_ptr<VarDeclStmt> node) {
+template <typename DataTraits>
+void ASTVisitorForwardingNonConst<DataTraits>::visit(
+    std::shared_ptr<VarDeclStmt<DataTraits>> node) {
   for(const auto& expr : node->getInitList())
     expr->accept(*this);
 }
 
-void ASTVisitorForwardingNonConst::visit(std::shared_ptr<VerticalRegionDeclStmt> stmt) {
-  stmt->getVerticalRegion()->Ast->accept(*this);
-}
-
 #define ASTVISITORPOSTORDER_VISIT_IMPL(NodeType, Type)                                             \
-  std::shared_ptr<NodeType> ASTVisitorPostOrder::visitAndReplace(                                  \
-      std::shared_ptr<Type> const& node) {                                                         \
+  template <typename DataTraits>                                                                   \
+  std::shared_ptr<NodeType<DataTraits>> ASTVisitorPostOrder<DataTraits>::visitAndReplace(          \
+      std::shared_ptr<Type<DataTraits>> const& node) {                                             \
     if(!preVisitNode(node))                                                                        \
       return node;                                                                                 \
     for(auto s : node->getChildren()) {                                                            \
@@ -119,9 +126,14 @@ void ASTVisitorForwardingNonConst::visit(std::shared_ptr<VerticalRegionDeclStmt>
     }                                                                                              \
     return postVisitNode(node);                                                                    \
   }                                                                                                \
-  bool ASTVisitorPostOrder::preVisitNode(std::shared_ptr<Type> const& node) { return true; }       \
-  std::shared_ptr<NodeType> ASTVisitorPostOrder::postVisitNode(                                    \
-      std::shared_ptr<Type> const& node) {                                                         \
+  template <typename DataTraits>                                                                   \
+  bool ASTVisitorPostOrder<DataTraits>::preVisitNode(                                              \
+      std::shared_ptr<Type<DataTraits>> const& node) {                                             \
+    return true;                                                                                   \
+  }                                                                                                \
+  template <typename DataTraits>                                                                   \
+  std::shared_ptr<NodeType<DataTraits>> ASTVisitorPostOrder<DataTraits>::postVisitNode(            \
+      std::shared_ptr<Type<DataTraits>> const& node) {                                             \
     return node;                                                                                   \
   }
 
@@ -144,7 +156,9 @@ ASTVISITORPOSTORDER_VISIT_IMPL(Expr, NOPExpr)
 #undef ASTVISITORPOSTORDER_VISIT_STMT_IMPL
 #undef ASTVISITORPOSTORDER_VISIT_EXPR_IMPL
 
-std::shared_ptr<Stmt> ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<ExprStmt> const& node) {
+template <typename DataTraits>
+std::shared_ptr<Stmt<DataTraits>> ASTVisitorPostOrder<DataTraits>::visitAndReplace(
+    std::shared_ptr<ExprStmt<DataTraits>> const& node) {
   DAWN_ASSERT(node);
   if(!preVisitNode(node))
     return node;
@@ -160,13 +174,20 @@ std::shared_ptr<Stmt> ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<ExprS
   }
   return postVisitNode(node);
 }
-bool ASTVisitorPostOrder::preVisitNode(std::shared_ptr<ExprStmt> const& node) { return true; }
-std::shared_ptr<Stmt> ASTVisitorPostOrder::postVisitNode(std::shared_ptr<ExprStmt> const& node) {
+template <typename DataTraits>
+bool ASTVisitorPostOrder<DataTraits>::preVisitNode(
+    std::shared_ptr<ExprStmt<DataTraits>> const& node) {
+  return true;
+}
+template <typename DataTraits>
+std::shared_ptr<Stmt<DataTraits>>
+ASTVisitorPostOrder<DataTraits>::postVisitNode(std::shared_ptr<ExprStmt<DataTraits>> const& node) {
   return node;
 }
 
-std::shared_ptr<Stmt>
-ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<ReturnStmt> const& node) {
+template <typename DataTraits>
+std::shared_ptr<Stmt<DataTraits>> ASTVisitorPostOrder<DataTraits>::visitAndReplace(
+    std::shared_ptr<ReturnStmt<DataTraits>> const& node) {
   if(!preVisitNode(node))
     return node;
   auto repl = node->getExpr()->acceptAndReplace(*this);
@@ -174,13 +195,20 @@ ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<ReturnStmt> const& node) {
     node->replaceChildren(node->getExpr(), repl);
   return postVisitNode(node);
 }
-std::shared_ptr<Stmt> ASTVisitorPostOrder::postVisitNode(std::shared_ptr<ReturnStmt> const& node) {
+template <typename DataTraits>
+std::shared_ptr<Stmt<DataTraits>> ASTVisitorPostOrder<DataTraits>::postVisitNode(
+    std::shared_ptr<ReturnStmt<DataTraits>> const& node) {
   return node;
 }
-bool ASTVisitorPostOrder::preVisitNode(std::shared_ptr<ReturnStmt> const& node) { return true; }
+template <typename DataTraits>
+bool ASTVisitorPostOrder<DataTraits>::preVisitNode(
+    std::shared_ptr<ReturnStmt<DataTraits>> const& node) {
+  return true;
+}
 
-std::shared_ptr<Stmt>
-ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<VarDeclStmt> const& node) {
+template <typename DataTraits>
+std::shared_ptr<Stmt<DataTraits>> ASTVisitorPostOrder<DataTraits>::visitAndReplace(
+    std::shared_ptr<VarDeclStmt<DataTraits>> const& node) {
   if(!preVisitNode(node))
     return node;
   for(auto expr : node->getInitList()) {
@@ -191,33 +219,20 @@ ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<VarDeclStmt> const& node) {
   return postVisitNode(node);
 }
 
-std::shared_ptr<Stmt> ASTVisitorPostOrder::postVisitNode(std::shared_ptr<VarDeclStmt> const& node) {
+template <typename DataTraits>
+std::shared_ptr<Stmt<DataTraits>> ASTVisitorPostOrder<DataTraits>::postVisitNode(
+    std::shared_ptr<VarDeclStmt<DataTraits>> const& node) {
   return node;
 }
-bool ASTVisitorPostOrder::preVisitNode(std::shared_ptr<VarDeclStmt> const& node) { return true; }
-
-std::shared_ptr<Stmt>
-ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<VerticalRegionDeclStmt> const& stmt) {
-  // TODO replace this as wel
-  if(!preVisitNode(stmt))
-    return stmt;
-  auto repl = stmt->getVerticalRegion()->Ast->acceptAndReplace(*this);
-  if(repl && repl != stmt->getVerticalRegion()->Ast)
-    stmt->getVerticalRegion()->Ast = repl;
-  return postVisitNode(stmt);
-}
-
-bool ASTVisitorPostOrder::preVisitNode(std::shared_ptr<VerticalRegionDeclStmt> const& stmt) {
+template <typename DataTraits>
+bool ASTVisitorPostOrder<DataTraits>::preVisitNode(
+    std::shared_ptr<VarDeclStmt<DataTraits>> const& node) {
   return true;
 }
 
-std::shared_ptr<Stmt>
-ASTVisitorPostOrder::postVisitNode(std::shared_ptr<VerticalRegionDeclStmt> const& stmt) {
-  return stmt;
-}
-
 #define ASTVISITORDISABLED_VISIT_IMPL(Type)                                                        \
-  void ASTVisitorDisabled::visit(const std::shared_ptr<Type>& node) {                              \
+  template <typename DataTraits>                                                                   \
+  void ASTVisitorDisabled<DataTraits>::visit(const std::shared_ptr<Type<DataTraits>>& node) {      \
     DAWN_ASSERT_MSG(0, "Type not allowed in this context");                                        \
   }
 
@@ -238,7 +253,6 @@ ASTVISITORDISABLED_VISIT_IMPL(LiteralAccessExpr)
 ASTVISITORDISABLED_VISIT_IMPL(ExprStmt)
 ASTVISITORDISABLED_VISIT_IMPL(ReturnStmt)
 ASTVISITORDISABLED_VISIT_IMPL(VarDeclStmt)
-ASTVISITORDISABLED_VISIT_IMPL(VerticalRegionDeclStmt)
 
 #undef ASTVISITORDISABLED_VISIT_IMPL
 } // namespace ast

@@ -20,6 +20,9 @@
 
 namespace dawn {
 namespace sir {
+
+struct Field;
+
 /// @brief Replace `oldExpr` with `newExpr` in `stmt`
 ///
 /// Note that `oldExpr` is identfied by its `std::shared_ptr` and not its content. To replace
@@ -81,10 +84,8 @@ extern bool evalExprAsBoolean(const std::shared_ptr<Expr>& expr, bool& result,
 /// @param ast              AST to evaluate
 /// @returns                a Vector of all the Fields used in the stencil
 /// @ingroup testing
-extern std::vector<sir::Field> getFieldFromStencilAST(const std::shared_ptr<AST>& ast);
-//
-// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
-//
+extern std::vector<Field> getFieldFromStencilAST(const std::shared_ptr<AST>& ast);
+
 using ASTHelper = ast::ASTHelper;
 } // namespace sir
 } // namespace dawn

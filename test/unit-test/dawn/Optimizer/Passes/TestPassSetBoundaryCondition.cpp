@@ -94,7 +94,7 @@ TEST_F(StencilSplitAnalyzer, test_no_bc_inserted) {
   ASSERT_TRUE((test->getMetaData().getFieldNameToBCMap().size() == 1));
   BCFinder myvisitor;
   for(const auto& stmt : test->getIIR()->getControlFlowDescriptor().getStatements()) {
-    stmt->ASTStmt->accept(myvisitor);
+    stmt->accept(myvisitor);
   }
   ASSERT_TRUE((myvisitor.reportBCsFound() == 0));
 }
@@ -114,7 +114,7 @@ TEST_F(StencilSplitAnalyzer, test_bc_extent_calc) {
   ASSERT_TRUE((test->getMetaData().getFieldNameToBCMap().size() == 1));
   BCFinder myvisitor;
   for(const auto& stmt : test->getIIR()->getControlFlowDescriptor().getStatements()) {
-    stmt->ASTStmt->accept(myvisitor);
+    stmt->accept(myvisitor);
   }
   ASSERT_TRUE((myvisitor.reportBCsFound() == 1));
   ASSERT_TRUE(test->getMetaData().getFieldNameToBCMap().count("intermediate"));

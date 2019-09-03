@@ -13,12 +13,7 @@
       "statements": [
        {
         "vertical_region_decl_stmt": {
-         "vertical_region": {
-          "loc": {
-           "Line": 26,
-           "Column": 5
-          },
-          "ast": {
+         "ast": {
            "root": {
             "block_stmt": {
              "statements": [
@@ -97,6 +92,11 @@
             }
            }
           },
+         "vertical_region": {
+          "loc": {
+           "Line": 26,
+           "Column": 5
+          },
           "interval": {
            "lower_offset": 2,
            "upper_offset": 3,
@@ -113,12 +113,7 @@
        },
        {
         "vertical_region_decl_stmt": {
-         "vertical_region": {
-          "loc": {
-           "Line": 28,
-           "Column": 5
-          },
-          "ast": {
+         "ast": {
            "root": {
             "block_stmt": {
              "statements": [
@@ -231,6 +226,11 @@
             }
            }
           },
+         "vertical_region": {
+          "loc": {
+           "Line": 28,
+           "Column": 5
+          },
           "interval": {
            "lower_offset": 2,
            "upper_offset": 10,
@@ -247,12 +247,7 @@
        },
        {
         "vertical_region_decl_stmt": {
-         "vertical_region": {
-          "loc": {
-           "Line": 30,
-           "Column": 5
-          },
-          "ast": {
+         "ast": {
            "root": {
             "block_stmt": {
              "statements": [
@@ -330,6 +325,11 @@
              }
             }
            }
+          },
+         "vertical_region": {
+          "loc": {
+           "Line": 30,
+           "Column": 5
           },
           "interval": {
            "lower_offset": 0,

@@ -16,18 +16,16 @@
 #define DAWN_IIR_ASTVISITOR_H
 
 #include "dawn/AST/ASTVisitor.h"
+#include "dawn/IIR/ASTData.h"
 
 namespace dawn {
 namespace iir {
-//
-// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
-//
-using ASTVisitor = ast::ASTVisitor;
-using ASTVisitorNonConst = ast::ASTVisitorNonConst;
-using ASTVisitorForwarding = ast::ASTVisitorForwarding;
-using ASTVisitorPostOrder = ast::ASTVisitorPostOrder;
-using ASTVisitorForwardingNonConst = ast::ASTVisitorForwardingNonConst;
-using ASTVisitorDisabled = ast::ASTVisitorDisabled;
+using ASTVisitor = ast::ASTVisitor<IIRASTData>;
+using ASTVisitorNonConst = ast::ASTVisitorNonConst<IIRASTData>;
+using ASTVisitorForwarding = ast::ASTVisitorForwarding<IIRASTData>;
+using ASTVisitorPostOrder = ast::ASTVisitorPostOrder<IIRASTData>;
+using ASTVisitorForwardingNonConst = ast::ASTVisitorForwardingNonConst<IIRASTData>;
+using ASTVisitorDisabled = ast::ASTVisitorDisabled<IIRASTData>;
 } // namespace iir
 } // namespace dawn
 

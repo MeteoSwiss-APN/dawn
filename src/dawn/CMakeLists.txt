@@ -27,7 +27,6 @@ include(yodaCombineLibraries)
 yoda_combine_libraries(
   NAME Dawn
   OBJECTS DawnSupportObjects
-          DawnASTObjects
           DawnCompilerObjects
           DawnOptimizerObjects
           DawnCodeGenObjects

@@ -14,6 +14,7 @@
 
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/SIR/AST.h"
+#include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/SIR/SIR/SIR.pb.h"
@@ -324,9 +325,6 @@ makeVerticalRegion(const dawn::proto::statements::VerticalRegion& verticalRegion
   // VerticalRegion.Loc
   auto loc = makeLocation(verticalRegionProto);
 
-  // VerticalRegion.Ast
-  auto ast = makeAST(verticalRegionProto.ast());
-
   // VerticalRegion.VerticalInterval
   auto interval = makeInterval(verticalRegionProto.interval());
 
@@ -336,7 +334,7 @@ makeVerticalRegion(const dawn::proto::statements::VerticalRegion& verticalRegion
           ? sir::VerticalRegion::LK_Backward
           : sir::VerticalRegion::LK_Forward;
 
-  return std::make_shared<sir::VerticalRegion>(ast, interval, loopOrder, loc);
+  return std::make_shared<sir::VerticalRegion>(interval, loopOrder, loc);
 }
 
 static std::shared_ptr<ast::StencilCall>
@@ -521,8 +519,10 @@ static std::shared_ptr<sir::Stmt> makeStmt(const dawn::proto::statements::Stmt& 
   }
   case dawn::proto::statements::Stmt::kVerticalRegionDeclStmt: {
     const auto& stmtProto = statementProto.vertical_region_decl_stmt();
+    // VerticalRegionDeclStmt.Ast
+    auto ast = makeAST(stmtProto.ast());
     return std::make_shared<sir::VerticalRegionDeclStmt>(
-        makeVerticalRegion(stmtProto.vertical_region()), makeLocation(stmtProto));
+        ast, makeVerticalRegion(stmtProto.vertical_region()), makeLocation(stmtProto));
   }
   case dawn::proto::statements::Stmt::kBoundaryConditionDeclStmt: {
     const auto& stmtProto = statementProto.boundary_condition_decl_stmt();

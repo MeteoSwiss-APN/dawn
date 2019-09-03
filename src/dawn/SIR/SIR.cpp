@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/SIR/SIR.h"
+#include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/ASTStringifier.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Casting.h"
@@ -32,32 +33,32 @@ class DiffWriter final : public sir::ASTVisitorForwarding {
 public:
   virtual void visit(const std::shared_ptr<sir::VerticalRegionDeclStmt>& stmt) override {
     statements_.push_back(stmt);
-    stmt->getVerticalRegion()->Ast->getRoot()->accept(*this);
+    this->sir::ASTVisitorForwarding::visit(stmt);
   }
 
   virtual void visit(const std::shared_ptr<sir::ReturnStmt>& stmt) override {
     statements_.push_back(stmt);
-    sir::ASTVisitorForwarding::visit(stmt);
+    this->sir::ASTVisitorForwarding::Base::visit(stmt);
   }
 
   virtual void visit(const std::shared_ptr<sir::ExprStmt>& stmt) override {
     statements_.push_back(stmt);
-    sir::ASTVisitorForwarding::visit(stmt);
+    this->sir::ASTVisitorForwarding::Base::visit(stmt);
   }
 
   virtual void visit(const std::shared_ptr<sir::BlockStmt>& stmt) override {
     statements_.push_back(stmt);
-    sir::ASTVisitorForwarding::visit(stmt);
+    this->sir::ASTVisitorForwarding::Base::visit(stmt);
   }
 
   virtual void visit(const std::shared_ptr<sir::VarDeclStmt>& stmt) override {
     statements_.push_back(stmt);
-    sir::ASTVisitorForwarding::visit(stmt);
+    this->sir::ASTVisitorForwarding::Base::visit(stmt);
   }
 
   virtual void visit(const std::shared_ptr<sir::IfStmt>& stmt) override {
     statements_.push_back(stmt);
-    sir::ASTVisitorForwarding::visit(stmt);
+    this->sir::ASTVisitorForwarding::Base::visit(stmt);
   }
 
   std::vector<std::shared_ptr<sir::Stmt>> getStatements() const { return statements_; }
@@ -102,23 +103,6 @@ CompareResult isEqualImpl(const sir::Value& a, const sir::Value& b, const std::s
                          false};
 
   return CompareResult{"", true};
-}
-
-/// @brief Compares two ASTs
-std::pair<std::string, bool> compareAst(const std::shared_ptr<sir::AST>& lhs,
-                                        const std::shared_ptr<sir::AST>& rhs) {
-  if(lhs->getRoot()->equals(rhs->getRoot().get()))
-    return std::make_pair("", true);
-
-  DiffWriter lhsDW, rhsDW;
-  lhs->accept(lhsDW);
-  rhs->accept(rhsDW);
-
-  auto comp = lhsDW.compare(rhsDW);
-  if(!comp.second)
-    return comp;
-
-  return std::make_pair("", true);
 }
 
 /// @brief Compares the content of two shared pointers
@@ -187,6 +171,23 @@ static std::pair<std::string, bool> pointerMapComparison(const sir::GlobalVariab
 }
 
 } // anonymous namespace
+
+/// @brief Compares two ASTs
+std::pair<std::string, bool> sir::compareAst(const std::shared_ptr<sir::AST>& lhs,
+                                             const std::shared_ptr<sir::AST>& rhs) {
+  if(lhs->getRoot()->equals(rhs->getRoot().get()))
+    return std::make_pair("", true);
+
+  DiffWriter lhsDW, rhsDW;
+  lhs->accept(lhsDW);
+  rhs->accept(rhsDW);
+
+  auto comp = lhsDW.compare(rhsDW);
+  if(!comp.second)
+    return comp;
+
+  return std::make_pair("", true);
+}
 
 CompareResult SIR::comparison(const SIR& rhs) const {
   std::string output;
@@ -458,12 +459,6 @@ CompareResult sir::VerticalRegion::comparison(const sir::VerticalRegion& rhs) co
     return CompareResult{output, false};
   }
 
-  auto astComp = compareAst(Ast, rhs.Ast);
-  if(!astComp.second) {
-    output += "[VerticalRegion mismatch] ASTs do not match\n";
-    output += astComp.first;
-    return CompareResult{output, false};
-  }
   return CompareResult{output, true};
 }
 
@@ -657,7 +652,7 @@ std::string sir::Value::toString() const {
 }
 
 std::shared_ptr<sir::VerticalRegion> sir::VerticalRegion::clone() const {
-  return std::make_shared<sir::VerticalRegion>(Ast->clone(), VerticalInterval, LoopOrder, Loc);
+  return std::make_shared<sir::VerticalRegion>(VerticalInterval, LoopOrder, Loc);
 }
 
 bool SIR::operator==(const SIR& rhs) const { return comparison(rhs); }
