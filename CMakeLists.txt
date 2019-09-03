@@ -157,7 +157,7 @@ endif()
 install(
   DIRECTORY ${CMAKE_SOURCE_DIR}/src/
   DESTINATION ${DAWN_INSTALL_INCLUDE_DIR}
-  FILES_MATCHING PATTERN "*.h" PATTERN "*.inc" PATTERN "*.hpp"
+  FILES_MATCHING PATTERN "*.h" PATTERN "*.inc" PATTERN "*.hpp" PATTERN "*.tcc"
 )
 
 # Install CMake package configuration
