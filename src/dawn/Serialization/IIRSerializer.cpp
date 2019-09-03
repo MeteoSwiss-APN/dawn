@@ -24,8 +24,6 @@
 #include <fstream>
 #include <google/protobuf/util/json_util.h>
 
-#include "dawn/Support/test_mat.h"
-
 namespace dawn {
 static proto::iir::Extents makeProtoExtents(dawn::iir::Extents const& extents) {
   proto::iir::Extents protoExtents;

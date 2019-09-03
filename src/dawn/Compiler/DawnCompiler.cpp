@@ -48,8 +48,6 @@
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
 
-#include "dawn/Support/test_mat.h"
-
 namespace dawn {
 
 namespace {
