@@ -88,10 +88,12 @@ public:
   void visit(const std::shared_ptr<sir::IfStmt>& stmt) override {
     stmt->getCondStmt()->accept(*this);
     stmt->getThenStmt()->accept(*this);
-    stmt->getElseStmt()->accept(*this);
+    if(stmt->hasElse())
+      stmt->getElseStmt()->accept(*this);
     stmtMap_.emplace(stmt, std::make_shared<iir::IfStmt>(
                                stmtMap_.at(stmt->getCondStmt()), stmtMap_.at(stmt->getThenStmt()),
-                               stmtMap_.at(stmt->getElseStmt()), stmt->getSourceLocation()));
+                               stmt->hasElse() ? stmtMap_.at(stmt->getElseStmt()) : nullptr,
+                               stmt->getSourceLocation()));
   }
   /// @}
   /// @brief Expressions

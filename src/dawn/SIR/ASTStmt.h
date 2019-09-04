@@ -66,8 +66,11 @@ public:
   static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_VerticalRegionDeclStmt; }
   virtual void accept(ast::ASTVisitor<SIRASTData>& visitor) override;
   virtual void accept(ast::ASTVisitorNonConst<SIRASTData>& visitor) override;
+  virtual void accept(ast::ASTVisitorForwarding<SIRASTData>& visitor) override;
   virtual std::shared_ptr<Stmt>
   acceptAndReplace(ast::ASTVisitorPostOrder<SIRASTData>& visitor) override;
+  virtual void accept(ast::ASTVisitorForwardingNonConst<SIRASTData>& visitor) override;
+  virtual void accept(ast::ASTVisitorDisabled<SIRASTData>& visitor) override;
 };
 
 } // namespace sir

@@ -70,6 +70,13 @@ void VerticalRegionDeclStmt::accept(ast::ASTVisitorNonConst<SIRASTData>& visitor
     throw std::runtime_error("Invalid ASTVisitorNonConst used on VerticalRegionDeclStmt.");
 }
 
+void VerticalRegionDeclStmt::accept(ast::ASTVisitorForwarding<SIRASTData>& visitor) {
+  if(ASTVisitorForwarding* sirVisitor = dynamic_cast<ASTVisitorForwarding*>(&visitor))
+    sirVisitor->visit(std::static_pointer_cast<VerticalRegionDeclStmt>(shared_from_this()));
+  else
+    throw std::runtime_error("Invalid ASTVisitorForwarding used on VerticalRegionDeclStmt.");
+}
+
 std::shared_ptr<Stmt>
 VerticalRegionDeclStmt::acceptAndReplace(ast::ASTVisitorPostOrder<SIRASTData>& visitor) {
   if(ASTVisitorPostOrder* sirVisitor = dynamic_cast<ASTVisitorPostOrder*>(&visitor))
@@ -77,6 +84,22 @@ VerticalRegionDeclStmt::acceptAndReplace(ast::ASTVisitorPostOrder<SIRASTData>& v
         std::static_pointer_cast<VerticalRegionDeclStmt>(shared_from_this()));
   else
     throw std::runtime_error("Invalid ASTVisitorPostOrder used on VerticalRegionDeclStmt.");
+}
+
+void VerticalRegionDeclStmt::accept(ast::ASTVisitorForwardingNonConst<SIRASTData>& visitor) {
+  if(ASTVisitorForwardingNonConst* sirVisitor =
+         dynamic_cast<ASTVisitorForwardingNonConst*>(&visitor))
+    sirVisitor->visit(std::static_pointer_cast<VerticalRegionDeclStmt>(shared_from_this()));
+  else
+    throw std::runtime_error(
+        "Invalid ASTVisitorForwardingNonConst used on VerticalRegionDeclStmt.");
+}
+
+void VerticalRegionDeclStmt::accept(ast::ASTVisitorDisabled<SIRASTData>& visitor) {
+  if(ASTVisitorDisabled* sirVisitor = dynamic_cast<ASTVisitorDisabled*>(&visitor))
+    sirVisitor->visit(std::static_pointer_cast<VerticalRegionDeclStmt>(shared_from_this()));
+  else
+    throw std::runtime_error("Invalid ASTVisitorDisabled used on VerticalRegionDeclStmt.");
 }
 
 } // namespace sir

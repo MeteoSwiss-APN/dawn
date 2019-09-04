@@ -29,9 +29,6 @@
 namespace dawn {
 namespace ast {
 
-template <typename DataTraits>
-class ASTVisitor;
-
 /// @brief Abstract base class of all expressions
 /// @ingroup ast
 template <typename DataTraits>
@@ -64,8 +61,11 @@ public:
   /// @brief Hook for Visitors
   virtual void accept(ASTVisitor<DataTraits>& visitor) = 0;
   virtual void accept(ASTVisitorNonConst<DataTraits>& visitor) = 0;
+  virtual void accept(ASTVisitorForwarding<DataTraits>& visitor) = 0;
   virtual std::shared_ptr<Expr<DataTraits>>
   acceptAndReplace(ASTVisitorPostOrder<DataTraits>& visitor) = 0;
+  virtual void accept(ASTVisitorForwardingNonConst<DataTraits>& visitor) = 0;
+  virtual void accept(ASTVisitorDisabled<DataTraits>& visitor) = 0;
 
   /// @brief Clone the current expression
   virtual std::shared_ptr<Expr<DataTraits>> clone() const = 0;

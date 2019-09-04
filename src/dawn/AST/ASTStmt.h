@@ -31,8 +31,6 @@ namespace ast {
 template <typename DataTraits>
 class AST;
 template <typename DataTraits>
-class ASTVisitor;
-template <typename DataTraits>
 class Expr;
 
 /// @brief Abstract base class of all statements
@@ -65,8 +63,11 @@ public:
   /// @brief Hook for Visitors
   virtual void accept(ASTVisitor<DataTraits>& visitor) = 0;
   virtual void accept(ASTVisitorNonConst<DataTraits>& visitor) = 0;
+  virtual void accept(ASTVisitorForwarding<DataTraits>& visitor) = 0;
   virtual std::shared_ptr<Stmt<DataTraits>>
   acceptAndReplace(ASTVisitorPostOrder<DataTraits>& visitor) = 0;
+  virtual void accept(ASTVisitorForwardingNonConst<DataTraits>& visitor) = 0;
+  virtual void accept(ASTVisitorDisabled<DataTraits>& visitor) = 0;
 
   /// @brief Clone the current statement
   virtual std::shared_ptr<Stmt<DataTraits>> clone() const = 0;

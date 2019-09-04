@@ -21,7 +21,16 @@
   virtual inline void accept(ASTVisitorNonConst<DataTraits>& visitor) override {                   \
     visitor.visit(std::static_pointer_cast<type>(this->shared_from_this()));                       \
   }                                                                                                \
+  virtual inline void accept(ASTVisitorForwarding<DataTraits>& visitor) override {                 \
+    visitor.visit(std::static_pointer_cast<type>(this->shared_from_this()));                       \
+  }                                                                                                \
   virtual inline std::shared_ptr<subtype> acceptAndReplace(                                        \
       ASTVisitorPostOrder<DataTraits>& visitor) override {                                         \
     return visitor.visitAndReplace(std::static_pointer_cast<type>(this->shared_from_this()));      \
+  }                                                                                                \
+  virtual inline void accept(ASTVisitorForwardingNonConst<DataTraits>& visitor) {                  \
+    visitor.visit(std::static_pointer_cast<type>(this->shared_from_this()));                       \
+  }                                                                                                \
+  virtual inline void accept(ASTVisitorDisabled<DataTraits>& visitor) {                            \
+    visitor.visit(std::static_pointer_cast<type>(this->shared_from_this()));                       \
   }

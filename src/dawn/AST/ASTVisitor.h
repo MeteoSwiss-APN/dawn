@@ -95,6 +95,8 @@ class ASTVisitorForwarding : public ASTVisitor<DataTraits> {
 public:
   virtual ~ASTVisitorForwarding();
 
+  using ASTVisitor<DataTraits>::visit;
+
   /// @brief Statements
   /// @{
   virtual void visit(const std::shared_ptr<BlockStmt<DataTraits>>& stmt) override;
@@ -264,6 +266,8 @@ class ASTVisitorForwardingNonConst : public ASTVisitorNonConst<DataTraits> {
 public:
   virtual ~ASTVisitorForwardingNonConst();
 
+  using ASTVisitorNonConst<DataTraits>::visit;
+
   /// @brief Statements
   /// @{
   virtual void visit(std::shared_ptr<BlockStmt<DataTraits>> stmt) override;
@@ -298,6 +302,8 @@ template <typename DataTraits>
 class ASTVisitorDisabled : public ASTVisitor<DataTraits> {
 public:
   virtual ~ASTVisitorDisabled();
+
+  using ASTVisitor<DataTraits>::visit;
 
   /// @brief Statements
   /// @{
