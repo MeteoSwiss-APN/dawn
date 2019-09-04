@@ -83,7 +83,7 @@ std::shared_ptr<dawn::sir::VarDeclStmt> vecdecl(const std::string& type, const s
 std::shared_ptr<dawn::sir::VerticalRegionDeclStmt>
 verticalRegion(const std::shared_ptr<dawn::sir::VerticalRegion>& verticalRegion);
 std::shared_ptr<dawn::sir::StencilCallDeclStmt>
-scdec(const std::shared_ptr<dawn::sir::StencilCall>& stencilCall);
+scdec(const std::shared_ptr<dawn::ast::StencilCall>& stencilCall);
 std::shared_ptr<dawn::sir::BoundaryConditionDeclStmt> boundaryCondition(const std::string& callee);
 std::shared_ptr<dawn::sir::IfStmt> ifstmt(const std::shared_ptr<dawn::sir::Stmt>& condExpr,
                                      const std::shared_ptr<dawn::sir::Stmt>& thenStmt,

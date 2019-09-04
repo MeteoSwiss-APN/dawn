@@ -59,7 +59,7 @@ verticalRegion(const std::shared_ptr<dawn::sir::VerticalRegion>& verticalRegion)
 }
 
 std::shared_ptr<dawn::sir::StencilCallDeclStmt>
-scdec(const std::shared_ptr<dawn::sir::StencilCall>& stencilCall) {
+scdec(const std::shared_ptr<dawn::ast::StencilCall>& stencilCall) {
   return std::make_shared<dawn::sir::StencilCallDeclStmt>(stencilCall);
 }
 
