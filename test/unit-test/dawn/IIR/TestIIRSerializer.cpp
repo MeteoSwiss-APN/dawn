@@ -268,18 +268,20 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
 
 TEST_F(IIRSerializerTest, ComplexStrucutes) {
   auto statement = std::make_shared<Statement>(
-      std::make_shared<iir::StencilCallDeclStmt>(std::make_shared<sir::StencilCall>("me")), nullptr);
+      std::make_shared<iir::StencilCallDeclStmt>(std::make_shared<ast::StencilCall>("me")),
+      nullptr);
   statement->ASTStmt->getSourceLocation().Line = 10;
   statement->ASTStmt->getSourceLocation().Column = 12;
   referenceInstantiaton->getIIR()->getControlFlowDescriptor().insertStmt(statement);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  auto stmt = std::make_shared<iir::StencilCallDeclStmt>(std::make_shared<sir::StencilCall>("test"));
+  auto stmt =
+      std::make_shared<iir::StencilCallDeclStmt>(std::make_shared<ast::StencilCall>("test"));
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   auto bcstmt = std::make_shared<iir::BoundaryConditionDeclStmt>("callee");
-  bcstmt->getFields().push_back(std::make_shared<sir::Field>("field1"));
-  bcstmt->getFields().push_back(std::make_shared<sir::Field>("field2"));
+  bcstmt->getFields().push_back("field1");
+  bcstmt->getFields().push_back("field2");
   referenceInstantiaton->getMetaData().insertFieldBC("bc", bcstmt);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 }
