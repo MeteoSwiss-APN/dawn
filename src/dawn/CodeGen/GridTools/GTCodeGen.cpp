@@ -168,7 +168,8 @@ void GTCodeGen::generatePlaceholderDefinitions(
 
   if(!globalsMap.empty()) {
     stencilClass.addTypeDef("globals_gp_t")
-        .addType("decltype(make_global_parameter<backend_t>(std::declval<globals>()))");
+        .addType("decltype(" + c_gt() +
+                 "make_global_parameter<backend_t>(std::declval<globals>()))");
     stencilClass.addTypeDef("p_globals")
         .addType(c_gt() + "arg")
         .addTemplate(Twine(accessorIdx))
@@ -217,8 +218,8 @@ std::string GTCodeGen::generateStencilInstantiation(
 
   std::stringstream ssSW, ssMS, tss;
 
-  Namespace dawnNamespace("dawn_generated", ssSW);		
-  Namespace gridtoolsNamespace("gt", ssSW);		
+  Namespace dawnNamespace("dawn_generated", ssSW);
+  Namespace gridtoolsNamespace("gt", ssSW);
 
   Class stencilWrapperClass(stencilInstantiation->getName(), ssSW);
   stencilWrapperClass.changeAccessibility(
@@ -386,6 +387,11 @@ void GTCodeGen::generateStencilWrapperCtr(
     addTmpStorageInitStencilWrapperCtr(StencilWrapperConstructor, stencils, tempFields);
   }
   StencilWrapperConstructor.addInit("m_dom(dom)");
+
+  if(!globalsMap.empty()) {
+    StencilWrapperConstructor.addInit("m_globals_gp(" + c_gt() +
+                                      "make_global_parameter<backend_t>(m_globals))");
+  }
 
   // Initialize stencils
   for(const auto& stencil : stencils) {
@@ -571,8 +577,9 @@ void GTCodeGen::generateStencilClasses(
         // If we have a return argument, we generate a special `__out` field
         int accessorID = 0;
         if(stencilFun->hasReturn()) {
-          StencilFunStruct.addStatement("using __out = gridtools::accessor<0, " + c_gt_intent() +
-                                        "inout, gridtools::extent<0, 0, 0, 0, "
+          StencilFunStruct.addStatement("using __out = " + c_gt() + "accessor<0, " + c_gt_intent() +
+                                        "inout, " + c_gt() +
+                                        "extent<0, 0, 0, 0, "
                                         "0, 0>>");
           arglist.push_back("__out");
           accessorID++;
@@ -711,7 +718,8 @@ void GTCodeGen::generateStencilClasses(
         Structure StageStruct =
             stencilClass.addStruct(Twine("stage_") + Twine(multiStageIdx) + "_" + Twine(stageIdx));
 
-        ssMS << "gridtools::make_stage_with_extent<" << StageStruct.getName() << ", extent< ";
+        ssMS << c_gt() + "make_stage_with_extent<" << StageStruct.getName()
+             << ", " + c_gt() + "extent< ";
         auto extents = stage.getExtents().getExtents();
         ssMS << extents[0].Minus << ", " << extents[0].Plus << ", " << extents[1].Minus << ", "
              << extents[1].Plus << "> >(";
@@ -907,9 +915,9 @@ void GTCodeGen::generateStencilClasses(
         (!domainMapPlaceholders.empty() ? RangeToString(", ", "", ",")(domainMapPlaceholders) : "");
 
     // This is a memory leak.. but nothing we can do ;)
-    StencilConstructor.addStatement(
-        Twine("m_stencil = gridtools::make_computation<backend_t>(grid_, " + plchdrStr +
-              RangeToString(", ", "", ")")(makeComputation)));
+    StencilConstructor.addStatement(Twine("m_stencil = " + c_gt() +
+                                          "make_computation<backend_t>(grid_, " + plchdrStr +
+                                          RangeToString(", ", "", ")")(makeComputation)));
     StencilConstructor.commit();
 
     stencilClass.addComment("Members");
@@ -917,7 +925,7 @@ void GTCodeGen::generateStencilClasses(
     auto plchdrs = CodeGenUtils::buildPlaceholderList(stencilInstantiation->getMetaData(),
                                                       stencilFields, globalsMap);
 
-    stencilType = "computation" + RangeToString(",", "<", ">")(plchdrs);
+    stencilType = c_gt().str() + "computation" + RangeToString(",", "<", ">")(plchdrs);
 
     stencilClass.addMember(stencilType, "m_stencil");
 
@@ -941,7 +949,7 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   }
 
   // Generate globals
-  std::string globals = generateGlobals(context_, "dawn_generated", "gt");  
+  std::string globals = generateGlobals(context_, "dawn_generated", "gt");
 
   // If we need more than 20 elements in boost::mpl containers, we need to increment to the
   // nearest multiple of ten

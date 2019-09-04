@@ -28,7 +28,7 @@
 
 namespace dawn {
 namespace iir {
-
+namespace {
 void mergeFields(std::unordered_map<int, Stencil::FieldInfo> const& sourceFields,
                  std::unordered_map<int, Stencil::FieldInfo>& destinationFields) {
 
@@ -49,6 +49,7 @@ void mergeFields(std::unordered_map<int, Stencil::FieldInfo> const& sourceFields
     }
   }
 }
+} // namespace
 
 const Stencil& IIR::getStencil(const int stencilID) const {
   auto lamb = [&](const std::unique_ptr<Stencil>& stencil) -> bool {
