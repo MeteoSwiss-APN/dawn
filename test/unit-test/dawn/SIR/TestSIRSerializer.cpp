@@ -15,7 +15,7 @@
 #include "dawn/SIR/ASTExpr.h"
 #include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/SIR/SIRSerializer.h"
+#include "dawn/Serialization/SIRSerializer.h"
 #include <gtest/gtest.h>
 
 using namespace dawn;

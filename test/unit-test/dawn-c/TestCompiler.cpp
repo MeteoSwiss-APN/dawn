@@ -15,7 +15,7 @@
 #include "dawn-c/Compiler.h"
 #include "dawn-c/TranslationUnit.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/SIR/SIRSerializer.h"
+#include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Unittest/ASTSimplifier.h"
 #include <cstring>
 #include <gtest/gtest.h>

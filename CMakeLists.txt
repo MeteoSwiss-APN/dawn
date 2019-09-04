@@ -124,6 +124,13 @@ yoda_report_result("Package summary" ${package_info})
 # Add clang-format target
 yoda_add_target_clang_format(DIRECTORIES ${CMAKE_SOURCE_DIR}/src EXTENSION ".h;.cpp")
 
+if(DAWN_PYTHON)
+  if(NOT DEFINED PYTHON_EXECUTABLE)
+    find_package(PythonInterp 3.4 REQUIRED)
+  endif()
+  add_subdirectory(python)
+endif()
+
 # Build dawn
 include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${CMAKE_BINARY_DIR}/src)
@@ -132,13 +139,6 @@ include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/src/dawn/Support/External)
 
 add_subdirectory(src)
 add_subdirectory(cmake)
-
-if(DAWN_PYTHON)
-  if(NOT DEFINED PYTHON_EXECUTABLE)
-    find_package(PythonInterp 3.4 REQUIRED)
-  endif()
-  add_subdirectory(python)
-endif()
 
 if(DAWN_EXAMPLES)
   add_subdirectory(examples)

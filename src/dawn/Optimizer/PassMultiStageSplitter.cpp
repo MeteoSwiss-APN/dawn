@@ -39,16 +39,16 @@ int checkDependencies(const std::unique_ptr<iir::Stage>& stage, int stmtIdx) {
 std::function<void(iir::MultiStage::child_reverse_iterator_t&, iir::DependencyGraphAccesses&,
                    iir::LoopOrderKind&, iir::LoopOrderKind&,
                    std::deque<iir::MultiStage::SplitIndex>&, int, int, int&, const std::string&,
-                   const std::string&, const Options&)>
+                   const std::string&, const OptimizerContext::OptimizerContextOptions&)>
 multiStageSplitterOptimized() {
-  return [&](iir::MultiStage::child_reverse_iterator_t& stageIt,
-             iir::DependencyGraphAccesses& graph, iir::LoopOrderKind userSpecifiedLoopOrder,
-             iir::LoopOrderKind& curLoopOrder,
-             std::deque<iir::MultiStage::SplitIndex>& splitterIndices, int stageIndex,
-             int multiStageIndex, int& numSplit, const std::string& StencilName,
-             const std::string& PassName, const Options& options) {
-    iir::Stage& stage = (**stageIt);
-    iir::DoMethod& doMethod = stage.getSingleDoMethod();
+  return
+      [&](iir::MultiStage::child_reverse_iterator_t& stageIt, iir::DependencyGraphAccesses& graph,
+          iir::LoopOrderKind userSpecifiedLoopOrder, iir::LoopOrderKind& curLoopOrder,
+          std::deque<iir::MultiStage::SplitIndex>& splitterIndices, int stageIndex,
+          int multiStageIndex, int& numSplit, const std::string& StencilName,
+          const std::string& PassName, const OptimizerContext::OptimizerContextOptions& options) {
+        iir::Stage& stage = (**stageIt);
+        iir::DoMethod& doMethod = stage.getSingleDoMethod();
 
     // Iterate statements backwards
     for(int stmtIndex = doMethod.getChildren().size() - 1; stmtIndex >= 0; --stmtIndex) {
@@ -93,7 +93,7 @@ multiStageSplitterOptimized() {
 std::function<void(iir::MultiStage::child_reverse_iterator_t&, iir::DependencyGraphAccesses&,
                    iir::LoopOrderKind&, iir::LoopOrderKind&,
                    std::deque<iir::MultiStage::SplitIndex>&, int, int, int&, const std::string&,
-                   const std::string&, const Options&)>
+                   const std::string&, const OptimizerContext::OptimizerContextOptions&)>
 multiStageSplitterDebug() {
 
   return
@@ -101,7 +101,7 @@ multiStageSplitterDebug() {
           iir::LoopOrderKind& userSpecifiedLoopOrder, iir::LoopOrderKind& curLoopOrder,
           std::deque<iir::MultiStage::SplitIndex>& splitterIndices, int stageIndex,
           int multiStageIndex, int& numSplit, const std::string& StencilName,
-          const std::string& PassName, const Options& options) {
+          const std::string& PassName, const OptimizerContext::OptimizerContextOptions& options) {
         DAWN_ASSERT_MSG(false, "Max-Cut for Multistages is not yet implemented");
         iir::Stage& stage = (**stageIt);
         iir::DoMethod& doMethod = stage.getSingleDoMethod();
@@ -159,7 +159,7 @@ bool PassMultiStageSplitter::run(
   std::function<void(iir::MultiStage::child_reverse_iterator_t&, iir::DependencyGraphAccesses&,
                      iir::LoopOrderKind&, iir::LoopOrderKind&,
                      std::deque<iir::MultiStage::SplitIndex>&, int, int, int&, const std::string&,
-                     const std::string&, const Options&)>
+                     const std::string&, const OptimizerContext::OptimizerContextOptions&)>
       multistagesplitter;
 
   if(strategy_ == MultiStageSplittingStrategy::SS_Optimized) {
