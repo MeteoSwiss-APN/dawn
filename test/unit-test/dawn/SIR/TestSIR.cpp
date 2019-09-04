@@ -202,11 +202,11 @@ TEST_F(SIRGlobalVariableTest, Comparison) {
   SIR_EXCPECT_NE(sir1, sir2);
 
   // Different types
-  (*sir2->GlobalVariableMap)["bar"]->setValue(true);
+  (*sir2->GlobalVariableMap)["bar"] = std::make_shared<sir::Value>(bool(true));
   SIR_EXCPECT_NE(sir1, sir2);
 
   // Same type/value
-  (*sir2->GlobalVariableMap)["bar"]->setValue(5.0);
+  (*sir2->GlobalVariableMap)["bar"] = std::make_shared<sir::Value>(double(5.0));
   SIR_EXCPECT_EQ(sir1, sir2);
 }
 
@@ -238,26 +238,26 @@ TEST(SIRValueTest, Construction) {
   EXPECT_EQ(empty.getType(), sir::Value::None);
 
   // Test Boolean
-  sir::Value valueBoolean;
-  valueBoolean.setValue(bool(true));
+  sir::Value valueBoolean(bool(true));
+  // valueBoolean.setValue(bool(true));
   EXPECT_EQ(valueBoolean.getType(), sir::Value::Boolean);
   EXPECT_EQ(valueBoolean.getValue<bool>(), true);
 
   // Test Integer
-  sir::Value valueInteger;
-  valueInteger.setValue(int(5));
+  sir::Value valueInteger(int(5));
+  // valueInteger.setValue();
   EXPECT_EQ(valueInteger.getType(), sir::Value::Integer);
   EXPECT_EQ(valueInteger.getValue<int>(), 5);
 
   // Test Double
-  sir::Value valueDouble;
-  valueDouble.setValue(double(5.0));
+  sir::Value valueDouble(double(5.0));
+  // valueDouble.setValue();
   EXPECT_EQ(valueDouble.getType(), sir::Value::Double);
   EXPECT_EQ(valueDouble.getValue<double>(), 5.0);
 
   // Test String
-  sir::Value valueString;
-  valueString.setValue(std::string("string"));
+  sir::Value valueString(std::string("string"));
+  // valueString.setValue(std::string("string"));
   EXPECT_EQ(valueString.getType(), sir::Value::String);
   EXPECT_EQ(valueString.getValue<std::string>(), "string");
 }

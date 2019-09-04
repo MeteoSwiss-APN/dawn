@@ -617,10 +617,7 @@ const char* sir::Value::typeToString(sir::Value::TypeKind type) {
   dawn_unreachable("invalid type");
 }
 
-  /// Does Value hold a numeric type?
-bool sir::Value::isArithmetic() const {
-  return type_ == sir::Value::Boolean || type_ == sir::Value::Integer || type_ == sir::Value::Double;
-}
+sir::Value::Value(TypeKind type) : type_(type), isConstexpr_(false) {}
 
 BuiltinTypeID sir::Value::typeToBuiltinTypeID(sir::Value::TypeKind type) {
   switch(type) {

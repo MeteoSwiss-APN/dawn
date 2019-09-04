@@ -314,8 +314,13 @@ struct Value : NonCopyable {
 
   template <class T>
   explicit Value(T&& value) : isConstexpr_(false) {
+    //TODO
+    //  I get a compiler error I don't understand when not using this redirection 
+    //  (use of invalid field)
     setValue(value);
   }
+
+  explicit Value(TypeKind type);
 
   /// @brief Get/Set if the variable is `constexpr`
   bool isConstexpr() const { return isConstexpr_; }
@@ -330,25 +335,11 @@ struct Value : NonCopyable {
   /// Convert the value to string
   std::string toString() const;
 
-  /// Does Value hold a numeric type?
-  bool isArithmetic() const;
-
   /// @brief Check if value is empty
   bool empty() const { return valueImpl_ == nullptr; }
 
   /// @brief Get/Set the underlying type
   TypeKind getType() const { return type_; }
-  void setType(TypeKind type) {
-    if (type_ == type) {
-      return;
-    }
-
-    if (type_ == Value::None) {
-      type_ = type;
-    } else {
-      DAWN_ASSERT_MSG(false, "Switching type of sir::Value not supported!\n");
-    }
-  }
 
   /// @brief Get the value as type `T`
   /// @returns Copy of the value
@@ -357,51 +348,6 @@ struct Value : NonCopyable {
     DAWN_ASSERT(!empty());
     DAWN_ASSERT_MSG(TypeInfo<T>::Type == type_, "type mismatch");
     return *(T*)valueImpl_->get();
-  }
-
-  /// @brief Set the value
-  template <class T>
-  typename std::enable_if<!std::is_arithmetic<T>::value>::type
-  setValue(const T& value) {
-    if (type_ == TypeKind::None) {
-      valueImpl_ = make_unique<ValueImpl<T>>(value);
-      type_ = TypeInfo<T>::Type;
-    } else {
-      if (TypeInfo<T>::Type == type_) {
-        valueImpl_ = make_unique<ValueImpl<T>>(value);
-      } else {
-        //type mismatch
-        DAWN_ASSERT_MSG(false, "type mismatch trying to set sir::Value");
-      }
-    }
-  }
-
-  template <class T>
-  typename std::enable_if<std::is_arithmetic<T>::value>::type
-  setValue(const T& value) {
-    if (type_ == TypeKind::None) {
-      valueImpl_ = make_unique<ValueImpl<T>>(value);
-      type_ = TypeInfo<T>::Type;
-    } else {
-      if (isArithmetic()) {
-        switch (type_) {
-          case Value::Integer:
-            valueImpl_ = make_unique<ValueImpl<int>>((int) value);
-            break;
-          case Value::Boolean:
-            valueImpl_ = make_unique<ValueImpl<bool>>((bool) value);
-            break;
-          case Value::Double:
-            valueImpl_ = make_unique<ValueImpl<double>>((double) value);
-            break;
-          default:
-            DAWN_ASSERT(false); //unreachable
-        }
-      } else {
-        //type mismatch
-        DAWN_ASSERT_MSG(false, "type mismatch trying to set sir::Value");
-      }
-    }
   }
 
   struct EmptyType {};
@@ -422,6 +368,12 @@ struct Value : NonCopyable {
   }
 
 private:
+  template <class T>
+  void setValue(const T& value) {
+    valueImpl_ = make_unique<ValueImpl<T>>(value);
+    type_ = TypeInfo<T>::Type;
+  }
+
   struct ValueImplBase {
     virtual ~ValueImplBase() {}
     virtual void* get() = 0;
