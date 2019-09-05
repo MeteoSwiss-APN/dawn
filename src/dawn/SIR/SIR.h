@@ -310,10 +310,18 @@ struct Stencil : public dawn::NonCopyable {
 struct Value : NonCopyable {
   enum TypeKind { None = 0, Boolean, Integer, Double, String };
 
-  Value() : type_(None), isConstexpr_(false), valueImpl_(nullptr) {}
+  // Value() : /*type_(None),*/ isConstexpr_(false), valueImpl_(nullptr) {}
 
   template <class T>
   explicit Value(T&& value) : isConstexpr_(false) {
+    //TODO
+    //  I get a compiler error I don't understand when not using this redirection 
+    //  (use of invalid field)
+    setValue(value);
+  }
+
+  template <class T>
+  explicit Value(T&& value, bool isConstexpr) : isConstexpr_(isConstexpr) {
     //TODO
     //  I get a compiler error I don't understand when not using this redirection 
     //  (use of invalid field)
@@ -324,7 +332,7 @@ struct Value : NonCopyable {
 
   /// @brief Get/Set if the variable is `constexpr`
   bool isConstexpr() const { return isConstexpr_; }
-  void setIsConstexpr(bool isConstexpr) { isConstexpr_ = isConstexpr; }
+  // void setIsConstexpr(bool isConstexpr) { isConstexpr_ = isConstexpr; }
 
   /// @brief `TypeKind` to string
   static const char* typeToString(TypeKind type);
@@ -339,18 +347,25 @@ struct Value : NonCopyable {
   bool empty() const { return valueImpl_ == nullptr; }
 
   /// @brief Get/Set the underlying type
-  TypeKind getType() const { return type_; }
+  TypeKind getType() const { 
+    if (valueImpl_ == nullptr) {
+      return TypeKind::None;
+    } else {
+      return valueImpl_->getType();
+    }
+  }
 
   /// @brief Get the value as type `T`
   /// @returns Copy of the value
   template <class T>
   T getValue() const {
-    DAWN_ASSERT(!empty());
-    DAWN_ASSERT_MSG(TypeInfo<T>::Type == type_, "type mismatch");
+    // DAWN_ASSERT(!empty());
+    DAWN_ASSERT_MSG(TypeInfo<T>::Type == valueImpl_->getType(), "type mismatch");
     return *(T*)valueImpl_->get();
   }
 
-  struct EmptyType {};
+  // struct EmptyType {};
+
   template <class T>
   struct TypeInfo {
     static const TypeKind Type = None;
@@ -361,7 +376,7 @@ struct Value : NonCopyable {
 
   json::json jsonDump() const {
     json::json valueJson;
-    valueJson["type"] = Value::typeToString(type_);
+    // valueJson["type"] = Value::typeToString(type_);
     valueJson["isConstexpr"] = isConstexpr();
     valueJson["value"] = toString();
     return valueJson;
@@ -371,12 +386,13 @@ private:
   template <class T>
   void setValue(const T& value) {
     valueImpl_ = make_unique<ValueImpl<T>>(value);
-    type_ = TypeInfo<T>::Type;
+    // type_ = TypeInfo<T>::Type;
   }
 
   struct ValueImplBase {
     virtual ~ValueImplBase() {}
     virtual void* get() = 0;
+    virtual TypeKind getType() const = 0;
   };
 
   template <class T>
@@ -390,9 +406,12 @@ private:
         delete ValuePtr;
     }
     void* get() override { return (void*)ValuePtr; }
+    TypeKind getType() const override {
+      return TypeInfo<T>::Type;
+    }
   };
 
-  TypeKind type_;
+  // TypeKind type_;
   bool isConstexpr_;
   std::unique_ptr<ValueImplBase> valueImpl_;
 };

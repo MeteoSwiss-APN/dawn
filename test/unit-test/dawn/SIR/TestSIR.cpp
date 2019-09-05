@@ -233,9 +233,9 @@ TEST(SIRIntervalTest, Comparison) {
 }
 
 TEST(SIRValueTest, Construction) {
-  sir::Value empty;
-  EXPECT_TRUE(empty.empty());
-  EXPECT_EQ(empty.getType(), sir::Value::None);
+  // sir::Value empty;
+  // EXPECT_TRUE(empty.empty());
+  // EXPECT_EQ(empty.getType(), sir::Value::None);
 
   // Test Boolean
   sir::Value valueBoolean(bool(true));

@@ -647,26 +647,26 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str,
       const std::string& sirName = nameValuePair.first;
       const sir::proto::GlobalVariableValue& sirValue = nameValuePair.second;
       std::shared_ptr<Value> value = nullptr;
+      bool isConstExpr = sirValue.is_constexpr();
 
       switch(sirValue.Value_case()) {
       case sir::proto::GlobalVariableValue::kBooleanValue:
-        value = std::make_shared<Value>(static_cast<bool>(sirValue.boolean_value()));
+        value = std::make_shared<Value>(static_cast<bool>(sirValue.boolean_value()), isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::kIntegerValue:
-        value = std::make_shared<Value>(static_cast<int>(sirValue.integer_value()));
+        value = std::make_shared<Value>(static_cast<int>(sirValue.integer_value()), isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::kDoubleValue:
-        value = std::make_shared<Value>(static_cast<double>(sirValue.double_value()));
+        value = std::make_shared<Value>(static_cast<double>(sirValue.double_value()), isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::kStringValue:
-        value = std::make_shared<Value>(static_cast<std::string>(sirValue.string_value()));
+        value = std::make_shared<Value>(static_cast<std::string>(sirValue.string_value()), isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::VALUE_NOT_SET:
       default:
         dawn_unreachable("value not set");
       }
 
-      value->setIsConstexpr(sirValue.is_constexpr());
       sir->GlobalVariableMap->emplace(sirName, std::move(value));
     }
 
