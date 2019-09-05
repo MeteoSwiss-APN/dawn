@@ -46,7 +46,8 @@ class StencilInstantiation : NonCopyable {
 
 public:
   /// @brief Assemble StencilInstantiation for stencil
-  StencilInstantiation(dawn::OptimizerContext* context);
+  StencilInstantiation(dawn::OptimizerContext* context,
+                       const std::vector<std::shared_ptr<iir::StencilFunction>>& stencilFunctions);
 
   StencilMetaInformation& getMetaData();
   const StencilMetaInformation& getMetaData() const { return metadata_; }

@@ -624,10 +624,18 @@ OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, OptimizerCont
     : diagnostics_(diagnostics), options_(options), SIR_(SIR) {
   DAWN_LOG(INFO) << "Intializing OptimizerContext ... ";
 
+  std::vector<std::shared_ptr<iir::StencilFunction>> iirStencilFunctions;
+  // Convert the sir::StencilFunctions to iir::StencilFunctions
+  std::transform(SIR_->StencilFunctions.begin(), SIR_->StencilFunctions.end(),
+                 std::back_inserter(iirStencilFunctions),
+                 [&](const std::shared_ptr<sir::StencilFunction>& sirSF) {
+                   return std::make_shared<iir::StencilFunction>(*sirSF);
+                 });
+
   for(const auto& stencil : SIR_->Stencils)
     if(!stencil->Attributes.has(sir::Attr::AK_NoCodeGen)) {
-      stencilInstantiationMap_.insert(
-          std::make_pair(stencil->Name, std::make_shared<iir::StencilInstantiation>(this)));
+      stencilInstantiationMap_.insert(std::make_pair(
+          stencil->Name, std::make_shared<iir::StencilInstantiation>(this, iirStencilFunctions)));
       fillIIRFromSIR(stencilInstantiationMap_.at(stencil->Name), stencil, SIR_);
     } else {
       DAWN_LOG(INFO) << "Skipping processing of `" << stencil->Name << "`";
@@ -656,15 +664,9 @@ bool OptimizerContext::fillIIRFromSIR(
   SIRToIIRASTMapper sirToIIRASTMapper;
   AST->accept(sirToIIRASTMapper);
 
-  // Convert the sir::StencilFunctions to iir::StencilFunctions
-  std::transform(fullSIR->StencilFunctions.begin(), fullSIR->StencilFunctions.end(),
-                 std::back_inserter(iirStencilFunctions_),
-                 [&](const std::shared_ptr<sir::StencilFunction>& sirSF) {
-                   return std::make_shared<iir::StencilFunction>(*sirSF);
-                 });
-
   StencilDescStatementMapper stencilDeclMapper(stencilInstantation, SIRStencil.get(), fullSIR,
-                                               iirStencilFunctions_, sirToIIRASTMapper.getStmtMap(),
+                                               stencilInstantation->getIIR()->getStencilFunctions(),
+                                               sirToIIRASTMapper.getStmtMap(),
                                                sirToIIRASTMapper.getExprMap());
   AST->accept(stencilDeclMapper);
 

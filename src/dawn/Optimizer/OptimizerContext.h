@@ -58,7 +58,6 @@ private:
   OptimizerContextOptions options_;
 
   const std::shared_ptr<SIR> SIR_;
-  std::vector<std::shared_ptr<iir::StencilFunction>> iirStencilFunctions_;
   std::map<std::string, std::shared_ptr<iir::StencilInstantiation>> stencilInstantiationMap_;
   PassManager passManager_;
   HardwareConfig hardwareConfiguration_;
@@ -82,10 +81,6 @@ public:
 
   /// @brief Get the SIR
   const std::shared_ptr<SIR>& getSIR() const { return SIR_; }
-
-  const std::vector<std::shared_ptr<iir::StencilFunction>>& getIIRStencilFunctions() const {
-    return iirStencilFunctions_;
-  }
 
   /// @brief Get options
   const OptimizerContextOptions& getOptions() const;

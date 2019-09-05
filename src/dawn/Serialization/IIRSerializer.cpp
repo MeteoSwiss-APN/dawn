@@ -700,7 +700,8 @@ void IIRSerializer::deserializeImpl(const std::string& str, IIRSerializer::Seria
   }
 
   std::shared_ptr<iir::StencilInstantiation> instantiation =
-      std::make_shared<iir::StencilInstantiation>(target->getOptimizerContext());
+      std::make_shared<iir::StencilInstantiation>(
+          target->getOptimizerContext(), std::vector<std::shared_ptr<iir::StencilFunction>>());
 
   deserializeMetaData(instantiation, (protoStencilInstantiation.metadata()));
   deserializeIIR(instantiation, (protoStencilInstantiation.internalir()));
@@ -720,7 +721,8 @@ IIRSerializer::deserialize(const std::string& file, OptimizerContext* context,
 
   std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
   std::shared_ptr<iir::StencilInstantiation> returnvalue =
-      std::make_shared<iir::StencilInstantiation>(context);
+      std::make_shared<iir::StencilInstantiation>(
+          context, std::vector<std::shared_ptr<iir::StencilFunction>>());
   deserializeImpl(str, kind, returnvalue);
   return returnvalue;
 }
@@ -729,7 +731,8 @@ std::shared_ptr<iir::StencilInstantiation>
 IIRSerializer::deserializeFromString(const std::string& str, OptimizerContext* context,
                                      IIRSerializer::SerializationKind kind) {
   std::shared_ptr<iir::StencilInstantiation> returnvalue =
-      std::make_shared<iir::StencilInstantiation>(context);
+      std::make_shared<iir::StencilInstantiation>(
+          context, std::vector<std::shared_ptr<iir::StencilFunction>>());
   deserializeImpl(str, kind, returnvalue);
   return returnvalue;
 }
