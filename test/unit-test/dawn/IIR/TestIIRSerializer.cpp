@@ -215,7 +215,7 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   referenceInstantiaton->getMetaData().addStmtToAccessID(
-      std::make_shared<ExprStmt>(std::make_shared<NOPExpr>()), 10);
+      std::make_shared<iir::ExprStmt>(std::make_shared<iir::NOPExpr>()), 10);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_Literal, 5,
@@ -245,12 +245,12 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
   IIR_EXPECT_NE(deserializedStencilInstantiaion, referenceInstantiaton);
 
   referenceInstantiaton->getMetaData().insertAccessOfType(
-      iir::FieldAccessType::FAT_StencilTemporary, 712, "field3");
+      iir::FieldAccessType::FAT_StencilTemporary, 713, "field3"); //access ids should be globally unique, not only per type
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  // TODO this should not be legal, since 712 was already inserted
-  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_GlobalVariable,
-                                                          712, "field4");
+  // This would fail, since 712 is already present
+  // referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_GlobalVariable,
+  //                                                         712, "field4");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   referenceInstantiaton->getMetaData().addFieldVersionIDPair(5, 6);
@@ -282,7 +282,7 @@ TEST_F(IIRSerializerTest, ComplexStrucutes) {
   auto bcstmt = std::make_shared<iir::BoundaryConditionDeclStmt>("callee");
   bcstmt->getFields().push_back("field1");
   bcstmt->getFields().push_back("field2");
-  referenceInstantiaton->getMetaData().insertFieldBC("bc", bcstmt);
+  referenceInstantiaton->getMetaData().addFieldBC("bc", bcstmt);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 }
 

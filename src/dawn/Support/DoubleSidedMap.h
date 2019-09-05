@@ -37,14 +37,6 @@ public:
     reverseMap_.emplace(key2, key1);
   }
 
-  /// Insert a new element into the map. This function works analogous to the emplace method in
-  /// std::unordered_map, i.e. if the key is already present no insertion is performed. In this
-  /// case the bijective mapping is lost.   
-  void emplace(const Key1& key1, const Key2& key2) {
-    directMap_.emplace(key1, key2);
-    reverseMap_.emplace(key2, key1);
-  }
-
   void directEraseKey(const Key1& key1) {
     const auto& key2 = directAt(key1);
     erase(key1, key2);

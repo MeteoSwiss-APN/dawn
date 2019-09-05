@@ -253,6 +253,9 @@ bool StencilMetaInformation::isAccessType(FieldAccessType fType, const int acces
            !isAccessType(FieldAccessType::FAT_Literal, accessID) &&
            !isAccessType(FieldAccessType::FAT_GlobalVariable, accessID);
   }
+  if (fType == FieldAccessType::FAT_Literal) {
+    return fieldAccessMetadata_.LiteralAccessIDToNameMap_.count(accessID) > 0;
+  }
   // not all the accessIDs are registered
   return (fieldAccessMetadata_.accessIDType_.count(accessID) &&
           fieldAccessMetadata_.accessIDType_.at(accessID) == fType);
@@ -287,8 +290,11 @@ int StencilMetaInformation::insertAccessOfType(FieldAccessType type, const std::
 
 void StencilMetaInformation::insertAccessOfType(FieldAccessType type, int AccessID,
                                                 const std::string& name) {
-  insertAccessIDNamePair(AccessID, name);
-  fieldAccessMetadata_.accessIDType_[AccessID] = type;
+  if(type != FieldAccessType::FAT_Literal) {
+    insertAccessIDNamePair(AccessID, name);
+    fieldAccessMetadata_.accessIDType_[AccessID] = type;
+  }
+
   if(isFieldType(type)) {
     fieldAccessMetadata_.FieldAccessIDSet_.insert(AccessID);
     if(type == FieldAccessType::FAT_StencilTemporary) {
@@ -413,9 +419,8 @@ StencilMetaInformation::getStencilFunctionInstantiation(
   return it->second;
 }
 
-void StencilMetaInformation::insertAccessIDNamePair(int accessID, const std::string& name) {
-  //tested, not unique
-  AccessIDToNameMap_.emplace(accessID, name);
+void StencilMetaInformation::insertAccessIDNamePair(int accessID, const std::string& name) { 
+  AccessIDToNameMap_.add(accessID, name);
 }
 
 int StencilMetaInformation::addField(FieldAccessType type, const std::string& name,

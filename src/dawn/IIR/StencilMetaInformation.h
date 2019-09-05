@@ -232,6 +232,18 @@ public:
   /// @brief erase entry of the Stmt to AccessID map
   void eraseStmtToAccessID(std::shared_ptr<Stmt> stmt);
 
+  void eraseStencilCallStmt(std::shared_ptr<iir::StencilCallDeclStmt> stmt);
+  void eraseStencilID(const int stencilID);
+
+  json::json jsonDump() const;
+
+  ///@brief struct with properties of a stencil function instantiation candidate
+  struct StencilFunctionInstantiationCandidate {
+    /// stencil function instantiation from where the stencil function instantiation candidate is
+    /// called
+    std::shared_ptr<StencilFunctionInstantiation> callerStencilFunction_;
+  };
+
   std::string getFileName() const { return fileName_; }
   std::string getStencilName() const { return stencilName_; }
   SourceLocation getStencilLocation() const { return stencilLocation_; }
