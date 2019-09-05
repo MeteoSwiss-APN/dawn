@@ -15,7 +15,8 @@
 #ifndef DAWN_CODEGEN_ASTCODEGENCXX_H
 #define DAWN_CODEGEN_ASTCODEGENCXX_H
 
-#include "dawn/SIR/ASTVisitor.h"
+#include "dawn/IIR/ASTFwd.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/Support/NonCopyable.h"
 #include "dawn/Support/Type.h"
 #include <sstream>
@@ -25,7 +26,7 @@ namespace codegen {
 
 /// @brief Abstract base class of all C++ code generation visitor
 /// @ingroup codegen
-class ASTCodeGenCXX : public ASTVisitor, public NonCopyable {
+class ASTCodeGenCXX : public iir::ASTVisitor, public NonCopyable {
 protected:
   /// Indent of each statement
   int indent_;
@@ -42,28 +43,28 @@ public:
 
   /// @name Statement implementation
   /// @{
-  virtual void visit(const std::shared_ptr<BlockStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<ExprStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<VarDeclStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<IfStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<ReturnStmt>& stmt) override = 0;
-  virtual void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) override = 0;
-  virtual void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override = 0;
-  virtual void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override = 0;
+  virtual void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<iir::IfStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) override = 0;
+  virtual void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override = 0;
+  virtual void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override = 0;
+  virtual void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override = 0;
   /// @}
 
   /// @name Expression implementation
   /// @{
-  virtual void visit(const std::shared_ptr<UnaryOperator>& expr) override;
-  virtual void visit(const std::shared_ptr<BinaryOperator>& expr) override;
-  virtual void visit(const std::shared_ptr<AssignmentExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<TernaryOperator>& expr) override;
-  virtual void visit(const std::shared_ptr<FunCallExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override = 0;
-  virtual void visit(const std::shared_ptr<StencilFunArgExpr>& expr) override = 0;
-  virtual void visit(const std::shared_ptr<VarAccessExpr>& expr) override = 0;
-  virtual void visit(const std::shared_ptr<LiteralAccessExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override = 0;
+  virtual void visit(const std::shared_ptr<iir::UnaryOperator>& expr) override;
+  virtual void visit(const std::shared_ptr<iir::BinaryOperator>& expr) override;
+  virtual void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<iir::TernaryOperator>& expr) override;
+  virtual void visit(const std::shared_ptr<iir::FunCallExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override = 0;
+  virtual void visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) override = 0;
+  virtual void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override = 0;
+  virtual void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override = 0;
   /// @}
 
   /// @brief Get the generated code and reset the internal string stream
@@ -74,8 +75,8 @@ public:
 
   /// @brief Mapping of VarDeclStmt and Var/FieldAccessExpr to their name
   /// @{
-  virtual std::string getName(const std::shared_ptr<Expr>& expr) const = 0;
-  virtual std::string getName(const std::shared_ptr<Stmt>& stmt) const = 0;
+  virtual std::string getName(const std::shared_ptr<iir::Expr>& expr) const = 0;
+  virtual std::string getName(const std::shared_ptr<iir::Stmt>& stmt) const = 0;
   /// @}
 
   /// @brief Convert builtin type to the corresponding C++ type

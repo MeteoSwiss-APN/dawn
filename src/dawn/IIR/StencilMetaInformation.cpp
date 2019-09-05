@@ -15,10 +15,10 @@
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
-#include "dawn/SIR/AST.h"
-#include "dawn/SIR/ASTStringifier.h"
-#include "dawn/SIR/ASTUtil.h"
-#include "dawn/SIR/ASTVisitor.h"
+#include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTStringifier.h"
+#include "dawn/IIR/ASTUtil.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/FileUtil.h"
@@ -48,7 +48,7 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
   }
   for(const auto& pair : origin.ExprToStencilFunctionInstantiationMap_) {
     ExprToStencilFunctionInstantiationMap_.emplace(
-        std::make_shared<StencilFunCallExpr>(*(pair.first)),
+        std::make_shared<iir::StencilFunCallExpr>(*(pair.first)),
         std::make_shared<StencilFunctionInstantiation>(pair.second->clone()));
   }
   for(const auto& pair : origin.stencilFunInstantiationCandidate_) {
@@ -60,7 +60,7 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
   }
   for(const auto& pair : origin.fieldnameToBoundaryConditionMap_) {
     fieldnameToBoundaryConditionMap_.emplace(
-        pair.first, std::make_shared<BoundaryConditionDeclStmt>(*(pair.second)));
+        pair.first, std::make_shared<iir::BoundaryConditionDeclStmt>(*(pair.second)));
     fieldIDToInitializedDimensionsMap_ = origin.fieldIDToInitializedDimensionsMap_;
   }
   stencilLocation_ = origin.stencilLocation_;
@@ -111,7 +111,7 @@ void StencilMetaInformation::deregisterStencilFunction(
     std::shared_ptr<StencilFunctionInstantiation> stencilFun) {
 
   bool found = RemoveIf(ExprToStencilFunctionInstantiationMap_,
-                        [&](std::pair<std::shared_ptr<StencilFunCallExpr>,
+                        [&](std::pair<std::shared_ptr<iir::StencilFunCallExpr>,
                                       std::shared_ptr<StencilFunctionInstantiation>>
                                 pair) { return (pair.second == stencilFun); });
   DAWN_ASSERT(found);
@@ -127,7 +127,7 @@ std::shared_ptr<StencilFunctionInstantiation> StencilMetaInformation::cloneStenc
   auto stencilFunClone = std::make_shared<StencilFunctionInstantiation>(stencilFun->clone());
 
   auto stencilFunExpr =
-      std::dynamic_pointer_cast<StencilFunCallExpr>(stencilFun->getExpression()->clone());
+      std::dynamic_pointer_cast<iir::StencilFunCallExpr>(stencilFun->getExpression()->clone());
   stencilFunExpr->setCallee(functionName);
 
   auto sirStencilFun = std::make_shared<sir::StencilFunction>(*(stencilFun->getStencilFunction()));
@@ -142,7 +142,7 @@ std::shared_ptr<StencilFunctionInstantiation> StencilMetaInformation::cloneStenc
 }
 
 void StencilMetaInformation::removeStencilFunctionInstantiation(
-    const std::shared_ptr<StencilFunCallExpr>& expr,
+    const std::shared_ptr<iir::StencilFunCallExpr>& expr,
     std::shared_ptr<StencilFunctionInstantiation> callerStencilFunctionInstantiation) {
 
   std::shared_ptr<StencilFunctionInstantiation> func = nullptr;
@@ -160,7 +160,7 @@ void StencilMetaInformation::removeStencilFunctionInstantiation(
 
 std::shared_ptr<StencilFunctionInstantiation>
 StencilMetaInformation::getStencilFunctionInstantiationCandidate(
-    const std::shared_ptr<StencilFunCallExpr>& expr) {
+    const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
   const auto& candidates = getStencilFunInstantiationCandidates();
   auto it = std::find_if(
       candidates.begin(), candidates.end(),
@@ -308,8 +308,13 @@ void StencilMetaInformation::insertAccessOfType(FieldAccessType type, int Access
   }
 }
 
+<<<<<<< HEAD
 int StencilMetaInformation::addStmt(bool keepVarNames,
                                        const std::shared_ptr<VarDeclStmt>& stmt) {
+=======
+int StencilMetaInformation::insertStmt(bool keepVarNames,
+                                       const std::shared_ptr<iir::VarDeclStmt>& stmt) {
+>>>>>>> master
   int accessID = UIDGenerator::getInstance()->get();
 
   std::string globalName;
@@ -349,22 +354,30 @@ const std::unordered_map<int, int>& StencilMetaInformation::getStmtIDToAccessIDM
   return StmtIDToAccessIDMap_;
 }
 
+<<<<<<< HEAD
 void StencilMetaInformation::insertExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID) {
   //DAWN_ASSERT(!ExprIDToAccessIDMap_.count(expr->getID()));  //access ID not unique
+=======
+void StencilMetaInformation::insertExprToAccessID(const std::shared_ptr<iir::Expr>& expr, int accessID) {
+>>>>>>> master
   ExprIDToAccessIDMap_.emplace(expr->getID(), accessID);
 }
 
-void StencilMetaInformation::eraseExprToAccessID(std::shared_ptr<Expr> expr) {
+void StencilMetaInformation::eraseExprToAccessID(std::shared_ptr<iir::Expr> expr) {
   DAWN_ASSERT_MSG(ExprIDToAccessIDMap_.count(expr->getID()), "Field with given ID does not exist");
   ExprIDToAccessIDMap_.erase(expr->getID());
 }
 
-void StencilMetaInformation::eraseStmtToAccessID(std::shared_ptr<Stmt> stmt) {
+void StencilMetaInformation::eraseStmtToAccessID(std::shared_ptr<iir::Stmt> stmt) {
   DAWN_ASSERT(StmtIDToAccessIDMap_.count(stmt->getID()));
   StmtIDToAccessIDMap_.erase(stmt->getID());
 }
 
+<<<<<<< HEAD
 void StencilMetaInformation::addStmtToAccessID(const std::shared_ptr<Stmt>& stmt, int accessID) {
+=======
+void StencilMetaInformation::insertStmtToAccessID(const std::shared_ptr<iir::Stmt>& stmt, int accessID) {
+>>>>>>> master
   DAWN_ASSERT(!StmtIDToAccessIDMap_.count(stmt->getID()));
   StmtIDToAccessIDMap_.emplace(stmt->getID(), accessID);
 }
@@ -377,29 +390,29 @@ std::string StencilMetaInformation::getNameFromAccessID(int accessID) const {
   }
 }
 
-int StencilMetaInformation::getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) const {
+int StencilMetaInformation::getAccessIDFromExpr(const std::shared_ptr<iir::Expr>& expr) const {
   auto it = ExprIDToAccessIDMap_.find(expr->getID());
   DAWN_ASSERT_MSG(it != ExprIDToAccessIDMap_.end(), "Invalid Expr");
   return it->second;
 }
 
-int StencilMetaInformation::getAccessIDFromStmt(const std::shared_ptr<Stmt>& stmt) const {
+int StencilMetaInformation::getAccessIDFromStmt(const std::shared_ptr<iir::Stmt>& stmt) const {
   auto it = StmtIDToAccessIDMap_.find(stmt->getID());
   DAWN_ASSERT_MSG(it != StmtIDToAccessIDMap_.end(), "Invalid Stmt");
   return it->second;
 }
 
-void StencilMetaInformation::setAccessIDOfStmt(const std::shared_ptr<Stmt>& stmt,
+void StencilMetaInformation::setAccessIDOfStmt(const std::shared_ptr<iir::Stmt>& stmt,
                                                const int accessID) {
   DAWN_ASSERT(StmtIDToAccessIDMap_.count(stmt->getID()));
   StmtIDToAccessIDMap_[stmt->getID()] = accessID;
 }
 
-bool StencilMetaInformation::hasStmtToAccessID(const std::shared_ptr<Stmt>& stmt) const {
+bool StencilMetaInformation::hasStmtToAccessID(const std::shared_ptr<iir::Stmt>& stmt) const {
   return StmtIDToAccessIDMap_.count(stmt->getID());
 }
 
-void StencilMetaInformation::setAccessIDOfExpr(const std::shared_ptr<Expr>& expr,
+void StencilMetaInformation::setAccessIDOfExpr(const std::shared_ptr<iir::Expr>& expr,
                                                const int accessID) {
   DAWN_ASSERT(ExprIDToAccessIDMap_.count(expr->getID()));
   ExprIDToAccessIDMap_[expr->getID()] = accessID;
@@ -407,14 +420,18 @@ void StencilMetaInformation::setAccessIDOfExpr(const std::shared_ptr<Expr>& expr
 
 const std::shared_ptr<StencilFunctionInstantiation>
 StencilMetaInformation::getStencilFunctionInstantiation(
-    const std::shared_ptr<StencilFunCallExpr>& expr) const {
+    const std::shared_ptr<iir::StencilFunCallExpr>& expr) const {
   auto it = ExprToStencilFunctionInstantiationMap_.find(expr);
   DAWN_ASSERT_MSG(it != ExprToStencilFunctionInstantiationMap_.end(), "Invalid stencil function");
   return it->second;
 }
 
+<<<<<<< HEAD
 void StencilMetaInformation::insertAccessIDNamePair(int accessID, const std::string& name) {
   //tested, not unique
+=======
+void StencilMetaInformation::setAccessIDNamePair(int accessID, const std::string& name) {  
+>>>>>>> master
   AccessIDToNameMap_.emplace(accessID, name);
 }
 
@@ -520,7 +537,7 @@ json::json StencilMetaInformation::jsonDump() const {
 
   json::json bcJson;
   for(const auto& bc : fieldnameToBoundaryConditionMap_) {
-    bcJson[bc.first] = ASTStringifer::toString(bc.second);
+    bcJson[bc.first] = ASTStringifier::toString(bc.second);
   }
   metaDataJson["FieldToBC"] = bcJson;
 
@@ -560,23 +577,23 @@ json::json StencilMetaInformation::jsonDump() const {
 
   json::json idToStencilCallJson;
   for(const auto& pair : StencilIDToStencilCallMap_.getDirectMap()) {
-    idToStencilCallJson[std::to_string(pair.first)] = ASTStringifer::toString(pair.second);
+    idToStencilCallJson[std::to_string(pair.first)] = ASTStringifier::toString(pair.second);
   }
   metaDataJson["IDToStencilCall"] = idToStencilCallJson;
 
   return metaDataJson;
 }
 
-const std::unordered_map<std::shared_ptr<StencilCallDeclStmt>, int>&
+const std::unordered_map<std::shared_ptr<iir::StencilCallDeclStmt>, int>&
 StencilMetaInformation::getStencilCallToStencilIDMap() const {
   return StencilIDToStencilCallMap_.getReverseMap();
 }
-const std::unordered_map<int, std::shared_ptr<StencilCallDeclStmt>>&
+const std::unordered_map<int, std::shared_ptr<iir::StencilCallDeclStmt>>&
 StencilMetaInformation::getStencilIDToStencilCallMap() const {
   return StencilIDToStencilCallMap_.getDirectMap();
 }
 
-void StencilMetaInformation::eraseStencilCallStmt(std::shared_ptr<StencilCallDeclStmt> stmt) {
+void StencilMetaInformation::eraseStencilCallStmt(std::shared_ptr<iir::StencilCallDeclStmt> stmt) {
   StencilIDToStencilCallMap_.reverseEraseKey(stmt);
 }
 void StencilMetaInformation::eraseStencilID(const int stencilID) {
@@ -584,11 +601,15 @@ void StencilMetaInformation::eraseStencilID(const int stencilID) {
 }
 
 int StencilMetaInformation::getStencilIDFromStencilCallStmt(
-    const std::shared_ptr<StencilCallDeclStmt>& stmt) const {
+    const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) const {
   return StencilIDToStencilCallMap_.reverseAt(stmt);
 }
 
+<<<<<<< HEAD
 void StencilMetaInformation::addStencilCallStmt(std::shared_ptr<StencilCallDeclStmt> stmt,
+=======
+void StencilMetaInformation::insertStencilCallStmt(std::shared_ptr<iir::StencilCallDeclStmt> stmt,
+>>>>>>> master
                                                    int stencilID) {
   StencilIDToStencilCallMap_.add(stencilID, stmt);
 }

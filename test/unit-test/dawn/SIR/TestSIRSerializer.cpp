@@ -12,8 +12,10 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/SIR/ASTExpr.h"
+#include "dawn/SIR/ASTStmt.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/SIR/SIRSerializer.h"
+#include "dawn/Serialization/SIRSerializer.h"
 #include <gtest/gtest.h>
 
 using namespace dawn;
@@ -71,9 +73,9 @@ TEST_P(StencilTest, FieldsWithAttributes) {
 }
 
 TEST_P(StencilTest, AST) {
-  sirRef->Stencils[0]->StencilDescAst =
-      std::make_shared<AST>(std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{
-          std::make_shared<ExprStmt>(std::make_shared<FieldAccessExpr>("bar"))}));
+  sirRef->Stencils[0]->StencilDescAst = std::make_shared<sir::AST>(
+      std::make_shared<sir::BlockStmt>(std::vector<std::shared_ptr<sir::Stmt>>{
+          std::make_shared<sir::ExprStmt>(std::make_shared<sir::FieldAccessExpr>("bar"))}));
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
 
@@ -107,9 +109,9 @@ TEST_P(StencilFunctionTest, Arguments) {
 }
 
 TEST_P(StencilFunctionTest, ASTs) {
-  sirRef->StencilFunctions[0]->Asts.emplace_back(
-      std::make_shared<AST>(std::make_shared<BlockStmt>(std::vector<std::shared_ptr<Stmt>>{
-          std::make_shared<ExprStmt>(std::make_shared<FieldAccessExpr>("bar"))})));
+  sirRef->StencilFunctions[0]->Asts.emplace_back(std::make_shared<sir::AST>(
+      std::make_shared<sir::BlockStmt>(std::vector<std::shared_ptr<sir::Stmt>>{
+          std::make_shared<sir::ExprStmt>(std::make_shared<sir::FieldAccessExpr>("bar"))})));
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
 

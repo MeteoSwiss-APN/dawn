@@ -15,6 +15,7 @@
 #ifndef DAWN_OPTIMIZER_RENAMING_H
 #define DAWN_OPTIMIZER_RENAMING_H
 
+#include "dawn/IIR/ASTFwd.h"
 #include "dawn/Support/ArrayRef.h"
 #include <memory>
 
@@ -49,7 +50,7 @@ void renameAccessIDInStmts(
     iir::StencilFunctionInstantiation* instantiation, int oldAccessID, int newAccessID,
     ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
 void renameAccessIDInExpr(iir::StencilInstantiation* instantiation, int oldAccessID,
-                          int newAccessID, std::shared_ptr<Expr>& expr);
+                          int newAccessID, std::shared_ptr<iir::Expr>& expr);
 /// @}
 
 /// @brief Rename all occurrences of `oldAccessID` to `newAccessID` in the in the stencil or

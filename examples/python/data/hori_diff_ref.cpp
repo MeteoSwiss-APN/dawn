@@ -1,3 +1,4 @@
+namespace dawn_generated{
 namespace cuda{
 __global__ void __launch_bounds__(256)  hori_diff_stencil43_ms86_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, gridtools::clang::float_type * const in, gridtools::clang::float_type * const out, gridtools::clang::float_type * const coeff) {
 
@@ -183,3 +184,4 @@ public:
 m_stencil_43->reset();  }
 };
 } // namespace cuda
+} // namespace dawn_generated

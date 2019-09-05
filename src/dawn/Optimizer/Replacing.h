@@ -15,7 +15,7 @@
 #ifndef DAWN_OPTIMIZER_REPLACING_H
 #define DAWN_OPTIMIZER_REPLACING_H
 
-#include "dawn/SIR/ASTVisitor.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/Support/ArrayRef.h"
 #include <memory>
 

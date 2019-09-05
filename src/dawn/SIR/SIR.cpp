@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/SIR/SIR.h"
+#include "dawn/SIR/ASTStringifier.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/Format.h"
@@ -27,39 +28,39 @@ namespace dawn {
 namespace {
 
 /// @brief Allow direct comparison of the Stmts of an AST
-class DiffWriter final : public ASTVisitorForwarding {
+class DiffWriter final : public sir::ASTVisitorForwarding {
 public:
-  virtual void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<sir::VerticalRegionDeclStmt>& stmt) override {
     statements_.push_back(stmt);
     stmt->getVerticalRegion()->Ast->getRoot()->accept(*this);
   }
 
-  virtual void visit(const std::shared_ptr<ReturnStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<sir::ReturnStmt>& stmt) override {
     statements_.push_back(stmt);
-    ASTVisitorForwarding::visit(stmt);
+    sir::ASTVisitorForwarding::visit(stmt);
   }
 
-  virtual void visit(const std::shared_ptr<ExprStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<sir::ExprStmt>& stmt) override {
     statements_.push_back(stmt);
-    ASTVisitorForwarding::visit(stmt);
+    sir::ASTVisitorForwarding::visit(stmt);
   }
 
-  virtual void visit(const std::shared_ptr<BlockStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<sir::BlockStmt>& stmt) override {
     statements_.push_back(stmt);
-    ASTVisitorForwarding::visit(stmt);
+    sir::ASTVisitorForwarding::visit(stmt);
   }
 
-  virtual void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<sir::VarDeclStmt>& stmt) override {
     statements_.push_back(stmt);
-    ASTVisitorForwarding::visit(stmt);
+    sir::ASTVisitorForwarding::visit(stmt);
   }
 
-  virtual void visit(const std::shared_ptr<IfStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<sir::IfStmt>& stmt) override {
     statements_.push_back(stmt);
-    ASTVisitorForwarding::visit(stmt);
+    sir::ASTVisitorForwarding::visit(stmt);
   }
 
-  std::vector<std::shared_ptr<Stmt>> getStatements() const { return statements_; }
+  std::vector<std::shared_ptr<sir::Stmt>> getStatements() const { return statements_; }
 
   std::pair<std::string, bool> compare(const DiffWriter& other) {
 
@@ -75,8 +76,8 @@ public:
                          "    %s\n"
                          "  Expected:\n"
                          "    %s",
-                         indent(ASTStringifer::toString(statements_[idx]), 4),
-                         indent(ASTStringifer::toString(other.getStatements()[idx]), 4)),
+                         indent(sir::ASTStringifier::toString(statements_[idx]), 4),
+                         indent(sir::ASTStringifier::toString(other.getStatements()[idx]), 4)),
             false);
       }
     }
@@ -85,7 +86,7 @@ public:
   }
 
 private:
-  std::vector<std::shared_ptr<Stmt>> statements_;
+  std::vector<std::shared_ptr<sir::Stmt>> statements_;
 };
 
 ///@brief Stringification of a Value mismatch
@@ -104,8 +105,8 @@ sir::CompareResult isEqualImpl(const sir::Value& a, const sir::Value& b, const s
 }
 
 /// @brief Compares two ASTs
-std::pair<std::string, bool> compareAst(const std::shared_ptr<AST>& lhs,
-                                        const std::shared_ptr<AST>& rhs) {
+std::pair<std::string, bool> compareAst(const std::shared_ptr<sir::AST>& lhs,
+                                        const std::shared_ptr<sir::AST>& rhs) {
   if(lhs->getRoot()->equals(rhs->getRoot().get()))
     return std::make_pair("", true);
 
@@ -474,7 +475,7 @@ namespace sir {
 
 bool StencilFunction::isSpecialized() const { return !Intervals.empty(); }
 
-std::shared_ptr<AST> StencilFunction::getASTOfInterval(const Interval& interval) const {
+std::shared_ptr<sir::AST> StencilFunction::getASTOfInterval(const Interval& interval) const {
   for(int i = 0; i < Intervals.size(); ++i)
     if(*Intervals[i] == interval)
       return Asts[i];
@@ -533,7 +534,7 @@ std::ostream& operator<<(std::ostream& os, const Interval& interval) {
   return os;
 }
 
-Stencil::Stencil() : StencilDescAst(std::make_shared<AST>()) {}
+Stencil::Stencil() : StencilDescAst(std::make_shared<sir::AST>()) {}
 
 CompareResult Field::comparison(const Field& rhs) const {
   if(rhs.IsTemporary != IsTemporary) {
@@ -571,11 +572,11 @@ std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
 
     if(!stencilFunction->isSpecialized()) {
       os << "\n" << indent2 << "Do\n";
-      os << ASTStringifer::toString(*stencilFunction->Asts[0], 2 * DAWN_PRINT_INDENT);
+      os << sir::ASTStringifier::toString(*stencilFunction->Asts[0], 2 * DAWN_PRINT_INDENT);
     } else {
       for(int i = 0; i < stencilFunction->Intervals.size(); ++i) {
         os << "\n" << indent2 << "Do " << *stencilFunction->Intervals[i].get() << "\n";
-        os << ASTStringifer::toString(*stencilFunction->Asts[i], 2 * DAWN_PRINT_INDENT);
+        os << sir::ASTStringifier::toString(*stencilFunction->Asts[i], 2 * DAWN_PRINT_INDENT);
       }
     }
     os << indent1 << "}\n";
@@ -588,7 +589,7 @@ std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
     os << "\n";
 
     os << indent2 << "Do\n"
-       << ASTStringifer::toString(*stencil->StencilDescAst, 2 * DAWN_PRINT_INDENT);
+       << sir::ASTStringifier::toString(*stencil->StencilDescAst, 2 * DAWN_PRINT_INDENT);
     os << indent1 << "}\n";
   }
 
