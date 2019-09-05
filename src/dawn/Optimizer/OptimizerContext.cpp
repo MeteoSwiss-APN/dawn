@@ -61,7 +61,7 @@ class StencilDescStatementMapper : public iir::ASTVisitor {
     std::unordered_map<std::string, double> VariableMap;
 
     /// Current call stack of stencil calls (may be NULL)
-    std::shared_ptr<std::vector<sir::StencilCall*>> StackTrace;
+    std::shared_ptr<std::vector<ast::StencilCall*>> StackTrace;
   };
 
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
@@ -122,7 +122,7 @@ public:
         instantiation_->getIIR());
     // We create a paceholder stencil-call for CodeGen to know wehere we need to insert calls to
     // this stencil
-    auto placeholderStencil = std::make_shared<sir::StencilCall>(
+    auto placeholderStencil = std::make_shared<ast::StencilCall>(
         InstantiationHelper::makeStencilCallCodeGenName(StencilID));
     auto stencilCallDeclStmt = std::make_shared<iir::StencilCallDeclStmt>(placeholderStencil);
 
@@ -391,7 +391,7 @@ public:
   }
 
   void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override {
-    sir::StencilCall* stencilCall = stmt->getStencilCall().get();
+    ast::StencilCall* stencilCall = stmt->getStencilCall().get();
 
     tryReplaceStencilDescStmt(stmt);
 
@@ -409,10 +409,10 @@ public:
 
     // Record the call
     if(!curScope->StackTrace)
-      candiateScope->StackTrace = std::make_shared<std::vector<sir::StencilCall*>>();
+      candiateScope->StackTrace = std::make_shared<std::vector<ast::StencilCall*>>();
     else
       candiateScope->StackTrace =
-          std::make_shared<std::vector<sir::StencilCall*>>(*curScope->StackTrace);
+          std::make_shared<std::vector<ast::StencilCall*>>(*curScope->StackTrace);
     candiateScope->StackTrace->push_back(stencilCall);
 
     // Get the sir::Stencil from the callee name
@@ -435,8 +435,7 @@ public:
         AccessID = metadata_.addTmpField(iir::FieldAccessType::FAT_StencilTemporary,
                                             stencil.Fields[stencilArgIdx]->Name, {1, 1, 1});
       } else {
-        AccessID =
-            curScope->LocalFieldnameToAccessIDMap.at(stencilCall->Args[stencilCallArgIdx]->Name);
+        AccessID = curScope->LocalFieldnameToAccessIDMap.at(stencilCall->Args[stencilCallArgIdx]);
         stencilCallArgIdx++;
       }
 
@@ -457,7 +456,7 @@ public:
   }
 
   void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override {
-    if(instantiation_->insertBoundaryConditions(stmt->getFields()[0]->Name, stmt) == false)
+    if(instantiation_->insertBoundaryConditions(stmt->getFields()[0], stmt) == false)
       DAWN_ASSERT_MSG(false, "Boundary Condition specified twice for the same field");
     //      if(instantiation_->insertBoundaryConditions(stmt->getFields()[0]->Name, stmt) == false)
     //      DAWN_ASSERT_MSG(false, "Boundary Condition specified twice for the same field");
