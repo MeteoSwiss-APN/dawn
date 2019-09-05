@@ -333,7 +333,7 @@ void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil,
   metadata_.removeAccessID(AccessID);
 
   // Register the variable
-  metadata_.insertAccessIDNamePair(AccessID, varname);
+  metadata_.addAccessIDNamePair(AccessID, varname);
   metadata_.addStmtToAccessID(varDeclStmt, AccessID);
 
   // Update the fields of the stages we modified

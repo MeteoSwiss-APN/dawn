@@ -495,7 +495,7 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
                                         const proto::iir::StencilMetaInfo& protoMetaData) {
   auto& metadata = target->getMetaData();
   for(auto IDtoName : protoMetaData.accessidtoname()) {
-    metadata.insertAccessIDNamePair(IDtoName.first, IDtoName.second);
+    metadata.addAccessIDNamePair(IDtoName.first, IDtoName.second);
   }
 
   for(auto exprIDToAccessID : protoMetaData.expridtoaccessid()) {

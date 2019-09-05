@@ -211,11 +211,9 @@ public:
   //MR checked, statement id is unique in this case
   //  -> renamed to add
   void addStmtToAccessID(const std::shared_ptr<Stmt>& stmt, const int accessID);
-
-  //MR checked, access id is not unique in this case
-  //  -> not renamed, consistent with std insert
+  
   /// @brief Insert a new AccessID - Name pair
-  void insertAccessIDNamePair(int accessID, const std::string& name);
+  void addAccessIDNamePair(int accessID, const std::string& name);
 
   //MR checked, stencil call decl statement is unqiue, so is stencil id --> bijective mapping
   //  -> renaemd to add

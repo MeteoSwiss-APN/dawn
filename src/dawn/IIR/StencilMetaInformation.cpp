@@ -291,7 +291,7 @@ int StencilMetaInformation::insertAccessOfType(FieldAccessType type, const std::
 void StencilMetaInformation::insertAccessOfType(FieldAccessType type, int AccessID,
                                                 const std::string& name) {
   if(type != FieldAccessType::FAT_Literal) {
-    insertAccessIDNamePair(AccessID, name);
+    addAccessIDNamePair(AccessID, name);
     fieldAccessMetadata_.accessIDType_[AccessID] = type;
   }
 
@@ -324,9 +324,8 @@ int StencilMetaInformation::addStmt(bool keepVarNames,
   } else {
     globalName = InstantiationHelper::makeLocalVariablename(stmt->getName(), accessID);
   }
-
-  //MR not unique
-  insertAccessIDNamePair(accessID, globalName);
+ 
+  addAccessIDNamePair(accessID, globalName);
 
   //MR unique
   DAWN_ASSERT(!StmtIDToAccessIDMap_.count(stmt->getID()));
@@ -356,7 +355,7 @@ const std::unordered_map<int, int>& StencilMetaInformation::getStmtIDToAccessIDM
 }
 
 void StencilMetaInformation::insertExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID) {
-  //DAWN_ASSERT(!ExprIDToAccessIDMap_.count(expr->getID()));  //access ID not unique
+  //DAWN_ASSERT(!ExprIDToAccessIDMap_.count(expr->getID()));  //this is not unique in case of -fpass-tmp-to-function
   ExprIDToAccessIDMap_.emplace(expr->getID(), accessID);
 }
 
@@ -365,7 +364,7 @@ void StencilMetaInformation::eraseExprToAccessID(std::shared_ptr<iir::Expr> expr
   ExprIDToAccessIDMap_.erase(expr->getID());
 }
 
-void StencilMetaInformation::eraseStmtToAccessID(std::shared_ptr<iir::Stmt> stmt) {
+void StencilMetaInformation::erasecdStmtToAccessID(std::shared_ptr<iir::Stmt> stmt) {
   DAWN_ASSERT(StmtIDToAccessIDMap_.count(stmt->getID()));
   StmtIDToAccessIDMap_.erase(stmt->getID());
 }
@@ -419,7 +418,7 @@ StencilMetaInformation::getStencilFunctionInstantiation(
   return it->second;
 }
 
-void StencilMetaInformation::insertAccessIDNamePair(int accessID, const std::string& name) { 
+void StencilMetaInformation::addAccessIDNamePair(int accessID, const std::string& name) { 
   AccessIDToNameMap_.add(accessID, name);
 }
 

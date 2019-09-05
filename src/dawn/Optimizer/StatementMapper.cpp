@@ -136,7 +136,7 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
     function->getAccessIDToNameMap().emplace(AccessID, globalName);
     function->mapStmtToAccessID(stmt, AccessID);
   } else {
-    metadata_.insertAccessIDNamePair(AccessID, globalName);
+    metadata_.addAccessIDNamePair(AccessID, globalName);
     metadata_.addStmtToAccessID(stmt, AccessID);
   }
 
