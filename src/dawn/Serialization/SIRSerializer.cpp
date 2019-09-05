@@ -174,7 +174,7 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::SerializationKin
 
     sir::proto::GlobalVariableValue valueProto;
     valueProto.set_is_constexpr(value.isConstexpr());
-    if(!value.empty()) {
+    if(value.has_value()) {
       switch(value.getType()) {
       case sir::Value::Boolean:
         valueProto.set_boolean_value(value.getValue<bool>());
@@ -187,8 +187,6 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::SerializationKin
         break;
       case sir::Value::String:
         valueProto.set_string_value(value.getValue<std::string>());
-        break;
-      case sir::Value::None:
         break;
       }
     }

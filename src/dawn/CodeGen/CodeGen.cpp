@@ -76,7 +76,7 @@ std::string CodeGen::generateGlobals(const sir::GlobalVariableMap& globalsMap,
       continue;
     }
     std::string Name = globalsPair.first;
-    if(!value.empty()) {
+    if(value.has_value()) {
       ctr.addInit(Name + "(" + value.toString() + ")");
     }
   }

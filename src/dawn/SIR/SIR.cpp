@@ -603,8 +603,6 @@ void SIR::dump() { std::cout << *this << std::endl; }
 
 const char* sir::Value::typeToString(sir::Value::TypeKind type) {
   switch(type) {
-  case None:
-    return "None";
   case Boolean:
     return "bool";
   case Integer:
@@ -619,23 +617,23 @@ const char* sir::Value::typeToString(sir::Value::TypeKind type) {
 
 sir::Value::Value(TypeKind type) : isConstexpr_(false) {
   switch(type) {
-  case None:
-    assert(false);
   case Boolean:
     valueImpl_ = make_unique<ValueImpl<bool>>();
+    break;
   case Integer:
     valueImpl_ = make_unique<ValueImpl<int>>();
+    break;
   case Double:
     valueImpl_ = make_unique<ValueImpl<double>>();
+    break;
   case String:
     valueImpl_ = make_unique<ValueImpl<std::string>>();
+    break;
   }
 }
 
 BuiltinTypeID sir::Value::typeToBuiltinTypeID(sir::Value::TypeKind type) {
-  switch(type) {
-  case None:
-    return BuiltinTypeID::Invalid;
+  switch(type) {  
   case Boolean:
     return BuiltinTypeID::Boolean;
   case Integer:
@@ -648,9 +646,6 @@ BuiltinTypeID sir::Value::typeToBuiltinTypeID(sir::Value::TypeKind type) {
 }
 
 std::string sir::Value::toString() const {
-  // if(empty())
-  //   return "null";
-
   std::stringstream ss;
   switch(valueImpl_->getType()) {
   case Boolean:

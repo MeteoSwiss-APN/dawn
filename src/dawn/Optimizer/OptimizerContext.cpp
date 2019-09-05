@@ -526,7 +526,7 @@ public:
       const auto& value = instantiation_->getGlobalVariableValue(varname);
       if(value.isConstexpr()) {
         // Replace the variable access with the actual value
-        DAWN_ASSERT_MSG(!value.empty(), "constant global variable with no value");
+        DAWN_ASSERT_MSG(!value.has_value(), "constant global variable with no value");
 
         auto newExpr = std::make_shared<dawn::LiteralAccessExpr>(
             value.toString(), sir::Value::typeToBuiltinTypeID(value.getType()));

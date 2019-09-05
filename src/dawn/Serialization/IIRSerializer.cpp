@@ -311,28 +311,28 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
   auto& protoGlobalVariableMap = *protoIIR->mutable_globalvariabletovalue();
   for(auto& globalToValue : iir->getGlobalVariableMap()) {
     proto::iir::GlobalValueAndType protoGlobalToStore;
-    double value = -1;
     bool valueIsSet = false;
+
     switch(globalToValue.second->getType()) {
     case sir::Value::Boolean:
-      if(!globalToValue.second->empty()) {
-        value = globalToValue.second->getValue<bool>();
+      if(globalToValue.second->has_value()) {
+        protoGlobalToStore.set_value(globalToValue.second->getValue<bool>());
         valueIsSet = true;
       }
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Boolean);
       break;
     case sir::Value::Integer:
       std::cout << "serialize int" << std::endl;
-      if(!globalToValue.second->empty()) {
-        value = globalToValue.second->getValue<int>();
+      if(globalToValue.second->has_value()) {
+        protoGlobalToStore.set_value(globalToValue.second->getValue<int>());
         valueIsSet = true;
       }
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Integer);
       break;
     case sir::Value::Double:
       std::cout << "serialize double" << std::endl;
-      if(!globalToValue.second->empty()) {
-        value = globalToValue.second->getValue<double>();
+      if(globalToValue.second->has_value()) {
+        protoGlobalToStore.set_value(globalToValue.second->getValue<double>());
         valueIsSet = true;
       }
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Double);
@@ -340,9 +340,7 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
     default:
       dawn_unreachable("non-supported global type");
     }
-    if(valueIsSet) {
-      protoGlobalToStore.set_value(value);
-    }
+
     protoGlobalToStore.set_valueisset(valueIsSet);
     protoGlobalVariableMap.insert({globalToValue.first, protoGlobalToStore});
   }
