@@ -205,7 +205,7 @@ def make_sir(filename: str, stencils: List[Stencil], functions: List[StencilFunc
     return sir
 
 
-def make_stencil_call(callee: str, arguments: List[Field]) -> StencilCall:
+def make_stencil_call(callee: str, arguments: List[str]) -> StencilCall:
     """ Create a StencilCall
 
     :param callee:      Name of the called stencil (i.e callee)
@@ -213,24 +213,18 @@ def make_stencil_call(callee: str, arguments: List[Field]) -> StencilCall:
     """
     call = StencilCall()
     call.callee = callee
-    if isinstance(arguments, Iterable):
-        call.arguments.extend(
-            [make_field(arg) if isinstance(arg, str) else arg for arg in arguments])
-    else:
-        call.arguments.extend([make_field(arguments) if isinstance(arguments, str) else arguments])
+    call.arguments.extend(arguments)
     return call
 
 
-def make_vertical_region(ast: AST, interval: Interval,
+def make_vertical_region(interval: Interval,
                          loop_order: VerticalRegion.LoopOrder) -> VerticalRegion:
     """ Create a VerticalRegion
 
-    :param ast:         Syntax tree of the body of the vertical region
     :param interval:    Vertical interval
     :param loop_order:  Vertical loop order of execution
     """
     vr = VerticalRegion()
-    vr.ast.CopyFrom(ast)
     vr.interval.CopyFrom(interval)
     vr.loop_order = loop_order
     return vr
@@ -369,30 +363,21 @@ def make_stencil_call_decl_stmt(stencil_call: StencilCall) -> StencilCallDeclStm
     stmt.stencil_call.CopyFrom(stencil_call)
     return stmt
 
-
-def make_vertical_region_decl_stmt(vertical_region: VerticalRegion) -> VerticalRegionDeclStmt:
-    """ Create a VerticalRegionDeclStmt
-
-    :param vertical_region:   Vertical region.
-    """
-    stmt = VerticalRegionDeclStmt()
-    stmt.vertical_region.CopyFrom(vertical_region)
-    return stmt
-
-
 def make_vertical_region_decl_stmt(ast: AST, interval: Interval,
                                    loop_order: VerticalRegion.LoopOrder) -> VerticalRegionDeclStmt:
     """ Create a VerticalRegionDeclStmt
 
+    :param ast:   AST of the vertical region.
     :param vertical_region:   Vertical region.
+    :param loop_order: Loop order
     """
     stmt = VerticalRegionDeclStmt()
-    stmt.vertical_region.CopyFrom(make_vertical_region(ast, interval, loop_order))
+    stmt.ast.CopyFrom(ast)
+    stmt.vertical_region.CopyFrom(make_vertical_region(interval, loop_order))
     return stmt
-
  
 def make_boundary_condition_decl_stmt(functor: str,
-                                      fields: List[Field]) -> BoundaryConditionDeclStmt:
+                                      fields: List[str]) -> BoundaryConditionDeclStmt:
     """ Create a BoundaryConditionDeclStmt
 
     :param functor:  Identifier of the boundary condition functor.
@@ -400,11 +385,7 @@ def make_boundary_condition_decl_stmt(functor: str,
     """
     stmt = BoundaryConditionDeclStmt()
     stmt.functor = functor
-    if isinstance(fields, Iterable):
-        stmt.fields.extend(
-            [make_field(field) if isinstance(field, str) else field for field in fields])
-    else:
-        stmt.fields.extend([make_field(fields) if isinstance(fields, str) else fields])
+    stmt.fields.extend(fields)
     return stmt
 
 

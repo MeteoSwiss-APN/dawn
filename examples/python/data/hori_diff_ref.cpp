@@ -1,6 +1,6 @@
 namespace dawn_generated{
 namespace cuda{
-__global__ void __launch_bounds__(256)  hori_diff_stencil43_ms86_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, gridtools::clang::float_type * const in, gridtools::clang::float_type * const out, gridtools::clang::float_type * const coeff) {
+__global__ void __launch_bounds__(256)  hori_diff_stencil77_ms85_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, gridtools::clang::float_type * const in, gridtools::clang::float_type * const out, gridtools::clang::float_type * const coeff) {
 
   // Start kernel
   __shared__ gridtools::clang::float_type lap_ijcache[34*6];
@@ -91,7 +91,7 @@ public:
     }
   };
 
-  struct stencil_43 : public sbase {
+  struct stencil_77 : public sbase {
 
     // Members
 
@@ -111,9 +111,9 @@ public:
     tmp_storage_t m_lap;
   public:
 
-    stencil_43(const gridtools::clang::domain& dom_, storage_ijk_t& in_, storage_ijk_t& out_, storage_ijk_t& coeff_) : sbase("stencil_43"), m_dom(dom_), m_in(in_), m_out(out_), m_coeff(coeff_), m_tmp_meta_data(32+2, 4+2, (dom_.isize()+ 32 - 1) / 32, (dom_.jsize()+ 4 - 1) / 4, dom_.ksize() + 2 * 0), m_lap(m_tmp_meta_data){}
+    stencil_77(const gridtools::clang::domain& dom_, storage_ijk_t& in_, storage_ijk_t& out_, storage_ijk_t& coeff_) : sbase("stencil_77"), m_dom(dom_), m_in(in_), m_out(out_), m_coeff(coeff_), m_tmp_meta_data(32+2, 4+2, (dom_.isize()+ 32 - 1) / 32, (dom_.jsize()+ 4 - 1) / 4, dom_.ksize() + 2 * 0), m_lap(m_tmp_meta_data){}
 
-    ~stencil_43() {
+    ~stencil_77() {
     }
 
     void sync_storages() {
@@ -138,7 +138,7 @@ public:
       const unsigned int nby = (ny + 4 - 1) / 4;
       const unsigned int nbz = (m_dom.ksize()+4-1) / 4;
       dim3 blocks(nbx, nby, nbz);
-      hori_diff_stencil43_ms86_kernel<<<blocks, threads>>>(nx,ny,nz,m_in.strides()[1],m_in.strides()[2],(in.data()+m_in.get_storage_info_ptr()->index(in.begin<0>(), in.begin<1>(),0 )),(out.data()+m_out.get_storage_info_ptr()->index(out.begin<0>(), out.begin<1>(),0 )),(coeff.data()+m_coeff.get_storage_info_ptr()->index(coeff.begin<0>(), coeff.begin<1>(),0 )));
+      hori_diff_stencil77_ms85_kernel<<<blocks, threads>>>(nx,ny,nz,m_in.strides()[1],m_in.strides()[2],(in.data()+m_in.get_storage_info_ptr()->index(in.begin<0>(), in.begin<1>(),0 )),(out.data()+m_out.get_storage_info_ptr()->index(out.begin<0>(), out.begin<1>(),0 )),(coeff.data()+m_coeff.get_storage_info_ptr()->index(coeff.begin<0>(), coeff.begin<1>(),0 )));
       };
 
       // stopping timers
@@ -150,7 +150,7 @@ public:
     }
   };
   static constexpr const char* s_name = "hori_diff";
-  sbase* m_stencil_43;
+  sbase* m_stencil_77;
 public:
 
   hori_diff(const hori_diff&) = delete;
@@ -159,17 +159,17 @@ public:
 
   // Stencil-Data
 
-  hori_diff(const gridtools::clang::domain& dom, storage_ijk_t& in, storage_ijk_t& out, storage_ijk_t& coeff) : m_stencil_43(new stencil_43(dom,in,out,coeff) ){}
+  hori_diff(const gridtools::clang::domain& dom, storage_ijk_t& in, storage_ijk_t& out, storage_ijk_t& coeff) : m_stencil_77(new stencil_77(dom,in,out,coeff) ){}
 
   void run() {
     sync_storages();
-    m_stencil_43->run();
+    m_stencil_77->run();
 ;
     sync_storages();
   }
 
   void sync_storages() {
-    m_stencil_43->sync_storages();
+    m_stencil_77->sync_storages();
   }
 
   std::string get_name()  const {
@@ -177,11 +177,11 @@ public:
   }
 
   std::vector<sbase*> getStencils() {
-    return std::vector<sbase*>({m_stencil_43});
+    return std::vector<sbase*>({m_stencil_77});
   }
 
   void reset_meters() {
-m_stencil_43->reset();  }
+m_stencil_77->reset();  }
 };
 } // namespace cuda
 } // namespace dawn_generated

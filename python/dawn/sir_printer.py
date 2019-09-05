@@ -157,14 +157,6 @@ class SIRPrinter:
         str_ += ")"
         print(self.T_.fill(str_))
 
-        self.indent_ += 2
-        self.T_.initial_indent = ' ' * self.indent_
-
-        for stmt in vertical_region.ast.root.block_stmt.statements:
-            self.visit_body_stmt(stmt)
-
-        self.indent_ -= 2
-        self.T_.initial_indent = ' ' * self.indent_
 
     def visit_stencil(self, stencil):
         print(self.T_.fill("stencil " + stencil.name))
@@ -176,6 +168,14 @@ class SIRPrinter:
         block = stencil.ast.root.block_stmt
         for stmt in block.statements:
             if stmt.WhichOneof("stmt") == "vertical_region_decl_stmt":
+                self.indent_ += 2
+                self.T_.initial_indent = ' ' * self.indent_
+
+                for stmt in stmt.ast.root.block_stmt.statements:
+                    self.visit_body_stmt(stmt)
+
+                self.indent_ -= 2
+                self.T_.initial_indent = ' ' * self.indent_
                 self.visit_vertical_region(stmt.vertical_region_decl_stmt.vertical_region)
 
         self.indent_ -= 2
