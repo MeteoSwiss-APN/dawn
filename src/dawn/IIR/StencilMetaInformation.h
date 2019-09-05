@@ -122,14 +122,10 @@ public:
   int addTmpField(FieldAccessType type, const std::string& basename,
                      const Array3i fieldDimensions);
 
-<<<<<<< HEAD
   //MR checked, calls insertAccessOfType but also inserts into StmtIDToAccessIDMap_ where the key is unique,
   //and AccessIDToNameMap_, where the key is NOT unique
   // -> renamed to `add', but not sure about that decision
   int addStmt(bool keepVarNames, const std::shared_ptr<VarDeclStmt>& stmt);
-=======
-  int insertStmt(bool keepVarNames, const std::shared_ptr<iir::VarDeclStmt>& stmt);
->>>>>>> master
 
   void eraseStencilFunctionInstantiation(
       const std::shared_ptr<StencilFunctionInstantiation>& stencilFun) {
@@ -181,13 +177,9 @@ public:
     return BoundaryConditionToExtentsMap_.count(stmt);
   }
 
-<<<<<<< HEAD
   //MR checked, bc is a unique key into BoundaryConditionToExtentsMap_
   //  -> renamed to add
   void addBoundaryConditiontoExtentPair(std::shared_ptr<BoundaryConditionDeclStmt>& bc,
-=======
-  void insertBoundaryConditiontoExtentPair(std::shared_ptr<iir::BoundaryConditionDeclStmt>& bc,
->>>>>>> master
                                            Extents& extents) {
     DAWN_ASSERT(!BoundaryConditionToExtentsMap_.count(bc));
     BoundaryConditionToExtentsMap_.emplace(bc, extents);
@@ -216,32 +208,22 @@ public:
 
   bool hasStmtToAccessID(const std::shared_ptr<iir::Stmt>& stmt) const;
 
-<<<<<<< HEAD
   //MR checked, statement id is unique in this case
   //  -> renamed to add
   void addStmtToAccessID(const std::shared_ptr<Stmt>& stmt, const int accessID);
-=======
-  void insertStmtToAccessID(const std::shared_ptr<iir::Stmt>& stmt, const int accessID);
->>>>>>> master
 
   //MR checked, access id is not unique in this case
   //  -> not renamed, consistent with std insert
   /// @brief Insert a new AccessID - Name pair
   void insertAccessIDNamePair(int accessID, const std::string& name);
 
-<<<<<<< HEAD
   //MR checked, stencil call decl statement is unqiue, so is stencil id --> bijective mapping
   //  -> renaemd to add
   void addStencilCallStmt(std::shared_ptr<StencilCallDeclStmt> stmt, int stencilID);
-=======
-  void insertStencilCallStmt(std::shared_ptr<iir::StencilCallDeclStmt> stmt, int stencilID);
->>>>>>> master
 
   /// @brief Remove the field, variable or literal given by `AccessID`
   void removeAccessID(int AccesssID);
 
-<<<<<<< HEAD
-  /// @brief insert entry to the map between a given expr to its access ID 
   void insertExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID);
 
   /// @brief erase entry of the Expr to AccessID map
@@ -249,28 +231,6 @@ public:
 
   /// @brief erase entry of the Stmt to AccessID map
   void eraseStmtToAccessID(std::shared_ptr<Stmt> stmt);
-=======
-  /// @brief Add entry to the map between a given expr to its access ID
-  void insertExprToAccessID(const std::shared_ptr<iir::Expr>& expr, int accessID);
-
-  /// @brief Add entry of the Expr to AccessID map
-  void eraseExprToAccessID(std::shared_ptr<iir::Expr> expr);
-
-  /// @brief Add entry of the Stmt to AccessID map
-  void eraseStmtToAccessID(std::shared_ptr<iir::Stmt> stmt);
->>>>>>> master
-
-  void eraseStencilCallStmt(std::shared_ptr<iir::StencilCallDeclStmt> stmt);
-  void eraseStencilID(const int stencilID);
-
-  json::json jsonDump() const;
-
-  ///@brief struct with properties of a stencil function instantiation candidate
-  struct StencilFunctionInstantiationCandidate {
-    /// stencil function instantiation from where the stencil function instantiation candidate is
-    /// called
-    std::shared_ptr<StencilFunctionInstantiation> callerStencilFunction_;
-  };
 
   std::string getFileName() const { return fileName_; }
   std::string getStencilName() const { return stencilName_; }
@@ -283,15 +243,11 @@ public:
 
   bool hasBC() const { return !fieldnameToBoundaryConditionMap_.empty(); }
   bool hasFieldBC(std::string name) const { return fieldnameToBoundaryConditionMap_.count(name); }
-<<<<<<< HEAD
 
   //MR checked, name is unique in this case
   //  -> renamed to add
   void addFieldBC(std::string name, const std::shared_ptr<BoundaryConditionDeclStmt>& bc) {
     DAWN_ASSERT(!fieldnameToBoundaryConditionMap_.count(name));
-=======
-  void insertFieldBC(std::string name, const std::shared_ptr<iir::BoundaryConditionDeclStmt>& bc) {
->>>>>>> master
     fieldnameToBoundaryConditionMap_.emplace(name, bc);
   }
 
