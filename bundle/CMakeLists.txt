@@ -39,7 +39,7 @@ include(DawnCloneRepository)
 
 set(DAWN_YODA_GIT_URL "https:///github.com/Meteoswiss-APN/yoda.git"
     CACHE PATH "URL of the dawn git repository to clone")
-set(DAWN_YODA_GIT_BRANCH "1.0.5" CACHE STRING "Branch of the dawn git repository to clone")
+set(DAWN_YODA_GIT_BRANCH "1.0.6" CACHE STRING "Branch of the dawn git repository to clone")
 dawn_clone_repository(NAME yoda URL ${DAWN_YODA_GIT_URL} BRANCH ${DAWN_YODA_GIT_BRANCH} SOURCE_DIR DAWN_YODA_SOURCE_DIR )
 #
 list(APPEND CMAKE_MODULE_PATH "${DAWN_YODA_SOURCE_DIR}/cmake")
@@ -109,6 +109,9 @@ install(
 )
 
 if(DAWN_BUNDLE_PYTHON)
+  if(NOT DEFINED PROTOBUF_PYTHON_INSTALL)
+    message(FATAL_ERROR "protobuf python not set")
+  endif()
   install(DIRECTORY ${PROTOBUF_PYTHON_INSTALL}/google DESTINATION ${CMAKE_INSTALL_PREFIX}/python)
   install (SCRIPT "${CMAKE_SOURCE_DIR}/PostInstall.cmake")
 endif(DAWN_BUNDLE_PYTHON)
