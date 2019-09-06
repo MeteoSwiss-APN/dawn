@@ -581,12 +581,11 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
 
   for(auto IDToCall : protoMetaData.idtostencilcall()) {
     auto call = IDToCall.second;
-    std::shared_ptr<sir::StencilCall> sirStencilCall = std::make_shared<sir::StencilCall>(
+    std::shared_ptr<ast::StencilCall> astStencilCall = std::make_shared<ast::StencilCall>(
         call.stencil_call_decl_stmt().stencil_call().callee(),
         makeLocation(call.stencil_call_decl_stmt().stencil_call()));
-    for(const auto& protoField : call.stencil_call_decl_stmt().stencil_call().arguments()) {
-      auto field = makeField(protoField);
-      sirStencilCall->Args.push_back(field);
+    for(const auto& protoFieldName : call.stencil_call_decl_stmt().stencil_call().arguments()) {
+      astStencilCall->Args.push_back(protoFieldName);
     }
 
     auto stmt = declStmtFinder.stencilCallDecl[call.stencil_call_decl_stmt().id()];

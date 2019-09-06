@@ -296,7 +296,7 @@ protected:
   std::unordered_map<int, TemporaryFunctionProperties> const& temporaryFieldAccessIDToFunctionCall_;
   const iir::Interval interval_;
   const sir::Interval sirInterval_;
-  std::shared_ptr<std::vector<sir::StencilCall*>> stackTrace_;
+  std::shared_ptr<std::vector<ast::StencilCall*>> stackTrace_;
   std::shared_ptr<iir::Expr> skip_;
 
   // the prop of the arguments of nested stencil functions
@@ -313,7 +313,7 @@ public:
                  std::unordered_map<int, TemporaryFunctionProperties> const&
                      temporaryFieldAccessIDToFunctionCall,
                  const iir::Interval& interval,
-                 std::shared_ptr<std::vector<sir::StencilCall*>> stackTrace)
+                 std::shared_ptr<std::vector<ast::StencilCall*>> stackTrace)
       : stencilInstantiation_(stencilInstantiation), metadata_(stencilInstantiation->getMetaData()),
         temporaryFieldAccessIDToFunctionCall_(temporaryFieldAccessIDToFunctionCall),
         interval_(interval), sirInterval_(intervalToSIRInterval(interval)),
