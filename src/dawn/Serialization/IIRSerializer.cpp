@@ -588,14 +588,10 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
       astStencilCall->Args.push_back(protoFieldName);
     }
 
-<<<<<<< HEAD
     // auto stmt = declStmtFinder.stencilCallDecl[call.stencil_call_decl_stmt().id()];
     auto stmt = std::make_shared<iir::StencilCallDeclStmt>(
         astStencilCall, makeLocation(call.stencil_call_decl_stmt()));
     stmt->setID(call.stencil_call_decl_stmt().id());
-=======
-    auto stmt = declStmtFinder.stencilCallDecl[call.stencil_call_decl_stmt().id()];
->>>>>>> 7008cba1462ab12514ae834028b8a6bcf8509fa4
     metadata.insertStencilCallStmt(stmt, IDToCall.first);
   }
 
