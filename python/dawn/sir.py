@@ -205,7 +205,7 @@ def make_sir(filename: str, stencils: List[Stencil], functions: List[StencilFunc
     return sir
 
 
-def make_stencil_call(callee: str, arguments: List[Field]) -> StencilCall:
+def make_stencil_call(callee: str, arguments: List[str]) -> StencilCall:
     """ Create a StencilCall
 
     :param callee:      Name of the called stencil (i.e callee)
@@ -213,11 +213,7 @@ def make_stencil_call(callee: str, arguments: List[Field]) -> StencilCall:
     """
     call = StencilCall()
     call.callee = callee
-    if isinstance(arguments, Iterable):
-        call.arguments.extend(
-            [make_field(arg) if isinstance(arg, str) else arg for arg in arguments])
-    else:
-        call.arguments.extend([make_field(arguments) if isinstance(arguments, str) else arguments])
+    call.arguments.extend(arguments)
     return call
 
 
@@ -392,7 +388,7 @@ def make_vertical_region_decl_stmt(ast: AST, interval: Interval,
 
  
 def make_boundary_condition_decl_stmt(functor: str,
-                                      fields: List[Field]) -> BoundaryConditionDeclStmt:
+                                      fields: List[str]) -> BoundaryConditionDeclStmt:
     """ Create a BoundaryConditionDeclStmt
 
     :param functor:  Identifier of the boundary condition functor.
@@ -400,11 +396,7 @@ def make_boundary_condition_decl_stmt(functor: str,
     """
     stmt = BoundaryConditionDeclStmt()
     stmt.functor = functor
-    if isinstance(fields, Iterable):
-        stmt.fields.extend(
-            [make_field(field) if isinstance(field, str) else field for field in fields])
-    else:
-        stmt.fields.extend([make_field(fields) if isinstance(fields, str) else fields])
+    stmt.fields.extend(fields)
     return stmt
 
 
