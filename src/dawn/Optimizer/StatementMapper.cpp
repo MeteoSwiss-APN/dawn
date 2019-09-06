@@ -19,7 +19,7 @@
 namespace dawn {
 StatementMapper::StatementMapper(
     const std::shared_ptr<SIR>& fullSIR, iir::StencilInstantiation* instantiation,
-    const std::shared_ptr<std::vector<sir::StencilCall*>>& stackTrace, iir::DoMethod& doMethod,
+    const std::shared_ptr<std::vector<ast::StencilCall*>>& stackTrace, iir::DoMethod& doMethod,
     const iir::Interval& interval,
     const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,
     const std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation)

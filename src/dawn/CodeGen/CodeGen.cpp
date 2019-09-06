@@ -241,7 +241,7 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
   }
   for(auto usedBoundaryCondition : metadata.getFieldNameToBCMap()) {
     for(const auto& field : usedBoundaryCondition.second->getFields()) {
-      codeGenProperties.setParamBC(field->Name);
+      codeGenProperties.setParamBC(field);
     }
   }
   for(int accessID :
