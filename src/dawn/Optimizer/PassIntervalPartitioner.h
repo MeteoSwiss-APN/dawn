@@ -1,0 +1,54 @@
+//===--------------------------------------------------------------------------------*- C++ -*-===//
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
+//                     | (_| | (_| |\ V  V /| | | |
+//                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+//
+//
+//  This file is distributed under the MIT License (MIT).
+//  See LICENSE.txt for details.
+//
+//===------------------------------------------------------------------------------------------===//
+
+#ifndef DAWN_OPTIMIZER_PASSINTERVALPARTITIONER_H
+#define DAWN_OPTIMIZER_PASSINTERVALPARTITIONER_H
+
+#include "dawn/Optimizer/Pass.h"
+#include "dawn/Support/Assert.h"
+#include <set>
+#include <unordered_map>
+
+namespace dawn {
+
+namespace iir {
+class Stencil;
+class DoMethod;
+} // namespace iir
+
+/// @brief PassTemporaryToStencilFunction pass will identify temporaries of a stencil and replace
+/// their pre-computations
+/// by a stencil function. Each reference to the temporary is later replaced by the stencil function
+/// call.
+/// * Input: well formed SIR and IIR with the list of mss/stages, temporaries used and
+/// <statement,accesses> pairs
+/// * Output: modified SIR, new stencil functions are inserted and calls. Temporary fields are
+/// removed. New stencil functions instantiations are inserted into the IIR. <statement,accesses>
+/// pairs are recomputed
+/// @ingroup optimizer
+///
+/// This pass is not necessary to create legal code and is hence not in the debug-group
+class PassIntervalPartitioner : public Pass {
+public:
+  PassIntervalPartitioner() : Pass("PassIntervalPartitioner") {}
+
+  /// @brief Pass implementation
+  bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
+
+private:
+};
+
+} // namespace dawn
+
+#endif
