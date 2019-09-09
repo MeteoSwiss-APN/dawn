@@ -17,7 +17,9 @@
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/AccessComputation.h"
+#include "dawn/Optimizer/PassComputeStageExtents.h"
 #include "dawn/Optimizer/PassTemporaryType.h"
+#include "dawn/Optimizer/PassSetStageName.h"
 #include "dawn/Optimizer/StatementMapper.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Logging.h"
@@ -566,23 +568,13 @@ OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, OptimizerCont
                                    const std::shared_ptr<SIR>& SIR)
     : diagnostics_(diagnostics), options_(options), SIR_(SIR) {
   DAWN_LOG(INFO) << "Intializing OptimizerContext ... ";
-
-  for(const auto& stencil : SIR_->Stencils)
-    if(!stencil->Attributes.has(sir::Attr::AK_NoCodeGen)) {
-      stencilInstantiationMap_.insert(
-          std::make_pair(stencil->Name, std::make_shared<iir::StencilInstantiation>(this)));
-      fillIIRFromSIR(stencilInstantiationMap_.at(stencil->Name), stencil, SIR_);
-    } else {
-      DAWN_LOG(INFO) << "Skipping processing of `" << stencil->Name << "`";
-    }
 }
-
 bool OptimizerContext::fillIIRFromSIR(
-    std::shared_ptr<iir::StencilInstantiation> stencilInstantation,
+    std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     const std::shared_ptr<sir::Stencil> SIRStencil, const std::shared_ptr<SIR> fullSIR) {
   DAWN_LOG(INFO) << "Intializing StencilInstantiation of `" << SIRStencil->Name << "`";
   DAWN_ASSERT_MSG(SIRStencil, "Stencil does not exist");
-  auto& metadata = stencilInstantation->getMetaData();
+  auto& metadata = stencilInstantiation->getMetaData();
   metadata.setStencilname(SIRStencil->Name);
   metadata.setFileName(fullSIR->Filename);
   metadata.setStencilLocation(SIRStencil->Loc);
@@ -595,7 +587,7 @@ bool OptimizerContext::fillIIRFromSIR(
                          field->Name, field->fieldDimensions);
   }
 
-  StencilDescStatementMapper stencilDeclMapper(stencilInstantation, SIRStencil.get(), fullSIR);
+  StencilDescStatementMapper stencilDeclMapper(stencilInstantiation, SIRStencil.get(), fullSIR);
 
   //  // We need to operate on a copy of the AST as we may modify the nodes inplace
   auto AST = SIRStencil->StencilDescAst->clone();
@@ -606,26 +598,26 @@ bool OptimizerContext::fillIIRFromSIR(
 
   //  // Repair broken references to temporaries i.e promote them to real fields
   PassTemporaryType::fixTemporariesSpanningMultipleStencils(
-      stencilInstantation.get(), stencilInstantation->getIIR()->getChildren());
+      stencilInstantiation.get(), stencilInstantiation->getIIR()->getChildren());
 
-  if(stencilInstantation->getOptimizerContext()->getOptions().ReportAccesses) {
-    stencilInstantation->reportAccesses();
+  if(stencilInstantiation->getOptimizerContext()->getOptions().ReportAccesses) {
+    stencilInstantiation->reportAccesses();
   }
 
-  for(const auto& MS : iterateIIROver<MultiStage>(*(stencilInstantation->getIIR()))) {
+  for(const auto& MS : iterateIIROver<MultiStage>(*(stencilInstantiation->getIIR()))) {
     MS->update(NodeUpdateType::levelAndTreeAbove);
   }
   DAWN_LOG(INFO) << "Done initializing StencilInstantiation";
 
   // Iterate all statements (top -> bottom)
-  for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantation->getIIR()))) {
+  for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {
     iir::Stage& stage = *stagePtr;
     for(const auto& doMethod : stage.getChildren()) {
       doMethod->update(iir::NodeUpdateType::level);
     }
     stage.update(iir::NodeUpdateType::level);
   }
-  for(const auto& MSPtr : iterateIIROver<iir::Stage>(*(stencilInstantation->getIIR()))) {
+  for(const auto& MSPtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {
     MSPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
 
@@ -651,5 +643,55 @@ const OptimizerContext::OptimizerContextOptions& OptimizerContext::getOptions() 
 }
 
 OptimizerContext::OptimizerContextOptions& OptimizerContext::getOptions() { return options_; }
+
+void OptimizerContext::fillIIR() {
+  DAWN_ASSERT(SIR_);
+  for(const auto& stencil : SIR_->Stencils) {
+    DAWN_ASSERT(stencil);
+    if(!stencil->Attributes.has(sir::Attr::AK_NoCodeGen)) {
+      stencilInstantiationMap_.insert(std::make_pair(
+          stencil->Name, std::make_shared<iir::StencilInstantiation>(
+                             this, *getSIR()->GlobalVariableMap, getSIR()->StencilFunctions)));
+      fillIIRFromSIR(stencilInstantiationMap_.at(stencil->Name), stencil, SIR_);
+    } else {
+      DAWN_LOG(INFO) << "Skipping processing of `" << stencil->Name << "`";
+    }
+  }
+}
+
+bool OptimizerContext::restoreIIR(std::string const& name,
+                                  std::shared_ptr<iir::StencilInstantiation> stencilInstantiation) {
+  auto& metadata = stencilInstantiation->getMetaData();
+  metadata.setStencilname(stencilInstantiation->getName());
+  metadata.setFileName("<unknown>");
+
+  stencilInstantiationMap_.insert(std::make_pair(name, stencilInstantiation));
+
+  for(const auto& MS : iterateIIROver<MultiStage>(*(stencilInstantiation->getIIR()))) {
+    MS->update(NodeUpdateType::levelAndTreeAbove);
+  }
+  DAWN_LOG(INFO) << "Done initializing StencilInstantiation";
+
+  // Iterate all statements (top -> bottom)
+  for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {
+    iir::Stage& stage = *stagePtr;
+    for(const auto& doMethod : stage.getChildren()) {
+      doMethod->update(iir::NodeUpdateType::level);
+    }
+    stage.update(iir::NodeUpdateType::level);
+  }
+  for(const auto& MSPtr : iterateIIROver<iir::Stage>(*(stencilInstantiation->getIIR()))) {
+    MSPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
+  }
+
+  // fix extents of stages since they are not stored in the iir but computed from the accesses contained
+  // in the DeMethods
+  checkAndPushBack<PassSetStageName>();
+  checkAndPushBack<PassComputeStageExtents>();
+  if(!getPassManager().runAllPassesOnStecilInstantiation(stencilInstantiation))
+    return false;
+
+  return true;
+}
 
 } // namespace dawn

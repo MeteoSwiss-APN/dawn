@@ -122,6 +122,7 @@ void CodeGen::generateBoundaryConditionFunctions(
   // Functions for boundary conditions
   const auto& metadata = stencilInstantiation->getMetaData();
   for(auto usedBoundaryCondition : metadata.getFieldNameToBCMap()) {
+    bool found = false;
     for(const auto& sf : stencilInstantiation->getIIR()->getStencilFunctions()) {
       if(sf->Name == usedBoundaryCondition.second->getFunctor()) {
 
@@ -145,9 +146,12 @@ void CodeGen::generateBoundaryConditionFunctions(
         std::string output = reader.getCodeAndResetStream();
         BC << output;
         BC.commit();
+
+        found = true;
         break;
       }
     }
+    DAWN_ASSERT(found);
   }
 }
 
