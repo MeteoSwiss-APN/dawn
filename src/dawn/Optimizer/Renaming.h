@@ -77,6 +77,7 @@ void renameAccessIDInMultiStage(iir::MultiStage* multiStage, int oldAccessID, in
 
 void renameAccessIDInStencil(iir::Stencil* stencil, int oldAccessID, int newAccessID);
 
+/// @brief Rename all occurences of the caller AccessID from `oldAccessID` to `newAccessID`
 void renameCallerAccessIDInStencilFunction(iir::StencilFunctionInstantiation* function,
                                            int oldAccessID, int newAccessID);
 } // namespace dawn

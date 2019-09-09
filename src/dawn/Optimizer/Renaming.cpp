@@ -50,7 +50,7 @@ public:
   virtual void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override {
     std::shared_ptr<iir::StencilFunctionInstantiation> fun =
         instantiation_->getStencilFunctionInstantiation(expr);
-    fun->renameCallerAccessID(oldAccessID_, newAccessID_);
+    renameCallerAccessIDInStencilFunction(fun.get(), oldAccessID_, newAccessID_);
     iir::ASTVisitorForwarding::visit(expr);
   }
 
@@ -169,8 +169,6 @@ void renameCallerAccessIDInStencilFunction(iir::StencilFunctionInstantiation* fu
 
   // // Update AccessID to name map
   function->replaceKeyInMap(function->getAccessIDToNameMap(), oldAccessID, newAccessID);
-
-  ////////////////////////// WITTODO: Continue fixing stuff here
 
   // Update statements
   renameAccessIDInStmts(function, oldAccessID, newAccessID, function->getDoMethod()->getChildren());

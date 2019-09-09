@@ -319,9 +319,6 @@ public:
   /// @brief Check if the argument at the given index is a stencil function
   bool isArgStencilFunctionInstantiation(int argumentIndex) const;
 
-  /// @brief Rename all occurences of the caller AccessID from `oldAccessID` to `newAccessID`
-  void renameCallerAccessID(int oldAccessID, int newAccessID);
-
   /// @brief determines if accessid corresponds to a literal
   bool isLiteral(int accessID) const { return accessID < 0; }
 

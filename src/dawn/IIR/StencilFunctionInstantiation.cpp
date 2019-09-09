@@ -16,7 +16,6 @@
 #include "dawn/IIR/AccessUtils.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/StencilInstantiation.h"
-// #include "dawn/Optimizer/Renaming.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/Printing.h"
@@ -53,7 +52,7 @@ StencilFunctionInstantiation StencilFunctionInstantiation::clone() const {
       ArgumentIndexToStencilFunctionInstantiationMap_;
   stencilFun.ArgumentIndexToCallerDirectionMap_ = ArgumentIndexToCallerDirectionMap_;
   stencilFun.ArgumentIndexToCallerOffsetMap_ = ArgumentIndexToCallerOffsetMap_;
-  stencilFun.CallerAcceessIDToInitialOffsetMap_ = CallerAcceessIDToInitialOffsetMap_;
+  stencilFun.CallerAccessIDToInitialOffsetMap_ = CallerAccessIDToInitialOffsetMap_;
   stencilFun.ExprToCallerAccessIDMap_ = ExprToCallerAccessIDMap_;
   stencilFun.StmtToCallerAccessIDMap_ = StmtToCallerAccessIDMap_;
   stencilFun.AccessIDToNameMap_ = AccessIDToNameMap_;
@@ -179,8 +178,8 @@ void StencilFunctionInstantiation::setFunctionInstantiationOfArgField(
 
 const Array3i&
 StencilFunctionInstantiation::getCallerInitialOffsetFromAccessID(int callerAccessID) const {
-  DAWN_ASSERT(CallerAcceessIDToInitialOffsetMap_.count(callerAccessID));
-  return CallerAcceessIDToInitialOffsetMap_.find(callerAccessID)->second;
+  DAWN_ASSERT(CallerAccessIDToInitialOffsetMap_.count(callerAccessID));
+  return CallerAccessIDToInitialOffsetMap_.find(callerAccessID)->second;
 }
 
 void StencilFunctionInstantiation::setCallerInitialOffsetFromAccessID(int callerAccessID,
@@ -251,28 +250,6 @@ bool StencilFunctionInstantiation::isArgField(int argumentIndex) const {
 
 bool StencilFunctionInstantiation::isArgStencilFunctionInstantiation(int argumentIndex) const {
   return ArgumentIndexToStencilFunctionInstantiationMap_.count(argumentIndex);
-}
-
-void StencilFunctionInstantiation::renameCallerAccessID(int oldAccessID, int newAccessID) {
-  // // Update argument maps
-  // for(auto& argumentAccessIDPair : ArgumentIndexToCallerAccessIDMap_) {
-  //   int& AccessID = argumentAccessIDPair.second;
-  //   if(AccessID == oldAccessID)
-  //     AccessID = newAccessID;
-  // }
-  // replaceKeyInMap(CallerAcceessIDToInitialOffsetMap_, oldAccessID, newAccessID);
-
-  // // Update AccessID to name map
-  // replaceKeyInMap(AccessIDToNameMap_, oldAccessID, newAccessID);
-
-  // // Update statements
-  // renameAccessIDInStmts(this, oldAccessID, newAccessID, doMethod_->getChildren());
-
-  // // Update accesses
-  // renameAccessIDInAccesses(this, oldAccessID, newAccessID, doMethod_->getChildren());
-
-  // // Recompute the fields
-  // update();
 }
 
 //===----------------------------------------------------------------------------------------===//
