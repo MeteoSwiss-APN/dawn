@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/Renaming.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/StatementAccessesPair.h"
@@ -20,7 +21,6 @@
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
-#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/SIR/Statement.h"
 #include <unordered_map>
 
@@ -158,26 +158,28 @@ void renameAccessIDInStencil(iir::Stencil* stencil, int oldAccessID, int newAcce
 void renameCallerAccessIDInStencilFunction(iir::StencilFunctionInstantiation* function,
                                            int oldAccessID, int newAccessID) {
   // Update argument maps
-  for(auto& argumentAccessIDPair : function->ArgumentIndexToCallerAccessIDMap_) {
+  for(auto& argumentAccessIDPair : function->ArgumentIndexToCallerAccessIDMap()) {
     int& AccessID = argumentAccessIDPair.second;
     if(AccessID == oldAccessID)
       AccessID = newAccessID;
   }
-  replaceKeyInMap(CallerAcceessIDToInitialOffsetMap_, oldAccessID, newAccessID);
 
-  // Update AccessID to name map
-  replaceKeyInMap(AccessIDToNameMap_, oldAccessID, newAccessID);
+  function->replaceKeyInMap(CallerAcceessIDToInitialOffsetMap_, oldAccessID, newAccessID);
+
+  // // Update AccessID to name map
+  function->replaceKeyInMap(function->getAccessIDToNameMap(), oldAccessID, newAccessID);
 
   ////////////////////////// WITTODO: Continue fixing stuff here
 
   // Update statements
-  renameAccessIDInStmts(function, oldAccessID, newAccessID, doMethod_->getChildren());
+  renameAccessIDInStmts(function, oldAccessID, newAccessID, function->getDoMethod()->getChildren());
 
   // Update accesses
-  renameAccessIDInAccesses(function, oldAccessID, newAccessID, doMethod_->getChildren());
+  renameAccessIDInAccesses(function, oldAccessID, newAccessID,
+                           function->getDoMethod()->getChildren());
 
   // Recompute the fields
-  update();
+  function->update();
 }
 
 } // namespace dawn

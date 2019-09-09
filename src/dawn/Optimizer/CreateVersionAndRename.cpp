@@ -20,7 +20,7 @@ namespace dawn {
 
 int createVersionAndRename(iir::StencilInstantiation* instantiation, int AccessID,
                            iir::Stencil* stencil, int curStageIdx, int curStmtIdx,
-                           std::shared_ptr<Expr>& expr, RenameDirection dir) {
+                           std::shared_ptr<ast::Expr>& expr, RenameDirection dir) {
   int newAccessID = -1;
   if(instantiation->getMetaData().isAccessType(iir::FieldAccessType::FAT_Field, AccessID)) {
     if(instantiation->getMetaData().variableHasMultipleVersions(AccessID)) {

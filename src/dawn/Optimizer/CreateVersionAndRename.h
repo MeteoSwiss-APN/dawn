@@ -18,7 +18,9 @@
 #include <memory>
 
 namespace dawn {
+namespace ast {
 class Expr;
+}
 namespace iir {
 class StencilInstantiation;
 class Stencil;
@@ -62,7 +64,7 @@ enum class RenameDirection {
 /// @returns AccessID of the new field
 int createVersionAndRename(iir::StencilInstantiation* instantiation, int AccessID,
                            iir::Stencil* stencil, int curStageIdx, int curStmtIdx,
-                           std::shared_ptr<Expr>& expr, RenameDirection dir);
+                           std::shared_ptr<ast::Expr>& expr, RenameDirection dir);
 
 } // namespace dawn
 

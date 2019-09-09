@@ -185,7 +185,7 @@ StencilFunctionInstantiation::getCallerInitialOffsetFromAccessID(int callerAcces
 
 void StencilFunctionInstantiation::setCallerInitialOffsetFromAccessID(int callerAccessID,
                                                                       const Array3i& offset) {
-  CallerAcceessIDToInitialOffsetMap_[callerAccessID] = offset;
+  CallerAccessIDToInitialOffsetMap_[callerAccessID] = offset;
 }
 
 bool StencilFunctionInstantiation::isProvidedByStencilFunctionCall(int callerAccessID) const {
@@ -253,35 +253,26 @@ bool StencilFunctionInstantiation::isArgStencilFunctionInstantiation(int argumen
   return ArgumentIndexToStencilFunctionInstantiationMap_.count(argumentIndex);
 }
 
-template <class MapType, class KeyType>
-static void replaceKeyInMap(MapType& map, KeyType oldKey, KeyType newKey) {
-  auto it = map.find(oldKey);
-  if(it != map.end()) {
-    std::swap(map[newKey], it->second);
-    map.erase(it);
-  }
-}
-
 void StencilFunctionInstantiation::renameCallerAccessID(int oldAccessID, int newAccessID) {
-  // Update argument maps
-  for(auto& argumentAccessIDPair : ArgumentIndexToCallerAccessIDMap_) {
-    int& AccessID = argumentAccessIDPair.second;
-    if(AccessID == oldAccessID)
-      AccessID = newAccessID;
-  }
-  replaceKeyInMap(CallerAcceessIDToInitialOffsetMap_, oldAccessID, newAccessID);
+  // // Update argument maps
+  // for(auto& argumentAccessIDPair : ArgumentIndexToCallerAccessIDMap_) {
+  //   int& AccessID = argumentAccessIDPair.second;
+  //   if(AccessID == oldAccessID)
+  //     AccessID = newAccessID;
+  // }
+  // replaceKeyInMap(CallerAcceessIDToInitialOffsetMap_, oldAccessID, newAccessID);
 
-  // Update AccessID to name map
-  replaceKeyInMap(AccessIDToNameMap_, oldAccessID, newAccessID);
+  // // Update AccessID to name map
+  // replaceKeyInMap(AccessIDToNameMap_, oldAccessID, newAccessID);
 
-  // Update statements
-  renameAccessIDInStmts(this, oldAccessID, newAccessID, doMethod_->getChildren());
+  // // Update statements
+  // renameAccessIDInStmts(this, oldAccessID, newAccessID, doMethod_->getChildren());
 
-  // Update accesses
-  renameAccessIDInAccesses(this, oldAccessID, newAccessID, doMethod_->getChildren());
+  // // Update accesses
+  // renameAccessIDInAccesses(this, oldAccessID, newAccessID, doMethod_->getChildren());
 
-  // Recompute the fields
-  update();
+  // // Recompute the fields
+  // update();
 }
 
 //===----------------------------------------------------------------------------------------===//
@@ -381,6 +372,14 @@ std::unordered_map<int, std::string>& StencilFunctionInstantiation::getAccessIDT
 const std::unordered_map<int, std::string>&
 StencilFunctionInstantiation::getAccessIDToNameMap() const {
   return AccessIDToNameMap_;
+}
+std::unordered_map<int, Array3i>&
+StencilFunctionInstantiation::getCallerAccessIDToInitialOffsetMap() {
+  return CallerAccessIDToInitialOffsetMap_;
+}
+const std::unordered_map<int, Array3i>&
+StencilFunctionInstantiation::getCallerAccessIDToInitialOffsetMap() const {
+  return CallerAccessIDToInitialOffsetMap_;
 }
 
 const std::unordered_map<std::shared_ptr<iir::StencilFunCallExpr>,
@@ -657,7 +656,7 @@ void StencilFunctionInstantiation::dump() const {
 
   const auto& statements = getAST()->getRoot()->getStatements();
   for(std::size_t i = 0; i < statements.size(); ++i) {
-    std::cout << "\e[1m" << iir::ASTStringifier::toString(statements[i], 2 * DAWN_PRINT_INDENT)
+    std::cout << "\e[1m" << ast::ASTStringifier::toString(statements[i], 2 * DAWN_PRINT_INDENT)
               << "\e[0m";
     if(doMethod_->getChild(i)->getCallerAccesses())
       std::cout << doMethod_->getChild(i)->getCallerAccesses()->toString(this,

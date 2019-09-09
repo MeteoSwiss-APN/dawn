@@ -54,7 +54,7 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
   //
   //   __tmp_foo(0, 0, 0) = ...
   //
-  VarDeclStmt* varDeclStmt = dyn_cast<VarDeclStmt>(oldStatement->ASTStmt.get());
+  iir::VarDeclStmt* varDeclStmt = dyn_cast<iir::VarDeclStmt>(oldStatement->ASTStmt.get());
   // If the TemporaryScope is within this stencil, then a VarDecl should be found (otherwise we have
   // a bug)
   DAWN_ASSERT_MSG((varDeclStmt || temporaryScope == iir::TemporaryScope::TS_Field),
@@ -68,11 +68,11 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
   if(varDeclStmt) {
     DAWN_ASSERT_MSG(!varDeclStmt->isArray(), "cannot promote local array to temporary field");
 
-    auto fieldAccessExpr = std::make_shared<FieldAccessExpr>(fieldname);
+    auto fieldAccessExpr = std::make_shared<iir::FieldAccessExpr>(fieldname);
     instantiation->getMetaData().insertExprToAccessID(fieldAccessExpr, accessID);
     auto assignmentExpr =
-        std::make_shared<AssignmentExpr>(fieldAccessExpr, varDeclStmt->getInitList().front());
-    auto exprStmt = std::make_shared<ExprStmt>(assignmentExpr);
+        std::make_shared<iir::AssignmentExpr>(fieldAccessExpr, varDeclStmt->getInitList().front());
+    auto exprStmt = std::make_shared<iir::ExprStmt>(assignmentExpr);
 
     // Replace the statement
     statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(
@@ -129,16 +129,16 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
   //
   //   double __local_foo = ...
   //
-  ExprStmt* exprStmt = dyn_cast<ExprStmt>(oldStatement->ASTStmt.get());
+  iir::ExprStmt* exprStmt = dyn_cast<iir::ExprStmt>(oldStatement->ASTStmt.get());
   DAWN_ASSERT_MSG(exprStmt, "first access of field (i.e lifetime.Begin) is not an `ExprStmt`");
-  AssignmentExpr* assignmentExpr = dyn_cast<AssignmentExpr>(exprStmt->getExpr().get());
+  iir::AssignmentExpr* assignmentExpr = dyn_cast<iir::AssignmentExpr>(exprStmt->getExpr().get());
   DAWN_ASSERT_MSG(assignmentExpr,
                   "first access of field (i.e lifetime.Begin) is not an `AssignmentExpr`");
 
   // Create the new `VarDeclStmt` which will replace the old `ExprStmt`
-  std::shared_ptr<Stmt> varDeclStmt =
-      std::make_shared<VarDeclStmt>(Type(BuiltinTypeID::Float), varname, 0, "=",
-                                    std::vector<std::shared_ptr<Expr>>{assignmentExpr->getRight()});
+  std::shared_ptr<iir::Stmt> varDeclStmt = std::make_shared<iir::VarDeclStmt>(
+      Type(BuiltinTypeID::Float), varname, 0, "=",
+      std::vector<std::shared_ptr<iir::Expr>>{assignmentExpr->getRight()});
 
   // Replace the statement
   statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(
