@@ -64,6 +64,8 @@
     }
    }
   },
+  "boundaryCallToExtent": {},
+  "allocatedFieldIDs": [],
   "stencilLocation": {
    "Line": 24,
    "Column": 8
@@ -414,7 +416,8 @@
      "ID": 22
     }
    }
-  ]
+  ],
+  "boundaryConditions": []
  },
  "filename": "/code/gtclang/test/integration-test/IIRSerializer/AccessTest.cpp"
 }

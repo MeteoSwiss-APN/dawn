@@ -15,7 +15,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 // RUN: %gtclang% %file% -fwrite-iir -fno-codegen -o %filename%_gen.cpp
-// EXPECTED_FILE: OUTPUT:%filename%.iir REFERENCE:%filename%_ref.iir IGNORE:filename
+// EXPECTED_FILE: OUTPUT:%filename%.0.iir REFERENCE:%filename%_ref.iir IGNORE:filename
 
 #include "gridtools/clang_dsl.hpp"
 

@@ -15,7 +15,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 // RUN: %gtclang% %file% -fwrite-iir -fno-codegen -o %filename%_gen.cpp
-// EXPECTED_FILE: OUTPUT:%filename%.iir REFERENCE:%filename%_ref.iir IGNORE:filename
+// EXPECTED_FILE: OUTPUT:%filename%.2.iir REFERENCE:%filename%_ref.iir IGNORE:filename
 
 #include "gridtools/clang_dsl.hpp"
 
@@ -43,3 +43,4 @@ stencil Nesting2 {
     Test(field_f, field_e);
   }
 };
+

@@ -59,6 +59,8 @@
     }
    }
   },
+  "boundaryCallToExtent": {},
+  "allocatedFieldIDs": [],
   "stencilLocation": {
    "Line": 24,
    "Column": 8
@@ -229,7 +231,8 @@
      "ID": 12
     }
    }
-  ]
+  ],
+  "boundaryConditions": []
  },
  "filename": "/code/gtclang/test/integration-test/IIRSerializer/CopyTest.cpp"
 }

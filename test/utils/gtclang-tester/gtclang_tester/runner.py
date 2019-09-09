@@ -140,12 +140,14 @@ class TestRunner(object):
                                 del output_json[node]
                                 del reference_json[node]
 
-                        output, reference = dumps(output_json), dumps(reference_json)
+                        output, reference = dumps(output_json, indent=2), dumps(reference_json, indent=2)
 
                         if output != reference:
+                            output = list(map(lambda x : x + "\n", output.split("\n")))
+                            reference = list(map(lambda x : x + "\n", reference.split("\n")))
                             msg = "\n"
-                            for line in unified_diff(open(outputfile, 'r').readlines(),
-                                                     open(referencefile, 'r').readlines(),
+                            for line in unified_diff(output,
+                                                     reference,
                                                      fromfile=outputfile,
                                                      tofile=referencefile):
                                 msg += line
