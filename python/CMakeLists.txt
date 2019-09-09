@@ -1,13 +1,13 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
-##                          _                      
-##                         | |                     
-##                       __| | __ ___      ___ ___  
-##                      / _` |/ _` \ \ /\ / / '_  | 
+##                          _
+##                         | |
+##                       __| | __ ___      ___ ___
+##                      / _` |/ _` \ \ /\ / / '_  |
 ##                     | (_| | (_| |\ V  V /| | | |
 ##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
@@ -22,12 +22,12 @@ set(protobuf_python "${protobuf_root}/python")
 set(protobuf_init_py "${protobuf_python}/google/protobuf/__init__.py")
 
 if(NOT EXISTS "${protobuf_init_py}")
-  message(WARNING 
+  message(WARNING
     "Python module of protobuf is not installed correctly! Expected protobuf's __init__.py at:\n"
     "    ${protobuf_init_py}\n"
     "Disabling python module of Dawn."
   )
-  set(DAWN_PYTHON OFF)
+  set(DAWN_PYTHON OFF CACHE BOOL "" FORCE)
 else()
   set(DAWN_INSTALL_PROTOBUF_MODULE "${protobuf_python}")
 
@@ -40,9 +40,9 @@ else()
        FILES_MATCHING PATTERN "*.py")
 
   # Copy to install
-  install(FILES ${config_out} 
+  install(FILES ${config_out}
           DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/dawn/)
-  install(DIRECTORY dawn/ 
+  install(DIRECTORY dawn/
           DESTINATION ${DAWN_INSTALL_PYTHON_DIR}/dawn
           FILES_MATCHING PATTERN "*.py"
 

@@ -20,6 +20,7 @@
 #include <utility>
 
 using namespace dawn;
+using namespace ast;
 
 void setAST(dawn::proto::statements::AST* astProto, const AST* ast);
 
@@ -179,7 +180,7 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt
 void ProtoStmtBuilder::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
   auto protoStmt = getCurrentStmtProto()->mutable_stencil_call_decl_stmt();
 
-  dawn::sir::StencilCall* stencilCall = stmt->getStencilCall().get();
+  dawn::ast::StencilCall* stencilCall = stmt->getStencilCall().get();
   dawn::proto::statements::StencilCall* stencilCallProto = protoStmt->mutable_stencil_call();
 
   // StencilCall.Loc
@@ -189,12 +190,8 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) {
   stencilCallProto->set_callee(stencilCall->Callee);
 
   // StencilCall.Args
-  for(const auto& arg : stencilCall->Args) {
-    auto argProto = stencilCallProto->add_arguments();
-    argProto->set_name(arg->Name);
-    argProto->set_is_temporary(arg->IsTemporary);
-    argProto->mutable_loc()->set_column(arg->Loc.Column);
-    argProto->mutable_loc()->set_line(arg->Loc.Line);
+  for(const auto& argName : stencilCall->Args) {
+    stencilCallProto->add_arguments(argName);
   }
 
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
@@ -205,13 +202,8 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<BoundaryConditionDeclStmt>& s
   auto protoStmt = getCurrentStmtProto()->mutable_boundary_condition_decl_stmt();
   protoStmt->set_functor(stmt->getFunctor());
 
-  for(const auto& field : stmt->getFields()) {
-    auto fieldProto = protoStmt->add_fields();
-    fieldProto->set_name(field->Name);
-    fieldProto->set_is_temporary(field->IsTemporary);
-    fieldProto->mutable_loc()->set_column(field->Loc.Column);
-    fieldProto->mutable_loc()->set_line(field->Loc.Line);
-  }
+  for(const auto& fieldName : stmt->getFields())
+    protoStmt->add_fields(fieldName);
 
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
   protoStmt->set_id(stmt->getID());
@@ -228,10 +220,11 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<IfStmt>& stmt) {
   stmt->getThenStmt()->accept(*this);
   currentStmtProto_.pop();
 
-  currentStmtProto_.push(protoStmt->mutable_else_part());
-  if(stmt->getElseStmt())
+  if(stmt->getElseStmt()) {
+    currentStmtProto_.push(protoStmt->mutable_else_part());
     stmt->getElseStmt()->accept(*this);
-  currentStmtProto_.pop();
+    currentStmtProto_.pop();
+  }
 
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
   protoStmt->set_id(stmt->getID());
@@ -655,10 +648,10 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto) {
     auto metaloc = makeLocation(statementProto.stencil_call_decl_stmt());
     const auto& stmtProto = statementProto.stencil_call_decl_stmt();
     auto loc = makeLocation(stmtProto.stencil_call());
-    std::shared_ptr<sir::StencilCall> call =
-        std::make_shared<sir::StencilCall>(stmtProto.stencil_call().callee(), loc);
-    for(const auto& arg : stmtProto.stencil_call().arguments()) {
-      call->Args.push_back(makeField(arg));
+    std::shared_ptr<ast::StencilCall> call =
+        std::make_shared<ast::StencilCall>(stmtProto.stencil_call().callee(), loc);
+    for(const auto& argName : stmtProto.stencil_call().arguments()) {
+      call->Args.push_back(argName);
     }
     auto stmt = std::make_shared<StencilCallDeclStmt>(call, metaloc);
     stmt->setID(stmtProto.id());
@@ -690,8 +683,8 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto) {
     const auto& stmtProto = statementProto.boundary_condition_decl_stmt();
     auto stmt =
         std::make_shared<BoundaryConditionDeclStmt>(stmtProto.functor(), makeLocation(stmtProto));
-    for(const auto& fieldProto : stmtProto.fields())
-      stmt->getFields().emplace_back(makeField(fieldProto));
+    for(const auto& fieldName : stmtProto.fields())
+      stmt->getFields().emplace_back(fieldName);
     stmt->setID(stmtProto.id());
     return stmt;
   }

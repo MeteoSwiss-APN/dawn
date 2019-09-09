@@ -28,7 +28,14 @@ dawn_protobuf_generate(
 
 yoda_add_library(
   NAME DawnIIR
-  SOURCES 
+  SOURCES AST.h
+          ASTExpr.h
+          ASTFwd.h
+          ASTStmt.h
+          ASTStringifier.h
+          ASTUtil.h
+          ASTUtil.cpp
+          ASTVisitor.h
           Accesses.cpp  
           Accesses.h
           AccessUtils.cpp

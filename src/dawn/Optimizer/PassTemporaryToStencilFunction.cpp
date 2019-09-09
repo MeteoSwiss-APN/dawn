@@ -13,6 +13,10 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassTemporaryToStencilFunction.h"
+#include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTExpr.h"
+#include "dawn/IIR/ASTStmt.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/Stencil.h"
@@ -41,12 +45,12 @@ iir::Interval sirIntervalToInterval(sir::Interval interval) {
 
 /// @brief some properties of the temporary being replaced
 struct TemporaryFunctionProperties {
-  std::shared_ptr<StencilFunCallExpr>
+  std::shared_ptr<iir::StencilFunCallExpr>
       stencilFunCallExpr_;        ///< stencil function call that will replace the tmp
   std::vector<int> accessIDArgs_; ///< access IDs of the args that are needed to compute the tmp
   std::shared_ptr<sir::StencilFunction>
       sirStencilFunction_; ///< sir stencil function of the tmp being created
-  std::shared_ptr<FieldAccessExpr>
+  std::shared_ptr<iir::FieldAccessExpr>
       tmpFieldAccessExpr_; ///< FieldAccessExpr of the tmp captured for replacement
   iir::Interval interval_; ///< interval for which the tmp definition is valid
 };
@@ -60,7 +64,7 @@ struct TemporaryFunctionProperties {
 /// local variable a will have to be promoted to temporary, since tmp will be evaluated on-the-fly
 /// with extents
 ///
-class LocalVariablePromotion : public ASTVisitorPostOrder, public NonCopyable {
+class LocalVariablePromotion : public iir::ASTVisitorPostOrder, public NonCopyable {
 protected:
   const iir::StencilMetaInformation& metadata_;
   const iir::Stencil& stencil_;
@@ -78,7 +82,7 @@ public:
 
   virtual ~LocalVariablePromotion() override {}
 
-  virtual bool preVisitNode(std::shared_ptr<VarAccessExpr> const& expr) override {
+  virtual bool preVisitNode(std::shared_ptr<iir::VarAccessExpr> const& expr) override {
     // TODO if inside stencil function we should get it from stencilfun
 
     // we process this var access only after activation, i.e. after a "tmp= ..." pattern has been
@@ -91,9 +95,9 @@ public:
   }
 
   /// @brief capture a tmp computation
-  virtual bool preVisitNode(std::shared_ptr<AssignmentExpr> const& expr) override {
+  virtual bool preVisitNode(std::shared_ptr<iir::AssignmentExpr> const& expr) override {
 
-    if(isa<FieldAccessExpr>(*(expr->getLeft()))) {
+    if(isa<iir::FieldAccessExpr>(*(expr->getLeft()))) {
       int accessID = metadata_.getAccessIDFromExpr(expr->getLeft());
       DAWN_ASSERT(fields_.count(accessID));
       const iir::Field& field = fields_.at(accessID).field;
@@ -132,7 +136,7 @@ static std::string offsetToString(int a) {
 }
 
 /// @brief create the name of a newly created stencil function associated to a tmp computations
-std::string makeOnTheFlyFunctionName(const std::shared_ptr<FieldAccessExpr>& expr,
+std::string makeOnTheFlyFunctionName(const std::shared_ptr<iir::FieldAccessExpr>& expr,
                                      const iir::Interval& interval) {
   return expr->getName() + "_OnTheFly_" + interval.toStringGen() + "_i" +
          offsetToString(expr->getOffset()[0]) + "_j" + offsetToString(expr->getOffset()[1]) + "_k" +
@@ -140,7 +144,7 @@ std::string makeOnTheFlyFunctionName(const std::shared_ptr<FieldAccessExpr>& exp
 }
 
 /// @brief create the name of a newly created stencil function associated to a tmp computations
-std::string makeOnTheFlyFunctionCandidateName(const std::shared_ptr<FieldAccessExpr>& expr,
+std::string makeOnTheFlyFunctionCandidateName(const std::shared_ptr<iir::FieldAccessExpr>& expr,
                                               const iir::Interval& interval) {
   return expr->getName() + "_OnTheFly_" + interval.toStringGen();
 }
@@ -153,7 +157,7 @@ std::string makeOnTheFlyFunctionCandidateName(const std::string fieldName,
 /// @brief visitor that will detect assignment (i.e. computations) to a temporary,
 /// it will create a sir::StencilFunction out of this computation, and replace the assignment
 /// expression in the AST by a NOExpr.
-class TmpAssignment : public ASTVisitorPostOrder, public NonCopyable {
+class TmpAssignment : public iir::ASTVisitorPostOrder, public NonCopyable {
 protected:
   const iir::StencilMetaInformation& metadata_;
   sir::Interval interval_; // interval where the function declaration will be defined
@@ -162,12 +166,12 @@ protected:
   std::vector<int> accessIDs_; // accessIDs of the accesses that form the tmp = ... expression, that
                                // will become arguments of the stencil fn
 
-  std::shared_ptr<FieldAccessExpr> tmpFieldAccessExpr_ = nullptr; // the field access expr of the
-                                                                  // temporary that is captured and
-                                                                  // being replaced by stencil fn
-  const std::set<int>& skipAccessIDsOfMS_; // list of ids that will be skipped, since they dont
-                                           // fulfil the requirements, like they contain cycle
-                                           // dependencies, etc
+  std::shared_ptr<iir::FieldAccessExpr> tmpFieldAccessExpr_ =
+      nullptr; // the field access expr of the temporary that is captured and being replaced by
+               // stencil fn
+  const std::set<int>&
+      skipAccessIDsOfMS_; // list of ids that will be skipped, since they dont fulfil the
+                          // requirements, like they contain cycle dependencies, etc
 
 public:
   TmpAssignment(const iir::StencilMetaInformation& metadata, sir::Interval const& interval,
@@ -179,7 +183,9 @@ public:
 
   const std::vector<int>& getAccessIDs() const { return accessIDs_; }
 
-  std::shared_ptr<FieldAccessExpr> getTemporaryFieldAccessExpr() { return tmpFieldAccessExpr_; }
+  std::shared_ptr<iir::FieldAccessExpr> getTemporaryFieldAccessExpr() {
+    return tmpFieldAccessExpr_;
+  }
 
   std::shared_ptr<sir::StencilFunction> temporaryStencilFunction() { return tmpFunction_; }
 
@@ -188,7 +194,7 @@ public:
   /// @brief pre visit the node. The assignment expr visit will only continue processing the visitor
   /// for the right hand side of the =. Therefore all accesses capture here correspond to arguments
   /// for computing the tmp. They are captured as arguments of the stencil function being created
-  virtual bool preVisitNode(std::shared_ptr<FieldAccessExpr> const& expr) override {
+  virtual bool preVisitNode(std::shared_ptr<iir::FieldAccessExpr> const& expr) override {
     DAWN_ASSERT(tmpFunction_);
     for(int idx : expr->getArgumentMap()) {
       DAWN_ASSERT(idx == -1);
@@ -210,7 +216,7 @@ public:
     return true;
   }
 
-  virtual bool preVisitNode(std::shared_ptr<VarAccessExpr> const& expr) override {
+  virtual bool preVisitNode(std::shared_ptr<iir::VarAccessExpr> const& expr) override {
     DAWN_ASSERT(tmpFunction_);
     if(!metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable,
                                metadata_.getAccessIDFromExpr(expr))) {
@@ -220,7 +226,7 @@ public:
     return true;
   }
 
-  virtual bool preVisitNode(std::shared_ptr<VarDeclStmt> const& stmt) override {
+  virtual bool preVisitNode(std::shared_ptr<iir::VarDeclStmt> const& stmt) override {
     // a vardecl is assigning to a local variable, since the local variable promotion did not
     // promoted this to a tmp, we assume here the rules for tmp->function replacement were not
     // fulfil
@@ -228,14 +234,14 @@ public:
   }
 
   /// @brief capture a tmp computation
-  virtual bool preVisitNode(std::shared_ptr<AssignmentExpr> const& expr) override {
-    if(isa<FieldAccessExpr>(*(expr->getLeft()))) {
+  virtual bool preVisitNode(std::shared_ptr<iir::AssignmentExpr> const& expr) override {
+    if(isa<iir::FieldAccessExpr>(*(expr->getLeft()))) {
       // return and stop traversing the AST if the left hand of the =  is not a temporary
       int accessID = metadata_.getAccessIDFromExpr(expr->getLeft());
       if(skipAccessIDsOfMS_.count(accessID)) {
         return false;
       }
-      tmpFieldAccessExpr_ = std::dynamic_pointer_cast<FieldAccessExpr>(expr->getLeft());
+      tmpFieldAccessExpr_ = std::dynamic_pointer_cast<iir::FieldAccessExpr>(expr->getLeft());
 
       // otherwise we create a new stencil function
       std::string tmpFieldName = metadata_.getFieldNameFromAccessID(accessID);
@@ -251,9 +257,9 @@ public:
   }
   ///@brief once the "tmp= fn(args)" has been captured, the new stencil function to compute the
   /// temporary is finalized and the assignment is replaced by a NOExpr
-  virtual std::shared_ptr<Expr>
-  postVisitNode(std::shared_ptr<AssignmentExpr> const& expr) override {
-    if(isa<FieldAccessExpr>(*(expr->getLeft()))) {
+  virtual std::shared_ptr<iir::Expr>
+  postVisitNode(std::shared_ptr<iir::AssignmentExpr> const& expr) override {
+    if(isa<iir::FieldAccessExpr>(*(expr->getLeft()))) {
       DAWN_ASSERT(tmpFieldAccessExpr_);
       const int accessID = metadata_.getAccessIDFromExpr(tmpFieldAccessExpr_);
       if(!metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID))
@@ -262,14 +268,14 @@ public:
       DAWN_ASSERT(tmpFunction_);
 
       auto functionExpr = expr->getRight()->clone();
-      auto retStmt = std::make_shared<ReturnStmt>(functionExpr);
+      auto retStmt = std::make_shared<iir::ReturnStmt>(functionExpr);
 
-      std::shared_ptr<BlockStmt> root = std::make_shared<BlockStmt>();
+      std::shared_ptr<iir::BlockStmt> root = std::make_shared<iir::BlockStmt>();
       root->push_back(retStmt);
-      std::shared_ptr<AST> ast = std::make_shared<AST>(root);
+      std::shared_ptr<iir::AST> ast = std::make_shared<iir::AST>(root);
       tmpFunction_->Asts.push_back(ast);
 
-      return std::make_shared<NOPExpr>();
+      return std::make_shared<iir::NOPExpr>();
     }
     return expr;
   }
@@ -279,7 +285,7 @@ public:
 /// the temporary is extracted and pass to all the stencil function arguments. A new stencil
 /// function instantiation is then created and the field access expression replaced by a stencil
 /// function call
-class TmpReplacement : public ASTVisitorPostOrder, public NonCopyable {
+class TmpReplacement : public iir::ASTVisitorPostOrder, public NonCopyable {
   // struct to store the stencil function instantiation of each parameter of a stencil function that
   // is at the same time instantiated as a stencil function
   struct NestedStencilFunctionArgs {
@@ -293,15 +299,15 @@ protected:
   std::unordered_map<int, TemporaryFunctionProperties> const& temporaryFieldAccessIDToFunctionCall_;
   const iir::Interval interval_;
   const sir::Interval sirInterval_;
-  std::shared_ptr<std::vector<sir::StencilCall*>> stackTrace_;
-  std::shared_ptr<Expr> skip_;
+  std::shared_ptr<std::vector<ast::StencilCall*>> stackTrace_;
+  std::shared_ptr<iir::Expr> skip_;
 
   // the prop of the arguments of nested stencil functions
   std::stack<bool> replaceInNestedFun_;
 
   unsigned int numTmpReplaced_ = 0;
 
-  std::unordered_map<std::shared_ptr<FieldAccessExpr>,
+  std::unordered_map<std::shared_ptr<iir::FieldAccessExpr>,
                      std::shared_ptr<iir::StencilFunctionInstantiation>>
       tmpToStencilFunctionMap_;
 
@@ -310,7 +316,7 @@ public:
                  std::unordered_map<int, TemporaryFunctionProperties> const&
                      temporaryFieldAccessIDToFunctionCall,
                  const iir::Interval& interval,
-                 std::shared_ptr<std::vector<sir::StencilCall*>> stackTrace)
+                 std::shared_ptr<std::vector<ast::StencilCall*>> stackTrace)
       : stencilInstantiation_(stencilInstantiation), metadata_(stencilInstantiation->getMetaData()),
         temporaryFieldAccessIDToFunctionCall_(temporaryFieldAccessIDToFunctionCall),
         interval_(interval), sirInterval_(intervalToSIRInterval(interval)),
@@ -321,11 +327,11 @@ public:
   unsigned int getNumTmpReplaced() { return numTmpReplaced_; }
   void resetNumTmpReplaced() { numTmpReplaced_ = 0; }
 
-  virtual bool preVisitNode(std::shared_ptr<StencilFunCallExpr> const& expr) override {
+  virtual bool preVisitNode(std::shared_ptr<iir::StencilFunCallExpr> const& expr) override {
     // we check which arguments of the stencil function are also a stencil function call
     bool doReplaceTmp = false;
     for(auto arg : expr->getArguments()) {
-      if(isa<FieldAccessExpr>(*arg)) {
+      if(isa<iir::FieldAccessExpr>(*arg)) {
         int accessID = metadata_.getAccessIDFromExpr(arg);
         if(temporaryFieldAccessIDToFunctionCall_.count(accessID)) {
           doReplaceTmp = true;
@@ -340,8 +346,8 @@ public:
     return true;
   }
 
-  virtual std::shared_ptr<Expr>
-  postVisitNode(std::shared_ptr<StencilFunCallExpr> const& expr) override {
+  virtual std::shared_ptr<iir::Expr>
+  postVisitNode(std::shared_ptr<iir::StencilFunCallExpr> const& expr) override {
     // at the post visit of a stencil function node, we will replace the arguments to "tmp" fields
     // by stecil function calls
     std::shared_ptr<iir::StencilFunctionInstantiation> thisStencilFun =
@@ -361,16 +367,16 @@ public:
 
   /// @brief previsit the access to a temporary. Finalize the stencil function instantiation and
   /// recompute its <statement,accesses> pairs
-  virtual bool preVisitNode(std::shared_ptr<AssignmentExpr> const& expr) override {
+  virtual bool preVisitNode(std::shared_ptr<iir::AssignmentExpr> const& expr) override {
     // we would like to identify fields that are lhs of an assignment expr, so that we skip them and
     // dont replace them
-    if(isa<FieldAccessExpr>(expr->getLeft().get())) {
+    if(isa<iir::FieldAccessExpr>(expr->getLeft().get())) {
       skip_ = expr->getLeft();
     }
     return true;
   }
 
-  bool replaceFieldByFunction(const std::shared_ptr<FieldAccessExpr>& expr) {
+  bool replaceFieldByFunction(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
     int accessID = metadata_.getAccessIDFromExpr(expr);
     if(!temporaryFieldAccessIDToFunctionCall_.count(accessID)) {
       return false;
@@ -382,7 +388,7 @@ public:
 
   /// @brief previsit the access to a temporary. Finalize the stencil function instantiation and
   /// recompute its <statement,accesses> pairs
-  virtual bool preVisitNode(std::shared_ptr<FieldAccessExpr> const& expr) override {
+  virtual bool preVisitNode(std::shared_ptr<iir::FieldAccessExpr> const& expr) override {
     int accessID = metadata_.getAccessIDFromExpr(expr);
 
     if(!replaceFieldByFunction(expr)) {
@@ -427,7 +433,7 @@ public:
     // corresponding
     // to the offset used to access the temporary
     for(auto accessID_ : (accessIDsOfArgs)) {
-      std::shared_ptr<FieldAccessExpr> arg = std::make_shared<FieldAccessExpr>(
+      std::shared_ptr<iir::FieldAccessExpr> arg = std::make_shared<iir::FieldAccessExpr>(
           metadata_.getFieldNameFromAccessID(accessID_), expr->getOffset());
       cloneStencilFun->getExpression()->insertArgument(arg);
 
@@ -482,8 +488,8 @@ public:
   }
 
   /// @brief replace the access to a temporary by a stencil function call expression
-  virtual std::shared_ptr<Expr>
-  postVisitNode(std::shared_ptr<FieldAccessExpr> const& expr) override {
+  virtual std::shared_ptr<iir::Expr>
+  postVisitNode(std::shared_ptr<iir::FieldAccessExpr> const& expr) override {
     // if the field access is not identified as a temporary being replaced just return without
     // substitution
     if(!replaceFieldByFunction(expr)) {
@@ -632,14 +638,14 @@ bool PassTemporaryToStencilFunction::run(
             for(const auto& stmtAccessPair : doMethodPtr->getChildren()) {
               const std::shared_ptr<Statement> stmt = stmtAccessPair->getStatement();
 
-              DAWN_ASSERT((stmt->ASTStmt->getKind() != Stmt::SK_ReturnStmt) &&
-                          (stmt->ASTStmt->getKind() != Stmt::SK_StencilCallDeclStmt) &&
-                          (stmt->ASTStmt->getKind() != Stmt::SK_VerticalRegionDeclStmt) &&
-                          (stmt->ASTStmt->getKind() != Stmt::SK_BoundaryConditionDeclStmt));
+              DAWN_ASSERT((stmt->ASTStmt->getKind() != iir::Stmt::SK_ReturnStmt) &&
+                          (stmt->ASTStmt->getKind() != iir::Stmt::SK_StencilCallDeclStmt) &&
+                          (stmt->ASTStmt->getKind() != iir::Stmt::SK_VerticalRegionDeclStmt) &&
+                          (stmt->ASTStmt->getKind() != iir::Stmt::SK_BoundaryConditionDeclStmt));
 
               // We exclude blocks or If/Else stmt
-              if((stmt->ASTStmt->getKind() != Stmt::SK_ExprStmt) &&
-                 (stmt->ASTStmt->getKind() != Stmt::SK_VarDeclStmt)) {
+              if((stmt->ASTStmt->getKind() != iir::Stmt::SK_ExprStmt) &&
+                 (stmt->ASTStmt->getKind() != iir::Stmt::SK_VarDeclStmt)) {
                 continue;
               }
 
@@ -669,8 +675,8 @@ bool PassTemporaryToStencilFunction::run(
                       sirInterval, stencilInstantiation->getMetaData().getNameToAccessIDMap(),
                       nullptr);
 
-                  std::shared_ptr<BlockStmt> blockStmt = std::make_shared<BlockStmt>(
-                      std::vector<std::shared_ptr<Stmt>>{stmt->ASTStmt});
+                  std::shared_ptr<iir::BlockStmt> blockStmt = std::make_shared<iir::BlockStmt>(
+                      std::vector<std::shared_ptr<iir::Stmt>>{stmt->ASTStmt});
                   blockStmt->accept(statementMapper);
 
                   DAWN_ASSERT(tmpStmtDoMethod.getChildren().size() == 1);
@@ -689,13 +695,13 @@ bool PassTemporaryToStencilFunction::run(
                 if(tmpAssignment.foundTemporaryToReplace()) {
                   std::shared_ptr<sir::StencilFunction> stencilFunction =
                       tmpAssignment.temporaryStencilFunction();
-                  std::shared_ptr<AST> ast = stencilFunction->getASTOfInterval(sirInterval);
+                  std::shared_ptr<iir::AST> ast = stencilFunction->getASTOfInterval(sirInterval);
 
                   DAWN_ASSERT(ast);
                   DAWN_ASSERT(stencilFunction);
 
-                  std::shared_ptr<StencilFunCallExpr> stencilFunCallExpr =
-                      std::make_shared<StencilFunCallExpr>(stencilFunction->Name);
+                  std::shared_ptr<iir::StencilFunCallExpr> stencilFunCallExpr =
+                      std::make_shared<iir::StencilFunCallExpr>(stencilFunction->Name);
 
                   // all the temporary computations captured are stored in this map of <ID, tmp
                   // properties>

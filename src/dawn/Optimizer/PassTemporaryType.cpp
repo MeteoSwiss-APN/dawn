@@ -31,7 +31,7 @@ namespace dawn {
 
 namespace {
 
-class StencilFunArgumentDetector : public ASTVisitorForwarding {
+class StencilFunArgumentDetector : public iir::ASTVisitorForwarding {
   const iir::StencilMetaInformation& metadata_;
   int AccessID_;
 
@@ -42,13 +42,13 @@ public:
   StencilFunArgumentDetector(const iir::StencilMetaInformation& metadata, int AccessID)
       : metadata_(metadata), AccessID_(AccessID), argListNesting_(0), usedInStencilFun_(false) {}
 
-  virtual void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
+  virtual void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override {
     argListNesting_++;
-    ASTVisitorForwarding::visit(expr);
+    iir::ASTVisitorForwarding::visit(expr);
     argListNesting_--;
   }
 
-  virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
+  virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
     if(argListNesting_ > 0 && metadata_.getAccessIDFromExpr(expr) == AccessID_)
       usedInStencilFun_ = true;
   }

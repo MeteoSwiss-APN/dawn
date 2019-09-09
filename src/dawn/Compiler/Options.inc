@@ -46,6 +46,8 @@ OPT(std::string, domain_size, "", "domain-size", "",
     "domain size for compiler optimization", "", true, false)
 OPT(bool, SerializeIIR, false, "write-iir", "",
     "Serialize the low level intermediate representation after Optimization", "", false, true)
+OPT(std::string, DeserializeIIR, "", "read-iir", "",
+    "Deserialize the low level intermediate representation from file", "", true, true)
 OPT(std::string, IIRFormat, "json", "iir-format", "", "format of the output IIR", "", true, false)
 OPT(bool, InlineSF, false, "inline", "",
     "Inline stencil functions","", false, false)

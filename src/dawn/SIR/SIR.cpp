@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/SIR/SIR.h"
+#include "dawn/SIR/ASTStringifier.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/Format.h"
@@ -27,39 +28,39 @@ namespace dawn {
 namespace {
 
 /// @brief Allow direct comparison of the Stmts of an AST
-class DiffWriter final : public ASTVisitorForwarding {
+class DiffWriter final : public sir::ASTVisitorForwarding {
 public:
-  virtual void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<sir::VerticalRegionDeclStmt>& stmt) override {
     statements_.push_back(stmt);
     stmt->getVerticalRegion()->Ast->getRoot()->accept(*this);
   }
 
-  virtual void visit(const std::shared_ptr<ReturnStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<sir::ReturnStmt>& stmt) override {
     statements_.push_back(stmt);
-    ASTVisitorForwarding::visit(stmt);
+    sir::ASTVisitorForwarding::visit(stmt);
   }
 
-  virtual void visit(const std::shared_ptr<ExprStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<sir::ExprStmt>& stmt) override {
     statements_.push_back(stmt);
-    ASTVisitorForwarding::visit(stmt);
+    sir::ASTVisitorForwarding::visit(stmt);
   }
 
-  virtual void visit(const std::shared_ptr<BlockStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<sir::BlockStmt>& stmt) override {
     statements_.push_back(stmt);
-    ASTVisitorForwarding::visit(stmt);
+    sir::ASTVisitorForwarding::visit(stmt);
   }
 
-  virtual void visit(const std::shared_ptr<VarDeclStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<sir::VarDeclStmt>& stmt) override {
     statements_.push_back(stmt);
-    ASTVisitorForwarding::visit(stmt);
+    sir::ASTVisitorForwarding::visit(stmt);
   }
 
-  virtual void visit(const std::shared_ptr<IfStmt>& stmt) override {
+  virtual void visit(const std::shared_ptr<sir::IfStmt>& stmt) override {
     statements_.push_back(stmt);
-    ASTVisitorForwarding::visit(stmt);
+    sir::ASTVisitorForwarding::visit(stmt);
   }
 
-  std::vector<std::shared_ptr<Stmt>> getStatements() const { return statements_; }
+  std::vector<std::shared_ptr<sir::Stmt>> getStatements() const { return statements_; }
 
   std::pair<std::string, bool> compare(const DiffWriter& other) {
 
@@ -75,8 +76,8 @@ public:
                          "    %s\n"
                          "  Expected:\n"
                          "    %s",
-                         indent(ASTStringifer::toString(statements_[idx]), 4),
-                         indent(ASTStringifer::toString(other.getStatements()[idx]), 4)),
+                         indent(sir::ASTStringifier::toString(statements_[idx]), 4),
+                         indent(sir::ASTStringifier::toString(other.getStatements()[idx]), 4)),
             false);
       }
     }
@@ -85,27 +86,27 @@ public:
   }
 
 private:
-  std::vector<std::shared_ptr<Stmt>> statements_;
+  std::vector<std::shared_ptr<sir::Stmt>> statements_;
 };
 
 ///@brief Stringification of a Value mismatch
 template <class T>
-sir::CompareResult isEqualImpl(const sir::Value& a, const sir::Value& b, const std::string& name) {
+CompareResult isEqualImpl(const sir::Value& a, const sir::Value& b, const std::string& name) {
   if(a.getValue<T>() != b.getValue<T>())
-    return sir::CompareResult{dawn::format("[Value mismatch] %s values are not equal\n"
-                                           "  Actual:\n"
-                                           "    %s\n"
-                                           "  Expected:\n"
-                                           "    %s",
-                                           name, a.toString(), b.toString()),
-                              false};
+    return CompareResult{dawn::format("[Value mismatch] %s values are not equal\n"
+                                      "  Actual:\n"
+                                      "    %s\n"
+                                      "  Expected:\n"
+                                      "    %s",
+                                      name, a.toString(), b.toString()),
+                         false};
 
-  return sir::CompareResult{"", true};
+  return CompareResult{"", true};
 }
 
 /// @brief Compares two ASTs
-std::pair<std::string, bool> compareAst(const std::shared_ptr<AST>& lhs,
-                                        const std::shared_ptr<AST>& rhs) {
+std::pair<std::string, bool> compareAst(const std::shared_ptr<sir::AST>& lhs,
+                                        const std::shared_ptr<sir::AST>& rhs) {
   if(lhs->getRoot()->equals(rhs->getRoot().get()))
     return std::make_pair("", true);
 
@@ -140,8 +141,8 @@ bool pointeeComparison(const std::shared_ptr<T>& comparate1, const std::shared_p
 /// @return pair of boolean and string
 /// @pre Type T requies a comparison function that returns the pair of bool and string
 template <typename T>
-sir::CompareResult pointeeComparisonWithOutput(const std::shared_ptr<T>& comparate1,
-                                               const std::shared_ptr<T>& comparate2) {
+CompareResult pointeeComparisonWithOutput(const std::shared_ptr<T>& comparate1,
+                                          const std::shared_ptr<T>& comparate2) {
   return (*comparate1).comparison(*comparate2);
 }
 
@@ -187,12 +188,12 @@ static std::pair<std::string, bool> pointerMapComparison(const sir::GlobalVariab
 
 } // anonymous namespace
 
-sir::CompareResult SIR::comparison(const SIR& rhs) const {
+CompareResult SIR::comparison(const SIR& rhs) const {
   std::string output;
 
   // Stencils
   if((Stencils.size() != rhs.Stencils.size()))
-    return sir::CompareResult{"[SIR mismatch] number of Stencils do not match\n", false};
+    return CompareResult{"[SIR mismatch] number of Stencils do not match\n", false};
 
   if(!std::equal(Stencils.begin(), Stencils.end(), rhs.Stencils.begin(),
                  pointeeComparison<sir::Stencil>)) {
@@ -204,12 +205,12 @@ sir::CompareResult SIR::comparison(const SIR& rhs) const {
       }
     }
 
-    return sir::CompareResult{output, false};
+    return CompareResult{output, false};
   }
 
   // Stencil Functions
   if(StencilFunctions.size() != rhs.StencilFunctions.size())
-    return sir::CompareResult{"[SIR mismatch] number of Stencil Functions does not match\n", false};
+    return CompareResult{"[SIR mismatch] number of Stencil Functions does not match\n", false};
 
   if(!std::equal(StencilFunctions.begin(), StencilFunctions.end(), rhs.StencilFunctions.begin(),
                  pointeeComparison<sir::StencilFunction>)) {
@@ -222,23 +223,23 @@ sir::CompareResult SIR::comparison(const SIR& rhs) const {
                          StencilFunctions[i]->Name, comp.why());
     }
 
-    return sir::CompareResult{output, false};
+    return CompareResult{output, false};
   }
 
   // Global variable map
   if(GlobalVariableMap.get()->size() != rhs.GlobalVariableMap.get()->size())
-    return sir::CompareResult{"[SIR mismatch] number of Global Variables does not match\n", false};
+    return CompareResult{"[SIR mismatch] number of Global Variables does not match\n", false};
 
   if(!pointerMapComparison(*(GlobalVariableMap.get()), *(rhs.GlobalVariableMap.get())).second) {
     auto comp = pointerMapComparison(*(GlobalVariableMap.get()), *(rhs.GlobalVariableMap.get()));
     if(!comp.second)
-      return sir::CompareResult{comp.first, false};
+      return CompareResult{comp.first, false};
   }
 
-  return sir::CompareResult{"", true};
+  return CompareResult{"", true};
 }
 
-sir::CompareResult sir::Stencil::comparison(const sir::Stencil& rhs) const {
+CompareResult sir::Stencil::comparison(const sir::Stencil& rhs) const {
   // Fields
   if(Fields.size() != rhs.Fields.size())
     return CompareResult{dawn::format("[Stencil mismatch] number of Fields does not match\n"
@@ -282,7 +283,7 @@ sir::CompareResult sir::Stencil::comparison(const sir::Stencil& rhs) const {
   return CompareResult{"", true};
 }
 
-sir::CompareResult sir::StencilFunction::comparison(const sir::StencilFunction& rhs) const {
+CompareResult sir::StencilFunction::comparison(const sir::StencilFunction& rhs) const {
 
   // Name
   if(Name != rhs.Name) {
@@ -377,7 +378,7 @@ sir::CompareResult sir::StencilFunction::comparison(const sir::StencilFunction& 
   return CompareResult{"", true};
 }
 
-sir::CompareResult sir::StencilFunctionArg::comparison(const sir::StencilFunctionArg& rhs) const {
+CompareResult sir::StencilFunctionArg::comparison(const sir::StencilFunctionArg& rhs) const {
   auto kindToString = [](ArgumentKind kind) -> const char* {
     switch(kind) {
     case dawn::sir::StencilFunctionArg::AK_Field:
@@ -413,7 +414,7 @@ sir::CompareResult sir::StencilFunctionArg::comparison(const sir::StencilFunctio
   return CompareResult{"", true};
 }
 
-sir::CompareResult sir::Value::comparison(const sir::Value& rhs) const {
+CompareResult sir::Value::comparison(const sir::Value& rhs) const {
   auto type = getType();
   if(type != rhs.getType())
     return CompareResult{dawn::format("[Value mismatch] Values are not of the same type\n"
@@ -438,7 +439,7 @@ sir::CompareResult sir::Value::comparison(const sir::Value& rhs) const {
   }
 }
 
-sir::CompareResult sir::VerticalRegion::comparison(const sir::VerticalRegion& rhs) const {
+CompareResult sir::VerticalRegion::comparison(const sir::VerticalRegion& rhs) const {
   std::string output;
   if(LoopOrder != rhs.LoopOrder) {
     output += dawn::format("[VerticalRegion mismatch] Loop order does not match\n"
@@ -474,7 +475,7 @@ namespace sir {
 
 bool StencilFunction::isSpecialized() const { return !Intervals.empty(); }
 
-std::shared_ptr<AST> StencilFunction::getASTOfInterval(const Interval& interval) const {
+std::shared_ptr<sir::AST> StencilFunction::getASTOfInterval(const Interval& interval) const {
   for(int i = 0; i < Intervals.size(); ++i)
     if(*Intervals[i] == interval)
       return Asts[i];
@@ -533,7 +534,7 @@ std::ostream& operator<<(std::ostream& os, const Interval& interval) {
   return os;
 }
 
-Stencil::Stencil() : StencilDescAst(std::make_shared<AST>()) {}
+Stencil::Stencil() : StencilDescAst(std::make_shared<sir::AST>()) {}
 
 CompareResult Field::comparison(const Field& rhs) const {
   if(rhs.IsTemporary != IsTemporary) {
@@ -571,11 +572,11 @@ std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
 
     if(!stencilFunction->isSpecialized()) {
       os << "\n" << indent2 << "Do\n";
-      os << ASTStringifer::toString(*stencilFunction->Asts[0], 2 * DAWN_PRINT_INDENT);
+      os << sir::ASTStringifier::toString(*stencilFunction->Asts[0], 2 * DAWN_PRINT_INDENT);
     } else {
       for(int i = 0; i < stencilFunction->Intervals.size(); ++i) {
         os << "\n" << indent2 << "Do " << *stencilFunction->Intervals[i].get() << "\n";
-        os << ASTStringifer::toString(*stencilFunction->Asts[i], 2 * DAWN_PRINT_INDENT);
+        os << sir::ASTStringifier::toString(*stencilFunction->Asts[i], 2 * DAWN_PRINT_INDENT);
       }
     }
     os << indent1 << "}\n";
@@ -588,7 +589,7 @@ std::ostream& operator<<(std::ostream& os, const SIR& Sir) {
     os << "\n";
 
     os << indent2 << "Do\n"
-       << ASTStringifer::toString(*stencil->StencilDescAst, 2 * DAWN_PRINT_INDENT);
+       << sir::ASTStringifier::toString(*stencil->StencilDescAst, 2 * DAWN_PRINT_INDENT);
     os << indent1 << "}\n";
   }
 
@@ -657,38 +658,6 @@ std::string sir::Value::toString() const {
 
 std::shared_ptr<sir::VerticalRegion> sir::VerticalRegion::clone() const {
   return std::make_shared<sir::VerticalRegion>(Ast->clone(), VerticalInterval, LoopOrder, Loc);
-}
-
-std::shared_ptr<sir::StencilCall> sir::StencilCall::clone() const {
-  auto call = std::make_shared<sir::StencilCall>(Callee, Loc);
-  call->Args = Args;
-  return call;
-}
-
-bool sir::StencilCall::operator==(const sir::StencilCall& rhs) const {
-  return bool(this->comparison(rhs));
-}
-
-sir::CompareResult sir::StencilCall::comparison(const sir::StencilCall& rhs) const {
-  std::string output;
-  if(Callee != rhs.Callee) {
-    output += dawn::format("[StencilCall mismatch] Callees do not match\n"
-                           "  Actual:\n"
-                           "    %s\n"
-                           "  Expected:\n"
-                           "    %s",
-                           Callee, rhs.Callee);
-    return CompareResult{output, false};
-  }
-  for(int i = 0; i < Args.size(); ++i) {
-    auto ArgComparison = Args[i]->comparison(*rhs.Args[i]);
-    if(!bool(ArgComparison)) {
-      output += "[StencilCall mismatch] Arguments do not match\n";
-      output += ArgComparison.why();
-      return CompareResult{output, false};
-    }
-  }
-  return CompareResult{output, true};
 }
 
 bool SIR::operator==(const SIR& rhs) const { return comparison(rhs); }

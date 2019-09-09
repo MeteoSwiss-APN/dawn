@@ -18,7 +18,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
-#include "dawn/SIR/AST.h"
+#include "dawn/IIR/AST.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Logging.h"
 #include <deque>
@@ -70,7 +70,7 @@ bool PassStageSplitter::run(
           if(hasHorizontalReadBeforeWriteConflict(newGraph.get())) {
 
             // Check if the conflict is related to a conditional block
-            if(isa<IfStmt>(stmtAccessesPair->getStatement()->ASTStmt.get())) {
+            if(isa<iir::IfStmt>(stmtAccessesPair->getStatement()->ASTStmt.get())) {
               // Check if the conflict is inside the conditional block
               iir::DependencyGraphAccesses conditionalBlockGraph =
                   iir::DependencyGraphAccesses(stencilInstantiation->getMetaData());

@@ -15,14 +15,11 @@
 #ifndef DAWN_SIR_ASTUTIL_H
 #define DAWN_SIR_ASTUTIL_H
 
+#include "dawn/AST/ASTUtil.h"
 #include "dawn/SIR/ASTFwd.h"
-#include "dawn/SIR/SIR.h"
-#include "dawn/Support/ArrayRef.h"
-#include <memory>
-#include <unordered_map>
 
 namespace dawn {
-
+namespace sir {
 /// @brief Replace `oldExpr` with `newExpr` in `stmt`
 ///
 /// Note that `oldExpr` is identfied by its `std::shared_ptr` and not its content. To replace
@@ -85,22 +82,11 @@ extern bool evalExprAsBoolean(const std::shared_ptr<Expr>& expr, bool& result,
 /// @returns                a Vector of all the Fields used in the stencil
 /// @ingroup testing
 extern std::vector<sir::Field> getFieldFromStencilAST(const std::shared_ptr<AST>& ast);
-
-class ASTHelper {
-public:
-  template <typename Container, typename Type>
-  static bool replaceOperands(std::shared_ptr<Type> const& oldExpr,
-                              std::shared_ptr<Type> const& newExpr, Container& operands) {
-    for(int i = 0; i < operands.size(); ++i) {
-      if(operands[i] == oldExpr) {
-        operands[i] = newExpr;
-        return true;
-      }
-    }
-    return false;
-  }
-};
-
+//
+// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
+//
+using ASTHelper = ast::ASTHelper;
+} // namespace sir
 } // namespace dawn
 
 #endif

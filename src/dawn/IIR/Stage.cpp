@@ -20,6 +20,7 @@
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
+#include "dawn/Optimizer/AccessUtils.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Logging.h"
 #include <algorithm>
@@ -172,7 +173,7 @@ bool Stage::overlaps(const Interval& interval, const std::unordered_map<int, Fie
 /// @brief The CaptureStencilFunctionCallGlobalParams class
 /// is an AST visitor used to capture accesses to global accessor from within
 /// stencil functions called from a stage
-class CaptureStencilFunctionCallGlobalParams : public ASTVisitorForwarding {
+class CaptureStencilFunctionCallGlobalParams : public iir::ASTVisitorForwarding {
 
   std::unordered_set<int>& globalVariables_;
   const StencilMetaInformation& metaData_;
@@ -183,7 +184,7 @@ public:
                                          const StencilMetaInformation& metaData)
       : globalVariables_(globalVariables), metaData_(metaData), function_(nullptr) {}
 
-  void visit(const std::shared_ptr<StencilFunCallExpr>& expr) override {
+  void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override {
     // Find the referenced stencil function
     std::shared_ptr<const StencilFunctionInstantiation> stencilFun =
         function_ ? function_->getStencilFunctionInstantiation(expr)

@@ -17,6 +17,7 @@
 
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Assert.h"
+#include "dawn/Support/ComparisonHelpers.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Json.h"
 #include "dawn/Support/NonCopyable.h"
@@ -34,16 +35,6 @@ namespace dawn {
 /// @brief This namespace contains a C++ implementation of the SIR specification
 /// @ingroup sir
 namespace sir {
-
-/// @brief Result of comparisons
-/// contains the boolean that is true when the comparee match and an error message if not
-struct CompareResult {
-  std::string message;
-  bool match;
-
-  operator bool() { return match; }
-  std::string why() { return message; }
-};
 
 /// @brief Attributes attached to various SIR objects which allow to change the behavior on per
 /// stencil basis
@@ -200,7 +191,7 @@ struct StencilFunction {
   SourceLocation Loc;                                    ///< Source location of the stencil func
   std::vector<std::shared_ptr<StencilFunctionArg>> Args; ///< Arguments of the stencil function
   std::vector<std::shared_ptr<Interval>> Intervals; ///< Vertical intervals of the specializations
-  std::vector<std::shared_ptr<AST>> Asts;           ///< ASTs of the specializations
+  std::vector<std::shared_ptr<sir::AST>> Asts;      ///< ASTs of the specializations
   Attr Attributes;                                  ///< Attributes of the stencil function
 
   /// @brief Check if the Stencil function contains specializations
@@ -211,7 +202,7 @@ struct StencilFunction {
 
   /// @brief Get the AST of the specified vertical interval or `NULL` if the function is not
   /// specialized for this interval
-  std::shared_ptr<AST> getASTOfInterval(const Interval& interval) const;
+  std::shared_ptr<sir::AST> getASTOfInterval(const Interval& interval) const;
 
   bool operator==(const sir::StencilFunction& rhs) const;
   CompareResult comparison(const StencilFunction& rhs) const;
@@ -235,12 +226,13 @@ struct VerticalRegion {
   enum LoopOrderKind { LK_Forward = 0, LK_Backward };
 
   SourceLocation Loc;                         ///< Source location of the vertical region
-  std::shared_ptr<AST> Ast;                   ///< AST of the region
+  std::shared_ptr<sir::AST> Ast;              ///< AST of the region
   std::shared_ptr<Interval> VerticalInterval; ///< Interval description of the region
   LoopOrderKind LoopOrder;                    /// Loop order (usually associated with the k-loop)
 
-  VerticalRegion(const std::shared_ptr<AST>& ast, const std::shared_ptr<Interval>& verticalInterval,
-                 LoopOrderKind loopOrder, SourceLocation loc = SourceLocation())
+  VerticalRegion(const std::shared_ptr<sir::AST>& ast,
+                 const std::shared_ptr<Interval>& verticalInterval, LoopOrderKind loopOrder,
+                 SourceLocation loc = SourceLocation())
       : Loc(loc), Ast(ast), VerticalInterval(verticalInterval), LoopOrder(loopOrder) {}
 
   /// @brief Clone the vertical region
@@ -252,28 +244,6 @@ struct VerticalRegion {
   /// @brief Comparison between stencils (omitting location)
   /// if the comparison fails, outputs human readable reason why in the string
   CompareResult comparison(const VerticalRegion& rhs) const;
-};
-
-/// @brief Call to another stencil
-/// @ingroup sir
-struct StencilCall {
-
-  SourceLocation Loc;                       ///< Source location of the call
-  std::string Callee;                       ///< Name of the callee stencil
-  std::vector<std::shared_ptr<Field>> Args; ///< List of fields used as arguments
-
-  StencilCall(std::string callee, SourceLocation loc = SourceLocation())
-      : Loc(loc), Callee(callee) {}
-
-  /// @brief Clone the vertical region
-  std::shared_ptr<StencilCall> clone() const;
-
-  /// @brief Comparison between stencils (omitting location)
-  bool operator==(const StencilCall& rhs) const;
-
-  /// @brief Comparison between stencils (omitting location)
-  /// if the comparison fails, outputs human readable reason why in the string
-  CompareResult comparison(const StencilCall& rhs) const;
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -288,7 +258,7 @@ struct Stencil : public dawn::NonCopyable {
 
   std::string Name;                           ///< Name of the stencil
   SourceLocation Loc;                         ///< Source location of the stencil declaration
-  std::shared_ptr<AST> StencilDescAst;        ///< Stencil description AST
+  std::shared_ptr<sir::AST> StencilDescAst;   ///< Stencil description AST
   std::vector<std::shared_ptr<Field>> Fields; ///< Fields referenced by this stencil
   Attr Attributes;                            ///< Attributes of the stencil
 
@@ -442,7 +412,7 @@ struct SIR : public dawn::NonCopyable {
   /// @brief Compares two SIRs for equality in contents
   ///
   /// The `Filename` as well as the SourceLocations and Attributes are not taken into account.
-  sir::CompareResult comparison(const SIR& rhs) const;
+  CompareResult comparison(const SIR& rhs) const;
 
   /// @brief Dump SIR to the given stream
   friend std::ostream& operator<<(std::ostream& os, const SIR& Sir);

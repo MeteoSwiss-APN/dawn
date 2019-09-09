@@ -13,12 +13,12 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/SIR/ASTVisitor.h"
-#include "dawn/SIR/AST.h"
+#include "dawn/AST/ASTVisitor.h"
+#include "dawn/AST/AST.h"
 #include "dawn/SIR/SIR.h"
 
 namespace dawn {
-
+namespace ast {
 ASTVisitor::~ASTVisitor() {}
 ASTVisitorNonConst::~ASTVisitorNonConst() {}
 ASTVisitorForwarding::~ASTVisitorForwarding() {}
@@ -62,7 +62,7 @@ void ASTVisitorForwarding::visit(const std::shared_ptr<VarDeclStmt>& node) {
     expr->accept(*this);
 }
 
-void ASTVisitorForwarding::visit(const std::shared_ptr<dawn::VerticalRegionDeclStmt>& stmt) {
+void ASTVisitorForwarding::visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) {
   stmt->getVerticalRegion()->Ast->accept(*this);
 }
 
@@ -102,7 +102,7 @@ void ASTVisitorForwardingNonConst::visit(std::shared_ptr<VarDeclStmt> node) {
     expr->accept(*this);
 }
 
-void ASTVisitorForwardingNonConst::visit(std::shared_ptr<dawn::VerticalRegionDeclStmt> stmt) {
+void ASTVisitorForwardingNonConst::visit(std::shared_ptr<VerticalRegionDeclStmt> stmt) {
   stmt->getVerticalRegion()->Ast->accept(*this);
 }
 
@@ -197,7 +197,7 @@ std::shared_ptr<Stmt> ASTVisitorPostOrder::postVisitNode(std::shared_ptr<VarDecl
 bool ASTVisitorPostOrder::preVisitNode(std::shared_ptr<VarDeclStmt> const& node) { return true; }
 
 std::shared_ptr<Stmt>
-ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<dawn::VerticalRegionDeclStmt> const& stmt) {
+ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<VerticalRegionDeclStmt> const& stmt) {
   // TODO replace this as wel
   if(!preVisitNode(stmt))
     return stmt;
@@ -207,12 +207,12 @@ ASTVisitorPostOrder::visitAndReplace(std::shared_ptr<dawn::VerticalRegionDeclStm
   return postVisitNode(stmt);
 }
 
-bool ASTVisitorPostOrder::preVisitNode(std::shared_ptr<dawn::VerticalRegionDeclStmt> const& stmt) {
+bool ASTVisitorPostOrder::preVisitNode(std::shared_ptr<VerticalRegionDeclStmt> const& stmt) {
   return true;
 }
 
 std::shared_ptr<Stmt>
-ASTVisitorPostOrder::postVisitNode(std::shared_ptr<dawn::VerticalRegionDeclStmt> const& stmt) {
+ASTVisitorPostOrder::postVisitNode(std::shared_ptr<VerticalRegionDeclStmt> const& stmt) {
   return stmt;
 }
 
@@ -241,5 +241,5 @@ ASTVISITORDISABLED_VISIT_IMPL(VarDeclStmt)
 ASTVISITORDISABLED_VISIT_IMPL(VerticalRegionDeclStmt)
 
 #undef ASTVISITORDISABLED_VISIT_IMPL
-
+} // namespace ast
 } // namespace dawn

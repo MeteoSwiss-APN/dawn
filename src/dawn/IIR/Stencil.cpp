@@ -541,7 +541,7 @@ boost::optional<Interval> Stencil::getEnclosingIntervalTemporaries() const {
   return tmpInterval;
 }
 
-void Stencil::accept(ASTVisitor& visitor) {
+void Stencil::accept(iir::ASTVisitor& visitor) {
   for(const auto& stmtAccessesPairPtr : iterateIIROver<StatementAccessesPair>(*this)) {
     stmtAccessesPairPtr->getStatement()->ASTStmt->accept(visitor);
   }

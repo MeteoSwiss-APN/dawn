@@ -13,10 +13,10 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/Replacing.h"
+#include "dawn/IIR/ASTUtil.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/SIR/ASTUtil.h"
-#include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/Statement.h"
 #include <unordered_map>
 
@@ -25,32 +25,32 @@ namespace dawn {
 namespace {
 
 /// @brief Get all field and variable accesses identifier by `AccessID`
-class GetFieldAndVarAccesses : public ASTVisitorForwarding {
+class GetFieldAndVarAccesses : public iir::ASTVisitorForwarding {
   const iir::StencilMetaInformation& metadata_;
   int AccessID_;
 
-  std::vector<std::shared_ptr<FieldAccessExpr>> fieldAccessExprToReplace_;
-  std::vector<std::shared_ptr<VarAccessExpr>> varAccessesToReplace_;
+  std::vector<std::shared_ptr<iir::FieldAccessExpr>> fieldAccessExprToReplace_;
+  std::vector<std::shared_ptr<iir::VarAccessExpr>> varAccessesToReplace_;
 
 public:
   GetFieldAndVarAccesses(iir::StencilMetaInformation& metadata, int AccessID)
       : metadata_(metadata), AccessID_(AccessID) {}
 
-  void visit(const std::shared_ptr<VarAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
     if(metadata_.getAccessIDFromExpr(expr) == AccessID_)
       varAccessesToReplace_.emplace_back(expr);
   }
 
-  void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
+  void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
     if(metadata_.getAccessIDFromExpr(expr) == AccessID_)
       fieldAccessExprToReplace_.emplace_back(expr);
   }
 
-  std::vector<std::shared_ptr<VarAccessExpr>>& getVarAccessesToReplace() {
+  std::vector<std::shared_ptr<iir::VarAccessExpr>>& getVarAccessesToReplace() {
     return varAccessesToReplace_;
   }
 
-  std::vector<std::shared_ptr<FieldAccessExpr>>& getFieldAccessExprToReplace() {
+  std::vector<std::shared_ptr<iir::FieldAccessExpr>>& getFieldAccessExprToReplace() {
     return fieldAccessExprToReplace_;
   }
 
@@ -75,9 +75,9 @@ void replaceFieldWithVarAccessInStmts(
     stmt->accept(visitor);
 
     for(auto& oldExpr : visitor.getFieldAccessExprToReplace()) {
-      auto newExpr = std::make_shared<VarAccessExpr>(varname);
+      auto newExpr = std::make_shared<iir::VarAccessExpr>(varname);
 
-      replaceOldExprWithNewExprInStmt(stmt, oldExpr, newExpr);
+      iir::replaceOldExprWithNewExprInStmt(stmt, oldExpr, newExpr);
 
       metadata.insertExprToAccessID(newExpr, AccessID);
       metadata.eraseExprToAccessID(oldExpr);
@@ -98,9 +98,9 @@ void replaceVarWithFieldAccessInStmts(
     stmt->accept(visitor);
 
     for(auto& oldExpr : visitor.getVarAccessesToReplace()) {
-      auto newExpr = std::make_shared<FieldAccessExpr>(fieldname);
+      auto newExpr = std::make_shared<iir::FieldAccessExpr>(fieldname);
 
-      replaceOldExprWithNewExprInStmt(stmt, oldExpr, newExpr);
+      iir::replaceOldExprWithNewExprInStmt(stmt, oldExpr, newExpr);
 
       metadata.insertExprToAccessID(newExpr, AccessID);
       metadata.eraseExprToAccessID(oldExpr);
@@ -111,22 +111,22 @@ void replaceVarWithFieldAccessInStmts(
 namespace {
 
 /// @brief Get all field and variable accesses identifier by `AccessID`
-class GetStencilCalls : public ASTVisitorForwarding {
+class GetStencilCalls : public iir::ASTVisitorForwarding {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   int StencilID_;
 
-  std::vector<std::shared_ptr<StencilCallDeclStmt>> stencilCallsToReplace_;
+  std::vector<std::shared_ptr<iir::StencilCallDeclStmt>> stencilCallsToReplace_;
 
 public:
   GetStencilCalls(const std::shared_ptr<iir::StencilInstantiation>& instantiation, int StencilID)
       : instantiation_(instantiation), StencilID_(StencilID) {}
 
-  void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
+  void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override {
     if(instantiation_->getMetaData().getStencilIDFromStencilCallStmt(stmt) == StencilID_)
       stencilCallsToReplace_.emplace_back(stmt);
   }
 
-  std::vector<std::shared_ptr<StencilCallDeclStmt>>& getStencilCallsToReplace() {
+  std::vector<std::shared_ptr<iir::StencilCallDeclStmt>>& getStencilCallsToReplace() {
     return stencilCallsToReplace_;
   }
 
@@ -142,21 +142,21 @@ void replaceStencilCalls(const std::shared_ptr<iir::StencilInstantiation>& insta
   for(auto& statement : instantiation->getIIR()->getControlFlowDescriptor().getStatements()) {
     visitor.reset();
 
-    std::shared_ptr<Stmt>& stmt = statement->ASTStmt;
+    std::shared_ptr<iir::Stmt>& stmt = statement->ASTStmt;
 
     stmt->accept(visitor);
     for(auto& oldStencilCall : visitor.getStencilCallsToReplace()) {
 
       // Create the new stencils
-      std::vector<std::shared_ptr<StencilCallDeclStmt>> newStencilCalls;
+      std::vector<std::shared_ptr<iir::StencilCallDeclStmt>> newStencilCalls;
       for(int StencilID : newStencilIDs) {
-        auto placeholderStencil = std::make_shared<sir::StencilCall>(
+        auto placeholderStencil = std::make_shared<ast::StencilCall>(
             iir::InstantiationHelper::makeStencilCallCodeGenName(StencilID));
-        newStencilCalls.push_back(std::make_shared<StencilCallDeclStmt>(placeholderStencil));
+        newStencilCalls.push_back(std::make_shared<iir::StencilCallDeclStmt>(placeholderStencil));
       }
 
       // Bundle all the statements in a block statements
-      auto newBlockStmt = std::make_shared<BlockStmt>();
+      auto newBlockStmt = std::make_shared<iir::BlockStmt>();
       std::copy(newStencilCalls.begin(), newStencilCalls.end(),
                 std::back_inserter(newBlockStmt->getStatements()));
 
@@ -166,7 +166,7 @@ void replaceStencilCalls(const std::shared_ptr<iir::StencilInstantiation>& insta
         stmt = newBlockStmt;
       } else {
         // Recursively replace the statement
-        replaceOldStmtWithNewStmtInStmt(stmt, oldStencilCall, newBlockStmt);
+        iir::replaceOldStmtWithNewStmtInStmt(stmt, oldStencilCall, newBlockStmt);
       }
 
       auto& metadata = instantiation->getMetaData();

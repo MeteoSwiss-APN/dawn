@@ -13,6 +13,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassFieldVersioning.h"
+#include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/Extents.h"
 #include "dawn/IIR/IIRNodeIterator.h"
@@ -21,8 +23,6 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/SIR/AST.h"
-#include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include <iostream>
 #include <set>
@@ -33,22 +33,22 @@ namespace dawn {
 namespace {
 
 /// @brief Register all referenced AccessIDs
-struct AccessIDGetter : public ASTVisitorForwarding {
+struct AccessIDGetter : public iir::ASTVisitorForwarding {
   const iir::StencilMetaInformation& metadata_;
   std::set<int> AccessIDs;
 
   AccessIDGetter(const iir::StencilMetaInformation& metadata) : metadata_(metadata) {}
 
-  virtual void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
+  virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
     AccessIDs.insert(metadata_.getAccessIDFromExpr(expr));
   }
 };
 
 /// @brief Compute the AccessIDs of the left and right hand side expression of the assignment
 static void getAccessIDFromAssignment(const iir::StencilMetaInformation& metadata,
-                                      AssignmentExpr* assignment, std::set<int>& LHSAccessIDs,
+                                      iir::AssignmentExpr* assignment, std::set<int>& LHSAccessIDs,
                                       std::set<int>& RHSAccessIDs) {
-  auto computeAccessIDs = [&](const std::shared_ptr<Expr>& expr, std::set<int>& AccessIDs) {
+  auto computeAccessIDs = [&](const std::shared_ptr<iir::Expr>& expr, std::set<int>& AccessIDs) {
     AccessIDGetter getter{metadata};
     expr->accept(getter);
     AccessIDs = std::move(getter.AccessIDs);
@@ -71,7 +71,7 @@ static void reportRaceCondition(const Statement& statement,
                                 iir::StencilInstantiation& instantiation) {
   DiagnosticsBuilder diag(DiagnosticsKind::Error, statement.ASTStmt->getSourceLocation());
 
-  if(isa<IfStmt>(statement.ASTStmt.get())) {
+  if(isa<iir::IfStmt>(statement.ASTStmt.get())) {
     diag << "unresolvable race-condition in body of if-statement";
   } else {
     diag << "unresolvable race-condition in statement";
@@ -81,7 +81,7 @@ static void reportRaceCondition(const Statement& statement,
 
   // Print stack trace of stencil calls
   if(statement.StackTrace) {
-    std::vector<sir::StencilCall*>& stackTrace = *statement.StackTrace;
+    std::vector<ast::StencilCall*>& stackTrace = *statement.StackTrace;
     for(int i = stackTrace.size() - 1; i >= 0; --i) {
       DiagnosticsBuilder note(DiagnosticsKind::Note, stackTrace[i]->Loc);
       note << "detected during instantiation of stencil-call '" << stackTrace[i]->Callee << "'";
@@ -234,9 +234,9 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   // Check whether our statement is an `ExprStmt` and contains an `AssignmentExpr`. If not,
   // we cannot perform any double buffering (e.g if there is a problem inside an `IfStmt`, nothing
   // we can do (yet ;))
-  AssignmentExpr* assignment = nullptr;
-  if(ExprStmt* stmt = dyn_cast<ExprStmt>(statement.ASTStmt.get()))
-    assignment = dyn_cast<AssignmentExpr>(stmt->getExpr().get());
+  iir::AssignmentExpr* assignment = nullptr;
+  if(iir::ExprStmt* stmt = dyn_cast<iir::ExprStmt>(statement.ASTStmt.get()))
+    assignment = dyn_cast<iir::AssignmentExpr>(stmt->getExpr().get());
 
   if(!assignment) {
     if(context->getOptions().DumpRaceConditionGraph)

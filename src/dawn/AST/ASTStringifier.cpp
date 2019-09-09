@@ -12,17 +12,19 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/SIR/AST.h"
-#include "dawn/SIR/ASTVisitor.h"
+#include "dawn/AST/ASTStringifier.h"
+#include "dawn/AST/AST.h"
+#include "dawn/AST/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Printing.h"
 #include "dawn/Support/StringUtil.h"
+#include "dawn/Support/Type.h"
 #include "dawn/Support/Unreachable.h"
 #include <iostream>
 #include <sstream>
 
 namespace dawn {
-
+namespace ast {
 namespace {
 
 /// @brief Dump AST to string
@@ -106,7 +108,7 @@ public:
         << (stmt->getVerticalRegion()->LoopOrder == sir::VerticalRegion::LK_Forward ? "forward"
                                                                                     : "backward")
         << "]\n";
-    ss_ << ASTStringifer::toString(*stmt->getVerticalRegion()->Ast, curIndent_);
+    ss_ << ASTStringifier::toString(*stmt->getVerticalRegion()->Ast, curIndent_);
   }
 
   virtual void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {
@@ -114,9 +116,8 @@ public:
       ss_ << std::string(curIndent_, ' ');
     ss_ << "stencil-call:";
     ss_ << stmt->getStencilCall()->Callee;
-    ss_ << RangeToString(", ", "(", ")")(
-        stmt->getStencilCall()->Args,
-        [&](const std::shared_ptr<sir::Field>& field) { return field->Name; });
+    ss_ << RangeToString(", ", "(", ")")(stmt->getStencilCall()->Args,
+                                         [&](const std::string& fieldName) { return fieldName; });
     ss_ << ";" << (newLines_ ? "\n" : "");
   }
 
@@ -125,8 +126,7 @@ public:
       ss_ << std::string(curIndent_, ' ');
     ss_ << "boundary-condition:";
     ss_ << stmt->getFunctor();
-    ss_ << RangeToString(", ", "(", ")")(
-        stmt->getFields(), [&](const std::shared_ptr<sir::Field>& field) { return field->Name; });
+    ss_ << RangeToString(", ", "(", ")")(stmt->getFields());
     ss_ << ";" << (newLines_ ? "\n" : "");
   }
 
@@ -251,33 +251,33 @@ public:
 
 } // namespace
 
-std::string ASTStringifer::toString(const AST& ast, int initialIndent, bool newLines) {
+std::string ASTStringifier::toString(const AST& ast, int initialIndent, bool newLines) {
   StringVisitor strVisitor(initialIndent, newLines);
   ast.accept(strVisitor);
   return strVisitor.toString();
 }
-std::string ASTStringifer::toString(const std::shared_ptr<Stmt>& stmt, int initialIndent,
-                                    bool newLines) {
+std::string ASTStringifier::toString(const std::shared_ptr<Stmt>& stmt, int initialIndent,
+                                     bool newLines) {
   StringVisitor strVisitor(initialIndent, newLines);
   stmt->accept(strVisitor);
   return strVisitor.toString();
 }
 
-std::string ASTStringifer::toString(const std::shared_ptr<Expr>& expr, int initialIndent,
-                                    bool newLines) {
+std::string ASTStringifier::toString(const std::shared_ptr<Expr>& expr, int initialIndent,
+                                     bool newLines) {
   StringVisitor strVisitor(initialIndent, newLines);
   expr->accept(strVisitor);
   return strVisitor.toString();
 }
 
 std::ostream& operator<<(std::ostream& os, const AST& ast) {
-  return (os << ASTStringifer::toString(ast));
+  return (os << ASTStringifier::toString(ast));
 }
 std::ostream& operator<<(std::ostream& os, const std::shared_ptr<Stmt>& expr) {
-  return (os << ASTStringifer::toString(expr));
+  return (os << ASTStringifier::toString(expr));
 }
 std::ostream& operator<<(std::ostream& os, const std::shared_ptr<Expr>& stmt) {
-  return (os << ASTStringifer::toString(stmt));
+  return (os << ASTStringifier::toString(stmt));
 }
-
+} // namespace ast
 } // namespace dawn
