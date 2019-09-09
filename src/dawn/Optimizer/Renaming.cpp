@@ -164,7 +164,8 @@ void renameCallerAccessIDInStencilFunction(iir::StencilFunctionInstantiation* fu
       AccessID = newAccessID;
   }
 
-  function->replaceKeyInMap(CallerAcceessIDToInitialOffsetMap_, oldAccessID, newAccessID);
+  function->replaceKeyInMap(function->getCallerAccessIDToInitialOffsetMap(), oldAccessID,
+                            newAccessID);
 
   // // Update AccessID to name map
   function->replaceKeyInMap(function->getAccessIDToNameMap(), oldAccessID, newAccessID);
