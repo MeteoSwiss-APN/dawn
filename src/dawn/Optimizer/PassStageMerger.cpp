@@ -42,7 +42,8 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
   if(!MergeStages && !MergeDoMethods && !stencilNeedsMergePass)
     return true;
 
-  std::string filenameWE = getFilenameWithoutExtension(context->getSIR()->Filename);
+  std::string filenameWE =
+      getFilenameWithoutExtension(stencilInstantiation->getMetaData().getFileName());
   if(context->getOptions().ReportPassStageMerger)
     stencilInstantiation->jsonDump(filenameWE + "_before.json");
 

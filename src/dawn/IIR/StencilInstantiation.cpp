@@ -48,18 +48,18 @@ namespace iir {
 //===------------------------------------------------------------------------------------------===//
 
 StencilInstantiation::StencilInstantiation(
-    dawn::OptimizerContext* context,
+    dawn::OptimizerContext* context, sir::GlobalVariableMap const& globalVariables,
     const std::vector<std::shared_ptr<iir::StencilFunction>>& stencilFunctions)
-    : context_(context), metadata_(*(context->getSIR()->GlobalVariableMap)),
-      IIR_(make_unique<IIR>(*(context->getSIR()->GlobalVariableMap), stencilFunctions)) {}
+    : context_(context), metadata_(globalVariables),
+      IIR_(make_unique<IIR>(globalVariables, stencilFunctions)) {}
 
 StencilMetaInformation& StencilInstantiation::getMetaData() { return metadata_; }
 
 std::shared_ptr<StencilInstantiation> StencilInstantiation::clone() const {
 
   std::shared_ptr<StencilInstantiation> stencilInstantiation =
-      std::make_shared<StencilInstantiation>(context_,
-                                             stencilInstantiation->getIIR()->getStencilFunctions());
+      std::make_shared<StencilInstantiation>(context_, IIR_->getGlobalVariableMap(),
+                                             IIR_->getStencilFunctions());
 
   stencilInstantiation->metadata_.clone(metadata_);
 

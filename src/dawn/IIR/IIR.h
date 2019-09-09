@@ -77,8 +77,8 @@ public:
   inline std::unordered_map<int, std::string>& getStageIDToNameMap() {
     return derivedInfo_.StageIDToNameMap_;
   }
-  void insertStencilFunction(const std::shared_ptr<iir::StencilFunction>& sirStencilFunction) {
-    stencilFunctions_.push_back(sirStencilFunction);
+  void insertStencilFunction(const std::shared_ptr<iir::StencilFunction>& iirStencilFunction) {
+    stencilFunctions_.push_back(iirStencilFunction);
   }
 
   inline const std::string& getNameFromStageID(int StageID) const {

@@ -157,6 +157,23 @@ message Stencil {
     Attributes attr = 3;
 }
 
+message IIRStencilFunction {
+    // Name of the stencil function
+    string name = 5;
+
+    // Source location of the stencil function
+    dawn.proto.statements.SourceLocation loc = 4;
+
+    // Stencil body ASTs
+    repeated dawn.proto.statements.AST asts = 1;
+
+    // Associated intervals of the AST
+    repeated dawn.proto.statements.Interval intervals = 2;
+
+    // Fields referenced by this stencil
+    repeated dawn.proto.statements.StencilFunctionArg arguments = 3;
+}
+
 // @brief The Protobuf description of the root node of the IIR
 //
 // The root node of the tree, holding multiple stencils. There is one IIR object for each user
@@ -169,6 +186,8 @@ message IIR {
 
     // Stencil description statements for the overall program flow
     repeated dawn.proto.statements.Stmt controlFlowStatements = 3;
+
+    repeated IIRStencilFunction stencilFunctions = 4;
 }
 
 /* ===-----------------------------------------------------------------------------------------===*/
@@ -252,12 +271,18 @@ message StencilMetaInfo {
     // Map of the StencilID's to their respective StencilCall
     map<int32, dawn.proto.statements.Stmt> idToStencilCall = 13;
 
+    // Map of the BoundaryConditionCall to its extent
+    map<int32, Extents> boundaryCallToExtent = 14;
+
+    // AccessIDs of allocated fields
+    repeated int32 allocatedFieldIDs = 15;
+
     // The source-location of the stencil (for better error-handeling)
-    dawn.proto.statements.SourceLocation stencilLocation = 14;
+    dawn.proto.statements.SourceLocation stencilLocation = 16;
 
     // The user-given name of the stencil
     // (remember the 1-1 mapping of user-stencil - StencilInstantiation)
-    string stencilName = 15;
+    string stencilName = 17;
 }
 
 /* ===-----------------------------------------------------------------------------------------===*/

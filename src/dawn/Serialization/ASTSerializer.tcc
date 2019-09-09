@@ -153,10 +153,11 @@ void ProtoStmtBuilder<DataTraits>::visit(const std::shared_ptr<IfStmt<DataTraits
   stmt->getThenStmt()->accept(*this);
   currentStmtProto_.pop();
 
-  currentStmtProto_.push(protoStmt->mutable_else_part());
-  if(stmt->getElseStmt())
+  if(stmt->getElseStmt()) {
+    currentStmtProto_.push(protoStmt->mutable_else_part());
     stmt->getElseStmt()->accept(*this);
-  currentStmtProto_.pop();
+    currentStmtProto_.pop();
+  }
 
   setLocation(protoStmt->mutable_loc(), stmt->getSourceLocation());
   protoStmt->set_id(stmt->getID());

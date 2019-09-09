@@ -185,7 +185,7 @@ protected:
   virtual void SetUp() override {
     createEmptyOptimizerContext::SetUp();
     referenceInstantiaton = std::make_shared<iir::StencilInstantiation>(
-        context_, std::vector<std::shared_ptr<iir::StencilFunction>>());
+        context_, *context_->getSIR()->GlobalVariableMap);
   }
   virtual void TearDown() override { referenceInstantiaton.reset(); }
 
