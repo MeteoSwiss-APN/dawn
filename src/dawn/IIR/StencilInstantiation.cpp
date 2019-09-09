@@ -11,8 +11,11 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTStringifier.h"
+#include "dawn/IIR/ASTUtil.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StatementAccessesPair.h"
@@ -22,9 +25,6 @@
 #include "dawn/Optimizer/Renaming.h"
 #include "dawn/Optimizer/Replacing.h"
 #include "dawn/Optimizer/StatementMapper.h"
-#include "dawn/IIR/AST.h"
-#include "dawn/IIR/ASTUtil.h"
-#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/FileUtil.h"
@@ -73,8 +73,8 @@ std::shared_ptr<StencilInstantiation> StencilInstantiation::clone() const {
 
 const std::string StencilInstantiation::getName() const { return metadata_.getStencilName(); }
 
-bool StencilInstantiation::insertBoundaryConditions(std::string originalFieldName,
-                                                    std::shared_ptr<iir::BoundaryConditionDeclStmt> bc) {
+bool StencilInstantiation::insertBoundaryConditions(
+    std::string originalFieldName, std::shared_ptr<iir::BoundaryConditionDeclStmt> bc) {
   if(metadata_.hasFieldBC(originalFieldName) != 0) {
     return false;
   } else {
@@ -323,9 +323,9 @@ void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil,
                   "first access of field (i.e lifetime.Begin) is not an `AssignmentExpr`");
 
   // Create the new `VarDeclStmt` which will replace the old `ExprStmt`
-  std::shared_ptr<iir::Stmt> varDeclStmt =
-      std::make_shared<iir::VarDeclStmt>(Type(BuiltinTypeID::Float), varname, 0, "=",
-                                    std::vector<std::shared_ptr<iir::Expr>>{assignmentExpr->getRight()});
+  std::shared_ptr<iir::Stmt> varDeclStmt = std::make_shared<iir::VarDeclStmt>(
+      Type(BuiltinTypeID::Float), varname, 0, "=",
+      std::vector<std::shared_ptr<iir::Expr>>{assignmentExpr->getRight()});
 
   // Replace the statement
   statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(
@@ -345,8 +345,8 @@ void StencilInstantiation::demoteTemporaryFieldToLocalVariable(Stencil* stencil,
 std::shared_ptr<StencilFunctionInstantiation>
 StencilInstantiation::makeStencilFunctionInstantiation(
     const std::shared_ptr<iir::StencilFunCallExpr>& expr,
-    const std::shared_ptr<sir::StencilFunction>& SIRStencilFun, const std::shared_ptr<iir::AST>& ast,
-    const Interval& interval,
+    const std::shared_ptr<sir::StencilFunction>& SIRStencilFun,
+    const std::shared_ptr<iir::AST>& ast, const Interval& interval,
     const std::shared_ptr<StencilFunctionInstantiation>& curStencilFunctionInstantiation) {
 
   std::shared_ptr<StencilFunctionInstantiation> stencilFun =
@@ -458,6 +458,64 @@ void StencilInstantiation::jsonDump(std::string filename) const {
   node["IIR"] = IIR_->jsonDump();
   fs << node.dump(2) << std::endl;
   fs.close();
+}
+
+template <int Level>
+struct PrintDescLine {
+  PrintDescLine(const Twine& name) {
+    std::cout << MakeIndent<Level>::value << format("\e[1;3%im", Level) << name.str() << "\n"
+              << MakeIndent<Level>::value << "{\n\e[0m";
+  }
+  ~PrintDescLine() { std::cout << MakeIndent<Level>::value << format("\e[1;3%im}\n\e[0m", Level); }
+};
+
+void StencilInstantiation::dump() const {
+  std::cout << "StencilInstantiation : " << getName() << "\n";
+
+  int i = 0;
+  for(const auto& stencil : getStencils()) {
+    PrintDescLine<1> iline("Stencil_" + Twine(i));
+
+    int j = 0;
+    const auto& multiStages = stencil->getChildren();
+    for(const auto& multiStage : multiStages) {
+      PrintDescLine<2> jline(Twine("MultiStage_") + Twine(j) + " [" +
+                             loopOrderToString(multiStage->getLoopOrder()) + "]");
+
+      int k = 0;
+      const auto& stages = multiStage->getChildren();
+      for(const auto& stage : stages) {
+        PrintDescLine<3> kline(Twine("Stage_") + Twine(k));
+
+        int l = 0;
+        const auto& doMethods = stage->getChildren();
+        for(const auto& doMethod : doMethods) {
+          PrintDescLine<4> lline(Twine("Do_") + Twine(l) + " " +
+                                 doMethod->getInterval().toString());
+
+          const auto& statementAccessesPairs = doMethod->getChildren();
+          for(std::size_t m = 0; m < statementAccessesPairs.size(); ++m) {
+            std::cout << "\e[1m"
+                      << iir::ASTStringifier::toString(
+                             statementAccessesPairs[m]->getStatement()->ASTStmt,
+                             5 * DAWN_PRINT_INDENT)
+                      << "\e[0m";
+            std::cout << statementAccessesPairs[m]->getAccesses()->toString(&getMetaData(),
+                                                                            6 * DAWN_PRINT_INDENT)
+                      << "\n";
+          }
+          l += 1;
+        }
+        std::cout << "\e[1m" << std::string(4 * DAWN_PRINT_INDENT, ' ')
+                  << "Extents: " << stage->getExtents() << std::endl
+                  << "\e[0m";
+        k += 1;
+      }
+      j += 1;
+    }
+    ++i;
+  }
+  std::cout.flush();
 }
 
 void StencilInstantiation::reportAccesses() const {
