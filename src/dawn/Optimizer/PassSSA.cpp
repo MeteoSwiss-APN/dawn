@@ -49,7 +49,8 @@ bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInsta
             doMethod.getChildren()[stmtIdx];
 
         iir::AssignmentExpr* assignment = nullptr;
-        if(iir::ExprStmt* stmt = dyn_cast<iir::ExprStmt>(stmtAccessesPair->getStatement()->ASTStmt.get()))
+        if(iir::ExprStmt* stmt =
+               dyn_cast<iir::ExprStmt>(stmtAccessesPair->getStatement()->ASTStmt.get()))
           assignment = dyn_cast<iir::AssignmentExpr>(stmt->getExpr().get());
 
         std::vector<int> AccessIDsToRename;
@@ -75,9 +76,6 @@ bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInsta
         }
 
         for(int AccessID : AccessIDsToRename) {
-          // tochedAccessIDs.insert(stencilInstantiation->createVersionAndRename(
-          //     AccessID, &stencil, stageIdx, stmtIdx, assignment->getLeft(),
-          //     iir::StencilInstantiation::RD_Below));
           tochedAccessIDs.insert(
               createVersionAndRename(stencilInstantiation.get(), AccessID, &stencil, stageIdx,
                                      stmtIdx, assignment->getLeft(), RenameDirection::Below));

@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===/
 
-#include "dawn/Optimizer/TemporaryHandeling.h"
+#include "dawn/Optimizer/TemporaryHandling.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"

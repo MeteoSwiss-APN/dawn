@@ -19,7 +19,7 @@
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/Optimizer/TemporaryHandeling.h"
+#include "dawn/Optimizer/TemporaryHandling.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include <iostream>
 #include <memory>
@@ -175,9 +175,6 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
           report_.push_back(Report{AccessID, TmpActionMod::promote});
           promoteLocalVariableToTemporaryField(instantiation.get(), stencilPtr.get(), AccessID,
                                                temporary.lifetime_, temporary.type_);
-          // instantiation->promoteLocalVariableToTemporaryField(stencilPtr.get(), AccessID,
-          //                                                     temporary.lifetime_,
-          //                                                     temporary.type_);
         }
       } else {
         // If the field is only accessed within the same Do-Method, does not have an extent and is

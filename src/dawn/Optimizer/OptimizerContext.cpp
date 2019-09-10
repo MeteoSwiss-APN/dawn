@@ -18,8 +18,8 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/PassComputeStageExtents.h"
-#include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/PassSetStageName.h"
+#include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/StatementMapper.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Logging.h"
@@ -684,8 +684,8 @@ bool OptimizerContext::restoreIIR(std::string const& name,
     MSPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
 
-  // fix extents of stages since they are not stored in the iir but computed from the accesses contained
-  // in the DeMethods
+  // fix extents of stages since they are not stored in the iir but computed from the accesses
+  // contained in the DoMethods
   checkAndPushBack<PassSetStageName>();
   checkAndPushBack<PassComputeStageExtents>();
   if(!getPassManager().runAllPassesOnStecilInstantiation(stencilInstantiation))
