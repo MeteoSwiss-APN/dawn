@@ -72,9 +72,12 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborStmt>
   ss_ << std::string(indent_, ' ') << "for(auto&& x : cellNeighboursOfCell(m_mesh, t))\n";
   ss_ << std::string(indent_ + DAWN_PRINT_INDENT, ' ');
   stmt->getLhs()->accept(*this);
-  ss_ << "[t] " + stmt->getOp() + "= ";
+  ss_ << " " + stmt->getOp() + "= ";
+  auto argName = argName_;
+  argName_ = "*x";
   stmt->getRhs()->accept(*this);
-  ss_ << "[*x];\n";
+  argName_ = argName;
+  ss_ << ";\n";
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) { Base::visit(stmt); }
@@ -222,7 +225,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
       // accessName));
     }
   } else {
-    ss_ << "m_" << getName(expr); // << offsetPrinter_(ijkfyOffset(expr->getOffset(), accessName));
+    ss_ << "m_" << getName(expr) << "[" << argName_ << "]";
   }
 }
 
