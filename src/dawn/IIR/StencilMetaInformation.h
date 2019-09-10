@@ -164,8 +164,8 @@ public:
   
   void addBoundaryConditiontoExtentPair(std::shared_ptr<BoundaryConditionDeclStmt>& bc,
                                            Extents& extents) {
-    DAWN_ASSERT(!BoundaryConditionToExtentsMap_.count(bc));
-    BoundaryConditionToExtentsMap_.emplace(bc, extents);
+    DAWN_ASSERT(!boundaryConditionToExtentsMap_.count(bc));
+    boundaryConditionToExtentsMap_.emplace(bc, extents);
   }
 
   /// @brief get a stencil function instantiation by StencilFunCallExpr
