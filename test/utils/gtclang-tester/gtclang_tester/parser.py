@@ -242,6 +242,7 @@ class ExpectedFile(object):
         self.__file_output = []
         self.__file_reference = []
         self.__ignored_nodes = []
+        self.__discarded_files = []
 
         commands = command.split(' ')
         for cmd in commands:
@@ -263,6 +264,12 @@ class ExpectedFile(object):
                 for node in ignored_nodes.split(','):
                     self.__ignored_nodes.append(node)
 
+            delete_idx = cmd.find("DELETE:")
+            if delete_idx >= 0:
+                discarded_files = cmd[delete_idx + len("DELETE:"):].rstrip()
+                for discarded_file in discarded_files.split(','):
+                    self.__discarded_files.append(path.join(dir, discarded_file))
+
         if len(self.__file_output) != len(self.__file_reference):
             report_fatal_error(
                 "%s:%i: mismatch of number of output and reference files" % (file, linenumber))
@@ -275,6 +282,9 @@ class ExpectedFile(object):
 
     def get_ignored_nodes(self):
         return self.__ignored_nodes
+
+    def get_discarded_files(self):
+        return self.__discarded_files
 
 
 class Test(object):

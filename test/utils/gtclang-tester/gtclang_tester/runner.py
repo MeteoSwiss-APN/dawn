@@ -156,6 +156,8 @@ class TestRunner(object):
                             has_failure = True
                         else:
                             remove(outputfile)
+                            for discarded_file in files.get_discarded_files():
+                                remove(discarded_file)
 
             # Check expected output
             out = stdout.split('\n')
