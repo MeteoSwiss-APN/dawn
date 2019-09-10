@@ -100,31 +100,16 @@ public:
   }
 
   void moveRegisteredFieldTo(FieldAccessType type, int accessID);
-
-  //MR checked, inserts into vectors (where insert isn't ambigous) 
-  //            as well as a map with unique key
-  //            as well as a map without unique key
-  // -> ?!
+  
   int insertAccessOfType(FieldAccessType type, const std::string& name);
-
-  //MR checked, inserts into vectors (where insert isn't ambigous) 
-  //            as well as a map with unique key
-  //            as well as a map without unique key
-  // -> ?!
+  
   void insertAccessOfType(FieldAccessType type, int AccessID, const std::string& name);
-
-  //MR checked, calls insertAccessOfType but also inserts into fieldIDToInitializedDimensionsMap_ where the fieldID is unique
-  // -> rename to `add'
+  
   int addField(FieldAccessType type, const std::string& name, const Array3i fieldDimensions);
-
-  //MR checked, calls insertAccessOfType but also inserts into fieldIDToInitializedDimensionsMap_ where the fieldID is unique
-  // -> rename to `add'
+  
   int addTmpField(FieldAccessType type, const std::string& basename,
                      const Array3i fieldDimensions);
 
-  //MR checked, calls insertAccessOfType but also inserts into StmtIDToAccessIDMap_ where the key is unique,
-  //and AccessIDToNameMap_, where the key is NOT unique
-  // -> renamed to `add', but not sure about that decision
   int addStmt(bool keepVarNames, const std::shared_ptr<VarDeclStmt>& stmt);
 
   void eraseStencilFunctionInstantiation(
@@ -176,9 +161,7 @@ public:
       const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) const {
     return BoundaryConditionToExtentsMap_.count(stmt);
   }
-
-  //MR checked, bc is a unique key into BoundaryConditionToExtentsMap_
-  //  -> renamed to add
+  
   void addBoundaryConditiontoExtentPair(std::shared_ptr<BoundaryConditionDeclStmt>& bc,
                                            Extents& extents) {
     DAWN_ASSERT(!BoundaryConditionToExtentsMap_.count(bc));
@@ -207,16 +190,12 @@ public:
   void setAccessIDOfStmt(const std::shared_ptr<iir::Stmt>& stmt, const int accessID);
 
   bool hasStmtToAccessID(const std::shared_ptr<iir::Stmt>& stmt) const;
-
-  //MR checked, statement id is unique in this case
-  //  -> renamed to add
+  
   void addStmtToAccessID(const std::shared_ptr<Stmt>& stmt, const int accessID);
   
   /// @brief Insert a new AccessID - Name pair
   void addAccessIDNamePair(int accessID, const std::string& name);
-
-  //MR checked, stencil call decl statement is unqiue, so is stencil id --> bijective mapping
-  //  -> renaemd to add
+  
   void addStencilCallStmt(std::shared_ptr<StencilCallDeclStmt> stmt, int stencilID);
 
   /// @brief Remove the field, variable or literal given by `AccessID`
@@ -253,9 +232,7 @@ public:
 
   bool hasBC() const { return !fieldnameToBoundaryConditionMap_.empty(); }
   bool hasFieldBC(std::string name) const { return fieldnameToBoundaryConditionMap_.count(name); }
-
-  //MR checked, name is unique in this case
-  //  -> renamed to add
+  
   void addFieldBC(std::string name, const std::shared_ptr<BoundaryConditionDeclStmt>& bc) {
     DAWN_ASSERT(!fieldnameToBoundaryConditionMap_.count(name));
     fieldnameToBoundaryConditionMap_.emplace(name, bc);
@@ -267,11 +244,7 @@ public:
   void setStencilLocation(const SourceLocation& location) { stencilLocation_ = location; }
 
   const FieldAccessMetadata& getFieldAccessMetadata() const { return fieldAccessMetadata_; }
-
-  //MR checked, defers to addIDPair (formerly insertIDPair) which 
-  //adds to a vector in a map of vectors, adds a unique element to a set and ads a unique element to
-  //an unordered map
-  //  -> renamed to add
+  
   void addFieldVersionIDPair(const int originalAccessID, const int versionedAccessID) {
     fieldAccessMetadata_.variableVersions_.addIDPair(originalAccessID, versionedAccessID);
   }
@@ -290,17 +263,13 @@ public:
   getExprToStencilFunctionInstantiation() const {
     return ExprToStencilFunctionInstantiationMap_;
   }
-
-  //MR checked, expr is not unique in this case
-  //  -> leave insert
+  
   void insertExprToStencilFunctionInstantiation(
       const std::shared_ptr<iir::StencilFunCallExpr>& expr,
       const std::shared_ptr<StencilFunctionInstantiation>& stencilFun) {
     ExprToStencilFunctionInstantiationMap_.emplace(expr, stencilFun);
   }
-
-  //MR checked, expr is not unique in this case
-  //  -> leave insert
+  
   void insertExprToStencilFunctionInstantiation(
       const std::shared_ptr<StencilFunctionInstantiation>& stencilFun);
 
@@ -337,18 +306,14 @@ public:
 
   void markStencilFunctionInstantiationFinal(
       const std::shared_ptr<StencilFunctionInstantiation>& stencilFun);
-
-  //MR checked, encapsulates vector, not map
-  //  -> not reanmed
+  
   void insertStencilFunctionInstantiation(
       const std::shared_ptr<StencilFunctionInstantiation>& stencilFunctionInstantiation) {
     stencilFunctionInstantiations_.push_back(stencilFunctionInstantiation);
   }
 
   void deregisterStencilFunction(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
-
-  //MR checked, stencilFun is unique in this case
-  //  -> renamed to ad 
+  
   void addStencilFunInstantiationCandidate(
       const std::shared_ptr<StencilFunctionInstantiation>& stencilFun,
       const StencilFunctionInstantiationCandidate& candidate) {

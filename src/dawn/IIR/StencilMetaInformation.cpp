@@ -326,8 +326,7 @@ int StencilMetaInformation::addStmt(bool keepVarNames,
   }
  
   addAccessIDNamePair(accessID, globalName);
-
-  //MR unique
+ 
   DAWN_ASSERT(!StmtIDToAccessIDMap_.count(stmt->getID()));
   StmtIDToAccessIDMap_.emplace(stmt->getID(), accessID);
 
@@ -364,7 +363,7 @@ void StencilMetaInformation::eraseExprToAccessID(std::shared_ptr<iir::Expr> expr
   ExprIDToAccessIDMap_.erase(expr->getID());
 }
 
-void StencilMetaInformation::erasecdStmtToAccessID(std::shared_ptr<iir::Stmt> stmt) {
+void StencilMetaInformation::eraseStmtToAccessID(std::shared_ptr<iir::Stmt> stmt) {
   DAWN_ASSERT(StmtIDToAccessIDMap_.count(stmt->getID()));
   StmtIDToAccessIDMap_.erase(stmt->getID());
 }
@@ -419,6 +418,7 @@ StencilMetaInformation::getStencilFunctionInstantiation(
 }
 
 void StencilMetaInformation::addAccessIDNamePair(int accessID, const std::string& name) { 
+  //this fails if -fkeep-varnames is used
   AccessIDToNameMap_.add(accessID, name);
 }
 
