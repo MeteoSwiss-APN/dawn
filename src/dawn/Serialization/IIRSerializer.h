@@ -114,7 +114,8 @@ private:
   /// @param target     The protobuf version of the StencilInstantiation to serilaize the IIR into
   /// @param iir        The IIR to serialize
   static void serializeIIR(proto::iir::StencilInstantiation& target,
-                           const std::unique_ptr<iir::IIR>& iir);
+                           const std::unique_ptr<iir::IIR>& iir,
+                           const std::set<std::string>& usedBc);
   ///
   /// @brief serializeMetaData serializes the Metadata
   /// @param target    The protobuf version of the StencilInstantiation to serilaize the metadata to

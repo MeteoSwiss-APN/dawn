@@ -152,14 +152,14 @@ public:
 
   Extents getBoundaryConditionExtentsFromBCStmt(
       const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) const {
-    DAWN_ASSERT_MSG(BoundaryConditionToExtentsMap_.count(stmt),
+    DAWN_ASSERT_MSG(boundaryConditionToExtentsMap_.count(stmt),
                     "Boundary Condition does not have a matching Extent");
-    return BoundaryConditionToExtentsMap_.at(stmt);
+    return boundaryConditionToExtentsMap_.at(stmt);
   }
 
   bool hasBoundaryConditionStmtToExtent(
       const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) const {
-    return BoundaryConditionToExtentsMap_.count(stmt);
+    return boundaryConditionToExtentsMap_.count(stmt);
   }
   
   void addBoundaryConditiontoExtentPair(std::shared_ptr<BoundaryConditionDeclStmt>& bc,
@@ -373,7 +373,7 @@ private:
 
   /// BoundaryConditionCall to Extent Map. Filled my `PassSetBoundaryCondition`
   std::unordered_map<std::shared_ptr<iir::BoundaryConditionDeclStmt>, Extents>
-      BoundaryConditionToExtentsMap_;
+      boundaryConditionToExtentsMap_;
 
   SourceLocation stencilLocation_;
   std::string stencilName_;
