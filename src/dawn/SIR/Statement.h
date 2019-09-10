@@ -26,17 +26,17 @@ namespace dawn {
 /// @ingroup optimizer
 struct Statement {
   Statement(const std::shared_ptr<sir::Stmt>& stmt,
-            const std::shared_ptr<std::vector<sir::StencilCall*>>& stackTrace)
+            const std::shared_ptr<std::vector<ast::StencilCall*>>& stackTrace)
       : ASTStmt(stmt), StackTrace(stackTrace) {}
 
   /// SIR AST statement
   std::shared_ptr<sir::Stmt> ASTStmt;
 
   /// Stack trace of inlined stencil calls of this statment (might be `NULL`)
-  std::shared_ptr<std::vector<sir::StencilCall*>> StackTrace;
+  std::shared_ptr<std::vector<ast::StencilCall*>> StackTrace;
 
   std::shared_ptr<Statement> clone() {
-    std::shared_ptr<std::vector<sir::StencilCall*>> clonedStackTrace;
+    std::shared_ptr<std::vector<ast::StencilCall*>> clonedStackTrace;
     if(StackTrace) {
       for(const auto call : *StackTrace) {
         clonedStackTrace->emplace_back(call->clone().get());

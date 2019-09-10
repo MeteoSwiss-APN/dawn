@@ -80,7 +80,7 @@ static void reportRaceCondition(const Statement& statement,
 
   // Print stack trace of stencil calls
   if(statement.StackTrace) {
-    std::vector<sir::StencilCall*>& stackTrace = *statement.StackTrace;
+    std::vector<ast::StencilCall*>& stackTrace = *statement.StackTrace;
     for(int i = stackTrace.size() - 1; i >= 0; --i) {
       DiagnosticsBuilder note(DiagnosticsKind::Note, stackTrace[i]->Loc);
       note << "detected during instantiation of stencil-call '" << stackTrace[i]->Callee << "'";

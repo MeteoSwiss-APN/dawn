@@ -17,6 +17,7 @@
 
 #include "dawn/SIR/AST.h"
 #include "dawn/Support/Assert.h"
+#include "dawn/Support/ComparisonHelpers.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Json.h"
 #include "dawn/Support/NonCopyable.h"
@@ -34,16 +35,6 @@ namespace dawn {
 /// @brief This namespace contains a C++ implementation of the SIR specification
 /// @ingroup sir
 namespace sir {
-
-/// @brief Result of comparisons
-/// contains the boolean that is true when the comparee match and an error message if not
-struct CompareResult {
-  std::string message;
-  bool match;
-
-  operator bool() { return match; }
-  std::string why() { return message; }
-};
 
 /// @brief Attributes attached to various SIR objects which allow to change the behavior on per
 /// stencil basis
@@ -255,28 +246,6 @@ struct VerticalRegion {
   CompareResult comparison(const VerticalRegion& rhs) const;
 };
 
-/// @brief Call to another stencil
-/// @ingroup sir
-struct StencilCall {
-
-  SourceLocation Loc;                       ///< Source location of the call
-  std::string Callee;                       ///< Name of the callee stencil
-  std::vector<std::shared_ptr<Field>> Args; ///< List of fields used as arguments
-
-  StencilCall(std::string callee, SourceLocation loc = SourceLocation())
-      : Loc(loc), Callee(callee) {}
-
-  /// @brief Clone the vertical region
-  std::shared_ptr<StencilCall> clone() const;
-
-  /// @brief Comparison between stencils (omitting location)
-  bool operator==(const StencilCall& rhs) const;
-
-  /// @brief Comparison between stencils (omitting location)
-  /// if the comparison fails, outputs human readable reason why in the string
-  CompareResult comparison(const StencilCall& rhs) const;
-};
-
 //===------------------------------------------------------------------------------------------===//
 //     Stencil
 //===------------------------------------------------------------------------------------------===//
@@ -443,7 +412,7 @@ struct SIR : public dawn::NonCopyable {
   /// @brief Compares two SIRs for equality in contents
   ///
   /// The `Filename` as well as the SourceLocations and Attributes are not taken into account.
-  sir::CompareResult comparison(const SIR& rhs) const;
+  CompareResult comparison(const SIR& rhs) const;
 
   /// @brief Dump SIR to the given stream
   friend std::ostream& operator<<(std::ostream& os, const SIR& Sir);

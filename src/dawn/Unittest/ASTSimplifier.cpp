@@ -55,7 +55,7 @@ verticalRegion(const std::shared_ptr<sir::VerticalRegion>& verticalRegion) {
   return std::make_shared<sir::VerticalRegionDeclStmt>(verticalRegion);
 }
 
-std::shared_ptr<sir::StencilCallDeclStmt> scdec(const std::shared_ptr<sir::StencilCall>& stencilCall) {
+std::shared_ptr<sir::StencilCallDeclStmt> scdec(const std::shared_ptr<ast::StencilCall>& stencilCall) {
   return std::make_shared<sir::StencilCallDeclStmt>(stencilCall);
 }
 

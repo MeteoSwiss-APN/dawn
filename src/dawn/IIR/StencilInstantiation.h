@@ -49,7 +49,9 @@ public:
   void dump() const;
 
   /// @brief Assemble StencilInstantiation for stencil
-  StencilInstantiation(dawn::OptimizerContext* context);
+  StencilInstantiation(
+      dawn::OptimizerContext* context, sir::GlobalVariableMap const& globalVariables = {},
+      std::vector<std::shared_ptr<sir::StencilFunction>> const& stencilFunctions = {});
 
   StencilMetaInformation& getMetaData();
   const StencilMetaInformation& getMetaData() const { return metadata_; }
