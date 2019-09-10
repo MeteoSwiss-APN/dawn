@@ -96,10 +96,10 @@ static void createIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target
   IIRDoMethod->updateLevel();
 
   // Add the control flow descriptor to the IIR
-  auto stencilCall = std::make_shared<sir::StencilCall>("generatedDriver");
-  stencilCall->Args.push_back(sirInField);
-  stencilCall->Args.push_back(sirOutField);
-  auto placeholderStencil = std::make_shared<sir::StencilCall>(
+  auto stencilCall = std::make_shared<ast::StencilCall>("generatedDriver");
+  stencilCall->Args.push_back(sirInField->Name);
+  stencilCall->Args.push_back(sirOutField->Name);
+  auto placeholderStencil = std::make_shared<ast::StencilCall>(
       iir::InstantiationHelper::makeStencilCallCodeGenName(stencilID));
   auto stencilCallDeclStmt = std::make_shared<iir::StencilCallDeclStmt>(placeholderStencil);
   // Register the call and set it as a replacement for the next vertical region
@@ -675,7 +675,28 @@ OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, OptimizerCont
                                    const std::shared_ptr<SIR>& SIR)
     : diagnostics_(diagnostics), options_(options), SIR_(SIR) {
   DAWN_LOG(INFO) << "Intializing OptimizerContext ... ";
+
+  /// Instead of getting the IIR from the SIR we're generating it here:
+  // stencilInstantiationMap_.insert(
+  //     std::make_pair("<unstructured>", std::make_shared<iir::StencilInstantiation>(this)));
+  // createIIRInMemory(stencilInstantiationMap_.at("<unstructured>"));
+  // if(options.Debug) {
+  //   stencilInstantiationMap_.at("<unstructured>")->dump();
+  // }
+   
+  // stencilInstantiationMap_.insert(std::make_pair("<unstructured>", std::make_shared<iir::StencilInstantiation>(this)));  
+  // createIIRInMemory(stencilInstantiationMap_.at("<unstructured>"));
+
+  // for(const auto& stencil : SIR_->Stencils)
+  //   if(!stencil->Attributes.has(sir::Attr::AK_NoCodeGen)) {
+  //     stencilInstantiationMap_.insert(
+  //         std::make_pair(stencil->Name, std::make_shared<iir::StencilInstantiation>(this)));
+  //     fillIIRFromSIR(stencilInstantiationMap_.at(stencil->Name), stencil, SIR_);
+  //   } else {
+  //     DAWN_LOG(INFO) << "Skipping processing of `" << stencil->Name << "`";   
+  //   }
 }
+
 bool OptimizerContext::fillIIRFromSIR(
     std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     const std::shared_ptr<sir::Stencil> SIRStencil, const std::shared_ptr<SIR> fullSIR) {

@@ -18,6 +18,8 @@ yoda_add_library(
           DawnCompiler.cpp
           Options.h
           Options.inc
+          test_proto.h
+          test_proto.cpp
   OBJECT
 )
 
