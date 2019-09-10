@@ -83,17 +83,7 @@ std::string CXXNaiveIcoCodeGen::generateStencilInstantiation(
 
   CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
 
-  generateStencilFunctions(StencilWrapperClass, stencilInstantiation, codeGenProperties);
-
-  // generate code for base class of all the inner stencils
-  Structure sbase = StencilWrapperClass.addStruct("sbase", "");
-  MemberFunction sbase_run = sbase.addMemberFunction("virtual void", "run");
-  sbase_run.startBody();
-  sbase_run.commit();
-  MemberFunction sbaseVdtor = sbase.addMemberFunction("virtual", "~sbase");
-  sbaseVdtor.startBody();
-  sbaseVdtor.commit();
-  sbase.commit();
+  // generateStencilFunctions(StencilWrapperClass, stencilInstantiation, codeGenProperties);
 
   generateStencilClasses(stencilInstantiation, StencilWrapperClass, codeGenProperties);
 
@@ -146,13 +136,12 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
   const auto& APIFields = metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>();
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
-  StencilWrapperConstructor.addArg("const " + c_gtc() + "domain& dom");
+  StencilWrapperConstructor.addArg("const Mesh& mesh");
 
   std::string ctrArgs("(dom");
   for(auto APIfieldID : APIFields) {
-    StencilWrapperConstructor.addArg(
-        codeGenProperties.getParamType(metadata.getFieldNameFromAccessID(APIfieldID)) + "& " +
-        metadata.getFieldNameFromAccessID(APIfieldID));
+    StencilWrapperConstructor.addArg("Field<double>& " +
+                                     metadata.getFieldNameFromAccessID(APIfieldID));
     ctrArgs += "," + metadata.getFieldNameFromAccessID(APIfieldID);
   }
 
@@ -169,20 +158,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
 
     std::string initCtr = "m_" + stencilName + "(new " + stencilName;
 
-    int i = 0;
-    for(const auto& fieldInfoPair : stencilFields) {
-      const auto& fieldInfo = fieldInfoPair.second;
-      if(fieldInfo.IsTemporary)
-        continue;
-      initCtr += (i != 0 ? "," : "<") +
-                 (metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
-                                        fieldInfo.field.getAccessID())
-                      ? (c_gtc().str() + "storage_t")
-                      : (codeGenProperties.getParamType(fieldInfo.Name)));
-      i++;
-    }
-
-    initCtr += ">(dom";
+    initCtr += "(mesh";
     if(!globalsMap.empty()) {
       initCtr += ",m_globals";
     }
@@ -227,7 +203,8 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperMembers(
 
   for(auto stencilPropertiesPair :
       codeGenProperties.stencilProperties(StencilContext::SC_Stencil)) {
-    stencilWrapperClass.addMember("sbase*", "m_" + stencilPropertiesPair.second->name_);
+    stencilWrapperClass.addMember(stencilPropertiesPair.second->name_ + "*",
+                                  "m_" + stencilPropertiesPair.second->name_);
   }
 
   stencilWrapperClass.changeAccessibility("public");
@@ -256,17 +233,16 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
   // Stencil members:
   // generate the code for each of the stencils
-  for(std::size_t stencilIdx = 0; stencilIdx < stencils.size(); ++stencilIdx) {
-    const auto& stencil = *stencils[stencilIdx];
+  for(const auto& stencil : stencils) {
 
     std::string stencilName =
-        codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
+        codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil->getStencilID());
 
-    if(stencil.isEmpty())
+    if(stencil->isEmpty())
       continue;
 
     // fields used in the stencil
-    const auto stencilFields = orderMap(stencil.getFields());
+    const auto stencilFields = orderMap(stencil->getFields());
 
     auto nonTempFields = makeRange(
         stencilFields, std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
@@ -278,66 +254,47 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
         std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
             [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
 
-    // maps storage access ID to storage type
-    std::map<int, std::string> StencilTemplates;
-    int cnt = 0;
-    std::transform(nonTempFields.begin(), nonTempFields.end(),
-                   std::inserter(StencilTemplates, StencilTemplates.end()),
-                   [cnt](const decltype(*nonTempFields.begin())& it) mutable {
-                     return std::make_pair(it->second.field.getAccessID(),
-                                           "StorageType" + std::to_string(cnt++));
-                   });
-
-    Structure StencilClass = stencilWrapperClass.addStruct(
-        stencilName,
-        RangeToString(", ", "",
-                      "")(StencilTemplates,
-                          [](const std::pair<int, std::string>& s) { return "class " + s.second; }),
-        "sbase");
+    Structure StencilClass = stencilWrapperClass.addStruct(stencilName);
 
     ASTStencilBody stencilBodyCXXVisitor(stencilInstantiation->getMetaData(),
                                          StencilContext::SC_Stencil);
 
-    StencilClass.addComment("Members");
-    StencilClass.addComment("Temporary storages");
-    addTempStorageTypedef(StencilClass, stencil);
+    // StencilClass.addComment("Temporary storages");
+    // addTempStorageTypedef(StencilClass, *stencil);
 
-    StencilClass.addMember("const " + c_gtc() + "domain&", "m_dom");
+    // StencilClass.addMember("const " + c_gtc() + "domain&", "m_dom");
 
-    if(!globalsMap.empty()) {
-      StencilClass.addMember("const globals&", "m_globals");
-    }
+    // if(!globalsMap.empty()) {
+    //   StencilClass.addMember("const globals&", "m_globals");
+    // }
 
+    StencilClass.addMember("Mesh const&", "m_mesh");
     for(auto fieldIt : nonTempFields) {
-      StencilClass.addMember(StencilTemplates[fieldIt->second.field.getAccessID()] + "&",
-                             "m_" + (*fieldIt).second.Name);
+      StencilClass.addMember("Field<double>&", "m_" + (*fieldIt).second.Name);
     }
 
-    addTmpStorageDeclaration(StencilClass, tempFields);
+    // addTmpStorageDeclaration(StencilClass, tempFields);
 
     StencilClass.changeAccessibility("public");
 
     auto stencilClassCtr = StencilClass.addConstructor();
 
-    stencilClassCtr.addArg("const " + c_gtc() + "domain& dom_");
-    if(!globalsMap.empty()) {
-      stencilClassCtr.addArg("const globals& globals_");
-    }
+    stencilClassCtr.addArg("Mesh const& mesh");
     for(auto fieldIt : nonTempFields) {
-      stencilClassCtr.addArg(StencilTemplates[fieldIt->second.field.getAccessID()] + "& " +
-                             (*fieldIt).second.Name + "_");
+      stencilClassCtr.addArg("Field<double>&" + (*fieldIt).second.Name);
     }
 
-    stencilClassCtr.addInit("m_dom(dom_)");
-    if(!globalsMap.empty()) {
-      stencilClassCtr.addArg("m_globals(globals_)");
-    }
+    // stencilClassCtr.addInit("m_dom(dom_)");
+    // if(!globalsMap.empty()) {
+    //   stencilClassCtr.addArg("m_globals(globals_)");
+    // }
 
+    stencilClassCtr.addInit("m_mesh(mesh)");
     for(auto fieldIt : nonTempFields) {
-      stencilClassCtr.addInit("m_" + (*fieldIt).second.Name + "(" + (*fieldIt).second.Name + "_)");
+      stencilClassCtr.addInit("m_" + (*fieldIt).second.Name + "(" + (*fieldIt).second.Name + ")");
     }
 
-    addTmpStorageInit(stencilClassCtr, stencil, tempFields);
+    // addTmpStorageInit(stencilClassCtr, *stencil, tempFields);
     stencilClassCtr.commit();
 
     // virtual dtor
@@ -349,22 +306,22 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     MemberFunction syncStoragesMethod = StencilClass.addMemberFunction("void", "sync_storages", "");
     syncStoragesMethod.startBody();
 
-    for(auto fieldIt : nonTempFields) {
-      syncStoragesMethod.addStatement("m_" + (*fieldIt).second.Name + ".sync()");
-    }
+    // for(auto fieldIt : nonTempFields) {
+    //   syncStoragesMethod.addStatement("m_" + (*fieldIt).second.Name + ".sync()");
+    // }
 
     syncStoragesMethod.commit();
 
     //
     // Run-Method
     //
-    MemberFunction StencilRunMethod = StencilClass.addMemberFunction("virtual void", "run", "");
+    MemberFunction StencilRunMethod = StencilClass.addMemberFunction("void", "run", "");
     StencilRunMethod.startBody();
 
-    StencilRunMethod.addStatement("sync_storages()");
-    for(const auto& multiStagePtr : stencil.getChildren()) {
+    // StencilRunMethod.addStatement("sync_storages()");
+    for(const auto& multiStagePtr : stencil->getChildren()) {
 
-      StencilRunMethod.ss() << "{";
+      StencilRunMethod.ss() << "{\n";
 
       const iir::MultiStage& multiStage = *multiStagePtr;
 
@@ -372,10 +329,11 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
       const auto& usedFields = multiStage.getFields();
       for(const auto& usedField : usedFields) {
         auto field = stencilFields.at(usedField.first);
-        auto storageName = field.IsTemporary ? "tmp_storage_t" : StencilTemplates[usedField.first];
-        StencilRunMethod.addStatement(c_gt() + "data_view<" + storageName + "> " + field.Name +
-                                      "= " + c_gt() + "make_host_view(m_" + field.Name + ")");
-        StencilRunMethod.addStatement("std::array<int,3> " + field.Name + "_offsets{0,0,0}");
+        // auto storageName = field.IsTemporary ? "tmp_storage_t" :
+        // StencilTemplates[usedField.first]; StencilRunMethod.addStatement(c_gt() + "data_view<" +
+        // storageName + "> " + field.Name +
+        //                               "= " + c_gt() + "make_host_view(m_" + field.Name + ")");
+        // StencilRunMethod.addStatement("std::array<int,3> " + field.Name + "_offsets{0,0,0}");
       }
       auto intervals_set = multiStage.getIntervals();
       std::vector<iir::Interval> intervals_v;
@@ -389,32 +347,22 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
       for(auto interval : partitionIntervals) {
 
         // for each interval, we generate naive nested loops
-        StencilRunMethod.addBlockStatement(
-            makeKLoop("m_dom", (multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Backward),
-                      interval),
-            [&]() {
-              for(const auto& stagePtr : multiStage.getChildren()) {
-                const iir::Stage& stage = *stagePtr;
+        for(const auto& stagePtr : multiStage.getChildren()) {
+          const iir::Stage& stage = *stagePtr;
 
-                StencilRunMethod.addBlockStatement(
-                    makeIJLoop(stage.getExtents()[0], "m_dom", "i"), [&]() {
-                      StencilRunMethod.addBlockStatement(
-                          makeIJLoop(stage.getExtents()[1], "m_dom", "j"), [&]() {
-                            // Generate Do-Method
-                            for(const auto& doMethodPtr : stage.getChildren()) {
-                              const iir::DoMethod& doMethod = *doMethodPtr;
-                              if(!doMethod.getInterval().overlaps(interval))
-                                continue;
-                              for(const auto& statementAccessesPair : doMethod.getChildren()) {
-                                statementAccessesPair->getStatement()->ASTStmt->accept(
-                                    stencilBodyCXXVisitor);
-                                StencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
-                              }
-                            }
-                          });
-                    });
+          StencilRunMethod.addBlockStatement("for (auto&& t : getTriangles(m_mesh))", [&]() {
+            // Generate Do-Method
+            for(const auto& doMethodPtr : stage.getChildren()) {
+              const iir::DoMethod& doMethod = *doMethodPtr;
+              if(!doMethod.getInterval().overlaps(interval))
+                continue;
+              for(const auto& statementAccessesPair : doMethod.getChildren()) {
+                statementAccessesPair->getStatement()->ASTStmt->accept(stencilBodyCXXVisitor);
+                StencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
               }
-            });
+            }
+          });
+        }
       }
       StencilRunMethod.ss() << "}";
     }
@@ -451,17 +399,8 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
         return;
       }
 
-      // list of template names of the stencil function declaration
-      std::vector<std::string> stencilFnTemplates(fields.size());
-      // TODO move to capture initialization with C++14
-      int n = 0;
-      std::generate(stencilFnTemplates.begin(), stencilFnTemplates.end(),
-                    [n]() mutable { return "StorageType" + std::to_string(n++); });
-
       MemberFunction stencilFunMethod = stencilWrapperClass.addMemberFunction(
-          std::string("static ") + (stencilFun->hasReturn() ? "double" : "void"), stencilFunName,
-          RangeToString(", ", "", "")(stencilFnTemplates,
-                                      [](const std::string& str) { return "class " + str; }));
+          std::string("static ") + (stencilFun->hasReturn() ? "double" : "void"), stencilFunName);
 
       if(fields.empty() && !stencilFun->hasReturn()) {
         DiagnosticsBuilder diag(DiagnosticsKind::Error, stencilFun->getStencilFunction()->Loc);
@@ -542,19 +481,10 @@ std::unique_ptr<TranslationUnit> CXXNaiveIcoCodeGen::generateCode() {
   std::string globals = generateGlobals(context_, "cxxnaiveico");
 
   std::vector<std::string> ppDefines;
-  auto makeDefine = [](std::string define, int value) {
-    return "#define " + define + " " + std::to_string(value);
-  };
-
-  ppDefines.push_back(makeDefine("GRIDTOOLS_CLANG_GENERATED", 1));
-  ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T CXXNAIVE");
-  // ==============------------------------------------------------------------------------------===
-  // BENCHMARKTODO: since we're importing two cpp files into the benchmark API we need to set
-  // these variables also in the naive code-generation in order to not break it. Once the move to
-  // different TU's is completed, this is no longer necessary.
-  // [https://github.com/MeteoSwiss-APN/gtclang/issues/32]
-  // ==============------------------------------------------------------------------------------===
-  CodeGen::addMplIfdefs(ppDefines, 30);
+  ppDefines.push_back("#define GRIDTOOLS_CLANG_GENERATED 1");
+  ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T CXXNAIVEICO");
+  ppDefines.push_back("#include \"my_interface.hpp\"");
+  ppDefines.push_back("using namespace MyInterface;");
   DAWN_LOG(INFO) << "Done generating code";
 
   std::string filename = generateFileName(context_);

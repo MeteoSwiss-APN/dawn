@@ -69,13 +69,12 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
   ss_ << ";\n";
 }
 void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborStmt>& stmt) {
-  ss_ << indent_ << std::string(indent_, ' ')
-      << "for(auto&& x : cellNeighborsOfCell(mesh, triangle)\n";
-  ss_ << std::string(indent_ + DAWN_PRINT_INDENT, ' ') << "triangle[";
+  ss_ << std::string(indent_, ' ') << "for(auto&& x : cellNeighboursOfCell(m_mesh, t))\n";
+  ss_ << std::string(indent_ + DAWN_PRINT_INDENT, ' ');
   stmt->getLhs()->accept(*this);
-  ss_ << "] += ";
+  ss_ << "[t] " + stmt->getOp() + "= ";
   stmt->getRhs()->accept(*this);
-  ss_ << ";\n";
+  ss_ << "[*x];\n";
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) { Base::visit(stmt); }
@@ -185,43 +184,45 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
       iir::StencilFunctionInstantiation& argStencilFn =
           *(currentFunction_->getFunctionInstantiationOfArgField(argIndex));
 
-      ss_ << iir::StencilFunctionInstantiation::makeCodeGenName(argStencilFn) << "(i,j,k";
+      ss_ << "m_"
+          << iir::StencilFunctionInstantiation::makeCodeGenName(argStencilFn); // << "(i,j,k";
 
-      // parse the arguments of the argument stencil gn call
-      for(int argIdx = 0; argIdx < argStencilFn.numArgs(); ++argIdx) {
-        // parse the argument if it is a field. Ignore offsets/directions,
-        // since they are "inlined" in the code generation of the function
-        if(argStencilFn.isArgField(argIdx)) {
-          Array3i offset = currentFunction_->evalOffsetOfFieldAccessExpr(expr, false);
+      /*
+            // parse the arguments of the argument stencil gn call
+            for(int argIdx = 0; argIdx < argStencilFn.numArgs(); ++argIdx) {
+              // parse the argument if it is a field. Ignore offsets/directions,
+              // since they are "inlined" in the code generation of the function
+              if(argStencilFn.isArgField(argIdx)) {
+                Array3i offset = currentFunction_->evalOffsetOfFieldAccessExpr(expr, false);
 
-          std::string accessName =
-              currentFunction_->getArgNameFromFunctionCall(argStencilFn.getName());
-          ss_ << ", "
-              << "pw_" + accessName << ".cloneWithOffset(std::array<int,"
-              << std::to_string(offset.size()) << ">{";
+                std::string accessName =
+                    currentFunction_->getArgNameFromFunctionCall(argStencilFn.getName());
+                ss_ << ", "
+                    << "pw_" + accessName << ".cloneWithOffset(std::array<int,"
+                    << std::to_string(offset.size()) << ">{";
 
-          bool init = false;
-          for(auto idxIt : offset) {
-            if(init)
-              ss_ << ",";
-            ss_ << std::to_string(idxIt);
-            init = true;
-          }
-          ss_ << "})";
-        }
-      }
+                bool init = false;
+                for(auto idxIt : offset) {
+                  if(init)
+                    ss_ << ",";
+                  ss_ << std::to_string(idxIt);
+                  init = true;
+                }
+                ss_ << "})";
+              }
+            }
       ss_ << ")";
+            */
 
     } else {
       std::string accessName = currentFunction_->getOriginalNameFromCallerAccessID(
           currentFunction_->getAccessIDFromExpr(expr));
-      ss_ << accessName
-          << offsetPrinter_(ijkfyOffset(currentFunction_->evalOffsetOfFieldAccessExpr(expr, false),
-                                        accessName));
+      ss_ << "m_" + accessName;
+      //<< offsetPrinter_(ijkfyOffset(currentFunction_->evalOffsetOfFieldAccessExpr(expr, false),
+      // accessName));
     }
   } else {
-    std::string accessName = getName(expr);
-    ss_ << accessName << offsetPrinter_(ijkfyOffset(expr->getOffset(), accessName));
+    ss_ << "m_" << getName(expr); // << offsetPrinter_(ijkfyOffset(expr->getOffset(), accessName));
   }
 }
 
