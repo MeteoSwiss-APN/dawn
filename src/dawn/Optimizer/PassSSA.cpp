@@ -22,12 +22,11 @@
 
 namespace dawn {
 
-PassSSA::PassSSA() : Pass("PassSSA") {}
+PassSSA::PassSSA(OptimizerContext& context) : Pass(context, "PassSSA") {}
 
 bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
-  if(!context->getOptions().SSA)
+  if(!context_.getOptions().SSA)
     return true;
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {

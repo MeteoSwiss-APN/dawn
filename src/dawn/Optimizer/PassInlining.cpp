@@ -507,8 +507,8 @@ static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
 
 } // anonymous namespace
 
-PassInlining::PassInlining(bool activate, InlineStrategy strategy)
-    : Pass("PassInlining", true), activate_(activate), strategy_(strategy) {}
+PassInlining::PassInlining(OptimizerContext& context, bool activate, InlineStrategy strategy)
+    : Pass(context, "PassInlining", true), activate_(activate), strategy_(strategy) {}
 
 bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 

@@ -24,12 +24,11 @@
 
 namespace dawn {
 
-PassTemporaryMerger::PassTemporaryMerger() : Pass("PassTemporaryMerger") {}
+PassTemporaryMerger::PassTemporaryMerger(OptimizerContext& context)
+    : Pass(context, "PassTemporaryMerger") {}
 
 bool PassTemporaryMerger::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
-
   using Edge = iir::DependencyGraphAccesses::Edge;
   using Vertex = iir::DependencyGraphAccesses::Vertex;
   const iir::StencilMetaInformation& metadata = stencilInstantiation->getMetaData();
@@ -40,7 +39,7 @@ bool PassTemporaryMerger::run(
   for(const auto& stencilPtr : stencilInstantiation->getStencils())
     stencilNeedsMergePass |= stencilPtr->getStencilAttributes().has(sir::Attr::AK_MergeTemporaries);
 
-  if(!(context->getOptions().MergeTemporaries || stencilNeedsMergePass))
+  if(!(context_.getOptions().MergeTemporaries || stencilNeedsMergePass))
     return true;
 
   // Pair of nodes to visit and AccessID of the last temporary (or -1 if no temporary has been
@@ -136,7 +135,7 @@ bool PassTemporaryMerger::run(
       }
     }
 
-    if(context->getOptions().DumpTemporaryGraphs)
+    if(context_.getOptions().DumpTemporaryGraphs)
       TemporaryDAG.toDot(format("tmp_stencil_%i.dot", stencilIdx));
 
     // Color the temporary graph
@@ -160,7 +159,7 @@ bool PassTemporaryMerger::run(
       const std::vector<int>& AccessIDOfRenameCandiates = colorRenameCandidatesPair.second;
 
       // Print the rename candiates in alphabetical order
-      if(context->getOptions().ReportPassTemporaryMerger && AccessIDOfRenameCandiates.size() >= 2) {
+      if(context_.getOptions().ReportPassTemporaryMerger && AccessIDOfRenameCandiates.size() >= 2) {
         std::vector<std::string> renameCandiatesNames;
         for(int AccessID : AccessIDOfRenameCandiates)
           renameCandiatesNames.emplace_back(metadata.getFieldNameFromAccessID(AccessID));
@@ -183,7 +182,7 @@ bool PassTemporaryMerger::run(
     stencilIdx++;
   }
 
-  if(context->getOptions().ReportPassTemporaryMerger && !merged)
+  if(context_.getOptions().ReportPassTemporaryMerger && !merged)
     std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
               << ": no merge\n";
 

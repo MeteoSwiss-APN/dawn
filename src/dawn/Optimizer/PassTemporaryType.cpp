@@ -92,10 +92,10 @@ struct Temporary {
 
 } // anonymous namespace
 
-PassTemporaryType::PassTemporaryType() : Pass("PassTemporaryType", true) {}
+PassTemporaryType::PassTemporaryType(OptimizerContext& context)
+    : Pass(context, "PassTemporaryType", true) {}
 
 bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
-  OptimizerContext* context = instantiation->getOptimizerContext();
   const auto& metadata = instantiation->getMetaData();
 
   report_.clear();
@@ -169,7 +169,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
         // If the variable is accessed in multiple Do-Methods, we need to promote it to a field!
         if(!temporary.lifetime_.Begin.inSameDoMethod(temporary.lifetime_.End)) {
 
-          if(context->getOptions().ReportPassTemporaryType)
+          if(context_.getOptions().ReportPassTemporaryType)
             report("promote");
 
           report_.push_back(Report{AccessID, TmpActionMod::promote});
@@ -182,7 +182,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
         if(temporary.lifetime_.Begin.inSameDoMethod(temporary.lifetime_.End) &&
            temporary.extent_.isPointwise() && !usedAsArgumentInStencilFun(stencilPtr, AccessID)) {
 
-          if(context->getOptions().ReportPassTemporaryType)
+          if(context_.getOptions().ReportPassTemporaryType)
             report("demote");
 
           report_.push_back(Report{AccessID, TmpActionMod::demote});

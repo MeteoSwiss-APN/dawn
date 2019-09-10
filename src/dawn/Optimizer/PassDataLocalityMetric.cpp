@@ -13,11 +13,11 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
+#include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/IIR/AST.h"
-#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/StringUtil.h"
 #include <deque>
@@ -32,6 +32,7 @@ namespace {
 class ReadWriteCounter : public iir::ASTVisitorForwarding {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   const iir::StencilMetaInformation& metadata_;
+  OptimizerContext& context_;
 
   std::size_t numReads_, numWrites_;
 
@@ -61,16 +62,15 @@ class ReadWriteCounter : public iir::ASTVisitorForwarding {
 
 public:
   ReadWriteCounter(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                   const iir::MultiStage& multiStage)
-      : instantiation_(instantiation), metadata_(instantiation->getMetaData()), numReads_(0),
-        numWrites_(0), multiStage_(multiStage), fields_(multiStage_.getFields()) {}
+                   OptimizerContext& context, const iir::MultiStage& multiStage)
+      : instantiation_(instantiation), metadata_(instantiation->getMetaData()), context_(context),
+        numReads_(0), numWrites_(0), multiStage_(multiStage), fields_(multiStage_.getFields()) {}
 
   std::size_t getNumReads() const { return numReads_; }
   std::size_t getNumWrites() const { return numWrites_; }
 
   void updateTextureCache(int AccessID, int kOffset) {
-    if(textureCache_.size() <
-       instantiation_->getOptimizerContext()->getHardwareConfiguration().TexCacheMaxFields)
+    if(textureCache_.size() < context_.getHardwareConfiguration().TexCacheMaxFields)
       textureCache_.emplace_front(AccessID, kOffset);
     else {
       auto it = std::find_if(
@@ -221,7 +221,9 @@ public:
     stencilFunCalls_.pop();
   }
 
-  void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override { processReadAccess(expr); }
+  void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
+    processReadAccess(expr);
+  }
   const std::unordered_map<int, ReadWriteAccumulator>& getIndividualReadWrites() const {
     return individualReadWrites_;
   }
@@ -280,9 +282,9 @@ computeReadWriteAccessesLowerBound(iir::StencilInstantiation* instantiation,
 
 /// @brief Approximate the reads and writes individually for each ID
 std::unordered_map<int, ReadWriteAccumulator> computeReadWriteAccessesMetricPerAccessID(
-    const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+    const std::shared_ptr<iir::StencilInstantiation>& instantiation, OptimizerContext& context,
     const iir::MultiStage& multiStage) {
-  ReadWriteCounter readWriteCounter(instantiation, multiStage);
+  ReadWriteCounter readWriteCounter(instantiation, context, multiStage);
 
   for(const auto& statementAccessesPair : iterateIIROver<iir::StatementAccessesPair>(multiStage)) {
     statementAccessesPair->getStatement()->ASTStmt->accept(readWriteCounter);
@@ -294,8 +296,8 @@ std::unordered_map<int, ReadWriteAccumulator> computeReadWriteAccessesMetricPerA
 /// @brief Approximate the reads and writes accoding to our data locality metric
 std::pair<int, int>
 computeReadWriteAccessesMetric(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                               const iir::MultiStage& multiStage) {
-  ReadWriteCounter readWriteCounter(instantiation, multiStage);
+                               OptimizerContext& context, const iir::MultiStage& multiStage) {
+  ReadWriteCounter readWriteCounter(instantiation, context, multiStage);
 
   for(const auto& statementAccessesPair : iterateIIROver<iir::StatementAccessesPair>(multiStage)) {
     statementAccessesPair->getStatement()->ASTStmt->accept(readWriteCounter);
@@ -304,13 +306,13 @@ computeReadWriteAccessesMetric(const std::shared_ptr<iir::StencilInstantiation>&
   return std::make_pair(readWriteCounter.getNumReads(), readWriteCounter.getNumWrites());
 }
 
-PassDataLocalityMetric::PassDataLocalityMetric() : Pass("PassDataLocalityMetric") {}
+PassDataLocalityMetric::PassDataLocalityMetric(OptimizerContext& context)
+    : Pass(context, "PassDataLocalityMetric") {}
 
 bool PassDataLocalityMetric::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
-  if(context->getOptions().ReportDataLocalityMetric) {
+  if(context_.getOptions().ReportDataLocalityMetric) {
     std::string title = " DataLocality - " + stencilInstantiation->getName() + " ";
     const int paddingLength = std::max(int(TERMINAL_CHAR_WIDTH - title.size()), 0);
     std::cout << std::string((paddingLength) / 2, '-') << title
@@ -330,7 +332,8 @@ bool PassDataLocalityMetric::run(
 
         std::cout << "  MultiStage " << multiStageIdx << ":\n";
 
-        auto readAndWrite = computeReadWriteAccessesMetric(stencilInstantiation, multiStage);
+        auto readAndWrite =
+            computeReadWriteAccessesMetric(stencilInstantiation, context_, multiStage);
 
         std::size_t numReads = readAndWrite.first, numWrites = readAndWrite.second;
 

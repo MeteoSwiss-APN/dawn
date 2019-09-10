@@ -84,7 +84,8 @@ ReturnType isMergable(const iir::Stage& stage, iir::LoopOrderKind stageLoopOrder
 
 std::unique_ptr<iir::Stencil>
 ReoderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
-                              const std::unique_ptr<iir::Stencil>& stencilPtr) {
+                              const std::unique_ptr<iir::Stencil>& stencilPtr,
+                              OptimizerContext& context) {
   iir::Stencil& stencil = *stencilPtr;
 
   iir::DependencyGraphStage& stageDAG = *stencil.getStageDependencyGraph();
@@ -97,7 +98,7 @@ ReoderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
   int newNumStages = 0;
   int newNumMultiStages = 0;
 
-  const int maxBoundaryExtent = instantiation->getOptimizerContext()->getOptions().MaxHaloPoints;
+  const int maxBoundaryExtent = context.getOptions().MaxHaloPoints;
 
   auto pushBackNewMultiStage = [&](iir::LoopOrderKind loopOrder) -> void {
     newStencil->insertChild(make_unique<iir::MultiStage>(metadata, loopOrder));
@@ -149,7 +150,7 @@ ReoderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
               diag << "stencil '" << instantiation->getName()
                    << "' exceeds maximum number of allowed halo lines (" << maxBoundaryExtent
                    << ")";
-              instantiation->getOptimizerContext()->getDiagnostics().report(diag);
+              context.getDiagnostics().report(diag);
               return nullptr;
             }
           }

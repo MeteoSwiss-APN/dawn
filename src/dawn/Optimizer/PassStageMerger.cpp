@@ -22,21 +22,19 @@
 
 namespace dawn {
 
-PassStageMerger::PassStageMerger() : Pass("PassStageMerger") {
+PassStageMerger::PassStageMerger(OptimizerContext& context) : Pass(context, "PassStageMerger") {
   dependencies_.push_back("PassSetStageGraph");
 }
 
 bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
-
   // Do we need to run this Pass?
   bool stencilNeedsMergePass = false;
   for(const auto& stencilPtr : stencilInstantiation->getStencils())
     stencilNeedsMergePass |= stencilPtr->getStencilAttributes().hasOneOf(
         sir::Attr::AK_MergeStages, sir::Attr::AK_MergeDoMethods);
 
-  bool MergeStages = context->getOptions().MergeStages;
-  bool MergeDoMethods = context->getOptions().MergeDoMethods;
+  bool MergeStages = context_.getOptions().MergeStages;
+  bool MergeDoMethods = context_.getOptions().MergeDoMethods;
 
   // ... Nope
   if(!MergeStages && !MergeDoMethods && !stencilNeedsMergePass)
@@ -44,7 +42,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
 
   std::string filenameWE =
       getFilenameWithoutExtension(stencilInstantiation->getMetaData().getFileName());
-  if(context->getOptions().ReportPassStageMerger)
+  if(context_.getOptions().ReportPassStageMerger)
     stencilInstantiation->jsonDump(filenameWE + "_before.json");
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
@@ -190,7 +188,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
     }
   }
 
-  if(context->getOptions().ReportPassStageMerger)
+  if(context_.getOptions().ReportPassStageMerger)
     stencilInstantiation->jsonDump(filenameWE + "_after.json");
 
   return true;

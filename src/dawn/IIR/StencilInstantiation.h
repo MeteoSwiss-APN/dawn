@@ -39,15 +39,13 @@ enum class TemporaryScope { TS_LocalVariable, TS_StencilTemporary, TS_Field };
 /// @brief Specific instantiation of a stencil
 /// @ingroup optimizer
 class StencilInstantiation : NonCopyable {
-
-  OptimizerContext* context_;
   StencilMetaInformation metadata_;
   std::unique_ptr<IIR> IIR_;
 
 public:
   /// @brief Assemble StencilInstantiation for stencil
   StencilInstantiation(
-      dawn::OptimizerContext* context, sir::GlobalVariableMap const& globalVariables = {},
+      sir::GlobalVariableMap const& globalVariables = {},
       std::vector<std::shared_ptr<sir::StencilFunction>> const& stencilFunctions = {});
 
   StencilMetaInformation& getMetaData();
@@ -90,12 +88,6 @@ public:
 
   /// @brief get the IIR tree
   inline std::unique_ptr<IIR>& getIIR() { return IIR_; }
-
-  /// @brief Get the optimizer context
-  inline ::dawn::OptimizerContext* getOptimizerContext() { return context_; }
-
-  /// @brief Get the optimizer context
-  const ::dawn::OptimizerContext* getOptimizerContext() const { return context_; }
 
   bool insertBoundaryConditions(std::string originalFieldName,
                                 std::shared_ptr<iir::BoundaryConditionDeclStmt> bc);
