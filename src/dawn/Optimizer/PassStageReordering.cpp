@@ -32,7 +32,8 @@ bool PassStageReordering::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   OptimizerContext* context = stencilInstantiation->getOptimizerContext();
 
-  std::string filenameWE = getFilenameWithoutExtension(context->getSIR()->Filename);
+  std::string filenameWE =
+      getFilenameWithoutExtension(stencilInstantiation->getMetaData().getFileName());
   if(context->getOptions().ReportPassStageReodering)
     stencilInstantiation->jsonDump(filenameWE + "_before.json");
 
