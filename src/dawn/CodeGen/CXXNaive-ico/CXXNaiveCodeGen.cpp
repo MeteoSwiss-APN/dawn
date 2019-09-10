@@ -156,7 +156,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
     const std::string stencilName =
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
 
-    std::string initCtr = "m_" + stencilName + "(new " + stencilName;
+    std::string initCtr = "m_" + stencilName;
 
     initCtr += "(mesh";
     if(!globalsMap.empty()) {
@@ -171,7 +171,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
                             ? ("m_" + fieldInfo.Name)
                             : (fieldInfo.Name));
     }
-    initCtr += ") )";
+    initCtr += ")";
     StencilWrapperConstructor.addInit(initCtr);
   }
 
@@ -203,7 +203,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperMembers(
 
   for(auto stencilPropertiesPair :
       codeGenProperties.stencilProperties(StencilContext::SC_Stencil)) {
-    stencilWrapperClass.addMember(stencilPropertiesPair.second->name_ + "*",
+    stencilWrapperClass.addMember(stencilPropertiesPair.second->name_,
                                   "m_" + stencilPropertiesPair.second->name_);
   }
 
