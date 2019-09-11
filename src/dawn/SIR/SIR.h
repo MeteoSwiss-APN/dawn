@@ -280,19 +280,13 @@ struct Value : NonCopyable {
   enum TypeKind { Boolean=0, Integer, Double, String };
 
   template <class T>
-  explicit Value(T&& value) : isConstexpr_(false) {
-    //TODO
-    //  I get a compiler error I don't understand when not using this redirection 
-    //  (use of invalid field)
-    setValue(value);
+  explicit Value(T value) : isConstexpr_(false) {
+    valueImpl_ = make_unique<ValueImpl<T>>(value);
   }
 
   template <class T>
-  explicit Value(T&& value, bool isConstexpr) : isConstexpr_(isConstexpr) {
-    //TODO
-    //  I get a compiler error I don't understand when not using this redirection 
-    //  (use of invalid field)
-    setValue(value);
+  explicit Value(T value, bool isConstexpr) : isConstexpr_(isConstexpr) {
+    valueImpl_ = make_unique<ValueImpl<T>>(value);
   }
 
   explicit Value(TypeKind type);
@@ -341,10 +335,6 @@ struct Value : NonCopyable {
   }
 
 private:
-  template <class T>
-  void setValue(const T& value) {
-    valueImpl_ = make_unique<ValueImpl<T>>(value);
-  }
 
   struct ValueImplBase {
     virtual ~ValueImplBase() {}
