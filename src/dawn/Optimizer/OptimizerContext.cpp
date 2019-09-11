@@ -156,6 +156,30 @@ static void createIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target
   IIRDoMethod->updateLevel();
   //==----------------------------------------------------------------------------------------------
 
+  // create the StmtAccessPair 4:
+  // m_out_field[x] += m_in_field[x];
+  //==----------------------------------------------------------------------------------------------
+  // create the stmt
+  auto finalOutAccess = std::make_shared<ast::FieldAccessExpr>(sirOutField->Name);
+  finalOutAccess->setID(target->nextUID());
+  auto inAccess = std::make_shared<ast::FieldAccessExpr>(sirInField->Name);
+  inAccess->setID(target->nextUID());
+  auto addUp = std::make_shared<ast::AssignmentExpr>(finalOutAccess, inAccess, "+=");
+  addUp->setID(target->nextUID());
+
+  // Insert the stmt into the statementaccesspair
+  auto addOld = std::make_shared<Statement>(addUp, nullptr);
+  auto sap_3 = make_unique<iir::StatementAccessesPair>(addOld);
+  std::shared_ptr<iir::Accesses> callerAccesses_3 = std::make_shared<iir::Accesses>();
+  callerAccesses_3->addWriteExtent(out_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
+  callerAccesses_3->addReadExtent(in_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
+  sap_3->setCallerAccesses(callerAccesses_3);
+
+  // Add the statementaccesspair to the IIR
+  IIRDoMethod->insertChild(std::move(sap_3));
+  IIRDoMethod->updateLevel();
+  //==----------------------------------------------------------------------------------------------
+
   // Add the control flow descriptor to the IIR
   auto stencilCall = std::make_shared<sir::StencilCall>("generatedDriver");
   stencilCall->Args.push_back(sirInField);
