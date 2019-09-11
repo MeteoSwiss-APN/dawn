@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/StencilFunctionInstantiation.h"
+#include "dawn/IIR/ASTStringifier.h"
 #include "dawn/IIR/AccessUtils.h"
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -633,7 +634,7 @@ void StencilFunctionInstantiation::dump() const {
 
   const auto& statements = getAST()->getRoot()->getStatements();
   for(std::size_t i = 0; i < statements.size(); ++i) {
-    std::cout << "\e[1m" << ast::ASTStringifier::toString(statements[i], 2 * DAWN_PRINT_INDENT)
+    std::cout << "\e[1m" << iir::ASTStringifier::toString(statements[i], 2 * DAWN_PRINT_INDENT)
               << "\e[0m";
     if(doMethod_->getChild(i)->getCallerAccesses())
       std::cout << doMethod_->getChild(i)->getCallerAccesses()->toString(this,
