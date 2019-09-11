@@ -1,14 +1,30 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+# ===-----------------------------------------------------------------------------*- Python -*-===##
+#                          _
+#                         | |
+#                       __| | __ ___      ___ ___
+#                      / _` |/ _` \ \ /\ / / '_  |
+#                     | (_| | (_| |\ V  V /| | | |
+#                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+#
+#
+#  This file is distributed under the MIT License (MIT).
+#  See LICENSE.txt for details.
+#
+# ===------------------------------------------------------------------------------------------===##
+
 """Copy stencil HIR generator
 
 This program creates the HIR corresponding to a copy stencil using the Python API of the HIR.
 The copy stencil is a hello world for stencil computations.
-The code is meant as an example for high-level DSLs that could generate HIR from their own 
-internal IR. 
-The program contains two parts: 
+The code is meant as an example for high-level DSLs that could generate HIR from their own
+internal IR.
+The program contains two parts:
     1. construct the HIR of the example
     2. pass the HIR to the dawn compiler in order to run all optimizer passes and code generation.
-       In this example the compiler is configured with the CUDA backend, therefore will code generate
-       an optimized CUDA implementation.
+       In this example the compiler is configured with the CUDA backend, therefore will code
+       generate an optimized CUDA implementation.
 
 """
 
@@ -43,7 +59,8 @@ def create_vertical_region_stmt() -> VerticalRegionDeclStmt:
         ]
     )
 
-    vertical_region_stmt = make_vertical_region_decl_stmt(body_ast, interval, VerticalRegion.Forward)
+    vertical_region_stmt = make_vertical_region_decl_stmt(
+        body_ast, interval, VerticalRegion.Forward)
     return vertical_region_stmt
 
 
@@ -65,11 +82,12 @@ parser.add_option("-v", "--verbose",
 
 # Print the SIR to stdout only in verbose mode
 if options.verbose:
-    T = textwrap.TextWrapper(initial_indent=' ' * 1, width=120, subsequent_indent=' ' * 1)
+    T = textwrap.TextWrapper(
+        initial_indent=' ' * 1, width=120, subsequent_indent=' ' * 1)
     des = sir_printer.SIRPrinter()
 
     for stencil in hir.stencils:
-        des.visitStencil(stencil)
+        des.visit_stencil(stencil)
 
 # serialize the hir to pass it to the compiler
 hirstr = hir.SerializeToString()
@@ -79,6 +97,8 @@ options = dawn.dawnOptionsCreate()
 # we set the backend of the compiler to cuda
 backend = dawn.dawnOptionsEntryCreateString("cuda".encode('utf-8'))
 dawn.dawnOptionsSet(options, "Backend".encode('utf-8'), backend)
+# true = dawn.dawnOptionsEntryCreateInteger(1)
+# dawn.dawnOptionsSet(options, "SerializeIIR".encode('utf-8'), true)
 
 # call the compiler that generates a translation unit
 tu = dawn.dawnCompile(hirstr, len(hirstr), options)
@@ -88,7 +108,8 @@ b_stencilName = stencilname.encode('utf-8')
 code = dawn.dawnTranslationUnitGetStencil(tu, b_stencilName)
 
 # write to file
-f = open(os.path.dirname(os.path.realpath(__file__)) + "/data/copy_stencil.cpp", "w")
+f = open(os.path.dirname(os.path.realpath(__file__))
+         + "/data/copy_stencil.cpp", "w")
 f.write(ctypes.c_char_p(code).value.decode("utf-8"))
 
 f.close()

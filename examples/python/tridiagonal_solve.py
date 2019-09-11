@@ -160,7 +160,7 @@ if options.verbose:
     des = sir_printer.SIRPrinter()
 
     for stencil in hir.stencils:
-        des.visitStencil(stencil)
+        des.visit_stencil(stencil)
 
 # serialize the hir to pass it to the compiler
 hirstr = hir.SerializeToString()
