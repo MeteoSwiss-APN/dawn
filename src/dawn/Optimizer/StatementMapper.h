@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/ASTUtil.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include <stack>
 
 namespace dawn {
@@ -67,6 +67,7 @@ class StatementMapper : public iir::ASTVisitor {
   const std::shared_ptr<SIR> sir_;
   iir::StencilInstantiation* instantiation_;
   iir::StencilMetaInformation& metadata_;
+  OptimizerContext& context_;
   std::shared_ptr<std::vector<ast::StencilCall*>> stackTrace_;
   std::stack<std::shared_ptr<Scope>> scope_;
   bool initializedWithBlockStmt_ = false;
@@ -74,8 +75,8 @@ class StatementMapper : public iir::ASTVisitor {
 public:
   StatementMapper(
       const std::shared_ptr<SIR>& fullSIR, iir::StencilInstantiation* instantiation,
-      const std::shared_ptr<std::vector<ast::StencilCall*>>& stackTrace, iir::DoMethod& doMethod,
-      const iir::Interval& interval,
+      OptimizerContext& context, const std::shared_ptr<std::vector<ast::StencilCall*>>& stackTrace,
+      iir::DoMethod& doMethod, const iir::Interval& interval,
       const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,
       const std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation);
 

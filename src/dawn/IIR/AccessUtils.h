@@ -1,12 +1,10 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                         _       _
-//                        | |     | |
-//                    __ _| |_ ___| | __ _ _ __   __ _
-//                   / _` | __/ __| |/ _` | '_ \ / _` |
-//                  | (_| | || (__| | (_| | | | | (_| |
-//                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
-//                    __/ |                       __/ |
-//                   |___/                       |___/
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
+//                     | (_| | (_| |\ V  V /| | | |
+//                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
 //  This file is distributed under the MIT License (MIT).
@@ -14,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_OPTIMIZER_ACCESSUTILS_H
-#define DAWN_OPTIMIZER_ACCESSUTILS_H
+#ifndef DAWN_IIR_ACCESSUTILS_H
+#define DAWN_IIR_ACCESSUTILS_H
 
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/Field.h"
@@ -49,4 +47,4 @@ void recordReadAccess(std::unordered_map<int, iir::Field>& inputOutputFields,
 } // namespace AccessUtils
 } // namespace dawn
 
-#endif
+#endif // DAWN_IIR_ACCESSUTILS_H

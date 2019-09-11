@@ -21,7 +21,8 @@ namespace dawn {
 
 std::unique_ptr<iir::Stencil>
 ReoderStrategyPartitioning::reorder(iir::StencilInstantiation* instantiation,
-                                    const std::unique_ptr<iir::Stencil>& stencilPtr) {
+                                    const std::unique_ptr<iir::Stencil>& stencilPtr,
+                                    OptimizerContext& context) {
   DAWN_ASSERT("ReoderStrategyPartitioning is not yet implemented");
   return nullptr;
 }

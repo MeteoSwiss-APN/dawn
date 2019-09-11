@@ -115,7 +115,8 @@ public:
   void reset() { stencilCallsToReplace_.clear(); }
 };
 
-PassSetBoundaryCondition::PassSetBoundaryCondition() : Pass("PassSetBoundaryCondition") {}
+PassSetBoundaryCondition::PassSetBoundaryCondition(OptimizerContext& context)
+    : Pass(context, "PassSetBoundaryCondition") {}
 
 bool PassSetBoundaryCondition::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
@@ -124,7 +125,7 @@ bool PassSetBoundaryCondition::run(
 
   // check if we need to run this pass
   if(stencilInstantiation->getStencils().size() == 1) {
-    if(stencilInstantiation->getOptimizerContext()->getOptions().ReportBoundaryConditions) {
+    if(context_.getOptions().ReportBoundaryConditions) {
       std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName() << " :";
       std::cout << " No boundary conditions applied\n";
     }
@@ -324,9 +325,8 @@ bool PassSetBoundaryCondition::run(
     doMethod->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
 
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
   // Output
-  if(context->getOptions().ReportBoundaryConditions) {
+  if(context_.getOptions().ReportBoundaryConditions) {
     std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName() << " :";
     if(boundaryConditionInserted_.size() == 0) {
       std::cout << " No boundary conditions applied\n";

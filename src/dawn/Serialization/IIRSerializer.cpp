@@ -637,13 +637,13 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
     case proto::iir::GlobalValueAndType_TypeKind_Integer:
       value->setType(sir::Value::Integer);
       if(GlobalToValue.second.valueisset()) {
-        value->setValue((int) GlobalToValue.second.value());
+        value->setValue((int)GlobalToValue.second.value());
       }
       break;
     case proto::iir::GlobalValueAndType_TypeKind_Double:
       value->setType(sir::Value::Double);
       if(GlobalToValue.second.valueisset()) {
-        value->setValue((double) GlobalToValue.second.value());
+        value->setValue((double)GlobalToValue.second.value());
       }
       break;
     default:
@@ -798,7 +798,7 @@ IIRSerializer::deserialize(const std::string& file, OptimizerContext* context,
 
   std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
   std::shared_ptr<iir::StencilInstantiation> returnvalue =
-      std::make_shared<iir::StencilInstantiation>(context);
+      std::make_shared<iir::StencilInstantiation>();
   deserializeImpl(str, kind, returnvalue);
   return returnvalue;
 }
@@ -807,7 +807,7 @@ std::shared_ptr<iir::StencilInstantiation>
 IIRSerializer::deserializeFromString(const std::string& str, OptimizerContext* context,
                                      IIRSerializer::SerializationKind kind) {
   std::shared_ptr<iir::StencilInstantiation> returnvalue =
-      std::make_shared<iir::StencilInstantiation>(context);
+      std::make_shared<iir::StencilInstantiation>();
   deserializeImpl(str, kind, returnvalue);
   return returnvalue;
 }

@@ -31,7 +31,7 @@ public:
                /// code legality
     SS_Optimized ///< Optimized splitting of Multistages, only when needed
   };
-  PassMultiStageSplitter(MultiStageSplittingStrategy strategy);
+  PassMultiStageSplitter(OptimizerContext& context, MultiStageSplittingStrategy strategy);
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;

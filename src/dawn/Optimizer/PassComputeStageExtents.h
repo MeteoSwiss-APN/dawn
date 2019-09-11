@@ -33,7 +33,7 @@ namespace dawn {
 /// @ingroup optimizer
 class PassComputeStageExtents : public Pass {
 public:
-  PassComputeStageExtents();
+  PassComputeStageExtents(OptimizerContext& context);
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;

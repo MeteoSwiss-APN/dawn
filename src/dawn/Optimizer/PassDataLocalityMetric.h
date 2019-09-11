@@ -38,7 +38,7 @@ private:
   static const int TERMINAL_CHAR_WIDTH = 70;
 
 public:
-  PassDataLocalityMetric();
+  PassDataLocalityMetric(OptimizerContext& context);
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
@@ -46,9 +46,9 @@ public:
 
 std::pair<int, int>
 computeReadWriteAccessesMetric(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                               const iir::MultiStage& multiStage);
+                               OptimizerContext& context, const iir::MultiStage& multiStage);
 std::unordered_map<int, ReadWriteAccumulator> computeReadWriteAccessesMetricPerAccessID(
-    const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+    const std::shared_ptr<iir::StencilInstantiation>& instantiation, OptimizerContext& context,
     const iir::MultiStage& multiStage);
 
 } // namespace dawn
