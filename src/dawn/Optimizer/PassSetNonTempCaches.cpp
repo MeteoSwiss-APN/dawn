@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassSetNonTempCaches.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/Cache.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StatementAccessesPair.h"
@@ -21,7 +22,6 @@
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassSetCaches.h"
 #include "dawn/Optimizer/Renaming.h"
-#include "dawn/SIR/ASTExpr.h"
 #include "dawn/Support/Unreachable.h"
 #include <iostream>
 #include <set>

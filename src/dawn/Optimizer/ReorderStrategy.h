@@ -15,7 +15,6 @@
 #ifndef DAWN_OPTIMIZER_REORDERSTRATEGY_H
 #define DAWN_OPTIMIZER_REORDERSTRATEGY_H
 
-#include "dawn/Optimizer/OptimizerContext.h"
 #include <memory>
 
 namespace dawn {

@@ -78,12 +78,12 @@ class StencilDescStatementMapper : public iir::ASTVisitor {
   /// should insert a call to the gridtools stencil here
   std::shared_ptr<iir::Stmt> stencilDescReplacement_;
 
-  OptimizerContext* context_;
+  OptimizerContext& context_;
 
 public:
   StencilDescStatementMapper(std::shared_ptr<iir::StencilInstantiation>& instantiation,
                              sir::Stencil* sirStencil, const std::shared_ptr<SIR>& sir,
-                             OptimizerContext* context)
+                             OptimizerContext& context)
       : instantiation_(instantiation), metadata_(instantiation->getMetaData()),
         sirStencil_(sirStencil), sir_(sir), context_(context) {
     DAWN_ASSERT(instantiation);
@@ -320,7 +320,7 @@ public:
     // This is the first time we encounter this variable. We have to make sure the name is not
     // already used in another scope!
 
-    int AccessID = metadata_.insertStmt(context_->getOptions().KeepVarnames, stmt);
+    int AccessID = metadata_.insertStmt(context_.getOptions().KeepVarnames, stmt);
 
     // Add the mapping to the local scope
     scope_.top()->LocalVarNameToAccessIDMap.emplace(stmt->getName(), AccessID);
@@ -370,13 +370,13 @@ public:
     DoMethod& doMethod = stage->getSingleDoMethod();
     // TODO move iterators of IIRNode to const getChildren, when we pass here begin, end instead
 
-    StatementMapper statementMapper(sir_, instantiation_.get(), *context_, scope_.top()->StackTrace,
+    StatementMapper statementMapper(sir_, instantiation_.get(), context_, scope_.top()->StackTrace,
                                     doMethod, doMethod.getInterval(),
                                     scope_.top()->LocalFieldnameToAccessIDMap, nullptr);
     ast->accept(statementMapper);
     DAWN_LOG(INFO) << "Inserted " << doMethod.getChildren().size() << " statements";
 
-    if(context_->getDiagnostics().hasErrors())
+    if(context_.getDiagnostics().hasErrors())
       return;
     // Here we compute the *actual* access of each statement and associate access to the AccessIDs
     // we set previously.
@@ -590,7 +590,7 @@ bool OptimizerContext::fillIIRFromSIR(
   }
 
   StencilDescStatementMapper stencilDeclMapper(stencilInstantiation, SIRStencil.get(), fullSIR,
-                                               this);
+                                               *this);
 
   //  // We need to operate on a copy of the AST as we may modify the nodes inplace
   auto AST = SIRStencil->StencilDescAst->clone();

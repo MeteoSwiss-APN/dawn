@@ -26,7 +26,6 @@
 #include "dawn/Optimizer/StatementMapper.h"
 #include "dawn/Optimizer/TemporaryHandling.h"
 #include "dawn/SIR/AST.h"
-#include "dawn/SIR/ASTVisitor.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/RemoveIf.hpp"
 

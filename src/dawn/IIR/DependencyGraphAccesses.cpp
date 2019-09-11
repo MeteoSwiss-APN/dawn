@@ -272,7 +272,7 @@ std::vector<std::size_t> DependencyGraphAccesses::getInputVertexIDs() const {
 /// @brief Compute the accumulated extent of each Vertex (given by `VertexID`) referenced in `graph`
 /// @returns map of `VertexID` to boundary extent
 /// @ingroup optimizer
-static std::unique_ptr<std::unordered_map<std::size_t, iir::Extents>>
+static std::unordered_map<std::size_t, iir::Extents>
 computeBoundaryExtents(const iir::DependencyGraphAccesses* graph) {
   using Vertex = iir::DependencyGraphAccesses::Vertex;
   using Edge = iir::DependencyGraphAccesses::Edge;
@@ -283,8 +283,7 @@ computeBoundaryExtents(const iir::DependencyGraphAccesses* graph) {
   std::unordered_set<std::size_t> visitedNodes;
 
   // Keep track of the extents of each vertex (and compute a VertexID to AccessID map)
-  auto nodeExtentsPtr = make_unique<std::unordered_map<std::size_t, iir::Extents>>();
-  auto& nodeExtents = *nodeExtentsPtr;
+  std::unordered_map<std::size_t, iir::Extents> nodeExtents;
 
   for(const auto& AccessIDVertexPair : graph->getVertices()) {
     const Vertex& vertex = AccessIDVertexPair.second;
@@ -335,7 +334,7 @@ computeBoundaryExtents(const iir::DependencyGraphAccesses* graph) {
     }
   }
 
-  return nodeExtentsPtr;
+  return nodeExtents;
 }
 
 namespace {
@@ -541,7 +540,7 @@ void DependencyGraphAccesses::clear() {
 }
 
 void DependencyGraphAccesses::toJSON(const std::string& file, DiagnosticsEngine& diagEngine) const {
-  std::unordered_map<std::size_t, Extents> extentMap = *computeBoundaryExtents(this);
+  std::unordered_map<std::size_t, Extents> extentMap = computeBoundaryExtents(this);
   json::json jgraph;
 
   auto extentsToVec = [&](const Extents& extents) {
@@ -604,8 +603,7 @@ void DependencyGraphAccesses::toJSON(const std::string& file, DiagnosticsEngine&
 }
 
 bool DependencyGraphAccesses::exceedsMaxBoundaryPoints(int maxHorizontalBoundaryExtent) {
-  // auto nodeExtentsPtr = computeBoundaryExtents(this);
-  std::unordered_map<std::size_t, Extents> extentMap = *computeBoundaryExtents(this);
+  std::unordered_map<std::size_t, Extents> extentMap = computeBoundaryExtents(this);
 
   for(const auto& vertexIDExtentsPair : extentMap) {
     const iir::Extents& extents = vertexIDExtentsPair.second;

@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassTemporaryType.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/NodeUpdateType.h"
 #include "dawn/IIR/StatementAccessesPair.h"
@@ -20,7 +21,6 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/TemporaryHandling.h"
-#include "dawn/SIR/ASTVisitor.h"
 #include <iostream>
 #include <memory>
 #include <stack>
