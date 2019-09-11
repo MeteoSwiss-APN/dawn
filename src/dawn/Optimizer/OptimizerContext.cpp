@@ -95,7 +95,8 @@ static void createIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target
   assignment->setID(target->nextUID());
 
   // Insert the stmt into the statementaccesspair
-  auto scalingInput = std::make_shared<Statement>(assignment, nullptr);
+  auto scalingInputES = std::make_shared<iir::ExprStmt>(assignment);
+  auto scalingInput = std::make_shared<Statement>(scalingInputES, nullptr);
   auto sap_1 = make_unique<iir::StatementAccessesPair>(scalingInput);
   std::shared_ptr<iir::Accesses> callerAccesses_1 = std::make_shared<iir::Accesses>();
   callerAccesses_1->addWriteExtent(out_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
@@ -138,13 +139,13 @@ static void createIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target
   auto outAccess = std::make_shared<ast::FieldAccessExpr>(sirOutField->Name);
   outAccess->setID(target->nextUID());
   auto diffCoeffAccess =
-      std::make_shared<ast::LiteralAccessExpr>("0.1", dawn::BuiltinTypeID::Float);
+      std::make_shared<ast::LiteralAccessExpr>("0.3", dawn::BuiltinTypeID::Float);
   diffCoeffAccess->setID(target->nextUID());
   auto scale = std::make_shared<ast::AssignmentExpr>(outAccess, diffCoeffAccess, "*=");
   scale->setID(target->nextUID());
 
   // Insert the stmt into the statementaccesspair
-  auto scaleOutput = std::make_shared<Statement>(scale, nullptr);
+  auto scaleOutput = std::make_shared<Statement>(std::make_shared<ast::ExprStmt>(scale), nullptr);
   auto sap_2 = make_unique<iir::StatementAccessesPair>(scaleOutput);
   std::shared_ptr<iir::Accesses> callerAccesses_2 = std::make_shared<iir::Accesses>();
   callerAccesses_2->addWriteExtent(out_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
@@ -168,7 +169,7 @@ static void createIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target
   addUp->setID(target->nextUID());
 
   // Insert the stmt into the statementaccesspair
-  auto addOld = std::make_shared<Statement>(addUp, nullptr);
+  auto addOld = std::make_shared<Statement>(std::make_shared<ast::ExprStmt>(addUp), nullptr);
   auto sap_3 = make_unique<iir::StatementAccessesPair>(addOld);
   std::shared_ptr<iir::Accesses> callerAccesses_3 = std::make_shared<iir::Accesses>();
   callerAccesses_3->addWriteExtent(out_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
@@ -213,6 +214,10 @@ static void createIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target
   // stmt 3
   target->getMetaData().insertExprToAccessID(outAccess, out_fieldID);
   target->getMetaData().insertExprToAccessID(diffCoeffAccess, literal_d1_ID);
+
+  // stmt 4
+  target->getMetaData().insertExprToAccessID(finalOutAccess, out_fieldID);
+  target->getMetaData().insertExprToAccessID(inAccess, in_fieldID);
 
   target->getMetaData().setStencilname("generated");
 
