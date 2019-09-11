@@ -320,7 +320,7 @@ public:
     // This is the first time we encounter this variable. We have to make sure the name is not
     // already used in another scope!
 
-    int AccessID = metadata_.insertStmt(context_.getOptions().KeepVarnames, stmt);
+    int AccessID = metadata_.addStmt(context_.getOptions().KeepVarnames, stmt);
 
     // Add the mapping to the local scope
     scope_.top()->LocalVarNameToAccessIDMap.emplace(stmt->getName(), AccessID);
@@ -437,7 +437,7 @@ public:
       if(stencil.Fields[stencilArgIdx]->IsTemporary) {
         // We add a new temporary field for each temporary field argument
         AccessID = metadata_.addTmpField(iir::FieldAccessType::FAT_StencilTemporary,
-                                            stencil.Fields[stencilArgIdx]->Name, {1, 1, 1});
+                                         stencil.Fields[stencilArgIdx]->Name, {1, 1, 1});
       } else {
         AccessID = curScope->LocalFieldnameToAccessIDMap.at(stencilCall->Args[stencilCallArgIdx]);
         stencilCallArgIdx++;
@@ -585,8 +585,8 @@ bool OptimizerContext::fillIIRFromSIR(
   // indentify the field).
   for(const auto& field : SIRStencil->Fields) {
     metadata.addField((field->IsTemporary ? iir::FieldAccessType::FAT_StencilTemporary
-                                             : iir::FieldAccessType::FAT_APIField),
-                         field->Name, field->fieldDimensions);
+                                          : iir::FieldAccessType::FAT_APIField),
+                      field->Name, field->fieldDimensions);
   }
 
   StencilDescStatementMapper stencilDeclMapper(stencilInstantiation, SIRStencil.get(), fullSIR,

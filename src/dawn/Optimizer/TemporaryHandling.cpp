@@ -148,8 +148,8 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
   instantiation->getMetaData().removeAccessID(AccessID);
 
   // Register the variable
-  instantiation->getMetaData().setAccessIDNamePair(AccessID, varname);
-  instantiation->getMetaData().insertStmtToAccessID(varDeclStmt, AccessID);
+  instantiation->getMetaData().addAccessIDNamePair(AccessID, varname);
+  instantiation->getMetaData().addStmtToAccessID(varDeclStmt, AccessID);
 
   // Update the fields of the stages we modified
   stencil->updateFields(lifetime);

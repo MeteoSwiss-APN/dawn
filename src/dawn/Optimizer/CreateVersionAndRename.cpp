@@ -46,7 +46,7 @@ int createVersionAndRename(iir::StencilInstantiation* instantiation, int AccessI
           originalName + "_" + std::to_string(versions->size()));
 
       // and register in field-versioning
-      instantiation->getMetaData().insertFieldVersionIDPair(originalID, newAccessID);
+      instantiation->getMetaData().addFieldVersionIDPair(originalID, newAccessID);
 
     } else {
       const std::string& originalName =
@@ -57,7 +57,7 @@ int createVersionAndRename(iir::StencilInstantiation* instantiation, int AccessI
 
       // Register the new *and* old field as being multi-versioned and indicate code-gen it has to
       // allocate the second version
-      instantiation->getMetaData().insertFieldVersionIDPair(AccessID, newAccessID);
+      instantiation->getMetaData().addFieldVersionIDPair(AccessID, newAccessID);
     }
   } else {
     // if not a field, it is a variable
@@ -78,7 +78,7 @@ int createVersionAndRename(iir::StencilInstantiation* instantiation, int AccessI
           iir::FieldAccessType::FAT_LocalVariable,
           originalName + "_" + std::to_string(versions->size()));
 
-      instantiation->getMetaData().insertFieldVersionIDPair(originalID, newAccessID);
+      instantiation->getMetaData().addFieldVersionIDPair(originalID, newAccessID);
 
     } else {
       const std::string& originalName =
@@ -87,7 +87,7 @@ int createVersionAndRename(iir::StencilInstantiation* instantiation, int AccessI
       newAccessID = instantiation->getMetaData().insertAccessOfType(
           iir::FieldAccessType::FAT_LocalVariable, originalName + "_0");
       // Register the new *and* old variable as being multi-versioned
-      instantiation->getMetaData().insertFieldVersionIDPair(AccessID, newAccessID);
+      instantiation->getMetaData().addFieldVersionIDPair(AccessID, newAccessID);
     }
   }
 
