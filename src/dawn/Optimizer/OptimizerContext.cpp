@@ -132,7 +132,7 @@ public:
     auto stencilCallDeclStmt = std::make_shared<iir::StencilCallDeclStmt>(placeholderStencil);
 
     // Register the call and set it as a replacement for the next vertical region
-    metadata_.insertStencilCallStmt(stencilCallDeclStmt, StencilID);
+    metadata_.addStencilCallStmt(stencilCallDeclStmt, StencilID);
     stencilDescReplacement_ = stencilCallDeclStmt;
   }
 
@@ -436,7 +436,7 @@ public:
       int AccessID = 0;
       if(stencil.Fields[stencilArgIdx]->IsTemporary) {
         // We add a new temporary field for each temporary field argument
-        AccessID = metadata_.insertTmpField(iir::FieldAccessType::FAT_StencilTemporary,
+        AccessID = metadata_.addTmpField(iir::FieldAccessType::FAT_StencilTemporary,
                                             stencil.Fields[stencilArgIdx]->Name, {1, 1, 1});
       } else {
         AccessID = curScope->LocalFieldnameToAccessIDMap.at(stencilCall->Args[stencilCallArgIdx]);
@@ -584,7 +584,7 @@ bool OptimizerContext::fillIIRFromSIR(
   // Map the fields of the "main stencil" to unique IDs (which are used in the access maps to
   // indentify the field).
   for(const auto& field : SIRStencil->Fields) {
-    metadata.insertField((field->IsTemporary ? iir::FieldAccessType::FAT_StencilTemporary
+    metadata.addField((field->IsTemporary ? iir::FieldAccessType::FAT_StencilTemporary
                                              : iir::FieldAccessType::FAT_APIField),
                          field->Name, field->fieldDimensions);
   }

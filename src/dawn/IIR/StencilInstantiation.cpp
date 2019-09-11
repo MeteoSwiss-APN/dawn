@@ -72,7 +72,7 @@ bool StencilInstantiation::insertBoundaryConditions(
   if(metadata_.hasFieldBC(originalFieldName) != 0) {
     return false;
   } else {
-    metadata_.insertFieldBC(originalFieldName, bc);
+    metadata_.addFieldBC(originalFieldName, bc);
     return true;
   }
 }
@@ -105,7 +105,7 @@ StencilInstantiation::makeStencilFunctionInstantiation(
       std::make_shared<StencilFunctionInstantiation>(this, expr, SIRStencilFun, ast, interval,
                                                      curStencilFunctionInstantiation != nullptr);
 
-  metadata_.insertStencilFunInstantiationCandidate(
+  metadata_.addStencilFunInstantiationCandidate(
       stencilFun, StencilMetaInformation::StencilFunctionInstantiationCandidate{
                       curStencilFunctionInstantiation});
 
