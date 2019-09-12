@@ -1,11 +1,26 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+# ===-----------------------------------------------------------------------------*- Python -*-===##
+#                          _
+#                         | |
+#                       __| | __ ___      ___ ___
+#                      / _` |/ _` \ \ /\ / / '_  |
+#                     | (_| | (_| |\ V  V /| | | |
+#                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+#
+#
+#  This file is distributed under the MIT License (MIT).
+#  See LICENSE.txt for details.
+#
+# ===------------------------------------------------------------------------------------------===##
 """Tridiagonal solve computation HIR generator
 
 This program creates the HIR corresponding to a tridiagonal solve computation using the Python API of the HIR.
-The tridiagonal solve is a basic example that contains vertical data dependencies that need to be resolved 
-by the compiler passes. 
-The code is meant as an example for high-level DSLs that could generate HIR from their own 
-internal IR. 
-The program contains two parts: 
+The tridiagonal solve is a basic example that contains vertical data dependencies that need to be resolved
+by the compiler passes.
+The code is meant as an example for high-level DSLs that could generate HIR from their own
+internal IR.
+The program contains two parts:
     1. construct the HIR of the example
     2. pass the HIR to the dawn compiler in order to run all optimizer passes and code generation.
        In this example the compiler is configured with the CUDA backend, therefore will code generate
@@ -45,7 +60,8 @@ def create_vertical_region_stmt1() -> VerticalRegionDeclStmt:
         ]
     )
 
-    vertical_region_stmt = make_vertical_region_decl_stmt(body_ast, interval, VerticalRegion.Forward)
+    vertical_region_stmt = make_vertical_region_decl_stmt(
+        body_ast, interval, VerticalRegion.Forward)
     return vertical_region_stmt
 
 
@@ -106,7 +122,8 @@ def create_vertical_region_stmt2() -> VerticalRegionDeclStmt:
         ]
     )
 
-    vertical_region_stmt = make_vertical_region_decl_stmt(body_ast, interval, VerticalRegion.Forward)
+    vertical_region_stmt = make_vertical_region_decl_stmt(
+        body_ast, interval, VerticalRegion.Forward)
     return vertical_region_stmt
 
 
@@ -130,7 +147,8 @@ def create_vertical_region_stmt3() -> VerticalRegionDeclStmt:
         ]
     )
 
-    vertical_region_stmt = make_vertical_region_decl_stmt(body_ast, interval, VerticalRegion.Backward)
+    vertical_region_stmt = make_vertical_region_decl_stmt(
+        body_ast, interval, VerticalRegion.Backward)
     return vertical_region_stmt
 
 
@@ -156,7 +174,8 @@ hir = make_sir("tridiagonal_solve.cpp", [
 
 # Print the SIR to stdout only in verbose mode
 if options.verbose:
-    T = textwrap.TextWrapper(initial_indent=' ' * 1, width=120, subsequent_indent=' ' * 1)
+    T = textwrap.TextWrapper(
+        initial_indent=' ' * 1, width=120, subsequent_indent=' ' * 1)
     des = sir_printer.SIRPrinter()
 
     for stencil in hir.stencils:
@@ -179,7 +198,8 @@ b_stencilName = stencilname.encode('utf-8')
 code = dawn.dawnTranslationUnitGetStencil(tu, b_stencilName)
 
 # write to file
-f = open(os.path.dirname(os.path.realpath(__file__)) + "/data/tridiagonal_solve.cpp", "w")
+f = open(os.path.dirname(os.path.realpath(__file__))
+         + "/data/tridiagonal_solve.cpp", "w")
 f.write(ctypes.c_char_p(code).value.decode("utf-8"))
 
 f.close()
