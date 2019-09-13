@@ -37,7 +37,7 @@ private:
   int numRenames_;
 
 public:
-  PassFieldVersioning();
+  PassFieldVersioning(OptimizerContext& context);
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;

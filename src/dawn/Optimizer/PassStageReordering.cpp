@@ -23,18 +23,17 @@
 
 namespace dawn {
 
-PassStageReordering::PassStageReordering(ReorderStrategy::ReorderStrategyKind strategy)
-    : Pass("PassStageReordering"), strategy_(strategy) {
+PassStageReordering::PassStageReordering(OptimizerContext& context,
+                                         ReorderStrategy::ReorderStrategyKind strategy)
+    : Pass(context, "PassStageReordering"), strategy_(strategy) {
   dependencies_.push_back("PassSetStageGraph");
 }
 
 bool PassStageReordering::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
-
   std::string filenameWE =
       getFilenameWithoutExtension(stencilInstantiation->getMetaData().getFileName());
-  if(context->getOptions().ReportPassStageReodering)
+  if(context_.getOptions().ReportPassStageReodering)
     stencilInstantiation->jsonDump(filenameWE + "_before.json");
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
@@ -54,7 +53,7 @@ bool PassStageReordering::run(
     }
 
     // TODO should we have Iterators so to prevent unique_ptr swaps
-    auto newStencil = strategy->reorder(stencilInstantiation.get(), stencilPtr);
+    auto newStencil = strategy->reorder(stencilInstantiation.get(), stencilPtr, context_);
 
     stencilInstantiation->getIIR()->replace(stencilPtr, newStencil, stencilInstantiation->getIIR());
 
@@ -63,7 +62,7 @@ bool PassStageReordering::run(
     if(!stencilPtr)
       return false;
   }
-  if(context->getOptions().ReportPassStageReodering)
+  if(context_.getOptions().ReportPassStageReodering)
     stencilInstantiation->jsonDump(filenameWE + "_after.json");
 
   return true;

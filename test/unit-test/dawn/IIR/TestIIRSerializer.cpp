@@ -186,7 +186,7 @@ protected:
   virtual void SetUp() override {
     createEmptyOptimizerContext::SetUp();
     referenceInstantiaton = std::make_shared<iir::StencilInstantiation>(
-        context_, *context_->getSIR()->GlobalVariableMap, context_->getSIR()->StencilFunctions);
+        *context_->getSIR()->GlobalVariableMap, context_->getSIR()->StencilFunctions);
   }
   virtual void TearDown() override { referenceInstantiaton.reset(); }
 
@@ -209,13 +209,13 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
   //===------------------------------------------------------------------------------------------===
   // Checking inserts into the various maps
   //===------------------------------------------------------------------------------------------===
-  referenceInstantiaton->getMetaData().setAccessIDNamePair(1, "test");
+  referenceInstantiaton->getMetaData().addAccessIDNamePair(1, "test");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   referenceInstantiaton->getMetaData().insertExprToAccessID(std::make_shared<iir::NOPExpr>(), 5);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  referenceInstantiaton->getMetaData().insertStmtToAccessID(
+  referenceInstantiaton->getMetaData().addStmtToAccessID(
       std::make_shared<iir::ExprStmt>(std::make_shared<iir::NOPExpr>()), 10);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
@@ -246,17 +246,17 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
   IIR_EXPECT_NE(deserializedStencilInstantiaion, referenceInstantiaton);
 
   referenceInstantiaton->getMetaData().insertAccessOfType(
-      iir::FieldAccessType::FAT_StencilTemporary, 712, "field3");
+      iir::FieldAccessType::FAT_StencilTemporary, 713, "field3"); //access ids should be globally unique, not only per type
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  // TODO this should not be legal, since 712 was already inserted
-  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_GlobalVariable,
-                                                          712, "field4");
+  // This would fail, since 712 is already present
+  // referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_GlobalVariable,
+  //                                                         712, "field4");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  referenceInstantiaton->getMetaData().insertFieldVersionIDPair(5, 6);
-  referenceInstantiaton->getMetaData().insertFieldVersionIDPair(5, 7);
-  referenceInstantiaton->getMetaData().insertFieldVersionIDPair(5, 8);
+  referenceInstantiaton->getMetaData().addFieldVersionIDPair(5, 6);
+  referenceInstantiaton->getMetaData().addFieldVersionIDPair(5, 7);
+  referenceInstantiaton->getMetaData().addFieldVersionIDPair(5, 8);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   referenceInstantiaton->getMetaData().setFileName("fileName");
@@ -283,7 +283,7 @@ TEST_F(IIRSerializerTest, ComplexStrucutes) {
   auto bcstmt = std::make_shared<iir::BoundaryConditionDeclStmt>("callee");
   bcstmt->getFields().push_back("field1");
   bcstmt->getFields().push_back("field2");
-  referenceInstantiaton->getMetaData().insertFieldBC("bc", bcstmt);
+  referenceInstantiaton->getMetaData().addFieldBC("bc", bcstmt);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 }
 

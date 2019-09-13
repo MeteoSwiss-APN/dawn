@@ -67,7 +67,7 @@ void FieldAccessMetadata::clone(const FieldAccessMetadata& origin) {
   for(auto idToVersionsPair : origin.variableVersions_.getvariableVersionsMap()) {
     int originalID = idToVersionsPair.first;
     for(auto versionID : *idToVersionsPair.second) {
-      variableVersions_.insertIDPair(originalID, versionID);
+      variableVersions_.addIDPair(originalID, versionID);
     }
   }
   accessIDType_ = origin.accessIDType_;

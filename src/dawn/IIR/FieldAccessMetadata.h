@@ -58,8 +58,11 @@ public:
       return variableVersionsMap_.at(derivedInfo_.versionToOriginalVersionMap_.at(accessID));
     }
   }
+  
+  void addIDPair(const int originalAccessID, const int versionedAccessID) {
+    DAWN_ASSERT(!derivedInfo_.versionIDs_.count(versionedAccessID));
+    DAWN_ASSERT(!derivedInfo_.versionToOriginalVersionMap_.count(originalAccessID));
 
-  void insertIDPair(const int originalAccessID, const int versionedAccessID) {
     // Insert the versioned ID into the list of verisons for its origial field
     if(variableHasMultipleVersions(originalAccessID)) {
       variableVersionsMap_[originalAccessID]->push_back(versionedAccessID);

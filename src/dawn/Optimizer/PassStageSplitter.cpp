@@ -13,12 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassStageSplitter.h"
+#include "dawn/IIR/AST.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
-#include "dawn/IIR/AST.h"
 #include "dawn/Support/Format.h"
 #include "dawn/Support/Logging.h"
 #include <deque>
@@ -28,12 +28,11 @@
 
 namespace dawn {
 
-PassStageSplitter::PassStageSplitter() : Pass("PassStageSplitter", true) {}
+PassStageSplitter::PassStageSplitter(OptimizerContext& context)
+    : Pass(context, "PassStageSplitter", true) {}
 
 bool PassStageSplitter::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
-
   int numSplit = 0;
   std::deque<int> splitterIndices;
   std::deque<std::shared_ptr<iir::DependencyGraphAccesses>> graphs;
@@ -82,12 +81,12 @@ bool PassStageSplitter::run(
                 DiagnosticsBuilder diag(DiagnosticsKind::Error,
                                         statement->ASTStmt->getSourceLocation());
                 diag << "Read-before-Write conflict inside conditional block is not supported.";
-                stencilInstantiation->getOptimizerContext()->getDiagnostics().report(diag);
+                context_.getDiagnostics().report(diag);
                 return false;
               }
             }
 
-            if(context->getOptions().DumpSplitGraphs)
+            if(context_.getOptions().DumpSplitGraphs)
               oldGraph->toDot(
                   format("stmt_hd_ms%i_s%i_%02i.dot", multiStageIndex, stageIndex, numSplit));
 
@@ -95,7 +94,7 @@ bool PassStageSplitter::run(
             splitterIndices.push_front(stmtIndex);
             graphs.push_front(std::move(oldGraph));
 
-            if(context->getOptions().ReportPassStageSplit)
+            if(context_.getOptions().ReportPassStageSplit)
               std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
                         << ": split:"
                         << stmtAccessesPair->getStatement()->ASTStmt->getSourceLocation().Line
@@ -111,7 +110,7 @@ bool PassStageSplitter::run(
           oldGraph = newGraph->clone();
         }
 
-        if(context->getOptions().DumpSplitGraphs)
+        if(context_.getOptions().DumpSplitGraphs)
           newGraph->toDot(
               format("stmt_hd_ms%i_s%i_%02i.dot", multiStageIndex, stageIndex, numSplit));
 
@@ -140,7 +139,7 @@ bool PassStageSplitter::run(
     }
   }
 
-  if(context->getOptions().ReportPassStageSplit && !numSplit)
+  if(context_.getOptions().ReportPassStageSplit && !numSplit)
     std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
               << ": no split\n";
 

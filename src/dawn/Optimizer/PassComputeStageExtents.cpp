@@ -21,7 +21,8 @@
 
 namespace dawn {
 
-PassComputeStageExtents::PassComputeStageExtents() : Pass("PassComputeStageExtents", true) {
+PassComputeStageExtents::PassComputeStageExtents(OptimizerContext& context)
+    : Pass(context, "PassComputeStageExtents", true) {
   dependencies_.push_back("PassSetStageName");
 }
 

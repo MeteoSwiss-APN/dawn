@@ -13,12 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
+#include "dawn/IIR/AST.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
-#include "dawn/IIR/AST.h"
 #include "dawn/Support/Format.h"
 #include <deque>
 #include <iostream>
@@ -27,8 +27,9 @@
 
 namespace dawn {
 
-PassMultiStageSplitter::PassMultiStageSplitter(MultiStageSplittingStrategy strategy)
-    : Pass("PassMultiStageSplitter", true), strategy_(strategy) {}
+PassMultiStageSplitter::PassMultiStageSplitter(OptimizerContext& context,
+                                               MultiStageSplittingStrategy strategy)
+    : Pass(context, "PassMultiStageSplitter", true), strategy_(strategy) {}
 namespace {
 
 int checkDependencies(const std::unique_ptr<iir::Stage>& stage, int stmtIdx) {
@@ -171,12 +172,11 @@ bool PassMultiStageSplitter::run(
     multistagesplitter = multiStageSplitterDebug();
   }
 
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
   iir::DependencyGraphAccesses graph(stencilInstantiation->getMetaData());
   int numSplit = 0;
   std::string StencilName = stencilInstantiation->getName();
   std::string PassName = getName();
-  auto options = context->getOptions();
+  auto options = context_.getOptions();
 
   // Iterate over all stages in all multistages of all stencils
   for(const auto& stencil : stencilInstantiation->getStencils()) {
@@ -204,7 +204,7 @@ bool PassMultiStageSplitter::run(
         multistagesplitter(stageIt, graph, userSpecifiedLoopOrder, curLoopOrder, splitterIndices,
                            stageIndex, multiStageIndex, numSplit, StencilName, PassName, options);
       }
-      if(context->getOptions().DumpSplitGraphs)
+      if(context_.getOptions().DumpSplitGraphs)
         graph.toDot(format("stmt_vd_m%i_%02i.dot", multiStageIndex, numSplit));
 
       if(!splitterIndices.empty()) {
@@ -219,7 +219,7 @@ bool PassMultiStageSplitter::run(
     }
   }
 
-  if(context->getOptions().ReportPassMultiStageSplit && !numSplit)
+  if(context_.getOptions().ReportPassMultiStageSplit && !numSplit)
     std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
               << ": no split\n";
 

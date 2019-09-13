@@ -13,13 +13,14 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassTemporaryType.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/NodeUpdateType.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/IIR/ASTVisitor.h"
+#include "dawn/Optimizer/TemporaryHandling.h"
 #include <iostream>
 #include <memory>
 #include <stack>
@@ -91,10 +92,10 @@ struct Temporary {
 
 } // anonymous namespace
 
-PassTemporaryType::PassTemporaryType() : Pass("PassTemporaryType", true) {}
+PassTemporaryType::PassTemporaryType(OptimizerContext& context)
+    : Pass(context, "PassTemporaryType", true) {}
 
 bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
-  OptimizerContext* context = instantiation->getOptimizerContext();
   const auto& metadata = instantiation->getMetaData();
 
   report_.clear();
@@ -168,12 +169,12 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
         // If the variable is accessed in multiple Do-Methods, we need to promote it to a field!
         if(!temporary.lifetime_.Begin.inSameDoMethod(temporary.lifetime_.End)) {
 
-          if(context->getOptions().ReportPassTemporaryType)
+          if(context_.getOptions().ReportPassTemporaryType)
             report("promote");
 
           report_.push_back(Report{AccessID, TmpActionMod::promote});
-          instantiation->promoteLocalVariableToTemporaryField(stencilPtr.get(), AccessID,
-                                                              temporary.lifetime_, temporary.type_);
+          promoteLocalVariableToTemporaryField(instantiation.get(), stencilPtr.get(), AccessID,
+                                               temporary.lifetime_, temporary.type_);
         }
       } else {
         // If the field is only accessed within the same Do-Method, does not have an extent and is
@@ -181,12 +182,12 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
         if(temporary.lifetime_.Begin.inSameDoMethod(temporary.lifetime_.End) &&
            temporary.extent_.isPointwise() && !usedAsArgumentInStencilFun(stencilPtr, AccessID)) {
 
-          if(context->getOptions().ReportPassTemporaryType)
+          if(context_.getOptions().ReportPassTemporaryType)
             report("demote");
 
           report_.push_back(Report{AccessID, TmpActionMod::demote});
-          instantiation->demoteTemporaryFieldToLocalVariable(stencilPtr.get(), AccessID,
-                                                             temporary.lifetime_);
+          demoteTemporaryFieldToLocalVariable(instantiation.get(), stencilPtr.get(), AccessID,
+                                              temporary.lifetime_);
         }
       }
     }
@@ -218,7 +219,7 @@ void PassTemporaryType::fixTemporariesSpanningMultipleStencils(
       if(metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID) &&
          instantiation->isIDAccessedMultipleStencils(accessID)) {
         updated = true;
-        instantiation->promoteTemporaryFieldToAllocatedField(accessID);
+        promoteTemporaryFieldToAllocatedField(instantiation, accessID);
       }
     }
   }

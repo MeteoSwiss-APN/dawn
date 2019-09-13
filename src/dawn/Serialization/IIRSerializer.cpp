@@ -522,7 +522,7 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
                                         const proto::iir::StencilMetaInfo& protoMetaData) {
   auto& metadata = target->getMetaData();
   for(auto IDtoName : protoMetaData.accessidtoname()) {
-    metadata.setAccessIDNamePair(IDtoName.first, IDtoName.second);
+    metadata.addAccessIDNamePair(IDtoName.first, IDtoName.second);
   }
 
   for(auto exprIDToAccessID : protoMetaData.expridtoaccessid()) {
@@ -559,7 +559,7 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
 
   for(auto variableVersionMap : protoMetaData.versionedfields().variableversionmap()) {
     for(auto versionedID : variableVersionMap.second.allids()) {
-      metadata.insertFieldVersionIDPair(variableVersionMap.first, versionedID);
+      metadata.addFieldVersionIDPair(variableVersionMap.first, versionedID);
     }
   }
 
@@ -592,7 +592,7 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
     auto stmt = std::make_shared<iir::StencilCallDeclStmt>(
         astStencilCall, makeLocation(call.stencil_call_decl_stmt()));
     stmt->setID(call.stencil_call_decl_stmt().id());
-    metadata.insertStencilCallStmt(stmt, IDToCall.first);
+    metadata.addStencilCallStmt(stmt, IDToCall.first);
   }
 
   for(auto FieldnameToBC : protoMetaData.fieldnametoboundarycondition()) {
@@ -637,13 +637,13 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
     case proto::iir::GlobalValueAndType_TypeKind_Integer:
       value->setType(sir::Value::Integer);
       if(GlobalToValue.second.valueisset()) {
-        value->setValue((int) GlobalToValue.second.value());
+        value->setValue((int)GlobalToValue.second.value());
       }
       break;
     case proto::iir::GlobalValueAndType_TypeKind_Double:
       value->setType(sir::Value::Double);
       if(GlobalToValue.second.valueisset()) {
-        value->setValue((double) GlobalToValue.second.value());
+        value->setValue((double)GlobalToValue.second.value());
       }
       break;
     default:
@@ -798,7 +798,7 @@ IIRSerializer::deserialize(const std::string& file, OptimizerContext* context,
 
   std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
   std::shared_ptr<iir::StencilInstantiation> returnvalue =
-      std::make_shared<iir::StencilInstantiation>(context);
+      std::make_shared<iir::StencilInstantiation>();
   deserializeImpl(str, kind, returnvalue);
   return returnvalue;
 }
@@ -807,7 +807,7 @@ std::shared_ptr<iir::StencilInstantiation>
 IIRSerializer::deserializeFromString(const std::string& str, OptimizerContext* context,
                                      IIRSerializer::SerializationKind kind) {
   std::shared_ptr<iir::StencilInstantiation> returnvalue =
-      std::make_shared<iir::StencilInstantiation>(context);
+      std::make_shared<iir::StencilInstantiation>();
   deserializeImpl(str, kind, returnvalue);
   return returnvalue;
 }

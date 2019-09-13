@@ -154,8 +154,9 @@ public:
       appendNewStatementAccessesPair(newStmt);
 
       // Register the variable
-      metadata_.setAccessIDNamePair(AccessID, returnVarName);
-      metadata_.insertStmtToAccessID(newStmt, AccessID);
+      metadata_.addAccessIDNamePair(AccessID, returnVarName);
+      metadata_.addStmtToAccessID(newStmt, AccessID);
+      //TODO recheck this
       metadata_.insertExprToAccessID(newExpr_, AccessID);
 
     } else {
@@ -193,8 +194,8 @@ public:
   void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
     int AccessID = curStencilFunctioninstantiation_->getAccessIDFromStmt(stmt);
     const std::string& name = curStencilFunctioninstantiation_->getFieldNameFromAccessID(AccessID);
-    metadata_.setAccessIDNamePair(AccessID, name);
-    metadata_.insertStmtToAccessID(stmt, AccessID);
+    metadata_.addAccessIDNamePair(AccessID, name);
+    metadata_.addStmtToAccessID(stmt, AccessID);
 
     // Push back the statement and move on
     appendNewStatementAccessesPair(stmt);
@@ -507,8 +508,8 @@ static std::pair<bool, std::shared_ptr<Inliner>> tryInlineStencilFunction(
 
 } // anonymous namespace
 
-PassInlining::PassInlining(bool activate, InlineStrategy strategy)
-    : Pass("PassInlining", true), activate_(activate), strategy_(strategy) {}
+PassInlining::PassInlining(OptimizerContext& context, bool activate, InlineStrategy strategy)
+    : Pass(context, "PassInlining", true), activate_(activate), strategy_(strategy) {}
 
 bool PassInlining::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 
