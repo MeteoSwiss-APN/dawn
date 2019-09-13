@@ -58,7 +58,8 @@ OPT(bool, UseNonTempCaches, false, "cache-non-temp-fields", "",
     "Allows for caching of non-temporary fields", "", false, true)
 OPT(bool, KeepVarnames, false, "keep-varnames", "",
     "Keep the names of locally defined variables (this should merely be used for debugging as it may result in invalid code)", "", false, true)
-
+OPT(bool, PartitionIntervals, false, "partition-intervals", "",
+    "partitions the intervals so there are no overlapping doMethods anymore", "", false, true)
 
 OPT(bool, PassVerbose, false, "pass-verbose", "",
     "Compile in verbose mode", "", false, true)

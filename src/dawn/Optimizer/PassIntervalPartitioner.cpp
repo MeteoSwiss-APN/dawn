@@ -22,32 +22,30 @@ namespace dawn {
 
 bool PassIntervalPartitioner::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
-
-  if(!context->getOptions().PassTmpToFunction)
+  if(!context_.getOptions().PartitionIntervals) {
     return true;
-
-  DAWN_ASSERT(context);
+  }
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
-    const auto& fields = stencilPtr->getFields();
-
-    // Iterate multi-stages for the replacement of temporaries by stencil functions
     for(auto& multiStage : stencilPtr->getChildren()) {
       auto cloneMS = multiStage->clone();
 
       auto multiInterval = multiStage->computePartitionOfIntervals();
+
+      // empty out the multistage
+      for(auto cloneStageIt = cloneMS->childrenBegin(); cloneStageIt != cloneMS->childrenEnd();
+          ++cloneStageIt) {
+        auto cloneDoMethodIt = (*cloneStageIt)->childrenBegin();
+        while(cloneDoMethodIt != (*cloneStageIt)->childrenEnd()) {
+          cloneDoMethodIt = (*cloneStageIt)->childrenErase(cloneDoMethodIt);
+        }
+      }
+
       for(const auto& interval : multiInterval.getIntervals()) {
 
         auto cloneStageIt = cloneMS->childrenBegin();
         for(auto stageIt = multiStage->childrenBegin(); stageIt != multiStage->childrenEnd();
             ++stageIt, ++cloneStageIt) {
-
-          auto cloneDoMethodIt = (*cloneStageIt)->childrenBegin();
-          while(cloneDoMethodIt != (*cloneStageIt)->childrenEnd()) {
-            cloneDoMethodIt = (*cloneStageIt)->childrenErase(cloneDoMethodIt);
-          }
 
           for(auto doMethodIt = (*stageIt)->childrenBegin();
               doMethodIt != (*stageIt)->childrenEnd(); ++doMethodIt) {

@@ -177,40 +177,40 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     optimizer = make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, SIR);
     optimizer->fillIIR();
 
-  // Setup pass interface
-  optimizer->checkAndPushBack<PassInlining>(true, PassInlining::InlineStrategy::InlineProcedures);
-  // This pass is currently broken and needs to be redesigned before it can be enabled
-  //  optimizer->checkAndPushBack<PassTemporaryFirstAccss>();
-  optimizer->checkAndPushBack<PassFieldVersioning>();
-  optimizer->checkAndPushBack<PassSSA>();
-  optimizer->checkAndPushBack<PassMultiStageSplitter>(mssSplitStrategy);
-  optimizer->checkAndPushBack<PassStageSplitter>();
-  optimizer->checkAndPushBack<PassPrintStencilGraph>();
-  optimizer->checkAndPushBack<PassTemporaryType>();
-  optimizer->checkAndPushBack<PassSetStageName>();
-  optimizer->checkAndPushBack<PassSetStageGraph>();
-  optimizer->checkAndPushBack<PassStageReordering>(reorderStrategy);
-  optimizer->checkAndPushBack<PassStageMerger>();
-  optimizer->checkAndPushBack<PassStencilSplitter>(maxFields);
-  optimizer->checkAndPushBack<PassTemporaryType>();
-  optimizer->checkAndPushBack<PassTemporaryMerger>();
-  optimizer->checkAndPushBack<PassInlining>(
-      (getOptions().InlineSF || getOptions().PassTmpToFunction),
-      PassInlining::InlineStrategy::ComputationsOnTheFly);
-  optimizer->checkAndPushBack<PassIntervalPartitioner>();
-  optimizer->checkAndPushBack<PassTemporaryToStencilFunction>();
-  optimizer->checkAndPushBack<PassSetNonTempCaches>();
-  optimizer->checkAndPushBack<PassSetCaches>();
-  optimizer->checkAndPushBack<PassComputeStageExtents>();
-  optimizer->checkAndPushBack<PassSetBoundaryCondition>();
-  optimizer->checkAndPushBack<PassSetBlockSize>();
-  optimizer->checkAndPushBack<PassDataLocalityMetric>();
-  optimizer->checkAndPushBack<PassSetSyncStage>();
-  // Since both cuda code generation as well as serialization do not support stencil-functions, we
-  // need to inline here as the last step
-  optimizer->checkAndPushBack<PassInlining>(getOptions().Backend == "cuda" ||
-                                                getOptions().SerializeIIR,
-                                            PassInlining::InlineStrategy::ComputationsOnTheFly);
+    // Setup pass interface
+    optimizer->checkAndPushBack<PassInlining>(true, PassInlining::InlineStrategy::InlineProcedures);
+    // This pass is currently broken and needs to be redesigned before it can be enabled
+    //  optimizer->checkAndPushBack<PassTemporaryFirstAccss>();
+    optimizer->checkAndPushBack<PassFieldVersioning>();
+    optimizer->checkAndPushBack<PassSSA>();
+    optimizer->checkAndPushBack<PassMultiStageSplitter>(mssSplitStrategy);
+    optimizer->checkAndPushBack<PassStageSplitter>();
+    optimizer->checkAndPushBack<PassPrintStencilGraph>();
+    optimizer->checkAndPushBack<PassTemporaryType>();
+    optimizer->checkAndPushBack<PassSetStageName>();
+    optimizer->checkAndPushBack<PassSetStageGraph>();
+    optimizer->checkAndPushBack<PassStageReordering>(reorderStrategy);
+    optimizer->checkAndPushBack<PassStageMerger>();
+    optimizer->checkAndPushBack<PassStencilSplitter>(maxFields);
+    optimizer->checkAndPushBack<PassTemporaryType>();
+    optimizer->checkAndPushBack<PassTemporaryMerger>();
+    optimizer->checkAndPushBack<PassInlining>(
+        (getOptions().InlineSF || getOptions().PassTmpToFunction),
+        PassInlining::InlineStrategy::ComputationsOnTheFly);
+    optimizer->checkAndPushBack<PassIntervalPartitioner>();
+    optimizer->checkAndPushBack<PassTemporaryToStencilFunction>();
+    optimizer->checkAndPushBack<PassSetNonTempCaches>();
+    optimizer->checkAndPushBack<PassSetCaches>();
+    optimizer->checkAndPushBack<PassComputeStageExtents>();
+    optimizer->checkAndPushBack<PassSetBoundaryCondition>();
+    optimizer->checkAndPushBack<PassSetBlockSize>();
+    optimizer->checkAndPushBack<PassDataLocalityMetric>();
+    optimizer->checkAndPushBack<PassSetSyncStage>();
+    // Since both cuda code generation as well as serialization do not support stencil-functions, we
+    // need to inline here as the last step
+    optimizer->checkAndPushBack<PassInlining>(getOptions().Backend == "cuda" ||
+                                                  getOptions().SerializeIIR,
+                                              PassInlining::InlineStrategy::ComputationsOnTheFly);
 
     DAWN_LOG(INFO) << "All the passes ran with the current command line arguments:";
     for(const auto& a : optimizer->getPassManager().getPasses()) {

@@ -41,7 +41,7 @@ class DoMethod;
 /// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassIntervalPartitioner : public Pass {
 public:
-  PassIntervalPartitioner() : Pass("PassIntervalPartitioner") {}
+  PassIntervalPartitioner(OptimizerContext& context) : Pass(context, "PassIntervalPartitioner") {}
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
