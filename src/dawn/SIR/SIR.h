@@ -276,19 +276,24 @@ struct Stencil : public dawn::NonCopyable {
 /// values are restricted to `bool`, `int`, `double` or `std::string`.
 ///
 /// @ingroup sir
-struct Value : NonCopyable {
-  enum TypeKind { None = 0, Boolean, Integer, Double, String };
 
-  Value() : type_(None), isConstexpr_(false), valueImpl_(nullptr) {}
+struct Value : NonCopyable {
+  enum TypeKind { Boolean=0, Integer, Double, String };
 
   template <class T>
   explicit Value(T&& value) : isConstexpr_(false) {
-    setValue(value);
+    valueImpl_= make_unique<ValueImpl<decay_t<T>>>(std::forward<T>(value));
   }
+
+  template <class T>
+  explicit Value(T value, bool isConstexpr) : isConstexpr_(isConstexpr) {
+    valueImpl_= make_unique<ValueImpl<decay_t<T>>>(std::forward<T>(value));
+  }
+
+  explicit Value(TypeKind type);
 
   /// @brief Get/Set if the variable is `constexpr`
   bool isConstexpr() const { return isConstexpr_; }
-  void setIsConstexpr(bool isConstexpr) { isConstexpr_ = isConstexpr; }
 
   /// @brief `TypeKind` to string
   static const char* typeToString(TypeKind type);
@@ -299,33 +304,24 @@ struct Value : NonCopyable {
   /// Convert the value to string
   std::string toString() const;
 
-  /// @brief Check if value is empty
-  bool empty() const { return valueImpl_ == nullptr; }
+  /// @brief Check if value is set
+  bool has_value() const { return valueImpl_->has_value(); }
 
   /// @brief Get/Set the underlying type
-  TypeKind getType() const { return type_; }
-  void setType(TypeKind type) { type_ = type; }
+  TypeKind getType() const { return valueImpl_->getType(); }
 
   /// @brief Get the value as type `T`
   /// @returns Copy of the value
   template <class T>
   T getValue() const {
-    DAWN_ASSERT(!empty());
-    DAWN_ASSERT_MSG(TypeInfo<T>::Type == type_, "type mismatch");
+    DAWN_ASSERT(has_value());
+    DAWN_ASSERT_MSG(TypeInfo<T>::Type == valueImpl_->getType(), "type mismatch");
     return *(T*)valueImpl_->get();
   }
 
-  /// @brief Set the value
-  template <class T>
-  void setValue(const T& value) {
-    valueImpl_ = make_unique<ValueImpl<T>>(value);
-    type_ = TypeInfo<T>::Type;
-  }
-
-  struct EmptyType {};
   template <class T>
   struct TypeInfo {
-    static const TypeKind Type = None;
+    static const TypeKind Type;
   };
 
   bool operator==(const Value& rhs) const;
@@ -333,16 +329,19 @@ struct Value : NonCopyable {
 
   json::json jsonDump() const {
     json::json valueJson;
-    valueJson["type"] = Value::typeToString(type_);
+    valueJson["type"] = Value::typeToString(valueImpl_->getType());
     valueJson["isConstexpr"] = isConstexpr();
     valueJson["value"] = toString();
     return valueJson;
   }
 
 private:
+
   struct ValueImplBase {
     virtual ~ValueImplBase() {}
     virtual void* get() = 0;
+    virtual TypeKind getType() const = 0;
+    virtual bool has_value() const = 0;
   };
 
   template <class T>
@@ -356,9 +355,14 @@ private:
         delete ValuePtr;
     }
     void* get() override { return (void*)ValuePtr; }
+    TypeKind getType() const override {
+      return TypeInfo<T>::Type;
+    }
+    bool has_value() const override {
+      return ValuePtr != nullptr;
+    }
   };
 
-  TypeKind type_;
   bool isConstexpr_;
   std::unique_ptr<ValueImplBase> valueImpl_;
 };
