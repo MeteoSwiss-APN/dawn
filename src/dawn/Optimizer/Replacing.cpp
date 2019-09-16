@@ -172,7 +172,7 @@ void replaceStencilCalls(const std::shared_ptr<iir::StencilInstantiation>& insta
       auto& metadata = instantiation->getMetaData();
       metadata.eraseStencilCallStmt(oldStencilCall);
       for(std::size_t i = 0; i < newStencilIDs.size(); ++i) {
-        metadata.insertStencilCallStmt(newStencilCalls[i], newStencilIDs[i]);
+        metadata.addStencilCallStmt(newStencilCalls[i], newStencilIDs[i]);
       }
     }
   }

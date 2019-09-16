@@ -56,13 +56,13 @@ static bool depends(const iir::Stage& fromStage, const iir::Stage& toStage) {
   return false;
 }
 
-PassSetStageGraph::PassSetStageGraph() : Pass("PassSetStageGraph") {
+PassSetStageGraph::PassSetStageGraph(OptimizerContext& context)
+    : Pass(context, "PassSetStageGraph") {
   dependencies_.push_back("PassSetStageName");
 }
 
 bool PassSetStageGraph::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
   int stencilIdx = 0;
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
@@ -84,7 +84,7 @@ bool PassSetStageGraph::run(
       }
     }
 
-    if(context->getOptions().DumpStageGraph)
+    if(context_.getOptions().DumpStageGraph)
       stageDAG->toDot("stage_" + stencilInstantiation->getName() + "_s" +
                       std::to_string(stencilIdx) + ".dot");
 

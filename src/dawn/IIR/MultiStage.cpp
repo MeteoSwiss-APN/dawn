@@ -22,8 +22,6 @@
 #include "dawn/IIR/Stage.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
-#include "dawn/Optimizer/ReadBeforeWriteConflict.h"
-#include "dawn/Optimizer/Renaming.h"
 #include "dawn/Support/STLExtras.h"
 #include "dawn/Support/UIDGenerator.h"
 
@@ -394,19 +392,6 @@ const iir::Cache& MultiStage::getCache(const int accessID) const {
   return derivedInfo_.caches_.at(accessID);
 }
 
-void MultiStage::renameAllOccurrences(int oldAccessID, int newAccessID) {
-  for(auto stageIt = childrenBegin(); stageIt != childrenEnd(); ++stageIt) {
-    Stage& stage = (**stageIt);
-    for(const auto& doMethodPtr : stage.getChildren()) {
-      DoMethod& doMethod = *doMethodPtr;
-      renameAccessIDInStmts(&metadata_, oldAccessID, newAccessID, doMethod.getChildren());
-      renameAccessIDInAccesses(&metadata_, oldAccessID, newAccessID, doMethod.getChildren());
-      doMethod.update(NodeUpdateType::level);
-    }
-    stage.update(NodeUpdateType::levelAndTreeAbove);
-  }
-}
-
 json::json MultiStage::jsonDump() const {
   json::json node;
   node["ID"] = id_;
@@ -470,6 +455,8 @@ MultiStage::computeFieldsAtInterval(const iir::Interval& interval) const {
   }
   return fields;
 }
+
+StencilMetaInformation& MultiStage::getMetadata() { return metadata_; }
 
 } // namespace iir
 } // namespace dawn

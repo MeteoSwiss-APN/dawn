@@ -21,7 +21,7 @@
 namespace dawn {
 
 bool PassManager::runAllPassesOnStecilInstantiation(
-    const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
+    OptimizerContext& context, const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
   std::vector<std::string> passesRan;
 
   for(auto& pass : passes_) {
@@ -30,11 +30,11 @@ bool PassManager::runAllPassesOnStecilInstantiation(
         DiagnosticsBuilder diag(DiagnosticsKind::Error);
         diag << "invalid pass registration: optimizer pass '" << pass->getName() << "' depends on '"
              << dependency << "'";
-        instantiation->getOptimizerContext()->getDiagnostics().report(diag);
+        context.getDiagnostics().report(diag);
         return false;
       }
 
-    if(!runPassOnStecilInstantiation(instantiation, pass.get()))
+    if(!runPassOnStecilInstantiation(context, instantiation, pass.get()))
       return false;
 
     passesRan.emplace_back(pass->getName());
@@ -43,7 +43,8 @@ bool PassManager::runAllPassesOnStecilInstantiation(
 }
 
 bool PassManager::runPassOnStecilInstantiation(
-    const std::shared_ptr<iir::StencilInstantiation>& instantiation, Pass* pass) {
+    OptimizerContext& context, const std::shared_ptr<iir::StencilInstantiation>& instantiation,
+    Pass* pass) {
   DAWN_LOG(INFO) << "Starting " << pass->getName() << " ...";
 
   if(!pass->run(instantiation)) {
@@ -51,7 +52,7 @@ bool PassManager::runPassOnStecilInstantiation(
     return false;
   }
 
-  if(instantiation->getOptimizerContext()->getOptions().PassVerbose) {
+  if(context.getOptions().PassVerbose) {
     instantiation->jsonDump(pass->getName() + "_" + std::to_string(passCounter_[pass->getName()]) +
                             "_Log.json");
   }

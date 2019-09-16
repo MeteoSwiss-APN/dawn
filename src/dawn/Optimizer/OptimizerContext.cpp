@@ -18,8 +18,8 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/Optimizer/PassComputeStageExtents.h"
-#include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/PassSetStageName.h"
+#include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/StatementMapper.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Logging.h"
@@ -78,11 +78,14 @@ class StencilDescStatementMapper : public iir::ASTVisitor {
   /// should insert a call to the gridtools stencil here
   std::shared_ptr<iir::Stmt> stencilDescReplacement_;
 
+  OptimizerContext& context_;
+
 public:
   StencilDescStatementMapper(std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                             sir::Stencil* sirStencil, const std::shared_ptr<SIR>& sir)
+                             sir::Stencil* sirStencil, const std::shared_ptr<SIR>& sir,
+                             OptimizerContext& context)
       : instantiation_(instantiation), metadata_(instantiation->getMetaData()),
-        sirStencil_(sirStencil), sir_(sir) {
+        sirStencil_(sirStencil), sir_(sir), context_(context) {
     DAWN_ASSERT(instantiation);
     // Create the initial scope
     scope_.push(std::make_shared<Scope>(sirStencil_->Name,
@@ -129,7 +132,7 @@ public:
     auto stencilCallDeclStmt = std::make_shared<iir::StencilCallDeclStmt>(placeholderStencil);
 
     // Register the call and set it as a replacement for the next vertical region
-    metadata_.insertStencilCallStmt(stencilCallDeclStmt, StencilID);
+    metadata_.addStencilCallStmt(stencilCallDeclStmt, StencilID);
     stencilDescReplacement_ = stencilCallDeclStmt;
   }
 
@@ -317,8 +320,7 @@ public:
     // This is the first time we encounter this variable. We have to make sure the name is not
     // already used in another scope!
 
-    int AccessID = metadata_.insertStmt(
-        instantiation_->getOptimizerContext()->getOptions().KeepVarnames, stmt);
+    int AccessID = metadata_.addStmt(context_.getOptions().KeepVarnames, stmt);
 
     // Add the mapping to the local scope
     scope_.top()->LocalVarNameToAccessIDMap.emplace(stmt->getName(), AccessID);
@@ -368,13 +370,13 @@ public:
     DoMethod& doMethod = stage->getSingleDoMethod();
     // TODO move iterators of IIRNode to const getChildren, when we pass here begin, end instead
 
-    StatementMapper statementMapper(sir_, instantiation_.get(), scope_.top()->StackTrace, doMethod,
-                                    doMethod.getInterval(),
+    StatementMapper statementMapper(sir_, instantiation_.get(), context_, scope_.top()->StackTrace,
+                                    doMethod, doMethod.getInterval(),
                                     scope_.top()->LocalFieldnameToAccessIDMap, nullptr);
     ast->accept(statementMapper);
     DAWN_LOG(INFO) << "Inserted " << doMethod.getChildren().size() << " statements";
 
-    if(instantiation_->getOptimizerContext()->getDiagnostics().hasErrors())
+    if(context_.getDiagnostics().hasErrors())
       return;
     // Here we compute the *actual* access of each statement and associate access to the AccessIDs
     // we set previously.
@@ -434,8 +436,8 @@ public:
       int AccessID = 0;
       if(stencil.Fields[stencilArgIdx]->IsTemporary) {
         // We add a new temporary field for each temporary field argument
-        AccessID = metadata_.insertTmpField(iir::FieldAccessType::FAT_StencilTemporary,
-                                            stencil.Fields[stencilArgIdx]->Name, {1, 1, 1});
+        AccessID = metadata_.addTmpField(iir::FieldAccessType::FAT_StencilTemporary,
+                                         stencil.Fields[stencilArgIdx]->Name, {1, 1, 1});
       } else {
         AccessID = curScope->LocalFieldnameToAccessIDMap.at(stencilCall->Args[stencilCallArgIdx]);
         stencilCallArgIdx++;
@@ -582,12 +584,13 @@ bool OptimizerContext::fillIIRFromSIR(
   // Map the fields of the "main stencil" to unique IDs (which are used in the access maps to
   // indentify the field).
   for(const auto& field : SIRStencil->Fields) {
-    metadata.insertField((field->IsTemporary ? iir::FieldAccessType::FAT_StencilTemporary
-                                             : iir::FieldAccessType::FAT_APIField),
-                         field->Name, field->fieldDimensions);
+    metadata.addField((field->IsTemporary ? iir::FieldAccessType::FAT_StencilTemporary
+                                          : iir::FieldAccessType::FAT_APIField),
+                      field->Name, field->fieldDimensions);
   }
 
-  StencilDescStatementMapper stencilDeclMapper(stencilInstantiation, SIRStencil.get(), fullSIR);
+  StencilDescStatementMapper stencilDeclMapper(stencilInstantiation, SIRStencil.get(), fullSIR,
+                                               *this);
 
   //  // We need to operate on a copy of the AST as we may modify the nodes inplace
   auto AST = SIRStencil->StencilDescAst->clone();
@@ -600,7 +603,7 @@ bool OptimizerContext::fillIIRFromSIR(
   PassTemporaryType::fixTemporariesSpanningMultipleStencils(
       stencilInstantiation.get(), stencilInstantiation->getIIR()->getChildren());
 
-  if(stencilInstantiation->getOptimizerContext()->getOptions().ReportAccesses) {
+  if(getOptions().ReportAccesses) {
     stencilInstantiation->reportAccesses();
   }
 
@@ -650,8 +653,8 @@ void OptimizerContext::fillIIR() {
     DAWN_ASSERT(stencil);
     if(!stencil->Attributes.has(sir::Attr::AK_NoCodeGen)) {
       stencilInstantiationMap_.insert(std::make_pair(
-          stencil->Name, std::make_shared<iir::StencilInstantiation>(
-                             this, *getSIR()->GlobalVariableMap, getSIR()->StencilFunctions)));
+          stencil->Name, std::make_shared<iir::StencilInstantiation>(*getSIR()->GlobalVariableMap,
+                                                                     getSIR()->StencilFunctions)));
       fillIIRFromSIR(stencilInstantiationMap_.at(stencil->Name), stencil, SIR_);
     } else {
       DAWN_LOG(INFO) << "Skipping processing of `" << stencil->Name << "`";
@@ -684,11 +687,11 @@ bool OptimizerContext::restoreIIR(std::string const& name,
     MSPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
 
-  // fix extents of stages since they are not stored in the iir but computed from the accesses contained
-  // in the DeMethods
+  // fix extents of stages since they are not stored in the iir but computed from the accesses
+  // contained in the DoMethods
   checkAndPushBack<PassSetStageName>();
   checkAndPushBack<PassComputeStageExtents>();
-  if(!getPassManager().runAllPassesOnStecilInstantiation(stencilInstantiation))
+  if(!getPassManager().runAllPassesOnStecilInstantiation(*this, stencilInstantiation))
     return false;
 
   return true;

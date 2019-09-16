@@ -19,12 +19,12 @@
 namespace dawn {
 StatementMapper::StatementMapper(
     const std::shared_ptr<SIR>& fullSIR, iir::StencilInstantiation* instantiation,
-    const std::shared_ptr<std::vector<ast::StencilCall*>>& stackTrace, iir::DoMethod& doMethod,
-    const iir::Interval& interval,
+    OptimizerContext& context, const std::shared_ptr<std::vector<ast::StencilCall*>>& stackTrace,
+    iir::DoMethod& doMethod, const iir::Interval& interval,
     const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,
     const std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation)
     : sir_(fullSIR), instantiation_(instantiation), metadata_(instantiation->getMetaData()),
-      stackTrace_(stackTrace) {
+      context_(context), stackTrace_(stackTrace) {
 
   // Create the initial scope
   scope_.push(std::make_shared<Scope>(doMethod, interval, stencilFunctionInstantiation));
@@ -94,7 +94,7 @@ void StatementMapper::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
   if(curFunc->hasReturn()) {
     DiagnosticsBuilder diag(DiagnosticsKind::Error, curFunc->getStencilFunction()->Loc);
     diag << "multiple return-statement in stencil function '" << curFunc->getName() << "'";
-    instantiation_->getOptimizerContext()->getDiagnostics().report(diag);
+    context_.getDiagnostics().report(diag);
     return;
   }
   scope_.top()->FunctionInstantiation->setReturn(true);
@@ -125,7 +125,7 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
   int AccessID = instantiation_->nextUID();
 
   std::string globalName;
-  if(instantiation_->getOptimizerContext()->getOptions().KeepVarnames)
+  if(context_.getOptions().KeepVarnames)
     globalName = stmt->getName();
   else
     globalName = iir::InstantiationHelper::makeLocalVariablename(stmt->getName(), AccessID);
@@ -136,8 +136,8 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
     function->getAccessIDToNameMap().emplace(AccessID, globalName);
     function->mapStmtToAccessID(stmt, AccessID);
   } else {
-    metadata_.setAccessIDNamePair(AccessID, globalName);
-    metadata_.insertStmtToAccessID(stmt, AccessID);
+    metadata_.addAccessIDNamePair(AccessID, globalName);
+    metadata_.addStmtToAccessID(stmt, AccessID);
   }
 
   // Add the mapping to the local scope
@@ -218,7 +218,7 @@ void StatementMapper::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr
           DiagnosticsBuilder diag(DiagnosticsKind::Error, expr->getSourceLocation());
           diag << "no viable Do-Method overload for stencil function call '" << expr->getCallee()
                << "'";
-          instantiation_->getOptimizerContext()->getDiagnostics().report(diag);
+          context_.getDiagnostics().report(diag);
           dawn_unreachable("no viable do-method overload for stencil function call");
         }
       } else {

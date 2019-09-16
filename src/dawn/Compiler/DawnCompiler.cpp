@@ -215,7 +215,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     for(const auto& a : optimizer->getPassManager().getPasses()) {
       DAWN_LOG(INFO) << a->getName();
     }
-    
+
     int i = 0;
     for(auto& stencil : optimizer->getStencilInstantiationMap()) {
       // Run optimization passes
@@ -223,7 +223,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
 
       DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `"
                      << instantiation->getName() << "` ...";
-      if(!optimizer->getPassManager().runAllPassesOnStecilInstantiation(instantiation))
+      if(!optimizer->getPassManager().runAllPassesOnStecilInstantiation(*optimizer, instantiation))
         return nullptr;
 
       DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `"

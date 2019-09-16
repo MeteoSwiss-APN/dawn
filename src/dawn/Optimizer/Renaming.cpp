@@ -13,12 +13,14 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/Renaming.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/Accesses.h"
+#include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/IIR/StencilMetaInformation.h"
-#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/SIR/Statement.h"
 #include <unordered_map>
 
@@ -48,7 +50,7 @@ public:
   virtual void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override {
     std::shared_ptr<iir::StencilFunctionInstantiation> fun =
         instantiation_->getStencilFunctionInstantiation(expr);
-    fun->renameCallerAccessID(oldAccessID_, newAccessID_);
+    renameCallerAccessIDInStencilFunction(fun.get(), oldAccessID_, newAccessID_);
     iir::ASTVisitorForwarding::visit(expr);
   }
 
@@ -130,6 +132,53 @@ void renameAccessIDInAccesses(
     renameAccessesMaps(statementAccessesPair->getCalleeAccesses()->getWriteAccesses(), oldAccessID,
                        newAccessID);
   }
+}
+
+void renameAccessIDInMultiStage(iir::MultiStage* multiStage, int oldAccessID, int newAccessID) {
+  for(auto stageIt = multiStage->childrenBegin(), stageEnd = multiStage->childrenEnd();
+      stageIt != stageEnd; ++stageIt) {
+    iir::Stage& stage = (**stageIt);
+    for(const auto& doMethodPtr : stage.getChildren()) {
+      iir::DoMethod& doMethod = *doMethodPtr;
+      renameAccessIDInStmts(&(multiStage->getMetadata()), oldAccessID, newAccessID,
+                            doMethod.getChildren());
+      renameAccessIDInAccesses(&(multiStage->getMetadata()), oldAccessID, newAccessID,
+                               doMethod.getChildren());
+      doMethod.update(iir::NodeUpdateType::level);
+    }
+    stage.update(iir::NodeUpdateType::levelAndTreeAbove);
+  }
+}
+void renameAccessIDInStencil(iir::Stencil* stencil, int oldAccessID, int newAccessID) {
+  for(const auto& multistage : stencil->getChildren()) {
+    renameAccessIDInMultiStage(multistage.get(), oldAccessID, newAccessID);
+  }
+}
+
+void renameCallerAccessIDInStencilFunction(iir::StencilFunctionInstantiation* function,
+                                           int oldAccessID, int newAccessID) {
+  // Update argument maps
+  for(auto& argumentAccessIDPair : function->ArgumentIndexToCallerAccessIDMap()) {
+    int& AccessID = argumentAccessIDPair.second;
+    if(AccessID == oldAccessID)
+      AccessID = newAccessID;
+  }
+
+  function->replaceKeyInMap(function->getCallerAccessIDToInitialOffsetMap(), oldAccessID,
+                            newAccessID);
+
+  // // Update AccessID to name map
+  function->replaceKeyInMap(function->getAccessIDToNameMap(), oldAccessID, newAccessID);
+
+  // Update statements
+  renameAccessIDInStmts(function, oldAccessID, newAccessID, function->getDoMethod()->getChildren());
+
+  // Update accesses
+  renameAccessIDInAccesses(function, oldAccessID, newAccessID,
+                           function->getDoMethod()->getChildren());
+
+  // Recompute the fields
+  function->update();
 }
 
 } // namespace dawn

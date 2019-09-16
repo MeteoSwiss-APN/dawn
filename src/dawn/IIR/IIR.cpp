@@ -16,7 +16,6 @@
 #include "dawn/IIR/DependencyGraphStage.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
-#include "dawn/Optimizer/Renaming.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"

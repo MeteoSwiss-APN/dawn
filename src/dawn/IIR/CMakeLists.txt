@@ -38,6 +38,8 @@ yoda_add_library(
           ASTVisitor.h
           Accesses.cpp  
           Accesses.h
+          AccessUtils.cpp
+          AccessUtils.h
           AccessToNameMapper.cpp
           AccessToNameMapper.h
           BlockStatements.cpp

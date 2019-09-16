@@ -15,8 +15,6 @@
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilMetaInformation.h"
-#include "dawn/Optimizer/BoundaryExtent.h"
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Json.h"
 #include "dawn/Support/StringUtil.h"
 #include <stack>
@@ -270,6 +268,75 @@ std::vector<std::size_t> DependencyGraphAccesses::getInputVertexIDs() const {
   return inputVertexIDs;
 }
 
+/// @fn computeBoundaryPoints
+/// @brief Compute the accumulated extent of each Vertex (given by `VertexID`) referenced in `graph`
+/// @returns map of `VertexID` to boundary extent
+/// @ingroup optimizer
+static std::unordered_map<std::size_t, iir::Extents>
+computeBoundaryExtents(const iir::DependencyGraphAccesses* graph) {
+  using Vertex = iir::DependencyGraphAccesses::Vertex;
+  using Edge = iir::DependencyGraphAccesses::Edge;
+
+  const auto& adjacencyList = graph->getAdjacencyList();
+
+  std::vector<std::size_t> nodesToVisit;
+  std::unordered_set<std::size_t> visitedNodes;
+
+  // Keep track of the extents of each vertex (and compute a VertexID to AccessID map)
+  std::unordered_map<std::size_t, iir::Extents> nodeExtents;
+
+  for(const auto& AccessIDVertexPair : graph->getVertices()) {
+    const Vertex& vertex = AccessIDVertexPair.second;
+    nodeExtents.emplace(vertex.VertexID, iir::Extents{0, 0, 0, 0, 0, 0});
+  }
+
+  // Start from the output nodes and follow all paths
+  for(std::size_t VertexID : graph->getOutputVertexIDs()) {
+    nodesToVisit.clear();
+    visitedNodes.clear();
+
+    // Traverse all reachable nodes and update the node extents
+    //
+    // Consider the following example:
+    //
+    //              +-----+    <0, 1, 0, 1, 0, 0>     +-----+
+    //              |  a  | ------------------------> |  b  |
+    //              +-----+                           +-----+
+    //      <-1, 1, 0, 0, 0, 0>                 <0, 0, -1, 0, 0, 0>
+    //
+    // If our current node is `a`, we compute the new extent of `b` by adding our current extent
+    // to the edge extent (which represents the access pattern of b) and merge this result with
+    // the already existing extent of `b`, thus:
+    //
+    // extent: b = merge(add(< -1, 1, 0, 0, 0, 0>, < 0, 1, 0, 1, 0, 0>), <0, 0, -1, 0, 0, 0>)
+    //           = merge(<-1, 2, 0, 1, 0, 0>,  <0, 0, -1, 0, 0, 0>)
+    //           = <-1, 2, -1, 1, 0, 0>
+    //
+    nodesToVisit.push_back(VertexID);
+    while(!nodesToVisit.empty()) {
+
+      // Process the current node
+      std::size_t curNode = nodesToVisit.back();
+      nodesToVisit.pop_back();
+      const iir::Extents& curExtent = nodeExtents.at(curNode);
+
+      // Check if we already visited this node
+      if(visitedNodes.count(curNode))
+        continue;
+      else
+        visitedNodes.insert(curNode);
+
+      // Follow edges of the current node and update the node extents
+      for(const Edge& edge : *adjacencyList[curNode]) {
+        nodeExtents.at(edge.ToVertexID).merge(iir::Extents::add(curExtent, edge.Data));
+        nodesToVisit.push_back(edge.ToVertexID);
+      }
+    }
+  }
+
+  return nodeExtents;
+}
+
 namespace {
 
 /// @brief Find strongly connected components using Tarjan's algorithm
@@ -473,7 +540,7 @@ void DependencyGraphAccesses::clear() {
 }
 
 void DependencyGraphAccesses::toJSON(const std::string& file, DiagnosticsEngine& diagEngine) const {
-  std::unordered_map<std::size_t, Extents> extentMap = *computeBoundaryExtents(this);
+  std::unordered_map<std::size_t, Extents> extentMap = computeBoundaryExtents(this);
   json::json jgraph;
 
   auto extentsToVec = [&](const Extents& extents) {
@@ -533,6 +600,20 @@ void DependencyGraphAccesses::toJSON(const std::string& file, DiagnosticsEngine&
 
   ofs << jgraph.dump(2);
   ofs.close();
+}
+
+bool DependencyGraphAccesses::exceedsMaxBoundaryPoints(int maxHorizontalBoundaryExtent) {
+  std::unordered_map<std::size_t, Extents> extentMap = computeBoundaryExtents(this);
+
+  for(const auto& vertexIDExtentsPair : extentMap) {
+    const iir::Extents& extents = vertexIDExtentsPair.second;
+    if(extents[0].Plus > maxHorizontalBoundaryExtent ||
+       extents[0].Minus < -maxHorizontalBoundaryExtent ||
+       extents[1].Plus > maxHorizontalBoundaryExtent ||
+       extents[1].Minus < -maxHorizontalBoundaryExtent)
+      return true;
+  }
+  return false;
 }
 
 } // namespace iir

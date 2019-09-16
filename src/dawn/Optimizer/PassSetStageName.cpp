@@ -18,7 +18,8 @@
 
 namespace dawn {
 
-PassSetStageName::PassSetStageName() : Pass("PassSetStageName", true) {}
+PassSetStageName::PassSetStageName(OptimizerContext& context)
+    : Pass(context, "PassSetStageName", true) {}
 
 bool PassSetStageName::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
   stencilInstantiation->getIIR()->getStageIDToNameMap().clear();

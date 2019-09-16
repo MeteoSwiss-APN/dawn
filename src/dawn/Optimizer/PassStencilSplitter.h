@@ -28,7 +28,7 @@ namespace dawn {
 /// This pass is not necessary to create legal code and is hence not in the debug-group
 class PassStencilSplitter : public Pass {
 public:
-  PassStencilSplitter(int maxNumberOfFilelds);
+  PassStencilSplitter(OptimizerContext& context, int maxNumberOfFilelds);
 
   /// @brief Maximum number of allowed fields per stencil
   ///
