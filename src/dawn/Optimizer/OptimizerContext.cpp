@@ -537,7 +537,7 @@ public:
             scope_.top()->controlFlowDescriptor_.getStatements().back()->ASTStmt, expr, newExpr);
 
         int AccessID = instantiation_->nextUID();
-        metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID,
+        metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, -AccessID,
                                      newExpr->getValue());
         metadata_.insertExprToAccessID(newExpr, AccessID);
 
