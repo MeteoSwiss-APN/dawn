@@ -36,11 +36,11 @@ public:
   virtual void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) = 0;
   virtual void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) = 0;
   virtual void visit(const std::shared_ptr<IfStmt>& stmt) = 0;
-  virtual void visit(const std::shared_ptr<ReductionOverNeighborStmt>& stmt) = 0;
   /// @}
 
   /// @brief Expressions
   /// @{
+  virtual void visit(const std::shared_ptr<ReductionOverNeighborExpr>& expr) = 0;
   virtual void visit(const std::shared_ptr<NOPExpr>& stmt) final {}
   virtual void visit(const std::shared_ptr<UnaryOperator>& expr) = 0;
   virtual void visit(const std::shared_ptr<BinaryOperator>& expr) = 0;
@@ -71,11 +71,11 @@ public:
   virtual void visit(std::shared_ptr<StencilCallDeclStmt> stmt) = 0;
   virtual void visit(std::shared_ptr<BoundaryConditionDeclStmt> stmt) = 0;
   virtual void visit(std::shared_ptr<IfStmt> stmt) = 0;
-  virtual void visit(std::shared_ptr<ReductionOverNeighborStmt> stmt) = 0;
   /// @}
 
   /// @brief Expressions
   /// @{
+  virtual void visit(std::shared_ptr<ReductionOverNeighborExpr> expr) = 0;
   virtual void visit(std::shared_ptr<NOPExpr> expr) final {}
   virtual void visit(std::shared_ptr<UnaryOperator> expr) = 0;
   virtual void visit(std::shared_ptr<BinaryOperator> expr) = 0;
@@ -106,11 +106,11 @@ public:
   virtual void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<IfStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<ReductionOverNeighborStmt>& stmt) override;
   /// @}
 
   /// @brief Expressions
   /// @{
+  virtual void visit(const std::shared_ptr<ReductionOverNeighborExpr>& expr) override;
   virtual void visit(const std::shared_ptr<UnaryOperator>& expr) override;
   virtual void visit(const std::shared_ptr<BinaryOperator>& expr) override;
   virtual void visit(const std::shared_ptr<AssignmentExpr>& expr) override;
@@ -151,12 +151,12 @@ public:
   virtual std::shared_ptr<Stmt>
   visitAndReplace(std::shared_ptr<BoundaryConditionDeclStmt> const& stmt);
   virtual std::shared_ptr<Stmt> visitAndReplace(std::shared_ptr<IfStmt> const& stmt);
-  virtual std::shared_ptr<Stmt>
-  visitAndReplace(std::shared_ptr<ReductionOverNeighborStmt> const& stmt);
   /// @}
 
   /// @brief visitAndReplace will do a full traverse of this node for Expressions
   /// @{
+  virtual std::shared_ptr<Expr>
+  visitAndReplace(std::shared_ptr<ReductionOverNeighborExpr> const& expr);
   virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<NOPExpr> const& expr) final;
   virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<UnaryOperator> const& expr);
   virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<BinaryOperator> const& expr);
@@ -180,12 +180,12 @@ public:
   virtual bool preVisitNode(std::shared_ptr<StencilCallDeclStmt> const& stmt);
   virtual bool preVisitNode(std::shared_ptr<BoundaryConditionDeclStmt> const& stmt);
   virtual bool preVisitNode(std::shared_ptr<IfStmt> const& stmt);
-  virtual bool preVisitNode(std::shared_ptr<ReductionOverNeighborStmt> const& expr);
   /// @}
 
   /// @brief pre-visit the node for Expressions and returns true if we should continue the tree
   /// traversal
   /// @{
+  virtual bool preVisitNode(std::shared_ptr<ReductionOverNeighborExpr> const& expr);
   virtual bool preVisitNode(std::shared_ptr<NOPExpr> const& expr);
   virtual bool preVisitNode(std::shared_ptr<UnaryOperator> const& expr);
   virtual bool preVisitNode(std::shared_ptr<BinaryOperator> const& expr);
@@ -212,13 +212,13 @@ public:
   virtual std::shared_ptr<Stmt>
   postVisitNode(std::shared_ptr<BoundaryConditionDeclStmt> const& stmt);
   virtual std::shared_ptr<Stmt> postVisitNode(std::shared_ptr<IfStmt> const& stmt);
-  virtual std::shared_ptr<Stmt>
-  postVisitNode(std::shared_ptr<ReductionOverNeighborStmt> const& expr);
   /// @}
 
   /// @brief post-visit the node for Expressions and returns a modified/new version of the
   /// expression node to be returned to the parent
   /// @{
+  virtual std::shared_ptr<Expr>
+  postVisitNode(std::shared_ptr<ReductionOverNeighborExpr> const& expr);
   virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<NOPExpr> const& expr);
   virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<UnaryOperator> const& expr);
   virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<BinaryOperator> const& expr);
@@ -250,11 +250,11 @@ public:
   virtual void visit(std::shared_ptr<StencilCallDeclStmt> stmt) override;
   virtual void visit(std::shared_ptr<BoundaryConditionDeclStmt> stmt) override;
   virtual void visit(std::shared_ptr<IfStmt> stmt) override;
-  virtual void visit(std::shared_ptr<ReductionOverNeighborStmt> expr) override;
   /// @}
 
   /// @brief Expressions
   /// @{
+  virtual void visit(std::shared_ptr<ReductionOverNeighborExpr> expr) override;
   virtual void visit(std::shared_ptr<UnaryOperator> expr) override;
   virtual void visit(std::shared_ptr<BinaryOperator> expr) override;
   virtual void visit(std::shared_ptr<AssignmentExpr> expr) override;
@@ -286,11 +286,11 @@ public:
   virtual void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<IfStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<ReductionOverNeighborStmt>& stmt) override;
   /// @}
 
   /// @brief Expressions
   /// @{
+  virtual void visit(const std::shared_ptr<ReductionOverNeighborExpr>& expr) override;
   virtual void visit(const std::shared_ptr<UnaryOperator>& expr) override;
   virtual void visit(const std::shared_ptr<BinaryOperator>& expr) override;
   virtual void visit(const std::shared_ptr<AssignmentExpr>& expr) override;

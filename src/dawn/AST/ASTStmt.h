@@ -50,7 +50,6 @@ public:
     SK_VerticalRegionDeclStmt,
     SK_BoundaryConditionDeclStmt,
     SK_IfStmt,
-    SK_ReductionOverNeighborStmt
   };
 
   using StmtRangeType = MutableArrayRef<std::shared_ptr<Stmt>>;
@@ -419,41 +418,6 @@ public:
   virtual void replaceChildren(const std::shared_ptr<Stmt>& oldStmt,
                                const std::shared_ptr<Stmt>& newStmt) override;
   ACCEPTVISITOR(Stmt, IfStmt)
-};
-
-//===------------------------------------------------------------------------------------------===//
-//     ReductionOverNeighborStmt
-//===------------------------------------------------------------------------------------------===//
-
-/// @brief This represents a reduction over neighbor
-/// @ingroup sir
-class ReductionOverNeighborStmt : public Stmt {
-private:
-  std::shared_ptr<Expr> lhs_;
-  std::string op_ = "+";
-  std::shared_ptr<Expr> rhs_;
-
-public:
-  /// @name Constructor & Destructor
-  /// @{
-  ReductionOverNeighborStmt(std::shared_ptr<Expr> lhs, std::string const& op,
-                            std::shared_ptr<Expr> rhs, SourceLocation loc = SourceLocation());
-  ReductionOverNeighborStmt(const ReductionOverNeighborStmt& stmt);
-  ReductionOverNeighborStmt& operator=(ReductionOverNeighborStmt stmt);
-  /// @}
-
-  std::shared_ptr<Expr> const& getLhs() const { return lhs_; }
-  void setLhs(std::shared_ptr<Expr> lhs) { lhs_ = std::move(lhs); }
-  std::string const& getOp() const { return op_; }
-  std::shared_ptr<Expr> const& getRhs() const { return rhs_; }
-  void setRhs(std::shared_ptr<Expr> rhs) { rhs_ = std::move(rhs); }
-
-  std::shared_ptr<Stmt> clone() const override;
-  bool equals(const Stmt* other) const override;
-  static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_ReductionOverNeighborStmt; }
-  void replaceChildren(const std::shared_ptr<Stmt>& oldStmt,
-                       const std::shared_ptr<Stmt>& newStmt) override;
-  ACCEPTVISITOR(Stmt, ReductionOverNeighborStmt)
 };
 
 } // namespace ast

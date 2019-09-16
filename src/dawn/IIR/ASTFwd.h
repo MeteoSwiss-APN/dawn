@@ -33,7 +33,6 @@ using VerticalRegionDeclStmt = ast::VerticalRegionDeclStmt;
 using StencilCallDeclStmt = ast::StencilCallDeclStmt;
 using BoundaryConditionDeclStmt = ast::BoundaryConditionDeclStmt;
 using IfStmt = ast::IfStmt;
-using ReductionOverNeighborStmt = ast::ReductionOverNeighborStmt;
 
 using Expr = ast::Expr;
 using NOPExpr = ast::NOPExpr;
@@ -47,6 +46,7 @@ using StencilFunArgExpr = ast::StencilFunArgExpr;
 using VarAccessExpr = ast::VarAccessExpr;
 using FieldAccessExpr = ast::FieldAccessExpr;
 using LiteralAccessExpr = ast::LiteralAccessExpr;
+using ReductionOverNeighborExpr = ast::ReductionOverNeighborExpr;
 
 using ASTHelper = ast::ASTHelper;
 using ASTVisitor = ast::ASTVisitor;

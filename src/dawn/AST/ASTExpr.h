@@ -47,6 +47,7 @@ public:
     EK_FieldAccessExpr,
     EK_LiteralAccessExpr,
     EK_NOPExpr,
+    EK_ReductionOverNeighborExpr,
   };
 
   using ExprRangeType = ArrayRef<std::shared_ptr<Expr>>;
@@ -556,6 +557,41 @@ public:
   static bool classof(const Expr* expr) { return expr->getKind() == EK_LiteralAccessExpr; }
   ACCEPTVISITOR(Expr, LiteralAccessExpr)
 };
+
+//===------------------------------------------------------------------------------------------===//
+//     ReductionOverNeighborExpr
+//===------------------------------------------------------------------------------------------===//
+
+/// @brief This represents a reduction over neighbor
+/// @ingroup sir
+class ReductionOverNeighborExpr : public Expr {
+private:
+  std::string op_ = "+";
+  std::shared_ptr<Expr> rhs_;
+  std::shared_ptr<LiteralAccessExpr> init_;
+
+public:
+  /// @name Constructor & Destructor
+  /// @{
+  ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> rhs,
+                            std::shared_ptr<LiteralAccessExpr> init,
+                            SourceLocation loc = SourceLocation());
+  ReductionOverNeighborExpr(const ReductionOverNeighborExpr& stmt);
+  ReductionOverNeighborExpr& operator=(ReductionOverNeighborExpr stmt);
+  /// @}
+
+  std::shared_ptr<LiteralAccessExpr> const& getInit() const { return init_; }
+  void setInit(std::shared_ptr<LiteralAccessExpr> init) { init_ = std::move(init); }
+  std::string const& getOp() const { return op_; }
+  std::shared_ptr<Expr> const& getRhs() const { return rhs_; }
+  void setRhs(std::shared_ptr<Expr> rhs) { rhs_ = std::move(rhs); }
+
+  std::shared_ptr<Expr> clone() const override;
+  bool equals(const Expr* other) const override;
+  static bool classof(const Expr* expr) { return expr->getKind() == EK_ReductionOverNeighborExpr; }
+  ACCEPTVISITOR(Expr, ReductionOverNeighborExpr)
+};
+
 } // namespace ast
 } // namespace dawn
 

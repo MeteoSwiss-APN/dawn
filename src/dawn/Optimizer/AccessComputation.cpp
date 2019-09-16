@@ -316,8 +316,8 @@ public:
 
     removeLastChildAccesses();
   }
-  virtual void visit(const std::shared_ptr<iir::ReductionOverNeighborStmt>& stmt) override {
-    DAWN_ASSERT_MSG(0, "ReductionOverNeighborStmt not allowed in this context");
+  virtual void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override {
+    DAWN_ASSERT_MSG(0, "ReductionOverNeighborExpr not allowed in this context");
   }
 
   virtual void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override {

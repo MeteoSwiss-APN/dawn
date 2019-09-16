@@ -91,7 +91,7 @@ dawn::proto::statements::Expr* ProtoStmtBuilder::getCurrentExprProto() {
   DAWN_ASSERT(!currentExprProto_.empty());
   return currentExprProto_.top();
 }
-void ProtoStmtBuilder::visit(const std::shared_ptr<ReductionOverNeighborStmt>& stmt) {
+void ProtoStmtBuilder::visit(const std::shared_ptr<ReductionOverNeighborExpr>& expr) {
   DAWN_ASSERT_MSG(0, "Not implemented!");
 }
 

@@ -46,11 +46,11 @@ public:
   void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override;
   void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override;
   void visit(const std::shared_ptr<iir::IfStmt>& stmt) override;
-  void visit(const std::shared_ptr<iir::ReductionOverNeighborStmt>& stmt) override{};
   /// @}
 
   /// @name Expression implementation
   /// @{
+  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override{};
   void visit(const std::shared_ptr<iir::UnaryOperator>& expr) override;
   void visit(const std::shared_ptr<iir::BinaryOperator>& expr) override;
   void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override;

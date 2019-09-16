@@ -68,16 +68,15 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
   stmt->getExpr()->accept(*this);
   ss_ << ";\n";
 }
-void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborStmt>& stmt) {
-  ss_ << std::string(indent_, ' ') << "for(auto&& x : cellNeighboursOfCell(m_mesh, t))\n";
-  ss_ << std::string(indent_ + DAWN_PRINT_INDENT, ' ');
-  stmt->getLhs()->accept(*this);
-  ss_ << " " + stmt->getOp() + "= ";
+void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
+  ss_ << std::string(indent_, ' ') << "reduce(cellNeighboursOfCell(m_mesh, t), ";
+  expr->getInit()->accept(*this);
+  ss_ << ", [&](auto& lhs, auto const& t) { return lhs " << expr->getOp() << "= ";
   auto argName = argName_;
-  argName_ = "*x";
-  stmt->getRhs()->accept(*this);
+  argName_ = "t";
+  expr->getRhs()->accept(*this);
   argName_ = argName;
-  ss_ << ";\n";
+  ss_ << ";})";
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) { Base::visit(stmt); }

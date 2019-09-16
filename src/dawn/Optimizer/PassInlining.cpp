@@ -207,11 +207,9 @@ public:
   }
 
   void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>&) override {}
-  void visit(const std::shared_ptr<iir::ReductionOverNeighborStmt>& stmt) override {
-    appendNewStatementAccessesPair(stmt);
-    stmt->getLhs()->accept(*this);
-    stmt->getRhs()->accept(*this);
-    removeLastChildStatementAccessesPair();
+  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override {
+    expr->getInit()->accept(*this);
+    expr->getRhs()->accept(*this);
   }
   void visit(const std::shared_ptr<iir::StencilCallDeclStmt>&) override {}
   void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>&) override {}

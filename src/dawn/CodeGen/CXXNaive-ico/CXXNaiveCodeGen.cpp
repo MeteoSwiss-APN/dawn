@@ -350,7 +350,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
         for(const auto& stagePtr : multiStage.getChildren()) {
           const iir::Stage& stage = *stagePtr;
 
-          StencilRunMethod.addBlockStatement("for (auto&& t : getTriangles(m_mesh))", [&]() {
+          StencilRunMethod.addBlockStatement("for (auto const& t : getTriangles(m_mesh))", [&]() {
             // Generate Do-Method
             for(const auto& doMethodPtr : stage.getChildren()) {
               const iir::DoMethod& doMethod = *doMethodPtr;

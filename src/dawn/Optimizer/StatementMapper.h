@@ -120,7 +120,7 @@ public:
   void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override;
 
   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override;
-  void visit(const std::shared_ptr<iir::ReductionOverNeighborStmt>& expr) override;
+  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override;
 };
 
 } // namespace dawn

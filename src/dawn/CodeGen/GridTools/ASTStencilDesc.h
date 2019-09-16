@@ -55,11 +55,11 @@ public:
   virtual void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<iir::IfStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<iir::ReductionOverNeighborStmt>& stmt) override;
   /// @}
 
   /// @name Expression implementation
   /// @{
+  virtual void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override;
   virtual void visit(const std::shared_ptr<iir::UnaryOperator>& expr) override;
   virtual void visit(const std::shared_ptr<iir::BinaryOperator>& expr) override;
   virtual void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override;

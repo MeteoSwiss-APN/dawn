@@ -326,35 +326,5 @@ void IfStmt::replaceChildren(std::shared_ptr<Stmt> const& oldStmt,
   DAWN_ASSERT_MSG((false), ("Expression not found"));
 }
 //===------------------------------------------------------------------------------------------===//
-
-ReductionOverNeighborStmt::ReductionOverNeighborStmt(std::shared_ptr<Expr> lhs,
-                                                     std::string const& op,
-                                                     std::shared_ptr<Expr> rhs, SourceLocation loc)
-    : Stmt(SK_ReductionOverNeighborStmt, loc), lhs_(std::move(lhs)), op_(op), rhs_(std::move(rhs)) {
-}
-
-ReductionOverNeighborStmt::ReductionOverNeighborStmt(const ReductionOverNeighborStmt& stmt)
-    : Stmt(SK_ReductionOverNeighborStmt, stmt.getSourceLocation()), lhs_(stmt.lhs_->clone()),
-      op_(stmt.op_), rhs_(stmt.rhs_->clone()) {}
-
-ReductionOverNeighborStmt& ReductionOverNeighborStmt::operator=(ReductionOverNeighborStmt stmt) {
-  assign(stmt);
-  lhs_ = stmt.lhs_;
-  op_ = stmt.op_;
-  rhs_ = stmt.rhs_;
-  return *this;
-}
-
-std::shared_ptr<Stmt> ReductionOverNeighborStmt::clone() const {
-  return std::make_shared<ReductionOverNeighborStmt>(*this);
-}
-
-bool ReductionOverNeighborStmt::equals(const Stmt* other) const {
-  const ReductionOverNeighborStmt* otherPtr = dyn_cast<ReductionOverNeighborStmt>(other);
-  return otherPtr && otherPtr->getLhs() == getLhs() && otherPtr->getOp() == getOp() &&
-         otherPtr->getRhs() == getRhs();
-}
-void ReductionOverNeighborStmt::replaceChildren(std::shared_ptr<Stmt> const& oldStmt,
-                                                std::shared_ptr<Stmt> const& newStmt) {}
 } // namespace ast
 } // namespace dawn

@@ -116,7 +116,13 @@ static void createIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target
   lhs->setID(target->nextUID());
   auto rhs = std::make_shared<ast::FieldAccessExpr>(sirInField->Name);
   rhs->setID(target->nextUID());
-  auto stmt = std::make_shared<ast::ReductionOverNeighborStmt>(lhs, "+", rhs);
+  auto init = std::make_shared<ast::LiteralAccessExpr>("0.0", BuiltinTypeID::Float);
+  init->setID(target->nextUID());
+  auto expr = std::make_shared<ast::ReductionOverNeighborExpr>("+", rhs, init);
+  expr->setID(target->nextUID());
+  auto assign = std::make_shared<ast::AssignmentExpr>(lhs, expr);
+  assign->setID(target->nextUID());
+  auto stmt = std::make_shared<ast::ExprStmt>(assign);
   stmt->setID(target->nextUID());
   auto statement = std::make_shared<Statement>(stmt, nullptr);
   auto insertee = make_unique<iir::StatementAccessesPair>(statement);
@@ -769,9 +775,7 @@ public:
     metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, expr->getValue());
     metadata_.insertExprToAccessID(expr, AccessID);
   }
-  void visit(const std::shared_ptr<iir::ReductionOverNeighborStmt>& stmt) override {
-    pushBackStatement(stmt);
-  }
+  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override {}
 
   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {}
 };

@@ -28,7 +28,6 @@ class VerticalRegionDeclStmt;
 class StencilCallDeclStmt;
 class BoundaryConditionDeclStmt;
 class IfStmt;
-class ReductionOverNeighborStmt;
 
 class Expr;
 class NOPExpr;
@@ -42,6 +41,7 @@ class StencilFunArgExpr;
 class VarAccessExpr;
 class FieldAccessExpr;
 class LiteralAccessExpr;
+class ReductionOverNeighborExpr;
 
 class ASTHelper;
 class ASTVisitor; //   Compiler complains if declared as class

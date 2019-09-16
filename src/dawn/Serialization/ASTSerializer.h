@@ -89,7 +89,7 @@ public:
 
   void visit(const std::shared_ptr<ast::LiteralAccessExpr>& expr) override;
 
-  void visit(const std::shared_ptr<ast::ReductionOverNeighborStmt>& stmt) override;
+  void visit(const std::shared_ptr<ast::ReductionOverNeighborExpr>& expr) override;
 };
 
 void setAST(proto::statements::AST* astProto, const ast::AST* ast);
