@@ -775,16 +775,6 @@ OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, OptimizerCont
                                    const std::shared_ptr<SIR>& SIR)
     : diagnostics_(diagnostics), options_(options), SIR_(SIR) {
   DAWN_LOG(INFO) << "Intializing OptimizerContext ... ";
-
-  /// Instead of getting the IIR from the SIR we're generating it here:
-  stencilInstantiationMap_.insert(
-      std::make_pair("<unstructured>", std::make_shared<iir::StencilInstantiation>(
-                                           sir::GlobalVariableMap{},
-                                           std::vector<std::shared_ptr<sir::StencilFunction>>{})));
-  createIIRInMemory(stencilInstantiationMap_.at("<unstructured>"));
-  if(options.Debug) {
-    stencilInstantiationMap_.at("<unstructured>")->dump();
-  }
 }
 
 bool OptimizerContext::fillIIRFromSIR(
@@ -864,17 +854,15 @@ const OptimizerContext::OptimizerContextOptions& OptimizerContext::getOptions() 
 OptimizerContext::OptimizerContextOptions& OptimizerContext::getOptions() { return options_; }
 
 void OptimizerContext::fillIIR() {
-  DAWN_ASSERT(SIR_);
-  for(const auto& stencil : SIR_->Stencils) {
-    DAWN_ASSERT(stencil);
-    if(!stencil->Attributes.has(sir::Attr::AK_NoCodeGen)) {
-      stencilInstantiationMap_.insert(std::make_pair(
-          stencil->Name, std::make_shared<iir::StencilInstantiation>(*getSIR()->GlobalVariableMap,
-                                                                     getSIR()->StencilFunctions)));
-      fillIIRFromSIR(stencilInstantiationMap_.at(stencil->Name), stencil, SIR_);
-    } else {
-      DAWN_LOG(INFO) << "Skipping processing of `" << stencil->Name << "`";
-    }
+
+  /// Instead of getting the IIR from the SIR we're generating it here:
+  stencilInstantiationMap_.insert(
+      std::make_pair("<unstructured>", std::make_shared<iir::StencilInstantiation>(
+                                           sir::GlobalVariableMap{},
+                                           std::vector<std::shared_ptr<sir::StencilFunction>>{})));
+  createIIRInMemory(stencilInstantiationMap_.at("<unstructured>"));
+  if(options_.Debug) {
+    stencilInstantiationMap_.at("<unstructured>")->dump();
   }
 }
 
