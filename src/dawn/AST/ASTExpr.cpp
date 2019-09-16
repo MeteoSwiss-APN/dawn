@@ -434,15 +434,13 @@ bool LiteralAccessExpr::equals(const Expr* other) const {
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
                                                      std::shared_ptr<Expr> rhs,
-                                                     std::shared_ptr<LiteralAccessExpr> init,
-                                                     SourceLocation loc)
+                                                     std::shared_ptr<Expr> init, SourceLocation loc)
     : Expr(EK_ReductionOverNeighborExpr, loc), op_(op), rhs_(std::move(rhs)),
       init_(std::move(init)) {}
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(const ReductionOverNeighborExpr& expr)
     : Expr(EK_ReductionOverNeighborExpr, expr.getSourceLocation()), op_(expr.op_),
-      rhs_(expr.rhs_->clone()),
-      init_(std::dynamic_pointer_cast<LiteralAccessExpr>(expr.init_->clone())) {}
+      rhs_(expr.rhs_->clone()), init_(expr.init_->clone()) {}
 
 ReductionOverNeighborExpr& ReductionOverNeighborExpr::operator=(ReductionOverNeighborExpr stmt) {
   assign(stmt);

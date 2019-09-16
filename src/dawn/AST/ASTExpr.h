@@ -568,20 +568,19 @@ class ReductionOverNeighborExpr : public Expr {
 private:
   std::string op_ = "+";
   std::shared_ptr<Expr> rhs_;
-  std::shared_ptr<LiteralAccessExpr> init_;
+  std::shared_ptr<Expr> init_;
 
 public:
   /// @name Constructor & Destructor
   /// @{
   ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> rhs,
-                            std::shared_ptr<LiteralAccessExpr> init,
-                            SourceLocation loc = SourceLocation());
+                            std::shared_ptr<Expr> init, SourceLocation loc = SourceLocation());
   ReductionOverNeighborExpr(const ReductionOverNeighborExpr& stmt);
   ReductionOverNeighborExpr& operator=(ReductionOverNeighborExpr stmt);
   /// @}
 
-  std::shared_ptr<LiteralAccessExpr> const& getInit() const { return init_; }
-  void setInit(std::shared_ptr<LiteralAccessExpr> init) { init_ = std::move(init); }
+  std::shared_ptr<Expr> const& getInit() const { return init_; }
+  void setInit(std::shared_ptr<Expr> init) { init_ = std::move(init); }
   std::string const& getOp() const { return op_; }
   std::shared_ptr<Expr> const& getRhs() const { return rhs_; }
   void setRhs(std::shared_ptr<Expr> rhs) { rhs_ = std::move(rhs); }

@@ -118,7 +118,7 @@ static void createIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target
   rhs->setID(target->nextUID());
   auto init = std::make_shared<ast::LiteralAccessExpr>("0.0", BuiltinTypeID::Float);
   init->setID(target->nextUID());
-  auto expr = std::make_shared<ast::ReductionOverNeighborExpr>("+", rhs, init);
+  auto expr = std::make_shared<ast::ReductionOverNeighborExpr>("+", rhs, rhs);
   expr->setID(target->nextUID());
   auto assign = std::make_shared<ast::AssignmentExpr>(lhs, expr);
   assign->setID(target->nextUID());
