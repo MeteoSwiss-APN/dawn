@@ -219,7 +219,7 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
       std::make_shared<iir::ExprStmt>(std::make_shared<iir::NOPExpr>()), 10);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_Literal, 5,
+  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_Literal, -5,
                                                           "test");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
