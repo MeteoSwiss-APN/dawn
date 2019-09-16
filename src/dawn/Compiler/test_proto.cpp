@@ -27,31 +27,28 @@
 
 using namespace dawn;
 
+//this compares the structure of the iirs
 bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
   assert(lhs->checkTreeConsistency());
   assert(rhs->checkTreeConsistency());
   // checking the stencils
+  assert(lhs->getChildren().size() == rhs->getChildren().size());
   for(int stencils = 0, size = lhs->getChildren().size(); stencils < size; ++stencils) {
     const auto& lhsStencil = lhs->getChild(stencils);
     const auto& rhsStencil = rhs->getChild(stencils);
-    assert((lhsStencil->getStencilAttributes() == rhsStencil->getStencilAttributes()));
-    printf("%d %d\n", lhsStencil->getStencilID(), rhsStencil->getStencilID());
+    assert((lhsStencil->getStencilAttributes() == rhsStencil->getStencilAttributes()));    
     assert((lhsStencil->getStencilID() == rhsStencil->getStencilID()));
 
     // checking each of the multistages
+    assert(lhsStencil->getChildren().size() == rhsStencil->getChildren().size());
     for(int mssidx = 0, mssSize = lhsStencil->getChildren().size(); mssidx < mssSize; ++mssidx) {
       const auto& lhsMSS = lhsStencil->getChild(mssidx);
       const auto& rhsMSS = rhsStencil->getChild(mssidx);
-      assert((lhsMSS->getLoopOrder() == rhsMSS->getLoopOrder()));
-      printf("%d %d\n", lhsMSS->getID(), rhsMSS->getID());
+      assert((lhsMSS->getLoopOrder() == rhsMSS->getLoopOrder()));     
       assert((lhsMSS->getID() == rhsMSS->getID()));
-      assert((lhsMSS->getCaches().size() == rhsMSS->getCaches().size()));
-      for(const auto& lhsPair : lhsMSS->getCaches()) {
-        assert(rhsMSS->getCaches().count(lhsPair.first));
-        auto rhsValue = rhsMSS->getCaches().at(lhsPair.first);
-        assert((rhsValue == lhsPair.second));
-      }
+
       // checking each of the stages
+      assert(lhsMSS->getChildren().size() == rhsMSS->getChildren().size());
       for(int stageidx = 0, stageSize = lhsMSS->getChildren().size(); stageidx < stageSize;
           ++stageidx) {
         const auto& lhsStage = lhsMSS->getChild(stageidx);
@@ -59,6 +56,7 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
         assert((lhsStage->getStageID() == rhsStage->getStageID()));
 
         // checking each of the doMethods
+        assert(lhsStage->getChildren().size() == rhsStage->getChildren().size());
         for(int doMethodidx = 0, doMethodSize = lhsStage->getChildren().size();
             doMethodidx < doMethodSize; ++doMethodidx) {
           const auto& lhsDoMethod = lhsStage->getChild(doMethodidx);
@@ -67,6 +65,7 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
           assert((lhsDoMethod->getInterval() == rhsDoMethod->getInterval()));
 
           // checking each of the StmtAccesspairs
+          assert(lhsDoMethod->getChildren().size() == rhsDoMethod->getChildren().size());
           for(int stmtidx = 0, stmtSize = lhsDoMethod->getChildren().size(); stmtidx < stmtSize;
               ++stmtidx) {
             const auto& lhsStmt = lhsDoMethod->getChild(stmtidx);
@@ -147,7 +146,8 @@ bool compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformati
   assert((lhs.getFieldIDToDimsMap() == rhs.getFieldIDToDimsMap()));
   assert((lhs.getStencilLocation() == rhs.getStencilLocation()));
   assert((lhs.getStencilName() == rhs.getStencilName()));
-  // assert((lhs.getFileName() == rhs.getFileName()));  //in memory stencil has no file name
+  //file name makes little sense for in memory stencil
+  //assert((lhs.getFileName() == rhs.getFileName()));  
 
   // we compare the content of the maps since the shared-ptr's are not the same
   assert((lhs.getStencilIDToStencilCallMap().getDirectMap().size() ==
@@ -158,9 +158,96 @@ bool compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformati
     assert(rhsValue->equals(lhsPair.second.get()));
   }
 
-  //TODO compare more things?
-  //  e.g. stage extents (extents stored in stages are derived)
+  return true;
+}
 
+bool compareDerivedInformation(iir::IIR* lhs, iir::IIR* rhs) {
+  //IIR -> Stencil -> Multistage -> Stage -> Do Method -> (StatementAccessPair)
+
+  //IIR
+  // struct DerivedInfo {
+  //   /// StageID to name Map. Filled by the `PassSetStageName`.
+  //   [X] std::unordered_map<int, std::string> StageIDToNameMap_;
+  //   /// Set containing the AccessIDs of fields which are manually allocated by the stencil and serve
+  //   /// as temporaries spanning over multiple stencils
+  // };
+
+  // assert(lhs->getStageIDToNameMap() == rhs->getStageIDToNameMap());  //this is not present in stencil from memory
+
+  for(int stencils = 0, size = lhs->getChildren().size(); stencils < size; ++stencils) {
+    const auto& lhsStencil = lhs->getChild(stencils);
+    const auto& rhsStencil = rhs->getChild(stencils);    
+
+    //struct DerivedInfo {
+    //   /// Dependency graph of the stages of this stencil
+    //   [X] std::shared_ptr<DependencyGraphStage> stageDependencyGraph_;
+    //   /// field info properties
+    //   [X] std::unordered_map<int, FieldInfo> fields_;  
+    // };
+
+    assert(lhsStencil->getStageDependencyGraph() == rhsStencil->getStageDependencyGraph()); //this _should_ work, to be tested
+    assert(lhsStencil->getFields() == rhsStencil->getFields());
+
+    // checking each of the multistages
+    for(int mssidx = 0, mssSize = lhsStencil->getChildren().size(); mssidx < mssSize; ++mssidx) {
+      const auto& lhsMSS = lhsStencil->getChild(mssidx);
+      const auto& rhsMSS = rhsStencil->getChild(mssidx);
+
+      assert((lhsMSS->getCaches().size() == rhsMSS->getCaches().size()));
+      for(const auto& lhsPair : lhsMSS->getCaches()) {
+        assert(rhsMSS->getCaches().count(lhsPair.first));
+        auto rhsValue = rhsMSS->getCaches().at(lhsPair.first);
+        assert((rhsValue == lhsPair.second));
+      }
+
+      assert(lhsMSS->getFields() == rhsMSS->getFields());
+
+      // checking each of the stages
+      for(int stageidx = 0, stageSize = lhsMSS->getChildren().size(); stageidx < stageSize;
+          ++stageidx) {
+        const auto& lhsStage = lhsMSS->getChild(stageidx);
+        const auto& rhsStage = rhsMSS->getChild(stageidx);
+
+        // struct DerivedInfo {
+
+        //   /// Declaration of the fields of this stage
+        //   [X] std::unordered_map<int, Field> fields_;
+
+        //   /// AccessIDs of the global variable accesses of this stage
+        //   [X] std::unordered_set<int> allGlobalVariables_;
+        //   [X] std::unordered_set<int> globalVariables_;
+        //   [X] std::unordered_set<int> globalVariablesFromStencilFunctionCalls_;
+
+        //   [X] Extents extents_;
+        //   [X] bool requiresSync_ = false;
+        // };
+
+        assert(lhsStage->getFields() == rhsStage->getFields());
+        assert(lhsStage->getAllGlobalVariables() == rhsStage->getAllGlobalVariables());
+        assert(lhsStage->getGlobalVariables() == rhsStage->getGlobalVariables());
+        assert(lhsStage->getGlobalVariablesFromStencilFunctionCalls() 
+          == rhsStage->getGlobalVariablesFromStencilFunctionCalls());
+        assert(lhsStage->getExtents() == rhsStage->getExtents());
+        assert(lhsStage->getRequiresSync() == rhsStage->getRequiresSync());
+
+        // checking each of the doMethods
+        for(int doMethodidx = 0, doMethodSize = lhsStage->getChildren().size();
+            doMethodidx < doMethodSize; ++doMethodidx) {
+          const auto& lhsDoMethod = lhsStage->getChild(doMethodidx);
+          const auto& rhsDoMethod = rhsStage->getChild(doMethodidx);
+
+          // struct DerivedInfo {
+          //   /// Declaration of the fields of this doMethod
+          //   [X] std::unordered_map<int, Field> fields_;
+          //   [X] std::shared_ptr<DependencyGraphAccesses> dependencyGraph_;
+          // };
+
+          assert(lhsDoMethod->getFields() == rhsDoMethod->getFields());
+          assert(lhsDoMethod->getDependencyGraph() == rhsDoMethod->getDependencyGraph());
+        }
+      }
+    }
+  }
 
   return true;
 }
@@ -287,17 +374,25 @@ void deserialization_test_mat() {
 
   printf("prepared IIRs succesfully!\n");
 
-  //first compare the iirs, this is a precondition before we can actually check the metadata
+  //first compare the (structure of the) iirs, this is a precondition before we can actually check the metadata / derived info
   if (compareIIRs(copy_stencil_memory->getIIR().get(), copy_stencil_from_file->getIIR().get())) {
     printf("IIRS are equal!\n");
   } else {
     printf("IIRS are different!\n");
   }
 
-  //then we compare the actual meta data
+  //then we compare the meta data
   if (compareMetaData(copy_stencil_memory->getMetaData(), copy_stencil_from_file->getMetaData())) {
     printf("Meta Data is equal!\n");
   } else {
     printf("Meta Data is different!\n");
+  }
+
+  //and finally the derived info
+  //first compare the (structure of the) iirs, this is a precondition before we can actually check the metadata / derived info
+  if (compareDerivedInformation(copy_stencil_memory->getIIR().get(), copy_stencil_from_file->getIIR().get())) {
+    printf("Derived Info is equal!\n");
+  } else {
+    printf("Derived Info is different!\n");
   }
 }
