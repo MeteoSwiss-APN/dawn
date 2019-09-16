@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/DoMethod.h"
+#include "dawn/IIR/AccessUtils.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/IIR.h"
@@ -22,7 +23,6 @@
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilMetaInformation.h"
-#include "dawn/Optimizer/AccessUtils.h"
 #include "dawn/SIR/Statement.h"
 #include "dawn/Support/IndexGenerator.h"
 #include "dawn/Support/Logging.h"

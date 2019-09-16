@@ -200,11 +200,45 @@ bool VerticalRegionDeclStmt::equals(const Stmt* other) const {
          *(verticalRegion_.get()) == *(otherPtr->verticalRegion_.get());
 }
 
+std::shared_ptr<StencilCall> StencilCall::clone() const {
+  auto call = std::make_shared<StencilCall>(Callee, Loc);
+  call->Args = Args;
+  return call;
+}
+
+bool StencilCall::operator==(const StencilCall& rhs) const { return bool(this->comparison(rhs)); }
+
+CompareResult StencilCall::comparison(const StencilCall& rhs) const {
+  std::string output;
+  if(Callee != rhs.Callee) {
+    output += dawn::format("[StencilCall mismatch] Callees do not match\n"
+                           "  Actual:\n"
+                           "    %s\n"
+                           "  Expected:\n"
+                           "    %s",
+                           Callee, rhs.Callee);
+    return CompareResult{output, false};
+  }
+  for(int i = 0; i < Args.size(); ++i) {
+    if(Args[i] != rhs.Args[i]) {
+      output += "[StencilCall mismatch] Arguments do not match\n";
+      output += dawn::format("Names do not match\n"
+                             "  Actual:\n"
+                             "    %s\n"
+                             "  Expected:\n"
+                             "    %s",
+                             Args[i], rhs.Args[i]);
+      return CompareResult{output, false};
+    }
+  }
+  return CompareResult{output, true};
+}
+
 //===------------------------------------------------------------------------------------------===//
 //     StencilCallDeclStmt
 //===------------------------------------------------------------------------------------------===//
 
-StencilCallDeclStmt::StencilCallDeclStmt(const std::shared_ptr<sir::StencilCall>& stencilCall,
+StencilCallDeclStmt::StencilCallDeclStmt(const std::shared_ptr<StencilCall>& stencilCall,
                                          SourceLocation loc)
     : Stmt(SK_StencilCallDeclStmt, loc), stencilCall_(stencilCall) {}
 
@@ -267,9 +301,7 @@ bool BoundaryConditionDeclStmt::equals(const Stmt* other) const {
   return otherPtr && Stmt::equals(other) && functor_ == otherPtr->functor_ &&
          fields_.size() == otherPtr->fields_.size() &&
          std::equal(fields_.begin(), fields_.end(), otherPtr->fields_.begin(),
-                    [](const std::shared_ptr<sir::Field>& a, const std::shared_ptr<sir::Field>& b) {
-                      return a->Name == b->Name && a->IsTemporary == b->IsTemporary;
-                    });
+                    [](const std::string& a, const std::string& b) { return a == b; });
 }
 
 //===------------------------------------------------------------------------------------------===//

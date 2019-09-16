@@ -16,7 +16,7 @@
 #include "dawn/Compiler/Options.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/SIR/SIRSerializer.h"
+#include "dawn/Serialization/SIRSerializer.h"
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 #include <fstream>
 #include <gtest/gtest.h>

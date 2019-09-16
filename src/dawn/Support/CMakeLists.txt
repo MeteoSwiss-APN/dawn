@@ -24,6 +24,7 @@ yoda_add_library(
           Assert.h
           Casting.h
           Compiler.h
+          ComparisonHelpers.h
           Config.h.cmake
           DiagnosticsEngine.cpp
           DiagnosticsEngine.h

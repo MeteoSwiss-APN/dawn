@@ -27,6 +27,7 @@
 #include <iostream>
 #include <set>
 
+#include "dawn/Optimizer/CreateVersionAndRename.h"
 namespace dawn {
 
 namespace {
@@ -67,7 +68,8 @@ static bool isHorizontalStencilOrCounterLoopOrderExtent(const iir::Extents& exte
 
 /// @brief Report a race condition in the given `statement`
 static void reportRaceCondition(const Statement& statement,
-                                iir::StencilInstantiation& instantiation) {
+                                iir::StencilInstantiation& instantiation,
+                                OptimizerContext& context) {
   DiagnosticsBuilder diag(DiagnosticsKind::Error, statement.ASTStmt->getSourceLocation());
 
   if(isa<iir::IfStmt>(statement.ASTStmt.get())) {
@@ -76,26 +78,26 @@ static void reportRaceCondition(const Statement& statement,
     diag << "unresolvable race-condition in statement";
   }
 
-  instantiation.getOptimizerContext()->getDiagnostics().report(diag);
+  context.getDiagnostics().report(diag);
 
   // Print stack trace of stencil calls
   if(statement.StackTrace) {
-    std::vector<sir::StencilCall*>& stackTrace = *statement.StackTrace;
+    std::vector<ast::StencilCall*>& stackTrace = *statement.StackTrace;
     for(int i = stackTrace.size() - 1; i >= 0; --i) {
       DiagnosticsBuilder note(DiagnosticsKind::Note, stackTrace[i]->Loc);
       note << "detected during instantiation of stencil-call '" << stackTrace[i]->Callee << "'";
-      instantiation.getOptimizerContext()->getDiagnostics().report(note);
+      context.getDiagnostics().report(note);
     }
   }
 }
 
 } // anonymous namespace
 
-PassFieldVersioning::PassFieldVersioning() : Pass("PassFieldVersioning", true), numRenames_(0) {}
+PassFieldVersioning::PassFieldVersioning(OptimizerContext& context)
+    : Pass(context, "PassFieldVersioning", true), numRenames_(0) {}
 
 bool PassFieldVersioning::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
   numRenames_ = 0;
 
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
@@ -150,7 +152,7 @@ bool PassFieldVersioning::run(
     }
   }
 
-  if(context->getOptions().ReportPassFieldVersioning && numRenames_ == 0)
+  if(context_.getOptions().ReportPassFieldVersioning && numRenames_ == 0)
     std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
               << ": no rename\n";
   return true;
@@ -165,7 +167,6 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
 
   Statement& statement = *doMethod.getChildren()[index]->getStatement();
 
-  OptimizerContext* context = instantiation->getOptimizerContext();
   int numRenames = 0;
 
   // Vector of strongly connected components with atleast one stencil access
@@ -238,9 +239,9 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
     assignment = dyn_cast<iir::AssignmentExpr>(stmt->getExpr().get());
 
   if(!assignment) {
-    if(context->getOptions().DumpRaceConditionGraph)
+    if(context_.getOptions().DumpRaceConditionGraph)
       graph->toDot("rc_" + instantiation->getName() + ".dot");
-    reportRaceCondition(statement, *instantiation);
+    reportRaceCondition(statement, *instantiation, context_);
     return RCKind::RK_Unresolvable;
   }
 
@@ -254,9 +255,9 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   // If the LHSAccessID is not part of the SCC, we cannot resolve the race-condition
   for(std::set<int>& scc : *stencilSCCs) {
     if(!scc.count(LHSAccessID)) {
-      if(context->getOptions().DumpRaceConditionGraph)
+      if(context_.getOptions().DumpRaceConditionGraph)
         graph->toDot("rc_" + instantiation->getName() + ".dot");
-      reportRaceCondition(statement, *instantiation);
+      reportRaceCondition(statement, *instantiation, context_);
       return RCKind::RK_Unresolvable;
     }
   }
@@ -270,17 +271,16 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
       renameCandiates.insert(AccessID);
   }
 
-  if(context->getOptions().ReportPassFieldVersioning)
+  if(context_.getOptions().ReportPassFieldVersioning)
     std::cout << "\nPASS: " << getName() << ": " << instantiation->getName()
               << ": rename:" << statement.ASTStmt->getSourceLocation().Line;
 
   // Create a new multi-versioned field and rename all occurences
   for(int oldAccessID : renameCandiates) {
-    int newAccessID = instantiation->createVersionAndRename(oldAccessID, &stencil, stageIdx, index,
-                                                            assignment->getRight(),
-                                                            iir::StencilInstantiation::RD_Above);
+    int newAccessID = createVersionAndRename(instantiation.get(), oldAccessID, &stencil, stageIdx,
+                                             index, assignment->getRight(), RenameDirection::Above);
 
-    if(context->getOptions().ReportPassFieldVersioning)
+    if(context_.getOptions().ReportPassFieldVersioning)
       std::cout << (numRenames != 0 ? ", " : " ")
                 << instantiation->getMetaData().getFieldNameFromAccessID(oldAccessID) << ":"
                 << instantiation->getMetaData().getFieldNameFromAccessID(newAccessID);
@@ -288,7 +288,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
     numRenames++;
   }
 
-  if(context->getOptions().ReportPassFieldVersioning && numRenames > 0)
+  if(context_.getOptions().ReportPassFieldVersioning && numRenames > 0)
     std::cout << "\n";
 
   numRenames_ += numRenames;

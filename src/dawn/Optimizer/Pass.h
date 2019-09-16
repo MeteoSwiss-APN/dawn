@@ -20,7 +20,7 @@
 #include <vector>
 
 namespace dawn {
-
+class OptimizerContext;
 namespace iir {
 class StencilInstantiation;
 }
@@ -42,12 +42,17 @@ class Pass {
 protected:
   /// Name of the passes this pass depends on (empty implies no dependency)
   std::vector<std::string> dependencies_;
+
+  /// Optimizer that registers the passes
+  OptimizerContext& context_;
+
   /// Categroy of the pass
   const bool isDebug_;
 
 public:
-  Pass(const std::string& name) : Pass(name, false) {}
-  Pass(const std::string& name, bool isDebug) : name_(name), isDebug_(isDebug) {}
+  Pass(OptimizerContext& context, const std::string& name) : Pass(context, name, false) {}
+  Pass(OptimizerContext& context, const std::string& name, bool isDebug)
+      : name_(name), context_(context), isDebug_(isDebug) {}
   virtual ~Pass() {}
 
   /// @brief Run the the Pass

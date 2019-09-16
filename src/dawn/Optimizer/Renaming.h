@@ -16,17 +16,19 @@
 #define DAWN_OPTIMIZER_RENAMING_H
 
 #include "dawn/IIR/ASTFwd.h"
+#include "dawn/IIR/DoMethod.h"
 #include "dawn/Support/ArrayRef.h"
 #include <memory>
 
 namespace dawn {
 
-class Expr;
 namespace iir {
 class StatementAccessesPair;
 class StencilFunctionInstantiation;
 class StencilInstantiation;
 class StencilMetaInformation;
+class MultiStage;
+class Stencil;
 } // namespace iir
 
 /// @name Renaming routines
@@ -71,6 +73,13 @@ void renameAccessIDInAccesses(
     ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs);
 /// @}
 
+void renameAccessIDInMultiStage(iir::MultiStage* multiStage, int oldAccessID, int newAccessID);
+
+void renameAccessIDInStencil(iir::Stencil* stencil, int oldAccessID, int newAccessID);
+
+/// @brief Rename all occurences of the caller AccessID from `oldAccessID` to `newAccessID`
+void renameCallerAccessIDInStencilFunction(iir::StencilFunctionInstantiation* function,
+                                           int oldAccessID, int newAccessID);
 } // namespace dawn
 
 #endif

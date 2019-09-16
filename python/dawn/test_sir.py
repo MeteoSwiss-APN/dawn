@@ -152,29 +152,22 @@ class TestMakeInterval(unittest.TestCase):
 
 class TestMakeStencilCall(unittest.TestCase):
     def test_make_stencil_call(self):
-        call = make_stencil_call("foo", [make_field("a"), make_field("b")])
+        call = make_stencil_call("foo", ["a", "b"])
         self.assertEqual(call.callee, "foo")
-        self.assertEqual(call.arguments[0], make_field("a"))
-        self.assertEqual(call.arguments[1], make_field("b"))
+        self.assertEqual(call.arguments[0], "a")
+        self.assertEqual(call.arguments[1], "b")
 
     def test_make_stencil_call_1_arg(self):
-        call = make_stencil_call("foo", make_field("a"))
+        call = make_stencil_call("foo", "a")
         self.assertEqual(call.callee, "foo")
-        self.assertEqual(call.arguments[0], make_field("a"))
+        self.assertEqual(call.arguments[0], "a")
 
     def test_make_stencil_call_str_args(self):
         call = make_stencil_call("foo", ["a", "b", "c"])
         self.assertEqual(call.callee, "foo")
-        self.assertEqual(call.arguments[0], make_field("a"))
-        self.assertEqual(call.arguments[1], make_field("b"))
-        self.assertEqual(call.arguments[2], make_field("c"))
-
-    def test_make_stencil_call_mixed(self):
-        call = make_stencil_call("foo", [make_field("a"), "b", make_field("c")])
-        self.assertEqual(call.callee, "foo")
-        self.assertEqual(call.arguments[0], make_field("a"))
-        self.assertEqual(call.arguments[1], make_field("b"))
-        self.assertEqual(call.arguments[2], make_field("c"))
+        self.assertEqual(call.arguments[0], "a")
+        self.assertEqual(call.arguments[1], "b")
+        self.assertEqual(call.arguments[2], "c")
 
 
 class TestMakeVerticalRegion(ASTTestBase):
@@ -209,10 +202,10 @@ class TestStmt(VerticalRegionTestBase):
         self.assertEqual(stmt.name, "var")
 
     def test_boundary_condition_decl_stmt(self):
-        stmt = make_boundary_condition_decl_stmt("foo", ["a", make_field("b")])
+        stmt = make_boundary_condition_decl_stmt("foo", ["a", "b"])
         self.assertEqual(stmt.functor, "foo")
-        self.assertEqual(stmt.fields[0], make_field("a"))
-        self.assertEqual(stmt.fields[1], make_field("b"))
+        self.assertEqual(stmt.fields[0], "a")
+        self.assertEqual(stmt.fields[1], "b")
 
 
 class TestExpr(ExprTestBase):

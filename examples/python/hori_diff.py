@@ -1,3 +1,18 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+# ===-----------------------------------------------------------------------------*- Python -*-===##
+#                          _
+#                         | |
+#                       __| | __ ___      ___ ___
+#                      / _` |/ _` \ \ /\ / / '_  |
+#                     | (_| | (_| |\ V  V /| | | |
+#                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
+#
+#
+#  This file is distributed under the MIT License (MIT).
+#  See LICENSE.txt for details.
+#
+# ===------------------------------------------------------------------------------------------===##
 """Horizontal diffusion stencil HIR generator
 
 This program creates the HIR corresponding to an horizontal diffusion stencil using the Python API of the HIR.
@@ -125,7 +140,7 @@ if options.verbose:
     des = sir_printer.SIRPrinter()
 
     for stencil in hir.stencils:
-        des.visitStencil(stencil)
+        des.visit_stencil(stencil)
 
 # serialize the hir to pass it to the compiler
 hirstr = hir.SerializeToString()

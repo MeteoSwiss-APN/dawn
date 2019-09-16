@@ -91,7 +91,7 @@ std::shared_ptr<sir::VarDeclStmt> vecdecl(const std::string& type, const std::st
 std::shared_ptr<sir::VerticalRegionDeclStmt>
 verticalRegion(const std::shared_ptr<sir::VerticalRegion>& verticalRegion);
 
-std::shared_ptr<sir::StencilCallDeclStmt> scdec(const std::shared_ptr<sir::StencilCall>& stencilCall);
+std::shared_ptr<sir::StencilCallDeclStmt> scdec(const std::shared_ptr<ast::StencilCall>& stencilCall);
 
 std::shared_ptr<sir::BoundaryConditionDeclStmt> boundaryCondition(const std::string& callee);
 

@@ -42,16 +42,14 @@ static int mergePossible(const std::set<int>& fields, const iir::Stage* stage, i
   return numFields <= maxNumFields;
 }
 
-PassStencilSplitter::PassStencilSplitter(int maxNumberOfFilelds)
-    : Pass("PassStencilSplitter"), MaxFieldPerStencil(maxNumberOfFilelds) {
+PassStencilSplitter::PassStencilSplitter(OptimizerContext& context, int maxNumberOfFilelds)
+    : Pass(context, "PassStencilSplitter"), MaxFieldPerStencil(maxNumberOfFilelds) {
   dependencies_.push_back("PassSetStageGraph");
 }
 
 bool PassStencilSplitter::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
-
-  if(!context->getOptions().SplitStencils)
+  if(!context_.getOptions().SplitStencils)
     return true;
 
   // If we split a stencil, we need to recompute the stage graphs
@@ -157,7 +155,7 @@ bool PassStencilSplitter::run(
 
   // Recompute the stage graph of each stencil
   if(rerunPassSetStageGraph) {
-    PassSetStageGraph pass;
+    PassSetStageGraph pass(context_);
     pass.run(stencilInstantiation);
   }
 

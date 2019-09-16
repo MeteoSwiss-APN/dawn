@@ -31,6 +31,9 @@ namespace dawn {
 //     Extra additions to <memory>
 //===------------------------------------------------------------------------------------------===//
 
+template< class T >
+using decay_t = typename std::decay<T>::type;
+
 /// @brief Constructs a `new T()` with the given args and returns a `unique_ptr<T>` which owns the
 /// object
 ///

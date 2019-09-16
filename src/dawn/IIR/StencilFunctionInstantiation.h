@@ -128,7 +128,7 @@ private:
 
   /// Map of *caller* AccessID to the initial offset of the field (e.g the initial offset of the
   /// field mapping to the first argument in `avg(in(i+1))` would be [1, 0, 0])
-  std::unordered_map<int, Array3i> CallerAcceessIDToInitialOffsetMap_;
+  std::unordered_map<int, Array3i> CallerAccessIDToInitialOffsetMap_;
 
   //===----------------------------------------------------------------------------------------===//
   //     Expr/Stmt to caller AccessID maps
@@ -319,9 +319,6 @@ public:
   /// @brief Check if the argument at the given index is a stencil function
   bool isArgStencilFunctionInstantiation(int argumentIndex) const;
 
-  /// @brief Rename all occurences of the caller AccessID from `oldAccessID` to `newAccessID`
-  void renameCallerAccessID(int oldAccessID, int newAccessID);
-
   /// @brief determines if accessid corresponds to a literal
   bool isLiteral(int accessID) const { return accessID < 0; }
 
@@ -364,6 +361,9 @@ public:
   std::unordered_map<int, std::string>& getAccessIDToNameMap();
   const std::unordered_map<int, std::string>& getAccessIDToNameMap() const;
 
+  std::unordered_map<int, Array3i>& getCallerAccessIDToInitialOffsetMap();
+  const std::unordered_map<int, Array3i>& getCallerAccessIDToInitialOffsetMap() const;
+
   /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
   const std::unordered_map<std::shared_ptr<iir::StencilFunCallExpr>,
                            std::shared_ptr<StencilFunctionInstantiation>>&
@@ -376,6 +376,15 @@ public:
   bool hasStencilFunctionInstantiation(const std::shared_ptr<iir::StencilFunCallExpr>& expr) const;
 
   void insertExprToStencilFunction(const std::shared_ptr<StencilFunctionInstantiation>& stencilFun);
+
+  template <class MapType, class KeyType>
+  static void replaceKeyInMap(MapType& map, KeyType oldKey, KeyType newKey) {
+    auto it = map.find(oldKey);
+    if(it != map.end()) {
+      std::swap(map[newKey], it->second);
+      map.erase(it);
+    }
+  }
 
   //===----------------------------------------------------------------------------------------===//
   //     Accesses & Fields

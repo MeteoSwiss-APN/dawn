@@ -24,7 +24,7 @@ namespace dawn {
 /// @ingroup optimizer
 class PassTemporaryFirstAccess : public Pass {
 public:
-  PassTemporaryFirstAccess();
+  PassTemporaryFirstAccess(OptimizerContext& context);
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;
