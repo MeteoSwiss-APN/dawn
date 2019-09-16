@@ -388,8 +388,7 @@ void deserialization_test_mat() {
     printf("Meta Data is different!\n");
   }
 
-  //and finally the derived info
-  //first compare the (structure of the) iirs, this is a precondition before we can actually check the metadata / derived info
+  //and finally the derived info 
   if (compareDerivedInformation(copy_stencil_memory->getIIR().get(), copy_stencil_from_file->getIIR().get())) {
     printf("Derived Info is equal!\n");
   } else {
