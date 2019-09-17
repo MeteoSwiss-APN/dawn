@@ -196,6 +196,7 @@ public:
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
   this->setOption<TYPE>(#NAME, DEFAULT_VALUE);
 #include "dawn/Compiler/Options.inc"
+#include "dawn/Optimizer/OptimizerOptions.inc"
 #undef OPT
   }
 
