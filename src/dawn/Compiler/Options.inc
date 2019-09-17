@@ -60,5 +60,6 @@ OPT(int, MaxFieldsPerStencil, 40, "max-fields", "",
     "Set the maximum number of fields in any given stencils", "<N>", true, false)
 OPT(bool, MaxCutMSS, false, "max-cut-mss", "",
     "Cuts the given multistages in as many multistages as possible while maintaining legal code", "", false, true)
+OPT(std::string, ReferenceSource, "", "reference-src", "", "Sets the reference DSL .cpp source (of the input SIR) to <file>", "<file>", true, false)
 
 // clang-format on
