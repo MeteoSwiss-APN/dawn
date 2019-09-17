@@ -326,14 +326,16 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
     const auto& value = instantiation_->getGlobalVariableValue(varname);
     if(value.isConstexpr()) {
       // Replace the variable access with the actual value
-      DAWN_ASSERT_MSG(!value.empty(), "constant global variable with no value");
+      DAWN_ASSERT_MSG(value.has_value(), "constant global variable with no value");
 
       auto newExpr = std::make_shared<iir::LiteralAccessExpr>(
           value.toString(), sir::Value::typeToBuiltinTypeID(value.getType()));
       iir::replaceOldExprWithNewExprInStmt(
           (*(scope_.top()->doMethod_.childrenRBegin()))->getStatement()->ASTStmt, expr, newExpr);
 
-      int AccessID = instantiation_->nextUID();
+      //if a global is replaced by its value it becomes a de-facto literal negate access id
+      int AccessID = -instantiation_->nextUID();
+
       metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID,
                                    newExpr->getValue());
       metadata_.insertExprToAccessID(newExpr, AccessID);

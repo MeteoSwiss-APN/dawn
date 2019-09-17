@@ -173,6 +173,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     optimizerOptions = createOptimizerOptionsFromAllOptions(*options_);
   }
   std::unique_ptr<OptimizerContext> optimizer;
+
   if(options_->DeserializeIIR == "") {
     optimizer = make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, SIR);
     optimizer->fillIIR();
@@ -226,6 +227,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
                      << instantiation->getName() << "` ...";
       if(!optimizer->getPassManager().runAllPassesOnStecilInstantiation(*optimizer, instantiation))
         return nullptr;
+
       DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `"
                      << instantiation->getName() << "`";
 
