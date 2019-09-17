@@ -32,6 +32,7 @@
 //                  command-line target will be generated which allows to negate the option i.e 
 //
 
+OPT(std::string, OutputFile, "", "output", "o", "Write output to <file>", "<file>", true, false)
 OPT(std::string, Backend, "gridtools", "backend", "",
     "Set backend code-generator. Possible values for <backend> are:"
     "\n - gridtools = gridtools C++ code"
