@@ -62,3 +62,4 @@ OPT(bool, MaxCutMSS, false, "max-cut-mss", "",
     "Cuts the given multistages in as many multistages as possible while maintaining legal code", "", false, true)
 
 // clang-format on
+#include "dawn/Optimizer/OptimizerOptions.inc"

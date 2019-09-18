@@ -38,7 +38,6 @@ void OptionsWrapper::setDawnOptions(dawn::Options* options) const noexcept {
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
   options->NAME = OptionsEntryWrapper::getValue<TYPE>(options_.find(#NAME)->second);
 #include "dawn/Compiler/Options.inc"
-#include "dawn/Optimizer/OptimizerOptions.inc"
 #undef OPT
 }
 
@@ -47,7 +46,6 @@ char* OptionsWrapper::toString() const {
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
   ss << #NAME " = " << OptionsEntryWrapper::getValue<TYPE>(options_.find(#NAME)->second) << "\n";
 #include "dawn/Compiler/Options.inc"
-#include "dawn/Optimizer/OptimizerOptions.inc"
 #undef OPT
   return allocateAndCopyString(ss.str());
 }
