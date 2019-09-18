@@ -40,7 +40,6 @@ OPT(bool, DumpAST, false, "dump-ast", "", "Dump the clang AST of the preprocesse
 OPT(bool, WriteSIR, false, "write-sir", "", "Write the parsed SIR to stdout", "", false, false)
 OPT(std::string, SIRFormat, "json", "sir-format", "", "format of the output SIR", "", true, false)
 OPT(bool, DumpPP, false, "dump-pp", "", "Dump the preprocessed code to stdout", "", false, false)
-OPT(std::string, OutputFile, "", "output", "o", "Write output to <file>", "<file>", true, false)
 OPT(std::string, ConfigFile, "", "config", "", 
     "json <file> with a single key \"globals\" which contains \"key\" : \"value\" pairs of global variables and their respective values. "
     "Global variables defined in the config file are treated as compile time constants and are replaced by their value", 
