@@ -16,11 +16,50 @@
 #define DAWN_IIR_ASTSTMT_H
 
 #include "dawn/AST/ASTStmt.h"
+#include <memory>
 
 namespace dawn {
 namespace iir {
+struct IIRStmtData : public ast::StmtData {
+  DataType getDataType() const override { return DataType::IIR_DATA_TYPE; }
+  std::unique_ptr<StmtData> clone() const override;
+};
+
+template <typename... Args>
+inline std::shared_ptr<ast::BlockStmt> makeBlockStmt(Args&&... args) {
+  return std::move(std::make_shared<ast::BlockStmt>(new IIRStmtData(), args...));
+}
+template <typename... Args>
+inline std::shared_ptr<ast::ExprStmt> makeExprStmt(Args&&... args) {
+  return std::move(std::make_shared<ast::ExprStmt>(new IIRStmtData(), args...));
+}
+template <typename... Args>
+inline std::shared_ptr<ast::ReturnStmt> makeReturnStmt(Args&&... args) {
+  return std::move(std::make_shared<ast::ReturnStmt>(new IIRStmtData(), args...));
+}
+template <typename... Args>
+inline std::shared_ptr<ast::VarDeclStmt> makeVarDeclStmt(Args&&... args) {
+  return std::move(std::make_shared<ast::VarDeclStmt>(new IIRStmtData(), args...));
+}
+template <typename... Args>
+inline std::shared_ptr<ast::VerticalRegionDeclStmt> makeVerticalRegionDeclStmt(Args&&... args) {
+  return std::move(std::make_shared<ast::VerticalRegionDeclStmt>(new IIRStmtData(), args...));
+}
+template <typename... Args>
+inline std::shared_ptr<ast::StencilCallDeclStmt> makeStencilCallDeclStmt(Args&&... args) {
+  return std::move(std::make_shared<ast::StencilCallDeclStmt>(new IIRStmtData(), args...));
+}
+template <typename... Args>
+inline std::shared_ptr<ast::BoundaryConditionDeclStmt>
+makeBoundaryConditionDeclStmt(Args&&... args) {
+  return std::move(std::make_shared<ast::BoundaryConditionDeclStmt>(new IIRStmtData(), args...));
+}
+template <typename... Args>
+inline std::shared_ptr<ast::IfStmt> makeIfStmt(Args&&... args) {
+  return std::move(std::make_shared<ast::IfStmt>(new IIRStmtData(), args...));
+}
 //
-// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
+// TODO refactor_AST: the following is going to be removed
 //
 using Stmt = ast::Stmt;
 using BlockStmt = ast::BlockStmt;

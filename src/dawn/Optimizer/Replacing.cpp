@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/Replacing.h"
+#include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTUtil.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/InstantiationHelper.h"
@@ -152,11 +153,11 @@ void replaceStencilCalls(const std::shared_ptr<iir::StencilInstantiation>& insta
       for(int StencilID : newStencilIDs) {
         auto placeholderStencil = std::make_shared<ast::StencilCall>(
             iir::InstantiationHelper::makeStencilCallCodeGenName(StencilID));
-        newStencilCalls.push_back(std::make_shared<iir::StencilCallDeclStmt>(placeholderStencil));
+        newStencilCalls.push_back(iir::makeStencilCallDeclStmt(placeholderStencil));
       }
 
       // Bundle all the statements in a block statements
-      auto newBlockStmt = std::make_shared<iir::BlockStmt>();
+      auto newBlockStmt = iir::makeBlockStmt();
       std::copy(newStencilCalls.begin(), newStencilCalls.end(),
                 std::back_inserter(newBlockStmt->getStatements()));
 

@@ -286,7 +286,7 @@ bool PassSetBoundaryCondition::run(
           stencilCallWithBC_.emplace_back(IDtoBCpair->second);
           for(auto& oldStencilCall : visitor.getStencilCallsToReplace()) {
             stencilCallWithBC_.emplace_back(oldStencilCall);
-            auto newBlockStmt = std::make_shared<iir::BlockStmt>();
+            auto newBlockStmt = iir::makeBlockStmt();
             std::copy(stencilCallWithBC_.begin(), stencilCallWithBC_.end(),
                       std::back_inserter(newBlockStmt->getStatements()));
             if(oldStencilCall == stmt) {

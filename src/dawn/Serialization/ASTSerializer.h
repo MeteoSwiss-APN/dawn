@@ -16,6 +16,7 @@
 #define DAWN_SUPPORT_ASTSERIALIZER_H
 
 #include "dawn/AST/ASTFwd.h"
+#include "dawn/AST/ASTStmt.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/SIR/ASTVisitor.h"
@@ -114,8 +115,10 @@ std::shared_ptr<sir::Interval> makeInterval(const proto::statements::Interval& i
 
 std::shared_ptr<ast::Expr> makeExpr(const proto::statements::Expr& expressionProto);
 
-std::shared_ptr<ast::Stmt> makeStmt(const proto::statements::Stmt& statementProto);
+std::shared_ptr<ast::Stmt> makeStmt(const proto::statements::Stmt& statementProto,
+                                    ast::StmtData::DataType dataType);
 
-std::shared_ptr<ast::AST> makeAST(const dawn::proto::statements::AST& astProto);
+std::shared_ptr<ast::AST> makeAST(const dawn::proto::statements::AST& astProto,
+                                  ast::StmtData::DataType dataType);
 
 #endif // DAWN_SUPPORT_ASTSERIALIZER_H

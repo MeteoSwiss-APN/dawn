@@ -12,22 +12,13 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SIR_AST_H
-#define DAWN_SIR_AST_H
-
-#include "dawn/AST/AST.h"
 #include "dawn/SIR/ASTStmt.h"
+#include <memory>
 
 namespace dawn {
 namespace sir {
-inline std::shared_ptr<ast::AST> makeAST() {
-  return std::move(std::make_shared<ast::AST>(new SIRStmtData()));
+std::unique_ptr<ast::StmtData> SIRStmtData::clone() const {
+  return make_unique<SIRStmtData>(*this);
 }
-//
-// TODO refactor_AST: this is TEMPORARY, will be removed in the future
-//
-using AST = ast::AST;
 } // namespace sir
 } // namespace dawn
-
-#endif

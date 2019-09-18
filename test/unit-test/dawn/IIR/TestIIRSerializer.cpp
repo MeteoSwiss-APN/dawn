@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Compiler/Options.h"
+#include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -216,7 +217,7 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   referenceInstantiaton->getMetaData().addStmtToAccessID(
-      std::make_shared<iir::ExprStmt>(std::make_shared<iir::NOPExpr>()), 10);
+      iir::makeExprStmt(std::make_shared<iir::NOPExpr>()), 10);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_Literal, 5,
@@ -246,7 +247,8 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
   IIR_EXPECT_NE(deserializedStencilInstantiaion, referenceInstantiaton);
 
   referenceInstantiaton->getMetaData().insertAccessOfType(
-      iir::FieldAccessType::FAT_StencilTemporary, 713, "field3"); //access ids should be globally unique, not only per type
+      iir::FieldAccessType::FAT_StencilTemporary, 713,
+      "field3"); // access ids should be globally unique, not only per type
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   // This would fail, since 712 is already present
@@ -269,18 +271,16 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
 
 TEST_F(IIRSerializerTest, ComplexStrucutes) {
   auto statement = std::make_shared<Statement>(
-      std::make_shared<iir::StencilCallDeclStmt>(std::make_shared<ast::StencilCall>("me")),
-      nullptr);
+      iir::makeStencilCallDeclStmt(std::make_shared<ast::StencilCall>("me")), nullptr);
   statement->ASTStmt->getSourceLocation().Line = 10;
   statement->ASTStmt->getSourceLocation().Column = 12;
   referenceInstantiaton->getIIR()->getControlFlowDescriptor().insertStmt(statement);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  auto stmt =
-      std::make_shared<iir::StencilCallDeclStmt>(std::make_shared<ast::StencilCall>("test"));
+  auto stmt = iir::makeStencilCallDeclStmt(std::make_shared<ast::StencilCall>("test"));
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  auto bcstmt = std::make_shared<iir::BoundaryConditionDeclStmt>("callee");
+  auto bcstmt = iir::makeBoundaryConditionDeclStmt("callee");
   bcstmt->getFields().push_back("field1");
   bcstmt->getFields().push_back("field2");
   referenceInstantiaton->getMetaData().addFieldBC("bc", bcstmt);
@@ -320,7 +320,7 @@ TEST_F(IIRSerializerTest, IIRTests) {
 
   auto& IIRDoMethod = (IIRStage)->getChild(0);
   auto expr = std::make_shared<iir::VarAccessExpr>("name");
-  auto stmt = std::make_shared<iir::ExprStmt>(expr);
+  auto stmt = iir::makeExprStmt(expr);
   stmt->setID(22);
   auto statement = std::make_shared<Statement>(stmt, nullptr);
   auto stmtAccessPair = make_unique<iir::StatementAccessesPair>(statement);

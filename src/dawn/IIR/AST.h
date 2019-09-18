@@ -16,11 +16,15 @@
 #define DAWN_IIR_AST_H
 
 #include "dawn/AST/AST.h"
+#include "dawn/IIR/ASTStmt.h"
 
 namespace dawn {
 namespace iir {
+inline std::shared_ptr<ast::AST> makeAST() {
+  return std::move(std::make_shared<ast::AST>(new IIRStmtData()));
+}
 //
-// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
+// TODO refactor_AST: this is TEMPORARY, will be removed in the future
 //
 using AST = ast::AST;
 } // namespace iir

@@ -13,6 +13,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Serialization/ASTSerializer.h"
+#include "dawn/IIR/ASTStmt.h"
+#include "dawn/SIR/ASTStmt.h"
 #include <fstream>
 #include <google/protobuf/util/json_util.h>
 #include <list>
@@ -598,27 +600,33 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto) {
   return nullptr;
 }
 
-std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto) {
+std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
+                               ast::StmtData::DataType dataType) {
+  ast::StmtData* data = dataType == ast::StmtData::SIR_DATA_TYPE
+                            ? dynamic_cast<ast::StmtData*>(new sir::SIRStmtData())
+                            : dynamic_cast<ast::StmtData*>(new iir::IIRStmtData());
   switch(statementProto.stmt_case()) {
   case proto::statements::Stmt::kBlockStmt: {
     const auto& stmtProto = statementProto.block_stmt();
-    auto stmt = std::make_shared<BlockStmt>(makeLocation(stmtProto));
+    auto stmt = std::make_shared<BlockStmt>(data, makeLocation(stmtProto));
 
     for(const auto& s : stmtProto.statements())
-      stmt->push_back(makeStmt(s));
+      stmt->push_back(makeStmt(s, dataType));
     stmt->setID(stmtProto.id());
 
     return stmt;
   }
   case proto::statements::Stmt::kExprStmt: {
     const auto& stmtProto = statementProto.expr_stmt();
-    auto stmt = std::make_shared<ExprStmt>(makeExpr(stmtProto.expr()), makeLocation(stmtProto));
+    auto stmt =
+        std::make_shared<ExprStmt>(data, makeExpr(stmtProto.expr()), makeLocation(stmtProto));
     stmt->setID(stmtProto.id());
     return stmt;
   }
   case proto::statements::Stmt::kReturnStmt: {
     const auto& stmtProto = statementProto.return_stmt();
-    auto stmt = std::make_shared<ReturnStmt>(makeExpr(stmtProto.expr()), makeLocation(stmtProto));
+    auto stmt =
+        std::make_shared<ReturnStmt>(data, makeExpr(stmtProto.expr()), makeLocation(stmtProto));
     stmt->setID(stmtProto.id());
     return stmt;
   }
@@ -639,7 +647,7 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto) {
                                          : Type(typeProto.name(), cvQual);
 
     auto stmt =
-        std::make_shared<VarDeclStmt>(type, stmtProto.name(), stmtProto.dimension(),
+        std::make_shared<VarDeclStmt>(data, type, stmtProto.name(), stmtProto.dimension(),
                                       stmtProto.op().c_str(), initList, makeLocation(stmtProto));
     stmt->setID(stmtProto.id());
     return stmt;
@@ -653,7 +661,7 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto) {
     for(const auto& argName : stmtProto.stencil_call().arguments()) {
       call->Args.push_back(argName);
     }
-    auto stmt = std::make_shared<StencilCallDeclStmt>(call, metaloc);
+    auto stmt = std::make_shared<StencilCallDeclStmt>(data, call, metaloc);
     stmt->setID(stmtProto.id());
     return stmt;
   }
@@ -672,17 +680,17 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto) {
     default:
       dawn_unreachable("no looporder specified");
     }
-    auto ast = makeAST(stmtProto.vertical_region().ast());
+    auto ast = makeAST(stmtProto.vertical_region().ast(), dataType);
     std::shared_ptr<sir::VerticalRegion> verticalRegion =
         std::make_shared<sir::VerticalRegion>(ast, interval, looporder, loc);
-    auto stmt = std::make_shared<VerticalRegionDeclStmt>(verticalRegion, loc);
+    auto stmt = std::make_shared<VerticalRegionDeclStmt>(data, verticalRegion, loc);
     stmt->setID(stmtProto.id());
     return stmt;
   }
   case proto::statements::Stmt::kBoundaryConditionDeclStmt: {
     const auto& stmtProto = statementProto.boundary_condition_decl_stmt();
-    auto stmt =
-        std::make_shared<BoundaryConditionDeclStmt>(stmtProto.functor(), makeLocation(stmtProto));
+    auto stmt = std::make_shared<BoundaryConditionDeclStmt>(data, stmtProto.functor(),
+                                                            makeLocation(stmtProto));
     for(const auto& fieldName : stmtProto.fields())
       stmt->getFields().emplace_back(fieldName);
     stmt->setID(stmtProto.id());
@@ -691,8 +699,8 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto) {
   case proto::statements::Stmt::kIfStmt: {
     const auto& stmtProto = statementProto.if_stmt();
     auto stmt = std::make_shared<IfStmt>(
-        makeStmt(stmtProto.cond_part()), makeStmt(stmtProto.then_part()),
-        stmtProto.has_else_part() ? makeStmt(stmtProto.else_part()) : nullptr,
+        data, makeStmt(stmtProto.cond_part(), dataType), makeStmt(stmtProto.then_part(), dataType),
+        stmtProto.has_else_part() ? makeStmt(stmtProto.else_part(), dataType) : nullptr,
         makeLocation(stmtProto));
     stmt->setID(stmtProto.id());
     return stmt;
@@ -704,11 +712,11 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto) {
   return nullptr;
 }
 
-std::shared_ptr<AST> makeAST(const dawn::proto::statements::AST& astProto) {
-  auto ast = std::make_shared<AST>();
-  auto root = dyn_pointer_cast<BlockStmt>(makeStmt(astProto.root()));
+std::shared_ptr<AST> makeAST(const dawn::proto::statements::AST& astProto,
+                             ast::StmtData::DataType dataType) {
+  auto root = dyn_pointer_cast<BlockStmt>(makeStmt(astProto.root(), dataType));
   if(!root)
     throw std::runtime_error("root statement of AST is not a 'BlockStmt'");
-  ast->setRoot(root);
+  auto ast = std::make_shared<AST>(root);
   return ast;
 }

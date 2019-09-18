@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===/
 
 #include "dawn/Optimizer/TemporaryHandling.h"
+#include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
@@ -72,7 +73,7 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
     instantiation->getMetaData().insertExprToAccessID(fieldAccessExpr, accessID);
     auto assignmentExpr =
         std::make_shared<iir::AssignmentExpr>(fieldAccessExpr, varDeclStmt->getInitList().front());
-    auto exprStmt = std::make_shared<iir::ExprStmt>(assignmentExpr);
+    auto exprStmt = iir::makeExprStmt(assignmentExpr);
 
     // Replace the statement
     statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(
@@ -136,9 +137,9 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
                   "first access of field (i.e lifetime.Begin) is not an `AssignmentExpr`");
 
   // Create the new `VarDeclStmt` which will replace the old `ExprStmt`
-  std::shared_ptr<iir::Stmt> varDeclStmt = std::make_shared<iir::VarDeclStmt>(
-      Type(BuiltinTypeID::Float), varname, 0, "=",
-      std::vector<std::shared_ptr<iir::Expr>>{assignmentExpr->getRight()});
+  std::shared_ptr<iir::Stmt> varDeclStmt =
+      iir::makeVarDeclStmt(Type(BuiltinTypeID::Float), varname, 0, "=",
+                           std::vector<std::shared_ptr<iir::Expr>>{assignmentExpr->getRight()});
 
   // Replace the statement
   statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(

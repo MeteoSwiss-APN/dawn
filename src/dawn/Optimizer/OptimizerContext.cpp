@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/OptimizerContext.h"
+#include "dawn/IIR/ASTConverter.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -129,7 +130,7 @@ public:
     // this stencil
     auto placeholderStencil = std::make_shared<ast::StencilCall>(
         InstantiationHelper::makeStencilCallCodeGenName(StencilID));
-    auto stencilCallDeclStmt = std::make_shared<iir::StencilCallDeclStmt>(placeholderStencil);
+    auto stencilCallDeclStmt = iir::makeStencilCallDeclStmt(placeholderStencil);
 
     // Register the call and set it as a replacement for the next vertical region
     metadata_.addStencilCallStmt(stencilCallDeclStmt, StencilID);
@@ -286,7 +287,7 @@ public:
         } else {
           // Replace the if-statement with a void `0`
           auto voidExpr = std::make_shared<iir::LiteralAccessExpr>("0", BuiltinTypeID::Float);
-          auto voidStmt = std::make_shared<iir::ExprStmt>(voidExpr);
+          auto voidStmt = iir::makeExprStmt(voidExpr);
           int AccessID = -instantiation_->nextUID();
           metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, "0");
           metadata_.insertExprToAccessID(voidExpr, AccessID);
@@ -450,9 +451,10 @@ public:
     // Process the stencil description AST of the callee.
     scope_.push(candiateScope);
 
-    // As we *may* modify the AST we better make a copy here otherwise we get funny surprises if
-    // we call this stencil multiple times ...
-    stencil.StencilDescAst->clone()->accept(*this);
+    // Convert the AST
+    ASTConverter astConverter;
+    stencil.StencilDescAst->accept(astConverter);
+    astConverter.getStmtMap().at(stencil.StencilDescAst->getRoot())->accept(*this);
 
     scope_.pop();
 
@@ -592,8 +594,11 @@ bool OptimizerContext::fillIIRFromSIR(
   StencilDescStatementMapper stencilDeclMapper(stencilInstantiation, SIRStencil.get(), fullSIR,
                                                *this);
 
-  //  // We need to operate on a copy of the AST as we may modify the nodes inplace
-  auto AST = SIRStencil->StencilDescAst->clone();
+  //  Converting to AST with iir data
+  ASTConverter astConverter;
+  SIRStencil->StencilDescAst->accept(astConverter);
+  auto AST = std::make_shared<ast::AST>(std::dynamic_pointer_cast<iir::BlockStmt>(
+      astConverter.getStmtMap().at(SIRStencil->StencilDescAst->getRoot())));
   AST->accept(stencilDeclMapper);
 
   //  Cleanup the `stencilDescStatements` and remove the empty stencils which may have been inserted
@@ -649,12 +654,28 @@ OptimizerContext::OptimizerContextOptions& OptimizerContext::getOptions() { retu
 
 void OptimizerContext::fillIIR() {
   DAWN_ASSERT(SIR_);
+  std::vector<std::shared_ptr<sir::StencilFunction>> iirStencilFunctions;
+  // Convert the asts of sir::StencilFunctions to iir
+  std::transform(SIR_->StencilFunctions.begin(), SIR_->StencilFunctions.end(),
+                 std::back_inserter(iirStencilFunctions),
+                 [&](const std::shared_ptr<sir::StencilFunction>& sirSF) {
+                   auto iirSF = std::make_shared<sir::StencilFunction>();
+                   *iirSF = *sirSF;
+                   for(auto& ast : iirSF->Asts) {
+                     ASTConverter astConverter;
+                     ast->accept(astConverter);
+                     ast = std::make_shared<ast::AST>(std::dynamic_pointer_cast<iir::BlockStmt>(
+                         astConverter.getStmtMap().at(ast->getRoot())));
+                   }
+                   return iirSF;
+                 });
+
   for(const auto& stencil : SIR_->Stencils) {
     DAWN_ASSERT(stencil);
     if(!stencil->Attributes.has(sir::Attr::AK_NoCodeGen)) {
-      stencilInstantiationMap_.insert(std::make_pair(
-          stencil->Name, std::make_shared<iir::StencilInstantiation>(*getSIR()->GlobalVariableMap,
-                                                                     getSIR()->StencilFunctions)));
+      stencilInstantiationMap_.insert(
+          std::make_pair(stencil->Name, std::make_shared<iir::StencilInstantiation>(
+                                            *getSIR()->GlobalVariableMap, iirStencilFunctions)));
       fillIIRFromSIR(stencilInstantiationMap_.at(stencil->Name), stencil, SIR_);
     } else {
       DAWN_LOG(INFO) << "Skipping processing of `" << stencil->Name << "`";

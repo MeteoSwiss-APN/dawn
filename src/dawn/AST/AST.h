@@ -31,7 +31,7 @@ class AST {
 
 public:
   /// @brief Construct with empty root
-  AST();
+  AST(StmtData* data);
 
   /// @brief Construct with existing root
   ///

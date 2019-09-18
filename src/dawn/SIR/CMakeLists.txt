@@ -30,6 +30,7 @@ yoda_add_library(
           ASTExpr.h
           ASTFwd.h
           ASTStmt.h
+          ASTStmt.cpp
           ASTStringifier.h
           ASTUtil.h
           ASTUtil.cpp

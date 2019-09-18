@@ -12,7 +12,7 @@
 //
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/Serialization/IIRSerializer.h"
-#include "dawn/AST/ASTStmt.h"
+#include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIR/IIR.pb.h"
 #include "dawn/IIR/IIRNodeIterator.h"
@@ -47,7 +47,7 @@ static void setAccesses(proto::iir::Accesses* protoAccesses,
 
 static std::shared_ptr<dawn::Statement>
 makeStatement(const proto::statements::Stmt* protoStatement) {
-  auto stmt = makeStmt(*protoStatement);
+  auto stmt = makeStmt(*protoStatement, ast::StmtData::IIR_DATA_TYPE);
   return std::make_shared<Statement>(stmt, nullptr);
 }
 
@@ -589,8 +589,8 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
     }
 
     // auto stmt = declStmtFinder.stencilCallDecl[call.stencil_call_decl_stmt().id()];
-    auto stmt = std::make_shared<iir::StencilCallDeclStmt>(
-        astStencilCall, makeLocation(call.stencil_call_decl_stmt()));
+    auto stmt =
+        iir::makeStencilCallDeclStmt(astStencilCall, makeLocation(call.stencil_call_decl_stmt()));
     stmt->setID(call.stencil_call_decl_stmt().id());
     metadata.addStencilCallStmt(stmt, IDToCall.first);
   }
@@ -602,7 +602,8 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
     metadata.fieldnameToBoundaryConditionMap_[FieldnameToBC.first] =
         foundDecl != declStmtFinder.boundaryConditionDecl.end()
             ? foundDecl->second
-            : dyn_pointer_cast<iir::BoundaryConditionDeclStmt>(makeStmt((FieldnameToBC.second)));
+            : dyn_pointer_cast<iir::BoundaryConditionDeclStmt>(
+                  makeStmt(FieldnameToBC.second, ast::StmtData::IIR_DATA_TYPE));
   }
 
   for(auto fieldIDInitializedDims : protoMetaData.fieldidtolegaldimensions()) {
@@ -721,7 +722,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
           (IIRDoMethod)->setID(protoDoMethod.domethodid());
 
           for(const auto& protoStmtAccessPair : protoDoMethod.stmtaccesspairs()) {
-            auto stmt = makeStmt(protoStmtAccessPair.aststmt());
+            auto stmt = makeStmt(protoStmtAccessPair.aststmt(), ast::StmtData::IIR_DATA_TYPE);
             auto statement = std::make_shared<Statement>(stmt, nullptr);
 
             std::shared_ptr<iir::Accesses> callerAccesses = std::make_shared<iir::Accesses>();
@@ -752,7 +753,8 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
       new_arg->Kind = sir::StencilFunctionArg::AK_Field;
       stencilFunction->Args.push_back(std::move(new_arg));
     }
-    auto stmt = std::dynamic_pointer_cast<iir::BlockStmt>(makeStmt(boundaryCondition.aststmt()));
+    auto stmt = std::dynamic_pointer_cast<iir::BlockStmt>(
+        makeStmt(boundaryCondition.aststmt(), ast::StmtData::IIR_DATA_TYPE));
     DAWN_ASSERT(stmt);
     stencilFunction->Asts.push_back(std::make_shared<iir::AST>(stmt));
 

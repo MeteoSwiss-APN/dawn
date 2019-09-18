@@ -148,7 +148,7 @@ public:
           curStencilFunctioninstantiation_->getName(), AccessID);
 
       newExpr_ = std::make_shared<iir::VarAccessExpr>(returnVarName);
-      auto newStmt = std::make_shared<iir::VarDeclStmt>(
+      auto newStmt = iir::makeVarDeclStmt(
           dawn::Type(BuiltinTypeID::Float, CVQualifier::Const), returnVarName, 0, "=",
           std::vector<std::shared_ptr<iir::Expr>>{stmt->getExpr()});
       appendNewStatementAccessesPair(newStmt);
@@ -166,7 +166,7 @@ public:
           curStencilFunctioninstantiation_->getName(), AccessIDOfCaller_);
 
       newExpr_ = std::make_shared<iir::FieldAccessExpr>(returnFieldName);
-      auto newStmt = std::make_shared<iir::ExprStmt>(
+      auto newStmt = iir::makeExprStmt(
           std::make_shared<iir::AssignmentExpr>(newExpr_, stmt->getExpr()));
       appendNewStatementAccessesPair(newStmt);
 

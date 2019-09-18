@@ -267,9 +267,9 @@ public:
       DAWN_ASSERT(tmpFunction_);
 
       auto functionExpr = expr->getRight()->clone();
-      auto retStmt = std::make_shared<iir::ReturnStmt>(functionExpr);
+      auto retStmt = iir::makeReturnStmt(functionExpr);
 
-      std::shared_ptr<iir::BlockStmt> root = std::make_shared<iir::BlockStmt>();
+      std::shared_ptr<iir::BlockStmt> root = iir::makeBlockStmt();
       root->push_back(retStmt);
       std::shared_ptr<iir::AST> ast = std::make_shared<iir::AST>(root);
       tmpFunction_->Asts.push_back(ast);
@@ -672,7 +672,7 @@ bool PassTemporaryToStencilFunction::run(
                       sirInterval, stencilInstantiation->getMetaData().getNameToAccessIDMap(),
                       nullptr);
 
-                  std::shared_ptr<iir::BlockStmt> blockStmt = std::make_shared<iir::BlockStmt>(
+                  std::shared_ptr<iir::BlockStmt> blockStmt = iir::makeBlockStmt(
                       std::vector<std::shared_ptr<iir::Stmt>>{stmt->ASTStmt});
                   blockStmt->accept(statementMapper);
 
