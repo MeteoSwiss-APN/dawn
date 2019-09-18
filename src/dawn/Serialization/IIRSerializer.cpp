@@ -330,7 +330,6 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Boolean);
       break;
     case sir::Value::Integer:
-      std::cout << "serialize int" << std::endl;
       if(globalToValue.second->has_value()) {
         protoGlobalToStore.set_value(globalToValue.second->getValue<int>());
         valueIsSet = true;
@@ -338,7 +337,6 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Integer);
       break;
     case sir::Value::Double:
-      std::cout << "serialize double" << std::endl;
       if(globalToValue.second->has_value()) {
         protoGlobalToStore.set_value(globalToValue.second->getValue<double>());
         valueIsSet = true;
@@ -641,14 +639,14 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
       } else {
         // the explicit cast is needed since in this case GlobalToValue.second.value()
         // may hold a double constant because of trailing dot in the IIR (e.g. 12.)
-        value = std::make_shared<sir::Value>((int) GlobalToValue.second.value());
+        value = std::make_shared<sir::Value>((int)GlobalToValue.second.value());
       }
       break;
     case proto::iir::GlobalValueAndType_TypeKind_Double:
       if(GlobalToValue.second.valueisset()) {
         value = std::make_shared<sir::Value>(sir::Value::Double);
       } else {
-        value = std::make_shared<sir::Value>((double) GlobalToValue.second.value());
+        value = std::make_shared<sir::Value>((double)GlobalToValue.second.value());
       }
       break;
     default:
