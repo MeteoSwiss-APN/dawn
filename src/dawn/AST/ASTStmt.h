@@ -185,7 +185,7 @@ public:
 
   template <class Iterator>
   void insert_back(Iterator begin, Iterator end) {
-    std::for_each(begin, end, [&](std::shared_ptr<Stmt>& stmt) {
+    std::for_each(begin, end, [&](const std::shared_ptr<Stmt>& stmt) {
       DAWN_ASSERT_MSG((checkSameDataType(*stmt)),
                       "Trying to insert child Stmt with different data type");
     });
