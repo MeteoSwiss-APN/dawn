@@ -11,7 +11,6 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-#include "dawn/Optimizer/OptimizerOptions.inc"
 // clang-format off
 
 // #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP)
@@ -38,6 +37,7 @@ OPT(std::string, Backend, "gridtools", "backend", "",
     "\n - c++-naive   = naive C++ code\n"
     "\n - c++-opt     = optimized C++ code"
     "\n - cuda        = optimized cuda", "<backend>", true, false)
+OPT(std::string, OutputFile, "", "output", "o", "Write output to <file>", "<file>", true, false)
 OPT(int, nsms, 0, "nsms", "",
     "Number of (CUDA) SMs", "<nsms>", true, false)
 OPT(int, maxBlocksPerSM, 0, "max-blocks-sm", "",
@@ -45,9 +45,9 @@ OPT(int, maxBlocksPerSM, 0, "max-blocks-sm", "",
 OPT(std::string, domain_size, "", "domain-size", "",
     "domain size for compiler optimization", "", true, false)
 OPT(bool, SerializeIIR, false, "write-iir", "",
-    "Serialize the low level intermediate representation after Optimization", "", false, true)
+    "Serialize the low level intermediate representation after Optimization", "", false, false)
 OPT(std::string, DeserializeIIR, "", "read-iir", "",
-    "Deserialize the low level intermediate representation from file", "", true, true)
+    "Deserialize the low level intermediate representation from file", "", true, false)
 OPT(std::string, IIRFormat, "json", "iir-format", "", "format of the output IIR", "", true, false)
 OPT(bool, InlineSF, false, "inline", "",
     "Inline stencil functions","", false, false)
@@ -62,3 +62,4 @@ OPT(bool, MaxCutMSS, false, "max-cut-mss", "",
     "Cuts the given multistages in as many multistages as possible while maintaining legal code", "", false, true)
 
 // clang-format on
+#include "dawn/Optimizer/OptimizerOptions.inc"

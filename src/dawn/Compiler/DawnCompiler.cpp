@@ -232,10 +232,12 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
                      << instantiation->getName() << "`";
 
       if(options_->SerializeIIR) {
-        IIRSerializer::serialize(
-            remove_fileextension(instantiation->getMetaData().getFileName(), ".cpp") + "." +
-                std::to_string(i) + ".iir",
-            instantiation, serializationKind);
+        const std::string originalFileName = remove_fileextension(
+            options_->OutputFile.empty() ? instantiation->getMetaData().getFileName()
+                                         : options_->OutputFile,
+            ".cpp");
+        IIRSerializer::serialize(originalFileName + "." + std::to_string(i) + ".iir", instantiation,
+                                 serializationKind);
         i++;
       }
     }
