@@ -95,10 +95,14 @@ public:
   /// @brief Get data object, must provide the type of the data object (must be subtype of StmtData)
   template <typename DataType, ENABLE_IF_SUBTYPE(DataType, StmtData)>
   DataType& getData() {
+    DAWN_ASSERT_MSG(DataType::ThisDataType == data_->getDataType(),
+                    "Trying to get wrong data type");
     return *dynamic_cast<DataType*>(data_.get());
   }
   template <typename DataType, ENABLE_IF_SUBTYPE(DataType, StmtData)>
   const DataType& getData() const {
+    DAWN_ASSERT_MSG(DataType::ThisDataType == data_->getDataType(),
+                    "Trying to get wrong data type");
     return *dynamic_cast<DataType*>(data_.get());
   }
 

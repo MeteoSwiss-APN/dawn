@@ -227,8 +227,7 @@ private:
     auto assignmentExpression =
         std::make_shared<iir::AssignmentExpr>(fa_assignment, fa_assignee, "=");
     auto expAssignment = iir::makeExprStmt(assignmentExpression);
-    auto assignmentStatement = std::make_shared<Statement>(expAssignment, nullptr);
-    auto pair = make_unique<iir::StatementAccessesPair>(assignmentStatement);
+    auto pair = make_unique<iir::StatementAccessesPair>(expAssignment);
     auto newAccess = std::make_shared<iir::Accesses>();
     newAccess->addWriteExtent(assignmentID, iir::Extents(Array3i{{0, 0, 0}}));
     newAccess->addReadExtent(assigneeID, iir::Extents(Array3i{{0, 0, 0}}));

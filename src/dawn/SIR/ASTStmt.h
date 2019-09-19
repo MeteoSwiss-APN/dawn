@@ -20,7 +20,9 @@
 namespace dawn {
 namespace sir {
 struct SIRStmtData : public ast::StmtData {
-  DataType getDataType() const override { return DataType::SIR_DATA_TYPE; }
+  static const DataType ThisDataType = DataType::SIR_DATA_TYPE;
+
+  DataType getDataType() const override { return ThisDataType; }
   std::unique_ptr<StmtData> clone() const override;
 };
 

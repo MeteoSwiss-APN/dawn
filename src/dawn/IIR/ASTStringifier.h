@@ -16,6 +16,7 @@
 #define DAWN_IIR_ASTSTRINGIFER_H
 
 #include "dawn/AST/ASTStringifier.h"
+#include "dawn/IIR/ASTFwd.h"
 
 namespace dawn {
 namespace iir {

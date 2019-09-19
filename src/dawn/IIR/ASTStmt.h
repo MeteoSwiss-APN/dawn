@@ -17,11 +17,20 @@
 
 #include "dawn/AST/ASTStmt.h"
 #include <memory>
+#include <vector>
 
 namespace dawn {
 namespace iir {
 struct IIRStmtData : public ast::StmtData {
-  DataType getDataType() const override { return DataType::IIR_DATA_TYPE; }
+  static const DataType ThisDataType = DataType::IIR_DATA_TYPE;
+
+  IIRStmtData() {}
+  IIRStmtData(const IIRStmtData& other);
+
+  /// Stack trace of inlined stencil calls of this statment (might be empty)
+  std::vector<ast::StencilCall*> StackTrace = {};
+
+  DataType getDataType() const override { return ThisDataType; }
   std::unique_ptr<StmtData> clone() const override;
 };
 

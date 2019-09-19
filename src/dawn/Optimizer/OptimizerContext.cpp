@@ -41,9 +41,10 @@ class StencilDescStatementMapper : public iir::ASTVisitor {
 
   /// @brief Record of the current scope (each StencilCall will create a new scope)
   struct Scope : public NonCopyable {
-    Scope(const std::string& name, ControlFlowDescriptor& controlFlowDescriptor)
+    Scope(const std::string& name, ControlFlowDescriptor& controlFlowDescriptor,
+          const std::vector<ast::StencilCall*>& stackTrace)
         : Name(name), ScopeDepth(0), controlFlowDescriptor_(controlFlowDescriptor),
-          StackTrace(nullptr) {}
+          StackTrace(stackTrace) {}
 
     /// Name of the current stencil
     std::string Name;
@@ -63,8 +64,8 @@ class StencilDescStatementMapper : public iir::ASTVisitor {
     /// Map of known values of variables
     std::unordered_map<std::string, double> VariableMap;
 
-    /// Current call stack of stencil calls (may be NULL)
-    std::shared_ptr<std::vector<ast::StencilCall*>> StackTrace;
+    /// Current call stack of stencil calls (may be empty)
+    std::vector<ast::StencilCall*> StackTrace;
   };
 
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
@@ -73,7 +74,7 @@ class StencilDescStatementMapper : public iir::ASTVisitor {
 
   sir::Stencil* sirStencil_;
 
-  const std::shared_ptr<SIR> sir_;
+  const std::vector<std::shared_ptr<sir::Stencil>>& stencils_;
 
   /// We replace the first VerticalRegionDeclStmt with a dummy node which signals code-gen that it
   /// should insert a call to the gridtools stencil here
@@ -83,20 +84,23 @@ class StencilDescStatementMapper : public iir::ASTVisitor {
 
 public:
   StencilDescStatementMapper(std::shared_ptr<iir::StencilInstantiation>& instantiation,
-                             sir::Stencil* sirStencil, const std::shared_ptr<SIR>& sir,
+                             sir::Stencil* sirStencil,
+                             const std::vector<std::shared_ptr<sir::Stencil>>& stencils,
+                             const sir::GlobalVariableMap& globalVariableMap,
                              OptimizerContext& context)
       : instantiation_(instantiation), metadata_(instantiation->getMetaData()),
-        sirStencil_(sirStencil), sir_(sir), context_(context) {
+        sirStencil_(sirStencil), stencils_(stencils), context_(context) {
     DAWN_ASSERT(instantiation);
     // Create the initial scope
     scope_.push(std::make_shared<Scope>(sirStencil_->Name,
-                                        instantiation_->getIIR()->getControlFlowDescriptor()));
+                                        instantiation_->getIIR()->getControlFlowDescriptor(),
+                                        std::vector<ast::StencilCall*>()));
     scope_.top()->LocalFieldnameToAccessIDMap = metadata_.getNameToAccessIDMap();
 
     // We add all global variables which have constant values
-    for(auto& keyValuePair : *(sir->GlobalVariableMap)) {
+    for(const auto& keyValuePair : globalVariableMap) {
       const std::string& key = keyValuePair.first;
-      sir::Value& value = *keyValuePair.second;
+      const sir::Value& value = *keyValuePair.second;
 
       if(value.isConstexpr()) {
         switch(value.getType()) {
@@ -153,14 +157,14 @@ public:
 
     // TODO redo
     // Instead of inserting the VerticalRegionDeclStmt we insert the call to the gridtools stencil
-    if(scope_.top()->ScopeDepth == 1)
-      scope_.top()->controlFlowDescriptor_.insertStmt(
-          std::make_shared<Statement>(stencilDescReplacement_, scope_.top()->StackTrace));
-    else {
+    if(scope_.top()->ScopeDepth == 1) {
+      stencilDescReplacement_->getData<iir::IIRStmtData>().StackTrace = scope_.top()->StackTrace;
+      scope_.top()->controlFlowDescriptor_.insertStmt(stencilDescReplacement_);
+    } else {
 
       // We need to replace the VerticalRegionDeclStmt in the current statement
       iir::replaceOldStmtWithNewStmtInStmt(
-          scope_.top()->controlFlowDescriptor_.getStatements().back()->ASTStmt, stencilDescNode,
+          scope_.top()->controlFlowDescriptor_.getStatements().back(), stencilDescNode,
           stencilDescReplacement_);
     }
 
@@ -220,13 +224,13 @@ public:
     // Remove the nested VerticalRegionDeclStmts and StencilCallDeclStmts
     RemoveStencilDescNodes remover;
     for(auto& statement : scope_.top()->controlFlowDescriptor_.getStatements())
-      statement->ASTStmt->accept(remover);
+      statement->accept(remover);
   }
 
   /// @brief Push back a new statement to the end of the current statement list
   void pushBackStatement(const std::shared_ptr<iir::Stmt>& stmt) {
-    scope_.top()->controlFlowDescriptor_.insertStmt(
-        std::make_shared<Statement>(stmt, scope_.top()->StackTrace));
+    stmt->getData<iir::IIRStmtData>().StackTrace = scope_.top()->StackTrace;
+    scope_.top()->controlFlowDescriptor_.insertStmt(stmt);
   }
 
   void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override {
@@ -275,13 +279,13 @@ public:
           // Replace the if-statement with the then-block
           // TODO very repetitive scope_.top()->control....getStatements() ...
           iir::replaceOldStmtWithNewStmtInStmt(
-              scope_.top()->controlFlowDescriptor_.getStatements().back()->ASTStmt, stmt,
+              scope_.top()->controlFlowDescriptor_.getStatements().back(), stmt,
               stmt->getThenStmt());
           stmt->getThenStmt()->accept(*this);
         } else if(stmt->hasElse()) {
           // Replace the if-statement with the else-block
           iir::replaceOldStmtWithNewStmtInStmt(
-              scope_.top()->controlFlowDescriptor_.getStatements().back()->ASTStmt, stmt,
+              scope_.top()->controlFlowDescriptor_.getStatements().back(), stmt,
               stmt->getElseStmt());
           stmt->getElseStmt()->accept(*this);
         } else {
@@ -292,7 +296,7 @@ public:
           metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, "0");
           metadata_.insertExprToAccessID(voidExpr, AccessID);
           iir::replaceOldStmtWithNewStmtInStmt(
-              scope_.top()->controlFlowDescriptor_.getStatements().back()->ASTStmt, stmt, voidStmt);
+              scope_.top()->controlFlowDescriptor_.getStatements().back(), stmt, voidStmt);
         }
       }
 
@@ -371,7 +375,7 @@ public:
     DoMethod& doMethod = stage->getSingleDoMethod();
     // TODO move iterators of IIRNode to const getChildren, when we pass here begin, end instead
 
-    StatementMapper statementMapper(sir_, instantiation_.get(), context_, scope_.top()->StackTrace,
+    StatementMapper statementMapper(instantiation_.get(), context_, scope_.top()->StackTrace,
                                     doMethod, doMethod.getInterval(),
                                     scope_.top()->LocalFieldnameToAccessIDMap, nullptr);
     ast->accept(statementMapper);
@@ -405,26 +409,21 @@ public:
 
     // Prepare a new scope for the stencil call
     std::shared_ptr<Scope>& curScope = scope_.top();
-    std::shared_ptr<Scope> candiateScope =
-        std::make_shared<Scope>(curScope->Name, curScope->controlFlowDescriptor_);
+    std::shared_ptr<Scope> candiateScope = std::make_shared<Scope>(
+        curScope->Name, curScope->controlFlowDescriptor_, curScope->StackTrace);
 
     // Variables are inherited from the parent scope (note that this *needs* to be a copy as we
     // cannot modify the parent scope)
     candiateScope->VariableMap = curScope->VariableMap;
 
     // Record the call
-    if(!curScope->StackTrace)
-      candiateScope->StackTrace = std::make_shared<std::vector<ast::StencilCall*>>();
-    else
-      candiateScope->StackTrace =
-          std::make_shared<std::vector<ast::StencilCall*>>(*curScope->StackTrace);
-    candiateScope->StackTrace->push_back(stencilCall);
+    candiateScope->StackTrace.push_back(stencilCall);
 
     // Get the sir::Stencil from the callee name
     auto stencilIt = std::find_if(
-        sir_->Stencils.begin(), sir_->Stencils.end(),
+        stencils_.begin(), stencils_.end(),
         [&](const std::shared_ptr<sir::Stencil>& s) { return s->Name == stencilCall->Callee; });
-    DAWN_ASSERT(stencilIt != sir_->Stencils.end());
+    DAWN_ASSERT(stencilIt != stencils_.end());
     sir::Stencil& stencil = **stencilIt;
 
     // We need less or an equal amount of args as temporaries are added implicitly
@@ -531,12 +530,12 @@ public:
       const auto& value = instantiation_->getGlobalVariableValue(varname);
       if(value.isConstexpr()) {
         // Replace the variable access with the actual value
-        DAWN_ASSERT_MSG(value.has_value(), "constant global variable with no value");        
+        DAWN_ASSERT_MSG(value.has_value(), "constant global variable with no value");
 
         auto newExpr = std::make_shared<dawn::LiteralAccessExpr>(
             value.toString(), sir::Value::typeToBuiltinTypeID(value.getType()));
         iir::replaceOldExprWithNewExprInStmt(
-            scope_.top()->controlFlowDescriptor_.getStatements().back()->ASTStmt, expr, newExpr);
+            scope_.top()->controlFlowDescriptor_.getStatements().back(), expr, newExpr);
 
         int AccessID = instantiation_->nextUID();
         metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, -AccessID,
@@ -591,7 +590,8 @@ bool OptimizerContext::fillIIRFromSIR(
                       field->Name, field->fieldDimensions);
   }
 
-  StencilDescStatementMapper stencilDeclMapper(stencilInstantiation, SIRStencil.get(), fullSIR,
+  StencilDescStatementMapper stencilDeclMapper(stencilInstantiation, SIRStencil.get(),
+                                               fullSIR->Stencils, *fullSIR->GlobalVariableMap,
                                                *this);
 
   //  Converting to AST with iir data

@@ -38,7 +38,6 @@ yoda_add_library(
           SIR.cpp
           SIR.h
           proto/SIR/SIR.proto
-          Statement.h
           ${sir_proto_cpp_files}
   OBJECT
 )

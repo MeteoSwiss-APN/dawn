@@ -15,7 +15,6 @@
 #include "dawn/IIR/ASTUtil.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTVisitor.h"
-#include "dawn/SIR/Statement.h"
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/Unreachable.h"
 #include <functional>

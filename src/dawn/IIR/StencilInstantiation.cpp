@@ -185,7 +185,7 @@ std::string StencilInstantiation::getOriginalNameFromAccessID(int AccessID) cons
   OriginalNameGetter orignalNameGetter(metadata_, AccessID, true);
 
   for(const auto& stmtAccessesPair : iterateIIROver<StatementAccessesPair>(*getIIR())) {
-    stmtAccessesPair->getStatement()->ASTStmt->accept(orignalNameGetter);
+    stmtAccessesPair->getStatement()->accept(orignalNameGetter);
     if(orignalNameGetter.hasName())
       return orignalNameGetter.getName();
   }
@@ -215,7 +215,7 @@ void StencilInstantiation::reportAccesses() const {
 
     for(std::size_t i = 0; i < statementAccessesPairs.size(); ++i) {
       std::cout << "\nACCESSES: line "
-                << statementAccessesPairs[i]->getStatement()->ASTStmt->getSourceLocation().Line
+                << statementAccessesPairs[i]->getStatement()->getSourceLocation().Line
                 << ": "
                 << statementAccessesPairs[i]->getCalleeAccesses()->reportAccesses(stencilFun.get())
                 << "\n";
@@ -226,7 +226,7 @@ void StencilInstantiation::reportAccesses() const {
 
   for(const auto& stmtAccessesPair : iterateIIROver<StatementAccessesPair>(*getIIR())) {
     std::cout << "\nACCESSES: line "
-              << stmtAccessesPair->getStatement()->ASTStmt->getSourceLocation().Line << ": "
+              << stmtAccessesPair->getStatement()->getSourceLocation().Line << ": "
               << stmtAccessesPair->getAccesses()->reportAccesses(metadata_) << "\n";
   }
 }

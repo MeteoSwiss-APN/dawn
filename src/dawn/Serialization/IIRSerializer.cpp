@@ -45,12 +45,6 @@ static void setAccesses(proto::iir::Accesses* protoAccesses,
     protoWriteAccesses->insert({IDExtentsPair.first, makeProtoExtents(IDExtentsPair.second)});
 }
 
-static std::shared_ptr<dawn::Statement>
-makeStatement(const proto::statements::Stmt* protoStatement) {
-  auto stmt = makeStmt(*protoStatement, ast::StmtData::IIR_DATA_TYPE);
-  return std::make_shared<Statement>(stmt, nullptr);
-}
-
 static iir::Extents makeExtents(const proto::iir::Extents* protoExtents) {
   int dim1minus = protoExtents->extents()[0].minus();
   int dim1plus = protoExtents->extents()[0].plus();
@@ -66,7 +60,7 @@ serializeStmtAccessPair(proto::iir::StatementAccessPair* protoStmtAccessPair,
                         const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessPair) {
   // serialize the statement
   ProtoStmtBuilder builder(protoStmtAccessPair->mutable_aststmt());
-  stmtAccessPair->getStatement()->ASTStmt->accept(builder);
+  stmtAccessPair->getStatement()->accept(builder);
 
   // check if caller accesses are initialized, and if so, fill them
   if(stmtAccessPair->getCallerAccesses()) {
@@ -426,8 +420,8 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
   for(const auto& stencilDescStmt : iir->getControlFlowDescriptor().getStatements()) {
     auto protoStmt = protoIIR->add_controlflowstatements();
     ProtoStmtBuilder builder(protoStmt);
-    stencilDescStmt->ASTStmt->accept(builder);
-    DAWN_ASSERT_MSG(!stencilDescStmt->StackTrace,
+    stencilDescStmt->accept(builder);
+    DAWN_ASSERT_MSG(stencilDescStmt->getData<iir::IIRStmtData>().StackTrace.empty(),
                     "there should be no stack trace if inlining worked");
   }
   for(const auto& sf : iir->getStencilFunctions()) {
@@ -575,7 +569,7 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
   };
   DeclStmtFinder declStmtFinder;
   for(auto& stmt : target->getIIR()->getControlFlowDescriptor().getStatements())
-    stmt->ASTStmt->accept(declStmtFinder);
+    stmt->accept(declStmtFinder);
 
   for(auto IDToCall : protoMetaData.idtostencilcall()) {
     auto call = IDToCall.second;
@@ -725,7 +719,6 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
 
           for(const auto& protoStmtAccessPair : protoDoMethod.stmtaccesspairs()) {
             auto stmt = makeStmt(protoStmtAccessPair.aststmt(), ast::StmtData::IIR_DATA_TYPE);
-            auto statement = std::make_shared<Statement>(stmt, nullptr);
 
             std::shared_ptr<iir::Accesses> callerAccesses = std::make_shared<iir::Accesses>();
             for(auto writeAccess : protoStmtAccessPair.accesses().writeaccess()) {
@@ -734,7 +727,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
             for(auto readAccess : protoStmtAccessPair.accesses().readaccess()) {
               callerAccesses->addReadExtent(readAccess.first, makeExtents(&readAccess.second));
             }
-            auto insertee = make_unique<iir::StatementAccessesPair>(statement);
+            auto insertee = make_unique<iir::StatementAccessesPair>(stmt);
             insertee->setCallerAccesses(callerAccesses);
             (IIRDoMethod)->insertChild(std::move(insertee));
           }
@@ -742,8 +735,9 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
       }
     }
   }
-  for(auto controlFlowStmt : protoIIR.controlflowstatements()) {
-    target->getIIR()->getControlFlowDescriptor().insertStmt(makeStatement(&controlFlowStmt));
+  for(auto& controlFlowStmt : protoIIR.controlflowstatements()) {
+    target->getIIR()->getControlFlowDescriptor().insertStmt(
+        makeStmt(controlFlowStmt, ast::StmtData::IIR_DATA_TYPE));
   }
   for(auto& boundaryCondition : protoIIR.boundaryconditions()) {
     auto stencilFunction = std::make_shared<sir::StencilFunction>();

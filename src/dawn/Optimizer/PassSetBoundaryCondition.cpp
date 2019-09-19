@@ -173,11 +173,11 @@ bool PassSetBoundaryCondition::run(
   // Get the order in which the stencils are called:
   VisitStencilCalls findStencilCalls;
 
-  const iir::ControlFlowDescriptor& controlFlow =
+  iir::ControlFlowDescriptor& controlFlow =
       stencilInstantiation->getIIR()->getControlFlowDescriptor();
 
-  for(const std::shared_ptr<Statement>& statement : controlFlow.getStatements()) {
-    statement->ASTStmt->accept(findStencilCalls);
+  for(const std::shared_ptr<iir::Stmt>& stmt : controlFlow.getStatements()) {
+    stmt->accept(findStencilCalls);
   }
   std::unordered_set<int> StencilIDsVisited_;
   for(const auto& stencilcall : findStencilCalls.getStencilCalls()) {
@@ -262,7 +262,7 @@ bool PassSetBoundaryCondition::run(
         iir::Extents fullExtents =
             calculateHaloExtents(metadata.getFieldNameFromAccessID(readaccess.first));
         stencilInstantiation->getMetaData().addBoundaryConditiontoExtentPair(IDtoBCpair->second,
-                                                                                fullExtents);
+                                                                             fullExtents);
 
         auto it = std::find_if(stencilInstantiation->getIIR()->childrenBegin(),
                                stencilInstantiation->getIIR()->childrenEnd(),
@@ -276,10 +276,8 @@ bool PassSetBoundaryCondition::run(
         // condition. These calls are then replaced by {boundary_condition, stencil_call}
         AddBoundaryConditions visitor(stencilInstantiation, stencil.getStencilID());
 
-        for(auto& statement : controlFlow.getStatements()) {
+        for(std::shared_ptr<iir::Stmt>& stmt : controlFlow.getStatements()) {
           visitor.reset();
-
-          std::shared_ptr<iir::Stmt>& stmt = statement->ASTStmt;
 
           stmt->accept(visitor);
           std::vector<std::shared_ptr<iir::Stmt>> stencilCallWithBC_;
