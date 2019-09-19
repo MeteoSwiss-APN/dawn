@@ -240,6 +240,9 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
                                  serializationKind);
         i++;
       }
+      if(options_->DumpStencilInstantiation) {
+        instantiation->dump();
+      }
     }
   } else {
     optimizer = make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, nullptr);
