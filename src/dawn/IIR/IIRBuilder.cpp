@@ -38,6 +38,42 @@ Array3i as_array(field_type ft) {
   }
   return {};
 }
+std::string to_str(op operation, std::vector<op> valid_ops) {
+  DAWN_ASSERT(std::find(valid_ops.begin(), valid_ops.end(), operation) != valid_ops.end());
+  switch(operation) {
+  case op::plus:
+    return "+";
+  case op::minus:
+    return "-";
+  case op::multiply:
+    return "*";
+  case op::assign:
+    return "";
+  case op::divide:
+    return "/";
+  case op::equal:
+    return "==";
+  case op::not_equal:
+    return "!=";
+  case op::greater:
+    return ">";
+  case op::less:
+    return "<";
+  case op::greater_equal:
+    return ">=";
+  case op::less_equal:
+    return "<=";
+  case op::logical_and:
+    return "&&";
+  case op::logical_or:
+    return "||";
+  case op::logical_not:
+    return "!";
+  default:
+    DAWN_ASSERT(false);
+    return "";
+  }
+}
 } // namespace
 
 std::shared_ptr<iir::StencilInstantiation>
@@ -78,71 +114,36 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
 std::shared_ptr<iir::Expr>
 IIRBuilder::make_reduce_over_neighbor_expr(op operation, std::shared_ptr<iir::Expr> const& rhs,
                                            std::shared_ptr<iir::Expr> const& init) {
-  std::string op_str;
-  switch(operation) {
-  case op::multiply:
-    op_str = "*";
-    break;
-  case op::plus:
-    op_str = "+";
-    break;
-  case op::minus:
-    op_str = "-";
-    break;
-  case op::assign:
-    op_str = "";
-    break;
-  default:
-    DAWN_ASSERT(false);
-  }
-  auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(op_str, rhs, init);
+  auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
+      to_str(operation, {op::multiply, op::plus, op::minus, op::assign, op::divide}), rhs, init);
   expr->setID(si_->nextUID());
   return expr;
 }
-std::shared_ptr<iir::Expr> IIRBuilder::make_multiply_expr(std::shared_ptr<iir::Expr> const& lhs,
-                                                          std::shared_ptr<iir::Expr> const& rhs) {
-  auto binop = std::make_shared<iir::BinaryOperator>(lhs, "*", rhs);
+std::shared_ptr<iir::Expr> IIRBuilder::make_binary_expr(std::shared_ptr<iir::Expr> const& lhs,
+                                                        std::shared_ptr<iir::Expr> const& rhs,
+                                                        op operation) {
+  auto binop = std::make_shared<iir::BinaryOperator>(
+      lhs,
+      to_str(operation,
+             {op::multiply, op::plus, op::minus, op::divide, op::equal, op::not_equal, op::greater,
+              op::less, op::greater_equal, op::less_equal, op::logical_and, op::logical_or}),
+      rhs);
   binop->setID(si_->nextUID());
   return binop;
 }
 std::shared_ptr<iir::Expr> IIRBuilder::make_unary_expr(std::shared_ptr<iir::Expr> const& expr,
                                                        op operation) {
-  std::string op_str;
-  switch(operation) {
-  case op::plus:
-    op_str = "+";
-    break;
-  case op::minus:
-    op_str = "-";
-    break;
-  default:
-    DAWN_ASSERT(false);
-  }
-  auto ret = std::make_shared<iir::UnaryOperator>(expr, op_str);
+  auto ret = std::make_shared<iir::UnaryOperator>(
+      expr, to_str(operation, {op::plus, op::minus, op::logical_not}));
   ret->setID(si_->nextUID());
   return ret;
 }
 std::shared_ptr<iir::Expr> IIRBuilder::make_assign_expr(std::shared_ptr<iir::Expr> const& lhs,
                                                         std::shared_ptr<iir::Expr> const& rhs,
                                                         op operation) {
-  std::string op_str;
-  switch(operation) {
-  case op::multiply:
-    op_str = "*=";
-    break;
-  case op::plus:
-    op_str = "+=";
-    break;
-  case op::minus:
-    op_str = "-=";
-    break;
-  case op::assign:
-    op_str = "=";
-    break;
-  default:
-    DAWN_ASSERT(false);
-  }
-  auto binop = std::make_shared<iir::AssignmentExpr>(lhs, rhs, op_str);
+  auto binop = std::make_shared<iir::AssignmentExpr>(
+      lhs, rhs,
+      to_str(operation, {op::assign, op::multiply, op::plus, op::minus, op::divide}) + "=");
   binop->setID(si_->nextUID());
   return binop;
 }

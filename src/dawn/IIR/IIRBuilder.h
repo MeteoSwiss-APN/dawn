@@ -28,7 +28,23 @@ namespace iir {
 
 enum class field_type { ijk, ij, ik, jk, i, j, k };
 
-enum class op { multiply, plus, minus, reduce_over_neighbor, assign };
+enum class op {
+  reduce_over_neighbor,
+  multiply,
+  plus,
+  minus,
+  assign,
+  divide,
+  equal,
+  not_equal,
+  greater,
+  less,
+  greater_equal,
+  less_equal,
+  logical_and,
+  logical_or,
+  logical_not
+};
 enum class access_type { r, rw };
 class IIRBuilder {
 public:
@@ -36,8 +52,8 @@ public:
                                                             std::shared_ptr<iir::Expr> const& rhs,
                                                             std::shared_ptr<iir::Expr> const& init);
 
-  std::shared_ptr<iir::Expr> make_multiply_expr(std::shared_ptr<iir::Expr> const& lhs,
-                                                std::shared_ptr<iir::Expr> const& rhs);
+  std::shared_ptr<iir::Expr> make_binary_expr(std::shared_ptr<iir::Expr> const& lhs,
+                                              std::shared_ptr<iir::Expr> const& rhs, op operation);
 
   std::shared_ptr<iir::Expr> make_assign_expr(std::shared_ptr<iir::Expr> const& lhs,
                                               std::shared_ptr<iir::Expr> const& rhs,
