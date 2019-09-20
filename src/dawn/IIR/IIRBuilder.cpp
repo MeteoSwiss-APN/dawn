@@ -105,6 +105,23 @@ std::shared_ptr<iir::Expr> IIRBuilder::make_multiply_expr(std::shared_ptr<iir::E
   binop->setID(si_->nextUID());
   return binop;
 }
+std::shared_ptr<iir::Expr> IIRBuilder::make_unary_expr(std::shared_ptr<iir::Expr> const& expr,
+                                                       op operation) {
+  std::string op_str;
+  switch(operation) {
+  case op::plus:
+    op_str = "+";
+    break;
+  case op::minus:
+    op_str = "-";
+    break;
+  default:
+    DAWN_ASSERT(false);
+  }
+  auto ret = std::make_shared<iir::UnaryOperator>(expr, op_str);
+  ret->setID(si_->nextUID());
+  return ret;
+}
 std::shared_ptr<iir::Expr> IIRBuilder::make_assign_expr(std::shared_ptr<iir::Expr> const& lhs,
                                                         std::shared_ptr<iir::Expr> const& rhs,
                                                         op operation) {

@@ -43,6 +43,8 @@ public:
                                               std::shared_ptr<iir::Expr> const& rhs,
                                               op operation = op::assign);
 
+  std::shared_ptr<iir::Expr> make_unary_expr(std::shared_ptr<iir::Expr> const& expr, op operation);
+
   int make_field(std::string const& name, field_type ft = field_type::ijk);
 
   template <typename T>
@@ -70,14 +72,12 @@ public:
     auto ret = make_unique<iir::DoMethod>(iir::Interval(s, e), si_->getMetaData());
     ret->setID(si_->nextUID());
     int x[] = {(ret->insertChild(std::forward<Stmts>(stmts)), ret->updateLevel(), 0)...};
-    (void*)x;
     return ret;
   }
   template <typename... DoMethods>
   std::unique_ptr<iir::Stage> make_stage(DoMethods&&... do_methods) {
     auto ret = make_unique<iir::Stage>(si_->getMetaData(), si_->nextUID());
     int x[] = {(ret->insertChild(std::forward<DoMethods>(do_methods)), 0)...};
-    (void*)x;
     return ret;
   }
   template <typename... Stages>
@@ -86,14 +86,12 @@ public:
     auto ret = make_unique<iir::MultiStage>(si_->getMetaData(), loop_kind);
     ret->setID(si_->nextUID());
     int x[] = {(ret->insertChild(std::forward<Stages>(stages)), 0)...};
-    (void*)x;
     return ret;
   }
   template <typename... MultiStages>
   std::unique_ptr<iir::Stencil> make_stencil(MultiStages&&... multistages) {
     auto ret = make_unique<iir::Stencil>(si_->getMetaData(), sir::Attr{}, si_->nextUID());
     int x[] = {(ret->insertChild(std::forward<MultiStages>(multistages)), 0)...};
-    (void*)x;
     return ret;
   }
 
