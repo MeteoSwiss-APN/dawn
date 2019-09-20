@@ -14,8 +14,12 @@
 
 #include "dawn-c/Compiler.h"
 #include "dawn-c/TranslationUnit.h"
+#include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
+#include "dawn/CodeGen/CodeGen.h"
+#include "dawn/IIR/IIRBuilder.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
+#include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Unittest/ASTSimplifier.h"
 #include <cstring>
 #include <gtest/gtest.h>
@@ -87,6 +91,45 @@ TEST(CompilerTest, CompileCopyStencil) {
   freeCharArray(ppDefines, size);
   std::free(copyCode);
   dawnTranslationUnitDestroy(TU);
+}
+
+TEST(CompilerTest, TestCodeGen) {
+  using namespace dawn::iir;
+
+  IIRBuilder b;
+  auto in_f = b.make_field("in_field", field_type::ijk);
+  auto out_f = b.make_field("out_field", field_type::ijk);
+
+  auto my_do = b.make_do(
+      dawn::sir::Interval::Start, dawn::sir::Interval::End,
+      b.make_stmt(b.make_assign_expr(b.at(out_f, access_type::rw),
+                                     b.make_multiply_expr(b.make_lit(-3.), b.at(in_f)))),
+      b.make_stmt(
+          b.make_assign_expr(b.at(out_f, access_type::rw),
+                             b.make_reduce_over_neighbor_expr(op::plus, b.at(in_f), b.at(out_f)))),
+      b.make_stmt(b.make_assign_expr(b.at(out_f, access_type::rw), b.make_lit(0.1), op::multiply)),
+      b.make_stmt(
+          b.make_assign_expr(b.at(out_f, access_type::rw), b.at(in_f, {0, 0, 1}), op::plus)));
+
+  auto stencil_instantiation =
+      b.build("generated", b.make_stencil(b.make_multistage(dawn::iir::LoopOrderKind::LK_Parallel,
+                                                            b.make_stage(std::move(my_do)))));
+
+  dawn::DiagnosticsEngine diagnostics;
+  dawn::codegen::stencilInstantiationContext map;
+  map["test"] = std::move(stencil_instantiation);
+
+  dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen generator(map, diagnostics, 0);
+  auto tu = generator.generateCode();
+
+  std::ostringstream ss;
+  for(auto const& macroDefine : tu->getPPDefines())
+    ss << macroDefine << "\n";
+
+  ss << tu->getGlobals();
+  for(auto const& s : tu->getStencils())
+    ss << s.second;
+  std::clog << ss.str();
 }
 
 } // anonymous namespace

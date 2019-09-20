@@ -32,28 +32,6 @@
 namespace dawn {
 
 namespace {
-void createIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target) {
-  using namespace iir;
-
-  IIRBuilder b;
-  auto in_f = b.make_field("in_field", field_type::ijk);
-  auto out_f = b.make_field("out_field", field_type::ijk);
-
-  auto my_do = b.make_do(
-      sir::Interval::Start, sir::Interval::End,
-      b.make_stmt(b.make_assign_expr(b.at(out_f, access_type::rw),
-                                     b.make_multiply_expr(b.make_lit(-3.), b.at(in_f)))),
-      b.make_stmt(
-          b.make_assign_expr(b.at(out_f, access_type::rw),
-                             b.make_reduce_over_neighbor_expr(op::plus, b.at(in_f), b.at(out_f)))),
-      b.make_stmt(b.make_assign_expr(b.at(out_f, access_type::rw), b.make_lit(0.1), op::multiply)),
-      b.make_stmt(
-          b.make_assign_expr(b.at(out_f, access_type::rw), b.at(in_f, {0, 0, 1}), op::plus)));
-
-  target =
-      b.build("generated", b.make_stencil(b.make_multistage(iir::LoopOrderKind::LK_Parallel,
-                                                            b.make_stage(std::move(my_do)))));
-}
 using namespace iir;
 //===------------------------------------------------------------------------------------------===//
 //     StencilDescStatementMapper
@@ -599,7 +577,6 @@ OptimizerContext::OptimizerContext(DiagnosticsEngine& diagnostics, OptimizerCont
     : diagnostics_(diagnostics), options_(options), SIR_(SIR) {
   DAWN_LOG(INFO) << "Intializing OptimizerContext ... ";
 }
-
 bool OptimizerContext::fillIIRFromSIR(
     std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     const std::shared_ptr<sir::Stencil> SIRStencil, const std::shared_ptr<SIR> fullSIR) {
@@ -677,15 +654,17 @@ const OptimizerContext::OptimizerContextOptions& OptimizerContext::getOptions() 
 OptimizerContext::OptimizerContextOptions& OptimizerContext::getOptions() { return options_; }
 
 void OptimizerContext::fillIIR() {
-
-  /// Instead of getting the IIR from the SIR we're generating it here:
-  stencilInstantiationMap_.insert(
-      std::make_pair("<unstructured>", std::make_shared<iir::StencilInstantiation>(
-                                           sir::GlobalVariableMap{},
-                                           std::vector<std::shared_ptr<sir::StencilFunction>>{})));
-  createIIRInMemory(stencilInstantiationMap_.at("<unstructured>"));
-  if(options_.Debug) {
-    stencilInstantiationMap_.at("<unstructured>")->dump();
+  DAWN_ASSERT(SIR_);
+  for(const auto& stencil : SIR_->Stencils) {
+    DAWN_ASSERT(stencil);
+    if(!stencil->Attributes.has(sir::Attr::AK_NoCodeGen)) {
+      stencilInstantiationMap_.insert(std::make_pair(
+          stencil->Name, std::make_shared<iir::StencilInstantiation>(*getSIR()->GlobalVariableMap,
+                                                                     getSIR()->StencilFunctions)));
+      fillIIRFromSIR(stencilInstantiationMap_.at(stencil->Name), stencil, SIR_);
+    } else {
+      DAWN_LOG(INFO) << "Skipping processing of `" << stencil->Name << "`";
+    }
   }
 }
 
