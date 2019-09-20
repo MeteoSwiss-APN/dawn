@@ -42,14 +42,14 @@ void StatementMapper::appendNewStatementAccessesPair(const std::shared_ptr<iir::
     // The top-level block statement is collapsed thus we only insert at 1. Note that this works
     // because all AST have a block statement as root node.
     stmt->getData<iir::IIRStmtData>().StackTrace = boost::make_optional(stackTrace_);
-    scope_.top()->doMethod_.insertChild(make_unique<iir::StatementAccessesPair>(stmt));
+    scope_.top()->doMethod_.insertChild(std::make_unique<iir::StatementAccessesPair>(stmt));
     scope_.top()->CurentStmtAccessesPair.push(&(*(scope_.top()->doMethod_.childrenRBegin())));
 
   } else if(scope_.top()->ScopeDepth > 1) {
     // We are inside a nested block statement, we add the stmt as a child of the parent statement
     stmt->getData<iir::IIRStmtData>().StackTrace = boost::make_optional(stackTrace_);
     (*scope_.top()->CurentStmtAccessesPair.top())
-        ->insertBlockStatement(make_unique<iir::StatementAccessesPair>(stmt));
+        ->insertBlockStatement(std::make_unique<iir::StatementAccessesPair>(stmt));
 
     const std::unique_ptr<iir::StatementAccessesPair>& lp =
         ((*scope_.top()->CurentStmtAccessesPair.top())->getBlockStatements().back());

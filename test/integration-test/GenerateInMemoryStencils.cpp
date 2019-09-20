@@ -46,20 +46,21 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   sir::Attr attributes;
   int stencilID = target->nextUID();
   target->getIIR()->insertChild(
-      make_unique<iir::Stencil>(target->getMetaData(), attributes, stencilID), target->getIIR());
+      std::make_unique<iir::Stencil>(target->getMetaData(), attributes, stencilID),
+      target->getIIR());
   const auto& IIRStencil = target->getIIR()->getChild(0);
   // One Multistage with a parallel looporder
   IIRStencil->insertChild(
-      make_unique<iir::MultiStage>(target->getMetaData(), iir::LoopOrderKind::LK_Parallel));
+      std::make_unique<iir::MultiStage>(target->getMetaData(), iir::LoopOrderKind::LK_Parallel));
   const auto& IIRMSS = (IIRStencil)->getChild(0);
   IIRMSS->setID(target->nextUID());
 
   // Create one stage inside the MSS
-  IIRMSS->insertChild(make_unique<iir::Stage>(target->getMetaData(), target->nextUID()));
+  IIRMSS->insertChild(std::make_unique<iir::Stage>(target->getMetaData(), target->nextUID()));
   const auto& IIRStage = IIRMSS->getChild(0);
 
   // Create one doMethod inside the Stage that spans the full domain
-  IIRStage->insertChild(make_unique<iir::DoMethod>(
+  IIRStage->insertChild(std::make_unique<iir::DoMethod>(
       iir::Interval(sir::Interval{sir::Interval::Start, sir::Interval::End}),
       target->getMetaData()));
   const auto& IIRDoMethod = IIRStage->getChild(0);
@@ -87,7 +88,7 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   expr->setID(target->nextUID());
   auto stmt = iir::makeExprStmt(expr);
   stmt->setID(target->nextUID());
-  auto insertee = make_unique<iir::StatementAccessesPair>(stmt);
+  auto insertee = std::make_unique<iir::StatementAccessesPair>(stmt);
 
   // Add the accesses to the Pair:
   std::shared_ptr<iir::Accesses> callerAccesses = std::make_shared<iir::Accesses>();
@@ -142,27 +143,28 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   sir::Attr attributes;
   int stencilID = target->nextUID();
   target->getIIR()->insertChild(
-      make_unique<iir::Stencil>(target->getMetaData(), attributes, stencilID), target->getIIR());
+      std::make_unique<iir::Stencil>(target->getMetaData(), attributes, stencilID),
+      target->getIIR());
   const auto& IIRStencil = target->getIIR()->getChild(0);
   // One Multistage with a parallel looporder
   IIRStencil->insertChild(
-      make_unique<iir::MultiStage>(target->getMetaData(), iir::LoopOrderKind::LK_Parallel));
+      std::make_unique<iir::MultiStage>(target->getMetaData(), iir::LoopOrderKind::LK_Parallel));
   const auto& IIRMSS = (IIRStencil)->getChild(0);
   IIRMSS->setID(target->nextUID());
 
-  auto IIRStage1 = make_unique<iir::Stage>(target->getMetaData(), target->nextUID());
-  auto IIRStage2 = make_unique<iir::Stage>(target->getMetaData(), target->nextUID());
+  auto IIRStage1 = std::make_unique<iir::Stage>(target->getMetaData(), target->nextUID());
+  auto IIRStage2 = std::make_unique<iir::Stage>(target->getMetaData(), target->nextUID());
 
   IIRStage1->setExtents(iir::Extents(-1, +1, -1, +1, 0, 0));
 
   // Create one doMethod inside the Stage that spans the full domain
-  IIRStage1->insertChild(make_unique<iir::DoMethod>(
+  IIRStage1->insertChild(std::make_unique<iir::DoMethod>(
       iir::Interval(sir::Interval{sir::Interval::Start, sir::Interval::End}),
       target->getMetaData()));
   const auto& IIRDoMethod1 = IIRStage1->getChild(0);
   IIRDoMethod1->setID(target->nextUID());
 
-  IIRStage2->insertChild(make_unique<iir::DoMethod>(
+  IIRStage2->insertChild(std::make_unique<iir::DoMethod>(
       iir::Interval(sir::Interval{sir::Interval::Start, sir::Interval::End}),
       target->getMetaData()));
   const auto& IIRDoMethod2 = IIRStage2->getChild(0);
@@ -229,7 +231,7 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
 
   auto stmt1 = iir::makeExprStmt(assignmentTmpIn);
   stmt1->setID(target->nextUID());
-  auto insertee1 = make_unique<iir::StatementAccessesPair>(stmt1);
+  auto insertee1 = std::make_unique<iir::StatementAccessesPair>(stmt1);
 
   // Add the accesses to the Pair:
   std::shared_ptr<iir::Accesses> callerAccesses1 = std::make_shared<iir::Accesses>();
@@ -253,7 +255,7 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
 
   auto stmt2 = iir::makeExprStmt(assignmentOutTmp);
   stmt2->setID(target->nextUID());
-  auto insertee2 = make_unique<iir::StatementAccessesPair>(stmt2);
+  auto insertee2 = std::make_unique<iir::StatementAccessesPair>(stmt2);
 
   // Add the accesses to the Pair:
   std::shared_ptr<iir::Accesses> callerAccesses2 = std::make_shared<iir::Accesses>();

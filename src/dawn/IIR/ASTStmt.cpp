@@ -22,7 +22,7 @@ bool IIRStmtData::operator==(const IIRStmtData& rhs) { return StackTrace == rhs.
 bool IIRStmtData::operator!=(const IIRStmtData& rhs) { return !(*this == rhs); }
 
 std::unique_ptr<ast::StmtData> IIRStmtData::clone() const {
-  return make_unique<IIRStmtData>(*this);
+  return std::make_unique<IIRStmtData>(*this);
 }
 } // namespace iir
 } // namespace dawn

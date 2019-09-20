@@ -118,7 +118,9 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
 
     if(lhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace) {
       if(rhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace) {
-        for(int j = 0, jsize = lhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace->size(); j < jsize; ++j) {
+        for(int j = 0,
+                jsize = lhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace->size();
+            j < jsize; ++j) {
           if(!(lhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace->at(j) ==
                rhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace->at(j))) {
             return false;
@@ -128,7 +130,7 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
         return false;
       }
     }
-    
+
     if(lhsControlFlowStmts[i]->getData<iir::IIRStmtData>() !=
        rhsControlFlowStmts[i]->getData<iir::IIRStmtData>())
       return false;
@@ -187,7 +189,7 @@ protected:
     dawn::DiagnosticsEngine diag;
     std::shared_ptr<SIR> sir = std::make_shared<SIR>();
     dawn::OptimizerContext::OptimizerContextOptions options;
-    context_ = make_unique<OptimizerContext>(diag, options, sir);
+    context_ = std::make_unique<OptimizerContext>(diag, options, sir);
   }
   virtual void TearDown() override {}
   std::unique_ptr<OptimizerContext> context_;
@@ -301,7 +303,7 @@ TEST_F(IIRSerializerTest, IIRTests) {
   sir::Attr attributes;
   attributes.set(sir::Attr::AK_MergeStages);
   referenceInstantiaton->getIIR()->insertChild(
-      make_unique<iir::Stencil>(referenceInstantiaton->getMetaData(), attributes, 10),
+      std::make_unique<iir::Stencil>(referenceInstantiaton->getMetaData(), attributes, 10),
       referenceInstantiaton->getIIR());
   const auto& IIRStencil = referenceInstantiaton->getIIR()->getChild(0);
   auto deserialized = serializeAndDeserializeRef();
@@ -310,8 +312,8 @@ TEST_F(IIRSerializerTest, IIRTests) {
   IIR_EXPECT_NE(deserialized, referenceInstantiaton);
 
   (IIRStencil)
-      ->insertChild(make_unique<iir::MultiStage>(referenceInstantiaton->getMetaData(),
-                                                 iir::LoopOrderKind::LK_Backward));
+      ->insertChild(std::make_unique<iir::MultiStage>(referenceInstantiaton->getMetaData(),
+                                                      iir::LoopOrderKind::LK_Backward));
   const auto& IIRMSS = (IIRStencil)->getChild(0);
   IIRMSS->getCaches().emplace(
       10, iir::Cache(iir::Cache::IJ, iir::Cache::fill, 10, boost::none, boost::none, boost::none));
@@ -320,19 +322,19 @@ TEST_F(IIRSerializerTest, IIRTests) {
   IIRMSS->setLoopOrder(iir::LoopOrderKind::LK_Forward);
   IIR_EXPECT_NE(deserialized, referenceInstantiaton);
 
-  IIRMSS->insertChild(make_unique<iir::Stage>(referenceInstantiaton->getMetaData(), 12));
+  IIRMSS->insertChild(std::make_unique<iir::Stage>(referenceInstantiaton->getMetaData(), 12));
   const auto& IIRStage = IIRMSS->getChild(0);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  (IIRStage)->insertChild(
-      make_unique<iir::DoMethod>(iir::Interval(1, 5, 0, 1), referenceInstantiaton->getMetaData()));
+  (IIRStage)->insertChild(std::make_unique<iir::DoMethod>(iir::Interval(1, 5, 0, 1),
+                                                          referenceInstantiaton->getMetaData()));
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   auto& IIRDoMethod = (IIRStage)->getChild(0);
   auto expr = std::make_shared<iir::VarAccessExpr>("name");
   auto stmt = iir::makeExprStmt(expr);
   stmt->setID(22);
-  auto stmtAccessPair = make_unique<iir::StatementAccessesPair>(stmt);
+  auto stmtAccessPair = std::make_unique<iir::StatementAccessesPair>(stmt);
   std::shared_ptr<iir::Accesses> callerAccesses = std::make_shared<iir::Accesses>();
   stmtAccessPair->setCallerAccesses(callerAccesses);
 

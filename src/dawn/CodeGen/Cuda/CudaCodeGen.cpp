@@ -670,7 +670,7 @@ std::unique_ptr<TranslationUnit> CudaCodeGen::generateCode() {
 
   std::string filename = generateFileName(context_);
   // TODO missing the BC
-  return make_unique<TranslationUnit>(filename, std::move(ppDefines), std::move(stencils),
+  return std::make_unique<TranslationUnit>(filename, std::move(ppDefines), std::move(stencils),
                                       std::move(globals));
 }
 

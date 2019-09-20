@@ -61,7 +61,7 @@ const Stencil& IIR::getStencil(const int stencilID) const {
 }
 
 std::unique_ptr<IIR> IIR::clone() const {
-  auto cloneIIR = make_unique<IIR>(globalVariableMap_, stencilFunctions_);
+  auto cloneIIR = std::make_unique<IIR>(globalVariableMap_, stencilFunctions_);
   clone(cloneIIR);
   return cloneIIR;
 }

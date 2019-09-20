@@ -107,14 +107,14 @@ public:
     if(scopeDepth_ == 1) {
       // The top-level block statement is collapsed thus we only insert at 1. Note that this works
       // because all AST have a block statement as root node.
-      newStmtAccessesPairs_.emplace_back(make_unique<iir::StatementAccessesPair>(stmt));
+      newStmtAccessesPairs_.emplace_back(std::make_unique<iir::StatementAccessesPair>(stmt));
 
       currentStmtAccessesPair_.push(&(newStmtAccessesPairs_.back()));
 
     } else if(scopeDepth_ > 1) {
       // We are inside a nested block statement, we add the stmt as a child of the parent statement
       (*currentStmtAccessesPair_.top())
-          ->insertBlockStatement(make_unique<iir::StatementAccessesPair>(stmt));
+          ->insertBlockStatement(std::make_unique<iir::StatementAccessesPair>(stmt));
 
       const std::unique_ptr<iir::StatementAccessesPair>& lp =
           (*(currentStmtAccessesPair_.top()))->getBlockStatements().back();
@@ -281,7 +281,7 @@ public:
         // push backed all the new statements). Hence, we need to insert an empty statement in the
         // back -> swap with our statement -> replace the expr in our statement and evict the empty
         // statement)
-        newStmtAccessesPairs_.emplace_back(make_unique<iir::StatementAccessesPair>(nullptr));
+        newStmtAccessesPairs_.emplace_back(std::make_unique<iir::StatementAccessesPair>(nullptr));
         std::iter_swap(newStmtAccessesPairs_.begin() + stmtIdxOfFunc,
                        std::prev(newStmtAccessesPairs_.end()));
 

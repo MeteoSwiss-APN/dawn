@@ -63,7 +63,7 @@ include(DawnDefinitions)
 include(DawnMacros)
 
 # Set C++ standard
-yoda_set_cxx_standard(c++11)
+yoda_set_cxx_standard(c++17)
 
 # Set C++ flags
 dawn_set_cxx_flags()

@@ -282,12 +282,12 @@ struct Value : NonCopyable {
 
   template <class T>
   explicit Value(T&& value) : isConstexpr_(false) {
-    valueImpl_= make_unique<ValueImpl<decay_t<T>>>(std::forward<T>(value));
+    valueImpl_= std::make_unique<ValueImpl<std::decay_t<T>>>(std::forward<T>(value));
   }
 
   template <class T>
   explicit Value(T value, bool isConstexpr) : isConstexpr_(isConstexpr) {
-    valueImpl_= make_unique<ValueImpl<decay_t<T>>>(std::forward<T>(value));
+    valueImpl_= std::make_unique<ValueImpl<std::decay_t<T>>>(std::forward<T>(value));
   }
 
   explicit Value(TypeKind type);

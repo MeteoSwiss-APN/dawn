@@ -21,7 +21,7 @@
 namespace dawn {
 namespace iir {
 inline std::shared_ptr<ast::AST> makeAST() {
-  return std::make_shared<ast::AST>(make_unique<IIRStmtData>());
+  return std::make_shared<ast::AST>(std::make_unique<IIRStmtData>());
 }
 //
 // TODO refactor_AST: this is TEMPORARY, will be removed in the future
