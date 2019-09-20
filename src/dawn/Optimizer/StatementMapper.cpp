@@ -332,7 +332,9 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
       iir::replaceOldExprWithNewExprInStmt(
           (*(scope_.top()->doMethod_.childrenRBegin()))->getStatement()->ASTStmt, expr, newExpr);
 
-      int AccessID = instantiation_->nextUID();
+      //if a global is replaced by its value it becomes a de-facto literal negate access id
+      int AccessID = -instantiation_->nextUID();
+
       metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID,
                                    newExpr->getValue());
       metadata_.insertExprToAccessID(newExpr, AccessID);
