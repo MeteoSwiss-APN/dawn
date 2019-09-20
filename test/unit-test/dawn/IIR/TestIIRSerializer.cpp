@@ -291,7 +291,7 @@ TEST_F(IIRSerializerTest, IIRTests) {
   sir::Attr attributes;
   attributes.set(sir::Attr::AK_MergeStages);
   referenceInstantiaton->getIIR()->insertChild(
-      make_unique<iir::Stencil>(referenceInstantiaton->getMetaData(), attributes, 10),
+      std::make_unique<iir::Stencil>(referenceInstantiaton->getMetaData(), attributes, 10),
       referenceInstantiaton->getIIR());
   const auto& IIRStencil = referenceInstantiaton->getIIR()->getChild(0);
   auto deserialized = serializeAndDeserializeRef();
@@ -300,7 +300,7 @@ TEST_F(IIRSerializerTest, IIRTests) {
   IIR_EXPECT_NE(deserialized, referenceInstantiaton);
 
   (IIRStencil)
-      ->insertChild(make_unique<iir::MultiStage>(referenceInstantiaton->getMetaData(),
+      ->insertChild(std::make_unique<iir::MultiStage>(referenceInstantiaton->getMetaData(),
                                                  iir::LoopOrderKind::LK_Backward));
   const auto& IIRMSS = (IIRStencil)->getChild(0);
   IIRMSS->getCaches().emplace(
@@ -310,12 +310,12 @@ TEST_F(IIRSerializerTest, IIRTests) {
   IIRMSS->setLoopOrder(iir::LoopOrderKind::LK_Forward);
   IIR_EXPECT_NE(deserialized, referenceInstantiaton);
 
-  IIRMSS->insertChild(make_unique<iir::Stage>(referenceInstantiaton->getMetaData(), 12));
+  IIRMSS->insertChild(std::make_unique<iir::Stage>(referenceInstantiaton->getMetaData(), 12));
   const auto& IIRStage = IIRMSS->getChild(0);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   (IIRStage)->insertChild(
-      make_unique<iir::DoMethod>(iir::Interval(1, 5, 0, 1), referenceInstantiaton->getMetaData()));
+      std::make_unique<iir::DoMethod>(iir::Interval(1, 5, 0, 1), referenceInstantiaton->getMetaData()));
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   auto& IIRDoMethod = (IIRStage)->getChild(0);
@@ -323,7 +323,7 @@ TEST_F(IIRSerializerTest, IIRTests) {
   auto stmt = std::make_shared<iir::ExprStmt>(expr);
   stmt->setID(22);
   auto statement = std::make_shared<Statement>(stmt, nullptr);
-  auto stmtAccessPair = make_unique<iir::StatementAccessesPair>(statement);
+  auto stmtAccessPair = std::make_unique<iir::StatementAccessesPair>(statement);
   std::shared_ptr<iir::Accesses> callerAccesses = std::make_shared<iir::Accesses>();
   stmtAccessPair->setCallerAccesses(callerAccesses);
 

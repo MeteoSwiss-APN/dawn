@@ -170,10 +170,10 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   int numRenames = 0;
 
   // Vector of strongly connected components with atleast one stencil access
-  auto stencilSCCs = make_unique<std::vector<std::set<int>>>();
+  auto stencilSCCs = std::make_unique<std::vector<std::set<int>>>();
 
   // Find all strongly connected components in the graph ...
-  auto SCCs = make_unique<std::vector<std::set<int>>>();
+  auto SCCs = std::make_unique<std::vector<std::set<int>>>();
   graph->findStronglyConnectedComponents(*SCCs);
 
   // ... and add those which have atleast one stencil access

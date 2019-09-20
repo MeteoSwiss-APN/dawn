@@ -35,7 +35,7 @@ DoMethod::DoMethod(Interval interval, const StencilMetaInformation& metaData)
     : interval_(interval), id_(IndexGenerator::Instance().getIndex()), metaData_(metaData) {}
 
 std::unique_ptr<DoMethod> DoMethod::clone() const {
-  auto cloneMS = make_unique<DoMethod>(interval_, metaData_);
+  auto cloneMS = std::make_unique<DoMethod>(interval_, metaData_);
 
   cloneMS->setID(id_);
   cloneMS->setDependencyGraph(derivedInfo_.dependencyGraph_);

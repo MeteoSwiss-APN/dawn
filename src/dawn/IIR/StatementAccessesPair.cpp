@@ -67,7 +67,7 @@ StatementAccessesPair::StatementAccessesPair(const std::shared_ptr<Statement>& s
     : statement_(statement), callerAccesses_(nullptr), calleeAccesses_(nullptr) {}
 
 std::unique_ptr<StatementAccessesPair> StatementAccessesPair::clone() const {
-  auto cloneSAP = make_unique<StatementAccessesPair>(statement_);
+  auto cloneSAP = std::make_unique<StatementAccessesPair>(statement_);
 
   if(callerAccesses_) {
     cloneSAP->callerAccesses_ = std::make_shared<Accesses>(*callerAccesses_);

@@ -67,7 +67,7 @@ bool PassStencilSplitter::run(
     if(stencil.getFields().size() > MaxFieldPerStencil) {
       rerunPassSetStageGraph = true;
 
-      newStencils.emplace_back(make_unique<iir::Stencil>(stencilInstantiation->getMetaData(),
+      newStencils.emplace_back(std::make_unique<iir::Stencil>(stencilInstantiation->getMetaData(),
                                                          stencil.getStencilAttributes(),
                                                          stencilInstantiation->nextUID()));
       const std::unique_ptr<iir::Stencil>& newStencil = newStencils.back();
@@ -80,7 +80,7 @@ bool PassStencilSplitter::run(
 
         // Create an empty multi-stage in the current stencil with the same parameter as
         // `multiStage`
-        newStencil->insertChild(make_unique<iir::MultiStage>(stencilInstantiation->getMetaData(),
+        newStencil->insertChild(std::make_unique<iir::MultiStage>(stencilInstantiation->getMetaData(),
                                                              multiStage.getLoopOrder()));
 
         for(const auto& stagePtr : multiStage.getChildren()) {
@@ -97,7 +97,7 @@ bool PassStencilSplitter::run(
 
           } else {
             // Make a new stencil
-            newStencils.emplace_back(make_unique<iir::Stencil>(stencilInstantiation->getMetaData(),
+            newStencils.emplace_back(std::make_unique<iir::Stencil>(stencilInstantiation->getMetaData(),
                                                                stencil.getStencilAttributes(),
                                                                stencilInstantiation->nextUID()));
             const std::unique_ptr<iir::Stencil>& newStencil2 = newStencils.back();
@@ -105,7 +105,7 @@ bool PassStencilSplitter::run(
             fieldsInNewStencil.clear();
 
             // Re-create the current multi-stage in the `newStencil` and insert the stage
-            newStencil2->insertChild(make_unique<iir::MultiStage>(
+            newStencil2->insertChild(std::make_unique<iir::MultiStage>(
                 stencilInstantiation->getMetaData(), multiStage.getLoopOrder()));
             newStencil2->getChildren().back()->insertChild(stagePtr->clone());
           }
