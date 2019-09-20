@@ -26,16 +26,7 @@
 namespace dawn {
 namespace iir {
 
-enum class field_type { ijk, ij };
-static Array3i as_array(field_type ft) {
-  switch(ft) {
-  case field_type::ijk:
-    return Array3i{0, 0, 0};
-  case field_type::ij:
-    return Array3i{0, 0, 1};
-  }
-  return {};
-}
+enum class field_type { ijk, ij, ik, jk, i, j, k };
 
 enum class op { multiply, plus, minus, reduce_over_neighbor, assign };
 enum class access_type { r, rw };

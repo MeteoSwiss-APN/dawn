@@ -18,6 +18,27 @@
 
 namespace dawn {
 namespace iir {
+namespace {
+Array3i as_array(field_type ft) {
+  switch(ft) {
+  case field_type::ijk:
+    return Array3i{1, 1, 1};
+  case field_type::ij:
+    return Array3i{1, 1, 0};
+  case field_type::ik:
+    return Array3i{1, 0, 1};
+  case field_type::jk:
+    return Array3i{0, 1, 1};
+  case field_type::i:
+    return Array3i{1, 0, 0};
+  case field_type::j:
+    return Array3i{0, 1, 0};
+  case field_type::k:
+    return Array3i{0, 0, 1};
+  }
+  return {};
+}
+} // namespace
 
 std::shared_ptr<iir::StencilInstantiation>
 IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil) {
@@ -71,6 +92,8 @@ IIRBuilder::make_reduce_over_neighbor_expr(op operation, std::shared_ptr<iir::Ex
   case op::assign:
     op_str = "";
     break;
+  default:
+    DAWN_ASSERT(false);
   }
   auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(op_str, rhs, init);
   expr->setID(si_->nextUID());
@@ -84,7 +107,7 @@ std::shared_ptr<iir::Expr> IIRBuilder::make_multiply_expr(std::shared_ptr<iir::E
 }
 std::shared_ptr<iir::Expr> IIRBuilder::make_assign_expr(std::shared_ptr<iir::Expr> const& lhs,
                                                         std::shared_ptr<iir::Expr> const& rhs,
-                                                        op operation ) {
+                                                        op operation) {
   std::string op_str;
   switch(operation) {
   case op::multiply:
@@ -112,8 +135,7 @@ int IIRBuilder::make_field(std::string const& name, field_type ft) {
   field_ids_[name] = ret;
   return ret;
 }
-std::shared_ptr<iir::Expr> IIRBuilder::at(int field_id, access_type access ,
-                                          Array3i extent ) {
+std::shared_ptr<iir::Expr> IIRBuilder::at(int field_id, access_type access, Array3i extent) {
   auto expr = std::make_shared<iir::FieldAccessExpr>(field_names_[field_id], extent);
   expr->setID(si_->nextUID());
 
