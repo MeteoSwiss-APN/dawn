@@ -15,6 +15,7 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTUtil.h"
+#include "dawn/IIR/IIRBuilder.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -32,204 +33,26 @@ namespace dawn {
 
 namespace {
 void createIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target) {
-  ///////////////// Generation of the IIR
-  sir::Attr attributes;
-  int stencilID = target->nextUID();
-  target->getIIR()->insertChild(
-      make_unique<iir::Stencil>(target->getMetaData(), attributes, stencilID), target->getIIR());
-  const auto& IIRStencil = target->getIIR()->getChild(0);
-  // One Multistage with a parallel looporder
-  IIRStencil->insertChild(
-      make_unique<iir::MultiStage>(target->getMetaData(), iir::LoopOrderKind::LK_Parallel));
-  const auto& IIRMSS = (IIRStencil)->getChild(0);
-  IIRMSS->setID(target->nextUID());
+  using namespace iir;
 
-  // Create one stage inside the MSS
-  IIRMSS->insertChild(make_unique<iir::Stage>(target->getMetaData(), target->nextUID()));
-  const auto& IIRStage = IIRMSS->getChild(0);
+  IIRBuilder b;
+  auto in_f = b.make_field("in_field", field_type::ijk);
+  auto out_f = b.make_field("out_field", field_type::ijk);
 
-  // Create one doMethod inside the Stage that spans the full domain
-  IIRStage->insertChild(make_unique<iir::DoMethod>(
-      iir::Interval(sir::Interval{sir::Interval::Start, sir::Interval::End}),
-      target->getMetaData()));
-  const auto& IIRDoMethod = IIRStage->getChild(0);
-  IIRDoMethod->setID(target->nextUID());
+  auto my_do = b.make_do(
+      sir::Interval::Start, sir::Interval::End,
+      b.make_stmt(b.make_assign_expr(b.at(out_f, access_type::rw),
+                                     b.make_multiply_expr(b.make_lit(-3.), b.at(in_f)))),
+      b.make_stmt(
+          b.make_assign_expr(b.at(out_f, access_type::rw),
+                             b.make_reduce_over_neighbor_expr(op::plus, b.at(in_f), b.at(out_f)))),
+      b.make_stmt(b.make_assign_expr(b.at(out_f, access_type::rw), b.make_lit(0.1), op::multiply)),
+      b.make_stmt(
+          b.make_assign_expr(b.at(out_f, access_type::rw), b.at(in_f, {0, 0, 1}), op::plus)));
 
-  // create the SIR-Fields
-  auto sirInField = std::make_shared<sir::Field>("in_field");
-  sirInField->IsTemporary = false;
-  sirInField->fieldDimensions = Array3i{1, 1, 1};
-  auto sirOutField = std::make_shared<sir::Field>("out_field");
-  sirOutField->IsTemporary = false;
-  sirOutField->fieldDimensions = Array3i{1, 1, 1};
-  int in_fieldID = target->getMetaData().addField(iir::FieldAccessType::FAT_APIField,
-                                                  sirInField->Name, sirInField->fieldDimensions);
-  int out_fieldID = target->getMetaData().addField(iir::FieldAccessType::FAT_APIField,
-                                                   sirOutField->Name, sirOutField->fieldDimensions);
-
-  int literal_m3_ID =
-      target->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_Literal, "-3");
-  int literal_d1_ID =
-      target->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_Literal, "0.1");
-  // create the StmtAccessPair 1:
-  // m_out_field[t] = -3. * m_in_field[t];
-  //==----------------------------------------------------------------------------------------------
-  // create the stmt
-  auto outFieldAccess = std::make_shared<ast::FieldAccessExpr>(sirOutField->Name);
-  outFieldAccess->setID(target->nextUID());
-  auto inFieldAccess = std::make_shared<ast::FieldAccessExpr>(sirInField->Name);
-  inFieldAccess->setID(target->nextUID());
-  auto literalAccess = std::make_shared<ast::LiteralAccessExpr>("-3", dawn::BuiltinTypeID::Float);
-  literalAccess->setID(target->nextUID());
-  auto binop = std::make_shared<ast::BinaryOperator>(literalAccess, "*", inFieldAccess);
-  binop->setID(target->nextUID());
-  auto assignment = std::make_shared<ast::AssignmentExpr>(outFieldAccess, binop);
-  assignment->setID(target->nextUID());
-
-  // Insert the stmt into the statementaccesspair
-  auto scalingInputES = std::make_shared<iir::ExprStmt>(assignment);
-  auto scalingInput = std::make_shared<Statement>(scalingInputES, nullptr);
-  auto sap_1 = make_unique<iir::StatementAccessesPair>(scalingInput);
-  std::shared_ptr<iir::Accesses> callerAccesses_1 = std::make_shared<iir::Accesses>();
-  callerAccesses_1->addWriteExtent(out_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
-  callerAccesses_1->addReadExtent(in_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
-  sap_1->setCallerAccesses(callerAccesses_1);
-
-  // Add the statementaccesspair to the IIR
-  IIRDoMethod->insertChild(std::move(sap_1));
-  IIRDoMethod->updateLevel();
-  //==----------------------------------------------------------------------------------------------
-
-  // create the StmtAccessPair 2:
-  // for (auto&& x : cellNeighboursOfCell(m_mesh, t)) m_out_field[t] += m_in_field[*x];
-  //==----------------------------------------------------------------------------------------------
-  // create the stmt
-  auto lhs = std::make_shared<ast::FieldAccessExpr>(sirOutField->Name);
-  lhs->setID(target->nextUID());
-  auto rhs = std::make_shared<ast::FieldAccessExpr>(sirInField->Name);
-  rhs->setID(target->nextUID());
-  auto init = std::make_shared<ast::LiteralAccessExpr>("0.0", BuiltinTypeID::Float);
-  init->setID(target->nextUID());
-  auto expr = std::make_shared<ast::ReductionOverNeighborExpr>("+", rhs, lhs);
-  expr->setID(target->nextUID());
-  auto assign = std::make_shared<ast::AssignmentExpr>(lhs, expr);
-  assign->setID(target->nextUID());
-  auto stmt = std::make_shared<ast::ExprStmt>(assign);
-  stmt->setID(target->nextUID());
-  auto statement = std::make_shared<Statement>(stmt, nullptr);
-  auto insertee = make_unique<iir::StatementAccessesPair>(statement);
-
-  // Insert the stmt into the statementaccesspair
-  std::shared_ptr<iir::Accesses> callerAccesses = std::make_shared<iir::Accesses>();
-  callerAccesses->addWriteExtent(out_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
-  callerAccesses->addReadExtent(in_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
-  insertee->setCallerAccesses(callerAccesses);
-
-  // Add the statementaccesspair to the IIR
-  IIRDoMethod->insertChild(std::move(insertee));
-  IIRDoMethod->updateLevel();
-  //==----------------------------------------------------------------------------------------------
-
-  // create the StmtAccessPair 3:
-  // m_out_field[x] *= 0.1;
-  //==----------------------------------------------------------------------------------------------
-  // create the stmt
-  auto outAccess = std::make_shared<ast::FieldAccessExpr>(sirOutField->Name);
-  outAccess->setID(target->nextUID());
-  auto diffCoeffAccess =
-      std::make_shared<ast::LiteralAccessExpr>("0.3", dawn::BuiltinTypeID::Float);
-  diffCoeffAccess->setID(target->nextUID());
-  auto scale = std::make_shared<ast::AssignmentExpr>(outAccess, diffCoeffAccess, "*=");
-  scale->setID(target->nextUID());
-
-  // Insert the stmt into the statementaccesspair
-  auto scaleOutput = std::make_shared<Statement>(std::make_shared<ast::ExprStmt>(scale), nullptr);
-  auto sap_2 = make_unique<iir::StatementAccessesPair>(scaleOutput);
-  std::shared_ptr<iir::Accesses> callerAccesses_2 = std::make_shared<iir::Accesses>();
-  callerAccesses_2->addWriteExtent(out_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
-  callerAccesses_2->addReadExtent(in_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
-  sap_2->setCallerAccesses(callerAccesses_2);
-
-  // Add the statementaccesspair to the IIR
-  IIRDoMethod->insertChild(std::move(sap_2));
-  IIRDoMethod->updateLevel();
-  //==----------------------------------------------------------------------------------------------
-
-  // create the StmtAccessPair 4:
-  // m_out_field[x] += m_in_field[x];
-  //==----------------------------------------------------------------------------------------------
-  // create the stmt
-  auto finalOutAccess = std::make_shared<ast::FieldAccessExpr>(sirOutField->Name);
-  finalOutAccess->setID(target->nextUID());
-  auto inAccess = std::make_shared<ast::FieldAccessExpr>(sirInField->Name);
-  inAccess->setID(target->nextUID());
-  auto addUp = std::make_shared<ast::AssignmentExpr>(finalOutAccess, inAccess, "+=");
-  addUp->setID(target->nextUID());
-
-  // Insert the stmt into the statementaccesspair
-  auto addOld = std::make_shared<Statement>(std::make_shared<ast::ExprStmt>(addUp), nullptr);
-  auto sap_3 = make_unique<iir::StatementAccessesPair>(addOld);
-  std::shared_ptr<iir::Accesses> callerAccesses_3 = std::make_shared<iir::Accesses>();
-  callerAccesses_3->addWriteExtent(out_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
-  callerAccesses_3->addReadExtent(in_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
-  sap_3->setCallerAccesses(callerAccesses_3);
-
-  // Add the statementaccesspair to the IIR
-  IIRDoMethod->insertChild(std::move(sap_3));
-  IIRDoMethod->updateLevel();
-  //==----------------------------------------------------------------------------------------------
-
-  // Add the control flow descriptor to the IIR
-  auto stencilCall = std::make_shared<ast::StencilCall>("generatedDriver");
-  stencilCall->Args.push_back(sirInField->Name);
-  stencilCall->Args.push_back(sirOutField->Name);
-  auto placeholderStencil = std::make_shared<ast::StencilCall>(
-      iir::InstantiationHelper::makeStencilCallCodeGenName(stencilID));
-  auto stencilCallDeclStmt = std::make_shared<iir::StencilCallDeclStmt>(placeholderStencil);
-  // Register the call and set it as a replacement for the next vertical region
-  target->getMetaData().addStencilCallStmt(stencilCallDeclStmt, stencilID);
-
-  // auto stencilCallStmt = std::make_shared<ast::StencilCallDeclStmt>(stencilCall);
-  // stencilCallStmt->setID(target->nextUID());
-  // target->getMetaData().insertStencilCallStmt(stencilCallStmt, target->nextUID());
-  auto stencilCallStatement = std::make_shared<Statement>(stencilCallDeclStmt, nullptr);
-  target->getIIR()->getControlFlowDescriptor().insertStmt(stencilCallStatement);
-
-  ///////////////// Generation of the Metadata
-
-  // stmt 1
-  target->getMetaData().insertExprToAccessID(outFieldAccess, out_fieldID);
-  target->getMetaData().insertExprToAccessID(inFieldAccess, in_fieldID);
-  target->getMetaData().insertExprToAccessID(literalAccess, literal_m3_ID);
-
-  // stmt 2
-  target->getMetaData().insertExprToAccessID(lhs, out_fieldID);
-  target->getMetaData().insertExprToAccessID(rhs, in_fieldID);
-
-  // stmt 3
-  target->getMetaData().insertExprToAccessID(outAccess, out_fieldID);
-  target->getMetaData().insertExprToAccessID(diffCoeffAccess, literal_d1_ID);
-
-  // stmt 4
-  target->getMetaData().insertExprToAccessID(finalOutAccess, out_fieldID);
-  target->getMetaData().insertExprToAccessID(inAccess, in_fieldID);
-
-  target->getMetaData().setStencilname("generated");
-
-  for(const auto& MS : iterateIIROver<iir::MultiStage>(*(target->getIIR()))) {
-    MS->update(iir::NodeUpdateType::levelAndTreeAbove);
-  }
-  // Iterate all statements (top -> bottom)
-  for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(target->getIIR()))) {
-    iir::Stage& stage = *stagePtr;
-    for(const auto& doMethod : stage.getChildren()) {
-      doMethod->update(iir::NodeUpdateType::level);
-    }
-    stage.update(iir::NodeUpdateType::level);
-  }
-  for(const auto& MSPtr : iterateIIROver<iir::Stage>(*(target->getIIR()))) {
-    MSPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
-  }
+  target =
+      b.build("generated", b.make_stencil(b.make_multistage(iir::LoopOrderKind::LK_Parallel,
+                                                            b.make_stage(std::move(my_do)))));
 }
 using namespace iir;
 //===------------------------------------------------------------------------------------------===//
