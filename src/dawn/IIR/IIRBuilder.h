@@ -61,7 +61,7 @@ public:
     auto expr = std::make_shared<iir::LiteralAccessExpr>(
         std::to_string(v),
         sir::Value::typeToBuiltinTypeID(sir::Value::TypeInfo<typename std::decay<T>::type>::Type));
-    expr->setID(si_->nextUID());
+    expr->setID(-si_->nextUID());
     si_->getMetaData().insertExprToAccessID(expr, acc);
     return expr;
   }
