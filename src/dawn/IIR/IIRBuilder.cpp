@@ -101,7 +101,6 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(si_->getIIR()))) {
     iir::Stage& stage = *stagePtr;
     for(const auto& doMethod : stage.getChildren()) {
-      computeAccesses(si_.get(), doMethod->getChildren());
       doMethod->update(iir::NodeUpdateType::level);
     }
     stage.update(iir::NodeUpdateType::level);
@@ -153,6 +152,14 @@ int IIRBuilder::make_field(std::string const& name, field_type ft) {
   field_ids_[name] = ret;
   return ret;
 }
+int IIRBuilder::make_localvar(std::string const& name) {
+  // int ret = si_->getMetaData().addField(iir::FieldAccessType::FAT_LocalVariable, name,
+  // as_array(field_type::ijk));
+  int ret = si_->nextUID();
+  field_names_[ret] = name;
+  field_ids_[name] = ret;
+  return ret;
+}
 std::shared_ptr<iir::Expr> IIRBuilder::at(int field_id, access_type access, Array3i extent) {
   auto expr = std::make_shared<iir::FieldAccessExpr>(field_names_[field_id], extent);
   expr->setID(si_->nextUID());
@@ -172,30 +179,15 @@ std::unique_ptr<iir::StatementAccessesPair>
 IIRBuilder::make_stmt(std::shared_ptr<iir::Expr>&& expr) {
   auto iir_stmt = std::make_shared<iir::ExprStmt>(std::move(expr));
   auto statement = std::make_shared<Statement>(iir_stmt, nullptr);
-  auto sap = make_unique<iir::StatementAccessesPair>(statement);
-  auto accesses = std::make_shared<iir::Accesses>();
-
-  struct ExtentAdder : public iir::ASTVisitorForwarding {
-    void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
-      if(b_.read_extents_.find(expr.get()) != b_.read_extents_.end()) {
-        accesses_.addReadExtent(b_.field_ids_[expr->getName()], iir::Extents{0, 0, 0, 0, 0, 0});
-        b_.read_extents_.erase(expr.get());
-      }
-      if(b_.write_extents_.find(expr.get()) != b_.write_extents_.end()) {
-        accesses_.addWriteExtent(b_.field_ids_[expr->getName()], iir::Extents{0, 0, 0, 0, 0, 0});
-        b_.write_extents_.erase(expr.get());
-      }
-      ASTVisitorForwarding::visit(expr);
-    }
-    ExtentAdder(iir::Accesses& accesses, IIRBuilder& b) : accesses_(accesses), b_(b) {}
-    iir::Accesses& accesses_;
-    IIRBuilder& b_;
-  };
-  ExtentAdder visitor{*accesses, *this};
-  expr->accept(visitor);
-
-  sap->setCallerAccesses(accesses);
-  return sap;
+  return make_unique<iir::StatementAccessesPair>(statement);
+}
+std::unique_ptr<iir::StatementAccessesPair> IIRBuilder::declare_var(int var_id) {
+  auto iir_stmt =
+      std::make_shared<iir::VarDeclStmt>(Type{BuiltinTypeID::Float}, field_names_[var_id], 0, "=",
+                                         std::vector<std::shared_ptr<Expr>>{});
+  si_->getMetaData().addStmt(true, iir_stmt);
+  auto statement = std::make_shared<Statement>(iir_stmt, nullptr);
+  return make_unique<iir::StatementAccessesPair>(statement);
 }
 
 } // namespace iir

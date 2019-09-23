@@ -18,6 +18,7 @@
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/IIR/IIRBuilder.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/DiagnosticsEngine.h"
@@ -100,28 +101,51 @@ TEST(CompilerTest, TestCodeGen) {
   IIRBuilder b;
   auto in_f = b.make_field("in_field", field_type::ijk);
   auto out_f = b.make_field("out_field", field_type::ijk);
+  auto var = b.make_localvar("my_var");
+  auto var2 = b.make_localvar("my_var2");
 
   auto stencil_instantiation = b.build(
       "generated",
       b.make_stencil(b.make_multistage(
           dawn::iir::LoopOrderKind::LK_Parallel,
           b.make_stage(b.make_do(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End,
-              b.make_stmt(b.make_assign_expr(b.at(out_f, access_type::rw),
-                                             b.make_multiply_expr(b.make_lit(-3.), b.at(in_f)))),
+              dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declare_var(var),
               b.make_stmt(b.make_assign_expr(
                   b.at(out_f, access_type::rw),
-                  b.make_reduce_over_neighbor_expr(op::plus, b.at(in_f), b.at(out_f)))),
+                  b.make_binary_expr(b.make_lit(-3.), b.make_unary_expr(b.at(in_f), op::minus),
+                                     op::multiply))),
+              b.make_stmt(b.make_assign_expr(
+                  b.at(out_f, access_type::rw),
+                  b.make_reduce_over_neighbor_expr(
+                      op::plus, b.make_unary_expr(b.at(in_f), op::minus), b.at(out_f)))),
               b.make_stmt(
                   b.make_assign_expr(b.at(out_f, access_type::rw), b.make_lit(0.1), op::multiply)),
               b.make_stmt(b.make_assign_expr(b.at(out_f, access_type::rw), b.at(in_f, {0, 0, 1}),
-                                             op::plus)))))));
+                                             op::plus)))),
+          b.make_stage(
+              b.make_do(dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declare_var(var2),
+                        b.make_stmt(b.make_assign_expr(
+                            b.at(out_f, access_type::rw),
+                            b.make_binary_expr(b.make_lit(-3.),
+                                               b.make_unary_expr(b.at(out_f, {0, 1, 0}), op::minus),
+                                               op::multiply))),
+                        b.make_stmt(b.make_assign_expr(b.at(out_f, access_type::rw),
+                                                       b.make_lit(0.1), op::multiply)),
+                        b.make_stmt(b.make_assign_expr(b.at(out_f, access_type::rw),
+                                                       b.at(in_f, {0, 0, 1}), op::plus)))))));
 
   dawn::DiagnosticsEngine diagnostics;
+
+  auto optimizer = dawn::make_unique<dawn::OptimizerContext>(
+      diagnostics, dawn::OptimizerContext::OptimizerContextOptions{}, nullptr);
+  optimizer->restoreIIR("<restored>", stencil_instantiation);
+  stencil_instantiation = optimizer->getStencilInstantiationMap()["<restored>"];
+
   dawn::codegen::stencilInstantiationContext map;
   map["test"] = std::move(stencil_instantiation);
 
   dawn::codegen::cxxnaive::CXXNaiveCodeGen generator(map, diagnostics, 0);
+  // dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen generator(map, diagnostics, 0);
   auto tu = generator.generateCode();
 
   std::ostringstream ss;

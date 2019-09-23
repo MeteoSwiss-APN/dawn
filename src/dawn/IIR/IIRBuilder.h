@@ -62,6 +62,7 @@ public:
   std::shared_ptr<iir::Expr> make_unary_expr(std::shared_ptr<iir::Expr> const& expr, op operation);
 
   int make_field(std::string const& name, field_type ft = field_type::ijk);
+  int make_localvar(std::string const& name);
 
   template <typename T>
   std::shared_ptr<iir::Expr> make_lit(T&& v) {
@@ -81,13 +82,16 @@ public:
   std::shared_ptr<iir::Expr> at(int field_id, Array3i extent);
 
   std::unique_ptr<iir::StatementAccessesPair> make_stmt(std::shared_ptr<iir::Expr>&& expr);
+  std::unique_ptr<iir::StatementAccessesPair> declare_var(int var_id);
 
   template <typename... Stmts>
   std::unique_ptr<iir::DoMethod> make_do(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
                                          Stmts&&... stmts) {
     auto ret = make_unique<iir::DoMethod>(iir::Interval(s, e), si_->getMetaData());
     ret->setID(si_->nextUID());
-    int x[] = {(ret->insertChild(std::forward<Stmts>(stmts)), ret->updateLevel(), 0)...};
+    int x[] = {(ret->insertChild(std::forward<Stmts>(stmts)), 0)...};
+    computeAccesses(si_.get(), ret->getChildren());
+    ret->updateLevel();
     return ret;
   }
   template <typename... DoMethods>
