@@ -178,25 +178,19 @@ std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::LocalVar var) {
   si_->getMetaData().insertExprToAccessID(expr, var.id);
   return expr;
 }
-std::unique_ptr<iir::StatementAccessesPair> IIRBuilder::stmt(std::shared_ptr<iir::Expr>&& expr) {
-  auto iir_stmt = std::make_shared<iir::ExprStmt>(std::move(expr));
-  auto statement = std::make_shared<Statement>(iir_stmt, nullptr);
-  return make_unique<iir::StatementAccessesPair>(statement);
+std::shared_ptr<iir::Stmt> IIRBuilder::stmt(std::shared_ptr<iir::Expr>&& expr) {
+  return std::make_shared<iir::ExprStmt>(std::move(expr));
 }
-std::unique_ptr<iir::StatementAccessesPair>
-IIRBuilder::if_stmt(std::shared_ptr<iir::Expr>&& cond,
-                    std::shared_ptr<iir::StatementAccessesPair>&& case_then,
-                    std::shared_ptr<iir::StatementAccessesPair>&& case_else) {
+std::shared_ptr<iir::Stmt> IIRBuilder::if_stmt(std::shared_ptr<iir::Expr>&& cond,
+                                               std::shared_ptr<iir::Stmt>&& case_then,
+                                               std::shared_ptr<iir::Stmt>&& case_else) {
   auto cond_stmt = std::make_shared<iir::ExprStmt>(std::move(cond));
-  auto ret_stmt = std::make_shared<iir::IfStmt>(std::move(cond_stmt),
-                                                std::move(case_then->getStatement()->ASTStmt),
-                                                std::move(case_else->getStatement()->ASTStmt));
-  auto statement = std::make_shared<Statement>(ret_stmt, nullptr);
-  return make_unique<iir::StatementAccessesPair>(statement);
+  return std::make_shared<iir::IfStmt>(std::move(cond_stmt), std::move(case_then),
+                                       std::move(case_else));
 }
-std::unique_ptr<iir::StatementAccessesPair> IIRBuilder::declare_var(IIRBuilder::LocalVar& var) {
-  auto statement = std::make_shared<Statement>(var.decl, nullptr);
-  return make_unique<iir::StatementAccessesPair>(statement);
+std::shared_ptr<iir::Stmt> IIRBuilder::declare_var(IIRBuilder::LocalVar& var) {
+  DAWN_ASSERT(var.decl);
+  return std::move(var.decl);
 }
 
 } // namespace iir

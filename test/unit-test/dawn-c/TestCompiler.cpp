@@ -128,8 +128,8 @@ TEST(CompilerTest, TestCodeGen) {
                                                  op::multiply))),
               b.stmt(b.assign_expr(b.at(var2), b.lit(0.1), op::multiply)),
               b.if_stmt(b.binary_expr(b.lit(0.1), b.lit(0.1), op::equal),
-                        b.block(b.stmt(b.assign_expr(b.at(out_f, access_type::rw),
-                                                     b.at(in_f, {0, 0, 1}), op::plus))),
+                        b.stmt(b.assign_expr(b.at(out_f, access_type::rw), b.at(in_f, {0, 0, 1}),
+                                             op::plus)),
                         b.stmt(b.assign_expr(
                             b.at(var2),
                             b.conditional_expr(b.binary_expr(b.lit(0.1), b.lit(0.1), op::equal),

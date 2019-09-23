@@ -97,19 +97,20 @@ public:
 
   std::shared_ptr<iir::Expr> at(LocalVar var);
 
-  std::unique_ptr<iir::StatementAccessesPair> stmt(std::shared_ptr<iir::Expr>&& expr);
-  std::unique_ptr<iir::StatementAccessesPair>
-  if_stmt(std::shared_ptr<iir::Expr>&& cond,
-          std::shared_ptr<iir::StatementAccessesPair>&& case_then,
-          std::shared_ptr<iir::StatementAccessesPair>&& case_else = nullptr);
-  std::unique_ptr<iir::StatementAccessesPair> declare_var(LocalVar& var_id);
+  std::shared_ptr<iir::Stmt> stmt(std::shared_ptr<iir::Expr>&& expr);
+  std::shared_ptr<iir::Stmt> if_stmt(std::shared_ptr<iir::Expr>&& cond,
+                                     std::shared_ptr<iir::Stmt>&& case_then,
+                                     std::shared_ptr<iir::Stmt>&& case_else = nullptr);
+  std::shared_ptr<iir::Stmt> declare_var(LocalVar& var_id);
 
   template <typename... Stmts>
   std::unique_ptr<iir::DoMethod> vregion(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
                                          Stmts&&... stmts) {
     auto ret = make_unique<iir::DoMethod>(iir::Interval(s, e), si_->getMetaData());
     ret->setID(si_->nextUID());
-    int x[] = {(ret->insertChild(std::forward<Stmts>(stmts)), 0)...};
+    int x[] = {(ret->insertChild(make_unique<iir::StatementAccessesPair>(
+                    std::make_shared<Statement>(std::forward<Stmts>(stmts), nullptr))),
+                0)...};
     (void)x;
     computeAccesses(si_.get(), ret->getChildren());
     ret->updateLevel();
