@@ -67,10 +67,7 @@ yoda_set_cxx_standard(c++11)
 
 # Set C++ flags
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  message(STATUS "address")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
-else()
-  message(STATUS "no address")
 endif()
 
 # Add custom targets
