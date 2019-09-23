@@ -90,6 +90,7 @@ public:
     auto ret = make_unique<iir::DoMethod>(iir::Interval(s, e), si_->getMetaData());
     ret->setID(si_->nextUID());
     int x[] = {(ret->insertChild(std::forward<Stmts>(stmts)), 0)...};
+    (void)x;
     computeAccesses(si_.get(), ret->getChildren());
     ret->updateLevel();
     return ret;
@@ -98,6 +99,7 @@ public:
   std::unique_ptr<iir::Stage> make_stage(DoMethods&&... do_methods) {
     auto ret = make_unique<iir::Stage>(si_->getMetaData(), si_->nextUID());
     int x[] = {(ret->insertChild(std::forward<DoMethods>(do_methods)), 0)...};
+    (void)x;
     return ret;
   }
   template <typename... Stages>
@@ -106,12 +108,14 @@ public:
     auto ret = make_unique<iir::MultiStage>(si_->getMetaData(), loop_kind);
     ret->setID(si_->nextUID());
     int x[] = {(ret->insertChild(std::forward<Stages>(stages)), 0)...};
+    (void)x;
     return ret;
   }
   template <typename... MultiStages>
   std::unique_ptr<iir::Stencil> make_stencil(MultiStages&&... multistages) {
     auto ret = make_unique<iir::Stencil>(si_->getMetaData(), sir::Attr{}, si_->nextUID());
     int x[] = {(ret->insertChild(std::forward<MultiStages>(multistages)), 0)...};
+    (void)x;
     return ret;
   }
 

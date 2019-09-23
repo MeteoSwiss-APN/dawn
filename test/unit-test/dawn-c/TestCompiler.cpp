@@ -136,6 +136,7 @@ TEST(CompilerTest, TestCodeGen) {
 
   dawn::DiagnosticsEngine diagnostics;
 
+  // TODO this should be moved into the IIR builder -> the IIR builder cannot be in IIR
   auto optimizer = dawn::make_unique<dawn::OptimizerContext>(
       diagnostics, dawn::OptimizerContext::OptimizerContextOptions{}, nullptr);
   optimizer->restoreIIR("<restored>", stencil_instantiation);
@@ -144,8 +145,8 @@ TEST(CompilerTest, TestCodeGen) {
   dawn::codegen::stencilInstantiationContext map;
   map["test"] = std::move(stencil_instantiation);
 
-  dawn::codegen::cxxnaive::CXXNaiveCodeGen generator(map, diagnostics, 0);
-  // dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen generator(map, diagnostics, 0);
+  // dawn::codegen::cxxnaive::CXXNaiveCodeGen generator(map, diagnostics, 0);
+  dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen generator(map, diagnostics, 0);
   auto tu = generator.generateCode();
 
   std::ostringstream ss;
