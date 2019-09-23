@@ -31,7 +31,14 @@ public:
   static UIDGenerator* getInstance();
 
   /// @brief Get a unique *strictly* positive identifer
-  int get() { return (counter_++); }
+  int get() { 
+    return (counter_++);
+  }
+
+  void reset() {
+    counter_ = 0;
+  }
+
 };
 
 } // namespace dawn

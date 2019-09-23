@@ -96,7 +96,9 @@ public:
                                 std::shared_ptr<iir::BoundaryConditionDeclStmt> bc);
 
   /// @brief Get a unique (positive) identifier
-  inline int nextUID() { return UIDGenerator::getInstance()->get(); }
+  inline int nextUID() { 
+    return UIDGenerator::getInstance()->get(); 
+  }
 
   /// @brief Dump the StencilInstantiation to stdout
   void jsonDump(std::string filename) const;
