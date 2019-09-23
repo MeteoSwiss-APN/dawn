@@ -590,7 +590,7 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
     // auto stmt = std::make_shared<iir::StencilCallDeclStmt>(
     //       astStencilCall, makeLocation(call.stencil_call_decl_stmt()));
 
-    //NOTE MR: reverted to this version, which was commented out. but why?
+    //reverted to this version, which was commented out
     auto stmt = declStmtFinder.stencilCallDecl[call.stencil_call_decl_stmt().id()];
 
     stmt->setID(call.stencil_call_decl_stmt().id());
