@@ -99,39 +99,36 @@ TEST(CompilerTest, TestCodeGen) {
   using namespace dawn::iir;
 
   IIRBuilder b;
-  auto in_f = b.make_field("in_field", field_type::ijk);
-  auto out_f = b.make_field("out_field", field_type::ijk);
-  auto var = b.make_localvar("my_var");
-  auto var2 = b.make_localvar("my_var2");
+  auto in_f = b.field("in_field", field_type::ijk);
+  auto out_f = b.field("out_field", field_type::ijk);
+  auto var = b.localvar("my_var");
+  auto var2 = b.localvar("my_var2");
 
   auto stencil_instantiation = b.build(
       "generated",
-      b.make_stencil(b.make_multistage(
+      b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::LK_Parallel,
-          b.make_stage(b.make_do(
+          b.stage(b.vregion(
               dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declare_var(var),
-              b.make_stmt(b.make_assign_expr(
+              b.stmt(b.assign_expr(
                   b.at(out_f, access_type::rw),
-                  b.make_binary_expr(b.make_lit(-3.), b.make_unary_expr(b.at(in_f), op::minus),
-                                     op::multiply))),
-              b.make_stmt(b.make_assign_expr(
-                  b.at(out_f, access_type::rw),
-                  b.make_reduce_over_neighbor_expr(
-                      op::plus, b.make_unary_expr(b.at(in_f), op::minus), b.at(out_f)))),
-              b.make_stmt(
-                  b.make_assign_expr(b.at(out_f, access_type::rw), b.make_lit(0.1), op::multiply)),
-              b.make_stmt(b.make_assign_expr(b.at(out_f, access_type::rw), b.at(in_f, {0, 0, 1}),
-                                             op::plus)))),
-          b.make_stage(
-              b.make_do(dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declare_var(var2),
-                        b.make_stmt(b.make_assign_expr(
-                            b.at(out_f, access_type::rw),
-                            b.make_binary_expr(b.make_lit(-3.),
-                                               b.make_unary_expr(b.at(out_f, {0, 1, 0}), op::minus),
-                                               op::multiply))),
-                        b.make_stmt(b.make_assign_expr(b.at(var2), b.make_lit(0.1), op::multiply)),
-                        b.make_stmt(b.make_assign_expr(b.at(out_f, access_type::rw),
-                                                       b.at(in_f, {0, 0, 1}), op::plus)))))));
+                  b.binary_expr(b.lit(-3.), b.unary_expr(b.at(in_f), op::minus), op::multiply))),
+              b.stmt(b.assign_expr(b.at(out_f, access_type::rw),
+                                   b.reduce_over_neighbor_expr(op::plus,
+                                                               b.unary_expr(b.at(in_f), op::minus),
+                                                               b.at(out_f)))),
+              b.stmt(b.assign_expr(b.at(out_f, access_type::rw), b.lit(0.1), op::multiply)),
+              b.stmt(
+                  b.assign_expr(b.at(out_f, access_type::rw), b.at(in_f, {0, 0, 1}), op::plus)))),
+          b.stage(b.vregion(
+              dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declare_var(var2),
+              b.stmt(b.assign_expr(b.at(out_f, access_type::rw),
+                                   b.binary_expr(b.lit(-3.),
+                                                 b.unary_expr(b.at(out_f, {0, 1, 0}), op::minus),
+                                                 op::multiply))),
+              b.stmt(b.assign_expr(b.at(var2), b.lit(0.1), op::multiply)),
+              b.stmt(b.assign_expr(b.at(out_f, access_type::rw), b.at(in_f, {0, 0, 1}),
+                                   op::plus)))))));
 
   dawn::DiagnosticsEngine diagnostics;
 

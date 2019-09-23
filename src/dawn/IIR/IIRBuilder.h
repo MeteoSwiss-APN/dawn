@@ -58,24 +58,24 @@ class IIRBuilder {
   };
 
 public:
-  std::shared_ptr<iir::Expr> make_reduce_over_neighbor_expr(op operation,
-                                                            std::shared_ptr<iir::Expr> const& rhs,
-                                                            std::shared_ptr<iir::Expr> const& init);
+  std::shared_ptr<iir::Expr> reduce_over_neighbor_expr(op operation,
+                                                       std::shared_ptr<iir::Expr> const& rhs,
+                                                       std::shared_ptr<iir::Expr> const& init);
 
-  std::shared_ptr<iir::Expr> make_binary_expr(std::shared_ptr<iir::Expr> const& lhs,
-                                              std::shared_ptr<iir::Expr> const& rhs, op operation);
+  std::shared_ptr<iir::Expr> binary_expr(std::shared_ptr<iir::Expr> const& lhs,
+                                         std::shared_ptr<iir::Expr> const& rhs, op operation);
 
-  std::shared_ptr<iir::Expr> make_assign_expr(std::shared_ptr<iir::Expr> const& lhs,
-                                              std::shared_ptr<iir::Expr> const& rhs,
-                                              op operation = op::assign);
+  std::shared_ptr<iir::Expr> assign_expr(std::shared_ptr<iir::Expr> const& lhs,
+                                         std::shared_ptr<iir::Expr> const& rhs,
+                                         op operation = op::assign);
 
-  std::shared_ptr<iir::Expr> make_unary_expr(std::shared_ptr<iir::Expr> const& expr, op operation);
+  std::shared_ptr<iir::Expr> unary_expr(std::shared_ptr<iir::Expr> const& expr, op operation);
 
-  Field make_field(std::string const& name, field_type ft = field_type::ijk);
-  LocalVar make_localvar(std::string const& name);
+  Field field(std::string const& name, field_type ft = field_type::ijk);
+  LocalVar localvar(std::string const& name);
 
   template <typename T>
-  std::shared_ptr<iir::Expr> make_lit(T&& v) {
+  std::shared_ptr<iir::Expr> lit(T&& v) {
     int acc =
         si_->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_Literal, std::to_string(v));
     auto expr = std::make_shared<iir::LiteralAccessExpr>(
@@ -93,11 +93,11 @@ public:
 
   std::shared_ptr<iir::Expr> at(LocalVar var);
 
-  std::unique_ptr<iir::StatementAccessesPair> make_stmt(std::shared_ptr<iir::Expr>&& expr);
+  std::unique_ptr<iir::StatementAccessesPair> stmt(std::shared_ptr<iir::Expr>&& expr);
   std::unique_ptr<iir::StatementAccessesPair> declare_var(LocalVar& var_id);
 
   template <typename... Stmts>
-  std::unique_ptr<iir::DoMethod> make_do(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
+  std::unique_ptr<iir::DoMethod> vregion(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
                                          Stmts&&... stmts) {
     auto ret = make_unique<iir::DoMethod>(iir::Interval(s, e), si_->getMetaData());
     ret->setID(si_->nextUID());
@@ -108,15 +108,14 @@ public:
     return ret;
   }
   template <typename... DoMethods>
-  std::unique_ptr<iir::Stage> make_stage(DoMethods&&... do_methods) {
+  std::unique_ptr<iir::Stage> stage(DoMethods&&... do_methods) {
     auto ret = make_unique<iir::Stage>(si_->getMetaData(), si_->nextUID());
     int x[] = {(ret->insertChild(std::forward<DoMethods>(do_methods)), 0)...};
     (void)x;
     return ret;
   }
   template <typename... Stages>
-  std::unique_ptr<iir::MultiStage> make_multistage(iir::LoopOrderKind loop_kind,
-                                                   Stages&&... stages) {
+  std::unique_ptr<iir::MultiStage> multistage(iir::LoopOrderKind loop_kind, Stages&&... stages) {
     auto ret = make_unique<iir::MultiStage>(si_->getMetaData(), loop_kind);
     ret->setID(si_->nextUID());
     int x[] = {(ret->insertChild(std::forward<Stages>(stages)), 0)...};
@@ -124,7 +123,7 @@ public:
     return ret;
   }
   template <typename... MultiStages>
-  std::unique_ptr<iir::Stencil> make_stencil(MultiStages&&... multistages) {
+  std::unique_ptr<iir::Stencil> stencil(MultiStages&&... multistages) {
     auto ret = make_unique<iir::Stencil>(si_->getMetaData(), sir::Attr{}, si_->nextUID());
     int x[] = {(ret->insertChild(std::forward<MultiStages>(multistages)), 0)...};
     (void)x;

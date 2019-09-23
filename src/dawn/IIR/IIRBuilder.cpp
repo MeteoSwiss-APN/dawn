@@ -111,16 +111,16 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   return std::move(si_);
 }
 std::shared_ptr<iir::Expr>
-IIRBuilder::make_reduce_over_neighbor_expr(op operation, std::shared_ptr<iir::Expr> const& rhs,
-                                           std::shared_ptr<iir::Expr> const& init) {
+IIRBuilder::reduce_over_neighbor_expr(op operation, std::shared_ptr<iir::Expr> const& rhs,
+                                      std::shared_ptr<iir::Expr> const& init) {
   auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
       to_str(operation, {op::multiply, op::plus, op::minus, op::assign, op::divide}), rhs, init);
   expr->setID(si_->nextUID());
   return expr;
 }
-std::shared_ptr<iir::Expr> IIRBuilder::make_binary_expr(std::shared_ptr<iir::Expr> const& lhs,
-                                                        std::shared_ptr<iir::Expr> const& rhs,
-                                                        op operation) {
+std::shared_ptr<iir::Expr> IIRBuilder::binary_expr(std::shared_ptr<iir::Expr> const& lhs,
+                                                   std::shared_ptr<iir::Expr> const& rhs,
+                                                   op operation) {
   auto binop = std::make_shared<iir::BinaryOperator>(
       lhs,
       to_str(operation,
@@ -130,27 +130,27 @@ std::shared_ptr<iir::Expr> IIRBuilder::make_binary_expr(std::shared_ptr<iir::Exp
   binop->setID(si_->nextUID());
   return binop;
 }
-std::shared_ptr<iir::Expr> IIRBuilder::make_unary_expr(std::shared_ptr<iir::Expr> const& expr,
-                                                       op operation) {
+std::shared_ptr<iir::Expr> IIRBuilder::unary_expr(std::shared_ptr<iir::Expr> const& expr,
+                                                  op operation) {
   auto ret = std::make_shared<iir::UnaryOperator>(
       expr, to_str(operation, {op::plus, op::minus, op::logical_not}));
   ret->setID(si_->nextUID());
   return ret;
 }
-std::shared_ptr<iir::Expr> IIRBuilder::make_assign_expr(std::shared_ptr<iir::Expr> const& lhs,
-                                                        std::shared_ptr<iir::Expr> const& rhs,
-                                                        op operation) {
+std::shared_ptr<iir::Expr> IIRBuilder::assign_expr(std::shared_ptr<iir::Expr> const& lhs,
+                                                   std::shared_ptr<iir::Expr> const& rhs,
+                                                   op operation) {
   auto binop = std::make_shared<iir::AssignmentExpr>(
       lhs, rhs,
       to_str(operation, {op::assign, op::multiply, op::plus, op::minus, op::divide}) + "=");
   binop->setID(si_->nextUID());
   return binop;
 }
-IIRBuilder::Field IIRBuilder::make_field(std::string const& name, field_type ft) {
+IIRBuilder::Field IIRBuilder::field(std::string const& name, field_type ft) {
   int id = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name, as_array(ft));
   return {id, name};
 }
-IIRBuilder::LocalVar IIRBuilder::make_localvar(std::string const& name) {
+IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name) {
   auto iir_stmt = std::make_shared<iir::VarDeclStmt>(Type{BuiltinTypeID::Float}, name, 0, "=",
                                                      std::vector<std::shared_ptr<Expr>>{});
   int id = si_->getMetaData().addStmt(true, iir_stmt);
@@ -173,8 +173,7 @@ std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::LocalVar var) {
   si_->getMetaData().insertExprToAccessID(expr, var.id);
   return expr;
 }
-std::unique_ptr<iir::StatementAccessesPair>
-IIRBuilder::make_stmt(std::shared_ptr<iir::Expr>&& expr) {
+std::unique_ptr<iir::StatementAccessesPair> IIRBuilder::stmt(std::shared_ptr<iir::Expr>&& expr) {
   auto iir_stmt = std::make_shared<iir::ExprStmt>(std::move(expr));
   auto statement = std::make_shared<Statement>(iir_stmt, nullptr);
   return make_unique<iir::StatementAccessesPair>(statement);
