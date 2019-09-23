@@ -71,6 +71,10 @@ public:
 
   std::shared_ptr<iir::Expr> unary_expr(std::shared_ptr<iir::Expr> const& expr, op operation);
 
+  std::shared_ptr<iir::Expr> conditional_expr(std::shared_ptr<iir::Expr> const& cond,
+                                              std::shared_ptr<iir::Expr> const& case_then,
+                                              std::shared_ptr<iir::Expr> const& case_else);
+
   Field field(std::string const& name, field_type ft = field_type::ijk);
   LocalVar localvar(std::string const& name);
 
@@ -94,6 +98,10 @@ public:
   std::shared_ptr<iir::Expr> at(LocalVar var);
 
   std::unique_ptr<iir::StatementAccessesPair> stmt(std::shared_ptr<iir::Expr>&& expr);
+  std::unique_ptr<iir::StatementAccessesPair>
+  if_stmt(std::shared_ptr<iir::Expr>&& cond,
+          std::shared_ptr<iir::StatementAccessesPair>&& case_then,
+          std::shared_ptr<iir::StatementAccessesPair>&& case_else = nullptr);
   std::unique_ptr<iir::StatementAccessesPair> declare_var(LocalVar& var_id);
 
   template <typename... Stmts>

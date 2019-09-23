@@ -82,9 +82,6 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   si_->getMetaData().setStencilname(name);
   si_->getIIR()->insertChild(std::move(stencil), si_->getIIR());
 
-  auto stencilCall = std::make_shared<ast::StencilCall>("generatedDriver");
-  // stencilCall->Args.push_back(sirInField->Name);
-  // stencilCall->Args.push_back(sirOutField->Name);
   auto placeholderStencil = std::make_shared<ast::StencilCall>(
       iir::InstantiationHelper::makeStencilCallCodeGenName(stencil_id));
   auto stencilCallDeclStmt = std::make_shared<iir::StencilCallDeclStmt>(placeholderStencil);
@@ -137,6 +134,14 @@ std::shared_ptr<iir::Expr> IIRBuilder::unary_expr(std::shared_ptr<iir::Expr> con
   ret->setID(si_->nextUID());
   return ret;
 }
+std::shared_ptr<iir::Expr>
+IIRBuilder::conditional_expr(std::shared_ptr<iir::Expr> const& cond,
+                             std::shared_ptr<iir::Expr> const& case_then,
+                             std::shared_ptr<iir::Expr> const& case_else) {
+  auto ret = std::make_shared<iir::TernaryOperator>(cond, case_then, case_else);
+  ret->setID(si_->nextUID());
+  return ret;
+}
 std::shared_ptr<iir::Expr> IIRBuilder::assign_expr(std::shared_ptr<iir::Expr> const& lhs,
                                                    std::shared_ptr<iir::Expr> const& rhs,
                                                    op operation) {
@@ -176,6 +181,17 @@ std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::LocalVar var) {
 std::unique_ptr<iir::StatementAccessesPair> IIRBuilder::stmt(std::shared_ptr<iir::Expr>&& expr) {
   auto iir_stmt = std::make_shared<iir::ExprStmt>(std::move(expr));
   auto statement = std::make_shared<Statement>(iir_stmt, nullptr);
+  return make_unique<iir::StatementAccessesPair>(statement);
+}
+std::unique_ptr<iir::StatementAccessesPair>
+IIRBuilder::if_stmt(std::shared_ptr<iir::Expr>&& cond,
+                    std::shared_ptr<iir::StatementAccessesPair>&& case_then,
+                    std::shared_ptr<iir::StatementAccessesPair>&& case_else) {
+  auto cond_stmt = std::make_shared<iir::ExprStmt>(std::move(cond));
+  auto ret_stmt = std::make_shared<iir::IfStmt>(std::move(cond_stmt),
+                                                std::move(case_then->getStatement()->ASTStmt),
+                                                std::move(case_else->getStatement()->ASTStmt));
+  auto statement = std::make_shared<Statement>(ret_stmt, nullptr);
   return make_unique<iir::StatementAccessesPair>(statement);
 }
 std::unique_ptr<iir::StatementAccessesPair> IIRBuilder::declare_var(IIRBuilder::LocalVar& var) {
