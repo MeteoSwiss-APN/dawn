@@ -162,11 +162,6 @@ std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::Field field, access_type a
   expr->setID(si_->nextUID());
 
   si_->getMetaData().insertExprToAccessID(expr, field.id);
-
-  if(access == access_type::r)
-    read_extents_[expr.get()] = extent;
-  else
-    write_extents_[expr.get()] = extent;
   return expr;
 }
 std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::Field field, Array3i extent) {

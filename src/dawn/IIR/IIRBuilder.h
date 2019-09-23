@@ -138,8 +138,6 @@ public:
 
 private:
   std::shared_ptr<iir::StencilInstantiation> si_;
-  std::map<iir::Expr*, Array3i> read_extents_;
-  std::map<iir::Expr*, Array3i> write_extents_;
 };
 } // namespace iir
 } // namespace dawn
