@@ -30,6 +30,16 @@
 namespace dawn {
 
 namespace {
+
+/// @brief Helper function to encapsulate conversion performed by ASTConverter from AST with sir
+/// data to equal AST (cloned) but with iir data
+std::shared_ptr<ast::AST> convertToIIRAST(const ast::AST& sirAST) {
+  ASTConverter astConverter;
+  sirAST.accept(astConverter);
+  return std::make_shared<ast::AST>(
+      std::dynamic_pointer_cast<iir::BlockStmt>(astConverter.getStmtMap().at(sirAST.getRoot())));
+}
+
 using namespace iir;
 //===------------------------------------------------------------------------------------------===//
 //     StencilDescStatementMapper
@@ -158,7 +168,8 @@ public:
     // TODO redo
     // Instead of inserting the VerticalRegionDeclStmt we insert the call to the gridtools stencil
     if(scope_.top()->ScopeDepth == 1) {
-      stencilDescReplacement_->getData<iir::IIRStmtData>().StackTrace = scope_.top()->StackTrace;
+      stencilDescReplacement_->getData<iir::IIRStmtData>().StackTrace =
+          boost::optional<std::vector<ast::StencilCall*>>(scope_.top()->StackTrace);
       scope_.top()->controlFlowDescriptor_.insertStmt(stencilDescReplacement_);
     } else {
 
@@ -229,7 +240,8 @@ public:
 
   /// @brief Push back a new statement to the end of the current statement list
   void pushBackStatement(const std::shared_ptr<iir::Stmt>& stmt) {
-    stmt->getData<iir::IIRStmtData>().StackTrace = scope_.top()->StackTrace;
+    stmt->getData<iir::IIRStmtData>().StackTrace =
+        boost::optional<std::vector<ast::StencilCall*>>(scope_.top()->StackTrace);
     scope_.top()->controlFlowDescriptor_.insertStmt(stmt);
   }
 
@@ -450,10 +462,8 @@ public:
     // Process the stencil description AST of the callee.
     scope_.push(candiateScope);
 
-    // Convert the AST
-    ASTConverter astConverter;
-    stencil.StencilDescAst->accept(astConverter);
-    astConverter.getStmtMap().at(stencil.StencilDescAst->getRoot())->accept(*this);
+    // Convert the AST to have an AST with iir data and visit it
+    convertToIIRAST(*stencil.StencilDescAst)->accept(*this);
 
     scope_.pop();
 
@@ -595,10 +605,7 @@ bool OptimizerContext::fillIIRFromSIR(
                                                *this);
 
   //  Converting to AST with iir data
-  ASTConverter astConverter;
-  SIRStencil->StencilDescAst->accept(astConverter);
-  auto AST = std::make_shared<ast::AST>(std::dynamic_pointer_cast<iir::BlockStmt>(
-      astConverter.getStmtMap().at(SIRStencil->StencilDescAst->getRoot())));
+  auto AST = convertToIIRAST(*SIRStencil->StencilDescAst);
   AST->accept(stencilDeclMapper);
 
   //  Cleanup the `stencilDescStatements` and remove the empty stencils which may have been inserted
@@ -659,14 +666,10 @@ void OptimizerContext::fillIIR() {
   std::transform(SIR_->StencilFunctions.begin(), SIR_->StencilFunctions.end(),
                  std::back_inserter(iirStencilFunctions),
                  [&](const std::shared_ptr<sir::StencilFunction>& sirSF) {
-                   auto iirSF = std::make_shared<sir::StencilFunction>();
-                   *iirSF = *sirSF;
-                   for(auto& ast : iirSF->Asts) {
-                     ASTConverter astConverter;
-                     ast->accept(astConverter);
-                     ast = std::make_shared<ast::AST>(std::dynamic_pointer_cast<iir::BlockStmt>(
-                         astConverter.getStmtMap().at(ast->getRoot())));
-                   }
+                   auto iirSF = std::make_shared<sir::StencilFunction>(*sirSF);
+                   for(auto& ast : iirSF->Asts)
+                     ast = convertToIIRAST(*ast);
+
                    return iirSF;
                  });
 

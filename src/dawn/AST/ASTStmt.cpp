@@ -26,10 +26,11 @@ namespace ast {
 //     BlockStmt
 //===------------------------------------------------------------------------------------------===//
 
-BlockStmt::BlockStmt(StmtData* data, SourceLocation loc) : Stmt(data, SK_BlockStmt, loc) {}
-BlockStmt::BlockStmt(StmtData* data, const std::vector<std::shared_ptr<Stmt>>& statements,
-                     SourceLocation loc)
-    : Stmt(data, SK_BlockStmt, loc), statements_(statements) {
+BlockStmt::BlockStmt(std::unique_ptr<StmtData> data, SourceLocation loc)
+    : Stmt(std::move(data), SK_BlockStmt, loc) {}
+BlockStmt::BlockStmt(std::unique_ptr<StmtData> data,
+                     const std::vector<std::shared_ptr<Stmt>>& statements, SourceLocation loc)
+    : Stmt(std::move(data), SK_BlockStmt, loc), statements_(statements) {
   for(const auto& s : statements)
     DAWN_ASSERT_MSG((checkSameDataType(*s)),
                     "Trying to insert child Stmt with different data type");
@@ -42,7 +43,7 @@ BlockStmt::BlockStmt(const BlockStmt& stmt) : Stmt(stmt) {
 
 BlockStmt& BlockStmt::operator=(BlockStmt const& stmt) {
   assign(stmt);
-  statements_ = std::move(stmt.statements_);
+  statements_ = stmt.statements_;
   return *this;
 }
 
@@ -71,8 +72,9 @@ void BlockStmt::replaceChildren(std::shared_ptr<Stmt> const& oldStmt,
 //     ExprStmt
 //===------------------------------------------------------------------------------------------===//
 
-ExprStmt::ExprStmt(StmtData* data, const std::shared_ptr<Expr>& expr, SourceLocation loc)
-    : Stmt(data, SK_ExprStmt, loc), expr_(expr) {}
+ExprStmt::ExprStmt(std::unique_ptr<StmtData> data, const std::shared_ptr<Expr>& expr,
+                   SourceLocation loc)
+    : Stmt(std::move(data), SK_ExprStmt, loc), expr_(expr) {}
 
 ExprStmt::ExprStmt(const ExprStmt& stmt) : Stmt(stmt), expr_(stmt.getExpr()->clone()) {}
 
@@ -102,8 +104,9 @@ void ExprStmt::replaceChildren(std::shared_ptr<Expr> const& oldExpr,
 //     ReturnStmt
 //===------------------------------------------------------------------------------------------===//
 
-ReturnStmt::ReturnStmt(StmtData* data, const std::shared_ptr<Expr>& expr, SourceLocation loc)
-    : Stmt(data, SK_ReturnStmt, loc), expr_(expr) {}
+ReturnStmt::ReturnStmt(std::unique_ptr<StmtData> data, const std::shared_ptr<Expr>& expr,
+                       SourceLocation loc)
+    : Stmt(std::move(data), SK_ReturnStmt, loc), expr_(expr) {}
 
 ReturnStmt::ReturnStmt(const ReturnStmt& stmt) : Stmt(stmt), expr_(stmt.getExpr()->clone()) {}
 
@@ -132,10 +135,10 @@ void ReturnStmt::replaceChildren(std::shared_ptr<Expr> const& oldExpr,
 //     VarDeclStmt
 //===------------------------------------------------------------------------------------------===//
 
-VarDeclStmt::VarDeclStmt(StmtData* data, const Type& type, const std::string& name, int dimension,
-                         const char* op, InitList initList, SourceLocation loc)
-    : Stmt(data, SK_VarDeclStmt, loc), type_(type), name_(name), dimension_(dimension), op_(op),
-      initList_(std::move(initList)) {}
+VarDeclStmt::VarDeclStmt(std::unique_ptr<StmtData> data, const Type& type, const std::string& name,
+                         int dimension, const char* op, InitList initList, SourceLocation loc)
+    : Stmt(std::move(data), SK_VarDeclStmt, loc), type_(type), name_(name), dimension_(dimension),
+      op_(op), initList_(std::move(initList)) {}
 
 VarDeclStmt::VarDeclStmt(const VarDeclStmt& stmt)
     : Stmt(stmt), type_(stmt.getType()), name_(stmt.getName()), dimension_(stmt.getDimension()),
@@ -180,8 +183,9 @@ void VarDeclStmt::replaceChildren(std::shared_ptr<Expr> const& oldExpr,
 //===------------------------------------------------------------------------------------------===//
 
 VerticalRegionDeclStmt::VerticalRegionDeclStmt(
-    StmtData* data, const std::shared_ptr<sir::VerticalRegion>& verticalRegion, SourceLocation loc)
-    : Stmt(data, SK_VerticalRegionDeclStmt, loc), verticalRegion_(verticalRegion) {
+    std::unique_ptr<StmtData> data, const std::shared_ptr<sir::VerticalRegion>& verticalRegion,
+    SourceLocation loc)
+    : Stmt(std::move(data), SK_VerticalRegionDeclStmt, loc), verticalRegion_(verticalRegion) {
   DAWN_ASSERT_MSG((checkSameDataType(*verticalRegion_->Ast->getRoot())),
                   "Trying to insert vertical region with different data type");
 }
@@ -245,10 +249,10 @@ CompareResult StencilCall::comparison(const StencilCall& rhs) const {
 //     StencilCallDeclStmt
 //===------------------------------------------------------------------------------------------===//
 
-StencilCallDeclStmt::StencilCallDeclStmt(StmtData* data,
+StencilCallDeclStmt::StencilCallDeclStmt(std::unique_ptr<StmtData> data,
                                          const std::shared_ptr<StencilCall>& stencilCall,
                                          SourceLocation loc)
-    : Stmt(data, SK_StencilCallDeclStmt, loc), stencilCall_(stencilCall) {}
+    : Stmt(std::move(data), SK_StencilCallDeclStmt, loc), stencilCall_(stencilCall) {}
 
 StencilCallDeclStmt::StencilCallDeclStmt(const StencilCallDeclStmt& stmt)
     : Stmt(stmt), stencilCall_(stmt.getStencilCall()->clone()) {}
@@ -283,9 +287,9 @@ bool StencilCallDeclStmt::equals(const Stmt* other) const {
 //     BoundaryConditionDeclStmt
 //===------------------------------------------------------------------------------------------===//
 
-BoundaryConditionDeclStmt::BoundaryConditionDeclStmt(StmtData* data, const std::string& callee,
-                                                     SourceLocation loc)
-    : Stmt(data, SK_BoundaryConditionDeclStmt, loc), functor_(callee) {}
+BoundaryConditionDeclStmt::BoundaryConditionDeclStmt(std::unique_ptr<StmtData> data,
+                                                     const std::string& callee, SourceLocation loc)
+    : Stmt(std::move(data), SK_BoundaryConditionDeclStmt, loc), functor_(callee) {}
 
 BoundaryConditionDeclStmt::BoundaryConditionDeclStmt(const BoundaryConditionDeclStmt& stmt)
     : Stmt(stmt), functor_(stmt.functor_), fields_(stmt.fields_) {}
@@ -315,10 +319,10 @@ bool BoundaryConditionDeclStmt::equals(const Stmt* other) const {
 //     IfStmt
 //===------------------------------------------------------------------------------------------===//
 
-IfStmt::IfStmt(StmtData* data, const std::shared_ptr<Stmt>& condStmt,
+IfStmt::IfStmt(std::unique_ptr<StmtData> data, const std::shared_ptr<Stmt>& condStmt,
                const std::shared_ptr<Stmt>& thenStmt, const std::shared_ptr<Stmt>& elseStmt,
                SourceLocation loc)
-    : Stmt(data, SK_IfStmt, loc), subStmts_{condStmt, thenStmt, elseStmt} {
+    : Stmt(std::move(data), SK_IfStmt, loc), subStmts_{condStmt, thenStmt, elseStmt} {
   for(const auto& s : subStmts_)
     if(s)
       DAWN_ASSERT_MSG((checkSameDataType(*s)), "Trying to insert substmt with different data type");

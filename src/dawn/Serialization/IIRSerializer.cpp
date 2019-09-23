@@ -421,8 +421,9 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
     auto protoStmt = protoIIR->add_controlflowstatements();
     ProtoStmtBuilder builder(protoStmt);
     stencilDescStmt->accept(builder);
-    DAWN_ASSERT_MSG(stencilDescStmt->getData<iir::IIRStmtData>().StackTrace.empty(),
-                    "there should be no stack trace if inlining worked");
+    if(stencilDescStmt->getData<iir::IIRStmtData>().StackTrace)
+      DAWN_ASSERT_MSG(stencilDescStmt->getData<iir::IIRStmtData>().StackTrace->empty(),
+                      "there should be no stack trace if inlining worked");
   }
   for(const auto& sf : iir->getStencilFunctions()) {
     if(usedBC.count(sf->Name) > 0) {

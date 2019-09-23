@@ -63,10 +63,9 @@ public:
 
   /// @name Constructor & Destructor
   /// @{
-  Stmt(StmtData* data, StmtKind kind, SourceLocation loc = SourceLocation())
-      : kind_(kind), loc_(loc), statementID_(UIDGenerator::getInstance()->get()), data_(data) {
-    DAWN_ASSERT_MSG((data), "null data pointer in Stmt instantiation");
-  }
+  Stmt(std::unique_ptr<StmtData> data, StmtKind kind, SourceLocation loc = SourceLocation())
+      : kind_(kind), loc_(loc), statementID_(UIDGenerator::getInstance()->get()),
+        data_(std::move(data)) {}
   Stmt(const Stmt& stmt)
       : std::enable_shared_from_this<Stmt>(stmt), kind_(stmt.getKind()),
         loc_(stmt.getSourceLocation()), statementID_(UIDGenerator::getInstance()->get()),
@@ -89,17 +88,17 @@ public:
   const SourceLocation& getSourceLocation() const { return loc_; }
   SourceLocation& getSourceLocation() { return loc_; }
 
-#define ENABLE_IF_SUBTYPE(SUB, BASE)                                                               \
-  typename = typename std::enable_if<std::is_base_of<BASE, SUB>::value>::type
+  template <typename Sub, typename Base>
+  using enable_if_subtype_t = typename std::enable_if<std::is_base_of<Base, Sub>::value>::type;
 
   /// @brief Get data object, must provide the type of the data object (must be subtype of StmtData)
-  template <typename DataType, ENABLE_IF_SUBTYPE(DataType, StmtData)>
+  template <typename DataType, typename = enable_if_subtype_t<DataType, StmtData>>
   DataType& getData() {
     DAWN_ASSERT_MSG(DataType::ThisDataType == data_->getDataType(),
                     "Trying to get wrong data type");
     return *dynamic_cast<DataType*>(data_.get());
   }
-  template <typename DataType, ENABLE_IF_SUBTYPE(DataType, StmtData)>
+  template <typename DataType, typename = enable_if_subtype_t<DataType, StmtData>>
   const DataType& getData() const {
     DAWN_ASSERT_MSG(DataType::ThisDataType == data_->getDataType(),
                     "Trying to get wrong data type");
@@ -140,15 +139,12 @@ public:
   void setID(int id) { statementID_ = id; }
 
 protected:
-  // TODO refactor_AST: not sure if the intended semantics here is that of a copy assignment or a
-  // move assignment ... implementations of operator= of stmts suggest a move one, but, since the
-  // parameter here is const, you can only copy.
-  // Also there's the question of wheter data_ should be a const pointer.
+  // copy assignment
   void assign(const Stmt& other) {
     DAWN_ASSERT_MSG((checkSameDataType(other)), "Trying to assign Stmt with different data type");
     kind_ = other.kind_;
     loc_ = other.loc_;
-    data_ = other.data_->clone();
+    *data_ = *other.data_;
   }
 
   StmtKind kind_;
@@ -157,7 +153,7 @@ protected:
   int statementID_;
 
 private:
-  std::unique_ptr<StmtData> data_;
+  const std::unique_ptr<StmtData> data_;
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -174,8 +170,8 @@ public:
 
   /// @name Constructor & Destructor
   /// @{
-  BlockStmt(StmtData* data, SourceLocation loc = SourceLocation());
-  BlockStmt(StmtData* data, const std::vector<std::shared_ptr<Stmt>>& statements,
+  BlockStmt(std::unique_ptr<StmtData> data, SourceLocation loc = SourceLocation());
+  BlockStmt(std::unique_ptr<StmtData> data, const std::vector<std::shared_ptr<Stmt>>& statements,
             SourceLocation loc = SourceLocation());
   BlockStmt(const BlockStmt& stmt);
   BlockStmt& operator=(BlockStmt const& stmt);
@@ -233,7 +229,7 @@ class ExprStmt : public Stmt {
 public:
   /// @name Constructor & Destructor
   /// @{
-  ExprStmt(StmtData* data, const std::shared_ptr<Expr>& expr,
+  ExprStmt(std::unique_ptr<StmtData> data, const std::shared_ptr<Expr>& expr,
            SourceLocation loc = SourceLocation());
   ExprStmt(const ExprStmt& stmt);
   ExprStmt& operator=(ExprStmt stmt);
@@ -268,7 +264,7 @@ class ReturnStmt : public Stmt {
 public:
   /// @name Constructor & Destructor
   /// @{
-  ReturnStmt(StmtData* data, const std::shared_ptr<Expr>& expr,
+  ReturnStmt(std::unique_ptr<StmtData> data, const std::shared_ptr<Expr>& expr,
              SourceLocation loc = SourceLocation());
   ReturnStmt(const ReturnStmt& stmt);
   ReturnStmt& operator=(ReturnStmt stmt);
@@ -303,8 +299,9 @@ public:
 
   /// @name Constructor & Destructor
   /// @{
-  VarDeclStmt(StmtData* data, const Type& type, const std::string& name, int dimension,
-              const char* op, InitList initList, SourceLocation loc = SourceLocation());
+  VarDeclStmt(std::unique_ptr<StmtData> data, const Type& type, const std::string& name,
+              int dimension, const char* op, InitList initList,
+              SourceLocation loc = SourceLocation());
   VarDeclStmt(const VarDeclStmt& stmt);
   VarDeclStmt& operator=(VarDeclStmt stmt);
   virtual ~VarDeclStmt();
@@ -359,7 +356,8 @@ class VerticalRegionDeclStmt : public Stmt {
 public:
   /// @name Constructor & Destructor
   /// @{
-  VerticalRegionDeclStmt(StmtData* data, const std::shared_ptr<sir::VerticalRegion>& verticalRegion,
+  VerticalRegionDeclStmt(std::unique_ptr<StmtData> data,
+                         const std::shared_ptr<sir::VerticalRegion>& verticalRegion,
                          SourceLocation loc = SourceLocation());
   VerticalRegionDeclStmt(const VerticalRegionDeclStmt& stmt);
   VerticalRegionDeclStmt& operator=(VerticalRegionDeclStmt stmt);
@@ -409,7 +407,8 @@ class StencilCallDeclStmt : public Stmt {
 public:
   /// @name Constructor & Destructor
   /// @{
-  StencilCallDeclStmt(StmtData* data, const std::shared_ptr<StencilCall>& stencilCall,
+  StencilCallDeclStmt(std::unique_ptr<StmtData> data,
+                      const std::shared_ptr<StencilCall>& stencilCall,
                       SourceLocation loc = SourceLocation());
   StencilCallDeclStmt(const StencilCallDeclStmt& stmt);
   StencilCallDeclStmt& operator=(StencilCallDeclStmt stmt);
@@ -438,7 +437,7 @@ class BoundaryConditionDeclStmt : public Stmt {
 public:
   /// @name Constructor & Destructor
   /// @{
-  BoundaryConditionDeclStmt(StmtData* data, const std::string& callee,
+  BoundaryConditionDeclStmt(std::unique_ptr<StmtData> data, const std::string& callee,
                             SourceLocation loc = SourceLocation());
   BoundaryConditionDeclStmt(const BoundaryConditionDeclStmt& stmt);
   BoundaryConditionDeclStmt& operator=(BoundaryConditionDeclStmt stmt);
@@ -470,7 +469,7 @@ class IfStmt : public Stmt {
 public:
   /// @name Constructor & Destructor
   /// @{
-  IfStmt(StmtData* data, const std::shared_ptr<Stmt>& condExpr,
+  IfStmt(std::unique_ptr<StmtData> data, const std::shared_ptr<Stmt>& condExpr,
          const std::shared_ptr<Stmt>& thenStmt, const std::shared_ptr<Stmt>& elseStmt = nullptr,
          SourceLocation loc = SourceLocation());
   IfStmt(const IfStmt& stmt);

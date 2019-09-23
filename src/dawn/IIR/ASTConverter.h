@@ -48,7 +48,7 @@ public:
   void visit(const std::shared_ptr<sir::IfStmt>& stmt) override;
 
 private:
-  StmtMap stmtMap_;
+  StmtMap stmtMap_; // TODO: make it a pointer to first visited element
 };
 
 } // namespace dawn

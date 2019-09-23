@@ -81,12 +81,14 @@ static void reportRaceCondition(const iir::Stmt& statement,
   context.getDiagnostics().report(diag);
 
   // Print stack trace of stencil calls
-  const std::vector<ast::StencilCall*>& stackTrace =
-      statement.getData<iir::IIRStmtData>().StackTrace;
-  for(int i = stackTrace.size() - 1; i >= 0; --i) {
-    DiagnosticsBuilder note(DiagnosticsKind::Note, stackTrace[i]->Loc);
-    note << "detected during instantiation of stencil-call '" << stackTrace[i]->Callee << "'";
-    context.getDiagnostics().report(note);
+  if(statement.getData<iir::IIRStmtData>().StackTrace) {
+    const std::vector<ast::StencilCall*>& stackTrace =
+        *statement.getData<iir::IIRStmtData>().StackTrace;
+    for(int i = stackTrace.size() - 1; i >= 0; --i) {
+      DiagnosticsBuilder note(DiagnosticsKind::Note, stackTrace[i]->Loc);
+      note << "detected during instantiation of stencil-call '" << stackTrace[i]->Callee << "'";
+      context.getDiagnostics().report(note);
+    }
   }
 }
 

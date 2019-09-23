@@ -22,6 +22,16 @@
 #include <utility>
 
 using namespace dawn;
+
+namespace {
+std::unique_ptr<ast::StmtData> makeData(ast::StmtData::DataType dataType) {
+  if(dataType == ast::StmtData::SIR_DATA_TYPE)
+    return make_unique<sir::SIRStmtData>();
+  else
+    return make_unique<iir::IIRStmtData>();
+}
+} // namespace
+
 using namespace ast;
 
 void setAST(dawn::proto::statements::AST* astProto, const AST* ast);
@@ -602,13 +612,11 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto) {
 
 std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
                                ast::StmtData::DataType dataType) {
-  ast::StmtData* data = dataType == ast::StmtData::SIR_DATA_TYPE
-                            ? dynamic_cast<ast::StmtData*>(new sir::SIRStmtData())
-                            : dynamic_cast<ast::StmtData*>(new iir::IIRStmtData());
+
   switch(statementProto.stmt_case()) {
   case proto::statements::Stmt::kBlockStmt: {
     const auto& stmtProto = statementProto.block_stmt();
-    auto stmt = std::make_shared<BlockStmt>(data, makeLocation(stmtProto));
+    auto stmt = std::make_shared<BlockStmt>(makeData(dataType), makeLocation(stmtProto));
 
     for(const auto& s : stmtProto.statements())
       stmt->push_back(makeStmt(s, dataType));
@@ -618,15 +626,15 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
   }
   case proto::statements::Stmt::kExprStmt: {
     const auto& stmtProto = statementProto.expr_stmt();
-    auto stmt =
-        std::make_shared<ExprStmt>(data, makeExpr(stmtProto.expr()), makeLocation(stmtProto));
+    auto stmt = std::make_shared<ExprStmt>(makeData(dataType), makeExpr(stmtProto.expr()),
+                                           makeLocation(stmtProto));
     stmt->setID(stmtProto.id());
     return stmt;
   }
   case proto::statements::Stmt::kReturnStmt: {
     const auto& stmtProto = statementProto.return_stmt();
-    auto stmt =
-        std::make_shared<ReturnStmt>(data, makeExpr(stmtProto.expr()), makeLocation(stmtProto));
+    auto stmt = std::make_shared<ReturnStmt>(makeData(dataType), makeExpr(stmtProto.expr()),
+                                             makeLocation(stmtProto));
     stmt->setID(stmtProto.id());
     return stmt;
   }
@@ -646,9 +654,9 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
     Type type = typeProto.name().empty() ? Type(makeBuiltinTypeID(typeProto.builtin_type()), cvQual)
                                          : Type(typeProto.name(), cvQual);
 
-    auto stmt =
-        std::make_shared<VarDeclStmt>(data, type, stmtProto.name(), stmtProto.dimension(),
-                                      stmtProto.op().c_str(), initList, makeLocation(stmtProto));
+    auto stmt = std::make_shared<VarDeclStmt>(makeData(dataType), type, stmtProto.name(),
+                                              stmtProto.dimension(), stmtProto.op().c_str(),
+                                              initList, makeLocation(stmtProto));
     stmt->setID(stmtProto.id());
     return stmt;
   }
@@ -661,7 +669,7 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
     for(const auto& argName : stmtProto.stencil_call().arguments()) {
       call->Args.push_back(argName);
     }
-    auto stmt = std::make_shared<StencilCallDeclStmt>(data, call, metaloc);
+    auto stmt = std::make_shared<StencilCallDeclStmt>(makeData(dataType), call, metaloc);
     stmt->setID(stmtProto.id());
     return stmt;
   }
@@ -683,13 +691,13 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
     auto ast = makeAST(stmtProto.vertical_region().ast(), dataType);
     std::shared_ptr<sir::VerticalRegion> verticalRegion =
         std::make_shared<sir::VerticalRegion>(ast, interval, looporder, loc);
-    auto stmt = std::make_shared<VerticalRegionDeclStmt>(data, verticalRegion, loc);
+    auto stmt = std::make_shared<VerticalRegionDeclStmt>(makeData(dataType), verticalRegion, loc);
     stmt->setID(stmtProto.id());
     return stmt;
   }
   case proto::statements::Stmt::kBoundaryConditionDeclStmt: {
     const auto& stmtProto = statementProto.boundary_condition_decl_stmt();
-    auto stmt = std::make_shared<BoundaryConditionDeclStmt>(data, stmtProto.functor(),
+    auto stmt = std::make_shared<BoundaryConditionDeclStmt>(makeData(dataType), stmtProto.functor(),
                                                             makeLocation(stmtProto));
     for(const auto& fieldName : stmtProto.fields())
       stmt->getFields().emplace_back(fieldName);
@@ -699,7 +707,8 @@ std::shared_ptr<Stmt> makeStmt(const proto::statements::Stmt& statementProto,
   case proto::statements::Stmt::kIfStmt: {
     const auto& stmtProto = statementProto.if_stmt();
     auto stmt = std::make_shared<IfStmt>(
-        data, makeStmt(stmtProto.cond_part(), dataType), makeStmt(stmtProto.then_part(), dataType),
+        makeData(dataType), makeStmt(stmtProto.cond_part(), dataType),
+        makeStmt(stmtProto.then_part(), dataType),
         stmtProto.has_else_part() ? makeStmt(stmtProto.else_part(), dataType) : nullptr,
         makeLocation(stmtProto));
     stmt->setID(stmtProto.id());

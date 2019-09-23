@@ -643,10 +643,12 @@ bool PassTemporaryToStencilFunction::run(
                 const iir::Interval& doMethodInterval = doMethodPtr->getInterval();
                 const sir::Interval sirInterval = intervalToSIRInterval(interval);
 
+                DAWN_ASSERT(stmt->getData<iir::IIRStmtData>().StackTrace);
+
                 // run the replacer visitor
                 TmpReplacement tmpReplacement(stencilInstantiation, context_,
                                               temporaryFieldExprToFunction, interval,
-                                              stmt->getData<iir::IIRStmtData>().StackTrace);
+                                              *stmt->getData<iir::IIRStmtData>().StackTrace);
                 stmt->acceptAndReplace(tmpReplacement);
 
                 // flag if a least a tmp has been replaced within this stage
@@ -658,7 +660,7 @@ bool PassTemporaryToStencilFunction::run(
 
                   StatementMapper statementMapper(
                       stencilInstantiation.get(), context_,
-                      stmt->getData<iir::IIRStmtData>().StackTrace, tmpStmtDoMethod, sirInterval,
+                      *stmt->getData<iir::IIRStmtData>().StackTrace, tmpStmtDoMethod, sirInterval,
                       stencilInstantiation->getMetaData().getNameToAccessIDMap(), nullptr);
 
                   std::shared_ptr<iir::BlockStmt> blockStmt =

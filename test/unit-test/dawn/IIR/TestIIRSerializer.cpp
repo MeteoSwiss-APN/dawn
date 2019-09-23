@@ -110,19 +110,10 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
   for(int i = 0, size = lhsControlFlowStmts.size(); i < size; ++i) {
     if(!lhsControlFlowStmts[i]->equals(rhsControlFlowStmts[i].get()))
       return false;
-    if(!lhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace.empty()) {
-      if(!rhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace.empty()) {
-        for(int j = 0,
-                jsize = lhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace.size();
-            j < jsize; ++j) {
-          if(!(lhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace.at(j) ==
-               rhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace.at(j))) {
-            return false;
-          }
-        }
-      }
+
+    if(lhsControlFlowStmts[i]->getData<iir::IIRStmtData>() !=
+       rhsControlFlowStmts[i]->getData<iir::IIRStmtData>())
       return false;
-    }
   }
 
   return true;

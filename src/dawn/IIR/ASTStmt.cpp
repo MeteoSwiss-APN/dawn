@@ -18,7 +18,9 @@
 namespace dawn {
 namespace iir {
 
-IIRStmtData::IIRStmtData(const IIRStmtData& other) : StackTrace(other.StackTrace) {}
+bool IIRStmtData::operator==(const IIRStmtData& rhs) { return StackTrace == rhs.StackTrace; }
+bool IIRStmtData::operator!=(const IIRStmtData& rhs) { return !operator==(rhs); }
+
 std::unique_ptr<ast::StmtData> IIRStmtData::clone() const {
   return make_unique<IIRStmtData>(*this);
 }

@@ -31,7 +31,7 @@ class AST {
 
 public:
   /// @brief Construct with empty root
-  AST(StmtData* data);
+  AST(std::unique_ptr<StmtData> data);
 
   /// @brief Construct with existing root
   ///
