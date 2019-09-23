@@ -187,6 +187,7 @@ void DoMethod::updateLevel() {
     for(const auto& accessPair : access->getReadAccesses()) {
       if(!metaData_.isAccessType(FieldAccessType::FAT_Field, accessPair.first))
         continue;
+
       derivedInfo_.fields_.at(accessPair.first).mergeReadExtents(accessPair.second);
     }
   }

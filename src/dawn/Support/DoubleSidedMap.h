@@ -48,9 +48,7 @@ public:
   }
 
   const Key2& directAt(const Key1& key1) const { return directMap_.at(key1); }
-  const Key1& reverseAt(const Key2& key2) const {
-    return reverseMap_.at(key2); 
-  }
+  const Key1& reverseAt(const Key2& key2) const { return reverseMap_.at(key2); }
 
   bool directHas(const Key1& key1) const { return directMap_.count(key1); }
   bool reverseHas(const Key2& key2) const { return reverseMap_.count(key2); }

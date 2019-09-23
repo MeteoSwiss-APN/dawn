@@ -240,15 +240,11 @@ CompareResult StencilCall::comparison(const StencilCall& rhs) const {
 
 StencilCallDeclStmt::StencilCallDeclStmt(const std::shared_ptr<StencilCall>& stencilCall,
                                          SourceLocation loc)
-    : Stmt(SK_StencilCallDeclStmt, loc), stencilCall_(stencilCall) {
-      
-    }
+    : Stmt(SK_StencilCallDeclStmt, loc), stencilCall_(stencilCall) {}
 
 StencilCallDeclStmt::StencilCallDeclStmt(const StencilCallDeclStmt& stmt)
     : Stmt(SK_StencilCallDeclStmt, stmt.getSourceLocation()),
-      stencilCall_(stmt.getStencilCall()->clone()) {
-
-      }
+      stencilCall_(stmt.getStencilCall()->clone()) {}
 
 StencilCallDeclStmt& StencilCallDeclStmt::operator=(StencilCallDeclStmt stmt) {
   assign(stmt);
