@@ -104,6 +104,6 @@ OPT(bool, DumpTemporaryGraphs, false, "dump-tmp-dag", "",
 OPT(bool, DumpRaceConditionGraph, false, "dump-rc-dag", "",
     "In case an unresolvable race-condition is detected, dump the dependency graph to a dot file", "", false, true)
 OPT(bool, DumpStencilInstantiation, false, "dump-si", "",
-    "dump every stencilInstantiation to the standart output", "", false, true)
+    "dump every stencilInstantiation to the standard output", "", false, true)
 
 // clang-format on
