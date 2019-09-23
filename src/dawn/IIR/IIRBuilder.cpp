@@ -146,25 +146,22 @@ std::shared_ptr<iir::Expr> IIRBuilder::make_assign_expr(std::shared_ptr<iir::Exp
   binop->setID(si_->nextUID());
   return binop;
 }
-int IIRBuilder::make_field(std::string const& name, field_type ft) {
-  int ret = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name, as_array(ft));
-  field_names_[ret] = name;
-  field_ids_[name] = ret;
-  return ret;
+IIRBuilder::Field IIRBuilder::make_field(std::string const& name, field_type ft) {
+  int id = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name, as_array(ft));
+  return {id, name};
 }
-int IIRBuilder::make_localvar(std::string const& name) {
-  // int ret = si_->getMetaData().addField(iir::FieldAccessType::FAT_LocalVariable, name,
-  // as_array(field_type::ijk));
-  int ret = si_->nextUID();
-  field_names_[ret] = name;
-  field_ids_[name] = ret;
-  return ret;
+IIRBuilder::LocalVar IIRBuilder::make_localvar(std::string const& name) {
+  auto iir_stmt = std::make_shared<iir::VarDeclStmt>(Type{BuiltinTypeID::Float}, name, 0, "=",
+                                                     std::vector<std::shared_ptr<Expr>>{});
+  int id = si_->getMetaData().addStmt(true, iir_stmt);
+  return {id, name, iir_stmt};
 }
-std::shared_ptr<iir::Expr> IIRBuilder::at(int field_id, access_type access, Array3i extent) {
-  auto expr = std::make_shared<iir::FieldAccessExpr>(field_names_[field_id], extent);
+std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::Field field, access_type access,
+                                          Array3i extent) {
+  auto expr = std::make_shared<iir::FieldAccessExpr>(field.name, extent);
   expr->setID(si_->nextUID());
 
-  si_->getMetaData().insertExprToAccessID(expr, field_id);
+  si_->getMetaData().insertExprToAccessID(expr, field.id);
 
   if(access == access_type::r)
     read_extents_[expr.get()] = extent;
@@ -172,8 +169,14 @@ std::shared_ptr<iir::Expr> IIRBuilder::at(int field_id, access_type access, Arra
     write_extents_[expr.get()] = extent;
   return expr;
 }
-std::shared_ptr<iir::Expr> IIRBuilder::at(int field_id, Array3i extent) {
-  return at(field_id, access_type::r, extent);
+std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::Field field, Array3i extent) {
+  return at(field, access_type::r, extent);
+}
+std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::LocalVar var) {
+  auto expr = std::make_shared<iir::VarAccessExpr>(var.name);
+  expr->setID(si_->nextUID());
+  si_->getMetaData().insertExprToAccessID(expr, var.id);
+  return expr;
 }
 std::unique_ptr<iir::StatementAccessesPair>
 IIRBuilder::make_stmt(std::shared_ptr<iir::Expr>&& expr) {
@@ -181,12 +184,8 @@ IIRBuilder::make_stmt(std::shared_ptr<iir::Expr>&& expr) {
   auto statement = std::make_shared<Statement>(iir_stmt, nullptr);
   return make_unique<iir::StatementAccessesPair>(statement);
 }
-std::unique_ptr<iir::StatementAccessesPair> IIRBuilder::declare_var(int var_id) {
-  auto iir_stmt =
-      std::make_shared<iir::VarDeclStmt>(Type{BuiltinTypeID::Float}, field_names_[var_id], 0, "=",
-                                         std::vector<std::shared_ptr<Expr>>{});
-  si_->getMetaData().addStmt(true, iir_stmt);
-  auto statement = std::make_shared<Statement>(iir_stmt, nullptr);
+std::unique_ptr<iir::StatementAccessesPair> IIRBuilder::declare_var(IIRBuilder::LocalVar& var) {
+  auto statement = std::make_shared<Statement>(var.decl, nullptr);
   return make_unique<iir::StatementAccessesPair>(statement);
 }
 

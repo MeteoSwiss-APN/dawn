@@ -47,6 +47,16 @@ enum class op {
 };
 enum class access_type { r, rw };
 class IIRBuilder {
+  struct Field {
+    int id;
+    std::string name;
+  };
+  struct LocalVar {
+    int id;
+    std::string name;
+    std::shared_ptr<VarDeclStmt> decl;
+  };
+
 public:
   std::shared_ptr<iir::Expr> make_reduce_over_neighbor_expr(op operation,
                                                             std::shared_ptr<iir::Expr> const& rhs,
@@ -61,8 +71,8 @@ public:
 
   std::shared_ptr<iir::Expr> make_unary_expr(std::shared_ptr<iir::Expr> const& expr, op operation);
 
-  int make_field(std::string const& name, field_type ft = field_type::ijk);
-  int make_localvar(std::string const& name);
+  Field make_field(std::string const& name, field_type ft = field_type::ijk);
+  LocalVar make_localvar(std::string const& name);
 
   template <typename T>
   std::shared_ptr<iir::Expr> make_lit(T&& v) {
@@ -76,13 +86,15 @@ public:
     return expr;
   }
 
-  std::shared_ptr<iir::Expr> at(int field_id, access_type access = access_type::r,
+  std::shared_ptr<iir::Expr> at(Field field, access_type access = access_type::r,
                                 Array3i extent = {});
 
-  std::shared_ptr<iir::Expr> at(int field_id, Array3i extent);
+  std::shared_ptr<iir::Expr> at(Field field, Array3i extent);
+
+  std::shared_ptr<iir::Expr> at(LocalVar var);
 
   std::unique_ptr<iir::StatementAccessesPair> make_stmt(std::shared_ptr<iir::Expr>&& expr);
-  std::unique_ptr<iir::StatementAccessesPair> declare_var(int var_id);
+  std::unique_ptr<iir::StatementAccessesPair> declare_var(LocalVar& var_id);
 
   template <typename... Stmts>
   std::unique_ptr<iir::DoMethod> make_do(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
@@ -126,8 +138,6 @@ public:
 
 private:
   std::shared_ptr<iir::StencilInstantiation> si_;
-  std::map<int, std::string> field_names_;
-  std::map<std::string, int> field_ids_;
   std::map<iir::Expr*, Array3i> read_extents_;
   std::map<iir::Expr*, Array3i> write_extents_;
 };

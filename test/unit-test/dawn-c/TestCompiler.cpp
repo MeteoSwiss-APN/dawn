@@ -129,8 +129,7 @@ TEST(CompilerTest, TestCodeGen) {
                             b.make_binary_expr(b.make_lit(-3.),
                                                b.make_unary_expr(b.at(out_f, {0, 1, 0}), op::minus),
                                                op::multiply))),
-                        b.make_stmt(b.make_assign_expr(b.at(out_f, access_type::rw),
-                                                       b.make_lit(0.1), op::multiply)),
+                        b.make_stmt(b.make_assign_expr(b.at(var2), b.make_lit(0.1), op::multiply)),
                         b.make_stmt(b.make_assign_expr(b.at(out_f, access_type::rw),
                                                        b.at(in_f, {0, 0, 1}), op::plus)))))));
 
