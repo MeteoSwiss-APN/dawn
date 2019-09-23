@@ -273,9 +273,6 @@ public:
   /// @brief clear the derived info
   virtual void clearDerivedInfo() override;
 
-  /// @brief Rename all occurences of field `oldAccessID` to `newAccessID`
-  void renameAllOccurrences(int oldAccessID, int newAccessID);
-
   /// @brief Compute the life-time of the fields (or variables) given as a set of `AccessID`s
   std::unordered_map<int, Lifetime> getLifetime(const std::unordered_set<int>& AccessID) const;
 

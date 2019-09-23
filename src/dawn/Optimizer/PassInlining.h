@@ -39,7 +39,7 @@ public:
     ComputationsOnTheFly ///< Inline stencil functions as computations on the fly
   };
 
-  PassInlining(bool activate, InlineStrategy strategy);
+  PassInlining(OptimizerContext& context, bool activate, InlineStrategy strategy);
 
   /// @brief Pass implementation
   bool run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) override;

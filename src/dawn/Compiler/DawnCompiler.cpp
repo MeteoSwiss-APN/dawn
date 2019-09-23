@@ -172,6 +172,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     optimizerOptions = createOptimizerOptionsFromAllOptions(*options_);
   }
   std::unique_ptr<OptimizerContext> optimizer;
+
   if(options_->DeserializeIIR == "") {
     optimizer = make_unique<OptimizerContext>(getDiagnostics(), optimizerOptions, SIR);
     optimizer->fillIIR();
@@ -214,7 +215,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     for(const auto& a : optimizer->getPassManager().getPasses()) {
       DAWN_LOG(INFO) << a->getName();
     }
-    
+
     int i = 0;
     for(auto& stencil : optimizer->getStencilInstantiationMap()) {
       // Run optimization passes
@@ -222,16 +223,19 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
 
       DAWN_LOG(INFO) << "Starting Optimization and Analysis passes for `"
                      << instantiation->getName() << "` ...";
-      if(!optimizer->getPassManager().runAllPassesOnStecilInstantiation(instantiation))
+      if(!optimizer->getPassManager().runAllPassesOnStecilInstantiation(*optimizer, instantiation))
         return nullptr;
+
       DAWN_LOG(INFO) << "Done with Optimization and Analysis passes for `"
                      << instantiation->getName() << "`";
 
       if(options_->SerializeIIR) {
-        IIRSerializer::serialize(
-            remove_fileextension(instantiation->getMetaData().getFileName(), ".cpp") + "." +
-                std::to_string(i) + ".iir",
-            instantiation, serializationKind);
+        const std::string originalFileName = remove_fileextension(
+            options_->OutputFile.empty() ? instantiation->getMetaData().getFileName()
+                                         : options_->OutputFile,
+            ".cpp");
+        IIRSerializer::serialize(originalFileName + "." + std::to_string(i) + ".iir", instantiation,
+                                 serializationKind);
         i++;
       }
     }

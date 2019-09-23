@@ -148,10 +148,9 @@ CacheCandidate computeCacheCandidateForMS(iir::Field const& field, bool isTempor
 
 } // anonymous namespace
 
-PassSetCaches::PassSetCaches() : Pass("PassSetCaches") {}
+PassSetCaches::PassSetCaches(OptimizerContext& context) : Pass(context, "PassSetCaches") {}
 
 bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
-  OptimizerContext* context = instantiation->getOptimizerContext();
   const auto& metadata = instantiation->getMetaData();
 
   for(const auto& stencilPtr : instantiation->getStencils()) {
@@ -197,7 +196,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
 
             iir::Cache& cache = MS.setCache(iir::Cache::IJ, iir::Cache::local, accessID);
 
-            if(context->getOptions().ReportPassSetCaches) {
+            if(context_.getOptions().ReportPassSetCaches) {
               std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": MS"
                         << msIdx << ": " << instantiation->getOriginalNameFromAccessID(accessID)
                         << ":" << cache.getCacheTypeAsString() << ":"
@@ -213,7 +212,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
     }
 
     // Set K-Caches
-    if(!context->getOptions().DisableKCaches ||
+    if(!context_.getOptions().DisableKCaches ||
        stencil.getStencilAttributes().has(sir::Attr::AK_UseKCaches)) {
 
       std::set<int> mssProcessedFields;
@@ -295,7 +294,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
               ms.setCache(iir::Cache::K, cacheCandidate.policy_, field.getAccessID(), interval,
                           enclosingAccessedInterval, cacheCandidate.window_);
 
-          if(context->getOptions().ReportPassSetCaches) {
+          if(context_.getOptions().ReportPassSetCaches) {
             std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": MS"
                       << MSIndex << ": "
                       << instantiation->getOriginalNameFromAccessID(field.getAccessID()) << ":"

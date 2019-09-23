@@ -319,26 +319,26 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
   auto& protoGlobalVariableMap = *protoIIR->mutable_globalvariabletovalue();
   for(auto& globalToValue : iir->getGlobalVariableMap()) {
     proto::iir::GlobalValueAndType protoGlobalToStore;
-    double value = -1;
     bool valueIsSet = false;
+
     switch(globalToValue.second->getType()) {
     case sir::Value::Boolean:
-      if(!globalToValue.second->empty()) {
-        value = globalToValue.second->getValue<bool>();
+      if(globalToValue.second->has_value()) {
+        protoGlobalToStore.set_value(globalToValue.second->getValue<bool>());
         valueIsSet = true;
       }
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Boolean);
       break;
     case sir::Value::Integer:
-      if(!globalToValue.second->empty()) {
-        value = globalToValue.second->getValue<int>();
+      if(globalToValue.second->has_value()) {
+        protoGlobalToStore.set_value(globalToValue.second->getValue<int>());
         valueIsSet = true;
       }
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Integer);
       break;
     case sir::Value::Double:
-      if(!globalToValue.second->empty()) {
-        value = globalToValue.second->getValue<double>();
+      if(globalToValue.second->has_value()) {
+        protoGlobalToStore.set_value(globalToValue.second->getValue<double>());
         valueIsSet = true;
       }
       protoGlobalToStore.set_type(proto::iir::GlobalValueAndType_TypeKind_Double);
@@ -346,9 +346,7 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
     default:
       dawn_unreachable("non-supported global type");
     }
-    if(valueIsSet) {
-      protoGlobalToStore.set_value(value);
-    }
+
     protoGlobalToStore.set_valueisset(valueIsSet);
     protoGlobalVariableMap.insert({globalToValue.first, protoGlobalToStore});
   }
@@ -522,7 +520,7 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
                                         const proto::iir::StencilMetaInfo& protoMetaData) {
   auto& metadata = target->getMetaData();
   for(auto IDtoName : protoMetaData.accessidtoname()) {
-    metadata.setAccessIDNamePair(IDtoName.first, IDtoName.second);
+    metadata.addAccessIDNamePair(IDtoName.first, IDtoName.second);
   }
 
   for(auto exprIDToAccessID : protoMetaData.expridtoaccessid()) {
@@ -559,7 +557,7 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
 
   for(auto variableVersionMap : protoMetaData.versionedfields().variableversionmap()) {
     for(auto versionedID : variableVersionMap.second.allids()) {
-      metadata.insertFieldVersionIDPair(variableVersionMap.first, versionedID);
+      metadata.addFieldVersionIDPair(variableVersionMap.first, versionedID);
     }
   }
 
@@ -592,7 +590,7 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
     auto stmt = std::make_shared<iir::StencilCallDeclStmt>(
         astStencilCall, makeLocation(call.stencil_call_decl_stmt()));
     stmt->setID(call.stencil_call_decl_stmt().id());
-    metadata.insertStencilCallStmt(stmt, IDToCall.first);
+    metadata.addStencilCallStmt(stmt, IDToCall.first);
   }
 
   for(auto FieldnameToBC : protoMetaData.fieldnametoboundarycondition()) {
@@ -625,25 +623,29 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
 void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& target,
                                    const proto::iir::IIR& protoIIR) {
   for(auto GlobalToValue : protoIIR.globalvariabletovalue()) {
-    std::shared_ptr<sir::Value> value = std::make_shared<sir::Value>();
-
+    std::shared_ptr<sir::Value> value;
     switch(GlobalToValue.second.type()) {
     case proto::iir::GlobalValueAndType_TypeKind_Boolean:
-      value->setType(sir::Value::Boolean);
       if(GlobalToValue.second.valueisset()) {
-        value->setValue(GlobalToValue.second.value());
+        value = std::make_shared<sir::Value>(sir::Value::Boolean);
+      } else {
+        value = std::make_shared<sir::Value>(GlobalToValue.second.value());
       }
       break;
     case proto::iir::GlobalValueAndType_TypeKind_Integer:
-      value->setType(sir::Value::Integer);
       if(GlobalToValue.second.valueisset()) {
-        value->setValue((int) GlobalToValue.second.value());
+        value = std::make_shared<sir::Value>(sir::Value::Integer);
+      } else {
+        // the explicit cast is needed since in this case GlobalToValue.second.value()
+        // may hold a double constant because of trailing dot in the IIR (e.g. 12.)
+        value = std::make_shared<sir::Value>((int)GlobalToValue.second.value());
       }
       break;
     case proto::iir::GlobalValueAndType_TypeKind_Double:
-      value->setType(sir::Value::Double);
       if(GlobalToValue.second.valueisset()) {
-        value->setValue((double) GlobalToValue.second.value());
+        value = std::make_shared<sir::Value>(sir::Value::Double);
+      } else {
+        value = std::make_shared<sir::Value>((double)GlobalToValue.second.value());
       }
       break;
     default:
@@ -799,7 +801,7 @@ IIRSerializer::deserialize(const std::string& file, OptimizerContext* context,
 
   std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
   std::shared_ptr<iir::StencilInstantiation> returnvalue =
-      std::make_shared<iir::StencilInstantiation>(context);
+      std::make_shared<iir::StencilInstantiation>();
   deserializeImpl(str, kind, returnvalue);
   return returnvalue;
 }
@@ -808,7 +810,7 @@ std::shared_ptr<iir::StencilInstantiation>
 IIRSerializer::deserializeFromString(const std::string& str, OptimizerContext* context,
                                      IIRSerializer::SerializationKind kind) {
   std::shared_ptr<iir::StencilInstantiation> returnvalue =
-      std::make_shared<iir::StencilInstantiation>(context);
+      std::make_shared<iir::StencilInstantiation>();
   deserializeImpl(str, kind, returnvalue);
   return returnvalue;
 }

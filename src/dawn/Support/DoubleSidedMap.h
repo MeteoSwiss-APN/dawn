@@ -26,10 +26,17 @@ class DoubleSidedMap {
   std::unordered_map<Key2, Key1> reverseMap_;
 
 public:
-  void emplace(const Key1& key1, const Key2& key2) {
+
+  /// Add a new element to the map. This function asserts that neither key1 nor key2 is already
+  /// present. That is, one to one relation (bijective mapping) is maintained
+  void add(const Key1& key1, const Key2& key2) {
+    DAWN_ASSERT(!directHas(key1));
+    DAWN_ASSERT(!reverseHas(key2));
+
     directMap_.emplace(key1, key2);
     reverseMap_.emplace(key2, key1);
   }
+
   void directEraseKey(const Key1& key1) {
     const auto& key2 = directAt(key1);
     erase(key1, key2);

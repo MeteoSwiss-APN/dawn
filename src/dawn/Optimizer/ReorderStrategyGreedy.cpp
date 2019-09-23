@@ -18,7 +18,6 @@
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Optimizer/BoundaryExtent.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/ReadBeforeWriteConflict.h"
 #include <algorithm>
@@ -85,7 +84,8 @@ ReturnType isMergable(const iir::Stage& stage, iir::LoopOrderKind stageLoopOrder
 
 std::unique_ptr<iir::Stencil>
 ReoderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
-                              const std::unique_ptr<iir::Stencil>& stencilPtr) {
+                              const std::unique_ptr<iir::Stencil>& stencilPtr,
+                              OptimizerContext& context) {
   iir::Stencil& stencil = *stencilPtr;
 
   iir::DependencyGraphStage& stageDAG = *stencil.getStageDependencyGraph();
@@ -98,7 +98,7 @@ ReoderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
   int newNumStages = 0;
   int newNumMultiStages = 0;
 
-  const int maxBoundaryExtent = instantiation->getOptimizerContext()->getOptions().MaxHaloPoints;
+  const int maxBoundaryExtent = context.getOptions().MaxHaloPoints;
 
   auto pushBackNewMultiStage = [&](iir::LoopOrderKind loopOrder) -> void {
     newStencil->insertChild(make_unique<iir::MultiStage>(metadata, loopOrder));
@@ -139,7 +139,7 @@ ReoderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
           if(multiStageDependencyGraph) {
 
             // 3) Do we not exceed the maximum allowed boundary extents?
-            if(!exceedsMaxBoundaryPoints(multiStageDependencyGraph.get(), maxBoundaryExtent)) {
+            if(!multiStageDependencyGraph->exceedsMaxBoundaryPoints(maxBoundaryExtent)) {
 
               // Yes, Yes and Yes ... stop and insert the stage!
               MS->setLoopOrder(dependencyGraphLoopOrderPair.second);
@@ -150,7 +150,7 @@ ReoderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
               diag << "stencil '" << instantiation->getName()
                    << "' exceeds maximum number of allowed halo lines (" << maxBoundaryExtent
                    << ")";
-              instantiation->getOptimizerContext()->getDiagnostics().report(diag);
+              context.getDiagnostics().report(diag);
               return nullptr;
             }
           }

@@ -289,9 +289,9 @@ static void createCopyStencilIIRInMemory(std::shared_ptr<iir::StencilInstantiati
   auto rhs = std::make_shared<ast::FieldAccessExpr>(sirInField->Name);
   rhs->setID(target->nextUID());
 
-  int in_fieldID = target->getMetaData().insertField(iir::FieldAccessType::FAT_APIField,
+  int in_fieldID = target->getMetaData().addField(iir::FieldAccessType::FAT_APIField,
                                                      sirInField->Name, sirInField->fieldDimensions);
-  int out_fieldID = target->getMetaData().insertField(
+  int out_fieldID = target->getMetaData().addField(
       iir::FieldAccessType::FAT_APIField, sirOutField->Name, sirOutField->fieldDimensions);
 
   auto expr = std::make_shared<ast::AssignmentExpr>(lhs, rhs);
@@ -317,7 +317,7 @@ static void createCopyStencilIIRInMemory(std::shared_ptr<iir::StencilInstantiati
       iir::InstantiationHelper::makeStencilCallCodeGenName(stencilID));
   auto stencilCallDeclStmt = std::make_shared<iir::StencilCallDeclStmt>(placeholderStencil);
   // Register the call and set it as a replacement for the next vertical region
-  target->getMetaData().insertStencilCallStmt(stencilCallDeclStmt, stencilID);
+  target->getMetaData().addStencilCallStmt(stencilCallDeclStmt, stencilID);
 
   // auto stencilCallStmt = std::make_shared<ast::StencilCallDeclStmt>(stencilCall);
   // stencilCallStmt->setID(target->nextUID());
@@ -327,8 +327,8 @@ static void createCopyStencilIIRInMemory(std::shared_ptr<iir::StencilInstantiati
 
   ///////////////// Generation of the Metadata
 
-  target->getMetaData().setAccessIDNamePair(in_fieldID, "in_field");
-  target->getMetaData().setAccessIDNamePair(out_fieldID, "out_field");
+  target->getMetaData().addAccessIDNamePair(in_fieldID, "in_field");
+  target->getMetaData().addAccessIDNamePair(out_fieldID, "out_field");
   target->getMetaData().insertExprToAccessID(lhs, out_fieldID);
   target->getMetaData().insertExprToAccessID(rhs, in_fieldID);
   target->getMetaData().setStencilname("generated");
@@ -364,12 +364,14 @@ void deserialization_test_mat() {
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions, nullptr);
 
   //generate IIR in memory
-  std::shared_ptr<iir::StencilInstantiation> copy_stencil_memory = std::make_shared<iir::StencilInstantiation>(&optimizer);
+  std::shared_ptr<iir::StencilInstantiation> copy_stencil_memory = 
+    std::make_shared<iir::StencilInstantiation>(*optimizer.getSIR()->GlobalVariableMap, optimizer.getSIR()->StencilFunctions);
   createCopyStencilIIRInMemory(copy_stencil_memory);
   // IIRSerializer::serialize("test_mat.iir", copy_stencil_memory, IIRSerializer::SK_Json);
 
   //read IIR from file
-  std::shared_ptr<iir::StencilInstantiation> copy_stencil_from_file = std::make_shared<iir::StencilInstantiation>(&optimizer);
+  std::shared_ptr<iir::StencilInstantiation> copy_stencil_from_file = 
+    std::make_shared<iir::StencilInstantiation>(*optimizer.getSIR()->GlobalVariableMap, optimizer.getSIR()->StencilFunctions);
   readIIRFromFile(optimizer, copy_stencil_from_file, "test_mat.iir");
 
   printf("prepared IIRs succesfully!\n");
