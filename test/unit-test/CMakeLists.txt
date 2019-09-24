@@ -39,7 +39,7 @@ macro(dawn_add_unittest_impl)
   )
 endmacro()
 
-# dawn_add_unittest_impl
+# dawn_add_integrationtest_impl
 # ----------------------
 #
 # Compile the given objects into a runnable integration test executable (.exe) and register it within CTest.
