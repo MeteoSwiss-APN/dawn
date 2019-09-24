@@ -20,6 +20,7 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/DiagnosticsEngine.h"
+#include "dawn/Support/STLExtras.h"
 #include <gtest/gtest.h>
 
 using namespace dawn;
@@ -168,10 +169,10 @@ protected:
     dawn::DiagnosticsEngine diag;
     std::shared_ptr<SIR> sir = std::make_shared<SIR>();
     dawn::OptimizerContext::OptimizerContextOptions options;
-    context_ = new OptimizerContext(diag, options, sir);
+    context_ = make_unique<OptimizerContext>(diag, options, sir);
   }
   virtual void TearDown() override {}
-  OptimizerContext* context_;
+  std::unique_ptr<OptimizerContext> context_;
 };
 
 class IIRSerializerTest : public createEmptyOptimizerContext {
@@ -185,7 +186,7 @@ protected:
 
   std::shared_ptr<iir::StencilInstantiation> serializeAndDeserializeRef() {
     return IIRSerializer::deserializeFromString(
-        IIRSerializer::serializeToString(referenceInstantiaton), context_);
+        IIRSerializer::serializeToString(referenceInstantiaton), context_.get());
   }
 
   std::shared_ptr<iir::StencilInstantiation> referenceInstantiaton;
