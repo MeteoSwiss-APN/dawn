@@ -29,10 +29,15 @@
 
 namespace gtclang {
 
-ReturnValue Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
+bool Driver::isInitialized = false;
 
+ReturnValue Driver::run(const llvm::SmallVectorImpl<const char*>& args) {
   // Print a stack trace if we signal out
-  llvm::sys::PrintStackTraceOnErrorSignal(args[0]);
+  if(!isInitialized) {
+    // we must call this only once, otherwise we register a signal on each call
+    llvm::sys::PrintStackTraceOnErrorSignal(args[0]);
+    isInitialized = true;
+  }
   llvm::PrettyStackTraceProgram X(args.size(), args.data());
 
   // Call llvm_shutdown() on exit

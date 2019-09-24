@@ -40,6 +40,8 @@ struct Driver : public dawn::NonCopyable {
   /// @returns The Stencil Intermediate Representation and an integer that is `0` on success, `1`
   /// otherwise
   static ReturnValue run(const llvm::SmallVectorImpl<const char*>& args);
+
+  static bool isInitialized;
 };
 
 } // namespace gtclang
