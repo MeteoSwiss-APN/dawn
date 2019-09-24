@@ -55,6 +55,10 @@ macro(dawn_set_cxx_flags)
   yoda_check_and_set_cxx_flag("-Wno-sign-compare" HAVE_GCC_WNO_SIGN_COMPARE)
   yoda_check_and_set_cxx_flag("-Wno-unused-parameter" HAVE_GCC_WNO_UNUSDED_PARAMETER)
 
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    yoda_check_and_set_cxx_flag("-fsanitize=address" HAVE_GCC_SANITIZE_ADDRESS)
+  endif()
+
   if(BUILD_SHARED_LIBS)
     yoda_check_and_set_cxx_flag("-fPIC" HAVE_GCC_PIC)
   endif()
