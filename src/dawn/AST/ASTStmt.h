@@ -123,7 +123,7 @@ public:
   virtual bool isStencilDesc() const { return false; }
 
   /// @brief Check if statements have the same runtime data type
-  inline bool checkSameDataType(const Stmt& other) const {
+  bool checkSameDataType(const Stmt& other) const {
     return data_->getDataType() == other.data_->getDataType();
   }
 
