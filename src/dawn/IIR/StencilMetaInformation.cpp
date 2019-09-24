@@ -309,7 +309,7 @@ void StencilMetaInformation::insertAccessOfType(FieldAccessType type, int Access
   } else if(type == FieldAccessType::FAT_LocalVariable) {
     // local variables are not stored
   } else if(type == FieldAccessType::FAT_Literal) {
-    DAWN_ASSERT(!fieldAccessMetadata_.LiteralAccessIDToNameMap_.count(AccessID));
+    DAWN_ASSERT(AccessID < 0);
     fieldAccessMetadata_.LiteralAccessIDToNameMap_.emplace(AccessID, name);
   }
 }

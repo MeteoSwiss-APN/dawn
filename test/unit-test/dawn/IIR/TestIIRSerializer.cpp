@@ -19,6 +19,7 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/DiagnosticsEngine.h"
+#include "dawn/Support/STLExtras.h"
 #include <gtest/gtest.h>
 
 using namespace dawn;
@@ -175,10 +176,10 @@ protected:
     dawn::DiagnosticsEngine diag;
     std::shared_ptr<SIR> sir = std::make_shared<SIR>();
     dawn::OptimizerContext::OptimizerContextOptions options;
-    context_ = new OptimizerContext(diag, options, sir);
+    context_ = make_unique<OptimizerContext>(diag, options, sir);
   }
   virtual void TearDown() override {}
-  OptimizerContext* context_;
+  std::unique_ptr<OptimizerContext> context_;
 };
 
 class IIRSerializerTest : public createEmptyOptimizerContext {
@@ -192,7 +193,7 @@ protected:
 
   std::shared_ptr<iir::StencilInstantiation> serializeAndDeserializeRef() {
     return IIRSerializer::deserializeFromString(
-        IIRSerializer::serializeToString(referenceInstantiaton), context_);
+        IIRSerializer::serializeToString(referenceInstantiaton), context_.get());
   }
 
   std::shared_ptr<iir::StencilInstantiation> referenceInstantiaton;
@@ -219,7 +220,7 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
       std::make_shared<iir::ExprStmt>(std::make_shared<iir::NOPExpr>()), 10);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
-  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_Literal, 5,
+  referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_Literal, -5,
                                                           "test");
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
@@ -246,7 +247,8 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
   IIR_EXPECT_NE(deserializedStencilInstantiaion, referenceInstantiaton);
 
   referenceInstantiaton->getMetaData().insertAccessOfType(
-      iir::FieldAccessType::FAT_StencilTemporary, 713, "field3"); //access ids should be globally unique, not only per type
+      iir::FieldAccessType::FAT_StencilTemporary, 713,
+      "field3"); // access ids should be globally unique, not only per type
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   // This would fail, since 712 is already present
