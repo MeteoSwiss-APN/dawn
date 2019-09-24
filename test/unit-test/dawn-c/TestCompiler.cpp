@@ -81,7 +81,7 @@ TEST(CompilerTest, CompileCopyStencil) {
   dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(of, stencil_instantiation);
 }
 
-TEST(CompilerTest, TestCodeGen) {
+TEST(CompilerTest, DISABLED_CodeGenPlayground) {
   using namespace dawn::iir;
 
   IIRBuilder b;
@@ -95,31 +95,15 @@ TEST(CompilerTest, TestCodeGen) {
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::LK_Parallel,
           b.stage(b.vregion(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(var),
+              dawn::sir::Interval::Start, dawn::sir::Interval::End,
               b.stmt(b.assignExpr(
-                  b.at(out_f, access_type::rw),
-                  b.binaryExpr(b.lit(-3.), b.unaryExpr(b.at(in_f), op::minus), op::multiply))),
-              b.stmt(b.assignExpr(b.at(out_f, access_type::rw),
-                                  b.reduceOverNeighborExpr(
-                                      op::plus, b.unaryExpr(b.at(in_f), op::minus), b.at(out_f)))),
-              b.block(b.stmt(b.assignExpr(b.at(out_f, access_type::rw), b.lit(0.1), op::multiply))),
-              b.stmt(b.assignExpr(b.at(out_f, access_type::rw), b.at(in_f, {0, 0, 1}), op::plus)))),
-          b.stage(b.vregion(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(var2),
-              b.stmt(b.assignExpr(b.at(out_f, access_type::rw),
-                                  b.binaryExpr(b.lit(-3.),
-                                               b.unaryExpr(b.at(out_f, {0, 1, 0}), op::minus),
-                                               op::multiply))),
-              b.stmt(b.assignExpr(b.at(var2), b.lit(0.1), op::multiply)),
-              b.ifStmt(
-                  b.binaryExpr(b.lit(0.1), b.lit(0.1), op::equal),
-                  b.block(b.stmt(b.assignExpr(b.at(out_f, access_type::rw), b.at(in_f, {0, 0, 1}),
-                                              op::plus)),
-                          b.stmt(b.assignExpr(b.at(out_f, access_type::rw), b.at(in_f, {0, 0, 1}),
-                                              op::plus))),
-                  b.stmt(b.assignExpr(
-                      b.at(var2), b.conditionalExpr(b.binaryExpr(b.lit(0.1), b.lit(0.1), op::equal),
-                                                    b.lit(0.2), b.lit(0.3))))))))));
+                  b.at(out_f),
+                  b.reduceOverNeighborExpr(op::plus, b.at(in_f),
+                                           b.binaryExpr(b.lit(-3.), b.at(in_f), op::multiply)))),
+              b.stmt(b.assignExpr(b.at(out_f),
+                                  b.binaryExpr(b.at(in_f),
+                                               b.binaryExpr(b.lit(0.1), b.at(out_f), op::multiply),
+                                               op::plus))))))));
 
   dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(std::clog, stencil_instantiation);
 }

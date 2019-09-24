@@ -115,7 +115,7 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   auto new_si = optimizer->getStencilInstantiationMap()["<restored>"];
 
   dawn::codegen::stencilInstantiationContext map;
-  map["test"] = std::move(new_si);
+  map[new_si->getName()] = std::move(new_si);
 
   return map;
 }
