@@ -12,14 +12,14 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/CodeGen/CXXNaive/ASTStencilDesc.h"
+#include "dawn/CodeGen/CXXNaive-ico/ASTStencilDesc.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
 namespace codegen {
-namespace cxxnaive {
+namespace cxxnaiveico {
 
 ASTStencilDesc::ASTStencilDesc(const iir::StencilMetaInformation& metadata,
                                CodeGenProperties const& codeGenProperties)
@@ -52,7 +52,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt
 
   std::string stencilName =
       codeGenProperties_.getStencilName(StencilContext::SC_Stencil, stencilID);
-  ss_ << "m_" << stencilName + "->run();\n";
+  ss_ << "m_" << stencilName + ".run();\n";
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) {
@@ -89,6 +89,6 @@ void ASTStencilDesc::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   DAWN_ASSERT_MSG(0, "FieldAccessExpr not allowed in StencilDesc AST");
 }
 
-} // namespace cxxnaive
+} // namespace cxxnaiveico
 } // namespace codegen
 } // namespace dawn

@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_CXXNAIVE_ASTSTENCILBODY_H
-#define DAWN_CODEGEN_CXXNAIVE_ASTSTENCILBODY_H
+#ifndef DAWN_CODEGEN_CXXNAIVEICO_ASTSTENCILBODY_H
+#define DAWN_CODEGEN_CXXNAIVEICO_ASTSTENCILBODY_H
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
@@ -30,14 +30,15 @@ class StencilMetaInformation;
 } // namespace iir
 
 namespace codegen {
-namespace cxxnaive {
+namespace cxxnaiveico {
 
 /// @brief ASTVisitor to generate C++ naive code for the stencil and stencil function bodies
-/// @ingroup cxxnaive
+/// @ingroup cxxnaiveico
 class ASTStencilBody : public ASTCodeGenCXX {
 protected:
   const iir::StencilMetaInformation& metadata_;
   RangeToString offsetPrinter_;
+  std::string argName_ = "t";
 
   /// The stencil function we are currently generating or NULL
   std::shared_ptr<iir::StencilFunctionInstantiation> currentFunction_;
@@ -78,28 +79,28 @@ public:
 
   /// @name Statement implementation
   /// @{
-  virtual void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override;
-  virtual void visit(const std::shared_ptr<iir::IfStmt>& stmt) override;
+  void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override;
+  void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override;
+  void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) override;
+  void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override;
+  void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override;
+  void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override;
+  void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override;
+  void visit(const std::shared_ptr<iir::IfStmt>& stmt) override;
   /// @}
 
   /// @name Expression implementation
   /// @{
-  virtual void visit(const std::shared_ptr<iir::UnaryOperator>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::BinaryOperator>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::TernaryOperator>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::FunCallExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override;
-  virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override;
+  void visit(const std::shared_ptr<iir::UnaryOperator>& expr) override;
+  void visit(const std::shared_ptr<iir::BinaryOperator>& expr) override;
+  void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override;
+  void visit(const std::shared_ptr<iir::TernaryOperator>& expr) override;
+  void visit(const std::shared_ptr<iir::FunCallExpr>& expr) override;
+  void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override;
+  void visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) override;
+  void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override;
+  void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override;
+  void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override;
   /// @}
 
   /// @brief Set the current stencil function (can be NULL)
@@ -112,7 +113,7 @@ public:
   int getAccessID(const std::shared_ptr<iir::Expr>& expr) const;
 };
 
-} // namespace cxxnaive
+} // namespace cxxnaiveico
 } // namespace codegen
 } // namespace dawn
 

@@ -12,16 +12,16 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/CodeGen/CXXNaive/ASTStencilFunctionParamVisitor.h"
+#include "dawn/CodeGen/CXXNaive-ico/ASTStencilFunctionParamVisitor.h"
 #include "dawn/CodeGen/CXXUtil.h"
+#include "dawn/IIR/AST.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/IIR/AST.h"
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
 namespace codegen {
-namespace cxxnaive {
+namespace cxxnaiveico {
 
 ASTStencilFunctionParamVisitor::ASTStencilFunctionParamVisitor(
     const std::shared_ptr<iir::StencilFunctionInstantiation>& function,
@@ -75,6 +75,6 @@ std::string ASTStencilFunctionParamVisitor::getCodeAndResetStream() {
   return str;
 }
 
-} // namespace cxxnaive
+} // namespace cxxnaiveico
 } // namespace codegen
 } // namespace dawn

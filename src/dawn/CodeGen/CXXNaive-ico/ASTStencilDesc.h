@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_CXXNAIVE_ASTSTENCILDESC_H
-#define DAWN_CODEGEN_CXXNAIVE_ASTSTENCILDESC_H
+#ifndef DAWN_CODEGEN_CXXNAIVEICO_ASTSTENCILDESC_H
+#define DAWN_CODEGEN_CXXNAIVEICO_ASTSTENCILDESC_H
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
@@ -28,10 +28,10 @@ class StencilMetaInformation;
 }
 
 namespace codegen {
-namespace cxxnaive {
+namespace cxxnaiveico {
 
 /// @brief ASTVisitor to generate C++ naive bakend code for the control flow code of stencils
-/// @ingroup cxxnaive
+/// @ingroup cxxnaiveico
 class ASTStencilDesc : public ASTCodeGenCXX {
 protected:
   const iir::StencilMetaInformation& metadata_;
@@ -66,7 +66,7 @@ public:
   std::string getName(const std::shared_ptr<iir::Expr>& expr) const override;
 };
 
-} // namespace cxxnaive
+} // namespace cxxnaiveico
 } // namespace codegen
 } // namespace dawn
 

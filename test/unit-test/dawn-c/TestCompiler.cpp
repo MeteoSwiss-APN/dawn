@@ -14,6 +14,7 @@
 
 #include "dawn-c/Compiler.h"
 #include "dawn-c/TranslationUnit.h"
+#include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/Optimizer/OptimizerContext.h"
@@ -78,6 +79,30 @@ TEST(CompilerTest, CompileCopyStencil) {
                                                b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))))))));
   std::ofstream of("/dev/null");
   dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(of, stencil_instantiation);
+}
+
+TEST(CompilerTest, DISABLED_CodeGenPlayground) {
+  using namespace dawn::iir;
+
+  IIRBuilder b;
+  auto in_f = b.field("in_field", field_type::ijk);
+  auto out_f = b.field("out_field", field_type::ijk);
+  auto var = b.localvar("my_var");
+  auto var2 = b.localvar("my_var2");
+
+  auto stencil_instantiation = b.build(
+      "generated",
+      b.stencil(b.multistage(
+          dawn::iir::LoopOrderKind::LK_Parallel,
+          b.stage(b.vregion(
+              dawn::sir::Interval::Start, dawn::sir::Interval::End,
+              b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))),
+              b.stmt(b.assignExpr(b.at(out_f),
+                                  b.binaryExpr(b.at(in_f),
+                                               b.binaryExpr(b.lit(0.1), b.at(out_f), op::multiply),
+                                               op::plus))))))));
+
+  dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(std::clog, stencil_instantiation);
 }
 
 } // anonymous namespace

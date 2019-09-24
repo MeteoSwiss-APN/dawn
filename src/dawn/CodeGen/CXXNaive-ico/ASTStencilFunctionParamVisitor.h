@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_CXXNAIVE_ASTSTENCILFUNCTIONPARAMVISITOR_H
-#define DAWN_CODEGEN_CXXNAIVE_ASTSTENCILFUNCTIONPARAMVISITOR_H
+#ifndef DAWN_CODEGEN_CXXNAIVEICO_ASTSTENCILFUNCTIONPARAMVISITOR_H
+#define DAWN_CODEGEN_CXXNAIVEICO_ASTSTENCILFUNCTIONPARAMVISITOR_H
 
 #include "dawn/CodeGen/ASTCodeGenCXX.h"
 #include "dawn/IIR/Interval.h"
@@ -28,11 +28,11 @@ class StencilMetaInformation;
 } // namespace iir
 
 namespace codegen {
-namespace cxxnaive {
+namespace cxxnaiveico {
 
 /// @brief ASTVisitor to generate C++ naive backend code for the parameters of the stencil function
 /// calls
-/// @ingroup cxxnaive
+/// @ingroup cxxnaiveico
 class ASTStencilFunctionParamVisitor : public iir::ASTVisitorDisabled, public NonCopyable {
 protected:
   const iir::StencilMetaInformation& metadata_;
@@ -63,7 +63,7 @@ public:
   /// @}
 };
 
-} // namespace cxxnaive
+} // namespace cxxnaiveico
 } // namespace codegen
 } // namespace dawn
 

@@ -12,16 +12,16 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/CodeGen/CXXNaive/ASTStencilBody.h"
-#include "dawn/CodeGen/CXXNaive/ASTStencilFunctionParamVisitor.h"
+#include "dawn/CodeGen/CXXNaive-ico/ASTStencilBody.h"
+#include "dawn/CodeGen/CXXNaive-ico/ASTStencilFunctionParamVisitor.h"
 #include "dawn/CodeGen/CXXUtil.h"
-#include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/AST.h"
+#include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
 namespace codegen {
-namespace cxxnaive {
+namespace cxxnaiveico {
 
 ASTStencilBody::ASTStencilBody(const iir::StencilMetaInformation& metadata,
                                StencilContext stencilContext)
@@ -142,7 +142,9 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   }
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) { Base::visit(expr); }
+void ASTStencilBody::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) {
+  Base::visit(expr);
+}
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
 
@@ -174,43 +176,45 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
       iir::StencilFunctionInstantiation& argStencilFn =
           *(currentFunction_->getFunctionInstantiationOfArgField(argIndex));
 
-      ss_ << iir::StencilFunctionInstantiation::makeCodeGenName(argStencilFn) << "(i,j,k";
+      ss_ << "m_"
+          << iir::StencilFunctionInstantiation::makeCodeGenName(argStencilFn); // << "(i,j,k";
 
-      // parse the arguments of the argument stencil gn call
-      for(int argIdx = 0; argIdx < argStencilFn.numArgs(); ++argIdx) {
-        // parse the argument if it is a field. Ignore offsets/directions,
-        // since they are "inlined" in the code generation of the function
-        if(argStencilFn.isArgField(argIdx)) {
-          Array3i offset = currentFunction_->evalOffsetOfFieldAccessExpr(expr, false);
+      /*
+            // parse the arguments of the argument stencil gn call
+            for(int argIdx = 0; argIdx < argStencilFn.numArgs(); ++argIdx) {
+              // parse the argument if it is a field. Ignore offsets/directions,
+              // since they are "inlined" in the code generation of the function
+              if(argStencilFn.isArgField(argIdx)) {
+                Array3i offset = currentFunction_->evalOffsetOfFieldAccessExpr(expr, false);
 
-          std::string accessName =
-              currentFunction_->getArgNameFromFunctionCall(argStencilFn.getName());
-          ss_ << ", "
-              << "pw_" + accessName << ".cloneWithOffset(std::array<int,"
-              << std::to_string(offset.size()) << ">{";
+                std::string accessName =
+                    currentFunction_->getArgNameFromFunctionCall(argStencilFn.getName());
+                ss_ << ", "
+                    << "pw_" + accessName << ".cloneWithOffset(std::array<int,"
+                    << std::to_string(offset.size()) << ">{";
 
-          bool init = false;
-          for(auto idxIt : offset) {
-            if(init)
-              ss_ << ",";
-            ss_ << std::to_string(idxIt);
-            init = true;
-          }
-          ss_ << "})";
-        }
-      }
+                bool init = false;
+                for(auto idxIt : offset) {
+                  if(init)
+                    ss_ << ",";
+                  ss_ << std::to_string(idxIt);
+                  init = true;
+                }
+                ss_ << "})";
+              }
+            }
       ss_ << ")";
+            */
 
     } else {
       std::string accessName = currentFunction_->getOriginalNameFromCallerAccessID(
           currentFunction_->getAccessIDFromExpr(expr));
-      ss_ << accessName
-          << offsetPrinter_(ijkfyOffset(currentFunction_->evalOffsetOfFieldAccessExpr(expr, false),
-                                        accessName));
+      ss_ << "m_" + accessName;
+      //<< offsetPrinter_(ijkfyOffset(currentFunction_->evalOffsetOfFieldAccessExpr(expr, false),
+      // accessName));
     }
   } else {
-    std::string accessName = getName(expr);
-    ss_ << accessName << offsetPrinter_(ijkfyOffset(expr->getOffset(), accessName));
+    ss_ << "m_" << getName(expr) << "[" << argName_ << "]";
   }
 }
 
@@ -219,6 +223,6 @@ void ASTStencilBody::setCurrentStencilFunction(
   currentFunction_ = currentFunction;
 }
 
-} // namespace cxxnaive
+} // namespace cxxnaiveico
 } // namespace codegen
 } // namespace dawn

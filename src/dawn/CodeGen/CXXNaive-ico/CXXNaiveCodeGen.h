@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_CODEGEN_CXXNAIVE_CXXNAIVECODEGEN_H
-#define DAWN_CODEGEN_CXXNAIVE_CXXNAIVECODEGEN_H
+#ifndef DAWN_CODEGEN_CXXNAIVEICO_CXXNAIVECODEGEN_H
+#define DAWN_CODEGEN_CXXNAIVEICO_CXXNAIVECODEGEN_H
 
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/CodeGenProperties.h"
@@ -30,15 +30,15 @@ class StencilInstantiation;
 }
 
 namespace codegen {
-namespace cxxnaive {
+namespace cxxnaiveico {
 
 /// @brief GridTools C++ code generation for the gridtools_clang DSL
-/// @ingroup cxxnaive
-class CXXNaiveCodeGen : public CodeGen {
+/// @ingroup cxxnaiveico
+class CXXNaiveIcoCodeGen : public CodeGen {
 public:
   ///@brief constructor
-  CXXNaiveCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine, int maxHaloPoint);
-  virtual ~CXXNaiveCodeGen();
+  CXXNaiveIcoCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine, int maxHaloPoint);
+  virtual ~CXXNaiveIcoCodeGen();
   virtual std::unique_ptr<TranslationUnit> generateCode() override;
 
 private:
@@ -68,7 +68,7 @@ private:
                             const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
                             const CodeGenProperties& codeGenProperties) const;
 };
-} // namespace cxxnaive
+} // namespace cxxnaiveico
 } // namespace codegen
 } // namespace dawn
 
