@@ -22,9 +22,10 @@
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/DiagnosticsEngine.h"
-#include "dawn/Unittest/ASTSimplifier.h"
-#include <cstring>
 #include <gtest/gtest.h>
+
+#include <cstring>
+#include <fstream>
 
 namespace {
 
@@ -49,50 +50,45 @@ TEST(CompilerTest, CompileEmptySIR) {
   freeCharArray(ppDefines, size);
   dawnTranslationUnitDestroy(TU);
 }
+template <typename CG>
+void dump(std::ostream& os, std::shared_ptr<dawn::iir::StencilInstantiation> const& si) {
+  dawn::DiagnosticsEngine diagnostics;
 
+  // TODO this should be moved into the IIR builder -> the IIR builder cannot be in IIR
+  auto optimizer = dawn::make_unique<dawn::OptimizerContext>(
+      diagnostics, dawn::OptimizerContext::OptimizerContextOptions{}, nullptr);
+  optimizer->restoreIIR("<restored>", si);
+  auto new_si = optimizer->getStencilInstantiationMap()["<restored>"];
+
+  dawn::codegen::stencilInstantiationContext map;
+  map["test"] = std::move(new_si);
+
+  CG generator(map, diagnostics, 0);
+  auto tu = generator.generateCode();
+
+  std::ostringstream ss;
+  for(auto const& macroDefine : tu->getPPDefines())
+    ss << macroDefine << "\n";
+
+  ss << tu->getGlobals();
+  for(auto const& s : tu->getStencils())
+    ss << s.second;
+  os << ss.str();
+}
 TEST(CompilerTest, CompileCopyStencil) {
-  using namespace dawn::astgen;
+  using namespace dawn::iir;
 
-  // Build copy stencil
-  //
-  //  copy {
-  //    storage in, out;
-  //
-  //    vertical_region(start, end) {
-  //      out = in;
-  //    }
-  //  }
-  //
-  auto sir = std::make_shared<dawn::SIR>();
-  auto stencil = std::make_shared<dawn::sir::Stencil>();
-  stencil->Name = "copy";
-  stencil->Fields.emplace_back(std::make_shared<dawn::sir::Field>("in"));
-  stencil->Fields.emplace_back(std::make_shared<dawn::sir::Field>("out"));
+  IIRBuilder b;
+  auto in_f = b.field("in_field", field_type::ijk);
+  auto out_f = b.field("out_field", field_type::ijk);
 
-  auto ast = std::make_shared<dawn::sir::AST>(block(assign(field("out"), field("in"))));
-  auto vr = std::make_shared<dawn::sir::VerticalRegion>(
-      ast,
-      std::make_shared<dawn::sir::Interval>(dawn::sir::Interval::Start, dawn::sir::Interval::End),
-      dawn::sir::VerticalRegion::LK_Forward);
-  stencil->StencilDescAst = std::make_shared<dawn::sir::AST>(block(verticalRegion(vr)));
-  sir->Stencils.emplace_back(stencil);
-
-  std::string sirStr =
-      dawn::SIRSerializer::serializeToString(sir.get(), dawn::SIRSerializer::SK_Byte);
-  dawnTranslationUnit_t* TU = dawnCompile(sirStr.data(), sirStr.size(), nullptr);
-
-  char* copyCode = dawnTranslationUnitGetStencil(TU, "copy");
-  EXPECT_NE(copyCode, nullptr);
-
-  char** ppDefines;
-  int size;
-  dawnTranslationUnitGetPPDefines(TU, &ppDefines, &size);
-  EXPECT_NE(size, 0);
-  EXPECT_NE(ppDefines, nullptr);
-
-  freeCharArray(ppDefines, size);
-  std::free(copyCode);
-  dawnTranslationUnitDestroy(TU);
+  auto stencil_instantiation = b.build(
+      "generated",
+      b.stencil(b.multistage(dawn::iir::LoopOrderKind::LK_Parallel,
+                             b.stage(b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                               b.stmt(b.assign_expr(b.at(out_f), b.at(in_f))))))));
+  std::ofstream of("/dev/null");
+  dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(of, stencil_instantiation);
 }
 
 TEST(CompilerTest, TestCodeGen) {
@@ -138,29 +134,7 @@ TEST(CompilerTest, TestCodeGen) {
                             b.conditional_expr(b.binary_expr(b.lit(0.1), b.lit(0.1), op::equal),
                                                b.lit(0.2), b.lit(0.3))))))))));
 
-  dawn::DiagnosticsEngine diagnostics;
-
-  // TODO this should be moved into the IIR builder -> the IIR builder cannot be in IIR
-  auto optimizer = dawn::make_unique<dawn::OptimizerContext>(
-      diagnostics, dawn::OptimizerContext::OptimizerContextOptions{}, nullptr);
-  optimizer->restoreIIR("<restored>", stencil_instantiation);
-  stencil_instantiation = optimizer->getStencilInstantiationMap()["<restored>"];
-
-  dawn::codegen::stencilInstantiationContext map;
-  map["test"] = std::move(stencil_instantiation);
-
-  dawn::codegen::cxxnaive::CXXNaiveCodeGen generator(map, diagnostics, 0);
-  // dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen generator(map, diagnostics, 0);
-  auto tu = generator.generateCode();
-
-  std::ostringstream ss;
-  for(auto const& macroDefine : tu->getPPDefines())
-    ss << macroDefine << "\n";
-
-  ss << tu->getGlobals();
-  for(auto const& s : tu->getStencils())
-    ss << s.second;
-  std::clog << ss.str();
+  dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(std::clog, stencil_instantiation);
 }
 
 } // anonymous namespace
