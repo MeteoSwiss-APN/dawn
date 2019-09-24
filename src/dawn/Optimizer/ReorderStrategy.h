@@ -18,7 +18,7 @@
 #include <memory>
 
 namespace dawn {
-
+class OptimizerContext;
 namespace iir {
 class Stencil;
 class StencilInstantiation;
@@ -42,9 +42,9 @@ public:
 
   /// @brief Reorder the stages of the `stencilPtr` according to the implemented strategy
   /// @returns New stencil with the reordered stages
-  virtual std::unique_ptr<iir::Stencil>
-  reorder(iir::StencilInstantiation* instantiation,
-          const std::unique_ptr<iir::Stencil>& stencilPtr) = 0;
+  virtual std::unique_ptr<iir::Stencil> reorder(iir::StencilInstantiation* instantiation,
+                                                const std::unique_ptr<iir::Stencil>& stencilPtr,
+                                                OptimizerContext& context) = 0;
 };
 
 } // namespace dawn

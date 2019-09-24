@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassSetNonTempCaches.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/Cache.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StatementAccessesPair.h"
@@ -20,7 +21,7 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassSetCaches.h"
-#include "dawn/IIR/ASTExpr.h"
+#include "dawn/Optimizer/Renaming.h"
 #include "dawn/Support/Unreachable.h"
 #include <iostream>
 #include <set>
@@ -47,6 +48,7 @@ class GlobalFieldCacher {
   const std::unique_ptr<iir::MultiStage>& multiStagePrt_;
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   iir::StencilMetaInformation& metadata_;
+  OptimizerContext& context_;
   std::unordered_map<int, int> accessIDToDataLocality_;
   std::unordered_map<int, int> oldAccessIDtoNewAccessID_;
   std::vector<AcessIDTolocalityMetric> sortedAccesses_;
@@ -56,8 +58,9 @@ public:
   /// @param[in, out]  msprt   Pointer to the multistage to handle
   /// @param[in, out]  si      Stencil Instanciation [ISIR] holding all the Stencils
   GlobalFieldCacher(const std::unique_ptr<iir::MultiStage>& msptr,
-                    const std::shared_ptr<iir::StencilInstantiation>& si)
-      : multiStagePrt_(msptr), instantiation_(si), metadata_(si->getMetaData()) {}
+                    const std::shared_ptr<iir::StencilInstantiation>& si, OptimizerContext& context)
+      : multiStagePrt_(msptr), instantiation_(si), metadata_(si->getMetaData()), context_(context) {
+  }
 
   /// @brief Entry method for the pass: processes a given multistage and applies all changes
   /// required
@@ -75,7 +78,8 @@ private:
   /// @brief Use the data locality metric to rank the fields in a stencil based on how much they
   /// would benefit from caching
   void computeOptimalFields() {
-    auto dataLocality = computeReadWriteAccessesMetricPerAccessID(instantiation_, *multiStagePrt_);
+    auto dataLocality =
+        computeReadWriteAccessesMetricPerAccessID(instantiation_, context_, *multiStagePrt_);
 
     for(const auto& stagePtr : multiStagePrt_->getChildren()) {
       for(const auto& fieldPair : stagePtr->getFields()) {
@@ -123,8 +127,7 @@ private:
   /// variables to reduce synchronisation overhead
   void addFillerStages() {
     int numVarsToBeCached =
-        std::min((int)sortedAccesses_.size(),
-                 instantiation_->getOptimizerContext()->getHardwareConfiguration().SMemMaxFields);
+        std::min((int)sortedAccesses_.size(), context_.getHardwareConfiguration().SMemMaxFields);
     for(int i = 0; i < numVarsToBeCached; ++i) {
       int oldID = sortedAccesses_[i].accessID;
 
@@ -133,7 +136,7 @@ private:
                                                "__tmp_cache_" + std::to_string(i));
 
       // Rename all the fields in this multistage
-      multiStagePrt_->renameAllOccurrences(oldID, newID);
+      renameAccessIDInMultiStage(multiStagePrt_.get(), oldID, newID);
 
       oldAccessIDtoNewAccessID_.emplace(oldID, newID);
       iir::Cache& cache = multiStagePrt_->setCache(iir::Cache::IJ, iir::Cache::local, newID);
@@ -220,7 +223,8 @@ private:
         std::make_shared<iir::FieldAccessExpr>(metadata_.getFieldNameFromAccessID(assigneeID));
     auto fa_assignment =
         std::make_shared<iir::FieldAccessExpr>(metadata_.getFieldNameFromAccessID(assignmentID));
-    auto assignmentExpression = std::make_shared<iir::AssignmentExpr>(fa_assignment, fa_assignee, "=");
+    auto assignmentExpression =
+        std::make_shared<iir::AssignmentExpr>(fa_assignment, fa_assignee, "=");
     auto expAssignment = std::make_shared<iir::ExprStmt>(assignmentExpression);
     auto assignmentStatement = std::make_shared<Statement>(expAssignment, nullptr);
     auto pair = make_unique<iir::StatementAccessesPair>(assignmentStatement);
@@ -277,30 +281,29 @@ private:
   }
 };
 
-PassSetNonTempCaches::PassSetNonTempCaches() : Pass("PassSetNonTempCaches") {}
+PassSetNonTempCaches::PassSetNonTempCaches(OptimizerContext& context)
+    : Pass(context, "PassSetNonTempCaches") {}
 
 // TODO delete this pass
 bool dawn::PassSetNonTempCaches::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
 
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
-
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     const iir::Stencil& stencil = *stencilPtr;
 
     std::vector<NameToImprovementMetric> allCachedFields;
-    if(context->getOptions().UseNonTempCaches) {
+    if(context_.getOptions().UseNonTempCaches) {
       for(const auto& multiStagePtr : stencil.getChildren()) {
-        GlobalFieldCacher organizer(multiStagePtr, stencilInstantiation);
+        GlobalFieldCacher organizer(multiStagePtr, stencilInstantiation, context_);
         organizer.process();
-        if(context->getOptions().ReportPassSetNonTempCaches) {
+        if(context_.getOptions().ReportPassSetNonTempCaches) {
           for(const auto& nametoCache : organizer.getOriginalNameToCache())
             allCachedFields.push_back(nametoCache);
         }
       }
     }
     // Output
-    if(context->getOptions().ReportPassSetNonTempCaches) {
+    if(context_.getOptions().ReportPassSetNonTempCaches) {
       std::sort(allCachedFields.begin(), allCachedFields.end(),
                 [](const NameToImprovementMetric& lhs, const NameToImprovementMetric& rhs) {
                   return lhs.name < rhs.name;

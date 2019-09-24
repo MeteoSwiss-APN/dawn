@@ -184,9 +184,6 @@ public:
 
   const iir::Cache& getCache(const int accessID) const;
 
-  /// @brief Rename all the occurances in the multi-stage
-  void renameAllOccurrences(int oldAccessID, int newAccessID);
-
   /// @brief true if it contains no stages or the stages are empty
   bool isEmptyOrNullStmt() const;
 
@@ -201,6 +198,8 @@ public:
   boost::optional<Extents> computeExtents(const int accessID, const Interval& interval) const;
 
   MultiInterval computePartitionOfIntervals() const;
+
+  StencilMetaInformation& getMetadata();
 };
 
 } // namespace iir

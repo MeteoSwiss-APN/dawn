@@ -57,9 +57,6 @@ public:
   bool isAccessType(FieldAccessType fType, const int accessID) const;
   bool isAccessType(FieldAccessType fType, const std::string& name) const;
 
-  /// @brief check whether the `accessID` is accessed in more than one stencil
-  bool isIDAccessedMultipleStencils(int accessID) const;
-
   bool isAccessIDAVersion(const int accessID) const {
     return fieldAccessMetadata_.variableVersions_.isAccessIDAVersion(accessID);
   }
@@ -105,12 +102,11 @@ public:
 
   void insertAccessOfType(FieldAccessType type, int AccessID, const std::string& name);
 
-  int insertField(FieldAccessType type, const std::string& name, const Array3i fieldDimensions);
+  int addField(FieldAccessType type, const std::string& name, const Array3i fieldDimensions);
 
-  int insertTmpField(FieldAccessType type, const std::string& basename,
-                     const Array3i fieldDimensions);
+  int addTmpField(FieldAccessType type, const std::string& basename, const Array3i fieldDimensions);
 
-  int insertStmt(bool keepVarNames, const std::shared_ptr<iir::VarDeclStmt>& stmt);
+  int addStmt(bool keepVarNames, const std::shared_ptr<VarDeclStmt>& stmt);
 
   void eraseStencilFunctionInstantiation(
       const std::shared_ptr<StencilFunctionInstantiation>& stencilFun) {
@@ -152,19 +148,20 @@ public:
 
   Extents getBoundaryConditionExtentsFromBCStmt(
       const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) const {
-    DAWN_ASSERT_MSG(BoundaryConditionToExtentsMap_.count(stmt),
+    DAWN_ASSERT_MSG(boundaryConditionToExtentsMap_.count(stmt),
                     "Boundary Condition does not have a matching Extent");
-    return BoundaryConditionToExtentsMap_.at(stmt);
+    return boundaryConditionToExtentsMap_.at(stmt);
   }
 
   bool hasBoundaryConditionStmtToExtent(
       const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) const {
-    return BoundaryConditionToExtentsMap_.count(stmt);
+    return boundaryConditionToExtentsMap_.count(stmt);
   }
 
-  void insertBoundaryConditiontoExtentPair(std::shared_ptr<iir::BoundaryConditionDeclStmt>& bc,
-                                           Extents& extents) {
-    BoundaryConditionToExtentsMap_.emplace(bc, extents);
+  void addBoundaryConditiontoExtentPair(std::shared_ptr<BoundaryConditionDeclStmt>& bc,
+                                        Extents& extents) {
+    DAWN_ASSERT(!boundaryConditionToExtentsMap_.count(bc));
+    boundaryConditionToExtentsMap_.emplace(bc, extents);
   }
 
   /// @brief get a stencil function instantiation by StencilFunCallExpr
@@ -190,24 +187,23 @@ public:
 
   bool hasStmtToAccessID(const std::shared_ptr<iir::Stmt>& stmt) const;
 
-  void insertStmtToAccessID(const std::shared_ptr<iir::Stmt>& stmt, const int accessID);
+  void addStmtToAccessID(const std::shared_ptr<Stmt>& stmt, const int accessID);
 
   /// @brief Insert a new AccessID - Name pair
-  void setAccessIDNamePair(int accessID, const std::string& name);
+  void addAccessIDNamePair(int accessID, const std::string& name);
 
-  void insertStencilCallStmt(std::shared_ptr<iir::StencilCallDeclStmt> stmt, int stencilID);
+  void addStencilCallStmt(std::shared_ptr<StencilCallDeclStmt> stmt, int stencilID);
 
   /// @brief Remove the field, variable or literal given by `AccessID`
   void removeAccessID(int AccesssID);
 
-  /// @brief Add entry to the map between a given expr to its access ID
-  void insertExprToAccessID(const std::shared_ptr<iir::Expr>& expr, int accessID);
+  void insertExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID);
 
-  /// @brief Add entry of the Expr to AccessID map
-  void eraseExprToAccessID(std::shared_ptr<iir::Expr> expr);
+  /// @brief erase entry of the Expr to AccessID map
+  void eraseExprToAccessID(std::shared_ptr<Expr> expr);
 
-  /// @brief Add entry of the Stmt to AccessID map
-  void eraseStmtToAccessID(std::shared_ptr<iir::Stmt> stmt);
+  /// @brief erase entry of the Stmt to AccessID map
+  void eraseStmtToAccessID(std::shared_ptr<Stmt> stmt);
 
   void eraseStencilCallStmt(std::shared_ptr<iir::StencilCallDeclStmt> stmt);
   void eraseStencilID(const int stencilID);
@@ -232,7 +228,9 @@ public:
 
   bool hasBC() const { return !fieldnameToBoundaryConditionMap_.empty(); }
   bool hasFieldBC(std::string name) const { return fieldnameToBoundaryConditionMap_.count(name); }
-  void insertFieldBC(std::string name, const std::shared_ptr<iir::BoundaryConditionDeclStmt>& bc) {
+
+  void addFieldBC(std::string name, const std::shared_ptr<BoundaryConditionDeclStmt>& bc) {
+    DAWN_ASSERT(!fieldnameToBoundaryConditionMap_.count(name));
     fieldnameToBoundaryConditionMap_.emplace(name, bc);
   }
 
@@ -243,8 +241,8 @@ public:
 
   const FieldAccessMetadata& getFieldAccessMetadata() const { return fieldAccessMetadata_; }
 
-  void insertFieldVersionIDPair(const int originalAccessID, const int versionedAccessID) {
-    fieldAccessMetadata_.variableVersions_.insertIDPair(originalAccessID, versionedAccessID);
+  void addFieldVersionIDPair(const int originalAccessID, const int versionedAccessID) {
+    fieldAccessMetadata_.variableVersions_.addIDPair(originalAccessID, versionedAccessID);
   }
 
   bool variableHasMultipleVersions(const int accessID) const {
@@ -307,14 +305,15 @@ public:
 
   void insertStencilFunctionInstantiation(
       const std::shared_ptr<StencilFunctionInstantiation>& stencilFunctionInstantiation) {
-    return stencilFunctionInstantiations_.push_back(stencilFunctionInstantiation);
+    stencilFunctionInstantiations_.push_back(stencilFunctionInstantiation);
   }
 
   void deregisterStencilFunction(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
 
-  void insertStencilFunInstantiationCandidate(
+  void addStencilFunInstantiationCandidate(
       const std::shared_ptr<StencilFunctionInstantiation>& stencilFun,
       const StencilFunctionInstantiationCandidate& candidate) {
+    DAWN_ASSERT(!stencilFunInstantiationCandidate_.count(stencilFun));
     stencilFunInstantiationCandidate_.emplace(stencilFun, candidate);
   }
 
@@ -370,7 +369,7 @@ private:
 
   /// BoundaryConditionCall to Extent Map. Filled my `PassSetBoundaryCondition`
   std::unordered_map<std::shared_ptr<iir::BoundaryConditionDeclStmt>, Extents>
-      BoundaryConditionToExtentsMap_;
+      boundaryConditionToExtentsMap_;
 
   SourceLocation stencilLocation_;
   std::string stencilName_;

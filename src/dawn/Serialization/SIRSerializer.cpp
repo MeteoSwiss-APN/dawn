@@ -174,7 +174,7 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::SerializationKin
 
     sir::proto::GlobalVariableValue valueProto;
     valueProto.set_is_constexpr(value.isConstexpr());
-    if(!value.empty()) {
+    if(value.has_value()) {
       switch(value.getType()) {
       case sir::Value::Boolean:
         valueProto.set_boolean_value(value.getValue<bool>());
@@ -187,8 +187,6 @@ static std::string serializeImpl(const SIR* sir, SIRSerializer::SerializationKin
         break;
       case sir::Value::String:
         valueProto.set_string_value(value.getValue<std::string>());
-        break;
-      case sir::Value::None:
         break;
       }
     }
@@ -339,13 +337,13 @@ makeVerticalRegion(const dawn::proto::statements::VerticalRegion& verticalRegion
   return std::make_shared<sir::VerticalRegion>(ast, interval, loopOrder, loc);
 }
 
-static std::shared_ptr<sir::StencilCall>
+static std::shared_ptr<ast::StencilCall>
 makeStencilCall(const dawn::proto::statements::StencilCall& stencilCallProto) {
   auto stencilCall =
-      std::make_shared<sir::StencilCall>(stencilCallProto.callee(), makeLocation(stencilCallProto));
+      std::make_shared<ast::StencilCall>(stencilCallProto.callee(), makeLocation(stencilCallProto));
 
-  for(const auto& arg : stencilCallProto.arguments())
-    stencilCall->Args.emplace_back(makeField(arg));
+  for(const auto& argName : stencilCallProto.arguments())
+    stencilCall->Args.emplace_back(argName);
 
   return stencilCall;
 }
@@ -355,22 +353,25 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
   case dawn::proto::statements::Expr::kUnaryOperator: {
     const auto& exprProto = expressionProto.unary_operator();
     return std::make_shared<sir::UnaryOperator>(makeExpr(exprProto.operand()), exprProto.op(),
-                                           makeLocation(exprProto));
+                                                makeLocation(exprProto));
   }
   case dawn::proto::statements::Expr::kBinaryOperator: {
     const auto& exprProto = expressionProto.binary_operator();
     return std::make_shared<sir::BinaryOperator>(makeExpr(exprProto.left()), exprProto.op(),
-                                            makeExpr(exprProto.right()), makeLocation(exprProto));
+                                                 makeExpr(exprProto.right()),
+                                                 makeLocation(exprProto));
   }
   case dawn::proto::statements::Expr::kAssignmentExpr: {
     const auto& exprProto = expressionProto.assignment_expr();
-    return std::make_shared<sir::AssignmentExpr>(makeExpr(exprProto.left()), makeExpr(exprProto.right()),
-                                            exprProto.op(), makeLocation(exprProto));
+    return std::make_shared<sir::AssignmentExpr>(makeExpr(exprProto.left()),
+                                                 makeExpr(exprProto.right()), exprProto.op(),
+                                                 makeLocation(exprProto));
   }
   case dawn::proto::statements::Expr::kTernaryOperator: {
     const auto& exprProto = expressionProto.ternary_operator();
-    return std::make_shared<sir::TernaryOperator>(makeExpr(exprProto.cond()), makeExpr(exprProto.left()),
-                                             makeExpr(exprProto.right()), makeLocation(exprProto));
+    return std::make_shared<sir::TernaryOperator>(
+        makeExpr(exprProto.cond()), makeExpr(exprProto.left()), makeExpr(exprProto.right()),
+        makeLocation(exprProto));
   }
   case dawn::proto::statements::Expr::kFunCallExpr: {
     const auto& exprProto = expressionProto.fun_call_expr();
@@ -381,7 +382,8 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
   }
   case dawn::proto::statements::Expr::kStencilFunCallExpr: {
     const auto& exprProto = expressionProto.stencil_fun_call_expr();
-    auto expr = std::make_shared<sir::StencilFunCallExpr>(exprProto.callee(), makeLocation(exprProto));
+    auto expr =
+        std::make_shared<sir::StencilFunCallExpr>(exprProto.callee(), makeLocation(exprProto));
     for(const auto& argProto : exprProto.arguments())
       expr->getArguments().emplace_back(makeExpr(argProto));
     return expr;
@@ -410,7 +412,7 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
     offset = exprProto.offset();
     argumentIndex = exprProto.argument_index();
     return std::make_shared<sir::StencilFunArgExpr>(direction, offset, argumentIndex,
-                                               makeLocation(exprProto));
+                                                    makeLocation(exprProto));
   }
   case dawn::proto::statements::Expr::kVarAccessExpr: {
     const auto& exprProto = expressionProto.var_access_expr();
@@ -457,7 +459,7 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
     }
 
     return std::make_shared<sir::FieldAccessExpr>(name, offset, argumentMap, argumentOffset,
-                                             negateOffset, makeLocation(exprProto));
+                                                  negateOffset, makeLocation(exprProto));
   }
   case dawn::proto::statements::Expr::kLiteralAccessExpr: {
     const auto& exprProto = expressionProto.literal_access_expr();
@@ -507,24 +509,25 @@ static std::shared_ptr<sir::Stmt> makeStmt(const dawn::proto::statements::Stmt& 
                                          : Type(typeProto.name(), cvQual);
 
     return std::make_shared<sir::VarDeclStmt>(type, stmtProto.name(), stmtProto.dimension(),
-                                         stmtProto.op().c_str(), initList, makeLocation(stmtProto));
+                                              stmtProto.op().c_str(), initList,
+                                              makeLocation(stmtProto));
   }
   case dawn::proto::statements::Stmt::kStencilCallDeclStmt: {
     const auto& stmtProto = statementProto.stencil_call_decl_stmt();
     return std::make_shared<sir::StencilCallDeclStmt>(makeStencilCall(stmtProto.stencil_call()),
-                                                 makeLocation(stmtProto));
+                                                      makeLocation(stmtProto));
   }
   case dawn::proto::statements::Stmt::kVerticalRegionDeclStmt: {
     const auto& stmtProto = statementProto.vertical_region_decl_stmt();
-    return std::make_shared<sir::VerticalRegionDeclStmt>(makeVerticalRegion(stmtProto.vertical_region()),
-                                                    makeLocation(stmtProto));
+    return std::make_shared<sir::VerticalRegionDeclStmt>(
+        makeVerticalRegion(stmtProto.vertical_region()), makeLocation(stmtProto));
   }
   case dawn::proto::statements::Stmt::kBoundaryConditionDeclStmt: {
     const auto& stmtProto = statementProto.boundary_condition_decl_stmt();
-    auto stmt =
-        std::make_shared<sir::BoundaryConditionDeclStmt>(stmtProto.functor(), makeLocation(stmtProto));
-    for(const auto& fieldProto : stmtProto.fields())
-      stmt->getFields().emplace_back(makeField(fieldProto));
+    auto stmt = std::make_shared<sir::BoundaryConditionDeclStmt>(stmtProto.functor(),
+                                                                 makeLocation(stmtProto));
+    for(const auto& fieldName : stmtProto.fields())
+      stmt->getFields().emplace_back(fieldName);
     return stmt;
   }
   case dawn::proto::statements::Stmt::kIfStmt: {
@@ -647,26 +650,26 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str,
       const std::string& sirName = nameValuePair.first;
       const sir::proto::GlobalVariableValue& sirValue = nameValuePair.second;
       std::shared_ptr<Value> value = nullptr;
+      bool isConstExpr = sirValue.is_constexpr();
 
       switch(sirValue.Value_case()) {
       case sir::proto::GlobalVariableValue::kBooleanValue:
-        value = std::make_shared<Value>(static_cast<bool>(sirValue.boolean_value()));
+        value = std::make_shared<Value>(static_cast<bool>(sirValue.boolean_value()), isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::kIntegerValue:
-        value = std::make_shared<Value>(static_cast<int>(sirValue.integer_value()));
+        value = std::make_shared<Value>(static_cast<int>(sirValue.integer_value()), isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::kDoubleValue:
-        value = std::make_shared<Value>(static_cast<double>(sirValue.double_value()));
+        value = std::make_shared<Value>(static_cast<double>(sirValue.double_value()), isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::kStringValue:
-        value = std::make_shared<Value>(static_cast<std::string>(sirValue.string_value()));
+        value = std::make_shared<Value>(static_cast<std::string>(sirValue.string_value()), isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::VALUE_NOT_SET:
       default:
         dawn_unreachable("value not set");
       }
 
-      value->setIsConstexpr(sirValue.is_constexpr());
       sir->GlobalVariableMap->emplace(sirName, std::move(value));
     }
 

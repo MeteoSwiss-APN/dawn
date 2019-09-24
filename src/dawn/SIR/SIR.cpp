@@ -91,17 +91,17 @@ private:
 
 ///@brief Stringification of a Value mismatch
 template <class T>
-sir::CompareResult isEqualImpl(const sir::Value& a, const sir::Value& b, const std::string& name) {
+CompareResult isEqualImpl(const sir::Value& a, const sir::Value& b, const std::string& name) {
   if(a.getValue<T>() != b.getValue<T>())
-    return sir::CompareResult{dawn::format("[Value mismatch] %s values are not equal\n"
-                                           "  Actual:\n"
-                                           "    %s\n"
-                                           "  Expected:\n"
-                                           "    %s",
-                                           name, a.toString(), b.toString()),
-                              false};
+    return CompareResult{dawn::format("[Value mismatch] %s values are not equal\n"
+                                      "  Actual:\n"
+                                      "    %s\n"
+                                      "  Expected:\n"
+                                      "    %s",
+                                      name, a.toString(), b.toString()),
+                         false};
 
-  return sir::CompareResult{"", true};
+  return CompareResult{"", true};
 }
 
 /// @brief Compares two ASTs
@@ -141,8 +141,8 @@ bool pointeeComparison(const std::shared_ptr<T>& comparate1, const std::shared_p
 /// @return pair of boolean and string
 /// @pre Type T requies a comparison function that returns the pair of bool and string
 template <typename T>
-sir::CompareResult pointeeComparisonWithOutput(const std::shared_ptr<T>& comparate1,
-                                               const std::shared_ptr<T>& comparate2) {
+CompareResult pointeeComparisonWithOutput(const std::shared_ptr<T>& comparate1,
+                                          const std::shared_ptr<T>& comparate2) {
   return (*comparate1).comparison(*comparate2);
 }
 
@@ -188,12 +188,12 @@ static std::pair<std::string, bool> pointerMapComparison(const sir::GlobalVariab
 
 } // anonymous namespace
 
-sir::CompareResult SIR::comparison(const SIR& rhs) const {
+CompareResult SIR::comparison(const SIR& rhs) const {
   std::string output;
 
   // Stencils
   if((Stencils.size() != rhs.Stencils.size()))
-    return sir::CompareResult{"[SIR mismatch] number of Stencils do not match\n", false};
+    return CompareResult{"[SIR mismatch] number of Stencils do not match\n", false};
 
   if(!std::equal(Stencils.begin(), Stencils.end(), rhs.Stencils.begin(),
                  pointeeComparison<sir::Stencil>)) {
@@ -205,12 +205,12 @@ sir::CompareResult SIR::comparison(const SIR& rhs) const {
       }
     }
 
-    return sir::CompareResult{output, false};
+    return CompareResult{output, false};
   }
 
   // Stencil Functions
   if(StencilFunctions.size() != rhs.StencilFunctions.size())
-    return sir::CompareResult{"[SIR mismatch] number of Stencil Functions does not match\n", false};
+    return CompareResult{"[SIR mismatch] number of Stencil Functions does not match\n", false};
 
   if(!std::equal(StencilFunctions.begin(), StencilFunctions.end(), rhs.StencilFunctions.begin(),
                  pointeeComparison<sir::StencilFunction>)) {
@@ -223,23 +223,23 @@ sir::CompareResult SIR::comparison(const SIR& rhs) const {
                          StencilFunctions[i]->Name, comp.why());
     }
 
-    return sir::CompareResult{output, false};
+    return CompareResult{output, false};
   }
 
   // Global variable map
   if(GlobalVariableMap.get()->size() != rhs.GlobalVariableMap.get()->size())
-    return sir::CompareResult{"[SIR mismatch] number of Global Variables does not match\n", false};
+    return CompareResult{"[SIR mismatch] number of Global Variables does not match\n", false};
 
   if(!pointerMapComparison(*(GlobalVariableMap.get()), *(rhs.GlobalVariableMap.get())).second) {
     auto comp = pointerMapComparison(*(GlobalVariableMap.get()), *(rhs.GlobalVariableMap.get()));
     if(!comp.second)
-      return sir::CompareResult{comp.first, false};
+      return CompareResult{comp.first, false};
   }
 
-  return sir::CompareResult{"", true};
+  return CompareResult{"", true};
 }
 
-sir::CompareResult sir::Stencil::comparison(const sir::Stencil& rhs) const {
+CompareResult sir::Stencil::comparison(const sir::Stencil& rhs) const {
   // Fields
   if(Fields.size() != rhs.Fields.size())
     return CompareResult{dawn::format("[Stencil mismatch] number of Fields does not match\n"
@@ -283,7 +283,7 @@ sir::CompareResult sir::Stencil::comparison(const sir::Stencil& rhs) const {
   return CompareResult{"", true};
 }
 
-sir::CompareResult sir::StencilFunction::comparison(const sir::StencilFunction& rhs) const {
+CompareResult sir::StencilFunction::comparison(const sir::StencilFunction& rhs) const {
 
   // Name
   if(Name != rhs.Name) {
@@ -378,7 +378,7 @@ sir::CompareResult sir::StencilFunction::comparison(const sir::StencilFunction& 
   return CompareResult{"", true};
 }
 
-sir::CompareResult sir::StencilFunctionArg::comparison(const sir::StencilFunctionArg& rhs) const {
+CompareResult sir::StencilFunctionArg::comparison(const sir::StencilFunctionArg& rhs) const {
   auto kindToString = [](ArgumentKind kind) -> const char* {
     switch(kind) {
     case dawn::sir::StencilFunctionArg::AK_Field:
@@ -414,7 +414,7 @@ sir::CompareResult sir::StencilFunctionArg::comparison(const sir::StencilFunctio
   return CompareResult{"", true};
 }
 
-sir::CompareResult sir::Value::comparison(const sir::Value& rhs) const {
+CompareResult sir::Value::comparison(const sir::Value& rhs) const {
   auto type = getType();
   if(type != rhs.getType())
     return CompareResult{dawn::format("[Value mismatch] Values are not of the same type\n"
@@ -439,7 +439,7 @@ sir::CompareResult sir::Value::comparison(const sir::Value& rhs) const {
   }
 }
 
-sir::CompareResult sir::VerticalRegion::comparison(const sir::VerticalRegion& rhs) const {
+CompareResult sir::VerticalRegion::comparison(const sir::VerticalRegion& rhs) const {
   std::string output;
   if(LoopOrder != rhs.LoopOrder) {
     output += dawn::format("[VerticalRegion mismatch] Loop order does not match\n"
@@ -603,8 +603,6 @@ void SIR::dump() { std::cout << *this << std::endl; }
 
 const char* sir::Value::typeToString(sir::Value::TypeKind type) {
   switch(type) {
-  case None:
-    return "None";
   case Boolean:
     return "bool";
   case Integer:
@@ -617,10 +615,25 @@ const char* sir::Value::typeToString(sir::Value::TypeKind type) {
   dawn_unreachable("invalid type");
 }
 
+sir::Value::Value(TypeKind type) : isConstexpr_(false) {
+  switch(type) {
+  case Boolean:
+    valueImpl_ = make_unique<ValueImpl<decay_t<bool>>>(false);
+    break;
+  case Integer:
+    valueImpl_ = make_unique<ValueImpl<decay_t<int>>>(0);
+    break;
+  case Double:
+    valueImpl_ = make_unique<ValueImpl<decay_t<double>>>(0.0);
+    break;
+  case String:
+    valueImpl_ = make_unique<ValueImpl<decay_t<std::string>>>("");
+    break;
+  }
+}
+
 BuiltinTypeID sir::Value::typeToBuiltinTypeID(sir::Value::TypeKind type) {
   switch(type) {
-  case None:
-    return BuiltinTypeID::Invalid;
   case Boolean:
     return BuiltinTypeID::Boolean;
   case Integer:
@@ -633,11 +646,8 @@ BuiltinTypeID sir::Value::typeToBuiltinTypeID(sir::Value::TypeKind type) {
 }
 
 std::string sir::Value::toString() const {
-  if(empty())
-    return "null";
-
   std::stringstream ss;
-  switch(type_) {
+  switch(valueImpl_->getType()) {
   case Boolean:
     ss << (getValue<bool>() ? "true" : "false");
     break;
@@ -658,38 +668,6 @@ std::string sir::Value::toString() const {
 
 std::shared_ptr<sir::VerticalRegion> sir::VerticalRegion::clone() const {
   return std::make_shared<sir::VerticalRegion>(Ast->clone(), VerticalInterval, LoopOrder, Loc);
-}
-
-std::shared_ptr<sir::StencilCall> sir::StencilCall::clone() const {
-  auto call = std::make_shared<sir::StencilCall>(Callee, Loc);
-  call->Args = Args;
-  return call;
-}
-
-bool sir::StencilCall::operator==(const sir::StencilCall& rhs) const {
-  return bool(this->comparison(rhs));
-}
-
-sir::CompareResult sir::StencilCall::comparison(const sir::StencilCall& rhs) const {
-  std::string output;
-  if(Callee != rhs.Callee) {
-    output += dawn::format("[StencilCall mismatch] Callees do not match\n"
-                           "  Actual:\n"
-                           "    %s\n"
-                           "  Expected:\n"
-                           "    %s",
-                           Callee, rhs.Callee);
-    return CompareResult{output, false};
-  }
-  for(int i = 0; i < Args.size(); ++i) {
-    auto ArgComparison = Args[i]->comparison(*rhs.Args[i]);
-    if(!bool(ArgComparison)) {
-      output += "[StencilCall mismatch] Arguments do not match\n";
-      output += ArgComparison.why();
-      return CompareResult{output, false};
-    }
-  }
-  return CompareResult{output, true};
 }
 
 bool SIR::operator==(const SIR& rhs) const { return comparison(rhs); }

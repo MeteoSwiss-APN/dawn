@@ -96,7 +96,7 @@ public:
   /// @brief Create a new pass at the end of the pass list
   template <class T, typename... Args>
   void checkAndPushBack(Args&&... args) {
-    std::unique_ptr<T> pass = make_unique<T>(std::forward<Args>(args)...);
+    std::unique_ptr<T> pass = make_unique<T>(*this, std::forward<Args>(args)...);
     if(compareOptionsToPassFlags<T>(pass)) {
       passManager_.getPasses().push_back(std::move(pass));
     }
@@ -110,6 +110,9 @@ public:
   bool fillIIRFromSIR(std::shared_ptr<iir::StencilInstantiation> stencilInstantation,
                       const std::shared_ptr<sir::Stencil> SIRStencil,
                       const std::shared_ptr<SIR> fullSIR);
+  bool restoreIIR(std::string const& name,
+                  std::shared_ptr<iir::StencilInstantiation> stencilInstantiation);
+  void fillIIR();
 
   /// @brief this function check if a pass should be pushed back into the list of passes based on
   /// the options.

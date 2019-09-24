@@ -13,11 +13,11 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassTemporaryFirstAccess.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/OptimizerContext.h"
-#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/Support/IndexRange.h"
 #include <algorithm>
 #include <set>
@@ -65,12 +65,11 @@ public:
 
 } // anonymous namespace
 
-PassTemporaryFirstAccess::PassTemporaryFirstAccess() : Pass("PassTemporaryFirstAccess", true) {}
+PassTemporaryFirstAccess::PassTemporaryFirstAccess(OptimizerContext& context)
+    : Pass(context, "PassTemporaryFirstAccess", true) {}
 
 bool PassTemporaryFirstAccess::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
-
   for(const auto& stencilPtr : stencilInstantiation->getStencils()) {
     std::unordered_map<int, iir::Stencil::FieldInfo> fields = stencilPtr->getFields();
     std::set<int> temporaryFields;
@@ -121,13 +120,13 @@ bool PassTemporaryFirstAccess::run(
         DiagnosticsBuilder diagError(DiagnosticsKind::Error, nameLocPair.second[0]);
 
         diagError << "access to uninitialized temporary storage '" << nameLocPair.first << "'";
-        context->getDiagnostics().report(diagError);
+        context_.getDiagnostics().report(diagError);
 
         // Report notes where the temporary is referenced
         for(int i = 1; i < nameLocPair.second.size(); ++i) {
           DiagnosticsBuilder diagNote(DiagnosticsKind::Note, nameLocPair.second[i]);
           diagNote << "'" << nameLocPair.first << "' referenced here";
-          context->getDiagnostics().report(diagNote);
+          context_.getDiagnostics().report(diagNote);
         }
 
         return false;

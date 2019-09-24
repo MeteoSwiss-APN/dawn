@@ -39,14 +39,14 @@ enum class TemporaryScope { TS_LocalVariable, TS_StencilTemporary };
 /// @brief Specific instantiation of a stencil
 /// @ingroup optimizer
 class StencilInstantiation : NonCopyable {
-
-  OptimizerContext* context_;
   StencilMetaInformation metadata_;
   std::unique_ptr<IIR> IIR_;
 
 public:
   /// @brief Assemble StencilInstantiation for stencil
-  StencilInstantiation(dawn::OptimizerContext* context);
+  StencilInstantiation(
+      sir::GlobalVariableMap const& globalVariables = {},
+      std::vector<std::shared_ptr<sir::StencilFunction>> const& stencilFunctions = {});
 
   StencilMetaInformation& getMetaData();
   const StencilMetaInformation& getMetaData() const { return metadata_; }
@@ -61,7 +61,8 @@ public:
   /// @brief Get the orginal `name` and a list of source locations of the field (or variable)
   /// associated with the `AccessID` in the given statement.
   std::pair<std::string, std::vector<SourceLocation>>
-  getOriginalNameAndLocationsFromAccessID(int AccessID, const std::shared_ptr<iir::Stmt>& stmt) const;
+  getOriginalNameAndLocationsFromAccessID(int AccessID,
+                                          const std::shared_ptr<iir::Stmt>& stmt) const;
 
   /// @brief Get the original name of the field (as registered in the AST)
   std::string getOriginalNameFromAccessID(int AccessID) const;
@@ -72,9 +73,6 @@ public:
   /// @brief check whether the `accessID` is accessed in more than one MS
   bool isIDAccessedMultipleMSs(int accessID) const;
 
-  /// @brief check if there is any (iterative) solver type of accesses for the accessID
-  bool hasSolverAccess(int accessID) const;
-
   /// @brief Get the value of the global variable `name`
   const sir::Value& getGlobalVariableValue(const std::string& name) const;
 
@@ -82,66 +80,6 @@ public:
     RD_Above, ///< Rename all fields above the current statement
     RD_Below  ///< Rename all fields below the current statement
   };
-
-  /// @brief Add a new version to the field/local variable given by `AccessID`
-  ///
-  /// This will create a **new** field and trigger a renaming of all the remaining occurences in the
-  /// AccessID maps either above or below that statement, starting one statment before or after
-  /// the current statement. Optionally, an `Expr` can be passed which will be renamed as well
-  /// (usually the left- or right-hand side of an assignment).
-  /// Consider the following example:
-  ///
-  /// @code
-  ///   v = 2 * u
-  ///   lap = u(i+1)
-  ///   u = lap(i+1)
-  /// @endcode
-  ///
-  /// We may want to rename `u` in the second statement (an all occurences of `u` above) to
-  /// resolve the race-condition. We expect to end up with:
-  ///
-  /// @code
-  ///   v = 2 * u_1
-  ///   lap = u_1(i+1)
-  ///   u = lap(i+1)
-  /// @endcode
-  ///
-  /// where `u_1` is the newly created version of `u`.
-  ///
-  /// @param AccessID   AccessID of the field for which a new version will be created
-  /// @param stencil    Current stencil
-  /// @param stageIdx   **Linear** index of the stage in the stencil
-  /// @param stmtIdx    Index of the statement inside the stage
-  /// @param expr       Expression to be renamed (usually the left- or right-hand side of an
-  ///                   assignment). Can be `NULL`.
-  /// @returns AccessID of the new field
-  int createVersionAndRename(int AccessID, Stencil* stencil, int stageIndex, int stmtIndex,
-                             std::shared_ptr<iir::Expr>& expr, RenameDirection dir);
-
-  /// @brief Rename all occurences of field `oldAccessID` to `newAccessID`
-  void renameAllOccurrences(Stencil* stencil, int oldAccessID, int newAccessID);
-
-  /// @brief Promote the local variable, given by `AccessID`, to a temporary field
-  ///
-  /// This will take care of registering the new field (and removing the variable) as well as
-  /// replacing the variable accesses with point-wise field accesses.
-  void promoteLocalVariableToTemporaryField(Stencil* stencil, int AccessID,
-                                            const Stencil::Lifetime& lifetime,
-                                            TemporaryScope temporaryScope);
-
-  /// @brief Promote the temporary field, given by `AccessID`, to a real storage which needs to be
-  /// allocated by the stencil
-  void promoteTemporaryFieldToAllocatedField(int AccessID);
-
-  /// @brief Demote the temporary field, given by `AccessID`, to a local variable
-  ///
-  /// This will take care of registering the new variable (and removing the field) as well as
-  /// replacing the field accesses with varible accesses.
-  ///
-  /// This implicitcly assumes the first access (i.e `lifetime.Begin`) to the field is an
-  /// `ExprStmt` and the field is accessed as the LHS of an `AssignmentExpr`.
-  void demoteTemporaryFieldToLocalVariable(Stencil* stencil, int AccessID,
-                                           const Stencil::Lifetime& lifetime);
 
   /// @brief Get the list of stencils
   inline const std::vector<std::unique_ptr<Stencil>>& getStencils() const {
@@ -153,12 +91,6 @@ public:
 
   /// @brief get the IIR tree
   inline std::unique_ptr<IIR>& getIIR() { return IIR_; }
-
-  /// @brief Get the optimizer context
-  inline ::dawn::OptimizerContext* getOptimizerContext() { return context_; }
-
-  /// @brief Get the optimizer context
-  const ::dawn::OptimizerContext* getOptimizerContext() const { return context_; }
 
   bool insertBoundaryConditions(std::string originalFieldName,
                                 std::shared_ptr<iir::BoundaryConditionDeclStmt> bc);
@@ -175,8 +107,8 @@ public:
   /// stencil function.
   std::shared_ptr<StencilFunctionInstantiation> makeStencilFunctionInstantiation(
       const std::shared_ptr<iir::StencilFunCallExpr>& expr,
-      const std::shared_ptr<sir::StencilFunction>& SIRStencilFun, const std::shared_ptr<iir::AST>& ast,
-      const Interval& interval,
+      const std::shared_ptr<sir::StencilFunction>& SIRStencilFun,
+      const std::shared_ptr<iir::AST>& ast, const Interval& interval,
       const std::shared_ptr<StencilFunctionInstantiation>& curStencilFunctionInstantiation);
 
   /// @brief Report the accesses to the console (according to `-freport-accesses`)

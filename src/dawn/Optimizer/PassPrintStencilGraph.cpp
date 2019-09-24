@@ -19,14 +19,14 @@
 
 namespace dawn {
 
-PassPrintStencilGraph::PassPrintStencilGraph() : Pass("PassPrintStencilGraph") {
+PassPrintStencilGraph::PassPrintStencilGraph(OptimizerContext& context)
+    : Pass(context, "PassPrintStencilGraph") {
   dependencies_.push_back("PassStageSplitter");
 }
 
 bool PassPrintStencilGraph::run(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
-  if(!context->getOptions().DumpStencilGraph)
+  if(!context_.getOptions().DumpStencilGraph)
     return true;
 
   int stencilIdx = 0;
@@ -43,7 +43,7 @@ bool PassPrintStencilGraph::run(
                ".dot");
     DAG->toJSON("stencil_" + stencilInstantiation->getName() + "_s" + std::to_string(stencilIdx) +
                     ".json",
-                stencilInstantiation->getOptimizerContext()->getDiagnostics());
+                context_.getDiagnostics());
 
     stencilIdx++;
   }

@@ -150,7 +150,7 @@ void replaceStencilCalls(const std::shared_ptr<iir::StencilInstantiation>& insta
       // Create the new stencils
       std::vector<std::shared_ptr<iir::StencilCallDeclStmt>> newStencilCalls;
       for(int StencilID : newStencilIDs) {
-        auto placeholderStencil = std::make_shared<sir::StencilCall>(
+        auto placeholderStencil = std::make_shared<ast::StencilCall>(
             iir::InstantiationHelper::makeStencilCallCodeGenName(StencilID));
         newStencilCalls.push_back(std::make_shared<iir::StencilCallDeclStmt>(placeholderStencil));
       }
@@ -172,7 +172,7 @@ void replaceStencilCalls(const std::shared_ptr<iir::StencilInstantiation>& insta
       auto& metadata = instantiation->getMetaData();
       metadata.eraseStencilCallStmt(oldStencilCall);
       for(std::size_t i = 0; i < newStencilIDs.size(); ++i) {
-        metadata.insertStencilCallStmt(newStencilCalls[i], newStencilIDs[i]);
+        metadata.addStencilCallStmt(newStencilCalls[i], newStencilIDs[i]);
       }
     }
   }

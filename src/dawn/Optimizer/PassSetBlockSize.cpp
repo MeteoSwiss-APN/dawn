@@ -19,16 +19,14 @@
 
 namespace dawn {
 
-PassSetBlockSize::PassSetBlockSize() : Pass("PassSetBlockSize") {}
+PassSetBlockSize::PassSetBlockSize(OptimizerContext& context) : Pass(context, "PassSetBlockSize") {}
 
 bool PassSetBlockSize::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation) {
-  OptimizerContext* context = stencilInstantiation->getOptimizerContext();
-
   const auto& IIR = stencilInstantiation->getIIR();
 
   std::array<unsigned int, 3> blockSize{0, 0, 0};
-  if(!context->getOptions().block_size.empty()) {
-    std::string blockSizeStr = context->getOptions().block_size;
+  if(!context_.getOptions().block_size.empty()) {
+    std::string blockSizeStr = context_.getOptions().block_size;
     std::istringstream idomain_size(blockSizeStr);
     std::string arg;
     getline(idomain_size, arg, ',');
@@ -71,7 +69,7 @@ bool PassSetBlockSize::run(const std::shared_ptr<iir::StencilInstantiation>& ste
 
   IIR->setBlockSize(blockSize);
 
-  if(context->getOptions().ReportPassSetBlockSize) {
+  if(context_.getOptions().ReportPassSetBlockSize) {
     std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName() << ": blockSize"
               << "[" << blockSize[0] << "," << blockSize[1] << "," << blockSize[2] << "]"
               << std::endl;

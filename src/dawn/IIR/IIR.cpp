@@ -17,7 +17,6 @@
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
-#include "dawn/Optimizer/Renaming.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/StringUtil.h"
