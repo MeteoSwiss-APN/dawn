@@ -98,6 +98,8 @@ public:
   /// @brief Dump the StencilInstantiation to stdout
   void jsonDump(std::string filename) const;
 
+  void dump() const;
+
   /// @brief Register a new stencil function
   ///
   /// If `curStencilFunctionInstantiation` is not NULL, the stencil function is treated as a nested
