@@ -71,8 +71,6 @@ yoda_add_library(
           IntervalAlgorithms.h
           IIR.cpp
           IIR.h
-          IIRBuilder.cpp
-          IIRBuilder.h
           proto/IIR/IIR.proto
           IIRNode.h
           IIRNodeIterator.h

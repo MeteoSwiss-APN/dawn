@@ -15,7 +15,6 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTUtil.h"
-#include "dawn/IIR/IIRBuilder.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilInstantiation.h"

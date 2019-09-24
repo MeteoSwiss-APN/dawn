@@ -17,11 +17,11 @@
 #include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
-#include "dawn/IIR/IIRBuilder.h"
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/DiagnosticsEngine.h"
+#include "dawn/Unittest/IIRBuilder.h"
 #include <gtest/gtest.h>
 
 #include <cstring>
@@ -51,19 +51,9 @@ TEST(CompilerTest, CompileEmptySIR) {
   dawnTranslationUnitDestroy(TU);
 }
 template <typename CG>
-void dump(std::ostream& os, std::shared_ptr<dawn::iir::StencilInstantiation> const& si) {
+void dump(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx) {
   dawn::DiagnosticsEngine diagnostics;
-
-  // TODO this should be moved into the IIR builder -> the IIR builder cannot be in IIR
-  auto optimizer = dawn::make_unique<dawn::OptimizerContext>(
-      diagnostics, dawn::OptimizerContext::OptimizerContextOptions{}, nullptr);
-  optimizer->restoreIIR("<restored>", si);
-  auto new_si = optimizer->getStencilInstantiationMap()["<restored>"];
-
-  dawn::codegen::stencilInstantiationContext map;
-  map["test"] = std::move(new_si);
-
-  CG generator(map, diagnostics, 0);
+  CG generator(ctx, diagnostics, 0);
   auto tu = generator.generateCode();
 
   std::ostringstream ss;
@@ -86,7 +76,7 @@ TEST(CompilerTest, CompileCopyStencil) {
       "generated",
       b.stencil(b.multistage(dawn::iir::LoopOrderKind::LK_Parallel,
                              b.stage(b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
-                                               b.stmt(b.assign_expr(b.at(out_f), b.at(in_f))))))));
+                                               b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))))))));
   std::ofstream of("/dev/null");
   dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(of, stencil_instantiation);
 }
@@ -105,34 +95,31 @@ TEST(CompilerTest, TestCodeGen) {
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::LK_Parallel,
           b.stage(b.vregion(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declare_var(var),
-              b.stmt(b.assign_expr(
+              dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(var),
+              b.stmt(b.assignExpr(
                   b.at(out_f, access_type::rw),
-                  b.binary_expr(b.lit(-3.), b.unary_expr(b.at(in_f), op::minus), op::multiply))),
-              b.stmt(b.assign_expr(b.at(out_f, access_type::rw),
-                                   b.reduce_over_neighbor_expr(op::plus,
-                                                               b.unary_expr(b.at(in_f), op::minus),
-                                                               b.at(out_f)))),
-              b.block(
-                  b.stmt(b.assign_expr(b.at(out_f, access_type::rw), b.lit(0.1), op::multiply))),
-              b.stmt(
-                  b.assign_expr(b.at(out_f, access_type::rw), b.at(in_f, {0, 0, 1}), op::plus)))),
+                  b.binaryExpr(b.lit(-3.), b.unaryExpr(b.at(in_f), op::minus), op::multiply))),
+              b.stmt(b.assignExpr(b.at(out_f, access_type::rw),
+                                  b.reduceOverNeighborExpr(
+                                      op::plus, b.unaryExpr(b.at(in_f), op::minus), b.at(out_f)))),
+              b.block(b.stmt(b.assignExpr(b.at(out_f, access_type::rw), b.lit(0.1), op::multiply))),
+              b.stmt(b.assignExpr(b.at(out_f, access_type::rw), b.at(in_f, {0, 0, 1}), op::plus)))),
           b.stage(b.vregion(
-              dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declare_var(var2),
-              b.stmt(b.assign_expr(b.at(out_f, access_type::rw),
-                                   b.binary_expr(b.lit(-3.),
-                                                 b.unary_expr(b.at(out_f, {0, 1, 0}), op::minus),
-                                                 op::multiply))),
-              b.stmt(b.assign_expr(b.at(var2), b.lit(0.1), op::multiply)),
-              b.if_stmt(b.binary_expr(b.lit(0.1), b.lit(0.1), op::equal),
-                        b.block(b.stmt(b.assign_expr(b.at(out_f, access_type::rw),
-                                                     b.at(in_f, {0, 0, 1}), op::plus)),
-                                b.stmt(b.assign_expr(b.at(out_f, access_type::rw),
-                                                     b.at(in_f, {0, 0, 1}), op::plus))),
-                        b.stmt(b.assign_expr(
-                            b.at(var2),
-                            b.conditional_expr(b.binary_expr(b.lit(0.1), b.lit(0.1), op::equal),
-                                               b.lit(0.2), b.lit(0.3))))))))));
+              dawn::sir::Interval::Start, dawn::sir::Interval::End, b.declareVar(var2),
+              b.stmt(b.assignExpr(b.at(out_f, access_type::rw),
+                                  b.binaryExpr(b.lit(-3.),
+                                               b.unaryExpr(b.at(out_f, {0, 1, 0}), op::minus),
+                                               op::multiply))),
+              b.stmt(b.assignExpr(b.at(var2), b.lit(0.1), op::multiply)),
+              b.ifStmt(
+                  b.binaryExpr(b.lit(0.1), b.lit(0.1), op::equal),
+                  b.block(b.stmt(b.assignExpr(b.at(out_f, access_type::rw), b.at(in_f, {0, 0, 1}),
+                                              op::plus)),
+                          b.stmt(b.assignExpr(b.at(out_f, access_type::rw), b.at(in_f, {0, 0, 1}),
+                                              op::plus))),
+                  b.stmt(b.assignExpr(
+                      b.at(var2), b.conditionalExpr(b.binaryExpr(b.lit(0.1), b.lit(0.1), op::equal),
+                                                    b.lit(0.2), b.lit(0.3))))))))));
 
   dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(std::clog, stencil_instantiation);
 }

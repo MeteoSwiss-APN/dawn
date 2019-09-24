@@ -15,12 +15,12 @@
 #ifndef DAWN_IIR_IIRBUILDER_H
 #define DAWN_IIR_IIRBUILDER_H
 
-#include "ASTStmt.h"
-#include "MultiStage.h"
-#include "Stage.h"
-#include "Stencil.h"
-#include "StencilInstantiation.h"
-
+#include "dawn/CodeGen/CodeGen.h"
+#include "dawn/IIR/ASTStmt.h"
+#include "dawn/IIR/MultiStage.h"
+#include "dawn/IIR/Stage.h"
+#include "dawn/IIR/Stencil.h"
+#include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Optimizer/AccessComputation.h"
 
 namespace dawn {
@@ -62,22 +62,22 @@ class IIRBuilder {
   };
 
 public:
-  std::shared_ptr<iir::Expr> reduce_over_neighbor_expr(op operation,
-                                                       std::shared_ptr<iir::Expr> const& rhs,
-                                                       std::shared_ptr<iir::Expr> const& init);
+  std::shared_ptr<iir::Expr> reduceOverNeighborExpr(op operation,
+                                                    std::shared_ptr<iir::Expr> const& rhs,
+                                                    std::shared_ptr<iir::Expr> const& init);
 
-  std::shared_ptr<iir::Expr> binary_expr(std::shared_ptr<iir::Expr> const& lhs,
-                                         std::shared_ptr<iir::Expr> const& rhs, op operation);
+  std::shared_ptr<iir::Expr> binaryExpr(std::shared_ptr<iir::Expr> const& lhs,
+                                        std::shared_ptr<iir::Expr> const& rhs, op operation);
 
-  std::shared_ptr<iir::Expr> assign_expr(std::shared_ptr<iir::Expr> const& lhs,
-                                         std::shared_ptr<iir::Expr> const& rhs,
-                                         op operation = op::assign);
+  std::shared_ptr<iir::Expr> assignExpr(std::shared_ptr<iir::Expr> const& lhs,
+                                        std::shared_ptr<iir::Expr> const& rhs,
+                                        op operation = op::assign);
 
-  std::shared_ptr<iir::Expr> unary_expr(std::shared_ptr<iir::Expr> const& expr, op operation);
+  std::shared_ptr<iir::Expr> unaryExpr(std::shared_ptr<iir::Expr> const& expr, op operation);
 
-  std::shared_ptr<iir::Expr> conditional_expr(std::shared_ptr<iir::Expr> const& cond,
-                                              std::shared_ptr<iir::Expr> const& case_then,
-                                              std::shared_ptr<iir::Expr> const& case_else);
+  std::shared_ptr<iir::Expr> conditionalExpr(std::shared_ptr<iir::Expr> const& cond,
+                                             std::shared_ptr<iir::Expr> const& case_then,
+                                             std::shared_ptr<iir::Expr> const& case_else);
 
   Field field(std::string const& name, field_type ft = field_type::ijk);
   LocalVar localvar(std::string const& name);
@@ -111,9 +111,9 @@ public:
     (void)x;
     return {std::move(stmt), std::move(sap)};
   }
-  StmtData if_stmt(std::shared_ptr<iir::Expr>&& cond, StmtData&& case_then,
-                   StmtData&& case_else = {nullptr, {}});
-  StmtData declare_var(LocalVar& var_id);
+  StmtData ifStmt(std::shared_ptr<iir::Expr>&& cond, StmtData&& case_then,
+                  StmtData&& case_else = {nullptr, {}});
+  StmtData declareVar(LocalVar& var_id);
 
   template <typename... Stmts>
   std::unique_ptr<iir::DoMethod> vregion(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
@@ -149,7 +149,7 @@ public:
     return ret;
   }
 
-  std::shared_ptr<iir::StencilInstantiation> build(std::string const& name,
+  dawn::codegen::stencilInstantiationContext build(std::string const& name,
                                                    std::unique_ptr<iir::Stencil> stencil);
 
   IIRBuilder() : si_(std::make_shared<iir::StencilInstantiation>()) {}

@@ -13,8 +13,10 @@
 //===------------------------------------------------------------------------------------------===//
 //
 #include "IIRBuilder.h"
-#include "InstantiationHelper.h"
-#include "StatementAccessesPair.h"
+
+#include "dawn/IIR/InstantiationHelper.h"
+#include "dawn/IIR/StatementAccessesPair.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 
 namespace dawn {
 namespace iir {
@@ -76,7 +78,7 @@ std::string to_str(op operation, std::vector<op> valid_ops) {
 }
 } // namespace
 
-std::shared_ptr<iir::StencilInstantiation>
+dawn::codegen::stencilInstantiationContext
 IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil) {
   auto stencil_id = stencil->getStencilID();
   si_->getMetaData().setStencilname(name);
@@ -105,19 +107,29 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   for(const auto& MSPtr : iterateIIROver<iir::Stage>(*(si_->getIIR()))) {
     MSPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
-  return std::move(si_);
+
+  dawn::DiagnosticsEngine diagnostics;
+  auto optimizer = dawn::make_unique<dawn::OptimizerContext>(
+      diagnostics, dawn::OptimizerContext::OptimizerContextOptions{}, nullptr);
+  optimizer->restoreIIR("<restored>", std::move(si_));
+  auto new_si = optimizer->getStencilInstantiationMap()["<restored>"];
+
+  dawn::codegen::stencilInstantiationContext map;
+  map["test"] = std::move(new_si);
+
+  return map;
 }
 std::shared_ptr<iir::Expr>
-IIRBuilder::reduce_over_neighbor_expr(op operation, std::shared_ptr<iir::Expr> const& rhs,
-                                      std::shared_ptr<iir::Expr> const& init) {
+IIRBuilder::reduceOverNeighborExpr(op operation, std::shared_ptr<iir::Expr> const& rhs,
+                                   std::shared_ptr<iir::Expr> const& init) {
   auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
       to_str(operation, {op::multiply, op::plus, op::minus, op::assign, op::divide}), rhs, init);
   expr->setID(si_->nextUID());
   return expr;
 }
-std::shared_ptr<iir::Expr> IIRBuilder::binary_expr(std::shared_ptr<iir::Expr> const& lhs,
-                                                   std::shared_ptr<iir::Expr> const& rhs,
-                                                   op operation) {
+std::shared_ptr<iir::Expr> IIRBuilder::binaryExpr(std::shared_ptr<iir::Expr> const& lhs,
+                                                  std::shared_ptr<iir::Expr> const& rhs,
+                                                  op operation) {
   auto binop = std::make_shared<iir::BinaryOperator>(
       lhs,
       to_str(operation,
@@ -127,24 +139,24 @@ std::shared_ptr<iir::Expr> IIRBuilder::binary_expr(std::shared_ptr<iir::Expr> co
   binop->setID(si_->nextUID());
   return binop;
 }
-std::shared_ptr<iir::Expr> IIRBuilder::unary_expr(std::shared_ptr<iir::Expr> const& expr,
-                                                  op operation) {
+std::shared_ptr<iir::Expr> IIRBuilder::unaryExpr(std::shared_ptr<iir::Expr> const& expr,
+                                                 op operation) {
   auto ret = std::make_shared<iir::UnaryOperator>(
       expr, to_str(operation, {op::plus, op::minus, op::logical_not}));
   ret->setID(si_->nextUID());
   return ret;
 }
 std::shared_ptr<iir::Expr>
-IIRBuilder::conditional_expr(std::shared_ptr<iir::Expr> const& cond,
-                             std::shared_ptr<iir::Expr> const& case_then,
-                             std::shared_ptr<iir::Expr> const& case_else) {
+IIRBuilder::conditionalExpr(std::shared_ptr<iir::Expr> const& cond,
+                            std::shared_ptr<iir::Expr> const& case_then,
+                            std::shared_ptr<iir::Expr> const& case_else) {
   auto ret = std::make_shared<iir::TernaryOperator>(cond, case_then, case_else);
   ret->setID(si_->nextUID());
   return ret;
 }
-std::shared_ptr<iir::Expr> IIRBuilder::assign_expr(std::shared_ptr<iir::Expr> const& lhs,
-                                                   std::shared_ptr<iir::Expr> const& rhs,
-                                                   op operation) {
+std::shared_ptr<iir::Expr> IIRBuilder::assignExpr(std::shared_ptr<iir::Expr> const& lhs,
+                                                  std::shared_ptr<iir::Expr> const& rhs,
+                                                  op operation) {
   auto binop = std::make_shared<iir::AssignmentExpr>(
       lhs, rhs,
       to_str(operation, {op::assign, op::multiply, op::plus, op::minus, op::divide}) + "=");
@@ -183,8 +195,8 @@ IIRBuilder::StmtData IIRBuilder::stmt(std::shared_ptr<iir::Expr>&& expr) {
   auto sap = make_unique<iir::StatementAccessesPair>(std::make_shared<Statement>(stmt, nullptr));
   return {std::move(stmt), std::move(sap)};
 }
-IIRBuilder::StmtData IIRBuilder::if_stmt(std::shared_ptr<iir::Expr>&& cond, StmtData&& case_then,
-                                         StmtData&& case_else) {
+IIRBuilder::StmtData IIRBuilder::ifStmt(std::shared_ptr<iir::Expr>&& cond, StmtData&& case_then,
+                                        StmtData&& case_else) {
   auto cond_stmt = std::make_shared<iir::ExprStmt>(std::move(cond));
   auto stmt = std::make_shared<iir::IfStmt>(cond_stmt, std::move(case_then.stmt),
                                             std::move(case_else.stmt));
@@ -195,7 +207,7 @@ IIRBuilder::StmtData IIRBuilder::if_stmt(std::shared_ptr<iir::Expr>&& cond, Stmt
     sap->insertBlockStatement(std::move(case_else.sap));
   return {std::move(stmt), std::move(sap)};
 }
-IIRBuilder::StmtData IIRBuilder::declare_var(IIRBuilder::LocalVar& var) {
+IIRBuilder::StmtData IIRBuilder::declareVar(IIRBuilder::LocalVar& var) {
   DAWN_ASSERT(var.decl);
   auto sap =
       make_unique<iir::StatementAccessesPair>(std::make_shared<Statement>(var.decl, nullptr));
