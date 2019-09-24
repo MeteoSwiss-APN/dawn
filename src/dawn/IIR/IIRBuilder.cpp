@@ -178,19 +178,28 @@ std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::LocalVar var) {
   si_->getMetaData().insertExprToAccessID(expr, var.id);
   return expr;
 }
-std::shared_ptr<iir::Stmt> IIRBuilder::stmt(std::shared_ptr<iir::Expr>&& expr) {
-  return std::make_shared<iir::ExprStmt>(std::move(expr));
+IIRBuilder::StmtData IIRBuilder::stmt(std::shared_ptr<iir::Expr>&& expr) {
+  auto stmt = std::make_shared<iir::ExprStmt>(std::move(expr));
+  auto sap = make_unique<iir::StatementAccessesPair>(std::make_shared<Statement>(stmt, nullptr));
+  return {std::move(stmt), std::move(sap)};
 }
-std::shared_ptr<iir::Stmt> IIRBuilder::if_stmt(std::shared_ptr<iir::Expr>&& cond,
-                                               std::shared_ptr<iir::Stmt>&& case_then,
-                                               std::shared_ptr<iir::Stmt>&& case_else) {
+IIRBuilder::StmtData IIRBuilder::if_stmt(std::shared_ptr<iir::Expr>&& cond, StmtData&& case_then,
+                                         StmtData&& case_else) {
   auto cond_stmt = std::make_shared<iir::ExprStmt>(std::move(cond));
-  return std::make_shared<iir::IfStmt>(std::move(cond_stmt), std::move(case_then),
-                                       std::move(case_else));
+  auto stmt = std::make_shared<iir::IfStmt>(cond_stmt, std::move(case_then.stmt),
+                                            std::move(case_else.stmt));
+  auto sap = make_unique<iir::StatementAccessesPair>(std::make_shared<Statement>(stmt, nullptr));
+  if(case_then.sap)
+    sap->insertBlockStatement(std::move(case_then.sap));
+  if(case_else.sap)
+    sap->insertBlockStatement(std::move(case_else.sap));
+  return {std::move(stmt), std::move(sap)};
 }
-std::shared_ptr<iir::Stmt> IIRBuilder::declare_var(IIRBuilder::LocalVar& var) {
+IIRBuilder::StmtData IIRBuilder::declare_var(IIRBuilder::LocalVar& var) {
   DAWN_ASSERT(var.decl);
-  return std::move(var.decl);
+  auto sap =
+      make_unique<iir::StatementAccessesPair>(std::make_shared<Statement>(var.decl, nullptr));
+  return {std::move(var.decl), std::move(sap)};
 }
 
 } // namespace iir

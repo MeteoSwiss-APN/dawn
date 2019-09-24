@@ -117,7 +117,8 @@ TEST(CompilerTest, TestCodeGen) {
                                    b.reduce_over_neighbor_expr(op::plus,
                                                                b.unary_expr(b.at(in_f), op::minus),
                                                                b.at(out_f)))),
-              b.stmt(b.assign_expr(b.at(out_f, access_type::rw), b.lit(0.1), op::multiply)),
+              b.block(
+                  b.stmt(b.assign_expr(b.at(out_f, access_type::rw), b.lit(0.1), op::multiply))),
               b.stmt(
                   b.assign_expr(b.at(out_f, access_type::rw), b.at(in_f, {0, 0, 1}), op::plus)))),
           b.stage(b.vregion(
@@ -128,8 +129,10 @@ TEST(CompilerTest, TestCodeGen) {
                                                  op::multiply))),
               b.stmt(b.assign_expr(b.at(var2), b.lit(0.1), op::multiply)),
               b.if_stmt(b.binary_expr(b.lit(0.1), b.lit(0.1), op::equal),
-                        b.stmt(b.assign_expr(b.at(out_f, access_type::rw), b.at(in_f, {0, 0, 1}),
-                                             op::plus)),
+                        b.block(b.stmt(b.assign_expr(b.at(out_f, access_type::rw),
+                                                     b.at(in_f, {0, 0, 1}), op::plus)),
+                                b.stmt(b.assign_expr(b.at(out_f, access_type::rw),
+                                                     b.at(in_f, {0, 0, 1}), op::plus))),
                         b.stmt(b.assign_expr(
                             b.at(var2),
                             b.conditional_expr(b.binary_expr(b.lit(0.1), b.lit(0.1), op::equal),
@@ -146,8 +149,8 @@ TEST(CompilerTest, TestCodeGen) {
   dawn::codegen::stencilInstantiationContext map;
   map["test"] = std::move(stencil_instantiation);
 
-  // dawn::codegen::cxxnaive::CXXNaiveCodeGen generator(map, diagnostics, 0);
-  dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen generator(map, diagnostics, 0);
+  dawn::codegen::cxxnaive::CXXNaiveCodeGen generator(map, diagnostics, 0);
+  // dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen generator(map, diagnostics, 0);
   auto tu = generator.generateCode();
 
   std::ostringstream ss;

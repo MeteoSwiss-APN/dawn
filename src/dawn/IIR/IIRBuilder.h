@@ -56,6 +56,10 @@ class IIRBuilder {
     std::string name;
     std::shared_ptr<VarDeclStmt> decl;
   };
+  struct StmtData {
+    std::shared_ptr<Stmt> stmt;
+    std::unique_ptr<StatementAccessesPair> sap;
+  };
 
 public:
   std::shared_ptr<iir::Expr> reduce_over_neighbor_expr(op operation,
@@ -97,20 +101,26 @@ public:
 
   std::shared_ptr<iir::Expr> at(LocalVar var);
 
-  std::shared_ptr<iir::Stmt> stmt(std::shared_ptr<iir::Expr>&& expr);
-  std::shared_ptr<iir::Stmt> if_stmt(std::shared_ptr<iir::Expr>&& cond,
-                                     std::shared_ptr<iir::Stmt>&& case_then,
-                                     std::shared_ptr<iir::Stmt>&& case_else = nullptr);
-  std::shared_ptr<iir::Stmt> declare_var(LocalVar& var_id);
+  StmtData stmt(std::shared_ptr<iir::Expr>&& expr);
+  template <typename... Stmts>
+  StmtData block(Stmts&&... stmts) {
+    auto stmt =
+        std::make_shared<iir::BlockStmt>(std::vector<std::shared_ptr<iir::Stmt>>{stmts.stmt...});
+    auto sap = make_unique<iir::StatementAccessesPair>(std::make_shared<Statement>(stmt, nullptr));
+    int x[] = {(stmts.sap ? (sap->insertBlockStatement(std::move(stmts.sap)), 0) : 0)...};
+    (void)x;
+    return {std::move(stmt), std::move(sap)};
+  }
+  StmtData if_stmt(std::shared_ptr<iir::Expr>&& cond, StmtData&& case_then,
+                   StmtData&& case_else = {nullptr, {}});
+  StmtData declare_var(LocalVar& var_id);
 
   template <typename... Stmts>
   std::unique_ptr<iir::DoMethod> vregion(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
                                          Stmts&&... stmts) {
     auto ret = make_unique<iir::DoMethod>(iir::Interval(s, e), si_->getMetaData());
     ret->setID(si_->nextUID());
-    int x[] = {(ret->insertChild(make_unique<iir::StatementAccessesPair>(
-                    std::make_shared<Statement>(std::forward<Stmts>(stmts), nullptr))),
-                0)...};
+    int x[] = {(DAWN_ASSERT(stmts.sap), ret->insertChild(std::move(stmts.sap)), 0)...};
     (void)x;
     computeAccesses(si_.get(), ret->getChildren());
     ret->updateLevel();
