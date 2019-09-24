@@ -14,11 +14,17 @@
 
 #include "dawn-c/Compiler.h"
 #include "dawn-c/TranslationUnit.h"
+#include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
+#include "dawn/CodeGen/CodeGen.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Serialization/SIRSerializer.h"
-#include "dawn/Unittest/ASTSimplifier.h"
-#include <cstring>
+#include "dawn/Support/DiagnosticsEngine.h"
+#include "dawn/Unittest/IIRBuilder.h"
 #include <gtest/gtest.h>
+
+#include <cstring>
+#include <fstream>
 
 namespace {
 
@@ -43,50 +49,35 @@ TEST(CompilerTest, CompileEmptySIR) {
   freeCharArray(ppDefines, size);
   dawnTranslationUnitDestroy(TU);
 }
+template <typename CG>
+void dump(std::ostream& os, dawn::codegen::stencilInstantiationContext& ctx) {
+  dawn::DiagnosticsEngine diagnostics;
+  CG generator(ctx, diagnostics, 0);
+  auto tu = generator.generateCode();
 
+  std::ostringstream ss;
+  for(auto const& macroDefine : tu->getPPDefines())
+    ss << macroDefine << "\n";
+
+  ss << tu->getGlobals();
+  for(auto const& s : tu->getStencils())
+    ss << s.second;
+  os << ss.str();
+}
 TEST(CompilerTest, CompileCopyStencil) {
-  using namespace dawn::astgen;
+  using namespace dawn::iir;
 
-  // Build copy stencil
-  //
-  //  copy {
-  //    storage in, out;
-  //
-  //    vertical_region(start, end) {
-  //      out = in;
-  //    }
-  //  }
-  //
-  auto sir = std::make_shared<dawn::SIR>();
-  auto stencil = std::make_shared<dawn::sir::Stencil>();
-  stencil->Name = "copy";
-  stencil->Fields.emplace_back(std::make_shared<dawn::sir::Field>("in"));
-  stencil->Fields.emplace_back(std::make_shared<dawn::sir::Field>("out"));
+  IIRBuilder b;
+  auto in_f = b.field("in_field", field_type::ijk);
+  auto out_f = b.field("out_field", field_type::ijk);
 
-  auto ast = std::make_shared<dawn::sir::AST>(block(assign(field("out"), field("in"))));
-  auto vr = std::make_shared<dawn::sir::VerticalRegion>(
-      ast,
-      std::make_shared<dawn::sir::Interval>(dawn::sir::Interval::Start, dawn::sir::Interval::End),
-      dawn::sir::VerticalRegion::LK_Forward);
-  stencil->StencilDescAst = std::make_shared<dawn::sir::AST>(block(verticalRegion(vr)));
-  sir->Stencils.emplace_back(stencil);
-
-  std::string sirStr =
-      dawn::SIRSerializer::serializeToString(sir.get(), dawn::SIRSerializer::SK_Byte);
-  dawnTranslationUnit_t* TU = dawnCompile(sirStr.data(), sirStr.size(), nullptr);
-
-  char* copyCode = dawnTranslationUnitGetStencil(TU, "copy");
-  EXPECT_NE(copyCode, nullptr);
-
-  char** ppDefines;
-  int size;
-  dawnTranslationUnitGetPPDefines(TU, &ppDefines, &size);
-  EXPECT_NE(size, 0);
-  EXPECT_NE(ppDefines, nullptr);
-
-  freeCharArray(ppDefines, size);
-  std::free(copyCode);
-  dawnTranslationUnitDestroy(TU);
+  auto stencil_instantiation = b.build(
+      "generated",
+      b.stencil(b.multistage(dawn::iir::LoopOrderKind::LK_Parallel,
+                             b.stage(b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                               b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))))))));
+  std::ofstream of("/dev/null");
+  dump<dawn::codegen::cxxnaive::CXXNaiveCodeGen>(of, stencil_instantiation);
 }
 
 } // anonymous namespace

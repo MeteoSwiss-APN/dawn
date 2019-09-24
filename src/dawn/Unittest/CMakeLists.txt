@@ -14,9 +14,9 @@
 
 yoda_add_library(
   NAME DawnUnittest
-  SOURCES ASTSimplifier.cpp
-          ASTSimplifier.h
-          UnittestLogger.cpp
+  SOURCES UnittestLogger.cpp
           UnittestLogger.h
+          IIRBuilder.cpp
+          IIRBuilder.h
   ARCHIVE
 )
