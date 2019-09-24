@@ -81,12 +81,6 @@ public:
       return total_time();
     }
 
-    virtual void run() {
-    }
-
-    virtual void sync_storages() {
-    }
-
     virtual ~sbase() {
     }
   };
@@ -101,35 +95,24 @@ public:
     using tmp_storage_t = storage_traits_t::data_store_t< float_type, tmp_meta_data_t>;
     const gridtools::clang::domain& m_dom;
 
-    // storage declarations
-    storage_ijk_t& m_in;
-    storage_ijk_t& m_out;
-    storage_ijk_t& m_coeff;
-
     // temporary storage declarations
     tmp_meta_data_t m_tmp_meta_data;
     tmp_storage_t m_lap;
   public:
 
-    stencil_43(const gridtools::clang::domain& dom_, storage_ijk_t& in_, storage_ijk_t& out_, storage_ijk_t& coeff_) : sbase("stencil_43"), m_dom(dom_), m_in(in_), m_out(out_), m_coeff(coeff_), m_tmp_meta_data(32+2, 4+2, (dom_.isize()+ 32 - 1) / 32, (dom_.jsize()+ 4 - 1) / 4, dom_.ksize() + 2 * 0), m_lap(m_tmp_meta_data){}
+    stencil_43(const gridtools::clang::domain& dom_, storage_ijk_t& in_, storage_ijk_t& out_, storage_ijk_t& coeff_) : sbase("stencil_43"), m_dom(dom_), m_tmp_meta_data(32+2, 4+2, (dom_.isize()+ 32 - 1) / 32, (dom_.jsize()+ 4 - 1) / 4, dom_.ksize() + 2 * 0), m_lap(m_tmp_meta_data){}
 
-    ~stencil_43() {
+    virtual ~stencil_43() {
     }
 
-    void sync_storages() {
-      m_in.sync();
-      m_out.sync();
-      m_coeff.sync();
-    }
-
-    virtual void run() {
+    virtual void run(storage_ijk_t in_ds, storage_ijk_t out_ds, storage_ijk_t coeff_ds) {
 
       // starting timers
       start();
       {;
-      gridtools::data_view<storage_ijk_t> in= gridtools::make_device_view(m_in);
-      gridtools::data_view<storage_ijk_t> out= gridtools::make_device_view(m_out);
-      gridtools::data_view<storage_ijk_t> coeff= gridtools::make_device_view(m_coeff);
+      gridtools::data_view<storage_ijk_t> in= gridtools::make_device_view(in_ds);
+      gridtools::data_view<storage_ijk_t> out= gridtools::make_device_view(out_ds);
+      gridtools::data_view<storage_ijk_t> coeff= gridtools::make_device_view(coeff_ds);
       const unsigned int nx = m_dom.isize() - m_dom.iminus() - m_dom.iplus();
       const unsigned int ny = m_dom.jsize() - m_dom.jminus() - m_dom.jplus();
       const unsigned int nz = m_dom.ksize() - m_dom.kminus() - m_dom.kplus();
@@ -138,19 +121,15 @@ public:
       const unsigned int nby = (ny + 4 - 1) / 4;
       const unsigned int nbz = (m_dom.ksize()+4-1) / 4;
       dim3 blocks(nbx, nby, nbz);
-      hori_diff_stencil43_ms86_kernel<<<blocks, threads>>>(nx,ny,nz,m_in.strides()[1],m_in.strides()[2],(in.data()+m_in.get_storage_info_ptr()->index(in.begin<0>(), in.begin<1>(),0 )),(out.data()+m_out.get_storage_info_ptr()->index(out.begin<0>(), out.begin<1>(),0 )),(coeff.data()+m_coeff.get_storage_info_ptr()->index(coeff.begin<0>(), coeff.begin<1>(),0 )));
+      hori_diff_stencil43_ms86_kernel<<<blocks, threads>>>(nx,ny,nz,in_ds.strides()[1],in_ds.strides()[2],(in.data()+in_ds.get_storage_info_ptr()->index(in.begin<0>(), in.begin<1>(),0 )),(out.data()+out_ds.get_storage_info_ptr()->index(out.begin<0>(), out.begin<1>(),0 )),(coeff.data()+coeff_ds.get_storage_info_ptr()->index(coeff.begin<0>(), coeff.begin<1>(),0 )));
       };
 
       // stopping timers
       pause();
     }
-
-    sbase* get_stencil() {
-      return this;
-    }
   };
   static constexpr const char* s_name = "hori_diff";
-  sbase* m_stencil_43;
+  stencil_43* m_stencil_43;
 public:
 
   hori_diff(const hori_diff&) = delete;
@@ -161,27 +140,36 @@ public:
 
   hori_diff(const gridtools::clang::domain& dom, storage_ijk_t& in, storage_ijk_t& out, storage_ijk_t& coeff) : m_stencil_43(new stencil_43(dom,in,out,coeff) ){}
 
-  void run() {
-    sync_storages();
-    m_stencil_43->run();
-;
-    sync_storages();
+  template<typename S>
+  void sync_storages(S field) {
+    field.sync();
   }
 
-  void sync_storages() {
-    m_stencil_43->sync_storages();
+  template<typename S0, typename ... S>
+  void sync_storages(S0 f0, S... fields) {
+    f0.sync();
+    sync_storages(fields...);
+  }
+
+  void run(storage_ijk_t in, storage_ijk_t out, storage_ijk_t coeff) {
+    sync_storages(in,out,coeff);
+    m_stencil_43->run(in,out,coeff);
+;
+    sync_storages(in,out,coeff);
   }
 
   std::string get_name()  const {
     return std::string(s_name);
   }
 
-  std::vector<sbase*> getStencils() {
-    return std::vector<sbase*>({m_stencil_43});
-  }
-
   void reset_meters() {
 m_stencil_43->reset();  }
+
+  double get_total_time() {
+    double res = 0;
+    res +=m_stencil_43->get_time();
+    return res;
+  }
 };
 } // namespace cuda
 } // namespace dawn_generated
