@@ -19,7 +19,7 @@ namespace dawn {
 namespace iir {
 
 bool IIRStmtData::operator==(const IIRStmtData& rhs) { return StackTrace == rhs.StackTrace; }
-bool IIRStmtData::operator!=(const IIRStmtData& rhs) { return !operator==(rhs); }
+bool IIRStmtData::operator!=(const IIRStmtData& rhs) { return !(*this == rhs); }
 
 std::unique_ptr<ast::StmtData> IIRStmtData::clone() const {
   return make_unique<IIRStmtData>(*this);
