@@ -48,7 +48,7 @@ public:
     SK_StencilCallDeclStmt,
     SK_VerticalRegionDeclStmt,
     SK_BoundaryConditionDeclStmt,
-    SK_IfStmt,
+    SK_IfStmt
   };
 
   using StmtRangeType = MutableArrayRef<std::shared_ptr<Stmt>>;
@@ -440,7 +440,6 @@ public:
                                const std::shared_ptr<Stmt>& newStmt) override;
   ACCEPTVISITOR(Stmt, IfStmt)
 };
-
 } // namespace ast
 } // namespace dawn
 

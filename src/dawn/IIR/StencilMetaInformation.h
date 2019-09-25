@@ -100,15 +100,14 @@ public:
   }
 
   void moveRegisteredFieldTo(FieldAccessType type, int accessID);
-  
+
   int insertAccessOfType(FieldAccessType type, const std::string& name);
-  
+
   void insertAccessOfType(FieldAccessType type, int AccessID, const std::string& name);
-  
+
   int addField(FieldAccessType type, const std::string& name, const Array3i fieldDimensions);
-  
-  int addTmpField(FieldAccessType type, const std::string& basename,
-                     const Array3i fieldDimensions);
+
+  int addTmpField(FieldAccessType type, const std::string& basename, const Array3i fieldDimensions);
 
   int addStmt(bool keepVarNames, const std::shared_ptr<VarDeclStmt>& stmt);
 
@@ -161,9 +160,9 @@ public:
       const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) const {
     return boundaryConditionToExtentsMap_.count(stmt);
   }
-  
+
   void addBoundaryConditiontoExtentPair(std::shared_ptr<BoundaryConditionDeclStmt>& bc,
-                                           Extents& extents) {
+                                        Extents& extents) {
     DAWN_ASSERT(!boundaryConditionToExtentsMap_.count(bc));
     boundaryConditionToExtentsMap_.emplace(bc, extents);
   }
@@ -190,12 +189,12 @@ public:
   void setAccessIDOfStmt(const std::shared_ptr<iir::Stmt>& stmt, const int accessID);
 
   bool hasStmtToAccessID(const std::shared_ptr<iir::Stmt>& stmt) const;
-  
+
   void addStmtToAccessID(const std::shared_ptr<Stmt>& stmt, const int accessID);
-  
+
   /// @brief Insert a new AccessID - Name pair
   void addAccessIDNamePair(int accessID, const std::string& name);
-  
+
   void addStencilCallStmt(std::shared_ptr<StencilCallDeclStmt> stmt, int stencilID);
 
   /// @brief Remove the field, variable or literal given by `AccessID`
@@ -232,7 +231,7 @@ public:
 
   bool hasBC() const { return !fieldnameToBoundaryConditionMap_.empty(); }
   bool hasFieldBC(std::string name) const { return fieldnameToBoundaryConditionMap_.count(name); }
-  
+
   void addFieldBC(std::string name, const std::shared_ptr<BoundaryConditionDeclStmt>& bc) {
     DAWN_ASSERT(!fieldnameToBoundaryConditionMap_.count(name));
     fieldnameToBoundaryConditionMap_.emplace(name, bc);
@@ -244,7 +243,7 @@ public:
   void setStencilLocation(const SourceLocation& location) { stencilLocation_ = location; }
 
   const FieldAccessMetadata& getFieldAccessMetadata() const { return fieldAccessMetadata_; }
-  
+
   void addFieldVersionIDPair(const int originalAccessID, const int versionedAccessID) {
     fieldAccessMetadata_.variableVersions_.addIDPair(originalAccessID, versionedAccessID);
   }
@@ -263,13 +262,13 @@ public:
   getExprToStencilFunctionInstantiation() const {
     return ExprToStencilFunctionInstantiationMap_;
   }
-  
+
   void insertExprToStencilFunctionInstantiation(
       const std::shared_ptr<iir::StencilFunCallExpr>& expr,
       const std::shared_ptr<StencilFunctionInstantiation>& stencilFun) {
     ExprToStencilFunctionInstantiationMap_.emplace(expr, stencilFun);
   }
-  
+
   void insertExprToStencilFunctionInstantiation(
       const std::shared_ptr<StencilFunctionInstantiation>& stencilFun);
 
@@ -306,14 +305,14 @@ public:
 
   void markStencilFunctionInstantiationFinal(
       const std::shared_ptr<StencilFunctionInstantiation>& stencilFun);
-  
+
   void insertStencilFunctionInstantiation(
       const std::shared_ptr<StencilFunctionInstantiation>& stencilFunctionInstantiation) {
     stencilFunctionInstantiations_.push_back(stencilFunctionInstantiation);
   }
 
   void deregisterStencilFunction(std::shared_ptr<StencilFunctionInstantiation> stencilFun);
-  
+
   void addStencilFunInstantiationCandidate(
       const std::shared_ptr<StencilFunctionInstantiation>& stencilFun,
       const StencilFunctionInstantiationCandidate& candidate) {
@@ -330,7 +329,7 @@ public:
     return StencilIDToStencilCallMap_;
   }
 
-public:
+private:
   //================================================================================================
   // Stored MetaInformation
   //================================================================================================

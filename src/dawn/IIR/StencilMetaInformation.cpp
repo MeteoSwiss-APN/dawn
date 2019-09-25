@@ -13,12 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/StencilMetaInformation.h"
-#include "dawn/IIR/InstantiationHelper.h"
-#include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTStringifier.h"
 #include "dawn/IIR/ASTUtil.h"
 #include "dawn/IIR/ASTVisitor.h"
+#include "dawn/IIR/InstantiationHelper.h"
+#include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/FileUtil.h"
@@ -137,7 +137,7 @@ std::shared_ptr<StencilFunctionInstantiation> StencilMetaInformation::cloneStenc
   stencilFunClone->setStencilFunction(sirStencilFun);
 
   addStencilFunInstantiationCandidate(stencilFunClone,
-                                         getStencilFunInstantiationCandidates().at(stencilFun));
+                                      getStencilFunInstantiationCandidates().at(stencilFun));
   return stencilFunClone;
 }
 
@@ -253,7 +253,7 @@ bool StencilMetaInformation::isAccessType(FieldAccessType fType, const int acces
            !isAccessType(FieldAccessType::FAT_Literal, accessID) &&
            !isAccessType(FieldAccessType::FAT_GlobalVariable, accessID);
   }
-  if (fType == FieldAccessType::FAT_Literal) {
+  if(fType == FieldAccessType::FAT_Literal) {
     return fieldAccessMetadata_.LiteralAccessIDToNameMap_.count(accessID) > 0;
   }
   // not all the accessIDs are registered
@@ -316,8 +316,7 @@ void StencilMetaInformation::insertAccessOfType(FieldAccessType type, int Access
   }
 }
 
-int StencilMetaInformation::addStmt(bool keepVarNames,
-                                       const std::shared_ptr<VarDeclStmt>& stmt) {
+int StencilMetaInformation::addStmt(bool keepVarNames, const std::shared_ptr<VarDeclStmt>& stmt) {
   int accessID = UIDGenerator::getInstance()->get();
 
   std::string globalName;
@@ -326,9 +325,9 @@ int StencilMetaInformation::addStmt(bool keepVarNames,
   } else {
     globalName = InstantiationHelper::makeLocalVariablename(stmt->getName(), accessID);
   }
- 
+
   addAccessIDNamePair(accessID, globalName);
- 
+
   DAWN_ASSERT(!StmtIDToAccessIDMap_.count(stmt->getID()));
   StmtIDToAccessIDMap_.emplace(stmt->getID(), accessID);
 
@@ -356,7 +355,8 @@ const std::unordered_map<int, int>& StencilMetaInformation::getStmtIDToAccessIDM
 }
 
 void StencilMetaInformation::insertExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID) {
-  //DAWN_ASSERT(!ExprIDToAccessIDMap_.count(expr->getID()));  //this is not unique in case of -fpass-tmp-to-function
+  // DAWN_ASSERT(!ExprIDToAccessIDMap_.count(expr->getID()));  //this is not unique in case of
+  // -fpass-tmp-to-function
   ExprIDToAccessIDMap_.emplace(expr->getID(), accessID);
 }
 
@@ -419,13 +419,13 @@ StencilMetaInformation::getStencilFunctionInstantiation(
   return it->second;
 }
 
-void StencilMetaInformation::addAccessIDNamePair(int accessID, const std::string& name) { 
-  //this fails if -fkeep-varnames is used
+void StencilMetaInformation::addAccessIDNamePair(int accessID, const std::string& name) {
+  // this fails if -fkeep-varnames is used
   AccessIDToNameMap_.add(accessID, name);
 }
 
 int StencilMetaInformation::addField(FieldAccessType type, const std::string& name,
-                                        const Array3i fieldDimensions) {
+                                     const Array3i fieldDimensions) {
   int accessID = UIDGenerator::getInstance()->get();
   DAWN_ASSERT(isFieldType(type));
   insertAccessOfType(type, accessID, name);
@@ -437,7 +437,7 @@ int StencilMetaInformation::addField(FieldAccessType type, const std::string& na
 }
 
 int StencilMetaInformation::addTmpField(FieldAccessType type, const std::string& basename,
-                                           const Array3i fieldDimensions) {
+                                        const Array3i fieldDimensions) {
   int accessID = UIDGenerator::getInstance()->get();
 
   std::string fname = InstantiationHelper::makeTemporaryFieldname(basename, accessID);
@@ -595,7 +595,7 @@ int StencilMetaInformation::getStencilIDFromStencilCallStmt(
 }
 
 void StencilMetaInformation::addStencilCallStmt(std::shared_ptr<StencilCallDeclStmt> stmt,
-                                                   int stencilID) {
+                                                int stencilID) {
   StencilIDToStencilCallMap_.add(stencilID, stmt);
 }
 

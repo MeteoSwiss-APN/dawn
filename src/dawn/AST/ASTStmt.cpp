@@ -357,6 +357,5 @@ void IfStmt::replaceChildren(std::shared_ptr<Stmt> const& oldStmt,
   }
   DAWN_ASSERT_MSG((false), ("Expression not found"));
 }
-//===------------------------------------------------------------------------------------------===//
 } // namespace ast
 } // namespace dawn
