@@ -119,7 +119,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperRun(
   stencilDescCGVisitor.setIndent(RunMethod.getIndent());
   for(const auto& statement :
       stencilInstantiation->getIIR()->getControlFlowDescriptor().getStatements()) {
-    statement->ASTStmt->accept(stencilDescCGVisitor);
+    statement->accept(stencilDescCGVisitor);
     RunMethod.addStatement(stencilDescCGVisitor.getCodeAndResetStream());
   }
 
@@ -359,7 +359,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
               if(!doMethod.getInterval().overlaps(interval))
                 continue;
               for(const auto& statementAccessesPair : doMethod.getChildren()) {
-                statementAccessesPair->getStatement()->ASTStmt->accept(stencilBodyCXXVisitor);
+                statementAccessesPair->getStatement()->accept(stencilBodyCXXVisitor);
                 StencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
               }
             }
@@ -457,7 +457,7 @@ void CXXNaiveIcoCodeGen::generateStencilFunctions(
       stencilBodyCXXVisitor.setCurrentStencilFunction(stencilFun);
       stencilBodyCXXVisitor.setIndent(stencilFunMethod.getIndent());
       for(const auto& statementAccessesPair : stencilFun->getStatementAccessesPairs()) {
-        statementAccessesPair->getStatement()->ASTStmt->accept(stencilBodyCXXVisitor);
+        statementAccessesPair->getStatement()->accept(stencilBodyCXXVisitor);
         stencilFunMethod.indentStatment();
         stencilFunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
       }
