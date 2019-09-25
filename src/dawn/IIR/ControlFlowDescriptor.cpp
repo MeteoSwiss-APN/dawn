@@ -19,15 +19,15 @@ namespace iir {
 
 ControlFlowDescriptor ControlFlowDescriptor::clone() const {
   ControlFlowDescriptor copy;
-  for(const auto stmt : controlFlowStatements_) {
+  for(const auto& stmt : controlFlowStatements_) {
     copy.controlFlowStatements_.push_back(stmt->clone());
   }
   return copy;
 }
 void ControlFlowDescriptor::removeStencilCalls(const std::set<int>& stencilIDs,
                                                iir::StencilMetaInformation& metadata) {
-  for(auto it = getStatements().begin(); it != getStatements().end(); ++it) {
-    std::shared_ptr<iir::Stmt> stmt = (*it)->ASTStmt;
+  for(StmtConstIterator it = getStatements().begin(); it != getStatements().end(); ++it) {
+    const std::shared_ptr<iir::Stmt>& stmt = *it;
     if(isa<iir::StencilCallDeclStmt>(stmt.get())) {
       auto callDecl = std::static_pointer_cast<iir::StencilCallDeclStmt>(stmt);
       bool remove = false;

@@ -15,7 +15,6 @@
 #include "dawn/IIR/ASTUtil.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTVisitor.h"
-#include "dawn/SIR/Statement.h"
 #include "dawn/Support/StringSwitch.h"
 #include "dawn/Support/Unreachable.h"
 #include <functional>
@@ -23,7 +22,7 @@
 namespace dawn {
 namespace iir {
 //
-// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
+// TODO refactor_AST: this is TEMPORARY, will be removed in the future
 //
 void replaceOldExprWithNewExprInStmt(const std::shared_ptr<Stmt>& stmt,
                                      const std::shared_ptr<Expr>& oldExpr,

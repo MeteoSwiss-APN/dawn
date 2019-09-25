@@ -185,16 +185,39 @@ if options.verbose:
 hirstr = hir.SerializeToString()
 
 # create the options to control the compiler
+dawn.dawnOptionsCreate.restype = c_void_p
 options = dawn.dawnOptionsCreate()
+
 # we set the backend of the compiler to cuda
+dawn.dawnOptionsEntryCreateString.restype = c_void_p
+dawn.dawnOptionsEntryCreateString.argtypes = [
+    ctypes.c_char_p
+]
 backend = dawn.dawnOptionsEntryCreateString("cuda".encode('utf-8'))
+
+dawn.dawnOptionsSet.argtypes = [
+    ctypes.c_void_p,
+    ctypes.c_char_p,
+    ctypes.c_void_p
+]
 dawn.dawnOptionsSet(options, "Backend".encode('utf-8'), backend)
 
 # call the compiler that generates a translation unit
+dawn.dawnCompile.restype = c_void_p
+dawn.dawnCompile.argtypes = [
+    ctypes.c_char_p,
+    ctypes.c_int,
+    ctypes.c_void_p
+]
 tu = dawn.dawnCompile(hirstr, len(hirstr), options)
 stencilname = "tridiagonal_solve"
 b_stencilName = stencilname.encode('utf-8')
 # get the code of the translation unit for the given stencil
+dawn.dawnTranslationUnitGetStencil.restype = c_void_p
+dawn.dawnTranslationUnitGetStencil.argtypes = [
+    ctypes.c_void_p,
+    ctypes.c_char_p
+]
 code = dawn.dawnTranslationUnitGetStencil(tu, b_stencilName)
 
 # write to file

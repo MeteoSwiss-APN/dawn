@@ -19,6 +19,8 @@ namespace dawn {
 namespace ast {
 class AST;
 
+struct StmtData;
+
 class Stmt;
 class BlockStmt;
 class ExprStmt;

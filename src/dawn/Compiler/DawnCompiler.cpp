@@ -23,6 +23,7 @@
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/Optimizer/PassInlining.h"
+#include "dawn/Optimizer/PassIntervalPartitioner.h"
 #include "dawn/Optimizer/PassMultiStageSplitter.h"
 #include "dawn/Optimizer/PassPrintStencilGraph.h"
 #include "dawn/Optimizer/PassSSA.h"
@@ -198,6 +199,7 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
     optimizer->checkAndPushBack<PassInlining>(
         (getOptions().InlineSF || getOptions().PassTmpToFunction),
         PassInlining::InlineStrategy::ComputationsOnTheFly);
+    optimizer->checkAndPushBack<PassIntervalPartitioner>();
     optimizer->checkAndPushBack<PassTemporaryToStencilFunction>();
     optimizer->checkAndPushBack<PassSetNonTempCaches>();
     optimizer->checkAndPushBack<PassSetCaches>();
@@ -238,6 +240,9 @@ std::unique_ptr<OptimizerContext> DawnCompiler::runOptimizer(std::shared_ptr<SIR
         IIRSerializer::serialize(originalFileName + "." + std::to_string(i) + ".iir", instantiation,
                                  serializationKind);
         i++;
+      }
+      if(options_->DumpStencilInstantiation) {
+        instantiation->dump();
       }
     }
   } else {

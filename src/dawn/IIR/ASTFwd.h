@@ -20,7 +20,7 @@
 namespace dawn {
 namespace iir {
 //
-// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
+// TODO refactor_AST: this is TEMPORARY, will be removed in the future
 //
 using AST = ast::AST;
 

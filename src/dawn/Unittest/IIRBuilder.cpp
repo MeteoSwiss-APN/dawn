@@ -86,12 +86,11 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
 
   auto placeholderStencil = std::make_shared<ast::StencilCall>(
       iir::InstantiationHelper::makeStencilCallCodeGenName(stencil_id));
-  auto stencilCallDeclStmt = std::make_shared<iir::StencilCallDeclStmt>(placeholderStencil);
+  auto stencilCallDeclStmt = iir::makeStencilCallDeclStmt(placeholderStencil);
   // Register the call and set it as a replacement for the next vertical region
   si_->getMetaData().addStencilCallStmt(stencilCallDeclStmt, stencil_id);
 
-  auto stencilCallStatement = std::make_shared<Statement>(stencilCallDeclStmt, nullptr);
-  si_->getIIR()->getControlFlowDescriptor().insertStmt(stencilCallStatement);
+  si_->getIIR()->getControlFlowDescriptor().insertStmt(stencilCallDeclStmt);
 
   // update everything
   for(const auto& MS : iterateIIROver<iir::MultiStage>(*(si_->getIIR()))) {
@@ -174,8 +173,8 @@ IIRBuilder::Field IIRBuilder::field(std::string const& name, fieldType ft) {
 }
 IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name) {
   DAWN_ASSERT(si_);
-  auto iirStmt = std::make_shared<iir::VarDeclStmt>(Type{BuiltinTypeID::Float}, name, 0, "=",
-                                                    std::vector<std::shared_ptr<Expr>>{});
+  auto iirStmt = makeVarDeclStmt(Type{BuiltinTypeID::Float}, name, 0, "=",
+                                 std::vector<std::shared_ptr<Expr>>{});
   int id = si_->getMetaData().addStmt(true, iirStmt);
   return {id, name, iirStmt};
 }
@@ -201,17 +200,16 @@ std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::LocalVar const& var) {
 }
 IIRBuilder::StmtData IIRBuilder::stmt(std::shared_ptr<iir::Expr>&& expr) {
   DAWN_ASSERT(si_);
-  auto stmt = std::make_shared<iir::ExprStmt>(std::move(expr));
-  auto sap = make_unique<iir::StatementAccessesPair>(std::make_shared<Statement>(stmt, nullptr));
+  auto stmt = iir::makeExprStmt(std::move(expr));
+  auto sap = make_unique<iir::StatementAccessesPair>(stmt);
   return {std::move(stmt), std::move(sap)};
 }
 IIRBuilder::StmtData IIRBuilder::ifStmt(std::shared_ptr<iir::Expr>&& cond, StmtData&& caseThen,
                                         StmtData&& caseElse) {
   DAWN_ASSERT(si_);
-  auto condStmt = std::make_shared<iir::ExprStmt>(std::move(cond));
-  auto stmt =
-      std::make_shared<iir::IfStmt>(condStmt, std::move(caseThen.stmt), std::move(caseElse.stmt));
-  auto sap = make_unique<iir::StatementAccessesPair>(std::make_shared<Statement>(stmt, nullptr));
+  auto condStmt = iir::makeExprStmt(std::move(cond));
+  auto stmt = iir::makeIfStmt(condStmt, std::move(caseThen.stmt), std::move(caseElse.stmt));
+  auto sap = make_unique<iir::StatementAccessesPair>(stmt);
   if(caseThen.sap)
     sap->insertBlockStatement(std::move(caseThen.sap));
   if(caseElse.sap)
@@ -221,8 +219,7 @@ IIRBuilder::StmtData IIRBuilder::ifStmt(std::shared_ptr<iir::Expr>&& cond, StmtD
 IIRBuilder::StmtData IIRBuilder::declareVar(IIRBuilder::LocalVar& var) {
   DAWN_ASSERT(si_);
   DAWN_ASSERT(var.decl);
-  auto sap =
-      make_unique<iir::StatementAccessesPair>(std::make_shared<Statement>(var.decl, nullptr));
+  auto sap = make_unique<iir::StatementAccessesPair>(var.decl);
   return {std::move(var.decl), std::move(sap)};
 }
 

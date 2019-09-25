@@ -102,19 +102,19 @@ public:
   }
 
   void appendNewStatementAccessesPair(const std::shared_ptr<iir::Stmt>& stmt) {
+    stmt->getData<iir::IIRStmtData>().StackTrace =
+        oldStmtAccessesPair_->getStatement()->getData<iir::IIRStmtData>().StackTrace;
     if(scopeDepth_ == 1) {
       // The top-level block statement is collapsed thus we only insert at 1. Note that this works
       // because all AST have a block statement as root node.
-      newStmtAccessesPairs_.emplace_back(make_unique<iir::StatementAccessesPair>(
-          std::make_shared<Statement>(stmt, oldStmtAccessesPair_->getStatement()->StackTrace)));
+      newStmtAccessesPairs_.emplace_back(make_unique<iir::StatementAccessesPair>(stmt));
 
       currentStmtAccessesPair_.push(&(newStmtAccessesPairs_.back()));
 
     } else if(scopeDepth_ > 1) {
       // We are inside a nested block statement, we add the stmt as a child of the parent statement
       (*currentStmtAccessesPair_.top())
-          ->insertBlockStatement(make_unique<iir::StatementAccessesPair>(
-              std::make_shared<Statement>(stmt, oldStmtAccessesPair_->getStatement()->StackTrace)));
+          ->insertBlockStatement(make_unique<iir::StatementAccessesPair>(stmt));
 
       const std::unique_ptr<iir::StatementAccessesPair>& lp =
           (*(currentStmtAccessesPair_.top()))->getBlockStatements().back();
@@ -148,15 +148,15 @@ public:
           curStencilFunctioninstantiation_->getName(), AccessID);
 
       newExpr_ = std::make_shared<iir::VarAccessExpr>(returnVarName);
-      auto newStmt = std::make_shared<iir::VarDeclStmt>(
-          dawn::Type(BuiltinTypeID::Float, CVQualifier::Const), returnVarName, 0, "=",
-          std::vector<std::shared_ptr<iir::Expr>>{stmt->getExpr()});
+      auto newStmt =
+          iir::makeVarDeclStmt(dawn::Type(BuiltinTypeID::Float, CVQualifier::Const), returnVarName,
+                               0, "=", std::vector<std::shared_ptr<iir::Expr>>{stmt->getExpr()});
       appendNewStatementAccessesPair(newStmt);
 
       // Register the variable
       metadata_.addAccessIDNamePair(AccessID, returnVarName);
       metadata_.addStmtToAccessID(newStmt, AccessID);
-      //TODO recheck this
+      // TODO recheck this
       metadata_.insertExprToAccessID(newExpr_, AccessID);
 
     } else {
@@ -166,8 +166,8 @@ public:
           curStencilFunctioninstantiation_->getName(), AccessIDOfCaller_);
 
       newExpr_ = std::make_shared<iir::FieldAccessExpr>(returnFieldName);
-      auto newStmt = std::make_shared<iir::ExprStmt>(
-          std::make_shared<iir::AssignmentExpr>(newExpr_, stmt->getExpr()));
+      auto newStmt =
+          iir::makeExprStmt(std::make_shared<iir::AssignmentExpr>(newExpr_, stmt->getExpr()));
       appendNewStatementAccessesPair(newStmt);
 
       // Promote the "temporary" storage we used to mock the argument to an actual temporary field
@@ -285,13 +285,12 @@ public:
         // push backed all the new statements). Hence, we need to insert an empty statement in the
         // back -> swap with our statement -> replace the expr in our statement and evict the empty
         // statement)
-        newStmtAccessesPairs_.emplace_back(
-            make_unique<iir::StatementAccessesPair>(std::make_shared<Statement>(nullptr, nullptr)));
+        newStmtAccessesPairs_.emplace_back(make_unique<iir::StatementAccessesPair>(nullptr));
         std::iter_swap(newStmtAccessesPairs_.begin() + stmtIdxOfFunc,
                        std::prev(newStmtAccessesPairs_.end()));
 
         iir::replaceOldExprWithNewExprInStmt(
-            newStmtAccessesPairs_[newStmtAccessesPairs_.size() - 1]->getStatement()->ASTStmt, expr,
+            newStmtAccessesPairs_[newStmtAccessesPairs_.size() - 1]->getStatement(), expr,
             inliner->getNewExpr());
       }
 
@@ -396,7 +395,7 @@ public:
     newStmtAccessesPairs_.clear();
 
     // Detect the stencil functions suitable for inlining
-    oldStmtAccessesPair_->getStatement()->ASTStmt->accept(*this);
+    oldStmtAccessesPair_->getStatement()->accept(*this);
   }
 
   /// @brief Atleast one inline candiate was found and the given `stmt` should be replaced with
@@ -412,7 +411,7 @@ public:
 
       for(const auto& oldNewPair : replacmentOfOldStmtMap_)
         iir::replaceOldExprWithNewExprInStmt(
-            newStmtAccessesPairs_[newStmtAccessesPairs_.size() - 1]->getStatement()->ASTStmt,
+            newStmtAccessesPairs_[newStmtAccessesPairs_.size() - 1]->getStatement(),
             oldNewPair.first, oldNewPair.second);
 
       // Clear the map in case someone would call getNewStatments multiple times
