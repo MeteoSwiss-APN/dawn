@@ -41,15 +41,13 @@ void StatementMapper::appendNewStatementAccessesPair(const std::shared_ptr<iir::
   if(scope_.top()->ScopeDepth == 1) {
     // The top-level block statement is collapsed thus we only insert at 1. Note that this works
     // because all AST have a block statement as root node.
-    stmt->getData<iir::IIRStmtData>().StackTrace =
-        boost::optional<std::vector<ast::StencilCall*>>(stackTrace_);
+    stmt->getData<iir::IIRStmtData>().StackTrace = boost::make_optional(stackTrace_);
     scope_.top()->doMethod_.insertChild(make_unique<iir::StatementAccessesPair>(stmt));
     scope_.top()->CurentStmtAccessesPair.push(&(*(scope_.top()->doMethod_.childrenRBegin())));
 
   } else if(scope_.top()->ScopeDepth > 1) {
     // We are inside a nested block statement, we add the stmt as a child of the parent statement
-    stmt->getData<iir::IIRStmtData>().StackTrace =
-        boost::optional<std::vector<ast::StencilCall*>>(stackTrace_);
+    stmt->getData<iir::IIRStmtData>().StackTrace = boost::make_optional(stackTrace_);
     (*scope_.top()->CurentStmtAccessesPair.top())
         ->insertBlockStatement(make_unique<iir::StatementAccessesPair>(stmt));
 
@@ -122,37 +120,42 @@ void StatementMapper::visit(const std::shared_ptr<iir::IfStmt>& stmt) {
 void StatementMapper::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
   DAWN_ASSERT(initializedWithBlockStmt_);
 
-  // This is the first time we encounter this variable. We have to make sure the name is not
-  // already used in another scope!
-  int AccessID = instantiation_->nextUID();
-
-  std::string globalName;
-  if(context_.getOptions().KeepVarnames)
-    globalName = stmt->getName();
-  else
-    globalName = iir::InstantiationHelper::makeLocalVariablename(stmt->getName(), AccessID);
-
-  // We generate a new AccessID and insert it into the AccessMaps (using the global name)
-  auto& function = scope_.top()->FunctionInstantiation;
-  if(function) {
-    function->getAccessIDToNameMap().emplace(AccessID, globalName);
-    function->mapStmtToAccessID(stmt, AccessID);
+  int accessID = -1;
+  if(metadata_.hasStmtToAccessID(stmt)) {
+    accessID = metadata_.getAccessIDFromStmt(stmt);
   } else {
-    metadata_.addAccessIDNamePair(AccessID, globalName);
-    metadata_.addStmtToAccessID(stmt, AccessID);
+    // This is the first time we encounter this variable. We have to make sure the name is not
+    // already used in another scope!
+    accessID = instantiation_->nextUID();
+
+    std::string globalName;
+    if(context_.getOptions().KeepVarnames)
+      globalName = stmt->getName();
+    else
+      globalName = iir::InstantiationHelper::makeLocalVariablename(stmt->getName(), accessID);
+
+    // We generate a new AccessID and insert it into the AccessMaps (using the global name)
+    auto& function = scope_.top()->FunctionInstantiation;
+    if(function) {
+      function->getAccessIDToNameMap().emplace(accessID, globalName);
+      function->mapStmtToAccessID(stmt, accessID);
+    } else {
+      metadata_.addAccessIDNamePair(accessID, globalName);
+      metadata_.addStmtToAccessID(stmt, accessID);
+    }
+
+    // Add the mapping to the local scope
+    scope_.top()->LocalVarNameToAccessIDMap.emplace(stmt->getName(), accessID);
+
+    // Push back the statement and move on
+    appendNewStatementAccessesPair(stmt);
+
+    // Resolve the RHS
+    for(const auto& expr : stmt->getInitList())
+      expr->accept(*this);
+
+    removeLastChildStatementAccessesPair();
   }
-
-  // Add the mapping to the local scope
-  scope_.top()->LocalVarNameToAccessIDMap.emplace(stmt->getName(), AccessID);
-
-  // Push back the statement and move on
-  appendNewStatementAccessesPair(stmt);
-
-  // Resolve the RHS
-  for(const auto& expr : stmt->getInitList())
-    expr->accept(*this);
-
-  removeLastChildStatementAccessesPair();
 }
 
 void StatementMapper::visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) {

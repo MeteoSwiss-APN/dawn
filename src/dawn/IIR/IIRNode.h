@@ -97,6 +97,7 @@ public:
   /// @brief getters and iterator getters
   /// @{
   inline const Container<SmartPtr<Child>>& getChildren() const { return children_; }
+  inline Container<SmartPtr<Child>>& getChildren() { return children_; }
 
   inline ChildIterator childrenBegin() { return children_.begin(); }
   inline ChildIterator childrenEnd() { return children_.end(); }

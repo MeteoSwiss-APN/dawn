@@ -13,6 +13,10 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/AST/ASTStringifier.h"
+#include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTUtil.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StatementAccessesPair.h"
@@ -208,6 +212,63 @@ void StencilInstantiation::jsonDump(std::string filename) const {
   fs.close();
 }
 
+template <int Level>
+struct PrintDescLine {
+  PrintDescLine(const Twine& name) {
+    std::cout << MakeIndent<Level>::value << format("\e[1;3%im", Level) << name.str() << "\n"
+              << MakeIndent<Level>::value << "{\n\e[0m";
+  }
+  ~PrintDescLine() { std::cout << MakeIndent<Level>::value << format("\e[1;3%im}\n\e[0m", Level); }
+};
+
+void StencilInstantiation::dump() const {
+  std::cout << "StencilInstantiation : " << getName() << "\n";
+
+  int i = 0;
+  for(const auto& stencil : getStencils()) {
+    PrintDescLine<1> iline("Stencil_" + Twine(i));
+
+    int j = 0;
+    const auto& multiStages = stencil->getChildren();
+    for(const auto& multiStage : multiStages) {
+      PrintDescLine<2> jline(Twine("MultiStage_") + Twine(j) + " [" +
+                             loopOrderToString(multiStage->getLoopOrder()) + "]");
+
+      int k = 0;
+      const auto& stages = multiStage->getChildren();
+      for(const auto& stage : stages) {
+        PrintDescLine<3> kline(Twine("Stage_") + Twine(k));
+
+        int l = 0;
+        const auto& doMethods = stage->getChildren();
+        for(const auto& doMethod : doMethods) {
+          PrintDescLine<4> lline(Twine("Do_") + Twine(l) + " " +
+                                 doMethod->getInterval().toString());
+
+          const auto& statementAccessesPairs = doMethod->getChildren();
+          for(std::size_t m = 0; m < statementAccessesPairs.size(); ++m) {
+            std::cout << "\e[1m"
+                      << ast::ASTStringifier::toString(statementAccessesPairs[m]->getStatement(),
+                                                       5 * DAWN_PRINT_INDENT)
+                      << "\e[0m";
+            std::cout << statementAccessesPairs[m]->getAccesses()->toString(&getMetaData(),
+                                                                            6 * DAWN_PRINT_INDENT)
+                      << "\n";
+          }
+          l += 1;
+        }
+        std::cout << "\e[1m" << std::string(4 * DAWN_PRINT_INDENT, ' ')
+                  << "Extents: " << stage->getExtents() << std::endl
+                  << "\e[0m";
+        k += 1;
+      }
+      j += 1;
+    }
+    ++i;
+  }
+  std::cout.flush();
+}
+
 void StencilInstantiation::reportAccesses() const {
   // Stencil functions
   for(const auto& stencilFun : metadata_.getStencilFunctionInstantiations()) {
@@ -215,8 +276,7 @@ void StencilInstantiation::reportAccesses() const {
 
     for(std::size_t i = 0; i < statementAccessesPairs.size(); ++i) {
       std::cout << "\nACCESSES: line "
-                << statementAccessesPairs[i]->getStatement()->getSourceLocation().Line
-                << ": "
+                << statementAccessesPairs[i]->getStatement()->getSourceLocation().Line << ": "
                 << statementAccessesPairs[i]->getCalleeAccesses()->reportAccesses(stencilFun.get())
                 << "\n";
     }
@@ -225,9 +285,8 @@ void StencilInstantiation::reportAccesses() const {
   // Stages
 
   for(const auto& stmtAccessesPair : iterateIIROver<StatementAccessesPair>(*getIIR())) {
-    std::cout << "\nACCESSES: line "
-              << stmtAccessesPair->getStatement()->getSourceLocation().Line << ": "
-              << stmtAccessesPair->getAccesses()->reportAccesses(metadata_) << "\n";
+    std::cout << "\nACCESSES: line " << stmtAccessesPair->getStatement()->getSourceLocation().Line
+              << ": " << stmtAccessesPair->getAccesses()->reportAccesses(metadata_) << "\n";
   }
 }
 
