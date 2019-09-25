@@ -30,6 +30,7 @@ yoda_add_library(
           ASTExpr.h
           ASTFwd.h
           ASTStmt.h
+          ASTStmt.cpp
           ASTStringifier.h
           ASTUtil.h
           ASTUtil.cpp
@@ -37,7 +38,6 @@ yoda_add_library(
           SIR.cpp
           SIR.h
           proto/SIR/SIR.proto
-          Statement.h
           ${sir_proto_cpp_files}
   OBJECT
 )

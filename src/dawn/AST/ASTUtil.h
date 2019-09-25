@@ -32,7 +32,7 @@ namespace ast {
 /// @param oldExpr  Expression to replace
 /// @param newExpr  Expression to use as a replacement
 ///
-/// @ingroup sir
+/// @ingroup ast
 extern void replaceOldExprWithNewExprInStmt(const std::shared_ptr<Stmt>& stmt,
                                             const std::shared_ptr<Expr>& oldExpr,
                                             const std::shared_ptr<Expr>& newExpr);
@@ -45,7 +45,7 @@ extern void replaceOldExprWithNewExprInStmt(const std::shared_ptr<Stmt>& stmt,
 /// @param oldStmt  Statement to replace
 /// @param newStmt  Statement to use as a replacement
 ///
-/// @ingroup sir
+/// @ingroup ast
 extern void replaceOldStmtWithNewStmtInStmt(const std::shared_ptr<Stmt>& stmt,
                                             const std::shared_ptr<Stmt>& oldStmt,
                                             const std::shared_ptr<Stmt>& newStmt);
@@ -63,7 +63,7 @@ extern void replaceOldStmtWithNewStmtInStmt(const std::shared_ptr<Stmt>& stmt,
 ///                        resolved.
 /// @returns `true` if evaluation was successful, `false` otherwise
 ///
-/// @ingroup sir
+/// @ingroup ast
 /// @{
 extern bool evalExprAsDouble(const std::shared_ptr<Expr>& expr, double& result,
                              const std::unordered_map<std::string, double>& variableMap =

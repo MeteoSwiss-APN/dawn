@@ -69,7 +69,7 @@ bool PassStageSplitter::run(
           if(hasHorizontalReadBeforeWriteConflict(newGraph.get())) {
 
             // Check if the conflict is related to a conditional block
-            if(isa<iir::IfStmt>(stmtAccessesPair->getStatement()->ASTStmt.get())) {
+            if(isa<iir::IfStmt>(stmtAccessesPair->getStatement().get())) {
               // Check if the conflict is inside the conditional block
               iir::DependencyGraphAccesses conditionalBlockGraph =
                   iir::DependencyGraphAccesses(stencilInstantiation->getMetaData());
@@ -79,7 +79,7 @@ bool PassStageSplitter::run(
                 // error.
                 auto statement = stmtAccessesPair->getStatement();
                 DiagnosticsBuilder diag(DiagnosticsKind::Error,
-                                        statement->ASTStmt->getSourceLocation());
+                                        statement->getSourceLocation());
                 diag << "Read-before-Write conflict inside conditional block is not supported.";
                 context_.getDiagnostics().report(diag);
                 return false;
@@ -97,7 +97,7 @@ bool PassStageSplitter::run(
             if(context_.getOptions().ReportPassStageSplit)
               std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
                         << ": split:"
-                        << stmtAccessesPair->getStatement()->ASTStmt->getSourceLocation().Line
+                        << stmtAccessesPair->getStatement()->getSourceLocation().Line
                         << "\n";
 
             // Clear the new graph an process the current statements again

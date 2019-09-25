@@ -12,28 +12,17 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_ASTSTRINGIFER_H
-#define DAWN_IIR_ASTSTRINGIFER_H
-
-#include "dawn/AST/ASTStringifier.h"
-#include "dawn/IIR/ASTFwd.h"
+#include "dawn/IIR/ASTStmt.h"
+#include <memory>
 
 namespace dawn {
 namespace iir {
-//
-// TODO refactor_AST: this is TEMPORARY, will be removed in the future
-//
-using ASTStringifier = ast::ASTStringifier;
-extern inline std::ostream& operator<<(std::ostream& os, const AST& ast) {
-  return ast::operator<<(os, ast);
-}
-extern inline std::ostream& operator<<(std::ostream& os, const std::shared_ptr<Stmt>& expr) {
-  return ast::operator<<(os, expr);
-}
-extern inline std::ostream& operator<<(std::ostream& os, const std::shared_ptr<Expr>& stmt) {
-  return ast::operator<<(os, stmt);
+
+bool IIRStmtData::operator==(const IIRStmtData& rhs) { return StackTrace == rhs.StackTrace; }
+bool IIRStmtData::operator!=(const IIRStmtData& rhs) { return !(*this == rhs); }
+
+std::unique_ptr<ast::StmtData> IIRStmtData::clone() const {
+  return make_unique<IIRStmtData>(*this);
 }
 } // namespace iir
 } // namespace dawn
-
-#endif

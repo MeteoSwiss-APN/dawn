@@ -16,11 +16,15 @@
 #define DAWN_SIR_AST_H
 
 #include "dawn/AST/AST.h"
+#include "dawn/SIR/ASTStmt.h"
 
 namespace dawn {
 namespace sir {
+inline std::shared_ptr<ast::AST> makeAST() {
+  return std::make_shared<ast::AST>(make_unique<SIRStmtData>());
+}
 //
-// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
+// TODO refactor_AST: this is TEMPORARY, will be removed in the future
 //
 using AST = ast::AST;
 } // namespace sir

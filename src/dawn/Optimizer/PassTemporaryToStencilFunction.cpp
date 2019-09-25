@@ -267,9 +267,9 @@ public:
       DAWN_ASSERT(tmpFunction_);
 
       auto functionExpr = expr->getRight()->clone();
-      auto retStmt = std::make_shared<iir::ReturnStmt>(functionExpr);
+      auto retStmt = iir::makeReturnStmt(functionExpr);
 
-      std::shared_ptr<iir::BlockStmt> root = std::make_shared<iir::BlockStmt>();
+      std::shared_ptr<iir::BlockStmt> root = iir::makeBlockStmt();
       root->push_back(retStmt);
       std::shared_ptr<iir::AST> ast = std::make_shared<iir::AST>(root);
       tmpFunction_->Asts.push_back(ast);
@@ -299,7 +299,7 @@ protected:
   std::unordered_map<int, TemporaryFunctionProperties> const& temporaryFieldAccessIDToFunctionCall_;
   const iir::Interval interval_;
   const sir::Interval sirInterval_;
-  std::shared_ptr<std::vector<ast::StencilCall*>> stackTrace_;
+  const std::vector<ast::StencilCall*>& stackTrace_;
   std::shared_ptr<iir::Expr> skip_;
 
   // the prop of the arguments of nested stencil functions
@@ -316,8 +316,7 @@ public:
                  OptimizerContext& context,
                  std::unordered_map<int, TemporaryFunctionProperties> const&
                      temporaryFieldAccessIDToFunctionCall,
-                 const iir::Interval& interval,
-                 std::shared_ptr<std::vector<ast::StencilCall*>> stackTrace)
+                 const iir::Interval& interval, const std::vector<ast::StencilCall*>& stackTrace)
       : stencilInstantiation_(stencilInstantiation), metadata_(stencilInstantiation->getMetaData()),
         context_(context),
         temporaryFieldAccessIDToFunctionCall_(temporaryFieldAccessIDToFunctionCall),
@@ -465,13 +464,8 @@ public:
       }
     }
 
-    auto asir = std::make_shared<SIR>();
-    for(const auto& sf : stencilInstantiation_->getIIR()->getStencilFunctions()) {
-      asir->StencilFunctions.push_back(sf);
-    }
-
     // recompute the list of <statement, accesses> pairs
-    StatementMapper statementMapper(asir, stencilInstantiation_.get(), context_, stackTrace_,
+    StatementMapper statementMapper(stencilInstantiation_.get(), context_, stackTrace_,
                                     *(cloneStencilFun->getDoMethod()), interval_, fieldsMap,
                                     cloneStencilFun);
 
@@ -595,9 +589,8 @@ bool PassTemporaryToStencilFunction::run(
             doMethodIt != (*stageIt)->childrenREnd(); doMethodIt++) {
           for(auto stmtAccessPairIt = (*doMethodIt)->childrenRBegin();
               stmtAccessPairIt != (*doMethodIt)->childrenREnd(); stmtAccessPairIt++) {
-            const std::shared_ptr<Statement> stmt = (*stmtAccessPairIt)->getStatement();
 
-            stmt->ASTStmt->acceptAndReplace(localVariablePromotion);
+            (*stmtAccessPairIt)->getStatement()->acceptAndReplace(localVariablePromotion);
           }
         }
       }
@@ -632,16 +625,16 @@ bool PassTemporaryToStencilFunction::run(
             }
 
             for(const auto& stmtAccessPair : doMethodPtr->getChildren()) {
-              const std::shared_ptr<Statement> stmt = stmtAccessPair->getStatement();
+              const std::shared_ptr<iir::Stmt> stmt = stmtAccessPair->getStatement();
 
-              DAWN_ASSERT((stmt->ASTStmt->getKind() != iir::Stmt::SK_ReturnStmt) &&
-                          (stmt->ASTStmt->getKind() != iir::Stmt::SK_StencilCallDeclStmt) &&
-                          (stmt->ASTStmt->getKind() != iir::Stmt::SK_VerticalRegionDeclStmt) &&
-                          (stmt->ASTStmt->getKind() != iir::Stmt::SK_BoundaryConditionDeclStmt));
+              DAWN_ASSERT((stmt->getKind() != iir::Stmt::SK_ReturnStmt) &&
+                          (stmt->getKind() != iir::Stmt::SK_StencilCallDeclStmt) &&
+                          (stmt->getKind() != iir::Stmt::SK_VerticalRegionDeclStmt) &&
+                          (stmt->getKind() != iir::Stmt::SK_BoundaryConditionDeclStmt));
 
               // We exclude blocks or If/Else stmt
-              if((stmt->ASTStmt->getKind() != iir::Stmt::SK_ExprStmt) &&
-                 (stmt->ASTStmt->getKind() != iir::Stmt::SK_VarDeclStmt)) {
+              if((stmt->getKind() != iir::Stmt::SK_ExprStmt) &&
+                 (stmt->getKind() != iir::Stmt::SK_VarDeclStmt)) {
                 continue;
               }
 
@@ -650,11 +643,13 @@ bool PassTemporaryToStencilFunction::run(
                 const iir::Interval& doMethodInterval = doMethodPtr->getInterval();
                 const sir::Interval sirInterval = intervalToSIRInterval(interval);
 
+                DAWN_ASSERT(stmt->getData<iir::IIRStmtData>().StackTrace);
+
                 // run the replacer visitor
                 TmpReplacement tmpReplacement(stencilInstantiation, context_,
                                               temporaryFieldExprToFunction, interval,
-                                              stmt->StackTrace);
-                stmt->ASTStmt->acceptAndReplace(tmpReplacement);
+                                              *stmt->getData<iir::IIRStmtData>().StackTrace);
+                stmt->acceptAndReplace(tmpReplacement);
 
                 // flag if a least a tmp has been replaced within this stage
                 isATmpReplaced = isATmpReplaced || (tmpReplacement.getNumTmpReplaced() != 0);
@@ -663,17 +658,13 @@ bool PassTemporaryToStencilFunction::run(
 
                   iir::DoMethod tmpStmtDoMethod(doMethodInterval, metadata);
 
-                  auto asir = std::make_shared<SIR>();
-                  for(const auto sf : stencilInstantiation->getIIR()->getStencilFunctions()) {
-                    asir->StencilFunctions.push_back(sf);
-                  }
                   StatementMapper statementMapper(
-                      asir, stencilInstantiation.get(), context_, stmt->StackTrace, tmpStmtDoMethod,
-                      sirInterval, stencilInstantiation->getMetaData().getNameToAccessIDMap(),
-                      nullptr);
+                      stencilInstantiation.get(), context_,
+                      *stmt->getData<iir::IIRStmtData>().StackTrace, tmpStmtDoMethod, sirInterval,
+                      stencilInstantiation->getMetaData().getNameToAccessIDMap(), nullptr);
 
-                  std::shared_ptr<iir::BlockStmt> blockStmt = std::make_shared<iir::BlockStmt>(
-                      std::vector<std::shared_ptr<iir::Stmt>>{stmt->ASTStmt});
+                  std::shared_ptr<iir::BlockStmt> blockStmt =
+                      iir::makeBlockStmt(std::vector<std::shared_ptr<iir::Stmt>>{stmt});
                   blockStmt->accept(statementMapper);
 
                   DAWN_ASSERT(tmpStmtDoMethod.getChildren().size() == 1);
@@ -688,7 +679,7 @@ bool PassTemporaryToStencilFunction::run(
 
                 // find patterns like tmp = fn(args)...;
                 TmpAssignment tmpAssignment(metadata, sirInterval, skipAccessIDsOfMS);
-                stmt->ASTStmt->acceptAndReplace(tmpAssignment);
+                stmt->acceptAndReplace(tmpAssignment);
                 if(tmpAssignment.foundTemporaryToReplace()) {
                   std::shared_ptr<sir::StencilFunction> stencilFunction =
                       tmpAssignment.temporaryStencilFunction();

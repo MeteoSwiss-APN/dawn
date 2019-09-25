@@ -1,6 +1,6 @@
 namespace dawn_generated{
 namespace cuda{
-__global__ void __launch_bounds__(32)  tridiagonal_solve_stencil53_ms106_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, gridtools::clang::float_type * const a, gridtools::clang::float_type * const b, gridtools::clang::float_type * const c, gridtools::clang::float_type * const d) {
+__global__ void __launch_bounds__(32)  tridiagonal_solve_stencil49_ms71_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, gridtools::clang::float_type * const a, gridtools::clang::float_type * const b, gridtools::clang::float_type * const c, gridtools::clang::float_type * const d) {
 
   // Start kernel
   gridtools::clang::float_type c_kcache[2];
@@ -84,9 +84,9 @@ if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= bloc
       c_kcache[1] =c[idx111];
       d_kcache[1] =d[idx111];
   }  if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= block_size_j -1 + 0) {
-int __local_m_102 = ((gridtools::clang::float_type) 1.0 / (__ldg(&(b[idx111])) - (__ldg(&(a[idx111])) * c_kcache[0])));
-c_kcache[1] = (c_kcache[1] * __local_m_102);
-d_kcache[1] = ((d_kcache[1] - (__ldg(&(a[idx111])) * d_kcache[0])) * __local_m_102);
+int __local_m_67 = ((gridtools::clang::float_type) 1.0 / (__ldg(&(b[idx111])) - (__ldg(&(a[idx111])) * c_kcache[0])));
+c_kcache[1] = (c_kcache[1] * __local_m_67);
+d_kcache[1] = ((d_kcache[1] - (__ldg(&(a[idx111])) * d_kcache[0])) * __local_m_67);
   }
     // Flush of kcaches
 
@@ -113,7 +113,7 @@ if(iblock >= 0 && iblock <= block_size_i -1 + 0 && jblock >= 0 && jblock <= bloc
 
   // Final flush of kcaches
 }
-__global__ void __launch_bounds__(32)  tridiagonal_solve_stencil53_ms107_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, gridtools::clang::float_type * const c, gridtools::clang::float_type * const d) {
+__global__ void __launch_bounds__(32)  tridiagonal_solve_stencil49_ms72_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, gridtools::clang::float_type * const c, gridtools::clang::float_type * const d) {
 
   // Start kernel
   gridtools::clang::float_type d_kcache[2];
@@ -216,7 +216,7 @@ public:
     }
   };
 
-  struct stencil_53 : public sbase {
+  struct stencil_49 : public sbase {
 
     // Members
 
@@ -235,9 +235,9 @@ public:
     // temporary storage declarations
   public:
 
-    stencil_53(const gridtools::clang::domain& dom_, storage_ijk_t& a_, storage_ijk_t& b_, storage_ijk_t& c_, storage_ijk_t& d_) : sbase("stencil_53"), m_dom(dom_), m_a(a_), m_b(b_), m_c(c_), m_d(d_){}
+    stencil_49(const gridtools::clang::domain& dom_, storage_ijk_t& a_, storage_ijk_t& b_, storage_ijk_t& c_, storage_ijk_t& d_) : sbase("stencil_49"), m_dom(dom_), m_a(a_), m_b(b_), m_c(c_), m_d(d_){}
 
-    ~stencil_53() {
+    ~stencil_49() {
     }
 
     void sync_storages() {
@@ -264,7 +264,7 @@ public:
       const unsigned int nby = (ny + 1 - 1) / 1;
       const unsigned int nbz = 1;
       dim3 blocks(nbx, nby, nbz);
-      tridiagonal_solve_stencil53_ms106_kernel<<<blocks, threads>>>(nx,ny,nz,m_a.strides()[1],m_a.strides()[2],(a.data()+m_a.get_storage_info_ptr()->index(a.begin<0>(), a.begin<1>(),0 )),(b.data()+m_b.get_storage_info_ptr()->index(b.begin<0>(), b.begin<1>(),0 )),(c.data()+m_c.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+m_d.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )));
+      tridiagonal_solve_stencil49_ms71_kernel<<<blocks, threads>>>(nx,ny,nz,m_a.strides()[1],m_a.strides()[2],(a.data()+m_a.get_storage_info_ptr()->index(a.begin<0>(), a.begin<1>(),0 )),(b.data()+m_b.get_storage_info_ptr()->index(b.begin<0>(), b.begin<1>(),0 )),(c.data()+m_c.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+m_d.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )));
       };
       {;
       gridtools::data_view<storage_ijk_t> c= gridtools::make_device_view(m_c);
@@ -277,7 +277,7 @@ public:
       const unsigned int nby = (ny + 1 - 1) / 1;
       const unsigned int nbz = 1;
       dim3 blocks(nbx, nby, nbz);
-      tridiagonal_solve_stencil53_ms107_kernel<<<blocks, threads>>>(nx,ny,nz,m_c.strides()[1],m_c.strides()[2],(c.data()+m_c.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+m_d.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )));
+      tridiagonal_solve_stencil49_ms72_kernel<<<blocks, threads>>>(nx,ny,nz,m_c.strides()[1],m_c.strides()[2],(c.data()+m_c.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+m_d.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )));
       };
 
       // stopping timers
@@ -289,7 +289,7 @@ public:
     }
   };
   static constexpr const char* s_name = "tridiagonal_solve";
-  sbase* m_stencil_53;
+  sbase* m_stencil_49;
 public:
 
   tridiagonal_solve(const tridiagonal_solve&) = delete;
@@ -298,17 +298,17 @@ public:
 
   // Stencil-Data
 
-  tridiagonal_solve(const gridtools::clang::domain& dom, storage_ijk_t& a, storage_ijk_t& b, storage_ijk_t& c, storage_ijk_t& d) : m_stencil_53(new stencil_53(dom,a,b,c,d) ){}
+  tridiagonal_solve(const gridtools::clang::domain& dom, storage_ijk_t& a, storage_ijk_t& b, storage_ijk_t& c, storage_ijk_t& d) : m_stencil_49(new stencil_49(dom,a,b,c,d) ){}
 
   void run() {
     sync_storages();
-    m_stencil_53->run();
+    m_stencil_49->run();
 ;
     sync_storages();
   }
 
   void sync_storages() {
-    m_stencil_53->sync_storages();
+    m_stencil_49->sync_storages();
   }
 
   std::string get_name()  const {
@@ -316,11 +316,11 @@ public:
   }
 
   std::vector<sbase*> getStencils() {
-    return std::vector<sbase*>({m_stencil_53});
+    return std::vector<sbase*>({m_stencil_49});
   }
 
   void reset_meters() {
-m_stencil_53->reset();  }
+m_stencil_49->reset();  }
 };
 } // namespace cuda
 } // namespace dawn_generated

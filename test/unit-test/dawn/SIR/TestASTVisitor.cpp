@@ -84,7 +84,7 @@ protected:
   std::shared_ptr<sir::BlockStmt> blockStmt_;
 
   void SetUp() override {
-    blockStmt_ = std::make_shared<sir::BlockStmt>();
+    blockStmt_ = sir::makeBlockStmt();
 
     // pi = {3.14, 3.14, 3.14};
     Type floatType(BuiltinTypeID::Float);
@@ -92,7 +92,7 @@ protected:
         std::make_shared<sir::LiteralAccessExpr>("3.14", BuiltinTypeID::Float);
     std::vector<std::shared_ptr<sir::Expr>> initList = {pi, pi, pi};
     std::shared_ptr<sir::VarDeclStmt> varDcl =
-        std::make_shared<sir::VarDeclStmt>(floatType, "u1", 3, "=", initList);
+        sir::makeVarDeclStmt(floatType, "u1", 3, "=", initList);
 
     blockStmt_->push_back(varDcl);
 
@@ -111,7 +111,7 @@ protected:
         std::make_shared<sir::BinaryOperator>(f2, "+", varAccess);
     std::shared_ptr<sir::AssignmentExpr> assignExpr =
         std::make_shared<sir::AssignmentExpr>(f1, rightExpr);
-    std::shared_ptr<sir::ExprStmt> exprStmt1 = std::make_shared<sir::ExprStmt>(assignExpr);
+    std::shared_ptr<sir::ExprStmt> exprStmt1 = sir::makeExprStmt(assignExpr);
 
     blockStmt_->push_back(exprStmt1);
 
@@ -123,12 +123,12 @@ protected:
 
     std::shared_ptr<sir::BinaryOperator> equal =
         std::make_shared<sir::BinaryOperator>(varAccess1, "==", val0);
-    std::shared_ptr<sir::ExprStmt> condStmt = std::make_shared<sir::ExprStmt>(equal);
-    std::shared_ptr<sir::ReturnStmt> returnIf = std::make_shared<sir::ReturnStmt>(f1);
-    std::shared_ptr<sir::ReturnStmt> returnElse = std::make_shared<sir::ReturnStmt>(f2);
+    std::shared_ptr<sir::ExprStmt> condStmt = sir::makeExprStmt(equal);
+    std::shared_ptr<sir::ReturnStmt> returnIf = sir::makeReturnStmt(f1);
+    std::shared_ptr<sir::ReturnStmt> returnElse = sir::makeReturnStmt(f2);
 
     std::shared_ptr<sir::IfStmt> ifStmt =
-        std::make_shared<sir::IfStmt>(condStmt, returnIf, returnElse);
+        sir::makeIfStmt(condStmt, returnIf, returnElse);
     blockStmt_->push_back(ifStmt);
   }
 };
@@ -205,15 +205,15 @@ public:
     std::shared_ptr<sir::BinaryOperator> op =
         std::dynamic_pointer_cast<sir::BinaryOperator>(stmt->getCondExpr());
 
-    std::shared_ptr<sir::ExprStmt> gt = std::make_shared<sir::ExprStmt>(
+    std::shared_ptr<sir::ExprStmt> gt = sir::makeExprStmt(
         std::make_shared<sir::BinaryOperator>(op->getLeft(), ">=", op->getRight()));
 
     std::shared_ptr<sir::ExprStmt> ifStmt =
-        std::make_shared<sir::ExprStmt>(std::make_shared<sir::NOPExpr>());
+        sir::makeExprStmt(std::make_shared<sir::NOPExpr>());
     std::shared_ptr<sir::ExprStmt> elseStmt =
-        std::make_shared<sir::ExprStmt>(std::make_shared<sir::NOPExpr>());
+        sir::makeExprStmt(std::make_shared<sir::NOPExpr>());
 
-    return std::make_shared<sir::IfStmt>(gt, ifStmt, elseStmt);
+    return sir::makeIfStmt(gt, ifStmt, elseStmt);
   }
 };
 
