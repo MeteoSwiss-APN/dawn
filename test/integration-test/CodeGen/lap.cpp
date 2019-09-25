@@ -24,7 +24,7 @@ stencil lap {
   Do {
     vertical_region(k_start, k_end) {
       tmp = in[j - 2] + in[j + 2] + in[i - 2] + in[i + 2];
-      out = tmp[i + 1] + tmp[j + 1] + tmp[i - 1] + tmp[i - 1];
+      out = tmp[j - 1] + tmp[j + 1] + tmp[i - 1] + tmp[i + 1];
     }
   }
 };
