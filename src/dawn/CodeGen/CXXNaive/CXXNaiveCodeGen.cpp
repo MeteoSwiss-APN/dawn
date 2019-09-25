@@ -129,7 +129,7 @@ void CXXNaiveCodeGen::generateStencilWrapperRun(
   stencilDescCGVisitor.setIndent(RunMethod.getIndent());
   for(const auto& statement :
       stencilInstantiation->getIIR()->getControlFlowDescriptor().getStatements()) {
-    statement->ASTStmt->accept(stencilDescCGVisitor);
+    statement->accept(stencilDescCGVisitor);
     RunMethod.addStatement(stencilDescCGVisitor.getCodeAndResetStream());
   }
 
@@ -408,7 +408,7 @@ void CXXNaiveCodeGen::generateStencilClasses(
                               if(!doMethod.getInterval().overlaps(interval))
                                 continue;
                               for(const auto& statementAccessesPair : doMethod.getChildren()) {
-                                statementAccessesPair->getStatement()->ASTStmt->accept(
+                                statementAccessesPair->getStatement()->accept(
                                     stencilBodyCXXVisitor);
                                 StencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
                               }
@@ -518,7 +518,7 @@ void CXXNaiveCodeGen::generateStencilFunctions(
       stencilBodyCXXVisitor.setCurrentStencilFunction(stencilFun);
       stencilBodyCXXVisitor.setIndent(stencilFunMethod.getIndent());
       for(const auto& statementAccessesPair : stencilFun->getStatementAccessesPairs()) {
-        statementAccessesPair->getStatement()->ASTStmt->accept(stencilBodyCXXVisitor);
+        statementAccessesPair->getStatement()->accept(stencilBodyCXXVisitor);
         stencilFunMethod.indentStatment();
         stencilFunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
       }

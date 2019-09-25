@@ -13,11 +13,11 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/Replacing.h"
+#include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTUtil.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/SIR/Statement.h"
 #include <unordered_map>
 
 namespace dawn {
@@ -71,7 +71,7 @@ void replaceFieldWithVarAccessInStmts(
   for(const auto& statementAccessesPair : statementAccessesPairs) {
     visitor.reset();
 
-    const auto& stmt = statementAccessesPair->getStatement()->ASTStmt;
+    const auto& stmt = statementAccessesPair->getStatement();
     stmt->accept(visitor);
 
     for(auto& oldExpr : visitor.getFieldAccessExprToReplace()) {
@@ -94,7 +94,7 @@ void replaceVarWithFieldAccessInStmts(
   for(const auto& statementAccessesPair : statementAccessesPairs) {
     visitor.reset();
 
-    const auto& stmt = statementAccessesPair->getStatement()->ASTStmt;
+    const auto& stmt = statementAccessesPair->getStatement();
     stmt->accept(visitor);
 
     for(auto& oldExpr : visitor.getVarAccessesToReplace()) {
@@ -139,10 +139,8 @@ void replaceStencilCalls(const std::shared_ptr<iir::StencilInstantiation>& insta
                          int oldStencilID, const std::vector<int>& newStencilIDs) {
   GetStencilCalls visitor(instantiation, oldStencilID);
 
-  for(auto& statement : instantiation->getIIR()->getControlFlowDescriptor().getStatements()) {
+  for(auto& stmt : instantiation->getIIR()->getControlFlowDescriptor().getStatements()) {
     visitor.reset();
-
-    std::shared_ptr<iir::Stmt>& stmt = statement->ASTStmt;
 
     stmt->accept(visitor);
     for(auto& oldStencilCall : visitor.getStencilCallsToReplace()) {
@@ -152,11 +150,11 @@ void replaceStencilCalls(const std::shared_ptr<iir::StencilInstantiation>& insta
       for(int StencilID : newStencilIDs) {
         auto placeholderStencil = std::make_shared<ast::StencilCall>(
             iir::InstantiationHelper::makeStencilCallCodeGenName(StencilID));
-        newStencilCalls.push_back(std::make_shared<iir::StencilCallDeclStmt>(placeholderStencil));
+        newStencilCalls.push_back(iir::makeStencilCallDeclStmt(placeholderStencil));
       }
 
       // Bundle all the statements in a block statements
-      auto newBlockStmt = std::make_shared<iir::BlockStmt>();
+      auto newBlockStmt = iir::makeBlockStmt();
       std::copy(newStencilCalls.begin(), newStencilCalls.end(),
                 std::back_inserter(newBlockStmt->getStatements()));
 

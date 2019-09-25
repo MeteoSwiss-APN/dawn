@@ -12,23 +12,13 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_IIR_ASTVISITOR_H
-#define DAWN_IIR_ASTVISITOR_H
-
-#include "dawn/AST/ASTVisitor.h"
+#include "dawn/SIR/ASTStmt.h"
+#include <memory>
 
 namespace dawn {
-namespace iir {
-//
-// TODO refactor_AST: this is TEMPORARY, will be removed in the future
-//
-using ASTVisitor = ast::ASTVisitor;
-using ASTVisitorNonConst = ast::ASTVisitorNonConst;
-using ASTVisitorForwarding = ast::ASTVisitorForwarding;
-using ASTVisitorPostOrder = ast::ASTVisitorPostOrder;
-using ASTVisitorForwardingNonConst = ast::ASTVisitorForwardingNonConst;
-using ASTVisitorDisabled = ast::ASTVisitorDisabled;
-} // namespace iir
+namespace sir {
+std::unique_ptr<ast::StmtData> SIRStmtData::clone() const {
+  return make_unique<SIRStmtData>(*this);
+}
+} // namespace sir
 } // namespace dawn
-
-#endif

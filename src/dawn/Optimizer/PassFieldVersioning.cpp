@@ -67,12 +67,12 @@ static bool isHorizontalStencilOrCounterLoopOrderExtent(const iir::Extents& exte
 }
 
 /// @brief Report a race condition in the given `statement`
-static void reportRaceCondition(const Statement& statement,
+static void reportRaceCondition(const iir::Stmt& statement,
                                 iir::StencilInstantiation& instantiation,
                                 OptimizerContext& context) {
-  DiagnosticsBuilder diag(DiagnosticsKind::Error, statement.ASTStmt->getSourceLocation());
+  DiagnosticsBuilder diag(DiagnosticsKind::Error, statement.getSourceLocation());
 
-  if(isa<iir::IfStmt>(statement.ASTStmt.get())) {
+  if(isa<iir::IfStmt>(&statement)) {
     diag << "unresolvable race-condition in body of if-statement";
   } else {
     diag << "unresolvable race-condition in statement";
@@ -81,8 +81,9 @@ static void reportRaceCondition(const Statement& statement,
   context.getDiagnostics().report(diag);
 
   // Print stack trace of stencil calls
-  if(statement.StackTrace) {
-    std::vector<ast::StencilCall*>& stackTrace = *statement.StackTrace;
+  if(statement.getData<iir::IIRStmtData>().StackTrace) {
+    const std::vector<ast::StencilCall*>& stackTrace =
+        *statement.getData<iir::IIRStmtData>().StackTrace;
     for(int i = stackTrace.size() - 1; i >= 0; --i) {
       DiagnosticsBuilder note(DiagnosticsKind::Note, stackTrace[i]->Loc);
       note << "detected during instantiation of stencil-call '" << stackTrace[i]->Callee << "'";
@@ -165,7 +166,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   using Vertex = iir::DependencyGraphAccesses::Vertex;
   using Edge = iir::DependencyGraphAccesses::Edge;
 
-  Statement& statement = *doMethod.getChildren()[index]->getStatement();
+  iir::Stmt& statement = *doMethod.getChildren()[index]->getStatement();
 
   int numRenames = 0;
 
@@ -235,7 +236,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
   // we cannot perform any double buffering (e.g if there is a problem inside an `IfStmt`, nothing
   // we can do (yet ;))
   iir::AssignmentExpr* assignment = nullptr;
-  if(iir::ExprStmt* stmt = dyn_cast<iir::ExprStmt>(statement.ASTStmt.get()))
+  if(iir::ExprStmt* stmt = dyn_cast<iir::ExprStmt>(&statement))
     assignment = dyn_cast<iir::AssignmentExpr>(stmt->getExpr().get());
 
   if(!assignment) {
@@ -273,7 +274,7 @@ PassFieldVersioning::RCKind PassFieldVersioning::fixRaceCondition(
 
   if(context_.getOptions().ReportPassFieldVersioning)
     std::cout << "\nPASS: " << getName() << ": " << instantiation->getName()
-              << ": rename:" << statement.ASTStmt->getSourceLocation().Line;
+              << ": rename:" << statement.getSourceLocation().Line;
 
   // Create a new multi-versioned field and rename all occurences
   for(int oldAccessID : renameCandiates) {

@@ -18,13 +18,13 @@
 
 namespace dawn {
 StatementMapper::StatementMapper(
-    const std::shared_ptr<SIR>& fullSIR, iir::StencilInstantiation* instantiation,
-    OptimizerContext& context, const std::shared_ptr<std::vector<ast::StencilCall*>>& stackTrace,
-    iir::DoMethod& doMethod, const iir::Interval& interval,
+    iir::StencilInstantiation* instantiation, OptimizerContext& context,
+    const std::vector<ast::StencilCall*>& stackTrace, iir::DoMethod& doMethod,
+    const iir::Interval& interval,
     const std::unordered_map<std::string, int>& localFieldnameToAccessIDMap,
     const std::shared_ptr<iir::StencilFunctionInstantiation> stencilFunctionInstantiation)
-    : sir_(fullSIR), instantiation_(instantiation), metadata_(instantiation->getMetaData()),
-      context_(context), stackTrace_(stackTrace) {
+    : instantiation_(instantiation), metadata_(instantiation->getMetaData()), context_(context),
+      stackTrace_(stackTrace) {
 
   // Create the initial scope
   scope_.push(std::make_shared<Scope>(doMethod, interval, stencilFunctionInstantiation));
@@ -41,15 +41,17 @@ void StatementMapper::appendNewStatementAccessesPair(const std::shared_ptr<iir::
   if(scope_.top()->ScopeDepth == 1) {
     // The top-level block statement is collapsed thus we only insert at 1. Note that this works
     // because all AST have a block statement as root node.
-    scope_.top()->doMethod_.insertChild(
-        make_unique<iir::StatementAccessesPair>(std::make_shared<Statement>(stmt, stackTrace_)));
+    stmt->getData<iir::IIRStmtData>().StackTrace =
+        boost::optional<std::vector<ast::StencilCall*>>(stackTrace_);
+    scope_.top()->doMethod_.insertChild(make_unique<iir::StatementAccessesPair>(stmt));
     scope_.top()->CurentStmtAccessesPair.push(&(*(scope_.top()->doMethod_.childrenRBegin())));
 
   } else if(scope_.top()->ScopeDepth > 1) {
     // We are inside a nested block statement, we add the stmt as a child of the parent statement
+    stmt->getData<iir::IIRStmtData>().StackTrace =
+        boost::optional<std::vector<ast::StencilCall*>>(stackTrace_);
     (*scope_.top()->CurentStmtAccessesPair.top())
-        ->insertBlockStatement(make_unique<iir::StatementAccessesPair>(
-            std::make_shared<Statement>(stmt, stackTrace_)));
+        ->insertBlockStatement(make_unique<iir::StatementAccessesPair>(stmt));
 
     const std::unique_ptr<iir::StatementAccessesPair>& lp =
         ((*scope_.top()->CurentStmtAccessesPair.top())->getBlockStatements().back());
@@ -212,13 +214,13 @@ void StatementMapper::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr
   std::shared_ptr<iir::StencilFunctionInstantiation> stencilFun = nullptr;
   const iir::Interval& interval = scope_.top()->VerticalInterval;
 
-  for(auto& SIRStencilFun : sir_->StencilFunctions) {
-    if(SIRStencilFun->Name == expr->getCallee()) {
+  for(auto& iirStencilFun : instantiation_->getIIR()->getStencilFunctions()) {
+    if(iirStencilFun->Name == expr->getCallee()) {
 
       std::shared_ptr<iir::AST> ast = nullptr;
-      if(SIRStencilFun->isSpecialized()) {
+      if(iirStencilFun->isSpecialized()) {
         // Select the correct overload
-        ast = SIRStencilFun->getASTOfInterval(interval.asSIRInterval());
+        ast = iirStencilFun->getASTOfInterval(interval.asSIRInterval());
         if(ast == nullptr) {
           DiagnosticsBuilder diag(DiagnosticsKind::Error, expr->getSourceLocation());
           diag << "no viable Do-Method overload for stencil function call '" << expr->getCallee()
@@ -227,7 +229,7 @@ void StatementMapper::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr
           dawn_unreachable("no viable do-method overload for stencil function call");
         }
       } else {
-        ast = SIRStencilFun->Asts.front();
+        ast = iirStencilFun->Asts.front();
       }
 
       // Clone the AST s.t each stencil function has their own AST which is modifiable
@@ -235,7 +237,7 @@ void StatementMapper::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr
 
       // TODO decouple the funciton of stencil function instantiation from the statement mapper
       stencilFun = instantiation_->makeStencilFunctionInstantiation(
-          expr, SIRStencilFun, ast, interval, scope_.top()->FunctionInstantiation);
+          expr, iirStencilFun, ast, interval, scope_.top()->FunctionInstantiation);
       break;
     }
   }
@@ -331,9 +333,9 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
       auto newExpr = std::make_shared<iir::LiteralAccessExpr>(
           value.toString(), sir::Value::typeToBuiltinTypeID(value.getType()));
       iir::replaceOldExprWithNewExprInStmt(
-          (*(scope_.top()->doMethod_.childrenRBegin()))->getStatement()->ASTStmt, expr, newExpr);
+          (*(scope_.top()->doMethod_.childrenRBegin()))->getStatement(), expr, newExpr);
 
-      //if a global is replaced by its value it becomes a de-facto literal negate access id
+      // if a global is replaced by its value it becomes a de-facto literal negate access id
       int AccessID = -instantiation_->nextUID();
 
       metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID,
