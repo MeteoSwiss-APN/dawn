@@ -18,7 +18,6 @@
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/SIR/SIR.h"
-#include "dawn/SIR/Statement.h"
 #include <functional>
 #include <list>
 #include <memory>

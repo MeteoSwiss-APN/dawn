@@ -29,6 +29,8 @@ yoda_add_library(
           PassFieldVersioning.h
           PassInlining.cpp
           PassInlining.h
+          PassIntervalPartitioner.cpp
+          PassIntervalPartitioner.h
           PassManager.cpp   
           PassManager.h 
           PassMultiStageSplitter.cpp

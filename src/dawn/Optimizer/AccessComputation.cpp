@@ -473,7 +473,7 @@ void computeAccesses(iir::StencilInstantiation* instantiation,
   for(const auto& statementAccessesPair : statementAccessesPairs) {
     DAWN_ASSERT(instantiation);
     AccessMapper mapper(instantiation->getMetaData(), statementAccessesPair, nullptr);
-    statementAccessesPair->getStatement()->ASTStmt->accept(mapper);
+    statementAccessesPair->getStatement()->accept(mapper);
   }
 }
 
@@ -483,7 +483,7 @@ void computeAccesses(
   for(const auto& statementAccessesPair : statementAccessesPairs) {
     AccessMapper mapper(stencilFunctionInstantiation->getStencilInstantiation()->getMetaData(),
                         statementAccessesPair, stencilFunctionInstantiation);
-    statementAccessesPair->getStatement()->ASTStmt->accept(mapper);
+    statementAccessesPair->getStatement()->accept(mapper);
   }
 }
 

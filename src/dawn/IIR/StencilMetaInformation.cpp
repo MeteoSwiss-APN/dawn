@@ -60,7 +60,7 @@ void StencilMetaInformation::clone(const StencilMetaInformation& origin) {
   }
   for(const auto& pair : origin.fieldnameToBoundaryConditionMap_) {
     fieldnameToBoundaryConditionMap_.emplace(
-        pair.first, std::make_shared<iir::BoundaryConditionDeclStmt>(*(pair.second)));
+        pair.first, std::make_shared<ast::BoundaryConditionDeclStmt>(*(pair.second)));
     fieldIDToInitializedDimensionsMap_ = origin.fieldIDToInitializedDimensionsMap_;
   }
   stencilLocation_ = origin.stencilLocation_;

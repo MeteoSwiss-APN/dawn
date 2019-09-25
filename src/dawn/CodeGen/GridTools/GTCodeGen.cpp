@@ -289,7 +289,7 @@ void GTCodeGen::generateStencilWrapperRun(
   stencilDescCGVisitor.setIndent(RunMethod.getIndent());
   for(const auto& statement :
       stencilInstantiation->getIIR()->getControlFlowDescriptor().getStatements()) {
-    statement->ASTStmt->accept(stencilDescCGVisitor);
+    statement->accept(stencilDescCGVisitor);
     RunMethod << stencilDescCGVisitor.getCodeAndResetStream();
   }
 
@@ -577,7 +577,7 @@ void GTCodeGen::generateStencilClasses(
         stencilBodyCGVisitor.setCurrentStencilFunction(stencilFun);
         stencilBodyCGVisitor.setIndent(doMethod.getIndent());
         for(const auto& statementAccessesPair : stencilFun->getStatementAccessesPairs()) {
-          statementAccessesPair->getStatement()->ASTStmt->accept(stencilBodyCGVisitor);
+          statementAccessesPair->getStatement()->accept(stencilBodyCGVisitor);
           doMethod.indentStatment();
           doMethod << stencilBodyCGVisitor.getCodeAndResetStream();
         }
@@ -737,7 +737,7 @@ void GTCodeGen::generateStencilClasses(
 
           stencilBodyCGVisitor.setIndent(DoMethodCodeGen.getIndent());
           for(const auto& statementAccessesPair : doMethod.getChildren()) {
-            statementAccessesPair->getStatement()->ASTStmt->accept(stencilBodyCGVisitor);
+            statementAccessesPair->getStatement()->accept(stencilBodyCGVisitor);
             DoMethodCodeGen << stencilBodyCGVisitor.getCodeAndResetStream();
           }
         }

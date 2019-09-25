@@ -225,13 +225,12 @@ void Stage::updateGlobalVariablesInfo() {
         }
       }
 
-      const std::shared_ptr<Statement> statement = statementAccessesPair->getStatement();
+      const std::shared_ptr<iir::Stmt>& statement = statementAccessesPair->getStatement();
       DAWN_ASSERT(statement);
-      DAWN_ASSERT(statement->ASTStmt);
 
       // capture all the accesses to global accesses of stencil function called
       // from this statement
-      statement->ASTStmt->accept(functionCallGlobaParamVisitor);
+      statement->accept(functionCallGlobaParamVisitor);
     }
   }
 

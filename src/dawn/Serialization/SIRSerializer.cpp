@@ -477,7 +477,7 @@ static std::shared_ptr<sir::Stmt> makeStmt(const dawn::proto::statements::Stmt& 
   switch(statementProto.stmt_case()) {
   case dawn::proto::statements::Stmt::kBlockStmt: {
     const auto& stmtProto = statementProto.block_stmt();
-    auto stmt = std::make_shared<sir::BlockStmt>(makeLocation(stmtProto));
+    auto stmt = sir::makeBlockStmt(makeLocation(stmtProto));
 
     for(const auto& s : stmtProto.statements())
       stmt->push_back(makeStmt(s));
@@ -486,11 +486,11 @@ static std::shared_ptr<sir::Stmt> makeStmt(const dawn::proto::statements::Stmt& 
   }
   case dawn::proto::statements::Stmt::kExprStmt: {
     const auto& stmtProto = statementProto.expr_stmt();
-    return std::make_shared<sir::ExprStmt>(makeExpr(stmtProto.expr()), makeLocation(stmtProto));
+    return sir::makeExprStmt(makeExpr(stmtProto.expr()), makeLocation(stmtProto));
   }
   case dawn::proto::statements::Stmt::kReturnStmt: {
     const auto& stmtProto = statementProto.return_stmt();
-    return std::make_shared<sir::ReturnStmt>(makeExpr(stmtProto.expr()), makeLocation(stmtProto));
+    return sir::makeReturnStmt(makeExpr(stmtProto.expr()), makeLocation(stmtProto));
   }
   case dawn::proto::statements::Stmt::kVarDeclStmt: {
     const auto& stmtProto = statementProto.var_decl_stmt();
@@ -508,34 +508,31 @@ static std::shared_ptr<sir::Stmt> makeStmt(const dawn::proto::statements::Stmt& 
     Type type = typeProto.name().empty() ? Type(makeBuiltinTypeID(typeProto.builtin_type()), cvQual)
                                          : Type(typeProto.name(), cvQual);
 
-    return std::make_shared<sir::VarDeclStmt>(type, stmtProto.name(), stmtProto.dimension(),
-                                              stmtProto.op().c_str(), initList,
-                                              makeLocation(stmtProto));
+    return sir::makeVarDeclStmt(type, stmtProto.name(), stmtProto.dimension(),
+                                stmtProto.op().c_str(), initList, makeLocation(stmtProto));
   }
   case dawn::proto::statements::Stmt::kStencilCallDeclStmt: {
     const auto& stmtProto = statementProto.stencil_call_decl_stmt();
-    return std::make_shared<sir::StencilCallDeclStmt>(makeStencilCall(stmtProto.stencil_call()),
-                                                      makeLocation(stmtProto));
+    return sir::makeStencilCallDeclStmt(makeStencilCall(stmtProto.stencil_call()),
+                                        makeLocation(stmtProto));
   }
   case dawn::proto::statements::Stmt::kVerticalRegionDeclStmt: {
     const auto& stmtProto = statementProto.vertical_region_decl_stmt();
-    return std::make_shared<sir::VerticalRegionDeclStmt>(
-        makeVerticalRegion(stmtProto.vertical_region()), makeLocation(stmtProto));
+    return sir::makeVerticalRegionDeclStmt(makeVerticalRegion(stmtProto.vertical_region()),
+                                           makeLocation(stmtProto));
   }
   case dawn::proto::statements::Stmt::kBoundaryConditionDeclStmt: {
     const auto& stmtProto = statementProto.boundary_condition_decl_stmt();
-    auto stmt = std::make_shared<sir::BoundaryConditionDeclStmt>(stmtProto.functor(),
-                                                                 makeLocation(stmtProto));
+    auto stmt = sir::makeBoundaryConditionDeclStmt(stmtProto.functor(), makeLocation(stmtProto));
     for(const auto& fieldName : stmtProto.fields())
       stmt->getFields().emplace_back(fieldName);
     return stmt;
   }
   case dawn::proto::statements::Stmt::kIfStmt: {
     const auto& stmtProto = statementProto.if_stmt();
-    return std::make_shared<sir::IfStmt>(
-        makeStmt(stmtProto.cond_part()), makeStmt(stmtProto.then_part()),
-        stmtProto.has_else_part() ? makeStmt(stmtProto.else_part()) : nullptr,
-        makeLocation(stmtProto));
+    return sir::makeIfStmt(makeStmt(stmtProto.cond_part()), makeStmt(stmtProto.then_part()),
+                           stmtProto.has_else_part() ? makeStmt(stmtProto.else_part()) : nullptr,
+                           makeLocation(stmtProto));
   }
   case dawn::proto::statements::Stmt::STMT_NOT_SET:
   default:
@@ -545,11 +542,10 @@ static std::shared_ptr<sir::Stmt> makeStmt(const dawn::proto::statements::Stmt& 
 }
 
 static std::shared_ptr<sir::AST> makeAST(const dawn::proto::statements::AST& astProto) {
-  auto ast = std::make_shared<sir::AST>();
   auto root = dyn_pointer_cast<sir::BlockStmt>(makeStmt(astProto.root()));
   if(!root)
     throw std::runtime_error("root statement of AST is not a 'BlockStmt'");
-  ast->setRoot(root);
+  auto ast = std::make_shared<sir::AST>(root);
   return ast;
 }
 

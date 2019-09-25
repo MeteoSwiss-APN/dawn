@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/SIR/SIR.h"
+#include "dawn/SIR/AST.h"
 #include "dawn/SIR/ASTStringifier.h"
 #include "dawn/SIR/ASTVisitor.h"
 #include "dawn/Support/Casting.h"
@@ -534,7 +535,7 @@ std::ostream& operator<<(std::ostream& os, const Interval& interval) {
   return os;
 }
 
-Stencil::Stencil() : StencilDescAst(std::make_shared<sir::AST>()) {}
+Stencil::Stencil() : StencilDescAst(sir::makeAST()) {}
 
 CompareResult Field::comparison(const Field& rhs) const {
   if(rhs.IsTemporary != IsTemporary) {

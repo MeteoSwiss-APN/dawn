@@ -66,17 +66,17 @@ protected:
     //
     // Statements
     //
-    stmt_ExprStmt = std::make_shared<sir::ExprStmt>(std::make_shared<sir::VarAccessExpr>("foo"));
-    stmt_BlockStmt = std::make_shared<sir::BlockStmt>(std::vector<std::shared_ptr<sir::Stmt>>{
-        std::make_shared<sir::ExprStmt>(std::make_shared<sir::VarAccessExpr>("foo"))});
-    stmt_ReturnStmt = std::make_shared<sir::ReturnStmt>(std::make_shared<sir::VarAccessExpr>("foo"));
-    stmt_VarDeclStmt = std::make_shared<sir::VarDeclStmt>(
+    stmt_ExprStmt = sir::makeExprStmt(std::make_shared<sir::VarAccessExpr>("foo"));
+    stmt_BlockStmt = sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
+        sir::makeExprStmt(std::make_shared<sir::VarAccessExpr>("foo"))});
+    stmt_ReturnStmt = sir::makeReturnStmt(std::make_shared<sir::VarAccessExpr>("foo"));
+    stmt_VarDeclStmt = sir::makeVarDeclStmt(
         Type(BuiltinTypeID::Float), "var", 0, "=",
         std::vector<std::shared_ptr<sir::Expr>>{std::make_shared<sir::VarAccessExpr>("foo")});
-    stmt_IfStmt = std::make_shared<sir::IfStmt>(
-        std::make_shared<sir::ExprStmt>(std::make_shared<sir::VarAccessExpr>("foo1")),
-        std::make_shared<sir::ExprStmt>(std::make_shared<sir::VarAccessExpr>("foo2")),
-        std::make_shared<sir::ExprStmt>(std::make_shared<sir::VarAccessExpr>("foo3")));
+    stmt_IfStmt = sir::makeIfStmt(
+        sir::makeExprStmt(std::make_shared<sir::VarAccessExpr>("foo1")),
+        sir::makeExprStmt(std::make_shared<sir::VarAccessExpr>("foo2")),
+        sir::makeExprStmt(std::make_shared<sir::VarAccessExpr>("foo3")));
     //
     // Expressions
     //

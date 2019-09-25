@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===/
 
 #include "dawn/Optimizer/TemporaryHandling.h"
+#include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
@@ -43,7 +44,7 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
           ->getChildren()
           .at(lifetime.Begin.DoMethodIndex)
           ->getChildren();
-  std::shared_ptr<Statement> oldStatement =
+  std::shared_ptr<iir::Stmt> oldStatement =
       statementAccessesPairs[lifetime.Begin.StatementIndex]->getStatement();
 
   // The oldStmt has to be a `VarDeclStmt`. For example
@@ -54,7 +55,7 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
   //
   //   __tmp_foo(0, 0, 0) = ...
   //
-  iir::VarDeclStmt* varDeclStmt = dyn_cast<iir::VarDeclStmt>(oldStatement->ASTStmt.get());
+  iir::VarDeclStmt* varDeclStmt = dyn_cast<iir::VarDeclStmt>(oldStatement.get());
   // If the TemporaryScope is within this stencil, then a VarDecl should be found (otherwise we have
   // a bug)
   DAWN_ASSERT_MSG((varDeclStmt || temporaryScope == iir::TemporaryScope::TS_Field),
@@ -72,15 +73,16 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
     instantiation->getMetaData().insertExprToAccessID(fieldAccessExpr, accessID);
     auto assignmentExpr =
         std::make_shared<iir::AssignmentExpr>(fieldAccessExpr, varDeclStmt->getInitList().front());
-    auto exprStmt = std::make_shared<iir::ExprStmt>(assignmentExpr);
+    auto exprStmt = iir::makeExprStmt(assignmentExpr);
 
     // Replace the statement
-    statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(
-        std::make_shared<Statement>(exprStmt, oldStatement->StackTrace));
+    exprStmt->getData<iir::IIRStmtData>().StackTrace =
+        oldStatement->getData<iir::IIRStmtData>().StackTrace;
+    statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(exprStmt);
 
     // Remove the variable
     instantiation->getMetaData().removeAccessID(accessID);
-    instantiation->getMetaData().eraseStmtToAccessID(oldStatement->ASTStmt);
+    instantiation->getMetaData().eraseStmtToAccessID(oldStatement);
   }
   // Register the field
   instantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_StencilTemporary,
@@ -118,7 +120,7 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
           ->getChildren()
           .at(lifetime.Begin.DoMethodIndex)
           ->getChildren();
-  std::shared_ptr<Statement> oldStatement =
+  std::shared_ptr<iir::Stmt> oldStatement =
       statementAccessesPairs[lifetime.Begin.StatementIndex]->getStatement();
 
   // The oldStmt has to be an `ExprStmt` with an `AssignmentExpr`. For example
@@ -129,20 +131,21 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
   //
   //   double __local_foo = ...
   //
-  iir::ExprStmt* exprStmt = dyn_cast<iir::ExprStmt>(oldStatement->ASTStmt.get());
+  iir::ExprStmt* exprStmt = dyn_cast<iir::ExprStmt>(oldStatement.get());
   DAWN_ASSERT_MSG(exprStmt, "first access of field (i.e lifetime.Begin) is not an `ExprStmt`");
   iir::AssignmentExpr* assignmentExpr = dyn_cast<iir::AssignmentExpr>(exprStmt->getExpr().get());
   DAWN_ASSERT_MSG(assignmentExpr,
                   "first access of field (i.e lifetime.Begin) is not an `AssignmentExpr`");
 
   // Create the new `VarDeclStmt` which will replace the old `ExprStmt`
-  std::shared_ptr<iir::Stmt> varDeclStmt = std::make_shared<iir::VarDeclStmt>(
-      Type(BuiltinTypeID::Float), varname, 0, "=",
-      std::vector<std::shared_ptr<iir::Expr>>{assignmentExpr->getRight()});
+  std::shared_ptr<iir::Stmt> varDeclStmt =
+      iir::makeVarDeclStmt(Type(BuiltinTypeID::Float), varname, 0, "=",
+                           std::vector<std::shared_ptr<iir::Expr>>{assignmentExpr->getRight()});
 
   // Replace the statement
-  statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(
-      std::make_shared<Statement>(varDeclStmt, oldStatement->StackTrace));
+  varDeclStmt->getData<iir::IIRStmtData>().StackTrace =
+      oldStatement->getData<iir::IIRStmtData>().StackTrace;
+  statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(varDeclStmt);
 
   // Remove the field
   instantiation->getMetaData().removeAccessID(AccessID);

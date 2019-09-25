@@ -16,11 +16,11 @@
 """Horizontal diffusion stencil HIR generator
 
 This program creates the HIR corresponding to an horizontal diffusion stencil using the Python API of the HIR.
-The horizontal diffusion is a basic example that contains horizontal data dependencies that need to be resolved 
-by the compiler passes. 
-The code is meant as an example for high-level DSLs that could generate HIR from their own 
-internal IR. 
-The program contains two parts: 
+The horizontal diffusion is a basic example that contains horizontal data dependencies that need to be resolved
+by the compiler passes.
+The code is meant as an example for high-level DSLs that could generate HIR from their own
+internal IR.
+The program contains two parts:
     1. construct the HIR of the example
     2. pass the HIR to the dawn compiler in order to run all optimizer passes and code generation.
        In this example the compiler is configured with the CUDA backend, therefore will code generate
@@ -146,16 +146,39 @@ if options.verbose:
 hirstr = hir.SerializeToString()
 
 # create the options to control the compiler
+dawn.dawnOptionsCreate.restype = c_void_p
 options = dawn.dawnOptionsCreate()
+
 # we set the backend of the compiler to cuda
+dawn.dawnOptionsEntryCreateString.restype = c_void_p
+dawn.dawnOptionsEntryCreateString.argtypes = [
+    ctypes.c_char_p
+]
 backend = dawn.dawnOptionsEntryCreateString("cuda".encode('utf-8'))
+
+dawn.dawnOptionsSet.argtypes = [
+    ctypes.c_void_p,
+    ctypes.c_char_p,
+    ctypes.c_void_p
+]
 dawn.dawnOptionsSet(options, "Backend".encode('utf-8'), backend)
 
 # call the compiler that generates a translation unit
+dawn.dawnCompile.restype = c_void_p
+dawn.dawnCompile.argtypes = [
+    ctypes.c_char_p,
+    ctypes.c_int,
+    ctypes.c_void_p
+]
 tu = dawn.dawnCompile(hirstr, len(hirstr), options)
 stencilname = "hori_diff"
 b_stencilName = stencilname.encode('utf-8')
 # get the code of the translation unit for the given stencil
+dawn.dawnTranslationUnitGetStencil.restype = c_void_p
+dawn.dawnTranslationUnitGetStencil.argtypes = [
+    ctypes.c_void_p,
+    ctypes.c_char_p
+]
 code = dawn.dawnTranslationUnitGetStencil(tu, b_stencilName)
 
 # write to file

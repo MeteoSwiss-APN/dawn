@@ -14,7 +14,7 @@
 #ifndef DAWN_IIR_CONTROLFLOWDESCRIPTOR_H
 #define DAWN_IIR_CONTROLFLOWDESCRIPTOR_H
 
-#include "dawn/SIR/Statement.h"
+#include "dawn/IIR/ASTStmt.h"
 #include <set>
 
 namespace dawn {
@@ -23,9 +23,9 @@ class StencilMetaInformation;
 
 class ControlFlowDescriptor {
 public:
-  using StmtContainer = std::vector<std::shared_ptr<Statement>>;
-  using StmtIterator = std::vector<std::shared_ptr<Statement>>::iterator;
-  using StmtConstIterator = std::vector<std::shared_ptr<Statement>>::const_iterator;
+  using StmtContainer = std::vector<std::shared_ptr<iir::Stmt>>;
+  using StmtIterator = std::vector<std::shared_ptr<iir::Stmt>>::iterator;
+  using StmtConstIterator = std::vector<std::shared_ptr<iir::Stmt>>::const_iterator;
 
 private:
   /// The control flow statements. These are built from the StencilDescAst of the sir::Stencil
@@ -37,6 +37,7 @@ public:
 
   /// @brief Get the stencil description AST
   const StmtContainer& getStatements() const { return controlFlowStatements_; }
+  StmtContainer& getStatements() { return controlFlowStatements_; }
 
   StmtConstIterator eraseStmt(StmtConstIterator it) { return controlFlowStatements_.erase(it); }
 
