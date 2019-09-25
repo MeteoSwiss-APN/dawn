@@ -74,6 +74,7 @@ std::string CXXNaiveIcoCodeGen::generateStencilInstantiation(
 
   std::stringstream ssSW;
 
+  Namespace dawnNamespace("dawn_generated", ssSW);
   Namespace cxxnaiveNamespace("cxxnaiveico", ssSW);
 
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
@@ -98,6 +99,7 @@ std::string CXXNaiveIcoCodeGen::generateStencilInstantiation(
   StencilWrapperClass.commit();
 
   cxxnaiveNamespace.commit();
+  dawnNamespace.commit();
 
   return ssSW.str();
 }
