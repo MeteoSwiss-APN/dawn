@@ -85,8 +85,8 @@ TEST(CompilerTest, DISABLED_CodeGenPlayground) {
   using namespace dawn::iir;
 
   IIRBuilder b;
-  auto in_f = b.field("in_field", field_type::ijk);
-  auto out_f = b.field("out_field", field_type::ijk);
+  auto in_f = b.field("in_field", fieldType::ijk);
+  auto out_f = b.field("out_field", fieldType::ijk);
   auto var = b.localvar("my_var");
   auto var2 = b.localvar("my_var2");
 
