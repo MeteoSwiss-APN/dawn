@@ -26,7 +26,7 @@
 namespace dawn {
 namespace iir {
 
-enum class field_type { ijk, ij, ik, jk, i, j, k };
+enum class fieldType { ijk, ij, ik, jk, i, j, k };
 
 enum class op {
   multiply,
@@ -35,16 +35,16 @@ enum class op {
   assign,
   divide,
   equal,
-  not_equal,
+  notEqual,
   greater,
   less,
-  greater_equal,
-  less_equal,
-  logical_and,
-  logical_or,
-  logical_not
+  greaterEqual,
+  lessEqual,
+  logicalAnd,
+  locigalOr,
+  logicalNot
 };
-enum class access_type { r, rw };
+enum class accessType { r, rw };
 
 // \brief Short syntax to build an IIR in a consistent state
 //
@@ -67,7 +67,7 @@ class IIRBuilder {
   };
 
 public:
-  Field field(std::string const& name, field_type ft = field_type::ijk);
+  Field field(std::string const& name, fieldType ft = fieldType::ijk);
   LocalVar localvar(std::string const& name);
 
   std::shared_ptr<iir::Expr> binaryExpr(std::shared_ptr<iir::Expr>&& lhs,
@@ -80,8 +80,8 @@ public:
   std::shared_ptr<iir::Expr> unaryExpr(std::shared_ptr<iir::Expr>&& expr, op operation);
 
   std::shared_ptr<iir::Expr> conditionalExpr(std::shared_ptr<iir::Expr>&& cond,
-                                             std::shared_ptr<iir::Expr>&& case_then,
-                                             std::shared_ptr<iir::Expr>&& case_else);
+                                             std::shared_ptr<iir::Expr>&& caseThen,
+                                             std::shared_ptr<iir::Expr>&& caseElse);
 
   template <typename T>
   std::shared_ptr<iir::Expr> lit(T&& v) {
@@ -96,7 +96,7 @@ public:
     return expr;
   }
 
-  std::shared_ptr<iir::Expr> at(Field const& field, access_type access = access_type::r,
+  std::shared_ptr<iir::Expr> at(Field const& field, accessType access = accessType::r,
                                 Array3i extent = {});
 
   std::shared_ptr<iir::Expr> at(Field const& field, Array3i extent);
@@ -116,8 +116,8 @@ public:
     return {std::move(stmt), std::move(sap)};
   }
 
-  StmtData ifStmt(std::shared_ptr<iir::Expr>&& cond, StmtData&& case_then,
-                  StmtData&& case_else = {nullptr, {}});
+  StmtData ifStmt(std::shared_ptr<iir::Expr>&& cond, StmtData&& caseThen,
+                  StmtData&& caseElse = {nullptr, {}});
 
   StmtData declareVar(LocalVar& var_id);
 

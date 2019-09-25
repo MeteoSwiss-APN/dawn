@@ -21,26 +21,26 @@
 namespace dawn {
 namespace iir {
 namespace {
-Array3i as_array(field_type ft) {
+Array3i asArray(fieldType ft) {
   switch(ft) {
-  case field_type::ijk:
+  case fieldType::ijk:
     return Array3i{1, 1, 1};
-  case field_type::ij:
+  case fieldType::ij:
     return Array3i{1, 1, 0};
-  case field_type::ik:
+  case fieldType::ik:
     return Array3i{1, 0, 1};
-  case field_type::jk:
+  case fieldType::jk:
     return Array3i{0, 1, 1};
-  case field_type::i:
+  case fieldType::i:
     return Array3i{1, 0, 0};
-  case field_type::j:
+  case fieldType::j:
     return Array3i{0, 1, 0};
-  case field_type::k:
+  case fieldType::k:
     return Array3i{0, 0, 1};
   }
   dawn_unreachable("Unreachable");
 }
-std::string to_str(op operation, std::vector<op> valid_ops) {
+std::string toStr(op operation, std::vector<op> const& valid_ops) {
   DAWN_ASSERT(std::find(valid_ops.begin(), valid_ops.end(), operation) != valid_ops.end());
   switch(operation) {
   case op::plus:
@@ -55,21 +55,21 @@ std::string to_str(op operation, std::vector<op> valid_ops) {
     return "/";
   case op::equal:
     return "==";
-  case op::not_equal:
+  case op::notEqual:
     return "!=";
   case op::greater:
     return ">";
   case op::less:
     return "<";
-  case op::greater_equal:
+  case op::greaterEqual:
     return ">=";
-  case op::less_equal:
+  case op::lessEqual:
     return "<=";
-  case op::logical_and:
+  case op::logicalAnd:
     return "&&";
-  case op::logical_or:
+  case op::locigalOr:
     return "||";
-  case op::logical_not:
+  case op::logicalNot:
     return "!";
   }
   dawn_unreachable("Unreachable");
@@ -126,9 +126,9 @@ std::shared_ptr<iir::Expr> IIRBuilder::binaryExpr(std::shared_ptr<iir::Expr>&& l
   DAWN_ASSERT(si_);
   auto binop = std::make_shared<iir::BinaryOperator>(
       std::move(lhs),
-      to_str(operation,
-             {op::multiply, op::plus, op::minus, op::divide, op::equal, op::not_equal, op::greater,
-              op::less, op::greater_equal, op::less_equal, op::logical_and, op::logical_or}),
+      toStr(operation,
+            {op::multiply, op::plus, op::minus, op::divide, op::equal, op::notEqual, op::greater,
+             op::less, op::greaterEqual, op::lessEqual, op::logicalAnd, op::locigalOr}),
       std::move(rhs));
   binop->setID(si_->nextUID());
   return binop;
@@ -136,16 +136,16 @@ std::shared_ptr<iir::Expr> IIRBuilder::binaryExpr(std::shared_ptr<iir::Expr>&& l
 std::shared_ptr<iir::Expr> IIRBuilder::unaryExpr(std::shared_ptr<iir::Expr>&& expr, op operation) {
   DAWN_ASSERT(si_);
   auto ret = std::make_shared<iir::UnaryOperator>(
-      std::move(expr), to_str(operation, {op::plus, op::minus, op::logical_not}));
+      std::move(expr), toStr(operation, {op::plus, op::minus, op::logicalNot}));
   ret->setID(si_->nextUID());
   return ret;
 }
 std::shared_ptr<iir::Expr> IIRBuilder::conditionalExpr(std::shared_ptr<iir::Expr>&& cond,
-                                                       std::shared_ptr<iir::Expr>&& case_then,
-                                                       std::shared_ptr<iir::Expr>&& case_else) {
+                                                       std::shared_ptr<iir::Expr>&& caseThen,
+                                                       std::shared_ptr<iir::Expr>&& caseElse) {
   DAWN_ASSERT(si_);
-  auto ret = std::make_shared<iir::TernaryOperator>(std::move(cond), std::move(case_then),
-                                                    std::move(case_else));
+  auto ret = std::make_shared<iir::TernaryOperator>(std::move(cond), std::move(caseThen),
+                                                    std::move(caseElse));
   ret->setID(si_->nextUID());
   return ret;
 }
@@ -154,23 +154,23 @@ std::shared_ptr<iir::Expr> IIRBuilder::assignExpr(std::shared_ptr<iir::Expr>&& l
   DAWN_ASSERT(si_);
   auto binop = std::make_shared<iir::AssignmentExpr>(
       std::move(lhs), std::move(rhs),
-      to_str(operation, {op::assign, op::multiply, op::plus, op::minus, op::divide}) + "=");
+      toStr(operation, {op::assign, op::multiply, op::plus, op::minus, op::divide}) + "=");
   binop->setID(si_->nextUID());
   return binop;
 }
-IIRBuilder::Field IIRBuilder::field(std::string const& name, field_type ft) {
+IIRBuilder::Field IIRBuilder::field(std::string const& name, fieldType ft) {
   DAWN_ASSERT(si_);
-  int id = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name, as_array(ft));
+  int id = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name, asArray(ft));
   return {id, name};
 }
 IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name) {
   DAWN_ASSERT(si_);
-  auto iir_stmt = std::make_shared<iir::VarDeclStmt>(Type{BuiltinTypeID::Float}, name, 0, "=",
-                                                     std::vector<std::shared_ptr<Expr>>{});
-  int id = si_->getMetaData().addStmt(true, iir_stmt);
-  return {id, name, iir_stmt};
+  auto iirStmt = std::make_shared<iir::VarDeclStmt>(Type{BuiltinTypeID::Float}, name, 0, "=",
+                                                    std::vector<std::shared_ptr<Expr>>{});
+  int id = si_->getMetaData().addStmt(true, iirStmt);
+  return {id, name, iirStmt};
 }
-std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::Field const& field, access_type access,
+std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::Field const& field, accessType access,
                                           Array3i extent) {
   DAWN_ASSERT(si_);
   auto expr = std::make_shared<iir::FieldAccessExpr>(field.name, extent);
@@ -181,7 +181,7 @@ std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::Field const& field, access
 }
 std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::Field const& field, Array3i extent) {
   DAWN_ASSERT(si_);
-  return at(field, access_type::r, extent);
+  return at(field, accessType::r, extent);
 }
 std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::LocalVar const& var) {
   DAWN_ASSERT(si_);
@@ -196,17 +196,17 @@ IIRBuilder::StmtData IIRBuilder::stmt(std::shared_ptr<iir::Expr>&& expr) {
   auto sap = make_unique<iir::StatementAccessesPair>(std::make_shared<Statement>(stmt, nullptr));
   return {std::move(stmt), std::move(sap)};
 }
-IIRBuilder::StmtData IIRBuilder::ifStmt(std::shared_ptr<iir::Expr>&& cond, StmtData&& case_then,
-                                        StmtData&& case_else) {
+IIRBuilder::StmtData IIRBuilder::ifStmt(std::shared_ptr<iir::Expr>&& cond, StmtData&& caseThen,
+                                        StmtData&& caseElse) {
   DAWN_ASSERT(si_);
-  auto cond_stmt = std::make_shared<iir::ExprStmt>(std::move(cond));
-  auto stmt = std::make_shared<iir::IfStmt>(cond_stmt, std::move(case_then.stmt),
-                                            std::move(case_else.stmt));
+  auto condStmt = std::make_shared<iir::ExprStmt>(std::move(cond));
+  auto stmt =
+      std::make_shared<iir::IfStmt>(condStmt, std::move(caseThen.stmt), std::move(caseElse.stmt));
   auto sap = make_unique<iir::StatementAccessesPair>(std::make_shared<Statement>(stmt, nullptr));
-  if(case_then.sap)
-    sap->insertBlockStatement(std::move(case_then.sap));
-  if(case_else.sap)
-    sap->insertBlockStatement(std::move(case_else.sap));
+  if(caseThen.sap)
+    sap->insertBlockStatement(std::move(caseThen.sap));
+  if(caseElse.sap)
+    sap->insertBlockStatement(std::move(caseElse.sap));
   return {std::move(stmt), std::move(sap)};
 }
 IIRBuilder::StmtData IIRBuilder::declareVar(IIRBuilder::LocalVar& var) {
