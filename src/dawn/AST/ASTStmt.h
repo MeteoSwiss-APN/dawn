@@ -144,7 +144,7 @@ protected:
     DAWN_ASSERT_MSG((checkSameDataType(other)), "Trying to assign Stmt with different data type");
     kind_ = other.kind_;
     loc_ = other.loc_;
-    *data_ = *other.data_;
+    data_ = other.data_->clone();
   }
 
   StmtKind kind_;
@@ -153,7 +153,7 @@ protected:
   int statementID_;
 
 private:
-  const std::unique_ptr<StmtData> data_;
+  std::unique_ptr<StmtData> data_;
 };
 
 //===------------------------------------------------------------------------------------------===//
