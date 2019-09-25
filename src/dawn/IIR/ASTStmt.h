@@ -16,23 +16,42 @@
 #define DAWN_IIR_ASTSTMT_H
 
 #include "dawn/AST/ASTStmt.h"
+#include "dawn/IIR/Accesses.h"
 #include <boost/optional.hpp>
 #include <memory>
 #include <vector>
 
 namespace dawn {
 namespace iir {
+
+struct Extents;
+
 /// @brief Data container for IIR stmt's data. All data should be optional and initially
 /// uninitialized, meaning that such information hasn't yet been computed. The code that fills such
 /// data should take care of its initialization.
 struct IIRStmtData : public ast::StmtData {
   static const DataType ThisDataType = DataType::IIR_DATA_TYPE;
 
+  IIRStmtData() {}
+  IIRStmtData(const IIRStmtData& other);
+
   bool operator==(const IIRStmtData&);
   bool operator!=(const IIRStmtData&);
 
   /// Stack trace of inlined stencil calls of this statement (might be empty).
   boost::optional<std::vector<ast::StencilCall*>> StackTrace;
+
+  // In case of a non function call stmt, the accesses are stored in CallerAccesses, while
+  // CalleeAccesses is uninitialized
+
+  /// Accesses of the statement. If the statement is part of a stencil-function, this will store the
+  /// caller accesses. The caller access will have the initial offset added (e.g if a stencil
+  /// function is called with `avg(u(i+1))` the initial offset of `u` is `[1, 0, 0]`).
+  boost::optional<Accesses> CallerAccesses;
+
+  /// If the statement is part of a stencil-function, this will store the callee accesses i.e the
+  /// accesses without the initial offset of the call
+  boost::optional<Accesses> CalleeAccesses;
 
   DataType getDataType() const override { return ThisDataType; }
   std::unique_ptr<StmtData> clone() const override;
@@ -86,6 +105,8 @@ using VerticalRegionDeclStmt = ast::VerticalRegionDeclStmt;
 using StencilCallDeclStmt = ast::StencilCallDeclStmt;
 using BoundaryConditionDeclStmt = ast::BoundaryConditionDeclStmt;
 using IfStmt = ast::IfStmt;
+
+extern boost::optional<Extents> computeMaximumExtents(Stmt& stmt, const int accessID);
 
 } // namespace iir
 } // namespace dawn

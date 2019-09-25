@@ -78,6 +78,10 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
     // Replace the statement
     exprStmt->getData<iir::IIRStmtData>().StackTrace =
         oldStatement->getData<iir::IIRStmtData>().StackTrace;
+    exprStmt->getData<iir::IIRStmtData>().CallerAccesses =
+        oldStatement->getData<iir::IIRStmtData>().CallerAccesses;
+    exprStmt->getData<iir::IIRStmtData>().CalleeAccesses =
+        oldStatement->getData<iir::IIRStmtData>().CalleeAccesses;
     statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(exprStmt);
 
     // Remove the variable
@@ -145,6 +149,10 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
   // Replace the statement
   varDeclStmt->getData<iir::IIRStmtData>().StackTrace =
       oldStatement->getData<iir::IIRStmtData>().StackTrace;
+  varDeclStmt->getData<iir::IIRStmtData>().CallerAccesses =
+      oldStatement->getData<iir::IIRStmtData>().CallerAccesses;
+  varDeclStmt->getData<iir::IIRStmtData>().CalleeAccesses =
+      oldStatement->getData<iir::IIRStmtData>().CalleeAccesses;
   statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(varDeclStmt);
 
   // Remove the field

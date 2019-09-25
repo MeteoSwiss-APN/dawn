@@ -55,7 +55,7 @@ boost::optional<Extents> DoMethod::computeMaximumExtents(const int accessID) con
   boost::optional<Extents> extents;
 
   for(auto& stmtAccess : getChildren()) {
-    auto extents_ = stmtAccess->computeMaximumExtents(accessID);
+    auto extents_ = iir::computeMaximumExtents(*stmtAccess->getStatement(), accessID);
     if(!extents_.is_initialized())
       continue;
 
@@ -131,7 +131,8 @@ void DoMethod::updateLevel() {
   std::unordered_map<int, Field> outputFields;
 
   for(const auto& statementAccessesPair : children_) {
-    const auto& access = statementAccessesPair->getAccesses();
+    const auto& access =
+        statementAccessesPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
     DAWN_ASSERT(access);
 
     for(const auto& accessPair : access->getWriteAccesses()) {
@@ -173,7 +174,8 @@ void DoMethod::updateLevel() {
   // Compute the extents of each field by accumulating the extents of each access to field in the
   // stage
   for(const auto& statementAccessesPair : iterateIIROver<StatementAccessesPair>(*this)) {
-    const auto& access = statementAccessesPair->getAccesses();
+    const auto& access =
+        statementAccessesPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
 
     // first => AccessID, second => Extent
     for(auto& accessPair : access->getWriteAccesses()) {

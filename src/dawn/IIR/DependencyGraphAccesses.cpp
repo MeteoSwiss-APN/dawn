@@ -31,10 +31,14 @@ void DependencyGraphAccesses::insertStatementAccessesPair(
       insertStatementAccessesPair(s);
   } else {
 
-    for(const auto& writeAccess : stmtAccessPair->getAccesses()->getWriteAccesses()) {
+    for(const auto& writeAccess : stmtAccessPair->getStatement()
+                                      ->getData<iir::IIRStmtData>()
+                                      .CallerAccesses->getWriteAccesses()) {
       insertNode(writeAccess.first);
 
-      for(const auto& readAccess : stmtAccessPair->getAccesses()->getReadAccesses())
+      for(const auto& readAccess : stmtAccessPair->getStatement()
+                                       ->getData<iir::IIRStmtData>()
+                                       .CallerAccesses->getReadAccesses())
         insertEdge(writeAccess.first, readAccess.first, readAccess.second);
     }
   }

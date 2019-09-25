@@ -84,18 +84,19 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
             IIR_EARLY_EXIT((lhsStmt->getStatement()->equals(rhsStmt->getStatement().get())));
 
             // check the accesses
-            IIR_EARLY_EXIT((lhsStmt->getCallerAccesses() == rhsStmt->getCallerAccesses()));
-            if(lhsStmt->getCallerAccesses()) {
-              for(const auto& lhsPair : rhsStmt->getCallerAccesses()->getReadAccesses()) {
-                IIR_EARLY_EXIT(
-                    rhsStmt->getCallerAccesses()->getReadAccesses().count(lhsPair.first));
-                auto rhsValue = rhsStmt->getCallerAccesses()->getReadAccesses().at(lhsPair.first);
+            const auto& lhsCallerAccesses =
+                lhsStmt->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
+            const auto& rhsCallerAccesses =
+                rhsStmt->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
+            if(lhsCallerAccesses) {
+              for(const auto& lhsPair : rhsCallerAccesses->getReadAccesses()) {
+                IIR_EARLY_EXIT(rhsCallerAccesses->getReadAccesses().count(lhsPair.first));
+                auto rhsValue = rhsCallerAccesses->getReadAccesses().at(lhsPair.first);
                 IIR_EARLY_EXIT((rhsValue == lhsPair.second));
               }
-              for(const auto& lhsPair : rhsStmt->getCallerAccesses()->getWriteAccesses()) {
-                IIR_EARLY_EXIT(
-                    rhsStmt->getCallerAccesses()->getWriteAccesses().count(lhsPair.first));
-                auto rhsValue = rhsStmt->getCallerAccesses()->getWriteAccesses().at(lhsPair.first);
+              for(const auto& lhsPair : rhsCallerAccesses->getWriteAccesses()) {
+                IIR_EARLY_EXIT(rhsCallerAccesses->getWriteAccesses().count(lhsPair.first));
+                auto rhsValue = rhsCallerAccesses->getWriteAccesses().at(lhsPair.first);
                 IIR_EARLY_EXIT((rhsValue == lhsPair.second));
               }
             }
@@ -314,9 +315,8 @@ TEST_F(IIRSerializerTest, IIRTests) {
   auto expr = std::make_shared<iir::VarAccessExpr>("name");
   auto stmt = iir::makeExprStmt(expr);
   stmt->setID(22);
+  stmt->getData<iir::IIRStmtData>().CallerAccesses = boost::make_optional(iir::Accesses());
   auto stmtAccessPair = make_unique<iir::StatementAccessesPair>(stmt);
-  std::shared_ptr<iir::Accesses> callerAccesses = std::make_shared<iir::Accesses>();
-  stmtAccessPair->setCallerAccesses(callerAccesses);
 
   (IIRDoMethod)->insertChild(std::move(stmtAccessPair));
 }

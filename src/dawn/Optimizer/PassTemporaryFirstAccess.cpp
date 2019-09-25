@@ -86,7 +86,8 @@ bool PassTemporaryFirstAccess::run(
     std::unordered_map<int, std::pair<bool, std::shared_ptr<iir::Stmt>>> accessMap;
 
     for(const auto& stmtAccessesPair : iterateIIROver<iir::StatementAccessesPair>(*stencilPtr)) {
-      const auto& accesses = stmtAccessesPair->getAccesses();
+      const auto& accesses =
+          stmtAccessesPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
       const auto& astStatement = stmtAccessesPair->getStatement();
 
       for(const auto& writeAccess : accesses->getWriteAccesses())

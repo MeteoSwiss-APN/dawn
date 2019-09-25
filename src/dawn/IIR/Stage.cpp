@@ -209,7 +209,8 @@ void Stage::updateGlobalVariablesInfo() {
   for(const auto& doMethodPtr : getChildren()) {
     const DoMethod& doMethod = *doMethodPtr;
     for(const auto& statementAccessesPair : doMethod.getChildren()) {
-      const auto& access = statementAccessesPair->getAccesses();
+      const auto& access =
+          statementAccessesPair->getStatement()->getData<IIRStmtData>().CallerAccesses;
       DAWN_ASSERT(access);
       for(const auto& accessPair : access->getWriteAccesses()) {
         int AccessID = accessPair.first;

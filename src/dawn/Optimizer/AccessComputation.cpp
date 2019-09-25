@@ -13,12 +13,12 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/AccessComputation.h"
+#include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/IIR/AST.h"
-#include "dawn/IIR/ASTVisitor.h"
 #include <iostream>
 #include <stack>
 
@@ -54,8 +54,8 @@ class AccessMapper : public iir::ASTVisitor {
   /// List of caller and callee accesses. The first element is the primary accesses corresponding to
   /// the statement of the statement access pair which was passed to the constructor. All other
   /// elements are the accesses of the children of the top-level statement.
-  std::vector<std::shared_ptr<iir::Accesses>> callerAccessesList_;
-  std::vector<std::shared_ptr<iir::Accesses>> calleeAccessesList_;
+  std::vector<iir::Accesses*> callerAccessesList_;
+  std::vector<iir::Accesses*> calleeAccessesList_;
 
   /// Reference to the stencil function we are currently inside (if any)
   std::shared_ptr<iir::StencilFunctionInstantiation> stencilFun_;
@@ -103,15 +103,24 @@ public:
   /// accesses list. This will also add accesses to the children of the top-level statement access
   /// pair
   void appendNewAccesses() {
-    curStatementAccessPairStack_.back()->Pair->setCallerAccesses(std::make_shared<iir::Accesses>());
-    callerAccessesList_.emplace_back(
-        curStatementAccessPairStack_.back()->Pair->getCallerAccesses());
+    curStatementAccessPairStack_.back()
+        ->Pair->getStatement()
+        ->getData<iir::IIRStmtData>()
+        .CallerAccesses = boost::make_optional(iir::Accesses());
+    callerAccessesList_.emplace_back(curStatementAccessPairStack_.back()
+                                         ->Pair->getStatement()
+                                         ->getData<iir::IIRStmtData>()
+                                         .CallerAccesses.get_ptr());
 
     if(stencilFun_) {
-      curStatementAccessPairStack_.back()->Pair->setCalleeAccesses(
-          std::make_shared<iir::Accesses>());
-      calleeAccessesList_.emplace_back(
-          curStatementAccessPairStack_.back()->Pair->getCalleeAccesses());
+      curStatementAccessPairStack_.back()
+          ->Pair->getStatement()
+          ->getData<iir::IIRStmtData>()
+          .CalleeAccesses = boost::make_optional(iir::Accesses());
+      calleeAccessesList_.emplace_back(curStatementAccessPairStack_.back()
+                                           ->Pair->getStatement()
+                                           ->getData<iir::IIRStmtData>()
+                                           .CalleeAccesses.get_ptr());
     }
 
     // Add all accesses of all parent if-cond expressions
@@ -163,7 +172,8 @@ public:
       calleeAccesses->mergeWriteOffset(getAccessIDFromStmt(var), Array3i{{0, 0, 0}});
   }
 
-  void mergeWriteExtent(const std::shared_ptr<iir::FieldAccessExpr>& field, const iir::Extents& extent) {
+  void mergeWriteExtent(const std::shared_ptr<iir::FieldAccessExpr>& field,
+                        const iir::Extents& extent) {
     for(auto& callerAccesses : callerAccessesList_)
       callerAccesses->mergeWriteExtent(getAccessIDFromExpr(field), extent);
 
@@ -203,7 +213,8 @@ public:
       calleeAccesses->mergeReadOffset(getAccessIDFromExpr(lit), Array3i{{0, 0, 0}});
   }
 
-  void mergeReadExtent(const std::shared_ptr<iir::FieldAccessExpr>& field, const iir::Extents& extent) {
+  void mergeReadExtent(const std::shared_ptr<iir::FieldAccessExpr>& field,
+                       const iir::Extents& extent) {
     for(auto& callerAccesses : callerAccessesList_)
       callerAccesses->mergeReadExtent(getAccessIDFromExpr(field), extent);
 

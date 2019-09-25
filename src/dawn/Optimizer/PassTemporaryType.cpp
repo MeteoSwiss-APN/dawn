@@ -143,8 +143,12 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
         }
       };
 
-      processAccessMap(statementAccessesPair->getAccesses()->getWriteAccesses());
-      processAccessMap(statementAccessesPair->getAccesses()->getReadAccesses());
+      processAccessMap(statementAccessesPair->getStatement()
+                           ->getData<iir::IIRStmtData>()
+                           .CallerAccesses->getWriteAccesses());
+      processAccessMap(statementAccessesPair->getStatement()
+                           ->getData<iir::IIRStmtData>()
+                           .CallerAccesses->getReadAccesses());
     }
 
     auto LifetimeMap = stencilPtr->getLifetime(AccessIDs);

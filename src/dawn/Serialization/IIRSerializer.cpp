@@ -35,7 +35,7 @@ static proto::iir::Extents makeProtoExtents(dawn::iir::Extents const& extents) {
   return protoExtents;
 }
 static void setAccesses(proto::iir::Accesses* protoAccesses,
-                        const std::shared_ptr<iir::Accesses>& accesses) {
+                        const boost::optional<iir::Accesses>& accesses) {
   auto protoReadAccesses = protoAccesses->mutable_readaccess();
   for(auto IDExtentsPair : accesses->getReadAccesses())
     protoReadAccesses->insert({IDExtentsPair.first, makeProtoExtents(IDExtentsPair.second)});
@@ -63,10 +63,11 @@ serializeStmtAccessPair(proto::iir::StatementAccessPair* protoStmtAccessPair,
   stmtAccessPair->getStatement()->accept(builder);
 
   // check if caller accesses are initialized, and if so, fill them
-  if(stmtAccessPair->getCallerAccesses()) {
-    setAccesses(protoStmtAccessPair->mutable_accesses(), stmtAccessPair->getCallerAccesses());
+  if(stmtAccessPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses) {
+    setAccesses(protoStmtAccessPair->mutable_accesses(),
+                stmtAccessPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses);
   }
-  DAWN_ASSERT_MSG(!stmtAccessPair->getCalleeAccesses(),
+  DAWN_ASSERT_MSG(!stmtAccessPair->getStatement()->getData<iir::IIRStmtData>().CalleeAccesses,
                   "inlining did not work as we have calee-accesses");
 }
 
@@ -721,7 +722,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
           for(const auto& protoStmtAccessPair : protoDoMethod.stmtaccesspairs()) {
             auto stmt = makeStmt(protoStmtAccessPair.aststmt(), ast::StmtData::IIR_DATA_TYPE);
 
-            std::shared_ptr<iir::Accesses> callerAccesses = std::make_shared<iir::Accesses>();
+            boost::optional<iir::Accesses> callerAccesses = boost::make_optional(iir::Accesses());
             for(auto writeAccess : protoStmtAccessPair.accesses().writeaccess()) {
               callerAccesses->addWriteExtent(writeAccess.first, makeExtents(&writeAccess.second));
             }
@@ -729,7 +730,8 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
               callerAccesses->addReadExtent(readAccess.first, makeExtents(&readAccess.second));
             }
             auto insertee = make_unique<iir::StatementAccessesPair>(stmt);
-            insertee->setCallerAccesses(callerAccesses);
+            insertee->getStatement()->getData<iir::IIRStmtData>().CallerAccesses =
+                std::move(callerAccesses);
             (IIRDoMethod)->insertChild(std::move(insertee));
           }
         }

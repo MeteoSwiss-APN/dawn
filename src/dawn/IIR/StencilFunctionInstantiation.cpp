@@ -422,7 +422,8 @@ void StencilFunctionInstantiation::update() {
   std::unordered_map<int, Field> outputFields;
 
   for(const auto& statementAccessesPair : doMethod_->getChildren()) {
-    auto access = statementAccessesPair->getAccesses();
+    const auto& access =
+        statementAccessesPair->getStatement()->getData<IIRStmtData>().CallerAccesses;
     DAWN_ASSERT(access);
 
     for(const auto& accessPair : access->getWriteAccesses()) {
@@ -497,8 +498,10 @@ void StencilFunctionInstantiation::update() {
 
       // Accumulate the extents of each field in this stage
       for(const auto& statementAccessesPair : doMethod_->getChildren()) {
-        const auto& access = callerAccesses ? statementAccessesPair->getCallerAccesses()
-                                            : statementAccessesPair->getCalleeAccesses();
+        const auto& access =
+            callerAccesses
+                ? statementAccessesPair->getStatement()->getData<IIRStmtData>().CallerAccesses
+                : statementAccessesPair->getStatement()->getData<IIRStmtData>().CalleeAccesses;
 
         // first => AccessID, second => Extent
         for(auto& accessPair : access->getWriteAccesses()) {
@@ -636,10 +639,10 @@ void StencilFunctionInstantiation::dump() const {
   for(std::size_t i = 0; i < statements.size(); ++i) {
     std::cout << "\e[1m" << iir::ASTStringifier::toString(statements[i], 2 * DAWN_PRINT_INDENT)
               << "\e[0m";
-    if(doMethod_->getChild(i)->getCallerAccesses())
-      std::cout << doMethod_->getChild(i)->getCallerAccesses()->toString(this,
-                                                                         3 * DAWN_PRINT_INDENT)
-                << "\n";
+    const auto& callerAccesses =
+        doMethod_->getChild(i)->getStatement()->getData<IIRStmtData>().CallerAccesses;
+    if(callerAccesses)
+      std::cout << callerAccesses->toString(this, 3 * DAWN_PRINT_INDENT) << "\n";
   }
   std::cout.flush();
 }

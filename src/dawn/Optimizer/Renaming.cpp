@@ -111,10 +111,10 @@ void renameAccessIDInAccesses(
     const iir::StencilMetaInformation* metadata, int oldAccessID, int newAccessID,
     ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
   for(auto& statementAccessesPair : statementAccessesPairs) {
-    renameAccessesMaps(statementAccessesPair->getAccesses()->getReadAccesses(), oldAccessID,
-                       newAccessID);
-    renameAccessesMaps(statementAccessesPair->getAccesses()->getWriteAccesses(), oldAccessID,
-                       newAccessID);
+    auto& callerAccesses =
+        statementAccessesPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
+    renameAccessesMaps(callerAccesses->getReadAccesses(), oldAccessID, newAccessID);
+    renameAccessesMaps(callerAccesses->getWriteAccesses(), oldAccessID, newAccessID);
   }
 }
 
@@ -122,14 +122,12 @@ void renameAccessIDInAccesses(
     iir::StencilFunctionInstantiation* instantiation, int oldAccessID, int newAccessID,
     ArrayRef<std::unique_ptr<iir::StatementAccessesPair>> statementAccessesPairs) {
   for(auto& statementAccessesPair : statementAccessesPairs) {
-    renameAccessesMaps(statementAccessesPair->getCallerAccesses()->getReadAccesses(), oldAccessID,
-                       newAccessID);
-    renameAccessesMaps(statementAccessesPair->getCallerAccesses()->getWriteAccesses(), oldAccessID,
-                       newAccessID);
-    renameAccessesMaps(statementAccessesPair->getCalleeAccesses()->getReadAccesses(), oldAccessID,
-                       newAccessID);
-    renameAccessesMaps(statementAccessesPair->getCalleeAccesses()->getWriteAccesses(), oldAccessID,
-                       newAccessID);
+    auto& callerAccesses =
+        statementAccessesPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
+    renameAccessesMaps(callerAccesses->getReadAccesses(), oldAccessID, newAccessID);
+    renameAccessesMaps(callerAccesses->getWriteAccesses(), oldAccessID, newAccessID);
+    renameAccessesMaps(callerAccesses->getReadAccesses(), oldAccessID, newAccessID);
+    renameAccessesMaps(callerAccesses->getWriteAccesses(), oldAccessID, newAccessID);
   }
 }
 
