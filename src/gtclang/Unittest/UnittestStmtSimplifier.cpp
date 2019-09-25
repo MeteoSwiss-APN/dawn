@@ -32,11 +32,11 @@ static dawn::Type stringToType(const std::string& typestring) {
 }
 
 std::shared_ptr<dawn::sir::ExprStmt> expr(const std::shared_ptr<dawn::sir::Expr>& expr) {
-  return std::make_shared<dawn::sir::ExprStmt>(expr);
+  return dawn::sir::makeExprStmt(expr);
 }
 
 std::shared_ptr<dawn::sir::ReturnStmt> ret(const std::shared_ptr<dawn::sir::Expr>& expr) {
-  return std::make_shared<dawn::sir::ReturnStmt>(expr);
+  return dawn::sir::makeReturnStmt(expr);
 }
 
 std::shared_ptr<dawn::sir::VarDeclStmt> vardecl(const std::string& type, const std::string& name,
@@ -50,27 +50,27 @@ std::shared_ptr<dawn::sir::VarDeclStmt> vecdecl(const std::string& type, const s
                                            std::vector<std::shared_ptr<dawn::sir::Expr>> initList,
                                            int dimension, const char* op) {
   auto realtype = stringToType(type);
-  return std::make_shared<dawn::sir::VarDeclStmt>(realtype, name, dimension, op, initList);
+  return dawn::sir::makeVarDeclStmt(realtype, name, dimension, op, initList);
 }
 
 std::shared_ptr<dawn::sir::VerticalRegionDeclStmt>
 verticalRegion(const std::shared_ptr<dawn::sir::VerticalRegion>& verticalRegion) {
-  return std::make_shared<dawn::sir::VerticalRegionDeclStmt>(verticalRegion);
+  return dawn::sir::makeVerticalRegionDeclStmt(verticalRegion);
 }
 
 std::shared_ptr<dawn::sir::StencilCallDeclStmt>
 scdec(const std::shared_ptr<dawn::ast::StencilCall>& stencilCall) {
-  return std::make_shared<dawn::sir::StencilCallDeclStmt>(stencilCall);
+  return dawn::sir::makeStencilCallDeclStmt(stencilCall);
 }
 
 std::shared_ptr<dawn::sir::BoundaryConditionDeclStmt> boundaryCondition(const std::string& callee) {
-  return std::make_shared<dawn::sir::BoundaryConditionDeclStmt>(callee);
+  return dawn::sir::makeBoundaryConditionDeclStmt(callee);
 }
 
 std::shared_ptr<dawn::sir::IfStmt> ifstmt(const std::shared_ptr<dawn::sir::Stmt>& condExpr,
                                      const std::shared_ptr<dawn::sir::Stmt>& thenStmt,
                                      const std::shared_ptr<dawn::sir::Stmt>& elseStmt) {
-  return std::make_shared<dawn::sir::IfStmt>(condExpr, thenStmt, elseStmt);
+  return dawn::sir::makeIfStmt(condExpr, thenStmt, elseStmt);
 }
 
 std::shared_ptr<dawn::sir::UnaryOperator> unop(const std::shared_ptr<dawn::sir::Expr>& operand,

@@ -5,8 +5,8 @@
    "17": "field_b"
   },
   "exprIDToAccessID": {
-   "24": 17,
-   "25": 16
+   "4": 17,
+   "5": 16
   },
   "stmtIDToAccessID": {},
   "accessIDToType": {
@@ -106,7 +106,7 @@
                    "Line": 28,
                    "Column": 50
                   },
-                  "ID": 25
+                  "ID": 5
                  }
                 },
                 "op": "=",
@@ -133,21 +133,21 @@
                    "Line": 28,
                    "Column": 60
                   },
-                  "ID": 24
+                  "ID": 4
                  }
                 },
                 "loc": {
                  "Line": 28,
                  "Column": 50
                 },
-                "ID": 26
+                "ID": 6
                }
               },
               "loc": {
                "Line": 28,
                "Column": 50
               },
-              "ID": 23
+              "ID": 20
              }
             },
             "accesses": {
@@ -199,11 +199,11 @@
           }
          }
         ],
-        "stageID": 28
+        "stageID": 25
        }
       ],
       "loopOrder": "Parallel",
-      "multiStageID": 89,
+      "multiStageID": 77,
       "Caches": {}
      }
     ],

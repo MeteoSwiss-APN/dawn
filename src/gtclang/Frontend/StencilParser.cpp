@@ -511,7 +511,7 @@ void StencilParser::parseStencilImpl(clang::CXXRecordDecl* recordDecl, const std
             .first->second.get();
     currentParserRecord_->CurrentStencil->Name = name;
     currentParserRecord_->CurrentStencil->Loc = getLocation(recordDecl);
-    currentParserRecord_->CurrentStencil->StencilDescAst = std::make_shared<dawn::sir::AST>();
+    currentParserRecord_->CurrentStencil->StencilDescAst = dawn::sir::makeAST();
 
     // Parse the arguments
     for(FieldDecl* field : recordDecl->fields())
@@ -703,7 +703,7 @@ void StencilParser::parseStencilFunctionDoMethod(clang::CXXMethodDecl* DoMethod)
   if(DoMethod->hasBody()) {
 
     ClangASTStmtResolver stmtResolver(context_, this);
-    auto SIRBlockStmt = std::make_shared<dawn::sir::BlockStmt>(getLocation(DoMethod->getBody()));
+    auto SIRBlockStmt = dawn::sir::makeBlockStmt(getLocation(DoMethod->getBody()));
 
     if(CompoundStmt* bodyStmt = dyn_cast<CompoundStmt>(DoMethod->getBody())) {
 
@@ -771,9 +771,9 @@ void StencilParser::parseStencilDoMethod(clang::CXXMethodDecl* DoMethod) {
           if(getClassNameFromConstructExpr(s) == "boundary_condition")
             // stmt is a declaration of a boundary condition
             stencilDescAst->getRoot()->push_back(parseBoundaryCondition(s));
-          else
+          else if(std::shared_ptr<dawn::sir::StencilCallDeclStmt> stencilCall = parseStencilCall(s))
             // stmt is a call to another stencil
-            stencilDescAst->getRoot()->push_back(parseStencilCall(s));
+            stencilDescAst->getRoot()->push_back(stencilCall);
 
         } else if(isa<DeclStmt>(stmt)) {
           // smt is a local variable declaration (e.g `double a = ...`)
@@ -897,7 +897,7 @@ StencilParser::parseStencilCall(clang::CXXConstructExpr* stencilCall) {
   astStencilCall->Args = std::move(fieldNames);
 
   DAWN_LOG(INFO) << "Done parsing stencil call";
-  return std::make_shared<dawn::sir::StencilCallDeclStmt>(astStencilCall, astStencilCall->Loc);
+  return dawn::sir::makeStencilCallDeclStmt(astStencilCall, astStencilCall->Loc);
 }
 
 std::shared_ptr<dawn::sir::VerticalRegionDeclStmt>
@@ -915,7 +915,7 @@ StencilParser::parseVerticalRegion(clang::CXXForRangeStmt* verticalRegion) {
   intervalResolver.resolve(verticalRegion);
 
   // Extract the Do-Method body (AST) from the loop body
-  auto SIRBlockStmt = std::make_shared<dawn::sir::BlockStmt>(getLocation(verticalRegion));
+  auto SIRBlockStmt = dawn::sir::makeBlockStmt(getLocation(verticalRegion));
 
   // There is a difference between
   //
@@ -954,8 +954,7 @@ StencilParser::parseVerticalRegion(clang::CXXForRangeStmt* verticalRegion) {
       SIRAST, intervalPair.first, intervalPair.second, getLocation(verticalRegion));
 
   DAWN_LOG(INFO) << "Done parsing vertical region";
-  return std::make_shared<dawn::sir::VerticalRegionDeclStmt>(SIRVerticalRegion,
-                                                             SIRVerticalRegion->Loc);
+  return dawn::sir::makeVerticalRegionDeclStmt(SIRVerticalRegion, SIRVerticalRegion->Loc);
 }
 
 std::shared_ptr<dawn::sir::BoundaryConditionDeclStmt>
@@ -974,7 +973,7 @@ StencilParser::parseBoundaryCondition(clang::CXXConstructExpr* boundaryCondition
   BoundaryConditionResolver resolver(this);
   resolver.resolve(boundaryCondition);
 
-  auto ASTBoundaryCondition = std::make_shared<dawn::sir::BoundaryConditionDeclStmt>(
+  auto ASTBoundaryCondition = dawn::sir::makeBoundaryConditionDeclStmt(
       resolver.getFunctor(), getLocation(boundaryCondition));
 
   for(const auto& name : resolver.getFields()) {
@@ -1020,7 +1019,7 @@ StencilParser::parseBoundaryConditions(clang::CXXMethodDecl* allBoundaryConditio
 
         // create that DeclStmt with the functor and add the Fields / Arugments, where the field to
         // apply to is at Field[0] and all the arguments follow
-        auto bc = std::make_shared<dawn::sir::BoundaryConditionDeclStmt>(res.getFunctor());
+        auto bc = dawn::sir::makeBoundaryConditionDeclStmt(res.getFunctor());
         for(const auto& fieldName : res.getFields()) {
           bc->getFields().emplace_back(fieldName);
         }

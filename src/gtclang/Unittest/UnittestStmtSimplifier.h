@@ -34,7 +34,7 @@ public:
 
   template <typename... Args>
   void recursiveBlock(const std::shared_ptr<dawn::sir::Expr>& expression, Args&&... args) {
-    recursiveBlock(std::make_shared<dawn::sir::ExprStmt>(expression), std::forward<Args>(args)...);
+    recursiveBlock(dawn::sir::makeExprStmt(expression), std::forward<Args>(args)...);
   }
 
   void recursiveBlock() {}
@@ -69,7 +69,7 @@ template <typename... Args>
 std::shared_ptr<dawn::sir::BlockStmt> block(Args&&... args) {
   BlockWriter bw;
   auto vec = bw.createVec(std::forward<Args>(args)...);
-  return std::make_shared<dawn::sir::BlockStmt>(vec);
+  return dawn::sir::makeBlockStmt(vec);
 }
 
 std::shared_ptr<dawn::sir::ExprStmt> expr(const std::shared_ptr<dawn::sir::Expr>& expr);

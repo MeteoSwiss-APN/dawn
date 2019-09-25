@@ -208,7 +208,7 @@ CompareResult ParsingComparison::compare(const ParsedString& ps,
 
 CompareResult ParsingComparison::compare(const ParsedString& ps,
                                          const std::shared_ptr<dawn::sir::Expr>& expr) {
-  return compare(ps, std::make_shared<dawn::sir::ExprStmt>(expr));
+  return compare(ps, dawn::sir::makeExprStmt(expr));
 }
 
 ParsingComparison* ParsingComparison::instance_ = nullptr;
@@ -225,9 +225,9 @@ void ParsingComparison::wrapStatementInStencil(std::unique_ptr<dawn::SIR>& sir,
   if(sir::BlockStmt* blockstmt = dawn::dyn_cast<sir::BlockStmt>(stmt.get())) {
     sir->Stencils.push_back(std::make_shared<sir::Stencil>());
     sir->Stencils[0]->Name = "test01";
-    sir->Stencils[0]->StencilDescAst = std::make_shared<sir::AST>(
-        std::make_shared<sir::BlockStmt>(std::vector<std::shared_ptr<sir::Stmt>>{
-            std::make_shared<sir::VerticalRegionDeclStmt>(std::make_shared<sir::VerticalRegion>(
+    sir->Stencils[0]->StencilDescAst =
+        std::make_shared<sir::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
+            sir::makeVerticalRegionDeclStmt(std::make_shared<sir::VerticalRegion>(
                 std::make_shared<sir::AST>(std::make_shared<sir::BlockStmt>(*blockstmt)),
                 std::make_shared<sir::Interval>(sir::Interval::Start, sir::Interval::End),
                 sir::VerticalRegion::LoopOrderKind::LK_Forward))}));
@@ -236,8 +236,7 @@ void ParsingComparison::wrapStatementInStencil(std::unique_ptr<dawn::SIR>& sir,
       sir->Stencils[0]->Fields.push_back(std::make_shared<dawn::sir::Field>(a));
     }
   } else {
-    wrapStatementInStencil(
-        sir, std::make_shared<sir::BlockStmt>(std::vector<std::shared_ptr<sir::Stmt>>{stmt}));
+    wrapStatementInStencil(sir, sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{stmt}));
   }
 }
 

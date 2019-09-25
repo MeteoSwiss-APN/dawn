@@ -31,8 +31,8 @@ ClangASTStmtResolver::ClangASTStmtResolver(GTClangContext* context, StencilParse
 ClangASTStmtResolver::ClangASTStmtResolver(const std::shared_ptr<ClangASTExprResolver>& resolver)
     : clangASTExprResolver_(resolver), AstKind_(AK_Unknown) {}
 
-llvm::ArrayRef<std::shared_ptr<dawn::sir::Stmt>> ClangASTStmtResolver::resolveStmt(clang::Stmt* stmt,
-                                                                              ASTKind kind) {
+llvm::ArrayRef<std::shared_ptr<dawn::sir::Stmt>>
+ClangASTStmtResolver::resolveStmt(clang::Stmt* stmt, ASTKind kind) {
   resetInternals();
   AstKind_ = kind;
   resolve(stmt);
@@ -49,6 +49,11 @@ const std::vector<std::shared_ptr<dawn::sir::Stmt>>& ClangASTStmtResolver::getSt
 
 //===------------------------------------------------------------------------------------------===//
 //     Internal statment resolver
+
+inline void ClangASTStmtResolver::emplaceStmt(std::shared_ptr<dawn::sir::Stmt>&& stmt) {
+  if(stmt)
+    statements_.emplace_back(stmt);
+}
 
 void ClangASTStmtResolver::resolve(clang::Stmt* stmt) {
   using namespace clang;
@@ -89,56 +94,56 @@ void ClangASTStmtResolver::resolve(clang::Stmt* stmt) {
 
 void ClangASTStmtResolver::resolve(clang::BinaryOperator* expr) {
   // LHS is a variable (e.g `a = ...`)
-  statements_.emplace_back(clangASTExprResolver_->resolveExpr(expr));
+  emplaceStmt(clangASTExprResolver_->resolveExpr(expr));
 }
 
 void ClangASTStmtResolver::resolve(clang::CXXOperatorCallExpr* expr) {
   // LHS is a storage (e.g `u = ..` or `u(i, j) = ...`)
-  statements_.emplace_back(clangASTExprResolver_->resolveExpr(expr));
+  emplaceStmt(clangASTExprResolver_->resolveExpr(expr));
 }
 
 void ClangASTStmtResolver::resolve(clang::CXXConstructExpr* expr) {
   if(AstKind_ == AK_StencilBody) {
     // Call to a stencil function (e.g `avg(u)`)
-    statements_.emplace_back(clangASTExprResolver_->resolveExpr(expr));
+    emplaceStmt(clangASTExprResolver_->resolveExpr(expr));
   } else {
     // Call to a another stencil
-    statements_.emplace_back(clangASTExprResolver_->getParser()->parseStencilCall(expr));
+    emplaceStmt(clangASTExprResolver_->getParser()->parseStencilCall(expr));
   }
 }
 
 void ClangASTStmtResolver::resolve(clang::CXXFunctionalCastExpr* expr) {
   // Call to a stencil function (e.g `avg(i+1)`)
-  statements_.emplace_back(clangASTExprResolver_->resolveExpr(expr));
+  emplaceStmt(clangASTExprResolver_->resolveExpr(expr));
 }
 
 void ClangASTStmtResolver::resolve(clang::CXXForRangeStmt* expr) {
   // Parse a vertial region (i.e `for( ... ) { ... }`)
   DAWN_ASSERT(AstKind_ == AK_StencilDesc);
-  statements_.emplace_back(clangASTExprResolver_->getParser()->parseVerticalRegion(expr));
+  emplaceStmt(clangASTExprResolver_->getParser()->parseVerticalRegion(expr));
 }
 
 void ClangASTStmtResolver::resolve(clang::DeclRefExpr* expr) {
   // Access to a local variable `var;` where `var` is an unused result
-  statements_.emplace_back(clangASTExprResolver_->resolveExpr(expr));
+  emplaceStmt(clangASTExprResolver_->resolveExpr(expr));
 }
 
 void ClangASTStmtResolver::resolve(clang::UnaryOperator* expr) {
   // Access to a local variable `+/-var;` where `var` is an unused result
-  statements_.emplace_back(clangASTExprResolver_->resolveExpr(expr));
+  emplaceStmt(clangASTExprResolver_->resolveExpr(expr));
 }
 
 void ClangASTStmtResolver::resolve(clang::DeclStmt* stmt) {
   DAWN_ASSERT_MSG(stmt->isSingleDecl(), "only single declarations are currently supported");
 
   // LHS is a variable declaration (e.g `double a = ...`)
-  statements_.emplace_back(
+  emplaceStmt(
       clangASTExprResolver_->resolveDecl(clang::dyn_cast<clang::VarDecl>(stmt->getSingleDecl())));
 }
 
 void ClangASTStmtResolver::resolve(clang::ReturnStmt* stmt) {
   // Return from a stencil function (e.g `return u(i+1)`)
-  statements_.emplace_back(clangASTExprResolver_->resolveStmt(stmt));
+  emplaceStmt(clangASTExprResolver_->resolveStmt(stmt));
 }
 
 void ClangASTStmtResolver::resolve(clang::IfStmt* stmt) {
@@ -185,8 +190,8 @@ void ClangASTStmtResolver::resolve(clang::IfStmt* stmt) {
     if(!clangStmt)
       return nullptr;
 
-    auto blockStmt =
-        std::make_shared<dawn::sir::BlockStmt>(clangASTExprResolver_->getSourceLocation(clangStmt));
+    std::shared_ptr<dawn::ast::BlockStmt> blockStmt =
+        dawn::sir::makeBlockStmt(clangASTExprResolver_->getSourceLocation(clangStmt));
     ClangASTStmtResolver resolver(clangASTExprResolver_);
 
     if(CompoundStmt* compound = dyn_cast<CompoundStmt>(clangStmt)) {
@@ -200,9 +205,9 @@ void ClangASTStmtResolver::resolve(clang::IfStmt* stmt) {
     return blockStmt;
   };
 
-  statements_.emplace_back(std::make_shared<dawn::sir::IfStmt>(
-      condStmt, parseBody(stmt->getThen()), parseBody(stmt->getElse()),
-      clangASTExprResolver_->getSourceLocation(stmt)));
+  emplaceStmt(dawn::sir::makeIfStmt(condStmt, parseBody(stmt->getThen()),
+                                    parseBody(stmt->getElse()),
+                                    clangASTExprResolver_->getSourceLocation(stmt)));
 }
 
 void ClangASTStmtResolver::resolve(clang::NullStmt* stmt) {}

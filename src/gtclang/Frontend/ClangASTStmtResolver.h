@@ -57,6 +57,8 @@ private:
   //===----------------------------------------------------------------------------------------===//
   //     Internal statment resolver
 
+  inline void emplaceStmt(std::shared_ptr<dawn::sir::Stmt>&& stmt);
+
   void resolve(clang::Stmt* stmt);
   void resolve(clang::BinaryOperator* expr);
   void resolve(clang::CXXOperatorCallExpr* expr);

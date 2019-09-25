@@ -5,13 +5,13 @@
    "10": "field_b"
   },
   "exprIDToAccessID": {
-   "18": 9,
-   "17": 10
+   "4": 10,
+   "5": 9
   },
   "stmtIDToAccessID": {},
   "accessIDToType": {
-   "9": 6,
-   "10": 6
+   "10": 6,
+   "9": 6
   },
   "literalIDToName": {},
   "fieldAccessIDs": [
@@ -29,12 +29,12 @@
   },
   "fieldnameToBoundaryCondition": {},
   "fieldIDtoLegalDimensions": {
-   "9": {
+   "10": {
     "int1": 1,
     "int2": 1,
     "int3": 1
    },
-   "10": {
+   "9": {
     "int1": 1,
     "int2": 1,
     "int3": 1
@@ -106,7 +106,7 @@
                    "Line": 28,
                    "Column": 50
                   },
-                  "ID": 18
+                  "ID": 5
                  }
                 },
                 "op": "=",
@@ -133,21 +133,21 @@
                    "Line": 28,
                    "Column": 60
                   },
-                  "ID": 17
+                  "ID": 4
                  }
                 },
                 "loc": {
                  "Line": 28,
                  "Column": 50
                 },
-                "ID": 19
+                "ID": 6
                }
               },
               "loc": {
                "Line": 28,
                "Column": 50
               },
-              "ID": 16
+              "ID": 13
              }
             },
             "accesses": {
@@ -199,11 +199,11 @@
           }
          }
         ],
-        "stageID": 21
+        "stageID": 18
        }
       ],
       "loopOrder": "Parallel",
-      "multiStageID": 22,
+      "multiStageID": 19,
       "Caches": {}
      }
     ],
