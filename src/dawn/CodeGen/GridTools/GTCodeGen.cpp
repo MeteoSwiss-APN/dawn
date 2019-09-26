@@ -167,9 +167,7 @@ void GTCodeGen::generatePlaceholderDefinitions(
   }
 
   if(!globalsMap.empty()) {
-    stencilClass.addTypeDef("globals_gp_t")
-        .addType("decltype(" + c_gt() +
-                 "make_global_parameter<backend_t>(std::declval<globals>()))");
+    stencilClass.addTypeDef("globals_gp_t").addType(c_gt() + "global_parameter<backend_t,globals>");
     stencilClass.addTypeDef("p_globals")
         .addType(c_gt() + "arg")
         .addTemplate(Twine(accessorIdx))
@@ -201,13 +199,6 @@ void GTCodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInsta
     setter.finishArgs();
     setter.addStatement("m_globals." + globalProp.first + "=" + globalProp.first);
     setter.addStatement("update_globals()");
-    // for(const auto& stencil : stencilInstantiation.getStencils()) {
-    //   setter.addStatement(
-    //       "m_" +
-    //       codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil->getStencilID()) +
-    //       ".update_globals()");
-    // }
-
     setter.commit();
   }
 }
@@ -518,12 +509,14 @@ void GTCodeGen::generateStencilClasses(
                                                        intervalDefinitions.Levels.find(level)));
       int gt_offset =
           (level != sir::Interval::End) ? offset + 1 : (offset <= 0) ? offset - 1 : offset;
-      tss << "gridtools::level<" << gt_level << ", " << gt_offset << ", 3>";
+      tss << "gridtools::level<" << gt_level << ", " << gt_offset << ", "
+          << intervalDefinitions.OffsetLimit << ">";
 
       return tss.str();
     };
 
     // Generate typedefs for the individual intervals
+    // TODO this code needs to be ported to the documented axis API of gridtools
     auto codeGenInterval = [&](std::string const& name, iir::Interval const& interval) {
       stencilClass.addTypeDef(name)
           .addType(c_gt() + "interval")

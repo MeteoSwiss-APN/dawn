@@ -58,6 +58,9 @@ public:
 
     /// Intervals of the Do-Methods of each stage
     std::unordered_map<int, std::vector<iir::Interval>> StageIntervals;
+
+    // TODO we should compute the OffsetLimit, not use a hard-coded value!
+    static constexpr int OffsetLimit = 3;
   };
 
 private:

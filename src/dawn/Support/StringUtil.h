@@ -92,18 +92,17 @@ public:
 
     using namespace std;
     ss << start_;
-    auto it = std::begin(range), end = std::end(range);
-    const std::size_t size = distance(it, end);
+    auto it = begin(range);
+    const std::size_t size = distance(begin(range), end(range));
     std::size_t i = 0;
 
     bool initialized = false;
-    for(; it != end; ++it, ++i) {
+    for(; it != end(range); ++it, ++i) {
       if(!stringify(*it).empty() || !ignoreIfEmpty_) {
         ss << stringify(*it);
         initialized = true;
       }
-      if(i != size - 1 &&
-         ((!stringify(*std::next(it)).empty() && initialized) || !ignoreIfEmpty_)) {
+      if(i != size - 1 && ((!stringify(*next(it)).empty() && initialized) || !ignoreIfEmpty_)) {
         ss << delim_;
       }
     }

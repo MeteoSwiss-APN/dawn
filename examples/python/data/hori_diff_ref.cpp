@@ -102,10 +102,7 @@ public:
 
     stencil_41(const gridtools::clang::domain& dom_, storage_ijk_t& in_, storage_ijk_t& out_, storage_ijk_t& coeff_) : sbase("stencil_41"), m_dom(dom_), m_tmp_meta_data(32+2, 4+2, (dom_.isize()+ 32 - 1) / 32, (dom_.jsize()+ 4 - 1) / 4, dom_.ksize() + 2 * 0), m_lap(m_tmp_meta_data){}
 
-    virtual ~stencil_41() {
-    }
-
-    virtual void run(storage_ijk_t in_ds, storage_ijk_t out_ds, storage_ijk_t coeff_ds) {
+    void run(storage_ijk_t in_ds, storage_ijk_t out_ds, storage_ijk_t coeff_ds) {
 
       // starting timers
       start();

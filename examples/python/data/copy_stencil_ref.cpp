@@ -86,10 +86,7 @@ public:
 
     stencil_11(const gridtools::clang::domain& dom_, storage_ijk_t& in_, storage_ijk_t& out_) : sbase("stencil_11"), m_dom(dom_){}
 
-    virtual ~stencil_11() {
-    }
-
-    virtual void run(storage_ijk_t in_ds, storage_ijk_t out_ds) {
+    void run(storage_ijk_t in_ds, storage_ijk_t out_ds) {
 
       // starting timers
       start();

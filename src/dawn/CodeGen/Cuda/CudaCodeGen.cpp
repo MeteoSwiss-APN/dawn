@@ -59,12 +59,12 @@ std::string CudaCodeGen::generateStencilInstantiation(
 
   std::stringstream ssSW;
 
-  Namespace dawnNamespace("dawn_generated", ssSW);	
-  Namespace cudaNamespace("cuda", ssSW);	
+  Namespace dawnNamespace("dawn_generated", ssSW);
+  Namespace cudaNamespace("cuda", ssSW);
 
   // map from MS ID to cacheProperty
   for(const auto& ms : iterateIIROver<iir::MultiStage>(*(stencilInstantiation->getIIR()))) {
-    cachePropertyMap_.emplace(ms->getID(), makeCacheProperties(ms, stencilInstantiation, 2));    
+    cachePropertyMap_.emplace(ms->getID(), makeCacheProperties(ms, stencilInstantiation, 2));
   }
 
   generateAllCudaKernels(ssSW, stencilInstantiation);
@@ -201,11 +201,6 @@ void CudaCodeGen::generateStencilClasses(
 
     generateStencilClassCtr(stencilClass, stencil, globalsMap, nonTempFields, tempFields,
                             stencilProperties);
-
-    // virtual dtor
-    MemberFunction stencilClassDtr = stencilClass.addDestructor(true);
-    stencilClassDtr.startBody();
-    stencilClassDtr.commit();
 
     //
     // Run-Method
@@ -415,7 +410,7 @@ void CudaCodeGen::generateStencilRunMethod(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const std::unordered_map<std::string, std::string>& paramNameToType,
     const sir::GlobalVariableMap& globalsMap) const {
-  MemberFunction stencilRunMethod = stencilClass.addMemberFunction("virtual void", "run", "");
+  MemberFunction stencilRunMethod = stencilClass.addMemberFunction("void", "run", "");
   const auto& metadata = stencilInstantiation->getMetaData();
 
   // fields used in the stencil

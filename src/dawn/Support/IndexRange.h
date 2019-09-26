@@ -31,7 +31,6 @@ private:
 
 public:
   IteratorWrap(T& t, int idx) : t_(t), idx_(idx) {}
-  //  int idx() const { return idx_; }
   T& operator*() { return t_; }
   T* operator->() { return &t_; }
 
@@ -53,12 +52,14 @@ struct IndexRangeIterator {
   using difference_type = typename iterator::difference_type;
 
   // TODO make this private
+private:
   iterator it_;
   iterator begin_;
   iterator end_;
   std::function<bool(T const&)> pred_;
   int idx_ = 0;
 
+public:
   /// @brief constructor
   IndexRangeIterator(Cont& cont, std::function<bool(T const&)> pred)
       : it_(nextValid(cont.begin(), cont.end(), pred)), begin_(cont.begin()), end_(cont.end()),
@@ -108,19 +109,15 @@ struct IndexRangeIterator {
     it_ = prevValid(it_, begin_, pred_);
     return (*this);
   }
+
+  friend typename IndexRangeIterator::difference_type distance(IndexRangeIterator first,
+                                                               IndexRangeIterator last) {
+    return last.idx() - first.idx();
+  }
+
+  /// @brief comparison operators
+  friend bool operator!=(IndexRangeIterator l, IndexRangeIterator r) { return l.it_ != r.it_; }
 };
-
-template <typename T>
-typename IndexRangeIterator<T>::difference_type distance(IndexRangeIterator<T> first,
-                                                         IndexRangeIterator<T> last) {
-  return last.idx() - first.idx();
-}
-
-/// @brief comparison operators
-template <typename Cont>
-bool operator!=(IndexRangeIterator<Cont> l, IndexRangeIterator<Cont> r) {
-  return l.it_ != r.it_;
-}
 
 /// @brief range class to be used within C++11 for range loops,
 /// that accepts predicates to filter elements of the iteration.

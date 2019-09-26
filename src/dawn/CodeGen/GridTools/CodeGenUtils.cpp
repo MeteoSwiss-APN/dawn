@@ -14,6 +14,7 @@
 
 #include "dawn/CodeGen/GridTools/CodeGenUtils.h"
 #include "dawn/Support/IndexRange.h"
+#include <sstream>
 
 namespace dawn {
 namespace codegen {
@@ -28,21 +29,28 @@ CodeGenUtils::buildPlaceholderList(const iir::StencilMetaInformation& metadata,
       std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
           [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return !p.second.IsTemporary; }));
 
-  std::vector<std::string> plchdrs;
+  std::vector<std::string> placeholders;
   for(const auto& fieldInfoPair : nonTempFields) {
-    const auto& fieldInfo = fieldInfoPair.second;
+    const auto& fieldName = fieldInfoPair.second.Name;
+
+    std::stringstream placeholderStatement;
+    placeholderStatement << "p_" + fieldName;
     if(buildPair) {
+      placeholderStatement << "{} = ";
+      // TODO(havogt): refactor
+      // metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary, fieldInfoPair.first)
+      // to
+      // metadata.isInterStencilTemporary(fieldInfoPair.first)
       if(metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
                                fieldInfoPair.first)) {
-        plchdrs.push_back("p_" + fieldInfo.Name + "{} = m_" + fieldInfo.Name);
+        placeholderStatement << "m_" << fieldName;
       } else {
-        plchdrs.push_back("p_" + fieldInfo.Name + "{} = " + fieldInfo.Name);
+        placeholderStatement << fieldName;
       }
-    } else {
-      plchdrs.push_back("p_" + fieldInfo.Name);
     }
+    placeholders.push_back(placeholderStatement.str());
   }
-  return plchdrs;
+  return placeholders;
 }
 
 } // namespace gt
