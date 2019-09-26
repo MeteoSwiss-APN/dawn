@@ -127,11 +127,7 @@ void CXXNaiveCodeGen::generateStencilWrapperRun(
   for(const auto& statement :
       stencilInstantiation->getIIR()->getControlFlowDescriptor().getStatements()) {
     statement->accept(stencilDescCGVisitor);
-<<<<<<< HEAD
     runMethod.addStatement(stencilDescCGVisitor.getCodeAndResetStream());
-=======
-    RunMethod.addStatement(stencilDescCGVisitor.getCodeAndResetStream());
->>>>>>> master
   }
 
   runMethod.commit();
