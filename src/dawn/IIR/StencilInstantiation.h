@@ -43,6 +43,9 @@ class StencilInstantiation : NonCopyable {
   std::unique_ptr<IIR> IIR_;
 
 public:
+  /// @brief Dump the StencilInstantiation to stdout
+  void dump() const;
+
   /// @brief Assemble StencilInstantiation for stencil
   StencilInstantiation(
       sir::GlobalVariableMap const& globalVariables = {},

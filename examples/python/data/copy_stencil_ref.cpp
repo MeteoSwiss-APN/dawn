@@ -1,6 +1,6 @@
 namespace dawn_generated{
 namespace cuda{
-__global__ void __launch_bounds__(32)  copy_stencil_stencil13_ms24_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, gridtools::clang::float_type * const in, gridtools::clang::float_type * const out) {
+__global__ void __launch_bounds__(32)  copy_stencil_stencil11_ms19_kernel(const int isize, const int jsize, const int ksize, const int stride_111_1, const int stride_111_2, gridtools::clang::float_type * const in, gridtools::clang::float_type * const out) {
 
   // Start kernel
   const unsigned int nx = isize;
@@ -73,7 +73,7 @@ public:
     }
   };
 
-  struct stencil_13 : public sbase {
+  struct stencil_11 : public sbase {
 
     // Members
 
@@ -84,9 +84,9 @@ public:
     const gridtools::clang::domain& m_dom;
   public:
 
-    stencil_13(const gridtools::clang::domain& dom_, storage_ijk_t& in_, storage_ijk_t& out_) : sbase("stencil_13"), m_dom(dom_){}
+    stencil_11(const gridtools::clang::domain& dom_, storage_ijk_t& in_, storage_ijk_t& out_) : sbase("stencil_11"), m_dom(dom_){}
 
-    virtual ~stencil_13() {
+    virtual ~stencil_11() {
     }
 
     virtual void run(storage_ijk_t in_ds, storage_ijk_t out_ds) {
@@ -104,7 +104,7 @@ public:
       const unsigned int nby = (ny + 1 - 1) / 1;
       const unsigned int nbz = (m_dom.ksize()+4-1) / 4;
       dim3 blocks(nbx, nby, nbz);
-      copy_stencil_stencil13_ms24_kernel<<<blocks, threads>>>(nx,ny,nz,in_ds.strides()[1],in_ds.strides()[2],(in.data()+in_ds.get_storage_info_ptr()->index(in.begin<0>(), in.begin<1>(),0 )),(out.data()+out_ds.get_storage_info_ptr()->index(out.begin<0>(), out.begin<1>(),0 )));
+      copy_stencil_stencil11_ms19_kernel<<<blocks, threads>>>(nx,ny,nz,in_ds.strides()[1],in_ds.strides()[2],(in.data()+in_ds.get_storage_info_ptr()->index(in.begin<0>(), in.begin<1>(),0 )),(out.data()+out_ds.get_storage_info_ptr()->index(out.begin<0>(), out.begin<1>(),0 )));
       };
 
       // stopping timers
@@ -112,7 +112,7 @@ public:
     }
   };
   static constexpr const char* s_name = "copy_stencil";
-  stencil_13* m_stencil_13;
+  stencil_11* m_stencil_11;
 public:
 
   copy_stencil(const copy_stencil&) = delete;
@@ -121,7 +121,7 @@ public:
 
   // Stencil-Data
 
-  copy_stencil(const gridtools::clang::domain& dom, storage_ijk_t& in, storage_ijk_t& out) : m_stencil_13(new stencil_13(dom,in,out) ){}
+  copy_stencil(const gridtools::clang::domain& dom, storage_ijk_t& in, storage_ijk_t& out) : m_stencil_11(new stencil_11(dom,in,out) ){}
 
   template<typename S>
   void sync_storages(S field) {
@@ -136,7 +136,7 @@ public:
 
   void run(storage_ijk_t in, storage_ijk_t out) {
     sync_storages(in,out);
-    m_stencil_13->run(in,out);
+    m_stencil_11->run(in,out);
 ;
     sync_storages(in,out);
   }
@@ -146,11 +146,11 @@ public:
   }
 
   void reset_meters() {
-m_stencil_13->reset();  }
+m_stencil_11->reset();  }
 
   double get_total_time() {
     double res = 0;
-    res +=m_stencil_13->get_time();
+    res +=m_stencil_11->get_time();
     return res;
   }
 };

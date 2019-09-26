@@ -14,6 +14,7 @@
 
 #include "dawn/Optimizer/PassSetNonTempCaches.h"
 #include "dawn/IIR/ASTExpr.h"
+#include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/Cache.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StatementAccessesPair.h"
@@ -225,9 +226,8 @@ private:
         std::make_shared<iir::FieldAccessExpr>(metadata_.getFieldNameFromAccessID(assignmentID));
     auto assignmentExpression =
         std::make_shared<iir::AssignmentExpr>(fa_assignment, fa_assignee, "=");
-    auto expAssignment = std::make_shared<iir::ExprStmt>(assignmentExpression);
-    auto assignmentStatement = std::make_shared<Statement>(expAssignment, nullptr);
-    auto pair = make_unique<iir::StatementAccessesPair>(assignmentStatement);
+    auto expAssignment = iir::makeExprStmt(assignmentExpression);
+    auto pair = make_unique<iir::StatementAccessesPair>(expAssignment);
     auto newAccess = std::make_shared<iir::Accesses>();
     newAccess->addWriteExtent(assignmentID, iir::Extents(Array3i{{0, 0, 0}}));
     newAccess->addReadExtent(assigneeID, iir::Extents(Array3i{{0, 0, 0}}));

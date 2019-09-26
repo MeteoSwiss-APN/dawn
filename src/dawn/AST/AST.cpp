@@ -19,7 +19,7 @@
 
 namespace dawn {
 namespace ast {
-AST::AST() : root_(std::make_shared<BlockStmt>()) {}
+AST::AST(std::unique_ptr<StmtData> data) : root_(std::make_shared<BlockStmt>(std::move(data))) {}
 
 AST::AST(const std::shared_ptr<BlockStmt>& root) : root_(root) { DAWN_ASSERT(root_ != nullptr); }
 

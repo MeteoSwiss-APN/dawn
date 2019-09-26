@@ -58,7 +58,8 @@ OPT(bool, UseNonTempCaches, false, "cache-non-temp-fields", "",
     "Allows for caching of non-temporary fields", "", false, true)
 OPT(bool, KeepVarnames, false, "keep-varnames", "",
     "Keep the names of locally defined variables (this should merely be used for debugging as it may result in invalid code)", "", false, true)
-
+OPT(bool, PartitionIntervals, false, "partition-intervals", "",
+    "partitions the intervals so there are no overlapping doMethods anymore", "", false, true)
 
 OPT(bool, PassVerbose, false, "pass-verbose", "",
     "Compile in verbose mode", "", false, true)
@@ -102,5 +103,7 @@ OPT(bool, DumpTemporaryGraphs, false, "dump-tmp-dag", "",
     "Dump the dependency graph of the temporaries of each stencil to a dot file", "", false, true)
 OPT(bool, DumpRaceConditionGraph, false, "dump-rc-dag", "",
     "In case an unresolvable race-condition is detected, dump the dependency graph to a dot file", "", false, true)
+OPT(bool, DumpStencilInstantiation, false, "dump-si", "",
+    "dump every stencilInstantiation to the standard output", "", false, true)
 
 // clang-format on

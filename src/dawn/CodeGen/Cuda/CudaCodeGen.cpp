@@ -401,7 +401,7 @@ void CudaCodeGen::generateStencilWrapperRun(
   stencilDescCGVisitor.setIndent(RunMethod.getIndent());
   for(const auto& statement :
       stencilInstantiation->getIIR()->getControlFlowDescriptor().getStatements()) {
-    statement->ASTStmt->accept(stencilDescCGVisitor);
+    statement->accept(stencilDescCGVisitor);
     RunMethod.addStatement(stencilDescCGVisitor.getCodeAndResetStream());
   }
 
