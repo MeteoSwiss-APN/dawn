@@ -83,14 +83,8 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
                 (lhsStmt->getStatement()->ASTStmt->equals(rhsStmt->getStatement()->ASTStmt.get())));
 
             // check the accesses
-            //IIR_EARLY_EXIT((lhsStmt->getCallerAccesses() == rhsStmt->getCallerAccesses()));   //NOTE: this is most probably broken (i.e. false negative)
-            //  guess what is intended is to compare the _sizes_ of the maps, not the maps themselves, which is done in the following anyway
-
-            // check the accesses
-            assert(lhsStmt->getCallerAccesses()->getReadAccesses().size()
-              == lhsStmt->getCallerAccesses()->getReadAccesses().size());
-            assert(rhsStmt->getCallerAccesses()->getWriteAccesses().size()
-              == rhsStmt->getCallerAccesses()->getWriteAccesses().size());
+            IIR_EARLY_EXIT((lhsStmt->getCallerAccesses()->getReadAccesses().size() == lhsStmt->getCallerAccesses()->getReadAccesses().size()));
+            IIR_EARLY_EXIT((rhsStmt->getCallerAccesses()->getWriteAccesses().size() == rhsStmt->getCallerAccesses()->getWriteAccesses().size()));
 
             if(lhsStmt->getCallerAccesses()) {
               for(const auto& lhsPair : rhsStmt->getCallerAccesses()->getReadAccesses()) {

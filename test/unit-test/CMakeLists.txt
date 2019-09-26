@@ -39,30 +39,5 @@ macro(dawn_add_unittest_impl)
   )
 endmacro()
 
-# dawn_add_integrationtest_impl
-# ----------------------
-#
-# Compile the given objects into a runnable integration test executable (.exe) and register it within CTest.
-# The executable will be stored in ${CMAKE_BINARY_DIR}/bin/integrationtest.
-#
-#    NAME:STRING=<>     - Name of the unittest exectuable as well as the CMake target to build it.
-#    SOURCES:STRING=<>   - List of source files making up the exectuable.
-#
-macro(dawn_add_integrationtest_impl)
-  cmake_parse_arguments(ARG "" "NAME" "SOURCES" ${ARGN})
-
-  if(NOT("${ARG_UNPARSED_ARGUMENTS}" STREQUAL ""))
-    message(FATAL_ERROR "dawn_add_integrationtest_impl: invalid argument ${ARG_UNPARSED_ARGUMENTS}")
-  endif()
-
-  yoda_add_unittest(
-    NAME ${ARG_NAME}
-    SOURCES ${ARG_SOURCES}
-    DEPENDS DawnUnittestStatic DawnCStatic DawnStatic  ${DAWN_EXTERNAL_LIBRARIES} gtest
-    OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/integrationtest
-    GTEST_ARGS --gtest_color=yes
-  )
-endmacro()
-
 add_subdirectory(dawn)
 add_subdirectory(dawn-c)

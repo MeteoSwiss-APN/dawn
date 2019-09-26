@@ -59,8 +59,8 @@ public:
     json::json jsonDump() const;
 
     bool operator==(const FieldInfo& other) const {
-      return Name == other.Name && Dimensions == other.Dimensions && field == other.field 
-        && IsTemporary == other.IsTemporary;
+      return Name == other.Name && Dimensions == other.Dimensions && field == other.field &&
+             IsTemporary == other.IsTemporary;
     }
   };
 

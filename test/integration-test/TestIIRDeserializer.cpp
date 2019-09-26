@@ -42,76 +42,72 @@
 using namespace dawn;
 
 namespace {
-#define IIR_EARLY_EXIT(value)                                                                      \
-  if(!value)                                                                                       \
-    return false;
 
-static bool compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
-  IIR_EARLY_EXIT(lhs->checkTreeConsistency());
-  IIR_EARLY_EXIT(rhs->checkTreeConsistency());
+void compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
+  ASSERT_TRUE(lhs->checkTreeConsistency());
+  ASSERT_TRUE(rhs->checkTreeConsistency());
   // checking the stencils
-  IIR_EARLY_EXIT((lhs->getChildren().size() == rhs->getChildren().size()));
+  ASSERT_TRUE(lhs->getChildren().size() == rhs->getChildren().size());
   for(int stencils = 0, size = lhs->getChildren().size(); stencils < size; ++stencils) {
     const auto& lhsStencil = lhs->getChild(stencils);
     const auto& rhsStencil = rhs->getChild(stencils);
-    IIR_EARLY_EXIT((lhsStencil->getStencilAttributes() == rhsStencil->getStencilAttributes()));    
-    IIR_EARLY_EXIT((lhsStencil->getStencilID() == rhsStencil->getStencilID()));
+    ASSERT_TRUE(lhsStencil->getStencilAttributes() == rhsStencil->getStencilAttributes());    
+    ASSERT_TRUE(lhsStencil->getStencilID() == rhsStencil->getStencilID());
 
     // checking each of the multistages
-    IIR_EARLY_EXIT((lhsStencil->getChildren().size() == rhsStencil->getChildren().size()));
+    ASSERT_TRUE(lhsStencil->getChildren().size() == rhsStencil->getChildren().size());
     for(int mssidx = 0, mssSize = lhsStencil->getChildren().size(); mssidx < mssSize; ++mssidx) {
       const auto& lhsMSS = lhsStencil->getChild(mssidx);
       const auto& rhsMSS = rhsStencil->getChild(mssidx);
-      IIR_EARLY_EXIT((lhsMSS->getLoopOrder() == rhsMSS->getLoopOrder()));     
-      IIR_EARLY_EXIT((lhsMSS->getID() == rhsMSS->getID()));
+      ASSERT_TRUE(lhsMSS->getLoopOrder() == rhsMSS->getLoopOrder());     
+      ASSERT_TRUE(lhsMSS->getID() == rhsMSS->getID());
 
       // checking each of the stages
-      IIR_EARLY_EXIT((lhsMSS->getChildren().size() == rhsMSS->getChildren().size()));
+      ASSERT_TRUE(lhsMSS->getChildren().size() == rhsMSS->getChildren().size());
       for(int stageidx = 0, stageSize = lhsMSS->getChildren().size(); stageidx < stageSize;
           ++stageidx) {
         const auto& lhsStage = lhsMSS->getChild(stageidx);
         const auto& rhsStage = rhsMSS->getChild(stageidx);
-        IIR_EARLY_EXIT((lhsStage->getStageID() == rhsStage->getStageID()));
+        ASSERT_TRUE(lhsStage->getStageID() == rhsStage->getStageID());
 
         // checking each of the doMethods
-        IIR_EARLY_EXIT((lhsStage->getChildren().size() == rhsStage->getChildren().size()));
+        ASSERT_TRUE(lhsStage->getChildren().size() == rhsStage->getChildren().size());
         for(int doMethodidx = 0, doMethodSize = lhsStage->getChildren().size();
             doMethodidx < doMethodSize; ++doMethodidx) {
           const auto& lhsDoMethod = lhsStage->getChild(doMethodidx);
           const auto& rhsDoMethod = rhsStage->getChild(doMethodidx);
-          IIR_EARLY_EXIT((lhsDoMethod->getID() == rhsDoMethod->getID()));
-          IIR_EARLY_EXIT((lhsDoMethod->getInterval() == rhsDoMethod->getInterval()));
+          ASSERT_TRUE(lhsDoMethod->getID() == rhsDoMethod->getID());
+          ASSERT_TRUE(lhsDoMethod->getInterval() == rhsDoMethod->getInterval());
 
           // checking each of the StmtAccesspairs
-          IIR_EARLY_EXIT((lhsDoMethod->getChildren().size() == rhsDoMethod->getChildren().size()));
+          ASSERT_TRUE(lhsDoMethod->getChildren().size() == rhsDoMethod->getChildren().size());
           for(int stmtidx = 0, stmtSize = lhsDoMethod->getChildren().size(); stmtidx < stmtSize;
               ++stmtidx) {
             const auto& lhsStmt = lhsDoMethod->getChild(stmtidx);
             const auto& rhsStmt = rhsDoMethod->getChild(stmtidx);
             // check the statement
-            IIR_EARLY_EXIT(
-                (lhsStmt->getStatement()->ASTStmt->equals(rhsStmt->getStatement()->ASTStmt.get())));
+            ASSERT_TRUE(lhsStmt->getStatement()->ASTStmt->equals(rhsStmt->getStatement()->ASTStmt.get()));
 
             // check the accesses
-            IIR_EARLY_EXIT((lhsStmt->getCallerAccesses()->getReadAccesses().size()
-              == lhsStmt->getCallerAccesses()->getReadAccesses().size()));
-            IIR_EARLY_EXIT((rhsStmt->getCallerAccesses()->getWriteAccesses().size()
-              == rhsStmt->getCallerAccesses()->getWriteAccesses().size()));
+            ASSERT_TRUE(lhsStmt->getCallerAccesses()->getReadAccesses()
+              == rhsStmt->getCallerAccesses()->getReadAccesses());
+            ASSERT_TRUE(lhsStmt->getCallerAccesses()->getWriteAccesses()
+              == rhsStmt->getCallerAccesses()->getWriteAccesses());
 
-            if(lhsStmt->getCallerAccesses()) {
-              for(const auto& lhsPair : rhsStmt->getCallerAccesses()->getReadAccesses()) {
-                IIR_EARLY_EXIT((
-                    rhsStmt->getCallerAccesses()->getReadAccesses().count(lhsPair.first)));
-                auto rhsValue = rhsStmt->getCallerAccesses()->getReadAccesses().at(lhsPair.first);
-                IIR_EARLY_EXIT((rhsValue == lhsPair.second));
-              }
-              for(const auto& lhsPair : rhsStmt->getCallerAccesses()->getWriteAccesses()) {
-                IIR_EARLY_EXIT((
-                    rhsStmt->getCallerAccesses()->getWriteAccesses().count(lhsPair.first)));
-                auto rhsValue = rhsStmt->getCallerAccesses()->getWriteAccesses().at(lhsPair.first);
-                IIR_EARLY_EXIT((rhsValue == lhsPair.second));
-              }
-            }
+            // if(lhsStmt->getCallerAccesses()) {
+            //   for(const auto& lhsPair : rhsStmt->getCallerAccesses()->getReadAccesses()) {
+            //     ASSERT_TRUE(
+            //         rhsStmt->getCallerAccesses()->getReadAccesses().count(lhsPair.first));
+            //     auto rhsValue = rhsStmt->getCallerAccesses()->getReadAccesses().at(lhsPair.first);
+            //     ASSERT_TRUE(rhsValue == lhsPair.second);
+            //   }
+            //   for(const auto& lhsPair : rhsStmt->getCallerAccesses()->getWriteAccesses()) {
+            //     ASSERT_TRUE(
+            //         rhsStmt->getCallerAccesses()->getWriteAccesses().count(lhsPair.first));
+            //     auto rhsValue = rhsStmt->getCallerAccesses()->getWriteAccesses().at(lhsPair.first);
+            //     ASSERT_TRUE(rhsValue == lhsPair.second);
+            //   }
+            // }
           }
         }
       }
@@ -120,66 +116,66 @@ static bool compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
   const auto& lhsControlFlowStmts = lhs->getControlFlowDescriptor().getStatements();
   const auto& rhsControlFlowStmts = rhs->getControlFlowDescriptor().getStatements();
 
-  IIR_EARLY_EXIT((lhsControlFlowStmts.size() == rhsControlFlowStmts.size()));
+  ASSERT_TRUE(lhsControlFlowStmts.size() == rhsControlFlowStmts.size());
   for(int i = 0, size = lhsControlFlowStmts.size(); i < size; ++i) {
     if(!lhsControlFlowStmts[i]->ASTStmt->equals(rhsControlFlowStmts[i]->ASTStmt.get()))
-      return false;
+      FAIL();
     if(lhsControlFlowStmts[i]->StackTrace) {
       if(rhsControlFlowStmts[i]->StackTrace) {
         for(int j = 0, jsize = lhsControlFlowStmts[i]->StackTrace->size(); j < jsize; ++j) {
           if(!(lhsControlFlowStmts[i]->StackTrace->at(j) ==
                rhsControlFlowStmts[i]->StackTrace->at(j))) {
-            return false;
+            FAIL();
           }
         }
       }
-      return false;
+      FAIL();
     }
   }
 
-  return true;
+  SUCCEED();
 }
 
-static bool compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformation& rhs) {
-  IIR_EARLY_EXIT((lhs.getExprIDToAccessIDMap() == rhs.getExprIDToAccessIDMap()));
-  IIR_EARLY_EXIT((lhs.getStmtIDToAccessIDMap() == rhs.getStmtIDToAccessIDMap()));
-  IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::FAT_Literal>() ==
-                  rhs.getAccessesOfType<iir::FieldAccessType::FAT_Literal>()));
-  IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::FAT_Field>() ==
-                  rhs.getAccessesOfType<iir::FieldAccessType::FAT_Field>()));
-  IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::FAT_APIField>() ==
-                  rhs.getAccessesOfType<iir::FieldAccessType::FAT_APIField>()));
-  IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::FAT_StencilTemporary>() ==
-                  rhs.getAccessesOfType<iir::FieldAccessType::FAT_StencilTemporary>()));
-  IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::FAT_GlobalVariable>() ==
-                  rhs.getAccessesOfType<iir::FieldAccessType::FAT_GlobalVariable>()));
+void compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformation& rhs) {
+  ASSERT_TRUE(lhs.getExprIDToAccessIDMap() == rhs.getExprIDToAccessIDMap());
+  ASSERT_TRUE(lhs.getStmtIDToAccessIDMap() == rhs.getStmtIDToAccessIDMap());
+  ASSERT_TRUE(lhs.getAccessesOfType<iir::FieldAccessType::FAT_Literal>() ==
+                  rhs.getAccessesOfType<iir::FieldAccessType::FAT_Literal>());
+  ASSERT_TRUE(lhs.getAccessesOfType<iir::FieldAccessType::FAT_Field>() ==
+                  rhs.getAccessesOfType<iir::FieldAccessType::FAT_Field>());
+  ASSERT_TRUE(lhs.getAccessesOfType<iir::FieldAccessType::FAT_APIField>() ==
+                  rhs.getAccessesOfType<iir::FieldAccessType::FAT_APIField>());
+  ASSERT_TRUE(lhs.getAccessesOfType<iir::FieldAccessType::FAT_StencilTemporary>() ==
+                  rhs.getAccessesOfType<iir::FieldAccessType::FAT_StencilTemporary>());
+  ASSERT_TRUE(lhs.getAccessesOfType<iir::FieldAccessType::FAT_GlobalVariable>() ==
+                  rhs.getAccessesOfType<iir::FieldAccessType::FAT_GlobalVariable>());
 
   // we compare the content of the maps since the shared-ptr's are not the same
-  IIR_EARLY_EXIT((lhs.getFieldNameToBCMap().size() == rhs.getFieldNameToBCMap().size()));
+  ASSERT_TRUE(lhs.getFieldNameToBCMap().size() == rhs.getFieldNameToBCMap().size());
   for(const auto& lhsPair : lhs.getFieldNameToBCMap()) {
-    IIR_EARLY_EXIT(rhs.getFieldNameToBCMap().count(lhsPair.first));
+    ASSERT_TRUE(rhs.getFieldNameToBCMap().count(lhsPair.first));
     auto rhsValue = rhs.getFieldNameToBCMap().at(lhsPair.first);
-    IIR_EARLY_EXIT(rhsValue->equals(lhsPair.second.get()));
+    ASSERT_TRUE(rhsValue->equals(lhsPair.second.get()));
   }
-  IIR_EARLY_EXIT((lhs.getFieldIDToDimsMap() == rhs.getFieldIDToDimsMap()));
-  IIR_EARLY_EXIT((lhs.getStencilLocation() == rhs.getStencilLocation()));
-  IIR_EARLY_EXIT((lhs.getStencilName() == rhs.getStencilName()));
+  ASSERT_TRUE(lhs.getFieldIDToDimsMap() == rhs.getFieldIDToDimsMap());
+  ASSERT_TRUE(lhs.getStencilLocation() == rhs.getStencilLocation());
+  ASSERT_TRUE(lhs.getStencilName() == rhs.getStencilName());
   //file name makes little sense for in memory stencil
-  //IIR_EARLY_EXIT((lhs.getFileName() == rhs.getFileName()));  
+  //ASSERT_TRUE(lhs.getFileName() == rhs.getFileName()));  
 
   // we compare the content of the maps since the shared-ptr's are not the same
-  IIR_EARLY_EXIT((lhs.getStencilIDToStencilCallMap().getDirectMap().size() ==
-                  rhs.getStencilIDToStencilCallMap().getDirectMap().size()));
+  ASSERT_TRUE(lhs.getStencilIDToStencilCallMap().getDirectMap().size() ==
+                  rhs.getStencilIDToStencilCallMap().getDirectMap().size());
   for(const auto& lhsPair : lhs.getStencilIDToStencilCallMap().getDirectMap()) {
-    IIR_EARLY_EXIT(rhs.getStencilIDToStencilCallMap().getDirectMap().count(lhsPair.first));
+    ASSERT_TRUE(rhs.getStencilIDToStencilCallMap().getDirectMap().count(lhsPair.first));
     auto rhsValue = rhs.getStencilIDToStencilCallMap().getDirectMap().at(lhsPair.first);
-    IIR_EARLY_EXIT(rhsValue->equals(lhsPair.second.get()));
+    ASSERT_TRUE(rhsValue->equals(lhsPair.second.get()));
   }
 
-  return true;
+  SUCCEED();
 }
 
-static bool compareDerivedInformation(iir::IIR* lhs, iir::IIR* rhs) {
+void compareDerivedInformation(iir::IIR* lhs, iir::IIR* rhs) {
   //IIR -> Stencil -> Multistage -> Stage -> Do Method -> (StatementAccessPair)
 
   //IIR
@@ -203,22 +199,25 @@ static bool compareDerivedInformation(iir::IIR* lhs, iir::IIR* rhs) {
     //   [X] std::unordered_map<int, FieldInfo> fields_;  
     // };
 
-    IIR_EARLY_EXIT((lhsStencil->getStageDependencyGraph() == rhsStencil->getStageDependencyGraph())); //this _should_ work, to be tested
-    IIR_EARLY_EXIT((lhsStencil->getFields() == rhsStencil->getFields()));
+    ASSERT_TRUE(lhsStencil->getStageDependencyGraph().get() 
+      == rhsStencil->getStageDependencyGraph().get());
+    ASSERT_TRUE(lhsStencil->getFields() == rhsStencil->getFields());
 
     // checking each of the multistages
     for(int mssidx = 0, mssSize = lhsStencil->getChildren().size(); mssidx < mssSize; ++mssidx) {
       const auto& lhsMSS = lhsStencil->getChild(mssidx);
       const auto& rhsMSS = rhsStencil->getChild(mssidx);
 
-      IIR_EARLY_EXIT((lhsMSS->getCaches().size() == rhsMSS->getCaches().size()));
-      for(const auto& lhsPair : lhsMSS->getCaches()) {
-        IIR_EARLY_EXIT(rhsMSS->getCaches().count(lhsPair.first));
-        auto rhsValue = rhsMSS->getCaches().at(lhsPair.first);
-        IIR_EARLY_EXIT((rhsValue == lhsPair.second));
-      }
+      ASSERT_TRUE(lhsMSS->getCaches() == rhsMSS->getCaches());
 
-      IIR_EARLY_EXIT((lhsMSS->getFields() == rhsMSS->getFields()));
+      // ASSERT_TRUE(lhsMSS->getCaches().size() == rhsMSS->getCaches().size());
+      // for(const auto& lhsPair : lhsMSS->getCaches()) {
+      //   ASSERT_TRUE(rhsMSS->getCaches().count(lhsPair.first));
+      //   auto rhsValue = rhsMSS->getCaches().at(lhsPair.first);
+      //   ASSERT_TRUE(rhsValue == lhsPair.second);
+      // }
+
+      ASSERT_TRUE(lhsMSS->getFields() == rhsMSS->getFields());
 
       // checking each of the stages
       for(int stageidx = 0, stageSize = lhsMSS->getChildren().size(); stageidx < stageSize;
@@ -240,13 +239,13 @@ static bool compareDerivedInformation(iir::IIR* lhs, iir::IIR* rhs) {
         //   [X] bool requiresSync_ = false;
         // };
 
-        IIR_EARLY_EXIT((lhsStage->getFields() == rhsStage->getFields()));
-        IIR_EARLY_EXIT((lhsStage->getAllGlobalVariables() == rhsStage->getAllGlobalVariables()));
-        IIR_EARLY_EXIT((lhsStage->getGlobalVariables() == rhsStage->getGlobalVariables()));
-        IIR_EARLY_EXIT((lhsStage->getGlobalVariablesFromStencilFunctionCalls() 
-          == rhsStage->getGlobalVariablesFromStencilFunctionCalls()));
-        IIR_EARLY_EXIT((lhsStage->getExtents() == rhsStage->getExtents()));
-        IIR_EARLY_EXIT((lhsStage->getRequiresSync() == rhsStage->getRequiresSync()));
+        ASSERT_TRUE(lhsStage->getFields() == rhsStage->getFields());
+        ASSERT_TRUE(lhsStage->getAllGlobalVariables() == rhsStage->getAllGlobalVariables());
+        ASSERT_TRUE(lhsStage->getGlobalVariables() == rhsStage->getGlobalVariables());
+        ASSERT_TRUE(lhsStage->getGlobalVariablesFromStencilFunctionCalls() 
+          == rhsStage->getGlobalVariablesFromStencilFunctionCalls());
+        ASSERT_TRUE(lhsStage->getExtents() == rhsStage->getExtents());
+        ASSERT_TRUE(lhsStage->getRequiresSync() == rhsStage->getRequiresSync());
 
         // checking each of the doMethods
         for(int doMethodidx = 0, doMethodSize = lhsStage->getChildren().size();
@@ -260,17 +259,17 @@ static bool compareDerivedInformation(iir::IIR* lhs, iir::IIR* rhs) {
           //   [X] std::shared_ptr<DependencyGraphAccesses> dependencyGraph_;
           // };
 
-          IIR_EARLY_EXIT((lhsDoMethod->getFields() == rhsDoMethod->getFields()));
-          IIR_EARLY_EXIT((lhsDoMethod->getDependencyGraph() == rhsDoMethod->getDependencyGraph()));
+          ASSERT_TRUE(lhsDoMethod->getFields() == rhsDoMethod->getFields());
+          ASSERT_TRUE(lhsDoMethod->getDependencyGraph() == rhsDoMethod->getDependencyGraph());
         }
       }
     }
   }
 
-  return true;
+  SUCCEED();
 }
 
-static void createCopyStencilIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target) {
+void createCopyStencilIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target) {
   ///////////////// Generation of the IIR
   sir::Attr attributes;
   int stencilID = target->nextUID();
@@ -362,7 +361,7 @@ static void createCopyStencilIIRInMemory(std::shared_ptr<iir::StencilInstantiati
   }
 }
 
-static void createLapStencilIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target) {
+void createLapStencilIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target) {
   ///////////////// Generation of the IIR
   sir::Attr attributes;
   int stencilID = target->nextUID();
@@ -535,7 +534,7 @@ static void createLapStencilIIRInMemory(std::shared_ptr<iir::StencilInstantiatio
   }
 }
 
-static void readIIRFromFile(OptimizerContext &optimizer, std::shared_ptr<iir::StencilInstantiation>& target, std::string fname) {
+void readIIRFromFile(OptimizerContext &optimizer, std::shared_ptr<iir::StencilInstantiation>& target, std::string fname) {
   target =
       IIRSerializer::deserialize(fname, &optimizer, IIRSerializer::SK_Json);
 
@@ -543,65 +542,57 @@ static void readIIRFromFile(OptimizerContext &optimizer, std::shared_ptr<iir::St
   optimizer.restoreIIR("<restored>", target);
 }
 
-static bool compareIIRs(std::shared_ptr<iir::StencilInstantiation> lhs, std::shared_ptr<iir::StencilInstantiation> rhs) {
+void compareIIRs(std::shared_ptr<iir::StencilInstantiation> lhs, std::shared_ptr<iir::StencilInstantiation> rhs) {
   //first compare the (structure of the) iirs, this is a precondition before we can actually check the metadata / derived info
-  IIR_EARLY_EXIT((compareIIRstructures(lhs->getIIR().get(), rhs->getIIR().get())));
+  compareIIRstructures(lhs->getIIR().get(), rhs->getIIR().get());
 
   //then we compare the meta data
-  IIR_EARLY_EXIT((compareMetaData(lhs->getMetaData(), rhs->getMetaData())));
+  compareMetaData(lhs->getMetaData(), rhs->getMetaData());
 
   //and finally the derived info 
-  IIR_EARLY_EXIT((compareMetaData(lhs->getMetaData(), rhs->getMetaData())));
-  ((compareDerivedInformation(lhs->getIIR().get(), rhs->getIIR().get())));
-
-  return true;
+  compareDerivedInformation(lhs->getIIR().get(), rhs->getIIR().get());  
 }
 
 TEST(IIRDeserializerTest, CopyStencil) {
-  char cCurrentPath[FILENAME_MAX];
-  getcwd(cCurrentPath, sizeof(cCurrentPath));
-  cCurrentPath[sizeof(cCurrentPath) - 1] = '\0'; /* not really required */
-  printf ("The current working directory is %s", cCurrentPath);
-
   Options compileOptions;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
   DawnCompiler compiler(&compileOptions);   
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions, std::make_shared<dawn::SIR>());
 
-  //read IIRs from file
+  //read IIR from file
   std::shared_ptr<iir::StencilInstantiation> copy_stencil_from_file = std::make_shared<iir::StencilInstantiation>(
-    *optimizer.getSIR()->GlobalVariableMap, optimizer.getSIR()->StencilFunctions);
+    dawn::sir::GlobalVariableMap(), std::vector<std::shared_ptr<sir::StencilFunction>>());
   readIIRFromFile(optimizer, copy_stencil_from_file, "reference_iir/copy_stencil.iir");
   UIDGenerator::getInstance()->reset();
 
-  //generate IIRs in memory
+  //generate IIR in memory
   std::shared_ptr<iir::StencilInstantiation> copy_stencil_memory = std::make_shared<iir::StencilInstantiation>(
     *optimizer.getSIR()->GlobalVariableMap, optimizer.getSIR()->StencilFunctions);
   createCopyStencilIIRInMemory(copy_stencil_memory);
   UIDGenerator::getInstance()->reset(); 
 
-  EXPECT_TRUE(compareIIRs(copy_stencil_from_file, copy_stencil_memory));
+  compareIIRs(copy_stencil_from_file, copy_stencil_memory);
 }
 
 TEST(IIRDeserializerTest, LaplStencil) {
   Options compileOptions;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DawnCompiler compiler(&compileOptions);   
+  DawnCompiler compiler(&compileOptions);
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions, std::make_shared<dawn::SIR>());
 
-  //read IIRs from file
+  //read IIR from file   
   std::shared_ptr<iir::StencilInstantiation> lap_stencil_from_file = std::make_shared<iir::StencilInstantiation>(
-    *optimizer.getSIR()->GlobalVariableMap, optimizer.getSIR()->StencilFunctions);
+    dawn::sir::GlobalVariableMap(), std::vector<std::shared_ptr<sir::StencilFunction>>());
   readIIRFromFile(optimizer, lap_stencil_from_file, "reference_iir/lap_stencil.iir");
   UIDGenerator::getInstance()->reset();
 
-  //generate IIRs in memory
+  //generate IIR in memory
   std::shared_ptr<iir::StencilInstantiation> lap_stencil_memory = std::make_shared<iir::StencilInstantiation>(   
     *optimizer.getSIR()->GlobalVariableMap, optimizer.getSIR()->StencilFunctions);
   createLapStencilIIRInMemory(lap_stencil_memory); 
   UIDGenerator::getInstance()->reset();
 
-  EXPECT_TRUE(compareIIRs(lap_stencil_from_file, lap_stencil_memory));
+  compareIIRs(lap_stencil_from_file, lap_stencil_memory);
 }
 
 } // anonymous namespace

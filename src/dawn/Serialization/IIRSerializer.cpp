@@ -584,13 +584,8 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
         makeLocation(call.stencil_call_decl_stmt().stencil_call()));
     for(const auto& protoFieldName : call.stencil_call_decl_stmt().stencil_call().arguments()) {
       astStencilCall->Args.push_back(protoFieldName);
-    }    
-    
-    //this introduces problems when trying to retrieve the stencil_call_decl_stmt later on!
-    // auto stmt = std::make_shared<iir::StencilCallDeclStmt>(
-    //       astStencilCall, makeLocation(call.stencil_call_decl_stmt()));
+    }
 
-    //reverted to this version, which was commented out
     auto stmt = declStmtFinder.stencilCallDecl[call.stencil_call_decl_stmt().id()];
 
     stmt->setID(call.stencil_call_decl_stmt().id());
