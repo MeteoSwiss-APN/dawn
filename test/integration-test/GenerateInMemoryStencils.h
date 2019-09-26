@@ -12,18 +12,14 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Support/STLExtras.h"
-#include "dawn/Unittest/UnittestLogger.h"
-#include <gtest/gtest.h>
+#pragma once
 
-int main(int argc, char* argv[]) {
+#include <memory>
 
-  // Initialize gtest
-  testing::InitGoogleTest(&argc, argv);
+#include "dawn/IIR/IIR.h"
+#include "dawn/IIR/StencilInstantiation.h"
 
-  // Initialize Unittest-Logger
-  auto logger = dawn::make_unique<dawn::UnittestLogger>();
-  dawn::Logger::getSingleton().registerLogger(logger.get());
+using namespace dawn;
 
-  return RUN_ALL_TESTS();
-}
+void createCopyStencilIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target);
+void createLapStencilIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target);

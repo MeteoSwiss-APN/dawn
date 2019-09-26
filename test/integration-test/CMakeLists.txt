@@ -31,7 +31,7 @@ macro(dawn_add_integrationtest_impl)
   yoda_add_unittest(
     NAME ${ARG_NAME}
     SOURCES ${ARG_SOURCES}
-    DEPENDS DawnUnittestStatic DawnCStatic DawnStatic  ${DAWN_EXTERNAL_LIBRARIES} gtest
+    DEPENDS DawnUnittestStatic DawnCStatic DawnStatic ${DAWN_EXTERNAL_LIBRARIES} gtest
     OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/integrationtest
     GTEST_ARGS --gtest_color=yes
   )
@@ -41,6 +41,15 @@ dawn_add_integrationtest_impl(
   NAME DawnIntegrationTest
   SOURCES TestMain.cpp
           TestIIRDeserializer.cpp
+          GenerateInMemoryStencils.cpp
+)
+
+yoda_add_executable(
+  NAME DawnRegenerateInMemoryStencils
+  SOURCES RegenerateIIRMain.cpp
+          GenerateInMemoryStencils.cpp
+  DEPENDS DawnUnittestStatic DawnCStatic DawnStatic ${DAWN_EXTERNAL_LIBRARIES}
+  OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/integrationtest
 )
 
 file(COPY reference_iir DESTINATION ${CMAKE_BINARY_DIR}/bin/integrationtest)

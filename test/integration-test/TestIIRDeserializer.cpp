@@ -1,113 +1,101 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Compiler/DawnCompiler.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTUtil.h"
 #include "dawn/IIR/FieldAccessMetadata.h"
+#include "dawn/IIR/IIR.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/Serialization/IIRSerializer.h"
+#include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Optimizer/AccessComputation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Optimizer/PassComputeStageExtents.h"
-#include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/PassSetStageName.h"
+#include "dawn/Optimizer/PassTemporaryType.h"
 #include "dawn/Optimizer/StatementMapper.h"
 #include "dawn/SIR/ASTFwd.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/STLExtras.h"
-#include "dawn/IIR/IIR.h"
-#include "dawn/IIR/StencilMetaInformation.h"
 
-#include <stack>
+#include <gtest/gtest.h>
 #include <memory>
+#include <stack>
 #include <string>
 #include <unistd.h>
-#include <gtest/gtest.h>
+
+#include "GenerateInMemoryStencils.h"
 
 using namespace dawn;
 
 namespace {
 
 void compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
-  ASSERT_TRUE(lhs->checkTreeConsistency());
-  ASSERT_TRUE(rhs->checkTreeConsistency());
+  EXPECT_TRUE(lhs->checkTreeConsistency());
+  EXPECT_TRUE(rhs->checkTreeConsistency());
   // checking the stencils
-  ASSERT_TRUE(lhs->getChildren().size() == rhs->getChildren().size());
+  ASSERT_EQ(lhs->getChildren().size(), rhs->getChildren().size());
   for(int stencils = 0, size = lhs->getChildren().size(); stencils < size; ++stencils) {
     const auto& lhsStencil = lhs->getChild(stencils);
     const auto& rhsStencil = rhs->getChild(stencils);
-    ASSERT_TRUE(lhsStencil->getStencilAttributes() == rhsStencil->getStencilAttributes());    
-    ASSERT_TRUE(lhsStencil->getStencilID() == rhsStencil->getStencilID());
+    EXPECT_EQ(lhsStencil->getStencilAttributes(), rhsStencil->getStencilAttributes());
+    EXPECT_EQ(lhsStencil->getStencilID(), rhsStencil->getStencilID());
 
     // checking each of the multistages
-    ASSERT_TRUE(lhsStencil->getChildren().size() == rhsStencil->getChildren().size());
+    ASSERT_EQ(lhsStencil->getChildren().size(), rhsStencil->getChildren().size());
     for(int mssidx = 0, mssSize = lhsStencil->getChildren().size(); mssidx < mssSize; ++mssidx) {
       const auto& lhsMSS = lhsStencil->getChild(mssidx);
       const auto& rhsMSS = rhsStencil->getChild(mssidx);
-      ASSERT_TRUE(lhsMSS->getLoopOrder() == rhsMSS->getLoopOrder());     
-      ASSERT_TRUE(lhsMSS->getID() == rhsMSS->getID());
+      EXPECT_EQ(lhsMSS->getLoopOrder(), rhsMSS->getLoopOrder());
+      EXPECT_EQ(lhsMSS->getID(), rhsMSS->getID());
 
       // checking each of the stages
-      ASSERT_TRUE(lhsMSS->getChildren().size() == rhsMSS->getChildren().size());
+      ASSERT_EQ(lhsMSS->getChildren().size(), rhsMSS->getChildren().size());
       for(int stageidx = 0, stageSize = lhsMSS->getChildren().size(); stageidx < stageSize;
           ++stageidx) {
         const auto& lhsStage = lhsMSS->getChild(stageidx);
         const auto& rhsStage = rhsMSS->getChild(stageidx);
-        ASSERT_TRUE(lhsStage->getStageID() == rhsStage->getStageID());
+        EXPECT_EQ(lhsStage->getStageID(), rhsStage->getStageID());
 
         // checking each of the doMethods
-        ASSERT_TRUE(lhsStage->getChildren().size() == rhsStage->getChildren().size());
+        ASSERT_EQ(lhsStage->getChildren().size(), rhsStage->getChildren().size());
         for(int doMethodidx = 0, doMethodSize = lhsStage->getChildren().size();
             doMethodidx < doMethodSize; ++doMethodidx) {
           const auto& lhsDoMethod = lhsStage->getChild(doMethodidx);
           const auto& rhsDoMethod = rhsStage->getChild(doMethodidx);
-          ASSERT_TRUE(lhsDoMethod->getID() == rhsDoMethod->getID());
-          ASSERT_TRUE(lhsDoMethod->getInterval() == rhsDoMethod->getInterval());
+          EXPECT_EQ(lhsDoMethod->getID(), rhsDoMethod->getID());
+          EXPECT_EQ(lhsDoMethod->getInterval(), rhsDoMethod->getInterval());
 
           // checking each of the StmtAccesspairs
-          ASSERT_TRUE(lhsDoMethod->getChildren().size() == rhsDoMethod->getChildren().size());
+          ASSERT_EQ(lhsDoMethod->getChildren().size(), rhsDoMethod->getChildren().size());
           for(int stmtidx = 0, stmtSize = lhsDoMethod->getChildren().size(); stmtidx < stmtSize;
               ++stmtidx) {
             const auto& lhsStmt = lhsDoMethod->getChild(stmtidx);
             const auto& rhsStmt = rhsDoMethod->getChild(stmtidx);
             // check the statement
-            ASSERT_TRUE(lhsStmt->getStatement()->ASTStmt->equals(rhsStmt->getStatement()->ASTStmt.get()));
+            EXPECT_TRUE(
+                lhsStmt->getStatement()->ASTStmt->equals(rhsStmt->getStatement()->ASTStmt.get()));
 
             // check the accesses
-            ASSERT_TRUE(lhsStmt->getCallerAccesses()->getReadAccesses()
-              == rhsStmt->getCallerAccesses()->getReadAccesses());
-            ASSERT_TRUE(lhsStmt->getCallerAccesses()->getWriteAccesses()
-              == rhsStmt->getCallerAccesses()->getWriteAccesses());
-
-            // if(lhsStmt->getCallerAccesses()) {
-            //   for(const auto& lhsPair : rhsStmt->getCallerAccesses()->getReadAccesses()) {
-            //     ASSERT_TRUE(
-            //         rhsStmt->getCallerAccesses()->getReadAccesses().count(lhsPair.first));
-            //     auto rhsValue = rhsStmt->getCallerAccesses()->getReadAccesses().at(lhsPair.first);
-            //     ASSERT_TRUE(rhsValue == lhsPair.second);
-            //   }
-            //   for(const auto& lhsPair : rhsStmt->getCallerAccesses()->getWriteAccesses()) {
-            //     ASSERT_TRUE(
-            //         rhsStmt->getCallerAccesses()->getWriteAccesses().count(lhsPair.first));
-            //     auto rhsValue = rhsStmt->getCallerAccesses()->getWriteAccesses().at(lhsPair.first);
-            //     ASSERT_TRUE(rhsValue == lhsPair.second);
-            //   }
-            // }
+            EXPECT_EQ(lhsStmt->getCallerAccesses()->getReadAccesses(),
+                      rhsStmt->getCallerAccesses()->getReadAccesses());
+            EXPECT_EQ(lhsStmt->getCallerAccesses()->getWriteAccesses(),
+                      rhsStmt->getCallerAccesses()->getWriteAccesses());
           }
         }
       }
@@ -116,108 +104,80 @@ void compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
   const auto& lhsControlFlowStmts = lhs->getControlFlowDescriptor().getStatements();
   const auto& rhsControlFlowStmts = rhs->getControlFlowDescriptor().getStatements();
 
-  ASSERT_TRUE(lhsControlFlowStmts.size() == rhsControlFlowStmts.size());
+  ASSERT_EQ(lhsControlFlowStmts.size(), rhsControlFlowStmts.size());
   for(int i = 0, size = lhsControlFlowStmts.size(); i < size; ++i) {
-    if(!lhsControlFlowStmts[i]->ASTStmt->equals(rhsControlFlowStmts[i]->ASTStmt.get()))
-      FAIL();
+    ASSERT_TRUE(lhsControlFlowStmts[i]->ASTStmt->equals(rhsControlFlowStmts[i]->ASTStmt.get()));
+
     if(lhsControlFlowStmts[i]->StackTrace) {
       if(rhsControlFlowStmts[i]->StackTrace) {
         for(int j = 0, jsize = lhsControlFlowStmts[i]->StackTrace->size(); j < jsize; ++j) {
-          if(!(lhsControlFlowStmts[i]->StackTrace->at(j) ==
-               rhsControlFlowStmts[i]->StackTrace->at(j))) {
-            FAIL();
-          }
+          EXPECT_EQ(*lhsControlFlowStmts[i]->StackTrace->at(j),
+                    *rhsControlFlowStmts[i]->StackTrace->at(j));
         }
+      } else {
+        FAIL();
       }
-      FAIL();
     }
   }
-
-  SUCCEED();
 }
 
 void compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformation& rhs) {
-  ASSERT_TRUE(lhs.getExprIDToAccessIDMap() == rhs.getExprIDToAccessIDMap());
-  ASSERT_TRUE(lhs.getStmtIDToAccessIDMap() == rhs.getStmtIDToAccessIDMap());
-  ASSERT_TRUE(lhs.getAccessesOfType<iir::FieldAccessType::FAT_Literal>() ==
-                  rhs.getAccessesOfType<iir::FieldAccessType::FAT_Literal>());
-  ASSERT_TRUE(lhs.getAccessesOfType<iir::FieldAccessType::FAT_Field>() ==
-                  rhs.getAccessesOfType<iir::FieldAccessType::FAT_Field>());
-  ASSERT_TRUE(lhs.getAccessesOfType<iir::FieldAccessType::FAT_APIField>() ==
-                  rhs.getAccessesOfType<iir::FieldAccessType::FAT_APIField>());
-  ASSERT_TRUE(lhs.getAccessesOfType<iir::FieldAccessType::FAT_StencilTemporary>() ==
-                  rhs.getAccessesOfType<iir::FieldAccessType::FAT_StencilTemporary>());
-  ASSERT_TRUE(lhs.getAccessesOfType<iir::FieldAccessType::FAT_GlobalVariable>() ==
-                  rhs.getAccessesOfType<iir::FieldAccessType::FAT_GlobalVariable>());
+  EXPECT_EQ(lhs.getExprIDToAccessIDMap(), rhs.getExprIDToAccessIDMap());
+  EXPECT_EQ(lhs.getStmtIDToAccessIDMap(), rhs.getStmtIDToAccessIDMap());
+  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::FAT_Literal>(),
+            rhs.getAccessesOfType<iir::FieldAccessType::FAT_Literal>());
+  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::FAT_Field>(),
+            rhs.getAccessesOfType<iir::FieldAccessType::FAT_Field>());
+  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::FAT_APIField>(),
+            rhs.getAccessesOfType<iir::FieldAccessType::FAT_APIField>());
+  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::FAT_StencilTemporary>(),
+            rhs.getAccessesOfType<iir::FieldAccessType::FAT_StencilTemporary>());
+  EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::FAT_GlobalVariable>(),
+            rhs.getAccessesOfType<iir::FieldAccessType::FAT_GlobalVariable>());
 
   // we compare the content of the maps since the shared-ptr's are not the same
-  ASSERT_TRUE(lhs.getFieldNameToBCMap().size() == rhs.getFieldNameToBCMap().size());
+  ASSERT_EQ(lhs.getFieldNameToBCMap().size(), rhs.getFieldNameToBCMap().size());
   for(const auto& lhsPair : lhs.getFieldNameToBCMap()) {
-    ASSERT_TRUE(rhs.getFieldNameToBCMap().count(lhsPair.first));
+    EXPECT_TRUE(rhs.getFieldNameToBCMap().count(lhsPair.first));
     auto rhsValue = rhs.getFieldNameToBCMap().at(lhsPair.first);
-    ASSERT_TRUE(rhsValue->equals(lhsPair.second.get()));
+    EXPECT_TRUE(rhsValue->equals(lhsPair.second.get()));
   }
-  ASSERT_TRUE(lhs.getFieldIDToDimsMap() == rhs.getFieldIDToDimsMap());
-  ASSERT_TRUE(lhs.getStencilLocation() == rhs.getStencilLocation());
-  ASSERT_TRUE(lhs.getStencilName() == rhs.getStencilName());
-  //file name makes little sense for in memory stencil
-  //ASSERT_TRUE(lhs.getFileName() == rhs.getFileName()));  
+  EXPECT_EQ(lhs.getFieldIDToDimsMap(), rhs.getFieldIDToDimsMap());
+  EXPECT_EQ(lhs.getStencilLocation(), rhs.getStencilLocation());
+  EXPECT_EQ(lhs.getStencilName(), rhs.getStencilName());
+  // file name makes little sense for in memory stencil
+  // ASSERT_EQ(lhs.getFileName(), rhs.getFileName()));
 
   // we compare the content of the maps since the shared-ptr's are not the same
-  ASSERT_TRUE(lhs.getStencilIDToStencilCallMap().getDirectMap().size() ==
-                  rhs.getStencilIDToStencilCallMap().getDirectMap().size());
+  ASSERT_EQ(lhs.getStencilIDToStencilCallMap().getDirectMap().size(),
+            rhs.getStencilIDToStencilCallMap().getDirectMap().size());
   for(const auto& lhsPair : lhs.getStencilIDToStencilCallMap().getDirectMap()) {
-    ASSERT_TRUE(rhs.getStencilIDToStencilCallMap().getDirectMap().count(lhsPair.first));
+    EXPECT_TRUE(rhs.getStencilIDToStencilCallMap().getDirectMap().count(lhsPair.first));
     auto rhsValue = rhs.getStencilIDToStencilCallMap().getDirectMap().at(lhsPair.first);
-    ASSERT_TRUE(rhsValue->equals(lhsPair.second.get()));
+    EXPECT_TRUE(rhsValue->equals(lhsPair.second.get()));
   }
-
-  SUCCEED();
 }
 
 void compareDerivedInformation(iir::IIR* lhs, iir::IIR* rhs) {
-  //IIR -> Stencil -> Multistage -> Stage -> Do Method -> (StatementAccessPair)
-
-  //IIR
-  // struct DerivedInfo {
-  //   /// StageID to name Map. Filled by the `PassSetStageName`.
-  //   [X] std::unordered_map<int, std::string> StageIDToNameMap_;
-  //   /// Set containing the AccessIDs of fields which are manually allocated by the stencil and serve
-  //   /// as temporaries spanning over multiple stencils
-  // };
-
-  // IIR_EARLY_EXIT(lhs->getStageIDToNameMap() == rhs->getStageIDToNameMap());  //this is not present in stencil from memory
-
   for(int stencils = 0, size = lhs->getChildren().size(); stencils < size; ++stencils) {
     const auto& lhsStencil = lhs->getChild(stencils);
-    const auto& rhsStencil = rhs->getChild(stencils);    
+    const auto& rhsStencil = rhs->getChild(stencils);
 
-    //struct DerivedInfo {
-    //   /// Dependency graph of the stages of this stencil
-    //   [X] std::shared_ptr<DependencyGraphStage> stageDependencyGraph_;
-    //   /// field info properties
-    //   [X] std::unordered_map<int, FieldInfo> fields_;  
-    // };
+    EXPECT_EQ(lhsStencil->getStageDependencyGraph().get(),
+              rhsStencil->getStageDependencyGraph().get());
+    EXPECT_EQ(lhsStencil->getFields(), rhsStencil->getFields());
 
-    ASSERT_TRUE(lhsStencil->getStageDependencyGraph().get() 
-      == rhsStencil->getStageDependencyGraph().get());
-    ASSERT_TRUE(lhsStencil->getFields() == rhsStencil->getFields());
+    ASSERT_EQ(lhsStencil->getChildren().size(), rhsStencil->getChildren().size());
 
     // checking each of the multistages
     for(int mssidx = 0, mssSize = lhsStencil->getChildren().size(); mssidx < mssSize; ++mssidx) {
       const auto& lhsMSS = lhsStencil->getChild(mssidx);
       const auto& rhsMSS = rhsStencil->getChild(mssidx);
 
-      ASSERT_TRUE(lhsMSS->getCaches() == rhsMSS->getCaches());
+      EXPECT_EQ(lhsMSS->getCaches(), rhsMSS->getCaches());
+      EXPECT_EQ(lhsMSS->getFields(), rhsMSS->getFields());
 
-      // ASSERT_TRUE(lhsMSS->getCaches().size() == rhsMSS->getCaches().size());
-      // for(const auto& lhsPair : lhsMSS->getCaches()) {
-      //   ASSERT_TRUE(rhsMSS->getCaches().count(lhsPair.first));
-      //   auto rhsValue = rhsMSS->getCaches().at(lhsPair.first);
-      //   ASSERT_TRUE(rhsValue == lhsPair.second);
-      // }
-
-      ASSERT_TRUE(lhsMSS->getFields() == rhsMSS->getFields());
+      ASSERT_EQ(lhsMSS->getChildren().size(), rhsMSS->getChildren().size());
 
       // checking each of the stages
       for(int stageidx = 0, stageSize = lhsMSS->getChildren().size(); stageidx < stageSize;
@@ -225,27 +185,15 @@ void compareDerivedInformation(iir::IIR* lhs, iir::IIR* rhs) {
         const auto& lhsStage = lhsMSS->getChild(stageidx);
         const auto& rhsStage = rhsMSS->getChild(stageidx);
 
-        // struct DerivedInfo {
+        EXPECT_EQ(lhsStage->getFields(), rhsStage->getFields());
+        EXPECT_EQ(lhsStage->getAllGlobalVariables(), rhsStage->getAllGlobalVariables());
+        EXPECT_EQ(lhsStage->getGlobalVariables(), rhsStage->getGlobalVariables());
+        EXPECT_EQ(lhsStage->getGlobalVariablesFromStencilFunctionCalls(),
+                  rhsStage->getGlobalVariablesFromStencilFunctionCalls());
+        EXPECT_EQ(lhsStage->getExtents(), rhsStage->getExtents());
+        EXPECT_EQ(lhsStage->getRequiresSync(), rhsStage->getRequiresSync());
 
-        //   /// Declaration of the fields of this stage
-        //   [X] std::unordered_map<int, Field> fields_;
-
-        //   /// AccessIDs of the global variable accesses of this stage
-        //   [X] std::unordered_set<int> allGlobalVariables_;
-        //   [X] std::unordered_set<int> globalVariables_;
-        //   [X] std::unordered_set<int> globalVariablesFromStencilFunctionCalls_;
-
-        //   [X] Extents extents_;
-        //   [X] bool requiresSync_ = false;
-        // };
-
-        ASSERT_TRUE(lhsStage->getFields() == rhsStage->getFields());
-        ASSERT_TRUE(lhsStage->getAllGlobalVariables() == rhsStage->getAllGlobalVariables());
-        ASSERT_TRUE(lhsStage->getGlobalVariables() == rhsStage->getGlobalVariables());
-        ASSERT_TRUE(lhsStage->getGlobalVariablesFromStencilFunctionCalls() 
-          == rhsStage->getGlobalVariablesFromStencilFunctionCalls());
-        ASSERT_TRUE(lhsStage->getExtents() == rhsStage->getExtents());
-        ASSERT_TRUE(lhsStage->getRequiresSync() == rhsStage->getRequiresSync());
+        ASSERT_EQ(lhsStage->getChildren().size(), rhsStage->getChildren().size());
 
         // checking each of the doMethods
         for(int doMethodidx = 0, doMethodSize = lhsStage->getChildren().size();
@@ -253,323 +201,53 @@ void compareDerivedInformation(iir::IIR* lhs, iir::IIR* rhs) {
           const auto& lhsDoMethod = lhsStage->getChild(doMethodidx);
           const auto& rhsDoMethod = rhsStage->getChild(doMethodidx);
 
-          // struct DerivedInfo {
-          //   /// Declaration of the fields of this doMethod
-          //   [X] std::unordered_map<int, Field> fields_;
-          //   [X] std::shared_ptr<DependencyGraphAccesses> dependencyGraph_;
-          // };
-
-          ASSERT_TRUE(lhsDoMethod->getFields() == rhsDoMethod->getFields());
-          ASSERT_TRUE(lhsDoMethod->getDependencyGraph() == rhsDoMethod->getDependencyGraph());
+          ASSERT_EQ(lhsDoMethod->getFields(), rhsDoMethod->getFields());
+          ASSERT_EQ(lhsDoMethod->getDependencyGraph(), rhsDoMethod->getDependencyGraph());
         }
       }
     }
   }
-
-  SUCCEED();
 }
 
-void createCopyStencilIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target) {
-  ///////////////// Generation of the IIR
-  sir::Attr attributes;
-  int stencilID = target->nextUID();
-  target->getIIR()->insertChild(
-      make_unique<iir::Stencil>(target->getMetaData(), attributes, stencilID), target->getIIR());
-  const auto& IIRStencil = target->getIIR()->getChild(0);
-  // One Multistage with a parallel looporder
-  IIRStencil->insertChild(
-      make_unique<iir::MultiStage>(target->getMetaData(), iir::LoopOrderKind::LK_Parallel));
-  const auto& IIRMSS = (IIRStencil)->getChild(0);
-  IIRMSS->setID(target->nextUID());
+void readIIRFromFile(OptimizerContext& optimizer,
+                     std::shared_ptr<iir::StencilInstantiation>& target, std::string fname) {
+  target = IIRSerializer::deserialize(fname, &optimizer, IIRSerializer::SK_Json);
 
-  // Create one stage inside the MSS
-  IIRMSS->insertChild(make_unique<iir::Stage>(target->getMetaData(), target->nextUID()));
-  const auto& IIRStage = IIRMSS->getChild(0);
-
-  // Create one doMethod inside the Stage that spans the full domain
-  IIRStage->insertChild(make_unique<iir::DoMethod>(
-      iir::Interval(sir::Interval{sir::Interval::Start, sir::Interval::End}),
-      target->getMetaData()));
-  const auto& IIRDoMethod = IIRStage->getChild(0);
-  IIRDoMethod->setID(target->nextUID());
-
-  // create the StmtAccessPair
-  auto sirInField = std::make_shared<sir::Field>("in_field");
-  sirInField->IsTemporary = false;
-  sirInField->fieldDimensions = Array3i{1, 1, 1};
-  auto sirOutField = std::make_shared<sir::Field>("out_field");
-  sirOutField->IsTemporary = false;
-  sirOutField->fieldDimensions = Array3i{1, 1, 1};
-
-  auto lhs = std::make_shared<ast::FieldAccessExpr>(sirOutField->Name);
-  lhs->setID(target->nextUID());
-  auto rhs = std::make_shared<ast::FieldAccessExpr>(sirInField->Name);
-  rhs->setID(target->nextUID());
-
-  int in_fieldID = target->getMetaData().addField(iir::FieldAccessType::FAT_APIField,
-                                                     sirInField->Name, sirInField->fieldDimensions);
-  int out_fieldID = target->getMetaData().addField(
-      iir::FieldAccessType::FAT_APIField, sirOutField->Name, sirOutField->fieldDimensions);
-
-  auto expr = std::make_shared<ast::AssignmentExpr>(lhs, rhs);
-  expr->setID(target->nextUID());
-  auto stmt = std::make_shared<ast::ExprStmt>(expr);
-  stmt->setID(target->nextUID());
-  auto statement = std::make_shared<Statement>(stmt, nullptr);
-  auto insertee = make_unique<iir::StatementAccessesPair>(statement);
-  // Add the accesses to the Pair:
-  std::shared_ptr<iir::Accesses> callerAccesses = std::make_shared<iir::Accesses>();
-  callerAccesses->addWriteExtent(out_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
-  callerAccesses->addReadExtent(in_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
-  insertee->setCallerAccesses(callerAccesses);
-  // And add the StmtAccesspair to it
-  IIRDoMethod->insertChild(std::move(insertee));
-  IIRDoMethod->updateLevel();
-
-  // Add the control flow descriptor to the IIR
-  auto stencilCall = std::make_shared<ast::StencilCall>("generatedDriver");
-  stencilCall->Args.push_back(sirInField->Name);
-  stencilCall->Args.push_back(sirOutField->Name);
-  auto placeholderStencil = std::make_shared<ast::StencilCall>(
-      iir::InstantiationHelper::makeStencilCallCodeGenName(stencilID));
-  auto stencilCallDeclStmt = std::make_shared<iir::StencilCallDeclStmt>(placeholderStencil);
-  // Register the call and set it as a replacement for the next vertical region
-  target->getMetaData().addStencilCallStmt(stencilCallDeclStmt, stencilID);
-
-  auto stencilCallStatement = std::make_shared<Statement>(stencilCallDeclStmt, nullptr);
-  target->getIIR()->getControlFlowDescriptor().insertStmt(stencilCallStatement);
-
-  ///////////////// Generation of the Metadata
-
-  target->getMetaData().insertExprToAccessID(lhs, out_fieldID);
-  target->getMetaData().insertExprToAccessID(rhs, in_fieldID);
-  target->getMetaData().setStencilname("generated");
-
-  for(const auto& MS : iterateIIROver<iir::MultiStage>(*(target->getIIR()))) {
-    MS->update(iir::NodeUpdateType::levelAndTreeAbove);
-  }
-  // Iterate all statements (top -> bottom)
-  for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(target->getIIR()))) {
-    iir::Stage& stage = *stagePtr;
-    for(const auto& doMethod : stage.getChildren()) {
-      doMethod->update(iir::NodeUpdateType::level);
-    }
-    stage.update(iir::NodeUpdateType::level);
-  }
-  for(const auto& MSPtr : iterateIIROver<iir::Stage>(*(target->getIIR()))) {
-    MSPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
-  }
-}
-
-void createLapStencilIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target) {
-  ///////////////// Generation of the IIR
-  sir::Attr attributes;
-  int stencilID = target->nextUID();
-  target->getIIR()->insertChild(
-      make_unique<iir::Stencil>(target->getMetaData(), attributes, stencilID), target->getIIR());
-  const auto& IIRStencil = target->getIIR()->getChild(0);
-  // One Multistage with a parallel looporder
-  IIRStencil->insertChild(
-      make_unique<iir::MultiStage>(target->getMetaData(), iir::LoopOrderKind::LK_Parallel));
-  const auto& IIRMSS = (IIRStencil)->getChild(0);
-  IIRMSS->setID(target->nextUID());
-
-  auto IIRStage1 = make_unique<iir::Stage>(target->getMetaData(), target->nextUID());
-  auto IIRStage2 = make_unique<iir::Stage>(target->getMetaData(), target->nextUID());
-
-  IIRStage1->setExtents(iir::Extents(-1, +1, -1, +1, 0, 0));
-
-  // Create one doMethod inside the Stage that spans the full domain
-  IIRStage1->insertChild(make_unique<iir::DoMethod>(
-      iir::Interval(sir::Interval{sir::Interval::Start, sir::Interval::End}),
-      target->getMetaData()));
-  const auto& IIRDoMethod1 = IIRStage1->getChild(0);
-  IIRDoMethod1->setID(target->nextUID());
-
-  IIRStage2->insertChild(make_unique<iir::DoMethod>(
-      iir::Interval(sir::Interval{sir::Interval::Start, sir::Interval::End}),
-      target->getMetaData()));
-  const auto& IIRDoMethod2 = IIRStage2->getChild(0);
-  IIRDoMethod2->setID(target->nextUID());
-
-  // Create two stages inside the MSS
-  IIRMSS->insertChild(std::move(IIRStage1));
-  IIRMSS->insertChild(std::move(IIRStage2));
-
-  // create the StmtAccessPair
-  auto sirInField = std::make_shared<sir::Field>("in");
-  sirInField->IsTemporary = false;
-  sirInField->fieldDimensions = Array3i{1, 1, 1};
-  auto sirOutField = std::make_shared<sir::Field>("out");
-  sirOutField->IsTemporary = false;
-  sirOutField->fieldDimensions = Array3i{1, 1, 1};
-  auto sirTmpField = std::make_shared<sir::Field>("tmp");
-  sirOutField->IsTemporary = true;
-  sirOutField->fieldDimensions = Array3i{1, 1, 1};
-
-  auto lhsTmp = std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name);
-  lhsTmp->setID(target->nextUID());
-  
-  auto rhsInT1 = std::make_shared<ast::FieldAccessExpr>(sirInField->Name, Array3i{0, -2, 0});
-  auto rhsInT2 = std::make_shared<ast::FieldAccessExpr>(sirInField->Name, Array3i{0, +2, 0});
-  auto rhsInT3 = std::make_shared<ast::FieldAccessExpr>(sirInField->Name, Array3i{-2, 0, 0});
-  auto rhsInT4 = std::make_shared<ast::FieldAccessExpr>(sirInField->Name, Array3i{+2, 0, 0});
-
-  rhsInT1->setID(target->nextUID());
-  rhsInT2->setID(target->nextUID());
-  rhsInT3->setID(target->nextUID());
-  rhsInT4->setID(target->nextUID());
-
-  auto lhsOut = std::make_shared<ast::FieldAccessExpr>(sirOutField->Name);
-  lhsOut->setID(target->nextUID());
-
-  auto rhsTmpT1 = std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name, Array3i{0, -1, 0});
-  auto rhsTmpT2 = std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name, Array3i{0, +1, 0});
-  auto rhsTmpT3 = std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name, Array3i{-1, 0, 0});
-  auto rhsTmpT4 = std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name, Array3i{+1, 0, 0});
-
-  rhsTmpT1->setID(target->nextUID());
-  rhsTmpT2->setID(target->nextUID());
-  rhsTmpT3->setID(target->nextUID());
-  rhsTmpT4->setID(target->nextUID());
-
-  int inFieldID = target->getMetaData().addField(
-    iir::FieldAccessType::FAT_APIField, sirInField->Name, sirInField->fieldDimensions);
-  int tmpFieldID = target->getMetaData().addField(
-      iir::FieldAccessType::FAT_StencilTemporary, sirTmpField->Name, sirTmpField->fieldDimensions);
-  int outFieldID = target->getMetaData().addField(
-      iir::FieldAccessType::FAT_APIField, sirOutField->Name, sirOutField->fieldDimensions);
-
-  auto plusIn1 = std::make_shared<ast::BinaryOperator>(rhsInT1, std::string("+"), rhsInT2);
-  auto plusIn2 = std::make_shared<ast::BinaryOperator>(rhsInT3, std::string("+"), rhsInT4);
-  auto plusIn3 = std::make_shared<ast::BinaryOperator>(plusIn1, std::string("+"), plusIn2);
-
-  plusIn1->setID(target->nextUID());
-  plusIn2->setID(target->nextUID());
-  plusIn3->setID(target->nextUID());
-
-  auto assignmentTmpIn = std::make_shared<ast::AssignmentExpr>(lhsTmp, plusIn3);
-  assignmentTmpIn->setID(target->nextUID());
-
-  auto stmt1 = std::make_shared<ast::ExprStmt>(assignmentTmpIn);
-  stmt1->setID(target->nextUID());
-  auto statement1 = std::make_shared<Statement>(stmt1, nullptr);
-  auto insertee1 = make_unique<iir::StatementAccessesPair>(statement1);
-  // Add the accesses to the Pair:
-  std::shared_ptr<iir::Accesses> callerAccesses1 = std::make_shared<iir::Accesses>();
-  callerAccesses1->addWriteExtent(tmpFieldID, iir::Extents{0, 0, 0, 0, 0, 0});
-  callerAccesses1->addReadExtent(inFieldID, iir::Extents{-2, 2, -2, 2, 0, 0});
-  insertee1->setCallerAccesses(callerAccesses1);
-  // And add the StmtAccesspair to it
-  IIRDoMethod1->insertChild(std::move(insertee1));
-  IIRDoMethod1->updateLevel();
-
-  auto plusTmp1 = std::make_shared<ast::BinaryOperator>(rhsTmpT1, std::string("+"), rhsTmpT2);
-  auto plusTmp2 = std::make_shared<ast::BinaryOperator>(rhsTmpT3, std::string("+"), rhsTmpT4);
-  auto plusTmp3 = std::make_shared<ast::BinaryOperator>(plusTmp1, std::string("+"), plusTmp2);
-
-  plusTmp1->setID(target->nextUID());
-  plusTmp2->setID(target->nextUID());
-  plusTmp3->setID(target->nextUID());
-
-  auto assignmentOutTmp = std::make_shared<ast::AssignmentExpr>(lhsOut, plusTmp3);
-  assignmentOutTmp->setID(target->nextUID());
-
-  auto stmt2 = std::make_shared<ast::ExprStmt>(assignmentOutTmp);
-  stmt2->setID(target->nextUID());
-  auto statement2 = std::make_shared<Statement>(stmt2, nullptr);
-  auto insertee2 = make_unique<iir::StatementAccessesPair>(statement2);
-  // Add the accesses to the Pair:
-  std::shared_ptr<iir::Accesses> callerAccesses2 = std::make_shared<iir::Accesses>();
-  callerAccesses2->addWriteExtent(outFieldID, iir::Extents{0, 0, 0, 0, 0, 0});
-  callerAccesses2->addReadExtent(tmpFieldID, iir::Extents{-1, 1, -1, 1, 0, 0});
-  insertee2->setCallerAccesses(callerAccesses2);
-  // And add the StmtAccesspair to it
-  IIRDoMethod2->insertChild(std::move(insertee2));
-  IIRDoMethod2->updateLevel();
-
-  // Add the control flow descriptor to the IIR
-  auto stencilCall = std::make_shared<ast::StencilCall>("generatedDriver");
-  stencilCall->Args.push_back(sirInField->Name);
-  // stencilCall->Args.push_back(sirTmpField->Name);
-  stencilCall->Args.push_back(sirOutField->Name);
-  auto placeholderStencil = std::make_shared<ast::StencilCall>(
-      iir::InstantiationHelper::makeStencilCallCodeGenName(stencilID));
-  auto stencilCallDeclStmt = std::make_shared<iir::StencilCallDeclStmt>(placeholderStencil);
-  // Register the call and set it as a replacement for the next vertical region
-  target->getMetaData().addStencilCallStmt(stencilCallDeclStmt, stencilID);
-
-  auto stencilCallStatement = std::make_shared<Statement>(stencilCallDeclStmt, nullptr);
-  target->getIIR()->getControlFlowDescriptor().insertStmt(stencilCallStatement);
-
-  ///////////////// Generation of the Metadata
-
-  target->getMetaData().insertExprToAccessID(lhsTmp, tmpFieldID);
-  target->getMetaData().insertExprToAccessID(rhsInT1, inFieldID);
-  target->getMetaData().insertExprToAccessID(rhsInT2, inFieldID);
-  target->getMetaData().insertExprToAccessID(rhsInT3, inFieldID);
-  target->getMetaData().insertExprToAccessID(rhsInT4, inFieldID);
-
-  target->getMetaData().insertExprToAccessID(lhsOut, outFieldID);
-  target->getMetaData().insertExprToAccessID(rhsTmpT1, tmpFieldID);
-  target->getMetaData().insertExprToAccessID(rhsTmpT2, tmpFieldID);
-  target->getMetaData().insertExprToAccessID(rhsTmpT3, tmpFieldID);
-  target->getMetaData().insertExprToAccessID(rhsTmpT4, tmpFieldID);
-
-  target->getMetaData().setStencilname("generated");
-
-  for(const auto& MS : iterateIIROver<iir::MultiStage>(*(target->getIIR()))) {
-    MS->update(iir::NodeUpdateType::levelAndTreeAbove);
-  }
-  // Iterate all statements (top -> bottom)
-  for(const auto& stagePtr : iterateIIROver<iir::Stage>(*(target->getIIR()))) {
-    iir::Stage& stage = *stagePtr;
-    for(const auto& doMethod : stage.getChildren()) {
-      doMethod->update(iir::NodeUpdateType::level);
-    }
-    stage.update(iir::NodeUpdateType::level);
-  }
-  for(const auto& MSPtr : iterateIIROver<iir::Stage>(*(target->getIIR()))) {
-    MSPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
-  }
-}
-
-void readIIRFromFile(OptimizerContext &optimizer, std::shared_ptr<iir::StencilInstantiation>& target, std::string fname) {
-  target =
-      IIRSerializer::deserialize(fname, &optimizer, IIRSerializer::SK_Json);
-
-  //this is whats actually to be tested.
+  // this is whats actually to be tested.
   optimizer.restoreIIR("<restored>", target);
 }
 
-void compareIIRs(std::shared_ptr<iir::StencilInstantiation> lhs, std::shared_ptr<iir::StencilInstantiation> rhs) {
-  //first compare the (structure of the) iirs, this is a precondition before we can actually check the metadata / derived info
+void compareIIRs(std::shared_ptr<iir::StencilInstantiation> lhs,
+                 std::shared_ptr<iir::StencilInstantiation> rhs) {
+  // first compare the (structure of the) iirs, this is a precondition before we can actually check
+  // the metadata / derived info
   compareIIRstructures(lhs->getIIR().get(), rhs->getIIR().get());
 
-  //then we compare the meta data
+  // then we compare the meta data
   compareMetaData(lhs->getMetaData(), rhs->getMetaData());
 
-  //and finally the derived info 
-  compareDerivedInformation(lhs->getIIR().get(), rhs->getIIR().get());  
+  // and finally the derived info
+  compareDerivedInformation(lhs->getIIR().get(), rhs->getIIR().get());
 }
 
 TEST(IIRDeserializerTest, CopyStencil) {
   Options compileOptions;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
-  DawnCompiler compiler(&compileOptions);   
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions, std::make_shared<dawn::SIR>());
+  DawnCompiler compiler(&compileOptions);
+  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+                             std::make_shared<dawn::SIR>());
 
-  //read IIR from file
-  std::shared_ptr<iir::StencilInstantiation> copy_stencil_from_file = std::make_shared<iir::StencilInstantiation>(
-    dawn::sir::GlobalVariableMap(), std::vector<std::shared_ptr<sir::StencilFunction>>());
+  // read IIR from file
+  auto copy_stencil_from_file = std::make_shared<iir::StencilInstantiation>(
+      dawn::sir::GlobalVariableMap(), std::vector<std::shared_ptr<sir::StencilFunction>>());
   readIIRFromFile(optimizer, copy_stencil_from_file, "reference_iir/copy_stencil.iir");
   UIDGenerator::getInstance()->reset();
 
-  //generate IIR in memory
-  std::shared_ptr<iir::StencilInstantiation> copy_stencil_memory = std::make_shared<iir::StencilInstantiation>(
-    *optimizer.getSIR()->GlobalVariableMap, optimizer.getSIR()->StencilFunctions);
+  // generate IIR in memory
+  auto copy_stencil_memory = std::make_shared<iir::StencilInstantiation>(
+      *optimizer.getSIR()->GlobalVariableMap, optimizer.getSIR()->StencilFunctions);
   createCopyStencilIIRInMemory(copy_stencil_memory);
-  UIDGenerator::getInstance()->reset(); 
+  UIDGenerator::getInstance()->reset();
 
   compareIIRs(copy_stencil_from_file, copy_stencil_memory);
 }
@@ -578,18 +256,19 @@ TEST(IIRDeserializerTest, LaplStencil) {
   Options compileOptions;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
   DawnCompiler compiler(&compileOptions);
-  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions, std::make_shared<dawn::SIR>());
+  OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
+                             std::make_shared<dawn::SIR>());
 
-  //read IIR from file   
-  std::shared_ptr<iir::StencilInstantiation> lap_stencil_from_file = std::make_shared<iir::StencilInstantiation>(
-    dawn::sir::GlobalVariableMap(), std::vector<std::shared_ptr<sir::StencilFunction>>());
+  // read IIR from file
+  auto lap_stencil_from_file = std::make_shared<iir::StencilInstantiation>(
+      dawn::sir::GlobalVariableMap(), std::vector<std::shared_ptr<sir::StencilFunction>>());
   readIIRFromFile(optimizer, lap_stencil_from_file, "reference_iir/lap_stencil.iir");
   UIDGenerator::getInstance()->reset();
 
-  //generate IIR in memory
-  std::shared_ptr<iir::StencilInstantiation> lap_stencil_memory = std::make_shared<iir::StencilInstantiation>(   
-    *optimizer.getSIR()->GlobalVariableMap, optimizer.getSIR()->StencilFunctions);
-  createLapStencilIIRInMemory(lap_stencil_memory); 
+  // generate IIR in memory
+  auto lap_stencil_memory = std::make_shared<iir::StencilInstantiation>(
+      *optimizer.getSIR()->GlobalVariableMap, optimizer.getSIR()->StencilFunctions);
+  createLapStencilIIRInMemory(lap_stencil_memory);
   UIDGenerator::getInstance()->reset();
 
   compareIIRs(lap_stencil_from_file, lap_stencil_memory);

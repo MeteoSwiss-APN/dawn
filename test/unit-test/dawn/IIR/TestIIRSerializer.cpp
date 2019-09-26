@@ -75,7 +75,7 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
 
           // checking each of the StmtAccesspairs
           for(int stmtidx = 0, stmtSize = lhsDoMethod->getChildren().size(); stmtidx < stmtSize;
-              ++stmtidx) { 
+              ++stmtidx) {
             const auto& lhsStmt = lhsDoMethod->getChild(stmtidx);
             const auto& rhsStmt = rhsDoMethod->getChild(stmtidx);
             // check the statement
@@ -83,8 +83,10 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
                 (lhsStmt->getStatement()->ASTStmt->equals(rhsStmt->getStatement()->ASTStmt.get())));
 
             // check the accesses
-            IIR_EARLY_EXIT((lhsStmt->getCallerAccesses()->getReadAccesses().size() == lhsStmt->getCallerAccesses()->getReadAccesses().size()));
-            IIR_EARLY_EXIT((rhsStmt->getCallerAccesses()->getWriteAccesses().size() == rhsStmt->getCallerAccesses()->getWriteAccesses().size()));
+            IIR_EARLY_EXIT((lhsStmt->getCallerAccesses()->getReadAccesses().size() ==
+                            lhsStmt->getCallerAccesses()->getReadAccesses().size()));
+            IIR_EARLY_EXIT((rhsStmt->getCallerAccesses()->getWriteAccesses().size() ==
+                            rhsStmt->getCallerAccesses()->getWriteAccesses().size()));
 
             if(lhsStmt->getCallerAccesses()) {
               for(const auto& lhsPair : rhsStmt->getCallerAccesses()->getReadAccesses()) {
@@ -112,6 +114,7 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
   for(int i = 0, size = lhsControlFlowStmts.size(); i < size; ++i) {
     if(!lhsControlFlowStmts[i]->ASTStmt->equals(rhsControlFlowStmts[i]->ASTStmt.get()))
       return false;
+
     if(lhsControlFlowStmts[i]->StackTrace) {
       if(rhsControlFlowStmts[i]->StackTrace) {
         for(int j = 0, jsize = lhsControlFlowStmts[i]->StackTrace->size(); j < jsize; ++j) {
@@ -120,8 +123,9 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
             return false;
           }
         }
+      } else {
+        return false;
       }
-      return false;
     }
   }
 
@@ -249,7 +253,8 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
   IIR_EXPECT_NE(deserializedStencilInstantiaion, referenceInstantiaton);
 
   referenceInstantiaton->getMetaData().insertAccessOfType(
-      iir::FieldAccessType::FAT_StencilTemporary, 713, "field3"); //access ids should be globally unique, not only per type
+      iir::FieldAccessType::FAT_StencilTemporary, 713,
+      "field3"); // access ids should be globally unique, not only per type
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   // This would fail, since 712 is already present
@@ -270,7 +275,7 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 }
 
-TEST_F(IIRSerializerTest, ComplexStrucutes) { 
+TEST_F(IIRSerializerTest, ComplexStrucutes) {
   auto statement = std::make_shared<Statement>(
       std::make_shared<iir::StencilCallDeclStmt>(std::make_shared<ast::StencilCall>("me")),
       nullptr);
