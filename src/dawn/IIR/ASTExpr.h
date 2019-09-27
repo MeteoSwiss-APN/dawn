@@ -16,9 +16,35 @@
 #define DAWN_IIR_ASTEXPR_H
 
 #include "dawn/AST/ASTExpr.h"
+#include <boost/optional.hpp>
 
 namespace dawn {
 namespace iir {
+
+struct IIRVarAccessExprData : public ast::VarAccessExprData {
+  IIRVarAccessExprData() = default;
+  IIRVarAccessExprData(const IIRVarAccessExprData& other);
+
+  bool operator==(const IIRVarAccessExprData&);
+  bool operator!=(const IIRVarAccessExprData&);
+
+  std::unique_ptr<ast::VarAccessExprData> clone() const override;
+
+  boost::optional<int> AccessID;
+};
+
+struct IIRFieldAccessExprData : public ast::FieldAccessExprData {
+  IIRFieldAccessExprData() = default;
+  IIRFieldAccessExprData(const IIRFieldAccessExprData& other);
+
+  bool operator==(const IIRFieldAccessExprData&);
+  bool operator!=(const IIRFieldAccessExprData&);
+
+  std::unique_ptr<ast::FieldAccessExprData> clone() const override;
+
+  boost::optional<int> AccessID;
+};
+
 //
 // TODO refactor_AST: this is TEMPORARY, will be removed in the future
 //

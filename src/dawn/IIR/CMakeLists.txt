@@ -31,6 +31,7 @@ yoda_add_library(
   SOURCES AST.h
           ASTConverter.cpp
           ASTConverter.h
+          ASTExpr.cpp
           ASTExpr.h
           ASTFwd.h
           ASTStmt.h
