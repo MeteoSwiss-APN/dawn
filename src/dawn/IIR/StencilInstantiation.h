@@ -34,7 +34,7 @@ class OptimizerContext;
 
 namespace iir {
 
-enum class TemporaryScope { TS_LocalVariable, TS_StencilTemporary, TS_Field };
+enum class TemporaryScope { TS_LocalVariable, TS_StencilTemporary };
 
 /// @brief Specific instantiation of a stencil
 /// @ingroup optimizer
@@ -72,6 +72,9 @@ public:
 
   /// @brief check whether the `accessID` is accessed in more than one stencil
   bool isIDAccessedMultipleStencils(int accessID) const;
+
+  /// @brief check whether the `accessID` is accessed in more than one MS
+  bool isIDAccessedMultipleMSs(int accessID) const;
 
   /// @brief Get the value of the global variable `name`
   const sir::Value& getGlobalVariableValue(const std::string& name) const;

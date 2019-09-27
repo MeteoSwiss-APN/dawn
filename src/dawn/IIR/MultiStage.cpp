@@ -374,6 +374,9 @@ void MultiStage::DerivedInfo::clear() { fields_.clear(); }
 void MultiStage::clearDerivedInfo() { derivedInfo_.clear(); }
 
 const std::unordered_map<int, Field>& MultiStage::getFields() const { return derivedInfo_.fields_; }
+std::map<int, Field> MultiStage::getOrderedFields() const {
+  return support::orderMap(derivedInfo_.fields_);
+}
 
 void MultiStage::updateFromChildren() {
   for(const auto& stagePtr : children_) {

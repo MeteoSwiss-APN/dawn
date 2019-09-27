@@ -17,6 +17,7 @@
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/GridTools/ASTStencilBody.h"
 #include "dawn/CodeGen/GridTools/ASTStencilDesc.h"
+#include "dawn/CodeGen/GridTools/CodeGenUtils.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -109,26 +110,56 @@ std::string GTCodeGen::cacheWindowToString(iir::Cache::window const& cacheWindow
          std::to_string(cacheWindow.m_p) + ">";
 }
 
-void GTCodeGen::generateSyncStorages(
-    MemberFunction& method,
-    const IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& stencilFields) const {
-  // synchronize storages method
-  for(auto fieldIt : stencilFields) {
-    method.addStatement((*fieldIt).second.Name + ".sync()");
+void GTCodeGen::generateGridConstruction(MemberFunction& stencilConstructor,
+                                         const iir::Stencil& stencil,
+                                         IntervalDefinitions& intervalDefinitions,
+                                         const CodeGenProperties& codeGenProperties) const {
+
+  stencilConstructor.addComment("Grid");
+  stencilConstructor.addStatement("gridtools::halo_descriptor di = {dom.iminus(), dom.iminus(), "
+                                  "dom.iplus(), dom.isize() - 1 - dom.iplus(), dom.isize()}");
+  stencilConstructor.addStatement("gridtools::halo_descriptor dj = {dom.jminus(), dom.jminus(), "
+                                  "dom.jplus(), dom.jsize() - 1 - dom.jplus(), dom.jsize()}");
+
+  auto getLevelSize = [](int level) -> std::string {
+    switch(level) {
+    case sir::Interval::Start:
+      return "dom.kminus()";
+    case sir::Interval::End:
+      return "dom.ksize() == 0 ? 0 : dom.ksize() - dom.kplus()";
+    default:
+      return std::to_string(level);
+    }
+  };
+
+  int levelIdx = 0;
+
+  // compile the size of all the intervals in a vector from their positional definition
+  std::vector<std::string> gridLevels;
+  // notice we skip the first level since it is kstart and not included in the GT grid definition
+  for(auto it = intervalDefinitions.Levels.begin(), end = intervalDefinitions.Levels.end();
+      it != end; ++it, ++levelIdx) {
+    gridLevels.push_back(getLevelSize(*it));
   }
+
+  std::string stencilName =
+      codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
+
+  stencilConstructor.addStatement(getGridName(stencilName) + " grid_(di, dj, " +
+                                  RangeToString(",", "{", "}")(gridLevels) + ")");
 }
 
-void GTCodeGen::buildPlaceholderDefinitions(
-    MemberFunction& function,
-    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-    const std::map<int, iir::Stencil::FieldInfo>& stencilFields,
+void GTCodeGen::generatePlaceholderDefinitions(
+    Structure& stencilClass, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const sir::GlobalVariableMap& globalsMap, const CodeGenProperties& codeGenProperties) const {
+
+  const auto& stencilFields = stencilInstantiation->getIIR()->getFields();
 
   int accessorIdx = 0;
   for(const auto& fieldInfoPair : stencilFields) {
     const auto& fieldInfo = fieldInfoPair.second;
     // Fields
-    function.addTypeDef("p_" + fieldInfo.Name)
+    stencilClass.addTypeDef("p_" + fieldInfo.Name)
         .addType(c_gt() + (fieldInfo.IsTemporary ? "tmp_arg" : "arg"))
         .addTemplate(Twine(accessorIdx))
         .addTemplate(codeGenProperties.getParamType(stencilInstantiation, fieldInfo));
@@ -136,10 +167,11 @@ void GTCodeGen::buildPlaceholderDefinitions(
   }
 
   if(!globalsMap.empty()) {
-    function.addTypeDef("p_globals")
+    stencilClass.addTypeDef("globals_gp_t").addType(c_gt() + "global_parameter<backend_t,globals>");
+    stencilClass.addTypeDef("p_globals")
         .addType(c_gt() + "arg")
         .addTemplate(Twine(accessorIdx))
-        .addTemplate("decltype(m_globals_gp_)");
+        .addTemplate("globals_gp_t");
   }
 }
 
@@ -166,14 +198,7 @@ void GTCodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInsta
                   globalProp.first);
     setter.finishArgs();
     setter.addStatement("m_globals." + globalProp.first + "=" + globalProp.first);
-
-    for(const auto& stencil : stencilInstantiation.getStencils()) {
-      setter.addStatement(
-          "m_" +
-          codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil->getStencilID()) +
-          ".update_globals()");
-    }
-
+    setter.addStatement("update_globals()");
     setter.commit();
   }
 }
@@ -184,33 +209,39 @@ std::string GTCodeGen::generateStencilInstantiation(
 
   std::stringstream ssSW, ssMS, tss;
 
-  Namespace dawnNamespace("dawn_generated", ssSW);		
-  Namespace gridtoolsNamespace("gt", ssSW);		
+  Namespace dawnNamespace("dawn_generated", ssSW);
+  Namespace gridtoolsNamespace("gt", ssSW);
 
-  Class StencilWrapperClass(stencilInstantiation->getName(), ssSW);
-  StencilWrapperClass.changeAccessibility(
+  Class stencilWrapperClass(stencilInstantiation->getName(), ssSW);
+  stencilWrapperClass.changeAccessibility(
       "public"); // The stencils should technically be private but nvcc doesn't like it ...
 
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
   CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
 
-  generateBoundaryConditionFunctions(StencilWrapperClass, stencilInstantiation);
+  generateBoundaryConditionFunctions(stencilWrapperClass, stencilInstantiation);
 
-  generateStencilClasses(stencilInstantiation, StencilWrapperClass, codeGenProperties);
+  // Generate placeholders
+  generatePlaceholderDefinitions(stencilWrapperClass, stencilInstantiation, globalsMap,
+                                 codeGenProperties);
 
-  generateStencilWrapperMembers(StencilWrapperClass, stencilInstantiation, codeGenProperties);
+  generateStencilClasses(stencilInstantiation, stencilWrapperClass, codeGenProperties);
 
-  generateStencilWrapperCtr(StencilWrapperClass, stencilInstantiation, codeGenProperties);
+  generateStencilWrapperMembers(stencilWrapperClass, stencilInstantiation, codeGenProperties);
 
-  generateStencilWrapperRun(StencilWrapperClass, stencilInstantiation, codeGenProperties);
+  generateStencilWrapperCtr(stencilWrapperClass, stencilInstantiation, codeGenProperties);
+
+  generateStencilWrapperSyncMethod(stencilWrapperClass);
+
+  generateStencilWrapperRun(stencilWrapperClass, stencilInstantiation, codeGenProperties);
 
   if(!globalsMap.empty()) {
-    generateGlobalsAPI(*stencilInstantiation, StencilWrapperClass, globalsMap, codeGenProperties);
+    generateGlobalsAPI(*stencilInstantiation, stencilWrapperClass, globalsMap, codeGenProperties);
   }
 
-  generateStencilWrapperPublicMemberFunctions(StencilWrapperClass, codeGenProperties);
+  generateStencilWrapperPublicMemberFunctions(stencilWrapperClass, codeGenProperties);
 
-  StencilWrapperClass.commit();
+  stencilWrapperClass.commit();
 
   gridtoolsNamespace.commit();
   dawnNamespace.commit();
@@ -232,14 +263,6 @@ void GTCodeGen::generateStencilWrapperPublicMemberFunctions(
       codeGenProperties.getAllStencilProperties(StencilContext::SC_Stencil)) {
     stencilMembers.push_back("m_" + stencilProp.first);
   }
-  // Generate stencil getter
-  MemberFunction stencilGetter =
-      stencilWrapperClass.addMemberFunction("std::vector<gridtools::computation<void>*>", "getStencils");
-  stencilGetter.addStatement(
-      "return " +
-      RangeToString(", ", "std::vector<gridtools::computation<void>*>({", "})")(
-          stencilMembers, [](const std::string& member) { return member + ".get_stencil()"; }));
-  stencilGetter.commit();
 
   MemberFunction clearMeters = stencilWrapperClass.addMemberFunction("void", "reset_meters");
   clearMeters.startBody();
@@ -248,20 +271,30 @@ void GTCodeGen::generateStencilWrapperPublicMemberFunctions(
   });
   clearMeters << s;
   clearMeters.commit();
+
+  MemberFunction totalTime = stencilWrapperClass.addMemberFunction("double", "get_total_time");
+  totalTime.startBody();
+  totalTime.addStatement("double res = 0");
+  std::string s1 = RangeToString(";\n", "", "")(stencilMembers, [](const std::string& member) {
+    return "res +=" + member + ".get_stencil()->get_time()";
+  });
+  totalTime.addStatement(s1);
+  totalTime.addStatement("return res");
+  totalTime.commit();
 }
 
 void GTCodeGen::generateStencilWrapperRun(
     Class& stencilWrapperClass,
     const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
     const CodeGenProperties& codeGenProperties) const {
-
+  const auto& metadata = stencilInstantiation->getMetaData();
   const auto& stencils = stencilInstantiation->getStencils();
   // Create the StencilID -> stencil name map
   std::unordered_map<int, std::string> stencilIDToRunArguments;
 
   for(const auto& stencil : stencils) {
 
-    const auto fields = orderMap(stencil->getFields());
+    const auto fields = stencil->getOrderedFields();
     std::vector<iir::Stencil::FieldInfo> nonTempFields;
 
     for(const auto& field : fields) {
@@ -272,8 +305,8 @@ void GTCodeGen::generateStencilWrapperRun(
     stencilIDToRunArguments[stencil->getStencilID()] =
         "m_dom," +
         RangeToString(", ", "", "")(nonTempFields, [&](const iir::Stencil::FieldInfo& fieldInfo) {
-          if(stencilInstantiation->getMetaData().isAccessType(
-                 iir::FieldAccessType::FAT_InterStencilTemporary, fieldInfo.field.getAccessID()))
+          if(metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
+                                   fieldInfo.field.getAccessID()))
             return "m_" + fieldInfo.Name;
           else
             return fieldInfo.Name;
@@ -282,9 +315,25 @@ void GTCodeGen::generateStencilWrapperRun(
 
   // Generate the run method by generate code for the stencil description AST
   MemberFunction RunMethod = stencilWrapperClass.addMemberFunction("void", "run");
+
+  std::vector<std::string> apiFieldNames;
+
+  for(const auto& fieldID : metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>()) {
+    std::string name = metadata.getFieldNameFromAccessID(fieldID);
+    apiFieldNames.push_back(name);
+  }
+
+  for(const auto& fieldName : apiFieldNames) {
+    RunMethod.addArg(codeGenProperties.getParamType(stencilInstantiation, fieldName) + " " +
+                     fieldName);
+  }
+
   RunMethod.startBody();
 
-  ASTStencilDesc stencilDescCGVisitor(stencilInstantiation->getMetaData(), codeGenProperties,
+  RangeToString apiFieldArgs(",", "", "");
+  RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
+
+  ASTStencilDesc stencilDescCGVisitor(stencilInstantiation, codeGenProperties,
                                       stencilIDToRunArguments);
   stencilDescCGVisitor.setIndent(RunMethod.getIndent());
   for(const auto& statement :
@@ -293,6 +342,7 @@ void GTCodeGen::generateStencilWrapperRun(
     RunMethod << stencilDescCGVisitor.getCodeAndResetStream();
   }
 
+  RunMethod.addStatement("sync_storages(" + apiFieldArgs(apiFieldNames) + ")");
   RunMethod.commit();
 }
 void GTCodeGen::generateStencilWrapperCtr(
@@ -314,7 +364,8 @@ void GTCodeGen::generateStencilWrapperCtr(
   for(const auto& fieldID :
       stencilInstantiation->getMetaData().getAccessesOfType<iir::FieldAccessType::FAT_APIField>()) {
     std::string name = metadata.getFieldNameFromAccessID(fieldID);
-    StencilWrapperConstructor.addArg(codeGenProperties.getParamType(name) + " " + name);
+    StencilWrapperConstructor.addArg(codeGenProperties.getParamType(stencilInstantiation, name) +
+                                     "/*unused*/");
   }
 
   // Initialize allocated fields
@@ -328,11 +379,14 @@ void GTCodeGen::generateStencilWrapperCtr(
   }
   StencilWrapperConstructor.addInit("m_dom(dom)");
 
-  addBCFieldInitStencilWrapperCtr(StencilWrapperConstructor, codeGenProperties);
+  if(!globalsMap.empty()) {
+    StencilWrapperConstructor.addInit("m_globals_gp(" + c_gt() +
+                                      "make_global_parameter<backend_t>(m_globals))");
+  }
 
   // Initialize stencils
   for(const auto& stencil : stencils) {
-    const auto fields = orderMap(stencil->getFields());
+    const auto fields = stencil->getOrderedFields();
 
     std::vector<iir::Stencil::FieldInfo> nonTempFields;
 
@@ -342,21 +396,14 @@ void GTCodeGen::generateStencilWrapperCtr(
       }
     }
 
-    std::string initctr = "(dom, ";
+    std::string initctr = "(dom";
     if(!globalsMap.empty()) {
-      initctr = initctr + "m_globals,";
+      initctr = initctr + ", m_globals_gp";
     }
     StencilWrapperConstructor.addInit(
         "m_" +
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil->getStencilID()) +
-        RangeToString(", ", initctr.c_str(),
-                      ")")(nonTempFields, [&](const iir::Stencil::FieldInfo& fieldInfo) {
-          if(metadata.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary,
-                                   fieldInfo.field.getAccessID()))
-            return "m_" + fieldInfo.Name;
-          else
-            return fieldInfo.Name;
-        }));
+        initctr + ")");
   }
 
   StencilWrapperConstructor.commit();
@@ -370,8 +417,6 @@ void GTCodeGen::generateStencilWrapperMembers(
   //
   // Generate constructor/destructor and methods of the stencil wrapper
   //
-  generateBCFieldMembers(stencilWrapperClass, stencilInstantiation, codeGenProperties);
-
   stencilWrapperClass.addComment("Stencil-Data");
 
   if(codeGenProperties.hasAllocatedFields()) {
@@ -392,6 +437,10 @@ void GTCodeGen::generateStencilWrapperMembers(
   // globals member
   if(!globalsMap.empty()) {
     stencilWrapperClass.addMember("globals", "m_globals");
+    stencilWrapperClass.addMember("globals_gp_t", "m_globals_gp");
+    // update globals
+    stencilWrapperClass.addMemberFunction("void", "update_globals")
+        .addStatement("update_global_parameter(m_globals_gp, m_globals)");
   }
 
   // Stencil members
@@ -404,6 +453,9 @@ void GTCodeGen::generateStencilWrapperMembers(
     stencilWrapperClass.addMember(stencilName, "m_" + stencilName);
   }
 }
+
+std::string GTCodeGen::getAxisName(const std::string& stencilName) { return "axis_" + stencilName; }
+std::string GTCodeGen::getGridName(const std::string& stencilName) { return "grid_" + stencilName; }
 
 void GTCodeGen::generateStencilClasses(
     const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
@@ -421,7 +473,7 @@ void GTCodeGen::generateStencilClasses(
     std::string stencilType;
     const iir::Stencil& stencil = *stencils[stencilIdx];
 
-    const auto stencilFields = orderMap(stencil.getFields());
+    const auto stencilFields = stencil.getOrderedFields();
 
     auto nonTempFields = makeRange(
         stencilFields, std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
@@ -437,20 +489,14 @@ void GTCodeGen::generateStencilClasses(
       return;
     }
 
-    Structure StencilClass = stencilWrapperClass.addStruct(
+    Structure stencilClass = stencilWrapperClass.addStruct(
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID()));
-    std::string StencilName = StencilClass.getName();
-
-    if(!globalsMap.empty()) {
-      StencilClass.addMember("const globals&", "m_globals");
-      StencilClass.addMember("decltype(backend_t::make_global_parameter(m_globals))",
-                             "m_globals_gp_");
-    }
+    std::string StencilName = stencilClass.getName();
 
     //
     // Interval typedefs
     //
-    StencilClass.addComment("Intervals");
+    stencilClass.addComment("Intervals");
     IntervalDefinitions intervalDefinitions(stencil);
 
     std::size_t maxLevel = intervalDefinitions.Levels.size() - 1;
@@ -463,14 +509,16 @@ void GTCodeGen::generateStencilClasses(
                                                        intervalDefinitions.Levels.find(level)));
       int gt_offset =
           (level != sir::Interval::End) ? offset + 1 : (offset <= 0) ? offset - 1 : offset;
-      tss << "gridtools::level<" << gt_level << ", " << gt_offset << ", 4>";
+      tss << "gridtools::level<" << gt_level << ", " << gt_offset << ", "
+          << intervalDefinitions.OffsetLimit << ">";
 
       return tss.str();
     };
 
     // Generate typedefs for the individual intervals
+    // TODO this code needs to be ported to the documented axis API of gridtools
     auto codeGenInterval = [&](std::string const& name, iir::Interval const& interval) {
-      StencilClass.addTypeDef(name)
+      stencilClass.addTypeDef(name)
           .addType(c_gt() + "interval")
           .addTemplates(
               makeArrayRef({makeLevelName(interval.lowerLevel(), interval.lowerOffset()),
@@ -486,7 +534,7 @@ void GTCodeGen::generateStencilClasses(
 
     // Generate typedef for the axis
     const iir::Interval& axis = intervalDefinitions.Axis;
-    StencilClass.addTypeDef(Twine("axis_") + StencilName)
+    stencilClass.addTypeDef(getAxisName(StencilName))
         .addType(c_gt() + "interval")
         .addTemplates(makeArrayRef(
             {makeLevelName(axis.lowerLevel(), axis.lowerOffset() - 2),
@@ -494,9 +542,9 @@ void GTCodeGen::generateStencilClasses(
                            (axis.upperOffset() + 1) == 0 ? 1 : (axis.upperOffset() + 1))}));
 
     // Generate typedef of the grid
-    StencilClass.addTypeDef(Twine("grid_") + StencilName)
+    stencilClass.addTypeDef(getGridName(StencilName))
         .addType(c_gt() + "grid")
-        .addTemplate(Twine("axis_") + StencilName);
+        .addTemplate(getAxisName(StencilName));
 
     //
     // Generate stencil functions code for stencils instantiated by this stencil
@@ -505,7 +553,7 @@ void GTCodeGen::generateStencilClasses(
     for(const auto& stencilFun : metadata.getStencilFunctionInstantiations()) {
       std::string stencilFunName = iir::StencilFunctionInstantiation::makeCodeGenName(*stencilFun);
       if(generatedStencilFun.emplace(stencilFunName).second) {
-        Structure StencilFunStruct = StencilClass.addStruct(stencilFunName);
+        Structure StencilFunStruct = stencilClass.addStruct(stencilFunName);
 
         // Field declaration
         const auto& fields = stencilFun->getCalleeFields();
@@ -522,8 +570,9 @@ void GTCodeGen::generateStencilClasses(
         // If we have a return argument, we generate a special `__out` field
         int accessorID = 0;
         if(stencilFun->hasReturn()) {
-          StencilFunStruct.addStatement("using __out = gridtools::accessor<0, "
-                                        "gridtools::enumtype::inout, gridtools::extent<0, 0, 0, 0, "
+          StencilFunStruct.addStatement("using __out = " + c_gt() + "accessor<0, " + c_gt_intent() +
+                                        "inout, " + c_gt() +
+                                        "extent<0, 0, 0, 0, "
                                         "0, 0>>");
           arglist.push_back("__out");
           accessorID++;
@@ -542,7 +591,7 @@ void GTCodeGen::generateStencilClasses(
           StencilFunStruct.addTypeDef(paramName)
               .addType(c_gt() + "accessor")
               .addTemplate(Twine(accessorID))
-              .addTemplate(c_gt_enum() +
+              .addTemplate(c_gt_intent() +
                            ((fields[m].getIntend() == iir::Field::IK_Input) ? "in" : "inout"))
               .addTemplate(extent);
 
@@ -559,11 +608,13 @@ void GTCodeGen::generateStencilClasses(
         }
 
         // Generate arglist
-        StencilFunStruct.addTypeDef("arg_list").addType("boost::mpl::vector").addTemplates(arglist);
+        StencilFunStruct.addTypeDef("param_list")
+            .addType(c_gt() + "make_param_list")
+            .addTemplates(arglist);
         mplContainerMaxSize_ = std::max(mplContainerMaxSize_, arglist.size());
 
         // Generate Do-Method
-        auto doMethod = StencilFunStruct.addMemberFunction("GT_FUNCTION static void", "Do",
+        auto doMethod = StencilFunStruct.addMemberFunction("GT_FUNCTION static void", "apply",
                                                            "typename Evaluation");
 
         DAWN_ASSERT_MSG(intervalDefinitions.intervalProperties_.count(stencilFun->getInterval()),
@@ -603,13 +654,13 @@ void GTCodeGen::generateStencilClasses(
       const iir::MultiStage& multiStage = **multiStageIt;
 
       // Generate `make_multistage`
-      ssMS << "gridtools::make_multistage(gridtools::enumtype::execute<gridtools::enumtype::";
+      ssMS << "gridtools::make_multistage(gridtools::execute::";
       if(!codeGenOptions_.useParallelEP_ &&
          multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Parallel)
         ssMS << iir::LoopOrderKind::LK_Forward << " /*parallel*/ ";
       else
         ssMS << multiStage.getLoopOrder();
-      ssMS << ">(),";
+      ssMS << "(),";
 
       // Add the MultiStage caches
       if(!multiStage.getCaches().empty()) {
@@ -658,14 +709,15 @@ void GTCodeGen::generateStencilClasses(
         const iir::Stage& stage = *stagePtr;
 
         Structure StageStruct =
-            StencilClass.addStruct(Twine("stage_") + Twine(multiStageIdx) + "_" + Twine(stageIdx));
+            stencilClass.addStruct(Twine("stage_") + Twine(multiStageIdx) + "_" + Twine(stageIdx));
 
-        ssMS << "gridtools::make_stage_with_extent<" << StageStruct.getName() << ", gridtools::extent< ";
+        ssMS << c_gt() + "make_stage_with_extent<" << StageStruct.getName()
+             << ", " + c_gt() + "extent< ";
         auto extents = stage.getExtents().getExtents();
         ssMS << extents[0].Minus << ", " << extents[0].Plus << ", " << extents[1].Minus << ", "
              << extents[1].Plus << "> >(";
 
-        const auto fields = orderMap(stage.getFields());
+        const auto fields = stage.getOrderedFields();
 
         // Field declaration
         std::vector<std::string> arglist;
@@ -693,7 +745,7 @@ void GTCodeGen::generateStencilClasses(
           StageStruct.addTypeDef(paramName)
               .addType(c_gt() + "accessor")
               .addTemplate(Twine(accessorIdx))
-              .addTemplate(c_gt_enum() +
+              .addTemplate(c_gt_intent() +
                            ((field.getIntend() == iir::Field::IK_Input) ? "in" : "inout"))
               .addTemplate(extent);
 
@@ -719,15 +771,17 @@ void GTCodeGen::generateStencilClasses(
         ssMS << ")" << ((stageIdx != multiStage.getChildren().size() - 1) ? "," : ")");
 
         // Generate arglist
-        StageStruct.addTypeDef("arg_list").addType("boost::mpl::vector").addTemplates(arglist);
+        StageStruct.addTypeDef("param_list")
+            .addType(c_gt() + "make_param_list")
+            .addTemplates(arglist);
         mplContainerMaxSize_ = std::max(mplContainerMaxSize_, arglist.size());
 
         // Generate Do-Method
         for(const auto& doMethodPtr : stage.getChildren()) {
           const iir::DoMethod& doMethod = *doMethodPtr;
 
-          auto DoMethodCodeGen =
-              StageStruct.addMemberFunction("GT_FUNCTION static void", "Do", "typename Evaluation");
+          auto DoMethodCodeGen = StageStruct.addMemberFunction("GT_FUNCTION static void", "apply",
+                                                               "typename Evaluation");
           DoMethodCodeGen.addArg(DoMethodArg);
           DAWN_ASSERT(intervalDefinitions.intervalProperties_.count(
               iir::IntervalProperties{doMethod.getInterval()}));
@@ -742,13 +796,13 @@ void GTCodeGen::generateStencilClasses(
           }
         }
 
-        // Generate empty Do-Methods
+        // Generate empty apply-Methods
         // See https://github.com/eth-cscs/gridtools/issues/330
         const auto& stageIntervals = stage.getIntervals();
         for(const auto& interval : intervalDefinitions.StageIntervals[stagePtr->getStageID()]) {
           if(std::find(stageIntervals.begin(), stageIntervals.end(), interval) ==
              stageIntervals.end()) {
-            StageStruct.addMemberFunction("GT_FUNCTION static void", "Do", "typename Evaluation")
+            StageStruct.addMemberFunction("GT_FUNCTION static void", "apply", "typename Evaluation")
                 .addArg(DoMethodArg)
                 .addArg(iir::Interval::makeCodeGenName(interval));
           }
@@ -767,24 +821,13 @@ void GTCodeGen::generateStencilClasses(
     mplContainerMaxSize_ = std::max(mplContainerMaxSize_, numFields);
 
     // Generate constructor
-    auto StencilConstructor = StencilClass.addConstructor();
+    auto StencilConstructor = stencilClass.addConstructor();
 
     StencilConstructor.addArg("const gridtools::clang::domain& dom");
     if(!globalsMap.empty()) {
-      StencilConstructor.addArg("const globals& globals");
-    }
-    int index = 0;
-    for(auto field : nonTempFields) {
-      StencilConstructor.addArg(
-          codeGenProperties.getParamType(stencilInstantiation, (*field).second) + " " +
-          (*field).second.Name);
-      index++;
+      StencilConstructor.addArg("const globals_gp_t& globals_gp");
     }
 
-    if(!globalsMap.empty()) {
-      StencilConstructor.addInit("m_globals(globals)");
-      StencilConstructor.addInit("m_globals_gp_(backend_t::make_global_parameter(m_globals))");
-    }
     StencilConstructor.startBody();
 
     // Add static asserts to check halos against extents
@@ -842,85 +885,45 @@ void GTCodeGen::generateStencilClasses(
     }
 
     // Generate domain
-    buildPlaceholderDefinitions(StencilConstructor, stencilInstantiation, stencilFields, globalsMap,
-                                codeGenProperties);
-
     std::vector<std::string> ArglistPlaceholders;
     for(const auto& field : stencilFields)
       ArglistPlaceholders.push_back("p_" + field.second.Name);
     if(!globalsMap.empty()) {
       ArglistPlaceholders.push_back("p_globals");
     }
-    StencilConstructor.addTypeDef("domain_arg_list")
-        .addType("boost::mpl::vector")
-        .addTemplates(ArglistPlaceholders);
 
     // Placeholders to map the real storages to the placeholders (no temporaries)
-    std::vector<std::string> DomainMapPlaceholders;
-    for(auto field : nonTempFields) {
-      DomainMapPlaceholders.push_back(
-          std::string("(p_" + (*field).second.Name + "() = " + (*field).second.Name + ")"));
-    }
+    std::vector<std::string> domainMapPlaceholders;
     if(stencil.hasGlobalVariables()) {
-      DomainMapPlaceholders.push_back("(p_globals() = m_globals_gp_)");
+      domainMapPlaceholders.push_back("p_globals() = globals_gp");
     }
 
-    // Generate grid
-    StencilConstructor.addComment("Grid");
-    StencilConstructor.addStatement("gridtools::halo_descriptor di = {dom.iminus(), dom.iminus(), "
-                                    "dom.iplus(), dom.isize() - 1 - dom.iplus(), dom.isize()}");
-    StencilConstructor.addStatement("gridtools::halo_descriptor dj = {dom.jminus(), dom.jminus(), "
-                                    "dom.jplus(), dom.jsize() - 1 - dom.jplus(), dom.jsize()}");
-
-    auto getLevelSize = [](int level) -> std::string {
-      switch(level) {
-      case sir::Interval::Start:
-        return "dom.kminus()";
-      case sir::Interval::End:
-        return "dom.ksize() == 0 ? 0 : dom.ksize() - dom.kplus()";
-      default:
-        return std::to_string(level);
-      }
-    };
-
-    StencilConstructor.addStatement(
-        "auto grid_ = grid_" +
-        codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID()) +
-        "(di, dj)");
-
-    int levelIdx = 0;
-    // notice we skip the first level since it is kstart and not included in the GT grid definition
-    for(auto it = intervalDefinitions.Levels.begin(), end = intervalDefinitions.Levels.end();
-        it != end; ++it, ++levelIdx)
-      StencilConstructor.addStatement("grid_.value_list[" + std::to_string(levelIdx) +
-                                      "] = " + getLevelSize(*it));
-
-    // generate sync storage calls
-    generateSyncStorages(StencilConstructor, nonTempFields);
+    // Construct grid
+    generateGridConstruction(StencilConstructor, stencil, intervalDefinitions, codeGenProperties);
 
     // Generate make_computation
     StencilConstructor.addComment("Computation");
 
+    std::string plchdrStr =
+        (!domainMapPlaceholders.empty() ? RangeToString(", ", "", ",")(domainMapPlaceholders) : "");
+
     // This is a memory leak.. but nothing we can do ;)
-    StencilConstructor.addStatement(
-        Twine("m_stencil = gridtools::make_computation<backend_t>(grid_, " +
-              RangeToString(", ", "", "")(DomainMapPlaceholders) +
-              RangeToString(", ", ", ", ")")(makeComputation)));
+    StencilConstructor.addStatement(Twine("m_stencil = " + c_gt() +
+                                          "make_computation<backend_t>(grid_, " + plchdrStr +
+                                          RangeToString(", ", "", ")")(makeComputation)));
     StencilConstructor.commit();
 
-    StencilClass.addComment("Members");
-    stencilType = "gridtools::computation<void>";
-    StencilClass.addMember(stencilType, "m_stencil");
+    stencilClass.addComment("Members");
 
-    if(!globalsMap.empty()) {
+    auto plchdrs = CodeGenUtils::buildPlaceholderList(stencilInstantiation->getMetaData(),
+                                                      stencilFields, globalsMap);
 
-      // update globals
-      StencilClass.addMemberFunction("void", "update_globals")
-          .addStatement("backend_t::update_global_parameter(m_globals_gp_, m_globals)");
-    }
+    stencilType = c_gt().str() + "computation" + RangeToString(",", "<", ">")(plchdrs);
+
+    stencilClass.addMember(stencilType, "m_stencil");
 
     // Generate stencil getter
-    StencilClass.addMemberFunction(stencilType + "*", "get_stencil")
+    stencilClass.addMemberFunction(stencilType + "*", "get_stencil")
         .addStatement("return &m_stencil");
   }
 }
@@ -939,7 +942,7 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
   }
 
   // Generate globals
-  std::string globals = generateGlobals(context_, "dawn_generated", "gt");  
+  std::string globals = generateGlobals(context_, "dawn_generated", "gt");
 
   // If we need more than 20 elements in boost::mpl containers, we need to increment to the
   // nearest multiple of ten

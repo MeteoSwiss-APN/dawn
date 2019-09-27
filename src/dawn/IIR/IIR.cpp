@@ -14,9 +14,11 @@
 
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/DependencyGraphStage.h"
+#include "dawn/IIR/Field.h"
 #include "dawn/IIR/StatementAccessesPair.h"
 #include "dawn/IIR/Stencil.h"
 #include "dawn/SIR/SIR.h"
+#include "dawn/Support/Assert.h"
 #include "dawn/Support/StringUtil.h"
 #include "dawn/Support/Unreachable.h"
 #include <algorithm>
@@ -25,6 +27,38 @@
 
 namespace dawn {
 namespace iir {
+namespace {
+void mergeFields(std::unordered_map<int, Stencil::FieldInfo> const& sourceFields,
+                 std::unordered_map<int, Stencil::FieldInfo>& destinationFields) {
+
+  for(const auto& fieldPair : sourceFields) {
+    Stencil::FieldInfo sField = fieldPair.second;
+
+    auto it = destinationFields.find(fieldPair.first);
+    if(it != destinationFields.end()) {
+      Stencil::FieldInfo dField = destinationFields.at(fieldPair.first);
+
+      DAWN_ASSERT(dField.Name == sField.Name);
+      DAWN_ASSERT(dField.Dimensions == sField.Dimensions);
+      DAWN_ASSERT(dField.IsTemporary == sField.IsTemporary);
+
+      mergeField(sField.field, dField.field);
+    } else {
+      destinationFields.emplace(fieldPair.first, sField);
+    }
+  }
+}
+} // namespace
+
+const Stencil& IIR::getStencil(const int stencilID) const {
+  auto lamb = [&](const std::unique_ptr<Stencil>& stencil) -> bool {
+    return (stencil->getStencilID() == stencilID);
+  };
+
+  auto it = std::find_if(getChildren().begin(), getChildren().end(), lamb);
+  DAWN_ASSERT(it != getChildren().end());
+  return *(*it);
+}
 
 std::unique_ptr<IIR> IIR::clone() const {
   auto cloneIIR = make_unique<IIR>(globalVariableMap_, stencilFunctions_);
@@ -32,8 +66,24 @@ std::unique_ptr<IIR> IIR::clone() const {
   return cloneIIR;
 }
 
+void IIR::updateFromChildren() {
+  derivedInfo_.fields_.clear();
+
+  for(const auto& stencil : children_) {
+    mergeFields(stencil->getFields(), derivedInfo_.fields_);
+  }
+}
+
+void IIR::DerivedInfo::clear() { fields_.clear(); }
+
 json::json IIR::jsonDump() const {
   json::json node;
+
+  json::json fieldsJson;
+  for(const auto& f : derivedInfo_.fields_) {
+    fieldsJson[f.second.Name] = f.second.jsonDump();
+  }
+  node["Fields"] = fieldsJson;
 
   int cnt = 0;
   for(const auto& stencil : children_) {

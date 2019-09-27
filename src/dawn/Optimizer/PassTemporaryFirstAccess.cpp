@@ -78,8 +78,8 @@ bool PassTemporaryFirstAccess::run(
         fields,
         std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
             [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
-    for(auto tmpF : tempFields) {
-      temporaryFields.insert((*tmpF).second.field.getAccessID());
+    for(const auto& tmpF : tempFields) {
+      temporaryFields.insert(tmpF.second.field.getAccessID());
     }
 
     // {AccesID : (isFirstAccessWrite, Stmt)}

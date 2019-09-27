@@ -285,6 +285,11 @@ public:
   /// @brief Get the pair <AccessID, field> for the fields used within the multi-stage
   const std::unordered_map<int, FieldInfo>& getFields() const { return derivedInfo_.fields_; }
 
+  /// @brief Get the pair <AccessID, field> for the fields used within the multi-stage
+  std::map<int, FieldInfo> getOrderedFields() const {
+    return support::orderMap(derivedInfo_.fields_);
+  }
+
   std::unordered_map<int, Field> computeFieldsOnTheFly() const;
 
   /// @brief update the derived info from children

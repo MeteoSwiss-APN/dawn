@@ -132,10 +132,8 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
               // Register the temporary
               AccessIDs.insert(AccessID);
               iir::TemporaryScope ttype =
-                  instantiation->isIDAccessedMultipleStencils(AccessID)
-                      ? iir::TemporaryScope::TS_Field
-                      : (isTemporaryField ? iir::TemporaryScope::TS_StencilTemporary
-                                          : iir::TemporaryScope::TS_LocalVariable);
+                  (isTemporaryField ? iir::TemporaryScope::TS_StencilTemporary
+                                    : iir::TemporaryScope::TS_LocalVariable);
 
               temporaries.emplace(AccessID, Temporary(AccessID, ttype, extent));
             }
@@ -156,37 +154,43 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
 
     // Process each temporary
     for(const auto& AccessIDTemporaryPair : temporaries) {
-      int AccessID = AccessIDTemporaryPair.first;
+      int accessID = AccessIDTemporaryPair.first;
       const Temporary& temporary = AccessIDTemporaryPair.second;
 
       auto report = [&](const char* action) {
         std::cout << "\nPASS: " << getName() << ": " << instantiation->getName() << ": " << action
-                  << ":" << instantiation->getOriginalNameFromAccessID(AccessID) << std::endl;
+                  << ":" << instantiation->getOriginalNameFromAccessID(accessID) << std::endl;
       };
 
-      if(temporary.type_ == iir::TemporaryScope::TS_LocalVariable ||
-         temporary.type_ == iir::TemporaryScope::TS_Field) {
-        // If the variable is accessed in multiple Do-Methods, we need to promote it to a field!
-        if(!temporary.lifetime_.Begin.inSameDoMethod(temporary.lifetime_.End)) {
+      // we promote local variables into temporary fields if they are accessed out
+      // of a local scope
+      if(temporary.type_ == iir::TemporaryScope::TS_LocalVariable) {
+        // we promote to a temporary any local variable that is accessed in different Do methods
+        // Since the Lifetime only records the position within one stencil we additionally check if
+        // the accessID is accessed in multiple stencils
+        if(!temporary.lifetime_.Begin.inSameDoMethod(temporary.lifetime_.End) ||
+           instantiation->isIDAccessedMultipleMSs(accessID)) {
 
           if(context_.getOptions().ReportPassTemporaryType)
             report("promote");
 
-          report_.push_back(Report{AccessID, TmpActionMod::promote});
-          promoteLocalVariableToTemporaryField(instantiation.get(), stencilPtr.get(), AccessID,
+          report_.push_back(Report{accessID, TmpActionMod::promote});
+          promoteLocalVariableToTemporaryField(instantiation.get(), stencilPtr.get(), accessID,
                                                temporary.lifetime_, temporary.type_);
         }
       } else {
         // If the field is only accessed within the same Do-Method, does not have an extent and is
         // not argument to a stencil function, we can demote it to a local variable
+        // Also solver accesses can not be demoted to local variable
         if(temporary.lifetime_.Begin.inSameDoMethod(temporary.lifetime_.End) &&
-           temporary.extent_.isPointwise() && !usedAsArgumentInStencilFun(stencilPtr, AccessID)) {
+           temporary.extent_.isPointwise() && !usedAsArgumentInStencilFun(stencilPtr, accessID) &&
+           !instantiation->isIDAccessedMultipleMSs(accessID)) {
 
           if(context_.getOptions().ReportPassTemporaryType)
             report("demote");
 
-          report_.push_back(Report{AccessID, TmpActionMod::demote});
-          demoteTemporaryFieldToLocalVariable(instantiation.get(), stencilPtr.get(), AccessID,
+          report_.push_back(Report{accessID, TmpActionMod::demote});
+          demoteTemporaryFieldToLocalVariable(instantiation.get(), stencilPtr.get(), accessID,
                                               temporary.lifetime_);
         }
       }
@@ -200,7 +204,7 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
     }
   }
   return true;
-}
+} // namespace dawn
 
 void PassTemporaryType::fixTemporariesSpanningMultipleStencils(
     iir::StencilInstantiation* instantiation,

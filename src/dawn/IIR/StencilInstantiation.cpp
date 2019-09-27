@@ -87,12 +87,24 @@ const sir::Value& StencilInstantiation::getGlobalVariableValue(const std::string
 }
 
 bool StencilInstantiation::isIDAccessedMultipleStencils(int accessID) const {
-
-  int count = 0;
+  bool wasAccessed = false;
   for(const auto& stencil : IIR_->getChildren()) {
     if(stencil->hasFieldAccessID(accessID)) {
-      if(++count > 1)
+      if(wasAccessed)
         return true;
+      wasAccessed = true;
+    }
+  }
+  return false;
+}
+
+bool StencilInstantiation::isIDAccessedMultipleMSs(int accessID) const {
+  bool wasAccessed = false;
+  for(const auto& ms : iterateIIROver<MultiStage>(*IIR_)) {
+    if(ms->hasField(accessID)) {
+      if(wasAccessed)
+        return true;
+      wasAccessed = true;
     }
   }
   return false;

@@ -146,6 +146,8 @@ void mergeFields(std::unordered_map<int, Field> const& sourceFields,
                  std::unordered_map<int, Field>& destinationFields,
                  boost::optional<Extents> baseExtents = boost::optional<Extents>());
 
+void mergeField(const Field& sField, Field& dField);
+
 } // namespace iir
 } // namespace dawn
 
