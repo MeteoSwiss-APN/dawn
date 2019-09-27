@@ -85,10 +85,10 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
 
   auto expr = std::make_shared<ast::AssignmentExpr>(lhs, rhs);
   expr->setID(target->nextUID());
-  auto stmt = std::make_shared<ast::ExprStmt>(expr);
+  auto stmt = iir::makeExprStmt(expr);
   stmt->setID(target->nextUID());
-  auto statement = std::make_shared<Statement>(stmt, nullptr);
-  auto insertee = make_unique<iir::StatementAccessesPair>(statement);
+  auto insertee = make_unique<iir::StatementAccessesPair>(stmt);
+
   // Add the accesses to the Pair:
   std::shared_ptr<iir::Accesses> callerAccesses = std::make_shared<iir::Accesses>();
   callerAccesses->addWriteExtent(out_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
@@ -104,12 +104,10 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   stencilCall->Args.push_back(sirOutField->Name);
   auto placeholderStencil = std::make_shared<ast::StencilCall>(
       iir::InstantiationHelper::makeStencilCallCodeGenName(stencilID));
-  auto stencilCallDeclStmt = std::make_shared<iir::StencilCallDeclStmt>(placeholderStencil);
+  auto stencilCallDeclStmt = iir::makeStencilCallDeclStmt(placeholderStencil);
   // Register the call and set it as a replacement for the next vertical region
   target->getMetaData().addStencilCallStmt(stencilCallDeclStmt, stencilID);
-
-  auto stencilCallStatement = std::make_shared<Statement>(stencilCallDeclStmt, nullptr);
-  target->getIIR()->getControlFlowDescriptor().insertStmt(stencilCallStatement);
+  target->getIIR()->getControlFlowDescriptor().insertStmt(stencilCallDeclStmt);
 
   ///////////////// Generation of the Metadata
 
@@ -229,10 +227,10 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   auto assignmentTmpIn = std::make_shared<ast::AssignmentExpr>(lhsTmp, plusIn3);
   assignmentTmpIn->setID(target->nextUID());
 
-  auto stmt1 = std::make_shared<ast::ExprStmt>(assignmentTmpIn);
+  auto stmt1 = iir::makeExprStmt(assignmentTmpIn);
   stmt1->setID(target->nextUID());
-  auto statement1 = std::make_shared<Statement>(stmt1, nullptr);
-  auto insertee1 = make_unique<iir::StatementAccessesPair>(statement1);
+  auto insertee1 = make_unique<iir::StatementAccessesPair>(stmt1);
+
   // Add the accesses to the Pair:
   std::shared_ptr<iir::Accesses> callerAccesses1 = std::make_shared<iir::Accesses>();
   callerAccesses1->addWriteExtent(tmpFieldID, iir::Extents{0, 0, 0, 0, 0, 0});
@@ -253,10 +251,10 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   auto assignmentOutTmp = std::make_shared<ast::AssignmentExpr>(lhsOut, plusTmp3);
   assignmentOutTmp->setID(target->nextUID());
 
-  auto stmt2 = std::make_shared<ast::ExprStmt>(assignmentOutTmp);
+  auto stmt2 = iir::makeExprStmt(assignmentOutTmp);
   stmt2->setID(target->nextUID());
-  auto statement2 = std::make_shared<Statement>(stmt2, nullptr);
-  auto insertee2 = make_unique<iir::StatementAccessesPair>(statement2);
+  auto insertee2 = make_unique<iir::StatementAccessesPair>(stmt2);
+
   // Add the accesses to the Pair:
   std::shared_ptr<iir::Accesses> callerAccesses2 = std::make_shared<iir::Accesses>();
   callerAccesses2->addWriteExtent(outFieldID, iir::Extents{0, 0, 0, 0, 0, 0});
@@ -273,12 +271,10 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   stencilCall->Args.push_back(sirOutField->Name);
   auto placeholderStencil = std::make_shared<ast::StencilCall>(
       iir::InstantiationHelper::makeStencilCallCodeGenName(stencilID));
-  auto stencilCallDeclStmt = std::make_shared<iir::StencilCallDeclStmt>(placeholderStencil);
+  auto stencilCallDeclStmt = iir::makeStencilCallDeclStmt(placeholderStencil);
   // Register the call and set it as a replacement for the next vertical region
   target->getMetaData().addStencilCallStmt(stencilCallDeclStmt, stencilID);
-
-  auto stencilCallStatement = std::make_shared<Statement>(stencilCallDeclStmt, nullptr);
-  target->getIIR()->getControlFlowDescriptor().insertStmt(stencilCallStatement);
+  target->getIIR()->getControlFlowDescriptor().insertStmt(stencilCallDeclStmt);
 
   ///////////////// Generation of the Metadata
 

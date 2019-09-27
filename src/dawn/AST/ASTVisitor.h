@@ -21,7 +21,7 @@
 namespace dawn {
 namespace ast {
 /// @brief Base class of all Visitor for ASTs and ASTNodes
-/// @ingroup sir
+/// @ingroup ast
 class ASTVisitor {
 public:
   virtual ~ASTVisitor();
@@ -55,7 +55,7 @@ public:
 };
 
 /// @brief Base class of all Visitor for ASTs and ASTNodes
-/// @ingroup sir
+/// @ingroup ast
 class ASTVisitorNonConst {
 public:
   virtual ~ASTVisitorNonConst();
@@ -89,7 +89,7 @@ public:
 };
 
 /// @brief Visitor which forwards all calls to their children by default
-/// @ingroup sir
+/// @ingroup ast
 class ASTVisitorForwarding : public ASTVisitor {
 public:
   virtual ~ASTVisitorForwarding();
@@ -131,7 +131,7 @@ public:
 ///   C'=visitAndReplace(C) ->recursive
 ///   if(C' != C) A -> C' (remove B)
 ///   return postvisit(A) (modify parent A and return it to its parent)
-/// @ingroup sir
+/// @ingroup ast
 class ASTVisitorPostOrder {
 public:
   virtual ~ASTVisitorPostOrder();
@@ -227,7 +227,7 @@ public:
 };
 
 /// @brief Visitor which forwards all calls to their children by default
-/// @ingroup sir
+/// @ingroup ast
 class ASTVisitorForwardingNonConst : public ASTVisitorNonConst {
 public:
   virtual ~ASTVisitorForwardingNonConst();
@@ -262,7 +262,7 @@ public:
 /// @brief Visitor which disables the visit of all expr and stmt
 /// (in order to implement the corresponding functionality of a node, the method should be overrided
 /// by the inherited class)
-/// @ingroup sir
+/// @ingroup ast
 class ASTVisitorDisabled : public ASTVisitor {
 public:
   virtual ~ASTVisitorDisabled();

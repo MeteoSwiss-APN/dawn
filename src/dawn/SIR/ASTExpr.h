@@ -20,7 +20,7 @@
 namespace dawn {
 namespace sir {
 //
-// TODO refactor_AST: this is TEMPORARY, should be changed in the future to template specialization
+// TODO refactor_AST: this is TEMPORARY, will be removed in the future
 //
 using Expr = ast::Expr;
 using NOPExpr = ast::NOPExpr;

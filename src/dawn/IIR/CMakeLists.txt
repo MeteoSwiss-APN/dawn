@@ -29,9 +29,12 @@ dawn_protobuf_generate(
 yoda_add_library(
   NAME DawnIIR
   SOURCES AST.h
+          ASTConverter.cpp
+          ASTConverter.h
           ASTExpr.h
           ASTFwd.h
           ASTStmt.h
+          ASTStmt.cpp
           ASTStringifier.h
           ASTUtil.h
           ASTUtil.cpp

@@ -17,6 +17,7 @@
 
 #include "dawn/AST/ASTVisitorHelpers.h"
 #include "dawn/Support/ArrayRef.h"
+#include "dawn/Support/Assert.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/ComparisonHelpers.h"
 #include "dawn/Support/SourceLocation.h"
@@ -35,8 +36,15 @@ namespace ast {
 class ASTVisitor;
 class Expr;
 
+struct StmtData {
+  enum DataType { SIR_DATA_TYPE, IIR_DATA_TYPE };
+  virtual ~StmtData() {}
+  virtual DataType getDataType() const = 0;
+  virtual std::unique_ptr<StmtData> clone() const = 0;
+};
+
 /// @brief Abstract base class of all statements
-/// @ingroup sir
+/// @ingroup ast
 class Stmt : public std::enable_shared_from_this<Stmt> {
 public:
   /// @brief Discriminator for RTTI (dyn_cast<> et al.)
@@ -55,8 +63,13 @@ public:
 
   /// @name Constructor & Destructor
   /// @{
-  Stmt(StmtKind kind, SourceLocation loc = SourceLocation())
-      : kind_(kind), loc_(loc), statementID_(UIDGenerator::getInstance()->get()) {}
+  Stmt(std::unique_ptr<StmtData> data, StmtKind kind, SourceLocation loc = SourceLocation())
+      : kind_(kind), loc_(loc), statementID_(UIDGenerator::getInstance()->get()),
+        data_(std::move(data)) {}
+  Stmt(const Stmt& stmt)
+      : std::enable_shared_from_this<Stmt>(stmt), kind_(stmt.getKind()),
+        loc_(stmt.getSourceLocation()), statementID_(UIDGenerator::getInstance()->get()),
+        data_(stmt.data_->clone()) {}
   virtual ~Stmt() {}
   /// @}
 
@@ -75,18 +88,44 @@ public:
   const SourceLocation& getSourceLocation() const { return loc_; }
   SourceLocation& getSourceLocation() { return loc_; }
 
+  template <typename Sub, typename Base>
+  using enable_if_subtype_t = typename std::enable_if<std::is_base_of<Base, Sub>::value>::type;
+
+  /// @brief Get data object, must provide the type of the data object (must be subtype of StmtData)
+  template <typename DataType, typename = enable_if_subtype_t<DataType, StmtData>>
+  DataType& getData() {
+    DAWN_ASSERT_MSG(DataType::ThisDataType == data_->getDataType(),
+                    "Trying to get wrong data type");
+    return *dynamic_cast<DataType*>(data_.get());
+  }
+  template <typename DataType, typename = enable_if_subtype_t<DataType, StmtData>>
+  const DataType& getData() const {
+    DAWN_ASSERT_MSG(DataType::ThisDataType == data_->getDataType(),
+                    "Trying to get wrong data type");
+    return *dynamic_cast<DataType*>(data_.get());
+  }
+
   /// @brief Iterate children (if any)
   virtual StmtRangeType getChildren() { return StmtRangeType(); }
 
   virtual void replaceChildren(std::shared_ptr<Stmt> const& oldStmt,
                                std::shared_ptr<Stmt> const& newStmt) {}
 
+  // TODO refactor_AST: should equality comparison check also data equality? It makes sense to check
+  // that at least data type is the same
   /// @brief Compare for equality
-  virtual bool equals(const Stmt* other) const { return kind_ == other->kind_; }
+  virtual bool equals(const Stmt* other) const {
+    return kind_ == other->kind_ && checkSameDataType(*other);
+  }
 
   /// @brief Is the statement used for stencil description and has no real analogon in C++
   /// (e.g a VerticalRegion or StencilCall)?
   virtual bool isStencilDesc() const { return false; }
+
+  /// @brief Check if statements have the same runtime data type
+  bool checkSameDataType(const Stmt& other) const {
+    return data_->getDataType() == other.data_->getDataType();
+  }
 
   /// @name Operators
   /// @{
@@ -100,16 +139,21 @@ public:
   void setID(int id) { statementID_ = id; }
 
 protected:
+  // copy assignment
   void assign(const Stmt& other) {
+    DAWN_ASSERT_MSG((checkSameDataType(other)), "Trying to assign Stmt with different data type");
     kind_ = other.kind_;
     loc_ = other.loc_;
+    data_ = other.data_->clone();
   }
 
-protected:
   StmtKind kind_;
   SourceLocation loc_;
 
   int statementID_;
+
+private:
+  std::unique_ptr<StmtData> data_;
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -117,7 +161,7 @@ protected:
 //===------------------------------------------------------------------------------------------===//
 
 /// @brief Block of statements
-/// @ingroup sir
+/// @ingroup ast
 class BlockStmt : public Stmt {
   std::vector<std::shared_ptr<Stmt>> statements_;
 
@@ -126,8 +170,8 @@ public:
 
   /// @name Constructor & Destructor
   /// @{
-  BlockStmt(SourceLocation loc = SourceLocation());
-  BlockStmt(const std::vector<std::shared_ptr<Stmt>>& statements,
+  BlockStmt(std::unique_ptr<StmtData> data, SourceLocation loc = SourceLocation());
+  BlockStmt(std::unique_ptr<StmtData> data, const std::vector<std::shared_ptr<Stmt>>& statements,
             SourceLocation loc = SourceLocation());
   BlockStmt(const BlockStmt& stmt);
   BlockStmt& operator=(BlockStmt const& stmt);
@@ -141,11 +185,23 @@ public:
 
   template <class Iterator>
   void insert_back(Iterator begin, Iterator end) {
+    std::for_each(begin, end, [&](const std::shared_ptr<Stmt>& stmt) {
+      DAWN_ASSERT(stmt);
+      DAWN_ASSERT_MSG((checkSameDataType(*stmt)),
+                      "Trying to insert child Stmt with different data type");
+    });
     statements_.insert(statements_.end(), begin, end);
   }
 
-  void push_back(const std::shared_ptr<Stmt>& stmt) { statements_.push_back(stmt); }
+  void push_back(const std::shared_ptr<Stmt>& stmt) {
+    DAWN_ASSERT(stmt);
+    DAWN_ASSERT_MSG((checkSameDataType(*stmt)),
+                    "Trying to insert child Stmt with different data type");
+    statements_.push_back(stmt);
+  }
 
+  // TODO refactor_AST: this non-const getter is a source of problems: no runtime checks on data
+  // type when user changes the vector!
   std::vector<std::shared_ptr<Stmt>>& getStatements() { return statements_; }
   const std::vector<std::shared_ptr<Stmt>>& getStatements() const { return statements_; }
 
@@ -166,14 +222,15 @@ public:
 //===------------------------------------------------------------------------------------------===//
 
 /// @brief Block of statements
-/// @ingroup sir
+/// @ingroup ast
 class ExprStmt : public Stmt {
   std::shared_ptr<Expr> expr_;
 
 public:
   /// @name Constructor & Destructor
   /// @{
-  ExprStmt(const std::shared_ptr<Expr>& expr, SourceLocation loc = SourceLocation());
+  ExprStmt(std::unique_ptr<StmtData> data, const std::shared_ptr<Expr>& expr,
+           SourceLocation loc = SourceLocation());
   ExprStmt(const ExprStmt& stmt);
   ExprStmt& operator=(ExprStmt stmt);
   virtual ~ExprStmt();
@@ -200,14 +257,15 @@ public:
 //===------------------------------------------------------------------------------------------===//
 
 /// @brief This represents a return of an expression
-/// @ingroup sir
+/// @ingroup ast
 class ReturnStmt : public Stmt {
   std::shared_ptr<Expr> expr_;
 
 public:
   /// @name Constructor & Destructor
   /// @{
-  ReturnStmt(const std::shared_ptr<Expr>& expr, SourceLocation loc = SourceLocation());
+  ReturnStmt(std::unique_ptr<StmtData> data, const std::shared_ptr<Expr>& expr,
+             SourceLocation loc = SourceLocation());
   ReturnStmt(const ReturnStmt& stmt);
   ReturnStmt& operator=(ReturnStmt stmt);
   virtual ~ReturnStmt();
@@ -234,23 +292,16 @@ public:
 //===------------------------------------------------------------------------------------------===//
 
 /// @brief This represents a declaration of a local variable or C-array
-/// @ingroup sir
+/// @ingroup ast
 class VarDeclStmt : public Stmt {
-  Type type_;
-  std::string name_;
-
-  // Dimension of the array or 0 for variables
-  int dimension_;
-  std::string op_;
-
-  // List of expression used for initializaion or just 1 element for variables
-  std::vector<std::shared_ptr<Expr>> initList_;
-
 public:
+  using InitList = std::vector<std::shared_ptr<Expr>>;
+
   /// @name Constructor & Destructor
   /// @{
-  VarDeclStmt(const Type& type, const std::string& name, int dimension, const char* op,
-              std::vector<std::shared_ptr<Expr>> initList, SourceLocation loc = SourceLocation());
+  VarDeclStmt(std::unique_ptr<StmtData> data, const Type& type, const std::string& name,
+              int dimension, const char* op, InitList initList,
+              SourceLocation loc = SourceLocation());
   VarDeclStmt(const VarDeclStmt& stmt);
   VarDeclStmt& operator=(VarDeclStmt stmt);
   virtual ~VarDeclStmt();
@@ -267,8 +318,8 @@ public:
 
   bool isArray() const { return (dimension_ > 0); }
   bool hasInit() const { return (!initList_.empty()); }
-  const std::vector<std::shared_ptr<Expr>>& getInitList() const { return initList_; }
-  std::vector<std::shared_ptr<Expr>>& getInitList() { return initList_; }
+  const InitList& getInitList() const { return initList_; }
+  InitList& getInitList() { return initList_; }
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Woverloaded-virtual"
@@ -280,6 +331,17 @@ public:
   virtual bool equals(const Stmt* other) const override;
   static bool classof(const Stmt* stmt) { return stmt->getKind() == SK_VarDeclStmt; }
   ACCEPTVISITOR(Stmt, VarDeclStmt)
+
+private:
+  Type type_;
+  std::string name_;
+
+  // Dimension of the array or 0 for variables
+  int dimension_;
+  std::string op_;
+
+  // List of expression used for initializaion or just 1 element for variables
+  InitList initList_;
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -287,14 +349,15 @@ public:
 //===------------------------------------------------------------------------------------------===//
 
 /// @brief This represents a declaration of a sir::VerticalRegion
-/// @ingroup sir
+/// @ingroup ast
 class VerticalRegionDeclStmt : public Stmt {
   std::shared_ptr<sir::VerticalRegion> verticalRegion_;
 
 public:
   /// @name Constructor & Destructor
   /// @{
-  VerticalRegionDeclStmt(const std::shared_ptr<sir::VerticalRegion>& verticalRegion,
+  VerticalRegionDeclStmt(std::unique_ptr<StmtData> data,
+                         const std::shared_ptr<sir::VerticalRegion>& verticalRegion,
                          SourceLocation loc = SourceLocation());
   VerticalRegionDeclStmt(const VerticalRegionDeclStmt& stmt);
   VerticalRegionDeclStmt& operator=(VerticalRegionDeclStmt stmt);
@@ -311,7 +374,7 @@ public:
 };
 
 /// @brief Call to another stencil
-/// @ingroup sir
+/// @ingroup ast
 struct StencilCall {
 
   SourceLocation Loc;            ///< Source location of the call
@@ -321,7 +384,7 @@ struct StencilCall {
   StencilCall(std::string callee, SourceLocation loc = SourceLocation())
       : Loc(loc), Callee(callee) {}
 
-  /// @brief Clone the vertical region
+  /// @brief Clone the stencil call
   std::shared_ptr<StencilCall> clone() const;
 
   /// @brief Comparison between stencils (omitting location)
@@ -337,14 +400,15 @@ struct StencilCall {
 //===------------------------------------------------------------------------------------------===//
 
 /// @brief This represents a declaration of a StencilCall
-/// @ingroup sir
+/// @ingroup ast
 class StencilCallDeclStmt : public Stmt {
   std::shared_ptr<StencilCall> stencilCall_;
 
 public:
   /// @name Constructor & Destructor
   /// @{
-  StencilCallDeclStmt(const std::shared_ptr<StencilCall>& stencilCall,
+  StencilCallDeclStmt(std::unique_ptr<StmtData> data,
+                      const std::shared_ptr<StencilCall>& stencilCall,
                       SourceLocation loc = SourceLocation());
   StencilCallDeclStmt(const StencilCallDeclStmt& stmt);
   StencilCallDeclStmt& operator=(StencilCallDeclStmt stmt);
@@ -365,7 +429,7 @@ public:
 //===------------------------------------------------------------------------------------------===//
 
 /// @brief This represents a declaration of a boundary condition
-/// @ingroup sir
+/// @ingroup ast
 class BoundaryConditionDeclStmt : public Stmt {
   std::string functor_;
   std::vector<std::string> fields_;
@@ -373,7 +437,8 @@ class BoundaryConditionDeclStmt : public Stmt {
 public:
   /// @name Constructor & Destructor
   /// @{
-  BoundaryConditionDeclStmt(const std::string& callee, SourceLocation loc = SourceLocation());
+  BoundaryConditionDeclStmt(std::unique_ptr<StmtData> data, const std::string& callee,
+                            SourceLocation loc = SourceLocation());
   BoundaryConditionDeclStmt(const BoundaryConditionDeclStmt& stmt);
   BoundaryConditionDeclStmt& operator=(BoundaryConditionDeclStmt stmt);
   virtual ~BoundaryConditionDeclStmt();
@@ -396,7 +461,7 @@ public:
 //===------------------------------------------------------------------------------------------===//
 
 /// @brief This represents an if/then/else block
-/// @ingroup sir
+/// @ingroup ast
 class IfStmt : public Stmt {
   enum OperandKind { OK_Cond, OK_Then, OK_Else, OK_End };
   std::shared_ptr<Stmt> subStmts_[OK_End];
@@ -404,12 +469,16 @@ class IfStmt : public Stmt {
 public:
   /// @name Constructor & Destructor
   /// @{
-  IfStmt(const std::shared_ptr<Stmt>& condExpr, const std::shared_ptr<Stmt>& thenStmt,
-         const std::shared_ptr<Stmt>& elseStmt = nullptr, SourceLocation loc = SourceLocation());
+  IfStmt(std::unique_ptr<StmtData> data, const std::shared_ptr<Stmt>& condExpr,
+         const std::shared_ptr<Stmt>& thenStmt, const std::shared_ptr<Stmt>& elseStmt = nullptr,
+         SourceLocation loc = SourceLocation());
   IfStmt(const IfStmt& stmt);
   IfStmt& operator=(IfStmt stmt);
   virtual ~IfStmt();
   /// @}
+
+  // TODO refactor_AST: this non-const getters are sources of problems: no runtime checks on data
+  // type when user changes the substatements! (should have only setters and const getters)
 
   const std::shared_ptr<Expr>& getCondExpr() const {
     return dyn_cast<ExprStmt>(subStmts_[OK_Cond].get())->getExpr();
@@ -423,12 +492,20 @@ public:
 
   const std::shared_ptr<Stmt>& getThenStmt() const { return subStmts_[OK_Then]; }
   std::shared_ptr<Stmt>& getThenStmt() { return subStmts_[OK_Then]; }
-  void setThenStmt(std::shared_ptr<Stmt>& thenStmt) { subStmts_[OK_Then] = thenStmt; }
+  void setThenStmt(std::shared_ptr<Stmt>& thenStmt) {
+    DAWN_ASSERT_MSG((checkSameDataType(*thenStmt)),
+                    "Trying to set substmt with different data type");
+    subStmts_[OK_Then] = thenStmt;
+  }
 
   const std::shared_ptr<Stmt>& getElseStmt() const { return subStmts_[OK_Else]; }
   std::shared_ptr<Stmt>& getElseStmt() { return subStmts_[OK_Else]; }
   bool hasElse() const { return getElseStmt() != nullptr; }
-  void setElseStmt(std::shared_ptr<Stmt>& elseStmt) { subStmts_[OK_Else] = elseStmt; }
+  void setElseStmt(std::shared_ptr<Stmt>& elseStmt) {
+    DAWN_ASSERT_MSG((checkSameDataType(*elseStmt)),
+                    "Trying to set substmt with different data type");
+    subStmts_[OK_Else] = elseStmt;
+  }
 
   virtual std::shared_ptr<Stmt> clone() const override;
   virtual bool equals(const Stmt* other) const override;

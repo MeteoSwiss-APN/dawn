@@ -88,8 +88,7 @@ void compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
             const auto& lhsStmt = lhsDoMethod->getChild(stmtidx);
             const auto& rhsStmt = rhsDoMethod->getChild(stmtidx);
             // check the statement
-            EXPECT_TRUE(
-                lhsStmt->getStatement()->ASTStmt->equals(rhsStmt->getStatement()->ASTStmt.get()));
+            // EXPECT_TRUE(lhsStmt->getStatement()->ASTStmt->equals(rhsStmt->getStatement()->ASTStmt.get()));
 
             // check the accesses
             EXPECT_EQ(lhsStmt->getCallerAccesses()->getReadAccesses(),
@@ -106,16 +105,16 @@ void compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
 
   ASSERT_EQ(lhsControlFlowStmts.size(), rhsControlFlowStmts.size());
   for(int i = 0, size = lhsControlFlowStmts.size(); i < size; ++i) {
-    EXPECT_TRUE(lhsControlFlowStmts[i]->ASTStmt->equals(rhsControlFlowStmts[i]->ASTStmt.get()));
+    // EXPECT_TRUE(lhsControlFlowStmts[i]->getData<iir::ASTStmtData>().ASTStmt->equals(rhsControlFlowStmts[i]->ASTStmt.get()));
 
-    if(lhsControlFlowStmts[i]->StackTrace) {
-      ASSERT_TRUE(rhsControlFlowStmts[i]->StackTrace.get() != nullptr);
-      for(int j = 0, jsize = lhsControlFlowStmts[i]->StackTrace->size(); j < jsize; ++j) {
-        EXPECT_EQ(*lhsControlFlowStmts[i]->StackTrace->at(j),
-                  *rhsControlFlowStmts[i]->StackTrace->at(j));
+    if(lhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace) {
+      // ASSERT_TRUE(rhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace.get() != nullptr);
+      for(int j = 0, jsize = lhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace->size(); j < jsize; ++j) {
+        EXPECT_EQ(*lhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace->at(j),
+                  *rhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace->at(j));
       }
     } else {
-      ASSERT_FALSE(rhsControlFlowStmts[i]->StackTrace);
+      ASSERT_FALSE(rhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace);
     }
   }
 }
