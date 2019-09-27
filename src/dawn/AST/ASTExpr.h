@@ -18,6 +18,7 @@
 #include "dawn/AST/ASTVisitorHelpers.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/ArrayRef.h"
+#include "dawn/Support/STLExtras.h"
 #include "dawn/Support/SourceLocation.h"
 #include "dawn/Support/Type.h"
 #include "dawn/Support/UIDGenerator.h"
@@ -390,9 +391,15 @@ public:
 //     VarAccessExpr
 //===------------------------------------------------------------------------------------------===//
 
+struct VarAccessExprData {
+  virtual ~VarAccessExprData() {}
+  virtual std::unique_ptr<VarAccessExprData> clone() const = 0;
+};
+
 /// @brief Variable access expression
 /// @ingroup ast
 class VarAccessExpr : public Expr {
+  std::unique_ptr<VarAccessExprData> data_ = nullptr;
   std::string name_;
   std::shared_ptr<Expr> index_;
   bool isExternal_;
@@ -406,6 +413,15 @@ public:
   VarAccessExpr& operator=(VarAccessExpr expr);
   virtual ~VarAccessExpr();
   /// @}
+
+  /// @brief Get data object, must provide the type of the data object (must be subtype of
+  /// VarAccessExprData)
+  template <typename DataType, typename = enable_if_subtype_t<DataType, VarAccessExprData>>
+  DataType& getData() {
+    if(!data_)
+      data_ = make_unique<DataType>();
+    return *dynamic_cast<DataType*>(data_.get());
+  }
 
   const std::string& getName() const { return name_; }
 
@@ -439,9 +455,15 @@ public:
 //     FieldAccessExpr
 //===------------------------------------------------------------------------------------------===//
 
+struct FieldAccessExprData {
+  virtual ~FieldAccessExprData() {}
+  virtual std::unique_ptr<FieldAccessExprData> clone() const = 0;
+};
+
 /// @brief Field access expression
 /// @ingroup ast
 class FieldAccessExpr : public Expr {
+  std::unique_ptr<FieldAccessExprData> data_ = nullptr;
   std::string name_;
 
   // The offset known so far. If we have directional or offset arguments, we have to perform a
@@ -499,6 +521,18 @@ public:
   ///
   /// This function is used during the inlining when we now all the offsets.
   void setPureOffset(const Array3i& offset);
+
+  template <typename Sub, typename Base>
+  using enable_if_subtype_t = typename std::enable_if<std::is_base_of<Base, Sub>::value>::type;
+
+  /// @brief Get data object, must provide the type of the data object (must be subtype of
+  /// FieldAccessExprData)
+  template <typename DataType, typename = enable_if_subtype_t<DataType, FieldAccessExprData>>
+  DataType& getData() {
+    if(!data_)
+      data_ = make_unique<DataType>();
+    return *dynamic_cast<DataType*>(data_.get());
+  }
 
   const std::string& getName() const { return name_; }
 
