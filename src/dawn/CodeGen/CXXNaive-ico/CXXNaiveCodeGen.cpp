@@ -29,38 +29,32 @@ namespace dawn {
 namespace codegen {
 namespace cxxnaiveico {
 
-static std::string makeLoopImpl(const iir::Extent extent, const std::string& dim,
-                                const std::string& lower, const std::string& upper,
-                                const std::string& comparison, const std::string& increment) {
-  return Twine("for(int " + dim + " = " + lower + "+" + std::to_string(extent.Minus) + "; " + dim +
-               " " + comparison + " " + upper + "+" + std::to_string(extent.Plus) + "; " +
-               increment + dim + ")")
-      .str();
-}
+// static std::string makeLoopImpl(const iir::Extent extent, const std::string& dim,
+// const std::string& lower, const std::string& upper,
+// const std::string& comparison, const std::string& increment) {
+// return Twine("for(int " + dim + " = " + lower + "+" + std::to_string(extent.Minus) + "; " + dim +
+// " " + comparison + " " + upper + "+" + std::to_string(extent.Plus) + "; " +
+// increment + dim + ")")
+// .str();
+// }
 
-static std::string makeIJLoop(const iir::Extent extent, const std::string dom,
-                              const std::string& dim) {
-  return makeLoopImpl(extent, dim, dom + "." + dim + "minus()",
-                      dom + "." + dim + "size() - " + dom + "." + dim + "plus() - 1", " <= ", "++");
-}
+// static std::string makeIntervalBound(const std::string dom, iir::Interval const& interval,
+// iir::Interval::Bound bound) {
+// return interval.levelIsEnd(bound)
+// ? "( " + dom + ".ksize() == 0 ? 0 : (" + dom + ".ksize() - " + dom +
+// ".kplus() - 1)) + " + std::to_string(interval.offset(bound))
+// : std::to_string(interval.bound(bound));
+// }
 
-static std::string makeIntervalBound(const std::string dom, iir::Interval const& interval,
-                                     iir::Interval::Bound bound) {
-  return interval.levelIsEnd(bound)
-             ? "( " + dom + ".ksize() == 0 ? 0 : (" + dom + ".ksize() - " + dom +
-                   ".kplus() - 1)) + " + std::to_string(interval.offset(bound))
-             : std::to_string(interval.bound(bound));
-}
+// static std::string makeKLoop(const std::string dom, bool isBackward,
+// iir::Interval const& interval) {
 
-static std::string makeKLoop(const std::string dom, bool isBackward,
-                             iir::Interval const& interval) {
+// const std::string lower = makeIntervalBound(dom, interval, iir::Interval::Bound::lower);
+// const std::string upper = makeIntervalBound(dom, interval, iir::Interval::Bound::upper);
 
-  const std::string lower = makeIntervalBound(dom, interval, iir::Interval::Bound::lower);
-  const std::string upper = makeIntervalBound(dom, interval, iir::Interval::Bound::upper);
-
-  return isBackward ? makeLoopImpl(iir::Extent{}, "k", upper, lower, ">=", "--")
-                    : makeLoopImpl(iir::Extent{}, "k", lower, upper, "<=", "++");
-}
+// return isBackward ? makeLoopImpl(iir::Extent{}, "k", upper, lower, ">=", "--")
+// : makeLoopImpl(iir::Extent{}, "k", lower, upper, "<=", "++");
+// }
 
 CXXNaiveIcoCodeGen::CXXNaiveIcoCodeGen(stencilInstantiationContext& ctx, DiagnosticsEngine& engine,
                                        int maxHaloPoint)
@@ -231,7 +225,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     Class& stencilWrapperClass, const CodeGenProperties& codeGenProperties) const {
 
   const auto& stencils = stencilInstantiation->getStencils();
-  const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
+  // const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // Stencil members:
   // generate the code for each of the stencils
@@ -480,7 +474,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveIcoCodeGen::generateCode() {
     stencils.emplace(nameStencilCtxPair.first, std::move(code));
   }
 
-  std::string globals = generateGlobals(context_, "cxxnaiveico");
+  std::string globals = generateGlobals(context_, "dawn_generated", "cxxnaiveico");
 
   std::vector<std::string> ppDefines;
   ppDefines.push_back("#define GRIDTOOLS_CLANG_GENERATED 1");
