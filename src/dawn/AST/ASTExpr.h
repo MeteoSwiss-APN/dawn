@@ -416,7 +416,8 @@ public:
 
   /// @brief Get data object, must provide the type of the data object (must be subtype of
   /// VarAccessExprData)
-  template <typename DataType, typename = enable_if_subtype_t<DataType, VarAccessExprData>>
+  template <typename DataType, typename = typename std::enable_if<
+                                   std::is_base_of<VarAccessExprData, DataType>::value>::type>
   DataType& getData() {
     if(!data_)
       data_ = make_unique<DataType>();
@@ -522,12 +523,10 @@ public:
   /// This function is used during the inlining when we now all the offsets.
   void setPureOffset(const Array3i& offset);
 
-  template <typename Sub, typename Base>
-  using enable_if_subtype_t = typename std::enable_if<std::is_base_of<Base, Sub>::value>::type;
-
   /// @brief Get data object, must provide the type of the data object (must be subtype of
   /// FieldAccessExprData)
-  template <typename DataType, typename = enable_if_subtype_t<DataType, FieldAccessExprData>>
+  template <typename DataType, typename = typename std::enable_if<
+                                   std::is_base_of<FieldAccessExprData, DataType>::value>::type>
   DataType& getData() {
     if(!data_)
       data_ = make_unique<DataType>();
