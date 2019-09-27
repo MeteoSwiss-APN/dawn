@@ -35,7 +35,7 @@ macro( gtclang_setup_CUDA )
 
   endif()
 
-  list( APPEND GTCLANG_DEFINITIONS "-D_USE_GPU_" )
+  list( APPEND GTCLANG_DEFINITIONS "-DGT_USE_GPU" )
 
   string( REPLACE "." "" CUDA_VERSION_INT ${CUDA_VERSION} )
   gtclang_add_nvcc_flags( -DCUDA_VERSION=${CUDA_VERSION_INT} )

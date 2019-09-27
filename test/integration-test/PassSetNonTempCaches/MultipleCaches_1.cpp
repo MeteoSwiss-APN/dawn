@@ -15,7 +15,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 // RUN: %gtclang% %file% -fno-codegen -fcache-non-temp-fields -freport-cache-non-temp-fields
-// EXPECTED: PASS: PassSetNonTempCaches: Test01 : Cached: field_b : Type: IJ:local Cached: field_c : Type: IJ:local
+// EXPECTED: PASS: PassSetNonTempCaches: Test01 : Cached: field_b : Type: cache_type::ij:local Cached: field_c : Type: cache_type::ij:local
 #include "gridtools/clang_dsl.hpp"
 
 using namespace gridtools::clang;

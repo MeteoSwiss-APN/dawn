@@ -55,8 +55,8 @@ TEST(hori_diff_stencil_01, test) {
   dawn_generated::OPTBACKEND::hori_diff_stencil hori_diff_gt(dom, u, out_gt);
   dawn_generated::cxxnaive::hori_diff_stencil hori_diff_naive(dom, u, out_naive);
 
-  hori_diff_gt.run();
-  hori_diff_naive.run();
+  hori_diff_gt.run(u, out_gt);
+  hori_diff_naive.run(u, out_naive);
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
 }

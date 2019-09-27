@@ -55,8 +55,8 @@ TEST(lap, test) {
   dawn_generated::OPTBACKEND::lap lap_gt(dom, in, out_gt);
   dawn_generated::cxxnaive::lap lap_naive(dom, in, out_naive);
 
-  lap_gt.run();
-  lap_naive.run();
+  lap_gt.run(in, out_gt);
+  lap_naive.run(in, out_naive);
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
 }

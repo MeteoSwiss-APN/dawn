@@ -60,8 +60,8 @@ TEST(tridiagonal_solve, test) {
   dawn_generated::OPTBACKEND::tridiagonal_solve tridiagonal_solve_gt(dom, d_gt, a, b, c_gt);
   dawn_generated::cxxnaive::tridiagonal_solve tridiagonal_solve_naive(dom, d_naive, a, b, c_naive);
 
-  tridiagonal_solve_gt.run();
-  tridiagonal_solve_naive.run();
+  tridiagonal_solve_gt.run(d_gt, a, b, c_gt);
+  tridiagonal_solve_naive.run(d_naive, a, b, c_naive);
 
   ASSERT_TRUE(verif.verify(d_gt, d_naive));
 }

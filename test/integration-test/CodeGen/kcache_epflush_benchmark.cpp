@@ -59,8 +59,8 @@ TEST(kcache_epflush, test) {
   dawn_generated::OPTBACKEND::kcache_epflush kcache_epflush_gt(dom, in, out_opt);
   dawn_generated::cxxnaive::kcache_epflush kcache_epflush_naive(dom, in, out_naive);
 
-  kcache_epflush_gt.run();
-  kcache_epflush_naive.run();
+  kcache_epflush_gt.run(in, out_opt);
+  kcache_epflush_naive.run(in, out_naive);
 
   ASSERT_TRUE(verif.verify(out_opt, out_naive));
 }

@@ -49,8 +49,8 @@ TEST(kcache_fill, test) {
   dawn_generated::OPTBACKEND::kcache_fill kcache_fill_gt(dom, in, out_gt);
   dawn_generated::cxxnaive::kcache_fill kcache_fill_naive(dom, in, out_naive);
 
-  kcache_fill_gt.run();
-  kcache_fill_naive.run();
+  kcache_fill_gt.run(in, out_gt);
+  kcache_fill_naive.run(in, out_naive);
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
 }

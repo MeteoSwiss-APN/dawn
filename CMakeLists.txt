@@ -1,7 +1,7 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
 ##                         _       _
 ##                        | |     | |
-##                    __ _| |_ ___| | __ _ _ __   __ _ 
+##                    __ _| |_ ___| | __ _ _ __   __ _
 ##                   / _` | __/ __| |/ _` | '_ \ / _` |
 ##                  | (_| | || (__| | (_| | | | | (_| |
 ##                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
@@ -9,13 +9,13 @@
 ##                   |___/                       |___/
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
 
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING 
+  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
       "Choose the type of build, options are: Debug Release RelWithDebInfo." FORCE)
 endif()
 
@@ -102,13 +102,13 @@ foreach(package bash ccache Python3 Boost clang-format Clang Dawn OpenMP Threads
   endif()
 endforeach()
 
-if(DEFINED GRIDTOOLS_ROOT)
+if(GTCLANG_BUILD_GT_CPU_EXAMPLES OR GTCLANG_BUILD_GT_GPU_EXAMPLES OR GTCLANG_BUILD_CUDA_EXAMPLES)
   include("AddGridTools")
-  yoda_create_package_string(GridTools info)
-  list(APPEND package_info ${info})
+  if(GridTools_FOUND)
+    yoda_create_package_string(GridTools info)
+    list(APPEND package_info ${info})
 
-  string(TOUPPER GridTools PACKAGE)
-  if(${PACKAGE}_FOUND)
+    string(TOUPPER GridTools PACKAGE)
     list(APPEND GTCLANG_EXTERNAL_LIBRARIES ${YODA_${PACKAGE}_LIBRARIES})
     list(APPEND GTCLANG_EXTERNAL_INCLUDE_DIRS ${YODA_${PACKAGE}_INCLUDE_DIRS})
     list(APPEND GTCLANG_EXTERNAL_DEFINITIONS ${YODA_${PACKAGE}_DEFINITIONS})
@@ -128,7 +128,7 @@ endif()
 yoda_enable_full_rpath("${DAWN_RPATH_DIR}")
 
 # Add clang-format target
-set(format_directories 
+set(format_directories
   "${CMAKE_SOURCE_DIR}/src"
   "${CMAKE_SOURCE_DIR}/test/unit-test"
 )
@@ -159,8 +159,7 @@ gtclang_gen_install_config()
 
 # Install headers
 install(
-  DIRECTORY src/ 
-  DESTINATION ${GTCLANG_INSTALL_INCLUDE_DIR} 
+  DIRECTORY src/
+  DESTINATION ${GTCLANG_INSTALL_INCLUDE_DIR}
   FILES_MATCHING PATTERN "*.h" PATTERN "*.inc" PATTERN "*.hpp"
 )
-

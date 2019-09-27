@@ -82,7 +82,7 @@ public:
     global_parameter_t& as_global_parameter() {
       if(!m_global_parameter_ptr) {
         m_global_parameter_ptr = std::unique_ptr<global_parameter_t>(
-            new global_parameter_t(backend_t::make_global_parameter(m_data)));
+            new global_parameter_t(make_global_parameter<backend_t>(m_data)));
       }
       return *m_global_parameter_ptr;
     }

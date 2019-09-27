@@ -55,8 +55,8 @@ TEST(globals_stencil, test) {
   dawn_generated::cxxnaive::globals_stencil globals_naive(dom, in, out_naive);
   globals_naive.set_var_runtime(1);
 
-  globals_gt.run();
-  globals_naive.run();
+  globals_gt.run(in, out_gt);
+  globals_naive.run(in, out_naive);
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
 }

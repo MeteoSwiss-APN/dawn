@@ -66,8 +66,8 @@ TEST(hori_diff_type2_stencil, test) {
   dawn_generated::OPTBACKEND::hori_diff_type2_stencil hd_gt(dom, u_out_gt, u, crlato, crlatu, hdmask);
   dawn_generated::cxxnaive::hori_diff_type2_stencil hd_naive(dom, u_out_naive, u, crlato, crlatu, hdmask);
 
-  hd_gt.run();
-  hd_naive.run();
+  hd_gt.run(u_out_gt, u, crlato, crlatu, hdmask);
+  hd_naive.run(u_out_naive, u, crlato, crlatu, hdmask);
 
   ASSERT_TRUE(verif.verify(u_out_gt, u_out_naive));
 }

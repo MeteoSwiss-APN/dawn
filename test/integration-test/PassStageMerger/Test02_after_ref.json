@@ -1,5 +1,75 @@
 {
   "IIR": {
+    "Fields": {
+      "field_a0": {
+        "IsTemporary": false,
+        "dim": "[1,1,1]",
+        "field": {
+          "accessID": 15,
+          "extents": {
+            "read_access": "[(0, 0), (0, 0), (0, 0)]",
+            "write_access": "null"
+          },
+          "intend": 2,
+          "interval": "{ Start : End }",
+          "redundant extents": {
+            "read_access": "[(0, 0), (0, 0), (0, 0)]",
+            "write_access": "null"
+          }
+        }
+      },
+      "field_a1": {
+        "IsTemporary": false,
+        "dim": "[1,1,1]",
+        "field": {
+          "accessID": 16,
+          "extents": {
+            "read_access": "null",
+            "write_access": "[(0, 0), (0, 0), (0, 0)]"
+          },
+          "intend": 0,
+          "interval": "{ Start : End }",
+          "redundant extents": {
+            "read_access": "null",
+            "write_access": "[(0, 0), (0, 0), (0, 0)]"
+          }
+        }
+      },
+      "field_b0": {
+        "IsTemporary": false,
+        "dim": "[1,1,1]",
+        "field": {
+          "accessID": 17,
+          "extents": {
+            "read_access": "[(0, 0), (0, 0), (0, 0)]",
+            "write_access": "null"
+          },
+          "intend": 2,
+          "interval": "{ Start+1 : End }",
+          "redundant extents": {
+            "read_access": "[(0, 0), (0, 0), (0, 0)]",
+            "write_access": "null"
+          }
+        }
+      },
+      "field_b1": {
+        "IsTemporary": false,
+        "dim": "[1,1,1]",
+        "field": {
+          "accessID": 18,
+          "extents": {
+            "read_access": "null",
+            "write_access": "[(0, 0), (0, 0), (0, 0)]"
+          },
+          "intend": 0,
+          "interval": "{ Start+1 : End }",
+          "redundant extents": {
+            "read_access": "null",
+            "write_access": "[(0, 0), (0, 0), (0, 0)]"
+          }
+        }
+      }
+    },
     "Stencil0": {
       "Fields": {
         "field_a0": {

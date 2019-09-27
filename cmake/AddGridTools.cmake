@@ -15,7 +15,7 @@
 ##===------------------------------------------------------------------------------------------===##
 
 include(yodaExportPackage)
-find_package(GridTools)
+find_package(GridTools CONFIG REQUIRED)
 
 if(GridTools_FOUND)
   set(GTCLANG_HAS_GRIDTOOLS 1)
@@ -24,6 +24,6 @@ endif()
 yoda_export_package(
   NAME GridTools
   FOUND ${GridTools_FOUND}
-  INCLUDE_DIRS ${GRIDTOOLS_INCLUDE_DIRS} 
+  INCLUDE_DIRS ${GridTools_INCLUDE_PATH} 
   VERSION "${GridTools_VERSION}" 
 )

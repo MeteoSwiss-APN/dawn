@@ -60,8 +60,8 @@ TEST(kparallel_solver, test) {
   dawn_generated::OPTBACKEND::kparallel_solver kparallel_solver_gt(dom, d_gt, a, b, c_gt);
   dawn_generated::cxxnaive::kparallel_solver kparallel_solver_naive(dom, d_naive, a, b, c_naive);
 
-  kparallel_solver_gt.run();
-  kparallel_solver_naive.run();
+  kparallel_solver_gt.run(d_gt, a, b, c_gt);
+  kparallel_solver_naive.run(d_naive, a, b, c_naive);
 
   ASSERT_TRUE(verif.verify(d_gt, d_naive));
 }

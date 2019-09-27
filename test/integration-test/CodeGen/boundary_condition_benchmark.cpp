@@ -57,8 +57,8 @@ TEST(split_stencil, test) {
   dawn_generated::OPTBACKEND::split_stencil copy_gt(dom, in_gt, out_gt);
   dawn_generated::cxxnaive::split_stencil copy_naive(dom, in_naive, out_naive);
 
-  copy_gt.run();
-  copy_naive.run();
+  copy_gt.run(in_gt, out_gt);
+  copy_naive.run(in_naive, out_naive);
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
   ASSERT_TRUE(verif.verify(in_gt, in_naive));

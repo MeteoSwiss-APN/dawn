@@ -55,8 +55,8 @@ TEST(intervals02, test) {
   dawn_generated::OPTBACKEND::intervals02 intervals02_gt(dom, in, out_gt);
   dawn_generated::cxxnaive::intervals02 intervals02_naive(dom, in, out_naive);
 
-  intervals02_gt.run();
-  intervals02_naive.run();
+  intervals02_gt.run(in, out_gt);
+  intervals02_naive.run(in, out_naive);
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
 }

@@ -55,8 +55,8 @@ TEST(asymmetric, test) {
   dawn_generated::OPTBACKEND::asymmetric_stencil stencil_opt(dom, in, out_opt);
   dawn_generated::cxxnaive::asymmetric_stencil stencil_naive(dom, in, out_naive);
 
-  stencil_opt.run();
-  stencil_naive.run();
+  stencil_opt.run(in, out_opt);
+  stencil_naive.run(in, out_naive);
 
   ASSERT_TRUE(verif.verify(out_opt, out_naive));
 }

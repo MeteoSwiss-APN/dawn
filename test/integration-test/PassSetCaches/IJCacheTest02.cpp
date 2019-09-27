@@ -14,8 +14,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-// RUN: %gtclang% %file% -fno-codegen -fuse-kcaches -freport-pass-set-caches
-// EXPECTED: PASS: PassSetCaches: Test: MS0: tmp:IJ:local
+// RUN: %gtclang% %file% -fno-codegen -freport-pass-set-caches
+// EXPECTED: PASS: PassSetCaches: Test: MS0: tmp:cache_type::ij:local
 
 #include "gridtools/clang_dsl.hpp"
 

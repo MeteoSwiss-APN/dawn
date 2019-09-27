@@ -58,8 +58,8 @@ TEST(conditional_stencil, test) {
   conditional_naive.set_var2(true);
   conditional_gt.set_var2(true);
 
-  conditional_gt.run();
-  conditional_naive.run();
+  conditional_gt.run(in, out_gt);
+  conditional_naive.run(in, out_naive);
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
 }

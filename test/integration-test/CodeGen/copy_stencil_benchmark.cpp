@@ -55,8 +55,8 @@ TEST(copy_stencil, test) {
   dawn_generated::OPTBACKEND::copy_stencil copy_gt(dom, in, out_gt);
   dawn_generated::cxxnaive::copy_stencil copy_naive(dom, in, out_naive);
 
-  copy_gt.run();
-  copy_naive.run();
+  copy_gt.run(in, out_gt);
+  copy_naive.run(in, out_naive);
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
 }

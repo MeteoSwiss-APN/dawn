@@ -58,8 +58,8 @@ TEST(split_stencil, test) {
   dawn_generated::OPTBACKEND::split_stencil swapconst_gt(dom, in_gt, out_gt, bc_field);
   dawn_generated::cxxnaive::split_stencil swapconst_naive(dom, in_naive, out_naive, bc_field);
 
-  swapconst_gt.run();
-  swapconst_naive.run();
+  swapconst_gt.run(in_gt, out_gt, bc_field);
+  swapconst_naive.run(in_naive, out_naive, bc_field);
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
   ASSERT_TRUE(verif.verify(in_gt, in_naive));

@@ -62,8 +62,8 @@ TEST(local_kcache, test) {
   dawn_generated::OPTBACKEND::local_kcache local_kcache_opt(dom, a_opt, b_opt, c_opt, d_opt);
   dawn_generated::cxxnaive::local_kcache local_kcache_naive(dom, a_naive, b_naive, c_naive, d_naive);
 
-  local_kcache_opt.run();
-  local_kcache_naive.run();
+  local_kcache_opt.run(a_opt, b_opt, c_opt, d_opt);
+  local_kcache_naive.run(a_naive, b_naive, c_naive, d_naive);
 
   ASSERT_TRUE(verif.verify(a_opt, a_naive));
   ASSERT_TRUE(verif.verify(b_opt, b_naive));

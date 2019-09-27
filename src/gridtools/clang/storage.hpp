@@ -61,7 +61,7 @@
 #endif
 
 #if GRIDTOOLS_CLANG_STORAGE_TYPE == GRIDTOOLS_CLANG_STORAGE_CUDA
-#define _USE_GPU_
+#define GT_USE_GPU
 #endif
 
 /**
@@ -75,9 +75,9 @@
 
 // Include gridtools
 #ifndef GRIDTOOLS_CLANG_NO_INCLUDE
-#include <gridtools/stencil-composition/stencil-composition.hpp>
-#include <gridtools/stencil-composition/stencil-functions/call_interfaces.hpp>
-#include <gridtools/storage/storage-facility.hpp>
+#define GT_FLOAT_PRECISION 8
+#include <gridtools/stencil_composition/stencil_composition.hpp>
+#include <gridtools/storage/storage_facility.hpp>
 #endif
 
 #include "gridtools/clang/storage_runtime.hpp"

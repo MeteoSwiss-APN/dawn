@@ -1,7 +1,7 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
 ##                         _       _
 ##                        | |     | |
-##                    __ _| |_ ___| | __ _ _ __   __ _ 
+##                    __ _| |_ ___| | __ _ _ __   __ _
 ##                   / _` | __/ __| |/ _` | '_ \ / _` |
 ##                  | (_| | || (__| | (_| | | | | (_| |
 ##                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
@@ -9,13 +9,13 @@
 ##                   |___/                       |___/
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
 
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING 
+  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
       "Choose the type of build, options are: Debug Release RelWithDebInfo." FORCE)
 endif()
 
@@ -48,9 +48,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake")
 
 include(GTClangCloneRepository)
 
-set(GTCLANG_YODA_GIT_URL "https:///github.com/MeteoSwiss-APN/yoda.git" 
+set(GTCLANG_YODA_GIT_URL "https:///github.com/MeteoSwiss-APN/yoda.git"
     CACHE PATH "URL of the yoda git repository to clone")
-set(GTCLANG_YODA_GIT_BRANCH "1.0.1" CACHE STRING "Branch of the yoda git repository to clone")
+set(GTCLANG_YODA_GIT_BRANCH "1.0.4" CACHE STRING "Branch of the yoda git repository to clone")
 
 gtclang_clone_repository(NAME yoda URL ${GTCLANG_YODA_GIT_URL} BRANCH ${GTCLANG_YODA_GIT_BRANCH} SOURCE_DIR GTCLANG_YODA_SOURCE_DIR )
 
@@ -64,8 +64,8 @@ include(yodaAddTargetCleanAll)
 # Add custom targets
 yoda_add_target_clean_all(
   "${CMAKE_BINARY_DIR}/prefix"
-  "${CMAKE_BINARY_DIR}/thirdparty"  
-  "${CMAKE_BINARY_DIR}/dawn-cmake"  
+  "${CMAKE_BINARY_DIR}/thirdparty"
+  "${CMAKE_BINARY_DIR}/dawn-cmake"
   "${CMAKE_BINARY_DIR}/dawn"
   "${CMAKE_BINARY_DIR}/dawn-prefix"
   "${CMAKE_BINARY_DIR}/gtclang"
@@ -91,7 +91,7 @@ yoda_find_package(
   ADDITIONAL
     DOWNLOAD_DIR ${YODA_DOWNLOAD_DIR}
     GIT_REPOSITORY "git@github.com:MeteoSwiss-APN/dawn.git"
-    GIT_TAG "master" 
+    GIT_TAG "master"
     YODA_ROOT "${GTCLANG_YODA_SOURCE_DIR}"
     CMAKE_ARGS ${dawn_cmake_args}
 )
@@ -103,35 +103,37 @@ option(GTCLANG_ENABLE_GRIDTOOLS "Enable GridTools compilation" OFF)
 
 set(gtclang_dependencies "boost" "dawn")
 
-if(GTCLANG_ENABLE_GRIDTOOLS) 
+if(GTCLANG_ENABLE_GRIDTOOLS)
   yoda_find_package(
     PACKAGE GridTools
     REQUIRED_VARS GridTools_DIR
     DEPENDS "boost"
     ADDITIONAL
       DOWNLOAD_DIR ${YODA_DOWNLOAD_DIR}
-      GIT_REPOSITORY "git@github.com:cosunae/gridtools.git"
-      GIT_TAG "16.10.2018" 
+      GIT_REPOSITORY "git@github.com:GridTools/gridtools.git"
+      GIT_TAG "v1.0.1"
       YODA_ROOT "${GTCLANG_YODA_SOURCE_DIR}"
-      CMAKE_ARGS -DSTRUCTURED_GRIDS=ON -DBOOST_ROOT=${BOOST_ROOT} -DDISABLE_TESTING=ON -DENABLE_PERFORMANCE_METERS=ON -DINSTALL_GTEST=OFF
+      CMAKE_ARGS -DSTRUCTURED_GRIDS=ON -DBOOST_ROOT=${BOOST_ROOT} -DBUILD_TESTING=OFF -DENABLE_PERFORMANCE_METERS=ON -DINSTALL_GTEST=OFF
   )
   list(APPEND gtclang_dependencies "gridtools")
 
-  list(APPEND gtclang_cmake_args -DGRIDTOOLS_ROOT=${GridTools_DIR})
+  list(APPEND gtclang_cmake_args -DGridTools_DIR=${GridTools_DIR})
 else()
-  list(APPEND gtclang_cmake_args -DGTCLANG_BUILD_EXAMPLES=OFF)
+  list(APPEND gtclang_cmake_args -DGTCLANG_BUILD_GT_CPU_EXAMPLES=OFF)
+  list(APPEND gtclang_cmake_args -DGTCLANG_BUILD_GT_GPU_EXAMPLES=OFF)
+  list(APPEND gtclang_cmake_args -DGTCLANG_BUILD_CUDA_EXAMPLES=OFF)
 endif()
 
 yoda_find_package(
   PACKAGE gtclang
   NO_DEFAULT_PATH
-  FORWARD_VARS 
+  FORWARD_VARS
     BINARY_DIR gtclang_binary_dir
   DEPENDS ${gtclang_dependencies}
   ADDITIONAL
     SOURCE_DIR "${CMAKE_SOURCE_DIR}/../"
     YODA_ROOT "${GTCLANG_YODA_SOURCE_DIR}"
-    CMAKE_ARGS 
+    CMAKE_ARGS
         ${gtclang_cmake_args}
 )
 
@@ -139,7 +141,7 @@ if(NOT(gtclang_binary_dir))
   message(FATAL_ERROR "gtclang binary dir was not defined by External_gtclang")
 endif()
 
-add_test(NAME gtclang-tests 
+add_test(NAME gtclang-tests
   COMMAND  ${CMAKE_COMMAND} --build ${gtclang_binary_dir} --target test
 )
 
