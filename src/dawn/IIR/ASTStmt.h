@@ -41,8 +41,8 @@ struct IIRStmtData : public ast::StmtData {
   /// Stack trace of inlined stencil calls of this statement (might be empty).
   boost::optional<std::vector<ast::StencilCall*>> StackTrace;
 
-  // In case of a non function call stmt, the accesses are stored in CallerAccesses, while
-  // CalleeAccesses is uninitialized
+  /// In case of a non function call stmt, the accesses are stored in CallerAccesses, while
+  /// CalleeAccesses is uninitialized
 
   /// Accesses of the statement. If the statement is part of a stencil-function, this will store the
   /// caller accesses. The caller access will have the initial offset added (e.g if a stencil
@@ -54,7 +54,7 @@ struct IIRStmtData : public ast::StmtData {
   boost::optional<Accesses> CalleeAccesses;
 
   DataType getDataType() const override { return ThisDataType; }
-  std::unique_ptr<StmtData> clone() const override;
+  virtual std::unique_ptr<StmtData> clone() const override;
 };
 
 template <typename... Args>
@@ -69,9 +69,23 @@ template <typename... Args>
 std::shared_ptr<ast::ReturnStmt> makeReturnStmt(Args&&... args) {
   return std::make_shared<ast::ReturnStmt>(make_unique<IIRStmtData>(), std::forward<Args>(args)...);
 }
+
+struct VarDeclStmtData : public IIRStmtData {
+
+  VarDeclStmtData() = default;
+  VarDeclStmtData(const VarDeclStmtData&);
+
+  bool operator==(const VarDeclStmtData&);
+  bool operator!=(const VarDeclStmtData&);
+
+  boost::optional<int> AccessID;
+
+  std::unique_ptr<StmtData> clone() const override;
+};
+
 template <typename... Args>
 std::shared_ptr<ast::VarDeclStmt> makeVarDeclStmt(Args&&... args) {
-  return std::make_shared<ast::VarDeclStmt>(make_unique<IIRStmtData>(),
+  return std::make_shared<ast::VarDeclStmt>(make_unique<VarDeclStmtData>(),
                                             std::forward<Args>(args)...);
 }
 template <typename... Args>

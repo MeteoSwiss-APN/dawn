@@ -19,6 +19,10 @@
 namespace dawn {
 namespace iir {
 
+//===------------------------------------------------------------------------------------------===//
+//     IIRStmtData
+//===------------------------------------------------------------------------------------------===//
+
 IIRStmtData::IIRStmtData(const IIRStmtData& other) {
   StackTrace = other.StackTrace ? boost::make_optional(*other.StackTrace) : other.StackTrace;
   CallerAccesses =
@@ -27,12 +31,36 @@ IIRStmtData::IIRStmtData(const IIRStmtData& other) {
       other.CalleeAccesses ? boost::make_optional(*other.CalleeAccesses) : other.CalleeAccesses;
 }
 
-bool IIRStmtData::operator==(const IIRStmtData& rhs) { return StackTrace == rhs.StackTrace; }
+bool IIRStmtData::operator==(const IIRStmtData& rhs) {
+  return StackTrace == rhs.StackTrace && CallerAccesses == rhs.CallerAccesses &&
+         CalleeAccesses == rhs.CalleeAccesses;
+}
 bool IIRStmtData::operator!=(const IIRStmtData& rhs) { return !(*this == rhs); }
 
 std::unique_ptr<ast::StmtData> IIRStmtData::clone() const {
   return make_unique<IIRStmtData>(*this);
 }
+
+//===------------------------------------------------------------------------------------------===//
+//     VarDeclStmtData
+//===------------------------------------------------------------------------------------------===//
+
+VarDeclStmtData::VarDeclStmtData(const VarDeclStmtData& other) : IIRStmtData(other) {
+  AccessID = other.AccessID ? boost::make_optional(*other.AccessID) : other.AccessID;
+}
+
+bool VarDeclStmtData::operator==(const VarDeclStmtData& rhs) {
+  return IIRStmtData::operator==(rhs) && AccessID == rhs.AccessID;
+}
+bool VarDeclStmtData::operator!=(const VarDeclStmtData& rhs) { return !(*this == rhs); }
+
+std::unique_ptr<ast::StmtData> VarDeclStmtData::clone() const {
+  return make_unique<VarDeclStmtData>(*this);
+}
+
+//===------------------------------------------------------------------------------------------===//
+//     computeMaximumExtents
+//===------------------------------------------------------------------------------------------===//
 
 boost::optional<Extents> computeMaximumExtents(Stmt& stmt, const int accessID) {
   boost::optional<Extents> extents;
