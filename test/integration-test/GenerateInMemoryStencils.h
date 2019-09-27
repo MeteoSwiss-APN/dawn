@@ -12,7 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#pragma once
+#ifndef GENERATE_IN_MEMORY_STENCILS
+#define GENERATE_IN_MEMORY_STENCILS
 
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -24,3 +25,5 @@ std::shared_ptr<dawn::iir::StencilInstantiation>
 createCopyStencilIIRInMemory(dawn::OptimizerContext& optimizer);
 std::shared_ptr<dawn::iir::StencilInstantiation>
 createLapStencilIIRInMemory(dawn::OptimizerContext& optimizer);
+
+#endif

@@ -127,7 +127,7 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
         return false;
       }
     } else {
-      IIR_EARLY_EXIT(!(rhsControlFlowStmts[i]->StackTrace));
+      return false
     }
   }
 
