@@ -45,7 +45,7 @@ dawn_add_integrationtest_impl(
 )
 
 yoda_add_executable(
-  NAME DawnRegenerateInMemoryStencils
+  NAME DawnUpdateIIRReferences
   SOURCES RegenerateIIRMain.cpp
           GenerateInMemoryStencils.cpp
   DEPENDS DawnUnittestStatic DawnCStatic DawnStatic ${DAWN_EXTERNAL_LIBRARIES}

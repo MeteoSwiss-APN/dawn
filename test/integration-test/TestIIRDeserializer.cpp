@@ -74,10 +74,10 @@ void compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
 
         // checking each of the doMethods
         ASSERT_EQ(lhsStage->getChildren().size(), rhsStage->getChildren().size());
-        for(int doMethodidx = 0, doMethodSize = lhsStage->getChildren().size();
-            doMethodidx < doMethodSize; ++doMethodidx) {
-          const auto& lhsDoMethod = lhsStage->getChild(doMethodidx);
-          const auto& rhsDoMethod = rhsStage->getChild(doMethodidx);
+        for(int doMethodIdx = 0, doMethodSize = lhsStage->getChildren().size();
+            doMethodIdx < doMethodSize; ++doMethodIdx) {
+          const auto& lhsDoMethod = lhsStage->getChild(doMethodIdx);
+          const auto& rhsDoMethod = rhsStage->getChild(doMethodIdx);
           EXPECT_EQ(lhsDoMethod->getID(), rhsDoMethod->getID());
           EXPECT_EQ(lhsDoMethod->getInterval(), rhsDoMethod->getInterval());
 
@@ -106,17 +106,16 @@ void compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
 
   ASSERT_EQ(lhsControlFlowStmts.size(), rhsControlFlowStmts.size());
   for(int i = 0, size = lhsControlFlowStmts.size(); i < size; ++i) {
-    ASSERT_TRUE(lhsControlFlowStmts[i]->ASTStmt->equals(rhsControlFlowStmts[i]->ASTStmt.get()));
+    EXPECT_TRUE(lhsControlFlowStmts[i]->ASTStmt->equals(rhsControlFlowStmts[i]->ASTStmt.get()));
 
     if(lhsControlFlowStmts[i]->StackTrace) {
-      if(rhsControlFlowStmts[i]->StackTrace) {
-        for(int j = 0, jsize = lhsControlFlowStmts[i]->StackTrace->size(); j < jsize; ++j) {
-          EXPECT_EQ(*lhsControlFlowStmts[i]->StackTrace->at(j),
-                    *rhsControlFlowStmts[i]->StackTrace->at(j));
-        }
-      } else {
-        FAIL();
+      ASSERT_TRUE(rhsControlFlowStmts[i]->StackTrace.get() != nullptr);
+      for(int j = 0, jsize = lhsControlFlowStmts[i]->StackTrace->size(); j < jsize; ++j) {
+        EXPECT_EQ(*lhsControlFlowStmts[i]->StackTrace->at(j),
+                  *rhsControlFlowStmts[i]->StackTrace->at(j));
       }
+    } else {
+      ASSERT_FALSE(rhsControlFlowStmts[i]->StackTrace);
     }
   }
 }
@@ -196,10 +195,10 @@ void compareDerivedInformation(iir::IIR* lhs, iir::IIR* rhs) {
         ASSERT_EQ(lhsStage->getChildren().size(), rhsStage->getChildren().size());
 
         // checking each of the doMethods
-        for(int doMethodidx = 0, doMethodSize = lhsStage->getChildren().size();
-            doMethodidx < doMethodSize; ++doMethodidx) {
-          const auto& lhsDoMethod = lhsStage->getChild(doMethodidx);
-          const auto& rhsDoMethod = rhsStage->getChild(doMethodidx);
+        for(int doMethodIdx = 0, doMethodSize = lhsStage->getChildren().size();
+            doMethodIdx < doMethodSize; ++doMethodIdx) {
+          const auto& lhsDoMethod = lhsStage->getChild(doMethodIdx);
+          const auto& rhsDoMethod = rhsStage->getChild(doMethodIdx);
 
           ASSERT_EQ(lhsDoMethod->getFields(), rhsDoMethod->getFields());
           ASSERT_EQ(lhsDoMethod->getDependencyGraph(), rhsDoMethod->getDependencyGraph());
@@ -209,12 +208,13 @@ void compareDerivedInformation(iir::IIR* lhs, iir::IIR* rhs) {
   }
 }
 
-void readIIRFromFile(OptimizerContext& optimizer,
-                     std::shared_ptr<iir::StencilInstantiation>& target, std::string fname) {
-  target = IIRSerializer::deserialize(fname, &optimizer, IIRSerializer::SK_Json);
+std::shared_ptr<iir::StencilInstantiation> readIIRFromFile(OptimizerContext& optimizer,
+                                                           const std::string& fname) {
+  auto target = IIRSerializer::deserialize(fname, &optimizer, IIRSerializer::SK_Json);
 
   // this is whats actually to be tested.
   optimizer.restoreIIR("<restored>", target);
+  return target;
 }
 
 void compareIIRs(std::shared_ptr<iir::StencilInstantiation> lhs,
@@ -238,15 +238,11 @@ TEST(IIRDeserializerTest, CopyStencil) {
                              std::make_shared<dawn::SIR>());
 
   // read IIR from file
-  auto copy_stencil_from_file = std::make_shared<iir::StencilInstantiation>(
-      dawn::sir::GlobalVariableMap(), std::vector<std::shared_ptr<sir::StencilFunction>>());
-  readIIRFromFile(optimizer, copy_stencil_from_file, "reference_iir/copy_stencil.iir");
+  auto copy_stencil_from_file = readIIRFromFile(optimizer, "reference_iir/copy_stencil.iir");
   UIDGenerator::getInstance()->reset();
 
   // generate IIR in memory
-  auto copy_stencil_memory = std::make_shared<iir::StencilInstantiation>(
-      *optimizer.getSIR()->GlobalVariableMap, optimizer.getSIR()->StencilFunctions);
-  createCopyStencilIIRInMemory(copy_stencil_memory);
+  auto copy_stencil_memory = createCopyStencilIIRInMemory(optimizer);
   UIDGenerator::getInstance()->reset();
 
   compareIIRs(copy_stencil_from_file, copy_stencil_memory);
@@ -260,15 +256,11 @@ TEST(IIRDeserializerTest, LaplStencil) {
                              std::make_shared<dawn::SIR>());
 
   // read IIR from file
-  auto lap_stencil_from_file = std::make_shared<iir::StencilInstantiation>(
-      dawn::sir::GlobalVariableMap(), std::vector<std::shared_ptr<sir::StencilFunction>>());
-  readIIRFromFile(optimizer, lap_stencil_from_file, "reference_iir/lap_stencil.iir");
+  auto lap_stencil_from_file = readIIRFromFile(optimizer, "reference_iir/lap_stencil.iir");
   UIDGenerator::getInstance()->reset();
 
   // generate IIR in memory
-  auto lap_stencil_memory = std::make_shared<iir::StencilInstantiation>(
-      *optimizer.getSIR()->GlobalVariableMap, optimizer.getSIR()->StencilFunctions);
-  createLapStencilIIRInMemory(lap_stencil_memory);
+  auto lap_stencil_memory = createLapStencilIIRInMemory(optimizer);
   UIDGenerator::getInstance()->reset();
 
   compareIIRs(lap_stencil_from_file, lap_stencil_memory);

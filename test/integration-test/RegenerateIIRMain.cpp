@@ -18,6 +18,8 @@
 
 #include <memory>
 
+using namespace dawn;
+
 int main(int argc, char* argv[]) {
   Options compileOptions;
   OptimizerContext::OptimizerContextOptions optimizerOptions;
@@ -25,17 +27,11 @@ int main(int argc, char* argv[]) {
   OptimizerContext optimizer(compiler.getDiagnostics(), optimizerOptions,
                              std::make_shared<dawn::SIR>());
 
-  auto copy_stencil = std::make_shared<iir::StencilInstantiation>(
-      *optimizer.getSIR()->GlobalVariableMap, optimizer.getSIR()->StencilFunctions);
-  createCopyStencilIIRInMemory(copy_stencil);
+  auto copy_stencil = createCopyStencilIIRInMemory(optimizer);
   UIDGenerator::getInstance()->reset();
-
   IIRSerializer::serialize("reference_iir/copy_stencil.iir", copy_stencil, IIRSerializer::SK_Json);
 
-    auto lapl_stencil = std::make_shared<iir::StencilInstantiation>(
-      *optimizer.getSIR()->GlobalVariableMap, optimizer.getSIR()->StencilFunctions);
-  createLapStencilIIRInMemory(copy_stencil);
+  auto lapl_stencil = createLapStencilIIRInMemory(optimizer);
   UIDGenerator::getInstance()->reset();
-
   IIRSerializer::serialize("reference_iir/lapl_stencil.iir", copy_stencil, IIRSerializer::SK_Json);
 }

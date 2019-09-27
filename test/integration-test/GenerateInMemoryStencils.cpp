@@ -35,7 +35,13 @@
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/STLExtras.h"
 
-void createCopyStencilIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target) {
+using namespace dawn;
+
+std::shared_ptr<iir::StencilInstantiation>
+createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
+  auto target = std::make_shared<iir::StencilInstantiation>(*optimizer.getSIR()->GlobalVariableMap,
+                                                            optimizer.getSIR()->StencilFunctions);
+
   ///////////////// Generation of the IIR
   sir::Attr attributes;
   int stencilID = target->nextUID();
@@ -125,9 +131,15 @@ void createCopyStencilIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& ta
   for(const auto& MSPtr : iterateIIROver<iir::Stage>(*(target->getIIR()))) {
     MSPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
+
+  return target;
 }
 
-void createLapStencilIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target) {
+std::shared_ptr<iir::StencilInstantiation>
+createLapStencilIIRInMemory(OptimizerContext& optimizer) {
+  auto target = std::make_shared<iir::StencilInstantiation>(*optimizer.getSIR()->GlobalVariableMap,
+                                                            optimizer.getSIR()->StencilFunctions);
+
   ///////////////// Generation of the IIR
   sir::Attr attributes;
   int stencilID = target->nextUID();
@@ -298,4 +310,6 @@ void createLapStencilIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& tar
   for(const auto& MSPtr : iterateIIROver<iir::Stage>(*(target->getIIR()))) {
     MSPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
   }
+
+  return target;
 }

@@ -14,12 +14,13 @@
 
 #pragma once
 
-#include <memory>
-
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 
-using namespace dawn;
+#include <memory>
 
-void createCopyStencilIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target);
-void createLapStencilIIRInMemory(std::shared_ptr<iir::StencilInstantiation>& target);
+std::shared_ptr<dawn::iir::StencilInstantiation>
+createCopyStencilIIRInMemory(dawn::OptimizerContext& optimizer);
+std::shared_ptr<dawn::iir::StencilInstantiation>
+createLapStencilIIRInMemory(dawn::OptimizerContext& optimizer);
