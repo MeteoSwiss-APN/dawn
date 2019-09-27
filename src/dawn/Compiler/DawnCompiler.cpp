@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Compiler/DawnCompiler.h"
+#include "dawn/CodeGen/CXXNaive-ico/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CXXNaive/CXXNaiveCodeGen.h"
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/Cuda/CudaCodeGen.h"
@@ -284,6 +285,9 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
   } else if(options_->Backend == "c++-naive") {
     CG = make_unique<codegen::cxxnaive::CXXNaiveCodeGen>(optimizer->getStencilInstantiationMap(),
                                                          *diagnostics_, options_->MaxHaloPoints);
+  } else if(options_->Backend == "c++-naive-ico") {
+    CG = make_unique<codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(
+        optimizer->getStencilInstantiationMap(), *diagnostics_, options_->MaxHaloPoints);
   } else if(options_->Backend == "cuda") {
     CG = make_unique<codegen::cuda::CudaCodeGen>(
         optimizer->getStencilInstantiationMap(), *diagnostics_, options_->MaxHaloPoints,
@@ -294,7 +298,7 @@ std::unique_ptr<codegen::TranslationUnit> DawnCompiler::compile(const std::share
     diagnostics_->report(buildDiag("-backend", options_->Backend,
                                    "backend options must be : " +
                                        dawn::RangeToString(", ", "", "")(std::vector<std::string>{
-                                           "gridtools", "c++-naive", "c++-opt"})));
+                                           "gridtools", "c++-naive", "c++-opt", "c++-naive-ico"})));
     return nullptr;
   }
 
