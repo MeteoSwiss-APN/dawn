@@ -573,9 +573,10 @@ private:
 public:
   /// @name Constructor & Destructor
   /// @{
-  ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> rhs,
-                            std::shared_ptr<Expr> init, SourceLocation loc = SourceLocation());
-  ReductionOverNeighborExpr(const ReductionOverNeighborExpr& stmt);
+  ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> const& rhs,
+                            std::shared_ptr<Expr> const& init,
+                            SourceLocation loc = SourceLocation());
+  ReductionOverNeighborExpr(ReductionOverNeighborExpr const& stmt);
   ReductionOverNeighborExpr& operator=(ReductionOverNeighborExpr stmt);
   /// @}
 

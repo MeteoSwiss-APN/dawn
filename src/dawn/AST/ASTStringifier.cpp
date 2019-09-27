@@ -144,9 +144,10 @@ public:
     }
   }
   void visit(const std::shared_ptr<ReductionOverNeighborExpr>& expr) override {
-    if(scopeDepth_ == 0)
-      ss_ << std::string(curIndent_, ' ');
-    ss_ << "Reduce (" << expr->getOp() << "): " << '\n';
+    ss_ << "Reduce (" << expr->getOp() << ", init = ";
+    expr->getInit()->accept(*this);
+    ss_ << "): ";
+    expr->getRhs()->accept(*this);
   }
 
   void visit(const std::shared_ptr<UnaryOperator>& expr) override {
