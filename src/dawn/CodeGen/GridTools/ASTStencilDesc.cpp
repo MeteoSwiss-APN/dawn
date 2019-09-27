@@ -77,6 +77,9 @@ void ASTStencilDesc::visit(const std::shared_ptr<iir::IfStmt>& stmt) { Base::vis
 
 // TODO use the forwarding visitor?
 void ASTStencilDesc::visit(const std::shared_ptr<iir::UnaryOperator>& expr) { Base::visit(expr); }
+void ASTStencilDesc::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
+  Base::visit(expr);
+}
 
 void ASTStencilDesc::visit(const std::shared_ptr<iir::BinaryOperator>& expr) { Base::visit(expr); }
 
@@ -108,7 +111,9 @@ void ASTStencilDesc::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   }
 }
 
-void ASTStencilDesc::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) { Base::visit(expr); }
+void ASTStencilDesc::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) {
+  Base::visit(expr);
+}
 
 void ASTStencilDesc::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   dawn_unreachable("FieldAccessExpr not allowed in StencilDesc AST");
