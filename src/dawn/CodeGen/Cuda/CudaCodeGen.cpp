@@ -142,7 +142,7 @@ void CudaCodeGen::generateStencilWrapperPublicMemberFunctions(
   MemberFunction totalTime = stencilWrapperClass.addMemberFunction("double", "get_total_time");
   totalTime.startBody();
   totalTime.addStatement("double res = 0");
-  std::string s1 = RangeToString("\n", "", "")(
+  std::string s1 = RangeToString(";\n", "", "")(
       stencilMembers, [](const std::string& member) { return "res +=" + member + "->get_time()"; });
   totalTime.addStatement(s1);
   totalTime.addStatement("return res");
