@@ -353,7 +353,7 @@ class DetectInlineCandiates : public iir::ASTVisitorForwarding {
   const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
 
   /// The statement we are currently analyzing
-  std::unique_ptr<iir::StatementAccessesPair> oldStmtAccessesPair_;
+  std::unique_ptr<iir::StatementAccessesPair>* oldStmtAccessesPair_;
 
   /// If non-empty the `oldStmt` will be appended to `newStmts` with the given replacements
   std::unordered_map<std::shared_ptr<iir::Expr>, std::shared_ptr<iir::Expr>>
@@ -384,14 +384,14 @@ public:
       : strategy_(strategy), instantiation_(instantiation), inlineCandiatesFound_(false) {}
 
   /// @brief Process the given statement
-  void processStatment(const std::unique_ptr<iir::StatementAccessesPair>& stmtAccesesPair) {
+  void processStatment(std::unique_ptr<iir::StatementAccessesPair>& stmtAccesesPair) {
     // Reset the state
     inlineCandiatesFound_ = false;
-    oldStmtAccessesPair_ = stmtAccesesPair->clone();
+    oldStmtAccessesPair_ = &stmtAccesesPair;
     newStmtAccessesPairs_.clear();
 
     // Detect the stencil functions suitable for inlining
-    oldStmtAccessesPair_->getStatement()->accept(*this);
+    (*oldStmtAccessesPair_)->getStatement()->accept(*this);
   }
 
   /// @brief Atleast one inline candiate was found and the given `stmt` should be replaced with
@@ -403,7 +403,7 @@ public:
   /// Note that the accesses are not computed!
   std::vector<std::unique_ptr<iir::StatementAccessesPair>>& getNewStatementAccessesPairs() {
     if(!replacmentOfOldStmtMap_.empty()) {
-      newStmtAccessesPairs_.push_back(oldStmtAccessesPair_->clone());
+      newStmtAccessesPairs_.push_back(std::move(*oldStmtAccessesPair_));
 
       for(const auto& oldNewPair : replacmentOfOldStmtMap_)
         iir::replaceOldExprWithNewExprInStmt(
@@ -439,7 +439,7 @@ public:
     argListScope_.pop();
 
     auto inlineResult =
-        tryInlineStencilFunction(strategy_, func, oldStmtAccessesPair_, newStmtAccessesPairs_,
+        tryInlineStencilFunction(strategy_, func, *oldStmtAccessesPair_, newStmtAccessesPairs_,
                                  AccessIDOfCaller, instantiation_);
 
     inlineCandiatesFound_ |= inlineResult.first;

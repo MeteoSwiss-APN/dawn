@@ -56,7 +56,7 @@ bool PassStageReordering::run(
     auto newStencil = strategy->reorder(stencilInstantiation.get(), stencilPtr, context_);
 
     stencilInstantiation->getIIR()->replace(stencilPtr, newStencil, stencilInstantiation->getIIR());
-
+    // TODO why is this pointer still used? (it was replaced in the previous statement)
     stencilPtr->update(iir::NodeUpdateType::levelAndTreeAbove);
 
     if(!stencilPtr)

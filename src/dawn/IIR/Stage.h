@@ -177,10 +177,10 @@ public:
   /// The global variables are computed during `Stage::update`.
   const std::unordered_set<int>& getAllGlobalVariables() const;
 
-  /// @brief Add the given Do-Method to the list of Do-Methods of this stage
+  /// @brief Moves the given Do-Method to the list of Do-Methods of this stage
   ///
   /// Calls `update()` in the end.
-  void addDoMethod(const DoMethodSmartPtr_t& doMethod);
+  void addDoMethod(DoMethodSmartPtr_t& doMethod);
 
   /// @brief Append the `from` DoMethod to the existing `to` DoMethod of this stage and use
   /// `dependencyGraph` as the new DependencyGraphAccesses of this new Do-Method
