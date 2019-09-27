@@ -323,10 +323,13 @@ VarAccessExpr::VarAccessExpr(const std::string& name, std::shared_ptr<Expr> inde
 
 VarAccessExpr::VarAccessExpr(const VarAccessExpr& expr)
     : Expr(EK_VarAccessExpr, expr.getSourceLocation()), name_(expr.getName()),
-      index_(expr.getIndex()), isExternal_(expr.isExternal()) {}
+      index_(expr.getIndex()), isExternal_(expr.isExternal()) {
+  data_ = expr.data_ ? expr.data_->clone() : nullptr;
+}
 
 VarAccessExpr& VarAccessExpr::operator=(VarAccessExpr expr) {
   assign(expr);
+  data_ = expr.data_ ? expr.data_->clone() : nullptr;
   name_ = std::move(expr.getName());
   index_ = std::move(expr.getIndex());
   isExternal_ = expr.isExternal();
@@ -369,10 +372,13 @@ FieldAccessExpr::FieldAccessExpr(const std::string& name, Array3i offset, Array3
 FieldAccessExpr::FieldAccessExpr(const FieldAccessExpr& expr)
     : Expr(EK_FieldAccessExpr, expr.getSourceLocation()), name_(expr.getName()),
       offset_(expr.getOffset()), argumentMap_(expr.getArgumentMap()),
-      argumentOffset_(expr.getArgumentOffset()), negateOffset_(expr.negateOffset()) {}
+      argumentOffset_(expr.getArgumentOffset()), negateOffset_(expr.negateOffset()) {
+  data_ = expr.data_ ? expr.data_->clone() : nullptr;
+}
 
 FieldAccessExpr& FieldAccessExpr::operator=(FieldAccessExpr expr) {
   assign(expr);
+  data_ = expr.data_ ? expr.data_->clone() : nullptr;
   name_ = std::move(expr.getName());
   offset_ = std::move(expr.getOffset());
   argumentMap_ = std::move(expr.getArgumentMap());
