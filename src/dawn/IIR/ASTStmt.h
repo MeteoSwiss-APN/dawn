@@ -78,6 +78,7 @@ struct VarDeclStmtData : public IIRStmtData {
   bool operator==(const VarDeclStmtData&);
   bool operator!=(const VarDeclStmtData&);
 
+  /// ID of the variable declared by the statement
   boost::optional<int> AccessID;
 
   std::unique_ptr<StmtData> clone() const override;
@@ -119,7 +120,9 @@ using VerticalRegionDeclStmt = ast::VerticalRegionDeclStmt;
 using StencilCallDeclStmt = ast::StencilCallDeclStmt;
 using BoundaryConditionDeclStmt = ast::BoundaryConditionDeclStmt;
 using IfStmt = ast::IfStmt;
-
+//
+// END_TODO
+//
 extern boost::optional<Extents> computeMaximumExtents(Stmt& stmt, const int accessID);
 
 } // namespace iir

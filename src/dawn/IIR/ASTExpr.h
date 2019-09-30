@@ -21,27 +21,16 @@
 namespace dawn {
 namespace iir {
 
-struct IIRVarAccessExprData : public ast::VarAccessExprData {
-  IIRVarAccessExprData() = default;
-  IIRVarAccessExprData(const IIRVarAccessExprData& other);
+struct IIRAccessExprData : public ast::AccessExprData {
+  IIRAccessExprData() = default;
+  IIRAccessExprData(const IIRAccessExprData& other);
 
-  bool operator==(const IIRVarAccessExprData&);
-  bool operator!=(const IIRVarAccessExprData&);
+  bool operator==(const IIRAccessExprData&);
+  bool operator!=(const IIRAccessExprData&);
 
-  std::unique_ptr<ast::VarAccessExprData> clone() const override;
+  std::unique_ptr<ast::AccessExprData> clone() const override;
 
-  boost::optional<int> AccessID;
-};
-
-struct IIRFieldAccessExprData : public ast::FieldAccessExprData {
-  IIRFieldAccessExprData() = default;
-  IIRFieldAccessExprData(const IIRFieldAccessExprData& other);
-
-  bool operator==(const IIRFieldAccessExprData&);
-  bool operator!=(const IIRFieldAccessExprData&);
-
-  std::unique_ptr<ast::FieldAccessExprData> clone() const override;
-
+  /// ID of the resource (literal or variable or field) accessed by the expression
   boost::optional<int> AccessID;
 };
 
@@ -60,6 +49,13 @@ using StencilFunArgExpr = ast::StencilFunArgExpr;
 using VarAccessExpr = ast::VarAccessExpr;
 using FieldAccessExpr = ast::FieldAccessExpr;
 using LiteralAccessExpr = ast::LiteralAccessExpr;
+//
+// END_TODO
+//
+
+/// @brief Get the `AccessID` of the Expr (VarAccess or FieldAccess or LiteralAccess)
+extern int getAccessIDFromExpr(const std::shared_ptr<Expr>& expr);
+
 } // namespace iir
 } // namespace dawn
 

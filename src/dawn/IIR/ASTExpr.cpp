@@ -19,39 +19,35 @@ namespace dawn {
 namespace iir {
 
 //===------------------------------------------------------------------------------------------===//
-//     IIRVarAccessExprData
+//     IIRAccessExprData
 //===------------------------------------------------------------------------------------------===//
 
-IIRVarAccessExprData::IIRVarAccessExprData(const IIRVarAccessExprData& other) {
+IIRAccessExprData::IIRAccessExprData(const IIRAccessExprData& other) {
   AccessID = other.AccessID ? boost::make_optional(*other.AccessID) : other.AccessID;
 }
 
-bool IIRVarAccessExprData::operator==(const IIRVarAccessExprData& rhs) {
+bool IIRAccessExprData::operator==(const IIRAccessExprData& rhs) {
   return AccessID == rhs.AccessID;
 }
-bool IIRVarAccessExprData::operator!=(const IIRVarAccessExprData& rhs) { return !(*this == rhs); }
+bool IIRAccessExprData::operator!=(const IIRAccessExprData& rhs) { return !(*this == rhs); }
 
-std::unique_ptr<ast::VarAccessExprData> IIRVarAccessExprData::clone() const {
-  return make_unique<IIRVarAccessExprData>(*this);
+std::unique_ptr<ast::AccessExprData> IIRAccessExprData::clone() const {
+  return make_unique<IIRAccessExprData>(*this);
 }
 
-//===------------------------------------------------------------------------------------------===//
-//     IIRFieldAccessExprData
-//===------------------------------------------------------------------------------------------===//
-
-IIRFieldAccessExprData::IIRFieldAccessExprData(const IIRFieldAccessExprData& other) {
-  AccessID = other.AccessID ? boost::make_optional(*other.AccessID) : other.AccessID;
-}
-
-bool IIRFieldAccessExprData::operator==(const IIRFieldAccessExprData& rhs) {
-  return AccessID == rhs.AccessID;
-}
-bool IIRFieldAccessExprData::operator!=(const IIRFieldAccessExprData& rhs) {
-  return !(*this == rhs);
-}
-
-std::unique_ptr<ast::FieldAccessExprData> IIRFieldAccessExprData::clone() const {
-  return make_unique<IIRFieldAccessExprData>(*this);
+int getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) {
+  switch(expr->getKind()) {
+  case ast::Expr::EK_FieldAccessExpr:
+    return *std::dynamic_pointer_cast<FieldAccessExpr>(expr)->getData<IIRAccessExprData>().AccessID;
+  case ast::Expr::EK_LiteralAccessExpr:
+    return *std::dynamic_pointer_cast<LiteralAccessExpr>(expr)
+                ->getData<IIRAccessExprData>()
+                .AccessID;
+  case ast::Expr::EK_VarAccessExpr:
+    return *std::dynamic_pointer_cast<VarAccessExpr>(expr)->getData<IIRAccessExprData>().AccessID;
+  default:
+    throw std::runtime_error("Invalid Expr to get access id from");
+  }
 }
 
 } // namespace iir

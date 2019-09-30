@@ -15,8 +15,9 @@
 #include "dawn/CodeGen/Cuda/ASTStencilBody.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/Cuda/ASTStencilFunctionParamVisitor.h"
-#include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTExpr.h"
+#include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/Support/Unreachable.h"
 #include <string>
 
@@ -35,11 +36,11 @@ ASTStencilBody::ASTStencilBody(const iir::StencilMetaInformation& metadata,
 ASTStencilBody::~ASTStencilBody() {}
 
 std::string ASTStencilBody::getName(const std::shared_ptr<iir::Expr>& expr) const {
-  return metadata_.getFieldNameFromAccessID(metadata_.getAccessIDFromExpr(expr));
+  return metadata_.getFieldNameFromAccessID(iir::getAccessIDFromExpr(expr));
 }
 
 std::string ASTStencilBody::getName(const std::shared_ptr<iir::Stmt>& stmt) const {
-  return metadata_.getFieldNameFromAccessID(metadata_.getAccessIDFromStmt(stmt));
+  return metadata_.getFieldNameFromAccessID(*stmt->getData<iir::VarDeclStmtData>().AccessID);
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -82,7 +83,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) 
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   std::string name = getName(expr);
-  int accessID = metadata_.getAccessIDFromExpr(expr);
+  int accessID = iir::getAccessIDFromExpr(expr);
 
   if(metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, accessID)) {
     ss_ << "globals_." << name;
@@ -98,7 +99,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
-  int accessID = metadata_.getAccessIDFromExpr(expr);
+  int accessID = iir::getAccessIDFromExpr(expr);
   if(cacheProperties_.isIJCached(accessID)) {
     derefIJCache(expr);
     return;
@@ -113,7 +114,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
 }
 
 void ASTStencilBody::derefIJCache(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
-  int accessID = metadata_.getAccessIDFromExpr(expr);
+  int accessID = iir::getAccessIDFromExpr(expr);
   std::string accessName = cacheProperties_.getCacheName(accessID);
 
   std::string index;
@@ -138,7 +139,7 @@ void ASTStencilBody::derefIJCache(const std::shared_ptr<iir::FieldAccessExpr>& e
 }
 
 void ASTStencilBody::derefKCache(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
-  int accessID = metadata_.getAccessIDFromExpr(expr);
+  int accessID = iir::getAccessIDFromExpr(expr);
   std::string accessName = cacheProperties_.getCacheName(accessID);
   auto vertExtent = ms_->getKCacheVertExtent(accessID);
 

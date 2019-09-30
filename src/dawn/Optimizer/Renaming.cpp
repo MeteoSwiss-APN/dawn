@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/Renaming.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/MultiStage.h"
@@ -40,9 +41,9 @@ public:
       : instantiation_(instantiation), oldAccessID_(oldAccessID), newAccessID_(newAccessID) {}
 
   virtual void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
-    int varAccessID = instantiation_->getAccessIDFromStmt(stmt);
+    int& varAccessID = *stmt->getData<iir::VarDeclStmtData>().AccessID;
     if(varAccessID == oldAccessID_)
-      instantiation_->setAccessIDOfStmt(stmt, newAccessID_);
+      varAccessID = newAccessID_;
     iir::ASTVisitorForwarding::visit(stmt);
   }
 
@@ -54,15 +55,15 @@ public:
   }
 
   void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
-    int varAccessID = instantiation_->getAccessIDFromExpr(expr);
+    int& varAccessID = *expr->getData<iir::IIRAccessExprData>().AccessID;
     if(varAccessID == oldAccessID_)
-      instantiation_->setAccessIDOfExpr(expr, newAccessID_);
+      varAccessID = newAccessID_;
   }
 
   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
-    int fieldAccessID = instantiation_->getAccessIDFromExpr(expr);
+    int& fieldAccessID = *expr->getData<iir::IIRAccessExprData>().AccessID;
     if(fieldAccessID == oldAccessID_)
-      instantiation_->setAccessIDOfExpr(expr, newAccessID_);
+      fieldAccessID = newAccessID_;
   }
 };
 

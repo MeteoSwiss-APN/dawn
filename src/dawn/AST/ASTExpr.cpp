@@ -416,10 +416,13 @@ LiteralAccessExpr::LiteralAccessExpr(const std::string& value, BuiltinTypeID bui
 
 LiteralAccessExpr::LiteralAccessExpr(const LiteralAccessExpr& expr)
     : Expr(EK_LiteralAccessExpr, expr.getSourceLocation()), value_(expr.getValue()),
-      builtinType_(expr.getBuiltinType()) {}
+      builtinType_(expr.getBuiltinType()) {
+  data_ = expr.data_ ? expr.data_->clone() : nullptr;
+}
 
 LiteralAccessExpr& LiteralAccessExpr::operator=(LiteralAccessExpr expr) {
   assign(expr);
+  data_ = expr.data_ ? expr.data_->clone() : nullptr;
   value_ = std::move(expr.getValue());
   builtinType_ = expr.getBuiltinType();
   return *this;

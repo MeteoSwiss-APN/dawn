@@ -14,9 +14,10 @@
 
 #include "dawn/CodeGen/GridTools/ASTStencilBody.h"
 #include "dawn/CodeGen/CXXUtil.h"
+#include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/IIR/AST.h"
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
@@ -33,23 +34,21 @@ ASTStencilBody::~ASTStencilBody() {}
 
 std::string ASTStencilBody::getName(const std::shared_ptr<iir::Stmt>& stmt) const {
   if(currentFunction_)
-    return currentFunction_->getFieldNameFromAccessID(currentFunction_->getAccessIDFromStmt(stmt));
+    return currentFunction_->getFieldNameFromAccessID(
+        *stmt->getData<iir::VarDeclStmtData>().AccessID);
   else
-    return metadata_.getFieldNameFromAccessID(metadata_.getAccessIDFromStmt(stmt));
+    return metadata_.getFieldNameFromAccessID(*stmt->getData<iir::VarDeclStmtData>().AccessID);
 }
 
 std::string ASTStencilBody::getName(const std::shared_ptr<iir::Expr>& expr) const {
   if(currentFunction_)
-    return currentFunction_->getFieldNameFromAccessID(currentFunction_->getAccessIDFromExpr(expr));
+    return currentFunction_->getFieldNameFromAccessID(iir::getAccessIDFromExpr(expr));
   else
-    return metadata_.getFieldNameFromAccessID(metadata_.getAccessIDFromExpr(expr));
+    return metadata_.getFieldNameFromAccessID(iir::getAccessIDFromExpr(expr));
 }
 
 int ASTStencilBody::getAccessID(const std::shared_ptr<iir::Expr>& expr) const {
-  if(currentFunction_)
-    return currentFunction_->getAccessIDFromExpr(expr);
-  else
-    return metadata_.getAccessIDFromExpr(expr);
+  return iir::getAccessIDFromExpr(expr);
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -164,7 +163,9 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   }
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) { Base::visit(expr); }
+void ASTStencilBody::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) {
+  Base::visit(expr);
+}
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   if(!nestingOfStencilFunArgLists_)
@@ -173,8 +174,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
     ss_ << ", ";
 
   if(currentFunction_) {
-    ss_ << currentFunction_->getOriginalNameFromCallerAccessID(
-               currentFunction_->getAccessIDFromExpr(expr))
+    ss_ << currentFunction_->getOriginalNameFromCallerAccessID(iir::getAccessIDFromExpr(expr))
         << offsetPrinter_(currentFunction_->evalOffsetOfFieldAccessExpr(expr, false));
   } else
     ss_ << getName(expr) << offsetPrinter_(expr->getOffset());

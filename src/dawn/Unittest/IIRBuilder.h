@@ -16,6 +16,7 @@
 #define DAWN_IIR_IIRBUILDER_H
 
 #include "dawn/CodeGen/CodeGen.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stage.h"
@@ -88,11 +89,11 @@ public:
     DAWN_ASSERT(si_);
     auto v_str = std::to_string(std::forward<T>(v));
     int acc = si_->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_Literal, v_str);
-    auto expr = std::make_shared<iir::LiteralAccessExpr>(
+    std::shared_ptr<iir::LiteralAccessExpr> expr = std::make_shared<iir::LiteralAccessExpr>(
         v_str,
         sir::Value::typeToBuiltinTypeID(sir::Value::TypeInfo<typename std::decay<T>::type>::Type));
     expr->setID(-si_->nextUID());
-    si_->getMetaData().insertExprToAccessID(expr, acc);
+    expr->getData<IIRAccessExprData>().AccessID = boost::make_optional(acc);
     return expr;
   }
 

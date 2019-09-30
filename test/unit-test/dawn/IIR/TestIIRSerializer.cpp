@@ -121,8 +121,6 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
   return true;
 }
 bool compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformation& rhs) {
-  IIR_EARLY_EXIT((lhs.getExprIDToAccessIDMap() == rhs.getExprIDToAccessIDMap()));
-  IIR_EARLY_EXIT((lhs.getStmtIDToAccessIDMap() == rhs.getStmtIDToAccessIDMap()));
   IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::FAT_Literal>() ==
                   rhs.getAccessesOfType<iir::FieldAccessType::FAT_Literal>()));
   IIR_EARLY_EXIT((lhs.getAccessesOfType<iir::FieldAccessType::FAT_Field>() ==
@@ -205,13 +203,6 @@ TEST_F(IIRSerializerTest, SimpleDataStructures) {
   // Checking inserts into the various maps
   //===------------------------------------------------------------------------------------------===
   referenceInstantiaton->getMetaData().addAccessIDNamePair(1, "test");
-  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
-
-  referenceInstantiaton->getMetaData().insertExprToAccessID(std::make_shared<iir::NOPExpr>(), 5);
-  IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
-
-  referenceInstantiaton->getMetaData().addStmtToAccessID(
-      iir::makeExprStmt(std::make_shared<iir::NOPExpr>()), 10);
   IIR_EXPECT_EQ(serializeAndDeserializeRef(), referenceInstantiaton);
 
   referenceInstantiaton->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_Literal, -5,

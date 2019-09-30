@@ -175,7 +175,7 @@ std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::Field const& field, access
   auto expr = std::make_shared<iir::FieldAccessExpr>(field.name, extent);
   expr->setID(si_->nextUID());
 
-  si_->getMetaData().insertExprToAccessID(expr, field.id);
+  expr->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(field.id);
   return expr;
 }
 std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::Field const& field, Array3i extent) {
@@ -186,7 +186,7 @@ std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::LocalVar const& var) {
   DAWN_ASSERT(si_);
   auto expr = std::make_shared<iir::VarAccessExpr>(var.name);
   expr->setID(si_->nextUID());
-  si_->getMetaData().insertExprToAccessID(expr, var.id);
+  expr->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(var.id);
   return expr;
 }
 IIRBuilder::StmtData IIRBuilder::stmt(std::shared_ptr<iir::Expr>&& expr) {

@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===/
 
 #include "dawn/Optimizer/TemporaryHandling.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/InstantiationHelper.h"
 #include "dawn/IIR/StatementAccessesPair.h"
@@ -70,7 +71,7 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
     DAWN_ASSERT_MSG(!varDeclStmt->isArray(), "cannot promote local array to temporary field");
 
     auto fieldAccessExpr = std::make_shared<iir::FieldAccessExpr>(fieldname);
-    instantiation->getMetaData().insertExprToAccessID(fieldAccessExpr, accessID);
+    fieldAccessExpr->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(accessID);
     auto assignmentExpr =
         std::make_shared<iir::AssignmentExpr>(fieldAccessExpr, varDeclStmt->getInitList().front());
     auto exprStmt = iir::makeExprStmt(assignmentExpr);
@@ -86,7 +87,7 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
 
     // Remove the variable
     instantiation->getMetaData().removeAccessID(accessID);
-    instantiation->getMetaData().eraseStmtToAccessID(oldStatement);
+    oldStatement->getData<iir::VarDeclStmtData>().AccessID = boost::none;
   }
   // Register the field
   instantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_StencilTemporary,
@@ -160,7 +161,7 @@ void demoteTemporaryFieldToLocalVariable(iir::StencilInstantiation* instantiatio
 
   // Register the variable
   instantiation->getMetaData().addAccessIDNamePair(AccessID, varname);
-  instantiation->getMetaData().addStmtToAccessID(varDeclStmt, AccessID);
+  varDeclStmt->getData<iir::VarDeclStmtData>().AccessID = boost::make_optional(AccessID);
 
   // Update the fields of the stages we modified
   stencil->updateFields(lifetime);

@@ -16,6 +16,7 @@
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/StencilFunctionAsBCGenerator.h"
 #include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
@@ -31,11 +32,11 @@ ASTStencilDesc::ASTStencilDesc(const iir::StencilMetaInformation& metadata,
 ASTStencilDesc::~ASTStencilDesc() {}
 
 std::string ASTStencilDesc::getName(const std::shared_ptr<iir::Stmt>& stmt) const {
-  return metadata_.getFieldNameFromAccessID(metadata_.getAccessIDFromStmt(stmt));
+  return metadata_.getFieldNameFromAccessID(*stmt->getData<iir::VarDeclStmtData>().AccessID);
 }
 
 std::string ASTStencilDesc::getName(const std::shared_ptr<iir::Expr>& expr) const {
-  return metadata_.getFieldNameFromAccessID(metadata_.getAccessIDFromExpr(expr));
+  return metadata_.getFieldNameFromAccessID(iir::getAccessIDFromExpr(expr));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -96,7 +97,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) 
 
 void ASTStencilDesc::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   if(metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable,
-                            metadata_.getAccessIDFromExpr(expr)))
+                            iir::getAccessIDFromExpr(expr)))
     ss_ << "m_globals.";
 
   ss_ << getName(expr);
@@ -108,7 +109,9 @@ void ASTStencilDesc::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   }
 }
 
-void ASTStencilDesc::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) { Base::visit(expr); }
+void ASTStencilDesc::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) {
+  Base::visit(expr);
+}
 
 void ASTStencilDesc::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   dawn_unreachable("FieldAccessExpr not allowed in StencilDesc AST");

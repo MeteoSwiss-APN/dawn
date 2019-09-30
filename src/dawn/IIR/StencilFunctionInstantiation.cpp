@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/IIR/StencilFunctionInstantiation.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStringifier.h"
 #include "dawn/IIR/AccessUtils.h"
 #include "dawn/IIR/Field.h"
@@ -54,8 +55,6 @@ StencilFunctionInstantiation StencilFunctionInstantiation::clone() const {
   stencilFun.ArgumentIndexToCallerDirectionMap_ = ArgumentIndexToCallerDirectionMap_;
   stencilFun.ArgumentIndexToCallerOffsetMap_ = ArgumentIndexToCallerOffsetMap_;
   stencilFun.CallerAccessIDToInitialOffsetMap_ = CallerAccessIDToInitialOffsetMap_;
-  stencilFun.ExprToCallerAccessIDMap_ = ExprToCallerAccessIDMap_;
-  stencilFun.StmtToCallerAccessIDMap_ = StmtToCallerAccessIDMap_;
   stencilFun.AccessIDToNameMap_ = AccessIDToNameMap_;
   stencilFun.LiteralAccessIDToNameMap_ = LiteralAccessIDToNameMap_;
   stencilFun.ExprToStencilFunctionInstantiationMap_ = ExprToStencilFunctionInstantiationMap_;
@@ -78,7 +77,8 @@ Array3i StencilFunctionInstantiation::evalOffsetOfFieldAccessExpr(
   // Apply the initial offset (e.g if we call a function `avg(in(i+1))` we have to shift all
   // accesses of the field `in` by [1, 0, 0])
   if(applyInitialOffset) {
-    const Array3i& initialOffset = getCallerInitialOffsetFromAccessID(getAccessIDFromExpr(expr));
+    const Array3i& initialOffset =
+        getCallerInitialOffsetFromAccessID(iir::getAccessIDFromExpr(expr));
     offset[0] += initialOffset[0];
     offset[1] += initialOffset[1];
     offset[2] += initialOffset[2];
@@ -291,48 +291,6 @@ std::string StencilFunctionInstantiation::getNameFromAccessID(int accessID) cons
   } else {
     return getFieldNameFromAccessID(accessID);
   }
-}
-
-int StencilFunctionInstantiation::getAccessIDFromExpr(
-    const std::shared_ptr<iir::Expr>& expr) const {
-  auto it = ExprToCallerAccessIDMap_.find(expr);
-  /// HACK for Literals (inserted from Globals) that are not found in SFI
-  if(it == ExprToCallerAccessIDMap_.end()) {
-    return metadata_.getAccessIDFromExpr(expr);
-  }
-  DAWN_ASSERT_MSG(it != ExprToCallerAccessIDMap_.end(), "Invalid Expr");
-  return it->second;
-}
-
-int StencilFunctionInstantiation::getAccessIDFromStmt(
-    const std::shared_ptr<iir::Stmt>& stmt) const {
-  auto it = StmtToCallerAccessIDMap_.find(stmt);
-  DAWN_ASSERT_MSG(it != StmtToCallerAccessIDMap_.end(), "Invalid Stmt");
-  return it->second;
-}
-
-void StencilFunctionInstantiation::setAccessIDOfExpr(const std::shared_ptr<iir::Expr>& expr,
-                                                     const int accessID) {
-  ExprToCallerAccessIDMap_[expr] = accessID;
-}
-
-void StencilFunctionInstantiation::mapExprToAccessID(const std::shared_ptr<iir::Expr>& expr,
-                                                     int accessID) {
-  DAWN_ASSERT(!ExprToCallerAccessIDMap_.count(expr) ||
-              ExprToCallerAccessIDMap_.at(expr) == accessID);
-
-  ExprToCallerAccessIDMap_.emplace(expr, accessID);
-}
-
-void StencilFunctionInstantiation::setAccessIDOfStmt(const std::shared_ptr<iir::Stmt>& stmt,
-                                                     const int accessID) {
-  DAWN_ASSERT(StmtToCallerAccessIDMap_.count(stmt));
-  StmtToCallerAccessIDMap_[stmt] = accessID;
-}
-
-void StencilFunctionInstantiation::mapStmtToAccessID(const std::shared_ptr<iir::Stmt>& stmt,
-                                                     int accessID) {
-  StmtToCallerAccessIDMap_.emplace(stmt, accessID);
 }
 
 std::unordered_map<int, std::string>& StencilFunctionInstantiation::getLiteralAccessIDToNameMap() {

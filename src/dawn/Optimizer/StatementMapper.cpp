@@ -121,8 +121,8 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
   DAWN_ASSERT(initializedWithBlockStmt_);
 
   int accessID = -1;
-  if(metadata_.hasStmtToAccessID(stmt)) {
-    accessID = metadata_.getAccessIDFromStmt(stmt);
+  if(stmt->getData<iir::VarDeclStmtData>().AccessID) {
+    accessID = *stmt->getData<iir::VarDeclStmtData>().AccessID;
   } else {
     // This is the first time we encounter this variable. We have to make sure the name is not
     // already used in another scope!
@@ -136,13 +136,12 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
 
     // We generate a new AccessID and insert it into the AccessMaps (using the global name)
     auto& function = scope_.top()->FunctionInstantiation;
-    if(function) {
+    if(function)
       function->getAccessIDToNameMap().emplace(accessID, globalName);
-      function->mapStmtToAccessID(stmt, accessID);
-    } else {
+    else
       metadata_.addAccessIDNamePair(accessID, globalName);
-      metadata_.addStmtToAccessID(stmt, accessID);
-    }
+
+    stmt->getData<iir::VarDeclStmtData>().AccessID = boost::make_optional(accessID);
 
     // Add the mapping to the local scope
     scope_.top()->LocalVarNameToAccessIDMap.emplace(stmt->getName(), accessID);
@@ -338,7 +337,7 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
 
       metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID,
                                    newExpr->getValue());
-      metadata_.insertExprToAccessID(newExpr, AccessID);
+      newExpr->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(AccessID);
 
     } else {
       int AccessID = 0;
@@ -351,19 +350,13 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
       if(function)
         function->setAccessIDOfGlobalVariable(AccessID);
 
-      if(function) {
-        function->mapExprToAccessID(expr, AccessID);
-        metadata_.insertExprToAccessID(expr, AccessID);
-      } else
-        metadata_.insertExprToAccessID(expr, AccessID);
+      expr->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(AccessID);
     }
 
   } else {
     // Register the mapping between VarAccessExpr and AccessID.
-    if(function)
-      function->mapExprToAccessID(expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
-    else
-      metadata_.insertExprToAccessID(expr, scope_.top()->LocalVarNameToAccessIDMap[varname]);
+    expr->getData<iir::IIRAccessExprData>().AccessID =
+        boost::make_optional(scope_.top()->LocalVarNameToAccessIDMap[varname]);
 
     // Resolve the index if this is an array access
     if(expr->isArrayAccess())
@@ -378,13 +371,12 @@ void StatementMapper::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr)
   int AccessID = -instantiation_->nextUID();
 
   auto& function = scope_.top()->FunctionInstantiation;
-  if(function) {
+  if(function)
     function->getLiteralAccessIDToNameMap().emplace(AccessID, expr->getValue());
-    function->mapExprToAccessID(expr, AccessID);
-  } else {
+  else
     metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, expr->getValue());
-    metadata_.insertExprToAccessID(expr, AccessID);
-  }
+
+  expr->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(AccessID);
 }
 
 void StatementMapper::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
@@ -393,11 +385,8 @@ void StatementMapper::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   int AccessID = scope_.top()->LocalFieldnameToAccessIDMap.at(expr->getName());
 
   auto& function = scope_.top()->FunctionInstantiation;
-  if(function) {
-    function->mapExprToAccessID(expr, AccessID);
-  } else {
-    metadata_.insertExprToAccessID(expr, AccessID);
-  }
+
+  expr->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(AccessID);
 
   if(Scope* candiateScope = getCurrentCandidateScope()) {
     // We are currently traversing an argument list of a stencil function (create the mapping of

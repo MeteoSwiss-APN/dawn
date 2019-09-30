@@ -388,18 +388,22 @@ public:
 };
 
 //===------------------------------------------------------------------------------------------===//
-//     VarAccessExpr
+//     AccessExprData
 //===------------------------------------------------------------------------------------------===//
 
-struct VarAccessExprData {
-  virtual ~VarAccessExprData() {}
-  virtual std::unique_ptr<VarAccessExprData> clone() const = 0;
+struct AccessExprData {
+  virtual ~AccessExprData() {}
+  virtual std::unique_ptr<AccessExprData> clone() const = 0;
 };
+
+//===------------------------------------------------------------------------------------------===//
+//     VarAccessExpr
+//===------------------------------------------------------------------------------------------===//
 
 /// @brief Variable access expression
 /// @ingroup ast
 class VarAccessExpr : public Expr {
-  std::unique_ptr<VarAccessExprData> data_ = nullptr;
+  std::unique_ptr<AccessExprData> data_ = nullptr;
   std::string name_;
   std::shared_ptr<Expr> index_;
   bool isExternal_;
@@ -415,9 +419,9 @@ public:
   /// @}
 
   /// @brief Get data object, must provide the type of the data object (must be subtype of
-  /// VarAccessExprData)
+  /// AccessExprData)
   template <typename DataType, typename = typename std::enable_if<
-                                   std::is_base_of<VarAccessExprData, DataType>::value>::type>
+                                   std::is_base_of<AccessExprData, DataType>::value>::type>
   DataType& getData() {
     if(!data_)
       data_ = make_unique<DataType>();
@@ -456,15 +460,10 @@ public:
 //     FieldAccessExpr
 //===------------------------------------------------------------------------------------------===//
 
-struct FieldAccessExprData {
-  virtual ~FieldAccessExprData() {}
-  virtual std::unique_ptr<FieldAccessExprData> clone() const = 0;
-};
-
 /// @brief Field access expression
 /// @ingroup ast
 class FieldAccessExpr : public Expr {
-  std::unique_ptr<FieldAccessExprData> data_ = nullptr;
+  std::unique_ptr<AccessExprData> data_ = nullptr;
   std::string name_;
 
   // The offset known so far. If we have directional or offset arguments, we have to perform a
@@ -524,9 +523,9 @@ public:
   void setPureOffset(const Array3i& offset);
 
   /// @brief Get data object, must provide the type of the data object (must be subtype of
-  /// FieldAccessExprData)
+  /// AccessExprData)
   template <typename DataType, typename = typename std::enable_if<
-                                   std::is_base_of<FieldAccessExprData, DataType>::value>::type>
+                                   std::is_base_of<AccessExprData, DataType>::value>::type>
   DataType& getData() {
     if(!data_)
       data_ = make_unique<DataType>();
@@ -565,6 +564,7 @@ public:
 /// @brief Variable access expression
 /// @ingroup ast
 class LiteralAccessExpr : public Expr {
+  std::unique_ptr<AccessExprData> data_ = nullptr;
   std::string value_;
   BuiltinTypeID builtinType_;
 
@@ -577,6 +577,16 @@ public:
   LiteralAccessExpr& operator=(LiteralAccessExpr expr);
   virtual ~LiteralAccessExpr();
   /// @}
+
+  /// @brief Get data object, must provide the type of the data object (must be subtype of
+  /// AccessExprData)
+  template <typename DataType, typename = typename std::enable_if<
+                                   std::is_base_of<AccessExprData, DataType>::value>::type>
+  DataType& getData() {
+    if(!data_)
+      data_ = make_unique<DataType>();
+    return *dynamic_cast<DataType*>(data_.get());
+  }
 
   const std::string& getValue() const { return value_; }
   std::string& getValue() { return value_; }

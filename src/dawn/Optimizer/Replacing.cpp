@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/Replacing.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/ASTUtil.h"
 #include "dawn/IIR/ASTVisitor.h"
@@ -37,12 +38,12 @@ public:
       : metadata_(metadata), AccessID_(AccessID) {}
 
   void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
-    if(metadata_.getAccessIDFromExpr(expr) == AccessID_)
+    if(iir::getAccessIDFromExpr(expr) == AccessID_)
       varAccessesToReplace_.emplace_back(expr);
   }
 
   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
-    if(metadata_.getAccessIDFromExpr(expr) == AccessID_)
+    if(iir::getAccessIDFromExpr(expr) == AccessID_)
       fieldAccessExprToReplace_.emplace_back(expr);
   }
 
@@ -79,8 +80,7 @@ void replaceFieldWithVarAccessInStmts(
 
       iir::replaceOldExprWithNewExprInStmt(stmt, oldExpr, newExpr);
 
-      metadata.insertExprToAccessID(newExpr, AccessID);
-      metadata.eraseExprToAccessID(oldExpr);
+      newExpr->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(AccessID);
     }
   }
 }
@@ -102,8 +102,7 @@ void replaceVarWithFieldAccessInStmts(
 
       iir::replaceOldExprWithNewExprInStmt(stmt, oldExpr, newExpr);
 
-      metadata.insertExprToAccessID(newExpr, AccessID);
-      metadata.eraseExprToAccessID(oldExpr);
+      newExpr->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(AccessID);
     }
   }
 }

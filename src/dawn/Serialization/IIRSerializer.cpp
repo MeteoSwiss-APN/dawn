@@ -208,44 +208,34 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
   for(const auto& accessIDtoNamePair : metaData.getAccessIDToNameMap()) {
     protoAccessIDtoNameMap.insert({accessIDtoNamePair.first, accessIDtoNamePair.second});
   }
-  // Filling Field: repeated ExprIDPair ExprToAccessID = 2;
-  auto& protoExprIDtoAccessID = *protoMetaData->mutable_expridtoaccessid();
-  for(const auto& exprIDToAccessIDPair : metaData.ExprIDToAccessIDMap_) {
-    protoExprIDtoAccessID.insert({exprIDToAccessIDPair.first, exprIDToAccessIDPair.second});
-  }
-  // Filling Field: repeated StmtIDPair StmtToAccessID = 3;
-  auto& protoStmtIDtoAccessID = *protoMetaData->mutable_stmtidtoaccessid();
-  for(const auto& stmtIDToAccessIDPair : metaData.StmtIDToAccessIDMap_) {
-    protoStmtIDtoAccessID.insert({stmtIDToAccessIDPair.first, stmtIDToAccessIDPair.second});
-  }
-  // Filling Field: repeated AccessIDType = 4;
+  // Filling Field: repeated AccessIDType = 2;
   auto& protoAccessIDType = *protoMetaData->mutable_accessidtotype();
   for(const auto& accessIDTypePair : metaData.fieldAccessMetadata_.accessIDType_) {
     protoAccessIDType.insert({accessIDTypePair.first, (int)accessIDTypePair.second});
   }
-  // Filling Field: map<int32, string> LiteralIDToName = 5;
+  // Filling Field: map<int32, string> LiteralIDToName = 3;
   auto& protoLiteralIDToNameMap = *protoMetaData->mutable_literalidtoname();
   for(const auto& literalIDtoNamePair : metaData.fieldAccessMetadata_.LiteralAccessIDToNameMap_) {
     protoLiteralIDToNameMap.insert({literalIDtoNamePair.first, literalIDtoNamePair.second});
   }
-  // Filling Field: repeated int32 FieldAccessIDs = 6;
+  // Filling Field: repeated int32 FieldAccessIDs = 4;
   for(int fieldAccessID : metaData.fieldAccessMetadata_.FieldAccessIDSet_) {
     protoMetaData->add_fieldaccessids(fieldAccessID);
   }
-  // Filling Field: repeated int32 APIFieldIDs = 7;
+  // Filling Field: repeated int32 APIFieldIDs = 5;
   for(int apifieldID : metaData.fieldAccessMetadata_.apiFieldIDs_) {
     protoMetaData->add_apifieldids(apifieldID);
   }
-  // Filling Field: repeated int32 TemporaryFieldIDs = 8;
+  // Filling Field: repeated int32 TemporaryFieldIDs = 6;
   for(int temporaryFieldID : metaData.fieldAccessMetadata_.TemporaryFieldAccessIDSet_) {
     protoMetaData->add_temporaryfieldids(temporaryFieldID);
   }
-  // Filling Field: repeated int32 GlobalVariableIDs = 9;
+  // Filling Field: repeated int32 GlobalVariableIDs = 7;
   for(int globalVariableID : metaData.fieldAccessMetadata_.GlobalVariableAccessIDSet_) {
     protoMetaData->add_globalvariableids(globalVariableID);
   }
 
-  // Filling Field: VariableVersions versionedFields = 10;
+  // Filling Field: VariableVersions versionedFields = 8;
   auto protoVariableVersions = protoMetaData->mutable_versionedfields();
   auto& protoVariableVersionMap = *protoVariableVersions->mutable_variableversionmap();
   auto variableVersions = metaData.fieldAccessMetadata_.variableVersions_;
@@ -258,7 +248,7 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
   }
 
   // Filling Field:
-  // map<string, dawn.proto.statements.BoundaryConditionDeclStmt> FieldnameToBoundaryCondition = 11;
+  // map<string, dawn.proto.statements.BoundaryConditionDeclStmt> FieldnameToBoundaryCondition = 9;
   auto& protoFieldNameToBC = *protoMetaData->mutable_fieldnametoboundarycondition();
   for(auto fieldNameToBC : metaData.fieldnameToBoundaryConditionMap_) {
     proto::statements::Stmt protoStencilCall;
@@ -267,7 +257,7 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
     protoFieldNameToBC.insert({fieldNameToBC.first, protoStencilCall});
   }
 
-  // Filling Field: map<int32, Array3i> fieldIDtoLegalDimensions = 12;
+  // Filling Field: map<int32, Array3i> fieldIDtoLegalDimensions = 10;
   auto& protoInitializedDimensionsMap = *protoMetaData->mutable_fieldidtolegaldimensions();
   for(auto IDToLegalDimension : metaData.fieldIDToInitializedDimensionsMap_) {
     proto::iir::Array3i array;
@@ -277,7 +267,7 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
     protoInitializedDimensionsMap.insert({IDToLegalDimension.first, array});
   }
 
-  // Filling Field: map<int32, dawn.proto.statements.StencilCallDeclStmt> IDToStencilCall = 13;
+  // Filling Field: map<int32, dawn.proto.statements.StencilCallDeclStmt> IDToStencilCall = 11;
   auto& protoIDToStencilCallMap = *protoMetaData->mutable_idtostencilcall();
   for(auto IDToStencilCall : metaData.getStencilIDToStencilCallMap().getDirectMap()) {
     proto::statements::Stmt protoStencilCall;
@@ -286,23 +276,23 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
     protoIDToStencilCallMap.insert({IDToStencilCall.first, protoStencilCall});
   }
 
-  // Filling Field: map<int32, Extents> boundaryCallToExtent = 14;
+  // Filling Field: map<int32, Extents> boundaryCallToExtent = 12;
   auto& protoBoundaryCallToExtent = *protoMetaData->mutable_boundarycalltoextent();
   for(auto boundaryCallToExtent : metaData.boundaryConditionToExtentsMap_)
     protoBoundaryCallToExtent.insert(
         {boundaryCallToExtent.first->getID(), makeProtoExtents(boundaryCallToExtent.second)});
 
-  // Filling Field: dawn.proto.statements.SourceLocation stencilLocation = 15;
+  // Filling Field: dawn.proto.statements.SourceLocation stencilLocation = 13;
   for(auto allocatedFieldID : metaData.fieldAccessMetadata_.AllocatedFieldAccessIDSet_) {
     protoMetaData->add_allocatedfieldids(allocatedFieldID);
   }
 
-  // Filling Field: dawn.proto.statements.SourceLocation stencilLocation = 16;
+  // Filling Field: dawn.proto.statements.SourceLocation stencilLocation = 14;
   auto protoStencilLoc = protoMetaData->mutable_stencillocation();
   protoStencilLoc->set_column(metaData.stencilLocation_.Column);
   protoStencilLoc->set_line(metaData.stencilLocation_.Line);
 
-  // Filling Field: string stencilMName = 17;
+  // Filling Field: string stencilMName = 15;
   protoMetaData->set_stencilname(metaData.stencilName_);
 }
 
@@ -517,13 +507,6 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
   auto& metadata = target->getMetaData();
   for(auto IDtoName : protoMetaData.accessidtoname()) {
     metadata.addAccessIDNamePair(IDtoName.first, IDtoName.second);
-  }
-
-  for(auto exprIDToAccessID : protoMetaData.expridtoaccessid()) {
-    metadata.ExprIDToAccessIDMap_[exprIDToAccessID.first] = exprIDToAccessID.second;
-  }
-  for(auto stmtIDToAccessID : protoMetaData.stmtidtoaccessid()) {
-    metadata.StmtIDToAccessIDMap_[stmtIDToAccessID.first] = stmtIDToAccessID.second;
   }
 
   for(auto accessIDTypePair : protoMetaData.accessidtotype()) {

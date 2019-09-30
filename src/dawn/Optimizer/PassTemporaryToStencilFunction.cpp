@@ -88,7 +88,7 @@ public:
     // found. This is important to protect against var accesses in a var decl like "float var = "
     // that could occur before the visit of the assignment expression
     if(activate_) {
-      localVarAccessIDs_.emplace(metadata_.getAccessIDFromExpr(expr));
+      localVarAccessIDs_.emplace(iir::getAccessIDFromExpr(expr));
     }
     return true;
   }
@@ -97,7 +97,7 @@ public:
   virtual bool preVisitNode(std::shared_ptr<iir::AssignmentExpr> const& expr) override {
 
     if(isa<iir::FieldAccessExpr>(*(expr->getLeft()))) {
-      int accessID = metadata_.getAccessIDFromExpr(expr->getLeft());
+      int accessID = iir::getAccessIDFromExpr(expr->getLeft());
       DAWN_ASSERT(fields_.count(accessID));
       const iir::Field& field = fields_.at(accessID).field;
 
@@ -209,7 +209,7 @@ public:
       tmpFunction_->Args.push_back(
           std::make_shared<sir::Field>(expr->getName(), SourceLocation(genLineKey, genLineKey)));
 
-      accessIDs_.push_back(metadata_.getAccessIDFromExpr(expr));
+      accessIDs_.push_back(iir::getAccessIDFromExpr(expr));
     }
     // continue traversing
     return true;
@@ -218,7 +218,7 @@ public:
   virtual bool preVisitNode(std::shared_ptr<iir::VarAccessExpr> const& expr) override {
     DAWN_ASSERT(tmpFunction_);
     if(!metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable,
-                               metadata_.getAccessIDFromExpr(expr))) {
+                               iir::getAccessIDFromExpr(expr))) {
       // record the var access as an argument to the stencil funcion
       dawn_unreachable_internal("All the var access should have been promoted to temporaries");
     }
@@ -236,7 +236,7 @@ public:
   virtual bool preVisitNode(std::shared_ptr<iir::AssignmentExpr> const& expr) override {
     if(isa<iir::FieldAccessExpr>(*(expr->getLeft()))) {
       // return and stop traversing the AST if the left hand of the =  is not a temporary
-      int accessID = metadata_.getAccessIDFromExpr(expr->getLeft());
+      int accessID = iir::getAccessIDFromExpr(expr->getLeft());
       if(skipAccessIDsOfMS_.count(accessID)) {
         return false;
       }
@@ -260,7 +260,7 @@ public:
   postVisitNode(std::shared_ptr<iir::AssignmentExpr> const& expr) override {
     if(isa<iir::FieldAccessExpr>(*(expr->getLeft()))) {
       DAWN_ASSERT(tmpFieldAccessExpr_);
-      const int accessID = metadata_.getAccessIDFromExpr(tmpFieldAccessExpr_);
+      const int accessID = iir::getAccessIDFromExpr(tmpFieldAccessExpr_);
       if(!metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID))
         return expr;
 
@@ -333,7 +333,7 @@ public:
     bool doReplaceTmp = false;
     for(auto arg : expr->getArguments()) {
       if(isa<iir::FieldAccessExpr>(*arg)) {
-        int accessID = metadata_.getAccessIDFromExpr(arg);
+        int accessID = iir::getAccessIDFromExpr(arg);
         if(temporaryFieldAccessIDToFunctionCall_.count(accessID)) {
           doReplaceTmp = true;
         }
@@ -378,7 +378,7 @@ public:
   }
 
   bool replaceFieldByFunction(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
-    int accessID = metadata_.getAccessIDFromExpr(expr);
+    int accessID = iir::getAccessIDFromExpr(expr);
     if(!temporaryFieldAccessIDToFunctionCall_.count(accessID)) {
       return false;
     }
@@ -390,7 +390,7 @@ public:
   /// @brief previsit the access to a temporary. Finalize the stencil function instantiation and
   /// recompute its <statement,accesses> pairs
   virtual bool preVisitNode(std::shared_ptr<iir::FieldAccessExpr> const& expr) override {
-    int accessID = metadata_.getAccessIDFromExpr(expr);
+    int accessID = iir::getAccessIDFromExpr(expr);
 
     if(!replaceFieldByFunction(expr)) {
       return true;
@@ -438,7 +438,7 @@ public:
           metadata_.getFieldNameFromAccessID(accessID_), expr->getOffset());
       cloneStencilFun->getExpression()->insertArgument(arg);
 
-      metadata_.insertExprToAccessID(arg, accessID_);
+      arg->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(accessID_);
     }
 
     for(int idx : expr->getArgumentMap()) {
@@ -695,7 +695,7 @@ bool PassTemporaryToStencilFunction::run(
                   // properties>
                   // for later use of the replacer visitor
                   const int accessID =
-                      metadata.getAccessIDFromExpr(tmpAssignment.getTemporaryFieldAccessExpr());
+                      iir::getAccessIDFromExpr(tmpAssignment.getTemporaryFieldAccessExpr());
 
                   if(!temporaryFieldExprToFunction.count(accessID)) {
                     temporaryFieldExprToFunction.emplace(

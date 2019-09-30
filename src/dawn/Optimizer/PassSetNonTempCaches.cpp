@@ -235,9 +235,9 @@ private:
         boost::make_optional(std::move(newAccess));
     domethod->insertChild(std::move(pair));
 
-    // Add the new expressions to the map
-    metadata_.insertExprToAccessID(fa_assignment, assignmentID);
-    metadata_.insertExprToAccessID(fa_assignee, assigneeID);
+    // Add access ids to the expressions
+    fa_assignment->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(assignmentID);
+    fa_assignee->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(assigneeID);
   }
 
   /// @brief Checks if there is a read operation before the first write operation in the given

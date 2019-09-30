@@ -14,6 +14,7 @@
 
 #include "dawn/Optimizer/PassDataLocalityMetric.h"
 #include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/StencilInstantiation.h"
@@ -95,8 +96,7 @@ public:
   }
 
   int getAccessIDFromExpr(const std::shared_ptr<iir::Expr>& expr) {
-    return stencilFunCalls_.empty() ? metadata_.getAccessIDFromExpr(expr)
-                                    : stencilFunCalls_.top()->getAccessIDFromExpr(expr);
+    return iir::getAccessIDFromExpr(expr);
   }
 
   std::string getNameFromAccessID(int AccessID) {

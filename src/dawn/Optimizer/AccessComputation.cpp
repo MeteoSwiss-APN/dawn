@@ -14,6 +14,7 @@
 
 #include "dawn/Optimizer/AccessComputation.h"
 #include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/StatementAccessesPair.h"
@@ -89,14 +90,12 @@ public:
 
   /// @brief Get the AccessID from the Expr
   int getAccessIDFromExpr(const std::shared_ptr<iir::Expr>& expr) {
-    return stencilFun_ ? stencilFun_->getAccessIDFromExpr(expr)
-                       : metadata_.getAccessIDFromExpr(expr);
+    return iir::getAccessIDFromExpr(expr);
   }
 
   /// @brief Get the AccessID from the Stmt
   int getAccessIDFromStmt(const std::shared_ptr<iir::Stmt>& stmt) {
-    return stencilFun_ ? stencilFun_->getAccessIDFromStmt(stmt)
-                       : metadata_.getAccessIDFromStmt(stmt);
+    return *stmt->getData<iir::VarDeclStmtData>().AccessID;
   }
 
   /// @brief Add a new access to the caller and callee and register it in the caller and callee

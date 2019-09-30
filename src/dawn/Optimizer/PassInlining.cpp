@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 #include "dawn/Optimizer/PassInlining.h"
 #include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTUtil.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
@@ -155,9 +156,11 @@ public:
 
       // Register the variable
       metadata_.addAccessIDNamePair(AccessID, returnVarName);
-      metadata_.addStmtToAccessID(newStmt, AccessID);
+      newStmt->getData<iir::VarDeclStmtData>().AccessID = boost::make_optional(AccessID);
       // TODO recheck this
-      metadata_.insertExprToAccessID(newExpr_, AccessID);
+      std::dynamic_pointer_cast<iir::VarAccessExpr>(newExpr_)
+          ->getData<iir::IIRAccessExprData>()
+          .AccessID = boost::make_optional(AccessID);
 
     } else {
       // We are called within an arugment list of a stencil function, we thus need to store the
@@ -173,7 +176,9 @@ public:
       // Promote the "temporary" storage we used to mock the argument to an actual temporary field
       metadata_.insertAccessOfType(iir::FieldAccessType::FAT_StencilTemporary, AccessIDOfCaller_,
                                    returnFieldName);
-      metadata_.insertExprToAccessID(newExpr_, AccessIDOfCaller_);
+      std::dynamic_pointer_cast<iir::FieldAccessExpr>(newExpr_)
+          ->getData<iir::IIRAccessExprData>()
+          .AccessID = boost::make_optional(AccessIDOfCaller_);
     }
 
     // Resolve the actual expression of the return statement
@@ -192,10 +197,9 @@ public:
   }
 
   void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
-    int AccessID = curStencilFunctioninstantiation_->getAccessIDFromStmt(stmt);
+    int AccessID = *stmt->getData<iir::VarDeclStmtData>().AccessID;
     const std::string& name = curStencilFunctioninstantiation_->getFieldNameFromAccessID(AccessID);
     metadata_.addAccessIDNamePair(AccessID, name);
-    metadata_.addStmtToAccessID(stmt, AccessID);
 
     // Push back the statement and move on
     appendNewStatementAccessesPair(stmt);
@@ -313,24 +317,17 @@ public:
 
   void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
 
-    std::string callerName = metadata_.getFieldNameFromAccessID(
-        curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
+    std::string callerName = metadata_.getFieldNameFromAccessID(iir::getAccessIDFromExpr(expr));
     expr->setName(callerName);
 
-    metadata_.insertExprToAccessID(expr,
-                                   curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
     if(expr->isArrayAccess())
       expr->getIndex()->accept(*this);
   }
 
   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
 
-    std::string callerName = metadata_.getFieldNameFromAccessID(
-        curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
+    std::string callerName = metadata_.getFieldNameFromAccessID(iir::getAccessIDFromExpr(expr));
     expr->setName(callerName);
-
-    metadata_.insertExprToAccessID(expr,
-                                   curStencilFunctioninstantiation_->getAccessIDFromExpr(expr));
 
     // Set the fully evaluated offset as the new offset of the field. Note that this renders the
     // AST of the current stencil function incorrent which is why it needs to be removed!
@@ -341,9 +338,8 @@ public:
   }
 
   void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override {
-    int AccessID = curStencilFunctioninstantiation_->getAccessIDFromExpr(expr);
+    int AccessID = iir::getAccessIDFromExpr(expr);
     metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, expr->getValue());
-    metadata_.insertExprToAccessID(expr, AccessID);
   }
 };
 

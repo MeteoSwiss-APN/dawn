@@ -39,6 +39,8 @@ public:
   Accesses& operator=(const Accesses&) = default;
   Accesses& operator=(Accesses&&) = default;
 
+  bool operator==(const Accesses& rhs) const;
+
   /// @brief Merge read offset/extent to the field given by `AccessID`
   ///
   /// @see Extents::merge

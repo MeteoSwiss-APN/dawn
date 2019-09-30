@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/PassTemporaryType.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/NodeUpdateType.h"
@@ -49,7 +50,7 @@ public:
   }
 
   virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
-    if(argListNesting_ > 0 && metadata_.getAccessIDFromExpr(expr) == AccessID_)
+    if(argListNesting_ > 0 && iir::getAccessIDFromExpr(expr) == AccessID_)
       usedInStencilFun_ = true;
   }
 

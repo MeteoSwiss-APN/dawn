@@ -1,15 +1,16 @@
 #include "dawn/CodeGen/StencilFunctionAsBCGenerator.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/StencilInstantiation.h"
 
 namespace dawn {
 namespace codegen {
 
 std::string StencilFunctionAsBCGenerator::getName(const std::shared_ptr<iir::Stmt>& stmt) const {
-  return metadata_.getFieldNameFromAccessID(metadata_.getAccessIDFromStmt(stmt));
+  return metadata_.getFieldNameFromAccessID(*stmt->getData<iir::VarDeclStmtData>().AccessID);
 }
 
 std::string StencilFunctionAsBCGenerator::getName(const std::shared_ptr<iir::Expr>& expr) const {
-  return metadata_.getFieldNameFromAccessID(metadata_.getAccessIDFromExpr(expr));
+  return metadata_.getFieldNameFromAccessID(iir::getAccessIDFromExpr(expr));
 }
 
 void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
@@ -41,7 +42,7 @@ void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::FieldAccessE
 
 void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   if(metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable,
-                            metadata_.getAccessIDFromExpr(expr)))
+                            iir::getAccessIDFromExpr(expr)))
     ss_ << "m_globals.";
 
   ss_ << getName(expr);

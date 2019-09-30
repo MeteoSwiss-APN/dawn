@@ -15,6 +15,7 @@
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/AST/ASTStringifier.h"
 #include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTUtil.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/IIRNodeIterator.h"
@@ -133,7 +134,7 @@ public:
       : metadata_(metadata), AccessID_(AccessID), captureLocation_(captureLocation) {}
 
   virtual void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
-    if(metadata_.getAccessIDFromStmt(stmt) == AccessID_) {
+    if(*stmt->getData<iir::VarDeclStmtData>().AccessID == AccessID_) {
       name_ = stmt->getName();
       if(captureLocation_)
         locations_.push_back(stmt->getSourceLocation());
@@ -144,7 +145,7 @@ public:
   }
 
   void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
-    if(metadata_.getAccessIDFromExpr(expr) == AccessID_) {
+    if(iir::getAccessIDFromExpr(expr) == AccessID_) {
       name_ = expr->getName();
       if(captureLocation_)
         locations_.push_back(expr->getSourceLocation());
@@ -152,7 +153,7 @@ public:
   }
 
   void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override {
-    if(metadata_.getAccessIDFromExpr(expr) == AccessID_) {
+    if(iir::getAccessIDFromExpr(expr) == AccessID_) {
       name_ = expr->getValue();
       if(captureLocation_)
         locations_.push_back(expr->getSourceLocation());
@@ -160,7 +161,7 @@ public:
   }
 
   virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
-    if(metadata_.getAccessIDFromExpr(expr) == AccessID_) {
+    if(iir::getAccessIDFromExpr(expr) == AccessID_) {
       name_ = expr->getName();
       if(captureLocation_)
         locations_.push_back(expr->getSourceLocation());
