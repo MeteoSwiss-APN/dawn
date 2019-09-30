@@ -18,7 +18,6 @@
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Casting.h"
 #include "dawn/Support/StringRef.h"
-#include <memory>
 
 namespace dawn {
 namespace ast {
@@ -430,34 +429,6 @@ bool LiteralAccessExpr::equals(const Expr* other) const {
   const LiteralAccessExpr* otherPtr = dyn_cast<LiteralAccessExpr>(other);
   return otherPtr && Expr::equals(other) && value_ == otherPtr->value_ &&
          builtinType_ == otherPtr->builtinType_;
-}
-
-ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
-                                                     std::shared_ptr<Expr> const& rhs,
-                                                     std::shared_ptr<Expr> const& init,
-                                                     SourceLocation loc)
-    : Expr(EK_ReductionOverNeighborExpr, loc), op_(op), rhs_(rhs), init_(init) {}
-
-ReductionOverNeighborExpr::ReductionOverNeighborExpr(ReductionOverNeighborExpr const& expr)
-    : Expr(EK_ReductionOverNeighborExpr, expr.getSourceLocation()), op_(expr.op_),
-      rhs_(expr.rhs_->clone()), init_(expr.init_->clone()) {}
-
-ReductionOverNeighborExpr& ReductionOverNeighborExpr::operator=(ReductionOverNeighborExpr stmt) {
-  assign(stmt);
-  init_ = stmt.init_;
-  op_ = stmt.op_;
-  rhs_ = stmt.rhs_;
-  return *this;
-}
-
-std::shared_ptr<Expr> ReductionOverNeighborExpr::clone() const {
-  return std::make_shared<ReductionOverNeighborExpr>(*this);
-}
-
-bool ReductionOverNeighborExpr::equals(const Expr* other) const {
-  const ReductionOverNeighborExpr* otherPtr = dyn_cast<ReductionOverNeighborExpr>(other);
-  return otherPtr && otherPtr->getInit() == getInit() && otherPtr->getOp() == getOp() &&
-         otherPtr->getRhs() == getRhs();
 }
 } // namespace ast
 } // namespace dawn

@@ -256,7 +256,6 @@ public:
     // the block statements as the if/then/else block of the if-statement has been collapsed into
     // one single
     // vector of block statements
-    appendNewAccesses();
     if(!curStatementAccessPairStack_.back()->IfCondExpr)
       curStatementAccessPairStack_.back()->ChildIndex = 0;
 
@@ -278,7 +277,6 @@ public:
       curStatementAccessPairStack_.pop_back();
       curStatementAccessPairStack_.back()->ChildIndex++;
     }
-    removeLastChildAccesses();
   }
 
   virtual void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override {
@@ -317,10 +315,6 @@ public:
       expr->accept(*this);
 
     removeLastChildAccesses();
-  }
-  virtual void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override {
-    expr->getRhs()->accept(*this);
-    expr->getInit()->accept(*this);
   }
 
   virtual void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override {

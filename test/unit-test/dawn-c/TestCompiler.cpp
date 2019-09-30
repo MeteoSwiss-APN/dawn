@@ -96,10 +96,7 @@ TEST(CompilerTest, DISABLED_CodeGenPlayground) {
           dawn::iir::LoopOrderKind::LK_Parallel,
           b.stage(b.vregion(
               dawn::sir::Interval::Start, dawn::sir::Interval::End,
-              b.stmt(b.assignExpr(
-                  b.at(out_f),
-                  b.reduceOverNeighborExpr(op::plus, b.at(in_f),
-                                           b.binaryExpr(b.lit(-3.), b.at(in_f), op::multiply)))),
+              b.stmt(b.assignExpr(b.at(out_f), b.at(in_f))),
               b.stmt(b.assignExpr(b.at(out_f),
                                   b.binaryExpr(b.at(in_f),
                                                b.binaryExpr(b.lit(0.1), b.at(out_f), op::multiply),

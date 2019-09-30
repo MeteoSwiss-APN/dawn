@@ -530,9 +530,6 @@ public:
   void visit(const std::shared_ptr<iir::StencilFunArgExpr>&) override {
     DAWN_ASSERT_MSG(0, "StencilFunArgExpr not allowed in this context");
   }
-  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>&) override {
-    DAWN_ASSERT_MSG(0, "ReductionOverNeighborExpr not allowed in this context");
-  }
 
   void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
     const auto& varname = expr->getName();

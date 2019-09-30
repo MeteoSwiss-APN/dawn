@@ -39,6 +39,7 @@ protected:
 
 public:
   ASTCodeGenCXX();
+  virtual ~ASTCodeGenCXX();
 
   /// @name Statement implementation
   /// @{
@@ -46,17 +47,24 @@ public:
   virtual void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override;
   virtual void visit(const std::shared_ptr<iir::IfStmt>& stmt) override;
+  virtual void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) override = 0;
+  virtual void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override = 0;
+  virtual void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override = 0;
+  virtual void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override = 0;
   /// @}
 
   /// @name Expression implementation
   /// @{
-  virtual void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override{};
   virtual void visit(const std::shared_ptr<iir::UnaryOperator>& expr) override;
   virtual void visit(const std::shared_ptr<iir::BinaryOperator>& expr) override;
   virtual void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override;
   virtual void visit(const std::shared_ptr<iir::TernaryOperator>& expr) override;
   virtual void visit(const std::shared_ptr<iir::FunCallExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) override = 0;
+  virtual void visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) override = 0;
+  virtual void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override = 0;
   virtual void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override;
+  virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override = 0;
   /// @}
 
   /// @brief Get the generated code and reset the internal string stream

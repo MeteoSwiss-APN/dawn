@@ -46,7 +46,6 @@ using StencilFunArgExpr = ast::StencilFunArgExpr;
 using VarAccessExpr = ast::VarAccessExpr;
 using FieldAccessExpr = ast::FieldAccessExpr;
 using LiteralAccessExpr = ast::LiteralAccessExpr;
-using ReductionOverNeighborExpr = ast::ReductionOverNeighborExpr;
 
 using ASTHelper = ast::ASTHelper;
 using ASTVisitor = ast::ASTVisitor;
