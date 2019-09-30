@@ -12,30 +12,18 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_UIDGENERATOR
-#define DAWN_SUPPORT_UIDGENERATOR
+#ifndef GENERATE_IN_MEMORY_STENCILS
+#define GENERATE_IN_MEMORY_STENCILS
 
-#include "dawn/Support/NonCopyable.h"
+#include "dawn/IIR/IIR.h"
+#include "dawn/IIR/StencilInstantiation.h"
+#include "dawn/Optimizer/OptimizerContext.h"
 
-namespace dawn {
+#include <memory>
 
-/// @brief Unique identifier generator (starting from @b 1)
-/// @ingroup support
-class UIDGenerator : NonCopyable {
-  int counter_;
-  static UIDGenerator* instance_;
-
-  UIDGenerator() : counter_(1) {}
-
-public:
-  static UIDGenerator* getInstance();
-
-  /// @brief Get a unique *strictly* positive identifer
-  int get() { return (counter_++); }
-
-  void reset() { counter_ = 0; }
-};
-
-} // namespace dawn
+std::shared_ptr<dawn::iir::StencilInstantiation>
+createCopyStencilIIRInMemory(dawn::OptimizerContext& optimizer);
+std::shared_ptr<dawn::iir::StencilInstantiation>
+createLapStencilIIRInMemory(dawn::OptimizerContext& optimizer);
 
 #endif

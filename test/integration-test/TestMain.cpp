@@ -12,30 +12,18 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_SUPPORT_UIDGENERATOR
-#define DAWN_SUPPORT_UIDGENERATOR
+#include "dawn/Support/STLExtras.h"
+#include "dawn/Unittest/UnittestLogger.h"
+#include <gtest/gtest.h>
 
-#include "dawn/Support/NonCopyable.h"
+int main(int argc, char* argv[]) {
 
-namespace dawn {
+  // Initialize gtest
+  testing::InitGoogleTest(&argc, argv);
 
-/// @brief Unique identifier generator (starting from @b 1)
-/// @ingroup support
-class UIDGenerator : NonCopyable {
-  int counter_;
-  static UIDGenerator* instance_;
+  // Initialize Unittest-Logger
+  auto logger = dawn::make_unique<dawn::UnittestLogger>();
+  dawn::Logger::getSingleton().registerLogger(logger.get());
 
-  UIDGenerator() : counter_(1) {}
-
-public:
-  static UIDGenerator* getInstance();
-
-  /// @brief Get a unique *strictly* positive identifer
-  int get() { return (counter_++); }
-
-  void reset() { counter_ = 0; }
-};
-
-} // namespace dawn
-
-#endif
+  return RUN_ALL_TESTS();
+}

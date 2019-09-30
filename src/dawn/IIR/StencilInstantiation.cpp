@@ -11,7 +11,6 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/AST/ASTStringifier.h"
 #include "dawn/IIR/AST.h"
