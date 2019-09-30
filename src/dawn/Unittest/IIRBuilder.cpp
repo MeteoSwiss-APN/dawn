@@ -120,15 +120,6 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
 
   return map;
 }
-std::shared_ptr<iir::Expr> IIRBuilder::reduceOverNeighborExpr(op operation,
-                                                              std::shared_ptr<iir::Expr>&& rhs,
-                                                              std::shared_ptr<iir::Expr>&& init) {
-  auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
-      toStr(operation, {op::multiply, op::plus, op::minus, op::assign, op::divide}), std::move(rhs),
-      std::move(init));
-  expr->setID(si_->nextUID());
-  return expr;
-}
 std::shared_ptr<iir::Expr> IIRBuilder::binaryExpr(std::shared_ptr<iir::Expr>&& lhs,
                                                   std::shared_ptr<iir::Expr>&& rhs, op operation) {
   DAWN_ASSERT(si_);

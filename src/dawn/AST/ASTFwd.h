@@ -43,7 +43,6 @@ class StencilFunArgExpr;
 class VarAccessExpr;
 class FieldAccessExpr;
 class LiteralAccessExpr;
-class ReductionOverNeighborExpr;
 
 class ASTHelper;
 class ASTVisitor; //   Compiler complains if declared as class

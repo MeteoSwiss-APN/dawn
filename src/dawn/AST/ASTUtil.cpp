@@ -67,10 +67,6 @@ public:
   void visit(const std::shared_ptr<VerticalRegionDeclStmt>& stmt) override {}
   void visit(const std::shared_ptr<StencilCallDeclStmt>& stmt) override {}
   void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override {}
-  void visit(const std::shared_ptr<ReductionOverNeighborExpr>& expr) override {
-    for(const auto& s : expr->getChildren())
-      s->accept(*this);
-  }
 
   void visit(const std::shared_ptr<IfStmt>& stmt) override {
     for(const auto& s : stmt->getChildren())
@@ -367,9 +363,6 @@ public:
 
   void visit(const std::shared_ptr<BoundaryConditionDeclStmt>& stmt) override {
     dawn_unreachable("cannot evaluate stmt");
-  }
-  void visit(const std::shared_ptr<ReductionOverNeighborExpr>& expr) override {
-    dawn_unreachable("cannot evaluate expr");
   }
 
   void visit(const std::shared_ptr<IfStmt>& stmt) override {
