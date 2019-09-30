@@ -467,8 +467,7 @@ Stencil::getLifetime(const std::unordered_set<int>& AccessIDs) const {
 }
 
 Stencil::Lifetime Stencil::getLifetime(const int AccessID) const {
-  // use make_optional(false, ...) just to avoid a gcc warning
-  std::optional<StatementPosition> Begin = std::make_optional(StatementPosition{});
+  std::optional<StatementPosition> Begin;
   StatementPosition End;
 
   int multiStageIdx = 0;
