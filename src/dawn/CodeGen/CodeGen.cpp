@@ -22,7 +22,7 @@ size_t CodeGen::getVerticalTmpHaloSizeForMultipleStencils(
         fullIntervals->merge((*tmpInterval));
     }
   }
-  return (fullIntervals) ? std::max(fullIntervals->overEnd(), fullIntervals->belowBegin()) : 0;
+  return fullIntervals ? std::max(fullIntervals->overEnd(), fullIntervals->belowBegin()) : 0;
 }
 
 std::string CodeGen::generateGlobals(stencilInstantiationContext& context,
