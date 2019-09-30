@@ -54,16 +54,16 @@ static const char* cachePolicyToString(Cache::CacheIOPolicy cachePolicy) {
 }
 
 Cache::Cache(CacheTypeKind type, CacheIOPolicy policy, int fieldAccessID,
-             const boost::optional<Interval>& interval,
-             const boost::optional<Interval>& enclosingAccessedInterval,
-             const boost::optional<window>& w)
+             const std::optional<Interval>& interval,
+             const std::optional<Interval>& enclosingAccessedInterval,
+             const std::optional<window>& w)
     : type_(type), policy_(policy), AccessID_(fieldAccessID), interval_(interval),
       enclosingAccessedInterval_(enclosingAccessedInterval), window_(w) {}
 
 int Cache::getCachedFieldAccessID() const { return AccessID_; }
 
 Interval Cache::getWindowInterval(Interval::Bound bound) const {
-  DAWN_ASSERT(interval_.is_initialized() && window_.is_initialized());
+  DAWN_ASSERT(interval_ && window_);
   return interval_->crop(bound, {window_->m_m, window_->m_p});
 }
 
@@ -77,7 +77,7 @@ json::json Cache::jsonDump() const {
   node["type"] = cacheTypeToString(type_);
   node["policy"] = cachePolicyToString(policy_);
   std::stringstream ss;
-  if(interval_.is_initialized()) {
+  if(interval_) {
     ss << *interval_;
   } else {
     ss << "null";
@@ -85,14 +85,14 @@ json::json Cache::jsonDump() const {
   node["interval"] = ss.str();
   ss.str("");
 
-  if(enclosingAccessedInterval_.is_initialized()) {
+  if(enclosingAccessedInterval_) {
     ss << *enclosingAccessedInterval_;
   } else {
     ss << "null";
   }
   node["enclosing_accessed_interval"] = ss.str();
   ss.str("");
-  if(window_.is_initialized()) {
+  if(window_) {
     ss << *window_;
   } else {
     ss << "null";
@@ -101,9 +101,9 @@ json::json Cache::jsonDump() const {
   return node;
 }
 
-boost::optional<Interval> Cache::getInterval() const { return interval_; }
+std::optional<Interval> Cache::getInterval() const { return interval_; }
 
-boost::optional<Interval> Cache::getEnclosingAccessedInterval() const {
+std::optional<Interval> Cache::getEnclosingAccessedInterval() const {
   return enclosingAccessedInterval_;
 }
 

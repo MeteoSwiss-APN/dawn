@@ -18,8 +18,8 @@
 #include "dawn/IIR/Field.h"
 #include "dawn/IIR/IIRNode.h"
 #include "dawn/IIR/Interval.h"
-#include <boost/optional.hpp>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace dawn {
@@ -89,7 +89,7 @@ public:
   virtual void clearDerivedInfo() override;
 
   /// @brief computes the maximum extent among all the accesses of accessID
-  boost::optional<Extents> computeMaximumExtents(const int accessID) const;
+  std::optional<Extents> computeMaximumExtents(const int accessID) const;
 
   /// @brief true if it is empty
   bool isEmptyOrNullStmt() const;
@@ -102,8 +102,8 @@ public:
   /// will return Interval{3,kend+1} if mergeWithDoInterval is false
   /// will return Interval{2,kend+1} (which is Interval{3,kend+1}.merge(Interval{2,kend})) if
   /// mergeWithDoInterval is true
-  boost::optional<Interval> computeEnclosingAccessInterval(const int accessID,
-                                                           const bool mergeWithDoInterval) const;
+  std::optional<Interval> computeEnclosingAccessInterval(const int accessID,
+                                                         const bool mergeWithDoInterval) const;
 
   /// @brief Get fields of this stage sorted according their Intend: `Output` -> `IntputOutput` ->
   /// `Input`

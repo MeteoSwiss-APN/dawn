@@ -169,7 +169,7 @@ public:
     // Instead of inserting the VerticalRegionDeclStmt we insert the call to the gridtools stencil
     if(scope_.top()->ScopeDepth == 1) {
       stencilDescReplacement_->getData<iir::IIRStmtData>().StackTrace =
-          boost::make_optional(scope_.top()->StackTrace);
+          std::make_optional(scope_.top()->StackTrace);
       scope_.top()->controlFlowDescriptor_.insertStmt(stencilDescReplacement_);
     } else {
 
@@ -240,7 +240,7 @@ public:
 
   /// @brief Push back a new statement to the end of the current statement list
   void pushBackStatement(const std::shared_ptr<iir::Stmt>& stmt) {
-    stmt->getData<iir::IIRStmtData>().StackTrace = boost::make_optional(scope_.top()->StackTrace);
+    stmt->getData<iir::IIRStmtData>().StackTrace = std::make_optional(scope_.top()->StackTrace);
     scope_.top()->controlFlowDescriptor_.insertStmt(stmt);
   }
 

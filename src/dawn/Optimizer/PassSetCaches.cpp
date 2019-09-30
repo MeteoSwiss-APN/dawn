@@ -20,6 +20,7 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Unreachable.h"
 #include <iostream>
+#include <optional>
 #include <set>
 #include <vector>
 
@@ -32,7 +33,7 @@ enum class FirstAccessKind { FK_Read, FK_Write, FK_Mixed };
 /// @brief properties of a cache candidate
 struct CacheCandidate {
   iir::Cache::CacheIOPolicy policy_;
-  boost::optional<iir::Cache::window> window_;
+  std::optional<iir::Cache::window> window_;
   iir::Interval interval_;
 };
 
@@ -61,13 +62,13 @@ CacheCandidate combinePolicy(CacheCandidate const& MS1Policy, iir::Field::Intend
                              CacheCandidate const& MS2Policy) {
   if(MS1Policy.policy_ == iir::Cache::local) {
     if(MS2Policy.policy_ == iir::Cache::fill)
-      return CacheCandidate{iir::Cache::flush, boost::make_optional(iir::Cache::window{}),
+      return CacheCandidate{iir::Cache::flush, std::make_optional(iir::Cache::window{}),
                             MS1Policy.interval_};
     if(MS2Policy.policy_ == iir::Cache::bpfill) {
-      DAWN_ASSERT(MS2Policy.window_.is_initialized());
+     DAWN_ASSERT(MS2Policy.window_);
       auto const& window = *(MS2Policy.window_);
       return CacheCandidate{iir::Cache::epflush,
-                            boost::make_optional(iir::Cache::window{-window.m_p, -window.m_m}),
+                            std::make_optional(iir::Cache::window{-window.m_p, -window.m_m}),
                             MS1Policy.interval_};
     }
     if(MS2Policy.policy_ == iir::Cache::local)
@@ -93,36 +94,36 @@ CacheCandidate computeCacheCandidateForMS(iir::Field const& field, bool isTempor
                                           iir::MultiStage const& MS) {
 
   if(field.getIntend() == iir::Field::IK_Input) {
-    boost::optional<iir::Interval> interval =
+    std::optional<iir::Interval> interval =
         MS.computeEnclosingAccessInterval(field.getAccessID(), true);
     // make sure the access interval has the same boundaries as from any interval of the mss
     interval->merge(field.getInterval());
-    DAWN_ASSERT(interval.is_initialized());
+   DAWN_ASSERT(interval);
 
-    return CacheCandidate{iir::Cache::fill, boost::optional<iir::Cache::window>(), *interval};
+    return CacheCandidate{iir::Cache::fill, std::optional<iir::Cache::window>(), *interval};
   }
   if(field.getIntend() == iir::Field::IK_Output) {
-    return CacheCandidate{iir::Cache::local, boost::optional<iir::Cache::window>(),
+    return CacheCandidate{iir::Cache::local, std::optional<iir::Cache::window>(),
                           field.getInterval()};
   }
 
   if(field.getIntend() == iir::Field::IK_InputOutput) {
 
-    boost::optional<iir::Interval> interval =
+    std::optional<iir::Interval> interval =
         MS.computeEnclosingAccessInterval(field.getAccessID(), true);
 
-    DAWN_ASSERT(interval.is_initialized());
+   DAWN_ASSERT(interval);
 
     DAWN_ASSERT(interval->contains(field.getInterval()));
 
     iir::MultiInterval multiInterval = MS.computeReadAccessInterval(field.getAccessID());
     if(multiInterval.empty())
-      return CacheCandidate{iir::Cache::local, boost::optional<iir::Cache::window>(),
+      return CacheCandidate{iir::Cache::local, std::optional<iir::Cache::window>(),
                             field.getInterval()};
 
     if(multiInterval.numPartitions() > 1 ||
        multiInterval.getIntervals()[0].contains(field.getInterval()))
-      return CacheCandidate{iir::Cache::fill, boost::optional<iir::Cache::window>(), *interval};
+      return CacheCandidate{iir::Cache::fill, std::optional<iir::Cache::window>(), *interval};
 
     iir::Interval const& readInterval = multiInterval.getIntervals()[0];
 
@@ -135,13 +136,13 @@ CacheCandidate computeCacheCandidateForMS(iir::Field const& field, bool isTempor
         window.m_p >= 0)) {
       return CacheCandidate{
           iir::Cache::bpfill,
-          boost::make_optional(iir::Cache::window{
+          std::make_optional(iir::Cache::window{
               ((MS.getLoopOrder() == iir::LoopOrderKind::LK_Forward) ? window.m_m : 0),
               ((MS.getLoopOrder() == iir::LoopOrderKind::LK_Forward) ? 0 : window.m_p)}),
           *interval};
     }
 
-    return CacheCandidate{iir::Cache::fill, boost::optional<iir::Cache::window>(), *interval};
+    return CacheCandidate{iir::Cache::fill, std::optional<iir::Cache::window>(), *interval};
   }
   dawn_unreachable("Policy of Field not found");
 }
@@ -233,7 +234,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
           if(!field.getExtents().isHorizontalPointwise())
             continue;
           // we dont know how to cache fields with out of center writes
-          if(field.getWriteExtents().is_initialized() && !field.getWriteExtents()->isPointwise())
+         if(field.getWriteExtents() && !field.getWriteExtents()->isPointwise())
             continue;
 
           if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
@@ -255,7 +256,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
 
             cacheCandidate = combinePolicy(cacheCandidate, field.getIntend(),
                                            CacheCandidate{iir::Cache::CacheIOPolicy::fill,
-                                                          boost::optional<iir::Cache::window>(),
+                                                          std::optional<iir::Cache::window>(),
                                                           /* FirstAccessKind::FK_Read, */
                                                           field.getInterval()});
           } else {
@@ -286,7 +287,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
 
           iir::Interval interval = field.getInterval();
           auto interval_ = ms.computeEnclosingAccessInterval(field.getAccessID(), true);
-          DAWN_ASSERT(interval_.is_initialized());
+         DAWN_ASSERT(interval_);
           auto enclosingAccessedInterval = *interval_;
 
           // Set the cache
@@ -299,7 +300,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
                       << MSIndex << ": "
                       << instantiation->getOriginalNameFromAccessID(field.getAccessID()) << ":"
                       << cache.getCacheTypeAsString() << ":" << cache.getCacheIOPolicyAsString()
-                      << (cache.getWindow().is_initialized()
+                     << (cache.getWindow()
                               ? (std::string(":") + cache.getWindow()->toString())
                               : "")
                       << std::endl;

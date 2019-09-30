@@ -67,8 +67,8 @@ bool MultiInterval::operator==(const MultiInterval& other) const {
   return true;
 }
 
-void MultiInterval::insert(boost::optional<iir::Interval> const& interval) {
-  if(interval.is_initialized())
+void MultiInterval::insert(std::optional<iir::Interval> const& interval) {
+ if(interval)
     insert(*interval);
 }
 

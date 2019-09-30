@@ -25,7 +25,6 @@
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/IndexGenerator.h"
 #include "dawn/Support/Logging.h"
-#include <boost/optional.hpp>
 
 namespace dawn {
 namespace iir {
@@ -51,15 +50,15 @@ void DoMethod::setDependencyGraph(const std::shared_ptr<DependencyGraphAccesses>
   derivedInfo_.dependencyGraph_ = DG;
 }
 
-boost::optional<Extents> DoMethod::computeMaximumExtents(const int accessID) const {
-  boost::optional<Extents> extents;
+std::optional<Extents> DoMethod::computeMaximumExtents(const int accessID) const {
+  std::optional<Extents> extents;
 
   for(auto& stmtAccess : getChildren()) {
     auto extents_ = stmtAccess->computeMaximumExtents(accessID);
-    if(!extents_.is_initialized())
+    if(!extents_)
       continue;
 
-    if(extents.is_initialized()) {
+    if(extents) {
       extents->merge(*extents_);
     } else {
       extents = extents_;
@@ -68,16 +67,16 @@ boost::optional<Extents> DoMethod::computeMaximumExtents(const int accessID) con
   return extents;
 }
 
-boost::optional<Interval>
+std::optional<Interval>
 DoMethod::computeEnclosingAccessInterval(const int accessID, const bool mergeWithDoInterval) const {
-  boost::optional<Interval> interval;
+  std::optional<Interval> interval;
 
-  boost::optional<Extents>&& extents = computeMaximumExtents(accessID);
+  std::optional<Extents>&& extents = computeMaximumExtents(accessID);
 
-  if(extents.is_initialized()) {
+  if(extents) {
     if(mergeWithDoInterval)
       extents->addCenter(2);
-    return boost::make_optional(getInterval())->extendInterval(*extents);
+    return std::make_optional(getInterval())->extendInterval(*extents);
   }
   return interval;
 }

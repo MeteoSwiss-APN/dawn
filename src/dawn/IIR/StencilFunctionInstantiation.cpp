@@ -23,6 +23,7 @@
 #include "dawn/Support/Unreachable.h"
 #include <iostream>
 #include <numeric>
+#include <optional>
 
 namespace dawn {
 namespace iir {
@@ -434,7 +435,7 @@ void StencilFunctionInstantiation::update() {
         continue;
 
       AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                     boost::optional<Extents>(), interval_);
+                                     std::optional<Extents>(), interval_);
     }
 
     for(const auto& accessPair : access->getReadAccesses()) {
@@ -446,7 +447,7 @@ void StencilFunctionInstantiation::update() {
         continue;
 
       AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                    boost::optional<Extents>(), interval_);
+                                    std::optional<Extents>(), interval_);
     }
   }
 

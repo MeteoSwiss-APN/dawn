@@ -21,6 +21,7 @@
 #include "dawn/Optimizer/OptimizerContext.h"
 #include "dawn/Support/Unreachable.h"
 #include <iostream>
+#include <optional>
 #include <set>
 #include <vector>
 
@@ -50,9 +51,9 @@ bool PassSetSyncStage::requiresSync(const iir::Stage& stage,
     if(field.second.getExtents().isHorizontalPointwise())
       continue;
 
-    boost::optional<iir::Interval> fieldInterval =
+    std::optional<iir::Interval> fieldInterval =
         stage.computeEnclosingAccessInterval(accessID, false);
-    DAWN_ASSERT(fieldInterval.is_initialized());
+   DAWN_ASSERT(fieldInterval);
 
     for(const auto& stageIt : ms->getChildren()) {
       if(stageIt->getStageID() == stageId)

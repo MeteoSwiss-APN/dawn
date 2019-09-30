@@ -21,6 +21,7 @@
 #include <functional>
 #include <list>
 #include <memory>
+#include <optional>
 #include <unordered_set>
 #include <vector>
 
@@ -205,7 +206,7 @@ public:
   bool hasFieldAccessID(const int accessID) const { return derivedInfo_.fields_.count(accessID); }
 
   /// @brief Get the enclosing interval of accesses of temporaries used in this stencil
-  boost::optional<Interval> getEnclosingIntervalTemporaries() const;
+  std::optional<Interval> getEnclosingIntervalTemporaries() const;
 
   /// @brief Get the multi-stage at given multistage index
   const std::unique_ptr<MultiStage>& getMultiStageFromMultiStageIndex(int multiStageIdx) const;

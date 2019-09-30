@@ -20,6 +20,7 @@
 #include "test/unit-test/dawn/Optimizer/TestEnvironment.h"
 #include <fstream>
 #include <gtest/gtest.h>
+#include <optional>
 #include <streambuf>
 
 using namespace dawn;
@@ -160,9 +161,9 @@ TEST_F(TestFieldAccessIntervals, test_field_access_interval_04) {
 
   iir::MultiStage& multiStage = **(stencil->childrenBegin());
 
-  boost::optional<iir::Interval> enclosingInterval =
+  std::optional<iir::Interval> enclosingInterval =
       multiStage.getEnclosingAccessIntervalTemporaries();
-  ASSERT_TRUE(enclosingInterval.is_initialized());
+  ASSERT_TRUE(enclosingInterval.has_value());
   EXPECT_EQ((*enclosingInterval), (iir::Interval{2, 14}));
 }
 

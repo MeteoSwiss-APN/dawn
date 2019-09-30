@@ -19,6 +19,7 @@
 #include "dawn/IIR/FieldAccessExtents.h"
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/Json.h"
+#include <optional>
 #include <utility>
 
 namespace dawn {
@@ -50,14 +51,14 @@ public:
   Field& operator=(Field&&) = default;
   Field& operator=(const Field&) = default;
 
-  Field(int accessID, IntendKind intend, boost::optional<Extents> const& readExtents,
-        boost::optional<Extents> const& writeExtents, Interval const& interval)
+  Field(int accessID, IntendKind intend, std::optional<Extents> const& readExtents,
+        std::optional<Extents> const& writeExtents, Interval const& interval)
       : accessID_(accessID), intend_(intend),
         extents_(FieldAccessExtents(readExtents, writeExtents)),
         extentsRB_(FieldAccessExtents(readExtents, writeExtents)), interval_(interval) {}
 
-  Field(int accessID, IntendKind intend, boost::optional<Extents>&& readExtents,
-        boost::optional<Extents>&& writeExtents, Interval&& interval)
+  Field(int accessID, IntendKind intend, std::optional<Extents>&& readExtents,
+        std::optional<Extents>&& writeExtents, Interval&& interval)
       : accessID_(accessID), intend_(intend),
         extents_(FieldAccessExtents(std::move(readExtents), std::move(writeExtents))),
         extentsRB_(extents_), interval_(std::move(interval)) {}
@@ -77,17 +78,15 @@ public:
   /// @{
   inline Interval const& getInterval() const { return interval_; }
 
-  inline boost::optional<Extents> const& getReadExtents() const {
-    return extents_.getReadExtents();
-  }
-  inline boost::optional<Extents> const& getWriteExtents() const {
+  inline std::optional<Extents> const& getReadExtents() const { return extents_.getReadExtents(); }
+  inline std::optional<Extents> const& getWriteExtents() const {
     return extents_.getWriteExtents();
   }
 
-  inline boost::optional<Extents> const& getReadExtentsRB() const {
+  inline std::optional<Extents> const& getReadExtentsRB() const {
     return extentsRB_.getReadExtents();
   }
-  inline boost::optional<Extents> const& getWriteExtentsRB() const {
+  inline std::optional<Extents> const& getWriteExtentsRB() const {
     return extentsRB_.getWriteExtents();
   }
 
@@ -105,8 +104,8 @@ public:
   inline void setIntend(IntendKind intend) { intend_ = intend; }
   inline void setReadExtentsRB(Extents const& extents) { extentsRB_.setReadExtents(extents); }
   inline void setWriteExtentsRB(Extents const& extents) { extentsRB_.setWriteExtents(extents); }
-  inline void setReadExtentsRB(boost::optional<Extents> const& extents);
-  inline void setWriteExtentsRB(boost::optional<Extents> const& extents);
+  inline void setReadExtentsRB(std::optional<Extents> const& extents);
+  inline void setWriteExtentsRB(std::optional<Extents> const& extents);
   /// @}
 
   // Enclosing interval where accesses where recorded,
@@ -117,20 +116,20 @@ public:
   /// @{
   inline void mergeReadExtents(Extents const& extents) { extents_.mergeReadExtents(extents); }
   inline void mergeWriteExtents(Extents const& extents) { extents_.mergeWriteExtents(extents); }
-  inline void mergeReadExtents(boost::optional<Extents> const& extents) {
+  inline void mergeReadExtents(std::optional<Extents> const& extents) {
     extents_.mergeReadExtents(extents);
   }
-  inline void mergeWriteExtents(boost::optional<Extents> const& extents) {
+  inline void mergeWriteExtents(std::optional<Extents> const& extents) {
     extents_.mergeWriteExtents(extents);
   }
 
   inline void mergeReadExtentsRB(Extents const& extents) { extentsRB_.mergeReadExtents(extents); }
   inline void mergeWriteExtentsRB(Extents const& extents) { extentsRB_.mergeWriteExtents(extents); }
 
-  inline void mergeReadExtentsRB(boost::optional<Extents> const& extents) {
+  inline void mergeReadExtentsRB(std::optional<Extents> const& extents) {
     extentsRB_.mergeReadExtents(extents);
   }
-  inline void mergeWriteExtentsRB(boost::optional<Extents> const& extents) {
+  inline void mergeWriteExtentsRB(std::optional<Extents> const& extents) {
     extentsRB_.mergeWriteExtents(extents);
   }
   /// @}
@@ -144,7 +143,7 @@ public:
 /// recorded)
 void mergeFields(std::unordered_map<int, Field> const& sourceFields,
                  std::unordered_map<int, Field>& destinationFields,
-                 boost::optional<Extents> baseExtents = boost::optional<Extents>());
+                 std::optional<Extents> baseExtents = std::optional<Extents>());
 
 void mergeField(const Field& sField, Field& dField);
 

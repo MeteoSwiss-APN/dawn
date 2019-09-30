@@ -21,8 +21,8 @@
 #include "dawn/IIR/BlockStatements.h"
 #include "dawn/IIR/IIRNode.h"
 #include "dawn/Support/Json.h"
-#include <boost/optional.hpp>
 #include <memory>
+#include <optional>
 #include <vector>
 namespace dawn {
 namespace iir {
@@ -90,7 +90,7 @@ public:
   /// @brief insert a new statemenent accesses pair as a block statement
   void insertBlockStatement(std::unique_ptr<StatementAccessesPair>&& stmt);
 
-  boost::optional<Extents> computeMaximumExtents(const int accessID) const;
+  std::optional<Extents> computeMaximumExtents(const int accessID) const;
 
   /// @brief Convert the StatementAccessesPair of a stencil or stencil-function to string
   /// @{
