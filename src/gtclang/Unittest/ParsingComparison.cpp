@@ -185,7 +185,7 @@ private:
 
 CompareResult ParsingComparison::compare(const ParsedString& ps,
                                          const std::shared_ptr<dawn::sir::Stmt>& stmt) {
-  std::unique_ptr<dawn::SIR> test01SIR = dawn::make_unique<dawn::SIR>();
+  std::unique_ptr<dawn::SIR> test01SIR = std::make_unique<dawn::SIR>();
   wrapStatementInStencil(test01SIR, stmt);
   test01SIR->Filename = "In Memory Generated SIR";
   std::string localPath = "gtclang/Frontend/" + UnittestEnvironment::getSingleton().testCaseName() +

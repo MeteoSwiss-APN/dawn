@@ -1,20 +1,23 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
-##                         _       _                   
-##                        | |     | |                  
-##                    __ _| |_ ___| | __ _ _ __   __ _ 
+##                         _       _
+##                        | |     | |
+##                    __ _| |_ ___| | __ _ _ __   __ _
 ##                   / _` | __/ __| |/ _` | '_ \ / _` |
 ##                  | (_| | || (__| | (_| | | | | (_| |
 ##                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
 ##                    __/ |                       __/ |
-##                   |___/                       |___/ 
+##                   |___/                       |___/
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
 
 include(yodaAddCustomDummyTarget)
+
+# TODO cleanup when switching to cuda as a language
+set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
 
 macro(ADD_COMPILER_FLAG_TO_EXAMPLE _KEY _VALUE)
   set("MyMap_${_KEY}" "${MyMap_${_KEY}}" "${_VALUE}")
@@ -42,7 +45,7 @@ function(code_generate_examples)
       if(EXISTS "${cwd}/CodeGen/${example}.json")
         set(config_str "--config=${cwd}/CodeGen/${example}.json")
       endif()
-  
+
       if(CMAKE_BUILD_TYPE MATCHES DEBUG)
         set(config_str "${config_str}" "-fpass-verbose")
       endif(CMAKE_BUILD_TYPE MATCHES DEBUG)
@@ -51,23 +54,23 @@ function(code_generate_examples)
       # Add the specified compilerflags
       GET_COMPILER_FLAGS(${example} flags)
       set(config_str "${config_str}" "${flags}")
-  
+
       file(MAKE_DIRECTORY "${cwd}/CodeGen/generated/")
-  
+
       # Add make target
       add_custom_command( OUTPUT ${cwd}/CodeGen/generated/${example}_${backend}.cpp
         COMMAND $<TARGET_FILE:gtclang> "-backend=${backend}" ${config_str} "-o" "${cwd}/CodeGen/generated/${example}_${backend}.cpp"  "${cwd}/CodeGen/${example}.cpp"
         DEPENDS ${cwd}/CodeGen/${example}.cpp gtclang
       )
- 
+
       add_custom_target(${example}_${backend}_codegen ALL DEPENDS ${cwd}/CodeGen/generated/${example}_${backend}.cpp)
       set_source_files_properties(${cwd}/CodeGen/generated/${example}_${backend}.cpp PROPERTIES GENERATED TRUE)
- 
+
       add_custom_command(OUTPUT ${cwd}/CodeGen/generated/${example}_c++-naive.cpp
         COMMAND $<TARGET_FILE:gtclang> "-backend=c++-naive" ${config_str} "-o" "${cwd}/CodeGen/generated/${example}_c++-naive.cpp"  "${cwd}/CodeGen/${example}.cpp"
         DEPENDS ${cwd}/CodeGen/${example}.cpp gtclang
       )
- 
+
       add_custom_target(${example}_c++-naive_codegen ALL DEPENDS ${cwd}/CodeGen/generated/${example}_c++-naive.cpp)
       set_source_files_properties(${cwd}/CodeGen/generated/${example}_c++-naive.cpp PROPERTIES GENERATED TRUE)
 
@@ -82,7 +85,7 @@ function(compile_generated_examples)
   set(codegen_examples_ ${ARG_EXAMPLES})
   set(backend ${ARG_BACKEND})
 
-  if(NOT ${backend} STREQUAL "gt") 
+  if(NOT ${backend} STREQUAL "gt")
     message(FATAL "backend ${backend} not supported")
   endif()
 
@@ -97,6 +100,7 @@ function(compile_generated_examples)
       add_executable(${example}_benchmarks_${backend} "${cwd}/CodeGen/${example}_benchmark.cpp" "${cwd}/CodeGen/TestMain.cpp" "${cwd}/CodeGen/Options.cpp")
       target_include_directories(${example}_benchmarks_${backend} PUBLIC ${include_dirs})
       target_compile_definitions(${example}_benchmarks_${backend} PRIVATE -DOPTBACKEND=${backend})
+      target_compile_features(${example}_benchmarks_${backend} PRIVATE cxx_std_11)
       if(${backend} STREQUAL gt)
         target_compile_definitions(${example}_benchmarks_${backend} PRIVATE -DBACKEND_MC)
       endif()
@@ -105,9 +109,9 @@ function(compile_generated_examples)
 
 #      set_property(SOURCE ${cwd}/CodeGen/${example}_benchmark.cpp APPEND PROPERTY OBJECT_DEPENDS ${cwd}/CodeGen/generated/${example}_${backend}.cpp)
 #      set_property(SOURCE ${cwd}/CodeGen/${example}_benchmark.cpp APPEND PROPERTY OBJECT_DEPENDS ${cwd}/CodeGen/generated/${example}_c++-naive.cpp)
-  
+
       add_test(NAME CTest-${example}_benchmarks_${backend} COMMAND $<TARGET_FILE:${example}_benchmarks_${backend}> 12 12 10 --gtest_output=xml:${example}_unittest.xml)
-  
+
   endforeach()
 endfunction(compile_generated_examples)
 
@@ -141,7 +145,7 @@ function(cuda_compile_generated_examples)
         DEPENDS ${cwd}/CodeGen/generated/${example}_c++-naive.cpp
       )
 
-      if(CTEST_CUDA_SUBMIT) 
+      if(CTEST_CUDA_SUBMIT)
         string(REPLACE " " ";" GTCLANG_SLURM_RESOURCES_LIST ${GTCLANG_SLURM_RESOURCES})
         set(CTEST_SUBMIT_COMMAND "${SLURM_SRUN_COMMAND}" "-n" "${GTCLANG_SLURM_N_TASKS}" ${GTCLANG_SLURM_RESOURCES_LIST} "-p" "${GTCLANG_SLURM_PARTITION}")
       endif(CTEST_CUDA_SUBMIT)
@@ -153,7 +157,7 @@ endfunction(cuda_compile_generated_examples)
 
 set(cwd ${CMAKE_CURRENT_LIST_DIR})
 
-set(directories 
+set(directories
   ${cwd}/Accesses
   ${cwd}/Diagnostics
   ${cwd}/PassStageSplitter
@@ -206,7 +210,7 @@ if(GTCLANG_HAS_GRIDTOOLS)
 
   ADD_COMPILER_FLAG_TO_EXAMPLE("boundary_condition_2" "-max-fields=2")
   ADD_COMPILER_FLAG_TO_EXAMPLE("boundary_condition_2" "-fsplit-stencils")
-  
+
   ADD_COMPILER_FLAG_TO_EXAMPLE("boundary_condition" "-max-fields=2")
   ADD_COMPILER_FLAG_TO_EXAMPLE("boundary_condition" "-fsplit-stencils")
 
