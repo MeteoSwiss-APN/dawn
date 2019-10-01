@@ -475,11 +475,10 @@ void GTCodeGen::generateStencilClasses(
 
     const auto stencilFields = stencil.getOrderedFields();
 
-    auto nonTempFields = makeRange(
-        stencilFields, std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
-                           [](std::pair<int, iir::Stencil::FieldInfo> const& f) {
-                             return !f.second.IsTemporary;
-                           }));
+    auto nonTempFields =
+        makeRange(stencilFields, [](std::pair<int, iir::Stencil::FieldInfo> const& f) {
+          return !f.second.IsTemporary;
+        });
     if(stencil.isEmpty()) {
       DiagnosticsBuilder diag(DiagnosticsKind::Error,
                               stencilInstantiation->getMetaData().getStencilLocation());
@@ -971,7 +970,7 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
 
   std::string filename = generateFileName(context_);
   return std::make_unique<TranslationUnit>(filename, std::move(ppDefines), std::move(stencils),
-                                      std::move(globals));
+                                           std::move(globals));
 }
 
 std::vector<std::string> GTCodeGen::buildFieldTemplateNames(

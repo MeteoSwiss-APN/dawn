@@ -24,10 +24,10 @@ std::vector<std::string>
 CodeGenUtils::buildPlaceholderList(const iir::StencilMetaInformation& metadata,
                                    const std::map<int, iir::Stencil::FieldInfo>& stencilFields,
                                    const sir::GlobalVariableMap& globalsMap, bool buildPair) {
-  auto nonTempFields = makeRange(
-      stencilFields,
-      std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
-          [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return !p.second.IsTemporary; }));
+  auto nonTempFields =
+      makeRange(stencilFields, [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
+        return !p.second.IsTemporary;
+      });
 
   std::vector<std::string> placeholders;
   for(const auto& fieldInfoPair : nonTempFields) {

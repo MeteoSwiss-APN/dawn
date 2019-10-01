@@ -257,15 +257,14 @@ void CXXNaiveCodeGen::generateStencilClasses(
     // fields used in the stencil
     const auto stencilFields = stencil.getOrderedFields();
 
-    auto nonTempFields = makeRange(
-        stencilFields, std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
-                           [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
-                             return !p.second.IsTemporary;
-                           }));
-    auto tempFields = makeRange(
-        stencilFields,
-        std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
-            [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
+    auto nonTempFields =
+        makeRange(stencilFields, [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
+          return !p.second.IsTemporary;
+        });
+    auto tempFields =
+        makeRange(stencilFields, [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
+          return p.second.IsTemporary;
+        });
 
     Structure stencilClass = stencilWrapperClass.addStruct(stencilName);
 
@@ -545,7 +544,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
 
   std::string filename = generateFileName(context_);
   return std::make_unique<TranslationUnit>(filename, std::move(ppDefines), std::move(stencils),
-                                      std::move(globals));
+                                           std::move(globals));
 }
 
 } // namespace cxxnaive
