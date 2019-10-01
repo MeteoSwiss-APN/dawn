@@ -21,8 +21,8 @@
 #include "dawn/Serialization/IIRSerializer.h"
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/STLExtras.h"
-#include <c++/9/optional>
 #include <gtest/gtest.h>
+#include <optional>
 
 using namespace dawn;
 
