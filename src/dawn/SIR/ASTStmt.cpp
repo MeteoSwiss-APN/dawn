@@ -18,7 +18,7 @@
 namespace dawn {
 namespace sir {
 std::unique_ptr<ast::StmtData> SIRStmtData::clone() const {
-  return make_unique<SIRStmtData>(*this);
+  return std::make_unique<SIRStmtData>(*this);
 }
 } // namespace sir
 } // namespace dawn

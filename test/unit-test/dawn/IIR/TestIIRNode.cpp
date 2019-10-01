@@ -58,7 +58,7 @@ class IIRNode : public ::testing::Test {
 public:
   std::unique_ptr<impl::Node1> root_;
 
-  IIRNode() : root_(make_unique<impl::Node1>()) {}
+  IIRNode() : root_(std::make_unique<impl::Node1>()) {}
 
   void SetUp() override {
 
@@ -77,48 +77,48 @@ public:
     // Node4:  2   3 5   6 8   9    12 13 15 16 18 19
     */
 
-    root_->insertChild(make_unique<impl::Node2>(), root_);
-    root_->insertChild(make_unique<impl::Node2>(), root_);
+    root_->insertChild(std::make_unique<impl::Node2>(), root_);
+    root_->insertChild(std::make_unique<impl::Node2>(), root_);
 
     auto node2_It = root_->childrenBegin();
 
-    (*node2_It)->insertChild(make_unique<impl::Node3>());
-    (*node2_It)->insertChild(make_unique<impl::Node3>());
-    (*node2_It)->insertChild(make_unique<impl::Node3>());
+    (*node2_It)->insertChild(std::make_unique<impl::Node3>());
+    (*node2_It)->insertChild(std::make_unique<impl::Node3>());
+    (*node2_It)->insertChild(std::make_unique<impl::Node3>());
 
     auto node3_It = (*node2_It)->childrenBegin();
-    (*node3_It)->insertChild(make_unique<impl::Node4>(2));
-    (*node3_It)->insertChild(make_unique<impl::Node4>(3));
+    (*node3_It)->insertChild(std::make_unique<impl::Node4>(2));
+    (*node3_It)->insertChild(std::make_unique<impl::Node4>(3));
 
     node3_It++;
 
-    (*node3_It)->insertChild(make_unique<impl::Node4>(5));
-    (*node3_It)->insertChild(make_unique<impl::Node4>(6));
+    (*node3_It)->insertChild(std::make_unique<impl::Node4>(5));
+    (*node3_It)->insertChild(std::make_unique<impl::Node4>(6));
 
     node3_It++;
 
-    (*node3_It)->insertChild(make_unique<impl::Node4>(8));
-    (*node3_It)->insertChild(make_unique<impl::Node4>(9));
+    (*node3_It)->insertChild(std::make_unique<impl::Node4>(8));
+    (*node3_It)->insertChild(std::make_unique<impl::Node4>(9));
 
     node2_It++;
 
-    (*node2_It)->insertChild(make_unique<impl::Node3>());
-    (*node2_It)->insertChild(make_unique<impl::Node3>());
-    (*node2_It)->insertChild(make_unique<impl::Node3>());
+    (*node2_It)->insertChild(std::make_unique<impl::Node3>());
+    (*node2_It)->insertChild(std::make_unique<impl::Node3>());
+    (*node2_It)->insertChild(std::make_unique<impl::Node3>());
 
     node3_It = (*node2_It)->childrenBegin();
-    (*node3_It)->insertChild(make_unique<impl::Node4>(12));
-    (*node3_It)->insertChild(make_unique<impl::Node4>(13));
+    (*node3_It)->insertChild(std::make_unique<impl::Node4>(12));
+    (*node3_It)->insertChild(std::make_unique<impl::Node4>(13));
 
     node3_It++;
 
-    (*node3_It)->insertChild(make_unique<impl::Node4>(15));
-    (*node3_It)->insertChild(make_unique<impl::Node4>(16));
+    (*node3_It)->insertChild(std::make_unique<impl::Node4>(15));
+    (*node3_It)->insertChild(std::make_unique<impl::Node4>(16));
 
     node3_It++;
 
-    (*node3_It)->insertChild(make_unique<impl::Node4>(18));
-    (*node3_It)->insertChild(make_unique<impl::Node4>(19));
+    (*node3_It)->insertChild(std::make_unique<impl::Node4>(18));
+    (*node3_It)->insertChild(std::make_unique<impl::Node4>(19));
   }
 
   void TearDown() override {}
@@ -133,7 +133,7 @@ TEST_F(IIRNode, replace) {
 
   EXPECT_EQ(n4_7->val_, 13);
 
-  std::unique_ptr<impl::Node4> repl = make_unique<impl::Node4>(-13);
+  std::unique_ptr<impl::Node4> repl = std::make_unique<impl::Node4>(-13);
   n3_3->replace(n4_7, repl);
 
   EXPECT_TRUE(root_->checkTreeConsistency());
@@ -156,7 +156,7 @@ TEST_F(IIRNode, insertChild) {
   // we insert multiple children since the consistency can be broken if the STL vector of children
   // gets reallocated because a resize operation
   for(int i = -1; i > -7; --i) {
-    n3_3->insertChild(make_unique<impl::Node4>(i));
+    n3_3->insertChild(std::make_unique<impl::Node4>(i));
   }
 
   EXPECT_EQ(n3_3->getChildren().size(), 8);
@@ -174,19 +174,19 @@ TEST_F(IIRNode, insertChild) {
 
 // test the insertChild API for the top node
 TEST_F(IIRNode, insertChildTopNode) {
-  auto newn2 = make_unique<impl::Node2>();
-  newn2->insertChild(make_unique<impl::Node3>());
-  newn2->insertChild(make_unique<impl::Node3>());
-  newn2->insertChild(make_unique<impl::Node3>());
+  auto newn2 = std::make_unique<impl::Node2>();
+  newn2->insertChild(std::make_unique<impl::Node3>());
+  newn2->insertChild(std::make_unique<impl::Node3>());
+  newn2->insertChild(std::make_unique<impl::Node3>());
   auto newn3It = (newn2)->childrenBegin();
-  (*newn3It)->insertChild(make_unique<impl::Node4>(-9));
+  (*newn3It)->insertChild(std::make_unique<impl::Node4>(-9));
   newn3It++;
-  (*newn3It)->insertChild(make_unique<impl::Node4>(-11));
-  (*newn3It)->insertChild(make_unique<impl::Node4>(-12));
+  (*newn3It)->insertChild(std::make_unique<impl::Node4>(-11));
+  (*newn3It)->insertChild(std::make_unique<impl::Node4>(-12));
   newn3It++;
-  (*newn3It)->insertChild(make_unique<impl::Node4>(-15));
-  (*newn3It)->insertChild(make_unique<impl::Node4>(-16));
-  (*newn3It)->insertChild(make_unique<impl::Node4>(-17));
+  (*newn3It)->insertChild(std::make_unique<impl::Node4>(-15));
+  (*newn3It)->insertChild(std::make_unique<impl::Node4>(-16));
+  (*newn3It)->insertChild(std::make_unique<impl::Node4>(-17));
 
   root_->insertChild(std::move(newn2), root_);
 
@@ -207,12 +207,12 @@ TEST_F(IIRNode, insertChildren) {
   const auto& n2_1 = root_->getChildren()[1];
   const auto& n3_3 = n2_1->getChildren()[0];
 
-  auto newn3 = make_unique<impl::Node3>();
+  auto newn3 = std::make_unique<impl::Node3>();
 
-  newn3->insertChild(make_unique<impl::Node4>(-3));
-  newn3->insertChild(make_unique<impl::Node4>(-4));
-  newn3->insertChild(make_unique<impl::Node4>(-5));
-  newn3->insertChild(make_unique<impl::Node4>(-6));
+  newn3->insertChild(std::make_unique<impl::Node4>(-3));
+  newn3->insertChild(std::make_unique<impl::Node4>(-4));
+  newn3->insertChild(std::make_unique<impl::Node4>(-5));
+  newn3->insertChild(std::make_unique<impl::Node4>(-6));
 
   n3_3->insertChildren(std::next(n3_3->childrenBegin()),
                        std::make_move_iterator(newn3->childrenBegin()),
@@ -232,22 +232,22 @@ TEST_F(IIRNode, insertChildren) {
 // test the insertChild API for top node
 TEST_F(IIRNode, insertChildrenTopNode) {
 
-  auto newn1 = make_unique<impl::Node1>();
+  auto newn1 = std::make_unique<impl::Node1>();
   {
-    auto newn2 = make_unique<impl::Node2>();
-    auto newn3 = make_unique<impl::Node3>();
+    auto newn2 = std::make_unique<impl::Node2>();
+    auto newn3 = std::make_unique<impl::Node3>();
 
-    newn3->insertChild(make_unique<impl::Node4>(-3));
-    newn3->insertChild(make_unique<impl::Node4>(-4));
+    newn3->insertChild(std::make_unique<impl::Node4>(-3));
+    newn3->insertChild(std::make_unique<impl::Node4>(-4));
     newn2->insertChild(std::move(newn3));
     newn1->insertChild(std::move(newn2), newn1);
   }
   {
-    auto newn2 = make_unique<impl::Node2>();
-    auto newn3 = make_unique<impl::Node3>();
+    auto newn2 = std::make_unique<impl::Node2>();
+    auto newn3 = std::make_unique<impl::Node3>();
 
-    newn3->insertChild(make_unique<impl::Node4>(-7));
-    newn3->insertChild(make_unique<impl::Node4>(-9));
+    newn3->insertChild(std::make_unique<impl::Node4>(-7));
+    newn3->insertChild(std::make_unique<impl::Node4>(-9));
     newn2->insertChild(std::move(newn3));
     newn1->insertChild(std::move(newn2), newn1);
   }

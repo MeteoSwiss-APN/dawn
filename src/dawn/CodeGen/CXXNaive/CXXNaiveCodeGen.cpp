@@ -544,7 +544,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
   DAWN_LOG(INFO) << "Done generating code";
 
   std::string filename = generateFileName(context_);
-  return make_unique<TranslationUnit>(filename, std::move(ppDefines), std::move(stencils),
+  return std::make_unique<TranslationUnit>(filename, std::move(ppDefines), std::move(stencils),
                                       std::move(globals));
 }
 

@@ -43,10 +43,10 @@ bool PassStageReordering::run(
     std::unique_ptr<ReorderStrategy> strategy;
     switch(strategy_) {
     case ReorderStrategy::RK_Greedy:
-      strategy = make_unique<ReoderStrategyGreedy>();
+      strategy = std::make_unique<ReoderStrategyGreedy>();
       break;
     case ReorderStrategy::RK_Partitioning:
-      strategy = make_unique<ReoderStrategyPartitioning>();
+      strategy = std::make_unique<ReoderStrategyPartitioning>();
       break;
     default:
       dawn_unreachable("invalid reorder strategy");

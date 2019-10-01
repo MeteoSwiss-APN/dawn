@@ -91,7 +91,7 @@ ReoderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
   iir::DependencyGraphStage& stageDAG = *stencil.getStageDependencyGraph();
 
   auto& metadata = instantiation->getMetaData();
-  std::unique_ptr<iir::Stencil> newStencil = make_unique<iir::Stencil>(
+  std::unique_ptr<iir::Stencil> newStencil = std::make_unique<iir::Stencil>(
       metadata, stencil.getStencilAttributes(), stencilPtr->getStencilID());
 
   newStencil->setStageDependencyGraph(stencil.getStageDependencyGraph());
@@ -101,7 +101,7 @@ ReoderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
   const int maxBoundaryExtent = context.getOptions().MaxHaloPoints;
 
   auto pushBackNewMultiStage = [&](iir::LoopOrderKind loopOrder) -> void {
-    newStencil->insertChild(make_unique<iir::MultiStage>(metadata, loopOrder));
+    newStencil->insertChild(std::make_unique<iir::MultiStage>(metadata, loopOrder));
     newNumMultiStages++;
   };
 

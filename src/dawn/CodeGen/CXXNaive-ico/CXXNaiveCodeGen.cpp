@@ -484,8 +484,8 @@ std::unique_ptr<TranslationUnit> CXXNaiveIcoCodeGen::generateCode() {
   DAWN_LOG(INFO) << "Done generating code";
 
   std::string filename = generateFileName(context_);
-  return make_unique<TranslationUnit>(filename, std::move(ppDefines), std::move(stencils),
-                                      std::move(globals));
+  return std::make_unique<TranslationUnit>(filename, std::move(ppDefines), std::move(stencils),
+                                           std::move(globals));
 }
 
 } // namespace cxxnaiveico

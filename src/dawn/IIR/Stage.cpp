@@ -35,7 +35,7 @@ Stage::Stage(const StencilMetaInformation& metaData, int StageID)
 
 Stage::Stage(const StencilMetaInformation& metaData, int StageID, const Interval& interval)
     : metaData_(metaData), StageID_(StageID) {
-  insertChild(make_unique<DoMethod>(interval, metaData));
+  insertChild(std::make_unique<DoMethod>(interval, metaData));
 }
 
 json::json Stage::jsonDump(const StencilMetaInformation& metaData) const {
@@ -60,7 +60,7 @@ json::json Stage::jsonDump(const StencilMetaInformation& metaData) const {
 
 std::unique_ptr<Stage> Stage::clone() const {
 
-  auto cloneStage = make_unique<Stage>(metaData_, StageID_);
+  auto cloneStage = std::make_unique<Stage>(metaData_, StageID_);
 
   cloneStage->derivedInfo_ = derivedInfo_;
 
@@ -298,7 +298,7 @@ Stage::split(std::deque<int>& splitterIndices,
     DoMethod::StatementAccessesIterator nextSplitterIndex =
         std::next(thisDoMethod.childrenBegin(), splitterIndices[i] + 1);
 
-    newStages.push_back(make_unique<Stage>(metaData_, UIDGenerator::getInstance()->get(),
+    newStages.push_back(std::make_unique<Stage>(metaData_, UIDGenerator::getInstance()->get(),
                                            thisDoMethod.getInterval()));
     Stage& newStage = *newStages.back();
     DoMethod& doMethod = newStage.getSingleDoMethod();

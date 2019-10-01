@@ -22,13 +22,13 @@ DiagnosticsQueue::DiagnosticsQueue() : numErrors_(0), numWarnings_(0) {}
 void DiagnosticsQueue::push_back(const DiagnosticsMessage& msg) {
   numErrors_ += msg.getDiagKind() == DiagnosticsKind::Error;
   numWarnings_ += msg.getDiagKind() == DiagnosticsKind::Warning;
-  queue_.push_back(make_unique<DiagnosticsMessage>(msg));
+  queue_.push_back(std::make_unique<DiagnosticsMessage>(msg));
 }
 
 void DiagnosticsQueue::push_back(DiagnosticsMessage&& msg) {
   numErrors_ += msg.getDiagKind() == DiagnosticsKind::Error;
   numWarnings_ += msg.getDiagKind() == DiagnosticsKind::Warning;
-  queue_.push_back(make_unique<DiagnosticsMessage>(std::move(msg)));
+  queue_.push_back(std::make_unique<DiagnosticsMessage>(std::move(msg)));
 }
 
 void DiagnosticsQueue::clear() {

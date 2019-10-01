@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
   testing::InitGoogleTest(&argc, argv);
 
   // Initialize Unittest-Logger
-  auto logger = dawn::make_unique<dawn::UnittestLogger>();
+  auto logger = std::make_unique<dawn::UnittestLogger>();
   dawn::Logger::getSingleton().registerLogger(logger.get());
 
   return RUN_ALL_TESTS();

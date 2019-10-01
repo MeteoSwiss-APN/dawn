@@ -619,16 +619,16 @@ const char* sir::Value::typeToString(sir::Value::TypeKind type) {
 sir::Value::Value(TypeKind type) : isConstexpr_(false) {
   switch(type) {
   case Boolean:
-    valueImpl_ = make_unique<ValueImpl<decay_t<bool>>>(false);
+    valueImpl_ = std::make_unique<ValueImpl<std::decay_t<bool>>>(false);
     break;
   case Integer:
-    valueImpl_ = make_unique<ValueImpl<decay_t<int>>>(0);
+    valueImpl_ = std::make_unique<ValueImpl<std::decay_t<int>>>(0);
     break;
   case Double:
-    valueImpl_ = make_unique<ValueImpl<decay_t<double>>>(0.0);
+    valueImpl_ = std::make_unique<ValueImpl<std::decay_t<double>>>(0.0);
     break;
   case String:
-    valueImpl_ = make_unique<ValueImpl<decay_t<std::string>>>("");
+    valueImpl_ = std::make_unique<ValueImpl<std::decay_t<std::string>>>("");
     break;
   }
 }
