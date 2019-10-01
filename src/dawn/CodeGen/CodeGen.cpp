@@ -94,7 +94,9 @@ void CodeGen::generateGlobalsAPI(const iir::StencilInstantiation& stencilInstant
                                  const sir::GlobalVariableMap& globalsMap,
                                  const CodeGenProperties& codeGenProperties) const {
 
-  stencilWrapperClass.addComment("Access-wrapper for globally defined variables");
+  if(!globalsMap.empty()) {
+    stencilWrapperClass.addComment("Access-wrapper for globally defined variables");
+  }
 
   for(const auto& globalProp : globalsMap) {
     auto globalValue = globalProp.second;
@@ -162,7 +164,7 @@ void CodeGen::generateBCHeaders(std::vector<std::string>& ppDefines) const {
       };
 
   if(std::accumulate(context_.begin(), context_.end(), false, hasBCFold)) {
-    ppDefines.push_back("#include <gridtools/boundary-conditions/boundary.hpp>\n");
+    ppDefines.push_back("#include <gridtools/boundary_conditions/boundary.hpp>\n");
   }
 }
 
@@ -218,18 +220,12 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
         std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
             [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
 
-    // list of template for storages used in the stencil class
-    std::vector<std::string> StencilTemplates(nonTempFields.size());
-    int cnt = 0;
-    std::generate(StencilTemplates.begin(), StencilTemplates.end(),
-                  [cnt]() mutable { return "StorageType" + std::to_string(cnt++); });
-
-    for(auto fieldIt : nonTempFields) {
-      paramNameToType.emplace((*fieldIt).second.Name, getStorageType((*fieldIt).second.Dimensions));
+    for(const auto& field : nonTempFields) {
+      paramNameToType.emplace(field.second.Name, getStorageType(field.second.Dimensions));
     }
 
-    for(auto fieldIt : tempFields) {
-      paramNameToType.emplace((*fieldIt).second.Name, c_gtc().str() + "storage_t");
+    for(const auto& field : tempFields) {
+      paramNameToType.emplace(field.second.Name, c_gtc().str() + "storage_t");
     }
   }
 
@@ -250,6 +246,30 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
   }
 
   return codeGenProperties;
+}
+
+void CodeGen::generateStencilWrapperSyncMethod(Class& stencilWrapperClass) const {
+  // synchronize storages method
+  // typical recursion methods that would look cleaner with a C++17 fold expression
+
+  MemberFunction syncStorageMethod =
+      stencilWrapperClass.addMemberFunction("void", "sync_storages", "typename S");
+  syncStorageMethod.addArg("S field");
+  syncStorageMethod.startBody();
+
+  syncStorageMethod.addStatement("field.sync()");
+
+  syncStorageMethod.commit();
+
+  MemberFunction syncStoragesMethod =
+      stencilWrapperClass.addMemberFunction("void", "sync_storages", "typename S0, typename ... S");
+  syncStoragesMethod.addArg("S0 f0, S... fields");
+  syncStoragesMethod.startBody();
+
+  syncStoragesMethod.addStatement("f0.sync()");
+  syncStoragesMethod.addStatement("sync_storages(fields...)");
+
+  syncStoragesMethod.commit();
 }
 
 std::string CodeGen::getStorageType(Array3i dimensions) {
@@ -287,8 +307,8 @@ void CodeGen::addTmpStorageDeclaration(
   if(!(tempFields.empty())) {
     stencilClass.addMember(tmpMetadataTypename_, tmpMetadataName_);
 
-    for(auto field : tempFields) {
-      stencilClass.addMember(tmpStorageTypename_, "m_" + (*field).second.Name);
+    for(const auto& field : tempFields) {
+      stencilClass.addMember(tmpStorageTypename_, "m_" + field.second.Name);
     }
   }
 }
@@ -299,8 +319,8 @@ void CodeGen::addTmpStorageInit(
   if(!(tempFields.empty())) {
     ctr.addInit(tmpMetadataName_ + "(dom_.isize(), dom_.jsize(), dom_.ksize() + 2*" +
                 std::to_string(getVerticalTmpHaloSize(stencil)) + ")");
-    for(auto fieldIt : tempFields) {
-      ctr.addInit("m_" + (*fieldIt).second.Name + "(" + tmpMetadataName_ + ")");
+    for(const auto& field : tempFields) {
+      ctr.addInit("m_" + field.second.Name + "(" + tmpMetadataName_ + ")");
     }
   }
 }
@@ -315,33 +335,6 @@ void CodeGen::addTmpStorageInitStencilWrapperCtr(
     for(auto fieldName : tempFields) {
       ctr.addInit("m_" + fieldName + " (" + bigWrapperMetadata_ + ", \"" + fieldName + "\")");
     }
-  }
-}
-
-void CodeGen::addBCFieldInitStencilWrapperCtr(MemberFunction& ctr,
-                                              const CodeGenProperties& codeGenProperties) const {
-  // Initialize storages that require boundary conditions
-  for(const auto& param : codeGenProperties.getParameterNameToType()) {
-    if(!codeGenProperties.isParamBC(param.first))
-      continue;
-    ctr.addInit("m_" + param.first + "(" + param.first + ")");
-  }
-}
-
-void CodeGen::generateBCFieldMembers(
-    Class& stencilWrapperClass,
-    const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-    const CodeGenProperties& codeGenProperties) const {
-  const auto& metadata = stencilInstantiation->getMetaData();
-
-  if(metadata.hasBC())
-    stencilWrapperClass.addComment("Fields that require Boundary Conditions");
-  // add all fields that require a boundary condition as members since they need to be called from
-  // this class and not from individual stencils
-  for(const auto& field : codeGenProperties.getParameterNameToType()) {
-    if(!codeGenProperties.isParamBC(field.first))
-      continue;
-    stencilWrapperClass.addMember(field.second, "m_" + field.first);
   }
 }
 

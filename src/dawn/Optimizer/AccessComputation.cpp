@@ -77,7 +77,7 @@ public:
                std::shared_ptr<iir::StencilFunctionInstantiation> stencilFun = nullptr)
       : metadata_(metadata), stencilFun_(stencilFun) {
     curStatementAccessPairStack_.push_back(
-        make_unique<CurrentStatementAccessPair>(stmtAccessesPair));
+        std::make_unique<CurrentStatementAccessPair>(stmtAccessesPair));
   }
 
   /// @brief Get the stencil function instantiation from the `StencilFunCallExpr`
@@ -266,7 +266,7 @@ public:
       const auto& curStmt = curStatementAccessPairStack_.back();
       DAWN_ASSERT(curStmt->Pair->hasBlockStatements());
 
-      auto curBlockStmt = make_unique<CurrentStatementAccessPair>(
+      auto curBlockStmt = std::make_unique<CurrentStatementAccessPair>(
           curStmt->Pair->getBlockStatements()[curStmt->ChildIndex]);
 
       curStatementAccessPairStack_.push_back(std::move(curBlockStmt));
@@ -347,7 +347,7 @@ public:
 
     // Compute the accesses of the stencil function
     stencilFunCalls_.push(
-        make_unique<StencilFunctionCallScope>(getStencilFunctionInstantiation(expr)));
+        std::make_unique<StencilFunctionCallScope>(getStencilFunctionInstantiation(expr)));
 
     std::shared_ptr<iir::StencilFunctionInstantiation> curStencilFunCall =
         stencilFunCalls_.top()->FunctionInstantiation;

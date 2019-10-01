@@ -111,9 +111,9 @@ public:
   template <typename... Stmts>
   StmtData block(Stmts&&... stmts) {
     DAWN_ASSERT(si_);
-    auto stmt =
-        iir::makeBlockStmt(std::vector<std::shared_ptr<iir::Stmt>>{std::move(stmts.stmt)...});
-    auto sap = make_unique<iir::StatementAccessesPair>(stmt);
+    auto stmt = std::make_shared<iir::BlockStmt>(
+        std::vector<std::shared_ptr<iir::Stmt>>{std::move(stmts.stmt)...});
+    auto sap = std::make_unique<iir::StatementAccessesPair>(stmt);
     int x[] = {(stmts.sap ? (sap->insertBlockStatement(std::move(stmts.sap)), 0) : 0)...};
     (void)x;
     return {std::move(stmt), std::move(sap)};
@@ -128,7 +128,7 @@ public:
   std::unique_ptr<iir::DoMethod> vregion(sir::Interval::LevelKind s, sir::Interval::LevelKind e,
                                          Stmts&&... stmts) {
     DAWN_ASSERT(si_);
-    auto ret = make_unique<iir::DoMethod>(iir::Interval(s, e), si_->getMetaData());
+    auto ret = std::make_unique<iir::DoMethod>(iir::Interval(s, e), si_->getMetaData());
     ret->setID(si_->nextUID());
     int x[] = {(DAWN_ASSERT(stmts.sap), ret->insertChild(std::move(stmts.sap)), 0)...};
     (void)x;
@@ -140,7 +140,7 @@ public:
   template <typename... DoMethods>
   std::unique_ptr<iir::Stage> stage(DoMethods&&... do_methods) {
     DAWN_ASSERT(si_);
-    auto ret = make_unique<iir::Stage>(si_->getMetaData(), si_->nextUID());
+    auto ret = std::make_unique<iir::Stage>(si_->getMetaData(), si_->nextUID());
     int x[] = {(ret->insertChild(std::forward<DoMethods>(do_methods)), 0)...};
     (void)x;
     return ret;
@@ -149,7 +149,7 @@ public:
   template <typename... Stages>
   std::unique_ptr<iir::MultiStage> multistage(iir::LoopOrderKind loop_kind, Stages&&... stages) {
     DAWN_ASSERT(si_);
-    auto ret = make_unique<iir::MultiStage>(si_->getMetaData(), loop_kind);
+    auto ret = std::make_unique<iir::MultiStage>(si_->getMetaData(), loop_kind);
     ret->setID(si_->nextUID());
     int x[] = {(ret->insertChild(std::forward<Stages>(stages)), 0)...};
     (void)x;
@@ -159,7 +159,7 @@ public:
   template <typename... MultiStages>
   std::unique_ptr<iir::Stencil> stencil(MultiStages&&... multistages) {
     DAWN_ASSERT(si_);
-    auto ret = make_unique<iir::Stencil>(si_->getMetaData(), sir::Attr{}, si_->nextUID());
+    auto ret = std::make_unique<iir::Stencil>(si_->getMetaData(), sir::Attr{}, si_->nextUID());
     int x[] = {(ret->insertChild(std::forward<MultiStages>(multistages)), 0)...};
     (void)x;
     return ret;

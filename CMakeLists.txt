@@ -63,7 +63,7 @@ include(DawnDefinitions)
 include(DawnMacros)
 
 # Set C++ standard
-yoda_set_cxx_standard(c++11)
+yoda_set_cxx_standard(c++17)
 
 # Set C++ flags
 dawn_set_cxx_flags()
@@ -122,7 +122,7 @@ add_definitions(${DAWN_EXTERNAL_DEFINITIONS})
 yoda_report_result("Package summary" ${package_info})
 
 # Add clang-format target
-yoda_add_target_clang_format(DIRECTORIES ${CMAKE_SOURCE_DIR}/src EXTENSION ".h;.cpp")
+yoda_add_target_clang_format(DIRECTORIES ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/test EXTENSION ".h;.cpp")
 
 if(DAWN_PYTHON)
   if(NOT DEFINED PYTHON_EXECUTABLE)

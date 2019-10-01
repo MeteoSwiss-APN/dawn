@@ -28,39 +28,43 @@ struct SIRStmtData : public ast::StmtData {
 
 template <typename... Args>
 std::shared_ptr<ast::BlockStmt> makeBlockStmt(Args&&... args) {
-  return std::make_shared<ast::BlockStmt>(make_unique<SIRStmtData>(), std::forward<Args>(args)...);
+  return std::make_shared<ast::BlockStmt>(std::make_unique<SIRStmtData>(),
+                                          std::forward<Args>(args)...);
 }
 template <typename... Args>
 std::shared_ptr<ast::ExprStmt> makeExprStmt(Args&&... args) {
-  return std::make_shared<ast::ExprStmt>(make_unique<SIRStmtData>(), std::forward<Args>(args)...);
+  return std::make_shared<ast::ExprStmt>(std::make_unique<SIRStmtData>(),
+                                         std::forward<Args>(args)...);
 }
 template <typename... Args>
 std::shared_ptr<ast::ReturnStmt> makeReturnStmt(Args&&... args) {
-  return std::make_shared<ast::ReturnStmt>(make_unique<SIRStmtData>(), std::forward<Args>(args)...);
+  return std::make_shared<ast::ReturnStmt>(std::make_unique<SIRStmtData>(),
+                                           std::forward<Args>(args)...);
 }
 template <typename... Args>
 std::shared_ptr<ast::VarDeclStmt> makeVarDeclStmt(Args&&... args) {
-  return std::make_shared<ast::VarDeclStmt>(make_unique<SIRStmtData>(),
+  return std::make_shared<ast::VarDeclStmt>(std::make_unique<SIRStmtData>(),
                                             std::forward<Args>(args)...);
 }
 template <typename... Args>
 std::shared_ptr<ast::VerticalRegionDeclStmt> makeVerticalRegionDeclStmt(Args&&... args) {
-  return std::make_shared<ast::VerticalRegionDeclStmt>(make_unique<SIRStmtData>(),
+  return std::make_shared<ast::VerticalRegionDeclStmt>(std::make_unique<SIRStmtData>(),
                                                        std::forward<Args>(args)...);
 }
 template <typename... Args>
 std::shared_ptr<ast::StencilCallDeclStmt> makeStencilCallDeclStmt(Args&&... args) {
-  return std::make_shared<ast::StencilCallDeclStmt>(make_unique<SIRStmtData>(),
+  return std::make_shared<ast::StencilCallDeclStmt>(std::make_unique<SIRStmtData>(),
                                                     std::forward<Args>(args)...);
 }
 template <typename... Args>
 std::shared_ptr<ast::BoundaryConditionDeclStmt> makeBoundaryConditionDeclStmt(Args&&... args) {
-  return std::make_shared<ast::BoundaryConditionDeclStmt>(make_unique<SIRStmtData>(),
+  return std::make_shared<ast::BoundaryConditionDeclStmt>(std::make_unique<SIRStmtData>(),
                                                           std::forward<Args>(args)...);
 }
 template <typename... Args>
 std::shared_ptr<ast::IfStmt> makeIfStmt(Args&&... args) {
-  return std::make_shared<ast::IfStmt>(make_unique<SIRStmtData>(), std::forward<Args>(args)...);
+  return std::make_shared<ast::IfStmt>(std::make_unique<SIRStmtData>(),
+                                       std::forward<Args>(args)...);
 }
 //
 // TODO refactor_AST: this is TEMPORARY, will be removed in the future

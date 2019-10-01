@@ -193,10 +193,10 @@ private:
                                                     const std::vector<int>& assignmentIDs,
                                                     const std::vector<int>& assigneeIDs) {
     // Add the cache Flush stage
-    std::unique_ptr<iir::Stage> assignmentStage =
-        make_unique<iir::Stage>(instantiation_->getMetaData(), instantiation_->nextUID(), interval);
+    std::unique_ptr<iir::Stage> assignmentStage = std::make_unique<iir::Stage>(
+        instantiation_->getMetaData(), instantiation_->nextUID(), interval);
     iir::Stage::DoMethodSmartPtr_t domethod =
-        make_unique<iir::DoMethod>(interval, instantiation_->getMetaData());
+        std::make_unique<iir::DoMethod>(interval, instantiation_->getMetaData());
     domethod->clearChildren();
 
     for(int i = 0; i < assignmentIDs.size(); ++i) {
@@ -227,7 +227,7 @@ private:
     auto assignmentExpression =
         std::make_shared<iir::AssignmentExpr>(fa_assignment, fa_assignee, "=");
     auto expAssignment = iir::makeExprStmt(assignmentExpression);
-    auto pair = make_unique<iir::StatementAccessesPair>(expAssignment);
+    auto pair = std::make_unique<iir::StatementAccessesPair>(expAssignment);
     auto newAccess = std::make_shared<iir::Accesses>();
     newAccess->addWriteExtent(assignmentID, iir::Extents(Array3i{{0, 0, 0}}));
     newAccess->addReadExtent(assigneeID, iir::Extents(Array3i{{0, 0, 0}}));

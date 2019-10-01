@@ -147,7 +147,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
     if(stencil.isEmpty())
       continue;
 
-    const auto stencilFields = orderMap(stencil.getFields());
+    const auto stencilFields = support::orderMap(stencil.getFields());
 
     const std::string stencilName =
         codeGenProperties.getStencilName(StencilContext::SC_Stencil, stencil.getStencilID());
@@ -238,7 +238,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
       continue;
 
     // fields used in the stencil
-    const auto stencilFields = orderMap(stencil->getFields());
+    const auto stencilFields = support::orderMap(stencil->getFields());
 
     auto nonTempFields = makeRange(
         stencilFields, std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
@@ -266,7 +266,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
     StencilClass.addMember("Mesh const&", "m_mesh");
     for(auto fieldIt : nonTempFields) {
-      StencilClass.addMember("Field<double>&", "m_" + (*fieldIt).second.Name);
+      StencilClass.addMember("Field<double>&", "m_" + fieldIt.second.Name);
     }
 
     // addTmpStorageDeclaration(StencilClass, tempFields);
@@ -277,7 +277,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
     stencilClassCtr.addArg("Mesh const& mesh");
     for(auto fieldIt : nonTempFields) {
-      stencilClassCtr.addArg("Field<double>&" + (*fieldIt).second.Name);
+      stencilClassCtr.addArg("Field<double>&" + fieldIt.second.Name);
     }
 
     // stencilClassCtr.addInit("m_dom(dom_)");
@@ -287,14 +287,14 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
     stencilClassCtr.addInit("m_mesh(mesh)");
     for(auto fieldIt : nonTempFields) {
-      stencilClassCtr.addInit("m_" + (*fieldIt).second.Name + "(" + (*fieldIt).second.Name + ")");
+      stencilClassCtr.addInit("m_" + fieldIt.second.Name + "(" + fieldIt.second.Name + ")");
     }
 
     // addTmpStorageInit(stencilClassCtr, *stencil, tempFields);
     stencilClassCtr.commit();
 
     // virtual dtor
-    MemberFunction stencilClassDtr = StencilClass.addDestructor();
+    MemberFunction stencilClassDtr = StencilClass.addDestructor(false);
     stencilClassDtr.startBody();
     stencilClassDtr.commit();
 
@@ -303,7 +303,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     syncStoragesMethod.startBody();
 
     // for(auto fieldIt : nonTempFields) {
-    //   syncStoragesMethod.addStatement("m_" + (*fieldIt).second.Name + ".sync()");
+    //   syncStoragesMethod.addStatement("m_" + fieldIt.second.Name + ".sync()");
     // }
 
     syncStoragesMethod.commit();
@@ -484,8 +484,8 @@ std::unique_ptr<TranslationUnit> CXXNaiveIcoCodeGen::generateCode() {
   DAWN_LOG(INFO) << "Done generating code";
 
   std::string filename = generateFileName(context_);
-  return make_unique<TranslationUnit>(filename, std::move(ppDefines), std::move(stencils),
-                                      std::move(globals));
+  return std::make_unique<TranslationUnit>(filename, std::move(ppDefines), std::move(stencils),
+                                           std::move(globals));
 }
 
 } // namespace cxxnaiveico

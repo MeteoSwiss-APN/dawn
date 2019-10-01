@@ -26,14 +26,6 @@
 namespace dawn {
 namespace codegen {
 
-template <typename Key, typename Value>
-extern std::map<Key, Value> orderMap(const std::unordered_map<Key, Value>& umap) {
-  std::map<Key, Value> m;
-  for(const auto& f : umap)
-    m.insert(f);
-
-  return m;
-}
 using stencilInstantiationContext =
     std::map<std::string, std::shared_ptr<iir::StencilInstantiation>>;
 
@@ -62,11 +54,7 @@ protected:
                                      const std::vector<std::unique_ptr<iir::Stencil>>& stencils,
                                      const std::vector<std::string>& tempFields) const;
 
-  void addBCFieldInitStencilWrapperCtr(MemberFunction& ctr,
-                                       const CodeGenProperties& codeGenProperties) const;
-  void generateBCFieldMembers(Class& stencilWrapperClass,
-                              const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
-                              const CodeGenProperties& codeGenProperties) const;
+  void generateStencilWrapperSyncMethod(Class& stencilWrapperClass) const;
 
   void addMplIfdefs(std::vector<std::string>& ppDefines, int mplContainerMaxSize) const;
 

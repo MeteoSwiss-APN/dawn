@@ -16,15 +16,17 @@
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/CodeGen/StencilFunctionAsBCGenerator.h"
 #include "dawn/IIR/AST.h"
+#include "dawn/Support/IndexRange.h"
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
 namespace codegen {
 namespace cuda {
 
-ASTStencilDesc::ASTStencilDesc(const iir::StencilMetaInformation& metadata,
+ASTStencilDesc::ASTStencilDesc(const std::shared_ptr<iir::StencilInstantiation>& instantiation,
                                CodeGenProperties const& codeGenProperties)
-    : ASTCodeGenCXX(), metadata_(metadata), codeGenProperties_(codeGenProperties) {}
+    : ASTCodeGenCXX(), instantiation_(instantiation), metadata_(instantiation->getMetaData()),
+      codeGenProperties_(codeGenProperties) {}
 
 ASTStencilDesc::~ASTStencilDesc() {}
 
@@ -51,9 +53,31 @@ void ASTStencilDesc::visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& s
 void ASTStencilDesc::visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) {
   int stencilID = metadata_.getStencilIDFromStencilCallStmt(stmt);
 
+  const iir::Stencil& stencil = instantiation_->getIIR()->getStencil(stencilID);
+
+  // fields used in the stencil
+  const auto stencilFields = stencil.getOrderedFields();
+
+  auto nonTempFields = makeRange(
+      stencilFields,
+      std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
+          [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return !p.second.IsTemporary; }));
+
   std::string stencilName =
       codeGenProperties_.getStencilName(StencilContext::SC_Stencil, stencilID);
-  ss_ << "m_" << stencilName + "->run();\n";
+  ss_ << "m_" << stencilName + "->run";
+
+  RangeToString fieldArgs(",", "(", ");");
+
+  ss_ << fieldArgs(nonTempFields, [&](const std::pair<const int, iir::Stencil::FieldInfo>& fieldp) {
+    if(metadata_.isAccessType(iir::FieldAccessType::FAT_InterStencilTemporary, fieldp.first)) {
+      return "m_" + fieldp.second.Name;
+    } else {
+      return fieldp.second.Name;
+    }
+  });
+
+  ss_ << std::endl;
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) {

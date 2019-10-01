@@ -58,7 +58,7 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
   iir::VarDeclStmt* varDeclStmt = dyn_cast<iir::VarDeclStmt>(oldStatement.get());
   // If the TemporaryScope is within this stencil, then a VarDecl should be found (otherwise we have
   // a bug)
-  DAWN_ASSERT_MSG((varDeclStmt || temporaryScope == iir::TemporaryScope::TS_Field),
+  DAWN_ASSERT_MSG((varDeclStmt || instantiation->isIDAccessedMultipleStencils(accessID)),
                   format("Promote local variable to temporary field: a var decl is not "
                          "found for accessid: %i , name :%s",
                          accessID, instantiation->getMetaData().getNameFromAccessID(accessID))

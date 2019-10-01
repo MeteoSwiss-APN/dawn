@@ -1,13 +1,13 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
-##                          _                      
-##                         | |                     
-##                       __| | __ ___      ___ ___  
-##                      / _` |/ _` \ \ /\ / / '_  | 
+##                          _
+##                         | |
+##                       __| | __ ___      ___ ___
+##                      / _` |/ _` \ \ /\ / / '_  |
 ##                     | (_| | (_| |\ V  V /| | | |
 ##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
@@ -26,6 +26,7 @@ yoda_add_library(
           Compiler.h
           ComparisonHelpers.h
           Config.h.cmake
+          ContainerUtils.h
           DiagnosticsEngine.cpp
           DiagnosticsEngine.h
           DiagnosticsMessage.h
@@ -45,7 +46,7 @@ yoda_add_library(
           Logging.h
           MathExtras.h
           NonCopyable.h
-          Printing.h          
+          Printing.h
           RemoveIf.hpp
           SmallString.h
           SmallVector.cpp
@@ -78,4 +79,3 @@ yoda_combine_libraries(
   VERSION ${DAWN_VERSION}
   EXPORT_GROUP DawnTargets
 )
-

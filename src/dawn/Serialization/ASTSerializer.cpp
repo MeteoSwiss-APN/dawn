@@ -26,9 +26,9 @@ using namespace dawn;
 namespace {
 std::unique_ptr<ast::StmtData> makeData(ast::StmtData::DataType dataType) {
   if(dataType == ast::StmtData::SIR_DATA_TYPE)
-    return make_unique<sir::SIRStmtData>();
+    return std::make_unique<sir::SIRStmtData>();
   else
-    return make_unique<iir::IIRStmtData>();
+    return std::make_unique<iir::IIRStmtData>();
 }
 } // namespace
 

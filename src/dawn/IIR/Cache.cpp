@@ -112,13 +112,13 @@ Cache::CacheTypeKind Cache::getCacheType() const { return type_; }
 std::string Cache::getCacheTypeAsString() const {
   switch(type_) {
   case IJ:
-    return "IJ";
+    return "cache_type::ij";
   case K:
-    return "K";
+    return "cache_type::k";
   case IJK:
-    return "IJK";
+    return "cache_type::ijk";
   case bypass:
-    return "bypass";
+    return "cache_type::bypass";
   }
   dawn_unreachable("invalid cache type");
 }

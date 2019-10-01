@@ -58,6 +58,9 @@ public:
 
     /// Intervals of the Do-Methods of each stage
     std::unordered_map<int, std::vector<iir::Interval>> StageIntervals;
+
+    // TODO we should compute the OffsetLimit, not use a hard-coded value!
+    static constexpr int OffsetLimit = 3;
   };
 
 private:
@@ -65,10 +68,8 @@ private:
       const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation);
   std::string cacheWindowToString(const iir::Cache::window& cacheWindow);
 
-  void buildPlaceholderDefinitions(
-      MemberFunction& function,
-      const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
-      const std::map<int, iir::Stencil::FieldInfo>& stencilFields,
+  void generatePlaceholderDefinitions(
+      Structure& function, const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
       const sir::GlobalVariableMap& globalsMap, const CodeGenProperties& codeGenProperties) const;
 
   std::string getFieldName(std::shared_ptr<sir::Field> const& f) const { return f->Name; }
@@ -106,10 +107,12 @@ private:
   generateStencilClasses(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                          Class& stencilWrapperClass, CodeGenProperties& codeGenProperties);
 
-  /// code generate sync methods statements for all the fields passed
-  void generateSyncStorages(
-      MemberFunction& method,
-      const IndexRange<const std::map<int, iir::Stencil::FieldInfo>>& stencilFields) const;
+  void generateGridConstruction(MemberFunction& stencilConstructor, const iir::Stencil& stencil,
+                                IntervalDefinitions& intervalDefinitions,
+                                const CodeGenProperties& codeGenProperties) const;
+
+  static std::string getAxisName(const std::string& stencilName);
+  static std::string getGridName(const std::string& stencilName);
 
   /// construct a string of template parameters for storages
   std::vector<std::string> buildFieldTemplateNames(

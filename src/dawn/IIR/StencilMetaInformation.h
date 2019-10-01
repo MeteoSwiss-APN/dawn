@@ -57,10 +57,7 @@ public:
   bool isAccessType(FieldAccessType fType, const int accessID) const;
   bool isAccessType(FieldAccessType fType, const std::string& name) const;
 
-  /// @brief check whether the `accessID` is accessed in more than one stencil
-  bool isIDAccessedMultipleStencils(int accessID) const;
-
-  bool isAccessIDAVersion(const int accessID) {
+  bool isAccessIDAVersion(const int accessID) const {
     return fieldAccessMetadata_.variableVersions_.isAccessIDAVersion(accessID);
   }
 
