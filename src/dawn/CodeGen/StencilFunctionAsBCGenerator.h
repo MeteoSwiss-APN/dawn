@@ -66,6 +66,9 @@ public:
   inline void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
     DAWN_ASSERT_MSG(0, "ReturnStmt not allowed in this context");
   }
+  inline void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
+    DAWN_ASSERT_MSG(0, "ReductionOverNeighborExpr not allowed in this context");
+  }
 
   void visit(const std::shared_ptr<iir::VarAccessExpr>& expr);
 
