@@ -111,8 +111,8 @@ public:
   template <typename... Stmts>
   StmtData block(Stmts&&... stmts) {
     DAWN_ASSERT(si_);
-    auto stmt = std::make_shared<iir::BlockStmt>(
-        std::vector<std::shared_ptr<iir::Stmt>>{std::move(stmts.stmt)...});
+    auto stmt =
+        iir::makeBlockStmt(std::vector<std::shared_ptr<iir::Stmt>>{std::move(stmts.stmt)...});
     auto sap = make_unique<iir::StatementAccessesPair>(stmt);
     int x[] = {(stmts.sap ? (sap->insertBlockStatement(std::move(stmts.sap)), 0) : 0)...};
     (void)x;
