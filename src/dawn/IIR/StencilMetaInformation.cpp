@@ -217,31 +217,6 @@ void StencilMetaInformation::insertExprToStencilFunctionInstantiation(
   insertExprToStencilFunctionInstantiation(stencilFun->getExpression(), stencilFun);
 }
 
-FieldAccessMetadata::allConstContainerTypes
-StencilMetaInformation::getAccessesOfTypeImpl(FieldAccessType fieldAccessType) const {
-  switch(fieldAccessType) {
-  case FieldAccessType::FAT_Literal:
-    return FieldAccessMetadata::allConstContainerTypes(
-        fieldAccessMetadata_.LiteralAccessIDToNameMap_);
-  case FieldAccessType::FAT_GlobalVariable:
-    return FieldAccessMetadata::allConstContainerTypes(
-        fieldAccessMetadata_.GlobalVariableAccessIDSet_);
-  case FieldAccessType::FAT_Field:
-    return FieldAccessMetadata::allConstContainerTypes(fieldAccessMetadata_.FieldAccessIDSet_);
-  case FieldAccessType::FAT_LocalVariable:
-    dawn_unreachable("getter of local accesses ids not supported");
-  case FieldAccessType::FAT_StencilTemporary:
-    return FieldAccessMetadata::allConstContainerTypes(
-        fieldAccessMetadata_.TemporaryFieldAccessIDSet_);
-  case FieldAccessType::FAT_InterStencilTemporary:
-    return FieldAccessMetadata::allConstContainerTypes(
-        fieldAccessMetadata_.AllocatedFieldAccessIDSet_);
-  case FieldAccessType::FAT_APIField:
-    return FieldAccessMetadata::allConstContainerTypes(fieldAccessMetadata_.apiFieldIDs_);
-  }
-  return FieldAccessMetadata::allConstContainerTypes{std::set<int>{}};
-}
-
 bool StencilMetaInformation::isAccessType(FieldAccessType fType, const int accessID) const {
   if(fType == FieldAccessType::FAT_Field) {
     return isAccessType(FieldAccessType::FAT_APIField, accessID) ||
