@@ -18,6 +18,7 @@
 #include "dawn/CodeGen/Cuda/ASTStencilBody.h"
 #include "dawn/CodeGen/Cuda/CodeGeneratorHelper.h"
 #include "dawn/IIR/IIRNodeIterator.h"
+#include "dawn/Support/ContainerUtils.h"
 #include "dawn/Support/IndexRange.h"
 #include <functional>
 #include <numeric>
@@ -672,7 +673,7 @@ void MSCodeGen::generateCudaKernelCode() {
   }
 
   // fields used in the stencil
-  const auto fields = orderMap(ms_->getFields());
+  const auto fields = support::orderMap(ms_->getFields());
 
   auto nonTempFields = makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>(
                                              [&](std::pair<int, iir::Field> const& p) {
@@ -743,19 +744,19 @@ void MSCodeGen::generateCudaKernelCode() {
   }
 
   // first we construct non temporary field arguments
-  for(auto field : nonTempFields) {
+  for(const auto& fieldPair : nonTempFields) {
     cudaKernel.addArg("gridtools::clang::float_type * const " +
-                      metadata_.getFieldNameFromAccessID((*field).second.getAccessID()));
+                      metadata_.getFieldNameFromAccessID(fieldPair.second.getAccessID()));
   }
 
   // then the temporary field arguments
-  for(auto field : tempFieldsNonLocalCached) {
+  for(const auto& fieldPair : tempFieldsNonLocalCached) {
     if(useCodeGenTemporaries_) {
       cudaKernel.addArg(c_gt() + "data_view<TmpStorage>" +
-                        metadata_.getFieldNameFromAccessID((*field).second.getAccessID()) + "_dv");
+                        metadata_.getFieldNameFromAccessID(fieldPair.second.getAccessID()) + "_dv");
     } else {
       cudaKernel.addArg("gridtools::clang::float_type * const " +
-                        metadata_.getFieldNameFromAccessID((*field).second.getAccessID()));
+                        metadata_.getFieldNameFromAccessID(fieldPair.second.getAccessID()));
     }
   }
 
@@ -767,8 +768,8 @@ void MSCodeGen::generateCudaKernelCode() {
 
   // extract raw pointers of temporaries from the data views
   if(useCodeGenTemporaries_) {
-    for(auto field : tempFieldsNonLocalCached) {
-      std::string fieldName = metadata_.getFieldNameFromAccessID((*field).second.getAccessID());
+    for(const auto& fieldPair : tempFieldsNonLocalCached) {
+      std::string fieldName = metadata_.getFieldNameFromAccessID(fieldPair.second.getAccessID());
 
       cudaKernel.addStatement("gridtools::clang::float_type* " + fieldName + " = &" + fieldName +
                               "_dv(tmpBeginIIndex,tmpBeginJIndex,blockIdx.x,blockIdx.y,0)");
@@ -853,21 +854,21 @@ void MSCodeGen::generateCudaKernelCode() {
   std::unordered_map<int, Array3i> fieldIndexMap;
   std::unordered_map<std::string, Array3i> indexIterators;
 
-  for(auto field : nonTempFields) {
+  for(const auto& fieldPair : nonTempFields) {
     Array3i dims{-1, -1, -1};
     for(const auto& fieldInfo : ms_->getParent()->getFields()) {
-      if(fieldInfo.second.field.getAccessID() == (*field).second.getAccessID()) {
+      if(fieldInfo.second.field.getAccessID() == fieldPair.second.getAccessID()) {
         dims = fieldInfo.second.Dimensions;
         break;
       }
     }
     DAWN_ASSERT(std::accumulate(dims.begin(), dims.end(), 0) != -3);
-    fieldIndexMap.emplace((*field).second.getAccessID(), dims);
+    fieldIndexMap.emplace(fieldPair.second.getAccessID(), dims);
     indexIterators.emplace(CodeGeneratorHelper::indexIteratorName(dims), dims);
   }
-  for(auto field : tempFieldsNonLocalCached) {
+  for(const auto& fieldPair : tempFieldsNonLocalCached) {
     Array3i dims{1, 1, 1};
-    fieldIndexMap.emplace((*field).second.getAccessID(), dims);
+    fieldIndexMap.emplace(fieldPair.second.getAccessID(), dims);
     indexIterators.emplace(CodeGeneratorHelper::indexIteratorName(dims), dims);
   }
 

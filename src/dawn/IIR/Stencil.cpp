@@ -174,7 +174,7 @@ std::unordered_set<Interval> Stencil::getIntervals() const {
 }
 
 std::unique_ptr<Stencil> Stencil::clone() const {
-  auto cloneStencil = make_unique<Stencil>(metadata_, stencilAttributes_, StencilID_);
+  auto cloneStencil = std::make_unique<Stencil>(metadata_, stencilAttributes_, StencilID_);
 
   cloneStencil->derivedInfo_ = derivedInfo_;
   cloneStencil->cloneChildrenFrom(*this);

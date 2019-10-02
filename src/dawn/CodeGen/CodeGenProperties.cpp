@@ -34,19 +34,30 @@ void CodeGenProperties::setParamBC(std::string name) {
 bool CodeGenProperties::isParamBC(std::string name) const { return paramBC_.count(name); }
 
 std::string CodeGenProperties::getParamType(
-    const std::shared_ptr<iir::StencilInstantiation> stencilInstantiation,
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
     const iir::Stencil::FieldInfo& field) const {
   return (stencilInstantiation->getMetaData().isAccessType(
               iir::FieldAccessType::FAT_InterStencilTemporary, field.field.getAccessID()) ||
           field.IsTemporary)
              ? "storage_t"
-             : getParamType(field.Name);
+             : getParamType(stencilInstantiation, field.Name);
 }
 
-std::string CodeGenProperties::getParamType(const std::string paramName) const {
-  DAWN_ASSERT_MSG(paramNameToType_.count(paramName),
+std::string CodeGenProperties::getParamType(
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const std::string paramName) const {
+  const auto& metadata = stencilInstantiation->getMetaData();
+  const int accessID = metadata.getAccessIDFromName(paramName);
+
+  std::string fieldName = paramName;
+  if(metadata.isAccessIDAVersion(accessID)) {
+    const auto originalFieldID = metadata.getOriginalVersionOfAccessID(accessID);
+    fieldName = metadata.getNameFromAccessID(originalFieldID);
+  }
+
+  DAWN_ASSERT_MSG(paramNameToType_.count(fieldName),
                   std::string("parameter " + paramName + " not found").c_str());
-  return paramNameToType_.at(paramName);
+  return paramNameToType_.at(fieldName);
 }
 
 std::unordered_map<std::string, std::shared_ptr<StencilProperties>>&

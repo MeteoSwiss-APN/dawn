@@ -32,6 +32,8 @@ public:
 
   /// @brief Get a unique *strictly* positive identifer
   int get() { return (counter_++); }
+
+  void reset() { counter_ = 0; }
 };
 
 } // namespace dawn

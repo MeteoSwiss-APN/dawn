@@ -110,7 +110,7 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
 
   // create stencil instantiation context
   dawn::DiagnosticsEngine diagnostics;
-  auto optimizer = dawn::make_unique<dawn::OptimizerContext>(
+  auto optimizer = std::make_unique<dawn::OptimizerContext>(
       diagnostics, dawn::OptimizerContext::OptimizerContextOptions{}, nullptr);
   optimizer->restoreIIR("<restored>", std::move(si_));
   auto new_si = optimizer->getStencilInstantiationMap()["<restored>"];
@@ -119,6 +119,15 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
   map[new_si->getName()] = std::move(new_si);
 
   return map;
+}
+std::shared_ptr<iir::Expr> IIRBuilder::reduceOverNeighborExpr(op operation,
+                                                              std::shared_ptr<iir::Expr>&& rhs,
+                                                              std::shared_ptr<iir::Expr>&& init) {
+  auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
+      toStr(operation, {op::multiply, op::plus, op::minus, op::assign, op::divide}), std::move(rhs),
+      std::move(init));
+  expr->setID(si_->nextUID());
+  return expr;
 }
 std::shared_ptr<iir::Expr> IIRBuilder::binaryExpr(std::shared_ptr<iir::Expr>&& lhs,
                                                   std::shared_ptr<iir::Expr>&& rhs, op operation) {
@@ -192,7 +201,7 @@ std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::LocalVar const& var) {
 IIRBuilder::StmtData IIRBuilder::stmt(std::shared_ptr<iir::Expr>&& expr) {
   DAWN_ASSERT(si_);
   auto stmt = iir::makeExprStmt(std::move(expr));
-  auto sap = make_unique<iir::StatementAccessesPair>(stmt);
+  auto sap = std::make_unique<iir::StatementAccessesPair>(stmt);
   return {std::move(stmt), std::move(sap)};
 }
 IIRBuilder::StmtData IIRBuilder::ifStmt(std::shared_ptr<iir::Expr>&& cond, StmtData&& caseThen,
@@ -200,7 +209,7 @@ IIRBuilder::StmtData IIRBuilder::ifStmt(std::shared_ptr<iir::Expr>&& cond, StmtD
   DAWN_ASSERT(si_);
   auto condStmt = iir::makeExprStmt(std::move(cond));
   auto stmt = iir::makeIfStmt(condStmt, std::move(caseThen.stmt), std::move(caseElse.stmt));
-  auto sap = make_unique<iir::StatementAccessesPair>(stmt);
+  auto sap = std::make_unique<iir::StatementAccessesPair>(stmt);
   if(caseThen.sap)
     sap->insertBlockStatement(std::move(caseThen.sap));
   if(caseElse.sap)
@@ -210,7 +219,7 @@ IIRBuilder::StmtData IIRBuilder::ifStmt(std::shared_ptr<iir::Expr>&& cond, StmtD
 IIRBuilder::StmtData IIRBuilder::declareVar(IIRBuilder::LocalVar& var) {
   DAWN_ASSERT(si_);
   DAWN_ASSERT(var.decl);
-  auto sap = make_unique<iir::StatementAccessesPair>(var.decl);
+  auto sap = std::make_unique<iir::StatementAccessesPair>(var.decl);
   return {std::move(var.decl), std::move(sap)};
 }
 

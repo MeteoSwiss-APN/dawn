@@ -278,6 +278,8 @@ void StencilMetaInformation::moveRegisteredFieldTo(FieldAccessType type, int acc
 
 int StencilMetaInformation::insertAccessOfType(FieldAccessType type, const std::string& name) {
   int accessID = UIDGenerator::getInstance()->get();
+  if(type == FieldAccessType::FAT_Literal)
+    accessID = -accessID;
   insertAccessOfType(type, accessID, name);
   return accessID;
 }

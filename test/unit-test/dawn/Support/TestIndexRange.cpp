@@ -24,23 +24,46 @@ TEST(IndexRange, VectorInt) {
   auto loopRange = makeRange(v, [](int const& val) { return val < 6; });
 
   ASSERT_TRUE((loopRange.size() == 3));
-  for(auto vIt : loopRange) {
+  for(auto vIt = loopRange.begin(); vIt != loopRange.end(); ++vIt) {
     ASSERT_TRUE((*vIt == v[vIt.idx()]));
   }
 }
 
-TEST(IndexRange, VectorIntModify) {
-  std::vector<int> v{1, 3, 5, 6, 7, 9};
-  auto loopRange = makeRange(v, [](int const& val) { return val < 6; });
+TEST(IndexRange, ItSub) {
+  std::vector<int> v{1, 3, 9, 13, 6, 7};
+  auto loopRange = makeRange(v, [](int const& val) { return val < 10; });
 
-  ASSERT_TRUE((loopRange.size() == 3));
-  for(auto vIt : loopRange) {
-    *vIt += 3;
+  ASSERT_TRUE((loopRange.size() == 5));
+  std::vector<int> vref{1, 3, 9, 6, 7};
+
+  auto vIt = loopRange.end();
+  for(--vIt; vIt != loopRange.begin(); --vIt) {
+    ASSERT_TRUE((*vIt == vref[vIt.idx()]));
+  }
+  // test for begin
+  ASSERT_TRUE((*vIt == vref[vIt.idx()]));
+}
+
+TEST(IndexRange, VectorIntModify) {
+  std::vector<int> v{1, 3, 9, 13, 6, 7};
+  auto loopRange = makeRange(v, [](int const& val) { return val < 10; });
+
+  ASSERT_TRUE((loopRange.size() == 5));
+
+  std::vector<int> vref{1, 3, 9, 6, 7};
+  int cnt = 0;
+  for(auto vIt = loopRange.begin(); vIt != loopRange.end(); ++vIt, ++cnt) {
+    ASSERT_TRUE(vIt.idx() == cnt);
+    ASSERT_TRUE((*vIt == vref[vIt.idx()]));
   }
 
-  std::vector<int> vref{4, 6, 8, 6, 7, 9};
-  for(auto vIt : loopRange) {
-    ASSERT_TRUE((*vIt == vref[vIt.idx()]));
+  for(auto& val : loopRange) {
+    val += 3;
+  }
+
+  std::vector<int> vref2{4, 6, 9};
+  for(auto vIt = loopRange.begin(); vIt != loopRange.end(); ++vIt) {
+    ASSERT_TRUE((*vIt == vref2[vIt.idx()]));
   }
 }
 
@@ -49,9 +72,9 @@ TEST(IndexRange, ConstVectorInt) {
   auto loopRange = makeRange(v, [](int const& val) { return val < 6; });
 
   ASSERT_TRUE((loopRange.size() == 3));
-  for(auto vIt : loopRange) {
+  for(auto vIt = loopRange.begin(); vIt != loopRange.end(); ++vIt) {
     ASSERT_TRUE((*vIt == v[vIt.idx()]));
   }
 }
 
-} // anonymous namespace
+} // namespace dawn

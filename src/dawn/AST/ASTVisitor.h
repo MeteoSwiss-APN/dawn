@@ -40,6 +40,7 @@ public:
 
   /// @brief Expressions
   /// @{
+  virtual void visit(const std::shared_ptr<ReductionOverNeighborExpr>& expr) = 0;
   virtual void visit(const std::shared_ptr<NOPExpr>& stmt) final {}
   virtual void visit(const std::shared_ptr<UnaryOperator>& expr) = 0;
   virtual void visit(const std::shared_ptr<BinaryOperator>& expr) = 0;
@@ -74,6 +75,7 @@ public:
 
   /// @brief Expressions
   /// @{
+  virtual void visit(std::shared_ptr<ReductionOverNeighborExpr> expr) = 0;
   virtual void visit(std::shared_ptr<NOPExpr> expr) final {}
   virtual void visit(std::shared_ptr<UnaryOperator> expr) = 0;
   virtual void visit(std::shared_ptr<BinaryOperator> expr) = 0;
@@ -108,6 +110,7 @@ public:
 
   /// @brief Expressions
   /// @{
+  virtual void visit(const std::shared_ptr<ReductionOverNeighborExpr>& expr) override;
   virtual void visit(const std::shared_ptr<UnaryOperator>& expr) override;
   virtual void visit(const std::shared_ptr<BinaryOperator>& expr) override;
   virtual void visit(const std::shared_ptr<AssignmentExpr>& expr) override;
@@ -152,6 +155,8 @@ public:
 
   /// @brief visitAndReplace will do a full traverse of this node for Expressions
   /// @{
+  virtual std::shared_ptr<Expr>
+  visitAndReplace(std::shared_ptr<ReductionOverNeighborExpr> const& expr);
   virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<NOPExpr> const& expr) final;
   virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<UnaryOperator> const& expr);
   virtual std::shared_ptr<Expr> visitAndReplace(std::shared_ptr<BinaryOperator> const& expr);
@@ -180,6 +185,7 @@ public:
   /// @brief pre-visit the node for Expressions and returns true if we should continue the tree
   /// traversal
   /// @{
+  virtual bool preVisitNode(std::shared_ptr<ReductionOverNeighborExpr> const& expr);
   virtual bool preVisitNode(std::shared_ptr<NOPExpr> const& expr);
   virtual bool preVisitNode(std::shared_ptr<UnaryOperator> const& expr);
   virtual bool preVisitNode(std::shared_ptr<BinaryOperator> const& expr);
@@ -211,6 +217,8 @@ public:
   /// @brief post-visit the node for Expressions and returns a modified/new version of the
   /// expression node to be returned to the parent
   /// @{
+  virtual std::shared_ptr<Expr>
+  postVisitNode(std::shared_ptr<ReductionOverNeighborExpr> const& expr);
   virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<NOPExpr> const& expr);
   virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<UnaryOperator> const& expr);
   virtual std::shared_ptr<Expr> postVisitNode(std::shared_ptr<BinaryOperator> const& expr);
@@ -246,6 +254,7 @@ public:
 
   /// @brief Expressions
   /// @{
+  virtual void visit(std::shared_ptr<ReductionOverNeighborExpr> expr) override;
   virtual void visit(std::shared_ptr<UnaryOperator> expr) override;
   virtual void visit(std::shared_ptr<BinaryOperator> expr) override;
   virtual void visit(std::shared_ptr<AssignmentExpr> expr) override;
@@ -281,6 +290,7 @@ public:
 
   /// @brief Expressions
   /// @{
+  virtual void visit(const std::shared_ptr<ReductionOverNeighborExpr>& expr) override;
   virtual void visit(const std::shared_ptr<UnaryOperator>& expr) override;
   virtual void visit(const std::shared_ptr<BinaryOperator>& expr) override;
   virtual void visit(const std::shared_ptr<AssignmentExpr>& expr) override;

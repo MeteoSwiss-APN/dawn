@@ -69,7 +69,7 @@ StatementAccessesPair::StatementAccessesPair(const std::shared_ptr<iir::Stmt>& s
     : statement_(statement) {}
 
 std::unique_ptr<StatementAccessesPair> StatementAccessesPair::clone() const {
-  auto cloneSAP = make_unique<StatementAccessesPair>(statement_->clone());
+  auto cloneSAP = std::make_unique<StatementAccessesPair>(statement_->clone());
 
   cloneSAP->blockStatements_ = blockStatements_.clone();
 

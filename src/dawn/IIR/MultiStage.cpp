@@ -32,7 +32,7 @@ MultiStage::MultiStage(StencilMetaInformation& metadata, LoopOrderKind loopOrder
     : metadata_(metadata), loopOrder_(loopOrder), id_(UIDGenerator::getInstance()->get()) {}
 
 std::unique_ptr<MultiStage> MultiStage::clone() const {
-  auto cloneMS = make_unique<MultiStage>(metadata_, loopOrder_);
+  auto cloneMS = std::make_unique<MultiStage>(metadata_, loopOrder_);
 
   cloneMS->id_ = id_;
   cloneMS->derivedInfo_ = derivedInfo_;
@@ -51,7 +51,7 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
   auto curStageIt = children_.begin();
   std::deque<int> curStageSplitterIndices;
 
-  newMultiStages.push_back(make_unique<MultiStage>(metadata_, lastLoopOrder));
+  newMultiStages.push_back(std::make_unique<MultiStage>(metadata_, lastLoopOrder));
 
   for(std::size_t i = 0; i < splitterIndices.size(); ++i) {
     SplitIndex& splitIndex = splitterIndices[i];
@@ -59,7 +59,7 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
     if(splitIndex.StageIndex == curStageIndex) {
 
       curStageSplitterIndices.push_back(splitIndex.StmtIndex);
-      newMultiStages.push_back(make_unique<MultiStage>(metadata_, splitIndex.LowerLoopOrder));
+      newMultiStages.push_back(std::make_unique<MultiStage>(metadata_, splitIndex.LowerLoopOrder));
       lastLoopOrder = splitIndex.LowerLoopOrder;
     }
 
@@ -82,7 +82,7 @@ MultiStage::split(std::deque<MultiStage::SplitIndex>& splitterIndices,
       }
 
       if(i != (splitterIndices.size() - 1))
-        newMultiStages.push_back(make_unique<MultiStage>(metadata_, lastLoopOrder));
+        newMultiStages.push_back(std::make_unique<MultiStage>(metadata_, lastLoopOrder));
 
       // Handle the next stage
       curStageIndex++;
@@ -376,6 +376,9 @@ void MultiStage::DerivedInfo::clear() { fields_.clear(); }
 void MultiStage::clearDerivedInfo() { derivedInfo_.clear(); }
 
 const std::unordered_map<int, Field>& MultiStage::getFields() const { return derivedInfo_.fields_; }
+std::map<int, Field> MultiStage::getOrderedFields() const {
+  return support::orderMap(derivedInfo_.fields_);
+}
 
 void MultiStage::updateFromChildren() {
   for(const auto& stagePtr : children_) {

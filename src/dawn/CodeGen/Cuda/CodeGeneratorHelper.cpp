@@ -52,12 +52,12 @@ std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(
 
   std::unordered_set<std::string> processedDims;
   std::vector<std::string> strides;
-  for(auto field : nonTempFields) {
-    const auto fieldName = metadata.getFieldNameFromAccessID((*field).second.getAccessID());
+  for(const auto& fieldPair : nonTempFields) {
+    const auto fieldName = metadata.getFieldNameFromAccessID(fieldPair.second.getAccessID());
     Array3i dims{-1, -1, -1};
     // TODO this is a hack, we need to have dimensions also at ms level
     for(const auto& fieldInfo : ms->getParent()->getFields()) {
-      if(fieldInfo.second.field.getAccessID() == (*field).second.getAccessID()) {
+      if(fieldInfo.second.field.getAccessID() == fieldPair.second.getAccessID()) {
         dims = fieldInfo.second.Dimensions;
         break;
       }
@@ -75,7 +75,7 @@ std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(
       if(!(usedDim++))
         continue;
       if(funArg == CodeGeneratorHelper::FunctionArgType::FT_Caller) {
-        strides.push_back("m_" + fieldName + ".strides()[" + std::to_string(i) + "]");
+        strides.push_back(fieldName + "_ds.strides()[" + std::to_string(i) + "]");
       } else {
         strides.push_back("const int stride_" + CodeGeneratorHelper::indexIteratorName(dims) + "_" +
                           std::to_string(i));
@@ -83,7 +83,7 @@ std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(
     }
   }
   if(!tempFields.empty()) {
-    auto firstTmpField = **(tempFields.begin());
+    const auto& firstTmpField = *(tempFields.begin());
     std::string fieldName = metadata.getFieldNameFromAccessID(firstTmpField.second.getAccessID());
     if(funArg == CodeGeneratorHelper::FunctionArgType::FT_Caller) {
       strides.push_back("m_" + fieldName + ".get_storage_info_ptr()->template begin<0>()," + "m_" +
@@ -105,9 +105,9 @@ iir::Extents CodeGeneratorHelper::computeTempMaxWriteExtent(iir::Stencil const& 
       std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
           [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
   iir::Extents maxExtents{0, 0, 0, 0, 0, 0};
-  for(auto field : tempFields) {
-    DAWN_ASSERT((*field).second.field.getWriteExtentsRB().is_initialized());
-    maxExtents.merge(*((*field).second.field.getWriteExtentsRB()));
+  for(const auto& fieldPair : tempFields) {
+    DAWN_ASSERT(fieldPair.second.field.getWriteExtentsRB().is_initialized());
+    maxExtents.merge(*(fieldPair.second.field.getWriteExtentsRB()));
   }
   return maxExtents;
 }

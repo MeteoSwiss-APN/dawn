@@ -34,8 +34,8 @@ namespace {
 class SIRTest : public ::testing::Test {
 protected:
   virtual void SetUp() override {
-    sir1 = make_unique<SIR>();
-    sir2 = make_unique<SIR>();
+    sir1 = std::make_unique<SIR>();
+    sir2 = std::make_unique<SIR>();
   }
 
   virtual void TearDown() override {
@@ -43,8 +43,8 @@ protected:
     sir2.release();
   }
 
-  std::unique_ptr<SIR> sir1 = make_unique<SIR>();
-  std::unique_ptr<SIR> sir2 = make_unique<SIR>();
+  std::unique_ptr<SIR> sir1 = std::make_unique<SIR>();
+  std::unique_ptr<SIR> sir2 = std::make_unique<SIR>();
 };
 
 class SIRStencilTest : public SIRTest {

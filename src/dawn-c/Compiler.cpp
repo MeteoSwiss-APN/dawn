@@ -77,7 +77,7 @@ dawnTranslationUnit_t* dawnCompile(const char* SIR, size_t size, const dawnOptio
         dawn::SIRSerializer::deserializeFromString(sirStr, dawn::SIRSerializer::SK_Byte);
 
     // Prepare options
-    std::unique_ptr<dawn::Options> compileOptions = dawn::make_unique<dawn::Options>();
+    std::unique_ptr<dawn::Options> compileOptions = std::make_unique<dawn::Options>();
     if(options)
       toConstOptionsWrapper(options)->setDawnOptions(compileOptions.get());
 

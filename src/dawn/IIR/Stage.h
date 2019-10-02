@@ -21,6 +21,7 @@
 #include "dawn/IIR/Interval.h"
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/ArrayRef.h"
+#include "dawn/Support/ContainerUtils.h"
 #include <boost/optional.hpp>
 #include <deque>
 #include <memory>
@@ -148,6 +149,8 @@ public:
   ///
   /// The fields are computed during `Stage::update`.
   const std::unordered_map<int, Field>& getFields() const { return derivedInfo_.fields_; }
+
+  std::map<int, Field> getOrderedFields() const { return support::orderMap(derivedInfo_.fields_); }
 
   /// @brief Update the fields and global variables
   ///

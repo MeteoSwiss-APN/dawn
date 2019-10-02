@@ -36,6 +36,24 @@ json::json Field::jsonDump() const {
   return node;
 }
 
+void mergeField(const Field& sField, Field& dField) {
+
+  // Adjust the Intend
+  if(dField.getIntend() != sField.getIntend())
+    dField.setIntend(Field::IK_InputOutput);
+
+  // field accounting for extents of the accesses plus the base extent (i.e. normally redundant
+  // computations of the stages)
+
+  // Merge the Extent
+  dField.mergeReadExtentsRB(sField.getReadExtentsRB());
+  dField.mergeWriteExtentsRB(sField.getWriteExtentsRB());
+
+  dField.mergeReadExtents(sField.getReadExtents());
+  dField.mergeWriteExtents(sField.getWriteExtents());
+  dField.extendInterval(sField.getInterval());
+}
+
 void mergeFields(std::unordered_map<int, Field> const& sourceFields,
                  std::unordered_map<int, Field>& destinationFields,
                  boost::optional<Extents> baseExtents) {
@@ -57,20 +75,7 @@ void mergeFields(std::unordered_map<int, Field> const& sourceFields,
 
     auto it = destinationFields.find(sField.getAccessID());
     if(it != destinationFields.end()) {
-      // Adjust the Intend
-      if(it->second.getIntend() != sField.getIntend())
-        it->second.setIntend(Field::IK_InputOutput);
-
-      // field accounting for extents of the accesses plus the base extent (i.e. normally redundant
-      // computations of the stages)
-
-      // Merge the Extent
-      it->second.mergeReadExtentsRB(sField.getReadExtentsRB());
-      it->second.mergeWriteExtentsRB(sField.getWriteExtentsRB());
-
-      it->second.mergeReadExtents(sField.getReadExtents());
-      it->second.mergeWriteExtents(sField.getWriteExtents());
-      it->second.extendInterval(sField.getInterval());
+      mergeField(sField, it->second);
     } else {
 
       // add the baseExtent of the field (i.e. normally redundant computations of a stage)

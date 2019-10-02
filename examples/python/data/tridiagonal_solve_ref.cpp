@@ -206,12 +206,6 @@ public:
       return total_time();
     }
 
-    virtual void run() {
-    }
-
-    virtual void sync_storages() {
-    }
-
     virtual ~sbase() {
     }
   };
@@ -225,37 +219,19 @@ public:
     using tmp_meta_data_t = storage_traits_t::storage_info_t< 0, 5, tmp_halo_t >;
     using tmp_storage_t = storage_traits_t::data_store_t< float_type, tmp_meta_data_t>;
     const gridtools::clang::domain& m_dom;
-
-    // storage declarations
-    storage_ijk_t& m_a;
-    storage_ijk_t& m_b;
-    storage_ijk_t& m_c;
-    storage_ijk_t& m_d;
-
-    // temporary storage declarations
   public:
 
-    stencil_49(const gridtools::clang::domain& dom_, storage_ijk_t& a_, storage_ijk_t& b_, storage_ijk_t& c_, storage_ijk_t& d_) : sbase("stencil_49"), m_dom(dom_), m_a(a_), m_b(b_), m_c(c_), m_d(d_){}
+    stencil_49(const gridtools::clang::domain& dom_, storage_ijk_t& a_, storage_ijk_t& b_, storage_ijk_t& c_, storage_ijk_t& d_) : sbase("stencil_49"), m_dom(dom_){}
 
-    ~stencil_49() {
-    }
-
-    void sync_storages() {
-      m_a.sync();
-      m_b.sync();
-      m_c.sync();
-      m_d.sync();
-    }
-
-    virtual void run() {
+    void run(storage_ijk_t a_ds, storage_ijk_t b_ds, storage_ijk_t c_ds, storage_ijk_t d_ds) {
 
       // starting timers
       start();
       {;
-      gridtools::data_view<storage_ijk_t> a= gridtools::make_device_view(m_a);
-      gridtools::data_view<storage_ijk_t> b= gridtools::make_device_view(m_b);
-      gridtools::data_view<storage_ijk_t> c= gridtools::make_device_view(m_c);
-      gridtools::data_view<storage_ijk_t> d= gridtools::make_device_view(m_d);
+      gridtools::data_view<storage_ijk_t> a= gridtools::make_device_view(a_ds);
+      gridtools::data_view<storage_ijk_t> b= gridtools::make_device_view(b_ds);
+      gridtools::data_view<storage_ijk_t> c= gridtools::make_device_view(c_ds);
+      gridtools::data_view<storage_ijk_t> d= gridtools::make_device_view(d_ds);
       const unsigned int nx = m_dom.isize() - m_dom.iminus() - m_dom.iplus();
       const unsigned int ny = m_dom.jsize() - m_dom.jminus() - m_dom.jplus();
       const unsigned int nz = m_dom.ksize() - m_dom.kminus() - m_dom.kplus();
@@ -264,11 +240,11 @@ public:
       const unsigned int nby = (ny + 1 - 1) / 1;
       const unsigned int nbz = 1;
       dim3 blocks(nbx, nby, nbz);
-      tridiagonal_solve_stencil49_ms71_kernel<<<blocks, threads>>>(nx,ny,nz,m_a.strides()[1],m_a.strides()[2],(a.data()+m_a.get_storage_info_ptr()->index(a.begin<0>(), a.begin<1>(),0 )),(b.data()+m_b.get_storage_info_ptr()->index(b.begin<0>(), b.begin<1>(),0 )),(c.data()+m_c.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+m_d.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )));
+      tridiagonal_solve_stencil49_ms71_kernel<<<blocks, threads>>>(nx,ny,nz,a_ds.strides()[1],a_ds.strides()[2],(a.data()+a_ds.get_storage_info_ptr()->index(a.begin<0>(), a.begin<1>(),0 )),(b.data()+b_ds.get_storage_info_ptr()->index(b.begin<0>(), b.begin<1>(),0 )),(c.data()+c_ds.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+d_ds.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )));
       };
       {;
-      gridtools::data_view<storage_ijk_t> c= gridtools::make_device_view(m_c);
-      gridtools::data_view<storage_ijk_t> d= gridtools::make_device_view(m_d);
+      gridtools::data_view<storage_ijk_t> c= gridtools::make_device_view(c_ds);
+      gridtools::data_view<storage_ijk_t> d= gridtools::make_device_view(d_ds);
       const unsigned int nx = m_dom.isize() - m_dom.iminus() - m_dom.iplus();
       const unsigned int ny = m_dom.jsize() - m_dom.jminus() - m_dom.jplus();
       const unsigned int nz = m_dom.ksize() - m_dom.kminus() - m_dom.kplus();
@@ -277,19 +253,15 @@ public:
       const unsigned int nby = (ny + 1 - 1) / 1;
       const unsigned int nbz = 1;
       dim3 blocks(nbx, nby, nbz);
-      tridiagonal_solve_stencil49_ms72_kernel<<<blocks, threads>>>(nx,ny,nz,m_c.strides()[1],m_c.strides()[2],(c.data()+m_c.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+m_d.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )));
+      tridiagonal_solve_stencil49_ms72_kernel<<<blocks, threads>>>(nx,ny,nz,c_ds.strides()[1],c_ds.strides()[2],(c.data()+c_ds.get_storage_info_ptr()->index(c.begin<0>(), c.begin<1>(),0 )),(d.data()+d_ds.get_storage_info_ptr()->index(d.begin<0>(), d.begin<1>(),0 )));
       };
 
       // stopping timers
       pause();
     }
-
-    sbase* get_stencil() {
-      return this;
-    }
   };
   static constexpr const char* s_name = "tridiagonal_solve";
-  sbase* m_stencil_49;
+  stencil_49* m_stencil_49;
 public:
 
   tridiagonal_solve(const tridiagonal_solve&) = delete;
@@ -300,27 +272,36 @@ public:
 
   tridiagonal_solve(const gridtools::clang::domain& dom, storage_ijk_t& a, storage_ijk_t& b, storage_ijk_t& c, storage_ijk_t& d) : m_stencil_49(new stencil_49(dom,a,b,c,d) ){}
 
-  void run() {
-    sync_storages();
-    m_stencil_49->run();
-;
-    sync_storages();
+  template<typename S>
+  void sync_storages(S field) {
+    field.sync();
   }
 
-  void sync_storages() {
-    m_stencil_49->sync_storages();
+  template<typename S0, typename ... S>
+  void sync_storages(S0 f0, S... fields) {
+    f0.sync();
+    sync_storages(fields...);
+  }
+
+  void run(storage_ijk_t a, storage_ijk_t b, storage_ijk_t c, storage_ijk_t d) {
+    sync_storages(a,b,c,d);
+    m_stencil_49->run(a,b,c,d);
+;
+    sync_storages(a,b,c,d);
   }
 
   std::string get_name()  const {
     return std::string(s_name);
   }
 
-  std::vector<sbase*> getStencils() {
-    return std::vector<sbase*>({m_stencil_49});
-  }
-
   void reset_meters() {
 m_stencil_49->reset();  }
+
+  double get_total_time() {
+    double res = 0;
+    res +=m_stencil_49->get_time();
+    return res;
+  }
 };
 } // namespace cuda
 } // namespace dawn_generated

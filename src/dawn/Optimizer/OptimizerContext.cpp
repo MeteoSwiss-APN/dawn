@@ -139,7 +139,7 @@ public:
   void makeNewStencil() {
     int StencilID = instantiation_->nextUID();
     instantiation_->getIIR()->insertChild(
-        make_unique<Stencil>(metadata_, sirStencil_->Attributes, StencilID),
+        std::make_unique<Stencil>(metadata_, sirStencil_->Attributes, StencilID),
         instantiation_->getIIR());
     // We create a paceholder stencil-call for CodeGen to know wehere we need to insert calls to
     // this stencil
@@ -372,12 +372,12 @@ public:
     std::shared_ptr<iir::AST> ast = cloneAST ? verticalRegion->Ast->clone() : verticalRegion->Ast;
 
     // Create the new multi-stage
-    std::unique_ptr<MultiStage> multiStage = make_unique<MultiStage>(
+    std::unique_ptr<MultiStage> multiStage = std::make_unique<MultiStage>(
         metadata_, verticalRegion->LoopOrder == sir::VerticalRegion::LK_Forward
                        ? LoopOrderKind::LK_Forward
                        : LoopOrderKind::LK_Backward);
     std::unique_ptr<Stage> stage =
-        make_unique<Stage>(metadata_, instantiation_->nextUID(), interval);
+        std::make_unique<Stage>(metadata_, instantiation_->nextUID(), interval);
 
     DAWN_LOG(INFO) << "Processing vertical region at " << verticalRegion->Loc;
 
@@ -530,6 +530,9 @@ public:
   }
   void visit(const std::shared_ptr<iir::StencilFunArgExpr>&) override {
     DAWN_ASSERT_MSG(0, "StencilFunArgExpr not allowed in this context");
+  }
+  void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>&) override {
+    DAWN_ASSERT_MSG(0, "ReductionOverNeighborExpr not allowed in this context");
   }
 
   void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {

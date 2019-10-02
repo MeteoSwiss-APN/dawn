@@ -13,8 +13,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/AccessComputation.h"
-#include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
+#include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/StatementAccessesPair.h"
@@ -70,7 +70,7 @@ public:
   AccessMapper(const iir::StencilMetaInformation& metadata, const std::shared_ptr<iir::Stmt>& stmt,
                std::shared_ptr<iir::StencilFunctionInstantiation> stencilFun = nullptr)
       : metadata_(metadata), stencilFun_(stencilFun) {
-    curStatementStack_.push_back(make_unique<CurrentStatement>(stmt));
+    curStatementStack_.push_back(std::make_unique<CurrentStatement>(stmt));
   }
 
   /// @brief Get the stencil function instantiation from the `StencilFunCallExpr`
@@ -303,6 +303,10 @@ public:
 
     removeLastChildAccesses();
   }
+  virtual void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override {
+    expr->getRhs()->accept(*this);
+    expr->getInit()->accept(*this);
+  }
 
   virtual void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override {
     DAWN_ASSERT_MSG(0, "VerticalRegionDeclStmt not allowed in this context");
@@ -330,7 +334,7 @@ public:
 
     // Compute the accesses of the stencil function
     stencilFunCalls_.push(
-        make_unique<StencilFunctionCallScope>(getStencilFunctionInstantiation(expr)));
+        std::make_unique<StencilFunctionCallScope>(getStencilFunctionInstantiation(expr)));
 
     std::shared_ptr<iir::StencilFunctionInstantiation> curStencilFunCall =
         stencilFunCalls_.top()->FunctionInstantiation;

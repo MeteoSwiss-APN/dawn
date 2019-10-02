@@ -143,6 +143,12 @@ public:
       stmt->getElseStmt()->accept(*this);
     }
   }
+  void visit(const std::shared_ptr<ReductionOverNeighborExpr>& expr) override {
+    ss_ << "Reduce (" << expr->getOp() << ", init = ";
+    expr->getInit()->accept(*this);
+    ss_ << "): ";
+    expr->getRhs()->accept(*this);
+  }
 
   void visit(const std::shared_ptr<UnaryOperator>& expr) override {
     ss_ << "(";

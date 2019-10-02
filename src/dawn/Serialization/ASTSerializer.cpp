@@ -27,9 +27,9 @@ using namespace dawn;
 namespace {
 std::unique_ptr<ast::StmtData> makeData(ast::StmtData::DataType dataType) {
   if(dataType == ast::StmtData::SIR_DATA_TYPE)
-    return make_unique<sir::SIRStmtData>();
+    return std::make_unique<sir::SIRStmtData>();
   else
-    return make_unique<iir::IIRStmtData>();
+    return std::make_unique<iir::IIRStmtData>();
 }
 
 void fillAccessExprDataFromProto(iir::IIRAccessExprData& data,
@@ -131,6 +131,9 @@ dawn::proto::statements::Stmt* ProtoStmtBuilder::getCurrentStmtProto() {
 dawn::proto::statements::Expr* ProtoStmtBuilder::getCurrentExprProto() {
   DAWN_ASSERT(!currentExprProto_.empty());
   return currentExprProto_.top();
+}
+void ProtoStmtBuilder::visit(const std::shared_ptr<ReductionOverNeighborExpr>& expr) {
+  DAWN_ASSERT_MSG(0, "Not implemented!");
 }
 
 void ProtoStmtBuilder::visit(const std::shared_ptr<BlockStmt>& stmt) {

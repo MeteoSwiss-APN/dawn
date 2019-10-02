@@ -69,12 +69,6 @@ public:
       return total_time();
     }
 
-    virtual void run() {
-    }
-
-    virtual void sync_storages() {
-    }
-
     virtual ~sbase() {
     }
   };
@@ -88,31 +82,17 @@ public:
     using tmp_meta_data_t = storage_traits_t::storage_info_t< 0, 5, tmp_halo_t >;
     using tmp_storage_t = storage_traits_t::data_store_t< float_type, tmp_meta_data_t>;
     const gridtools::clang::domain& m_dom;
-
-    // storage declarations
-    storage_ijk_t& m_in;
-    storage_ijk_t& m_out;
-
-    // temporary storage declarations
   public:
 
-    stencil_11(const gridtools::clang::domain& dom_, storage_ijk_t& in_, storage_ijk_t& out_) : sbase("stencil_11"), m_dom(dom_), m_in(in_), m_out(out_){}
+    stencil_11(const gridtools::clang::domain& dom_, storage_ijk_t& in_, storage_ijk_t& out_) : sbase("stencil_11"), m_dom(dom_){}
 
-    ~stencil_11() {
-    }
-
-    void sync_storages() {
-      m_in.sync();
-      m_out.sync();
-    }
-
-    virtual void run() {
+    void run(storage_ijk_t in_ds, storage_ijk_t out_ds) {
 
       // starting timers
       start();
       {;
-      gridtools::data_view<storage_ijk_t> in= gridtools::make_device_view(m_in);
-      gridtools::data_view<storage_ijk_t> out= gridtools::make_device_view(m_out);
+      gridtools::data_view<storage_ijk_t> in= gridtools::make_device_view(in_ds);
+      gridtools::data_view<storage_ijk_t> out= gridtools::make_device_view(out_ds);
       const unsigned int nx = m_dom.isize() - m_dom.iminus() - m_dom.iplus();
       const unsigned int ny = m_dom.jsize() - m_dom.jminus() - m_dom.jplus();
       const unsigned int nz = m_dom.ksize() - m_dom.kminus() - m_dom.kplus();
@@ -121,19 +101,15 @@ public:
       const unsigned int nby = (ny + 1 - 1) / 1;
       const unsigned int nbz = (m_dom.ksize()+4-1) / 4;
       dim3 blocks(nbx, nby, nbz);
-      copy_stencil_stencil11_ms19_kernel<<<blocks, threads>>>(nx,ny,nz,m_in.strides()[1],m_in.strides()[2],(in.data()+m_in.get_storage_info_ptr()->index(in.begin<0>(), in.begin<1>(),0 )),(out.data()+m_out.get_storage_info_ptr()->index(out.begin<0>(), out.begin<1>(),0 )));
+      copy_stencil_stencil11_ms19_kernel<<<blocks, threads>>>(nx,ny,nz,in_ds.strides()[1],in_ds.strides()[2],(in.data()+in_ds.get_storage_info_ptr()->index(in.begin<0>(), in.begin<1>(),0 )),(out.data()+out_ds.get_storage_info_ptr()->index(out.begin<0>(), out.begin<1>(),0 )));
       };
 
       // stopping timers
       pause();
     }
-
-    sbase* get_stencil() {
-      return this;
-    }
   };
   static constexpr const char* s_name = "copy_stencil";
-  sbase* m_stencil_11;
+  stencil_11* m_stencil_11;
 public:
 
   copy_stencil(const copy_stencil&) = delete;
@@ -144,27 +120,36 @@ public:
 
   copy_stencil(const gridtools::clang::domain& dom, storage_ijk_t& in, storage_ijk_t& out) : m_stencil_11(new stencil_11(dom,in,out) ){}
 
-  void run() {
-    sync_storages();
-    m_stencil_11->run();
-;
-    sync_storages();
+  template<typename S>
+  void sync_storages(S field) {
+    field.sync();
   }
 
-  void sync_storages() {
-    m_stencil_11->sync_storages();
+  template<typename S0, typename ... S>
+  void sync_storages(S0 f0, S... fields) {
+    f0.sync();
+    sync_storages(fields...);
+  }
+
+  void run(storage_ijk_t in, storage_ijk_t out) {
+    sync_storages(in,out);
+    m_stencil_11->run(in,out);
+;
+    sync_storages(in,out);
   }
 
   std::string get_name()  const {
     return std::string(s_name);
   }
 
-  std::vector<sbase*> getStencils() {
-    return std::vector<sbase*>({m_stencil_11});
-  }
-
   void reset_meters() {
 m_stencil_11->reset();  }
+
+  double get_total_time() {
+    double res = 0;
+    res +=m_stencil_11->get_time();
+    return res;
+  }
 };
 } // namespace cuda
 } // namespace dawn_generated

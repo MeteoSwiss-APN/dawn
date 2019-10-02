@@ -14,6 +14,7 @@
 
 #include "dawn/CodeGen/GridTools/ASTStencilDesc.h"
 #include "dawn/CodeGen/CXXUtil.h"
+#include "dawn/CodeGen/GridTools/CodeGenUtils.h"
 #include "dawn/CodeGen/StencilFunctionAsBCGenerator.h"
 #include "dawn/IIR/AST.h"
 #include "dawn/IIR/ASTExpr.h"
@@ -23,10 +24,12 @@ namespace dawn {
 namespace codegen {
 namespace gt {
 
-ASTStencilDesc::ASTStencilDesc(const iir::StencilMetaInformation& metadata,
-                               const CodeGenProperties& codeGenProperties,
-                               const std::unordered_map<int, std::string>& stencilIdToArguments)
-    : ASTCodeGenCXX(), metadata_(metadata), codeGenProperties_(codeGenProperties),
+ASTStencilDesc::ASTStencilDesc(
+    const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
+    const CodeGenProperties& codeGenProperties,
+    const std::unordered_map<int, std::string>& stencilIdToArguments)
+    : ASTCodeGenCXX(), instantiation_(stencilInstantiation),
+      metadata_(stencilInstantiation->getMetaData()), codeGenProperties_(codeGenProperties),
       stencilIdToArguments_(stencilIdToArguments) {}
 
 ASTStencilDesc::~ASTStencilDesc() {}
@@ -58,11 +61,17 @@ void ASTStencilDesc::visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& s
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) {
-  int StencilID = metadata_.getStencilIDFromStencilCallStmt(stmt);
+  int stencilID = metadata_.getStencilIDFromStencilCallStmt(stmt);
+
+  const auto& stencil = instantiation_->getIIR()->getStencil(stencilID);
+  const auto fields = stencil.getOrderedFields();
+  const auto& globalsMap = instantiation_->getIIR()->getGlobalVariableMap();
+  auto plchdrs = CodeGenUtils::buildPlaceholderList(metadata_, fields, globalsMap, true);
 
   std::string stencilName =
-      codeGenProperties_.getStencilName(StencilContext::SC_Stencil, StencilID);
-  ss_ << std::string(indent_, ' ') << "m_" << stencilName << ".get_stencil()->run();\n";
+      codeGenProperties_.getStencilName(StencilContext::SC_Stencil, stencilID);
+  ss_ << std::string(indent_, ' ') << "m_" << stencilName
+      << ".get_stencil()->run(" + RangeToString(",", "", "")(plchdrs) + "); " << std::endl;
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) {
@@ -78,6 +87,9 @@ void ASTStencilDesc::visit(const std::shared_ptr<iir::IfStmt>& stmt) { Base::vis
 
 // TODO use the forwarding visitor?
 void ASTStencilDesc::visit(const std::shared_ptr<iir::UnaryOperator>& expr) { Base::visit(expr); }
+void ASTStencilDesc::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
+  Base::visit(expr);
+}
 
 void ASTStencilDesc::visit(const std::shared_ptr<iir::BinaryOperator>& expr) { Base::visit(expr); }
 

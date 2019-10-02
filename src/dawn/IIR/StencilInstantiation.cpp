@@ -11,7 +11,6 @@
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
-
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/AST/ASTStringifier.h"
 #include "dawn/IIR/AST.h"
@@ -50,7 +49,7 @@ namespace iir {
 StencilInstantiation::StencilInstantiation(
     sir::GlobalVariableMap const& globalVariables,
     std::vector<std::shared_ptr<sir::StencilFunction>> const& stencilFunctions)
-    : metadata_(globalVariables), IIR_(make_unique<IIR>(globalVariables, stencilFunctions)) {}
+    : metadata_(globalVariables), IIR_(std::make_unique<IIR>(globalVariables, stencilFunctions)) {}
 
 StencilMetaInformation& StencilInstantiation::getMetaData() { return metadata_; }
 
@@ -63,7 +62,7 @@ std::shared_ptr<StencilInstantiation> StencilInstantiation::clone() const {
   stencilInstantiation->metadata_.clone(metadata_);
 
   stencilInstantiation->IIR_ =
-      make_unique<iir::IIR>(stencilInstantiation->getIIR()->getGlobalVariableMap(),
+      std::make_unique<iir::IIR>(stencilInstantiation->getIIR()->getGlobalVariableMap(),
                             stencilInstantiation->getIIR()->getStencilFunctions());
   IIR_->clone(stencilInstantiation->IIR_);
 
@@ -88,12 +87,24 @@ const sir::Value& StencilInstantiation::getGlobalVariableValue(const std::string
 }
 
 bool StencilInstantiation::isIDAccessedMultipleStencils(int accessID) const {
-
-  int count = 0;
+  bool wasAccessed = false;
   for(const auto& stencil : IIR_->getChildren()) {
     if(stencil->hasFieldAccessID(accessID)) {
-      if(++count > 1)
+      if(wasAccessed)
         return true;
+      wasAccessed = true;
+    }
+  }
+  return false;
+}
+
+bool StencilInstantiation::isIDAccessedMultipleMSs(int accessID) const {
+  bool wasAccessed = false;
+  for(const auto& ms : iterateIIROver<MultiStage>(*IIR_)) {
+    if(ms->hasField(accessID)) {
+      if(wasAccessed)
+        return true;
+      wasAccessed = true;
     }
   }
   return false;

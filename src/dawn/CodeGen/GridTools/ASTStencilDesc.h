@@ -30,6 +30,7 @@ namespace gt {
 /// @ingroup gt
 class ASTStencilDesc : public ASTCodeGenCXX {
 protected:
+  const std::shared_ptr<iir::StencilInstantiation>& instantiation_;
   const iir::StencilMetaInformation& metadata_;
 
   /// StencilID to the name of the generated stencils for this ID
@@ -39,7 +40,7 @@ protected:
 public:
   using Base = ASTCodeGenCXX;
 
-  ASTStencilDesc(const iir::StencilMetaInformation& metadata,
+  ASTStencilDesc(const std::shared_ptr<iir::StencilInstantiation>& stencilInstantiation,
                  const CodeGenProperties& codeGenProperties,
                  const std::unordered_map<int, std::string>& stencilIdToArguments);
 
@@ -59,6 +60,7 @@ public:
 
   /// @name Expression implementation
   /// @{
+  virtual void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override;
   virtual void visit(const std::shared_ptr<iir::UnaryOperator>& expr) override;
   virtual void visit(const std::shared_ptr<iir::BinaryOperator>& expr) override;
   virtual void visit(const std::shared_ptr<iir::AssignmentExpr>& expr) override;

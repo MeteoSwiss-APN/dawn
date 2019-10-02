@@ -15,6 +15,7 @@
 #define DAWN_SUPPORT_INDEXRANGE_H
 
 #include <functional>
+#include <iterator>
 #include <type_traits>
 
 namespace dawn {
@@ -30,7 +31,6 @@ private:
 
 public:
   IteratorWrap(T& t, int idx) : t_(t), idx_(idx) {}
-  int idx() const { return idx_; }
   T& operator*() { return t_; }
   T* operator->() { return &t_; }
 
@@ -49,22 +49,49 @@ struct IndexRangeIterator {
   using iterator =
       typename std::conditional<std::is_const<Cont>::value, typename Cont::const_iterator,
                                 typename Cont::iterator>::type;
+  using difference_type = typename iterator::difference_type;
+
+  // TODO make this private
+private:
   iterator it_;
+  iterator begin_;
   iterator end_;
   std::function<bool(T const&)> pred_;
-  int idx_ = -1;
+  int idx_ = 0;
+
+public:
+  /// @brief constructor
+  IndexRangeIterator(Cont& cont, std::function<bool(T const&)> pred)
+      : it_(nextValid(cont.begin(), cont.end(), pred)), begin_(cont.begin()), end_(cont.end()),
+        pred_(pred) {}
 
   /// @brief constructor
-  IndexRangeIterator(iterator it, iterator end, std::function<bool(T const&)> pred, int index)
-      : it_(nextValid(it, end, pred)), end_(end), pred_(pred), idx_(index) {}
+  IndexRangeIterator(iterator it, iterator begin, iterator end, std::function<bool(T const&)> pred,
+                     int index)
+      : it_(nextValid(it, end, pred)), begin_(begin), end_(end), pred_(pred), idx_(index) {}
 
   /// @brief it dereferences the value of an iterator
   /// @returns an IteratorWrap
-  IteratorWrap<T> operator*() { return IteratorWrap<T>(*it_, idx_); }
+  T& operator*() { return *it_; }
+
   /// @returns the next valid iterators, for which the predicate evaluates to true
   static iterator nextValid(iterator it, iterator end, std::function<bool(T const&)> pred) {
     while((it != end) && (!pred(*it)))
       it++;
+    return (it);
+  }
+
+  void setToEnd() {
+    while(it_ != end_)
+      this->operator++();
+  }
+
+  int idx() const { return idx_; }
+
+  /// @returns the previous valid iterators, for which the predicate evaluates to true
+  static iterator prevValid(iterator it, iterator begin, std::function<bool(T const&)> pred) {
+    while((it != begin) && (!pred(*it)))
+      it--;
     return (it);
   }
 
@@ -75,13 +102,22 @@ struct IndexRangeIterator {
     it_ = nextValid(it_, end_, pred_);
     return (*this);
   }
-};
+  /// @brief increment the iterator
+  IndexRangeIterator& operator--() {
+    --it_;
+    idx_--;
+    it_ = prevValid(it_, begin_, pred_);
+    return (*this);
+  }
 
-/// @brief comparison operators
-template <typename Cont>
-bool operator!=(IndexRangeIterator<Cont> l, IndexRangeIterator<Cont> r) {
-  return l.it_ != r.it_;
-}
+  friend typename IndexRangeIterator::difference_type distance(IndexRangeIterator first,
+                                                               IndexRangeIterator last) {
+    return last.idx() - first.idx();
+  }
+
+  /// @brief comparison operators
+  friend bool operator!=(IndexRangeIterator l, IndexRangeIterator r) { return l.it_ != r.it_; }
+};
 
 /// @brief range class to be used within C++11 for range loops,
 /// that accepts predicates to filter elements of the iteration.
@@ -121,20 +157,22 @@ struct IndexRange {
 
   /// @returns iterator to the end of the range
   IndexRangeIterator<Cont> end() {
-    return IndexRangeIterator<Cont>(cont_.end(), cont_.end(), pred_, size_ - 1);
+    auto it = IndexRangeIterator<Cont>(cont_, pred_);
+    it.setToEnd();
+    return it;
   }
   /// @returns iterator to the end of the range
   IndexRangeIterator<const Cont> end() const {
-    return IndexRangeIterator<const Cont>(cont_.end(), cont_.end(), pred_, size_ - 1);
+    auto it = IndexRangeIterator<Cont>(cont_, pred_);
+    it.setToEnd();
+    return it;
   }
 
   /// @returns iterator to the beginning of the range
-  IndexRangeIterator<Cont> begin() {
-    return IndexRangeIterator<Cont>(cont_.begin(), cont_.end(), pred_, 0);
-  }
+  IndexRangeIterator<Cont> begin() { return IndexRangeIterator<Cont>(cont_, pred_); }
   /// @returns iterator to the beginning of the range
   IndexRangeIterator<const Cont> begin() const {
-    return IndexRangeIterator<const Cont>(cont_.begin(), cont_.end(), pred_, 0);
+    return IndexRangeIterator<const Cont>(cont_, pred_);
   }
 
   /// @returns true if range contains no elements (compatible with the predicate)
@@ -168,5 +206,20 @@ IndexRange<Cont> makeRange(Cont& cont, std::function<bool(typename Cont::value_t
 }
 
 } // namespace dawn
+
+namespace std {
+template <typename Cont>
+struct iterator_traits<dawn::IndexRangeIterator<Cont>> {
+  using difference_type =
+      typename iterator_traits<typename dawn::IndexRangeIterator<Cont>::iterator>::difference_type;
+  using value_type =
+      typename iterator_traits<typename dawn::IndexRangeIterator<Cont>::iterator>::value_type;
+  using pointer =
+      typename iterator_traits<typename dawn::IndexRangeIterator<Cont>::iterator>::pointer;
+  using iterator_category = typename iterator_traits<
+      typename dawn::IndexRangeIterator<Cont>::iterator>::iterator_category;
+};
+
+} // namespace std
 
 #endif

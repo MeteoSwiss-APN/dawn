@@ -565,9 +565,7 @@ void IIRSerializer::deserializeMetaData(std::shared_ptr<iir::StencilInstantiatio
       astStencilCall->Args.push_back(protoFieldName);
     }
 
-    // auto stmt = declStmtFinder.stencilCallDecl[call.stencil_call_decl_stmt().id()];
-    auto stmt =
-        iir::makeStencilCallDeclStmt(astStencilCall, makeLocation(call.stencil_call_decl_stmt()));
+    auto stmt = declStmtFinder.stencilCallDecl[call.stencil_call_decl_stmt().id()];
     stmt->setID(call.stencil_call_decl_stmt().id());
     metadata.addStencilCallStmt(stmt, IDToCall.first);
   }
@@ -639,9 +637,10 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
   for(const auto& protoStencils : protoIIR.stencils()) {
     int mssPos = 0;
     sir::Attr attributes;
-    target->getIIR()->insertChild(
-        make_unique<iir::Stencil>(target->getMetaData(), attributes, protoStencils.stencilid()),
-        target->getIIR());
+
+    target->getIIR()->insertChild(std::make_unique<iir::Stencil>(target->getMetaData(), attributes,
+                                                                 protoStencils.stencilid()),
+                                  target->getIIR());
     const auto& IIRStencil = target->getIIR()->getChild(stencilPos++);
 
     for(auto attribute : protoStencils.attr().attributes()) {
@@ -679,7 +678,8 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
       if(protoMSS.looporder() == proto::iir::MultiStage_LoopOrder::MultiStage_LoopOrder_Parallel) {
         looporder = iir::LoopOrderKind::LK_Parallel;
       }
-      (IIRStencil)->insertChild(make_unique<iir::MultiStage>(target->getMetaData(), looporder));
+      (IIRStencil)
+          ->insertChild(std::make_unique<iir::MultiStage>(target->getMetaData(), looporder));
 
       const auto& IIRMSS = (IIRStencil)->getChild(mssPos++);
       IIRMSS->setID(protoMSS.multistageid());
@@ -692,11 +692,11 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
         int doMethodPos = 0;
         int stageID = protoStage.stageid();
 
-        IIRMSS->insertChild(make_unique<iir::Stage>(target->getMetaData(), stageID));
+        IIRMSS->insertChild(std::make_unique<iir::Stage>(target->getMetaData(), stageID));
         const auto& IIRStage = IIRMSS->getChild(stagePos++);
 
         for(const auto& protoDoMethod : protoStage.domethods()) {
-          (IIRStage)->insertChild(make_unique<iir::DoMethod>(
+          (IIRStage)->insertChild(std::make_unique<iir::DoMethod>(
               *makeInterval(protoDoMethod.interval()), target->getMetaData()));
 
           auto& IIRDoMethod = (IIRStage)->getChild(doMethodPos++);
@@ -712,7 +712,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
             for(auto readAccess : protoStmtAccessPair.accesses().readaccess()) {
               callerAccesses->addReadExtent(readAccess.first, makeExtents(&readAccess.second));
             }
-            auto insertee = make_unique<iir::StatementAccessesPair>(stmt);
+            auto insertee = std::make_unique<iir::StatementAccessesPair>(stmt);
             insertee->getStatement()->getData<iir::IIRStmtData>().CallerAccesses =
                 std::move(callerAccesses);
             (IIRDoMethod)->insertChild(std::move(insertee));
