@@ -408,10 +408,10 @@ def make_if_stmt(cond_part: StmtType, then_part: StmtType, else_part: StmtType =
     :param else_part:   Else part.
     """
     stmt = IfStmt()
-    stmt.expr.CopyFrom(make_stmt(cond_part))
-    stmt.expr.CopyFrom(make_stmt(then_part))
+    stmt.cond_part.CopyFrom(make_stmt(cond_part))
+    stmt.then_part.CopyFrom(make_stmt(then_part))
     if else_part:
-        stmt.expr.CopyFrom(make_stmt(else_part))
+        stmt.else_part.CopyFrom(make_stmt(else_part))
     return stmt
 
 
