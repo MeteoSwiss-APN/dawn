@@ -32,15 +32,16 @@ std::string CodeGen::generateGlobals(stencilInstantiationContext& context,
                                      std::string outer_namespace_, std::string inner_namespace_) {
 
   std::stringstream ss;
-  Namespace outerNamespace(outer_namespace_, ss);                                          
-  std::string globals = generateGlobals(context, inner_namespace_);        
-  ss << globals;
-  outerNamespace.commit();
+  std::string globals = generateGlobals(context, inner_namespace_);
+  if(globals != "") {
+    Namespace outerNamespace(outer_namespace_, ss);
+    ss << globals;
+    outerNamespace.commit();
+  }
   return ss.str();
 }
 
-std::string CodeGen::generateGlobals(stencilInstantiationContext& context,
-                                     std::string namespace_) {
+std::string CodeGen::generateGlobals(stencilInstantiationContext& context, std::string namespace_) {
   if(context.size() > 0) {
     const auto& globalsMap = context.begin()->second->getIIR()->getGlobalVariableMap();
     return generateGlobals(globalsMap, namespace_);
@@ -55,7 +56,7 @@ std::string CodeGen::generateGlobals(const sir::GlobalVariableMap& globalsMap,
 
   std::stringstream ss;
 
-  Namespace cudaNamespace(namespace_, ss);  //why is this named cudaNamespace?
+  Namespace cudaNamespace(namespace_, ss); // why is this named cudaNamespace?
 
   Struct GlobalsStruct("globals", ss);
 

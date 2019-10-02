@@ -346,7 +346,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
         for(const auto& stagePtr : multiStage.getChildren()) {
           const iir::Stage& stage = *stagePtr;
 
-          StencilRunMethod.addBlockStatement("for (auto const& t : getTriangles(m_mesh))", [&]() {
+          StencilRunMethod.addBlockStatement("for (auto const& t : getCells(m_mesh))", [&]() {
             // Generate Do-Method
             for(const auto& doMethodPtr : stage.getChildren()) {
               const iir::DoMethod& doMethod = *doMethodPtr;
@@ -479,8 +479,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveIcoCodeGen::generateCode() {
   std::vector<std::string> ppDefines;
   ppDefines.push_back("#define GRIDTOOLS_CLANG_GENERATED 1");
   ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T CXXNAIVEICO");
-  ppDefines.push_back("#include \"my_interface.hpp\"");
-  ppDefines.push_back("using namespace MyInterface;");
+  ppDefines.push_back("#include <gridtools/clang_dsl.hpp>");
   DAWN_LOG(INFO) << "Done generating code";
 
   std::string filename = generateFileName(context_);

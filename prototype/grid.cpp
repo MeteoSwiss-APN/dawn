@@ -67,7 +67,7 @@ std::ostream& toVtk(std::string const& name, FaceData<double> const& f_data, Gri
   os << "SCALARS " << name << "  float 1\nLOOKUP_TABLE default\n";
   for(auto& f : grid.faces())
     if(inner_face(f))
-      os << f_data[f] << '\n';
+      os << f_data(f) << '\n';
   return os;
 }
 std::ostream& toVtk(std::string const& name, EdgeData<double> const& e_data, Grid const& grid,
