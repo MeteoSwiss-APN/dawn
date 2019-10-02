@@ -91,10 +91,12 @@ void compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
             // EXPECT_TRUE(lhsStmt->getStatement()->ASTStmt->equals(rhsStmt->getStatement()->ASTStmt.get()));
 
             // check the accesses
-            EXPECT_EQ(lhsStmt->getCallerAccesses()->getReadAccesses(),
-                      rhsStmt->getCallerAccesses()->getReadAccesses());
-            EXPECT_EQ(lhsStmt->getCallerAccesses()->getWriteAccesses(),
-                      rhsStmt->getCallerAccesses()->getWriteAccesses());
+            const auto& lhsCallerAccesses =
+                lhsStmt->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
+            const auto& rhsCallerAccesses =
+                rhsStmt->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
+            EXPECT_EQ(lhsCallerAccesses->getReadAccesses(), rhsCallerAccesses->getReadAccesses());
+            EXPECT_EQ(lhsCallerAccesses->getWriteAccesses(), rhsCallerAccesses->getWriteAccesses());
           }
         }
       }
@@ -108,8 +110,10 @@ void compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
     // EXPECT_TRUE(lhsControlFlowStmts[i]->getData<iir::ASTStmtData>().ASTStmt->equals(rhsControlFlowStmts[i]->ASTStmt.get()));
 
     if(lhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace) {
-      // ASSERT_TRUE(rhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace.get() != nullptr);
-      for(int j = 0, jsize = lhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace->size(); j < jsize; ++j) {
+      // ASSERT_TRUE(rhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace.get() !=
+      // nullptr);
+      for(int j = 0, jsize = lhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace->size();
+          j < jsize; ++j) {
         EXPECT_EQ(*lhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace->at(j),
                   *rhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace->at(j));
       }
@@ -120,8 +124,6 @@ void compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
 }
 
 void compareMetaData(iir::StencilMetaInformation& lhs, iir::StencilMetaInformation& rhs) {
-  EXPECT_EQ(lhs.getExprIDToAccessIDMap(), rhs.getExprIDToAccessIDMap());
-  EXPECT_EQ(lhs.getStmtIDToAccessIDMap(), rhs.getStmtIDToAccessIDMap());
   EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::FAT_Literal>(),
             rhs.getAccessesOfType<iir::FieldAccessType::FAT_Literal>());
   EXPECT_EQ(lhs.getAccessesOfType<iir::FieldAccessType::FAT_Field>(),

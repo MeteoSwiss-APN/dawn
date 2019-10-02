@@ -248,7 +248,7 @@ public:
 
       DAWN_ASSERT(!curStatementStack_.empty());
 
-      curStatementStack_.push_back(make_unique<CurrentStatement>(s));
+      curStatementStack_.push_back(std::make_unique<CurrentStatement>(s));
 
       // Process the statement
       s->accept(*this);
@@ -273,17 +273,17 @@ public:
   void visit(const std::shared_ptr<iir::IfStmt>& stmt) override {
     appendNewAccesses();
 
-    curStatementStack_.push_back(make_unique<CurrentStatement>(stmt->getCondStmt()));
+    curStatementStack_.push_back(std::make_unique<CurrentStatement>(stmt->getCondStmt()));
     stmt->getCondStmt()->accept(*this);
     curStatementStack_.pop_back();
 
     curStatementStack_.back()->IfCondExpr = stmt->getCondExpr();
 
-    curStatementStack_.push_back(make_unique<CurrentStatement>(stmt->getThenStmt()));
+    curStatementStack_.push_back(std::make_unique<CurrentStatement>(stmt->getThenStmt()));
     stmt->getThenStmt()->accept(*this);
     curStatementStack_.pop_back();
     if(stmt->hasElse()) {
-      curStatementStack_.push_back(make_unique<CurrentStatement>(stmt->getElseStmt()));
+      curStatementStack_.push_back(std::make_unique<CurrentStatement>(stmt->getElseStmt()));
       stmt->getElseStmt()->accept(*this);
       curStatementStack_.pop_back();
     }

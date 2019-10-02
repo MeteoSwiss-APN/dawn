@@ -15,6 +15,7 @@
 #include "dawn/CodeGen/CXXNaive-ico/ASTStencilFunctionParamVisitor.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
 #include "dawn/Support/Unreachable.h"
@@ -39,10 +40,7 @@ std::string ASTStencilFunctionParamVisitor::getName(const std::shared_ptr<iir::E
 }
 
 int ASTStencilFunctionParamVisitor::getAccessID(const std::shared_ptr<iir::Expr>& expr) const {
-  if(currentFunction_)
-    return currentFunction_->getAccessIDFromExpr(expr);
-  else
-    return metadata_.getAccessIDFromExpr(expr);
+  return iir::getAccessIDFromExpr(expr);
 }
 
 void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {}
@@ -60,9 +58,10 @@ void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<iir::StencilFun
 
 void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
 
-  std::string fieldName = (currentFunction_) ? currentFunction_->getOriginalNameFromCallerAccessID(
-                                                   currentFunction_->getAccessIDFromExpr(expr))
-                                             : getName(expr);
+  std::string fieldName =
+      (currentFunction_)
+          ? currentFunction_->getOriginalNameFromCallerAccessID(iir::getAccessIDFromExpr(expr))
+          : getName(expr);
 
   ss_ << ",param_wrapper<decltype(" << fieldName << ")>(" << fieldName << ","
       << "std::array<int, 3>{" << RangeToString(", ", "", "")(expr->getOffset())

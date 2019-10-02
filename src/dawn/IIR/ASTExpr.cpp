@@ -32,7 +32,7 @@ bool IIRAccessExprData::operator==(const IIRAccessExprData& rhs) {
 bool IIRAccessExprData::operator!=(const IIRAccessExprData& rhs) { return !(*this == rhs); }
 
 std::unique_ptr<ast::AccessExprData> IIRAccessExprData::clone() const {
-  return make_unique<IIRAccessExprData>(*this);
+  return std::make_unique<IIRAccessExprData>(*this);
 }
 
 int getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) {

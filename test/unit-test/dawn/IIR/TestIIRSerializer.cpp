@@ -88,10 +88,10 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
                 lhsStmt->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
             const auto& rhsCallerAccesses =
                 rhsStmt->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
-            IIR_EARLY_EXIT(lhsCallerAccesses->getReadAccesses().size() ==
-                           rhsCallerAccesses->getReadAccesses().size());
-            IIR_EARLY_EXIT(lhsCallerAccesses->getWriteAccesses().size() ==
-                           rhsCallerAccesses->getWriteAccesses().size());
+            IIR_EARLY_EXIT((lhsCallerAccesses->getReadAccesses().size() ==
+                            rhsCallerAccesses->getReadAccesses().size()));
+            IIR_EARLY_EXIT((lhsCallerAccesses->getWriteAccesses().size() ==
+                            rhsCallerAccesses->getWriteAccesses().size()));
             if(lhsCallerAccesses) {
               for(const auto& lhsPair : rhsCallerAccesses->getReadAccesses()) {
                 IIR_EARLY_EXIT(rhsCallerAccesses->getReadAccesses().count(lhsPair.first));

@@ -55,7 +55,7 @@ bool VarDeclStmtData::operator==(const VarDeclStmtData& rhs) {
 bool VarDeclStmtData::operator!=(const VarDeclStmtData& rhs) { return !(*this == rhs); }
 
 std::unique_ptr<ast::StmtData> VarDeclStmtData::clone() const {
-  return make_unique<VarDeclStmtData>(*this);
+  return std::make_unique<VarDeclStmtData>(*this);
 }
 
 //===------------------------------------------------------------------------------------------===//

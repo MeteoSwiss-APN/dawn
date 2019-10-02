@@ -425,7 +425,7 @@ public:
                                    std::is_base_of<AccessExprData, DataType>::value>::type>
   DataType& getData() {
     if(!data_)
-      data_ = make_unique<DataType>();
+      data_ = std::make_unique<DataType>();
     return *dynamic_cast<DataType*>(data_.get());
   }
 
@@ -529,7 +529,7 @@ public:
                                    std::is_base_of<AccessExprData, DataType>::value>::type>
   DataType& getData() {
     if(!data_)
-      data_ = make_unique<DataType>();
+      data_ = std::make_unique<DataType>();
     return *dynamic_cast<DataType*>(data_.get());
   }
 
@@ -585,7 +585,7 @@ public:
                                    std::is_base_of<AccessExprData, DataType>::value>::type>
   DataType& getData() {
     if(!data_)
-      data_ = make_unique<DataType>();
+      data_ = std::make_unique<DataType>();
     return *dynamic_cast<DataType*>(data_.get());
   }
 
