@@ -37,7 +37,7 @@ std::unique_ptr<DoMethod> DoMethod::clone() const {
   auto cloneMS = std::make_unique<DoMethod>(interval_, metaData_);
 
   cloneMS->setID(id_);
-  cloneMS->setDependencyGraph(derivedInfo_.dependencyGraph_);
+  cloneMS->derivedInfo_ = derivedInfo_.clone();
 
   cloneMS->cloneChildrenFrom(*this);
   return cloneMS;
@@ -86,6 +86,13 @@ void DoMethod::setInterval(const Interval& interval) { interval_ = interval; }
 
 const std::shared_ptr<DependencyGraphAccesses>& DoMethod::getDependencyGraph() const {
   return derivedInfo_.dependencyGraph_;
+}
+
+DoMethod::DerivedInfo DoMethod::DerivedInfo::clone() const {
+  DerivedInfo clone;
+  clone.fields_ = fields_;
+  clone.dependencyGraph_ = dependencyGraph_ ? dependencyGraph_->clone() : nullptr;
+  return clone;
 }
 
 void DoMethod::DerivedInfo::clear() { fields_.clear(); }

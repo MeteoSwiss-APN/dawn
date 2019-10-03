@@ -45,6 +45,8 @@ class DoMethod : public IIRNode<Stage, DoMethod, StatementAccessesPair> {
     DerivedInfo& operator=(DerivedInfo&&) = default;
     DerivedInfo& operator=(const DerivedInfo&) = default;
 
+    DerivedInfo clone() const;
+
     void clear();
 
     /// Declaration of the fields of this doMethod

@@ -106,7 +106,8 @@ std::shared_ptr<DependencyGraphAccesses> DependencyGraphAccesses::clone() const 
   graph->vertices_ = vertices_;
   graph->VertexIDToAccessIDMap_ = VertexIDToAccessIDMap_;
   for(const auto& edgeListPtr : adjacencyList_)
-    graph->adjacencyList_.push_back(std::make_shared<EdgeList>(*edgeListPtr));
+    graph->adjacencyList_.push_back(edgeListPtr ? std::make_shared<EdgeList>(*edgeListPtr)
+                                                : nullptr);
   return graph;
 }
 
