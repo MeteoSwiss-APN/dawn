@@ -438,7 +438,7 @@ public:
           metadata_.getFieldNameFromAccessID(accessID_), expr->getOffset());
       cloneStencilFun->getExpression()->insertArgument(arg);
 
-      arg->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(accessID_);
+      arg->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(accessID_);
     }
 
     for(int idx : expr->getArgumentMap()) {

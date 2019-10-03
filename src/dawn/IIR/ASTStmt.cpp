@@ -24,11 +24,11 @@ namespace iir {
 //===------------------------------------------------------------------------------------------===//
 
 IIRStmtData::IIRStmtData(const IIRStmtData& other) {
-  StackTrace = other.StackTrace ? boost::make_optional(*other.StackTrace) : other.StackTrace;
+  StackTrace = other.StackTrace ? std::make_optional(*other.StackTrace) : other.StackTrace;
   CallerAccesses =
-      other.CallerAccesses ? boost::make_optional(*other.CallerAccesses) : other.CallerAccesses;
+      other.CallerAccesses ? std::make_optional(*other.CallerAccesses) : other.CallerAccesses;
   CalleeAccesses =
-      other.CalleeAccesses ? boost::make_optional(*other.CalleeAccesses) : other.CalleeAccesses;
+      other.CalleeAccesses ? std::make_optional(*other.CalleeAccesses) : other.CalleeAccesses;
 }
 
 bool IIRStmtData::operator==(const IIRStmtData& rhs) {
@@ -46,7 +46,7 @@ std::unique_ptr<ast::StmtData> IIRStmtData::clone() const {
 //===------------------------------------------------------------------------------------------===//
 
 VarDeclStmtData::VarDeclStmtData(const VarDeclStmtData& other) : IIRStmtData(other) {
-  AccessID = other.AccessID ? boost::make_optional(*other.AccessID) : other.AccessID;
+  AccessID = other.AccessID ? std::make_optional(*other.AccessID) : other.AccessID;
 }
 
 bool VarDeclStmtData::operator==(const VarDeclStmtData& rhs) {
@@ -62,23 +62,23 @@ std::unique_ptr<ast::StmtData> VarDeclStmtData::clone() const {
 //     computeMaximumExtents
 //===------------------------------------------------------------------------------------------===//
 
-boost::optional<Extents> computeMaximumExtents(Stmt& stmt, const int accessID) {
-  boost::optional<Extents> extents;
+std::optional<Extents> computeMaximumExtents(Stmt& stmt, const int accessID) {
+  std::optional<Extents> extents;
 
   const auto& callerAccesses = stmt.getData<IIRStmtData>().CallerAccesses;
 
   if(callerAccesses->hasReadAccess(accessID) || callerAccesses->hasWriteAccess(accessID)) {
-    extents = boost::optional<Extents>();
+    extents = std::optional<Extents>();
 
     if(callerAccesses->hasReadAccess(accessID)) {
-      if(!extents.is_initialized())
-        extents = boost::make_optional(callerAccesses->getReadAccess(accessID));
+      if(!extents)
+        extents = std::make_optional(callerAccesses->getReadAccess(accessID));
       else
         extents->merge(callerAccesses->getReadAccess(accessID));
     }
     if(callerAccesses->hasWriteAccess(accessID)) {
-      if(!extents.is_initialized())
-        extents = boost::make_optional(callerAccesses->getWriteAccess(accessID));
+      if(!extents)
+        extents = std::make_optional(callerAccesses->getWriteAccess(accessID));
       else
         extents->merge(callerAccesses->getWriteAccess(accessID));
     }
@@ -86,9 +86,9 @@ boost::optional<Extents> computeMaximumExtents(Stmt& stmt, const int accessID) {
 
   for(auto const& child : stmt.getChildren()) {
     auto childExtent = computeMaximumExtents(*child, accessID);
-    if(!childExtent.is_initialized())
+    if(!childExtent)
       continue;
-    if(extents.is_initialized())
+    if(extents)
       extents->merge(*childExtent);
     else
       extents = childExtent;

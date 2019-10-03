@@ -23,6 +23,7 @@
 #include "dawn/Serialization/ASTSerializer.h"
 #include <fstream>
 #include <google/protobuf/util/json_util.h>
+#include <optional>
 
 namespace dawn {
 static proto::iir::Extents makeProtoExtents(dawn::iir::Extents const& extents) {
@@ -35,7 +36,7 @@ static proto::iir::Extents makeProtoExtents(dawn::iir::Extents const& extents) {
   return protoExtents;
 }
 static void setAccesses(proto::iir::Accesses* protoAccesses,
-                        const boost::optional<iir::Accesses>& accesses) {
+                        const std::optional<iir::Accesses>& accesses) {
   auto protoReadAccesses = protoAccesses->mutable_readaccess();
   for(auto IDExtentsPair : accesses->getReadAccesses())
     protoReadAccesses->insert({IDExtentsPair.first, makeProtoExtents(IDExtentsPair.second)});
@@ -114,15 +115,15 @@ static void setCache(proto::iir::Cache* protoCache, const iir::Cache& cache) {
   default:
     dawn_unreachable("unknown cache type");
   }
-  if(cache.getInterval().is_initialized()) {
+  if(cache.getInterval()) {
     auto sirInterval = cache.getInterval()->asSIRInterval();
     setInterval(protoCache->mutable_interval(), &sirInterval);
   }
-  if(cache.getEnclosingAccessedInterval().is_initialized()) {
+  if(cache.getEnclosingAccessedInterval()) {
     auto sirInterval = cache.getEnclosingAccessedInterval()->asSIRInterval();
     setInterval(protoCache->mutable_enclosingaccessinterval(), &sirInterval);
   }
-  if(cache.getWindow().is_initialized()) {
+  if(cache.getWindow()) {
     protoCache->mutable_cachewindow()->set_minus(cache.getWindow()->m_m);
     protoCache->mutable_cachewindow()->set_plus(cache.getWindow()->m_p);
   }
@@ -131,9 +132,9 @@ static void setCache(proto::iir::Cache* protoCache, const iir::Cache& cache) {
 static iir::Cache makeCache(const proto::iir::Cache* protoCache) {
   iir::Cache::CacheTypeKind cacheType;
   iir::Cache::CacheIOPolicy cachePolicy;
-  boost::optional<iir::Interval> interval;
-  boost::optional<iir::Interval> enclosingInverval;
-  boost::optional<iir::Cache::window> cacheWindow;
+  std::optional<iir::Interval> interval;
+  std::optional<iir::Interval> enclosingInverval;
+  std::optional<iir::Cache::window> cacheWindow;
   int ID = protoCache->accessid();
   switch(protoCache->type()) {
   case proto::iir::Cache_CacheType_CT_Bypass:
@@ -177,13 +178,13 @@ static iir::Cache makeCache(const proto::iir::Cache* protoCache) {
     dawn_unreachable("unknown cache policy");
   }
   if(protoCache->has_interval()) {
-    interval = boost::make_optional(*makeInterval(protoCache->interval()));
+    interval = std::make_optional(*makeInterval(protoCache->interval()));
   }
   if(protoCache->has_enclosingaccessinterval()) {
-    enclosingInverval = boost::make_optional(*makeInterval(protoCache->enclosingaccessinterval()));
+    enclosingInverval = std::make_optional(*makeInterval(protoCache->enclosingaccessinterval()));
   }
   if(protoCache->has_cachewindow()) {
-    cacheWindow = boost::make_optional(
+    cacheWindow = std::make_optional(
         iir::Cache::window{protoCache->cachewindow().plus(), protoCache->cachewindow().minus()});
   }
 
@@ -705,7 +706,7 @@ void IIRSerializer::deserializeIIR(std::shared_ptr<iir::StencilInstantiation>& t
           for(const auto& protoStmtAccessPair : protoDoMethod.stmtaccesspairs()) {
             auto stmt = makeStmt(protoStmtAccessPair.aststmt(), ast::StmtData::IIR_DATA_TYPE);
 
-            boost::optional<iir::Accesses> callerAccesses = boost::make_optional(iir::Accesses());
+            std::optional<iir::Accesses> callerAccesses = std::make_optional(iir::Accesses());
             for(auto writeAccess : protoStmtAccessPair.accesses().writeaccess()) {
               callerAccesses->addWriteExtent(writeAccess.first, makeExtents(&writeAccess.second));
             }

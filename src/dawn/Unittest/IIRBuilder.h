@@ -96,7 +96,7 @@ public:
         v_str,
         sir::Value::typeToBuiltinTypeID(sir::Value::TypeInfo<typename std::decay<T>::type>::Type));
     expr->setID(-si_->nextUID());
-    expr->getData<IIRAccessExprData>().AccessID = boost::make_optional(acc);
+    expr->getData<IIRAccessExprData>().AccessID = std::make_optional(acc);
     return expr;
   }
 

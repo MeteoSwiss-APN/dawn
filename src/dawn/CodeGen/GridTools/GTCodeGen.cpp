@@ -26,7 +26,7 @@
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringUtil.h"
-#include <boost/optional.hpp>
+#include <optional>
 #include <map>
 #include <string>
 #include <unordered_map>
@@ -68,20 +68,20 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const iir::Stencil& stencil)
   for(const auto& mss : stencil.getChildren()) {
     for(const auto& cachePair : mss->getCaches()) {
       auto const& cache = cachePair.second;
-      boost::optional<iir::Interval> interval;
+      std::optional<iir::Interval> interval;
       if(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill) {
         interval = cache.getEnclosingAccessedInterval();
       } else {
         interval = cache.getInterval();
       }
-      if(interval.is_initialized())
+     if(interval)
         intervalProperties_.insert(*interval);
 
       // for the kcaches with fill, the interval could span beyond the axis of the do methods.
       // We need to extent the axis, to make sure that at least on interval will trigger the begin
       // of the kcache interval
       if(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill) {
-        DAWN_ASSERT(interval.is_initialized());
+       DAWN_ASSERT(interval);
         Levels.insert(interval->lowerLevel());
         Levels.insert(interval->upperLevel());
         Axis.merge(*interval);
@@ -676,17 +676,17 @@ void GTCodeGen::generateStencilClasses(
 
         ssMS << RangeToString(", ", "gridtools::define_caches(",
                               "),")(ioCaches, [&](const iir::Cache& cache) -> std::string {
-          boost::optional<iir::Interval> cInterval;
+          std::optional<iir::Interval> cInterval;
 
           if(cache.getCacheIOPolicy() == iir::Cache::fill) {
             cInterval = cache.getEnclosingAccessedInterval();
           } else {
             cInterval = cache.getInterval();
           }
-          DAWN_ASSERT(cInterval.is_initialized() || cache.getCacheIOPolicy() == iir::Cache::local);
+         DAWN_ASSERT(cInterval || cache.getCacheIOPolicy() == iir::Cache::local);
 
           std::string intervalName;
-          if(cInterval.is_initialized()) {
+         if(cInterval) {
             DAWN_ASSERT(intervalDefinitions.intervalProperties_.count(*(cInterval)));
             intervalName = intervalDefinitions.intervalProperties_.find(*cInterval)->name_;
           }

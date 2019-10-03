@@ -21,8 +21,8 @@
 #include "dawn/IIR/BlockStatements.h"
 #include "dawn/IIR/IIRNode.h"
 #include "dawn/Support/Json.h"
-#include <boost/optional.hpp>
 #include <memory>
+#include <optional>
 #include <vector>
 namespace dawn {
 namespace iir {

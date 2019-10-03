@@ -35,13 +35,13 @@ std::unique_ptr<ast::StmtData> makeData(ast::StmtData::DataType dataType) {
 void fillAccessExprDataFromProto(iir::IIRAccessExprData& data,
                                  const dawn::proto::statements::AccessExprData& dataProto) {
   if(dataProto.has_accessid())
-    data.AccessID = boost::make_optional(dataProto.accessid().value());
+    data.AccessID = std::make_optional(dataProto.accessid().value());
 }
 
 void fillVarDeclStmtDataFromProto(iir::VarDeclStmtData& data,
                                   const dawn::proto::statements::VarDeclStmtData& dataProto) {
   if(dataProto.has_accessid())
-    data.AccessID = boost::make_optional(dataProto.accessid().value());
+    data.AccessID = std::make_optional(dataProto.accessid().value());
 }
 
 void setAccessExprData(dawn::proto::statements::AccessExprData* dataProto,

@@ -156,11 +156,11 @@ public:
 
       // Register the variable
       metadata_.addAccessIDNamePair(AccessID, returnVarName);
-      newStmt->getData<iir::VarDeclStmtData>().AccessID = boost::make_optional(AccessID);
+      newStmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional(AccessID);
       // TODO recheck this
       std::dynamic_pointer_cast<iir::VarAccessExpr>(newExpr_)
           ->getData<iir::IIRAccessExprData>()
-          .AccessID = boost::make_optional(AccessID);
+          .AccessID = std::make_optional(AccessID);
 
     } else {
       // We are called within an arugment list of a stencil function, we thus need to store the
@@ -178,7 +178,7 @@ public:
                                    returnFieldName);
       std::dynamic_pointer_cast<iir::FieldAccessExpr>(newExpr_)
           ->getData<iir::IIRAccessExprData>()
-          .AccessID = boost::make_optional(AccessIDOfCaller_);
+          .AccessID = std::make_optional(AccessIDOfCaller_);
     }
 
     // Resolve the actual expression of the return statement

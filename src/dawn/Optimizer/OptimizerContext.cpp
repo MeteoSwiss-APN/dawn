@@ -170,7 +170,7 @@ public:
     // Instead of inserting the VerticalRegionDeclStmt we insert the call to the gridtools stencil
     if(scope_.top()->ScopeDepth == 1) {
       stencilDescReplacement_->getData<iir::IIRStmtData>().StackTrace =
-          boost::make_optional(scope_.top()->StackTrace);
+          std::make_optional(scope_.top()->StackTrace);
       scope_.top()->controlFlowDescriptor_.insertStmt(stencilDescReplacement_);
     } else {
 
@@ -241,7 +241,7 @@ public:
 
   /// @brief Push back a new statement to the end of the current statement list
   void pushBackStatement(const std::shared_ptr<iir::Stmt>& stmt) {
-    stmt->getData<iir::IIRStmtData>().StackTrace = boost::make_optional(scope_.top()->StackTrace);
+    stmt->getData<iir::IIRStmtData>().StackTrace = std::make_optional(scope_.top()->StackTrace);
     scope_.top()->controlFlowDescriptor_.insertStmt(stmt);
   }
 
@@ -306,7 +306,7 @@ public:
           auto voidStmt = iir::makeExprStmt(voidExpr);
           int AccessID = -instantiation_->nextUID();
           metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, "0");
-          voidExpr->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(AccessID);
+          voidExpr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
           iir::replaceOldStmtWithNewStmtInStmt(
               scope_.top()->controlFlowDescriptor_.getStatements().back(), stmt, voidStmt);
         }
@@ -553,17 +553,17 @@ public:
         int AccessID = instantiation_->nextUID();
         metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, -AccessID,
                                      newExpr->getValue());
-        newExpr->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(AccessID);
+        newExpr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
 
       } else {
         expr->getData<iir::IIRAccessExprData>().AccessID =
-            boost::make_optional(metadata_.getAccessIDFromName(varname));
+            std::make_optional(metadata_.getAccessIDFromName(varname));
       }
 
     } else {
       // Register the mapping between VarAccessExpr and AccessID.
       expr->getData<iir::IIRAccessExprData>().AccessID =
-          boost::make_optional(scope_.top()->LocalVarNameToAccessIDMap[varname]);
+          std::make_optional(scope_.top()->LocalVarNameToAccessIDMap[varname]);
 
       // Resolve the index if this is an array access
       if(expr->isArrayAccess())
@@ -575,7 +575,7 @@ public:
     // Register a literal access (Note: the negative AccessID we assign!)
     int AccessID = -instantiation_->nextUID();
     metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, expr->getValue());
-    expr->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(AccessID);
+    expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
   }
 
   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {}

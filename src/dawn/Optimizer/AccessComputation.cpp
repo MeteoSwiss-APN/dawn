@@ -13,8 +13,8 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Optimizer/AccessComputation.h"
-#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/Accesses.h"
 #include "dawn/IIR/StatementAccessesPair.h"
@@ -94,15 +94,15 @@ public:
   /// accesses list. This will also add accesses to the children of the top-level statement
   void appendNewAccesses() {
     curStatementStack_.back()->Stmt->getData<iir::IIRStmtData>().CallerAccesses =
-        boost::make_optional(iir::Accesses());
+        std::make_optional(iir::Accesses());
     callerAccessesList_.emplace_back(
-        curStatementStack_.back()->Stmt->getData<iir::IIRStmtData>().CallerAccesses.get_ptr());
+        &*curStatementStack_.back()->Stmt->getData<iir::IIRStmtData>().CallerAccesses);
 
     if(stencilFun_) {
       curStatementStack_.back()->Stmt->getData<iir::IIRStmtData>().CalleeAccesses =
-          boost::make_optional(iir::Accesses());
+          std::make_optional(iir::Accesses());
       calleeAccessesList_.emplace_back(
-          curStatementStack_.back()->Stmt->getData<iir::IIRStmtData>().CalleeAccesses.get_ptr());
+          &*curStatementStack_.back()->Stmt->getData<iir::IIRStmtData>().CalleeAccesses);
     }
 
     // Add all accesses of all parent if-cond expressions

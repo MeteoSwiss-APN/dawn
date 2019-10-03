@@ -80,7 +80,7 @@ void replaceFieldWithVarAccessInStmts(
 
       iir::replaceOldExprWithNewExprInStmt(stmt, oldExpr, newExpr);
 
-      newExpr->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(AccessID);
+      newExpr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
     }
   }
 }
@@ -102,7 +102,7 @@ void replaceVarWithFieldAccessInStmts(
 
       iir::replaceOldExprWithNewExprInStmt(stmt, oldExpr, newExpr);
 
-      newExpr->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(AccessID);
+      newExpr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(AccessID);
     }
   }
 }

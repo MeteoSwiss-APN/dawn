@@ -85,8 +85,8 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   int out_fieldID = target->getMetaData().addField(iir::FieldAccessType::FAT_APIField,
                                                    sirOutField->Name, sirOutField->fieldDimensions);
 
-  lhs->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(out_fieldID);
-  rhs->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(in_fieldID);
+  lhs->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(out_fieldID);
+  rhs->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(in_fieldID);
 
   auto expr = std::make_shared<ast::AssignmentExpr>(lhs, rhs);
   expr->setID(target->nextUID());
@@ -98,8 +98,7 @@ createCopyStencilIIRInMemory(OptimizerContext& optimizer) {
   iir::Accesses callerAccesses;
   callerAccesses.addWriteExtent(out_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
   callerAccesses.addReadExtent(in_fieldID, iir::Extents{0, 0, 0, 0, 0, 0});
-  stmt->getData<iir::IIRStmtData>().CallerAccesses =
-      boost::make_optional(std::move(callerAccesses));
+  stmt->getData<iir::IIRStmtData>().CallerAccesses = std::make_optional(std::move(callerAccesses));
   // And add the StmtAccesspair to it
   IIRDoMethod->insertChild(std::move(insertee));
   IIRDoMethod->updateLevel();
@@ -221,17 +220,17 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   int outFieldID = target->getMetaData().addField(iir::FieldAccessType::FAT_APIField,
                                                   sirOutField->Name, sirOutField->fieldDimensions);
 
-  lhsTmp->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(tmpFieldID);
-  rhsInT1->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(inFieldID);
-  rhsInT2->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(inFieldID);
-  rhsInT3->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(inFieldID);
-  rhsInT4->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(inFieldID);
+  lhsTmp->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(tmpFieldID);
+  rhsInT1->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(inFieldID);
+  rhsInT2->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(inFieldID);
+  rhsInT3->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(inFieldID);
+  rhsInT4->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(inFieldID);
 
-  lhsOut->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(outFieldID);
-  rhsTmpT1->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(tmpFieldID);
-  rhsTmpT2->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(tmpFieldID);
-  rhsTmpT3->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(tmpFieldID);
-  rhsTmpT4->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(tmpFieldID);
+  lhsOut->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(outFieldID);
+  rhsTmpT1->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(tmpFieldID);
+  rhsTmpT2->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(tmpFieldID);
+  rhsTmpT3->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(tmpFieldID);
+  rhsTmpT4->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(tmpFieldID);
 
   auto plusIn1 = std::make_shared<ast::BinaryOperator>(rhsInT1, std::string("+"), rhsInT2);
   auto plusIn2 = std::make_shared<ast::BinaryOperator>(rhsInT3, std::string("+"), rhsInT4);
@@ -253,7 +252,7 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   callerAccesses1.addWriteExtent(tmpFieldID, iir::Extents{0, 0, 0, 0, 0, 0});
   callerAccesses1.addReadExtent(inFieldID, iir::Extents{-2, 2, -2, 2, 0, 0});
   stmt1->getData<iir::IIRStmtData>().CallerAccesses =
-      boost::make_optional(std::move(callerAccesses1));
+      std::make_optional(std::move(callerAccesses1));
 
   // And add the StmtAccesspair to it
   IIRDoMethod1->insertChild(std::move(insertee1));
@@ -279,7 +278,7 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   callerAccesses2.addWriteExtent(outFieldID, iir::Extents{0, 0, 0, 0, 0, 0});
   callerAccesses2.addReadExtent(tmpFieldID, iir::Extents{-1, 1, -1, 1, 0, 0});
   stmt2->getData<iir::IIRStmtData>().CallerAccesses =
-      boost::make_optional(std::move(callerAccesses2));
+      std::make_optional(std::move(callerAccesses2));
   // And add the StmtAccesspair to it
   IIRDoMethod2->insertChild(std::move(insertee2));
   IIRDoMethod2->updateLevel();

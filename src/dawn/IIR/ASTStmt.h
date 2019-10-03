@@ -17,8 +17,8 @@
 
 #include "dawn/AST/ASTStmt.h"
 #include "dawn/IIR/Accesses.h"
-#include <boost/optional.hpp>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace dawn {
@@ -39,7 +39,7 @@ struct IIRStmtData : public ast::StmtData {
   bool operator!=(const IIRStmtData&);
 
   /// Stack trace of inlined stencil calls of this statement (might be empty).
-  boost::optional<std::vector<ast::StencilCall*>> StackTrace;
+  std::optional<std::vector<ast::StencilCall*>> StackTrace;
 
   /// In case of a non function call stmt, the accesses are stored in CallerAccesses, while
   /// CalleeAccesses is uninitialized
@@ -47,11 +47,11 @@ struct IIRStmtData : public ast::StmtData {
   /// Accesses of the statement. If the statement is part of a stencil-function, this will store the
   /// caller accesses. The caller access will have the initial offset added (e.g if a stencil
   /// function is called with `avg(u(i+1))` the initial offset of `u` is `[1, 0, 0]`).
-  boost::optional<Accesses> CallerAccesses;
+  std::optional<Accesses> CallerAccesses;
 
   /// If the statement is part of a stencil-function, this will store the callee accesses i.e the
   /// accesses without the initial offset of the call
-  boost::optional<Accesses> CalleeAccesses;
+  std::optional<Accesses> CalleeAccesses;
 
   DataType getDataType() const override { return ThisDataType; }
   virtual std::unique_ptr<StmtData> clone() const override;
@@ -82,7 +82,7 @@ struct VarDeclStmtData : public IIRStmtData {
   bool operator!=(const VarDeclStmtData&);
 
   /// ID of the variable declared by the statement
-  boost::optional<int> AccessID;
+  std::optional<int> AccessID;
 
   std::unique_ptr<StmtData> clone() const override;
 };
@@ -127,7 +127,7 @@ using IfStmt = ast::IfStmt;
 //
 // END_TODO
 //
-extern boost::optional<Extents> computeMaximumExtents(Stmt& stmt, const int accessID);
+extern std::optional<Extents> computeMaximumExtents(Stmt& stmt, const int accessID);
 
 } // namespace iir
 } // namespace dawn

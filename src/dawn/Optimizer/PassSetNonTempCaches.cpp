@@ -232,12 +232,12 @@ private:
     newAccess.addWriteExtent(assignmentID, iir::Extents(Array3i{{0, 0, 0}}));
     newAccess.addReadExtent(assigneeID, iir::Extents(Array3i{{0, 0, 0}}));
     pair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses =
-        boost::make_optional(std::move(newAccess));
+        std::make_optional(std::move(newAccess));
     domethod->insertChild(std::move(pair));
 
     // Add access ids to the expressions
-    fa_assignment->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(assignmentID);
-    fa_assignee->getData<iir::IIRAccessExprData>().AccessID = boost::make_optional(assigneeID);
+    fa_assignment->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(assignmentID);
+    fa_assignee->getData<iir::IIRAccessExprData>().AccessID = std::make_optional(assigneeID);
   }
 
   /// @brief Checks if there is a read operation before the first write operation in the given

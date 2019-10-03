@@ -18,16 +18,16 @@
 namespace dawn {
 namespace iir {
 void FieldAccessExtents::mergeReadExtents(Extents const& extents) {
-  if(readAccessExtents_.is_initialized())
+ if(readAccessExtents_)
     readAccessExtents_->merge(extents);
   else
-    readAccessExtents_ = boost::make_optional(extents);
+    readAccessExtents_ = std::make_optional(extents);
   updateTotalExtents();
 }
 json::json FieldAccessExtents::jsonDump() const {
   json::json node;
   std::stringstream ss;
-  if(readAccessExtents_.is_initialized()) {
+ if(readAccessExtents_) {
     ss << *readAccessExtents_;
   } else {
     ss << "null";
@@ -35,7 +35,7 @@ json::json FieldAccessExtents::jsonDump() const {
 
   node["read_access"] = ss.str();
   ss.str("");
-  if(writeAccessExtents_.is_initialized()) {
+ if(writeAccessExtents_) {
     ss << *writeAccessExtents_;
   } else {
     ss << "null";
@@ -46,37 +46,37 @@ json::json FieldAccessExtents::jsonDump() const {
 }
 
 void FieldAccessExtents::mergeWriteExtents(Extents const& extents) {
-  if(writeAccessExtents_.is_initialized())
+ if(writeAccessExtents_)
     writeAccessExtents_->merge(extents);
   else
-    writeAccessExtents_ = boost::make_optional(extents);
+    writeAccessExtents_ = std::make_optional(extents);
 
   updateTotalExtents();
 }
-void FieldAccessExtents::mergeReadExtents(boost::optional<Extents> const& extents) {
-  if(extents.is_initialized())
+void FieldAccessExtents::mergeReadExtents(std::optional<Extents> const& extents) {
+ if(extents)
     mergeReadExtents(*extents);
 }
-void FieldAccessExtents::mergeWriteExtents(boost::optional<Extents> const& extents) {
-  if(extents.is_initialized())
+void FieldAccessExtents::mergeWriteExtents(std::optional<Extents> const& extents) {
+ if(extents)
     mergeWriteExtents(*extents);
 }
 
 void FieldAccessExtents::setReadExtents(Extents const& extents) {
-  readAccessExtents_ = boost::make_optional(extents);
+  readAccessExtents_ = std::make_optional(extents);
   updateTotalExtents();
 }
 void FieldAccessExtents::setWriteExtents(Extents const& extents) {
-  writeAccessExtents_ = boost::make_optional(extents);
+  writeAccessExtents_ = std::make_optional(extents);
   updateTotalExtents();
 }
 
 void FieldAccessExtents::updateTotalExtents() {
-  if(readAccessExtents_.is_initialized()) {
+ if(readAccessExtents_) {
     totalExtents_ = *readAccessExtents_;
-    if(writeAccessExtents_.is_initialized())
+   if(writeAccessExtents_)
       totalExtents_.merge(*writeAccessExtents_);
-  } else if(writeAccessExtents_.is_initialized()) {
+ } else if(writeAccessExtents_) {
     totalExtents_ = *writeAccessExtents_;
   }
 }

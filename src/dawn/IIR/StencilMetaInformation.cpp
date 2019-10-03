@@ -323,7 +323,7 @@ int StencilMetaInformation::addStmt(bool keepVarNames, const std::shared_ptr<Var
   addAccessIDNamePair(accessID, globalName);
 
   DAWN_ASSERT(!stmt->getData<iir::VarDeclStmtData>().AccessID);
-  stmt->getData<iir::VarDeclStmtData>().AccessID = boost::make_optional(accessID);
+  stmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional(accessID);
 
   return accessID;
 }

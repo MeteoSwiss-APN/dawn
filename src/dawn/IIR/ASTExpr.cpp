@@ -23,7 +23,7 @@ namespace iir {
 //===------------------------------------------------------------------------------------------===//
 
 IIRAccessExprData::IIRAccessExprData(const IIRAccessExprData& other) {
-  AccessID = other.AccessID ? boost::make_optional(*other.AccessID) : other.AccessID;
+  AccessID = other.AccessID ? std::make_optional(*other.AccessID) : other.AccessID;
 }
 
 bool IIRAccessExprData::operator==(const IIRAccessExprData& rhs) {

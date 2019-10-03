@@ -16,7 +16,6 @@
 #define DAWN_IIR_ASTEXPR_H
 
 #include "dawn/AST/ASTExpr.h"
-#include <boost/optional.hpp>
 
 namespace dawn {
 namespace iir {
@@ -31,7 +30,7 @@ struct IIRAccessExprData : public ast::AccessExprData {
   std::unique_ptr<ast::AccessExprData> clone() const override;
 
   /// ID of the resource (literal or variable or field) accessed by the expression
-  boost::optional<int> AccessID;
+  std::optional<int> AccessID;
 };
 
 //
