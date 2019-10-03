@@ -127,8 +127,10 @@ void renameAccessIDInAccesses(
         statementAccessesPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
     renameAccessesMaps(callerAccesses->getReadAccesses(), oldAccessID, newAccessID);
     renameAccessesMaps(callerAccesses->getWriteAccesses(), oldAccessID, newAccessID);
-    renameAccessesMaps(callerAccesses->getReadAccesses(), oldAccessID, newAccessID);
-    renameAccessesMaps(callerAccesses->getWriteAccesses(), oldAccessID, newAccessID);
+    auto& calleeAccesses =
+        statementAccessesPair->getStatement()->getData<iir::IIRStmtData>().CalleeAccesses;
+    renameAccessesMaps(calleeAccesses->getReadAccesses(), oldAccessID, newAccessID);
+    renameAccessesMaps(calleeAccesses->getWriteAccesses(), oldAccessID, newAccessID);
   }
 }
 
