@@ -48,32 +48,32 @@ namespace atlasInterface {
 
 struct atlasTag {};
 
-using Mesh = atlas::Mesh;
-using Face = int;
-
 template <typename T>
 class Field {
 public:
-  T operator()(Face f) const { return atlas_field_(f, 0); }
-  T& operator()(Face f) { return atlas_field_(f, 0); }
+  T operator()(int f) const { return atlas_field_(f, 0); }
+  T& operator()(int f) { return atlas_field_(f, 0); }
 
-  Field(atlas::array::ArrayView<T, 2> atlas_field) : atlas_field_(atlas_field) {}
+  Field(atlas::array::ArrayView<T, 2> const& atlas_field) : atlas_field_(atlas_field) {}
 
 private:
   atlas::array::ArrayView<T, 2> atlas_field_;
 };
 
-decltype(auto) getCells(atlasTag, Mesh const& m) { return utility::irange(0, m.cells().size()); }
+auto getCells(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.cells().size()); }
 
-struct int_holder {
+class int_holder {
+public:
   int& operator*() { return i_; }
   int operator*() const { return i_; }
   int_holder(int i) : i_(i) {}
 
+private:
   int i_;
 };
 
-decltype(auto) cellNeighboursOfCell(atlasTag, Mesh const& m, Face const& idx) {
+std::vector<int_holder> const& cellNeighboursOfCell(atlasTag, atlas::Mesh const& m,
+                                                    int const& idx) {
   // note this is only a workaround and does only work as long as we have only one mesh
   static std::map<int, std::vector<int_holder>> neighs;
   if(neighs.count(idx) == 0) {

@@ -13,11 +13,16 @@ struct identity {
 };
 } // namespace wstd
 
-namespace lib_lukas {
+namespace mylib {
 class Vertex;
 class Edge;
 class Face;
 
+//   .---.---.---.
+//   |\ 1|\ 3|\ 5|
+//   | \ | \ | \ |
+//   |0 \|2 \|4 \|
+//   ----'---'---'
 enum face_color { upward = 0, downward = 1 };
 enum edge_color { horizontal = 0, diagonal = 1, vertical = 2 };
 
@@ -322,34 +327,6 @@ class EdgeData : public Data<Edge, T> {
 public:
   explicit EdgeData(Grid const& grid) : Data<Edge, T>(grid.edges().size()) {}
 };
-template <typename T>
-inline T gauss(T width, T x, T y, T nx, T ny, bool f = false) {
-  return std::exp(-width * (std::pow(x - nx / 2.0, 2) + std::pow(y - ny / 2.0, 2)));
-}
-template <typename T>
-inline void init_gaussian(T width, VertexData<T>& v_data, Grid const& grid) {
-  for(auto& v : grid.vertices())
-    v_data(v) = gauss(width, v.x(), v.y(), (T)grid.nx(), (T)grid.ny());
-}
-template <typename T>
-inline void init_gaussian(T width, EdgeData<T>& e_data, Grid const& grid) {
-  for(auto& e : grid.edges())
-    if(e) {
-      auto center_x = 0.5 * (e.vertex(0).x() + e.vertex(1).x());
-      auto center_y = 0.5 * (e.vertex(0).y() + e.vertex(1).y());
-
-      e_data(e) = gauss(width, center_x, center_y, (T)grid.nx(), (T)grid.ny());
-    }
-}
-template <typename T>
-inline void init_gaussian(T width, FaceData<T>& f_data, Grid const& grid) {
-  for(auto& f : grid.faces()) {
-    auto center_x = (1.f / 3) * (f.vertex(0).x() + f.vertex(1).x() + f.vertex(2).x());
-    auto center_y = (1.f / 3) * (f.vertex(0).y() + f.vertex(1).y() + f.vertex(2).y());
-
-    f_data(f) = gauss(width, center_x, center_y, (T)grid.nx(), (T)grid.ny(), true);
-  }
-}
 namespace faces {
 template <class T, class Map, class Reduce>
 auto reduce_on_vertices(VertexData<T> const& v_data, Grid const& grid, Map const& map,
@@ -379,8 +356,8 @@ reduce_on_edges(EdgeData<T> const& e_data, Grid const& grid, Map const& map, Red
   for(auto f : grid.faces()) {
     // inward, if edge from negative to positive
     //   .
-    //   |\
-        //  0| \ 1   0: outwards
+    //   |\ 
+    //  0| \ 1   0: outwards
     //   |  \    1: inwards
     //   ----'   2: outwards
     //     2
@@ -444,5 +421,14 @@ std::ostream& toVtk(std::string const& name, EdgeData<double> const& e_data, Gri
                     std::ostream& os = std::cout);
 std::ostream& toVtk(std::string const& name, VertexData<double> const& v_data, Grid const& grid,
                     std::ostream& os = std::cout);
-} // namespace lib_lukas
-using namespace lib_lukas;
+
+namespace {
+bool inner_face(Face const& f) {
+  return (f.color() == face_color::downward && f.vertex(0).id() < f.vertex(1).id() &&
+          f.vertex(0).id() < f.vertex(2).id()) ||
+         (f.color() == face_color::upward && f.vertex(1).id() > f.vertex(0).id() &&
+          f.vertex(1).id() > f.vertex(2).id());
+}
+} // namespace
+
+} // namespace mylib

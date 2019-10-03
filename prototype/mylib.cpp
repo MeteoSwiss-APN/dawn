@@ -1,5 +1,6 @@
-#include "grid.hpp"
-namespace lib_lukas {
+#include "mylib.hpp"
+
+namespace mylib {
 
 Edge const& Vertex::edge(size_t i) const { return *edges_[i]; }
 Face const& Vertex::face(size_t i) const { return *faces_[i]; }
@@ -29,14 +30,6 @@ std::vector<const Face*> Face::faces() const {
 Vertex const& Edge::vertex(size_t i) const { return *vertices_[i]; }
 Face const& Edge::face(size_t i) const { return *faces_[i]; }
 
-// periodic faces are too much for paraview...
-inline bool inner_face(Face const& f) {
-  return (f.color() == face_color::downward && f.vertex(0).id() < f.vertex(1).id() &&
-          f.vertex(0).id() < f.vertex(2).id()) ||
-         (f.color() == face_color::upward && f.vertex(1).id() > f.vertex(0).id() &&
-          f.vertex(1).id() > f.vertex(2).id());
-}
-
 std::ostream& toVtk(Grid const& grid, std::ostream& os) {
   os << "# vtk DataFile Version 3.0\n2D scalar data\nASCII\nDATASET "
         "UNSTRUCTURED_GRID\n";
@@ -59,6 +52,7 @@ std::ostream& toVtk(Grid const& grid, std::ostream& os) {
     if(inner_face(f))
       os << "5\n";
   os << "CELL_DATA " << fcnt << '\n';
+  return os;
 
   return os;
 } // namespace lib_lukas
@@ -68,6 +62,10 @@ std::ostream& toVtk(std::string const& name, FaceData<double> const& f_data, Gri
   for(auto& f : grid.faces())
     if(inner_face(f))
       os << f_data(f) << '\n';
+  os << "SCALARS id int 1\nLOOKUP_TABLE default\n";
+  for(auto& f : grid.faces())
+    if(inner_face(f))
+      os << f.id() << '\n';
   return os;
 }
 std::ostream& toVtk(std::string const& name, EdgeData<double> const& e_data, Grid const& grid,
@@ -84,4 +82,4 @@ std::ostream& toVtk(std::string const& name, VertexData<double> const& v_data, G
 }
 void Vertex::add_edge(Edge& e) { edges_.push_back(&e); }
 
-} // namespace lib_lukas
+} // namespace mylib
