@@ -16,8 +16,8 @@
 #define DAWN_IIR_ASTSTMT_H
 
 #include "dawn/AST/ASTStmt.h"
-#include <boost/optional.hpp>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace dawn {
@@ -32,7 +32,7 @@ struct IIRStmtData : public ast::StmtData {
   bool operator!=(const IIRStmtData&);
 
   /// Stack trace of inlined stencil calls of this statement (might be empty).
-  boost::optional<std::vector<ast::StencilCall*>> StackTrace;
+  std::optional<std::vector<ast::StencilCall*>> StackTrace;
 
   DataType getDataType() const override { return ThisDataType; }
   std::unique_ptr<StmtData> clone() const override;

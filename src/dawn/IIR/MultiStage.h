@@ -23,6 +23,7 @@
 #include <deque>
 #include <list>
 #include <memory>
+#include <optional>
 #include <unordered_map>
 #include <vector>
 
@@ -127,15 +128,15 @@ public:
   iir::Cache& setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
                        int AccessID, Interval const& interval,
                        const Interval& enclosingAccessedInterval,
-                       boost::optional<iir::Cache::window> w);
+                       std::optional<iir::Cache::window> w);
 
   iir::Cache& setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
                        int AccessID);
 
   /// @brief computes the interval where an accessId is used (extended by the extent of the
   /// access)
-  boost::optional<Interval> computeEnclosingAccessInterval(const int accessID,
-                                                           const bool mergeWithDoInterval) const;
+  std::optional<Interval> computeEnclosingAccessInterval(const int accessID,
+                                                         const bool mergeWithDoInterval) const;
 
   /// @brief Is the field given by the `AccessID` cached?
   bool isCached(int AccessID) const { return derivedInfo_.caches_.count(AccessID); }
@@ -175,7 +176,7 @@ public:
   std::unordered_map<int, Field> computeFieldsOnTheFly() const;
 
   /// @brief Get the enclosing interval of all access to temporaries
-  boost::optional<Interval> getEnclosingAccessIntervalTemporaries() const;
+  std::optional<Interval> getEnclosingAccessIntervalTemporaries() const;
 
   /// @brief Get the caches
   /// //TODO remove this non const getter
@@ -195,7 +196,7 @@ public:
   Extent getKCacheVertExtent(const int accessID) const;
 
   /// @brief computes the extents of an accessID field at a given interval
-  boost::optional<Extents> computeExtents(const int accessID, const Interval& interval) const;
+  std::optional<Extents> computeExtents(const int accessID, const Interval& interval) const;
 
   MultiInterval computePartitionOfIntervals() const;
 

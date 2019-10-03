@@ -22,6 +22,7 @@
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/STLExtras.h"
 #include <gtest/gtest.h>
+#include <optional>
 
 using namespace dawn;
 
@@ -315,8 +316,8 @@ TEST_F(IIRSerializerTest, IIRTests) {
       ->insertChild(std::make_unique<iir::MultiStage>(referenceInstantiaton->getMetaData(),
                                                       iir::LoopOrderKind::LK_Backward));
   const auto& IIRMSS = (IIRStencil)->getChild(0);
-  IIRMSS->getCaches().emplace(
-      10, iir::Cache(iir::Cache::IJ, iir::Cache::fill, 10, boost::none, boost::none, boost::none));
+  IIRMSS->getCaches().emplace(10, iir::Cache(iir::Cache::IJ, iir::Cache::fill, 10, std::nullopt,
+                                             std::nullopt, std::nullopt));
   deserialized = serializeAndDeserializeRef();
   IIR_EXPECT_EQ(deserialized, referenceInstantiaton);
   IIRMSS->setLoopOrder(iir::LoopOrderKind::LK_Forward);

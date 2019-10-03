@@ -83,11 +83,11 @@ bool Stage::hasSingleDoMethod() const { return (children_.size() == 1); }
 void Stage::setRequiresSync(const bool sync) { derivedInfo_.requiresSync_ = sync; }
 bool Stage::getRequiresSync() const { return derivedInfo_.requiresSync_; }
 
-boost::optional<Interval>
+std::optional<Interval>
 Stage::computeEnclosingAccessInterval(const int accessID, const bool mergeWithDoInterval) const {
-  boost::optional<Interval> interval;
+  std::optional<Interval> interval;
   for(auto const& doMethod : getChildren()) {
-    boost::optional<Interval> doInterval =
+    std::optional<Interval> doInterval =
         doMethod->computeEnclosingAccessInterval(accessID, mergeWithDoInterval);
 
     if(doInterval) {
@@ -299,7 +299,7 @@ Stage::split(std::deque<int>& splitterIndices,
         std::next(thisDoMethod.childrenBegin(), splitterIndices[i] + 1);
 
     newStages.push_back(std::make_unique<Stage>(metaData_, UIDGenerator::getInstance()->get(),
-                                           thisDoMethod.getInterval()));
+                                                thisDoMethod.getInterval()));
     Stage& newStage = *newStages.back();
     DoMethod& doMethod = newStage.getSingleDoMethod();
 
@@ -325,7 +325,7 @@ void Stage::updateFromChildren() {
   updateGlobalVariablesInfo();
 
   for(const auto& doMethod : children_) {
-    mergeFields(doMethod->getFields(), derivedInfo_.fields_, boost::optional<Extents>());
+    mergeFields(doMethod->getFields(), derivedInfo_.fields_, std::optional<Extents>());
   }
 }
 

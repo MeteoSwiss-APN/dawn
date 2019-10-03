@@ -235,15 +235,14 @@ bool DependencyGraphAccesses::isDAG() const {
   std::vector<std::size_t> vertices;
 
   for(std::set<std::size_t>& partition : partitions) {
-    vertices.empty();
-    getInputVertexIDsImpl(*this, partition, [](std::size_t VertexID) { return VertexID; },
-                          vertices);
+    getInputVertexIDsImpl(
+        *this, partition, [](std::size_t VertexID) { return VertexID; }, vertices);
     if(vertices.empty())
       return false;
 
     vertices.clear();
-    getOutputVertexIDsImpl(*this, partition, [](std::size_t VertexID) { return VertexID; },
-                           vertices);
+    getOutputVertexIDsImpl(
+        *this, partition, [](std::size_t VertexID) { return VertexID; }, vertices);
     if(vertices.empty())
       return false;
   }

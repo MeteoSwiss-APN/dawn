@@ -56,19 +56,19 @@ void mergeField(const Field& sField, Field& dField) {
 
 void mergeFields(std::unordered_map<int, Field> const& sourceFields,
                  std::unordered_map<int, Field>& destinationFields,
-                 boost::optional<Extents> baseExtents) {
+                 std::optional<Extents> baseExtents) {
 
   for(const auto& fieldPair : sourceFields) {
     Field sField = fieldPair.second;
 
     auto readExtentsRB = sField.getReadExtents();
-    if(readExtentsRB.is_initialized() && baseExtents.is_initialized()) {
+    if(readExtentsRB && baseExtents) {
       readExtentsRB->expand(*baseExtents);
       sField.setReadExtentsRB(readExtentsRB);
     }
 
     auto writeExtentsRB = sField.getWriteExtents();
-    if(writeExtentsRB.is_initialized() && baseExtents.is_initialized()) {
+    if(writeExtentsRB && baseExtents) {
       writeExtentsRB->expand(*baseExtents);
       sField.setWriteExtentsRB(writeExtentsRB);
     }
@@ -84,13 +84,13 @@ void mergeFields(std::unordered_map<int, Field> const& sourceFields,
   }
 }
 
-void Field::setReadExtentsRB(boost::optional<Extents> const& extents) {
-  if(extents.is_initialized()) {
+void Field::setReadExtentsRB(std::optional<Extents> const& extents) {
+  if(extents) {
     extentsRB_.setReadExtents(*extents);
   }
 }
-void Field::setWriteExtentsRB(boost::optional<Extents> const& extents) {
-  if(extents.is_initialized()) {
+void Field::setWriteExtentsRB(std::optional<Extents> const& extents) {
+  if(extents) {
     extentsRB_.setWriteExtents(*extents);
   }
 }

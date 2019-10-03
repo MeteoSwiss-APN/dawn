@@ -36,8 +36,7 @@ static std::string toStringImpl(const StatementAccessesPair* pair,
   std::string curIndentStr = std::string(curIndent, ' ');
 
   ss << initialIndentStr << "[\n" << curIndentStr << "Statement:\n";
-  ss << "\e[1m"
-     << ASTStringifier::toString(pair->getStatement(), curIndent + DAWN_PRINT_INDENT)
+  ss << "\e[1m" << ASTStringifier::toString(pair->getStatement(), curIndent + DAWN_PRINT_INDENT)
      << "\e[0m\n";
 
   if(pair->getCallerAccesses()) {
@@ -106,21 +105,21 @@ void StatementAccessesPair::insertBlockStatement(std::unique_ptr<StatementAccess
   blockStatements_.insert(std::move(stmt));
 }
 
-boost::optional<Extents> StatementAccessesPair::computeMaximumExtents(const int accessID) const {
-  boost::optional<Extents> extents;
+std::optional<Extents> StatementAccessesPair::computeMaximumExtents(const int accessID) const {
+  std::optional<Extents> extents;
 
   if(callerAccesses_->hasReadAccess(accessID) || callerAccesses_->hasWriteAccess(accessID)) {
-    extents = boost::optional<Extents>();
+    extents = std::optional<Extents>();
 
     if(callerAccesses_->hasReadAccess(accessID)) {
-      if(!extents.is_initialized())
-        extents = boost::make_optional(callerAccesses_->getReadAccess(accessID));
+      if(!extents)
+        extents = std::make_optional(callerAccesses_->getReadAccess(accessID));
       else
         extents->merge(callerAccesses_->getReadAccess(accessID));
     }
     if(callerAccesses_->hasWriteAccess(accessID)) {
-      if(!extents.is_initialized())
-        extents = boost::make_optional(callerAccesses_->getWriteAccess(accessID));
+      if(!extents)
+        extents = std::make_optional(callerAccesses_->getWriteAccess(accessID));
       else
         extents->merge(callerAccesses_->getWriteAccess(accessID));
     }
@@ -128,9 +127,9 @@ boost::optional<Extents> StatementAccessesPair::computeMaximumExtents(const int 
 
   for(auto const& child : blockStatements_.getBlockStatements()) {
     auto childExtent = child->computeMaximumExtents(accessID);
-    if(!childExtent.is_initialized())
+    if(!childExtent)
       continue;
-    if(extents.is_initialized())
+    if(extents)
       extents->merge(*childExtent);
     else
       extents = childExtent;

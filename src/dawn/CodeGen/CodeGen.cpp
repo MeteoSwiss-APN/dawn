@@ -1,46 +1,42 @@
 #include "dawn/CodeGen/CodeGen.h"
 #include "dawn/CodeGen/StencilFunctionAsBCGenerator.h"
+#include <optional>
 
 namespace dawn {
 namespace codegen {
 
 size_t CodeGen::getVerticalTmpHaloSize(iir::Stencil const& stencil) {
-  boost::optional<iir::Interval> tmpInterval = stencil.getEnclosingIntervalTemporaries();
-  return (tmpInterval.is_initialized())
-             ? std::max(tmpInterval->overEnd(), tmpInterval->belowBegin())
-             : 0;
+  std::optional<iir::Interval> tmpInterval = stencil.getEnclosingIntervalTemporaries();
+  return tmpInterval ? std::max(tmpInterval->overEnd(), tmpInterval->belowBegin()) : 0;
 }
 
 size_t CodeGen::getVerticalTmpHaloSizeForMultipleStencils(
     const std::vector<std::unique_ptr<iir::Stencil>>& stencils) const {
-  boost::optional<iir::Interval> fullIntervals;
+  std::optional<iir::Interval> fullIntervals;
   for(const auto& stencil : stencils) {
     auto tmpInterval = stencil->getEnclosingIntervalTemporaries();
-    if(tmpInterval.is_initialized()) {
-      if(!fullIntervals.is_initialized())
+    if(tmpInterval) {
+      if(!fullIntervals)
         fullIntervals = tmpInterval;
       else
         fullIntervals->merge((*tmpInterval));
     }
   }
-  return (fullIntervals.is_initialized())
-             ? std::max(fullIntervals->overEnd(), fullIntervals->belowBegin())
-             : 0;
+  return fullIntervals ? std::max(fullIntervals->overEnd(), fullIntervals->belowBegin()) : 0;
 }
 
 std::string CodeGen::generateGlobals(stencilInstantiationContext& context,
                                      std::string outer_namespace_, std::string inner_namespace_) {
 
   std::stringstream ss;
-  Namespace outerNamespace(outer_namespace_, ss);                                          
-  std::string globals = generateGlobals(context, inner_namespace_);        
+  Namespace outerNamespace(outer_namespace_, ss);
+  std::string globals = generateGlobals(context, inner_namespace_);
   ss << globals;
   outerNamespace.commit();
   return ss.str();
 }
 
-std::string CodeGen::generateGlobals(stencilInstantiationContext& context,
-                                     std::string namespace_) {
+std::string CodeGen::generateGlobals(stencilInstantiationContext& context, std::string namespace_) {
   if(context.size() > 0) {
     const auto& globalsMap = context.begin()->second->getIIR()->getGlobalVariableMap();
     return generateGlobals(globalsMap, namespace_);
@@ -55,7 +51,7 @@ std::string CodeGen::generateGlobals(const sir::GlobalVariableMap& globalsMap,
 
   std::stringstream ss;
 
-  Namespace cudaNamespace(namespace_, ss);  //why is this named cudaNamespace?
+  Namespace cudaNamespace(namespace_, ss); // why is this named cudaNamespace?
 
   Struct GlobalsStruct("globals", ss);
 

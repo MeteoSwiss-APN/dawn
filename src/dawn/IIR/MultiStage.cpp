@@ -120,10 +120,10 @@ std::shared_ptr<DependencyGraphAccesses> MultiStage::getDependencyGraphOfAxis() 
 iir::Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
                                  int AccessID, const Interval& interval,
                                  const Interval& enclosingAccessedInterval,
-                                 boost::optional<iir::Cache::window> w) {
+                                 std::optional<iir::Cache::window> w) {
   return derivedInfo_.caches_
-      .emplace(AccessID, iir::Cache(type, policy, AccessID, boost::optional<Interval>(interval),
-                                    boost::optional<Interval>(enclosingAccessedInterval), w))
+      .emplace(AccessID, iir::Cache(type, policy, AccessID, std::optional<Interval>(interval),
+                                    std::optional<Interval>(enclosingAccessedInterval), w))
       .first->second;
 }
 
@@ -158,7 +158,7 @@ Extent MultiStage::getKCacheVertExtent(const int accessID) const {
   // in the case of epflush, the extent of the cache required is not determined only by the access
   // pattern, but also by the window required to epflush
   if(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::epflush) {
-    DAWN_ASSERT(cache.getWindow().is_initialized());
+   DAWN_ASSERT(cache.getWindow());
     auto window = *(cache.getWindow());
     return vertExtent.merge(iir::Extent{window.m_m, window.m_p});
   } else {
@@ -166,10 +166,10 @@ Extent MultiStage::getKCacheVertExtent(const int accessID) const {
   }
 }
 
-boost::optional<Extents> MultiStage::computeExtents(const int accessID,
+std::optional<Extents> MultiStage::computeExtents(const int accessID,
                                                     const Interval& interval) const {
 
-  boost::optional<Extents> extents;
+  std::optional<Extents> extents;
   for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*this)) {
     if(!doMethod->getInterval().overlaps(interval)) {
       continue;
@@ -179,10 +179,10 @@ boost::optional<Extents> MultiStage::computeExtents(const int accessID,
       continue;
     }
 
-    if(extents.is_initialized()) {
+   if(extents) {
       extents->merge(doMethod->getField(accessID).getExtents());
     } else {
-      extents = boost::make_optional(doMethod->getField(accessID).getExtents());
+      extents = std::make_optional(doMethod->getField(accessID).getExtents());
     }
   }
   return extents;
@@ -204,8 +204,8 @@ Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOP
                             int AccessID) {
   return derivedInfo_.caches_
       .emplace(AccessID,
-               iir::Cache(type, policy, AccessID, boost::optional<Interval>(),
-                          boost::optional<Interval>(), boost::optional<iir::Cache::window>()))
+               iir::Cache(type, policy, AccessID, std::optional<Interval>(),
+                          std::optional<Interval>(), std::optional<iir::Cache::window>()))
       .first->second;
 }
 
@@ -264,10 +264,10 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
         MultiInterval interv;
 
         Extents const& readAccessExtent = accesses.getReadAccess(accessID);
-        boost::optional<Extent> readAccessInLoopOrder = readAccessExtent.getVerticalLoopOrderExtent(
+        std::optional<Extent> readAccessInLoopOrder = readAccessExtent.getVerticalLoopOrderExtent(
             getLoopOrder(), Extents::VerticalLoopOrderDir::VL_InLoopOrder, false);
         Interval computingInterval = doMethod->getInterval();
-        if(readAccessInLoopOrder.is_initialized()) {
+       if(readAccessInLoopOrder) {
           interv.insert(computingInterval.extendInterval(*readAccessInLoopOrder));
         }
         if(!writeIntervalPre.empty()) {
@@ -279,11 +279,11 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
           interv.insert(centerAccessInterval);
         }
 
-        boost::optional<Extent> readAccessCounterLoopOrder =
+        std::optional<Extent> readAccessCounterLoopOrder =
             readAccessExtent.getVerticalLoopOrderExtent(
                 getLoopOrder(), Extents::VerticalLoopOrderDir::VL_CounterLoopOrder, false);
 
-        if(readAccessCounterLoopOrder.is_initialized()) {
+       if(readAccessCounterLoopOrder) {
           interv.insert(computingInterval.extendInterval(*readAccessCounterLoopOrder));
         }
 
@@ -298,12 +298,12 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
   return readInterval;
 }
 
-boost::optional<Interval>
+std::optional<Interval>
 MultiStage::computeEnclosingAccessInterval(const int accessID,
                                            const bool mergeWithDoInterval) const {
-  boost::optional<Interval> interval;
+  std::optional<Interval> interval;
   for(auto const& stage : children_) {
-    boost::optional<Interval> doInterval =
+    std::optional<Interval> doInterval =
         stage->computeEnclosingAccessInterval(accessID, mergeWithDoInterval);
 
     if(doInterval) {
@@ -335,8 +335,8 @@ Interval MultiStage::getEnclosingInterval() const {
   return interval;
 }
 
-boost::optional<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() const {
-  boost::optional<Interval> interval;
+std::optional<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() const {
+  std::optional<Interval> interval;
   // notice we dont use here the fields of getFields() since they contain the enclosing of all the
   // extents and intervals of all stages and it would give larger intervals than really required
   // inspecting the extents and intervals of individual stages
@@ -348,8 +348,8 @@ boost::optional<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() co
       if(!metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, AccessID))
         continue;
 
-      if(!interval.is_initialized()) {
-        interval = boost::make_optional(field.computeAccessedInterval());
+     if(!interval) {
+        interval = std::make_optional(field.computeAccessedInterval());
       } else {
         interval->merge(field.computeAccessedInterval());
       }
@@ -381,7 +381,7 @@ std::map<int, Field> MultiStage::getOrderedFields() const {
 void MultiStage::updateFromChildren() {
   for(const auto& stagePtr : children_) {
     mergeFields(stagePtr->getFields(), derivedInfo_.fields_,
-                boost::make_optional(stagePtr->getExtents()));
+                std::make_optional(stagePtr->getExtents()));
   }
 }
 
@@ -453,7 +453,7 @@ MultiStage::computeFieldsAtInterval(const iir::Interval& interval) const {
     for(const auto& doMethod : stage->getChildren()) {
       if(!doMethod->getInterval().overlaps(interval))
         continue;
-      mergeFields(doMethod->getFields(), fields, boost::make_optional(stage->getExtents()));
+      mergeFields(doMethod->getFields(), fields, std::make_optional(stage->getExtents()));
     }
   }
   return fields;

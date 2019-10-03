@@ -22,9 +22,9 @@
 #include "dawn/IIR/StencilMetaInformation.h"
 #include "dawn/Support/ArrayRef.h"
 #include "dawn/Support/ContainerUtils.h"
-#include <boost/optional.hpp>
 #include <deque>
 #include <memory>
+#include <optional>
 #include <unordered_set>
 #include <vector>
 
@@ -141,8 +141,8 @@ public:
   Extent getMaxVerticalExtent() const;
 
   /// @brief computes the interval where an accessId is used (extended by the extent of the access)
-  boost::optional<Interval> computeEnclosingAccessInterval(const int accessID,
-                                                           const bool mergeWithDoInterval) const;
+  std::optional<Interval> computeEnclosingAccessInterval(const int accessID,
+                                                         const bool mergeWithDoInterval) const;
 
   /// @brief Get fields of this stage sorted according their Intend: `Output` -> `IntputOutput` ->
   /// `Input`

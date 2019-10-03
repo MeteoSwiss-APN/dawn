@@ -135,15 +135,15 @@ Extents::getVerticalLoopOrderAccesses(LoopOrderKind loopOrder) const {
   return access;
 }
 
-boost::optional<Extent> Extents::getVerticalLoopOrderExtent(LoopOrderKind loopOrder,
-                                                            VerticalLoopOrderDir loopOrderPolicy,
-                                                            bool includeCenter) const {
+std::optional<Extent> Extents::getVerticalLoopOrderExtent(LoopOrderKind loopOrder,
+                                                          VerticalLoopOrderDir loopOrderPolicy,
+                                                          bool includeCenter) const {
   const Extent& verticalExtent = extents_[2];
 
   if(loopOrder == LoopOrderKind::LK_Parallel) {
     if(includeCenter && verticalExtent.Plus >= 0 && verticalExtent.Minus <= 0)
-      return boost::make_optional(Extent{0, 0});
-    return boost::optional<Extent>();
+      return std::make_optional(Extent{0, 0});
+    return std::optional<Extent>();
   }
 
   // retrieving the head (Plus) of the extent
@@ -152,10 +152,10 @@ boost::optional<Extent> Extents::getVerticalLoopOrderExtent(LoopOrderKind loopOr
      (loopOrder == LoopOrderKind::LK_Backward &&
       loopOrderPolicy == VerticalLoopOrderDir::VL_InLoopOrder)) {
     if(verticalExtent.Plus < (includeCenter ? 0 : 1))
-      return boost::optional<Extent>();
+      return std::optional<Extent>();
 
     // Accesses k+1 are against the loop order
-    return boost::make_optional(
+    return std::make_optional(
         Extent{std::max((includeCenter ? 0 : 1), verticalExtent.Minus), verticalExtent.Plus});
   }
   // retrieving the tail (Minus) of the extent
@@ -164,10 +164,10 @@ boost::optional<Extent> Extents::getVerticalLoopOrderExtent(LoopOrderKind loopOr
      (loopOrder == LoopOrderKind::LK_Forward &&
       loopOrderPolicy == VerticalLoopOrderDir::VL_InLoopOrder)) {
     if(verticalExtent.Minus > (includeCenter ? 0 : -1))
-      return boost::optional<Extent>();
+      return std::optional<Extent>();
 
     // Accesses k-1 are against the loop order
-    return boost::make_optional(
+    return std::make_optional(
         Extent{verticalExtent.Minus, std::min((includeCenter ? 0 : -1), verticalExtent.Plus)});
   }
   dawn_unreachable("Non supported loop order");

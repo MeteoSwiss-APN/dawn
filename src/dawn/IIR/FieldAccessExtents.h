@@ -17,6 +17,7 @@
 
 #include "dawn/IIR/Extents.h"
 #include "dawn/Support/Json.h"
+#include <optional>
 
 namespace dawn {
 namespace iir {
@@ -27,8 +28,8 @@ class FieldAccessExtents {
 public:
   /// @brief constructors and assignment
   /// @{
-  FieldAccessExtents(boost::optional<Extents> const& readExtents,
-                     boost::optional<Extents> const& writeExtents)
+  FieldAccessExtents(std::optional<Extents> const& readExtents,
+                     std::optional<Extents> const& writeExtents)
       : readAccessExtents_(readExtents),
         writeAccessExtents_(writeExtents), totalExtents_{0, 0, 0, 0, 0, 0} {
     updateTotalExtents();
@@ -43,16 +44,16 @@ public:
 
   /// @brief getters
   /// @{
-  boost::optional<Extents> const& getReadExtents() const { return readAccessExtents_; }
-  boost::optional<Extents> const& getWriteExtents() const { return writeAccessExtents_; }
+  std::optional<Extents> const& getReadExtents() const { return readAccessExtents_; }
+  std::optional<Extents> const& getWriteExtents() const { return writeAccessExtents_; }
   Extents const& getExtents() const { return totalExtents_; }
   /// @}
   /// @brief merge of extent with another (argument) extent
   /// @{
   void mergeReadExtents(Extents const& extents);
   void mergeWriteExtents(Extents const& extents);
-  void mergeReadExtents(boost::optional<Extents> const& extents);
-  void mergeWriteExtents(boost::optional<Extents> const& extents);
+  void mergeReadExtents(std::optional<Extents> const& extents);
+  void mergeWriteExtents(std::optional<Extents> const& extents);
   /// @}
   /// @brief setters
   /// @{
@@ -66,8 +67,8 @@ private:
   /// @brief update the total extent from read/write extents
   void updateTotalExtents();
 
-  boost::optional<Extents> readAccessExtents_;
-  boost::optional<Extents> writeAccessExtents_;
+  std::optional<Extents> readAccessExtents_;
+  std::optional<Extents> writeAccessExtents_;
   Extents totalExtents_;
 };
 

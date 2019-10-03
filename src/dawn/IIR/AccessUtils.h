@@ -30,7 +30,7 @@ namespace AccessUtils {
 void recordWriteAccess(std::unordered_map<int, iir::Field>& inputOutputFields,
                        std::unordered_map<int, iir::Field>& inputFields,
                        std::unordered_map<int, iir::Field>& outputFields, int AccessID,
-                       const boost::optional<iir::Extents>& extents,
+                       const std::optional<iir::Extents>& extents,
                        iir::Interval const& doMethodInterval);
 
 /// @brief given a read access, with AccessID, it will recorded in the corresponding map of input,
@@ -41,7 +41,7 @@ void recordWriteAccess(std::unordered_map<int, iir::Field>& inputOutputFields,
 void recordReadAccess(std::unordered_map<int, iir::Field>& inputOutputFields,
                       std::unordered_map<int, iir::Field>& inputFields,
                       std::unordered_map<int, iir::Field>& outputFields, int AccessID,
-                      const boost::optional<iir::Extents>& extents,
+                      const std::optional<iir::Extents>& extents,
                       iir::Interval const& doMethodInterval);
 
 } // namespace AccessUtils

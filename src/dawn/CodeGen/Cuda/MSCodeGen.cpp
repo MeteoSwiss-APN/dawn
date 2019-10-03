@@ -198,12 +198,12 @@ void MSCodeGen::generatePreFillKCaches(
     // applied at the intervals on the bounds of the iteration, they can generate out of bound
     // accesses
     auto extents = ms_->computeExtents(accessID, interval);
-    if(!extents.is_initialized()) {
+    if(!extents) {
       continue;
     }
     auto intervalVertExtent = (*extents)[2];
 
-    DAWN_ASSERT(cache.getInterval().is_initialized());
+    DAWN_ASSERT(cache.getInterval());
 
     // if only one level is accessed (the head of the cache) this level will be provided by the fill
     // operation
@@ -303,10 +303,10 @@ void MSCodeGen::generateFillKCaches(MemberFunction& cudaKernel, const iir::Inter
     if(!CacheProperties::requiresFill(cache))
       continue;
 
-    DAWN_ASSERT(cache.getInterval().is_initialized());
+    DAWN_ASSERT(cache.getInterval());
     const auto cacheInterval = *(cache.getInterval());
     auto extents = ms_->computeExtents(accessID, interval);
-    if(!extents.is_initialized()) {
+    if(!extents) {
       continue;
     }
 
@@ -422,7 +422,7 @@ bool MSCodeGen::intervalRequiresSync(const iir::Interval& interval, const iir::S
 }
 
 bool MSCodeGen::checkIfCacheNeedsToFlush(const iir::Cache& cache, iir::Interval interval) const {
-  DAWN_ASSERT(cache.getInterval().is_initialized());
+  DAWN_ASSERT(cache.getInterval());
 
   const iir::Interval& cacheInterval = *(cache.getInterval());
   if(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::epflush) {
@@ -450,9 +450,9 @@ MSCodeGen::buildKCacheProperties(const iir::Interval& interval,
       continue;
     }
     DAWN_ASSERT(policy != iir::Cache::CacheIOPolicy::local);
-    DAWN_ASSERT(cache.getInterval().is_initialized());
+    DAWN_ASSERT(cache.getInterval());
     auto extents = ms_->computeExtents(accessID, interval);
-    if(!extents.is_initialized()) {
+    if(!extents) {
       continue;
     }
     auto applyEpflush = checkIfCacheNeedsToFlush(cache, interval);
@@ -569,7 +569,7 @@ void MSCodeGen::generateKCacheSlide(MemberFunction& cudaKernel,
     if(!cacheProperties_.isKCached(cache))
       continue;
     auto cacheInterval = cache.getInterval();
-    DAWN_ASSERT(cacheInterval.is_initialized());
+    DAWN_ASSERT(cacheInterval);
     if(!(*cacheInterval).overlaps(interval)) {
       continue;
     }
@@ -614,7 +614,7 @@ void MSCodeGen::generateFinalFlushKCaches(MemberFunction& cudaKernel, const iir:
           for(const auto& kcacheProp : kcachesProp) {
             const int accessID = kcacheProp.accessID_;
             const auto& cache = ms_->getCache(accessID);
-            DAWN_ASSERT((cache.getInterval().is_initialized()));
+            DAWN_ASSERT((cache.getInterval()));
 
             int kcacheTailExtent;
             if((policy == iir::Cache::CacheIOPolicy::flush) ||
@@ -623,7 +623,7 @@ void MSCodeGen::generateFinalFlushKCaches(MemberFunction& cudaKernel, const iir:
                                      ? kcacheProp.intervalVertExtent_.Plus
                                      : kcacheProp.intervalVertExtent_.Minus;
             } else if(policy == iir::Cache::CacheIOPolicy::epflush) {
-              DAWN_ASSERT(cache.getWindow().is_initialized());
+              DAWN_ASSERT(cache.getWindow());
               auto intervalToFlush =
                   cache
                       .getWindowInterval((ms_->getLoopOrder() == iir::LoopOrderKind::LK_Backward)
@@ -761,7 +761,6 @@ void MSCodeGen::generateCudaKernelCode() {
   }
 
   DAWN_ASSERT(fields.size() > 0);
-  auto firstField = *(fields.begin());
 
   cudaKernel.startBody();
   cudaKernel.addComment("Start kernel");

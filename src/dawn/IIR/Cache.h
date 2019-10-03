@@ -17,7 +17,7 @@
 
 #include "dawn/IIR/Interval.h"
 #include "dawn/Support/HashCombine.h"
-#include <boost/optional.hpp>
+#include <optional>
 #include <string>
 
 namespace dawn {
@@ -59,9 +59,8 @@ public:
   };
 
   Cache(CacheTypeKind type, CacheIOPolicy policy, int AccessID,
-        boost::optional<Interval> const& interval,
-        boost::optional<Interval> const& enclosingAccessedInterval,
-        boost::optional<window> const& w);
+        std::optional<Interval> const& interval,
+        std::optional<Interval> const& enclosingAccessedInterval, std::optional<window> const& w);
 
   /// @brief Get the AccessID of the field
   int getCachedFieldAccessID() const;
@@ -77,14 +76,14 @@ public:
   std::string getCacheIOPolicyAsString() const;
 
   /// @brief Get the interval of the iteration space from where the cache was accessed
-  boost::optional<Interval> getInterval() const;
+  std::optional<Interval> getInterval() const;
 
   /// @brief returns a crop of the interval with the window of the cache (according to the specified
   /// bound)
   Interval getWindowInterval(Interval::Bound bound) const;
 
   /// @brief Get the enclosing of the iteration space interval and the accesses extent
-  boost::optional<Interval> getEnclosingAccessedInterval() const;
+  std::optional<Interval> getEnclosingAccessedInterval() const;
 
   /// @brief determines if the cache specification requires a window
   bool requiresWindow() const;
@@ -99,15 +98,15 @@ public:
   bool operator!=(const Cache& other) const { return !(*this == other); }
   /// @}
 
-  boost::optional<window> const& getWindow() const { return window_; }
+  std::optional<window> const& getWindow() const { return window_; }
 
 private:
   CacheTypeKind type_;
   CacheIOPolicy policy_;
   int AccessID_;
-  boost::optional<Interval> interval_;
-  boost::optional<Interval> enclosingAccessedInterval_;
-  boost::optional<window> window_;
+  std::optional<Interval> interval_;
+  std::optional<Interval> enclosingAccessedInterval_;
+  std::optional<window> window_;
 };
 
 std::ostream& operator<<(std::ostream& os, Cache::window const& w);

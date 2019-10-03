@@ -20,11 +20,11 @@
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/HashCombine.h"
 #include <array>
-#include <boost/optional.hpp>
 #include <cmath>
 #include <functional>
 #include <initializer_list>
 #include <iosfwd>
+#include <optional>
 #include <vector>
 
 namespace dawn {
@@ -182,9 +182,9 @@ public:
   /// @param loopOrderPolicy specifies the requested policy for the requested extent access:
   ///            InLoopOrder/CounterLoopOrder
   /// @param includeCenter determines whether center is considered part of the loopOrderPolicy
-  boost::optional<Extent> getVerticalLoopOrderExtent(LoopOrderKind loopOrder,
-                                                     VerticalLoopOrderDir loopOrderPolicy,
-                                                     bool includeCenter) const;
+  std::optional<Extent> getVerticalLoopOrderExtent(LoopOrderKind loopOrder,
+                                                   VerticalLoopOrderDir loopOrderPolicy,
+                                                   bool includeCenter) const;
 
   /// @brief format extents in string
   std::string toString() const;

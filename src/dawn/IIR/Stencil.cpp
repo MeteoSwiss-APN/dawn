@@ -467,8 +467,7 @@ Stencil::getLifetime(const std::unordered_set<int>& AccessIDs) const {
 }
 
 Stencil::Lifetime Stencil::getLifetime(const int AccessID) const {
-  // use make_optional(false, ...) just to avoid a gcc warning
-  boost::optional<StatementPosition> Begin = boost::make_optional(false, StatementPosition{});
+  std::optional<StatementPosition> Begin;
   StatementPosition End;
 
   int multiStageIdx = 0;
@@ -492,8 +491,8 @@ Stencil::Lifetime Stencil::getLifetime(const int AccessID) const {
             StatementPosition pos(StagePosition(multiStageIdx, stageOffset), doMethodIndex,
                                   statementIdx);
 
-            if(!Begin.is_initialized())
-              Begin = boost::make_optional(pos);
+            if(!Begin)
+              Begin = std::make_optional(pos);
             End = pos;
           };
 
@@ -511,7 +510,7 @@ Stencil::Lifetime Stencil::getLifetime(const int AccessID) const {
     multiStageIdx++;
   }
 
-  DAWN_ASSERT(Begin.is_initialized());
+  DAWN_ASSERT(Begin);
 
   return Lifetime(*Begin, End);
 }
@@ -526,13 +525,13 @@ bool Stencil::isEmpty() const {
   return true;
 }
 
-boost::optional<Interval> Stencil::getEnclosingIntervalTemporaries() const {
-  boost::optional<Interval> tmpInterval;
+std::optional<Interval> Stencil::getEnclosingIntervalTemporaries() const {
+  std::optional<Interval> tmpInterval;
   for(const auto& mss : getChildren()) {
     auto mssInterval = mss->getEnclosingAccessIntervalTemporaries();
-    if(!mssInterval.is_initialized())
+    if(!mssInterval)
       continue;
-    if(tmpInterval.is_initialized()) {
+    if(tmpInterval) {
       tmpInterval->merge(*mssInterval);
     } else {
       tmpInterval = mssInterval;

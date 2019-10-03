@@ -17,6 +17,7 @@
 
 #include "dawn/IIR/Interval.h"
 #include <list>
+#include <optional>
 
 namespace dawn {
 namespace iir {
@@ -31,7 +32,7 @@ public:
   MultiInterval(std::initializer_list<Interval> const& intervals);
 
   void insert(iir::Interval const& interval);
-  void insert(boost::optional<iir::Interval> const& interval);
+  void insert(std::optional<iir::Interval> const& interval);
   void insert(MultiInterval const& multiInterval);
   void substract(iir::Interval const& interval);
   void substract(MultiInterval const& multiInterval);
