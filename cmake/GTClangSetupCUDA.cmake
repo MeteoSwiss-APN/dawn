@@ -26,7 +26,7 @@ macro( gtclang_setup_CUDA )
       message( FATAL_ERROR "
         Could not deduce CUDA_ARCH from GPU_DEVICE=${GPU_DEVICE}.
         Possible options for GPU_DEVICE: K40, K80, P100.
-            
+
         Alternatively:
           - Set CUDA_ARCH (e.g. for P100 : \"CUDA_ARCH=sm_60\")
           - Set ENABLE_CUDA=OFF
@@ -41,6 +41,10 @@ macro( gtclang_setup_CUDA )
   gtclang_add_nvcc_flags( -DCUDA_VERSION=${CUDA_VERSION_INT} )
   gtclang_add_nvcc_flags( -arch=${CUDA_ARCH} )
   gtclang_add_nvcc_flags( --compiler-options -fPIC )
+  # workarounds for NVCC 9.2 and 10.0, see https://github.com/GridTools/gridtools/issues/1056
+  # TODO should be removed once we link to the gridtools target as we should
+  gtclang_add_nvcc_flags( -DBOOST_OPTIONAL_CONFIG_USE_OLD_IMPLEMENTATION_OF_OPTIONAL )
+  gtclang_add_nvcc_flags( -DBOOST_OPTIONAL_USE_OLD_DEFINITION_OF_NONE )
 
   if( ENABLE_WERROR )
       # Unfortunately we cannot treat all errors as warnings, we have to specify each warning.
@@ -49,7 +53,7 @@ macro( gtclang_setup_CUDA )
   endif()
 
   # Suppress nvcc warnings
-  foreach( _diag 
+  foreach( _diag
               dupl_calling_convention code_is_unreachable
               implicit_return_from_non_void_function
               calling_convention_not_allowed
@@ -57,4 +61,3 @@ macro( gtclang_setup_CUDA )
     gtclang_add_nvcc_flags( -Xcudafe --diag_suppress=${_diag} )
   endforeach()
 endmacro()
-
