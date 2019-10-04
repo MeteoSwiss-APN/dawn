@@ -6,6 +6,7 @@ paths=(
 ignore=(
     "^dawn/test/utils/googletest/"
     "^dawn/src/dawn/Support/External/"
+    "^dawn/examples/python/data/"
     "^gtclang/test/utils/googletest/"
     )
 arg_list=("")
@@ -14,7 +15,14 @@ for i in "${ignore[@]}"; do
     arg_list+=("$i")
 done
 
+CLANG_FORMAT=`which clang-format-6`
+CLANG_FORMAT_VERSION=`${CLANG_FORMAT} --version | sed 's/.*clang-format version \([[:digit:]]\.[[:digit:]]\).*/\1/g'`
+if [[ "${CLANG_FORMAT_VERSION}" != "6.0" ]]; then
+    echo "Clang format version ${CLANG_FORMAT_VERSION} not supported. Please install Clang-format 6.0!"
+    exit 1
+fi
+
 file_list=$(find ${paths[@]} -regextype posix-egrep -regex ".*\.(hpp|cpp|h|cu)$")
 for file in $(grep -v ${arg_list[@]} <<< $file_list); do
-    clang-format -i $file
+    echo "$CLANG_FORMAT -i $file"
 done

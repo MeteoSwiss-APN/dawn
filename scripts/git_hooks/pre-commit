@@ -17,7 +17,7 @@
 ##################################################################
 # SETTINGS
 # set path to clang-format binary
-CLANG_FORMAT=`which clang-format`
+CLANG_FORMAT=`which clang-format-6`
 
 ## parsing the clang format version from an output like
 ## Ubuntu clang-format version 3.7.1-2ubuntu2
@@ -36,6 +36,14 @@ PARSE_EXTS=true
 # file types to parse. Only effective when PARSE_EXTS is true.
 # FILE_EXTS=".c .h .cpp .hpp"
 FILE_EXTS=".c .h .cpp .hpp .cc .hh .cxx .cu .m"
+
+list_files_to_skip=(
+    "^dawn/test/utils/googletest/"
+    "^dawn/src/dawn/Support/External/"
+    "^dawn/examples/python/data/"
+    "^gtclang/test/utils/googletest/"
+    )
+
 
 ##################################################################
 # There should be no need to change anything below this line.
@@ -76,11 +84,15 @@ set -e
 
 # check whether the given file matches any of the set extensions
 matches_extension() {
-    local skip_files=$1
-    local filename=$(basename "$2")
+    local filepath=$1
+    local filename=$(basename "$1")
+    shift
+    local skip_files=$@
 
     #early return if file is in list of files to skip
-    for ff in $skip_files; do [[ "$ff" == "$filename" ]] && return 1; done
+    for ff in $skip_files; do 
+        [[ "$filepath" =~ $ff ]] && return 1;
+    done
 
     local extension=".${filename##*.}"
     local ext
@@ -94,8 +106,6 @@ if [[ "${CLANG_FORMAT_VERSION}" != "6.0" ]]; then
     echo "Clang format version ${CLANG_FORMAT_VERSION} not supported by pre_commit hook"
     exit 1
 fi
-
-list_files_to_skip=("define_caches_cxx03.hpp")
 
 # necessary check for initial commit
 if git rev-parse --verify HEAD >/dev/null 2>&1 ; then
@@ -124,7 +134,7 @@ git diff-index --cached --diff-filter=ACMR --name-only $against -- | while read 
 do
     # ignore file if we do check for file extensions and the file
     # does not match any of the extensions specified in $FILE_EXTS
-    if $PARSE_EXTS && ! matches_extension "${list_files_to_skip}" "$file"; then
+    if $PARSE_EXTS && ! matches_extension "$file" "${list_files_to_skip[@]}"; then
         continue;
     fi
 
