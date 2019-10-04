@@ -1,0 +1,315 @@
+{
+ "metadata": {
+  "accessIDToName": {
+   "29": "__local_fn_29",
+   "15": "a",
+   "16": "b"
+  },
+  "exprIDToAccessID": {
+   "30": 29,
+   "8": 15,
+   "9": 16,
+   "27": 15
+  },
+  "stmtIDToAccessID": {
+   "31": 29
+  },
+  "accessIDToType": {
+   "15": 6,
+   "16": 6
+  },
+  "literalIDToName": {},
+  "fieldAccessIDs": [
+   15,
+   16
+  ],
+  "APIFieldIDs": [
+   15,
+   16
+  ],
+  "temporaryFieldIDs": [],
+  "globalVariableIDs": [],
+  "versionedFields": {
+   "variableVersionMap": {}
+  },
+  "fieldnameToBoundaryCondition": {},
+  "fieldIDtoLegalDimensions": {
+   "16": {
+    "int1": 1,
+    "int2": 1,
+    "int3": 1
+   },
+   "15": {
+    "int1": 1,
+    "int2": 1,
+    "int3": 1
+   }
+  },
+  "idToStencilCall": {
+   "17": {
+    "stencil_call_decl_stmt": {
+     "stencil_call": {
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "callee": "__code_gen_17",
+      "arguments": []
+     },
+     "loc": {
+      "Line": -1,
+      "Column": -1
+     },
+     "ID": 18
+    }
+   }
+  },
+  "boundaryCallToExtent": {},
+  "allocatedFieldIDs": [],
+  "stencilLocation": {
+   "Line": 29,
+   "Column": 8
+  },
+  "stencilName": "Test"
+ },
+ "internalIR": {
+  "globalVariableToValue": {},
+  "stencils": [
+   {
+    "multiStages": [
+     {
+      "stages": [
+       {
+        "doMethods": [
+         {
+          "stmtaccesspairs": [
+           {
+            "ASTStmt": {
+             "var_decl_stmt": {
+              "type": {
+               "builtin_type": {
+                "type_id": "Float"
+               },
+               "is_const": true,
+               "is_volatile": false
+              },
+              "name": "__local_fn_29",
+              "dimension": 0,
+              "op": "=",
+              "init_list": [
+               {
+                "field_access_expr": {
+                 "name": "a",
+                 "offset": [
+                  0,
+                  0,
+                  0
+                 ],
+                 "argument_map": [
+                  -1,
+                  -1,
+                  -1
+                 ],
+                 "argument_offset": [
+                  0,
+                  0,
+                  0
+                 ],
+                 "negate_offset": false,
+                 "loc": {
+                  "Line": 26,
+                  "Column": 25
+                 },
+                 "ID": 27
+                }
+               }
+              ],
+              "loc": {
+               "Line": -1,
+               "Column": -1
+              },
+              "ID": 31
+             }
+            },
+            "accesses": {
+             "writeAccess": {
+              "29": {
+               "extents": [
+                {
+                 "minus": 0,
+                 "plus": 0
+                },
+                {
+                 "minus": 0,
+                 "plus": 0
+                },
+                {
+                 "minus": 0,
+                 "plus": 0
+                }
+               ]
+              }
+             },
+             "readAccess": {
+              "15": {
+               "extents": [
+                {
+                 "minus": 0,
+                 "plus": 0
+                },
+                {
+                 "minus": 0,
+                 "plus": 0
+                },
+                {
+                 "minus": 0,
+                 "plus": 0
+                }
+               ]
+              }
+             }
+            }
+           },
+           {
+            "ASTStmt": {
+             "expr_stmt": {
+              "expr": {
+               "assignment_expr": {
+                "left": {
+                 "field_access_expr": {
+                  "name": "b",
+                  "offset": [
+                   0,
+                   0,
+                   0
+                  ],
+                  "argument_map": [
+                   -1,
+                   -1,
+                   -1
+                  ],
+                  "argument_offset": [
+                   0,
+                   0,
+                   0
+                  ],
+                  "negate_offset": false,
+                  "loc": {
+                   "Line": 32,
+                   "Column": 59
+                  },
+                  "ID": 9
+                 }
+                },
+                "op": "=",
+                "right": {
+                 "var_access_expr": {
+                  "name": "__local_fn_29",
+                  "is_external": false,
+                  "loc": {
+                   "Line": -1,
+                   "Column": -1
+                  },
+                  "ID": 30
+                 }
+                },
+                "loc": {
+                 "Line": 32,
+                 "Column": 59
+                },
+                "ID": 10
+               }
+              },
+              "loc": {
+               "Line": 32,
+               "Column": 59
+              },
+              "ID": 19
+             }
+            },
+            "accesses": {
+             "writeAccess": {
+              "16": {
+               "extents": [
+                {
+                 "minus": 0,
+                 "plus": 0
+                },
+                {
+                 "minus": 0,
+                 "plus": 0
+                },
+                {
+                 "minus": 0,
+                 "plus": 0
+                }
+               ]
+              }
+             },
+             "readAccess": {
+              "29": {
+               "extents": [
+                {
+                 "minus": 0,
+                 "plus": 0
+                },
+                {
+                 "minus": 0,
+                 "plus": 0
+                },
+                {
+                 "minus": 0,
+                 "plus": 0
+                }
+               ]
+              }
+             }
+            }
+           }
+          ],
+          "doMethodID": 0,
+          "interval": {
+           "lower_offset": 0,
+           "upper_offset": 0,
+           "special_lower_level": "Start",
+           "special_upper_level": "End"
+          }
+         }
+        ],
+        "stageID": 24
+       }
+      ],
+      "loopOrder": "Parallel",
+      "multiStageID": 28,
+      "Caches": {}
+     }
+    ],
+    "stencilID": 17,
+    "attr": {
+     "attributes": []
+    }
+   }
+  ],
+  "controlFlowStatements": [
+   {
+    "stencil_call_decl_stmt": {
+     "stencil_call": {
+      "loc": {
+       "Line": -1,
+       "Column": -1
+      },
+      "callee": "__code_gen_17",
+      "arguments": []
+     },
+     "loc": {
+      "Line": -1,
+      "Column": -1
+     },
+     "ID": 18
+    }
+   }
+  ],
+  "boundaryConditions": []
+ },
+ "filename": "/code/gtclang/test/integration-test/IIRSerializer/StencilFnCallTest.cpp"
+}
