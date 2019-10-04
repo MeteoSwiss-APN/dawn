@@ -84,7 +84,7 @@ std::vector<int> const& cellNeighboursOfCell(atlas::Mesh const& m, int const& id
 }
 
 template <typename Init, typename Op>
-auto reduce(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
+auto reduceCellToCell(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
   for(auto&& obj : cellNeighboursOfCell(m, idx))
     op(init, obj);
   return init;
