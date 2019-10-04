@@ -62,23 +62,12 @@ private:
 
 auto getCells(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.cells().size()); }
 
-class int_holder {
-public:
-  int& operator*() { return i_; }
-  int operator*() const { return i_; }
-  int_holder(int i) : i_(i) {}
-
-private:
-  int i_;
-};
-
-std::vector<int_holder> const& cellNeighboursOfCell(atlasTag, atlas::Mesh const& m,
-                                                    int const& idx) {
+std::vector<int> const& cellNeighboursOfCell(atlas::Mesh const& m, int const& idx) {
   // note this is only a workaround and does only work as long as we have only one mesh
-  static std::map<int, std::vector<int_holder>> neighs;
+  static std::map<int, std::vector<int>> neighs;
   if(neighs.count(idx) == 0) {
     const auto& conn = m.cells().edge_connectivity();
-    neighs[idx] = std::vector<int_holder>{};
+    neighs[idx] = std::vector<int>{};
     for(int n = 0; n < conn.cols(idx); ++n) {
       int initialEdge = conn(idx, n);
       for(int c1 = 0; c1 < m.cells().size(); ++c1) {
@@ -94,10 +83,10 @@ std::vector<int_holder> const& cellNeighboursOfCell(atlasTag, atlas::Mesh const&
   return neighs[idx];
 }
 
-template <typename Objs, typename Init, typename Op>
-auto reduce(atlasTag, Objs&& objs, Init init, Op&& op) {
-  for(auto&& obj : objs)
-    op(init, *obj);
+template <typename Init, typename Op>
+auto reduce(atlasTag, atlas::Mesh const& m, int idx, Init init, Op&& op) {
+  for(auto&& obj : cellNeighboursOfCell(m, idx))
+    op(init, obj);
   return init;
 }
 
