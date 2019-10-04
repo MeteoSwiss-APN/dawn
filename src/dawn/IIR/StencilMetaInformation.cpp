@@ -599,5 +599,18 @@ void StencilMetaInformation::addStencilCallStmt(std::shared_ptr<StencilCallDeclS
   StencilIDToStencilCallMap_.add(stencilID, stmt);
 }
 
+bool StencilMetaInformation::fieldIsUnordered(int ID) const {
+  return FieldAccessIdToLocationType_.count(ID) != 0;
+}
+
+dawn::ast::FieldAccessExpr::Location StencilMetaInformation::getLocationType(int ID) const {
+  DAWN_ASSERT(fieldIsUnordered(ID));
+  return FieldAccessIdToLocationType_.at(ID);
+}
+
+void StencilMetaInformation::addUnorderedField(int ID, dawn::ast::FieldAccessExpr::Location location) {
+  FieldAccessIdToLocationType_.emplace(ID, location);
+}
+
 } // namespace iir
 } // namespace dawn

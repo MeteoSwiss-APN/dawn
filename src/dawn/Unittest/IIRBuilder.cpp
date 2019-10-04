@@ -169,7 +169,13 @@ std::shared_ptr<iir::Expr> IIRBuilder::assignExpr(std::shared_ptr<iir::Expr>&& l
 IIRBuilder::Field IIRBuilder::field(std::string const& name, fieldType ft) {
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name, asArray(ft));
-  return {id, name};
+  return {id, name, false, dawn::ast::FieldAccessExpr::Location::CELLS};
+}
+IIRBuilder::Field IIRBuilder::field(std::string const& name, dawn::ast::FieldAccessExpr::Location location) {
+  DAWN_ASSERT(si_);
+  int id = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name, asArray(fieldType::ijk));
+  si_->getMetaData().addUnorderedField(id, location);
+  return {id, name, true, location};
 }
 IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name) {
   DAWN_ASSERT(si_);

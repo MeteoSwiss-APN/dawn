@@ -443,6 +443,10 @@ public:
 /// @brief Field access expression
 /// @ingroup ast
 class FieldAccessExpr : public Expr {
+  public:
+  enum Location {CELLS = 0, NODES = 1, EDGES = 2};
+
+  private:
   std::string name_;
 
   // The offset known so far. If we have directional or offset arguments, we have to perform a
@@ -478,6 +482,9 @@ class FieldAccessExpr : public Expr {
 
   // Negate the offset (this allows writing `in(-off)`)
   bool negateOffset_;
+
+  bool unstructured_ = false;
+  Location location_ = Location::CELLS;
 
 public:
   /// @name Constructor & Destructor

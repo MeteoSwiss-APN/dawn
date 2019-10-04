@@ -326,6 +326,10 @@ public:
     return StencilIDToStencilCallMap_;
   }
 
+  bool fieldIsUnordered(int ID) const;
+  dawn::ast::FieldAccessExpr::Location getLocationType(int ID) const;
+  void addUnorderedField(int ID, dawn::ast::FieldAccessExpr::Location location);
+
 private:
   //================================================================================================
   // Stored MetaInformation
@@ -366,6 +370,9 @@ private:
 
   /// Can be filled from the StencilIDToStencilCallMap that is in Metainformation
   DoubleSidedMap<int, std::shared_ptr<iir::StencilCallDeclStmt>> StencilIDToStencilCallMap_;
+
+  /// Field access id to location type for unstructered accesses
+  std::unordered_map<int, dawn::ast::FieldAccessExpr::Location> FieldAccessIdToLocationType_;
 
   /// BoundaryConditionCall to Extent Map. Filled my `PassSetBoundaryCondition`
   std::unordered_map<std::shared_ptr<iir::BoundaryConditionDeclStmt>, Extents>

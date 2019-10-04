@@ -264,9 +264,23 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     //   StencilClass.addMember("const globals&", "m_globals");
     // }
 
+    auto fieldInfoToDeclString = [] (iir::Stencil::FieldInfo info) {
+      switch(info.field.getLocation()) {
+        case dawn::ast::FieldAccessExpr::Location::CELLS:
+          return std::string("CellField<double>");
+        case dawn::ast::FieldAccessExpr::Location::NODES:
+          return std::string("NodeField<double>");
+        case dawn::ast::FieldAccessExpr::Location::EDGES:
+          return std::string("EdgeField<double>");
+        default:
+          dawn_unreachable("invalid location");
+          return std::string("");
+      }
+    };
+
     StencilClass.addMember("Mesh const&", "m_mesh");
     for(auto fieldIt : nonTempFields) {
-      StencilClass.addMember("Field<double>&", "m_" + fieldIt.second.Name);
+      StencilClass.addMember(fieldInfoToDeclString(fieldIt.second) + "&", "m_" + fieldIt.second.Name);
     }
 
     // addTmpStorageDeclaration(StencilClass, tempFields);
@@ -277,7 +291,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
     stencilClassCtr.addArg("Mesh const& mesh");
     for(auto fieldIt : nonTempFields) {
-      stencilClassCtr.addArg("Field<double>&" + fieldIt.second.Name);
+      stencilClassCtr.addArg(fieldInfoToDeclString(fieldIt.second) + "&" + fieldIt.second.Name);
     }
 
     // stencilClassCtr.addInit("m_dom(dom_)");
