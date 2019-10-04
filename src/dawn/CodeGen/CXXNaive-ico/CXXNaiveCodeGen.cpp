@@ -74,8 +74,7 @@ std::string CXXNaiveIcoCodeGen::generateStencilInstantiation(
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // we might need to think about how to get Mesh and Field for a certain tag
-  Class StencilWrapperClass(stencilInstantiation->getName(), ssSW,
-                            "typename Tag, typename Mesh, typename Field");
+  Class StencilWrapperClass(stencilInstantiation->getName(), ssSW, "typename Tag");
   StencilWrapperClass.changeAccessibility("private");
 
   CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
@@ -134,11 +133,12 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
   const auto& APIFields = metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>();
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
-  StencilWrapperConstructor.addArg("const Mesh& mesh");
+  StencilWrapperConstructor.addArg("const gtclang::mesh_t<Tag>& mesh");
 
   std::string ctrArgs("(dom");
   for(auto APIfieldID : APIFields) {
-    StencilWrapperConstructor.addArg("Field& " + metadata.getFieldNameFromAccessID(APIfieldID));
+    StencilWrapperConstructor.addArg("gtclang::field_t<Tag, double>& " +
+                                     metadata.getFieldNameFromAccessID(APIfieldID));
     ctrArgs += "," + metadata.getFieldNameFromAccessID(APIfieldID);
   }
 
@@ -265,9 +265,9 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     //   StencilClass.addMember("const globals&", "m_globals");
     // }
 
-    StencilClass.addMember("Mesh const&", "m_mesh");
+    StencilClass.addMember("gtclang::mesh_t<Tag> const&", "m_mesh");
     for(auto fieldIt : nonTempFields) {
-      StencilClass.addMember("Field&", "m_" + fieldIt.second.Name);
+      StencilClass.addMember("gtclang::field_t<Tag, double>&", "m_" + fieldIt.second.Name);
     }
 
     // addTmpStorageDeclaration(StencilClass, tempFields);
@@ -276,9 +276,9 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
     auto stencilClassCtr = StencilClass.addConstructor();
 
-    stencilClassCtr.addArg("Mesh const& mesh");
+    stencilClassCtr.addArg("gtclang::mesh_t<Tag> const& mesh");
     for(auto fieldIt : nonTempFields) {
-      stencilClassCtr.addArg("Field&" + fieldIt.second.Name);
+      stencilClassCtr.addArg("gtclang::field_t<Tag, double>&" + fieldIt.second.Name);
     }
 
     // stencilClassCtr.addInit("m_dom(dom_)");

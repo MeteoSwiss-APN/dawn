@@ -60,6 +60,10 @@ private:
   atlas::array::ArrayView<T, 2> atlas_field_;
 };
 
+template <typename T>
+Field<T> fieldType(atlasTag);
+atlas::Mesh meshType(atlasTag);
+
 auto getCells(atlasTag, atlas::Mesh const& m) { return utility::irange(0, m.cells().size()); }
 
 std::vector<int> const& cellNeighboursOfCell(atlas::Mesh const& m, int const& idx) {

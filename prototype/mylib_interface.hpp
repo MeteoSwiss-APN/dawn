@@ -6,6 +6,10 @@ namespace mylibInterface {
 
 struct mylibTag {};
 
+template <typename T>
+mylib::FaceData<T> fieldType(mylibTag);
+mylib::Grid meshType(mylibTag);
+
 decltype(auto) getCells(mylibTag, mylib::Grid const& m) { return m.faces(); }
 
 template <typename Init, typename Op>

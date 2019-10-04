@@ -21,9 +21,7 @@ int main() {
     toVtk(m, of);
     toVtk("temperature", in, m, of);
 
-    dawn_generated::cxxnaiveico::generated<mylibInterface::mylibTag, mylib::Grid,
-                                           mylib::FaceData<double>>(m, in, out)
-        .run();
+    dawn_generated::cxxnaiveico::generated<mylibInterface::mylibTag>(m, in, out).run();
 
     using std::swap;
     swap(in, out);
