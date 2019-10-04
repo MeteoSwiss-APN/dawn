@@ -8,8 +8,8 @@ RUN apt-get update                                                              
 ENV PYTHON_DIR $(which python3.7)
 USER 1001
 RUN cd /usr/local/gtclang_build                                                                                                 && \
-    git clone https://github.com/MeteoSwiss-APN/gtclang.git gtclang                                                             && \
-    cd gtclang                                                                                                                  && \
+    git clone https://github.com/MeteoSwiss-APN/dawn.git                                                                        && \
+    cd dawn/gtclang                                                                                                             && \
     sed -i 's/git@github.com:MeteoSwiss-APN\/dawn.git/https:\/\/github.com\/MeteoSwiss-APN\/dawn.git/g' bundle/CMakeLists.txt   && \
     cd bundle/ && mkdir build && cd build && \ 
     cmake -DPYTHON_EXECUTABLE="${PYTHON_DIR}" -DCMAKE_INSTALL_PREFIX=/usr/local/gtclang_build/install ..                        && \
