@@ -91,6 +91,9 @@ public:
   template <typename Sub, typename Base>
   using enable_if_subtype_t = typename std::enable_if<std::is_base_of<Base, Sub>::value>::type;
 
+  /// @brief Dynamically determine the data type
+  StmtData::DataType getDataType() const { return data_->getDataType(); }
+
   /// @brief Get data object, must provide the type of the data object (must be subtype of StmtData)
   template <typename DataType, typename = enable_if_subtype_t<DataType, StmtData>>
   DataType& getData() {

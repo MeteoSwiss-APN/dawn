@@ -60,7 +60,7 @@ static void
 serializeStmtAccessPair(proto::iir::StatementAccessPair* protoStmtAccessPair,
                         const std::unique_ptr<iir::StatementAccessesPair>& stmtAccessPair) {
   // serialize the statement
-  ProtoStmtBuilder builder(protoStmtAccessPair->mutable_aststmt());
+  ProtoStmtBuilder builder(protoStmtAccessPair->mutable_aststmt(), ast::StmtData::IIR_DATA_TYPE);
   stmtAccessPair->getStatement()->accept(builder);
 
   // check if caller accesses are initialized, and if so, fill them
@@ -253,7 +253,7 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
   auto& protoFieldNameToBC = *protoMetaData->mutable_fieldnametoboundarycondition();
   for(auto fieldNameToBC : metaData.fieldnameToBoundaryConditionMap_) {
     proto::statements::Stmt protoStencilCall;
-    ProtoStmtBuilder builder(&protoStencilCall);
+    ProtoStmtBuilder builder(&protoStencilCall, ast::StmtData::IIR_DATA_TYPE);
     fieldNameToBC.second->accept(builder);
     protoFieldNameToBC.insert({fieldNameToBC.first, protoStencilCall});
   }
@@ -272,7 +272,7 @@ void IIRSerializer::serializeMetaData(proto::iir::StencilInstantiation& target,
   auto& protoIDToStencilCallMap = *protoMetaData->mutable_idtostencilcall();
   for(auto IDToStencilCall : metaData.getStencilIDToStencilCallMap().getDirectMap()) {
     proto::statements::Stmt protoStencilCall;
-    ProtoStmtBuilder builder(&protoStencilCall);
+    ProtoStmtBuilder builder(&protoStencilCall, ast::StmtData::IIR_DATA_TYPE);
     IDToStencilCall.second->accept(builder);
     protoIDToStencilCallMap.insert({IDToStencilCall.first, protoStencilCall});
   }
@@ -411,7 +411,7 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
   // Filling Field: repeated StencilDescStatement stencilDescStatements = 10;
   for(const auto& stencilDescStmt : iir->getControlFlowDescriptor().getStatements()) {
     auto protoStmt = protoIIR->add_controlflowstatements();
-    ProtoStmtBuilder builder(protoStmt);
+    ProtoStmtBuilder builder(protoStmt, ast::StmtData::IIR_DATA_TYPE);
     stencilDescStmt->accept(builder);
     if(stencilDescStmt->getData<iir::IIRStmtData>().StackTrace)
       DAWN_ASSERT_MSG(stencilDescStmt->getData<iir::IIRStmtData>().StackTrace->empty(),
@@ -427,7 +427,7 @@ void IIRSerializer::serializeIIR(proto::iir::StencilInstantiation& target,
       }
 
       DAWN_ASSERT(sf->Asts.size() == 1);
-      ProtoStmtBuilder builder(protoBC->mutable_aststmt());
+      ProtoStmtBuilder builder(protoBC->mutable_aststmt(), ast::StmtData::IIR_DATA_TYPE);
       sf->Asts[0]->accept(builder);
     }
   }

@@ -103,7 +103,8 @@ public:
           std::make_optional(iir::Accesses());
       calleeAccessesList_.emplace_back(
           &*curStatementStack_.back()->Stmt->getData<iir::IIRStmtData>().CalleeAccesses);
-    }
+    } else
+      curStatementStack_.back()->Stmt->getData<iir::IIRStmtData>().CalleeAccesses = std::nullopt;
 
     // Add all accesses of all parent if-cond expressions
     for(const auto& stmt : curStatementStack_)
