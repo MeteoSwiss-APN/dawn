@@ -57,11 +57,11 @@ TEST(coriolis_stencil, test) {
 
   dawn_generated::OPTBACKEND::coriolis_stencil coriolis_gt(dom, u_tens_gt, u_nnow, v_tens_gt, v_nnow, fc);
   dawn_generated::cxxnaive::coriolis_stencil coriolis_cxxnaive(dom, u_tens_cxxnaive, u_nnow, v_tens_cxxnaive,
-                                               v_nnow, fc);
+                                                               v_nnow, fc);
 
   coriolis_gt.run(u_tens_gt, u_nnow, v_tens_gt, v_nnow, fc);
   coriolis_cxxnaive.run(u_tens_cxxnaive, u_nnow, v_tens_cxxnaive,
-                                               v_nnow, fc);
+                        v_nnow, fc);
 
   ASSERT_TRUE(verif.verify(u_tens_gt, u_tens_cxxnaive));
   ASSERT_TRUE(verif.verify(v_tens_gt, v_tens_cxxnaive));

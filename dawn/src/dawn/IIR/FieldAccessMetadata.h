@@ -58,7 +58,7 @@ public:
       return variableVersionsMap_.at(derivedInfo_.versionToOriginalVersionMap_.at(accessID));
     }
   }
-  
+
   void addIDPair(const int originalAccessID, const int versionedAccessID) {
     DAWN_ASSERT(!derivedInfo_.versionIDs_.count(versionedAccessID));
     DAWN_ASSERT(!derivedInfo_.versionToOriginalVersionMap_.count(originalAccessID));

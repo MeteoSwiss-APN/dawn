@@ -48,5 +48,5 @@ public:
    */
   void make_steady();
 };
-}
-}
+} // namespace clang
+} // namespace gridtools

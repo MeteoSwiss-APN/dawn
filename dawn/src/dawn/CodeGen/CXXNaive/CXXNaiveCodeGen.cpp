@@ -545,7 +545,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveCodeGen::generateCode() {
 
   std::string filename = generateFileName(context_);
   return std::make_unique<TranslationUnit>(filename, std::move(ppDefines), std::move(stencils),
-                                      std::move(globals));
+                                           std::move(globals));
 }
 
 } // namespace cxxnaive

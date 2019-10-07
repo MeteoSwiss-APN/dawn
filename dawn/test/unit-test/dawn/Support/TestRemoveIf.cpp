@@ -14,8 +14,8 @@
 
 #include "dawn/Support/RemoveIf.hpp"
 #include <algorithm>
-#include <unordered_map>
 #include <gtest/gtest.h>
+#include <unordered_map>
 #include <vector>
 
 namespace dawn {
@@ -63,4 +63,4 @@ TEST(RemoveIf, Map) {
   EXPECT_EQ(m.size(), 2);
 }
 
-} // anonymous namespace
+} // namespace dawn

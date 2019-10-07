@@ -41,5 +41,5 @@ public:
 
   operator double() const;
 };
-}
-}
+} // namespace clang
+} // namespace gridtools

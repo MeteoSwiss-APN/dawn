@@ -37,13 +37,13 @@ namespace clang {
 namespace math {
 
 /**
-* @defgroup math_function Math functions
-* @brief Math functions which can be safely used inside stencil and stencil_function
-* Do-methods
-*
-* @ingroup gridtools_clang
-* @{
-*/
+ * @defgroup math_function Math functions
+ * @brief Math functions which can be safely used inside stencil and stencil_function
+ * Do-methods
+ *
+ * @ingroup gridtools_clang
+ * @{
+ */
 
 /**
  * @brief Computes the absolute value of a floating point value @c arg
@@ -112,13 +112,13 @@ GT_FUNCTION T pow(const T x, const T y) {
 }
 
 /**
-* @brief Compute square root
-*
-* @param x Value whose square root is computed. If the argument is negative, a domain
-* error occurs.
-*
-* @see http://en.cppreference.com/w/cpp/numeric/math/sqrt
-*/
+ * @brief Compute square root
+ *
+ * @param x Value whose square root is computed. If the argument is negative, a domain
+ * error occurs.
+ *
+ * @see http://en.cppreference.com/w/cpp/numeric/math/sqrt
+ */
 template <typename T>
 GT_FUNCTION T sqrt(const T x) {
   return ::sqrt(x);
@@ -173,6 +173,6 @@ GT_FUNCTION T log(const T x) {
 }
 
 /** @} */
-}
-}
-}
+} // namespace math
+} // namespace clang
+} // namespace gridtools

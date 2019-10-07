@@ -31,5 +31,5 @@ public:
   template <typename... T>
   boundary_condition(const stencil_function&, T&&...);
 };
-}
-}
+} // namespace clang
+} // namespace gridtools

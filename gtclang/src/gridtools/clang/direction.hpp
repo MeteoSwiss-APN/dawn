@@ -28,5 +28,5 @@ struct direction {
   direction operator+(int);
   direction operator-(int);
 };
-}
-}
+} // namespace clang
+} // namespace gridtools

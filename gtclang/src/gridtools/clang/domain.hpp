@@ -93,5 +93,5 @@ struct is_domain : std::false_type {};
 
 template <>
 struct is_domain<domain> : std::true_type {};
-}
-}
+} // namespace clang
+} // namespace gridtools

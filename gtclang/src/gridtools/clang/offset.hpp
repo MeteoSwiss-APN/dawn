@@ -31,5 +31,5 @@ struct offset {
   offset operator+();
   offset operator-();
 };
-}
-}
+} // namespace clang
+} // namespace gridtools

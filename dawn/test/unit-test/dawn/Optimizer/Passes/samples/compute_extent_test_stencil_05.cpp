@@ -26,7 +26,7 @@ stencil compute_extent_test_stencil {
     vertical_region(k_start, k_end) {
       tmp0 = u[i + 1] + u[i - 1];
       tmp1 = tmp0[j + 1] + tmp0[i - 1];
-      tmp2 = tmp1[i-1] + tmp0[j-1];
+      tmp2 = tmp1[i - 1] + tmp0[j - 1];
       tmp3 = tmp0[i + 2] + tmp0[j - 1];
       out = tmp3[i + 1] + tmp2[j - 1];
     }

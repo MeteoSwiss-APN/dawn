@@ -73,8 +73,8 @@ TEST_P(StencilTest, FieldsWithAttributes) {
 }
 
 TEST_P(StencilTest, AST) {
-  sirRef->Stencils[0]->StencilDescAst = std::make_shared<sir::AST>(
-      sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
+  sirRef->Stencils[0]->StencilDescAst =
+      std::make_shared<sir::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
           sir::makeExprStmt(std::make_shared<sir::FieldAccessExpr>("bar"))}));
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }
@@ -109,8 +109,8 @@ TEST_P(StencilFunctionTest, Arguments) {
 }
 
 TEST_P(StencilFunctionTest, ASTs) {
-  sirRef->StencilFunctions[0]->Asts.emplace_back(std::make_shared<sir::AST>(
-      sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
+  sirRef->StencilFunctions[0]->Asts.emplace_back(
+      std::make_shared<sir::AST>(sir::makeBlockStmt(std::vector<std::shared_ptr<sir::Stmt>>{
           sir::makeExprStmt(std::make_shared<sir::FieldAccessExpr>("bar"))})));
   SIR_EXCPECT_EQ(sirRef, serializeAndDeserializeRef());
 }

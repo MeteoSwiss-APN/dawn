@@ -26,7 +26,7 @@ stencil Test {
 
   Do {
     vertical_region(k_start, k_end)
-      field_a = field_b;
+        field_a = field_b;
   }
 };
 

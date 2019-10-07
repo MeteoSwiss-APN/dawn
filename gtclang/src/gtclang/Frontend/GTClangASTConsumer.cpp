@@ -237,8 +237,9 @@ void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {
       } else {
         num_stencils_generated++;
       }
-      if(context_->getOptions().DeserializeIIR != "" && num_stencils_generated > 1) {        
-        DAWN_LOG(ERROR)<< "more than one stencil present in DSL but only one stencil deserialized from IIR";
+      if(context_->getOptions().DeserializeIIR != "" && num_stencils_generated > 1) {
+        DAWN_LOG(ERROR)
+            << "more than one stencil present in DSL but only one stencil deserialized from IIR";
         return;
       }
     }

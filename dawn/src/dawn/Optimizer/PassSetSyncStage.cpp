@@ -53,7 +53,7 @@ bool PassSetSyncStage::requiresSync(const iir::Stage& stage,
 
     std::optional<iir::Interval> fieldInterval =
         stage.computeEnclosingAccessInterval(accessID, false);
-   DAWN_ASSERT(fieldInterval);
+    DAWN_ASSERT(fieldInterval);
 
     for(const auto& stageIt : ms->getChildren()) {
       if(stageIt->getStageID() == stageId)

@@ -14,9 +14,9 @@
 
 #include "dawn/CodeGen/Cuda/ASTStencilFunctionParamVisitor.h"
 #include "dawn/CodeGen/CXXUtil.h"
+#include "dawn/IIR/AST.h"
 #include "dawn/IIR/StencilFunctionInstantiation.h"
 #include "dawn/IIR/StencilInstantiation.h"
-#include "dawn/IIR/AST.h"
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {

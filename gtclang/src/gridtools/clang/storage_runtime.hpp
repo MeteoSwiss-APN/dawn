@@ -23,9 +23,9 @@
 #define GRIDTOOLS_CLANG_META_DATA_T_DEFINED
 #define GRIDTOOLS_CLANG_STORAGE_T_DEFINED
 
-#include <gridtools/storage/storage_facility.hpp>
 #include <gridtools/stencil_composition/stencil_composition.hpp>
 #include <gridtools/stencil_composition/stencil_functions.hpp>
+#include <gridtools/storage/storage_facility.hpp>
 
 namespace gridtools {
 
@@ -50,8 +50,8 @@ using halo_j_t = gridtools::halo<0, 0, 0>;
 #endif
 
 /**
-  * @brief Backend type
-  */
+ * @brief Backend type
+ */
 #ifdef __CUDACC__
 using backend_t = gridtools::backend::cuda;
 #else
@@ -98,5 +98,5 @@ using storage_t = storage_ijk_t;
 #define GT_BACKEND_DECISION_viewmaker(x) make_device_view(x)
 #define GT_BACKEND_DECISION_bcapply gridtools::boundary_apply_gpu
 #endif
-}
-}
+} // namespace clang
+} // namespace gridtools

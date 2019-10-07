@@ -200,5 +200,5 @@ using ::gridtools::make_host_view;
 template <typename T>
 storage_t make_host_view(T...);
 #endif
-}
-}
+} // namespace clang
+} // namespace gridtools

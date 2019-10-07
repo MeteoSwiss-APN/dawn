@@ -49,7 +49,7 @@ public:
   Node4(Node4&& other) : val_(other.val_) {}
   int val_;
 };
-}
+} // namespace impl
 
 namespace {
 
@@ -337,4 +337,4 @@ TEST_F(IIRNode, ReverseIterators) {
 }
 
 TEST_F(IIRNode, getChild) {}
-}
+} // namespace
