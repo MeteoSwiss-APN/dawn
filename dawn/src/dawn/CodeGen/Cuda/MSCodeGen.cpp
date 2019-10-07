@@ -675,21 +675,17 @@ void MSCodeGen::generateCudaKernelCode() {
   // fields used in the stencil
   const auto fields = support::orderMap(ms_->getFields());
 
-  auto nonTempFields = makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>(
-                                             [&](std::pair<int, iir::Field> const& p) {
-                                               return !metadata_.isAccessType(
-                                                   iir::FieldAccessType::FAT_StencilTemporary,
-                                                   p.second.getAccessID());
-                                             }));
+  auto nonTempFields = makeRange(fields, [&](std::pair<int, iir::Field> const& p) {
+    return !metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
+                                   p.second.getAccessID());
+  });
   // all the temp fields that are non local cache, and therefore will require the infrastructure
   // of
   // tmp storages (allocation, iterators, etc)
-  auto tempFieldsNonLocalCached =
-      makeRange(fields, std::function<bool(std::pair<int, iir::Field> const&)>(
-                            [&](std::pair<int, iir::Field> const& p) {
-                              const int accessID = p.first;
-                              return ms_->isMemAccessTemporary(accessID);
-                            }));
+  auto tempFieldsNonLocalCached = makeRange(fields, [&](std::pair<int, iir::Field> const& p) {
+    const int accessID = p.first;
+    return ms_->isMemAccessTemporary(accessID);
+  });
 
   std::string fnDecl = "";
   if(useCodeGenTemporaries_)

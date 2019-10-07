@@ -194,15 +194,14 @@ private:
 /// @see IndexRange for an example on how to use the index ranges
 /// @ingroup support
 ///
-template <typename Cont>
-IndexRange<const Cont> makeRange(Cont const& cont,
-                                 std::function<bool(typename Cont::value_type const&)> pred) {
-  return IndexRange<const Cont>{cont, pred};
+template <typename Cont, typename Fun>
+IndexRange<const Cont> makeRange(Cont const& cont, Fun&& pred) {
+  return IndexRange<const Cont>{cont, std::forward<Fun>(pred)};
 }
 
-template <typename Cont>
-IndexRange<Cont> makeRange(Cont& cont, std::function<bool(typename Cont::value_type const&)> pred) {
-  return IndexRange<Cont>{cont, pred};
+template <typename Cont, typename Fun>
+IndexRange<Cont> makeRange(Cont& cont, Fun&& pred) {
+  return IndexRange<Cont>{cont, std::forward<Fun>(pred)};
 }
 
 } // namespace dawn

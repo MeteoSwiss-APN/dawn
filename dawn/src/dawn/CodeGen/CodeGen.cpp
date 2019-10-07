@@ -206,15 +206,14 @@ CodeGen::computeCodeGenProperties(const iir::StencilInstantiation* stencilInstan
     // fields used in the stencil
     const auto& StencilFields = stencil->getFields();
 
-    auto nonTempFields = makeRange(
-        StencilFields, std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
-                           [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
-                             return !p.second.IsTemporary;
-                           }));
-    auto tempFields = makeRange(
-        StencilFields,
-        std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
-            [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
+    auto nonTempFields =
+        makeRange(StencilFields, [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
+          return !p.second.IsTemporary;
+        });
+    auto tempFields =
+        makeRange(StencilFields, [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
+          return p.second.IsTemporary;
+        });
 
     for(const auto& field : nonTempFields) {
       paramNameToType.emplace(field.second.Name, getStorageType(field.second.Dimensions));
