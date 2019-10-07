@@ -1,14 +1,8 @@
 #!/bin/bash
-paths=(
-    "dawn"
-    "gtclang"
-    )
-ignore=(
-    "^dawn/test/utils/googletest/"
-    "^dawn/src/dawn/Support/External/"
-    "^dawn/examples/python/data/"
-    "^gtclang/test/utils/googletest/"
-    )
+SCRIPT=$(readlink -f $0)
+SCRIPTPATH=`dirname $SCRIPT`
+
+source ${SCRIPTPATH}/ignore_list.sh
 arg_list=("")
 for i in "${ignore[@]}"; do
     arg_list+=("-e")
@@ -22,7 +16,7 @@ if [[ "${CLANG_FORMAT_VERSION}" != "6.0" ]]; then
     exit 1
 fi
 
-file_list=$(find ${paths[@]} -regextype posix-egrep -regex ".*\.(hpp|cpp|h|cu)$")
+file_list=$(find . -regextype posix-egrep -regex ".*\.(hpp|cpp|h|cu)$")
 for file in $(grep -v ${arg_list[@]} <<< $file_list); do
     echo "$CLANG_FORMAT -i $file"
 done

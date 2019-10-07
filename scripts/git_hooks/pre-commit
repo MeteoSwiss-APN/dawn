@@ -13,6 +13,8 @@
 # Link:    https://github.com/githubbrowser/Pre-commit-hooks
 # Contact: David Martin, david.martin.mailbox@googlemail.com
 
+SCRIPT=$(readlink -f $0)
+SCRIPTPATH=`dirname $SCRIPT`
 
 ##################################################################
 # SETTINGS
@@ -37,13 +39,7 @@ PARSE_EXTS=true
 # FILE_EXTS=".c .h .cpp .hpp"
 FILE_EXTS=".c .h .cpp .hpp .cc .hh .cxx .cu .m"
 
-list_files_to_skip=(
-    "^dawn/test/utils/googletest/"
-    "^dawn/src/dawn/Support/External/"
-    "^dawn/examples/python/data/"
-    "^gtclang/test/utils/googletest/"
-    )
-
+source ${SCRIPTPATH}/../ignore_list.sh
 
 ##################################################################
 # There should be no need to change anything below this line.
