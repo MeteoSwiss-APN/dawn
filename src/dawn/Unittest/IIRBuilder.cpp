@@ -170,11 +170,6 @@ std::shared_ptr<iir::Expr> IIRBuilder::assignExpr(std::shared_ptr<iir::Expr>&& l
 IIRBuilder::Field IIRBuilder::field(std::string const& name, fieldType ft) {
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name, asArray(ft));
-  int accessID = si_->getMetaData().getAccessIDFromName(name);
-  dawn::iir::Field field(accessID, iir::Field::IntendKind::IK_InputOutput, std::nullopt,
-                         std::nullopt,
-                         iir::Interval(sir::Interval{sir::Interval::Start, sir::Interval::End}));
-  si_->getMetaData().addAccessIDFieldPair(accessID, field);
   return {id, name, false, ast::Expr::LocationType::Cells};
 }
 IIRBuilder::Field IIRBuilder::field(std::string const& name, ast::Expr::LocationType location) {
@@ -185,7 +180,7 @@ IIRBuilder::Field IIRBuilder::field(std::string const& name, ast::Expr::Location
   dawn::iir::Field field(
       accessID, iir::Field::IntendKind::IK_InputOutput, std::nullopt, std::nullopt,
       iir::Interval(sir::Interval{sir::Interval::Start, sir::Interval::End}), location);
-  si_->getMetaData().addAccessIDFieldPair(accessID, field);
+  si_->getMetaData().addAccessIDLocationPair(accessID, location);
 
   return {id, name, true, location};
 }

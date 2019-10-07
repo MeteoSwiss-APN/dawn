@@ -383,10 +383,6 @@ std::string StencilMetaInformation::getNameFromAccessID(int accessID) const {
   }
 }
 
-iir::Field StencilMetaInformation::getFieldFromFieldAccessID(int accessID) const {
-  return fieldAccessIdToField_.at(accessID);
-}
-
 int StencilMetaInformation::getAccessIDFromExpr(const std::shared_ptr<iir::Expr>& expr) const {
   auto it = ExprIDToAccessIDMap_.find(expr->getID());
   DAWN_ASSERT_MSG(it != ExprIDToAccessIDMap_.end(), "Invalid Expr");
@@ -428,10 +424,6 @@ void StencilMetaInformation::addAccessIDNamePair(int accessID, const std::string
   AccessIDToNameMap_.add(accessID, name);
 }
 
-void StencilMetaInformation::addAccessIDFieldPair(int accessID, const iir::Field& field) {
-  fieldAccessIdToField_.emplace(accessID, field);
-}
-
 int StencilMetaInformation::addField(FieldAccessType type, const std::string& name,
                                      const Array3i fieldDimensions) {
   int accessID = UIDGenerator::getInstance()->get();
@@ -457,6 +449,20 @@ int StencilMetaInformation::addTmpField(FieldAccessType type, const std::string&
   fieldIDToInitializedDimensionsMap_.emplace(accessID, fieldDimensions);
 
   return accessID;
+}
+
+bool StencilMetaInformation::getIsUnorderedFromAcessID(int AccessID) const {
+  return FieldAccessIdToLocationType_.count(AccessID) != 0;
+}
+
+ast::Expr::LocationType StencilMetaInformation::getLocationTypeFromAccessID(int AccessID) const {
+  DAWN_ASSERT(getIsUnorderedFromAcessID(AccessID));
+  return FieldAccessIdToLocationType_.at(AccessID);
+}
+
+void StencilMetaInformation::addAccessIDLocationPair(int AccessID,
+                                                     ast::Expr::LocationType location) {
+  FieldAccessIdToLocationType_.emplace(AccessID, location);
 }
 
 void StencilMetaInformation::removeAccessID(int AccessID) {

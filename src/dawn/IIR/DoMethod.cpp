@@ -142,10 +142,10 @@ void DoMethod::updateLevel() {
         continue;
       }
 
-      if(metaData_.getFieldFromFieldAccessID(AccessID).isUnstructured()) {
+      if(metaData_.getIsUnorderedFromAcessID(AccessID)) {
         AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
                                        extents, getInterval(),
-                                       metaData_.getFieldFromFieldAccessID(AccessID).getLocation());
+                                       metaData_.getLocationTypeFromAccessID(AccessID));
       } else {
         AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
                                        extents, getInterval());
@@ -161,10 +161,10 @@ void DoMethod::updateLevel() {
         continue;
       }
 
-      if(metaData_.getFieldFromFieldAccessID(AccessID).isUnstructured()) {
+      if(metaData_.getIsUnorderedFromAcessID(AccessID)) {
         AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
                                       extents, getInterval(),
-                                      metaData_.getFieldFromFieldAccessID(AccessID).getLocation());
+                                      metaData_.getLocationTypeFromAccessID(AccessID));
       } else {
         AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
                                       extents, getInterval());

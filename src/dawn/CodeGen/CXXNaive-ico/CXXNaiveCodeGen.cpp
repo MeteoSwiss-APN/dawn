@@ -139,7 +139,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
 
     std::string typeString = "";
 
-    switch(metadata.getFieldFromFieldAccessID(APIfieldID).getLocation()) {
+    switch(metadata.getLocationTypeFromAccessID(APIfieldID)) {
     case ast::Expr::LocationType::Cells:
       typeString = "Cell";
       break;

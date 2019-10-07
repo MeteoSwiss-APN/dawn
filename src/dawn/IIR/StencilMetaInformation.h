@@ -196,9 +196,6 @@ public:
   /// @brief Insert a new AccessID - Name pair
   void addAccessIDNamePair(int accessID, const std::string& name);
 
-  /// @brief Insert a new AccessID - Field pair
-  void addAccessIDFieldPair(int accessID, const iir::Field& field);
-
   void addStencilCallStmt(std::shared_ptr<StencilCallDeclStmt> stmt, int stencilID);
 
   /// @brief Remove the field, variable or literal given by `AccessID`
@@ -333,9 +330,9 @@ public:
     return StencilIDToStencilCallMap_;
   }
 
-  bool fieldIsUnordered(int ID) const;
-  ast::Expr::LocationType getLocationType(int ID) const;
-  void addUnorderedField(int ID, ast::Expr::LocationType location);
+  bool getIsUnorderedFromAcessID(int AcessID) const;
+  dawn::ast::Expr::LocationType getLocationTypeFromAccessID(int ID) const;
+  void addAccessIDLocationPair(int ID, dawn::ast::Expr::LocationType location);
 
 private:
   //================================================================================================
@@ -355,6 +352,8 @@ private:
   /// field for example
   std::unordered_map<int, int> ExprIDToAccessIDMap_;
   std::unordered_map<int, int> StmtIDToAccessIDMap_;
+
+  std::unordered_map<int, ast::Expr::LocationType> FieldAccessIdToLocationType_;
 
   /// Referenced stencil functions in this stencil (note that nested stencil functions are not
   /// stored here but rather in the respecticve `StencilFunctionInstantiation`)
@@ -377,9 +376,6 @@ private:
 
   /// Can be filled from the StencilIDToStencilCallMap that is in Metainformation
   DoubleSidedMap<int, std::shared_ptr<iir::StencilCallDeclStmt>> StencilIDToStencilCallMap_;
-
-  /// Field access id to iir::Field (e.g. to find location type)
-  std::unordered_map<int, iir::Field> fieldAccessIdToField_;
 
   /// BoundaryConditionCall to Extent Map. Filled my `PassSetBoundaryCondition`
   std::unordered_map<std::shared_ptr<iir::BoundaryConditionDeclStmt>, Extents>
