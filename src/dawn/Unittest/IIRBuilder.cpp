@@ -172,7 +172,8 @@ IIRBuilder::Field IIRBuilder::field(std::string const& name, fieldType ft) {
   int id = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name, asArray(ft));
   int accessID = si_->getMetaData().getAccessIDFromName(name);
   dawn::iir::Field field(accessID, iir::Field::IntendKind::IK_InputOutput, std::nullopt,
-                         std::nullopt, iir::Interval(0, 0));
+                         std::nullopt,
+                         iir::Interval(sir::Interval{sir::Interval::Start, sir::Interval::End}));
   si_->getMetaData().addAccessIDFieldPair(accessID, field);
   return {id, name, false, ast::Expr::LocationType::Cells};
 }
@@ -181,8 +182,9 @@ IIRBuilder::Field IIRBuilder::field(std::string const& name, ast::Expr::Location
   int id = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name,
                                        asArray(fieldType::ijk));
   int accessID = si_->getMetaData().getAccessIDFromName(name);
-  dawn::iir::Field field(accessID, iir::Field::IntendKind::IK_InputOutput, std::nullopt,
-                         std::nullopt, iir::Interval(0, 0), location);
+  dawn::iir::Field field(
+      accessID, iir::Field::IntendKind::IK_InputOutput, std::nullopt, std::nullopt,
+      iir::Interval(sir::Interval{sir::Interval::Start, sir::Interval::End}), location);
   si_->getMetaData().addAccessIDFieldPair(accessID, field);
 
   return {id, name, true, location};
