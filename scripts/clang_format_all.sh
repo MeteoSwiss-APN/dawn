@@ -18,5 +18,5 @@ fi
 
 file_list=$(find . -regextype posix-egrep -regex ".*\.(hpp|cpp|h|cu)$")
 for file in $(grep -v ${arg_list[@]} <<< $file_list); do
-    echo "$CLANG_FORMAT -i $file"
+    $CLANG_FORMAT -i $file
 done
