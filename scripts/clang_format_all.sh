@@ -9,10 +9,10 @@ for i in "${ignore[@]}"; do
     arg_list+=("$i")
 done
 
-CLANG_FORMAT=`which clang-format-6`
-CLANG_FORMAT_VERSION=`${CLANG_FORMAT} --version | sed 's/.*clang-format version \([[:digit:]]\.[[:digit:]]\).*/\1/g'`
-if [[ "${CLANG_FORMAT_VERSION}" != "6.0" ]]; then
-    echo "Clang format version ${CLANG_FORMAT_VERSION} not supported. Please install Clang-format 6.0!"
+CLANG_FORMAT=`which clang-format`
+CLANG_FORMAT_VERSION=`${CLANG_FORMAT} --version | sed 's/.*clang-format version \([[:digit:]]\.[[:digit:]]\.[[:digit:]]\).*/\1/g'`
+if [[ "${CLANG_FORMAT_VERSION}" != "6.0.1" ]]; then
+    echo "Clang format version ${CLANG_FORMAT_VERSION} not supported. Please install Clang-format 6.0.1!"
     exit 1
 fi
 
