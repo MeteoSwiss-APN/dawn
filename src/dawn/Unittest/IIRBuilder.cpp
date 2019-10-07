@@ -120,12 +120,13 @@ IIRBuilder::build(std::string const& name, std::unique_ptr<iir::Stencil> stencil
 
   return map;
 }
-std::shared_ptr<iir::Expr> IIRBuilder::reduceOverNeighborExpr(op operation,
-                                                              std::shared_ptr<iir::Expr>&& rhs,
-                                                              std::shared_ptr<iir::Expr>&& init) {
+std::shared_ptr<iir::Expr>
+IIRBuilder::reduceOverNeighborExpr(op operation, std::shared_ptr<iir::Expr>&& rhs,
+                                   std::shared_ptr<iir::Expr>&& init,
+                                   ast::Expr::LocationType rhs_location) {
   auto expr = std::make_shared<iir::ReductionOverNeighborExpr>(
       toStr(operation, {op::multiply, op::plus, op::minus, op::assign, op::divide}), std::move(rhs),
-      std::move(init));
+      std::move(init), rhs_location);
   expr->setID(si_->nextUID());
   return expr;
 }
@@ -169,12 +170,21 @@ std::shared_ptr<iir::Expr> IIRBuilder::assignExpr(std::shared_ptr<iir::Expr>&& l
 IIRBuilder::Field IIRBuilder::field(std::string const& name, fieldType ft) {
   DAWN_ASSERT(si_);
   int id = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name, asArray(ft));
-  return {id, name, false, dawn::ast::FieldAccessExpr::Location::CELLS};
+  int accessID = si_->getMetaData().getAccessIDFromName(name);
+  dawn::iir::Field field(accessID, iir::Field::IntendKind::IK_InputOutput, std::nullopt,
+                         std::nullopt, iir::Interval(0, 0));
+  si_->getMetaData().addAccessIDFieldPair(accessID, field);
+  return {id, name, false, ast::Expr::LocationType::Cells};
 }
-IIRBuilder::Field IIRBuilder::field(std::string const& name, dawn::ast::FieldAccessExpr::Location location) {
+IIRBuilder::Field IIRBuilder::field(std::string const& name, ast::Expr::LocationType location) {
   DAWN_ASSERT(si_);
-  int id = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name, asArray(fieldType::ijk));
-  si_->getMetaData().addUnorderedField(id, location);
+  int id = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name,
+                                       asArray(fieldType::ijk));
+  int accessID = si_->getMetaData().getAccessIDFromName(name);
+  dawn::iir::Field field(accessID, iir::Field::IntendKind::IK_InputOutput, std::nullopt,
+                         std::nullopt, iir::Interval(0, 0), location);
+  si_->getMetaData().addAccessIDFieldPair(accessID, field);
+
   return {id, name, true, location};
 }
 IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name) {

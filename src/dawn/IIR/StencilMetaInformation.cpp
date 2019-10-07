@@ -383,6 +383,10 @@ std::string StencilMetaInformation::getNameFromAccessID(int accessID) const {
   }
 }
 
+iir::Field StencilMetaInformation::getFieldFromFieldAccessID(int accessID) const {
+  return fieldAccessIdToField_.at(accessID);
+}
+
 int StencilMetaInformation::getAccessIDFromExpr(const std::shared_ptr<iir::Expr>& expr) const {
   auto it = ExprIDToAccessIDMap_.find(expr->getID());
   DAWN_ASSERT_MSG(it != ExprIDToAccessIDMap_.end(), "Invalid Expr");
@@ -422,6 +426,10 @@ StencilMetaInformation::getStencilFunctionInstantiation(
 void StencilMetaInformation::addAccessIDNamePair(int accessID, const std::string& name) {
   // this fails if -fkeep-varnames is used
   AccessIDToNameMap_.add(accessID, name);
+}
+
+void StencilMetaInformation::addAccessIDFieldPair(int accessID, const iir::Field& field) {
+  fieldAccessIdToField_.emplace(accessID, field);
 }
 
 int StencilMetaInformation::addField(FieldAccessType type, const std::string& name,
@@ -597,19 +605,6 @@ int StencilMetaInformation::getStencilIDFromStencilCallStmt(
 void StencilMetaInformation::addStencilCallStmt(std::shared_ptr<StencilCallDeclStmt> stmt,
                                                 int stencilID) {
   StencilIDToStencilCallMap_.add(stencilID, stmt);
-}
-
-bool StencilMetaInformation::fieldIsUnordered(int ID) const {
-  return FieldAccessIdToLocationType_.count(ID) != 0;
-}
-
-dawn::ast::FieldAccessExpr::Location StencilMetaInformation::getLocationType(int ID) const {
-  DAWN_ASSERT(fieldIsUnordered(ID));
-  return FieldAccessIdToLocationType_.at(ID);
-}
-
-void StencilMetaInformation::addUnorderedField(int ID, dawn::ast::FieldAccessExpr::Location location) {
-  FieldAccessIdToLocationType_.emplace(ID, location);
 }
 
 } // namespace iir

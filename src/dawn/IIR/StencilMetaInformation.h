@@ -17,6 +17,7 @@
 
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/Extents.h"
+#include "dawn/IIR/Field.h"
 #include "dawn/IIR/FieldAccessMetadata.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/DoubleSidedMap.h"
@@ -79,6 +80,9 @@ public:
 
   /// @brief get the `name` associated with the `accessID` of any access type
   std::string getNameFromAccessID(int accessID) const;
+
+  /// @brief get the iir::Field given an access ID
+  iir::Field getFieldFromFieldAccessID(int accessID) const;
 
   /// @brief this checks if the user specialized the field to a dimensionality. If not all
   /// dimensions are allow for off-center acesses and hence, {1,1,1} is returned. If we got a
@@ -191,6 +195,9 @@ public:
 
   /// @brief Insert a new AccessID - Name pair
   void addAccessIDNamePair(int accessID, const std::string& name);
+
+  /// @brief Insert a new AccessID - Field pair
+  void addAccessIDFieldPair(int accessID, const iir::Field& field);
 
   void addStencilCallStmt(std::shared_ptr<StencilCallDeclStmt> stmt, int stencilID);
 
@@ -327,8 +334,8 @@ public:
   }
 
   bool fieldIsUnordered(int ID) const;
-  dawn::ast::FieldAccessExpr::Location getLocationType(int ID) const;
-  void addUnorderedField(int ID, dawn::ast::FieldAccessExpr::Location location);
+  ast::Expr::LocationType getLocationType(int ID) const;
+  void addUnorderedField(int ID, ast::Expr::LocationType location);
 
 private:
   //================================================================================================
@@ -371,8 +378,8 @@ private:
   /// Can be filled from the StencilIDToStencilCallMap that is in Metainformation
   DoubleSidedMap<int, std::shared_ptr<iir::StencilCallDeclStmt>> StencilIDToStencilCallMap_;
 
-  /// Field access id to location type for unstructered accesses
-  std::unordered_map<int, dawn::ast::FieldAccessExpr::Location> FieldAccessIdToLocationType_;
+  /// Field access id to iir::Field (e.g. to find location type)
+  std::unordered_map<int, iir::Field> fieldAccessIdToField_;
 
   /// BoundaryConditionCall to Extent Map. Filled my `PassSetBoundaryCondition`
   std::unordered_map<std::shared_ptr<iir::BoundaryConditionDeclStmt>, Extents>

@@ -56,7 +56,7 @@ class IIRBuilder {
     int id;
     std::string name;
     bool unstructured;
-    dawn::ast::FieldAccessExpr::Location location;
+    ast::Expr::LocationType location;
   };
   struct LocalVar {
     int id;
@@ -70,11 +70,11 @@ class IIRBuilder {
 
 public:
   Field field(std::string const& name, fieldType ft = fieldType::ijk);
-  Field field(std::string const& name, dawn::ast::FieldAccessExpr::Location location);
+  Field field(std::string const& name, ast::Expr::LocationType location);
   LocalVar localvar(std::string const& name);
 
   std::shared_ptr<iir::Expr> reduceOverNeighborExpr(op operation, std::shared_ptr<iir::Expr>&& rhs,
-                                                    std::shared_ptr<iir::Expr>&& init);
+                                                    std::shared_ptr<iir::Expr>&& init, ast::Expr::LocationType rhs_location);
 
   std::shared_ptr<iir::Expr> binaryExpr(std::shared_ptr<iir::Expr>&& lhs,
                                         std::shared_ptr<iir::Expr>&& rhs, op operation);

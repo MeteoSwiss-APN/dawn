@@ -435,11 +435,12 @@ bool LiteralAccessExpr::equals(const Expr* other) const {
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
                                                      std::shared_ptr<Expr> const& rhs,
                                                      std::shared_ptr<Expr> const& init,
+                                                     ast::Expr::LocationType rhs_location,
                                                      SourceLocation loc)
-    : Expr(EK_ReductionOverNeighborExpr, loc), op_(op), rhs_(rhs), init_(init) {}
+    : Expr(EK_ReductionOverNeighborExpr, loc), op_(op), rhs_(rhs), rhs_location_(rhs_location), init_(init) {}
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(ReductionOverNeighborExpr const& expr)
-    : Expr(EK_ReductionOverNeighborExpr, expr.getSourceLocation()), op_(expr.op_),
+    : Expr(EK_ReductionOverNeighborExpr, expr.getSourceLocation()), op_(expr.op_), rhs_location_(expr.rhs_location_),
       rhs_(expr.rhs_->clone()), init_(expr.init_->clone()) {}
 
 ReductionOverNeighborExpr& ReductionOverNeighborExpr::operator=(ReductionOverNeighborExpr stmt) {
@@ -447,7 +448,12 @@ ReductionOverNeighborExpr& ReductionOverNeighborExpr::operator=(ReductionOverNei
   init_ = stmt.init_;
   op_ = stmt.op_;
   rhs_ = stmt.rhs_;
+  rhs_location_ = stmt.rhs_location_;
   return *this;
+}
+
+ast::Expr::LocationType ReductionOverNeighborExpr::getRhsLocation() const {
+  return rhs_location_;
 }
 
 std::shared_ptr<Expr> ReductionOverNeighborExpr::clone() const {

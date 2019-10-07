@@ -22,6 +22,7 @@
 #include "dawn/Serialization/SIRSerializer.h"
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Unittest/IIRBuilder.h"
+
 #include <gtest/gtest.h>
 
 #include <cstring>
@@ -85,8 +86,8 @@ TEST(CompilerTest, DISABLED_CodeGenPlayground) {
   using namespace dawn::iir;
 
   IIRBuilder b;
-  auto in_f = b.field("in_field", dawn::ast::FieldAccessExpr::Location::CELLS);
-  auto out_f = b.field("out_field", dawn::ast::FieldAccessExpr::Location::NODES);
+  auto in_f = b.field("in_field", dawn::ast::Expr::LocationType::Vertices);
+  auto out_f = b.field("out_field", dawn::ast::Expr::LocationType::Cells);
   auto var = b.localvar("my_var");
   auto var2 = b.localvar("my_var2");
 
@@ -97,13 +98,13 @@ TEST(CompilerTest, DISABLED_CodeGenPlayground) {
           b.stage(b.vregion(
               dawn::sir::Interval::Start, dawn::sir::Interval::End,
               b.stmt(b.assignExpr(
-                  b.at(out_f),
-                  b.reduceOverNeighborExpr(op::plus, b.at(in_f),
-                                           b.binaryExpr(b.lit(-3.), b.at(in_f), op::multiply)))),
-              b.stmt(b.assignExpr(b.at(out_f),
-                                  b.binaryExpr(b.at(in_f),
-                                               b.binaryExpr(b.lit(0.1), b.at(out_f), op::multiply),
-                                               op::plus))))))));
+                  b.at(out_f), b.reduceOverNeighborExpr(op::plus, b.at(in_f), b.lit(0.),
+                                                        dawn::ast::Expr::LocationType::Vertices)))
+              // ,b.stmt(b.assignExpr(b.at(out_f),
+              //                     b.binaryExpr(b.at(in_f),
+              //                                  b.binaryExpr(b.lit(0.1), b.at(out_f),
+              //                                  op::multiply), op::plus)))
+              )))));
 
   dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(std::clog, stencil_instantiation);
 }

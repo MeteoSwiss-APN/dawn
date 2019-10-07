@@ -48,7 +48,7 @@ private:
                       ///  from where the Field has been accessed
 
   bool unstrucutred_ = false;
-  dawn::ast::FieldAccessExpr::Location location_ = dawn::ast::FieldAccessExpr::Location::CELLS;
+  ast::Expr::LocationType location_ = ast::Expr::LocationType::Cells;
 
 public:
   Field(Field&& f) = default;
@@ -63,10 +63,12 @@ public:
         extentsRB_(FieldAccessExtents(readExtents, writeExtents)), interval_(interval) {}
 
   Field(int accessID, IntendKind intend, std::optional<Extents> const& readExtents,
-      std::optional<Extents> const& writeExtents, Interval const& interval, dawn::ast::FieldAccessExpr::Location location)
-    : accessID_(accessID), intend_(intend),
-      extents_(FieldAccessExtents(readExtents, writeExtents)),
-      extentsRB_(FieldAccessExtents(readExtents, writeExtents)), interval_(interval), unstrucutred_(true), location_(location) {}
+        std::optional<Extents> const& writeExtents, Interval const& interval,
+        ast::Expr::LocationType location)
+      : accessID_(accessID), intend_(intend),
+        extents_(FieldAccessExtents(readExtents, writeExtents)),
+        extentsRB_(FieldAccessExtents(readExtents, writeExtents)), interval_(interval),
+        unstrucutred_(true), location_(location) {}
 
   Field(int accessID, IntendKind intend, std::optional<Extents>&& readExtents,
         std::optional<Extents>&& writeExtents, Interval&& interval)
@@ -75,12 +77,12 @@ public:
         extentsRB_(extents_), interval_(std::move(interval)) {}
 
   Field(int accessID, IntendKind intend, std::optional<Extents>&& readExtents,
-      std::optional<Extents>&& writeExtents, Interval&& interval, dawn::ast::FieldAccessExpr::Location location)
-    : accessID_(accessID), intend_(intend),
-      extents_(FieldAccessExtents(std::move(readExtents), std::move(writeExtents))),
-      extentsRB_(extents_), interval_(std::move(interval)), unstrucutred_(true), location_(location) {}
-
-  
+        std::optional<Extents>&& writeExtents, Interval&& interval,
+        ast::Expr::LocationType location)
+      : accessID_(accessID), intend_(intend),
+        extents_(FieldAccessExtents(std::move(readExtents), std::move(writeExtents))),
+        extentsRB_(extents_), interval_(std::move(interval)), unstrucutred_(true),
+        location_(location) {}
 
   /// @name Operators
   /// @{
@@ -155,11 +157,10 @@ public:
   ///
   inline void extendInterval(Interval const& interval) { interval_.merge(interval); }
 
-  inline dawn::ast::FieldAccessExpr::Location getLocation() {
-    return location_;
-  }
-};
+  inline ast::Expr::LocationType getLocation() { return location_; }
 
+  inline bool isUnstructured() { return unstrucutred_; }
+};
 
 /// @brief merges all the fields from sourceFields into destinationFields
 /// If a baseExtent is provided (optionally), the extent of each sourceField is expanded with the

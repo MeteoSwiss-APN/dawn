@@ -50,6 +50,12 @@ public:
     EK_ReductionOverNeighborExpr,
   };
 
+  enum class LocationType {
+    Cells,
+    Edges,
+    Vertices
+  };
+
   using ExprRangeType = ArrayRef<std::shared_ptr<Expr>>;
 
   /// @name Constructor & Destructor
@@ -442,10 +448,7 @@ public:
 
 /// @brief Field access expression
 /// @ingroup ast
-class FieldAccessExpr : public Expr {
-  public:
-  enum Location {CELLS = 0, NODES = 1, EDGES = 2};
-
+class FieldAccessExpr : public Expr { 
   private:
   std::string name_;
 
@@ -481,10 +484,7 @@ class FieldAccessExpr : public Expr {
   Array3i argumentOffset_;
 
   // Negate the offset (this allows writing `in(-off)`)
-  bool negateOffset_;
-
-  bool unstructured_ = false;
-  Location location_ = Location::CELLS;
+  bool negateOffset_;  
 
 public:
   /// @name Constructor & Destructor
@@ -576,12 +576,13 @@ private:
   std::string op_ = "+";
   std::shared_ptr<Expr> rhs_;
   std::shared_ptr<Expr> init_;
+  ast::Expr::LocationType rhs_location_;
 
 public:
   /// @name Constructor & Destructor
   /// @{
   ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> const& rhs,
-                            std::shared_ptr<Expr> const& init,
+                            std::shared_ptr<Expr> const& init, ast::Expr::LocationType rhs_location,
                             SourceLocation loc = SourceLocation());
   ReductionOverNeighborExpr(ReductionOverNeighborExpr const& stmt);
   ReductionOverNeighborExpr& operator=(ReductionOverNeighborExpr stmt);
@@ -591,6 +592,7 @@ public:
   void setInit(std::shared_ptr<Expr> init) { init_ = std::move(init); }
   std::string const& getOp() const { return op_; }
   std::shared_ptr<Expr> const& getRhs() const { return rhs_; }
+  ast::Expr::LocationType getRhsLocation() const;
   void setRhs(std::shared_ptr<Expr> rhs) { rhs_ = std::move(rhs); }
 
   std::shared_ptr<Expr> clone() const override;

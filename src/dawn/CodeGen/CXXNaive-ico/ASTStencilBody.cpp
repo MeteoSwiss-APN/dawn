@@ -69,7 +69,21 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
   ss_ << ";\n";
 }
 void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
-  ss_ << std::string(indent_, ' ') << "reduce(cellNeighboursOfCell(m_mesh, t), ";
+  std::string typeString;
+  switch(expr->getRhsLocation()) {
+    case ast::Expr::LocationType::Cells:
+      typeString = "cell";
+      break;
+    case ast::Expr::LocationType::Edges:
+      typeString = "edge";
+      break;
+    case ast::Expr::LocationType::Vertices:
+      typeString = "node";
+      break;
+    default:
+      dawn_unreachable("unknown location type");
+  }
+  ss_ << std::string(indent_, ' ') << "reduce(" + typeString + "NeighboursOfCell(m_mesh, t), ";
   expr->getInit()->accept(*this);
   ss_ << ", [&](auto& lhs, auto const& t) { return lhs " << expr->getOp() << "= ";
   auto argName = argName_;

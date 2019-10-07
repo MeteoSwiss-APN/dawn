@@ -142,14 +142,14 @@ void DoMethod::updateLevel() {
         continue;
       }
 
-      if (metaData_.fieldIsUnordered(AccessID)) {
-      AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                     extents, getInterval(), metaData_.getLocationType(AccessID));
+      if(metaData_.getFieldFromFieldAccessID(AccessID).isUnstructured()) {
+        AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
+                                       extents, getInterval(),
+                                       metaData_.getFieldFromFieldAccessID(AccessID).getLocation());
       } else {
-      AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
-                                     extents, getInterval());
+        AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
+                                       extents, getInterval());
       }
-
     }
 
     for(const auto& accessPair : access->getReadAccesses()) {
@@ -161,14 +161,14 @@ void DoMethod::updateLevel() {
         continue;
       }
 
-      if (metaData_.fieldIsUnordered(AccessID)) {
-        AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID, extents,
-                              getInterval(), metaData_.getLocationType(AccessID));
+      if(metaData_.getFieldFromFieldAccessID(AccessID).isUnstructured()) {
+        AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
+                                      extents, getInterval(),
+                                      metaData_.getFieldFromFieldAccessID(AccessID).getLocation());
       } else {
-        AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID, extents,
-                              getInterval());
+        AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
+                                      extents, getInterval());
       }
-
     }
   }
 
