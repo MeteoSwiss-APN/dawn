@@ -293,13 +293,40 @@
               }
             }
           },
-          "ID": 56,
+          "ID": 68,
           "Loop": "parallel",
           "Stages": [
             {
               "DoMethods": [
                 {
-                  "Fields": null,
+                  "Fields": {
+                    "field_a0": {
+                      "accessID": 27,
+                      "extents": {
+                        "read_access": "[(0, 0), (0, 0), (0, 0)]",
+                        "write_access": "null"
+                      },
+                      "intend": 2,
+                      "interval": "{ Start : End }",
+                      "redundant extents": {
+                        "read_access": "[(0, 0), (0, 0), (0, 0)]",
+                        "write_access": "null"
+                      }
+                    },
+                    "field_a1": {
+                      "accessID": 28,
+                      "extents": {
+                        "read_access": "null",
+                        "write_access": "[(0, 0), (0, 0), (0, 0)]"
+                      },
+                      "intend": 0,
+                      "interval": "{ Start : End }",
+                      "redundant extents": {
+                        "read_access": "null",
+                        "write_access": "[(0, 0), (0, 0), (0, 0)]"
+                      }
+                    }
+                  },
                   "ID": 1,
                   "Stmts": [
                     {
@@ -357,7 +384,34 @@
             {
               "DoMethods": [
                 {
-                  "Fields": null,
+                  "Fields": {
+                    "field_a1": {
+                      "accessID": 28,
+                      "extents": {
+                        "read_access": "[(0, 0), (0, 0), (0, 0)]",
+                        "write_access": "null"
+                      },
+                      "intend": 2,
+                      "interval": "{ Start : End }",
+                      "redundant extents": {
+                        "read_access": "[(0, 0), (0, 0), (0, 0)]",
+                        "write_access": "null"
+                      }
+                    },
+                    "field_a2": {
+                      "accessID": 29,
+                      "extents": {
+                        "read_access": "null",
+                        "write_access": "[(0, 0), (0, 0), (0, 0)]"
+                      },
+                      "intend": 0,
+                      "interval": "{ Start : End }",
+                      "redundant extents": {
+                        "read_access": "null",
+                        "write_access": "[(0, 0), (0, 0), (0, 0)]"
+                      }
+                    }
+                  },
                   "ID": 3,
                   "Stmts": [
                     {
@@ -415,7 +469,34 @@
             {
               "DoMethods": [
                 {
-                  "Fields": null,
+                  "Fields": {
+                    "field_b0": {
+                      "accessID": 30,
+                      "extents": {
+                        "read_access": "[(0, 0), (0, 0), (0, 0)]",
+                        "write_access": "null"
+                      },
+                      "intend": 2,
+                      "interval": "{ Start : End }",
+                      "redundant extents": {
+                        "read_access": "[(0, 0), (0, 0), (0, 0)]",
+                        "write_access": "null"
+                      }
+                    },
+                    "field_b1": {
+                      "accessID": 31,
+                      "extents": {
+                        "read_access": "null",
+                        "write_access": "[(0, 0), (0, 0), (0, 0)]"
+                      },
+                      "intend": 0,
+                      "interval": "{ Start : End }",
+                      "redundant extents": {
+                        "read_access": "null",
+                        "write_access": "[(0, 0), (0, 0), (0, 0)]"
+                      }
+                    }
+                  },
                   "ID": 0,
                   "Stmts": [
                     {
@@ -473,7 +554,34 @@
             {
               "DoMethods": [
                 {
-                  "Fields": null,
+                  "Fields": {
+                    "field_b1": {
+                      "accessID": 31,
+                      "extents": {
+                        "read_access": "[(0, 0), (0, 0), (0, 0)]",
+                        "write_access": "null"
+                      },
+                      "intend": 2,
+                      "interval": "{ Start : End }",
+                      "redundant extents": {
+                        "read_access": "[(0, 0), (0, 0), (0, 0)]",
+                        "write_access": "null"
+                      }
+                    },
+                    "field_b2": {
+                      "accessID": 32,
+                      "extents": {
+                        "read_access": "null",
+                        "write_access": "[(0, 0), (0, 0), (0, 0)]"
+                      },
+                      "intend": 0,
+                      "interval": "{ Start : End }",
+                      "redundant extents": {
+                        "read_access": "null",
+                        "write_access": "[(0, 0), (0, 0), (0, 0)]"
+                      }
+                    }
+                  },
                   "ID": 2,
                   "Stmts": [
                     {
