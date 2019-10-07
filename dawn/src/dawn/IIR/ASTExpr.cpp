@@ -26,13 +26,19 @@ IIRAccessExprData::IIRAccessExprData(const IIRAccessExprData& other) {
   AccessID = other.AccessID ? std::make_optional(*other.AccessID) : other.AccessID;
 }
 
-bool IIRAccessExprData::operator==(const IIRAccessExprData& rhs) {
+bool IIRAccessExprData::operator==(const IIRAccessExprData& rhs) const {
   return AccessID == rhs.AccessID;
 }
-bool IIRAccessExprData::operator!=(const IIRAccessExprData& rhs) { return !(*this == rhs); }
+bool IIRAccessExprData::operator!=(const IIRAccessExprData& rhs) const { return !(*this == rhs); }
 
 std::unique_ptr<ast::AccessExprData> IIRAccessExprData::clone() const {
   return std::make_unique<IIRAccessExprData>(*this);
+}
+
+bool IIRAccessExprData::equals(AccessExprData const* other) const {
+  IIRAccessExprData const* iirAccessExprDataOther;
+  return other && (iirAccessExprDataOther = dynamic_cast<IIRAccessExprData const*>(other)) &&
+         *this == *iirAccessExprDataOther;
 }
 
 int getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) {

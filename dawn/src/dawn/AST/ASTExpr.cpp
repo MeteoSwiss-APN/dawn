@@ -347,7 +347,8 @@ bool VarAccessExpr::equals(const Expr* other) const {
   const VarAccessExpr* otherPtr = dyn_cast<VarAccessExpr>(other);
   return otherPtr && Expr::equals(other) && name_ == otherPtr->name_ &&
          isExternal_ == otherPtr->isExternal_ && isArrayAccess() == otherPtr->isArrayAccess() &&
-         (isArrayAccess() ? index_->equals(otherPtr->index_.get()) : true);
+         (isArrayAccess() ? index_->equals(otherPtr->index_.get()) : true) &&
+         (data_ ? data_->equals(otherPtr->data_.get()) : !otherPtr->data_);
 }
 
 void VarAccessExpr::replaceChildren(const std::shared_ptr<Expr>& oldExpr,
@@ -404,7 +405,8 @@ bool FieldAccessExpr::equals(const Expr* other) const {
   const FieldAccessExpr* otherPtr = dyn_cast<FieldAccessExpr>(other);
   return otherPtr && Expr::equals(other) && name_ == otherPtr->name_ &&
          offset_ == otherPtr->offset_ && argumentMap_ == otherPtr->argumentMap_ &&
-         argumentOffset_ == otherPtr->argumentOffset_ && negateOffset_ == otherPtr->negateOffset_;
+         argumentOffset_ == otherPtr->argumentOffset_ && negateOffset_ == otherPtr->negateOffset_ &&
+         (data_ ? data_->equals(otherPtr->data_.get()) : !otherPtr->data_);
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -438,7 +440,8 @@ std::shared_ptr<Expr> LiteralAccessExpr::clone() const {
 bool LiteralAccessExpr::equals(const Expr* other) const {
   const LiteralAccessExpr* otherPtr = dyn_cast<LiteralAccessExpr>(other);
   return otherPtr && Expr::equals(other) && value_ == otherPtr->value_ &&
-         builtinType_ == otherPtr->builtinType_;
+         builtinType_ == otherPtr->builtinType_ &&
+         (data_ ? data_->equals(otherPtr->data_.get()) : !otherPtr->data_);
 }
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,

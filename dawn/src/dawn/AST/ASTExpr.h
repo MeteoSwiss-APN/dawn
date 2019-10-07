@@ -395,6 +395,7 @@ public:
 struct AccessExprData {
   virtual ~AccessExprData() {}
   virtual std::unique_ptr<AccessExprData> clone() const = 0;
+  virtual bool equals(AccessExprData const* other) const = 0;
 };
 
 //===------------------------------------------------------------------------------------------===//
@@ -421,12 +422,13 @@ public:
 
   /// @brief Get data object, must provide the type of the data object (must be subtype of
   /// AccessExprData)
-  template <typename DataType, typename = typename std::enable_if<
-                                   std::is_base_of<AccessExprData, DataType>::value>::type>
+  template <typename DataType>
   DataType& getData() {
+    static_assert(std::is_base_of<AccessExprData, DataType>::value,
+                  "getData() called with invalid DataType parameter");
     if(!data_)
       data_ = std::make_unique<DataType>();
-    return *dynamic_cast<DataType*>(data_.get());
+    return dynamic_cast<DataType&>(*data_.get());
   }
 
   const std::string& getName() const { return name_; }
@@ -525,12 +527,13 @@ public:
 
   /// @brief Get data object, must provide the type of the data object (must be subtype of
   /// AccessExprData)
-  template <typename DataType, typename = typename std::enable_if<
-                                   std::is_base_of<AccessExprData, DataType>::value>::type>
+  template <typename DataType>
   DataType& getData() {
+    static_assert(std::is_base_of<AccessExprData, DataType>::value,
+                  "getData() called with invalid DataType parameter");
     if(!data_)
       data_ = std::make_unique<DataType>();
-    return *dynamic_cast<DataType*>(data_.get());
+    return dynamic_cast<DataType&>(*data_.get());
   }
 
   const std::string& getName() const { return name_; }
@@ -581,12 +584,13 @@ public:
 
   /// @brief Get data object, must provide the type of the data object (must be subtype of
   /// AccessExprData)
-  template <typename DataType, typename = typename std::enable_if<
-                                   std::is_base_of<AccessExprData, DataType>::value>::type>
+  template <typename DataType>
   DataType& getData() {
+    static_assert(std::is_base_of<AccessExprData, DataType>::value,
+                  "getData() called with invalid DataType parameter");
     if(!data_)
       data_ = std::make_unique<DataType>();
-    return *dynamic_cast<DataType*>(data_.get());
+    return dynamic_cast<DataType&>(*data_.get());
   }
 
   const std::string& getValue() const { return value_; }

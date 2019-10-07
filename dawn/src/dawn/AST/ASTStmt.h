@@ -41,6 +41,7 @@ struct StmtData {
   virtual ~StmtData() {}
   virtual DataType getDataType() const = 0;
   virtual std::unique_ptr<StmtData> clone() const = 0;
+  virtual bool equals(StmtData const* other) const = 0;
 };
 
 /// @brief Abstract base class of all statements
@@ -99,13 +100,13 @@ public:
   DataType& getData() {
     DAWN_ASSERT_MSG(DataType::ThisDataType == data_->getDataType(),
                     "Trying to get wrong data type");
-    return *dynamic_cast<DataType*>(data_.get());
+    return dynamic_cast<DataType&>(*data_.get());
   }
   template <typename DataType, typename = enable_if_subtype_t<DataType, StmtData>>
   const DataType& getData() const {
     DAWN_ASSERT_MSG(DataType::ThisDataType == data_->getDataType(),
                     "Trying to get wrong data type");
-    return *dynamic_cast<DataType*>(data_.get());
+    return dynamic_cast<DataType&>(*data_.get());
   }
 
   /// @brief Iterate children (if any)
@@ -114,11 +115,9 @@ public:
   virtual void replaceChildren(std::shared_ptr<Stmt> const& oldStmt,
                                std::shared_ptr<Stmt> const& newStmt) {}
 
-  // TODO refactor_AST: should equality comparison check also data equality? It makes sense to check
-  // that at least data type is the same
   /// @brief Compare for equality
   virtual bool equals(const Stmt* other) const {
-    return kind_ == other->kind_ && checkSameDataType(*other);
+    return kind_ == other->kind_ && checkSameDataType(*other) && data_->equals(other->data_.get());
   }
 
   /// @brief Is the statement used for stencil description and has no real analogon in C++

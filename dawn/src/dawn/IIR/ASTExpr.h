@@ -24,10 +24,12 @@ struct IIRAccessExprData : public ast::AccessExprData {
   IIRAccessExprData() = default;
   IIRAccessExprData(const IIRAccessExprData& other);
 
-  bool operator==(const IIRAccessExprData&);
-  bool operator!=(const IIRAccessExprData&);
+  bool operator==(const IIRAccessExprData&) const;
+  bool operator!=(const IIRAccessExprData&) const;
 
   std::unique_ptr<ast::AccessExprData> clone() const override;
+
+  bool equals(AccessExprData const* other) const override;
 
   /// ID of the resource (literal or variable or field) accessed by the expression
   std::optional<int> AccessID;

@@ -31,14 +31,19 @@ IIRStmtData::IIRStmtData(const IIRStmtData& other) {
       other.CalleeAccesses ? std::make_optional(*other.CalleeAccesses) : other.CalleeAccesses;
 }
 
-bool IIRStmtData::operator==(const IIRStmtData& rhs) {
+bool IIRStmtData::operator==(const IIRStmtData& rhs) const {
   return StackTrace == rhs.StackTrace && CallerAccesses == rhs.CallerAccesses &&
          CalleeAccesses == rhs.CalleeAccesses;
 }
-bool IIRStmtData::operator!=(const IIRStmtData& rhs) { return !(*this == rhs); }
+bool IIRStmtData::operator!=(const IIRStmtData& rhs) const { return !(*this == rhs); }
 
 std::unique_ptr<ast::StmtData> IIRStmtData::clone() const {
   return std::make_unique<IIRStmtData>(*this);
+}
+
+bool IIRStmtData::equals(ast::StmtData const* other) const {
+  return other && getDataType() == other->getDataType() &&
+         *this == dynamic_cast<IIRStmtData const&>(*other);
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -49,13 +54,19 @@ VarDeclStmtData::VarDeclStmtData(const VarDeclStmtData& other) : IIRStmtData(oth
   AccessID = other.AccessID ? std::make_optional(*other.AccessID) : other.AccessID;
 }
 
-bool VarDeclStmtData::operator==(const VarDeclStmtData& rhs) {
+bool VarDeclStmtData::operator==(const VarDeclStmtData& rhs) const {
   return IIRStmtData::operator==(rhs) && AccessID == rhs.AccessID;
 }
-bool VarDeclStmtData::operator!=(const VarDeclStmtData& rhs) { return !(*this == rhs); }
+bool VarDeclStmtData::operator!=(const VarDeclStmtData& rhs) const { return !(*this == rhs); }
 
 std::unique_ptr<ast::StmtData> VarDeclStmtData::clone() const {
   return std::make_unique<VarDeclStmtData>(*this);
+}
+
+bool VarDeclStmtData::equals(ast::StmtData const* other) const {
+  VarDeclStmtData const* varDeclStmtDataOther;
+  return (varDeclStmtDataOther = dynamic_cast<VarDeclStmtData const*>(other)) &&
+         *this == *varDeclStmtDataOther;
 }
 
 //===------------------------------------------------------------------------------------------===//

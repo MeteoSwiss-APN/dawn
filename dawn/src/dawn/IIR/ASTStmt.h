@@ -35,8 +35,8 @@ struct IIRStmtData : public ast::StmtData {
   IIRStmtData() {}
   IIRStmtData(const IIRStmtData& other);
 
-  bool operator==(const IIRStmtData&);
-  bool operator!=(const IIRStmtData&);
+  bool operator==(const IIRStmtData&) const;
+  bool operator!=(const IIRStmtData&) const;
 
   /// Stack trace of inlined stencil calls of this statement (might be empty).
   std::optional<std::vector<ast::StencilCall*>> StackTrace;
@@ -55,6 +55,7 @@ struct IIRStmtData : public ast::StmtData {
 
   DataType getDataType() const override { return ThisDataType; }
   virtual std::unique_ptr<StmtData> clone() const override;
+  virtual bool equals(StmtData const* other) const override;
 };
 
 template <typename... Args>
@@ -78,13 +79,14 @@ struct VarDeclStmtData : public IIRStmtData {
   VarDeclStmtData() = default;
   VarDeclStmtData(const VarDeclStmtData&);
 
-  bool operator==(const VarDeclStmtData&);
-  bool operator!=(const VarDeclStmtData&);
+  bool operator==(const VarDeclStmtData&) const;
+  bool operator!=(const VarDeclStmtData&) const;
 
   /// ID of the variable declared by the statement
   std::optional<int> AccessID;
 
   std::unique_ptr<StmtData> clone() const override;
+  bool equals(StmtData const* other) const override;
 };
 
 template <typename... Args>
