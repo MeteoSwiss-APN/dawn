@@ -78,8 +78,7 @@ bool PassStageSplitter::run(
                 // Since splitting inside a conditional block is not supported, report and return an
                 // error.
                 auto statement = stmtAccessesPair->getStatement();
-                DiagnosticsBuilder diag(DiagnosticsKind::Error,
-                                        statement->getSourceLocation());
+                DiagnosticsBuilder diag(DiagnosticsKind::Error, statement->getSourceLocation());
                 diag << "Read-before-Write conflict inside conditional block is not supported.";
                 context_.getDiagnostics().report(diag);
                 return false;
@@ -96,8 +95,7 @@ bool PassStageSplitter::run(
 
             if(context_.getOptions().ReportPassStageSplit)
               std::cout << "\nPASS: " << getName() << ": " << stencilInstantiation->getName()
-                        << ": split:"
-                        << stmtAccessesPair->getStatement()->getSourceLocation().Line
+                        << ": split:" << stmtAccessesPair->getStatement()->getSourceLocation().Line
                         << "\n";
 
             // Clear the new graph an process the current statements again

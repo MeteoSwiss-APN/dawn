@@ -23,12 +23,12 @@ stencil compute_extent_test_stencil {
 
   Do {
     vertical_region(k_start, k_end) {
-      out = u[i+1];
-      out += u[j-1];
-      if(out==1) {
-//        out *= u[k+2]+2.4;
-//        out -= u[k-1];
-        out=2;
+      out = u[i + 1];
+      out += u[j - 1];
+      if(out == 1) {
+        //        out *= u[k+2]+2.4;
+        //        out -= u[k-1];
+        out = 2;
       }
     }
   }

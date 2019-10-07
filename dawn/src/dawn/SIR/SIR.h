@@ -278,16 +278,16 @@ struct Stencil : public dawn::NonCopyable {
 /// @ingroup sir
 
 struct Value : NonCopyable {
-  enum TypeKind { Boolean=0, Integer, Double, String };
+  enum TypeKind { Boolean = 0, Integer, Double, String };
 
   template <class T>
   explicit Value(T&& value) : isConstexpr_(false) {
-    valueImpl_= std::make_unique<ValueImpl<std::decay_t<T>>>(std::forward<T>(value));
+    valueImpl_ = std::make_unique<ValueImpl<std::decay_t<T>>>(std::forward<T>(value));
   }
 
   template <class T>
   explicit Value(T value, bool isConstexpr) : isConstexpr_(isConstexpr) {
-    valueImpl_= std::make_unique<ValueImpl<std::decay_t<T>>>(std::forward<T>(value));
+    valueImpl_ = std::make_unique<ValueImpl<std::decay_t<T>>>(std::forward<T>(value));
   }
 
   explicit Value(TypeKind type);
@@ -336,7 +336,6 @@ struct Value : NonCopyable {
   }
 
 private:
-
   struct ValueImplBase {
     virtual ~ValueImplBase() {}
     virtual void* get() = 0;
@@ -355,12 +354,8 @@ private:
         delete ValuePtr;
     }
     void* get() override { return (void*)ValuePtr; }
-    TypeKind getType() const override {
-      return TypeInfo<T>::Type;
-    }
-    bool has_value() const override {
-      return ValuePtr != nullptr;
-    }
+    TypeKind getType() const override { return TypeInfo<T>::Type; }
+    bool has_value() const override { return ValuePtr != nullptr; }
   };
 
   bool isConstexpr_;

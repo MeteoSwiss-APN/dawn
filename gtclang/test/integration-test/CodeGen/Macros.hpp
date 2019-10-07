@@ -16,14 +16,14 @@
 #ifndef TEST_INTEGRATIONTEST_CODEGEN_MACROS_H
 #define TEST_INTEGRATIONTEST_CODEGEN_MACROS_H
 
-#define CAT(X,Y) CAT2(X,Y)
-#define CAT2(X,Y) X##Y
+#define CAT(X, Y) CAT2(X, Y)
+#define CAT2(X, Y) X##Y
 #define CAT_2 CAT
 
 // Macro for adding quotes
 #define STRINGIFY(X) STRINGIFY2(X)
 #define STRINGIFY2(X) #X
 
-#define INCLUDE_FILE(HEAD,TAIL) STRINGIFY( CAT_2(HEAD,TAIL) )
+#define INCLUDE_FILE(HEAD, TAIL) STRINGIFY(CAT_2(HEAD, TAIL))
 
 #endif

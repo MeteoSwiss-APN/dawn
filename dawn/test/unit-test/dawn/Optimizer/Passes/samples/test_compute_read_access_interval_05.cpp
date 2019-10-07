@@ -20,18 +20,17 @@ using namespace gridtools::clang;
 
 stencil stencil {
   storage dcol, ccol, t_nnow, tp_tens, datacol;
-//  var datacol;
+  //  var datacol;
   Do {
-//    vertical_region(k_end, k_end) 
-//       datacol=0;
+    //    vertical_region(k_end, k_end)
+    //       datacol=0;
 
-    vertical_region(k_end-1, k_start) {
+    vertical_region(k_end - 1, k_start) {
 
-       double retval =dcol - ccol * datacol[k+1];
-       datacol = retval;
+      double retval = dcol - ccol * datacol[k + 1];
+      datacol = retval;
 
-       tp_tens = (datacol - t_nnow) * 1.2;
-    } 
+      tp_tens = (datacol - t_nnow) * 1.2;
+    }
   }
 };
-

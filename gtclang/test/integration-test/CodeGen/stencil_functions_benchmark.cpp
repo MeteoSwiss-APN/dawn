@@ -112,7 +112,7 @@ void test_07_stencil_reference(const domain& dom, storage_t& in_s, storage_t& ou
     }
   }
 }
-}
+} // namespace sftest
 
 TEST(stencil_functions, test_01) {
   domain dom(Options::getInstance().m_size[0], Options::getInstance().m_size[1],

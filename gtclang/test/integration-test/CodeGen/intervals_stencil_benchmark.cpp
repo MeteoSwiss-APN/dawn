@@ -60,4 +60,4 @@ TEST(intervals_stencil, test) {
 
   ASSERT_TRUE(verif.verify(out_gt, out_naive));
 }
-}
+} // namespace

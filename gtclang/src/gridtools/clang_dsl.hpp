@@ -27,7 +27,7 @@ namespace gridtools {
  * @brief Namespace of the gridtools clang DSL
  */
 namespace clang {}
-}
+} // namespace gridtools
 
 /**
  * @defgroup gridtools_clang gridtools_clang DSL
@@ -43,6 +43,7 @@ namespace clang {}
 
 #define BOOST_PP_VARIADICS 1
 
+#include "gridtools/clang/arrayAddons.hpp"
 #include "gridtools/clang/boundary_condition.hpp"
 #include "gridtools/clang/cxx11_warning.hpp"
 #include "gridtools/clang/defs.hpp"
@@ -50,9 +51,7 @@ namespace clang {}
 #include "gridtools/clang/globals_impl.hpp"
 #include "gridtools/clang/halo.hpp"
 #include "gridtools/clang/interval.hpp"
+#include "gridtools/clang/param_wrapper.hpp"
 #include "gridtools/clang/stencil.hpp"
 #include "gridtools/clang/stencil_function.hpp"
 #include "gridtools/clang/storage.hpp"
-#include "gridtools/clang/arrayAddons.hpp"
-#include "gridtools/clang/param_wrapper.hpp"
-

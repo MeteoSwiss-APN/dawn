@@ -18,7 +18,7 @@
 namespace dawn {
 namespace iir {
 void FieldAccessExtents::mergeReadExtents(Extents const& extents) {
- if(readAccessExtents_)
+  if(readAccessExtents_)
     readAccessExtents_->merge(extents);
   else
     readAccessExtents_ = std::make_optional(extents);
@@ -27,7 +27,7 @@ void FieldAccessExtents::mergeReadExtents(Extents const& extents) {
 json::json FieldAccessExtents::jsonDump() const {
   json::json node;
   std::stringstream ss;
- if(readAccessExtents_) {
+  if(readAccessExtents_) {
     ss << *readAccessExtents_;
   } else {
     ss << "null";
@@ -35,7 +35,7 @@ json::json FieldAccessExtents::jsonDump() const {
 
   node["read_access"] = ss.str();
   ss.str("");
- if(writeAccessExtents_) {
+  if(writeAccessExtents_) {
     ss << *writeAccessExtents_;
   } else {
     ss << "null";
@@ -46,7 +46,7 @@ json::json FieldAccessExtents::jsonDump() const {
 }
 
 void FieldAccessExtents::mergeWriteExtents(Extents const& extents) {
- if(writeAccessExtents_)
+  if(writeAccessExtents_)
     writeAccessExtents_->merge(extents);
   else
     writeAccessExtents_ = std::make_optional(extents);
@@ -54,11 +54,11 @@ void FieldAccessExtents::mergeWriteExtents(Extents const& extents) {
   updateTotalExtents();
 }
 void FieldAccessExtents::mergeReadExtents(std::optional<Extents> const& extents) {
- if(extents)
+  if(extents)
     mergeReadExtents(*extents);
 }
 void FieldAccessExtents::mergeWriteExtents(std::optional<Extents> const& extents) {
- if(extents)
+  if(extents)
     mergeWriteExtents(*extents);
 }
 
@@ -72,11 +72,11 @@ void FieldAccessExtents::setWriteExtents(Extents const& extents) {
 }
 
 void FieldAccessExtents::updateTotalExtents() {
- if(readAccessExtents_) {
+  if(readAccessExtents_) {
     totalExtents_ = *readAccessExtents_;
-   if(writeAccessExtents_)
+    if(writeAccessExtents_)
       totalExtents_.merge(*writeAccessExtents_);
- } else if(writeAccessExtents_) {
+  } else if(writeAccessExtents_) {
     totalExtents_ = *writeAccessExtents_;
   }
 }

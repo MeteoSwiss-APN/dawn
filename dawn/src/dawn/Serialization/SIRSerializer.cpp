@@ -659,7 +659,8 @@ static std::shared_ptr<SIR> deserializeImpl(const std::string& str,
         value = std::make_shared<Value>(static_cast<double>(sirValue.double_value()), isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::kStringValue:
-        value = std::make_shared<Value>(static_cast<std::string>(sirValue.string_value()), isConstExpr);
+        value =
+            std::make_shared<Value>(static_cast<std::string>(sirValue.string_value()), isConstExpr);
         break;
       case sir::proto::GlobalVariableValue::VALUE_NOT_SET:
       default:

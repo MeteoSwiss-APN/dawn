@@ -26,8 +26,8 @@
 #include "dawn/Support/DiagnosticsEngine.h"
 #include "dawn/Support/Logging.h"
 #include "dawn/Support/StringUtil.h"
-#include <optional>
 #include <map>
+#include <optional>
 #include <string>
 #include <unordered_map>
 
@@ -74,14 +74,14 @@ GTCodeGen::IntervalDefinitions::IntervalDefinitions(const iir::Stencil& stencil)
       } else {
         interval = cache.getInterval();
       }
-     if(interval)
+      if(interval)
         intervalProperties_.insert(*interval);
 
       // for the kcaches with fill, the interval could span beyond the axis of the do methods.
       // We need to extent the axis, to make sure that at least on interval will trigger the begin
       // of the kcache interval
       if(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::fill) {
-       DAWN_ASSERT(interval);
+        DAWN_ASSERT(interval);
         Levels.insert(interval->lowerLevel());
         Levels.insert(interval->upperLevel());
         Axis.merge(*interval);
@@ -683,10 +683,10 @@ void GTCodeGen::generateStencilClasses(
           } else {
             cInterval = cache.getInterval();
           }
-         DAWN_ASSERT(cInterval || cache.getCacheIOPolicy() == iir::Cache::local);
+          DAWN_ASSERT(cInterval || cache.getCacheIOPolicy() == iir::Cache::local);
 
           std::string intervalName;
-         if(cInterval) {
+          if(cInterval) {
             DAWN_ASSERT(intervalDefinitions.intervalProperties_.count(*(cInterval)));
             intervalName = intervalDefinitions.intervalProperties_.find(*cInterval)->name_;
           }
@@ -971,7 +971,7 @@ std::unique_ptr<TranslationUnit> GTCodeGen::generateCode() {
 
   std::string filename = generateFileName(context_);
   return std::make_unique<TranslationUnit>(filename, std::move(ppDefines), std::move(stencils),
-                                      std::move(globals));
+                                           std::move(globals));
 }
 
 std::vector<std::string> GTCodeGen::buildFieldTemplateNames(

@@ -12,8 +12,8 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/IIR/IIR.h"
+#include "dawn/IIR/IIRNodeIterator.h"
 #include <gtest/gtest.h>
 #include <string>
 
@@ -48,7 +48,7 @@ public:
   Node4(Node4&& other) : val_(other.val_) {}
   int val_;
 };
-}
+} // namespace impl
 
 namespace {
 
@@ -196,4 +196,4 @@ TEST_F(IIRNodeIterator, MissingLeaf) {
   }
   ASSERT_EQ(i, 2);
 }
-}
+} // namespace

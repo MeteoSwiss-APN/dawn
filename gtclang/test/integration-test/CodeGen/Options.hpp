@@ -41,6 +41,6 @@ public:
   int m_size[4] = {12, 12, 12, 10};
   bool m_verify;
 };
-}
+} // namespace dawn
 
 #endif

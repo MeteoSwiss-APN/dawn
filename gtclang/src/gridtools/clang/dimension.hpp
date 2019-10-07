@@ -28,5 +28,5 @@ struct dimension {
   dimension operator+(int);
   dimension operator-(int);
 };
-}
-}
+} // namespace clang
+} // namespace gridtools
