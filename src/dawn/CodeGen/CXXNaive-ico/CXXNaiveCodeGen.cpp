@@ -29,6 +29,30 @@ namespace dawn {
 namespace codegen {
 namespace cxxnaiveico {
 
+// Requirement for the atlas interface:
+//
+// - Tag: No requirement on the tag. Might be used for ADL.
+//
+// - The following functions should be declarared:
+//
+//   template<typename ValueType> FieldType fieldType(Tag);
+//   MeshType meshType(Tag);
+//
+// - FieldType should be callable with CellType and return `ValueType&` or `ValueType const&`.
+//
+// - getCells(Tag, MeshType const&) should return an object that can be used in a range-based
+//   for-loop as follows:
+//
+//     for (auto&& x : getCells(...)) needs to be well-defined such that x is of type CellType
+//
+// - The following function should be defined:
+//
+//   template<typename Init, typename Op>
+//   Init reduceCellToCell(Tag, MeshType, CellType, Init, Op)
+//
+//   where Op must be callable as
+//     Op(Init, ValueType);
+
 // static std::string makeLoopImpl(const iir::Extent extent, const std::string& dim,
 // const std::string& lower, const std::string& upper,
 // const std::string& comparison, const std::string& increment) {
