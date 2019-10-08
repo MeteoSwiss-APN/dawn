@@ -15,7 +15,6 @@
 #ifndef DAWN_IIR_FIELDACCESSMETADATA_H
 #define DAWN_IIR_FIELDACCESSMETADATA_H
 
-#include "boost/variant.hpp"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/Json.h"
 #include <set>
@@ -215,12 +214,6 @@ struct AccessesContainerKeyValue {
 };
 
 struct FieldAccessMetadata {
-
-  using allContainerTypes =
-      boost::variant<std::unordered_map<int, std::string>&, std::set<int>&, std::vector<int>&>;
-
-  using allConstContainerTypes = boost::variant<const std::unordered_map<int, std::string>&,
-                                                const std::set<int>&, const std::vector<int>&>;
   // Rules:
   // - FieldAccessIDSet_ includes : apiFieldIDs_, TemporaryFieldAccessIDSet_,
   // AllocatedFieldAccessIDSet_

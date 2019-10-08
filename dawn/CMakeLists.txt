@@ -99,7 +99,7 @@ if(DAWN_DOCUMENTATION)
   set(doc_packages Python3 Sphinx LaTeX Doxygen)
 endif()
 
-foreach(package bash Boost Protobuf ccache clang-format ${doc_packages})
+foreach(package bash Protobuf ccache clang-format ${doc_packages})
   include("Add${package}")
   yoda_create_package_string(${package} info)
   list(APPEND package_info ${info})

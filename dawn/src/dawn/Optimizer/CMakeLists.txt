@@ -1,13 +1,13 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
-##                          _                      
-##                         | |                     
-##                       __| | __ ___      ___ ___  
-##                      / _` |/ _` \ \ /\ / / '_  | 
+##                          _
+##                         | |
+##                       __| | __ ___      ___ ___
+##                      / _` |/ _` \ \ /\ / / '_  |
 ##                     | (_| | (_| |\ V  V /| | | |
 ##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
@@ -15,15 +15,15 @@
 yoda_add_library(
   NAME DawnOptimizer
   SOURCES AccessComputation.h
-          AccessComputation.cpp   
+          AccessComputation.cpp
           CreateVersionAndRename.cpp
           CreateVersionAndRename.h
-          OptimizerContext.cpp 
+          OptimizerContext.cpp
           OptimizerContext.h
           Pass.h
           PassComputeStageExtents.cpp
           PassComputeStageExtents.h
-          PassDataLocalityMetric.cpp      
+          PassDataLocalityMetric.cpp
           PassDataLocalityMetric.h
           PassFieldVersioning.cpp
           PassFieldVersioning.h
@@ -31,8 +31,8 @@ yoda_add_library(
           PassInlining.h
           PassIntervalPartitioner.cpp
           PassIntervalPartitioner.h
-          PassManager.cpp   
-          PassManager.h 
+          PassManager.cpp
+          PassManager.h
           PassMultiStageSplitter.cpp
           PassMultiStageSplitter.h
           PassPrintStencilGraph.cpp
@@ -87,8 +87,6 @@ yoda_add_library(
           OBJECT
           )
 
-target_include_directories(DawnOptimizerObjects SYSTEM PUBLIC ${Boost_INCLUDE_DIR})
-
 yoda_combine_libraries(
   NAME DawnOptimizer
   OBJECTS DawnOptimizerObjects
@@ -97,4 +95,3 @@ yoda_combine_libraries(
   VERSION ${DAWN_VERSION}
   EXPORT_GROUP DawnTargets
 )
-
