@@ -4,10 +4,10 @@
 # checks that <of_module> does not depend on <on_module>
 # i.e. <of_module> does not include any file from <on_module>
 function no_dependency() {
-    last_result=`grep -rE "#include .*$2/.*(hpp|h)" src/dawn/$1 | wc -l`
+    last_result=`grep -rE "#include .*$2/.*(hpp|h)" dawn/src/dawn/$1 | wc -l`
     if [ "$last_result" -gt 0 ]; then
         echo "ERROR Modularization violated: found dependency of $1 on $2"
-        echo "`grep -rE "#include .*$2/.*(hpp|h)" src/dawn/$1`"
+        echo "`grep -rE "#include .*$2/.*(hpp|h)" dawn/src/dawn/$1`"
     fi
     modularization_result=$(( modularization_result || last_result ))
 }
@@ -20,13 +20,20 @@ modularization_result=0
 
 # # list of non-dependencies
 no_dependency "Support" "SIR"
+no_dependency "Support" "AST"
 no_dependency "Support" "IIR"
 no_dependency "Support" "CodeGen"
 no_dependency "Support" "Serialization"
 no_dependency "Support" "Optimizer"
 no_dependency "Support" "Compiler"
 
-no_dependency "SIR" "IIR"
+no_dependency "AST" "IIR"
+#no_dependency "AST" "SIR"
+no_dependency "AST" "Optimizer"
+no_dependency "AST" "Compiler"
+no_dependency "AST" "Serialization"
+no_dependency "AST" "CodeGen"
+
 no_dependency "SIR" "Optimizer"
 no_dependency "SIR" "Compiler"
 no_dependency "SIR" "Serialization"
@@ -43,6 +50,7 @@ no_dependency "CodeGen" "Compiler"
 
 are_independent "Serialization" "Optimizer"
 are_independent "Optimizer" "CodeGen"
-are_independent "Optimizer" "CodeGen"
+#are_independent "SIR" "IIR"
+#are_independent "SIR" "CodeGen"
 
 exit $modularization_result

@@ -19,7 +19,7 @@ SCRIPTPATH=`dirname $SCRIPT`
 ##################################################################
 # SETTINGS
 # set path to clang-format binary
-CLANG_FORMAT=`which clang-format`
+CLANG_FORMAT=`which clang-format-6`
 
 ## parsing the clang format version from an output like
 ## Ubuntu clang-format version 3.7.1-2ubuntu2
@@ -161,6 +161,9 @@ else
 
     error_code=$((error_code || 1 ))
 fi
+
+${SCRIPTPATH}/check_modularization
+modularization_result=$?
 
 # exit if errors
 error_code=$((error_code || modularization_result ))
