@@ -4,4 +4,5 @@ ignore=(
     "^\./dawn/src/dawn/Support/External/"
     "^\./dawn/examples/python/data/"
     "^\./gtclang/test/utils/googletest/"
+    "^\./bundle/"
     )
