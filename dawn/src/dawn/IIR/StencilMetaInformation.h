@@ -62,7 +62,7 @@ struct GetAccessesOfTypeHelper<FieldAccessType::FAT_Field> {
 };
 template <>
 struct GetAccessesOfTypeHelper<FieldAccessType::FAT_LocalVariable> {
-  void operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+  void operator()(FieldAccessMetadata const&) {
     dawn_unreachable("getter of local accesses ids not supported");
   }
 };
