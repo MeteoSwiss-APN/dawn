@@ -40,15 +40,15 @@ std::shared_ptr<dawn::sir::ReturnStmt> ret(const std::shared_ptr<dawn::sir::Expr
 }
 
 std::shared_ptr<dawn::sir::VarDeclStmt> vardecl(const std::string& type, const std::string& name,
-                                           const std::shared_ptr<dawn::sir::Expr>& init,
-                                           const char* op) {
+                                                const std::shared_ptr<dawn::sir::Expr>& init,
+                                                const char* op) {
 
   return vecdecl(type, name, std::vector<std::shared_ptr<dawn::sir::Expr>>({init}), 0, op);
 }
 
-std::shared_ptr<dawn::sir::VarDeclStmt> vecdecl(const std::string& type, const std::string& name,
-                                           std::vector<std::shared_ptr<dawn::sir::Expr>> initList,
-                                           int dimension, const char* op) {
+std::shared_ptr<dawn::sir::VarDeclStmt>
+vecdecl(const std::string& type, const std::string& name,
+        std::vector<std::shared_ptr<dawn::sir::Expr>> initList, int dimension, const char* op) {
   auto realtype = stringToType(type);
   return dawn::sir::makeVarDeclStmt(realtype, name, dimension, op, initList);
 }
@@ -68,30 +68,31 @@ std::shared_ptr<dawn::sir::BoundaryConditionDeclStmt> boundaryCondition(const st
 }
 
 std::shared_ptr<dawn::sir::IfStmt> ifstmt(const std::shared_ptr<dawn::sir::Stmt>& condExpr,
-                                     const std::shared_ptr<dawn::sir::Stmt>& thenStmt,
-                                     const std::shared_ptr<dawn::sir::Stmt>& elseStmt) {
+                                          const std::shared_ptr<dawn::sir::Stmt>& thenStmt,
+                                          const std::shared_ptr<dawn::sir::Stmt>& elseStmt) {
   return dawn::sir::makeIfStmt(condExpr, thenStmt, elseStmt);
 }
 
 std::shared_ptr<dawn::sir::UnaryOperator> unop(const std::shared_ptr<dawn::sir::Expr>& operand,
-                                          const char* op) {
+                                               const char* op) {
   return std::make_shared<dawn::sir::UnaryOperator>(operand, op);
 }
 
-std::shared_ptr<dawn::sir::BinaryOperator> binop(const std::shared_ptr<dawn::sir::Expr>& left, const char* op,
-                                            const std::shared_ptr<dawn::sir::Expr>& right) {
+std::shared_ptr<dawn::sir::BinaryOperator> binop(const std::shared_ptr<dawn::sir::Expr>& left,
+                                                 const char* op,
+                                                 const std::shared_ptr<dawn::sir::Expr>& right) {
   return std::make_shared<dawn::sir::BinaryOperator>(left, op, right);
 }
 
 std::shared_ptr<dawn::sir::AssignmentExpr> assign(const std::shared_ptr<dawn::sir::Expr>& left,
-                                             const std::shared_ptr<dawn::sir::Expr>& right,
-                                             const char* op) {
+                                                  const std::shared_ptr<dawn::sir::Expr>& right,
+                                                  const char* op) {
   return std::make_shared<dawn::sir::AssignmentExpr>(left, right, op);
 }
 
 std::shared_ptr<dawn::sir::TernaryOperator> ternop(const std::shared_ptr<dawn::sir::Expr>& cond,
-                                              const std::shared_ptr<dawn::sir::Expr>& left,
-                                              const std::shared_ptr<dawn::sir::Expr>& right) {
+                                                   const std::shared_ptr<dawn::sir::Expr>& left,
+                                                   const std::shared_ptr<dawn::sir::Expr>& right) {
   return std::make_shared<dawn::sir::TernaryOperator>(cond, left, right);
 }
 
@@ -108,19 +109,19 @@ std::shared_ptr<dawn::sir::StencilFunArgExpr> arg(int direction, int offset, int
 }
 
 std::shared_ptr<dawn::sir::VarAccessExpr> var(const std::string& name,
-                                         std::shared_ptr<dawn::sir::Expr> index) {
+                                              std::shared_ptr<dawn::sir::Expr> index) {
   return std::make_shared<dawn::sir::VarAccessExpr>(name, index);
 }
 
 std::shared_ptr<dawn::sir::FieldAccessExpr> field(const std::string& name, dawn::Array3i offset,
-                                             dawn::Array3i argumentMap,
-                                             dawn::Array3i argumentOffset, bool negateOffset) {
+                                                  dawn::Array3i argumentMap,
+                                                  dawn::Array3i argumentOffset, bool negateOffset) {
   return std::make_shared<dawn::sir::FieldAccessExpr>(name, offset, argumentMap, argumentOffset,
-                                                 negateOffset);
+                                                      negateOffset);
 }
 
 std::shared_ptr<dawn::sir::LiteralAccessExpr> lit(const std::string& value,
-                                             dawn::BuiltinTypeID builtinType) {
+                                                  dawn::BuiltinTypeID builtinType) {
   return std::make_shared<dawn::sir::LiteralAccessExpr>(value, builtinType);
 }
 

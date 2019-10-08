@@ -1,13 +1,13 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -15,17 +15,17 @@
 #include "dawn/Support/ArrayRef.h"
 #include "dawn/Support/StringUtil.h"
 #include <gtest/gtest.h>
-#include <vector>
 #include <iostream>
+#include <vector>
 
 namespace dawn {
 
-template<class T>
+template <class T>
 std::ostream& operator<<(std::ostream& os, const ArrayRef<T>& a) {
   return os << RangeToString()(a);
 }
 
-}
+} // namespace dawn
 
 using namespace dawn;
 

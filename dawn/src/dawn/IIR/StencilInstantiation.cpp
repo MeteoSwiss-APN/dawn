@@ -62,7 +62,7 @@ std::shared_ptr<StencilInstantiation> StencilInstantiation::clone() const {
 
   stencilInstantiation->IIR_ =
       std::make_unique<iir::IIR>(stencilInstantiation->getIIR()->getGlobalVariableMap(),
-                            stencilInstantiation->getIIR()->getStencilFunctions());
+                                 stencilInstantiation->getIIR()->getStencilFunctions());
   IIR_->clone(stencilInstantiation->IIR_);
 
   return stencilInstantiation;

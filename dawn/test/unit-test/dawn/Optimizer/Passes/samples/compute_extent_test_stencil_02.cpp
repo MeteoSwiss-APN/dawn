@@ -25,16 +25,16 @@ stencil compute_extent_test_stencil {
   Do {
     vertical_region(k_start, k_end) {
       lap = u[i + 1] + u[i - 1] + u[j + 1] + u[j - 1] - 4.0 * u;
-      if (flx * (u[i+1] - u) > 0)
+      if(flx * (u[i + 1] - u) > 0)
         flx = 0.;
       else
-        flx = lap[i+1] - lap;
+        flx = lap[i + 1] - lap;
 
-      if (fly * (u[j+1] - u) > 0)
-      	fly = 0.;
-      else 
-        fly = lap[j+1] - lap;
-      out = u - coeff * (flx - flx[i-1] + fly - fly[j-1]);
+      if(fly * (u[j + 1] - u) > 0)
+        fly = 0.;
+      else
+        fly = lap[j + 1] - lap;
+      out = u - coeff * (flx - flx[i - 1] + fly - fly[j - 1]);
     }
   }
 };

@@ -116,5 +116,5 @@ public:
   static void reset();
 };
 #endif
-}
-}
+} // namespace clang
+} // namespace gridtools

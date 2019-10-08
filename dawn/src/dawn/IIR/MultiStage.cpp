@@ -158,7 +158,7 @@ Extent MultiStage::getKCacheVertExtent(const int accessID) const {
   // in the case of epflush, the extent of the cache required is not determined only by the access
   // pattern, but also by the window required to epflush
   if(cache.getCacheIOPolicy() == iir::Cache::CacheIOPolicy::epflush) {
-   DAWN_ASSERT(cache.getWindow());
+    DAWN_ASSERT(cache.getWindow());
     auto window = *(cache.getWindow());
     return vertExtent.merge(iir::Extent{window.m_m, window.m_p});
   } else {
@@ -167,7 +167,7 @@ Extent MultiStage::getKCacheVertExtent(const int accessID) const {
 }
 
 std::optional<Extents> MultiStage::computeExtents(const int accessID,
-                                                    const Interval& interval) const {
+                                                  const Interval& interval) const {
 
   std::optional<Extents> extents;
   for(const auto& doMethod : iterateIIROver<iir::DoMethod>(*this)) {
@@ -179,7 +179,7 @@ std::optional<Extents> MultiStage::computeExtents(const int accessID,
       continue;
     }
 
-   if(extents) {
+    if(extents) {
       extents->merge(doMethod->getField(accessID).getExtents());
     } else {
       extents = std::make_optional(doMethod->getField(accessID).getExtents());
@@ -203,9 +203,8 @@ MultiInterval MultiStage::computePartitionOfIntervals() const {
 Cache& MultiStage::setCache(iir::Cache::CacheTypeKind type, iir::Cache::CacheIOPolicy policy,
                             int AccessID) {
   return derivedInfo_.caches_
-      .emplace(AccessID,
-               iir::Cache(type, policy, AccessID, std::optional<Interval>(),
-                          std::optional<Interval>(), std::optional<iir::Cache::window>()))
+      .emplace(AccessID, iir::Cache(type, policy, AccessID, std::optional<Interval>(),
+                                    std::optional<Interval>(), std::optional<iir::Cache::window>()))
       .first->second;
 }
 
@@ -267,7 +266,7 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
         std::optional<Extent> readAccessInLoopOrder = readAccessExtent.getVerticalLoopOrderExtent(
             getLoopOrder(), Extents::VerticalLoopOrderDir::VL_InLoopOrder, false);
         Interval computingInterval = doMethod->getInterval();
-       if(readAccessInLoopOrder) {
+        if(readAccessInLoopOrder) {
           interv.insert(computingInterval.extendInterval(*readAccessInLoopOrder));
         }
         if(!writeIntervalPre.empty()) {
@@ -283,7 +282,7 @@ MultiInterval MultiStage::computeReadAccessInterval(int accessID) const {
             readAccessExtent.getVerticalLoopOrderExtent(
                 getLoopOrder(), Extents::VerticalLoopOrderDir::VL_CounterLoopOrder, false);
 
-       if(readAccessCounterLoopOrder) {
+        if(readAccessCounterLoopOrder) {
           interv.insert(computingInterval.extendInterval(*readAccessCounterLoopOrder));
         }
 
@@ -348,7 +347,7 @@ std::optional<Interval> MultiStage::getEnclosingAccessIntervalTemporaries() cons
       if(!metadata_.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, AccessID))
         continue;
 
-     if(!interval) {
+      if(!interval) {
         interval = std::make_optional(field.computeAccessedInterval());
       } else {
         interval->merge(field.computeAccessedInterval());

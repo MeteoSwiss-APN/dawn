@@ -26,10 +26,10 @@ stencil intervals01 {
   storage in, out;
 
   Do {
-    vertical_region(k_start+1, k_flat)
+    vertical_region(k_start + 1, k_flat)
         out = in + 1;
 
-    vertical_region(k_flat + 2, k_end-1)
+    vertical_region(k_flat + 2, k_end - 1)
         out = in + 3;
   }
 };

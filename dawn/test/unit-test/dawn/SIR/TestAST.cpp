@@ -1,13 +1,13 @@
 //===--------------------------------------------------------------------------------*- C++ -*-===//
-//                          _                      
-//                         | |                     
-//                       __| | __ ___      ___ ___  
-//                      / _` |/ _` \ \ /\ / / '_  | 
+//                          _
+//                         | |
+//                       __| | __ ___      ___ ___
+//                      / _` |/ _` \ \ /\ / / '_  |
 //                     | (_| | (_| |\ V  V /| | | |
 //                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 //
 //
-//  This file is distributed under the MIT License (MIT). 
+//  This file is distributed under the MIT License (MIT).
 //  See LICENSE.txt for details.
 //
 //===------------------------------------------------------------------------------------------===//
@@ -73,19 +73,19 @@ protected:
     stmt_VarDeclStmt = sir::makeVarDeclStmt(
         Type(BuiltinTypeID::Float), "var", 0, "=",
         std::vector<std::shared_ptr<sir::Expr>>{std::make_shared<sir::VarAccessExpr>("foo")});
-    stmt_IfStmt = sir::makeIfStmt(
-        sir::makeExprStmt(std::make_shared<sir::VarAccessExpr>("foo1")),
-        sir::makeExprStmt(std::make_shared<sir::VarAccessExpr>("foo2")),
-        sir::makeExprStmt(std::make_shared<sir::VarAccessExpr>("foo3")));
+    stmt_IfStmt = sir::makeIfStmt(sir::makeExprStmt(std::make_shared<sir::VarAccessExpr>("foo1")),
+                                  sir::makeExprStmt(std::make_shared<sir::VarAccessExpr>("foo2")),
+                                  sir::makeExprStmt(std::make_shared<sir::VarAccessExpr>("foo3")));
     //
     // Expressions
     //
     expr_UnaryOperator =
         std::make_shared<sir::UnaryOperator>(std::make_shared<sir::VarAccessExpr>("foo"), "-");
-    expr_BinaryOperator = std::make_shared<sir::BinaryOperator>(
-        std::make_shared<sir::VarAccessExpr>("foo"), "+", std::make_shared<sir::VarAccessExpr>("foo"));
-    expr_AssignmentExpr = std::make_shared<sir::AssignmentExpr>(std::make_shared<sir::VarAccessExpr>("foo1"),
-                                                           std::make_shared<sir::VarAccessExpr>("foo2"));
+    expr_BinaryOperator =
+        std::make_shared<sir::BinaryOperator>(std::make_shared<sir::VarAccessExpr>("foo"), "+",
+                                              std::make_shared<sir::VarAccessExpr>("foo"));
+    expr_AssignmentExpr = std::make_shared<sir::AssignmentExpr>(
+        std::make_shared<sir::VarAccessExpr>("foo1"), std::make_shared<sir::VarAccessExpr>("foo2"));
     expr_TernaryOperator = std::make_shared<sir::TernaryOperator>(
         std::make_shared<sir::VarAccessExpr>("foo1"), std::make_shared<sir::VarAccessExpr>("foo2"),
         std::make_shared<sir::VarAccessExpr>("foo3"));
@@ -222,9 +222,9 @@ TEST_F(ASTTest, Clone) {
 TEST_F(ASTTest, ReplaceExpr) {
   auto foo_var = std::make_shared<sir::VarAccessExpr>("foo");
 
-  replaceOldExprWithNewExprInStmt(stmt_BlockStmt,
-                    dyn_cast<sir::ExprStmt>(stmt_BlockStmt->getStatements().front().get())->getExpr(),
-                    foo_var);
+  replaceOldExprWithNewExprInStmt(
+      stmt_BlockStmt,
+      dyn_cast<sir::ExprStmt>(stmt_BlockStmt->getStatements().front().get())->getExpr(), foo_var);
   EXPECT_TRUE(dyn_cast<sir::ExprStmt>(stmt_BlockStmt->getStatements().front().get())
                   ->getExpr()
                   ->equals(foo_var));
@@ -235,7 +235,8 @@ TEST_F(ASTTest, ReplaceExpr) {
   replaceOldExprWithNewExprInStmt(stmt_ReturnStmt, stmt_ReturnStmt->getExpr(), foo_var);
   EXPECT_TRUE(stmt_ReturnStmt->getExpr()->equals(foo_var));
 
-  replaceOldExprWithNewExprInStmt(stmt_VarDeclStmt, stmt_VarDeclStmt->getInitList().front(), foo_var);
+  replaceOldExprWithNewExprInStmt(stmt_VarDeclStmt, stmt_VarDeclStmt->getInitList().front(),
+                                  foo_var);
   EXPECT_TRUE(stmt_VarDeclStmt->getInitList().front()->equals(foo_var));
 
   replaceOldExprWithNewExprInStmt(stmt_IfStmt, stmt_IfStmt->getCondExpr(), foo_var);
@@ -305,8 +306,8 @@ TEST_F(ASTTest, EvalExprBoolean) {
 
   {
     auto expr = std::make_shared<sir::BinaryOperator>(
-        std::make_shared<sir::LiteralAccessExpr>("true", BuiltinTypeID::Boolean), "==",
-        std::make_shared<sir::LiteralAccessExpr>("false", BuiltinTypeID::Boolean));
+        std::make_shared<sir::LiteralAccessExpr>("true", BuiltinTypeID::Boolean),
+        "==", std::make_shared<sir::LiteralAccessExpr>("false", BuiltinTypeID::Boolean));
     bool res;
     EXPECT_TRUE(evalExprAsBoolean(expr, res));
     EXPECT_EQ(res, false);
@@ -314,8 +315,8 @@ TEST_F(ASTTest, EvalExprBoolean) {
 
   {
     auto expr = std::make_shared<sir::BinaryOperator>(
-        std::make_shared<sir::LiteralAccessExpr>("true", BuiltinTypeID::Boolean), "!=",
-        std::make_shared<sir::LiteralAccessExpr>("false", BuiltinTypeID::Boolean));
+        std::make_shared<sir::LiteralAccessExpr>("true", BuiltinTypeID::Boolean),
+        "!=", std::make_shared<sir::LiteralAccessExpr>("false", BuiltinTypeID::Boolean));
     bool res;
     EXPECT_TRUE(evalExprAsBoolean(expr, res));
     EXPECT_EQ(res, true);
@@ -365,8 +366,8 @@ TEST_F(ASTTest, EvalExprBoolean) {
 
   {
     auto expr = std::make_shared<sir::BinaryOperator>(
-        std::make_shared<sir::LiteralAccessExpr>("1", BuiltinTypeID::Integer), ">=",
-        std::make_shared<sir::LiteralAccessExpr>("2", BuiltinTypeID::Integer));
+        std::make_shared<sir::LiteralAccessExpr>("1", BuiltinTypeID::Integer),
+        ">=", std::make_shared<sir::LiteralAccessExpr>("2", BuiltinTypeID::Integer));
     bool res;
     EXPECT_TRUE(evalExprAsBoolean(expr, res));
     EXPECT_EQ(res, false);
@@ -374,8 +375,8 @@ TEST_F(ASTTest, EvalExprBoolean) {
 
   {
     auto expr = std::make_shared<sir::BinaryOperator>(
-        std::make_shared<sir::LiteralAccessExpr>("1", BuiltinTypeID::Integer), "<=",
-        std::make_shared<sir::LiteralAccessExpr>("2", BuiltinTypeID::Integer));
+        std::make_shared<sir::LiteralAccessExpr>("1", BuiltinTypeID::Integer),
+        "<=", std::make_shared<sir::LiteralAccessExpr>("2", BuiltinTypeID::Integer));
     bool res;
     EXPECT_TRUE(evalExprAsBoolean(expr, res));
     EXPECT_EQ(res, true);

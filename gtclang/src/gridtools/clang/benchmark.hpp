@@ -128,7 +128,7 @@ struct command_line {
 };
 
 #endif
-}
-}
+} // namespace clang
+} // namespace gridtools
 
 #endif
