@@ -1,7 +1,7 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
 ##                         _       _
 ##                        | |     | |
-##                    __ _| |_ ___| | __ _ _ __   __ _ 
+##                    __ _| |_ ___| | __ _ _ __   __ _
 ##                   / _` | __/ __| |/ _` | '_ \ / _` |
 ##                  | (_| | || (__| | (_| | | | | (_| |
 ##                   \__, |\__\___|_|\__,_|_| |_|\__, | - GridTools Clang DSL
@@ -9,13 +9,13 @@
 ##                   |___/                       |___/
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
 
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING 
+  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
       "Choose the type of build, options are: Debug Release RelWithDebInfo." FORCE)
 endif()
 
@@ -52,8 +52,8 @@ include(yodaAddTargetCleanAll)
 # Add custom targets
 yoda_add_target_clean_all(
   "${CMAKE_BINARY_DIR}/prefix"
-  "${CMAKE_BINARY_DIR}/thirdparty"  
-  "${CMAKE_BINARY_DIR}/dawn-cmake"  
+  "${CMAKE_BINARY_DIR}/thirdparty"
+  "${CMAKE_BINARY_DIR}/dawn-cmake"
   "${CMAKE_BINARY_DIR}/dawn"
   "${CMAKE_BINARY_DIR}/dawn-prefix"
   "${CMAKE_BINARY_DIR}/gtclang"
@@ -66,8 +66,6 @@ yoda_add_target_clean_all(
 
 include("thirdparty/DawnAddProtobuf")
 
-include("thirdparty/DawnAddBoost")
-
 option(DAWN_BUNDLE_PYTHON "Build and install the Python module interface to HIR" OFF)
 option(DAWN_BUNDLE_JAVA "Build and install the java interface to HIR" OFF)
 option(DAWN_PYTHON_EXAMPLES "Build the python examples of generating HIR" OFF)
@@ -78,17 +76,17 @@ if( DAWN_BUNDLE_PYTHON )
   endif()
 endif()
 
-set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR} -DBOOST_ROOT=${BOOST_ROOT} -DDAWN_PYTHON=${DAWN_BUNDLE_PYTHON} -DDAWN_EXAMPLES=${DAWN_PYTHON_EXAMPLES} -DDAWN_JAVA=${DAWN_BUNDLE_JAVA})
+set(dawn_cmake_args -DProtobuf_DIR=${Protobuf_DIR} -DDAWN_PYTHON=${DAWN_BUNDLE_PYTHON} -DDAWN_EXAMPLES=${DAWN_PYTHON_EXAMPLES} -DDAWN_JAVA=${DAWN_BUNDLE_JAVA})
 
 yoda_find_package(
   PACKAGE dawn
-  FORWARD_VARS 
+  FORWARD_VARS
     BINARY_DIR dawn_binary_dir
-  DEPENDS "protobuf" "boost"
+  DEPENDS "protobuf"
   ADDITIONAL
     SOURCE_DIR "${CMAKE_SOURCE_DIR}/../"
     YODA_ROOT "${DAWN_YODA_SOURCE_DIR}"
-    CMAKE_ARGS 
+    CMAKE_ARGS
         ${dawn_cmake_args}
 )
 
@@ -96,7 +94,7 @@ if(NOT(dawn_binary_dir))
   message(FATAL_ERROR "dawn binary dir was not defined by External_dawn")
 endif()
 
-add_test(NAME dawn-tests 
+add_test(NAME dawn-tests
   COMMAND  ${CMAKE_COMMAND} --build ${dawn_binary_dir} --target test
 )
 

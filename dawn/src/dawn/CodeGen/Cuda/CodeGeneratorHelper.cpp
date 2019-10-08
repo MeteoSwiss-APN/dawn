@@ -100,10 +100,10 @@ std::vector<std::string> CodeGeneratorHelper::generateStrideArguments(
 }
 
 iir::Extents CodeGeneratorHelper::computeTempMaxWriteExtent(iir::Stencil const& stencil) {
-  auto tempFields = makeRange(
-      stencil.getFields(),
-      std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
-          [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
+  auto tempFields =
+      makeRange(stencil.getFields(), [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
+        return p.second.IsTemporary;
+      });
   iir::Extents maxExtents{0, 0, 0, 0, 0, 0};
   for(const auto& fieldPair : tempFields) {
     DAWN_ASSERT(fieldPair.second.field.getWriteExtentsRB());

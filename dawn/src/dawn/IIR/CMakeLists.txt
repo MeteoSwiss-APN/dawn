@@ -1,13 +1,13 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
-##                          _                      
-##                         | |                     
-##                       __| | __ ___      ___ ___  
-##                      / _` |/ _` \ \ /\ / / '_  | 
+##                          _
+##                         | |
+##                       __| | __ ___      ___ ___
+##                      / _` |/ _` \ \ /\ / / '_  |
 ##                     | (_| | (_| |\ V  V /| | | |
 ##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
@@ -39,7 +39,7 @@ yoda_add_library(
           ASTUtil.h
           ASTUtil.cpp
           ASTVisitor.h
-          Accesses.cpp  
+          Accesses.cpp
           Accesses.h
           AccessUtils.cpp
           AccessUtils.h
@@ -52,7 +52,7 @@ yoda_add_library(
           ControlFlowDescriptor.cpp
           ControlFlowDescriptor.h
           DependencyGraph.h
-          DependencyGraphAccesses.cpp      
+          DependencyGraphAccesses.cpp
           DependencyGraphAccesses.h
           DependencyGraphStage.cpp
           DependencyGraphStage.h
@@ -81,7 +81,7 @@ yoda_add_library(
           LoopOrder.h
           MultiInterval.cpp
           MultiInterval.h
-          MultiStage.cpp 
+          MultiStage.cpp
           MultiStage.h
           NodeUpdateType.cpp
           NodeUpdateType.h
@@ -103,7 +103,7 @@ yoda_add_library(
 target_include_directories(DawnIIRObjects PUBLIC ${iir_proto_include_dirs}/../)
 
 target_include_directories(DawnIIRObjects PUBLIC $<TARGET_PROPERTY:DawnSIRStatic,INCLUDE_DIRECTORIES>)
-target_include_directories(DawnIIRObjects SYSTEM PUBLIC ${Boost_INCLUDE_DIR} ${iir_proto_include_dirs})
+target_include_directories(DawnIIRObjects SYSTEM PUBLIC ${iir_proto_include_dirs})
 
 add_custom_target(IIR_Proto_Generated ALL DEPENDS ${iir_proto_cpp_files})
 add_dependencies(IIR_Proto_Generated SIR_Proto_Generated)
@@ -117,7 +117,7 @@ yoda_combine_libraries(
   EXPORT_GROUP DawnTargets
 )
 
-if(DAWN_PYTHON) 
+if(DAWN_PYTHON)
   # Genreate python proto files
   dawn_protobuf_generate(
     OUT_FILES iir_proto_python_files
@@ -155,4 +155,3 @@ if(DAWN_JAVA)
 
   install(DIRECTORY ${iir_proto_java_dirs} DESTINATION ${DAWN_INSTALL_JAVA_DIR}/dawn)
 endif(DAWN_JAVA)
-

@@ -8,8 +8,8 @@ RUN apt-get update                                                              
 ENV PYTHON_DIR $(which python3.7)
 USER 1001
 RUN cd /usr/local/gtclang_build                                                                                                 && \
-    git clone https://github.com/MeteoSwiss-APN/gtclang.git gtclang                                                             && \
-    cd gtclang                                                                                                                  && \
+    git clone https://github.com/MeteoSwiss-APN/dawn.git                                                                        && \
+    cd dawn/gtclang                                                                                                             && \
     sed -i 's/git@github.com:MeteoSwiss-APN\/dawn.git/https:\/\/github.com\/MeteoSwiss-APN\/dawn.git/g' bundle/CMakeLists.txt   && \
     cd bundle/ && mkdir build && cd build && \ 
     cmake -DPYTHON_EXECUTABLE="${PYTHON_DIR}" -DCMAKE_INSTALL_PREFIX=/usr/local/gtclang_build/install ..                        && \
@@ -26,9 +26,9 @@ RUN apt-get update                                                              
 USER 1001
 WORKDIR /usr/local/gtclang
 COPY --from=builder /usr/local/gtclang_build/install .
-COPY --from=builder /usr/local/gtclang_build/gtclang/bundle/build/dawn-prefix/src/dawn-build/prefix/protobuf/lib/libprotobuf.so .
+COPY --from=builder /usr/local/gtclang_build/dawn/gtclang/bundle/build/dawn-prefix/src/dawn-build/prefix/protobuf/lib/libprotobuf.so .
 RUN mkdir -p /usr/local/gtclang_build/gtclang/src /usr/local/gtclang/data
-COPY --from=builder /usr/local/gtclang_build/gtclang/src /usr/local/gtclang_build/gtclang/src
+COPY --from=builder /usr/local/gtclang_build/dawn/gtclang/src /usr/local/gtclang_build/dawn/gtclang/src
 ENV LD_LIBRARY_PATH=/usr/local/gtclang
 
 ENTRYPOINT ["/usr/local/gtclang/bin/gtclang"]

@@ -42,14 +42,10 @@ build_dir=${base_dir}/bundle/build
 mkdir -p $build_dir
 cd $build_dir
 
-if [ -z ${BOOST_DIR+x} ]; then 
- echo "BOOST_DIR needs to be set in the machine env"
-fi
-
-if [ -z ${PROTOBUFDIR+x} ]; then 
+if [ -z ${PROTOBUFDIR+x} ]; then
  echo "PROTOBUFDIF needs to be set in the machine env"
 fi
-CMAKE_ARGS="-DDAWN_BUNDLE_PYTHON=ON -DDAWN_BUNDLE_JAVA=ON -DDAWN_PYTHON_EXAMPLES=ON -DCMAKE_BUILD_TYPE=${build_type} -DBOOST_ROOT=${BOOST_DIR}  \
+CMAKE_ARGS="-DDAWN_BUNDLE_PYTHON=ON -DDAWN_BUNDLE_JAVA=ON -DDAWN_PYTHON_EXAMPLES=ON -DCMAKE_BUILD_TYPE=${build_type}  \
         -DProtobuf_DIR=${PROTOBUFDIR} -DPROTOBUF_PYTHON_INSTALL=${PROTOBUFDIR}/../../../python"
 
 if [ -n ${INSTALL_DIR} ]; then
@@ -61,4 +57,4 @@ cmake ${CMAKE_ARGS} ../
 make -j2 install
 
 # Run unittests
-ctest -VV -C ${build_type} --output-on-failure --force-new-ctest-process  
+ctest -VV -C ${build_type} --output-on-failure --force-new-ctest-process
