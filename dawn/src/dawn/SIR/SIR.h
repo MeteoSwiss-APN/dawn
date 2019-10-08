@@ -25,11 +25,11 @@
 #include "dawn/Support/Type.h"
 #include <iosfwd>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
-#include <vector>
 #include <variant>
-#include <optional>
+#include <vector>
 
 namespace dawn {
 
@@ -284,11 +284,11 @@ struct Value : NonCopyable {
 
   template <class T>
   explicit Value(T&& value)
-    : value_{value}, is_constexpr_{false}, type_{TypeInfo<T>::Type} {}
+      : value_{std::forward<T>(value)}, is_constexpr_{false}, type_{TypeInfo<T>::Type} {}
 
   template <class T>
   explicit Value(T value, bool is_constexpr)
-    : value_{value}, is_constexpr_{is_constexpr}, type_{TypeInfo<T>::Type} {}
+      : value_{value}, is_constexpr_{is_constexpr}, type_{TypeInfo<T>::Type} {}
 
   explicit Value(TypeKind type) : value_{}, is_constexpr_{false}, type_{type} {}
 
@@ -302,7 +302,7 @@ struct Value : NonCopyable {
   static BuiltinTypeID typeToBuiltinTypeID(TypeKind type);
 
   /// Convert the value to string
-  std::string toString() const { return std::string{typeToString(type_)}; }
+  std::string toString() const { return typeToString(type_); }
 
   /// @brief Check if value is set
   bool has_value() const { return value_.has_value(); }
@@ -330,7 +330,8 @@ struct Value : NonCopyable {
     return valueJson;
   }
 
-  template <typename T> struct TypeInfo {};
+  template <typename T>
+  struct TypeInfo {};
 
 private:
   std::optional<std::variant<bool, int, double, std::string>> value_;
@@ -338,20 +339,24 @@ private:
   TypeKind type_;
 };
 
-template <> struct Value::TypeInfo<bool> {
- static const TypeKind Type = Boolean;
+template <>
+struct Value::TypeInfo<bool> {
+  static constexpr TypeKind Type = Boolean;
 };
 
-template <> struct Value::TypeInfo<int> {
-  static const TypeKind Type = Integer;
+template <>
+struct Value::TypeInfo<int> {
+  static constexpr TypeKind Type = Integer;
 };
 
-template <> struct Value::TypeInfo<double> {
-  static const TypeKind Type = Double;
+template <>
+struct Value::TypeInfo<double> {
+  static constexpr TypeKind Type = Double;
 };
 
-template <> struct Value::TypeInfo<std::string> {
-  static const TypeKind Type = String;
+template <>
+struct Value::TypeInfo<std::string> {
+  static constexpr TypeKind Type = String;
 };
 
 using GlobalVariableMap = std::unordered_map<std::string, std::shared_ptr<Value>>;
