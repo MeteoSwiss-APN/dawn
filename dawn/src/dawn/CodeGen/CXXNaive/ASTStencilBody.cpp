@@ -57,10 +57,6 @@ int ASTStencilBody::getAccessID(const std::shared_ptr<iir::VarDeclStmt>& stmt) c
 //     Stmt
 //===------------------------------------------------------------------------------------------===//
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::BlockStmt>& stmt) { Base::visit(stmt); }
-
-void ASTStencilBody::visit(const std::shared_ptr<iir::ExprStmt>& stmt) { Base::visit(stmt); }
-
 void ASTStencilBody::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
   if(scopeDepth_ == 0)
     ss_ << std::string(indent_, ' ');
@@ -70,8 +66,6 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
   stmt->getExpr()->accept(*this);
   ss_ << ";\n";
 }
-
-void ASTStencilBody::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) { Base::visit(stmt); }
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) {
   DAWN_ASSERT_MSG(0, "VerticalRegionDeclStmt not allowed in this context");
@@ -85,21 +79,9 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>
   DAWN_ASSERT_MSG(0, "BoundaryConditionDeclStmt not allowed in this context");
 }
 
-void ASTStencilBody::visit(const std::shared_ptr<iir::IfStmt>& stmt) { Base::visit(stmt); }
-
 //===------------------------------------------------------------------------------------------===//
 //     Expr
 //===------------------------------------------------------------------------------------------===//
-
-void ASTStencilBody::visit(const std::shared_ptr<iir::UnaryOperator>& expr) { Base::visit(expr); }
-
-void ASTStencilBody::visit(const std::shared_ptr<iir::BinaryOperator>& expr) { Base::visit(expr); }
-
-void ASTStencilBody::visit(const std::shared_ptr<iir::AssignmentExpr>& expr) { Base::visit(expr); }
-
-void ASTStencilBody::visit(const std::shared_ptr<iir::TernaryOperator>& expr) { Base::visit(expr); }
-
-void ASTStencilBody::visit(const std::shared_ptr<iir::FunCallExpr>& expr) { Base::visit(expr); }
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::StencilFunCallExpr>& expr) {
   if(nestingOfStencilFunArgLists_++)
@@ -142,10 +124,6 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
       ss_ << "]";
     }
   }
-}
-
-void ASTStencilBody::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) {
-  Base::visit(expr);
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
