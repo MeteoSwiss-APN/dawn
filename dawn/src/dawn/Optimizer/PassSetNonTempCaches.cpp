@@ -207,7 +207,7 @@ private:
 
     // Add the single do method to the new Stage
     assignmentStage->clearChildren();
-    assignmentStage->addDoMethod(domethod);
+    assignmentStage->addDoMethod(std::move(domethod));
     for(auto& doMethod : assignmentStage->getChildren()) {
       doMethod->update(iir::NodeUpdateType::level);
     }

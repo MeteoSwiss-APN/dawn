@@ -144,7 +144,7 @@ bool PassStageMerger::run(const std::shared_ptr<iir::StencilInstantiation>& sten
             } else {
               // Interval does not exists in `candidateStage`, just insert our DoMethod
               if(MergeDoMethodsOfStencil && MergeDoMethodsOfStage) {
-                candidateStage.addDoMethod(*curDoMethodIt);
+                candidateStage.addDoMethod(std::move(*curDoMethodIt));
                 // CARTO
                 for(auto& doMethod : candidateStage.getChildren()) {
                   doMethod->update(iir::NodeUpdateType::level);

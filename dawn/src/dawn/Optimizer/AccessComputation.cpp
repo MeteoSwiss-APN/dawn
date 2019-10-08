@@ -80,16 +80,6 @@ public:
                         : metadata_.getStencilFunctionInstantiation(expr));
   }
 
-  /// @brief Get the AccessID from the Expr
-  int getAccessIDFromExpr(const std::shared_ptr<iir::Expr>& expr) {
-    return iir::getAccessIDFromExpr(expr);
-  }
-
-  /// @brief Get the AccessID from the Stmt
-  int getAccessIDFromStmt(const std::shared_ptr<iir::Stmt>& stmt) {
-    return *stmt->getData<iir::VarDeclStmtData>().AccessID;
-  }
-
   /// @brief Add a new access to the caller and callee and register it in the caller and callee
   /// accesses list. This will also add accesses to the children of the top-level statement
   void appendNewAccesses() {
@@ -133,35 +123,35 @@ public:
     };
 
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeWriteOffset(getAccessIDFromExpr(field), getOffset(true));
+      callerAccesses->mergeWriteOffset(iir::getAccessIDFromExpr(field), getOffset(true));
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeWriteOffset(getAccessIDFromExpr(field), getOffset(false));
+      calleeAccesses->mergeWriteOffset(iir::getAccessIDFromExpr(field), getOffset(false));
   }
 
   void mergeWriteOffset(const std::shared_ptr<iir::VarAccessExpr>& var) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeWriteOffset(getAccessIDFromExpr(var), Array3i{{0, 0, 0}});
+      callerAccesses->mergeWriteOffset(iir::getAccessIDFromExpr(var), Array3i{{0, 0, 0}});
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeWriteOffset(getAccessIDFromExpr(var), Array3i{{0, 0, 0}});
+      calleeAccesses->mergeWriteOffset(iir::getAccessIDFromExpr(var), Array3i{{0, 0, 0}});
   }
 
   void mergeWriteOffset(const std::shared_ptr<iir::VarDeclStmt>& var) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeWriteOffset(getAccessIDFromStmt(var), Array3i{{0, 0, 0}});
+      callerAccesses->mergeWriteOffset(iir::getAccessIDFromStmt(var), Array3i{{0, 0, 0}});
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeWriteOffset(getAccessIDFromStmt(var), Array3i{{0, 0, 0}});
+      calleeAccesses->mergeWriteOffset(iir::getAccessIDFromStmt(var), Array3i{{0, 0, 0}});
   }
 
   void mergeWriteExtent(const std::shared_ptr<iir::FieldAccessExpr>& field,
                         const iir::Extents& extent) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeWriteExtent(getAccessIDFromExpr(field), extent);
+      callerAccesses->mergeWriteExtent(iir::getAccessIDFromExpr(field), extent);
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeWriteExtent(getAccessIDFromExpr(field), extent);
+      calleeAccesses->mergeWriteExtent(iir::getAccessIDFromExpr(field), extent);
   }
   /// @}
 
@@ -174,35 +164,35 @@ public:
     };
 
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeReadOffset(getAccessIDFromExpr(field), getOffset(true));
+      callerAccesses->mergeReadOffset(iir::getAccessIDFromExpr(field), getOffset(true));
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeReadOffset(getAccessIDFromExpr(field), getOffset(false));
+      calleeAccesses->mergeReadOffset(iir::getAccessIDFromExpr(field), getOffset(false));
   }
 
   void mergeReadOffset(const std::shared_ptr<iir::VarAccessExpr>& var) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeReadOffset(getAccessIDFromExpr(var), Array3i{{0, 0, 0}});
+      callerAccesses->mergeReadOffset(iir::getAccessIDFromExpr(var), Array3i{{0, 0, 0}});
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeReadOffset(getAccessIDFromExpr(var), Array3i{{0, 0, 0}});
+      calleeAccesses->mergeReadOffset(iir::getAccessIDFromExpr(var), Array3i{{0, 0, 0}});
   }
 
   void mergeReadOffset(const std::shared_ptr<iir::LiteralAccessExpr>& lit) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeReadOffset(getAccessIDFromExpr(lit), Array3i{{0, 0, 0}});
+      callerAccesses->mergeReadOffset(iir::getAccessIDFromExpr(lit), Array3i{{0, 0, 0}});
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeReadOffset(getAccessIDFromExpr(lit), Array3i{{0, 0, 0}});
+      calleeAccesses->mergeReadOffset(iir::getAccessIDFromExpr(lit), Array3i{{0, 0, 0}});
   }
 
   void mergeReadExtent(const std::shared_ptr<iir::FieldAccessExpr>& field,
                        const iir::Extents& extent) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeReadExtent(getAccessIDFromExpr(field), extent);
+      callerAccesses->mergeReadExtent(iir::getAccessIDFromExpr(field), extent);
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeReadExtent(getAccessIDFromExpr(field), extent);
+      calleeAccesses->mergeReadExtent(iir::getAccessIDFromExpr(field), extent);
   }
   /// @}
 

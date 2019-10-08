@@ -34,8 +34,8 @@ ASTStencilDesc::ASTStencilDesc(
 
 ASTStencilDesc::~ASTStencilDesc() {}
 
-std::string ASTStencilDesc::getName(const std::shared_ptr<iir::Stmt>& stmt) const {
-  return metadata_.getFieldNameFromAccessID(*stmt->getData<iir::VarDeclStmtData>().AccessID);
+std::string ASTStencilDesc::getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const {
+  return metadata_.getFieldNameFromAccessID(iir::getAccessIDFromStmt(stmt));
 }
 
 std::string ASTStencilDesc::getName(const std::shared_ptr<iir::Expr>& expr) const {

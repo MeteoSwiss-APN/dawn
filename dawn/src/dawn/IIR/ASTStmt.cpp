@@ -23,13 +23,9 @@ namespace iir {
 //     IIRStmtData
 //===------------------------------------------------------------------------------------------===//
 
-IIRStmtData::IIRStmtData(const IIRStmtData& other) {
-  StackTrace = other.StackTrace ? std::make_optional(*other.StackTrace) : other.StackTrace;
-  CallerAccesses =
-      other.CallerAccesses ? std::make_optional(*other.CallerAccesses) : other.CallerAccesses;
-  CalleeAccesses =
-      other.CalleeAccesses ? std::make_optional(*other.CalleeAccesses) : other.CalleeAccesses;
-}
+IIRStmtData::IIRStmtData(const IIRStmtData& other)
+    : StackTrace(other.StackTrace), CallerAccesses(other.CallerAccesses),
+      CalleeAccesses(other.CalleeAccesses) {}
 
 bool IIRStmtData::operator==(const IIRStmtData& rhs) const {
   return StackTrace == rhs.StackTrace && CallerAccesses == rhs.CallerAccesses &&
@@ -50,9 +46,8 @@ bool IIRStmtData::equals(ast::StmtData const* other) const {
 //     VarDeclStmtData
 //===------------------------------------------------------------------------------------------===//
 
-VarDeclStmtData::VarDeclStmtData(const VarDeclStmtData& other) : IIRStmtData(other) {
-  AccessID = other.AccessID ? std::make_optional(*other.AccessID) : other.AccessID;
-}
+VarDeclStmtData::VarDeclStmtData(const VarDeclStmtData& other)
+    : IIRStmtData(other), AccessID(other.AccessID) {}
 
 bool VarDeclStmtData::operator==(const VarDeclStmtData& rhs) const {
   return IIRStmtData::operator==(rhs) && AccessID == rhs.AccessID;
@@ -106,6 +101,10 @@ std::optional<Extents> computeMaximumExtents(Stmt& stmt, const int accessID) {
   }
 
   return extents;
+}
+
+int getAccessIDFromStmt(const std::shared_ptr<VarDeclStmt>& stmt) {
+  return *stmt->getData<VarDeclStmtData>().AccessID;
 }
 
 } // namespace iir

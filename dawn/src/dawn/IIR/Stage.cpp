@@ -258,7 +258,7 @@ const std::unordered_set<int>& Stage::getAllGlobalVariables() const {
   return derivedInfo_.allGlobalVariables_;
 }
 
-void Stage::addDoMethod(DoMethodSmartPtr_t& doMethod) {
+void Stage::addDoMethod(DoMethodSmartPtr_t&& doMethod) {
   DAWN_ASSERT_MSG(std::find_if(childrenBegin(), childrenEnd(),
                                [&](const DoMethodSmartPtr_t& doMethodPtr) {
                                  return doMethodPtr->getInterval() == doMethod->getInterval();

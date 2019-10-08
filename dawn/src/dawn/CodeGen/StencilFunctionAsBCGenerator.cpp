@@ -5,8 +5,9 @@
 namespace dawn {
 namespace codegen {
 
-std::string StencilFunctionAsBCGenerator::getName(const std::shared_ptr<iir::Stmt>& stmt) const {
-  return metadata_.getFieldNameFromAccessID(*stmt->getData<iir::VarDeclStmtData>().AccessID);
+std::string
+StencilFunctionAsBCGenerator::getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const {
+  return metadata_.getFieldNameFromAccessID(iir::getAccessIDFromStmt(stmt));
 }
 
 std::string StencilFunctionAsBCGenerator::getName(const std::shared_ptr<iir::Expr>& expr) const {

@@ -18,7 +18,6 @@
 #include "dawn/AST/ASTVisitorHelpers.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/ArrayRef.h"
-#include "dawn/Support/STLExtras.h"
 #include "dawn/Support/SourceLocation.h"
 #include "dawn/Support/Type.h"
 #include "dawn/Support/UIDGenerator.h"

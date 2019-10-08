@@ -15,8 +15,8 @@
 #include "dawn/CodeGen/CXXNaive/ASTStencilDesc.h"
 #include "dawn/CodeGen/CXXUtil.h"
 #include "dawn/IIR/AST.h"
-#include "dawn/Support/IndexRange.h"
 #include "dawn/IIR/ASTExpr.h"
+#include "dawn/Support/IndexRange.h"
 #include "dawn/Support/Unreachable.h"
 
 namespace dawn {
@@ -31,8 +31,8 @@ ASTStencilDesc::ASTStencilDesc(
 
 ASTStencilDesc::~ASTStencilDesc() {}
 
-std::string ASTStencilDesc::getName(const std::shared_ptr<iir::Stmt>& stmt) const {
-  return metadata_.getFieldNameFromAccessID(*stmt->getData<iir::VarDeclStmtData>().AccessID);
+std::string ASTStencilDesc::getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const {
+  return metadata_.getFieldNameFromAccessID(iir::getAccessIDFromStmt(stmt));
 }
 
 std::string ASTStencilDesc::getName(const std::shared_ptr<iir::Expr>& expr) const {

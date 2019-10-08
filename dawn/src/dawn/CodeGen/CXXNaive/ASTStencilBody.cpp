@@ -31,23 +31,26 @@ ASTStencilBody::ASTStencilBody(const iir::StencilMetaInformation& metadata,
 
 ASTStencilBody::~ASTStencilBody() {}
 
-std::string ASTStencilBody::getName(const std::shared_ptr<iir::Stmt>& stmt) const {
+std::string ASTStencilBody::getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const {
   if(currentFunction_)
-    return currentFunction_->getFieldNameFromAccessID(
-        *stmt->getData<iir::VarDeclStmtData>().AccessID);
+    return currentFunction_->getFieldNameFromAccessID(getAccessID(stmt));
   else
-    return metadata_.getFieldNameFromAccessID(*stmt->getData<iir::VarDeclStmtData>().AccessID);
+    return metadata_.getFieldNameFromAccessID(getAccessID(stmt));
 }
 
 std::string ASTStencilBody::getName(const std::shared_ptr<iir::Expr>& expr) const {
   if(currentFunction_)
-    return currentFunction_->getFieldNameFromAccessID(iir::getAccessIDFromExpr(expr));
+    return currentFunction_->getFieldNameFromAccessID(getAccessID(expr));
   else
-    return metadata_.getFieldNameFromAccessID(iir::getAccessIDFromExpr(expr));
+    return metadata_.getFieldNameFromAccessID(getAccessID(expr));
 }
 
 int ASTStencilBody::getAccessID(const std::shared_ptr<iir::Expr>& expr) const {
   return iir::getAccessIDFromExpr(expr);
+}
+
+int ASTStencilBody::getAccessID(const std::shared_ptr<iir::VarDeclStmt>& stmt) const {
+  return iir::getAccessIDFromStmt(stmt);
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -151,7 +154,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
     // extract the arg index, from the AccessID
     int argIndex = -1;
     for(auto idx : currentFunction_->ArgumentIndexToCallerAccessIDMap()) {
-      if(idx.second == iir::getAccessIDFromExpr(expr))
+      if(idx.second == getAccessID(expr))
         argIndex = idx.first;
     }
 
@@ -204,7 +207,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
 
     } else {
       std::string accessName =
-          currentFunction_->getOriginalNameFromCallerAccessID(iir::getAccessIDFromExpr(expr));
+          currentFunction_->getOriginalNameFromCallerAccessID(getAccessID(expr));
       ss_ << accessName
           << offsetPrinter_(ijkfyOffset(currentFunction_->evalOffsetOfFieldAccessExpr(expr, false),
                                         accessName));

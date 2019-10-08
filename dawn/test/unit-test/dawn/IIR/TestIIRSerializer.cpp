@@ -13,6 +13,7 @@
 //===------------------------------------------------------------------------------------------===//
 
 #include "dawn/Compiler/Options.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/IIR.h"
 #include "dawn/IIR/StatementAccessesPair.h"
@@ -81,30 +82,8 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
               ++stmtidx) {
             const auto& lhsStmt = lhsDoMethod->getChild(stmtidx);
             const auto& rhsStmt = rhsDoMethod->getChild(stmtidx);
-            // check the statement
+            // check the statement (and its data)
             IIR_EARLY_EXIT((lhsStmt->getStatement()->equals(rhsStmt->getStatement().get())));
-
-            // check the accesses
-            const auto& lhsCallerAccesses =
-                lhsStmt->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
-            const auto& rhsCallerAccesses =
-                rhsStmt->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
-            IIR_EARLY_EXIT((lhsCallerAccesses->getReadAccesses().size() ==
-                            rhsCallerAccesses->getReadAccesses().size()));
-            IIR_EARLY_EXIT((lhsCallerAccesses->getWriteAccesses().size() ==
-                            rhsCallerAccesses->getWriteAccesses().size()));
-            if(lhsCallerAccesses) {
-              for(const auto& lhsPair : rhsCallerAccesses->getReadAccesses()) {
-                IIR_EARLY_EXIT(rhsCallerAccesses->getReadAccesses().count(lhsPair.first));
-                auto rhsValue = rhsCallerAccesses->getReadAccesses().at(lhsPair.first);
-                IIR_EARLY_EXIT((rhsValue == lhsPair.second));
-              }
-              for(const auto& lhsPair : rhsCallerAccesses->getWriteAccesses()) {
-                IIR_EARLY_EXIT(rhsCallerAccesses->getWriteAccesses().count(lhsPair.first));
-                auto rhsValue = rhsCallerAccesses->getWriteAccesses().at(lhsPair.first);
-                IIR_EARLY_EXIT((rhsValue == lhsPair.second));
-              }
-            }
           }
         }
       }
@@ -115,26 +94,8 @@ bool compareIIRs(iir::IIR* lhs, iir::IIR* rhs) {
 
   IIR_EARLY_EXIT((lhsControlFlowStmts.size() == rhsControlFlowStmts.size()));
   for(int i = 0, size = lhsControlFlowStmts.size(); i < size; ++i) {
+    // check the statement (and its data)
     if(!lhsControlFlowStmts[i]->equals(rhsControlFlowStmts[i].get()))
-      return false;
-
-    if(lhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace) {
-      if(rhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace) {
-        for(int j = 0,
-                jsize = lhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace->size();
-            j < jsize; ++j) {
-          if(!(lhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace->at(j) ==
-               rhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace->at(j))) {
-            return false;
-          }
-        }
-      } else {
-        return false;
-      }
-    }
-
-    if(lhsControlFlowStmts[i]->getData<iir::IIRStmtData>() !=
-       rhsControlFlowStmts[i]->getData<iir::IIRStmtData>())
       return false;
   }
 
@@ -325,12 +286,27 @@ TEST_F(IIRSerializerTest, IIRTests) {
 
   auto& IIRDoMethod = (IIRStage)->getChild(0);
   auto expr = std::make_shared<iir::VarAccessExpr>("name");
+  expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional<int>(42);
   auto stmt = iir::makeExprStmt(expr);
   stmt->setID(22);
   stmt->getData<iir::IIRStmtData>().CallerAccesses = std::make_optional(iir::Accesses());
   auto stmtAccessPair = std::make_unique<iir::StatementAccessesPair>(stmt);
 
   (IIRDoMethod)->insertChild(std::move(stmtAccessPair));
+
+  deserialized = serializeAndDeserializeRef();
+  IIR_EXPECT_EQ(deserialized, referenceInstantiaton);
+  const auto& deserializedStmt = std::dynamic_pointer_cast<iir::ExprStmt>(deserialized->getIIR()
+                                                                              ->getChild(0)
+                                                                              ->getChild(0)
+                                                                              ->getChild(0)
+                                                                              ->getChild(0)
+                                                                              ->getChild(0)
+                                                                              ->getStatement());
+  std::dynamic_pointer_cast<iir::VarAccessExpr>(deserializedStmt->getExpr())
+      ->getData<iir::IIRAccessExprData>()
+      .AccessID = std::make_optional<int>(50);
+  IIR_EXPECT_NE(deserialized, referenceInstantiaton);
 }
 
 } // anonymous namespace

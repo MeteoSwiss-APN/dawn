@@ -22,9 +22,7 @@ namespace iir {
 //     IIRAccessExprData
 //===------------------------------------------------------------------------------------------===//
 
-IIRAccessExprData::IIRAccessExprData(const IIRAccessExprData& other) {
-  AccessID = other.AccessID ? std::make_optional(*other.AccessID) : other.AccessID;
-}
+IIRAccessExprData::IIRAccessExprData(const IIRAccessExprData& other) : AccessID(other.AccessID) {}
 
 bool IIRAccessExprData::operator==(const IIRAccessExprData& rhs) const {
   return AccessID == rhs.AccessID;

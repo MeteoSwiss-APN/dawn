@@ -63,7 +63,7 @@ std::shared_ptr<StencilInstantiation> StencilInstantiation::clone() const {
 
   stencilInstantiation->IIR_ =
       std::make_unique<iir::IIR>(stencilInstantiation->getIIR()->getGlobalVariableMap(),
-                            stencilInstantiation->getIIR()->getStencilFunctions());
+                                 stencilInstantiation->getIIR()->getStencilFunctions());
   IIR_->clone(stencilInstantiation->IIR_);
 
   return stencilInstantiation;
@@ -145,7 +145,7 @@ public:
       : metadata_(metadata), AccessID_(AccessID), captureLocation_(captureLocation) {}
 
   virtual void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
-    if(*stmt->getData<iir::VarDeclStmtData>().AccessID == AccessID_) {
+    if(iir::getAccessIDFromStmt(stmt) == AccessID_) {
       name_ = stmt->getName();
       if(captureLocation_)
         locations_.push_back(stmt->getSourceLocation());

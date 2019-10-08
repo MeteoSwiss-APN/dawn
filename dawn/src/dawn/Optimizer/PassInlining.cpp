@@ -197,7 +197,7 @@ public:
   }
 
   void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
-    int AccessID = *stmt->getData<iir::VarDeclStmtData>().AccessID;
+    int AccessID = iir::getAccessIDFromStmt(stmt);
     const std::string& name = curStencilFunctioninstantiation_->getFieldNameFromAccessID(AccessID);
     metadata_.addAccessIDNamePair(AccessID, name);
 

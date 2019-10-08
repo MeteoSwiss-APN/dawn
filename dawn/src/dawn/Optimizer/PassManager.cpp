@@ -20,46 +20,7 @@
 #include <vector>
 
 namespace dawn {
-//
-//  TODO refactor_AST: this needs to be removed!
-//
-struct CheckAccesses : public iir::ASTVisitorForwarding {
-  void visit(const std::shared_ptr<iir::BlockStmt>& stmt) override {
-    DAWN_ASSERT(stmt->getData<iir::IIRStmtData>().CallerAccesses);
-    iir::ASTVisitorForwarding::visit(stmt);
-  }
-  void visit(const std::shared_ptr<iir::ExprStmt>& stmt) override {
-    DAWN_ASSERT_MSG(stmt->getData<iir::IIRStmtData>().CallerAccesses,
-                    "no accesses for statement " + stmt->getID());
-  }
-  void visit(const std::shared_ptr<iir::ReturnStmt>& stmt) override {
-    DAWN_ASSERT(stmt->getData<iir::IIRStmtData>().CallerAccesses);
-    iir::ASTVisitorForwarding::visit(stmt);
-  }
-  void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
-    DAWN_ASSERT(stmt->getData<iir::IIRStmtData>().CallerAccesses);
-    iir::ASTVisitorForwarding::visit(stmt);
-  }
-  void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override {
-    DAWN_ASSERT(stmt->getData<iir::IIRStmtData>().CallerAccesses);
-    iir::ASTVisitorForwarding::visit(stmt);
-  }
-  void visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt) override {
-    DAWN_ASSERT(stmt->getData<iir::IIRStmtData>().CallerAccesses);
-    iir::ASTVisitorForwarding::visit(stmt);
-  }
-  void visit(const std::shared_ptr<iir::BoundaryConditionDeclStmt>& stmt) override {
-    DAWN_ASSERT(stmt->getData<iir::IIRStmtData>().CallerAccesses);
-    iir::ASTVisitorForwarding::visit(stmt);
-  }
-  void visit(const std::shared_ptr<iir::IfStmt>& stmt) override {
-    DAWN_ASSERT(stmt->getData<iir::IIRStmtData>().CallerAccesses);
-    iir::ASTVisitorForwarding::visit(stmt);
-  }
-};
-//
-//  END_TODO
-//
+
 bool PassManager::runAllPassesOnStecilInstantiation(
     OptimizerContext& context, const std::shared_ptr<iir::StencilInstantiation>& instantiation) {
   std::vector<std::string> passesRan;
@@ -86,11 +47,6 @@ bool PassManager::runPassOnStecilInstantiation(
     OptimizerContext& context, const std::shared_ptr<iir::StencilInstantiation>& instantiation,
     Pass* pass) {
   DAWN_LOG(INFO) << "Starting " << pass->getName() << " ...";
-
-  CheckAccesses checkAccesses;
-  for(auto& sap : iterateIIROver<iir::StatementAccessesPair>(*instantiation->getIIR())) {
-    sap->getStatement()->accept(checkAccesses);
-  }
 
   if(!pass->run(instantiation)) {
     DAWN_LOG(WARNING) << "Done with " << pass->getName() << " : FAIL";

@@ -32,7 +32,7 @@ struct Extents;
 struct IIRStmtData : public ast::StmtData {
   static const DataType ThisDataType = DataType::IIR_DATA_TYPE;
 
-  IIRStmtData() {}
+  IIRStmtData() = default;
   IIRStmtData(const IIRStmtData& other);
 
   bool operator==(const IIRStmtData&) const;
@@ -54,8 +54,8 @@ struct IIRStmtData : public ast::StmtData {
   std::optional<Accesses> CalleeAccesses;
 
   DataType getDataType() const override { return ThisDataType; }
-  virtual std::unique_ptr<StmtData> clone() const override;
-  virtual bool equals(StmtData const* other) const override;
+  std::unique_ptr<StmtData> clone() const override;
+  bool equals(StmtData const* other) const override;
 };
 
 template <typename... Args>
@@ -129,7 +129,11 @@ using IfStmt = ast::IfStmt;
 //
 // END_TODO
 //
-extern std::optional<Extents> computeMaximumExtents(Stmt& stmt, const int accessID);
+/// @brief Computes the maximum extent among all the accesses of accessID in stmt
+std::optional<Extents> computeMaximumExtents(Stmt& stmt, const int accessID);
+
+/// @brief Get the `AccessID` of the a VarDeclStmt
+int getAccessIDFromStmt(const std::shared_ptr<VarDeclStmt>& stmt);
 
 } // namespace iir
 } // namespace dawn

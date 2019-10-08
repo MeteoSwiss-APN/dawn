@@ -87,16 +87,8 @@ void compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
               ++stmtidx) {
             const auto& lhsStmt = lhsDoMethod->getChild(stmtidx);
             const auto& rhsStmt = rhsDoMethod->getChild(stmtidx);
-            // check the statement
-            // EXPECT_TRUE(lhsStmt->getStatement()->ASTStmt->equals(rhsStmt->getStatement()->ASTStmt.get()));
-
-            // check the accesses
-            const auto& lhsCallerAccesses =
-                lhsStmt->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
-            const auto& rhsCallerAccesses =
-                rhsStmt->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
-            EXPECT_EQ(lhsCallerAccesses->getReadAccesses(), rhsCallerAccesses->getReadAccesses());
-            EXPECT_EQ(lhsCallerAccesses->getWriteAccesses(), rhsCallerAccesses->getWriteAccesses());
+            // check the statement (and its data)
+            EXPECT_TRUE(lhsStmt->getStatement()->equals(rhsStmt->getStatement().get()));
           }
         }
       }
@@ -107,19 +99,7 @@ void compareIIRstructures(iir::IIR* lhs, iir::IIR* rhs) {
 
   ASSERT_EQ(lhsControlFlowStmts.size(), rhsControlFlowStmts.size());
   for(int i = 0, size = lhsControlFlowStmts.size(); i < size; ++i) {
-    // EXPECT_TRUE(lhsControlFlowStmts[i]->getData<iir::ASTStmtData>().ASTStmt->equals(rhsControlFlowStmts[i]->ASTStmt.get()));
-
-    if(lhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace) {
-      // ASSERT_TRUE(rhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace.get() !=
-      // nullptr);
-      for(int j = 0, jsize = lhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace->size();
-          j < jsize; ++j) {
-        EXPECT_EQ(*lhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace->at(j),
-                  *rhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace->at(j));
-      }
-    } else {
-      ASSERT_FALSE(rhsControlFlowStmts[i]->getData<iir::IIRStmtData>().StackTrace);
-    }
+    EXPECT_TRUE(lhsControlFlowStmts[i]->equals(rhsControlFlowStmts[i].get()));
   }
 }
 

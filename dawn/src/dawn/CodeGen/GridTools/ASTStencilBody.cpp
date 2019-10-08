@@ -32,12 +32,11 @@ ASTStencilBody::ASTStencilBody(
 
 ASTStencilBody::~ASTStencilBody() {}
 
-std::string ASTStencilBody::getName(const std::shared_ptr<iir::Stmt>& stmt) const {
+std::string ASTStencilBody::getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const {
   if(currentFunction_)
-    return currentFunction_->getFieldNameFromAccessID(
-        *stmt->getData<iir::VarDeclStmtData>().AccessID);
+    return currentFunction_->getFieldNameFromAccessID(iir::getAccessIDFromStmt(stmt));
   else
-    return metadata_.getFieldNameFromAccessID(*stmt->getData<iir::VarDeclStmtData>().AccessID);
+    return metadata_.getFieldNameFromAccessID(iir::getAccessIDFromStmt(stmt));
 }
 
 std::string ASTStencilBody::getName(const std::shared_ptr<iir::Expr>& expr) const {

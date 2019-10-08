@@ -72,7 +72,7 @@ public:
 
   void visit(const std::shared_ptr<iir::VarAccessExpr>& expr);
 
-  std::string getName(const std::shared_ptr<iir::Stmt>& stmt) const;
+  std::string getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const;
   std::string getName(const std::shared_ptr<iir::Expr>& expr) const;
 };
 

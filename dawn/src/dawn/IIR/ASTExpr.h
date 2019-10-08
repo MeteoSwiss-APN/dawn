@@ -56,7 +56,7 @@ using ReductionOverNeighborExpr = ast::ReductionOverNeighborExpr;
 //
 
 /// @brief Get the `AccessID` of the Expr (VarAccess or FieldAccess or LiteralAccess)
-extern int getAccessIDFromExpr(const std::shared_ptr<Expr>& expr);
+int getAccessIDFromExpr(const std::shared_ptr<Expr>& expr);
 
 } // namespace iir
 } // namespace dawn
