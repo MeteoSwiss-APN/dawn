@@ -29,20 +29,14 @@
   Type& operator/=(const storage&);                                                                \
   Type& operator*=(const storage&);                                                                \
                                                                                                    \
-  /**                                                                                              \
-   * @name 1D access                                                                               \
-   * @{                                                                                            \
-   */                                                                                              \
+  /** @name 1D access @{ */                                                                        \
   Type& operator()(direction);                                                                     \
                                                                                                    \
   Type& operator()(dimension);                                                                     \
   Type& operator()(offset);                                                                        \
   /** @} */                                                                                        \
                                                                                                    \
-  /**                                                                                              \
-   * @name 2D access                                                                               \
-   * @{                                                                                            \
-   */                                                                                              \
+  /** @name 2D access @{ */                                                                        \
   Type& operator()(dimension, dimension);                                                          \
                                                                                                    \
   Type& operator()(dimension, direction);                                                          \
@@ -50,10 +44,7 @@
   Type& operator()(direction, direction);                                                          \
   /** @} */                                                                                        \
                                                                                                    \
-  /**                                                                                              \
-   * @name 3D access                                                                               \
-   * @{                                                                                            \
-   */                                                                                              \
+  /** @name 3D access @{ */                                                                        \
   Type& operator()(dimension, dimension, dimension);                                               \
                                                                                                    \
   Type& operator()(direction, direction, direction);                                               \
@@ -209,5 +200,5 @@ using ::gridtools::make_host_view;
 template <typename T>
 storage_t make_host_view(T...);
 #endif
-}
-}
+} // namespace clang
+} // namespace gridtools

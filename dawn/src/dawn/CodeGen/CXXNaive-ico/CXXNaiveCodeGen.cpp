@@ -265,15 +265,14 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
     // fields used in the stencil
     const auto stencilFields = support::orderMap(stencil->getFields());
 
-    auto nonTempFields = makeRange(
-        stencilFields, std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
-                           [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
-                             return !p.second.IsTemporary;
-                           }));
-    auto tempFields = makeRange(
-        stencilFields,
-        std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
-            [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
+    auto nonTempFields =
+        makeRange(stencilFields, [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
+          return !p.second.IsTemporary;
+        });
+    auto tempFields =
+        makeRange(stencilFields, [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
+          return p.second.IsTemporary;
+        });
 
     Structure StencilClass = stencilWrapperClass.addStruct(stencilName);
 
