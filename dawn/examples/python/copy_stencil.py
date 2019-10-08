@@ -53,7 +53,9 @@ def create_vertical_region_stmt() -> VerticalRegionDeclStmt:
     body_ast = make_ast(
         [make_assignment_stmt(
             make_field_access_expr("out", [0, 0, 0]),
-            make_field_access_expr("in", [1, 0, 0]),
+            make_reduction_over_neighbor_expr("+",
+                make_literal_access_expr("1.0", BuiltinType.Float),
+                make_field_access_expr("in", [1, 0, 0])),
             "="
         )
         ]
@@ -101,7 +103,7 @@ dawn.dawnOptionsEntryCreateString.restype = c_void_p
 dawn.dawnOptionsEntryCreateString.argtypes = [
     ctypes.c_char_p
 ]
-backend = dawn.dawnOptionsEntryCreateString("cuda".encode('utf-8'))
+backend = dawn.dawnOptionsEntryCreateString("c++-naive-ico".encode('utf-8'))
 
 dawn.dawnOptionsSet.argtypes = [
     ctypes.c_void_p,

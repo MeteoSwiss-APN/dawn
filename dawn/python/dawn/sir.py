@@ -43,6 +43,7 @@ ExprType = TypeVar('Expr',
                    VarAccessExpr,
                    FieldAccessExpr,
                    LiteralAccessExpr,
+                   ReductionOverNeighborExpr,
                    )
 
 StmtType = TypeVar('Stmt',
@@ -262,6 +263,8 @@ def make_expr(expr: ExprType):
         wrapped_expr.field_access_expr.CopyFrom(expr)
     elif isinstance(expr, LiteralAccessExpr):
         wrapped_expr.literal_access_expr.CopyFrom(expr)
+    elif isinstance(expr, ReductionOverNeighborExpr):
+        wrapped_expr.reduction_over_neighbor_expr.CopyFrom(expr)
     else:
         raise SIRError("cannot create Expr from type {}".format(type(expr)))
     return wrapped_expr
@@ -571,6 +574,21 @@ def make_literal_access_expr(value: str, type: BuiltinType.TypeID) -> LiteralAcc
     expr.type.CopyFrom(builtin_type)
     return expr
 
+def make_reduction_over_neighbor_expr(op: str, rhs: ExprType, init: ExprType) -> ReductionOverNeighborExpr:
+    """ Create a ReductionOverNeighborExpr
+
+    :param op:          Reduction operation performed for each neighbor
+    :param rhs:         Operation to be performed for each neighbor before reducing
+    :param init:        Initial value for reduction operation
+    """
+    expr = ReductionOverNeighborExpr()
+    expr.op = op
+    expr.rhs.CopyFrom(make_expr(rhs))
+    expr.init.CopyFrom(make_expr(init))
+    return expr
+
+
+
 
 __all__ = [
     # SIR
@@ -641,6 +659,8 @@ __all__ = [
     'make_field_access_expr',
     'LiteralAccessExpr',
     'make_literal_access_expr',
+    'ReductionOverNeighborExpr',
+    'make_reduction_over_neighbor_expr',
 
     # Convenience functions
     'to_json',
