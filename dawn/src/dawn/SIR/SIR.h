@@ -279,16 +279,26 @@ struct Stencil : public dawn::NonCopyable {
 ///
 /// @ingroup sir
 
-struct Value : NonCopyable {
+class Value : NonCopyable {
+public:
   enum TypeKind { Boolean = 0, Integer, Double, String };
 
+private:
+  template <typename T>
+  struct TypeInfo {};
+
+  std::optional<std::variant<bool, int, double, std::string>> value_;
+  bool is_constexpr_;
+  TypeKind type_;
+
+public:
   template <class T>
   explicit Value(T&& value)
       : value_{std::forward<T>(value)}, is_constexpr_{false}, type_{TypeInfo<T>::Type} {}
 
   template <class T>
   explicit Value(T value, bool is_constexpr)
-      : value_{value}, is_constexpr_{is_constexpr}, type_{TypeInfo<T>::Type} {}
+      : value_{std::forward<T>(value)}, is_constexpr_{is_constexpr}, type_{TypeInfo<T>::Type} {}
 
   explicit Value(TypeKind type) : value_{}, is_constexpr_{false}, type_{type} {}
 
@@ -329,14 +339,6 @@ struct Value : NonCopyable {
     valueJson["value"] = toString();
     return valueJson;
   }
-
-  template <typename T>
-  struct TypeInfo {};
-
-private:
-  std::optional<std::variant<bool, int, double, std::string>> value_;
-  bool is_constexpr_;
-  TypeKind type_;
 };
 
 template <>
