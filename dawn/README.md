@@ -11,7 +11,7 @@ Dawn <br/> <a target="_blank" href="http://semver.org">![Version][Version.Badge]
 git clone git@github.com:MeteoSwiss-APN/dawn.git
 cd dawn/dawn/bundle
 mkdir build && cd build
-cmake .. -DProtobuf_DIR=/path/to/protobuf/ #ADDITIONAL_FLAGS#
+cmake .. -DProtobuf_DIR=<path/to/protobuf> #ADDITIONAL_FLAGS#
 make -j6
 make install
 ```

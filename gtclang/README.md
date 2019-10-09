@@ -14,7 +14,7 @@ Please ensure that dawn already built succesfully before attempting to build gtc
 ```bash
 cd dawn/gtclang/bundle
 mkdir build && cd build
-cmake .. -DProtobuf_DIR=/path/to/protobuf/ -Ddawn_DIR=/home/mroeth/workspace/dawn/dawn/bundle/install/cmake #ADDITIONAL_FLAGS#
+cmake .. -DProtobuf_DIR=</path/to/protobuf/> -Ddawn_DIR=<path/to/dawn>/dawn/bundle/install/cmake #ADDITIONAL_FLAGS#
 make -j6
 make install
 ```
