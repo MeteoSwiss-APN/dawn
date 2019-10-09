@@ -50,7 +50,7 @@ public:
   }
 
   virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
-    if(argListNesting_ > 0 && iir::getAccessIDFromExpr(expr) == AccessID_)
+    if(argListNesting_ > 0 && iir::getAccessID(expr) == AccessID_)
       usedInStencilFun_ = true;
   }
 
@@ -141,13 +141,10 @@ bool PassTemporaryType::run(const std::shared_ptr<iir::StencilInstantiation>& in
           }
         }
       };
-
-      processAccessMap(statementAccessesPair->getStatement()
-                           ->getData<iir::IIRStmtData>()
-                           .CallerAccesses->getWriteAccesses());
-      processAccessMap(statementAccessesPair->getStatement()
-                           ->getData<iir::IIRStmtData>()
-                           .CallerAccesses->getReadAccesses());
+      const auto& callerAccesses =
+          statementAccessesPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
+      processAccessMap(callerAccesses->getWriteAccesses());
+      processAccessMap(callerAccesses->getReadAccesses());
     }
 
     auto LifetimeMap = stencilPtr->getLifetime(AccessIDs);

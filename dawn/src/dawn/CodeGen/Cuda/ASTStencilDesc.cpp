@@ -32,11 +32,11 @@ ASTStencilDesc::ASTStencilDesc(const std::shared_ptr<iir::StencilInstantiation>&
 ASTStencilDesc::~ASTStencilDesc() {}
 
 std::string ASTStencilDesc::getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const {
-  return metadata_.getFieldNameFromAccessID(iir::getAccessIDFromStmt(stmt));
+  return metadata_.getFieldNameFromAccessID(iir::getAccessID(stmt));
 }
 
 std::string ASTStencilDesc::getName(const std::shared_ptr<iir::Expr>& expr) const {
-  return metadata_.getFieldNameFromAccessID(iir::getAccessIDFromExpr(expr));
+  return metadata_.getFieldNameFromAccessID(iir::getAccessID(expr));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -100,7 +100,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) 
 
 void ASTStencilDesc::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   if(metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable,
-                            iir::getAccessIDFromExpr(expr))) {
+                            iir::getAccessID(expr))) {
     ss_ << "m_globals.";
   }
 

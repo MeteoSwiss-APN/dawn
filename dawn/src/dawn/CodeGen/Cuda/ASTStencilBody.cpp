@@ -36,11 +36,11 @@ ASTStencilBody::ASTStencilBody(const iir::StencilMetaInformation& metadata,
 ASTStencilBody::~ASTStencilBody() {}
 
 std::string ASTStencilBody::getName(const std::shared_ptr<iir::Expr>& expr) const {
-  return metadata_.getFieldNameFromAccessID(iir::getAccessIDFromExpr(expr));
+  return metadata_.getFieldNameFromAccessID(iir::getAccessID(expr));
 }
 
 std::string ASTStencilBody::getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const {
-  return metadata_.getFieldNameFromAccessID(iir::getAccessIDFromStmt(stmt));
+  return metadata_.getFieldNameFromAccessID(iir::getAccessID(stmt));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -83,7 +83,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) 
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   std::string name = getName(expr);
-  int accessID = iir::getAccessIDFromExpr(expr);
+  int accessID = iir::getAccessID(expr);
 
   if(metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, accessID)) {
     ss_ << "globals_." << name;
@@ -99,7 +99,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
 }
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
-  int accessID = iir::getAccessIDFromExpr(expr);
+  int accessID = iir::getAccessID(expr);
   if(cacheProperties_.isIJCached(accessID)) {
     derefIJCache(expr);
     return;
@@ -114,7 +114,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
 }
 
 void ASTStencilBody::derefIJCache(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
-  int accessID = iir::getAccessIDFromExpr(expr);
+  int accessID = iir::getAccessID(expr);
   std::string accessName = cacheProperties_.getCacheName(accessID);
 
   std::string index;
@@ -139,7 +139,7 @@ void ASTStencilBody::derefIJCache(const std::shared_ptr<iir::FieldAccessExpr>& e
 }
 
 void ASTStencilBody::derefKCache(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
-  int accessID = iir::getAccessIDFromExpr(expr);
+  int accessID = iir::getAccessID(expr);
   std::string accessName = cacheProperties_.getCacheName(accessID);
   auto vertExtent = ms_->getKCacheVertExtent(accessID);
 

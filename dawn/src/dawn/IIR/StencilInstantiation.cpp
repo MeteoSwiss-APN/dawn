@@ -145,7 +145,7 @@ public:
       : metadata_(metadata), AccessID_(AccessID), captureLocation_(captureLocation) {}
 
   virtual void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
-    if(iir::getAccessIDFromStmt(stmt) == AccessID_) {
+    if(iir::getAccessID(stmt) == AccessID_) {
       name_ = stmt->getName();
       if(captureLocation_)
         locations_.push_back(stmt->getSourceLocation());
@@ -156,7 +156,7 @@ public:
   }
 
   void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
-    if(iir::getAccessIDFromExpr(expr) == AccessID_) {
+    if(iir::getAccessID(expr) == AccessID_) {
       name_ = expr->getName();
       if(captureLocation_)
         locations_.push_back(expr->getSourceLocation());
@@ -164,7 +164,7 @@ public:
   }
 
   void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override {
-    if(iir::getAccessIDFromExpr(expr) == AccessID_) {
+    if(iir::getAccessID(expr) == AccessID_) {
       name_ = expr->getValue();
       if(captureLocation_)
         locations_.push_back(expr->getSourceLocation());
@@ -172,7 +172,7 @@ public:
   }
 
   virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
-    if(iir::getAccessIDFromExpr(expr) == AccessID_) {
+    if(iir::getAccessID(expr) == AccessID_) {
       name_ = expr->getName();
       if(captureLocation_)
         locations_.push_back(expr->getSourceLocation());

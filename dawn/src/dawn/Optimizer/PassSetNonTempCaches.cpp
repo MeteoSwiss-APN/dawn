@@ -259,8 +259,8 @@ private:
       }
       // If we did not find a read statement so far, we have  a write first and do not need to
       // fill the cache
-      auto wirteAccessIterator = callerAccesses->getWriteAccesses().find(AccessID);
-      if(wirteAccessIterator != callerAccesses->getWriteAccesses().end()) {
+      auto writeAccessIterator = callerAccesses->getWriteAccesses().find(AccessID);
+      if(writeAccessIterator != callerAccesses->getWriteAccesses().end()) {
         return false;
       }
     }

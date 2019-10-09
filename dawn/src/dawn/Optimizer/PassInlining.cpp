@@ -197,7 +197,7 @@ public:
   }
 
   void visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) override {
-    int AccessID = iir::getAccessIDFromStmt(stmt);
+    int AccessID = iir::getAccessID(stmt);
     const std::string& name = curStencilFunctioninstantiation_->getFieldNameFromAccessID(AccessID);
     metadata_.addAccessIDNamePair(AccessID, name);
 
@@ -321,7 +321,7 @@ public:
 
   void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
 
-    std::string callerName = metadata_.getFieldNameFromAccessID(iir::getAccessIDFromExpr(expr));
+    std::string callerName = metadata_.getFieldNameFromAccessID(iir::getAccessID(expr));
     expr->setName(callerName);
 
     if(expr->isArrayAccess())
@@ -330,7 +330,7 @@ public:
 
   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
 
-    std::string callerName = metadata_.getFieldNameFromAccessID(iir::getAccessIDFromExpr(expr));
+    std::string callerName = metadata_.getFieldNameFromAccessID(iir::getAccessID(expr));
     expr->setName(callerName);
 
     // Set the fully evaluated offset as the new offset of the field. Note that this renders the
@@ -342,7 +342,7 @@ public:
   }
 
   void visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) override {
-    int AccessID = iir::getAccessIDFromExpr(expr);
+    int AccessID = iir::getAccessID(expr);
     metadata_.insertAccessOfType(iir::FieldAccessType::FAT_Literal, AccessID, expr->getValue());
   }
 };

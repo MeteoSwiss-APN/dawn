@@ -122,7 +122,7 @@ void StatementMapper::visit(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
 
   int accessID = -1;
   if(stmt->getData<iir::VarDeclStmtData>().AccessID) {
-    accessID = iir::getAccessIDFromStmt(stmt);
+    accessID = iir::getAccessID(stmt);
   } else {
     // This is the first time we encounter this variable. We have to make sure the name is not
     // already used in another scope!

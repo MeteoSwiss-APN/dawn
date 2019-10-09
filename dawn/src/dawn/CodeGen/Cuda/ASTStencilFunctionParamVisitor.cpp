@@ -34,14 +34,10 @@ ASTStencilFunctionParamVisitor::~ASTStencilFunctionParamVisitor() {}
 std::string ASTStencilFunctionParamVisitor::getName(const std::shared_ptr<iir::Expr>& expr) const {
 
   if(currentFunction_) {
-    return currentFunction_->getFieldNameFromAccessID(getAccessID(expr));
+    return currentFunction_->getFieldNameFromAccessID(iir::getAccessID(expr));
   } else {
-    return metadata_.getFieldNameFromAccessID(getAccessID(expr));
+    return metadata_.getFieldNameFromAccessID(iir::getAccessID(expr));
   }
-}
-
-int ASTStencilFunctionParamVisitor::getAccessID(const std::shared_ptr<iir::Expr>& expr) const {
-  return iir::getAccessIDFromExpr(expr);
 }
 
 void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {}
@@ -60,9 +56,8 @@ void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<iir::StencilFun
 void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
 
   std::string fieldName =
-      (currentFunction_)
-          ? currentFunction_->getOriginalNameFromCallerAccessID(iir::getAccessIDFromExpr(expr))
-          : getName(expr);
+      currentFunction_ ? currentFunction_->getOriginalNameFromCallerAccessID(iir::getAccessID(expr))
+                       : getName(expr);
 
   ss_ << ",param_wrapper<decltype(" << fieldName << ")>(" << fieldName << ","
       << "std::array<int, 3>{" << RangeToString(", ", "", "")(expr->getOffset())

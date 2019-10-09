@@ -41,7 +41,7 @@ void AccessToNameMapper::visit(const std::shared_ptr<iir::StencilFunCallExpr>& e
 }
 
 void AccessToNameMapper::insertAccessInfo(const std::shared_ptr<iir::Expr>& expr) {
-  int accessID = iir::getAccessIDFromExpr(expr);
+  int accessID = iir::getAccessID(expr);
   std::string name = (curFunctionInstantiation_.empty())
                          ? metaData_.getNameFromAccessID(accessID)
                          : curFunctionInstantiation_.top()->getNameFromAccessID(accessID);
@@ -49,7 +49,7 @@ void AccessToNameMapper::insertAccessInfo(const std::shared_ptr<iir::Expr>& expr
   accessIDToName_.emplace(accessID, name);
 }
 void AccessToNameMapper::insertAccessInfo(const std::shared_ptr<iir::VarDeclStmt>& stmt) {
-  int accessID = iir::getAccessIDFromStmt(stmt);
+  int accessID = iir::getAccessID(stmt);
   std::string name = (curFunctionInstantiation_.empty())
                          ? metaData_.getNameFromAccessID(accessID)
                          : curFunctionInstantiation_.top()->getNameFromAccessID(accessID);

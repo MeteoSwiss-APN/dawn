@@ -33,20 +33,16 @@ ASTStencilBody::~ASTStencilBody() {}
 
 std::string ASTStencilBody::getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const {
   if(currentFunction_)
-    return currentFunction_->getFieldNameFromAccessID(iir::getAccessIDFromStmt(stmt));
+    return currentFunction_->getFieldNameFromAccessID(iir::getAccessID(stmt));
   else
-    return metadata_.getFieldNameFromAccessID(iir::getAccessIDFromStmt(stmt));
+    return metadata_.getFieldNameFromAccessID(iir::getAccessID(stmt));
 }
 
 std::string ASTStencilBody::getName(const std::shared_ptr<iir::Expr>& expr) const {
   if(currentFunction_)
-    return currentFunction_->getFieldNameFromAccessID(iir::getAccessIDFromExpr(expr));
+    return currentFunction_->getFieldNameFromAccessID(iir::getAccessID(expr));
   else
-    return metadata_.getFieldNameFromAccessID(iir::getAccessIDFromExpr(expr));
-}
-
-int ASTStencilBody::getAccessID(const std::shared_ptr<iir::Expr>& expr) const {
-  return iir::getAccessIDFromExpr(expr);
+    return metadata_.getFieldNameFromAccessID(iir::getAccessID(expr));
 }
 
 //===------------------------------------------------------------------------------------------===//
@@ -117,7 +113,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) 
 
 void ASTStencilBody::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   std::string name = getName(expr);
-  int AccessID = getAccessID(expr);
+  int AccessID = iir::getAccessID(expr);
 
   if(metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, AccessID)) {
     ss_ << "m_globals." << name;
@@ -138,7 +134,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
     // extract the arg index, from the AccessID
     int argIndex = -1;
     for(auto idx : currentFunction_->ArgumentIndexToCallerAccessIDMap()) {
-      if(idx.second == iir::getAccessIDFromExpr(expr))
+      if(idx.second == iir::getAccessID(expr))
         argIndex = idx.first;
     }
 
@@ -194,7 +190,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
 
     } else {
       std::string accessName =
-          currentFunction_->getOriginalNameFromCallerAccessID(iir::getAccessIDFromExpr(expr));
+          currentFunction_->getOriginalNameFromCallerAccessID(iir::getAccessID(expr));
       ss_ << "m_" + accessName;
       //<< offsetPrinter_(ijkfyOffset(currentFunction_->evalOffsetOfFieldAccessExpr(expr, false),
       // accessName));

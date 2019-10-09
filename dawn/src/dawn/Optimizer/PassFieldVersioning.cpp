@@ -41,7 +41,7 @@ struct AccessIDGetter : public iir::ASTVisitorForwarding {
   AccessIDGetter(const iir::StencilMetaInformation& metadata) : metadata_(metadata) {}
 
   virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
-    AccessIDs.insert(iir::getAccessIDFromExpr(expr));
+    AccessIDs.insert(iir::getAccessID(expr));
   }
 };
 

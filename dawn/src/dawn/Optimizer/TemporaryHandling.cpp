@@ -77,17 +77,11 @@ void promoteLocalVariableToTemporaryField(iir::StencilInstantiation* instantiati
     auto exprStmt = iir::makeExprStmt(assignmentExpr);
 
     // Replace the statement
-    exprStmt->getData<iir::IIRStmtData>().StackTrace =
-        oldStatement->getData<iir::IIRStmtData>().StackTrace;
-    exprStmt->getData<iir::IIRStmtData>().CallerAccesses =
-        oldStatement->getData<iir::IIRStmtData>().CallerAccesses;
-    exprStmt->getData<iir::IIRStmtData>().CalleeAccesses =
-        oldStatement->getData<iir::IIRStmtData>().CalleeAccesses;
+    exprStmt->getData<iir::IIRStmtData>() = std::move(oldStatement->getData<iir::IIRStmtData>());
     statementAccessesPairs[lifetime.Begin.StatementIndex]->setStatement(exprStmt);
 
     // Remove the variable
     instantiation->getMetaData().removeAccessID(accessID);
-    oldStatement->getData<iir::VarDeclStmtData>().AccessID = std::nullopt;
   }
   // Register the field
   instantiation->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_StencilTemporary,

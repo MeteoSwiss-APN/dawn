@@ -79,7 +79,7 @@ Array3i StencilFunctionInstantiation::evalOffsetOfFieldAccessExpr(
   // accesses of the field `in` by [1, 0, 0])
   if(applyInitialOffset) {
     const Array3i& initialOffset =
-        getCallerInitialOffsetFromAccessID(iir::getAccessIDFromExpr(expr));
+        getCallerInitialOffsetFromAccessID(iir::getAccessID(expr));
     offset[0] += initialOffset[0];
     offset[1] += initialOffset[1];
     offset[2] += initialOffset[2];

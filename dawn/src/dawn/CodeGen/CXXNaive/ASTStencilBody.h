@@ -99,8 +99,6 @@ public:
   /// @brief Mapping of VarDeclStmt and Var/FieldAccessExpr to their name
   std::string getName(const std::shared_ptr<iir::Expr>& expr) const override;
   std::string getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const override;
-  int getAccessID(const std::shared_ptr<iir::Expr>& expr) const;
-  int getAccessID(const std::shared_ptr<iir::VarDeclStmt>& stmt) const;
 };
 
 } // namespace cxxnaive

@@ -96,7 +96,7 @@ public:
   }
 
   int getAccessIDFromExpr(const std::shared_ptr<iir::Expr>& expr) {
-    return iir::getAccessIDFromExpr(expr);
+    return iir::getAccessID(expr);
   }
 
   std::string getNameFromAccessID(int AccessID) {

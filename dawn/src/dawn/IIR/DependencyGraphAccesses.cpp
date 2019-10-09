@@ -30,15 +30,13 @@ void DependencyGraphAccesses::insertStatementAccessesPair(
     for(const auto& s : stmtAccessPair->getBlockStatements())
       insertStatementAccessesPair(s);
   } else {
+    const auto& callerAccesses =
+        stmtAccessPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
 
-    for(const auto& writeAccess : stmtAccessPair->getStatement()
-                                      ->getData<iir::IIRStmtData>()
-                                      .CallerAccesses->getWriteAccesses()) {
+    for(const auto& writeAccess : callerAccesses->getWriteAccesses()) {
       insertNode(writeAccess.first);
 
-      for(const auto& readAccess : stmtAccessPair->getStatement()
-                                       ->getData<iir::IIRStmtData>()
-                                       .CallerAccesses->getReadAccesses())
+      for(const auto& readAccess : callerAccesses->getReadAccesses())
         insertEdge(writeAccess.first, readAccess.first, readAccess.second);
     }
   }
@@ -240,14 +238,14 @@ bool DependencyGraphAccesses::isDAG() const {
   std::vector<std::size_t> vertices;
 
   for(std::set<std::size_t>& partition : partitions) {
-    getInputVertexIDsImpl(
-        *this, partition, [](std::size_t VertexID) { return VertexID; }, vertices);
+    getInputVertexIDsImpl(*this, partition, [](std::size_t VertexID) { return VertexID; },
+                          vertices);
     if(vertices.empty())
       return false;
 
     vertices.clear();
-    getOutputVertexIDsImpl(
-        *this, partition, [](std::size_t VertexID) { return VertexID; }, vertices);
+    getOutputVertexIDsImpl(*this, partition, [](std::size_t VertexID) { return VertexID; },
+                           vertices);
     if(vertices.empty())
       return false;
   }

@@ -7,11 +7,11 @@ namespace codegen {
 
 std::string
 StencilFunctionAsBCGenerator::getName(const std::shared_ptr<iir::VarDeclStmt>& stmt) const {
-  return metadata_.getFieldNameFromAccessID(iir::getAccessIDFromStmt(stmt));
+  return metadata_.getFieldNameFromAccessID(iir::getAccessID(stmt));
 }
 
 std::string StencilFunctionAsBCGenerator::getName(const std::shared_ptr<iir::Expr>& expr) const {
-  return metadata_.getFieldNameFromAccessID(iir::getAccessIDFromExpr(expr));
+  return metadata_.getFieldNameFromAccessID(iir::getAccessID(expr));
 }
 
 void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
@@ -43,7 +43,7 @@ void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::FieldAccessE
 
 void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
   if(metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable,
-                            iir::getAccessIDFromExpr(expr)))
+                            iir::getAccessID(expr)))
     ss_ << "m_globals.";
 
   ss_ << getName(expr);

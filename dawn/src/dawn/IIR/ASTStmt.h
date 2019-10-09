@@ -133,7 +133,7 @@ using IfStmt = ast::IfStmt;
 std::optional<Extents> computeMaximumExtents(Stmt& stmt, const int accessID);
 
 /// @brief Get the `AccessID` of the a VarDeclStmt
-int getAccessIDFromStmt(const std::shared_ptr<VarDeclStmt>& stmt);
+int getAccessID(const std::shared_ptr<VarDeclStmt>& stmt);
 
 } // namespace iir
 } // namespace dawn

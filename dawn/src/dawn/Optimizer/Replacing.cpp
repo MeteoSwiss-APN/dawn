@@ -38,12 +38,12 @@ public:
       : metadata_(metadata), AccessID_(AccessID) {}
 
   void visit(const std::shared_ptr<iir::VarAccessExpr>& expr) override {
-    if(iir::getAccessIDFromExpr(expr) == AccessID_)
+    if(iir::getAccessID(expr) == AccessID_)
       varAccessesToReplace_.emplace_back(expr);
   }
 
   void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
-    if(iir::getAccessIDFromExpr(expr) == AccessID_)
+    if(iir::getAccessID(expr) == AccessID_)
       fieldAccessExprToReplace_.emplace_back(expr);
   }
 

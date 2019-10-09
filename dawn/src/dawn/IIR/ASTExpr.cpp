@@ -39,7 +39,7 @@ bool IIRAccessExprData::equals(AccessExprData const* other) const {
          *this == *iirAccessExprDataOther;
 }
 
-int getAccessIDFromExpr(const std::shared_ptr<Expr>& expr) {
+int getAccessID(const std::shared_ptr<Expr>& expr) {
   switch(expr->getKind()) {
   case ast::Expr::EK_FieldAccessExpr:
     return *std::dynamic_pointer_cast<FieldAccessExpr>(expr)->getData<IIRAccessExprData>().AccessID;

@@ -39,18 +39,14 @@ static std::string toStringImpl(const StatementAccessesPair* pair,
   ss << "\e[1m" << ASTStringifier::toString(pair->getStatement(), curIndent + DAWN_PRINT_INDENT)
      << "\e[0m\n";
 
-  if(pair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses) {
+  if(const auto& accesses = pair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses) {
     ss << curIndentStr << "CallerAccesses:\n";
-    ss << pair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses->toString(
-              instantiation, curIndent + DAWN_PRINT_INDENT)
-       << "\n";
+    ss << accesses->toString(instantiation, curIndent + DAWN_PRINT_INDENT) << "\n";
   }
 
-  if(pair->getStatement()->getData<iir::IIRStmtData>().CalleeAccesses) {
+  if(const auto& accesses = pair->getStatement()->getData<iir::IIRStmtData>().CalleeAccesses) {
     ss << curIndentStr << "CalleeAccesses:\n";
-    ss << pair->getStatement()->getData<iir::IIRStmtData>().CalleeAccesses->toString(
-              instantiation, curIndent + DAWN_PRINT_INDENT)
-       << "\n";
+    ss << accesses->toString(instantiation, curIndent + DAWN_PRINT_INDENT) << "\n";
   }
 
   if(!pair->getBlockStatements().empty()) {

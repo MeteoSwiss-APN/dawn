@@ -73,37 +73,28 @@ std::optional<Extents> computeMaximumExtents(Stmt& stmt, const int accessID) {
 
   const auto& callerAccesses = stmt.getData<IIRStmtData>().CallerAccesses;
 
-  if(callerAccesses->hasReadAccess(accessID) || callerAccesses->hasWriteAccess(accessID)) {
-    extents = std::optional<Extents>();
+  if(callerAccesses->hasReadAccess(accessID))
+    extents = std::make_optional(callerAccesses->getReadAccess(accessID));
 
-    if(callerAccesses->hasReadAccess(accessID)) {
-      if(!extents)
-        extents = std::make_optional(callerAccesses->getReadAccess(accessID));
-      else
-        extents->merge(callerAccesses->getReadAccess(accessID));
-    }
-    if(callerAccesses->hasWriteAccess(accessID)) {
-      if(!extents)
-        extents = std::make_optional(callerAccesses->getWriteAccess(accessID));
-      else
-        extents->merge(callerAccesses->getWriteAccess(accessID));
-    }
-  }
-
-  for(auto const& child : stmt.getChildren()) {
-    auto childExtent = computeMaximumExtents(*child, accessID);
-    if(!childExtent)
-      continue;
+  if(callerAccesses->hasWriteAccess(accessID)) {
     if(extents)
-      extents->merge(*childExtent);
+      extents->merge(callerAccesses->getWriteAccess(accessID));
     else
-      extents = childExtent;
+      extents = std::make_optional(callerAccesses->getWriteAccess(accessID));
   }
+
+  for(auto const& child : stmt.getChildren())
+    if(auto childExtent = computeMaximumExtents(*child, accessID)) {
+      if(extents)
+        extents->merge(*childExtent);
+      else
+        extents = childExtent;
+    }
 
   return extents;
 }
 
-int getAccessIDFromStmt(const std::shared_ptr<VarDeclStmt>& stmt) {
+int getAccessID(const std::shared_ptr<VarDeclStmt>& stmt) {
   return *stmt->getData<VarDeclStmtData>().AccessID;
 }
 

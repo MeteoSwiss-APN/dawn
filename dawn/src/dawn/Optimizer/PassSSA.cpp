@@ -52,21 +52,17 @@ bool PassSSA::run(const std::shared_ptr<iir::StencilInstantiation>& stencilInsta
           assignment = dyn_cast<iir::AssignmentExpr>(stmt->getExpr().get());
 
         std::vector<int> AccessIDsToRename;
+        const auto& callerAccesses =
+            stmtAccessesPair->getStatement()->getData<iir::IIRStmtData>().CallerAccesses;
 
-        for(const std::pair<int, iir::Extents>& readAccess :
-            stmtAccessesPair->getStatement()
-                ->getData<iir::IIRStmtData>()
-                .CallerAccesses->getReadAccesses()) {
+        for(const std::pair<int, iir::Extents>& readAccess : callerAccesses->getReadAccesses()) {
           int AccessID = readAccess.first;
           if(!tochedAccessIDs.count(AccessID))
             tochedAccessIDs.insert(AccessID);
         }
 
         // Every write to a field which was has been touched (read/written) will get a new version
-        for(const std::pair<int, iir::Extents>& writeAccess :
-            stmtAccessesPair->getStatement()
-                ->getData<iir::IIRStmtData>()
-                .CallerAccesses->getWriteAccesses()) {
+        for(const std::pair<int, iir::Extents>& writeAccess : callerAccesses->getWriteAccesses()) {
 
           int AccessID = writeAccess.first;
 

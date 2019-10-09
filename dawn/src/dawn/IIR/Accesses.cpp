@@ -75,6 +75,8 @@ bool Accesses::operator==(const Accesses& rhs) const {
   return readAccesses_ == rhs.readAccesses_ && writeAccesses_ == rhs.writeAccesses_;
 }
 
+bool Accesses::operator!=(const Accesses& rhs) const { return !(*this == rhs); }
+
 void Accesses::mergeReadOffset(int AccessID, const Array3i& offset) {
   auto it = readAccesses_.find(AccessID);
   if(it != readAccesses_.end()) {
