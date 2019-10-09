@@ -74,10 +74,9 @@ bool PassTemporaryFirstAccess::run(
     std::unordered_map<int, iir::Stencil::FieldInfo> fields = stencilPtr->getFields();
     std::set<int> temporaryFields;
 
-    auto tempFields = makeRange(
-        fields,
-        std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
-            [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return p.second.IsTemporary; }));
+    auto tempFields = makeRange(fields, [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
+      return p.second.IsTemporary;
+    });
     for(const auto& tmpF : tempFields) {
       temporaryFields.insert(tmpF.second.field.getAccessID());
     }

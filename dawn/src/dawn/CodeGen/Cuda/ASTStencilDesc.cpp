@@ -59,10 +59,10 @@ void ASTStencilDesc::visit(const std::shared_ptr<iir::StencilCallDeclStmt>& stmt
   // fields used in the stencil
   const auto stencilFields = stencil.getOrderedFields();
 
-  auto nonTempFields = makeRange(
-      stencilFields,
-      std::function<bool(std::pair<int, iir::Stencil::FieldInfo> const&)>(
-          [](std::pair<int, iir::Stencil::FieldInfo> const& p) { return !p.second.IsTemporary; }));
+  auto nonTempFields =
+      makeRange(stencilFields, [](std::pair<int, iir::Stencil::FieldInfo> const& p) {
+        return !p.second.IsTemporary;
+      });
 
   std::string stencilName =
       codeGenProperties_.getStencilName(StencilContext::SC_Stencil, stencilID);

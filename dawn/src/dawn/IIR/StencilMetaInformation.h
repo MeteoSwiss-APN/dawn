@@ -38,6 +38,55 @@ namespace iir {
 class StencilFunctionInstantiation;
 class Interval;
 
+namespace impl {
+template <FieldAccessType T>
+struct GetAccessesOfTypeHelper;
+
+template <>
+struct GetAccessesOfTypeHelper<FieldAccessType::FAT_Literal> {
+  auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+    return fieldAccessMetadata.LiteralAccessIDToNameMap_;
+  }
+};
+template <>
+struct GetAccessesOfTypeHelper<FieldAccessType::FAT_GlobalVariable> {
+  auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+    return fieldAccessMetadata.GlobalVariableAccessIDSet_;
+  }
+};
+template <>
+struct GetAccessesOfTypeHelper<FieldAccessType::FAT_Field> {
+  auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+    return fieldAccessMetadata.FieldAccessIDSet_;
+  }
+};
+template <>
+struct GetAccessesOfTypeHelper<FieldAccessType::FAT_LocalVariable> {
+  void operator()(FieldAccessMetadata const&) {
+    dawn_unreachable("getter of local accesses ids not supported");
+  }
+};
+template <>
+struct GetAccessesOfTypeHelper<FieldAccessType::FAT_StencilTemporary> {
+  auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+    return fieldAccessMetadata.TemporaryFieldAccessIDSet_;
+  }
+};
+template <>
+struct GetAccessesOfTypeHelper<FieldAccessType::FAT_InterStencilTemporary> {
+  auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+    return fieldAccessMetadata.AllocatedFieldAccessIDSet_;
+  }
+};
+template <>
+struct GetAccessesOfTypeHelper<FieldAccessType::FAT_APIField> {
+  auto const& operator()(FieldAccessMetadata const& fieldAccessMetadata) {
+    return fieldAccessMetadata.apiFieldIDs_;
+  }
+};
+
+} // namespace impl
+
 /// @brief Specific instantiation of a stencil
 /// @ingroup optimizer
 class StencilMetaInformation : public NonCopyable {
@@ -91,9 +140,8 @@ public:
   }
 
   template <FieldAccessType TFieldAccessType>
-  typename TypeOfAccessContainer<TFieldAccessType>::type getAccessesOfType() const {
-    return boost::get<const typename TypeOfAccessContainer<TFieldAccessType>::type>(
-        getAccessesOfTypeImpl(TFieldAccessType));
+  auto const& getAccessesOfType() const {
+    return impl::GetAccessesOfTypeHelper<TFieldAccessType>{}(fieldAccessMetadata_);
   }
 
   void moveRegisteredFieldTo(FieldAccessType type, int accessID);
@@ -340,9 +388,6 @@ private:
   SourceLocation stencilLocation_;
   std::string stencilName_;
   std::string fileName_;
-
-  FieldAccessMetadata::allConstContainerTypes
-  getAccessesOfTypeImpl(FieldAccessType fieldAccessType) const;
 };
 } // namespace iir
 } // namespace dawn

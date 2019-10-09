@@ -13,11 +13,16 @@ struct identity {
 };
 } // namespace wstd
 
-namespace lib_lukas {
+namespace mylib {
 class Vertex;
 class Edge;
 class Face;
 
+//   .---.---.---.
+//   |\ 1|\ 3|\ 5|
+//   | \ | \ | \ |
+//   |0 \|2 \|4 \|
+//   ----'---'---'
 enum face_color { upward = 0, downward = 1 };
 enum edge_color { horizontal = 0, diagonal = 1, vertical = 2 };
 
@@ -299,8 +304,8 @@ template <typename O, typename T>
 class Data {
 public:
   explicit Data(size_t size) : data_(size) {}
-  T& operator[](O const& f) { return data_[f.id()]; }
-  T const& operator[](O const& f) const { return data_[f.id()]; }
+  T& operator()(O const& f) { return data_[f.id()]; }
+  T const& operator()(O const& f) const { return data_[f.id()]; }
   auto begin() { return data_.begin(); }
   auto end() { return data_.end(); }
 
@@ -322,42 +327,14 @@ class EdgeData : public Data<Edge, T> {
 public:
   explicit EdgeData(Grid const& grid) : Data<Edge, T>(grid.edges().size()) {}
 };
-template <typename T>
-inline T gauss(T width, T x, T y, T nx, T ny, bool f = false) {
-  return std::exp(-width * (std::pow(x - nx / 2.0, 2) + std::pow(y - ny / 2.0, 2)));
-}
-template <typename T>
-inline void init_gaussian(T width, VertexData<T>& v_data, Grid const& grid) {
-  for(auto& v : grid.vertices())
-    v_data[v] = gauss(width, v.x(), v.y(), (T)grid.nx(), (T)grid.ny());
-}
-template <typename T>
-inline void init_gaussian(T width, EdgeData<T>& e_data, Grid const& grid) {
-  for(auto& e : grid.edges())
-    if(e) {
-      auto center_x = 0.5 * (e.vertex(0).x() + e.vertex(1).x());
-      auto center_y = 0.5 * (e.vertex(0).y() + e.vertex(1).y());
-
-      e_data[e] = gauss(width, center_x, center_y, (T)grid.nx(), (T)grid.ny());
-    }
-}
-template <typename T>
-inline void init_gaussian(T width, FaceData<T>& f_data, Grid const& grid) {
-  for(auto& f : grid.faces()) {
-    auto center_x = (1.f / 3) * (f.vertex(0).x() + f.vertex(1).x() + f.vertex(2).x());
-    auto center_y = (1.f / 3) * (f.vertex(0).y() + f.vertex(1).y() + f.vertex(2).y());
-
-    f_data[f] = gauss(width, center_x, center_y, (T)grid.nx(), (T)grid.ny(), true);
-  }
-}
 namespace faces {
 template <class T, class Map, class Reduce>
 auto reduce_on_vertices(VertexData<T> const& v_data, Grid const& grid, Map const& map,
                         Reduce const& reduce, FaceData<T> ret) {
   for(auto f : grid.faces()) {
     for(auto v : f.vertices())
-      ret[f] = reduce(ret[f], map(v_data[*v]));
-    ret[f] /= f.vertices().size();
+      ret(f) = reduce(ret(f), map(v_data(*v)));
+    ret(f) /= f.vertices().size();
   }
   return ret;
 }
@@ -379,8 +356,8 @@ reduce_on_edges(EdgeData<T> const& e_data, Grid const& grid, Map const& map, Red
   for(auto f : grid.faces()) {
     // inward, if edge from negative to positive
     //   .
-    //   |\
-        //  0| \ 1   0: outwards
+    //   |\ 
+    //  0| \ 1   0: outwards
     //   |  \    1: inwards
     //   ----'   2: outwards
     //     2
@@ -393,8 +370,8 @@ reduce_on_edges(EdgeData<T> const& e_data, Grid const& grid, Map const& map, Red
     //      ^    2: inwards
     auto edges = f.edges();
     for(auto prev = edges.end() - 1, curr = edges.begin(); curr != edges.end(); prev = curr, ++curr)
-      ret[f] = reduce(ret[f], map(e_data[**curr], edge_sign(**curr, **prev)));
-    ret[f] /= f.edges().size();
+      ret(f) = reduce(ret(f), map(e_data(**curr), edge_sign(**curr, **prev)));
+    ret(f) /= f.edges().size();
   }
   return ret;
 }
@@ -404,8 +381,8 @@ reduce_on_edges(EdgeData<T> const& e_data, Grid const& grid, Map const& map, Red
                 FaceData<T> ret) {
   for(auto f : grid.faces()) {
     for(auto e : f.edges())
-      ret[f] = reduce(ret[f], map(e_data[*e]));
-    ret[f] /= f.edges().size();
+      ret(f) = reduce(ret(f), map(e_data(*e)));
+    ret(f) /= f.edges().size();
   }
   return ret;
 }
@@ -415,8 +392,8 @@ auto reduce_on_faces(FaceData<T> const& f_data, Grid const& grid, Map const& map
                      Reduce const& reduce, FaceData<T> ret) {
   for(auto f : grid.faces()) {
     for(auto next_f : f.faces())
-      ret[f] = reduce(ret[f], map(f_data[*next_f]));
-    ret[f] /= f.faces().size();
+      ret(f) = reduce(ret(f), map(f_data(*next_f)));
+    ret(f) /= f.faces().size();
   }
   return ret;
 }
@@ -429,10 +406,10 @@ auto reduce_on_faces(FaceData<T> const& f_data, Grid const& grid, Map const& map
                      Reduce const& reduce, EdgeData<T> ret) {
   for(auto e : grid.edges()) {
     if(e.faces().size() == 2) {
-      ret[e] = reduce(ret[e], map(f_data[e.face(0)], 1));
-      ret[e] = reduce(ret[e], map(f_data[e.face(1)], -1));
+      ret(e) = reduce(ret(e), map(f_data(e.face(0)), 1));
+      ret(e) = reduce(ret(e), map(f_data(e.face(1)), -1));
     } else
-      ret[e] = 0;
+      ret(e) = 0;
   }
   return ret;
 }
@@ -444,5 +421,14 @@ std::ostream& toVtk(std::string const& name, EdgeData<double> const& e_data, Gri
                     std::ostream& os = std::cout);
 std::ostream& toVtk(std::string const& name, VertexData<double> const& v_data, Grid const& grid,
                     std::ostream& os = std::cout);
-} // namespace lib_lukas
-using namespace lib_lukas;
+
+namespace {
+bool inner_face(Face const& f) {
+  return (f.color() == face_color::downward && f.vertex(0).id() < f.vertex(1).id() &&
+          f.vertex(0).id() < f.vertex(2).id()) ||
+         (f.color() == face_color::upward && f.vertex(1).id() > f.vertex(0).id() &&
+          f.vertex(1).id() > f.vertex(2).id());
+}
+} // namespace
+
+} // namespace mylib

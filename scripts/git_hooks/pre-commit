@@ -162,6 +162,9 @@ else
     error_code=$((error_code || 1 ))
 fi
 
+${SCRIPTPATH}/check_modularization
+modularization_result=$?
+
 # exit if errors
 error_code=$((error_code || modularization_result ))
 if [ "$error_code" -gt 0 ]; then

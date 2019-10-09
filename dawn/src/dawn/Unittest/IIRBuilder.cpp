@@ -171,10 +171,9 @@ IIRBuilder::Field IIRBuilder::field(std::string const& name, fieldType ft) {
   int id = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name, asArray(ft));
   return {id, name};
 }
-IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name) {
+IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name, BuiltinTypeID type) {
   DAWN_ASSERT(si_);
-  auto iirStmt = makeVarDeclStmt(Type{BuiltinTypeID::Float}, name, 0, "=",
-                                 std::vector<std::shared_ptr<Expr>>{});
+  auto iirStmt = makeVarDeclStmt(Type{type}, name, 0, "=", std::vector<std::shared_ptr<Expr>>{});
   int id = si_->getMetaData().addStmt(true, iirStmt);
   return {id, name, iirStmt};
 }

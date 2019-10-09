@@ -1,5 +1,5 @@
 ##===------------------------------------------------------------------------------*- CMake -*-===##
-##                          _                      
+##                          _
 ##                         | |
 ##                       __| | __ ___      ___ ___
 ##                      / _` |/ _` \ \ /\ / / '_  |
@@ -7,7 +7,7 @@
 ##                      \__,_|\__,_| \_/\_/ |_| |_| - Compiler Toolchain
 ##
 ##
-##  This file is distributed under the MIT License (MIT). 
+##  This file is distributed under the MIT License (MIT).
 ##  See LICENSE.txt for details.
 ##
 ##===------------------------------------------------------------------------------------------===##
@@ -35,8 +35,6 @@ yoda_combine_libraries(
   VERSION ${DAWN_VERSION}
   DEPENDS ${DAWN_EXTERNAL_LIBRARIES} DawnSerializerStatic
 )
-
-target_include_directories(DawnShared SYSTEM INTERFACE $<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>)
 
 # Export the targets
 install(EXPORT DawnTargets NAMESPACE Dawn:: DESTINATION ${DAWN_INSTALL_CMAKE_DIR})
