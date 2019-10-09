@@ -89,8 +89,7 @@ TEST(CompilerTest, DISABLED_CodeGenPlayground) {
   IIRBuilder b;
   auto in_f = b.field("in_field", LocType::Edges);
   auto out_f = b.field("out_field", LocType::Cells);
-  auto var = b.localvar("my_var");
-  auto var2 = b.localvar("my_var2");
+  auto cnt = b.localvar("cnt", dawn::BuiltinTypeID::Integer);
 
   auto stencil_instantiation = b.build(
       "generated",

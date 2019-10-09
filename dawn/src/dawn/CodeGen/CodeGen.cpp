@@ -29,10 +29,12 @@ std::string CodeGen::generateGlobals(stencilInstantiationContext& context,
                                      std::string outer_namespace_, std::string inner_namespace_) {
 
   std::stringstream ss;
-  Namespace outerNamespace(outer_namespace_, ss);
   std::string globals = generateGlobals(context, inner_namespace_);
-  ss << globals;
-  outerNamespace.commit();
+  if(globals != "") {
+    Namespace outerNamespace(outer_namespace_, ss);
+    ss << globals;
+    outerNamespace.commit();
+  }
   return ss.str();
 }
 

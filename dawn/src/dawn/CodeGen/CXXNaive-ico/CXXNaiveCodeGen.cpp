@@ -29,6 +29,30 @@ namespace dawn {
 namespace codegen {
 namespace cxxnaiveico {
 
+// Requirement for the atlas interface:
+//
+// - Tag: No requirement on the tag. Might be used for ADL.
+//
+// - The following functions should be declarared:
+//
+//   template<typename ValueType> FieldType fieldType(Tag);
+//   MeshType meshType(Tag);
+//
+// - FieldType should be callable with CellType and return `ValueType&` or `ValueType const&`.
+//
+// - getCells(Tag, MeshType const&) should return an object that can be used in a range-based
+//   for-loop as follows:
+//
+//     for (auto&& x : getCells(...)) needs to be well-defined such that x is of type CellType
+//
+// - The following function should be defined:
+//
+//   template<typename Init, typename Op>
+//   Init reduceCellToCell(Tag, MeshType, CellType, Init, Op)
+//
+//   where Op must be callable as
+//     Op(Init, ValueType);
+
 // static std::string makeLoopImpl(const iir::Extent extent, const std::string& dim,
 // const std::string& lower, const std::string& upper,
 // const std::string& comparison, const std::string& increment) {
@@ -73,7 +97,8 @@ std::string CXXNaiveIcoCodeGen::generateStencilInstantiation(
 
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
-  Class StencilWrapperClass(stencilInstantiation->getName(), ssSW);
+  // we might need to think about how to get Mesh and Field for a certain tag
+  Class StencilWrapperClass(stencilInstantiation->getName(), ssSW, "typename Tag");
   StencilWrapperClass.changeAccessibility("private");
 
   CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
@@ -132,7 +157,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
   const auto& APIFields = metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>();
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
-  StencilWrapperConstructor.addArg("const Mesh& mesh");
+  StencilWrapperConstructor.addArg("const gtclang::mesh_t<Tag>& mesh");
 
   std::string ctrArgs("(dom");
   for(auto APIfieldID : APIFields) {
@@ -154,6 +179,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
     }
 
     StencilWrapperConstructor.addArg(typeString + "Field<double>& " +
+    StencilWrapperConstructor.addArg("gtclang::field_t<Tag, double>& " +
                                      metadata.getFieldNameFromAccessID(APIfieldID));
     ctrArgs += "," + metadata.getFieldNameFromAccessID(APIfieldID);
   }
@@ -294,10 +320,11 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
       }
     };
 
-    StencilClass.addMember("Mesh const&", "m_mesh");
+    StencilClass.addMember("gtclang::mesh_t<Tag> const&", "m_mesh");
     for(auto fieldIt : nonTempFields) {
       StencilClass.addMember(fieldInfoToDeclString(fieldIt.second) + "&",
                              "m_" + fieldIt.second.Name);
+      StencilClass.addMember("gtclang::field_t<Tag, double>&", "m_" + fieldIt.second.Name);
     }
 
     // addTmpStorageDeclaration(StencilClass, tempFields);
@@ -306,8 +333,9 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
     auto stencilClassCtr = StencilClass.addConstructor();
 
-    stencilClassCtr.addArg("Mesh const& mesh");
+    stencilClassCtr.addArg("gtclang::mesh_t<Tag> const& mesh");
     for(auto fieldIt : nonTempFields) {
+      stencilClassCtr.addArg("gtclang::field_t<Tag, double>&" + fieldIt.second.Name);
       stencilClassCtr.addArg(fieldInfoToDeclString(fieldIt.second) + "&" + fieldIt.second.Name);
     }
 
@@ -391,18 +419,19 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
           };
           std::string loopCode = getLoop(stage.getLocationType());
 
-          StencilRunMethod.addBlockStatement(loopCode, [&]() {
-            // Generate Do-Method
-            for(const auto& doMethodPtr : stage.getChildren()) {
-              const iir::DoMethod& doMethod = *doMethodPtr;
-              if(!doMethod.getInterval().overlaps(interval))
-                continue;
-              for(const auto& statementAccessesPair : doMethod.getChildren()) {
-                statementAccessesPair->getStatement()->accept(stencilBodyCXXVisitor);
-                StencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
-              }
-            }
-          });
+          StencilRunMethod.addBlockStatement(
+              "for (auto const& t : getCells(Tag{}, m_mesh))", [&]() {
+                // Generate Do-Method
+                for(const auto& doMethodPtr : stage.getChildren()) {
+                  const iir::DoMethod& doMethod = *doMethodPtr;
+                  if(!doMethod.getInterval().overlaps(interval))
+                    continue;
+                  for(const auto& statementAccessesPair : doMethod.getChildren()) {
+                    statementAccessesPair->getStatement()->accept(stencilBodyCXXVisitor);
+                    StencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
+                  }
+                }
+              });
         }
       }
       StencilRunMethod.ss() << "}";
@@ -524,8 +553,7 @@ std::unique_ptr<TranslationUnit> CXXNaiveIcoCodeGen::generateCode() {
   std::vector<std::string> ppDefines;
   ppDefines.push_back("#define GRIDTOOLS_CLANG_GENERATED 1");
   ppDefines.push_back("#define GRIDTOOLS_CLANG_BACKEND_T CXXNAIVEICO");
-  ppDefines.push_back("#include \"my_interface.hpp\"");
-  ppDefines.push_back("using namespace MyInterface;");
+  ppDefines.push_back("#include <gridtools/clang_dsl.hpp>");
   DAWN_LOG(INFO) << "Done generating code";
 
   std::string filename = generateFileName(context_);
