@@ -50,11 +50,7 @@ public:
     EK_ReductionOverNeighborExpr,
   };
 
-  enum class LocationType {
-    Cells,
-    Edges,
-    Vertices
-  };
+  enum class LocationType { Cells, Edges, Vertices };
 
   using ExprRangeType = ArrayRef<std::shared_ptr<Expr>>;
 
@@ -448,8 +444,7 @@ public:
 
 /// @brief Field access expression
 /// @ingroup ast
-class FieldAccessExpr : public Expr { 
-  private:
+class FieldAccessExpr : public Expr {
   std::string name_;
 
   // The offset known so far. If we have directional or offset arguments, we have to perform a
@@ -484,7 +479,7 @@ class FieldAccessExpr : public Expr {
   Array3i argumentOffset_;
 
   // Negate the offset (this allows writing `in(-off)`)
-  bool negateOffset_;  
+  bool negateOffset_;
 
 public:
   /// @name Constructor & Destructor

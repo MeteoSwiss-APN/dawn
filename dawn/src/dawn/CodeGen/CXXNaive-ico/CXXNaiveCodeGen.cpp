@@ -178,6 +178,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
       dawn_unreachable("unexpected type");
     }
 
+    // TODO: figure out which ctor arg we need
     StencilWrapperConstructor.addArg(typeString + "Field<double>& " +
     StencilWrapperConstructor.addArg("gtclang::field_t<Tag, double>& " +
                                      metadata.getFieldNameFromAccessID(APIfieldID));
@@ -322,6 +323,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
     StencilClass.addMember("gtclang::mesh_t<Tag> const&", "m_mesh");
     for(auto fieldIt : nonTempFields) {
+      // TODO: figure out which ctor arg we need
       StencilClass.addMember(fieldInfoToDeclString(fieldIt.second) + "&",
                              "m_" + fieldIt.second.Name);
       StencilClass.addMember("gtclang::field_t<Tag, double>&", "m_" + fieldIt.second.Name);
@@ -335,6 +337,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
     stencilClassCtr.addArg("gtclang::mesh_t<Tag> const& mesh");
     for(auto fieldIt : nonTempFields) {
+      // TODO: figure out which ctor arg we need
       stencilClassCtr.addArg("gtclang::field_t<Tag, double>&" + fieldIt.second.Name);
       stencilClassCtr.addArg(fieldInfoToDeclString(fieldIt.second) + "&" + fieldIt.second.Name);
     }
@@ -418,7 +421,7 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
             }
           };
           std::string loopCode = getLoop(stage.getLocationType());
-
+          // TODO: figure out which how we need the loopcode now
           StencilRunMethod.addBlockStatement(
               "for (auto const& t : getCells(Tag{}, m_mesh))", [&]() {
                 // Generate Do-Method
