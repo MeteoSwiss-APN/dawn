@@ -98,7 +98,7 @@ std::string CXXNaiveIcoCodeGen::generateStencilInstantiation(
   const auto& globalsMap = stencilInstantiation->getIIR()->getGlobalVariableMap();
 
   // we might need to think about how to get Mesh and Field for a certain tag
-  Class StencilWrapperClass(stencilInstantiation->getName(), ssSW, "typename Tag");
+  Class StencilWrapperClass(stencilInstantiation->getName(), ssSW, "typename libtag_t");
   StencilWrapperClass.changeAccessibility("private");
 
   CodeGenProperties codeGenProperties = computeCodeGenProperties(stencilInstantiation.get());
@@ -157,7 +157,7 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
   const auto& APIFields = metadata.getAccessesOfType<iir::FieldAccessType::FAT_APIField>();
   auto StencilWrapperConstructor = stencilWrapperClass.addConstructor();
 
-  StencilWrapperConstructor.addArg("const gtclang::mesh_t<Tag>& mesh");
+  StencilWrapperConstructor.addArg("const Mesh &mesh");
 
   std::string ctrArgs("(dom");
   for(auto APIfieldID : APIFields) {
@@ -178,10 +178,8 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
       dawn_unreachable("unexpected type");
     }
 
-    // TODO: figure out which ctor arg we need
     StencilWrapperConstructor.addArg(typeString + "Field<double>& " +
-    StencilWrapperConstructor.addArg("gtclang::field_t<Tag, double>& " +
-                                     metadata.getFieldNameFromAccessID(APIfieldID));
+                                     metadata.getNameFromAccessID(APIfieldID));
     ctrArgs += "," + metadata.getFieldNameFromAccessID(APIfieldID);
   }
 
@@ -321,12 +319,10 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
       }
     };
 
-    StencilClass.addMember("gtclang::mesh_t<Tag> const&", "m_mesh");
+    StencilClass.addMember("Mesh const&", "m_mesh");
     for(auto fieldIt : nonTempFields) {
-      // TODO: figure out which ctor arg we need
       StencilClass.addMember(fieldInfoToDeclString(fieldIt.second) + "&",
                              "m_" + fieldIt.second.Name);
-      StencilClass.addMember("gtclang::field_t<Tag, double>&", "m_" + fieldIt.second.Name);
     }
 
     // addTmpStorageDeclaration(StencilClass, tempFields);
@@ -335,10 +331,8 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
 
     auto stencilClassCtr = StencilClass.addConstructor();
 
-    stencilClassCtr.addArg("gtclang::mesh_t<Tag> const& mesh");
+    stencilClassCtr.addArg("Mesh const &mesh");
     for(auto fieldIt : nonTempFields) {
-      // TODO: figure out which ctor arg we need
-      stencilClassCtr.addArg("gtclang::field_t<Tag, double>&" + fieldIt.second.Name);
       stencilClassCtr.addArg(fieldInfoToDeclString(fieldIt.second) + "&" + fieldIt.second.Name);
     }
 
@@ -410,31 +404,30 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
           auto getLoop = [](ast::Expr::LocationType type) {
             switch(type) {
             case ast::Expr::LocationType::Cells:
-              return "for(auto const& t : getTriangles(m_mesh))";
+              return "for(auto const& t : getCells(libtag_t(), m_mesh))";
             case ast::Expr::LocationType::Vertices:
-              return "for(auto const& t : getVertices(m_mesh))";
+              return "for(auto const& t : getVertices(libtag_t(), m_mesh))";
             case ast::Expr::LocationType::Edges:
-              return "for(auto const& t : getEdges(m_mesh))";
+              return "for(auto const& t : getEdges(libtag_t(), m_mesh))";
             default:
               dawn_unreachable("invalid type");
               return "";
             }
           };
           std::string loopCode = getLoop(stage.getLocationType());
-          // TODO: figure out which how we need the loopcode now
-          StencilRunMethod.addBlockStatement(
-              "for (auto const& t : getCells(Tag{}, m_mesh))", [&]() {
-                // Generate Do-Method
-                for(const auto& doMethodPtr : stage.getChildren()) {
-                  const iir::DoMethod& doMethod = *doMethodPtr;
-                  if(!doMethod.getInterval().overlaps(interval))
-                    continue;
-                  for(const auto& statementAccessesPair : doMethod.getChildren()) {
-                    statementAccessesPair->getStatement()->accept(stencilBodyCXXVisitor);
-                    StencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
-                  }
-                }
-              });
+
+          StencilRunMethod.addBlockStatement(getLoop(stage.getLocationType()), [&]() {
+            // Generate Do-Method
+            for(const auto& doMethodPtr : stage.getChildren()) {
+              const iir::DoMethod& doMethod = *doMethodPtr;
+              if(!doMethod.getInterval().overlaps(interval))
+                continue;
+              for(const auto& statementAccessesPair : doMethod.getChildren()) {
+                statementAccessesPair->getStatement()->accept(stencilBodyCXXVisitor);
+                StencilRunMethod << stencilBodyCXXVisitor.getCodeAndResetStream();
+              }
+            }
+          });
         }
       }
       StencilRunMethod.ss() << "}";

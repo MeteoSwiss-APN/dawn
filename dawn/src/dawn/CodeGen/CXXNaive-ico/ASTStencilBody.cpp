@@ -83,7 +83,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>
   default:
     dawn_unreachable("unknown location type");
   }
-  ss_ << std::string(indent_, ' ') << "reduce" + typeString + "ToCell(Tag{}, m_mesh, t, ";
+  ss_ << std::string(indent_, ' ') << "reduce" + typeString + "ToCell(libtag_t(), m_mesh, t, ";
   expr->getInit()->accept(*this);
   ss_ << ", [&](auto& lhs, auto const& t) { return lhs " << expr->getOp() << "= ";
   auto argName = argName_;

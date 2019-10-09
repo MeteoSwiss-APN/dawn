@@ -1,8 +1,10 @@
 #include <fstream>
 #include <gridtools/clang_dsl.hpp>
 
-#include "generated.hpp"
 #include "mylib_interface.hpp"
+using namespace mylibInterface;
+
+#include "generated.hpp"
 
 int main() {
   int w = 20;
@@ -16,12 +18,11 @@ int main() {
   //   in[f] = (center_x * center_x + center_y * center_y > w / 3.) ? 1 : 0;
   // }
 
-  for(int i = 0; i < 500; ++i) {
+  for(int i = 0; i < 10; ++i) {
     std::ofstream of("of_" + std::to_string(i) + ".vtk");
     toVtk(m, of);
     toVtk("temperature", out, m, of);
 
-    dawn_generated::cxxnaiveico::generated(m, in, out).run();
     dawn_generated::cxxnaiveico::generated<mylibInterface::mylibTag>(m, in, out).run();
   }
 }
