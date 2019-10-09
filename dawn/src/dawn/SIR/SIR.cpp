@@ -629,6 +629,22 @@ BuiltinTypeID sir::Value::typeToBuiltinTypeID(sir::Value::TypeKind type) {
   }
 }
 
+std::string sir::Value::toString() const {
+  DAWN_ASSERT(has_value());
+  switch(type_) {
+  case Boolean:
+    return std::get<bool>(*value_) ? "true" : "false";
+  case Integer:
+    return std::to_string(std::get<int>(*value_));
+  case Double:
+    return std::to_string(std::get<double>(*value_));
+  case String:
+    return std::get<std::string>(*value_);
+  default:
+    dawn_unreachable("invalid type");
+  }
+}
+
 std::shared_ptr<sir::VerticalRegion> sir::VerticalRegion::clone() const {
   return std::make_shared<sir::VerticalRegion>(Ast->clone(), VerticalInterval, LoopOrder, Loc);
 }

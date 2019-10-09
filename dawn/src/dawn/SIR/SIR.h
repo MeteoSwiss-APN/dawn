@@ -282,23 +282,18 @@ struct Stencil : public dawn::NonCopyable {
 class Value : NonCopyable {
 public:
   enum TypeKind { Boolean = 0, Integer, Double, String };
-
-private:
   template <typename T>
-  struct TypeInfo {};
+  struct TypeInfo;
 
-  std::optional<std::variant<bool, int, double, std::string>> value_;
-  bool is_constexpr_;
-  TypeKind type_;
-
-public:
   template <class T>
   explicit Value(T&& value)
-      : value_{std::forward<T>(value)}, is_constexpr_{false}, type_{TypeInfo<T>::Type} {}
+      : value_{std::forward<T>(value)},
+        is_constexpr_{false}, type_{TypeInfo<std::decay_t<T>>::Type} {}
 
   template <class T>
   explicit Value(T value, bool is_constexpr)
-      : value_{std::forward<T>(value)}, is_constexpr_{is_constexpr}, type_{TypeInfo<T>::Type} {}
+      : value_{std::forward<T>(value)},
+        is_constexpr_{is_constexpr}, type_{TypeInfo<std::decay_t<T>>::Type} {}
 
   explicit Value(TypeKind type) : value_{}, is_constexpr_{false}, type_{type} {}
 
@@ -312,7 +307,7 @@ public:
   static BuiltinTypeID typeToBuiltinTypeID(TypeKind type);
 
   /// Convert the value to string
-  std::string toString() const { return typeToString(type_); }
+  std::string toString() const;
 
   /// @brief Check if value is set
   bool has_value() const { return value_.has_value(); }
@@ -339,6 +334,11 @@ public:
     valueJson["value"] = toString();
     return valueJson;
   }
+
+private:
+  std::optional<std::variant<bool, int, double, std::string>> value_;
+  bool is_constexpr_;
+  TypeKind type_;
 };
 
 template <>
