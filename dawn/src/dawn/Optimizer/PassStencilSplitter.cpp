@@ -68,8 +68,8 @@ bool PassStencilSplitter::run(
       rerunPassSetStageGraph = true;
 
       newStencils.emplace_back(std::make_unique<iir::Stencil>(stencilInstantiation->getMetaData(),
-                                                         stencil.getStencilAttributes(),
-                                                         stencilInstantiation->nextUID()));
+                                                              stencil.getStencilAttributes(),
+                                                              stencilInstantiation->nextUID()));
       const std::unique_ptr<iir::Stencil>& newStencil = newStencils.back();
 
       std::set<int> fieldsInNewStencil;
@@ -80,8 +80,8 @@ bool PassStencilSplitter::run(
 
         // Create an empty multi-stage in the current stencil with the same parameter as
         // `multiStage`
-        newStencil->insertChild(std::make_unique<iir::MultiStage>(stencilInstantiation->getMetaData(),
-                                                             multiStage.getLoopOrder()));
+        newStencil->insertChild(std::make_unique<iir::MultiStage>(
+            stencilInstantiation->getMetaData(), multiStage.getLoopOrder()));
 
         for(const auto& stagePtr : multiStage.getChildren()) {
           if(newStencil->isEmpty() ||
@@ -97,9 +97,9 @@ bool PassStencilSplitter::run(
 
           } else {
             // Make a new stencil
-            newStencils.emplace_back(std::make_unique<iir::Stencil>(stencilInstantiation->getMetaData(),
-                                                               stencil.getStencilAttributes(),
-                                                               stencilInstantiation->nextUID()));
+            newStencils.emplace_back(std::make_unique<iir::Stencil>(
+                stencilInstantiation->getMetaData(), stencil.getStencilAttributes(),
+                stencilInstantiation->nextUID()));
             const std::unique_ptr<iir::Stencil>& newStencil2 = newStencils.back();
 
             fieldsInNewStencil.clear();

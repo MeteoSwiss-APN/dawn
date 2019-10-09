@@ -217,8 +217,7 @@ public:
 
   virtual bool preVisitNode(std::shared_ptr<iir::VarAccessExpr> const& expr) override {
     DAWN_ASSERT(tmpFunction_);
-    if(!metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable,
-                               iir::getAccessID(expr))) {
+    if(!metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, iir::getAccessID(expr))) {
       // record the var access as an argument to the stencil funcion
       dawn_unreachable_internal("All the var access should have been promoted to temporaries");
     }

@@ -30,7 +30,8 @@ namespace clang {
 class verifier {
 public:
   verifier(const domain& dom,
-           double precision = std::is_same<gridtools::clang::float_type, double>::value ? 1e-10 : 1e-6)
+           double precision = std::is_same<gridtools::clang::float_type, double>::value ? 1e-10
+                                                                                        : 1e-6)
       : m_domain(dom), m_precision(precision) {}
 
   template <class FunctorType, class... StorageTypes>
@@ -56,11 +57,12 @@ public:
           // 8,2,1.5,1.5,2,4
           double x = i / (gridtools::clang::float_type)dims[0];
           double y = j / (gridtools::clang::float_type)dims[1];
-          return k * 10e-3 +
-                 (gridtools::clang::float_type)a *
-                     ((gridtools::clang::float_type)b + cos(pi * (x + (gridtools::clang::float_type)c * y)) +
-                      sin((gridtools::clang::float_type)d * pi * (x + (gridtools::clang::float_type)e * y))) /
-                     (gridtools::clang::float_type)f;
+          return k * 10e-3 + (gridtools::clang::float_type)a *
+                                 ((gridtools::clang::float_type)b +
+                                  cos(pi * (x + (gridtools::clang::float_type)c * y)) +
+                                  sin((gridtools::clang::float_type)d * pi *
+                                      (x + (gridtools::clang::float_type)e * y))) /
+                                 (gridtools::clang::float_type)f;
         },
         storages...);
   }
@@ -165,8 +167,6 @@ public:
     storage.sync();
     auto sinfo = *(storage.get_storage_info_ptr());
     const uint_t d3 = sinfo.template total_length<2>();
-
-
 
     auto storage_v = make_host_view<access_mode::read_only>(storage);
     std::cout << "==============================================\n";
@@ -337,7 +337,7 @@ private:
   domain m_domain;
   double m_precision;
 };
-}
-}
+} // namespace clang
+} // namespace gridtools
 
 #endif

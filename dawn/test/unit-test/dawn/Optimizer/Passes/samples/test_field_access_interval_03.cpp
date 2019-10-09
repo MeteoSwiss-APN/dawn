@@ -22,11 +22,9 @@ stencil compute_extent_test_stencil {
   storage u, out, coeff, lap, out2;
 
   Do {
-    vertical_region(k_start,k_start+10)
-      out = u;
-    vertical_region(k_start+4,k_start+14)
-      out2 = u + coeff(k-2);
-    vertical_region(k_start+11, k_end) {
+    vertical_region(k_start, k_start + 10) out = u;
+    vertical_region(k_start + 4, k_start + 14) out2 = u + coeff(k - 2);
+    vertical_region(k_start + 11, k_end) {
       lap = u(i + 1) + u(i - 1) + u(j + 1) + u(j - 1) - 4.0 * u + coeff(k + 1);
       out = lap(i + 1) + lap(i - 1) + lap(j + 1) + lap(j - 1) - 4.0 * lap;
     }

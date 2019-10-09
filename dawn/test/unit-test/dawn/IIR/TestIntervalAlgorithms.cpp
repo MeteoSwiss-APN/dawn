@@ -12,9 +12,9 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
+#include "dawn/IIR/Interval.h"
 #include "dawn/IIR/IntervalAlgorithms.h"
 #include "dawn/IIR/MultiInterval.h"
-#include "dawn/IIR/Interval.h"
 #include <gtest/gtest.h>
 #include <unordered_set>
 

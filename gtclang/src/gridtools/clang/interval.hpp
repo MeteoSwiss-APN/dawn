@@ -142,5 +142,5 @@ struct interval19 {
   template <typename T>
   interval19(T...);
 };
-}
-}
+} // namespace clang
+} // namespace gridtools

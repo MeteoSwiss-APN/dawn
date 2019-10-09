@@ -65,7 +65,7 @@ CacheCandidate combinePolicy(CacheCandidate const& MS1Policy, iir::Field::Intend
       return CacheCandidate{iir::Cache::flush, std::make_optional(iir::Cache::window{}),
                             MS1Policy.interval_};
     if(MS2Policy.policy_ == iir::Cache::bpfill) {
-     DAWN_ASSERT(MS2Policy.window_);
+      DAWN_ASSERT(MS2Policy.window_);
       auto const& window = *(MS2Policy.window_);
       return CacheCandidate{iir::Cache::epflush,
                             std::make_optional(iir::Cache::window{-window.m_p, -window.m_m}),
@@ -98,7 +98,7 @@ CacheCandidate computeCacheCandidateForMS(iir::Field const& field, bool isTempor
         MS.computeEnclosingAccessInterval(field.getAccessID(), true);
     // make sure the access interval has the same boundaries as from any interval of the mss
     interval->merge(field.getInterval());
-   DAWN_ASSERT(interval);
+    DAWN_ASSERT(interval);
 
     return CacheCandidate{iir::Cache::fill, std::optional<iir::Cache::window>(), *interval};
   }
@@ -112,7 +112,7 @@ CacheCandidate computeCacheCandidateForMS(iir::Field const& field, bool isTempor
     std::optional<iir::Interval> interval =
         MS.computeEnclosingAccessInterval(field.getAccessID(), true);
 
-   DAWN_ASSERT(interval);
+    DAWN_ASSERT(interval);
 
     DAWN_ASSERT(interval->contains(field.getInterval()));
 
@@ -234,7 +234,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
           if(!field.getExtents().isHorizontalPointwise())
             continue;
           // we dont know how to cache fields with out of center writes
-         if(field.getWriteExtents() && !field.getWriteExtents()->isPointwise())
+          if(field.getWriteExtents() && !field.getWriteExtents()->isPointwise())
             continue;
 
           if(!metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary,
@@ -287,7 +287,7 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
 
           iir::Interval interval = field.getInterval();
           auto interval_ = ms.computeEnclosingAccessInterval(field.getAccessID(), true);
-         DAWN_ASSERT(interval_);
+          DAWN_ASSERT(interval_);
           auto enclosingAccessedInterval = *interval_;
 
           // Set the cache
@@ -300,9 +300,8 @@ bool PassSetCaches::run(const std::shared_ptr<iir::StencilInstantiation>& instan
                       << MSIndex << ": "
                       << instantiation->getOriginalNameFromAccessID(field.getAccessID()) << ":"
                       << cache.getCacheTypeAsString() << ":" << cache.getCacheIOPolicyAsString()
-                     << (cache.getWindow()
-                              ? (std::string(":") + cache.getWindow()->toString())
-                              : "")
+                      << (cache.getWindow() ? (std::string(":") + cache.getWindow()->toString())
+                                            : "")
                       << std::endl;
           }
         }

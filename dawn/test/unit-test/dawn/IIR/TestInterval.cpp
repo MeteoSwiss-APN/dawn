@@ -143,8 +143,14 @@ TEST(IntervalTest, LevelUnion5) {
   auto levelUnion = Interval::computeLevelUnion(std::vector<Interval>{I1, I2, I3, I4});
   EXPECT_TRUE((std::unordered_set<Interval>(levelUnion.begin(), levelUnion.end()) ==
                std::unordered_set<Interval>{
-                   Interval(0, 0), Interval(1, 4), Interval(5, 5), Interval(6, 9), Interval(10, 10),
-                   Interval(11, 19), Interval(20, 20), Interval(21, 21),
+                   Interval(0, 0),
+                   Interval(1, 4),
+                   Interval(5, 5),
+                   Interval(6, 9),
+                   Interval(10, 10),
+                   Interval(11, 19),
+                   Interval(20, 20),
+                   Interval(21, 21),
                }));
 }
 

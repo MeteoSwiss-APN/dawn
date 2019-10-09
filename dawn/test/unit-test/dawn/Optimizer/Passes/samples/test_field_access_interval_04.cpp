@@ -23,11 +23,8 @@ stencil compute_extent_test_stencil {
 
   var u;
   Do {
-    vertical_region(k_start+2, k_start+3)
-      u = in;
-    vertical_region(k_start+2,k_start+10)
-      out1 = u[k+2] + u[k+1];
-    vertical_region(k_start,k_start+8)
-      out2 = u[k+6];
+    vertical_region(k_start + 2, k_start + 3) u = in;
+    vertical_region(k_start + 2, k_start + 10) out1 = u[k + 2] + u[k + 1];
+    vertical_region(k_start, k_start + 8) out2 = u[k + 6];
   }
 };

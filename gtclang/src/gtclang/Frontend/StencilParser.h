@@ -145,7 +145,8 @@ private:
   void parseStencilFunctionDoMethod(clang::CXXMethodDecl* DoMethod);
 
   /// @brief Parse call to another stencil
-  std::shared_ptr<dawn::sir::StencilCallDeclStmt> parseStencilCall(clang::CXXConstructExpr* stencilCall);
+  std::shared_ptr<dawn::sir::StencilCallDeclStmt>
+  parseStencilCall(clang::CXXConstructExpr* stencilCall);
 
   /// @brief Parse a vertical-region
   std::shared_ptr<dawn::sir::VerticalRegionDeclStmt>
@@ -162,7 +163,7 @@ private:
 
   /// @brief Resolve Clang AST statements by passing them to ClangASTResolver
   std::shared_ptr<dawn::sir::Stmt> resolveStmt(ClangASTExprResolver& clangASTResolver,
-                                          clang::Stmt* stmt);
+                                               clang::Stmt* stmt);
 
   /// @brief Get SourceLocation
   dawn::SourceLocation getLocation(clang::Decl* decl) const;

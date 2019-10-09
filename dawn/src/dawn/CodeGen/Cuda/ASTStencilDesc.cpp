@@ -99,8 +99,7 @@ void ASTStencilDesc::visit(const std::shared_ptr<iir::StencilFunArgExpr>& expr) 
 }
 
 void ASTStencilDesc::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {
-  if(metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable,
-                            iir::getAccessID(expr))) {
+  if(metadata_.isAccessType(iir::FieldAccessType::FAT_GlobalVariable, iir::getAccessID(expr))) {
     ss_ << "m_globals.";
   }
 

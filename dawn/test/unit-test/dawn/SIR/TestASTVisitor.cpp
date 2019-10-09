@@ -127,8 +127,7 @@ protected:
     std::shared_ptr<sir::ReturnStmt> returnIf = sir::makeReturnStmt(f1);
     std::shared_ptr<sir::ReturnStmt> returnElse = sir::makeReturnStmt(f2);
 
-    std::shared_ptr<sir::IfStmt> ifStmt =
-        sir::makeIfStmt(condStmt, returnIf, returnElse);
+    std::shared_ptr<sir::IfStmt> ifStmt = sir::makeIfStmt(condStmt, returnIf, returnElse);
     blockStmt_->push_back(ifStmt);
   }
 };
@@ -208,10 +207,8 @@ public:
     std::shared_ptr<sir::ExprStmt> gt = sir::makeExprStmt(
         std::make_shared<sir::BinaryOperator>(op->getLeft(), ">=", op->getRight()));
 
-    std::shared_ptr<sir::ExprStmt> ifStmt =
-        sir::makeExprStmt(std::make_shared<sir::NOPExpr>());
-    std::shared_ptr<sir::ExprStmt> elseStmt =
-        sir::makeExprStmt(std::make_shared<sir::NOPExpr>());
+    std::shared_ptr<sir::ExprStmt> ifStmt = sir::makeExprStmt(std::make_shared<sir::NOPExpr>());
+    std::shared_ptr<sir::ExprStmt> elseStmt = sir::makeExprStmt(std::make_shared<sir::NOPExpr>());
 
     return sir::makeIfStmt(gt, ifStmt, elseStmt);
   }

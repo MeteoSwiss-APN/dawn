@@ -656,7 +656,8 @@ static const char* BadStrings[] = {"" // empty string
                                    ,
                                    "-123" // negative unsigned value
                                    ,
-                                   "0x", "0b"};
+                                   "0x",
+                                   "0b"};
 
 TEST(StringRefTest, getAsUnsignedIntegerBadStrings) {
   unsigned long long U64;

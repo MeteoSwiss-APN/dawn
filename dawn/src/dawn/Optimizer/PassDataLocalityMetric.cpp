@@ -95,9 +95,7 @@ public:
                         }) != textureCache_.end();
   }
 
-  int getAccessIDFromExpr(const std::shared_ptr<iir::Expr>& expr) {
-    return iir::getAccessID(expr);
-  }
+  int getAccessIDFromExpr(const std::shared_ptr<iir::Expr>& expr) { return iir::getAccessID(expr); }
 
   std::string getNameFromAccessID(int AccessID) {
     return stencilFunCalls_.empty() ? metadata_.getFieldNameFromAccessID(AccessID)

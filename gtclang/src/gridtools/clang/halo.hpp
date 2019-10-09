@@ -31,5 +31,5 @@ struct halo {
   static constexpr int value = 3;
 #endif
 };
-}
-}
+} // namespace clang
+} // namespace gridtools
