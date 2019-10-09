@@ -1,0 +1,34 @@
+*.pyc
+*.log
+*.old
+*.out
+*.DS_Store
+*.~
+*~
+*.user
+*.project
+
+# Build directories
+build*/
+install*/
+test/integration-test/CodeGen/generated*/
+
+# Meta project information
+bundle/yoda/*
+bundle/CMakeFiles/*
+
+
+# Shared library in source dir
+*.so
+*.dylib
+*.dll
+
+# Ignore gh-pages folder
+gh-pages*
+
+# Ignore IDEs
+.idea
+.vscode/
+**/compile_commands.json
+.clangd/
+

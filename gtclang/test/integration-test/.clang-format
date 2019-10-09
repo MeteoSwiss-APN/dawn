@@ -1,0 +1,8 @@
+---
+BasedOnStyle:                                           LLVM
+SortIncludes:                                           false
+ColumnLimit:                                            0 # Do NOT change this it will break the gtclang-tester!
+PointerAlignment:                                       Left
+SpaceBeforeParens:                                      Never
+AlwaysBreakTemplateDeclarations:                        true
+...
