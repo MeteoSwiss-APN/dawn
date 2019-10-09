@@ -51,7 +51,7 @@ struct atlasTag {};
 template <typename T>
 class Field {
 public:
-  T operator()(int f) const { return atlas_field_(f, 0); }
+  T const& operator()(int f) const { return atlas_field_(f, 0); }
   T& operator()(int f) { return atlas_field_(f, 0); }
 
   Field(atlas::array::ArrayView<T, 2> const& atlas_field) : atlas_field_(atlas_field) {}
