@@ -68,7 +68,7 @@ class IIRBuilder {
 
 public:
   Field field(std::string const& name, fieldType ft = fieldType::ijk);
-  LocalVar localvar(std::string const& name);
+  LocalVar localvar(std::string const& name, BuiltinTypeID = BuiltinTypeID::Float);
 
   std::shared_ptr<iir::Expr> reduceOverNeighborExpr(op operation, std::shared_ptr<iir::Expr>&& rhs,
                                                     std::shared_ptr<iir::Expr>&& init);

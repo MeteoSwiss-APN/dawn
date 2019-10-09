@@ -50,6 +50,7 @@ namespace clang {}
 #include "gridtools/clang/domain.hpp"
 #include "gridtools/clang/globals_impl.hpp"
 #include "gridtools/clang/halo.hpp"
+#include "gridtools/clang/interface.hpp"
 #include "gridtools/clang/interval.hpp"
 #include "gridtools/clang/param_wrapper.hpp"
 #include "gridtools/clang/stencil.hpp"
