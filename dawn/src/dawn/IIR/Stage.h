@@ -223,8 +223,10 @@ public:
   /// execution
   bool getRequiresSync() const;
 
+  /// @brief setter for the location type
   void setLocationType(ast::Expr::LocationType type);
 
+  /// @brief returns the location type of a stage
   ast::Expr::LocationType getLocationType() const;
 };
 

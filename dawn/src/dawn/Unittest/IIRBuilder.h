@@ -141,6 +141,7 @@ public:
     return ret;
   }
 
+  // specialized builder for the stage that accepts a location type
   template <typename... DoMethods>
   std::unique_ptr<iir::Stage> stage(ast::Expr::LocationType type, DoMethods&&... do_methods) {
     DAWN_ASSERT(si_);
@@ -151,6 +152,7 @@ public:
     return ret;
   }
 
+  // default builder for the stage that assumes stages are over cells
   template <typename... DoMethods>
   std::unique_ptr<iir::Stage> stage(DoMethods&&... do_methods) {
     DAWN_ASSERT(si_);
