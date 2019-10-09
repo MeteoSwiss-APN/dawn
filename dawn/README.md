@@ -3,7 +3,7 @@ Dawn <br/> <a target="_blank" href="http://semver.org">![Version][Version.Badge]
 
 ## Introduction
 
-**Dawn** is part of a compiler toolchain for developing high-level DSLs for geophysical fluid dynamics models. See the top level `README` for a detailed description.
+**Dawn** is part of a compiler toolchain for developing high-level DSLs for geophysical fluid dynamics models. **dawn** is the backend of the tool chain, performing optimizations and code generation to a number of different backends. See the top level `README` for a detailed description.
 
 ## Building
 

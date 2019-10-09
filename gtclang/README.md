@@ -3,7 +3,7 @@ gtclang <br/> <a target="_blank" href="http://semver.org">![Version][Version.Bad
 
 ## Introduction
 
-**gtclang** is part of a compiler toolchain for developing high-level DSLs for geophysical fluid dynamics models. See the top level `README` for a detailed description. **gtclang** is the frontend part of the toolchain that processes a high level DSL and turns it into an intermediary representation (SIR), to be processed by dawn. Consider the following code snippet for an example stencil that performs two Laplacian operators in succesion using finite differences:
+**gtclang** is part of a compiler toolchain for developing high-level DSLs for geophysical fluid dynamics models. **gtclang** is the frontend part of the toolchain that processes a high level DSL and turns it into an intermediary representation (SIR), to be processed by dawn. See the top level `README` for a detailed description. Consider the following code snippet for an example stencil that performs two Laplacian operators in succesion using finite differences:
 
 [![gtclang](https://raw.githubusercontent.com/MeteoSwiss-APN/gtclang/master/docs/images/hd.png)](https://github.com/MeteoSwiss-APN/gtclang/releases)
 
@@ -27,7 +27,7 @@ Where the `ADDITIONAL_FAGS` may include
 
 ## Testing
 
-All **gtclang** tests are run using `Ctest`. They can be run using a single incovation of `Ctest` by:
+All **gtclang** tests are run using `Ctest`. They can be run using a single invocation of `Ctest` by:
 
 ```
 cd gtclang/bundle/build/dawn-prefix/src/dawn-build/

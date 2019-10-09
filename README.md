@@ -32,9 +32,18 @@ Even though **gtclang** and **dawn** share a common repository, they are built i
 * zlib 
 If the documentation is to be built as well, LaTeX, Sphinx and Doxygen are required as well. 
 
+###Developer Instructions
+
+If you wish to contribute to **dawn** or **gtclang**, please fork this repo into your own github user first, then send a pull request using a descriptive branch name from there. Before submitting a PR, please make sure that:
+* All tests are passing. This includes the **dawn** and **gtclang** unit tests and the tests performed in the **dawn** install step. In order that the full test suites are performed, **gtclang** needs to be built with [gridtools](https://github.com/GridTools/gridtools) enabled, and **dawn** needs to be built with python exampled enabled.
+* The code is properly formatted according to the clang-format rules provided. This can be ensured automatically using the git hook located in scripts. To install it, simply put a simlink into your `.git` folder (usually located in the top level dawn folder, except if using git work trees) to the script as follows:
+```
+ln -s </absolute/path/to>/dawn/scripts/git_hooks/pre-commit .git/hooks/
+```
+
 ###About
 
-This Project is developed by [ETHZ](https://ethz.ch/), [MeteoSwiss](https://www.meteoswiss.admin.ch/) and [CSCS](https://www.cscs.ch/). <!-- add funding parties? !-->
+This Project is developed by [ETHZ](https://ethz.ch/), [MeteoSwiss](https://www.meteoswiss.admin.ch/), and [CSCS](https://www.cscs.ch/). <!-- add funding parties? !-->
 
 ###License
 
