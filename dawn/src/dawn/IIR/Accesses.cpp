@@ -20,7 +20,7 @@
 #include <iostream>
 #include <utility>
 
-namespace dawn {                                  
+namespace dawn {                        
 namespace iir {
 
 namespace {
