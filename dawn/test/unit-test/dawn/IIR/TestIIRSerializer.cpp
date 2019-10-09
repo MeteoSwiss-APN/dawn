@@ -289,23 +289,58 @@ TEST_F(IIRSerializerTest, IIRTests) {
   expr->getData<iir::IIRAccessExprData>().AccessID = std::make_optional<int>(42);
   auto stmt = iir::makeExprStmt(expr);
   stmt->setID(22);
-  stmt->getData<iir::IIRStmtData>().CallerAccesses = std::make_optional(iir::Accesses());
+  iir::Accesses stmtAccesses;
+  iir::Extents extents({0, 0, 0});
+  stmtAccesses.addReadExtent(42, extents);
+  stmt->getData<iir::IIRStmtData>().CallerAccesses = std::make_optional(std::move(stmtAccesses));
   auto stmtAccessPair = std::make_unique<iir::StatementAccessesPair>(stmt);
 
   (IIRDoMethod)->insertChild(std::move(stmtAccessPair));
+  std::string varName = "foo";
+  auto varDeclStmt = iir::makeVarDeclStmt(dawn::Type(BuiltinTypeID::Float), varName, 0, "=",
+                                          std::vector<std::shared_ptr<iir::Expr>>{expr->clone()});
+  iir::Accesses varDeclStmtAccesses;
+  varDeclStmtAccesses.addWriteExtent(33, extents);
+  varDeclStmt->getData<iir::IIRStmtData>().CallerAccesses =
+      std::make_optional(std::move(varDeclStmtAccesses));
+  varDeclStmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional<int>(33);
+  auto varDeclSAP = std::make_unique<iir::StatementAccessesPair>(varDeclStmt);
+
+  (IIRDoMethod)->insertChild(std::move(varDeclSAP));
 
   deserialized = serializeAndDeserializeRef();
   IIR_EXPECT_EQ(deserialized, referenceInstantiaton);
-  const auto& deserializedStmt = std::dynamic_pointer_cast<iir::ExprStmt>(deserialized->getIIR()
-                                                                              ->getChild(0)
-                                                                              ->getChild(0)
-                                                                              ->getChild(0)
-                                                                              ->getChild(0)
-                                                                              ->getChild(0)
-                                                                              ->getStatement());
-  std::dynamic_pointer_cast<iir::VarAccessExpr>(deserializedStmt->getExpr())
-      ->getData<iir::IIRAccessExprData>()
-      .AccessID = std::make_optional<int>(50);
+  auto deserializedExprStmt = std::dynamic_pointer_cast<iir::ExprStmt>(deserialized->getIIR()
+                                                                           ->getChild(0)
+                                                                           ->getChild(0)
+                                                                           ->getChild(0)
+                                                                           ->getChild(0)
+                                                                           ->getChild(0)
+                                                                           ->getStatement());
+  deserializedExprStmt->getData<iir::IIRStmtData>().CallerAccesses->addReadExtent(50, extents);
+  IIR_EXPECT_NE(deserialized, referenceInstantiaton);
+  deserialized = serializeAndDeserializeRef();
+  auto deserializedVarAccessExpr = std::dynamic_pointer_cast<iir::VarAccessExpr>(
+      std::dynamic_pointer_cast<iir::ExprStmt>(deserialized->getIIR()
+                                                   ->getChild(0)
+                                                   ->getChild(0)
+                                                   ->getChild(0)
+                                                   ->getChild(0)
+                                                   ->getChild(0)
+                                                   ->getStatement())
+          ->getExpr());
+  deserializedVarAccessExpr->getData<iir::IIRAccessExprData>().AccessID =
+      std::make_optional<int>(50);
+  IIR_EXPECT_NE(deserialized, referenceInstantiaton);
+  deserialized = serializeAndDeserializeRef();
+  auto deserializedVarDeclStmt = std::dynamic_pointer_cast<iir::VarDeclStmt>(deserialized->getIIR()
+                                                                                 ->getChild(0)
+                                                                                 ->getChild(0)
+                                                                                 ->getChild(0)
+                                                                                 ->getChild(0)
+                                                                                 ->getChild(1)
+                                                                                 ->getStatement());
+  deserializedVarDeclStmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional<int>(34);
   IIR_EXPECT_NE(deserialized, referenceInstantiaton);
 }
 
