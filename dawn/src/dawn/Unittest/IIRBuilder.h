@@ -74,7 +74,8 @@ public:
   LocalVar localvar(std::string const& name);
 
   std::shared_ptr<iir::Expr> reduceOverNeighborExpr(op operation, std::shared_ptr<iir::Expr>&& rhs,
-                                                    std::shared_ptr<iir::Expr>&& init, ast::Expr::LocationType rhs_location);
+                                                    std::shared_ptr<iir::Expr>&& init,
+                                                    ast::Expr::LocationType rhs_location);
 
   std::shared_ptr<iir::Expr> binaryExpr(std::shared_ptr<iir::Expr>&& lhs,
                                         std::shared_ptr<iir::Expr>&& rhs, op operation);
@@ -137,6 +138,16 @@ public:
     (void)x;
     computeAccesses(si_.get(), ret->getChildren());
     ret->updateLevel();
+    return ret;
+  }
+
+  template <typename... DoMethods>
+  std::unique_ptr<iir::Stage> stage(ast::Expr::LocationType type, DoMethods&&... do_methods) {
+    DAWN_ASSERT(si_);
+    auto ret = std::make_unique<iir::Stage>(si_->getMetaData(), si_->nextUID());
+    ret->setLocationType(type);
+    int x[] = {(ret->insertChild(std::forward<DoMethods>(do_methods)), 0)...};
+    (void)x;
     return ret;
   }
 

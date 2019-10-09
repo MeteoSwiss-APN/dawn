@@ -84,10 +84,11 @@ TEST(CompilerTest, CompileCopyStencil) {
 
 TEST(CompilerTest, DISABLED_CodeGenPlayground) {
   using namespace dawn::iir;
+  using LocType = dawn::ast::Expr::LocationType;
 
   IIRBuilder b;
-  auto in_f = b.field("in_field", dawn::ast::Expr::LocationType::Vertices);
-  auto out_f = b.field("out_field", dawn::ast::Expr::LocationType::Cells);
+  auto in_f = b.field("in_field", LocType::Edges);
+  auto out_f = b.field("out_field", LocType::Cells);
   auto var = b.localvar("my_var");
   auto var2 = b.localvar("my_var2");
 
@@ -95,16 +96,13 @@ TEST(CompilerTest, DISABLED_CodeGenPlayground) {
       "generated",
       b.stencil(b.multistage(
           dawn::iir::LoopOrderKind::LK_Parallel,
+          b.stage(LocType::Edges, b.vregion(dawn::sir::Interval::Start, dawn::sir::Interval::End,
+                                            b.stmt(b.assignExpr(b.at(in_f), b.lit(10))))),
           b.stage(b.vregion(
               dawn::sir::Interval::Start, dawn::sir::Interval::End,
-              b.stmt(b.assignExpr(
-                  b.at(out_f), b.reduceOverNeighborExpr(op::plus, b.at(in_f), b.lit(0.),
-                                                        dawn::ast::Expr::LocationType::Vertices)))
-              // ,b.stmt(b.assignExpr(b.at(out_f),
-              //                     b.binaryExpr(b.at(in_f),
-              //                                  b.binaryExpr(b.lit(0.1), b.at(out_f),
-              //                                  op::multiply), op::plus)))
-              )))));
+              b.stmt(b.assignExpr(b.at(out_f), b.reduceOverNeighborExpr(
+                                                   op::plus, b.at(in_f), b.lit(0.),
+                                                   dawn::ast::Expr::LocationType::Edges))))))));
 
   dump<dawn::codegen::cxxnaiveico::CXXNaiveIcoCodeGen>(std::clog, stencil_instantiation);
 }

@@ -376,8 +376,22 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
         // for each interval, we generate naive nested loops
         for(const auto& stagePtr : multiStage.getChildren()) {
           const iir::Stage& stage = *stagePtr;
+          auto getLoop = [](ast::Expr::LocationType type) {
+            switch(type) {
+            case ast::Expr::LocationType::Cells:
+              return "for(auto const& t : getTriangles(m_mesh))";
+            case ast::Expr::LocationType::Vertices:
+              return "for(auto const& t : getVertices(m_mesh))";
+            case ast::Expr::LocationType::Edges:
+              return "for(auto const& t : getEdges(m_mesh))";
+            default:
+              dawn_unreachable("invalid type");
+              return "";
+            }
+          };
+          std::string loopCode = getLoop(stage.getLocationType());
 
-          StencilRunMethod.addBlockStatement("for (auto const& t : getTriangles(m_mesh))", [&]() {
+          StencilRunMethod.addBlockStatement(loopCode, [&]() {
             // Generate Do-Method
             for(const auto& doMethodPtr : stage.getChildren()) {
               const iir::DoMethod& doMethod = *doMethodPtr;
