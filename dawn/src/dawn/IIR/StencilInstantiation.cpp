@@ -266,7 +266,11 @@ void StencilInstantiation::dump() const {
             std::cout << statementAccessesPairs[m]
                              ->getStatement()
                              ->getData<IIRStmtData>()
-                             .CallerAccesses->toString(&getMetaData(), 6 * DAWN_PRINT_INDENT)
+                             .CallerAccesses->toString(
+                                 [&](int AccessID) {
+                                   return getMetaData().getNameFromAccessID(AccessID);
+                                 },
+                                 6 * DAWN_PRINT_INDENT)
                       << "\n";
           }
           l += 1;

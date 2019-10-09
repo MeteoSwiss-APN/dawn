@@ -14,7 +14,9 @@
 
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/Extents.h"
+#include "dawn/Support/Printing.h"
 #include <memory>
+#include <sstream>
 
 namespace dawn {
 namespace iir {
@@ -40,6 +42,26 @@ std::unique_ptr<ast::StmtData> IIRStmtData::clone() const {
 bool IIRStmtData::equals(ast::StmtData const* other) const {
   return other && getDataType() == other->getDataType() &&
          *this == dynamic_cast<IIRStmtData const&>(*other);
+}
+
+std::string IIRStmtData::toString(std::function<std::string(int)>&& accessIDToStringFunction,
+                                  std::size_t initialIndent) const {
+  std::stringstream ss;
+  std::string indent(initialIndent, ' ');
+  if(CallerAccesses) {
+    ss << indent << "CallerAccesses:\n";
+    ss << CallerAccesses->toString(std::move(accessIDToStringFunction),
+                                   initialIndent + DAWN_PRINT_INDENT)
+       << "\n";
+  }
+
+  if(CalleeAccesses) {
+    ss << indent << "CalleeAccesses:\n";
+    ss << CalleeAccesses->toString(std::move(accessIDToStringFunction),
+                                   initialIndent + DAWN_PRINT_INDENT)
+       << "\n";
+  }
+  return ss.str();
 }
 
 //===------------------------------------------------------------------------------------------===//

@@ -78,8 +78,7 @@ Array3i StencilFunctionInstantiation::evalOffsetOfFieldAccessExpr(
   // Apply the initial offset (e.g if we call a function `avg(in(i+1))` we have to shift all
   // accesses of the field `in` by [1, 0, 0])
   if(applyInitialOffset) {
-    const Array3i& initialOffset =
-        getCallerInitialOffsetFromAccessID(iir::getAccessID(expr));
+    const Array3i& initialOffset = getCallerInitialOffsetFromAccessID(iir::getAccessID(expr));
     offset[0] += initialOffset[0];
     offset[1] += initialOffset[1];
     offset[2] += initialOffset[2];
@@ -601,7 +600,10 @@ void StencilFunctionInstantiation::dump() const {
     const auto& callerAccesses =
         doMethod_->getChild(i)->getStatement()->getData<IIRStmtData>().CallerAccesses;
     if(callerAccesses)
-      std::cout << callerAccesses->toString(this, 3 * DAWN_PRINT_INDENT) << "\n";
+      std::cout << callerAccesses->toString(
+                       [&](int AccessID) { return this->getNameFromAccessID(AccessID); },
+                       3 * DAWN_PRINT_INDENT)
+                << "\n";
   }
   std::cout.flush();
 }

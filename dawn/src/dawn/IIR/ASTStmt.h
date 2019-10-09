@@ -56,6 +56,9 @@ struct IIRStmtData : public ast::StmtData {
   DataType getDataType() const override { return ThisDataType; }
   std::unique_ptr<StmtData> clone() const override;
   bool equals(StmtData const* other) const override;
+
+  std::string toString(std::function<std::string(int)>&& accessIDToStringFunction,
+                       std::size_t initialIndent = 0) const;
 };
 
 template <typename... Args>
