@@ -16,16 +16,9 @@
 
 """Copy stencil HIR generator
 
-This program creates the HIR corresponding to a copy stencil using the Python API of the HIR.
-The copy stencil is a hello world for stencil computations.
+This program creates the HIR corresponding to an unstructured stencil using the Python API of the HIR.
 The code is meant as an example for high-level DSLs that could generate HIR from their own
 internal IR.
-The program contains two parts:
-    1. construct the HIR of the example
-    2. pass the HIR to the dawn compiler in order to run all optimizer passes and code generation.
-       In this example the compiler is configured with the CUDA backend, therefore will code
-       generate an optimized CUDA implementation.
-
 """
 
 import argparse
@@ -53,7 +46,9 @@ def create_vertical_region_stmt() -> VerticalRegionDeclStmt:
     body_ast = make_ast(
         [make_assignment_stmt(
             make_field_access_expr("out", [0, 0, 0]),
-            make_field_access_expr("in", [1, 0, 0]),
+            make_reduction_over_neighbor_expr("+",
+                make_literal_access_expr("1.0", BuiltinType.Float),
+                make_field_access_expr("in", [1, 0, 0])),
             "="
         )
         ]
@@ -64,9 +59,9 @@ def create_vertical_region_stmt() -> VerticalRegionDeclStmt:
     return vertical_region_stmt
 
 
-hir = make_sir("copy_stencil.cpp", [
+hir = make_sir("unstructured_stencil.cpp", [
     make_stencil(
-        "copy_stencil",
+        "unstructured_stencil",
         make_ast([create_vertical_region_stmt()]),
         [make_field("in"), make_field("out")]
     )
@@ -101,7 +96,7 @@ dawn.dawnOptionsEntryCreateString.restype = c_void_p
 dawn.dawnOptionsEntryCreateString.argtypes = [
     ctypes.c_char_p
 ]
-backend = dawn.dawnOptionsEntryCreateString("cuda".encode('utf-8'))
+backend = dawn.dawnOptionsEntryCreateString("c++-naive-ico".encode('utf-8'))
 
 dawn.dawnOptionsSet.argtypes = [
     ctypes.c_void_p,
@@ -119,7 +114,7 @@ dawn.dawnCompile.argtypes = [
     ctypes.c_void_p
 ]
 tu = dawn.dawnCompile(hirstr, len(hirstr), options)
-stencilname = "copy_stencil"
+stencilname = "unstructured_stencil"
 b_stencilName = stencilname.encode('utf-8')
 # get the code of the translation unit for the given stencil
 dawn.dawnTranslationUnitGetStencil.restype = c_void_p
@@ -131,7 +126,7 @@ code = dawn.dawnTranslationUnitGetStencil(tu, b_stencilName)
 
 # write to file
 f = open(os.path.dirname(os.path.realpath(__file__))
-         + "/data/copy_stencil.cpp", "w")
+         + "/data/unstructured_stencil.cpp", "w")
 f.write(ctypes.c_char_p(code).value.decode("utf-8"))
 
 f.close()

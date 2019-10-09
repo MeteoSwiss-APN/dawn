@@ -1,4 +1,4 @@
-set(examples "copy_stencil;hori_diff;tridiagonal_solve")
+set(examples "copy_stencil;hori_diff;tridiagonal_solve;unstructured_stencil")
 
 if(NOT DEFINED PYTHON_EXECUTABLE)
   find_package(PythonInterp 3.5 REQUIRED)
