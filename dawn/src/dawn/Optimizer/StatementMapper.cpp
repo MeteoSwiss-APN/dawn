@@ -185,7 +185,10 @@ void StatementMapper::visit(const std::shared_ptr<iir::UnaryOperator>& expr) {
 }
 
 void StatementMapper::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
-  DAWN_ASSERT_MSG(0, "ReductionOverNeighborExpr not allowed in this context");
+  DAWN_ASSERT(initializedWithBlockStmt_);
+
+  for(auto& s : expr->getChildren())
+    s->accept(*this);
 }
 
 void StatementMapper::visit(const std::shared_ptr<iir::BinaryOperator>& expr) {
