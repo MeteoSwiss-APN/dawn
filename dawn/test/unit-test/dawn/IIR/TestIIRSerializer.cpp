@@ -308,15 +308,21 @@ TEST_F(IIRSerializerTest, IIRTests) {
 
   (IIRDoMethod)->insertChild(std::move(varDeclSAP));
 
+  auto getNthChild = [](std::shared_ptr<iir::StencilInstantiation>& si,
+                        int n) -> std::shared_ptr<iir::Stmt> {
+    auto& iir = si->getIIR();
+    auto& stencil = iir->getChild(0);
+    auto& ms = stencil->getChild(0);
+    auto& stage = ms->getChild(0);
+    auto& doMethod = stage->getChild(0);
+    auto& sap = doMethod->getChild(n);
+    return sap->getStatement();
+  };
+
   deserialized = serializeAndDeserializeRef();
   IIR_EXPECT_EQ(deserialized, referenceInstantiaton);
-  auto deserializedExprStmt = std::dynamic_pointer_cast<iir::ExprStmt>(deserialized->getIIR()
-                                                                           ->getChild(0)
-                                                                           ->getChild(0)
-                                                                           ->getChild(0)
-                                                                           ->getChild(0)
-                                                                           ->getChild(0)
-                                                                           ->getStatement());
+  auto deserializedExprStmt =
+      std::dynamic_pointer_cast<iir::ExprStmt>(getNthChild(deserialized, 0));
   deserializedExprStmt->getData<iir::IIRStmtData>().CallerAccesses->addReadExtent(50, extents);
   IIR_EXPECT_NE(deserialized, referenceInstantiaton);
   deserialized = serializeAndDeserializeRef();
@@ -333,13 +339,8 @@ TEST_F(IIRSerializerTest, IIRTests) {
       std::make_optional<int>(50);
   IIR_EXPECT_NE(deserialized, referenceInstantiaton);
   deserialized = serializeAndDeserializeRef();
-  auto deserializedVarDeclStmt = std::dynamic_pointer_cast<iir::VarDeclStmt>(deserialized->getIIR()
-                                                                                 ->getChild(0)
-                                                                                 ->getChild(0)
-                                                                                 ->getChild(0)
-                                                                                 ->getChild(0)
-                                                                                 ->getChild(1)
-                                                                                 ->getStatement());
+  auto deserializedVarDeclStmt =
+      std::dynamic_pointer_cast<iir::VarDeclStmt>(getNthChild(deserialized, 1));
   deserializedVarDeclStmt->getData<iir::VarDeclStmtData>().AccessID = std::make_optional<int>(34);
   IIR_EXPECT_NE(deserialized, referenceInstantiaton);
 }
