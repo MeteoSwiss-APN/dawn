@@ -17,6 +17,7 @@
 
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/Extents.h"
+#include "dawn/IIR/Field.h"
 #include "dawn/IIR/FieldAccessMetadata.h"
 #include "dawn/SIR/SIR.h"
 #include "dawn/Support/DoubleSidedMap.h"
@@ -128,6 +129,9 @@ public:
 
   /// @brief get the `name` associated with the `accessID` of any access type
   std::string getNameFromAccessID(int accessID) const;
+
+  /// @brief get the iir::Field given an access ID
+  iir::Field getFieldFromFieldAccessID(int accessID) const;
 
   /// @brief this checks if the user specialized the field to a dimensionality. If not all
   /// dimensions are allow for off-center acesses and hence, {1,1,1} is returned. If we got a
@@ -374,6 +378,10 @@ public:
     return StencilIDToStencilCallMap_;
   }
 
+  bool getIsUnstructuredFromAcessID(int AcessID) const;
+  dawn::ast::Expr::LocationType getLocationTypeFromAccessID(int ID) const;
+  void addAccessIDLocationPair(int ID, dawn::ast::Expr::LocationType location);
+
 private:
   //================================================================================================
   // Stored MetaInformation
@@ -392,6 +400,9 @@ private:
   /// field for example
   std::unordered_map<int, int> ExprIDToAccessIDMap_;
   std::unordered_map<int, int> StmtIDToAccessIDMap_;
+
+  /// Stores the location type for every field as a map to the AccessID
+  std::unordered_map<int, ast::Expr::LocationType> FieldAccessIDToLocationTypeMap_;
 
   /// Referenced stencil functions in this stencil (note that nested stencil functions are not
   /// stored here but rather in the respecticve `StencilFunctionInstantiation`)

@@ -338,5 +338,9 @@ bool Stage::isEmptyOrNullStmt() const {
   return true;
 }
 
+void Stage::setLocationType(ast::Expr::LocationType type) { type_ = type; }
+
+ast::Expr::LocationType Stage::getLocationType() const { return type_; }
+
 } // namespace iir
 } // namespace dawn

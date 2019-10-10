@@ -48,6 +48,9 @@ class Stage : public IIRNode<MultiStage, Stage, DoMethod> {
   /// Unique identifier of the stage
   int StageID_;
 
+  // Location type of the stage (which loop it represents)
+  ast::Expr::LocationType type_ = ast::Expr::LocationType::Cells;
+
   struct DerivedInfo {
 
     DerivedInfo() : extents_{0, 0, 0, 0, 0, 0} {}
@@ -219,6 +222,12 @@ public:
   /// @brief get the flag that specifies that the stage will require an explicit sync before
   /// execution
   bool getRequiresSync() const;
+
+  /// @brief setter for the location type
+  void setLocationType(ast::Expr::LocationType type);
+
+  /// @brief returns the location type of a stage
+  ast::Expr::LocationType getLocationType() const;
 };
 
 } // namespace iir
