@@ -378,7 +378,7 @@ public:
     return StencilIDToStencilCallMap_;
   }
 
-  bool getIsUnorderedFromAcessID(int AcessID) const;
+  bool getIsUnstructuredFromAcessID(int AcessID) const;
   dawn::ast::Expr::LocationType getLocationTypeFromAccessID(int ID) const;
   void addAccessIDLocationPair(int ID, dawn::ast::Expr::LocationType location);
 
@@ -401,7 +401,8 @@ private:
   std::unordered_map<int, int> ExprIDToAccessIDMap_;
   std::unordered_map<int, int> StmtIDToAccessIDMap_;
 
-  std::unordered_map<int, ast::Expr::LocationType> FieldAccessIdToLocationType_;
+  /// Stores the location type for every field as a map to the AccessID
+  std::unordered_map<int, ast::Expr::LocationType> FieldAccessIDToLocationTypeMap_;
 
   /// Referenced stencil functions in this stencil (note that nested stencil functions are not
   /// stored here but rather in the respecticve `StencilFunctionInstantiation`)

@@ -160,23 +160,22 @@ void CXXNaiveIcoCodeGen::generateStencilWrapperCtr(
   StencilWrapperConstructor.addArg("const Mesh &mesh");
 
   std::string ctrArgs("(dom");
-  for(auto APIfieldID : APIFields) {
-
-    std::string typeString = "";
-
-    switch(metadata.getLocationTypeFromAccessID(APIfieldID)) {
+  auto getLocationTypeString = [](ast::Expr::LocationType type) {
+    switch(type) {
     case ast::Expr::LocationType::Cells:
-      typeString = "Cell";
-      break;
+      return "Cell";
     case ast::Expr::LocationType::Vertices:
-      typeString = "Node";
-      break;
+      return "Node";
     case ast::Expr::LocationType::Edges:
-      typeString = "Edge";
-      break;
+      return "Edge";
     default:
       dawn_unreachable("unexpected type");
+      return "";
     }
+  };
+  for(auto APIfieldID : APIFields) {
+    std::string typeString =
+        getLocationTypeString(metadata.getLocationTypeFromAccessID(APIfieldID));
 
     StencilWrapperConstructor.addArg(typeString + "Field<double>& " +
                                      metadata.getNameFromAccessID(APIfieldID));
@@ -396,27 +395,27 @@ void CXXNaiveIcoCodeGen::generateStencilClasses(
       if((multiStage.getLoopOrder() == iir::LoopOrderKind::LK_Backward))
         std::reverse(partitionIntervals.begin(), partitionIntervals.end());
 
+      auto getLoop = [](ast::Expr::LocationType type) {
+        switch(type) {
+        case ast::Expr::LocationType::Cells:
+          return "for(auto const& t : getCells(libtag_t(), m_mesh))";
+        case ast::Expr::LocationType::Vertices:
+          return "for(auto const& t : getVertices(libtag_t(), m_mesh))";
+        case ast::Expr::LocationType::Edges:
+          return "for(auto const& t : getEdges(libtag_t(), m_mesh))";
+        default:
+          dawn_unreachable("invalid type");
+          return "";
+        }
+      };
       for(auto interval : partitionIntervals) {
 
         // for each interval, we generate naive nested loops
         for(const auto& stagePtr : multiStage.getChildren()) {
           const iir::Stage& stage = *stagePtr;
-          auto getLoop = [](ast::Expr::LocationType type) {
-            switch(type) {
-            case ast::Expr::LocationType::Cells:
-              return "for(auto const& t : getCells(libtag_t(), m_mesh))";
-            case ast::Expr::LocationType::Vertices:
-              return "for(auto const& t : getVertices(libtag_t(), m_mesh))";
-            case ast::Expr::LocationType::Edges:
-              return "for(auto const& t : getEdges(libtag_t(), m_mesh))";
-            default:
-              dawn_unreachable("invalid type");
-              return "";
-            }
-          };
-          std::string loopCode = getLoop(stage.getLocationType());
 
-          StencilRunMethod.addBlockStatement(getLoop(stage.getLocationType()), [&]() {
+          std::string loopCode = getLoop(stage.getLocationType());
+          StencilRunMethod.addBlockStatement(loopCode, [&]() {
             // Generate Do-Method
             for(const auto& doMethodPtr : stage.getChildren()) {
               const iir::DoMethod& doMethod = *doMethodPtr;

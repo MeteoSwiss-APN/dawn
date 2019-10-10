@@ -69,20 +69,20 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::ReturnStmt>& stmt) {
   ss_ << ";\n";
 }
 void ASTStencilBody::visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) {
-  std::string typeString;
-  switch(expr->getRhsLocation()) {
-  case ast::Expr::LocationType::Cells:
-    typeString = "Cell";
-    break;
-  case ast::Expr::LocationType::Edges:
-    typeString = "Edge";
-    break;
-  case ast::Expr::LocationType::Vertices:
-    typeString = "Node";
-    break;
-  default:
-    dawn_unreachable("unknown location type");
-  }
+  auto getLocationTypeString = [](ast::Expr::LocationType type) {
+    switch(type) {
+    case ast::Expr::LocationType::Cells:
+      return "Cell";
+    case ast::Expr::LocationType::Edges:
+      return "Edge";
+    case ast::Expr::LocationType::Vertices:
+      return "Node";
+    default:
+      dawn_unreachable("unknown location type");
+      return "";
+    }
+  };
+  std::string typeString = getLocationTypeString(expr->getRhsLocation());
   ss_ << std::string(indent_, ' ') << "reduce" + typeString + "ToCell(libtag_t(), m_mesh, t, ";
   expr->getInit()->accept(*this);
   ss_ << ", [&](auto& lhs, auto const& t) { return lhs " << expr->getOp() << "= ";

@@ -441,7 +441,7 @@ ReductionOverNeighborExpr::ReductionOverNeighborExpr(std::string const& op,
       rhs_location_(rhs_location), operands_{rhs, init} {}
 
 ReductionOverNeighborExpr::ReductionOverNeighborExpr(ReductionOverNeighborExpr const& expr)
-    : Expr(EK_ReductionOverNeighborExpr, expr.getSourceLocation()), op_(expr.op_),
+    : Expr(EK_ReductionOverNeighborExpr, expr.getSourceLocation()), op_(expr.getOp()),
       rhs_location_(expr.getRhsLocation()), operands_{expr.getRhs()->clone(),
                                                       expr.getInit()->clone()} {}
 

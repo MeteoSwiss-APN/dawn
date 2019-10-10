@@ -65,10 +65,10 @@ public:
   Field(int accessID, IntendKind intend, std::optional<Extents> const& readExtents,
         std::optional<Extents> const& writeExtents, Interval const& interval,
         ast::Expr::LocationType location)
-      : accessID_(accessID), intend_(intend),
-        extents_(FieldAccessExtents(readExtents, writeExtents)),
-        extentsRB_(FieldAccessExtents(readExtents, writeExtents)), interval_(interval),
-        unstrucutred_(true), location_(location) {}
+      : Field(accessID, intend, readExtents, writeExtents, interval) {
+    unstrucutred_ = true;
+    location_ = location;
+  }
 
   Field(int accessID, IntendKind intend, std::optional<Extents>&& readExtents,
         std::optional<Extents>&& writeExtents, Interval&& interval)
@@ -79,10 +79,10 @@ public:
   Field(int accessID, IntendKind intend, std::optional<Extents>&& readExtents,
         std::optional<Extents>&& writeExtents, Interval&& interval,
         ast::Expr::LocationType location)
-      : accessID_(accessID), intend_(intend),
-        extents_(FieldAccessExtents(std::move(readExtents), std::move(writeExtents))),
-        extentsRB_(extents_), interval_(std::move(interval)), unstrucutred_(true),
-        location_(location) {}
+      : Field(accessID, intend, readExtents, writeExtents, interval) {
+    unstrucutred_ = true;
+    location_ = location;
+  }
 
   /// @name Operators
   /// @{

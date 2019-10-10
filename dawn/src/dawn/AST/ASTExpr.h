@@ -571,15 +571,15 @@ private:
   enum OperandKind { Rhs = 0, Init };
 
   std::string op_ = "+";
-  std::array<std::shared_ptr<Expr>, 2> operands_;
-
   ast::Expr::LocationType rhs_location_;
+  std::array<std::shared_ptr<Expr>, 2> operands_;
 
 public:
   /// @name Constructor & Destructor
   /// @{
   ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> const& rhs,
-                            std::shared_ptr<Expr> const& init, ast::Expr::LocationType rhs_location,
+                            std::shared_ptr<Expr> const& init,
+                            ast::Expr::LocationType rhs_location = ast::Expr::LocationType::Cells,
                             SourceLocation loc = SourceLocation());
   ReductionOverNeighborExpr(ReductionOverNeighborExpr const& stmt);
   ReductionOverNeighborExpr& operator=(ReductionOverNeighborExpr const& stmt);

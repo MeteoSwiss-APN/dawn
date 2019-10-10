@@ -177,9 +177,6 @@ IIRBuilder::Field IIRBuilder::field(std::string const& name, ast::Expr::Location
   int id = si_->getMetaData().addField(iir::FieldAccessType::FAT_APIField, name,
                                        asArray(fieldType::ijk));
   int accessID = si_->getMetaData().getAccessIDFromName(name);
-  dawn::iir::Field field(
-      accessID, iir::Field::IntendKind::IK_InputOutput, std::nullopt, std::nullopt,
-      iir::Interval(sir::Interval{sir::Interval::Start, sir::Interval::End}), location);
   si_->getMetaData().addAccessIDLocationPair(accessID, location);
 
   return {id, name, true, location};
