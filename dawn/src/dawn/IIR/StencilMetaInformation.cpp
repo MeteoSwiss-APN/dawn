@@ -364,6 +364,21 @@ int StencilMetaInformation::addTmpField(FieldAccessType type, const std::string&
   return accessID;
 }
 
+bool StencilMetaInformation::getIsUnstructuredFromAcessID(int AccessID) const {
+  return FieldAccessIDToLocationTypeMap_.count(AccessID) != 0;
+}
+
+ast::Expr::LocationType StencilMetaInformation::getLocationTypeFromAccessID(int AccessID) const {
+  DAWN_ASSERT(getIsUnstructuredFromAcessID(AccessID));
+  return FieldAccessIDToLocationTypeMap_.at(AccessID);
+}
+
+void StencilMetaInformation::addAccessIDLocationPair(int AccessID,
+                                                     ast::Expr::LocationType location) {
+  DAWN_ASSERT(!FieldAccessIDToLocationTypeMap_.count(AccessID));
+  FieldAccessIDToLocationTypeMap_.emplace(AccessID, location);
+}
+
 void StencilMetaInformation::removeAccessID(int AccessID) {
   AccessIDToNameMap_.directEraseKey(AccessID);
 

@@ -63,6 +63,7 @@ std::unique_ptr<Stage> Stage::clone() const {
   auto cloneStage = std::make_unique<Stage>(metaData_, StageID_);
 
   cloneStage->derivedInfo_ = derivedInfo_;
+  cloneStage->type_ = type_;
 
   cloneStage->cloneChildrenFrom(*this);
   return cloneStage;
@@ -338,6 +339,10 @@ bool Stage::isEmptyOrNullStmt() const {
   }
   return true;
 }
+
+void Stage::setLocationType(ast::Expr::LocationType type) { type_ = type; }
+
+ast::Expr::LocationType Stage::getLocationType() const { return type_; }
 
 } // namespace iir
 } // namespace dawn

@@ -50,6 +50,8 @@ public:
     EK_ReductionOverNeighborExpr,
   };
 
+  enum class LocationType { Cells, Edges, Vertices };
+
   using ExprRangeType = ArrayRef<std::shared_ptr<Expr>>;
 
   /// @name Constructor & Destructor
@@ -615,6 +617,7 @@ private:
   enum OperandKind { Rhs = 0, Init };
 
   std::string op_ = "+";
+  ast::Expr::LocationType rhs_location_;
   std::array<std::shared_ptr<Expr>, 2> operands_;
 
 public:
@@ -622,6 +625,7 @@ public:
   /// @{
   ReductionOverNeighborExpr(std::string const& op, std::shared_ptr<Expr> const& rhs,
                             std::shared_ptr<Expr> const& init,
+                            ast::Expr::LocationType rhs_location = ast::Expr::LocationType::Cells,
                             SourceLocation loc = SourceLocation());
   ReductionOverNeighborExpr(ReductionOverNeighborExpr const& stmt);
   ReductionOverNeighborExpr& operator=(ReductionOverNeighborExpr const& stmt);
@@ -632,6 +636,7 @@ public:
   std::string const& getOp() const { return op_; }
   std::shared_ptr<Expr> const& getRhs() const { return operands_[Rhs]; }
   void setRhs(std::shared_ptr<Expr> rhs) { operands_[Rhs] = std::move(rhs); }
+  ast::Expr::LocationType getRhsLocation() const;
 
   ExprRangeType getChildren() override { return ExprRangeType(operands_); }
   std::shared_ptr<Expr> clone() const override;
