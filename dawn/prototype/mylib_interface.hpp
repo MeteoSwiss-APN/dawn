@@ -21,6 +21,13 @@ decltype(auto) getCells(mylibTag, mylib::Grid const& m) { return m.faces(); }
 decltype(auto) getEdges(mylibTag, mylib::Grid const& m) { return m.edges(); }
 decltype(auto) getVertices(mylibTag, mylib::Grid const& m) { return m.vertices(); }
 
+template <typename Objs, typename Init, typename Op>
+auto reduce(Objs&& objs, Init init, Op&& op) {
+  for(auto&& obj : objs)
+    op(init, *obj);
+  return init;
+}
+
 template <typename Init, typename Op>
 auto reduceCellToCell(mylibTag, mylib::Grid const& grid, mylib::Face const& f, Init init, Op&& op) {
   return reduce(f.faces(), init, op);
@@ -64,13 +71,6 @@ template <typename Init, typename Op>
 auto reduceVertexToVertex(mylibTag, mylib::Grid const& grid, mylib::Vertex const& v, Init init,
                           Op&& op) {
   return reduce(v.vertices(), init, op);
-}
-
-template <typename Objs, typename Init, typename Op>
-auto reduce(Objs&& objs, Init init, Op&& op) {
-  for(auto&& obj : objs)
-    op(init, *obj);
-  return init;
 }
 
 } // namespace mylibInterface
