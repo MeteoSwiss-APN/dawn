@@ -573,6 +573,8 @@ private:
   std::string op_ = "+";
   std::array<std::shared_ptr<Expr>, 2> operands_;
 
+  ast::Expr::LocationType rhs_location_;
+
 public:
   /// @name Constructor & Destructor
   /// @{
