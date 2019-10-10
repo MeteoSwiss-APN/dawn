@@ -15,7 +15,9 @@
 #include "dawn/IIR/IIRNode.h"
 #include "dawn/IIR/IIRNodeIterator.h"
 #include "dawn/Support/STLExtras.h"
+#include <array>
 #include <gtest/gtest.h>
+#include <list>
 #include <string>
 
 using namespace dawn;

@@ -18,6 +18,7 @@
 #include "dawn/IIR/ASTFwd.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include <stack>
+#include <string>
 #include <unordered_map>
 
 namespace dawn {

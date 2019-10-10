@@ -15,6 +15,8 @@
 #ifndef DAWN_SUPPORT_COMPARISONHELPERS_H
 #define DAWN_SUPPORT_COMPARISONHELPERS_H
 
+#include <string>
+
 namespace dawn {
 
 /// @brief Result of comparisons

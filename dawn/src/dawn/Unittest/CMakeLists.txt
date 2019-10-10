@@ -19,4 +19,5 @@ yoda_add_library(
           IIRBuilder.cpp
           IIRBuilder.h
   ARCHIVE
+  DEPENDS DawnIIRStatic DawnOptimizerStatic
 )

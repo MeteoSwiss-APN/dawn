@@ -33,7 +33,7 @@ namespace dawn {
 struct AcessIDTolocalityMetric {
   int accessID;
   int dataLocalityGain;
-  bool operator<(const AcessIDTolocalityMetric& rhs) {
+  bool operator<(const AcessIDTolocalityMetric& rhs) const {
     return dataLocalityGain < rhs.dataLocalityGain;
   }
 };
