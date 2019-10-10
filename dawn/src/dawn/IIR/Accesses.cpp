@@ -144,8 +144,8 @@ std::string Accesses::toString(std::function<std::string(int)>&& accessIDToStrin
   std::string indent(initialIndent, ' ');
 
   auto printMap = [&](const std::unordered_map<int, Extents>& map) {
-    for(auto it = map.begin(), end = map.end(); it != end; ++it)
-      ss << indent << "  " << accessIDToStringFunction(it->first) << " : " << it->second << "\n";
+    for(auto const& [accessID, access] : map)
+      ss << indent << "  " << accessIDToStringFunction(accessID) << " : " << access << "\n";
   };
 
   ss << indent << "Write Accesses:\n";

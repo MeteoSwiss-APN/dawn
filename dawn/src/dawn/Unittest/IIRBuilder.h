@@ -92,11 +92,11 @@ public:
     DAWN_ASSERT(si_);
     auto v_str = std::to_string(std::forward<T>(v));
     int acc = si_->getMetaData().insertAccessOfType(iir::FieldAccessType::FAT_Literal, v_str);
-    std::shared_ptr<iir::LiteralAccessExpr> expr = std::make_shared<iir::LiteralAccessExpr>(
+    auto expr = std::make_shared<iir::LiteralAccessExpr>(
         v_str,
         sir::Value::typeToBuiltinTypeID(sir::Value::TypeInfo<typename std::decay<T>::type>::Type));
     expr->setID(-si_->nextUID());
-    expr->getData<IIRAccessExprData>().AccessID = std::make_optional(acc);
+    expr->template getData<IIRAccessExprData>().AccessID = std::make_optional(acc);
     return expr;
   }
 

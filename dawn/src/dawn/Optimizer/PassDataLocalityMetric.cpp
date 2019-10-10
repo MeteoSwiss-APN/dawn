@@ -95,8 +95,6 @@ public:
                         }) != textureCache_.end();
   }
 
-  int getAccessIDFromExpr(const std::shared_ptr<iir::Expr>& expr) { return iir::getAccessID(expr); }
-
   std::string getNameFromAccessID(int AccessID) {
     return stencilFunCalls_.empty() ? metadata_.getFieldNameFromAccessID(AccessID)
                                     : stencilFunCalls_.top()->getFieldNameFromAccessID(AccessID);
@@ -140,7 +138,7 @@ public:
   }
 
   void processWriteAccess(const std::shared_ptr<iir::FieldAccessExpr>& field) {
-    int AccessID = getAccessIDFromExpr(field);
+    int AccessID = iir::getAccessID(field);
 
     // Is field stored in cache?
     if(!multiStage_.getCaches().count(AccessID)) {
@@ -156,7 +154,7 @@ public:
   }
 
   void processReadAccess(const std::shared_ptr<iir::FieldAccessExpr>& fieldExpr) {
-    int AccessID = getAccessIDFromExpr(fieldExpr);
+    int AccessID = iir::getAccessID(fieldExpr);
     int kOffset = fieldExpr->getOffset()[2];
 
     auto it = fields_.find(AccessID);
