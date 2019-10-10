@@ -1,9 +1,9 @@
-gtclang & dawn
+GTClang & dawn
 ===========
 
 ## Introduction
 
-This is the shared repository of **gtclang** and **dawn**. gtclang and dawn build a source-to-source compiler toolchain for developing high level DSLs for geophyiscal fluid dynamics models. **gtclang** is the front end that translates a costum, easy to use DSL into a relatively simple Stencil Intermediate Representation (SIR). **dawn** in turn takes this SIR, performs a wide array of optimizations and subsequently generates code suitable for execution on distributed memory super computers.
+This is the shared repository of **GTClang** and **dawn**. GTClang and dawn build a source-to-source compiler toolchain for developing high level DSLs for geophyiscal fluid dynamics models. **GTClang** is the front end that translates a costum, easy to use DSL into a relatively simple Stencil Intermediate Representation (SIR). **dawn** in turn takes this SIR, performs a wide array of optimizations and subsequently generates code suitable for execution on distributed memory super computers.
 
 ## Motivation
 
@@ -13,37 +13,42 @@ We introduce a new compiler framework, consisting of GTclang and Dawn, that deco
 
 ## Core Features
 
-* Gtclang translates an easy to understand but expressive DSL that is capable of modelling Finite Difference stencils as well as spare solvers into a relatively simple Stencil Intermediate Representation (SIR). See the `README` in the gtclang subdirectory for an illustrative example
-* Dawn allows the user to generate fast performing code for several back-ends from the intermediate representation (SIR).
+* GTClang translates an easy to understand but expressive DSL that is capable of modelling Finite Difference stencils as well as spare solvers into a relatively simple SIR. See the `README` in the GTClang subdirectory for an illustrative example
+* Dawn allows the user to generate fast performing code for several back-ends from the SIR.
 * Dawn exposes several APIs in different languages (C++, Java, Python) to parse and process the SIR. 
 * Dawn is able to generate code to be run on Distributed Memory Machines based on MPI, Machines with access to GPUs based on CUDA as well as naive C++ code with close to no parallelism for debugging.
 * Dawn offers a wide range of optimization and static analysis passes to guarantee correctness as well as performance of the generated parallel program.
 
 ## Building
 
-Even though **gtclang** and **dawn** share a common repository, they are built independently from each other. Dawn has to be built first, gtclang is then built "on top" of dawn in a second step. Please see the [dawn README](https://github.com/MeteoSwiss-APN/dawn/blob/master/dawn/README.md) and [gtclang README](https://github.com/MeteoSwiss-APN/dawn/blob/master/dawn/README.md) for detailed build and testing instructions. Dependencies include: 
+Even though **GTClang** and **dawn** share a common repository, they are built independently from each other. Dawn has to be built first, GTClang is then built "on top" of dawn in a second step. Please see the [dawn README](https://github.com/MeteoSwiss-APN/dawn/blob/master/dawn/README.md) and [GTClang README](https://github.com/MeteoSwiss-APN/dawn/blob/master/dawn/README.md) for detailed build and testing instructions. Dependencies include: 
+
 * C++-17 compatible compiler
-* clang
-* clang format (=6.0) 
+* clang > 6.0 and containing llvm
 * cmake (>= 3.3)
-* llvm
-* protobuf 
-* python (>= 3.4)
+* python (>= 3.4) and python3-setuptools
 * zlib 
-If the documentation is to be built as well, LaTeX, Sphinx and Doxygen are required as well. 
+
+optional dependencies are:
+
+* clang format (=6.0) 
+* LaTeX, Sphinx and Doxygen (for documentation)
 
 ## Developer Instructions
 
-If you wish to contribute to **dawn** or **gtclang**, please fork this repo into your own github user first, then send a pull request using a descriptive branch name from there. Before submitting a PR, please make sure that:
-* All tests are passing. This includes the **dawn** and **gtclang** unit tests and the tests performed in the **dawn** install step. In order that the full test suites are performed, **gtclang** needs to be built with [gridtools](https://github.com/GridTools/gridtools) enabled, and **dawn** needs to be built with python exampled enabled.
+If you wish to contribute to **dawn** or **GTClang**, please fork this repo into your own github user first, then send a pull request using a descriptive branch name from there. Before submitting a PR, please make sure that:
+* All tests are passing. This includes the **dawn** and **GTClang** unit tests and the tests performed in the **dawn** install step. In order that the full test suites are performed, **GTClang** needs to be built with [gridtools](https://github.com/GridTools/gridtools) enabled, and **dawn** needs to be built with python exampled enabled. Please see the `README` in the **dawn** and **GTClang** folders respectivley for information on how to do that.
 * The code is properly formatted according to the clang-format rules provided. This can be ensured automatically using the git hook located in scripts. To install it, simply put a simlink into your `.git` folder (usually located in the top level dawn folder, except if using git work trees) to the script as follows:
+
 ```
 ln -s </absolute/path/to>/dawn/scripts/git_hooks/pre-commit .git/hooks/
 ```
 
+If you want to call the script manually, simply run `/scripts/clang_format_all.sh`.
+
 ## About
 
-This Project is developed by [ETHZ](https://ethz.ch/), [MeteoSwiss](https://www.meteoswiss.admin.ch/), and [CSCS](https://www.cscs.ch/). <!-- add funding parties? !-->
+This Project is developed by [MeteoSwiss](https://www.meteoswiss.admin.ch/), [CSCS](https://www.cscs.ch/), [ETHZ](https://ethz.ch/), and [Vulcan](https://vulcan.com/)
 
 ## License
 
