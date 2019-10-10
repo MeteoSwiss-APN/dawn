@@ -295,8 +295,8 @@ public:
     removeLastChildAccesses();
   }
   virtual void visit(const std::shared_ptr<iir::ReductionOverNeighborExpr>& expr) override {
-    expr->getRhs()->accept(*this);
-    expr->getInit()->accept(*this);
+    for(auto& s : expr->getChildren())
+      s->accept(*this);
   }
 
   virtual void visit(const std::shared_ptr<iir::VerticalRegionDeclStmt>& stmt) override {

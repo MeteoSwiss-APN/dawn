@@ -201,6 +201,7 @@ message Expr {
     VarAccessExpr var_access_expr = 8;
     FieldAccessExpr field_access_expr = 9;
     LiteralAccessExpr literal_access_expr = 10;
+    ReductionOverNeighborExpr reduction_over_neighbor_expr = 11;
   }
 }
 
@@ -548,6 +549,15 @@ message LiteralAccessExpr {
   SourceLocation loc = 3; // Source location
   AccessExprData data = 4; // Access data
   int32 ID = 5;           // ID of the Expr
+}
+
+// @brief Reduction operation over neighbors
+//
+// @ingroup sir_proto
+message ReductionOverNeighborExpr {
+  string op = 1; // Reduction operation
+  Expr rhs = 2;  // Operation to be applied for each neighbor
+  Expr init = 3; // Initial value of reduction
 }
 
 // @brief Abstract syntax tree of the SIR

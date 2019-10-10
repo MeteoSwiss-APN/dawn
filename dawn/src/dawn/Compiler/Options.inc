@@ -33,10 +33,11 @@
 
 OPT(std::string, Backend, "gridtools", "backend", "",
     "Set backend code-generator. Possible values for <backend> are:"
-    "\n - gridtools = gridtools C++ code"
-    "\n - c++-naive   = naive C++ code\n"
-    "\n - c++-opt     = optimized C++ code"
-    "\n - cuda        = optimized cuda", "<backend>", true, false)
+    "\n - gridtools     = gridtools C++ code"
+    "\n - c++-naive     = naive C++ code\n"
+    "\n - c++-naive-ico = naive unstructured C++ code\n"
+    "\n - c++-opt       = optimized C++ code"
+    "\n - cuda          = optimized cuda", "<backend>", true, false)
 OPT(std::string, OutputFile, "", "output", "o", "Write output to <file>", "<file>", true, false)
 OPT(int, nsms, 0, "nsms", "",
     "Number of (CUDA) SMs", "<nsms>", true, false)

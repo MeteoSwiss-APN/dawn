@@ -466,6 +466,11 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
     return std::make_shared<sir::LiteralAccessExpr>(
         exprProto.value(), makeBuiltinTypeID(exprProto.type()), makeLocation(exprProto));
   }
+  case dawn::proto::statements::Expr::kReductionOverNeighborExpr: {
+    const auto& exprProto = expressionProto.reduction_over_neighbor_expr();
+    return std::make_shared<sir::ReductionOverNeighborExpr>(
+        exprProto.op(), makeExpr(exprProto.rhs()), makeExpr(exprProto.init()));
+  }
   case dawn::proto::statements::Expr::EXPR_NOT_SET:
   default:
     dawn_unreachable("expr not set");

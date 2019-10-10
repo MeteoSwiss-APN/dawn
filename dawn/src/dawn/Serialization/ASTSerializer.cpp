@@ -136,9 +136,6 @@ dawn::proto::statements::Expr* ProtoStmtBuilder::getCurrentExprProto() {
   DAWN_ASSERT(!currentExprProto_.empty());
   return currentExprProto_.top();
 }
-void ProtoStmtBuilder::visit(const std::shared_ptr<ReductionOverNeighborExpr>& expr) {
-  DAWN_ASSERT_MSG(0, "Not implemented!");
-}
 
 void ProtoStmtBuilder::visit(const std::shared_ptr<BlockStmt>& stmt) {
   auto protoStmt = getCurrentStmtProto()->mutable_block_stmt();
@@ -443,6 +440,20 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<LiteralAccessExpr>& expr) {
   else
     protoExpr->mutable_data();
   protoExpr->set_id(expr->getID());
+}
+
+void ProtoStmtBuilder::visit(const std::shared_ptr<ReductionOverNeighborExpr>& expr) {
+  auto protoExpr = getCurrentExprProto()->mutable_reduction_over_neighbor_expr();
+
+  protoExpr->set_op(expr->getOp());
+
+  currentExprProto_.push(protoExpr->mutable_rhs());
+  expr->getRhs()->accept(*this);
+  currentExprProto_.pop();
+
+  currentExprProto_.push(protoExpr->mutable_init());
+  expr->getInit()->accept(*this);
+  currentExprProto_.pop();
 }
 
 void setAST(proto::statements::AST* astProto, const AST* ast) {
