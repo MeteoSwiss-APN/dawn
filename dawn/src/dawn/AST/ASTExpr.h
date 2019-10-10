@@ -566,9 +566,10 @@ public:
 /// @ingroup sir
 class ReductionOverNeighborExpr : public Expr {
 private:
+  enum OperandKind { Rhs = 0, Init };
+
   std::string op_ = "+";
-  std::shared_ptr<Expr> rhs_;
-  std::shared_ptr<Expr> init_;
+  std::array<std::shared_ptr<Expr>, 2> operands_;
 
 public:
   /// @name Constructor & Destructor
@@ -577,15 +578,16 @@ public:
                             std::shared_ptr<Expr> const& init,
                             SourceLocation loc = SourceLocation());
   ReductionOverNeighborExpr(ReductionOverNeighborExpr const& stmt);
-  ReductionOverNeighborExpr& operator=(ReductionOverNeighborExpr stmt);
+  ReductionOverNeighborExpr& operator=(ReductionOverNeighborExpr const& stmt);
   /// @}
 
-  std::shared_ptr<Expr> const& getInit() const { return init_; }
-  void setInit(std::shared_ptr<Expr> init) { init_ = std::move(init); }
+  std::shared_ptr<Expr> const& getInit() const { return operands_[Init]; }
+  void setInit(std::shared_ptr<Expr> init) { operands_[Init] = std::move(init); }
   std::string const& getOp() const { return op_; }
-  std::shared_ptr<Expr> const& getRhs() const { return rhs_; }
-  void setRhs(std::shared_ptr<Expr> rhs) { rhs_ = std::move(rhs); }
+  std::shared_ptr<Expr> const& getRhs() const { return operands_[Rhs]; }
+  void setRhs(std::shared_ptr<Expr> rhs) { operands_[Rhs] = std::move(rhs); }
 
+  ExprRangeType getChildren() override { return ExprRangeType(operands_); }
   std::shared_ptr<Expr> clone() const override;
   bool equals(const Expr* other) const override;
   static bool classof(const Expr* expr) { return expr->getKind() == EK_ReductionOverNeighborExpr; }
