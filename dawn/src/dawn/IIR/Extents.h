@@ -17,7 +17,7 @@
 
 #include "LoopOrder.h"
 
-#include "dawn/AST/Offset.h"
+#include "dawn/AST/Offsets.h"
 #include "dawn/Support/Array.h"
 #include "dawn/Support/Assert.h"
 #include "dawn/Support/HashCombine.h"
@@ -102,7 +102,7 @@ public:
 
   /// @name Constructors and Assignment
   /// @{
-  explicit Extents(const ast::Offset& offset);
+  explicit Extents(const ast::Offsets& offset);
   Extents(int extent1minus, int extent1plus, int extent2minus, int extent2plus, int extent3minus,
           int extent3plus);
   Extents() = delete;
@@ -131,7 +131,7 @@ public:
   ///   If `this` is `{-1, 1, 0, 0, 0, 0}` and `other` is `{-2, 0, 0, 0, 1}` the result will be
   ///   `{-2, 1, 0, 0, 0, 1}`.
   void merge(const Extents& other);
-  void merge(const ast::Offset& offset);
+  void merge(const ast::Offsets& offset);
 
   void expand(const Extents& other);
 
@@ -140,7 +140,7 @@ public:
   /// @b Example:
   ///   If `this` is `{-1, 1, -1, 1, 0, 0}` and `other` is `{0, 1, 0, 0, 0, 0}` the result will be
   ///   `{-1, 2, -1, 1, 0, 0}`.
-  void add(const ast::Offset& offset);
+  void add(const ast::Offsets& offset);
   void add(const Extents& other);
   static Extents add(const Extents& lhs, const Extents& rhs);
 

@@ -168,7 +168,7 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) 
   Base::visit(expr);
 }
 
-static void printOffset(std::ostream& os, ast::Offset const& offset) {
+static void printOffset(std::ostream& os, ast::Offsets const& offset) {
   auto const& hoffset = ast::offset_cast<ast::StructuredOffset const&>(offset.horizontalOffset());
   auto const& voffset = offset.verticalOffset();
 

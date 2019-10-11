@@ -71,7 +71,7 @@ std::string reportAccessesImpl(AccessIDToStringFunctionType&& accessIDToStringFu
 
 } // anonymous namespace
 
-void Accesses::mergeReadOffset(int AccessID, const ast::Offset& offset) {
+void Accesses::mergeReadOffset(int AccessID, const ast::Offsets& offset) {
   auto it = readAccesses_.find(AccessID);
   if(it != readAccesses_.end()) {
     it->second.merge(offset);
@@ -88,7 +88,7 @@ void Accesses::mergeReadExtent(int AccessID, const Extents& extent) {
     readAccesses_.emplace(AccessID, extent);
 }
 
-void Accesses::mergeWriteOffset(int AccessID, const ast::Offset& offset) {
+void Accesses::mergeWriteOffset(int AccessID, const ast::Offsets& offset) {
   auto it = writeAccesses_.find(AccessID);
   if(it != writeAccesses_.end())
     it->second.merge(offset);

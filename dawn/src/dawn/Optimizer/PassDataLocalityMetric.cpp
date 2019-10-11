@@ -110,7 +110,7 @@ public:
                                     : stencilFunCalls_.top()->getStencilFunctionInstantiation(expr);
   }
 
-  ast::Offset getOffset(const std::shared_ptr<iir::FieldAccessExpr>& field) {
+  ast::Offsets getOffset(const std::shared_ptr<iir::FieldAccessExpr>& field) {
     return stencilFunCalls_.empty()
                ? field->getOffset()
                : stencilFunCalls_.top()->evalOffsetOfFieldAccessExpr(field, true);
@@ -169,7 +169,7 @@ public:
       if(!register_.count(AccessID)) {
 
         // Cache the center access
-        if(getOffset(fieldExpr) == ast::Offset{})
+        if(getOffset(fieldExpr) == ast::Offsets{ast::structured})
           register_.insert(AccessID);
 
         // Check if the field is either cached or stored in the texture cache
@@ -184,7 +184,7 @@ public:
       if(!multiStage_.isCached(AccessID)) {
 
         // Check if the center is stored in a register
-        if(!(register_.count(AccessID) && getOffset(fieldExpr) == ast::Offset{})) {
+        if(!(register_.count(AccessID) && getOffset(fieldExpr) == ast::Offsets{ast::structured})) {
           numReads_++;
           individualReadWrites_[AccessID].numReads++;
         }

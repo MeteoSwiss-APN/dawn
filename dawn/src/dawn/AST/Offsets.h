@@ -22,6 +22,9 @@
 
 namespace dawn::ast {
 
+struct structured_ {};
+static constexpr structured_ structured;
+
 class Dimension {
 public:
   explicit constexpr Dimension(std::string_view name) : name_(name) {}
@@ -98,8 +101,8 @@ private:
 
 class HorizontalOffset {
 public:
-  HorizontalOffset() : impl_(std::make_unique<StructuredOffset>()) {}
-  HorizontalOffset(std::array<int, 2> const& offset)
+  HorizontalOffset(structured_) : impl_(std::make_unique<StructuredOffset>()) {}
+  HorizontalOffset(structured_, std::array<int, 2> const& offset)
       : impl_(std::make_unique<StructuredOffset>(offset)) {}
   HorizontalOffset(HorizontalOffset const& other) : impl_(other.impl_->clone()) {}
   HorizontalOffset& operator=(HorizontalOffset const& other) {
@@ -133,22 +136,23 @@ T offset_cast(HorizontalOffset const& offset) {
   return dynamic_cast<T>(*offset.impl_);
 }
 
-class Offset {
+class Offsets {
 public:
-  explicit Offset(std::array<int, 3> const& structuredOffsets)
-      : horizontalOffset_(std::array<int, 2>{{structuredOffsets[0], structuredOffsets[1]}}),
+  Offsets(structured_, std::array<int, 3> const& structuredOffsets)
+      : horizontalOffset_(structured,
+                          std::array<int, 2>{{structuredOffsets[0], structuredOffsets[1]}}),
         verticalOffset_(structuredOffsets[2]) {}
-  Offset() = default;
+  Offsets(structured_) : horizontalOffset_(structured) {}
 
   int verticalOffset() const { return verticalOffset_; }
   HorizontalOffset const& horizontalOffset() const { return horizontalOffset_; }
 
-  bool operator==(Offset const& other) const {
+  bool operator==(Offsets const& other) const {
     return horizontalOffset_ == other.horizontalOffset_ && verticalOffset_ == other.verticalOffset_;
   }
-  bool operator!=(Offset const& other) const { return !(*this == other); }
+  bool operator!=(Offsets const& other) const { return !(*this == other); }
 
-  Offset& operator+=(Offset const& other) {
+  Offsets& operator+=(Offsets const& other) {
     horizontalOffset_ += other.horizontalOffset_;
     verticalOffset_ += other.verticalOffset_;
     return *this;
@@ -184,11 +188,11 @@ public:
 
 private:
   HorizontalOffset horizontalOffset_;
-  int verticalOffset_;
+  int verticalOffset_ = 0;
 
   static constexpr Dimension verticalDimension_{"k"};
 };
-std::ostream& operator<<(std::ostream& os, Offset const& offset);
+std::ostream& operator<<(std::ostream& os, Offsets const& offsets);
 
 } // namespace dawn::ast
 #endif

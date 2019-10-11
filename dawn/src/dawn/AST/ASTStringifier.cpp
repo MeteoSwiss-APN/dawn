@@ -229,9 +229,14 @@ public:
   }
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
+    auto offset = expr->getOffset();
+    auto const& hoffset = ast::offset_cast<StructuredOffset const&>(offset.horizontalOffset());
+    auto const& voffset = offset.verticalOffset();
+
     if(!expr->hasArguments()) {
-      // TODO
-      // ss_ << expr->getName() << RangeToString()(expr->getOffset());
+
+      ss_ << expr->getName();
+      ss_ << "(" << hoffset.offsetI() << ", " << hoffset.offsetJ() << ", " << voffset << ")";
     } else {
       ss_ << expr->getName() << "[";
 
@@ -245,7 +250,17 @@ public:
             ss_ << (argOffset[i] > 0 ? "+" : "") << argOffset[i];
         } else {
           // TODO
-          // ss_ << expr->getOffset()[i];
+          switch(i) {
+          case 0:
+            ss_ << hoffset.offsetI();
+            break;
+          case 1:
+            ss_ << hoffset.offsetJ();
+            break;
+          case 2:
+            ss_ << voffset;
+            break;
+          }
         }
         ss_ << (i == (expr->getArgumentMap().size() - 1) ? "]" : ", ");
       }

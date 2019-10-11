@@ -188,10 +188,14 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   auto lhsTmp = std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name);
   lhsTmp->setID(target->nextUID());
 
-  auto rhsInT1 = std::make_shared<ast::FieldAccessExpr>(sirInField->Name, ast::Offset{{0, -2, 0}});
-  auto rhsInT2 = std::make_shared<ast::FieldAccessExpr>(sirInField->Name, ast::Offset{{0, +2, 0}});
-  auto rhsInT3 = std::make_shared<ast::FieldAccessExpr>(sirInField->Name, ast::Offset{{-2, 0, 0}});
-  auto rhsInT4 = std::make_shared<ast::FieldAccessExpr>(sirInField->Name, ast::Offset{{+2, 0, 0}});
+  auto rhsInT1 = std::make_shared<ast::FieldAccessExpr>(sirInField->Name,
+                                                        ast::Offsets{ast::structured, {0, -2, 0}});
+  auto rhsInT2 = std::make_shared<ast::FieldAccessExpr>(sirInField->Name,
+                                                        ast::Offsets{ast::structured, {0, +2, 0}});
+  auto rhsInT3 = std::make_shared<ast::FieldAccessExpr>(sirInField->Name,
+                                                        ast::Offsets{ast::structured, {-2, 0, 0}});
+  auto rhsInT4 = std::make_shared<ast::FieldAccessExpr>(sirInField->Name,
+                                                        ast::Offsets{ast::structured, {+2, 0, 0}});
 
   rhsInT1->setID(target->nextUID());
   rhsInT2->setID(target->nextUID());
@@ -201,14 +205,14 @@ createLapStencilIIRInMemory(OptimizerContext& optimizer) {
   auto lhsOut = std::make_shared<ast::FieldAccessExpr>(sirOutField->Name);
   lhsOut->setID(target->nextUID());
 
-  auto rhsTmpT1 =
-      std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name, ast::Offset{{0, -1, 0}});
-  auto rhsTmpT2 =
-      std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name, ast::Offset{{0, +1, 0}});
-  auto rhsTmpT3 =
-      std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name, ast::Offset{{-1, 0, 0}});
-  auto rhsTmpT4 =
-      std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name, ast::Offset{{+1, 0, 0}});
+  auto rhsTmpT1 = std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name,
+                                                         ast::Offsets{ast::structured, {0, -1, 0}});
+  auto rhsTmpT2 = std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name,
+                                                         ast::Offsets{ast::structured, {0, +1, 0}});
+  auto rhsTmpT3 = std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name,
+                                                         ast::Offsets{ast::structured, {-1, 0, 0}});
+  auto rhsTmpT4 = std::make_shared<ast::FieldAccessExpr>(sirTmpField->Name,
+                                                         ast::Offsets{ast::structured, {+1, 0, 0}});
 
   rhsTmpT1->setID(target->nextUID());
   rhsTmpT2->setID(target->nextUID());

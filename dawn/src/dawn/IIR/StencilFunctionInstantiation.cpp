@@ -70,16 +70,16 @@ StencilFunctionInstantiation StencilFunctionInstantiation::clone() const {
   return stencilFun;
 }
 
-dawn::ast::Offset StencilFunctionInstantiation::evalOffsetOfFieldAccessExpr(
+ast::Offsets StencilFunctionInstantiation::evalOffsetOfFieldAccessExpr(
     const std::shared_ptr<iir::FieldAccessExpr>& expr, bool applyInitialOffset) const {
 
   // Get the offsets we know so far (i.e the constant offset)
-  dawn::ast::Offset offset = expr->getOffset();
+  ast::Offsets offset = expr->getOffset();
 
   // Apply the initial offset (e.g if we call a function `avg(in(i+1))` we have to shift all
   // accesses of the field `in` by [1, 0, 0])
   if(applyInitialOffset) {
-    const dawn::ast::Offset& initialOffset =
+    const ast::Offsets& initialOffset =
         getCallerInitialOffsetFromAccessID(getAccessIDFromExpr(expr));
     offset += initialOffset;
   }
@@ -104,7 +104,7 @@ dawn::ast::Offset StencilFunctionInstantiation::evalOffsetOfFieldAccessExpr(
         const auto& instantiatedOffset = getCallerOffsetOfArgOffset(argIndex);
         addOffset[instantiatedOffset[0]] = sign * (argOffset + instantiatedOffset[1]);
       }
-      offset += ast::Offset{addOffset};
+      offset += ast::Offsets{ast::structured, addOffset};
     }
   }
 
@@ -181,15 +181,15 @@ void StencilFunctionInstantiation::setFunctionInstantiationOfArgField(
   ArgumentIndexToStencilFunctionInstantiationMap_[argumentIndex] = func;
 }
 
-const dawn::ast::Offset&
+const ast::Offsets&
 StencilFunctionInstantiation::getCallerInitialOffsetFromAccessID(int callerAccessID) const {
   DAWN_ASSERT(CallerAccessIDToInitialOffsetMap_.count(callerAccessID));
   return CallerAccessIDToInitialOffsetMap_.find(callerAccessID)->second;
 }
 
-void StencilFunctionInstantiation::setCallerInitialOffsetFromAccessID(
-    int callerAccessID, const dawn::ast::Offset& offset) {
-  CallerAccessIDToInitialOffsetMap_[callerAccessID] = offset;
+void StencilFunctionInstantiation::setCallerInitialOffsetFromAccessID(int callerAccessID,
+                                                                      const ast::Offsets& offset) {
+  CallerAccessIDToInitialOffsetMap_.emplace(callerAccessID, offset);
 }
 
 bool StencilFunctionInstantiation::isProvidedByStencilFunctionCall(int callerAccessID) const {
@@ -355,11 +355,11 @@ const std::unordered_map<int, std::string>&
 StencilFunctionInstantiation::getAccessIDToNameMap() const {
   return AccessIDToNameMap_;
 }
-std::unordered_map<int, dawn::ast::Offset>&
+std::unordered_map<int, ast::Offsets>&
 StencilFunctionInstantiation::getCallerAccessIDToInitialOffsetMap() {
   return CallerAccessIDToInitialOffsetMap_;
 }
-const std::unordered_map<int, dawn::ast::Offset>&
+const std::unordered_map<int, ast::Offsets>&
 StencilFunctionInstantiation::getCallerAccessIDToInitialOffsetMap() const {
   return CallerAccessIDToInitialOffsetMap_;
 }
@@ -667,7 +667,7 @@ void StencilFunctionInstantiation::closeFunctionBindings(const std::vector<int>&
         int AccessID = stencilInstantiation_->nextUID();
 
         setCallerAccessIDOfArgField(argIdx, AccessID);
-        setCallerInitialOffsetFromAccessID(AccessID, ast::Offset{});
+        setCallerInitialOffsetFromAccessID(AccessID, ast::Offsets{ast::structured});
       }
     }
   }

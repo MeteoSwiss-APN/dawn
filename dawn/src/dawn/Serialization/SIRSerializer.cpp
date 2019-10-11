@@ -458,7 +458,7 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
                 argumentMap.begin());
     }
 
-    return std::make_shared<sir::FieldAccessExpr>(name, ast::Offset{offset}, argumentMap,
+    return std::make_shared<sir::FieldAccessExpr>(name, ast::Offsets{ast::structured, offset}, argumentMap,
                                                   argumentOffset, negateOffset,
                                                   makeLocation(exprProto));
   }

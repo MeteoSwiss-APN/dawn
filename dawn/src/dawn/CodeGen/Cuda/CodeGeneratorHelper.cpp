@@ -150,7 +150,7 @@ bool CodeGeneratorHelper::useTemporaries(const std::unique_ptr<iir::Stencil>& st
 void CodeGeneratorHelper::generateFieldAccessDeref(
     std::stringstream& ss, const std::unique_ptr<iir::MultiStage>& ms,
     const iir::StencilMetaInformation& metadata, const int accessID,
-    const std::unordered_map<int, Array3i> fieldIndexMap, ast::Offset const& offset) {
+    const std::unordered_map<int, Array3i> fieldIndexMap, ast::Offsets const& offset) {
   std::string accessName = metadata.getFieldNameFromAccessID(accessID);
   bool isTemporary = metadata.isAccessType(iir::FieldAccessType::FAT_StencilTemporary, accessID);
   DAWN_ASSERT(fieldIndexMap.count(accessID) || isTemporary);
@@ -171,7 +171,7 @@ void CodeGeneratorHelper::generateFieldAccessDeref(
      << (readOnly ? "))" : "");
 }
 
-std::array<std::string, 3> CodeGeneratorHelper::ijkfyOffset(const ast::Offset& offset,
+std::array<std::string, 3> CodeGeneratorHelper::ijkfyOffset(const ast::Offsets& offset,
                                                             bool useTmpIndex,
                                                             const Array3i iteratorDims) {
   auto const& hoffset = ast::offset_cast<ast::StructuredOffset const&>(offset.horizontalOffset());

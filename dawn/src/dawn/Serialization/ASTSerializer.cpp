@@ -607,8 +607,8 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto) {
     }
 
     auto expr =
-        std::make_shared<FieldAccessExpr>(name, ast::Offset{offset}, argumentMap, argumentOffset,
-                                          negateOffset, makeLocation(exprProto));
+        std::make_shared<FieldAccessExpr>(name, ast::Offsets{ast::structured, offset}, argumentMap,
+                                          argumentOffset, negateOffset, makeLocation(exprProto));
     expr->setID(exprProto.id());
     return expr;
   }

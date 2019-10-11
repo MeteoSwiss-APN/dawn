@@ -149,18 +149,18 @@ public:
 
   void mergeWriteOffset(const std::shared_ptr<iir::VarAccessExpr>& var) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeWriteOffset(getAccessIDFromExpr(var), dawn::ast::Offset{});
+      callerAccesses->mergeWriteOffset(getAccessIDFromExpr(var), ast::Offsets{ast::structured});
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeWriteOffset(getAccessIDFromExpr(var), dawn::ast::Offset{});
+      calleeAccesses->mergeWriteOffset(getAccessIDFromExpr(var), ast::Offsets{ast::structured});
   }
 
   void mergeWriteOffset(const std::shared_ptr<iir::VarDeclStmt>& var) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeWriteOffset(getAccessIDFromStmt(var), dawn::ast::Offset{});
+      callerAccesses->mergeWriteOffset(getAccessIDFromStmt(var), ast::Offsets{ast::structured});
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeWriteOffset(getAccessIDFromStmt(var), dawn::ast::Offset{});
+      calleeAccesses->mergeWriteOffset(getAccessIDFromStmt(var), ast::Offsets{ast::structured});
   }
 
   void mergeWriteExtent(const std::shared_ptr<iir::FieldAccessExpr>& field,
@@ -190,18 +190,18 @@ public:
 
   void mergeReadOffset(const std::shared_ptr<iir::VarAccessExpr>& var) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeReadOffset(getAccessIDFromExpr(var), dawn::ast::Offset{});
+      callerAccesses->mergeReadOffset(getAccessIDFromExpr(var), ast::Offsets{ast::structured});
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeReadOffset(getAccessIDFromExpr(var), dawn::ast::Offset{});
+      calleeAccesses->mergeReadOffset(getAccessIDFromExpr(var), ast::Offsets{ast::structured});
   }
 
   void mergeReadOffset(const std::shared_ptr<iir::LiteralAccessExpr>& lit) {
     for(auto& callerAccesses : callerAccessesList_)
-      callerAccesses->mergeReadOffset(getAccessIDFromExpr(lit), dawn::ast::Offset{});
+      callerAccesses->mergeReadOffset(getAccessIDFromExpr(lit), ast::Offsets{ast::structured});
 
     for(auto& calleeAccesses : calleeAccessesList_)
-      calleeAccesses->mergeReadOffset(getAccessIDFromExpr(lit), dawn::ast::Offset{});
+      calleeAccesses->mergeReadOffset(getAccessIDFromExpr(lit), ast::Offsets{ast::structured});
   }
 
   void mergeReadExtent(const std::shared_ptr<iir::FieldAccessExpr>& field,

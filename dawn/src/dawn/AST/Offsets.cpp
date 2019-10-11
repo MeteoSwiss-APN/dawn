@@ -12,16 +12,16 @@
 //
 //===------------------------------------------------------------------------------------------===//
 
-#ifndef DAWN_AST_OFFSET_CPP
-#define DAWN_AST_OFFSET_CPP
+#ifndef DAWN_AST_OFFSETS_CPP
+#define DAWN_AST_OFFSETS_CPP
 
-#include "Offset.h"
+#include "Offsets.h"
 
 #include <iostream>
 
 namespace dawn::ast {
 
-std::ostream& operator<<(std::ostream& os, Offset const& offset) {
+std::ostream& operator<<(std::ostream& os, Offsets const& offset) {
   auto const& hoffset = ast::offset_cast<StructuredOffset const&>(offset.horizontalOffset());
   auto const& voffset = offset.verticalOffset();
   return os << hoffset.offsetI() << ", " << hoffset.offsetJ() << ", " << voffset;

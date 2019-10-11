@@ -43,12 +43,12 @@ public:
                                        const iir::StencilMetaInformation& metadata,
                                        const int accessID,
                                        const std::unordered_map<int, Array3i> fieldIndexMap,
-                                       ast::Offset const& offset);
+                                       ast::Offsets const& offset);
   ///
   /// @brief produces a string of (i,j,k) accesses for the C++ generated naive code,
   /// from an array of offseted accesses
   ///
-  static std::array<std::string, 3> ijkfyOffset(const ast::Offset& offset, bool isTemporary,
+  static std::array<std::string, 3> ijkfyOffset(const ast::Offsets& offset, bool isTemporary,
                                                 const Array3i iteratorDims);
 
   /// @brief determines wheter an accessID will perform an access to main memory

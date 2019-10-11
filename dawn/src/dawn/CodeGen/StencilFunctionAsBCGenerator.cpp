@@ -13,7 +13,7 @@ std::string StencilFunctionAsBCGenerator::getName(const std::shared_ptr<iir::Exp
 }
 
 void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
-  auto printOffset = [](const ast::Offset& argOffset) {
+  auto printOffset = [](const ast::Offsets& argOffset) {
     auto const& hoffset =
         ast::offset_cast<ast::StructuredOffset const&>(argOffset.horizontalOffset());
     auto const& voffset = argOffset.verticalOffset();

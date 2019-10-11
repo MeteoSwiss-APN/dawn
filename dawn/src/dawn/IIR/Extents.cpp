@@ -21,7 +21,7 @@
 namespace dawn {
 namespace iir {
 
-Extents::Extents(const ast::Offset& offset) {
+Extents::Extents(const ast::Offsets& offset) {
   auto const& hOffset = ast::offset_cast<ast::StructuredOffset const&>(offset.horizontalOffset());
   std::array<int, 3> offsetArray = {hOffset.offsetI(), hOffset.offsetJ(), offset.verticalOffset()};
 
@@ -56,7 +56,7 @@ void Extents::expand(const Extents& other) {
     extents_[i].expand(other.getExtents()[i]);
 }
 
-void Extents::merge(const ast::Offset& offset) {
+void Extents::merge(const ast::Offsets& offset) {
   auto const& hOffset = ast::offset_cast<ast::StructuredOffset const&>(offset.horizontalOffset());
   std::array<int, 3> offsetArray = {hOffset.offsetI(), hOffset.offsetJ(), offset.verticalOffset()};
 
@@ -77,7 +77,7 @@ Extents Extents::add(const Extents& lhs, const Extents& rhs) {
   return sum;
 }
 
-void Extents::add(const ast::Offset& offset) {
+void Extents::add(const ast::Offsets& offset) {
   auto const& hOffset = ast::offset_cast<ast::StructuredOffset const&>(offset.horizontalOffset());
   std::array<int, 3> offsetArray = {hOffset.offsetI(), hOffset.offsetJ(), offset.verticalOffset()};
 

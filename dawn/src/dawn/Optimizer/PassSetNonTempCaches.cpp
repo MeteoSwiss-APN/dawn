@@ -229,8 +229,8 @@ private:
     auto expAssignment = iir::makeExprStmt(assignmentExpression);
     auto pair = std::make_unique<iir::StatementAccessesPair>(expAssignment);
     auto newAccess = std::make_shared<iir::Accesses>();
-    newAccess->addWriteExtent(assignmentID, iir::Extents(ast::Offset{}));
-    newAccess->addReadExtent(assigneeID, iir::Extents(ast::Offset{}));
+    newAccess->addWriteExtent(assignmentID, iir::Extents(ast::Offsets{ast::structured}));
+    newAccess->addReadExtent(assigneeID, iir::Extents(ast::Offsets{ast::structured}));
     pair->setAccesses(newAccess);
     domethod->insertChild(std::move(pair));
 
