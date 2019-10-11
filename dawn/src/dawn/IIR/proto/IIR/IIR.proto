@@ -224,54 +224,48 @@ message StencilMetaInfo {
     // Map from AccessID's to their original name
     map<int32, string> accessIDToName = 1;
 
-    // Surjection of AST Nodes, Stmt (VarDeclStmt) to their AccessID
-    map<int32, int32> exprIDToAccessID = 2;
-
-    // Surjection of AST Nodes, Expr (FieldAccessExpr or VarAccessExpr) to their AccessID
-    map<int32, int32> stmtIDToAccessID = 3;
-
     // Injection of AccessIDs of the access type
-    map<int32, int32> accessIDToType = 4;
+    map<int32, int32> accessIDToType = 2;
 
     // Injection of AccessIDs of literal constant to their respective name
-    map<int32, string> literalIDToName = 5;
+    map<int32, string> literalIDToName = 3;
 
     // set of AccessIDs which correspond to fields for identification as such
-    repeated int32 fieldAccessIDs = 6;
+    repeated int32 fieldAccessIDs = 4;
 
     // Ordered list of IDs of fields that belong to the user API call of the program
-    repeated int32 APIFieldIDs = 7;
+    repeated int32 APIFieldIDs = 5;
 
     // AccessIDs of fields which are represented by a temporary storages
-    repeated int32 temporaryFieldIDs = 8;
+    repeated int32 temporaryFieldIDs = 6;
 
     // AccessIDs of "global variable" accesses
-    repeated int32 globalVariableIDs = 9;
+    repeated int32 globalVariableIDs = 7;
 
     // Strucutue for all the fieldversioning information
-    VariableVersions versionedFields = 10;
+    VariableVersions versionedFields = 8;
 
     // Map of field names to their respective Boundary Condition
-    map<string, dawn.proto.statements.Stmt> fieldnameToBoundaryCondition = 11;
+    map<string, dawn.proto.statements.Stmt> fieldnameToBoundaryCondition = 9;
 
     // Map of field ID's to the user-specified dimensions
-    map<int32, Array3i> fieldIDtoLegalDimensions = 12;
+    map<int32, Array3i> fieldIDtoLegalDimensions = 10;
 
     // Map of the StencilID's to their respective StencilCall
-    map<int32, dawn.proto.statements.Stmt> idToStencilCall = 13;
+    map<int32, dawn.proto.statements.Stmt> idToStencilCall = 11;
 
     // Map of the BoundaryConditionCall to its extent
-    map<int32, Extents> boundaryCallToExtent = 14;
+    map<int32, Extents> boundaryCallToExtent = 12;
 
     // AccessIDs of allocated fields
-    repeated int32 allocatedFieldIDs = 15;
+    repeated int32 allocatedFieldIDs = 13;
 
     // The source-location of the stencil (for better error-handeling)
-    dawn.proto.statements.SourceLocation stencilLocation = 16;
+    dawn.proto.statements.SourceLocation stencilLocation = 14;
 
     // The user-given name of the stencil
     // (remember the 1-1 mapping of user-stencil - StencilInstantiation)
-    string stencilName = 17;
+    string stencilName = 15;
 }
 
 /* ===-----------------------------------------------------------------------------------------===*/

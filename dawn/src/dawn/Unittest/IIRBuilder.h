@@ -16,6 +16,7 @@
 #define DAWN_IIR_IIRBUILDER_H
 
 #include "dawn/CodeGen/CodeGen.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTStmt.h"
 #include "dawn/IIR/MultiStage.h"
 #include "dawn/IIR/Stage.h"
@@ -99,7 +100,7 @@ public:
         v_str,
         sir::Value::typeToBuiltinTypeID(sir::Value::TypeInfo<typename std::decay<T>::type>::Type));
     expr->setID(-si_->nextUID());
-    si_->getMetaData().insertExprToAccessID(expr, acc);
+    expr->template getData<IIRAccessExprData>().AccessID = std::make_optional(acc);
     return expr;
   }
 
@@ -115,8 +116,8 @@ public:
   template <typename... Stmts>
   StmtData block(Stmts&&... stmts) {
     DAWN_ASSERT(si_);
-    auto stmt = std::make_shared<iir::BlockStmt>(
-        std::vector<std::shared_ptr<iir::Stmt>>{std::move(stmts.stmt)...});
+    auto stmt =
+        iir::makeBlockStmt(std::vector<std::shared_ptr<iir::Stmt>>{std::move(stmts.stmt)...});
     auto sap = std::make_unique<iir::StatementAccessesPair>(stmt);
     int x[] = {(stmts.sap ? (sap->insertBlockStatement(std::move(stmts.sap)), 0) : 0)...};
     (void)x;

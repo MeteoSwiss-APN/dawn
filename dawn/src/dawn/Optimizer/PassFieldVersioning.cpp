@@ -14,6 +14,7 @@
 
 #include "dawn/Optimizer/PassFieldVersioning.h"
 #include "dawn/IIR/AST.h"
+#include "dawn/IIR/ASTExpr.h"
 #include "dawn/IIR/ASTVisitor.h"
 #include "dawn/IIR/DependencyGraphAccesses.h"
 #include "dawn/IIR/Extents.h"
@@ -40,7 +41,7 @@ struct AccessIDGetter : public iir::ASTVisitorForwarding {
   AccessIDGetter(const iir::StencilMetaInformation& metadata) : metadata_(metadata) {}
 
   virtual void visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) override {
-    AccessIDs.insert(metadata_.getAccessIDFromExpr(expr));
+    AccessIDs.insert(iir::getAccessID(expr));
   }
 };
 

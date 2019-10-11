@@ -110,7 +110,7 @@ ReoderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
     // First time we encounter this multi-stage, create an empty multi-stage
     pushBackNewMultiStage(iir::LoopOrderKind::LK_Parallel);
 
-    for(const auto& stagePtr : multiStagePtr->getChildren()) {
+    for(auto& stagePtr : multiStagePtr->getChildren()) {
       const iir::Stage& stage = *stagePtr;
       int stageIdx = newNumStages - 1;
 
@@ -173,7 +173,7 @@ ReoderStrategyGreedy::reorder(iir::StencilInstantiation* instantiation,
       }
 
       newNumStages++;
-      newStencil->insertStage(pos, stagePtr->clone());
+      newStencil->insertStage(pos, std::move(stagePtr));
     }
   }
 

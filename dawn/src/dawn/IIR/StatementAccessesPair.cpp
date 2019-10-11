@@ -39,15 +39,8 @@ static std::string toStringImpl(const StatementAccessesPair* pair,
   ss << "\e[1m" << ASTStringifier::toString(pair->getStatement(), curIndent + DAWN_PRINT_INDENT)
      << "\e[0m\n";
 
-  if(pair->getCallerAccesses()) {
-    ss << curIndentStr << "CallerAccesses:\n";
-    ss << pair->getCallerAccesses()->toString(instantiation, curIndent + DAWN_PRINT_INDENT) << "\n";
-  }
-
-  if(pair->getCalleeAccesses()) {
-    ss << curIndentStr << "CalleeAccesses:\n";
-    ss << pair->getCalleeAccesses()->toString(instantiation, curIndent + DAWN_PRINT_INDENT) << "\n";
-  }
+  ss << pair->getStatement()->getData<iir::IIRStmtData>().toString(
+      [&](int AccessID) { return instantiation->getNameFromAccessID(AccessID); }, curIndent);
 
   if(!pair->getBlockStatements().empty()) {
     ss << curIndentStr << "BlockStatements:\n";
@@ -62,21 +55,11 @@ static std::string toStringImpl(const StatementAccessesPair* pair,
 } // anonymous namespace
 
 StatementAccessesPair::StatementAccessesPair(const std::shared_ptr<iir::Stmt>& statement)
-    : statement_(statement), callerAccesses_(nullptr), calleeAccesses_(nullptr) {}
+    : statement_(statement) {}
 
 std::unique_ptr<StatementAccessesPair> StatementAccessesPair::clone() const {
-  auto cloneSAP = std::make_unique<StatementAccessesPair>(statement_);
+  auto cloneSAP = std::make_unique<StatementAccessesPair>(statement_->clone());
 
-  if(callerAccesses_) {
-    cloneSAP->callerAccesses_ = std::make_shared<Accesses>(*callerAccesses_);
-  } else {
-    cloneSAP->callerAccesses_ = nullptr;
-  }
-  if(calleeAccesses_) {
-    cloneSAP->calleeAccesses_ = std::make_shared<Accesses>(*calleeAccesses_);
-  } else {
-    cloneSAP->calleeAccesses_ = nullptr;
-  }
   cloneSAP->blockStatements_ = blockStatements_.clone();
 
   cloneSAP->cloneChildrenFrom(*this);
@@ -90,12 +73,6 @@ void StatementAccessesPair::setStatement(const std::shared_ptr<iir::Stmt>& state
   statement_ = statement;
 }
 
-std::shared_ptr<Accesses> StatementAccessesPair::getAccesses() const { return callerAccesses_; }
-
-void StatementAccessesPair::setAccesses(const std::shared_ptr<Accesses>& accesses) {
-  callerAccesses_ = accesses;
-}
-
 const std::vector<std::unique_ptr<StatementAccessesPair>>&
 StatementAccessesPair::getBlockStatements() const {
   return blockStatements_.getBlockStatements();
@@ -105,58 +82,9 @@ void StatementAccessesPair::insertBlockStatement(std::unique_ptr<StatementAccess
   blockStatements_.insert(std::move(stmt));
 }
 
-std::optional<Extents> StatementAccessesPair::computeMaximumExtents(const int accessID) const {
-  std::optional<Extents> extents;
-
-  if(callerAccesses_->hasReadAccess(accessID) || callerAccesses_->hasWriteAccess(accessID)) {
-    extents = std::optional<Extents>();
-
-    if(callerAccesses_->hasReadAccess(accessID)) {
-      if(!extents)
-        extents = std::make_optional(callerAccesses_->getReadAccess(accessID));
-      else
-        extents->merge(callerAccesses_->getReadAccess(accessID));
-    }
-    if(callerAccesses_->hasWriteAccess(accessID)) {
-      if(!extents)
-        extents = std::make_optional(callerAccesses_->getWriteAccess(accessID));
-      else
-        extents->merge(callerAccesses_->getWriteAccess(accessID));
-    }
-  }
-
-  for(auto const& child : blockStatements_.getBlockStatements()) {
-    auto childExtent = child->computeMaximumExtents(accessID);
-    if(!childExtent)
-      continue;
-    if(extents)
-      extents->merge(*childExtent);
-    else
-      extents = childExtent;
-  }
-
-  return extents;
-}
-
 bool StatementAccessesPair::hasBlockStatements() const {
   return blockStatements_.hasBlockStatements();
 }
-
-std::shared_ptr<Accesses> StatementAccessesPair::getCallerAccesses() const { return getAccesses(); }
-
-void StatementAccessesPair::setCallerAccesses(const std::shared_ptr<Accesses>& accesses) {
-  return setAccesses(accesses);
-}
-
-std::shared_ptr<Accesses> StatementAccessesPair::getCalleeAccesses() const {
-  return calleeAccesses_;
-}
-
-void StatementAccessesPair::setCalleeAccesses(const std::shared_ptr<Accesses>& accesses) {
-  calleeAccesses_ = accesses;
-}
-
-bool StatementAccessesPair::hasCalleeAccesses() { return calleeAccesses_ != nullptr; }
 
 json::json StatementAccessesPair::print(const StencilMetaInformation& metadata,
                                         const AccessToNameMapper& accessToNameMapper,
@@ -189,8 +117,12 @@ json::json StatementAccessesPair::jsonDump(const StencilMetaInformation& metadat
   AccessToNameMapper accessToNameMapper(metadata);
   getStatement()->accept(accessToNameMapper);
 
-  node["write_accesses"] = print(metadata, accessToNameMapper, getAccesses()->getWriteAccesses());
-  node["read_accesses"] = print(metadata, accessToNameMapper, getAccesses()->getReadAccesses());
+  node["write_accesses"] =
+      print(metadata, accessToNameMapper,
+            getStatement()->getData<iir::IIRStmtData>().CallerAccesses->getWriteAccesses());
+  node["read_accesses"] =
+      print(metadata, accessToNameMapper,
+            getStatement()->getData<iir::IIRStmtData>().CallerAccesses->getReadAccesses());
   return node;
 }
 

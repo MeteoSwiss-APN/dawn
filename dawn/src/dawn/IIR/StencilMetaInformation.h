@@ -220,26 +220,10 @@ public:
   const std::shared_ptr<StencilFunctionInstantiation>
   getStencilFunctionInstantiation(const std::shared_ptr<iir::StencilFunCallExpr>& expr) const;
 
-  /// @brief Get the `AccessID` of the Expr (VarAccess or FieldAccess)
-  int getAccessIDFromExpr(const std::shared_ptr<iir::Expr>& expr) const;
-
-  /// @brief Get the `AccessID` of the Stmt (VarDeclStmt)
-  int getAccessIDFromStmt(const std::shared_ptr<iir::Stmt>& stmt) const;
-
   const std::vector<std::shared_ptr<StencilFunctionInstantiation>>&
   getStencilFunctionInstantiations() const {
     return stencilFunctionInstantiations_;
   }
-
-  /// @brief Set the `AccessID` of the Expr (VarAccess or FieldAccess)
-  void setAccessIDOfExpr(const std::shared_ptr<iir::Expr>& expr, const int accessID);
-
-  /// @brief Set the `AccessID` of the Stmt (VarDeclStmt)
-  void setAccessIDOfStmt(const std::shared_ptr<iir::Stmt>& stmt, const int accessID);
-
-  bool hasStmtToAccessID(const std::shared_ptr<iir::Stmt>& stmt) const;
-
-  void addStmtToAccessID(const std::shared_ptr<Stmt>& stmt, const int accessID);
 
   /// @brief Insert a new AccessID - Name pair
   void addAccessIDNamePair(int accessID, const std::string& name);
@@ -248,14 +232,6 @@ public:
 
   /// @brief Remove the field, variable or literal given by `AccessID`
   void removeAccessID(int AccesssID);
-
-  void insertExprToAccessID(const std::shared_ptr<Expr>& expr, int accessID);
-
-  /// @brief erase entry of the Expr to AccessID map
-  void eraseExprToAccessID(std::shared_ptr<Expr> expr);
-
-  /// @brief erase entry of the Stmt to AccessID map
-  void eraseStmtToAccessID(std::shared_ptr<Stmt> stmt);
 
   void eraseStencilCallStmt(std::shared_ptr<iir::StencilCallDeclStmt> stmt);
   void eraseStencilID(const int stencilID);
@@ -302,9 +278,6 @@ public:
   }
 
   std::shared_ptr<std::vector<int>> getVersionsOf(const int accessID) const;
-
-  const std::unordered_map<int, int>& getExprIDToAccessIDMap() const;
-  const std::unordered_map<int, int>& getStmtIDToAccessIDMap() const;
 
   const std::unordered_map<std::shared_ptr<iir::StencilFunCallExpr>,
                            std::shared_ptr<StencilFunctionInstantiation>>&
@@ -393,13 +366,6 @@ private:
   /// "main stencil" we can get the AccessID by name. This is due the fact that fields of different
   /// stencil functions can share the same name.
   DoubleSidedMap<int, std::string> AccessIDToNameMap_;
-
-  /// Surjection of AST Nodes, Expr (FieldAccessExpr or VarAccessExpr) or Stmt (VarDeclStmt), to
-  /// their AccessID. The surjection implies that multiple AST Nodes can have the same AccessID,
-  /// which is the intended behaviour as we want to get the same ID back when we access the same
-  /// field for example
-  std::unordered_map<int, int> ExprIDToAccessIDMap_;
-  std::unordered_map<int, int> StmtIDToAccessIDMap_;
 
   /// Stores the location type for every field as a map to the AccessID
   std::unordered_map<int, ast::Expr::LocationType> FieldAccessIDToLocationTypeMap_;
