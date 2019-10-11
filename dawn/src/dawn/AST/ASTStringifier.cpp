@@ -234,9 +234,7 @@ public:
     auto const& voffset = offset.verticalOffset();
 
     if(!expr->hasArguments()) {
-
-      ss_ << expr->getName();
-      ss_ << "(" << hoffset.offsetI() << ", " << hoffset.offsetJ() << ", " << voffset << ")";
+      ss_ << expr->getName() << "(" << offset << ")";
     } else {
       ss_ << expr->getName() << "[";
 

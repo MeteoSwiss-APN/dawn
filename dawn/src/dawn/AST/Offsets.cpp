@@ -21,10 +21,11 @@
 
 namespace dawn::ast {
 
-std::ostream& operator<<(std::ostream& os, Offsets const& offset) {
-  auto const& hoffset = ast::offset_cast<StructuredOffset const&>(offset.horizontalOffset());
-  auto const& voffset = offset.verticalOffset();
-  return os << hoffset.offsetI() << ", " << hoffset.offsetJ() << ", " << voffset;
+std::ostream& operator<<(std::ostream& os, Offsets const& offset) { return os << toString(offset); }
+
+std::string toString(Offsets const& offsets, std::string const& sep) {
+  return toString(offsets, sep,
+                  [](std::string const&, int offset) { return std::to_string(offset); });
 }
 
 } // namespace dawn::ast

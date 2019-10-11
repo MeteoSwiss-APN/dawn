@@ -168,13 +168,6 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) 
   Base::visit(expr);
 }
 
-static void printOffset(std::ostream& os, ast::Offsets const& offset) {
-  auto const& hoffset = ast::offset_cast<ast::StructuredOffset const&>(offset.horizontalOffset());
-  auto const& voffset = offset.verticalOffset();
-
-  os << "(" << hoffset.offsetI() << "," << hoffset.offsetJ() << "," << voffset << ")";
-}
-
 void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   if(!nestingOfStencilFunArgLists_)
     ss_ << "eval(";
@@ -183,11 +176,10 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
 
   if(currentFunction_) {
     ss_ << currentFunction_->getOriginalNameFromCallerAccessID(
-        currentFunction_->getAccessIDFromExpr(expr));
-    printOffset(ss_, currentFunction_->evalOffsetOfFieldAccessExpr(expr, false));
+               currentFunction_->getAccessIDFromExpr(expr))
+        << "(" << currentFunction_->evalOffsetOfFieldAccessExpr(expr, false) << ")";
   } else {
-    ss_ << getName(expr);
-    printOffset(ss_, expr->getOffset());
+    ss_ << getName(expr) << "(" << expr->getOffset() << ")";
   }
 
   if(!nestingOfStencilFunArgLists_)

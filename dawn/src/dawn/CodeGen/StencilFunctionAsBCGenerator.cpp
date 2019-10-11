@@ -13,27 +13,6 @@ std::string StencilFunctionAsBCGenerator::getName(const std::shared_ptr<iir::Exp
 }
 
 void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
-  auto printOffset = [](const ast::Offsets& argOffset) {
-    auto const& hoffset =
-        ast::offset_cast<ast::StructuredOffset const&>(argOffset.horizontalOffset());
-    auto const& voffset = argOffset.verticalOffset();
-
-    std::string delim;
-
-    std::ostringstream os;
-    if(hoffset.offsetI()) {
-      os << delim << " + " << hoffset.offsetI();
-      delim = ", ";
-    }
-    if(hoffset.offsetJ()) {
-      os << delim << " + " << hoffset.offsetJ();
-      delim = ", ";
-    }
-    if(voffset) {
-      os << delim << " + " << voffset;
-    }
-    return os.str();
-  };
   expr->getName();
   auto getArgumentIndex = [&](const std::string& name) {
     size_t pos =
@@ -47,7 +26,7 @@ void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::FieldAccessE
     return pos;
   };
   ss_ << dawn::format("data_field_%i(%s)", getArgumentIndex(expr->getName()),
-                      printOffset(expr->getOffset()));
+                      toString(expr->getOffset()));
 }
 
 void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::VarAccessExpr>& expr) {

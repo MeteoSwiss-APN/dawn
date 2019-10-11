@@ -51,12 +51,15 @@ public:
   }
   int getOffset(Dimension const& dim) const { return getOffsetImpl(dim); }
 
+  bool isZero() const { return isZeroImpl(); }
+
 protected:
   virtual HorizontalOffsetImpl* cloneImpl() const = 0;
   virtual bool equalsImpl(HorizontalOffsetImpl const&) const = 0;
   virtual HorizontalOffsetImpl& addImpl(HorizontalOffsetImpl const&) = 0;
   virtual std::vector<std::reference_wrapper<const Dimension>> getDimensionsImpl() const = 0;
   virtual int getOffsetImpl(Dimension const& dim) const = 0;
+  virtual bool isZeroImpl() const = 0;
 };
 
 class StructuredOffset : public HorizontalOffsetImpl {
@@ -85,11 +88,14 @@ protected:
     return {std::cref(dimensionI_), std::cref(dimensionJ_)};
   }
 
-  int getOffsetImpl(Dimension const& dim) const {
+  int getOffsetImpl(Dimension const& dim) const override {
     if(dim == dimensionI_)
       return horizontalOffset_[0];
     else
       return horizontalOffset_[1];
+  }
+  bool isZeroImpl() const override {
+    return horizontalOffset_[0] == 0 && horizontalOffset_[1] == 0;
   }
 
 private:
@@ -123,6 +129,7 @@ public:
     return impl_->getDimensions();
   }
   int getOffset(Dimension const& dim) const { return impl_->getOffset(dim); }
+  bool isZero() const { return impl_->isZero(); }
 
   template <typename T>
   friend T offset_cast(HorizontalOffset const& offset);
@@ -158,22 +165,6 @@ public:
     return *this;
   }
 
-  // TODO this I guess weshould remove
-  int getOffset(int i) const {
-    auto const& hoffset = ast::offset_cast<StructuredOffset const&>(horizontalOffset());
-    auto const& voffset = verticalOffset();
-    switch(i) {
-    case 0:
-      return hoffset.offsetI();
-    case 1:
-      return hoffset.offsetJ();
-    case 2:
-      return voffset;
-    default:
-      dawn_unreachable("invalid offset");
-    }
-  }
-
   int getOffset(Dimension const& dim) const {
     if(dim == verticalDimension_)
       return verticalOffset_;
@@ -186,12 +177,29 @@ public:
     return ret;
   }
 
+  bool isZero() const { return verticalOffset_ == 0 && horizontalOffset_.isZero(); }
+
 private:
   HorizontalOffset horizontalOffset_;
   int verticalOffset_ = 0;
 
   static constexpr Dimension verticalDimension_{"k"};
 };
+template <typename F>
+std::string toString(Offsets const& offset, std::string const& sep, F&& f) {
+  auto const& hoffset = ast::offset_cast<StructuredOffset const&>(offset.horizontalOffset());
+  auto const& voffset = offset.verticalOffset();
+  std::string s;
+  if(auto ret = f("i", hoffset.offsetI()); ret != "")
+    s += ret + sep;
+  if(auto ret = f("j", hoffset.offsetJ()); ret != "")
+    s += ret + sep;
+  if(auto ret = f("k", voffset); ret != "")
+    s += ret + sep;
+  return s;
+}
+std::string toString(Offsets const& offset, std::string const& sep = ",");
+// the default printer prints "i, j, k" for structured grids, otherwise you should use toString
 std::ostream& operator<<(std::ostream& os, Offsets const& offsets);
 
 } // namespace dawn::ast

@@ -184,15 +184,11 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
         // since they are "inlined" in the code generation of the function
         if(argStencilFn.isArgField(argIdx)) {
           auto offset = currentFunction_->evalOffsetOfFieldAccessExpr(expr, false);
-          auto const& hoffset =
-              ast::offset_cast<ast::StructuredOffset const&>(offset.horizontalOffset());
-          auto const& voffset = offset.verticalOffset();
 
           std::string accessName =
               currentFunction_->getArgNameFromFunctionCall(argStencilFn.getName());
           ss_ << ", "
-              << "pw_" + accessName << ".cloneWithOffset(std::array<int, 3>{" << hoffset.offsetI()
-              << "," << hoffset.offsetJ() << "," << voffset << "}";
+              << "pw_" + accessName << ".cloneWithOffset(std::array<int, 3>{" << offset << "}";
           ss_ << "})";
         }
       }

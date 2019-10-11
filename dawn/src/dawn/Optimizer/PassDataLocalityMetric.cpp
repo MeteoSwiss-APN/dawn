@@ -169,7 +169,7 @@ public:
       if(!register_.count(AccessID)) {
 
         // Cache the center access
-        if(getOffset(fieldExpr) == ast::Offsets{ast::structured})
+        if(getOffset(fieldExpr).isZero())
           register_.insert(AccessID);
 
         // Check if the field is either cached or stored in the texture cache
@@ -184,7 +184,7 @@ public:
       if(!multiStage_.isCached(AccessID)) {
 
         // Check if the center is stored in a register
-        if(!(register_.count(AccessID) && getOffset(fieldExpr) == ast::Offsets{ast::structured})) {
+        if(!register_.count(AccessID) || !getOffset(fieldExpr).isZero()) {
           numReads_++;
           individualReadWrites_[AccessID].numReads++;
         }

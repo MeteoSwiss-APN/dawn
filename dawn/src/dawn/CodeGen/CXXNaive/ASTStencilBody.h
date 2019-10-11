@@ -50,15 +50,13 @@ protected:
   /// @brief produces a string of (i,j,k) accesses for the C++ generated naive code,
   /// from an array of offseted accesses
   ///
-  std::string ijkfyOffset(const ast::Offsets& offset, std::string accessName) {
-    auto const& hoffset = ast::offset_cast<ast::StructuredOffset const&>(offset.horizontalOffset());
-    auto const& voffset = offset.verticalOffset();
-    std::ostringstream ss;
-    ss << "(";
-    ss << "i+" << hoffset.offsetI() << ",";
-    ss << "j+" << hoffset.offsetJ() << ",";
-    ss << "k+" << voffset + ")";
-    return ss.str();
+  std::string ijkfyOffset(const ast::Offsets& offsets, std::string accessName) {
+    return "(" +
+           toString(offsets, ", ",
+                    [](std::string const& name, int offset) {
+                      return name + "+" + std::to_string(offset);
+                    }) +
+           ")";
   }
 
 public:

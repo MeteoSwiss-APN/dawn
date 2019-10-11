@@ -63,13 +63,8 @@ void ASTStencilFunctionParamVisitor::visit(const std::shared_ptr<iir::FieldAcces
   std::string fieldName = (currentFunction_) ? currentFunction_->getOriginalNameFromCallerAccessID(
                                                    currentFunction_->getAccessIDFromExpr(expr))
                                              : getName(expr);
-  auto const offset = expr->getOffset();
-  auto const& hoffset = ast::offset_cast<ast::StructuredOffset const&>(offset.horizontalOffset());
-  auto const& voffset = offset.verticalOffset();
-
   ss_ << ",param_wrapper<decltype(" << fieldName << ")>(" << fieldName << ","
-      << "std::array<int, 3>{" << hoffset.offsetI() << "," << hoffset.offsetJ() << "," << voffset
-      << "}+" + fieldName + "_offsets)";
+      << "std::array<int, 3>{" << expr->getOffset() << "}+" + fieldName + "_offsets)";
 }
 
 std::string ASTStencilFunctionParamVisitor::getCodeAndResetStream() {

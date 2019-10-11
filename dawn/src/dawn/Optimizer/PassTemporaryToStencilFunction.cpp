@@ -139,17 +139,10 @@ std::string makeOnTheFlyFunctionCandidateName(const std::shared_ptr<iir::FieldAc
 /// @brief create the name of a newly created stencil function associated to a tmp computations
 std::string makeOnTheFlyFunctionName(const std::shared_ptr<iir::FieldAccessExpr>& expr,
                                      const iir::Interval& interval) {
-  auto offsetToString = [](std::string const& s, int a) {
-    return s + "_" + ((a < 0) ? "minus" : "") + std::to_string(std::abs(a));
-  };
-  auto const& hOffset =
-      ast::offset_cast<ast::StructuredOffset const&>(expr->getOffset().horizontalOffset());
-  auto const& vOffset = expr->getOffset().verticalOffset();
-
-  std::string s = makeOnTheFlyFunctionCandidateName(expr, interval) + "_";
-  s += offsetToString("i", hOffset.offsetI()) + "_" + offsetToString("j", hOffset.offsetJ()) + "_" +
-       offsetToString("k", vOffset);
-  return s;
+  return makeOnTheFlyFunctionCandidateName(expr, interval) + "_" +
+         toString(expr->getOffset(), "_", [](std::string const& name, int offset) {
+           return name + "_" + ((offset < 0) ? "minus" : "") + std::to_string(std::abs(offset));
+         });
 }
 
 std::string makeOnTheFlyFunctionCandidateName(const std::string fieldName,
@@ -166,8 +159,8 @@ protected:
   sir::Interval interval_; // interval where the function declaration will be defined
   std::shared_ptr<sir::StencilFunction>
       tmpFunction_;            // sir function with the declaration of the tmp computation
-  std::vector<int> accessIDs_; // accessIDs of the accesses that form the tmp = ... expression, that
-                               // will become arguments of the stencil fn
+  std::vector<int> accessIDs_; // accessIDs of the accesses that form the tmp = ... expression,
+                               // that will become arguments of the stencil fn
 
   std::shared_ptr<iir::FieldAccessExpr> tmpFieldAccessExpr_ =
       nullptr; // the field access expr of the temporary that is captured and being replaced by

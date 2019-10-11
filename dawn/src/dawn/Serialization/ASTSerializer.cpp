@@ -368,9 +368,12 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
 
   protoExpr->set_name(expr->getName());
 
-  // TODO
-  // for(int offset : expr->getOffset())
-  // protoExpr->add_offset(offset);
+  auto const& hoffset =
+      ast::offset_cast<StructuredOffset const&>(expr->getOffset().horizontalOffset());
+  auto const& voffset = expr->getOffset().verticalOffset();
+  protoExpr->add_offset(hoffset.offsetI());
+  protoExpr->add_offset(hoffset.offsetJ());
+  protoExpr->add_offset(voffset);
 
   for(int argOffset : expr->getArgumentOffset())
     protoExpr->add_argument_offset(argOffset);
