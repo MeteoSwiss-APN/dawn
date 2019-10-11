@@ -16,11 +16,15 @@ endif()
 
 set(ENV{PYTHONPATH} "$ENV{PYTHONPATH}:${CMAKE_INSTALL_PREFIX}/python")
 foreach(example ${examples})
-  execute_process(COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_INSTALL_PREFIX}/examples/python/${example}.py)
+  execute_process(COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_INSTALL_PREFIX}/examples/python/${example}.py RESULT_VARIABLE res)
+  if(NOT ${res} EQUAL 0)
+    message(FATAL_ERROR "SIR Python example did not run. TEST failed")
+  endif()
+
   if(${example} IN_LIST verified_examples)
     execute_process(COMMAND diff ${CMAKE_INSTALL_PREFIX}/examples/python/data/${example}.cpp ${CMAKE_INSTALL_PREFIX}/examples/python/data/${example}_ref.cpp RESULT_VARIABLE res)
 
-    if(NOT ${res} EQUAL 0) 
+    if(NOT ${res} EQUAL 0)
       message(FATAL_ERROR "SIR Python example ${example} TEST failed")
     else() 
       message("SIR Python example ${example} TEST succeded")
