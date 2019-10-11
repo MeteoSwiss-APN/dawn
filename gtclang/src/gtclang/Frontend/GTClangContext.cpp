@@ -17,7 +17,6 @@
 #include "gtclang/Frontend/GTClangContext.h"
 #include "dawn/Support/Assert.h"
 #include "clang/AST/ASTContext.h"
-#include "llvm/ADT/STLExtras.h"
 
 namespace gtclang {
 

@@ -41,7 +41,6 @@
 #include "clang/Basic/Version.h"
 #include "clang/Lex/Lexer.h"
 #include "clang/Rewrite/Core/Rewriter.h"
-#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringSwitch.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/MemoryBuffer.h"
