@@ -1,6 +1,6 @@
+#include "mylib_interface.hpp"
 #include <fstream>
 #include <gridtools/clang_dsl.hpp>
-#include "mylib_interface.hpp"
 using namespace mylibInterface;
 
 #include "generated.hpp"

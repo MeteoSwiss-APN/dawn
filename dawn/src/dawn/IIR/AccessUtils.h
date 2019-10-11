@@ -32,8 +32,7 @@ void recordWriteAccess(std::unordered_map<int, iir::Field>& inputOutputFields,
                        std::unordered_map<int, iir::Field>& outputFields, int AccessID,
                        const std::optional<iir::Extents>& extents,
                        iir::Interval const& doMethodInterval,
-                       ast::Expr::LocationType location = ast::Expr::LocationType::Cells
-                       );
+                       ast::Expr::LocationType location = ast::Expr::LocationType::Cells);
 
 /// @brief given a read access, with AccessID, it will recorded in the corresponding map of input,
 /// output or inputOutput
