@@ -142,7 +142,7 @@ void DoMethod::updateLevel() {
         continue;
       }
 
-      if(metaData_.getIsUnstructuredFromAcessID(AccessID)) {
+      if(metaData_.getIsUnstructuredFromAccessID(AccessID)) {
         AccessUtils::recordWriteAccess(inputOutputFields, inputFields, outputFields, AccessID,
                                        extents, getInterval(),
                                        metaData_.getLocationTypeFromAccessID(AccessID));
@@ -161,7 +161,7 @@ void DoMethod::updateLevel() {
         continue;
       }
 
-      if(metaData_.getIsUnstructuredFromAcessID(AccessID)) {
+      if(metaData_.getIsUnstructuredFromAccessID(AccessID)) {
         AccessUtils::recordReadAccess(inputOutputFields, inputFields, outputFields, AccessID,
                                       extents, getInterval(),
                                       metaData_.getLocationTypeFromAccessID(AccessID));
