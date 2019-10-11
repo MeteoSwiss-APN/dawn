@@ -28,18 +28,16 @@ namespace clang_compat {
 
 #if CLANG_VERSION_MAJOR < 9
 template <typename StmtT>
-typename std::enable_if<std::is_base_of<clang::Stmt, typename std::decay<StmtT>::type>::value,
-                        StmtT*>::type
-skipAllImplicitNodes(StmtT* e) {
+StmtT* skipAllImplicitNodes(StmtT* e) {
+  static_assert(std::is_base_of_v<clang::Stmt, std::decay_t<StmtT>>);
   while(e != e->IgnoreImplicit())
     e = e->IgnoreImplicit();
   return e;
 }
 #else
 template <typename StmtT>
-typename std::enable_if<std::is_base_of<clang::Stmt, typename std::decay<StmtT>::type>::value,
-                        StmtT*>::type
-skipAllImplicitNodes(StmtT* s) {
+StmtT* skipAllImplicitNodes(StmtT* s) {
+  static_assert(std::is_base_of_v<clang::Stmt, std::decay_t<StmtT>>);
   if(auto* e = llvm::dyn_cast_or_null<clang::Expr>(s)) {
     while(e != e->IgnoreImplicit())
       e = e->IgnoreImplicit();
