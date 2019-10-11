@@ -130,22 +130,26 @@ public:
   }
 };
 
-static std::string offsetToString(int a) {
-  return ((a < 0) ? "minus" : "") + std::to_string(std::abs(a));
+/// @brief create the name of a newly created stencil function associated to a tmp computations
+std::string makeOnTheFlyFunctionCandidateName(const std::shared_ptr<iir::FieldAccessExpr>& expr,
+                                              const iir::Interval& interval) {
+  return expr->getName() + "_OnTheFly_" + interval.toStringGen();
 }
 
 /// @brief create the name of a newly created stencil function associated to a tmp computations
 std::string makeOnTheFlyFunctionName(const std::shared_ptr<iir::FieldAccessExpr>& expr,
                                      const iir::Interval& interval) {
-  return expr->getName() + "_OnTheFly_" + interval.toStringGen() + "_i" +
-         offsetToString(expr->getOffset()[0]) + "_j" + offsetToString(expr->getOffset()[1]) + "_k" +
-         offsetToString(expr->getOffset()[2]);
-}
+  auto offsetToString = [](std::string const& s, int a) {
+    return s + "_" + ((a < 0) ? "minus" : "") + std::to_string(std::abs(a));
+  };
+  auto const& hOffset =
+      ast::offset_cast<ast::StructuredOffset const&>(expr->getOffset().horizontalOffset());
+  auto const& vOffset = expr->getOffset().verticalOffset();
 
-/// @brief create the name of a newly created stencil function associated to a tmp computations
-std::string makeOnTheFlyFunctionCandidateName(const std::shared_ptr<iir::FieldAccessExpr>& expr,
-                                              const iir::Interval& interval) {
-  return expr->getName() + "_OnTheFly_" + interval.toStringGen();
+  std::string s = makeOnTheFlyFunctionCandidateName(expr, interval) + "_";
+  s += offsetToString("i", hOffset.offsetI()) + "_" + offsetToString("j", hOffset.offsetJ()) + "_" +
+       offsetToString("k", vOffset);
+  return s;
 }
 
 std::string makeOnTheFlyFunctionCandidateName(const std::string fieldName,

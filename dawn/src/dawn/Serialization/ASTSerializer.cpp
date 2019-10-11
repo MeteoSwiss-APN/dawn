@@ -368,8 +368,9 @@ void ProtoStmtBuilder::visit(const std::shared_ptr<FieldAccessExpr>& expr) {
 
   protoExpr->set_name(expr->getName());
 
-  for(int offset : expr->getOffset())
-    protoExpr->add_offset(offset);
+  // TODO
+  // for(int offset : expr->getOffset())
+  // protoExpr->add_offset(offset);
 
   for(int argOffset : expr->getArgumentOffset())
     protoExpr->add_argument_offset(argOffset);
@@ -605,8 +606,9 @@ std::shared_ptr<Expr> makeExpr(const proto::statements::Expr& expressionProto) {
                 argumentMap.begin());
     }
 
-    auto expr = std::make_shared<FieldAccessExpr>(name, offset, argumentMap, argumentOffset,
-                                                  negateOffset, makeLocation(exprProto));
+    auto expr =
+        std::make_shared<FieldAccessExpr>(name, ast::Offset{offset}, argumentMap, argumentOffset,
+                                          negateOffset, makeLocation(exprProto));
     expr->setID(exprProto.id());
     return expr;
   }

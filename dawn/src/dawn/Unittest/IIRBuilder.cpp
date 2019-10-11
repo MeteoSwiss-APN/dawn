@@ -178,9 +178,9 @@ IIRBuilder::LocalVar IIRBuilder::localvar(std::string const& name, BuiltinTypeID
   return {id, name, iirStmt};
 }
 std::shared_ptr<iir::Expr> IIRBuilder::at(IIRBuilder::Field const& field, accessType access,
-                                          Array3i extent) {
+                                          Array3i offset) {
   DAWN_ASSERT(si_);
-  auto expr = std::make_shared<iir::FieldAccessExpr>(field.name, extent);
+  auto expr = std::make_shared<iir::FieldAccessExpr>(field.name, ast::Offset{offset});
   expr->setID(si_->nextUID());
 
   si_->getMetaData().insertExprToAccessID(expr, field.id);

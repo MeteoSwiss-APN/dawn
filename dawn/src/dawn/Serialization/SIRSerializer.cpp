@@ -458,8 +458,9 @@ static std::shared_ptr<sir::Expr> makeExpr(const dawn::proto::statements::Expr& 
                 argumentMap.begin());
     }
 
-    return std::make_shared<sir::FieldAccessExpr>(name, offset, argumentMap, argumentOffset,
-                                                  negateOffset, makeLocation(exprProto));
+    return std::make_shared<sir::FieldAccessExpr>(name, ast::Offset{offset}, argumentMap,
+                                                  argumentOffset, negateOffset,
+                                                  makeLocation(exprProto));
   }
   case dawn::proto::statements::Expr::kLiteralAccessExpr: {
     const auto& exprProto = expressionProto.literal_access_expr();

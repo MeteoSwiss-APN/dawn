@@ -21,24 +21,19 @@
 namespace dawn {
 namespace iir {
 
-Extents::Extents(const Array3i& offset) {
+Extents::Extents(const ast::Offset& offset) {
+  auto const& hOffset = ast::offset_cast<ast::StructuredOffset const&>(offset.horizontalOffset());
+  std::array<int, 3> offsetArray = {hOffset.offsetI(), hOffset.offsetJ(), offset.verticalOffset()};
 
-  extents_ = std::array<Extent, 3>{};
-
-  DAWN_ASSERT(extents_.size() == offset.size());
-
-  for(std::size_t i = 0; i < extents_.size(); ++i) {
-    extents_[i].Minus = offset[i];
-    extents_[i].Plus = offset[i];
-  }
+  for(int i = 0; i < extents_.size(); ++i)
+    extents_[i].Minus = extents_[i].Plus = offsetArray[i];
 }
 
 Extents::Extents(int extent1Minus, int extent1Plus, int extent2Minus, int extent2Plus,
-                 int extent3Minus, int extent3Plus) {
-  extents_ =
-      std::array<Extent, 3>({{Extent{extent1Minus, extent1Plus}, Extent{extent2Minus, extent2Plus},
-                              Extent{extent3Minus, extent3Plus}}});
-}
+                 int extent3Minus, int extent3Plus)
+    : extents_({{{extent1Minus, extent1Plus},
+                 {extent2Minus, extent2Plus},
+                 {extent3Minus, extent3Plus}}}) {}
 
 void Extents::addCenter(const unsigned int dim) {
   DAWN_ASSERT(dim < 3);
@@ -61,11 +56,12 @@ void Extents::expand(const Extents& other) {
     extents_[i].expand(other.getExtents()[i]);
 }
 
-void Extents::merge(const Array3i& offset) {
-  DAWN_ASSERT(extents_.size() == offset.size());
+void Extents::merge(const ast::Offset& offset) {
+  auto const& hOffset = ast::offset_cast<ast::StructuredOffset const&>(offset.horizontalOffset());
+  std::array<int, 3> offsetArray = {hOffset.offsetI(), hOffset.offsetJ(), offset.verticalOffset()};
 
   for(std::size_t i = 0; i < extents_.size(); ++i)
-    extents_[i].merge(Extent{offset[i], offset[i]});
+    extents_[i].merge(Extent{offsetArray[i], offsetArray[i]});
 }
 
 void Extents::add(const Extents& other) {
@@ -81,11 +77,12 @@ Extents Extents::add(const Extents& lhs, const Extents& rhs) {
   return sum;
 }
 
-void Extents::add(const Array3i& offset) {
-  DAWN_ASSERT(extents_.size() == offset.size());
+void Extents::add(const ast::Offset& offset) {
+  auto const& hOffset = ast::offset_cast<ast::StructuredOffset const&>(offset.horizontalOffset());
+  std::array<int, 3> offsetArray = {hOffset.offsetI(), hOffset.offsetJ(), offset.verticalOffset()};
 
   for(std::size_t i = 0; i < extents_.size(); ++i)
-    extents_[i].add(offset[i]);
+    extents_[i].add(offsetArray[i]);
 }
 
 bool Extents::empty() { return extents_.empty(); }

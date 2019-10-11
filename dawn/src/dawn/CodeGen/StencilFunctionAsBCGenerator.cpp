@@ -13,15 +13,26 @@ std::string StencilFunctionAsBCGenerator::getName(const std::shared_ptr<iir::Exp
 }
 
 void StencilFunctionAsBCGenerator::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
-  auto printOffset = [](const Array3i& argumentoffsets) {
-    std::string retval = "";
-    std::array<std::string, 3> dims{"i", "j", "k"};
-    for(int i = 0; i < 3; ++i) {
-      retval +=
-          dims[i] + (argumentoffsets[i] != 0 ? " + " + std::to_string(argumentoffsets[i]) + ", "
-                                             : (i < 2 ? ", " : ""));
+  auto printOffset = [](const ast::Offset& argOffset) {
+    auto const& hoffset =
+        ast::offset_cast<ast::StructuredOffset const&>(argOffset.horizontalOffset());
+    auto const& voffset = argOffset.verticalOffset();
+
+    std::string delim;
+
+    std::ostringstream os;
+    if(hoffset.offsetI()) {
+      os << delim << " + " << hoffset.offsetI();
+      delim = ", ";
     }
-    return retval;
+    if(hoffset.offsetJ()) {
+      os << delim << " + " << hoffset.offsetJ();
+      delim = ", ";
+    }
+    if(voffset) {
+      os << delim << " + " << voffset;
+    }
+    return os.str();
   };
   expr->getName();
   auto getArgumentIndex = [&](const std::string& name) {

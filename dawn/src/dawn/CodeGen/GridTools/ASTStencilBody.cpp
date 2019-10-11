@@ -27,7 +27,7 @@ ASTStencilBody::ASTStencilBody(
     const iir::StencilMetaInformation& metadata,
     const std::unordered_set<iir::IntervalProperties>& intervalProperties)
     : ASTCodeGenCXX(), metadata_(metadata), intervalProperties_(intervalProperties),
-      offsetPrinter_(",", "(", ")"), currentFunction_(nullptr), nestingOfStencilFunArgLists_(0) {}
+      currentFunction_(nullptr), nestingOfStencilFunArgLists_(0) {}
 
 ASTStencilBody::~ASTStencilBody() {}
 
@@ -168,6 +168,13 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::LiteralAccessExpr>& expr) 
   Base::visit(expr);
 }
 
+static void printOffset(std::ostream& os, ast::Offset const& offset) {
+  auto const& hoffset = ast::offset_cast<ast::StructuredOffset const&>(offset.horizontalOffset());
+  auto const& voffset = offset.verticalOffset();
+
+  os << "(" << hoffset.offsetI() << "," << hoffset.offsetJ() << "," << voffset << ")";
+}
+
 void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
   if(!nestingOfStencilFunArgLists_)
     ss_ << "eval(";
@@ -176,10 +183,12 @@ void ASTStencilBody::visit(const std::shared_ptr<iir::FieldAccessExpr>& expr) {
 
   if(currentFunction_) {
     ss_ << currentFunction_->getOriginalNameFromCallerAccessID(
-               currentFunction_->getAccessIDFromExpr(expr))
-        << offsetPrinter_(currentFunction_->evalOffsetOfFieldAccessExpr(expr, false));
-  } else
-    ss_ << getName(expr) << offsetPrinter_(expr->getOffset());
+        currentFunction_->getAccessIDFromExpr(expr));
+    printOffset(ss_, currentFunction_->evalOffsetOfFieldAccessExpr(expr, false));
+  } else {
+    ss_ << getName(expr);
+    printOffset(ss_, expr->getOffset());
+  }
 
   if(!nestingOfStencilFunArgLists_)
     ss_ << ")";

@@ -230,7 +230,8 @@ public:
 
   void visit(const std::shared_ptr<FieldAccessExpr>& expr) override {
     if(!expr->hasArguments()) {
-      ss_ << expr->getName() << RangeToString()(expr->getOffset());
+      // TODO
+      // ss_ << expr->getName() << RangeToString()(expr->getOffset());
     } else {
       ss_ << expr->getName() << "[";
 
@@ -243,7 +244,8 @@ public:
           if(argOffset[i] != 0)
             ss_ << (argOffset[i] > 0 ? "+" : "") << argOffset[i];
         } else {
-          ss_ << expr->getOffset()[i];
+          // TODO
+          // ss_ << expr->getOffset()[i];
         }
         ss_ << (i == (expr->getArgumentMap().size() - 1) ? "]" : ", ");
       }

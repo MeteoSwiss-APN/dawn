@@ -28,6 +28,8 @@ yoda_add_library(
           ASTVisitor.cpp
           ASTVisitor.h
           ASTVisitorHelpers.h
+          Offset.h
+          Offset.cpp
   OBJECT
 )
 

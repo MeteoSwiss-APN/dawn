@@ -128,7 +128,7 @@ private:
 
   /// Map of *caller* AccessID to the initial offset of the field (e.g the initial offset of the
   /// field mapping to the first argument in `avg(in(i+1))` would be [1, 0, 0])
-  std::unordered_map<int, Array3i> CallerAccessIDToInitialOffsetMap_;
+  std::unordered_map<int, dawn::ast::Offset> CallerAccessIDToInitialOffsetMap_;
 
   //===----------------------------------------------------------------------------------------===//
   //     Expr/Stmt to caller AccessID maps
@@ -233,8 +233,8 @@ public:
 
   /// @brief Evaluate the offset of the field access expression (this performs the lazy evaluation
   /// of the offsets)
-  Array3i evalOffsetOfFieldAccessExpr(const std::shared_ptr<iir::FieldAccessExpr>& expr,
-                                      bool applyInitialOffset = true) const;
+  dawn::ast::Offset evalOffsetOfFieldAccessExpr(const std::shared_ptr<iir::FieldAccessExpr>& expr,
+                                                bool applyInitialOffset = true) const;
 
   /// @brief returns true if the argument in the argumentIndex position is bound to an offset
   /// argument
@@ -287,8 +287,8 @@ public:
 
   /// @brief Get/Set the initial offset of the @b caller given the caller AccessID
   /// @{
-  const Array3i& getCallerInitialOffsetFromAccessID(int callerAccessID) const;
-  void setCallerInitialOffsetFromAccessID(int callerAccessID, const Array3i& offset);
+  const dawn::ast::Offset& getCallerInitialOffsetFromAccessID(int callerAccessID) const;
+  void setCallerInitialOffsetFromAccessID(int callerAccessID, const dawn::ast::Offset& offset);
   /// @}
 
   /// @brief Get/Set if a field (given by its AccessID) is provided via a stencil function call
@@ -361,8 +361,8 @@ public:
   std::unordered_map<int, std::string>& getAccessIDToNameMap();
   const std::unordered_map<int, std::string>& getAccessIDToNameMap() const;
 
-  std::unordered_map<int, Array3i>& getCallerAccessIDToInitialOffsetMap();
-  const std::unordered_map<int, Array3i>& getCallerAccessIDToInitialOffsetMap() const;
+  std::unordered_map<int, dawn::ast::Offset>& getCallerAccessIDToInitialOffsetMap();
+  const std::unordered_map<int, dawn::ast::Offset>& getCallerAccessIDToInitialOffsetMap() const;
 
   /// @brief Get StencilFunctionInstantiation of the `StencilFunCallExpr`
   const std::unordered_map<std::shared_ptr<iir::StencilFunCallExpr>,
