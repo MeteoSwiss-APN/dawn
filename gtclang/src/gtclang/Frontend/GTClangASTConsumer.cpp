@@ -65,7 +65,7 @@ static const std::string currentDateTime() {
 
 /// @brief Extract the DAWN options from the GTClang options
 static std::unique_ptr<dawn::Options> makeDAWNOptions(const Options& options) {
-  auto DAWNOptions = llvm::make_unique<dawn::Options>();
+  auto DAWNOptions = std::make_unique<dawn::Options>();
 #define OPT(TYPE, NAME, DEFAULT_VALUE, OPTION, OPTION_SHORT, HELP, VALUE_NAME, HAS_VALUE, F_GROUP) \
   DAWNOptions->NAME = options.NAME;
 #include "dawn/Compiler/Options.inc"
@@ -77,7 +77,7 @@ GTClangASTConsumer::GTClangASTConsumer(GTClangContext* context, const std::strin
                                        GTClangASTAction* parentAction)
     : context_(context), file_(file), parentAction_(parentAction) {
   DAWN_LOG(INFO) << "Creating ASTVisitor ... ";
-  visitor_ = llvm::make_unique<GTClangASTVisitor>(context);
+  visitor_ = std::make_unique<GTClangASTVisitor>(context);
 }
 
 void GTClangASTConsumer::HandleTranslationUnit(clang::ASTContext& ASTContext) {

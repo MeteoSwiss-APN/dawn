@@ -22,7 +22,7 @@
 namespace gtclang {
 
 GTClangContext::GTClangContext()
-    : options_(llvm::make_unique<Options>()), diagnostics_(nullptr), astContext_(nullptr) {}
+    : options_(std::make_unique<Options>()), diagnostics_(nullptr), astContext_(nullptr) {}
 
 Options& GTClangContext::getOptions() {
   DAWN_ASSERT(options_);
@@ -46,7 +46,7 @@ const Diagnostics& GTClangContext::getDiagnostics() const {
 
 void GTClangContext::setDiagnostics(clang::DiagnosticsEngine* diags) {
   DAWN_ASSERT_MSG(!diagnostics_, "Diagnostics already set!");
-  diagnostics_ = llvm::make_unique<Diagnostics>(diags);
+  diagnostics_ = std::make_unique<Diagnostics>(diags);
 }
 
 bool GTClangContext::hasDiagnostics() const { return (diagnostics_ != nullptr); }
