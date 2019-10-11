@@ -351,7 +351,7 @@ public:
     return StencilIDToStencilCallMap_;
   }
 
-  bool getIsUnstructuredFromAcessID(int AcessID) const;
+  bool getIsUnstructuredFromAccessID(int AccessID) const;
   dawn::ast::Expr::LocationType getLocationTypeFromAccessID(int ID) const;
   void addAccessIDLocationPair(int ID, dawn::ast::Expr::LocationType location);
 

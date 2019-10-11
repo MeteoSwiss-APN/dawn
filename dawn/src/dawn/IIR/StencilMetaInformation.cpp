@@ -364,12 +364,20 @@ int StencilMetaInformation::addTmpField(FieldAccessType type, const std::string&
   return accessID;
 }
 
-bool StencilMetaInformation::getIsUnstructuredFromAcessID(int AccessID) const {
+bool StencilMetaInformation::getIsUnstructuredFromAccessID(int AccessID) const {
   return FieldAccessIDToLocationTypeMap_.count(AccessID) != 0;
 }
 
 ast::Expr::LocationType StencilMetaInformation::getLocationTypeFromAccessID(int AccessID) const {
-  DAWN_ASSERT(getIsUnstructuredFromAcessID(AccessID));
+  // Since we can't pass the location type to the SIR yet we're defaulting to cell compuatation if
+  // nothing is specified. This happens if we call dawn from SIR but not if we call it from IIR.
+  //
+  // TODO: restrore this assertion once we have location-type passing through SIR (GT-63)
+  // DAWN_ASSERT(getIsUnstructuredFromAccessID(AccessID));
+  //
+  if(!getIsUnstructuredFromAccessID(AccessID)) {
+    return ast::Expr::LocationType::Cells;
+  }
   return FieldAccessIDToLocationTypeMap_.at(AccessID);
 }
 
